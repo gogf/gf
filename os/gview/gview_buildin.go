@@ -25,6 +25,7 @@ import (
 // buildInFuncDump implements build-in template function: dump
 func (view *View) buildInFuncDump(values ...interface{}) string {
 	buffer := bytes.NewBuffer(nil)
+	buffer.WriteString("\n")
 	buffer.WriteString("<!--\n")
 	for _, v := range values {
 		gutil.DumpTo(buffer, v, gutil.DumpOption{})

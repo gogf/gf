@@ -129,6 +129,9 @@ const (
 	methodNameShut       = "Shut"
 	methodNameExit       = "Exit"
 	ctxKeyForRequest     = "gHttpRequestObject"
+	contentTypeXml       = "text/xml"
+	contentTypeHtml      = "text/html"
+	contentTypeJson      = "application/json"
 	swaggerUIPackedPath  = "/goframe/swaggerui"
 )
 
