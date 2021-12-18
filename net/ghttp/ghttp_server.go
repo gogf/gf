@@ -293,7 +293,7 @@ func (s *Server) dumpRouterMap() {
 		table.SetCenterSeparator("|")
 
 		for _, item := range s.GetRoutes() {
-			item.Middleware = gstr.SubStrFromREx(item.Middleware, ".")
+			item.Middleware = gstr.Replace(item.Middleware, ",", "\n")
 			data := make([]string, 0)
 			if isJustDefaultServerAndDomain {
 				data = append(
