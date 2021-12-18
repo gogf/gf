@@ -47,9 +47,12 @@ func Test_Log(t *testing.T) {
 		t.Assert(client.GetContent(ctx, "/hello"), "hello")
 		t.Assert(client.GetContent(ctx, "/error"), "custom error")
 
-		logPath1 := gfile.Join(logDir, gtime.Now().Format("Y-m-d")+".log")
-		t.Assert(gstr.Contains(gfile.GetContents(logPath1), "http server started listening on"), true)
-		t.Assert(gstr.Contains(gfile.GetContents(logPath1), "HANDLER"), true)
+		var (
+			logPath1 = gfile.Join(logDir, gtime.Now().Format("Y-m-d")+".log")
+			content  = gfile.GetContents(logPath1)
+		)
+		t.Assert(gstr.Contains(content, "http server started listening on"), true)
+		t.Assert(gstr.Contains(content, "HANDLER"), true)
 
 		logPath2 := gfile.Join(logDir, "access-"+gtime.Now().Format("Ymd")+".log")
 		// fmt.Println(gfile.GetContents(logPath2))

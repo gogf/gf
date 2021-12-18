@@ -127,7 +127,6 @@ const (
 	routeCacheDuration   = time.Hour
 	methodNameInit       = "Init"
 	methodNameShut       = "Shut"
-	methodNameExit       = "Exit"
 	ctxKeyForRequest     = "gHttpRequestObject"
 	contentTypeXml       = "text/xml"
 	contentTypeHtml      = "text/html"
