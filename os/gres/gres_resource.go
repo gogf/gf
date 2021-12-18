@@ -17,6 +17,7 @@ import (
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 type Resource struct {
@@ -224,12 +225,56 @@ func (r *Resource) doScanDir(path string, pattern string, recursive bool, onlyFi
 	return files
 }
 
+// ExportOption is the option for function Export.
+type ExportOption struct {
+	RemovePrefix string // Remove the prefix of file name from resource.
+}
+
+// Export exports and saves specified path `srcPath` and all its sub files to specified system path `dstPath` recursively.
+func (r *Resource) Export(src, dst string, option ...ExportOption) error {
+	var (
+		err          error
+		name         string
+		path         string
+		exportOption ExportOption
+		files        = r.doScanDir(src, "*", true, false)
+	)
+	if len(option) > 0 {
+		exportOption = option[0]
+	}
+	for _, file := range files {
+		name = file.Name()
+		if exportOption.RemovePrefix != "" {
+			name = gstr.TrimLeftStr(name, exportOption.RemovePrefix)
+		}
+		name = gstr.Trim(name, `\/`)
+		if name == "" {
+			continue
+		}
+		path = gfile.Join(dst, name)
+		if file.FileInfo().IsDir() {
+			err = gfile.Mkdir(path)
+		} else {
+			err = gfile.PutBytes(path, file.Content())
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Dump prints the files of current resource object.
 func (r *Resource) Dump() {
 	var info os.FileInfo
 	r.tree.Iterator(func(key, value interface{}) bool {
 		info = value.(*File).FileInfo()
-		fmt.Printf("%v %7s %s\n", gtime.New(info.ModTime()).ISO8601(), gfile.FormatSize(info.Size()), key)
+		fmt.Printf(
+			"%v %7s %s\n",
+			gtime.New(info.ModTime()).ISO8601(),
+			gfile.FormatSize(info.Size()),
+			key,
+		)
 		return true
 	})
 	fmt.Printf("TOTAL FILES: %d\n", r.tree.Size())

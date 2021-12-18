@@ -12,139 +12,144 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func ExampleAddSlashes() {
+func ExampleCount() {
 	var (
-		str    = `'aa'"bb"cc\r\n\d\t`
-		result = gstr.AddSlashes(str)
+		str     = `goframe is very, very easy to use`
+		substr1 = "goframe"
+		substr2 = "very"
+		result1 = gstr.Count(str, substr1)
+		result2 = gstr.Count(str, substr2)
 	)
-
-	fmt.Println(result)
+	fmt.Println(result1)
+	fmt.Println(result2)
 
 	// Output:
-	// \'aa\'\"bb\"cc\\r\\n\\d\\t
+	// 1
+	// 2
 }
 
-func ExampleCaseCamel() {
+func ExampleCountI() {
 	var (
-		str    = `hello world`
-		result = gstr.CaseCamel(str)
+		str     = `goframe is very, very easy to use`
+		substr1 = "GOFRAME"
+		substr2 = "VERY"
+		result1 = gstr.CountI(str, substr1)
+		result2 = gstr.CountI(str, substr2)
 	)
-	fmt.Println(result)
+	fmt.Println(result1)
+	fmt.Println(result2)
 
 	// Output:
-	// HelloWorld
+	// 1
+	// 2
 }
 
-func ExampleCaseCamelLower() {
+func ExampleToLower() {
 	var (
-		str    = `hello world`
-		result = gstr.CaseCamelLower(str)
-	)
-	fmt.Println(result)
-
-	// Output:
-	// helloWorld
-}
-
-func ExampleCaseDelimited() {
-	var (
-		str    = `hello world`
-		del    = byte('-')
-		result = gstr.CaseDelimited(str, del)
+		s      = `GOFRAME`
+		result = gstr.ToLower(s)
 	)
 	fmt.Println(result)
 
 	// Output:
-	// hello-world
+	// goframe
 }
 
-func ExampleCaseDelimitedScreaming() {
-	{
-		var (
-			str    = `hello world`
-			del    = byte('-')
-			result = gstr.CaseDelimitedScreaming(str, del, true)
-		)
-		fmt.Println(result)
-	}
-	{
-		var (
-			str    = `hello world`
-			del    = byte('-')
-			result = gstr.CaseDelimitedScreaming(str, del, false)
-		)
-		fmt.Println(result)
-	}
-
-	// Output:
-	// HELLO-WORLD
-	// hello-world
-}
-
-func ExampleCaseKebab() {
+func ExampleToUpper() {
 	var (
-		str    = `hello world`
-		result = gstr.CaseKebab(str)
+		s      = `goframe`
+		result = gstr.ToUpper(s)
 	)
 	fmt.Println(result)
 
 	// Output:
-	// hello-world
+	// GOFRAME
 }
 
-func ExampleCaseKebabScreaming() {
+func ExampleUcFirst() {
+	var (
+		s      = `hello`
+		result = gstr.UcFirst(s)
+	)
+	fmt.Println(result)
+
+	// Output:
+	// Hello
+}
+
+func ExampleLcFirst() {
+	var (
+		str    = `Goframe`
+		result = gstr.LcFirst(str)
+	)
+	fmt.Println(result)
+
+	// Output:
+	// goframe
+}
+
+func ExampleUcWords() {
 	var (
 		str    = `hello world`
-		result = gstr.CaseKebabScreaming(str)
+		result = gstr.UcWords(str)
 	)
 	fmt.Println(result)
 
 	// Output:
-	// HELLO-WORLD
+	// Hello World
 }
 
-func ExampleCaseSnake() {
-	var (
-		str    = `hello world`
-		result = gstr.CaseSnake(str)
-	)
-	fmt.Println(result)
+func ExampleIsLetterLower() {
+	fmt.Println(gstr.IsLetterLower('a'))
+	fmt.Println(gstr.IsLetterLower('A'))
 
 	// Output:
-	// hello_world
+	// true
+	// false
 }
 
-func ExampleCaseSnakeFirstUpper() {
-	var (
-		str    = `RGBCodeMd5`
-		result = gstr.CaseSnakeFirstUpper(str)
-	)
-	fmt.Println(result)
+func ExampleIsLetterUpper() {
+	fmt.Println(gstr.IsLetterUpper('A'))
+	fmt.Println(gstr.IsLetterUpper('a'))
 
 	// Output:
-	// rgb_code_md5
+	// true
+	// false
 }
 
-func ExampleCaseSnakeScreaming() {
-	var (
-		str    = `hello world`
-		result = gstr.CaseSnakeScreaming(str)
-	)
-	fmt.Println(result)
-
+func ExampleIsNumeric() {
+	fmt.Println(gstr.IsNumeric("88"))
+	fmt.Println(gstr.IsNumeric("3.1415926"))
+	fmt.Println(gstr.IsNumeric("abc"))
 	// Output:
-	// HELLO_WORLD
+	// true
+	// true
+	// false
 }
 
-func ExampleChr() {
+func ExampleReverse() {
 	var (
-		ascii  = 65 // A
-		result = gstr.Chr(ascii)
+		str    = `123456`
+		result = gstr.Reverse(str)
 	)
 	fmt.Println(result)
 
 	// Output:
-	// A
+	// 654321
+}
+
+func ExampleNumberFormat() {
+	var (
+		number       float64 = 123456
+		decimals             = 2
+		decPoint             = "."
+		thousandsSep         = ","
+		result               = gstr.NumberFormat(number, decimals, decPoint, thousandsSep)
+	)
+	fmt.Println(result)
+
+	// Output:
+	// 123,456.00
 }
 
 func ExampleChunkSplit() {
@@ -171,147 +176,6 @@ func ExampleCompare() {
 	// 1
 }
 
-func ExampleCompareVersion() {
-	fmt.Println(gstr.CompareVersion("v2.11.9", "v2.10.8"))
-	fmt.Println(gstr.CompareVersion("1.10.8", "1.19.7"))
-	fmt.Println(gstr.CompareVersion("2.8.beta", "2.8"))
-
-	// Output:
-	// 1
-	// -1
-	// 0
-}
-
-func ExampleCompareVersionGo() {
-	fmt.Println(gstr.CompareVersionGo("v2.11.9", "v2.10.8"))
-	fmt.Println(gstr.CompareVersionGo("v4.20.1", "v4.20.1+incompatible"))
-	fmt.Println(gstr.CompareVersionGo(
-		"v0.0.2-20180626092158-b2ccc119800e",
-		"v1.0.1-20190626092158-b2ccc519800e",
-	))
-
-	// Output:
-	// 1
-	// 1
-	// -1
-}
-
-func ExampleContains() {
-	{
-		var (
-			str    = `Hello World`
-			substr = `Hello`
-			result = gstr.Contains(str, substr)
-		)
-		fmt.Println(result)
-	}
-	{
-		var (
-			str    = `Hello World`
-			substr = `hello`
-			result = gstr.Contains(str, substr)
-		)
-		fmt.Println(result)
-	}
-
-	// Output:
-	// true
-	// false
-}
-
-func ExampleContainsAny() {
-	{
-		var (
-			s      = `goframe`
-			chars  = "g"
-			result = gstr.ContainsAny(s, chars)
-		)
-		fmt.Println(result)
-	}
-	{
-		var (
-			s      = `goframe`
-			chars  = "G"
-			result = gstr.ContainsAny(s, chars)
-		)
-		fmt.Println(result)
-	}
-
-	// Output:
-	// true
-	// false
-}
-
-func ExampleContainsI() {
-	var (
-		str     = `Hello World`
-		substr  = "hello"
-		result1 = gstr.Contains(str, substr)
-		result2 = gstr.ContainsI(str, substr)
-	)
-	fmt.Println(result1)
-	fmt.Println(result2)
-
-	// Output:
-	// false
-	// true
-}
-
-func ExampleCount() {
-	var (
-		str     = `goframe is very, very easy to use`
-		substr1 = "goframe"
-		substr2 = "very"
-		result1 = gstr.Count(str, substr1)
-		result2 = gstr.Count(str, substr2)
-	)
-	fmt.Println(result1)
-	fmt.Println(result2)
-
-	// Output:
-	// 1
-	// 2
-}
-
-func ExampleCountChars() {
-	var (
-		str    = `goframe`
-		result = gstr.CountChars(str)
-	)
-	fmt.Println(result)
-
-	// May Output:
-	// map[a:1 e:1 f:1 g:1 m:1 o:1 r:1]
-
-}
-
-func ExampleCountI() {
-	var (
-		str     = `goframe is very, very easy to use`
-		substr1 = "GOFRAME"
-		substr2 = "VERY"
-		result1 = gstr.CountI(str, substr1)
-		result2 = gstr.CountI(str, substr2)
-	)
-	fmt.Println(result1)
-	fmt.Println(result2)
-
-	// Output:
-	// 1
-	// 2
-}
-
-func ExampleCountWords() {
-	var (
-		str    = `goframe is very, very easy to use!`
-		result = gstr.CountWords(str)
-	)
-	fmt.Printf(`%#v`, result)
-
-	// Output:
-	// map[string]int{"easy":1, "goframe":1, "is":1, "to":1, "use!":1, "very":1, "very,":1}
-}
-
 func ExampleEqual() {
 	fmt.Println(gstr.Equal(`A`, `a`))
 	fmt.Println(gstr.Equal(`A`, `A`))
@@ -321,18 +185,6 @@ func ExampleEqual() {
 	// true
 	// true
 	// false
-}
-
-func ExampleExplode() {
-	var (
-		str       = `Hello World`
-		delimiter = " "
-		result    = gstr.Explode(delimiter, str)
-	)
-	fmt.Printf(`%#v`, result)
-
-	// Output:
-	// []string{"Hello", "World"}
 }
 
 func ExampleFields() {
@@ -370,81 +222,115 @@ func ExampleHasSuffix() {
 	// true
 }
 
-func ExampleHideStr() {
+func ExampleCountWords() {
 	var (
-		str     = `13800138000`
-		percent = 40
-		hide    = `*`
-		result  = gstr.HideStr(str, percent, hide)
+		str    = `goframe is very, very easy to use!`
+		result = gstr.CountWords(str)
+	)
+	fmt.Printf(`%#v`, result)
+
+	// Output:
+	// map[string]int{"easy":1, "goframe":1, "is":1, "to":1, "use!":1, "very":1, "very,":1}
+}
+
+func ExampleCountChars() {
+	var (
+		str    = `goframe`
+		result = gstr.CountChars(str)
+	)
+	fmt.Println(result)
+
+	// May Output:
+	// map[a:1 e:1 f:1 g:1 m:1 o:1 r:1]
+}
+
+func ExampleWordWrap() {
+	{
+		var (
+			str    = `A very long woooooooooooooooooord. and something`
+			width  = 8
+			br     = "\n"
+			result = gstr.WordWrap(str, width, br)
+		)
+		fmt.Println(result)
+	}
+	{
+		var (
+			str    = `The quick brown fox jumped over the lazy dog.`
+			width  = 20
+			br     = "<br />\n"
+			result = gstr.WordWrap(str, width, br)
+		)
+		fmt.Printf("%v", result)
+	}
+
+	// Output:
+	// A very
+	// long
+	// woooooooooooooooooord.
+	// and
+	// something
+	// The quick brown fox<br />
+	// jumped over the lazy<br />
+	// dog.
+}
+
+func ExampleLenRune() {
+	var (
+		str    = `GoFrame框架`
+		result = gstr.LenRune(str)
 	)
 	fmt.Println(result)
 
 	// Output:
-	// 138****8000
+	// 9
 }
 
-func ExampleImplode() {
+func ExampleRepeat() {
 	var (
-		pieces = []string{"goframe", "is", "very", "easy", "to", "use"}
-		glue   = " "
-		result = gstr.Implode(glue, pieces)
+		input      = `goframe `
+		multiplier = 3
+		result     = gstr.Repeat(input, multiplier)
 	)
 	fmt.Println(result)
 
 	// Output:
-	// goframe is very easy to use
+	// goframe goframe goframe
 }
 
-func ExampleInArray() {
+func ExampleShuffle() {
 	var (
-		a      = []string{"goframe", "is", "very", "easy", "to", "use"}
-		s      = "goframe"
-		result = gstr.InArray(a, s)
+		str    = `123456`
+		result = gstr.Shuffle(str)
 	)
 	fmt.Println(result)
 
-	// Output:
-	// true
+	// May Output:
+	// 563214
 }
 
-func ExampleIsLetterLower() {
-	fmt.Println(gstr.IsLetterLower('a'))
-	fmt.Println(gstr.IsLetterLower('A'))
-
-	// Output:
-	// true
-	// false
-}
-
-func ExampleIsLetterUpper() {
-	fmt.Println(gstr.IsLetterUpper('A'))
-	fmt.Println(gstr.IsLetterUpper('a'))
-
-	// Output:
-	// true
-	// false
-}
-
-func ExampleIsNumeric() {
-	fmt.Println(gstr.IsNumeric("88"))
-	fmt.Println(gstr.IsNumeric("3.1415926"))
-	fmt.Println(gstr.IsNumeric("abc"))
-	// Output:
-	// true
-	// true
-	// false
-}
-
-func ExampleIsSubDomain() {
+func ExampleSplit() {
 	var (
-		subDomain  = `s.goframe.org`
-		mainDomain = `goframe.org`
-		result     = gstr.IsSubDomain(subDomain, mainDomain)
+		str       = `a|b|c|d`
+		delimiter = `|`
+		result    = gstr.Split(str, delimiter)
 	)
-	fmt.Println(result)
+	fmt.Printf(`%#v`, result)
 
 	// Output:
-	// true
+	// []string{"a", "b", "c", "d"}
+}
+
+func ExampleSplitAndTrim() {
+	var (
+		str       = `a|b|||||c|d`
+		delimiter = `|`
+		result    = gstr.SplitAndTrim(str, delimiter)
+	)
+	fmt.Printf(`%#v`, result)
+
+	// Output:
+	// []string{"a", "b", "c", "d"}
 }
 
 func ExampleJoin() {
@@ -471,41 +357,65 @@ func ExampleJoinAny() {
 	// 99,73,85,66
 }
 
-func ExampleLcFirst() {
+func ExampleExplode() {
 	var (
-		str    = `Goframe`
-		result = gstr.LcFirst(str)
+		str       = `Hello World`
+		delimiter = " "
+		result    = gstr.Explode(delimiter, str)
 	)
-	fmt.Println(result)
+	fmt.Printf(`%#v`, result)
 
 	// Output:
-	// goframe
+	// []string{"Hello", "World"}
 }
 
-func ExampleLenRune() {
+func ExampleImplode() {
 	var (
-		str    = `GoFrame框架`
-		result = gstr.LenRune(str)
+		pieces = []string{"goframe", "is", "very", "easy", "to", "use"}
+		glue   = " "
+		result = gstr.Implode(glue, pieces)
 	)
 	fmt.Println(result)
 
 	// Output:
-	// 9
+	// goframe is very easy to use
 }
 
-func ExampleLevenshtein() {
+func ExampleChr() {
 	var (
-		str1    = "Hello World"
-		str2    = "hallo World"
-		costIns = 1
-		costRep = 1
-		costDel = 1
-		result  = gstr.Levenshtein(str1, str2, costIns, costRep, costDel)
+		ascii  = 65 // A
+		result = gstr.Chr(ascii)
 	)
 	fmt.Println(result)
 
 	// Output:
-	// 2
+	// A
+}
+
+// '103' is the 'g' in ASCII
+func ExampleOrd() {
+	var (
+		str    = `goframe`
+		result = gstr.Ord(str)
+	)
+
+	fmt.Println(result)
+
+	// Output:
+	// 103
+}
+
+func ExampleHideStr() {
+	var (
+		str     = `13800138000`
+		percent = 40
+		hide    = `*`
+		result  = gstr.HideStr(str, percent, hide)
+	)
+	fmt.Println(result)
+
+	// Output:
+	// 138****8000
 }
 
 func ExampleNl2Br() {
@@ -525,20 +435,265 @@ use`
 	// goframe<br>is<br>very<br>easy<br>to<br>use
 }
 
-func ExampleNumberFormat() {
+func ExampleAddSlashes() {
 	var (
-		number       float64 = 123456
-		decimals             = 2
-		decPoint             = "."
-		thousandsSep         = ","
-		result               = gstr.NumberFormat(number, decimals, decPoint, thousandsSep)
+		str    = `'aa'"bb"cc\r\n\d\t`
+		result = gstr.AddSlashes(str)
+	)
+
+	fmt.Println(result)
+
+	// Output:
+	// \'aa\'\"bb\"cc\\r\\n\\d\\t
+}
+
+func ExampleStripSlashes() {
+	var (
+		str    = `C:\\windows\\GoFrame\\test`
+		result = gstr.StripSlashes(str)
 	)
 	fmt.Println(result)
 
 	// Output:
-	// 123,456.00
+	// C:\windows\GoFrame\test
 }
 
+func ExampleQuoteMeta() {
+	{
+		var (
+			str    = `.\+?[^]()`
+			result = gstr.QuoteMeta(str)
+		)
+		fmt.Println(result)
+	}
+	{
+		var (
+			str    = `https://goframe.org/pages/viewpage.action?pageId=1114327`
+			result = gstr.QuoteMeta(str)
+		)
+		fmt.Println(result)
+	}
+
+	// Output:
+	// \.\\\+\?\[\^\]\(\)
+	// https://goframe\.org/pages/viewpage\.action\?pageId=1114327
+
+}
+
+// array
+func ExampleSearchArray() {
+	var (
+		array  = []string{"goframe", "is", "very", "nice"}
+		str    = `goframe`
+		result = gstr.SearchArray(array, str)
+	)
+	fmt.Println(result)
+
+	// Output:
+	// 0
+}
+
+func ExampleInArray() {
+	var (
+		a      = []string{"goframe", "is", "very", "easy", "to", "use"}
+		s      = "goframe"
+		result = gstr.InArray(a, s)
+	)
+	fmt.Println(result)
+
+	// Output:
+	// true
+}
+
+func ExamplePrefixArray() {
+	var (
+		strArray = []string{"tom", "lily", "john"}
+	)
+
+	gstr.PrefixArray(strArray, "classA_")
+
+	fmt.Println(strArray)
+
+	// Output:
+	// [classA_tom classA_lily classA_john]
+}
+
+// case
+func ExampleCaseCamel() {
+	var (
+		str    = `hello world`
+		result = gstr.CaseCamel(str)
+	)
+	fmt.Println(result)
+
+	// Output:
+	// HelloWorld
+}
+
+func ExampleCaseCamelLower() {
+	var (
+		str    = `hello world`
+		result = gstr.CaseCamelLower(str)
+	)
+	fmt.Println(result)
+
+	// Output:
+	// helloWorld
+}
+
+func ExampleCaseSnake() {
+	var (
+		str    = `hello world`
+		result = gstr.CaseSnake(str)
+	)
+	fmt.Println(result)
+
+	// Output:
+	// hello_world
+}
+
+func ExampleCaseSnakeScreaming() {
+	var (
+		str    = `hello world`
+		result = gstr.CaseSnakeScreaming(str)
+	)
+	fmt.Println(result)
+
+	// Output:
+	// HELLO_WORLD
+}
+
+func ExampleCaseSnakeFirstUpper() {
+	var (
+		str    = `RGBCodeMd5`
+		result = gstr.CaseSnakeFirstUpper(str)
+	)
+	fmt.Println(result)
+
+	// Output:
+	// rgb_code_md5
+}
+
+func ExampleCaseKebab() {
+	var (
+		str    = `hello world`
+		result = gstr.CaseKebab(str)
+	)
+	fmt.Println(result)
+
+	// Output:
+	// hello-world
+}
+
+func ExampleCaseKebabScreaming() {
+	var (
+		str    = `hello world`
+		result = gstr.CaseKebabScreaming(str)
+	)
+	fmt.Println(result)
+
+	// Output:
+	// HELLO-WORLD
+}
+
+func ExampleCaseDelimited() {
+	var (
+		str    = `hello world`
+		del    = byte('-')
+		result = gstr.CaseDelimited(str, del)
+	)
+	fmt.Println(result)
+
+	// Output:
+	// hello-world
+}
+
+func ExampleCaseDelimitedScreaming() {
+	{
+		var (
+			str    = `hello world`
+			del    = byte('-')
+			result = gstr.CaseDelimitedScreaming(str, del, true)
+		)
+		fmt.Println(result)
+	}
+	{
+		var (
+			str    = `hello world`
+			del    = byte('-')
+			result = gstr.CaseDelimitedScreaming(str, del, false)
+		)
+		fmt.Println(result)
+	}
+
+	// Output:
+	// HELLO-WORLD
+	// hello-world
+}
+
+// contain
+func ExampleContains() {
+	{
+		var (
+			str    = `Hello World`
+			substr = `Hello`
+			result = gstr.Contains(str, substr)
+		)
+		fmt.Println(result)
+	}
+	{
+		var (
+			str    = `Hello World`
+			substr = `hello`
+			result = gstr.Contains(str, substr)
+		)
+		fmt.Println(result)
+	}
+
+	// Output:
+	// true
+	// false
+}
+
+func ExampleContainsI() {
+	var (
+		str     = `Hello World`
+		substr  = "hello"
+		result1 = gstr.Contains(str, substr)
+		result2 = gstr.ContainsI(str, substr)
+	)
+	fmt.Println(result1)
+	fmt.Println(result2)
+
+	// Output:
+	// false
+	// true
+}
+
+func ExampleContainsAny() {
+	{
+		var (
+			s      = `goframe`
+			chars  = "g"
+			result = gstr.ContainsAny(s, chars)
+		)
+		fmt.Println(result)
+	}
+	{
+		var (
+			s      = `goframe`
+			chars  = "G"
+			result = gstr.ContainsAny(s, chars)
+		)
+		fmt.Println(result)
+	}
+
+	// Output:
+	// true
+	// false
+}
+
+// convert
 func ExampleOctStr() {
 	var (
 		str    = `\346\200\241`
@@ -550,19 +705,36 @@ func ExampleOctStr() {
 	// 怡
 }
 
-// '103' is the 'g' in ASCII
-func ExampleOrd() {
+// domain
+func ExampleIsSubDomain() {
 	var (
-		str    = `goframe`
-		result = gstr.Ord(str)
+		subDomain  = `s.goframe.org`
+		mainDomain = `goframe.org`
+		result     = gstr.IsSubDomain(subDomain, mainDomain)
 	)
-
 	fmt.Println(result)
 
 	// Output:
-	// 103
+	// true
 }
 
+// levenshtein
+func ExampleLevenshtein() {
+	var (
+		str1    = "Hello World"
+		str2    = "hallo World"
+		costIns = 1
+		costRep = 1
+		costDel = 1
+		result  = gstr.Levenshtein(str1, str2, costIns, costRep, costDel)
+	)
+	fmt.Println(result)
+
+	// Output:
+	// 2
+}
+
+// parse
 func ExampleParse() {
 	{
 		var (
@@ -613,6 +785,7 @@ func ExampleParse() {
 	// map[a___[b:c]
 }
 
+// pos
 func ExamplePos() {
 	var (
 		haystack = `Hello World`
@@ -623,6 +796,21 @@ func ExamplePos() {
 
 	// Output:
 	// 6
+}
+
+func ExamplePosRune() {
+	var (
+		haystack = `GoFrame是一款模块化、高性能、企业级的Go基础开发框架`
+		needle   = `Go`
+		posI     = gstr.PosRune(haystack, needle)
+		posR     = gstr.PosRRune(haystack, needle)
+	)
+	fmt.Println(posI)
+	fmt.Println(posR)
+
+	// Output:
+	// 0
+	// 22
 }
 
 func ExamplePosI() {
@@ -680,6 +868,21 @@ func ExamplePosR() {
 	// 17
 }
 
+func ExamplePosRRune() {
+	var (
+		haystack = `GoFrame是一款模块化、高性能、企业级的Go基础开发框架`
+		needle   = `Go`
+		posI     = gstr.PosIRune(haystack, needle)
+		posR     = gstr.PosRRune(haystack, needle)
+	)
+	fmt.Println(posI)
+	fmt.Println(posR)
+
+	// Output:
+	// 0
+	// 22
+}
+
 func ExamplePosRI() {
 	var (
 		haystack = `goframe is very, very easy to use`
@@ -710,76 +913,26 @@ func ExamplePosRIRune() {
 	// 22
 }
 
-func ExamplePosRRune() {
-	var (
-		haystack = `GoFrame是一款模块化、高性能、企业级的Go基础开发框架`
-		needle   = `Go`
-		posI     = gstr.PosIRune(haystack, needle)
-		posR     = gstr.PosRRune(haystack, needle)
-	)
-	fmt.Println(posI)
-	fmt.Println(posR)
-
-	// Output:
-	// 0
-	// 22
-}
-
-func ExamplePosRune() {
-	var (
-		haystack = `GoFrame是一款模块化、高性能、企业级的Go基础开发框架`
-		needle   = `Go`
-		posI     = gstr.PosRune(haystack, needle)
-		posR     = gstr.PosRRune(haystack, needle)
-	)
-	fmt.Println(posI)
-	fmt.Println(posR)
-
-	// Output:
-	// 0
-	// 22
-}
-
-func ExampleQuoteMeta() {
-	{
-		var (
-			str    = `.\+?[^]()`
-			result = gstr.QuoteMeta(str)
-		)
-		fmt.Println(result)
-	}
-	{
-		var (
-			str    = `https://goframe.org/pages/viewpage.action?pageId=1114327`
-			result = gstr.QuoteMeta(str)
-		)
-		fmt.Println(result)
-	}
-
-	// Output:
-	// \.\\\+\?\[\^\]\(\)
-	// https://goframe\.org/pages/viewpage\.action\?pageId=1114327
-
-}
-
-func ExampleRepeat() {
-	var (
-		input      = `goframe `
-		multiplier = 3
-		result     = gstr.Repeat(input, multiplier)
-	)
-	fmt.Println(result)
-
-	// Output:
-	// goframe goframe goframe
-}
-
+// replace
 func ExampleReplace() {
 	var (
 		origin  = `golang is very nice!`
 		search  = `golang`
 		replace = `goframe`
 		result  = gstr.Replace(origin, search, replace)
+	)
+	fmt.Println(result)
+
+	// Output:
+	// goframe is very nice!
+}
+
+func ExampleReplaceI() {
+	var (
+		origin  = `golang is very nice!`
+		search  = `GOLANG`
+		replace = `goframe`
+		result  = gstr.ReplaceI(origin, search, replace)
 	)
 	fmt.Println(result)
 
@@ -807,6 +960,19 @@ func ExampleReplaceByArray() {
 
 	// Output:
 	// goframe is very nice
+	// goframe is very nice
+}
+
+func ExampleReplaceIByArray() {
+	var (
+		origin = `golang is very Good`
+		array  = []string{"Golang", "goframe", "GOOD", "nice"}
+		result = gstr.ReplaceIByArray(origin, array)
+	)
+
+	fmt.Println(result)
+
+	// Output:
 	// goframe is very nice
 }
 
@@ -838,32 +1004,6 @@ func ExampleReplaceByMap() {
 	// goframe is very nice
 }
 
-func ExampleReplaceI() {
-	var (
-		origin  = `golang is very nice!`
-		search  = `GOLANG`
-		replace = `goframe`
-		result  = gstr.ReplaceI(origin, search, replace)
-	)
-	fmt.Println(result)
-
-	// Output:
-	// goframe is very nice!
-}
-
-func ExampleReplaceIByArray() {
-	var (
-		origin = `golang is very Good`
-		array  = []string{"Golang", "goframe", "GOOD", "nice"}
-		result = gstr.ReplaceIByArray(origin, array)
-	)
-
-	fmt.Println(result)
-
-	// Output:
-	// goframe is very nice
-}
-
 func ExampleReplaceIByMap() {
 	var (
 		origin   = `golang is very nice`
@@ -878,40 +1018,7 @@ func ExampleReplaceIByMap() {
 	// goframe is very nice
 }
 
-func ExampleReverse() {
-	var (
-		str    = `123456`
-		result = gstr.Reverse(str)
-	)
-	fmt.Println(result)
-
-	// Output:
-	// 654321
-}
-
-func ExampleSearchArray() {
-	var (
-		array  = []string{"goframe", "is", "very", "nice"}
-		str    = `goframe`
-		result = gstr.SearchArray(array, str)
-	)
-	fmt.Println(result)
-
-	// Output:
-	// 0
-}
-
-func ExampleShuffle() {
-	var (
-		str    = `123456`
-		result = gstr.Shuffle(str)
-	)
-	fmt.Println(result)
-
-	// May Output:
-	// 563214
-}
-
+// similartext
 func ExampleSimilarText() {
 	var (
 		first   = `AaBbCcDd`
@@ -925,6 +1032,7 @@ func ExampleSimilarText() {
 	// 2
 }
 
+// soundex
 func ExampleSoundex() {
 	var (
 		str1    = `Hello`
@@ -938,30 +1046,7 @@ func ExampleSoundex() {
 	// H400 H400
 }
 
-func ExampleSplit() {
-	var (
-		str       = `a|b|c|d`
-		delimiter = `|`
-		result    = gstr.Split(str, delimiter)
-	)
-	fmt.Printf(`%#v`, result)
-
-	// Output:
-	// []string{"a", "b", "c", "d"}
-}
-
-func ExampleSplitAndTrim() {
-	var (
-		str       = `a|b|||||c|d`
-		delimiter = `|`
-		result    = gstr.SplitAndTrim(str, delimiter)
-	)
-	fmt.Printf(`%#v`, result)
-
-	// Output:
-	// []string{"a", "b", "c", "d"}
-}
-
+// str
 func ExampleStr() {
 	var (
 		haystack = `xxx.jpg`
@@ -984,6 +1069,57 @@ func ExampleStrEx() {
 
 	// Output:
 	// a=1&b=2
+}
+
+func ExampleStrTill() {
+	var (
+		haystack = `https://goframe.org/index.html?test=123456`
+		needle   = `?`
+		result   = gstr.StrTill(haystack, needle)
+	)
+	fmt.Println(result)
+
+	// Output:
+	// https://goframe.org/index.html?
+}
+
+func ExampleStrTillEx() {
+	var (
+		haystack = `https://goframe.org/index.html?test=123456`
+		needle   = `?`
+		result   = gstr.StrTillEx(haystack, needle)
+	)
+	fmt.Println(result)
+
+	// Output:
+	// https://goframe.org/index.html
+}
+
+// substr
+func ExampleSubStr() {
+	var (
+		str    = `1234567890`
+		start  = 0
+		length = 4
+		subStr = gstr.SubStr(str, start, length)
+	)
+	fmt.Println(subStr)
+
+	// Output:
+	// 1234
+}
+
+func ExampleSubStrRune() {
+	var (
+		str    = `GoFrame是一款模块化、高性能、企业级的Go基础开发框架。`
+		start  = 14
+		length = 3
+		subStr = gstr.SubStrRune(str, start, length)
+	)
+	fmt.Println(subStr)
+
+	// Output:
+	// 高性能
 }
 
 func ExampleStrLimit() {
@@ -1012,89 +1148,55 @@ func ExampleStrLimitRune() {
 	// GoFrame是一款模块化、高性能...
 }
 
-func ExampleStrTill() {
+func ExampleSubStrFrom() {
 	var (
-		haystack = `https://goframe.org/index.html?test=123456`
-		needle   = `?`
-		result   = gstr.StrTill(haystack, needle)
+		str  = "我爱GoFrameGood"
+		need = `爱`
 	)
-	fmt.Println(result)
+
+	fmt.Println(gstr.SubStrFrom(str, need))
 
 	// Output:
-	// https://goframe.org/index.html?
+	// 爱GoFrameGood
 }
 
-func ExampleStrTillEx() {
+func ExampleSubStrFromEx() {
 	var (
-		haystack = `https://goframe.org/index.html?test=123456`
-		needle   = `?`
-		result   = gstr.StrTillEx(haystack, needle)
+		str  = "我爱GoFrameGood"
+		need = `爱`
 	)
-	fmt.Println(result)
+
+	fmt.Println(gstr.SubStrFromEx(str, need))
 
 	// Output:
-	// https://goframe.org/index.html
+	// GoFrameGood
 }
 
-func ExampleStripSlashes() {
+func ExampleSubStrFromR() {
 	var (
-		str    = `C:\\windows\\GoFrame\\test`
-		result = gstr.StripSlashes(str)
+		str  = "我爱GoFrameGood"
+		need = `Go`
 	)
-	fmt.Println(result)
+
+	fmt.Println(gstr.SubStrFromR(str, need))
 
 	// Output:
-	// C:\windows\GoFrame\test
+	// Good
 }
 
-func ExampleSubStr() {
+func ExampleSubStrFromREx() {
 	var (
-		str    = `1234567890`
-		start  = 0
-		length = 4
-		subStr = gstr.SubStr(str, start, length)
+		str  = "我爱GoFrameGood"
+		need = `Go`
 	)
-	fmt.Println(subStr)
+
+	fmt.Println(gstr.SubStrFromREx(str, need))
 
 	// Output:
-	// 1234
+	// od
 }
 
-func ExampleSubStrRune() {
-	var (
-		str    = `GoFrame是一款模块化、高性能、企业级的Go基础开发框架。`
-		start  = 14
-		length = 3
-		subStr = gstr.SubStrRune(str, start, length)
-	)
-	fmt.Println(subStr)
-
-	// Output:
-	// 高性能
-}
-
-func ExampleToLower() {
-	var (
-		s      = `GOFRAME`
-		result = gstr.ToLower(s)
-	)
-	fmt.Println(result)
-
-	// Output:
-	// goframe
-}
-
-func ExampleToUpper() {
-	var (
-		s      = `goframe`
-		result = gstr.ToUpper(s)
-	)
-	fmt.Println(result)
-
-	// Output:
-	// GOFRAME
-}
-
+// trim
 func ExampleTrim() {
 	var (
 		str           = `*Hello World*`
@@ -1107,16 +1209,17 @@ func ExampleTrim() {
 	// Hello World
 }
 
-func ExampleTrimAll() {
+func ExampleTrimStr() {
 	var (
-		str           = `*Hello World*`
-		characterMask = "*"
-		result        = gstr.TrimAll(str, characterMask)
+		str    = `Hello World`
+		cut    = "World"
+		count  = -1
+		result = gstr.TrimStr(str, cut, count)
 	)
 	fmt.Println(result)
 
 	// Output:
-	// HelloWorld
+	// Hello
 }
 
 func ExampleTrimLeft() {
@@ -1169,68 +1272,40 @@ func ExampleTrimRightStr() {
 	// Hello World
 }
 
-func ExampleTrimStr() {
+func ExampleTrimAll() {
 	var (
-		str    = `Hello World`
-		cut    = "World"
-		count  = -1
-		result = gstr.TrimStr(str, cut, count)
+		str           = `*Hello World*`
+		characterMask = "*"
+		result        = gstr.TrimAll(str, characterMask)
 	)
 	fmt.Println(result)
 
 	// Output:
-	// Hello
+	// HelloWorld
 }
 
-func ExampleUcFirst() {
-	var (
-		s      = `hello`
-		result = gstr.UcFirst(s)
-	)
-	fmt.Println(result)
+// version
+func ExampleCompareVersion() {
+	fmt.Println(gstr.CompareVersion("v2.11.9", "v2.10.8"))
+	fmt.Println(gstr.CompareVersion("1.10.8", "1.19.7"))
+	fmt.Println(gstr.CompareVersion("2.8.beta", "2.8"))
 
 	// Output:
-	// Hello
+	// 1
+	// -1
+	// 0
 }
 
-func ExampleUcWords() {
-	var (
-		str    = `hello world`
-		result = gstr.UcWords(str)
-	)
-	fmt.Println(result)
+func ExampleCompareVersionGo() {
+	fmt.Println(gstr.CompareVersionGo("v2.11.9", "v2.10.8"))
+	fmt.Println(gstr.CompareVersionGo("v4.20.1", "v4.20.1+incompatible"))
+	fmt.Println(gstr.CompareVersionGo(
+		"v0.0.2-20180626092158-b2ccc119800e",
+		"v1.0.1-20190626092158-b2ccc519800e",
+	))
 
 	// Output:
-	// Hello World
-}
-
-func ExampleWordWrap() {
-	{
-		var (
-			str    = `A very long woooooooooooooooooord. and something`
-			width  = 8
-			br     = "\n"
-			result = gstr.WordWrap(str, width, br)
-		)
-		fmt.Println(result)
-	}
-	{
-		var (
-			str    = `The quick brown fox jumped over the lazy dog.`
-			width  = 20
-			br     = "<br />\n"
-			result = gstr.WordWrap(str, width, br)
-		)
-		fmt.Printf("%v", result)
-	}
-
-	// Output:
-	// A very
-	// long
-	// woooooooooooooooooord.
-	// and
-	// something
-	// The quick brown fox<br />
-	// jumped over the lazy<br />
-	// dog.
+	// 1
+	// 1
+	// -1
 }
