@@ -348,3 +348,11 @@ func (s *Session) MustSize() int {
 	}
 	return size
 }
+
+// MustRemove performs as function Remove, but it panics if any error occurs.
+func (s *Session) MustRemove(keys ...string) {
+	err := s.Remove(keys...)
+	if err != nil {
+		panic(err)
+	}
+}
