@@ -271,25 +271,51 @@ func (s *Server) getListenAddress() string {
 // DumpRouterMap dumps the router map to the log.
 func (s *Server) dumpRouterMap() {
 	var (
-		ctx = context.TODO()
+		ctx                          = context.TODO()
+		headers                      = []string{"SERVER", "DOMAIN", "ADDRESS", "METHOD", "ROUTE", "HANDLER", "MIDDLEWARE"}
+		isJustDefaultServerAndDomain = true
 	)
+	for _, item := range s.GetRoutes() {
+		if item.Server != DefaultServerName || item.Domain != DefaultDomainName {
+			isJustDefaultServerAndDomain = false
+			break
+		}
+	}
+	if isJustDefaultServerAndDomain {
+		headers = []string{"ADDRESS", "METHOD", "ROUTE", "HANDLER", "MIDDLEWARE"}
+	}
 	if s.config.DumpRouterMap && len(s.routesMap) > 0 {
 		buffer := bytes.NewBuffer(nil)
 		table := tablewriter.NewWriter(buffer)
-		table.SetHeader([]string{"SERVER", "DOMAIN", "ADDRESS", "METHOD", "ROUTE", "HANDLER", "MIDDLEWARE"})
+		table.SetHeader(headers)
 		table.SetRowLine(true)
 		table.SetBorder(false)
 		table.SetCenterSeparator("|")
 
 		for _, item := range s.GetRoutes() {
-			data := make([]string, 7)
-			data[0] = item.Server
-			data[1] = item.Domain
-			data[2] = item.Address
-			data[3] = item.Method
-			data[4] = item.Route
-			data[5] = item.Handler.Name
-			data[6] = item.Middleware
+			item.Middleware = gstr.SubStrFromREx(item.Middleware, ".")
+			data := make([]string, 0)
+			if isJustDefaultServerAndDomain {
+				data = append(
+					data,
+					item.Address,
+					item.Method,
+					item.Route,
+					item.Handler.Name,
+					item.Middleware,
+				)
+			} else {
+				data = append(
+					data,
+					item.Server,
+					item.Domain,
+					item.Address,
+					item.Method,
+					item.Route,
+					item.Handler.Name,
+					item.Middleware,
+				)
+			}
 			table.Append(data)
 		}
 		table.Render()
