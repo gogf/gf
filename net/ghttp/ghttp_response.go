@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gres"
 )
@@ -142,6 +143,7 @@ func (r *Response) ClearBuffer() {
 
 // Flush outputs the buffer content to the client and clears the buffer.
 func (r *Response) Flush() {
+	r.Header().Set(responseTraceIdHeader, gtrace.GetTraceID(r.Request.Context()))
 	if r.Server.config.ServerAgent != "" {
 		r.Header().Set("Server", r.Server.config.ServerAgent)
 	}
