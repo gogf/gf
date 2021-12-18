@@ -133,7 +133,7 @@ const (
 	contentTypeHtml       = "text/html"
 	contentTypeJson       = "application/json"
 	swaggerUIPackedPath   = "/goframe/swaggerui"
-	responseTraceIDHeader = "TraceID"
+	responseTraceIDHeader = "Trace-ID"
 )
 
 var (
