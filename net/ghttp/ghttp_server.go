@@ -293,15 +293,22 @@ func (s *Server) dumpRouterMap() {
 		table.SetCenterSeparator("|")
 
 		for _, item := range s.GetRoutes() {
-			item.Middleware = gstr.Replace(item.Middleware, ",", "\n")
-			data := make([]string, 0)
+			var (
+				data        = make([]string, 0)
+				handlerName = gstr.TrimRightStr(item.Handler.Name, "-fm")
+				middlewares = gstr.SplitAndTrim(item.Middleware, ",")
+			)
+			for k, v := range middlewares {
+				middlewares[k] = gstr.TrimRightStr(v, "-fm")
+			}
+			item.Middleware = gstr.Join(middlewares, "\n")
 			if isJustDefaultServerAndDomain {
 				data = append(
 					data,
 					item.Address,
 					item.Method,
 					item.Route,
-					item.Handler.Name,
+					handlerName,
 					item.Middleware,
 				)
 			} else {
@@ -312,7 +319,7 @@ func (s *Server) dumpRouterMap() {
 					item.Address,
 					item.Method,
 					item.Route,
-					item.Handler.Name,
+					handlerName,
 					item.Middleware,
 				)
 			}

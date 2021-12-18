@@ -6,25 +6,22 @@
 
 // Package gtag providing tag content storing for struct.
 //
-// Note that calling functions of this package is concurrently safe.
+// Note that calling functions of this package is not concurrently safe,
+// which means you cannot call them in runtime but in boot procedure.
 package gtag
 
 import (
 	"fmt"
 	"regexp"
-	"sync"
 )
 
 var (
-	mu    sync.RWMutex
 	data  = make(map[string]string)
 	regex = regexp.MustCompile(`\{(.+?)\}`)
 )
 
 // Set sets tag content for specified name.
 func Set(name, value string) {
-	mu.Lock()
-	defer mu.Unlock()
 	if _, ok := data[name]; ok {
 		panic(fmt.Sprintf(`value for tag "%s" already exists`, name))
 	}
@@ -33,8 +30,6 @@ func Set(name, value string) {
 
 // Sets sets multiple tag content by map.
 func Sets(m map[string]string) {
-	mu.Lock()
-	defer mu.Unlock()
 	for k, v := range m {
 		if _, ok := data[k]; ok {
 			panic(fmt.Sprintf(`value for tag "%s" already exists`, k))
@@ -45,8 +40,6 @@ func Sets(m map[string]string) {
 
 // Get retrieves and returns the stored tag content for specified name.
 func Get(name string) string {
-	mu.RLock()
-	defer mu.RUnlock()
 	return data[name]
 }
 
@@ -56,8 +49,6 @@ func Get(name string) string {
 // If "Demo:content" in tag mapping,
 // Parse(`This is {Demo}`) -> `This is content`.
 func Parse(content string) string {
-	mu.RLock()
-	defer mu.RUnlock()
 	return regex.ReplaceAllStringFunc(content, func(s string) string {
 		if v, ok := data[s[1:len(s)-1]]; ok {
 			return v
