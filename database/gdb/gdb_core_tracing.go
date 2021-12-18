@@ -55,7 +55,7 @@ func (c *Core) addSqlToTracing(ctx context.Context, sql *Sql) {
 	labels = append(labels, gtrace.CommonLabels()...)
 	labels = append(labels,
 		attribute.String(tracingAttrDbType, c.db.GetConfig().Type),
-		attribute.String(string(semconv.DBStatementKey), sql.Format),
+		semconv.DBStatementKey.String(sql.Format),
 	)
 	if c.db.GetConfig().Host != "" {
 		labels = append(labels, attribute.String(tracingAttrDbHost, c.db.GetConfig().Host))
