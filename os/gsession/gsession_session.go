@@ -21,7 +21,7 @@ import (
 // The Session struct is the interface with user, but the Storage is the underlying adapter designed interface
 // for functionality implements.
 type Session struct {
-	id      string          // Session id.
+	id      string          // Session id. It retrieves the session if id is custom specified.
 	ctx     context.Context // Context for current session. Please note that, session live along with context.
 	data    *gmap.StrAnyMap // Session data.
 	dirty   bool            // Used to mark session is modified.
@@ -33,8 +33,8 @@ type Session struct {
 	idFunc func(ttl time.Duration) (id string)
 }
 
-// init does the lazy initialization for session.
-// It here initializes real session if necessary.
+// init does the lazy initialization for session, which retrieves the session if session id is specified,
+// or else it creates a new empty session.
 func (s *Session) init() error {
 	if s.start {
 		return nil
@@ -58,21 +58,24 @@ func (s *Session) init() error {
 			}
 		}
 	}
-	// Use custom session id creating function.
-	if s.id == "" && s.idFunc != nil {
-		s.id = s.idFunc(s.manager.ttl)
-	}
-	// Use default session id creating function of storage.
+	// Session id creation.
 	if s.id == "" {
-		s.id, err = s.manager.storage.New(s.ctx, s.manager.ttl)
-		if err != nil && err != ErrorDisabled {
-			intlog.Errorf(s.ctx, "create session id failed: %v", err)
-			return err
+		if s.idFunc != nil {
+			// Use custom session id creating function.
+			s.id = s.idFunc(s.manager.ttl)
+		} else {
+			// Use default session id creating function of storage.
+			s.id, err = s.manager.storage.New(s.ctx, s.manager.ttl)
+			if err != nil && err != ErrorDisabled {
+				intlog.Errorf(s.ctx, "create session id failed: %v", err)
+				return err
+			}
+			// If session storage does not implements id generating functionality,
+			// it then uses default session id creating function.
+			if s.id == "" {
+				s.id = NewSessionId()
+			}
 		}
-	}
-	// Use default session id creating function.
-	if s.id == "" {
-		s.id = NewSessionId()
 	}
 	if s.data == nil {
 		s.data = gmap.NewStrAnyMap(true)
@@ -210,42 +213,45 @@ func (s *Session) SetIdFunc(f func(ttl time.Duration) string) error {
 // Data returns all data as map.
 // Note that it's using value copy internally for concurrent-safe purpose.
 func (s *Session) Data() (map[string]interface{}, error) {
-	if s.id != "" {
-		if err := s.init(); err != nil {
-			return nil, err
-		}
-		data, err := s.manager.storage.Data(s.ctx, s.id)
-		if err != nil && err != ErrorDisabled {
-			intlog.Error(s.ctx, err)
-		}
-		if data != nil {
-			return data, nil
-		}
-		return s.data.Map(), nil
+	if s.id == "" {
+		return map[string]interface{}{}, nil
 	}
-	return map[string]interface{}{}, nil
+	if err := s.init(); err != nil {
+		return nil, err
+	}
+	data, err := s.manager.storage.Data(s.ctx, s.id)
+	if err != nil && err != ErrorDisabled {
+		intlog.Error(s.ctx, err)
+	}
+	if data != nil {
+		return data, nil
+	}
+	return s.data.Map(), nil
 }
 
 // Size returns the size of the session.
 func (s *Session) Size() (int, error) {
-	if s.id != "" {
-		if err := s.init(); err != nil {
-			return 0, err
-		}
-		size, err := s.manager.storage.GetSize(s.ctx, s.id)
-		if err != nil && err != ErrorDisabled {
-			intlog.Error(s.ctx, err)
-		}
-		if size >= 0 {
-			return size, nil
-		}
-		return s.data.Size(), nil
+	if s.id == "" {
+		return 0, nil
 	}
-	return 0, nil
+	if err := s.init(); err != nil {
+		return 0, err
+	}
+	size, err := s.manager.storage.GetSize(s.ctx, s.id)
+	if err != nil && err != ErrorDisabled {
+		intlog.Error(s.ctx, err)
+	}
+	if size >= 0 {
+		return size, nil
+	}
+	return s.data.Size(), nil
 }
 
 // Contains checks whether key exist in the session.
 func (s *Session) Contains(key string) (bool, error) {
+	if s.id == "" {
+		return false, nil
+	}
 	if err := s.init(); err != nil {
 		return false, err
 	}
@@ -266,7 +272,7 @@ func (s *Session) IsDirty() bool {
 // or else it returns nil.
 func (s *Session) Get(key string, def ...interface{}) (*gvar.Var, error) {
 	if s.id == "" {
-		return nil, gerror.NewCode(gcode.CodeInvalidParameter, `session id cannot be empty`)
+		return nil, nil
 	}
 	if err := s.init(); err != nil {
 		return nil, err
