@@ -272,10 +272,11 @@ func (s *Server) getListenAddress() string {
 func (s *Server) dumpRouterMap() {
 	var (
 		ctx                          = context.TODO()
+		routes                       = s.GetRoutes()
 		headers                      = []string{"SERVER", "DOMAIN", "ADDRESS", "METHOD", "ROUTE", "HANDLER", "MIDDLEWARE"}
 		isJustDefaultServerAndDomain = true
 	)
-	for _, item := range s.GetRoutes() {
+	for _, item := range routes {
 		if item.Server != DefaultServerName || item.Domain != DefaultDomainName {
 			isJustDefaultServerAndDomain = false
 			break
@@ -284,7 +285,7 @@ func (s *Server) dumpRouterMap() {
 	if isJustDefaultServerAndDomain {
 		headers = []string{"ADDRESS", "METHOD", "ROUTE", "HANDLER", "MIDDLEWARE"}
 	}
-	if s.config.DumpRouterMap && len(s.routesMap) > 0 {
+	if s.config.DumpRouterMap && len(routes) > 0 {
 		buffer := bytes.NewBuffer(nil)
 		table := tablewriter.NewWriter(buffer)
 		table.SetHeader(headers)
@@ -292,7 +293,7 @@ func (s *Server) dumpRouterMap() {
 		table.SetBorder(false)
 		table.SetCenterSeparator("|")
 
-		for _, item := range s.GetRoutes() {
+		for _, item := range routes {
 			var (
 				data        = make([]string, 0)
 				handlerName = gstr.TrimRightStr(item.Handler.Name, "-fm")
@@ -336,10 +337,11 @@ func (s *Server) GetOpenApi() *goai.OpenApiV3 {
 }
 
 // GetRoutes retrieves and returns the router array.
-// The key of the returned map is the domain of the server.
 func (s *Server) GetRoutes() []RouterItem {
-	m := make(map[string]*garray.SortedArray)
-	address := s.config.Address
+	var (
+		m       = make(map[string]*garray.SortedArray)
+		address = s.config.Address
+	)
 	if s.config.HTTPSAddr != "" {
 		if len(address) > 0 {
 			address += ","
@@ -402,6 +404,7 @@ func (s *Server) GetRoutes() []RouterItem {
 			m[item.Domain].Add(item)
 		}
 	}
+
 	routerArray := make([]RouterItem, 0, 128)
 	for _, array := range m {
 		for _, v := range array.Slice() {

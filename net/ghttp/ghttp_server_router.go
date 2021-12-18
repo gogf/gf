@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"runtime"
 	"strings"
 
 	"github.com/gogf/gf/v2/container/glist"
@@ -82,6 +83,9 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 		pattern = in.Pattern
 		handler = in.HandlerItem
 	)
+	if handler.Name == "" {
+		handler.Name = runtime.FuncForPC(handler.Info.Value.Pointer()).Name()
+	}
 	handler.Id = handlerIdGenerator.Add(1)
 	if handler.Source == "" {
 		_, file, line := gdebug.CallerWithFilter([]string{utils.StackFilterKeyForGoFrame})
