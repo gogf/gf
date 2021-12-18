@@ -87,14 +87,20 @@ PLATFORMS
 	plan9     amd64
 	solaris   amd64
 `
+	commandBuildBriefPack = `
+destination file path for packed file. if extension of the filename is ".go" and "-n" option is given, 
+it enables packing SRC to go file, or else it packs SRC into a binary file.
+
+`
 )
 
 func init() {
 	gtag.Sets(map[string]string{
-		`commandBuildBrief`: commandBuildBrief,
-		`commandBuildDc`:    commandBuildDc,
-		`commandBuildEg`:    commandBuildEg,
-		`commandBuildAd`:    commandBuildAd,
+		`commandBuildBrief`:     commandBuildBrief,
+		`commandBuildDc`:        commandBuildDc,
+		`commandBuildEg`:        commandBuildEg,
+		`commandBuildAd`:        commandBuildAd,
+		`commandBuildBriefPack`: commandBuildBriefPack,
 	})
 }
 
@@ -109,7 +115,7 @@ type commandBuildInput struct {
 	Extra   string `short:"e" name:"extra"   brief:"extra custom \"go build\" options"`
 	Mod     string `short:"m" name:"mod"     brief:"like \"-mod\" option of \"go build\", use \"-m none\" to disable go module"`
 	Cgo     bool   `short:"c" name:"cgo"     brief:"enable or disable cgo feature, it's disabled in default" orphan:"true"`
-	Pack    string `name:"pack" brief:"pack specified folder into temporary go file before building and removes it after built"`
+	Pack    string `name:"pack" brief:"{commandBuildBriefPack}"`
 }
 type commandBuildOutput struct{}
 
