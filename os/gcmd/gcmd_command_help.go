@@ -127,7 +127,7 @@ func (c *Command) Print() {
 				continue
 			}
 			if arg.Short != "" {
-				nameStr = fmt.Sprintf("-%s,\t--%s", arg.Short, arg.Name)
+				nameStr = fmt.Sprintf("-%s,--%s", arg.Short, arg.Name)
 			} else {
 				nameStr = fmt.Sprintf("-/--%s", arg.Name)
 			}
@@ -140,7 +140,7 @@ func (c *Command) Print() {
 				continue
 			}
 			if arg.Short != "" {
-				nameStr = fmt.Sprintf("-%s,\t--%s", arg.Short, arg.Name)
+				nameStr = fmt.Sprintf("-%s, --%s", arg.Short, arg.Name)
 			} else {
 				nameStr = fmt.Sprintf("-/--%s", arg.Name)
 			}
