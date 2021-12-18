@@ -306,6 +306,22 @@ func (s *Session) MustGet(key string, def ...interface{}) *gvar.Var {
 	return v
 }
 
+// MustSet performs as function Set, but it panics if any error occurs.
+func (s *Session) MustSet(key string, value interface{}) {
+	err := s.Set(key, value)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// MustSetMap performs as function SetMap, but it panics if any error occurs.
+func (s *Session) MustSetMap(data map[string]interface{}) {
+	err := s.SetMap(data)
+	if err != nil {
+		panic(err)
+	}
+}
+
 // MustContains performs as function Contains, but it panics if any error occurs.
 func (s *Session) MustContains(key string) bool {
 	b, err := s.Contains(key)
