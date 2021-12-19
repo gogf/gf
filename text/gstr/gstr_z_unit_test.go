@@ -11,60 +11,9 @@ package gstr_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
 )
-
-func Test_Replace(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		s1 := "abcdEFG乱入的中文abcdefg"
-		t.Assert(gstr.Replace(s1, "ab", "AB"), "ABcdEFG乱入的中文ABcdefg")
-		t.Assert(gstr.Replace(s1, "EF", "ef"), "abcdefG乱入的中文abcdefg")
-		t.Assert(gstr.Replace(s1, "MN", "mn"), s1)
-
-		t.Assert(gstr.ReplaceByArray(s1, g.ArrayStr{
-			"a", "A",
-			"A", "-",
-			"a",
-		}), "-bcdEFG乱入的中文-bcdefg")
-
-		t.Assert(gstr.ReplaceByMap(s1, g.MapStrStr{
-			"a": "A",
-			"G": "g",
-		}), "AbcdEFg乱入的中文Abcdefg")
-	})
-}
-
-func Test_ReplaceI_1(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		s1 := "abcd乱入的中文ABCD"
-		s2 := "a"
-		t.Assert(gstr.ReplaceI(s1, "ab", "aa"), "aacd乱入的中文aaCD")
-		t.Assert(gstr.ReplaceI(s1, "ab", "aa", 0), "abcd乱入的中文ABCD")
-		t.Assert(gstr.ReplaceI(s1, "ab", "aa", 1), "aacd乱入的中文ABCD")
-
-		t.Assert(gstr.ReplaceI(s1, "abcd", "-"), "-乱入的中文-")
-		t.Assert(gstr.ReplaceI(s1, "abcd", "-", 1), "-乱入的中文ABCD")
-
-		t.Assert(gstr.ReplaceI(s1, "abcd乱入的", ""), "中文ABCD")
-		t.Assert(gstr.ReplaceI(s1, "ABCD乱入的", ""), "中文ABCD")
-
-		t.Assert(gstr.ReplaceI(s2, "A", "-"), "-")
-		t.Assert(gstr.ReplaceI(s2, "a", "-"), "-")
-
-		t.Assert(gstr.ReplaceIByArray(s1, g.ArrayStr{
-			"abcd乱入的", "-",
-			"-", "=",
-			"a",
-		}), "=中文ABCD")
-
-		t.Assert(gstr.ReplaceIByMap(s1, g.MapStrStr{
-			"ab": "-",
-			"CD": "=",
-		}), "-=乱入的中文-=")
-	})
-}
 
 func Test_ToLower(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
