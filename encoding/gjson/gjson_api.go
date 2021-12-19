@@ -106,10 +106,24 @@ func (j *Json) Set(pattern string, value interface{}) error {
 	return j.setValue(pattern, value, false)
 }
 
+// MustSet performs as Set, but it panics if any error occurs.
+func (j *Json) MustSet(pattern string, value interface{}) {
+	if err := j.Set(pattern, value); err != nil {
+		panic(err)
+	}
+}
+
 // Remove deletes value with specified `pattern`.
 // It supports hierarchical data access by char separator, which is '.' in default.
 func (j *Json) Remove(pattern string) error {
 	return j.setValue(pattern, nil, true)
+}
+
+// MustRemove performs as Remove, but it panics if any error occurs.
+func (j *Json) MustRemove(pattern string) {
+	if err := j.Remove(pattern); err != nil {
+		panic(err)
+	}
 }
 
 // Contains checks whether the value by specified `pattern` exist.
@@ -153,6 +167,13 @@ func (j *Json) Append(pattern string, value interface{}) error {
 		return j.Set(fmt.Sprintf("%s.%d", pattern, len((*p).([]interface{}))), value)
 	}
 	return gerror.NewCodef(gcode.CodeInvalidParameter, "invalid variable type of %s", pattern)
+}
+
+// MustAppend performs as Append, but it panics if any error occurs.
+func (j *Json) MustAppend(pattern string, value interface{}) {
+	if err := j.Append(pattern, value); err != nil {
+		panic(err)
+	}
 }
 
 // Map converts current Json object to map[string]interface{}.
