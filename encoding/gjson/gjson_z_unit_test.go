@@ -510,8 +510,8 @@ func TestJson_Set_With_Struct(t *testing.T) {
 			"user3": g.Map{"name": "user3"},
 		})
 		user1 := v.GetJson("user1")
-		user1.Set("id", 111)
-		v.Set("user1", user1)
+		t.AssertNil(user1.Set("id", 111))
+		t.AssertNil(v.Set("user1", user1))
 		t.Assert(v.Get("user1.id"), 111)
 	})
 }

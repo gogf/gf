@@ -29,3 +29,13 @@ func (j *Json) UnmarshalValue(value interface{}) error {
 	}
 	return nil
 }
+
+// MapStrAny implements interface function MapStrAny().
+func (j *Json) MapStrAny() map[string]interface{} {
+	return j.Map()
+}
+
+// Interfaces implements interface function Interfaces().
+func (j *Json) Interfaces() []interface{} {
+	return j.Array()
+}

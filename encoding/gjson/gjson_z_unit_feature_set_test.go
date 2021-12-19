@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -327,5 +328,14 @@ func Test_Set20(t *testing.T) {
 			},
 			s,
 		), true)
+	})
+}
+
+func Test_Set_GArray(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(nil)
+		arr := garray.New().Append("test")
+		t.AssertNil(j.Set("arr", arr))
+		t.Assert(j.Get("arr").Array(), g.Slice{"test"})
 	})
 }

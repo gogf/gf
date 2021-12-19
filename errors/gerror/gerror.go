@@ -84,8 +84,8 @@ func NewSkipf(skip int, format string, args ...interface{}) error {
 	}
 }
 
-// Wrap wraps error with text.
-// It returns nil if given err is nil.
+// Wrap wraps error with text. It returns nil if given err is nil.
+// Note that it does not lose the error code of wrapped error, as it inherits the error code from it.
 func Wrap(err error, text string) error {
 	if err == nil {
 		return nil
@@ -98,9 +98,9 @@ func Wrap(err error, text string) error {
 	}
 }
 
-// Wrapf returns an error annotating err with a stack trace
-// at the point Wrapf is called, and the format specifier.
+// Wrapf returns an error annotating err with a stack trace at the point Wrapf is called, and the format specifier.
 // It returns nil if given `err` is nil.
+// Note that it does not lose the error code of wrapped error, as it inherits the error code from it.
 func Wrapf(err error, format string, args ...interface{}) error {
 	if err == nil {
 		return nil
@@ -113,9 +113,9 @@ func Wrapf(err error, format string, args ...interface{}) error {
 	}
 }
 
-// WrapSkip wraps error with text.
-// It returns nil if given err is nil.
+// WrapSkip wraps error with text. It returns nil if given err is nil.
 // The parameter `skip` specifies the stack callers skipped amount.
+// Note that it does not lose the error code of wrapped error, as it inherits the error code from it.
 func WrapSkip(skip int, err error, text string) error {
 	if err == nil {
 		return nil
@@ -128,9 +128,9 @@ func WrapSkip(skip int, err error, text string) error {
 	}
 }
 
-// WrapSkipf wraps error with text that is formatted with given format and args.
-// It returns nil if given err is nil.
+// WrapSkipf wraps error with text that is formatted with given format and args. It returns nil if given err is nil.
 // The parameter `skip` specifies the stack callers skipped amount.
+// Note that it does not lose the error code of wrapped error, as it inherits the error code from it.
 func WrapSkipf(skip int, err error, format string, args ...interface{}) error {
 	if err == nil {
 		return nil
