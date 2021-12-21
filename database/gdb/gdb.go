@@ -274,6 +274,7 @@ const (
 	sqlTypeExecContext     = `DB.ExecContext`
 	sqlTypePrepareContext  = `DB.PrepareContext`
 	modelForDaoSuffix      = `ForDao`
+	dbRoleSlave            = `slave`
 )
 
 var (
@@ -400,10 +401,12 @@ func Instance(name ...string) (db DB, err error) {
 func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 	if list, ok := configs.config[group]; ok {
 		// Separates master and slave configuration nodes array.
-		masterList := make(ConfigGroup, 0)
-		slaveList := make(ConfigGroup, 0)
+		var (
+			masterList = make(ConfigGroup, 0)
+			slaveList  = make(ConfigGroup, 0)
+		)
 		for i := 0; i < len(list); i++ {
-			if list[i].Role == "slave" {
+			if list[i].Role == dbRoleSlave {
 				slaveList = append(slaveList, list[i])
 			} else {
 				masterList = append(masterList, list[i])
@@ -513,8 +516,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 			}
 		}()
 
-		sqlDb, err = c.db.Open(node)
-		if err != nil {
+		if sqlDb, err = c.db.Open(node); err != nil {
 			return nil
 		}
 

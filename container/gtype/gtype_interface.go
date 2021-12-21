@@ -59,8 +59,7 @@ func (v *Interface) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (v *Interface) UnmarshalJSON(b []byte) error {
 	var i interface{}
-	err := json.UnmarshalUseNumber(b, &i)
-	if err != nil {
+	if err := json.UnmarshalUseNumber(b, &i); err != nil {
 		return err
 	}
 	v.Set(i)

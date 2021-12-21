@@ -212,7 +212,7 @@ func (l *Logger) SetPath(path string) error {
 	}
 	if !gfile.Exists(path) {
 		if err := gfile.Mkdir(path); err != nil {
-			return gerror.WrapCodef(gcode.CodeOperationFailed, err, `Mkdir "%s" failed in PWD "%s"`, path, gfile.Pwd())
+			return gerror.Wrapf(err, `Mkdir "%s" failed in PWD "%s"`, path, gfile.Pwd())
 		}
 	}
 	l.config.Path = strings.TrimRight(path, gfile.Separator)

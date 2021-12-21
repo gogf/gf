@@ -26,9 +26,9 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 	if fieldType == "" {
 		return fieldValue
 	}
-	t, _ := gregex.ReplaceString(`\(.+\)`, "", fieldType)
-	t = strings.ToLower(t)
-	switch t {
+	typeName, _ := gregex.ReplaceString(`\(.+\)`, "", fieldType)
+	typeName = strings.ToLower(typeName)
+	switch typeName {
 	case
 		"binary",
 		"varbinary",
@@ -107,22 +107,22 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 	default:
 		// Auto-detect field type, using key match.
 		switch {
-		case strings.Contains(t, "text") || strings.Contains(t, "char") || strings.Contains(t, "character"):
+		case strings.Contains(typeName, "text") || strings.Contains(typeName, "char") || strings.Contains(typeName, "character"):
 			return gconv.String(fieldValue)
 
-		case strings.Contains(t, "float") || strings.Contains(t, "double") || strings.Contains(t, "numeric"):
+		case strings.Contains(typeName, "float") || strings.Contains(typeName, "double") || strings.Contains(typeName, "numeric"):
 			return gconv.Float64(gconv.String(fieldValue))
 
-		case strings.Contains(t, "bool"):
+		case strings.Contains(typeName, "bool"):
 			return gconv.Bool(gconv.String(fieldValue))
 
-		case strings.Contains(t, "binary") || strings.Contains(t, "blob"):
+		case strings.Contains(typeName, "binary") || strings.Contains(typeName, "blob"):
 			return fieldValue
 
-		case strings.Contains(t, "int"):
+		case strings.Contains(typeName, "int"):
 			return gconv.Int(gconv.String(fieldValue))
 
-		case strings.Contains(t, "time"):
+		case strings.Contains(typeName, "time"):
 			s := gconv.String(fieldValue)
 			t, err := gtime.StrToTime(s)
 			if err != nil {
@@ -130,7 +130,7 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 			}
 			return t.String()
 
-		case strings.Contains(t, "date"):
+		case strings.Contains(typeName, "date"):
 			s := gconv.String(fieldValue)
 			t, err := gtime.StrToTime(s)
 			if err != nil {

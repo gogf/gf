@@ -11,7 +11,6 @@ import (
 	"fmt"
 
 	"github.com/gogf/gf/v2/database/gredis"
-	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
@@ -44,7 +43,7 @@ func Redis(name ...string) *gredis.Redis {
 		)
 
 		if configData, err := Config().Data(ctx); err != nil {
-			panic(gerror.WrapCode(gcode.CodeOperationFailed, err, `retrieving redis configuration failed`))
+			panic(gerror.Wrap(err, `retrieving redis configuration failed`))
 		} else {
 			if _, v := gutil.MapPossibleItemByKey(configData, configNodeNameRedis); v != nil {
 				configMap = gconv.Map(v)

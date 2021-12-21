@@ -37,8 +37,11 @@ func (d *DriverSqlite) New(core *Core, node *ConfigNode) (DB, error) {
 }
 
 // Open creates and returns a underlying sql.DB object for sqlite.
-func (d *DriverSqlite) Open(config *ConfigNode) (*sql.DB, error) {
-	var source string
+func (d *DriverSqlite) Open(config *ConfigNode) (db *sql.DB, err error) {
+	var (
+		source string
+		driver = "sqlite3"
+	)
 	if config.Link != "" {
 		source = config.Link
 	} else {
@@ -49,11 +52,14 @@ func (d *DriverSqlite) Open(config *ConfigNode) (*sql.DB, error) {
 		source = absolutePath
 	}
 	intlog.Printf(d.GetCtx(), "Open: %s", source)
-	if db, err := sql.Open("sqlite3", source); err == nil {
-		return db, nil
-	} else {
+	if db, err = sql.Open(driver, source); err != nil {
+		err = gerror.WrapCodef(
+			gcode.CodeDbOperationError, err,
+			`sql.Open failed for driver "%s" by source "%s"`, driver, source,
+		)
 		return nil, err
 	}
+	return
 }
 
 // FilteredLink retrieves and returns filtered `linkInfo` that can be using for

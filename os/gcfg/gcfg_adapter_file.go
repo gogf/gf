@@ -13,7 +13,6 @@ import (
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/command"
 	"github.com/gogf/gf/v2/internal/intlog"
@@ -270,9 +269,9 @@ func (c *AdapterFile) getJson(fileName ...string) (configJson *gjson.Json, err e
 		}
 		if err != nil {
 			if filePath != "" {
-				err = gerror.WrapCodef(gcode.CodeOperationFailed, err, `load config file "%s" failed`, filePath)
+				err = gerror.Wrapf(err, `load config file "%s" failed`, filePath)
 			} else {
-				err = gerror.WrapCode(gcode.CodeOperationFailed, err, `load configuration failed`)
+				err = gerror.Wrap(err, `load configuration failed`)
 			}
 		}
 		return nil

@@ -38,6 +38,7 @@ func Decrypt(cipherText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 func EncryptCBC(plainText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
+		err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `aes.NewCipher failed for key "%s"`, key)
 		return nil, err
 	}
 	blockSize := block.BlockSize()
@@ -61,6 +62,7 @@ func EncryptCBC(plainText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 func DecryptCBC(cipherText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
+		err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `aes.NewCipher failed for key "%s"`, key)
 		return nil, err
 	}
 	blockSize := block.BlockSize()
@@ -123,6 +125,7 @@ func PKCS5UnPadding(src []byte, blockSize int) ([]byte, error) {
 func EncryptCFB(plainText []byte, key []byte, padding *int, iv ...[]byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
+		err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `aes.NewCipher failed for key "%s"`, key)
 		return nil, err
 	}
 	blockSize := block.BlockSize()
@@ -145,6 +148,7 @@ func EncryptCFB(plainText []byte, key []byte, padding *int, iv ...[]byte) ([]byt
 func DecryptCFB(cipherText []byte, key []byte, unPadding int, iv ...[]byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
+		err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `aes.NewCipher failed for key "%s"`, key)
 		return nil, err
 	}
 	if len(cipherText) < aes.BlockSize {

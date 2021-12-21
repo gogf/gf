@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/v2/container/glist"
-	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/json"
@@ -202,7 +201,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 							parsedItemList.PushBack(parsedItem)
 
 						default:
-							panic(gerror.NewCodef(gcode.CodeInternalError, `invalid handler type %s`, item.Type))
+							panic(gerror.Newf(`invalid handler type %s`, item.Type))
 						}
 					}
 				}

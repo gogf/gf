@@ -11,6 +11,7 @@ import (
 	"encoding/base64"
 	"sync/atomic"
 
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -65,10 +66,13 @@ func (v *Bytes) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (v *Bytes) UnmarshalJSON(b []byte) error {
-	src := make([]byte, base64.StdEncoding.DecodedLen(len(b)))
-	n, err := base64.StdEncoding.Decode(src, bytes.Trim(b, `"`))
+	var (
+		src    = make([]byte, base64.StdEncoding.DecodedLen(len(b)))
+		n, err = base64.StdEncoding.Decode(src, bytes.Trim(b, `"`))
+	)
 	if err != nil {
-		return nil
+		err = gerror.Wrap(err, `base64.StdEncoding.Decode failed`)
+		return err
 	}
 	v.Set(src[:n])
 	return nil

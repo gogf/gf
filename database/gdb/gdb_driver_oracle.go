@@ -42,8 +42,11 @@ func (d *DriverOracle) New(core *Core, node *ConfigNode) (DB, error) {
 }
 
 // Open creates and returns a underlying sql.DB object for oracle.
-func (d *DriverOracle) Open(config *ConfigNode) (*sql.DB, error) {
-	var source string
+func (d *DriverOracle) Open(config *ConfigNode) (db *sql.DB, err error) {
+	var (
+		source string
+		driver = "oci8"
+	)
 	if config.Link != "" {
 		source = config.Link
 	} else {
@@ -53,11 +56,14 @@ func (d *DriverOracle) Open(config *ConfigNode) (*sql.DB, error) {
 		)
 	}
 	intlog.Printf(d.GetCtx(), "Open: %s", source)
-	if db, err := sql.Open("oci8", source); err == nil {
-		return db, nil
-	} else {
+	if db, err = sql.Open(driver, source); err != nil {
+		err = gerror.WrapCodef(
+			gcode.CodeDbOperationError, err,
+			`sql.Open failed for driver "%s" by source "%s"`, driver, source,
+		)
 		return nil, err
 	}
+	return
 }
 
 // FilteredLink retrieves and returns filtered `linkInfo` that can be using for

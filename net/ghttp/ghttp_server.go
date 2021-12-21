@@ -186,7 +186,7 @@ func (s *Server) Start() error {
 			path = gfile.Join(s.config.SessionPath, s.name)
 			if !gfile.Exists(path) {
 				if err := gfile.Mkdir(path); err != nil {
-					return gerror.WrapCodef(gcode.CodeInternalError, err, `mkdir failed for "%s"`, path)
+					return gerror.Wrapf(err, `mkdir failed for "%s"`, path)
 				}
 			}
 		}

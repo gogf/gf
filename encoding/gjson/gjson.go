@@ -61,7 +61,7 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 		length = len(array)
 	)
 	if value, err = j.convertValue(value); err != nil {
-		return gerror.Wrap(err, `Json Set failed`)
+		return err
 	}
 	// Initialization checks.
 	if *j.p == nil {
@@ -71,8 +71,10 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 			*j.p = make(map[string]interface{})
 		}
 	}
-	var pparent *interface{} = nil // Parent pointer.
-	var pointer *interface{} = j.p // Current pointer.
+	var (
+		pparent *interface{} = nil // Parent pointer.
+		pointer *interface{} = j.p // Current pointer.
+	)
 	j.mu.Lock()
 	defer j.mu.Unlock()
 	for i := 0; i < length; i++ {
@@ -126,6 +128,7 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 			// Numeric index.
 			valueNum, err := strconv.Atoi(array[i])
 			if err != nil {
+				err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `strconv.Atoi failed for string "%s"`, array[i])
 				return err
 			}
 
