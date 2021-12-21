@@ -298,7 +298,7 @@ func IsEmpty(value interface{}) bool {
 //	return false
 //}
 
-// IsNil checks whether given `value` is nil.
+// IsNil checks whether given `value` is nil, especially for interface{} type value.
 // Parameter `traceSource` is used for tracing to the source variable if given `value` is type of pinter
 // that also points to a pointer. It returns nil if the source is nil when `traceSource` is true.
 // Note that it might use reflect feature which affects performance a little.

@@ -69,7 +69,7 @@ func CaseSnakeFirstUpper(word string, underscore ...string) string {
 	}
 
 	for {
-		m := firstCamelCaseStart.FindAllStringSubmatch(word, 1)
+		m = firstCamelCaseStart.FindAllStringSubmatch(word, 1)
 		if len(m) > 0 && m[0][1] != "" {
 			w := strings.ToLower(m[0][1])
 			w = w[:len(w)-1] + replace + string(w[len(w)-1])
