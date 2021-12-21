@@ -138,12 +138,3 @@ func ReplaceStringFuncMatch(pattern string, src string, replaceFunc func(match [
 		return "", err
 	}
 }
-
-// Split slices `src` into substrings separated by the expression and returns a slice of
-// the substrings between those expression matches.
-func Split(pattern string, src string) []string {
-	if r, err := getRegexp(pattern); err == nil {
-		return r.Split(src, -1)
-	}
-	return nil
-}
