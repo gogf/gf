@@ -306,8 +306,10 @@ func Bytes(any interface{}) []byte {
 	switch value := any.(type) {
 	case string:
 		return []byte(value)
+
 	case []byte:
 		return value
+
 	default:
 		if f, ok := value.(iBytes); ok {
 			return f.Bytes()
