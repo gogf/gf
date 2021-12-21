@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/clbanning/mxj/v2"
+	"github.com/gogf/gf/v2/errors/gerror"
 
 	"github.com/gogf/gf/v2/encoding/gcharset"
 	"github.com/gogf/gf/v2/text/gregex"
@@ -22,7 +23,11 @@ func Decode(content []byte) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return mxj.NewMapXml(res)
+	m, err := mxj.NewMapXml(res)
+	if err != nil {
+		err = gerror.Wrapf(err, `mxj.NewMapXml failed`)
+	}
+	return m, err
 }
 
 // DecodeWithoutRoot parses `content` into a map, and returns the map without root level.
@@ -33,6 +38,7 @@ func DecodeWithoutRoot(content []byte) (map[string]interface{}, error) {
 	}
 	m, err := mxj.NewMapXml(res)
 	if err != nil {
+		err = gerror.Wrapf(err, `mxj.NewMapXml failed`)
 		return nil, err
 	}
 	for _, v := range m {
@@ -46,13 +52,21 @@ func DecodeWithoutRoot(content []byte) (map[string]interface{}, error) {
 // Encode encodes map `m` to an XML format content as bytes.
 // The optional parameter `rootTag` is used to specify the XML root tag.
 func Encode(m map[string]interface{}, rootTag ...string) ([]byte, error) {
-	return mxj.Map(m).Xml(rootTag...)
+	b, err := mxj.Map(m).Xml(rootTag...)
+	if err != nil {
+		err = gerror.Wrapf(err, `mxj.Map.Xml failed`)
+	}
+	return b, err
 }
 
 // EncodeWithIndent encodes map `m` to an XML format content as bytes with indent.
 // The optional parameter `rootTag` is used to specify the XML root tag.
 func EncodeWithIndent(m map[string]interface{}, rootTag ...string) ([]byte, error) {
-	return mxj.Map(m).XmlIndent("", "\t", rootTag...)
+	b, err := mxj.Map(m).XmlIndent("", "\t", rootTag...)
+	if err != nil {
+		err = gerror.Wrapf(err, `mxj.Map.XmlIndent failed`)
+	}
+	return b, err
 }
 
 // ToJson converts `content` as XML format into JSON format bytes.
@@ -63,6 +77,7 @@ func ToJson(content []byte) ([]byte, error) {
 	}
 	mv, err := mxj.NewMapXml(res)
 	if err == nil {
+		err = gerror.Wrapf(err, `mxj.NewMapXml failed`)
 		return mv.Json()
 	}
 	return nil, err
@@ -70,12 +85,11 @@ func ToJson(content []byte) ([]byte, error) {
 
 // convert does convert the encoding of given XML content from XML root tag into UTF-8 encoding content.
 func convert(xml []byte) (res []byte, err error) {
-	patten := `<\?xml.*encoding\s*=\s*['|"](.*?)['|"].*\?>`
-	matchStr, err := gregex.MatchString(patten, string(xml))
-	if err != nil {
-		return nil, err
-	}
-	xmlEncode := "UTF-8"
+	var (
+		patten      = `<\?xml.*encoding\s*=\s*['|"](.*?)['|"].*\?>`
+		matchStr, _ = gregex.MatchString(patten, string(xml))
+		xmlEncode   = "UTF-8"
+	)
 	if len(matchStr) == 2 {
 		xmlEncode = matchStr[1]
 	}

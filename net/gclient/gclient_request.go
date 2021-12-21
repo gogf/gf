@@ -21,7 +21,6 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/httputil"
-	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -175,6 +174,7 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 			bodyBuffer = bytes.NewBuffer(nil)
 		}
 		if req, err = http.NewRequest(method, url, bodyBuffer); err != nil {
+			err = gerror.Wrapf(err, `http.NewRequest failed with method "%s" and URL "%s"`, method, url)
 			return nil, err
 		}
 	} else {
@@ -191,25 +191,35 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 					if !gfile.Exists(path) {
 						return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `"%s" does not exist`, path)
 					}
-					if file, err := writer.CreateFormFile(array[0], gfile.Basename(path)); err == nil {
-						if f, err := os.Open(path); err == nil {
+					var (
+						file          io.Writer
+						formFileName  = gfile.Basename(path)
+						formFieldName = array[0]
+					)
+					if file, err = writer.CreateFormFile(formFieldName, formFileName); err != nil {
+						err = gerror.Wrapf(err, `writer.CreateFormFile failed with "%s", "%s"`, formFieldName, formFileName)
+						return nil, err
+					} else {
+						var f *os.File
+						if f, err = os.Open(path); err == nil {
+							err = gerror.Wrapf(err, `os.Open failed for name "%s"`, path)
+							return nil, err
+						} else {
 							if _, err = io.Copy(file, f); err != nil {
-								if err := f.Close(); err != nil {
-									intlog.Errorf(ctx, `%+v`, err)
-								}
+								err = gerror.Wrapf(err, `io.Copy failed from "%s" to form "%s"`, path, formFieldName)
+								_ = f.Close()
 								return nil, err
 							}
-							if err := f.Close(); err != nil {
-								intlog.Errorf(ctx, `%+v`, err)
-							}
-						} else {
-							return nil, err
+							_ = f.Close()
 						}
-					} else {
-						return nil, err
 					}
 				} else {
-					if err = writer.WriteField(array[0], array[1]); err != nil {
+					var (
+						fieldName  = array[0]
+						fieldValue = array[1]
+					)
+					if err = writer.WriteField(fieldName, fieldValue); err != nil {
+						err = gerror.Wrapf(err, `writer.WriteField failed with "%s", "%s"`, fieldName, fieldValue)
 						return nil, err
 					}
 				}
@@ -217,10 +227,12 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 			// Close finishes the multipart message and writes the trailing
 			// boundary end line to the output.
 			if err = writer.Close(); err != nil {
+				err = gerror.Wrapf(err, `writer.Close failed`)
 				return nil, err
 			}
 
 			if req, err = http.NewRequest(method, url, buffer); err != nil {
+				err = gerror.Wrapf(err, `http.NewRequest failed for method "%s" and URL "%s"`, method, url)
 				return nil, err
 			} else {
 				req.Header.Set("Content-Type", writer.FormDataContentType())
@@ -229,6 +241,7 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 			// Normal request.
 			paramBytes := []byte(params)
 			if req, err = http.NewRequest(method, url, bytes.NewReader(paramBytes)); err != nil {
+				err = gerror.Wrapf(err, `http.NewRequest failed for method "%s" and URL "%s"`, method, url)
 				return nil, err
 			} else {
 				if v, ok := c.header["Content-Type"]; ok {
@@ -236,7 +249,7 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 					req.Header.Set("Content-Type", v)
 				} else if len(paramBytes) > 0 {
 					if (paramBytes[0] == '[' || paramBytes[0] == '{') && json.Valid(paramBytes) {
-						// Auto detecting and setting the post content format: JSON.
+						// Auto-detecting and setting the post content format: JSON.
 						req.Header.Set("Content-Type", "application/json")
 					} else if gregex.IsMatchString(`^[\w\[\]]+=.+`, params) {
 						// If the parameters passed like "name=value", it then uses form type.
@@ -259,8 +272,8 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 	}
 	// It's necessary set the req.Host if you want to custom the host value of the request.
 	// It uses the "Host" value from header if it's not empty.
-	if host := req.Header.Get("Host"); host != "" {
-		req.Host = host
+	if reqHeaderHost := req.Header.Get("Host"); host != "" {
+		req.Host = reqHeaderHost
 	}
 	// Custom Cookie.
 	if len(c.cookies) > 0 {
@@ -285,7 +298,6 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 // callRequest sends request with give http.Request, and returns the responses object.
 // Note that the response object MUST be closed if it'll never be used.
 func (c *Client) callRequest(req *http.Request) (resp *Response, err error) {
-	ctx := req.Context()
 	resp = &Response{
 		request: req,
 	}
@@ -297,11 +309,10 @@ func (c *Client) callRequest(req *http.Request) (resp *Response, err error) {
 	req.Body = utils.NewReadCloser(reqBodyContent, false)
 	for {
 		if resp.Response, err = c.Do(req); err != nil {
+			err = gerror.Wrapf(err, `request failed`)
 			// The response might not be nil when err != nil.
 			if resp.Response != nil {
-				if err := resp.Response.Body.Close(); err != nil {
-					intlog.Errorf(ctx, `%+v`, err)
-				}
+				_ = resp.Response.Body.Close()
 			}
 			if c.retryCount > 0 {
 				c.retryCount--

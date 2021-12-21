@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/utils"
 )
 
@@ -45,6 +46,7 @@ func (r *Response) RawRequest() string {
 	// DumpRequestOut writes more request headers than DumpRequest, such as User-Agent.
 	bs, err := httputil.DumpRequestOut(r.request, false)
 	if err != nil {
+		intlog.Error(r.request.Context(), err)
 		return ""
 	}
 	return fmt.Sprintf(
@@ -63,6 +65,7 @@ func (r *Response) RawResponse() string {
 	}
 	bs, err := httputil.DumpResponse(r.Response, false)
 	if err != nil {
+		intlog.Error(r.request.Context(), err)
 		return ""
 	}
 

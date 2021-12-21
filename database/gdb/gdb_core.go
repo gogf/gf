@@ -101,6 +101,9 @@ func (c *Core) Close(ctx context.Context) (err error) {
 		for k, v := range m {
 			if db, ok := v.(*sql.DB); ok {
 				err = db.Close()
+				if err != nil {
+					err = gerror.WrapCode(gcode.CodeDbOperationError, err, `db.Close failed`)
+				}
 				intlog.Printf(ctx, `close link: %s, err: %v`, k, err)
 				if err != nil {
 					return
@@ -283,7 +286,10 @@ func (c *Core) PingMaster() error {
 	if master, err := c.db.Master(); err != nil {
 		return err
 	} else {
-		return master.Ping()
+		if err = master.Ping(); err != nil {
+			err = gerror.WrapCode(gcode.CodeDbOperationError, err, `master.Ping failed`)
+		}
+		return err
 	}
 }
 
@@ -292,7 +298,10 @@ func (c *Core) PingSlave() error {
 	if slave, err := c.db.Slave(); err != nil {
 		return err
 	} else {
-		return slave.Ping()
+		if err = slave.Ping(); err != nil {
+			err = gerror.WrapCode(gcode.CodeDbOperationError, err, `slave.Ping failed`)
+		}
+		return err
 	}
 }
 
@@ -425,20 +434,25 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 		valueHolder = append(valueHolder, "("+gstr.Join(values, ",")+")")
 		// Batch package checks: It meets the batch number, or it is the last element.
 		if len(valueHolder) == option.BatchCount || (i == listLength-1 && len(valueHolder) > 0) {
-			r, err := c.db.DoExec(ctx, link, fmt.Sprintf(
+			var (
+				stdSqlResult sql.Result
+				affectedRows int64
+			)
+			stdSqlResult, err = c.db.DoExec(ctx, link, fmt.Sprintf(
 				"%s INTO %s(%s) VALUES%s %s",
 				operation, c.QuotePrefixTableName(table), keysStr,
 				gstr.Join(valueHolder, ","),
 				onDuplicateStr,
 			), params...)
 			if err != nil {
-				return r, err
+				return stdSqlResult, err
 			}
-			if n, err := r.RowsAffected(); err != nil {
-				return r, err
+			if affectedRows, err = stdSqlResult.RowsAffected(); err != nil {
+				err = gerror.WrapCode(gcode.CodeDbOperationError, err, `sql.Result.RowsAffected failed`)
+				return stdSqlResult, err
 			} else {
-				batchResult.result = r
-				batchResult.affected += n
+				batchResult.result = stdSqlResult
+				batchResult.affected += affectedRows
 			}
 			params = params[:0]
 			valueHolder = valueHolder[:0]
@@ -531,8 +545,8 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 			dataMap        = ConvertDataForTableRecord(data)
 			counterHandler = func(column string, counter Counter) {
 				if counter.Value != 0 {
+					column = c.QuoteWord(column)
 					var (
-						column    = c.QuoteWord(column)
 						columnRef = c.QuoteWord(counter.Field)
 						columnVal = counter.Value
 						operator  = "+"

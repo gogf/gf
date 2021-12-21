@@ -9,6 +9,8 @@ package gclient
 import (
 	"io/ioutil"
 	"net/http"
+
+	"github.com/gogf/gf/v2/internal/intlog"
 )
 
 // Response is the struct for client request response.
@@ -56,6 +58,7 @@ func (r *Response) ReadAll() []byte {
 	}
 	body, err := ioutil.ReadAll(r.Response.Body)
 	if err != nil {
+		intlog.Error(r.request.Context(), err)
 		return nil
 	}
 	return body

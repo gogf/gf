@@ -118,7 +118,7 @@ func (c *Core) Transaction(ctx context.Context, f func(ctx context.Context, tx *
 				if v, ok := exception.(error); ok && gerror.HasStack(v) {
 					err = v
 				} else {
-					err = gerror.NewCodef(gcode.CodeInternalError, "%+v", exception)
+					err = gerror.Newf("%+v", exception)
 				}
 			}
 		}
@@ -143,11 +143,11 @@ func WithTX(ctx context.Context, tx *TX) context.Context {
 	}
 	// Check repeat injection from given.
 	group := tx.db.GetGroup()
-	if tx := TXFromCtx(ctx, group); tx != nil && tx.db.GetGroup() == group {
+	if ctxTx := TXFromCtx(ctx, group); ctxTx != nil && ctxTx.db.GetGroup() == group {
 		return ctx
 	}
 	dbCtx := tx.db.GetCtx()
-	if tx := TXFromCtx(dbCtx, group); tx != nil && tx.db.GetGroup() == group {
+	if ctxTx := TXFromCtx(dbCtx, group); ctxTx != nil && ctxTx.db.GetGroup() == group {
 		return dbCtx
 	}
 	// Inject transaction object and id into context.
@@ -215,6 +215,9 @@ func (tx *TX) Commit() error {
 			IsTransaction: true,
 		}
 	)
+	if err != nil {
+		err = gerror.WrapCode(gcode.CodeDbOperationError, err, `tx.Commit failed`)
+	}
 	tx.isClosed = true
 	tx.db.GetCore().addSqlToTracing(tx.ctx, sqlObj)
 	if tx.db.GetDebug() {
@@ -249,6 +252,9 @@ func (tx *TX) Rollback() error {
 			IsTransaction: true,
 		}
 	)
+	if err != nil {
+		err = gerror.WrapCode(gcode.CodeDbOperationError, err, `tx.Rollback failed`)
+	}
 	tx.isClosed = true
 	tx.db.GetCore().addSqlToTracing(tx.ctx, sqlObj)
 	if tx.db.GetDebug() {
@@ -312,7 +318,7 @@ func (tx *TX) Transaction(ctx context.Context, f func(ctx context.Context, tx *T
 				if v, ok := exception.(error); ok && gerror.HasStack(v) {
 					err = v
 				} else {
-					err = gerror.NewCodef(gcode.CodeInternalError, "%+v", exception)
+					err = gerror.Newf("%+v", exception)
 				}
 			}
 		}

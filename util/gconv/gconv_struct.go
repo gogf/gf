@@ -322,7 +322,7 @@ func bindVarToStructAttr(elem reflect.Value, name string, value interface{}, map
 	defer func() {
 		if exception := recover(); exception != nil {
 			if err = bindVarToReflectValue(structFieldValue, value, mapping); err != nil {
-				err = gerror.WrapCodef(gcode.CodeInternalError, err, `error binding value to attribute "%s"`, name)
+				err = gerror.Wrapf(err, `error binding value to attribute "%s"`, name)
 			}
 		}
 	}()

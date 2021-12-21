@@ -275,7 +275,7 @@ func doLoadContentWithOptions(dataType string, data []byte, options Options) (*J
 	}
 	switch result.(type) {
 	case string, []byte:
-		return nil, gerror.NewCodef(gcode.CodeInternalError, `json decoding failed for content: %s`, data)
+		return nil, gerror.Newf(`json decoding failed for content: %s`, data)
 	}
 	return NewWithOptions(result, options), nil
 }

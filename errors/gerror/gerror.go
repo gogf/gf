@@ -12,6 +12,7 @@ package gerror
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 )
@@ -145,13 +146,9 @@ func WrapSkipf(skip int, err error, format string, args ...interface{}) error {
 
 // NewCode creates and returns an error that has error code and given text.
 func NewCode(code gcode.Code, text ...string) error {
-	errText := ""
-	if len(text) > 0 {
-		errText = text[0]
-	}
 	return &Error{
 		stack: callers(),
-		text:  errText,
+		text:  strings.Join(text, ", "),
 		code:  code,
 	}
 }
@@ -168,13 +165,9 @@ func NewCodef(code gcode.Code, format string, args ...interface{}) error {
 // NewCodeSkip creates and returns an error which has error code and is formatted from given text.
 // The parameter `skip` specifies the stack callers skipped amount.
 func NewCodeSkip(code gcode.Code, skip int, text ...string) error {
-	errText := ""
-	if len(text) > 0 {
-		errText = text[0]
-	}
 	return &Error{
 		stack: callers(skip),
-		text:  errText,
+		text:  strings.Join(text, ", "),
 		code:  code,
 	}
 }
@@ -195,14 +188,10 @@ func WrapCode(code gcode.Code, err error, text ...string) error {
 	if err == nil {
 		return nil
 	}
-	errText := ""
-	if len(text) > 0 {
-		errText = text[0]
-	}
 	return &Error{
 		error: err,
 		stack: callers(),
-		text:  errText,
+		text:  strings.Join(text, ", "),
 		code:  code,
 	}
 }
@@ -228,14 +217,10 @@ func WrapCodeSkip(code gcode.Code, skip int, err error, text ...string) error {
 	if err == nil {
 		return nil
 	}
-	errText := ""
-	if len(text) > 0 {
-		errText = text[0]
-	}
 	return &Error{
 		error: err,
 		stack: callers(skip),
-		text:  errText,
+		text:  strings.Join(text, ", "),
 		code:  code,
 	}
 }

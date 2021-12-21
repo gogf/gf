@@ -116,7 +116,7 @@ func (view *View) Parse(ctx context.Context, file string, params ...Params) (res
 			tpl, err = tpl.(*texttpl.Template).Parse(item.content)
 		}
 		if err != nil && item.path != "" {
-			err = gerror.WrapCode(gcode.CodeInternalError, err, item.path)
+			err = gerror.Wrap(err, item.path)
 		}
 	})
 	if err != nil {

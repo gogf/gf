@@ -8,10 +8,12 @@ package gtree
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"strings"
 
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/rwmutex"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -573,8 +575,10 @@ func (tree *BTree) output(buffer *bytes.Buffer, node *BTreeNode, level int, isTa
 		}
 		if e < len(node.Entries) {
 			if _, err := buffer.WriteString(strings.Repeat("    ", level)); err != nil {
+				intlog.Error(context.TODO(), err)
 			}
 			if _, err := buffer.WriteString(fmt.Sprintf("%v", node.Entries[e].Key) + "\n"); err != nil {
+				intlog.Error(context.TODO(), err)
 			}
 		}
 	}

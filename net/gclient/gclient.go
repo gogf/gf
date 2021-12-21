@@ -20,10 +20,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gogf/gf/v2/internal/intlog"
 	"golang.org/x/net/proxy"
 
 	"github.com/gogf/gf/v2"
-	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gregex"
@@ -193,6 +193,7 @@ func (c *Client) SetProxy(proxyURL string) {
 	}
 	_proxy, err := url.Parse(proxyURL)
 	if err != nil {
+		intlog.Error(context.TODO(), err)
 		return
 	}
 	if _proxy.Scheme == "http" {
@@ -202,7 +203,6 @@ func (c *Client) SetProxy(proxyURL string) {
 	} else {
 		var auth = &proxy.Auth{}
 		user := _proxy.User.Username()
-
 		if user != "" {
 			auth.User = user
 			password, hasPassword := _proxy.User.Password()
@@ -223,6 +223,7 @@ func (c *Client) SetProxy(proxyURL string) {
 			},
 		)
 		if err != nil {
+			intlog.Error(context.TODO(), err)
 			return
 		}
 		if v, ok := c.Transport.(*http.Transport); ok {
@@ -238,14 +239,14 @@ func (c *Client) SetProxy(proxyURL string) {
 func (c *Client) SetTLSKeyCrt(crtFile, keyFile string) error {
 	tlsConfig, err := LoadKeyCrt(crtFile, keyFile)
 	if err != nil {
-		return gerror.WrapCode(gcode.CodeInternalError, err, "LoadKeyCrt failed")
+		return gerror.Wrap(err, "LoadKeyCrt failed")
 	}
 	if v, ok := c.Transport.(*http.Transport); ok {
 		tlsConfig.InsecureSkipVerify = true
 		v.TLSClientConfig = tlsConfig
 		return nil
 	}
-	return gerror.NewCode(gcode.CodeInternalError, `cannot set TLSClientConfig for custom Transport of the client`)
+	return gerror.New(`cannot set TLSClientConfig for custom Transport of the client`)
 }
 
 // SetTLSConfig sets the TLS configuration of client.
@@ -254,7 +255,7 @@ func (c *Client) SetTLSConfig(tlsConfig *tls.Config) error {
 		v.TLSClientConfig = tlsConfig
 		return nil
 	}
-	return gerror.NewCode(gcode.CodeInternalError, `cannot set TLSClientConfig for custom Transport of the client`)
+	return gerror.New(`cannot set TLSClientConfig for custom Transport of the client`)
 }
 
 // LoadKeyCrt creates and returns a TLS configuration object with given certificate and key files.
@@ -269,6 +270,7 @@ func LoadKeyCrt(crtFile, keyFile string) (*tls.Config, error) {
 	}
 	crt, err := tls.LoadX509KeyPair(crtPath, keyPath)
 	if err != nil {
+		err = gerror.Wrapf(err, `tls.LoadX509KeyPair failed for certFile "%s", keyFile "%s"`, crtPath, keyPath)
 		return nil, err
 	}
 	tlsConfig := &tls.Config{}

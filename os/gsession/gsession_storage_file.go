@@ -53,7 +53,7 @@ func NewStorageFile(path ...string) *StorageFile {
 	}
 	if storagePath != "" {
 		if err := gfile.Mkdir(storagePath); err != nil {
-			panic(gerror.WrapCodef(gcode.CodeInternalError, err, `Mkdir "%s" failed in PWD "%s"`, path, gfile.Pwd()))
+			panic(gerror.Wrapf(err, `Mkdir "%s" failed in PWD "%s"`, path, gfile.Pwd()))
 		}
 	}
 	s := &StorageFile{

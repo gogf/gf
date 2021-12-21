@@ -247,12 +247,12 @@ func (r *Request) parseForm() {
 		if gstr.Contains(contentType, "multipart/") {
 			// multipart/form-data, multipart/mixed
 			if err = r.ParseMultipartForm(r.Server.config.FormParsingMemory); err != nil {
-				panic(gerror.WrapCode(gcode.CodeInvalidRequest, err, ""))
+				panic(gerror.WrapCode(gcode.CodeInvalidRequest, err, "r.ParseMultipartForm failed"))
 			}
 		} else if gstr.Contains(contentType, "form") {
 			// application/x-www-form-urlencoded
 			if err = r.Request.ParseForm(); err != nil {
-				panic(gerror.WrapCode(gcode.CodeInvalidRequest, err, ""))
+				panic(gerror.WrapCode(gcode.CodeInvalidRequest, err, "r.Request.ParseForm failed"))
 			}
 		}
 		if len(r.PostForm) > 0 {
@@ -295,7 +295,7 @@ func (r *Request) parseForm() {
 			}
 			if params != "" {
 				if r.formMap, err = gstr.Parse(params); err != nil {
-					panic(gerror.WrapCode(gcode.CodeInvalidParameter, err, ""))
+					panic(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse request parameters failed"))
 				}
 			}
 		}

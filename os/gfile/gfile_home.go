@@ -58,7 +58,7 @@ func homeUnix() (string, error) {
 
 	result := strings.TrimSpace(stdout.String())
 	if result == "" {
-		return "", gerror.NewCode(gcode.CodeInternalError, "blank output when reading home directory")
+		return "", gerror.New("blank output when reading home directory")
 	}
 
 	return result, nil

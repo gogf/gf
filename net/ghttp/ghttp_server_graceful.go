@@ -14,7 +14,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/os/gres"
@@ -126,7 +125,7 @@ func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig .
 
 	}
 	if err != nil {
-		return gerror.WrapCodef(gcode.CodeInternalError, err, `open cert file "%s","%s" failed`, certFile, keyFile)
+		return gerror.Wrapf(err, `open certFile "%s" and keyFile "%s" failed`, certFile, keyFile)
 	}
 	ln, err := s.getNetListener()
 	if err != nil {
@@ -174,13 +173,13 @@ func (s *gracefulServer) getNetListener() (net.Listener, error) {
 		f := os.NewFile(s.fd, "")
 		ln, err = net.FileListener(f)
 		if err != nil {
-			err = gerror.WrapCodef(gcode.CodeInternalError, err, "%d: net.FileListener failed", gproc.Pid())
+			err = gerror.Wrapf(err, "%d: net.FileListener failed", gproc.Pid())
 			return nil, err
 		}
 	} else {
 		ln, err = net.Listen("tcp", s.httpServer.Addr)
 		if err != nil {
-			err = gerror.WrapCodef(gcode.CodeInternalError, err, "%d: net.Listen failed", gproc.Pid())
+			err = gerror.Wrapf(err, "%d: net.Listen failed", gproc.Pid())
 		}
 	}
 	return ln, err

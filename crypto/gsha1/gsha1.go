@@ -13,6 +13,8 @@ import (
 	"io"
 	"os"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -27,12 +29,14 @@ func Encrypt(v interface{}) string {
 func EncryptFile(path string) (encrypt string, err error) {
 	f, err := os.Open(path)
 	if err != nil {
+		err = gerror.Wrapf(err, `os.Open failed for name "%s"`, path)
 		return "", err
 	}
 	defer f.Close()
 	h := sha1.New()
 	_, err = io.Copy(h, f)
 	if err != nil {
+		err = gerror.Wrap(err, `io.Copy failed`)
 		return "", err
 	}
 	return hex.EncodeToString(h.Sum(nil)), nil

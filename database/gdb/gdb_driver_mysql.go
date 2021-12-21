@@ -36,8 +36,11 @@ func (d *DriverMysql) New(core *Core, node *ConfigNode) (DB, error) {
 
 // Open creates and returns an underlying sql.DB object for mysql.
 // Note that it converts time.Time argument to local timezone in default.
-func (d *DriverMysql) Open(config *ConfigNode) (*sql.DB, error) {
-	var source string
+func (d *DriverMysql) Open(config *ConfigNode) (db *sql.DB, err error) {
+	var (
+		source string
+		driver = "mysql"
+	)
 	if config.Link != "" {
 		source = config.Link
 		// Custom changing the schema in runtime.
@@ -54,11 +57,14 @@ func (d *DriverMysql) Open(config *ConfigNode) (*sql.DB, error) {
 		}
 	}
 	intlog.Printf(d.GetCtx(), "Open: %s", source)
-	if db, err := sql.Open("mysql", source); err == nil {
-		return db, nil
-	} else {
+	if db, err = sql.Open(driver, source); err != nil {
+		err = gerror.WrapCodef(
+			gcode.CodeDbOperationError, err,
+			`sql.Open failed for driver "%s" by source "%s"`, driver, source,
+		)
 		return nil, err
 	}
+	return
 }
 
 // FilteredLink retrieves and returns filtered `linkInfo` that can be using for

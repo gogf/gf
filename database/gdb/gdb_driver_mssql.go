@@ -39,8 +39,11 @@ func (d *DriverMssql) New(core *Core, node *ConfigNode) (DB, error) {
 }
 
 // Open creates and returns an underlying sql.DB object for mssql.
-func (d *DriverMssql) Open(config *ConfigNode) (*sql.DB, error) {
-	source := ""
+func (d *DriverMssql) Open(config *ConfigNode) (db *sql.DB, err error) {
+	var (
+		source string
+		driver = "sqlserver"
+	)
 	if config.Link != "" {
 		source = config.Link
 	} else {
@@ -50,11 +53,14 @@ func (d *DriverMssql) Open(config *ConfigNode) (*sql.DB, error) {
 		)
 	}
 	intlog.Printf(d.GetCtx(), "Open: %s", source)
-	if db, err := sql.Open("sqlserver", source); err == nil {
-		return db, nil
-	} else {
+	if db, err = sql.Open(driver, source); err != nil {
+		err = gerror.WrapCodef(
+			gcode.CodeDbOperationError, err,
+			`sql.Open failed for driver "%s" by source "%s"`, driver, source,
+		)
 		return nil, err
 	}
+	return
 }
 
 // FilteredLink retrieves and returns filtered `linkInfo` that can be using for
