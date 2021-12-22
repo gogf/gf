@@ -102,3 +102,13 @@ func TrimAll(str string, characterMask ...string) string {
 	}
 	return string(slice)
 }
+
+// HasPrefix tests whether the string s begins with prefix.
+func HasPrefix(s, prefix string) bool {
+	return strings.HasPrefix(s, prefix)
+}
+
+// HasSuffix tests whether the string s ends with suffix.
+func HasSuffix(s, suffix string) bool {
+	return strings.HasSuffix(s, suffix)
+}
