@@ -56,7 +56,7 @@ func (r *Redis) Conn(ctx context.Context) (*RedisConn, error) {
 	}, nil
 }
 
-// Do sends a command to the server and returns the received reply.
+// Do send a command to the server and returns the received reply.
 // It uses json.Marshal for struct/slice/map type values before committing them to redis.
 func (r *Redis) Do(ctx context.Context, command string, args ...interface{}) (*gvar.Var, error) {
 	if r == nil {

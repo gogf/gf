@@ -38,8 +38,8 @@ func (c *AdapterFile) SetPath(path string) (err error) {
 			// Relative path.
 			c.searchPaths.RLockFunc(func(array []string) {
 				for _, v := range array {
-					if path, _ := gspath.Search(v, path); path != "" {
-						realPath = path
+					if searchedPath, _ := gspath.Search(v, path); searchedPath != "" {
+						realPath = searchedPath
 						break
 					}
 				}
@@ -62,7 +62,7 @@ func (c *AdapterFile) SetPath(path string) (err error) {
 		} else {
 			buffer.WriteString(fmt.Sprintf(`SetPath failed: path "%s" does not exist`, path))
 		}
-		return gerror.NewCode(gcode.CodeOperationFailed, buffer.String())
+		return gerror.New(buffer.String())
 	}
 	// Should be a directory.
 	if !isDir {
@@ -101,8 +101,8 @@ func (c *AdapterFile) AddPath(path string) (err error) {
 			// Relative path.
 			c.searchPaths.RLockFunc(func(array []string) {
 				for _, v := range array {
-					if path, _ := gspath.Search(v, path); path != "" {
-						realPath = path
+					if searchedPath, _ := gspath.Search(v, path); searchedPath != "" {
+						realPath = searchedPath
 						break
 					}
 				}
@@ -124,7 +124,7 @@ func (c *AdapterFile) AddPath(path string) (err error) {
 		} else {
 			buffer.WriteString(fmt.Sprintf(`AddPath failed: path "%s" does not exist`, path))
 		}
-		return gerror.NewCode(gcode.CodeOperationFailed, buffer.String())
+		return gerror.New(buffer.String())
 	}
 	if !isDir {
 		return gerror.NewCodef(gcode.CodeInvalidParameter, `AddPath failed: path "%s" should be directory type`, path)
@@ -214,7 +214,7 @@ func (c *AdapterFile) GetFilePath(fileName ...string) (path string, err error) {
 		} else {
 			buffer.WriteString(fmt.Sprintf(`cannot find config file "%s" with no path configured`, usedFileName))
 		}
-		err = gerror.NewCode(gcode.CodeOperationFailed, buffer.String())
+		err = gerror.New(buffer.String())
 	}
 	return
 }

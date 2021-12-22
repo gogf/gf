@@ -12,6 +12,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gfile"
 )
 
@@ -28,24 +29,32 @@ type Retry struct {
 
 // NewNetConn creates and returns a net.Conn with given address like "127.0.0.1:80".
 // The optional parameter `timeout` specifies the timeout for dialing connection.
-func NewNetConn(addr string, timeout ...time.Duration) (net.Conn, error) {
-	d := defaultConnTimeout
+func NewNetConn(address string, timeout ...time.Duration) (net.Conn, error) {
+	duration := defaultConnTimeout
 	if len(timeout) > 0 {
-		d = timeout[0]
+		duration = timeout[0]
 	}
-	return net.DialTimeout("tcp", addr, d)
+	conn, err := net.DialTimeout("tcp", address, duration)
+	if err != nil {
+		err = gerror.Wrapf(err, `net.DialTimeout failed with address "%s", timeout "%s"`, address, duration)
+	}
+	return conn, err
 }
 
 // NewNetConnTLS creates and returns a TLS net.Conn with given address like "127.0.0.1:80".
 // The optional parameter `timeout` specifies the timeout for dialing connection.
-func NewNetConnTLS(addr string, tlsConfig *tls.Config, timeout ...time.Duration) (net.Conn, error) {
+func NewNetConnTLS(address string, tlsConfig *tls.Config, timeout ...time.Duration) (net.Conn, error) {
 	dialer := &net.Dialer{
 		Timeout: defaultConnTimeout,
 	}
 	if len(timeout) > 0 {
 		dialer.Timeout = timeout[0]
 	}
-	return tls.DialWithDialer(dialer, "tcp", addr, tlsConfig)
+	conn, err := tls.DialWithDialer(dialer, "tcp", address, tlsConfig)
+	if err != nil {
+		err = gerror.Wrapf(err, `tls.DialWithDialer failed with address "%s"`, address)
+	}
+	return conn, err
 }
 
 // NewNetConnKeyCrt creates and returns a TLS net.Conn with given TLS certificate and key files
@@ -129,6 +138,7 @@ func LoadKeyCrt(crtFile, keyFile string) (*tls.Config, error) {
 	}
 	crt, err := tls.LoadX509KeyPair(crtPath, keyPath)
 	if err != nil {
+		err = gerror.Wrapf(err, `tls.LoadX509KeyPair failed for certFile "%s" and keyFile "%s"`, crtPath, keyPath)
 		return nil, err
 	}
 	tlsConfig := &tls.Config{}

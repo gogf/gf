@@ -22,7 +22,7 @@ type RedisConn struct {
 	redis *Redis
 }
 
-// Do sends a command to the server and returns the received reply.
+// Do send a command to the server and returns the received reply.
 // It uses json.Marshal for struct/slice/map type values before committing them to redis.
 func (c *RedisConn) Do(ctx context.Context, command string, args ...interface{}) (reply *gvar.Var, err error) {
 	for k, v := range args {

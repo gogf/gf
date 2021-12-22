@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -60,8 +61,9 @@ func init() {
 
 // Mkdir creates directories recursively with given `path`.
 // The parameter `path` is suggested to be an absolute path instead of relative one.
-func Mkdir(path string) error {
-	if err := os.MkdirAll(path, os.ModePerm); err != nil {
+func Mkdir(path string) (err error) {
+	if err = os.MkdirAll(path, os.ModePerm); err != nil {
+		err = gerror.Wrapf(err, `os.MkdirAll failed for path "%s"`, path)
 		return err
 	}
 	return nil

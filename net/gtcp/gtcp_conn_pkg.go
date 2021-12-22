@@ -94,8 +94,10 @@ func (c *Conn) SendRecvPkgWithTimeout(data []byte, timeout time.Duration, option
 
 // RecvPkg receives data from connection using simple package protocol.
 func (c *Conn) RecvPkg(option ...PkgOption) (result []byte, err error) {
-	var buffer []byte
-	var length int
+	var (
+		buffer []byte
+		length int
+	)
 	pkgOption, err := getPkgOption(option...)
 	if err != nil {
 		return nil, err
@@ -131,10 +133,10 @@ func (c *Conn) RecvPkg(option ...PkgOption) (result []byte, err error) {
 
 // RecvPkgWithTimeout reads data from connection with timeout using simple package protocol.
 func (c *Conn) RecvPkgWithTimeout(timeout time.Duration, option ...PkgOption) (data []byte, err error) {
-	if err := c.SetreceiveDeadline(time.Now().Add(timeout)); err != nil {
+	if err := c.SetReceiveDeadline(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer c.SetreceiveDeadline(time.Time{})
+	defer c.SetReceiveDeadline(time.Time{})
 	data, err = c.RecvPkg(option...)
 	return
 }

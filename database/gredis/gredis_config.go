@@ -78,7 +78,7 @@ func SetConfigByMap(m map[string]interface{}, name ...string) error {
 func ConfigFromMap(m map[string]interface{}) (config *Config, err error) {
 	config = &Config{}
 	if err = gconv.Scan(m, config); err != nil {
-		err = gerror.NewCodef(gcode.CodeInvalidConfiguration, `invalid redis configuration: "%+v"`, m)
+		err = gerror.NewCodef(gcode.CodeInvalidConfiguration, `invalid redis configuration: %#v`, m)
 	}
 	if config.DialTimeout < 1000 {
 		config.DialTimeout = config.DialTimeout * time.Second

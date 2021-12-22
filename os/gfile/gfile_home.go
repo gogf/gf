@@ -75,7 +75,7 @@ func homeWindows() (string, error) {
 		home = os.Getenv("USERPROFILE")
 	}
 	if home == "" {
-		return "", gerror.NewCode(gcode.CodeOperationFailed, "HOMEDRIVE, HOMEPATH, and USERPROFILE are blank")
+		return "", gerror.New("HOMEDRIVE, HOMEPATH, and USERPROFILE are blank")
 	}
 
 	return home, nil
