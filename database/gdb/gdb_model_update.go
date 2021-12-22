@@ -57,6 +57,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 				dataMap[fieldNameUpdate] = gtime.Now().String()
 			}
 			updateData = dataMap
+
 		default:
 			updates := gconv.String(m.data)
 			if fieldNameUpdate != "" && !gstr.Contains(updates, fieldNameUpdate) {
