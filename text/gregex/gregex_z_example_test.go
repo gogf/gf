@@ -275,5 +275,5 @@ func ExampleValidate() {
 
 	// Output:
 	// <nil>
-	// error parsing regexp: invalid character class range: `a-9`
+	// regexp.Compile failed for pattern "[a-9]\d+": error parsing regexp: invalid character class range: `a-9`
 }
