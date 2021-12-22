@@ -53,7 +53,7 @@ func Search(name string, prioritySearchPaths ...string) (realPath string, err er
 				buffer.WriteString(fmt.Sprintf("\n%d. %s", k+1, v))
 			}
 		})
-		err = gerror.NewCode(gcode.CodeOperationFailed, buffer.String())
+		err = gerror.New(buffer.String())
 	}
 	return
 }

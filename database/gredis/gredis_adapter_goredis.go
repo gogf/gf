@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/gogf/gf/v2/errors/gerror"
 
 	"github.com/gogf/gf/v2/text/gstr"
 )
@@ -54,8 +55,11 @@ func NewAdapterGoRedis(config *Config) *AdapterGoRedis {
 
 // Close closes the redis connection pool, which will release all connections reserved by this pool.
 // It is commonly not necessary to call Close manually.
-func (r *AdapterGoRedis) Close(ctx context.Context) error {
-	return r.client.Close()
+func (r *AdapterGoRedis) Close(ctx context.Context) (err error) {
+	if err = r.client.Close(); err != nil {
+		err = gerror.Wrap(err, `Redis Client Close failed`)
+	}
+	return
 }
 
 // Conn retrieves and returns a connection object for continuous operations.

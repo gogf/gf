@@ -8,24 +8,32 @@ package gudp
 
 import (
 	"net"
+
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 // NewNetConn creates and returns a *net.UDPConn with given addresses.
 func NewNetConn(remoteAddress string, localAddress ...string) (*net.UDPConn, error) {
-	var err error
-	var remoteAddr, localAddr *net.UDPAddr
+	var (
+		err        error
+		remoteAddr *net.UDPAddr
+		localAddr  *net.UDPAddr
+	)
 	remoteAddr, err = net.ResolveUDPAddr("udp", remoteAddress)
 	if err != nil {
+		err = gerror.Wrapf(err, `net.ResolveUDPAddr failed for address "%s"`, remoteAddress)
 		return nil, err
 	}
 	if len(localAddress) > 0 {
 		localAddr, err = net.ResolveUDPAddr("udp", localAddress[0])
 		if err != nil {
+			err = gerror.Wrapf(err, `net.ResolveUDPAddr failed for address "%s"`, localAddress[0])
 			return nil, err
 		}
 	}
 	conn, err := net.DialUDP("udp", localAddr, remoteAddr)
 	if err != nil {
+		err = gerror.Wrapf(err, `net.DialUDP failed for local "%s", remote "%s"`, localAddr.String(), remoteAddr.String())
 		return nil, err
 	}
 	return conn, nil

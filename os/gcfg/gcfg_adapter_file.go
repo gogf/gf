@@ -65,7 +65,7 @@ func NewAdapterFile(file ...string) (*AdapterFile, error) {
 			name = customFile
 		}
 	}
-	c := &AdapterFile{
+	config := &AdapterFile{
 		defaultName: name,
 		searchPaths: garray.NewStrArray(true),
 		jsonMap:     gmap.NewStrAnyMap(true),
@@ -73,7 +73,7 @@ func NewAdapterFile(file ...string) (*AdapterFile, error) {
 	// Customized dir path from env/cmd.
 	if customPath := command.GetOptWithEnv(commandEnvKeyForPath); customPath != "" {
 		if gfile.Exists(customPath) {
-			if err = c.SetPath(customPath); err != nil {
+			if err = config.SetPath(customPath); err != nil {
 				return nil, err
 			}
 		} else {
@@ -86,25 +86,25 @@ func NewAdapterFile(file ...string) (*AdapterFile, error) {
 		// ================================================================================
 
 		// Dir path of working dir.
-		if err := c.AddPath(gfile.Pwd()); err != nil {
+		if err = config.AddPath(gfile.Pwd()); err != nil {
 			intlog.Error(context.TODO(), err)
 		}
 
 		// Dir path of main package.
 		if mainPath := gfile.MainPkgPath(); mainPath != "" && gfile.Exists(mainPath) {
-			if err := c.AddPath(mainPath); err != nil {
+			if err = config.AddPath(mainPath); err != nil {
 				intlog.Error(context.TODO(), err)
 			}
 		}
 
 		// Dir path of binary.
 		if selfPath := gfile.SelfDir(); selfPath != "" && gfile.Exists(selfPath) {
-			if err := c.AddPath(selfPath); err != nil {
+			if err = config.AddPath(selfPath); err != nil {
 				intlog.Error(context.TODO(), err)
 			}
 		}
 	}
-	return c, nil
+	return config, nil
 }
 
 // SetViolenceCheck sets whether to perform hierarchical conflict checking.

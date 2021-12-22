@@ -157,14 +157,14 @@ func parsePatternItem(item string, min int, max int, allowQuestionMark bool) (ma
 		}
 	} else {
 		// Like: MON,FRI
-		for _, item := range strings.Split(item, ",") {
+		for _, itemElem := range strings.Split(item, ",") {
 			var (
 				interval      = 1
-				intervalArray = strings.Split(item, "/")
+				intervalArray = strings.Split(itemElem, "/")
 			)
 			if len(intervalArray) == 2 {
 				if number, err := strconv.Atoi(intervalArray[1]); err != nil {
-					return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid pattern item: "%s"`, item)
+					return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid pattern item: "%s"`, itemElem)
 				} else {
 					interval = number
 				}
@@ -186,7 +186,7 @@ func parsePatternItem(item string, min int, max int, allowQuestionMark bool) (ma
 			// Eg: */5
 			if rangeArray[0] != "*" {
 				if number, err := parsePatternItemValue(rangeArray[0], itemType); err != nil {
-					return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid pattern item: "%s"`, item)
+					return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid pattern item: "%s"`, itemElem)
 				} else {
 					rangeMin = number
 					if len(intervalArray) == 1 {
@@ -196,7 +196,7 @@ func parsePatternItem(item string, min int, max int, allowQuestionMark bool) (ma
 			}
 			if len(rangeArray) == 2 {
 				if number, err := parsePatternItemValue(rangeArray[1], itemType); err != nil {
-					return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid pattern item: "%s"`, item)
+					return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid pattern item: "%s"`, itemElem)
 				} else {
 					rangeMax = number
 				}

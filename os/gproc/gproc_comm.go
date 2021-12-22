@@ -89,7 +89,7 @@ func getConnByPid(pid int) (*gtcp.PoolConn, error) {
 			return nil, err
 		}
 	}
-	return nil, gerror.NewCodef(gcode.CodeOperationFailed, "could not find port for pid: %d", pid)
+	return nil, gerror.Newf("could not find port for pid: %d", pid)
 }
 
 // getPortByPid returns the listening port for specified pid.

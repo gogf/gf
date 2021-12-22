@@ -111,10 +111,10 @@ func (c *PoolConn) RecvLine(retry ...Retry) ([]byte, error) {
 	return data, err
 }
 
-// RecvTil reads data from the connection until reads bytes `til`.
+// RecvTill reads data from the connection until reads bytes `til`.
 // Note that the returned result contains the last bytes `til`.
-func (c *PoolConn) RecvTil(til []byte, retry ...Retry) ([]byte, error) {
-	data, err := c.Conn.RecvTil(til, retry...)
+func (c *PoolConn) RecvTill(til []byte, retry ...Retry) ([]byte, error) {
+	data, err := c.Conn.RecvTill(til, retry...)
 	if err != nil {
 		c.status = connStatusError
 	} else {
@@ -125,10 +125,10 @@ func (c *PoolConn) RecvTil(til []byte, retry ...Retry) ([]byte, error) {
 
 // RecvWithTimeout reads data from the connection with timeout.
 func (c *PoolConn) RecvWithTimeout(length int, timeout time.Duration, retry ...Retry) (data []byte, err error) {
-	if err := c.SetreceiveDeadline(time.Now().Add(timeout)); err != nil {
+	if err := c.SetReceiveDeadline(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer c.SetreceiveDeadline(time.Time{})
+	defer c.SetReceiveDeadline(time.Time{})
 	data, err = c.Recv(length, retry...)
 	return
 }
