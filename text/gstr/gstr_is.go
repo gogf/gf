@@ -4,14 +4,11 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gstr provides functions for string handling.
 package gstr
 
-const (
-	// NotFoundIndex is the position index for string not found in searching functions.
-	NotFoundIndex = -1
-)
+import "github.com/gogf/gf/v2/internal/utils"
 
-const (
-	defaultSuffixForStrLimit = "..."
-)
+// IsNumeric tests whether the given string s is numeric.
+func IsNumeric(s string) bool {
+	return utils.IsNumeric(s)
+}

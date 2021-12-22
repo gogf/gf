@@ -4,14 +4,11 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gstr provides functions for string handling.
 package gstr
 
-const (
-	// NotFoundIndex is the position index for string not found in searching functions.
-	NotFoundIndex = -1
-)
+import "unicode/utf8"
 
-const (
-	defaultSuffixForStrLimit = "..."
-)
+// LenRune returns string length of unicode.
+func LenRune(str string) int {
+	return utf8.RuneCountInString(str)
+}

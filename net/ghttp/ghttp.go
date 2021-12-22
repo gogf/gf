@@ -12,12 +12,13 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/gorilla/websocket"
+
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gsession"
 	"github.com/gogf/gf/v2/protocol/goai"
-	"github.com/gorilla/websocket"
 )
 
 type (
@@ -132,7 +133,7 @@ const (
 	contentTypeHtml       = "text/html"
 	contentTypeJson       = "application/json"
 	swaggerUIPackedPath   = "/goframe/swaggerui"
-	responseTraceIdHeader = "Trace-Id"
+	responseTraceIDHeader = "Trace-ID"
 )
 
 var (
