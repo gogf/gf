@@ -197,21 +197,19 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 						formFieldName = array[0]
 					)
 					if file, err = writer.CreateFormFile(formFieldName, formFileName); err != nil {
-						err = gerror.Wrapf(err, `writer.CreateFormFile failed with "%s", "%s"`, formFieldName, formFileName)
+						err = gerror.Wrapf(err, `CreateFormFile failed with "%s", "%s"`, formFieldName, formFileName)
 						return nil, err
 					} else {
 						var f *os.File
-						if f, err = os.Open(path); err == nil {
-							err = gerror.Wrapf(err, `os.Open failed for name "%s"`, path)
+						if f, err = gfile.Open(path); err != nil {
 							return nil, err
-						} else {
-							if _, err = io.Copy(file, f); err != nil {
-								err = gerror.Wrapf(err, `io.Copy failed from "%s" to form "%s"`, path, formFieldName)
-								_ = f.Close()
-								return nil, err
-							}
-							_ = f.Close()
 						}
+						if _, err = io.Copy(file, f); err != nil {
+							err = gerror.Wrapf(err, `io.Copy failed from "%s" to form "%s"`, path, formFieldName)
+							_ = f.Close()
+							return nil, err
+						}
+						_ = f.Close()
 					}
 				} else {
 					var (
@@ -219,7 +217,7 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 						fieldValue = array[1]
 					)
 					if err = writer.WriteField(fieldName, fieldValue); err != nil {
-						err = gerror.Wrapf(err, `writer.WriteField failed with "%s", "%s"`, fieldName, fieldValue)
+						err = gerror.Wrapf(err, `write form field failed with "%s", "%s"`, fieldName, fieldValue)
 						return nil, err
 					}
 				}
@@ -227,7 +225,7 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 			// Close finishes the multipart message and writes the trailing
 			// boundary end line to the output.
 			if err = writer.Close(); err != nil {
-				err = gerror.Wrapf(err, `writer.Close failed`)
+				err = gerror.Wrapf(err, `form writer close failed`)
 				return nil, err
 			}
 
