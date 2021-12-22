@@ -29,7 +29,7 @@ func Gzip(data []byte, level ...int) ([]byte, error) {
 	if len(level) > 0 {
 		writer, err = gzip.NewWriterLevel(&buf, level[0])
 		if err != nil {
-			err = gerror.Wrap(err, `gzip.NewWriterLevel failed`)
+			err = gerror.Wrapf(err, `gzip.NewWriterLevel failed for level "%d"`, level[0])
 			return nil, err
 		}
 	} else {
