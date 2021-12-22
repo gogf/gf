@@ -93,8 +93,7 @@ func receiveTcpHandler(conn *gtcp.Conn) {
 		if len(buffer) > 0 {
 			// Package decoding.
 			msg := new(MsgRequest)
-			if err := json.UnmarshalUseNumber(buffer, msg); err != nil {
-				// glog.Error(err)
+			if err = json.UnmarshalUseNumber(buffer, msg); err != nil {
 				continue
 			}
 			if msg.RecvPid != Pid() {
@@ -117,12 +116,12 @@ func receiveTcpHandler(conn *gtcp.Conn) {
 			if err != nil {
 				glog.Error(ctx, err)
 			}
-			if err := conn.SendPkg(result); err != nil {
+			if err = conn.SendPkg(result); err != nil {
 				glog.Error(ctx, err)
 			}
 		} else {
 			// Just close the connection if any error occurs.
-			if err := conn.Close(); err != nil {
+			if err = conn.Close(); err != nil {
 				glog.Error(ctx, err)
 			}
 			break

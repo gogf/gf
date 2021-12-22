@@ -7,10 +7,11 @@
 package gstr
 
 import (
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"net/url"
 	"strings"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 // Parse parses the string into map[string]interface{}.
@@ -37,6 +38,7 @@ func Parse(s string) (result map[string]interface{}, err error) {
 		}
 		key, err := url.QueryUnescape(part[:pos])
 		if err != nil {
+			err = gerror.Wrapf(err, `url.QueryUnescape failed for string "%s"`, part[:pos])
 			return nil, err
 		}
 		for key[0] == ' ' {
@@ -47,6 +49,7 @@ func Parse(s string) (result map[string]interface{}, err error) {
 		}
 		value, err := url.QueryUnescape(part[pos+1:])
 		if err != nil {
+			err = gerror.Wrapf(err, `url.QueryUnescape failed for string "%s"`, part[pos+1:])
 			return nil, err
 		}
 		// split into multiple keys
@@ -87,7 +90,7 @@ func Parse(s string) (result map[string]interface{}, err error) {
 		keys[0] = first
 
 		// build nested map
-		if err := build(result, keys, value); err != nil {
+		if err = build(result, keys, value); err != nil {
 			return nil, err
 		}
 	}
@@ -96,9 +99,10 @@ func Parse(s string) (result map[string]interface{}, err error) {
 
 // build nested map.
 func build(result map[string]interface{}, keys []string, value interface{}) error {
-	length := len(keys)
-	// trim ',"
-	key := strings.Trim(keys[0], "'\"")
+	var (
+		length = len(keys)
+		key    = strings.Trim(keys[0], "'\"")
+	)
 	if length == 1 {
 		result[key] = value
 		return nil
@@ -145,13 +149,13 @@ func build(result map[string]interface{}, keys []string, value interface{}) erro
 		if l := len(children); l > 0 {
 			if child, ok := children[l-1].(map[string]interface{}); ok {
 				if _, ok := child[keys[2]]; !ok {
-					build(child, keys[2:], value)
+					_ = build(child, keys[2:], value)
 					return nil
 				}
 			}
 		}
 		child := map[string]interface{}{}
-		build(child, keys[2:], value)
+		_ = build(child, keys[2:], value)
 		result[key] = append(children, child)
 		return nil
 	}

@@ -151,6 +151,5 @@ func New(path ...string) *View {
 		"times":      view.buildInFuncTimes,
 		"divide":     view.buildInFuncDivide,
 	})
-
 	return view
 }

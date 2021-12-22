@@ -18,7 +18,7 @@ const (
 
 var (
 	// Default logger object, for package method usage.
-	logger = New()
+	defaultLogger = New()
 
 	// Goroutine pool for async logging output.
 	// It uses only one asynchronous worker to ensure log sequence.
@@ -36,12 +36,12 @@ func init() {
 
 // DefaultLogger returns the default logger.
 func DefaultLogger() *Logger {
-	return logger
+	return defaultLogger
 }
 
 // SetDefaultLogger sets the default logger for package glog.
 // Note that there might be concurrent safety issue if calls this function
 // in different goroutines.
 func SetDefaultLogger(l *Logger) {
-	logger = l
+	defaultLogger = l
 }

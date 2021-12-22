@@ -46,11 +46,11 @@ func NewPoolConn(addr string, timeout ...time.Duration) (*PoolConn, error) {
 		})
 		return pool
 	})
-	if v, err := v.(*gpool.Pool).Get(); err == nil {
-		return v.(*PoolConn), nil
-	} else {
+	value, err := v.(*gpool.Pool).Get()
+	if err != nil {
 		return nil, err
 	}
+	return value.(*PoolConn), nil
 }
 
 // Close puts back the connection to the pool if it's active,

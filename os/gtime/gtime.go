@@ -108,12 +108,20 @@ var (
 //
 // This should be called before package "time" import.
 // Please refer to issue: https://github.com/golang/go/issues/34814
-func SetTimeZone(zone string) error {
+func SetTimeZone(zone string) (err error) {
 	location, err := time.LoadLocation(zone)
 	if err != nil {
+		err = gerror.Wrapf(err, `time.LoadLocation failed for zone "%s"`, zone)
 		return err
 	}
-	return os.Setenv("TZ", location.String())
+	var (
+		envKey   = "TZ"
+		envValue = location.String()
+	)
+	if err = os.Setenv(envKey, envValue); err != nil {
+		err = gerror.Wrapf(err, `set environment failed with key "%s", value "%s"`, envKey, envValue)
+	}
+	return
 }
 
 // Timestamp retrieves and returns the timestamp in seconds.
@@ -348,22 +356,14 @@ func ConvertZone(strTime string, toZone string, fromZone ...string) (*Time, erro
 	var l *time.Location
 	if len(fromZone) > 0 {
 		if l, err = time.LoadLocation(fromZone[0]); err != nil {
-			err = gerror.WrapCodef(
-				gcode.CodeInvalidParameter, err,
-				`time.LoadLocation failed for name "%s"`,
-				fromZone[0],
-			)
+			err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `time.LoadLocation failed for name "%s"`, fromZone[0])
 			return nil, err
 		} else {
 			t.Time = time.Date(t.Year(), time.Month(t.Month()), t.Day(), t.Hour(), t.Minute(), t.Time.Second(), t.Time.Nanosecond(), l)
 		}
 	}
 	if l, err = time.LoadLocation(toZone); err != nil {
-		err = gerror.WrapCodef(
-			gcode.CodeInvalidParameter, err,
-			`time.LoadLocation failed for name "%s"`,
-			toZone,
-		)
+		err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `time.LoadLocation failed for name "%s"`, toZone)
 		return nil, err
 	} else {
 		return t.ToLocation(l), nil

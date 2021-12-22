@@ -253,6 +253,7 @@ func (t *Time) Add(d time.Duration) *Time {
 // AddStr parses the given duration as string and adds it to current time.
 func (t *Time) AddStr(duration string) (*Time, error) {
 	if d, err := time.ParseDuration(duration); err != nil {
+		err = gerror.Wrapf(err, `time.ParseDuration failed for string "%s"`, duration)
 		return nil, err
 	} else {
 		return t.Add(d), nil
@@ -475,6 +476,4 @@ func (t *Time) UnmarshalText(data []byte) error {
 }
 
 // NoValidation marks this struct object will not be validated by package gvalid.
-func (t *Time) NoValidation() {
-
-}
+func (t *Time) NoValidation() {}

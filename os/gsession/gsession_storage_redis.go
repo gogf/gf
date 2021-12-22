@@ -24,7 +24,7 @@ type StorageRedis struct {
 	updatingIdMap *gmap.StrIntMap // Updating TTL set for session id.
 }
 
-var (
+const (
 	// DefaultStorageRedisLoopInterval is the interval updating TTL for session ids
 	// in last duration.
 	DefaultStorageRedisLoopInterval = 10 * time.Second

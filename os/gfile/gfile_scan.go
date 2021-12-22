@@ -7,11 +7,9 @@
 package gfile
 
 import (
-	"os"
 	"path/filepath"
 	"sort"
 
-	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"
 )
@@ -141,14 +139,17 @@ func doScanDir(depth int, path string, pattern string, recursive bool, handler f
 	if depth >= maxScanDepth {
 		return nil, gerror.Newf("directory scanning exceeds max recursive depth: %d", maxScanDepth)
 	}
-	list := ([]string)(nil)
-	file, err := os.Open(path)
+	var (
+		list      []string
+		file, err = Open(path)
+	)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 	names, err := file.Readdirnames(-1)
 	if err != nil {
+		err = gerror.Wrapf(err, `read directory files failed from path "%s"`, path)
 		return nil, err
 	}
 	var (
@@ -172,9 +173,8 @@ func doScanDir(depth int, path string, pattern string, recursive bool, handler f
 		}
 		// If it meets pattern, then add it to the result list.
 		for _, p := range patterns {
-			if match, err := filepath.Match(p, name); err == nil && match {
-				filePath = Abs(filePath)
-				if filePath != "" {
+			if match, _ := filepath.Match(p, name); match {
+				if filePath = Abs(filePath); filePath != "" {
 					list = append(list, filePath)
 				}
 			}

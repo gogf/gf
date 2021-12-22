@@ -11,7 +11,6 @@ import (
 	"fmt"
 
 	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/net/gtcp"
@@ -89,7 +88,7 @@ func getConnByPid(pid int) (*gtcp.PoolConn, error) {
 			return nil, err
 		}
 	}
-	return nil, gerror.Newf("could not find port for pid: %d", pid)
+	return nil, gerror.Newf(`could not find port for pid "%d"`, pid)
 }
 
 // getPortByPid returns the listening port for specified pid.

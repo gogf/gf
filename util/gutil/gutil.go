@@ -8,7 +8,6 @@
 package gutil
 
 import (
-	"fmt"
 	"reflect"
 
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -49,7 +48,7 @@ func TryCatch(try func(), catch ...func(exception error)) {
 			if v, ok := exception.(error); ok && gerror.HasStack(v) {
 				catch[0](v)
 			} else {
-				catch[0](fmt.Errorf(`%+v`, exception))
+				catch[0](gerror.Newf(`%+v`, exception))
 			}
 		}
 	}()

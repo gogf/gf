@@ -32,11 +32,14 @@ type StorageFile struct {
 	updatingIdSet *gset.StrSet
 }
 
-var (
-	DefaultStorageFilePath          = gfile.TempDir("gsessions")
-	DefaultStorageFileCryptoKey     = []byte("Session storage file crypto key!")
+const (
 	DefaultStorageFileCryptoEnabled = false
 	DefaultStorageFileLoopInterval  = 10 * time.Second
+)
+
+var (
+	DefaultStorageFilePath      = gfile.TempDir("gsessions")
+	DefaultStorageFileCryptoKey = []byte("Session storage file crypto key!")
 )
 
 // NewStorageFile creates and returns a file storage object for session.
@@ -112,7 +115,7 @@ func (s *StorageFile) Get(ctx context.Context, id string, key string) (value int
 	return nil, ErrorDisabled
 }
 
-// GetMap retrieves all key-value pairs as map from storage.
+// Data retrieves all key-value pairs as map from storage.
 func (s *StorageFile) Data(ctx context.Context, id string) (data map[string]interface{}, err error) {
 	return nil, ErrorDisabled
 }
@@ -208,9 +211,11 @@ func (s *StorageFile) SetSession(ctx context.Context, id string, data *gmap.StrA
 	}
 	defer file.Close()
 	if _, err = file.Write(gbinary.EncodeInt64(gtime.TimestampMilli())); err != nil {
+		err = gerror.Wrapf(err, `write data failed to file "%s"`, path)
 		return err
 	}
 	if _, err = file.Write(content); err != nil {
+		err = gerror.Wrapf(err, `write data failed to file "%s"`, path)
 		return err
 	}
 	return nil
@@ -236,6 +241,7 @@ func (s *StorageFile) updateSessionTTl(ctx context.Context, id string) error {
 		return err
 	}
 	if _, err = file.WriteAt(gbinary.EncodeInt64(gtime.TimestampMilli()), 0); err != nil {
+		err = gerror.Wrapf(err, `write data failed to file "%s"`, path)
 		return err
 	}
 	return file.Close()
