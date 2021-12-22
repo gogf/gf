@@ -4,14 +4,11 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gstr provides functions for string handling.
 package gstr
 
-const (
-	// NotFoundIndex is the position index for string not found in searching functions.
-	NotFoundIndex = -1
-)
+import "strings"
 
-const (
-	defaultSuffixForStrLimit = "..."
-)
+// Repeat returns a new string consisting of multiplier copies of the string input.
+func Repeat(input string, multiplier int) string {
+	return strings.Repeat(input, multiplier)
+}
