@@ -1091,6 +1091,15 @@ func Test_Model_OrderBy(t *testing.T) {
 		t.Assert(len(result), TableSize)
 		t.Assert(result[0]["nickname"].String(), "name_1")
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Order(gdb.Raw("field(id, 10,1,2,3,4,5,6,7,8,9)")).All()
+		t.AssertNil(err)
+		t.Assert(len(result), TableSize)
+		t.Assert(result[0]["nickname"].String(), "name_10")
+		t.Assert(result[1]["nickname"].String(), "name_1")
+		t.Assert(result[2]["nickname"].String(), "name_2")
+	})
 }
 
 func Test_Model_GroupBy(t *testing.T) {
