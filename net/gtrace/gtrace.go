@@ -12,7 +12,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gogf/gf/v2/net/gtrace/internal/provider"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
@@ -23,6 +22,7 @@ import (
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/internal/command"
 	"github.com/gogf/gf/v2/net/gipv4"
+	"github.com/gogf/gf/v2/net/gtrace/internal/provider"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
