@@ -161,7 +161,9 @@ func (c *Core) mappingAndFilterData(schema, table string, data map[string]interf
 		if _, ok := fieldsKeyMap[dataKey]; !ok {
 			foundKey, _ = gutil.MapPossibleItemByKey(fieldsKeyMap, dataKey)
 			if foundKey != "" {
-				data[foundKey] = dataValue
+				if _, ok = data[foundKey]; !ok {
+					data[foundKey] = dataValue
+				}
 				delete(data, dataKey)
 			}
 		}
