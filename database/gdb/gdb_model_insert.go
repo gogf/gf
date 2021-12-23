@@ -83,7 +83,7 @@ func (m *Model) Data(data ...interface{}) *Model {
 				}
 				list := make(List, reflectInfo.OriginValue.Len())
 				for i := 0; i < reflectInfo.OriginValue.Len(); i++ {
-					list[i] = ConvertDataForTableRecord(reflectInfo.OriginValue.Index(i).Interface())
+					list[i] = m.db.ConvertDataForRecord(m.GetCtx(), reflectInfo.OriginValue.Index(i).Interface())
 				}
 				model.data = list
 
@@ -100,15 +100,15 @@ func (m *Model) Data(data ...interface{}) *Model {
 						list  = make(List, len(array))
 					)
 					for i := 0; i < len(array); i++ {
-						list[i] = ConvertDataForTableRecord(array[i])
+						list[i] = m.db.ConvertDataForRecord(m.GetCtx(), array[i])
 					}
 					model.data = list
 				} else {
-					model.data = ConvertDataForTableRecord(data[0])
+					model.data = m.db.ConvertDataForRecord(m.GetCtx(), data[0])
 				}
 
 			case reflect.Map:
-				model.data = ConvertDataForTableRecord(data[0])
+				model.data = m.db.ConvertDataForRecord(m.GetCtx(), data[0])
 
 			default:
 				model.data = data[0]
@@ -246,11 +246,11 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 	case List:
 		list = value
 		for i, v := range list {
-			list[i] = ConvertDataForTableRecord(v)
+			list[i] = m.db.ConvertDataForRecord(m.GetCtx(), v)
 		}
 
 	case Map:
-		list = List{ConvertDataForTableRecord(value)}
+		list = List{m.db.ConvertDataForRecord(m.GetCtx(), value)}
 
 	default:
 		reflectInfo := utils.OriginValueAndKind(newData)
@@ -259,21 +259,21 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 		case reflect.Slice, reflect.Array:
 			list = make(List, reflectInfo.OriginValue.Len())
 			for i := 0; i < reflectInfo.OriginValue.Len(); i++ {
-				list[i] = ConvertDataForTableRecord(reflectInfo.OriginValue.Index(i).Interface())
+				list[i] = m.db.ConvertDataForRecord(m.GetCtx(), reflectInfo.OriginValue.Index(i).Interface())
 			}
 
 		case reflect.Map:
-			list = List{ConvertDataForTableRecord(value)}
+			list = List{m.db.ConvertDataForRecord(m.GetCtx(), value)}
 
 		case reflect.Struct:
 			if v, ok := value.(iInterfaces); ok {
 				array := v.Interfaces()
 				list = make(List, len(array))
 				for i := 0; i < len(array); i++ {
-					list[i] = ConvertDataForTableRecord(array[i])
+					list[i] = m.db.ConvertDataForRecord(m.GetCtx(), array[i])
 				}
 			} else {
-				list = List{ConvertDataForTableRecord(value)}
+				list = List{m.db.ConvertDataForRecord(m.GetCtx(), value)}
 			}
 
 		default:

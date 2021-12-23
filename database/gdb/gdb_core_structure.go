@@ -7,10 +7,13 @@
 package gdb
 
 import (
+	"context"
+	"reflect"
 	"strings"
 	"time"
 
 	"github.com/gogf/gf/v2/encoding/gbinary"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -18,8 +21,76 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
+// ConvertDataForRecord is a very important function, which does converting for any data that
+// will be inserted into table/collection as a record.
+//
+// The parameter `value` should be type of *map/map/*struct/struct.
+// It supports embedded struct definition for struct.
+func (c *Core) ConvertDataForRecord(ctx context.Context, value interface{}) map[string]interface{} {
+	var data = DataToMapDeep(value)
+	for k, v := range data {
+		data[k] = c.ConvertDataForRecordValue(ctx, v)
+	}
+	return data
+}
+
+func (c *Core) ConvertDataForRecordValue(ctx context.Context, value interface{}) interface{} {
+	var (
+		rvValue = reflect.ValueOf(value)
+		rvKind  = rvValue.Kind()
+	)
+	for rvKind == reflect.Ptr {
+		rvValue = rvValue.Elem()
+		rvKind = rvValue.Kind()
+	}
+	switch rvKind {
+	case reflect.Slice, reflect.Array, reflect.Map:
+		// It should ignore the bytes type.
+		if _, ok := value.([]byte); !ok {
+			// Convert the value to JSON.
+			value, _ = json.Marshal(value)
+		}
+
+	case reflect.Struct:
+		switch r := value.(type) {
+		// If the time is zero, it then updates it to nil,
+		// which will insert/update the value to database as "null".
+		case time.Time:
+			if r.IsZero() {
+				value = nil
+			}
+
+		case gtime.Time:
+			if r.IsZero() {
+				value = nil
+			}
+
+		case *gtime.Time:
+			if r.IsZero() {
+				value = nil
+			}
+
+		case *time.Time:
+			// Nothing to do.
+
+		case Counter, *Counter:
+			// Nothing to do.
+
+		default:
+			// Use string conversion in default.
+			if s, ok := value.(iString); ok {
+				value = s.String()
+			} else {
+				// Convert the value to JSON.
+				value, _ = json.Marshal(value)
+			}
+		}
+	}
+	return value
+}
+
 // convertFieldValueToLocalValue automatically checks and converts field value from database type
-// to golang variable type.
+// to golang variable type as underlying value of Value.
 func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType string) interface{} {
 	// If there's no type retrieved, it returns the `fieldValue` directly
 	// to use its original data type, as `fieldValue` is type of interface{}.

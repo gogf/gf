@@ -542,7 +542,7 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 	case reflect.Map, reflect.Struct:
 		var (
 			fields         []string
-			dataMap        = ConvertDataForTableRecord(data)
+			dataMap        = c.db.ConvertDataForRecord(ctx, data)
 			counterHandler = func(column string, counter Counter) {
 				if counter.Value != 0 {
 					column = c.QuoteWord(column)
