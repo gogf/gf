@@ -18,7 +18,6 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/empty"
-	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -159,71 +158,6 @@ func GetInsertOperationByOption(option int) string {
 		operator = "INSERT"
 	}
 	return operator
-}
-
-// ConvertDataForTableRecord is a very important function, which does converting for any data that
-// will be inserted into table as a record.
-//
-// The parameter `value` should be type of *map/map/*struct/struct.
-// It supports embedded struct definition for struct.
-func ConvertDataForTableRecord(value interface{}) map[string]interface{} {
-	var (
-		rvValue reflect.Value
-		rvKind  reflect.Kind
-		data    = DataToMapDeep(value)
-	)
-	for k, v := range data {
-		rvValue = reflect.ValueOf(v)
-		rvKind = rvValue.Kind()
-		for rvKind == reflect.Ptr {
-			rvValue = rvValue.Elem()
-			rvKind = rvValue.Kind()
-		}
-		switch rvKind {
-		case reflect.Slice, reflect.Array, reflect.Map:
-			// It should ignore the bytes type.
-			if _, ok := v.([]byte); !ok {
-				// Convert the value to JSON.
-				data[k], _ = json.Marshal(v)
-			}
-
-		case reflect.Struct:
-			switch r := v.(type) {
-			// If the time is zero, it then updates it to nil,
-			// which will insert/update the value to database as "null".
-			case time.Time:
-				if r.IsZero() {
-					data[k] = nil
-				}
-
-			case gtime.Time:
-				if r.IsZero() {
-					data[k] = nil
-				}
-
-			case *gtime.Time:
-				if r.IsZero() {
-					data[k] = nil
-				}
-
-			case *time.Time:
-				continue
-
-			case Counter, *Counter:
-				continue
-
-			default:
-				// Use string conversion in default.
-				if s, ok := v.(iString); ok {
-					data[k] = s.String()
-				} else {
-					// Convert the value to JSON.
-					data[k], _ = json.Marshal(v)
-				}
-			}
-		}
-	}
-	return data
 }
 
 // DataToMapDeep converts `value` to map type recursively(if attribute struct is embedded).

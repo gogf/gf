@@ -52,7 +52,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		reflectInfo := utils.OriginTypeAndKind(m.data)
 		switch reflectInfo.OriginKind {
 		case reflect.Map, reflect.Struct:
-			dataMap := ConvertDataForTableRecord(m.data)
+			dataMap := m.db.ConvertDataForRecord(m.GetCtx(), m.data)
 			if fieldNameUpdate != "" {
 				dataMap[fieldNameUpdate] = gtime.Now().String()
 			}
