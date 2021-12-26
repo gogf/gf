@@ -25,6 +25,15 @@ func Encode(value interface{}) ([]byte, error) {
 	return json.Marshal(value)
 }
 
+// MustEncode performs as Encode, but it panics if any error occurs.
+func MustEncode(value interface{}) []byte {
+	b, err := Encode(value)
+	if err != nil {
+		panic(err)
+	}
+	return b
+}
+
 // Decode decodes json format `data` to golang variable.
 // The parameter `data` can be either bytes or string type.
 func Decode(data interface{}) (interface{}, error) {
