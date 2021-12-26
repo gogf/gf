@@ -34,6 +34,12 @@ func MustEncode(value interface{}) []byte {
 	return b
 }
 
+// MustEncodeString encodes any golang variable `value` to JSON string.
+// It panics if any error occurs.
+func MustEncodeString(value interface{}) string {
+	return string(MustEncode(value))
+}
+
 // Decode decodes json format `data` to golang variable.
 // The parameter `data` can be either bytes or string type.
 func Decode(data interface{}) (interface{}, error) {
