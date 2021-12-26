@@ -34,6 +34,12 @@ func MustEncode(value interface{}) []byte {
 	return b
 }
 
+// EncodeString encodes any golang variable `value` to JSON string.
+func EncodeString(value interface{}) (string, error) {
+	b, err := json.Marshal(value)
+	return string(b), err
+}
+
 // MustEncodeString encodes any golang variable `value` to JSON string.
 // It panics if any error occurs.
 func MustEncodeString(value interface{}) string {
