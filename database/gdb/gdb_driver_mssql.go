@@ -83,10 +83,10 @@ func (d *DriverMssql) GetChars() (charLeft string, charRight string) {
 	return "\"", "\""
 }
 
-// DoCommit deals with the sql string before commits it to underlying sql driver.
-func (d *DriverMssql) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+// DoFilter deals with the sql string before commits it to underlying sql driver.
+func (d *DriverMssql) DoFilter(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
 	defer func() {
-		newSql, newArgs, err = d.Core.DoCommit(ctx, link, newSql, newArgs)
+		newSql, newArgs, err = d.Core.DoFilter(ctx, link, newSql, newArgs)
 	}()
 	var index int
 	// Convert placeholder char '?' to string "@px".

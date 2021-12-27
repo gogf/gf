@@ -100,7 +100,8 @@ type DB interface {
 	DoDelete(ctx context.Context, link Link, table string, condition string, args ...interface{}) (result sql.Result, err error)                   // See Core.DoDelete.
 	DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error)                                            // See Core.DoQuery.
 	DoExec(ctx context.Context, link Link, sql string, args ...interface{}) (result sql.Result, err error)                                         // See Core.DoExec.
-	DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error)                     // See Core.DoCommit.
+	DoFilter(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error)                     // See Core.DoFilter.
+	DoCommit(ctx context.Context, in DoCommitInput) (out *DoCommitOutput, err error)                                                               // See Core.DoCommit.
 	DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, error)                                                                           // See Core.DoPrepare.
 
 	// ===========================================================================
@@ -181,6 +182,22 @@ type Core struct {
 	schema *gtype.String   // Custom schema for this object.
 	logger *glog.Logger    // Logger for logging functionality.
 	config *ConfigNode     // Current config node.
+}
+
+// DoCommitInput is the input parameters for function DoCommit.
+type DoCommitInput struct {
+	Stmt *sql.Stmt
+	Link Link
+	Sql  string
+	Args []interface{}
+	Type string
+}
+
+// DoCommitOutput is the output parameters for function DoCommit.
+type DoCommitOutput struct {
+	Row    *sql.Row   // Row is the result of Stmt.QueryRowContext.
+	Rows   *sql.Rows  // Rows is the result of query statement.
+	Result sql.Result // Result is the result of exec statement.
 }
 
 // Driver is the interface for integrating sql drivers into package gdb.
@@ -276,6 +293,14 @@ const (
 	sqlTypePrepareContext  = `DB.PrepareContext`
 	modelForDaoSuffix      = `ForDao`
 	dbRoleSlave            = `slave`
+)
+
+const (
+	DoCommitTypeExecContext         = "ExecContext"
+	DoCommitTypeQueryContext        = "QueryContext"
+	DoCommitTypeStmtExecContext     = "Statement.ExecContext"
+	DoCommitTypeStmtQueryContext    = "Statement.QueryContext"
+	DoCommitTypeStmtQueryRowContext = "Statement.QueryRowContext"
 )
 
 var (
