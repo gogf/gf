@@ -12,6 +12,8 @@ import (
 	"database/sql"
 
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gtime"
 )
@@ -45,40 +47,27 @@ func (c *Core) DoQuery(ctx context.Context, link Link, sql string, args ...inter
 		ctx, _ = context.WithTimeout(ctx, c.GetConfig().QueryTimeout)
 	}
 
-	// Link execution.
+	// Sql filtering.
 	sql, args = formatSql(sql, args)
-	sql, args, err = c.db.DoCommit(ctx, link, sql, args)
+	sql, args, err = c.db.DoFilter(ctx, link, sql, args)
 	if err != nil {
 		return nil, err
 	}
-
-	mTime1 := gtime.TimestampMilli()
-	rows, err := link.QueryContext(ctx, sql, args...)
-	mTime2 := gtime.TimestampMilli()
-	if err == nil {
-		result, err = c.convertRowsToResult(ctx, rows)
+	// Link execution.
+	var out *DoCommitOutput
+	out, err = c.db.DoCommit(ctx, DoCommitInput{
+		Link: link,
+		Sql:  sql,
+		Args: args,
+		Stmt: nil,
+		Type: DoCommitTypeQueryContext,
+	})
+	if err != nil {
+		return nil, err
 	}
-	sqlObj := &Sql{
-		Sql:           sql,
-		Type:          sqlTypeQueryContext,
-		Args:          args,
-		Format:        FormatSqlWithArgs(sql, args),
-		Error:         err,
-		Start:         mTime1,
-		End:           mTime2,
-		Group:         c.db.GetGroup(),
-		IsTransaction: link.IsTransaction(),
-		RowsAffected:  int64(result.Len()),
-	}
-	// Tracing and logging.
-	c.addSqlToTracing(ctx, sqlObj)
-	if c.db.GetDebug() {
-		c.writeSqlToLogger(ctx, sqlObj)
-	}
-	if err == nil {
-		return result, nil
-	} else {
-		err = formatError(err, sql, args...)
+	if out != nil {
+		result, err = c.RowsToResult(ctx, out.Rows)
+		return result, err
 	}
 	return nil, err
 }
@@ -114,49 +103,96 @@ func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interf
 		defer cancelFunc()
 	}
 
-	// Link execution.
+	// Sql filtering.
 	sql, args = formatSql(sql, args)
-	sql, args, err = c.db.DoCommit(ctx, link, sql, args)
+	sql, args, err = c.db.DoFilter(ctx, link, sql, args)
 	if err != nil {
 		return nil, err
 	}
+	// Link execution.
+	var out *DoCommitOutput
+	out, err = c.db.DoCommit(ctx, DoCommitInput{
+		Link: link,
+		Sql:  sql,
+		Args: args,
+		Stmt: nil,
+		Type: DoCommitTypeExecContext,
+	})
+	if out != nil {
+		return out.Result, err
+	}
+	return nil, err
+}
 
-	mTime1 := gtime.TimestampMilli()
-	if !c.db.GetDryRun() {
-		result, err = link.ExecContext(ctx, sql, args...)
-	} else {
-		result = new(SqlResult)
+// DoFilter is a hook function, which filters the sql and its arguments before it's committed to underlying driver.
+// The parameter `link` specifies the current database connection operation object. You can modify the sql
+// string `sql` and its arguments `args` as you wish before they're committed to driver.
+func (c *Core) DoFilter(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+	return sql, args, nil
+}
+
+// DoCommit commits current sql and arguments to underlying sql driver.
+func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (*DoCommitOutput, error) {
+	var (
+		err                  error
+		cancelFuncForTimeout context.CancelFunc
+		out                  = &DoCommitOutput{}
+		timestampMilli1      = gtime.TimestampMilli()
+	)
+	switch in.Type {
+	case DoCommitTypeExecContext:
+		if c.db.GetDryRun() {
+			out.Result = new(SqlResult)
+		} else {
+			out.Result, err = in.Link.ExecContext(ctx, in.Sql, in.Args...)
+		}
+
+	case DoCommitTypeQueryContext:
+		out.Rows, err = in.Link.QueryContext(ctx, in.Sql, in.Args...)
+
+	case DoCommitTypeStmtExecContext:
+		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctxTimeoutTypeExec, ctx)
+		defer cancelFuncForTimeout()
+		if c.db.GetDryRun() {
+			out.Result = new(SqlResult)
+		} else {
+			out.Result, err = in.Stmt.ExecContext(ctx, in.Args...)
+		}
+
+	case DoCommitTypeStmtQueryContext:
+		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctxTimeoutTypeQuery, ctx)
+		defer cancelFuncForTimeout()
+		out.Rows, err = in.Stmt.QueryContext(ctx, in.Args...)
+
+	case DoCommitTypeStmtQueryRowContext:
+		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctxTimeoutTypeQuery, ctx)
+		defer cancelFuncForTimeout()
+		out.Row = in.Stmt.QueryRowContext(ctx, in.Args...)
+
+	default:
+		panic(gerror.NewCodef(gcode.CodeInvalidParameter, `invalid DoCommitType "%s"`, in.Type))
 	}
-	mTime2 := gtime.TimestampMilli()
-	var rowsAffected int64
-	if err == nil {
-		rowsAffected, err = result.RowsAffected()
-	}
-	sqlObj := &Sql{
-		Sql:           sql,
-		Type:          sqlTypeExecContext,
-		Args:          args,
-		Format:        FormatSqlWithArgs(sql, args),
-		Error:         err,
-		Start:         mTime1,
-		End:           mTime2,
-		Group:         c.db.GetGroup(),
-		IsTransaction: link.IsTransaction(),
-		RowsAffected:  rowsAffected,
-	}
+
+	var (
+		timestampMilli2 = gtime.TimestampMilli()
+		sqlObj          = &Sql{
+			Sql:           in.Sql,
+			Type:          in.Type,
+			Args:          in.Args,
+			Format:        FormatSqlWithArgs(in.Sql, in.Args),
+			Error:         err,
+			Start:         timestampMilli1,
+			End:           timestampMilli2,
+			Group:         c.db.GetGroup(),
+			IsTransaction: in.Link.IsTransaction(),
+		}
+	)
 	// Tracing and logging.
 	c.addSqlToTracing(ctx, sqlObj)
 	if c.db.GetDebug() {
 		c.writeSqlToLogger(ctx, sqlObj)
 	}
-	return result, formatError(err, sql, args...)
-}
-
-// DoCommit is a hook function, which deals with the sql string before it's committed to underlying driver.
-// The parameter `link` specifies the current database connection operation object. You can modify the sql
-// string `sql` and its arguments `args` as you wish before they're committed to driver.
-func (c *Core) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
-	return sql, args, nil
+	return out, formatError(err, in.Sql, in.Args...)
 }
 
 // Prepare creates a prepared statement for later queries or executions.
@@ -239,8 +275,8 @@ func (c *Core) DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, err
 	}, err
 }
 
-// convertRowsToResult converts underlying data record type sql.Rows to Result type.
-func (c *Core) convertRowsToResult(ctx context.Context, rows *sql.Rows) (Result, error) {
+// RowsToResult converts underlying data record type sql.Rows to Result type.
+func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error) {
 	if rows == nil {
 		return nil, nil
 	}

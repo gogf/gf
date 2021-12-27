@@ -73,9 +73,9 @@ func (d *DriverSqlite) GetChars() (charLeft string, charRight string) {
 	return "`", "`"
 }
 
-// DoCommit deals with the sql string before commits it to underlying sql driver.
-func (d *DriverSqlite) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
-	return d.Core.DoCommit(ctx, link, sql, args)
+// DoFilter deals with the sql string before commits it to underlying sql driver.
+func (d *DriverSqlite) DoFilter(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+	return d.Core.DoFilter(ctx, link, sql, args)
 }
 
 // Tables retrieves and returns the tables of current schema.

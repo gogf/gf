@@ -87,9 +87,9 @@ func (d *DriverMysql) GetChars() (charLeft string, charRight string) {
 	return "`", "`"
 }
 
-// DoCommit handles the sql before posts it to database.
-func (d *DriverMysql) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
-	return d.Core.DoCommit(ctx, link, sql, args)
+// DoFilter handles the sql before posts it to database.
+func (d *DriverMysql) DoFilter(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+	return d.Core.DoFilter(ctx, link, sql, args)
 }
 
 // Tables retrieves and returns the tables of current schema.

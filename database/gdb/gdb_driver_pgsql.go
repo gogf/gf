@@ -37,7 +37,7 @@ func (d *DriverPgsql) New(core *Core, node *ConfigNode) (DB, error) {
 	}, nil
 }
 
-// Open creates and returns a underlying sql.DB object for pgsql.
+// Open creates and returns an underlying sql.DB object for pgsql.
 func (d *DriverPgsql) Open(config *ConfigNode) (db *sql.DB, err error) {
 	var (
 		source string
@@ -85,10 +85,10 @@ func (d *DriverPgsql) GetChars() (charLeft string, charRight string) {
 	return "\"", "\""
 }
 
-// DoCommit deals with the sql string before commits it to underlying sql driver.
-func (d *DriverPgsql) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+// DoFilter deals with the sql string before commits it to underlying sql driver.
+func (d *DriverPgsql) DoFilter(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
 	defer func() {
-		newSql, newArgs, err = d.Core.DoCommit(ctx, link, newSql, newArgs)
+		newSql, newArgs, err = d.Core.DoFilter(ctx, link, newSql, newArgs)
 	}()
 
 	var index int

@@ -44,6 +44,9 @@ func (r *SqlResult) MustGetInsertId() int64 {
 // driver may support this.
 // Also, See sql.Result.
 func (r *SqlResult) RowsAffected() (int64, error) {
+	if r.result == nil {
+		return 0, nil
+	}
 	if r.affected > 0 {
 		return r.affected, nil
 	}
