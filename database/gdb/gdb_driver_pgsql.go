@@ -15,7 +15,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/os/gtime"
+	"reflect"
 	"strings"
+	"time"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -203,4 +207,70 @@ func (d *DriverPgsql) DoInsert(ctx context.Context, link Link, table string, lis
 	default:
 		return d.Core.DoInsert(ctx, link, table, list, option)
 	}
+}
+
+func (d *DriverPgsql) ConvertDataForRecord(ctx context.Context, value interface{}) map[string]interface{} {
+	var data = DataToMapDeep(value)
+	for k, v := range data {
+		data[k] = d.ConvertDataForRecordValue(ctx, v)
+	}
+	return data
+}
+
+func (d *DriverPgsql) ConvertDataForRecordValue(ctx context.Context, value interface{}) interface{} {
+	var (
+		rvValue = reflect.ValueOf(value)
+		rvKind  = rvValue.Kind()
+	)
+	for rvKind == reflect.Ptr {
+		rvValue = rvValue.Elem()
+		rvKind = rvValue.Kind()
+	}
+	switch rvKind {
+	case reflect.Slice, reflect.Array, reflect.Map:
+		// It should ignore the bytes type.
+		if _, ok := value.([]byte); !ok {
+			// Convert the value to JSON.
+			value, _ = json.Marshal(value)
+		}
+
+	case reflect.Struct:
+		switch r := value.(type) {
+		// If the time is zero, it then updates it to nil,
+		// which will insert/update the value to database as "null".
+		case time.Time:
+			if r.IsZero() {
+				value = nil
+			}
+
+		case gtime.Time:
+			if r.IsZero() {
+				value = nil
+			}
+
+		case *gtime.Time:
+			if r.IsZero() {
+				value = nil
+			}
+
+		case *time.Time:
+			// Nothing to do.
+
+		case Counter, *Counter:
+			// Nothing to do.
+
+		default:
+			xxx := reflect.TypeOf(value).Name()
+			fmt.Println(xxx)
+			if reflect.TypeOf(value).Name() == "GenericArray" {
+				// Nothing to do.
+			} else if s, ok := value.(iString); ok { // Use string conversion in default.
+				value = s.String()
+			} else {
+				// Convert the value to JSON.
+				value, _ = json.Marshal(value)
+			}
+		}
+	}
+	return value
 }
