@@ -2084,6 +2084,7 @@ func Test_Model_Option_Where(t *testing.T) {
 		n, _ := r.RowsAffected()
 		t.Assert(n, TableSize)
 	})
+	return
 	gtest.C(t, func(t *gtest.T) {
 		table := createInitTable()
 		defer dropTable(table)
@@ -3125,6 +3126,16 @@ func Test_Model_WhereIn(t *testing.T) {
 		t.Assert(len(result), 2)
 		t.Assert(result[0]["id"], 3)
 		t.Assert(result[1]["id"], 4)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).WhereIn("id", g.Slice{}).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), 0)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).OmitEmptyWhere().WhereIn("id", g.Slice{}).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), TableSize)
 	})
 }
 
