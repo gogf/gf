@@ -333,13 +333,36 @@ func formatSql(sql string, args []interface{}) (newSql string, newArgs []interfa
 }
 
 type formatWhereHolderInput struct {
-	Where     interface{}
-	Args      []interface{}
+	ModelWhereHolder
 	OmitNil   bool
 	OmitEmpty bool
 	Schema    string
 	Table     string // Table is used for fields mapping and filtering internally.
-	Prefix    string // Field prefix, eg: "user.", "order.".
+}
+
+func isKeyValueCanBeOmitEmpty(omitEmpty bool, whereType string, key, value interface{}) bool {
+	if !omitEmpty {
+		return false
+	}
+	// Eg:
+	// Where("id", []int{}).All()             -> SELECT xxx FROM xxx WHERE 0=1
+	// Where("name", "").All()                -> SELECT xxx FROM xxx WHERE `name`=''
+	// OmitEmpty().Where("id", []int{}).All() -> SELECT xxx FROM xxx
+	// OmitEmpty().Where("name", "").All()    -> SELECT xxx FROM xxx
+	// OmitEmpty().Where("1").All()           -> SELECT xxx FROM xxx WHERE 1
+	switch whereType {
+	case whereHolderTypeNoArgs:
+		return false
+
+	case whereHolderTypeIn:
+		return gutil.IsEmpty(value)
+
+	default:
+		if gstr.Count(gconv.String(key), "?") == 0 && gutil.IsEmpty(value) {
+			return true
+		}
+	}
+	return false
 }
 
 // formatWhereHolder formats where statement and its arguments for `Where` and `Having` statements.
@@ -369,6 +392,7 @@ func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newAr
 				Key:    key,
 				Value:  value,
 				Prefix: in.Prefix,
+				Type:   in.Type,
 			})
 		}
 
@@ -401,6 +425,7 @@ func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newAr
 					Value:     value,
 					OmitEmpty: in.OmitEmpty,
 					Prefix:    in.Prefix,
+					Type:      in.Type,
 				})
 				return true
 			})
@@ -447,11 +472,22 @@ func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newAr
 					Value:     foundValue,
 					OmitEmpty: in.OmitEmpty,
 					Prefix:    in.Prefix,
+					Type:      in.Type,
 				})
 			}
 		}
 
 	default:
+		// Where filter.
+		var omitEmptyCheckValue interface{}
+		if len(in.Args) == 1 {
+			omitEmptyCheckValue = in.Args[0]
+		} else {
+			omitEmptyCheckValue = in.Args
+		}
+		if isKeyValueCanBeOmitEmpty(in.OmitEmpty, in.Type, in.Where, omitEmptyCheckValue) {
+			return
+		}
 		// Usually a string.
 		whereStr := gconv.String(in.Where)
 		// Is `whereStr` a field name which composed as a key-value condition?
@@ -467,6 +503,7 @@ func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newAr
 				Value:     in.Args[0],
 				OmitEmpty: in.OmitEmpty,
 				Prefix:    in.Prefix,
+				Type:      in.Type,
 			})
 			in.Args = in.Args[:0]
 			break
@@ -578,6 +615,7 @@ type formatWhereKeyValueInput struct {
 	Args      []interface{} // Args is the full arguments of current operation.
 	Key       string        // The field name, eg: "id", "name", etc.
 	Value     interface{}   // The field value, can be any types.
+	Type      string        // The value in Where type.
 	OmitEmpty bool          // Ignores current condition key if `value` is empty.
 	Prefix    string        // Field prefix, eg: "user", "order", etc.
 }
@@ -588,12 +626,7 @@ func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []interface{}) {
 		quotedKey   = in.Db.GetCore().QuoteWord(in.Key)
 		holderCount = gstr.Count(quotedKey, "?")
 	)
-	// Eg:
-	// Where("id", []int{}).All()             -> SELECT xxx FROM xxx WHERE 0=1
-	// Where("name", "").All()                -> SELECT xxx FROM xxx WHERE `name`=''
-	// OmitEmpty().Where("id", []int{}).All() -> SELECT xxx FROM xxx
-	// OmitEmpty().("name", "").All()         -> SELECT xxx FROM xxx
-	if in.OmitEmpty && holderCount == 0 && gutil.IsEmpty(in.Value) {
+	if isKeyValueCanBeOmitEmpty(in.OmitEmpty, in.Type, quotedKey, in.Value) {
 		return in.Args
 	}
 	if in.Prefix != "" && !gstr.Contains(quotedKey, ".") {

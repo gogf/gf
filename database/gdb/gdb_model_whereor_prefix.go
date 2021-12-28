@@ -16,6 +16,7 @@ func (m *Model) WhereOrPrefix(prefix string, where interface{}, args ...interfac
 		model.whereHolder = make([]ModelWhereHolder, 0)
 	}
 	model.whereHolder = append(model.whereHolder, ModelWhereHolder{
+		Type:     whereHolderTypeDefault,
 		Operator: whereHolderOperatorOr,
 		Where:    where,
 		Args:     args,
@@ -56,7 +57,7 @@ func (m *Model) WhereOrPrefixLike(prefix string, column string, like interface{}
 
 // WhereOrPrefixIn builds `prefix.column IN (in)` statement in `OR` conditions.
 func (m *Model) WhereOrPrefixIn(prefix string, column string, in interface{}) *Model {
-	return m.WhereOrf(`%s.%s IN (?)`, m.QuoteWord(prefix), m.QuoteWord(column), in)
+	return m.doWhereOrfType(whereHolderTypeIn, `%s.%s IN (?)`, m.QuoteWord(prefix), m.QuoteWord(column), in)
 }
 
 // WhereOrPrefixNull builds `prefix.columns[0] IS NULL OR prefix.columns[1] IS NULL ...` statement in `OR` conditions.
@@ -80,7 +81,7 @@ func (m *Model) WhereOrPrefixNotLike(prefix string, column string, like interfac
 
 // WhereOrPrefixNotIn builds `prefix.column NOT IN (in)` statement.
 func (m *Model) WhereOrPrefixNotIn(prefix string, column string, in interface{}) *Model {
-	return m.WhereOrf(`%s.%s NOT IN (?)`, m.QuoteWord(prefix), m.QuoteWord(column), in)
+	return m.doWhereOrfType(whereHolderTypeIn, `%s.%s NOT IN (?)`, m.QuoteWord(prefix), m.QuoteWord(column), in)
 }
 
 // WhereOrPrefixNotNull builds `prefix.columns[0] IS NOT NULL OR prefix.columns[1] IS NOT NULL ...` statement in `OR` conditions.

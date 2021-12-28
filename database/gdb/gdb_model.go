@@ -59,6 +59,7 @@ type ChunkHandler func(result Result, err error) bool
 
 // ModelWhereHolder is the holder for where condition preparing.
 type ModelWhereHolder struct {
+	Type     string        // Type of this holder.
 	Operator int           // Operator for this holder.
 	Where    interface{}   // Where parameter, which can commonly be type of string/map/struct.
 	Args     []interface{} // Arguments for where parameter.
@@ -68,10 +69,13 @@ type ModelWhereHolder struct {
 const (
 	linkTypeMaster           = 1
 	linkTypeSlave            = 2
+	defaultFields            = "*"
 	whereHolderOperatorWhere = 1
 	whereHolderOperatorAnd   = 2
 	whereHolderOperatorOr    = 3
-	defaultFields            = "*"
+	whereHolderTypeDefault   = "Default"
+	whereHolderTypeNoArgs    = "NoArgs"
+	whereHolderTypeIn        = "In"
 )
 
 // Model creates and returns a new ORM model from given schema.
@@ -95,13 +99,16 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 	if len(tableNameQueryOrStruct) > 1 {
 		conditionStr := gconv.String(tableNameQueryOrStruct[0])
 		if gstr.Contains(conditionStr, "?") {
+			whereHolder := ModelWhereHolder{
+				Where: conditionStr,
+				Args:  tableNameQueryOrStruct[1:],
+			}
 			tableStr, extraArgs = formatWhereHolder(c.db, formatWhereHolderInput{
-				Where:     conditionStr,
-				Args:      tableNameQueryOrStruct[1:],
-				OmitNil:   false,
-				OmitEmpty: false,
-				Schema:    "",
-				Table:     "",
+				ModelWhereHolder: whereHolder,
+				OmitNil:          false,
+				OmitEmpty:        false,
+				Schema:           "",
+				Table:            "",
 			})
 		}
 	}
