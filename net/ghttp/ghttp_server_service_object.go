@@ -228,7 +228,7 @@ func (s *Server) doBindObjectMethod(ctx context.Context, in doBindObjectMethodIn
 		s.Logger().Fatalf(ctx, `%+v`, err)
 	}
 
-	key := s.mergeBuildInNameToPattern(in.Pattern, structName, methodName, false)
+	key := s.mergeBuildInNameToPattern(in.Pattern, structName, methodName, true)
 	handlerMap[key] = &handlerItem{
 		Name:       fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, methodName),
 		Type:       HandlerTypeObject,
