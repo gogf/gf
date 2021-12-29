@@ -21,7 +21,7 @@ func Get(name string) interface{} {
 	return localInstances.Get(name)
 }
 
-// Set sets a instance object to the instance manager with given name.
+// Set sets an instance object to the instance manager with given name.
 func Set(name string, instance interface{}) {
 	localInstances.Set(name, instance)
 }
