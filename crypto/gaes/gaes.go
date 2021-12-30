@@ -16,9 +16,8 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 )
 
-var (
+const (
 	// IVDefaultValue is the default value for IV.
-	// This can be changed globally.
 	IVDefaultValue = "I Love Go Frame!"
 )
 
