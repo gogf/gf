@@ -70,9 +70,9 @@ func NewFromObject(object interface{}) (rootCmd *Command, err error) {
 	if rootCommandName == "" {
 		rootCommandName = rootCmd.Name
 	}
-	for i := 0; i < originValueAndKind.InputValue.NumMethod(); i++ {
+	for i := 0; i < reflectValue.NumMethod(); i++ {
 		var (
-			method    = originValueAndKind.InputValue.Method(i)
+			method    = reflectValue.Method(i)
 			methodCmd *Command
 		)
 		methodCmd, err = newCommandFromMethod(object, method)
