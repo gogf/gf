@@ -18,7 +18,7 @@ import (
 
 const (
 	// IVDefaultValue is the default value for IV.
-	IVDefaultValue = "I Love GoFrame!"
+	IVDefaultValue = "I Love Go Frame!"
 )
 
 // Encrypt is alias of EncryptCBC.
