@@ -46,6 +46,16 @@ func NewFromObject(object interface{}) (rootCmd *Command, err error) {
 		)
 		return
 	}
+	var reflectValue = originValueAndKind.InputValue
+	// If given `object` is not pointer, it then creates a temporary one,
+	// of which the value is `reflectValue`.
+	// It then can retrieve all the methods both of struct/*struct.
+	if reflectValue.Kind() == reflect.Struct {
+		newValue := reflect.New(reflectValue.Type())
+		newValue.Elem().Set(reflectValue)
+		reflectValue = newValue
+	}
+
 	// Root command creating.
 	rootCmd, err = newCommandFromObjectMeta(object)
 	if err != nil {

@@ -103,7 +103,8 @@ func (s *Server) doBindObject(ctx context.Context, in doBindObjectInput) {
 		shutFunc     func(*Request)
 	)
 	// If given `object` is not pointer, it then creates a temporary one,
-	// of which the value is `v`.
+	// of which the value is `reflectValue`.
+	// It then can retrieve all the methods both of struct/*struct.
 	if reflectValue.Kind() == reflect.Struct {
 		newValue := reflect.New(reflectType)
 		newValue.Elem().Set(reflectValue)
