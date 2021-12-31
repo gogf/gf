@@ -138,6 +138,19 @@ func Test_Command_RootTag(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(value, `{"Content":"john"}`)
 	})
+	// Pointer.
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			ctx = gctx.New()
+		)
+		cmd, err := gcmd.NewFromObject(&TestObjectForRootTag{})
+		t.AssertNil(err)
+
+		os.Args = []string{"root", "-n=john"}
+		value, err := cmd.RunWithValue(ctx)
+		t.AssertNil(err)
+		t.Assert(value, `{"Content":"john"}`)
+	})
 }
 
 type TestObjectForNeedArgs struct {
@@ -186,5 +199,61 @@ func Test_Command_NeedArgs(t *testing.T) {
 		value, err := cmd.RunWithValue(ctx)
 		t.AssertNil(err)
 		t.Assert(value, `{"Args":["a","b","john"]}`)
+	})
+}
+
+type TestObjectPointerTag struct {
+	g.Meta `name:"root" root:"root"`
+}
+
+type TestObjectPointerTagEnvInput struct {
+	g.Meta `name:"env" usage:"root env" brief:"root env command" dc:"root env command description" ad:"root env command ad"`
+}
+type TestObjectPointerTagEnvOutput struct{}
+
+type TestObjectPointerTagTestInput struct {
+	g.Meta `name:"root"`
+	Name   string `v:"required" short:"n" orphan:"false" brief:"name for test command"`
+}
+type TestObjectPointerTagTestOutput struct {
+	Content string
+}
+
+func (c *TestObjectPointerTag) Env(ctx context.Context, in TestObjectPointerTagEnvInput) (out *TestObjectPointerTagEnvOutput, err error) {
+	return
+}
+
+func (c *TestObjectPointerTag) Root(ctx context.Context, in TestObjectPointerTagTestInput) (out *TestObjectPointerTagTestOutput, err error) {
+	out = &TestObjectPointerTagTestOutput{
+		Content: in.Name,
+	}
+	return
+}
+
+func Test_Command_Pointer(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			ctx = gctx.New()
+		)
+		cmd, err := gcmd.NewFromObject(TestObjectPointerTag{})
+		t.AssertNil(err)
+
+		os.Args = []string{"root", "-n=john"}
+		value, err := cmd.RunWithValue(ctx)
+		t.AssertNil(err)
+		t.Assert(value, `{"Content":"john"}`)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			ctx = gctx.New()
+		)
+		cmd, err := gcmd.NewFromObject(&TestObjectPointerTag{})
+		t.AssertNil(err)
+
+		os.Args = []string{"root", "-n=john"}
+		value, err := cmd.RunWithValue(ctx)
+		t.AssertNil(err)
+		t.Assert(value, `{"Content":"john"}`)
 	})
 }
