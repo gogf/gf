@@ -243,7 +243,7 @@ func Test_Command_Pointer(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(value, `{"Content":"john"}`)
 	})
-
+	return
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx = gctx.New()
