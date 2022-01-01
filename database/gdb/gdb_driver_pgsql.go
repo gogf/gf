@@ -12,9 +12,11 @@
 package gdb
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -203,4 +205,58 @@ func (d *DriverPgsql) DoInsert(ctx context.Context, link Link, table string, lis
 	default:
 		return d.Core.DoInsert(ctx, link, table, list, option)
 	}
+}
+
+// ConvertDataForRecord overload Core.ConvertDataForRecord to handle special data structure, like array
+func (d *DriverPgsql) ConvertDataForRecord(ctx context.Context, value interface{}) map[string]interface{} {
+	var data = DataToMapDeep(value)
+	for k, v := range data {
+		if convertedData, ok := d.convertDataForRecordValue(ctx, v); ok {
+			data[k] = convertedData
+		} else {
+			data[k] = d.ConvertDataForRecordValue(ctx, v)
+		}
+	}
+	return data
+}
+
+func (d *DriverPgsql) convertDataForRecordValue(ctx context.Context, value interface{}) (data interface{}, converted bool) {
+	var (
+		rvValue = reflect.ValueOf(value)
+		rvKind  = rvValue.Kind()
+	)
+	for rvKind == reflect.Ptr {
+		rvValue = rvValue.Elem()
+		rvKind = rvValue.Kind()
+	}
+	switch rvKind {
+	case reflect.Slice, reflect.Array:
+	// only deal with slice or array now
+	default:
+		return nil, false
+	}
+
+	elemKind := rvValue.Type().Elem().Kind()
+	switch elemKind {
+	case reflect.String:
+		return d.convertToRawForStringArray(ctx, rvValue.Interface().([]string)), true
+		// todo handle other types, like int\float
+	}
+
+	return nil, false
+}
+
+func (d *DriverPgsql) convertToRawForStringArray(ctx context.Context, strSlice []string) Raw {
+	// eg. the slice []string{"123", "456"} will covert to string "ARRAY['123','456']"
+	buf := bytes.NewBufferString("ARRAY[")
+	for i, s := range strSlice {
+		buf.WriteByte('\'')
+		buf.WriteString(s)
+		buf.WriteByte('\'')
+		if i < len(strSlice)-1 {
+			buf.WriteByte(',')
+		}
+	}
+	buf.WriteString("]")
+	return Raw(buf.String())
 }
