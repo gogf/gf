@@ -57,7 +57,7 @@ func Test_Command_NewFromObject_Help(t *testing.T) {
 		t.Assert(cmd.Name, "root")
 
 		os.Args = []string{"root"}
-		value, err := cmd.RunWithValue(ctx)
+		value, err := cmd.RunWithValueError(ctx)
 		t.AssertNil(err)
 		t.Assert(value, nil)
 	})
@@ -73,7 +73,7 @@ func Test_Command_NewFromObject_RunWithValue(t *testing.T) {
 		t.Assert(cmd.Name, "root")
 
 		os.Args = []string{"root", "test", "-n=john"}
-		value, err := cmd.RunWithValue(ctx)
+		value, err := cmd.RunWithValueError(ctx)
 		t.AssertNil(err)
 		t.Assert(value, `{"Content":"john"}`)
 	})
@@ -91,7 +91,7 @@ func Test_Command_AddObject(t *testing.T) {
 		t.AssertNil(err)
 
 		os.Args = []string{"start", "root", "test", "-n=john"}
-		value, err := command.RunWithValue(ctx)
+		value, err := command.RunWithValueError(ctx)
 		t.AssertNil(err)
 		t.Assert(value, `{"Content":"john"}`)
 	})
@@ -134,7 +134,7 @@ func Test_Command_RootTag(t *testing.T) {
 		t.AssertNil(err)
 
 		os.Args = []string{"root", "-n=john"}
-		value, err := cmd.RunWithValue(ctx)
+		value, err := cmd.RunWithValueError(ctx)
 		t.AssertNil(err)
 		t.Assert(value, `{"Content":"john"}`)
 	})
@@ -147,7 +147,7 @@ func Test_Command_RootTag(t *testing.T) {
 		t.AssertNil(err)
 
 		os.Args = []string{"root", "-n=john"}
-		value, err := cmd.RunWithValue(ctx)
+		value, err := cmd.RunWithValueError(ctx)
 		t.AssertNil(err)
 		t.Assert(value, `{"Content":"john"}`)
 	})
@@ -192,11 +192,11 @@ func Test_Command_NeedArgs(t *testing.T) {
 		t.AssertNil(err)
 
 		//os.Args = []string{"root", "test", "a", "b", "c", "-h"}
-		//value, err := cmd.RunWithValue(ctx)
+		//value, err := cmd.RunWithValueError(ctx)
 		//t.AssertNil(err)
 
 		os.Args = []string{"root", "test", "a", "b", "c", "-n=john"}
-		value, err := cmd.RunWithValue(ctx)
+		value, err := cmd.RunWithValueError(ctx)
 		t.AssertNil(err)
 		t.Assert(value, `{"Args":["a","b","john"]}`)
 	})
@@ -239,7 +239,7 @@ func Test_Command_Pointer(t *testing.T) {
 		t.AssertNil(err)
 
 		os.Args = []string{"root", "-n=john"}
-		value, err := cmd.RunWithValue(ctx)
+		value, err := cmd.RunWithValueError(ctx)
 		t.AssertNil(err)
 		t.Assert(value, `{"Content":"john"}`)
 	})
@@ -252,7 +252,7 @@ func Test_Command_Pointer(t *testing.T) {
 		t.AssertNil(err)
 
 		os.Args = []string{"root", "-n=john"}
-		value, err := cmd.RunWithValue(ctx)
+		value, err := cmd.RunWithValueError(ctx)
 		t.AssertNil(err)
 		t.Assert(value, `{"Content":"john"}`)
 	})

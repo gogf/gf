@@ -21,13 +21,35 @@ import (
 )
 
 // Run calls custom function that bound to this command.
-func (c *Command) Run(ctx context.Context) error {
-	_, err := c.RunWithValue(ctx)
-	return err
+// It exits this process with exit code 1 if any error occurs.
+func (c *Command) Run(ctx context.Context) {
+	_ = c.RunWithValue(ctx)
 }
 
 // RunWithValue calls custom function that bound to this command with value output.
-func (c *Command) RunWithValue(ctx context.Context) (value interface{}, err error) {
+// It exits this process with exit code 1 if any error occurs.
+func (c *Command) RunWithValue(ctx context.Context) (value interface{}) {
+	value, err := c.RunWithValueError(ctx)
+	if err != nil {
+		if gerror.Code(err) == gcode.CodeNotFound {
+			fmt.Printf("ERROR: %s\n", gstr.Trim(err.Error()))
+			c.Print()
+		} else {
+			fmt.Printf("%+v\n", err)
+		}
+		os.Exit(1)
+	}
+	return value
+}
+
+// RunWithError calls custom function that bound to this command with error output.
+func (c *Command) RunWithError(ctx context.Context) (err error) {
+	_, err = c.RunWithValueError(ctx)
+	return
+}
+
+// RunWithValueError calls custom function that bound to this command with value and error output.
+func (c *Command) RunWithValueError(ctx context.Context) (value interface{}, err error) {
 	// Parse command arguments and options using default algorithm.
 	parser, err := Parse(nil)
 	if err != nil {
