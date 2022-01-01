@@ -12,6 +12,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -45,14 +47,13 @@ func (c *Command) RunWithValue(ctx context.Context) (value interface{}, err erro
 	}
 
 	// Print error and help command if no command found.
-	fmt.Printf(
-		"ERROR: command \"%s\" not found for arguments \"%s\"\n",
+	err = gerror.NewCodef(
+		gcode.CodeNotFound,
+		`command "%s" not found for arguments "%s"`,
 		gstr.Join(args, " "),
 		gstr.Join(os.Args, " "),
 	)
-	c.Print()
-
-	return nil, nil
+	return
 }
 
 func (c *Command) doRun(ctx context.Context, parser *Parser) (value interface{}, err error) {

@@ -13,6 +13,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/gctx"
@@ -127,7 +129,9 @@ gf get golang.org/x/sys
 		}
 
 		if err = commandRoot.Run(ctx); err != nil {
-			g.Log().Fatal(ctx, err)
+			if gerror.Code(err) == gcode.CodeNotFound {
+				commandRoot.Print()
+			}
 		}
 	})
 }
