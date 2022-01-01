@@ -230,8 +230,8 @@ func (d *DriverPgsql) convertDataForRecordValue(ctx context.Context, value inter
 		rvKind = rvValue.Kind()
 	}
 	switch rvKind {
-	case reflect.Slice, reflect.Array:
-	// only deal with slice or array now
+	case reflect.Slice:
+	// only deal with slice now
 	default:
 		return nil, false
 	}
