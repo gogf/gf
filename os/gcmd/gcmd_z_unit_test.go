@@ -128,7 +128,7 @@ gf get golang.org/x/sys
 			g.Log().Fatal(ctx, err)
 		}
 
-		if err = commandRoot.Run(ctx); err != nil {
+		if err = commandRoot.RunWithError(ctx); err != nil {
 			if gerror.Code(err) == gcode.CodeNotFound {
 				commandRoot.Print()
 			}
@@ -219,6 +219,6 @@ gf build main.go -n my-app -v 1.0 -a amd64,386 -s linux,windows,darwin -p ./dock
 		if err = c.AddCommand(&commandBuild); err != nil {
 			g.Log().Fatal(ctx, err)
 		}
-		c.Run(ctx)
+		_ = c.RunWithError(ctx)
 	})
 }
