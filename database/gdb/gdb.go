@@ -101,7 +101,7 @@ type DB interface {
 	DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error)                                            // See Core.DoQuery.
 	DoExec(ctx context.Context, link Link, sql string, args ...interface{}) (result sql.Result, err error)                                         // See Core.DoExec.
 	DoFilter(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error)                     // See Core.DoFilter.
-	DoCommit(ctx context.Context, in DoCommitInput) (out *DoCommitOutput, err error)                                                               // See Core.DoCommit.
+	DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutput, err error)                                                                // See Core.DoCommit.
 	DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, error)                                                                           // See Core.DoPrepare.
 
 	// ===========================================================================
@@ -186,18 +186,23 @@ type Core struct {
 
 // DoCommitInput is the input parameters for function DoCommit.
 type DoCommitInput struct {
-	Stmt *sql.Stmt
-	Link Link
-	Sql  string
-	Args []interface{}
-	Type string
+	Db            *sql.DB
+	Tx            *sql.Tx
+	Stmt          *sql.Stmt
+	Link          Link
+	Sql           string
+	Args          []interface{}
+	Type          string
+	IsTransaction bool
 }
 
 // DoCommitOutput is the output parameters for function DoCommit.
 type DoCommitOutput struct {
-	Row    *sql.Row   // Row is the result of Stmt.QueryRowContext.
-	Rows   *sql.Rows  // Rows is the result of query statement.
-	Result sql.Result // Result is the result of exec statement.
+	Result    sql.Result  // Result is the result of exec statement.
+	Records   []Record    // Records is the result of query statement.
+	Stmt      *Stmt       // Stmt is the Statement object result for Prepare.
+	Tx        *TX         // Tx is the transaction object result for Begin.
+	RawResult interface{} // RawResult is the underlying result, which might be sql.Result/*sql.Rows/*sql.Row.
 }
 
 // Driver is the interface for integrating sql drivers into package gdb.
@@ -285,22 +290,20 @@ const (
 	ctxTimeoutTypeQuery
 	ctxTimeoutTypePrepare
 	commandEnvKeyForDryRun = "gf.gdb.dryrun"
-	sqlTypeBegin           = `DB.Begin`
-	sqlTypeTXCommit        = `TX.Commit`
-	sqlTypeTXRollback      = `TX.Rollback`
-	sqlTypeQueryContext    = `DB.QueryContext`
-	sqlTypeExecContext     = `DB.ExecContext`
-	sqlTypePrepareContext  = `DB.PrepareContext`
 	modelForDaoSuffix      = `ForDao`
 	dbRoleSlave            = `slave`
 )
 
 const (
-	DoCommitTypeExecContext         = "ExecContext"
-	DoCommitTypeQueryContext        = "QueryContext"
-	DoCommitTypeStmtExecContext     = "Statement.ExecContext"
-	DoCommitTypeStmtQueryContext    = "Statement.QueryContext"
-	DoCommitTypeStmtQueryRowContext = "Statement.QueryRowContext"
+	SqlTypeBegin               = "DB.Begin"
+	SqlTypeTXCommit            = "TX.Commit"
+	SqlTypeTXRollback          = "TX.Rollback"
+	SqlTypeExecContext         = "DB.ExecContext"
+	SqlTypeQueryContext        = "DB.QueryContext"
+	SqlTypePrepareContext      = "DB.PrepareContext"
+	SqlTypeStmtExecContext     = "DB.Statement.ExecContext"
+	SqlTypeStmtQueryContext    = "DB.Statement.QueryContext"
+	SqlTypeStmtQueryRowContext = "DB.Statement.QueryRowContext"
 )
 
 var (

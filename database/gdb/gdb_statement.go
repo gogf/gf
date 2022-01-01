@@ -31,32 +31,34 @@ type Stmt struct {
 // returns a Result summarizing the effect of the statement.
 func (s *Stmt) ExecContext(ctx context.Context, args ...interface{}) (sql.Result, error) {
 	out, err := s.core.db.DoCommit(ctx, DoCommitInput{
-		Stmt: s.Stmt,
-		Link: s.link,
-		Sql:  s.sql,
-		Args: args,
-		Type: DoCommitTypeStmtExecContext,
+		Stmt:          s.Stmt,
+		Link:          s.link,
+		Sql:           s.sql,
+		Args:          args,
+		Type:          SqlTypeStmtExecContext,
+		IsTransaction: s.link.IsTransaction(),
 	})
-	if out != nil {
-		return out.Result, err
-	}
-	return nil, err
+	return out.Result, err
 }
 
 // QueryContext executes a prepared query statement with the given arguments
 // and returns the query results as a *Rows.
 func (s *Stmt) QueryContext(ctx context.Context, args ...interface{}) (*sql.Rows, error) {
 	out, err := s.core.db.DoCommit(ctx, DoCommitInput{
-		Stmt: s.Stmt,
-		Link: s.link,
-		Sql:  s.sql,
-		Args: args,
-		Type: DoCommitTypeStmtQueryContext,
+		Stmt:          s.Stmt,
+		Link:          s.link,
+		Sql:           s.sql,
+		Args:          args,
+		Type:          SqlTypeStmtQueryContext,
+		IsTransaction: s.link.IsTransaction(),
 	})
-	if out != nil {
-		return out.Rows, err
+	if err != nil {
+		return nil, err
 	}
-	return nil, err
+	if out.RawResult != nil {
+		return out.RawResult.(*sql.Rows), err
+	}
+	return nil, nil
 }
 
 // QueryRowContext executes a prepared query statement with the given arguments.
@@ -67,17 +69,18 @@ func (s *Stmt) QueryContext(ctx context.Context, args ...interface{}) (*sql.Rows
 // the rest.
 func (s *Stmt) QueryRowContext(ctx context.Context, args ...interface{}) *sql.Row {
 	out, err := s.core.db.DoCommit(ctx, DoCommitInput{
-		Stmt: s.Stmt,
-		Link: s.link,
-		Sql:  s.sql,
-		Args: args,
-		Type: DoCommitTypeStmtQueryRowContext,
+		Stmt:          s.Stmt,
+		Link:          s.link,
+		Sql:           s.sql,
+		Args:          args,
+		Type:          SqlTypeStmtQueryContext,
+		IsTransaction: s.link.IsTransaction(),
 	})
 	if err != nil {
 		panic(err)
 	}
-	if out != nil {
-		return out.Row
+	if out.RawResult != nil {
+		return out.RawResult.(*sql.Row)
 	}
 	return nil
 }

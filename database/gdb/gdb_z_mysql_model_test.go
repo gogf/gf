@@ -31,6 +31,7 @@ import (
 func Test_Model_Insert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
+
 	gtest.C(t, func(t *gtest.T) {
 		user := db.Model(table)
 		result, err := user.Data(g.Map{
