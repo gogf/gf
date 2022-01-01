@@ -16,6 +16,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 // Query commits one query SQL to underlying driver and returns the execution result.
@@ -54,22 +55,16 @@ func (c *Core) DoQuery(ctx context.Context, link Link, sql string, args ...inter
 		return nil, err
 	}
 	// Link execution.
-	var out *DoCommitOutput
+	var out DoCommitOutput
 	out, err = c.db.DoCommit(ctx, DoCommitInput{
-		Link: link,
-		Sql:  sql,
-		Args: args,
-		Stmt: nil,
-		Type: DoCommitTypeQueryContext,
+		Link:          link,
+		Sql:           sql,
+		Args:          args,
+		Stmt:          nil,
+		Type:          SqlTypeQueryContext,
+		IsTransaction: link.IsTransaction(),
 	})
-	if err != nil {
-		return nil, err
-	}
-	if out != nil {
-		result, err = c.RowsToResult(ctx, out.Rows)
-		return result, err
-	}
-	return nil, err
+	return out.Records, err
 }
 
 // Exec commits one query SQL to underlying driver and returns the execution result.
@@ -110,18 +105,16 @@ func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interf
 		return nil, err
 	}
 	// Link execution.
-	var out *DoCommitOutput
+	var out DoCommitOutput
 	out, err = c.db.DoCommit(ctx, DoCommitInput{
-		Link: link,
-		Sql:  sql,
-		Args: args,
-		Stmt: nil,
-		Type: DoCommitTypeExecContext,
+		Link:          link,
+		Sql:           sql,
+		Args:          args,
+		Stmt:          nil,
+		Type:          SqlTypeExecContext,
+		IsTransaction: link.IsTransaction(),
 	})
-	if out != nil {
-		return out.Result, err
-	}
-	return nil, err
+	return out.Result, err
 }
 
 // DoFilter is a hook function, which filters the sql and its arguments before it's committed to underlying driver.
@@ -132,47 +125,98 @@ func (c *Core) DoFilter(ctx context.Context, link Link, sql string, args []inter
 }
 
 // DoCommit commits current sql and arguments to underlying sql driver.
-func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (*DoCommitOutput, error) {
+func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutput, err error) {
 	var (
-		err                  error
+		sqlTx                *sql.Tx
+		sqlStmt              *sql.Stmt
+		sqlRows              *sql.Rows
+		sqlResult            sql.Result
+		stmtSqlRows          *sql.Rows
+		stmtSqlRow           *sql.Row
+		rowsAffected         int64
 		cancelFuncForTimeout context.CancelFunc
-		out                  = &DoCommitOutput{}
 		timestampMilli1      = gtime.TimestampMilli()
 	)
+	// Execution cased by type.
 	switch in.Type {
-	case DoCommitTypeExecContext:
-		if c.db.GetDryRun() {
-			out.Result = new(SqlResult)
-		} else {
-			out.Result, err = in.Link.ExecContext(ctx, in.Sql, in.Args...)
+	case SqlTypeBegin:
+		if sqlTx, err = in.Db.Begin(); err == nil {
+			out.Tx = &TX{
+				db:            c.db,
+				tx:            sqlTx,
+				ctx:           context.WithValue(ctx, transactionIdForLoggerCtx, transactionIdGenerator.Add(1)),
+				master:        in.Db,
+				transactionId: guid.S(),
+			}
+			ctx = out.Tx.ctx
 		}
+		out.RawResult = sqlTx
 
-	case DoCommitTypeQueryContext:
-		out.Rows, err = in.Link.QueryContext(ctx, in.Sql, in.Args...)
+	case SqlTypeTXCommit:
+		err = in.Tx.Commit()
 
-	case DoCommitTypeStmtExecContext:
+	case SqlTypeTXRollback:
+		err = in.Tx.Rollback()
+
+	case SqlTypeExecContext:
+		if c.db.GetDryRun() {
+			sqlResult = new(SqlResult)
+		} else {
+			sqlResult, err = in.Link.ExecContext(ctx, in.Sql, in.Args...)
+		}
+		out.RawResult = sqlResult
+
+	case SqlTypeQueryContext:
+		sqlRows, err = in.Link.QueryContext(ctx, in.Sql, in.Args...)
+		out.RawResult = sqlRows
+
+	case SqlTypePrepareContext:
+		sqlStmt, err = in.Link.PrepareContext(ctx, in.Sql)
+		out.RawResult = sqlStmt
+
+	case SqlTypeStmtExecContext:
 		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctxTimeoutTypeExec, ctx)
 		defer cancelFuncForTimeout()
 		if c.db.GetDryRun() {
-			out.Result = new(SqlResult)
+			sqlResult = new(SqlResult)
 		} else {
-			out.Result, err = in.Stmt.ExecContext(ctx, in.Args...)
+			sqlResult, err = in.Stmt.ExecContext(ctx, in.Args...)
 		}
+		out.RawResult = sqlResult
 
-	case DoCommitTypeStmtQueryContext:
+	case SqlTypeStmtQueryContext:
 		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctxTimeoutTypeQuery, ctx)
 		defer cancelFuncForTimeout()
-		out.Rows, err = in.Stmt.QueryContext(ctx, in.Args...)
+		stmtSqlRows, err = in.Stmt.QueryContext(ctx, in.Args...)
+		out.RawResult = stmtSqlRows
 
-	case DoCommitTypeStmtQueryRowContext:
+	case SqlTypeStmtQueryRowContext:
 		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctxTimeoutTypeQuery, ctx)
 		defer cancelFuncForTimeout()
-		out.Row = in.Stmt.QueryRowContext(ctx, in.Args...)
+		stmtSqlRow = in.Stmt.QueryRowContext(ctx, in.Args...)
+		out.RawResult = stmtSqlRow
 
 	default:
-		panic(gerror.NewCodef(gcode.CodeInvalidParameter, `invalid DoCommitType "%s"`, in.Type))
+		panic(gerror.NewCodef(gcode.CodeInvalidParameter, `invalid SqlType "%s"`, in.Type))
 	}
+	// Result handling.
+	switch {
+	case sqlResult != nil:
+		rowsAffected, err = sqlResult.RowsAffected()
+		out.Result = sqlResult
 
+	case sqlRows != nil:
+		out.Records, err = c.RowsToResult(ctx, sqlRows)
+		rowsAffected = int64(len(out.Records))
+
+	case sqlStmt != nil:
+		out.Stmt = &Stmt{
+			Stmt: sqlStmt,
+			core: c,
+			link: in.Link,
+			sql:  in.Sql,
+		}
+	}
 	var (
 		timestampMilli2 = gtime.TimestampMilli()
 		sqlObj          = &Sql{
@@ -184,7 +228,8 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (*DoCommitOutput,
 			Start:         timestampMilli1,
 			End:           timestampMilli2,
 			Group:         c.db.GetGroup(),
-			IsTransaction: in.Link.IsTransaction(),
+			RowsAffected:  rowsAffected,
+			IsTransaction: in.IsTransaction,
 		}
 	)
 	// Tracing and logging.
@@ -192,7 +237,15 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (*DoCommitOutput,
 	if c.db.GetDebug() {
 		c.writeSqlToLogger(ctx, sqlObj)
 	}
-	return out, formatError(err, in.Sql, in.Args...)
+	if err != nil && err != sql.ErrNoRows {
+		err = gerror.NewCodef(
+			gcode.CodeDbOperationError,
+			"%s, %s\n",
+			err.Error(),
+			FormatSqlWithArgs(in.Sql, in.Args),
+		)
+	}
+	return out, err
 }
 
 // Prepare creates a prepared statement for later queries or executions.
@@ -221,7 +274,7 @@ func (c *Core) Prepare(ctx context.Context, sql string, execOnMaster ...bool) (*
 }
 
 // DoPrepare calls prepare function on given link object and returns the statement object.
-func (c *Core) DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, error) {
+func (c *Core) DoPrepare(ctx context.Context, link Link, sql string) (stmt *Stmt, err error) {
 	// Transaction checks.
 	if link == nil {
 		if tx := TXFromCtx(ctx, c.db.GetGroup()); tx != nil {
@@ -246,33 +299,15 @@ func (c *Core) DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, err
 		ctx, _ = context.WithTimeout(ctx, c.GetConfig().PrepareTimeout)
 	}
 
-	var (
-		mTime1    = gtime.TimestampMilli()
-		stmt, err = link.PrepareContext(ctx, sql)
-		mTime2    = gtime.TimestampMilli()
-		sqlObj    = &Sql{
-			Sql:           sql,
-			Type:          sqlTypePrepareContext,
-			Args:          nil,
-			Format:        FormatSqlWithArgs(sql, nil),
-			Error:         err,
-			Start:         mTime1,
-			End:           mTime2,
-			Group:         c.db.GetGroup(),
-			IsTransaction: link.IsTransaction(),
-		}
-	)
-	// Tracing and logging.
-	c.addSqlToTracing(ctx, sqlObj)
-	if c.db.GetDebug() {
-		c.writeSqlToLogger(ctx, sqlObj)
-	}
-	return &Stmt{
-		Stmt: stmt,
-		core: c,
-		link: link,
-		sql:  sql,
-	}, err
+	// Link execution.
+	var out DoCommitOutput
+	out, err = c.db.DoCommit(ctx, DoCommitInput{
+		Link:          link,
+		Sql:           sql,
+		Type:          SqlTypePrepareContext,
+		IsTransaction: link.IsTransaction(),
+	})
+	return out.Stmt, err
 }
 
 // RowsToResult converts underlying data record type sql.Rows to Result type.

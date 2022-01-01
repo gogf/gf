@@ -8,15 +8,12 @@ package gdb
 
 import (
 	"bytes"
-	"database/sql"
 	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gstructs"
@@ -805,14 +802,6 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 		}
 	}
 	return
-}
-
-// formatError customizes and returns the SQL error.
-func formatError(err error, s string, args ...interface{}) error {
-	if err != nil && err != sql.ErrNoRows {
-		return gerror.NewCodef(gcode.CodeDbOperationError, "%s, %s\n", err.Error(), FormatSqlWithArgs(s, args))
-	}
-	return err
 }
 
 // FormatSqlWithArgs binds the arguments to the sql string and returns a complete

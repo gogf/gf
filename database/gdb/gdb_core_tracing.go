@@ -33,6 +33,8 @@ const (
 	tracingEventDbExecution     = "db.execution"
 	tracingEventDbExecutionSql  = "db.execution.sql"
 	tracingEventDbExecutionCost = "db.execution.cost"
+	tracingEventDbExecutionRows = "db.execution.rows"
+	tracingEventDbExecutionTxID = "db.execution.txid"
 	tracingEventDbExecutionType = "db.execution.type"
 )
 
@@ -76,9 +78,18 @@ func (c *Core) addSqlToTracing(ctx context.Context, sql *Sql) {
 		labels = append(labels, attribute.String(tracingAttrDbGroup, group))
 	}
 	span.SetAttributes(labels...)
-	span.AddEvent(tracingEventDbExecution, trace.WithAttributes(
+	events := []attribute.KeyValue{
 		attribute.String(tracingEventDbExecutionSql, sql.Format),
 		attribute.String(tracingEventDbExecutionCost, fmt.Sprintf(`%d ms`, sql.End-sql.Start)),
-		attribute.String(tracingEventDbExecutionType, sql.Type),
-	))
+		attribute.String(tracingEventDbExecutionRows, fmt.Sprintf(`%d`, sql.RowsAffected)),
+	}
+	if sql.IsTransaction {
+		if v := ctx.Value(transactionIdForLoggerCtx); v != nil {
+			events = append(events, attribute.String(
+				tracingEventDbExecutionTxID, fmt.Sprintf(`%d`, v.(uint64)),
+			))
+		}
+	}
+	events = append(events, attribute.String(tracingEventDbExecutionType, sql.Type))
+	span.AddEvent(tracingEventDbExecution, trace.WithAttributes(events...))
 }
