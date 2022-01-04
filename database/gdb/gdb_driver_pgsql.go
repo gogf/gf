@@ -14,6 +14,7 @@ package gdb
 import (
 	"context"
 	"database/sql"
+	"database/sql/driver"
 	"fmt"
 	"strings"
 
@@ -203,4 +204,22 @@ func (d *DriverPgsql) DoInsert(ctx context.Context, link Link, table string, lis
 	default:
 		return d.Core.DoInsert(ctx, link, table, list, option)
 	}
+}
+
+// ConvertDataForRecord converting for any data that will be inserted into table/collection as a record.
+func (d *DriverPgsql) ConvertDataForRecord(ctx context.Context, value interface{}) map[string]interface{} {
+	data := DataToMapDeep(value)
+	var err error
+	for k, v := range data {
+		if valuer, ok := v.(driver.Valuer); ok {
+			data[k], err = valuer.Value()
+			if err != nil {
+				return nil
+			}
+		} else {
+			data[k] = d.Core.ConvertDataForRecordValue(ctx, v)
+		}
+	}
+
+	return data
 }
