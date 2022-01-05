@@ -11,6 +11,7 @@ import (
 	"database/sql"
 )
 
+// DriverClickhouse is the driver for SQL server database.
 type DriverClickhouse struct {
 	*Core
 }
@@ -62,5 +63,29 @@ func (d *DriverClickhouse) DoFilter(ctx context.Context, link Link, sql string, 
 }
 
 func (d *DriverClickhouse) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {
+	return nil, nil
+}
+
+func (d *DriverClickhouse) InsertIgnore(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
+	return nil, nil
+}
+
+func (d *DriverClickhouse) InsertAndGetId(ctx context.Context, table string, data interface{}, batch ...int) (int64, error) {
+	return 0, nil
+}
+
+func (d *DriverClickhouse) Replace(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
+	return nil, nil
+}
+
+func (d *DriverClickhouse) Save(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
+	return nil, nil
+}
+
+func (d *DriverClickhouse) Update(ctx context.Context, table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
+	return nil, nil
+}
+
+func (d *DriverClickhouse) Delete(ctx context.Context, table string, condition interface{}, args ...interface{}) (sql.Result, error) {
 	return nil, nil
 }
