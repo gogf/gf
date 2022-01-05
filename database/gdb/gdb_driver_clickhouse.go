@@ -49,12 +49,8 @@ func (d *DriverClickhouse) Open(config *ConfigNode) (db *sql.DB, err error) {
 	}
 }
 
-func (d *DriverClickhouse) Insert(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
-	return nil, nil
-}
-
 func (d *DriverClickhouse) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
-	return
+	return d.Core.Tables()
 }
 
 func (d *DriverClickhouse) FilteredLink() string {
@@ -70,20 +66,13 @@ func (d *DriverClickhouse) FilteredLink() string {
 	return s
 }
 
-func (d *DriverClickhouse) DoInsert(ctx context.Context, link Link, table string, list List, option DoInsertOption) (result sql.Result, err error) {
-	return nil, nil
-}
-
-func (d *DriverClickhouse) GetChars() (charLeft string, charRight string) {
-	return "", ""
-}
-
+// TableFields
 func (d *DriverClickhouse) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {
 	link, err := d.SlaveLink(schema...)
 	if err != nil {
 		return nil, err
 	}
-	getColumnsSql := fmt.Sprintf("select * from `system`.columns c where database = '%s' and `table` = '%s'", d.GetSchema(), table)
+	getColumnsSql := fmt.Sprintf("select position,name,type,comment from `system`.columns c where database = '%s' and `table` = '%s'", d.GetSchema(), table)
 	result, err := d.DoGetAll(ctx, link, getColumnsSql)
 	if err != nil {
 		return nil, err
@@ -100,26 +89,33 @@ func (d *DriverClickhouse) TableFields(ctx context.Context, table string, schema
 	return fields, nil
 }
 
-func (d *DriverClickhouse) InsertIgnore(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
+func (d *DriverClickhouse) DoInsert(ctx context.Context, link Link, table string, data List, option DoInsertOption) (result sql.Result, err error) {
 	return nil, nil
 }
 
-func (d *DriverClickhouse) InsertAndGetId(ctx context.Context, table string, data interface{}, batch ...int) (int64, error) {
-	return 0, nil
-}
-
-func (d *DriverClickhouse) Replace(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
+func (d *DriverClickhouse) DoUpdate(ctx context.Context, link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
 	return nil, nil
 }
 
-func (d *DriverClickhouse) Save(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
+func (d *DriverClickhouse) DoDelete(ctx context.Context, link Link, table string, condition string, args ...interface{}) (result sql.Result, err error) {
 	return nil, nil
 }
 
-func (d *DriverClickhouse) Update(ctx context.Context, table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
+func (d *DriverClickhouse) DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error) {
 	return nil, nil
 }
 
-func (d *DriverClickhouse) Delete(ctx context.Context, table string, condition interface{}, args ...interface{}) (sql.Result, error) {
+func (d *DriverClickhouse) DoExec(ctx context.Context, link Link, sql string, args ...interface{}) (result sql.Result, err error) {
+	return nil, nil
+}
+func (d *DriverClickhouse) DoFilter(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+	return "", nil, nil
+}
+
+func (d *DriverClickhouse) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutput, err error) {
+	return DoCommitOutput{}, nil
+}
+
+func (d *DriverClickhouse) DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, error) {
 	return nil, nil
 }
