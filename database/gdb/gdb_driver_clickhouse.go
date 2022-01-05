@@ -52,3 +52,15 @@ func (d *DriverClickhouse) DoInsert(ctx context.Context, link Link, table string
 func (d *DriverClickhouse) Model(tableNameOrStruct ...interface{}) *Model {
 	return nil
 }
+
+func (d *DriverClickhouse) GetChars() (charLeft string, charRight string) {
+	return "", ""
+}
+
+func (d *DriverClickhouse) DoFilter(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+	return "", nil, nil
+}
+
+func (d *DriverClickhouse) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {
+	return nil, nil
+}
