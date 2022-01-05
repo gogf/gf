@@ -8,48 +8,70 @@ package ghttp
 
 import (
 	"bytes"
-	"github.com/gogf/gf/debug/gdebug"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
+	"context"
 	"reflect"
 	"strings"
 
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // BindHandler registers a handler function to server with given pattern.
-// The parameter `handler` can be type of:
-// func(*ghttp.Request)
-// func(context.Context)
-// func(context.Context,TypeRequest)
-// func(context.Context,TypeRequest) error
-// func(context.Context,TypeRequest)(TypeResponse,error)
+//
+// Note that the parameter `handler` can be type of:
+// 1. func(*ghttp.Request)
+// 2. func(context.Context, BizRequest)(BizResponse, error)
 func (s *Server) BindHandler(pattern string, handler interface{}) {
+	var (
+		ctx = context.TODO()
+	)
 	funcInfo, err := s.checkAndCreateFuncInfo(handler, "", "", "")
 	if err != nil {
-		s.Logger().Error(err.Error())
-		return
+		s.Logger().Fatalf(ctx, `%+v`, err)
 	}
-	s.doBindHandler(pattern, funcInfo, nil, "")
+	s.doBindHandler(ctx, doBindHandlerInput{
+		Prefix:     "",
+		Pattern:    pattern,
+		FuncInfo:   funcInfo,
+		Middleware: nil,
+		Source:     "",
+	})
+}
+
+type doBindHandlerInput struct {
+	Prefix     string
+	Pattern    string
+	FuncInfo   handlerFuncInfo
+	Middleware []HandlerFunc
+	Source     string
 }
 
 // doBindHandler registers a handler function to server with given pattern.
-// The parameter <pattern> is like:
+//
+// The parameter `pattern` is like:
 // /user/list, put:/user, delete:/user, post:/user@goframe.org
-func (s *Server) doBindHandler(pattern string, funcInfo handlerFuncInfo, middleware []HandlerFunc, source string) {
-	s.setHandler(pattern, &handlerItem{
-		Name:       gdebug.FuncPath(funcInfo.Func),
-		Type:       handlerTypeHandler,
-		Info:       funcInfo,
-		Middleware: middleware,
-		Source:     source,
+func (s *Server) doBindHandler(ctx context.Context, in doBindHandlerInput) {
+	s.setHandler(ctx, setHandlerInput{
+		Prefix:  in.Prefix,
+		Pattern: in.Pattern,
+		HandlerItem: &handlerItem{
+			Type:       HandlerTypeHandler,
+			Info:       in.FuncInfo,
+			Middleware: in.Middleware,
+			Source:     in.Source,
+		},
 	})
 }
 
 // bindHandlerByMap registers handlers to server using map.
-func (s *Server) bindHandlerByMap(m map[string]*handlerItem) {
-	for p, h := range m {
-		s.setHandler(p, h)
+func (s *Server) bindHandlerByMap(ctx context.Context, prefix string, m map[string]*handlerItem) {
+	for pattern, handler := range m {
+		s.setHandler(ctx, setHandlerInput{
+			Prefix:      prefix,
+			Pattern:     pattern,
+			HandlerItem: handler,
+		})
 	}
 }
 
@@ -59,7 +81,7 @@ func (s *Server) bindHandlerByMap(m map[string]*handlerItem) {
 // Rule 2: The URI in pattern contains the {.method} keyword, it then replaces the keyword with the method name;
 // Rule 2: If Rule 1 is not met, it then adds the method name directly to the URI in the pattern;
 //
-// The parameter <allowAppend> specifies whether allowing appending method name to the tail of pattern.
+// The parameter `allowAppend` specifies whether allowing appending method name to the tail of pattern.
 func (s *Server) mergeBuildInNameToPattern(pattern string, structName, methodName string, allowAppend bool) string {
 	structName = s.nameToUri(structName)
 	methodName = s.nameToUri(methodName)
@@ -123,21 +145,21 @@ func (s *Server) nameToUri(name string) string {
 	}
 }
 
-func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, objName, methodName string) (info handlerFuncInfo, err error) {
+func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, methodName string) (info handlerFuncInfo, err error) {
 	handlerFunc, ok := f.(HandlerFunc)
 	if !ok {
 		reflectType := reflect.TypeOf(f)
-		if reflectType.NumIn() == 0 || reflectType.NumIn() > 2 || reflectType.NumOut() > 2 {
+		if reflectType.NumIn() != 2 || reflectType.NumOut() != 2 {
 			if pkgPath != "" {
 				err = gerror.NewCodef(
 					gcode.CodeInvalidParameter,
-					`invalid handler: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" or "func(context.Context)/func(context.Context,Request)/func(context.Context,Request) error/func(context.Context,Request)(Response,error)" is required`,
-					pkgPath, objName, methodName, reflect.TypeOf(f).String(),
+					`invalid handler: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" or "func(context.Context, BizRequest)(BizResponse, error)" is required`,
+					pkgPath, structName, methodName, reflect.TypeOf(f).String(),
 				)
 			} else {
 				err = gerror.NewCodef(
 					gcode.CodeInvalidParameter,
-					`invalid handler: defined as "%s", but "func(*ghttp.Request)" or "func(context.Context)/func(context.Context,Request)/func(context.Context,Request) error/func(context.Context,Request)(Response,error)" is required`,
+					`invalid handler: defined as "%s", but "func(*ghttp.Request)" or "func(context.Context, BizRequest)(BizResponse, error)" is required`,
 					reflect.TypeOf(f).String(),
 				)
 			}
@@ -153,11 +175,31 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, objName, methodN
 			return
 		}
 
-		if reflectType.NumOut() > 0 && reflectType.Out(reflectType.NumOut()-1).String() != "error" {
+		if reflectType.Out(1).String() != "error" {
 			err = gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`invalid handler: defined as "%s", but the last output parameter should be type of "error"`,
 				reflect.TypeOf(f).String(),
+			)
+			return
+		}
+
+		// The request struct should be named as `xxxReq`.
+		if !gstr.HasSuffix(reflectType.In(1).String(), `Req`) {
+			err = gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`invalid struct naming for request: defined as "%s", but it should be named with "Req" suffix like "xxxReq"`,
+				reflectType.In(1).String(),
+			)
+			return
+		}
+
+		// The response struct should be named as `xxxRes`.
+		if !gstr.HasSuffix(reflectType.Out(0).String(), `Res`) {
+			err = gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`invalid struct naming for response: defined as "%s", but it should be named with "Res" suffix like "xxxRes"`,
+				reflectType.Out(0).String(),
 			)
 			return
 		}

@@ -9,11 +9,12 @@ package gset
 
 import (
 	"bytes"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/internal/rwmutex"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
 	"strings"
+
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/internal/rwmutex"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 type StrSet struct {
@@ -22,7 +23,7 @@ type StrSet struct {
 }
 
 // NewStrSet create and returns a new set, which contains un-repeated items.
-// The parameter <safe> is used to specify whether using set in concurrent-safety,
+// The parameter `safe` is used to specify whether using set in concurrent-safety,
 // which is false in default.
 func NewStrSet(safe ...bool) *StrSet {
 	return &StrSet{
@@ -31,7 +32,7 @@ func NewStrSet(safe ...bool) *StrSet {
 	}
 }
 
-// NewStrSetFrom returns a new set from <items>.
+// NewStrSetFrom returns a new set from `items`.
 func NewStrSetFrom(items []string, safe ...bool) *StrSet {
 	m := make(map[string]struct{})
 	for _, v := range items {
@@ -43,8 +44,8 @@ func NewStrSetFrom(items []string, safe ...bool) *StrSet {
 	}
 }
 
-// Iterator iterates the set readonly with given callback function <f>,
-// if <f> returns true then continue iterating; or false to stop.
+// Iterator iterates the set readonly with given callback function `f`,
+// if `f` returns true then continue iterating; or false to stop.
 func (set *StrSet) Iterator(f func(v string) bool) {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
@@ -87,9 +88,9 @@ func (set *StrSet) AddIfNotExist(item string) bool {
 
 // AddIfNotExistFunc checks whether item exists in the set,
 // it adds the item to set and returns true if it does not exists in the set and
-// function <f> returns true, or else it does nothing and returns false.
+// function `f` returns true, or else it does nothing and returns false.
 //
-// Note that, the function <f> is executed without writing lock.
+// Note that, the function `f` is executed without writing lock.
 func (set *StrSet) AddIfNotExistFunc(item string, f func() bool) bool {
 	if !set.Contains(item) {
 		if f() {
@@ -107,11 +108,11 @@ func (set *StrSet) AddIfNotExistFunc(item string, f func() bool) bool {
 	return false
 }
 
-// AddIfNotExistFunc checks whether item exists in the set,
+// AddIfNotExistFuncLock checks whether item exists in the set,
 // it adds the item to set and returns true if it does not exists in the set and
-// function <f> returns true, or else it does nothing and returns false.
+// function `f` returns true, or else it does nothing and returns false.
 //
-// Note that, the function <f> is executed without writing lock.
+// Note that, the function `f` is executed without writing lock.
 func (set *StrSet) AddIfNotExistFuncLock(item string, f func() bool) bool {
 	if !set.Contains(item) {
 		set.mu.Lock()
@@ -129,7 +130,7 @@ func (set *StrSet) AddIfNotExistFuncLock(item string, f func() bool) bool {
 	return false
 }
 
-// Contains checks whether the set contains <item>.
+// Contains checks whether the set contains `item`.
 func (set *StrSet) Contains(item string) bool {
 	var ok bool
 	set.mu.RLock()
@@ -153,7 +154,7 @@ func (set *StrSet) ContainsI(item string) bool {
 	return false
 }
 
-// Remove deletes <item> from set.
+// Remove deletes `item` from set.
 func (set *StrSet) Remove(item string) {
 	set.mu.Lock()
 	if set.data != nil {
@@ -193,7 +194,7 @@ func (set *StrSet) Slice() []string {
 	return ret
 }
 
-// Join joins items with a string <glue>.
+// Join joins items with a string `glue`.
 func (set *StrSet) Join(glue string) string {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
@@ -234,14 +235,14 @@ func (set *StrSet) String() string {
 	return buffer.String()
 }
 
-// LockFunc locks writing with callback function <f>.
+// LockFunc locks writing with callback function `f`.
 func (set *StrSet) LockFunc(f func(m map[string]struct{})) {
 	set.mu.Lock()
 	defer set.mu.Unlock()
 	f(set.data)
 }
 
-// RLockFunc locks reading with callback function <f>.
+// RLockFunc locks reading with callback function `f`.
 func (set *StrSet) RLockFunc(f func(m map[string]struct{})) {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
@@ -268,7 +269,7 @@ func (set *StrSet) Equal(other *StrSet) bool {
 	return true
 }
 
-// IsSubsetOf checks whether the current set is a sub-set of <other>.
+// IsSubsetOf checks whether the current set is a sub-set of `other`.
 func (set *StrSet) IsSubsetOf(other *StrSet) bool {
 	if set == other {
 		return true
@@ -285,8 +286,8 @@ func (set *StrSet) IsSubsetOf(other *StrSet) bool {
 	return true
 }
 
-// Union returns a new set which is the union of <set> and <other>.
-// Which means, all the items in <newSet> are in <set> or in <other>.
+// Union returns a new set which is the union of `set` and `other`.
+// Which means, all the items in `newSet` are in `set` or in `other`.
 func (set *StrSet) Union(others ...*StrSet) (newSet *StrSet) {
 	newSet = NewStrSet()
 	set.mu.RLock()
@@ -311,8 +312,8 @@ func (set *StrSet) Union(others ...*StrSet) (newSet *StrSet) {
 	return
 }
 
-// Diff returns a new set which is the difference set from <set> to <other>.
-// Which means, all the items in <newSet> are in <set> but not in <other>.
+// Diff returns a new set which is the difference set from `set` to `other`.
+// Which means, all the items in `newSet` are in `set` but not in `other`.
 func (set *StrSet) Diff(others ...*StrSet) (newSet *StrSet) {
 	newSet = NewStrSet()
 	set.mu.RLock()
@@ -332,8 +333,8 @@ func (set *StrSet) Diff(others ...*StrSet) (newSet *StrSet) {
 	return
 }
 
-// Intersect returns a new set which is the intersection from <set> to <other>.
-// Which means, all the items in <newSet> are in <set> and also in <other>.
+// Intersect returns a new set which is the intersection from `set` to `other`.
+// Which means, all the items in `newSet` are in `set` and also in `other`.
 func (set *StrSet) Intersect(others ...*StrSet) (newSet *StrSet) {
 	newSet = NewStrSet()
 	set.mu.RLock()
@@ -354,11 +355,11 @@ func (set *StrSet) Intersect(others ...*StrSet) (newSet *StrSet) {
 	return
 }
 
-// Complement returns a new set which is the complement from <set> to <full>.
-// Which means, all the items in <newSet> are in <full> and not in <set>.
+// Complement returns a new set which is the complement from `set` to `full`.
+// Which means, all the items in `newSet` are in `full` and not in `set`.
 //
-// It returns the difference between <full> and <set>
-// if the given set <full> is not the full set of <set>.
+// It returns the difference between `full` and `set`
+// if the given set `full` is not the full set of `set`.
 func (set *StrSet) Complement(full *StrSet) (newSet *StrSet) {
 	newSet = NewStrSet()
 	set.mu.RLock()
@@ -375,7 +376,7 @@ func (set *StrSet) Complement(full *StrSet) (newSet *StrSet) {
 	return
 }
 
-// Merge adds items from <others> sets into <set>.
+// Merge adds items from `others` sets into `set`.
 func (set *StrSet) Merge(others ...*StrSet) *StrSet {
 	set.mu.Lock()
 	defer set.mu.Unlock()
@@ -405,7 +406,7 @@ func (set *StrSet) Sum() (sum int) {
 	return
 }
 
-// Pops randomly pops an item from set.
+// Pop randomly pops an item from set.
 func (set *StrSet) Pop() string {
 	set.mu.Lock()
 	defer set.mu.Unlock()
@@ -416,7 +417,7 @@ func (set *StrSet) Pop() string {
 	return ""
 }
 
-// Pops randomly pops <size> items from set.
+// Pops randomly pops `size` items from set.
 // It returns all items if size == -1.
 func (set *StrSet) Pops(size int) []string {
 	set.mu.Lock()
@@ -440,7 +441,7 @@ func (set *StrSet) Pops(size int) []string {
 	return array
 }
 
-// Walk applies a user supplied function <f> to every item of set.
+// Walk applies a user supplied function `f` to every item of set.
 func (set *StrSet) Walk(f func(item string) string) *StrSet {
 	set.mu.Lock()
 	defer set.mu.Unlock()

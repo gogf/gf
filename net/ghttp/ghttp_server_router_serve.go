@@ -7,14 +7,15 @@
 package ghttp
 
 import (
+	"context"
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/json"
 	"strings"
 
-	"github.com/gogf/gf/container/glist"
-	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/v2/container/glist"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/text/gregex"
 )
 
 // handlerCacheItem is an item just for internal router searching cache.
@@ -37,7 +38,10 @@ func (s *Server) serveHandlerKey(method, path, domain string) string {
 
 // getHandlersWithCache searches the router item with cache feature for given request.
 func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedItem, hasHook, hasServe bool) {
-	method := r.Method
+	var (
+		ctx    = r.Context()
+		method = r.Method
+	)
 	// Special http method OPTIONS handling.
 	// It searches the handler with the request method instead of OPTIONS method.
 	if method == "OPTIONS" {
@@ -46,17 +50,22 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedI
 		}
 	}
 	// Search and cache the router handlers.
-	value, _ := s.serveCache.GetOrSetFunc(
+	value, err := s.serveCache.GetOrSetFunc(
+		ctx,
 		s.serveHandlerKey(method, r.URL.Path, r.GetHost()),
-		func() (interface{}, error) {
+		func(ctx context.Context) (interface{}, error) {
 			parsedItems, hasHook, hasServe = s.searchHandlers(method, r.URL.Path, r.GetHost())
 			if parsedItems != nil {
 				return &handlerCacheItem{parsedItems, hasHook, hasServe}, nil
 			}
 			return nil, nil
-		}, routeCacheDuration)
+		}, routeCacheDuration,
+	)
+	if err != nil {
+		intlog.Error(ctx, err)
+	}
 	if value != nil {
-		item := value.(*handlerCacheItem)
+		item := value.Val().(*handlerCacheItem)
 		return item.parsedItems, item.hasHook, item.hasServe
 	}
 	return
@@ -98,7 +107,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 	)
 
 	// Default domain has the most priority when iteration.
-	for _, domain := range []string{defaultDomainName, domain} {
+	for _, domain := range []string{DefaultDomainName, domain} {
 		p, ok := s.serveTree[domain]
 		if !ok {
 			continue
@@ -151,7 +160,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 				// Serving handler can only be added to the handler array just once.
 				if hasServe {
 					switch item.Type {
-					case handlerTypeHandler, handlerTypeObject, handlerTypeController:
+					case HandlerTypeHandler, HandlerTypeObject:
 						continue
 					}
 				}
@@ -172,14 +181,14 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 						}
 						switch item.Type {
 						// The serving handler can be only added just once.
-						case handlerTypeHandler, handlerTypeObject, handlerTypeController:
+						case HandlerTypeHandler, HandlerTypeObject:
 							hasServe = true
 							parsedItemList.PushBack(parsedItem)
 
 						// The middleware is inserted before the serving handler.
 						// If there are multiple middleware, they're inserted into the result list by their registering order.
 						// The middleware is also executed by their registered order.
-						case handlerTypeMiddleware:
+						case HandlerTypeMiddleware:
 							if lastMiddlewareElem == nil {
 								lastMiddlewareElem = parsedItemList.PushFront(parsedItem)
 							} else {
@@ -187,12 +196,12 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 							}
 
 						// HOOK handler, just push it back to the list.
-						case handlerTypeHook:
+						case HandlerTypeHook:
 							hasHook = true
 							parsedItemList.PushBack(parsedItem)
 
 						default:
-							panic(gerror.NewCodef(gcode.CodeInternalError, `invalid handler type %d`, item.Type))
+							panic(gerror.Newf(`invalid handler type %s`, item.Type))
 						}
 					}
 				}
@@ -213,7 +222,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (item *handlerItem) MarshalJSON() ([]byte, error) {
 	switch item.Type {
-	case handlerTypeHook:
+	case HandlerTypeHook:
 		return json.Marshal(
 			fmt.Sprintf(
 				`%s %s:%s (%s)`,
@@ -223,7 +232,7 @@ func (item *handlerItem) MarshalJSON() ([]byte, error) {
 				item.HookName,
 			),
 		)
-	case handlerTypeMiddleware:
+	case HandlerTypeMiddleware:
 		return json.Marshal(
 			fmt.Sprintf(
 				`%s %s:%s (MIDDLEWARE)`,

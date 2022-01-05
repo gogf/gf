@@ -8,10 +8,13 @@
 package ghttp
 
 import (
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
 	"net/http"
 	"net/url"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // CORSOptions is the options for CORS feature.
@@ -105,7 +108,7 @@ func (r *Response) CORS(options CORSOptions) {
 	}
 }
 
-// CORSAllowed checks whether the current request origin is allowed cross-domain.
+// CORSAllowedOrigin CORSAllowed checks whether the current request origin is allowed cross-domain.
 func (r *Response) CORSAllowedOrigin(options CORSOptions) bool {
 	if options.AllowDomain == nil {
 		return true
@@ -116,6 +119,7 @@ func (r *Response) CORSAllowedOrigin(options CORSOptions) bool {
 	}
 	parsed, err := url.Parse(origin)
 	if err != nil {
+		err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `url.Parse failed for URL "%s"`, origin)
 		return false
 	}
 	for _, v := range options.AllowDomain {

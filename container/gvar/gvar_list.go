@@ -7,7 +7,7 @@
 package gvar
 
 import (
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // ListItemValues retrieves and returns the elements of all item struct/map with key `key`.

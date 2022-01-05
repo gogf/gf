@@ -8,27 +8,23 @@ package gdb
 
 import (
 	"database/sql"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/encoding/gparser"
-	"github.com/gogf/gf/internal/empty"
-	"github.com/gogf/gf/util/gconv"
-)
 
-// Interface converts and returns `r` as type of interface{}.
-func (r Record) Interface() interface{} {
-	return r
-}
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/util/gconv"
+)
 
 // Json converts `r` to JSON format content.
 func (r Record) Json() string {
-	content, _ := gparser.VarToJson(r.Map())
-	return gconv.UnsafeBytesToStr(content)
+	content, _ := gjson.New(r.Map()).ToJsonString()
+	return content
 }
 
 // Xml converts `r` to XML format content.
 func (r Record) Xml(rootTag ...string) string {
-	content, _ := gparser.VarToXml(r.Map(), rootTag...)
-	return gconv.UnsafeBytesToStr(content)
+	content, _ := gjson.New(r.Map()).ToXmlString(rootTag...)
+	return content
 }
 
 // Map converts `r` to map[string]interface{}.

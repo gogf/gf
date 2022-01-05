@@ -11,13 +11,13 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
-var (
+const (
 	// IVDefaultValue is the default value for IV.
-	// This can be changed globally.
 	IVDefaultValue = "I Love Go Frame!"
 )
 
@@ -31,12 +31,13 @@ func Decrypt(cipherText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 	return DecryptCBC(cipherText, key, iv...)
 }
 
-// EncryptCBC encrypts <plainText> using CBC mode.
+// EncryptCBC encrypts `plainText` using CBC mode.
 // Note that the key must be 16/24/32 bit length.
-// The parameter <iv> initialization vector is unnecessary.
+// The parameter `iv` initialization vector is unnecessary.
 func EncryptCBC(plainText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
+		err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `aes.NewCipher failed for key "%s"`, key)
 		return nil, err
 	}
 	blockSize := block.BlockSize()
@@ -54,12 +55,13 @@ func EncryptCBC(plainText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 	return cipherText, nil
 }
 
-// DecryptCBC decrypts <cipherText> using CBC mode.
+// DecryptCBC decrypts `cipherText` using CBC mode.
 // Note that the key must be 16/24/32 bit length.
-// The parameter <iv> initialization vector is unnecessary.
+// The parameter `iv` initialization vector is unnecessary.
 func DecryptCBC(cipherText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
+		err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `aes.NewCipher failed for key "%s"`, key)
 		return nil, err
 	}
 	blockSize := block.BlockSize()
@@ -116,12 +118,13 @@ func PKCS5UnPadding(src []byte, blockSize int) ([]byte, error) {
 	return src[:(length - unpadding)], nil
 }
 
-// EncryptCFB encrypts <plainText> using CFB mode.
+// EncryptCFB encrypts `plainText` using CFB mode.
 // Note that the key must be 16/24/32 bit length.
-// The parameter <iv> initialization vector is unnecessary.
+// The parameter `iv` initialization vector is unnecessary.
 func EncryptCFB(plainText []byte, key []byte, padding *int, iv ...[]byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
+		err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `aes.NewCipher failed for key "%s"`, key)
 		return nil, err
 	}
 	blockSize := block.BlockSize()
@@ -138,12 +141,13 @@ func EncryptCFB(plainText []byte, key []byte, padding *int, iv ...[]byte) ([]byt
 	return cipherText, nil
 }
 
-// DecryptCFB decrypts <plainText> using CFB mode.
+// DecryptCFB decrypts `plainText` using CFB mode.
 // Note that the key must be 16/24/32 bit length.
-// The parameter <iv> initialization vector is unnecessary.
+// The parameter `iv` initialization vector is unnecessary.
 func DecryptCFB(cipherText []byte, key []byte, unPadding int, iv ...[]byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
+		err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `aes.NewCipher failed for key "%s"`, key)
 		return nil, err
 	}
 	if len(cipherText) < aes.BlockSize {

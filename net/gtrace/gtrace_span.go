@@ -8,9 +8,11 @@ package gtrace
 
 import (
 	"context"
+
 	"go.opentelemetry.io/otel/trace"
 )
 
+// Span warps trace.Span for compatibility and extension.
 type Span struct {
 	trace.Span
 }

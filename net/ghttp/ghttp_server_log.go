@@ -8,7 +8,9 @@ package ghttp
 
 import (
 	"fmt"
-	"github.com/gogf/gf/errors/gerror"
+
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // handleAccessLog handles the access logging for server.
@@ -20,12 +22,12 @@ func (s *Server) handleAccessLog(r *Request) {
 	if r.TLS != nil {
 		scheme = "https"
 	}
-	s.Logger().Ctx(r.Context()).File(s.config.AccessLogPattern).
+	s.Logger().File(s.config.AccessLogPattern).
 		Stdout(s.config.LogStdout).
 		Printf(
+			r.Context(),
 			`%d "%s %s %s %s %s" %.3f, %s, "%s", "%s"`,
-			r.Response.Status,
-			r.Method, scheme, r.Host, r.URL.String(), r.Proto,
+			r.Response.Status, r.Method, scheme, r.Host, r.URL.String(), r.Proto,
 			float64(r.LeaveTime-r.EnterTime)/1000,
 			r.GetClientIp(), r.Referer(), r.UserAgent(),
 		)
@@ -37,16 +39,24 @@ func (s *Server) handleErrorLog(err error, r *Request) {
 	if !s.IsErrorLogEnabled() {
 		return
 	}
-
-	scheme := "http"
+	var (
+		code          = gerror.Code(err)
+		scheme        = "http"
+		codeDetail    = code.Detail()
+		codeDetailStr string
+	)
 	if r.TLS != nil {
 		scheme = "https"
 	}
+	if codeDetail != nil {
+		codeDetailStr = gstr.Replace(fmt.Sprintf(`%+v`, codeDetail), "\n", " ")
+	}
 	content := fmt.Sprintf(
-		`%d "%s %s %s %s %s" %.3f, %s, "%s", "%s"`,
+		`%d "%s %s %s %s %s" %.3f, %s, "%s", "%s", %d, "%s", "%+v"`,
 		r.Response.Status, r.Method, scheme, r.Host, r.URL.String(), r.Proto,
 		float64(r.LeaveTime-r.EnterTime)/1000,
 		r.GetClientIp(), r.Referer(), r.UserAgent(),
+		code.Code(), code.Message(), codeDetailStr,
 	)
 	if s.config.ErrorStack {
 		if stack := gerror.Stack(err); stack != "" {
@@ -57,8 +67,7 @@ func (s *Server) handleErrorLog(err error, r *Request) {
 	} else {
 		content += ", " + err.Error()
 	}
-	s.Logger().Ctx(r.Context()).
-		File(s.config.ErrorLogPattern).
+	s.Logger().File(s.config.ErrorLogPattern).
 		Stdout(s.config.LogStdout).
-		Print(content)
+		Print(r.Context(), content)
 }

@@ -10,10 +10,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/database/gredis"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/database/gredis"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // StorageRedisHashTable implements the Session Storage interface with redis hash table.
@@ -46,21 +46,24 @@ func (s *StorageRedisHashTable) New(ctx context.Context, ttl time.Duration) (id 
 // Get retrieves session value with given key.
 // It returns nil if the key does not exist in the session.
 func (s *StorageRedisHashTable) Get(ctx context.Context, id string, key string) (value interface{}, err error) {
-	value, err = s.redis.Ctx(ctx).Do("HGET", s.key(id), key)
-	if value != nil {
-		value = gconv.String(value)
+	v, err := s.redis.Do(ctx, "HGET", s.key(id), key)
+	if err != nil {
+		return nil, err
 	}
-	return
+	if v.IsNil() {
+		return nil, nil
+	}
+	return v.String(), nil
 }
 
-// GetMap retrieves all key-value pairs as map from storage.
-func (s *StorageRedisHashTable) GetMap(ctx context.Context, id string) (data map[string]interface{}, err error) {
-	r, err := s.redis.Ctx(ctx).DoVar("HGETALL", s.key(id))
+// Data retrieves all key-value pairs as map from storage.
+func (s *StorageRedisHashTable) Data(ctx context.Context, id string) (data map[string]interface{}, err error) {
+	v, err := s.redis.Do(ctx, "HGETALL", s.key(id))
 	if err != nil {
 		return nil, err
 	}
 	data = make(map[string]interface{})
-	array := r.Interfaces()
+	array := v.Interfaces()
 	for i := 0; i < len(array); i += 2 {
 		if array[i+1] != nil {
 			data[gconv.String(array[i])] = gconv.String(array[i+1])
@@ -73,7 +76,7 @@ func (s *StorageRedisHashTable) GetMap(ctx context.Context, id string) (data map
 
 // GetSize retrieves the size of key-value pairs from storage.
 func (s *StorageRedisHashTable) GetSize(ctx context.Context, id string) (size int, err error) {
-	r, err := s.redis.Ctx(ctx).DoVar("HLEN", s.key(id))
+	r, err := s.redis.Do(ctx, "HLEN", s.key(id))
 	if err != nil {
 		return -1, err
 	}
@@ -83,7 +86,7 @@ func (s *StorageRedisHashTable) GetSize(ctx context.Context, id string) (size in
 // Set sets key-value session pair to the storage.
 // The parameter `ttl` specifies the TTL for the session id (not for the key-value pair).
 func (s *StorageRedisHashTable) Set(ctx context.Context, id string, key string, value interface{}, ttl time.Duration) error {
-	_, err := s.redis.Ctx(ctx).Do("HSET", s.key(id), key, value)
+	_, err := s.redis.Do(ctx, "HSET", s.key(id), key, value)
 	return err
 }
 
@@ -99,19 +102,19 @@ func (s *StorageRedisHashTable) SetMap(ctx context.Context, id string, data map[
 		array[index+1] = v
 		index += 2
 	}
-	_, err := s.redis.Ctx(ctx).Do("HMSET", array...)
+	_, err := s.redis.Do(ctx, "HMSET", array...)
 	return err
 }
 
 // Remove deletes key with its value from storage.
 func (s *StorageRedisHashTable) Remove(ctx context.Context, id string, key string) error {
-	_, err := s.redis.Ctx(ctx).Do("HDEL", s.key(id), key)
+	_, err := s.redis.Do(ctx, "HDEL", s.key(id), key)
 	return err
 }
 
 // RemoveAll deletes all key-value pairs from storage.
 func (s *StorageRedisHashTable) RemoveAll(ctx context.Context, id string) error {
-	_, err := s.redis.Ctx(ctx).Do("DEL", s.key(id))
+	_, err := s.redis.Do(ctx, "DEL", s.key(id))
 	return err
 }
 
@@ -124,7 +127,7 @@ func (s *StorageRedisHashTable) RemoveAll(ctx context.Context, id string) error 
 // This function is called ever when session starts.
 func (s *StorageRedisHashTable) GetSession(ctx context.Context, id string, ttl time.Duration, data *gmap.StrAnyMap) (*gmap.StrAnyMap, error) {
 	intlog.Printf(ctx, "StorageRedisHashTable.GetSession: %s, %v", id, ttl)
-	r, err := s.redis.Ctx(ctx).DoVar("EXISTS", s.key(id))
+	r, err := s.redis.Do(ctx, "EXISTS", s.key(id))
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +142,7 @@ func (s *StorageRedisHashTable) GetSession(ctx context.Context, id string, ttl t
 // This copy all session data map from memory to storage.
 func (s *StorageRedisHashTable) SetSession(ctx context.Context, id string, data *gmap.StrAnyMap, ttl time.Duration) error {
 	intlog.Printf(ctx, "StorageRedisHashTable.SetSession: %s, %v", id, ttl)
-	_, err := s.redis.Ctx(ctx).Do("EXPIRE", s.key(id), int64(ttl.Seconds()))
+	_, err := s.redis.Do(ctx, "EXPIRE", s.key(id), int64(ttl.Seconds()))
 	return err
 }
 
@@ -148,7 +151,7 @@ func (s *StorageRedisHashTable) SetSession(ctx context.Context, id string, data 
 // It just adds the session id to the async handling queue.
 func (s *StorageRedisHashTable) UpdateTTL(ctx context.Context, id string, ttl time.Duration) error {
 	intlog.Printf(ctx, "StorageRedisHashTable.UpdateTTL: %s, %v", id, ttl)
-	_, err := s.redis.Do("EXPIRE", s.key(id), int64(ttl.Seconds()))
+	_, err := s.redis.Do(ctx, "EXPIRE", s.key(id), int64(ttl.Seconds()))
 	return err
 }
 

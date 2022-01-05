@@ -14,15 +14,15 @@ package gdb
 import (
 	"context"
 	"database/sql"
+	"database/sql/driver"
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
 	"strings"
 
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/text/gstr"
-
-	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // DriverPgsql is the driver for postgresql database.
@@ -38,9 +38,12 @@ func (d *DriverPgsql) New(core *Core, node *ConfigNode) (DB, error) {
 	}, nil
 }
 
-// Open creates and returns a underlying sql.DB object for pgsql.
-func (d *DriverPgsql) Open(config *ConfigNode) (*sql.DB, error) {
-	var source string
+// Open creates and returns an underlying sql.DB object for pgsql.
+func (d *DriverPgsql) Open(config *ConfigNode) (db *sql.DB, err error) {
+	var (
+		source string
+		driver = "postgres"
+	)
 	if config.Link != "" {
 		source = config.Link
 	} else {
@@ -53,11 +56,14 @@ func (d *DriverPgsql) Open(config *ConfigNode) (*sql.DB, error) {
 		}
 	}
 	intlog.Printf(d.GetCtx(), "Open: %s", source)
-	if db, err := sql.Open("postgres", source); err == nil {
-		return db, nil
-	} else {
+	if db, err = sql.Open(driver, source); err != nil {
+		err = gerror.WrapCodef(
+			gcode.CodeDbOperationError, err,
+			`sql.Open failed for driver "%s" by source "%s"`, driver, source,
+		)
 		return nil, err
 	}
+	return
 }
 
 // FilteredLink retrieves and returns filtered `linkInfo` that can be using for
@@ -80,14 +86,14 @@ func (d *DriverPgsql) GetChars() (charLeft string, charRight string) {
 	return "\"", "\""
 }
 
-// DoCommit deals with the sql string before commits it to underlying sql driver.
-func (d *DriverPgsql) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+// DoFilter deals with the sql string before commits it to underlying sql driver.
+func (d *DriverPgsql) DoFilter(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
 	defer func() {
-		newSql, newArgs, err = d.Core.DoCommit(ctx, link, newSql, newArgs)
+		newSql, newArgs, err = d.Core.DoFilter(ctx, link, newSql, newArgs)
 	}()
 
 	var index int
-	// Convert place holder char '?' to string "$x".
+	// Convert placeholder char '?' to string "$x".
 	sql, _ = gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
 		index++
 		return fmt.Sprintf("$%d", index)
@@ -120,7 +126,7 @@ func (d *DriverPgsql) Tables(ctx context.Context, schema ...string) (tables []st
 	return
 }
 
-// TableFields retrieves and returns the fields information of specified table of current schema.
+// TableFields retrieves and returns the fields' information of specified table of current schema.
 //
 // Also see DriverMysql.TableFields.
 func (d *DriverPgsql) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {
@@ -134,15 +140,13 @@ func (d *DriverPgsql) TableFields(ctx context.Context, table string, schema ...s
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	}
-	tableFieldsCacheKey := fmt.Sprintf(
-		`pgsql_table_fields_%s_%s@group:%s`,
-		table, useSchema, d.GetGroup(),
-	)
-	v := tableFieldsMap.GetOrSetFuncLock(tableFieldsCacheKey, func() interface{} {
-		var (
-			result       Result
-			link, err    = d.SlaveLink(useSchema)
-			structureSql = fmt.Sprintf(`
+	v := tableFieldsMap.GetOrSetFuncLock(
+		fmt.Sprintf(`pgsql_table_fields_%s_%s@group:%s`, table, useSchema, d.GetGroup()),
+		func() interface{} {
+			var (
+				result       Result
+				link         Link
+				structureSql = fmt.Sprintf(`
 SELECT a.attname AS field, t.typname AS type,a.attnotnull as null,
     (case when d.contype is not null then 'pri' else '' end)  as key
       ,ic.column_default as default_value,b.description as comment
@@ -156,31 +160,32 @@ FROM pg_attribute a
          left join information_schema.columns ic on ic.column_name = a.attname and ic.table_name = c.relname
 WHERE c.relname = '%s' and a.attnum > 0
 ORDER BY a.attnum`,
-				strings.ToLower(table),
+					strings.ToLower(table),
+				)
 			)
-		)
-		if err != nil {
-			return nil
-		}
-		structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
-		result, err = d.DoGetAll(ctx, link, structureSql)
-		if err != nil {
-			return nil
-		}
-		fields = make(map[string]*TableField)
-		for i, m := range result {
-			fields[m["field"].String()] = &TableField{
-				Index:   i,
-				Name:    m["field"].String(),
-				Type:    m["type"].String(),
-				Null:    m["null"].Bool(),
-				Key:     m["key"].String(),
-				Default: m["default_value"].Val(),
-				Comment: m["comment"].String(),
+			if link, err = d.SlaveLink(useSchema); err != nil {
+				return nil
 			}
-		}
-		return fields
-	})
+			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
+			result, err = d.DoGetAll(ctx, link, structureSql)
+			if err != nil {
+				return nil
+			}
+			fields = make(map[string]*TableField)
+			for i, m := range result {
+				fields[m["field"].String()] = &TableField{
+					Index:   i,
+					Name:    m["field"].String(),
+					Type:    m["type"].String(),
+					Null:    m["null"].Bool(),
+					Key:     m["key"].String(),
+					Default: m["default_value"].Val(),
+					Comment: m["comment"].String(),
+				}
+			}
+			return fields
+		},
+	)
 	if v != nil {
 		fields = v.(map[string]*TableField)
 	}
@@ -199,4 +204,22 @@ func (d *DriverPgsql) DoInsert(ctx context.Context, link Link, table string, lis
 	default:
 		return d.Core.DoInsert(ctx, link, table, list, option)
 	}
+}
+
+// ConvertDataForRecord converting for any data that will be inserted into table/collection as a record.
+func (d *DriverPgsql) ConvertDataForRecord(ctx context.Context, value interface{}) map[string]interface{} {
+	data := DataToMapDeep(value)
+	var err error
+	for k, v := range data {
+		if valuer, ok := v.(driver.Valuer); ok {
+			data[k], err = valuer.Value()
+			if err != nil {
+				return nil
+			}
+		} else {
+			data[k] = d.Core.ConvertDataForRecordValue(ctx, v)
+		}
+	}
+
+	return data
 }

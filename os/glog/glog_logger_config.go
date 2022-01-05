@@ -7,17 +7,17 @@
 package glog
 
 import (
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/os/gctx"
+	"context"
 	"io"
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // Config is the configuration object for logger.
@@ -51,7 +51,7 @@ func DefaultConfig() Config {
 		File:                defaultFileFormat,
 		Flags:               F_TIME_STD,
 		Level:               LEVEL_ALL,
-		CtxKeys:             []interface{}{gctx.CtxKey},
+		CtxKeys:             []interface{}{},
 		StStatus:            1,
 		HeaderPrint:         true,
 		StdoutPrint:         true,
@@ -73,11 +73,11 @@ func (l *Logger) SetConfig(config Config) error {
 	// Necessary validation.
 	if config.Path != "" {
 		if err := l.SetPath(config.Path); err != nil {
-			intlog.Error(l.ctx, err)
+			intlog.Error(context.TODO(), err)
 			return err
 		}
 	}
-	intlog.Printf(l.ctx, "SetConfig: %+v", l.config)
+	intlog.Printf(context.TODO(), "SetConfig: %+v", l.config)
 	return nil
 }
 
@@ -166,7 +166,6 @@ func (l *Logger) SetStackFilter(filter string) {
 // Note that multiple calls of this function will overwrite the previous set context keys.
 func (l *Logger) SetCtxKeys(keys ...interface{}) {
 	l.config.CtxKeys = keys
-	l.config.CtxKeys = append(l.config.CtxKeys, gctx.CtxKey)
 }
 
 // AppendCtxKeys appends extra keys to logger.
@@ -213,7 +212,7 @@ func (l *Logger) SetPath(path string) error {
 	}
 	if !gfile.Exists(path) {
 		if err := gfile.Mkdir(path); err != nil {
-			return gerror.WrapCodef(gcode.CodeOperationFailed, err, `Mkdir "%s" failed in PWD "%s"`, path, gfile.Pwd())
+			return gerror.Wrapf(err, `Mkdir "%s" failed in PWD "%s"`, path, gfile.Pwd())
 		}
 	}
 	l.config.Path = strings.TrimRight(path, gfile.Separator)
@@ -254,7 +253,7 @@ func (l *Logger) SetHandlers(handlers ...Handler) {
 	l.config.Handlers = handlers
 }
 
-//SetWriterColorEnable sets the file logging with color
+// SetWriterColorEnable sets the file logging with color
 func (l *Logger) SetWriterColorEnable(enabled bool) {
 	l.config.WriterColorEnable = enabled
 }

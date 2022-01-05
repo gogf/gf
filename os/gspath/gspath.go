@@ -13,17 +13,17 @@ package gspath
 
 import (
 	"context"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/intlog"
 	"os"
 	"sort"
 	"strings"
 
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // SPath manages the path searching feature.
@@ -53,7 +53,7 @@ func New(path string, cache bool) *SPath {
 	}
 	if len(path) > 0 {
 		if _, err := sp.Add(path); err != nil {
-			//intlog.Print(err)
+			// intlog.Print(err)
 		}
 	}
 	return sp
@@ -143,7 +143,7 @@ func (sp *SPath) Add(path string) (realPath string, err error) {
 	}
 	// The added path must be a directory.
 	if gfile.IsDir(realPath) {
-		//fmt.Println("gspath:", realPath, sp.paths.Search(realPath))
+		// fmt.Println("gspath:", realPath, sp.paths.Search(realPath))
 		// It will not add twice for the same directory.
 		if sp.paths.Search(realPath) < 0 {
 			realPath = strings.TrimRight(realPath, gfile.Separator)
@@ -205,7 +205,7 @@ func (sp *SPath) Search(name string, indexFiles ...string) (filePath string, isD
 				name = ""
 			}
 			for _, file := range indexFiles {
-				if v := sp.cache.Get(name + "/" + file); v != "" {
+				if v = sp.cache.Get(name + "/" + file); v != "" {
 					return sp.parseCacheValue(v)
 				}
 			}

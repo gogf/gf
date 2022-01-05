@@ -7,8 +7,9 @@
 package gstr
 
 import (
-	"github.com/gogf/gf/internal/utils"
 	"strings"
+
+	"github.com/gogf/gf/v2/internal/utils"
 )
 
 // Replace returns a copy of the string `origin`
@@ -32,13 +33,21 @@ func ReplaceI(origin, search, replace string, count ...int) string {
 		return origin
 	}
 	var (
-		length      = len(search)
-		searchLower = strings.ToLower(search)
+		searchLength = len(search)
+		searchLower  = strings.ToLower(search)
+		originLower  string
+		pos          int
+		diff         = len(replace) - searchLength
 	)
 	for {
-		originLower := strings.ToLower(origin)
-		if pos := strings.Index(originLower, searchLower); pos != -1 {
-			origin = origin[:pos] + replace + origin[pos+length:]
+		originLower = strings.ToLower(origin)
+		if pos = Pos(originLower, searchLower, pos); pos != -1 {
+			origin = origin[:pos] + replace + origin[pos+searchLength:]
+			if diff < 0 {
+				pos += -diff
+			} else {
+				pos += diff + 1
+			}
 			if n--; n == 0 {
 				break
 			}

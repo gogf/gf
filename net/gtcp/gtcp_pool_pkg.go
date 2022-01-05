@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-// SendPkg sends a package containing <data> to the connection.
-// The optional parameter <option> specifies the package options for sending.
+// SendPkg sends a package containing `data` to the connection.
+// The optional parameter `option` specifies the package options for sending.
 func (c *PoolConn) SendPkg(data []byte, option ...PkgOption) (err error) {
 	if err = c.Conn.SendPkg(data, option...); err != nil && c.status == connStatusUnknown {
 		if v, e := c.pool.NewFunc(); e == nil {
@@ -30,7 +30,7 @@ func (c *PoolConn) SendPkg(data []byte, option ...PkgOption) (err error) {
 }
 
 // RecvPkg receives package from connection using simple package protocol.
-// The optional parameter <option> specifies the package options for receiving.
+// The optional parameter `option` specifies the package options for receiving.
 func (c *PoolConn) RecvPkg(option ...PkgOption) ([]byte, error) {
 	data, err := c.Conn.RecvPkg(option...)
 	if err != nil {
@@ -43,10 +43,10 @@ func (c *PoolConn) RecvPkg(option ...PkgOption) ([]byte, error) {
 
 // RecvPkgWithTimeout reads data from connection with timeout using simple package protocol.
 func (c *PoolConn) RecvPkgWithTimeout(timeout time.Duration, option ...PkgOption) (data []byte, err error) {
-	if err := c.SetreceiveDeadline(time.Now().Add(timeout)); err != nil {
+	if err := c.SetReceiveDeadline(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer c.SetreceiveDeadline(time.Time{})
+	defer c.SetReceiveDeadline(time.Time{})
 	data, err = c.RecvPkg(option...)
 	return
 }

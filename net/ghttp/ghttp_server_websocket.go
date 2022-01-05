@@ -15,23 +15,23 @@ type WebSocket struct {
 }
 
 const (
-	// TextMessage denotes a text data message. The text message payload is
+	// WsMsgText TextMessage denotes a text data message. The text message payload is
 	// interpreted as UTF-8 encoded text data.
-	WS_MSG_TEXT = websocket.TextMessage
+	WsMsgText = websocket.TextMessage
 
-	// BinaryMessage denotes a binary data message.
-	WS_MSG_BINARY = websocket.BinaryMessage
+	// WsMsgBinary BinaryMessage denotes a binary data message.
+	WsMsgBinary = websocket.BinaryMessage
 
-	// CloseMessage denotes a close control message. The optional message
+	// WsMsgClose CloseMessage denotes a close control message. The optional message
 	// payload contains a numeric code and text. Use the FormatCloseMessage
 	// function to format a close message payload.
-	WS_MSG_CLOSE = websocket.CloseMessage
+	WsMsgClose = websocket.CloseMessage
 
-	// PingMessage denotes a ping control message. The optional message payload
+	// WsMsgPing PingMessage denotes a ping control message. The optional message payload
 	// is UTF-8 encoded text.
-	WS_MSG_PING = websocket.PingMessage
+	WsMsgPing = websocket.PingMessage
 
-	// PongMessage denotes a pong control message. The optional message payload
+	// WsMsgPong PongMessage denotes a pong control message. The optional message payload
 	// is UTF-8 encoded text.
-	WS_MSG_PONG = websocket.PongMessage
+	WsMsgPong = websocket.PongMessage
 )

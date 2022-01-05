@@ -11,11 +11,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/gogf/gf/debug/gdebug"
-	"github.com/gogf/gf/internal/utils"
-	"go.opentelemetry.io/otel/trace"
 	"path/filepath"
 	"time"
+
+	"go.opentelemetry.io/otel/trace"
+
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/internal/utils"
 )
 
 const (
@@ -104,7 +106,7 @@ func doPrint(ctx context.Context, content string, stack bool) {
 	buffer.WriteString(content)
 	buffer.WriteString("\n")
 	if stack {
-		buffer.WriteString(gdebug.StackWithFilter(stackFilterKey))
+		buffer.WriteString(gdebug.StackWithFilter([]string{stackFilterKey}))
 	}
 	fmt.Print(buffer.String())
 }
@@ -128,6 +130,6 @@ func now() string {
 
 // file returns caller file name along with its line number.
 func file() string {
-	_, p, l := gdebug.CallerWithFilter(stackFilterKey)
+	_, p, l := gdebug.CallerWithFilter([]string{stackFilterKey})
 	return fmt.Sprintf(`%s:%d`, filepath.Base(p), l)
 }

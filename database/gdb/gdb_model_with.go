@@ -7,15 +7,16 @@
 package gdb
 
 import (
+	"database/sql"
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
 	"reflect"
 
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/structs"
-	"github.com/gogf/gf/internal/utils"
-	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/os/gstructs"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // With creates and returns an ORM model based on metadata of given object.
@@ -64,10 +65,10 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 		err                 error
 		allowedTypeStrArray = make([]string, 0)
 	)
-	currentStructFieldMap, err := structs.FieldMap(structs.FieldMapInput{
+	currentStructFieldMap, err := gstructs.FieldMap(gstructs.FieldMapInput{
 		Pointer:          pointer,
 		PriorityTagArray: nil,
-		RecursiveOption:  structs.RecursiveOptionEmbeddedNoTag,
+		RecursiveOption:  gstructs.RecursiveOptionEmbeddedNoTag,
 	})
 	if err != nil {
 		return err
@@ -76,7 +77,7 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 	if !m.withAll {
 		for _, field := range currentStructFieldMap {
 			for _, withItem := range m.withArray {
-				withItemReflectValueType, err := structs.StructType(withItem)
+				withItemReflectValueType, err := gstructs.StructType(withItem)
 				if err != nil {
 					return err
 				}
@@ -136,7 +137,7 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 		}
 
 		// It automatically retrieves struct field names from current attribute struct/slice.
-		if structType, err := structs.StructType(field.Value); err != nil {
+		if structType, err := gstructs.StructType(field.Value); err != nil {
 			return err
 		} else {
 			fieldKeys = structType.FieldKeys()
@@ -155,12 +156,11 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 		if parsedTagOutput.Order != "" {
 			model = model.Order(parsedTagOutput.Order)
 		}
-
 		err = model.Fields(fieldKeys).Where(relatedSourceName, relatedTargetValue).Scan(bindToReflectValue)
-		if err != nil {
+		// It ignores sql.ErrNoRows in with feature.
+		if err != nil && err != sql.ErrNoRows {
 			return err
 		}
-
 	}
 	return nil
 }
@@ -176,10 +176,10 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 		err                 error
 		allowedTypeStrArray = make([]string, 0)
 	)
-	currentStructFieldMap, err := structs.FieldMap(structs.FieldMapInput{
+	currentStructFieldMap, err := gstructs.FieldMap(gstructs.FieldMapInput{
 		Pointer:          pointer,
 		PriorityTagArray: nil,
-		RecursiveOption:  structs.RecursiveOptionEmbeddedNoTag,
+		RecursiveOption:  gstructs.RecursiveOptionEmbeddedNoTag,
 	})
 	if err != nil {
 		return err
@@ -188,7 +188,7 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 	if !m.withAll {
 		for _, field := range currentStructFieldMap {
 			for _, withItem := range m.withArray {
-				withItemReflectValueType, err := structs.StructType(withItem)
+				withItemReflectValueType, err := gstructs.StructType(withItem)
 				if err != nil {
 					return err
 				}
@@ -229,7 +229,7 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 			relatedTargetValue interface{}
 		)
 		// Find the value slice of related attribute from `pointer`.
-		for attributeName, _ := range currentStructFieldMap {
+		for attributeName := range currentStructFieldMap {
 			if utils.EqualFoldWithoutChars(attributeName, relatedTargetName) {
 				relatedTargetValue = ListItemValuesUnique(pointer, attributeName)
 				break
@@ -244,7 +244,7 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 		}
 
 		// It automatically retrieves struct field names from current attribute struct/slice.
-		if structType, err := structs.StructType(field.Value); err != nil {
+		if structType, err := gstructs.StructType(field.Value); err != nil {
 			return err
 		} else {
 			fieldKeys = structType.FieldKeys()
@@ -267,7 +267,8 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 		err = model.Fields(fieldKeys).
 			Where(relatedSourceName, relatedTargetValue).
 			ScanList(pointer, fieldName, parsedTagOutput.With)
-		if err != nil {
+		// It ignores sql.ErrNoRows in with feature.
+		if err != nil && err != sql.ErrNoRows {
 			return err
 		}
 	}
@@ -280,7 +281,7 @@ type parseWithTagInFieldStructOutput struct {
 	Order string
 }
 
-func (m *Model) parseWithTagInFieldStruct(field *structs.Field) (output parseWithTagInFieldStructOutput) {
+func (m *Model) parseWithTagInFieldStruct(field gstructs.Field) (output parseWithTagInFieldStructOutput) {
 	var (
 		match  []string
 		ormTag = field.Tag(OrmTagForStruct)

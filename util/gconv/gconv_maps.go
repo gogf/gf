@@ -6,7 +6,7 @@
 
 package gconv
 
-import "github.com/gogf/gf/internal/json"
+import "github.com/gogf/gf/v2/internal/json"
 
 // SliceMap is alias of Maps.
 func SliceMap(any interface{}) []map[string]interface{} {

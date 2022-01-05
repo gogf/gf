@@ -6,7 +6,7 @@
 
 package ghttp
 
-import "github.com/gogf/gf/container/gvar"
+import "github.com/gogf/gf/v2/container/gvar"
 
 // SetParam sets custom parameter with key-value pair.
 func (r *Request) SetParam(key string, value interface{}) {
@@ -16,22 +16,15 @@ func (r *Request) SetParam(key string, value interface{}) {
 	r.paramsMap[key] = value
 }
 
-// GetParam returns custom parameter with given name <key>.
-// It returns <def> if <key> does not exist.
-// It returns nil if <def> is not passed.
-func (r *Request) GetParam(key string, def ...interface{}) interface{} {
+// GetParam returns custom parameter with given name `key`.
+// It returns `def` if `key` does not exist.
+// It returns nil if `def` is not passed.
+func (r *Request) GetParam(key string, def ...interface{}) *gvar.Var {
 	if r.paramsMap != nil {
-		return r.paramsMap[key]
+		return gvar.New(r.paramsMap[key])
 	}
 	if len(def) > 0 {
-		return def[0]
+		return gvar.New(def[0])
 	}
 	return nil
-}
-
-// GetParamVar returns custom parameter with given name <key> as gvar.Var.
-// It returns <def> if <key> does not exist.
-// It returns nil if <def> is not passed.
-func (r *Request) GetParamVar(key string, def ...interface{}) *gvar.Var {
-	return gvar.New(r.GetParam(key, def...))
 }

@@ -8,11 +8,11 @@ package gdb
 
 import (
 	"fmt"
-	"github.com/gogf/gf/os/glog"
 	"sync"
 	"time"
 
-	"github.com/gogf/gf/os/gcache"
+	"github.com/gogf/gf/v2/os/gcache"
+	"github.com/gogf/gf/v2/os/glog"
 )
 
 // Config is the configuration management object.
@@ -48,7 +48,6 @@ type ConfigNode struct {
 	UpdatedAt            string        `json:"updatedAt"`            // (Optional) The filed name of table for automatic-filled updated datetime.
 	DeletedAt            string        `json:"deletedAt"`            // (Optional) The filed name of table for automatic-filled updated datetime.
 	TimeMaintainDisabled bool          `json:"timeMaintainDisabled"` // (Optional) Disable the automatic time maintaining feature.
-	CtxStrict            bool          `json:"ctxStrict"`            // (Optional) Strictly require context input for all database operations.
 }
 
 const (
@@ -217,19 +216,16 @@ func (c *Core) GetGroup() string {
 }
 
 // SetDryRun enables/disables the DryRun feature.
-// Deprecated, use GetConfig instead.
 func (c *Core) SetDryRun(enabled bool) {
 	c.config.DryRun = enabled
 }
 
 // GetDryRun returns the DryRun value.
-// Deprecated, use GetConfig instead.
 func (c *Core) GetDryRun() bool {
 	return c.config.DryRun || allDryRun
 }
 
 // GetPrefix returns the table prefix string configured.
-// Deprecated, use GetConfig instead.
 func (c *Core) GetPrefix() string {
 	return c.config.Prefix
 }

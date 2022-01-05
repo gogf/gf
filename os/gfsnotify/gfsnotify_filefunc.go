@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 // fileDir returns all but the last element of path, typically the path's directory.
@@ -68,9 +70,9 @@ func fileAllDirs(path string) (list []string) {
 		return list
 	}
 	for _, name := range names {
-		path := fmt.Sprintf("%s%s%s", path, string(filepath.Separator), name)
-		if fileIsDir(path) {
-			if array := fileAllDirs(path); len(array) > 0 {
+		tempPath := fmt.Sprintf("%s%s%s", path, string(filepath.Separator), name)
+		if fileIsDir(tempPath) {
+			if array := fileAllDirs(tempPath); len(array) > 0 {
 				list = append(list, array...)
 			}
 		}
@@ -99,14 +101,18 @@ func fileScanDir(path string, pattern string, recursive ...bool) ([]string, erro
 //
 // It scans directory recursively if given parameter `recursive` is true.
 func doFileScanDir(path string, pattern string, recursive ...bool) ([]string, error) {
-	list := ([]string)(nil)
-	file, err := os.Open(path)
+	var (
+		list      []string
+		file, err = os.Open(path)
+	)
 	if err != nil {
+		err = gerror.Wrapf(err, `os.Open failed for path "%s"`, path)
 		return nil, err
 	}
 	defer file.Close()
 	names, err := file.Readdirnames(-1)
 	if err != nil {
+		err = gerror.Wrapf(err, `read directory files failed for path "%s"`, path)
 		return nil, err
 	}
 	filePath := ""
@@ -119,7 +125,7 @@ func doFileScanDir(path string, pattern string, recursive ...bool) ([]string, er
 			}
 		}
 		for _, p := range strings.Split(pattern, ",") {
-			if match, err := filepath.Match(strings.TrimSpace(p), name); err == nil && match {
+			if match, _ := filepath.Match(strings.TrimSpace(p), name); match {
 				list = append(list, filePath)
 			}
 		}

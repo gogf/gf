@@ -8,29 +8,32 @@
 package gfile
 
 import (
-	"github.com/gogf/gf/text/gstr"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
-var (
+const (
 	// Separator for file system.
 	// It here defines the separator as variable
 	// to allow it modified by developer if necessary.
 	Separator = string(filepath.Separator)
 
-	// DefaultPerm is the default perm for file opening.
+	// DefaultPermOpen is the default perm for file opening.
 	DefaultPermOpen = os.FileMode(0666)
 
 	// DefaultPermCopy is the default perm for file/folder copy.
 	DefaultPermCopy = os.FileMode(0777)
+)
 
+var (
 	// The absolute file path for main package.
 	// It can be only checked and set once.
 	mainPkgPath = gtype.NewString()
@@ -58,17 +61,18 @@ func init() {
 	}
 }
 
-// Mkdir creates directories recursively with given <path>.
-// The parameter <path> is suggested to be an absolute path instead of relative one.
-func Mkdir(path string) error {
-	if err := os.MkdirAll(path, os.ModePerm); err != nil {
+// Mkdir creates directories recursively with given `path`.
+// The parameter `path` is suggested to be an absolute path instead of relative one.
+func Mkdir(path string) (err error) {
+	if err = os.MkdirAll(path, os.ModePerm); err != nil {
+		err = gerror.Wrapf(err, `os.MkdirAll failed for path "%s" with perm "%d"`, path, os.ModePerm)
 		return err
 	}
 	return nil
 }
 
-// Create creates file with given <path> recursively.
-// The parameter <path> is suggested to be absolute path.
+// Create creates file with given `path` recursively.
+// The parameter `path` is suggested to be absolute path.
 func Create(path string) (*os.File, error) {
 	dir := Dir(path)
 	if !Exists(dir) {
@@ -76,40 +80,52 @@ func Create(path string) (*os.File, error) {
 			return nil, err
 		}
 	}
-	return os.Create(path)
+	file, err := os.Create(path)
+	if err != nil {
+		err = gerror.Wrapf(err, `os.Create failed for name "%s"`, path)
+	}
+	return file, err
 }
 
 // Open opens file/directory READONLY.
 func Open(path string) (*os.File, error) {
-	return os.Open(path)
+	file, err := os.Open(path)
+	if err != nil {
+		err = gerror.Wrapf(err, `os.Open failed for name "%s"`, path)
+	}
+	return file, err
 }
 
-// OpenFile opens file/directory with custom <flag> and <perm>.
-// The parameter <flag> is like: O_RDONLY, O_RDWR, O_RDWR|O_CREATE|O_TRUNC, etc.
+// OpenFile opens file/directory with custom `flag` and `perm`.
+// The parameter `flag` is like: O_RDONLY, O_RDWR, O_RDWR|O_CREATE|O_TRUNC, etc.
 func OpenFile(path string, flag int, perm os.FileMode) (*os.File, error) {
-	return os.OpenFile(path, flag, perm)
+	file, err := os.OpenFile(path, flag, perm)
+	if err != nil {
+		err = gerror.Wrapf(err, `os.OpenFile failed with name "%s", flag "%d", perm "%d"`, path, flag, perm)
+	}
+	return file, err
 }
 
-// OpenWithFlag opens file/directory with default perm and custom <flag>.
-// The default <perm> is 0666.
-// The parameter <flag> is like: O_RDONLY, O_RDWR, O_RDWR|O_CREATE|O_TRUNC, etc.
+// OpenWithFlag opens file/directory with default perm and custom `flag`.
+// The default `perm` is 0666.
+// The parameter `flag` is like: O_RDONLY, O_RDWR, O_RDWR|O_CREATE|O_TRUNC, etc.
 func OpenWithFlag(path string, flag int) (*os.File, error) {
-	f, err := os.OpenFile(path, flag, DefaultPermOpen)
+	file, err := OpenFile(path, flag, DefaultPermOpen)
 	if err != nil {
 		return nil, err
 	}
-	return f, nil
+	return file, nil
 }
 
-// OpenWithFlagPerm opens file/directory with custom <flag> and <perm>.
-// The parameter <flag> is like: O_RDONLY, O_RDWR, O_RDWR|O_CREATE|O_TRUNC, etc.
-// The parameter <perm> is like: 0600, 0666, 0777, etc.
+// OpenWithFlagPerm opens file/directory with custom `flag` and `perm`.
+// The parameter `flag` is like: O_RDONLY, O_RDWR, O_RDWR|O_CREATE|O_TRUNC, etc.
+// The parameter `perm` is like: 0600, 0666, 0777, etc.
 func OpenWithFlagPerm(path string, flag int, perm os.FileMode) (*os.File, error) {
-	f, err := os.OpenFile(path, flag, perm)
+	file, err := OpenFile(path, flag, perm)
 	if err != nil {
 		return nil, err
 	}
-	return f, nil
+	return file, nil
 }
 
 // Join joins string array paths with file separator of current system.
@@ -124,7 +140,7 @@ func Join(paths ...string) string {
 	return s
 }
 
-// Exists checks whether given <path> exist.
+// Exists checks whether given `path` exist.
 func Exists(path string) bool {
 	if stat, err := os.Stat(path); stat != nil && !os.IsNotExist(err) {
 		return true
@@ -132,8 +148,8 @@ func Exists(path string) bool {
 	return false
 }
 
-// IsDir checks whether given <path> a directory.
-// Note that it returns false if the <path> does not exist.
+// IsDir checks whether given `path` a directory.
+// Note that it returns false if the `path` does not exist.
 func IsDir(path string) bool {
 	s, err := os.Stat(path)
 	if err != nil {
@@ -155,36 +171,42 @@ func Pwd() string {
 
 // Chdir changes the current working directory to the named directory.
 // If there is an error, it will be of type *PathError.
-func Chdir(dir string) error {
-	return os.Chdir(dir)
+func Chdir(dir string) (err error) {
+	err = os.Chdir(dir)
+	if err != nil {
+		err = gerror.Wrapf(err, `os.Chdir failed with dir "%s"`, dir)
+	}
+	return
 }
 
-// IsFile checks whether given <path> a file, which means it's not a directory.
-// Note that it returns false if the <path> does not exist.
+// IsFile checks whether given `path` a file, which means it's not a directory.
+// Note that it returns false if the `path` does not exist.
 func IsFile(path string) bool {
-	s, err := os.Stat(path)
+	s, err := Stat(path)
 	if err != nil {
 		return false
 	}
 	return !s.IsDir()
 }
 
-// Alias of Stat.
-// See Stat.
-func Info(path string) (os.FileInfo, error) {
-	return Stat(path)
-}
-
 // Stat returns a FileInfo describing the named file.
 // If there is an error, it will be of type *PathError.
 func Stat(path string) (os.FileInfo, error) {
-	return os.Stat(path)
+	info, err := os.Stat(path)
+	if err != nil {
+		err = gerror.Wrapf(err, `os.Stat failed for file "%s"`, path)
+	}
+	return info, err
 }
 
-// Move renames (moves) <src> to <dst> path.
-// If <dst> already exists and is not a directory, it'll be replaced.
-func Move(src string, dst string) error {
-	return os.Rename(src, dst)
+// Move renames (moves) `src` to `dst` path.
+// If `dst` already exists and is not a directory, it'll be replaced.
+func Move(src string, dst string) (err error) {
+	err = os.Rename(src, dst)
+	if err != nil {
+		err = gerror.Wrapf(err, `os.Rename failed from "%s" to "%s"`, src, dst)
+	}
+	return
 }
 
 // Rename is alias of Move.
@@ -193,16 +215,17 @@ func Rename(src string, dst string) error {
 	return Move(src, dst)
 }
 
-// DirNames returns sub-file names of given directory <path>.
+// DirNames returns sub-file names of given directory `path`.
 // Note that the returned names are NOT absolute paths.
 func DirNames(path string) ([]string, error) {
-	f, err := os.Open(path)
+	f, err := Open(path)
 	if err != nil {
 		return nil, err
 	}
 	list, err := f.Readdirnames(-1)
-	f.Close()
+	_ = f.Close()
 	if err != nil {
+		err = gerror.Wrapf(err, `Read dir files failed from path "%s"`, path)
 		return nil, err
 	}
 	return list, nil
@@ -217,27 +240,32 @@ func DirNames(path string) ([]string, error) {
 // The only possible returned error is ErrBadPattern, when pattern
 // is malformed.
 func Glob(pattern string, onlyNames ...bool) ([]string, error) {
-	if list, err := filepath.Glob(pattern); err == nil {
-		if len(onlyNames) > 0 && onlyNames[0] && len(list) > 0 {
-			array := make([]string, len(list))
-			for k, v := range list {
-				array[k] = Basename(v)
-			}
-			return array, nil
-		}
-		return list, nil
-	} else {
+	list, err := filepath.Glob(pattern)
+	if err != nil {
+		err = gerror.Wrapf(err, `filepath.Glob failed for pattern "%s"`, pattern)
 		return nil, err
 	}
+	if len(onlyNames) > 0 && onlyNames[0] && len(list) > 0 {
+		array := make([]string, len(list))
+		for k, v := range list {
+			array[k] = Basename(v)
+		}
+		return array, nil
+	}
+	return list, nil
 }
 
-// Remove deletes all file/directory with <path> parameter.
-// If parameter <path> is directory, it deletes it recursively.
-func Remove(path string) error {
-	return os.RemoveAll(path)
+// Remove deletes all file/directory with `path` parameter.
+// If parameter `path` is directory, it deletes it recursively.
+func Remove(path string) (err error) {
+	err = os.RemoveAll(path)
+	if err != nil {
+		err = gerror.Wrapf(err, `os.RemoveAll failed for path "%s"`, path)
+	}
+	return
 }
 
-// IsReadable checks whether given <path> is readable.
+// IsReadable checks whether given `path` is readable.
 func IsReadable(path string) bool {
 	result := true
 	file, err := os.OpenFile(path, os.O_RDONLY, DefaultPermOpen)
@@ -248,7 +276,7 @@ func IsReadable(path string) bool {
 	return result
 }
 
-// IsWritable checks whether given <path> is writable.
+// IsWritable checks whether given `path` is writable.
 //
 // TODO improve performance; use golang.org/x/sys to cross-plat-form
 func IsWritable(path string) bool {
@@ -259,23 +287,28 @@ func IsWritable(path string) bool {
 		if f, err := Create(tmpFile); err != nil || !Exists(tmpFile) {
 			result = false
 		} else {
-			f.Close()
-			Remove(tmpFile)
+			_ = f.Close()
+			_ = Remove(tmpFile)
 		}
 	} else {
-		// 如果是文件，那么判断文件是否可打开
+		// If it's a file, check if it can open it.
 		file, err := os.OpenFile(path, os.O_WRONLY, DefaultPermOpen)
 		if err != nil {
 			result = false
 		}
-		file.Close()
+		_ = file.Close()
 	}
 	return result
 }
 
+// Chmod is alias of os.Chmod.
 // See os.Chmod.
-func Chmod(path string, mode os.FileMode) error {
-	return os.Chmod(path, mode)
+func Chmod(path string, mode os.FileMode) (err error) {
+	err = os.Chmod(path, mode)
+	if err != nil {
+		err = gerror.Wrapf(err, `os.Chmod failed with path "%s" and mode "%s"`, path, mode)
+	}
+	return
 }
 
 // Abs returns an absolute representation of path.
@@ -288,7 +321,7 @@ func Abs(path string) string {
 	return p
 }
 
-// RealPath converts the given <path> to its absolute path
+// RealPath converts the given `path` to its absolute path
 // and checks if the file path exists.
 // If the file does not exist, return an empty string.
 func RealPath(path string) string {
@@ -354,11 +387,11 @@ func Dir(path string) string {
 	return filepath.Dir(path)
 }
 
-// IsEmpty checks whether the given <path> is empty.
-// If <path> is a folder, it checks if there's any file under it.
-// If <path> is a file, it checks if the file size is zero.
+// IsEmpty checks whether the given `path` is empty.
+// If `path` is a folder, it checks if there's any file under it.
+// If `path` is a file, it checks if the file size is zero.
 //
-// Note that it returns true if <path> does not exist.
+// Note that it returns true if `path` does not exist.
 func IsEmpty(path string) bool {
 	stat, err := Stat(path)
 	if err != nil {
@@ -395,15 +428,15 @@ func Ext(path string) string {
 }
 
 // ExtName is like function Ext, which returns the file name extension used by path,
-// but the result does not contains symbol '.'.
+// but the result does not contain symbol '.'.
 func ExtName(path string) string {
 	return strings.TrimLeft(Ext(path), ".")
 }
 
 // TempDir retrieves and returns the temporary directory of current system.
-// It return "/tmp" is current in *nix system, or else it returns os.TempDir().
+// It returns "/tmp" is current in *nix system, or else it returns os.TempDir().
 //
-// The optional parameter <names> specifies the its sub-folders/sub-files,
+// The optional parameter `names` specifies the sub-folders/sub-files,
 // which will be joined with current system separator and returned with the path.
 func TempDir(names ...string) string {
 	path := tempDir

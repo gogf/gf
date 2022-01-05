@@ -7,43 +7,65 @@
 package ghttp
 
 import (
+	"context"
 	"fmt"
-	"github.com/gogf/gf"
-	"github.com/gogf/gf/internal/utils"
-	"github.com/gogf/gf/net/ghttp/internal/client"
-	"github.com/gogf/gf/net/ghttp/internal/httputil"
-	"github.com/gogf/gf/net/gtrace"
-	"github.com/gogf/gf/text/gstr"
+	"io/ioutil"
+
+	"github.com/gogf/gf/v2/os/gctx"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
-	"io/ioutil"
-	"net/http"
+
+	"github.com/gogf/gf/v2"
+	"github.com/gogf/gf/v2/internal/httputil"
+	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/net/gtrace"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 const (
-	tracingInstrumentName           = "github.com/gogf/gf/net/ghttp.Server"
-	tracingEventHttpRequest         = "http.request"
-	tracingEventHttpRequestHeaders  = "http.request.headers"
-	tracingEventHttpRequestBaggage  = "http.request.baggage"
-	tracingEventHttpRequestBody     = "http.request.body"
-	tracingEventHttpResponse        = "http.response"
-	tracingEventHttpResponseHeaders = "http.response.headers"
-	tracingEventHttpResponseBody    = "http.response.body"
+	tracingInstrumentName                       = "github.com/gogf/gf/v2/net/ghttp.Server"
+	tracingEventHttpRequest                     = "http.request"
+	tracingEventHttpRequestHeaders              = "http.request.headers"
+	tracingEventHttpRequestBaggage              = "http.request.baggage"
+	tracingEventHttpRequestBody                 = "http.request.body"
+	tracingEventHttpResponse                    = "http.response"
+	tracingEventHttpResponseHeaders             = "http.response.headers"
+	tracingEventHttpResponseBody                = "http.response.body"
+	tracingMiddlewareHandled        gctx.StrKey = `MiddlewareServerTracingHandled`
 )
 
-// MiddlewareClientTracing is a client middleware that enables tracing feature using standards of OpenTelemetry.
-func MiddlewareClientTracing(c *Client, r *http.Request) (*ClientResponse, error) {
-	return client.MiddlewareTracing(c, r)
-}
+// internalMiddlewareServerTracing is a serer middleware that enables tracing feature using standards of OpenTelemetry.
+func internalMiddlewareServerTracing(r *Request) {
+	var (
+		ctx = r.Context()
+	)
+	// Mark this request is handled by server tracing middleware,
+	// to avoid repeated handling by the same middleware.
+	if ctx.Value(tracingMiddlewareHandled) != nil {
+		r.Middleware.Next()
+		return
+	}
 
-// MiddlewareServerTracing is a serer middleware that enables tracing feature using standards of OpenTelemetry.
-func MiddlewareServerTracing(r *Request) {
-	tr := otel.GetTracerProvider().Tracer(tracingInstrumentName, trace.WithInstrumentationVersion(gf.VERSION))
-	ctx := otel.GetTextMapPropagator().Extract(r.Context(), propagation.HeaderCarrier(r.Header))
-	ctx, span := tr.Start(ctx, r.URL.String(), trace.WithSpanKind(trace.SpanKindServer))
+	ctx = context.WithValue(ctx, tracingMiddlewareHandled, 1)
+	var (
+		span trace.Span
+		tr   = otel.GetTracerProvider().Tracer(
+			tracingInstrumentName,
+			trace.WithInstrumentationVersion(gf.VERSION),
+		)
+	)
+	ctx, span = tr.Start(
+		otel.GetTextMapPropagator().Extract(
+			ctx,
+			propagation.HeaderCarrier(r.Header),
+		),
+		r.URL.String(),
+		trace.WithSpanKind(trace.SpanKindServer),
+	)
 	defer span.End()
 
 	span.SetAttributes(gtrace.CommonLabels()...)
@@ -51,13 +73,19 @@ func MiddlewareServerTracing(r *Request) {
 	// Inject tracing context.
 	r.SetCtx(ctx)
 
+	// If it is now using default trace provider, ot then does no complex tracing jobs.
+	if gtrace.IsUsingDefaultProvider() {
+		r.Middleware.Next()
+		return
+	}
+
 	// Request content logging.
 	reqBodyContentBytes, _ := ioutil.ReadAll(r.Body)
 	r.Body = utils.NewReadCloser(reqBodyContentBytes, false)
 
 	span.AddEvent(tracingEventHttpRequest, trace.WithAttributes(
-		attribute.Any(tracingEventHttpRequestHeaders, httputil.HeaderToMap(r.Header)),
-		attribute.Any(tracingEventHttpRequestBaggage, gtrace.GetBaggageMap(ctx)),
+		attribute.String(tracingEventHttpRequestHeaders, gconv.String(httputil.HeaderToMap(r.Header))),
+		attribute.String(tracingEventHttpRequestBaggage, gtrace.GetBaggageMap(ctx).String()),
 		attribute.String(tracingEventHttpRequestBody, gstr.StrLimit(
 			string(reqBodyContentBytes),
 			gtrace.MaxContentLogSize(),
@@ -73,16 +101,10 @@ func MiddlewareServerTracing(r *Request) {
 		span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, err))
 	}
 	// Response content logging.
-	var resBodyContent string
-	resBodyContent = r.Response.BufferString()
-	resBodyContent = gstr.StrLimit(
-		r.Response.BufferString(),
-		gtrace.MaxContentLogSize(),
-		"...",
-	)
+	var resBodyContent = gstr.StrLimit(r.Response.BufferString(), gtrace.MaxContentLogSize(), "...")
 
 	span.AddEvent(tracingEventHttpResponse, trace.WithAttributes(
-		attribute.Any(tracingEventHttpResponseHeaders, httputil.HeaderToMap(r.Response.Header())),
+		attribute.String(tracingEventHttpResponseHeaders, gconv.String(httputil.HeaderToMap(r.Response.Header()))),
 		attribute.String(tracingEventHttpResponseBody, resBodyContent),
 	))
 	return

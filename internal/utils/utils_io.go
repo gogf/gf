@@ -9,6 +9,8 @@ package utils
 import (
 	"io"
 	"io/ioutil"
+
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 // ReadCloser implements the io.ReadCloser interface
@@ -34,6 +36,7 @@ func NewReadCloser(content []byte, repeatable bool) io.ReadCloser {
 func NewReadCloserWithReadCloser(r io.ReadCloser, repeatable bool) (io.ReadCloser, error) {
 	content, err := ioutil.ReadAll(r)
 	if err != nil {
+		err = gerror.Wrapf(err, `ioutil.ReadAll failed`)
 		return nil, err
 	}
 	defer r.Close()

@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-// Size returns the size of file specified by <path> in byte.
+// Size returns the size of file specified by `path` in byte.
 func Size(path string) int64 {
 	s, e := os.Stat(path)
 	if e != nil {
@@ -22,12 +22,12 @@ func Size(path string) int64 {
 	return s.Size()
 }
 
-// SizeFormat returns the size of file specified by <path> in format string.
+// SizeFormat returns the size of file specified by `path` in format string.
 func SizeFormat(path string) string {
 	return FormatSize(Size(path))
 }
 
-// ReadableSize formats size of file given by <path>, for more human readable.
+// ReadableSize formats size of file given by `path`, for more human readable.
 func ReadableSize(path string) string {
 	return FormatSize(Size(path))
 }
@@ -74,7 +74,7 @@ func StrToSize(sizeStr string) int64 {
 	return -1
 }
 
-// FormatSize formats size <raw> for more human readable.
+// FormatSize formats size `raw` for more manually readable.
 func FormatSize(raw int64) string {
 	var r float64 = float64(raw)
 	var t float64 = 1024

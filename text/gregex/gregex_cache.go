@@ -9,6 +9,8 @@ package gregex
 import (
 	"regexp"
 	"sync"
+
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 var (
@@ -20,7 +22,7 @@ var (
 	regexMap = make(map[string]*regexp.Regexp)
 )
 
-// getRegexp returns *regexp.Regexp object with given <pattern>.
+// getRegexp returns *regexp.Regexp object with given `pattern`.
 // It uses cache to enhance the performance for compiling regular expression pattern,
 // which means, it will return the same *regexp.Regexp object with the same regular
 // expression pattern.
@@ -38,6 +40,7 @@ func getRegexp(pattern string) (regex *regexp.Regexp, err error) {
 	// it compiles the pattern and creates one.
 	regex, err = regexp.Compile(pattern)
 	if err != nil {
+		err = gerror.Wrapf(err, `regexp.Compile failed for pattern "%s"`, pattern)
 		return
 	}
 	// Cache the result object using writing lock.

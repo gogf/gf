@@ -6,10 +6,10 @@
 
 package gres
 
-import "github.com/gogf/gf/container/gmap"
+import "github.com/gogf/gf/v2/container/gmap"
 
 const (
-	// Default group name for instance usage.
+	// DefaultName default group name for instance usage.
 	DefaultName = "default"
 )
 
@@ -19,7 +19,7 @@ var (
 )
 
 // Instance returns an instance of Resource.
-// The parameter <name> is the name for the instance.
+// The parameter `name` is the name for the instance.
 func Instance(name ...string) *Resource {
 	key := DefaultName
 	if len(name) > 0 && name[0] != "" {

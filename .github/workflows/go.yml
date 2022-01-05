@@ -8,7 +8,7 @@ on:
   pull_request:
     branches: [master, develop]
 env:
-  GF_DEBUG: 1
+  GF_DEBUG: 0
 
 jobs:
   code-test:
@@ -37,7 +37,7 @@ jobs:
     # strategy set
     strategy:
       matrix:
-        go: ["1.14", "1.15", "1.16"]
+        go: ["1.15", "1.16", "1.17"]
 
     steps:
     - name: Set Up Timezone
@@ -57,7 +57,8 @@ jobs:
       run: |
         date
         find . -name "*.go" | xargs gofmt -w
-        git diff --name-only --exit-code || exit 1
+        git diff --name-only --exit-code || if [ $? != 0 ];then echo "Notice: gofmt check failed,please gofmt before pr." && exit 1; fi
+        echo "gofmt check pass."
         sudo echo "127.0.0.1   local" | sudo tee -a /etc/hosts
 
     - name: Run i386 Arch Test
@@ -67,5 +68,7 @@ jobs:
       run: GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
 
     - name: Report Coverage
-      run: bash <(curl -s https://codecov.io/bash)
+      uses: codecov/codecov-action@v2
+      with:
+        flags: go-${{ matrix.go }}
 

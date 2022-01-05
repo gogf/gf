@@ -7,12 +7,12 @@
 package ghttp
 
 import (
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
 	"net/http"
 	"reflect"
 
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // middleware is the plugin for request workflow management.
@@ -35,7 +35,7 @@ func (m *middleware) Next() {
 		}
 		item = m.request.handlers[m.handlerIndex]
 		// Filter the HOOK handlers, which are designed to be called in another standalone procedure.
-		if item.Handler.Type == handlerTypeHook {
+		if item.Handler.Type == HandlerTypeHook {
 			m.handlerIndex++
 			continue
 		}
@@ -60,7 +60,7 @@ func (m *middleware) Next() {
 
 			switch item.Handler.Type {
 			// Service object.
-			case handlerTypeObject:
+			case HandlerTypeObject:
 				m.served = true
 				if m.request.IsExited() {
 					break
@@ -80,7 +80,7 @@ func (m *middleware) Next() {
 				}
 
 			// Service handler.
-			case handlerTypeHandler:
+			case HandlerTypeHandler:
 				m.served = true
 				if m.request.IsExited() {
 					break
@@ -90,7 +90,7 @@ func (m *middleware) Next() {
 				})
 
 			// Global middleware array.
-			case handlerTypeMiddleware:
+			case HandlerTypeMiddleware:
 				niceCallFunc(func() {
 					item.Handler.Info.Func(m.request)
 				})
@@ -99,9 +99,9 @@ func (m *middleware) Next() {
 				loop = false
 			}
 		}, func(exception error) {
-			if e, ok := exception.(errorStack); ok {
+			if v, ok := exception.(error); ok && gerror.HasStack(v) {
 				// It's already an error that has stack info.
-				m.request.error = e
+				m.request.error = v
 			} else {
 				// Create a new error with stack info.
 				// Note that there's a skip pointing the start stacktrace

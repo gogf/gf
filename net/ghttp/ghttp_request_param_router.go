@@ -6,7 +6,7 @@
 
 package ghttp
 
-import "github.com/gogf/gf/container/gvar"
+import "github.com/gogf/gf/v2/container/gvar"
 
 // GetRouterMap retrieves and returns a copy of router map.
 func (r *Request) GetRouterMap() map[string]string {
@@ -20,28 +20,16 @@ func (r *Request) GetRouterMap() map[string]string {
 	return nil
 }
 
-// GetRouterValue retrieves and returns the router value with given key name <key>.
-// It returns <def> if <key> does not exist.
-func (r *Request) GetRouterValue(key string, def ...interface{}) interface{} {
+// GetRouter retrieves and returns the router value with given key name `key`.
+// It returns `def` if `key` does not exist.
+func (r *Request) GetRouter(key string, def ...interface{}) *gvar.Var {
 	if r.routerMap != nil {
 		if v, ok := r.routerMap[key]; ok {
-			return v
+			return gvar.New(v)
 		}
 	}
 	if len(def) > 0 {
-		return def[0]
+		return gvar.New(def[0])
 	}
 	return nil
-}
-
-// GetRouterVar retrieves and returns the router value as gvar.Var with given key name <key>.
-// It returns <def> if <key> does not exist.
-func (r *Request) GetRouterVar(key string, def ...interface{}) *gvar.Var {
-	return gvar.New(r.GetRouterValue(key, def...))
-}
-
-// GetRouterString retrieves and returns the router value as string with given key name <key>.
-// It returns <def> if <key> does not exist.
-func (r *Request) GetRouterString(key string, def ...interface{}) string {
-	return r.GetRouterVar(key, def...).String()
 }

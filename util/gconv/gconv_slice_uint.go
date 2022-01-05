@@ -6,7 +6,12 @@
 
 package gconv
 
-import "reflect"
+import (
+	"reflect"
+	"strings"
+
+	"github.com/gogf/gf/v2/internal/utils"
+)
 
 // SliceUint is alias of Uints.
 func SliceUint(any interface{}) []uint {
@@ -29,13 +34,19 @@ func Uints(any interface{}) []uint {
 		return nil
 	}
 
-	var array []uint
+	var (
+		array []uint = nil
+	)
 	switch value := any.(type) {
 	case string:
+		value = strings.TrimSpace(value)
 		if value == "" {
 			return []uint{}
 		}
-		return []uint{Uint(value)}
+		if utils.IsNumeric(value) {
+			return []uint{Uint(value)}
+		}
+
 	case []string:
 		array = make([]uint, len(value))
 		for k, v := range value {
@@ -112,41 +123,42 @@ func Uints(any interface{}) []uint {
 		for k, v := range value {
 			array[k] = Uint(v)
 		}
-	default:
-		if v, ok := any.(apiUints); ok {
-			return v.Uints()
-		}
-		if v, ok := any.(apiInterfaces); ok {
-			return Uints(v.Interfaces())
-		}
-		// Not a common type, it then uses reflection for conversion.
-		var reflectValue reflect.Value
-		if v, ok := value.(reflect.Value); ok {
-			reflectValue = v
-		} else {
-			reflectValue = reflect.ValueOf(value)
-		}
-		reflectKind := reflectValue.Kind()
-		for reflectKind == reflect.Ptr {
-			reflectValue = reflectValue.Elem()
-			reflectKind = reflectValue.Kind()
-		}
-		switch reflectKind {
-		case reflect.Slice, reflect.Array:
-			var (
-				length = reflectValue.Len()
-				slice  = make([]uint, length)
-			)
-			for i := 0; i < length; i++ {
-				slice[i] = Uint(reflectValue.Index(i).Interface())
-			}
-			return slice
-
-		default:
-			return []uint{Uint(any)}
-		}
 	}
-	return array
+
+	if array != nil {
+		return array
+	}
+
+	// Default handler.
+	if v, ok := any.(iUints); ok {
+		return v.Uints()
+	}
+	if v, ok := any.(iInterfaces); ok {
+		return Uints(v.Interfaces())
+	}
+	// JSON format string value converting.
+	if checkJsonAndUnmarshalUseNumber(any, &array) {
+		return array
+	}
+	// Not a common type, it then uses reflection for conversion.
+	originValueAndKind := utils.OriginValueAndKind(any)
+	switch originValueAndKind.OriginKind {
+	case reflect.Slice, reflect.Array:
+		var (
+			length = originValueAndKind.OriginValue.Len()
+			slice  = make([]uint, length)
+		)
+		for i := 0; i < length; i++ {
+			slice[i] = Uint(originValueAndKind.OriginValue.Index(i).Interface())
+		}
+		return slice
+
+	default:
+		if originValueAndKind.OriginValue.IsZero() {
+			return []uint{}
+		}
+		return []uint{Uint(any)}
+	}
 }
 
 // Uint32s converts `any` to []uint32.
@@ -154,13 +166,18 @@ func Uint32s(any interface{}) []uint32 {
 	if any == nil {
 		return nil
 	}
-	var array []uint32
+	var (
+		array []uint32 = nil
+	)
 	switch value := any.(type) {
 	case string:
+		value = strings.TrimSpace(value)
 		if value == "" {
 			return []uint32{}
 		}
-		return []uint32{Uint32(value)}
+		if utils.IsNumeric(value) {
+			return []uint32{Uint32(value)}
+		}
 	case []string:
 		array = make([]uint32, len(value))
 		for k, v := range value {
@@ -237,41 +254,41 @@ func Uint32s(any interface{}) []uint32 {
 		for k, v := range value {
 			array[k] = Uint32(v)
 		}
-	default:
-		if v, ok := any.(apiUints); ok {
-			return Uint32s(v.Uints())
-		}
-		if v, ok := any.(apiInterfaces); ok {
-			return Uint32s(v.Interfaces())
-		}
-		// Not a common type, it then uses reflection for conversion.
-		var reflectValue reflect.Value
-		if v, ok := value.(reflect.Value); ok {
-			reflectValue = v
-		} else {
-			reflectValue = reflect.ValueOf(value)
-		}
-		reflectKind := reflectValue.Kind()
-		for reflectKind == reflect.Ptr {
-			reflectValue = reflectValue.Elem()
-			reflectKind = reflectValue.Kind()
-		}
-		switch reflectKind {
-		case reflect.Slice, reflect.Array:
-			var (
-				length = reflectValue.Len()
-				slice  = make([]uint32, length)
-			)
-			for i := 0; i < length; i++ {
-				slice[i] = Uint32(reflectValue.Index(i).Interface())
-			}
-			return slice
-
-		default:
-			return []uint32{Uint32(any)}
-		}
 	}
-	return array
+	if array != nil {
+		return array
+	}
+
+	// Default handler.
+	if v, ok := any.(iUints); ok {
+		return Uint32s(v.Uints())
+	}
+	if v, ok := any.(iInterfaces); ok {
+		return Uint32s(v.Interfaces())
+	}
+	// JSON format string value converting.
+	if checkJsonAndUnmarshalUseNumber(any, &array) {
+		return array
+	}
+	// Not a common type, it then uses reflection for conversion.
+	originValueAndKind := utils.OriginValueAndKind(any)
+	switch originValueAndKind.OriginKind {
+	case reflect.Slice, reflect.Array:
+		var (
+			length = originValueAndKind.OriginValue.Len()
+			slice  = make([]uint32, length)
+		)
+		for i := 0; i < length; i++ {
+			slice[i] = Uint32(originValueAndKind.OriginValue.Index(i).Interface())
+		}
+		return slice
+
+	default:
+		if originValueAndKind.OriginValue.IsZero() {
+			return []uint32{}
+		}
+		return []uint32{Uint32(any)}
+	}
 }
 
 // Uint64s converts `any` to []uint64.
@@ -279,13 +296,19 @@ func Uint64s(any interface{}) []uint64 {
 	if any == nil {
 		return nil
 	}
-	var array []uint64
+	var (
+		array []uint64 = nil
+	)
 	switch value := any.(type) {
 	case string:
+		value = strings.TrimSpace(value)
 		if value == "" {
 			return []uint64{}
 		}
-		return []uint64{Uint64(value)}
+		if utils.IsNumeric(value) {
+			return []uint64{Uint64(value)}
+		}
+
 	case []string:
 		array = make([]uint64, len(value))
 		for k, v := range value {
@@ -362,39 +385,38 @@ func Uint64s(any interface{}) []uint64 {
 		for k, v := range value {
 			array[k] = Uint64(v)
 		}
-	default:
-		if v, ok := any.(apiUints); ok {
-			return Uint64s(v.Uints())
-		}
-		if v, ok := any.(apiInterfaces); ok {
-			return Uint64s(v.Interfaces())
-		}
-		// Not a common type, it then uses reflection for conversion.
-		var reflectValue reflect.Value
-		if v, ok := value.(reflect.Value); ok {
-			reflectValue = v
-		} else {
-			reflectValue = reflect.ValueOf(value)
-		}
-		reflectKind := reflectValue.Kind()
-		for reflectKind == reflect.Ptr {
-			reflectValue = reflectValue.Elem()
-			reflectKind = reflectValue.Kind()
-		}
-		switch reflectKind {
-		case reflect.Slice, reflect.Array:
-			var (
-				length = reflectValue.Len()
-				slice  = make([]uint64, length)
-			)
-			for i := 0; i < length; i++ {
-				slice[i] = Uint64(reflectValue.Index(i).Interface())
-			}
-			return slice
-
-		default:
-			return []uint64{Uint64(any)}
-		}
 	}
-	return array
+	if array != nil {
+		return array
+	}
+	// Default handler.
+	if v, ok := any.(iUints); ok {
+		return Uint64s(v.Uints())
+	}
+	if v, ok := any.(iInterfaces); ok {
+		return Uint64s(v.Interfaces())
+	}
+	// JSON format string value converting.
+	if checkJsonAndUnmarshalUseNumber(any, &array) {
+		return array
+	}
+	// Not a common type, it then uses reflection for conversion.
+	originValueAndKind := utils.OriginValueAndKind(any)
+	switch originValueAndKind.OriginKind {
+	case reflect.Slice, reflect.Array:
+		var (
+			length = originValueAndKind.OriginValue.Len()
+			slice  = make([]uint64, length)
+		)
+		for i := 0; i < length; i++ {
+			slice[i] = Uint64(originValueAndKind.OriginValue.Index(i).Interface())
+		}
+		return slice
+
+	default:
+		if originValueAndKind.OriginValue.IsZero() {
+			return []uint64{}
+		}
+		return []uint64{Uint64(any)}
+	}
 }

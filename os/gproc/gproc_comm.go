@@ -9,13 +9,13 @@ package gproc
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/net/gtcp"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/util/gconv"
+
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/net/gtcp"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // MsgRequest is the request structure for process communication.
@@ -88,7 +88,7 @@ func getConnByPid(pid int) (*gtcp.PoolConn, error) {
 			return nil, err
 		}
 	}
-	return nil, gerror.NewCodef(gcode.CodeOperationFailed, "could not find port for pid: %d", pid)
+	return nil, gerror.Newf(`could not find port for pid "%d"`, pid)
 }
 
 // getPortByPid returns the listening port for specified pid.

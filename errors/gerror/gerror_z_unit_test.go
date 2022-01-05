@@ -9,12 +9,12 @@ package gerror_test
 import (
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/internal/json"
 	"testing"
 
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func nilError() error {
@@ -209,13 +209,13 @@ func Test_Stack(t *testing.T) {
 		err = gerror.Wrap(err, "2")
 		err = gerror.Wrap(err, "3")
 		t.AssertNE(err, nil)
-		//fmt.Printf("%+v", err)
+		// fmt.Printf("%+v", err)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
 		err := gerror.New("1")
 		t.AssertNE(fmt.Sprintf("%+v", err), "1")
-		//fmt.Printf("%+v", err)
+		// fmt.Printf("%+v", err)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -223,7 +223,7 @@ func Test_Stack(t *testing.T) {
 		err = gerror.Wrap(err, "2")
 		err = gerror.Wrap(err, "3")
 		t.AssertNE(err, nil)
-		//fmt.Printf("%+v", err)
+		// fmt.Printf("%+v", err)
 	})
 }
 
@@ -311,11 +311,32 @@ func Test_Code(t *testing.T) {
 	})
 }
 
+func Test_SetCode(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.New("123")
+		t.Assert(gerror.Code(err), -1)
+		t.Assert(err.Error(), "123")
+
+		err.(*gerror.Error).SetCode(gcode.CodeValidationFailed)
+		t.Assert(gerror.Code(err), gcode.CodeValidationFailed)
+		t.Assert(err.Error(), "123")
+	})
+}
+
 func Test_Json(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err := gerror.Wrap(gerror.New("1"), "2")
 		b, e := json.Marshal(err)
 		t.Assert(e, nil)
 		t.Assert(string(b), `"2: 1"`)
+	})
+}
+
+func Test_HasStack(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err1 := errors.New("1")
+		err2 := gerror.New("1")
+		t.Assert(gerror.HasStack(err1), false)
+		t.Assert(gerror.HasStack(err2), true)
 	})
 }

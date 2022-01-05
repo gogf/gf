@@ -8,11 +8,11 @@ package gfsnotify
 
 import (
 	"context"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/intlog"
 
-	"github.com/gogf/gf/container/glist"
+	"github.com/gogf/gf/v2/container/glist"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
 )
 
 // Add monitors `path` with callback function `callbackFunc` to the watcher.
@@ -46,8 +46,8 @@ func (w *Watcher) AddOnce(name, path string, callbackFunc func(event *Event), re
 		if fileIsDir(path) && (len(recursive) == 0 || recursive[0]) {
 			for _, subPath := range fileAllDirs(path) {
 				if fileIsDir(subPath) {
-					if err := w.watcher.Add(subPath); err != nil {
-						intlog.Error(context.TODO(), err)
+					if err = w.watcher.Add(subPath); err != nil {
+						err = gerror.Wrapf(err, `add watch failed for path "%s"`, subPath)
 					} else {
 						intlog.Printf(context.TODO(), "watcher adds monitor for: %s", subPath)
 					}
@@ -94,8 +94,8 @@ func (w *Watcher) addWithCallbackFunc(name, path string, callbackFunc func(event
 		callback.elem = list.PushBack(callback)
 	})
 	// Add the path to underlying monitor.
-	if err := w.watcher.Add(path); err != nil {
-		intlog.Error(context.TODO(), err)
+	if err = w.watcher.Add(path); err != nil {
+		err = gerror.Wrapf(err, `add watch failed for path "%s"`, path)
 	} else {
 		intlog.Printf(context.TODO(), "watcher adds monitor for: %s", path)
 	}
@@ -116,11 +116,11 @@ func (w *Watcher) Close() {
 // Remove removes monitor and all callbacks associated with the `path` recursively.
 func (w *Watcher) Remove(path string) error {
 	// Firstly remove the callbacks of the path.
-	if r := w.callbacks.Remove(path); r != nil {
-		list := r.(*glist.List)
+	if value := w.callbacks.Remove(path); value != nil {
+		list := value.(*glist.List)
 		for {
-			if r := list.PopFront(); r != nil {
-				callbackIdMap.Remove(r.(*Callback).Id)
+			if item := list.PopFront(); item != nil {
+				callbackIdMap.Remove(item.(*Callback).Id)
 			} else {
 				break
 			}
@@ -130,14 +130,18 @@ func (w *Watcher) Remove(path string) error {
 	if subPaths, err := fileScanDir(path, "*", true); err == nil && len(subPaths) > 0 {
 		for _, subPath := range subPaths {
 			if w.checkPathCanBeRemoved(subPath) {
-				if err := w.watcher.Remove(subPath); err != nil {
-					intlog.Error(context.TODO(), err)
+				if internalErr := w.watcher.Remove(subPath); internalErr != nil {
+					intlog.Error(context.TODO(), internalErr)
 				}
 			}
 		}
 	}
 	// Lastly remove the monitor of the path from underlying monitor.
-	return w.watcher.Remove(path)
+	err := w.watcher.Remove(path)
+	if err != nil {
+		err = gerror.Wrapf(err, `remove watch failed for path "%s"`, path)
+	}
+	return err
 }
 
 // checkPathCanBeRemoved checks whether the given path have no callbacks bound.

@@ -6,7 +6,11 @@
 
 package gconv
 
-import "reflect"
+import (
+	"reflect"
+
+	"github.com/gogf/gf/v2/internal/utils"
+)
 
 // SliceFloat is alias of Floats.
 func SliceFloat(any interface{}) []float64 {
@@ -33,7 +37,9 @@ func Float32s(any interface{}) []float32 {
 	if any == nil {
 		return nil
 	}
-	var array []float32
+	var (
+		array []float32 = nil
+	)
 	switch value := any.(type) {
 	case string:
 		if value == "" {
@@ -111,41 +117,39 @@ func Float32s(any interface{}) []float32 {
 		for k, v := range value {
 			array[k] = Float32(v)
 		}
-	default:
-		if v, ok := any.(apiFloats); ok {
-			return Float32s(v.Floats())
-		}
-		if v, ok := any.(apiInterfaces); ok {
-			return Float32s(v.Interfaces())
-		}
-		// Not a common type, it then uses reflection for conversion.
-		var reflectValue reflect.Value
-		if v, ok := value.(reflect.Value); ok {
-			reflectValue = v
-		} else {
-			reflectValue = reflect.ValueOf(value)
-		}
-		reflectKind := reflectValue.Kind()
-		for reflectKind == reflect.Ptr {
-			reflectValue = reflectValue.Elem()
-			reflectKind = reflectValue.Kind()
-		}
-		switch reflectKind {
-		case reflect.Slice, reflect.Array:
-			var (
-				length = reflectValue.Len()
-				slice  = make([]float32, length)
-			)
-			for i := 0; i < length; i++ {
-				slice[i] = Float32(reflectValue.Index(i).Interface())
-			}
-			return slice
-
-		default:
-			return []float32{Float32(any)}
-		}
 	}
-	return array
+	if array != nil {
+		return array
+	}
+	if v, ok := any.(iFloats); ok {
+		return Float32s(v.Floats())
+	}
+	if v, ok := any.(iInterfaces); ok {
+		return Float32s(v.Interfaces())
+	}
+	// JSON format string value converting.
+	if checkJsonAndUnmarshalUseNumber(any, &array) {
+		return array
+	}
+	// Not a common type, it then uses reflection for conversion.
+	originValueAndKind := utils.OriginValueAndKind(any)
+	switch originValueAndKind.OriginKind {
+	case reflect.Slice, reflect.Array:
+		var (
+			length = originValueAndKind.OriginValue.Len()
+			slice  = make([]float32, length)
+		)
+		for i := 0; i < length; i++ {
+			slice[i] = Float32(originValueAndKind.OriginValue.Index(i).Interface())
+		}
+		return slice
+
+	default:
+		if originValueAndKind.OriginValue.IsZero() {
+			return []float32{}
+		}
+		return []float32{Float32(any)}
+	}
 }
 
 // Float64s converts `any` to []float64.
@@ -153,7 +157,9 @@ func Float64s(any interface{}) []float64 {
 	if any == nil {
 		return nil
 	}
-	var array []float64
+	var (
+		array []float64 = nil
+	)
 	switch value := any.(type) {
 	case string:
 		if value == "" {
@@ -231,40 +237,37 @@ func Float64s(any interface{}) []float64 {
 		for k, v := range value {
 			array[k] = Float64(v)
 		}
-	default:
-		if v, ok := any.(apiFloats); ok {
-			return v.Floats()
-		}
-		if v, ok := any.(apiInterfaces); ok {
-			return Floats(v.Interfaces())
-		}
-		// Not a common type, it then uses reflection for conversion.
-		var reflectValue reflect.Value
-		if v, ok := value.(reflect.Value); ok {
-			reflectValue = v
-		} else {
-			reflectValue = reflect.ValueOf(value)
-		}
-		reflectKind := reflectValue.Kind()
-		for reflectKind == reflect.Ptr {
-			reflectValue = reflectValue.Elem()
-			reflectKind = reflectValue.Kind()
-		}
-		switch reflectKind {
-		case reflect.Slice, reflect.Array:
-			var (
-				length = reflectValue.Len()
-				slice  = make([]float64, length)
-			)
-			for i := 0; i < length; i++ {
-				slice[i] = Float64(reflectValue.Index(i).Interface())
-			}
-			return slice
-
-		default:
-			return []float64{Float64(any)}
-		}
 	}
-	return array
+	if array != nil {
+		return array
+	}
+	if v, ok := any.(iFloats); ok {
+		return v.Floats()
+	}
+	if v, ok := any.(iInterfaces); ok {
+		return Floats(v.Interfaces())
+	}
+	// JSON format string value converting.
+	if checkJsonAndUnmarshalUseNumber(any, &array) {
+		return array
+	}
+	// Not a common type, it then uses reflection for conversion.
+	originValueAndKind := utils.OriginValueAndKind(any)
+	switch originValueAndKind.OriginKind {
+	case reflect.Slice, reflect.Array:
+		var (
+			length = originValueAndKind.OriginValue.Len()
+			slice  = make([]float64, length)
+		)
+		for i := 0; i < length; i++ {
+			slice[i] = Float64(originValueAndKind.OriginValue.Index(i).Interface())
+		}
+		return slice
 
+	default:
+		if originValueAndKind.OriginValue.IsZero() {
+			return []float64{}
+		}
+		return []float64{Float64(any)}
+	}
 }

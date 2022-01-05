@@ -10,6 +10,8 @@ package gurl
 import (
 	"net/url"
 	"strings"
+
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 // Encode escapes the string so it can be safely placed
@@ -27,30 +29,33 @@ func Decode(str string) (string, error) {
 	return url.QueryUnescape(str)
 }
 
+// RawEncode does encode the given string according
 // URL-encode according to RFC 3986.
 // See http://php.net/manual/en/function.rawurlencode.php.
 func RawEncode(str string) string {
 	return strings.Replace(url.QueryEscape(str), "+", "%20", -1)
 }
 
+// RawDecode does decode the given string
 // Decode URL-encoded strings.
 // See http://php.net/manual/en/function.rawurldecode.php.
 func RawDecode(str string) (string, error) {
 	return url.QueryUnescape(strings.Replace(str, "%20", "+", -1))
 }
 
-// Generate URL-encoded query string.
+// BuildQuery Generate URL-encoded query string.
 // See http://php.net/manual/en/function.http-build-query.php.
 func BuildQuery(queryData url.Values) string {
 	return queryData.Encode()
 }
 
-// Parse a URL and return its components.
+// ParseURL Parse a URL and return its components.
 // -1: all; 1: scheme; 2: host; 4: port; 8: user; 16: pass; 32: path; 64: query; 128: fragment.
 // See http://php.net/manual/en/function.parse-url.php.
 func ParseURL(str string, component int) (map[string]string, error) {
 	u, err := url.Parse(str)
 	if err != nil {
+		err = gerror.Wrapf(err, `url.Parse failed for URL "%s"`, str)
 		return nil, err
 	}
 	if component == -1 {

@@ -21,8 +21,8 @@ package gqueue
 import (
 	"math"
 
-	"github.com/gogf/gf/container/glist"
-	"github.com/gogf/gf/container/gtype"
+	"github.com/gogf/gf/v2/container/glist"
+	"github.com/gogf/gf/v2/container/gtype"
 )
 
 // Queue is a concurrent-safe queue built on doubly linked list and channel.
@@ -40,8 +40,8 @@ const (
 )
 
 // New returns an empty queue object.
-// Optional parameter <limit> is used to limit the size of the queue, which is unlimited in default.
-// When <limit> is given, the queue will be static and high performance which is comparable with stdlib channel.
+// Optional parameter `limit` is used to limit the size of the queue, which is unlimited in default.
+// When `limit` is given, the queue will be static and high performance which is comparable with stdlib channel.
 func New(limit ...int) *Queue {
 	q := &Queue{
 		closed: gtype.NewBool(),
@@ -59,7 +59,7 @@ func New(limit ...int) *Queue {
 }
 
 // asyncLoopFromListToChannel starts an asynchronous goroutine,
-// which handles the data synchronization from list <q.list> to channel <q.C>.
+// which handles the data synchronization from list `q.list` to channel `q.C`.
 func (q *Queue) asyncLoopFromListToChannel() {
 	defer func() {
 		if q.closed.Val() {
@@ -87,13 +87,13 @@ func (q *Queue) asyncLoopFromListToChannel() {
 			<-q.events
 		}
 	}
-	// It should be here to close q.C if <q> is unlimited size.
+	// It should be here to close `q.C` if `q` is unlimited size.
 	// It's the sender's responsibility to close channel when it should be closed.
 	close(q.C)
 }
 
-// Push pushes the data <v> into the queue.
-// Note that it would panics if Push is called after the queue is closed.
+// Push pushes the data `v` into the queue.
+// Note that it would panic if Push is called after the queue is closed.
 func (q *Queue) Push(v interface{}) {
 	if q.limit > 0 {
 		q.C <- v
@@ -121,14 +121,15 @@ func (q *Queue) Close() {
 	}
 	if q.limit > 0 {
 		close(q.C)
-	}
-	for i := 0; i < defaultBatchSize; i++ {
-		q.Pop()
+	} else {
+		for i := 0; i < defaultBatchSize; i++ {
+			q.Pop()
+		}
 	}
 }
 
 // Len returns the length of the queue.
-// Note that the result might not be accurate as there's a
+// Note that the result might not be accurate as there's an
 // asynchronous channel reading the list constantly.
 func (q *Queue) Len() (length int) {
 	if q.list != nil {

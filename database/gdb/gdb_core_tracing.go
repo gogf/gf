@@ -10,16 +10,19 @@ package gdb
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf"
-	"github.com/gogf/gf/net/gtrace"
+
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/gogf/gf/v2"
+	"github.com/gogf/gf/v2/net/gtrace"
 )
 
 const (
-	tracingInstrumentName       = "github.com/gogf/gf/database/gdb"
+	tracingInstrumentName       = "github.com/gogf/gf/v2/database/gdb"
 	tracingAttrDbType           = "db.type"
 	tracingAttrDbHost           = "db.host"
 	tracingAttrDbPort           = "db.port"
@@ -30,12 +33,14 @@ const (
 	tracingEventDbExecution     = "db.execution"
 	tracingEventDbExecutionSql  = "db.execution.sql"
 	tracingEventDbExecutionCost = "db.execution.cost"
+	tracingEventDbExecutionRows = "db.execution.rows"
+	tracingEventDbExecutionTxID = "db.execution.txid"
 	tracingEventDbExecutionType = "db.execution.type"
 )
 
 // addSqlToTracing adds sql information to tracer if it's enabled.
 func (c *Core) addSqlToTracing(ctx context.Context, sql *Sql) {
-	if !gtrace.IsTracingInternal() || !gtrace.IsActivated(ctx) {
+	if gtrace.IsUsingDefaultProvider() || !gtrace.IsTracingInternal() {
 		return
 	}
 	tr := otel.GetTracerProvider().Tracer(
@@ -52,6 +57,7 @@ func (c *Core) addSqlToTracing(ctx context.Context, sql *Sql) {
 	labels = append(labels, gtrace.CommonLabels()...)
 	labels = append(labels,
 		attribute.String(tracingAttrDbType, c.db.GetConfig().Type),
+		semconv.DBStatementKey.String(sql.Format),
 	)
 	if c.db.GetConfig().Host != "" {
 		labels = append(labels, attribute.String(tracingAttrDbHost, c.db.GetConfig().Host))
@@ -72,9 +78,18 @@ func (c *Core) addSqlToTracing(ctx context.Context, sql *Sql) {
 		labels = append(labels, attribute.String(tracingAttrDbGroup, group))
 	}
 	span.SetAttributes(labels...)
-	span.AddEvent(tracingEventDbExecution, trace.WithAttributes(
+	events := []attribute.KeyValue{
 		attribute.String(tracingEventDbExecutionSql, sql.Format),
 		attribute.String(tracingEventDbExecutionCost, fmt.Sprintf(`%d ms`, sql.End-sql.Start)),
-		attribute.String(tracingEventDbExecutionType, sql.Type),
-	))
+		attribute.String(tracingEventDbExecutionRows, fmt.Sprintf(`%d`, sql.RowsAffected)),
+	}
+	if sql.IsTransaction {
+		if v := ctx.Value(transactionIdForLoggerCtx); v != nil {
+			events = append(events, attribute.String(
+				tracingEventDbExecutionTxID, fmt.Sprintf(`%d`, v.(uint64)),
+			))
+		}
+	}
+	events = append(events, attribute.String(tracingEventDbExecutionType, sql.Type))
+	span.AddEvent(tracingEventDbExecution, trace.WithAttributes(events...))
 }

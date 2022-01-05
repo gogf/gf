@@ -9,20 +9,22 @@ package gres
 import (
 	"archive/zip"
 	"context"
-	"github.com/gogf/gf/internal/fileinfo"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/text/gregex"
 	"io"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/fileinfo"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/text/gregex"
 )
 
-// ZipPathWriter compresses <paths> to <writer> using zip compressing algorithm.
-// The unnecessary parameter <prefix> indicates the path prefix for zip file.
+// ZipPathWriter compresses `paths` to `writer` using zip compressing algorithm.
+// The unnecessary parameter `prefix` indicates the path prefix for zip file.
 //
-// Note that the parameter <paths> can be either a directory or a file, which
+// Note that the parameter `paths` can be either a directory or a file, which
 // supports multiple paths join with ','.
 func zipPathWriter(paths string, writer io.Writer, prefix ...string) error {
 	zipWriter := zip.NewWriter(writer)
@@ -36,10 +38,10 @@ func zipPathWriter(paths string, writer io.Writer, prefix ...string) error {
 	return nil
 }
 
-// doZipPathWriter compresses the file of given <path> and writes the content to <zipWriter>.
-// The parameter <exclude> specifies the exclusive file path that is not compressed to <zipWriter>,
+// doZipPathWriter compresses the file of given `path` and writes the content to `zipWriter`.
+// The parameter `exclude` specifies the exclusive file path that is not compressed to `zipWriter`,
 // commonly the destination zip file path.
-// The unnecessary parameter <prefix> indicates the path prefix for zip file.
+// The unnecessary parameter `prefix` indicates the path prefix for zip file.
 func doZipPathWriter(path string, exclude string, zipWriter *zip.Writer, prefix ...string) error {
 	var (
 		err   error
@@ -74,8 +76,7 @@ func doZipPathWriter(path string, exclude string, zipWriter *zip.Writer, prefix 
 			intlog.Printf(context.TODO(), `exclude file path: %s`, file)
 			continue
 		}
-		err = zipFile(file, headerPrefix+gfile.Dir(file[len(path):]), zipWriter)
-		if err != nil {
+		if err = zipFile(file, headerPrefix+gfile.Dir(file[len(path):]), zipWriter); err != nil {
 			return err
 		}
 	}
@@ -85,10 +86,7 @@ func doZipPathWriter(path string, exclude string, zipWriter *zip.Writer, prefix 
 		path = headerPrefix
 		for {
 			name = strings.Replace(gfile.Basename(path), `\`, `/`, -1)
-			err = zipFileVirtual(
-				fileinfo.New(name, 0, os.ModeDir|os.ModePerm, time.Now()), path, zipWriter,
-			)
-			if err != nil {
+			if err = zipFileVirtual(fileinfo.New(name, 0, os.ModeDir|os.ModePerm, time.Now()), path, zipWriter); err != nil {
 				return err
 			}
 			if path == `/` || !strings.Contains(path, `/`) {
@@ -100,17 +98,19 @@ func doZipPathWriter(path string, exclude string, zipWriter *zip.Writer, prefix 
 	return nil
 }
 
-// zipFile compresses the file of given <path> and writes the content to <zw>.
-// The parameter <prefix> indicates the path prefix for zip file.
+// zipFile compresses the file of given `path` and writes the content to `zw`.
+// The parameter `prefix` indicates the path prefix for zip file.
 func zipFile(path string, prefix string, zw *zip.Writer) error {
 	prefix = strings.Replace(prefix, `//`, `/`, -1)
 	file, err := os.Open(path)
 	if err != nil {
+		err = gerror.Wrapf(err, `os.Open failed for file "%s"`, path)
 		return nil
 	}
 	defer file.Close()
 	info, err := file.Stat()
 	if err != nil {
+		err = gerror.Wrapf(err, `read file stat failed for file "%s"`, path)
 		return err
 	}
 	header, err := createFileHeader(info, prefix)
@@ -122,10 +122,12 @@ func zipFile(path string, prefix string, zw *zip.Writer) error {
 	}
 	writer, err := zw.CreateHeader(header)
 	if err != nil {
+		err = gerror.Wrapf(err, `create zip header failed for %#v`, header)
 		return err
 	}
 	if !info.IsDir() {
 		if _, err = io.Copy(writer, file); err != nil {
+			err = gerror.Wrapf(err, `io.Copy failed for file "%s"`, path)
 			return err
 		}
 	}
@@ -139,6 +141,7 @@ func zipFileVirtual(info os.FileInfo, path string, zw *zip.Writer) error {
 	}
 	header.Name = path
 	if _, err = zw.CreateHeader(header); err != nil {
+		err = gerror.Wrapf(err, `create zip header failed for %#v`, header)
 		return err
 	}
 	return nil
@@ -147,6 +150,7 @@ func zipFileVirtual(info os.FileInfo, path string, zw *zip.Writer) error {
 func createFileHeader(info os.FileInfo, prefix string) (*zip.FileHeader, error) {
 	header, err := zip.FileInfoHeader(info)
 	if err != nil {
+		err = gerror.Wrapf(err, `create file header failed for name "%s"`, info.Name())
 		return nil, err
 	}
 	if len(prefix) > 0 {
