@@ -312,11 +312,12 @@ var (
 
 	// driverMap manages all custom registered driver.
 	driverMap = map[string]Driver{
-		"mysql":  &DriverMysql{},
-		"mssql":  &DriverMssql{},
-		"pgsql":  &DriverPgsql{},
-		"oracle": &DriverOracle{},
-		"sqlite": &DriverSqlite{},
+		"mysql":      &DriverMysql{},
+		"mssql":      &DriverMssql{},
+		"pgsql":      &DriverPgsql{},
+		"oracle":     &DriverOracle{},
+		"sqlite":     &DriverSqlite{},
+		"clickhouse": &DriverClickhouse{},
 	}
 
 	// lastOperatorRegPattern is the regular expression pattern for a string
