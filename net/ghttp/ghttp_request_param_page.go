@@ -8,12 +8,13 @@ package ghttp
 
 import (
 	"fmt"
-	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gpage"
+
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gpage"
 )
 
-// GetPage creates and returns the pagination object for given <totalSize> and <pageSize>.
+// GetPage creates and returns the pagination object for given `totalSize` and `pageSize`.
 // NOTE THAT the page parameter name from client is constantly defined as gpage.DefaultPageName
 // for simplification and convenience.
 func (r *Request) GetPage(totalSize, pageSize int) *gpage.Page {
@@ -67,5 +68,5 @@ func (r *Request) GetPage(totalSize, pageSize int) *gpage.Page {
 		urlTemplate += "?" + url.RawQuery
 	}
 
-	return gpage.New(totalSize, pageSize, r.GetInt(gpage.DefaultPageName), urlTemplate)
+	return gpage.New(totalSize, pageSize, r.Get(gpage.DefaultPageName).Int(), urlTemplate)
 }

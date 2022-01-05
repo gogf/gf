@@ -11,47 +11,49 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/json"
 	"io"
 	"strings"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/json"
 )
 
 // Decode converts INI format to map.
 func Decode(data []byte) (res map[string]interface{}, err error) {
 	res = make(map[string]interface{})
-	fieldMap := make(map[string]interface{})
+	var (
+		fieldMap    = make(map[string]interface{})
+		bytesReader = bytes.NewReader(data)
+		bufioReader = bufio.NewReader(bytesReader)
+		section     string
+		lastSection string
+		haveSection bool
+		line        string
+	)
 
-	a := bytes.NewReader(data)
-	r := bufio.NewReader(a)
-	var section string
-	var lastSection string
-	var haveSection bool
 	for {
-		line, err := r.ReadString('\n')
+		line, err = bufioReader.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
 				break
 			}
+			err = gerror.Wrapf(err, `bufioReader.ReadString failed`)
 			return nil, err
 		}
-
-		lineStr := strings.TrimSpace(string(line))
-		if len(lineStr) == 0 {
+		if line = strings.TrimSpace(line); len(line) == 0 {
 			continue
 		}
 
-		if lineStr[0] == ';' || lineStr[0] == '#' {
+		if line[0] == ';' || line[0] == '#' {
 			continue
 		}
-
-		sectionBeginPos := strings.Index(lineStr, "[")
-		sectionEndPos := strings.Index(lineStr, "]")
-
+		var (
+			sectionBeginPos = strings.Index(line, "[")
+			sectionEndPos   = strings.Index(line, "]")
+		)
 		if sectionBeginPos >= 0 && sectionEndPos >= 2 {
-			section = lineStr[sectionBeginPos+1 : sectionEndPos]
-
+			section = line[sectionBeginPos+1 : sectionEndPos]
 			if lastSection == "" {
 				lastSection = section
 			} else if lastSection != section {
@@ -63,9 +65,9 @@ func Decode(data []byte) (res map[string]interface{}, err error) {
 			continue
 		}
 
-		if strings.Contains(lineStr, "=") && haveSection {
-			values := strings.Split(lineStr, "=")
-			fieldMap[strings.TrimSpace(values[0])] = strings.TrimSpace(strings.Join(values[1:], ""))
+		if strings.Contains(line, "=") && haveSection {
+			values := strings.Split(line, "=")
+			fieldMap[strings.TrimSpace(values[0])] = strings.TrimSpace(strings.Join(values[1:], "="))
 			res[section] = fieldMap
 		}
 	}
@@ -78,27 +80,26 @@ func Decode(data []byte) (res map[string]interface{}, err error) {
 
 // Encode converts map to INI format.
 func Encode(data map[string]interface{}) (res []byte, err error) {
-	w := new(bytes.Buffer)
-
-	w.WriteString("; this ini file is produced by package gini\n")
+	var (
+		n int
+		w = new(bytes.Buffer)
+	)
 	for k, v := range data {
-		n, err := w.WriteString(fmt.Sprintf("[%s]\n", k))
+		n, err = w.WriteString(fmt.Sprintf("[%s]\n", k))
 		if err != nil || n == 0 {
-			return nil, fmt.Errorf("write data failed. %v", err)
+			return nil, gerror.Wrapf(err, "w.WriteString failed")
 		}
 		for kk, vv := range v.(map[string]interface{}) {
-			n, err := w.WriteString(fmt.Sprintf("%s=%s\n", kk, vv.(string)))
+			n, err = w.WriteString(fmt.Sprintf("%s=%s\n", kk, vv.(string)))
 			if err != nil || n == 0 {
-				return nil, fmt.Errorf("write data failed. %v", err)
+				return nil, gerror.Wrapf(err, "w.WriteString failed")
 			}
 		}
 	}
 	res = make([]byte, w.Len())
-	n, err := w.Read(res)
-	if err != nil || n == 0 {
-		return nil, fmt.Errorf("write data failed. %v", err)
+	if n, err = w.Read(res); err != nil || n == 0 {
+		return nil, gerror.Wrapf(err, "w.Read failed")
 	}
-
 	return res, nil
 }
 

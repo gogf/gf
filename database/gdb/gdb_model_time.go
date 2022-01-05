@@ -8,11 +8,12 @@ package gdb
 
 import (
 	"fmt"
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gutil"
+
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 var (
@@ -93,6 +94,7 @@ func (m *Model) getSoftFieldNameDeleted(table ...string) (field string) {
 
 // getSoftFieldName retrieves and returns the field name of the table for possible key.
 func (m *Model) getSoftFieldName(table string, keys []string) (field string) {
+	// Ignore the error from TableFields.
 	fieldsMap, _ := m.TableFields(table)
 	if len(fieldsMap) > 0 {
 		for _, key := range keys {
@@ -112,7 +114,7 @@ func (m *Model) getSoftFieldName(table string, keys []string) (field string) {
 // "user u, user_detail ud"
 // "user u LEFT JOIN user_detail ud ON(ud.uid=u.uid)"
 // "user LEFT JOIN user_detail ON(user_detail.uid=user.uid)"
-// "user u LEFT JOIN user_detail ud ON(ud.uid=u.uid) LEFT JOIN user_stats us ON(us.uid=u.uid)"
+// "user u LEFT JOIN user_detail ud ON(ud.uid=u.uid) LEFT JOIN user_stats us ON(us.uid=u.uid)".
 func (m *Model) getConditionForSoftDeleting() string {
 	if m.unscoped {
 		return ""

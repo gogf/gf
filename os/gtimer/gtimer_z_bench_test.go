@@ -7,17 +7,19 @@
 package gtimer
 
 import (
+	"context"
 	"testing"
 	"time"
 )
 
 var (
+	ctx   = context.TODO()
 	timer = New()
 )
 
 func Benchmark_Add(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		timer.Add(time.Hour, func() {
+		timer.Add(ctx, time.Hour, func(ctx context.Context) {
 
 		})
 	}

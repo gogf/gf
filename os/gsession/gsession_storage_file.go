@@ -8,24 +8,20 @@ package gsession
 
 import (
 	"context"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/internal/json"
 	"os"
 	"time"
 
-	"github.com/gogf/gf/crypto/gaes"
-
-	"github.com/gogf/gf/os/gtimer"
-
-	"github.com/gogf/gf/container/gset"
-	"github.com/gogf/gf/encoding/gbinary"
-
-	"github.com/gogf/gf/os/gtime"
-
-	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/crypto/gaes"
+	"github.com/gogf/gf/v2/encoding/gbinary"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/os/gtimer"
 )
 
 // StorageFile implements the Session Storage interface with file system.
@@ -36,11 +32,14 @@ type StorageFile struct {
 	updatingIdSet *gset.StrSet
 }
 
-var (
-	DefaultStorageFilePath          = gfile.TempDir("gsessions")
-	DefaultStorageFileCryptoKey     = []byte("Session storage file crypto key!")
+const (
 	DefaultStorageFileCryptoEnabled = false
 	DefaultStorageFileLoopInterval  = 10 * time.Second
+)
+
+var (
+	DefaultStorageFilePath      = gfile.TempDir("gsessions")
+	DefaultStorageFileCryptoKey = []byte("Session storage file crypto key!")
 )
 
 // NewStorageFile creates and returns a file storage object for session.
@@ -57,7 +56,7 @@ func NewStorageFile(path ...string) *StorageFile {
 	}
 	if storagePath != "" {
 		if err := gfile.Mkdir(storagePath); err != nil {
-			panic(gerror.WrapCodef(gcode.CodeInternalError, err, `Mkdir "%s" failed in PWD "%s"`, path, gfile.Pwd()))
+			panic(gerror.Wrapf(err, `Mkdir "%s" failed in PWD "%s"`, path, gfile.Pwd()))
 		}
 	}
 	s := &StorageFile{
@@ -67,12 +66,12 @@ func NewStorageFile(path ...string) *StorageFile {
 		updatingIdSet: gset.NewStrSet(true),
 	}
 
-	gtimer.AddSingleton(DefaultStorageFileLoopInterval, s.updateSessionTimely)
+	gtimer.AddSingleton(context.Background(), DefaultStorageFileLoopInterval, s.updateSessionTimely)
 	return s
 }
 
 // updateSessionTimely batch updates the TTL for sessions timely.
-func (s *StorageFile) updateSessionTimely() {
+func (s *StorageFile) updateSessionTimely(ctx context.Context) {
 	var (
 		id  string
 		err error
@@ -116,8 +115,8 @@ func (s *StorageFile) Get(ctx context.Context, id string, key string) (value int
 	return nil, ErrorDisabled
 }
 
-// GetMap retrieves all key-value pairs as map from storage.
-func (s *StorageFile) GetMap(ctx context.Context, id string) (data map[string]interface{}, err error) {
+// Data retrieves all key-value pairs as map from storage.
+func (s *StorageFile) Data(ctx context.Context, id string) (data map[string]interface{}, err error) {
 	return nil, ErrorDisabled
 }
 
@@ -212,9 +211,11 @@ func (s *StorageFile) SetSession(ctx context.Context, id string, data *gmap.StrA
 	}
 	defer file.Close()
 	if _, err = file.Write(gbinary.EncodeInt64(gtime.TimestampMilli())); err != nil {
+		err = gerror.Wrapf(err, `write data failed to file "%s"`, path)
 		return err
 	}
 	if _, err = file.Write(content); err != nil {
+		err = gerror.Wrapf(err, `write data failed to file "%s"`, path)
 		return err
 	}
 	return nil
@@ -240,6 +241,7 @@ func (s *StorageFile) updateSessionTTl(ctx context.Context, id string) error {
 		return err
 	}
 	if _, err = file.WriteAt(gbinary.EncodeInt64(gtime.TimestampMilli()), 0); err != nil {
+		err = gerror.Wrapf(err, `write data failed to file "%s"`, path)
 		return err
 	}
 	return file.Close()

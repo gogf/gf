@@ -8,10 +8,11 @@ package gtime
 
 import (
 	"bytes"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
 	"strconv"
 	"time"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 // Time is a wrapper for time.Time for additional features.
@@ -19,8 +20,8 @@ type Time struct {
 	wrapper
 }
 
-// apiUnixNano is an interface definition commonly for custom time.Time wrapper.
-type apiUnixNano interface {
+// iUnixNano is an interface definition commonly for custom time.Time wrapper.
+type iUnixNano interface {
 	UnixNano() int64
 }
 
@@ -69,7 +70,7 @@ func New(param ...interface{}) *Time {
 			return NewFromTimeStamp(r)
 
 		default:
-			if v, ok := r.(apiUnixNano); ok {
+			if v, ok := r.(iUnixNano); ok {
 				return NewFromTimeStamp(v.UnixNano())
 			}
 		}
@@ -252,6 +253,7 @@ func (t *Time) Add(d time.Duration) *Time {
 // AddStr parses the given duration as string and adds it to current time.
 func (t *Time) AddStr(duration string) (*Time, error) {
 	if d, err := time.ParseDuration(duration); err != nil {
+		err = gerror.Wrapf(err, `time.ParseDuration failed for string "%s"`, duration)
 		return nil, err
 	} else {
 		return t.Add(d), nil
@@ -474,6 +476,4 @@ func (t *Time) UnmarshalText(data []byte) error {
 }
 
 // NoValidation marks this struct object will not be validated by package gvalid.
-func (t *Time) NoValidation() {
-
-}
+func (t *Time) NoValidation() {}

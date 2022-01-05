@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"context"
 	"strings"
 )
 
@@ -34,9 +35,15 @@ func (d *Domain) BindHandler(pattern string, handler interface{}) {
 	}
 }
 
-func (d *Domain) doBindHandler(pattern string, funcInfo handlerFuncInfo, middleware []HandlerFunc, source string) {
+func (d *Domain) doBindHandler(ctx context.Context, in doBindHandlerInput) {
 	for domain, _ := range d.domains {
-		d.server.doBindHandler(pattern+"@"+domain, funcInfo, middleware, source)
+		d.server.doBindHandler(ctx, doBindHandlerInput{
+			Prefix:     in.Prefix,
+			Pattern:    in.Pattern + "@" + domain,
+			FuncInfo:   in.FuncInfo,
+			Middleware: in.Middleware,
+			Source:     in.Source,
+		})
 	}
 }
 
@@ -46,9 +53,16 @@ func (d *Domain) BindObject(pattern string, obj interface{}, methods ...string) 
 	}
 }
 
-func (d *Domain) doBindObject(pattern string, obj interface{}, methods string, middleware []HandlerFunc, source string) {
+func (d *Domain) doBindObject(ctx context.Context, in doBindObjectInput) {
 	for domain, _ := range d.domains {
-		d.server.doBindObject(pattern+"@"+domain, obj, methods, middleware, source)
+		d.server.doBindObject(ctx, doBindObjectInput{
+			Prefix:     in.Prefix,
+			Pattern:    in.Pattern + "@" + domain,
+			Object:     in.Object,
+			Method:     in.Method,
+			Middleware: in.Middleware,
+			Source:     in.Source,
+		})
 	}
 }
 
@@ -58,12 +72,16 @@ func (d *Domain) BindObjectMethod(pattern string, obj interface{}, method string
 	}
 }
 
-func (d *Domain) doBindObjectMethod(
-	pattern string, obj interface{}, method string,
-	middleware []HandlerFunc, source string,
-) {
+func (d *Domain) doBindObjectMethod(ctx context.Context, in doBindObjectMethodInput) {
 	for domain, _ := range d.domains {
-		d.server.doBindObjectMethod(pattern+"@"+domain, obj, method, middleware, source)
+		d.server.doBindObjectMethod(ctx, doBindObjectMethodInput{
+			Prefix:     in.Prefix,
+			Pattern:    in.Pattern + "@" + domain,
+			Object:     in.Object,
+			Method:     in.Method,
+			Middleware: in.Middleware,
+			Source:     in.Source,
+		})
 	}
 }
 
@@ -73,9 +91,16 @@ func (d *Domain) BindObjectRest(pattern string, obj interface{}) {
 	}
 }
 
-func (d *Domain) doBindObjectRest(pattern string, obj interface{}, middleware []HandlerFunc, source string) {
+func (d *Domain) doBindObjectRest(ctx context.Context, in doBindObjectInput) {
 	for domain, _ := range d.domains {
-		d.server.doBindObjectRest(pattern+"@"+domain, obj, middleware, source)
+		d.server.doBindObjectRest(ctx, doBindObjectInput{
+			Prefix:     in.Prefix,
+			Pattern:    in.Pattern + "@" + domain,
+			Object:     in.Object,
+			Method:     in.Method,
+			Middleware: in.Middleware,
+			Source:     in.Source,
+		})
 	}
 }
 
@@ -85,9 +110,15 @@ func (d *Domain) BindHookHandler(pattern string, hook string, handler HandlerFun
 	}
 }
 
-func (d *Domain) doBindHookHandler(pattern string, hook string, handler HandlerFunc, source string) {
+func (d *Domain) doBindHookHandler(ctx context.Context, in doBindHookHandlerInput) {
 	for domain, _ := range d.domains {
-		d.server.doBindHookHandler(pattern+"@"+domain, hook, handler, source)
+		d.server.doBindHookHandler(ctx, doBindHookHandlerInput{
+			Prefix:   in.Prefix,
+			Pattern:  in.Pattern + "@" + domain,
+			HookName: in.HookName,
+			Handler:  in.Handler,
+			Source:   in.Source,
+		})
 	}
 }
 

@@ -9,9 +9,11 @@ package gres
 import (
 	"bytes"
 	"os"
+
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
-// Close implements Close interface of http.File.
+// Close implements interface of http.File.
 func (f *File) Close() error {
 	return nil
 }
@@ -43,16 +45,22 @@ func (f *File) Read(b []byte) (n int, err error) {
 	if err != nil {
 		return 0, err
 	}
-	return reader.Read(b)
+	if n, err = reader.Read(b); err != nil {
+		err = gerror.Wrapf(err, `read content failed`)
+	}
+	return
 }
 
 // Seek implements the io.Seeker interface.
-func (f *File) Seek(offset int64, whence int) (int64, error) {
+func (f *File) Seek(offset int64, whence int) (n int64, err error) {
 	reader, err := f.getReader()
 	if err != nil {
 		return 0, err
 	}
-	return reader.Seek(offset, whence)
+	if n, err = reader.Seek(offset, whence); err != nil {
+		err = gerror.Wrapf(err, `seek failed for offset %d, whence %d`, offset, whence)
+	}
+	return
 }
 
 func (f *File) getReader() (*bytes.Reader, error) {

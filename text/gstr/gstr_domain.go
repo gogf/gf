@@ -8,8 +8,8 @@ package gstr
 
 import "strings"
 
-// IsSubDomain checks whether <subDomain> is sub-domain of mainDomain.
-// It supports '*' in <mainDomain>.
+// IsSubDomain checks whether `subDomain` is sub-domain of mainDomain.
+// It supports '*' in `mainDomain`.
 func IsSubDomain(subDomain string, mainDomain string) bool {
 	if p := strings.IndexByte(subDomain, ':'); p != -1 {
 		subDomain = subDomain[0:p]
@@ -24,7 +24,7 @@ func IsSubDomain(subDomain string, mainDomain string) bool {
 	// Eg:
 	// "s.s.goframe.org" is not sub-domain of "*.goframe.org"
 	// but
-	// "s.s.goframe.org" is not sub-domain of "goframe.org"
+	// "s.s.goframe.org" is sub-domain of "goframe.org"
 	if mainLength > 2 && subLength > mainLength {
 		return false
 	}

@@ -9,6 +9,8 @@ package gtime
 import (
 	"sync"
 	"time"
+
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 var (
@@ -42,7 +44,10 @@ func (t *Time) getLocationByZoneName(name string) (location *time.Location, err 
 	locationMu.RUnlock()
 	if location == nil {
 		location, err = time.LoadLocation(name)
-		if err == nil && location != nil {
+		if err != nil {
+			err = gerror.Wrapf(err, `time.LoadLocation failed for name "%s"`, name)
+		}
+		if location != nil {
 			locationMu.Lock()
 			locationMap[name] = location
 			locationMu.Unlock()

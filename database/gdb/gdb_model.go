@@ -9,12 +9,10 @@ package gdb
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/util/gconv"
-	"time"
 
-	"github.com/gogf/gf/text/gregex"
-
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Model is core struct implementing the DAO for ORM.
@@ -45,8 +43,7 @@ type Model struct {
 	distinct      string             // Force the query to only return distinct results.
 	lockInfo      string             // Lock for update or in shared lock.
 	cacheEnabled  bool               // Enable sql result cache feature.
-	cacheDuration time.Duration      // Cache TTL duration (< 1 for removing cache, >= 0 for saving cache).
-	cacheName     string             // Cache name for custom operation.
+	cacheOption   CacheOption        // Cache option for query statement.
 	unscoped      bool               // Disables soft deleting features when select/delete operations.
 	safe          bool               // If true, it clones and returns a new model object whenever operation done; or else it changes the attribute of current model.
 	onDuplicate   interface{}        // onDuplicate is used for ON "DUPLICATE KEY UPDATE" statement.
@@ -57,31 +54,29 @@ type Model struct {
 type ModelHandler func(m *Model) *Model
 
 // ChunkHandler is a function that is used in function Chunk, which handles given Result and error.
-// It returns true if it wants continue chunking, or else it returns false to stop chunking.
+// It returns true if it wants to continue chunking, or else it returns false to stop chunking.
 type ChunkHandler func(result Result, err error) bool
 
 // ModelWhereHolder is the holder for where condition preparing.
 type ModelWhereHolder struct {
+	Type     string        // Type of this holder.
 	Operator int           // Operator for this holder.
 	Where    interface{}   // Where parameter, which can commonly be type of string/map/struct.
 	Args     []interface{} // Arguments for where parameter.
+	Prefix   string        // Field prefix, eg: "user.", "order.".
 }
 
 const (
 	linkTypeMaster           = 1
 	linkTypeSlave            = 2
+	defaultFields            = "*"
 	whereHolderOperatorWhere = 1
 	whereHolderOperatorAnd   = 2
 	whereHolderOperatorOr    = 3
-	defaultFields            = "*"
+	whereHolderTypeDefault   = "Default"
+	whereHolderTypeNoArgs    = "NoArgs"
+	whereHolderTypeIn        = "In"
 )
-
-// Table is alias of Core.Model.
-// See Core.Model.
-// Deprecated, use Model instead.
-func (c *Core) Table(tableNameQueryOrStruct ...interface{}) *Model {
-	return c.db.Model(tableNameQueryOrStruct...)
-}
 
 // Model creates and returns a new ORM model from given schema.
 // The parameter `tableNameQueryOrStruct` can be more than one table names, and also alias name, like:
@@ -104,13 +99,16 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 	if len(tableNameQueryOrStruct) > 1 {
 		conditionStr := gconv.String(tableNameQueryOrStruct[0])
 		if gstr.Contains(conditionStr, "?") {
-			tableStr, extraArgs = formatWhere(c.db, formatWhereInput{
-				Where:     conditionStr,
-				Args:      tableNameQueryOrStruct[1:],
-				OmitNil:   false,
-				OmitEmpty: false,
-				Schema:    "",
-				Table:     "",
+			whereHolder := ModelWhereHolder{
+				Where: conditionStr,
+				Args:  tableNameQueryOrStruct[1:],
+			}
+			tableStr, extraArgs = formatWhereHolder(c.db, formatWhereHolderInput{
+				ModelWhereHolder: whereHolder,
+				OmitNil:          false,
+				OmitEmpty:        false,
+				Schema:           "",
+				Table:            "",
 			})
 		}
 	}
@@ -132,7 +130,7 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 			tableStr = c.QuotePrefixTableName(tableNames[0])
 		}
 	}
-	return &Model{
+	m := &Model{
 		db:         c.db,
 		tablesInit: tableStr,
 		tables:     tableStr,
@@ -142,6 +140,10 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 		filter:     true,
 		extraArgs:  extraArgs,
 	}
+	if defaultModelSafe {
+		m.safe = true
+	}
+	return m
 }
 
 // Raw creates and returns a model based on a raw sql not a table.
@@ -154,7 +156,7 @@ func (c *Core) Raw(rawSql string, args ...interface{}) *Model {
 	return model
 }
 
-// Raw creates and returns a model based on a raw sql not a table.
+// Raw sets current model as a raw sql model.
 // Example:
 //     db.Raw("SELECT * FROM `user` WHERE `name` = ?", "john").Scan(&result)
 // See Core.Raw.
@@ -169,7 +171,7 @@ func (tx *TX) Raw(rawSql string, args ...interface{}) *Model {
 	return tx.Model().Raw(rawSql, args...)
 }
 
-// With creates and returns an ORM model based on meta data of given object.
+// With creates and returns an ORM model based on metadata of given object.
 func (c *Core) With(objects ...interface{}) *Model {
 	return c.db.Model().With(objects...)
 }

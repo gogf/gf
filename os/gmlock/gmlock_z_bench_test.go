@@ -7,8 +7,9 @@
 package gmlock_test
 
 import (
-	"github.com/gogf/gf/os/gmlock"
 	"testing"
+
+	"github.com/gogf/gf/v2/os/gmlock"
 )
 
 var (

@@ -9,13 +9,14 @@ package gproc
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/intlog"
 	"os"
 	"os/exec"
 	"runtime"
 	"strings"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
 )
 
 // Process is the struct for a single process.
@@ -29,9 +30,7 @@ type Process struct {
 func NewProcess(path string, args []string, environment ...[]string) *Process {
 	env := os.Environ()
 	if len(environment) > 0 {
-		for k, v := range environment[0] {
-			env[k] = v
-		}
+		env = append(env, environment[0]...)
 	}
 	process := &Process{
 		Manager: nil,
@@ -113,23 +112,24 @@ func (p *Process) Release() error {
 }
 
 // Kill causes the Process to exit immediately.
-func (p *Process) Kill() error {
-	if err := p.Process.Kill(); err == nil {
-		if p.Manager != nil {
-			p.Manager.processes.Remove(p.Pid())
-		}
-		if runtime.GOOS != "windows" {
-			if err = p.Process.Release(); err != nil {
-				intlog.Error(context.TODO(), err)
-			}
-		}
-		_, err = p.Process.Wait()
-		intlog.Error(context.TODO(), err)
-		//return err
-		return nil
-	} else {
+func (p *Process) Kill() (err error) {
+	err = p.Process.Kill()
+	if err != nil {
+		err = gerror.Wrapf(err, `kill process failed for pid "%d"`, p.Process.Pid)
 		return err
 	}
+	if p.Manager != nil {
+		p.Manager.processes.Remove(p.Pid())
+	}
+	if runtime.GOOS != "windows" {
+		if err = p.Process.Release(); err != nil {
+			intlog.Error(context.TODO(), err)
+		}
+	}
+	// It ignores this error, just log it.
+	_, err = p.Process.Wait()
+	intlog.Error(context.TODO(), err)
+	return nil
 }
 
 // Signal sends a signal to the Process.

@@ -10,33 +10,33 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/fatih/color"
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/os/gctx"
-	"github.com/gogf/gf/os/gfpool"
-	"github.com/gogf/gf/os/gmlock"
-	"github.com/gogf/gf/os/gtimer"
-	"go.opentelemetry.io/otel/trace"
 	"io"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/debug/gdebug"
+	"github.com/fatih/color"
+	"github.com/gogf/gf/v2/internal/utils"
+	"go.opentelemetry.io/otel/trace"
 
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gfpool"
+	"github.com/gogf/gf/v2/os/gmlock"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/os/gtimer"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Logger is the struct for logging management.
 type Logger struct {
-	ctx    context.Context // Context for logging.
-	init   *gtype.Bool     // Initialized.
-	parent *Logger         // Parent logger, if it is not empty, it means the logger is used in chaining function.
-	config Config          // Logger configuration.
+	init   *gtype.Bool // Initialized.
+	parent *Logger     // Parent logger, if it is not empty, it means the logger is used in chaining function.
+	config Config      // Logger configuration.
 }
 
 const (
@@ -79,7 +79,6 @@ func NewWithWriter(writer io.Writer) *Logger {
 // It's commonly used for chaining operations.
 func (l *Logger) Clone() *Logger {
 	newLogger := New()
-	newLogger.ctx = l.ctx
 	newLogger.config = l.config
 	newLogger.parent = l
 	return newLogger
@@ -108,7 +107,7 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 	// It just initializes once for each logger.
 	if p.config.RotateSize > 0 || p.config.RotateExpire > 0 {
 		if !p.init.Val() && p.init.Cas(false, true) {
-			gtimer.AddOnce(p.config.RotateCheckInterval, p.rotateChecksTimely)
+			gtimer.AddOnce(context.Background(), p.config.RotateCheckInterval, p.rotateChecksTimely)
 			intlog.Printf(ctx, "logger rotation initialized: every %s", p.config.RotateCheckInterval.String())
 		}
 	}
@@ -152,7 +151,10 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 
 		// Caller path and Fn name.
 		if l.config.Flags&(F_FILE_LONG|F_FILE_SHORT|F_CALLER_FN) > 0 {
-			callerFnName, path, line := gdebug.CallerWithFilter(pathFilterKey, l.config.StSkip)
+			callerFnName, path, line := gdebug.CallerWithFilter(
+				[]string{utils.StackFilterKeyForGoFrame},
+				l.config.StSkip,
+			)
 			if l.config.Flags&F_CALLER_FN > 0 {
 				if len(callerFnName) > 2 {
 					input.CallerFunc = fmt.Sprintf(`[%s]`, callerFnName)
@@ -204,7 +206,7 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 		if len(input.Content) > 0 {
 			if input.Content[len(input.Content)-1] == '\n' {
 				// Remove one blank line(\n\n).
-				if tempStr[0] == '\n' {
+				if len(tempStr) > 0 && tempStr[0] == '\n' {
 					input.Content += tempStr[1:]
 				} else {
 					input.Content += tempStr
@@ -218,7 +220,7 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 	}
 	if l.config.Flags&F_ASYNC > 0 {
 		input.IsAsync = true
-		err := asyncPool.Add(func() {
+		err := asyncPool.Add(ctx, func(ctx context.Context) {
 			input.Next()
 		})
 		if err != nil {
@@ -300,7 +302,7 @@ func (l *Logger) printToFile(ctx context.Context, t time.Time, in *HandlerInput)
 	// Rotation file size checks.
 	if l.config.RotateSize > 0 {
 		if gfile.Size(logFilePath) > l.config.RotateSize {
-			l.rotateFileBySize(t)
+			l.rotateFileBySize(ctx, t)
 		}
 	}
 	// Logging content outputting to disk file.
@@ -332,29 +334,20 @@ func (l *Logger) getFilePointer(ctx context.Context, path string) *gfpool.File {
 	return file
 }
 
-// getCtx returns the context which is set through chaining operations.
-// It returns an empty context if no context set previously.
-func (l *Logger) getCtx() context.Context {
-	if l.ctx != nil {
-		return l.ctx
-	}
-	return context.TODO()
-}
-
 // printStd prints content `s` without stack.
-func (l *Logger) printStd(level int, value ...interface{}) {
-	l.print(l.getCtx(), level, value...)
+func (l *Logger) printStd(ctx context.Context, level int, value ...interface{}) {
+	l.print(ctx, level, value...)
 }
 
 // printStd prints content `s` with stack check.
-func (l *Logger) printErr(level int, value ...interface{}) {
+func (l *Logger) printErr(ctx context.Context, level int, value ...interface{}) {
 	if l.config.StStatus == 1 {
 		if s := l.GetStack(); s != "" {
 			value = append(value, "\nStack:\n"+s)
 		}
 	}
 	// In matter of sequence, do not use stderr here, but use the same stdout.
-	l.print(l.getCtx(), level, value...)
+	l.print(ctx, level, value...)
 }
 
 // format formats `values` using fmt.Sprintf.
@@ -364,11 +357,11 @@ func (l *Logger) format(format string, value ...interface{}) string {
 
 // PrintStack prints the caller stack,
 // the optional parameter `skip` specify the skipped stack offset from the end point.
-func (l *Logger) PrintStack(skip ...int) {
+func (l *Logger) PrintStack(ctx context.Context, skip ...int) {
 	if s := l.GetStack(skip...); s != "" {
-		l.Println("Stack:\n" + s)
+		l.Print(ctx, "Stack:\n"+s)
 	} else {
-		l.Println()
+		l.Print(ctx)
 	}
 }
 

@@ -9,82 +9,75 @@
 package gcmd
 
 import (
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/internal/command"
 	"os"
-	"strings"
+
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/command"
+	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/os/gctx"
 )
 
-var (
-	defaultCommandFuncMap = make(map[string]func())
+const (
+	CtxKeyParser    gctx.StrKey = `CtxKeyParser`
+	CtxKeyCommand   gctx.StrKey = `CtxKeyCommand`
+	CtxKeyArguments gctx.StrKey = `CtxKeyArguments`
 )
 
-// Custom initialization.
+const (
+	helpOptionName      = "help"
+	helpOptionNameShort = "h"
+	maxLineChars        = 120
+)
+
+// Init does custom initialization.
 func Init(args ...string) {
 	command.Init(args...)
 }
 
-// GetOpt returns the option value named <name>.
-func GetOpt(name string, def ...string) string {
-	Init()
-	return command.GetOpt(name, def...)
-}
-
-// GetOptVar returns the option value named <name> as gvar.Var.
-func GetOptVar(name string, def ...string) *gvar.Var {
-	Init()
-	return gvar.New(GetOpt(name, def...))
+// GetOpt returns the option value named `name` as gvar.Var.
+func GetOpt(name string, def ...string) *gvar.Var {
+	if v := command.GetOpt(name, def...); v != "" {
+		return gvar.New(v)
+	}
+	return nil
 }
 
 // GetOptAll returns all parsed options.
 func GetOptAll() map[string]string {
-	Init()
 	return command.GetOptAll()
 }
 
-// ContainsOpt checks whether option named <name> exist in the arguments.
+// ContainsOpt checks whether option named `name` exist in the arguments.
 func ContainsOpt(name string) bool {
-	Init()
 	return command.ContainsOpt(name)
 }
 
-// GetArg returns the argument at <index>.
-func GetArg(index int, def ...string) string {
-	Init()
-	return command.GetArg(index, def...)
-}
-
-// GetArgVar returns the argument at <index> as gvar.Var.
-func GetArgVar(index int, def ...string) *gvar.Var {
-	Init()
-	return gvar.New(GetArg(index, def...))
+// GetArg returns the argument at `index` as gvar.Var.
+func GetArg(index int, def ...string) *gvar.Var {
+	if v := command.GetArg(index, def...); v != "" {
+		return gvar.New(v)
+	}
+	return nil
 }
 
 // GetArgAll returns all parsed arguments.
 func GetArgAll() []string {
-	Init()
 	return command.GetArgAll()
 }
 
-// GetWithEnv is alias of GetOptWithEnv.
-// Deprecated, use GetOptWithEnv instead.
-func GetWithEnv(key string, def ...interface{}) *gvar.Var {
-	return GetOptWithEnv(key, def...)
-}
-
-// GetOptWithEnv returns the command line argument of the specified <key>.
-// If the argument does not exist, then it returns the environment variable with specified <key>.
-// It returns the default value <def> if none of them exists.
+// GetOptWithEnv returns the command line argument of the specified `key`.
+// If the argument does not exist, then it returns the environment variable with specified `key`.
+// It returns the default value `def` if none of them exists.
 //
 // Fetching Rules:
-// 1. Command line arguments are in lowercase format, eg: gf.<package name>.<variable name>;
-// 2. Environment arguments are in uppercase format, eg: GF_<package name>_<variable name>；
+// 1. Command line arguments are in lowercase format, eg: gf.`package name`.<variable name>;
+// 2. Environment arguments are in uppercase format, eg: GF_`package name`_<variable name>；
 func GetOptWithEnv(key string, def ...interface{}) *gvar.Var {
-	cmdKey := strings.ToLower(strings.Replace(key, "_", ".", -1))
+	cmdKey := utils.FormatCmdKey(key)
 	if ContainsOpt(cmdKey) {
 		return gvar.New(GetOpt(cmdKey))
 	} else {
-		envKey := strings.ToUpper(strings.Replace(key, ".", "_", -1))
+		envKey := utils.FormatEnvKey(key)
 		if r, ok := os.LookupEnv(envKey); ok {
 			return gvar.New(r)
 		} else {
@@ -93,7 +86,7 @@ func GetOptWithEnv(key string, def ...interface{}) *gvar.Var {
 			}
 		}
 	}
-	return gvar.New(nil)
+	return nil
 }
 
 // BuildOptions builds the options as string.

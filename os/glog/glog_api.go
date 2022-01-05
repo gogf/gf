@@ -6,108 +6,104 @@
 
 package glog
 
+import "context"
+
 // Print prints `v` with newline using fmt.Sprintln.
 // The parameter `v` can be multiple variables.
-func Print(v ...interface{}) {
-	logger.Print(v...)
+func Print(ctx context.Context, v ...interface{}) {
+	defaultLogger.Print(ctx, v...)
 }
 
 // Printf prints `v` with format `format` using fmt.Sprintf.
 // The parameter `v` can be multiple variables.
-func Printf(format string, v ...interface{}) {
-	logger.Printf(format, v...)
-}
-
-// Println is alias of Print.
-// See Print.
-func Println(v ...interface{}) {
-	logger.Println(v...)
+func Printf(ctx context.Context, format string, v ...interface{}) {
+	defaultLogger.Printf(ctx, format, v...)
 }
 
 // Fatal prints the logging content with [FATA] header and newline, then exit the current process.
-func Fatal(v ...interface{}) {
-	logger.Fatal(v...)
+func Fatal(ctx context.Context, v ...interface{}) {
+	defaultLogger.Fatal(ctx, v...)
 }
 
 // Fatalf prints the logging content with [FATA] header, custom format and newline, then exit the current process.
-func Fatalf(format string, v ...interface{}) {
-	logger.Fatalf(format, v...)
+func Fatalf(ctx context.Context, format string, v ...interface{}) {
+	defaultLogger.Fatalf(ctx, format, v...)
 }
 
 // Panic prints the logging content with [PANI] header and newline, then panics.
-func Panic(v ...interface{}) {
-	logger.Panic(v...)
+func Panic(ctx context.Context, v ...interface{}) {
+	defaultLogger.Panic(ctx, v...)
 }
 
 // Panicf prints the logging content with [PANI] header, custom format and newline, then panics.
-func Panicf(format string, v ...interface{}) {
-	logger.Panicf(format, v...)
+func Panicf(ctx context.Context, format string, v ...interface{}) {
+	defaultLogger.Panicf(ctx, format, v...)
 }
 
 // Info prints the logging content with [INFO] header and newline.
-func Info(v ...interface{}) {
-	logger.Info(v...)
+func Info(ctx context.Context, v ...interface{}) {
+	defaultLogger.Info(ctx, v...)
 }
 
 // Infof prints the logging content with [INFO] header, custom format and newline.
-func Infof(format string, v ...interface{}) {
-	logger.Infof(format, v...)
+func Infof(ctx context.Context, format string, v ...interface{}) {
+	defaultLogger.Infof(ctx, format, v...)
 }
 
 // Debug prints the logging content with [DEBU] header and newline.
-func Debug(v ...interface{}) {
-	logger.Debug(v...)
+func Debug(ctx context.Context, v ...interface{}) {
+	defaultLogger.Debug(ctx, v...)
 }
 
 // Debugf prints the logging content with [DEBU] header, custom format and newline.
-func Debugf(format string, v ...interface{}) {
-	logger.Debugf(format, v...)
+func Debugf(ctx context.Context, format string, v ...interface{}) {
+	defaultLogger.Debugf(ctx, format, v...)
 }
 
 // Notice prints the logging content with [NOTI] header and newline.
 // It also prints caller stack info if stack feature is enabled.
-func Notice(v ...interface{}) {
-	logger.Notice(v...)
+func Notice(ctx context.Context, v ...interface{}) {
+	defaultLogger.Notice(ctx, v...)
 }
 
 // Noticef prints the logging content with [NOTI] header, custom format and newline.
 // It also prints caller stack info if stack feature is enabled.
-func Noticef(format string, v ...interface{}) {
-	logger.Noticef(format, v...)
+func Noticef(ctx context.Context, format string, v ...interface{}) {
+	defaultLogger.Noticef(ctx, format, v...)
 }
 
 // Warning prints the logging content with [WARN] header and newline.
 // It also prints caller stack info if stack feature is enabled.
-func Warning(v ...interface{}) {
-	logger.Warning(v...)
+func Warning(ctx context.Context, v ...interface{}) {
+	defaultLogger.Warning(ctx, v...)
 }
 
 // Warningf prints the logging content with [WARN] header, custom format and newline.
 // It also prints caller stack info if stack feature is enabled.
-func Warningf(format string, v ...interface{}) {
-	logger.Warningf(format, v...)
+func Warningf(ctx context.Context, format string, v ...interface{}) {
+	defaultLogger.Warningf(ctx, format, v...)
 }
 
 // Error prints the logging content with [ERRO] header and newline.
 // It also prints caller stack info if stack feature is enabled.
-func Error(v ...interface{}) {
-	logger.Error(v...)
+func Error(ctx context.Context, v ...interface{}) {
+	defaultLogger.Error(ctx, v...)
 }
 
 // Errorf prints the logging content with [ERRO] header, custom format and newline.
 // It also prints caller stack info if stack feature is enabled.
-func Errorf(format string, v ...interface{}) {
-	logger.Errorf(format, v...)
+func Errorf(ctx context.Context, format string, v ...interface{}) {
+	defaultLogger.Errorf(ctx, format, v...)
 }
 
 // Critical prints the logging content with [CRIT] header and newline.
 // It also prints caller stack info if stack feature is enabled.
-func Critical(v ...interface{}) {
-	logger.Critical(v...)
+func Critical(ctx context.Context, v ...interface{}) {
+	defaultLogger.Critical(ctx, v...)
 }
 
 // Criticalf prints the logging content with [CRIT] header, custom format and newline.
 // It also prints caller stack info if stack feature is enabled.
-func Criticalf(format string, v ...interface{}) {
-	logger.Criticalf(format, v...)
+func Criticalf(ctx context.Context, format string, v ...interface{}) {
+	defaultLogger.Criticalf(ctx, format, v...)
 }

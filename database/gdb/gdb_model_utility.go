@@ -9,15 +9,24 @@ package gdb
 import (
 	"time"
 
-	"github.com/gogf/gf/container/gset"
-	"github.com/gogf/gf/internal/empty"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
-// TableFields retrieves and returns the fields information of specified table of current
+// QuoteWord checks given string `s` a word,
+// if true it quotes `s` with security chars of the database
+// and returns the quoted string; or else it returns `s` without any change.
+//
+// The meaning of a `word` can be considered as a column name.
+func (m *Model) QuoteWord(s string) string {
+	return m.db.GetCore().QuoteWord(s)
+}
+
+// TableFields retrieves and returns the fields' information of specified table of current
 // schema.
 //
 // Also see DriverMysql.TableFields.
@@ -26,7 +35,11 @@ func (m *Model) TableFields(tableStr string, schema ...string) (fields map[strin
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	}
-	return m.db.TableFields(m.GetCtx(), m.guessPrimaryTableName(tableStr), useSchema)
+	return m.db.TableFields(
+		m.GetCtx(),
+		m.db.GetCore().guessPrimaryTableName(tableStr),
+		useSchema,
+	)
 }
 
 // getModel creates and returns a cloned model of current model if `safe` is true, or else it returns
@@ -42,10 +55,10 @@ func (m *Model) getModel() *Model {
 // mappingAndFilterToTableFields mappings and changes given field name to really table field name.
 // Eg:
 // ID        -> id
-// NICK_Name -> nickname
+// NICK_Name -> nickname.
 func (m *Model) mappingAndFilterToTableFields(fields []string, filter bool) []string {
-	fieldsMap, err := m.TableFields(m.tablesInit)
-	if err != nil || len(fieldsMap) == 0 {
+	fieldsMap, _ := m.TableFields(m.tablesInit)
+	if len(fieldsMap) == 0 {
 		return fields
 	}
 	var (
@@ -53,7 +66,7 @@ func (m *Model) mappingAndFilterToTableFields(fields []string, filter bool) []st
 		outputFieldsArray = make([]string, 0, len(inputFieldsArray))
 	)
 	fieldsKeyMap := make(map[string]interface{}, len(fieldsMap))
-	for k, _ := range fieldsMap {
+	for k := range fieldsMap {
 		fieldsKeyMap[k] = nil
 	}
 	for _, field := range inputFieldsArray {
@@ -83,8 +96,12 @@ func (m *Model) filterDataForInsertOrUpdate(data interface{}) (interface{}, erro
 	var err error
 	switch value := data.(type) {
 	case List:
+		var omitEmpty bool
+		if m.option&optionOmitNilDataList > 0 {
+			omitEmpty = true
+		}
 		for k, item := range value {
-			value[k], err = m.doMappingAndFilterForInsertOrUpdateDataMap(item, false)
+			value[k], err = m.doMappingAndFilterForInsertOrUpdateDataMap(item, omitEmpty)
 			if err != nil {
 				return nil, err
 			}
@@ -104,7 +121,7 @@ func (m *Model) filterDataForInsertOrUpdate(data interface{}) (interface{}, erro
 func (m *Model) doMappingAndFilterForInsertOrUpdateDataMap(data Map, allowOmitEmpty bool) (Map, error) {
 	var err error
 	data, err = m.db.GetCore().mappingAndFilterData(
-		m.schema, m.guessPrimaryTableName(m.tablesInit), data, m.filter,
+		m.schema, m.tablesInit, data, m.filter,
 	)
 	if err != nil {
 		return nil, err
@@ -225,7 +242,7 @@ func (m *Model) getPrimaryKey() string {
 	return ""
 }
 
-// mergeArguments creates and returns new arguments by merging <m.extraArgs> and given `args`.
+// mergeArguments creates and returns new arguments by merging `m.extraArgs` and given `args`.
 func (m *Model) mergeArguments(args []interface{}) []interface{} {
 	if len(m.extraArgs) > 0 {
 		newArgs := make([]interface{}, len(m.extraArgs)+len(args))

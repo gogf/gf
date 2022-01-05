@@ -8,16 +8,17 @@ package gview
 
 import (
 	"context"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/i18n/gi18n"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/os/gres"
-	"github.com/gogf/gf/os/gspath"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gutil"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/i18n/gi18n"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/os/gres"
+	"github.com/gogf/gf/v2/os/gspath"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // Config is the configuration object for template engine.
@@ -98,6 +99,7 @@ func (view *View) SetConfigWithMap(m map[string]interface{}) error {
 // The parameter `path` can be absolute or relative path, but absolute path is suggested.
 func (view *View) SetPath(path string) error {
 	var (
+		ctx      = context.TODO()
 		isDir    = false
 		realPath = ""
 	)
@@ -109,7 +111,7 @@ func (view *View) SetPath(path string) error {
 		realPath = gfile.RealPath(path)
 		if realPath == "" {
 			// Relative path.
-			view.paths.RLockFunc(func(array []string) {
+			view.searchPaths.RLockFunc(func(array []string) {
 				for _, v := range array {
 					if path, _ := gspath.Search(v, path); path != "" {
 						realPath = path
@@ -124,34 +126,34 @@ func (view *View) SetPath(path string) error {
 	}
 	// Path not exist.
 	if realPath == "" {
-		err := gerror.NewCodef(gcode.CodeInvalidParameter, `[gview] SetPath failed: path "%s" does not exist`, path)
+		err := gerror.NewCodef(gcode.CodeInvalidParameter, `View.SetPath failed: path "%s" does not exist`, path)
 		if errorPrint() {
-			glog.Error(err)
+			glog.Error(ctx, err)
 		}
 		return err
 	}
 	// Should be a directory.
 	if !isDir {
-		err := gerror.NewCodef(gcode.CodeInvalidParameter, `[gview] SetPath failed: path "%s" should be directory type`, path)
+		err := gerror.NewCodef(gcode.CodeInvalidParameter, `View.SetPath failed: path "%s" should be directory type`, path)
 		if errorPrint() {
-			glog.Error(err)
+			glog.Error(ctx, err)
 		}
 		return err
 	}
 	// Repeated path adding check.
-	if view.paths.Search(realPath) != -1 {
+	if view.searchPaths.Search(realPath) != -1 {
 		return nil
 	}
-	view.paths.Clear()
-	view.paths.Append(realPath)
+	view.searchPaths.Clear()
+	view.searchPaths.Append(realPath)
 	view.fileCacheMap.Clear()
-	//glog.Debug("[gview] SetPath:", realPath)
 	return nil
 }
 
-// AddPath adds a absolute or relative path to the search paths.
+// AddPath adds an absolute or relative path to the search paths.
 func (view *View) AddPath(path string) error {
 	var (
+		ctx      = context.TODO()
 		isDir    = false
 		realPath = ""
 	)
@@ -160,13 +162,12 @@ func (view *View) AddPath(path string) error {
 		isDir = file.FileInfo().IsDir()
 	} else {
 		// Absolute path.
-		realPath = gfile.RealPath(path)
-		if realPath == "" {
+		if realPath = gfile.RealPath(path); realPath == "" {
 			// Relative path.
-			view.paths.RLockFunc(func(array []string) {
+			view.searchPaths.RLockFunc(func(array []string) {
 				for _, v := range array {
-					if path, _ := gspath.Search(v, path); path != "" {
-						realPath = path
+					if searchedPath, _ := gspath.Search(v, path); searchedPath != "" {
+						realPath = searchedPath
 						break
 					}
 				}
@@ -178,25 +179,25 @@ func (view *View) AddPath(path string) error {
 	}
 	// Path not exist.
 	if realPath == "" {
-		err := gerror.NewCodef(gcode.CodeInvalidParameter, `[gview] AddPath failed: path "%s" does not exist`, path)
+		err := gerror.NewCodef(gcode.CodeInvalidParameter, `View.AddPath failed: path "%s" does not exist`, path)
 		if errorPrint() {
-			glog.Error(err)
+			glog.Error(ctx, err)
 		}
 		return err
 	}
 	// realPath should be type of folder.
 	if !isDir {
-		err := gerror.NewCodef(gcode.CodeInvalidParameter, `[gview] AddPath failed: path "%s" should be directory type`, path)
+		err := gerror.NewCodef(gcode.CodeInvalidParameter, `View.AddPath failed: path "%s" should be directory type`, path)
 		if errorPrint() {
-			glog.Error(err)
+			glog.Error(ctx, err)
 		}
 		return err
 	}
 	// Repeated path adding check.
-	if view.paths.Search(realPath) != -1 {
+	if view.searchPaths.Search(realPath) != -1 {
 		return nil
 	}
-	view.paths.Append(realPath)
+	view.searchPaths.Append(realPath)
 	view.fileCacheMap.Clear()
 	return nil
 }

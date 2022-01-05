@@ -7,7 +7,7 @@
 package gview
 
 import (
-	"github.com/gogf/gf/os/gcmd"
+	"github.com/gogf/gf/v2/os/gcmd"
 )
 
 const (

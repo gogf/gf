@@ -10,6 +10,8 @@ import (
 	"io"
 	"net"
 	"time"
+
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 // Conn handles the UDP connection.
@@ -32,8 +34,8 @@ type Retry struct {
 	Interval time.Duration // Retry interval.
 }
 
-// NewConn creates UDP connection to <remoteAddress>.
-// The optional parameter <localAddress> specifies the local address for connection.
+// NewConn creates UDP connection to `remoteAddress`.
+// The optional parameter `localAddress` specifies the local address for connection.
 func NewConn(remoteAddress string, localAddress ...string) (*Conn, error) {
 	if conn, err := NewNetConn(remoteAddress, localAddress...); err == nil {
 		return NewConnByNetConn(conn), nil
@@ -67,6 +69,7 @@ func (c *Conn) Send(data []byte, retry ...Retry) (err error) {
 			}
 			// Still failed even after retrying.
 			if len(retry) == 0 || retry[0].Count == 0 {
+				err = gerror.Wrap(err, `Write data failed`)
 				return err
 			}
 			if len(retry) > 0 {
@@ -83,17 +86,19 @@ func (c *Conn) Send(data []byte, retry ...Retry) (err error) {
 }
 
 // Recv receives and returns data from remote address.
-// The parameter <buffer> is used for customizing the receiving buffer size. If <buffer> <= 0,
+// The parameter `buffer` is used for customizing the receiving buffer size. If `buffer` <= 0,
 // it uses the default buffer size, which is 1024 byte.
 //
 // There's package border in UDP protocol, we can receive a complete package if specified
 // buffer size is big enough. VERY NOTE that we should receive the complete package in once
 // or else the leftover package data would be dropped.
 func (c *Conn) Recv(buffer int, retry ...Retry) ([]byte, error) {
-	var err error               // Reading error.
-	var size int                // Reading size.
-	var data []byte             // Buffer object.
-	var remoteAddr *net.UDPAddr // Current remote address for reading.
+	var (
+		err        error        // Reading error
+		size       int          // Reading size
+		data       []byte       // Buffer object
+		remoteAddr *net.UDPAddr // Current remote address for reading
+	)
 	if buffer > 0 {
 		data = make([]byte, buffer)
 	} else {
@@ -121,6 +126,7 @@ func (c *Conn) Recv(buffer int, retry ...Retry) ([]byte, error) {
 				time.Sleep(retry[0].Interval)
 				continue
 			}
+			err = gerror.Wrap(err, `ReadFromUDP failed`)
 			break
 		}
 		break
@@ -139,7 +145,7 @@ func (c *Conn) SendRecv(data []byte, receive int, retry ...Retry) ([]byte, error
 
 // RecvWithTimeout reads data from remote address with timeout.
 func (c *Conn) RecvWithTimeout(length int, timeout time.Duration, retry ...Retry) (data []byte, err error) {
-	if err := c.SetRecvDeadline(time.Now().Add(timeout)); err != nil {
+	if err = c.SetRecvDeadline(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
 	defer c.SetRecvDeadline(time.Time{})
@@ -149,7 +155,7 @@ func (c *Conn) RecvWithTimeout(length int, timeout time.Duration, retry ...Retry
 
 // SendWithTimeout writes data to connection with timeout.
 func (c *Conn) SendWithTimeout(data []byte, timeout time.Duration, retry ...Retry) (err error) {
-	if err := c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
+	if err = c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
 		return err
 	}
 	defer c.SetSendDeadline(time.Time{})
@@ -166,27 +172,30 @@ func (c *Conn) SendRecvWithTimeout(data []byte, receive int, timeout time.Durati
 	}
 }
 
-func (c *Conn) SetDeadline(t time.Time) error {
-	err := c.UDPConn.SetDeadline(t)
-	if err == nil {
+func (c *Conn) SetDeadline(t time.Time) (err error) {
+	if err = c.UDPConn.SetDeadline(t); err == nil {
 		c.receiveDeadline = t
 		c.sendDeadline = t
+	} else {
+		err = gerror.Wrapf(err, `SetDeadline for connection failed with "%s"`, t)
 	}
 	return err
 }
 
-func (c *Conn) SetRecvDeadline(t time.Time) error {
-	err := c.SetReadDeadline(t)
-	if err == nil {
+func (c *Conn) SetRecvDeadline(t time.Time) (err error) {
+	if err = c.SetReadDeadline(t); err == nil {
 		c.receiveDeadline = t
+	} else {
+		err = gerror.Wrapf(err, `SetReadDeadline for connection failed with "%s"`, t)
 	}
 	return err
 }
 
-func (c *Conn) SetSendDeadline(t time.Time) error {
-	err := c.SetWriteDeadline(t)
-	if err == nil {
+func (c *Conn) SetSendDeadline(t time.Time) (err error) {
+	if err = c.SetWriteDeadline(t); err == nil {
 		c.sendDeadline = t
+	} else {
+		err = gerror.Wrapf(err, `SetWriteDeadline for connection failed with "%s"`, t)
 	}
 	return err
 }
@@ -198,7 +207,7 @@ func (c *Conn) SetRecvBufferWait(d time.Duration) {
 }
 
 // RemoteAddr returns the remote address of current UDP connection.
-// Note that it cannot use c.conn.RemoteAddr() as it's nil.
+// Note that it cannot use c.conn.RemoteAddr() as it is nil.
 func (c *Conn) RemoteAddr() net.Addr {
 	//return c.conn.RemoteAddr()
 	return c.remoteAddr

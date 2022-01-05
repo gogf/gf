@@ -7,25 +7,23 @@
 [![Production Ready](https://img.shields.io/badge/production-ready-blue.svg)](https://github.com/gogf/gf)
 [![License](https://img.shields.io/github/license/gogf/gf.svg?style=flat)](https://github.com/gogf/gf)
 
-English | [简体中文](README_ZH.MD)
 
-`GoFrame` is a modular, powerful, high-performance and enterprise-class application development framework 
-of Golang. 
+`GoFrame` is a modular, powerful, high-performance and enterprise-class application development framework of Golang. 
 
 > If you're a newbie to `Go`, you may consider `GoFrame` easy and great as `Laravel` in `PHP`, `SpringBoot` in `Java` or `Django` in `Python`.
 
 # Installation
 ```
-go get -u -v github.com/gogf/gf
+go get -u -v github.com/gogf/gf/v2
 ```
 suggested using `go.mod`:
 ```
-require github.com/gogf/gf latest
+require github.com/gogf/gf/v2 latest
 ```
 
 # Limitation
 ```
-golang version >= 1.11
+golang version >= 1.15
 ```
 
 # Architecture
@@ -56,17 +54,19 @@ The `Web` component performance of `GoFrame`, please refer to third-party projec
 
 # License
 
-`GF` is licensed under the [MIT License](LICENSE), 100% free and open-source, forever.
+`GoFrame` is licensed under the [MIT License](LICENSE), 100% free and open-source, forever.
 
 # Part Of Users
 
 - [Tencent](https://www.tencent.com/)
 - [ZTE](https://www.zte.com.cn/china/)
 - [Ant Financial Services](https://www.antfin.com/)
+- [VIVO](https://www.vivo.com/)
 - [MedLinker](https://www.medlinker.com/)
 - [KuCoin](https://www.kucoin.io/)
 - [LeYouJia](https://www.leyoujia.com/)
 - [IGG](https://igg.com)
+- [37](https://www.37.com)
 - [XiMaLaYa](https://www.ximalaya.com)
 - [ZYBang](https://www.zybang.com/)
 
@@ -75,15 +75,15 @@ The `Web` component performance of `GoFrame`, please refer to third-party projec
 
 # Contributors
 This project exists thanks to all the people who contribute. [[Contributors](https://github.com/gogf/gf/graphs/contributors)].
-<a href="https://github.com/gogf/gf/graphs/contributors"><img src="https://opencollective.com/goframe/contributors.svg?width=890&button=false" /></a>
+<a href="https://github.com/gogf/gf/graphs/contributors"><img src="https://contributors-img.web.app/image?repo=gogf/gf" /></a>
 
 
 # Donators
 
-If you love `GF`, why not [buy developer a cup of coffee](https://goframe.org/pages/viewpage.action?pageId=1115633)?
+If you love `GoFrame`, why not [buy developer a cup of coffee](https://goframe.org/pages/viewpage.action?pageId=1115633)?
 
 # Sponsors
-We appreciate any kind of sponsorship for `GF` development. If you've got some interesting, please contact WeChat `389961817` / Email `john@goframe.org`.
+We appreciate any kind of sponsorship for `GoFrame` development. If you've got some interesting, please contact WeChat `389961817` / Email `john@goframe.org`.
 
 
 

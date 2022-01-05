@@ -8,8 +8,9 @@ package gsession
 
 import (
 	"context"
-	"github.com/gogf/gf/container/gmap"
 	"time"
+
+	"github.com/gogf/gf/v2/container/gmap"
 )
 
 // StorageMemory implements the Session Storage interface with memory.
@@ -33,7 +34,7 @@ func (s *StorageMemory) Get(ctx context.Context, id string, key string) (value i
 }
 
 // GetMap retrieves all key-value pairs as map from storage.
-func (s *StorageMemory) GetMap(ctx context.Context, id string) (data map[string]interface{}, err error) {
+func (s *StorageMemory) Data(ctx context.Context, id string) (data map[string]interface{}, err error) {
 	return nil, ErrorDisabled
 }
 

@@ -8,12 +8,12 @@
 package gvar
 
 import (
-	"github.com/gogf/gf/internal/json"
 	"time"
 
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Var is an universal variable type implementer.
@@ -189,8 +189,7 @@ func (v *Var) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (v *Var) UnmarshalJSON(b []byte) error {
 	var i interface{}
-	err := json.UnmarshalUseNumber(b, &i)
-	if err != nil {
+	if err := json.UnmarshalUseNumber(b, &i); err != nil {
 		return err
 	}
 	v.Set(i)

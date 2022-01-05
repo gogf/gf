@@ -11,39 +11,48 @@ import (
 	"bytes"
 	"compress/zlib"
 	"io"
+
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
-// Zlib compresses <data> with zlib algorithm.
+// Zlib compresses `data` with zlib algorithm.
 func Zlib(data []byte) ([]byte, error) {
 	if data == nil || len(data) < 13 {
 		return data, nil
 	}
-	var in bytes.Buffer
-	var err error
-	w := zlib.NewWriter(&in)
-	if _, err = w.Write(data); err != nil {
+	var (
+		err    error
+		in     bytes.Buffer
+		writer = zlib.NewWriter(&in)
+	)
+
+	if _, err = writer.Write(data); err != nil {
+		err = gerror.Wrapf(err, `zlib.Writer.Write failed`)
 		return nil, err
 	}
-	if err = w.Close(); err != nil {
+	if err = writer.Close(); err != nil {
+		err = gerror.Wrapf(err, `zlib.Writer.Close failed`)
 		return in.Bytes(), err
 	}
 	return in.Bytes(), nil
 }
 
-// UnZlib decompresses <data> with zlib algorithm.
+// UnZlib decompresses `data` with zlib algorithm.
 func UnZlib(data []byte) ([]byte, error) {
 	if data == nil || len(data) < 13 {
 		return data, nil
 	}
-
-	b := bytes.NewReader(data)
-	var out bytes.Buffer
-	var err error
-	r, err := zlib.NewReader(b)
+	var (
+		out             bytes.Buffer
+		bytesReader     = bytes.NewReader(data)
+		zlibReader, err = zlib.NewReader(bytesReader)
+	)
 	if err != nil {
+		err = gerror.Wrapf(err, `zlib.NewReader failed`)
 		return nil, err
 	}
-	if _, err = io.Copy(&out, r); err != nil {
+	if _, err = io.Copy(&out, zlibReader); err != nil {
+		err = gerror.Wrapf(err, `io.Copy failed`)
 		return nil, err
 	}
 	return out.Bytes(), nil

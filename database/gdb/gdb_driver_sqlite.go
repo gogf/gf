@@ -14,13 +14,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
 	"strings"
 
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // DriverSqlite is the driver for sqlite database.
@@ -37,8 +37,11 @@ func (d *DriverSqlite) New(core *Core, node *ConfigNode) (DB, error) {
 }
 
 // Open creates and returns a underlying sql.DB object for sqlite.
-func (d *DriverSqlite) Open(config *ConfigNode) (*sql.DB, error) {
-	var source string
+func (d *DriverSqlite) Open(config *ConfigNode) (db *sql.DB, err error) {
+	var (
+		source string
+		driver = "sqlite3"
+	)
 	if config.Link != "" {
 		source = config.Link
 	} else {
@@ -49,11 +52,14 @@ func (d *DriverSqlite) Open(config *ConfigNode) (*sql.DB, error) {
 		source = absolutePath
 	}
 	intlog.Printf(d.GetCtx(), "Open: %s", source)
-	if db, err := sql.Open("sqlite3", source); err == nil {
-		return db, nil
-	} else {
+	if db, err = sql.Open(driver, source); err != nil {
+		err = gerror.WrapCodef(
+			gcode.CodeDbOperationError, err,
+			`sql.Open failed for driver "%s" by source "%s"`, driver, source,
+		)
 		return nil, err
 	}
+	return
 }
 
 // FilteredLink retrieves and returns filtered `linkInfo` that can be using for
@@ -67,9 +73,9 @@ func (d *DriverSqlite) GetChars() (charLeft string, charRight string) {
 	return "`", "`"
 }
 
-// DoCommit deals with the sql string before commits it to underlying sql driver.
-func (d *DriverSqlite) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
-	return d.Core.DoCommit(ctx, link, sql, args)
+// DoFilter deals with the sql string before commits it to underlying sql driver.
+func (d *DriverSqlite) DoFilter(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+	return d.Core.DoFilter(ctx, link, sql, args)
 }
 
 // Tables retrieves and returns the tables of current schema.
@@ -93,7 +99,7 @@ func (d *DriverSqlite) Tables(ctx context.Context, schema ...string) (tables []s
 	return
 }
 
-// TableFields retrieves and returns the fields information of specified table of current schema.
+// TableFields retrieves and returns the fields' information of specified table of current schema.
 //
 // Also see DriverMysql.TableFields.
 func (d *DriverSqlite) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {
@@ -106,32 +112,31 @@ func (d *DriverSqlite) TableFields(ctx context.Context, table string, schema ...
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	}
-	tableFieldsCacheKey := fmt.Sprintf(
-		`sqlite_table_fields_%s_%s@group:%s`,
-		table, useSchema, d.GetGroup(),
-	)
-	v := tableFieldsMap.GetOrSetFuncLock(tableFieldsCacheKey, func() interface{} {
-		var (
-			result    Result
-			link, err = d.SlaveLink(useSchema)
-		)
-		if err != nil {
-			return nil
-		}
-		result, err = d.DoGetAll(ctx, link, fmt.Sprintf(`PRAGMA TABLE_INFO(%s)`, table))
-		if err != nil {
-			return nil
-		}
-		fields = make(map[string]*TableField)
-		for i, m := range result {
-			fields[strings.ToLower(m["name"].String())] = &TableField{
-				Index: i,
-				Name:  strings.ToLower(m["name"].String()),
-				Type:  strings.ToLower(m["type"].String()),
+	v := tableFieldsMap.GetOrSetFuncLock(
+		fmt.Sprintf(`sqlite_table_fields_%s_%s@group:%s`, table, useSchema, d.GetGroup()),
+		func() interface{} {
+			var (
+				result Result
+				link   Link
+			)
+			if link, err = d.SlaveLink(useSchema); err != nil {
+				return nil
 			}
-		}
-		return fields
-	})
+			result, err = d.DoGetAll(ctx, link, fmt.Sprintf(`PRAGMA TABLE_INFO(%s)`, table))
+			if err != nil {
+				return nil
+			}
+			fields = make(map[string]*TableField)
+			for i, m := range result {
+				fields[strings.ToLower(m["name"].String())] = &TableField{
+					Index: i,
+					Name:  strings.ToLower(m["name"].String()),
+					Type:  strings.ToLower(m["type"].String()),
+				}
+			}
+			return fields
+		},
+	)
 	if v != nil {
 		fields = v.(map[string]*TableField)
 	}

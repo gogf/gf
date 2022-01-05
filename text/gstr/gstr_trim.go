@@ -7,17 +7,18 @@
 package gstr
 
 import (
-	"github.com/gogf/gf/internal/utils"
 	"strings"
+
+	"github.com/gogf/gf/v2/internal/utils"
 )
 
 // Trim strips whitespace (or other characters) from the beginning and end of a string.
-// The optional parameter <characterMask> specifies the additional stripped characters.
+// The optional parameter `characterMask` specifies the additional stripped characters.
 func Trim(str string, characterMask ...string) string {
 	return utils.Trim(str, characterMask...)
 }
 
-// TrimStr strips all the given <cut> string from the beginning and end of a string.
+// TrimStr strips all the given `cut` string from the beginning and end of a string.
 // Note that it does not strip the whitespaces of its beginning or end.
 func TrimStr(str string, cut string, count ...int) string {
 	return TrimLeftStr(TrimRightStr(str, cut, count...), cut, count...)
@@ -32,7 +33,7 @@ func TrimLeft(str string, characterMask ...string) string {
 	return strings.TrimLeft(str, trimChars)
 }
 
-// TrimLeftStr strips all the given <cut> string from the beginning of a string.
+// TrimLeftStr strips all the given `cut` string from the beginning of a string.
 // Note that it does not strip the whitespaces of its beginning.
 func TrimLeftStr(str string, cut string, count ...int) string {
 	var (
@@ -58,7 +59,7 @@ func TrimRight(str string, characterMask ...string) string {
 	return strings.TrimRight(str, trimChars)
 }
 
-// TrimRightStr strips all the given <cut> string from the end of a string.
+// TrimRightStr strips all the given `cut` string from the end of a string.
 // Note that it does not strip the whitespaces of its end.
 func TrimRightStr(str string, cut string, count ...int) string {
 	var (
@@ -100,4 +101,14 @@ func TrimAll(str string, characterMask ...string) string {
 		}
 	}
 	return string(slice)
+}
+
+// HasPrefix tests whether the string s begins with prefix.
+func HasPrefix(s, prefix string) bool {
+	return strings.HasPrefix(s, prefix)
+}
+
+// HasSuffix tests whether the string s ends with suffix.
+func HasSuffix(s, suffix string) bool {
+	return strings.HasSuffix(s, suffix)
 }

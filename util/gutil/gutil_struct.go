@@ -7,8 +7,9 @@
 package gutil
 
 import (
-	"github.com/gogf/gf/util/gconv"
 	"reflect"
+
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // StructToSlice converts struct to slice of which all keys and values are its items.

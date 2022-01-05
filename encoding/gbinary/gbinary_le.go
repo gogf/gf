@@ -8,13 +8,17 @@ package gbinary
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
 	"fmt"
 	"math"
+
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
 )
 
-// LeEncode encodes one or multiple <values> into bytes using LittleEndian.
-// It uses type asserting checking the type of each value of <values> and internally
+// LeEncode encodes one or multiple `values` into bytes using LittleEndian.
+// It uses type asserting checking the type of each value of `values` and internally
 // calls corresponding converting function do the bytes converting.
 //
 // It supports common variable type asserting, and finally it uses fmt.Sprintf converting
@@ -59,6 +63,7 @@ func LeEncode(values ...interface{}) []byte {
 			buf.Write(LeEncodeFloat64(value))
 		default:
 			if err := binary.Write(buf, binary.LittleEndian, value); err != nil {
+				intlog.Error(context.TODO(), err)
 				buf.Write(LeEncodeString(fmt.Sprintf("%v", value)))
 			}
 		}
@@ -66,8 +71,6 @@ func LeEncode(values ...interface{}) []byte {
 	return buf.Bytes()
 }
 
-// 将变量转换为二进制[]byte，并指定固定的[]byte长度返回，长度单位为字节(byte)；
-// 如果转换的二进制长度超过指定长度，那么进行截断处理
 func LeEncodeByLength(length int, values ...interface{}) []byte {
 	b := LeEncode(values...)
 	if len(b) < length {
@@ -78,13 +81,14 @@ func LeEncodeByLength(length int, values ...interface{}) []byte {
 	return b
 }
 
-// 整形二进制解包，注意第二个及其后参数为字长确定的整形变量的指针地址，以便确定解析的[]byte长度，
-// 例如：int8/16/32/64、uint8/16/32/64、float32/64等等
 func LeDecode(b []byte, values ...interface{}) error {
-	buf := bytes.NewBuffer(b)
+	var (
+		err error
+		buf = bytes.NewBuffer(b)
+	)
 	for i := 0; i < len(values); i++ {
-		err := binary.Read(buf, binary.LittleEndian, values[i])
-		if err != nil {
+		if err = binary.Read(buf, binary.LittleEndian, values[i]); err != nil {
+			err = gerror.Wrap(err, `binary.Read failed`)
 			return err
 		}
 	}
@@ -107,7 +111,6 @@ func LeEncodeBool(b bool) []byte {
 	}
 }
 
-// 自动识别int类型长度，转换为[]byte
 func LeEncodeInt(i int) []byte {
 	if i <= math.MaxInt8 {
 		return EncodeInt8(int8(i))
@@ -120,7 +123,6 @@ func LeEncodeInt(i int) []byte {
 	}
 }
 
-// 自动识别uint类型长度，转换为[]byte
 func LeEncodeUint(i uint) []byte {
 	if i <= math.MaxUint8 {
 		return EncodeUint8(uint8(i))
@@ -191,8 +193,6 @@ func LeEncodeFloat64(f float64) []byte {
 	return b
 }
 
-// 将二进制解析为int类型，根据[]byte的长度进行自动转换.
-// 注意内部使用的是uint*，使用int会造成位丢失。
 func LeDecodeToInt(b []byte) int {
 	if len(b) < 2 {
 		return int(LeDecodeToUint8(b))
@@ -205,7 +205,6 @@ func LeDecodeToInt(b []byte) int {
 	}
 }
 
-// 将二进制解析为uint类型，根据[]byte的长度进行自动转换
 func LeDecodeToUint(b []byte) uint {
 	if len(b) < 2 {
 		return uint(LeDecodeToUint8(b))
@@ -218,7 +217,6 @@ func LeDecodeToUint(b []byte) uint {
 	}
 }
 
-// 将二进制解析为bool类型，识别标准是判断二进制中数值是否都为0，或者为空。
 func LeDecodeToBool(b []byte) bool {
 	if len(b) == 0 {
 		return false
@@ -230,11 +228,17 @@ func LeDecodeToBool(b []byte) bool {
 }
 
 func LeDecodeToInt8(b []byte) int8 {
+	if len(b) == 0 {
+		panic(`empty slice given`)
+	}
 	return int8(b[0])
 }
 
 func LeDecodeToUint8(b []byte) uint8 {
-	return uint8(b[0])
+	if len(b) == 0 {
+		panic(`empty slice given`)
+	}
+	return b[0]
 }
 
 func LeDecodeToInt16(b []byte) int16 {
@@ -269,8 +273,10 @@ func LeDecodeToFloat64(b []byte) float64 {
 	return math.Float64frombits(binary.LittleEndian.Uint64(LeFillUpSize(b, 8)))
 }
 
-// 当b位数不够时，进行高位补0。
-// 注意这里为了不影响原有输入参数，是采用的值复制设计。
+// LeFillUpSize fills up the bytes `b` to given length `l` using LittleEndian.
+//
+// Note that it creates a new bytes slice by copying the original one to avoid changing
+// the original parameter bytes.
 func LeFillUpSize(b []byte, l int) []byte {
 	if len(b) >= l {
 		return b[:l]

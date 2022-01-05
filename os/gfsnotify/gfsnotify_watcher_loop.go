@@ -8,8 +8,9 @@ package gfsnotify
 
 import (
 	"context"
-	"github.com/gogf/gf/container/glist"
-	"github.com/gogf/gf/internal/intlog"
+
+	"github.com/gogf/gf/v2/container/glist"
+	"github.com/gogf/gf/v2/internal/intlog"
 )
 
 // watchLoop starts the loop for event listening from underlying inotify monitor.
@@ -24,15 +25,22 @@ func (w *Watcher) watchLoop() {
 			// Event listening.
 			case ev := <-w.watcher.Events:
 				// Filter the repeated event in custom duration.
-				w.cache.SetIfNotExist(ev.String(), func() (interface{}, error) {
-					w.events.Push(&Event{
-						event:   ev,
-						Path:    ev.Name,
-						Op:      Op(ev.Op),
-						Watcher: w,
-					})
-					return struct{}{}, nil
-				}, repeatEventFilterDuration)
+				_, err := w.cache.SetIfNotExist(
+					context.Background(),
+					ev.String(),
+					func(ctx context.Context) (value interface{}, err error) {
+						w.events.Push(&Event{
+							event:   ev,
+							Path:    ev.Name,
+							Op:      Op(ev.Op),
+							Watcher: w,
+						})
+						return struct{}{}, nil
+					}, repeatEventFilterDuration,
+				)
+				if err != nil {
+					intlog.Error(context.TODO(), err)
+				}
 
 			case err := <-w.watcher.Errors:
 				intlog.Error(context.TODO(), err)

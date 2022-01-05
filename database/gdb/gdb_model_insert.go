@@ -8,15 +8,16 @@ package gdb
 
 import (
 	"database/sql"
-	"github.com/gogf/gf/container/gset"
-	"github.com/gogf/gf/errors/gcode"
 	"reflect"
 
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // Batch sets the batch operation number for the model.
@@ -35,7 +36,7 @@ func (m *Model) Batch(batch int) *Model {
 // Data("uid", 10000)
 // Data("uid=? AND name=?", 10000, "john")
 // Data(g.Map{"uid": 10000, "name":"john"})
-// Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
+// Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"}).
 func (m *Model) Data(data ...interface{}) *Model {
 	model := m.getModel()
 	if len(data) > 1 {
@@ -50,56 +51,64 @@ func (m *Model) Data(data ...interface{}) *Model {
 			model.data = m
 		}
 	} else {
-		switch params := data[0].(type) {
+		switch value := data[0].(type) {
 		case Result:
-			model.data = params.List()
+			model.data = value.List()
 
 		case Record:
-			model.data = params.Map()
+			model.data = value.Map()
 
 		case List:
-			list := make(List, len(params))
-			for k, v := range params {
+			list := make(List, len(value))
+			for k, v := range value {
 				list[k] = gutil.MapCopy(v)
 			}
 			model.data = list
 
 		case Map:
-			model.data = gutil.MapCopy(params)
+			model.data = gutil.MapCopy(value)
 
 		default:
-			var (
-				rv   = reflect.ValueOf(params)
-				kind = rv.Kind()
-			)
-			if kind == reflect.Ptr {
-				rv = rv.Elem()
-				kind = rv.Kind()
-			}
-			switch kind {
+			reflectInfo := utils.OriginValueAndKind(value)
+			switch reflectInfo.OriginKind {
 			case reflect.Slice, reflect.Array:
-				list := make(List, rv.Len())
-				for i := 0; i < rv.Len(); i++ {
-					list[i] = ConvertDataForTableRecord(rv.Index(i).Interface())
+				if reflectInfo.OriginValue.Len() > 0 {
+					// If the `data` parameter is a DTO struct,
+					// it then adds `OmitNilData` option for this condition,
+					// which will filter all nil parameters in `data`.
+					if isDtoStruct(reflectInfo.OriginValue.Index(0).Interface()) {
+						model = model.OmitNilData()
+						model.option |= optionOmitNilDataInternal
+					}
+				}
+				list := make(List, reflectInfo.OriginValue.Len())
+				for i := 0; i < reflectInfo.OriginValue.Len(); i++ {
+					list[i] = m.db.ConvertDataForRecord(m.GetCtx(), reflectInfo.OriginValue.Index(i).Interface())
 				}
 				model.data = list
 
-			case reflect.Map:
-				model.data = ConvertDataForTableRecord(data[0])
-
 			case reflect.Struct:
-				if v, ok := data[0].(apiInterfaces); ok {
+				// If the `data` parameter is a DTO struct,
+				// it then adds `OmitNilData` option for this condition,
+				// which will filter all nil parameters in `data`.
+				if isDtoStruct(value) {
+					model = model.OmitNilData()
+				}
+				if v, ok := data[0].(iInterfaces); ok {
 					var (
 						array = v.Interfaces()
 						list  = make(List, len(array))
 					)
 					for i := 0; i < len(array); i++ {
-						list[i] = ConvertDataForTableRecord(array[i])
+						list[i] = m.db.ConvertDataForRecord(m.GetCtx(), array[i])
 					}
 					model.data = list
 				} else {
-					model.data = ConvertDataForTableRecord(data[0])
+					model.data = m.db.ConvertDataForRecord(m.GetCtx(), data[0])
 				}
+
+			case reflect.Map:
+				model.data = m.db.ConvertDataForRecord(m.GetCtx(), data[0])
 
 			default:
 				model.data = data[0]
@@ -120,7 +129,7 @@ func (m *Model) Data(data ...interface{}) *Model {
 // })
 // OnDuplicate(g.Map{
 //     "nickname": "passport",
-// })
+// }).
 func (m *Model) OnDuplicate(onDuplicate ...interface{}) *Model {
 	model := m.getModel()
 	if len(onDuplicate) > 1 {
@@ -140,7 +149,7 @@ func (m *Model) OnDuplicate(onDuplicate ...interface{}) *Model {
 // OnDuplicateEx(g.Map{
 //     "passport": "",
 //     "password": "",
-// })
+// }).
 func (m *Model) OnDuplicateEx(onDuplicateEx ...interface{}) *Model {
 	model := m.getModel()
 	if len(onDuplicateEx) > 1 {
@@ -226,7 +235,6 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 	if err != nil {
 		return nil, err
 	}
-
 	// It converts any data to List type for inserting.
 	switch value := newData.(type) {
 	case Result:
@@ -238,47 +246,42 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 	case List:
 		list = value
 		for i, v := range list {
-			list[i] = ConvertDataForTableRecord(v)
+			list[i] = m.db.ConvertDataForRecord(m.GetCtx(), v)
 		}
 
 	case Map:
-		list = List{ConvertDataForTableRecord(value)}
+		list = List{m.db.ConvertDataForRecord(m.GetCtx(), value)}
 
 	default:
-		var (
-			rv   = reflect.ValueOf(newData)
-			kind = rv.Kind()
-		)
-		if kind == reflect.Ptr {
-			rv = rv.Elem()
-			kind = rv.Kind()
-		}
-		switch kind {
+		reflectInfo := utils.OriginValueAndKind(newData)
+		switch reflectInfo.OriginKind {
 		// If it's slice type, it then converts it to List type.
 		case reflect.Slice, reflect.Array:
-			list = make(List, rv.Len())
-			for i := 0; i < rv.Len(); i++ {
-				list[i] = ConvertDataForTableRecord(rv.Index(i).Interface())
+			list = make(List, reflectInfo.OriginValue.Len())
+			for i := 0; i < reflectInfo.OriginValue.Len(); i++ {
+				list[i] = m.db.ConvertDataForRecord(m.GetCtx(), reflectInfo.OriginValue.Index(i).Interface())
 			}
 
 		case reflect.Map:
-			list = List{ConvertDataForTableRecord(value)}
+			list = List{m.db.ConvertDataForRecord(m.GetCtx(), value)}
 
 		case reflect.Struct:
-			if v, ok := value.(apiInterfaces); ok {
-				var (
-					array = v.Interfaces()
-				)
+			if v, ok := value.(iInterfaces); ok {
+				array := v.Interfaces()
 				list = make(List, len(array))
 				for i := 0; i < len(array); i++ {
-					list[i] = ConvertDataForTableRecord(array[i])
+					list[i] = m.db.ConvertDataForRecord(m.GetCtx(), array[i])
 				}
 			} else {
-				list = List{ConvertDataForTableRecord(value)}
+				list = List{m.db.ConvertDataForRecord(m.GetCtx(), value)}
 			}
 
 		default:
-			return result, gerror.NewCodef(gcode.CodeInvalidParameter, "unsupported list type:%v", kind)
+			return result, gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				"unsupported data list type: %v",
+				reflectInfo.InputValue.Type(),
+			)
 		}
 	}
 
@@ -300,14 +303,13 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 	}
 	// Format DoInsertOption, especially for "ON DUPLICATE KEY UPDATE" statement.
 	columnNames := make([]string, 0, len(list[0]))
-	for k, _ := range list[0] {
+	for k := range list[0] {
 		columnNames = append(columnNames, k)
 	}
 	doInsertOption, err := m.formatDoInsertOption(insertOption, columnNames)
 	if err != nil {
 		return result, err
 	}
-
 	return m.db.DoInsert(m.GetCtx(), m.getLink(true), m.tables, list, doInsertOption)
 }
 
@@ -321,27 +323,18 @@ func (m *Model) formatDoInsertOption(insertOption int, columnNames []string) (op
 		if err != nil {
 			return option, err
 		}
-		var (
-			onDuplicateExKeySet = gset.NewStrSetFrom(onDuplicateExKeys)
-		)
+		onDuplicateExKeySet := gset.NewStrSetFrom(onDuplicateExKeys)
 		if m.onDuplicate != nil {
 			switch m.onDuplicate.(type) {
 			case Raw, *Raw:
 				option.OnDuplicateStr = gconv.String(m.onDuplicate)
 
 			default:
-				var (
-					reflectValue = reflect.ValueOf(m.onDuplicate)
-					reflectKind  = reflectValue.Kind()
-				)
-				for reflectKind == reflect.Ptr {
-					reflectValue = reflectValue.Elem()
-					reflectKind = reflectValue.Kind()
-				}
-				switch reflectKind {
+				reflectInfo := utils.OriginValueAndKind(m.onDuplicate)
+				switch reflectInfo.OriginKind {
 				case reflect.String:
 					option.OnDuplicateMap = make(map[string]interface{})
-					for _, v := range gstr.SplitAndTrim(reflectValue.String(), ",") {
+					for _, v := range gstr.SplitAndTrim(reflectInfo.OriginValue.String(), ",") {
 						if onDuplicateExKeySet.Contains(v) {
 							continue
 						}
@@ -392,17 +385,10 @@ func (m *Model) formatOnDuplicateExKeys(onDuplicateEx interface{}) ([]string, er
 		return nil, nil
 	}
 
-	var (
-		reflectValue = reflect.ValueOf(onDuplicateEx)
-		reflectKind  = reflectValue.Kind()
-	)
-	for reflectKind == reflect.Ptr {
-		reflectValue = reflectValue.Elem()
-		reflectKind = reflectValue.Kind()
-	}
-	switch reflectKind {
+	reflectInfo := utils.OriginValueAndKind(onDuplicateEx)
+	switch reflectInfo.OriginKind {
 	case reflect.String:
-		return gstr.SplitAndTrim(reflectValue.String(), ","), nil
+		return gstr.SplitAndTrim(reflectInfo.OriginValue.String(), ","), nil
 
 	case reflect.Map:
 		return gutil.Keys(onDuplicateEx), nil
