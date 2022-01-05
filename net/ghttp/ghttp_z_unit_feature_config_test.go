@@ -28,6 +28,9 @@ func Test_ConfigFromMap(t *testing.T) {
 			"indexFiles":      g.Slice{"index.php", "main.php"},
 			"errorLogEnabled": true,
 			"cookieMaxAge":    "1y",
+			"sameSite":        "lax",
+			"cookieSecure":    true,
+			"CookieHttpOnly":  true,
 		}
 		config, err := ghttp.ConfigFromMap(m)
 		t.Assert(err, nil)
@@ -38,6 +41,9 @@ func Test_ConfigFromMap(t *testing.T) {
 		t.Assert(config.CookieMaxAge, d2)
 		t.Assert(config.IndexFiles, m["indexFiles"])
 		t.Assert(config.ErrorLogEnabled, m["errorLogEnabled"])
+		t.Assert(config.CookieSameSite, m["sameSite"])
+		t.Assert(config.CookieSecure, m["cookieSecure"])
+		t.Assert(config.CookieHttpOnly, m["CookieHttpOnly"])
 	})
 }
 
@@ -54,6 +60,9 @@ func Test_SetConfigWithMap(t *testing.T) {
 			"SessionIdName":    "MySessionId",
 			"SessionPath":      "/tmp/MySessionStoragePath",
 			"SessionMaxAge":    24 * time.Hour,
+			"sameSite":         "lax",
+			"cookieSecure":     true,
+			"CookieHttpOnly":   true,
 		}
 		s := g.Server()
 		err := s.SetConfigWithMap(m)

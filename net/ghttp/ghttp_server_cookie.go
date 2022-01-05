@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"github.com/gogf/gf/v2/util/gconv"
 	"net/http"
 	"time"
 
@@ -88,17 +89,27 @@ func (c *Cookie) Set(key, value string) {
 		c.request.Server.GetCookieDomain(),
 		c.request.Server.GetCookiePath(),
 		c.request.Server.GetCookieMaxAge(),
+		map[string]interface{}{
+			"sameSite": c.request.Server.GetCookieSameSite(),
+			"secure":   c.request.Server.GetCookieSecure(),
+			"httpOnly": c.request.Server.GetCookieHttpOnly(),
+		},
 	)
 }
 
 // SetCookie sets cookie item with given domain, path and expiration age.
 // The optional parameter `httpOnly` specifies if the cookie item is only available in HTTP,
 // which is usually empty.
-func (c *Cookie) SetCookie(key, value, domain, path string, maxAge time.Duration, httpOnly ...bool) {
+func (c *Cookie) SetCookie(key, value, domain, path string, maxAge time.Duration, extra ...map[string]interface{}) {
 	c.init()
 	isHttpOnly := false
-	if len(httpOnly) > 0 {
-		isHttpOnly = httpOnly[0]
+	sameSite := http.SameSiteDefaultMode
+	secure := false
+	if len(extra) > 0 {
+		config := extra[0]
+		isHttpOnly = gconv.Bool(config["httpOnly"])
+		sameSite = http.SameSite(gconv.Int(config["sameSite"]))
+		secure = gconv.Bool(config["secure"])
 	}
 	httpCookie := &http.Cookie{
 		Name:     key,
@@ -106,6 +117,8 @@ func (c *Cookie) SetCookie(key, value, domain, path string, maxAge time.Duration
 		Path:     path,
 		Domain:   domain,
 		HttpOnly: isHttpOnly,
+		SameSite: sameSite,
+		Secure:   secure,
 	}
 	if maxAge != 0 {
 		httpCookie.Expires = time.Now().Add(maxAge)
@@ -136,6 +149,11 @@ func (c *Cookie) SetSessionId(id string) {
 		c.request.Server.GetCookieDomain(),
 		c.request.Server.GetCookiePath(),
 		c.server.GetSessionCookieMaxAge(),
+		map[string]interface{}{
+			"sameSite": c.request.Server.GetCookieSameSite(),
+			"secure":   c.request.Server.GetCookieSecure(),
+			"httpOnly": c.request.Server.GetCookieHttpOnly(),
+		},
 	)
 }
 

@@ -104,3 +104,15 @@ func Test_SetHttpCookie(t *testing.T) {
 		//t.Assert(client.GetContent(ctx, "/get?k=key2"), "200")
 	})
 }
+
+func Test_CookieSameSite(t *testing.T) {
+	// todo: 补充测试
+}
+
+func Test_CookieSecure(t *testing.T) {
+	// todo: 补充测试
+}
+
+func Test_CookieHttpOnly(t *testing.T) {
+	// todo: 补充测试
+}
