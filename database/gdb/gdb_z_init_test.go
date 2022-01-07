@@ -24,8 +24,8 @@ const (
 	TestSchema1      = "test1"
 	TestSchema2      = "test2"
 	TableNamePrefix1 = "gf_"
-	TestDbUser       = "root"
-	TestDbPass       = "12345678"
+	TestDbUser       = "fanwei"
+	TestDbPass       = "fw123456"
 	CreateTime       = "2018-10-24 10:00:00"
 )
 
