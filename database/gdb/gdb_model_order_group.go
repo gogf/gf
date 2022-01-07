@@ -15,8 +15,9 @@ import (
 //
 // Eg:
 // Order("id desc")
+// Order("id", "desc")
 // Order("id desc,name asc").
-// Order("id", "desc",gdb.Raw("field(id, 3,1,2)"))
+// Order(gdb.Raw("field(id, 3,1,2)"))
 func (m *Model) Order(orderBy ...interface{}) *Model {
 	if len(orderBy) == 0 {
 		return m
@@ -28,15 +29,15 @@ func (m *Model) Order(orderBy ...interface{}) *Model {
 	}
 
 	for _, o := range orderBy {
-		switch o.(type) {
-		case Raw:
-			model.orderBy += gconv.String(o)
-		default:
-			model.orderBy += model.db.GetCore().QuoteString(gconv.String(o))
+		if v, ok := o.(Raw); ok {
+			model.orderBy += gconv.String(v)
+			return model
 		}
 	}
 
-	return m
+	model.orderBy += model.db.GetCore().QuoteString(strings.Join(gconv.SliceStr(orderBy), " "))
+
+	return model
 }
 
 // OrderAsc sets the "ORDER BY xxx ASC" statement for the model.

@@ -441,10 +441,10 @@ func Test_Model_Clone(t *testing.T) {
 		count, err := md.Count()
 		t.AssertNil(err)
 
-		record, err := md.Order("id DESC").One()
+		record, err := md.Safe(true).Order("id DESC").One()
 		t.AssertNil(err)
 
-		result, err := md.Order("id ASC").All()
+		result, err := md.Safe(true).Order("id ASC").All()
 		t.AssertNil(err)
 
 		t.Assert(count, 2)
