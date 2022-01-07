@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/gogf/gf/v2/crypto/gmd5"
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -505,7 +506,7 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 	if m.cacheEnabled && m.tx == nil {
 		cacheKey = m.cacheOption.Name
 		if len(cacheKey) == 0 {
-			cacheKey = sql + ", @PARAMS:" + gconv.String(args)
+			cacheKey = "gcache:" + gmd5.MustEncryptString(sql+", @PARAMS:"+gconv.String(args))
 		}
 		if v, _ := cacheObj.Get(ctx, cacheKey); !v.IsNil() {
 			if result, ok := v.Val().(Result); ok {
