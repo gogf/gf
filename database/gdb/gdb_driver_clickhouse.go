@@ -11,9 +11,14 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/ClickHouse/clickhouse-go"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+	"reflect"
+	"strings"
 )
 
 // DriverClickhouse is the driver for SQL server database.
@@ -28,7 +33,10 @@ func (d *DriverClickhouse) New(core *Core, node *ConfigNode) (DB, error) {
 }
 
 func (d *DriverClickhouse) Open(config *ConfigNode) (db *sql.DB, err error) {
-	source := ""
+	var (
+		source string
+		driver = "clickhouse"
+	)
 	if config.Pass != "" {
 		source = fmt.Sprintf(
 			"tcp://%s:%s?database=%s&password=%s&charset=%s&debug=%s",
@@ -41,7 +49,7 @@ func (d *DriverClickhouse) Open(config *ConfigNode) (db *sql.DB, err error) {
 		)
 	}
 	glog.Infof(context.Background(), "Open: %s %s", source, clickhouse.DefaultDatabase)
-	if db, err := sql.Open("clickhouse", source); err == nil {
+	if db, err := sql.Open(driver, source); err == nil {
 		d.SetSchema(config.Name)
 		return db, nil
 	} else {
@@ -49,8 +57,78 @@ func (d *DriverClickhouse) Open(config *ConfigNode) (db *sql.DB, err error) {
 	}
 }
 
+// Tables Get all tables from system tables record.
 func (d *DriverClickhouse) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
-	return d.Core.Tables()
+	var result Result
+	link, err := d.SlaveLink(schema...)
+	if err != nil {
+		return nil, err
+	}
+	result, err = d.DoGetAll(ctx, link, fmt.Sprintf("select name from `system`.tables where database '%s'", d.GetSchema()))
+	if err != nil {
+		return
+	}
+	for _, m := range result {
+		tables = append(tables, m["name"].String())
+	}
+	return
+}
+
+// TableFields Get
+func (d *DriverClickhouse) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {
+	charL, charR := d.GetChars()
+	table = gstr.Trim(table, charL+charR)
+	if gstr.Contains(table, " ") {
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "function TableFields supports only single table operations")
+	}
+	useSchema := d.schema.Val()
+	if len(schema) > 0 && schema[0] != "" {
+		useSchema = schema[0]
+	}
+	v := tableFieldsMap.GetOrSetFuncLock(
+		fmt.Sprintf(`clickhouse_table_fields_%s_%s@group:%s`, table, useSchema, d.GetGroup()),
+		func() interface{} {
+			var (
+				result Result
+				link   Link
+			)
+			if link, err = d.SlaveLink(useSchema); err != nil {
+				return nil
+			}
+			getColumnsSql := fmt.Sprintf("select name,position,default_expression,comment from `system`.columns c where database = '%s' and `table` = '%s'", d.GetSchema(), table)
+			result, err := d.DoGetAll(ctx, link, getColumnsSql)
+			if err != nil {
+				return nil
+			}
+			fields = make(map[string]*TableField)
+			for _, m := range result {
+				var (
+					isNull    = false
+					fieldType = m["type"].String()
+				)
+				// in clickhouse , filed type like is Nullable(int)
+				fieldsResult, _ := gregex.MatchString(`^Nullable\((.*?)\)`, fieldType)
+				if len(fieldsResult) == 2 {
+					isNull = true
+					fieldType = fieldsResult[1]
+				}
+				fields[m["name"].String()] = &TableField{
+					Index:   m["position"].Int(),
+					Name:    m["name"].String(),
+					Default: m["default_expression"].Val(),
+					Comment: m["comment"].String(),
+					//Key:     m["Key"].String(),
+					Type: fieldType,
+					Null: isNull,
+				}
+			}
+			return fields
+		},
+	)
+	if v != nil {
+		fields = v.(map[string]*TableField)
+	}
+	return
 }
 
 func (d *DriverClickhouse) FilteredLink() string {
@@ -66,48 +144,98 @@ func (d *DriverClickhouse) FilteredLink() string {
 	return s
 }
 
-// TableFields
-func (d *DriverClickhouse) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {
-	link, err := d.SlaveLink(schema...)
-	if err != nil {
-		return nil, err
-	}
-	getColumnsSql := fmt.Sprintf("select position,name,type,comment from `system`.columns c where database = '%s' and `table` = '%s'", d.GetSchema(), table)
-	result, err := d.DoGetAll(ctx, link, getColumnsSql)
-	if err != nil {
-		return nil, err
-	}
-	fields = make(map[string]*TableField)
-	for _, m := range result {
-		fields[m["name"].String()] = &TableField{
-			Index:   m["position"].Int(),
-			Name:    m["name"].String(),
-			Type:    m["type"].String(),
-			Comment: m["comment"].String(),
-		}
-	}
-	return fields, nil
-}
-
 func (d *DriverClickhouse) DoInsert(ctx context.Context, link Link, table string, data List, option DoInsertOption) (result sql.Result, err error) {
 	return nil, nil
 }
 
 func (d *DriverClickhouse) DoUpdate(ctx context.Context, link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
-	return nil, nil
+	table = d.QuotePrefixTableName(table)
+	var (
+		rv   = reflect.ValueOf(data)
+		kind = rv.Kind()
+	)
+	if kind == reflect.Ptr {
+		rv = rv.Elem()
+		kind = rv.Kind()
+	}
+	var (
+		params  []interface{}
+		updates = ""
+	)
+	switch kind {
+	case reflect.Map, reflect.Struct:
+		var (
+			fields         []string
+			dataMap        = d.db.ConvertDataForRecord(ctx, data)
+			counterHandler = func(column string, counter Counter) {
+				if counter.Value != 0 {
+					column = d.QuoteWord(column)
+					var (
+						columnRef = d.QuoteWord(counter.Field)
+						columnVal = counter.Value
+						operator  = "+"
+					)
+					if columnVal < 0 {
+						operator = "-"
+						columnVal = -columnVal
+					}
+					fields = append(fields, fmt.Sprintf("%s=%s%s?", column, columnRef, operator))
+					params = append(params, columnVal)
+				}
+			}
+		)
+
+		for k, v := range dataMap {
+			switch value := v.(type) {
+			case *Counter:
+				counterHandler(k, *value)
+
+			case Counter:
+				counterHandler(k, value)
+
+			default:
+				if s, ok := v.(Raw); ok {
+					fields = append(fields, d.QuoteWord(k)+"="+gconv.String(s))
+				} else {
+					fields = append(fields, d.QuoteWord(k)+"=?")
+					params = append(params, v)
+				}
+			}
+		}
+		updates = strings.Join(fields, ",")
+
+	default:
+		updates = gconv.String(data)
+	}
+	if len(updates) == 0 {
+		return nil, gerror.NewCode(gcode.CodeMissingParameter, "data cannot be empty")
+	}
+	if len(params) > 0 {
+		args = append(params, args...)
+	}
+	// If no link passed, it then uses the master link.
+	if link == nil {
+		if link, err = d.MasterLink(); err != nil {
+			return nil, err
+		}
+	}
+	return d.db.DoExec(ctx, link, fmt.Sprintf("UPDATE %s SET %s%s", table, updates, condition), args...)
 }
 
 func (d *DriverClickhouse) DoDelete(ctx context.Context, link Link, table string, condition string, args ...interface{}) (result sql.Result, err error) {
-	return nil, nil
+	if link == nil {
+		if link, err = d.MasterLink(); err != nil {
+			return nil, err
+		}
+	}
+	table = d.QuotePrefixTableName(table)
+	return d.db.DoExec(ctx, link, fmt.Sprintf("ALTER TABLE DELETE FROM %s%s", table, condition), args...)
 }
 
 func (d *DriverClickhouse) DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error) {
 	return nil, nil
 }
 
-func (d *DriverClickhouse) DoExec(ctx context.Context, link Link, sql string, args ...interface{}) (result sql.Result, err error) {
-	return nil, nil
-}
 func (d *DriverClickhouse) DoFilter(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
 	return "", nil, nil
 }
