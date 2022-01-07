@@ -7,7 +7,6 @@
 package ghttp
 
 import (
-	"github.com/gogf/gf/v2/util/gconv"
 	"net/http"
 	"time"
 
@@ -20,6 +19,13 @@ type Cookie struct {
 	server   *Server                // Belonged HTTP server
 	request  *Request               // Belonged HTTP request.
 	response *Response              // Belonged HTTP response.
+}
+
+// CookieOptions provides security config for cookies
+type CookieOptions struct {
+	sameSite http.SameSite // cookie SameSite property
+	secure   bool          // cookie Secure property
+	httpOnly bool          // cookie HttpOnly property
 }
 
 // cookieItem is the item stored in Cookie.
@@ -89,10 +95,10 @@ func (c *Cookie) Set(key, value string) {
 		c.request.Server.GetCookieDomain(),
 		c.request.Server.GetCookiePath(),
 		c.request.Server.GetCookieMaxAge(),
-		map[string]interface{}{
-			"sameSite": c.request.Server.GetCookieSameSite(),
-			"secure":   c.request.Server.GetCookieSecure(),
-			"httpOnly": c.request.Server.GetCookieHttpOnly(),
+		CookieOptions{
+			sameSite: c.request.Server.GetCookieSameSite(),
+			secure:   c.request.Server.GetCookieSecure(),
+			httpOnly: c.request.Server.GetCookieHttpOnly(),
 		},
 	)
 }
@@ -100,25 +106,20 @@ func (c *Cookie) Set(key, value string) {
 // SetCookie sets cookie item with given domain, path and expiration age.
 // The optional parameter `httpOnly` specifies if the cookie item is only available in HTTP,
 // which is usually empty.
-func (c *Cookie) SetCookie(key, value, domain, path string, maxAge time.Duration, extra ...map[string]interface{}) {
+func (c *Cookie) SetCookie(key, value, domain, path string, maxAge time.Duration, options ...CookieOptions) {
 	c.init()
-	isHttpOnly := false
-	sameSite := http.SameSiteDefaultMode
-	secure := false
-	if len(extra) > 0 {
-		config := extra[0]
-		isHttpOnly = gconv.Bool(config["httpOnly"])
-		sameSite = http.SameSite(gconv.Int(config["sameSite"]))
-		secure = gconv.Bool(config["secure"])
+	config := CookieOptions{}
+	if len(options) > 0 {
+		config = options[0]
 	}
 	httpCookie := &http.Cookie{
 		Name:     key,
 		Value:    value,
 		Path:     path,
 		Domain:   domain,
-		HttpOnly: isHttpOnly,
-		SameSite: sameSite,
-		Secure:   secure,
+		HttpOnly: config.httpOnly,
+		SameSite: config.sameSite,
+		Secure:   config.secure,
 	}
 	if maxAge != 0 {
 		httpCookie.Expires = time.Now().Add(maxAge)
@@ -149,10 +150,10 @@ func (c *Cookie) SetSessionId(id string) {
 		c.request.Server.GetCookieDomain(),
 		c.request.Server.GetCookiePath(),
 		c.server.GetSessionCookieMaxAge(),
-		map[string]interface{}{
-			"sameSite": c.request.Server.GetCookieSameSite(),
-			"secure":   c.request.Server.GetCookieSecure(),
-			"httpOnly": c.request.Server.GetCookieHttpOnly(),
+		CookieOptions{
+			sameSite: c.request.Server.GetCookieSameSite(),
+			secure:   c.request.Server.GetCookieSecure(),
+			httpOnly: c.request.Server.GetCookieHttpOnly(),
 		},
 	)
 }
