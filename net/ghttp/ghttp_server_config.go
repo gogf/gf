@@ -147,7 +147,7 @@ type ServerConfig struct {
 
 	// CookieSameSite specifies cookie SameSite property.
 	// It also affects the default storage for session id.
-	CookieSameSite string `json:"sameSite"`
+	CookieSameSite string `json:"cookieSameSite"`
 
 	// CookieSameSite specifies cookie Secure property.
 	// It also affects the default storage for session id.
@@ -155,7 +155,7 @@ type ServerConfig struct {
 
 	// CookieSameSite specifies cookie HttpOnly property.
 	// It also affects the default storage for session id.
-	CookieHttpOnly bool `json:"CookieHttpOnly"`
+	CookieHttpOnly bool `json:"cookieHttpOnly"`
 
 	// ======================================================================================================
 	// Session.
