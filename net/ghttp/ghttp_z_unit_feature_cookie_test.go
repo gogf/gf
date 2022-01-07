@@ -132,7 +132,7 @@ func Test_CookieOptionsDefault(t *testing.T) {
 
 		parts := strings.Split(r1.Header.Get("Set-Cookie"), "; ")
 
-		t.AssertEQ(len(parts), 3)
+		t.AssertIN(len(parts), []int{3, 4}) // For go < 1.16 cookie always output "SameSite", see: https://github.com/golang/go/commit/542693e00529fbb4248fac614ece68b127a5ec4d
 	})
 }
 
