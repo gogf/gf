@@ -99,10 +99,13 @@ func (l *Logger) doRotateFile(ctx context.Context, filePath string) error {
 			intlog.Printf(ctx, `rotation file exists, continue: %s`, newFilePath)
 		}
 	}
+
 	intlog.Printf(ctx, "rotating file by size from %s to %s", filePath, newFilePath)
-	if err := gfile.Rename(filePath, newFilePath); err != nil {
+	if err := gfile.CopyFile(filePath, newFilePath); err != nil {
 		return err
 	}
+	gfile.Truncate(filePath, 0)
+
 	return nil
 }
 
