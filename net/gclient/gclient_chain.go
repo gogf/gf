@@ -56,7 +56,7 @@ func (c *Client) ContentType(contentType string) *Client {
 // Note that it also checks and encodes the parameter to JSON format automatically.
 func (c *Client) ContentJson() *Client {
 	newClient := c.Clone()
-	newClient.SetContentType("application/json")
+	newClient.SetContentType(httpHeaderContentTypeJson)
 	return newClient
 }
 
@@ -66,7 +66,7 @@ func (c *Client) ContentJson() *Client {
 // Note that it also checks and encodes the parameter to XML format automatically.
 func (c *Client) ContentXml() *Client {
 	newClient := c.Clone()
-	newClient.SetContentType("application/xml")
+	newClient.SetContentType(httpHeaderContentTypeXml)
 	return newClient
 }
 

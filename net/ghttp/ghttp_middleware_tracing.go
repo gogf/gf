@@ -73,7 +73,7 @@ func internalMiddlewareServerTracing(r *Request) {
 	// Inject tracing context.
 	r.SetCtx(ctx)
 
-	// If it is now using default trace provider, ot then does no complex tracing jobs.
+	// If it is now using default trace provider, it then does no complex tracing jobs.
 	if gtrace.IsUsingDefaultProvider() {
 		r.Middleware.Next()
 		return
