@@ -2,6 +2,8 @@ package gclient
 
 import (
 	"net/http"
+
+	"github.com/gogf/gf/v2/os/gctx"
 )
 
 // HandlerFunc middleware handler func
@@ -16,7 +18,7 @@ type clientMiddleware struct {
 	err          error         // save err.
 }
 
-const clientMiddlewareKey = "__clientMiddlewareKey"
+const clientMiddlewareKey gctx.StrKey = "__clientMiddlewareKey"
 
 // Use adds one or more middleware handlers to client.
 func (c *Client) Use(handlers ...HandlerFunc) *Client {

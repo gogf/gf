@@ -70,7 +70,7 @@ func internalMiddlewareTracing(c *Client, r *http.Request) (response *Response, 
 	// Inject tracing content into http header.
 	otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(r.Header))
 
-	// If it is now using default trace provider, ot then does no complex tracing jobs.
+	// If it is now using default trace provider, it then does no complex tracing jobs.
 	if gtrace.IsUsingDefaultProvider() {
 		response, err = c.Next(r)
 		return
