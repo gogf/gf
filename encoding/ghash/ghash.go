@@ -9,8 +9,10 @@ package ghash
 
 // BKDRHash implements the classic BKDR hash algorithm for 32 bits.
 func BKDRHash(str []byte) uint32 {
-	var seed uint32 = 131 // 31 131 1313 13131 131313 etc..
-	var hash uint32 = 0
+	var (
+		seed uint32 = 131 // 31 131 1313 13131 131313 etc..
+		hash uint32 = 0
+	)
 	for i := 0; i < len(str); i++ {
 		hash = hash*seed + uint32(str[i])
 	}
@@ -19,8 +21,10 @@ func BKDRHash(str []byte) uint32 {
 
 // BKDRHash64 implements the classic BKDR hash algorithm for 64 bits.
 func BKDRHash64(str []byte) uint64 {
-	var seed uint64 = 131 // 31 131 1313 13131 131313 etc..
-	var hash uint64 = 0
+	var (
+		seed uint64 = 131 // 31 131 1313 13131 131313 etc..
+		hash uint64 = 0
+	)
 	for i := 0; i < len(str); i++ {
 		hash = hash*seed + uint64(str[i])
 	}
@@ -49,9 +53,11 @@ func SDBMHash64(str []byte) uint64 {
 
 // RSHash implements the classic RS hash algorithm for 32 bits.
 func RSHash(str []byte) uint32 {
-	var b uint32 = 378551
-	var a uint32 = 63689
-	var hash uint32 = 0
+	var (
+		b    uint32 = 378551
+		a    uint32 = 63689
+		hash uint32 = 0
+	)
 	for i := 0; i < len(str); i++ {
 		hash = hash*a + uint32(str[i])
 		a *= b
@@ -61,9 +67,11 @@ func RSHash(str []byte) uint32 {
 
 // RSHash64 implements the classic RS hash algorithm for 64 bits.
 func RSHash64(str []byte) uint64 {
-	var b uint64 = 378551
-	var a uint64 = 63689
-	var hash uint64 = 0
+	var (
+		b    uint64 = 378551
+		a    uint64 = 63689
+		hash uint64 = 0
+	)
 	for i := 0; i < len(str); i++ {
 		hash = hash*a + uint64(str[i])
 		a *= b
@@ -91,12 +99,14 @@ func JSHash64(str []byte) uint64 {
 
 // PJWHash implements the classic PJW hash algorithm for 32 bits.
 func PJWHash(str []byte) uint32 {
-	var BitsInUnignedInt uint32 = 4 * 8
-	var ThreeQuarters uint32 = (BitsInUnignedInt * 3) / 4
-	var OneEighth uint32 = BitsInUnignedInt / 8
-	var HighBits uint32 = (0xFFFFFFFF) << (BitsInUnignedInt - OneEighth)
-	var hash uint32 = 0
-	var test uint32 = 0
+	var (
+		BitsInUnsignedInt uint32 = 4 * 8
+		ThreeQuarters     uint32 = (BitsInUnsignedInt * 3) / 4
+		OneEighth         uint32 = BitsInUnsignedInt / 8
+		HighBits          uint32 = (0xFFFFFFFF) << (BitsInUnsignedInt - OneEighth)
+		hash              uint32 = 0
+		test              uint32 = 0
+	)
 	for i := 0; i < len(str); i++ {
 		hash = (hash << OneEighth) + uint32(str[i])
 		if test = hash & HighBits; test != 0 {
@@ -108,12 +118,14 @@ func PJWHash(str []byte) uint32 {
 
 // PJWHash64 implements the classic PJW hash algorithm for 64 bits.
 func PJWHash64(str []byte) uint64 {
-	var BitsInUnignedInt uint64 = 4 * 8
-	var ThreeQuarters uint64 = (BitsInUnignedInt * 3) / 4
-	var OneEighth uint64 = BitsInUnignedInt / 8
-	var HighBits uint64 = (0xFFFFFFFFFFFFFFFF) << (BitsInUnignedInt - OneEighth)
-	var hash uint64 = 0
-	var test uint64 = 0
+	var (
+		BitsInUnsignedInt uint64 = 4 * 8
+		ThreeQuarters     uint64 = (BitsInUnsignedInt * 3) / 4
+		OneEighth         uint64 = BitsInUnsignedInt / 8
+		HighBits          uint64 = (0xFFFFFFFFFFFFFFFF) << (BitsInUnsignedInt - OneEighth)
+		hash              uint64 = 0
+		test              uint64 = 0
+	)
 	for i := 0; i < len(str); i++ {
 		hash = (hash << OneEighth) + uint64(str[i])
 		if test = hash & HighBits; test != 0 {
@@ -139,8 +151,10 @@ func ELFHash(str []byte) uint32 {
 
 // ELFHash64 implements the classic ELF hash algorithm for 64 bits.
 func ELFHash64(str []byte) uint64 {
-	var hash uint64 = 0
-	var x uint64 = 0
+	var (
+		hash uint64 = 0
+		x    uint64 = 0
+	)
 	for i := 0; i < len(str); i++ {
 		hash = (hash << 4) + uint64(str[i])
 		if x = hash & 0xF000000000000000; x != 0 {
