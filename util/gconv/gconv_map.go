@@ -323,7 +323,20 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 						array[i] = doMapConvertForMapOrStructValue(false, rvAttrField.Index(i), recursive, tags...)
 					}
 					dataMap[mapKey] = array
-
+				case reflect.Map:
+					var (
+						mapKeys   = rvAttrField.MapKeys()
+						nestedMap = make(map[string]interface{})
+					)
+					for _, k := range mapKeys {
+						nestedMap[String(k.Interface())] = doMapConvertForMapOrStructValue(
+							false,
+							rvAttrField.MapIndex(k).Interface(),
+							recursive,
+							tags...,
+						)
+					}
+					dataMap[mapKey] = nestedMap
 				default:
 					if rvField.IsValid() {
 						dataMap[mapKey] = reflectValue.Field(i).Interface()
