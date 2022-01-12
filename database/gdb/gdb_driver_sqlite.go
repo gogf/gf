@@ -39,8 +39,8 @@ func (d *DriverSqlite) New(core *Core, node *ConfigNode) (DB, error) {
 // Open creates and returns a underlying sql.DB object for sqlite.
 func (d *DriverSqlite) Open(config *ConfigNode) (db *sql.DB, err error) {
 	var (
-		source string
-		driver = "sqlite3"
+		source               string
+		underlyingDriverName = "sqlite3"
 	)
 	if config.Link != "" {
 		source = config.Link
@@ -52,10 +52,10 @@ func (d *DriverSqlite) Open(config *ConfigNode) (db *sql.DB, err error) {
 		source = absolutePath
 	}
 	intlog.Printf(d.GetCtx(), "Open: %s", source)
-	if db, err = sql.Open(driver, source); err != nil {
+	if db, err = sql.Open(underlyingDriverName, source); err != nil {
 		err = gerror.WrapCodef(
 			gcode.CodeDbOperationError, err,
-			`sql.Open failed for driver "%s" by source "%s"`, driver, source,
+			`sql.Open failed for driver "%s" by source "%s"`, underlyingDriverName, source,
 		)
 		return nil, err
 	}

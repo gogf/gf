@@ -41,8 +41,8 @@ func (d *DriverMssql) New(core *Core, node *ConfigNode) (DB, error) {
 // Open creates and returns an underlying sql.DB object for mssql.
 func (d *DriverMssql) Open(config *ConfigNode) (db *sql.DB, err error) {
 	var (
-		source string
-		driver = "sqlserver"
+		source               string
+		underlyingDriverName = "sqlserver"
 	)
 	if config.Link != "" {
 		source = config.Link
@@ -53,10 +53,10 @@ func (d *DriverMssql) Open(config *ConfigNode) (db *sql.DB, err error) {
 		)
 	}
 	intlog.Printf(d.GetCtx(), "Open: %s", source)
-	if db, err = sql.Open(driver, source); err != nil {
+	if db, err = sql.Open(underlyingDriverName, source); err != nil {
 		err = gerror.WrapCodef(
 			gcode.CodeDbOperationError, err,
-			`sql.Open failed for driver "%s" by source "%s"`, driver, source,
+			`sql.Open failed for driver "%s" by source "%s"`, underlyingDriverName, source,
 		)
 		return nil, err
 	}
