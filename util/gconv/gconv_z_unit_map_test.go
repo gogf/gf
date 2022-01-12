@@ -7,7 +7,9 @@
 package gconv_test
 
 import (
+	"encoding/json"
 	"github.com/gogf/gf/v2/util/gutil"
+	"gopkg.in/yaml.v3"
 	"testing"
 
 	"github.com/gogf/gf/v2/frame/g"
@@ -405,5 +407,72 @@ func Test_MapDeepWithAttributeTag(t *testing.T) {
 		t.Assert(m["base"].(map[string]interface{})["ids"].(map[string]interface{})["id"], user.Id)
 		t.Assert(m["nickname"], user.Nickname)
 		t.Assert(m["base"].(map[string]interface{})["create_time"], user.CreateTime)
+	})
+}
+
+func Test_MapDeepWithNestedMapAnyAny(t *testing.T) {
+	type User struct {
+		ExtraAttributes g.Map `c:"extra_attributes"`
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		user := &User{
+			ExtraAttributes: g.Map{
+				"simple_attribute": 123,
+				"map_string_attribute": g.Map{
+					"inner_value": 456,
+				},
+				"map_interface_attribute": g.MapAnyAny{
+					"inner_value": 456,
+					123:           "integer_key_should_be_converted_to_string",
+				},
+			},
+		}
+		m := gconv.MapDeep(user)
+		t.Assert(m, g.Map{
+			"extra_attributes": g.Map{
+				"simple_attribute": 123,
+				"map_string_attribute": g.Map{
+					"inner_value": user.ExtraAttributes["map_string_attribute"].(g.Map)["inner_value"],
+				},
+				"map_interface_attribute": g.Map{
+					"inner_value": user.ExtraAttributes["map_interface_attribute"].(g.MapAnyAny)["inner_value"],
+					"123":         "integer_key_should_be_converted_to_string",
+				},
+			},
+		})
+	})
+
+	type Outer struct {
+		OuterStruct map[string]interface{} `c:"outer_struct" yaml:"outer_struct"`
+		Field3      map[string]interface{} `c:"field3" yaml:"field3"`
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		problemYaml := []byte(`
+outer_struct:
+  field1: &anchor1
+    inner1: 123
+    inner2: 345
+  field2: 
+    inner3: 456
+    inner4: 789
+    <<: *anchor1
+field3:
+  123: integer_key
+`)
+		parsed := &Outer{}
+
+		err := yaml.Unmarshal(problemYaml, parsed)
+		t.Assert(err, nil)
+
+		_, err = json.Marshal(parsed)
+		t.Assert(err.Error(), "json: unsupported type: map[interface {}]interface {}")
+
+		converted := gconv.MapDeep(parsed)
+		jsonData, err := json.Marshal(converted)
+		t.Assert(err, nil)
+
+		t.Assert(string(jsonData), `{"field3":{"123":"integer_key"},"outer_struct":{"field1":{"inner1":123,"inner2":345},"field2":{"inner1":123,"inner2":345,"inner3":456,"inner4":789}}}`)
 	})
 }
