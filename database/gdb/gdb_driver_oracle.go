@@ -41,11 +41,11 @@ func (d *DriverOracle) New(core *Core, node *ConfigNode) (DB, error) {
 	}, nil
 }
 
-// Open creates and returns a underlying sql.DB object for oracle.
+// Open creates and returns an underlying sql.DB object for oracle.
 func (d *DriverOracle) Open(config *ConfigNode) (db *sql.DB, err error) {
 	var (
-		source string
-		driver = "oci8"
+		source               string
+		underlyingDriverName = "oci8"
 	)
 	if config.Link != "" {
 		source = config.Link
@@ -56,10 +56,10 @@ func (d *DriverOracle) Open(config *ConfigNode) (db *sql.DB, err error) {
 		)
 	}
 	intlog.Printf(d.GetCtx(), "Open: %s", source)
-	if db, err = sql.Open(driver, source); err != nil {
+	if db, err = sql.Open(underlyingDriverName, source); err != nil {
 		err = gerror.WrapCodef(
 			gcode.CodeDbOperationError, err,
-			`sql.Open failed for driver "%s" by source "%s"`, driver, source,
+			`sql.Open failed for driver "%s" by source "%s"`, underlyingDriverName, source,
 		)
 		return nil, err
 	}

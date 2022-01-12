@@ -42,7 +42,7 @@ func (s *Schema) Model(table string) *Model {
 	}
 	// Do not change the schema of the original db,
 	// it here creates a new db and changes its schema.
-	db, err := New(m.db.GetGroup())
+	db, err := NewByGroup(m.db.GetGroup())
 	if err != nil {
 		panic(err)
 	}

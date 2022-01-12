@@ -51,7 +51,7 @@ func init() {
 	}
 	AddConfigNode(DefaultGroupName, configNode)
 	// Default db.
-	if r, err := New(); err != nil {
+	if r, err := NewByGroup(); err != nil {
 		gtest.Error(err)
 	} else {
 		db = r
