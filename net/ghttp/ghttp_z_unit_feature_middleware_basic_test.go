@@ -709,6 +709,6 @@ func Test_Middleware_Panic(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent(ctx, "/"), "error")
+		t.Assert(client.GetContent(ctx, "/"), "exception recovered: error")
 	})
 }
