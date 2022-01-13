@@ -487,15 +487,17 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 			if len(v) == 0 {
 				continue
 			}
-			fd := 0
-			itemFunc := v
-			array := strings.Split(v, "#")
-			if len(array) > 1 {
-				itemFunc = array[0]
+			var (
+				fd        = 0
+				itemFunc  = v
+				addrAndFd = strings.Split(v, "#")
+			)
+			if len(addrAndFd) > 1 {
+				itemFunc = addrAndFd[0]
 				// The Windows OS does not support socket file descriptor passing
 				// from parent process.
 				if runtime.GOOS != "windows" {
-					fd = gconv.Int(array[1])
+					fd = gconv.Int(addrAndFd[1])
 				}
 			}
 			if fd > 0 {
@@ -520,15 +522,17 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 		if len(v) == 0 {
 			continue
 		}
-		fd := 0
-		itemFunc := v
-		array := strings.Split(v, "#")
-		if len(array) > 1 {
-			itemFunc = array[0]
+		var (
+			fd        = 0
+			itemFunc  = v
+			addrAndFd = strings.Split(v, "#")
+		)
+		if len(addrAndFd) > 1 {
+			itemFunc = addrAndFd[0]
 			// The Windows OS does not support socket file descriptor passing
 			// from parent process.
 			if runtime.GOOS != "windows" {
-				fd = gconv.Int(array[1])
+				fd = gconv.Int(addrAndFd[1])
 			}
 		}
 		if fd > 0 {
@@ -542,7 +546,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 	for _, v := range s.servers {
 		go func(server *gracefulServer) {
 			s.serverCount.Add(1)
-			err := (error)(nil)
+			var err error
 			if server.isHttps {
 				err = server.ListenAndServeTLS(s.config.HTTPSCertPath, s.config.HTTPSKeyPath, s.config.TLSConfig)
 			} else {
@@ -552,7 +556,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 			if err != nil && !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
 				s.Logger().Fatalf(ctx, `%+v`, err)
 			}
-			// If all the underlying servers shutdown, the process exits.
+			// If all the underlying servers' shutdown, the process exits.
 			if s.serverCount.Add(-1) < 1 {
 				s.closeChan <- struct{}{}
 				if serverRunning.Add(-1) < 1 {
