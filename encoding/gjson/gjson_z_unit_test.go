@@ -7,6 +7,7 @@
 package gjson_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -513,5 +514,25 @@ func TestJson_Set_With_Struct(t *testing.T) {
 		t.AssertNil(user1.Set("id", 111))
 		t.AssertNil(v.Set("user1", user1))
 		t.Assert(v.Get("user1.id"), 111)
+	})
+}
+
+func TestJson_Options(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type S struct {
+			Id int64
+		}
+		s := S{
+			Id: 53687091200,
+		}
+		m := make(map[string]interface{})
+		t.AssertNil(gjson.DecodeTo(gjson.MustEncode(s), &m, gjson.Options{
+			StrNumber: false,
+		}))
+		t.Assert(fmt.Sprintf(`%v`, m["Id"]), `5.36870912e+10`)
+		t.AssertNil(gjson.DecodeTo(gjson.MustEncode(s), &m, gjson.Options{
+			StrNumber: true,
+		}))
+		t.Assert(fmt.Sprintf(`%v`, m["Id"]), `53687091200`)
 	})
 }
