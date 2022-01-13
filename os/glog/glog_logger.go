@@ -275,14 +275,22 @@ func (l *Logger) printToWriter(ctx context.Context, input *HandlerInput) *bytes.
 func (l *Logger) printToStdout(ctx context.Context, input *HandlerInput) *bytes.Buffer {
 	if l.config.StdoutPrint {
 		var (
+			err    error
 			buffer = input.getRealBuffer(true)
 		)
-		// This will lose color in Windows os system.
-		// if _, err := os.Stdout.Write(input.getRealBuffer(true).Bytes()); err != nil {
+		if l.config.StdoutColorDisabled {
+			// Output to stdout without color.
+			if _, err = os.Stdout.Write(buffer.Bytes()); err != nil {
+				intlog.Error(ctx, err)
+			}
+		} else {
+			// This will lose color in Windows os system.
+			// if _, err := os.Stdout.Write(input.getRealBuffer(true).Bytes()); err != nil {
 
-		// This will print color in Windows os system.
-		if _, err := fmt.Fprint(color.Output, buffer.String()); err != nil {
-			intlog.Error(ctx, err)
+			// This will print color in Windows os system.
+			if _, err = fmt.Fprint(color.Output, buffer.String()); err != nil {
+				intlog.Error(ctx, err)
+			}
 		}
 		return buffer
 	}
