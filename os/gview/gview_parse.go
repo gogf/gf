@@ -181,7 +181,7 @@ func (view *View) ParseContent(ctx context.Context, content string, params ...Pa
 		})
 	)
 	// Using memory lock to ensure concurrent safety for content parsing.
-	hash := strconv.FormatUint(ghash.DJBHash64([]byte(content)), 10)
+	hash := strconv.FormatUint(ghash.DJB64([]byte(content)), 10)
 	gmlock.LockFunc("gview.ParseContent:"+hash, func() {
 		if view.config.AutoEncode {
 			tpl, err = tpl.(*htmltpl.Template).Parse(content)
