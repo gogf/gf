@@ -24,7 +24,7 @@ func Test_BKDR(t *testing.T) {
 		t.Assert(j, x)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		x := 4214762819217104013
+		x := uint64(4214762819217104013)
 		j := ghash.BKDR64(strBasic)
 		t.Assert(j, x)
 	})
