@@ -11,20 +11,36 @@ import (
 	"testing"
 
 	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_New(t *testing.T) {
-	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
+	// New with json map.
 	gtest.C(t, func(t *gtest.T) {
+		data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 		j := gjson.New(data)
 		t.Assert(j.Get("n").String(), "123456789")
 		t.Assert(j.Get("m").Map(), g.Map{"k": "v"})
 		t.Assert(j.Get("a").Array(), g.Slice{1, 2, 3})
 	})
-
+	// New with json array map.
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(`[{"a":1},{"b":2},{"c":3}]`)
+		t.Assert(j.Get(".").String(), `[{"a":1},{"b":2},{"c":3}]`)
+		t.Assert(j.Get("2.c").String(), `3`)
+	})
+	// New with gvar.
+	// https://github.com/gogf/gf/issues/1571
+	gtest.C(t, func(t *gtest.T) {
+		v := gvar.New(`[{"a":1},{"b":2},{"c":3}]`)
+		j := gjson.New(v)
+		t.Assert(j.Get(".").String(), `[{"a":1},{"b":2},{"c":3}]`)
+		t.Assert(j.Get("2.c").String(), `3`)
+	})
+	// New with gmap.
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewAnyAnyMapFrom(g.MapAnyAny{
 			"k1": "v1",
