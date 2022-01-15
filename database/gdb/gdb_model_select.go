@@ -321,12 +321,18 @@ func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 //
 // See Result.ScanList.
 func (m *Model) ScanList(structSlicePointer interface{}, bindToAttrName string, relationAttrNameAndFields ...string) (err error) {
+	var result Result
 	out, err := checkGetSliceElementInfoForScanList(structSlicePointer, bindToAttrName)
 	if err != nil {
 		return err
 	}
-	// Filter fields using temporary created struct using reflect.New.
-	result, err := m.Fields(reflect.New(out.BindToAttrType).Interface()).All()
+	if m.fields != defaultFields || m.fieldsEx != "" {
+		// There are custom fields.
+		result, err = m.All()
+	} else {
+		// Filter fields using temporary created struct using reflect.New.
+		result, err = m.Fields(reflect.New(out.BindToAttrType).Interface()).All()
+	}
 	if err != nil {
 		return err
 	}
