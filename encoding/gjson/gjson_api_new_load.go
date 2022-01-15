@@ -67,21 +67,27 @@ func NewWithOptions(data interface{}, options Options) *Json {
 			}
 		}
 	default:
-		var (
-			reflectInfo = utils.OriginValueAndKind(data)
-		)
+		var reflectInfo = utils.OriginValueAndKind(data)
 		switch reflectInfo.OriginKind {
 		case reflect.Slice, reflect.Array:
-			i := interface{}(nil)
-			i = gconv.Interfaces(data)
+			var i interface{} = gconv.Interfaces(data)
 			j = &Json{
 				p:  &i,
 				c:  byte(defaultSplitChar),
 				vc: false,
 			}
-		case reflect.Map, reflect.Struct:
-			i := interface{}(nil)
-			i = gconv.MapDeep(data, options.Tags)
+		case reflect.Map:
+			var i interface{} = gconv.MapDeep(data, options.Tags)
+			j = &Json{
+				p:  &i,
+				c:  byte(defaultSplitChar),
+				vc: false,
+			}
+		case reflect.Struct:
+			if v, ok := data.(iVal); ok {
+				return NewWithOptions(v.Val(), options)
+			}
+			var i interface{} = gconv.MapDeep(data, options.Tags)
 			j = &Json{
 				p:  &i,
 				c:  byte(defaultSplitChar),

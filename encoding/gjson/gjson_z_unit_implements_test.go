@@ -28,6 +28,17 @@ func TestJson_UnmarshalJSON(t *testing.T) {
 		t.Assert(j.Get(".").String(), `["a","b","c"]`)
 		t.Assert(j.Get("2").String(), `c`)
 	})
+	// Json Array Map
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			data = []byte(`[{"a":1}, {"b":2}, {"c":3}]`)
+			j    = gjson.New(nil)
+			err  = json.UnmarshalUseNumber(data, j)
+		)
+		t.Assert(err, nil)
+		t.Assert(j.Get(".").String(), `[{"a":1},{"b":2},{"c":3}]`)
+		t.Assert(j.Get("2.c").String(), `3`)
+	})
 	// Json Map
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -76,6 +87,18 @@ func TestJson_UnmarshalValue(t *testing.T) {
 		t.Assert(v.Name, "john")
 		t.Assert(v.Json.Get(".").String(), `["a","b","c"]`)
 		t.Assert(v.Json.Get("2").String(), `c`)
+	})
+	// Json Array Map.
+	gtest.C(t, func(t *gtest.T) {
+		var v *V
+		err := gconv.Struct(g.Map{
+			"name": "john",
+			"json": `[{"a":1},{"b":2},{"c":3}]`,
+		}, &v)
+		t.Assert(err, nil)
+		t.Assert(v.Name, "john")
+		t.Assert(v.Json.Get(".").String(), `[{"a":1},{"b":2},{"c":3}]`)
+		t.Assert(v.Json.Get("2.c").String(), `3`)
 	})
 	// Map
 	gtest.C(t, func(t *gtest.T) {

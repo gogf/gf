@@ -50,6 +50,11 @@ type iMapStrAny interface {
 	MapStrAny() map[string]interface{}
 }
 
+// iVal is the interface for underlying interface{} retrieving.
+type iVal interface {
+	Val() interface{}
+}
+
 // setValue sets `value` to `j` by `pattern`.
 // Note:
 // 1. If value is nil and removed is true, means deleting this value;
