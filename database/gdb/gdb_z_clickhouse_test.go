@@ -29,7 +29,7 @@ func InitClickhouse() (DB, error) {
 		DryRun: false,
 	}
 	AddDefaultConfigNode(config)
-	return New()
+	return New(config)
 }
 
 func TestDriverClickhouse_New(t *testing.T) {
