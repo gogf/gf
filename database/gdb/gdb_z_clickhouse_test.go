@@ -24,7 +24,7 @@ func InitClickhouse() (DB, error) {
 	return New(ConfigNode{
 		Host:   "127.0.0.1",
 		Port:   "9000",
-		Name:   "clickhouse",
+		Name:   "default",
 		Type:   "clickhouse",
 		User:   "default",
 		Debug:  true,
