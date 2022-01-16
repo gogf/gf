@@ -40,6 +40,8 @@ jobs:
         go: ["1.15", "1.16", "1.17"]
 
     steps:
+    - name: Init clickhouse-server
+      uses: EpicStep/clickhouse-github-action@v1.0.0
     - name: Set Up Timezone
       uses: szenius/set-timezone@v1.0
       with:
