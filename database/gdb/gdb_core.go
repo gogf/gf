@@ -97,6 +97,9 @@ func (c *Core) GetCtxTimeout(timeoutType int, ctx context.Context) (context.Cont
 // It is rare to Close a DB, as the DB handle is meant to be
 // long-lived and shared between many goroutines.
 func (c *Core) Close(ctx context.Context) (err error) {
+	if err = c.cache.Close(ctx); err != nil {
+		return err
+	}
 	c.links.LockFunc(func(m map[string]interface{}) {
 		for k, v := range m {
 			if db, ok := v.(*sql.DB); ok {

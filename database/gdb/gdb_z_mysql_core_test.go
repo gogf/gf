@@ -22,6 +22,24 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
+func Test_New(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		node := gdb.ConfigNode{
+			Host: "127.0.0.1",
+			Port: "3306",
+			User: TestDbUser,
+			Pass: TestDbPass,
+			Type: gdb.DriverNameMysql,
+		}
+		newDb, err := gdb.New(node)
+		t.AssertNil(err)
+		value, err := newDb.GetValue(ctx, `select 1`)
+		t.AssertNil(err)
+		t.Assert(value, `1`)
+		t.AssertNil(newDb.Close(ctx))
+	})
+}
+
 func Test_DB_Ping(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err1 := db.PingMaster()

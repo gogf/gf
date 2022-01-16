@@ -306,18 +306,27 @@ const (
 	SqlTypeStmtQueryRowContext = "DB.Statement.QueryRowContext"
 )
 
+const (
+	DriverNameMysql      = `mysql`
+	DriverNameMssql      = `mssql`
+	DriverNamePgsql      = `pgsql`
+	DriverNameOracle     = `oracle`
+	DriverNameSqlite     = `sqlite`
+	DriverNameClickhouse = `clickhouse`
+)
+
 var (
 	// instances is the management map for instances.
 	instances = gmap.NewStrAnyMap(true)
 
 	// driverMap manages all custom registered driver.
 	driverMap = map[string]Driver{
-		"mysql":      &DriverMysql{},
-		"mssql":      &DriverMssql{},
-		"pgsql":      &DriverPgsql{},
-		"oracle":     &DriverOracle{},
-		"sqlite":     &DriverSqlite{},
-		"clickhouse": &DriverClickhouse{},
+		DriverNameMysql:      &DriverMysql{},
+		DriverNameMssql:      &DriverMssql{},
+		DriverNamePgsql:      &DriverPgsql{},
+		DriverNameOracle:     &DriverOracle{},
+		DriverNameSqlite:     &DriverSqlite{},
+		DriverNameClickhouse: &DriverClickhouse{},
 	}
 
 	// lastOperatorRegPattern is the regular expression pattern for a string
@@ -352,10 +361,15 @@ func Register(name string, driver Driver) error {
 	return nil
 }
 
-// New creates and returns an ORM object with global configurations.
+// New creates and returns an ORM object with given configuration node.
+func New(node ConfigNode) (db DB, err error) {
+	return doNewByNode(node, "")
+}
+
+// NewByGroup creates and returns an ORM object with global configurations.
 // The parameter `name` specifies the configuration group name,
 // which is DefaultGroupName in default.
-func New(group ...string) (db DB, err error) {
+func NewByGroup(group ...string) (db DB, err error) {
 	groupName := configs.group
 	if len(group) > 0 && group[0] != "" {
 		groupName = group[0]
@@ -370,29 +384,9 @@ func New(group ...string) (db DB, err error) {
 		)
 	}
 	if _, ok := configs.config[groupName]; ok {
-		if node, err := getConfigNodeByGroup(groupName, true); err == nil {
-			c := &Core{
-				group:  groupName,
-				debug:  gtype.NewBool(),
-				cache:  gcache.New(),
-				links:  gmap.NewStrAnyMap(true),
-				schema: gtype.NewString(),
-				logger: glog.New(),
-				config: node,
-			}
-			if v, ok := driverMap[node.Type]; ok {
-				c.db, err = v.New(c, node)
-				if err != nil {
-					return nil, err
-				}
-				return c.db, nil
-			} else {
-				return nil, gerror.NewCodef(
-					gcode.CodeInvalidConfiguration,
-					`cannot find database driver for specified database type "%s", did you misspell type name "%s" or forget importing the database driver?`,
-					node.Type, node.Type,
-				)
-			}
+		var node *ConfigNode
+		if node, err = getConfigNodeByGroup(groupName, true); err == nil {
+			return doNewByNode(*node, groupName)
 		} else {
 			return nil, err
 		}
@@ -405,6 +399,31 @@ func New(group ...string) (db DB, err error) {
 	}
 }
 
+// doNewByNode creates and returns an ORM object with given configuration node and group name.
+func doNewByNode(node ConfigNode, group string) (db DB, err error) {
+	c := &Core{
+		group:  group,
+		debug:  gtype.NewBool(),
+		cache:  gcache.New(),
+		links:  gmap.NewStrAnyMap(true),
+		schema: gtype.NewString(),
+		logger: glog.New(),
+		config: &node,
+	}
+	if v, ok := driverMap[node.Type]; ok {
+		c.db, err = v.New(c, &node)
+		if err != nil {
+			return nil, err
+		}
+		return c.db, nil
+	}
+	return nil, gerror.NewCodef(
+		gcode.CodeInvalidConfiguration,
+		`cannot find database driver for specified database type "%s", did you misspell type name "%s" or forget importing the database driver?`,
+		node.Type, node.Type,
+	)
+}
+
 // Instance returns an instance for DB operations.
 // The parameter `name` specifies the configuration group name,
 // which is DefaultGroupName in default.
@@ -414,7 +433,7 @@ func Instance(name ...string) (db DB, err error) {
 		group = name[0]
 	}
 	v := instances.GetOrSetFuncLock(group, func() interface{} {
-		db, err = New(group)
+		db, err = NewByGroup(group)
 		return db
 	})
 	if v != nil {
@@ -503,14 +522,19 @@ func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 	return nil
 }
 
-// getSqlDb retrieves and returns a underlying database connection object.
+// getSqlDb retrieves and returns an underlying database connection object.
 // The parameter `master` specifies whether retrieves master node connection if
 // master-slave nodes are configured.
 func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error) {
 	// Load balance.
-	node, err := getConfigNodeByGroup(c.group, master)
-	if err != nil {
-		return nil, err
+	var node *ConfigNode
+	if c.group != "" {
+		node, err = getConfigNodeByGroup(c.group, master)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		node = c.config
 	}
 	// Default value checks.
 	if node.Charset == "" {

@@ -45,7 +45,7 @@ func Test_Log(t *testing.T) {
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent(ctx, "/hello"), "hello")
-		t.Assert(client.GetContent(ctx, "/error"), "custom error")
+		t.Assert(client.GetContent(ctx, "/error"), "exception recovered: custom error")
 
 		var (
 			logPath1 = gfile.Join(logDir, gtime.Now().Format("Y-m-d")+".log")

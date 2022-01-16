@@ -41,8 +41,8 @@ func (d *DriverPgsql) New(core *Core, node *ConfigNode) (DB, error) {
 // Open creates and returns an underlying sql.DB object for pgsql.
 func (d *DriverPgsql) Open(config *ConfigNode) (db *sql.DB, err error) {
 	var (
-		source string
-		driver = "postgres"
+		source               string
+		underlyingDriverName = "postgres"
 	)
 	if config.Link != "" {
 		source = config.Link
@@ -56,10 +56,10 @@ func (d *DriverPgsql) Open(config *ConfigNode) (db *sql.DB, err error) {
 		}
 	}
 	intlog.Printf(d.GetCtx(), "Open: %s", source)
-	if db, err = sql.Open(driver, source); err != nil {
+	if db, err = sql.Open(underlyingDriverName, source); err != nil {
 		err = gerror.WrapCodef(
 			gcode.CodeDbOperationError, err,
-			`sql.Open failed for driver "%s" by source "%s"`, driver, source,
+			`sql.Open failed for driver "%s" by source "%s"`, underlyingDriverName, source,
 		)
 		return nil, err
 	}
@@ -158,7 +158,7 @@ FROM pg_attribute a
          left join pg_description b ON a.attrelid=b.objoid AND a.attnum = b.objsubid
          left join  pg_type t ON  a.atttypid = t.oid
          left join information_schema.columns ic on ic.column_name = a.attname and ic.table_name = c.relname
-WHERE c.relname = '%s' and a.attnum > 0
+WHERE c.relname = '%s' and a.attisdropped is false and a.attnum > 0
 ORDER BY a.attnum`,
 					strings.ToLower(table),
 				)

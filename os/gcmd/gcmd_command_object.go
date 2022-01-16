@@ -245,17 +245,6 @@ func newCommandFromMethod(object interface{}, method reflect.Value) (command *Co
 	// =============================================================================================
 	command.FuncWithValue = func(ctx context.Context, parser *Parser) (out interface{}, err error) {
 		ctx = context.WithValue(ctx, CtxKeyParser, parser)
-
-		defer func() {
-			if exception := recover(); exception != nil {
-				if v, ok := exception.(error); ok && gerror.HasStack(v) {
-					err = v
-				} else {
-					err = gerror.New(`exception recovered:` + gconv.String(exception))
-				}
-			}
-		}()
-
 		var (
 			data        = gconv.Map(parser.GetOptAll())
 			argIndex    = 0

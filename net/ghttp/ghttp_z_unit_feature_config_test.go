@@ -91,7 +91,7 @@ func Test_ClientMaxBodySize(t *testing.T) {
 		}
 		t.Assert(
 			gstr.Trim(c.PostContent(ctx, "/", data)),
-			data[:1024],
+			`ReadAll from body failed: http: request body too large`,
 		)
 	})
 }
