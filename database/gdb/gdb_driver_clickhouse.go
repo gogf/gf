@@ -9,6 +9,7 @@ package gdb
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/ClickHouse/clickhouse-go"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -144,10 +145,6 @@ func (d *DriverClickhouse) FilteredLink() string {
 	return s
 }
 
-func (d *DriverClickhouse) DoInsert(ctx context.Context, link Link, table string, data List, option DoInsertOption) (result sql.Result, err error) {
-	return nil, nil
-}
-
 func (d *DriverClickhouse) DoUpdate(ctx context.Context, link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
 	table = d.QuotePrefixTableName(table)
 	var (
@@ -219,7 +216,9 @@ func (d *DriverClickhouse) DoUpdate(ctx context.Context, link Link, table string
 			return nil, err
 		}
 	}
-	return d.db.DoExec(ctx, link, fmt.Sprintf("UPDATE %s SET %s%s", table, updates, condition), args...)
+	// in clickhouse ,use update must use alter
+	// ALTER TABLE [db.]table UPDATE column1 = expr1 [, ...] WHERE filter_expr
+	return d.db.DoExec(ctx, link, fmt.Sprintf("ALTER TABLE %s UPDATE %s%s", table, updates, condition), args...)
 }
 
 func (d *DriverClickhouse) DoDelete(ctx context.Context, link Link, table string, condition string, args ...interface{}) (result sql.Result, err error) {
@@ -229,21 +228,15 @@ func (d *DriverClickhouse) DoDelete(ctx context.Context, link Link, table string
 		}
 	}
 	table = d.QuotePrefixTableName(table)
-	return d.db.DoExec(ctx, link, fmt.Sprintf("ALTER TABLE DELETE FROM %s%s", table, condition), args...)
+	// in clickhouse , delete must use alter
+	// ALTER TABLE [db.]table DELETE WHERE filter_expr
+	return d.db.DoExec(ctx, link, fmt.Sprintf("ALTER TABLE %s DELETE FROM %s", table, condition), args...)
 }
 
-func (d *DriverClickhouse) DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error) {
-	return nil, nil
+func (d *DriverClickhouse) Transaction(ctx context.Context, f func(ctx context.Context, tx *TX) error) error {
+	return errors.New("transaction operations are not supported")
 }
 
-func (d *DriverClickhouse) DoFilter(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
-	return "", nil, nil
-}
-
-func (d *DriverClickhouse) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutput, err error) {
-	return DoCommitOutput{}, nil
-}
-
-func (d *DriverClickhouse) DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, error) {
+func (d *DriverClickhouse) DoInsert(ctx context.Context, link Link, table string, data List, option DoInsertOption) (result sql.Result, err error) {
 	return nil, nil
 }
