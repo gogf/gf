@@ -207,9 +207,6 @@ func TestDriverClickhouse_DoInsert(t *testing.T) {
 		t.Error(err.Error())
 	}
 	_, err = connect.Model("visits").Ctx(ctx).Data(item).InsertAndGetId()
-	if err != nil {
-		t.Error(err.Error())
-	}
 	_, err = connect.Model("visits").Ctx(ctx).Data(item).Save()
 	if err != nil {
 		t.Error(err.Error())
@@ -233,9 +230,6 @@ func TestDriverClickhouse_DoInsert(t *testing.T) {
 		t.Error(err.Error())
 	}
 	_, err = connect.Model("visits").Ctx(ctx).Data(list).InsertAndGetId()
-	if err != nil {
-		t.Error(err.Error())
-	}
 	_, err = connect.Model("visits").Ctx(ctx).Data(list).Save()
 	if err != nil {
 		t.Error(err.Error())
