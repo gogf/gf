@@ -264,10 +264,6 @@ func (d *DriverClickhouse) Transaction(ctx context.Context, f func(ctx context.C
 	return errors.New("transaction operations are not supported")
 }
 
-func (d *DriverClickhouse) DoInsert(ctx context.Context, link Link, table string, data List, option DoInsertOption) (result sql.Result, err error) {
-	return nil, nil
-}
-
 func (d *DriverClickhouse) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutput, err error) {
 	var (
 		sqlTx                *sql.Tx
@@ -393,4 +389,40 @@ func (d *DriverClickhouse) DoCommit(ctx context.Context, in DoCommitInput) (out 
 		)
 	}
 	return out, err
+}
+
+func (d *DriverClickhouse) DoInsert(ctx context.Context, link Link, table string, list List, option DoInsertOption) (result sql.Result, err error) {
+	var (
+		fields     []string
+		question   = []string{}
+		listLength = len(list)
+	)
+	for item := range list[0] {
+		fields = append(fields, item)
+		question = append(question, "?")
+	}
+	if link.IsTransaction() {
+		return nil, errors.New("transaction operations are not supported")
+	}
+	tx, err := d.db.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	sqlStr := fmt.Sprintf("INSERT INTO %v(%v) VALUES(%v)", table, strings.Join(fields, ","), strings.Join(question, ","))
+	stmt, err := tx.Prepare(sqlStr)
+	if err != nil {
+		return nil, err
+	}
+	for i := 0; i < listLength; i++ {
+		valueInterfaceSlice := []interface{}{}
+		for _, filed := range fields {
+			valueInterfaceSlice = append(valueInterfaceSlice, list[i][filed])
+		}
+		// TODO Clickhouse does not support the number of inserts, but can rely on this to get
+		result, err = stmt.ExecContext(ctx, valueInterfaceSlice...)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return result, tx.Commit()
 }

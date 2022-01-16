@@ -2,8 +2,8 @@ package gdb
 
 import (
 	"context"
-	"database/sql"
 	_ "github.com/ClickHouse/clickhouse-go"
+	"github.com/gogf/gf/v2/util/grand"
 	"testing"
 	"time"
 )
@@ -148,38 +148,60 @@ func TestDriverClickhouse_DoInsert(t *testing.T) {
 		return
 	}
 	ctx := context.Background()
-	// insert one data
 	type insertItem struct {
+		Id       int     `orm:"id"`
+		Duration float64 `orm:"duration"`
+		Url      string  `orm:"url"`
+		Created  string  `orm:"created"`
 	}
-	var (
-		insertOneDataList = []interface{}{
-			insertItem{},
-			map[string]string{},
-		}
-		result   sql.Result
-		resultId int64
-	)
-	for _, item := range insertOneDataList {
-		result, err = connect.Model().Ctx(ctx).Data(item).Insert()
-		if err != nil {
-			t.Error(err.Error())
-		}
-		t.Logf("%+v\n", result)
-		result, err = connect.Model().Ctx(ctx).Data(item).InsertIgnore()
-		if err != nil {
-			t.Error(err.Error())
-		}
-		t.Logf("%+v\n", result)
-		resultId, err = connect.Model().Ctx(ctx).Data(item).InsertAndGetId()
-		if err != nil {
-			t.Error(err.Error())
-		}
-		t.Logf("%+v\n", resultId)
-		result, err = connect.Model().Ctx(ctx).Data(item).Save()
-		if err != nil {
-			t.Error(err.Error())
-		}
-		t.Logf("%+v\n", result)
+	insertUrl := "https://goframe.org"
+	// insert one data
+	item := insertItem{
+		Id:       0,
+		Duration: 1,
+		Url:      insertUrl,
+		Created:  time.Now().Format("2006-01-02 15:04:05"),
 	}
-
+	_, err = connect.Model("visits").Ctx(ctx).Data(item).Insert()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	_, err = connect.Model("visits").Ctx(ctx).Data(item).InsertIgnore()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	_, err = connect.Model("visits").Ctx(ctx).Data(item).InsertAndGetId()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	_, err = connect.Model("visits").Ctx(ctx).Data(item).Save()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	// insert array data
+	list := []*insertItem{}
+	for i := 0; i < 999; i++ {
+		list = append(list, &insertItem{
+			Id:       grand.Intn(999),
+			Duration: float64(grand.Intn(999)),
+			Url:      insertUrl,
+			Created:  time.Now().Format("2006-01-02 15:04:05"),
+		})
+	}
+	_, err = connect.Model("visits").Ctx(ctx).Data(list).Insert()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	_, err = connect.Model("visits").Ctx(ctx).Data(list).InsertIgnore()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	_, err = connect.Model("visits").Ctx(ctx).Data(list).InsertAndGetId()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	_, err = connect.Model("visits").Ctx(ctx).Data(list).Save()
+	if err != nil {
+		t.Error(err.Error())
+	}
 }
