@@ -36,7 +36,7 @@ jobs:
       clickhouse-server:
         image: yandex/clickhouse-server
         ports:
-          - 9000/tcp
+          - 9000/9000
 
     # strategy set
     strategy:
