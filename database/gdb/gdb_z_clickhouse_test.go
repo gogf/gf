@@ -2,6 +2,7 @@ package gdb
 
 import (
 	"context"
+	"fmt"
 	_ "github.com/ClickHouse/clickhouse-go"
 	"github.com/gogf/gf/v2/util/grand"
 	"testing"
@@ -23,7 +24,7 @@ func InitClickhouse() (DB, error) {
 	config := ConfigNode{
 		Host:   "127.0.0.1",
 		Port:   "9000",
-		Name:   "default",
+		Name:   "clickhouse",
 		Type:   "clickhouse",
 		Debug:  true,
 		DryRun: false,
@@ -38,11 +39,23 @@ func TestDriverClickhouse_Create(t *testing.T) {
 		t.Error(err.Error())
 		return
 	}
-	sqlStr := "CREATE TABLE IF NOT EXISTS visits1 (id UInt64,duration Float64,url String,created DateTime) ENGINE = MergeTree()  PRIMARY KEY id ORDER BY id"
+	sqlStr := "CREATE TABLE IF NOT EXISTS visits (id UInt64,duration Float64,url String,created DateTime) ENGINE = MergeTree()  PRIMARY KEY id ORDER BY id"
 	_, err = connect.Exec(context.Background(), sqlStr)
 	if err != nil {
 		t.Error(err.Error())
 	}
+}
+
+func createClickhouseTable(connect DB) error {
+	sqlStr := "CREATE TABLE IF NOT EXISTS visits (id UInt64,duration Float64,url String,created DateTime) ENGINE = MergeTree()  PRIMARY KEY id ORDER BY id"
+	_, err := connect.Exec(context.Background(), sqlStr)
+	return err
+}
+
+func dropClickhouseTable(conn DB) error {
+	sqlStr := fmt.Sprintf("DROP TABLE IF EXISTS `visits`")
+	_, err := conn.Exec(context.Background(), sqlStr)
+	return err
 }
 
 func TestDriverClickhouse_New(t *testing.T) {
@@ -63,28 +76,15 @@ func TestDriverClickhouse_New(t *testing.T) {
 	}
 }
 
-func TestDriverClickhouse_TableFields(t *testing.T) {
-	connect, err := InitClickhouse()
-	if err != nil {
-		t.Error(err.Error())
-		return
-	}
-	tables, err := connect.TableFields(context.Background(), "visits")
-	if err != nil {
-		t.Error(err.Error())
-	}
-	for k, item := range tables {
-		t.Logf("tables:%v,data=%+v\n", k, item)
-	}
-}
-
 func TestDriverClickhouse_Tables(t *testing.T) {
 	connect, err := InitClickhouse()
 	if err != nil {
 		t.Error(err.Error())
 		return
 	}
-	tables, err := connect.Tables(context.Background(), "")
+	createClickhouseTable(connect)
+	defer dropClickhouseTable(connect)
+	tables, err := connect.Tables(context.Background())
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -97,6 +97,8 @@ func TestDriverClickhouse_Transaction(t *testing.T) {
 		t.Error(err.Error())
 		return
 	}
+	createClickhouseTable(connect)
+	defer dropClickhouseTable(connect)
 	err = connect.Transaction(context.Background(), func(ctx context.Context, tx *TX) error {
 		_, err = tx.Update("", nil, nil)
 		if err != nil {
@@ -115,6 +117,8 @@ func TestDriverClickhouse_DoDelete(t *testing.T) {
 		t.Error(err.Error())
 		return
 	}
+	createClickhouseTable(connect)
+	defer dropClickhouseTable(connect)
 	_, err = connect.Model("visits").Where("created >", "2021-01-01 00:00:00").Delete()
 	if err != nil {
 		t.Error(err.Error())
@@ -128,6 +132,8 @@ func TestDriverClickhouse_DoCommit(t *testing.T) {
 		t.Error(err.Error())
 		return
 	}
+	createClickhouseTable(connect)
+	defer dropClickhouseTable(connect)
 	data, err := connect.Model("visits").All()
 	if err != nil {
 		t.Error(err.Error())
@@ -144,6 +150,8 @@ func TestDriverClickhouse_DoUpdate(t *testing.T) {
 		t.Error(err.Error())
 		return
 	}
+	createClickhouseTable(connect)
+	defer dropClickhouseTable(connect)
 	result, err := connect.Model("visits").Where("created > ", "2021-01-01 15:15:15").Data(Map{
 		"created": time.Now().Format("2006-01-02 15:04:05"),
 	}).Update()
@@ -160,6 +168,8 @@ func TestDriverClickhouse_DoExec(t *testing.T) {
 		t.Error(err.Error())
 		return
 	}
+	createClickhouseTable(connect)
+	defer dropClickhouseTable(connect)
 	sqlStr := "OPTIMIZE table visits"
 	_, err = connect.Exec(context.Background(), sqlStr)
 	if err != nil {
@@ -174,6 +184,8 @@ func TestDriverClickhouse_DoInsert(t *testing.T) {
 		t.Error(err.Error())
 		return
 	}
+	createClickhouseTable(connect)
+	defer dropClickhouseTable(connect)
 	ctx := context.Background()
 	type insertItem struct {
 		Id       int     `orm:"id"`
