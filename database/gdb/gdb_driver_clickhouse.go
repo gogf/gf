@@ -18,7 +18,7 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -53,7 +53,7 @@ func (d *DriverClickhouse) Open(config *ConfigNode) (db *sql.DB, err error) {
 			config.Host, config.Port, config.Name, config.Charset, gconv.String(config.Debug),
 		)
 	}
-	glog.Infof(context.Background(), "Open: %s %s", source, clickhouse.DefaultDatabase)
+	intlog.Printf(d.GetCtx(), "Open: %s", source)
 	if db, err := sql.Open(driver, source); err == nil {
 		d.SetSchema(config.Name)
 		return db, nil
