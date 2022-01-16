@@ -21,16 +21,15 @@ import (
 // PRIMARY KEY id
 // ORDER BY id
 func InitClickhouse() (DB, error) {
-	config := ConfigNode{
+	return New(ConfigNode{
 		Host:   "127.0.0.1",
 		Port:   "9000",
 		Name:   "clickhouse",
 		Type:   "clickhouse",
+		User:   "default",
 		Debug:  true,
 		DryRun: false,
-	}
-	AddDefaultConfigNode(config)
-	return New(config)
+	})
 }
 
 func TestDriverClickhouse_Create(t *testing.T) {
@@ -46,16 +45,14 @@ func TestDriverClickhouse_Create(t *testing.T) {
 	}
 }
 
-func createClickhouseTable(connect DB) error {
+func createClickhouseTable(connect DB) {
 	sqlStr := "CREATE TABLE IF NOT EXISTS visits (id UInt64,duration Float64,url String,created DateTime) ENGINE = MergeTree()  PRIMARY KEY id ORDER BY id"
-	_, err := connect.Exec(context.Background(), sqlStr)
-	return err
+	_, _ = connect.Exec(context.Background(), sqlStr)
 }
 
-func dropClickhouseTable(conn DB) error {
+func dropClickhouseTable(conn DB) {
 	sqlStr := fmt.Sprintf("DROP TABLE IF EXISTS `visits`")
-	_, err := conn.Exec(context.Background(), sqlStr)
-	return err
+	_, _ = conn.Exec(context.Background(), sqlStr)
 }
 
 func TestDriverClickhouse_New(t *testing.T) {
