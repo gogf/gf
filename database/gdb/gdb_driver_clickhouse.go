@@ -240,3 +240,7 @@ func (d *DriverClickhouse) Transaction(ctx context.Context, f func(ctx context.C
 func (d *DriverClickhouse) DoInsert(ctx context.Context, link Link, table string, data List, option DoInsertOption) (result sql.Result, err error) {
 	return nil, nil
 }
+
+func (d *DriverClickhouse) PingMaster() error {
+	return d.db.PingMaster()
+}
