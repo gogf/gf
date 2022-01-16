@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	_ "github.com/ClickHouse/clickhouse-go"
-	"github.com/gogf/gf/v2/util/grand"
 	"testing"
 	"time"
+
+	"github.com/gogf/gf/v2/util/grand"
 )
 
 // table DDL
