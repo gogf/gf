@@ -8,10 +8,14 @@ package gdb
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
+	"reflect"
+	"strings"
+
+	"database/sql"
 	"github.com/ClickHouse/clickhouse-go"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/glog"
@@ -20,8 +24,6 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/guid"
-	"reflect"
-	"strings"
 )
 
 // DriverClickhouse is the driver for SQL server database.
