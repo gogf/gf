@@ -23,10 +23,10 @@ func InitClickhouse() (DB, error) {
 	config := ConfigNode{
 		Host:   "127.0.0.1",
 		Port:   "9000",
-		Name:   "clickhouse",
+		Name:   "default",
 		Type:   "clickhouse",
 		Debug:  true,
-		DryRun: true,
+		DryRun: false,
 	}
 	AddDefaultConfigNode(config)
 	return New()
@@ -43,6 +43,11 @@ func TestDriverClickhouse_New(t *testing.T) {
 		t.Error(err.Error())
 		return
 	}
+	err = connect.PingSlave()
+	if err != nil {
+		t.Error(err.Error())
+		return
+	}
 }
 
 func TestDriverClickhouse_TableFields(t *testing.T) {
@@ -55,7 +60,9 @@ func TestDriverClickhouse_TableFields(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	t.Logf("%+v", tables)
+	for k, item := range tables {
+		t.Logf("tables:%v,data=%+v\n", k, item)
+	}
 }
 
 func TestDriverClickhouse_Tables(t *testing.T) {
@@ -95,12 +102,27 @@ func TestDriverClickhouse_DoDelete(t *testing.T) {
 		t.Error(err.Error())
 		return
 	}
-	result, err := connect.Model("visits").Where("created >", "2021-01-01 00:00:00").Delete()
+	_, err = connect.Model("visits").Where("created >", "2021-01-01 00:00:00").Delete()
 	if err != nil {
 		t.Error(err.Error())
 		return
 	}
-	t.Logf("%+v\n", result)
+}
+
+func TestDriverClickhouse_DoCommit(t *testing.T) {
+	connect, err := InitClickhouse()
+	if err != nil {
+		t.Error(err.Error())
+		return
+	}
+	data, err := connect.Model("visits").All()
+	if err != nil {
+		t.Error(err.Error())
+		return
+	}
+	for _, item := range data {
+		t.Logf("%+v\n", item)
+	}
 }
 
 func TestDriverClickhouse_DoUpdate(t *testing.T) {
@@ -109,7 +131,7 @@ func TestDriverClickhouse_DoUpdate(t *testing.T) {
 		t.Error(err.Error())
 		return
 	}
-	result, err := connect.Model("visits").Data(Map{
+	result, err := connect.Model("visits").Where("created > ", "2021-01-01 15:15:15").Data(Map{
 		"created": time.Now().Format("2006-01-02 15:04:05"),
 	}).Update()
 	if err != nil {

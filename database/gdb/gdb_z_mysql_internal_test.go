@@ -29,7 +29,7 @@ var (
 	configNode ConfigNode
 )
 
-func init() {
+func init1() {
 	parser, err := gcmd.Parse(map[string]bool{
 		"name": true,
 		"type": true,

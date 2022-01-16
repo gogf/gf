@@ -15,9 +15,11 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/guid"
 	"reflect"
 	"strings"
 )
@@ -28,7 +30,7 @@ type DriverClickhouse struct {
 }
 
 func (d *DriverClickhouse) New(core *Core, node *ConfigNode) (DB, error) {
-	return &DriverMssql{
+	return &DriverClickhouse{
 		Core: core,
 	}, nil
 }
@@ -65,7 +67,7 @@ func (d *DriverClickhouse) Tables(ctx context.Context, schema ...string) (tables
 	if err != nil {
 		return nil, err
 	}
-	result, err = d.DoGetAll(ctx, link, fmt.Sprintf("select name from `system`.tables where database '%s'", d.GetSchema()))
+	result, err = d.DoGetAll(ctx, link, fmt.Sprintf("select name from `system`.tables where database = '%s'", d.GetSchema()))
 	if err != nil {
 		return
 	}
@@ -143,6 +145,31 @@ func (d *DriverClickhouse) FilteredLink() string {
 		linkInfo,
 	)
 	return s
+}
+
+func (d *DriverClickhouse) PingMaster() error {
+	conn, err := d.Master()
+	if err != nil {
+		return err
+	}
+	return d.ping(conn)
+
+}
+
+func (d *DriverClickhouse) PingSlave() error {
+	conn, err := d.Slave()
+	if err != nil {
+		return err
+	}
+	return d.ping(conn)
+}
+
+func (d *DriverClickhouse) ping(conn *sql.DB) error {
+	err := conn.Ping()
+	if exception, ok := err.(*clickhouse.Exception); ok {
+		return errors.New(fmt.Sprintf("[%d]%s", exception.Code, exception.Message))
+	}
+	return err
 }
 
 func (d *DriverClickhouse) DoUpdate(ctx context.Context, link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
@@ -230,7 +257,7 @@ func (d *DriverClickhouse) DoDelete(ctx context.Context, link Link, table string
 	table = d.QuotePrefixTableName(table)
 	// in clickhouse , delete must use alter
 	// ALTER TABLE [db.]table DELETE WHERE filter_expr
-	return d.db.DoExec(ctx, link, fmt.Sprintf("ALTER TABLE %s DELETE FROM %s", table, condition), args...)
+	return d.db.DoExec(ctx, link, fmt.Sprintf("ALTER TABLE %s DELETE %s", table, condition), args...)
 }
 
 func (d *DriverClickhouse) Transaction(ctx context.Context, f func(ctx context.Context, tx *TX) error) error {
@@ -241,6 +268,129 @@ func (d *DriverClickhouse) DoInsert(ctx context.Context, link Link, table string
 	return nil, nil
 }
 
-func (d *DriverClickhouse) PingMaster() error {
-	return d.db.PingMaster()
+func (d *DriverClickhouse) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutput, err error) {
+	var (
+		sqlTx                *sql.Tx
+		sqlStmt              *sql.Stmt
+		sqlRows              *sql.Rows
+		sqlResult            sql.Result
+		stmtSqlRows          *sql.Rows
+		stmtSqlRow           *sql.Row
+		rowsAffected         int64
+		cancelFuncForTimeout context.CancelFunc
+		timestampMilli1      = gtime.TimestampMilli()
+	)
+	// Execution cased by type.
+	switch in.Type {
+	case SqlTypeBegin:
+		if sqlTx, err = in.Db.Begin(); err == nil {
+			out.Tx = &TX{
+				db:            d.db,
+				tx:            sqlTx,
+				ctx:           context.WithValue(ctx, transactionIdForLoggerCtx, transactionIdGenerator.Add(1)),
+				master:        in.Db,
+				transactionId: guid.S(),
+			}
+			ctx = out.Tx.ctx
+		}
+		out.RawResult = sqlTx
+
+	case SqlTypeTXCommit:
+		err = in.Tx.Commit()
+
+	case SqlTypeTXRollback:
+		// Clickhouse does not support the transaction
+		// But it is necessary to submit the transaction after entering the transaction
+		// So shields the rollback event.
+		err = nil
+
+	case SqlTypeExecContext:
+		if d.db.GetDryRun() {
+			sqlResult = new(SqlResult)
+		} else {
+			sqlResult, err = in.Link.ExecContext(ctx, in.Sql, in.Args...)
+		}
+		out.RawResult = sqlResult
+
+	case SqlTypeQueryContext:
+		sqlRows, err = in.Link.QueryContext(ctx, in.Sql, in.Args...)
+		out.RawResult = sqlRows
+
+	case SqlTypePrepareContext:
+		sqlStmt, err = in.Link.PrepareContext(ctx, in.Sql)
+		out.RawResult = sqlStmt
+
+	case SqlTypeStmtExecContext:
+		ctx, cancelFuncForTimeout = d.GetCtxTimeout(ctxTimeoutTypeExec, ctx)
+		defer cancelFuncForTimeout()
+		if d.db.GetDryRun() {
+			sqlResult = new(SqlResult)
+		} else {
+			sqlResult, err = in.Stmt.ExecContext(ctx, in.Args...)
+		}
+		out.RawResult = sqlResult
+
+	case SqlTypeStmtQueryContext:
+		ctx, cancelFuncForTimeout = d.GetCtxTimeout(ctxTimeoutTypeQuery, ctx)
+		defer cancelFuncForTimeout()
+		stmtSqlRows, err = in.Stmt.QueryContext(ctx, in.Args...)
+		out.RawResult = stmtSqlRows
+
+	case SqlTypeStmtQueryRowContext:
+		ctx, cancelFuncForTimeout = d.GetCtxTimeout(ctxTimeoutTypeQuery, ctx)
+		defer cancelFuncForTimeout()
+		stmtSqlRow = in.Stmt.QueryRowContext(ctx, in.Args...)
+		out.RawResult = stmtSqlRow
+
+	default:
+		panic(gerror.NewCodef(gcode.CodeInvalidParameter, `invalid SqlType "%s"`, in.Type))
+	}
+	// Result handling.
+	switch {
+	case sqlResult != nil:
+		// RowsAffected is not supported , so return default result
+		rowsAffected, err = 0, nil
+		out.Result = sqlResult
+
+	case sqlRows != nil:
+		out.Records, err = d.RowsToResult(ctx, sqlRows)
+		rowsAffected = int64(len(out.Records))
+
+	case sqlStmt != nil:
+		out.Stmt = &Stmt{
+			Stmt: sqlStmt,
+			core: d.Core,
+			link: in.Link,
+			sql:  in.Sql,
+		}
+	}
+	var (
+		timestampMilli2 = gtime.TimestampMilli()
+		sqlObj          = &Sql{
+			Sql:           in.Sql,
+			Type:          in.Type,
+			Args:          in.Args,
+			Format:        FormatSqlWithArgs(in.Sql, in.Args),
+			Error:         err,
+			Start:         timestampMilli1,
+			End:           timestampMilli2,
+			Group:         d.db.GetGroup(),
+			RowsAffected:  rowsAffected,
+			IsTransaction: in.IsTransaction,
+		}
+	)
+	// Tracing and logging.
+	d.addSqlToTracing(ctx, sqlObj)
+	if d.db.GetDebug() {
+		d.writeSqlToLogger(ctx, sqlObj)
+	}
+	if err != nil && err != sql.ErrNoRows {
+		err = gerror.NewCodef(
+			gcode.CodeDbOperationError,
+			"%s, %s\n",
+			err.Error(),
+			FormatSqlWithArgs(in.Sql, in.Args),
+		)
+	}
+	return out, err
 }
