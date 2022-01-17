@@ -149,6 +149,7 @@ func New(path ...string) *View {
 		"xml":        view.buildInFuncXml,
 		"ini":        view.buildInFuncIni,
 		"yaml":       view.buildInFuncYaml,
+		"yamli":      view.buildInFuncYamlIndent,
 		"toml":       view.buildInFuncToml,
 		"plus":       view.buildInFuncPlus,
 		"minus":      view.buildInFuncMinus,
