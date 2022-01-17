@@ -10,7 +10,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
 	"strings"
 
 	"database/sql"
@@ -174,80 +173,11 @@ func (d *DriverClickhouse) ping(conn *sql.DB) error {
 	return err
 }
 
-func (d *DriverClickhouse) DoUpdate(ctx context.Context, link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
-	table = d.QuotePrefixTableName(table)
-	var (
-		rv   = reflect.ValueOf(data)
-		kind = rv.Kind()
-	)
-	if kind == reflect.Ptr {
-		rv = rv.Elem()
-		kind = rv.Kind()
-	}
-	var (
-		params  []interface{}
-		updates = ""
-	)
-	switch kind {
-	case reflect.Map, reflect.Struct:
-		var (
-			fields         []string
-			dataMap        = d.db.ConvertDataForRecord(ctx, data)
-			counterHandler = func(column string, counter Counter) {
-				if counter.Value != 0 {
-					column = d.QuoteWord(column)
-					var (
-						columnRef = d.QuoteWord(counter.Field)
-						columnVal = counter.Value
-						operator  = "+"
-					)
-					if columnVal < 0 {
-						operator = "-"
-						columnVal = -columnVal
-					}
-					fields = append(fields, fmt.Sprintf("%s=%s%s?", column, columnRef, operator))
-					params = append(params, columnVal)
-				}
-			}
-		)
-
-		for k, v := range dataMap {
-			switch value := v.(type) {
-			case *Counter:
-				counterHandler(k, *value)
-
-			case Counter:
-				counterHandler(k, value)
-
-			default:
-				if s, ok := v.(Raw); ok {
-					fields = append(fields, d.QuoteWord(k)+"="+gconv.String(s))
-				} else {
-					fields = append(fields, d.QuoteWord(k)+"=?")
-					params = append(params, v)
-				}
-			}
-		}
-		updates = strings.Join(fields, ",")
-
-	default:
-		updates = gconv.String(data)
-	}
-	if len(updates) == 0 {
-		return nil, gerror.NewCode(gcode.CodeMissingParameter, "data cannot be empty")
-	}
-	if len(params) > 0 {
-		args = append(params, args...)
-	}
-	// If no link passed, it then uses the master link.
-	if link == nil {
-		if link, err = d.MasterLink(); err != nil {
-			return nil, err
-		}
-	}
+func (d *DriverClickhouse) DoUpdateSQL(ctx context.Context, link Link, table string, updates interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
 	// in clickhouse ,use update must use alter
 	// ALTER TABLE [db.]table UPDATE column1 = expr1 [, ...] WHERE filter_expr
 	return d.db.DoExec(ctx, link, fmt.Sprintf("ALTER TABLE %s UPDATE %s%s", table, updates, condition), args...)
+
 }
 
 func (d *DriverClickhouse) DoDelete(ctx context.Context, link Link, table string, condition string, args ...interface{}) (result sql.Result, err error) {

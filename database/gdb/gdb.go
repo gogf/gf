@@ -94,15 +94,16 @@ type DB interface {
 	// Internal APIs for CURD, which can be overwritten by custom CURD implements.
 	// ===========================================================================
 
-	DoGetAll(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error)                                           // See Core.DoGetAll.
-	DoInsert(ctx context.Context, link Link, table string, data List, option DoInsertOption) (result sql.Result, err error)                        // See Core.DoInsert.
-	DoUpdate(ctx context.Context, link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) // See Core.DoUpdate.
-	DoDelete(ctx context.Context, link Link, table string, condition string, args ...interface{}) (result sql.Result, err error)                   // See Core.DoDelete.
-	DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error)                                            // See Core.DoQuery.
-	DoExec(ctx context.Context, link Link, sql string, args ...interface{}) (result sql.Result, err error)                                         // See Core.DoExec.
-	DoFilter(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error)                     // See Core.DoFilter.
-	DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutput, err error)                                                                // See Core.DoCommit.
-	DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, error)                                                                           // See Core.DoPrepare.
+	DoGetAll(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error)                                              // See Core.DoGetAll.
+	DoInsert(ctx context.Context, link Link, table string, data List, option DoInsertOption) (result sql.Result, err error)                           // See Core.DoInsert.
+	DoUpdate(ctx context.Context, link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error)    // See Core.DoUpdate.
+	DoUpdateSQL(ctx context.Context, link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) // Core.DoUpdateSQL
+	DoDelete(ctx context.Context, link Link, table string, condition string, args ...interface{}) (result sql.Result, err error)                      // See Core.DoDelete.
+	DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error)                                               // See Core.DoQuery.
+	DoExec(ctx context.Context, link Link, sql string, args ...interface{}) (result sql.Result, err error)                                            // See Core.DoExec.
+	DoFilter(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error)                        // See Core.DoFilter.
+	DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutput, err error)                                                                   // See Core.DoCommit.
+	DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, error)                                                                              // See Core.DoPrepare.
 
 	// ===========================================================================
 	// Query APIs for convenience purpose.
