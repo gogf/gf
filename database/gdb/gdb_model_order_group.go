@@ -15,9 +15,9 @@ import (
 //
 // Eg:
 // Order("id desc")
-// Order("id", "desc")
+// Order("id", "desc").
 // Order("id desc,name asc").
-// Order(gdb.Raw("field(id, 3,1,2)"))
+// Order(gdb.Raw("field(id, 3,1,2)")).
 func (m *Model) Order(orderBy ...interface{}) *Model {
 	if len(orderBy) == 0 {
 		return m
