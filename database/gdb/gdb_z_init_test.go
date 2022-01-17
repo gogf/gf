@@ -37,7 +37,7 @@ var (
 	ctx        = context.TODO()
 )
 
-func init1() {
+func init() {
 	parser, err := gcmd.Parse(g.MapStrBool{
 		"name": true,
 		"type": true,
