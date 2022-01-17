@@ -598,7 +598,7 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 			return nil, err
 		}
 	}
-	return c.db.DoUpdateSQL(ctx, link, table, updates, condition, args)
+	return c.db.DoUpdateSQL(ctx, link, table, updates, condition, args...)
 }
 
 func (c *Core) DoUpdateSQL(ctx context.Context, link Link, table string, updates interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
