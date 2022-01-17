@@ -173,21 +173,17 @@ func (d *DriverClickhouse) ping(conn *sql.DB) error {
 	return err
 }
 
+// DoUpdateSQL in clickhouse ,use update must use alter
+// eg.
+// ALTER TABLE [db.]table UPDATE column1 = expr1 [, ...] WHERE filter_expr
 func (d *DriverClickhouse) DoUpdateSQL(ctx context.Context, link Link, table string, updates interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
-	// in clickhouse ,use update must use alter
-	// ALTER TABLE [db.]table UPDATE column1 = expr1 [, ...] WHERE filter_expr
 	return d.db.DoExec(ctx, link, fmt.Sprintf("ALTER TABLE %s UPDATE %s%s", table, updates, condition), args...)
 }
 
-func (d *DriverClickhouse) DoDelete(ctx context.Context, link Link, table string, condition string, args ...interface{}) (result sql.Result, err error) {
-	if link == nil {
-		if link, err = d.MasterLink(); err != nil {
-			return nil, err
-		}
-	}
-	table = d.QuotePrefixTableName(table)
-	// in clickhouse , delete must use alter
-	// ALTER TABLE [db.]table DELETE WHERE filter_expr
+// DoDeleteSQL in clickhouse , delete must use alter
+// eg.
+// ALTER TABLE [db.]table DELETE WHERE filter_expr
+func (d *DriverClickhouse) DoDeleteSQL(ctx context.Context, link Link, table string, condition interface{}, args ...interface{}) (result sql.Result, err error) {
 	return d.db.DoExec(ctx, link, fmt.Sprintf("ALTER TABLE %s DELETE %s", table, condition), args...)
 }
 

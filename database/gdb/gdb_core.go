@@ -601,6 +601,8 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 	return c.db.DoUpdateSQL(ctx, link, table, updates, condition, args...)
 }
 
+// DoUpdateSQL Adapt to difference in different drives
+// For example, Clickhouse's update
 func (c *Core) DoUpdateSQL(ctx context.Context, link Link, table string, updates interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
 	return c.db.DoExec(ctx, link, fmt.Sprintf("UPDATE %s SET %s%s", table, updates, condition), args...)
 }
@@ -629,6 +631,12 @@ func (c *Core) DoDelete(ctx context.Context, link Link, table string, condition 
 		}
 	}
 	table = c.QuotePrefixTableName(table)
+	return c.db.DoDeleteSQL(ctx, link, table, condition, args...)
+}
+
+// DoDeleteSQL Adapt to difference in different drives
+// For example, Clickhouse's delete
+func (c *Core) DoDeleteSQL(ctx context.Context, link Link, table string, condition interface{}, args ...interface{}) (result sql.Result, err error) {
 	return c.db.DoExec(ctx, link, fmt.Sprintf("DELETE FROM %s%s", table, condition), args...)
 }
 

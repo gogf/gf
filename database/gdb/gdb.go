@@ -97,8 +97,9 @@ type DB interface {
 	DoGetAll(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error)                                              // See Core.DoGetAll.
 	DoInsert(ctx context.Context, link Link, table string, data List, option DoInsertOption) (result sql.Result, err error)                           // See Core.DoInsert.
 	DoUpdate(ctx context.Context, link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error)    // See Core.DoUpdate.
-	DoUpdateSQL(ctx context.Context, link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) // Core.DoUpdateSQL
+	DoUpdateSQL(ctx context.Context, link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) // See Core.DoUpdateSQL.
 	DoDelete(ctx context.Context, link Link, table string, condition string, args ...interface{}) (result sql.Result, err error)                      // See Core.DoDelete.
+	DoDeleteSQL(ctx context.Context, link Link, table string, condition interface{}, args ...interface{}) (result sql.Result, err error)              // See Core.DoDeleteSQL.
 	DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error)                                               // See Core.DoQuery.
 	DoExec(ctx context.Context, link Link, sql string, args ...interface{}) (result sql.Result, err error)                                            // See Core.DoExec.
 	DoFilter(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error)                        // See Core.DoFilter.
