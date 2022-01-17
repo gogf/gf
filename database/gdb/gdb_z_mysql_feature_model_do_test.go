@@ -13,13 +13,13 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Model_Insert_Data_DTO(t *testing.T) {
+func Test_Model_Insert_Data_DO(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
-			g.Meta     `orm:"dto:true"`
+			g.Meta     `orm:"do:true"`
 			Id         interface{}
 			Passport   interface{}
 			Password   interface{}
@@ -46,13 +46,13 @@ func Test_Model_Insert_Data_DTO(t *testing.T) {
 	})
 }
 
-func Test_Model_Insert_Data_LIst_DTO(t *testing.T) {
+func Test_Model_Insert_Data_LIst_DO(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
-			g.Meta     `orm:"dto:true"`
+			g.Meta     `orm:"do:true"`
 			Id         interface{}
 			Passport   interface{}
 			Password   interface{}
@@ -94,13 +94,13 @@ func Test_Model_Insert_Data_LIst_DTO(t *testing.T) {
 	})
 }
 
-func Test_Model_Update_Data_DTO(t *testing.T) {
+func Test_Model_Update_Data_DO(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
-			g.Meta     `orm:"dto:true"`
+			g.Meta     `orm:"do:true"`
 			Id         interface{}
 			Passport   interface{}
 			Password   interface{}
@@ -124,13 +124,13 @@ func Test_Model_Update_Data_DTO(t *testing.T) {
 	})
 }
 
-func Test_Model_Where_DTO(t *testing.T) {
+func Test_Model_Where_DO(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
-			g.Meta     `orm:"dto:true"`
+			g.Meta     `orm:"do:true"`
 			Id         interface{}
 			Passport   interface{}
 			Password   interface{}
