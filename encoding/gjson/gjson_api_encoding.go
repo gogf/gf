@@ -172,7 +172,7 @@ func (j *Json) MustToTomlString() string {
 func (j *Json) ToIni() ([]byte, error) {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
-	return gini.Encode((*(j.p)).(map[string]interface{}))
+	return gini.Encode(j.Map())
 }
 
 // ToIniString ini to string

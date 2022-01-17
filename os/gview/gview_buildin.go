@@ -14,8 +14,8 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/v2/encoding/ghtml"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/encoding/gurl"
-	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -224,7 +224,35 @@ func (view *View) buildInFuncNl2Br(str interface{}) string {
 // buildInFuncJson implements build-in template function: json ,
 // which encodes and returns `value` as JSON string.
 func (view *View) buildInFuncJson(value interface{}) (string, error) {
-	b, err := json.Marshal(value)
+	b, err := gjson.Marshal(value)
+	return string(b), err
+}
+
+// buildInFuncXml implements build-in template function: xml ,
+// which encodes and returns `value` as XML string.
+func (view *View) buildInFuncXml(value interface{}, rootTag ...string) (string, error) {
+	b, err := gjson.New(value).ToXml(rootTag...)
+	return string(b), err
+}
+
+// buildInFuncXml implements build-in template function: ini ,
+// which encodes and returns `value` as XML string.
+func (view *View) buildInFuncIni(value interface{}) (string, error) {
+	b, err := gjson.New(value).ToIni()
+	return string(b), err
+}
+
+// buildInFuncYaml implements build-in template function: yaml ,
+// which encodes and returns `value` as YAML string.
+func (view *View) buildInFuncYaml(value interface{}) (string, error) {
+	b, err := gjson.New(value).ToYaml()
+	return string(b), err
+}
+
+// buildInFuncToml implements build-in template function: toml ,
+// which encodes and returns `value` as TOML string.
+func (view *View) buildInFuncToml(value interface{}) (string, error) {
+	b, err := gjson.New(value).ToToml()
 	return string(b), err
 }
 

@@ -27,7 +27,7 @@ func Marshal(v interface{}) (marshaledBytes []byte, err error) {
 	return
 }
 
-// MarshalIndent same as json.MarshalIndent. Prefix is not supported.
+// MarshalIndent same as json.MarshalIndent.
 func MarshalIndent(v interface{}, prefix, indent string) (marshaledBytes []byte, err error) {
 	marshaledBytes, err = json.MarshalIndent(v, prefix, indent)
 	if err != nil {

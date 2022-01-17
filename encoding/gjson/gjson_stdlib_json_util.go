@@ -20,6 +20,21 @@ func Valid(data interface{}) bool {
 	return json.Valid(gconv.Bytes(data))
 }
 
+// Marshal is alias of Encode in order to fit the habit of json.Marshal/Unmarshal functions.
+func Marshal(v interface{}) (marshaledBytes []byte, err error) {
+	return Encode(v)
+}
+
+// MarshalIndent is alias of json.MarshalIndent in order to fit the habit of json.MarshalIndent function.
+func MarshalIndent(v interface{}, prefix, indent string) (marshaledBytes []byte, err error) {
+	return json.MarshalIndent(v, prefix, indent)
+}
+
+// Unmarshal is alias of DecodeTo in order to fit the habit of json.Marshal/Unmarshal functions.
+func Unmarshal(data []byte, v interface{}) (err error) {
+	return DecodeTo(data, v)
+}
+
 // Encode encodes any golang variable `value` to JSON bytes.
 func Encode(value interface{}) ([]byte, error) {
 	return json.Marshal(value)
