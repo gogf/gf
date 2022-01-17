@@ -602,10 +602,7 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 }
 
 func (c *Core) DoUpdateSQL(ctx context.Context, link Link, table string, updates interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
-	// in clickhouse ,use update must use alter
-	// ALTER TABLE [db.]table UPDATE column1 = expr1 [, ...] WHERE filter_expr
-	return c.db.DoExec(ctx, link, fmt.Sprintf("ALTER TABLE %s UPDATE %s%s", table, updates, condition), args...)
-
+	return c.db.DoExec(ctx, link, fmt.Sprintf("UPDATE %s SET %s%s", table, updates, condition), args...)
 }
 
 // Delete does "DELETE FROM ... " statement for the table.
