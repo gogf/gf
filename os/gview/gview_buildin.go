@@ -249,6 +249,13 @@ func (view *View) buildInFuncYaml(value interface{}) (string, error) {
 	return string(b), err
 }
 
+// buildInFuncYamlIndent implements build-in template function: yamli ,
+// which encodes and returns `value` as YAML string with custom indent string.
+func (view *View) buildInFuncYamlIndent(value, indent interface{}) (string, error) {
+	b, err := gjson.New(value).ToYamlIndent(gconv.String(indent))
+	return string(b), err
+}
+
 // buildInFuncToml implements build-in template function: toml ,
 // which encodes and returns `value` as TOML string.
 func (view *View) buildInFuncToml(value interface{}) (string, error) {

@@ -59,6 +59,18 @@ func Test_Encode(t *testing.T) {
 	})
 }
 
+func Test_EncodeIndent(t *testing.T) {
+	// Array.
+	gtest.C(t, func(t *gtest.T) {
+		b, err := gyaml.EncodeIndent([]string{"a", "b", "c"}, "####")
+		t.AssertNil(err)
+		t.Assert(string(b), `####- a
+####- b
+####- c
+`)
+	})
+}
+
 func Test_Decode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		result, err := gyaml.Decode([]byte(yamlStr))
