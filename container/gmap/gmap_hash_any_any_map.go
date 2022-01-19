@@ -461,7 +461,7 @@ func (m *AnyAnyMap) String() string {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (m *AnyAnyMap) MarshalJSON() ([]byte, error) {
+func (m AnyAnyMap) MarshalJSON() ([]byte, error) {
 	return json.Marshal(gconv.Map(m.Map()))
 }
 

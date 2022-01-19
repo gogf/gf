@@ -169,7 +169,7 @@ func (v *Var) GTime(format ...string) *gtime.Time {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (v *Var) MarshalJSON() ([]byte, error) {
+func (v Var) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.Val())
 }
 
