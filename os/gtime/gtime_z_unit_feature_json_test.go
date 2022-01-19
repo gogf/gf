@@ -29,6 +29,13 @@ func Test_Json_Pointer(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		b, err := json.Marshal(g.Map{
+			"MyTime": gtime.NewFromStr("2006-01-02 15:04:05"),
+		})
+		t.AssertNil(err)
+		t.Assert(b, `{"MyTime":"2006-01-02 15:04:05"}`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		b, err := json.Marshal(g.Map{
 			"MyTime": *gtime.NewFromStr("2006-01-02 15:04:05"),
 		})
 		t.AssertNil(err)
@@ -64,7 +71,7 @@ func Test_Json_Pointer(t *testing.T) {
 }
 
 func Test_Json_Struct(t *testing.T) {
-	// Marshal
+	// Marshal struct.
 	gtest.C(t, func(t *gtest.T) {
 		type MyTime struct {
 			MyTime gtime.Time
@@ -75,7 +82,7 @@ func Test_Json_Struct(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(b, `{"MyTime":"2006-01-02 15:04:05"}`)
 	})
-	// Marshal
+	// Marshal pointer.
 	gtest.C(t, func(t *gtest.T) {
 		type MyTime struct {
 			MyTime gtime.Time
