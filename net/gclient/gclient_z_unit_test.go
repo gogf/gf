@@ -34,7 +34,7 @@ var (
 )
 
 func init() {
-	for i := 7000; i <= 8000; i++ {
+	for i := 6000; i < 7000; i++ {
 		ports.Append(i)
 	}
 }
