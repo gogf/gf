@@ -264,7 +264,7 @@ func newCommandFromMethod(object interface{}, method reflect.Value) (command *Co
 				}
 			} else {
 				// Read argument from command line option name.
-				if arg.Orphan && parser.ContainsOpt(arg.Name) {
+				if arg.Orphan && parser.GetOpt(arg.Name) != nil {
 					data[arg.Name] = "true"
 				}
 			}
