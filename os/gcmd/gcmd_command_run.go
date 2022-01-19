@@ -101,7 +101,7 @@ func (c *Command) doRun(ctx context.Context, parser *Parser) (value interface{},
 
 	ctx = context.WithValue(ctx, CtxKeyCommand, c)
 	// Check built-in help command.
-	if parser.ContainsOpt(helpOptionName) || parser.ContainsOpt(helpOptionNameShort) {
+	if parser.GetOpt(helpOptionName) != nil || parser.GetOpt(helpOptionNameShort) != nil {
 		if c.HelpFunc != nil {
 			return nil, c.HelpFunc(ctx, parser)
 		}
@@ -159,7 +159,7 @@ func (c *Command) reParse(ctx context.Context, parser *Parser) (*Parser, error) 
 		configMap := value.Map()
 		for optionName, _ := range parser.passedOptions {
 			// The command line has the high priority.
-			if parser.ContainsOpt(optionName) {
+			if parser.GetOpt(optionName) != nil {
 				continue
 			}
 			// Merge the config value into parser.

@@ -55,16 +55,16 @@ func Parse(supportedOptions map[string]bool, strict ...bool) (*Parser, error) {
 			parsedOptions: GetOptAll(),
 		}, nil
 	}
-	return ParseWithArgs(os.Args, supportedOptions, strict...)
+	return ParseArgs(os.Args, supportedOptions, strict...)
 }
 
-// ParseWithArgs creates and returns a new Parser with given arguments and supported options.
+// ParseArgs creates and returns a new Parser with given arguments and supported options.
 //
 // Note that the parameter `supportedOptions` is as [option name: need argument], which means
 // the value item of `supportedOptions` indicates whether corresponding option name needs argument or not.
 //
 // The optional parameter `strict` specifies whether stops parsing and returns error if invalid option passed.
-func ParseWithArgs(args []string, supportedOptions map[string]bool, strict ...bool) (*Parser, error) {
+func ParseArgs(args []string, supportedOptions map[string]bool, strict ...bool) (*Parser, error) {
 	if supportedOptions == nil {
 		command.Init(args...)
 		return &Parser{
@@ -196,12 +196,6 @@ func (p *Parser) GetOpt(name string, def ...interface{}) *gvar.Var {
 // GetOptAll returns all parsed options.
 func (p *Parser) GetOptAll() map[string]string {
 	return p.parsedOptions
-}
-
-// ContainsOpt checks whether option named `name` exist in the arguments.
-func (p *Parser) ContainsOpt(name string) bool {
-	_, ok := p.parsedOptions[name]
-	return ok
 }
 
 // GetArg returns the argument at `index` as gvar.Var.
