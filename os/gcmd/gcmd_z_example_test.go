@@ -8,7 +8,9 @@ package gcmd_test
 
 import (
 	"fmt"
+	"os"
 
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/genv"
 )
@@ -67,4 +69,27 @@ func ExampleGetOptWithEnv() {
 	// Output:
 	// Opt[gf.test]:
 	// Opt[gf.test]:YES
+}
+
+func ExampleParse() {
+	os.Args = []string{"gf", "build", "main.go", "-o=gf.exe", "-y"}
+	p, err := gcmd.Parse(g.MapStrBool{
+		"o,output": true,
+		"y,yes":    false,
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(p.GetOpt("o"))
+	fmt.Println(p.GetOpt("output"))
+	fmt.Println(p.GetOpt("y") != nil)
+	fmt.Println(p.GetOpt("yes") != nil)
+	fmt.Println(p.GetOpt("none") != nil)
+
+	// Output:
+	// gf.exe
+	// gf.exe
+	// true
+	// true
+	// false
 }
