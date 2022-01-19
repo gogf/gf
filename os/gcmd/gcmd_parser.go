@@ -221,7 +221,7 @@ func (p *Parser) GetArgAll() []string {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (p *Parser) MarshalJSON() ([]byte, error) {
+func (p Parser) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"parsedArgs":       p.parsedArgs,
 		"parsedOptions":    p.parsedOptions,

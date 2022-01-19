@@ -55,7 +55,7 @@ func (f *File) FileInfo() os.FileInfo {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (f *File) MarshalJSON() ([]byte, error) {
+func (f File) MarshalJSON() ([]byte, error) {
 	info := f.FileInfo()
 	return json.Marshal(map[string]interface{}{
 		"name": f.Name(),

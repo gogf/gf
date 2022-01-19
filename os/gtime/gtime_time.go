@@ -446,6 +446,8 @@ func (t *Time) EndOfYear() *Time {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
+// Note that, DO NOT use `(t *Time) MarshalJSON() ([]byte, error)` as it looses interface
+// implement of `MarshalJSON` for struct of Time.
 func (t Time) MarshalJSON() ([]byte, error) {
 	return []byte(`"` + t.String() + `"`), nil
 }

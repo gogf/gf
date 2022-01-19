@@ -944,7 +944,7 @@ func (tree *BTree) deleteChild(node *BTreeNode, index int) {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (tree *BTree) MarshalJSON() ([]byte, error) {
+func (tree BTree) MarshalJSON() ([]byte, error) {
 	return json.Marshal(tree.MapStrAny())
 }
 

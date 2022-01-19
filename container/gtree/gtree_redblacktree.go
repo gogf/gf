@@ -925,7 +925,7 @@ func (tree *RedBlackTree) nodeColor(node *RedBlackTreeNode) color {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (tree *RedBlackTree) MarshalJSON() ([]byte, error) {
+func (tree RedBlackTree) MarshalJSON() ([]byte, error) {
 	return json.Marshal(gconv.Map(tree.Map()))
 }
 
