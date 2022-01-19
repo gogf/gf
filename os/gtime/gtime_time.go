@@ -446,7 +446,7 @@ func (t *Time) EndOfYear() *Time {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (t *Time) MarshalJSON() ([]byte, error) {
+func (t Time) MarshalJSON() ([]byte, error) {
 	return []byte(`"` + t.String() + `"`), nil
 }
 
