@@ -16,7 +16,7 @@ import (
 // Entry is the timing job.
 type Entry struct {
 	job         JobFunc         // The job function.
-	ctx         context.Context // The context for the job.
+	ctx         context.Context // The context for the job, for READ ONLY.
 	timer       *Timer          // Belonged timer.
 	ticks       int64           // The job runs every tick.
 	times       *gtype.Int      // Limit running times.

@@ -172,10 +172,11 @@ func (entry *Entry) check(ctx context.Context) {
 			}
 			entry.logDebugf(ctx, "[gcron] %s %s start", entry.schedule.pattern, entry.jobName)
 
-			entry.Job(entry.timerEntry.Ctx())
+			entry.Job(ctx)
 		}
 	}
 }
+
 func (entry *Entry) logDebugf(ctx context.Context, format string, v ...interface{}) {
 	if logger := entry.cron.GetLogger(); logger != nil {
 		logger.Debugf(ctx, format, v...)
