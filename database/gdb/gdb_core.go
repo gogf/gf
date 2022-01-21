@@ -454,8 +454,8 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 				err = gerror.WrapCode(gcode.CodeDbOperationError, err, `sql.Result.RowsAffected failed`)
 				return stdSqlResult, err
 			} else {
-				batchResult.result = stdSqlResult
-				batchResult.affected += affectedRows
+				batchResult.Result = stdSqlResult
+				batchResult.Affected += affectedRows
 			}
 			params = params[:0]
 			valueHolder = valueHolder[:0]
