@@ -301,8 +301,8 @@ func (d *DriverOracle) DoInsert(ctx context.Context, link Link, table string, li
 			if n, err := r.RowsAffected(); err != nil {
 				return r, err
 			} else {
-				batchResult.result = r
-				batchResult.affected += n
+				batchResult.Result = r
+				batchResult.Affected += n
 			}
 			params = params[:0]
 			intoStr = intoStr[:0]
