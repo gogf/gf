@@ -310,11 +310,7 @@ const (
 )
 
 const (
-	DriverNameMysql  = `mysql`
-	DriverNameMssql  = `mssql`
-	DriverNamePgsql  = `pgsql`
-	DriverNameOracle = `oracle`
-	DriverNameSqlite = `sqlite`
+	DriverNameMysql = `mysql`
 )
 
 var (
@@ -323,11 +319,7 @@ var (
 
 	// driverMap manages all custom registered driver.
 	driverMap = map[string]Driver{
-		DriverNameMysql:  &DriverMysql{},
-		DriverNameMssql:  &DriverMssql{},
-		DriverNamePgsql:  &DriverPgsql{},
-		DriverNameOracle: &DriverOracle{},
-		DriverNameSqlite: &DriverSqlite{},
+		DriverNameMysql: &DriverMysql{},
 	}
 
 	// lastOperatorRegPattern is the regular expression pattern for a string
