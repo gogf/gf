@@ -167,7 +167,7 @@ func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
 		return m.Data(data...).Insert()
 	}
-	return m.doInsertWithOption(insertOptionDefault)
+	return m.doInsertWithOption(InsertOptionDefault)
 }
 
 // InsertAndGetId performs action Insert and returns the last insert id that automatically generated.
@@ -175,7 +175,7 @@ func (m *Model) InsertAndGetId(data ...interface{}) (lastInsertId int64, err err
 	if len(data) > 0 {
 		return m.Data(data...).InsertAndGetId()
 	}
-	result, err := m.doInsertWithOption(insertOptionDefault)
+	result, err := m.doInsertWithOption(InsertOptionDefault)
 	if err != nil {
 		return 0, err
 	}
@@ -189,7 +189,7 @@ func (m *Model) InsertIgnore(data ...interface{}) (result sql.Result, err error)
 	if len(data) > 0 {
 		return m.Data(data...).InsertIgnore()
 	}
-	return m.doInsertWithOption(insertOptionIgnore)
+	return m.doInsertWithOption(InsertOptionIgnore)
 }
 
 // Replace does "REPLACE INTO ..." statement for the model.
@@ -199,7 +199,7 @@ func (m *Model) Replace(data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
 		return m.Data(data...).Replace()
 	}
-	return m.doInsertWithOption(insertOptionReplace)
+	return m.doInsertWithOption(InsertOptionReplace)
 }
 
 // Save does "INSERT INTO ... ON DUPLICATE KEY UPDATE..." statement for the model.
@@ -212,7 +212,7 @@ func (m *Model) Save(data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
 		return m.Data(data...).Save()
 	}
-	return m.doInsertWithOption(insertOptionSave)
+	return m.doInsertWithOption(InsertOptionSave)
 }
 
 // doInsertWithOption inserts data with option parameter.
@@ -318,7 +318,7 @@ func (m *Model) formatDoInsertOption(insertOption int, columnNames []string) (op
 		InsertOption: insertOption,
 		BatchCount:   m.getBatch(),
 	}
-	if insertOption == insertOptionSave {
+	if insertOption == InsertOptionSave {
 		onDuplicateExKeys, err := m.formatOnDuplicateExKeys(m.onDuplicateEx)
 		if err != nil {
 			return option, err

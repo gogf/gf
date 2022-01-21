@@ -195,10 +195,10 @@ ORDER BY a.attnum`,
 // DoInsert is not supported in pgsql.
 func (d *DriverPgsql) DoInsert(ctx context.Context, link Link, table string, list List, option DoInsertOption) (result sql.Result, err error) {
 	switch option.InsertOption {
-	case insertOptionSave:
+	case InsertOptionSave:
 		return nil, gerror.NewCode(gcode.CodeNotSupported, `Save operation is not supported by pgsql driver`)
 
-	case insertOptionReplace:
+	case InsertOptionReplace:
 		return nil, gerror.NewCode(gcode.CodeNotSupported, `Replace operation is not supported by pgsql driver`)
 
 	default:
