@@ -289,7 +289,7 @@ func (c *Core) PingMaster() error {
 	if master, err := c.db.Master(); err != nil {
 		return err
 	} else {
-		if err = master.Ping(); err != nil {
+		if err = master.PingContext(c.GetCtx()); err != nil {
 			err = gerror.WrapCode(gcode.CodeDbOperationError, err, `master.Ping failed`)
 		}
 		return err
@@ -301,7 +301,7 @@ func (c *Core) PingSlave() error {
 	if slave, err := c.db.Slave(); err != nil {
 		return err
 	} else {
-		if err = slave.Ping(); err != nil {
+		if err = slave.PingContext(c.GetCtx()); err != nil {
 			err = gerror.WrapCode(gcode.CodeDbOperationError, err, `slave.Ping failed`)
 		}
 		return err
