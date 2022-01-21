@@ -255,10 +255,10 @@ FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`,
 // 3: ignore:  if there's unique/primary key in the data, it ignores the inserting;
 func (d *DriverOracle) DoInsert(ctx context.Context, link Link, table string, list List, option DoInsertOption) (result sql.Result, err error) {
 	switch option.InsertOption {
-	case insertOptionSave:
+	case InsertOptionSave:
 		return nil, gerror.NewCode(gcode.CodeNotSupported, `Save operation is not supported by mssql driver`)
 
-	case insertOptionReplace:
+	case InsertOptionReplace:
 		return nil, gerror.NewCode(gcode.CodeNotSupported, `Replace operation is not supported by mssql driver`)
 	}
 

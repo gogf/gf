@@ -147,9 +147,9 @@ func ListItemValuesUnique(list interface{}, key string, subKey ...interface{}) [
 func GetInsertOperationByOption(option int) string {
 	var operator string
 	switch option {
-	case insertOptionReplace:
+	case InsertOptionReplace:
 		operator = "REPLACE"
-	case insertOptionIgnore:
+	case InsertOptionIgnore:
 		operator = "INSERT IGNORE"
 	default:
 		operator = "INSERT"

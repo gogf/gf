@@ -278,10 +278,6 @@ const (
 	queryTypeCount          = 1
 	unionTypeNormal         = 0
 	unionTypeAll            = 1
-	insertOptionDefault     = 0
-	insertOptionReplace     = 1
-	insertOptionSave        = 2
-	insertOptionIgnore      = 3
 	defaultBatchNumber      = 10               // Per count for batch insert/replace/save.
 	defaultMaxIdleConnCount = 10               // Max idle connection count in pool.
 	defaultMaxOpenConnCount = 0                // Max open connection count in pool. Default is no limit.
@@ -292,6 +288,13 @@ const (
 	commandEnvKeyForDryRun = "gf.gdb.dryrun"
 	modelForDaoSuffix      = `ForDao`
 	dbRoleSlave            = `slave`
+)
+
+const (
+	InsertOptionDefault = 0
+	InsertOptionReplace = 1
+	InsertOptionSave    = 2
+	InsertOptionIgnore  = 3
 )
 
 const (
