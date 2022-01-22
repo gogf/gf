@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gmeta"
@@ -31,7 +32,7 @@ func Test_OpenApi_Swagger(t *testing.T) {
 		Age  int
 		Name string
 	}
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.SetSwaggerPath("/swagger")
 	s.SetOpenApiPath("/api.json")

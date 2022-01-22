@@ -60,3 +60,59 @@ func SendRecv(address string, data []byte, receive int, retry ...Retry) ([]byte,
 	defer conn.Close()
 	return conn.SendRecv(data, receive, retry...)
 }
+
+// GetFreePort retrieves and returns a port that is free.
+func GetFreePort() (port int, err error) {
+	var (
+		network = `udp`
+		address = `:0`
+	)
+	resolvedAddr, err := net.ResolveUDPAddr(network, address)
+	if err != nil {
+		return 0, gerror.Wrapf(
+			err,
+			`net.ResolveUDPAddr failed for network "%s", address "%s"`,
+			network, address,
+		)
+	}
+	l, err := net.ListenUDP(network, resolvedAddr)
+	if err != nil {
+		return 0, gerror.Wrapf(
+			err,
+			`net.ListenUDP failed for network "%s", address "%s"`,
+			network, resolvedAddr.String(),
+		)
+	}
+	port = l.LocalAddr().(*net.UDPAddr).Port
+	_ = l.Close()
+	return
+}
+
+// GetFreePorts retrieves and returns specified number of ports that are free.
+func GetFreePorts(count int) (ports []int, err error) {
+	var (
+		network = `udp`
+		address = `:0`
+	)
+	for i := 0; i < count; i++ {
+		resolvedAddr, err := net.ResolveUDPAddr(network, address)
+		if err != nil {
+			return nil, gerror.Wrapf(
+				err,
+				`net.ResolveUDPAddr failed for network "%s", address "%s"`,
+				network, address,
+			)
+		}
+		l, err := net.ListenUDP(network, resolvedAddr)
+		if err != nil {
+			return nil, gerror.Wrapf(
+				err,
+				`net.ListenUDP failed for network "%s", address "%s"`,
+				network, resolvedAddr.String(),
+			)
+		}
+		ports = append(ports, l.LocalAddr().(*net.UDPAddr).Port)
+		_ = l.Close()
+	}
+	return ports, nil
+}

@@ -13,11 +13,12 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Context(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(func(r *ghttp.Request) {

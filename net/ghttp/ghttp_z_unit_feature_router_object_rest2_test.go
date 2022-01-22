@@ -13,6 +13,7 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
@@ -43,7 +44,7 @@ func (o *ObjectRest2) Delete(r *ghttp.Request) {
 }
 
 func Test_Router_ObjectRest_Id(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindObjectRest("/object/:id", new(ObjectRest2))
 	s.SetPort(p)

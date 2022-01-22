@@ -15,12 +15,13 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_StatusHandler(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		p, _ := ports.PopRand()
+		p, _ := gtcp.GetFreePort()
 		s := g.Server(p)
 		s.BindStatusHandlerByMap(map[int]ghttp.HandlerFunc{
 			404: func(r *ghttp.Request) { r.Response.WriteOver("404") },
@@ -44,7 +45,7 @@ func Test_StatusHandler(t *testing.T) {
 
 func Test_StatusHandler_Multi(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		p, _ := ports.PopRand()
+		p, _ := gtcp.GetFreePort()
 		s := g.Server(p)
 		s.BindStatusHandler(502, func(r *ghttp.Request) {
 			r.Response.WriteOver("1")

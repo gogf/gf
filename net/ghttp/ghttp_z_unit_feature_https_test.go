@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	_ "github.com/gogf/gf/v2/net/ghttp/testdata/https/packed"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -22,7 +23,7 @@ import (
 )
 
 func Test_HTTPS_Basic(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.GET("/test", func(r *ghttp.Request) {
@@ -57,7 +58,7 @@ func Test_HTTPS_Basic(t *testing.T) {
 }
 
 func Test_HTTPS_Resource(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.GET("/test", func(r *ghttp.Request) {
@@ -93,8 +94,8 @@ func Test_HTTPS_Resource(t *testing.T) {
 
 func Test_HTTPS_HTTP_Basic(t *testing.T) {
 	var (
-		portHttp, _  = ports.PopRand()
-		portHttps, _ = ports.PopRand()
+		portHttp, _  = gtcp.GetFreePort()
+		portHttps, _ = gtcp.GetFreePort()
 	)
 	s := g.Server(gtime.TimestampNanoStr())
 	s.Group("/", func(group *ghttp.RouterGroup) {

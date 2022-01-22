@@ -13,11 +13,12 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Router_Exit(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHookHandlerByMap("/*", map[string]ghttp.HandlerFunc{
 		ghttp.HookBeforeServe:  func(r *ghttp.Request) { r.Response.Write("1") },
@@ -46,7 +47,7 @@ func Test_Router_Exit(t *testing.T) {
 }
 
 func Test_Router_ExitHook(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/priority/show", func(r *ghttp.Request) {
 		r.Response.Write("show")
@@ -84,7 +85,7 @@ func Test_Router_ExitHook(t *testing.T) {
 }
 
 func Test_Router_ExitAll(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/priority/show", func(r *ghttp.Request) {
 		r.Response.Write("show")

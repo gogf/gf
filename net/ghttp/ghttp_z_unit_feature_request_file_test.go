@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -22,7 +23,7 @@ import (
 
 func Test_Params_File_Single(t *testing.T) {
 	dstDirPath := gfile.TempDir(gtime.TimestampNanoStr())
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/upload/single", func(r *ghttp.Request) {
 		file := r.GetUploadFile("file")
@@ -76,7 +77,7 @@ func Test_Params_File_Single(t *testing.T) {
 
 func Test_Params_File_CustomName(t *testing.T) {
 	dstDirPath := gfile.TempDir(gtime.TimestampNanoStr())
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/upload/single", func(r *ghttp.Request) {
 		file := r.GetUploadFile("file")
@@ -113,7 +114,7 @@ func Test_Params_File_CustomName(t *testing.T) {
 
 func Test_Params_File_Batch(t *testing.T) {
 	dstDirPath := gfile.TempDir(gtime.TimestampNanoStr())
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/upload/batch", func(r *ghttp.Request) {
 		files := r.GetUploadFiles("file")

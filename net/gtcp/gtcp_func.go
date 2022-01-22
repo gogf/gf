@@ -147,3 +147,59 @@ func LoadKeyCrt(crtFile, keyFile string) (*tls.Config, error) {
 	tlsConfig.Rand = rand.Reader
 	return tlsConfig, nil
 }
+
+// GetFreePort retrieves and returns a port that is free.
+func GetFreePort() (port int, err error) {
+	var (
+		network = `tcp`
+		address = `:0`
+	)
+	resolvedAddr, err := net.ResolveTCPAddr(network, address)
+	if err != nil {
+		return 0, gerror.Wrapf(
+			err,
+			`net.ResolveTCPAddr failed for network "%s", address "%s"`,
+			network, address,
+		)
+	}
+	l, err := net.ListenTCP(network, resolvedAddr)
+	if err != nil {
+		return 0, gerror.Wrapf(
+			err,
+			`net.ListenTCP failed for network "%s", address "%s"`,
+			network, resolvedAddr.String(),
+		)
+	}
+	port = l.Addr().(*net.TCPAddr).Port
+	_ = l.Close()
+	return
+}
+
+// GetFreePorts retrieves and returns specified number of ports that are free.
+func GetFreePorts(count int) (ports []int, err error) {
+	var (
+		network = `tcp`
+		address = `:0`
+	)
+	for i := 0; i < count; i++ {
+		resolvedAddr, err := net.ResolveTCPAddr(network, address)
+		if err != nil {
+			return nil, gerror.Wrapf(
+				err,
+				`net.ResolveTCPAddr failed for network "%s", address "%s"`,
+				network, address,
+			)
+		}
+		l, err := net.ListenTCP(network, resolvedAddr)
+		if err != nil {
+			return nil, gerror.Wrapf(
+				err,
+				`net.ListenTCP failed for network "%s", address "%s"`,
+				network, resolvedAddr.String(),
+			)
+		}
+		ports = append(ports, l.Addr().(*net.TCPAddr).Port)
+		_ = l.Close()
+	}
+	return ports, nil
+}

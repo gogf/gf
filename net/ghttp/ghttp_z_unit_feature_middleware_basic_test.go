@@ -16,11 +16,12 @@ import (
 	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_BindMiddleware_Basic1(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
@@ -60,7 +61,7 @@ func Test_BindMiddleware_Basic1(t *testing.T) {
 }
 
 func Test_BindMiddleware_Basic2(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
@@ -87,7 +88,7 @@ func Test_BindMiddleware_Basic2(t *testing.T) {
 }
 
 func Test_BindMiddleware_Basic3(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
@@ -131,7 +132,7 @@ func Test_BindMiddleware_Basic3(t *testing.T) {
 }
 
 func Test_BindMiddleware_Basic4(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(func(r *ghttp.Request) {
@@ -163,7 +164,7 @@ func Test_BindMiddleware_Basic4(t *testing.T) {
 }
 
 func Test_Middleware_With_Static(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(func(r *ghttp.Request) {
@@ -193,7 +194,7 @@ func Test_Middleware_With_Static(t *testing.T) {
 }
 
 func Test_Middleware_Status(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(func(r *ghttp.Request) {
@@ -224,7 +225,7 @@ func Test_Middleware_Status(t *testing.T) {
 }
 
 func Test_Middleware_Hook_With_Static(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	a := garray.New(true)
 	s.Group("/", func(group *ghttp.RouterGroup) {
@@ -278,7 +279,7 @@ func Test_Middleware_Hook_With_Static(t *testing.T) {
 }
 
 func Test_BindMiddleware_Status(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
@@ -304,7 +305,7 @@ func Test_BindMiddleware_Status(t *testing.T) {
 }
 
 func Test_BindMiddlewareDefault_Basic1(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
@@ -335,7 +336,7 @@ func Test_BindMiddlewareDefault_Basic1(t *testing.T) {
 }
 
 func Test_BindMiddlewareDefault_Basic2(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("PUT:/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
@@ -368,7 +369,7 @@ func Test_BindMiddlewareDefault_Basic2(t *testing.T) {
 }
 
 func Test_BindMiddlewareDefault_Basic3(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
@@ -397,7 +398,7 @@ func Test_BindMiddlewareDefault_Basic3(t *testing.T) {
 }
 
 func Test_BindMiddlewareDefault_Basic4(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
@@ -426,7 +427,7 @@ func Test_BindMiddlewareDefault_Basic4(t *testing.T) {
 }
 
 func Test_BindMiddlewareDefault_Basic5(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
@@ -455,7 +456,7 @@ func Test_BindMiddlewareDefault_Basic5(t *testing.T) {
 }
 
 func Test_BindMiddlewareDefault_Status(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
@@ -501,7 +502,7 @@ func (o *ObjectMiddleware) Info(r *ghttp.Request) {
 }
 
 func Test_BindMiddlewareDefault_Basic6(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindObject("/", new(ObjectMiddleware))
 	s.BindMiddlewareDefault(func(r *ghttp.Request) {
@@ -534,7 +535,7 @@ func Test_BindMiddlewareDefault_Basic6(t *testing.T) {
 }
 
 func Test_Hook_Middleware_Basic1(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
@@ -591,7 +592,7 @@ func MiddlewareCORS(r *ghttp.Request) {
 }
 
 func Test_Middleware_CORSAndAuth(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.Use(MiddlewareCORS)
 	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
@@ -645,7 +646,7 @@ func MiddlewareScope3(r *ghttp.Request) {
 }
 
 func Test_Middleware_Scope(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(MiddlewareScope1)
@@ -682,7 +683,7 @@ func Test_Middleware_Scope(t *testing.T) {
 }
 
 func Test_Middleware_Panic(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	i := 0
 	s.Group("/", func(group *ghttp.RouterGroup) {

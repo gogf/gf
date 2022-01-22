@@ -13,6 +13,7 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gvalid"
 )
@@ -23,7 +24,7 @@ func Test_Params_Parse(t *testing.T) {
 		Name string
 		Map  map[string]interface{}
 	}
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/parse", func(r *ghttp.Request) {
 		var user *User
@@ -50,7 +51,7 @@ func Test_Params_ParseQuery(t *testing.T) {
 		Id   int
 		Name string
 	}
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/parse-query", func(r *ghttp.Request) {
 		var user *User
@@ -83,7 +84,7 @@ func Test_Params_ParseForm(t *testing.T) {
 		Id   int
 		Name string
 	}
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/parse-form", func(r *ghttp.Request) {
 		var user *User
@@ -182,7 +183,7 @@ func Test_Params_ComplexJsonStruct(t *testing.T) {
 		ReadinessProbe ItemProbe
 	}
 
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/parse", func(r *ghttp.Request) {
 		if m := r.GetMap(); len(m) > 0 {
@@ -294,7 +295,7 @@ func Test_Params_Parse_Attr_Pointer1(t *testing.T) {
 		Id   *int
 		Name *string
 	}
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/parse1", func(r *ghttp.Request) {
 		if m := r.GetMap(); len(m) > 0 {
@@ -334,7 +335,7 @@ func Test_Params_Parse_Attr_Pointer2(t *testing.T) {
 	type User struct {
 		Id *int `v:"required"`
 	}
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/parse", func(r *ghttp.Request) {
 		var user *User
@@ -364,7 +365,7 @@ func Test_Params_Parse_Attr_Pointer2(t *testing.T) {
 //		Name   string
 //		Scores [][]int
 //	}
-//	p, _ := ports.PopRand()
+//	p, _ := gtcp.GetFreePort()
 //	s := g.Server(p)
 //	s.BindHandler("/parse", func(r *ghttp.Request) {
 //		if m := r.GetMap(); len(m) > 0 {
@@ -396,7 +397,7 @@ func Test_Params_Struct(t *testing.T) {
 		Pass1 string `p:"password1"`
 		Pass2 string `p:"password2" v:"password2 @required|length:2,20|password3#||密码强度不足"`
 	}
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/struct1", func(r *ghttp.Request) {
 		if m := r.GetMap(); len(m) > 0 {
@@ -465,7 +466,7 @@ func Test_Params_Structs(t *testing.T) {
 		Pass1 string `p:"password1"`
 		Pass2 string `p:"password2" v:"password2 @required|length:2,20|password3#||密码强度不足"`
 	}
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/parse1", func(r *ghttp.Request) {
 		var users []*User
@@ -496,7 +497,7 @@ func Test_Params_Struct_Validation(t *testing.T) {
 		Id   int    `v:"required"`
 		Name string `v:"name@required-with:id"`
 	}
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.ALL("/", func(r *ghttp.Request) {

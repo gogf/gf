@@ -13,11 +13,12 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Session_Cookie(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/set", func(r *ghttp.Request) {
 		r.Session.Set(r.Get("k").String(), r.Get("v").String())
@@ -64,7 +65,7 @@ func Test_Session_Cookie(t *testing.T) {
 }
 
 func Test_Session_Header(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/set", func(r *ghttp.Request) {
 		r.Session.Set(r.Get("k").String(), r.Get("v").String())
@@ -115,7 +116,7 @@ func Test_Session_Header(t *testing.T) {
 
 func Test_Session_StorageFile(t *testing.T) {
 	sessionId := ""
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/set", func(r *ghttp.Request) {
 		r.Session.Set(r.Get("k").String(), r.Get("v").String())
@@ -158,7 +159,7 @@ func Test_Session_Custom_Id(t *testing.T) {
 		sessionId = "1234567890"
 		key       = "key"
 		value     = "value"
-		p, _      = ports.PopRand()
+		p, _      = gtcp.GetFreePort()
 		s         = g.Server(p)
 	)
 	s.BindHandler("/id", func(r *ghttp.Request) {
