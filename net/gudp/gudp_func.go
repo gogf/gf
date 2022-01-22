@@ -18,23 +18,33 @@ func NewNetConn(remoteAddress string, localAddress ...string) (*net.UDPConn, err
 		err        error
 		remoteAddr *net.UDPAddr
 		localAddr  *net.UDPAddr
+		network    = `udp`
 	)
-	remoteAddr, err = net.ResolveUDPAddr("udp", remoteAddress)
+	remoteAddr, err = net.ResolveUDPAddr(network, remoteAddress)
 	if err != nil {
-		err = gerror.Wrapf(err, `net.ResolveUDPAddr failed for address "%s"`, remoteAddress)
-		return nil, err
+		return nil, gerror.Wrapf(
+			err,
+			`net.ResolveUDPAddr failed for network "%s", address "%s"`,
+			network, remoteAddress,
+		)
 	}
 	if len(localAddress) > 0 {
-		localAddr, err = net.ResolveUDPAddr("udp", localAddress[0])
+		localAddr, err = net.ResolveUDPAddr(network, localAddress[0])
 		if err != nil {
-			err = gerror.Wrapf(err, `net.ResolveUDPAddr failed for address "%s"`, localAddress[0])
-			return nil, err
+			return nil, gerror.Wrapf(
+				err,
+				`net.ResolveUDPAddr failed for network "%s", address "%s"`,
+				network, localAddress[0],
+			)
 		}
 	}
-	conn, err := net.DialUDP("udp", localAddr, remoteAddr)
+	conn, err := net.DialUDP(network, localAddr, remoteAddr)
 	if err != nil {
-		err = gerror.Wrapf(err, `net.DialUDP failed for local "%s", remote "%s"`, localAddr.String(), remoteAddr.String())
-		return nil, err
+		return nil, gerror.Wrapf(
+			err,
+			`net.DialUDP failed for network "%s", local "%s", remote "%s"`,
+			network, localAddr.String(), remoteAddr.String(),
+		)
 	}
 	return conn, nil
 }

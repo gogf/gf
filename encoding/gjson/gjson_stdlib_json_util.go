@@ -9,6 +9,7 @@ package gjson
 import (
 	"bytes"
 
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -75,7 +76,7 @@ func Decode(data interface{}, options ...Options) (interface{}, error) {
 // DecodeTo decodes json format `data` to specified golang variable `v`.
 // The parameter `data` can be either bytes or string type.
 // The parameter `v` should be a pointer type.
-func DecodeTo(data interface{}, v interface{}, options ...Options) error {
+func DecodeTo(data interface{}, v interface{}, options ...Options) (err error) {
 	decoder := json.NewDecoder(bytes.NewReader(gconv.Bytes(data)))
 	if len(options) > 0 {
 		// The StrNumber option is for certain situations, not for all.
@@ -84,7 +85,10 @@ func DecodeTo(data interface{}, v interface{}, options ...Options) error {
 			decoder.UseNumber()
 		}
 	}
-	return decoder.Decode(v)
+	if err = decoder.Decode(v); err != nil {
+		err = gerror.Wrap(err, `json Decode failed`)
+	}
+	return
 }
 
 // DecodeToJson codes json format `data` to a Json object.
