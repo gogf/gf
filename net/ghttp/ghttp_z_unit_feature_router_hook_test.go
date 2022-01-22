@@ -13,11 +13,12 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Router_Hook_Basic(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHookHandlerByMap("/*", map[string]ghttp.HandlerFunc{
 		ghttp.HookBeforeServe:  func(r *ghttp.Request) { r.Response.Write("1") },
@@ -44,7 +45,7 @@ func Test_Router_Hook_Basic(t *testing.T) {
 }
 
 func Test_Router_Hook_Fuzzy_Router(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	i := 1000
 	pattern1 := "/:name/info"
@@ -88,7 +89,7 @@ func Test_Router_Hook_Fuzzy_Router(t *testing.T) {
 }
 
 func Test_Router_Hook_Priority(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/priority/show", func(r *ghttp.Request) {
 		r.Response.Write("show")
@@ -127,7 +128,7 @@ func Test_Router_Hook_Priority(t *testing.T) {
 }
 
 func Test_Router_Hook_Multi(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/multi-hook", func(r *ghttp.Request) {
 		r.Response.Write("show")
@@ -159,7 +160,7 @@ func Test_Router_Hook_Multi(t *testing.T) {
 }
 
 func Test_Router_Hook_ExitAll(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/test", func(r *ghttp.Request) {
 		r.Response.Write("test")

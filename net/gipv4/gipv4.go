@@ -58,35 +58,3 @@ func GetSegment(ip string) string {
 	}
 	return fmt.Sprintf("%s.%s.%s", match[1], match[2], match[3])
 }
-
-// GetFreePort retrieves and returns a port that is free.
-func GetFreePort() (port int, err error) {
-	addr, err := net.ResolveTCPAddr("tcp", ":0")
-	if err != nil {
-		return 0, err
-	}
-	l, err := net.ListenTCP("tcp", addr)
-	if err != nil {
-		return 0, err
-	}
-	port = l.Addr().(*net.TCPAddr).Port
-	_ = l.Close()
-	return
-}
-
-// GetFreePorts retrieves and returns specified number of ports that are free.
-func GetFreePorts(count int) (ports []int, err error) {
-	for i := 0; i < count; i++ {
-		addr, err := net.ResolveTCPAddr("tcp", ":0")
-		if err != nil {
-			return nil, err
-		}
-		l, err := net.ListenTCP("tcp", addr)
-		if err != nil {
-			return nil, err
-		}
-		ports = append(ports, l.Addr().(*net.TCPAddr).Port)
-		_ = l.Close()
-	}
-	return ports, nil
-}

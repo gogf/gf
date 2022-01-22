@@ -13,6 +13,7 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
@@ -55,7 +56,7 @@ func (o *DomainObjectRest) Head(r *ghttp.Request) {
 }
 
 func Test_Router_DomainObjectRest(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	d := s.Domain("localhost, local")
 	d.BindObjectRest("/", new(DomainObjectRest))

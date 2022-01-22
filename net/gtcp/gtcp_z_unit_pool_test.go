@@ -8,14 +8,15 @@ package gtcp_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/v2/net/gtcp"
-	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
 	"time"
+
+	"github.com/gogf/gf/v2/net/gtcp"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Pool_Basic1(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := gtcp.NewServer(fmt.Sprintf(`:%d`, p), func(conn *gtcp.Conn) {
 		defer conn.Close()
 		for {
@@ -42,7 +43,7 @@ func Test_Pool_Basic1(t *testing.T) {
 }
 
 func Test_Pool_Basic2(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := gtcp.NewServer(fmt.Sprintf(`:%d`, p), func(conn *gtcp.Conn) {
 		conn.Close()
 	})

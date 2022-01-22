@@ -13,6 +13,7 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
@@ -39,7 +40,7 @@ func (o *Object) Info(r *ghttp.Request) {
 }
 
 func Test_Router_Object1(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindObject("/", new(Object))
 	s.BindObject("/{.struct}/{.method}", new(Object))
@@ -70,7 +71,7 @@ func Test_Router_Object1(t *testing.T) {
 }
 
 func Test_Router_Object2(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindObject("/object", new(Object), "Show, Info")
 	s.SetPort(p)
@@ -96,7 +97,7 @@ func Test_Router_Object2(t *testing.T) {
 }
 
 func Test_Router_ObjectMethod(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindObjectMethod("/object-info", new(Object), "Info")
 	s.SetPort(p)

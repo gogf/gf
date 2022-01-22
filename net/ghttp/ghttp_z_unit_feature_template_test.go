@@ -17,6 +17,7 @@ import (
 	"github.com/gogf/gf/v2/encoding/ghtml"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/os/gview"
 	"github.com/gogf/gf/v2/test/gtest"
 )
@@ -24,7 +25,7 @@ import (
 func Test_Template_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New(gdebug.TestDataPath("template", "basic"))
-		p, _ := ports.PopRand()
+		p, _ := gtcp.GetFreePort()
 		s := g.Server(p)
 		s.SetView(v)
 		s.BindHandler("/", func(r *ghttp.Request) {
@@ -50,7 +51,7 @@ func Test_Template_Encode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New(gdebug.TestDataPath("template", "basic"))
 		v.SetAutoEncode(true)
-		p, _ := ports.PopRand()
+		p, _ := gtcp.GetFreePort()
 		s := g.Server(p)
 		s.SetView(v)
 		s.BindHandler("/", func(r *ghttp.Request) {
@@ -75,7 +76,7 @@ func Test_Template_Encode(t *testing.T) {
 func Test_Template_Layout1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New(gdebug.TestDataPath("template", "layout1"))
-		p, _ := ports.PopRand()
+		p, _ := gtcp.GetFreePort()
 		s := g.Server(p)
 		s.SetView(v)
 		s.BindHandler("/layout", func(r *ghttp.Request) {
@@ -105,7 +106,7 @@ func Test_Template_Layout1(t *testing.T) {
 func Test_Template_Layout2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New(gdebug.TestDataPath("template", "layout2"))
-		p, _ := ports.PopRand()
+		p, _ := gtcp.GetFreePort()
 		s := g.Server(p)
 		s.SetView(v)
 		s.BindHandler("/main1", func(r *ghttp.Request) {
@@ -141,7 +142,7 @@ func Test_Template_Layout2(t *testing.T) {
 
 func Test_Template_BuildInVarRequest(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		p, _ := ports.PopRand()
+		p, _ := gtcp.GetFreePort()
 		s := g.Server(p)
 		s.BindHandler("/:table/test", func(r *ghttp.Request) {
 			err := r.Response.WriteTplContent("{{.Request.table}}")
@@ -165,7 +166,7 @@ func Test_Template_XSS(t *testing.T) {
 		v := gview.New()
 		v.SetAutoEncode(true)
 		c := "<br>"
-		p, _ := ports.PopRand()
+		p, _ := gtcp.GetFreePort()
 		s := g.Server(p)
 		s.SetView(v)
 		s.BindHandler("/", func(r *ghttp.Request) {

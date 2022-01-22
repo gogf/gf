@@ -14,12 +14,13 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/gtcp"
 	. "github.com/gogf/gf/v2/test/gtest"
 )
 
 func TestServer_EnablePProf(t *testing.T) {
 	C(t, func(t *T) {
-		p, _ := ports.PopRand()
+		p, _ := gtcp.GetFreePort()
 		s := g.Server(p)
 		s.EnablePProf("/pprof")
 		s.SetDumpRouterMap(false)

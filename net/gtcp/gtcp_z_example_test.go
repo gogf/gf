@@ -7,15 +7,21 @@
 package gtcp_test
 
 import (
-	"github.com/gogf/gf/v2/container/garray"
+	"fmt"
+
+	"github.com/gogf/gf/v2/net/gtcp"
 )
 
-var (
-	ports = garray.NewIntArray(true)
-)
+func ExampleGetFreePort() {
+	fmt.Println(gtcp.GetFreePort())
 
-func init() {
-	for i := 9000; i < 10000; i++ {
-		ports.Append(i)
-	}
+	// May Output:
+	// 57429 <nil>
+}
+
+func ExampleGetFreePorts() {
+	fmt.Println(gtcp.GetFreePorts(2))
+
+	// May Output:
+	// [57743 57744] <nil>
 }

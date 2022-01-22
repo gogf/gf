@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
@@ -28,7 +29,7 @@ func Test_Router_Handler_Extended_Handler_WithObject(t *testing.T) {
 		Age  int
 		Name string
 	}
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.Use(ghttp.MiddlewareHandlerResponse)
 	s.BindHandler("/test", func(ctx context.Context, req *TestReq) (res *TestRes, err error) {
@@ -132,7 +133,7 @@ func (ControllerForHandlerWithObjectAndMeta2) Test4(ctx context.Context, req *Te
 	}, nil
 }
 func Test_Router_Handler_Extended_Handler_WithObjectAndMeta(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.Use(ghttp.MiddlewareHandlerResponse)
 	s.Group("/", func(group *ghttp.RouterGroup) {
@@ -156,7 +157,7 @@ func Test_Router_Handler_Extended_Handler_WithObjectAndMeta(t *testing.T) {
 }
 
 func Test_Router_Handler_Extended_Handler_Group_Bind(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.Use(ghttp.MiddlewareHandlerResponse)
 	s.Group("/api/v1", func(group *ghttp.RouterGroup) {

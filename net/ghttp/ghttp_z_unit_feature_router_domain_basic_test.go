@@ -14,11 +14,12 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Router_DomainBasic(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	d := s.Domain("localhost, local")
 	d.BindHandler("/:name", func(r *ghttp.Request) {
@@ -69,7 +70,7 @@ func Test_Router_DomainBasic(t *testing.T) {
 }
 
 func Test_Router_DomainMethod(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	d := s.Domain("localhost, local")
 	d.BindHandler("GET:/get", func(r *ghttp.Request) {
@@ -161,7 +162,7 @@ func Test_Router_DomainMethod(t *testing.T) {
 }
 
 func Test_Router_DomainStatus(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	d := s.Domain("localhost, local")
 	d.BindHandler("/200", func(r *ghttp.Request) {
@@ -257,7 +258,7 @@ func Test_Router_DomainStatus(t *testing.T) {
 }
 
 func Test_Router_DomainCustomStatusHandler(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	d := s.Domain("localhost, local")
 	d.BindHandler("/", func(r *ghttp.Request) {
@@ -296,7 +297,7 @@ func Test_Router_DomainCustomStatusHandler(t *testing.T) {
 }
 
 func Test_Router_Domain404(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	d := s.Domain("localhost, local")
 	d.BindHandler("/", func(r *ghttp.Request) {
@@ -329,7 +330,7 @@ func Test_Router_Domain404(t *testing.T) {
 }
 
 func Test_Router_DomainGroup(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	d := s.Domain("localhost, local")
 	d.Group("/", func(group *ghttp.RouterGroup) {
