@@ -500,13 +500,15 @@ func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 		}
 	}
 	// Exclude the right border value.
-	r := grand.N(0, total-1)
-	min := 0
-	max := 0
+	var (
+		min    = 0
+		max    = 0
+		random = grand.N(0, total-1)
+	)
 	for i := 0; i < len(cg); i++ {
 		max = min + cg[i].Weight*100
 		// fmt.Printf("r: %d, min: %d, max: %d\n", r, min, max)
-		if r >= min && r < max {
+		if random >= min && random < max {
 			return &cg[i]
 		} else {
 			min = max

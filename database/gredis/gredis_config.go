@@ -80,22 +80,22 @@ func ConfigFromMap(m map[string]interface{}) (config *Config, err error) {
 	if err = gconv.Scan(m, config); err != nil {
 		err = gerror.NewCodef(gcode.CodeInvalidConfiguration, `invalid redis configuration: %#v`, m)
 	}
-	if config.DialTimeout < 1000 {
+	if config.DialTimeout < time.Second {
 		config.DialTimeout = config.DialTimeout * time.Second
 	}
-	if config.WaitTimeout < 1000 {
+	if config.WaitTimeout < time.Second {
 		config.WaitTimeout = config.WaitTimeout * time.Second
 	}
-	if config.WriteTimeout < 1000 {
+	if config.WriteTimeout < time.Second {
 		config.WriteTimeout = config.WriteTimeout * time.Second
 	}
-	if config.ReadTimeout < 1000 {
+	if config.ReadTimeout < time.Second {
 		config.ReadTimeout = config.ReadTimeout * time.Second
 	}
-	if config.IdleTimeout < 1000 {
+	if config.IdleTimeout < time.Second {
 		config.IdleTimeout = config.IdleTimeout * time.Second
 	}
-	if config.MaxConnLifetime < 1000 {
+	if config.MaxConnLifetime < time.Second {
 		config.MaxConnLifetime = config.MaxConnLifetime * time.Second
 	}
 	return
