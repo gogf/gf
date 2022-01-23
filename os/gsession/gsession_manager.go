@@ -60,6 +60,11 @@ func (m *Manager) SetStorage(storage Storage) {
 	m.storage = storage
 }
 
+// GetStorage returns the session storage of current manager.
+func (m *Manager) GetStorage() Storage {
+	return m.storage
+}
+
 // SetTTL the TTL for the session manager.
 func (m *Manager) SetTTL(ttl time.Duration) {
 	m.ttl = ttl
