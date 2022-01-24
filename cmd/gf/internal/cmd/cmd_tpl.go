@@ -3,7 +3,7 @@ package cmd
 import (
 	"context"
 
-	"github.com/gogf/gf/command/gf/v2/internal/utility/mlog"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
