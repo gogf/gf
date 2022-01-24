@@ -157,7 +157,7 @@ func (c *Command) reParse(ctx context.Context, parser *Parser) (*Parser, error) 
 			return nil, err
 		}
 		configMap := value.Map()
-		for optionName, _ := range parser.passedOptions {
+		for optionName, _ := range parser.supportedOptions {
 			// The command line has the high priority.
 			if parser.GetOpt(optionName) != nil {
 				continue

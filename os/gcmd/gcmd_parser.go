@@ -26,8 +26,8 @@ type Parser struct {
 	strict           bool              // Whether stops parsing and returns error if invalid option passed.
 	parsedArgs       []string          // As name described.
 	parsedOptions    map[string]string // As name described.
-	passedOptions    map[string]bool   // User passed supported options.
-	supportedOptions map[string]bool   // Option [OptionName:WhetherNeedArgument].
+	passedOptions    map[string]bool   // User passed supported options, like: map[string]bool{"name,n":true}
+	supportedOptions map[string]bool   // Option [OptionName:WhetherNeedArgument], like: map[string]bool{"name":true, "n":true}
 	commandFuncMap   map[string]func() // Command function map for function handler.
 }
 
