@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
+	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gbuild"
@@ -32,7 +32,7 @@ func (c cVersion) Index(ctx context.Context, in cVersionInput) (*cVersionOutput,
 	if info["git"] == "" {
 		info["git"] = "none"
 	}
-	mlog.Printf(`GoFrame CLI Tool %s, https://goframe.org`, consts.Version)
+	mlog.Printf(`GoFrame CLI Tool %s, https://goframe.org`, gf.VERSION)
 	gfVersion, err := c.getGFVersionOfCurrentProject()
 	if err != nil {
 		gfVersion = err.Error()
