@@ -15,6 +15,7 @@
 # Features
 - modular, loosely coupled design
 - rich components, out-of-the-box
+- automatic codes generating for efficiency
 - simple and easy to use, detailed documentation
 - interface designed components, with high scalability
 - fully supported tracing and error stack feature
@@ -26,12 +27,15 @@
 - much, much more...ready to explore?
 
 # Installation
-```
+
+## primary module
+```bash
 go get -u -v github.com/gogf/gf/v2
 ```
-suggested using `go.mod`:
-```
-require github.com/gogf/gf/v2 latest
+
+## cli tool
+```bash
+go install -g github.com/gogf/gf/cmd/gf/v2
 ```
 
 # Limitation

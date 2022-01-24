@@ -9,15 +9,10 @@
 
 1. Latest version
     ```
-    go install github.com/gogf/gf/command/gf/v2@master
+    go install -g github.com/gogf/gf/cmd/gf/v2
     ```
 
-2. Specified version
-    ```
-    go install github.com/gogf/gf/command/gf/v2@v2.0.0-beta
-    ```
-
-3. Check installation
+2. Check installation
    ```
    gf -v
    ```

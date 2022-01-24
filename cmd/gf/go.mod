@@ -1,6 +1,6 @@
 module github.com/gogf/gf/cmd/gf/v2
 
-go 1.14
+go 1.15
 
 require (
 	github.com/denisenkom/go-mssqldb v0.11.0
