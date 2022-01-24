@@ -3,10 +3,12 @@ name: GoFrame CI
 on:
   push:
     branches:
-      - master
-      - develop
+    - master
+    - develop
   pull_request:
-    branches: [master, develop]
+    branches:
+    - master
+    - develop
 
 env:
   GF_DEBUG: 0
