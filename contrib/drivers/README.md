@@ -1,4 +1,4 @@
-# gdb-drivers
+# drivers
 Database drivers for package gdb.
 
 # Installation
