@@ -5,8 +5,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/gogf/gf/command/gf/v2/internal/utility/allyes"
-	"github.com/gogf/gf/command/gf/v2/internal/utility/mlog"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/allyes"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/frame/g"

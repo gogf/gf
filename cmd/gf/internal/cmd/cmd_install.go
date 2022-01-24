@@ -3,7 +3,7 @@ package cmd
 import (
 	"context"
 
-	"github.com/gogf/gf/command/gf/v2/internal/service"
+	"github.com/gogf/gf/cmd/gf/v2/internal/service"
 	"github.com/gogf/gf/v2/frame/g"
 )
 
