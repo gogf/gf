@@ -19,7 +19,7 @@ type Selector interface {
 	Pick(ctx context.Context) (node Node, done DoneFunc, err error)
 
 	// Update updates services into Selector.
-	Update(nodes []Node)
+	Update(nodes []Node) error
 }
 
 // Node is node interface.
