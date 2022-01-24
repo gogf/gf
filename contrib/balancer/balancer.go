@@ -1,8 +1,6 @@
-package grpc
+package balancer
 
 import (
-	"sync"
-
 	"github.com/gogf/gf/v2/net/gsel"
 	"github.com/gogf/gf/v2/net/gsvc"
 
@@ -10,30 +8,20 @@ import (
 	"google.golang.org/grpc/balancer/base"
 )
 
-var (
-	mu sync.Mutex
-)
-
 const (
 	rawSvcKeyInSubConnInfo = `RawService`
 )
 
-// Builder is grpc balancer builder.
 type Builder struct {
 	selector gsel.Selector
 }
 
-// SetGlobalBalancer set grpc balancer with scheme.
-func SetGlobalBalancer(scheme string) {
-	mu.Lock()
-	defer mu.Unlock()
-
-	b := base.NewBalancerBuilder(
-		scheme,
-		&Builder{selector: nil},
+func Register(name string, selector gsel.Selector) {
+	balancer.Register(base.NewBalancerBuilder(
+		name,
+		&Builder{selector: selector},
 		base.Config{HealthCheck: true},
-	)
-	balancer.Register(b)
+	))
 }
 
 // Build creates a grpc Picker.
