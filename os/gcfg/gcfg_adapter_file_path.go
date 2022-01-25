@@ -219,7 +219,7 @@ func (c *AdapterFile) GetFilePath(fileName ...string) (path string, err error) {
 		} else {
 			buffer.WriteString(fmt.Sprintf(`cannot find config file "%s" with no path configured`, usedFileName))
 		}
-		err = gerror.New(buffer.String())
+		err = gerror.NewCode(gcode.CodeNotFound, buffer.String())
 	}
 	return
 }
