@@ -54,6 +54,9 @@ func Test_Client_Basic(t *testing.T) {
 
 		_, err := g.Client().Post(ctx, "")
 		t.AssertNE(err, nil)
+
+		_, err = g.Client().PostForm("", nil)
+		t.AssertNE(err, nil)
 	})
 }
 
