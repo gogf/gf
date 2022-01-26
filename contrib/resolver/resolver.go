@@ -1,15 +1,24 @@
 package resolver
 
 import (
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/net/gsvc"
 	"google.golang.org/grpc/resolver"
 )
 
-// Register registers the resolver builder to the resolver map. b.Scheme will be
-// used as the scheme registered with this builder.
-//
-// NOTE: this function must only be called during initialization time (i.e. in
-// an init() function), and is not thread-safe. If multiple Resolvers are
-// registered with the same name, the one registered last will take effect.
-func Register(builder resolver.Builder) {
-	resolver.Register(builder)
+const (
+	RawSvcKeyInSubConnInfo = `RawService`
+)
+
+func init() {
+	// It uses default builder handling the DNS for grpc service requests.
+	resolver.Register(&Builder{})
+}
+
+// SetRegistry sets the default Registry implements as your own implemented interface.
+func SetRegistry(registry gsvc.Registry) {
+	if registry == nil {
+		panic(gerror.New(`invalid Registry value "nil" given`))
+	}
+	gsvc.SetRegistry(registry)
 }

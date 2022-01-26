@@ -33,7 +33,7 @@ func NewServiceWithName(name string) (s *Service) {
 
 // NewServiceWithKV creates and returns service from `key` and `value`.
 func NewServiceWithKV(key, value []byte) (s *Service, err error) {
-	array := gstr.Split(string(key), separator)
+	array := gstr.Split(gstr.Trim(string(key), separator), separator)
 	if len(array) < 6 {
 		return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid service key "%s"`, key)
 	}
@@ -65,7 +65,7 @@ func (s *Service) Key() string {
 // KeyWithoutEndpoints formats the service information and returns a string as unique name of service.
 func (s *Service) KeyWithoutEndpoints() string {
 	s.autoFillDefaultAttributes()
-	return gstr.Join([]string{
+	return "/" + gstr.Join([]string{
 		s.Prefix,
 		s.Deployment,
 		s.Namespace,

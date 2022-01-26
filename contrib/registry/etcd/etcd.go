@@ -5,6 +5,7 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -34,18 +35,18 @@ const (
 	DefaultKeepAliveTTL = 10 * time.Second
 )
 
-func New(address string, option ...Option) (*Registry, error) {
+func New(address string, option ...Option) *Registry {
 	endpoints := gstr.SplitAndTrim(address, ",")
 	if len(endpoints) == 0 {
-		return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid etcd address "%s"`, address)
+		panic(gerror.NewCodef(gcode.CodeInvalidParameter, `invalid etcd address "%s"`, address))
 	}
 	client, err := etcd3.New(etcd3.Config{
 		Endpoints: endpoints,
 	})
 	if err != nil {
-		return nil, gerror.Wrap(err, `create etcd client failed`)
+		panic(gerror.Wrap(err, `create etcd client failed`))
 	}
-	return NewWithClient(client, option...), nil
+	return NewWithClient(client, option...)
 }
 
 func NewWithClient(client *etcd3.Client, option ...Option) *Registry {
@@ -56,6 +57,9 @@ func NewWithClient(client *etcd3.Client, option ...Option) *Registry {
 	if len(option) > 0 {
 		r.logger = option[0].Logger
 		r.keepaliveTTL = option[0].KeepaliveTTL
+	}
+	if r.logger == nil {
+		r.logger = g.Log()
 	}
 	if r.keepaliveTTL == 0 {
 		r.keepaliveTTL = DefaultKeepAliveTTL

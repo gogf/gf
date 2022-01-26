@@ -2,9 +2,9 @@ package resolver
 
 import (
 	"context"
+	"errors"
 	"time"
 
-	"github.com/gogf/gf/v2/contrib/balancer"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/glog"
 	"google.golang.org/grpc/attributes"
@@ -27,12 +27,14 @@ func (r *Resolver) watch() {
 
 		default:
 			services, err := r.watcher.Proceed()
-			if err != nil {
+			if err != nil && !errors.Is(err, context.Canceled) {
 				r.logger.Warningf(r.ctx, `watcher.Proceed error: %+v`, err)
 				time.Sleep(time.Second)
 				continue
 			}
-			r.update(services)
+			if len(services) > 0 {
+				r.update(services)
+			}
 		}
 	}
 }
@@ -49,7 +51,7 @@ func (r *Resolver) update(services []*gsvc.Service) {
 				ServerName: service.Name,
 				Attributes: newAttributesFromMetadata(service.Metadata),
 			}
-			addr.Attributes = addr.Attributes.WithValue(balancer.RawSvcKeyInSubConnInfo, service)
+			addr.Attributes = addr.Attributes.WithValue(RawSvcKeyInSubConnInfo, service)
 			addresses = append(addresses, addr)
 		}
 	}
@@ -63,6 +65,7 @@ func (r *Resolver) update(services []*gsvc.Service) {
 }
 
 func (r *Resolver) Close() {
+	r.logger.Debugf(r.ctx, `resolver closed`)
 	if err := r.watcher.Close(); err != nil {
 		r.logger.Errorf(r.ctx, `%+v`, err)
 	}

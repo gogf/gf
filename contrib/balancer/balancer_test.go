@@ -3,7 +3,7 @@ package balancer_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/v2/contrib/balancer"
+	"github.com/gogf/gf/contrib/balancer/v2"
 	"github.com/gogf/gf/v2/net/gsel"
 )
 
