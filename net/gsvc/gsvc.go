@@ -23,7 +23,7 @@ type Registry interface {
 	Search(ctx context.Context, in SearchInput) ([]*Service, error)
 
 	// Watch watches specified condition changes.
-	Watch(ctx context.Context, in WatchInput) (Watcher, error)
+	Watch(ctx context.Context, key string) (Watcher, error)
 }
 
 // Watcher interface for service.

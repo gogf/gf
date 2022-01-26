@@ -5,11 +5,11 @@ import (
 	"google.golang.org/grpc/balancer"
 )
 
-type grpcNode struct {
+type Node struct {
 	service *gsvc.Service
-	subConn balancer.SubConn
+	conn    balancer.SubConn
 }
 
-func (n *grpcNode) Service() *gsvc.Service {
+func (n *Node) Service() *gsvc.Service {
 	return n.service
 }

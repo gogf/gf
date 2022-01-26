@@ -5,17 +5,42 @@ import (
 	"google.golang.org/grpc/balancer"
 )
 
+// Picker implements grpc balancer.Picker,
+// which is used by gRPC to pick a SubConn to send an RPC.
+// Balancer is expected to generate a new picker from its snapshot every time its
+// internal state has changed.
+//
+// The pickers used by gRPC can be updated by ClientConn.UpdateState().
 type Picker struct {
 	selector gsel.Selector
 }
 
+// Pick returns the connection to use for this RPC and related information.
+//
+// Pick should not block.  If the balancer needs to do I/O or any blocking
+// or time-consuming work to service this call, it should return
+// ErrNoSubConnAvailable, and the Pick call will be repeated by gRPC when
+// the Picker is updated (using ClientConn.UpdateState).
+//
+// If an error is returned:
+//
+// - If the error is ErrNoSubConnAvailable, gRPC will block until a new
+//   Picker is provided by the balancer (using ClientConn.UpdateState).
+//
+// - If the error is a status error (implemented by the grpc/status
+//   package), gRPC will terminate the RPC with the code and message
+//   provided.
+//
+// - For all other errors, wait for ready RPCs will wait, but non-wait for
+//   ready RPCs will be terminated with this error's Error() string and
+//   status code Unavailable.
 func (p *Picker) Pick(info balancer.PickInfo) (balancer.PickResult, error) {
 	node, done, err := p.selector.Pick(info.Ctx)
 	if err != nil {
 		return balancer.PickResult{}, err
 	}
 	return balancer.PickResult{
-		SubConn: node.(*grpcNode).subConn,
+		SubConn: node.(*Node).conn,
 		Done: func(di balancer.DoneInfo) {
 			done(info.Ctx, gsel.DoneInfo{
 				Err:           di.Err,

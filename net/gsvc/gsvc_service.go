@@ -16,8 +16,40 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
+const (
+	DefaultPrefix     = `goframe`
+	DefaultDeployment = `default`
+	DefaultNamespace  = `default`
+	DefaultVersion    = `latest`
+)
+
+// NewServiceFromKV creates and returns service from `key` and `value`.
+func NewServiceFromKV(key, value []byte) (s *Service, err error) {
+	array := gstr.Split(string(key), "/")
+	if len(array) < 6 {
+		return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid service key "%s"`, key)
+	}
+	s = &Service{
+		Prefix:     array[0],
+		Deployment: array[1],
+		Namespace:  array[2],
+		Name:       array[3],
+		Version:    array[4],
+		Address:    array[5],
+		Metadata:   make(map[string]interface{}),
+	}
+	s.autoFillDefaultAttributes()
+	if len(value) > 0 {
+		if err = gjson.Unmarshal(value, &s.Metadata); err != nil {
+			return nil, gerror.WrapCodef(gcode.CodeInvalidParameter, err, `invalid service value "%s"`, value)
+		}
+	}
+	return s, nil
+}
+
 // Key formats the service information and returns the Service as registering key.
 func (s *Service) Key() string {
+	s.autoFillDefaultAttributes()
 	return gstr.Join([]string{
 		s.Prefix,
 		s.Deployment,
@@ -36,25 +68,17 @@ func (s *Service) Value() string {
 	return string(b)
 }
 
-// NewServiceFromKV creates and returns service from `key` and `value`.
-func NewServiceFromKV(key, value string) (s *Service, err error) {
-	array := gstr.Split(key, "/")
-	if len(array) < 6 {
-		return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid service key "%s"`, key)
+func (s *Service) autoFillDefaultAttributes() {
+	if s.Prefix == "" {
+		s.Prefix = DefaultPrefix
 	}
-	s = &Service{
-		Prefix:     array[0],
-		Deployment: array[1],
-		Namespace:  array[2],
-		Name:       array[3],
-		Version:    array[4],
-		Address:    array[5],
-		Metadata:   make(map[string]interface{}),
+	if s.Deployment == "" {
+		s.Deployment = DefaultDeployment
 	}
-	if len(value) > 0 {
-		if err = gjson.Unmarshal([]byte(value), &s.Metadata); err != nil {
-			return nil, gerror.WrapCodef(gcode.CodeInvalidParameter, err, `invalid service value "%s"`, value)
-		}
+	if s.Namespace == "" {
+		s.Namespace = DefaultNamespace
 	}
-	return s, nil
+	if s.Version == "" {
+		s.Version = DefaultVersion
+	}
 }
