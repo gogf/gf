@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/contrib/balancer"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/glog"
@@ -40,21 +39,19 @@ func (r *Resolver) watch() {
 
 func (r *Resolver) update(services []*gsvc.Service) {
 	var (
-		err        error
-		addresses  = make([]resolver.Address, 0)
-		addressSet = gset.NewStrSet()
+		err       error
+		addresses = make([]resolver.Address, 0)
 	)
 	for _, service := range services {
-		if !addressSet.AddIfNotExist(service.Address) {
-			continue
+		for _, endpoint := range service.Endpoints {
+			addr := resolver.Address{
+				Addr:       endpoint,
+				ServerName: service.Name,
+				Attributes: newAttributesFromMetadata(service.Metadata),
+			}
+			addr.Attributes = addr.Attributes.WithValue(balancer.RawSvcKeyInSubConnInfo, service)
+			addresses = append(addresses, addr)
 		}
-		addr := resolver.Address{
-			Addr:       service.Address,
-			ServerName: service.Name,
-			Attributes: newAttributesFromMetadata(service.Metadata),
-		}
-		addr.Attributes = addr.Attributes.WithValue(balancer.RawSvcKeyInSubConnInfo, service)
-		addresses = append(addresses, addr)
 	}
 	if len(addresses) == 0 {
 		r.logger.Noticef(r.ctx, "empty addresses parsed from: %+v", services)
