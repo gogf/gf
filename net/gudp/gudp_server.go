@@ -9,10 +9,9 @@ package gudp
 import (
 	"net"
 
+	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-
-	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -27,10 +26,8 @@ type Server struct {
 	handler func(*Conn) // Handler for UDP connection.
 }
 
-var (
-	// serverMapping is used for instance name to its UDP server mappings.
-	serverMapping = gmap.NewStrAnyMap(true)
-)
+// serverMapping is used for instance name to its UDP server mappings.
+var serverMapping = gmap.NewStrAnyMap(true)
 
 // GetServer creates and returns a UDP server instance with given name.
 func GetServer(name ...interface{}) *Server {

@@ -13,7 +13,6 @@ import (
 	"net/http"
 	"net/http/httptrace"
 
-	"github.com/gogf/gf/v2/os/gctx"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -24,6 +23,7 @@ import (
 	"github.com/gogf/gf/v2/internal/httputil"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/net/gtrace"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -48,9 +48,7 @@ const (
 
 // internalMiddlewareTracing is a client middleware that enables tracing feature using standards of OpenTelemetry.
 func internalMiddlewareTracing(c *Client, r *http.Request) (response *Response, err error) {
-	var (
-		ctx = r.Context()
-	)
+	ctx := r.Context()
 	// Mark this request is handled by server tracing middleware,
 	// to avoid repeated handling by the same middleware.
 	if ctx.Value(tracingMiddlewareHandled) != nil {

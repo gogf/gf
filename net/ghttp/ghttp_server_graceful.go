@@ -122,7 +122,6 @@ func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig .
 		} else {
 			config.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
 		}
-
 	}
 	if err != nil {
 		return gerror.Wrapf(err, `open certFile "%s" and keyFile "%s" failed`, certFile, keyFile)

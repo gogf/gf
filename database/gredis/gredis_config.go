@@ -42,10 +42,8 @@ const (
 	DefaultGroupName = "default" // Default configuration group name.
 )
 
-var (
-	// Configuration groups.
-	localConfigMap = gmap.NewStrAnyMap(true)
-)
+// Configuration groups.
+var localConfigMap = gmap.NewStrAnyMap(true)
 
 // SetConfig sets the global configuration for specified group.
 // If `name` is not passed, it sets configuration for the default group name.

@@ -57,7 +57,7 @@ func (c *AdapterRedis) SetMap(ctx context.Context, data map[interface{}]interfac
 			index = 0
 			keys  = make([]interface{}, len(data))
 		)
-		for k, _ := range data {
+		for k := range data {
 			keys[index] = k
 			index += 1
 		}
@@ -351,9 +351,7 @@ func (c *AdapterRedis) Update(ctx context.Context, key interface{}, value interf
 // It returns -1 and does nothing if the `key` does not exist in the cache.
 // It deletes the `key` if `duration` < 0.
 func (c *AdapterRedis) UpdateExpire(ctx context.Context, key interface{}, duration time.Duration) (oldDuration time.Duration, err error) {
-	var (
-		v *gvar.Var
-	)
+	var v *gvar.Var
 	// TTL.
 	v, err = c.redis.Do(ctx, "TTL", key)
 	if err != nil {

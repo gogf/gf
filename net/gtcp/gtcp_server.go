@@ -11,10 +11,9 @@ import (
 	"net"
 	"sync"
 
+	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-
-	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -37,7 +36,7 @@ var serverMapping = gmap.NewStrAnyMap(true)
 
 // GetServer returns the TCP server with specified `name`,
 // or it returns a new normal TCP server named `name` if it does not exist.
-// The parameter `name` is used to specify the TCP server
+// The parameter `name` is used to specify the TCP server.
 func GetServer(name ...interface{}) *Server {
 	serverName := defaultServer
 	if len(name) > 0 && name[0] != "" {
