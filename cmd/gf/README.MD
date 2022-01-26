@@ -12,7 +12,7 @@
 
 1. Latest version
     ```
-    go install -g github.com/gogf/gf/cmd/gf/v2
+    go install -g github.com/gogf/gf/cmd/gf/v2@latest
     ```
 
 2. Check installation
