@@ -4,19 +4,15 @@ import (
 	"context"
 
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v2/os/glog"
 	"google.golang.org/grpc/resolver"
 )
 
-const Name = "GoFrameResolver"
+const Name = "goframe"
 
-type Builder struct {
-}
-
-// NewBuilder creates a builder which is used to factory registry resolvers.
-func NewBuilder() resolver.Builder {
-	return &Builder{}
-}
+type Builder struct{}
 
 func (b *Builder) Build(
 	target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions,
@@ -26,6 +22,7 @@ func (b *Builder) Build(
 		watcher     gsvc.Watcher
 		ctx, cancel = context.WithCancel(context.Background())
 	)
+	glog.Debugf(ctx, `etcd Watch key "%s"`, target.URL.Path)
 	if watcher, err = gsvc.Watch(ctx, target.URL.Path); err != nil {
 		cancel()
 		return nil, gerror.Wrap(err, `registry.Watch failed`)
@@ -35,6 +32,7 @@ func (b *Builder) Build(
 		cc:      cc,
 		ctx:     ctx,
 		cancel:  cancel,
+		logger:  g.Log(),
 	}
 	go r.watch()
 	return r, nil
