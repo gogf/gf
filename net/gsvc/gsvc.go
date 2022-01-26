@@ -9,16 +9,27 @@ package gsvc
 
 import (
 	"context"
+
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 // Registry interface for service.
 type Registry interface {
+	Registrar
+	Discovery
+}
+
+// Registrar interface for service registrar.
+type Registrar interface {
 	// Register registers `service` to Registry.
 	Register(ctx context.Context, service *Service) error
 
 	// Deregister off-lines and removes `service` from Registry.
 	Deregister(ctx context.Context, service *Service) error
+}
 
+// Discovery interface for service discovery.
+type Discovery interface {
 	// Search searches and returns services with specified condition.
 	Search(ctx context.Context, in SearchInput) ([]*Service, error)
 
@@ -42,7 +53,7 @@ type Service struct {
 	Namespace  string                 // Service Namespace, to indicate different service in the same environment with the same Name.
 	Name       string                 // Name for the service.
 	Version    string                 // Service version, eg: v1.0.0, v2.1.1, etc.
-	Address    string                 // Service address, single one, pattern: IP:port, eg: 192.168.1.2:8000.
+	Endpoints  []string               // Service Endpoints, pattern: IP:port, eg: 192.168.1.2:8000.
 	Metadata   map[string]interface{} // Custom data for this service, which can be set using JSON by environment or command-line.
 }
 
@@ -62,4 +73,31 @@ type WatchInput struct {
 	Namespace  string // Service Namespace, to indicate different service in the same environment with the same Name.
 	Name       string // Name for the service.
 	Version    string // Service version, eg: v1.0.0, v2.1.1, etc.}
+}
+
+const (
+	DefaultPrefix     = `goframe`
+	DefaultDeployment = `default`
+	DefaultNamespace  = `default`
+	DefaultVersion    = `latest`
+)
+
+const (
+	EnvPrefix     = `GF_GSVC_PREFIX`
+	EnvDeployment = `GF_GSVC_DEPLOYMENT`
+	EnvNamespace  = `GF_GSVC_NAMESPACE`
+	EnvName       = `GF_GSVC_Name`
+	EnvVersion    = `GF_GSVC_VERSION`
+)
+
+var (
+	defaultRegistry Registry
+)
+
+// SetRegistry sets the default Registry implements as your own implemented interface.
+func SetRegistry(registry Registry) {
+	if registry == nil {
+		panic(gerror.New(`invalid Registry value "nil" given`))
+	}
+	defaultRegistry = registry
 }

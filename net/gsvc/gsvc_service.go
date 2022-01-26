@@ -13,19 +13,27 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
 const (
-	DefaultPrefix     = `goframe`
-	DefaultDeployment = `default`
-	DefaultNamespace  = `default`
-	DefaultVersion    = `latest`
+	separator = "/"
 )
 
-// NewServiceFromKV creates and returns service from `key` and `value`.
-func NewServiceFromKV(key, value []byte) (s *Service, err error) {
-	array := gstr.Split(string(key), "/")
+// NewServiceWithName creates and returns service from `name`.
+func NewServiceWithName(name string) (s *Service) {
+	s = &Service{
+		Name:     name,
+		Metadata: make(map[string]interface{}),
+	}
+	s.autoFillDefaultAttributes()
+	return s
+}
+
+// NewServiceWithKV creates and returns service from `key` and `value`.
+func NewServiceWithKV(key, value []byte) (s *Service, err error) {
+	array := gstr.Split(string(key), separator)
 	if len(array) < 6 {
 		return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid service key "%s"`, key)
 	}
@@ -35,7 +43,7 @@ func NewServiceFromKV(key, value []byte) (s *Service, err error) {
 		Namespace:  array[2],
 		Name:       array[3],
 		Version:    array[4],
-		Address:    array[5],
+		Endpoints:  gstr.Split(array[5], ","),
 		Metadata:   make(map[string]interface{}),
 	}
 	s.autoFillDefaultAttributes()
@@ -49,6 +57,13 @@ func NewServiceFromKV(key, value []byte) (s *Service, err error) {
 
 // Key formats the service information and returns the Service as registering key.
 func (s *Service) Key() string {
+	serviceNameUnique := s.KeyWithoutEndpoints()
+	serviceNameUnique += separator + gstr.Join(s.Endpoints, ",")
+	return serviceNameUnique
+}
+
+// KeyWithoutEndpoints formats the service information and returns a string as unique name of service.
+func (s *Service) KeyWithoutEndpoints() string {
 	s.autoFillDefaultAttributes()
 	return gstr.Join([]string{
 		s.Prefix,
@@ -56,8 +71,7 @@ func (s *Service) Key() string {
 		s.Namespace,
 		s.Name,
 		s.Version,
-		s.Address,
-	}, "/")
+	}, separator)
 }
 
 func (s *Service) Value() string {
@@ -70,15 +84,18 @@ func (s *Service) Value() string {
 
 func (s *Service) autoFillDefaultAttributes() {
 	if s.Prefix == "" {
-		s.Prefix = DefaultPrefix
+		s.Prefix = gcmd.GetOptWithEnv(EnvPrefix, DefaultPrefix).String()
 	}
 	if s.Deployment == "" {
-		s.Deployment = DefaultDeployment
+		s.Deployment = gcmd.GetOptWithEnv(EnvDeployment, DefaultDeployment).String()
 	}
 	if s.Namespace == "" {
-		s.Namespace = DefaultNamespace
+		s.Namespace = gcmd.GetOptWithEnv(EnvNamespace, DefaultNamespace).String()
 	}
 	if s.Version == "" {
-		s.Version = DefaultVersion
+		s.Version = gcmd.GetOptWithEnv(EnvVersion, DefaultVersion).String()
+	}
+	if s.Name == "" {
+		s.Name = gcmd.GetOptWithEnv(EnvName).String()
 	}
 }

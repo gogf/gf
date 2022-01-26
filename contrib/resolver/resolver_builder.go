@@ -8,18 +8,14 @@ import (
 	"google.golang.org/grpc/resolver"
 )
 
-const Name = "katyusha"
+const Name = "GoFrameResolver"
 
 type Builder struct {
-	registry gsvc.Registry
 }
 
 // NewBuilder creates a builder which is used to factory registry resolvers.
-func NewBuilder(registry gsvc.Registry) resolver.Builder {
-	b := &Builder{
-		registry: registry,
-	}
-	return b
+func NewBuilder() resolver.Builder {
+	return &Builder{}
 }
 
 func (b *Builder) Build(
@@ -30,7 +26,7 @@ func (b *Builder) Build(
 		watcher     gsvc.Watcher
 		ctx, cancel = context.WithCancel(context.Background())
 	)
-	if watcher, err = b.registry.Watch(ctx, target.URL.Path); err != nil {
+	if watcher, err = gsvc.Watch(ctx, target.URL.Path); err != nil {
 		cancel()
 		return nil, gerror.Wrap(err, `registry.Watch failed`)
 	}
