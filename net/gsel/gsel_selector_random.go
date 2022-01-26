@@ -26,6 +26,7 @@ func NewSelectorRandom() Selector {
 	}
 }
 
+// Update modify Service.
 func (p *selectorNameRandom) Update(nodes []Node) error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
