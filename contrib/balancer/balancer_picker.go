@@ -1,8 +1,9 @@
 package balancer
 
 import (
-	"github.com/gogf/gf/v2/net/gsel"
 	"google.golang.org/grpc/balancer"
+
+	"github.com/gogf/gf/v2/net/gsel"
 )
 
 type Picker struct {

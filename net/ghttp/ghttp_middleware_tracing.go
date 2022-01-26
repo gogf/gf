@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/gogf/gf/v2/os/gctx"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -22,6 +21,7 @@ import (
 	"github.com/gogf/gf/v2/internal/httputil"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/net/gtrace"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -40,9 +40,7 @@ const (
 
 // internalMiddlewareServerTracing is a serer middleware that enables tracing feature using standards of OpenTelemetry.
 func internalMiddlewareServerTracing(r *Request) {
-	var (
-		ctx = r.Context()
-	)
+	ctx := r.Context()
 	// Mark this request is handled by server tracing middleware,
 	// to avoid repeated handling by the same middleware.
 	if ctx.Value(tracingMiddlewareHandled) != nil {
@@ -101,7 +99,7 @@ func internalMiddlewareServerTracing(r *Request) {
 		span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, err))
 	}
 	// Response content logging.
-	var resBodyContent = gstr.StrLimit(r.Response.BufferString(), gtrace.MaxContentLogSize(), "...")
+	resBodyContent := gstr.StrLimit(r.Response.BufferString(), gtrace.MaxContentLogSize(), "...")
 
 	span.AddEvent(tracingEventHttpResponse, trace.WithAttributes(
 		attribute.String(tracingEventHttpResponseHeaders, gconv.String(httputil.HeaderToMap(r.Response.Header()))),

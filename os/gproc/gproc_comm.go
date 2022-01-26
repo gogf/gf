@@ -75,7 +75,6 @@ func init() {
 			availablePaths,
 		)
 	}
-
 }
 
 // getConnByPid creates and returns a TCP connection for specified pid.

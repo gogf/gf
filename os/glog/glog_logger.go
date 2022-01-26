@@ -16,12 +16,12 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/gogf/gf/v2/internal/utils"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gfpool"
@@ -42,7 +42,7 @@ type Logger struct {
 const (
 	defaultFileFormat                 = `{Y-m-d}.log`
 	defaultFileFlags                  = os.O_CREATE | os.O_WRONLY | os.O_APPEND
-	defaultFilePerm                   = os.FileMode(0666)
+	defaultFilePerm                   = os.FileMode(0o666)
 	defaultFileExpire                 = time.Minute
 	pathFilterKey                     = "/os/glog/glog"
 	memoryLockPrefixForPrintingToFile = "glog.printToFile:"
@@ -260,9 +260,7 @@ func (l *Logger) doDefaultPrint(ctx context.Context, input *HandlerInput) *bytes
 // printToWriter writes buffer to writer.
 func (l *Logger) printToWriter(ctx context.Context, input *HandlerInput) *bytes.Buffer {
 	if l.config.Writer != nil {
-		var (
-			buffer = input.getRealBuffer(l.config.WriterColorEnable)
-		)
+		buffer := input.getRealBuffer(l.config.WriterColorEnable)
 		if _, err := l.config.Writer.Write(buffer.Bytes()); err != nil {
 			intlog.Error(ctx, err)
 		}

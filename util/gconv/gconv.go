@@ -274,9 +274,7 @@ func doConvert(in doConvertInput) interface{} {
 
 	default:
 		if in.ReferValue != nil {
-			var (
-				referReflectValue reflect.Value
-			)
+			var referReflectValue reflect.Value
 			if v, ok := in.ReferValue.(reflect.Value); ok {
 				referReflectValue = v
 			} else {
@@ -321,7 +319,7 @@ func Bytes(any interface{}) []byte {
 				ok    = true
 				bytes = make([]byte, originValueAndKind.OriginValue.Len())
 			)
-			for i, _ := range bytes {
+			for i := range bytes {
 				int32Value := Int32(originValueAndKind.OriginValue.Index(i).Interface())
 				if int32Value < 0 || int32Value > math.MaxUint8 {
 					ok = false

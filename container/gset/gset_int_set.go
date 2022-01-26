@@ -47,7 +47,7 @@ func NewIntSetFrom(items []int, safe ...bool) *IntSet {
 func (set *IntSet) Iterator(f func(v int) bool) {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
-	for k, _ := range set.data {
+	for k := range set.data {
 		if !f(k) {
 			break
 		}
@@ -172,7 +172,7 @@ func (set *IntSet) Slice() []int {
 		i   = 0
 		ret = make([]int, len(set.data))
 	)
-	for k, _ := range set.data {
+	for k := range set.data {
 		ret[i] = k
 		i++
 	}
@@ -192,7 +192,7 @@ func (set *IntSet) Join(glue string) string {
 		i      = 0
 		buffer = bytes.NewBuffer(nil)
 	)
-	for k, _ := range set.data {
+	for k := range set.data {
 		buffer.WriteString(gconv.String(k))
 		if i != l-1 {
 			buffer.WriteString(glue)
@@ -372,7 +372,7 @@ func (set *IntSet) Merge(others ...*IntSet) *IntSet {
 func (set *IntSet) Sum() (sum int) {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
-	for k, _ := range set.data {
+	for k := range set.data {
 		sum += k
 	}
 	return
@@ -382,7 +382,7 @@ func (set *IntSet) Sum() (sum int) {
 func (set *IntSet) Pop() int {
 	set.mu.Lock()
 	defer set.mu.Unlock()
-	for k, _ := range set.data {
+	for k := range set.data {
 		delete(set.data, k)
 		return k
 	}
@@ -402,7 +402,7 @@ func (set *IntSet) Pops(size int) []int {
 	}
 	index := 0
 	array := make([]int, size)
-	for k, _ := range set.data {
+	for k := range set.data {
 		delete(set.data, k)
 		array[index] = k
 		index++

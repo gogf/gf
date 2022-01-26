@@ -228,7 +228,7 @@ func (e *validationError) Strings() (errs []string) {
 					}
 				}
 				// internal error checks.
-				for k, _ := range internalErrKeyMap {
+				for k := range internalErrKeyMap {
 					if err, ok := errorItemMap[k]; ok {
 						errs = append(errs, err.Error())
 					}

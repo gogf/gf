@@ -49,7 +49,6 @@ func niceCallFunc(f func()) {
 						gcode.CodeInternalError, 1, "exception recovered: %+v", exception,
 					))
 				}
-
 			}
 		}
 	}()

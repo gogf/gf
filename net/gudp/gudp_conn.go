@@ -209,6 +209,6 @@ func (c *Conn) SetRecvBufferWait(d time.Duration) {
 // RemoteAddr returns the remote address of current UDP connection.
 // Note that it cannot use c.conn.RemoteAddr() as it is nil.
 func (c *Conn) RemoteAddr() net.Addr {
-	//return c.conn.RemoteAddr()
+	// return c.conn.RemoteAddr()
 	return c.remoteAddr
 }
