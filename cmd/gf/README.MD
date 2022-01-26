@@ -2,7 +2,10 @@
 
 `gf` is a powerful CLI tool for building [GoFrame](https://goframe.org) application with convenience.
 
-# Install
+
+## 1. Install
+
+### 1). Manually Install
 
 > You might need setting the goproxy to make through building.
 > Please make sure your Golang version > v1.15.
@@ -16,8 +19,30 @@
    ```
    gf -v
    ```
+### 2). PreBuilt Binary
 
-## Commands
+You can also install `gf` tool using pre-built binaries: https://github.com/gogf/gf/releases
+
+After downloads, please use `gf_xxx_xxx install` command to install gf binary to system binary path.
+
+1. `Mac`
+    ```shell
+    wget -O gf https://github.com/gogf/gf/releases/download/v2.0.0-rc2/gf_darwin_amd64 && chmod +x gf && ./gf install
+    ```
+   > If you're using `zsh`, you might need rename your alias by command `alias gf=gf` to resolve the conflicts between `gf` and `git fetch`.
+
+2. `Linux`
+    ```shell
+    wget -O gf https://github.com/gogf/gf/releases/download/v2.0.0-rc2/gf_linux_amd64 && chmod +x gf && ./gf install
+    ```
+
+3. `Windows`
+
+   Manually download, execute it and then follow the instruction.
+
+4. Database `sqlite` and `oracle` are not support in `gf gen` command in default as it needs `cgo` and `gcc`, you can manually make some changes to the source codes and do the building.
+
+## 2. Commands
 ```html
 $ gf
 USAGE
@@ -45,11 +70,11 @@ ADDITIONAL
     Use "gf COMMAND -h" for details about a command.
 ```
 
-# FAQ
+## 3. FAQ
 
-1. Command `gf run` returns `pipe: too many open files`
+### 1). Command `gf run` returns `pipe: too many open files`
 
-   Please use `ulimit -n 65535` to enlarge your system configuration for max open files for current terminal shell session, and then `gf run`.
+Please use `ulimit -n 65535` to enlarge your system configuration for max open files for current terminal shell session, and then `gf run`.
 
 
 
