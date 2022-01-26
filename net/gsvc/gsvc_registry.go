@@ -38,6 +38,6 @@ func Search(ctx context.Context, in SearchInput) ([]*Service, error) {
 }
 
 // Watch watches specified condition changes.
-func Watch(ctx context.Context, in WatchInput) (Watcher, error) {
-	return defaultRegistry.Watch(ctx, in)
+func Watch(ctx context.Context, key string) (Watcher, error) {
+	return defaultRegistry.Watch(ctx, key)
 }

@@ -69,7 +69,7 @@ func (set *StrSet) Add(item ...string) {
 }
 
 // AddIfNotExist checks whether item exists in the set,
-// it adds the item to set and returns true if it does not exists in the set,
+// it adds the item to set and returns true if it does not exist in the set,
 // or else it does nothing and returns false.
 func (set *StrSet) AddIfNotExist(item string) bool {
 	if !set.Contains(item) {
