@@ -1,3 +1,9 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package resolver
 
 import (
@@ -11,6 +17,9 @@ import (
 	"google.golang.org/grpc/resolver"
 )
 
+// Resolver implements grpc resolver.Resolver,
+// which watches for the updates on the specified target.
+// Updates include address updates and service config updates.
 type Resolver struct {
 	watcher gsvc.Watcher
 	cc      resolver.ClientConn
@@ -51,7 +60,7 @@ func (r *Resolver) update(services []*gsvc.Service) {
 				ServerName: service.Name,
 				Attributes: newAttributesFromMetadata(service.Metadata),
 			}
-			addr.Attributes = addr.Attributes.WithValue(RawSvcKeyInSubConnInfo, service)
+			addr.Attributes = addr.Attributes.WithValue(rawSvcKeyInSubConnInfo, service)
 			addresses = append(addresses, addr)
 		}
 	}
@@ -59,11 +68,13 @@ func (r *Resolver) update(services []*gsvc.Service) {
 		r.logger.Noticef(r.ctx, "empty addresses parsed from: %+v", services)
 		return
 	}
+	r.logger.Debugf(r.ctx, "client conn updated with addresses %+v", addresses)
 	if err = r.cc.UpdateState(resolver.State{Addresses: addresses}); err != nil {
 		r.logger.Errorf(r.ctx, "UpdateState failed: %+v", err)
 	}
 }
 
+// Close closes the resolver.
 func (r *Resolver) Close() {
 	r.logger.Debugf(r.ctx, `resolver closed`)
 	if err := r.watcher.Close(); err != nil {
@@ -72,6 +83,10 @@ func (r *Resolver) Close() {
 	r.cancel()
 }
 
+// ResolveNow will be called by gRPC to try to resolve the target name
+// again. It's just a hint, resolver can ignore this if it's not necessary.
+//
+// It could be called multiple times concurrently.
 func (r *Resolver) ResolveNow(options resolver.ResolveNowOptions) {
 
 }

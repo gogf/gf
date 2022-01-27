@@ -6,6 +6,7 @@
 
 package gsvc
 
+// Key formats and returns a string for prefix searching purpose.
 func (s *SearchInput) Key() string {
 	keyPrefix := ""
 	if s.Prefix != "" {

@@ -1,6 +1,9 @@
 package main
 
 import (
+	"time"
+
+	"github.com/gogf/gf/contrib/balancer/v2"
 	"github.com/gogf/gf/contrib/registry/etcd/v2"
 	"github.com/gogf/gf/contrib/resolver/v2"
 	pb "github.com/gogf/gf/example/rawgrpc/helloworld"
@@ -21,17 +24,21 @@ func main() {
 	// Set up a connection to the server.
 	conn, err := grpc.Dial(
 		service.KeyWithSchema(),
+		balancer.WithRandom(),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
 		g.Log().Fatalf(ctx, "did not connect: %v", err)
 	}
 	defer conn.Close()
-	c := pb.NewGreeterClient(conn)
 
-	r, err := c.SayHello(ctx, &pb.HelloRequest{Name: `GoFrame`})
-	if err != nil {
-		g.Log().Fatalf(ctx, "could not greet: %+v", err)
+	client := pb.NewGreeterClient(conn)
+	for i := 0; i < 10; i++ {
+		res, err := client.SayHello(ctx, &pb.HelloRequest{Name: `GoFrame`})
+		if err != nil {
+			g.Log().Fatalf(ctx, "could not greet: %+v", err)
+		}
+		g.Log().Printf(ctx, "Greeting: %s", res.GetMessage())
+		time.Sleep(time.Second)
 	}
-	g.Log().Printf(ctx, "Greeting: %s", r.GetMessage())
 }

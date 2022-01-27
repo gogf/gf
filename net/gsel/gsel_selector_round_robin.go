@@ -9,35 +9,33 @@ package gsel
 import (
 	"context"
 	"sync"
-
-	"github.com/gogf/gf/v2/util/grand"
 )
 
-const SelectorRandom = "BalancerRandom"
+const SelectorRoundRobin = "BalancerRoundRobin"
 
-type selectorRandom struct {
+type selectorRoundRobin struct {
 	mu    sync.RWMutex
 	nodes []Node
+	next  int
 }
 
-func NewSelectorRandom() Selector {
-	return &selectorRandom{
+func NewSelectorRoundRobin() Selector {
+	return &selectorRoundRobin{
 		nodes: make([]Node, 0),
 	}
 }
 
-func (s *selectorRandom) Update(nodes []Node) error {
+func (s *selectorRoundRobin) Update(nodes []Node) error {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 	s.nodes = nodes
+	s.mu.Unlock()
 	return nil
 }
 
-func (s *selectorRandom) Pick(ctx context.Context) (node Node, done DoneFunc, err error) {
+func (s *selectorRoundRobin) Pick(ctx context.Context) (node Node, done DoneFunc, err error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	if len(s.nodes) == 0 {
-		return nil, nil, nil
-	}
-	return s.nodes[grand.Intn(len(s.nodes))], nil, nil
+	node = s.nodes[s.next]
+	s.next = (s.next + 1) % len(s.nodes)
+	return
 }

@@ -1,3 +1,10 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+// Package etcd implements service Registry and Discovery using etcd.
 package etcd
 
 import (
@@ -17,7 +24,6 @@ var (
 	_ gsvc.Watcher  = &watcher{}
 )
 
-// Registry is etcd registry.
 type Registry struct {
 	client       *etcd3.Client
 	kv           etcd3.KV

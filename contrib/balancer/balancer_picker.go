@@ -1,3 +1,9 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package balancer
 
 import (
@@ -42,6 +48,9 @@ func (p *Picker) Pick(info balancer.PickInfo) (balancer.PickResult, error) {
 	return balancer.PickResult{
 		SubConn: node.(*Node).conn,
 		Done: func(di balancer.DoneInfo) {
+			if done == nil {
+				return
+			}
 			done(info.Ctx, gsel.DoneInfo{
 				Err:           di.Err,
 				Trailer:       di.Trailer,
