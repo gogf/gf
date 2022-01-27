@@ -26,7 +26,7 @@ const (
 func NewServiceWithName(name string) (s *Service) {
 	s = &Service{
 		Name:     name,
-		Metadata: make(map[string]interface{}),
+		Metadata: make(Metadata),
 	}
 	s.autoFillDefaultAttributes()
 	return s
@@ -45,7 +45,7 @@ func NewServiceWithKV(key, value []byte) (s *Service, err error) {
 		Name:       array[3],
 		Version:    array[4],
 		Endpoints:  gstr.Split(array[5], ","),
-		Metadata:   make(map[string]interface{}),
+		Metadata:   make(Metadata),
 	}
 	s.autoFillDefaultAttributes()
 	if len(value) > 0 {
