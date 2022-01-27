@@ -14,17 +14,25 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 var (
 	watchedServiceMap = gmap.New(true)
 )
 
+type ServiceWatch func(service *Service)
+
 func Get(ctx context.Context, name string) (service *Service, err error) {
+	return GetWithWatch(ctx, name, nil)
+}
+
+func GetWithWatch(ctx context.Context, name string, watch ServiceWatch) (service *Service, err error) {
 	v := watchedServiceMap.GetOrSetFuncLock(name, func() interface{} {
 		var (
 			s        = NewServiceWithName(name)
 			services []*Service
+			watcher  Watcher
 		)
 		services, err = Search(ctx, SearchInput{
 			Prefix:     s.Prefix,
@@ -42,7 +50,11 @@ func Get(ctx context.Context, name string) (service *Service, err error) {
 		}
 		service = services[0]
 		// Watch the service changes in goroutine.
-		go watchAndUpdateService(ctx, service)
+		watcher, err = Watch(ctx, service.KeyWithoutEndpoints())
+		if err != nil {
+			return nil
+		}
+		go watchAndUpdateService(watcher, service, watch)
 		return service
 	})
 	if v != nil {
@@ -51,19 +63,14 @@ func Get(ctx context.Context, name string) (service *Service, err error) {
 	return
 }
 
-func watchAndUpdateService(ctx context.Context, service *Service) {
+func watchAndUpdateService(watcher Watcher, service *Service, watchFunc ServiceWatch) {
 	var (
+		ctx      = context.Background()
 		err      error
-		watcher  Watcher
 		services []*Service
 	)
 	for {
 		time.Sleep(time.Second)
-		watcher, err = Watch(ctx, service.KeyWithoutEndpoints())
-		if err != nil {
-			glog.Error(ctx, err)
-			continue
-		}
 		services, err = watcher.Proceed()
 		if err != nil {
 			glog.Error(ctx, err)
@@ -71,6 +78,13 @@ func watchAndUpdateService(ctx context.Context, service *Service) {
 		}
 		if len(services) > 0 {
 			watchedServiceMap.Set(service.Name, services[0])
+			if watchFunc != nil {
+				gutil.TryCatch(func() {
+					watchFunc(services[0])
+				}, func(exception error) {
+					glog.Error(ctx, exception)
+				})
+			}
 		}
 	}
 }

@@ -21,16 +21,16 @@ const (
 )
 
 func init() {
-	Register(gsel.SelectorRandom, gsel.NewSelectorRandom())
-	Register(gsel.SelectorWeight, gsel.NewSelectorWeight())
-	Register(gsel.SelectorRoundRobin, gsel.NewSelectorRoundRobin())
-	Register(gsel.SelectorLeastConnection, gsel.NewSelectorLeastConnection())
+	Register(gsel.SelectorRandom, gsel.NewBuilderRandom())
+	Register(gsel.SelectorWeight, gsel.NewBuilderWeight())
+	Register(gsel.SelectorRoundRobin, gsel.NewBuilderRoundRobin())
+	Register(gsel.SelectorLeastConnection, gsel.NewBuilderLeastConnection())
 }
 
-func Register(name string, selector gsel.Selector) {
+func Register(name string, builder gsel.Builder) {
 	balancer.Register(base.NewBalancerBuilder(
 		name,
-		&Builder{selector: selector},
+		&Builder{builder: builder},
 		base.Config{HealthCheck: true},
 	))
 }

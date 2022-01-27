@@ -17,6 +17,7 @@ import (
 
 	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/net/gsel"
 	"github.com/gogf/gf/v2/os/gfile"
 )
 
@@ -31,6 +32,7 @@ type Client struct {
 	retryCount        int               // Retry count when request fails.
 	retryInterval     time.Duration     // Retry interval when request fails.
 	middlewareHandler []HandlerFunc     // Interceptor handlers
+	selectorBuilder   gsel.Builder      // Builder for request balance.
 }
 
 const (
