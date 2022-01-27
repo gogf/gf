@@ -12,6 +12,7 @@ func main() {
 
 	s := g.Server(`hello.svc`)
 	s.BindHandler("/", func(r *ghttp.Request) {
+		g.Log().Info(r.Context(), `request received`)
 		r.Response.Write(`Hello world`)
 	})
 	s.Run()

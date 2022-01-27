@@ -1,4 +1,4 @@
-module github.com/gogf/gf/contrib/balancer/v2
+module github.com/gogf/gf/contrib/grpc/balancer/v2
 
 go 1.15
 
@@ -8,4 +8,4 @@ require (
 	google.golang.org/grpc v1.43.0
 )
 
-replace github.com/gogf/gf/v2 => ../../
+replace github.com/gogf/gf/v2 => ../../../

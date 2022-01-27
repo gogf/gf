@@ -18,7 +18,7 @@ import (
 // Builder implements grpc balancer base.PickerBuilder,
 // which returns a picker that will be used by gRPC to pick a SubConn.
 type Builder struct {
-	selector gsel.Selector
+	builder gsel.Builder
 }
 
 // Build returns a picker that will be used by gRPC to pick a SubConn.
@@ -42,7 +42,7 @@ func (b *Builder) Build(info base.PickerBuildInfo) balancer.Picker {
 		})
 	}
 	p := &Picker{
-		selector: b.selector,
+		selector: b.builder.Build(),
 	}
 	if err := p.selector.Update(nodes); err != nil {
 		panic(err)

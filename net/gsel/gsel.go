@@ -13,6 +13,11 @@ import (
 	"github.com/gogf/gf/v2/net/gsvc"
 )
 
+// Builder creates and returns selector in runtime.
+type Builder interface {
+	Build() Selector
+}
+
 // Selector for service balancer.
 type Selector interface {
 	// Pick selects and returns service.
