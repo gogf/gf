@@ -226,7 +226,7 @@ func (t *Time) String() string {
 	if t.IsZero() {
 		return ""
 	}
-	return t.Format("Y-m-d H:i:s")
+	return t.wrapper.String()
 }
 
 // IsZero reports whether t represents the zero time instant,

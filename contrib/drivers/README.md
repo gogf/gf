@@ -4,12 +4,12 @@ Database drivers for package gdb.
 # Installation
 Let's take `pgsql` for example.
 ```
-go get -u github.com/gogf/gf/contrib/drivers/v2
+go get -u github.com/gogf/gf/contrib/drivers/pgsql/v2
 ```
 
 Choose and import the driver to your project:
 ```
-import _ "github.com/gogf/gf/contrib/drivers/v2/pgsql"
+import _ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
 ```
 
 # Supported Drivers
@@ -20,14 +20,14 @@ BuiltIn supported, nothing todo.
 
 ## SQLite
 ```
-import _ "github.com/gogf/gf/contrib/drivers/v2/sqlite"
+import _ "github.com/gogf/gf/contrib/drivers/sqlite/v2"
 ```
 Note:
 - It does not support `Save/Replace` features.
 
 ## PostgreSQL
 ```
-import _ "github.com/gogf/gf/contrib/drivers/v2/pgsql"
+import _ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
 ```
 Note:
 - It does not support `Save/Replace` features.
@@ -35,7 +35,7 @@ Note:
 
 ## SQL Server
 ```
-import _ "github.com/gogf/gf/contrib/drivers/v2/mssql"
+import _ "github.com/gogf/gf/contrib/drivers/mssql/v2"
 ```
 Note:
 - It does not support `Save/Replace` features.
@@ -44,7 +44,7 @@ Note:
 
 ## Oracle
 ```
-import _ "github.com/gogf/gf/contrib/drivers/v2/oracle"
+import _ "github.com/gogf/gf/contrib/drivers/oracle/v2"
 ```
 Note:
 - It does not support `Save/Replace` features.

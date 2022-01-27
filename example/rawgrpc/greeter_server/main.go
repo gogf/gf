@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/gogf/gf/contrib/registry/v2/etcd"
+	"github.com/gogf/gf/contrib/registry/etcd/v2"
 	"github.com/gogf/gf/contrib/resolver/v2"
 	pb "github.com/gogf/gf/example/rawgrpc/helloworld"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/gipv4"
 	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/os/gctx"
 	"google.golang.org/grpc"
 )
@@ -29,16 +31,20 @@ func main() {
 	var (
 		err     error
 		ctx     = gctx.New()
-		port    = 9000
-		address = fmt.Sprintf("127.0.0.1:%d", port)
+		address = fmt.Sprintf("%s:%d", gipv4.MustGetIntranetIp(), gtcp.MustGetFreePort())
+		service = &gsvc.Service{
+			Name:      "hello",
+			Endpoints: []string{address},
+		}
 	)
-	err = gsvc.Register(ctx, &gsvc.Service{
-		Name:      "hello",
-		Endpoints: []string{address},
-	})
+	err = gsvc.Register(ctx, service)
 	if err != nil {
 		panic(err)
 	}
+	defer func() {
+		_ = gsvc.Deregister(ctx, service)
+	}()
+
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
 		g.Log().Fatalf(ctx, "failed to listen: %v", err)

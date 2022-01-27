@@ -8,6 +8,7 @@ package gsvc
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -60,6 +61,11 @@ func (s *Service) Key() string {
 	serviceNameUnique := s.KeyWithoutEndpoints()
 	serviceNameUnique += separator + gstr.Join(s.Endpoints, ",")
 	return serviceNameUnique
+}
+
+// KeyWithSchema formats the service information and returns the Service as dialing target key.
+func (s *Service) KeyWithSchema() string {
+	return fmt.Sprintf(`%s://%s`, Schema, s.Key())
 }
 
 // KeyWithoutEndpoints formats the service information and returns a string as unique name of service.
