@@ -46,12 +46,10 @@ func (r *Registry) Register(ctx context.Context, service *gsvc.Service) error {
 }
 
 func (r *Registry) Deregister(ctx context.Context, service *gsvc.Service) error {
-	defer func() {
-		if r.lease != nil {
-			_ = r.lease.Close()
-		}
-	}()
 	_, err := r.client.Delete(ctx, service.Key())
+	if r.lease != nil {
+		_ = r.lease.Close()
+	}
 	return err
 }
 

@@ -21,7 +21,6 @@ import (
 
 var (
 	_ gsvc.Registry = &Registry{}
-	_ gsvc.Watcher  = &watcher{}
 )
 
 type Registry struct {
