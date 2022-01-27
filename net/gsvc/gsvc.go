@@ -76,18 +76,18 @@ type WatchInput struct {
 }
 
 const (
+	Schema            = `goframe`
 	DefaultPrefix     = `goframe`
 	DefaultDeployment = `default`
 	DefaultNamespace  = `default`
 	DefaultVersion    = `latest`
-)
-
-const (
-	EnvPrefix     = `GF_GSVC_PREFIX`
-	EnvDeployment = `GF_GSVC_DEPLOYMENT`
-	EnvNamespace  = `GF_GSVC_NAMESPACE`
-	EnvName       = `GF_GSVC_Name`
-	EnvVersion    = `GF_GSVC_VERSION`
+	EnvPrefix         = `GF_GSVC_PREFIX`
+	EnvDeployment     = `GF_GSVC_DEPLOYMENT`
+	EnvNamespace      = `GF_GSVC_NAMESPACE`
+	EnvName           = `GF_GSVC_Name`
+	EnvVersion        = `GF_GSVC_VERSION`
+	MDProtocol        = `protocol`
+	MDInsecure        = `insecure`
 )
 
 var (

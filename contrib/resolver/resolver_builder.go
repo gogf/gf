@@ -10,8 +10,6 @@ import (
 	"google.golang.org/grpc/resolver"
 )
 
-const Name = "goframe"
-
 type Builder struct{}
 
 func (b *Builder) Build(
@@ -40,5 +38,5 @@ func (b *Builder) Build(
 
 // Scheme return scheme of discovery
 func (*Builder) Scheme() string {
-	return Name
+	return gsvc.Schema
 }

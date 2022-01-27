@@ -182,8 +182,10 @@ func (t *Time) IsLeapYear() bool {
 
 // DayOfYear checks and returns the position of the day for the year.
 func (t *Time) DayOfYear() int {
-	day := t.Day()
-	month := int(t.Month())
+	var (
+		day   = t.Day()
+		month = t.Month()
+	)
 	if t.IsLeapYear() {
 		if month > 2 {
 			return dayOfMonth[month-1] + day

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/gogf/gf/contrib/registry/v2/etcd"
+	"github.com/gogf/gf/contrib/registry/etcd/v2"
 	"github.com/gogf/gf/contrib/resolver/v2"
 	pb "github.com/gogf/gf/example/rawgrpc/helloworld"
 	"github.com/gogf/gf/v2/frame/g"
@@ -16,12 +16,11 @@ func main() {
 
 	var (
 		ctx     = gctx.New()
-		name    = `GoFrame`
 		service = gsvc.NewServiceWithName(`hello`)
 	)
 	// Set up a connection to the server.
 	conn, err := grpc.Dial(
-		resolver.Name+"://"+service.Key(),
+		service.KeyWithSchema(),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
@@ -30,7 +29,7 @@ func main() {
 	defer conn.Close()
 	c := pb.NewGreeterClient(conn)
 
-	r, err := c.SayHello(ctx, &pb.HelloRequest{Name: name})
+	r, err := c.SayHello(ctx, &pb.HelloRequest{Name: `GoFrame`})
 	if err != nil {
 		g.Log().Fatalf(ctx, "could not greet: %+v", err)
 	}
