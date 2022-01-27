@@ -88,6 +88,15 @@ func (s *Service) Value() string {
 	return string(b)
 }
 
+// Address returns the first endpoint of Service.
+// Eg: 192.168.1.12:9000.
+func (s *Service) Address() string {
+	if len(s.Endpoints) == 0 {
+		return ""
+	}
+	return s.Endpoints[0]
+}
+
 func (s *Service) autoFillDefaultAttributes() {
 	if s.Prefix == "" {
 		s.Prefix = gcmd.GetOptWithEnv(EnvPrefix, DefaultPrefix).String()

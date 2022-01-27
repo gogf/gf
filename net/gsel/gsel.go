@@ -25,6 +25,7 @@ type Selector interface {
 // Node is node interface.
 type Node interface {
 	Service() *gsvc.Service
+	Address() string
 }
 
 // DoneFunc is callback function when RPC invoke done.

@@ -13,6 +13,10 @@ import (
 	etcd3 "go.etcd.io/etcd/client/v3"
 )
 
+var (
+	_ gsvc.Watcher = &watcher{}
+)
+
 type watcher struct {
 	key         string
 	ctx         context.Context

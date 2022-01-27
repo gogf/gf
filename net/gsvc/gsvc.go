@@ -105,3 +105,9 @@ func SetRegistry(registry Registry) {
 	}
 	defaultRegistry = registry
 }
+
+// GetRegistry returns the default Registry that is previously set.
+// It returns nil if no Registry is set.
+func GetRegistry() Registry {
+	return defaultRegistry
+}

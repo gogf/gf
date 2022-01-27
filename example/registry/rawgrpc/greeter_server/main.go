@@ -7,7 +7,7 @@ import (
 
 	"github.com/gogf/gf/contrib/registry/etcd/v2"
 	"github.com/gogf/gf/contrib/resolver/v2"
-	pb "github.com/gogf/gf/example/rawgrpc/helloworld"
+	pb "github.com/gogf/gf/example/registry/rawgrpc/helloworld"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gipv4"
 	"github.com/gogf/gf/v2/net/gsvc"

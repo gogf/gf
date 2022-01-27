@@ -78,7 +78,7 @@ func New() *Client {
 	}
 	c.header[httpHeaderUserAgent] = defaultClientAgent
 	// It enables OpenTelemetry for client in default.
-	c.Use(internalMiddlewareTracing)
+	c.Use(internalMiddlewareTracing, internalMiddlewareDiscovery)
 	return c
 }
 

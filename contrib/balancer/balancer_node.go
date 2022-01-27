@@ -19,3 +19,7 @@ type Node struct {
 func (n *Node) Service() *gsvc.Service {
 	return n.service
 }
+
+func (n *Node) Address() string {
+	return n.service.Address()
+}
