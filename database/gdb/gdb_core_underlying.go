@@ -317,7 +317,7 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			intlog.Error(ctx, err)
+			intlog.Errorf(ctx, `%+v`, err)
 		}
 	}()
 	if !rows.Next() {

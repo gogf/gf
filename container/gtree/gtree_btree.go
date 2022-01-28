@@ -575,10 +575,10 @@ func (tree *BTree) output(buffer *bytes.Buffer, node *BTreeNode, level int, isTa
 		}
 		if e < len(node.Entries) {
 			if _, err := buffer.WriteString(strings.Repeat("    ", level)); err != nil {
-				intlog.Error(context.TODO(), err)
+				intlog.Errorf(context.TODO(), `%+v`, err)
 			}
 			if _, err := buffer.WriteString(fmt.Sprintf("%v", node.Entries[e].Key) + "\n"); err != nil {
-				intlog.Error(context.TODO(), err)
+				intlog.Errorf(context.TODO(), `%+v`, err)
 			}
 		}
 	}

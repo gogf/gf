@@ -58,7 +58,7 @@ func (r *Response) ReadAll() []byte {
 	}
 	body, err := ioutil.ReadAll(r.Response.Body)
 	if err != nil {
-		intlog.Error(r.request.Context(), err)
+		intlog.Errorf(r.request.Context(), `%+v`, err)
 		return nil
 	}
 	return body

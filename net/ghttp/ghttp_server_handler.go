@@ -68,19 +68,19 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// Close the session, which automatically update the TTL
 		// of the session if it exists.
 		if err := request.Session.Close(); err != nil {
-			intlog.Error(request.Context(), err)
+			intlog.Errorf(request.Context(), `%+v`, err)
 		}
 
 		// Close the request and response body
 		// to release the file descriptor in time.
 		err := request.Request.Body.Close()
 		if err != nil {
-			intlog.Error(request.Context(), err)
+			intlog.Errorf(request.Context(), `%+v`, err)
 		}
 		if request.Request.Response != nil {
 			err = request.Request.Response.Body.Close()
 			if err != nil {
-				intlog.Error(request.Context(), err)
+				intlog.Errorf(request.Context(), `%+v`, err)
 			}
 		}
 	}()

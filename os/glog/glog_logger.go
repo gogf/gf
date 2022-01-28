@@ -224,7 +224,7 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 			input.Next()
 		})
 		if err != nil {
-			intlog.Error(ctx, err)
+			intlog.Errorf(ctx, `%+v`, err)
 		}
 	} else {
 		input.Next()
@@ -264,7 +264,7 @@ func (l *Logger) printToWriter(ctx context.Context, input *HandlerInput) *bytes.
 			buffer = input.getRealBuffer(l.config.WriterColorEnable)
 		)
 		if _, err := l.config.Writer.Write(buffer.Bytes()); err != nil {
-			intlog.Error(ctx, err)
+			intlog.Errorf(ctx, `%+v`, err)
 		}
 		return buffer
 	}
@@ -281,7 +281,7 @@ func (l *Logger) printToStdout(ctx context.Context, input *HandlerInput) *bytes.
 		if l.config.StdoutColorDisabled {
 			// Output to stdout without color.
 			if _, err = os.Stdout.Write(buffer.Bytes()); err != nil {
-				intlog.Error(ctx, err)
+				intlog.Errorf(ctx, `%+v`, err)
 			}
 		} else {
 			// This will lose color in Windows os system.
@@ -289,7 +289,7 @@ func (l *Logger) printToStdout(ctx context.Context, input *HandlerInput) *bytes.
 
 			// This will print color in Windows os system.
 			if _, err = fmt.Fprint(color.Output, buffer.String()); err != nil {
-				intlog.Error(ctx, err)
+				intlog.Errorf(ctx, `%+v`, err)
 			}
 		}
 		return buffer
@@ -318,10 +318,10 @@ func (l *Logger) printToFile(ctx context.Context, t time.Time, in *HandlerInput)
 		intlog.Errorf(ctx, `got nil file pointer for: %s`, logFilePath)
 	} else {
 		if _, err := file.Write(buffer.Bytes()); err != nil {
-			intlog.Error(ctx, err)
+			intlog.Errorf(ctx, `%+v`, err)
 		}
 		if err := file.Close(); err != nil {
-			intlog.Error(ctx, err)
+			intlog.Errorf(ctx, `%+v`, err)
 		}
 	}
 	return buffer
@@ -337,7 +337,7 @@ func (l *Logger) getFilePointer(ctx context.Context, path string) *gfpool.File {
 	)
 	if err != nil {
 		// panic(err)
-		intlog.Error(ctx, err)
+		intlog.Errorf(ctx, `%+v`, err)
 	}
 	return file
 }

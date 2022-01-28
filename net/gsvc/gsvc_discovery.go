@@ -13,7 +13,7 @@ import (
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
@@ -73,7 +73,7 @@ func watchAndUpdateService(watcher Watcher, service *Service, watchFunc ServiceW
 		time.Sleep(time.Second)
 		services, err = watcher.Proceed()
 		if err != nil {
-			glog.Error(ctx, err)
+			intlog.Errorf(ctx, `%+v`, err)
 			continue
 		}
 		if len(services) > 0 {
@@ -82,7 +82,7 @@ func watchAndUpdateService(watcher Watcher, service *Service, watchFunc ServiceW
 				gutil.TryCatch(func() {
 					watchFunc(services[0])
 				}, func(exception error) {
-					glog.Error(ctx, exception)
+					intlog.Errorf(ctx, `%+v`, exception)
 				})
 			}
 		}
@@ -94,6 +94,7 @@ func Search(ctx context.Context, in SearchInput) ([]*Service, error) {
 	if defaultRegistry == nil {
 		return nil, gerror.NewCodef(gcode.CodeNotImplemented, `no Registry is registered`)
 	}
+	ctx, _ = context.WithTimeout(ctx, defaultSearchTimeout)
 	return defaultRegistry.Search(ctx, in)
 }
 

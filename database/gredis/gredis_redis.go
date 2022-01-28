@@ -68,7 +68,7 @@ func (r *Redis) Do(ctx context.Context, command string, args ...interface{}) (*g
 	}
 	defer func() {
 		if err := conn.Close(ctx); err != nil {
-			intlog.Error(ctx, err)
+			intlog.Errorf(ctx, `%+v`, err)
 		}
 	}()
 	return conn.Do(ctx, command, args...)

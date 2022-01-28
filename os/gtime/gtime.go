@@ -393,7 +393,7 @@ func ParseTimeFromContent(content string, format ...string) *Time {
 	if len(format) > 0 {
 		match, err = gregex.MatchString(formatToRegexPattern(format[0]), content)
 		if err != nil {
-			intlog.Error(context.TODO(), err)
+			intlog.Errorf(context.TODO(), `%+v`, err)
 		}
 		if len(match) > 0 {
 			return NewFromStrFormat(match[0], format[0])

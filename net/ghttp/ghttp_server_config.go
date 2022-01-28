@@ -346,7 +346,7 @@ func (s *Server) SetConfig(c ServerConfig) error {
 		}
 	}
 	if err := s.config.Logger.SetLevelStr(s.config.LogLevel); err != nil {
-		intlog.Error(context.TODO(), err)
+		intlog.Errorf(context.TODO(), `%+v`, err)
 	}
 	gracefulEnabled = c.Graceful
 	intlog.Printf(context.TODO(), "SetConfig: %+v", s.config)

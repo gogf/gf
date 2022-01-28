@@ -132,7 +132,7 @@ func (c *Client) SetProxy(proxyURL string) {
 	}
 	_proxy, err := url.Parse(proxyURL)
 	if err != nil {
-		intlog.Error(context.TODO(), err)
+		intlog.Errorf(context.TODO(), `%+v`, err)
 		return
 	}
 	if _proxy.Scheme == httpProtocolName {
@@ -162,7 +162,7 @@ func (c *Client) SetProxy(proxyURL string) {
 			},
 		)
 		if err != nil {
-			intlog.Error(context.TODO(), err)
+			intlog.Errorf(context.TODO(), `%+v`, err)
 			return
 		}
 		if v, ok := c.Transport.(*http.Transport); ok {

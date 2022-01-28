@@ -49,7 +49,7 @@ func (m *Model) checkAndRemoveCache() {
 		ctx := m.GetCtx()
 		_, err := m.db.GetCache().Remove(ctx, m.cacheOption.Name)
 		if err != nil {
-			intlog.Error(ctx, err)
+			intlog.Errorf(ctx, `%+v`, err)
 		}
 	}
 }

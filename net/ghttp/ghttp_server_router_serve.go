@@ -62,7 +62,7 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedI
 		}, routeCacheDuration,
 	)
 	if err != nil {
-		intlog.Error(ctx, err)
+		intlog.Errorf(ctx, `%+v`, err)
 	}
 	if value != nil {
 		item := value.Val().(*handlerCacheItem)

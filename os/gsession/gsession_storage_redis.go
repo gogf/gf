@@ -56,7 +56,7 @@ func NewStorageRedis(redis *gredis.Redis, prefix ...string) *StorageRedis {
 				break
 			} else {
 				if err = s.doUpdateTTL(context.TODO(), id, ttlSeconds); err != nil {
-					intlog.Error(context.TODO(), err)
+					intlog.Errorf(context.TODO(), `%+v`, err)
 				}
 			}
 		}

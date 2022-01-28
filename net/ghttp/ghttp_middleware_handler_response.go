@@ -45,7 +45,7 @@ func MiddlewareHandlerResponse(r *Request) {
 			Data:    nil,
 		})
 		if internalErr != nil {
-			intlog.Error(ctx, internalErr)
+			intlog.Errorf(ctx, `%+v`, internalErr)
 		}
 		return
 	}
@@ -55,6 +55,6 @@ func MiddlewareHandlerResponse(r *Request) {
 		Data:    res,
 	})
 	if internalErr != nil {
-		intlog.Error(ctx, internalErr)
+		intlog.Errorf(ctx, `%+v`, internalErr)
 	}
 }

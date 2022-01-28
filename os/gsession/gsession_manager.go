@@ -80,6 +80,6 @@ func (m *Manager) UpdateSessionTTL(sessionId string, data *gmap.StrAnyMap) {
 	ctx := context.Background()
 	err := m.sessionData.Set(ctx, sessionId, data, m.ttl)
 	if err != nil {
-		intlog.Error(ctx, err)
+		intlog.Errorf(ctx, `%+v`, err)
 	}
 }

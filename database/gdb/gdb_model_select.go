@@ -536,7 +536,7 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 	if cacheKey != "" && err == nil {
 		if m.cacheOption.Duration < 0 {
 			if _, err := cacheObj.Remove(ctx, cacheKey); err != nil {
-				intlog.Error(m.GetCtx(), err)
+				intlog.Errorf(m.GetCtx(), `%+v`, err)
 			}
 		} else {
 			// In case of Cache Penetration.
@@ -544,7 +544,7 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 				result = Result{}
 			}
 			if err := cacheObj.Set(ctx, cacheKey, result, m.cacheOption.Duration); err != nil {
-				intlog.Error(m.GetCtx(), err)
+				intlog.Errorf(m.GetCtx(), `%+v`, err)
 			}
 		}
 	}

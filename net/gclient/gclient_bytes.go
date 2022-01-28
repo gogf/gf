@@ -62,12 +62,12 @@ func (c *Client) TraceBytes(ctx context.Context, url string, data ...interface{}
 func (c *Client) RequestBytes(ctx context.Context, method string, url string, data ...interface{}) []byte {
 	response, err := c.DoRequest(ctx, method, url, data...)
 	if err != nil {
-		intlog.Error(ctx, err)
+		intlog.Errorf(ctx, `%+v`, err)
 		return nil
 	}
 	defer func() {
 		if err = response.Close(); err != nil {
-			intlog.Error(ctx, err)
+			intlog.Errorf(ctx, `%+v`, err)
 		}
 	}()
 	return response.ReadAll()
