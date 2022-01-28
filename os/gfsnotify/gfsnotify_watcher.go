@@ -108,7 +108,7 @@ func (w *Watcher) addWithCallbackFunc(name, path string, callbackFunc func(event
 func (w *Watcher) Close() {
 	w.events.Close()
 	if err := w.watcher.Close(); err != nil {
-		intlog.Error(context.TODO(), err)
+		intlog.Errorf(context.TODO(), `%+v`, err)
 	}
 	close(w.closeChan)
 }
@@ -131,7 +131,7 @@ func (w *Watcher) Remove(path string) error {
 		for _, subPath := range subPaths {
 			if w.checkPathCanBeRemoved(subPath) {
 				if internalErr := w.watcher.Remove(subPath); internalErr != nil {
-					intlog.Error(context.TODO(), internalErr)
+					intlog.Errorf(context.TODO(), `%+v`, internalErr)
 				}
 			}
 		}

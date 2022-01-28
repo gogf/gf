@@ -17,8 +17,9 @@ import (
 )
 
 const (
-	frameCoreComponentNameServer = "gf.core.component.server"
-	configNodeNameServer         = "server"
+	frameCoreComponentNameServer  = "gf.core.component.server"
+	configNodeNameServer          = "server"
+	configNodeNameServerSecondary = "httpserver"
 )
 
 // Server returns an instance of http server with specified name.
@@ -38,11 +39,16 @@ func Server(name ...interface{}) *ghttp.Server {
 		var (
 			serverConfigMap       map[string]interface{}
 			serverLoggerConfigMap map[string]interface{}
-			configNodeName        = configNodeNameServer
+			configNodeName        string
 		)
 		if configData, _ := Config().Data(ctx); len(configData) > 0 {
 			if v, _ := gutil.MapPossibleItemByKey(configData, configNodeNameServer); v != "" {
 				configNodeName = v
+			}
+			if configNodeName == "" {
+				if v, _ := gutil.MapPossibleItemByKey(configData, configNodeNameServerSecondary); v != "" {
+					configNodeName = v
+				}
 			}
 		}
 		// Server configuration.
@@ -63,7 +69,9 @@ func Server(name ...interface{}) *ghttp.Server {
 			// The configuration is not necessary, so it just prints internal logs.
 			intlog.Printf(ctx, `missing configuration from configuration component for HTTP server "%s"`, instanceName)
 		}
-
+		if s.GetName() == "" || s.GetName() == ghttp.DefaultServerName {
+			s.SetName(instanceName)
+		}
 		// Server logger configuration checks.
 		serverLoggerNodeName := fmt.Sprintf(`%s.%s.%s`, configNodeName, s.GetName(), configNodeNameLogger)
 		if v, _ := Config().Get(ctx, serverLoggerNodeName); !v.IsEmpty() {

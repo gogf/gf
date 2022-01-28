@@ -47,9 +47,7 @@ func init() {
 
 // serverProcessInit initializes some process configurations, which can only be done once.
 func serverProcessInit() {
-	var (
-		ctx = context.TODO()
-	)
+	var ctx = context.TODO()
 	if !serverProcessInitialized.Cas(false, true) {
 		return
 	}
@@ -58,10 +56,10 @@ func serverProcessInit() {
 	if !genv.Get(adminActionRestartEnvKey).IsEmpty() {
 		if p, err := os.FindProcess(gproc.PPid()); err == nil {
 			if err = p.Kill(); err != nil {
-				intlog.Error(ctx, err)
+				intlog.Errorf(ctx, `%+v`, err)
 			}
 			if _, err = p.Wait(); err != nil {
-				intlog.Error(ctx, err)
+				intlog.Errorf(ctx, `%+v`, err)
 			}
 		} else {
 			glog.Error(ctx, err)
@@ -98,7 +96,7 @@ func GetServer(name ...interface{}) *Server {
 		return s.(*Server)
 	}
 	s := &Server{
-		name:             serverName,
+		instance:         serverName,
 		plugins:          make([]Plugin, 0),
 		servers:          make([]*gracefulServer, 0),
 		closeChan:        make(chan struct{}, 10000),
@@ -123,9 +121,7 @@ func GetServer(name ...interface{}) *Server {
 // Start starts listening on configured port.
 // This function does not block the process, you can use function Wait blocking the process.
 func (s *Server) Start() error {
-	var (
-		ctx = context.TODO()
-	)
+	var ctx = context.TODO()
 
 	// Swagger UI.
 	if s.config.SwaggerPath != "" {
@@ -183,7 +179,7 @@ func (s *Server) Start() error {
 	if s.config.SessionStorage == nil {
 		path := ""
 		if s.config.SessionPath != "" {
-			path = gfile.Join(s.config.SessionPath, s.name)
+			path = gfile.Join(s.config.SessionPath, s.config.Name)
 			if !gfile.Exists(path) {
 				if err := gfile.Mkdir(path); err != nil {
 					return gerror.Wrapf(err, `mkdir failed for "%s"`, path)
@@ -231,7 +227,7 @@ func (s *Server) Start() error {
 	fdMapStr := genv.Get(adminActionReloadEnvKey).String()
 	if len(fdMapStr) > 0 {
 		sfm := bufferToServerFdMap([]byte(fdMapStr))
-		if v, ok := sfm[s.name]; ok {
+		if v, ok := sfm[s.config.Name]; ok {
 			s.startServer(v)
 			reloaded = true
 		}
@@ -244,11 +240,12 @@ func (s *Server) Start() error {
 	if gproc.IsChild() {
 		gtimer.SetTimeout(ctx, time.Duration(s.config.GracefulTimeout)*time.Second, func(ctx context.Context) {
 			if err := gproc.Send(gproc.PPid(), []byte("exit"), adminGProcCommGroup); err != nil {
-				intlog.Error(ctx, "server error in process communication:", err)
+				intlog.Errorf(ctx, `server error in process communication: %+v`, err)
 			}
 		})
 	}
 	s.initOpenApi()
+	s.doServiceRegister()
 	s.dumpRouterMap()
 	return nil
 }
@@ -352,7 +349,7 @@ func (s *Server) GetRoutes() []RouterItem {
 		array, _ := gregex.MatchString(`(.*?)%([A-Z]+):(.+)@(.+)`, k)
 		for index, registeredItem := range registeredItems {
 			item := RouterItem{
-				Server:     s.name,
+				Server:     s.config.Name,
 				Address:    address,
 				Domain:     array[4],
 				Type:       registeredItem.Handler.Type,
@@ -417,9 +414,8 @@ func (s *Server) GetRoutes() []RouterItem {
 // Run starts server listening in blocking way.
 // It's commonly used for single server situation.
 func (s *Server) Run() {
-	var (
-		ctx = context.TODO()
-	)
+	var ctx = context.TODO()
+
 	if err := s.Start(); err != nil {
 		s.Logger().Fatalf(ctx, `%+v`, err)
 	}
@@ -434,15 +430,15 @@ func (s *Server) Run() {
 			}
 		}
 	}
-	s.Logger().Printf(ctx, "%d: all servers shutdown", gproc.Pid())
+	s.doServiceDeregister()
+	s.Logger().Infof(ctx, "pid[%d]: all servers shutdown", gproc.Pid())
 }
 
 // Wait blocks to wait for all servers done.
-// It's commonly used in multiple servers situation.
+// It's commonly used in multiple server situation.
 func Wait() {
-	var (
-		ctx = context.TODO()
-	)
+	var ctx = context.TODO()
+
 	<-allDoneChan
 	// Remove plugins.
 	serverMapping.Iterator(func(k string, v interface{}) bool {
@@ -451,13 +447,13 @@ func Wait() {
 			for _, p := range s.plugins {
 				intlog.Printf(ctx, `remove plugin: %s`, p.Name())
 				if err := p.Remove(); err != nil {
-					intlog.Error(ctx, err)
+					intlog.Errorf(ctx, `%+v`, err)
 				}
 			}
 		}
 		return true
 	})
-	glog.Printf(ctx, "%d: all servers shutdown", gproc.Pid())
+	glog.Infof(ctx, "pid[%d]: all servers shutdown", gproc.Pid())
 }
 
 // startServer starts the underlying server listening.
@@ -560,7 +556,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 			if s.serverCount.Add(-1) < 1 {
 				s.closeChan <- struct{}{}
 				if serverRunning.Add(-1) < 1 {
-					serverMapping.Remove(s.name)
+					serverMapping.Remove(s.instance)
 					allDoneChan <- struct{}{}
 				}
 			}

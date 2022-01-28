@@ -152,9 +152,9 @@ func (s *gracefulServer) doServe(ctx context.Context) error {
 	if s.fd != 0 {
 		action = "reloaded"
 	}
-	s.server.Logger().Printf(
+	s.server.Logger().Infof(
 		ctx,
-		"%d: %s server %s listening on [%s]",
+		`pid[%d]: %s server %s listening on [%s]`,
 		gproc.Pid(), s.getProto(), action, s.address,
 	)
 	s.status = ServerStatusRunning

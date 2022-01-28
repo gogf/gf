@@ -241,19 +241,10 @@ func StrToTime(str string, format ...string) (*Time, error) {
 		local                = time.Local
 	)
 	if match = timeRegex1.FindStringSubmatch(str); len(match) > 0 && match[1] != "" {
-		// for k, v := range match {
-		//	match[k] = strings.TrimSpace(v)
-		// }
 		year, month, day = parseDateStr(match[1])
 	} else if match = timeRegex2.FindStringSubmatch(str); len(match) > 0 && match[1] != "" {
-		// for k, v := range match {
-		//	match[k] = strings.TrimSpace(v)
-		// }
 		year, month, day = parseDateStr(match[1])
 	} else if match = timeRegex3.FindStringSubmatch(str); len(match) > 0 && match[1] != "" {
-		// for k, v := range match {
-		//	match[k] = strings.TrimSpace(v)
-		// }
 		s := strings.Replace(match[2], ":", "", -1)
 		if len(s) < 6 {
 			s += strings.Repeat("0", 6-len(s))
@@ -402,7 +393,7 @@ func ParseTimeFromContent(content string, format ...string) *Time {
 	if len(format) > 0 {
 		match, err = gregex.MatchString(formatToRegexPattern(format[0]), content)
 		if err != nil {
-			intlog.Error(context.TODO(), err)
+			intlog.Errorf(context.TODO(), `%+v`, err)
 		}
 		if len(match) > 0 {
 			return NewFromStrFormat(match[0], format[0])
