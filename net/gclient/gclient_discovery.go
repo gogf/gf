@@ -7,6 +7,7 @@
 package gclient
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -14,7 +15,6 @@ import (
 	"github.com/gogf/gf/v2/net/gsel"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/os/glog"
 )
 
 const (
@@ -52,9 +52,11 @@ func internalMiddlewareDiscovery(c *Client, r *http.Request) (response *Response
 	var service *gsvc.Service
 	service, err = gsvc.GetWithWatch(ctx, r.URL.Host, func(service *gsvc.Service) {
 		intlog.Printf(ctx, `http client watching service "%s" changed`, service.KeyWithoutEndpoints())
-		// If service changed, it removes it from map cache,
-		// which makes it re-cache later.
-		clientSelectorMap.Remove(service.KeyWithoutEndpoints())
+		if v := clientSelectorMap.Get(service.KeyWithoutEndpoints()); v != nil {
+			if err = updateSelectorNodesByService(v.(gsel.Selector), service); err != nil {
+				intlog.Errorf(context.Background(), `%+v`, err)
+			}
+		}
 	})
 	if err != nil {
 		return nil, err
@@ -63,25 +65,15 @@ func internalMiddlewareDiscovery(c *Client, r *http.Request) (response *Response
 		return c.Next(r)
 	}
 	// Balancer.
-	selector := clientSelectorMap.GetOrSetFuncLock(
-		service.KeyWithoutEndpoints(),
-		func() interface{} {
-			intlog.Printf(ctx, `http client create selector for service "%s"`, service.KeyWithoutEndpoints())
-			// Build selector and cache it in internal map.
-			nodes := make([]gsel.Node, 0)
-			for _, address := range service.Endpoints {
-				nodes = append(nodes, &discoveryNode{
-					service: service,
-					address: address,
-				})
-			}
-			selector := gsel.GetBuilder().Build()
-			if err = selector.Update(nodes); err != nil {
-				glog.Error(ctx, err)
-			}
-			return selector
-		},
-	).(gsel.Selector)
+	var selectorMapKey = service.KeyWithoutEndpoints()
+	selector := clientSelectorMap.GetOrSetFuncLock(selectorMapKey, func() interface{} {
+		intlog.Printf(ctx, `http client create selector for service "%s"`, selectorMapKey)
+		return gsel.GetBuilder().Build()
+	}).(gsel.Selector)
+	// Update selector nodes.
+	if err = updateSelectorNodesByService(selector, service); err != nil {
+		return nil, err
+	}
 	// Pick one node from multiple addresses.
 	node, done, err := selector.Pick(ctx)
 	if err != nil {
@@ -93,4 +85,15 @@ func internalMiddlewareDiscovery(c *Client, r *http.Request) (response *Response
 	r.URL.Host = node.Address()
 	r.Host = node.Address()
 	return c.Next(r)
+}
+
+func updateSelectorNodesByService(selector gsel.Selector, service *gsvc.Service) error {
+	nodes := make([]gsel.Node, 0)
+	for _, address := range service.Endpoints {
+		nodes = append(nodes, &discoveryNode{
+			service: service,
+			address: address,
+		})
+	}
+	return selector.Update(nodes)
 }

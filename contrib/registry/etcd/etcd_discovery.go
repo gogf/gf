@@ -44,5 +44,5 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]*gsvc.Ser
 }
 
 func (r *Registry) Watch(ctx context.Context, key string) (gsvc.Watcher, error) {
-	return newWatcher(ctx, key, r.client)
+	return newWatcher(key, r.client)
 }

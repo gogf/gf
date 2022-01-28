@@ -19,10 +19,10 @@ import (
 	"github.com/gogf/gf/v2/util/gtag"
 	"github.com/olekukonko/tablewriter"
 
-	_ "github.com/denisenkom/go-mssqldb"
-	_ "github.com/lib/pq"
-	//_ "github.com/mattn/go-oci8"
-	//_ "github.com/mattn/go-sqlite3"
+	_ "github.com/gogf/gf/contrib/drivers/mssql/v2"
+	_ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
+	_ "github.com/gogf/gf/contrib/drivers/sqlite/v2"
+	//_ "github.com/gogf/gf/contrib/drivers/oracle/v2"
 )
 
 const (

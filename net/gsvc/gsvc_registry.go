@@ -18,6 +18,7 @@ func Register(ctx context.Context, service *Service) error {
 	if defaultRegistry == nil {
 		return gerror.NewCodef(gcode.CodeNotImplemented, `no Registry is registered`)
 	}
+	ctx, _ = context.WithTimeout(ctx, defaultTimeout)
 	return defaultRegistry.Register(ctx, service)
 }
 
@@ -26,5 +27,6 @@ func Deregister(ctx context.Context, service *Service) error {
 	if defaultRegistry == nil {
 		return gerror.NewCodef(gcode.CodeNotImplemented, `no Registry is registered`)
 	}
+	ctx, _ = context.WithTimeout(ctx, defaultTimeout)
 	return defaultRegistry.Deregister(ctx, service)
 }

@@ -26,13 +26,13 @@ type watcher struct {
 	kv        etcd3.KV
 }
 
-func newWatcher(ctx context.Context, key string, client *etcd3.Client) (*watcher, error) {
+func newWatcher(key string, client *etcd3.Client) (*watcher, error) {
 	w := &watcher{
 		key:     key,
 		watcher: etcd3.NewWatcher(client),
 		kv:      etcd3.NewKV(client),
 	}
-	w.ctx, w.cancel = context.WithCancel(ctx)
+	w.ctx, w.cancel = context.WithCancel(context.Background())
 	w.watchChan = w.watcher.Watch(w.ctx, key, etcd3.WithPrefix(), etcd3.WithRev(0))
 	err := w.watcher.RequestProgress(context.Background())
 	if err != nil {
