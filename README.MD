@@ -27,6 +27,7 @@
 - much, much more...ready to explore?
 
 # Installation
+Enter your repo. directory and execute following command:
 
 ## primary module
 ```bash
@@ -35,7 +36,7 @@ go get -u -v github.com/gogf/gf/v2
 
 ## cli tool
 ```bash
-go install -g github.com/gogf/gf/cmd/gf/v2
+go install github.com/gogf/gf/cmd/gf/v2
 ```
 
 # Limitation
