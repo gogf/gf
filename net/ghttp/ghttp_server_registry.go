@@ -10,7 +10,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/net/gipv4"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -50,7 +49,7 @@ func (s *Server) doServiceRegister() {
 	}
 	s.Logger().Debugf(ctx, `service register: %+v`, s.service)
 	if err := gsvc.Register(ctx, s.service); err != nil {
-		intlog.Errorf(ctx, `%+v`, err)
+		s.Logger().Fatalf(ctx, `%+v`, err)
 	}
 }
 
@@ -59,6 +58,6 @@ func (s *Server) doServiceDeregister() {
 	var ctx = context.Background()
 	s.Logger().Debugf(ctx, `service deregister: %+v`, s.service)
 	if err := gsvc.Deregister(ctx, s.service); err != nil {
-		intlog.Errorf(ctx, `%+v`, err)
+		s.Logger().Errorf(ctx, `%+v`, err)
 	}
 }

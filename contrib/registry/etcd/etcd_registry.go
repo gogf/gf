@@ -18,7 +18,7 @@ func (r *Registry) Register(ctx context.Context, service *gsvc.Service) error {
 	r.lease = etcd3.NewLease(r.client)
 	grant, err := r.lease.Grant(ctx, int64(r.keepaliveTTL.Seconds()))
 	if err != nil {
-		return gerror.Wrapf(err, `etcd Grant failed with keepalive ttl "%s"`, r.keepaliveTTL)
+		return gerror.Wrapf(err, `etcd grant failed with keepalive ttl "%s"`, r.keepaliveTTL)
 	}
 	var (
 		key   = service.Key()
@@ -28,20 +28,20 @@ func (r *Registry) Register(ctx context.Context, service *gsvc.Service) error {
 	if err != nil {
 		return gerror.Wrapf(
 			err,
-			`etcd Put failed with key "%s", value "%s", lease "%d"`,
+			`etcd put failed with key "%s", value "%s", lease "%d"`,
 			key, value, grant.ID,
 		)
 	}
 	r.logger.Infof(
 		ctx,
-		`etcd Put success with key "%s", value "%s", lease "%d"`,
+		`etcd put success with key "%s", value "%s", lease "%d"`,
 		key, value, grant.ID,
 	)
-	keepAliceCh, err := r.client.KeepAlive(ctx, grant.ID)
+	keepAliceCh, err := r.client.KeepAlive(context.Background(), grant.ID)
 	if err != nil {
 		return err
 	}
-	go r.doKeepAlive(ctx, grant.ID, keepAliceCh)
+	go r.doKeepAlive(grant.ID, keepAliceCh)
 	return nil
 }
 
@@ -54,13 +54,12 @@ func (r *Registry) Deregister(ctx context.Context, service *gsvc.Service) error 
 }
 
 // doKeepAlive continuously keeps alive the lease from ETCD.
-func (r *Registry) doKeepAlive(
-	ctx context.Context, leaseID etcd3.LeaseID, keepAliceCh <-chan *etcd3.LeaseKeepAliveResponse,
-) {
+func (r *Registry) doKeepAlive(leaseID etcd3.LeaseID, keepAliceCh <-chan *etcd3.LeaseKeepAliveResponse) {
+	var ctx = context.Background()
 	for {
 		select {
 		case <-r.client.Ctx().Done():
-			r.logger.Debugf(ctx, "keepalive done for lease id: %d", leaseID)
+			r.logger.Noticef(ctx, "keepalive done for lease id: %d", leaseID)
 			return
 
 		case res, ok := <-keepAliceCh:
@@ -68,7 +67,7 @@ func (r *Registry) doKeepAlive(
 				//r.logger.Debugf(ctx, `keepalive loop: %v, %s`, ok, res.String())
 			}
 			if !ok {
-				r.logger.Debugf(ctx, `keepalive exit, lease id: %d`, leaseID)
+				r.logger.Noticef(ctx, `keepalive exit, lease id: %d`, leaseID)
 				return
 			}
 		}

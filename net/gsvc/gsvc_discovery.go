@@ -94,7 +94,7 @@ func Search(ctx context.Context, in SearchInput) ([]*Service, error) {
 	if defaultRegistry == nil {
 		return nil, gerror.NewCodef(gcode.CodeNotImplemented, `no Registry is registered`)
 	}
-	ctx, _ = context.WithTimeout(ctx, defaultSearchTimeout)
+	ctx, _ = context.WithTimeout(ctx, defaultTimeout)
 	return defaultRegistry.Search(ctx, in)
 }
 

@@ -431,7 +431,7 @@ func (s *Server) Run() {
 		}
 	}
 	s.doServiceDeregister()
-	s.Logger().Printf(ctx, "%d: all servers shutdown", gproc.Pid())
+	s.Logger().Infof(ctx, "pid[%d]: all servers shutdown", gproc.Pid())
 }
 
 // Wait blocks to wait for all servers done.
@@ -453,7 +453,7 @@ func Wait() {
 		}
 		return true
 	})
-	glog.Printf(ctx, "%d: all servers shutdown", gproc.Pid())
+	glog.Infof(ctx, "pid[%d]: all servers shutdown", gproc.Pid())
 }
 
 // startServer starts the underlying server listening.
