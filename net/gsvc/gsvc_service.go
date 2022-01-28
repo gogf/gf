@@ -83,7 +83,7 @@ func (s *Service) KeyWithoutEndpoints() string {
 func (s *Service) Value() string {
 	b, err := gjson.Marshal(s.Metadata)
 	if err != nil {
-		intlog.Error(context.TODO(), err)
+		intlog.Errorf(context.TODO(), `%+v`, err)
 	}
 	return string(b)
 }

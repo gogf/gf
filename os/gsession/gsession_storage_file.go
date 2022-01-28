@@ -82,7 +82,7 @@ func (s *StorageFile) updateSessionTimely(ctx context.Context) {
 			break
 		}
 		if err = s.updateSessionTTl(context.TODO(), id); err != nil {
-			intlog.Error(context.TODO(), err)
+			intlog.Errorf(context.TODO(), `%+v`, err)
 		}
 	}
 }

@@ -28,7 +28,7 @@ func init() {
 	if builtInVarStr != "" {
 		err := json.UnmarshalUseNumber(gbase64.MustDecodeString(builtInVarStr), &builtInVarMap)
 		if err != nil {
-			intlog.Error(context.TODO(), err)
+			intlog.Errorf(context.TODO(), `%+v`, err)
 		}
 		builtInVarMap["gfVersion"] = gf.VERSION
 		builtInVarMap["goVersion"] = runtime.Version()

@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/net/gipv4"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -47,10 +48,17 @@ func (s *Server) doServiceRegister() {
 		Endpoints: []string{fmt.Sprintf(`%s:%s`, ip, port)},
 		Metadata:  metadata,
 	}
-	_ = gsvc.Register(ctx, s.service)
+	s.Logger().Debugf(ctx, `service register: %+v`, s.service)
+	if err := gsvc.Register(ctx, s.service); err != nil {
+		intlog.Errorf(ctx, `%+v`, err)
+	}
 }
 
 // doServiceDeregister de-registers current service from Registry.
 func (s *Server) doServiceDeregister() {
-	_ = gsvc.Deregister(context.Background(), s.service)
+	var ctx = context.Background()
+	s.Logger().Debugf(ctx, `service deregister: %+v`, s.service)
+	if err := gsvc.Deregister(ctx, s.service); err != nil {
+		intlog.Errorf(ctx, `%+v`, err)
+	}
 }

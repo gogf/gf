@@ -64,7 +64,7 @@ func Instance(name ...string) *Config {
 	return localInstances.GetOrSetFuncLock(key, func() interface{} {
 		adapter, err := NewAdapterFile()
 		if err != nil {
-			intlog.Error(context.Background(), err)
+			intlog.Errorf(context.Background(), `%+v`, err)
 			return nil
 		}
 		// If it's not using default configuration or its configuration file is not available,
