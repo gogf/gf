@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -81,6 +82,28 @@ func (c *Client) Options(ctx context.Context, url string, data ...interface{}) (
 // Note that the response object MUST be closed if it'll never be used.
 func (c *Client) Trace(ctx context.Context, url string, data ...interface{}) (*Response, error) {
 	return c.DoRequest(ctx, httpMethodTrace, url, data...)
+}
+
+// PostForm issues a POST to the specified URL,
+// with data's keys and values URL-encoded as the request body.
+//
+// The Content-Type header is set to application/x-www-form-urlencoded.
+// To set other headers, use NewRequest and Client.Do.
+//
+// When err is nil, resp always contains a non-nil resp.Body.
+// Caller should close resp.Body when done reading from it.
+//
+// See the Client.Do method documentation for details on how redirects
+// are handled.
+//
+// To make a request with a specified context.Context, use NewRequestWithContext
+// and Client.Do.
+// Deprecated, use Post instead.
+func (c *Client) PostForm(url string, data url.Values) (resp *Response, err error) {
+	return nil, gerror.NewCode(
+		gcode.CodeNotSupported,
+		`PostForm is not supported, please use Post instead`,
+	)
 }
 
 // DoRequest sends request with given HTTP method and data and returns the response object.
