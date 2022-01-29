@@ -13,29 +13,31 @@ import (
 	"github.com/gogf/gf/v2/util/grand"
 )
 
-const SelectorNameRandom = "BalancerRandom"
+const SelectorRandom = "BalancerRandom"
 
-type selectorNameRandom struct {
+type selectorRandom struct {
 	mu    sync.RWMutex
 	nodes []Node
 }
 
 func NewSelectorRandom() Selector {
-	return &selectorNameRandom{
+	return &selectorRandom{
 		nodes: make([]Node, 0),
 	}
 }
 
-// Update modify Service.
-func (p *selectorNameRandom) Update(nodes []Node) error {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	p.nodes = append(p.nodes, nodes...)
+func (s *selectorRandom) Update(nodes []Node) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.nodes = nodes
 	return nil
 }
 
-func (p *selectorNameRandom) Pick(ctx context.Context) (node Node, done DoneFunc, err error) {
-	p.mu.RLock()
-	defer p.mu.RUnlock()
-	return p.nodes[grand.Intn(len(p.nodes))], nil, nil
+func (s *selectorRandom) Pick(ctx context.Context) (node Node, done DoneFunc, err error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if len(s.nodes) == 0 {
+		return nil, nil, nil
+	}
+	return s.nodes[grand.Intn(len(s.nodes))], nil, nil
 }

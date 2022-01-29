@@ -39,11 +39,11 @@ func (w *Watcher) watchLoop() {
 					}, repeatEventFilterDuration,
 				)
 				if err != nil {
-					intlog.Error(context.TODO(), err)
+					intlog.Errorf(context.TODO(), `%+v`, err)
 				}
 
 			case err := <-w.watcher.Errors:
-				intlog.Error(context.TODO(), err)
+				intlog.Errorf(context.TODO(), `%+v`, err)
 			}
 		}
 	}()
@@ -69,7 +69,7 @@ func (w *Watcher) eventLoop() {
 						// It adds the path back to monitor.
 						// We need no worry about the repeat adding.
 						if err := w.watcher.Add(event.Path); err != nil {
-							intlog.Error(context.TODO(), err)
+							intlog.Errorf(context.TODO(), `%+v`, err)
 						} else {
 							intlog.Printf(context.TODO(), "fake remove event, watcher re-adds monitor for: %s", event.Path)
 						}
@@ -85,7 +85,7 @@ func (w *Watcher) eventLoop() {
 						// It might lost the monitoring for the path, so we add the path back to monitor.
 						// We need no worry about the repeat adding.
 						if err := w.watcher.Add(event.Path); err != nil {
-							intlog.Error(context.TODO(), err)
+							intlog.Errorf(context.TODO(), `%+v`, err)
 						} else {
 							intlog.Printf(context.TODO(), "fake rename event, watcher re-adds monitor for: %s", event.Path)
 						}
@@ -103,7 +103,7 @@ func (w *Watcher) eventLoop() {
 						for _, subPath := range fileAllDirs(event.Path) {
 							if fileIsDir(subPath) {
 								if err := w.watcher.Add(subPath); err != nil {
-									intlog.Error(context.TODO(), err)
+									intlog.Errorf(context.TODO(), `%+v`, err)
 								} else {
 									intlog.Printf(context.TODO(), "folder creation event, watcher adds monitor for: %s", subPath)
 								}
@@ -112,7 +112,7 @@ func (w *Watcher) eventLoop() {
 					} else {
 						// If it's a file, it directly adds it to monitor.
 						if err := w.watcher.Add(event.Path); err != nil {
-							intlog.Error(context.TODO(), err)
+							intlog.Errorf(context.TODO(), `%+v`, err)
 						} else {
 							intlog.Printf(context.TODO(), "file creation event, watcher adds monitor for: %s", event.Path)
 						}

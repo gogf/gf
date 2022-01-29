@@ -19,10 +19,10 @@ import (
 	"github.com/gogf/gf/v2/util/gtag"
 	"github.com/olekukonko/tablewriter"
 
-	_ "github.com/denisenkom/go-mssqldb"
-	_ "github.com/lib/pq"
-	//_ "github.com/mattn/go-oci8"
-	//_ "github.com/mattn/go-sqlite3"
+	_ "github.com/gogf/gf/contrib/drivers/mssql/v2"
+	_ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
+	_ "github.com/gogf/gf/contrib/drivers/sqlite/v2"
+	//_ "github.com/gogf/gf/contrib/drivers/oracle/v2"
 )
 
 const (
@@ -101,7 +101,7 @@ generated json tag case for model struct, cases are as follows:
 )
 
 var (
-	createdAt *gtime.Time
+	createdAt = gtime.Now()
 )
 
 func init() {
@@ -129,8 +129,6 @@ func init() {
 		`cGenDaoBriefGroup`:           cGenDaoBriefGroup,
 		`cGenDaoBriefJsonCase`:        cGenDaoBriefJsonCase,
 	})
-
-	createdAt = gtime.Now()
 }
 
 type (
@@ -216,20 +214,26 @@ func doGenDaoForArray(ctx context.Context, index int, in cGenDaoInput) {
 
 	// It uses user passed database configuration.
 	if in.Link != "" {
-		tempGroup := gtime.TimestampNanoStr()
-		match, _ := gregex.MatchString(`([a-z]+):(.+)`, in.Link)
+		var (
+			tempGroup = gtime.TimestampNanoStr()
+			match, _  = gregex.MatchString(`([a-z]+):(.+)`, in.Link)
+		)
 		if len(match) == 3 {
 			gdb.AddConfigNode(tempGroup, gdb.ConfigNode{
 				Type: gstr.Trim(match[1]),
 				Link: gstr.Trim(match[2]),
 			})
-			db, _ = gdb.Instance(tempGroup)
+			if db, err = gdb.Instance(tempGroup); err != nil {
+				mlog.Debugf(`database initialization failed: %+v`, err)
+			}
+		} else {
+			mlog.Fatalf(`invalid database configuration: %s`, in.Link)
 		}
 	} else {
 		db = g.DB(in.Group)
 	}
 	if db == nil {
-		mlog.Fatal("database initialization failed")
+		mlog.Fatal(`database initialization failed, may be invalid database configuration`)
 	}
 
 	var tableNames []string
@@ -238,7 +242,7 @@ func doGenDaoForArray(ctx context.Context, index int, in cGenDaoInput) {
 	} else {
 		tableNames, err = db.Tables(context.TODO())
 		if err != nil {
-			mlog.Fatalf("fetching tables failed: \n %v", err)
+			mlog.Fatalf("fetching tables failed: %+v", err)
 		}
 	}
 	// Table excluding.
@@ -284,7 +288,7 @@ func generateDao(ctx context.Context, db gdb.DB, in cGenDaoInternalInput) {
 	// Generating table data preparing.
 	fieldMap, err := db.TableFields(ctx, in.TableName)
 	if err != nil {
-		mlog.Fatalf("fetching tables fields failed for table '%s':\n%v", in.TableName, err)
+		mlog.Fatalf(`fetching tables fields failed for table "%s": %+v`, in.TableName, err)
 	}
 	var (
 		dirRealPath             = gfile.RealPath(in.Path)
@@ -364,7 +368,7 @@ func generateDo(ctx context.Context, db gdb.DB, tableNames, newTableNames []stri
 		)
 		err = gfile.PutContents(doFilePath, strings.TrimSpace(modelContent))
 		if err != nil {
-			mlog.Fatalf("writing content to '%s' failed: %v", doFilePath, err)
+			mlog.Fatalf(`writing content to "%s" failed: %v`, doFilePath, err)
 		} else {
 			utils.GoFmt(doFilePath)
 			mlog.Print("generated:", doFilePath)

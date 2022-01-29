@@ -53,7 +53,7 @@ func (s *Session) init() error {
 		// Retrieve stored session data from storage.
 		if s.manager.storage != nil {
 			if s.data, err = s.manager.storage.GetSession(s.ctx, s.id, s.manager.ttl, s.data); err != nil && err != ErrorDisabled {
-				intlog.Errorf(s.ctx, "session restoring failed for id '%s': %v", s.id, err)
+				intlog.Errorf(s.ctx, `session restoring failed for id "%s": %+v`, s.id, err)
 				return err
 			}
 		}
@@ -67,7 +67,7 @@ func (s *Session) init() error {
 			// Use default session id creating function of storage.
 			s.id, err = s.manager.storage.New(s.ctx, s.manager.ttl)
 			if err != nil && err != ErrorDisabled {
-				intlog.Errorf(s.ctx, "create session id failed: %v", err)
+				intlog.Errorf(s.ctx, "create session id failed: %+v", err)
 				return err
 			}
 			// If session storage does not implements id generating functionality,
@@ -221,7 +221,7 @@ func (s *Session) Data() (map[string]interface{}, error) {
 	}
 	data, err := s.manager.storage.Data(s.ctx, s.id)
 	if err != nil && err != ErrorDisabled {
-		intlog.Error(s.ctx, err)
+		intlog.Errorf(s.ctx, `%+v`, err)
 	}
 	if data != nil {
 		return data, nil
@@ -239,7 +239,7 @@ func (s *Session) Size() (int, error) {
 	}
 	size, err := s.manager.storage.GetSize(s.ctx, s.id)
 	if err != nil && err != ErrorDisabled {
-		intlog.Error(s.ctx, err)
+		intlog.Errorf(s.ctx, `%+v`, err)
 	}
 	if size >= 0 {
 		return size, nil
@@ -279,7 +279,7 @@ func (s *Session) Get(key string, def ...interface{}) (*gvar.Var, error) {
 	}
 	v, err := s.manager.storage.Get(s.ctx, s.id, key)
 	if err != nil && err != ErrorDisabled {
-		intlog.Error(s.ctx, err)
+		intlog.Errorf(s.ctx, `%+v`, err)
 		return nil, err
 	}
 	if v != nil {

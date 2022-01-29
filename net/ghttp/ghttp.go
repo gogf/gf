@@ -12,6 +12,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gorilla/websocket"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -24,7 +25,7 @@ import (
 type (
 	// Server wraps the http.Server and provides more rich features.
 	Server struct {
-		name             string                           // Unique name for instance management.
+		instance         string                           // Instance name.
 		config           ServerConfig                     // Configuration.
 		plugins          []Plugin                         // Plugin array to extend server functionality.
 		servers          []*gracefulServer                // Underlying http.Server array.
@@ -36,6 +37,7 @@ type (
 		statusHandlerMap map[string][]HandlerFunc         // Custom status handler map.
 		sessionManager   *gsession.Manager                // Session manager.
 		openapi          *goai.OpenApiV3                  // The OpenApi specification management object.
+		service          *gsvc.Service                    // The service for Registry.
 	}
 
 	// Router object.
