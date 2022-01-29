@@ -17,6 +17,9 @@ import (
 
 // doServiceRegister registers current service to Registry.
 func (s *Server) doServiceRegister() {
+	if gsvc.GetRegistry() == nil {
+		return
+	}
 	var (
 		ctx      = context.Background()
 		protocol = `http`
@@ -55,6 +58,9 @@ func (s *Server) doServiceRegister() {
 
 // doServiceDeregister de-registers current service from Registry.
 func (s *Server) doServiceDeregister() {
+	if gsvc.GetRegistry() == nil {
+		return
+	}
 	var ctx = context.Background()
 	s.Logger().Debugf(ctx, `service deregister: %+v`, s.service)
 	if err := gsvc.Deregister(ctx, s.service); err != nil {
