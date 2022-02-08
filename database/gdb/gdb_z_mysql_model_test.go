@@ -1075,6 +1075,28 @@ func Test_Model_Scan(t *testing.T) {
 	})
 }
 
+func Test_Model_Scan_NilSliceAttrWhenNoRecordsFound(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime gtime.Time
+		}
+		type Response struct {
+			Users []User `json:"users"`
+		}
+		var res Response
+		err := db.Model(table).Scan(&res.Users)
+		t.AssertNil(err)
+		t.Assert(res.Users, nil)
+	})
+}
+
 func Test_Model_OrderBy(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
