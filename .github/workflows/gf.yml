@@ -51,7 +51,7 @@ jobs:
           POSTGRES_DB:       test
           TZ:                Asia/Shanghai
         ports:
-          - 9920:5432
+          - 5432:5432
         # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
@@ -63,14 +63,14 @@ jobs:
         image: mcmoe/mssqldocker:latest
         env:
           ACCEPT_EULA:    Y
-          SA_PASSWORD:    12345678
+          SA_PASSWORD:    LoremIpsum86
           MSSQL_DB:       test
           MSSQL_USER:     root
-          MSSQL_PASSWORD: 12345678
+          MSSQL_PASSWORD: LoremIpsum86
         ports:
-          - 9930:1433
+          - 1433:1433
         options: >-
-          --health-cmd="/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P 12345678 -l 30 -Q \"SELECT 1\" || exit 1"
+          --health-cmd="/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P LoremIpsum86 -l 30 -Q \"SELECT 1\" || exit 1"
           --health-start-period 10s
           --health-interval 10s
           --health-timeout 5s
