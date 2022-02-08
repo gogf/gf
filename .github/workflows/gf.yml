@@ -81,7 +81,7 @@ jobs:
       run: |
         cd contrib
         for file in `find . -name go.mod`; do
-            cd ${file%/*}
+            cd $(dirname $file)
             go mod tidy
             go build ./...
             go test  ./...
