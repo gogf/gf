@@ -81,10 +81,11 @@ jobs:
       run: |
         cd contrib
         for file in `find . -name go.mod`; do
-            cd $(dirname $file)
+            cd ${file%/*}
             go mod tidy
             go build ./...
             go test  ./...
+            cd -
         done
 
     - name: Run i386 Arch Test
