@@ -74,6 +74,24 @@ func (r *Redis) Do(ctx context.Context, command string, args ...interface{}) (*g
 	return conn.Do(ctx, command, args...)
 }
 
+// MustConn performs as function Conn, but it panics if any error occurs internally.
+func (r *Redis) MustConn(ctx context.Context) *RedisConn {
+	c, err := r.Conn(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return c
+}
+
+// MustDo performs as function Do, but it panics if any error occurs internally.
+func (r *Redis) MustDo(ctx context.Context, command string, args ...interface{}) *gvar.Var {
+	v, err := r.Do(ctx, command, args...)
+	if err != nil {
+		panic(err)
+	}
+	return v
+}
+
 // Close closes current redis client, closes its connection pool and releases all its related resources.
 func (r *Redis) Close(ctx context.Context) error {
 	if r == nil {
