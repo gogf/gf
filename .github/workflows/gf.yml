@@ -58,17 +58,42 @@ jobs:
 
     - name: Before Script
       run: |
-        date
         find . -name "*.go" | xargs gofmt -w
-        git diff --name-only --exit-code || if [ $? != 0 ];then echo "Notice: gofmt check failed,please gofmt before pr." && exit 1; fi
+        git diff --name-only --exit-code || if [ $? != 0 ]; then echo "Notice: gofmt check failed,please gofmt before pr." && exit 1; fi
         echo "gofmt check pass."
         sudo echo "127.0.0.1   local" | sudo tee -a /etc/hosts
 
+    - name: CLI Build & Test
+      run: |
+        cd cmd/gf
+        go mod tidy
+        go build ./...
+        go test  ./...
+
+    - name: Example Build & Test
+      run: |
+        cd example
+        go mod tidy
+        go build ./...
+        go test  ./...
+
+    - name: Contrib Build & Test
+      run: |
+        cd contrib
+        for file in `find . -name go.mod`; do
+            cd ${file%/*}
+            go mod tidy
+            go build ./...
+            go test  ./...
+        done
+
     - name: Run i386 Arch Test
-      run: GOARCH=386 go test -v ./... || exit 1
+      run: |
+        GOARCH=386 go test -v ./... || exit 1
 
     - name: Run amd64 Arch Test
-      run: GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
+      run: |
+        GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
 
     - name: Report Coverage
       uses: codecov/codecov-action@v2

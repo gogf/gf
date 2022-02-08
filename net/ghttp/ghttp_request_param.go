@@ -45,7 +45,7 @@ var (
 //
 // The parameter `pointer` can be type of: *struct/**struct/*[]struct/*[]*struct.
 //
-// It supports single and multiple struct convertion:
+// It supports single and multiple struct converting:
 // 1. Single struct, post content like: {"id":1, "name":"john"} or ?id=1&name=john
 // 2. Multiple struct, post content like: [{"id":1, "name":"john"}, {"id":, "name":"smith"}]
 //
