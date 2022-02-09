@@ -143,7 +143,7 @@ func Database(name ...string) gdb.DB {
 		}
 
 		// Create a new ORM object with given configurations.
-		if db, err := gdb.New(name...); err == nil {
+		if db, err := gdb.NewByGroup(name...); err == nil {
 			// Initialize logger for ORM.
 			var (
 				loggerConfigMap map[string]interface{}

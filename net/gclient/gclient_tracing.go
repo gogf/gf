@@ -48,9 +48,7 @@ const (
 
 // internalMiddlewareTracing is a client middleware that enables tracing feature using standards of OpenTelemetry.
 func internalMiddlewareTracing(c *Client, r *http.Request) (response *Response, err error) {
-	var (
-		ctx = r.Context()
-	)
+	var ctx = r.Context()
 	// Mark this request is handled by server tracing middleware,
 	// to avoid repeated handling by the same middleware.
 	if ctx.Value(tracingMiddlewareHandled) != nil {
@@ -70,7 +68,7 @@ func internalMiddlewareTracing(c *Client, r *http.Request) (response *Response, 
 	// Inject tracing content into http header.
 	otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(r.Header))
 
-	// If it is now using default trace provider, ot then does no complex tracing jobs.
+	// If it is now using default trace provider, it then does no complex tracing jobs.
 	if gtrace.IsUsingDefaultProvider() {
 		response, err = c.Next(r)
 		return

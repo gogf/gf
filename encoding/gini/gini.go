@@ -81,20 +81,32 @@ func Decode(data []byte) (res map[string]interface{}, err error) {
 // Encode converts map to INI format.
 func Encode(data map[string]interface{}) (res []byte, err error) {
 	var (
-		n int
-		w = new(bytes.Buffer)
+		n  int
+		w  = new(bytes.Buffer)
+		m  map[string]interface{}
+		ok bool
 	)
-	for k, v := range data {
-		n, err = w.WriteString(fmt.Sprintf("[%s]\n", k))
-		if err != nil || n == 0 {
-			return nil, gerror.Wrapf(err, "w.WriteString failed")
-		}
-		for kk, vv := range v.(map[string]interface{}) {
-			n, err = w.WriteString(fmt.Sprintf("%s=%s\n", kk, vv.(string)))
+	for section, item := range data {
+		// Section key-value pairs.
+		if m, ok = item.(map[string]interface{}); ok {
+			n, err = w.WriteString(fmt.Sprintf("[%s]\n", section))
 			if err != nil || n == 0 {
 				return nil, gerror.Wrapf(err, "w.WriteString failed")
 			}
+			for k, v := range m {
+				if n, err = w.WriteString(fmt.Sprintf("%s=%v\n", k, v)); err != nil || n == 0 {
+					return nil, gerror.Wrapf(err, "w.WriteString failed")
+				}
+			}
+			continue
 		}
+		// Simple key-value pairs.
+		for k, v := range data {
+			if n, err = w.WriteString(fmt.Sprintf("%s=%v\n", k, v)); err != nil || n == 0 {
+				return nil, gerror.Wrapf(err, "w.WriteString failed")
+			}
+		}
+		break
 	}
 	res = make([]byte, w.Len())
 	if n, err = w.Read(res); err != nil || n == 0 {

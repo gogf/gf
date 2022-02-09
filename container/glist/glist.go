@@ -507,7 +507,7 @@ func (l *List) String() string {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (l *List) MarshalJSON() ([]byte, error) {
+func (l List) MarshalJSON() ([]byte, error) {
 	return json.Marshal(l.FrontAll())
 }
 

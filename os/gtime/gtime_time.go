@@ -226,7 +226,7 @@ func (t *Time) String() string {
 	if t.IsZero() {
 		return ""
 	}
-	return t.Format("Y-m-d H:i:s")
+	return t.wrapper.String()
 }
 
 // IsZero reports whether t represents the zero time instant,
@@ -446,7 +446,9 @@ func (t *Time) EndOfYear() *Time {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (t *Time) MarshalJSON() ([]byte, error) {
+// Note that, DO NOT use `(t *Time) MarshalJSON() ([]byte, error)` as it looses interface
+// implement of `MarshalJSON` for struct of Time.
+func (t Time) MarshalJSON() ([]byte, error) {
 	return []byte(`"` + t.String() + `"`), nil
 }
 

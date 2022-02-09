@@ -87,20 +87,20 @@ func NewAdapterFile(file ...string) (*AdapterFile, error) {
 
 		// Dir path of working dir.
 		if err = config.AddPath(gfile.Pwd()); err != nil {
-			intlog.Error(context.TODO(), err)
+			intlog.Errorf(context.TODO(), `%+v`, err)
 		}
 
 		// Dir path of main package.
 		if mainPath := gfile.MainPkgPath(); mainPath != "" && gfile.Exists(mainPath) {
 			if err = config.AddPath(mainPath); err != nil {
-				intlog.Error(context.TODO(), err)
+				intlog.Errorf(context.TODO(), `%+v`, err)
 			}
 		}
 
 		// Dir path of binary.
 		if selfPath := gfile.SelfDir(); selfPath != "" && gfile.Exists(selfPath) {
 			if err = config.AddPath(selfPath); err != nil {
-				intlog.Error(context.TODO(), err)
+				intlog.Errorf(context.TODO(), `%+v`, err)
 			}
 		}
 	}

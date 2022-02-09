@@ -11,6 +11,7 @@ package gcmd_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -30,16 +31,16 @@ func Test_Default(t *testing.T) {
 		t.Assert(gcmd.GetArg(100, "test"), "test")
 		t.Assert(gcmd.GetOpt("force"), "remove")
 		t.Assert(gcmd.GetOpt("n"), "root")
-		t.Assert(gcmd.ContainsOpt("fq"), true)
-		t.Assert(gcmd.ContainsOpt("p"), true)
-		t.Assert(gcmd.ContainsOpt("none"), false)
+		t.Assert(gcmd.GetOpt("fq").IsNil(), false)
+		t.Assert(gcmd.GetOpt("p").IsNil(), false)
+		t.Assert(gcmd.GetOpt("none").IsNil(), true)
 		t.Assert(gcmd.GetOpt("none", "value"), "value")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		gcmd.Init([]string{"gf", "gen", "-h"}...)
 		t.Assert(len(gcmd.GetArgAll()), 2)
 		t.Assert(gcmd.GetOpt("h"), "")
-		t.Assert(gcmd.ContainsOpt("h"), true)
+		t.Assert(gcmd.GetOpt("h").IsNil(), false)
 	})
 }
 
@@ -220,5 +221,37 @@ gf build main.go -n my-app -v 1.0 -a amd64,386 -s linux,windows,darwin -p ./dock
 			g.Log().Fatal(ctx, err)
 		}
 		_ = c.RunWithError(ctx)
+	})
+}
+
+func Test_Command_NotFound(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		c0 := &gcmd.Command{
+			Name: "c0",
+		}
+		c1 := &gcmd.Command{
+			Name: "c1",
+			FuncWithValue: func(ctx context.Context, parser *gcmd.Parser) (interface{}, error) {
+				return nil, nil
+			},
+		}
+		c21 := &gcmd.Command{
+			Name: "c21",
+			FuncWithValue: func(ctx context.Context, parser *gcmd.Parser) (interface{}, error) {
+				return nil, nil
+			},
+		}
+		c22 := &gcmd.Command{
+			Name: "c22",
+			FuncWithValue: func(ctx context.Context, parser *gcmd.Parser) (interface{}, error) {
+				return nil, nil
+			},
+		}
+		t.AssertNil(c0.AddCommand(c1))
+		t.AssertNil(c1.AddCommand(c21, c22))
+
+		os.Args = []string{"c0", "c1", "c23", `--test="abc"`}
+		err := c0.RunWithError(gctx.New())
+		t.Assert(err.Error(), `command "c1 c23" not found for command "c0", command line: c0 c1 c23 --test="abc"`)
 	})
 }

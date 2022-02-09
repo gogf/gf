@@ -57,3 +57,13 @@ func New(code int, message string, detail interface{}) Code {
 		detail:  detail,
 	}
 }
+
+// WithCode creates and returns a new error code based on given Code.
+// The code and message is from given `code`, but the detail if from given `detail`.
+func WithCode(code Code, detail interface{}) Code {
+	return localCode{
+		code:    code.Code(),
+		message: code.Message(),
+		detail:  detail,
+	}
+}

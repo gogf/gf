@@ -39,9 +39,10 @@ type Config struct {
 	RotateSize           int64          `json:"rotateSize"`           // Rotate the logging file if its size > 0 in bytes.
 	RotateExpire         time.Duration  `json:"rotateExpire"`         // Rotate the logging file if its mtime exceeds this duration.
 	RotateBackupLimit    int            `json:"rotateBackupLimit"`    // Max backup for rotated files, default is 0, means no backups.
-	RotateBackupExpire   time.Duration  `json:"rotateBackupExpire"`   // Max expire for rotated files, which is 0 in default, means no expiration.
+	RotateBackupExpire   time.Duration  `json:"rotateBackupExpire"`   // Max expires for rotated files, which is 0 in default, means no expiration.
 	RotateBackupCompress int            `json:"rotateBackupCompress"` // Compress level for rotated files using gzip algorithm. It's 0 in default, means no compression.
 	RotateCheckInterval  time.Duration  `json:"rotateCheckInterval"`  // Asynchronously checks the backups and expiration at intervals. It's 1 hour in default.
+	StdoutColorDisabled  bool           `json:"stdoutColorDisabled"`  // Logging level prefix with color to writer or not (false in default).
 	WriterColorEnable    bool           `json:"writerColorEnable"`    // Logging level prefix with color to writer or not (false in default).
 }
 
@@ -73,7 +74,7 @@ func (l *Logger) SetConfig(config Config) error {
 	// Necessary validation.
 	if config.Path != "" {
 		if err := l.SetPath(config.Path); err != nil {
-			intlog.Error(context.TODO(), err)
+			intlog.Errorf(context.TODO(), `%+v`, err)
 			return err
 		}
 	}

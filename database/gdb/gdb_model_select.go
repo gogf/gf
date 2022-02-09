@@ -12,6 +12,7 @@ import (
 
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/crypto/gmd5"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
@@ -320,12 +321,18 @@ func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 //
 // See Result.ScanList.
 func (m *Model) ScanList(structSlicePointer interface{}, bindToAttrName string, relationAttrNameAndFields ...string) (err error) {
+	var result Result
 	out, err := checkGetSliceElementInfoForScanList(structSlicePointer, bindToAttrName)
 	if err != nil {
 		return err
 	}
-	// Filter fields using temporary created struct using reflect.New.
-	result, err := m.Fields(reflect.New(out.BindToAttrType).Interface()).All()
+	if m.fields != defaultFields || m.fieldsEx != "" {
+		// There are custom fields.
+		result, err = m.All()
+	} else {
+		// Filter fields using temporary created struct using reflect.New.
+		result, err = m.Fields(reflect.New(out.BindToAttrType).Interface()).All()
+	}
 	if err != nil {
 		return err
 	}
@@ -505,7 +512,7 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 	if m.cacheEnabled && m.tx == nil {
 		cacheKey = m.cacheOption.Name
 		if len(cacheKey) == 0 {
-			cacheKey = sql + ", @PARAMS:" + gconv.String(args)
+			cacheKey = "gcache:" + gmd5.MustEncryptString(sql+", @PARAMS:"+gconv.String(args))
 		}
 		if v, _ := cacheObj.Get(ctx, cacheKey); !v.IsNil() {
 			if result, ok := v.Val().(Result); ok {
@@ -529,7 +536,7 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 	if cacheKey != "" && err == nil {
 		if m.cacheOption.Duration < 0 {
 			if _, err := cacheObj.Remove(ctx, cacheKey); err != nil {
-				intlog.Error(m.GetCtx(), err)
+				intlog.Errorf(m.GetCtx(), `%+v`, err)
 			}
 		} else {
 			// In case of Cache Penetration.
@@ -537,7 +544,7 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 				result = Result{}
 			}
 			if err := cacheObj.Set(ctx, cacheKey, result, m.cacheOption.Duration); err != nil {
-				intlog.Error(m.GetCtx(), err)
+				intlog.Errorf(m.GetCtx(), `%+v`, err)
 			}
 		}
 	}

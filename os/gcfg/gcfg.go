@@ -13,6 +13,8 @@ import (
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/command"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/utils"
@@ -64,7 +66,7 @@ func Instance(name ...string) *Config {
 	return localInstances.GetOrSetFuncLock(key, func() interface{} {
 		adapter, err := NewAdapterFile()
 		if err != nil {
-			intlog.Error(context.Background(), err)
+			intlog.Errorf(context.Background(), `%+v`, err)
 			return nil
 		}
 		// If it's not using default configuration or its configuration file is not available,
@@ -140,7 +142,7 @@ func (c *Config) Get(ctx context.Context, pattern string, def ...interface{}) (*
 // Fetching Rules: Environment arguments are in uppercase format, eg: GF_PACKAGE_VARIABLE.
 func (c *Config) GetWithEnv(ctx context.Context, pattern string, def ...interface{}) (*gvar.Var, error) {
 	value, err := c.Get(ctx, pattern)
-	if err != nil {
+	if err != nil && gerror.Code(err) != gcode.CodeNotFound {
 		return nil, err
 	}
 	if value == nil {
@@ -162,7 +164,7 @@ func (c *Config) GetWithEnv(ctx context.Context, pattern string, def ...interfac
 // Fetching Rules: Command line arguments are in lowercase format, eg: gf.package.variable.
 func (c *Config) GetWithCmd(ctx context.Context, pattern string, def ...interface{}) (*gvar.Var, error) {
 	value, err := c.Get(ctx, pattern)
-	if err != nil {
+	if err != nil && gerror.Code(err) != gcode.CodeNotFound {
 		return nil, err
 	}
 	if value == nil {

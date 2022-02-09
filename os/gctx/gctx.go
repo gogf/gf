@@ -25,8 +25,11 @@ func New() context.Context {
 
 // WithCtx creates and returns a context containing context id upon given parent context `ctx`.
 func WithCtx(ctx context.Context) context.Context {
-	ctx, span := gtrace.NewSpan(ctx, "gctx.WithCtx")
-	defer span.End()
+	if gtrace.IsUsingDefaultProvider() {
+		var span *gtrace.Span
+		ctx, span = gtrace.NewSpan(ctx, "gctx.WithCtx")
+		defer span.End()
+	}
 	return ctx
 }
 

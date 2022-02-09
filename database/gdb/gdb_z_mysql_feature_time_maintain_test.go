@@ -465,7 +465,7 @@ CREATE TABLE %s (
 	})
 }
 
-func Test_SoftUpdateTime_WithDTO(t *testing.T) {
+func Test_SoftUpdateTime_WithDO(t *testing.T) {
 	table := "time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
@@ -500,7 +500,7 @@ CREATE TABLE %s (
 		// Update.
 		time.Sleep(2 * time.Second)
 		type User struct {
-			g.Meta    `orm:"dto:true"`
+			g.Meta    `orm:"do:true"`
 			Id        interface{}
 			Num       interface{}
 			CreatedAt interface{}

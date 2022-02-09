@@ -49,6 +49,11 @@ func (c *Cache) SetAdapter(adapter Adapter) {
 	c.localAdapter = adapter
 }
 
+// GetAdapter returns the adapter that is set in current Cache.
+func (c *Cache) GetAdapter() Adapter {
+	return c.localAdapter
+}
+
 // Removes deletes `keys` in the cache.
 func (c *Cache) Removes(ctx context.Context, keys []interface{}) error {
 	_, err := c.Remove(ctx, keys...)

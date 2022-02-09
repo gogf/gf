@@ -15,6 +15,7 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -24,7 +25,7 @@ import (
 func Test_Log(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		logDir := gfile.TempDir(gtime.TimestampNanoStr())
-		p, _ := ports.PopRand()
+		p, _ := gtcp.GetFreePort()
 		s := g.Server(p)
 		s.BindHandler("/hello", func(r *ghttp.Request) {
 			r.Response.Write("hello")
@@ -45,7 +46,7 @@ func Test_Log(t *testing.T) {
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent(ctx, "/hello"), "hello")
-		t.Assert(client.GetContent(ctx, "/error"), "custom error")
+		t.Assert(client.GetContent(ctx, "/error"), "exception recovered: custom error")
 
 		var (
 			logPath1 = gfile.Join(logDir, gtime.Now().Format("Y-m-d")+".log")

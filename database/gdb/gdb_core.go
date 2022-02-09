@@ -97,6 +97,9 @@ func (c *Core) GetCtxTimeout(timeoutType int, ctx context.Context) (context.Cont
 // It is rare to Close a DB, as the DB handle is meant to be
 // long-lived and shared between many goroutines.
 func (c *Core) Close(ctx context.Context) (err error) {
+	if err = c.cache.Close(ctx); err != nil {
+		return err
+	}
 	c.links.LockFunc(func(m map[string]interface{}) {
 		for k, v := range m {
 			if db, ok := v.(*sql.DB); ok {
@@ -286,7 +289,7 @@ func (c *Core) PingMaster() error {
 	if master, err := c.db.Master(); err != nil {
 		return err
 	} else {
-		if err = master.Ping(); err != nil {
+		if err = master.PingContext(c.GetCtx()); err != nil {
 			err = gerror.WrapCode(gcode.CodeDbOperationError, err, `master.Ping failed`)
 		}
 		return err
@@ -298,7 +301,7 @@ func (c *Core) PingSlave() error {
 	if slave, err := c.db.Slave(); err != nil {
 		return err
 	} else {
-		if err = slave.Ping(); err != nil {
+		if err = slave.PingContext(c.GetCtx()); err != nil {
 			err = gerror.WrapCode(gcode.CodeDbOperationError, err, `slave.Ping failed`)
 		}
 		return err
@@ -412,7 +415,7 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 		keysStr      = charL + strings.Join(keys, charR+","+charL) + charR
 		operation    = GetInsertOperationByOption(option.InsertOption)
 	)
-	if option.InsertOption == insertOptionSave {
+	if option.InsertOption == InsertOptionSave {
 		onDuplicateStr = c.formatOnDuplicate(keys, option)
 	}
 	var (
@@ -451,8 +454,8 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 				err = gerror.WrapCode(gcode.CodeDbOperationError, err, `sql.Result.RowsAffected failed`)
 				return stdSqlResult, err
 			} else {
-				batchResult.result = stdSqlResult
-				batchResult.affected += affectedRows
+				batchResult.Result = stdSqlResult
+				batchResult.Affected += affectedRows
 			}
 			params = params[:0]
 			valueHolder = valueHolder[:0]
@@ -630,7 +633,7 @@ func (c *Core) DoDelete(ctx context.Context, link Link, table string, condition 
 //
 // Note that this interface implements mainly for workaround for a json infinite loop bug
 // of Golang version < v1.14.
-func (c *Core) MarshalJSON() ([]byte, error) {
+func (c Core) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf(`%+v`, c)), nil
 }
 

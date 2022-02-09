@@ -45,7 +45,7 @@ var (
 //
 // The parameter `pointer` can be type of: *struct/**struct/*[]struct/*[]*struct.
 //
-// It supports single and multiple struct convertion:
+// It supports single and multiple struct converting:
 // 1. Single struct, post content like: {"id":1, "name":"john"} or ?id=1&name=john
 // 2. Multiple struct, post content like: [{"id":1, "name":"john"}, {"id":, "name":"smith"}]
 //
@@ -124,7 +124,6 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 			return err
 		}
 		for i := 0; i < reflectVal2.Len(); i++ {
-
 			if err = gvalid.New().
 				Data(reflectVal2.Index(i)).Assoc(j.Get(gconv.String(i)).Map()).
 				Run(r.Context()); err != nil {
@@ -146,7 +145,11 @@ func (r *Request) Get(key string, def ...interface{}) *gvar.Var {
 // It can be called multiple times retrieving the same body content.
 func (r *Request) GetBody() []byte {
 	if r.bodyContent == nil {
-		r.bodyContent, _ = ioutil.ReadAll(r.Body)
+		var err error
+		r.bodyContent, err = ioutil.ReadAll(r.Body)
+		if err != nil {
+			panic(gerror.WrapCode(gcode.CodeInternalError, err, `ReadAll from body failed`))
+		}
 		r.Body = utils.NewReadCloser(r.bodyContent, true)
 	}
 	return r.bodyContent
@@ -192,7 +195,7 @@ func (r *Request) parseQuery() {
 		var err error
 		r.queryMap, err = gstr.Parse(r.URL.RawQuery)
 		if err != nil {
-			panic(gerror.WrapCode(gcode.CodeInvalidParameter, err, ""))
+			panic(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse Query failed"))
 		}
 	}
 }

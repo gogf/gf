@@ -13,6 +13,7 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -62,7 +63,7 @@ func Test_SetConfigWithMap(t *testing.T) {
 }
 
 func Test_ClientMaxBodySize(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.POST("/", func(r *ghttp.Request) {
@@ -91,13 +92,13 @@ func Test_ClientMaxBodySize(t *testing.T) {
 		}
 		t.Assert(
 			gstr.Trim(c.PostContent(ctx, "/", data)),
-			data[:1024],
+			`ReadAll from body failed: http: request body too large`,
 		)
 	})
 }
 
 func Test_ClientMaxBodySize_File(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.POST("/", func(r *ghttp.Request) {

@@ -22,6 +22,24 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
+func Test_New(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		node := gdb.ConfigNode{
+			Host: "127.0.0.1",
+			Port: "3306",
+			User: TestDbUser,
+			Pass: TestDbPass,
+			Type: gdb.DriverNameMysql,
+		}
+		newDb, err := gdb.New(node)
+		t.AssertNil(err)
+		value, err := newDb.GetValue(ctx, `select 1`)
+		t.AssertNil(err)
+		t.Assert(value, `1`)
+		t.AssertNil(newDb.Close(ctx))
+	})
+}
+
 func Test_DB_Ping(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err1 := db.PingMaster()
@@ -1545,7 +1563,7 @@ func Test_Types(t *testing.T) {
 		t.Assert(one["blob"].String(), data["blob"])
 		t.Assert(one["binary"].String(), data["binary"])
 		t.Assert(one["date"].String(), data["date"])
-		t.Assert(one["time"].String(), `0000-01-01 10:00:01`)
+		t.Assert(one["time"].String(), `10:00:01`)
 		t.Assert(one["decimal"].String(), -123.46)
 		t.Assert(one["double"].String(), data["double"])
 		t.Assert(one["bit"].Int(), data["bit"])
@@ -1569,7 +1587,7 @@ func Test_Types(t *testing.T) {
 		t.Assert(obj.Blob, data["blob"])
 		t.Assert(obj.Binary, data["binary"])
 		t.Assert(obj.Date.Format("Y-m-d"), data["date"])
-		t.Assert(obj.Time.String(), `0000-01-01 10:00:01`)
+		t.Assert(obj.Time.String(), `10:00:01`)
 		t.Assert(obj.Decimal, -123.46)
 		t.Assert(obj.Double, data["double"])
 		t.Assert(obj.Bit, data["bit"])

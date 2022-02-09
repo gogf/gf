@@ -429,6 +429,70 @@ func Test_BuildInFuncJson(t *testing.T) {
 	})
 }
 
+func Test_BuildInFuncXml(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		v.Assign("v", g.Map{
+			"name": "john",
+		})
+		r, err := v.ParseContent(context.TODO(), "{{xml .v}}")
+		t.Assert(err, nil)
+		t.Assert(r, `<name>john</name>`)
+	})
+}
+
+func Test_BuildInFuncIni(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		v.Assign("v", g.Map{
+			"name": "john",
+		})
+		r, err := v.ParseContent(context.TODO(), "{{ini .v}}")
+		t.AssertNil(err)
+		t.Assert(r, `name=john
+`)
+	})
+}
+
+func Test_BuildInFuncYaml(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		v.Assign("v", g.Map{
+			"name": "john",
+		})
+		r, err := v.ParseContent(context.TODO(), "{{yaml .v}}")
+		t.AssertNil(err)
+		t.Assert(r, `name: john
+`)
+	})
+}
+
+func Test_BuildInFuncYamlIndent(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		v.Assign("v", g.Map{
+			"name": "john",
+		})
+		r, err := v.ParseContent(context.TODO(), `{{yamli .v "####"}}`)
+		t.AssertNil(err)
+		t.Assert(r, `####name: john
+`)
+	})
+}
+
+func Test_BuildInFuncToml(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		v.Assign("v", g.Map{
+			"name": "john",
+		})
+		r, err := v.ParseContent(context.TODO(), "{{toml .v}}")
+		t.AssertNil(err)
+		t.Assert(r, `name = "john"
+`)
+	})
+}
+
 func Test_BuildInFuncPlus(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()

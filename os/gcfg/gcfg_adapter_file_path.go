@@ -174,25 +174,30 @@ func (c *AdapterFile) GetFilePath(fileName ...string) (path string, err error) {
 	c.autoCheckAndAddMainPkgPathToSearchPaths()
 
 	// Searching local file system.
-	c.searchPaths.RLockFunc(func(array []string) {
-		for _, searchPath := range array {
-			searchPath = gstr.TrimRight(searchPath, `\/`)
-			for _, tryFolder := range localSystemTryFolders {
-				relativePath := gstr.TrimRight(
-					gfile.Join(tryFolder, usedFileName),
-					`\/`,
-				)
-				if path, _ = gspath.Search(searchPath, relativePath); path != "" {
-					return
+	if path == "" {
+		// Absolute path.
+		if path = gfile.RealPath(usedFileName); path != "" {
+			return
+		}
+		c.searchPaths.RLockFunc(func(array []string) {
+			for _, searchPath := range array {
+				searchPath = gstr.TrimRight(searchPath, `\/`)
+				for _, tryFolder := range localSystemTryFolders {
+					relativePath := gstr.TrimRight(
+						gfile.Join(tryFolder, usedFileName),
+						`\/`,
+					)
+					if path, _ = gspath.Search(searchPath, relativePath); path != "" {
+						return
+					}
 				}
 			}
-		}
-	})
+		})
+	}
+
 	// If it cannot find the path of `file`, it formats and returns a detailed error.
 	if path == "" {
-		var (
-			buffer = bytes.NewBuffer(nil)
-		)
+		var buffer = bytes.NewBuffer(nil)
 		if c.searchPaths.Len() > 0 {
 			buffer.WriteString(fmt.Sprintf(
 				`config file "%s" not found in resource manager or the following system searching paths:`,
@@ -214,7 +219,7 @@ func (c *AdapterFile) GetFilePath(fileName ...string) (path string, err error) {
 		} else {
 			buffer.WriteString(fmt.Sprintf(`cannot find config file "%s" with no path configured`, usedFileName))
 		}
-		err = gerror.New(buffer.String())
+		err = gerror.NewCode(gcode.CodeNotFound, buffer.String())
 	}
 	return
 }

@@ -1,0 +1,33 @@
+
+registry:
+  endpoints: ["127.0.0.1:2379"]
+
+grpcserver:
+  name:            "demo"
+  logStdout:        true
+  errorLogEnabled:  true
+  accessLogEnabled: true
+  errorStack:       true
+
+# MySQL.
+database:
+  logger:
+    level: "all"
+    stdout: true
+  default:
+    link: "mysql:root:12345678@tcp(127.0.0.1:3306)/test"
+    debug: true
+
+# Redis.
+redis:
+  default:
+    address: 127.0.0.1:6379
+    db:      0
+  cache:
+    address: 127.0.0.1:6379
+    db:      1
+
+
+
+
+

@@ -20,8 +20,9 @@ type CustomMsg = map[string]interface{}
 
 // fieldRule defined the alias name and rule string for specified field.
 type fieldRule struct {
-	Name string // Alias name for the field.
-	Rule string // Rule string like: "max:6"
+	Name   string // Alias name for the field.
+	Rule   string // Rule string like: "max:6"
+	IsMeta bool   // Is this rule is from gmeta.Meta, which marks it as whole struct rule.
 }
 
 // iNoValidation is an interface that marks current struct not validated by package `gvalid`.

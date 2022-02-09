@@ -14,47 +14,47 @@ import (
 
 // GetBytes sends a GET request, retrieves and returns the result content as bytes.
 func (c *Client) GetBytes(ctx context.Context, url string, data ...interface{}) []byte {
-	return c.RequestBytes(ctx, "GET", url, data...)
+	return c.RequestBytes(ctx, httpMethodGet, url, data...)
 }
 
 // PutBytes sends a PUT request, retrieves and returns the result content as bytes.
 func (c *Client) PutBytes(ctx context.Context, url string, data ...interface{}) []byte {
-	return c.RequestBytes(ctx, "PUT", url, data...)
+	return c.RequestBytes(ctx, httpMethodPut, url, data...)
 }
 
 // PostBytes sends a POST request, retrieves and returns the result content as bytes.
 func (c *Client) PostBytes(ctx context.Context, url string, data ...interface{}) []byte {
-	return c.RequestBytes(ctx, "POST", url, data...)
+	return c.RequestBytes(ctx, httpMethodPost, url, data...)
 }
 
 // DeleteBytes sends a DELETE request, retrieves and returns the result content as bytes.
 func (c *Client) DeleteBytes(ctx context.Context, url string, data ...interface{}) []byte {
-	return c.RequestBytes(ctx, "DELETE", url, data...)
+	return c.RequestBytes(ctx, httpMethodDelete, url, data...)
 }
 
 // HeadBytes sends a HEAD request, retrieves and returns the result content as bytes.
 func (c *Client) HeadBytes(ctx context.Context, url string, data ...interface{}) []byte {
-	return c.RequestBytes(ctx, "HEAD", url, data...)
+	return c.RequestBytes(ctx, httpMethodHead, url, data...)
 }
 
 // PatchBytes sends a PATCH request, retrieves and returns the result content as bytes.
 func (c *Client) PatchBytes(ctx context.Context, url string, data ...interface{}) []byte {
-	return c.RequestBytes(ctx, "PATCH", url, data...)
+	return c.RequestBytes(ctx, httpMethodPatch, url, data...)
 }
 
 // ConnectBytes sends a CONNECT request, retrieves and returns the result content as bytes.
 func (c *Client) ConnectBytes(ctx context.Context, url string, data ...interface{}) []byte {
-	return c.RequestBytes(ctx, "CONNECT", url, data...)
+	return c.RequestBytes(ctx, httpMethodConnect, url, data...)
 }
 
 // OptionsBytes sends a OPTIONS request, retrieves and returns the result content as bytes.
 func (c *Client) OptionsBytes(ctx context.Context, url string, data ...interface{}) []byte {
-	return c.RequestBytes(ctx, "OPTIONS", url, data...)
+	return c.RequestBytes(ctx, httpMethodOptions, url, data...)
 }
 
 // TraceBytes sends a TRACE request, retrieves and returns the result content as bytes.
 func (c *Client) TraceBytes(ctx context.Context, url string, data ...interface{}) []byte {
-	return c.RequestBytes(ctx, "TRACE", url, data...)
+	return c.RequestBytes(ctx, httpMethodTrace, url, data...)
 }
 
 // RequestBytes sends request using given HTTP method and data, retrieves returns the result
@@ -62,12 +62,12 @@ func (c *Client) TraceBytes(ctx context.Context, url string, data ...interface{}
 func (c *Client) RequestBytes(ctx context.Context, method string, url string, data ...interface{}) []byte {
 	response, err := c.DoRequest(ctx, method, url, data...)
 	if err != nil {
-		intlog.Error(ctx, err)
+		intlog.Errorf(ctx, `%+v`, err)
 		return nil
 	}
 	defer func() {
 		if err = response.Close(); err != nil {
-			intlog.Error(ctx, err)
+			intlog.Errorf(ctx, `%+v`, err)
 		}
 	}()
 	return response.ReadAll()

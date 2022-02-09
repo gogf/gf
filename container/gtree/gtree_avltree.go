@@ -780,7 +780,7 @@ func output(node *AVLTreeNode, prefix string, isTail bool, str *string) {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (tree *AVLTree) MarshalJSON() ([]byte, error) {
+func (tree AVLTree) MarshalJSON() ([]byte, error) {
 	return json.Marshal(tree.MapStrAny())
 }
 

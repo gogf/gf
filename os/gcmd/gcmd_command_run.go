@@ -31,9 +31,17 @@ func (c *Command) Run(ctx context.Context) {
 func (c *Command) RunWithValue(ctx context.Context) (value interface{}) {
 	value, err := c.RunWithValueError(ctx)
 	if err != nil {
-		if gerror.Code(err) == gcode.CodeNotFound {
+		var (
+			code   = gerror.Code(err)
+			detail = code.Detail()
+		)
+		if code.Code() == gcode.CodeNotFound.Code() {
 			fmt.Printf("ERROR: %s\n", gstr.Trim(err.Error()))
-			c.Print()
+			if lastCmd, ok := detail.(*Command); ok {
+				lastCmd.Print()
+			} else {
+				c.Print()
+			}
 		} else {
 			fmt.Printf("%+v\n", err)
 		}
@@ -64,25 +72,36 @@ func (c *Command) RunWithValueError(ctx context.Context) (value interface{}, err
 	args = args[1:]
 
 	// Find the matched command and run it.
-	if subCommand, newCtx := c.searchCommand(ctx, args); subCommand != nil {
-		return subCommand.doRun(newCtx, parser)
+	lastCmd, foundCmd, newCtx := c.searchCommand(ctx, args)
+	if foundCmd != nil {
+		return foundCmd.doRun(newCtx, parser)
 	}
 
 	// Print error and help command if no command found.
 	err = gerror.NewCodef(
-		gcode.CodeNotFound,
-		`command "%s" not found for arguments "%s"`,
+		gcode.WithCode(gcode.CodeNotFound, lastCmd),
+		`command "%s" not found for command "%s", command line: %s`,
 		gstr.Join(args, " "),
+		c.Name,
 		gstr.Join(os.Args, " "),
 	)
 	return
 }
 
 func (c *Command) doRun(ctx context.Context, parser *Parser) (value interface{}, err error) {
-	ctx = context.WithValue(ctx, CtxKeyCommand, c)
+	defer func() {
+		if exception := recover(); exception != nil {
+			if v, ok := exception.(error); ok && gerror.HasStack(v) {
+				err = v
+			} else {
+				err = gerror.Newf(`exception recovered: %+v`, exception)
+			}
+		}
+	}()
 
+	ctx = context.WithValue(ctx, CtxKeyCommand, c)
 	// Check built-in help command.
-	if parser.ContainsOpt(helpOptionName) || parser.ContainsOpt(helpOptionNameShort) {
+	if parser.GetOpt(helpOptionName) != nil || parser.GetOpt(helpOptionNameShort) != nil {
 		if c.HelpFunc != nil {
 			return nil, c.HelpFunc(ctx, parser)
 		}
@@ -138,9 +157,9 @@ func (c *Command) reParse(ctx context.Context, parser *Parser) (*Parser, error) 
 			return nil, err
 		}
 		configMap := value.Map()
-		for optionName, _ := range parser.passedOptions {
+		for optionName, _ := range parser.supportedOptions {
 			// The command line has the high priority.
-			if parser.ContainsOpt(optionName) {
+			if parser.GetOpt(optionName) != nil {
 				continue
 			}
 			// Merge the config value into parser.
@@ -154,12 +173,11 @@ func (c *Command) reParse(ctx context.Context, parser *Parser) (*Parser, error) 
 }
 
 // searchCommand recursively searches the command according given arguments.
-func (c *Command) searchCommand(ctx context.Context, args []string) (*Command, context.Context) {
+func (c *Command) searchCommand(ctx context.Context, args []string) (lastCmd, foundCmd *Command, newCtx context.Context) {
 	if len(args) == 0 {
-		return nil, ctx
+		return c, nil, ctx
 	}
 	for _, cmd := range c.commands {
-
 		// Recursively searching the command.
 		if cmd.Name == args[0] {
 			leftArgs := args[1:]
@@ -167,16 +185,16 @@ func (c *Command) searchCommand(ctx context.Context, args []string) (*Command, c
 			// it then gives all its left arguments to it.
 			if cmd.hasArgumentFromIndex() {
 				ctx = context.WithValue(ctx, CtxKeyArguments, leftArgs)
-				return cmd, ctx
+				return c, cmd, ctx
 			}
 			// Recursively searching.
 			if len(leftArgs) == 0 {
-				return cmd, ctx
+				return c, cmd, ctx
 			}
 			return cmd.searchCommand(ctx, leftArgs)
 		}
 	}
-	return nil, ctx
+	return c, nil, ctx
 }
 
 func (c *Command) hasArgumentFromIndex() bool {

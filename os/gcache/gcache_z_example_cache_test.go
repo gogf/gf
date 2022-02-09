@@ -1,3 +1,9 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package gcache_test
 
 import (
@@ -5,12 +11,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gogf/gf/v2/database/gredis"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcache"
+	"github.com/gogf/gf/v2/os/gctx"
 )
 
 func ExampleNew() {
-
 	// Create a cache object,
 	// Of course, you can also easily use the gcache package method directly.
 	c := gcache.New()
@@ -45,7 +52,6 @@ func ExampleNew() {
 }
 
 func ExampleCache_Set() {
-
 	// Create a cache object,
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
@@ -61,7 +67,6 @@ func ExampleCache_Set() {
 }
 
 func ExampleCache_SetIfNotExist() {
-
 	// Create a cache object,
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
@@ -96,7 +101,6 @@ func ExampleCache_SetIfNotExist() {
 }
 
 func ExampleCache_SetMap() {
-
 	// Create a cache object,
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
@@ -124,7 +128,6 @@ func ExampleCache_SetMap() {
 }
 
 func ExampleCache_Size() {
-
 	// Create a cache object,
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
@@ -143,7 +146,6 @@ func ExampleCache_Size() {
 }
 
 func ExampleCache_Update() {
-
 	// Create a cache object,
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
@@ -188,7 +190,6 @@ func ExampleCache_Update() {
 }
 
 func ExampleCache_UpdateExpire() {
-
 	// Create a cache object,
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
@@ -210,7 +211,6 @@ func ExampleCache_UpdateExpire() {
 }
 
 func ExampleCache_Values() {
-
 	// Create a cache object,
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
@@ -229,7 +229,6 @@ func ExampleCache_Values() {
 }
 
 func ExampleCache_Close() {
-
 	// Create a cache object,
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
@@ -249,11 +248,9 @@ func ExampleCache_Close() {
 	// Output:
 	// v
 	// v
-
 }
 
 func ExampleCache_Contains() {
-
 	// Create a cache object,
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
@@ -273,11 +270,9 @@ func ExampleCache_Contains() {
 	// Output:
 	// true
 	// false
-
 }
 
 func ExampleCache_Data() {
-
 	// Create a cache object,
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
@@ -298,7 +293,6 @@ func ExampleCache_Data() {
 }
 
 func ExampleCache_Get() {
-
 	// Create a cache object,
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
@@ -316,7 +310,6 @@ func ExampleCache_Get() {
 }
 
 func ExampleCache_GetExpire() {
-
 	// Create a cache object,
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
@@ -334,7 +327,6 @@ func ExampleCache_GetExpire() {
 }
 
 func ExampleCache_GetOrSet() {
-
 	// Create a cache object,
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
@@ -354,7 +346,6 @@ func ExampleCache_GetOrSet() {
 }
 
 func ExampleCache_GetOrSetFunc() {
-
 	// Create a cache object,
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
@@ -379,7 +370,6 @@ func ExampleCache_GetOrSetFunc() {
 }
 
 func ExampleCache_GetOrSetFuncLock() {
-
 	// Create a cache object,
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
@@ -406,7 +396,6 @@ func ExampleCache_GetOrSetFuncLock() {
 }
 
 func ExampleCache_Keys() {
-
 	// Create a cache object,
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
@@ -419,7 +408,6 @@ func ExampleCache_Keys() {
 
 	// Output:
 	// [k1]
-
 }
 
 func ExampleCache_KeyStrings() {
@@ -436,7 +424,6 @@ func ExampleCache_KeyStrings() {
 }
 
 func ExampleCache_Remove() {
-
 	// Create a cache object,
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
@@ -457,7 +444,6 @@ func ExampleCache_Remove() {
 }
 
 func ExampleCache_Removes() {
-
 	// Create a cache object,
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
@@ -500,11 +486,9 @@ func ExampleCache_MustGet() {
 
 	// Output:
 	// v1
-
 }
 
 func ExampleCache_MustGetOrSet() {
-
 	// Create a cache object,
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
@@ -519,11 +503,9 @@ func ExampleCache_MustGetOrSet() {
 	// Output:
 	// v1
 	// v1
-
 }
 
 func ExampleCache_MustGetOrSetFunc() {
-
 	// Create a cache object,
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
@@ -547,7 +529,6 @@ func ExampleCache_MustGetOrSetFunc() {
 }
 
 func ExampleCache_MustGetOrSetFuncLock() {
-
 	// Create a cache object,
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
@@ -580,7 +561,7 @@ func ExampleCache_MustContains() {
 	// Set Cache
 	c.Set(ctx, "k", "v", 0)
 
-	// Contains returns true if `key` exists in the cache, or else returns false.
+	// MustContains returns true if `key` exists in the cache, or else returns false.
 	// return true
 	data := c.MustContains(ctx, "k")
 	fmt.Println(data)
@@ -592,11 +573,9 @@ func ExampleCache_MustContains() {
 	// Output:
 	// true
 	// false
-
 }
 
 func ExampleCache_MustGetExpire() {
-
 	// Create a cache object,
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
@@ -613,7 +592,6 @@ func ExampleCache_MustGetExpire() {
 }
 
 func ExampleCache_MustSize() {
-
 	// Create a cache object,
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
@@ -632,7 +610,6 @@ func ExampleCache_MustSize() {
 }
 
 func ExampleCache_MustData() {
-
 	// Create a cache object,
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
@@ -647,7 +624,6 @@ func ExampleCache_MustData() {
 }
 
 func ExampleCache_MustKeys() {
-
 	// Create a cache object,
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
@@ -678,7 +654,6 @@ func ExampleCache_MustKeyStrings() {
 }
 
 func ExampleCache_MustValues() {
-
 	// Create a cache object,
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
@@ -686,10 +661,81 @@ func ExampleCache_MustValues() {
 	// Write value
 	c.Set(ctx, "k1", "v1", 0)
 
-	// Values returns all values in the cache as slice.
+	// MustValues returns all values in the cache as slice.
 	data := c.MustValues(ctx)
 	fmt.Println(data)
 
 	// Output:
 	// [v1]
+}
+
+func ExampleCache_SetAdapter() {
+	var (
+		err         error
+		ctx         = gctx.New()
+		cache       = gcache.New()
+		redisConfig = &gredis.Config{
+			Address: "127.0.0.1:6379",
+			Db:      9,
+		}
+		cacheKey   = `key`
+		cacheValue = `value`
+	)
+	// Create redis client object.
+	redis, err := gredis.New(redisConfig)
+	if err != nil {
+		panic(err)
+	}
+	// Create redis cache adapter and set it to cache object.
+	cache.SetAdapter(gcache.NewAdapterRedis(redis))
+
+	// Set and Get using cache object.
+	err = cache.Set(ctx, cacheKey, cacheValue, time.Second)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(cache.MustGet(ctx, cacheKey).String())
+
+	// Get using redis client.
+	fmt.Println(redis.MustDo(ctx, "GET", cacheKey).String())
+
+	// Output:
+	// value
+	// value
+}
+
+func ExampleCache_GetAdapter() {
+	var (
+		err         error
+		ctx         = gctx.New()
+		cache       = gcache.New()
+		redisConfig = &gredis.Config{
+			Address: "127.0.0.1:6379",
+			Db:      10,
+		}
+		cacheKey   = `key`
+		cacheValue = `value`
+	)
+	redis, err := gredis.New(redisConfig)
+	if err != nil {
+		panic(err)
+	}
+	cache.SetAdapter(gcache.NewAdapterRedis(redis))
+
+	// Set and Get using cache object.
+	err = cache.Set(ctx, cacheKey, cacheValue, time.Second)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(cache.MustGet(ctx, cacheKey).String())
+
+	// Get using redis client.
+	v, err := cache.GetAdapter().(*gcache.AdapterRedis).Get(ctx, cacheKey)
+	fmt.Println(err)
+	fmt.Println(v.String())
+
+	// Output:
+	// value
+	// <nil>
+	// value
 }

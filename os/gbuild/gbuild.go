@@ -9,12 +9,13 @@ package gbuild
 
 import (
 	"context"
+	"runtime"
+
 	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/encoding/gbase64"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/json"
-	"runtime"
 )
 
 var (
@@ -27,7 +28,7 @@ func init() {
 	if builtInVarStr != "" {
 		err := json.UnmarshalUseNumber(gbase64.MustDecodeString(builtInVarStr), &builtInVarMap)
 		if err != nil {
-			intlog.Error(context.TODO(), err)
+			intlog.Errorf(context.TODO(), `%+v`, err)
 		}
 		builtInVarMap["gfVersion"] = gf.VERSION
 		builtInVarMap["goVersion"] = runtime.Version()

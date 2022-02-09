@@ -14,6 +14,7 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
@@ -30,7 +31,7 @@ func (t *testWrapStdHTTPStruct) ServeHTTP(w http.ResponseWriter, req *http.Reque
 }
 func Test_Server_Wrap_Handler(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		p, _ := ports.PopRand()
+		p, _ := gtcp.GetFreePort()
 		s := g.Server(p)
 		str1 := "hello"
 		str2 := "hello again"
