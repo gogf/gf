@@ -74,5 +74,4 @@ func StartRequests() {
 		return
 	}
 	g.Log().Info(ctx, "delete id:", -1)
-
 }
