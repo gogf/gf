@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	AppID = "demo"
+	ServiceName = "demo"
 )
 
 type Client struct {
@@ -15,7 +15,7 @@ type Client struct {
 }
 
 func NewClient(options ...grpc.DialOption) (*Client, error) {
-	conn, err := krpc.Client.NewGrpcClientConn(AppID, options...)
+	conn, err := krpc.Client.NewGrpcClientConn(ServiceName, options...)
 	if err != nil {
 		return nil, err
 	}
