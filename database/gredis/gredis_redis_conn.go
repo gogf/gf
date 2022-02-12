@@ -10,13 +10,14 @@ import (
 	"context"
 	"reflect"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gtime"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // RedisConn is a connection of redis client.

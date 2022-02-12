@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/gogf/gf/v2/os/gctx"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -22,6 +21,7 @@ import (
 	"github.com/gogf/gf/v2/internal/httputil"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/net/gtrace"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
