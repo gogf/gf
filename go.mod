@@ -3,13 +3,13 @@ module github.com/gogf/gf/v2
 go 1.15
 
 require (
-	github.com/BurntSushi/toml v0.4.1
+	github.com/BurntSushi/toml v1.0.1-0.20220212161021-2249a9c68e10
 	github.com/clbanning/mxj/v2 v2.5.5
 	github.com/fatih/color v1.13.0
 	github.com/fsnotify/fsnotify v1.5.1
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/gorilla/websocket v1.4.2
+	github.com/gorilla/websocket v1.4.3-0.20220104015952-9111bb834a68
 	github.com/grokify/html-strip-tags-go v0.0.1
 	github.com/olekukonko/tablewriter v0.0.5
 	go.opentelemetry.io/otel v1.4.0
