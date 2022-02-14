@@ -46,6 +46,12 @@ func (r *Redis) Conn(ctx context.Context) (*RedisConn, error) {
 	if r == nil {
 		return nil, gerror.NewCode(gcode.CodeInvalidParameter, errorNilRedis)
 	}
+	if r.adapter == nil {
+		return nil, gerror.NewCodef(
+			gcode.CodeMissingConfiguration,
+			`redis adapter not initialized, missing configuration or adapter register?`,
+		)
+	}
 	conn, err := r.adapter.Conn(ctx)
 	if err != nil {
 		return nil, err
@@ -67,8 +73,8 @@ func (r *Redis) Do(ctx context.Context, command string, args ...interface{}) (*g
 		return nil, err
 	}
 	defer func() {
-		if err := conn.Close(ctx); err != nil {
-			intlog.Errorf(ctx, `%+v`, err)
+		if closeErr := conn.Close(ctx); closeErr != nil {
+			intlog.Errorf(ctx, `%+v`, closeErr)
 		}
 	}()
 	return conn.Do(ctx, command, args...)
