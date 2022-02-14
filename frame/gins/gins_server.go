@@ -17,15 +17,16 @@ import (
 )
 
 const (
-	frameCoreComponentNameServer  = "gf.core.component.server"
-	configNodeNameServer          = "server"
-	configNodeNameServerSecondary = "httpserver"
+	frameCoreComponentNameServer  = "gf.core.component.server" // Prefix for HTTP server instance.
+	configNodeNameServer          = "server"                   // General version configuration item name.
+	configNodeNameServerSecondary = "httpserver"               // New version configuration item name support from v2.
 )
 
 // Server returns an instance of http server with specified name.
 // Note that it panics if any error occurs duration instance creating.
 func Server(name ...interface{}) *ghttp.Server {
 	var (
+		err          error
 		ctx          = context.Background()
 		instanceName = ghttp.DefaultServerName
 		instanceKey  = fmt.Sprintf("%s.%v", frameCoreComponentNameServer, name)
@@ -34,57 +35,67 @@ func Server(name ...interface{}) *ghttp.Server {
 		instanceName = gconv.String(name[0])
 	}
 	return localInstances.GetOrSetFuncLock(instanceKey, func() interface{} {
-		s := ghttp.GetServer(instanceName)
-		// It ignores returned error to avoid file no found error while it's not necessary.
-		var (
-			serverConfigMap       map[string]interface{}
-			serverLoggerConfigMap map[string]interface{}
-			configNodeName        string
-		)
-		if configData, _ := Config().Data(ctx); len(configData) > 0 {
-			if v, _ := gutil.MapPossibleItemByKey(configData, configNodeNameServer); v != "" {
-				configNodeName = v
+		server := ghttp.GetServer(instanceName)
+		if Config().Available(ctx) {
+			// Server initialization from configuration.
+			var (
+				configMap             map[string]interface{}
+				serverConfigMap       map[string]interface{}
+				serverLoggerConfigMap map[string]interface{}
+				configNodeName        string
+			)
+			if configMap, err = Config().Data(ctx); err != nil {
+				intlog.Errorf(ctx, `retrieve config data map failed: %+v`, err)
 			}
-			if configNodeName == "" {
-				if v, _ := gutil.MapPossibleItemByKey(configData, configNodeNameServerSecondary); v != "" {
+			// Find possible server configuration item by possible names.
+			if len(configMap) > 0 {
+				if v, _ := gutil.MapPossibleItemByKey(configMap, configNodeNameServer); v != "" {
 					configNodeName = v
+				}
+				if configNodeName == "" {
+					if v, _ := gutil.MapPossibleItemByKey(configMap, configNodeNameServerSecondary); v != "" {
+						configNodeName = v
+					}
+				}
+			}
+			// Server configuration.
+			serverConfigMap = Config().MustGet(
+				ctx,
+				fmt.Sprintf(`%s.%s`, configNodeName, server.GetName()),
+			).Map()
+			if len(serverConfigMap) == 0 {
+				serverConfigMap = Config().MustGet(ctx, configNodeName).Map()
+			}
+			if len(serverConfigMap) > 0 {
+				if err = server.SetConfigWithMap(serverConfigMap); err != nil {
+					panic(err)
+				}
+			} else {
+				// The configuration is not necessary, so it just prints internal logs.
+				intlog.Printf(
+					ctx,
+					`missing configuration from configuration component for HTTP server "%s"`,
+					instanceName,
+				)
+			}
+			// Server logger configuration checks.
+			serverLoggerConfigMap = Config().MustGet(
+				ctx,
+				fmt.Sprintf(`%s.%s.%s`, configNodeName, server.GetName(), configNodeNameLogger),
+			).Map()
+			if len(serverLoggerConfigMap) > 0 {
+				if err = server.Logger().SetConfigWithMap(serverLoggerConfigMap); err != nil {
+					panic(err)
 				}
 			}
 		}
-		// Server configuration.
-		certainConfigNodeName := fmt.Sprintf(`%s.%s`, configNodeName, s.GetName())
-		if v, _ := Config().Get(ctx, certainConfigNodeName); !v.IsEmpty() {
-			serverConfigMap = v.Map()
-		}
-		if len(serverConfigMap) == 0 {
-			if v, _ := Config().Get(ctx, configNodeName); !v.IsEmpty() {
-				serverConfigMap = v.Map()
-			}
-		}
-		if len(serverConfigMap) > 0 {
-			if err := s.SetConfigWithMap(serverConfigMap); err != nil {
-				panic(err)
-			}
-		} else {
-			// The configuration is not necessary, so it just prints internal logs.
-			intlog.Printf(ctx, `missing configuration from configuration component for HTTP server "%s"`, instanceName)
-		}
-		if s.GetName() == "" || s.GetName() == ghttp.DefaultServerName {
-			s.SetName(instanceName)
-		}
-		// Server logger configuration checks.
-		serverLoggerNodeName := fmt.Sprintf(`%s.%s.%s`, configNodeName, s.GetName(), configNodeNameLogger)
-		if v, _ := Config().Get(ctx, serverLoggerNodeName); !v.IsEmpty() {
-			serverLoggerConfigMap = v.Map()
-		}
-		if len(serverLoggerConfigMap) > 0 {
-			if err := s.Logger().SetConfigWithMap(serverLoggerConfigMap); err != nil {
-				panic(err)
-			}
+		// The server name is necessary. It sets a default server name is it is not configured.
+		if server.GetName() == "" || server.GetName() == ghttp.DefaultServerName {
+			server.SetName(instanceName)
 		}
 		// As it might use template feature,
 		// it initializes the view instance as well.
 		_ = getViewInstance()
-		return s
+		return server
 	}).(*ghttp.Server)
 }
