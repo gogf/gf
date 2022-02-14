@@ -527,3 +527,50 @@ func Test_Params_Struct_Validation(t *testing.T) {
 		t.Assert(c.PostContent(ctx, "/", `id=1`), `The name field is required`)
 	})
 }
+
+// https://github.com/gogf/gf/issues/1488
+func Test_Params_Parse_Issue1488(t *testing.T) {
+	p, _ := gtcp.GetFreePort()
+	s := g.Server(p)
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.ALL("/", func(r *ghttp.Request) {
+			type Request struct {
+				Type         []int  `p:"type"`
+				Keyword      string `p:"keyword"`
+				Limit        int    `p:"per_page" d:"10"`
+				Page         int    `p:"page" d:"1"`
+				Order        string
+				CreatedAtLte string
+				CreatedAtGte string
+				CreatorID    []int
+			}
+			for i := 0; i < 10; i++ {
+				r.SetParamMap(g.Map{
+					"type[]":           0,
+					"keyword":          "",
+					"t_start":          "",
+					"t_end":            "",
+					"reserve_at_start": "",
+					"reserve_at_end":   "",
+					"user_name":        "",
+					"flag":             "",
+					"per_page":         6,
+				})
+				var parsed Request
+				_ = r.Parse(&parsed)
+				r.Response.Write(parsed.Page, parsed.Limit)
+			}
+		})
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		t.Assert(c.GetContent(ctx, "/", ``), `16161616161616161616`)
+	})
+}

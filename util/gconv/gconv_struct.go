@@ -248,6 +248,12 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 		// orm:"id, priority"
 		// orm:"name, with:uid=id"
 		tagMap[attributeName] = utils.RemoveSymbols(strings.Split(tagName, ",")[0])
+
+		// If tag and attribute values both exist in `paramsMap`,
+		// it then uses the tag value overwriting the attribute value in `paramsMap`.
+		if paramsMap[tagName] != nil && paramsMap[attributeName] != nil {
+			paramsMap[attributeName] = paramsMap[tagName]
+		}
 	}
 
 	var (
@@ -269,7 +275,7 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 			// string cases and chars like '-'/'_'/'.'/' '.
 
 			// Matching the parameters to struct tag names.
-			// The `tagV` is the attribute name of the struct.
+			// The `attrKey` is the attribute name of the struct.
 			for attrKey, cmpKey := range tagMap {
 				if strings.EqualFold(checkName, cmpKey) {
 					attrName = attrKey
@@ -297,12 +303,12 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 			continue
 		}
 		// If the attribute name is already checked converting, then skip it.
-		if _, ok := doneMap[attrName]; ok {
+		if _, ok = doneMap[attrName]; ok {
 			continue
 		}
 		// Mark it done.
 		doneMap[attrName] = struct{}{}
-		if err := bindVarToStructAttr(pointerElemReflectValue, attrName, mapV, mapping); err != nil {
+		if err = bindVarToStructAttr(pointerElemReflectValue, attrName, mapV, mapping); err != nil {
 			return err
 		}
 	}
