@@ -253,28 +253,26 @@ func (c *AdapterFile) getJson(fileName ...string) (configJson *gjson.Json, err e
 		} else {
 			configJson, err = gjson.LoadContent(content, true)
 		}
-		if err == nil {
-			configJson.SetViolenceCheck(c.violenceCheck)
-			// Add monitor for this configuration file,
-			// any changes of this file will refresh its cache in Config object.
-			if filePath != "" && !gres.Contains(filePath) {
-				_, err = gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
-					c.jsonMap.Remove(usedFileName)
-				})
-				if err != nil {
-					return nil
-				}
-			}
-			return configJson
-		}
 		if err != nil {
 			if filePath != "" {
 				err = gerror.Wrapf(err, `load config file "%s" failed`, filePath)
 			} else {
 				err = gerror.Wrap(err, `load configuration failed`)
 			}
+			return nil
 		}
-		return nil
+		configJson.SetViolenceCheck(c.violenceCheck)
+		// Add monitor for this configuration file,
+		// any changes of this file will refresh its cache in Config object.
+		if filePath != "" && !gres.Contains(filePath) {
+			_, err = gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
+				c.jsonMap.Remove(usedFileName)
+			})
+			if err != nil {
+				return nil
+			}
+		}
+		return configJson
 	})
 	if result != nil {
 		return result.(*gjson.Json), err
