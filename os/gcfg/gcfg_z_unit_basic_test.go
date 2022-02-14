@@ -146,25 +146,6 @@ func Test_SetFileName(t *testing.T) {
 	})
 }
 
-func TestCfg_Set(t *testing.T) {
-	config := `log-path = "logs"`
-	gtest.C(t, func(t *gtest.T) {
-		path := gcfg.DefaultConfigFile
-		err := gfile.PutContents(path, config)
-		t.Assert(err, nil)
-		defer gfile.Remove(path)
-
-		adapterFile, err := gcfg.NewAdapterFile()
-		t.AssertNil(err)
-		t.Assert(adapterFile.MustGet(ctx, "log-path"), "logs")
-
-		c := gcfg.NewWithAdapter(adapterFile)
-		c.Set(ctx, "log-path", "custom-logs")
-		t.Assert(err, nil)
-		t.Assert(c.MustGet(ctx, "log-path"), "custom-logs")
-	})
-}
-
 func TestCfg_Get_WrongConfigFile(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var err error
