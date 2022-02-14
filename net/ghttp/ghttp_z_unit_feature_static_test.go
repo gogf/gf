@@ -26,7 +26,7 @@ func Test_Static_ServerRoot(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		p, _ := gtcp.GetFreePort()
 		s := g.Server(p)
-		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.TempDir(), p)
+		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), p)
 		defer gfile.Remove(path)
 		gfile.PutContents(path+"/index.htm", "index")
 		s.SetServerRoot(path)
@@ -86,7 +86,7 @@ func Test_Static_Folder_Forbidden(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		p, _ := gtcp.GetFreePort()
 		s := g.Server(p)
-		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.TempDir(), p)
+		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), p)
 		defer gfile.Remove(path)
 		gfile.PutContents(path+"/test.html", "test")
 		s.SetServerRoot(path)
@@ -107,7 +107,7 @@ func Test_Static_IndexFolder(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		p, _ := gtcp.GetFreePort()
 		s := g.Server(p)
-		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.TempDir(), p)
+		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), p)
 		defer gfile.Remove(path)
 		gfile.PutContents(path+"/test.html", "test")
 		s.SetIndexFolder(true)
@@ -130,7 +130,7 @@ func Test_Static_IndexFiles1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		p, _ := gtcp.GetFreePort()
 		s := g.Server(p)
-		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.TempDir(), p)
+		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), p)
 		defer gfile.Remove(path)
 		gfile.PutContents(path+"/index.html", "index")
 		gfile.PutContents(path+"/test.html", "test")
@@ -152,7 +152,7 @@ func Test_Static_IndexFiles2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		p, _ := gtcp.GetFreePort()
 		s := g.Server(p)
-		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.TempDir(), p)
+		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), p)
 		defer gfile.Remove(path)
 		gfile.PutContents(path+"/test.html", "test")
 		s.SetIndexFiles([]string{"index.html", "test.html"})
@@ -174,8 +174,8 @@ func Test_Static_AddSearchPath1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		p, _ := gtcp.GetFreePort()
 		s := g.Server(p)
-		path1 := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.TempDir(), p)
-		path2 := fmt.Sprintf(`%s/ghttp/static/test/%d/%d`, gfile.TempDir(), p, p)
+		path1 := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), p)
+		path2 := fmt.Sprintf(`%s/ghttp/static/test/%d/%d`, gfile.Temp(), p, p)
 		defer gfile.Remove(path1)
 		defer gfile.Remove(path2)
 		gfile.PutContents(path2+"/test.html", "test")
@@ -197,8 +197,8 @@ func Test_Static_AddSearchPath2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		p, _ := gtcp.GetFreePort()
 		s := g.Server(p)
-		path1 := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.TempDir(), p)
-		path2 := fmt.Sprintf(`%s/ghttp/static/test/%d/%d`, gfile.TempDir(), p, p)
+		path1 := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), p)
+		path2 := fmt.Sprintf(`%s/ghttp/static/test/%d/%d`, gfile.Temp(), p, p)
 		defer gfile.Remove(path1)
 		defer gfile.Remove(path2)
 		gfile.PutContents(path1+"/test.html", "test1")
@@ -221,8 +221,8 @@ func Test_Static_AddStaticPath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		p, _ := gtcp.GetFreePort()
 		s := g.Server(p)
-		path1 := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.TempDir(), p)
-		path2 := fmt.Sprintf(`%s/ghttp/static/test/%d/%d`, gfile.TempDir(), p, p)
+		path1 := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), p)
+		path2 := fmt.Sprintf(`%s/ghttp/static/test/%d/%d`, gfile.Temp(), p, p)
 		defer gfile.Remove(path1)
 		defer gfile.Remove(path2)
 		gfile.PutContents(path1+"/test.html", "test1")
@@ -246,8 +246,8 @@ func Test_Static_AddStaticPath_Priority(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		p, _ := gtcp.GetFreePort()
 		s := g.Server(p)
-		path1 := fmt.Sprintf(`%s/ghttp/static/test/%d/test`, gfile.TempDir(), p)
-		path2 := fmt.Sprintf(`%s/ghttp/static/test/%d/%d/test`, gfile.TempDir(), p, p)
+		path1 := fmt.Sprintf(`%s/ghttp/static/test/%d/test`, gfile.Temp(), p)
+		path2 := fmt.Sprintf(`%s/ghttp/static/test/%d/%d/test`, gfile.Temp(), p, p)
 		defer gfile.Remove(path1)
 		defer gfile.Remove(path2)
 		gfile.PutContents(path1+"/test.html", "test1")
@@ -271,7 +271,7 @@ func Test_Static_Rewrite(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		p, _ := gtcp.GetFreePort()
 		s := g.Server(p)
-		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.TempDir(), p)
+		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), p)
 		defer gfile.Remove(path)
 		gfile.PutContents(path+"/test1.html", "test1")
 		gfile.PutContents(path+"/test2.html", "test2")

@@ -24,7 +24,7 @@ import (
 
 func Test_Log(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		logDir := gfile.TempDir(gtime.TimestampNanoStr())
+		logDir := gfile.Temp(gtime.TimestampNanoStr())
 		p, _ := gtcp.GetFreePort()
 		s := g.Server(p)
 		s.BindHandler("/hello", func(r *ghttp.Request) {

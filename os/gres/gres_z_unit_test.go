@@ -24,7 +24,7 @@ func Test_PackToGoFile(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			srcPath    = gdebug.TestDataPath("files")
-			goFilePath = gfile.TempDir(gtime.TimestampNanoStr(), "testdata.go")
+			goFilePath = gfile.Temp(gtime.TimestampNanoStr(), "testdata.go")
 			pkgName    = "testdata"
 			err        = gres.PackToGoFile(srcPath, goFilePath, pkgName)
 		)
@@ -52,7 +52,7 @@ func Test_PackToFile(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			srcPath = gdebug.TestDataPath("files")
-			dstPath = gfile.TempDir(gtime.TimestampNanoStr())
+			dstPath = gfile.Temp(gtime.TimestampNanoStr())
 			err     = gres.PackToFile(srcPath, dstPath)
 		)
 		t.Assert(err, nil)
@@ -70,7 +70,7 @@ func Test_PackMulti(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			srcPath    = gdebug.TestDataPath("files")
-			goFilePath = gfile.TempDir(gtime.TimestampNanoStr(), "data.go")
+			goFilePath = gfile.Temp(gtime.TimestampNanoStr(), "data.go")
 			pkgName    = "data"
 			array, err = gfile.ScanDir(srcPath, "*", false)
 		)
@@ -85,7 +85,7 @@ func Test_PackWithPrefix1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			srcPath    = gdebug.TestDataPath("files")
-			goFilePath = gfile.TempDir(gtime.TimestampNanoStr(), "testdata.go")
+			goFilePath = gfile.Temp(gtime.TimestampNanoStr(), "testdata.go")
 			pkgName    = "testdata"
 			err        = gres.PackToGoFile(srcPath, goFilePath, pkgName, "www/gf-site/test")
 		)
@@ -98,7 +98,7 @@ func Test_PackWithPrefix2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			srcPath    = gdebug.TestDataPath("files")
-			goFilePath = gfile.TempDir(gtime.TimestampNanoStr(), "testdata.go")
+			goFilePath = gfile.Temp(gtime.TimestampNanoStr(), "testdata.go")
 			pkgName    = "testdata"
 			err        = gres.PackToGoFile(srcPath, goFilePath, pkgName, "/var/www/gf-site/test")
 		)
@@ -237,7 +237,7 @@ func Test_Export(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			src = `template`
-			dst = gfile.TempDir(gtime.TimestampNanoStr())
+			dst = gfile.Temp(gtime.TimestampNanoStr())
 			err = gres.Export(src, dst)
 		)
 		defer gfile.Remove(dst)
@@ -252,7 +252,7 @@ func Test_Export(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			src = `template`
-			dst = gfile.TempDir(gtime.TimestampNanoStr())
+			dst = gfile.Temp(gtime.TimestampNanoStr())
 			err = gres.Export(src, dst, gres.ExportOption{
 				RemovePrefix: `template`,
 			})

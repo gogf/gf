@@ -13,7 +13,7 @@ import (
 )
 
 func ExampleMTime() {
-	t := gfile.MTime(gfile.TempDir())
+	t := gfile.MTime(gfile.Temp())
 	fmt.Println(t)
 
 	// May Output:
@@ -21,7 +21,7 @@ func ExampleMTime() {
 }
 
 func ExampleMTimestamp() {
-	t := gfile.MTimestamp(gfile.TempDir())
+	t := gfile.MTimestamp(gfile.Temp())
 	fmt.Println(t)
 
 	// May Output:
@@ -29,7 +29,7 @@ func ExampleMTimestamp() {
 }
 
 func ExampleMTimestampMilli() {
-	t := gfile.MTimestampMilli(gfile.TempDir())
+	t := gfile.MTimestampMilli(gfile.Temp())
 	fmt.Println(t)
 
 	// May Output:
