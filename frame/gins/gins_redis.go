@@ -55,10 +55,11 @@ func Redis(name ...string) *gredis.Redis {
 					if redisConfig, err = gredis.ConfigFromMap(gconv.Map(v)); err != nil {
 						panic(err)
 					}
+				} else {
+					intlog.Printf(ctx, `missing configuration for redis group "%s"`, group)
 				}
-				intlog.Printf(ctx, `missing configuration for redis group "%s"`, group)
 			} else {
-				intlog.Printf(ctx, `missing configuration for redis: "redis" node not found`)
+				intlog.Print(ctx, `missing configuration for redis: "redis" node not found`)
 			}
 			if redisClient, err = gredis.New(redisConfig); err != nil {
 				panic(err)

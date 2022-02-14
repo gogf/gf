@@ -30,7 +30,7 @@ type Config struct {
 	IdleTimeout     time.Duration `json:"idleTimeout"`     // Maximum idle time for connection (default is 10 seconds, not allowed to be set to 0)
 	WaitTimeout     time.Duration `json:"waitTimeout"`     // Timed out duration waiting to get a connection from the connection pool.
 	DialTimeout     time.Duration `json:"dialTimeout"`     // Dial connection timeout for TCP.
-	ReadTimeout     time.Duration `json:"readTimeout"`     // Read timeout for TCP.
+	ReadTimeout     time.Duration `json:"readTimeout"`     // Read timeout for TCP. DO NOT set it if not necessary.
 	WriteTimeout    time.Duration `json:"writeTimeout"`    // Write timeout for TCP.
 	MasterName      string        `json:"masterName"`      // Used in Redis Sentinel mode.
 	TLS             bool          `json:"tls"`             // Specifies whether TLS should be used when connecting to the server.
