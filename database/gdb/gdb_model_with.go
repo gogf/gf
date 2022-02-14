@@ -156,7 +156,13 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 		if parsedTagOutput.Order != "" {
 			model = model.Order(parsedTagOutput.Order)
 		}
-		err = model.Fields(fieldKeys).Where(relatedSourceName, relatedTargetValue).Scan(bindToReflectValue)
+		// With cache feature.
+		if m.cacheEnabled && m.cacheOption.Name == "" {
+			model = model.Cache(m.cacheOption)
+		}
+		err = model.Fields(fieldKeys).
+			Where(relatedSourceName, relatedTargetValue).
+			Scan(bindToReflectValue)
 		// It ignores sql.ErrNoRows in with feature.
 		if err != nil && err != sql.ErrNoRows {
 			return err
@@ -263,7 +269,10 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 		if parsedTagOutput.Order != "" {
 			model = model.Order(parsedTagOutput.Order)
 		}
-
+		// With cache feature.
+		if m.cacheEnabled && m.cacheOption.Name == "" {
+			model = model.Cache(m.cacheOption)
+		}
 		err = model.Fields(fieldKeys).
 			Where(relatedSourceName, relatedTargetValue).
 			ScanList(pointer, fieldName, parsedTagOutput.With)
