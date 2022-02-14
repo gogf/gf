@@ -168,7 +168,7 @@ func TestCfg_Set(t *testing.T) {
 func TestCfg_Get_WrongConfigFile(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var err error
-		configPath := gfile.TempDir(gtime.TimestampNanoStr())
+		configPath := gfile.Temp(gtime.TimestampNanoStr())
 		err = gfile.Mkdir(configPath)
 		t.Assert(err, nil)
 		defer gfile.Remove(configPath)

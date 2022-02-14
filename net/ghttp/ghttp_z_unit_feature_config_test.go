@@ -124,7 +124,7 @@ func Test_ClientMaxBodySize_File(t *testing.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		path := gfile.TempDir(gtime.TimestampNanoStr())
+		path := gfile.Temp(gtime.TimestampNanoStr())
 		data := make([]byte, 512)
 		for i := 0; i < 512; i++ {
 			data[i] = 'a'
@@ -142,7 +142,7 @@ func Test_ClientMaxBodySize_File(t *testing.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		path := gfile.TempDir(gtime.TimestampNanoStr())
+		path := gfile.Temp(gtime.TimestampNanoStr())
 		data := make([]byte, 1056)
 		for i := 0; i < 1056; i++ {
 			data[i] = 'a'

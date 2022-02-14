@@ -316,7 +316,7 @@ func Test_Client_File_And_Param(t *testing.T) {
 	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/", func(r *ghttp.Request) {
-		tmpPath := gfile.TempDir(guid.S())
+		tmpPath := gfile.Temp(guid.S())
 		err := gfile.Mkdir(tmpPath)
 		gtest.Assert(err, nil)
 		defer gfile.Remove(tmpPath)
