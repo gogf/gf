@@ -16,7 +16,7 @@ func ExampleCopy() {
 	// init
 	var (
 		srcFileName = "gflie_example.txt"
-		srcTempDir  = gfile.TempDir("gfile_example_copy_src")
+		srcTempDir  = gfile.Temp("gfile_example_copy_src")
 		srcTempFile = gfile.Join(srcTempDir, srcFileName)
 
 		// copy file
@@ -24,7 +24,7 @@ func ExampleCopy() {
 		dstTempFile = gfile.Join(srcTempDir, dstFileName)
 
 		// copy dir
-		dstTempDir = gfile.TempDir("gfile_example_copy_dst")
+		dstTempDir = gfile.Temp("gfile_example_copy_dst")
 	)
 
 	// write contents

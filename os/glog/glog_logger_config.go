@@ -193,7 +193,7 @@ func (l *Logger) GetCtxKeys() []interface{} {
 }
 
 // SetWriter sets the customized logging `writer` for logging.
-// The `writer` object should implements the io.Writer interface.
+// The `writer` object should implement the io.Writer interface.
 // Developer can use customized logging `writer` to redirect logging output to another service,
 // eg: kafka, mysql, mongodb, etc.
 func (l *Logger) SetWriter(writer io.Writer) {
@@ -254,7 +254,12 @@ func (l *Logger) SetHandlers(handlers ...Handler) {
 	l.config.Handlers = handlers
 }
 
-// SetWriterColorEnable sets the file logging with color
+// SetWriterColorEnable enables file/writer logging with color.
 func (l *Logger) SetWriterColorEnable(enabled bool) {
 	l.config.WriterColorEnable = enabled
+}
+
+// SetStdoutColorDisabled disables stdout logging with color.
+func (l *Logger) SetStdoutColorDisabled(disabled bool) {
+	l.config.StdoutColorDisabled = disabled
 }

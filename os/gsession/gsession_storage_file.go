@@ -38,7 +38,7 @@ const (
 )
 
 var (
-	DefaultStorageFilePath      = gfile.TempDir("gsessions")
+	DefaultStorageFilePath      = gfile.Temp("gsessions")
 	DefaultStorageFileCryptoKey = []byte("Session storage file crypto key!")
 )
 

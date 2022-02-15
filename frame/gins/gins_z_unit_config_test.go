@@ -40,7 +40,7 @@ func Test_Config2(t *testing.T) {
 	// relative path
 	gtest.C(t, func(t *gtest.T) {
 		var err error
-		dirPath := gfile.TempDir(gtime.TimestampNanoStr())
+		dirPath := gfile.Temp(gtime.TimestampNanoStr())
 		err = gfile.Mkdir(dirPath)
 		t.Assert(err, nil)
 		defer gfile.Remove(dirPath)
@@ -64,7 +64,7 @@ func Test_Config2(t *testing.T) {
 	// relative path, config folder
 	gtest.C(t, func(t *gtest.T) {
 		var err error
-		dirPath := gfile.TempDir(gtime.TimestampNanoStr())
+		dirPath := gfile.Temp(gtime.TimestampNanoStr())
 		err = gfile.Mkdir(dirPath)
 		t.Assert(err, nil)
 		defer gfile.Remove(dirPath)
@@ -90,7 +90,7 @@ func Test_Config2(t *testing.T) {
 func Test_Config3(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var err error
-		dirPath := gfile.TempDir(gtime.TimestampNanoStr())
+		dirPath := gfile.Temp(gtime.TimestampNanoStr())
 		err = gfile.Mkdir(dirPath)
 		t.Assert(err, nil)
 		defer gfile.Remove(dirPath)
@@ -114,7 +114,7 @@ func Test_Config3(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		var err error
-		dirPath := gfile.TempDir(gtime.TimestampNanoStr())
+		dirPath := gfile.Temp(gtime.TimestampNanoStr())
 		err = gfile.Mkdir(dirPath)
 		t.Assert(err, nil)
 		defer gfile.Remove(dirPath)
@@ -140,7 +140,7 @@ func Test_Config3(t *testing.T) {
 func Test_Config4(t *testing.T) {
 	// absolute path
 	gtest.C(t, func(t *gtest.T) {
-		path := fmt.Sprintf(`%s/%d`, gfile.TempDir(), gtime.TimestampNano())
+		path := fmt.Sprintf(`%s/%d`, gfile.Temp(), gtime.TimestampNano())
 		file := fmt.Sprintf(`%s/%s`, path, "config.toml")
 		err := gfile.PutContents(file, configContent)
 		t.Assert(err, nil)
@@ -155,7 +155,7 @@ func Test_Config4(t *testing.T) {
 	time.Sleep(500 * time.Millisecond)
 
 	gtest.C(t, func(t *gtest.T) {
-		path := fmt.Sprintf(`%s/%d/config`, gfile.TempDir(), gtime.TimestampNano())
+		path := fmt.Sprintf(`%s/%d/config`, gfile.Temp(), gtime.TimestampNano())
 		file := fmt.Sprintf(`%s/%s`, path, "config.toml")
 		err := gfile.PutContents(file, configContent)
 		t.Assert(err, nil)
@@ -169,7 +169,7 @@ func Test_Config4(t *testing.T) {
 	time.Sleep(500 * time.Millisecond)
 
 	gtest.C(t, func(t *gtest.T) {
-		path := fmt.Sprintf(`%s/%d`, gfile.TempDir(), gtime.TimestampNano())
+		path := fmt.Sprintf(`%s/%d`, gfile.Temp(), gtime.TimestampNano())
 		file := fmt.Sprintf(`%s/%s`, path, "test.toml")
 		err := gfile.PutContents(file, configContent)
 		t.Assert(err, nil)
@@ -184,7 +184,7 @@ func Test_Config4(t *testing.T) {
 	time.Sleep(500 * time.Millisecond)
 
 	gtest.C(t, func(t *gtest.T) {
-		path := fmt.Sprintf(`%s/%d/config`, gfile.TempDir(), gtime.TimestampNano())
+		path := fmt.Sprintf(`%s/%d/config`, gfile.Temp(), gtime.TimestampNano())
 		file := fmt.Sprintf(`%s/%s`, path, "test.toml")
 		err := gfile.PutContents(file, configContent)
 		t.Assert(err, nil)
