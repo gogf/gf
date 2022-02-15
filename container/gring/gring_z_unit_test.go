@@ -7,6 +7,7 @@
 package gring_test
 
 import (
+	"container/ring"
 	"testing"
 
 	"github.com/gogf/gf/v2/container/gring"
@@ -136,4 +137,49 @@ func TestRing_Slice(t *testing.T) {
 		array4 := s.SlicePrev() // []
 		t.Assert(array4, g.Slice{1, 5, 4, 3, 2})
 	})
+}
+
+// https://github.com/gogf/gf/issues/1394
+func Test_Issue1394(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// gring.
+		gRing := gring.New(10)
+		for i := 0; i < 10; i++ {
+			gRing.Put(i)
+		}
+		t.Logf("the length:%d", gRing.Len())
+		gRingResult := gRing.Unlink(6)
+		for i := 0; i < 10; i++ {
+			t.Log(gRing.Val())
+			gRing = gRing.Next()
+		}
+		t.Logf("the ring length:%d", gRing.Len())
+		t.Logf("the result length:%d", gRingResult.Len())
+
+		// stdring
+		stdRing := ring.New(10)
+		for i := 0; i < 10; i++ {
+			stdRing.Value = i
+			stdRing = stdRing.Next()
+		}
+		t.Logf("the length:%d", stdRing.Len())
+		stdRingResult := stdRing.Unlink(6)
+		for i := 0; i < 10; i++ {
+			t.Log(stdRing.Value)
+			stdRing = stdRing.Next()
+		}
+		t.Logf("the ring length:%d", stdRing.Len())
+		t.Logf("the result length:%d", stdRingResult.Len())
+
+		// Assertion.
+		t.Assert(gRing.Len(), stdRing.Len())
+		t.Assert(gRingResult.Len(), stdRingResult.Len())
+
+		for i := 0; i < 10; i++ {
+			t.Assert(stdRing.Value, gRing.Val())
+			stdRing = stdRing.Next()
+			gRing = gRing.Next()
+		}
+	})
+
 }

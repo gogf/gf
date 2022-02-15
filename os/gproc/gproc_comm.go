@@ -57,7 +57,7 @@ func init() {
 	if homePath, _ := gfile.Home(); homePath != "" {
 		availablePaths = append(availablePaths, gfile.Join(homePath, ".config"))
 	}
-	availablePaths = append(availablePaths, gfile.TempDir())
+	availablePaths = append(availablePaths, gfile.Temp())
 	for _, availablePath := range availablePaths {
 		checkPath := gfile.Join(availablePath, defaultFolderNameForProcComm)
 		if !gfile.Exists(checkPath) && gfile.Mkdir(checkPath) != nil {

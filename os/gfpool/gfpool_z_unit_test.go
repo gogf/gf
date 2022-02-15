@@ -147,7 +147,7 @@ func stop(testFile string) {
 
 func Test_ConcurrentOS(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		path := gfile.TempDir(gtime.TimestampNanoStr())
+		path := gfile.Temp(gtime.TimestampNanoStr())
 		defer gfile.Remove(path)
 		f1, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
 		t.Assert(err, nil)
@@ -178,7 +178,7 @@ func Test_ConcurrentOS(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		path := gfile.TempDir(gtime.TimestampNanoStr())
+		path := gfile.Temp(gtime.TimestampNanoStr())
 		defer gfile.Remove(path)
 		f1, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
 		t.Assert(err, nil)
@@ -199,7 +199,7 @@ func Test_ConcurrentOS(t *testing.T) {
 		t.Assert(gstr.Count(gfile.GetContents(path), "@1234567890#"), 2000)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		path := gfile.TempDir(gtime.TimestampNanoStr())
+		path := gfile.Temp(gtime.TimestampNanoStr())
 		defer gfile.Remove(path)
 		f1, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
 		t.Assert(err, nil)
@@ -227,7 +227,7 @@ func Test_ConcurrentOS(t *testing.T) {
 	})
 	// DATA RACE
 	// gtest.C(t, func(t *gtest.T) {
-	//	path := gfile.TempDir(gtime.TimestampNanoStr())
+	//	path := gfile.Temp(gtime.TimestampNanoStr())
 	//	defer gfile.Remove(path)
 	//	f1, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
 	//	t.Assert(err, nil)
@@ -265,7 +265,7 @@ func Test_ConcurrentOS(t *testing.T) {
 
 func Test_ConcurrentGFPool(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		path := gfile.TempDir(gtime.TimestampNanoStr())
+		path := gfile.Temp(gtime.TimestampNanoStr())
 		defer gfile.Remove(path)
 		f1, err := gfpool.Open(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
 		t.Assert(err, nil)
@@ -287,7 +287,7 @@ func Test_ConcurrentGFPool(t *testing.T) {
 	})
 	// DATA RACE
 	// gtest.C(t, func(t *gtest.T) {
-	//	path := gfile.TempDir(gtime.TimestampNanoStr())
+	//	path := gfile.Temp(gtime.TimestampNanoStr())
 	//	defer gfile.Remove(path)
 	//	f1, err := gfpool.Open(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
 	//	t.Assert(err, nil)

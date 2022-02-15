@@ -13,13 +13,12 @@
 package pgsql
 
 import (
-	_ "github.com/lib/pq"
-
 	"context"
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
-	"strings"
+
+	_ "github.com/lib/pq"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -180,7 +179,7 @@ FROM pg_attribute a
          left join information_schema.columns ic on ic.column_name = a.attname and ic.table_name = c.relname
 WHERE c.relname = '%s' and a.attisdropped is false and a.attnum > 0
 ORDER BY a.attnum`,
-					strings.ToLower(table),
+					table,
 				)
 			)
 			if link, err = d.SlaveLink(useSchema); err != nil {

@@ -222,7 +222,7 @@ func Test_FuncInclude(t *testing.T) {
 			layout = `{{include "header.html" .}}
 {{include "main.html" .}}
 {{include "footer.html" .}}`
-			templatePath = gfile.TempDir("template")
+			templatePath = gfile.Temp("template")
 		)
 
 		gfile.Mkdir(templatePath)
@@ -294,7 +294,7 @@ func Test_ParseContent(t *testing.T) {
 func Test_HotReload(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		dirPath := gfile.Join(
-			gfile.TempDir(),
+			gfile.Temp(),
 			"testdata",
 			"template-"+gconv.String(gtime.TimestampNano()),
 		)
