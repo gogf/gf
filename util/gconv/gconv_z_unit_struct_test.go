@@ -1258,3 +1258,22 @@ func Test_Struct_Empty_MapStringString(t *testing.T) {
 		t.AssertNil(err)
 	})
 }
+
+// https://github.com/gogf/gf/issues/1563
+func Test_Struct_Issue1563(t *testing.T) {
+	type User struct {
+		Pass1 string `c:"password1"`
+	}
+	gtest.C(t, func(t *gtest.T) {
+		for i := 0; i < 100; i++ {
+			user := new(User)
+			params2 := g.Map{
+				"password1": "111",
+				"PASS1":     "222",
+			}
+			if err := gconv.Struct(params2, user); err == nil {
+				t.Assert(user.Pass1, `111`)
+			}
+		}
+	})
+}
