@@ -235,7 +235,7 @@ func (d *DriverMssql) Tables(ctx context.Context, schema ...string) (tables []st
 	return
 }
 
-// TableFields retrieves and returns the fields information of specified table of current schema.
+// TableFields retrieves and returns the fields' information of specified table of current schema.
 //
 // Also see DriverMysql.TableFields.
 func (d *DriverMssql) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
