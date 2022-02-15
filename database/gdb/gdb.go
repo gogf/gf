@@ -48,12 +48,12 @@ type DB interface {
 	// Also see Core.Schema.
 	Schema(schema string) *Schema
 
-	// With creates and returns an ORM model based on meta data of given object.
+	// With creates and returns an ORM model based on metadata of given object.
 	// Also see Core.With.
 	With(objects ...interface{}) *Model
 
 	// Open creates a raw connection object for database with given node configuration.
-	// Note that it is not recommended using the this function manually.
+	// Note that it is not recommended using the function manually.
 	// Also see DriverMysql.Open.
 	Open(config *ConfigNode) (*sql.DB, error)
 
@@ -145,7 +145,6 @@ type DB interface {
 	GetCache() *gcache.Cache            // See Core.GetCache.
 	SetDebug(debug bool)                // See Core.SetDebug.
 	GetDebug() bool                     // See Core.GetDebug.
-	SetSchema(schema string)            // See Core.SetSchema.
 	GetSchema() string                  // See Core.GetSchema.
 	GetPrefix() string                  // See Core.GetPrefix.
 	GetGroup() string                   // See Core.GetGroup.
@@ -176,10 +175,10 @@ type Core struct {
 	db     DB              // DB interface object.
 	ctx    context.Context // Context for chaining operation only. Do not set a default value in Core initialization.
 	group  string          // Configuration group name.
+	schema string          // Custom schema for this object.
 	debug  *gtype.Bool     // Enable debug mode for the database, which can be changed in runtime.
 	cache  *gcache.Cache   // Cache manager, SQL result cache only.
 	links  *gmap.StrAnyMap // links caches all created links by node.
-	schema *gtype.String   // Custom schema for this object.
 	logger *glog.Logger    // Logger for logging functionality.
 	config *ConfigNode     // Current config node.
 }
@@ -399,7 +398,6 @@ func doNewByNode(node ConfigNode, group string) (db DB, err error) {
 		debug:  gtype.NewBool(),
 		cache:  gcache.New(),
 		links:  gmap.NewStrAnyMap(true),
-		schema: gtype.NewString(),
 		logger: glog.New(),
 		config: &node,
 	}
@@ -536,7 +534,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		node.Charset = defaultCharset
 	}
 	// Changes the schema.
-	nodeSchema := c.schema.Val()
+	nodeSchema := c.schema
 	if len(schema) > 0 && schema[0] != "" {
 		nodeSchema = schema[0]
 	}

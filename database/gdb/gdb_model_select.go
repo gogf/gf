@@ -513,7 +513,11 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 	if m.cacheEnabled && m.tx == nil {
 		cacheKey = m.cacheOption.Name
 		if len(cacheKey) == 0 {
-			cacheKey = "GCache:" + gmd5.MustEncryptString(sql+", @PARAMS:"+gconv.String(args))
+			cacheKey = fmt.Sprintf(
+				`GCache@Schema(%s):%s`,
+				m.db.GetSchema(),
+				gmd5.MustEncryptString(sql+", @PARAMS:"+gconv.String(args)),
+			)
 		}
 		if v, _ := cacheObj.Get(ctx, cacheKey); !v.IsNil() {
 			if result, ok = v.Val().(Result); ok {

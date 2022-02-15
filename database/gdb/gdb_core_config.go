@@ -230,14 +230,7 @@ func (c *Core) GetPrefix() string {
 	return c.config.Prefix
 }
 
-// SetSchema changes the schema for this database connection object.
-// Importantly note that when schema configuration changed for the database,
-// it affects all operations on the database object in the future.
-func (c *Core) SetSchema(schema string) {
-	c.schema.Set(schema)
-}
-
 // GetSchema returns the schema configured.
 func (c *Core) GetSchema() string {
-	return c.schema.Val()
+	return c.schema
 }

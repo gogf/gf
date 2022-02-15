@@ -2255,22 +2255,21 @@ func Test_Model_Prefix(t *testing.T) {
 func Test_Model_Schema1(t *testing.T) {
 	// db.SetDebug(true)
 
-	db.SetSchema(TestSchema1)
+	db = db.Schema(TestSchema1)
 	table := fmt.Sprintf(`%s_%s`, TableName, gtime.TimestampNanoStr())
 	createInitTableWithDb(db, table)
-	db.SetSchema(TestSchema2)
+	db = db.Schema(TestSchema2)
 	createInitTableWithDb(db, table)
 	defer func() {
-		db.SetSchema(TestSchema1)
+		db = db.Schema(TestSchema1)
 		dropTableWithDb(db, table)
-		db.SetSchema(TestSchema2)
+		db = db.Schema(TestSchema2)
 		dropTableWithDb(db, table)
-
-		db.SetSchema(TestSchema1)
+		db = db.Schema(TestSchema1)
 	}()
 	// Method.
 	gtest.C(t, func(t *gtest.T) {
-		db.SetSchema(TestSchema1)
+		db = db.Schema(TestSchema1)
 		r, err := db.Model(table).Update(g.Map{"nickname": "name_100"}, "id=1")
 		t.AssertNil(err)
 		n, _ := r.RowsAffected()
@@ -2280,7 +2279,7 @@ func Test_Model_Schema1(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(v.String(), "name_100")
 
-		db.SetSchema(TestSchema2)
+		db = db.Schema(TestSchema2)
 		v, err = db.Model(table).Value("nickname", "id=1")
 		t.AssertNil(err)
 		t.Assert(v.String(), "name_1")
@@ -2334,18 +2333,18 @@ func Test_Model_Schema1(t *testing.T) {
 func Test_Model_Schema2(t *testing.T) {
 	// db.SetDebug(true)
 
-	db.SetSchema(TestSchema1)
+	db = db.Schema(TestSchema1)
 	table := fmt.Sprintf(`%s_%s`, TableName, gtime.TimestampNanoStr())
 	createInitTableWithDb(db, table)
-	db.SetSchema(TestSchema2)
+	db = db.Schema(TestSchema2)
 	createInitTableWithDb(db, table)
 	defer func() {
-		db.SetSchema(TestSchema1)
+		db = db.Schema(TestSchema1)
 		dropTableWithDb(db, table)
-		db.SetSchema(TestSchema2)
+		db = db.Schema(TestSchema2)
 		dropTableWithDb(db, table)
 
-		db.SetSchema(TestSchema1)
+		db = db.Schema(TestSchema1)
 	}()
 	// Schema.
 	gtest.C(t, func(t *gtest.T) {

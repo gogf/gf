@@ -125,7 +125,7 @@ func (c *Core) Master(schema ...string) (*sql.DB, error) {
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	} else {
-		useSchema = c.schema.Val()
+		useSchema = c.schema
 	}
 	return c.getSqlDb(true, useSchema)
 }
@@ -137,7 +137,7 @@ func (c *Core) Slave(schema ...string) (*sql.DB, error) {
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	} else {
-		useSchema = c.schema.Val()
+		useSchema = c.schema
 	}
 	return c.getSqlDb(false, useSchema)
 }

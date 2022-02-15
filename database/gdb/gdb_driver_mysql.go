@@ -133,7 +133,7 @@ func (d *DriverMysql) TableFields(ctx context.Context, table string, schema ...s
 			"function TableFields supports only single table operations",
 		)
 	}
-	useSchema := d.schema.Val()
+	useSchema := d.schema
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	}

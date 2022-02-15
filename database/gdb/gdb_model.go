@@ -132,6 +132,7 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 	}
 	m := &Model{
 		db:         c.db,
+		schema:     c.schema,
 		tablesInit: tableStr,
 		tables:     tableStr,
 		fields:     defaultFields,

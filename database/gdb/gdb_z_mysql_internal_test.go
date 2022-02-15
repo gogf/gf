@@ -57,10 +57,10 @@ func init() {
 		db = r
 	}
 	schemaTemplate := "CREATE DATABASE IF NOT EXISTS `%s` CHARACTER SET UTF8"
-	if _, err := db.Exec(ctx, fmt.Sprintf(schemaTemplate, SCHEMA)); err != nil {
+	if _, err = db.Exec(ctx, fmt.Sprintf(schemaTemplate, SCHEMA)); err != nil {
 		gtest.Error(err)
 	}
-	db.SetSchema(SCHEMA)
+	db = db.Schema(SCHEMA)
 }
 
 func dropTable(table string) {
