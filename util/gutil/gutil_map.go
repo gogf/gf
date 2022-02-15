@@ -76,10 +76,7 @@ func MapPossibleItemByKey(data map[string]interface{}, key string) (foundKey str
 //
 // Note that this function might be of low performance.
 func MapContainsPossibleKey(data map[string]interface{}, key string) bool {
-	if k, _ := MapPossibleItemByKey(data, key); k != "" {
-		return true
-	}
-	return false
+	return utils.MapContainsPossibleKey(data, key)
 }
 
 // MapOmitEmpty deletes all empty values from given map.
