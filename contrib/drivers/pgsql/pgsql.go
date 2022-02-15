@@ -28,8 +28,8 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-// DriverPgsql is the driver for postgresql database.
-type DriverPgsql struct {
+// Driver is the driver for postgresql database.
+type Driver struct {
 	*gdb.Core
 }
 
@@ -46,19 +46,19 @@ func init() {
 
 // New create and returns a driver that implements gdb.Driver, which supports operations for PostgreSql.
 func New() gdb.Driver {
-	return &DriverPgsql{}
+	return &Driver{}
 }
 
 // New creates and returns a database object for postgresql.
 // It implements the interface of gdb.Driver for extra database driver installation.
-func (d *DriverPgsql) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
-	return &DriverPgsql{
+func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
+	return &Driver{
 		Core: core,
 	}, nil
 }
 
 // Open creates and returns an underlying sql.DB object for pgsql.
-func (d *DriverPgsql) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
+func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	var (
 		source               string
 		underlyingDriverName = "postgres"
@@ -87,7 +87,7 @@ func (d *DriverPgsql) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 
 // FilteredLink retrieves and returns filtered `linkInfo` that can be using for
 // logging or tracing purpose.
-func (d *DriverPgsql) FilteredLink() string {
+func (d *Driver) FilteredLink() string {
 	linkInfo := d.GetConfig().Link
 	if linkInfo == "" {
 		return ""
@@ -101,21 +101,27 @@ func (d *DriverPgsql) FilteredLink() string {
 }
 
 // GetChars returns the security char for this type of database.
-func (d *DriverPgsql) GetChars() (charLeft string, charRight string) {
+func (d *Driver) GetChars() (charLeft string, charRight string) {
 	return "\"", "\""
 }
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
-func (d *DriverPgsql) DoFilter(ctx context.Context, link gdb.Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
 	defer func() {
 		newSql, newArgs, err = d.Core.DoFilter(ctx, link, newSql, newArgs)
 	}()
-
 	var index int
 	// Convert placeholder char '?' to string "$x".
-	sql, _ = gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
+	sql, _ = gregex.ReplaceStringFunc(`\?`, sql, func(s string) string {
 		index++
-		return fmt.Sprintf("$%d", index)
+		return fmt.Sprintf(`$%d`, index)
+	})
+	// Handle pgsql jsonb feature support, which contains place holder char '?'.
+	// Refer:
+	// https://github.com/gogf/gf/issues/1537
+	// https://www.postgresql.org/docs/12/functions-json.html
+	sql, _ = gregex.ReplaceStringFuncMatch(`(::jsonb([^\w\d]*)\$\d)`, sql, func(match []string) string {
+		return fmt.Sprintf(`::jsonb%s?`, match[2])
 	})
 	newSql, _ = gregex.ReplaceString(` LIMIT (\d+),\s*(\d+)`, ` LIMIT $2 OFFSET $1`, sql)
 	return newSql, args, nil
@@ -123,7 +129,7 @@ func (d *DriverPgsql) DoFilter(ctx context.Context, link gdb.Link, sql string, a
 
 // Tables retrieves and returns the tables of current schema.
 // It's mainly used in cli tool chain for automatically generating the models.
-func (d *DriverPgsql) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
+func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
 	var result gdb.Result
 	link, err := d.SlaveLink(schema...)
 	if err != nil {
@@ -131,7 +137,10 @@ func (d *DriverPgsql) Tables(ctx context.Context, schema ...string) (tables []st
 	}
 	query := "SELECT TABLENAME FROM PG_TABLES WHERE SCHEMANAME = 'public' ORDER BY TABLENAME"
 	if len(schema) > 0 && schema[0] != "" {
-		query = fmt.Sprintf("SELECT TABLENAME FROM PG_TABLES WHERE SCHEMANAME = '%s' ORDER BY TABLENAME", schema[0])
+		query = fmt.Sprintf(
+			"SELECT TABLENAME FROM PG_TABLES WHERE SCHEMANAME = '%s' ORDER BY TABLENAME",
+			schema[0],
+		)
 	}
 	result, err = d.DoGetAll(ctx, link, query)
 	if err != nil {
@@ -148,11 +157,14 @@ func (d *DriverPgsql) Tables(ctx context.Context, schema ...string) (tables []st
 // TableFields retrieves and returns the fields' information of specified table of current schema.
 //
 // Also see DriverMysql.TableFields.
-func (d *DriverPgsql) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
+func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
-		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "function TableFields supports only single table operations")
+		return nil, gerror.NewCode(
+			gcode.CodeInvalidParameter,
+			"function TableFields supports only single table operations",
+		)
 	}
 	table, _ = gregex.ReplaceString("\"", "", table)
 	useSchema := d.GetSchema()
@@ -212,13 +224,19 @@ ORDER BY a.attnum`,
 }
 
 // DoInsert is not supported in pgsql.
-func (d *DriverPgsql) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
+func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
 	switch option.InsertOption {
 	case gdb.InsertOptionSave:
-		return nil, gerror.NewCode(gcode.CodeNotSupported, `Save operation is not supported by pgsql driver`)
+		return nil, gerror.NewCode(
+			gcode.CodeNotSupported,
+			`Save operation is not supported by pgsql driver`,
+		)
 
 	case gdb.InsertOptionReplace:
-		return nil, gerror.NewCode(gcode.CodeNotSupported, `Replace operation is not supported by pgsql driver`)
+		return nil, gerror.NewCode(
+			gcode.CodeNotSupported,
+			`Replace operation is not supported by pgsql driver`,
+		)
 
 	default:
 		return d.Core.DoInsert(ctx, link, table, list, option)
@@ -226,7 +244,7 @@ func (d *DriverPgsql) DoInsert(ctx context.Context, link gdb.Link, table string,
 }
 
 // ConvertDataForRecord converting for any data that will be inserted into table/collection as a record.
-func (d *DriverPgsql) ConvertDataForRecord(ctx context.Context, value interface{}) map[string]interface{} {
+func (d *Driver) ConvertDataForRecord(ctx context.Context, value interface{}) map[string]interface{} {
 	data := gdb.DataToMapDeep(value)
 	var err error
 	for k, v := range data {
@@ -239,6 +257,5 @@ func (d *DriverPgsql) ConvertDataForRecord(ctx context.Context, value interface{
 			data[k] = d.Core.ConvertDataForRecordValue(ctx, v)
 		}
 	}
-
 	return data
 }
