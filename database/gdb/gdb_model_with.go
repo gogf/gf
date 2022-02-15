@@ -17,6 +17,7 @@ import (
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // With creates and returns an ORM model based on metadata of given object.
@@ -248,14 +249,16 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 				relatedTargetName, parsedTagOutput.With,
 			)
 		}
-
+		// If related value is empty, it does nothing but just returns.
+		if gutil.IsEmpty(relatedTargetValue) {
+			return nil
+		}
 		// It automatically retrieves struct field names from current attribute struct/slice.
 		if structType, err := gstructs.StructType(field.Value); err != nil {
 			return err
 		} else {
 			fieldKeys = structType.FieldKeys()
 		}
-
 		// Recursively with feature checks.
 		model = m.db.With(field.Value)
 		if m.withAll {
