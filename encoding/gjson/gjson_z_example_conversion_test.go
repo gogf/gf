@@ -169,3 +169,107 @@ func ExampleMarshalIndent() {
 	//	"Age": 18
 	// }
 }
+
+func ExampleUnmarshal() {
+	type BaseInfo struct {
+		Name  string
+		Score int
+	}
+
+	var info BaseInfo
+
+	jsonContent := "{\"name\":\"john\",\"score\":100}"
+	gjson.Unmarshal([]byte(jsonContent), &info)
+	fmt.Printf("%+v", info)
+
+	// Output:
+	// {Name:john Score:100}
+}
+
+func ExampleMustEncode() {
+	type BaseInfo struct {
+		Name string
+		Age  int
+	}
+
+	info := BaseInfo{
+		Name: "John",
+		Age:  18,
+	}
+
+	infoData := gjson.MustEncode(info)
+	fmt.Println(string(infoData))
+
+	// Output:
+	// {"Name":"John","Age":18}
+}
+
+func ExampleEncodeString() {
+	type BaseInfo struct {
+		Name string
+		Age  int
+	}
+
+	info := BaseInfo{
+		Name: "John",
+		Age:  18,
+	}
+
+	infoData, _ := gjson.EncodeString(info)
+	fmt.Println(infoData)
+
+	// Output:
+	// {"Name":"John","Age":18}
+}
+
+func ExampleMustEncodeString() {
+	type BaseInfo struct {
+		Name string
+		Age  int
+	}
+
+	info := BaseInfo{
+		Name: "John",
+		Age:  18,
+	}
+
+	infoData := gjson.MustEncodeString(info)
+	fmt.Println(infoData)
+
+	// Output:
+	// {"Name":"John","Age":18}
+}
+
+func ExampleDecode() {
+	jsonContent := `{"name":"john","score":100}`
+	info, _ := gjson.Decode([]byte(jsonContent))
+	fmt.Println(info)
+
+	// Output:
+	// map[name:john score:100]
+}
+
+func ExampleDecodeTo() {
+	type BaseInfo struct {
+		Name  string
+		Score int
+	}
+
+	var info BaseInfo
+
+	jsonContent := "{\"name\":\"john\",\"score\":100}"
+	gjson.DecodeTo([]byte(jsonContent), &info)
+	fmt.Printf("%+v", info)
+
+	// Output:
+	// {Name:john Score:100}
+}
+
+func ExampleDecodeToJson() {
+	jsonContent := `{"name":"john","score":100}"`
+	j, _ := gjson.DecodeToJson([]byte(jsonContent))
+	fmt.Println(j.Map())
+
+	// Output:
+	// map[name:john score:100]
+}
