@@ -81,7 +81,7 @@ func init() {
 	if _, err := db.Exec(ctx, fmt.Sprintf(schemaTemplate, TestSchema2)); err != nil {
 		gtest.Error(err)
 	}
-	db.SetSchema(TestSchema1)
+	db = db.Schema(TestSchema1)
 
 	// Prefix db.
 	if r, err := gdb.NewByGroup("prefix"); err != nil {
@@ -95,7 +95,7 @@ func init() {
 	if _, err := dbPrefix.Exec(ctx, fmt.Sprintf(schemaTemplate, TestSchema2)); err != nil {
 		gtest.Error(err)
 	}
-	dbPrefix.SetSchema(TestSchema1)
+	dbPrefix = dbPrefix.Schema(TestSchema1)
 
 	// Invalid db.
 	if r, err := gdb.NewByGroup("nodeinvalid"); err != nil {
@@ -103,7 +103,7 @@ func init() {
 	} else {
 		dbInvalid = r
 	}
-	dbInvalid.SetSchema(TestSchema1)
+	dbInvalid = dbInvalid.Schema(TestSchema1)
 }
 
 func createTable(table ...string) string {

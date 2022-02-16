@@ -504,6 +504,7 @@ func (m *Model) Having(having interface{}, args ...interface{}) *Model {
 // doGetAllBySql does the select statement on the database.
 func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, err error) {
 	var (
+		ok       bool
 		ctx      = m.GetCtx()
 		cacheKey = ""
 		cacheObj = m.db.GetCache()
@@ -512,20 +513,22 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 	if m.cacheEnabled && m.tx == nil {
 		cacheKey = m.cacheOption.Name
 		if len(cacheKey) == 0 {
-			cacheKey = "gcache:" + gmd5.MustEncryptString(sql+", @PARAMS:"+gconv.String(args))
+			cacheKey = fmt.Sprintf(
+				`GCache@Schema(%s):%s`,
+				m.db.GetSchema(),
+				gmd5.MustEncryptString(sql+", @PARAMS:"+gconv.String(args)),
+			)
 		}
 		if v, _ := cacheObj.Get(ctx, cacheKey); !v.IsNil() {
-			if result, ok := v.Val().(Result); ok {
+			if result, ok = v.Val().(Result); ok {
 				// In-memory cache.
 				return result, nil
+			}
+			// Other cache, it needs conversion.
+			if err = json.UnmarshalUseNumber(v.Bytes(), &result); err != nil {
+				return nil, err
 			} else {
-				// Other cache, it needs conversion.
-				var result Result
-				if err = json.UnmarshalUseNumber(v.Bytes(), &result); err != nil {
-					return nil, err
-				} else {
-					return result, nil
-				}
+				return result, nil
 			}
 		}
 	}
@@ -535,7 +538,7 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 	// Cache the result.
 	if cacheKey != "" && err == nil {
 		if m.cacheOption.Duration < 0 {
-			if _, err := cacheObj.Remove(ctx, cacheKey); err != nil {
+			if _, err = cacheObj.Remove(ctx, cacheKey); err != nil {
 				intlog.Errorf(m.GetCtx(), `%+v`, err)
 			}
 		} else {
@@ -543,7 +546,7 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 			if result.IsEmpty() && m.cacheOption.Force {
 				result = Result{}
 			}
-			if err := cacheObj.Set(ctx, cacheKey, result, m.cacheOption.Duration); err != nil {
+			if err = cacheObj.Set(ctx, cacheKey, result, m.cacheOption.Duration); err != nil {
 				intlog.Errorf(m.GetCtx(), `%+v`, err)
 			}
 		}

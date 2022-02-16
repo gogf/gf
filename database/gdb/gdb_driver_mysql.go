@@ -128,9 +128,12 @@ func (d *DriverMysql) TableFields(ctx context.Context, table string, schema ...s
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
-		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "function TableFields supports only single table operations")
+		return nil, gerror.NewCode(
+			gcode.CodeInvalidParameter,
+			"function TableFields supports only single table operations",
+		)
 	}
-	useSchema := d.schema.Val()
+	useSchema := d.schema
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	}
@@ -144,7 +147,10 @@ func (d *DriverMysql) TableFields(ctx context.Context, table string, schema ...s
 			if link, err = d.SlaveLink(useSchema); err != nil {
 				return nil
 			}
-			result, err = d.DoGetAll(ctx, link, fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.QuoteWord(table)))
+			result, err = d.DoGetAll(
+				ctx, link,
+				fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.QuoteWord(table)),
+			)
 			if err != nil {
 				return nil
 			}

@@ -42,7 +42,7 @@ type Model struct {
 	filter        bool               // Filter data and where key-value pairs according to the fields of the table.
 	distinct      string             // Force the query to only return distinct results.
 	lockInfo      string             // Lock for update or in shared lock.
-	cacheEnabled  bool               // Enable sql result cache feature.
+	cacheEnabled  bool               // Enable sql result cache feature, which is mainly for indicating cache duration(especially 0) usage.
 	cacheOption   CacheOption        // Cache option for query statement.
 	unscoped      bool               // Disables soft deleting features when select/delete operations.
 	safe          bool               // If true, it clones and returns a new model object whenever operation done; or else it changes the attribute of current model.
@@ -132,6 +132,7 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 	}
 	m := &Model{
 		db:         c.db,
+		schema:     c.schema,
 		tablesInit: tableStr,
 		tables:     tableStr,
 		fields:     defaultFields,

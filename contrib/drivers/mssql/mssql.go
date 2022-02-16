@@ -29,8 +29,8 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-// DriverMssql is the driver for SQL server database.
-type DriverMssql struct {
+// Driver is the driver for SQL server database.
+type Driver struct {
 	*gdb.Core
 }
 
@@ -47,19 +47,19 @@ func init() {
 
 // New create and returns a driver that implements gdb.Driver, which supports operations for Mssql.
 func New() gdb.Driver {
-	return &DriverMssql{}
+	return &Driver{}
 }
 
 // New creates and returns a database object for SQL server.
 // It implements the interface of gdb.Driver for extra database driver installation.
-func (d *DriverMssql) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
-	return &DriverMssql{
+func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
+	return &Driver{
 		Core: core,
 	}, nil
 }
 
 // Open creates and returns an underlying sql.DB object for mssql.
-func (d *DriverMssql) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
+func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	var (
 		source               string
 		underlyingDriverName = "sqlserver"
@@ -85,7 +85,7 @@ func (d *DriverMssql) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 
 // FilteredLink retrieves and returns filtered `linkInfo` that can be using for
 // logging or tracing purpose.
-func (d *DriverMssql) FilteredLink() string {
+func (d *Driver) FilteredLink() string {
 	linkInfo := d.GetConfig().Link
 	if linkInfo == "" {
 		return ""
@@ -99,12 +99,12 @@ func (d *DriverMssql) FilteredLink() string {
 }
 
 // GetChars returns the security char for this type of database.
-func (d *DriverMssql) GetChars() (charLeft string, charRight string) {
+func (d *Driver) GetChars() (charLeft string, charRight string) {
 	return "\"", "\""
 }
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
-func (d *DriverMssql) DoFilter(ctx context.Context, link gdb.Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
 	defer func() {
 		newSql, newArgs, err = d.Core.DoFilter(ctx, link, newSql, newArgs)
 	}()
@@ -120,7 +120,7 @@ func (d *DriverMssql) DoFilter(ctx context.Context, link gdb.Link, sql string, a
 
 // parseSql does some replacement of the sql before commits it to underlying driver,
 // for support of microsoft sql server.
-func (d *DriverMssql) parseSql(sql string) string {
+func (d *Driver) parseSql(sql string) string {
 	// SELECT * FROM USER WHERE ID=1 LIMIT 1
 	if m, _ := gregex.MatchString(`^SELECT(.+)LIMIT 1$`, sql); len(m) > 1 {
 		return fmt.Sprintf(`SELECT TOP 1 %s`, m[1])
@@ -134,11 +134,12 @@ func (d *DriverMssql) parseSql(sql string) string {
 	if err != nil {
 		return ""
 	}
-	index := 0
-	keyword := strings.TrimSpace(res[index][0])
-	keyword = strings.ToUpper(keyword)
+	var (
+		index   = 0
+		keyword = strings.TrimSpace(res[index][0])
+	)
 	index++
-	switch keyword {
+	switch strings.ToUpper(keyword) {
 	case "SELECT":
 		// LIMIT statement checks.
 		if len(res) < 2 ||
@@ -150,9 +151,11 @@ func (d *DriverMssql) parseSql(sql string) string {
 			break
 		}
 		// ORDER BY statement checks.
-		selectStr := ""
-		orderStr := ""
-		haveOrder := gregex.IsMatchString("((?i)SELECT)(.+)((?i)ORDER BY)", sql)
+		var (
+			selectStr = ""
+			orderStr  = ""
+			haveOrder = gregex.IsMatchString("((?i)SELECT)(.+)((?i)ORDER BY)", sql)
+		)
 		if haveOrder {
 			queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)ORDER BY)", sql)
 			if len(queryExpr) != 4 ||
@@ -213,7 +216,7 @@ func (d *DriverMssql) parseSql(sql string) string {
 
 // Tables retrieves and returns the tables of current schema.
 // It's mainly used in cli tool chain for automatically generating the models.
-func (d *DriverMssql) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
+func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
 	var result gdb.Result
 	link, err := d.SlaveLink(schema...)
 	if err != nil {
@@ -232,10 +235,10 @@ func (d *DriverMssql) Tables(ctx context.Context, schema ...string) (tables []st
 	return
 }
 
-// TableFields retrieves and returns the fields information of specified table of current schema.
+// TableFields retrieves and returns the fields' information of specified table of current schema.
 //
 // Also see DriverMysql.TableFields.
-func (d *DriverMssql) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
+func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
@@ -283,7 +286,7 @@ LEFT JOIN sys.extended_properties g ON a.id=g.major_id AND a.colid=g.minor_id
 LEFT JOIN sys.extended_properties f ON d.id=f.major_id AND f.minor_id =0
 WHERE d.name='%s'
 ORDER BY a.id,a.colorder`,
-				strings.ToUpper(table),
+				table,
 			)
 			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
 			result, err = d.DoGetAll(ctx, link, structureSql)
@@ -294,8 +297,8 @@ ORDER BY a.id,a.colorder`,
 			for i, m := range result {
 				fields[strings.ToLower(m["Field"].String())] = &gdb.TableField{
 					Index:   i,
-					Name:    strings.ToLower(m["Field"].String()),
-					Type:    strings.ToLower(m["Type"].String()),
+					Name:    m["Field"].String(),
+					Type:    m["Type"].String(),
 					Null:    m["Null"].Bool(),
 					Key:     m["Key"].String(),
 					Default: m["Default"].Val(),
@@ -313,7 +316,7 @@ ORDER BY a.id,a.colorder`,
 }
 
 // DoInsert is not supported in mssql.
-func (d *DriverMssql) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
+func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
 	switch option.InsertOption {
 	case gdb.InsertOptionSave:
 		return nil, gerror.NewCode(gcode.CodeNotSupported, `Save operation is not supported by mssql driver`)

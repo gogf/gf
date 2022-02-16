@@ -16,7 +16,7 @@ func ExampleScanDir() {
 	// init
 	var (
 		fileName = "gflie_example.txt"
-		tempDir  = gfile.TempDir("gfile_example_scan_dir")
+		tempDir  = gfile.Temp("gfile_example_scan_dir")
 		tempFile = gfile.Join(tempDir, fileName)
 
 		tempSubDir  = gfile.Join(tempDir, "sub_dir")
@@ -43,7 +43,7 @@ func ExampleScanDirFile() {
 	// init
 	var (
 		fileName = "gflie_example.txt"
-		tempDir  = gfile.TempDir("gfile_example_scan_dir_file")
+		tempDir  = gfile.Temp("gfile_example_scan_dir_file")
 		tempFile = gfile.Join(tempDir, fileName)
 
 		tempSubDir  = gfile.Join(tempDir, "sub_dir")
@@ -69,7 +69,7 @@ func ExampleScanDirFunc() {
 	// init
 	var (
 		fileName = "gflie_example.txt"
-		tempDir  = gfile.TempDir("gfile_example_scan_dir_func")
+		tempDir  = gfile.Temp("gfile_example_scan_dir_func")
 		tempFile = gfile.Join(tempDir, fileName)
 
 		tempSubDir  = gfile.Join(tempDir, "sub_dir")
@@ -100,7 +100,7 @@ func ExampleScanDirFileFunc() {
 	// init
 	var (
 		fileName = "gflie_example.txt"
-		tempDir  = gfile.TempDir("gfile_example_scan_dir_file_func")
+		tempDir  = gfile.Temp("gfile_example_scan_dir_file_func")
 		tempFile = gfile.Join(tempDir, fileName)
 
 		fileName1 = "gflie_example_ignores.txt"

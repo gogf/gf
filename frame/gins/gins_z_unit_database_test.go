@@ -24,7 +24,7 @@ func Test_Database(t *testing.T) {
 	)
 	gtest.C(t, func(t *gtest.T) {
 		var err error
-		dirPath := gfile.TempDir(gtime.TimestampNanoStr())
+		dirPath := gfile.Temp(gtime.TimestampNanoStr())
 		err = gfile.Mkdir(dirPath)
 		t.Assert(err, nil)
 		defer gfile.Remove(dirPath)

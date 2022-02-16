@@ -80,7 +80,7 @@ func (view *View) Parse(ctx context.Context, file string, params ...Params) (res
 		}
 		// Monitor template files changes using fsnotify asynchronously.
 		if resource == nil {
-			if _, err := gfsnotify.AddOnce("gview.Parse:"+folder, folder, func(event *gfsnotify.Event) {
+			if _, err = gfsnotify.AddOnce("gview.Parse:"+folder, folder, func(event *gfsnotify.Event) {
 				// CLEAR THEM ALL.
 				view.fileCacheMap.Clear()
 				templates.Clear()
@@ -137,11 +137,11 @@ func (view *View) Parse(ctx context.Context, file string, params ...Params) (res
 		if err != nil {
 			return "", err
 		}
-		if err := newTpl.Execute(buffer, variables); err != nil {
+		if err = newTpl.Execute(buffer, variables); err != nil {
 			return "", err
 		}
 	} else {
-		if err := tpl.(*texttpl.Template).Execute(buffer, variables); err != nil {
+		if err = tpl.(*texttpl.Template).Execute(buffer, variables); err != nil {
 			return "", err
 		}
 	}

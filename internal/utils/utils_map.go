@@ -24,3 +24,14 @@ func MapPossibleItemByKey(data map[string]interface{}, key string) (foundKey str
 	}
 	return "", nil
 }
+
+// MapContainsPossibleKey checks if the given `key` is contained in given map `data`.
+// It checks the key ignoring cases and symbols.
+//
+// Note that this function might be of low performance.
+func MapContainsPossibleKey(data map[string]interface{}, key string) bool {
+	if k, _ := MapPossibleItemByKey(data, key); k != "" {
+		return true
+	}
+	return false
+}
