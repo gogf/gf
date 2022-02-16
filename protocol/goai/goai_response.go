@@ -38,33 +38,33 @@ func (r ResponseRef) MarshalJSON() ([]byte, error) {
 }
 
 type getResponseSchemaRefInput struct {
-	BusinessStructName string      // The business struct name.
-	ResponseObject     interface{} // Common response object.
-	ResponseDataField  string      // Common response data field.
+	BusinessStructName      string      // The business struct name.
+	CommonResponseObject    interface{} // Common response object.
+	CommonResponseDataField string      // Common response data field.
 }
 
 func (oai *OpenApiV3) getResponseSchemaRef(in getResponseSchemaRefInput) (*SchemaRef, error) {
-	if in.ResponseObject == nil {
+	if in.CommonResponseObject == nil {
 		return &SchemaRef{
 			Ref: in.BusinessStructName,
 		}, nil
 	}
 
 	var (
-		dataFieldsPartsArray                                        = gstr.Split(in.ResponseDataField, ".")
+		dataFieldsPartsArray                                        = gstr.Split(in.CommonResponseDataField, ".")
 		bizResponseStructSchemaRef, bizResponseStructSchemaRefExist = oai.Components.Schemas[in.BusinessStructName]
-		schema, err                                                 = oai.structToSchema(in.ResponseObject)
+		schema, err                                                 = oai.structToSchema(in.CommonResponseObject)
 	)
 	if err != nil {
 		return nil, err
 	}
-	if in.ResponseDataField == "" && bizResponseStructSchemaRefExist {
+	if in.CommonResponseDataField == "" && bizResponseStructSchemaRefExist {
 		for k, v := range bizResponseStructSchemaRef.Value.Properties {
 			schema.Properties[k] = v
 		}
 	} else {
 		structFields, _ := gstructs.Fields(gstructs.FieldsInput{
-			Pointer:         in.ResponseObject,
+			Pointer:         in.CommonResponseObject,
 			RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
 		})
 		for _, structField := range structFields {
@@ -86,9 +86,9 @@ func (oai *OpenApiV3) getResponseSchemaRef(in getResponseSchemaRefInput) (*Schem
 						structFieldInstance = reflect.New(structField.Type().Type).Elem()
 					)
 					schemaRef, err := oai.getResponseSchemaRef(getResponseSchemaRefInput{
-						BusinessStructName: in.BusinessStructName,
-						ResponseObject:     structFieldInstance,
-						ResponseDataField:  gstr.Join(dataFieldsPartsArray[1:], "."),
+						BusinessStructName:      in.BusinessStructName,
+						CommonResponseObject:    structFieldInstance,
+						CommonResponseDataField: gstr.Join(dataFieldsPartsArray[1:], "."),
 					})
 					if err != nil {
 						return nil, err
