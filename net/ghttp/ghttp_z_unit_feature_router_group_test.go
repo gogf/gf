@@ -189,3 +189,26 @@ func Test_Router_Group_Map(t *testing.T) {
 		t.Assert(c.PostContent(ctx, "/test"), "post")
 	})
 }
+
+// https://github.com/gogf/gf/issues/1609
+func Test_Issue1609(t *testing.T) {
+	p, _ := gtcp.GetFreePort()
+	s := g.Server(p)
+	group := s.Group("/api/get")
+	group.GET("/", func(r *ghttp.Request) {
+		r.Response.Write("get")
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	gtest.Assert(s.Start(), nil)
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		t.Assert(c.GetContent(ctx, "/api/get"), "get")
+		t.Assert(c.PostContent(ctx, "/test"), "Not Found")
+	})
+}
