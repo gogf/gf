@@ -70,7 +70,7 @@ func ExampleNewWithOptions() {
 	// engineer
 }
 
-func Example_newFromXml() {
+func ExampleNew_Xml() {
 	jsonContent := `<?xml version="1.0" encoding="UTF-8"?><doc><name>john</name><score>100</score></doc>`
 	j := gjson.New(jsonContent)
 	// Note that there's root node in the XML content.
@@ -81,7 +81,7 @@ func Example_newFromXml() {
 	// 100
 }
 
-func Example_newFromStruct() {
+func ExampleNew_Struct() {
 	type Me struct {
 		Name  string `json:"name"`
 		Score int    `json:"score"`
