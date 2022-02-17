@@ -32,27 +32,6 @@ func Example_patternGet() {
 	// John Score: 99.5
 }
 
-func Example_patternCustomSplitChar() {
-	data :=
-		`{
-        "users" : {
-            "count" : 2,
-            "list"  : [
-                {"name" : "Ming",  "score" : 60},
-                {"name" : "John", "score" : 99.5}
-            ]
-        }
-    }`
-	if j, err := gjson.DecodeToJson(data); err != nil {
-		panic(err)
-	} else {
-		j.SetSplitChar('#')
-		fmt.Println("John Score:", j.Get("users#list#1#score").Float32())
-	}
-	// Output:
-	// John Score: 99.5
-}
-
 func Example_patternViolenceCheck() {
 	data :=
 		`{
