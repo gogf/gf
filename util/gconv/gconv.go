@@ -279,9 +279,7 @@ func doConvert(in doConvertInput) interface{} {
 
 	default:
 		if in.ReferValue != nil {
-			var (
-				referReflectValue reflect.Value
-			)
+			var referReflectValue reflect.Value
 			if v, ok := in.ReferValue.(reflect.Value); ok {
 				referReflectValue = v
 			} else {
