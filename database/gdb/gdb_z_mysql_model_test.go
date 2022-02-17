@@ -1454,7 +1454,7 @@ func Test_Model_Where_ISNULL_2(t *testing.T) {
 			"create_time > 0":    nil,
 			"id":                 g.Slice{1, 2, 3},
 		}
-		result, err := db.Model(table).WherePri(conditions).Order("id asc").All()
+		result, err := db.Model(table).Where(conditions).Order("id asc").All()
 		t.AssertNil(err)
 		t.Assert(len(result), 3)
 		t.Assert(result[0]["id"].Int(), 1)
@@ -1468,19 +1468,19 @@ func Test_Model_Where_OmitEmpty(t *testing.T) {
 		conditions := g.Map{
 			"id < 4": "",
 		}
-		result, err := db.Model(table).WherePri(conditions).Order("id asc").All()
+		result, err := db.Model(table).Where(conditions).Order("id desc").All()
 		t.AssertNil(err)
 		t.Assert(len(result), 3)
-		t.Assert(result[0]["id"].Int(), 1)
+		t.Assert(result[0]["id"].Int(), 3)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		conditions := g.Map{
 			"id < 4": "",
 		}
-		result, err := db.Model(table).WherePri(conditions).OmitEmpty().Order("id asc").All()
+		result, err := db.Model(table).Where(conditions).OmitEmpty().Order("id desc").All()
 		t.AssertNil(err)
-		t.Assert(len(result), 3)
-		t.Assert(result[0]["id"].Int(), 1)
+		t.Assert(len(result), 10)
+		t.Assert(result[0]["id"].Int(), 10)
 	})
 }
 
