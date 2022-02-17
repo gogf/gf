@@ -139,7 +139,7 @@ func (s *Server) Start() error {
 	// OpenApi specification json producing handler.
 	if s.config.OpenApiPath != "" {
 		s.BindHandler(s.config.OpenApiPath, s.openapiSpec)
-		s.Logger().Debugf(
+		s.Logger().Infof(
 			ctx,
 			`openapi specification is serving at address: %s%s`,
 			s.getListenAddress(),
@@ -147,12 +147,12 @@ func (s *Server) Start() error {
 		)
 	} else {
 		if s.config.SwaggerPath != "" {
-			s.Logger().Notice(
+			s.Logger().Warning(
 				ctx,
 				`openapi specification is disabled but swagger ui is serving, which might make no sense`,
 			)
 		} else {
-			s.Logger().Debug(
+			s.Logger().Info(
 				ctx,
 				`openapi specification is disabled`,
 			)
