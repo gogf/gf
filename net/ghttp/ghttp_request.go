@@ -250,6 +250,11 @@ func (r *Request) GetError() error {
 	return r.error
 }
 
+// SetError sets custom error for current request.
+func (r *Request) SetError(err error) {
+	r.error = err
+}
+
 // ReloadParam is used for modifying request parameter.
 // Sometimes, we want to modify request parameters through middleware, but directly modifying Request.Body
 // is invalid, so it clears the parsed* marks to make the parameters re-parsed.
