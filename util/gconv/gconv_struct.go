@@ -421,7 +421,7 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 	}
 
 	// Common interface check.
-	if err, ok := bindVarToReflectValueWithInterfaceCheck(structFieldValue, value); ok {
+	if err, ok = bindVarToReflectValueWithInterfaceCheck(structFieldValue, value); ok {
 		return err
 	}
 
@@ -500,7 +500,7 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 
 	case reflect.Ptr:
 		item := reflect.New(structFieldValue.Type().Elem())
-		if err, ok := bindVarToReflectValueWithInterfaceCheck(item, value); ok {
+		if err, ok = bindVarToReflectValueWithInterfaceCheck(item, value); ok {
 			structFieldValue.Set(item)
 			return err
 		}

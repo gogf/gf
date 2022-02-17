@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -1275,5 +1276,28 @@ func Test_Struct_Issue1563(t *testing.T) {
 				t.Assert(user.Pass1, `111`)
 			}
 		}
+	})
+}
+
+// https://github.com/gogf/gf/issues/1597
+func Test_Struct_Issue1597(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type S struct {
+			A int
+			B json.RawMessage
+		}
+
+		jsonByte := []byte(`{
+		"a":1, 
+		"b":{
+			"c": 3
+		}
+	}`)
+		data, err := gjson.DecodeToJson(jsonByte)
+		t.AssertNil(err)
+		s := &S{}
+		err = data.Scan(s)
+		t.AssertNil(err)
+		t.Assert(s.B, `{"c":3}`)
 	})
 }
