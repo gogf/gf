@@ -1520,6 +1520,7 @@ func Test_Types(t *testing.T) {
         %s binary(8) NOT NULL,
         %s date NOT NULL,
         %s time NOT NULL,
+        %s timestamp(6) NOT NULL,
         %s decimal(5,2) NOT NULL,
         %s double NOT NULL,
         %s bit(2) NOT NULL,
@@ -1532,6 +1533,7 @@ func Test_Types(t *testing.T) {
 			"`binary`",
 			"`date`",
 			"`time`",
+			"`timestamp`",
 			"`decimal`",
 			"`double`",
 			"`bit`",
@@ -1541,16 +1543,17 @@ func Test_Types(t *testing.T) {
 		}
 		defer dropTable("types")
 		data := g.Map{
-			"id":      1,
-			"blob":    "i love gf",
-			"binary":  []byte("abcdefgh"),
-			"date":    "1880-10-24",
-			"time":    "10:00:01",
-			"decimal": -123.456,
-			"double":  -123.456,
-			"bit":     2,
-			"tinyint": true,
-			"bool":    false,
+			"id":        1,
+			"blob":      "i love gf",
+			"binary":    []byte("abcdefgh"),
+			"date":      "1880-10-24",
+			"time":      "10:00:01",
+			"timestamp": "2022-02-14 12:00:01.123456",
+			"decimal":   -123.456,
+			"double":    -123.456,
+			"bit":       2,
+			"tinyint":   true,
+			"bool":      false,
 		}
 		r, err := db.Model("types").Data(data).Insert()
 		t.AssertNil(err)
@@ -1564,21 +1567,23 @@ func Test_Types(t *testing.T) {
 		t.Assert(one["binary"].String(), data["binary"])
 		t.Assert(one["date"].String(), data["date"])
 		t.Assert(one["time"].String(), `10:00:01`)
+		t.Assert(one["timestamp"].GTime().Format(`Y-m-d H:i:s.u`), `2022-02-14 12:00:01.123`)
 		t.Assert(one["decimal"].String(), -123.46)
 		t.Assert(one["double"].String(), data["double"])
 		t.Assert(one["bit"].Int(), data["bit"])
 		t.Assert(one["tinyint"].Bool(), data["tinyint"])
 
 		type T struct {
-			Id      int
-			Blob    []byte
-			Binary  []byte
-			Date    *gtime.Time
-			Time    *gtime.Time
-			Decimal float64
-			Double  float64
-			Bit     int8
-			TinyInt bool
+			Id        int
+			Blob      []byte
+			Binary    []byte
+			Date      *gtime.Time
+			Time      *gtime.Time
+			Timestamp *gtime.Time
+			Decimal   float64
+			Double    float64
+			Bit       int8
+			TinyInt   bool
 		}
 		var obj *T
 		err = db.Model("types").Scan(&obj)
@@ -1588,6 +1593,7 @@ func Test_Types(t *testing.T) {
 		t.Assert(obj.Binary, data["binary"])
 		t.Assert(obj.Date.Format("Y-m-d"), data["date"])
 		t.Assert(obj.Time.String(), `10:00:01`)
+		t.Assert(obj.Timestamp.Format(`Y-m-d H:i:s.u`), `2022-02-14 12:00:01.123`)
 		t.Assert(obj.Decimal, -123.46)
 		t.Assert(obj.Double, data["double"])
 		t.Assert(obj.Bit, data["bit"])
