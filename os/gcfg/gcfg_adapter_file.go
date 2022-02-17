@@ -47,7 +47,7 @@ var (
 	}
 
 	// Prefix array for trying searching in local system.
-	localSystemTryFolders = []string{"", "config/", "manifest/config"}
+	localSystemTryFolders = []string{"", "hack/", "config/", "manifest/config"}
 )
 
 // NewAdapterFile returns a new configuration management object.
