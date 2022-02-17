@@ -15,6 +15,11 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 )
 
+// RawMessage is a raw encoded JSON value.
+// It implements Marshaler and Unmarshaler and can
+// be used to delay JSON decoding or precompute a JSON encoding.
+type RawMessage = json.RawMessage
+
 // Marshal adapts to json/encoding Marshal API.
 //
 // Marshal returns the JSON encoding of v, adapts to json/encoding Marshal API

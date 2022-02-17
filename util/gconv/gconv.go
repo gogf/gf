@@ -10,6 +10,7 @@
 package gconv
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"reflect"
@@ -18,6 +19,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/encoding/gbinary"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -272,6 +274,9 @@ func doConvert(in doConvertInput) interface{} {
 	case "[]map[string]interface{}":
 		return Maps(in.FromValue)
 
+	case "json.RawMessage":
+		return Bytes(in.FromValue)
+
 	default:
 		if in.ReferValue != nil {
 			var (
@@ -316,6 +321,13 @@ func Bytes(any interface{}) []byte {
 		}
 		originValueAndKind := utils.OriginValueAndKind(any)
 		switch originValueAndKind.OriginKind {
+		case reflect.Map:
+			bytes, err := json.Marshal(any)
+			if err != nil {
+				intlog.Errorf(context.TODO(), `%+v`, err)
+			}
+			return bytes
+
 		case reflect.Array, reflect.Slice:
 			var (
 				ok    = true
