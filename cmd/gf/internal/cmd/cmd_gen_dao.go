@@ -22,6 +22,7 @@ import (
 	_ "github.com/gogf/gf/contrib/drivers/mssql/v2"
 	_ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
 	_ "github.com/gogf/gf/contrib/drivers/sqlite/v2"
+	_ "github.com/mattn/go-sqlite3"
 	//_ "github.com/gogf/gf/contrib/drivers/oracle/v2"
 )
 
