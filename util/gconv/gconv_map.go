@@ -115,6 +115,10 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 		for k, v := range r {
 			dataMap[k] = v
 		}
+	case map[string]string:
+		for k, v := range r {
+			dataMap[k] = v
+		}
 	case map[string]interface{}:
 		if recursive {
 			// A copy of current map.
@@ -210,28 +214,28 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 				tags...,
 			)
 		}
-		if len(dataMap) == 0 {
-			return value
-		}
 		return dataMap
+
 	case reflect.Struct:
+		var dataMap = make(map[string]interface{})
 		// Map converting interface check.
 		if v, ok := value.(iMapStrAny); ok {
-			m := v.MapStrAny()
-			if recursive {
-				for k, v := range m {
-					m[k] = doMapConvertForMapOrStructValue(false, v, recursive, tags...)
+			// Value copy, in case of concurrent safety.
+			for mapK, mapV := range v.MapStrAny() {
+				if recursive {
+					dataMap[mapK] = doMapConvertForMapOrStructValue(false, mapV, recursive, tags...)
+				} else {
+					dataMap[mapK] = mapV
 				}
 			}
-			return m
+			return dataMap
 		}
 		// Using reflect for converting.
 		var (
 			rtField     reflect.StructField
 			rvField     reflect.Value
-			dataMap     = make(map[string]interface{}) // result map.
-			reflectType = reflectValue.Type()          // attribute value type.
-			mapKey      = ""                           // mapKey may be the tag name or the struct attribute name.
+			reflectType = reflectValue.Type() // attribute value type.
+			mapKey      = ""                  // mapKey may be the tag name or the struct attribute name.
 		)
 		for i := 0; i < reflectValue.NumField(); i++ {
 			rtField = reflectType.Field(i)
@@ -317,11 +321,26 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 						break
 					}
 					array := make([]interface{}, length)
-					for i := 0; i < length; i++ {
-						array[i] = doMapConvertForMapOrStructValue(false, rvAttrField.Index(i), recursive, tags...)
+					for arrayIndex := 0; arrayIndex < length; arrayIndex++ {
+						array[arrayIndex] = doMapConvertForMapOrStructValue(
+							false, rvAttrField.Index(arrayIndex), recursive, tags...,
+						)
 					}
 					dataMap[mapKey] = array
-
+				case reflect.Map:
+					var (
+						mapKeys   = rvAttrField.MapKeys()
+						nestedMap = make(map[string]interface{})
+					)
+					for _, k := range mapKeys {
+						nestedMap[String(k.Interface())] = doMapConvertForMapOrStructValue(
+							false,
+							rvAttrField.MapIndex(k).Interface(),
+							recursive,
+							tags...,
+						)
+					}
+					dataMap[mapKey] = nestedMap
 				default:
 					if rvField.IsValid() {
 						dataMap[mapKey] = reflectValue.Field(i).Interface()

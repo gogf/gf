@@ -9,7 +9,7 @@ package gmeta
 
 import (
 	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/internal/structs"
+	"github.com/gogf/gf/v2/os/gstructs"
 )
 
 // Meta is used as an embedded attribute for struct to enabled metadata feature.
@@ -22,19 +22,12 @@ const (
 
 // Data retrieves and returns all metadata from `object`.
 func Data(object interface{}) map[string]string {
-	reflectType, err := structs.StructType(object)
+	reflectType, err := gstructs.StructType(object)
 	if err != nil {
 		return nil
 	}
 	if field, ok := reflectType.FieldByName(metaAttributeName); ok {
-		var (
-			tags = structs.ParseTag(string(field.Tag))
-			data = make(map[string]string, len(tags))
-		)
-		for k, v := range tags {
-			data[k] = v
-		}
-		return data
+		return gstructs.ParseTag(string(field.Tag))
 	}
 	return map[string]string{}
 }

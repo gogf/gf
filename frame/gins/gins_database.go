@@ -60,20 +60,21 @@ func Database(name ...string) gdb.DB {
 				configFilePath string
 			)
 			if fileConfig, ok := Config().GetAdapter().(*gcfg.AdapterFile); ok {
-				if configFilePath, err = fileConfig.GetFilePath(); configFilePath == "" {
-					exampleFileName := "config.example.toml"
-					if exampleConfigFilePath, _ := fileConfig.GetFilePath(exampleFileName); exampleConfigFilePath != "" {
-						err = gerror.WrapCodef(
+				if configFilePath, _ = fileConfig.GetFilePath(); configFilePath == "" {
+					var (
+						exampleFileName       = "config.example.toml"
+						exampleConfigFilePath string
+					)
+					if exampleConfigFilePath, _ = fileConfig.GetFilePath(exampleFileName); exampleConfigFilePath != "" {
+						err = gerror.NewCodef(
 							gcode.CodeMissingConfiguration,
-							err,
 							`configuration file "%s" not found, but found "%s", did you miss renaming the example configuration file?`,
 							fileConfig.GetFileName(),
 							exampleFileName,
 						)
 					} else {
-						err = gerror.WrapCodef(
+						err = gerror.NewCodef(
 							gcode.CodeMissingConfiguration,
-							err,
 							`configuration file "%s" not found, did you miss the configuration file or the misspell the configuration file name?`,
 							fileConfig.GetFileName(),
 						)
@@ -85,9 +86,8 @@ func Database(name ...string) gdb.DB {
 			}
 			// Panic if nothing found in Config object or in gdb configuration.
 			if len(configMap) == 0 && !gdb.IsConfigured() {
-				err = gerror.WrapCodef(
+				err = gerror.NewCodef(
 					gcode.CodeMissingConfiguration,
-					err,
 					`database initialization failed: "%s" node not found, is configuration file or configuration node missing?`,
 					configNodeNameDatabase,
 				)
@@ -143,7 +143,7 @@ func Database(name ...string) gdb.DB {
 		}
 
 		// Create a new ORM object with given configurations.
-		if db, err := gdb.New(name...); err == nil {
+		if db, err := gdb.NewByGroup(name...); err == nil {
 			// Initialize logger for ORM.
 			var (
 				loggerConfigMap map[string]interface{}
@@ -180,19 +180,18 @@ func parseDBConfigNode(value interface{}) *gdb.ConfigNode {
 	if !ok {
 		return nil
 	}
-	node := &gdb.ConfigNode{}
-	err := gconv.Struct(nodeMap, node)
+	var (
+		node = &gdb.ConfigNode{}
+		err  = gconv.Struct(nodeMap, node)
+	)
 	if err != nil {
 		panic(err)
 	}
-	// Be compatible with old version.
-	if _, v := gutil.MapPossibleItemByKey(nodeMap, "LinkInfo"); v != nil {
-		node.Link = gconv.String(v)
-	}
+	// Find possible `Link` configuration content.
 	if _, v := gutil.MapPossibleItemByKey(nodeMap, "Link"); v != nil {
 		node.Link = gconv.String(v)
 	}
-	// Parse link syntax.
+	// Parse `Link` configuration syntax.
 	if node.Link != "" && node.Type == "" {
 		match, _ := gregex.MatchString(`([a-z]+):(.+)`, node.Link)
 		if len(match) == 3 {

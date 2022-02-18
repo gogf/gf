@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/gogf/gf/v2/internal/utils"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/gogf/gf/v2/container/gtype"
@@ -150,7 +151,10 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 
 		// Caller path and Fn name.
 		if l.config.Flags&(F_FILE_LONG|F_FILE_SHORT|F_CALLER_FN) > 0 {
-			callerFnName, path, line := gdebug.CallerWithFilter(pathFilterKey, l.config.StSkip)
+			callerFnName, path, line := gdebug.CallerWithFilter(
+				[]string{utils.StackFilterKeyForGoFrame},
+				l.config.StSkip,
+			)
 			if l.config.Flags&F_CALLER_FN > 0 {
 				if len(callerFnName) > 2 {
 					input.CallerFunc = fmt.Sprintf(`[%s]`, callerFnName)
@@ -220,7 +224,7 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 			input.Next()
 		})
 		if err != nil {
-			intlog.Error(ctx, err)
+			intlog.Errorf(ctx, `%+v`, err)
 		}
 	} else {
 		input.Next()
@@ -260,7 +264,7 @@ func (l *Logger) printToWriter(ctx context.Context, input *HandlerInput) *bytes.
 			buffer = input.getRealBuffer(l.config.WriterColorEnable)
 		)
 		if _, err := l.config.Writer.Write(buffer.Bytes()); err != nil {
-			intlog.Error(ctx, err)
+			intlog.Errorf(ctx, `%+v`, err)
 		}
 		return buffer
 	}
@@ -271,14 +275,15 @@ func (l *Logger) printToWriter(ctx context.Context, input *HandlerInput) *bytes.
 func (l *Logger) printToStdout(ctx context.Context, input *HandlerInput) *bytes.Buffer {
 	if l.config.StdoutPrint {
 		var (
-			buffer = input.getRealBuffer(true)
+			err    error
+			buffer = input.getRealBuffer(!l.config.StdoutColorDisabled)
 		)
 		// This will lose color in Windows os system.
 		// if _, err := os.Stdout.Write(input.getRealBuffer(true).Bytes()); err != nil {
 
 		// This will print color in Windows os system.
-		if _, err := fmt.Fprint(color.Output, buffer.String()); err != nil {
-			intlog.Error(ctx, err)
+		if _, err = fmt.Fprint(color.Output, buffer.String()); err != nil {
+			intlog.Errorf(ctx, `%+v`, err)
 		}
 		return buffer
 	}
@@ -306,10 +311,10 @@ func (l *Logger) printToFile(ctx context.Context, t time.Time, in *HandlerInput)
 		intlog.Errorf(ctx, `got nil file pointer for: %s`, logFilePath)
 	} else {
 		if _, err := file.Write(buffer.Bytes()); err != nil {
-			intlog.Error(ctx, err)
+			intlog.Errorf(ctx, `%+v`, err)
 		}
 		if err := file.Close(); err != nil {
-			intlog.Error(ctx, err)
+			intlog.Errorf(ctx, `%+v`, err)
 		}
 	}
 	return buffer
@@ -325,7 +330,7 @@ func (l *Logger) getFilePointer(ctx context.Context, path string) *gfpool.File {
 	)
 	if err != nil {
 		// panic(err)
-		intlog.Error(ctx, err)
+		intlog.Errorf(ctx, `%+v`, err)
 	}
 	return file
 }

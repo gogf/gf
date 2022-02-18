@@ -10,10 +10,13 @@ import (
 	"context"
 	"reflect"
 
+	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gtime"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // RedisConn is a connection of redis client.
@@ -22,9 +25,12 @@ type RedisConn struct {
 	redis *Redis
 }
 
-// Do sends a command to the server and returns the received reply.
+// Do send a command to the server and returns the received reply.
 // It uses json.Marshal for struct/slice/map type values before committing them to redis.
 func (c *RedisConn) Do(ctx context.Context, command string, args ...interface{}) (reply *gvar.Var, err error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	for k, v := range args {
 		var (
 			reflectInfo = utils.OriginTypeAndKind(v)
@@ -43,12 +49,18 @@ func (c *RedisConn) Do(ctx context.Context, command string, args ...interface{})
 			}
 		}
 	}
+
+	// Trace span start.
+	tr := otel.GetTracerProvider().Tracer(traceInstrumentName, trace.WithInstrumentationVersion(gf.VERSION))
+	_, span := tr.Start(ctx, "Redis."+command, trace.WithSpanKind(trace.SpanKindInternal))
+	defer span.End()
+
 	timestampMilli1 := gtime.TimestampMilli()
 	reply, err = c.conn.Do(ctx, command, args...)
 	timestampMilli2 := gtime.TimestampMilli()
 
-	// Tracing.
-	c.addTracingItem(ctx, &tracingItem{
+	// Trace span end.
+	c.traceSpanEnd(ctx, span, &traceItem{
 		err:       err,
 		command:   command,
 		args:      args,

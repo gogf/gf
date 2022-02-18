@@ -7,7 +7,7 @@
 package gjson
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (j *Json) MarshalJSON() ([]byte, error) {
+func (j Json) MarshalJSON() ([]byte, error) {
 	return j.ToJson()
 }
 
@@ -28,4 +28,14 @@ func (j *Json) UnmarshalValue(value interface{}) error {
 		*j = *r
 	}
 	return nil
+}
+
+// MapStrAny implements interface function MapStrAny().
+func (j *Json) MapStrAny() map[string]interface{} {
+	return j.Map()
+}
+
+// Interfaces implements interface function Interfaces().
+func (j *Json) Interfaces() []interface{} {
+	return j.Array()
 }

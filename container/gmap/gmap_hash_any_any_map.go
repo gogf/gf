@@ -266,7 +266,7 @@ func (m *AnyAnyMap) GetVar(key interface{}) *gvar.Var {
 	return gvar.New(m.Get(key))
 }
 
-// GetVarOrSet returns a Var with result from GetVarOrSet.
+// GetVarOrSet returns a Var with result from GetOrSet.
 // The returned Var is un-concurrent safe.
 func (m *AnyAnyMap) GetVarOrSet(key interface{}, value interface{}) *gvar.Var {
 	return gvar.New(m.GetOrSet(key, value))
@@ -461,7 +461,7 @@ func (m *AnyAnyMap) String() string {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (m *AnyAnyMap) MarshalJSON() ([]byte, error) {
+func (m AnyAnyMap) MarshalJSON() ([]byte, error) {
 	return json.Marshal(gconv.Map(m.Map()))
 }
 

@@ -97,10 +97,16 @@ func (c *Core) GetCtxTimeout(timeoutType int, ctx context.Context) (context.Cont
 // It is rare to Close a DB, as the DB handle is meant to be
 // long-lived and shared between many goroutines.
 func (c *Core) Close(ctx context.Context) (err error) {
+	if err = c.cache.Close(ctx); err != nil {
+		return err
+	}
 	c.links.LockFunc(func(m map[string]interface{}) {
 		for k, v := range m {
 			if db, ok := v.(*sql.DB); ok {
 				err = db.Close()
+				if err != nil {
+					err = gerror.WrapCode(gcode.CodeDbOperationError, err, `db.Close failed`)
+				}
 				intlog.Printf(ctx, `close link: %s, err: %v`, k, err)
 				if err != nil {
 					return
@@ -119,7 +125,7 @@ func (c *Core) Master(schema ...string) (*sql.DB, error) {
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	} else {
-		useSchema = c.schema.Val()
+		useSchema = c.schema
 	}
 	return c.getSqlDb(true, useSchema)
 }
@@ -131,7 +137,7 @@ func (c *Core) Slave(schema ...string) (*sql.DB, error) {
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	} else {
-		useSchema = c.schema.Val()
+		useSchema = c.schema
 	}
 	return c.getSqlDb(false, useSchema)
 }
@@ -283,7 +289,10 @@ func (c *Core) PingMaster() error {
 	if master, err := c.db.Master(); err != nil {
 		return err
 	} else {
-		return master.Ping()
+		if err = master.PingContext(c.GetCtx()); err != nil {
+			err = gerror.WrapCode(gcode.CodeDbOperationError, err, `master.Ping failed`)
+		}
+		return err
 	}
 }
 
@@ -292,7 +301,10 @@ func (c *Core) PingSlave() error {
 	if slave, err := c.db.Slave(); err != nil {
 		return err
 	} else {
-		return slave.Ping()
+		if err = slave.PingContext(c.GetCtx()); err != nil {
+			err = gerror.WrapCode(gcode.CodeDbOperationError, err, `slave.Ping failed`)
+		}
+		return err
 	}
 }
 
@@ -403,7 +415,7 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 		keysStr      = charL + strings.Join(keys, charR+","+charL) + charR
 		operation    = GetInsertOperationByOption(option.InsertOption)
 	)
-	if option.InsertOption == insertOptionSave {
+	if option.InsertOption == InsertOptionSave {
 		onDuplicateStr = c.formatOnDuplicate(keys, option)
 	}
 	var (
@@ -425,20 +437,25 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 		valueHolder = append(valueHolder, "("+gstr.Join(values, ",")+")")
 		// Batch package checks: It meets the batch number, or it is the last element.
 		if len(valueHolder) == option.BatchCount || (i == listLength-1 && len(valueHolder) > 0) {
-			r, err := c.db.DoExec(ctx, link, fmt.Sprintf(
+			var (
+				stdSqlResult sql.Result
+				affectedRows int64
+			)
+			stdSqlResult, err = c.db.DoExec(ctx, link, fmt.Sprintf(
 				"%s INTO %s(%s) VALUES%s %s",
 				operation, c.QuotePrefixTableName(table), keysStr,
 				gstr.Join(valueHolder, ","),
 				onDuplicateStr,
 			), params...)
 			if err != nil {
-				return r, err
+				return stdSqlResult, err
 			}
-			if n, err := r.RowsAffected(); err != nil {
-				return r, err
+			if affectedRows, err = stdSqlResult.RowsAffected(); err != nil {
+				err = gerror.WrapCode(gcode.CodeDbOperationError, err, `sql.Result.RowsAffected failed`)
+				return stdSqlResult, err
 			} else {
-				batchResult.result = r
-				batchResult.affected += n
+				batchResult.Result = stdSqlResult
+				batchResult.Affected += affectedRows
 			}
 			params = params[:0]
 			valueHolder = valueHolder[:0]
@@ -528,11 +545,11 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 	case reflect.Map, reflect.Struct:
 		var (
 			fields         []string
-			dataMap        = ConvertDataForTableRecord(data)
+			dataMap        = c.db.ConvertDataForRecord(ctx, data)
 			counterHandler = func(column string, counter Counter) {
 				if counter.Value != 0 {
+					column = c.QuoteWord(column)
 					var (
-						column    = c.QuoteWord(column)
 						columnRef = c.QuoteWord(counter.Field)
 						columnVal = counter.Value
 						operator  = "+"
@@ -616,31 +633,22 @@ func (c *Core) DoDelete(ctx context.Context, link Link, table string, condition 
 //
 // Note that this interface implements mainly for workaround for a json infinite loop bug
 // of Golang version < v1.14.
-func (c *Core) MarshalJSON() ([]byte, error) {
+func (c Core) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf(`%+v`, c)), nil
 }
 
 // writeSqlToLogger outputs the Sql object to logger.
 // It is enabled only if configuration "debug" is true.
 func (c *Core) writeSqlToLogger(ctx context.Context, sql *Sql) {
-	var (
-		sqlTypeKey       string
-		transactionIdStr string
-	)
-	switch sql.Type {
-	case sqlTypeQueryContext:
-		sqlTypeKey = `rows`
-	default:
-		sqlTypeKey = `rows`
-	}
+	var transactionIdStr string
 	if sql.IsTransaction {
 		if v := ctx.Value(transactionIdForLoggerCtx); v != nil {
 			transactionIdStr = fmt.Sprintf(`[txid:%d] `, v.(uint64))
 		}
 	}
 	s := fmt.Sprintf(
-		"[%3d ms] [%s] [%s:%-3d] %s%s",
-		sql.End-sql.Start, sql.Group, sqlTypeKey, sql.RowsAffected, transactionIdStr, sql.Format,
+		"[%3d ms] [%s] [rows:%-3d] %s%s",
+		sql.End-sql.Start, sql.Group, sql.RowsAffected, transactionIdStr, sql.Format,
 	)
 	if sql.Error != nil {
 		s += "\nError: " + sql.Error.Error()
@@ -652,16 +660,26 @@ func (c *Core) writeSqlToLogger(ctx context.Context, sql *Sql) {
 
 // HasTable determine whether the table name exists in the database.
 func (c *Core) HasTable(name string) (bool, error) {
-	tableList, err := c.db.Tables(c.GetCtx())
+	result, err := c.GetCache().GetOrSetFuncLock(
+		c.GetCtx(),
+		fmt.Sprintf(`HasTable: %s`, name),
+		func(ctx context.Context) (interface{}, error) {
+			tableList, err := c.db.Tables(ctx)
+			if err != nil {
+				return false, err
+			}
+			for _, table := range tableList {
+				if table == name {
+					return true, nil
+				}
+			}
+			return false, nil
+		}, 0,
+	)
 	if err != nil {
 		return false, err
 	}
-	for _, table := range tableList {
-		if table == name {
-			return true, nil
-		}
-	}
-	return false, nil
+	return result.Bool(), nil
 }
 
 // isSoftCreatedFieldName checks and returns whether given filed name is an automatic-filled created time.

@@ -13,6 +13,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -36,7 +37,8 @@ func MustEncrypt(data interface{}) string {
 // EncryptBytes encrypts `data` using MD5 algorithms.
 func EncryptBytes(data []byte) (encrypt string, err error) {
 	h := md5.New()
-	if _, err = h.Write([]byte(data)); err != nil {
+	if _, err = h.Write(data); err != nil {
+		err = gerror.Wrap(err, `hash.Write failed`)
 		return "", err
 	}
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
@@ -52,7 +54,7 @@ func MustEncryptBytes(data []byte) string {
 	return result
 }
 
-// EncryptBytes encrypts string `data` using MD5 algorithms.
+// EncryptString encrypts string `data` using MD5 algorithms.
 func EncryptString(data string) (encrypt string, err error) {
 	return EncryptBytes([]byte(data))
 }
@@ -71,12 +73,14 @@ func MustEncryptString(data string) string {
 func EncryptFile(path string) (encrypt string, err error) {
 	f, err := os.Open(path)
 	if err != nil {
+		err = gerror.Wrapf(err, `os.Open failed for name "%s"`, path)
 		return "", err
 	}
 	defer f.Close()
 	h := md5.New()
 	_, err = io.Copy(h, f)
 	if err != nil {
+		err = gerror.Wrap(err, `io.Copy failed`)
 		return "", err
 	}
 	return fmt.Sprintf("%x", h.Sum(nil)), nil

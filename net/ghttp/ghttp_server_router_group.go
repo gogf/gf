@@ -262,7 +262,7 @@ func (g *RouterGroup) Middleware(handlers ...HandlerFunc) *RouterGroup {
 
 // preBindToLocalArray adds the route registering parameters to internal variable array for lazily registering feature.
 func (g *RouterGroup) preBindToLocalArray(bindType string, pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	_, file, line := gdebug.CallerWithFilter(stackFilterKey)
+	_, file, line := gdebug.CallerWithFilter([]string{utils.StackFilterKeyForGoFrame})
 	preBindItems = append(preBindItems, &preBindItem{
 		group:    g,
 		bindType: bindType,
@@ -299,7 +299,7 @@ func (g *RouterGroup) doBindRoutersToServer(ctx context.Context, item *preBindIt
 	if len(prefix) > 0 {
 		domain, method, path, err := g.server.parsePattern(pattern)
 		if err != nil {
-			g.server.Logger().Fatalf(ctx, "invalid pattern: %s", pattern)
+			g.server.Logger().Fatalf(ctx, "invalid route pattern: %s", pattern)
 		}
 		// If there is already a domain, unset the domain field in the pattern.
 		if g.domain != nil {

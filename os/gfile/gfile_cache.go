@@ -10,24 +10,32 @@ import (
 	"context"
 	"time"
 
+	"github.com/gogf/gf/v2/internal/command"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gcache"
-	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/gfsnotify"
 )
 
 const (
-	defaultCacheExpire    = time.Minute      // defaultCacheExpire is the expire time for file content caching in seconds.
+	defaultCacheExpire    = "1m"             // defaultCacheExpire is the expire time for file content caching in seconds.
 	commandEnvKeyForCache = "gf.gfile.cache" // commandEnvKeyForCache is the configuration key for command argument or environment configuring cache expire duration.
 )
 
 var (
 	// Default expire time for file content caching.
-	cacheExpire = gcmd.GetOptWithEnv(commandEnvKeyForCache, defaultCacheExpire).Duration()
+	cacheExpire = getCacheExpire()
 
 	// internalCache is the memory cache for internal usage.
 	internalCache = gcache.New()
 )
+
+func getCacheExpire() time.Duration {
+	d, err := time.ParseDuration(command.GetOptWithEnv(commandEnvKeyForCache, defaultCacheExpire))
+	if err != nil {
+		panic(err)
+	}
+	return d
+}
 
 // GetContentsWithCache returns string content of given file by `path` from cache.
 // If there's no content in the cache, it will read it from disk file specified by `path`.
@@ -49,7 +57,7 @@ func GetBytesWithCache(path string, duration ...time.Duration) []byte {
 	if len(duration) > 0 {
 		expire = duration[0]
 	}
-	r, _ := internalCache.GetOrSetFuncLock(ctx, cacheKey, func() (interface{}, error) {
+	r, _ := internalCache.GetOrSetFuncLock(ctx, cacheKey, func(ctx context.Context) (interface{}, error) {
 		b := GetBytes(path)
 		if b != nil {
 			// Adding this `path` to gfsnotify,
@@ -57,7 +65,7 @@ func GetBytesWithCache(path string, duration ...time.Duration) []byte {
 			_, _ = gfsnotify.Add(path, func(event *gfsnotify.Event) {
 				_, err := internalCache.Remove(ctx, cacheKey)
 				if err != nil {
-					intlog.Error(ctx, err)
+					intlog.Errorf(ctx, `%+v`, err)
 				}
 				gfsnotify.Exit()
 			})

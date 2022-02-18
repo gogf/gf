@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/rwmutex"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -33,14 +35,24 @@ type Json struct {
 
 // Options for Json object creating.
 type Options struct {
-	Safe      bool   // Mark this object is for in concurrent-safe usage.
-	Tags      string // Custom priority tags for decoding.
+	Safe      bool   // Mark this object is for in concurrent-safe usage. This is especially for Json object creating.
+	Tags      string // Custom priority tags for decoding. Eg: "json,yaml,MyTag". This is especially for struct parsing into Json object.
 	StrNumber bool   // StrNumber causes the Decoder to unmarshal a number into an interface{} as a string instead of as a float64.
 }
 
-// iInterface is used for type assert api for Interface().
-type iInterface interface {
-	Interface() interface{}
+// iInterfaces is used for type assert api for Interfaces().
+type iInterfaces interface {
+	Interfaces() []interface{}
+}
+
+// iMapStrAny is the interface support for converting struct parameter to map.
+type iMapStrAny interface {
+	MapStrAny() map[string]interface{}
+}
+
+// iVal is the interface for underlying interface{} retrieving.
+type iVal interface {
+	Val() interface{}
 }
 
 // setValue sets `value` to `j` by `pattern`.
@@ -48,16 +60,14 @@ type iInterface interface {
 // 1. If value is nil and removed is true, means deleting this value;
 // 2. It's quite complicated in hierarchical data search, node creating and data assignment;
 func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
-	if value != nil {
-		if utils.IsStruct(value) {
-			if v, ok := value.(iInterface); ok {
-				value = v.Interface()
-			}
-		}
+	var (
+		err    error
+		array  = strings.Split(pattern, string(j.c))
+		length = len(array)
+	)
+	if value, err = j.convertValue(value); err != nil {
+		return err
 	}
-	array := strings.Split(pattern, string(j.c))
-	length := len(array)
-	value = j.convertValue(value)
 	// Initialization checks.
 	if *j.p == nil {
 		if gstr.IsNumeric(array[0]) {
@@ -66,8 +76,10 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 			*j.p = make(map[string]interface{})
 		}
 	}
-	var pparent *interface{} = nil // Parent pointer.
-	var pointer *interface{} = j.p // Current pointer.
+	var (
+		pparent *interface{} = nil // Parent pointer.
+		pointer *interface{} = j.p // Current pointer.
+	)
 	j.mu.Lock()
 	defer j.mu.Unlock()
 	for i := 0; i < length; i++ {
@@ -121,6 +133,7 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 			// Numeric index.
 			valueNum, err := strconv.Atoi(array[i])
 			if err != nil {
+				err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `strconv.Atoi failed for string "%s"`, array[i])
 				return err
 			}
 
@@ -252,30 +265,51 @@ done:
 
 // convertValue converts `value` to map[string]interface{} or []interface{},
 // which can be supported for hierarchical data access.
-func (j *Json) convertValue(value interface{}) interface{} {
+func (j *Json) convertValue(value interface{}) (convertedValue interface{}, err error) {
+	if value == nil {
+		return
+	}
+
 	switch value.(type) {
 	case map[string]interface{}:
-		return value
+		return value, nil
+
 	case []interface{}:
-		return value
+		return value, nil
+
 	default:
 		var (
 			reflectInfo = utils.OriginValueAndKind(value)
 		)
 		switch reflectInfo.OriginKind {
 		case reflect.Array:
-			return gconv.Interfaces(value)
+			return gconv.Interfaces(value), nil
+
 		case reflect.Slice:
-			return gconv.Interfaces(value)
+			return gconv.Interfaces(value), nil
+
 		case reflect.Map:
-			return gconv.Map(value)
+			return gconv.Map(value), nil
+
 		case reflect.Struct:
-			return gconv.Map(value)
+			if v, ok := value.(iMapStrAny); ok {
+				convertedValue = v.MapStrAny()
+			}
+			if utils.IsNil(convertedValue) {
+				if v, ok := value.(iInterfaces); ok {
+					convertedValue = v.Interfaces()
+				}
+			}
+			if utils.IsNil(convertedValue) {
+				convertedValue = gconv.Map(value)
+			}
+			if utils.IsNil(convertedValue) {
+				err = gerror.NewCodef(gcode.CodeInvalidParameter, `unsupported value type "%s"`, reflect.TypeOf(value))
+			}
+			return
+
 		default:
-			// Use json decode/encode at last.
-			b, _ := Encode(value)
-			v, _ := Decode(b)
-			return v
+			return value, nil
 		}
 	}
 }

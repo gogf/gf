@@ -205,7 +205,7 @@ func (sp *SPath) Search(name string, indexFiles ...string) (filePath string, isD
 				name = ""
 			}
 			for _, file := range indexFiles {
-				if v := sp.cache.Get(name + "/" + file); v != "" {
+				if v = sp.cache.Get(name + "/" + file); v != "" {
 					return sp.parseCacheValue(v)
 				}
 			}

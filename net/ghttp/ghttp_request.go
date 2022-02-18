@@ -53,7 +53,7 @@ type Request struct {
 	formMap         map[string]interface{} // Form parameters map, which is nil if there's no form data from client.
 	bodyMap         map[string]interface{} // Body parameters map, which might be nil if there're no body content.
 	error           error                  // Current executing error of the request.
-	exit            bool                   // A bool marking whether current request is exited.
+	exitAll         bool                   // A bool marking whether current request is exited.
 	parsedHost      string                 // The parsed host name for current host used by GetHost function.
 	clientIp        string                 // The parsed client ip for current host used by GetClientIp function.
 	bodyContent     []byte                 // Request body content.
@@ -139,7 +139,7 @@ func (r *Request) Exit() {
 
 // ExitAll exits executing of current and following HTTP handlers.
 func (r *Request) ExitAll() {
-	r.exit = true
+	r.exitAll = true
 	panic(exceptionExitAll)
 }
 
@@ -150,7 +150,7 @@ func (r *Request) ExitHook() {
 
 // IsExited checks and returns whether current request is exited.
 func (r *Request) IsExited() bool {
-	return r.exit
+	return r.exitAll
 }
 
 // GetHeader retrieves and returns the header value with given `key`.
@@ -216,7 +216,7 @@ func (r *Request) GetClientIp() string {
 func (r *Request) GetRemoteIp() string {
 	array, _ := gregex.MatchString(`(.+):(\d+)`, r.RemoteAddr)
 	if len(array) > 1 {
-		return array[1]
+		return strings.Trim(array[1], "[]")
 	}
 	return r.RemoteAddr
 }
@@ -248,6 +248,11 @@ func (r *Request) GetReferer() string {
 // It returns nil if there's no error.
 func (r *Request) GetError() error {
 	return r.error
+}
+
+// SetError sets custom error for current request.
+func (r *Request) SetError(err error) {
+	r.error = err
 }
 
 // ReloadParam is used for modifying request parameter.

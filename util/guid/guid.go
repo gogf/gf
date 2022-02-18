@@ -38,7 +38,7 @@ func init() {
 			macAddrBytes = append(macAddrBytes, []byte(mac)...)
 		}
 		b := []byte{'0', '0', '0', '0', '0', '0', '0'}
-		s := strconv.FormatUint(uint64(ghash.DJBHash(macAddrBytes)), 36)
+		s := strconv.FormatUint(uint64(ghash.DJB(macAddrBytes)), 36)
 		copy(b, s)
 		macAddrStr = string(b)
 	}
@@ -124,7 +124,7 @@ func getRandomStr(n int) []byte {
 // getDataHashStr creates and returns hash bytes in 7 bytes with given data bytes.
 func getDataHashStr(data []byte) []byte {
 	b := []byte{'0', '0', '0', '0', '0', '0', '0'}
-	s := strconv.FormatUint(uint64(ghash.DJBHash(data)), 36)
+	s := strconv.FormatUint(uint64(ghash.DJB(data)), 36)
 	copy(b, s)
 	return b
 }

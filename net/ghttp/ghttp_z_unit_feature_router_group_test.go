@@ -13,6 +13,7 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
@@ -44,7 +45,7 @@ func Handler(r *ghttp.Request) {
 }
 
 func Test_Router_GroupBasic1(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	obj := new(GroupObject)
 	// 分组路由方法注册
@@ -79,7 +80,7 @@ func Test_Router_GroupBasic1(t *testing.T) {
 }
 
 func Test_Router_GroupBuildInVar(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	obj := new(GroupObject)
 	// 分组路由方法注册
@@ -105,7 +106,7 @@ func Test_Router_GroupBuildInVar(t *testing.T) {
 }
 
 func Test_Router_Group_Methods(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	obj := new(GroupObject)
 	group := s.Group("/")
@@ -125,8 +126,8 @@ func Test_Router_Group_Methods(t *testing.T) {
 }
 
 func Test_Router_Group_MultiServer(t *testing.T) {
-	p1, _ := ports.PopRand()
-	p2, _ := ports.PopRand()
+	p1, _ := gtcp.GetFreePort()
+	p2, _ := gtcp.GetFreePort()
 	s1 := g.Server(p1)
 	s2 := g.Server(p2)
 	s1.Group("/", func(group *ghttp.RouterGroup) {
@@ -166,7 +167,7 @@ func Test_Router_Group_Map(t *testing.T) {
 	testFuncPost := func(r *ghttp.Request) {
 		r.Response.Write("post")
 	}
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Map(map[string]interface{}{
@@ -186,5 +187,28 @@ func Test_Router_Group_Map(t *testing.T) {
 
 		t.Assert(c.GetContent(ctx, "/test"), "get")
 		t.Assert(c.PostContent(ctx, "/test"), "post")
+	})
+}
+
+// https://github.com/gogf/gf/issues/1609
+func Test_Issue1609(t *testing.T) {
+	p, _ := gtcp.GetFreePort()
+	s := g.Server(p)
+	group := s.Group("/api/get")
+	group.GET("/", func(r *ghttp.Request) {
+		r.Response.Write("get")
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	gtest.Assert(s.Start(), nil)
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		t.Assert(c.GetContent(ctx, "/api/get"), "get")
+		t.Assert(c.PostContent(ctx, "/test"), "Not Found")
 	})
 }

@@ -45,7 +45,7 @@ var (
 //
 // The parameter `pointer` can be type of: *struct/**struct/*[]struct/*[]*struct.
 //
-// It supports single and multiple struct convertion:
+// It supports single and multiple struct converting:
 // 1. Single struct, post content like: {"id":1, "name":"john"} or ?id=1&name=john
 // 2. Multiple struct, post content like: [{"id":1, "name":"john"}, {"id":, "name":"smith"}]
 //
@@ -107,29 +107,32 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 			}
 		}
 		// Validation.
-		if err := gvalid.CheckStructWithData(r.Context(), pointer, data, nil); err != nil {
+		if err = gvalid.New().
+			Bail().
+			Data(pointer).
+			Assoc(data).
+			Run(r.Context()); err != nil {
 			return err
 		}
 
 	// Multiple struct, it only supports JSON type post content like:
 	// [{"id":1, "name":"john"}, {"id":, "name":"smith"}]
 	case reflect.Array, reflect.Slice:
-		// If struct slice conversion, it might post JSON/XML content,
+		// If struct slice conversion, it might post JSON/XML/... content,
 		// so it uses `gjson` for the conversion.
 		j, err := gjson.LoadContent(r.GetBody())
 		if err != nil {
 			return err
 		}
-		if err := j.Var().Scan(pointer); err != nil {
+		if err = j.Var().Scan(pointer); err != nil {
 			return err
 		}
 		for i := 0; i < reflectVal2.Len(); i++ {
-			if err := gvalid.CheckStructWithData(
-				r.Context(),
-				reflectVal2.Index(i),
-				j.Get(gconv.String(i)).Map(),
-				nil,
-			); err != nil {
+			if err = gvalid.New().
+				Bail().
+				Data(reflectVal2.Index(i)).
+				Assoc(j.Get(gconv.String(i)).Map()).
+				Run(r.Context()); err != nil {
 				return err
 			}
 		}
@@ -148,7 +151,11 @@ func (r *Request) Get(key string, def ...interface{}) *gvar.Var {
 // It can be called multiple times retrieving the same body content.
 func (r *Request) GetBody() []byte {
 	if r.bodyContent == nil {
-		r.bodyContent, _ = ioutil.ReadAll(r.Body)
+		var err error
+		r.bodyContent, err = ioutil.ReadAll(r.Body)
+		if err != nil {
+			panic(gerror.WrapCode(gcode.CodeInternalError, err, `ReadAll from body failed`))
+		}
 		r.Body = utils.NewReadCloser(r.bodyContent, true)
 	}
 	return r.bodyContent
@@ -194,7 +201,7 @@ func (r *Request) parseQuery() {
 		var err error
 		r.queryMap, err = gstr.Parse(r.URL.RawQuery)
 		if err != nil {
-			panic(gerror.WrapCode(gcode.CodeInvalidParameter, err, ""))
+			panic(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse Query failed"))
 		}
 	}
 }
@@ -249,12 +256,12 @@ func (r *Request) parseForm() {
 		if gstr.Contains(contentType, "multipart/") {
 			// multipart/form-data, multipart/mixed
 			if err = r.ParseMultipartForm(r.Server.config.FormParsingMemory); err != nil {
-				panic(gerror.WrapCode(gcode.CodeInvalidRequest, err, ""))
+				panic(gerror.WrapCode(gcode.CodeInvalidRequest, err, "r.ParseMultipartForm failed"))
 			}
 		} else if gstr.Contains(contentType, "form") {
 			// application/x-www-form-urlencoded
 			if err = r.Request.ParseForm(); err != nil {
-				panic(gerror.WrapCode(gcode.CodeInvalidRequest, err, ""))
+				panic(gerror.WrapCode(gcode.CodeInvalidRequest, err, "r.Request.ParseForm failed"))
 			}
 		}
 		if len(r.PostForm) > 0 {
@@ -297,7 +304,7 @@ func (r *Request) parseForm() {
 			}
 			if params != "" {
 				if r.formMap, err = gstr.Parse(params); err != nil {
-					panic(gerror.WrapCode(gcode.CodeInvalidParameter, err, ""))
+					panic(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse request parameters failed"))
 				}
 			}
 		}

@@ -17,6 +17,9 @@ import (
 
 // Interface returns the json value.
 func (j *Json) Interface() interface{} {
+	if j == nil {
+		return nil
+	}
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	return *(j.p)
@@ -29,6 +32,9 @@ func (j *Json) Var() *gvar.Var {
 
 // IsNil checks whether the value pointed by `j` is nil.
 func (j *Json) IsNil() bool {
+	if j == nil {
+		return true
+	}
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	return j.p == nil || *(j.p) == nil
@@ -43,6 +49,9 @@ func (j *Json) IsNil() bool {
 //
 // It returns a default value specified by `def` if value for `pattern` is not found.
 func (j *Json) Get(pattern string, def ...interface{}) *gvar.Var {
+	if j == nil {
+		return nil
+	}
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 
@@ -106,10 +115,24 @@ func (j *Json) Set(pattern string, value interface{}) error {
 	return j.setValue(pattern, value, false)
 }
 
+// MustSet performs as Set, but it panics if any error occurs.
+func (j *Json) MustSet(pattern string, value interface{}) {
+	if err := j.Set(pattern, value); err != nil {
+		panic(err)
+	}
+}
+
 // Remove deletes value with specified `pattern`.
 // It supports hierarchical data access by char separator, which is '.' in default.
 func (j *Json) Remove(pattern string) error {
 	return j.setValue(pattern, nil, true)
+}
+
+// MustRemove performs as Remove, but it panics if any error occurs.
+func (j *Json) MustRemove(pattern string) {
+	if err := j.Remove(pattern); err != nil {
+		panic(err)
+	}
 }
 
 // Contains checks whether the value by specified `pattern` exist.
@@ -155,6 +178,13 @@ func (j *Json) Append(pattern string, value interface{}) error {
 	return gerror.NewCodef(gcode.CodeInvalidParameter, "invalid variable type of %s", pattern)
 }
 
+// MustAppend performs as Append, but it panics if any error occurs.
+func (j *Json) MustAppend(pattern string, value interface{}) {
+	if err := j.Append(pattern, value); err != nil {
+		panic(err)
+	}
+}
+
 // Map converts current Json object to map[string]interface{}.
 // It returns nil if fails.
 func (j *Json) Map() map[string]interface{} {
@@ -175,6 +205,9 @@ func (j *Json) Scan(pointer interface{}, mapping ...map[string]string) error {
 
 // Dump prints current Json object with more manually readable.
 func (j *Json) Dump() {
+	if j == nil {
+		return
+	}
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	gutil.Dump(*j.p)

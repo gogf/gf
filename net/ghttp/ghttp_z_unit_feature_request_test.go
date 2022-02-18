@@ -16,6 +16,7 @@ import (
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
@@ -26,7 +27,7 @@ func Test_Params_Basic(t *testing.T) {
 		Pass1 string `params:"password1"`
 		Pass2 string `params:"password2"`
 	}
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	// GET
 	s.BindHandler("/get", func(r *ghttp.Request) {
@@ -361,7 +362,7 @@ func Test_Params_Basic(t *testing.T) {
 }
 
 func Test_Params_Header(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/header", func(r *ghttp.Request) {
 		r.Response.Write(r.GetHeader("test"))
@@ -382,7 +383,7 @@ func Test_Params_Header(t *testing.T) {
 }
 
 func Test_Params_SupportChars(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/form-value", func(r *ghttp.Request) {
 		r.Response.Write(r.GetForm("test-value"))
@@ -405,7 +406,7 @@ func Test_Params_SupportChars(t *testing.T) {
 }
 
 func Test_Params_Priority(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/query", func(r *ghttp.Request) {
 		r.Response.Write(r.GetQuery("a"))
@@ -442,7 +443,7 @@ func Test_Params_Priority(t *testing.T) {
 }
 
 func Test_Params_GetRequestMap(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/map", func(r *ghttp.Request) {
 		r.Response.Write(r.GetRequestMap())
@@ -469,7 +470,7 @@ func Test_Params_GetRequestMap(t *testing.T) {
 }
 
 func Test_Params_Modify(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/param/modify", func(r *ghttp.Request) {
 		param := r.GetMap()
@@ -509,7 +510,7 @@ func Test_Params_Parse_DefaultValueTag(t *testing.T) {
 		Name  string  `d:"john"`
 		Score float32 `d:"60"`
 	}
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/parse", func(r *ghttp.Request) {
 		var t *T
@@ -542,7 +543,7 @@ func Test_Params_Parse_Validation(t *testing.T) {
 		Pass2 string `p:"password2" v:"required|length:6,30|same:password1#请确认密码|密码长度不够|两次密码不一致"`
 	}
 
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/parse", func(r *ghttp.Request) {
 		var req *RegisterReq
@@ -563,8 +564,8 @@ func Test_Params_Parse_Validation(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(prefix)
 
-		t.Assert(client.GetContent(ctx, "/parse"), `请输入账号; 账号长度为6到30位; 请输入密码; 密码长度不够; 请确认密码; 密码长度不够; 两次密码不一致`)
-		t.Assert(client.GetContent(ctx, "/parse?name=john11&password1=123456&password2=123"), `密码长度不够; 两次密码不一致`)
+		t.Assert(client.GetContent(ctx, "/parse"), `请输入账号`)
+		t.Assert(client.GetContent(ctx, "/parse?name=john11&password1=123456&password2=123"), `密码长度不够`)
 		t.Assert(client.GetContent(ctx, "/parse?name=john&password1=123456&password2=123456"), `账号长度为6到30位`)
 		t.Assert(client.GetContent(ctx, "/parse?name=john11&password1=123456&password2=123456"), `ok`)
 	})
@@ -588,7 +589,7 @@ func Test_Params_Parse_EmbeddedWithAliasName1(t *testing.T) {
 		Size       int  `d:"10" v:"max:50#分页数量最大50条"`
 	}
 
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/parse", func(r *ghttp.Request) {
 		var req *ContentGetListReq
@@ -631,7 +632,7 @@ func Test_Params_Parse_EmbeddedWithAliasName2(t *testing.T) {
 		Size       int  `d:"10" v:"max:50#分页数量最大50条"`
 	}
 
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/parse", func(r *ghttp.Request) {
 		var req *ContentGetListReq

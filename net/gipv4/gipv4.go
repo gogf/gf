@@ -11,9 +11,10 @@ package gipv4
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/gogf/gf/v2/text/gregex"
 	"net"
 	"strconv"
+
+	"github.com/gogf/gf/v2/text/gregex"
 )
 
 // Ip2long converts ip address to an uint32 integer.

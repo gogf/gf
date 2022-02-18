@@ -7,6 +7,7 @@
 package utils
 
 import (
+	"bytes"
 	"strings"
 )
 
@@ -49,7 +50,10 @@ func IsLetter(b byte) bool {
 // IsNumeric checks whether the given string s is numeric.
 // Note that float string like "123.456" is also numeric.
 func IsNumeric(s string) bool {
-	length := len(s)
+	var (
+		dotCount = 0
+		length   = len(s)
+	)
 	if length == 0 {
 		return false
 	}
@@ -58,6 +62,7 @@ func IsNumeric(s string) bool {
 			continue
 		}
 		if s[i] == '.' {
+			dotCount++
 			if i > 0 && i < len(s)-1 {
 				continue
 			} else {
@@ -67,6 +72,9 @@ func IsNumeric(s string) bool {
 		if s[i] < '0' || s[i] > '9' {
 			return false
 		}
+	}
+	if dotCount > 1 {
+		return false
 	}
 	return true
 }
@@ -140,4 +148,22 @@ func FormatCmdKey(s string) string {
 // FormatEnvKey formats string `s` as environment key using uniformed format.
 func FormatEnvKey(s string) string {
 	return strings.ToUpper(strings.Replace(s, ".", "_", -1))
+}
+
+// StripSlashes un-quotes a quoted string by AddSlashes.
+func StripSlashes(str string) string {
+	var buf bytes.Buffer
+	l, skip := len(str), false
+	for i, char := range str {
+		if skip {
+			skip = false
+		} else if char == '\\' {
+			if i+1 < l && str[i+1] == '\\' {
+				skip = true
+			}
+			continue
+		}
+		buf.WriteRune(char)
+	}
+	return buf.String()
 }

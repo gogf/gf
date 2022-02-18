@@ -9,7 +9,6 @@ package goai
 import (
 	"reflect"
 
-	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -34,7 +33,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 	)
 	if len(tagMap) > 0 {
 		if err := gconv.Struct(oai.fileMapWithShortTags(tagMap), schema); err != nil {
-			return nil, gerror.WrapCode(gcode.CodeInternalError, err, `mapping struct tags to Schema failed`)
+			return nil, gerror.Wrap(err, `mapping struct tags to Schema failed`)
 		}
 	}
 	schemaRef.Value = schema

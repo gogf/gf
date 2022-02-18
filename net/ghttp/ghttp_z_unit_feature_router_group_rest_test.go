@@ -4,7 +4,6 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// 分组路由测试
 package ghttp_test
 
 import (
@@ -14,6 +13,7 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
@@ -56,7 +56,7 @@ func (o *GroupObjRest) Head(r *ghttp.Request) {
 }
 
 func Test_Router_GroupRest1(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	group := s.Group("/api")
 	obj := new(GroupObjRest)
@@ -102,7 +102,7 @@ func Test_Router_GroupRest1(t *testing.T) {
 }
 
 func Test_Router_GroupRest2(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.Group("/api", func(group *ghttp.RouterGroup) {
 		obj := new(GroupObjRest)

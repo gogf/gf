@@ -11,18 +11,18 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/command"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/utils"
-	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/genv"
 )
 
 // Config is the configuration management object.
 type Config struct {
 	adapter Adapter
-	dataMap *gmap.StrAnyMap
 }
 
 const (
@@ -37,7 +37,6 @@ func New() (*Config, error) {
 	}
 	return &Config{
 		adapter: adapterFile,
-		dataMap: gmap.NewStrAnyMap(true),
 	}, nil
 }
 
@@ -45,7 +44,6 @@ func New() (*Config, error) {
 func NewWithAdapter(adapter Adapter) *Config {
 	return &Config{
 		adapter: adapter,
-		dataMap: gmap.NewStrAnyMap(true),
 	}
 }
 
@@ -54,22 +52,25 @@ func NewWithAdapter(adapter Adapter) *Config {
 // exists in the configuration directory, it then sets it as the default configuration file. The
 // toml file type is the default configuration file type.
 func Instance(name ...string) *Config {
-	key := DefaultName
+	var (
+		ctx = context.TODO()
+		key = DefaultName
+	)
 	if len(name) > 0 && name[0] != "" {
 		key = name[0]
 	}
 	return localInstances.GetOrSetFuncLock(key, func() interface{} {
 		adapter, err := NewAdapterFile()
 		if err != nil {
-			intlog.Error(context.Background(), err)
+			intlog.Errorf(context.Background(), `%+v`, err)
 			return nil
 		}
 		// If it's not using default configuration or its configuration file is not available,
 		// it searches the possible configuration file according to the name and all supported
 		// file types.
-		if key != DefaultName || !adapter.Available() {
+		if key != DefaultName || !adapter.Available(ctx) {
 			for _, fileType := range supportedFileTypes {
-				if file := fmt.Sprintf(`%s.%s`, key, fileType); adapter.Available(file) {
+				if file := fmt.Sprintf(`%s.%s`, key, fileType); adapter.Available(ctx, file) {
 					adapter.SetFileName(file)
 					break
 				}
@@ -89,11 +90,13 @@ func (c *Config) GetAdapter() Adapter {
 	return c.adapter
 }
 
-// Set sets value with specified `pattern`.
-// It supports hierarchical data access by char separator, which is '.' in default.
-// It is commonly used for updates certain configuration value in runtime.
-func (c *Config) Set(ctx context.Context, pattern string, value interface{}) {
-	c.dataMap.Set(pattern, value)
+// Available checks and returns the configuration service is available.
+// The optional parameter `pattern` specifies certain configuration resource.
+//
+// It returns true if configuration file is present in default AdapterFile, or else false.
+// Note that this function does not return error as it just does simply check for backend configuration service.
+func (c *Config) Available(ctx context.Context, resource ...string) (ok bool) {
+	return c.adapter.Available(ctx, resource...)
 }
 
 // Get retrieves and returns value by specified `pattern`.
@@ -106,17 +109,15 @@ func (c *Config) Get(ctx context.Context, pattern string, def ...interface{}) (*
 		err   error
 		value interface{}
 	)
-	if value = c.dataMap.Get(pattern); value == nil {
-		value, err = c.adapter.Get(ctx, pattern)
-		if err != nil {
-			return nil, err
+	value, err = c.adapter.Get(ctx, pattern)
+	if err != nil {
+		return nil, err
+	}
+	if value == nil {
+		if len(def) > 0 {
+			return gvar.New(def[0]), nil
 		}
-		if value == nil {
-			if len(def) > 0 {
-				return gvar.New(def[0]), nil
-			}
-			return nil, nil
-		}
+		return nil, nil
 	}
 	return gvar.New(value), nil
 }
@@ -128,7 +129,7 @@ func (c *Config) Get(ctx context.Context, pattern string, def ...interface{}) (*
 // Fetching Rules: Environment arguments are in uppercase format, eg: GF_PACKAGE_VARIABLE.
 func (c *Config) GetWithEnv(ctx context.Context, pattern string, def ...interface{}) (*gvar.Var, error) {
 	value, err := c.Get(ctx, pattern)
-	if err != nil {
+	if err != nil && gerror.Code(err) != gcode.CodeNotFound {
 		return nil, err
 	}
 	if value == nil {
@@ -150,12 +151,12 @@ func (c *Config) GetWithEnv(ctx context.Context, pattern string, def ...interfac
 // Fetching Rules: Command line arguments are in lowercase format, eg: gf.package.variable.
 func (c *Config) GetWithCmd(ctx context.Context, pattern string, def ...interface{}) (*gvar.Var, error) {
 	value, err := c.Get(ctx, pattern)
-	if err != nil {
+	if err != nil && gerror.Code(err) != gcode.CodeNotFound {
 		return nil, err
 	}
 	if value == nil {
-		if v := gcmd.GetOpt(utils.FormatCmdKey(pattern)); v != nil {
-			return v, nil
+		if v := command.GetOpt(utils.FormatCmdKey(pattern)); v != "" {
+			return gvar.New(v), nil
 		}
 		if len(def) > 0 {
 			return gvar.New(def[0]), nil
@@ -167,19 +168,7 @@ func (c *Config) GetWithCmd(ctx context.Context, pattern string, def ...interfac
 
 // Data retrieves and returns all configuration data as map type.
 func (c *Config) Data(ctx context.Context) (data map[string]interface{}, err error) {
-	adapterData, err := c.adapter.Data(ctx)
-	if err != nil {
-		return nil, err
-	}
-	data = make(map[string]interface{})
-	for k, v := range adapterData {
-		data[k] = v
-	}
-	c.dataMap.Iterator(func(k string, v interface{}) bool {
-		data[k] = v
-		return true
-	})
-	return
+	return c.adapter.Data(ctx)
 }
 
 // MustGet acts as function Get, but it panics if error occurs.

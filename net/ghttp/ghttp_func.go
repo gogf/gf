@@ -9,7 +9,7 @@ package ghttp
 import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/net/ghttp/internal/httputil"
+	"github.com/gogf/gf/v2/internal/httputil"
 )
 
 // BuildParams builds the request string for the http client. The `params` can be type of:
@@ -32,20 +32,24 @@ func niceCallFunc(f func()) {
 				if v, ok := exception.(error); ok && gerror.HasStack(v) {
 					// It's already an error that has stack info.
 					panic(v)
-				} else {
-					// Create a new error with stack info.
-					// Note that there's a skip pointing the start stacktrace
-					// of the real error point.
-					if v, ok := exception.(error); ok {
-						if gerror.Code(v) != gcode.CodeNil {
-							panic(v)
-						} else {
-							panic(gerror.WrapCodeSkip(gcode.CodeInternalError, 1, v, ""))
-						}
-					} else {
-						panic(gerror.NewCodeSkipf(gcode.CodeInternalError, 1, "%+v", exception))
-					}
 				}
+				// Create a new error with stack info.
+				// Note that there's a skip pointing the start stacktrace
+				// of the real error point.
+				if v, ok := exception.(error); ok {
+					if gerror.Code(v) != gcode.CodeNil {
+						panic(v)
+					} else {
+						panic(gerror.WrapCodeSkip(
+							gcode.CodeInternalError, 1, v, "exception recovered",
+						))
+					}
+				} else {
+					panic(gerror.NewCodeSkipf(
+						gcode.CodeInternalError, 1, "exception recovered: %+v", exception,
+					))
+				}
+
 			}
 		}
 	}()

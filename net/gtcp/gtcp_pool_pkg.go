@@ -43,10 +43,10 @@ func (c *PoolConn) RecvPkg(option ...PkgOption) ([]byte, error) {
 
 // RecvPkgWithTimeout reads data from connection with timeout using simple package protocol.
 func (c *PoolConn) RecvPkgWithTimeout(timeout time.Duration, option ...PkgOption) (data []byte, err error) {
-	if err := c.SetreceiveDeadline(time.Now().Add(timeout)); err != nil {
+	if err := c.SetReceiveDeadline(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer c.SetreceiveDeadline(time.Time{})
+	defer c.SetReceiveDeadline(time.Time{})
 	data, err = c.RecvPkg(option...)
 	return
 }

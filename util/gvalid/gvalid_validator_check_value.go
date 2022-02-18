@@ -9,6 +9,7 @@ package gvalid
 import (
 	"context"
 	"errors"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -17,6 +18,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/net/gipv4"
 	"github.com/gogf/gf/v2/net/gipv6"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -31,32 +33,19 @@ type iTime interface {
 	IsZero() bool
 }
 
-// CheckValue checks single value with specified rules.
-// It returns nil if successful validation.
-func (v *Validator) CheckValue(ctx context.Context, value interface{}) Error {
-	return v.doCheckValue(ctx, doCheckValueInput{
-		Name:     "",
-		Value:    value,
-		Rule:     gconv.String(v.rules),
-		Messages: v.messages,
-		DataRaw:  v.data,
-		DataMap:  gconv.Map(v.data),
-	})
-}
-
 type doCheckValueInput struct {
 	Name     string                 // Name specifies the name of parameter `value`.
-	Value    interface{}            // Value specifies the value for this rules to be validated.
+	Value    interface{}            // Value specifies the value for the rules to be validated.
 	Rule     string                 // Rule specifies the validation rules string, like "required", "required|between:1,100", etc.
-	Messages interface{}            // Messages specifies the custom error messages for this rule, which is usually type of map/slice.
+	Messages interface{}            // Messages specifies the custom error messages for this rule from parameters input, which is usually type of map/slice.
 	DataRaw  interface{}            // DataRaw specifies the `raw data` which is passed to the Validator. It might be type of map/struct or a nil value.
 	DataMap  map[string]interface{} // DataMap specifies the map that is converted from `dataRaw`. It is usually used internally
 }
 
 // doCheckSingleValue does the really rules validation for single key-value.
-func (v *Validator) doCheckValue(ctx context.Context, input doCheckValueInput) Error {
+func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Error {
 	// If there's no validation rules, it does nothing and returns quickly.
-	if input.Rule == "" {
+	if in.Rule == "" {
 		return nil
 	}
 	// It converts value to string and then does the validation.
@@ -69,17 +58,18 @@ func (v *Validator) doCheckValue(ctx context.Context, input doCheckValueInput) E
 		msgArray     = make([]string, 0)
 		customMsgMap = make(map[string]string)
 	)
-	switch messages := input.Messages.(type) {
+	switch messages := in.Messages.(type) {
 	case string:
 		msgArray = strings.Split(messages, "|")
+
 	default:
-		for k, message := range gconv.Map(input.Messages) {
+		for k, message := range gconv.Map(in.Messages) {
 			customMsgMap[k] = gconv.String(message)
 		}
 	}
 	// Handle the char '|' in the rule,
 	// which makes this rule separated into multiple rules.
-	ruleItems := strings.Split(strings.TrimSpace(input.Rule), "|")
+	ruleItems := strings.Split(strings.TrimSpace(in.Rule), "|")
 	for i := 0; ; {
 		array := strings.Split(ruleItems[i], ":")
 		_, ok := allSupportedRules[array[0]]
@@ -90,7 +80,7 @@ func (v *Validator) doCheckValue(ctx context.Context, input doCheckValueInput) E
 			} else {
 				return newValidationErrorByStr(
 					internalRulesErrRuleName,
-					errors.New(internalRulesErrRuleName+": "+input.Rule),
+					errors.New(internalRulesErrRuleName+": "+ruleItems[i]),
 				)
 			}
 		} else {
@@ -101,7 +91,8 @@ func (v *Validator) doCheckValue(ctx context.Context, input doCheckValueInput) E
 		}
 	}
 	var (
-		hasBailRule = false
+		hasBailRule        = v.bail
+		hasCaseInsensitive = v.caseInsensitive
 	)
 	for index := 0; index < len(ruleItems); {
 		var (
@@ -113,8 +104,12 @@ func (v *Validator) doCheckValue(ctx context.Context, input doCheckValueInput) E
 			customRuleFunc RuleFunc
 		)
 
-		if !hasBailRule && ruleKey == bailRuleName {
+		if !hasBailRule && ruleKey == ruleNameBail {
 			hasBailRule = true
+		}
+
+		if !hasCaseInsensitive && ruleKey == ruleNameCi {
+			hasCaseInsensitive = true
 		}
 
 		// Ignore logic executing for marked rules.
@@ -127,7 +122,9 @@ func (v *Validator) doCheckValue(ctx context.Context, input doCheckValueInput) E
 			customMsgMap[ruleKey] = strings.TrimSpace(msgArray[index])
 		}
 
-		// Custom rule handling.
+		// ===========================================================================================
+		// Custom rule handling
+		// ===========================================================================================
 		// 1. It firstly checks and uses the custom registered rules functions in the current Validator.
 		// 2. It secondly checks and uses the globally registered rules functions.
 		// 3. It finally checks and uses the build-in rules functions.
@@ -138,8 +135,8 @@ func (v *Validator) doCheckValue(ctx context.Context, input doCheckValueInput) E
 			if err = customRuleFunc(ctx, RuleFuncInput{
 				Rule:    ruleItems[index],
 				Message: message,
-				Value:   gvar.New(input.Value),
-				Data:    gvar.New(input.DataRaw),
+				Value:   gvar.New(in.Value),
+				Data:    gvar.New(in.DataRaw),
 			}); err != nil {
 				match = false
 				// The error should have stack info to indicate the error position.
@@ -161,13 +158,14 @@ func (v *Validator) doCheckValue(ctx context.Context, input doCheckValueInput) E
 			match, err = v.doCheckSingleBuildInRules(
 				ctx,
 				doCheckBuildInRulesInput{
-					Index:        index,
-					Value:        input.Value,
-					RuleKey:      ruleKey,
-					RulePattern:  rulePattern,
-					RuleItems:    ruleItems,
-					DataMap:      input.DataMap,
-					CustomMsgMap: customMsgMap,
+					Index:           index,
+					Value:           in.Value,
+					RuleKey:         ruleKey,
+					RulePattern:     rulePattern,
+					RuleItems:       ruleItems,
+					DataMap:         in.DataMap,
+					CustomMsgMap:    customMsgMap,
+					CaseInsensitive: hasCaseInsensitive,
 				},
 			)
 			if !match && err != nil {
@@ -187,9 +185,9 @@ func (v *Validator) doCheckValue(ctx context.Context, input doCheckValueInput) E
 			if err = ruleErrorMap[ruleKey]; !gerror.HasStack(err) {
 				var s string
 				s = gstr.ReplaceByMap(err.Error(), map[string]string{
-					"{value}":     gconv.String(input.Value),
+					"{value}":     gconv.String(in.Value),
 					"{pattern}":   rulePattern,
-					"{attribute}": input.Name,
+					"{attribute}": in.Name,
 				})
 				s, _ = gregex.ReplaceString(`\s{2,}`, ` `, s)
 				ruleErrorMap[ruleKey] = errors.New(s)
@@ -206,9 +204,9 @@ func (v *Validator) doCheckValue(ctx context.Context, input doCheckValueInput) E
 	if len(ruleErrorMap) > 0 {
 		return newValidationError(
 			gcode.CodeValidationFailed,
-			[]fieldRule{{Name: input.Name, Rule: input.Rule}},
+			[]fieldRule{{Name: in.Name, Rule: in.Rule}},
 			map[string]map[string]error{
-				input.Name: ruleErrorMap,
+				in.Name: ruleErrorMap,
 			},
 		)
 	}
@@ -216,18 +214,19 @@ func (v *Validator) doCheckValue(ctx context.Context, input doCheckValueInput) E
 }
 
 type doCheckBuildInRulesInput struct {
-	Index        int                    // Index of RuleKey in RuleItems.
-	Value        interface{}            // Value to be validated.
-	RuleKey      string                 // RuleKey is like the "max" in rule "max: 6"
-	RulePattern  string                 // RulePattern is like "6" in rule:"max:6"
-	RuleItems    []string               // RuleItems are all the rules that should be validated on single field, like: []string{"required", "min:1"}
-	DataMap      map[string]interface{} // Parameter map.
-	CustomMsgMap map[string]string      // Custom error message map.
+	Index           int                    // Index of RuleKey in RuleItems.
+	Value           interface{}            // Value to be validated.
+	RuleKey         string                 // RuleKey is like the "max" in rule "max: 6"
+	RulePattern     string                 // RulePattern is like "6" in rule:"max:6"
+	RuleItems       []string               // RuleItems are all the rules that should be validated on single field, like: []string{"required", "min:1"}
+	DataMap         map[string]interface{} // Parameter map.
+	CustomMsgMap    map[string]string      // Custom error message map.
+	CaseInsensitive bool                   // Case-Insensitive comparison.
 }
 
-func (v *Validator) doCheckSingleBuildInRules(ctx context.Context, input doCheckBuildInRulesInput) (match bool, err error) {
-	valueStr := gconv.String(input.Value)
-	switch input.RuleKey {
+func (v *Validator) doCheckSingleBuildInRules(ctx context.Context, in doCheckBuildInRulesInput) (match bool, err error) {
+	valueStr := gconv.String(in.Value)
+	switch in.RuleKey {
 	// Required rules.
 	case
 		"required",
@@ -237,7 +236,13 @@ func (v *Validator) doCheckSingleBuildInRules(ctx context.Context, input doCheck
 		"required-with-all",
 		"required-without",
 		"required-without-all":
-		match = v.checkRequired(input.Value, input.RuleKey, input.RulePattern, input.DataMap)
+		match = v.checkRequired(checkRequiredInput{
+			Value:           in.Value,
+			RuleKey:         in.RuleKey,
+			RulePattern:     in.RulePattern,
+			DataMap:         in.DataMap,
+			CaseInsensitive: in.CaseInsensitive,
+		})
 
 	// Length rules.
 	// It also supports length of unicode string.
@@ -246,7 +251,7 @@ func (v *Validator) doCheckSingleBuildInRules(ctx context.Context, input doCheck
 		"min-length",
 		"max-length",
 		"size":
-		if msg := v.checkLength(ctx, valueStr, input.RuleKey, input.RulePattern, input.CustomMsgMap); msg != "" {
+		if msg := v.checkLength(ctx, valueStr, in.RuleKey, in.RulePattern, in.CustomMsgMap); msg != "" {
 			return match, errors.New(msg)
 		} else {
 			match = true
@@ -257,7 +262,7 @@ func (v *Validator) doCheckSingleBuildInRules(ctx context.Context, input doCheck
 		"min",
 		"max",
 		"between":
-		if msg := v.checkRange(ctx, valueStr, input.RuleKey, input.RulePattern, input.CustomMsgMap); msg != "" {
+		if msg := v.checkRange(ctx, valueStr, in.RuleKey, in.RulePattern, in.CustomMsgMap); msg != "" {
 			return match, errors.New(msg)
 		} else {
 			match = true
@@ -266,27 +271,27 @@ func (v *Validator) doCheckSingleBuildInRules(ctx context.Context, input doCheck
 	// Custom regular expression.
 	case "regex":
 		// It here should check the rule as there might be special char '|' in it.
-		for i := input.Index + 1; i < len(input.RuleItems); i++ {
-			if !gregex.IsMatchString(singleRulePattern, input.RuleItems[i]) {
-				input.RulePattern += "|" + input.RuleItems[i]
-				input.Index++
+		for i := in.Index + 1; i < len(in.RuleItems); i++ {
+			if !gregex.IsMatchString(singleRulePattern, in.RuleItems[i]) {
+				in.RulePattern += "|" + in.RuleItems[i]
+				in.Index++
 			}
 		}
-		match = gregex.IsMatchString(input.RulePattern, valueStr)
+		match = gregex.IsMatchString(in.RulePattern, valueStr)
 
 	// Date rules.
 	case "date":
 		// support for time value, eg: gtime.Time/*gtime.Time, time.Time/*time.Time.
-		if v, ok := input.Value.(iTime); ok {
-			return !v.IsZero(), nil
+		if value, ok := in.Value.(iTime); ok {
+			return !value.IsZero(), nil
 		}
 		match = gregex.IsMatchString(`\d{4}[\.\-\_/]{0,1}\d{2}[\.\-\_/]{0,1}\d{2}`, valueStr)
 
 	// Datetime rule.
 	case "datetime":
 		// support for time value, eg: gtime.Time/*gtime.Time, time.Time/*time.Time.
-		if v, ok := input.Value.(iTime); ok {
-			return !v.IsZero(), nil
+		if value, ok := in.Value.(iTime); ok {
+			return !value.IsZero(), nil
 		}
 		if _, err = gtime.StrToTimeFormat(valueStr, `Y-m-d H:i:s`); err == nil {
 			match = true
@@ -295,54 +300,61 @@ func (v *Validator) doCheckSingleBuildInRules(ctx context.Context, input doCheck
 	// Date rule with specified format.
 	case "date-format":
 		// support for time value, eg: gtime.Time/*gtime.Time, time.Time/*time.Time.
-		if v, ok := input.Value.(iTime); ok {
-			return !v.IsZero(), nil
+		if value, ok := in.Value.(iTime); ok {
+			return !value.IsZero(), nil
 		}
-		if _, err = gtime.StrToTimeFormat(valueStr, input.RulePattern); err == nil {
+		if _, err = gtime.StrToTimeFormat(valueStr, in.RulePattern); err == nil {
 			match = true
 		} else {
 			var (
 				msg string
 			)
-			msg = v.getErrorMessageByRule(ctx, input.RuleKey, input.CustomMsgMap)
+			msg = v.getErrorMessageByRule(ctx, in.RuleKey, in.CustomMsgMap)
 			return match, errors.New(msg)
 		}
 
 	// Values of two fields should be equal as string.
 	case "same":
-		_, foundValue := gutil.MapPossibleItemByKey(input.DataMap, input.RulePattern)
+		_, foundValue := gutil.MapPossibleItemByKey(in.DataMap, in.RulePattern)
 		if foundValue != nil {
-			if strings.Compare(valueStr, gconv.String(foundValue)) == 0 {
-				match = true
+			if in.CaseInsensitive {
+				match = strings.EqualFold(valueStr, gconv.String(foundValue))
+			} else {
+				match = strings.Compare(valueStr, gconv.String(foundValue)) == 0
 			}
 		}
 		if !match {
 			var msg string
-			msg = v.getErrorMessageByRule(ctx, input.RuleKey, input.CustomMsgMap)
+			msg = v.getErrorMessageByRule(ctx, in.RuleKey, in.CustomMsgMap)
 			return match, errors.New(msg)
 		}
 
 	// Values of two fields should not be equal as string.
 	case "different":
 		match = true
-		_, foundValue := gutil.MapPossibleItemByKey(input.DataMap, input.RulePattern)
+		_, foundValue := gutil.MapPossibleItemByKey(in.DataMap, in.RulePattern)
 		if foundValue != nil {
-			if strings.Compare(valueStr, gconv.String(foundValue)) == 0 {
-				match = false
+			if in.CaseInsensitive {
+				match = !strings.EqualFold(valueStr, gconv.String(foundValue))
+			} else {
+				match = strings.Compare(valueStr, gconv.String(foundValue)) != 0
 			}
 		}
 		if !match {
 			var msg string
-			msg = v.getErrorMessageByRule(ctx, input.RuleKey, input.CustomMsgMap)
+			msg = v.getErrorMessageByRule(ctx, in.RuleKey, in.CustomMsgMap)
 			return match, errors.New(msg)
 		}
 
 	// Field value should be in range of.
 	case "in":
-		array := gstr.SplitAndTrim(input.RulePattern, ",")
-		for _, v := range array {
-			if strings.Compare(valueStr, strings.TrimSpace(v)) == 0 {
-				match = true
+		for _, value := range gstr.SplitAndTrim(in.RulePattern, ",") {
+			if in.CaseInsensitive {
+				match = strings.EqualFold(valueStr, strings.TrimSpace(value))
+			} else {
+				match = strings.Compare(valueStr, strings.TrimSpace(value)) == 0
+			}
+			if match {
 				break
 			}
 		}
@@ -350,10 +362,13 @@ func (v *Validator) doCheckSingleBuildInRules(ctx context.Context, input doCheck
 	// Field value should not be in range of.
 	case "not-in":
 		match = true
-		array := gstr.SplitAndTrim(input.RulePattern, ",")
-		for _, v := range array {
-			if strings.Compare(valueStr, strings.TrimSpace(v)) == 0 {
-				match = false
+		for _, value := range gstr.SplitAndTrim(in.RulePattern, ",") {
+			if in.CaseInsensitive {
+				match = !strings.EqualFold(valueStr, strings.TrimSpace(value))
+			} else {
+				match = strings.Compare(valueStr, strings.TrimSpace(value)) != 0
+			}
+			if !match {
 				break
 			}
 		}
@@ -517,7 +532,73 @@ func (v *Validator) doCheckSingleBuildInRules(ctx context.Context, input doCheck
 		match = gregex.IsMatchString(`^([0-9A-Fa-f]{2}[\-:]){5}[0-9A-Fa-f]{2}$`, valueStr)
 
 	default:
-		return match, errors.New("Invalid rule name: " + input.RuleKey)
+		return match, errors.New("Invalid rule name: " + in.RuleKey)
 	}
 	return match, nil
+}
+
+type doCheckValueRecursivelyInput struct {
+	Value               interface{}
+	Type                reflect.Type
+	OriginKind          reflect.Kind
+	ErrorMaps           map[string]map[string]error
+	ResultSequenceRules *[]fieldRule
+}
+
+func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValueRecursivelyInput) {
+	switch in.OriginKind {
+	case reflect.Struct:
+		// Ignore data, rules and messages from parent.
+		validator := v.Clone()
+		validator.rules = nil
+		validator.messages = nil
+		if err := validator.Data(reflect.New(in.Type).Interface()).Assoc(in.Value).Run(ctx); err != nil {
+			// It merges the errors into single error map.
+			for k, m := range err.(*validationError).errors {
+				in.ErrorMaps[k] = m
+			}
+			if in.ResultSequenceRules != nil {
+				*in.ResultSequenceRules = append(*in.ResultSequenceRules, err.(*validationError).rules...)
+			}
+		}
+
+	case reflect.Map:
+		var (
+			dataMap = gconv.Map(in.Value)
+		)
+		for _, item := range dataMap {
+			originTypeAndKind := utils.OriginTypeAndKind(item)
+			v.doCheckValueRecursively(ctx, doCheckValueRecursivelyInput{
+				Value:               item,
+				Type:                originTypeAndKind.InputType,
+				OriginKind:          originTypeAndKind.OriginKind,
+				ErrorMaps:           in.ErrorMaps,
+				ResultSequenceRules: in.ResultSequenceRules,
+			})
+			// Bail feature.
+			if v.bail && len(in.ErrorMaps) > 0 {
+				break
+			}
+		}
+
+	case reflect.Slice, reflect.Array:
+		array := gconv.Interfaces(in.Value)
+		if len(array) == 0 {
+			return
+		}
+		for _, item := range array {
+			originTypeAndKind := utils.OriginTypeAndKind(item)
+			v.doCheckValueRecursively(ctx, doCheckValueRecursivelyInput{
+				Value:               item,
+				Type:                originTypeAndKind.InputType,
+				OriginKind:          originTypeAndKind.OriginKind,
+				ErrorMaps:           in.ErrorMaps,
+				ResultSequenceRules: in.ResultSequenceRules,
+			})
+			// Bail feature.
+			if v.bail && len(in.ErrorMaps) > 0 {
+				break
+			}
+		}
+	}
 }

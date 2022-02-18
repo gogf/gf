@@ -16,6 +16,9 @@ import (
 	"github.com/gogf/gf/v2/container/gvar"
 )
 
+// Func is the cache function that calculates and returns the value.
+type Func func(ctx context.Context) (value interface{}, err error)
+
 // Default cache object.
 var defaultCache = New()
 
@@ -53,7 +56,7 @@ func SetIfNotExist(ctx context.Context, key interface{}, value interface{}, dura
 //
 // It does not expire if `duration` == 0.
 // It deletes the `key` if `duration` < 0 or given `value` is nil.
-func SetIfNotExistFunc(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) (bool, error) {
+func SetIfNotExistFunc(ctx context.Context, key interface{}, f Func, duration time.Duration) (bool, error) {
 	return defaultCache.SetIfNotExistFunc(ctx, key, f, duration)
 }
 
@@ -65,7 +68,7 @@ func SetIfNotExistFunc(ctx context.Context, key interface{}, f func() (interface
 //
 // Note that it differs from function `SetIfNotExistFunc` is that the function `f` is executed within
 // writing mutex lock for concurrent safety purpose.
-func SetIfNotExistFuncLock(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) (bool, error) {
+func SetIfNotExistFuncLock(ctx context.Context, key interface{}, f Func, duration time.Duration) (bool, error) {
 	return defaultCache.SetIfNotExistFuncLock(ctx, key, f, duration)
 }
 
@@ -94,7 +97,7 @@ func GetOrSet(ctx context.Context, key interface{}, value interface{}, duration 
 // It does not expire if `duration` == 0.
 // It deletes the `key` if `duration` < 0 or given `value` is nil, but it does nothing
 // if `value` is a function and the function result is nil.
-func GetOrSetFunc(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) (*gvar.Var, error) {
+func GetOrSetFunc(ctx context.Context, key interface{}, f Func, duration time.Duration) (*gvar.Var, error) {
 	return defaultCache.GetOrSetFunc(ctx, key, f, duration)
 }
 
@@ -108,7 +111,7 @@ func GetOrSetFunc(ctx context.Context, key interface{}, f func() (interface{}, e
 //
 // Note that it differs from function `GetOrSetFunc` is that the function `f` is executed within
 // writing mutex lock for concurrent safety purpose.
-func GetOrSetFuncLock(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) (*gvar.Var, error) {
+func GetOrSetFuncLock(ctx context.Context, key interface{}, f Func, duration time.Duration) (*gvar.Var, error) {
 	return defaultCache.GetOrSetFuncLock(ctx, key, f, duration)
 }
 
@@ -192,12 +195,12 @@ func MustGetOrSet(ctx context.Context, key interface{}, value interface{}, durat
 }
 
 // MustGetOrSetFunc acts like GetOrSetFunc, but it panics if any error occurs.
-func MustGetOrSetFunc(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) *gvar.Var {
+func MustGetOrSetFunc(ctx context.Context, key interface{}, f Func, duration time.Duration) *gvar.Var {
 	return defaultCache.MustGetOrSet(ctx, key, f, duration)
 }
 
 // MustGetOrSetFuncLock acts like GetOrSetFuncLock, but it panics if any error occurs.
-func MustGetOrSetFuncLock(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) *gvar.Var {
+func MustGetOrSetFuncLock(ctx context.Context, key interface{}, f Func, duration time.Duration) *gvar.Var {
 	return defaultCache.MustGetOrSetFuncLock(ctx, key, f, duration)
 }
 

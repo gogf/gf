@@ -51,16 +51,16 @@ func init() {
 	}
 	AddConfigNode(DefaultGroupName, configNode)
 	// Default db.
-	if r, err := New(); err != nil {
+	if r, err := NewByGroup(); err != nil {
 		gtest.Error(err)
 	} else {
 		db = r
 	}
 	schemaTemplate := "CREATE DATABASE IF NOT EXISTS `%s` CHARACTER SET UTF8"
-	if _, err := db.Exec(ctx, fmt.Sprintf(schemaTemplate, SCHEMA)); err != nil {
+	if _, err = db.Exec(ctx, fmt.Sprintf(schemaTemplate, SCHEMA)); err != nil {
 		gtest.Error(err)
 	}
-	db.SetSchema(SCHEMA)
+	db = db.Schema(SCHEMA)
 }
 
 func dropTable(table string) {

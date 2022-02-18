@@ -8,10 +8,12 @@ package gtree
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"strings"
 
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/rwmutex"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -231,7 +233,7 @@ func (tree *BTree) Contains(key interface{}) bool {
 	return ok
 }
 
-// Remove remove the node from the tree by key.
+// doRemove removes the node from the tree by key.
 // Key should adhere to the comparator's type assertion, otherwise method panics.
 func (tree *BTree) doRemove(key interface{}) (value interface{}) {
 	node, index, found := tree.searchRecursively(tree.root, key)
@@ -259,7 +261,7 @@ func (tree *BTree) Removes(keys []interface{}) {
 	}
 }
 
-// Empty returns true if tree does not contain any nodes
+// IsEmpty returns true if tree does not contain any nodes
 func (tree *BTree) IsEmpty() bool {
 	return tree.Size() == 0
 }
@@ -346,7 +348,10 @@ func (tree *BTree) Left() *BTreeEntry {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	node := tree.left(tree.root)
-	return node.Entries[0]
+	if node != nil {
+		return node.Entries[0]
+	}
+	return nil
 }
 
 // Right returns the right-most (max) entry or nil if tree is empty.
@@ -354,7 +359,10 @@ func (tree *BTree) Right() *BTreeEntry {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	node := tree.right(tree.root)
-	return node.Entries[len(node.Entries)-1]
+	if node != nil {
+		return node.Entries[len(node.Entries)-1]
+	}
+	return nil
 }
 
 // String returns a string representation of container (for debugging purposes)
@@ -430,7 +438,9 @@ func (tree *BTree) IteratorAscFrom(key interface{}, match bool, f func(key, valu
 			tree.doIteratorAsc(node, node.Entries[index], index, f)
 		}
 	} else {
-		tree.doIteratorAsc(node, node.Entries[index], index, f)
+		if index >= 0 && index < len(node.Entries) {
+			tree.doIteratorAsc(node, node.Entries[index], index, f)
+		}
 	}
 }
 
@@ -505,7 +515,9 @@ func (tree *BTree) IteratorDescFrom(key interface{}, match bool, f func(key, val
 			tree.doIteratorDesc(node, node.Entries[index], index, f)
 		}
 	} else {
-		tree.doIteratorDesc(node, node.Entries[index], index, f)
+		if index >= 0 && index < len(node.Entries) {
+			tree.doIteratorDesc(node, node.Entries[index], index, f)
+		}
 	}
 }
 
@@ -563,8 +575,10 @@ func (tree *BTree) output(buffer *bytes.Buffer, node *BTreeNode, level int, isTa
 		}
 		if e < len(node.Entries) {
 			if _, err := buffer.WriteString(strings.Repeat("    ", level)); err != nil {
+				intlog.Errorf(context.TODO(), `%+v`, err)
 			}
 			if _, err := buffer.WriteString(fmt.Sprintf("%v", node.Entries[e].Key) + "\n"); err != nil {
+				intlog.Errorf(context.TODO(), `%+v`, err)
 			}
 		}
 	}
@@ -615,11 +629,11 @@ func (tree *BTree) middle() int {
 	return (tree.m - 1) / 2
 }
 
-// search searches only within the single node among its entries
+// search does search only within the single node among its entries
 func (tree *BTree) search(node *BTreeNode, key interface{}) (index int, found bool) {
 	low, mid, high := 0, 0, len(node.Entries)-1
 	for low <= high {
-		mid = low + int((high-low)/2)
+		mid = low + (high-low)/2
 		compare := tree.getComparator()(key, node.Entries[mid].Key)
 		switch {
 		case compare > 0:
@@ -816,7 +830,7 @@ func (tree *BTree) delete(node *BTreeNode, index int) {
 	if tree.isLeaf(node) {
 		deletedKey := node.Entries[index].Key
 		tree.deleteEntry(node, index)
-		tree.rebalance(node, deletedKey)
+		tree.reBalance(node, deletedKey)
 		if len(tree.root.Entries) == 0 {
 			tree.root = nil
 		}
@@ -829,13 +843,13 @@ func (tree *BTree) delete(node *BTreeNode, index int) {
 	node.Entries[index] = leftLargestNode.Entries[leftLargestEntryIndex]
 	deletedKey := leftLargestNode.Entries[leftLargestEntryIndex].Key
 	tree.deleteEntry(leftLargestNode, leftLargestEntryIndex)
-	tree.rebalance(leftLargestNode, deletedKey)
+	tree.reBalance(leftLargestNode, deletedKey)
 }
 
-// rebalance rebalances the tree after deletion if necessary and returns true, otherwise false.
-// Note that we first delete the entry and then call rebalance, thus the passed deleted key as reference.
-func (tree *BTree) rebalance(node *BTreeNode, deletedKey interface{}) {
-	// check if rebalancing is needed
+// reBalance reBalances the tree after deletion if necessary and returns true, otherwise false.
+// Note that we first delete the entry and then call reBalance, thus the passed deleted key as reference.
+func (tree *BTree) reBalance(node *BTreeNode, deletedKey interface{}) {
+	// check if re-balancing is needed
 	if node == nil || len(node.Entries) >= tree.minEntries() {
 		return
 	}
@@ -899,8 +913,8 @@ func (tree *BTree) rebalance(node *BTreeNode, deletedKey interface{}) {
 		return
 	}
 
-	// parent might underflow, so try to rebalance if necessary
-	tree.rebalance(node.Parent, deletedKey)
+	// parent might be underflow, so try to reBalance if necessary
+	tree.reBalance(node.Parent, deletedKey)
 }
 
 func (tree *BTree) prependChildren(fromNode *BTreeNode, toNode *BTreeNode) {
@@ -930,8 +944,8 @@ func (tree *BTree) deleteChild(node *BTreeNode, index int) {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (tree *BTree) MarshalJSON() ([]byte, error) {
-	return json.Marshal(tree.Map())
+func (tree BTree) MarshalJSON() ([]byte, error) {
+	return json.Marshal(tree.MapStrAny())
 }
 
 // getComparator returns the comparator if it's previously set,

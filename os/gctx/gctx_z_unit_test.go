@@ -12,7 +12,6 @@ import (
 
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/text/gstr"
 )
 
 func Test_New(t *testing.T) {
@@ -28,24 +27,6 @@ func Test_WithCtx(t *testing.T) {
 		ctx := context.WithValue(context.TODO(), "TEST", 1)
 		ctx = gctx.WithCtx(ctx)
 		t.AssertNE(gctx.CtxId(ctx), "")
-		t.Assert(ctx.Value("TEST"), 1)
-	})
-}
-
-func Test_WithPrefix(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		ctx := context.WithValue(context.TODO(), "TEST", 1)
-		ctx = gctx.WithPrefix(ctx, "H-")
-		t.Assert(gstr.Contains(gctx.CtxId(ctx), "H-"), true)
-		t.Assert(ctx.Value("TEST"), 1)
-	})
-}
-
-func Test_WithValue(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		ctx := context.WithValue(context.TODO(), "TEST", 1)
-		ctx = gctx.WithCtxId(ctx, "123")
-		t.Assert(gctx.CtxId(ctx), "123")
 		t.Assert(ctx.Value("TEST"), 1)
 	})
 }

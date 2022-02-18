@@ -14,8 +14,8 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/internal/structs"
 	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/os/gstructs"
 )
 
 // Struct maps the params key-value pairs to the corresponding struct object's attributes.
@@ -151,7 +151,7 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 	}
 
 	// Normal unmarshalling interfaces checks.
-	if err, ok := bindVarToReflectValueWithInterfaceCheck(pointerReflectValue, paramsInterface); ok {
+	if err, ok = bindVarToReflectValueWithInterfaceCheck(pointerReflectValue, paramsInterface); ok {
 		return err
 	}
 
@@ -166,7 +166,7 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 		//	return v.UnmarshalValue(params)
 		// }
 		// Note that it's `pointerElemReflectValue` here not `pointerReflectValue`.
-		if err, ok := bindVarToReflectValueWithInterfaceCheck(pointerElemReflectValue, paramsInterface); ok {
+		if err, ok = bindVarToReflectValueWithInterfaceCheck(pointerElemReflectValue, paramsInterface); ok {
 			return err
 		}
 		// Retrieve its element, may be struct at last.
@@ -177,7 +177,11 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 	// DO NOT use MapDeep here.
 	paramsMap := Map(paramsInterface)
 	if paramsMap == nil {
-		return gerror.NewCodef(gcode.CodeInvalidParameter, "convert params to map failed: %v", params)
+		return gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`convert params from "%#v" to "map[string]interface{}" failed`,
+			params,
+		)
 	}
 
 	// It only performs one converting to the same attribute.
@@ -233,10 +237,11 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 	} else {
 		priorityTagArray = StructTagPriority
 	}
-	tagToNameMap, err := structs.TagMapName(pointerElemReflectValue, priorityTagArray)
+	tagToNameMap, err := gstructs.TagMapName(pointerElemReflectValue, priorityTagArray)
 	if err != nil {
 		return err
 	}
+	var foundKey string
 	for tagName, attributeName := range tagToNameMap {
 		// If there's something else in the tag string,
 		// it uses the first part which is split using char ','.
@@ -244,6 +249,13 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 		// orm:"id, priority"
 		// orm:"name, with:uid=id"
 		tagMap[attributeName] = utils.RemoveSymbols(strings.Split(tagName, ",")[0])
+		// If tag and attribute values both exist in `paramsMap`,
+		// it then uses the tag value overwriting the attribute value in `paramsMap`.
+		if paramsMap[tagName] != nil {
+			if foundKey, _ = utils.MapPossibleItemByKey(paramsMap, attributeName); foundKey != "" {
+				paramsMap[foundKey] = paramsMap[tagName]
+			}
+		}
 	}
 
 	var (
@@ -265,7 +277,7 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 			// string cases and chars like '-'/'_'/'.'/' '.
 
 			// Matching the parameters to struct tag names.
-			// The `tagV` is the attribute name of the struct.
+			// The `attrKey` is the attribute name of the struct.
 			for attrKey, cmpKey := range tagMap {
 				if strings.EqualFold(checkName, cmpKey) {
 					attrName = attrKey
@@ -293,12 +305,12 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 			continue
 		}
 		// If the attribute name is already checked converting, then skip it.
-		if _, ok := doneMap[attrName]; ok {
+		if _, ok = doneMap[attrName]; ok {
 			continue
 		}
 		// Mark it done.
 		doneMap[attrName] = struct{}{}
-		if err := bindVarToStructAttr(pointerElemReflectValue, attrName, mapV, mapping); err != nil {
+		if err = bindVarToStructAttr(pointerElemReflectValue, attrName, mapV, mapping); err != nil {
 			return err
 		}
 	}
@@ -318,7 +330,7 @@ func bindVarToStructAttr(elem reflect.Value, name string, value interface{}, map
 	defer func() {
 		if exception := recover(); exception != nil {
 			if err = bindVarToReflectValue(structFieldValue, value, mapping); err != nil {
-				err = gerror.WrapCodef(gcode.CodeInternalError, err, `error binding value to attribute "%s"`, name)
+				err = gerror.Wrapf(err, `error binding value to attribute "%s"`, name)
 			}
 		}
 	}()
@@ -326,6 +338,12 @@ func bindVarToStructAttr(elem reflect.Value, name string, value interface{}, map
 	if empty.IsNil(value) {
 		structFieldValue.Set(reflect.Zero(structFieldValue.Type()))
 	} else {
+		// Common interface check.
+		var ok bool
+		if err, ok = bindVarToReflectValueWithInterfaceCheck(structFieldValue, value); ok {
+			return err
+		}
+		// Default converting.
 		structFieldValue.Set(reflect.ValueOf(doConvert(
 			doConvertInput{
 				FromValue:  value,
@@ -408,11 +426,6 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 		return nil
 	}
 
-	// Common interface check.
-	if err, ok := bindVarToReflectValueWithInterfaceCheck(structFieldValue, value); ok {
-		return err
-	}
-
 	kind := structFieldValue.Kind()
 	// Converting using interface, for some kinds.
 	switch kind {
@@ -488,7 +501,7 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 
 	case reflect.Ptr:
 		item := reflect.New(structFieldValue.Type().Elem())
-		if err, ok := bindVarToReflectValueWithInterfaceCheck(item, value); ok {
+		if err, ok = bindVarToReflectValueWithInterfaceCheck(item, value); ok {
 			structFieldValue.Set(item)
 			return err
 		}

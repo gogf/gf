@@ -13,10 +13,9 @@ import (
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/command"
 	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gfsnotify"
 	"github.com/gogf/gf/v2/os/gres"
@@ -37,10 +36,18 @@ const (
 )
 
 var (
-	supportedFileTypes     = []string{"toml", "yaml", "yml", "json", "ini", "xml"}         // All supported file types suffixes.
-	resourceTryFiles       = []string{"", "/", "config/", "config", "/config", "/config/"} // Prefix array for trying searching in resource manager.
-	localInstances         = gmap.NewStrAnyMap(true)                                       // Instances map containing configuration instances.
-	customConfigContentMap = gmap.NewStrStrMap(true)                                       // Customized configuration content.
+	supportedFileTypes     = []string{"toml", "yaml", "yml", "json", "ini", "xml"} // All supported file types suffixes.
+	localInstances         = gmap.NewStrAnyMap(true)                               // Instances map containing configuration instances.
+	customConfigContentMap = gmap.NewStrStrMap(true)                               // Customized configuration content.
+
+	// Prefix array for trying searching in resource manager.
+	resourceTryFolders = []string{
+		"", "/", "config/", "config", "/config", "/config/",
+		"manifest/config/", "manifest/config", "/manifest/config", "/manifest/config/",
+	}
+
+	// Prefix array for trying searching in local system.
+	localSystemTryFolders = []string{"", "hack/", "config/", "manifest/config"}
 )
 
 // NewAdapterFile returns a new configuration management object.
@@ -54,19 +61,19 @@ func NewAdapterFile(file ...string) (*AdapterFile, error) {
 		name = file[0]
 	} else {
 		// Custom default configuration file name from command line or environment.
-		if customFile := gcmd.GetOptWithEnv(commandEnvKeyForFile).String(); customFile != "" {
+		if customFile := command.GetOptWithEnv(commandEnvKeyForFile); customFile != "" {
 			name = customFile
 		}
 	}
-	c := &AdapterFile{
+	config := &AdapterFile{
 		defaultName: name,
 		searchPaths: garray.NewStrArray(true),
 		jsonMap:     gmap.NewStrAnyMap(true),
 	}
 	// Customized dir path from env/cmd.
-	if customPath := gcmd.GetOptWithEnv(commandEnvKeyForPath).String(); customPath != "" {
+	if customPath := command.GetOptWithEnv(commandEnvKeyForPath); customPath != "" {
 		if gfile.Exists(customPath) {
-			if err = c.SetPath(customPath); err != nil {
+			if err = config.SetPath(customPath); err != nil {
 				return nil, err
 			}
 		} else {
@@ -79,25 +86,25 @@ func NewAdapterFile(file ...string) (*AdapterFile, error) {
 		// ================================================================================
 
 		// Dir path of working dir.
-		if err := c.AddPath(gfile.Pwd()); err != nil {
-			intlog.Error(context.TODO(), err)
+		if err = config.AddPath(gfile.Pwd()); err != nil {
+			intlog.Errorf(context.TODO(), `%+v`, err)
 		}
 
 		// Dir path of main package.
 		if mainPath := gfile.MainPkgPath(); mainPath != "" && gfile.Exists(mainPath) {
-			if err := c.AddPath(mainPath); err != nil {
-				intlog.Error(context.TODO(), err)
+			if err = config.AddPath(mainPath); err != nil {
+				intlog.Errorf(context.TODO(), `%+v`, err)
 			}
 		}
 
 		// Dir path of binary.
 		if selfPath := gfile.SelfDir(); selfPath != "" && gfile.Exists(selfPath) {
-			if err := c.AddPath(selfPath); err != nil {
-				intlog.Error(context.TODO(), err)
+			if err = config.AddPath(selfPath); err != nil {
+				intlog.Errorf(context.TODO(), `%+v`, err)
 			}
 		}
 	}
-	return c, nil
+	return config, nil
 }
 
 // SetViolenceCheck sets whether to perform hierarchical conflict checking.
@@ -175,7 +182,7 @@ func (c *AdapterFile) Dump() {
 }
 
 // Available checks and returns whether configuration of given `file` is available.
-func (c *AdapterFile) Available(fileName ...string) bool {
+func (c *AdapterFile) Available(ctx context.Context, fileName ...string) bool {
 	var (
 		usedFileName string
 	)
@@ -246,28 +253,26 @@ func (c *AdapterFile) getJson(fileName ...string) (configJson *gjson.Json, err e
 		} else {
 			configJson, err = gjson.LoadContent(content, true)
 		}
-		if err == nil {
-			configJson.SetViolenceCheck(c.violenceCheck)
-			// Add monitor for this configuration file,
-			// any changes of this file will refresh its cache in Config object.
-			if filePath != "" && !gres.Contains(filePath) {
-				_, err = gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
-					c.jsonMap.Remove(usedFileName)
-				})
-				if err != nil {
-					return nil
-				}
-			}
-			return configJson
-		}
 		if err != nil {
 			if filePath != "" {
-				err = gerror.WrapCodef(gcode.CodeOperationFailed, err, `load config file "%s" failed`, filePath)
+				err = gerror.Wrapf(err, `load config file "%s" failed`, filePath)
 			} else {
-				err = gerror.WrapCode(gcode.CodeOperationFailed, err, `load configuration failed`)
+				err = gerror.Wrap(err, `load configuration failed`)
+			}
+			return nil
+		}
+		configJson.SetViolenceCheck(c.violenceCheck)
+		// Add monitor for this configuration file,
+		// any changes of this file will refresh its cache in Config object.
+		if filePath != "" && !gres.Contains(filePath) {
+			_, err = gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
+				c.jsonMap.Remove(usedFileName)
+			})
+			if err != nil {
+				return nil
 			}
 		}
-		return nil
+		return configJson
 	})
 	if result != nil {
 		return result.(*gjson.Json), err

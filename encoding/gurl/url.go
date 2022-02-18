@@ -10,6 +10,8 @@ package gurl
 import (
 	"net/url"
 	"strings"
+
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 // Encode escapes the string so it can be safely placed
@@ -53,6 +55,7 @@ func BuildQuery(queryData url.Values) string {
 func ParseURL(str string, component int) (map[string]string, error) {
 	u, err := url.Parse(str)
 	if err != nil {
+		err = gerror.Wrapf(err, `url.Parse failed for URL "%s"`, str)
 		return nil, err
 	}
 	if component == -1 {

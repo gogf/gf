@@ -13,6 +13,7 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
@@ -24,7 +25,7 @@ func Test_Params_Xml_Request(t *testing.T) {
 		Pass1 string `p:"password1"`
 		Pass2 string `p:"password2" v:"password2@required|length:2,20|password3|same:password1#||密码强度不足|两次密码不一致"`
 	}
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/get", func(r *ghttp.Request) {
 		r.Response.WriteExit(r.Get("id"), r.Get("name"))
@@ -60,6 +61,6 @@ func Test_Params_Xml_Request(t *testing.T) {
 		t.Assert(client.GetContent(ctx, "/map", content1), ``)
 		t.Assert(client.PostContent(ctx, "/map", content1), `1john123Abc!@#123Abc!@#`)
 		t.Assert(client.PostContent(ctx, "/parse", content1), `1john123Abc!@#123Abc!@#`)
-		t.Assert(client.PostContent(ctx, "/parse", content2), `密码强度不足; 两次密码不一致`)
+		t.Assert(client.PostContent(ctx, "/parse", content2), `密码强度不足`)
 	})
 }

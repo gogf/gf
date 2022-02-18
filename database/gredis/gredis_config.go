@@ -20,7 +20,7 @@ import (
 
 // Config is redis configuration.
 type Config struct {
-	Address         string        `json:"address"`         // It supports single and cluster redis server. Multiple addresses joined with char ','.
+	Address         string        `json:"address"`         // It supports single and cluster redis server. Multiple addresses joined with char ','. Eg: 192.168.1.1:6379, 192.168.1.2:6379.
 	Db              int           `json:"db"`              // Redis db.
 	Pass            string        `json:"pass"`            // Password for AUTH.
 	MinIdle         int           `json:"minIdle"`         // Minimum number of connections allowed to be idle (default is 0)
@@ -30,7 +30,7 @@ type Config struct {
 	IdleTimeout     time.Duration `json:"idleTimeout"`     // Maximum idle time for connection (default is 10 seconds, not allowed to be set to 0)
 	WaitTimeout     time.Duration `json:"waitTimeout"`     // Timed out duration waiting to get a connection from the connection pool.
 	DialTimeout     time.Duration `json:"dialTimeout"`     // Dial connection timeout for TCP.
-	ReadTimeout     time.Duration `json:"readTimeout"`     // Read timeout for TCP.
+	ReadTimeout     time.Duration `json:"readTimeout"`     // Read timeout for TCP. DO NOT set it if not necessary.
 	WriteTimeout    time.Duration `json:"writeTimeout"`    // Write timeout for TCP.
 	MasterName      string        `json:"masterName"`      // Used in Redis Sentinel mode.
 	TLS             bool          `json:"tls"`             // Specifies whether TLS should be used when connecting to the server.
@@ -78,24 +78,24 @@ func SetConfigByMap(m map[string]interface{}, name ...string) error {
 func ConfigFromMap(m map[string]interface{}) (config *Config, err error) {
 	config = &Config{}
 	if err = gconv.Scan(m, config); err != nil {
-		err = gerror.NewCodef(gcode.CodeInvalidConfiguration, `invalid redis configuration: "%+v"`, m)
+		err = gerror.NewCodef(gcode.CodeInvalidConfiguration, `invalid redis configuration: %#v`, m)
 	}
-	if config.DialTimeout < 1000 {
+	if config.DialTimeout < time.Second {
 		config.DialTimeout = config.DialTimeout * time.Second
 	}
-	if config.WaitTimeout < 1000 {
+	if config.WaitTimeout < time.Second {
 		config.WaitTimeout = config.WaitTimeout * time.Second
 	}
-	if config.WriteTimeout < 1000 {
+	if config.WriteTimeout < time.Second {
 		config.WriteTimeout = config.WriteTimeout * time.Second
 	}
-	if config.ReadTimeout < 1000 {
+	if config.ReadTimeout < time.Second {
 		config.ReadTimeout = config.ReadTimeout * time.Second
 	}
-	if config.IdleTimeout < 1000 {
+	if config.IdleTimeout < time.Second {
 		config.IdleTimeout = config.IdleTimeout * time.Second
 	}
-	if config.MaxConnLifetime < 1000 {
+	if config.MaxConnLifetime < time.Second {
 		config.MaxConnLifetime = config.MaxConnLifetime * time.Second
 	}
 	return

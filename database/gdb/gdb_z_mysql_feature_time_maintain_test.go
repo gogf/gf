@@ -465,6 +465,63 @@ CREATE TABLE %s (
 	})
 }
 
+func Test_SoftUpdateTime_WithDO(t *testing.T) {
+	table := "time_test_table_" + gtime.TimestampNanoStr()
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+CREATE TABLE %s (
+  id        int(11) NOT NULL,
+  num       int(11) DEFAULT NULL,
+  created_at datetime DEFAULT NULL,
+  updated_at datetime DEFAULT NULL,
+  deleted_at datetime DEFAULT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    `, table)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		// Insert
+		dataInsert := g.Map{
+			"id":  1,
+			"num": 10,
+		}
+		r, err := db.Model(table).Data(dataInsert).Insert()
+		t.AssertNil(err)
+		n, _ := r.RowsAffected()
+		t.Assert(n, 1)
+
+		oneInserted, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(oneInserted["id"].Int(), 1)
+		t.Assert(oneInserted["num"].Int(), 10)
+
+		// Update.
+		time.Sleep(2 * time.Second)
+		type User struct {
+			g.Meta    `orm:"do:true"`
+			Id        interface{}
+			Num       interface{}
+			CreatedAt interface{}
+			UpdatedAt interface{}
+			DeletedAt interface{}
+		}
+		r, err = db.Model(table).Data(User{
+			Num: 100,
+		}).Where("id=?", 1).Update()
+		t.AssertNil(err)
+		n, _ = r.RowsAffected()
+		t.Assert(n, 1)
+
+		oneUpdated, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(oneUpdated["num"].Int(), 100)
+		t.Assert(oneUpdated["created_at"].String(), oneInserted["created_at"].String())
+		t.AssertNE(oneUpdated["updated_at"].String(), oneInserted["updated_at"].String())
+	})
+}
+
 func Test_SoftDelete(t *testing.T) {
 	table := "time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`

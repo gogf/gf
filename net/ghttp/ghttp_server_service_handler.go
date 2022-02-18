@@ -12,7 +12,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -57,7 +56,6 @@ func (s *Server) doBindHandler(ctx context.Context, in doBindHandlerInput) {
 		Prefix:  in.Prefix,
 		Pattern: in.Pattern,
 		HandlerItem: &handlerItem{
-			Name:       gdebug.FuncPath(in.FuncInfo.Func),
 			Type:       HandlerTypeHandler,
 			Info:       in.FuncInfo,
 			Middleware: in.Middleware,

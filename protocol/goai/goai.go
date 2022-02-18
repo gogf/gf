@@ -96,6 +96,8 @@ var (
 		"sm":  "summary",
 		"des": "description",
 		"dc":  "description",
+		"eg":  "example",
+		"egs": "examples",
 	}
 )
 
@@ -146,7 +148,7 @@ func (oai *OpenApiV3) Add(in AddInput) error {
 func (oai OpenApiV3) String() string {
 	b, err := json.Marshal(oai)
 	if err != nil {
-		intlog.Error(context.TODO(), err)
+		intlog.Errorf(context.TODO(), `%+v`, err)
 	}
 	return string(b)
 }

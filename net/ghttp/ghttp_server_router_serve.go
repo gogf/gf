@@ -7,11 +7,11 @@
 package ghttp
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	"github.com/gogf/gf/v2/container/glist"
-	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/json"
@@ -53,15 +53,16 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedI
 	value, err := s.serveCache.GetOrSetFunc(
 		ctx,
 		s.serveHandlerKey(method, r.URL.Path, r.GetHost()),
-		func() (interface{}, error) {
+		func(ctx context.Context) (interface{}, error) {
 			parsedItems, hasHook, hasServe = s.searchHandlers(method, r.URL.Path, r.GetHost())
 			if parsedItems != nil {
 				return &handlerCacheItem{parsedItems, hasHook, hasServe}, nil
 			}
 			return nil, nil
-		}, routeCacheDuration)
+		}, routeCacheDuration,
+	)
 	if err != nil {
-		intlog.Error(ctx, err)
+		intlog.Errorf(ctx, `%+v`, err)
 	}
 	if value != nil {
 		item := value.Val().(*handlerCacheItem)
@@ -106,8 +107,8 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 	)
 
 	// Default domain has the most priority when iteration.
-	for _, domain := range []string{DefaultDomainName, domain} {
-		p, ok := s.serveTree[domain]
+	for _, domainItem := range []string{DefaultDomainName, domain} {
+		p, ok := s.serveTree[domainItem]
 		if !ok {
 			continue
 		}
@@ -200,7 +201,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 							parsedItemList.PushBack(parsedItem)
 
 						default:
-							panic(gerror.NewCodef(gcode.CodeInternalError, `invalid handler type %s`, item.Type))
+							panic(gerror.Newf(`invalid handler type %s`, item.Type))
 						}
 					}
 				}
@@ -219,7 +220,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (item *handlerItem) MarshalJSON() ([]byte, error) {
+func (item handlerItem) MarshalJSON() ([]byte, error) {
 	switch item.Type {
 	case HandlerTypeHook:
 		return json.Marshal(
@@ -253,6 +254,6 @@ func (item *handlerItem) MarshalJSON() ([]byte, error) {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (item *handlerParsedItem) MarshalJSON() ([]byte, error) {
+func (item handlerParsedItem) MarshalJSON() ([]byte, error) {
 	return json.Marshal(item.Handler)
 }

@@ -14,10 +14,19 @@ import (
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/internal/command"
 	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/os/gctx"
 )
 
-var (
-	defaultCommandFuncMap = make(map[string]func())
+const (
+	CtxKeyParser    gctx.StrKey = `CtxKeyParser`
+	CtxKeyCommand   gctx.StrKey = `CtxKeyCommand`
+	CtxKeyArguments gctx.StrKey = `CtxKeyArguments`
+)
+
+const (
+	helpOptionName      = "help"
+	helpOptionNameShort = "h"
+	maxLineChars        = 120
 )
 
 // Init does custom initialization.
@@ -27,28 +36,22 @@ func Init(args ...string) {
 
 // GetOpt returns the option value named `name` as gvar.Var.
 func GetOpt(name string, def ...string) *gvar.Var {
-	Init()
 	if v := command.GetOpt(name, def...); v != "" {
 		return gvar.New(v)
+	}
+	if command.ContainsOpt(name) {
+		return gvar.New("")
 	}
 	return nil
 }
 
 // GetOptAll returns all parsed options.
 func GetOptAll() map[string]string {
-	Init()
 	return command.GetOptAll()
-}
-
-// ContainsOpt checks whether option named `name` exist in the arguments.
-func ContainsOpt(name string) bool {
-	Init()
-	return command.ContainsOpt(name)
 }
 
 // GetArg returns the argument at `index` as gvar.Var.
 func GetArg(index int, def ...string) *gvar.Var {
-	Init()
 	if v := command.GetArg(index, def...); v != "" {
 		return gvar.New(v)
 	}
@@ -57,7 +60,6 @@ func GetArg(index int, def ...string) *gvar.Var {
 
 // GetArgAll returns all parsed arguments.
 func GetArgAll() []string {
-	Init()
 	return command.GetArgAll()
 }
 
@@ -70,7 +72,7 @@ func GetArgAll() []string {
 // 2. Environment arguments are in uppercase format, eg: GF_`package name`_<variable name>；
 func GetOptWithEnv(key string, def ...interface{}) *gvar.Var {
 	cmdKey := utils.FormatCmdKey(key)
-	if ContainsOpt(cmdKey) {
+	if command.ContainsOpt(cmdKey) {
 		return gvar.New(GetOpt(cmdKey))
 	} else {
 		envKey := utils.FormatEnvKey(key)

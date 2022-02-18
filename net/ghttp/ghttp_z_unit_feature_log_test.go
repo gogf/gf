@@ -15,6 +15,7 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -23,8 +24,8 @@ import (
 
 func Test_Log(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		logDir := gfile.TempDir(gtime.TimestampNanoStr())
-		p, _ := ports.PopRand()
+		logDir := gfile.Temp(gtime.TimestampNanoStr())
+		p, _ := gtcp.GetFreePort()
 		s := g.Server(p)
 		s.BindHandler("/hello", func(r *ghttp.Request) {
 			r.Response.Write("hello")
@@ -45,11 +46,14 @@ func Test_Log(t *testing.T) {
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent(ctx, "/hello"), "hello")
-		t.Assert(client.GetContent(ctx, "/error"), "custom error")
+		t.Assert(client.GetContent(ctx, "/error"), "exception recovered: custom error")
 
-		logPath1 := gfile.Join(logDir, gtime.Now().Format("Y-m-d")+".log")
-		t.Assert(gstr.Contains(gfile.GetContents(logPath1), "http server started listening on"), true)
-		t.Assert(gstr.Contains(gfile.GetContents(logPath1), "HANDLER"), true)
+		var (
+			logPath1 = gfile.Join(logDir, gtime.Now().Format("Y-m-d")+".log")
+			content  = gfile.GetContents(logPath1)
+		)
+		t.Assert(gstr.Contains(content, "http server started listening on"), true)
+		t.Assert(gstr.Contains(content, "HANDLER"), true)
 
 		logPath2 := gfile.Join(logDir, "access-"+gtime.Now().Format("Ymd")+".log")
 		// fmt.Println(gfile.GetContents(logPath2))

@@ -47,9 +47,7 @@ func init() {
 
 // serverProcessInit initializes some process configurations, which can only be done once.
 func serverProcessInit() {
-	var (
-		ctx = context.TODO()
-	)
+	var ctx = context.TODO()
 	if !serverProcessInitialized.Cas(false, true) {
 		return
 	}
@@ -58,10 +56,10 @@ func serverProcessInit() {
 	if !genv.Get(adminActionRestartEnvKey).IsEmpty() {
 		if p, err := os.FindProcess(gproc.PPid()); err == nil {
 			if err = p.Kill(); err != nil {
-				intlog.Error(ctx, err)
+				intlog.Errorf(ctx, `%+v`, err)
 			}
 			if _, err = p.Wait(); err != nil {
-				intlog.Error(ctx, err)
+				intlog.Errorf(ctx, `%+v`, err)
 			}
 		} else {
 			glog.Error(ctx, err)
@@ -98,7 +96,7 @@ func GetServer(name ...interface{}) *Server {
 		return s.(*Server)
 	}
 	s := &Server{
-		name:             serverName,
+		instance:         serverName,
 		plugins:          make([]Plugin, 0),
 		servers:          make([]*gracefulServer, 0),
 		closeChan:        make(chan struct{}, 10000),
@@ -115,15 +113,15 @@ func GetServer(name ...interface{}) *Server {
 	}
 	// Record the server to internal server mapping by name.
 	serverMapping.Set(serverName, s)
+	// It enables OpenTelemetry for server in default.
+	s.Use(internalMiddlewareServerTracing)
 	return s
 }
 
 // Start starts listening on configured port.
 // This function does not block the process, you can use function Wait blocking the process.
 func (s *Server) Start() error {
-	var (
-		ctx = context.TODO()
-	)
+	var ctx = context.TODO()
 
 	// Swagger UI.
 	if s.config.SwaggerPath != "" {
@@ -141,7 +139,7 @@ func (s *Server) Start() error {
 	// OpenApi specification json producing handler.
 	if s.config.OpenApiPath != "" {
 		s.BindHandler(s.config.OpenApiPath, s.openapiSpec)
-		s.Logger().Debugf(
+		s.Logger().Infof(
 			ctx,
 			`openapi specification is serving at address: %s%s`,
 			s.getListenAddress(),
@@ -149,12 +147,12 @@ func (s *Server) Start() error {
 		)
 	} else {
 		if s.config.SwaggerPath != "" {
-			s.Logger().Notice(
+			s.Logger().Warning(
 				ctx,
 				`openapi specification is disabled but swagger ui is serving, which might make no sense`,
 			)
 		} else {
-			s.Logger().Debug(
+			s.Logger().Info(
 				ctx,
 				`openapi specification is disabled`,
 			)
@@ -181,10 +179,10 @@ func (s *Server) Start() error {
 	if s.config.SessionStorage == nil {
 		path := ""
 		if s.config.SessionPath != "" {
-			path = gfile.Join(s.config.SessionPath, s.name)
+			path = gfile.Join(s.config.SessionPath, s.config.Name)
 			if !gfile.Exists(path) {
 				if err := gfile.Mkdir(path); err != nil {
-					return gerror.WrapCodef(gcode.CodeInternalError, err, `mkdir failed for "%s"`, path)
+					return gerror.Wrapf(err, `mkdir failed for "%s"`, path)
 				}
 			}
 		}
@@ -229,7 +227,7 @@ func (s *Server) Start() error {
 	fdMapStr := genv.Get(adminActionReloadEnvKey).String()
 	if len(fdMapStr) > 0 {
 		sfm := bufferToServerFdMap([]byte(fdMapStr))
-		if v, ok := sfm[s.name]; ok {
+		if v, ok := sfm[s.config.Name]; ok {
 			s.startServer(v)
 			reloaded = true
 		}
@@ -242,11 +240,12 @@ func (s *Server) Start() error {
 	if gproc.IsChild() {
 		gtimer.SetTimeout(ctx, time.Duration(s.config.GracefulTimeout)*time.Second, func(ctx context.Context) {
 			if err := gproc.Send(gproc.PPid(), []byte("exit"), adminGProcCommGroup); err != nil {
-				intlog.Error(ctx, "server error in process communication:", err)
+				intlog.Errorf(ctx, `server error in process communication: %+v`, err)
 			}
 		})
 	}
 	s.initOpenApi()
+	s.doServiceRegister()
 	s.dumpRouterMap()
 	return nil
 }
@@ -269,25 +268,59 @@ func (s *Server) getListenAddress() string {
 // DumpRouterMap dumps the router map to the log.
 func (s *Server) dumpRouterMap() {
 	var (
-		ctx = context.TODO()
+		ctx                          = context.TODO()
+		routes                       = s.GetRoutes()
+		headers                      = []string{"SERVER", "DOMAIN", "ADDRESS", "METHOD", "ROUTE", "HANDLER", "MIDDLEWARE"}
+		isJustDefaultServerAndDomain = true
 	)
-	if s.config.DumpRouterMap && len(s.routesMap) > 0 {
+	for _, item := range routes {
+		if item.Server != DefaultServerName || item.Domain != DefaultDomainName {
+			isJustDefaultServerAndDomain = false
+			break
+		}
+	}
+	if isJustDefaultServerAndDomain {
+		headers = []string{"ADDRESS", "METHOD", "ROUTE", "HANDLER", "MIDDLEWARE"}
+	}
+	if s.config.DumpRouterMap && len(routes) > 0 {
 		buffer := bytes.NewBuffer(nil)
 		table := tablewriter.NewWriter(buffer)
-		table.SetHeader([]string{"SERVER", "DOMAIN", "ADDRESS", "METHOD", "ROUTE", "HANDLER", "MIDDLEWARE"})
+		table.SetHeader(headers)
 		table.SetRowLine(true)
 		table.SetBorder(false)
 		table.SetCenterSeparator("|")
 
-		for _, item := range s.GetRoutes() {
-			data := make([]string, 7)
-			data[0] = item.Server
-			data[1] = item.Domain
-			data[2] = item.Address
-			data[3] = item.Method
-			data[4] = item.Route
-			data[5] = item.Handler.Name
-			data[6] = item.Middleware
+		for _, item := range routes {
+			var (
+				data        = make([]string, 0)
+				handlerName = gstr.TrimRightStr(item.Handler.Name, "-fm")
+				middlewares = gstr.SplitAndTrim(item.Middleware, ",")
+			)
+			for k, v := range middlewares {
+				middlewares[k] = gstr.TrimRightStr(v, "-fm")
+			}
+			item.Middleware = gstr.Join(middlewares, "\n")
+			if isJustDefaultServerAndDomain {
+				data = append(
+					data,
+					item.Address,
+					item.Method,
+					item.Route,
+					handlerName,
+					item.Middleware,
+				)
+			} else {
+				data = append(
+					data,
+					item.Server,
+					item.Domain,
+					item.Address,
+					item.Method,
+					item.Route,
+					handlerName,
+					item.Middleware,
+				)
+			}
 			table.Append(data)
 		}
 		table.Render()
@@ -301,10 +334,11 @@ func (s *Server) GetOpenApi() *goai.OpenApiV3 {
 }
 
 // GetRoutes retrieves and returns the router array.
-// The key of the returned map is the domain of the server.
 func (s *Server) GetRoutes() []RouterItem {
-	m := make(map[string]*garray.SortedArray)
-	address := s.config.Address
+	var (
+		m       = make(map[string]*garray.SortedArray)
+		address = s.config.Address
+	)
 	if s.config.HTTPSAddr != "" {
 		if len(address) > 0 {
 			address += ","
@@ -315,7 +349,7 @@ func (s *Server) GetRoutes() []RouterItem {
 		array, _ := gregex.MatchString(`(.*?)%([A-Z]+):(.+)@(.+)`, k)
 		for index, registeredItem := range registeredItems {
 			item := RouterItem{
-				Server:     s.name,
+				Server:     s.config.Name,
 				Address:    address,
 				Domain:     array[4],
 				Type:       registeredItem.Handler.Type,
@@ -367,6 +401,7 @@ func (s *Server) GetRoutes() []RouterItem {
 			m[item.Domain].Add(item)
 		}
 	}
+
 	routerArray := make([]RouterItem, 0, 128)
 	for _, array := range m {
 		for _, v := range array.Slice() {
@@ -379,9 +414,8 @@ func (s *Server) GetRoutes() []RouterItem {
 // Run starts server listening in blocking way.
 // It's commonly used for single server situation.
 func (s *Server) Run() {
-	var (
-		ctx = context.TODO()
-	)
+	var ctx = context.TODO()
+
 	if err := s.Start(); err != nil {
 		s.Logger().Fatalf(ctx, `%+v`, err)
 	}
@@ -396,15 +430,15 @@ func (s *Server) Run() {
 			}
 		}
 	}
-	s.Logger().Printf(ctx, "%d: all servers shutdown", gproc.Pid())
+	s.doServiceDeregister()
+	s.Logger().Infof(ctx, "pid[%d]: all servers shutdown", gproc.Pid())
 }
 
 // Wait blocks to wait for all servers done.
-// It's commonly used in multiple servers situation.
+// It's commonly used in multiple server situation.
 func Wait() {
-	var (
-		ctx = context.TODO()
-	)
+	var ctx = context.TODO()
+
 	<-allDoneChan
 	// Remove plugins.
 	serverMapping.Iterator(func(k string, v interface{}) bool {
@@ -413,13 +447,13 @@ func Wait() {
 			for _, p := range s.plugins {
 				intlog.Printf(ctx, `remove plugin: %s`, p.Name())
 				if err := p.Remove(); err != nil {
-					intlog.Error(ctx, err)
+					intlog.Errorf(ctx, `%+v`, err)
 				}
 			}
 		}
 		return true
 	})
-	glog.Printf(ctx, "%d: all servers shutdown", gproc.Pid())
+	glog.Infof(ctx, "pid[%d]: all servers shutdown", gproc.Pid())
 }
 
 // startServer starts the underlying server listening.
@@ -449,15 +483,17 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 			if len(v) == 0 {
 				continue
 			}
-			fd := 0
-			itemFunc := v
-			array := strings.Split(v, "#")
-			if len(array) > 1 {
-				itemFunc = array[0]
+			var (
+				fd        = 0
+				itemFunc  = v
+				addrAndFd = strings.Split(v, "#")
+			)
+			if len(addrAndFd) > 1 {
+				itemFunc = addrAndFd[0]
 				// The Windows OS does not support socket file descriptor passing
 				// from parent process.
 				if runtime.GOOS != "windows" {
-					fd = gconv.Int(array[1])
+					fd = gconv.Int(addrAndFd[1])
 				}
 			}
 			if fd > 0 {
@@ -482,15 +518,17 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 		if len(v) == 0 {
 			continue
 		}
-		fd := 0
-		itemFunc := v
-		array := strings.Split(v, "#")
-		if len(array) > 1 {
-			itemFunc = array[0]
+		var (
+			fd        = 0
+			itemFunc  = v
+			addrAndFd = strings.Split(v, "#")
+		)
+		if len(addrAndFd) > 1 {
+			itemFunc = addrAndFd[0]
 			// The Windows OS does not support socket file descriptor passing
 			// from parent process.
 			if runtime.GOOS != "windows" {
-				fd = gconv.Int(array[1])
+				fd = gconv.Int(addrAndFd[1])
 			}
 		}
 		if fd > 0 {
@@ -504,7 +542,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 	for _, v := range s.servers {
 		go func(server *gracefulServer) {
 			s.serverCount.Add(1)
-			err := (error)(nil)
+			var err error
 			if server.isHttps {
 				err = server.ListenAndServeTLS(s.config.HTTPSCertPath, s.config.HTTPSKeyPath, s.config.TLSConfig)
 			} else {
@@ -514,11 +552,11 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 			if err != nil && !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
 				s.Logger().Fatalf(ctx, `%+v`, err)
 			}
-			// If all the underlying servers shutdown, the process exits.
+			// If all the underlying servers' shutdown, the process exits.
 			if s.serverCount.Add(-1) < 1 {
 				s.closeChan <- struct{}{}
 				if serverRunning.Add(-1) < 1 {
-					serverMapping.Remove(s.name)
+					serverMapping.Remove(s.instance)
 					allDoneChan <- struct{}{}
 				}
 			}

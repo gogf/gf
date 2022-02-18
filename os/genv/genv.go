@@ -12,8 +12,9 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/command"
 	"github.com/gogf/gf/v2/internal/utils"
-	"github.com/gogf/gf/v2/os/gcmd"
 )
 
 // All returns a copy of strings representing the environment,
@@ -49,14 +50,18 @@ func Get(key string, def ...interface{}) *gvar.Var {
 
 // Set sets the value of the environment variable named by the `key`.
 // It returns an error, if any.
-func Set(key, value string) error {
-	return os.Setenv(key, value)
+func Set(key, value string) (err error) {
+	err = os.Setenv(key, value)
+	if err != nil {
+		err = gerror.Wrapf(err, `set environment key-value failed with key "%s", value "%s"`, key, value)
+	}
+	return
 }
 
 // SetMap sets the environment variables using map.
-func SetMap(m map[string]string) error {
+func SetMap(m map[string]string) (err error) {
 	for k, v := range m {
-		if err := os.Setenv(k, v); err != nil {
+		if err = Set(k, v); err != nil {
 			return err
 		}
 	}
@@ -70,11 +75,10 @@ func Contains(key string) bool {
 }
 
 // Remove deletes one or more environment variables.
-func Remove(key ...string) error {
-	var err error
+func Remove(key ...string) (err error) {
 	for _, v := range key {
-		err = os.Unsetenv(v)
-		if err != nil {
+		if err = os.Unsetenv(v); err != nil {
+			err = gerror.Wrapf(err, `delete environment key failed with key "%s"`, v)
 			return err
 		}
 	}
@@ -94,8 +98,8 @@ func GetWithCmd(key string, def ...interface{}) *gvar.Var {
 		return gvar.New(v)
 	}
 	cmdKey := utils.FormatCmdKey(key)
-	if v := gcmd.GetOpt(cmdKey); !v.IsEmpty() {
-		return v
+	if v := command.GetOpt(cmdKey); v != "" {
+		return gvar.New(v)
 	}
 	if len(def) > 0 {
 		return gvar.New(def[0])

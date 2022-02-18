@@ -52,6 +52,7 @@ func (f *UploadFile) Save(dirPath string, randomlyRename ...bool) (filename stri
 
 	file, err := f.Open()
 	if err != nil {
+		err = gerror.Wrapf(err, `UploadFile.Open failed`)
 		return "", err
 	}
 	defer file.Close()
@@ -68,7 +69,8 @@ func (f *UploadFile) Save(dirPath string, randomlyRename ...bool) (filename stri
 	}
 	defer newFile.Close()
 	intlog.Printf(f.ctx, `save upload file: %s`, filePath)
-	if _, err := io.Copy(newFile, file); err != nil {
+	if _, err = io.Copy(newFile, file); err != nil {
+		err = gerror.Wrapf(err, `io.Copy failed from "%s" to "%s"`, f.Filename, filePath)
 		return "", err
 	}
 	return gfile.Basename(filePath), nil

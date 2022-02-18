@@ -26,7 +26,7 @@ func Test_CheckMap1(t *testing.T) {
 			"id":   "required|between:1,100",
 			"name": "required|length:6,16",
 		}
-		if m := gvalid.CheckMap(context.TODO(), data, rules); m == nil {
+		if m := g.Validator().Data(data).Rules(rules).Run(context.TODO()); m == nil {
 			t.Error("CheckMap校验失败")
 		} else {
 			t.Assert(len(m.Maps()), 2)
@@ -39,7 +39,7 @@ func Test_CheckMap1(t *testing.T) {
 func Test_CheckMap2(t *testing.T) {
 	var params interface{}
 	gtest.C(t, func(t *gtest.T) {
-		if err := gvalid.CheckMap(context.TODO(), params, nil, nil); err == nil {
+		if err := g.Validator().Data(params).Run(context.TODO()); err == nil {
 			t.Assert(err, nil)
 		}
 	})
@@ -59,7 +59,7 @@ func Test_CheckMap2(t *testing.T) {
 			"length":   "名称长度为{min}到{max}个字符",
 		},
 	}
-	if m := gvalid.CheckMap(context.TODO(), kvmap, rules, msgs); m == nil {
+	if m := g.Validator().Data(kvmap).Rules(rules).Messages(msgs).Run(context.TODO()); m == nil {
 		t.Error("CheckMap校验失败")
 	}
 
@@ -78,7 +78,7 @@ func Test_CheckMap2(t *testing.T) {
 			"length":   "名称长度为{min}到{max}个字符",
 		},
 	}
-	if m := gvalid.CheckMap(context.TODO(), kvmap, rules, msgs); m != nil {
+	if m := g.Validator().Data(kvmap).Rules(rules).Messages(msgs).Run(context.TODO()); m != nil {
 		t.Error(m)
 	}
 
@@ -97,7 +97,7 @@ func Test_CheckMap2(t *testing.T) {
 			"length":   "名称长度为{min}到{max}个字符",
 		},
 	}
-	if m := gvalid.CheckMap(context.TODO(), kvmap, rules, msgs); m != nil {
+	if m := g.Validator().Data(kvmap).Rules(rules).Messages(msgs).Run(context.TODO()); m != nil {
 		t.Error(m)
 	}
 
@@ -116,7 +116,7 @@ func Test_CheckMap2(t *testing.T) {
 			"length":   "名称长度为{min}到{max}个字符",
 		},
 	}
-	if m := gvalid.CheckMap(context.TODO(), kvmap, rules2, msgs); m != nil {
+	if m := g.Validator().Data(kvmap).Rules(rules2).Messages(msgs).Run(context.TODO()); m != nil {
 		t.Error(m)
 	}
 
@@ -135,7 +135,7 @@ func Test_CheckMap2(t *testing.T) {
 			"length":   "名称长度为{min}到{max}个字符",
 		},
 	}
-	if m := gvalid.CheckMap(context.TODO(), kvmap, rules2, msgs); m != nil {
+	if m := g.Validator().Data(kvmap).Rules(rules2).Messages(msgs).Run(context.TODO()); m != nil {
 		t.Error(m)
 	}
 
@@ -154,7 +154,7 @@ func Test_CheckMap2(t *testing.T) {
 			"length":   "名称长度为{min}到{max}个字符",
 		},
 	}
-	if m := gvalid.CheckMap(context.TODO(), kvmap, rules2, msgs); m != nil {
+	if m := g.Validator().Data(kvmap).Rules(rules2).Messages(msgs).Run(context.TODO()); m != nil {
 		t.Error(m)
 	}
 }
@@ -167,7 +167,7 @@ func Test_CheckMapWithNilAndNotRequiredField(t *testing.T) {
 		"id":   "required",
 		"name": "length:4,16",
 	}
-	if m := gvalid.CheckMap(context.TODO(), data, rules); m != nil {
+	if m := g.Validator().Data(data).Rules(rules).Run(context.TODO()); m != nil {
 		t.Error(m)
 	}
 }
@@ -184,7 +184,7 @@ func Test_Sequence(t *testing.T) {
 			"password@required|length:6,16|same:password2#密码不能为空|密码长度应当在{min}到{max}之间|两次密码输入不相等",
 			"password2@required|length:6,16#",
 		}
-		err := gvalid.CheckMap(context.TODO(), params, rules)
+		err := g.Validator().Data(params).Rules(rules).Run(context.TODO())
 		t.AssertNE(err, nil)
 		t.Assert(len(err.Map()), 2)
 		t.Assert(err.Map()["required"], "账号不能为空")
@@ -224,9 +224,9 @@ func Test_Map_Bail(t *testing.T) {
 			"password@required|length:6,16|same:password2#密码不能为空|密码长度应当在{min}到{max}之间|两次密码输入不相等",
 			"password2@required|length:6,16#",
 		}
-		err := g.Validator().Bail().Rules(rules).CheckMap(ctx, params)
+		err := g.Validator().Bail().Rules(rules).Data(params).Run(ctx)
 		t.AssertNE(err, nil)
-		t.Assert(err.String(), "账号不能为空; 账号长度应当在6到16之间")
+		t.Assert(err.String(), "账号不能为空")
 	})
 	// global bail with rule bail
 	gtest.C(t, func(t *gtest.T) {
@@ -240,7 +240,7 @@ func Test_Map_Bail(t *testing.T) {
 			"password@required|length:6,16|same:password2#密码不能为空|密码长度应当在{min}到{max}之间|两次密码输入不相等",
 			"password2@required|length:6,16#",
 		}
-		err := g.Validator().Bail().Rules(rules).CheckMap(ctx, params)
+		err := g.Validator().Bail().Rules(rules).Data(params).Run(ctx)
 		t.AssertNE(err, nil)
 		t.Assert(err.String(), "账号不能为空")
 	})

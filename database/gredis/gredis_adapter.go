@@ -24,7 +24,7 @@ type Adapter interface {
 
 // Conn is an interface of a connection from universal redis client.
 type Conn interface {
-	// Do sends a command to the server and returns the received reply.
+	// Do send a command to the server and returns the received reply.
 	// It uses json.Marshal for struct/slice/map type values before committing them to redis.
 	Do(ctx context.Context, command string, args ...interface{}) (result *gvar.Var, err error)
 

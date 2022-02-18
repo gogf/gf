@@ -9,9 +9,9 @@ package goai
 import (
 	"reflect"
 
-	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/structs"
+	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gmeta"
@@ -65,6 +65,8 @@ type Discriminator struct {
 	Mapping      map[string]string `json:"mapping,omitempty" yaml:"mapping,omitempty"`
 }
 
+// addSchema creates schemas with objects.
+// Note that the `object` can be array alias like: `type Res []Item`.
 func (oai *OpenApiV3) addSchema(object ...interface{}) error {
 	for _, v := range object {
 		if err := oai.doAddSchemaSingle(v); err != nil {
@@ -105,10 +107,6 @@ func (oai *OpenApiV3) doAddSchemaSingle(object interface{}) error {
 
 // structToSchema converts and returns given struct object as Schema.
 func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
-	structFields, _ := structs.Fields(structs.FieldsInput{
-		Pointer:         object,
-		RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
-	})
 	var (
 		tagMap = gmeta.Data(object)
 		schema = &Schema{
@@ -118,12 +116,27 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 	if len(tagMap) > 0 {
 		err := gconv.Struct(oai.fileMapWithShortTags(tagMap), schema)
 		if err != nil {
-			return nil, gerror.WrapCode(gcode.CodeInternalError, err, `mapping meta data tags to Schema failed`)
+			return nil, gerror.Wrap(err, `mapping meta data tags to Schema failed`)
 		}
 	}
 	if schema.Type != "" && schema.Type != TypeObject {
 		return schema, nil
 	}
+	// []struct.
+	if utils.IsArray(object) {
+		schema.Type = TypeArray
+		subSchemaRef, err := oai.newSchemaRefWithGolangType(reflect.TypeOf(object).Elem(), nil)
+		if err != nil {
+			return nil, err
+		}
+		schema.Items = subSchemaRef
+		return schema, nil
+	}
+	// struct.
+	structFields, _ := gstructs.Fields(gstructs.FieldsInput{
+		Pointer:         object,
+		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
+	})
 	schema.Type = TypeObject
 	for _, structField := range structFields {
 		if !gstr.IsLetterUpper(structField.Name()[0]) {

@@ -42,6 +42,10 @@ func (c *Core) SlaveLink(schema ...string) (Link, error) {
 //
 // The meaning of a `word` can be considered as a column name.
 func (c *Core) QuoteWord(s string) string {
+	s = gstr.Trim(s)
+	if s == "" {
+		return s
+	}
 	charLeft, charRight := c.db.GetChars()
 	return doQuoteWord(s, charLeft, charRight)
 }
@@ -83,22 +87,26 @@ func (c *Core) Tables(schema ...string) (tables []string, err error) {
 	return
 }
 
-// TableFields retrieves and returns the fields information of specified table of current schema.
+// TableFields retrieves and returns the fields' information of specified table of current schema.
 //
 // Note that it returns a map containing the field name and its corresponding fields.
-// As a map is unsorted, the TableField struct has a "Index" field marks its sequence in the fields.
+// As a map is unsorted, the TableField struct has an "Index" field marks its sequence in the fields.
 //
 // It's using cache feature to enhance the performance, which is never expired util the process restarts.
 //
 // It does nothing in default.
 func (c *Core) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
-	return
+	// It does nothing if given table is empty, especially in sub-query.
+	if table == "" {
+		return map[string]*TableField{}, nil
+	}
+	return c.db.TableFields(c.GetCtx(), table, schema...)
 }
 
 // HasField determine whether the field exists in the table.
 func (c *Core) HasField(table, field string, schema ...string) (bool, error) {
 	table = c.guessPrimaryTableName(table)
-	tableFields, err := c.db.TableFields(c.GetCtx(), table, schema...)
+	tableFields, err := c.TableFields(table, schema...)
 	if err != nil {
 		return false, err
 	}

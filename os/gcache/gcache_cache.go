@@ -31,7 +31,7 @@ func New(lruCap ...int) *Cache {
 	}
 	// Here may be a "timer leak" if adapter is manually changed from memory adapter.
 	// Do not worry about this, as adapter is less changed, and it does nothing if it's not used.
-	gtimer.AddSingleton(context.Background(), time.Second, memAdapter.syncEventAndClearExpired)
+	gtimer.AddSingleton(context.Background(), time.Second, memAdapter.(*AdapterMemory).syncEventAndClearExpired)
 	return c
 }
 
@@ -47,6 +47,11 @@ func NewWithAdapter(adapter Adapter) *Cache {
 // this setting function concurrently in multiple goroutines.
 func (c *Cache) SetAdapter(adapter Adapter) {
 	c.localAdapter = adapter
+}
+
+// GetAdapter returns the adapter that is set in current Cache.
+func (c *Cache) GetAdapter() Adapter {
+	return c.localAdapter
 }
 
 // Removes deletes `keys` in the cache.

@@ -54,7 +54,7 @@ const (
 )
 
 // NewAdapterMemory creates and returns a new memory cache object.
-func NewAdapterMemory(lruCap ...int) *AdapterMemory {
+func NewAdapterMemory(lruCap ...int) Adapter {
 	c := &AdapterMemory{
 		data:        newAdapterMemoryData(),
 		lruGetList:  glist.New(true),
@@ -120,7 +120,7 @@ func (c *AdapterMemory) SetIfNotExist(ctx context.Context, key interface{}, valu
 		return false, err
 	}
 	if !isContained {
-		if _, err = c.doSetWithLockCheck(key, value, duration); err != nil {
+		if _, err = c.doSetWithLockCheck(ctx, key, value, duration); err != nil {
 			return false, err
 		}
 		return true, nil
@@ -136,17 +136,17 @@ func (c *AdapterMemory) SetIfNotExist(ctx context.Context, key interface{}, valu
 //
 // It does not expire if `duration` == 0.
 // It deletes the `key` if `duration` < 0 or given `value` is nil.
-func (c *AdapterMemory) SetIfNotExistFunc(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) (bool, error) {
+func (c *AdapterMemory) SetIfNotExistFunc(ctx context.Context, key interface{}, f Func, duration time.Duration) (bool, error) {
 	isContained, err := c.Contains(ctx, key)
 	if err != nil {
 		return false, err
 	}
 	if !isContained {
-		value, err := f()
+		value, err := f(ctx)
 		if err != nil {
 			return false, err
 		}
-		if _, err = c.doSetWithLockCheck(key, value, duration); err != nil {
+		if _, err = c.doSetWithLockCheck(ctx, key, value, duration); err != nil {
 			return false, err
 		}
 		return true, nil
@@ -162,13 +162,13 @@ func (c *AdapterMemory) SetIfNotExistFunc(ctx context.Context, key interface{}, 
 //
 // Note that it differs from function `SetIfNotExistFunc` is that the function `f` is executed within
 // writing mutex lock for concurrent safety purpose.
-func (c *AdapterMemory) SetIfNotExistFuncLock(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) (bool, error) {
+func (c *AdapterMemory) SetIfNotExistFuncLock(ctx context.Context, key interface{}, f Func, duration time.Duration) (bool, error) {
 	isContained, err := c.Contains(ctx, key)
 	if err != nil {
 		return false, err
 	}
 	if !isContained {
-		if _, err = c.doSetWithLockCheck(key, f, duration); err != nil {
+		if _, err = c.doSetWithLockCheck(ctx, key, f, duration); err != nil {
 			return false, err
 		}
 		return true, nil
@@ -204,7 +204,7 @@ func (c *AdapterMemory) GetOrSet(ctx context.Context, key interface{}, value int
 		return nil, err
 	}
 	if v == nil {
-		return c.doSetWithLockCheck(key, value, duration)
+		return c.doSetWithLockCheck(ctx, key, value, duration)
 	} else {
 		return v, nil
 	}
@@ -217,20 +217,20 @@ func (c *AdapterMemory) GetOrSet(ctx context.Context, key interface{}, value int
 // It does not expire if `duration` == 0.
 // It deletes the `key` if `duration` < 0 or given `value` is nil, but it does nothing
 // if `value` is a function and the function result is nil.
-func (c *AdapterMemory) GetOrSetFunc(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) (*gvar.Var, error) {
+func (c *AdapterMemory) GetOrSetFunc(ctx context.Context, key interface{}, f Func, duration time.Duration) (*gvar.Var, error) {
 	v, err := c.Get(ctx, key)
 	if err != nil {
 		return nil, err
 	}
 	if v == nil {
-		value, err := f()
+		value, err := f(ctx)
 		if err != nil {
 			return nil, err
 		}
 		if value == nil {
 			return nil, nil
 		}
-		return c.doSetWithLockCheck(key, value, duration)
+		return c.doSetWithLockCheck(ctx, key, value, duration)
 	} else {
 		return v, nil
 	}
@@ -246,13 +246,13 @@ func (c *AdapterMemory) GetOrSetFunc(ctx context.Context, key interface{}, f fun
 //
 // Note that it differs from function `GetOrSetFunc` is that the function `f` is executed within
 // writing mutex lock for concurrent safety purpose.
-func (c *AdapterMemory) GetOrSetFuncLock(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) (*gvar.Var, error) {
+func (c *AdapterMemory) GetOrSetFuncLock(ctx context.Context, key interface{}, f Func, duration time.Duration) (*gvar.Var, error) {
 	v, err := c.Get(ctx, key)
 	if err != nil {
 		return nil, err
 	}
 	if v == nil {
-		return c.doSetWithLockCheck(key, f, duration)
+		return c.doSetWithLockCheck(ctx, key, f, duration)
 	} else {
 		return v, nil
 	}
@@ -369,9 +369,9 @@ func (c *AdapterMemory) Close(ctx context.Context) error {
 //
 // It doubly checks the `key` whether exists in the cache using mutex writing lock
 // before setting it to the cache.
-func (c *AdapterMemory) doSetWithLockCheck(key interface{}, value interface{}, duration time.Duration) (result *gvar.Var, err error) {
+func (c *AdapterMemory) doSetWithLockCheck(ctx context.Context, key interface{}, value interface{}, duration time.Duration) (result *gvar.Var, err error) {
 	expireTimestamp := c.getInternalExpire(duration)
-	v, err := c.data.SetWithLock(key, value, expireTimestamp)
+	v, err := c.data.SetWithLock(ctx, key, value, expireTimestamp)
 	c.eventList.PushBack(&adapterMemoryEvent{k: key, e: expireTimestamp})
 	return gvar.New(v), err
 }

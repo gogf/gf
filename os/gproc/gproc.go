@@ -84,7 +84,10 @@ func Uptime() time.Duration {
 // The command `cmd` reads the input parameters from input pipe `in`, and writes its output automatically
 // to output pipe `out`.
 func Shell(cmd string, out io.Writer, in io.Reader) error {
-	p := NewProcess(getShell(), append([]string{getShellOption()}, parseCommand(cmd)...))
+	p := NewProcess(
+		getShell(),
+		append([]string{getShellOption()}, parseCommand(cmd)...),
+	)
 	p.Stdin = in
 	p.Stdout = out
 	return p.Run()
@@ -92,18 +95,28 @@ func Shell(cmd string, out io.Writer, in io.Reader) error {
 
 // ShellRun executes given command `cmd` synchronously and outputs the command result to the stdout.
 func ShellRun(cmd string) error {
-	p := NewProcess(getShell(), append([]string{getShellOption()}, parseCommand(cmd)...))
+	p := NewProcess(
+		getShell(),
+		append([]string{getShellOption()}, parseCommand(cmd)...),
+	)
 	return p.Run()
 }
 
 // ShellExec executes given command `cmd` synchronously and returns the command result.
-func ShellExec(cmd string, environment ...[]string) (string, error) {
-	buf := bytes.NewBuffer(nil)
-	p := NewProcess(getShell(), append([]string{getShellOption()}, parseCommand(cmd)...), environment...)
+func ShellExec(cmd string, environment ...[]string) (result string, err error) {
+	var (
+		buf = bytes.NewBuffer(nil)
+		p   = NewProcess(
+			getShell(),
+			append([]string{getShellOption()}, parseCommand(cmd)...),
+			environment...,
+		)
+	)
 	p.Stdout = buf
 	p.Stderr = buf
-	err := p.Run()
-	return buf.String(), err
+	err = p.Run()
+	result = buf.String()
+	return
 }
 
 // parseCommand parses command `cmd` into slice arguments.
@@ -147,7 +160,7 @@ func parseCommand(cmd string) (args []string) {
 	return
 }
 
-// getShell returns the shell command depending on current working operation system.
+// getShell returns the shell command depending on current working operating system.
 // It returns "cmd.exe" for windows, and "bash" or "sh" for others.
 func getShell() string {
 	switch runtime.GOOS {
@@ -183,7 +196,7 @@ func getShellOption() string {
 
 // SearchBinary searches the binary `file` in current working folder and PATH environment.
 func SearchBinary(file string) string {
-	// Check if it's absolute path of exists at current working directory.
+	// Check if it is absolute path of exists at current working directory.
 	if gfile.Exists(file) {
 		return file
 	}
@@ -204,6 +217,7 @@ func SearchBinaryPath(file string) string {
 		if gfile.Ext(file) != ".exe" {
 			file += ".exe"
 		}
+
 	default:
 		array = gstr.SplitAndTrim(genv.Get("PATH").String(), ":")
 	}

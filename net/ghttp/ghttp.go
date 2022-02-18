@@ -12,18 +12,20 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gorilla/websocket"
+
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gsession"
 	"github.com/gogf/gf/v2/protocol/goai"
-	"github.com/gorilla/websocket"
 )
 
 type (
 	// Server wraps the http.Server and provides more rich features.
 	Server struct {
-		name             string                           // Unique name for instance management.
+		instance         string                           // Instance name.
 		config           ServerConfig                     // Configuration.
 		plugins          []Plugin                         // Plugin array to extend server functionality.
 		servers          []*gracefulServer                // Underlying http.Server array.
@@ -35,6 +37,7 @@ type (
 		statusHandlerMap map[string][]HandlerFunc         // Custom status handler map.
 		sessionManager   *gsession.Manager                // Session manager.
 		openapi          *goai.OpenApiV3                  // The OpenApi specification management object.
+		service          *gsvc.Service                    // The service for Registry.
 	}
 
 	// Router object.
@@ -119,17 +122,20 @@ const (
 )
 
 const (
-	supportedHttpMethods = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
-	defaultMethod        = "ALL"
-	exceptionExit        = "exit"
-	exceptionExitAll     = "exit_all"
-	exceptionExitHook    = "exit_hook"
-	routeCacheDuration   = time.Hour
-	methodNameInit       = "Init"
-	methodNameShut       = "Shut"
-	methodNameExit       = "Exit"
-	ctxKeyForRequest     = "gHttpRequestObject"
-	swaggerUIPackedPath  = "/goframe/swaggerui"
+	supportedHttpMethods  = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
+	defaultMethod         = "ALL"
+	exceptionExit         = "exit"
+	exceptionExitAll      = "exit_all"
+	exceptionExitHook     = "exit_hook"
+	routeCacheDuration    = time.Hour
+	methodNameInit        = "Init"
+	methodNameShut        = "Shut"
+	ctxKeyForRequest      = "gHttpRequestObject"
+	contentTypeXml        = "text/xml"
+	contentTypeHtml       = "text/html"
+	contentTypeJson       = "application/json"
+	swaggerUIPackedPath   = "/goframe/swaggerui"
+	responseTraceIDHeader = "Trace-ID"
 )
 
 var (

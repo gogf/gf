@@ -15,12 +15,13 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func TestRequest_GetRemoteIp(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		p, _ := ports.PopRand()
+		p, _ := gtcp.GetFreePort()
 		s := g.Server(p)
 		s.BindHandler("/", func(r *ghttp.Request) {
 			r.Response.Write(r.GetRemoteIp())
@@ -32,10 +33,14 @@ func TestRequest_GetRemoteIp(t *testing.T) {
 
 		time.Sleep(100 * time.Millisecond)
 
-		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		clientV4 := g.Client()
+		clientV4.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent(ctx, "/"), "127.0.0.1")
+		clientV6 := g.Client()
+		clientV6.SetPrefix(fmt.Sprintf("http://[::1]:%d", p))
+
+		t.Assert(clientV4.GetContent(ctx, "/"), "127.0.0.1")
+		t.Assert(clientV6.GetContent(ctx, "/"), "::1")
 	})
 
 }

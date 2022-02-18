@@ -7,6 +7,7 @@
 package gcache
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -153,7 +154,7 @@ func (d *adapterMemoryData) Set(key interface{}, value adapterMemoryItem) {
 	d.mu.Unlock()
 }
 
-// Sets batch sets cache with key-value pairs by `data`, which is expired after `duration`.
+// SetMap batch sets cache with key-value pairs by `data`, which is expired after `duration`.
 //
 // It does not expire if `duration` == 0.
 // It deletes the keys of `data` if `duration` < 0 or given `value` is nil.
@@ -169,21 +170,26 @@ func (d *adapterMemoryData) SetMap(data map[interface{}]interface{}, expireTime 
 	return nil
 }
 
-func (d *adapterMemoryData) SetWithLock(key interface{}, value interface{}, expireTimestamp int64) (interface{}, error) {
+func (d *adapterMemoryData) SetWithLock(ctx context.Context, key interface{}, value interface{}, expireTimestamp int64) (interface{}, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
+	var (
+		err error
+	)
 	if v, ok := d.data[key]; ok && !v.IsExpired() {
 		return v.v, nil
 	}
-	if f, ok := value.(func() (interface{}, error)); ok {
-		v, err := f()
-		if err != nil {
+	f, ok := value.(Func)
+	if !ok {
+		// Compatible with raw function value.
+		f, ok = value.(func(ctx context.Context) (value interface{}, err error))
+	}
+	if ok {
+		if value, err = f(ctx); err != nil {
 			return nil, err
 		}
-		if v == nil {
+		if value == nil {
 			return nil, nil
-		} else {
-			value = v
 		}
 	}
 	d.data[key] = adapterMemoryItem{v: value, e: expireTimestamp}

@@ -20,6 +20,7 @@ import (
 func GetIpArray() (ips []string, err error) {
 	interfaceAddr, err := net.InterfaceAddrs()
 	if err != nil {
+		err = gerror.Wrap(err, `net.InterfaceAddrs failed`)
 		return nil, err
 	}
 	for _, address := range interfaceAddr {
@@ -33,6 +34,15 @@ func GetIpArray() (ips []string, err error) {
 	return ips, nil
 }
 
+// MustGetIntranetIp performs as GetIntranetIp, but it panics if any error occurs.
+func MustGetIntranetIp() string {
+	ip, err := GetIntranetIp()
+	if err != nil {
+		panic(err)
+	}
+	return ip
+}
+
 // GetIntranetIp retrieves and returns the first intranet ip of current machine.
 func GetIntranetIp() (ip string, err error) {
 	ips, err := GetIntranetIpArray()
@@ -40,16 +50,21 @@ func GetIntranetIp() (ip string, err error) {
 		return "", err
 	}
 	if len(ips) == 0 {
-		return "", gerror.NewCode(gcode.CodeOperationFailed, "no intranet ip found")
+		return "", gerror.New("no intranet ip found")
 	}
 	return ips[0], nil
 }
 
 // GetIntranetIpArray retrieves and returns the intranet ip list of current machine.
 func GetIntranetIpArray() (ips []string, err error) {
-	interFaces, e := net.Interfaces()
-	if e != nil {
-		return ips, e
+	var (
+		addresses  []net.Addr
+		interFaces []net.Interface
+	)
+	interFaces, err = net.Interfaces()
+	if err != nil {
+		err = gerror.Wrap(err, `net.Interfaces failed`)
+		return ips, err
 	}
 	for _, interFace := range interFaces {
 		if interFace.Flags&net.FlagUp == 0 {
@@ -57,16 +72,17 @@ func GetIntranetIpArray() (ips []string, err error) {
 			continue
 		}
 		if interFace.Flags&net.FlagLoopback != 0 {
-			// loopback interface
+			// loop back interface
 			continue
 		}
 		// ignore warden bridge
 		if strings.HasPrefix(interFace.Name, "w-") {
 			continue
 		}
-		addresses, e := interFace.Addrs()
-		if e != nil {
-			return ips, e
+		addresses, err = interFace.Addrs()
+		if err != nil {
+			err = gerror.Wrap(err, `interFace.Addrs failed`)
+			return ips, err
 		}
 		for _, addr := range addresses {
 			var ip net.IP
@@ -120,6 +136,7 @@ func IsIntranet(ip string) bool {
 	if array[0] == "172" {
 		second, err := strconv.ParseInt(array[1], 10, 64)
 		if err != nil {
+			err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `strconv.ParseInt failed for string "%s"`, array[1])
 			return false
 		}
 		if second >= 16 && second <= 31 {

@@ -1,31 +1,47 @@
 # GoFrame
+<div align=center>
+<img src="https://goframe.org/statics/image/gf-head-large.png" width="100"/>
 
 [![Go Doc](https://godoc.org/github.com/gogf/gf?status.svg)](https://godoc.org/github.com/gogf/gf)
-[![GoFrame CI](https://github.com/gogf/gf/actions/workflows/go.yml/badge.svg)](https://github.com/gogf/gf/actions/workflows/go.yml)
+[![GoFrame CI](https://github.com/gogf/gf/actions/workflows/gf.yml/badge.svg)](https://github.com/gogf/gf/actions/workflows/gf.yml)
 [![Go Report](https://goreportcard.com/badge/github.com/gogf/gf?v=1)](https://goreportcard.com/report/github.com/gogf/gf)
 [![Code Coverage](https://codecov.io/gh/gogf/gf/branch/master/graph/badge.svg)](https://codecov.io/gh/gogf/gf/branch/master)
 [![Production Ready](https://img.shields.io/badge/production-ready-blue.svg)](https://github.com/gogf/gf)
 [![License](https://img.shields.io/github/license/gogf/gf.svg?style=flat)](https://github.com/gogf/gf)
+</div>
 
-English | [简体中文](README_ZH.MD)
+`GoFrame` is a modular, powerful, high-performance and enterprise-class application development framework of Golang. 
 
-`GoFrame` is a modular, powerful, high-performance and enterprise-class application development framework 
-of Golang. 
-
-> If you're a newbie to `Go`, you may consider `GoFrame` easy and great as `Laravel` in `PHP`, `SpringBoot` in `Java` or `Django` in `Python`.
+# Features
+- modular, loosely coupled design
+- rich components, out-of-the-box
+- automatic codes generating for efficiency
+- simple and easy to use, detailed documentation
+- interface designed components, with high scalability
+- fully supported tracing and error stack feature
+- specially developed and powerful ORM component
+- robust engineering design specifications
+- convenient development CLI tool provide
+- OpenTelemetry observability features support
+- OpenAPIV3 documentation generating, automatically
+- much, much more...ready to explore?
 
 # Installation
-```
+Enter your repo. directory and execute following command:
+
+## primary module
+```bash
 go get -u -v github.com/gogf/gf/v2
 ```
-suggested using `go.mod`:
-```
-require github.com/gogf/gf/v2 latest
+
+## cli tool
+```bash
+go install github.com/gogf/gf/cmd/gf/v2
 ```
 
 # Limitation
 ```
-golang version >= 1.14
+golang version >= 1.15
 ```
 
 # Architecture
@@ -33,40 +49,28 @@ golang version >= 1.14
 <img src="https://goframe.org/download/attachments/1114119/arch.png"/>
 </div>
 
-# Packages
-1. **Primary Package**
-
-    The `gf` repository maintains some basic and most commonly used packages, keeping it as lightweight and simple as possible. 
-
-1. **Community Package**
-
-    The community packages are contributed and maintained by community members, which are hosted in `gogf` organization. Some of the community packages are separated from the `gf` repository, which are not of common usage or are with heavy dependencies. 
-
-# Performance
-
-The `Web` component performance of `GoFrame`, please refer to third-party project: https://github.com/the-benchmarker/web-frameworks
-
-
 
 # Documentation
 
-* 中文官网: [https://goframe.org](https://goframe.org/display/gf)
+* Chinese Official Site(中文官网): [https://goframe.org](https://goframe.org/display/gf)
 * GoDoc API: [https://pkg.go.dev/github.com/gogf/gf](https://pkg.go.dev/github.com/gogf/gf)
 
 
 # License
 
-`GF` is licensed under the [MIT License](LICENSE), 100% free and open-source, forever.
+`GoFrame` is licensed under the [MIT License](LICENSE), 100% free and open-source, forever.
 
 # Part Of Users
 
 - [Tencent](https://www.tencent.com/)
 - [ZTE](https://www.zte.com.cn/china/)
 - [Ant Financial Services](https://www.antfin.com/)
+- [VIVO](https://www.vivo.com/)
 - [MedLinker](https://www.medlinker.com/)
 - [KuCoin](https://www.kucoin.io/)
 - [LeYouJia](https://www.leyoujia.com/)
 - [IGG](https://igg.com)
+- [37](https://www.37.com)
 - [XiMaLaYa](https://www.ximalaya.com)
 - [ZYBang](https://www.zybang.com/)
 
@@ -80,10 +84,10 @@ This project exists thanks to all the people who contribute. [[Contributors](htt
 
 # Donators
 
-If you love `GF`, why not [buy developer a cup of coffee](https://goframe.org/pages/viewpage.action?pageId=1115633)?
+If you love `GoFrame`, why not [buy developer a cup of coffee](https://goframe.org/pages/viewpage.action?pageId=1115633)?
 
 # Sponsors
-We appreciate any kind of sponsorship for `GF` development. If you've got some interesting, please contact WeChat `389961817` / Email `john@goframe.org`.
+We appreciate any kind of sponsorship for `GoFrame` development. If you've got some interesting, please contact WeChat `389961817` / Email `john@goframe.org`.
 
 
 

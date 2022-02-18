@@ -26,20 +26,19 @@ func (m *Model) QuoteWord(s string) string {
 	return m.db.GetCore().QuoteWord(s)
 }
 
-// TableFields retrieves and returns the fields information of specified table of current
+// TableFields retrieves and returns the fields' information of specified table of current
 // schema.
 //
 // Also see DriverMysql.TableFields.
 func (m *Model) TableFields(tableStr string, schema ...string) (fields map[string]*TableField, err error) {
-	useSchema := m.schema
+	var (
+		table     = m.db.GetCore().guessPrimaryTableName(tableStr)
+		useSchema = m.schema
+	)
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	}
-	return m.db.TableFields(
-		m.GetCtx(),
-		m.db.GetCore().guessPrimaryTableName(tableStr),
-		useSchema,
-	)
+	return m.db.GetCore().TableFields(table, useSchema)
 }
 
 // getModel creates and returns a cloned model of current model if `safe` is true, or else it returns
@@ -57,8 +56,8 @@ func (m *Model) getModel() *Model {
 // ID        -> id
 // NICK_Name -> nickname.
 func (m *Model) mappingAndFilterToTableFields(fields []string, filter bool) []string {
-	fieldsMap, err := m.TableFields(m.tablesInit)
-	if err != nil || len(fieldsMap) == 0 {
+	fieldsMap, _ := m.TableFields(m.tablesInit)
+	if len(fieldsMap) == 0 {
 		return fields
 	}
 	var (

@@ -13,11 +13,12 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Router_Basic1(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/:name", func(r *ghttp.Request) {
 		r.Response.Write("/:name")
@@ -51,7 +52,7 @@ func Test_Router_Basic1(t *testing.T) {
 }
 
 func Test_Router_Basic2(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/{hash}", func(r *ghttp.Request) {
 		r.Response.Write(r.Get("hash"))
@@ -74,7 +75,7 @@ func Test_Router_Basic2(t *testing.T) {
 }
 
 func Test_Router_Value(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/{hash}", func(r *ghttp.Request) {
 		r.Response.Write(r.GetRouter("hash").String())
@@ -102,7 +103,7 @@ func Test_Router_Value(t *testing.T) {
 
 // HTTP method register.
 func Test_Router_Method(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("GET:/get", func(r *ghttp.Request) {
 
@@ -144,7 +145,7 @@ func Test_Router_Method(t *testing.T) {
 
 // Extra char '/' of the router.
 func Test_Router_ExtraChar(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.Group("/api", func(group *ghttp.RouterGroup) {
 		group.GET("/test", func(r *ghttp.Request) {
@@ -172,7 +173,7 @@ func Test_Router_ExtraChar(t *testing.T) {
 
 // Custom status handler.
 func Test_Router_Status(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/200", func(r *ghttp.Request) {
 		r.Response.WriteStatus(200)
@@ -224,7 +225,7 @@ func Test_Router_Status(t *testing.T) {
 }
 
 func Test_Router_CustomStatusHandler(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/", func(r *ghttp.Request) {
 		r.Response.Write("hello")
@@ -253,7 +254,7 @@ func Test_Router_CustomStatusHandler(t *testing.T) {
 
 // 404 not found router.
 func Test_Router_404(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/", func(r *ghttp.Request) {
 		r.Response.Write("hello")
@@ -277,7 +278,7 @@ func Test_Router_404(t *testing.T) {
 }
 
 func Test_Router_Priority(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/admin", func(r *ghttp.Request) {
 		r.Response.Write("admin")

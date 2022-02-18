@@ -13,6 +13,7 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -62,7 +63,7 @@ func Test_SetConfigWithMap(t *testing.T) {
 }
 
 func Test_ClientMaxBodySize(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.POST("/", func(r *ghttp.Request) {
@@ -91,13 +92,13 @@ func Test_ClientMaxBodySize(t *testing.T) {
 		}
 		t.Assert(
 			gstr.Trim(c.PostContent(ctx, "/", data)),
-			data[:1024],
+			`ReadAll from body failed: http: request body too large`,
 		)
 	})
 }
 
 func Test_ClientMaxBodySize_File(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.POST("/", func(r *ghttp.Request) {
@@ -123,7 +124,7 @@ func Test_ClientMaxBodySize_File(t *testing.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		path := gfile.TempDir(gtime.TimestampNanoStr())
+		path := gfile.Temp(gtime.TimestampNanoStr())
 		data := make([]byte, 512)
 		for i := 0; i < 512; i++ {
 			data[i] = 'a'
@@ -141,7 +142,7 @@ func Test_ClientMaxBodySize_File(t *testing.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		path := gfile.TempDir(gtime.TimestampNanoStr())
+		path := gfile.Temp(gtime.TimestampNanoStr())
 		data := make([]byte, 1056)
 		for i := 0; i < 1056; i++ {
 			data[i] = 'a'
@@ -150,7 +151,7 @@ func Test_ClientMaxBodySize_File(t *testing.T) {
 		defer gfile.Remove(path)
 		t.Assert(
 			gstr.Trim(c.PostContent(ctx, "/", "name=john&file=@file:"+path)),
-			"Invalid Request: http: request body too large",
+			"r.ParseMultipartForm failed: http: request body too large",
 		)
 	})
 }

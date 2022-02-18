@@ -11,7 +11,7 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/structs"
+	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gmeta"
@@ -34,7 +34,7 @@ type Path struct {
 	Parameters  Parameters `json:"parameters,omitempty"  yaml:"parameters,omitempty"`
 }
 
-// Paths is specified by OpenAPI/Swagger standard version 3.0.
+// Paths are specified by OpenAPI/Swagger standard version 3.0.
 type Paths map[string]Path
 
 const (
@@ -71,19 +71,14 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	if reflectType.In(1).Kind() == reflect.Ptr {
 		inputObject = reflect.New(reflectType.In(1).Elem()).Elem()
 	} else {
-		inputObject = reflect.New(reflectType.In(1).Elem()).Elem()
+		inputObject = reflect.New(reflectType.In(1)).Elem()
 	}
 	if reflectType.Out(0).Kind() == reflect.Ptr {
 		outputObject = reflect.New(reflectType.Out(0).Elem()).Elem()
 	} else {
 		outputObject = reflect.New(reflectType.Out(0)).Elem()
 	}
-	for inputObject.Kind() == reflect.Ptr {
-		inputObject = inputObject.Elem()
-	}
-	for outputObject.Kind() == reflect.Ptr {
-		outputObject = outputObject.Elem()
-	}
+
 	var (
 		path                 = Path{}
 		inputMetaMap         = gmeta.Data(inputObject.Interface())
@@ -132,10 +127,10 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 
 	if len(inputMetaMap) > 0 {
 		if err := gconv.Struct(oai.fileMapWithShortTags(inputMetaMap), &path); err != nil {
-			return gerror.WrapCode(gcode.CodeInternalError, err, `mapping struct tags to Path failed`)
+			return gerror.Wrap(err, `mapping struct tags to Path failed`)
 		}
 		if err := gconv.Struct(oai.fileMapWithShortTags(inputMetaMap), &operation); err != nil {
-			return gerror.WrapCode(gcode.CodeInternalError, err, `mapping struct tags to Operation failed`)
+			return gerror.Wrap(err, `mapping struct tags to Operation failed`)
 		}
 	}
 
@@ -182,9 +177,9 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		}
 	}
 	// It also sets request parameters.
-	structFields, _ := structs.Fields(structs.FieldsInput{
+	structFields, _ := gstructs.Fields(gstructs.FieldsInput{
 		Pointer:         inputObject.Interface(),
-		RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
+		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
 	})
 	for _, structField := range structFields {
 		if operation.Parameters == nil {
@@ -210,7 +205,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		)
 		if len(outputMetaMap) > 0 {
 			if err := gconv.Struct(oai.fileMapWithShortTags(outputMetaMap), &response); err != nil {
-				return gerror.WrapCode(gcode.CodeInternalError, err, `mapping struct tags to Response failed`)
+				return gerror.Wrap(err, `mapping struct tags to Response failed`)
 			}
 		}
 		// Supported mime types of response.
@@ -218,9 +213,9 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			contentTypes = oai.Config.ReadContentTypes
 			tagMimeValue = gmeta.Get(outputObject.Interface(), TagNameMime).String()
 			refInput     = getResponseSchemaRefInput{
-				BusinessStructName: outputStructTypeName,
-				ResponseObject:     oai.Config.CommonResponse,
-				ResponseDataField:  oai.Config.CommonResponseDataField,
+				BusinessStructName:      outputStructTypeName,
+				CommonResponseObject:    oai.Config.CommonResponse,
+				CommonResponseDataField: oai.Config.CommonResponseDataField,
 			}
 		)
 		if tagMimeValue != "" {
@@ -229,8 +224,8 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		for _, v := range contentTypes {
 			// If customized response mime type, it then ignores common response feature.
 			if tagMimeValue != "" {
-				refInput.ResponseObject = nil
-				refInput.ResponseDataField = ""
+				refInput.CommonResponseObject = nil
+				refInput.CommonResponseDataField = ""
 			}
 			schemaRef, err := oai.getResponseSchemaRef(refInput)
 			if err != nil {

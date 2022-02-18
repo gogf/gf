@@ -10,6 +10,7 @@
 package gconv
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"reflect"
@@ -18,7 +19,9 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/encoding/gbinary"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gtime"
 )
 
@@ -33,10 +36,22 @@ var (
 	}
 
 	// StructTagPriority defines the default priority tags for Map*/Struct* functions.
-	// Note, the "gconv", "param", "params" tags are used by old version of package.
-	// It is strongly recommended using short tag "c" or "p" instead in the future.
+	// Note, the `gconv/param/params` tags are used by old version of package.
+	// It is strongly recommended using short tag `c/p` instead in the future.
 	StructTagPriority = []string{"gconv", "param", "params", "c", "p", "json"}
 )
+
+// Convert converts the variable `fromValue` to the type `toTypeName`, the type `toTypeName` is specified by string.
+// The optional parameter `extraParams` is used for additional necessary parameter for this conversion.
+// It supports common types conversion as its conversion based on type name string.
+func Convert(fromValue interface{}, toTypeName string, extraParams ...interface{}) interface{} {
+	return doConvert(doConvertInput{
+		FromValue:  fromValue,
+		ToTypeName: toTypeName,
+		ReferValue: nil,
+		Extra:      extraParams,
+	})
+}
 
 type doConvertInput struct {
 	FromValue  interface{}   // Value that is converted from.
@@ -259,11 +274,12 @@ func doConvert(in doConvertInput) interface{} {
 	case "[]map[string]interface{}":
 		return Maps(in.FromValue)
 
+	case "json.RawMessage":
+		return Bytes(in.FromValue)
+
 	default:
 		if in.ReferValue != nil {
-			var (
-				referReflectValue reflect.Value
-			)
+			var referReflectValue reflect.Value
 			if v, ok := in.ReferValue.(reflect.Value); ok {
 				referReflectValue = v
 			} else {
@@ -275,18 +291,6 @@ func doConvert(in doConvertInput) interface{} {
 		}
 		return in.FromValue
 	}
-}
-
-// Convert converts the variable `fromValue` to the type `toTypeName`, the type `toTypeName` is specified by string.
-// The optional parameter `extraParams` is used for additional necessary parameter for this conversion.
-// It supports common types conversion as its conversion based on type name string.
-func Convert(fromValue interface{}, toTypeName string, extraParams ...interface{}) interface{} {
-	return doConvert(doConvertInput{
-		FromValue:  fromValue,
-		ToTypeName: toTypeName,
-		ReferValue: nil,
-		Extra:      extraParams,
-	})
 }
 
 // Byte converts `any` to byte.
@@ -305,28 +309,30 @@ func Bytes(any interface{}) []byte {
 	switch value := any.(type) {
 	case string:
 		return []byte(value)
+
 	case []byte:
 		return value
+
 	default:
 		if f, ok := value.(iBytes); ok {
 			return f.Bytes()
 		}
-		var (
-			reflectValue = reflect.ValueOf(any)
-			reflectKind  = reflectValue.Kind()
-		)
-		for reflectKind == reflect.Ptr {
-			reflectValue = reflectValue.Elem()
-			reflectKind = reflectValue.Kind()
-		}
-		switch reflectKind {
+		originValueAndKind := utils.OriginValueAndKind(any)
+		switch originValueAndKind.OriginKind {
+		case reflect.Map:
+			bytes, err := json.Marshal(any)
+			if err != nil {
+				intlog.Errorf(context.TODO(), `%+v`, err)
+			}
+			return bytes
+
 		case reflect.Array, reflect.Slice:
 			var (
 				ok    = true
-				bytes = make([]byte, reflectValue.Len())
+				bytes = make([]byte, originValueAndKind.OriginValue.Len())
 			)
 			for i, _ := range bytes {
-				int32Value := Int32(reflectValue.Index(i).Interface())
+				int32Value := Int32(originValueAndKind.OriginValue.Index(i).Interface())
 				if int32Value < 0 || int32Value > math.MaxUint8 {
 					ok = false
 					break
@@ -502,280 +508,6 @@ func Bool(any interface{}) bool {
 			}
 			return true
 		}
-	}
-}
-
-// Int converts `any` to int.
-func Int(any interface{}) int {
-	if any == nil {
-		return 0
-	}
-	if v, ok := any.(int); ok {
-		return v
-	}
-	return int(Int64(any))
-}
-
-// Int8 converts `any` to int8.
-func Int8(any interface{}) int8 {
-	if any == nil {
-		return 0
-	}
-	if v, ok := any.(int8); ok {
-		return v
-	}
-	return int8(Int64(any))
-}
-
-// Int16 converts `any` to int16.
-func Int16(any interface{}) int16 {
-	if any == nil {
-		return 0
-	}
-	if v, ok := any.(int16); ok {
-		return v
-	}
-	return int16(Int64(any))
-}
-
-// Int32 converts `any` to int32.
-func Int32(any interface{}) int32 {
-	if any == nil {
-		return 0
-	}
-	if v, ok := any.(int32); ok {
-		return v
-	}
-	return int32(Int64(any))
-}
-
-// Int64 converts `any` to int64.
-func Int64(any interface{}) int64 {
-	if any == nil {
-		return 0
-	}
-	switch value := any.(type) {
-	case int:
-		return int64(value)
-	case int8:
-		return int64(value)
-	case int16:
-		return int64(value)
-	case int32:
-		return int64(value)
-	case int64:
-		return value
-	case uint:
-		return int64(value)
-	case uint8:
-		return int64(value)
-	case uint16:
-		return int64(value)
-	case uint32:
-		return int64(value)
-	case uint64:
-		return int64(value)
-	case float32:
-		return int64(value)
-	case float64:
-		return int64(value)
-	case bool:
-		if value {
-			return 1
-		}
-		return 0
-	case []byte:
-		return gbinary.DecodeToInt64(value)
-	default:
-		if f, ok := value.(iInt64); ok {
-			return f.Int64()
-		}
-		s := String(value)
-		isMinus := false
-		if len(s) > 0 {
-			if s[0] == '-' {
-				isMinus = true
-				s = s[1:]
-			} else if s[0] == '+' {
-				s = s[1:]
-			}
-		}
-		// Hexadecimal
-		if len(s) > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X') {
-			if v, e := strconv.ParseInt(s[2:], 16, 64); e == nil {
-				if isMinus {
-					return -v
-				}
-				return v
-			}
-		}
-		// Octal
-		if len(s) > 1 && s[0] == '0' {
-			if v, e := strconv.ParseInt(s[1:], 8, 64); e == nil {
-				if isMinus {
-					return -v
-				}
-				return v
-			}
-		}
-		// Decimal
-		if v, e := strconv.ParseInt(s, 10, 64); e == nil {
-			if isMinus {
-				return -v
-			}
-			return v
-		}
-		// Float64
-		return int64(Float64(value))
-	}
-}
-
-// Uint converts `any` to uint.
-func Uint(any interface{}) uint {
-	if any == nil {
-		return 0
-	}
-	if v, ok := any.(uint); ok {
-		return v
-	}
-	return uint(Uint64(any))
-}
-
-// Uint8 converts `any` to uint8.
-func Uint8(any interface{}) uint8 {
-	if any == nil {
-		return 0
-	}
-	if v, ok := any.(uint8); ok {
-		return v
-	}
-	return uint8(Uint64(any))
-}
-
-// Uint16 converts `any` to uint16.
-func Uint16(any interface{}) uint16 {
-	if any == nil {
-		return 0
-	}
-	if v, ok := any.(uint16); ok {
-		return v
-	}
-	return uint16(Uint64(any))
-}
-
-// Uint32 converts `any` to uint32.
-func Uint32(any interface{}) uint32 {
-	if any == nil {
-		return 0
-	}
-	if v, ok := any.(uint32); ok {
-		return v
-	}
-	return uint32(Uint64(any))
-}
-
-// Uint64 converts `any` to uint64.
-func Uint64(any interface{}) uint64 {
-	if any == nil {
-		return 0
-	}
-	switch value := any.(type) {
-	case int:
-		return uint64(value)
-	case int8:
-		return uint64(value)
-	case int16:
-		return uint64(value)
-	case int32:
-		return uint64(value)
-	case int64:
-		return uint64(value)
-	case uint:
-		return uint64(value)
-	case uint8:
-		return uint64(value)
-	case uint16:
-		return uint64(value)
-	case uint32:
-		return uint64(value)
-	case uint64:
-		return value
-	case float32:
-		return uint64(value)
-	case float64:
-		return uint64(value)
-	case bool:
-		if value {
-			return 1
-		}
-		return 0
-	case []byte:
-		return gbinary.DecodeToUint64(value)
-	default:
-		if f, ok := value.(iUint64); ok {
-			return f.Uint64()
-		}
-		s := String(value)
-		// Hexadecimal
-		if len(s) > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X') {
-			if v, e := strconv.ParseUint(s[2:], 16, 64); e == nil {
-				return v
-			}
-		}
-		// Octal
-		if len(s) > 1 && s[0] == '0' {
-			if v, e := strconv.ParseUint(s[1:], 8, 64); e == nil {
-				return v
-			}
-		}
-		// Decimal
-		if v, e := strconv.ParseUint(s, 10, 64); e == nil {
-			return v
-		}
-		// Float64
-		return uint64(Float64(value))
-	}
-}
-
-// Float32 converts `any` to float32.
-func Float32(any interface{}) float32 {
-	if any == nil {
-		return 0
-	}
-	switch value := any.(type) {
-	case float32:
-		return value
-	case float64:
-		return float32(value)
-	case []byte:
-		return gbinary.DecodeToFloat32(value)
-	default:
-		if f, ok := value.(iFloat32); ok {
-			return f.Float32()
-		}
-		v, _ := strconv.ParseFloat(String(any), 64)
-		return float32(v)
-	}
-}
-
-// Float64 converts `any` to float64.
-func Float64(any interface{}) float64 {
-	if any == nil {
-		return 0
-	}
-	switch value := any.(type) {
-	case float32:
-		return float64(value)
-	case float64:
-		return value
-	case []byte:
-		return gbinary.DecodeToFloat64(value)
-	default:
-		if f, ok := value.(iFloat64); ok {
-			return f.Float64()
-		}
-		v, _ := strconv.ParseFloat(String(any), 64)
-		return v
 	}
 }
 

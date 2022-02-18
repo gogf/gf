@@ -14,12 +14,13 @@ import (
 
 	"github.com/gogf/gf/v2/encoding/gbase64"
 	"github.com/gogf/gf/v2/encoding/gcompress"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
 const (
-	packedGoSouceTemplate = `
+	packedGoSourceTemplate = `
 package %s
 
 import "github.com/gogf/gf/v2/os/gres"
@@ -80,7 +81,7 @@ func PackToGoFile(srcPath, goFilePath, pkgName string, keyPrefix ...string) erro
 	}
 	return gfile.PutContents(
 		goFilePath,
-		fmt.Sprintf(gstr.TrimLeft(packedGoSouceTemplate), pkgName, gbase64.EncodeToString(data)),
+		fmt.Sprintf(gstr.TrimLeft(packedGoSourceTemplate), pkgName, gbase64.EncodeToString(data)),
 	)
 }
 
@@ -95,8 +96,10 @@ func Unpack(path string) ([]*File, error) {
 
 // UnpackContent unpacks the content to []*File.
 func UnpackContent(content string) ([]*File, error) {
-	var data []byte
-	var err error
+	var (
+		err  error
+		data []byte
+	)
 	if isHexStr(content) {
 		// It here keeps compatible with old version packing string using hex string.
 		// TODO remove this support in the future.
@@ -122,6 +125,7 @@ func UnpackContent(content string) ([]*File, error) {
 	}
 	reader, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
 	if err != nil {
+		err = gerror.Wrapf(err, `create zip reader failed`)
 		return nil, err
 	}
 	array := make([]*File, len(reader.File))
@@ -167,6 +171,6 @@ func isHexStr(s string) bool {
 func hexStrToBytes(s string) []byte {
 	src := []byte(s)
 	dst := make([]byte, hex.DecodedLen(len(src)))
-	hex.Decode(dst, src)
+	_, _ = hex.Decode(dst, src)
 	return dst
 }

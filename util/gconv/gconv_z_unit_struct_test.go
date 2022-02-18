@@ -7,14 +7,16 @@
 package gconv_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
-	"testing"
-	"time"
 )
 
 func Test_Struct_Basic1(t *testing.T) {
@@ -1242,5 +1244,60 @@ func Test_Struct_MapAttribute(t *testing.T) {
 		)
 		err := gconv.Struct(data, &out)
 		t.AssertNil(err)
+	})
+}
+
+func Test_Struct_Empty_MapStringString(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type S struct {
+			Id int
+		}
+		var (
+			s   = &S{}
+			err = gconv.Struct(map[string]string{}, s)
+		)
+		t.AssertNil(err)
+	})
+}
+
+// https://github.com/gogf/gf/issues/1563
+func Test_Struct_Issue1563(t *testing.T) {
+	type User struct {
+		Pass1 string `c:"password1"`
+	}
+	gtest.C(t, func(t *gtest.T) {
+		for i := 0; i < 100; i++ {
+			user := new(User)
+			params2 := g.Map{
+				"password1": "111",
+				"PASS1":     "222",
+			}
+			if err := gconv.Struct(params2, user); err == nil {
+				t.Assert(user.Pass1, `111`)
+			}
+		}
+	})
+}
+
+// https://github.com/gogf/gf/issues/1597
+func Test_Struct_Issue1597(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type S struct {
+			A int
+			B json.RawMessage
+		}
+
+		jsonByte := []byte(`{
+		"a":1, 
+		"b":{
+			"c": 3
+		}
+	}`)
+		data, err := gjson.DecodeToJson(jsonByte)
+		t.AssertNil(err)
+		s := &S{}
+		err = data.Scan(s)
+		t.AssertNil(err)
+		t.Assert(s.B, `{"c":3}`)
 	})
 }

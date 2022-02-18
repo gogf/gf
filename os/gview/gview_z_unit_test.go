@@ -222,7 +222,7 @@ func Test_FuncInclude(t *testing.T) {
 			layout = `{{include "header.html" .}}
 {{include "main.html" .}}
 {{include "footer.html" .}}`
-			templatePath = gfile.TempDir("template")
+			templatePath = gfile.Temp("template")
 		)
 
 		gfile.Mkdir(templatePath)
@@ -294,7 +294,7 @@ func Test_ParseContent(t *testing.T) {
 func Test_HotReload(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		dirPath := gfile.Join(
-			gfile.TempDir(),
+			gfile.Temp(),
 			"testdata",
 			"template-"+gconv.String(gtime.TimestampNano()),
 		)
@@ -426,6 +426,70 @@ func Test_BuildInFuncJson(t *testing.T) {
 		r, err := v.ParseContent(context.TODO(), "{{json .v}}")
 		t.Assert(err, nil)
 		t.Assert(r, `{"name":"john"}`)
+	})
+}
+
+func Test_BuildInFuncXml(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		v.Assign("v", g.Map{
+			"name": "john",
+		})
+		r, err := v.ParseContent(context.TODO(), "{{xml .v}}")
+		t.Assert(err, nil)
+		t.Assert(r, `<name>john</name>`)
+	})
+}
+
+func Test_BuildInFuncIni(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		v.Assign("v", g.Map{
+			"name": "john",
+		})
+		r, err := v.ParseContent(context.TODO(), "{{ini .v}}")
+		t.AssertNil(err)
+		t.Assert(r, `name=john
+`)
+	})
+}
+
+func Test_BuildInFuncYaml(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		v.Assign("v", g.Map{
+			"name": "john",
+		})
+		r, err := v.ParseContent(context.TODO(), "{{yaml .v}}")
+		t.AssertNil(err)
+		t.Assert(r, `name: john
+`)
+	})
+}
+
+func Test_BuildInFuncYamlIndent(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		v.Assign("v", g.Map{
+			"name": "john",
+		})
+		r, err := v.ParseContent(context.TODO(), `{{yamli .v "####"}}`)
+		t.AssertNil(err)
+		t.Assert(r, `####name: john
+`)
+	})
+}
+
+func Test_BuildInFuncToml(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		v.Assign("v", g.Map{
+			"name": "john",
+		})
+		r, err := v.ParseContent(context.TODO(), "{{toml .v}}")
+		t.AssertNil(err)
+		t.Assert(r, `name = "john"
+`)
 	})
 }
 

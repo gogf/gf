@@ -13,13 +13,18 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/gogf/gf/v2/internal/structs"
+	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // iString is used for type assert api for String().
 type iString interface {
 	String() string
+}
+
+// iError is used for type assert api for Error().
+type iError interface {
+	Error() string
 }
 
 // iMarshalJSON is the interface for custom Json marshaling.
@@ -117,11 +122,7 @@ func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDum
 		doDumpString(exportInternalInput)
 
 	case reflect.Bool:
-		if reflectValue.Bool() {
-			buffer.WriteString(`true`)
-		} else {
-			buffer.WriteString(`false`)
-		}
+		doDumpBool(exportInternalInput)
 
 	case
 		reflect.Int,
@@ -141,10 +142,14 @@ func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDum
 		doDumpNumber(exportInternalInput)
 
 	case reflect.Chan:
-		buffer.WriteString(`<chan>`)
+		buffer.WriteString(fmt.Sprintf(`<%s>`, reflect.TypeOf(value).String()))
 
 	case reflect.Func:
-		buffer.WriteString(`<func>`)
+		if reflectValue.IsNil() || !reflectValue.IsValid() {
+			buffer.WriteString(`<nil>`)
+		} else {
+			buffer.WriteString(fmt.Sprintf(`<%s>`, reflect.TypeOf(value).String()))
+		}
 
 	default:
 		doDumpDefault(exportInternalInput)
@@ -231,6 +236,7 @@ func doDumpMap(in doDumpInternalInput) {
 		} else {
 			mapKeyStr = fmt.Sprintf(`%v`, mapKey.Interface())
 		}
+		// Map key and indent string dump.
 		if !in.Option.WithType {
 			in.Buffer.WriteString(fmt.Sprintf(
 				"%s%v:%s",
@@ -247,6 +253,7 @@ func doDumpMap(in doDumpInternalInput) {
 				strings.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
 			))
 		}
+		// Map value dump.
 		doDump(in.ReflectValue.MapIndex(mapKey).Interface(), in.NewIndent, in.Buffer, in.Option)
 		in.Buffer.WriteString(",\n")
 	}
@@ -254,9 +261,9 @@ func doDumpMap(in doDumpInternalInput) {
 }
 
 func doDumpStruct(in doDumpInternalInput) {
-	structFields, _ := structs.Fields(structs.FieldsInput{
+	structFields, _ := gstructs.Fields(gstructs.FieldsInput{
 		Pointer:         in.Value,
-		RecursiveOption: structs.RecursiveOptionEmbedded,
+		RecursiveOption: gstructs.RecursiveOptionEmbedded,
 	})
 	if len(structFields) == 0 {
 		var (
@@ -265,6 +272,8 @@ func doDumpStruct(in doDumpInternalInput) {
 		)
 		if v, ok := in.Value.(iString); ok {
 			structContentStr = v.String()
+		} else if v, ok := in.Value.(iError); ok {
+			structContentStr = v.Error()
 		} else if v, ok := in.Value.(iMarshalJSON); ok {
 			b, _ := v.MarshalJSON()
 			structContentStr = string(b)
@@ -346,6 +355,19 @@ func doDumpString(in doDumpInternalInput) {
 			addSlashesForString(s),
 		))
 	}
+}
+
+func doDumpBool(in doDumpInternalInput) {
+	var s string
+	if in.ReflectValue.Bool() {
+		s = `true`
+	} else {
+		s = `false`
+	}
+	if in.Option.WithType {
+		s = fmt.Sprintf(`bool(%s)`, s)
+	}
+	in.Buffer.WriteString(s)
 }
 
 func doDumpDefault(in doDumpInternalInput) {

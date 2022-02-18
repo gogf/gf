@@ -12,27 +12,23 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/os/genv"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
 var (
-	ctx   = context.TODO()
-	ports = garray.NewIntArray(true)
+	ctx = context.TODO()
 )
 
 func init() {
 	genv.Set("UNDER_TEST", "1")
-	for i := 7000; i <= 8000; i++ {
-		ports.Append(i)
-	}
 }
 
 func Test_GetUrl(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/url", func(r *ghttp.Request) {
 		r.Response.Write(r.GetUrl())

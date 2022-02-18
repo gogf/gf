@@ -8,6 +8,9 @@
 package gyaml
 
 import (
+	"bytes"
+	"strings"
+
 	"gopkg.in/yaml.v3"
 
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -17,7 +20,27 @@ import (
 
 func Encode(value interface{}) (out []byte, err error) {
 	if out, err = yaml.Marshal(value); err != nil {
-		err = gerror.Wrap(err, `encode value to yaml failed`)
+		err = gerror.Wrap(err, `yaml.Marshal failed`)
+	}
+	return
+}
+
+func EncodeIndent(value interface{}, indent string) (out []byte, err error) {
+	out, err = Encode(value)
+	if err != nil {
+		return
+	}
+	if indent != "" {
+		var (
+			buffer = bytes.NewBuffer(nil)
+			array  = strings.Split(strings.TrimSpace(string(out)), "\n")
+		)
+		for _, v := range array {
+			buffer.WriteString(indent)
+			buffer.WriteString(v)
+			buffer.WriteString("\n")
+		}
+		out = buffer.Bytes()
 	}
 	return
 }
@@ -28,7 +51,7 @@ func Decode(value []byte) (interface{}, error) {
 		err    error
 	)
 	if err = yaml.Unmarshal(value, &result); err != nil {
-		err = gerror.Wrap(err, `decode yaml failed`)
+		err = gerror.Wrap(err, `yaml.Unmarshal failed`)
 		return nil, err
 	}
 	return gconv.MapDeep(result), nil
@@ -37,7 +60,7 @@ func Decode(value []byte) (interface{}, error) {
 func DecodeTo(value []byte, result interface{}) (err error) {
 	err = yaml.Unmarshal(value, result)
 	if err != nil {
-		err = gerror.Wrap(err, `encode yaml to value failed`)
+		err = gerror.Wrap(err, `yaml.Unmarshal failed`)
 	}
 	return
 }
@@ -49,9 +72,6 @@ func ToJson(value []byte) (out []byte, err error) {
 	if result, err = Decode(value); err != nil {
 		return nil, err
 	} else {
-		if out, err = json.Marshal(result); err != nil {
-			err = gerror.Wrap(err, `convert yaml to json failed`)
-		}
-		return out, err
+		return json.Marshal(result)
 	}
 }
