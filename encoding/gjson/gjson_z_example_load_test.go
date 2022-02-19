@@ -158,7 +158,7 @@ func ExampleIsValidDataType() {
 	// false
 }
 
-func Example_loadXml() {
+func ExampleLoad_Xml() {
 	jsonFilePath := gdebug.TestDataPath("xml", "data1.xml")
 	j, _ := gjson.Load(jsonFilePath)
 	fmt.Println(j.Get("doc.name"))

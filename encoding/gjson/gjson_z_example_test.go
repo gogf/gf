@@ -677,13 +677,27 @@ func ExampleJson_UnmarshalJSON() {
 	// map[Age:18 Name:John]
 }
 
+func ExampleJson_UnmarshalValue_Yaml() {
+	yamlContent :=
+		`base:
+  name: john
+  score: 100`
+
+	j := gjson.New("")
+	j.UnmarshalValue([]byte(yamlContent))
+	fmt.Println(j.Var().String())
+
+	// Output:
+	// {"base":{"name":"john","score":100}}
+}
+
 func ExampleJson_UnmarshalValue_Xml() {
-	xmlStr := `<doc><Age>18</Age><Name>John</Name></doc>`
+	xmlStr := `<?xml version="1.0" encoding="UTF-8"?><doc><name>john</name><score>100</score></doc>`
 
 	j := gjson.New("")
 	j.UnmarshalValue([]byte(xmlStr))
 	fmt.Println(j.Var().String())
 
 	// Output:
-	// {"doc":{"Age":"18","Name":"John"}}
+	// {"doc":{"name":"john","score":"100"}}
 }
