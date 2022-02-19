@@ -159,6 +159,7 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 		return gconv.Bool(fieldValue)
 
 	case "date":
+		// Date without time.
 		if t, ok := fieldValue.(time.Time); ok {
 			return gtime.NewFromTime(t).Format("Y-m-d")
 		}
@@ -173,7 +174,7 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 			return gtime.NewFromTime(t)
 		}
 		t, _ := gtime.StrToTime(gconv.String(fieldValue))
-		return t.String()
+		return t
 
 	default:
 		// Auto-detect field type, using key match.
@@ -199,7 +200,7 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 			if err != nil {
 				return s
 			}
-			return t.String()
+			return t
 
 		case strings.Contains(typeName, "date"):
 			s := gconv.String(fieldValue)
@@ -207,7 +208,7 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 			if err != nil {
 				return s
 			}
-			return t.Format("Y-m-d")
+			return t
 
 		default:
 			return gconv.String(fieldValue)

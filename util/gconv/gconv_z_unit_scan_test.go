@@ -8,11 +8,13 @@ package gconv_test
 
 import (
 	"fmt"
+	"math/big"
+	"testing"
+
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
-	"testing"
 )
 
 func Test_Scan_StructStructs(t *testing.T) {
@@ -599,5 +601,32 @@ func Test_ScanList_Embedded(t *testing.T) {
 		t.Assert(entities[1].UserScores[0], userScores[2])
 
 		t.Assert(len(entities[2].UserScores), 0)
+	})
+}
+
+type Float64 float64
+
+func (f *Float64) UnmarshalValue(value interface{}) error {
+	if v, ok := value.(*big.Rat); ok {
+		f64, _ := v.Float64()
+		*f = Float64(f64)
+	}
+	return nil
+}
+
+func Test_Issue1607(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Demo struct {
+			B Float64
+		}
+		rat := &big.Rat{}
+		rat.SetFloat64(1.5)
+
+		var demos = make([]Demo, 1)
+		err := gconv.Scan([]map[string]interface{}{
+			{"A": 1, "B": rat},
+		}, &demos)
+		t.AssertNil(err)
+		t.Assert(demos[0].B, 1.5)
 	})
 }

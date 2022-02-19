@@ -564,8 +564,8 @@ func Test_Params_Parse_Validation(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(prefix)
 
-		t.Assert(client.GetContent(ctx, "/parse"), `请输入账号; 账号长度为6到30位; 请输入密码; 密码长度不够; 请确认密码; 密码长度不够; 两次密码不一致`)
-		t.Assert(client.GetContent(ctx, "/parse?name=john11&password1=123456&password2=123"), `密码长度不够; 两次密码不一致`)
+		t.Assert(client.GetContent(ctx, "/parse"), `请输入账号`)
+		t.Assert(client.GetContent(ctx, "/parse?name=john11&password1=123456&password2=123"), `密码长度不够`)
 		t.Assert(client.GetContent(ctx, "/parse?name=john&password1=123456&password2=123456"), `账号长度为6到30位`)
 		t.Assert(client.GetContent(ctx, "/parse?name=john11&password1=123456&password2=123456"), `ok`)
 	})

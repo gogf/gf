@@ -374,13 +374,11 @@ func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newAr
 
 	case reflect.Map:
 		for key, value := range DataToMapDeep(in.Where) {
-			if gregex.IsMatchString(regularFieldNameRegPattern, key) {
-				if in.OmitNil && empty.IsNil(value) {
-					continue
-				}
-				if in.OmitEmpty && empty.IsEmpty(value) {
-					continue
-				}
+			if in.OmitNil && empty.IsNil(value) {
+				continue
+			}
+			if in.OmitEmpty && empty.IsEmpty(value) {
+				continue
 			}
 			newArgs = formatWhereKeyValue(formatWhereKeyValueInput{
 				Db:     db,
@@ -406,13 +404,11 @@ func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newAr
 		if iterator, ok := in.Where.(iIterator); ok {
 			iterator.Iterator(func(key, value interface{}) bool {
 				ketStr := gconv.String(key)
-				if gregex.IsMatchString(regularFieldNameRegPattern, ketStr) {
-					if in.OmitNil && empty.IsNil(value) {
-						return true
-					}
-					if in.OmitEmpty && empty.IsEmpty(value) {
-						return true
-					}
+				if in.OmitNil && empty.IsNil(value) {
+					return true
+				}
+				if in.OmitEmpty && empty.IsEmpty(value) {
+					return true
 				}
 				newArgs = formatWhereKeyValue(formatWhereKeyValueInput{
 					Db:        db,
