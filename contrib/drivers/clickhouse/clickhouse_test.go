@@ -9,6 +9,7 @@ import (
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/grand"
 )
 
@@ -102,6 +103,55 @@ func TestDriverClickhouse_Select(t *testing.T) {
 	data, err := connect.Model("visits").All()
 	gtest.AssertNil(err)
 	gtest.AssertEQ(len(data), 0)
+}
+
+func TestDriver_InsertIgnore(t *testing.T) {
+	connect := InitClickhouse()
+	_, err := connect.InsertIgnore(context.Background(), "", nil)
+	gtest.AssertEQ(err, ErrUnsupportedInsertIgnore)
+}
+
+func TestDriver_InsertAndGetId(t *testing.T) {
+	connect := InitClickhouse()
+	_, err := connect.InsertAndGetId(context.Background(), "", nil)
+	gtest.AssertEQ(err, ErrUnsupportedInsertGetId)
+}
+
+func TestDriver_Replace(t *testing.T) {
+	connect := InitClickhouse()
+	_, err := connect.Replace(context.Background(), "", nil)
+	gtest.AssertEQ(err, ErrUnsupportedReplace)
+}
+
+func TestDriverClickhouse_DoInsertOne(t *testing.T) {
+	connect := InitClickhouse()
+	gtest.AssertEQ(createClickhouseTable(connect), nil)
+	defer dropClickhouseTable(connect)
+	_, err := connect.Model("visits").Data(g.Map{
+		"id":       grand.Intn(999),
+		"duration": grand.Intn(999),
+		"url":      grand.Intn(999),
+		"created":  grand.Intn(999),
+	}).Insert()
+	gtest.AssertNil(err)
+}
+
+func TestDriver_DoInsertMany(t *testing.T) {
+	connect := InitClickhouse()
+	gtest.AssertEQ(createClickhouseTable(connect), nil)
+	defer dropClickhouseTable(connect)
+	tx, err := connect.Begin(context.Background())
+	for i := 0; i < 10; i++ {
+		_, err = tx.Model("visits").Data(g.Map{
+			"id":       grand.Intn(999),
+			"duration": float64(grand.Intn(999)),
+			"url":      gconv.String(grand.Intn(999)),
+			"created":  time.Now().Format("2006-01-02 15:04:05"),
+		}).
+			Save()
+		gtest.AssertNil(err)
+	}
+	gtest.AssertNil(tx.Commit())
 }
 
 func TestDriverClickhouse_DoInsert(t *testing.T) {
