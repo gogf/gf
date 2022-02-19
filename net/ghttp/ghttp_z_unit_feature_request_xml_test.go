@@ -61,6 +61,6 @@ func Test_Params_Xml_Request(t *testing.T) {
 		t.Assert(client.GetContent(ctx, "/map", content1), ``)
 		t.Assert(client.PostContent(ctx, "/map", content1), `1john123Abc!@#123Abc!@#`)
 		t.Assert(client.PostContent(ctx, "/parse", content1), `1john123Abc!@#123Abc!@#`)
-		t.Assert(client.PostContent(ctx, "/parse", content2), `密码强度不足; 两次密码不一致`)
+		t.Assert(client.PostContent(ctx, "/parse", content2), `密码强度不足`)
 	})
 }
