@@ -60,7 +60,7 @@ func Example_conversionNormalFormats() {
 	//   count = 1.0
 }
 
-func Example_conversionGetStruct() {
+func ExampleJson_ConversionGetStruct() {
 	data :=
 		`{
         "users" : {
@@ -86,7 +86,7 @@ func Example_conversionGetStruct() {
 	// &{Count:1 Array:[John Ming]}
 }
 
-func Example_conversionToStruct() {
+func ExampleJson_ConversionToStruct() {
 	data :=
 		`
 	{
