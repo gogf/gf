@@ -701,3 +701,410 @@ func ExampleJson_UnmarshalValue_Xml() {
 	// Output:
 	// {"doc":{"name":"john","score":"100"}}
 }
+
+func ExampleJson_MapStrAny() {
+	type BaseInfo struct {
+		Name string
+		Age  int
+	}
+
+	info := BaseInfo{
+		Name: "John",
+		Age:  18,
+	}
+
+	j := gjson.New(info)
+	fmt.Println(j.MapStrAny())
+
+	// Output:
+	// map[Age:18 Name:John]
+}
+
+func ExampleJson_Interfaces() {
+	type BaseInfo struct {
+		Name string
+		Age  int
+	}
+
+	infoList := []BaseInfo{
+		BaseInfo{
+			Name: "John",
+			Age:  18,
+		},
+		BaseInfo{
+			Name: "Tom",
+			Age:  20,
+		},
+	}
+
+	j := gjson.New(infoList)
+	fmt.Println(j.Interfaces())
+
+	// Output:
+	// [{John 18} {Tom 20}]
+}
+
+func ExampleJson_Interface() {
+	type BaseInfo struct {
+		Name string
+		Age  int
+	}
+
+	info := BaseInfo{
+		Name: "John",
+		Age:  18,
+	}
+
+	j := gjson.New(info)
+	fmt.Println(j.Interface())
+
+	// Output:
+	// map[Age:18 Name:John]
+}
+
+func ExampleJson_Var() {
+	type BaseInfo struct {
+		Name string
+		Age  int
+	}
+
+	info := BaseInfo{
+		Name: "John",
+		Age:  18,
+	}
+
+	j := gjson.New(info)
+	fmt.Println(j.Var().String())
+	fmt.Println(j.Var().Map())
+
+	// Output:
+	// {"Age":18,"Name":"John"}
+	// map[Age:18 Name:John]
+}
+
+func ExampleJson_IsNil() {
+	data1 := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
+	data2 := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]`)
+
+	j1, _ := gjson.LoadContent(data1)
+	fmt.Println(j1.IsNil())
+
+	j2, _ := gjson.LoadContent(data2)
+	fmt.Println(j2.IsNil())
+
+	// Output:
+	// false
+	// true
+}
+
+func ExampleJson_Get() {
+	data :=
+		`{
+        "users" : {
+            "count" : 1,
+            "array" : ["John", "Ming"]
+        }
+    }`
+
+	j, _ := gjson.LoadContent(data)
+	fmt.Println(j.Get("users"))
+	fmt.Println(j.Get("users.count"))
+	fmt.Println(j.Get("users.array"))
+
+	// Output:
+	// {"array":["John","Ming"],"count":1}
+	// 1
+	// ["John","Ming"]
+}
+
+func ExampleJson_GetJson() {
+	data :=
+		`{
+        "users" : {
+            "count" : 1,
+            "array" : ["John", "Ming"]
+        }
+    }`
+
+	j, _ := gjson.LoadContent(data)
+
+	fmt.Println(j.GetJson("users.array").Array())
+
+	// Output:
+	// [John Ming]
+}
+
+func ExampleJson_GetJsons() {
+	data :=
+		`{
+        "users" : {
+            "count" : 3,
+            "array" : [{"Age":18,"Name":"John"}, {"Age":20,"Name":"Tom"}]
+        }
+    }`
+
+	j, _ := gjson.LoadContent(data)
+
+	jsons := j.GetJsons("users.array")
+	for _, json := range jsons {
+		fmt.Println(json.Interface())
+	}
+
+	// Output:
+	// map[Age:18 Name:John]
+	// map[Age:20 Name:Tom]
+}
+
+func ExampleJson_GetJsonMap() {
+	data :=
+		`{
+        "users" : {
+            "count" : 1,
+			"array" : {
+				"info" : {"Age":18,"Name":"John"},
+				"addr" : {"City":"Chengdu","Company":"Tencent"}
+			}
+        }
+    }`
+
+	j, _ := gjson.LoadContent(data)
+
+	jsonMap := j.GetJsonMap("users.array")
+
+	for _, json := range jsonMap {
+		fmt.Println(json.Interface())
+	}
+
+	// May Output:
+	// map[City:Chengdu Company:Tencent]
+	// map[Age:18 Name:John]
+}
+
+func ExampleJson_Set() {
+	type BaseInfo struct {
+		Name string
+		Age  int
+	}
+
+	info := BaseInfo{
+		Name: "John",
+		Age:  18,
+	}
+
+	j := gjson.New(info)
+	j.Set("Addr", "ChengDu")
+	fmt.Println(j.Var().String())
+
+	// Output:
+	// {"Addr":"ChengDu","Age":18,"Name":"John"}
+}
+
+func ExampleJson_MustSet() {
+	type BaseInfo struct {
+		Name string
+		Age  int
+	}
+
+	info := BaseInfo{
+		Name: "John",
+		Age:  18,
+	}
+
+	j := gjson.New(info)
+	j.MustSet("Addr", "ChengDu")
+	fmt.Println(j.Var().String())
+
+	// Output:
+	// {"Addr":"ChengDu","Age":18,"Name":"John"}
+}
+
+func ExampleJson_Remove() {
+	type BaseInfo struct {
+		Name string
+		Age  int
+	}
+
+	info := BaseInfo{
+		Name: "John",
+		Age:  18,
+	}
+
+	j := gjson.New(info)
+	j.Remove("Age")
+	fmt.Println(j.Var().String())
+
+	// Output:
+	// {"Name":"John"}
+}
+
+func ExampleJson_MustRemove() {
+	type BaseInfo struct {
+		Name string
+		Age  int
+	}
+
+	info := BaseInfo{
+		Name: "John",
+		Age:  18,
+	}
+
+	j := gjson.New(info)
+	j.MustRemove("Age")
+	fmt.Println(j.Var().String())
+
+	// Output:
+	// {"Name":"John"}
+}
+
+func ExampleJson_Contains() {
+	type BaseInfo struct {
+		Name string
+		Age  int
+	}
+
+	info := BaseInfo{
+		Name: "John",
+		Age:  18,
+	}
+
+	j := gjson.New(info)
+	fmt.Println(j.Contains("Age"))
+	fmt.Println(j.Contains("Addr"))
+
+	// Output:
+	// true
+	// false
+}
+
+func ExampleJson_Len() {
+	data :=
+		`{
+        "users" : {
+            "count" : 1,
+			"nameArray" : ["Join", "Tom"],
+			"infoMap" : {
+				"name" : "Join",
+				"age" : 18,
+				"addr" : "ChengDu"
+			}
+        }
+    }`
+
+	j, _ := gjson.LoadContent(data)
+
+	fmt.Println(j.Len("users.nameArray"))
+	fmt.Println(j.Len("users.infoMap"))
+
+	// Output:
+	// 2
+	// 3
+}
+
+func ExampleJson_Append() {
+	data :=
+		`{
+        "users" : {
+            "count" : 1,
+            "array" : ["John", "Ming"]
+        }
+    }`
+
+	j, _ := gjson.LoadContent(data)
+
+	j.Append("users.array", "Lily")
+
+	fmt.Println(j.Get("users.array").Array())
+
+	// Output:
+	// [John Ming Lily]
+}
+
+func ExampleJson_MustAppend() {
+	data :=
+		`{
+        "users" : {
+            "count" : 1,
+            "array" : ["John", "Ming"]
+        }
+    }`
+
+	j, _ := gjson.LoadContent(data)
+
+	j.MustAppend("users.array", "Lily")
+
+	fmt.Println(j.Get("users.array").Array())
+
+	// Output:
+	// [John Ming Lily]
+}
+
+func ExampleJson_Map() {
+	data :=
+		`{
+        "users" : {
+            "count" : 1,
+            "info" : {
+				"name" : "John",
+				"age" : 18,
+				"addr" : "ChengDu"
+			}
+        }
+    }`
+
+	j, _ := gjson.LoadContent(data)
+
+	fmt.Println(j.Get("users.info").Map())
+
+	// Output:
+	// map[addr:ChengDu age:18 name:John]
+}
+
+func ExampleJson_Array() {
+	data :=
+		`{
+        "users" : {
+            "count" : 1,
+            "array" : ["John", "Ming"]
+        }
+    }`
+
+	j, _ := gjson.LoadContent(data)
+
+	fmt.Println(j.Get("users.array"))
+
+	// Output:
+	// ["John","Ming"]
+}
+
+func ExampleJson_Scan() {
+	data := `{"name":"john","age":"18"}`
+
+	type BaseInfo struct {
+		Name string
+		Age  int
+	}
+
+	info := BaseInfo{}
+
+	j, _ := gjson.LoadContent(data)
+	j.Scan(&info)
+
+	fmt.Println(info)
+
+	// Output:
+	// {john 18}
+}
+
+func ExampleJson_Dump() {
+	data := `{"name":"john","age":"18"}`
+
+	j, _ := gjson.LoadContent(data)
+
+	j.Dump()
+
+	// May Output:
+	//{
+	//	"age":  "18",
+	//	"name": "john",
+	//}
+}
