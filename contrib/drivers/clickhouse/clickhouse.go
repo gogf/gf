@@ -13,6 +13,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ClickHouse/clickhouse-go"
+	"strings"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -34,6 +35,8 @@ var (
 	ErrUnsupportedInsertIgnore = errors.New("unsupported method:InsertIgnore")
 	ErrUnsupportedInsertGetId  = errors.New("unsupported method:InsertGetId")
 	ErrUnsupportedReplace      = errors.New("unsupported method:Replace")
+	ErrUnsupportedBegin        = errors.New("unsupported method:Begin")
+	ErrUnsupportedTransaction  = errors.New("unsupported method:Transaction")
 )
 
 func init() {
@@ -201,12 +204,6 @@ func (d *Driver) ping(conn *sql.DB) error {
 	return err
 }
 
-// Transaction Clickhouse does not support transactions
-// So when you call this method you get an error.
-func (d *Driver) Transaction(ctx context.Context, f func(ctx context.Context, tx *gdb.TX) error) error {
-	return errors.New("transaction operations are not supported")
-}
-
 // DoUpdateSQL in clickhouse ,use update must use alter
 // eg.
 // ALTER TABLE [db.]table UPDATE column1 = expr1 [, ...] WHERE filter_expr
@@ -228,8 +225,50 @@ func (d *Driver) DoCommit(ctx context.Context, in gdb.DoCommitInput) (out gdb.Do
 }
 
 func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
-	option.IsIgnoreResult = true
-	return d.Core.DoInsert(ctx, link, table, list, option)
+	var (
+		keys        []string // Field names.
+		valueHolder = make([]string, 0)
+	)
+	// Handle the field names and placeholders.
+	for k := range list[0] {
+		keys = append(keys, k)
+		valueHolder = append(valueHolder, "?")
+	}
+	// Prepare the batch result pointer.
+	var (
+		charL, charR = d.Core.GetChars()
+		batchResult  = new(gdb.SqlResult)
+		keysStr      = charL + strings.Join(keys, charR+","+charL) + charR
+		holderStr    = strings.Join(valueHolder, ",")
+		listLength   = len(list)
+		tx           = &gdb.TX{}
+		stdSqlResult sql.Result
+		stmt         *gdb.Stmt
+	)
+	tx, err = d.Core.Begin(ctx)
+	if err != nil {
+		return
+	}
+	stmt, err = tx.Prepare(fmt.Sprintf(
+		"INSERT INTO %s(%s) VALUES (%s)",
+		d.QuotePrefixTableName(table), keysStr,
+		holderStr,
+	))
+	if err != nil {
+		return
+	}
+	for i := 0; i < listLength; i++ {
+		params := []interface{}{} // Values that will be committed to underlying database driver.
+		for _, k := range keys {
+			params = append(params, list[i][k])
+		}
+		// Prepare is allowed to execute only once in a transaction opened by clickhouse
+		stdSqlResult, err = stmt.ExecContext(ctx, params...)
+		if err != nil {
+			return stdSqlResult, err
+		}
+	}
+	return batchResult, tx.Commit()
 }
 
 // InsertIgnore Other queries for modifying data parts are not supported: REPLACE, MERGE, UPSERT, INSERT UPDATE.
@@ -245,4 +284,12 @@ func (d *Driver) InsertAndGetId(ctx context.Context, table string, data interfac
 // Replace Other queries for modifying data parts are not supported: REPLACE, MERGE, UPSERT, INSERT UPDATE.
 func (d *Driver) Replace(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
 	return nil, ErrUnsupportedReplace
+}
+
+func (d *Driver) Begin(ctx context.Context) (tx *gdb.TX, err error) {
+	return nil, ErrUnsupportedBegin
+}
+
+func (d *Driver) Transaction(ctx context.Context, f func(ctx context.Context, tx *gdb.TX) error) error {
+	return ErrUnsupportedTransaction
 }

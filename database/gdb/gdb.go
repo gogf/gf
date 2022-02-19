@@ -242,9 +242,8 @@ type Sql struct {
 type DoInsertOption struct {
 	OnDuplicateStr string
 	OnDuplicateMap map[string]interface{}
-	InsertOption   int  // Insert operation.
-	BatchCount     int  // Batch count for batch inserting.
-	IsIgnoreResult bool // IgnoreResult
+	InsertOption   int // Insert operation.
+	BatchCount     int // Batch count for batch inserting.
 }
 
 // TableField is the struct for table field.
