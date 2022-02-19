@@ -97,12 +97,14 @@ type DB interface {
 	DoGetAll(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error)                                           // See Core.DoGetAll.
 	DoInsert(ctx context.Context, link Link, table string, data List, option DoInsertOption) (result sql.Result, err error)                        // See Core.DoInsert.
 	DoUpdate(ctx context.Context, link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) // See Core.DoUpdate.
-	DoDelete(ctx context.Context, link Link, table string, condition string, args ...interface{}) (result sql.Result, err error)                   // See Core.DoDelete.
-	DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error)                                            // See Core.DoQuery.
-	DoExec(ctx context.Context, link Link, sql string, args ...interface{}) (result sql.Result, err error)                                         // See Core.DoExec.
-	DoFilter(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error)                     // See Core.DoFilter.
-	DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutput, err error)                                                                // See Core.DoCommit.
-	DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, error)                                                                           // See Core.DoPrepare.
+	DoUpdateSQL(ctx context.Context, link Link, table string, updates interface{}, condition string, args ...interface{}) (result sql.Result, err error)
+	DoDelete(ctx context.Context, link Link, table string, condition string, args ...interface{}) (result sql.Result, err error) // See Core.DoDelete.
+	DoDeleteSQL(ctx context.Context, link Link, table string, condition interface{}, args ...interface{}) (result sql.Result, err error)
+	DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error)                        // See Core.DoQuery.
+	DoExec(ctx context.Context, link Link, sql string, args ...interface{}) (result sql.Result, err error)                     // See Core.DoExec.
+	DoFilter(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) // See Core.DoFilter.
+	DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutput, err error)                                            // See Core.DoCommit.
+	DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, error)                                                       // See Core.DoPrepare.
 
 	// ===========================================================================
 	// Query APIs for convenience purpose.
@@ -185,14 +187,15 @@ type Core struct {
 
 // DoCommitInput is the input parameters for function DoCommit.
 type DoCommitInput struct {
-	Db            *sql.DB
-	Tx            *sql.Tx
-	Stmt          *sql.Stmt
-	Link          Link
-	Sql           string
-	Args          []interface{}
-	Type          string
-	IsTransaction bool
+	Db             *sql.DB
+	Tx             *sql.Tx
+	Stmt           *sql.Stmt
+	Link           Link
+	Sql            string
+	Args           []interface{}
+	Type           string
+	IsTransaction  bool
+	IsIgnoreResult bool
 }
 
 // DoCommitOutput is the output parameters for function DoCommit.

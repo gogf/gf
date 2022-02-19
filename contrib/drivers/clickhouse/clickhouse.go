@@ -12,7 +12,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/ClickHouse/clickhouse-go/v2"
+	"github.com/ClickHouse/clickhouse-go"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -30,7 +30,10 @@ type Driver struct {
 
 var (
 	// tableFieldsMap caches the table information retrieved from database.
-	tableFieldsMap = gmap.New(true)
+	tableFieldsMap             = gmap.New(true)
+	ErrUnsupportedInsertIgnore = errors.New("unsupported method:InsertIgnore")
+	ErrUnsupportedInsertGetId  = errors.New("unsupported method:InsertGetId")
+	ErrUnsupportedReplace      = errors.New("unsupported method:Replace")
 )
 
 func init() {
@@ -68,13 +71,14 @@ func (d *Driver) Open(config *gdb.ConfigNode) (*sql.DB, error) {
 			config.User, config.Host, config.Port, config.Name)
 	}
 	source += fmt.Sprintf(
-		"?charset=%s&debug=%s&compress=%s&secure=%s&skip_verify=%s",
-		config.Charset, gconv.String(config.Debug), gconv.String(config.Compress), gconv.String(config.Secure), gconv.String(config.SkipVerify),
+		"?charset=%s&debug=%s&compress=%s",
+		config.Charset, gconv.String(config.Debug), gconv.String(config.Compress),
 	)
 	db, err := sql.Open(driver, source)
 	if err != nil {
 		return nil, err
 	}
+
 	return db, nil
 }
 
@@ -86,7 +90,7 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 	if err != nil {
 		return nil, err
 	}
-	query := fmt.Sprintf("select name from `system`.tables where database = '%s'", d.GetSchema())
+	query := fmt.Sprintf("select name from `system`.tables where database = '%s'", d.GetConfig().Name)
 	result, err = d.DoGetAll(ctx, link, query)
 	if err != nil {
 		return
@@ -119,7 +123,7 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 			if link, err = d.SlaveLink(useSchema); err != nil {
 				return nil
 			}
-			getColumnsSql := fmt.Sprintf("select name,position,default_expression,comment from `system`.columns c where database = '%s' and `table` = '%s'", d.GetSchema(), table)
+			getColumnsSql := fmt.Sprintf("select name,position,default_expression,comment from `system`.columns c where database = '%s' and `table` = '%s'", d.GetConfig().Name, table)
 			result, err = d.DoGetAll(ctx, link, getColumnsSql)
 			if err != nil {
 				return nil
@@ -201,4 +205,42 @@ func (d *Driver) ping(conn *sql.DB) error {
 // So when you call this method you get an error.
 func (d *Driver) Transaction(ctx context.Context, f func(ctx context.Context, tx *gdb.TX) error) error {
 	return errors.New("transaction operations are not supported")
+}
+
+// DoUpdateSQL in clickhouse ,use update must use alter
+// eg.
+// ALTER TABLE [db.]table UPDATE column1 = expr1 [, ...] WHERE filter_expr
+func (d *Driver) DoUpdateSQL(ctx context.Context, link gdb.Link, table string, updates interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
+	return d.Core.DoExec(ctx, link, fmt.Sprintf("ALTER TABLE %s UPDATE %s%s", table, updates, condition), args...)
+}
+
+// DoDeleteSQL in clickhouse , delete must use alter
+// eg.
+// ALTER TABLE [db.]table DELETE WHERE filter_expr
+func (d *Driver) DoDeleteSQL(ctx context.Context, link gdb.Link, table string, condition interface{}, args ...interface{}) (result sql.Result, err error) {
+	return d.Core.DoExec(ctx, link, fmt.Sprintf("ALTER TABLE %s DELETE %s", table, condition), args...)
+}
+
+func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, data gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
+	return
+}
+
+func (d *Driver) DoCommit(ctx context.Context, in gdb.DoCommitInput) (out gdb.DoCommitOutput, err error) {
+	in.IsIgnoreResult = true
+	return d.Core.DoCommit(ctx, in)
+}
+
+// InsertIgnore Other queries for modifying data parts are not supported: REPLACE, MERGE, UPSERT, INSERT UPDATE.
+func (d *Driver) InsertIgnore(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
+	return nil, ErrUnsupportedInsertIgnore
+}
+
+// InsertAndGetId Other queries for modifying data parts are not supported: REPLACE, MERGE, UPSERT, INSERT UPDATE.
+func (d *Driver) InsertAndGetId(ctx context.Context, table string, data interface{}, batch ...int) (int64, error) {
+	return 0, ErrUnsupportedInsertGetId
+}
+
+// Replace Other queries for modifying data parts are not supported: REPLACE, MERGE, UPSERT, INSERT UPDATE.
+func (d *Driver) Replace(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
+	return nil, ErrUnsupportedReplace
 }
