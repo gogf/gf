@@ -450,12 +450,14 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 			if err != nil {
 				return stdSqlResult, err
 			}
-			if affectedRows, err = stdSqlResult.RowsAffected(); err != nil {
-				err = gerror.WrapCode(gcode.CodeDbOperationError, err, `sql.Result.RowsAffected failed`)
-				return stdSqlResult, err
-			} else {
-				batchResult.Result = stdSqlResult
-				batchResult.Affected += affectedRows
+			if !option.IsIgnoreResult {
+				if affectedRows, err = stdSqlResult.RowsAffected(); err != nil {
+					err = gerror.WrapCode(gcode.CodeDbOperationError, err, `sql.Result.RowsAffected failed`)
+					return stdSqlResult, err
+				} else {
+					batchResult.Result = stdSqlResult
+					batchResult.Affected += affectedRows
+				}
 			}
 			params = params[:0]
 			valueHolder = valueHolder[:0]

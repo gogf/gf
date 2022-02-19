@@ -221,13 +221,15 @@ func (d *Driver) DoDeleteSQL(ctx context.Context, link gdb.Link, table string, c
 	return d.Core.DoExec(ctx, link, fmt.Sprintf("ALTER TABLE %s DELETE %s", table, condition), args...)
 }
 
-func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, data gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
-	return
-}
-
+// DoCommit commits current sql and arguments to underlying sql driver.
 func (d *Driver) DoCommit(ctx context.Context, in gdb.DoCommitInput) (out gdb.DoCommitOutput, err error) {
 	in.IsIgnoreResult = true
 	return d.Core.DoCommit(ctx, in)
+}
+
+func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
+	option.IsIgnoreResult = true
+	return d.Core.DoInsert(ctx, link, table, list, option)
 }
 
 // InsertIgnore Other queries for modifying data parts are not supported: REPLACE, MERGE, UPSERT, INSERT UPDATE.
