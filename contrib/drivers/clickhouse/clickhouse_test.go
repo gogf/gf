@@ -129,9 +129,9 @@ func TestDriverClickhouse_DoInsertOne(t *testing.T) {
 	defer dropClickhouseTable(connect)
 	_, err := connect.Model("visits").Data(g.Map{
 		"id":       grand.Intn(999),
-		"duration": grand.Intn(999),
-		"url":      grand.Intn(999),
-		"created":  grand.Intn(999),
+		"duration": float64(grand.Intn(999)),
+		"url":      gconv.String(grand.Intn(999)),
+		"created":  time.Now().Format("2006-01-02 15:04:05"),
 	}).Insert()
 	gtest.AssertNil(err)
 }
@@ -141,23 +141,13 @@ func TestDriver_DoInsertMany(t *testing.T) {
 	gtest.AssertEQ(createClickhouseTable(connect), nil)
 	defer dropClickhouseTable(connect)
 	tx, err := connect.Begin(context.Background())
-	for i := 0; i < 10; i++ {
-		_, err = tx.Model("visits").Data(g.Map{
-			"id":       grand.Intn(999),
-			"duration": float64(grand.Intn(999)),
-			"url":      gconv.String(grand.Intn(999)),
-			"created":  time.Now().Format("2006-01-02 15:04:05"),
-		}).
-			Save()
-		gtest.AssertNil(err)
-	}
-	gtest.AssertNil(tx.Commit())
+	gtest.AssertEQ(err, ErrUnsupportedBegin)
+	gtest.AssertNil(tx)
 }
 
 func TestDriverClickhouse_DoInsert(t *testing.T) {
 	connect := InitClickhouse()
 	gtest.AssertEQ(createClickhouseTable(connect), nil)
-	defer dropClickhouseTable(connect)
 	type insertItem struct {
 		Id       int     `orm:"id"`
 		Duration float64 `orm:"duration"`
@@ -165,27 +155,24 @@ func TestDriverClickhouse_DoInsert(t *testing.T) {
 		Created  string  `orm:"created"`
 	}
 	var (
-		ctx       = context.Background()
 		insertUrl = "https://goframe.org"
-		// insert one data
-		item = insertItem{
+		total     = 0
+		item      = insertItem{
 			Id:       0,
 			Duration: 1,
 			Url:      insertUrl,
 			Created:  time.Now().Format("2006-01-02 15:04:05"),
 		}
 	)
-	_, err := connect.Model("visits").Ctx(ctx).Data(item).Insert()
+	_, err := connect.Model("visits").Data(item).Insert()
 	gtest.AssertNil(err)
-	_, err = connect.Model("visits").Ctx(ctx).Data(item).InsertIgnore()
+	_, err = connect.Model("visits").Data(item).Save()
 	gtest.AssertNil(err)
-
-	_, err = connect.Model("visits").Ctx(ctx).Data(item).InsertAndGetId()
-	_, err = connect.Model("visits").Ctx(ctx).Data(item).Save()
+	total, err = connect.Model("visits").Count()
 	gtest.AssertNil(err)
-	// insert array data
+	gtest.AssertEQ(total, 2)
 	list := []*insertItem{}
-	for i := 0; i < 999; i++ {
+	for i := 0; i < 50; i++ {
 		list = append(list, &insertItem{
 			Id:       grand.Intn(999),
 			Duration: float64(grand.Intn(999)),
@@ -193,13 +180,14 @@ func TestDriverClickhouse_DoInsert(t *testing.T) {
 			Created:  time.Now().Format("2006-01-02 15:04:05"),
 		})
 	}
-	_, err = connect.Model("visits").Ctx(ctx).Data(list).Insert()
+	_, err = connect.Model("visits").Data(list).Insert()
 	gtest.AssertNil(err)
-	_, err = connect.Model("visits").Ctx(ctx).Data(list).InsertIgnore()
+	_, err = connect.Model("visits").Data(list).Save()
 	gtest.AssertNil(err)
-	_, err = connect.Model("visits").Ctx(ctx).Data(list).InsertAndGetId()
-	_, err = connect.Model("visits").Ctx(ctx).Data(list).Save()
+	total, err = connect.Model("visits").Count()
 	gtest.AssertNil(err)
+	gtest.AssertEQ(total, 102)
+	dropClickhouseTable(connect)
 }
 
 func TestDriverClickhouse_DoExec(t *testing.T) {

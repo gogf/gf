@@ -416,7 +416,7 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 		operation    = GetInsertOperationByOption(option.InsertOption)
 	)
 	if option.InsertOption == InsertOptionSave {
-		onDuplicateStr = c.formatOnDuplicate(keys, option)
+		onDuplicateStr = c.FormatOnDuplicate(keys, option)
 	}
 	var (
 		listLength  = len(list)
@@ -450,14 +450,12 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 			if err != nil {
 				return stdSqlResult, err
 			}
-			if !option.IsIgnoreResult {
-				if affectedRows, err = stdSqlResult.RowsAffected(); err != nil {
-					err = gerror.WrapCode(gcode.CodeDbOperationError, err, `sql.Result.RowsAffected failed`)
-					return stdSqlResult, err
-				} else {
-					batchResult.Result = stdSqlResult
-					batchResult.Affected += affectedRows
-				}
+			if affectedRows, err = stdSqlResult.RowsAffected(); err != nil {
+				err = gerror.WrapCode(gcode.CodeDbOperationError, err, `sql.Result.RowsAffected failed`)
+				return stdSqlResult, err
+			} else {
+				batchResult.Result = stdSqlResult
+				batchResult.Affected += affectedRows
 			}
 			params = params[:0]
 			valueHolder = valueHolder[:0]
@@ -466,7 +464,7 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 	return batchResult, nil
 }
 
-func (c *Core) formatOnDuplicate(columns []string, option DoInsertOption) string {
+func (c *Core) FormatOnDuplicate(columns []string, option DoInsertOption) string {
 	var onDuplicateStr string
 	if option.OnDuplicateStr != "" {
 		onDuplicateStr = option.OnDuplicateStr
