@@ -12,7 +12,7 @@ import (
 	"github.com/gogf/gf/v2/encoding/gjson"
 )
 
-func ExampleJson_DataSetCreate1() {
+func ExampleJson_Set_DataSetCreate1() {
 	j := gjson.New(nil)
 	j.Set("name", "John")
 	j.Set("score", 99.5)
@@ -28,7 +28,7 @@ func ExampleJson_DataSetCreate1() {
 	// {"name":"John","score":99.5}
 }
 
-func ExampleJson_DataSetCreate2() {
+func ExampleJson_Set_DataSetCreate2() {
 	j := gjson.New(nil)
 	for i := 0; i < 5; i++ {
 		j.Set(fmt.Sprintf(`%d.id`, i), i)
