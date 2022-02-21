@@ -338,6 +338,12 @@ func bindVarToStructAttr(elem reflect.Value, name string, value interface{}, map
 	if empty.IsNil(value) {
 		structFieldValue.Set(reflect.Zero(structFieldValue.Type()))
 	} else {
+		// Common interface check.
+		var ok bool
+		if err, ok = bindVarToReflectValueWithInterfaceCheck(structFieldValue, value); ok {
+			return err
+		}
+		// Default converting.
 		structFieldValue.Set(reflect.ValueOf(doConvert(
 			doConvertInput{
 				FromValue:  value,
@@ -420,11 +426,6 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 		return nil
 	}
 
-	// Common interface check.
-	if err, ok := bindVarToReflectValueWithInterfaceCheck(structFieldValue, value); ok {
-		return err
-	}
-
 	kind := structFieldValue.Kind()
 	// Converting using interface, for some kinds.
 	switch kind {
@@ -500,7 +501,7 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 
 	case reflect.Ptr:
 		item := reflect.New(structFieldValue.Type().Elem())
-		if err, ok := bindVarToReflectValueWithInterfaceCheck(item, value); ok {
+		if err, ok = bindVarToReflectValueWithInterfaceCheck(item, value); ok {
 			structFieldValue.Set(item)
 			return err
 		}

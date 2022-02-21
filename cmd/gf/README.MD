@@ -5,35 +5,21 @@
 
 ## 1. Install
 
-### 1). Manually Install
-
-> You might need setting the goproxy to make through building.
-> Please make sure your Golang version > v1.15.
-
-1. Latest version
-    ```
-    go install github.com/gogf/gf/cmd/gf/v2
-    ```
-
-2. Check installation
-   ```
-   gf -v
-   ```
-### 2). PreBuilt Binary
-
 You can also install `gf` tool using pre-built binaries: https://github.com/gogf/gf/releases
-
-After downloads, please use `gf_xxx_xxx install` command to install gf binary to system binary path.
 
 1. `Mac`
     ```shell
-    wget -O gf https://github.com/gogf/gf/releases/download/v2.0.0-rc2/gf_darwin_amd64 && chmod +x gf && ./gf install
+    # Intel.
+    wget -O gf https://github.com/gogf/gf/releases/latest/download/gf_darwin_amd64 && chmod +x gf && ./gf install && rm ./gf
+    
+   # M1.
+    wget -O gf https://github.com/gogf/gf/releases/latest/download/gf_darwin_arm64 && chmod +x gf && ./gf install && rm ./gf
     ```
    > If you're using `zsh`, you might need rename your alias by command `alias gf=gf` to resolve the conflicts between `gf` and `git fetch`.
 
 2. `Linux`
     ```shell
-    wget -O gf https://github.com/gogf/gf/releases/download/v2.0.0-rc2/gf_linux_amd64 && chmod +x gf && ./gf install
+    wget -O gf https://github.com/gogf/gf/releases/latest/download/gf_linux_amd64 && chmod +x gf && ./gf install && rm ./gf
     ```
 
 3. `Windows`

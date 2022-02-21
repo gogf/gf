@@ -107,14 +107,18 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 			}
 		}
 		// Validation.
-		if err = gvalid.New().Data(pointer).Assoc(data).Run(r.Context()); err != nil {
+		if err = gvalid.New().
+			Bail().
+			Data(pointer).
+			Assoc(data).
+			Run(r.Context()); err != nil {
 			return err
 		}
 
 	// Multiple struct, it only supports JSON type post content like:
 	// [{"id":1, "name":"john"}, {"id":, "name":"smith"}]
 	case reflect.Array, reflect.Slice:
-		// If struct slice conversion, it might post JSON/XML content,
+		// If struct slice conversion, it might post JSON/XML/... content,
 		// so it uses `gjson` for the conversion.
 		j, err := gjson.LoadContent(r.GetBody())
 		if err != nil {
@@ -125,7 +129,9 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 		}
 		for i := 0; i < reflectVal2.Len(); i++ {
 			if err = gvalid.New().
-				Data(reflectVal2.Index(i)).Assoc(j.Get(gconv.String(i)).Map()).
+				Bail().
+				Data(reflectVal2.Index(i)).
+				Assoc(j.Get(gconv.String(i)).Map()).
 				Run(r.Context()); err != nil {
 				return err
 			}

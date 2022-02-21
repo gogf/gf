@@ -117,6 +117,10 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 	if prefix != "" {
 		uri = prefix + "/" + strings.TrimLeft(uri, "/")
 	}
+	uri = strings.TrimRight(uri, "/")
+	if uri == "" {
+		uri = "/"
+	}
 
 	if len(uri) == 0 || uri[0] != '/' {
 		s.Logger().Fatalf(ctx, `invalid pattern "%s", URI should lead with '/'`, pattern)

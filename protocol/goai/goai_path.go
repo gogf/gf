@@ -213,9 +213,9 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			contentTypes = oai.Config.ReadContentTypes
 			tagMimeValue = gmeta.Get(outputObject.Interface(), TagNameMime).String()
 			refInput     = getResponseSchemaRefInput{
-				BusinessStructName: outputStructTypeName,
-				ResponseObject:     oai.Config.CommonResponse,
-				ResponseDataField:  oai.Config.CommonResponseDataField,
+				BusinessStructName:      outputStructTypeName,
+				CommonResponseObject:    oai.Config.CommonResponse,
+				CommonResponseDataField: oai.Config.CommonResponseDataField,
 			}
 		)
 		if tagMimeValue != "" {
@@ -224,8 +224,8 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		for _, v := range contentTypes {
 			// If customized response mime type, it then ignores common response feature.
 			if tagMimeValue != "" {
-				refInput.ResponseObject = nil
-				refInput.ResponseDataField = ""
+				refInput.CommonResponseObject = nil
+				refInput.CommonResponseDataField = ""
 			}
 			schemaRef, err := oai.getResponseSchemaRef(refInput)
 			if err != nil {
