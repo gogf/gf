@@ -12,18 +12,30 @@ import (
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/os/glog"
 	"time"
 
 	"github.com/gogf/gf/v2/os/gcron"
-	"github.com/gogf/gf/v2/os/glog"
 )
 
 func Example_cronAddSingleton() {
-	gcron.AddSingleton(ctx, "* * * * * *", func(ctx context.Context) {
+	array := garray.New(true)
+	cron := gcron.New()
+	fmt.Println(array.Len())
+	cron.AddSingleton(ctx, "* * * * * *", func(ctx context.Context) {
 		glog.Print(context.TODO(), "doing")
-		time.Sleep(2 * time.Second)
-	})
-	select {}
+		if array.Len() < 1 {
+			array.Append(1)
+
+		} else {
+			cron.Remove("cron1")
+		}
+	}, "cron1")
+	time.Sleep(3000 * time.Millisecond)
+	fmt.Println(array.Len())
+	// Output:
+	// 0
+	// 1
 }
 
 func Example_cronAddOnce() {
