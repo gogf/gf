@@ -270,6 +270,6 @@ func ExampleDecodeToJson() {
 	j, _ := gjson.DecodeToJson([]byte(jsonContent))
 	fmt.Println(j.Map())
 
-	// Output:
+	// May Output:
 	// map[name:john score:100]
 }

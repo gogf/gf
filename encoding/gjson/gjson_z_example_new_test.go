@@ -34,7 +34,7 @@ func ExampleNewWithTag() {
 		Score: 100,
 		Title: "engineer",
 	}
-	j := gjson.NewWithTag(me, "tag")
+	j := gjson.NewWithTag(me, "tag", true)
 	fmt.Println(j.Get("name"))
 	fmt.Println(j.Get("score"))
 	fmt.Println(j.Get("Title"))
