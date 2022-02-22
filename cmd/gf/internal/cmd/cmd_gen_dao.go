@@ -512,11 +512,12 @@ func generateDaoInternal(
 }
 
 func replaceDefaultVar(in cGenDaoInternalInput, origin string) string {
-	if !in.WithTime {
-		return origin
+	var tplDatetimeStr string
+	if in.WithTime {
+		tplDatetimeStr = fmt.Sprintf(`Created at %s`, createdAt.String())
 	}
 	return gstr.ReplaceByMap(origin, g.MapStrStr{
-		tplVarDatetimeStr: createdAt.String(),
+		tplVarDatetimeStr: tplDatetimeStr,
 	})
 }
 
