@@ -13,8 +13,8 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 type NamesObject struct{}
@@ -24,11 +24,9 @@ func (o *NamesObject) ShowName(r *ghttp.Request) {
 }
 
 func Test_NameToUri_FullName(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.SetNameToUriType(ghttp.UriTypeFullName)
 	s.BindObject("/{.struct}/{.method}", new(NamesObject))
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -37,7 +35,7 @@ func Test_NameToUri_FullName(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetBrowserMode(true)
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		t.Assert(client.GetContent(ctx, "/"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/NamesObject"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/NamesObject/ShowName"), "Object Show Name")
@@ -45,11 +43,9 @@ func Test_NameToUri_FullName(t *testing.T) {
 }
 
 func Test_NameToUri_AllLower(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.SetNameToUriType(ghttp.UriTypeAllLower)
 	s.BindObject("/{.struct}/{.method}", new(NamesObject))
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -58,7 +54,7 @@ func Test_NameToUri_AllLower(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetBrowserMode(true)
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		t.Assert(client.GetContent(ctx, "/"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/NamesObject"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/namesobject/showname"), "Object Show Name")
@@ -66,11 +62,9 @@ func Test_NameToUri_AllLower(t *testing.T) {
 }
 
 func Test_NameToUri_Camel(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.SetNameToUriType(ghttp.UriTypeCamel)
 	s.BindObject("/{.struct}/{.method}", new(NamesObject))
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -79,7 +73,7 @@ func Test_NameToUri_Camel(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetBrowserMode(true)
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		t.Assert(client.GetContent(ctx, "/"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/NamesObject"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/namesObject/showName"), "Object Show Name")
@@ -87,11 +81,9 @@ func Test_NameToUri_Camel(t *testing.T) {
 }
 
 func Test_NameToUri_Default(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.SetNameToUriType(ghttp.UriTypeDefault)
 	s.BindObject("/{.struct}/{.method}", new(NamesObject))
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -100,7 +92,7 @@ func Test_NameToUri_Default(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetBrowserMode(true)
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		t.Assert(client.GetContent(ctx, "/"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/NamesObject"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/names-object/show-name"), "Object Show Name")

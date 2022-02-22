@@ -13,13 +13,12 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 func Test_Router_Basic1(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/:name", func(r *ghttp.Request) {
 		r.Response.Write("/:name")
 	})
@@ -35,7 +34,6 @@ func Test_Router_Basic1(t *testing.T) {
 	s.BindHandler("/user/list/{field}.html", func(r *ghttp.Request) {
 		r.Response.Write(r.Get("field"))
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -43,7 +41,7 @@ func Test_Router_Basic1(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		t.Assert(client.GetContent(ctx, "/john"), "")
 		t.Assert(client.GetContent(ctx, "/john/update"), "john")
 		t.Assert(client.GetContent(ctx, "/john/edit"), "edit")
@@ -52,15 +50,13 @@ func Test_Router_Basic1(t *testing.T) {
 }
 
 func Test_Router_Basic2(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/{hash}", func(r *ghttp.Request) {
 		r.Response.Write(r.Get("hash"))
 	})
 	s.BindHandler("/{hash}.{type}", func(r *ghttp.Request) {
 		r.Response.Write(r.Get("type"))
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -68,15 +64,14 @@ func Test_Router_Basic2(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		t.Assert(client.GetContent(ctx, "/data"), "data")
 		t.Assert(client.GetContent(ctx, "/data.json"), "json")
 	})
 }
 
 func Test_Router_Value(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/{hash}", func(r *ghttp.Request) {
 		r.Response.Write(r.GetRouter("hash").String())
 	})
@@ -86,7 +81,6 @@ func Test_Router_Value(t *testing.T) {
 	s.BindHandler("/{hash}.{type}.map", func(r *ghttp.Request) {
 		r.Response.Write(r.GetRouterMap()["type"])
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -94,7 +88,7 @@ func Test_Router_Value(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		t.Assert(client.GetContent(ctx, "/data"), "data")
 		t.Assert(client.GetContent(ctx, "/data.json"), "json")
 		t.Assert(client.GetContent(ctx, "/data.json.map"), "json")
@@ -103,15 +97,13 @@ func Test_Router_Value(t *testing.T) {
 
 // HTTP method register.
 func Test_Router_Method(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("GET:/get", func(r *ghttp.Request) {
 
 	})
 	s.BindHandler("POST:/post", func(r *ghttp.Request) {
 
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -119,7 +111,7 @@ func Test_Router_Method(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		resp1, err := client.Get(ctx, "/get")
 		defer resp1.Close()
@@ -145,14 +137,12 @@ func Test_Router_Method(t *testing.T) {
 
 // Extra char '/' of the router.
 func Test_Router_ExtraChar(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.Group("/api", func(group *ghttp.RouterGroup) {
 		group.GET("/test", func(r *ghttp.Request) {
 			r.Response.Write("test")
 		})
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -160,7 +150,7 @@ func Test_Router_ExtraChar(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/api/test"), "test")
 		t.Assert(client.GetContent(ctx, "/api/test/"), "test")
@@ -173,8 +163,7 @@ func Test_Router_ExtraChar(t *testing.T) {
 
 // Custom status handler.
 func Test_Router_Status(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/200", func(r *ghttp.Request) {
 		r.Response.WriteStatus(200)
 	})
@@ -187,7 +176,6 @@ func Test_Router_Status(t *testing.T) {
 	s.BindHandler("/500", func(r *ghttp.Request) {
 		r.Response.WriteStatus(500)
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -195,7 +183,7 @@ func Test_Router_Status(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		resp1, err := client.Get(ctx, "/200")
 		defer resp1.Close()
@@ -225,15 +213,13 @@ func Test_Router_Status(t *testing.T) {
 }
 
 func Test_Router_CustomStatusHandler(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/", func(r *ghttp.Request) {
 		r.Response.Write("hello")
 	})
 	s.BindStatusHandler(404, func(r *ghttp.Request) {
 		r.Response.Write("404 page")
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -241,7 +227,7 @@ func Test_Router_CustomStatusHandler(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "hello")
 		resp, err := client.Get(ctx, "/ThisDoesNotExist")
@@ -254,12 +240,10 @@ func Test_Router_CustomStatusHandler(t *testing.T) {
 
 // 404 not found router.
 func Test_Router_404(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/", func(r *ghttp.Request) {
 		r.Response.Write("hello")
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -267,7 +251,7 @@ func Test_Router_404(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "hello")
 		resp, err := client.Get(ctx, "/ThisDoesNotExist")
@@ -278,8 +262,7 @@ func Test_Router_404(t *testing.T) {
 }
 
 func Test_Router_Priority(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/admin", func(r *ghttp.Request) {
 		r.Response.Write("admin")
 	})
@@ -292,7 +275,6 @@ func Test_Router_Priority(t *testing.T) {
 	s.BindHandler("/admin-goods-{page}", func(r *ghttp.Request) {
 		r.Response.Write("admin-goods-{page}")
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -300,7 +282,7 @@ func Test_Router_Priority(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/admin"), "admin")
 		t.Assert(client.GetContent(ctx, "/admin-1"), "admin-{page}")

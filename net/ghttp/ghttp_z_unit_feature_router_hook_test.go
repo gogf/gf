@@ -13,13 +13,12 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 func Test_Router_Hook_Basic(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHookHandlerByMap("/*", map[string]ghttp.HandlerFunc{
 		ghttp.HookBeforeServe:  func(r *ghttp.Request) { r.Response.Write("1") },
 		ghttp.HookAfterServe:   func(r *ghttp.Request) { r.Response.Write("2") },
@@ -29,7 +28,6 @@ func Test_Router_Hook_Basic(t *testing.T) {
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -37,7 +35,7 @@ func Test_Router_Hook_Basic(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "123")
 		t.Assert(client.GetContent(ctx, "/test/test"), "1test23")
@@ -45,8 +43,7 @@ func Test_Router_Hook_Basic(t *testing.T) {
 }
 
 func Test_Router_Hook_Fuzzy_Router(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	i := 1000
 	pattern1 := "/:name/info"
 	s.BindHookHandlerByMap(pattern1, map[string]ghttp.HandlerFunc{
@@ -70,7 +67,6 @@ func Test_Router_Hook_Fuzzy_Router(t *testing.T) {
 	s.BindHandler(pattern2, func(r *ghttp.Request) {
 		r.Response.Write(r.Router.Uri)
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -78,7 +74,7 @@ func Test_Router_Hook_Fuzzy_Router(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/john"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/john/info"), "1000")
@@ -89,8 +85,7 @@ func Test_Router_Hook_Fuzzy_Router(t *testing.T) {
 }
 
 func Test_Router_Hook_Priority(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/priority/show", func(r *ghttp.Request) {
 		r.Response.Write("show")
 	})
@@ -110,7 +105,6 @@ func Test_Router_Hook_Priority(t *testing.T) {
 			r.Response.Write("3")
 		},
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -118,7 +112,7 @@ func Test_Router_Hook_Priority(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/priority/show"), "312show")
@@ -128,8 +122,7 @@ func Test_Router_Hook_Priority(t *testing.T) {
 }
 
 func Test_Router_Hook_Multi(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/multi-hook", func(r *ghttp.Request) {
 		r.Response.Write("show")
 	})
@@ -144,7 +137,6 @@ func Test_Router_Hook_Multi(t *testing.T) {
 			r.Response.Write("2")
 		},
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -152,7 +144,7 @@ func Test_Router_Hook_Multi(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/multi-hook"), "12show")
@@ -160,8 +152,7 @@ func Test_Router_Hook_Multi(t *testing.T) {
 }
 
 func Test_Router_Hook_ExitAll(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
 	})
@@ -179,7 +170,6 @@ func Test_Router_Hook_ExitAll(t *testing.T) {
 		r.Response.Write("hook")
 		r.ExitAll()
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -187,7 +177,7 @@ func Test_Router_Hook_ExitAll(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/test"), "test")
 		t.Assert(client.GetContent(ctx, "/hook/test"), "hook")

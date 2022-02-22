@@ -15,27 +15,25 @@ import (
 
 	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 func Test_Static_ServerRoot(t *testing.T) {
 	// SetServerRoot with absolute path
 	gtest.C(t, func(t *gtest.T) {
-		p, _ := gtcp.GetFreePort()
-		s := g.Server(p)
-		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), p)
+		s := g.Server(guid.S())
+		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), s.GetListenedPort())
 		defer gfile.Remove(path)
 		gfile.PutContents(path+"/index.htm", "index")
 		s.SetServerRoot(path)
-		s.SetPort(p)
 		s.Start()
 		defer s.Shutdown()
 		time.Sleep(100 * time.Millisecond)
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "index")
 		t.Assert(client.GetContent(ctx, "/index.htm"), "index")
@@ -43,18 +41,16 @@ func Test_Static_ServerRoot(t *testing.T) {
 
 	// SetServerRoot with relative path
 	gtest.C(t, func(t *gtest.T) {
-		p, _ := gtcp.GetFreePort()
-		s := g.Server(p)
-		path := fmt.Sprintf(`static/test/%d`, p)
+		s := g.Server(guid.S())
+		path := fmt.Sprintf(`static/test/%d`, s.GetListenedPort())
 		defer gfile.Remove(path)
 		gfile.PutContents(path+"/index.htm", "index")
 		s.SetServerRoot(path)
-		s.SetPort(p)
 		s.Start()
 		defer s.Shutdown()
 		time.Sleep(100 * time.Millisecond)
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "index")
 		t.Assert(client.GetContent(ctx, "/index.htm"), "index")
@@ -63,15 +59,13 @@ func Test_Static_ServerRoot(t *testing.T) {
 
 func Test_Static_ServerRoot_Security(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		p, _ := gtcp.GetFreePort()
-		s := g.Server(p)
+		s := g.Server(guid.S())
 		s.SetServerRoot(gdebug.TestDataPath("static1"))
-		s.SetPort(p)
 		s.Start()
 		defer s.Shutdown()
 		time.Sleep(100 * time.Millisecond)
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "index")
 		t.Assert(client.GetContent(ctx, "/index.htm"), "Not Found")
@@ -84,18 +78,16 @@ func Test_Static_ServerRoot_Security(t *testing.T) {
 
 func Test_Static_Folder_Forbidden(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		p, _ := gtcp.GetFreePort()
-		s := g.Server(p)
-		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), p)
+		s := g.Server(guid.S())
+		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), s.GetListenedPort())
 		defer gfile.Remove(path)
 		gfile.PutContents(path+"/test.html", "test")
 		s.SetServerRoot(path)
-		s.SetPort(p)
 		s.Start()
 		defer s.Shutdown()
 		time.Sleep(100 * time.Millisecond)
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "Forbidden")
 		t.Assert(client.GetContent(ctx, "/index.html"), "Not Found")
@@ -105,19 +97,17 @@ func Test_Static_Folder_Forbidden(t *testing.T) {
 
 func Test_Static_IndexFolder(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		p, _ := gtcp.GetFreePort()
-		s := g.Server(p)
-		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), p)
+		s := g.Server(guid.S())
+		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), s.GetListenedPort())
 		defer gfile.Remove(path)
 		gfile.PutContents(path+"/test.html", "test")
 		s.SetIndexFolder(true)
 		s.SetServerRoot(path)
-		s.SetPort(p)
 		s.Start()
 		defer s.Shutdown()
 		time.Sleep(100 * time.Millisecond)
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.AssertNE(client.GetContent(ctx, "/"), "Forbidden")
 		t.AssertNE(gstr.Pos(client.GetContent(ctx, "/"), `<a href="/test.html"`), -1)
@@ -128,19 +118,17 @@ func Test_Static_IndexFolder(t *testing.T) {
 
 func Test_Static_IndexFiles1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		p, _ := gtcp.GetFreePort()
-		s := g.Server(p)
-		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), p)
+		s := g.Server(guid.S())
+		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), s.GetListenedPort())
 		defer gfile.Remove(path)
 		gfile.PutContents(path+"/index.html", "index")
 		gfile.PutContents(path+"/test.html", "test")
 		s.SetServerRoot(path)
-		s.SetPort(p)
 		s.Start()
 		defer s.Shutdown()
 		time.Sleep(100 * time.Millisecond)
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "index")
 		t.Assert(client.GetContent(ctx, "/index.html"), "index")
@@ -150,19 +138,17 @@ func Test_Static_IndexFiles1(t *testing.T) {
 
 func Test_Static_IndexFiles2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		p, _ := gtcp.GetFreePort()
-		s := g.Server(p)
-		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), p)
+		s := g.Server(guid.S())
+		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), s.GetListenedPort())
 		defer gfile.Remove(path)
 		gfile.PutContents(path+"/test.html", "test")
 		s.SetIndexFiles([]string{"index.html", "test.html"})
 		s.SetServerRoot(path)
-		s.SetPort(p)
 		s.Start()
 		defer s.Shutdown()
 		time.Sleep(100 * time.Millisecond)
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "test")
 		t.Assert(client.GetContent(ctx, "/index.html"), "Not Found")
@@ -172,21 +158,19 @@ func Test_Static_IndexFiles2(t *testing.T) {
 
 func Test_Static_AddSearchPath1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		p, _ := gtcp.GetFreePort()
-		s := g.Server(p)
-		path1 := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), p)
-		path2 := fmt.Sprintf(`%s/ghttp/static/test/%d/%d`, gfile.Temp(), p, p)
+		s := g.Server(guid.S())
+		path1 := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), s.GetListenedPort())
+		path2 := fmt.Sprintf(`%s/ghttp/static/test/%d/%d`, gfile.Temp(), s.GetListenedPort(), s.GetListenedPort())
 		defer gfile.Remove(path1)
 		defer gfile.Remove(path2)
 		gfile.PutContents(path2+"/test.html", "test")
 		s.SetServerRoot(path1)
 		s.AddSearchPath(path2)
-		s.SetPort(p)
 		s.Start()
 		defer s.Shutdown()
 		time.Sleep(100 * time.Millisecond)
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "Forbidden")
 		t.Assert(client.GetContent(ctx, "/test.html"), "test")
@@ -195,22 +179,20 @@ func Test_Static_AddSearchPath1(t *testing.T) {
 
 func Test_Static_AddSearchPath2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		p, _ := gtcp.GetFreePort()
-		s := g.Server(p)
-		path1 := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), p)
-		path2 := fmt.Sprintf(`%s/ghttp/static/test/%d/%d`, gfile.Temp(), p, p)
+		s := g.Server(guid.S())
+		path1 := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), s.GetListenedPort())
+		path2 := fmt.Sprintf(`%s/ghttp/static/test/%d/%d`, gfile.Temp(), s.GetListenedPort(), s.GetListenedPort())
 		defer gfile.Remove(path1)
 		defer gfile.Remove(path2)
 		gfile.PutContents(path1+"/test.html", "test1")
 		gfile.PutContents(path2+"/test.html", "test2")
 		s.SetServerRoot(path1)
 		s.AddSearchPath(path2)
-		s.SetPort(p)
 		s.Start()
 		defer s.Shutdown()
 		time.Sleep(100 * time.Millisecond)
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "Forbidden")
 		t.Assert(client.GetContent(ctx, "/test.html"), "test1")
@@ -219,22 +201,20 @@ func Test_Static_AddSearchPath2(t *testing.T) {
 
 func Test_Static_AddStaticPath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		p, _ := gtcp.GetFreePort()
-		s := g.Server(p)
-		path1 := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), p)
-		path2 := fmt.Sprintf(`%s/ghttp/static/test/%d/%d`, gfile.Temp(), p, p)
+		s := g.Server(guid.S())
+		path1 := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), s.GetListenedPort())
+		path2 := fmt.Sprintf(`%s/ghttp/static/test/%d/%d`, gfile.Temp(), s.GetListenedPort(), s.GetListenedPort())
 		defer gfile.Remove(path1)
 		defer gfile.Remove(path2)
 		gfile.PutContents(path1+"/test.html", "test1")
 		gfile.PutContents(path2+"/test.html", "test2")
 		s.SetServerRoot(path1)
 		s.AddStaticPath("/my-test", path2)
-		s.SetPort(p)
 		s.Start()
 		defer s.Shutdown()
 		time.Sleep(100 * time.Millisecond)
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "Forbidden")
 		t.Assert(client.GetContent(ctx, "/test.html"), "test1")
@@ -244,22 +224,20 @@ func Test_Static_AddStaticPath(t *testing.T) {
 
 func Test_Static_AddStaticPath_Priority(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		p, _ := gtcp.GetFreePort()
-		s := g.Server(p)
-		path1 := fmt.Sprintf(`%s/ghttp/static/test/%d/test`, gfile.Temp(), p)
-		path2 := fmt.Sprintf(`%s/ghttp/static/test/%d/%d/test`, gfile.Temp(), p, p)
+		s := g.Server(guid.S())
+		path1 := fmt.Sprintf(`%s/ghttp/static/test/%d/test`, gfile.Temp(), s.GetListenedPort())
+		path2 := fmt.Sprintf(`%s/ghttp/static/test/%d/%d/test`, gfile.Temp(), s.GetListenedPort(), s.GetListenedPort())
 		defer gfile.Remove(path1)
 		defer gfile.Remove(path2)
 		gfile.PutContents(path1+"/test.html", "test1")
 		gfile.PutContents(path2+"/test.html", "test2")
 		s.SetServerRoot(path1)
 		s.AddStaticPath("/test", path2)
-		s.SetPort(p)
 		s.Start()
 		defer s.Shutdown()
 		time.Sleep(100 * time.Millisecond)
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "Forbidden")
 		t.Assert(client.GetContent(ctx, "/test.html"), "test1")
@@ -269,9 +247,8 @@ func Test_Static_AddStaticPath_Priority(t *testing.T) {
 
 func Test_Static_Rewrite(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		p, _ := gtcp.GetFreePort()
-		s := g.Server(p)
-		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), p)
+		s := g.Server(guid.S())
+		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), s.GetListenedPort())
 		defer gfile.Remove(path)
 		gfile.PutContents(path+"/test1.html", "test1")
 		gfile.PutContents(path+"/test2.html", "test2")
@@ -281,12 +258,11 @@ func Test_Static_Rewrite(t *testing.T) {
 			"/my-test1": "/test1.html",
 			"/my-test2": "/test2.html",
 		})
-		s.SetPort(p)
 		s.Start()
 		defer s.Shutdown()
 		time.Sleep(100 * time.Millisecond)
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "Forbidden")
 		t.Assert(client.GetContent(ctx, "/test.html"), "test1")

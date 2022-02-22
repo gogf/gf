@@ -50,11 +50,11 @@ func (s *Server) newGracefulServer(address string, fd ...int) *gracefulServer {
 	return gs
 }
 
-// newGracefulServer creates and returns a underlying http.Server with given address.
+// newGracefulServer creates and returns an underlying http.Server with given address.
 func (s *Server) newHttpServer(address string) *http.Server {
 	server := &http.Server{
 		Addr:           address,
-		Handler:        s.config.Handler,
+		Handler:        http.HandlerFunc(s.config.Handler),
 		ReadTimeout:    s.config.ReadTimeout,
 		WriteTimeout:   s.config.WriteTimeout,
 		IdleTimeout:    s.config.IdleTimeout,

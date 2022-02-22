@@ -107,10 +107,11 @@ type (
 )
 
 const (
-	HookBeforeServe       = "HOOK_BEFORE_SERVE"
-	HookAfterServe        = "HOOK_AFTER_SERVE"
-	HookBeforeOutput      = "HOOK_BEFORE_OUTPUT"
-	HookAfterOutput       = "HOOK_AFTER_OUTPUT"
+	HeaderXUrlPath        = "x-url-path"         // Used for custom route handler, which does not change URL.Path.
+	HookBeforeServe       = "HOOK_BEFORE_SERVE"  // Hook handler before route handler/file serving.
+	HookAfterServe        = "HOOK_AFTER_SERVE"   // Hook handler after route handler/file serving.
+	HookBeforeOutput      = "HOOK_BEFORE_OUTPUT" // Hook handler before response output.
+	HookAfterOutput       = "HOOK_AFTER_OUTPUT"  // Hook handler after response output.
 	ServerStatusStopped   = 0
 	ServerStatusRunning   = 1
 	DefaultServerName     = "default"

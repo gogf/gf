@@ -33,55 +33,55 @@ import (
 // Get send GET request and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
 func (c *Client) Get(ctx context.Context, url string, data ...interface{}) (*Response, error) {
-	return c.DoRequest(ctx, httpMethodGet, url, data...)
+	return c.DoRequest(ctx, http.MethodGet, url, data...)
 }
 
 // Put send PUT request and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
 func (c *Client) Put(ctx context.Context, url string, data ...interface{}) (*Response, error) {
-	return c.DoRequest(ctx, httpMethodPut, url, data...)
+	return c.DoRequest(ctx, http.MethodPut, url, data...)
 }
 
 // Post sends request using HTTP method POST and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
 func (c *Client) Post(ctx context.Context, url string, data ...interface{}) (*Response, error) {
-	return c.DoRequest(ctx, httpMethodPost, url, data...)
+	return c.DoRequest(ctx, http.MethodPost, url, data...)
 }
 
 // Delete send DELETE request and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
 func (c *Client) Delete(ctx context.Context, url string, data ...interface{}) (*Response, error) {
-	return c.DoRequest(ctx, httpMethodDelete, url, data...)
+	return c.DoRequest(ctx, http.MethodDelete, url, data...)
 }
 
 // Head send HEAD request and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
 func (c *Client) Head(ctx context.Context, url string, data ...interface{}) (*Response, error) {
-	return c.DoRequest(ctx, httpMethodHead, url, data...)
+	return c.DoRequest(ctx, http.MethodHead, url, data...)
 }
 
 // Patch send PATCH request and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
 func (c *Client) Patch(ctx context.Context, url string, data ...interface{}) (*Response, error) {
-	return c.DoRequest(ctx, httpMethodPatch, url, data...)
+	return c.DoRequest(ctx, http.MethodPatch, url, data...)
 }
 
 // Connect send CONNECT request and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
 func (c *Client) Connect(ctx context.Context, url string, data ...interface{}) (*Response, error) {
-	return c.DoRequest(ctx, httpMethodConnect, url, data...)
+	return c.DoRequest(ctx, http.MethodConnect, url, data...)
 }
 
 // Options send OPTIONS request and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
 func (c *Client) Options(ctx context.Context, url string, data ...interface{}) (*Response, error) {
-	return c.DoRequest(ctx, httpMethodOptions, url, data...)
+	return c.DoRequest(ctx, http.MethodOptions, url, data...)
 }
 
 // Trace send TRACE request and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
 func (c *Client) Trace(ctx context.Context, url string, data ...interface{}) (*Response, error) {
-	return c.DoRequest(ctx, httpMethodTrace, url, data...)
+	return c.DoRequest(ctx, http.MethodTrace, url, data...)
 }
 
 // PostForm issues a POST to the specified URL,
@@ -178,7 +178,7 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 			params = httputil.BuildParams(data[0])
 		}
 	}
-	if method == httpMethodGet {
+	if method == http.MethodGet {
 		var bodyBuffer *bytes.Buffer
 		if params != "" {
 			switch c.header[httpHeaderContentType] {
