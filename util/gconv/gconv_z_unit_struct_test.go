@@ -356,7 +356,7 @@ func Test_Struct_Attr_CustomType2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		user := new(User)
 		err := gconv.Struct(g.Map{"id": g.Slice{1, 2}, "name": "john"}, user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.Id, g.Slice{1, 2})
 		t.Assert(user.Name, "john")
 	})
@@ -1300,4 +1300,23 @@ func Test_Struct_Issue1597(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(s.B, `{"c":3}`)
 	})
+}
+
+func Test_Scan_WithDoubleSliceAttribute(t *testing.T) {
+	inputData := [][]string{
+		{"aa", "bb", "cc"},
+		{"11", "22", "33"},
+	}
+	data := struct {
+		Data [][]string
+	}{
+		Data: inputData,
+	}
+	gtest.C(t, func(t *gtest.T) {
+		jv := gjson.New(gjson.MustEncodeString(data))
+		err := jv.Scan(&data)
+		t.AssertNil(err)
+		t.Assert(data.Data, inputData)
+	})
+
 }
