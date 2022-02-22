@@ -364,7 +364,7 @@ func (view *View) searchFile(ctx context.Context, file string) (path string, fol
 						`\/`,
 					)
 					if path, _ = gspath.Search(searchPath, relativePath); path != "" {
-						folder = gfile.Dir(path)
+						folder = gfile.Join(searchPath, tryFolder)
 						return
 					}
 				}
