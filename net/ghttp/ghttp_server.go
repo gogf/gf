@@ -10,7 +10,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"net"
 	"net/http"
 	"os"
 	"runtime"
@@ -616,7 +615,7 @@ func (s *Server) GetListenedPort() int {
 func (s *Server) GetListenedPorts() []int {
 	ports := make([]int, 0)
 	for _, server := range s.servers {
-		ports = append(ports, server.rawListener.Addr().(*net.TCPAddr).Port)
+		ports = append(ports, server.GetListenedPort())
 	}
 	return ports
 }

@@ -34,6 +34,7 @@ func Test_Error_Code(t *testing.T) {
 				panic(gerror.NewCode(gcode.New(10000, "", nil), "test error"))
 			})
 		})
+		s.SetDumpRouterMap(false)
 		s.Start()
 		defer s.Shutdown()
 		time.Sleep(100 * time.Millisecond)
