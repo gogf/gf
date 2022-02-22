@@ -14,8 +14,8 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 func Test_Params_Json_Request(t *testing.T) {
@@ -26,8 +26,7 @@ func Test_Params_Json_Request(t *testing.T) {
 		Pass1 string `p:"password1"`
 		Pass2 string `p:"password2" v:"password2@required|length:2,20|password3|same:password1#||密码强度不足|两次密码不一致"`
 	}
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/get", func(r *ghttp.Request) {
 		r.Response.WriteExit(r.Get("id"), r.Get("name"))
 	})
@@ -45,7 +44,6 @@ func Test_Params_Json_Request(t *testing.T) {
 			r.Response.WriteExit(user.Id, user.Name, user.Pass1, user.Pass2)
 		}
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -53,7 +51,7 @@ func Test_Params_Json_Request(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/get", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}`), ``)
 		t.Assert(client.GetContent(ctx, "/map", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}`), ``)
@@ -72,8 +70,7 @@ func Test_Params_Json_Response(t *testing.T) {
 		Pass2    string `json:"password2"`
 	}
 
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/json1", func(r *ghttp.Request) {
 		r.Response.WriteJson(User{
 			Uid:     100,
@@ -134,7 +131,6 @@ func Test_Params_Json_Response(t *testing.T) {
 		}
 		r.Response.WriteJson(responseJson)
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -142,7 +138,7 @@ func Test_Params_Json_Response(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		map1 := make(map[string]interface{})
 		err1 := json.UnmarshalUseNumber([]byte(client.GetContent(ctx, "/json1")), &map1)

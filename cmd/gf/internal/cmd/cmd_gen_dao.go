@@ -43,7 +43,7 @@ gf gen dao -r user_
 CONFIGURATION SUPPORT
     Options are also supported by configuration file.
     It's suggested using configuration file instead of command line arguments making producing.
-    The configuration node name is "gf.gen.dao", which also supports multiple databases, for example(config.yaml):
+    The configuration node name is "gfcli.gen.dao", which also supports multiple databases, for example(config.yaml):
 	gfcli:
 	  gen:
 		dao:
@@ -63,6 +63,7 @@ CONFIGURATION SUPPORT
 	cGenDaoBriefPrefix          = `add prefix for all table of specified link/database tables`
 	cGenDaoBriefRemovePrefix    = `remove specified prefix of the table, multiple prefix separated with ','`
 	cGenDaoBriefStdTime         = `use time.Time from stdlib instead of gtime.Time for generated time/date fields of tables`
+	cGenDaoBriefWithTime        = `add created time for auto produced go files`
 	cGenDaoBriefGJsonSupport    = `use gJsonSupport to use *gjson.Json instead of string for generated json fields of tables`
 	cGenDaoBriefImportPrefix    = `custom import prefix for generated go files`
 	cGenDaoBriefOverwriteDao    = `overwrite all dao files both inside/outside internal folder`
@@ -97,7 +98,7 @@ generated json tag case for model struct, cases are as follows:
 	tplVarColumnDefine            = `{TplColumnDefine}`
 	tplVarColumnNames             = `{TplColumnNames}`
 	tplVarGroupName               = `{TplGroupName}`
-	tplVarDatetime                = `{TplDatetime}`
+	tplVarDatetimeStr             = `{TplDatetimeStr}`
 )
 
 var (
@@ -118,6 +119,7 @@ func init() {
 		`cGenDaoBriefPrefix`:          cGenDaoBriefPrefix,
 		`cGenDaoBriefRemovePrefix`:    cGenDaoBriefRemovePrefix,
 		`cGenDaoBriefStdTime`:         cGenDaoBriefStdTime,
+		`cGenDaoBriefWithTime`:        cGenDaoBriefWithTime,
 		`cGenDaoBriefGJsonSupport`:    cGenDaoBriefGJsonSupport,
 		`cGenDaoBriefImportPrefix`:    cGenDaoBriefImportPrefix,
 		`cGenDaoBriefOverwriteDao`:    cGenDaoBriefOverwriteDao,
@@ -144,6 +146,7 @@ type (
 		JsonCase       string `name:"jsonCase"        short:"j" brief:"{cGenDaoBriefJsonCase}" d:"CamelLower"`
 		ImportPrefix   string `name:"importPrefix"    short:"i" brief:"{cGenDaoBriefImportPrefix}"`
 		StdTime        bool   `name:"stdTime"         short:"s" brief:"{cGenDaoBriefStdTime}"         orphan:"true"`
+		WithTime       bool   `name:"withTime"        short:"c" brief:"{cGenDaoBriefWithTime}"        orphan:"true"`
 		GJsonSupport   bool   `name:"gJsonSupport"    short:"n" brief:"{cGenDaoBriefGJsonSupport}"    orphan:"true"`
 		OverwriteDao   bool   `name:"overwriteDao"    short:"o" brief:"{cGenDaoBriefOverwriteDao}"    orphan:"true"`
 		DescriptionTag bool   `name:"descriptionTag"  short:"d" brief:"{cGenDaoBriefDescriptionTag}"  orphan:"true"`
@@ -319,10 +322,10 @@ func generateDao(ctx context.Context, db gdb.DB, in cGenDaoInternalInput) {
 	}
 
 	// dao - index
-	generateDaoIndex(tableNameCamelCase, tableNameCamelLowerCase, importPrefix, dirPathDao, fileName, in)
+	generateDaoIndex(in, tableNameCamelCase, tableNameCamelLowerCase, importPrefix, dirPathDao, fileName)
 
 	// dao - internal
-	generateDaoInternal(tableNameCamelCase, tableNameCamelLowerCase, importPrefix, dirPathDao, fileName, fieldMap, in)
+	generateDaoInternal(in, tableNameCamelCase, tableNameCamelLowerCase, importPrefix, dirPathDao, fileName, fieldMap)
 }
 
 func generateDo(ctx context.Context, db gdb.DB, tableNames, newTableNames []string, in cGenDaoInternalInput) {
@@ -362,6 +365,7 @@ func generateDo(ctx context.Context, db gdb.DB, tableNames, newTableNames []stri
 			},
 		)
 		modelContent := generateDoContent(
+			in,
 			tableName,
 			gstr.CaseCamel(newTableName),
 			structDefinition,
@@ -391,6 +395,7 @@ func generateEntity(ctx context.Context, db gdb.DB, tableNames, newTableNames []
 			newTableName   = newTableNames[i]
 			entityFilePath = gfile.Join(entityDirPath, gstr.CaseSnake(newTableName)+".go")
 			entityContent  = generateEntityContent(
+				in,
 				newTableName,
 				gstr.CaseCamel(newTableName),
 				generateStructDefinition(generateStructDefinitionInput{
@@ -440,29 +445,29 @@ func getImportPartContent(source string, isDo bool) string {
 	return packageImportsStr
 }
 
-func generateEntityContent(tableName, tableNameCamelCase, structDefine string) string {
+func generateEntityContent(in cGenDaoInternalInput, tableName, tableNameCamelCase, structDefine string) string {
 	entityContent := gstr.ReplaceByMap(consts.TemplateGenDaoEntityContent, g.MapStrStr{
 		tplVarTableName:          tableName,
 		tplVarPackageImports:     getImportPartContent(structDefine, false),
 		tplVarTableNameCamelCase: tableNameCamelCase,
 		tplVarStructDefine:       structDefine,
 	})
-	entityContent = replaceDefaultVar(entityContent)
+	entityContent = replaceDefaultVar(in, entityContent)
 	return entityContent
 }
 
-func generateDoContent(tableName, tableNameCamelCase, structDefine string) string {
+func generateDoContent(in cGenDaoInternalInput, tableName, tableNameCamelCase, structDefine string) string {
 	doContent := gstr.ReplaceByMap(consts.TemplateGenDaoDoContent, g.MapStrStr{
 		tplVarTableName:          tableName,
 		tplVarPackageImports:     getImportPartContent(structDefine, true),
 		tplVarTableNameCamelCase: tableNameCamelCase,
 		tplVarStructDefine:       structDefine,
 	})
-	doContent = replaceDefaultVar(doContent)
+	doContent = replaceDefaultVar(in, doContent)
 	return doContent
 }
 
-func generateDaoIndex(tableNameCamelCase, tableNameCamelLowerCase, importPrefix, dirPathDao, fileName string, in cGenDaoInternalInput) {
+func generateDaoIndex(in cGenDaoInternalInput, tableNameCamelCase, tableNameCamelLowerCase, importPrefix, dirPathDao, fileName string) {
 	path := gfile.Join(dirPathDao, fileName+".go")
 	if in.OverwriteDao || !gfile.Exists(path) {
 		indexContent := gstr.ReplaceByMap(getTplDaoIndexContent(""), g.MapStrStr{
@@ -471,7 +476,7 @@ func generateDaoIndex(tableNameCamelCase, tableNameCamelLowerCase, importPrefix,
 			tplVarTableNameCamelCase:      tableNameCamelCase,
 			tplVarTableNameCamelLowerCase: tableNameCamelLowerCase,
 		})
-		indexContent = replaceDefaultVar(indexContent)
+		indexContent = replaceDefaultVar(in, indexContent)
 		if err := gfile.PutContents(path, strings.TrimSpace(indexContent)); err != nil {
 			mlog.Fatalf("writing content to '%s' failed: %v", path, err)
 		} else {
@@ -482,10 +487,10 @@ func generateDaoIndex(tableNameCamelCase, tableNameCamelLowerCase, importPrefix,
 }
 
 func generateDaoInternal(
+	in cGenDaoInternalInput,
 	tableNameCamelCase, tableNameCamelLowerCase, importPrefix string,
 	dirPathDao, fileName string,
 	fieldMap map[string]*gdb.TableField,
-	in cGenDaoInternalInput,
 ) {
 	path := gfile.Join(dirPathDao, "internal", fileName+".go")
 	modelContent := gstr.ReplaceByMap(getTplDaoInternalContent(""), g.MapStrStr{
@@ -497,7 +502,7 @@ func generateDaoInternal(
 		tplVarColumnDefine:            gstr.Trim(generateColumnDefinitionForDao(fieldMap)),
 		tplVarColumnNames:             gstr.Trim(generateColumnNamesForDao(fieldMap)),
 	})
-	modelContent = replaceDefaultVar(modelContent)
+	modelContent = replaceDefaultVar(in, modelContent)
 	if err := gfile.PutContents(path, strings.TrimSpace(modelContent)); err != nil {
 		mlog.Fatalf("writing content to '%s' failed: %v", path, err)
 	} else {
@@ -506,9 +511,13 @@ func generateDaoInternal(
 	}
 }
 
-func replaceDefaultVar(origin string) string {
+func replaceDefaultVar(in cGenDaoInternalInput, origin string) string {
+	var tplDatetimeStr string
+	if in.WithTime {
+		tplDatetimeStr = fmt.Sprintf(`Created at %s`, createdAt.String())
+	}
 	return gstr.ReplaceByMap(origin, g.MapStrStr{
-		tplVarDatetime: createdAt.String(),
+		tplVarDatetimeStr: tplDatetimeStr,
 	})
 }
 

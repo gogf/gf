@@ -66,7 +66,7 @@ type ServerConfig struct {
 	TLSConfig *tls.Config `json:"tlsConfig"`
 
 	// Handler the handler for HTTP request.
-	Handler http.Handler `json:"-"`
+	Handler func(w http.ResponseWriter, r *http.Request) `json:"-"`
 
 	// ReadTimeout is the maximum duration for reading the entire
 	// request, including the body.
@@ -240,7 +240,7 @@ type ServerConfig struct {
 func NewConfig() ServerConfig {
 	return ServerConfig{
 		Name:                DefaultServerName,
-		Address:             "",
+		Address:             ":0",
 		HTTPSAddr:           "",
 		Handler:             nil,
 		ReadTimeout:         60 * time.Second,
@@ -481,10 +481,15 @@ func (s *Server) SetName(name string) {
 	s.config.Name = name
 }
 
-// Handler returns the request handler of the server.
-func (s *Server) Handler() http.Handler {
+// SetHandler sets the request handler for server.
+func (s *Server) SetHandler(h func(w http.ResponseWriter, r *http.Request)) {
+	s.config.Handler = h
+}
+
+// GetHandler returns the request handler of the server.
+func (s *Server) GetHandler() func(w http.ResponseWriter, r *http.Request) {
 	if s.config.Handler == nil {
-		return s
+		return s.ServeHTTP
 	}
 	return s.config.Handler
 }

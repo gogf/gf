@@ -8,6 +8,7 @@ package gclient
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/gogf/gf/v2/container/gvar"
 )
@@ -15,55 +16,55 @@ import (
 // GetVar sends a GET request, retrieves and converts the result content to specified pointer.
 // The parameter `pointer` can be type of: struct/*struct/**struct/[]struct/[]*struct/*[]struct, etc.
 func (c *Client) GetVar(ctx context.Context, url string, data ...interface{}) *gvar.Var {
-	return c.RequestVar(ctx, httpMethodGet, url, data...)
+	return c.RequestVar(ctx, http.MethodGet, url, data...)
 }
 
 // PutVar sends a PUT request, retrieves and converts the result content to specified pointer.
 // The parameter `pointer` can be type of: struct/*struct/**struct/[]struct/[]*struct/*[]struct, etc.
 func (c *Client) PutVar(ctx context.Context, url string, data ...interface{}) *gvar.Var {
-	return c.RequestVar(ctx, httpMethodPut, url, data...)
+	return c.RequestVar(ctx, http.MethodPut, url, data...)
 }
 
 // PostVar sends a POST request, retrieves and converts the result content to specified pointer.
 // The parameter `pointer` can be type of: struct/*struct/**struct/[]struct/[]*struct/*[]struct, etc.
 func (c *Client) PostVar(ctx context.Context, url string, data ...interface{}) *gvar.Var {
-	return c.RequestVar(ctx, httpMethodPost, url, data...)
+	return c.RequestVar(ctx, http.MethodPost, url, data...)
 }
 
 // DeleteVar sends a DELETE request, retrieves and converts the result content to specified pointer.
 // The parameter `pointer` can be type of: struct/*struct/**struct/[]struct/[]*struct/*[]struct, etc.
 func (c *Client) DeleteVar(ctx context.Context, url string, data ...interface{}) *gvar.Var {
-	return c.RequestVar(ctx, httpMethodDelete, url, data...)
+	return c.RequestVar(ctx, http.MethodDelete, url, data...)
 }
 
 // HeadVar sends a HEAD request, retrieves and converts the result content to specified pointer.
 // The parameter `pointer` can be type of: struct/*struct/**struct/[]struct/[]*struct/*[]struct, etc.
 func (c *Client) HeadVar(ctx context.Context, url string, data ...interface{}) *gvar.Var {
-	return c.RequestVar(ctx, httpMethodHead, url, data...)
+	return c.RequestVar(ctx, http.MethodHead, url, data...)
 }
 
 // PatchVar sends a PATCH request, retrieves and converts the result content to specified pointer.
 // The parameter `pointer` can be type of: struct/*struct/**struct/[]struct/[]*struct/*[]struct, etc.
 func (c *Client) PatchVar(ctx context.Context, url string, data ...interface{}) *gvar.Var {
-	return c.RequestVar(ctx, httpMethodPatch, url, data...)
+	return c.RequestVar(ctx, http.MethodPatch, url, data...)
 }
 
 // ConnectVar sends a CONNECT request, retrieves and converts the result content to specified pointer.
 // The parameter `pointer` can be type of: struct/*struct/**struct/[]struct/[]*struct/*[]struct, etc.
 func (c *Client) ConnectVar(ctx context.Context, url string, data ...interface{}) *gvar.Var {
-	return c.RequestVar(ctx, httpMethodConnect, url, data...)
+	return c.RequestVar(ctx, http.MethodConnect, url, data...)
 }
 
 // OptionsVar sends a OPTIONS request, retrieves and converts the result content to specified pointer.
 // The parameter `pointer` can be type of: struct/*struct/**struct/[]struct/[]*struct/*[]struct, etc.
 func (c *Client) OptionsVar(ctx context.Context, url string, data ...interface{}) *gvar.Var {
-	return c.RequestVar(ctx, httpMethodOptions, url, data...)
+	return c.RequestVar(ctx, http.MethodOptions, url, data...)
 }
 
 // TraceVar sends a TRACE request, retrieves and converts the result content to specified pointer.
 // The parameter `pointer` can be type of: struct/*struct/**struct/[]struct/[]*struct/*[]struct, etc.
 func (c *Client) TraceVar(ctx context.Context, url string, data ...interface{}) *gvar.Var {
-	return c.RequestVar(ctx, httpMethodTrace, url, data...)
+	return c.RequestVar(ctx, http.MethodTrace, url, data...)
 }
 
 // RequestVar sends request using given HTTP method and data, retrieves converts the result

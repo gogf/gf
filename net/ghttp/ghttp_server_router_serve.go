@@ -9,6 +9,7 @@ package ghttp
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/gogf/gf/v2/container/glist"
@@ -41,26 +42,28 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedI
 	var (
 		ctx    = r.Context()
 		method = r.Method
+		path   = r.URL.Path
+		host   = r.GetHost()
 	)
 	// Special http method OPTIONS handling.
 	// It searches the handler with the request method instead of OPTIONS method.
-	if method == "OPTIONS" {
+	if method == http.MethodOptions {
 		if v := r.Request.Header.Get("Access-Control-Request-Method"); v != "" {
 			method = v
 		}
 	}
 	// Search and cache the router handlers.
-	value, err := s.serveCache.GetOrSetFunc(
-		ctx,
-		s.serveHandlerKey(method, r.URL.Path, r.GetHost()),
-		func(ctx context.Context) (interface{}, error) {
-			parsedItems, hasHook, hasServe = s.searchHandlers(method, r.URL.Path, r.GetHost())
-			if parsedItems != nil {
-				return &handlerCacheItem{parsedItems, hasHook, hasServe}, nil
-			}
-			return nil, nil
-		}, routeCacheDuration,
-	)
+	if xUrlPath := r.Header.Get(HeaderXUrlPath); xUrlPath != "" {
+		path = xUrlPath
+	}
+	var handlerKey = s.serveHandlerKey(method, path, host)
+	value, err := s.serveCache.GetOrSetFunc(ctx, handlerKey, func(ctx context.Context) (interface{}, error) {
+		parsedItems, hasHook, hasServe = s.searchHandlers(method, path, host)
+		if parsedItems != nil {
+			return &handlerCacheItem{parsedItems, hasHook, hasServe}, nil
+		}
+		return nil, nil
+	}, routeCacheDuration)
 	if err != nil {
 		intlog.Errorf(ctx, `%+v`, err)
 	}
