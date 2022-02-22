@@ -13,10 +13,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/genv"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/guid"
 )
 
@@ -72,5 +74,29 @@ func Test_XUrlPath(t *testing.T) {
 		t.Assert(c.GetContent(ctx, "/"), "test2")
 		t.Assert(c.GetContent(ctx, "/test/test"), "test2")
 		t.Assert(c.GetContent(ctx, "/test1"), "test2")
+	})
+}
+
+func Test_Issue1611(t *testing.T) {
+	s := g.Server(guid.S())
+	v := g.View(guid.S())
+	content := "This is header"
+	gtest.AssertNil(v.SetPath(gdebug.TestDataPath("issue1611")))
+	s.SetView(v)
+	s.BindHandler("/", func(r *ghttp.Request) {
+		gtest.AssertNil(r.Response.WriteTpl("index/layout.html", g.Map{
+			"header": content,
+		}))
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		t.Assert(gstr.Contains(c.GetContent(ctx, "/"), content), true)
 	})
 }
