@@ -17,14 +17,13 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 func Test_Error_Code(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		p, _ := gtcp.GetFreePort()
-		s := g.Server(p)
+		s := g.Server(guid.S())
 		s.Group("/", func(group *ghttp.RouterGroup) {
 			group.Middleware(func(r *ghttp.Request) {
 				r.Middleware.Next()
@@ -35,12 +34,12 @@ func Test_Error_Code(t *testing.T) {
 				panic(gerror.NewCode(gcode.New(10000, "", nil), "test error"))
 			})
 		})
-		s.SetPort(p)
+		s.SetDumpRouterMap(false)
 		s.Start()
 		defer s.Shutdown()
 		time.Sleep(100 * time.Millisecond)
 		c := g.Client()
-		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(c.GetContent(ctx, "/"), "10000")
 	})

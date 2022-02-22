@@ -15,11 +15,11 @@ import (
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 func Test_Session_Cookie(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/set", func(r *ghttp.Request) {
 		r.Session.Set(r.Get("k").String(), r.Get("v").String())
 	})
@@ -32,7 +32,6 @@ func Test_Session_Cookie(t *testing.T) {
 	s.BindHandler("/clear", func(r *ghttp.Request) {
 		r.Session.RemoveAll()
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -41,7 +40,7 @@ func Test_Session_Cookie(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetBrowserMode(true)
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		r1, e1 := client.Get(ctx, "/set?k=key1&v=100")
 		if r1 != nil {
 			defer r1.Close()
@@ -65,8 +64,7 @@ func Test_Session_Cookie(t *testing.T) {
 }
 
 func Test_Session_Header(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/set", func(r *ghttp.Request) {
 		r.Session.Set(r.Get("k").String(), r.Get("v").String())
 	})
@@ -79,7 +77,6 @@ func Test_Session_Header(t *testing.T) {
 	s.BindHandler("/clear", func(r *ghttp.Request) {
 		r.Session.RemoveAll()
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -87,7 +84,7 @@ func Test_Session_Header(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		response, e1 := client.Get(ctx, "/set?k=key1&v=100")
 		if response != nil {
 			defer response.Close()
@@ -116,8 +113,7 @@ func Test_Session_Header(t *testing.T) {
 
 func Test_Session_StorageFile(t *testing.T) {
 	sessionId := ""
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/set", func(r *ghttp.Request) {
 		r.Session.Set(r.Get("k").String(), r.Get("v").String())
 		r.Response.Write(r.Get("k").String(), "=", r.Get("v").String())
@@ -125,7 +121,6 @@ func Test_Session_StorageFile(t *testing.T) {
 	s.BindHandler("/get", func(r *ghttp.Request) {
 		r.Response.Write(r.Session.Get(r.Get("k").String()))
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -134,7 +129,7 @@ func Test_Session_StorageFile(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		response, e1 := client.Get(ctx, "/set?k=key&v=100")
 		if response != nil {
 			defer response.Close()
@@ -147,7 +142,7 @@ func Test_Session_StorageFile(t *testing.T) {
 	time.Sleep(time.Second)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		client.SetHeader(s.GetSessionIdName(), sessionId)
 		t.Assert(client.GetContent(ctx, "/get?k=key"), "100")
 		t.Assert(client.GetContent(ctx, "/get?k=key1"), "")
@@ -174,7 +169,6 @@ func Test_Session_Custom_Id(t *testing.T) {
 	s.BindHandler("/value", func(r *ghttp.Request) {
 		r.Response.WriteExit(r.Session.Get(key))
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -183,7 +177,7 @@ func Test_Session_Custom_Id(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		r, err := client.Get(ctx, "/id")
 		t.Assert(err, nil)
 		defer r.Close()
@@ -192,7 +186,7 @@ func Test_Session_Custom_Id(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		client.SetHeader(s.GetSessionIdName(), sessionId)
 		t.Assert(client.GetContent(ctx, "/value"), value)
 	})

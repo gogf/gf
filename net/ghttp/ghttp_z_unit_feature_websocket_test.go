@@ -13,14 +13,13 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 	"github.com/gorilla/websocket"
 )
 
 func Test_WebSocket(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/ws", func(r *ghttp.Request) {
 		ws, err := r.WebSocket()
 		if err != nil {
@@ -36,14 +35,15 @@ func Test_WebSocket(t *testing.T) {
 			}
 		}
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		conn, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf("ws://127.0.0.1:%d/ws", p), nil)
+		conn, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf(
+			"ws://127.0.0.1:%d/ws", s.GetListenedPort(),
+		), nil)
 		t.Assert(err, nil)
 		defer conn.Close()
 
