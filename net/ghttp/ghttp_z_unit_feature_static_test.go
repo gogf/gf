@@ -258,6 +258,7 @@ func Test_Static_Rewrite(t *testing.T) {
 			"/my-test1": "/test1.html",
 			"/my-test2": "/test2.html",
 		})
+		s.SetDumpRouterMap(false)
 		s.Start()
 		defer s.Shutdown()
 		time.Sleep(100 * time.Millisecond)
