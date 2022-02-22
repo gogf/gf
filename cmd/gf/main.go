@@ -47,6 +47,7 @@ func main() {
 		cmd.Docker,
 		cmd.Install,
 		cmd.Version,
+		cmd.Update,
 	)
 	if err != nil {
 		panic(err)
