@@ -15,9 +15,13 @@ import (
 
 func ExampleLoad() {
 	jsonFilePath := gdebug.TestDataPath("json", "data1.json")
-	j, _ := gjson.Load(jsonFilePath)
+	j, _ := gjson.Load(jsonFilePath, true)
 	fmt.Println(j.Get("name"))
 	fmt.Println(j.Get("score"))
+
+	notExistFilePath := gdebug.TestDataPath("json", "data2.json")
+	j2, _ := gjson.Load(notExistFilePath)
+	fmt.Println(j2.Get("name"))
 
 	// Output:
 	// john
@@ -26,7 +30,7 @@ func ExampleLoad() {
 
 func ExampleLoadJson() {
 	jsonContent := `{"name":"john", "score":"100"}`
-	j, _ := gjson.LoadJson(jsonContent)
+	j, _ := gjson.LoadJson(jsonContent, true)
 	fmt.Println(j.Get("name"))
 	fmt.Println(j.Get("score"))
 
@@ -41,7 +45,7 @@ func ExampleLoadXml() {
 		<name>john</name>
 		<score>100</score>
 	</base>`
-	j, _ := gjson.LoadXml(xmlContent)
+	j, _ := gjson.LoadXml(xmlContent, true)
 	fmt.Println(j.Get("base.name"))
 	fmt.Println(j.Get("base.score"))
 
@@ -56,7 +60,7 @@ func ExampleLoadIni() {
 	name = john
 	score = 100
 	`
-	j, _ := gjson.LoadIni(iniContent)
+	j, _ := gjson.LoadIni(iniContent, true)
 	fmt.Println(j.Get("base.name"))
 	fmt.Println(j.Get("base.score"))
 
@@ -71,7 +75,7 @@ func ExampleLoadYaml() {
   name: john
   score: 100`
 
-	j, _ := gjson.LoadYaml(yamlContent)
+	j, _ := gjson.LoadYaml(yamlContent, true)
 	fmt.Println(j.Get("base.name"))
 	fmt.Println(j.Get("base.score"))
 
@@ -86,7 +90,7 @@ func ExampleLoadToml() {
   name = "john"
   score = 100`
 
-	j, _ := gjson.LoadToml(tomlContent)
+	j, _ := gjson.LoadToml(tomlContent, true)
 	fmt.Println(j.Get("base.name"))
 	fmt.Println(j.Get("base.score"))
 
@@ -126,13 +130,15 @@ func ExampleLoadContentType() {
 		<score>100</score>
 	</base>`
 
-	j, _ := gjson.LoadContentType("json", jsonContent)
+	j, _ := gjson.LoadContentType("json", jsonContent, true)
 	x, _ := gjson.LoadContentType("xml", xmlContent)
+	j1, _ := gjson.LoadContentType("json", "")
 
 	fmt.Println(j.Get("name"))
 	fmt.Println(j.Get("score"))
 	fmt.Println(x.Get("base.name"))
 	fmt.Println(x.Get("base.score"))
+	fmt.Println(j1.Get(""))
 
 	// Output:
 	// john
@@ -148,6 +154,8 @@ func ExampleIsValidDataType() {
 	fmt.Println(gjson.IsValidDataType("mp4"))
 	fmt.Println(gjson.IsValidDataType("xsl"))
 	fmt.Println(gjson.IsValidDataType("txt"))
+	fmt.Println(gjson.IsValidDataType(""))
+	fmt.Println(gjson.IsValidDataType(".json"))
 
 	// Output:
 	// true
@@ -156,6 +164,8 @@ func ExampleIsValidDataType() {
 	// false
 	// false
 	// false
+	// false
+	// true
 }
 
 func ExampleLoad_Xml() {
