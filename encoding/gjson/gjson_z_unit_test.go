@@ -552,3 +552,27 @@ func TestJson_Options(t *testing.T) {
 		t.Assert(fmt.Sprintf(`%v`, m["Id"]), `53687091200`)
 	})
 }
+
+// https://github.com/gogf/gf/issues/1617
+func Test_Issue1617(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type MyJsonName struct {
+			F中文   int64 `json:"F中文"`
+			F英文   int64 `json:"F英文"`
+			F法文   int64 `json:"F法文"`
+			F西班牙语 int64 `json:"F西班牙语"`
+		}
+		jso := `{"F中文":1,"F英文":2,"F法文":3,"F西班牙语":4}`
+		var a MyJsonName
+		json, err := gjson.DecodeToJson(jso)
+		t.AssertNil(err)
+		err = json.Scan(&a)
+		t.AssertNil(err)
+		t.Assert(a, MyJsonName{
+			F中文:   1,
+			F英文:   2,
+			F法文:   3,
+			F西班牙语: 4,
+		})
+	})
+}
