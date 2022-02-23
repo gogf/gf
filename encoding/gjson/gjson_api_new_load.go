@@ -67,38 +67,30 @@ func NewWithOptions(data interface{}, options Options) *Json {
 			}
 		}
 	default:
-		var reflectInfo = utils.OriginValueAndKind(data)
+		var (
+			pointedData interface{}
+			reflectInfo = utils.OriginValueAndKind(data)
+		)
 		switch reflectInfo.OriginKind {
 		case reflect.Slice, reflect.Array:
-			var i interface{} = gconv.Interfaces(data)
-			j = &Json{
-				p:  &i,
-				c:  byte(defaultSplitChar),
-				vc: false,
-			}
+			pointedData = gconv.Interfaces(data)
+
 		case reflect.Map:
-			var i interface{} = gconv.MapDeep(data, options.Tags)
-			j = &Json{
-				p:  &i,
-				c:  byte(defaultSplitChar),
-				vc: false,
-			}
+			pointedData = gconv.MapDeep(data, options.Tags)
+
 		case reflect.Struct:
 			if v, ok := data.(iVal); ok {
 				return NewWithOptions(v.Val(), options)
 			}
-			var i interface{} = gconv.MapDeep(data, options.Tags)
-			j = &Json{
-				p:  &i,
-				c:  byte(defaultSplitChar),
-				vc: false,
-			}
+			pointedData = gconv.MapDeep(data, options.Tags)
+
 		default:
-			j = &Json{
-				p:  &data,
-				c:  byte(defaultSplitChar),
-				vc: false,
-			}
+			pointedData = data
+		}
+		j = &Json{
+			p:  &pointedData,
+			c:  byte(defaultSplitChar),
+			vc: false,
 		}
 	}
 	j.mu = rwmutex.New(options.Safe)
