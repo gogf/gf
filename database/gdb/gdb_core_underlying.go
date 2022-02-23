@@ -20,6 +20,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/guid"
 )
 
@@ -211,7 +212,7 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 	}
 	// Result handling.
 	switch {
-	case sqlResult != nil && !in.IsIgnoreResult:
+	case sqlResult != nil && !gconv.Bool(ctx.Value("isIgnoreResult")):
 		rowsAffected, err = sqlResult.RowsAffected()
 		out.Result = sqlResult
 

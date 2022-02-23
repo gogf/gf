@@ -48,7 +48,6 @@ type ConfigNode struct {
 	UpdatedAt            string        `json:"updatedAt"`            // (Optional) The filed name of table for automatic-filled updated datetime.
 	DeletedAt            string        `json:"deletedAt"`            // (Optional) The filed name of table for automatic-filled updated datetime.
 	TimeMaintainDisabled bool          `json:"timeMaintainDisabled"` // (Optional) Disable the automatic time maintaining feature.
-	Compress             bool          `json:"compress"`             // (Optional,only Clickhouse) enable lz4 compression
 }
 
 const (
