@@ -184,7 +184,7 @@ func (r *Request) IsAjaxRequest() bool {
 // GetClientIp returns the client ip of this request without port.
 // Note that this ip address might be modified by client header.
 func (r *Request) GetClientIp() string {
-	if r.clientIp == "" {
+	if r.clientIp != "" {
 		return r.clientIp
 	}
 	realIps := r.Header.Get("X-Forwarded-For")
