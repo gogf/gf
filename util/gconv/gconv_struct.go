@@ -196,7 +196,7 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 		elemFieldType  reflect.StructField
 		elemFieldValue reflect.Value
 		elemType       = pointerElemReflectValue.Type()
-		attrMap        = make(map[string]string)
+		attrMap        = make(map[string]string) // Attribute name to its check name which has no symbols.
 	)
 	for i := 0; i < pointerElemReflectValue.NumField(); i++ {
 		elemFieldType = elemType.Field(i)
@@ -229,7 +229,7 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 	// The key of the tagMap is the attribute name of the struct,
 	// and the value is its replaced tag name for later comparison to improve performance.
 	var (
-		tagMap           = make(map[string]string)
+		tagMap           = make(map[string]string) // Tag name to its check name which has no symbols.
 		priorityTagArray []string
 	)
 	if priorityTag != "" {
@@ -241,7 +241,6 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 	if err != nil {
 		return err
 	}
-	var foundKey string
 	for tagName, attributeName := range tagToNameMap {
 		// If there's something else in the tag string,
 		// it uses the first part which is split using char ','.
@@ -252,8 +251,13 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 		// If tag and attribute values both exist in `paramsMap`,
 		// it then uses the tag value overwriting the attribute value in `paramsMap`.
 		if paramsMap[tagName] != nil {
-			if foundKey, _ = utils.MapPossibleItemByKey(paramsMap, attributeName); foundKey != "" {
-				paramsMap[foundKey] = paramsMap[tagName]
+			for paramsKey, _ := range paramsMap {
+				if paramsKey == tagName {
+					continue
+				}
+				if utils.EqualFoldWithoutChars(paramsKey, attributeName) {
+					paramsMap[paramsKey] = paramsMap[tagName]
+				}
 			}
 		}
 	}
