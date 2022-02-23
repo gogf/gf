@@ -29,8 +29,8 @@ type cVersionOutput struct{}
 
 func (c cVersion) Index(ctx context.Context, in cVersionInput) (*cVersionOutput, error) {
 	info := gbuild.Info()
-	if info["git"] == "" {
-		info["git"] = "none"
+	if info.Git == "" {
+		info.Git = "none"
 	}
 	mlog.Printf(`GoFrame CLI Tool %s, https://goframe.org`, gf.VERSION)
 	gfVersion, err := c.getGFVersionOfCurrentProject()
@@ -41,7 +41,7 @@ func (c cVersion) Index(ctx context.Context, in cVersionInput) (*cVersionOutput,
 	}
 	mlog.Printf(`GoFrame Version: %s`, gfVersion)
 	mlog.Printf(`CLI Installed At: %s`, gfile.SelfPath())
-	if info["gf"] == "" {
+	if info.GoFrame == "" {
 		mlog.Print(`Current is a custom installed version, no installation information.`)
 		return nil, nil
 	}
@@ -52,7 +52,7 @@ CLI Built Detail:
   GF Version:  %s
   Git Commit:  %s
   Build Time:  %s
-`, info["go"], info["gf"], info["git"], info["time"])))
+`, info.Golang, info.GoFrame, info.Git, info.Time)))
 	return nil, nil
 }
 
