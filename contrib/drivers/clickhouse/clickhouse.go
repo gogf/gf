@@ -37,6 +37,7 @@ var (
 	ErrUnsupportedReplace      = errors.New("unsupported method:Replace")
 	ErrUnsupportedBegin        = errors.New("unsupported method:Begin")
 	ErrUnsupportedTransaction  = errors.New("unsupported method:Transaction")
+	ErrSQLNull                 = errors.New("SQL cannot be null")
 )
 
 func init() {
@@ -74,8 +75,8 @@ func (d *Driver) Open(config *gdb.ConfigNode) (*sql.DB, error) {
 			config.User, config.Host, config.Port, config.Name)
 	}
 	source += fmt.Sprintf(
-		"?charset=%s&debug=%s&compress=%s",
-		config.Charset, gconv.String(config.Debug), gconv.String(config.Compress),
+		"?charset=%s&debug=%s",
+		config.Charset, gconv.String(config.Debug),
 	)
 	db, err := sql.Open(driver, source)
 	if err != nil {
@@ -204,24 +205,38 @@ func (d *Driver) ping(conn *sql.DB) error {
 	return err
 }
 
-// DoUpdateSQL in clickhouse ,use update must use alter
-// eg.
-// ALTER TABLE [db.]table UPDATE column1 = expr1 [, ...] WHERE filter_expr
-func (d *Driver) DoUpdateSQL(ctx context.Context, link gdb.Link, table string, updates interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
-	return d.Core.DoExec(ctx, link, fmt.Sprintf("ALTER TABLE %s UPDATE %s%s", table, updates, condition), args...)
-}
-
-// DoDeleteSQL in clickhouse , delete must use alter
-// eg.
-// ALTER TABLE [db.]table DELETE WHERE filter_expr
-func (d *Driver) DoDeleteSQL(ctx context.Context, link gdb.Link, table string, condition interface{}, args ...interface{}) (result sql.Result, err error) {
-	return d.Core.DoExec(ctx, link, fmt.Sprintf("ALTER TABLE %s DELETE %s", table, condition), args...)
+// DoFilter handles the sql before posts it to database.
+func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+	// replace MySQL to Clickhouse SQL grammar
+	// MySQL eg: UPDATE visits SET xxx
+	// Clickhouse eg: ALTER TABLE visits UPDATE xxx
+	// MySQL eg: DELETE FROM VISIT
+	// Clickhouse eg: ALTER TABLE VISIT DELETE WHERE filter_expr
+	result, err := gregex.MatchString("(?i)^UPDATE|DELETE", sql)
+	if err != nil {
+		return "", nil, err
+	}
+	if len(result) != 0 {
+		sqlSlice := strings.Split(sql, " ")
+		if len(sqlSlice) < 3 {
+			return "", nil, ErrSQLNull
+		}
+		ck := []string{"ALTER", "TABLE"}
+		switch strings.ToUpper(result[0]) {
+		case "UPDATE":
+			sqlSlice = append(append(append(ck, sqlSlice[1]), result[0]), sqlSlice[3:]...)
+			return strings.Join(sqlSlice, " "), args, nil
+		case "DELETE":
+			sqlSlice = append(append(append(ck, sqlSlice[2]), result[0]), sqlSlice[3:]...)
+			return strings.Join(sqlSlice, " "), args, nil
+		}
+	}
+	return sql, args, nil
 }
 
 // DoCommit commits current sql and arguments to underlying sql driver.
 func (d *Driver) DoCommit(ctx context.Context, in gdb.DoCommitInput) (out gdb.DoCommitOutput, err error) {
-	in.IsIgnoreResult = true
-	return d.Core.DoCommit(ctx, in)
+	return d.Core.DoCommit(context.WithValue(ctx, "isIgnoreResult", true), in)
 }
 
 func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
