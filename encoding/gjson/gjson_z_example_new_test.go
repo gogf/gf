@@ -77,6 +77,7 @@ func ExampleNewWithOptions_UTF8BOM() {
 	content[0] = 0xEF
 	content[1] = 0xBB
 	content[2] = 0xBF
+	content = append(content, jsonContent...)
 
 	j := gjson.NewWithOptions(content, gjson.Options{
 		Tags: "tag",
