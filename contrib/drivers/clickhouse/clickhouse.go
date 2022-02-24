@@ -252,10 +252,8 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 	// Prepare the batch result pointer.
 	var (
 		charL, charR = d.Core.GetChars()
-		batchResult  = new(gdb.SqlResult)
 		keysStr      = charL + strings.Join(keys, charR+","+charL) + charR
 		holderStr    = strings.Join(valueHolder, ",")
-		listLength   = len(list)
 		tx           = &gdb.TX{}
 		stdSqlResult sql.Result
 		stmt         *gdb.Stmt
@@ -272,7 +270,7 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 	if err != nil {
 		return
 	}
-	for i := 0; i < listLength; i++ {
+	for i := 0; i < len(list); i++ {
 		params := []interface{}{} // Values that will be committed to underlying database driver.
 		for _, k := range keys {
 			params = append(params, list[i][k])
@@ -283,7 +281,7 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 			return stdSqlResult, err
 		}
 	}
-	return batchResult, tx.Commit()
+	return stdSqlResult, tx.Commit()
 }
 
 // InsertIgnore Other queries for modifying data parts are not supported: REPLACE, MERGE, UPSERT, INSERT UPDATE.
