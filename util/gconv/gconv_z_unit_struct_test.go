@@ -1271,6 +1271,7 @@ func Test_Struct_Issue1563(t *testing.T) {
 			params2 := g.Map{
 				"password1": "111",
 				"PASS1":     "222",
+				"Pass1":     "333",
 			}
 			if err := gconv.Struct(params2, user); err == nil {
 				t.Assert(user.Pass1, `111`)
