@@ -13,8 +13,8 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 type DomainObjectRest struct{}
@@ -56,11 +56,9 @@ func (o *DomainObjectRest) Head(r *ghttp.Request) {
 }
 
 func Test_Router_DomainObjectRest(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	d := s.Domain("localhost, local")
 	d.BindObjectRest("/", new(DomainObjectRest))
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -68,7 +66,7 @@ func Test_Router_DomainObjectRest(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "Not Found")
 		t.Assert(client.PutContent(ctx, "/"), "Not Found")
@@ -86,7 +84,7 @@ func Test_Router_DomainObjectRest(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://localhost:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://localhost:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "1Object Get2")
 		t.Assert(client.PutContent(ctx, "/"), "1Object Put2")
@@ -104,7 +102,7 @@ func Test_Router_DomainObjectRest(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://local:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://local:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "1Object Get2")
 		t.Assert(client.PutContent(ctx, "/"), "1Object Put2")

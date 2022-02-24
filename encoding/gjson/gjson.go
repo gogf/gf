@@ -90,6 +90,9 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 					// Delete item from map.
 					delete((*pointer).(map[string]interface{}), array[i])
 				} else {
+					if (*pointer).(map[string]interface{}) == nil {
+						*pointer = map[string]interface{}{}
+					}
 					(*pointer).(map[string]interface{})[array[i]] = value
 				}
 			} else {

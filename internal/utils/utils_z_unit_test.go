@@ -69,6 +69,7 @@ func Test_ReadCloser(t *testing.T) {
 func Test_RemoveSymbols(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(utils.RemoveSymbols(`-a-b._a c1!@#$%^&*()_+:";'.,'01`), `abac101`)
+		t.Assert(utils.RemoveSymbols(`-a-b我._a c1!@#$%^&*是()_+:帅";'.,哥'01`), `ab我ac1是帅哥01`)
 	})
 }
 

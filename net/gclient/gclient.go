@@ -36,15 +36,6 @@ type Client struct {
 }
 
 const (
-	httpMethodGet             = `GET`
-	httpMethodPut             = `PUT`
-	httpMethodPost            = `POST`
-	httpMethodDelete          = `DELETE`
-	httpMethodHead            = `HEAD`
-	httpMethodPatch           = `PATCH`
-	httpMethodConnect         = `CONNECT`
-	httpMethodOptions         = `OPTIONS`
-	httpMethodTrace           = `TRACE`
 	httpProtocolName          = `http`
 	httpParamFileHolder       = `@file:`
 	httpRegexParamJson        = `^[\w\[\]]+=.+`

@@ -339,3 +339,11 @@ func Test_Set_GArray(t *testing.T) {
 		t.Assert(j.Get("arr").Array(), g.Slice{"test"})
 	})
 }
+
+func Test_Set_WithEmptyStruct(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(&struct{}{})
+		t.AssertNil(j.Set("aa", "123"))
+		t.Assert(j.MustToJsonString(), `{"aa":"123"}`)
+	})
+}
