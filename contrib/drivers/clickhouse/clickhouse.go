@@ -65,19 +65,17 @@ func (d *Driver) Open(config *gdb.ConfigNode) (*sql.DB, error) {
 		source string
 		driver = "clickhouse"
 	)
-	if config.Pass != "" {
+	if config.Link != "" {
+		source = config.Link
+	} else if config.Pass != "" {
 		source = fmt.Sprintf(
-			"clickhouse://%s:%s@%s:%s/%s",
-			config.User, config.Pass, config.Host, config.Port, config.Name)
+			"clickhouse://%s:%s@%s:%s/%s?charset=%s&debug=%s",
+			config.User, config.Pass, config.Host, config.Port, config.Name, config.Charset, gconv.String(config.Debug))
 	} else {
 		source = fmt.Sprintf(
-			"clickhouse://%s@%s:%s/%s",
-			config.User, config.Host, config.Port, config.Name)
+			"clickhouse://%s@%s:%s/%s?charset=%s&debug=%s",
+			config.User, config.Host, config.Port, config.Name, config.Charset, gconv.String(config.Debug))
 	}
-	source += fmt.Sprintf(
-		"?charset=%s&debug=%s",
-		config.Charset, gconv.String(config.Debug),
-	)
 	db, err := sql.Open(driver, source)
 	if err != nil {
 		return nil, err
