@@ -239,5 +239,5 @@ func TestDriver_TableFields(t *testing.T) {
 	defer dropClickhouseTable(connect)
 	field, err := connect.TableFields(context.Background(), "visits")
 	gtest.AssertNil(err)
-	gtest.AssertNQ(len(field), 4)
+	gtest.AssertEQ(len(field), 4)
 }
