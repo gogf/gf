@@ -16,6 +16,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/guid"
 )
 
@@ -188,5 +189,44 @@ func Test_Router_Handler_Extended_Handler_Group_Bind(t *testing.T) {
 		t.Assert(client.GetContent(ctx, "/api/v2/custom-test2?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Name":"john"}}`)
 		t.Assert(client.GetContent(ctx, "/api/v2/custom-test3?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18}}`)
 		t.Assert(client.GetContent(ctx, "/api/v2/custom-test4?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Name":"john"}}`)
+	})
+}
+
+// https://github.com/gogf/gf/issues/1626
+func Test_Issue1626(t *testing.T) {
+	type TestReq struct {
+		Name string `v:"required"`
+	}
+	type TestRes struct {
+		Name string
+	}
+	s := g.Server(guid.S())
+	s.Use(
+		ghttp.MiddlewareHandlerResponse,
+		func(r *ghttp.Request) {
+			r.Middleware.Next()
+			if err := r.GetError(); err != nil {
+				r.Response.ClearBuffer()
+				r.Response.Write(err.Error())
+			}
+		},
+	)
+	s.BindHandler("/test", func(ctx context.Context, req *TestReq) (res *TestRes, err error) {
+		return &TestRes{Name: req.Name}, nil
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		t.Assert(c.GetContent(ctx, "/test"), `The Name field is required`)
+		t.Assert(
+			gstr.Contains(c.GetContent(ctx, "/test?name=john"), `{"Name":"john"}`),
+			true,
+		)
 	})
 }
