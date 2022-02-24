@@ -101,23 +101,48 @@ func ExampleLoadToml() {
 
 func ExampleLoadContent() {
 	jsonContent := `{"name":"john", "score":"100"}`
+
+	j, _ := gjson.LoadContent(jsonContent)
+
+	fmt.Println(j.Get("name"))
+	fmt.Println(j.Get("score"))
+
+	// Output:
+	// john
+	// 100
+}
+
+func ExampleLoadContent_UTF8BOM() {
+	jsonContent := `{"name":"john", "score":"100"}`
+
+	content := make([]byte, 3, len(jsonContent)+3)
+	content[0] = 0xEF
+	content[1] = 0xBB
+	content[2] = 0xBF
+
+	j, _ := gjson.LoadContent(content)
+
+	fmt.Println(j.Get("name"))
+	fmt.Println(j.Get("score"))
+
+	// Output:
+	// john
+	// 100
+}
+
+func ExampleLoadContent_Xml() {
 	xmlContent := `<?xml version="1.0" encoding="UTF-8"?>
 	<base>
 		<name>john</name>
 		<score>100</score>
 	</base>`
 
-	j, _ := gjson.LoadContent(jsonContent)
 	x, _ := gjson.LoadContent(xmlContent)
 
-	fmt.Println(j.Get("name"))
-	fmt.Println(j.Get("score"))
 	fmt.Println(x.Get("base.name"))
 	fmt.Println(x.Get("base.score"))
 
 	// Output:
-	// john
-	// 100
 	// john
 	// 100
 }
