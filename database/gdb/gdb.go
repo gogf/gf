@@ -408,11 +408,9 @@ func doNewByNode(node ConfigNode, group string) (db DB, err error) {
 		}
 		return c.db, nil
 	}
-	return nil, gerror.NewCodef(
-		gcode.CodeInvalidConfiguration,
-		`cannot find database driver for specified database type "%s", did you misspell type name "%s" or forget importing the database driver?`,
-		node.Type, node.Type,
-	)
+	errorMsg := `cannot find database driver for specified database type "%s"`
+	errorMsg += `, did you misspell type name "%s" or forget importing the database driver?`
+	return nil, gerror.NewCodef(gcode.CodeInvalidConfiguration, errorMsg, node.Type, node.Type)
 }
 
 // Instance returns an instance for DB operations.

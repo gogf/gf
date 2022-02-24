@@ -13,27 +13,25 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 func Test_Middleware_CORS1(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
 		group.Middleware(MiddlewareCORS)
 		group.POST("/user/list", func(r *ghttp.Request) {
 			r.Response.Write("list")
 		})
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		// Common Checks.
 		t.Assert(client.GetContent(ctx, "/"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/api.v2"), "Not Found")
@@ -58,7 +56,7 @@ func Test_Middleware_CORS1(t *testing.T) {
 	// OPTIONS GET
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		client.SetHeader("Access-Control-Request-Method", "GET")
 		resp, err := client.Options(ctx, "/api.v2/user/list")
 		t.Assert(err, nil)
@@ -70,7 +68,7 @@ func Test_Middleware_CORS1(t *testing.T) {
 	// OPTIONS POST
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		client.SetHeader("Access-Control-Request-Method", "POST")
 		resp, err := client.Options(ctx, "/api.v2/user/list")
 		t.Assert(err, nil)
@@ -81,22 +79,20 @@ func Test_Middleware_CORS1(t *testing.T) {
 }
 
 func Test_Middleware_CORS2(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
 		group.Middleware(MiddlewareCORS)
 		group.GET("/user/list/{type}", func(r *ghttp.Request) {
 			r.Response.Write(r.Get("type"))
 		})
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		// Common Checks.
 		t.Assert(client.GetContent(ctx, "/"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/api.v2"), "Not Found")
@@ -114,7 +110,7 @@ func Test_Middleware_CORS2(t *testing.T) {
 	// OPTIONS GET None.
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		client.SetHeader("Access-Control-Request-Method", "GET")
 		resp, err := client.Options(ctx, "/api.v2/user")
 		t.Assert(err, nil)
@@ -125,7 +121,7 @@ func Test_Middleware_CORS2(t *testing.T) {
 	// OPTIONS GET
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		client.SetHeader("Access-Control-Request-Method", "GET")
 		resp, err := client.Options(ctx, "/api.v2/user/list/1")
 		t.Assert(err, nil)
@@ -136,7 +132,7 @@ func Test_Middleware_CORS2(t *testing.T) {
 	// OPTIONS POST
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		client.SetHeader("Access-Control-Request-Method", "POST")
 		resp, err := client.Options(ctx, "/api.v2/user/list/1")
 		t.Assert(err, nil)

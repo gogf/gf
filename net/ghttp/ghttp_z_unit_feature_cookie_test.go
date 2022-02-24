@@ -14,13 +14,12 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 func Test_Cookie(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/set", func(r *ghttp.Request) {
 		r.Cookie.Set(r.Get("k").String(), r.Get("v").String())
 	})
@@ -30,7 +29,6 @@ func Test_Cookie(t *testing.T) {
 	s.BindHandler("/remove", func(r *ghttp.Request) {
 		r.Cookie.Remove(r.Get("k").String())
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -39,7 +37,7 @@ func Test_Cookie(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetBrowserMode(true)
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		r1, e1 := client.Get(ctx, "/set?k=key1&v=100")
 		if r1 != nil {
 			defer r1.Close()
@@ -62,8 +60,7 @@ func Test_Cookie(t *testing.T) {
 }
 
 func Test_SetHttpCookie(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/set", func(r *ghttp.Request) {
 		r.Cookie.SetHttpCookie(&http.Cookie{
 			Name:  r.Get("k").String(),
@@ -76,7 +73,6 @@ func Test_SetHttpCookie(t *testing.T) {
 	s.BindHandler("/remove", func(r *ghttp.Request) {
 		r.Cookie.Remove(r.Get("k").String())
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -85,7 +81,7 @@ func Test_SetHttpCookie(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetBrowserMode(true)
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		r1, e1 := client.Get(ctx, "/set?k=key1&v=100")
 		if r1 != nil {
 			defer r1.Close()
