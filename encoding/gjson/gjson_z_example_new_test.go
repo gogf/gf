@@ -70,6 +70,25 @@ func ExampleNewWithOptions() {
 	// engineer
 }
 
+func ExampleNewWithOptions_UTF8BOM() {
+	jsonContent := `{"name":"john", "score":"100"}`
+
+	content := make([]byte, 3, len(jsonContent)+3)
+	content[0] = 0xEF
+	content[1] = 0xBB
+	content[2] = 0xBF
+
+	j := gjson.NewWithOptions(content, gjson.Options{
+		Tags: "tag",
+	})
+	fmt.Println(j.Get("name"))
+	fmt.Println(j.Get("score"))
+
+	// Output:
+	// john
+	// 100
+}
+
 func ExampleNew_Xml() {
 	jsonContent := `<?xml version="1.0" encoding="UTF-8"?><doc><name>john</name><score>100</score></doc>`
 	j := gjson.New(jsonContent)
