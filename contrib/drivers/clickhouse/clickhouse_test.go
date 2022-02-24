@@ -240,4 +240,5 @@ func TestDriver_TableFields(t *testing.T) {
 	field, err := connect.TableFields(context.Background(), "visits")
 	gtest.AssertNil(err)
 	gtest.AssertEQ(len(field), 4)
+	gtest.AssertNQ(field, nil)
 }
