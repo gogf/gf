@@ -99,9 +99,7 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 
 	// Change the registered route according meta info from its request structure.
 	if handler.Info.Type != nil && handler.Info.Type.NumIn() == 2 {
-		var (
-			objectReq = reflect.New(handler.Info.Type.In(1))
-		)
+		var objectReq = reflect.New(handler.Info.Type.In(1))
 		if v := gmeta.Get(objectReq, goai.TagNamePath); !v.IsEmpty() {
 			uri = v.String()
 		}
@@ -132,12 +130,22 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 	if !s.config.RouteOverWrite {
 		switch handler.Type {
 		case HandlerTypeHandler, HandlerTypeObject:
-			if item, ok := s.routesMap[routerKey]; ok {
-				s.Logger().Fatalf(
-					ctx,
-					`duplicated route registry "%s" at %s , already registered at %s`,
-					pattern, handler.Source, item[0].Source,
-				)
+			if items, ok := s.routesMap[routerKey]; ok {
+				var duplicatedHandler *handlerItem
+				for _, item := range items {
+					switch item.Handler.Type {
+					case HandlerTypeHandler, HandlerTypeObject:
+						duplicatedHandler = item.Handler
+						break
+					}
+				}
+				if duplicatedHandler != nil {
+					s.Logger().Fatalf(
+						ctx,
+						`duplicated route registry "%s" at %s , already registered at %s`,
+						pattern, handler.Source, duplicatedHandler.Source,
+					)
+				}
 				return
 			}
 		}

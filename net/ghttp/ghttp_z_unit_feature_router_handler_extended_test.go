@@ -82,7 +82,7 @@ type TestForHandlerWithObjectAndMeta2Res struct {
 
 type ControllerForHandlerWithObjectAndMeta1 struct{}
 
-func (ControllerForHandlerWithObjectAndMeta1) Test1(ctx context.Context, req *TestForHandlerWithObjectAndMeta1Req) (res *TestForHandlerWithObjectAndMeta1Res, err error) {
+func (ControllerForHandlerWithObjectAndMeta1) Index(ctx context.Context, req *TestForHandlerWithObjectAndMeta1Req) (res *TestForHandlerWithObjectAndMeta1Res, err error) {
 	return &TestForHandlerWithObjectAndMeta1Res{
 		Id:  1,
 		Age: req.Age,
