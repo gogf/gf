@@ -232,3 +232,12 @@ func TestDriver_DoFilter(t *testing.T) {
 	// this SQL can't run ,clickhouse will report an error because there is no WHERE statement
 	gtest.AssertEQ(replaceSQL, "ALTER TABLE visit delete where url='0'")
 }
+
+func TestDriver_TableFields(t *testing.T) {
+	connect := InitClickhouse()
+	gtest.AssertNil(createClickhouseTable(connect))
+	defer dropClickhouseTable(connect)
+	field, err := connect.TableFields(context.Background(), "visits")
+	gtest.AssertNil(err)
+	gtest.AssertNQ(len(field), 4)
+}
