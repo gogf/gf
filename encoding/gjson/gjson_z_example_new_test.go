@@ -12,17 +12,65 @@ import (
 	"github.com/gogf/gf/v2/encoding/gjson"
 )
 
-func Example_newFromJson() {
+func ExampleNew() {
 	jsonContent := `{"name":"john", "score":"100"}`
 	j := gjson.New(jsonContent)
 	fmt.Println(j.Get("name"))
 	fmt.Println(j.Get("score"))
+
 	// Output:
 	// john
 	// 100
 }
 
-func Example_newFromXml() {
+func ExampleNewWithTag() {
+	type Me struct {
+		Name  string `tag:"name"`
+		Score int    `tag:"score"`
+		Title string
+	}
+	me := Me{
+		Name:  "john",
+		Score: 100,
+		Title: "engineer",
+	}
+	j := gjson.NewWithTag(me, "tag")
+	fmt.Println(j.Get("name"))
+	fmt.Println(j.Get("score"))
+	fmt.Println(j.Get("Title"))
+
+	// Output:
+	// john
+	// 100
+	// engineer
+}
+
+func ExampleNewWithOptions() {
+	type Me struct {
+		Name  string `tag:"name"`
+		Score int    `tag:"score"`
+		Title string
+	}
+	me := Me{
+		Name:  "john",
+		Score: 100,
+		Title: "engineer",
+	}
+
+	j := gjson.NewWithOptions(me, gjson.Options{
+		Tags: "tag",
+	})
+	fmt.Println(j.Get("name"))
+	fmt.Println(j.Get("score"))
+	fmt.Println(j.Get("Title"))
+
+	// Output:
+	// john
+	// 100
+	// engineer
+}
+
+func ExampleNew_Xml() {
 	jsonContent := `<?xml version="1.0" encoding="UTF-8"?><doc><name>john</name><score>100</score></doc>`
 	j := gjson.New(jsonContent)
 	// Note that there's root node in the XML content.
@@ -33,7 +81,7 @@ func Example_newFromXml() {
 	// 100
 }
 
-func Example_newFromStruct() {
+func ExampleNew_Struct() {
 	type Me struct {
 		Name  string `json:"name"`
 		Score int    `json:"score"`
@@ -48,27 +96,4 @@ func Example_newFromStruct() {
 	// Output:
 	// john
 	// 100
-}
-
-func Example_newFromStructWithTag() {
-	type Me struct {
-		Name  string `tag:"name"`
-		Score int    `tag:"score"`
-		Title string
-	}
-	me := Me{
-		Name:  "john",
-		Score: 100,
-		Title: "engineer",
-	}
-	// The parameter `tags` specifies custom priority tags for struct conversion to map,
-	// multiple tags joined with char ','.
-	j := gjson.NewWithTag(me, "tag")
-	fmt.Println(j.Get("name"))
-	fmt.Println(j.Get("score"))
-	fmt.Println(j.Get("Title"))
-	// Output:
-	// john
-	// 100
-	// engineer
 }
