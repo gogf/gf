@@ -15,7 +15,7 @@ import (
 
 func ExampleLoad() {
 	jsonFilePath := gdebug.TestDataPath("json", "data1.json")
-	j, _ := gjson.Load(jsonFilePath, true)
+	j, _ := gjson.Load(jsonFilePath)
 	fmt.Println(j.Get("name"))
 	fmt.Println(j.Get("score"))
 
@@ -30,7 +30,7 @@ func ExampleLoad() {
 
 func ExampleLoadJson() {
 	jsonContent := `{"name":"john", "score":"100"}`
-	j, _ := gjson.LoadJson(jsonContent, true)
+	j, _ := gjson.LoadJson(jsonContent)
 	fmt.Println(j.Get("name"))
 	fmt.Println(j.Get("score"))
 
@@ -45,7 +45,7 @@ func ExampleLoadXml() {
 		<name>john</name>
 		<score>100</score>
 	</base>`
-	j, _ := gjson.LoadXml(xmlContent, true)
+	j, _ := gjson.LoadXml(xmlContent)
 	fmt.Println(j.Get("base.name"))
 	fmt.Println(j.Get("base.score"))
 
@@ -60,7 +60,7 @@ func ExampleLoadIni() {
 	name = john
 	score = 100
 	`
-	j, _ := gjson.LoadIni(iniContent, true)
+	j, _ := gjson.LoadIni(iniContent)
 	fmt.Println(j.Get("base.name"))
 	fmt.Println(j.Get("base.score"))
 
@@ -75,7 +75,7 @@ func ExampleLoadYaml() {
   name: john
   score: 100`
 
-	j, _ := gjson.LoadYaml(yamlContent, true)
+	j, _ := gjson.LoadYaml(yamlContent)
 	fmt.Println(j.Get("base.name"))
 	fmt.Println(j.Get("base.score"))
 
@@ -90,7 +90,7 @@ func ExampleLoadToml() {
   name = "john"
   score = 100`
 
-	j, _ := gjson.LoadToml(tomlContent, true)
+	j, _ := gjson.LoadToml(tomlContent)
 	fmt.Println(j.Get("base.name"))
 	fmt.Println(j.Get("base.score"))
 
@@ -156,7 +156,7 @@ func ExampleLoadContentType() {
 		<score>100</score>
 	</base>`
 
-	j, _ := gjson.LoadContentType("json", jsonContent, true)
+	j, _ := gjson.LoadContentType("json", jsonContent)
 	x, _ := gjson.LoadContentType("xml", xmlContent)
 	j1, _ := gjson.LoadContentType("json", "")
 
