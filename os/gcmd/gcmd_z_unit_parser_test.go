@@ -48,6 +48,9 @@ func Test_Parse(t *testing.T) {
 		t.Assert(p.GetOpt("q") != nil, true)
 		t.Assert(p.GetOpt("quiet") != nil, true)
 		t.Assert(p.GetOpt("none") != nil, false)
+
+		_, err = p.MarshalJSON()
+		t.AssertNil(err)
 	})
 }
 
