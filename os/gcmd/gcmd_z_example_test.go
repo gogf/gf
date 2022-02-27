@@ -7,7 +7,9 @@
 package gcmd_test
 
 import (
+	"context"
 	"fmt"
+	"github.com/gogf/gf/v2/os/gctx"
 	"os"
 
 	"github.com/gogf/gf/v2/frame/g"
@@ -92,4 +94,113 @@ func ExampleParse() {
 	// true
 	// true
 	// false
+}
+
+func ExampleCommandFromCtx() {
+	var (
+		command = gcmd.Command{
+			Name: "start",
+		}
+	)
+
+	ctx := context.WithValue(gctx.New(), gcmd.CtxKeyCommand, &command)
+	unAddCtx := context.WithValue(gctx.New(), gcmd.CtxKeyCommand, &gcmd.Command{})
+	nonKeyCtx := context.WithValue(gctx.New(), "Testkey", &gcmd.Command{})
+
+	fmt.Println(gcmd.CommandFromCtx(ctx).Name)
+	fmt.Println(gcmd.CommandFromCtx(unAddCtx).Name)
+	fmt.Println(gcmd.CommandFromCtx(nonKeyCtx) == nil)
+
+	// Output:
+	// start
+	//
+	// true
+}
+
+func ExampleCommand_AddCommand() {
+	commandRoot := &gcmd.Command{
+		Name: "gf",
+	}
+	commandRoot.AddCommand(&gcmd.Command{
+		Name: "start",
+	}, &gcmd.Command{})
+
+	commandRoot.Print()
+
+	// Output:
+	//USAGE
+	//     gf COMMAND [OPTION]
+	//
+	//COMMAND
+	//     start
+}
+
+func ExampleCommand_AddCommand_Repeat() {
+	commandRoot := &gcmd.Command{
+		Name: "gf",
+	}
+	err := commandRoot.AddCommand(&gcmd.Command{
+		Name: "start",
+	}, &gcmd.Command{
+		Name: "stop",
+	}, &gcmd.Command{
+		Name: "start",
+	})
+
+	fmt.Println(err)
+
+	// Output:
+	// command "start" is already added to command "gf"
+}
+
+func ExampleCommand_AddObject() {
+	var (
+		command = gcmd.Command{
+			Name: "start",
+		}
+	)
+
+	command.AddObject(&TestCmdObject{})
+
+	command.Print()
+
+	// Output:
+	//USAGE
+	//     start COMMAND [OPTION]
+	//
+	//COMMAND
+	//     root    root env command
+}
+
+func ExampleCommand_AddObject_Error() {
+	var (
+		command = gcmd.Command{
+			Name: "start",
+		}
+	)
+
+	err := command.AddObject(&[]string{"Test"})
+
+	fmt.Println(err)
+
+	// Output:
+	// input object should be type of struct, but got "*[]string"
+}
+
+func ExampleCommand_Print() {
+	commandRoot := &gcmd.Command{
+		Name: "gf",
+	}
+	commandRoot.AddCommand(&gcmd.Command{
+		Name: "start",
+	}, &gcmd.Command{})
+
+	commandRoot.Print()
+
+	// Output:
+	//USAGE
+	//     gf COMMAND [OPTION]
+	//
+	//COMMAND
+	//     start
 }
