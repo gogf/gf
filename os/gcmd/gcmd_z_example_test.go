@@ -55,6 +55,15 @@ func ExampleGetOpt() {
 	// Opt["o"]: "gf.exe", Opt["y"]: "", Opt["d"]: "default value"
 }
 
+func ExampleGetOpt_Def() {
+	gcmd.Init("gf", "build", "main.go", "-o=gf.exe", "-y")
+
+	fmt.Println(gcmd.GetOpt("s", "Def").String())
+
+	// Output:
+	// Def
+}
+
 func ExampleGetOptAll() {
 	gcmd.Init("gf", "build", "main.go", "-o=gf.exe", "-y")
 	fmt.Printf(`%#v`, gcmd.GetOptAll())
@@ -87,6 +96,7 @@ func ExampleParse() {
 	fmt.Println(p.GetOpt("y") != nil)
 	fmt.Println(p.GetOpt("yes") != nil)
 	fmt.Println(p.GetOpt("none") != nil)
+	fmt.Println(p.GetOpt("none", "Def"))
 
 	// Output:
 	// gf.exe
@@ -94,6 +104,7 @@ func ExampleParse() {
 	// true
 	// true
 	// false
+	// Def
 }
 
 func ExampleCommandFromCtx() {
@@ -203,4 +214,58 @@ func ExampleCommand_Print() {
 	//
 	//COMMAND
 	//     start
+}
+
+func ExampleScan() {
+	fmt.Println(gcmd.Scan("gf scan"))
+
+	// Output:
+	// gf scan
+}
+
+func ExampleScanf() {
+	fmt.Println(gcmd.Scanf("gf %s", "scanf"))
+
+	// Output:
+	// gf scanf
+}
+
+func ExampleParserFromCtx() {
+	parser, _ := gcmd.Parse(nil)
+
+	ctx := context.WithValue(gctx.New(), gcmd.CtxKeyParser, parser)
+	nilCtx := context.WithValue(gctx.New(), "NilCtxKeyParser", parser)
+
+	fmt.Println(gcmd.ParserFromCtx(ctx).GetArgAll())
+	fmt.Println(gcmd.ParserFromCtx(nilCtx) == nil)
+
+	// Output:
+	// [gf build main.go]
+	// true
+}
+
+func ExampleParseArgs() {
+	p, _ := gcmd.ParseArgs([]string{
+		"gf", "--force", "remove", "-fq", "-p=www", "path", "-n", "root",
+	}, nil)
+
+	fmt.Println(p.GetArgAll())
+	fmt.Println(p.GetOptAll())
+
+	// Output:
+	// [gf path]
+	// map[force:remove fq: n:root p:www]
+}
+
+func ExampleParser_GetArg() {
+	p, _ := gcmd.ParseArgs([]string{
+		"gf", "--force", "remove", "-fq", "-p=www", "path", "-n", "root",
+	}, nil)
+
+	fmt.Println(p.GetArg(-1, "Def").String())
+	fmt.Println(p.GetArg(-1) == nil)
+
+	// Output:
+	// Def
+	// true
 }
