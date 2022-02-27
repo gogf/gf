@@ -60,12 +60,7 @@ func (j *Json) Get(pattern string, def ...interface{}) *gvar.Var {
 		return nil
 	}
 
-	var result *interface{}
-	if j.vc {
-		result = j.getPointerByPattern(pattern)
-	} else {
-		result = j.getPointerByPatternWithoutViolenceCheck(pattern)
-	}
+	result := j.getPointerByPattern(pattern)
 	if result != nil {
 		return gvar.New(*result)
 	}
