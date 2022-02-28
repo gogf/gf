@@ -7,7 +7,9 @@
 package gcmd_test
 
 import (
+	"context"
 	"fmt"
+	"github.com/gogf/gf/v2/os/gctx"
 	"os"
 
 	"github.com/gogf/gf/v2/frame/g"
@@ -53,6 +55,15 @@ func ExampleGetOpt() {
 	// Opt["o"]: "gf.exe", Opt["y"]: "", Opt["d"]: "default value"
 }
 
+func ExampleGetOpt_Def() {
+	gcmd.Init("gf", "build", "main.go", "-o=gf.exe", "-y")
+
+	fmt.Println(gcmd.GetOpt("s", "Def").String())
+
+	// Output:
+	// Def
+}
+
 func ExampleGetOptAll() {
 	gcmd.Init("gf", "build", "main.go", "-o=gf.exe", "-y")
 	fmt.Printf(`%#v`, gcmd.GetOptAll())
@@ -85,6 +96,7 @@ func ExampleParse() {
 	fmt.Println(p.GetOpt("y") != nil)
 	fmt.Println(p.GetOpt("yes") != nil)
 	fmt.Println(p.GetOpt("none") != nil)
+	fmt.Println(p.GetOpt("none", "Def"))
 
 	// Output:
 	// gf.exe
@@ -92,4 +104,168 @@ func ExampleParse() {
 	// true
 	// true
 	// false
+	// Def
+}
+
+func ExampleCommandFromCtx() {
+	var (
+		command = gcmd.Command{
+			Name: "start",
+		}
+	)
+
+	ctx := context.WithValue(gctx.New(), gcmd.CtxKeyCommand, &command)
+	unAddCtx := context.WithValue(gctx.New(), gcmd.CtxKeyCommand, &gcmd.Command{})
+	nonKeyCtx := context.WithValue(gctx.New(), "Testkey", &gcmd.Command{})
+
+	fmt.Println(gcmd.CommandFromCtx(ctx).Name)
+	fmt.Println(gcmd.CommandFromCtx(unAddCtx).Name)
+	fmt.Println(gcmd.CommandFromCtx(nonKeyCtx) == nil)
+
+	// Output:
+	// start
+	//
+	// true
+}
+
+func ExampleCommand_AddCommand() {
+	commandRoot := &gcmd.Command{
+		Name: "gf",
+	}
+	commandRoot.AddCommand(&gcmd.Command{
+		Name: "start",
+	}, &gcmd.Command{})
+
+	commandRoot.Print()
+
+	// Output:
+	//USAGE
+	//     gf COMMAND [OPTION]
+	//
+	//COMMAND
+	//     start
+}
+
+func ExampleCommand_AddCommand_Repeat() {
+	commandRoot := &gcmd.Command{
+		Name: "gf",
+	}
+	err := commandRoot.AddCommand(&gcmd.Command{
+		Name: "start",
+	}, &gcmd.Command{
+		Name: "stop",
+	}, &gcmd.Command{
+		Name: "start",
+	})
+
+	fmt.Println(err)
+
+	// Output:
+	// command "start" is already added to command "gf"
+}
+
+func ExampleCommand_AddObject() {
+	var (
+		command = gcmd.Command{
+			Name: "start",
+		}
+	)
+
+	command.AddObject(&TestCmdObject{})
+
+	command.Print()
+
+	// Output:
+	//USAGE
+	//     start COMMAND [OPTION]
+	//
+	//COMMAND
+	//     root    root env command
+}
+
+func ExampleCommand_AddObject_Error() {
+	var (
+		command = gcmd.Command{
+			Name: "start",
+		}
+	)
+
+	err := command.AddObject(&[]string{"Test"})
+
+	fmt.Println(err)
+
+	// Output:
+	// input object should be type of struct, but got "*[]string"
+}
+
+func ExampleCommand_Print() {
+	commandRoot := &gcmd.Command{
+		Name: "gf",
+	}
+	commandRoot.AddCommand(&gcmd.Command{
+		Name: "start",
+	}, &gcmd.Command{})
+
+	commandRoot.Print()
+
+	// Output:
+	//USAGE
+	//     gf COMMAND [OPTION]
+	//
+	//COMMAND
+	//     start
+}
+
+func ExampleScan() {
+	fmt.Println(gcmd.Scan("gf scan"))
+
+	// Output:
+	// gf scan
+}
+
+func ExampleScanf() {
+	fmt.Println(gcmd.Scanf("gf %s", "scanf"))
+
+	// Output:
+	// gf scanf
+}
+
+func ExampleParserFromCtx() {
+	parser, _ := gcmd.Parse(nil)
+
+	ctx := context.WithValue(gctx.New(), gcmd.CtxKeyParser, parser)
+	nilCtx := context.WithValue(gctx.New(), "NilCtxKeyParser", parser)
+
+	fmt.Println(gcmd.ParserFromCtx(ctx).GetArgAll())
+	fmt.Println(gcmd.ParserFromCtx(nilCtx) == nil)
+
+	// Output:
+	// [gf build main.go]
+	// true
+}
+
+func ExampleParseArgs() {
+	p, _ := gcmd.ParseArgs([]string{
+		"gf", "--force", "remove", "-fq", "-p=www", "path", "-n", "root",
+	}, nil)
+
+	fmt.Println(p.GetArgAll())
+	fmt.Println(p.GetOptAll())
+
+	// Output:
+	// [gf path]
+	// map[force:remove fq: n:root p:www]
+}
+
+func ExampleParser_GetArg() {
+	p, _ := gcmd.ParseArgs([]string{
+		"gf", "--force", "remove", "-fq", "-p=www", "path", "-n", "root",
+	}, nil)
+
+	fmt.Println(p.GetArg(-1, "Def").String())
+	fmt.Println(p.GetArg(-1) == nil)
+
+	// Output:
+	// Def
+	// true
 }
