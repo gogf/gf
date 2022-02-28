@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"regexp"
 	"runtime"
 	"strings"
@@ -119,6 +120,7 @@ type cBuildInput struct {
 	Mod     string `short:"m" name:"mod"     brief:"like \"-mod\" option of \"go build\", use \"-m none\" to disable go module"`
 	Cgo     bool   `short:"c" name:"cgo"     brief:"enable or disable cgo feature, it's disabled in default" orphan:"true"`
 	VarMap  g.Map  `short:"r" name:"varMap"  brief:"custom built embedded variable into binary"`
+	Exit    bool   `name:"exit" brief:"exit building when any error occurs, default is false" orphan:"true"`
 	Pack    string `name:"pack" brief:"pack specified folder into temporary go file before building and removes it after built"`
 }
 type cBuildOutput struct{}
@@ -254,7 +256,14 @@ func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, e
 			cmdShow, _ := gregex.ReplaceString(`\s+(-ldflags ".+?")\s+`, " ", cmd)
 			mlog.Print(cmdShow)
 			if result, err := gproc.ShellExec(cmd); err != nil {
-				mlog.Printf("failed to build, os:%s, arch:%s, error:\n%s\n", system, arch, gstr.Trim(result))
+				mlog.Printf(
+					"failed to build, os:%s, arch:%s, error:\n%s\n\n%s\n",
+					system, arch, gstr.Trim(result),
+					`you may use command option "--debug" to enable debug info and check the details`,
+				)
+				if in.Exit {
+					os.Exit(1)
+				}
 			} else {
 				mlog.Debug(gstr.Trim(result))
 			}
@@ -264,6 +273,7 @@ func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, e
 			}
 		}
 	}
+
 buildDone:
 	mlog.Print("done!")
 	return
