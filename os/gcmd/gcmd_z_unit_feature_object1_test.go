@@ -63,6 +63,21 @@ func Test_Command_NewFromObject_Help(t *testing.T) {
 	})
 }
 
+func Test_Command_NewFromObject_Run(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			ctx      = gctx.New()
+			cmd, err = gcmd.NewFromObject(&TestCmdObject{})
+		)
+		t.AssertNil(err)
+		t.Assert(cmd.Name, "root")
+
+		os.Args = []string{"root", "test", "-n=john"}
+
+		cmd.Run(ctx)
+	})
+}
+
 func Test_Command_NewFromObject_RunWithValue(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
