@@ -22,13 +22,10 @@ func Interfaces(any interface{}) []interface{} {
 	if any == nil {
 		return nil
 	}
-	if r, ok := any.([]interface{}); ok {
-		return r
-	}
-	var (
-		array []interface{} = nil
-	)
+	var array []interface{}
 	switch value := any.(type) {
+	case []interface{}:
+		array = value
 	case []string:
 		array = make([]interface{}, len(value))
 		for k, v := range value {
