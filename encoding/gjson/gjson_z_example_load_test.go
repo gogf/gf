@@ -19,6 +19,10 @@ func ExampleLoad() {
 	fmt.Println(j.Get("name"))
 	fmt.Println(j.Get("score"))
 
+	notExistFilePath := gdebug.TestDataPath("json", "data2.json")
+	j2, _ := gjson.Load(notExistFilePath)
+	fmt.Println(j2.Get("name"))
+
 	// Output:
 	// john
 	// 100
@@ -97,23 +101,49 @@ func ExampleLoadToml() {
 
 func ExampleLoadContent() {
 	jsonContent := `{"name":"john", "score":"100"}`
+
+	j, _ := gjson.LoadContent(jsonContent)
+
+	fmt.Println(j.Get("name"))
+	fmt.Println(j.Get("score"))
+
+	// Output:
+	// john
+	// 100
+}
+
+func ExampleLoadContent_UTF8BOM() {
+	jsonContent := `{"name":"john", "score":"100"}`
+
+	content := make([]byte, 3, len(jsonContent)+3)
+	content[0] = 0xEF
+	content[1] = 0xBB
+	content[2] = 0xBF
+	content = append(content, jsonContent...)
+
+	j, _ := gjson.LoadContent(content)
+
+	fmt.Println(j.Get("name"))
+	fmt.Println(j.Get("score"))
+
+	// Output:
+	// john
+	// 100
+}
+
+func ExampleLoadContent_Xml() {
 	xmlContent := `<?xml version="1.0" encoding="UTF-8"?>
 	<base>
 		<name>john</name>
 		<score>100</score>
 	</base>`
 
-	j, _ := gjson.LoadContent(jsonContent)
 	x, _ := gjson.LoadContent(xmlContent)
 
-	fmt.Println(j.Get("name"))
-	fmt.Println(j.Get("score"))
 	fmt.Println(x.Get("base.name"))
 	fmt.Println(x.Get("base.score"))
 
 	// Output:
-	// john
-	// 100
 	// john
 	// 100
 }
@@ -128,11 +158,13 @@ func ExampleLoadContentType() {
 
 	j, _ := gjson.LoadContentType("json", jsonContent)
 	x, _ := gjson.LoadContentType("xml", xmlContent)
+	j1, _ := gjson.LoadContentType("json", "")
 
 	fmt.Println(j.Get("name"))
 	fmt.Println(j.Get("score"))
 	fmt.Println(x.Get("base.name"))
 	fmt.Println(x.Get("base.score"))
+	fmt.Println(j1.Get(""))
 
 	// Output:
 	// john
@@ -148,6 +180,8 @@ func ExampleIsValidDataType() {
 	fmt.Println(gjson.IsValidDataType("mp4"))
 	fmt.Println(gjson.IsValidDataType("xsl"))
 	fmt.Println(gjson.IsValidDataType("txt"))
+	fmt.Println(gjson.IsValidDataType(""))
+	fmt.Println(gjson.IsValidDataType(".json"))
 
 	// Output:
 	// true
@@ -156,6 +190,8 @@ func ExampleIsValidDataType() {
 	// false
 	// false
 	// false
+	// false
+	// true
 }
 
 func ExampleLoad_Xml() {

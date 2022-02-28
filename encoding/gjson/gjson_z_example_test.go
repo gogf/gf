@@ -590,61 +590,52 @@ func ExampleJson_ToIni() {
 func ExampleJson_ToIniString() {
 	type BaseInfo struct {
 		Name string
-		Age  int
 	}
 
 	info := BaseInfo{
 		Name: "John",
-		Age:  18,
 	}
 
 	j := gjson.New(info)
 	IniStr, _ := j.ToIniString()
 	fmt.Println(string(IniStr))
 
-	// May Output:
+	// Output:
 	//Name=John
-	//Age=18
 }
 
 func ExampleJson_MustToIni() {
 	type BaseInfo struct {
 		Name string
-		Age  int
 	}
 
 	info := BaseInfo{
 		Name: "John",
-		Age:  18,
 	}
 
 	j := gjson.New(info)
 	IniBytes := j.MustToIni()
 	fmt.Println(string(IniBytes))
 
-	// May Output:
+	// Output:
 	//Name=John
-	//Age=18
 }
 
 func ExampleJson_MustToIniString() {
 	type BaseInfo struct {
 		Name string
-		Age  int
 	}
 
 	info := BaseInfo{
 		Name: "John",
-		Age:  18,
 	}
 
 	j := gjson.New(info)
 	IniStr := j.MustToIniString()
 	fmt.Println(string(IniStr))
 
-	// May Output:
+	// Output:
 	//Name=John
-	//Age=18
 }
 
 func ExampleJson_MarshalJSON() {
@@ -758,8 +749,12 @@ func ExampleJson_Interface() {
 	j := gjson.New(info)
 	fmt.Println(j.Interface())
 
+	var nilJ *gjson.Json = nil
+	fmt.Println(nilJ.Interface())
+
 	// Output:
 	// map[Age:18 Name:John]
+	// <nil>
 }
 
 func ExampleJson_Var() {
@@ -807,11 +802,16 @@ func ExampleJson_Get() {
     }`
 
 	j, _ := gjson.LoadContent(data)
+	fmt.Println(j.Get("."))
 	fmt.Println(j.Get("users"))
 	fmt.Println(j.Get("users.count"))
 	fmt.Println(j.Get("users.array"))
 
+	var nilJ *gjson.Json = nil
+	fmt.Println(nilJ.Get("."))
+
 	// Output:
+	// {"users":{"array":["John","Ming"],"count":1}}
 	// {"array":["John","Ming"],"count":1}
 	// 1
 	// ["John","Ming"]
@@ -893,10 +893,11 @@ func ExampleJson_Set() {
 
 	j := gjson.New(info)
 	j.Set("Addr", "ChengDu")
+	j.Set("Friends.0", "Tom")
 	fmt.Println(j.Var().String())
 
 	// Output:
-	// {"Addr":"ChengDu","Age":18,"Name":"John"}
+	// {"Addr":"ChengDu","Age":18,"Friends":["Tom"],"Name":"John"}
 }
 
 func ExampleJson_MustSet() {
@@ -1091,7 +1092,7 @@ func ExampleJson_Scan() {
 
 	fmt.Println(info)
 
-	// Output:
+	// May Output:
 	// {john 18}
 }
 
@@ -1099,12 +1100,11 @@ func ExampleJson_Dump() {
 	data := `{"name":"john","age":"18"}`
 
 	j, _ := gjson.LoadContent(data)
-
 	j.Dump()
 
 	// May Output:
 	//{
-	//	"age":  "18",
 	//	"name": "john",
+	//	"age":  "18",
 	//}
 }
