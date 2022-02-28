@@ -115,7 +115,7 @@ type cBuildInput struct {
 	Arch    string `short:"a" name:"arch"    brief:"output binary architecture, multiple arch separated with ','"`
 	System  string `short:"s" name:"system"  brief:"output binary system, multiple os separated with ','"`
 	Output  string `short:"o" name:"output"  brief:"output binary path, used when building single binary file"`
-	Path    string `short:"p" name:"path"    brief:"output binary directory path, default is './bin'" d:"./bin"`
+	Path    string `short:"p" name:"path"    brief:"output binary directory path, default is './temp'" d:"./temp"`
 	Extra   string `short:"e" name:"extra"   brief:"extra custom \"go build\" options"`
 	Mod     string `short:"m" name:"mod"     brief:"like \"-mod\" option of \"go build\", use \"-m none\" to disable go module"`
 	Cgo     bool   `short:"c" name:"cgo"     brief:"enable or disable cgo feature, it's disabled in default" orphan:"true"`
