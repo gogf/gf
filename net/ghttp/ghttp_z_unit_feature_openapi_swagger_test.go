@@ -62,7 +62,7 @@ func Test_OpenApi_Swagger(t *testing.T) {
 		t.Assert(c.GetContent(ctx, "/test?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18,"Name":"john"}}`)
 		t.Assert(c.GetContent(ctx, "/test/error"), `{"code":50,"message":"error","data":null}`)
 
-		t.Assert(gstr.Contains(c.GetContent(ctx, "/swagger/"), `SwaggerUIBundle`), true)
+		t.Assert(gstr.Contains(c.GetContent(ctx, "/swagger/"), `API Reference`), true)
 		t.Assert(gstr.Contains(c.GetContent(ctx, "/api.json"), `/test/error`), true)
 	})
 }
