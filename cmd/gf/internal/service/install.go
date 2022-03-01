@@ -181,13 +181,21 @@ func (s serviceInstall) getAvailablePaths() []serviceInstallAvailablePath {
 		// Search and find the writable directory path.
 		envPath := genv.Get("PATH", genv.Get("Path").String()).String()
 		if gstr.Contains(envPath, ";") {
+			// windows.
 			for _, v := range gstr.SplitAndTrim(envPath, ";") {
+				if v == "." {
+					continue
+				}
 				folderPaths = s.checkAndAppendToAvailablePath(
 					folderPaths, v, binaryFileName,
 				)
 			}
 		} else if gstr.Contains(envPath, ":") {
+			// *nix.
 			for _, v := range gstr.SplitAndTrim(envPath, ":") {
+				if v == "." {
+					continue
+				}
 				folderPaths = s.checkAndAppendToAvailablePath(
 					folderPaths, v, binaryFileName,
 				)
