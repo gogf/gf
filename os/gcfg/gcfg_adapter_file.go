@@ -223,6 +223,7 @@ func (c *AdapterFile) getJson(fileName ...string) (configJson *gjson.Json, err e
 	} else {
 		usedFileName = c.defaultName
 	}
+	// It uses json map to cache specified configuration file content.
 	result := c.jsonMap.GetOrSetFuncLock(usedFileName, func() interface{} {
 		var (
 			content  string

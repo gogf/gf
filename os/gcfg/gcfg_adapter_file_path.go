@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -142,23 +143,33 @@ func (c *AdapterFile) AddPath(path string) (err error) {
 // If `file` is not passed, it returns the configuration file path of the default name.
 // It returns an empty `path` string and an error if the given `file` does not exist.
 func (c *AdapterFile) doGetFilePath(fileName string) (path string) {
-	var tempPath string
+	var (
+		tempPath string
+		resFile  *gres.File
+		fileInfo os.FileInfo
+	)
 	// Searching resource manager.
 	if !gres.IsEmpty() {
 		for _, tryFolder := range resourceTryFolders {
 			tempPath = tryFolder + fileName
-			if file := gres.Get(tempPath); file != nil {
-				path = file.Name()
-				return
+			if resFile = gres.Get(tempPath); resFile != nil {
+				fileInfo, _ = resFile.Stat()
+				if fileInfo != nil && !fileInfo.IsDir() {
+					path = resFile.Name()
+					return
+				}
 			}
 		}
 		c.searchPaths.RLockFunc(func(array []string) {
 			for _, searchPath := range array {
 				for _, tryFolder := range resourceTryFolders {
 					tempPath = searchPath + tryFolder + fileName
-					if file := gres.Get(tempPath); file != nil {
-						path = file.Name()
-						return
+					if resFile = gres.Get(tempPath); resFile != nil {
+						fileInfo, _ = resFile.Stat()
+						if fileInfo != nil && !fileInfo.IsDir() {
+							path = resFile.Name()
+							return
+						}
 					}
 				}
 			}
@@ -170,7 +181,7 @@ func (c *AdapterFile) doGetFilePath(fileName string) (path string) {
 	// Searching local file system.
 	if path == "" {
 		// Absolute path.
-		if path = gfile.RealPath(fileName); path != "" {
+		if path = gfile.RealPath(fileName); path != "" && !gfile.IsDir(path) {
 			return
 		}
 		c.searchPaths.RLockFunc(func(array []string) {
@@ -181,7 +192,7 @@ func (c *AdapterFile) doGetFilePath(fileName string) (path string) {
 						gfile.Join(tryFolder, fileName),
 						`\/`,
 					)
-					if path, _ = gspath.Search(searchPath, relativePath); path != "" {
+					if path, _ = gspath.Search(searchPath, relativePath); path != "" && !gfile.IsDir(path) {
 						return
 					}
 				}
@@ -204,7 +215,7 @@ func (c *AdapterFile) GetFilePath(fileName ...string) (path string, err error) {
 		usedFileName = fileName[0]
 	}
 	fileExtName = gfile.ExtName(usedFileName)
-	if path = c.doGetFilePath(usedFileName); path == "" && !gstr.InArray(supportedFileTypes, fileExtName) {
+	if path = c.doGetFilePath(usedFileName); (path == "" || gfile.IsDir(path)) && !gstr.InArray(supportedFileTypes, fileExtName) {
 		// If it's not using default configuration or its configuration file is not available,
 		// it searches the possible configuration file according to the name and all supported
 		// file types.
