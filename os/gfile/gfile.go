@@ -417,8 +417,10 @@ func IsEmpty(path string) bool {
 // The extension is the suffix beginning at the final dot
 // in the final element of path; it is empty if there is
 // no dot.
-//
 // Note: the result contains symbol '.'.
+// Eg:
+// main.go  => .go
+// api.json => .json
 func Ext(path string) string {
 	ext := filepath.Ext(path)
 	if p := strings.IndexByte(ext, '?'); p != -1 {
@@ -429,6 +431,9 @@ func Ext(path string) string {
 
 // ExtName is like function Ext, which returns the file name extension used by path,
 // but the result does not contain symbol '.'.
+// Eg:
+// main.go  => go
+// api.json => json
 func ExtName(path string) string {
 	return strings.TrimLeft(Ext(path), ".")
 }

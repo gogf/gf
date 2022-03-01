@@ -9,7 +9,6 @@ package gcfg
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -26,7 +25,8 @@ type Config struct {
 }
 
 const (
-	DefaultName = "config" // DefaultName is the default group name for instance usage.
+	DefaultInstanceName   = "config" // DefaultName is the default instance name for instance usage.
+	DefaultConfigFileName = "config" // DefaultConfigFile is the default configuration file name.
 )
 
 // New creates and returns a Config object with default adapter of AdapterFile.
@@ -52,31 +52,20 @@ func NewWithAdapter(adapter Adapter) *Config {
 // exists in the configuration directory, it then sets it as the default configuration file. The
 // toml file type is the default configuration file type.
 func Instance(name ...string) *Config {
-	var (
-		ctx = context.TODO()
-		key = DefaultName
-	)
+	var instanceName = DefaultInstanceName
 	if len(name) > 0 && name[0] != "" {
-		key = name[0]
+		instanceName = name[0]
 	}
-	return localInstances.GetOrSetFuncLock(key, func() interface{} {
-		adapter, err := NewAdapterFile()
+	return localInstances.GetOrSetFuncLock(instanceName, func() interface{} {
+		adapterFile, err := NewAdapterFile()
 		if err != nil {
 			intlog.Errorf(context.Background(), `%+v`, err)
 			return nil
 		}
-		// If it's not using default configuration or its configuration file is not available,
-		// it searches the possible configuration file according to the name and all supported
-		// file types.
-		if key != DefaultName || !adapter.Available(ctx) {
-			for _, fileType := range supportedFileTypes {
-				if file := fmt.Sprintf(`%s.%s`, key, fileType); adapter.Available(ctx, file) {
-					adapter.SetFileName(file)
-					break
-				}
-			}
+		if instanceName != DefaultInstanceName {
+			adapterFile.SetFileName(instanceName)
 		}
-		return NewWithAdapter(adapter)
+		return NewWithAdapter(adapterFile)
 	}).(*Config)
 }
 

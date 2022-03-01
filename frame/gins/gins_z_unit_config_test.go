@@ -65,16 +65,15 @@ func Test_Config2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var err error
 		dirPath := gfile.Temp(gtime.TimestampNanoStr())
-		err = gfile.Mkdir(dirPath)
-		t.Assert(err, nil)
+		t.AssertNil(gfile.Mkdir(dirPath))
 		defer gfile.Remove(dirPath)
 
 		name := "config/config.toml"
 		err = gfile.PutContents(gfile.Join(dirPath, name), configContent)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		err = gins.Config().GetAdapter().(*gcfg.AdapterFile).AddPath(dirPath)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		defer gins.Config().GetAdapter().(*gcfg.AdapterFile).Clear()
 
@@ -200,9 +199,11 @@ func Test_Config4(t *testing.T) {
 func Test_Basic2(t *testing.T) {
 	config := `log-path = "logs"`
 	gtest.C(t, func(t *gtest.T) {
-		path := gcfg.DefaultConfigFile
-		err := gfile.PutContents(path, config)
-		t.Assert(err, nil)
+		var (
+			path = gcfg.DefaultConfigFileName
+			err  = gfile.PutContents(path, config)
+		)
+		t.AssertNil(err)
 		defer func() {
 			_ = gfile.Remove(path)
 		}()
