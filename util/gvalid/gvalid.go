@@ -206,3 +206,8 @@ func parseSequenceTag(tag string) (field, rule, msg string) {
 	match, _ := gregex.MatchString(`\s*((\w+)\s*@){0,1}\s*([^#]+)\s*(#\s*(.*)){0,1}\s*`, tag)
 	return strings.TrimSpace(match[2]), strings.TrimSpace(match[3]), strings.TrimSpace(match[5])
 }
+
+// GetTags returns the validation tags.
+func GetTags() []string {
+	return structTagPriority
+}
