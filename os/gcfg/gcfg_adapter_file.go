@@ -30,7 +30,6 @@ type AdapterFile struct {
 }
 
 const (
-	DefaultConfigFile    = "config.toml"  // DefaultConfigFile is the default configuration file name.
 	commandEnvKeyForFile = "gf.gcfg.file" // commandEnvKeyForFile is the configuration key for command argument or environment configuring file name.
 	commandEnvKeyForPath = "gf.gcfg.path" // commandEnvKeyForPath is the configuration key for command argument or environment configuring directory path.
 )
@@ -55,7 +54,7 @@ var (
 func NewAdapterFile(file ...string) (*AdapterFile, error) {
 	var (
 		err  error
-		name = DefaultConfigFile
+		name = DefaultConfigFileName
 	)
 	if len(file) > 0 {
 		name = file[0]
