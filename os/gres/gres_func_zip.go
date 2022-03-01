@@ -76,7 +76,11 @@ func doZipPathWriter(path string, exclude string, zipWriter *zip.Writer, prefix 
 			intlog.Printf(context.TODO(), `exclude file path: %s`, file)
 			continue
 		}
-		if err = zipFile(file, headerPrefix+gfile.Dir(file[len(path):]), zipWriter); err != nil {
+		subFilePath := file[len(path):]
+		if subFilePath != "" {
+			subFilePath = gfile.Dir(subFilePath)
+		}
+		if err = zipFile(file, headerPrefix+subFilePath, zipWriter); err != nil {
 			return err
 		}
 	}
