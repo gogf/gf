@@ -25,8 +25,8 @@ func (r *Request) SetForm(key string, value interface{}) {
 func (r *Request) GetForm(key string, def ...interface{}) *gvar.Var {
 	r.parseForm()
 	if len(r.formMap) > 0 {
-		if v, ok := r.formMap[key]; ok {
-			return gvar.New(v)
+		if value, ok := r.formMap[key]; ok {
+			return gvar.New(value)
 		}
 	}
 	if len(def) > 0 {

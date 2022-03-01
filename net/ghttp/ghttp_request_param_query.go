@@ -29,8 +29,8 @@ func (r *Request) SetQuery(key string, value interface{}) {
 func (r *Request) GetQuery(key string, def ...interface{}) *gvar.Var {
 	r.parseQuery()
 	if len(r.queryMap) > 0 {
-		if v, ok := r.queryMap[key]; ok {
-			return gvar.New(v)
+		if value, ok := r.queryMap[key]; ok {
+			return gvar.New(value)
 		}
 	}
 	if r.Method == "GET" {
