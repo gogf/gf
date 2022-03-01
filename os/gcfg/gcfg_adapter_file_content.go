@@ -15,7 +15,7 @@ import (
 // SetContent sets customized configuration content for specified `file`.
 // The `file` is unnecessary param, default is DefaultConfigFile.
 func (c *AdapterFile) SetContent(content string, file ...string) {
-	name := DefaultConfigFile
+	name := DefaultConfigFileName
 	if len(file) > 0 {
 		name = file[0]
 	}
@@ -37,7 +37,7 @@ func (c *AdapterFile) SetContent(content string, file ...string) {
 // GetContent returns customized configuration content for specified `file`.
 // The `file` is unnecessary param, default is DefaultConfigFile.
 func (c *AdapterFile) GetContent(file ...string) string {
-	name := DefaultConfigFile
+	name := DefaultConfigFileName
 	if len(file) > 0 {
 		name = file[0]
 	}
@@ -47,7 +47,7 @@ func (c *AdapterFile) GetContent(file ...string) string {
 // RemoveContent removes the global configuration with specified `file`.
 // If `name` is not passed, it removes configuration of the default group name.
 func (c *AdapterFile) RemoveContent(file ...string) {
-	name := DefaultConfigFile
+	name := DefaultConfigFileName
 	if len(file) > 0 {
 		name = file[0]
 	}
