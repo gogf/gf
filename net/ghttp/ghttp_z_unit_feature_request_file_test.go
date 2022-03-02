@@ -7,6 +7,7 @@
 package ghttp_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -18,6 +19,7 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gmeta"
 	"github.com/gogf/gf/v2/util/guid"
 )
 
@@ -167,5 +169,51 @@ func Test_Params_File_Batch(t *testing.T) {
 		dstPath2 := gfile.Join(dstDirPath, array[1])
 		t.Assert(gfile.GetContents(dstPath1), gfile.GetContents(srcPath1))
 		t.Assert(gfile.GetContents(dstPath2), gfile.GetContents(srcPath2))
+	})
+}
+
+func Test_Params_Strict_Route_File_Single(t *testing.T) {
+	type Req struct {
+		gmeta.Meta `method:"post" mime:"multipart/form-data"`
+		File       *ghttp.UploadFile `type:"file"`
+	}
+	type Res struct{}
+
+	dstDirPath := gfile.Temp(gtime.TimestampNanoStr())
+	s := g.Server(guid.S())
+	s.BindHandler("/upload/single", func(ctx context.Context, req *Req) (res *Res, err error) {
+		var (
+			r    = g.RequestFromCtx(ctx)
+			file = req.File
+		)
+		if file == nil {
+			r.Response.WriteExit("upload file cannot be empty")
+		}
+		name, err := file.Save(dstDirPath)
+		if err != nil {
+			r.Response.WriteExit(err)
+		}
+		r.Response.WriteExit(name)
+		return
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+	// normal name
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		srcPath := gdebug.TestDataPath("upload", "file1.txt")
+		dstPath := gfile.Join(dstDirPath, "file1.txt")
+		content := client.PostContent(ctx, "/upload/single", g.Map{
+			"file": "@file:" + srcPath,
+		})
+		t.AssertNE(content, "")
+		t.AssertNE(content, "upload file cannot be empty")
+		t.AssertNE(content, "upload failed")
+		t.Assert(content, "file1.txt")
+		t.Assert(gfile.GetContents(dstPath), gfile.GetContents(srcPath))
 	})
 }

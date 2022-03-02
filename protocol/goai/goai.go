@@ -82,6 +82,7 @@ const (
 	TagNamePath     = `path`
 	TagNameMethod   = `method`
 	TagNameMime     = `mime`
+	TagNameConsumes = `consumes`
 	TagNameType     = `type`
 	TagNameDomain   = `domain`
 	TagNameValidate = `v`
