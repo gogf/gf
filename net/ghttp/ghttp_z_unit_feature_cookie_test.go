@@ -104,12 +104,10 @@ func Test_SetHttpCookie(t *testing.T) {
 }
 
 func Test_CookieOptionsDefault(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/test", func(r *ghttp.Request) {
 		r.Cookie.Set(r.Get("k").String(), r.Get("v").String())
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -118,7 +116,7 @@ func Test_CookieOptionsDefault(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetBrowserMode(true)
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		r1, e1 := client.Get(ctx, "/test?k=key1&v=100")
 		if r1 != nil {
 			defer r1.Close()
@@ -134,8 +132,7 @@ func Test_CookieOptionsDefault(t *testing.T) {
 }
 
 func Test_CookieOptions(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.SetConfigWithMap(g.Map{
 		"cookieSameSite": "lax",
 		"cookieSecure":   true,
@@ -144,7 +141,6 @@ func Test_CookieOptions(t *testing.T) {
 	s.BindHandler("/test", func(r *ghttp.Request) {
 		r.Cookie.Set(r.Get("k").String(), r.Get("v").String())
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -153,7 +149,7 @@ func Test_CookieOptions(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetBrowserMode(true)
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		r1, e1 := client.Get(ctx, "/test?k=key1&v=100")
 		if r1 != nil {
 			defer r1.Close()
