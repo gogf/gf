@@ -52,7 +52,7 @@ func (v *Interface) String() string {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (v *Interface) MarshalJSON() ([]byte, error) {
+func (v Interface) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.Val())
 }
 

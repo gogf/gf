@@ -1,0 +1,149 @@
+name: GoFrame CI
+
+
+on:
+  push:
+    branches:
+    - master
+    - develop
+  pull_request:
+    branches:
+    - master
+    - develop
+
+
+env:
+  GF_DEBUG: 0
+
+
+jobs:
+  code-test:
+    runs-on: ubuntu-latest
+
+
+    # Service containers to run with `code-test`
+    services:
+      redis:
+        image  : redis
+        options: >-
+          --health-cmd      "redis-cli ping"
+          --health-interval 10s
+          --health-timeout  5s
+          --health-retries  5
+        ports:
+          # Maps tcp port 6379 on service container to the host
+          - 6379:6379
+
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_DATABASE     : test
+          MYSQL_ROOT_PASSWORD: 12345678
+        ports:
+          # Maps tcp port 3306 on service container to the host
+          - 3306:3306
+
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: 12345678
+          POSTGRES_USER:     root
+          POSTGRES_DB:       test
+          TZ:                Asia/Shanghai
+        ports:
+          - 5432:5432
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      mssql:
+        image: mcmoe/mssqldocker:latest
+        env:
+          ACCEPT_EULA:    Y
+          SA_PASSWORD:    LoremIpsum86
+          MSSQL_DB:       test
+          MSSQL_USER:     root
+          MSSQL_PASSWORD: LoremIpsum86
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd="/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P LoremIpsum86 -l 30 -Q \"SELECT 1\" || exit 1"
+          --health-start-period 10s
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+
+    # strategy set
+    strategy:
+      matrix:
+        go: ["1.15", "1.16", "1.17"]
+
+
+    steps:
+    - name: Set Up Timezone
+      uses: szenius/set-timezone@v1.0
+      with:
+        timezoneLinux: "Asia/Shanghai"
+
+    - name: Checkout Repositary
+      uses: actions/checkout@v2
+
+    - name: Set Up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ matrix.go }}
+
+    - name: Before Script
+      run: |
+        find . -name "*.go" | xargs gofmt -w
+        git diff --name-only --exit-code || if [ $? != 0 ]; then echo "Notice: gofmt check failed,please gofmt before pr." && exit 1; fi
+        echo "gofmt check pass."
+        sudo echo "127.0.0.1   local" | sudo tee -a /etc/hosts
+
+    - name: CLI Build & Test
+      run: |
+        cd cmd/gf
+        go mod tidy
+        go build ./...
+        go test  ./...
+
+    - name: Example Build & Test
+      run: |
+        cd example
+        go mod tidy
+        go build ./...
+        go test  ./...
+
+    - name: Contrib Build & Test
+      run: |
+        cd contrib
+        for file in `find . -name go.mod`; do
+            path=$(dirname $file)
+            # Ignore oracle database driver build&test.
+            if [ "oracle" = $(basename $path) ]; then
+                continue 1
+            fi
+            cd $path
+            go mod tidy
+            go build ./...
+            go test  ./...
+            cd -
+        done
+
+    - name: Run i386 Arch Test
+      run: |
+        GOARCH=386 go test -v ./... || exit 1
+
+    - name: Run amd64 Arch Test
+      run: |
+        GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
+
+    - name: Report Coverage
+      uses: codecov/codecov-action@v2
+      with:
+        flags: go-${{ matrix.go }}
+

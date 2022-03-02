@@ -38,7 +38,7 @@ const (
 )
 
 var (
-	DefaultStorageFilePath      = gfile.TempDir("gsessions")
+	DefaultStorageFilePath      = gfile.Temp("gsessions")
 	DefaultStorageFileCryptoKey = []byte("Session storage file crypto key!")
 )
 
@@ -82,7 +82,7 @@ func (s *StorageFile) updateSessionTimely(ctx context.Context) {
 			break
 		}
 		if err = s.updateSessionTTl(context.TODO(), id); err != nil {
-			intlog.Error(context.TODO(), err)
+			intlog.Errorf(context.TODO(), `%+v`, err)
 		}
 	}
 }

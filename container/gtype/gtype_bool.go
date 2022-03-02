@@ -78,7 +78,7 @@ func (v *Bool) String() string {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (v *Bool) MarshalJSON() ([]byte, error) {
+func (v Bool) MarshalJSON() ([]byte, error) {
 	if v.Val() {
 		return bytesTrue, nil
 	}

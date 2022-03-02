@@ -17,7 +17,7 @@ func ExampleReplaceFile() {
 	// init
 	var (
 		fileName = "gflie_example.txt"
-		tempDir  = gfile.TempDir("gfile_example_replace")
+		tempDir  = gfile.Temp("gfile_example_replace")
 		tempFile = gfile.Join(tempDir, fileName)
 	)
 
@@ -41,7 +41,7 @@ func ExampleReplaceFileFunc() {
 	// init
 	var (
 		fileName = "gflie_example.txt"
-		tempDir  = gfile.TempDir("gfile_example_replace")
+		tempDir  = gfile.Temp("gfile_example_replace")
 		tempFile = gfile.Join(tempDir, fileName)
 	)
 
@@ -69,7 +69,7 @@ func ExampleReplaceDir() {
 	// init
 	var (
 		fileName = "gflie_example.txt"
-		tempDir  = gfile.TempDir("gfile_example_replace")
+		tempDir  = gfile.Temp("gfile_example_replace")
 		tempFile = gfile.Join(tempDir, fileName)
 	)
 
@@ -94,7 +94,7 @@ func ExampleReplaceDirFunc() {
 	// init
 	var (
 		fileName = "gflie_example.txt"
-		tempDir  = gfile.TempDir("gfile_example_replace")
+		tempDir  = gfile.Temp("gfile_example_replace")
 		tempFile = gfile.Join(tempDir, fileName)
 	)
 

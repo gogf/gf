@@ -76,9 +76,7 @@ type doBindObjectInput struct {
 
 func (s *Server) doBindObject(ctx context.Context, in doBindObjectInput) {
 	// Convert input method to map for convenience and high performance searching purpose.
-	var (
-		methodMap map[string]bool
-	)
+	var methodMap map[string]bool
 	if len(in.Method) > 0 {
 		methodMap = make(map[string]bool)
 		for _, v := range strings.Split(in.Method, ",") {
@@ -112,11 +110,11 @@ func (s *Server) doBindObject(ctx context.Context, in doBindObjectInput) {
 		reflectType = reflectValue.Type()
 	}
 	structName := reflectType.Elem().Name()
-	if reflectValue.MethodByName("Init").IsValid() {
-		initFunc = reflectValue.MethodByName("Init").Interface().(func(*Request))
+	if reflectValue.MethodByName(specialMethodNameInit).IsValid() {
+		initFunc = reflectValue.MethodByName(specialMethodNameInit).Interface().(func(*Request))
 	}
-	if reflectValue.MethodByName("Shut").IsValid() {
-		shutFunc = reflectValue.MethodByName("Shut").Interface().(func(*Request))
+	if reflectValue.MethodByName(specialMethodNameShut).IsValid() {
+		shutFunc = reflectValue.MethodByName(specialMethodNameShut).Interface().(func(*Request))
 	}
 	pkgPath := reflectType.Elem().PkgPath()
 	pkgName := gfile.Basename(pkgPath)
@@ -125,7 +123,7 @@ func (s *Server) doBindObject(ctx context.Context, in doBindObjectInput) {
 		if methodMap != nil && !methodMap[methodName] {
 			continue
 		}
-		if methodName == "Init" || methodName == "Shut" {
+		if methodName == specialMethodNameInit || methodName == specialMethodNameShut {
 			continue
 		}
 		objName := gstr.Replace(reflectType.String(), fmt.Sprintf(`%s.`, pkgName), "")
@@ -155,7 +153,12 @@ func (s *Server) doBindObject(ctx context.Context, in doBindObjectInput) {
 		//
 		// Note that if there's built-in variables in pattern, this route will not be added
 		// automatically.
-		if strings.EqualFold(methodName, "Index") && !gregex.IsMatchString(`\{\.\w+\}`, in.Pattern) {
+		var (
+			isIndexMethod = strings.EqualFold(methodName, specialMethodNameIndex)
+			hasBuildInVar = gregex.IsMatchString(`\{\.\w+\}`, in.Pattern)
+			hashTwoParams = funcInfo.Type.NumIn() == 2
+		)
+		if isIndexMethod && !hasBuildInVar && !hashTwoParams {
 			p := gstr.PosRI(key, "/index")
 			k := key[0:p] + key[p+6:]
 			if len(k) == 0 || k[0] == '@' {
@@ -209,11 +212,11 @@ func (s *Server) doBindObjectMethod(ctx context.Context, in doBindObjectMethodIn
 		s.Logger().Fatalf(ctx, "invalid method name: %s", methodName)
 		return
 	}
-	if reflectValue.MethodByName("Init").IsValid() {
-		initFunc = reflectValue.MethodByName("Init").Interface().(func(*Request))
+	if reflectValue.MethodByName(specialMethodNameInit).IsValid() {
+		initFunc = reflectValue.MethodByName(specialMethodNameInit).Interface().(func(*Request))
 	}
-	if reflectValue.MethodByName("Shut").IsValid() {
-		shutFunc = reflectValue.MethodByName("Shut").Interface().(func(*Request))
+	if reflectValue.MethodByName(specialMethodNameShut).IsValid() {
+		shutFunc = reflectValue.MethodByName(specialMethodNameShut).Interface().(func(*Request))
 	}
 	var (
 		pkgPath = reflectType.Elem().PkgPath()
@@ -260,11 +263,11 @@ func (s *Server) doBindObjectRest(ctx context.Context, in doBindObjectInput) {
 		reflectType = reflectValue.Type()
 	}
 	structName := reflectType.Elem().Name()
-	if reflectValue.MethodByName(methodNameInit).IsValid() {
-		initFunc = reflectValue.MethodByName(methodNameInit).Interface().(func(*Request))
+	if reflectValue.MethodByName(specialMethodNameInit).IsValid() {
+		initFunc = reflectValue.MethodByName(specialMethodNameInit).Interface().(func(*Request))
 	}
-	if reflectValue.MethodByName(methodNameShut).IsValid() {
-		shutFunc = reflectValue.MethodByName(methodNameShut).Interface().(func(*Request))
+	if reflectValue.MethodByName(specialMethodNameShut).IsValid() {
+		shutFunc = reflectValue.MethodByName(specialMethodNameShut).Interface().(func(*Request))
 	}
 	pkgPath := reflectType.Elem().PkgPath()
 	for i := 0; i < reflectValue.NumMethod(); i++ {

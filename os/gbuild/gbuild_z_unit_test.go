@@ -7,18 +7,22 @@
 package gbuild_test
 
 import (
+	"testing"
+
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gbuild"
 	"github.com/gogf/gf/v2/test/gtest"
-	"testing"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func Test_Info(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gbuild.Info(), map[string]string{
-			"gf":   "",
-			"go":   "",
-			"git":  "",
-			"time": "",
+		t.Assert(gconv.Map(gbuild.Info()), g.Map{
+			"GoFrame": "",
+			"Golang":  "",
+			"Git":     "",
+			"Time":    "",
+			"Data":    g.Map{},
 		})
 	})
 }
@@ -34,6 +38,6 @@ func Test_Get(t *testing.T) {
 
 func Test_Map(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gbuild.Map(), map[string]interface{}{})
+		t.Assert(gbuild.Data(), map[string]interface{}{})
 	})
 }

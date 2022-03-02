@@ -60,6 +60,11 @@ func (m *Manager) SetStorage(storage Storage) {
 	m.storage = storage
 }
 
+// GetStorage returns the session storage of current manager.
+func (m *Manager) GetStorage() Storage {
+	return m.storage
+}
+
 // SetTTL the TTL for the session manager.
 func (m *Manager) SetTTL(ttl time.Duration) {
 	m.ttl = ttl
@@ -75,6 +80,6 @@ func (m *Manager) UpdateSessionTTL(sessionId string, data *gmap.StrAnyMap) {
 	ctx := context.Background()
 	err := m.sessionData.Set(ctx, sessionId, data, m.ttl)
 	if err != nil {
-		intlog.Error(ctx, err)
+		intlog.Errorf(ctx, `%+v`, err)
 	}
 }

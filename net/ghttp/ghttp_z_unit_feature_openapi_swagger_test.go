@@ -18,6 +18,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gmeta"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 func Test_OpenApi_Swagger(t *testing.T) {
@@ -31,8 +32,7 @@ func Test_OpenApi_Swagger(t *testing.T) {
 		Age  int
 		Name string
 	}
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.SetSwaggerPath("/swagger")
 	s.SetOpenApiPath("/api.json")
 	s.Use(ghttp.MiddlewareHandlerResponse)
@@ -50,7 +50,6 @@ func Test_OpenApi_Swagger(t *testing.T) {
 			Name: req.Name,
 		}, gerror.New("error")
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -58,12 +57,12 @@ func Test_OpenApi_Swagger(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
-		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(c.GetContent(ctx, "/test?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18,"Name":"john"}}`)
 		t.Assert(c.GetContent(ctx, "/test/error"), `{"code":50,"message":"error","data":null}`)
 
-		t.Assert(gstr.Contains(c.GetContent(ctx, "/swagger/"), `SwaggerUIBundle`), true)
+		t.Assert(gstr.Contains(c.GetContent(ctx, "/swagger/"), `API Reference`), true)
 		t.Assert(gstr.Contains(c.GetContent(ctx, "/api.json"), `/test/error`), true)
 	})
 }

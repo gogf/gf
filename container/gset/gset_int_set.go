@@ -426,7 +426,7 @@ func (set *IntSet) Walk(f func(item int) int) *IntSet {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (set *IntSet) MarshalJSON() ([]byte, error) {
+func (set IntSet) MarshalJSON() ([]byte, error) {
 	return json.Marshal(set.Slice())
 }
 

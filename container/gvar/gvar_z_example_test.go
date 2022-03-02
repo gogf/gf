@@ -8,6 +8,7 @@ package gvar_test
 
 import (
 	"fmt"
+
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/json"
@@ -21,15 +22,6 @@ func ExampleVarNew() {
 
 	// Output:
 	// "400"
-}
-
-// Create
-func ExampleVarCreate() {
-	var v = gvar.Create(100.0)
-	g.Dump(&v)
-
-	// Output:
-	// "100"
 }
 
 // Clone

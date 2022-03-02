@@ -11,12 +11,15 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/util/guid"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Query commits one query SQL to underlying driver and returns the execution result.
@@ -137,6 +140,12 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 		cancelFuncForTimeout context.CancelFunc
 		timestampMilli1      = gtime.TimestampMilli()
 	)
+
+	// Trace span start.
+	tr := otel.GetTracerProvider().Tracer(traceInstrumentName, trace.WithInstrumentationVersion(gf.VERSION))
+	ctx, span := tr.Start(ctx, in.Type, trace.WithSpanKind(trace.SpanKindInternal))
+	defer span.End()
+
 	// Execution cased by type.
 	switch in.Type {
 	case SqlTypeBegin:
@@ -232,8 +241,11 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 			IsTransaction: in.IsTransaction,
 		}
 	)
-	// Tracing and logging.
-	c.addSqlToTracing(ctx, sqlObj)
+
+	// Tracing.
+	c.traceSpanEnd(ctx, span, sqlObj)
+
+	// Logging.
 	if c.db.GetDebug() {
 		c.writeSqlToLogger(ctx, sqlObj)
 	}
@@ -317,7 +329,7 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			intlog.Error(ctx, err)
+			intlog.Errorf(ctx, `%+v`, err)
 		}
 	}()
 	if !rows.Next() {

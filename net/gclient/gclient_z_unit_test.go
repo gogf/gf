@@ -15,12 +15,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gclient"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -29,18 +29,11 @@ import (
 )
 
 var (
-	ctx   = context.TODO()
-	ports = garray.NewIntArray(true)
+	ctx = context.TODO()
 )
 
-func init() {
-	for i := 7000; i <= 8000; i++ {
-		ports.Append(i)
-	}
-}
-
 func Test_Client_Basic(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/hello", func(r *ghttp.Request) {
 		r.Response.Write("hello")
@@ -61,11 +54,14 @@ func Test_Client_Basic(t *testing.T) {
 
 		_, err := g.Client().Post(ctx, "")
 		t.AssertNE(err, nil)
+
+		_, err = g.Client().PostForm("", nil)
+		t.AssertNE(err, nil)
 	})
 }
 
 func Test_Client_BasicAuth(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/auth", func(r *ghttp.Request) {
 		if r.BasicAuth("admin", "admin") {
@@ -89,7 +85,7 @@ func Test_Client_BasicAuth(t *testing.T) {
 }
 
 func Test_Client_Cookie(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/cookie", func(r *ghttp.Request) {
 		r.Response.Write(r.Cookie.Get("test"))
@@ -110,7 +106,7 @@ func Test_Client_Cookie(t *testing.T) {
 }
 
 func Test_Client_MapParam(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/map", func(r *ghttp.Request) {
 		r.Response.Write(r.Get("test"))
@@ -130,7 +126,7 @@ func Test_Client_MapParam(t *testing.T) {
 }
 
 func Test_Client_Cookies(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/cookie", func(r *ghttp.Request) {
 		r.Cookie.Set("test1", "1")
@@ -163,7 +159,7 @@ func Test_Client_Cookies(t *testing.T) {
 }
 
 func Test_Client_Chain_Header(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/header1", func(r *ghttp.Request) {
 		r.Response.Write(r.Header.Get("test1"))
@@ -188,7 +184,7 @@ func Test_Client_Chain_Header(t *testing.T) {
 }
 
 func Test_Client_Chain_Context(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/context", func(r *ghttp.Request) {
 		time.Sleep(1 * time.Second)
@@ -213,7 +209,7 @@ func Test_Client_Chain_Context(t *testing.T) {
 }
 
 func Test_Client_Chain_Timeout(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/timeout", func(r *ghttp.Request) {
 		time.Sleep(1 * time.Second)
@@ -234,7 +230,7 @@ func Test_Client_Chain_Timeout(t *testing.T) {
 }
 
 func Test_Client_Chain_ContentJson(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/json", func(r *ghttp.Request) {
 		r.Response.Write(r.Get("name"), r.Get("score"))
@@ -263,7 +259,7 @@ func Test_Client_Chain_ContentJson(t *testing.T) {
 }
 
 func Test_Client_Chain_ContentXml(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/xml", func(r *ghttp.Request) {
 		r.Response.Write(r.Get("name"), r.Get("score"))
@@ -292,7 +288,7 @@ func Test_Client_Chain_ContentXml(t *testing.T) {
 }
 
 func Test_Client_Param_Containing_Special_Char(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/", func(r *ghttp.Request) {
 		r.Response.Write("k1=", r.Get("k1"), "&k2=", r.Get("k2"))
@@ -317,10 +313,10 @@ func Test_Client_Param_Containing_Special_Char(t *testing.T) {
 // It posts data along with file uploading.
 // It does not url-encodes the parameters.
 func Test_Client_File_And_Param(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/", func(r *ghttp.Request) {
-		tmpPath := gfile.TempDir(guid.S())
+		tmpPath := gfile.Temp(guid.S())
 		err := gfile.Mkdir(tmpPath)
 		gtest.Assert(err, nil)
 		defer gfile.Remove(tmpPath)
@@ -353,7 +349,7 @@ func Test_Client_File_And_Param(t *testing.T) {
 }
 
 func Test_Client_Middleware(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	isServerHandler := false
 	s.BindHandler("/", func(r *ghttp.Request) {
@@ -437,7 +433,7 @@ func Test_Client_Middleware(t *testing.T) {
 }
 
 func Test_Client_Agent(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/", func(r *ghttp.Request) {
 		r.Response.Write(r.UserAgent())
@@ -457,7 +453,7 @@ func Test_Client_Agent(t *testing.T) {
 }
 
 func Test_Client_Request_13_Dump(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/hello", func(r *ghttp.Request) {
 		r.Response.WriteHeader(200)
@@ -495,7 +491,7 @@ func Test_Client_Request_13_Dump(t *testing.T) {
 }
 
 func Test_WebSocketClient(t *testing.T) {
-	p, _ := ports.PopRand()
+	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.BindHandler("/ws", func(r *ghttp.Request) {
 		ws, err := r.WebSocket()

@@ -46,7 +46,7 @@ func (r *Response) RawRequest() string {
 	// DumpRequestOut writes more request headers than DumpRequest, such as User-Agent.
 	bs, err := httputil.DumpRequestOut(r.request, false)
 	if err != nil {
-		intlog.Error(r.request.Context(), err)
+		intlog.Errorf(r.request.Context(), `%+v`, err)
 		return ""
 	}
 	return fmt.Sprintf(
@@ -65,7 +65,7 @@ func (r *Response) RawResponse() string {
 	}
 	bs, err := httputil.DumpResponse(r.Response, false)
 	if err != nil {
-		intlog.Error(r.request.Context(), err)
+		intlog.Errorf(r.request.Context(), `%+v`, err)
 		return ""
 	}
 

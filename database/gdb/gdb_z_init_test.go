@@ -69,7 +69,7 @@ func init() {
 	gdb.AddConfigNode(gdb.DefaultGroupName, configNode)
 
 	// Default db.
-	if r, err := gdb.New(); err != nil {
+	if r, err := gdb.NewByGroup(); err != nil {
 		gtest.Error(err)
 	} else {
 		db = r
@@ -81,10 +81,10 @@ func init() {
 	if _, err := db.Exec(ctx, fmt.Sprintf(schemaTemplate, TestSchema2)); err != nil {
 		gtest.Error(err)
 	}
-	db.SetSchema(TestSchema1)
+	db = db.Schema(TestSchema1)
 
 	// Prefix db.
-	if r, err := gdb.New("prefix"); err != nil {
+	if r, err := gdb.NewByGroup("prefix"); err != nil {
 		gtest.Error(err)
 	} else {
 		dbPrefix = r
@@ -95,15 +95,15 @@ func init() {
 	if _, err := dbPrefix.Exec(ctx, fmt.Sprintf(schemaTemplate, TestSchema2)); err != nil {
 		gtest.Error(err)
 	}
-	dbPrefix.SetSchema(TestSchema1)
+	dbPrefix = dbPrefix.Schema(TestSchema1)
 
 	// Invalid db.
-	if r, err := gdb.New("nodeinvalid"); err != nil {
+	if r, err := gdb.NewByGroup("nodeinvalid"); err != nil {
 		gtest.Error(err)
 	} else {
 		dbInvalid = r
 	}
-	dbInvalid.SetSchema(TestSchema1)
+	dbInvalid = dbInvalid.Schema(TestSchema1)
 }
 
 func createTable(table ...string) string {

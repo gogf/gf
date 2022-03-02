@@ -16,7 +16,7 @@ func ExampleSearch() {
 	// init
 	var (
 		fileName = "gflie_example.txt"
-		tempDir  = gfile.TempDir("gfile_example_search")
+		tempDir  = gfile.Temp("gfile_example_search")
 		tempFile = gfile.Join(tempDir, fileName)
 	)
 

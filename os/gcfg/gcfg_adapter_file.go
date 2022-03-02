@@ -30,7 +30,6 @@ type AdapterFile struct {
 }
 
 const (
-	DefaultConfigFile    = "config.toml"  // DefaultConfigFile is the default configuration file name.
 	commandEnvKeyForFile = "gf.gcfg.file" // commandEnvKeyForFile is the configuration key for command argument or environment configuring file name.
 	commandEnvKeyForPath = "gf.gcfg.path" // commandEnvKeyForPath is the configuration key for command argument or environment configuring directory path.
 )
@@ -55,7 +54,7 @@ var (
 func NewAdapterFile(file ...string) (*AdapterFile, error) {
 	var (
 		err  error
-		name = DefaultConfigFile
+		name = DefaultConfigFileName
 	)
 	if len(file) > 0 {
 		name = file[0]
@@ -87,20 +86,20 @@ func NewAdapterFile(file ...string) (*AdapterFile, error) {
 
 		// Dir path of working dir.
 		if err = config.AddPath(gfile.Pwd()); err != nil {
-			intlog.Error(context.TODO(), err)
+			intlog.Errorf(context.TODO(), `%+v`, err)
 		}
 
 		// Dir path of main package.
 		if mainPath := gfile.MainPkgPath(); mainPath != "" && gfile.Exists(mainPath) {
 			if err = config.AddPath(mainPath); err != nil {
-				intlog.Error(context.TODO(), err)
+				intlog.Errorf(context.TODO(), `%+v`, err)
 			}
 		}
 
 		// Dir path of binary.
 		if selfPath := gfile.SelfDir(); selfPath != "" && gfile.Exists(selfPath) {
 			if err = config.AddPath(selfPath); err != nil {
-				intlog.Error(context.TODO(), err)
+				intlog.Errorf(context.TODO(), `%+v`, err)
 			}
 		}
 	}
@@ -224,6 +223,7 @@ func (c *AdapterFile) getJson(fileName ...string) (configJson *gjson.Json, err e
 	} else {
 		usedFileName = c.defaultName
 	}
+	// It uses json map to cache specified configuration file content.
 	result := c.jsonMap.GetOrSetFuncLock(usedFileName, func() interface{} {
 		var (
 			content  string
@@ -253,28 +253,26 @@ func (c *AdapterFile) getJson(fileName ...string) (configJson *gjson.Json, err e
 		} else {
 			configJson, err = gjson.LoadContent(content, true)
 		}
-		if err == nil {
-			configJson.SetViolenceCheck(c.violenceCheck)
-			// Add monitor for this configuration file,
-			// any changes of this file will refresh its cache in Config object.
-			if filePath != "" && !gres.Contains(filePath) {
-				_, err = gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
-					c.jsonMap.Remove(usedFileName)
-				})
-				if err != nil {
-					return nil
-				}
-			}
-			return configJson
-		}
 		if err != nil {
 			if filePath != "" {
 				err = gerror.Wrapf(err, `load config file "%s" failed`, filePath)
 			} else {
 				err = gerror.Wrap(err, `load configuration failed`)
 			}
+			return nil
 		}
-		return nil
+		configJson.SetViolenceCheck(c.violenceCheck)
+		// Add monitor for this configuration file,
+		// any changes of this file will refresh its cache in Config object.
+		if filePath != "" && !gres.Contains(filePath) {
+			_, err = gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
+				c.jsonMap.Remove(usedFileName)
+			})
+			if err != nil {
+				return nil
+			}
+		}
+		return configJson
 	})
 	if result != nil {
 		return result.(*gjson.Json), err

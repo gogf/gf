@@ -8,6 +8,7 @@ package gring_test
 
 import (
 	"fmt"
+
 	"github.com/gogf/gf/v2/container/gring"
 )
 
@@ -209,10 +210,10 @@ func ExampleRing_Unlink() {
 	// Before Unlink, Cap: 10
 	// Before Unlink,  [0 9 8 7 6 5 4 3 2 1]
 	// Before Unlink,  [0 1 2 3 4 5 6 7 8 9]
-	// After Unlink, Len: 7
-	// After Unlink, Cap: 7
-	// After Unlink,  [1 7 6 5 4 3 2]
-	// After Unlink,  [1 2 3 4 5 6 7]
+	// After Unlink, Len: 3
+	// After Unlink, Cap: 3
+	// After Unlink,  [0 9 8]
+	// After Unlink,  [0 8 9]
 }
 
 func ExampleRing_RLockIteratorNext() {

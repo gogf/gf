@@ -12,6 +12,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gorilla/websocket"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -24,7 +25,7 @@ import (
 type (
 	// Server wraps the http.Server and provides more rich features.
 	Server struct {
-		name             string                           // Unique name for instance management.
+		instance         string                           // Instance name.
 		config           ServerConfig                     // Configuration.
 		plugins          []Plugin                         // Plugin array to extend server functionality.
 		servers          []*gracefulServer                // Underlying http.Server array.
@@ -36,6 +37,7 @@ type (
 		statusHandlerMap map[string][]HandlerFunc         // Custom status handler map.
 		sessionManager   *gsession.Manager                // Session manager.
 		openapi          *goai.OpenApiV3                  // The OpenApi specification management object.
+		service          *gsvc.Service                    // The service for Registry.
 	}
 
 	// Router object.
@@ -105,10 +107,11 @@ type (
 )
 
 const (
-	HookBeforeServe       = "HOOK_BEFORE_SERVE"
-	HookAfterServe        = "HOOK_AFTER_SERVE"
-	HookBeforeOutput      = "HOOK_BEFORE_OUTPUT"
-	HookAfterOutput       = "HOOK_AFTER_OUTPUT"
+	HeaderXUrlPath        = "x-url-path"         // Used for custom route handler, which does not change URL.Path.
+	HookBeforeServe       = "HOOK_BEFORE_SERVE"  // Hook handler before route handler/file serving.
+	HookAfterServe        = "HOOK_AFTER_SERVE"   // Hook handler after route handler/file serving.
+	HookBeforeOutput      = "HOOK_BEFORE_OUTPUT" // Hook handler before response output.
+	HookAfterOutput       = "HOOK_AFTER_OUTPUT"  // Hook handler after response output.
 	ServerStatusStopped   = 0
 	ServerStatusRunning   = 1
 	DefaultServerName     = "default"
@@ -120,20 +123,21 @@ const (
 )
 
 const (
-	supportedHttpMethods  = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
-	defaultMethod         = "ALL"
-	exceptionExit         = "exit"
-	exceptionExitAll      = "exit_all"
-	exceptionExitHook     = "exit_hook"
-	routeCacheDuration    = time.Hour
-	methodNameInit        = "Init"
-	methodNameShut        = "Shut"
-	ctxKeyForRequest      = "gHttpRequestObject"
-	contentTypeXml        = "text/xml"
-	contentTypeHtml       = "text/html"
-	contentTypeJson       = "application/json"
-	swaggerUIPackedPath   = "/goframe/swaggerui"
-	responseTraceIDHeader = "Trace-ID"
+	supportedHttpMethods   = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
+	defaultMethod          = "ALL"
+	exceptionExit          = "exit"
+	exceptionExitAll       = "exit_all"
+	exceptionExitHook      = "exit_hook"
+	routeCacheDuration     = time.Hour
+	ctxKeyForRequest       = "gHttpRequestObject"
+	contentTypeXml         = "text/xml"
+	contentTypeHtml        = "text/html"
+	contentTypeJson        = "application/json"
+	swaggerUIPackedPath    = "/goframe/swaggerui"
+	responseTraceIDHeader  = "Trace-ID"
+	specialMethodNameInit  = "Init"
+	specialMethodNameShut  = "Shut"
+	specialMethodNameIndex = "Index"
 )
 
 var (
