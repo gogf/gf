@@ -147,8 +147,11 @@ func (entry *Entry) check(ctx context.Context) {
 			fallthrough
 		case StatusRunning:
 			defer func() {
-				if err := recover(); err != nil {
-					entry.logErrorf(ctx, "[gcron] %s %s end with error: %+v", entry.schedule.pattern, entry.jobName, err)
+				if exception := recover(); exception != nil {
+					entry.logErrorf(ctx,
+						"[gcron] %s %s end with error: %+v",
+						entry.schedule.pattern, entry.jobName, exception,
+					)
 				} else {
 					entry.logDebugf(ctx, "[gcron] %s %s end", entry.schedule.pattern, entry.jobName)
 				}
@@ -169,10 +172,11 @@ func (entry *Entry) check(ctx context.Context) {
 			}
 			entry.logDebugf(ctx, "[gcron] %s %s start", entry.schedule.pattern, entry.jobName)
 
-			entry.Job(entry.timerEntry.Ctx())
+			entry.Job(ctx)
 		}
 	}
 }
+
 func (entry *Entry) logDebugf(ctx context.Context, format string, v ...interface{}) {
 	if logger := entry.cron.GetLogger(); logger != nil {
 		logger.Debugf(ctx, format, v...)

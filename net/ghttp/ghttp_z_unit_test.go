@@ -9,46 +9,94 @@ package ghttp_test
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/genv"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 var (
-	ctx   = context.TODO()
-	ports = garray.NewIntArray(true)
+	ctx = context.TODO()
 )
 
 func init() {
 	genv.Set("UNDER_TEST", "1")
-	for i := 7000; i <= 8000; i++ {
-		ports.Append(i)
-	}
 }
 
 func Test_GetUrl(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/url", func(r *ghttp.Request) {
 		r.Response.Write(r.GetUrl())
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
 		client := g.Client()
 		client.SetBrowserMode(true)
 		client.SetPrefix(prefix)
 
 		t.Assert(client.GetContent(ctx, "/url"), prefix+"/url")
+	})
+}
+
+func Test_XUrlPath(t *testing.T) {
+	s := g.Server(guid.S())
+	s.BindHandler("/test1", func(r *ghttp.Request) {
+		r.Response.Write(`test1`)
+	})
+	s.BindHandler("/test2", func(r *ghttp.Request) {
+		r.Response.Write(`test2`)
+	})
+	s.SetHandler(func(w http.ResponseWriter, r *http.Request) {
+		r.Header.Set(ghttp.HeaderXUrlPath, "/test2")
+		s.ServeHTTP(w, r)
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		t.Assert(c.GetContent(ctx, "/"), "test2")
+		t.Assert(c.GetContent(ctx, "/test/test"), "test2")
+		t.Assert(c.GetContent(ctx, "/test1"), "test2")
+	})
+}
+
+func Test_Issue1611(t *testing.T) {
+	s := g.Server(guid.S())
+	v := g.View(guid.S())
+	content := "This is header"
+	gtest.AssertNil(v.SetPath(gdebug.TestDataPath("issue1611")))
+	s.SetView(v)
+	s.BindHandler("/", func(r *ghttp.Request) {
+		gtest.AssertNil(r.Response.WriteTpl("index/layout.html", g.Map{
+			"header": content,
+		}))
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		t.Assert(gstr.Contains(c.GetContent(ctx, "/"), content), true)
 	})
 }

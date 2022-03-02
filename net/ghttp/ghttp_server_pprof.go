@@ -92,7 +92,7 @@ func (p *utilPProf) Index(r *Request) {
 	for _, p := range profiles {
 		if p.Name() == action {
 			if err := p.WriteTo(r.Response.Writer, r.GetRequest("debug").Int()); err != nil {
-				intlog.Error(ctx, err)
+				intlog.Errorf(ctx, `%+v`, err)
 			}
 			break
 		}

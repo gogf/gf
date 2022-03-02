@@ -159,6 +159,7 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 		return gconv.Bool(fieldValue)
 
 	case "date":
+		// Date without time.
 		if t, ok := fieldValue.(time.Time); ok {
 			return gtime.NewFromTime(t).Format("Y-m-d")
 		}
@@ -173,7 +174,7 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 			return gtime.NewFromTime(t)
 		}
 		t, _ := gtime.StrToTime(gconv.String(fieldValue))
-		return t.String()
+		return t
 
 	default:
 		// Auto-detect field type, using key match.
@@ -199,7 +200,7 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 			if err != nil {
 				return s
 			}
-			return t.String()
+			return t
 
 		case strings.Contains(typeName, "date"):
 			s := gconv.String(fieldValue)
@@ -207,7 +208,7 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 			if err != nil {
 				return s
 			}
-			return t.Format("Y-m-d")
+			return t
 
 		default:
 			return gconv.String(fieldValue)
@@ -218,7 +219,7 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 // mappingAndFilterData automatically mappings the map key to table field and removes
 // all key-value pairs that are not the field of given table.
 func (c *Core) mappingAndFilterData(schema, table string, data map[string]interface{}, filter bool) (map[string]interface{}, error) {
-	fieldsMap, err := c.db.TableFields(c.GetCtx(), c.guessPrimaryTableName(table), schema)
+	fieldsMap, err := c.TableFields(c.guessPrimaryTableName(table), schema)
 	if err != nil {
 		return nil, err
 	}

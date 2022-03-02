@@ -17,10 +17,10 @@ import (
 // Send sends data to specified process of given pid.
 func Send(pid int, data []byte, group ...string) error {
 	msg := MsgRequest{
-		SendPid: Pid(),
-		RecvPid: pid,
-		Group:   defaultGroupNameForProcComm,
-		Data:    data,
+		SenderPid:   Pid(),
+		ReceiverPid: pid,
+		Group:       defaultGroupNameForProcComm,
+		Data:        data,
 	}
 	if len(group) > 0 {
 		msg.Group = group[0]

@@ -75,14 +75,14 @@ func New(path ...string) *View {
 	}
 	if len(path) > 0 && len(path[0]) > 0 {
 		if err := view.SetPath(path[0]); err != nil {
-			intlog.Error(context.TODO(), err)
+			intlog.Errorf(context.TODO(), `%+v`, err)
 		}
 	} else {
 		// Customized dir path from env/cmd.
 		if envPath := gcmd.GetOptWithEnv(commandEnvKeyForPath).String(); envPath != "" {
 			if gfile.Exists(envPath) {
 				if err := view.SetPath(envPath); err != nil {
-					intlog.Error(context.TODO(), err)
+					intlog.Errorf(context.TODO(), `%+v`, err)
 				}
 			} else {
 				if errorPrint() {
@@ -92,18 +92,18 @@ func New(path ...string) *View {
 		} else {
 			// Dir path of working dir.
 			if err := view.SetPath(gfile.Pwd()); err != nil {
-				intlog.Error(context.TODO(), err)
+				intlog.Errorf(context.TODO(), `%+v`, err)
 			}
 			// Dir path of binary.
 			if selfPath := gfile.SelfDir(); selfPath != "" && gfile.Exists(selfPath) {
 				if err := view.AddPath(selfPath); err != nil {
-					intlog.Error(context.TODO(), err)
+					intlog.Errorf(context.TODO(), `%+v`, err)
 				}
 			}
 			// Dir path of main package.
 			if mainPath := gfile.MainPkgPath(); mainPath != "" && gfile.Exists(mainPath) {
 				if err := view.AddPath(mainPath); err != nil {
-					intlog.Error(context.TODO(), err)
+					intlog.Errorf(context.TODO(), `%+v`, err)
 				}
 			}
 		}
@@ -146,6 +146,11 @@ func New(path ...string) *View {
 		"map":        view.buildInFuncMap,
 		"maps":       view.buildInFuncMaps,
 		"json":       view.buildInFuncJson,
+		"xml":        view.buildInFuncXml,
+		"ini":        view.buildInFuncIni,
+		"yaml":       view.buildInFuncYaml,
+		"yamli":      view.buildInFuncYamlIndent,
+		"toml":       view.buildInFuncToml,
 		"plus":       view.buildInFuncPlus,
 		"minus":      view.buildInFuncMinus,
 		"times":      view.buildInFuncTimes,

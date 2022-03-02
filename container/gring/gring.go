@@ -171,10 +171,13 @@ func (r *Ring) Link(s *Ring) *Ring {
 //
 func (r *Ring) Unlink(n int) *Ring {
 	r.mu.Lock()
-	r.ring = r.ring.Unlink(n)
+	resultRing := r.ring.Unlink(n)
 	r.dirty.Set(true)
 	r.mu.Unlock()
-	return r
+	resultGRing := New(resultRing.Len())
+	resultGRing.ring = resultRing
+	resultGRing.dirty.Set(true)
+	return resultGRing
 }
 
 // RLockIteratorNext iterates and locks reading forward

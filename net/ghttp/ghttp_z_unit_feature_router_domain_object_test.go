@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 type DomainObject struct{}
@@ -39,10 +40,8 @@ func (o *DomainObject) Info(r *ghttp.Request) {
 }
 
 func Test_Router_DomainObject1(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.Domain("localhost, local").BindObject("/", new(DomainObject))
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -50,7 +49,7 @@ func Test_Router_DomainObject1(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/init"), "Not Found")
@@ -62,7 +61,7 @@ func Test_Router_DomainObject1(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://localhost:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://localhost:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "1Object Index2")
 		t.Assert(client.GetContent(ctx, "/init"), "Not Found")
@@ -75,7 +74,7 @@ func Test_Router_DomainObject1(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://local:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://local:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "1Object Index2")
 		t.Assert(client.GetContent(ctx, "/init"), "Not Found")
@@ -88,10 +87,8 @@ func Test_Router_DomainObject1(t *testing.T) {
 }
 
 func Test_Router_DomainObject2(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.Domain("localhost, local").BindObject("/object", new(DomainObject), "Show, Info")
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -99,7 +96,7 @@ func Test_Router_DomainObject2(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/object"), "Not Found")
@@ -112,7 +109,7 @@ func Test_Router_DomainObject2(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://localhost:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://localhost:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/object"), "Not Found")
@@ -125,7 +122,7 @@ func Test_Router_DomainObject2(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://local:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://local:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/object"), "Not Found")
@@ -139,10 +136,8 @@ func Test_Router_DomainObject2(t *testing.T) {
 }
 
 func Test_Router_DomainObjectMethod(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.Domain("localhost, local").BindObjectMethod("/object-info", new(DomainObject), "Info")
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -150,7 +145,7 @@ func Test_Router_DomainObjectMethod(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/object"), "Not Found")
@@ -164,7 +159,7 @@ func Test_Router_DomainObjectMethod(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://localhost:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://localhost:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/object"), "Not Found")
@@ -178,7 +173,7 @@ func Test_Router_DomainObjectMethod(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://local:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://local:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/object"), "Not Found")

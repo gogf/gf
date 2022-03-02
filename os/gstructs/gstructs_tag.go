@@ -180,7 +180,8 @@ func getFieldValuesByTagPriority(pointer interface{}, priority []string, tagMap 
 		return nil, err
 	}
 	var (
-		tagValue  = ""
+		tagName   string
+		tagValue  string
 		tagFields = make([]Field, 0)
 	)
 	for _, field := range fields {
@@ -190,6 +191,7 @@ func getFieldValuesByTagPriority(pointer interface{}, priority []string, tagMap 
 		}
 		tagValue = ""
 		for _, p := range priority {
+			tagName = p
 			tagValue = field.Tag(p)
 			if tagValue != "" && tagValue != "-" {
 				break
@@ -201,6 +203,7 @@ func getFieldValuesByTagPriority(pointer interface{}, priority []string, tagMap 
 				continue
 			}
 			tagField := field
+			tagField.TagName = tagName
 			tagField.TagValue = tagValue
 			tagFields = append(tagFields, tagField)
 		}

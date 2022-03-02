@@ -459,10 +459,16 @@ func TestOpenApiV3_CommonResponse(t *testing.T) {
 			Object: f,
 		})
 		t.AssertNil(err)
+
+		//g.Dump(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties)
 		// Schema asserts.
 		t.Assert(len(oai.Components.Schemas), 3)
 		t.Assert(len(oai.Paths), 1)
 		t.Assert(len(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties), 3)
+		t.Assert(
+			oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties["data"].Value.Description,
+			`Result data for certain request according API definition`,
+		)
 	})
 }
 

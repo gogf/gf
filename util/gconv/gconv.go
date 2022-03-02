@@ -10,6 +10,7 @@
 package gconv
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"reflect"
@@ -18,6 +19,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/encoding/gbinary"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -34,8 +36,8 @@ var (
 	}
 
 	// StructTagPriority defines the default priority tags for Map*/Struct* functions.
-	// Note, the "gconv", "param", "params" tags are used by old version of package.
-	// It is strongly recommended using short tag "c" or "p" instead in the future.
+	// Note, the `gconv/param/params` tags are used by old version of package.
+	// It is strongly recommended using short tag `c/p` instead in the future.
 	StructTagPriority = []string{"gconv", "param", "params", "c", "p", "json"}
 )
 
@@ -272,11 +274,12 @@ func doConvert(in doConvertInput) interface{} {
 	case "[]map[string]interface{}":
 		return Maps(in.FromValue)
 
+	case "json.RawMessage":
+		return Bytes(in.FromValue)
+
 	default:
 		if in.ReferValue != nil {
-			var (
-				referReflectValue reflect.Value
-			)
+			var referReflectValue reflect.Value
 			if v, ok := in.ReferValue.(reflect.Value); ok {
 				referReflectValue = v
 			} else {
@@ -316,6 +319,13 @@ func Bytes(any interface{}) []byte {
 		}
 		originValueAndKind := utils.OriginValueAndKind(any)
 		switch originValueAndKind.OriginKind {
+		case reflect.Map:
+			bytes, err := json.Marshal(any)
+			if err != nil {
+				intlog.Errorf(context.TODO(), `%+v`, err)
+			}
+			return bytes
+
 		case reflect.Array, reflect.Slice:
 			var (
 				ok    = true

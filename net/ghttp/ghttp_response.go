@@ -11,6 +11,7 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -91,7 +92,7 @@ func (r *Response) ServeFileDownload(path string, name ...string) {
 	}
 	r.Header().Set("Content-Type", "application/force-download")
 	r.Header().Set("Accept-Ranges", "bytes")
-	r.Header().Set("Content-Disposition", fmt.Sprintf(`attachment;filename="%s"`, downloadName))
+	r.Header().Set("Content-Disposition", fmt.Sprintf(`attachment;filename="%s"`, url.QueryEscape(downloadName)))
 	r.Server.serveFile(r.Request, serveFile)
 }
 

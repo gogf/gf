@@ -12,28 +12,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/net/gudp"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-var (
-	ports = garray.NewIntArray(true)
-)
-
-func init() {
-	for i := 9000; i <= 10000; i++ {
-		ports.Append(i)
-	}
-}
-
 func Test_Basic(t *testing.T) {
 	var (
 		ctx = context.TODO()
 	)
-	p, _ := ports.PopRand()
+	p, _ := gudp.GetFreePort()
 	s := gudp.NewServer(fmt.Sprintf("127.0.0.1:%d", p), func(conn *gudp.Conn) {
 		defer conn.Close()
 		for {
@@ -94,7 +83,7 @@ func Test_Buffer(t *testing.T) {
 	var (
 		ctx = context.TODO()
 	)
-	p, _ := ports.PopRand()
+	p, _ := gudp.GetFreePort()
 	s := gudp.NewServer(fmt.Sprintf("127.0.0.1:%d", p), func(conn *gudp.Conn) {
 		defer conn.Close()
 		for {

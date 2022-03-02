@@ -26,8 +26,8 @@ type Parser struct {
 	strict           bool              // Whether stops parsing and returns error if invalid option passed.
 	parsedArgs       []string          // As name described.
 	parsedOptions    map[string]string // As name described.
-	passedOptions    map[string]bool   // User passed supported options.
-	supportedOptions map[string]bool   // Option [OptionName:WhetherNeedArgument].
+	passedOptions    map[string]bool   // User passed supported options, like: map[string]bool{"name,n":true}
+	supportedOptions map[string]bool   // Option [OptionName:WhetherNeedArgument], like: map[string]bool{"name":true, "n":true}
 	commandFuncMap   map[string]func() // Command function map for function handler.
 }
 
@@ -55,16 +55,16 @@ func Parse(supportedOptions map[string]bool, strict ...bool) (*Parser, error) {
 			parsedOptions: GetOptAll(),
 		}, nil
 	}
-	return ParseWithArgs(os.Args, supportedOptions, strict...)
+	return ParseArgs(os.Args, supportedOptions, strict...)
 }
 
-// ParseWithArgs creates and returns a new Parser with given arguments and supported options.
+// ParseArgs creates and returns a new Parser with given arguments and supported options.
 //
 // Note that the parameter `supportedOptions` is as [option name: need argument], which means
 // the value item of `supportedOptions` indicates whether corresponding option name needs argument or not.
 //
 // The optional parameter `strict` specifies whether stops parsing and returns error if invalid option passed.
-func ParseWithArgs(args []string, supportedOptions map[string]bool, strict ...bool) (*Parser, error) {
+func ParseArgs(args []string, supportedOptions map[string]bool, strict ...bool) (*Parser, error) {
 	if supportedOptions == nil {
 		command.Init(args...)
 		return &Parser{
@@ -198,15 +198,9 @@ func (p *Parser) GetOptAll() map[string]string {
 	return p.parsedOptions
 }
 
-// ContainsOpt checks whether option named `name` exist in the arguments.
-func (p *Parser) ContainsOpt(name string) bool {
-	_, ok := p.parsedOptions[name]
-	return ok
-}
-
 // GetArg returns the argument at `index` as gvar.Var.
 func (p *Parser) GetArg(index int, def ...string) *gvar.Var {
-	if index < len(p.parsedArgs) {
+	if index >= 0 && index < len(p.parsedArgs) {
 		return gvar.New(p.parsedArgs[index])
 	}
 	if len(def) > 0 {
@@ -221,7 +215,7 @@ func (p *Parser) GetArgAll() []string {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (p *Parser) MarshalJSON() ([]byte, error) {
+func (p Parser) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"parsedArgs":       p.parsedArgs,
 		"parsedOptions":    p.parsedOptions,

@@ -35,8 +35,8 @@ type Json struct {
 
 // Options for Json object creating.
 type Options struct {
-	Safe      bool   // Mark this object is for in concurrent-safe usage.
-	Tags      string // Custom priority tags for decoding.
+	Safe      bool   // Mark this object is for in concurrent-safe usage. This is especially for Json object creating.
+	Tags      string // Custom priority tags for decoding. Eg: "json,yaml,MyTag". This is especially for struct parsing into Json object.
 	StrNumber bool   // StrNumber causes the Decoder to unmarshal a number into an interface{} as a string instead of as a float64.
 }
 
@@ -48,6 +48,11 @@ type iInterfaces interface {
 // iMapStrAny is the interface support for converting struct parameter to map.
 type iMapStrAny interface {
 	MapStrAny() map[string]interface{}
+}
+
+// iVal is the interface for underlying interface{} retrieving.
+type iVal interface {
+	Val() interface{}
 }
 
 // setValue sets `value` to `j` by `pattern`.
@@ -85,6 +90,9 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 					// Delete item from map.
 					delete((*pointer).(map[string]interface{}), array[i])
 				} else {
+					if (*pointer).(map[string]interface{}) == nil {
+						*pointer = map[string]interface{}{}
+					}
 					(*pointer).(map[string]interface{})[array[i]] = value
 				}
 			} else {

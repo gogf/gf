@@ -56,7 +56,7 @@ const (
 	OrmTagForWith      = "with"
 	OrmTagForWithWhere = "where"
 	OrmTagForWithOrder = "order"
-	OrmTagForDto       = "dto"
+	OrmTagForDo        = "do"
 )
 
 var (
@@ -67,18 +67,18 @@ var (
 	structTagPriority = append([]string{OrmTagForStruct}, gconv.StructTagPriority...)
 )
 
-// isDtoStruct checks and returns whether given type is a DTO struct.
-func isDtoStruct(object interface{}) bool {
+// isDoStruct checks and returns whether given type is a DO struct.
+func isDoStruct(object interface{}) bool {
 	// It checks by struct name like "XxxForDao", to be compatible with old version.
 	// TODO remove this compatible codes in future.
 	reflectType := reflect.TypeOf(object)
 	if gstr.HasSuffix(reflectType.String(), modelForDaoSuffix) {
 		return true
 	}
-	// It checks by struct meta for DTO struct in version.
+	// It checks by struct meta for DO struct in version.
 	if ormTag := gmeta.Get(object, OrmTagForStruct); !ormTag.IsEmpty() {
 		match, _ := gregex.MatchString(
-			fmt.Sprintf(`%s\s*:\s*([^,]+)`, OrmTagForDto),
+			fmt.Sprintf(`%s\s*:\s*([^,]+)`, OrmTagForDo),
 			ormTag.String(),
 		)
 		if len(match) > 1 {
@@ -147,9 +147,9 @@ func ListItemValuesUnique(list interface{}, key string, subKey ...interface{}) [
 func GetInsertOperationByOption(option int) string {
 	var operator string
 	switch option {
-	case insertOptionReplace:
+	case InsertOptionReplace:
 		operator = "REPLACE"
-	case insertOptionIgnore:
+	case InsertOptionIgnore:
 		operator = "INSERT IGNORE"
 	default:
 		operator = "INSERT"
@@ -374,13 +374,11 @@ func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newAr
 
 	case reflect.Map:
 		for key, value := range DataToMapDeep(in.Where) {
-			if gregex.IsMatchString(regularFieldNameRegPattern, key) {
-				if in.OmitNil && empty.IsNil(value) {
-					continue
-				}
-				if in.OmitEmpty && empty.IsEmpty(value) {
-					continue
-				}
+			if in.OmitNil && empty.IsNil(value) {
+				continue
+			}
+			if in.OmitEmpty && empty.IsEmpty(value) {
+				continue
 			}
 			newArgs = formatWhereKeyValue(formatWhereKeyValueInput{
 				Db:     db,
@@ -394,9 +392,9 @@ func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newAr
 		}
 
 	case reflect.Struct:
-		// If the `where` parameter is DTO struct, it then adds `OmitNil` option for this condition,
+		// If the `where` parameter is DO struct, it then adds `OmitNil` option for this condition,
 		// which will filter all nil parameters in `where`.
-		if isDtoStruct(in.Where) {
+		if isDoStruct(in.Where) {
 			in.OmitNil = true
 		}
 		// If `where` struct implements `iIterator` interface,
@@ -406,13 +404,11 @@ func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newAr
 		if iterator, ok := in.Where.(iIterator); ok {
 			iterator.Iterator(func(key, value interface{}) bool {
 				ketStr := gconv.String(key)
-				if gregex.IsMatchString(regularFieldNameRegPattern, ketStr) {
-					if in.OmitNil && empty.IsNil(value) {
-						return true
-					}
-					if in.OmitEmpty && empty.IsEmpty(value) {
-						return true
-					}
+				if in.OmitNil && empty.IsNil(value) {
+					return true
+				}
+				if in.OmitEmpty && empty.IsEmpty(value) {
+					return true
 				}
 				newArgs = formatWhereKeyValue(formatWhereKeyValueInput{
 					Db:        db,

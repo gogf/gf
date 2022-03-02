@@ -12,6 +12,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gvalid"
 )
 
 type SchemaRefs []SchemaRef
@@ -34,6 +35,13 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 	if len(tagMap) > 0 {
 		if err := gconv.Struct(oai.fileMapWithShortTags(tagMap), schema); err != nil {
 			return nil, gerror.Wrap(err, `mapping struct tags to Schema failed`)
+		}
+		// Validation info to OpenAPI schema pattern.
+		for _, tag := range gvalid.GetTags() {
+			if validation, ok := tagMap[tag]; ok {
+				schema.Pattern = validation
+				break
+			}
 		}
 	}
 	schemaRef.Value = schema

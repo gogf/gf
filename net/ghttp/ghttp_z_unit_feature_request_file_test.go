@@ -18,12 +18,12 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 func Test_Params_File_Single(t *testing.T) {
-	dstDirPath := gfile.TempDir(gtime.TimestampNanoStr())
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	dstDirPath := gfile.Temp(gtime.TimestampNanoStr())
+	s := g.Server(guid.S())
 	s.BindHandler("/upload/single", func(r *ghttp.Request) {
 		file := r.GetUploadFile("file")
 		if file == nil {
@@ -35,7 +35,6 @@ func Test_Params_File_Single(t *testing.T) {
 		}
 		r.Response.WriteExit("upload failed")
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -43,7 +42,7 @@ func Test_Params_File_Single(t *testing.T) {
 	// normal name
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		srcPath := gdebug.TestDataPath("upload", "file1.txt")
 		dstPath := gfile.Join(dstDirPath, "file1.txt")
@@ -59,7 +58,7 @@ func Test_Params_File_Single(t *testing.T) {
 	// randomly rename.
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		srcPath := gdebug.TestDataPath("upload", "file2.txt")
 		content := client.PostContent(ctx, "/upload/single", g.Map{
@@ -75,9 +74,8 @@ func Test_Params_File_Single(t *testing.T) {
 }
 
 func Test_Params_File_CustomName(t *testing.T) {
-	dstDirPath := gfile.TempDir(gtime.TimestampNanoStr())
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	dstDirPath := gfile.Temp(gtime.TimestampNanoStr())
+	s := g.Server(guid.S())
 	s.BindHandler("/upload/single", func(r *ghttp.Request) {
 		file := r.GetUploadFile("file")
 		if file == nil {
@@ -89,14 +87,13 @@ func Test_Params_File_CustomName(t *testing.T) {
 		}
 		r.Response.WriteExit("upload failed")
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		srcPath := gdebug.TestDataPath("upload", "file1.txt")
 		dstPath := gfile.Join(dstDirPath, "my.txt")
@@ -112,9 +109,8 @@ func Test_Params_File_CustomName(t *testing.T) {
 }
 
 func Test_Params_File_Batch(t *testing.T) {
-	dstDirPath := gfile.TempDir(gtime.TimestampNanoStr())
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	dstDirPath := gfile.Temp(gtime.TimestampNanoStr())
+	s := g.Server(guid.S())
 	s.BindHandler("/upload/batch", func(r *ghttp.Request) {
 		files := r.GetUploadFiles("file")
 		if files == nil {
@@ -125,7 +121,6 @@ func Test_Params_File_Batch(t *testing.T) {
 		}
 		r.Response.WriteExit("upload failed")
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -133,7 +128,7 @@ func Test_Params_File_Batch(t *testing.T) {
 	// normal name
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		srcPath1 := gdebug.TestDataPath("upload", "file1.txt")
 		srcPath2 := gdebug.TestDataPath("upload", "file2.txt")
@@ -153,7 +148,7 @@ func Test_Params_File_Batch(t *testing.T) {
 	// randomly rename.
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		srcPath1 := gdebug.TestDataPath("upload", "file1.txt")
 		srcPath2 := gdebug.TestDataPath("upload", "file2.txt")

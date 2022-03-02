@@ -431,7 +431,7 @@ func (m *IntStrMap) String() string {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (m *IntStrMap) MarshalJSON() ([]byte, error) {
+func (m IntStrMap) MarshalJSON() ([]byte, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return json.Marshal(m.data)

@@ -41,7 +41,7 @@ type Request struct {
 
 	context         context.Context        // Custom context for internal usage purpose.
 	handlers        []*handlerParsedItem   // All matched handlers containing handler, hook and middleware for this request.
-	handlerResponse handlerResponse        // Handler response object and its error value for Request/Response handler.
+	handlerResponse interface{}            // Handler response object for Request/Response handler.
 	hasHookHandler  bool                   // A bool marking whether there's hook handler in the handlers for performance purpose.
 	hasServeHandler bool                   // A bool marking whether there's serving handler in the handlers for performance purpose.
 	parsedQuery     bool                   // A bool marking whether the GET parameters parsed.
@@ -53,7 +53,7 @@ type Request struct {
 	formMap         map[string]interface{} // Form parameters map, which is nil if there's no form data from client.
 	bodyMap         map[string]interface{} // Body parameters map, which might be nil if there're no body content.
 	error           error                  // Current executing error of the request.
-	exit            bool                   // A bool marking whether current request is exited.
+	exitAll         bool                   // A bool marking whether current request is exited.
 	parsedHost      string                 // The parsed host name for current host used by GetHost function.
 	clientIp        string                 // The parsed client ip for current host used by GetClientIp function.
 	bodyContent     []byte                 // Request body content.
@@ -139,7 +139,7 @@ func (r *Request) Exit() {
 
 // ExitAll exits executing of current and following HTTP handlers.
 func (r *Request) ExitAll() {
-	r.exit = true
+	r.exitAll = true
 	panic(exceptionExitAll)
 }
 
@@ -150,7 +150,7 @@ func (r *Request) ExitHook() {
 
 // IsExited checks and returns whether current request is exited.
 func (r *Request) IsExited() bool {
-	return r.exit
+	return r.exitAll
 }
 
 // GetHeader retrieves and returns the header value with given `key`.
@@ -184,30 +184,31 @@ func (r *Request) IsAjaxRequest() bool {
 // GetClientIp returns the client ip of this request without port.
 // Note that this ip address might be modified by client header.
 func (r *Request) GetClientIp() string {
-	if len(r.clientIp) == 0 {
-		realIps := r.Header.Get("X-Forwarded-For")
-		if realIps != "" && len(realIps) != 0 && !strings.EqualFold("unknown", realIps) {
-			ipArray := strings.Split(realIps, ",")
-			r.clientIp = ipArray[0]
-		}
-		if r.clientIp == "" || strings.EqualFold("unknown", realIps) {
-			r.clientIp = r.Header.Get("Proxy-Client-IP")
-		}
-		if r.clientIp == "" || strings.EqualFold("unknown", realIps) {
-			r.clientIp = r.Header.Get("WL-Proxy-Client-IP")
-		}
-		if r.clientIp == "" || strings.EqualFold("unknown", realIps) {
-			r.clientIp = r.Header.Get("HTTP_CLIENT_IP")
-		}
-		if r.clientIp == "" || strings.EqualFold("unknown", realIps) {
-			r.clientIp = r.Header.Get("HTTP_X_FORWARDED_FOR")
-		}
-		if r.clientIp == "" || strings.EqualFold("unknown", realIps) {
-			r.clientIp = r.Header.Get("X-Real-IP")
-		}
-		if r.clientIp == "" || strings.EqualFold("unknown", realIps) {
-			r.clientIp = r.GetRemoteIp()
-		}
+	if r.clientIp != "" {
+		return r.clientIp
+	}
+	realIps := r.Header.Get("X-Forwarded-For")
+	if realIps != "" && len(realIps) != 0 && !strings.EqualFold("unknown", realIps) {
+		ipArray := strings.Split(realIps, ",")
+		r.clientIp = ipArray[0]
+	}
+	if r.clientIp == "" {
+		r.clientIp = r.Header.Get("Proxy-Client-IP")
+	}
+	if r.clientIp == "" {
+		r.clientIp = r.Header.Get("WL-Proxy-Client-IP")
+	}
+	if r.clientIp == "" {
+		r.clientIp = r.Header.Get("HTTP_CLIENT_IP")
+	}
+	if r.clientIp == "" {
+		r.clientIp = r.Header.Get("HTTP_X_FORWARDED_FOR")
+	}
+	if r.clientIp == "" {
+		r.clientIp = r.Header.Get("X-Real-IP")
+	}
+	if r.clientIp == "" {
+		r.clientIp = r.GetRemoteIp()
 	}
 	return r.clientIp
 }
@@ -250,6 +251,11 @@ func (r *Request) GetError() error {
 	return r.error
 }
 
+// SetError sets custom error for current request.
+func (r *Request) SetError(err error) {
+	r.error = err
+}
+
 // ReloadParam is used for modifying request parameter.
 // Sometimes, we want to modify request parameters through middleware, but directly modifying Request.Body
 // is invalid, so it clears the parsed* marks to make the parameters re-parsed.
@@ -261,6 +267,6 @@ func (r *Request) ReloadParam() {
 }
 
 // GetHandlerResponse retrieves and returns the handler response object and its error.
-func (r *Request) GetHandlerResponse() (res interface{}, err error) {
-	return r.handlerResponse.Object, r.handlerResponse.Error
+func (r *Request) GetHandlerResponse() interface{} {
+	return r.handlerResponse
 }

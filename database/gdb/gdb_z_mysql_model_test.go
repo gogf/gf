@@ -1075,6 +1075,28 @@ func Test_Model_Scan(t *testing.T) {
 	})
 }
 
+func Test_Model_Scan_NilSliceAttrWhenNoRecordsFound(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime gtime.Time
+		}
+		type Response struct {
+			Users []User `json:"users"`
+		}
+		var res Response
+		err := db.Model(table).Scan(&res.Users)
+		t.AssertNil(err)
+		t.Assert(res.Users, nil)
+	})
+}
+
 func Test_Model_OrderBy(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
@@ -1432,7 +1454,7 @@ func Test_Model_Where_ISNULL_2(t *testing.T) {
 			"create_time > 0":    nil,
 			"id":                 g.Slice{1, 2, 3},
 		}
-		result, err := db.Model(table).WherePri(conditions).Order("id asc").All()
+		result, err := db.Model(table).Where(conditions).Order("id asc").All()
 		t.AssertNil(err)
 		t.Assert(len(result), 3)
 		t.Assert(result[0]["id"].Int(), 1)
@@ -1446,19 +1468,19 @@ func Test_Model_Where_OmitEmpty(t *testing.T) {
 		conditions := g.Map{
 			"id < 4": "",
 		}
-		result, err := db.Model(table).WherePri(conditions).Order("id asc").All()
+		result, err := db.Model(table).Where(conditions).Order("id desc").All()
 		t.AssertNil(err)
 		t.Assert(len(result), 3)
-		t.Assert(result[0]["id"].Int(), 1)
+		t.Assert(result[0]["id"].Int(), 3)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		conditions := g.Map{
 			"id < 4": "",
 		}
-		result, err := db.Model(table).WherePri(conditions).OmitEmpty().Order("id asc").All()
+		result, err := db.Model(table).Where(conditions).OmitEmpty().Order("id desc").All()
 		t.AssertNil(err)
-		t.Assert(len(result), 3)
-		t.Assert(result[0]["id"].Int(), 1)
+		t.Assert(len(result), 10)
+		t.Assert(result[0]["id"].Int(), 10)
 	})
 }
 
@@ -2233,22 +2255,21 @@ func Test_Model_Prefix(t *testing.T) {
 func Test_Model_Schema1(t *testing.T) {
 	// db.SetDebug(true)
 
-	db.SetSchema(TestSchema1)
+	db = db.Schema(TestSchema1)
 	table := fmt.Sprintf(`%s_%s`, TableName, gtime.TimestampNanoStr())
 	createInitTableWithDb(db, table)
-	db.SetSchema(TestSchema2)
+	db = db.Schema(TestSchema2)
 	createInitTableWithDb(db, table)
 	defer func() {
-		db.SetSchema(TestSchema1)
+		db = db.Schema(TestSchema1)
 		dropTableWithDb(db, table)
-		db.SetSchema(TestSchema2)
+		db = db.Schema(TestSchema2)
 		dropTableWithDb(db, table)
-
-		db.SetSchema(TestSchema1)
+		db = db.Schema(TestSchema1)
 	}()
 	// Method.
 	gtest.C(t, func(t *gtest.T) {
-		db.SetSchema(TestSchema1)
+		db = db.Schema(TestSchema1)
 		r, err := db.Model(table).Update(g.Map{"nickname": "name_100"}, "id=1")
 		t.AssertNil(err)
 		n, _ := r.RowsAffected()
@@ -2258,7 +2279,7 @@ func Test_Model_Schema1(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(v.String(), "name_100")
 
-		db.SetSchema(TestSchema2)
+		db = db.Schema(TestSchema2)
 		v, err = db.Model(table).Value("nickname", "id=1")
 		t.AssertNil(err)
 		t.Assert(v.String(), "name_1")
@@ -2312,18 +2333,18 @@ func Test_Model_Schema1(t *testing.T) {
 func Test_Model_Schema2(t *testing.T) {
 	// db.SetDebug(true)
 
-	db.SetSchema(TestSchema1)
+	db = db.Schema(TestSchema1)
 	table := fmt.Sprintf(`%s_%s`, TableName, gtime.TimestampNanoStr())
 	createInitTableWithDb(db, table)
-	db.SetSchema(TestSchema2)
+	db = db.Schema(TestSchema2)
 	createInitTableWithDb(db, table)
 	defer func() {
-		db.SetSchema(TestSchema1)
+		db = db.Schema(TestSchema1)
 		dropTableWithDb(db, table)
-		db.SetSchema(TestSchema2)
+		db = db.Schema(TestSchema2)
 		dropTableWithDb(db, table)
 
-		db.SetSchema(TestSchema1)
+		db = db.Schema(TestSchema1)
 	}()
 	// Schema.
 	gtest.C(t, func(t *gtest.T) {

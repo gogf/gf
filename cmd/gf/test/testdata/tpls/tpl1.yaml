@@ -1,0 +1,2 @@
+server:
+  address: {{.server.address}}

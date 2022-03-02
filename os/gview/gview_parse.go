@@ -80,13 +80,13 @@ func (view *View) Parse(ctx context.Context, file string, params ...Params) (res
 		}
 		// Monitor template files changes using fsnotify asynchronously.
 		if resource == nil {
-			if _, err := gfsnotify.AddOnce("gview.Parse:"+folder, folder, func(event *gfsnotify.Event) {
+			if _, err = gfsnotify.AddOnce("gview.Parse:"+folder, folder, func(event *gfsnotify.Event) {
 				// CLEAR THEM ALL.
 				view.fileCacheMap.Clear()
 				templates.Clear()
 				gfsnotify.Exit()
 			}); err != nil {
-				intlog.Error(ctx, err)
+				intlog.Errorf(ctx, `%+v`, err)
 			}
 		}
 		return &fileCacheItem{
@@ -137,11 +137,11 @@ func (view *View) Parse(ctx context.Context, file string, params ...Params) (res
 		if err != nil {
 			return "", err
 		}
-		if err := newTpl.Execute(buffer, variables); err != nil {
+		if err = newTpl.Execute(buffer, variables); err != nil {
 			return "", err
 		}
 	} else {
-		if err := tpl.(*texttpl.Template).Execute(buffer, variables); err != nil {
+		if err = tpl.(*texttpl.Template).Execute(buffer, variables); err != nil {
 			return "", err
 		}
 	}
@@ -181,7 +181,7 @@ func (view *View) ParseContent(ctx context.Context, content string, params ...Pa
 		})
 	)
 	// Using memory lock to ensure concurrent safety for content parsing.
-	hash := strconv.FormatUint(ghash.DJBHash64([]byte(content)), 10)
+	hash := strconv.FormatUint(ghash.DJB64([]byte(content)), 10)
 	gmlock.LockFunc("gview.ParseContent:"+hash, func() {
 		if view.config.AutoEncode {
 			tpl, err = tpl.(*htmltpl.Template).Parse(content)
@@ -319,9 +319,7 @@ func (view *View) formatTemplateObjectCreatingError(filePath, tplName string, er
 // Note that, the returned `folder` is the template folder path, but not the folder of
 // the returned template file `path`.
 func (view *View) searchFile(ctx context.Context, file string) (path string, folder string, resource *gres.File, err error) {
-	var (
-		tempPath string
-	)
+	var tempPath string
 	// Firstly checking the resource manager.
 	if !gres.IsEmpty() {
 		// Try folders.
@@ -350,6 +348,13 @@ func (view *View) searchFile(ctx context.Context, file string) (path string, fol
 
 	// Secondly checking the file system.
 	if path == "" {
+		// Absolute path.
+		path = gfile.RealPath(file)
+		if path != "" {
+			folder = gfile.Dir(path)
+			return
+		}
+		// In search paths.
 		view.searchPaths.RLockFunc(func(array []string) {
 			for _, searchPath := range array {
 				searchPath = gstr.TrimRight(searchPath, `\/`)
@@ -359,7 +364,7 @@ func (view *View) searchFile(ctx context.Context, file string) (path string, fol
 						`\/`,
 					)
 					if path, _ = gspath.Search(searchPath, relativePath); path != "" {
-						folder = gfile.Dir(path)
+						folder = gfile.Join(searchPath, tryFolder)
 						return
 					}
 				}

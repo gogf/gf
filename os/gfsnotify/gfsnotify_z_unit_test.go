@@ -22,7 +22,7 @@ import (
 func TestWatcher_AddOnce(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		value := gtype.New()
-		path := gfile.TempDir(gconv.String(gtime.TimestampNano()))
+		path := gfile.Temp(gconv.String(gtime.TimestampNano()))
 		err := gfile.PutContents(path, "init")
 		t.Assert(err, nil)
 		defer gfile.Remove(path)
@@ -57,8 +57,8 @@ func TestWatcher_AddOnce(t *testing.T) {
 
 func TestWatcher_AddRemove(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		path1 := gfile.TempDir() + gfile.Separator + gconv.String(gtime.TimestampNano())
-		path2 := gfile.TempDir() + gfile.Separator + gconv.String(gtime.TimestampNano()) + "2"
+		path1 := gfile.Temp() + gfile.Separator + gconv.String(gtime.TimestampNano())
+		path2 := gfile.Temp() + gfile.Separator + gconv.String(gtime.TimestampNano()) + "2"
 		gfile.PutContents(path1, "1")
 		defer func() {
 			gfile.Remove(path1)
@@ -89,7 +89,7 @@ func TestWatcher_AddRemove(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		path1 := gfile.TempDir() + gfile.Separator + gconv.String(gtime.TimestampNano())
+		path1 := gfile.Temp() + gfile.Separator + gconv.String(gtime.TimestampNano())
 		gfile.PutContents(path1, "1")
 		defer func() {
 			gfile.Remove(path1)
@@ -124,7 +124,7 @@ func TestWatcher_AddRemove(t *testing.T) {
 
 func TestWatcher_Callback1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		path1 := gfile.TempDir(gtime.TimestampNanoStr())
+		path1 := gfile.Temp(gtime.TimestampNanoStr())
 		gfile.PutContents(path1, "1")
 		defer func() {
 			gfile.Remove(path1)
@@ -154,7 +154,7 @@ func TestWatcher_Callback1(t *testing.T) {
 func TestWatcher_Callback2(t *testing.T) {
 	// multiple callbacks
 	gtest.C(t, func(t *gtest.T) {
-		path1 := gfile.TempDir(gtime.TimestampNanoStr())
+		path1 := gfile.Temp(gtime.TimestampNanoStr())
 		t.Assert(gfile.PutContents(path1, "1"), nil)
 		defer func() {
 			gfile.Remove(path1)
@@ -198,7 +198,7 @@ func TestWatcher_WatchFolderWithoutRecursively(t *testing.T) {
 		var (
 			err     error
 			array   = garray.New(true)
-			dirPath = gfile.TempDir(gtime.TimestampNanoStr())
+			dirPath = gfile.Temp(gtime.TimestampNanoStr())
 		)
 		err = gfile.Mkdir(dirPath)
 		t.AssertNil(err)

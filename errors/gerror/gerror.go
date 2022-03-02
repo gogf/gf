@@ -241,22 +241,30 @@ func WrapCodeSkipf(code gcode.Code, skip int, err error, format string, args ...
 }
 
 // Code returns the error code of current error.
-// It returns CodeNil if it has no error code or it does not implements interface Code.
+// It returns CodeNil if it has no error code neither it does not implement interface Code.
 func Code(err error) gcode.Code {
-	if err != nil {
-		if e, ok := err.(iCode); ok {
-			return e.Code()
-		}
+	if err == nil {
+		return gcode.CodeNil
+	}
+	if e, ok := err.(iCode); ok {
+		return e.Code()
+	}
+	if e, ok := err.(iNext); ok {
+		return Code(e.Next())
 	}
 	return gcode.CodeNil
 }
 
 // Cause returns the root cause error of `err`.
 func Cause(err error) error {
-	if err != nil {
-		if e, ok := err.(iCause); ok {
-			return e.Cause()
-		}
+	if err == nil {
+		return nil
+	}
+	if e, ok := err.(iCause); ok {
+		return e.Cause()
+	}
+	if e, ok := err.(iNext); ok {
+		return Cause(e.Next())
 	}
 	return err
 }

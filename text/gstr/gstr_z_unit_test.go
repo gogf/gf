@@ -80,6 +80,7 @@ func Test_IsNumeric(t *testing.T) {
 		t.Assert(gstr.IsNumeric("1a我"), false)
 		t.Assert(gstr.IsNumeric("0123"), true)
 		t.Assert(gstr.IsNumeric("我是中国人"), false)
+		t.Assert(gstr.IsNumeric("1.2.3.4"), false)
 	})
 }
 

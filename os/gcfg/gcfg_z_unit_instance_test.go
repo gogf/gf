@@ -37,11 +37,13 @@ v4 = "1.234"
 
 `
 	gtest.C(t, func(t *gtest.T) {
-		path := DefaultConfigFile
-		err := gfile.PutContents(path, config)
-		t.Assert(err, nil)
+		var (
+			path = DefaultConfigFileName
+			err  = gfile.PutContents(path, config)
+		)
+		t.AssertNil(err)
 		defer func() {
-			t.Assert(gfile.Remove(path), nil)
+			t.AssertNil(gfile.Remove(path))
 		}()
 
 		c := Instance()

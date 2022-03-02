@@ -42,3 +42,9 @@ func Test_parseSequenceTag(t *testing.T) {
 		t.Assert(msg, "")
 	})
 }
+
+func Test_GetTags(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(structTagPriority, GetTags())
+	})
+}

@@ -16,6 +16,8 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 func Test_Router_Handler_Extended_Handler_WithObject(t *testing.T) {
@@ -28,8 +30,7 @@ func Test_Router_Handler_Extended_Handler_WithObject(t *testing.T) {
 		Age  int
 		Name string
 	}
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.Use(ghttp.MiddlewareHandlerResponse)
 	s.BindHandler("/test", func(ctx context.Context, req *TestReq) (res *TestRes, err error) {
 		return &TestRes{
@@ -45,7 +46,6 @@ func Test_Router_Handler_Extended_Handler_WithObject(t *testing.T) {
 			Name: req.Name,
 		}, gerror.New("error")
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -53,7 +53,7 @@ func Test_Router_Handler_Extended_Handler_WithObject(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/test?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18,"Name":"john"}}`)
 		t.Assert(client.GetContent(ctx, "/test/error"), `{"code":50,"message":"error","data":null}`)
@@ -82,7 +82,7 @@ type TestForHandlerWithObjectAndMeta2Res struct {
 
 type ControllerForHandlerWithObjectAndMeta1 struct{}
 
-func (ControllerForHandlerWithObjectAndMeta1) Test1(ctx context.Context, req *TestForHandlerWithObjectAndMeta1Req) (res *TestForHandlerWithObjectAndMeta1Res, err error) {
+func (ControllerForHandlerWithObjectAndMeta1) Index(ctx context.Context, req *TestForHandlerWithObjectAndMeta1Req) (res *TestForHandlerWithObjectAndMeta1Res, err error) {
 	return &TestForHandlerWithObjectAndMeta1Res{
 		Id:  1,
 		Age: req.Age,
@@ -132,13 +132,11 @@ func (ControllerForHandlerWithObjectAndMeta2) Test4(ctx context.Context, req *Te
 	}, nil
 }
 func Test_Router_Handler_Extended_Handler_WithObjectAndMeta(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.Use(ghttp.MiddlewareHandlerResponse)
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.ALL("/", new(ControllerForHandlerWithObjectAndMeta1))
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -146,7 +144,7 @@ func Test_Router_Handler_Extended_Handler_WithObjectAndMeta(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), `{"code":0,"message":"","data":null}`)
 		t.Assert(client.GetContent(ctx, "/custom-test1?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18}}`)
@@ -156,8 +154,7 @@ func Test_Router_Handler_Extended_Handler_WithObjectAndMeta(t *testing.T) {
 }
 
 func Test_Router_Handler_Extended_Handler_Group_Bind(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.Use(ghttp.MiddlewareHandlerResponse)
 	s.Group("/api/v1", func(group *ghttp.RouterGroup) {
 		group.Bind(
@@ -171,7 +168,6 @@ func Test_Router_Handler_Extended_Handler_Group_Bind(t *testing.T) {
 			new(ControllerForHandlerWithObjectAndMeta2),
 		)
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -179,7 +175,7 @@ func Test_Router_Handler_Extended_Handler_Group_Bind(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), `{"code":0,"message":"","data":null}`)
 		t.Assert(client.GetContent(ctx, "/api/v1/custom-test1?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18}}`)
@@ -193,5 +189,44 @@ func Test_Router_Handler_Extended_Handler_Group_Bind(t *testing.T) {
 		t.Assert(client.GetContent(ctx, "/api/v2/custom-test2?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Name":"john"}}`)
 		t.Assert(client.GetContent(ctx, "/api/v2/custom-test3?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18}}`)
 		t.Assert(client.GetContent(ctx, "/api/v2/custom-test4?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Name":"john"}}`)
+	})
+}
+
+// https://github.com/gogf/gf/issues/1626
+func Test_Issue1626(t *testing.T) {
+	type TestReq struct {
+		Name string `v:"required"`
+	}
+	type TestRes struct {
+		Name string
+	}
+	s := g.Server(guid.S())
+	s.Use(
+		ghttp.MiddlewareHandlerResponse,
+		func(r *ghttp.Request) {
+			r.Middleware.Next()
+			if err := r.GetError(); err != nil {
+				r.Response.ClearBuffer()
+				r.Response.Write(err.Error())
+			}
+		},
+	)
+	s.BindHandler("/test", func(ctx context.Context, req *TestReq) (res *TestRes, err error) {
+		return &TestRes{Name: req.Name}, nil
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		t.Assert(c.GetContent(ctx, "/test"), `The Name field is required`)
+		t.Assert(
+			gstr.Contains(c.GetContent(ctx, "/test?name=john"), `{"Name":"john"}`),
+			true,
+		)
 	})
 }
