@@ -55,32 +55,33 @@ func (oai *OpenApiV3) getRequestSchemaRef(in getRequestSchemaRefInput) (*SchemaR
 		return nil, err
 	}
 	if in.RequestDataField == "" && bizRequestStructSchemaRefExist {
+		// Normal request.
 		for k, v := range bizRequestStructSchemaRef.Value.Properties {
 			schema.Properties[k] = v
 		}
 	} else {
+		// Common request.
 		structFields, _ := gstructs.Fields(gstructs.FieldsInput{
 			Pointer:         in.RequestObject,
 			RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
 		})
 		for _, structField := range structFields {
-			var (
-				fieldName = structField.Name()
-			)
+			var fieldName = structField.Name()
 			if jsonName := structField.TagJsonName(); jsonName != "" {
 				fieldName = jsonName
 			}
 			switch len(dataFieldsPartsArray) {
 			case 1:
 				if structField.Name() == dataFieldsPartsArray[0] {
+					if err = oai.tagMapToSchema(structField.TagMap(), bizRequestStructSchemaRef.Value); err != nil {
+						return nil, err
+					}
 					schema.Properties[fieldName] = bizRequestStructSchemaRef
 					break
 				}
 			default:
 				if structField.Name() == dataFieldsPartsArray[0] {
-					var (
-						structFieldInstance = reflect.New(structField.Type().Type).Elem()
-					)
+					var structFieldInstance = reflect.New(structField.Type().Type).Elem()
 					schemaRef, err := oai.getRequestSchemaRef(getRequestSchemaRefInput{
 						BusinessStructName: in.BusinessStructName,
 						RequestObject:      structFieldInstance,

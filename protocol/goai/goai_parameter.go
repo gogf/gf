@@ -54,8 +54,7 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path
 		parameter.Name = field.Name()
 	}
 	if len(tagMap) > 0 {
-		err := gconv.Struct(oai.fileMapWithShortTags(tagMap), parameter)
-		if err != nil {
+		if err := gconv.Struct(oai.fileMapWithShortTags(tagMap), parameter); err != nil {
 			return nil, gerror.Wrap(err, `mapping struct tags to Parameter failed`)
 		}
 	}
