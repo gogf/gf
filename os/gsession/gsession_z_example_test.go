@@ -2,6 +2,7 @@ package gsession_test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gredis"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gsession"
@@ -203,8 +204,11 @@ func ExampleStorageFile_UpdateTTL() {
 	var (
 		ctx = gctx.New()
 	)
+
 	storage := gsession.NewStorageFile()
-	fmt.Println(storage.UpdateTTL(ctx, "id", time.Minute))
+	fmt.Println(storage.UpdateTTL(ctx, "id", time.Second*15))
+
+	time.Sleep(time.Second * 11)
 
 	// Output:
 	// <nil>
@@ -257,9 +261,111 @@ func ExampleStorageRedis_RemoveAll() {
 
 func ExampleStorageRedis_UpdateTTL() {
 	storage := gsession.NewStorageRedis(&gredis.Redis{})
-	err := storage.UpdateTTL(gctx.New(), "id", time.Minute)
+	err := storage.UpdateTTL(gctx.New(), "id", time.Second*15)
+	fmt.Println(err)
+
+	time.Sleep(time.Second * 11)
+
+	// Output:
+	// <nil>
+}
+
+func ExampleStorageRedisHashTable_Get() {
+	storage := gsession.NewStorageRedisHashTable(&gredis.Redis{})
+
+	v, err := storage.Get(gctx.New(), "id", "key")
+
+	fmt.Println(v)
 	fmt.Println(err)
 
 	// Output:
 	// <nil>
+	// redis adapter not initialized, missing configuration or adapter register?
+}
+
+func ExampleStorageRedisHashTable_Data() {
+	storage := gsession.NewStorageRedisHashTable(&gredis.Redis{})
+
+	data, err := storage.Data(gctx.New(), "id")
+
+	fmt.Println(data)
+	fmt.Println(err)
+
+	// Output:
+	// map[]
+	// redis adapter not initialized, missing configuration or adapter register?
+}
+
+func ExampleStorageRedisHashTable_GetSize() {
+	storage := gsession.NewStorageRedisHashTable(&gredis.Redis{})
+
+	size, err := storage.GetSize(gctx.New(), "id")
+
+	fmt.Println(size)
+	fmt.Println(err)
+
+	// Output:
+	// -1
+	// redis adapter not initialized, missing configuration or adapter register?
+}
+
+func ExampleStorageRedisHashTable_Remove() {
+	storage := gsession.NewStorageRedisHashTable(&gredis.Redis{})
+
+	err := storage.Remove(gctx.New(), "id", "key")
+
+	fmt.Println(err)
+
+	// Output:
+	// redis adapter not initialized, missing configuration or adapter register?
+}
+
+func ExampleStorageRedisHashTable_RemoveAll() {
+	storage := gsession.NewStorageRedisHashTable(&gredis.Redis{})
+
+	err := storage.RemoveAll(gctx.New(), "id")
+
+	fmt.Println(err)
+
+	// Output:
+	// redis adapter not initialized, missing configuration or adapter register?
+}
+
+func ExampleStorageRedisHashTable_GetSession() {
+	storage := gsession.NewStorageRedisHashTable(&gredis.Redis{})
+
+	strAnyMap := gmap.StrAnyMap{}
+
+	data, err := storage.GetSession(gctx.New(), "id", time.Second, &strAnyMap)
+
+	fmt.Println(data)
+	fmt.Println(err)
+
+	// Output:
+	// <nil>
+	// redis adapter not initialized, missing configuration or adapter register?
+}
+
+func ExampleStorageRedisHashTable_SetSession() {
+	storage := gsession.NewStorageRedisHashTable(&gredis.Redis{})
+
+	strAnyMap := gmap.StrAnyMap{}
+
+	err := storage.SetSession(gctx.New(), "id", &strAnyMap, time.Second)
+
+	fmt.Println(err)
+
+	// Output:
+	// redis adapter not initialized, missing configuration or adapter register?
+}
+
+func ExampleStorageRedisHashTable_UpdateTTL() {
+	storage := gsession.NewStorageRedisHashTable(&gredis.Redis{})
+
+	err := storage.UpdateTTL(gctx.New(), "id", time.Second)
+
+	fmt.Println(err)
+
+	// Output:
+	// redis adapter not initialized, missing configuration or adapter register?
 }
