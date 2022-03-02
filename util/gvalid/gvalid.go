@@ -198,9 +198,9 @@ var (
 	}
 )
 
-// parseSequenceTag parses one sequence tag to field, rule and error message.
+// ParseTagValue parses one sequence tag to field, rule and error message.
 // The sequence tag is like: [alias@]rule[...#msg...]
-func parseSequenceTag(tag string) (field, rule, msg string) {
+func ParseTagValue(tag string) (field, rule, msg string) {
 	// Complete sequence tag.
 	// Example: name@required|length:2,20|password3|same:password1#||密码强度不足|两次密码不一致
 	match, _ := gregex.MatchString(`\s*((\w+)\s*@){0,1}\s*([^#]+)\s*(#\s*(.*)){0,1}\s*`, tag)
