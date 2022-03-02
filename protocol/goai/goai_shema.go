@@ -142,9 +142,7 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 		if !gstr.IsLetterUpper(structField.Name()[0]) {
 			continue
 		}
-		var (
-			fieldName = structField.Name()
-		)
+		var fieldName = structField.Name()
 		if jsonName := structField.TagJsonName(); jsonName != "" {
 			fieldName = jsonName
 		}

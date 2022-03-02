@@ -12,6 +12,7 @@ import (
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Response is specified by OpenAPI/Swagger 3.0 standard.
@@ -59,10 +60,12 @@ func (oai *OpenApiV3) getResponseSchemaRef(in getResponseSchemaRefInput) (*Schem
 		return nil, err
 	}
 	if in.CommonResponseDataField == "" && bizResponseStructSchemaRefExist {
+		// Normal response.
 		for k, v := range bizResponseStructSchemaRef.Value.Properties {
 			schema.Properties[k] = v
 		}
 	} else {
+		// Common response.
 		structFields, _ := gstructs.Fields(gstructs.FieldsInput{
 			Pointer:         in.CommonResponseObject,
 			RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
@@ -77,14 +80,17 @@ func (oai *OpenApiV3) getResponseSchemaRef(in getResponseSchemaRefInput) (*Schem
 			switch len(dataFieldsPartsArray) {
 			case 1:
 				if structField.Name() == dataFieldsPartsArray[0] {
+					err = gconv.Struct(oai.fileMapWithShortTags(structField.TagMap()), bizResponseStructSchemaRef.Value)
+					if err != nil {
+						return nil, err
+					}
 					schema.Properties[fieldName] = bizResponseStructSchemaRef
 					break
 				}
 			default:
+				// Recursively creating common response object schema.
 				if structField.Name() == dataFieldsPartsArray[0] {
-					var (
-						structFieldInstance = reflect.New(structField.Type().Type).Elem()
-					)
+					var structFieldInstance = reflect.New(structField.Type().Type).Elem()
 					schemaRef, err := oai.getResponseSchemaRef(getResponseSchemaRefInput{
 						BusinessStructName:      in.BusinessStructName,
 						CommonResponseObject:    structFieldInstance,
