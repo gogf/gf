@@ -12,7 +12,6 @@ import (
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Response is specified by OpenAPI/Swagger 3.0 standard.
@@ -71,17 +70,14 @@ func (oai *OpenApiV3) getResponseSchemaRef(in getResponseSchemaRefInput) (*Schem
 			RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
 		})
 		for _, structField := range structFields {
-			var (
-				fieldName = structField.Name()
-			)
+			var fieldName = structField.Name()
 			if jsonName := structField.TagJsonName(); jsonName != "" {
 				fieldName = jsonName
 			}
 			switch len(dataFieldsPartsArray) {
 			case 1:
 				if structField.Name() == dataFieldsPartsArray[0] {
-					err = gconv.Struct(oai.fileMapWithShortTags(structField.TagMap()), bizResponseStructSchemaRef.Value)
-					if err != nil {
+					if err = oai.tagMapToSchema(structField.TagMap(), bizResponseStructSchemaRef.Value); err != nil {
 						return nil, err
 					}
 					schema.Properties[fieldName] = bizResponseStructSchemaRef

@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gmeta"
+	"github.com/gogf/gf/v2/util/gvalid"
 )
 
 type Schemas map[string]SchemaRef
@@ -114,9 +115,8 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 		}
 	)
 	if len(tagMap) > 0 {
-		err := gconv.Struct(oai.fileMapWithShortTags(tagMap), schema)
-		if err != nil {
-			return nil, gerror.Wrap(err, `mapping meta data tags to Schema failed`)
+		if err := oai.tagMapToSchema(tagMap, schema); err != nil {
+			return nil, err
 		}
 	}
 	if schema.Type != "" && schema.Type != TypeObject {
@@ -156,4 +156,20 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 		schema.Properties[fieldName] = *schemaRef
 	}
 	return schema, nil
+}
+
+func (oai *OpenApiV3) tagMapToSchema(tagMap map[string]string, schema *Schema) error {
+	var mergedTagMap = oai.fileMapWithShortTags(tagMap)
+	if err := gconv.Struct(mergedTagMap, schema); err != nil {
+		return gerror.Wrap(err, `mapping struct tags to Schema failed`)
+	}
+	// Validation info to OpenAPI schema pattern.
+	for _, tag := range gvalid.GetTags() {
+		if validationTagValue, ok := tagMap[tag]; ok {
+			_, validationRule, _ := gvalid.ParseTagValue(validationTagValue)
+			schema.Pattern = validationRule
+			break
+		}
+	}
+	return nil
 }
