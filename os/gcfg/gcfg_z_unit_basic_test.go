@@ -31,9 +31,11 @@ array = [1,2,3]
     cache = "127.0.0.1:6379,1"
 `
 	gtest.C(t, func(t *gtest.T) {
-		path := gcfg.DefaultConfigFile
-		err := gfile.PutContents(path, config)
-		t.Assert(err, nil)
+		var (
+			path = gcfg.DefaultConfigFileName
+			err  = gfile.PutContents(path, config)
+		)
+		t.AssertNil(err)
 		defer gfile.Remove(path)
 
 		c, err := gcfg.New()
@@ -47,9 +49,11 @@ array = [1,2,3]
 func Test_Basic2(t *testing.T) {
 	config := `log-path = "logs"`
 	gtest.C(t, func(t *gtest.T) {
-		path := gcfg.DefaultConfigFile
-		err := gfile.PutContents(path, config)
-		t.Assert(err, nil)
+		var (
+			path = gcfg.DefaultConfigFileName
+			err  = gfile.PutContents(path, config)
+		)
+		t.AssertNil(err)
 		defer func() {
 			_ = gfile.Remove(path)
 		}()

@@ -28,12 +28,11 @@ func MiddlewareHandlerResponse(r *Request) {
 	}
 
 	var (
-		err         error
-		res         interface{}
 		ctx         = r.Context()
+		err         = r.GetError()
+		res         = r.GetHandlerResponse()
 		internalErr error
 	)
-	res, err = r.GetHandlerResponse()
 	if err != nil {
 		code := gerror.Code(err)
 		if code == gcode.CodeNil {

@@ -7,26 +7,17 @@
 
 You can also install `gf` tool using pre-built binaries: https://github.com/gogf/gf/releases
 
-1. `Mac`
+1. `Mac` & `Linux`
     ```shell
-    # Intel.
-    wget -O gf https://github.com/gogf/gf/releases/latest/download/gf_darwin_amd64 && chmod +x gf && ./gf install && rm ./gf
-    
-   # M1.
-    wget -O gf https://github.com/gogf/gf/releases/latest/download/gf_darwin_arm64 && chmod +x gf && ./gf install && rm ./gf
+    wget -O gf https://github.com/gogf/gf/releases/latest/download/gf_$(go env GOOS)_$(go env GOARCH) && chmod +x gf && ./gf install -y && rm ./gf
     ```
    > If you're using `zsh`, you might need rename your alias by command `alias gf=gf` to resolve the conflicts between `gf` and `git fetch`.
 
-2. `Linux`
-    ```shell
-    wget -O gf https://github.com/gogf/gf/releases/latest/download/gf_linux_amd64 && chmod +x gf && ./gf install && rm ./gf
-    ```
-
-3. `Windows`
+2. `Windows`
 
    Manually download, execute it and then follow the instruction.
 
-4. Database `sqlite` and `oracle` are not support in `gf gen` command in default as it needs `cgo` and `gcc`, you can manually make some changes to the source codes and do the building.
+3. Database `sqlite` and `oracle` are not support in `gf gen` command in default as it needs `cgo` and `gcc`, you can manually make some changes to the source codes and do the building.
 
 ## 2. Commands
 ```html
