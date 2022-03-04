@@ -21,6 +21,13 @@ type Cookie struct {
 	response *Response              // Belonged HTTP response.
 }
 
+// CookieOptions provides security config for cookies
+type CookieOptions struct {
+	SameSite http.SameSite // cookie SameSite property
+	Secure   bool          // cookie Secure property
+	HttpOnly bool          // cookie HttpOnly property
+}
+
 // cookieItem is the item stored in Cookie.
 type cookieItem struct {
 	*http.Cookie      // Underlying cookie items.
@@ -88,24 +95,31 @@ func (c *Cookie) Set(key, value string) {
 		c.request.Server.GetCookieDomain(),
 		c.request.Server.GetCookiePath(),
 		c.request.Server.GetCookieMaxAge(),
+		CookieOptions{
+			SameSite: c.request.Server.GetCookieSameSite(),
+			Secure:   c.request.Server.GetCookieSecure(),
+			HttpOnly: c.request.Server.GetCookieHttpOnly(),
+		},
 	)
 }
 
 // SetCookie sets cookie item with given domain, path and expiration age.
-// The optional parameter `httpOnly` specifies if the cookie item is only available in HTTP,
+// The optional parameter `options` specifies extra security configurations,
 // which is usually empty.
-func (c *Cookie) SetCookie(key, value, domain, path string, maxAge time.Duration, httpOnly ...bool) {
+func (c *Cookie) SetCookie(key, value, domain, path string, maxAge time.Duration, options ...CookieOptions) {
 	c.init()
-	isHttpOnly := false
-	if len(httpOnly) > 0 {
-		isHttpOnly = httpOnly[0]
+	config := CookieOptions{}
+	if len(options) > 0 {
+		config = options[0]
 	}
 	httpCookie := &http.Cookie{
 		Name:     key,
 		Value:    value,
 		Path:     path,
 		Domain:   domain,
-		HttpOnly: isHttpOnly,
+		HttpOnly: config.HttpOnly,
+		SameSite: config.SameSite,
+		Secure:   config.Secure,
 	}
 	if maxAge != 0 {
 		httpCookie.Expires = time.Now().Add(maxAge)
@@ -136,6 +150,11 @@ func (c *Cookie) SetSessionId(id string) {
 		c.request.Server.GetCookieDomain(),
 		c.request.Server.GetCookiePath(),
 		c.server.GetSessionCookieMaxAge(),
+		CookieOptions{
+			SameSite: c.request.Server.GetCookieSameSite(),
+			Secure:   c.request.Server.GetCookieSecure(),
+			HttpOnly: c.request.Server.GetCookieHttpOnly(),
+		},
 	)
 }
 
