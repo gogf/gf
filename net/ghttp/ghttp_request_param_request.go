@@ -22,12 +22,13 @@ import (
 //
 // Note that if there are multiple parameters with the same name, the parameters are
 // retrieved and overwrote in order of priority: router < query < body < form < custom.
+// fix the bug that the default value of r.get is invalid.
 func (r *Request) GetRequest(key string, def ...interface{}) *gvar.Var {
 	value := r.GetParam(key)
-	if value == nil {
+	if value.Val() == nil {
 		value = r.GetForm(key)
 	}
-	if value == nil {
+	if value.Val() == nil {
 		r.parseBody()
 		if len(r.bodyMap) > 0 {
 			if v := r.bodyMap[key]; v != nil {
@@ -35,13 +36,13 @@ func (r *Request) GetRequest(key string, def ...interface{}) *gvar.Var {
 			}
 		}
 	}
-	if value == nil {
+	if value.Val() == nil {
 		value = r.GetQuery(key)
 	}
-	if value == nil {
+	if value.Val() == nil {
 		value = r.GetRouter(key)
 	}
-	if value != nil {
+	if value.Val() != nil {
 		return value
 	}
 	if len(def) > 0 {
