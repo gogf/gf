@@ -101,3 +101,37 @@ func ExampleNewConnKeyCrt() {
 	// Output:
 	// <nil>
 }
+
+func ExampleConn_Send() {
+	var (
+		addr = "127.0.0.1:80"
+	)
+
+	s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
+		time.Sleep(time.Second * 2)
+		conn.Close()
+	})
+	defer s.Close()
+	go s.Run()
+
+	time.Sleep(time.Millisecond * 10)
+
+	var (
+		err error
+	)
+	conn, _ := gtcp.NewConn(addr)
+	if conn != nil {
+		for {
+			err = conn.Send([]byte("hello"), gtcp.Retry{Count: 1})
+			if err != nil {
+				break
+			}
+			time.Sleep(time.Second)
+		}
+	}
+
+	fmt.Println(err != nil)
+
+	// Output:
+	// true
+}
