@@ -196,7 +196,7 @@ func ExampleListMap_Sets() {
 	m.Sets(addMap)
 	fmt.Println(m)
 
-	// Output:
+	// May Output:
 	// {"key1":"val1","key2":"val2","key3":"val3"}
 }
 
