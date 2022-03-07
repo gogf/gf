@@ -43,7 +43,6 @@ type ExternalDocs struct {
 }
 
 const (
-	HttpMethodAll     = `ALL`
 	HttpMethodGet     = `GET`
 	HttpMethodPut     = `PUT`
 	HttpMethodPost    = `POST`
@@ -85,7 +84,11 @@ const (
 	TagNameConsumes = `consumes`
 	TagNameType     = `type`
 	TagNameDomain   = `domain`
-	TagNameValidate = `v`
+)
+
+const (
+	patternKeyForRequired = `required`
+	patternKeyForIn       = `in:`
 )
 
 var (

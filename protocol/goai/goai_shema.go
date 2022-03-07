@@ -10,6 +10,7 @@ import (
 	"reflect"
 
 	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gstructs"
@@ -154,6 +155,16 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 		}
 		schema.Properties.Set(fieldName, *schemaRef)
 	}
+
+	schema.Properties.Iterator(func(key string, ref SchemaRef) bool {
+		if ref.Value != nil && ref.Value.Pattern != "" {
+			validationRuleSet := gset.NewStrSetFrom(gstr.Split(ref.Value.Pattern, "|"))
+			if validationRuleSet.Contains(patternKeyForRequired) {
+				schema.Required = append(schema.Required, key)
+			}
+		}
+		return true
+	})
 	return schema, nil
 }
 
@@ -165,8 +176,16 @@ func (oai *OpenApiV3) tagMapToSchema(tagMap map[string]string, schema *Schema) e
 	// Validation info to OpenAPI schema pattern.
 	for _, tag := range gvalid.GetTags() {
 		if validationTagValue, ok := tagMap[tag]; ok {
-			_, validationRule, _ := gvalid.ParseTagValue(validationTagValue)
-			schema.Pattern = validationRule
+			_, validationRules, _ := gvalid.ParseTagValue(validationTagValue)
+			schema.Pattern = validationRules
+			// Enum checks.
+			if len(schema.Enum) == 0 {
+				for _, rule := range gstr.SplitAndTrim(validationRules, "|") {
+					if gstr.HasPrefix(rule, patternKeyForIn) {
+						schema.Enum = gconv.Interfaces(gstr.SplitAndTrim(rule[len(patternKeyForIn):], ","))
+					}
+				}
+			}
 			break
 		}
 	}

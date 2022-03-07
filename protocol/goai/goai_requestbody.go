@@ -97,7 +97,6 @@ func (oai *OpenApiV3) getRequestSchemaRef(in getRequestSchemaRefInput) (*SchemaR
 			}
 		}
 	}
-
 	return &SchemaRef{
 		Value: schema,
 	}, nil
