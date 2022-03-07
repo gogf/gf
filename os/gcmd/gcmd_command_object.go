@@ -221,9 +221,7 @@ func newCommandFromMethod(object interface{}, method reflect.Value) (command *Co
 		return
 	}
 
-	var (
-		inputObject reflect.Value
-	)
+	var inputObject reflect.Value
 	if method.Type().In(1).Kind() == reflect.Ptr {
 		inputObject = reflect.New(method.Type().In(1).Elem()).Elem()
 	} else {
@@ -264,8 +262,19 @@ func newCommandFromMethod(object interface{}, method reflect.Value) (command *Co
 				}
 			} else {
 				// Read argument from command line option name.
-				if arg.Orphan && parser.GetOpt(arg.Name) != nil {
-					data[arg.Name] = "true"
+				if arg.Orphan {
+					if orphanValue := parser.GetOpt(arg.Name); orphanValue != nil {
+						if orphanValue.String() == "" {
+							// Eg: gf -f
+							data[arg.Name] = "true"
+						} else {
+							// Adapter with common user habits.
+							// Eg:
+							// `gf -f=0`: which parameter `f` is parsed as false
+							// `gf -f=1`: which parameter `f` is parsed as true
+							data[arg.Name] = orphanValue.Bool()
+						}
+					}
 				}
 			}
 		}
