@@ -9,6 +9,7 @@ package goai
 import (
 	"fmt"
 
+	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
@@ -54,7 +55,8 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path
 		parameter.Name = field.Name()
 	}
 	if len(tagMap) > 0 {
-		if err := gconv.Struct(oai.fileMapWithShortTags(tagMap), parameter); err != nil {
+		err := gconv.Struct(oai.fileMapWithShortTags(tagMap), parameter)
+		if err != nil {
 			return nil, gerror.Wrap(err, `mapping struct tags to Parameter failed`)
 		}
 	}
@@ -80,10 +82,6 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path
 		parameter.Required = true
 
 	case ParameterInCookie, ParameterInHeader, ParameterInQuery:
-		// Check validation tag.
-		if validateTagValue := field.Tag(TagNameValidate); gstr.ContainsI(validateTagValue, `required`) {
-			parameter.Required = true
-		}
 
 	default:
 		return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid tag value "%s" for In`, parameter.In)
@@ -94,6 +92,13 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path
 		return nil, err
 	}
 	parameter.Schema = schemaRef
+
+	// Required check.
+	if parameter.Schema.Value != nil && parameter.Schema.Value.Pattern != "" {
+		if gset.NewStrSetFrom(gstr.Split(parameter.Schema.Value.Pattern, "|")).Contains(patternKeyForRequired) {
+			parameter.Required = true
+		}
+	}
 
 	return &ParameterRef{
 		Ref:   "",
