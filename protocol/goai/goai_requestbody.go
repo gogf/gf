@@ -47,18 +47,19 @@ func (oai *OpenApiV3) getRequestSchemaRef(in getRequestSchemaRefInput) (*SchemaR
 	}
 
 	var (
-		dataFieldsPartsArray                                      = gstr.Split(in.RequestDataField, ".")
-		bizRequestStructSchemaRef, bizRequestStructSchemaRefExist = oai.Components.Schemas[in.BusinessStructName]
-		schema, err                                               = oai.structToSchema(in.RequestObject)
+		dataFieldsPartsArray      = gstr.Split(in.RequestDataField, ".")
+		bizRequestStructSchemaRef = oai.Components.Schemas.Get(in.BusinessStructName)
+		schema, err               = oai.structToSchema(in.RequestObject)
 	)
 	if err != nil {
 		return nil, err
 	}
-	if in.RequestDataField == "" && bizRequestStructSchemaRefExist {
+	if in.RequestDataField == "" && bizRequestStructSchemaRef != nil {
 		// Normal request.
-		for k, v := range bizRequestStructSchemaRef.Value.Properties {
-			schema.Properties[k] = v
-		}
+		bizRequestStructSchemaRef.Value.Properties.Iterator(func(key string, ref SchemaRef) bool {
+			schema.Properties.Set(key, ref)
+			return true
+		})
 	} else {
 		// Common request.
 		structFields, _ := gstructs.Fields(gstructs.FieldsInput{
@@ -76,7 +77,7 @@ func (oai *OpenApiV3) getRequestSchemaRef(in getRequestSchemaRefInput) (*SchemaR
 					if err = oai.tagMapToSchema(structField.TagMap(), bizRequestStructSchemaRef.Value); err != nil {
 						return nil, err
 					}
-					schema.Properties[fieldName] = bizRequestStructSchemaRef
+					schema.Properties.Set(fieldName, *bizRequestStructSchemaRef)
 					break
 				}
 			default:
@@ -90,7 +91,7 @@ func (oai *OpenApiV3) getRequestSchemaRef(in getRequestSchemaRefInput) (*SchemaR
 					if err != nil {
 						return nil, err
 					}
-					schema.Properties[fieldName] = *schemaRef
+					schema.Properties.Set(fieldName, *schemaRef)
 					break
 				}
 			}

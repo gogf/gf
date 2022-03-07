@@ -9,6 +9,7 @@ package goai
 import (
 	"reflect"
 
+	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gstructs"
@@ -17,8 +18,6 @@ import (
 	"github.com/gogf/gf/v2/util/gmeta"
 	"github.com/gogf/gf/v2/util/gvalid"
 )
-
-type Schemas map[string]SchemaRef
 
 // Schema is specified by OpenAPI/Swagger 3.0 standard.
 type Schema struct {
@@ -78,8 +77,8 @@ func (oai *OpenApiV3) addSchema(object ...interface{}) error {
 }
 
 func (oai *OpenApiV3) doAddSchemaSingle(object interface{}) error {
-	if oai.Components.Schemas == nil {
-		oai.Components.Schemas = map[string]SchemaRef{}
+	if oai.Components.Schemas.refs == nil {
+		oai.Components.Schemas.refs = gmap.NewListMap()
 	}
 
 	var (
@@ -88,21 +87,21 @@ func (oai *OpenApiV3) doAddSchemaSingle(object interface{}) error {
 	)
 
 	// Already added.
-	if _, ok := oai.Components.Schemas[structTypeName]; ok {
+	if oai.Components.Schemas.Get(structTypeName) != nil {
 		return nil
 	}
 	// Take the holder first.
-	oai.Components.Schemas[structTypeName] = SchemaRef{}
+	oai.Components.Schemas.Set(structTypeName, SchemaRef{})
 
 	schema, err := oai.structToSchema(object)
 	if err != nil {
 		return err
 	}
 
-	oai.Components.Schemas[structTypeName] = SchemaRef{
+	oai.Components.Schemas.Set(structTypeName, SchemaRef{
 		Ref:   "",
 		Value: schema,
-	}
+	})
 	return nil
 }
 
@@ -111,7 +110,7 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 	var (
 		tagMap = gmeta.Data(object)
 		schema = &Schema{
-			Properties: map[string]SchemaRef{},
+			Properties: createSchemas(),
 		}
 	)
 	if len(tagMap) > 0 {
@@ -153,7 +152,7 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 		if err != nil {
 			return nil, err
 		}
-		schema.Properties[fieldName] = *schemaRef
+		schema.Properties.Set(fieldName, *schemaRef)
 	}
 	return schema, nil
 }
