@@ -8,6 +8,7 @@ package gmap_test
 
 import (
 	"fmt"
+
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/json"
@@ -562,12 +563,10 @@ func ExampleListMap_String() {
 
 func ExampleListMap_MarshalJSON() {
 	var m gmap.ListMap
-	m.Sets(g.MapAnyAny{
-		"k1": "v1",
-		"k2": "v2",
-		"k3": "v3",
-		"k4": "v4",
-	})
+	m.Set("k1", "v1")
+	m.Set("k2", "v2")
+	m.Set("k3", "v3")
+	m.Set("k4", "v4")
 
 	bytes, err := json.Marshal(&m)
 	if err == nil {
