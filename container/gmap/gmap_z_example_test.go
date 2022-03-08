@@ -8,6 +8,7 @@ package gmap_test
 
 import (
 	"fmt"
+
 	"github.com/gogf/gf/v2/util/gutil"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -305,7 +306,7 @@ func ExampleNewTreeMapFrom() {
 	n := gmap.NewListMapFrom(m.Map(), true)
 	fmt.Println(n.Map())
 
-	// Output:
+	// May Output:
 	// map[key1:var1 key2:var2]
 	// map[key1:var1 key2:var2]
 }
