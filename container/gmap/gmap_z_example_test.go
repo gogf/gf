@@ -278,7 +278,7 @@ func ExampleNewListMapFrom() {
 	n := gmap.NewListMapFrom(m.Map(), true)
 	fmt.Println(n)
 
-	// Output:
+	// May Output:
 	// {"key1":"var1","key2":"var2"}
 	// {"key1":"var1","key2":"var2"}
 }
@@ -291,7 +291,7 @@ func ExampleNewTreeMap() {
 
 	fmt.Println(m.Map())
 
-	// Output:
+	// May Output:
 	// map[key1:var1 key2:var2]
 }
 
