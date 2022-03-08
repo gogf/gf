@@ -9,6 +9,7 @@ on:
 env:
   TZ: Asia/Shanghai
 
+
 jobs:
   build:
     name: Build And Release
@@ -34,6 +35,15 @@ jobs:
         run: |
           cd cmd/gf
           gf build main.go -n gf -a all -s all
+
+      - name: Move Files Before Release
+        run: |
+          cd cmd/gf/temp
+          for OS in *;do for FILE in $OS/*;\
+          do if [[ ${OS} =~ 'windows' ]];\
+          then rm -rf noupx &&  mkdir noupx && mv $FILE noupx/gf_$OS.exe && rm -rf $OS;\
+          else mv $FILE gf_$OS && rm -rf $OS;\
+          fi;done;done
 
       - name: Create Github Release
         id: create_release
