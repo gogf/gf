@@ -36,7 +36,7 @@ jobs:
           cd cmd/gf
           gf build main.go -n gf -a all -s all
 
-      - name: Move Files Before Release
+      - name: Move Files Before Upx
         run: |
           cd cmd/gf/temp
           for OS in *;do for FILE in $OS/*;\
@@ -44,6 +44,12 @@ jobs:
           then rm -rf noupx &&  mkdir noupx && mv $FILE noupx/gf_$OS.exe && rm -rf $OS;\
           else mv $FILE gf_$OS && rm -rf $OS;\
           fi;done;done
+
+      - name: Move Files After Upx
+        run: |
+          cd cmd/gf/temp
+          mv noupx/* ./ && rm -rf noupx
+          ls -l
 
       - name: Create Github Release
         id: create_release
