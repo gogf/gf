@@ -186,7 +186,6 @@ func Test_ListMap_Json(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		data := g.MapAnyAny{
 			"k1": "v1",
-			"k2": "v2",
 		}
 		m1 := gmap.NewListMapFrom(data)
 		b1, err1 := json.Marshal(m1)
