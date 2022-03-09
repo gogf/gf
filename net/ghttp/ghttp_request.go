@@ -19,6 +19,7 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/os/gview"
 	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/guid"
 )
 
@@ -229,7 +230,7 @@ func (r *Request) GetUrl() string {
 		proto  = r.Header.Get("X-Forwarded-Proto")
 	)
 
-	if r.TLS != nil || (proto != "" && strings.ToLower(proto) == "https") {
+	if r.TLS != nil || gstr.Equal(proto, "https") {
 		scheme = "https"
 	}
 	return fmt.Sprintf(`%s://%s%s`, scheme, r.Host, r.URL.String())
