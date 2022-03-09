@@ -189,7 +189,7 @@ func (c *AdapterRedis) GetOrSet(ctx context.Context, key interface{}, value inte
 	if err != nil {
 		return nil, err
 	}
-	if result == nil {
+	if result.IsNil() {
 		return gvar.New(value), c.Set(ctx, key, value, duration)
 	}
 	return
@@ -207,7 +207,7 @@ func (c *AdapterRedis) GetOrSetFunc(ctx context.Context, key interface{}, f Func
 	if err != nil {
 		return nil, err
 	}
-	if v == nil {
+	if v.IsNil() {
 		value, err := f(ctx)
 		if err != nil {
 			return nil, err

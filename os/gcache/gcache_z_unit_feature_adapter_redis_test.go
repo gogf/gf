@@ -7,6 +7,7 @@
 package gcache_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -175,5 +176,37 @@ func Test_AdapterRedis_SetIfNotExist(t *testing.T) {
 		d, _ := cacheRedis.GetExpire(ctx, key)
 		t.Assert(d > time.Millisecond*500, true)
 		t.Assert(d <= time.Second, true)
+	})
+}
+
+func Test_AdapterRedis_GetOrSetFunc(t *testing.T) {
+	defer cacheRedis.Clear(ctx)
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			key    = "key"
+			value1 = "valueFunc"
+		)
+		v, err := cacheRedis.GetOrSetFunc(ctx, key, func(ctx context.Context) (value interface{}, err error) {
+			value = value1
+			return
+		}, 0)
+		t.AssertNil(err)
+		t.Assert(v, value1)
+	})
+}
+
+func Test_AdapterRedis_GetOrSetFuncLock(t *testing.T) {
+	defer cacheRedis.Clear(ctx)
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			key    = "key"
+			value1 = "valueFuncLock"
+		)
+		v, err := cacheRedis.GetOrSetFuncLock(ctx, key, func(ctx context.Context) (value interface{}, err error) {
+			value = value1
+			return
+		}, time.Second*60)
+		t.AssertNil(err)
+		t.Assert(v, value1)
 	})
 }
