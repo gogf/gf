@@ -18,8 +18,12 @@ func (s *Server) handleAccessLog(r *Request) {
 	if !s.IsAccessLogEnabled() {
 		return
 	}
-	scheme := "http"
-	if r.TLS != nil {
+	var (
+		scheme = "http"
+		proto  = r.Header.Get("X-Forwarded-Proto")
+	)
+
+	if r.TLS != nil || gstr.Equal(proto, "https") {
 		scheme = "https"
 	}
 	s.Logger().File(s.config.AccessLogPattern).
