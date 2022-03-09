@@ -9,15 +9,16 @@ package goai
 import (
 	"reflect"
 
-	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gmeta"
+	"github.com/gogf/gf/v2/util/gvalid"
 )
-
-type Schemas map[string]SchemaRef
 
 // Schema is specified by OpenAPI/Swagger 3.0 standard.
 type Schema struct {
@@ -65,6 +66,8 @@ type Discriminator struct {
 	Mapping      map[string]string `json:"mapping,omitempty" yaml:"mapping,omitempty"`
 }
 
+// addSchema creates schemas with objects.
+// Note that the `object` can be array alias like: `type Res []Item`.
 func (oai *OpenApiV3) addSchema(object ...interface{}) error {
 	for _, v := range object {
 		if err := oai.doAddSchemaSingle(v); err != nil {
@@ -75,8 +78,8 @@ func (oai *OpenApiV3) addSchema(object ...interface{}) error {
 }
 
 func (oai *OpenApiV3) doAddSchemaSingle(object interface{}) error {
-	if oai.Components.Schemas == nil {
-		oai.Components.Schemas = map[string]SchemaRef{}
+	if oai.Components.Schemas.refs == nil {
+		oai.Components.Schemas.refs = gmap.NewListMap()
 	}
 
 	var (
@@ -85,53 +88,61 @@ func (oai *OpenApiV3) doAddSchemaSingle(object interface{}) error {
 	)
 
 	// Already added.
-	if _, ok := oai.Components.Schemas[structTypeName]; ok {
+	if oai.Components.Schemas.Get(structTypeName) != nil {
 		return nil
 	}
 	// Take the holder first.
-	oai.Components.Schemas[structTypeName] = SchemaRef{}
+	oai.Components.Schemas.Set(structTypeName, SchemaRef{})
 
 	schema, err := oai.structToSchema(object)
 	if err != nil {
 		return err
 	}
 
-	oai.Components.Schemas[structTypeName] = SchemaRef{
+	oai.Components.Schemas.Set(structTypeName, SchemaRef{
 		Ref:   "",
 		Value: schema,
-	}
+	})
 	return nil
 }
 
 // structToSchema converts and returns given struct object as Schema.
 func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
-	structFields, _ := gstructs.Fields(gstructs.FieldsInput{
-		Pointer:         object,
-		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
-	})
 	var (
 		tagMap = gmeta.Data(object)
 		schema = &Schema{
-			Properties: map[string]SchemaRef{},
+			Properties: createSchemas(),
 		}
 	)
 	if len(tagMap) > 0 {
-		err := gconv.Struct(oai.fileMapWithShortTags(tagMap), schema)
-		if err != nil {
-			return nil, gerror.WrapCode(gcode.CodeInternalError, err, `mapping meta data tags to Schema failed`)
+		if err := oai.tagMapToSchema(tagMap, schema); err != nil {
+			return nil, err
 		}
 	}
 	if schema.Type != "" && schema.Type != TypeObject {
 		return schema, nil
 	}
+	// []struct.
+	if utils.IsArray(object) {
+		schema.Type = TypeArray
+		subSchemaRef, err := oai.newSchemaRefWithGolangType(reflect.TypeOf(object).Elem(), nil)
+		if err != nil {
+			return nil, err
+		}
+		schema.Items = subSchemaRef
+		return schema, nil
+	}
+	// struct.
+	structFields, _ := gstructs.Fields(gstructs.FieldsInput{
+		Pointer:         object,
+		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
+	})
 	schema.Type = TypeObject
 	for _, structField := range structFields {
 		if !gstr.IsLetterUpper(structField.Name()[0]) {
 			continue
 		}
-		var (
-			fieldName = structField.Name()
-		)
+		var fieldName = structField.Name()
 		if jsonName := structField.TagJsonName(); jsonName != "" {
 			fieldName = jsonName
 		}
@@ -142,7 +153,41 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 		if err != nil {
 			return nil, err
 		}
-		schema.Properties[fieldName] = *schemaRef
+		schema.Properties.Set(fieldName, *schemaRef)
 	}
+
+	schema.Properties.Iterator(func(key string, ref SchemaRef) bool {
+		if ref.Value != nil && ref.Value.Pattern != "" {
+			validationRuleSet := gset.NewStrSetFrom(gstr.Split(ref.Value.Pattern, "|"))
+			if validationRuleSet.Contains(patternKeyForRequired) {
+				schema.Required = append(schema.Required, key)
+			}
+		}
+		return true
+	})
 	return schema, nil
+}
+
+func (oai *OpenApiV3) tagMapToSchema(tagMap map[string]string, schema *Schema) error {
+	var mergedTagMap = oai.fileMapWithShortTags(tagMap)
+	if err := gconv.Struct(mergedTagMap, schema); err != nil {
+		return gerror.Wrap(err, `mapping struct tags to Schema failed`)
+	}
+	// Validation info to OpenAPI schema pattern.
+	for _, tag := range gvalid.GetTags() {
+		if validationTagValue, ok := tagMap[tag]; ok {
+			_, validationRules, _ := gvalid.ParseTagValue(validationTagValue)
+			schema.Pattern = validationRules
+			// Enum checks.
+			if len(schema.Enum) == 0 {
+				for _, rule := range gstr.SplitAndTrim(validationRules, "|") {
+					if gstr.HasPrefix(rule, patternKeyForIn) {
+						schema.Enum = gconv.Interfaces(gstr.SplitAndTrim(rule[len(patternKeyForIn):], ","))
+					}
+				}
+			}
+			break
+		}
+	}
+	return nil
 }

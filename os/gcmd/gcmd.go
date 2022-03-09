@@ -39,17 +39,15 @@ func GetOpt(name string, def ...string) *gvar.Var {
 	if v := command.GetOpt(name, def...); v != "" {
 		return gvar.New(v)
 	}
+	if command.ContainsOpt(name) {
+		return gvar.New("")
+	}
 	return nil
 }
 
 // GetOptAll returns all parsed options.
 func GetOptAll() map[string]string {
 	return command.GetOptAll()
-}
-
-// ContainsOpt checks whether option named `name` exist in the arguments.
-func ContainsOpt(name string) bool {
-	return command.ContainsOpt(name)
 }
 
 // GetArg returns the argument at `index` as gvar.Var.
@@ -74,7 +72,7 @@ func GetArgAll() []string {
 // 2. Environment arguments are in uppercase format, eg: GF_`package name`_<variable name>；
 func GetOptWithEnv(key string, def ...interface{}) *gvar.Var {
 	cmdKey := utils.FormatCmdKey(key)
-	if ContainsOpt(cmdKey) {
+	if command.ContainsOpt(cmdKey) {
 		return gvar.New(GetOpt(cmdKey))
 	} else {
 		envKey := utils.FormatEnvKey(key)

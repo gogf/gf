@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/container/gtype"
 )
 
-// Mutex The high level Mutex, which implements more rich features for mutex.
+// Mutex is a high level Mutex, which implements more rich features for mutex.
 type Mutex struct {
 	state   *gtype.Int32  // Indicates the state of mutex. -1: writing locked; > 1 reading locked.
 	writer  *gtype.Int32  // Pending writer count.

@@ -390,3 +390,10 @@ func Test_EndOfYear(t *testing.T) {
 		t.Assert(timeTemp1.Format("Y-m-d H:i:s"), "2020-12-31 23:59:59")
 	})
 }
+
+func Test_OnlyTime(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		obj := gtime.NewFromStr("18:24:06")
+		t.Assert(obj.String(), "18:24:06")
+	})
+}

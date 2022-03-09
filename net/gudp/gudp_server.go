@@ -7,14 +7,12 @@
 package gudp
 
 import (
-	"context"
 	"net"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 
 	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -74,28 +72,28 @@ func (s *Server) SetHandler(handler func(*Conn)) {
 
 // Close closes the connection.
 // It will make server shutdowns immediately.
-func (s *Server) Close() error {
-	return s.conn.Close()
+func (s *Server) Close() (err error) {
+	err = s.conn.Close()
+	if err != nil {
+		err = gerror.Wrap(err, "connection failed")
+	}
+	return
 }
 
 // Run starts listening UDP connection.
 func (s *Server) Run() error {
-	var (
-		ctx = context.TODO()
-	)
 	if s.handler == nil {
 		err := gerror.NewCode(gcode.CodeMissingConfiguration, "start running failed: socket handler not defined")
-		glog.Error(ctx, err)
 		return err
 	}
 	addr, err := net.ResolveUDPAddr("udp", s.address)
 	if err != nil {
-		glog.Error(ctx, err)
+		err = gerror.Wrapf(err, `net.ResolveUDPAddr failed for address "%s"`, s.address)
 		return err
 	}
 	conn, err := net.ListenUDP("udp", addr)
 	if err != nil {
-		glog.Error(ctx, err)
+		err = gerror.Wrapf(err, `net.ListenUDP failed for address "%s"`, s.address)
 		return err
 	}
 	s.conn = NewConnByNetConn(conn)

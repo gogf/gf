@@ -20,8 +20,9 @@ type CustomMsg = map[string]interface{}
 
 // fieldRule defined the alias name and rule string for specified field.
 type fieldRule struct {
-	Name string // Alias name for the field.
-	Rule string // Rule string like: "max:6"
+	Name   string // Alias name for the field.
+	Rule   string // Rule string like: "max:6"
+	IsMeta bool   // Is this rule is from gmeta.Meta, which marks it as whole struct rule.
 }
 
 // iNoValidation is an interface that marks current struct not validated by package `gvalid`.
@@ -197,11 +198,16 @@ var (
 	}
 )
 
-// parseSequenceTag parses one sequence tag to field, rule and error message.
+// ParseTagValue parses one sequence tag to field, rule and error message.
 // The sequence tag is like: [alias@]rule[...#msg...]
-func parseSequenceTag(tag string) (field, rule, msg string) {
+func ParseTagValue(tag string) (field, rule, msg string) {
 	// Complete sequence tag.
 	// Example: name@required|length:2,20|password3|same:password1#||密码强度不足|两次密码不一致
 	match, _ := gregex.MatchString(`\s*((\w+)\s*@){0,1}\s*([^#]+)\s*(#\s*(.*)){0,1}\s*`, tag)
 	return strings.TrimSpace(match[2]), strings.TrimSpace(match[3]), strings.TrimSpace(match[5])
+}
+
+// GetTags returns the validation tags.
+func GetTags() []string {
+	return structTagPriority
 }

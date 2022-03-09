@@ -48,7 +48,7 @@ func doStructs(params interface{}, pointer interface{}, mapping map[string]strin
 	}
 
 	defer func() {
-		// Catch the panic, especially the reflect operation panics.
+		// Catch the panic, especially the reflection operation panics.
 		if exception := recover(); exception != nil {
 			if v, ok := exception.(error); ok && gerror.HasStack(v) {
 				err = v
@@ -102,7 +102,7 @@ func doStructs(params interface{}, pointer interface{}, mapping map[string]strin
 	case reflect.Slice, reflect.Array:
 		paramsList = make([]interface{}, paramsRv.Len())
 		for i := 0; i < paramsRv.Len(); i++ {
-			paramsList[i] = paramsRv.Index(i)
+			paramsList[i] = paramsRv.Index(i).Interface()
 		}
 	default:
 		var paramsMaps = Maps(params)

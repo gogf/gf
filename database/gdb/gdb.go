@@ -48,12 +48,12 @@ type DB interface {
 	// Also see Core.Schema.
 	Schema(schema string) *Schema
 
-	// With creates and returns an ORM model based on meta data of given object.
+	// With creates and returns an ORM model based on metadata of given object.
 	// Also see Core.With.
 	With(objects ...interface{}) *Model
 
 	// Open creates a raw connection object for database with given node configuration.
-	// Note that it is not recommended using the this function manually.
+	// Note that it is not recommended using the function manually.
 	// Also see DriverMysql.Open.
 	Open(config *ConfigNode) (*sql.DB, error)
 
@@ -100,7 +100,8 @@ type DB interface {
 	DoDelete(ctx context.Context, link Link, table string, condition string, args ...interface{}) (result sql.Result, err error)                   // See Core.DoDelete.
 	DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error)                                            // See Core.DoQuery.
 	DoExec(ctx context.Context, link Link, sql string, args ...interface{}) (result sql.Result, err error)                                         // See Core.DoExec.
-	DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error)                     // See Core.DoCommit.
+	DoFilter(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error)                     // See Core.DoFilter.
+	DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutput, err error)                                                                // See Core.DoCommit.
 	DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, error)                                                                           // See Core.DoPrepare.
 
 	// ===========================================================================
@@ -144,7 +145,6 @@ type DB interface {
 	GetCache() *gcache.Cache            // See Core.GetCache.
 	SetDebug(debug bool)                // See Core.SetDebug.
 	GetDebug() bool                     // See Core.GetDebug.
-	SetSchema(schema string)            // See Core.SetSchema.
 	GetSchema() string                  // See Core.GetSchema.
 	GetPrefix() string                  // See Core.GetPrefix.
 	GetGroup() string                   // See Core.GetGroup.
@@ -166,6 +166,7 @@ type DB interface {
 	GetChars() (charLeft string, charRight string)                                                   // See Core.GetChars.
 	Tables(ctx context.Context, schema ...string) (tables []string, err error)                       // See Core.Tables.
 	TableFields(ctx context.Context, table string, schema ...string) (map[string]*TableField, error) // See Core.TableFields.
+	ConvertDataForRecord(ctx context.Context, data interface{}) map[string]interface{}               // See Core.ConvertDataForRecord
 	FilteredLink() string                                                                            // FilteredLink is used for filtering sensitive information in `Link` configuration before output it to tracing server.
 }
 
@@ -174,12 +175,33 @@ type Core struct {
 	db     DB              // DB interface object.
 	ctx    context.Context // Context for chaining operation only. Do not set a default value in Core initialization.
 	group  string          // Configuration group name.
+	schema string          // Custom schema for this object.
 	debug  *gtype.Bool     // Enable debug mode for the database, which can be changed in runtime.
 	cache  *gcache.Cache   // Cache manager, SQL result cache only.
 	links  *gmap.StrAnyMap // links caches all created links by node.
-	schema *gtype.String   // Custom schema for this object.
 	logger *glog.Logger    // Logger for logging functionality.
 	config *ConfigNode     // Current config node.
+}
+
+// DoCommitInput is the input parameters for function DoCommit.
+type DoCommitInput struct {
+	Db            *sql.DB
+	Tx            *sql.Tx
+	Stmt          *sql.Stmt
+	Link          Link
+	Sql           string
+	Args          []interface{}
+	Type          string
+	IsTransaction bool
+}
+
+// DoCommitOutput is the output parameters for function DoCommit.
+type DoCommitOutput struct {
+	Result    sql.Result  // Result is the result of exec statement.
+	Records   []Record    // Records is the result of query statement.
+	Stmt      *Stmt       // Stmt is the Statement object result for Prepare.
+	Tx        *TX         // Tx is the transaction object result for Begin.
+	RawResult interface{} // RawResult is the underlying result, which might be sql.Result/*sql.Rows/*sql.Row.
 }
 
 // Driver is the interface for integrating sql drivers into package gdb.
@@ -255,10 +277,6 @@ const (
 	queryTypeCount          = 1
 	unionTypeNormal         = 0
 	unionTypeAll            = 1
-	insertOptionDefault     = 0
-	insertOptionReplace     = 1
-	insertOptionSave        = 2
-	insertOptionIgnore      = 3
 	defaultBatchNumber      = 10               // Per count for batch insert/replace/save.
 	defaultMaxIdleConnCount = 10               // Max idle connection count in pool.
 	defaultMaxOpenConnCount = 0                // Max open connection count in pool. Default is no limit.
@@ -267,13 +285,31 @@ const (
 	ctxTimeoutTypeQuery
 	ctxTimeoutTypePrepare
 	commandEnvKeyForDryRun = "gf.gdb.dryrun"
-	sqlTypeBegin           = `DB.Begin`
-	sqlTypeTXCommit        = `TX.Commit`
-	sqlTypeTXRollback      = `TX.Rollback`
-	sqlTypeQueryContext    = `DB.QueryContext`
-	sqlTypeExecContext     = `DB.ExecContext`
-	sqlTypePrepareContext  = `DB.PrepareContext`
 	modelForDaoSuffix      = `ForDao`
+	dbRoleSlave            = `slave`
+)
+
+const (
+	InsertOptionDefault = 0
+	InsertOptionReplace = 1
+	InsertOptionSave    = 2
+	InsertOptionIgnore  = 3
+)
+
+const (
+	SqlTypeBegin               = "DB.Begin"
+	SqlTypeTXCommit            = "TX.Commit"
+	SqlTypeTXRollback          = "TX.Rollback"
+	SqlTypeExecContext         = "DB.ExecContext"
+	SqlTypeQueryContext        = "DB.QueryContext"
+	SqlTypePrepareContext      = "DB.PrepareContext"
+	SqlTypeStmtExecContext     = "DB.Statement.ExecContext"
+	SqlTypeStmtQueryContext    = "DB.Statement.QueryContext"
+	SqlTypeStmtQueryRowContext = "DB.Statement.QueryRowContext"
+)
+
+const (
+	DriverNameMysql = `mysql`
 )
 
 var (
@@ -282,11 +318,7 @@ var (
 
 	// driverMap manages all custom registered driver.
 	driverMap = map[string]Driver{
-		"mysql":  &DriverMysql{},
-		"mssql":  &DriverMssql{},
-		"pgsql":  &DriverPgsql{},
-		"oracle": &DriverOracle{},
-		"sqlite": &DriverSqlite{},
+		DriverNameMysql: &DriverMysql{},
 	}
 
 	// lastOperatorRegPattern is the regular expression pattern for a string
@@ -321,10 +353,15 @@ func Register(name string, driver Driver) error {
 	return nil
 }
 
-// New creates and returns an ORM object with global configurations.
+// New creates and returns an ORM object with given configuration node.
+func New(node ConfigNode) (db DB, err error) {
+	return doNewByNode(node, "")
+}
+
+// NewByGroup creates and returns an ORM object with global configurations.
 // The parameter `name` specifies the configuration group name,
 // which is DefaultGroupName in default.
-func New(group ...string) (db DB, err error) {
+func NewByGroup(group ...string) (db DB, err error) {
 	groupName := configs.group
 	if len(group) > 0 && group[0] != "" {
 		groupName = group[0]
@@ -339,29 +376,9 @@ func New(group ...string) (db DB, err error) {
 		)
 	}
 	if _, ok := configs.config[groupName]; ok {
-		if node, err := getConfigNodeByGroup(groupName, true); err == nil {
-			c := &Core{
-				group:  groupName,
-				debug:  gtype.NewBool(),
-				cache:  gcache.New(),
-				links:  gmap.NewStrAnyMap(true),
-				schema: gtype.NewString(),
-				logger: glog.New(),
-				config: node,
-			}
-			if v, ok := driverMap[node.Type]; ok {
-				c.db, err = v.New(c, node)
-				if err != nil {
-					return nil, err
-				}
-				return c.db, nil
-			} else {
-				return nil, gerror.NewCodef(
-					gcode.CodeInvalidConfiguration,
-					`cannot find database driver for specified database type "%s", did you misspell type name "%s" or forget importing the database driver?`,
-					node.Type, node.Type,
-				)
-			}
+		var node *ConfigNode
+		if node, err = getConfigNodeByGroup(groupName, true); err == nil {
+			return doNewByNode(*node, groupName)
 		} else {
 			return nil, err
 		}
@@ -374,6 +391,28 @@ func New(group ...string) (db DB, err error) {
 	}
 }
 
+// doNewByNode creates and returns an ORM object with given configuration node and group name.
+func doNewByNode(node ConfigNode, group string) (db DB, err error) {
+	c := &Core{
+		group:  group,
+		debug:  gtype.NewBool(),
+		cache:  gcache.New(),
+		links:  gmap.NewStrAnyMap(true),
+		logger: glog.New(),
+		config: &node,
+	}
+	if v, ok := driverMap[node.Type]; ok {
+		c.db, err = v.New(c, &node)
+		if err != nil {
+			return nil, err
+		}
+		return c.db, nil
+	}
+	errorMsg := `cannot find database driver for specified database type "%s"`
+	errorMsg += `, did you misspell type name "%s" or forget importing the database driver?`
+	return nil, gerror.NewCodef(gcode.CodeInvalidConfiguration, errorMsg, node.Type, node.Type)
+}
+
 // Instance returns an instance for DB operations.
 // The parameter `name` specifies the configuration group name,
 // which is DefaultGroupName in default.
@@ -383,7 +422,7 @@ func Instance(name ...string) (db DB, err error) {
 		group = name[0]
 	}
 	v := instances.GetOrSetFuncLock(group, func() interface{} {
-		db, err = New(group)
+		db, err = NewByGroup(group)
 		return db
 	})
 	if v != nil {
@@ -400,10 +439,12 @@ func Instance(name ...string) (db DB, err error) {
 func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 	if list, ok := configs.config[group]; ok {
 		// Separates master and slave configuration nodes array.
-		masterList := make(ConfigGroup, 0)
-		slaveList := make(ConfigGroup, 0)
+		var (
+			masterList = make(ConfigGroup, 0)
+			slaveList  = make(ConfigGroup, 0)
+		)
 		for i := 0; i < len(list); i++ {
-			if list[i].Role == "slave" {
+			if list[i].Role == dbRoleSlave {
 				slaveList = append(slaveList, list[i])
 			} else {
 				masterList = append(masterList, list[i])
@@ -455,13 +496,15 @@ func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 		}
 	}
 	// Exclude the right border value.
-	r := grand.N(0, total-1)
-	min := 0
-	max := 0
+	var (
+		min    = 0
+		max    = 0
+		random = grand.N(0, total-1)
+	)
 	for i := 0; i < len(cg); i++ {
 		max = min + cg[i].Weight*100
 		// fmt.Printf("r: %d, min: %d, max: %d\n", r, min, max)
-		if r >= min && r < max {
+		if random >= min && random < max {
 			return &cg[i]
 		} else {
 			min = max
@@ -470,21 +513,26 @@ func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 	return nil
 }
 
-// getSqlDb retrieves and returns a underlying database connection object.
+// getSqlDb retrieves and returns an underlying database connection object.
 // The parameter `master` specifies whether retrieves master node connection if
 // master-slave nodes are configured.
 func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error) {
 	// Load balance.
-	node, err := getConfigNodeByGroup(c.group, master)
-	if err != nil {
-		return nil, err
+	var node *ConfigNode
+	if c.group != "" {
+		node, err = getConfigNodeByGroup(c.group, master)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		node = c.config
 	}
 	// Default value checks.
 	if node.Charset == "" {
 		node.Charset = defaultCharset
 	}
 	// Changes the schema.
-	nodeSchema := c.schema.Val()
+	nodeSchema := c.schema
 	if len(schema) > 0 && schema[0] != "" {
 		nodeSchema = schema[0]
 	}
@@ -513,8 +561,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 			}
 		}()
 
-		sqlDb, err = c.db.Open(node)
-		if err != nil {
+		if sqlDb, err = c.db.Open(node); err != nil {
 			return nil
 		}
 

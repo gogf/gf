@@ -467,7 +467,7 @@ func (set *Set) Walk(f func(item interface{}) interface{}) *Set {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (set *Set) MarshalJSON() ([]byte, error) {
+func (set Set) MarshalJSON() ([]byte, error) {
 	return json.Marshal(set.Slice())
 }
 

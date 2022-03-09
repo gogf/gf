@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/gogf/gf/v2/errors/gerror"
 
 	"github.com/gogf/gf/v2/text/gstr"
 )
@@ -27,6 +28,7 @@ const (
 	defaultPoolIdleTimeout = 10 * time.Second
 	defaultPoolWaitTimeout = 10 * time.Second
 	defaultPoolMaxLifeTime = 30 * time.Second
+	defaultMaxRetries      = -1
 )
 
 // NewAdapterGoRedis creates and returns a redis adapter using go-redis.
@@ -36,6 +38,7 @@ func NewAdapterGoRedis(config *Config) *AdapterGoRedis {
 		Addrs:        gstr.SplitAndTrim(config.Address, ","),
 		Password:     config.Pass,
 		DB:           config.Db,
+		MaxRetries:   defaultMaxRetries,
 		MinIdleConns: config.MinIdle,
 		MaxConnAge:   config.MaxConnLifetime,
 		IdleTimeout:  config.IdleTimeout,
@@ -54,8 +57,11 @@ func NewAdapterGoRedis(config *Config) *AdapterGoRedis {
 
 // Close closes the redis connection pool, which will release all connections reserved by this pool.
 // It is commonly not necessary to call Close manually.
-func (r *AdapterGoRedis) Close(ctx context.Context) error {
-	return r.client.Close()
+func (r *AdapterGoRedis) Close(ctx context.Context) (err error) {
+	if err = r.client.Close(); err != nil {
+		err = gerror.Wrap(err, `Redis Client Close failed`)
+	}
+	return
 }
 
 // Conn retrieves and returns a connection object for continuous operations.
@@ -85,5 +91,11 @@ func fillWithDefaultConfiguration(config *Config) {
 	}
 	if config.MaxConnLifetime == 0 {
 		config.MaxConnLifetime = defaultPoolMaxLifeTime
+	}
+	if config.WriteTimeout == 0 {
+		config.WriteTimeout = -1
+	}
+	if config.ReadTimeout == 0 {
+		config.ReadTimeout = -1
 	}
 }

@@ -39,9 +39,10 @@ type Config struct {
 	RotateSize           int64          `json:"rotateSize"`           // Rotate the logging file if its size > 0 in bytes.
 	RotateExpire         time.Duration  `json:"rotateExpire"`         // Rotate the logging file if its mtime exceeds this duration.
 	RotateBackupLimit    int            `json:"rotateBackupLimit"`    // Max backup for rotated files, default is 0, means no backups.
-	RotateBackupExpire   time.Duration  `json:"rotateBackupExpire"`   // Max expire for rotated files, which is 0 in default, means no expiration.
+	RotateBackupExpire   time.Duration  `json:"rotateBackupExpire"`   // Max expires for rotated files, which is 0 in default, means no expiration.
 	RotateBackupCompress int            `json:"rotateBackupCompress"` // Compress level for rotated files using gzip algorithm. It's 0 in default, means no compression.
 	RotateCheckInterval  time.Duration  `json:"rotateCheckInterval"`  // Asynchronously checks the backups and expiration at intervals. It's 1 hour in default.
+	StdoutColorDisabled  bool           `json:"stdoutColorDisabled"`  // Logging level prefix with color to writer or not (false in default).
 	WriterColorEnable    bool           `json:"writerColorEnable"`    // Logging level prefix with color to writer or not (false in default).
 }
 
@@ -73,7 +74,7 @@ func (l *Logger) SetConfig(config Config) error {
 	// Necessary validation.
 	if config.Path != "" {
 		if err := l.SetPath(config.Path); err != nil {
-			intlog.Error(context.TODO(), err)
+			intlog.Errorf(context.TODO(), `%+v`, err)
 			return err
 		}
 	}
@@ -192,7 +193,7 @@ func (l *Logger) GetCtxKeys() []interface{} {
 }
 
 // SetWriter sets the customized logging `writer` for logging.
-// The `writer` object should implements the io.Writer interface.
+// The `writer` object should implement the io.Writer interface.
 // Developer can use customized logging `writer` to redirect logging output to another service,
 // eg: kafka, mysql, mongodb, etc.
 func (l *Logger) SetWriter(writer io.Writer) {
@@ -212,7 +213,7 @@ func (l *Logger) SetPath(path string) error {
 	}
 	if !gfile.Exists(path) {
 		if err := gfile.Mkdir(path); err != nil {
-			return gerror.WrapCodef(gcode.CodeOperationFailed, err, `Mkdir "%s" failed in PWD "%s"`, path, gfile.Pwd())
+			return gerror.Wrapf(err, `Mkdir "%s" failed in PWD "%s"`, path, gfile.Pwd())
 		}
 	}
 	l.config.Path = strings.TrimRight(path, gfile.Separator)
@@ -253,7 +254,12 @@ func (l *Logger) SetHandlers(handlers ...Handler) {
 	l.config.Handlers = handlers
 }
 
-// SetWriterColorEnable sets the file logging with color
+// SetWriterColorEnable enables file/writer logging with color.
 func (l *Logger) SetWriterColorEnable(enabled bool) {
 	l.config.WriterColorEnable = enabled
+}
+
+// SetStdoutColorDisabled disables stdout logging with color.
+func (l *Logger) SetStdoutColorDisabled(disabled bool) {
+	l.config.StdoutColorDisabled = disabled
 }

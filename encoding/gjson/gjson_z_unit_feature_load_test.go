@@ -29,10 +29,16 @@ func Test_Load_JSON1(t *testing.T) {
 	})
 	// JSON
 	gtest.C(t, func(t *gtest.T) {
+		errData := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]`)
+		_, err := gjson.LoadContentType("json", errData, true)
+		t.AssertNE(err, nil)
+	})
+	// JSON
+	gtest.C(t, func(t *gtest.T) {
 		path := "test.json"
 		gfile.PutBytes(path, data)
 		defer gfile.Remove(path)
-		j, err := gjson.Load(path)
+		j, err := gjson.Load(path, true)
 		t.Assert(err, nil)
 		t.Assert(j.Get("n").String(), "123456789")
 		t.Assert(j.Get("m").Map(), g.Map{"k": "v"})
@@ -66,6 +72,22 @@ func Test_Load_XML(t *testing.T) {
 		t.Assert(j.Get("doc.m.k").String(), "v")
 		t.Assert(j.Get("doc.a").Slice(), g.Slice{"1", "2", "3"})
 		t.Assert(j.Get("doc.a.1").Int(), 2)
+	})
+	// XML
+	gtest.C(t, func(t *gtest.T) {
+		j, err := gjson.LoadXml(data, true)
+		t.Assert(err, nil)
+		t.Assert(j.Get("doc.n").String(), "123456789")
+		t.Assert(j.Get("doc.m").Map(), g.Map{"k": "v"})
+		t.Assert(j.Get("doc.m.k").String(), "v")
+		t.Assert(j.Get("doc.a").Slice(), g.Slice{"1", "2", "3"})
+		t.Assert(j.Get("doc.a.1").Int(), 2)
+	})
+	// XML
+	gtest.C(t, func(t *gtest.T) {
+		errData := []byte(`<doc><a>1</a><a>2</a><a>3</a><m><k>v</k></m><n>123456789</n><doc>`)
+		_, err := gjson.LoadContentType("xml", errData, true)
+		t.AssertNE(err, nil)
 	})
 	// XML
 	gtest.C(t, func(t *gtest.T) {
@@ -122,6 +144,16 @@ m:
 	})
 	// YAML
 	gtest.C(t, func(t *gtest.T) {
+		j, err := gjson.LoadYaml(data, true)
+		t.Assert(err, nil)
+		t.Assert(j.Get("n").String(), "123456789")
+		t.Assert(j.Get("m").Map(), g.Map{"k": "v"})
+		t.Assert(j.Get("m.k").String(), "v")
+		t.Assert(j.Get("a").Slice(), g.Slice{1, 2, 3})
+		t.Assert(j.Get("a.1").Int(), 2)
+	})
+	// YAML
+	gtest.C(t, func(t *gtest.T) {
 		path := "test.yaml"
 		gfile.PutBytes(path, data)
 		defer gfile.Remove(path)
@@ -142,6 +174,11 @@ func Test_Load_YAML2(t *testing.T) {
 		t.Assert(err, nil)
 		t.Assert(j.Get("i"), "123456789")
 	})
+	gtest.C(t, func(t *gtest.T) {
+		errData := []byte("i # 123456789")
+		_, err := gjson.LoadContentType("yaml", errData, true)
+		t.AssertNE(err, nil)
+	})
 }
 
 func Test_Load_TOML1(t *testing.T) {
@@ -155,6 +192,16 @@ n = 123456789
 	// TOML
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.LoadContent(data)
+		t.Assert(err, nil)
+		t.Assert(j.Get("n").String(), "123456789")
+		t.Assert(j.Get("m").Map(), g.Map{"k": "v"})
+		t.Assert(j.Get("m.k").String(), "v")
+		t.Assert(j.Get("a").Slice(), g.Slice{"1", "2", "3"})
+		t.Assert(j.Get("a.1").Int(), 2)
+	})
+	// TOML
+	gtest.C(t, func(t *gtest.T) {
+		j, err := gjson.LoadToml(data, true)
 		t.Assert(err, nil)
 		t.Assert(j.Get("n").String(), "123456789")
 		t.Assert(j.Get("m").Map(), g.Map{"k": "v"})
@@ -183,6 +230,11 @@ func Test_Load_TOML2(t *testing.T) {
 		j, err := gjson.LoadContent(data)
 		t.Assert(err, nil)
 		t.Assert(j.Get("i"), "123456789")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		errData := []byte("i : 123456789")
+		_, err := gjson.LoadContentType("toml", errData, true)
+		t.AssertNE(err, nil)
 	})
 }
 
@@ -244,6 +296,26 @@ enable=true
 		if err != nil {
 			gtest.Fatal(err)
 		}
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		j, err := gjson.LoadIni(data, true)
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		t.Assert(j.Get("addr.ip").String(), "127.0.0.1")
+		t.Assert(j.Get("addr.port").String(), "9001")
+		t.Assert(j.Get("addr.enable").String(), "true")
+		t.Assert(j.Get("DBINFO.type").String(), "mysql")
+		t.Assert(j.Get("DBINFO.user").String(), "root")
+		t.Assert(j.Get("DBINFO.password").String(), "password")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		errData := []byte("i : 123456789")
+		_, err := gjson.LoadContentType("ini", errData, true)
+		t.AssertNE(err, nil)
 	})
 }
 

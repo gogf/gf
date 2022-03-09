@@ -323,7 +323,7 @@ func Test_Home(t *testing.T) {
 			err   error
 		)
 
-		reads, err = gfile.Home()
+		reads, err = gfile.Home("a", "b")
 		t.Assert(err, nil)
 		t.AssertNE(reads, "")
 	})

@@ -226,7 +226,7 @@ func (t *Time) String() string {
 	if t.IsZero() {
 		return ""
 	}
-	return t.Format("Y-m-d H:i:s")
+	return t.wrapper.String()
 }
 
 // IsZero reports whether t represents the zero time instant,
@@ -253,6 +253,7 @@ func (t *Time) Add(d time.Duration) *Time {
 // AddStr parses the given duration as string and adds it to current time.
 func (t *Time) AddStr(duration string) (*Time, error) {
 	if d, err := time.ParseDuration(duration); err != nil {
+		err = gerror.Wrapf(err, `time.ParseDuration failed for string "%s"`, duration)
 		return nil, err
 	} else {
 		return t.Add(d), nil
@@ -445,7 +446,9 @@ func (t *Time) EndOfYear() *Time {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (t *Time) MarshalJSON() ([]byte, error) {
+// Note that, DO NOT use `(t *Time) MarshalJSON() ([]byte, error)` as it looses interface
+// implement of `MarshalJSON` for struct of Time.
+func (t Time) MarshalJSON() ([]byte, error) {
 	return []byte(`"` + t.String() + `"`), nil
 }
 
@@ -475,6 +478,4 @@ func (t *Time) UnmarshalText(data []byte) error {
 }
 
 // NoValidation marks this struct object will not be validated by package gvalid.
-func (t *Time) NoValidation() {
-
-}
+func (t *Time) NoValidation() {}

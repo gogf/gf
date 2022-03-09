@@ -57,9 +57,24 @@ func Test_Command_NewFromObject_Help(t *testing.T) {
 		t.Assert(cmd.Name, "root")
 
 		os.Args = []string{"root"}
-		value, err := cmd.RunWithValue(ctx)
+		value, err := cmd.RunWithValueError(ctx)
 		t.AssertNil(err)
 		t.Assert(value, nil)
+	})
+}
+
+func Test_Command_NewFromObject_Run(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			ctx      = gctx.New()
+			cmd, err = gcmd.NewFromObject(&TestCmdObject{})
+		)
+		t.AssertNil(err)
+		t.Assert(cmd.Name, "root")
+
+		os.Args = []string{"root", "test", "-n=john"}
+
+		cmd.Run(ctx)
 	})
 }
 
@@ -73,7 +88,7 @@ func Test_Command_NewFromObject_RunWithValue(t *testing.T) {
 		t.Assert(cmd.Name, "root")
 
 		os.Args = []string{"root", "test", "-n=john"}
-		value, err := cmd.RunWithValue(ctx)
+		value, err := cmd.RunWithValueError(ctx)
 		t.AssertNil(err)
 		t.Assert(value, `{"Content":"john"}`)
 	})
@@ -91,7 +106,7 @@ func Test_Command_AddObject(t *testing.T) {
 		t.AssertNil(err)
 
 		os.Args = []string{"start", "root", "test", "-n=john"}
-		value, err := command.RunWithValue(ctx)
+		value, err := command.RunWithValueError(ctx)
 		t.AssertNil(err)
 		t.Assert(value, `{"Content":"john"}`)
 	})
@@ -134,7 +149,20 @@ func Test_Command_RootTag(t *testing.T) {
 		t.AssertNil(err)
 
 		os.Args = []string{"root", "-n=john"}
-		value, err := cmd.RunWithValue(ctx)
+		value, err := cmd.RunWithValueError(ctx)
+		t.AssertNil(err)
+		t.Assert(value, `{"Content":"john"}`)
+	})
+	// Pointer.
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			ctx = gctx.New()
+		)
+		cmd, err := gcmd.NewFromObject(&TestObjectForRootTag{})
+		t.AssertNil(err)
+
+		os.Args = []string{"root", "-n=john"}
+		value, err := cmd.RunWithValueError(ctx)
 		t.AssertNil(err)
 		t.Assert(value, `{"Content":"john"}`)
 	})
@@ -179,12 +207,107 @@ func Test_Command_NeedArgs(t *testing.T) {
 		t.AssertNil(err)
 
 		//os.Args = []string{"root", "test", "a", "b", "c", "-h"}
-		//value, err := cmd.RunWithValue(ctx)
+		//value, err := cmd.RunWithValueError(ctx)
 		//t.AssertNil(err)
 
 		os.Args = []string{"root", "test", "a", "b", "c", "-n=john"}
-		value, err := cmd.RunWithValue(ctx)
+		value, err := cmd.RunWithValueError(ctx)
 		t.AssertNil(err)
 		t.Assert(value, `{"Args":["a","b","john"]}`)
+	})
+}
+
+type TestObjectPointerTag struct {
+	g.Meta `name:"root" root:"root"`
+}
+
+type TestObjectPointerTagEnvInput struct {
+	g.Meta `name:"env" usage:"root env" brief:"root env command" dc:"root env command description" ad:"root env command ad"`
+}
+type TestObjectPointerTagEnvOutput struct{}
+
+type TestObjectPointerTagTestInput struct {
+	g.Meta `name:"root"`
+	Name   string `v:"required" short:"n" orphan:"false" brief:"name for test command"`
+}
+type TestObjectPointerTagTestOutput struct {
+	Content string
+}
+
+func (c *TestObjectPointerTag) Env(ctx context.Context, in TestObjectPointerTagEnvInput) (out *TestObjectPointerTagEnvOutput, err error) {
+	return
+}
+
+func (c *TestObjectPointerTag) Root(ctx context.Context, in TestObjectPointerTagTestInput) (out *TestObjectPointerTagTestOutput, err error) {
+	out = &TestObjectPointerTagTestOutput{
+		Content: in.Name,
+	}
+	return
+}
+
+func Test_Command_Pointer(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			ctx = gctx.New()
+		)
+		cmd, err := gcmd.NewFromObject(TestObjectPointerTag{})
+		t.AssertNil(err)
+
+		os.Args = []string{"root", "-n=john"}
+		value, err := cmd.RunWithValueError(ctx)
+		t.AssertNil(err)
+		t.Assert(value, `{"Content":"john"}`)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			ctx = gctx.New()
+		)
+		cmd, err := gcmd.NewFromObject(&TestObjectPointerTag{})
+		t.AssertNil(err)
+
+		os.Args = []string{"root", "-n=john"}
+		value, err := cmd.RunWithValueError(ctx)
+		t.AssertNil(err)
+		t.Assert(value, `{"Content":"john"}`)
+	})
+}
+
+type TestCommandOrphan struct {
+	g.Meta `name:"root" root:"root"`
+}
+
+type TestCommandOrphanIndexInput struct {
+	g.Meta  `name:"index"`
+	Orphan1 bool `short:"n1" orphan:"true"`
+	Orphan2 bool `short:"n2" orphan:"true"`
+	Orphan3 bool `short:"n3" orphan:"true"`
+}
+type TestCommandOrphanIndexOutput struct {
+	Orphan1 bool
+	Orphan2 bool
+	Orphan3 bool
+}
+
+func (c *TestCommandOrphan) Index(ctx context.Context, in TestCommandOrphanIndexInput) (out *TestCommandOrphanIndexOutput, err error) {
+	out = &TestCommandOrphanIndexOutput{
+		Orphan1: in.Orphan1,
+		Orphan2: in.Orphan2,
+		Orphan3: in.Orphan3,
+	}
+	return
+}
+func Test_Command_Orphan_Parameter(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var ctx = gctx.New()
+		cmd, err := gcmd.NewFromObject(TestCommandOrphan{})
+		t.AssertNil(err)
+
+		os.Args = []string{"root", "index", "-n1", "-n2=0", "-n3=1"}
+		value, err := cmd.RunWithValueError(ctx)
+		t.AssertNil(err)
+		t.Assert(value.(*TestCommandOrphanIndexOutput).Orphan1, true)
+		t.Assert(value.(*TestCommandOrphanIndexOutput).Orphan2, false)
+		t.Assert(value.(*TestCommandOrphanIndexOutput).Orphan3, true)
 	})
 }

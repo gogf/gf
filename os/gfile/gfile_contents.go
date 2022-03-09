@@ -11,6 +11,8 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 var (
@@ -49,7 +51,10 @@ func putContents(path string, data []byte, flag int, perm os.FileMode) error {
 		return err
 	}
 	defer f.Close()
-	if n, err := f.Write(data); err != nil {
+	// Write data.
+	var n int
+	if n, err = f.Write(data); err != nil {
+		err = gerror.Wrapf(err, `Write data to file "%s" failed`, path)
 		return err
 	} else if n < len(data) {
 		return io.ErrShortWrite
@@ -58,8 +63,12 @@ func putContents(path string, data []byte, flag int, perm os.FileMode) error {
 }
 
 // Truncate truncates file of `path` to given size by `size`.
-func Truncate(path string, size int) error {
-	return os.Truncate(path, int64(size))
+func Truncate(path string, size int) (err error) {
+	err = os.Truncate(path, int64(size))
+	if err != nil {
+		err = gerror.Wrapf(err, `os.Truncate failed for file "%s", size "%d"`, path, size)
+	}
+	return
 }
 
 // PutContents puts string `content` to file of `path`.
@@ -168,7 +177,7 @@ func GetBytesByTwoOffsetsByPath(path string, start int64, end int64) []byte {
 // Note that the parameter passed to callback function might be an empty value, and the last non-empty line
 // will be passed to callback function `callback` even if it has no newline marker.
 func ReadLines(file string, callback func(text string) error) error {
-	f, err := os.Open(file)
+	f, err := Open(file)
 	if err != nil {
 		return err
 	}
@@ -189,7 +198,7 @@ func ReadLines(file string, callback func(text string) error) error {
 // Note that the parameter passed to callback function might be an empty value, and the last non-empty line
 // will be passed to callback function `callback` even if it has no newline marker.
 func ReadLinesBytes(file string, callback func(bytes []byte) error) error {
-	f, err := os.Open(file)
+	f, err := Open(file)
 	if err != nil {
 		return err
 	}

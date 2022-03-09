@@ -17,11 +17,11 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 func Test_BindMiddleware_Basic1(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
 	})
@@ -43,7 +43,6 @@ func Test_BindMiddleware_Basic1(t *testing.T) {
 		r.Middleware.Next()
 		r.Response.Write("8")
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -51,7 +50,7 @@ func Test_BindMiddleware_Basic1(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/test"), "1342")
@@ -60,8 +59,7 @@ func Test_BindMiddleware_Basic1(t *testing.T) {
 }
 
 func Test_BindMiddleware_Basic2(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
 	})
@@ -70,7 +68,6 @@ func Test_BindMiddleware_Basic2(t *testing.T) {
 		r.Middleware.Next()
 		r.Response.Write("2")
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -78,7 +75,7 @@ func Test_BindMiddleware_Basic2(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "12")
 		t.Assert(client.GetContent(ctx, "/test"), "12")
@@ -87,8 +84,7 @@ func Test_BindMiddleware_Basic2(t *testing.T) {
 }
 
 func Test_BindMiddleware_Basic3(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
 	})
@@ -110,7 +106,6 @@ func Test_BindMiddleware_Basic3(t *testing.T) {
 		r.Middleware.Next()
 		r.Response.Write("8")
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -118,7 +113,7 @@ func Test_BindMiddleware_Basic3(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/test"), "Not Found")
@@ -131,8 +126,7 @@ func Test_BindMiddleware_Basic3(t *testing.T) {
 }
 
 func Test_BindMiddleware_Basic4(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(func(r *ghttp.Request) {
 			r.Response.Write("1")
@@ -146,7 +140,6 @@ func Test_BindMiddleware_Basic4(t *testing.T) {
 			r.Response.Write("test")
 		})
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -154,7 +147,7 @@ func Test_BindMiddleware_Basic4(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/test"), "1test2")
@@ -163,8 +156,7 @@ func Test_BindMiddleware_Basic4(t *testing.T) {
 }
 
 func Test_Middleware_With_Static(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(func(r *ghttp.Request) {
 			r.Response.Write("1")
@@ -175,7 +167,6 @@ func Test_Middleware_With_Static(t *testing.T) {
 			r.Response.Write("list")
 		})
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.SetServerRoot(gdebug.TestDataPath("static1"))
 	s.Start()
@@ -183,7 +174,7 @@ func Test_Middleware_With_Static(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "index")
 		t.Assert(client.GetContent(ctx, "/test.html"), "test")
@@ -193,8 +184,7 @@ func Test_Middleware_With_Static(t *testing.T) {
 }
 
 func Test_Middleware_Status(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(func(r *ghttp.Request) {
 			r.Middleware.Next()
@@ -204,14 +194,13 @@ func Test_Middleware_Status(t *testing.T) {
 			r.Response.Write("list")
 		})
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/user/list"), "200")
@@ -224,8 +213,7 @@ func Test_Middleware_Status(t *testing.T) {
 }
 
 func Test_Middleware_Hook_With_Static(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	a := garray.New(true)
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Hook("/*", ghttp.HookBeforeServe, func(r *ghttp.Request) {
@@ -247,7 +235,6 @@ func Test_Middleware_Hook_With_Static(t *testing.T) {
 			r.Response.Write("list")
 		})
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.SetServerRoot(gdebug.TestDataPath("static1"))
 	s.Start()
@@ -255,7 +242,7 @@ func Test_Middleware_Hook_With_Static(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		// The length assert sometimes fails, so I added time.Sleep here for debug purpose.
 
@@ -278,15 +265,13 @@ func Test_Middleware_Hook_With_Static(t *testing.T) {
 }
 
 func Test_BindMiddleware_Status(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
 	})
 	s.BindMiddleware("/test/*any", func(r *ghttp.Request) {
 		r.Middleware.Next()
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -294,7 +279,7 @@ func Test_BindMiddleware_Status(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/test"), "Not Found")
@@ -304,8 +289,7 @@ func Test_BindMiddleware_Status(t *testing.T) {
 }
 
 func Test_BindMiddlewareDefault_Basic1(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
 	})
@@ -319,7 +303,6 @@ func Test_BindMiddlewareDefault_Basic1(t *testing.T) {
 		r.Middleware.Next()
 		r.Response.Write("4")
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -327,7 +310,7 @@ func Test_BindMiddlewareDefault_Basic1(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "1342")
 		t.Assert(client.GetContent(ctx, "/test/test"), "13test42")
@@ -335,8 +318,7 @@ func Test_BindMiddlewareDefault_Basic1(t *testing.T) {
 }
 
 func Test_BindMiddlewareDefault_Basic2(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("PUT:/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
 	})
@@ -350,7 +332,6 @@ func Test_BindMiddlewareDefault_Basic2(t *testing.T) {
 		r.Middleware.Next()
 		r.Response.Write("4")
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -358,7 +339,7 @@ func Test_BindMiddlewareDefault_Basic2(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "1342")
 		t.Assert(client.PutContent(ctx, "/"), "1342")
@@ -368,8 +349,7 @@ func Test_BindMiddlewareDefault_Basic2(t *testing.T) {
 }
 
 func Test_BindMiddlewareDefault_Basic3(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
 	})
@@ -381,7 +361,6 @@ func Test_BindMiddlewareDefault_Basic3(t *testing.T) {
 		r.Middleware.Next()
 		r.Response.Write("2")
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -389,7 +368,7 @@ func Test_BindMiddlewareDefault_Basic3(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "12")
 		t.Assert(client.GetContent(ctx, "/test/test"), "1test2")
@@ -397,8 +376,7 @@ func Test_BindMiddlewareDefault_Basic3(t *testing.T) {
 }
 
 func Test_BindMiddlewareDefault_Basic4(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
 	})
@@ -410,7 +388,6 @@ func Test_BindMiddlewareDefault_Basic4(t *testing.T) {
 		r.Response.Write("2")
 		r.Middleware.Next()
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -418,7 +395,7 @@ func Test_BindMiddlewareDefault_Basic4(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "21")
 		t.Assert(client.GetContent(ctx, "/test/test"), "2test1")
@@ -426,8 +403,7 @@ func Test_BindMiddlewareDefault_Basic4(t *testing.T) {
 }
 
 func Test_BindMiddlewareDefault_Basic5(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
 	})
@@ -439,7 +415,6 @@ func Test_BindMiddlewareDefault_Basic5(t *testing.T) {
 		r.Response.Write("2")
 		r.Middleware.Next()
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -447,7 +422,7 @@ func Test_BindMiddlewareDefault_Basic5(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "12")
 		t.Assert(client.GetContent(ctx, "/test/test"), "12test")
@@ -455,15 +430,13 @@ func Test_BindMiddlewareDefault_Basic5(t *testing.T) {
 }
 
 func Test_BindMiddlewareDefault_Status(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
 	})
 	s.BindMiddlewareDefault(func(r *ghttp.Request) {
 		r.Middleware.Next()
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -471,7 +444,7 @@ func Test_BindMiddlewareDefault_Status(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/test/test"), "test")
@@ -501,8 +474,7 @@ func (o *ObjectMiddleware) Info(r *ghttp.Request) {
 }
 
 func Test_BindMiddlewareDefault_Basic6(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindObject("/", new(ObjectMiddleware))
 	s.BindMiddlewareDefault(func(r *ghttp.Request) {
 		r.Response.Write("1")
@@ -514,7 +486,6 @@ func Test_BindMiddlewareDefault_Basic6(t *testing.T) {
 		r.Middleware.Next()
 		r.Response.Write("4")
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -522,7 +493,7 @@ func Test_BindMiddlewareDefault_Basic6(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "13100Object Index20042")
 		t.Assert(client.GetContent(ctx, "/init"), "1342")
@@ -534,8 +505,7 @@ func Test_BindMiddlewareDefault_Basic6(t *testing.T) {
 }
 
 func Test_Hook_Middleware_Basic1(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
 	})
@@ -561,7 +531,6 @@ func Test_Hook_Middleware_Basic1(t *testing.T) {
 		r.Middleware.Next()
 		r.Response.Write("4")
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -569,7 +538,7 @@ func Test_Hook_Middleware_Basic1(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "ac1342bd")
 		t.Assert(client.GetContent(ctx, "/test/test"), "ac13test42bd")
@@ -591,8 +560,7 @@ func MiddlewareCORS(r *ghttp.Request) {
 }
 
 func Test_Middleware_CORSAndAuth(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.Use(MiddlewareCORS)
 	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
 		group.Middleware(MiddlewareAuth)
@@ -600,14 +568,13 @@ func Test_Middleware_CORSAndAuth(t *testing.T) {
 			r.Response.Write("list")
 		})
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		// Common Checks.
 		t.Assert(client.GetContent(ctx, "/"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/api.v2"), "Not Found")
@@ -645,8 +612,7 @@ func MiddlewareScope3(r *ghttp.Request) {
 }
 
 func Test_Middleware_Scope(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(MiddlewareScope1)
 		group.ALL("/scope1", func(r *ghttp.Request) {
@@ -665,14 +631,13 @@ func Test_Middleware_Scope(t *testing.T) {
 			})
 		})
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/scope1"), "a1b")
@@ -682,8 +647,7 @@ func Test_Middleware_Scope(t *testing.T) {
 }
 
 func Test_Middleware_Panic(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	i := 0
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Group("/", func(group *ghttp.RouterGroup) {
@@ -700,15 +664,14 @@ func Test_Middleware_Panic(t *testing.T) {
 			})
 		})
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
-		t.Assert(client.GetContent(ctx, "/"), "error")
+		t.Assert(client.GetContent(ctx, "/"), "exception recovered: error")
 	})
 }

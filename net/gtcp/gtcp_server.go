@@ -7,7 +7,6 @@
 package gtcp
 
 import (
-	"context"
 	"crypto/tls"
 	"net"
 	"sync"
@@ -16,7 +15,6 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 
 	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -73,12 +71,12 @@ func NewServerTLS(address string, tlsConfig *tls.Config, handler func(*Conn), na
 
 // NewServerKeyCrt creates and returns a new TCP server with TLS support.
 // The parameter `name` is optional, which is used to specify the instance name of the server.
-func NewServerKeyCrt(address, crtFile, keyFile string, handler func(*Conn), name ...string) *Server {
+func NewServerKeyCrt(address, crtFile, keyFile string, handler func(*Conn), name ...string) (*Server, error) {
 	s := NewServer(address, handler, name...)
 	if err := s.SetTLSKeyCrt(crtFile, keyFile); err != nil {
-		glog.Error(context.TODO(), err)
+		return nil, err
 	}
-	return s
+	return s, nil
 }
 
 // SetAddress sets the listening address for server.
@@ -118,12 +116,8 @@ func (s *Server) Close() error {
 
 // Run starts running the TCP Server.
 func (s *Server) Run() (err error) {
-	var (
-		ctx = context.TODO()
-	)
 	if s.handler == nil {
 		err = gerror.NewCode(gcode.CodeMissingConfiguration, "start running failed: socket handler not defined")
-		glog.Error(ctx, err)
 		return
 	}
 	if s.tlsConfig != nil {
@@ -132,27 +126,29 @@ func (s *Server) Run() (err error) {
 		s.listen, err = tls.Listen("tcp", s.address, s.tlsConfig)
 		s.mu.Unlock()
 		if err != nil {
-			glog.Error(ctx, err)
+			err = gerror.Wrapf(err, `tls.Listen failed for address "%s"`, s.address)
 			return
 		}
 	} else {
 		// Normal Server
-		addr, err := net.ResolveTCPAddr("tcp", s.address)
-		if err != nil {
-			glog.Error(ctx, err)
+		var tcpAddr *net.TCPAddr
+		if tcpAddr, err = net.ResolveTCPAddr("tcp", s.address); err != nil {
+			err = gerror.Wrapf(err, `net.ResolveTCPAddr failed for address "%s"`, s.address)
 			return err
 		}
 		s.mu.Lock()
-		s.listen, err = net.ListenTCP("tcp", addr)
+		s.listen, err = net.ListenTCP("tcp", tcpAddr)
 		s.mu.Unlock()
 		if err != nil {
-			glog.Error(ctx, err)
+			err = gerror.Wrapf(err, `net.ListenTCP failed for address "%s"`, s.address)
 			return err
 		}
 	}
 	// Listening loop.
 	for {
-		if conn, err := s.listen.Accept(); err != nil {
+		var conn net.Conn
+		if conn, err = s.listen.Accept(); err != nil {
+			err = gerror.Wrapf(err, `Listener.Accept failed`)
 			return err
 		} else if conn != nil {
 			go s.handler(NewConnByNetConn(conn))

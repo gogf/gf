@@ -43,7 +43,6 @@ type ExternalDocs struct {
 }
 
 const (
-	HttpMethodAll     = `ALL`
 	HttpMethodGet     = `GET`
 	HttpMethodPut     = `PUT`
 	HttpMethodPost    = `POST`
@@ -82,9 +81,14 @@ const (
 	TagNamePath     = `path`
 	TagNameMethod   = `method`
 	TagNameMime     = `mime`
+	TagNameConsumes = `consumes`
 	TagNameType     = `type`
 	TagNameDomain   = `domain`
-	TagNameValidate = `v`
+)
+
+const (
+	patternKeyForRequired = `required`
+	patternKeyForIn       = `in:`
 )
 
 var (
@@ -148,7 +152,7 @@ func (oai *OpenApiV3) Add(in AddInput) error {
 func (oai OpenApiV3) String() string {
 	b, err := json.Marshal(oai)
 	if err != nil {
-		intlog.Error(context.TODO(), err)
+		intlog.Errorf(context.TODO(), `%+v`, err)
 	}
 	return string(b)
 }

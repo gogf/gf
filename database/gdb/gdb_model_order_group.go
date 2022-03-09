@@ -22,21 +22,17 @@ func (m *Model) Order(orderBy ...interface{}) *Model {
 	if len(orderBy) == 0 {
 		return m
 	}
-
 	model := m.getModel()
 	if model.orderBy != "" {
 		model.orderBy += ","
 	}
-
 	for _, o := range orderBy {
 		if v, ok := o.(Raw); ok {
 			model.orderBy += gconv.String(v)
 			return model
 		}
 	}
-
 	model.orderBy += model.db.GetCore().QuoteString(strings.Join(gconv.SliceStr(orderBy), " "))
-
 	return model
 }
 

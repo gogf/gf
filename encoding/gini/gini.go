@@ -22,37 +22,38 @@ import (
 // Decode converts INI format to map.
 func Decode(data []byte) (res map[string]interface{}, err error) {
 	res = make(map[string]interface{})
-	fieldMap := make(map[string]interface{})
+	var (
+		fieldMap    = make(map[string]interface{})
+		bytesReader = bytes.NewReader(data)
+		bufioReader = bufio.NewReader(bytesReader)
+		section     string
+		lastSection string
+		haveSection bool
+		line        string
+	)
 
-	a := bytes.NewReader(data)
-	r := bufio.NewReader(a)
-	var section string
-	var lastSection string
-	var haveSection bool
 	for {
-		line, err := r.ReadString('\n')
+		line, err = bufioReader.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
 				break
 			}
+			err = gerror.Wrapf(err, `bufioReader.ReadString failed`)
 			return nil, err
 		}
-
-		lineStr := strings.TrimSpace(string(line))
-		if len(lineStr) == 0 {
+		if line = strings.TrimSpace(line); len(line) == 0 {
 			continue
 		}
 
-		if lineStr[0] == ';' || lineStr[0] == '#' {
+		if line[0] == ';' || line[0] == '#' {
 			continue
 		}
-
-		sectionBeginPos := strings.Index(lineStr, "[")
-		sectionEndPos := strings.Index(lineStr, "]")
-
+		var (
+			sectionBeginPos = strings.Index(line, "[")
+			sectionEndPos   = strings.Index(line, "]")
+		)
 		if sectionBeginPos >= 0 && sectionEndPos >= 2 {
-			section = lineStr[sectionBeginPos+1 : sectionEndPos]
-
+			section = line[sectionBeginPos+1 : sectionEndPos]
 			if lastSection == "" {
 				lastSection = section
 			} else if lastSection != section {
@@ -64,8 +65,8 @@ func Decode(data []byte) (res map[string]interface{}, err error) {
 			continue
 		}
 
-		if strings.Contains(lineStr, "=") && haveSection {
-			values := strings.Split(lineStr, "=")
+		if strings.Contains(line, "=") && haveSection {
+			values := strings.Split(line, "=")
 			fieldMap[strings.TrimSpace(values[0])] = strings.TrimSpace(strings.Join(values[1:], "="))
 			res[section] = fieldMap
 		}
@@ -79,26 +80,38 @@ func Decode(data []byte) (res map[string]interface{}, err error) {
 
 // Encode converts map to INI format.
 func Encode(data map[string]interface{}) (res []byte, err error) {
-	w := new(bytes.Buffer)
-	w.WriteString("; this ini file is produced by package gini\n")
-	for k, v := range data {
-		n, err := w.WriteString(fmt.Sprintf("[%s]\n", k))
-		if err != nil || n == 0 {
-			return nil, gerror.WrapCodef(gcode.CodeInternalError, err, "write data failed")
-		}
-		for kk, vv := range v.(map[string]interface{}) {
-			n, err := w.WriteString(fmt.Sprintf("%s=%s\n", kk, vv.(string)))
+	var (
+		n  int
+		w  = new(bytes.Buffer)
+		m  map[string]interface{}
+		ok bool
+	)
+	for section, item := range data {
+		// Section key-value pairs.
+		if m, ok = item.(map[string]interface{}); ok {
+			n, err = w.WriteString(fmt.Sprintf("[%s]\n", section))
 			if err != nil || n == 0 {
-				return nil, gerror.WrapCodef(gcode.CodeInternalError, err, "write data failed")
+				return nil, gerror.Wrapf(err, "w.WriteString failed")
+			}
+			for k, v := range m {
+				if n, err = w.WriteString(fmt.Sprintf("%s=%v\n", k, v)); err != nil || n == 0 {
+					return nil, gerror.Wrapf(err, "w.WriteString failed")
+				}
+			}
+			continue
+		}
+		// Simple key-value pairs.
+		for k, v := range data {
+			if n, err = w.WriteString(fmt.Sprintf("%s=%v\n", k, v)); err != nil || n == 0 {
+				return nil, gerror.Wrapf(err, "w.WriteString failed")
 			}
 		}
+		break
 	}
 	res = make([]byte, w.Len())
-	n, err := w.Read(res)
-	if err != nil || n == 0 {
-		return nil, gerror.WrapCodef(gcode.CodeInternalError, err, "write data failed")
+	if n, err = w.Read(res); err != nil || n == 0 {
+		return nil, gerror.Wrapf(err, "w.Read failed")
 	}
-
 	return res, nil
 }
 

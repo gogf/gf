@@ -112,23 +112,24 @@ func (p *Process) Release() error {
 }
 
 // Kill causes the Process to exit immediately.
-func (p *Process) Kill() error {
-	if err := p.Process.Kill(); err == nil {
-		if p.Manager != nil {
-			p.Manager.processes.Remove(p.Pid())
-		}
-		if runtime.GOOS != "windows" {
-			if err = p.Process.Release(); err != nil {
-				intlog.Error(context.TODO(), err)
-			}
-		}
-		_, err = p.Process.Wait()
-		intlog.Error(context.TODO(), err)
-		// return err
-		return nil
-	} else {
+func (p *Process) Kill() (err error) {
+	err = p.Process.Kill()
+	if err != nil {
+		err = gerror.Wrapf(err, `kill process failed for pid "%d"`, p.Process.Pid)
 		return err
 	}
+	if p.Manager != nil {
+		p.Manager.processes.Remove(p.Pid())
+	}
+	if runtime.GOOS != "windows" {
+		if err = p.Process.Release(); err != nil {
+			intlog.Errorf(context.TODO(), `%+v`, err)
+		}
+	}
+	// It ignores this error, just log it.
+	_, err = p.Process.Wait()
+	intlog.Errorf(context.TODO(), `%+v`, err)
+	return nil
 }
 
 // Signal sends a signal to the Process.

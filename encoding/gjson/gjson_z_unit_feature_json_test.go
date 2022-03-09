@@ -67,6 +67,11 @@ func Test_MapAttributeConvert(t *testing.T) {
 		t.Assert(tx.Title, g.Map{
 			"l1": "标签1", "l2": "标签2",
 		})
+
+		j.Dump()
+
+		var nilJ *gjson.Json = nil
+		nilJ.Dump()
 	})
 
 	gtest.C(t, func(t *gtest.T) {

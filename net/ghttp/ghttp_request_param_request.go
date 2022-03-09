@@ -66,14 +66,10 @@ func (r *Request) GetRequestMap(kvMap ...map[string]interface{}) map[string]inte
 	var (
 		ok, filter bool
 	)
-	var length int
 	if len(kvMap) > 0 && kvMap[0] != nil {
-		length = len(kvMap[0])
 		filter = true
-	} else {
-		length = len(r.routerMap) + len(r.queryMap) + len(r.formMap) + len(r.bodyMap) + len(r.paramsMap)
 	}
-	m := make(map[string]interface{}, length)
+	m := make(map[string]interface{})
 	for k, v := range r.routerMap {
 		if filter {
 			if _, ok = kvMap[0][k]; !ok {
@@ -113,6 +109,16 @@ func (r *Request) GetRequestMap(kvMap ...map[string]interface{}) map[string]inte
 			}
 		}
 		m[k] = v
+	}
+	// File uploading.
+	if r.MultipartForm != nil {
+		for name := range r.MultipartForm.File {
+			if uploadFiles := r.GetUploadFiles(name); len(uploadFiles) == 1 {
+				m[name] = uploadFiles[0]
+			} else {
+				m[name] = uploadFiles
+			}
+		}
 	}
 	// Check none exist parameters and assign it with default value.
 	if filter {
@@ -171,9 +177,11 @@ func (r *Request) doGetRequestStruct(pointer interface{}, mapping ...map[string]
 	if data == nil {
 		data = map[string]interface{}{}
 	}
+	// Default struct values.
 	if err = r.mergeDefaultStructValue(data, pointer); err != nil {
 		return data, nil
 	}
+
 	return data, gconv.Struct(data, pointer, mapping...)
 }
 

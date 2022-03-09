@@ -18,6 +18,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 func Test_ConfigFromMap(t *testing.T) {
@@ -28,6 +29,9 @@ func Test_ConfigFromMap(t *testing.T) {
 			"indexFiles":      g.Slice{"index.php", "main.php"},
 			"errorLogEnabled": true,
 			"cookieMaxAge":    "1y",
+			"cookieSameSite":  "lax",
+			"cookieSecure":    true,
+			"cookieHttpOnly":  true,
 		}
 		config, err := ghttp.ConfigFromMap(m)
 		t.Assert(err, nil)
@@ -38,6 +42,9 @@ func Test_ConfigFromMap(t *testing.T) {
 		t.Assert(config.CookieMaxAge, d2)
 		t.Assert(config.IndexFiles, m["indexFiles"])
 		t.Assert(config.ErrorLogEnabled, m["errorLogEnabled"])
+		t.Assert(config.CookieSameSite, m["cookieSameSite"])
+		t.Assert(config.CookieSecure, m["cookieSecure"])
+		t.Assert(config.CookieHttpOnly, m["cookieHttpOnly"])
 	})
 }
 
@@ -54,6 +61,9 @@ func Test_SetConfigWithMap(t *testing.T) {
 			"SessionIdName":    "MySessionId",
 			"SessionPath":      "/tmp/MySessionStoragePath",
 			"SessionMaxAge":    24 * time.Hour,
+			"cookieSameSite":   "lax",
+			"cookieSecure":     true,
+			"cookieHttpOnly":   true,
 		}
 		s := g.Server()
 		err := s.SetConfigWithMap(m)
@@ -62,19 +72,16 @@ func Test_SetConfigWithMap(t *testing.T) {
 }
 
 func Test_ClientMaxBodySize(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.POST("/", func(r *ghttp.Request) {
 			r.Response.Write(r.GetBodyString())
 		})
 	})
 	m := g.Map{
-		"Address":           p,
 		"ClientMaxBodySize": "1k",
 	}
 	gtest.Assert(s.SetConfigWithMap(m), nil)
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -83,7 +90,7 @@ func Test_ClientMaxBodySize(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
-		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		data := make([]byte, 1056)
 		for i := 0; i < 1056; i++ {
@@ -91,14 +98,13 @@ func Test_ClientMaxBodySize(t *testing.T) {
 		}
 		t.Assert(
 			gstr.Trim(c.PostContent(ctx, "/", data)),
-			data[:1024],
+			`ReadAll from body failed: http: request body too large`,
 		)
 	})
 }
 
 func Test_ClientMaxBodySize_File(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.POST("/", func(r *ghttp.Request) {
 			r.GetUploadFile("file")
@@ -106,12 +112,10 @@ func Test_ClientMaxBodySize_File(t *testing.T) {
 		})
 	})
 	m := g.Map{
-		"Address":           p,
 		"ErrorLogEnabled":   false,
 		"ClientMaxBodySize": "1k",
 	}
 	gtest.Assert(s.SetConfigWithMap(m), nil)
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -121,9 +125,9 @@ func Test_ClientMaxBodySize_File(t *testing.T) {
 	// ok
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
-		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
-		path := gfile.TempDir(gtime.TimestampNanoStr())
+		path := gfile.Temp(gtime.TimestampNanoStr())
 		data := make([]byte, 512)
 		for i := 0; i < 512; i++ {
 			data[i] = 'a'
@@ -139,9 +143,9 @@ func Test_ClientMaxBodySize_File(t *testing.T) {
 	// too large
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
-		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
-		path := gfile.TempDir(gtime.TimestampNanoStr())
+		path := gfile.Temp(gtime.TimestampNanoStr())
 		data := make([]byte, 1056)
 		for i := 0; i < 1056; i++ {
 			data[i] = 'a'
@@ -150,7 +154,7 @@ func Test_ClientMaxBodySize_File(t *testing.T) {
 		defer gfile.Remove(path)
 		t.Assert(
 			gstr.Trim(c.PostContent(ctx, "/", "name=john&file=@file:"+path)),
-			"Invalid Request: http: request body too large",
+			"r.ParseMultipartForm failed: http: request body too large",
 		)
 	})
 }

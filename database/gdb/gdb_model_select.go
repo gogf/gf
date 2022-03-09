@@ -12,6 +12,7 @@ import (
 
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/crypto/gmd5"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
@@ -320,12 +321,18 @@ func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 //
 // See Result.ScanList.
 func (m *Model) ScanList(structSlicePointer interface{}, bindToAttrName string, relationAttrNameAndFields ...string) (err error) {
+	var result Result
 	out, err := checkGetSliceElementInfoForScanList(structSlicePointer, bindToAttrName)
 	if err != nil {
 		return err
 	}
-	// Filter fields using temporary created struct using reflect.New.
-	result, err := m.Fields(reflect.New(out.BindToAttrType).Interface()).All()
+	if m.fields != defaultFields || m.fieldsEx != "" {
+		// There are custom fields.
+		result, err = m.All()
+	} else {
+		// Filter fields using temporary created struct using reflect.New.
+		result, err = m.Fields(reflect.New(out.BindToAttrType).Interface()).All()
+	}
 	if err != nil {
 		return err
 	}
@@ -497,6 +504,7 @@ func (m *Model) Having(having interface{}, args ...interface{}) *Model {
 // doGetAllBySql does the select statement on the database.
 func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, err error) {
 	var (
+		ok       bool
 		ctx      = m.GetCtx()
 		cacheKey = ""
 		cacheObj = m.db.GetCache()
@@ -505,20 +513,22 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 	if m.cacheEnabled && m.tx == nil {
 		cacheKey = m.cacheOption.Name
 		if len(cacheKey) == 0 {
-			cacheKey = sql + ", @PARAMS:" + gconv.String(args)
+			cacheKey = fmt.Sprintf(
+				`GCache@Schema(%s):%s`,
+				m.db.GetSchema(),
+				gmd5.MustEncryptString(sql+", @PARAMS:"+gconv.String(args)),
+			)
 		}
 		if v, _ := cacheObj.Get(ctx, cacheKey); !v.IsNil() {
-			if result, ok := v.Val().(Result); ok {
+			if result, ok = v.Val().(Result); ok {
 				// In-memory cache.
 				return result, nil
+			}
+			// Other cache, it needs conversion.
+			if err = json.UnmarshalUseNumber(v.Bytes(), &result); err != nil {
+				return nil, err
 			} else {
-				// Other cache, it needs conversion.
-				var result Result
-				if err = json.UnmarshalUseNumber(v.Bytes(), &result); err != nil {
-					return nil, err
-				} else {
-					return result, nil
-				}
+				return result, nil
 			}
 		}
 	}
@@ -528,16 +538,16 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 	// Cache the result.
 	if cacheKey != "" && err == nil {
 		if m.cacheOption.Duration < 0 {
-			if _, err := cacheObj.Remove(ctx, cacheKey); err != nil {
-				intlog.Error(m.GetCtx(), err)
+			if _, err = cacheObj.Remove(ctx, cacheKey); err != nil {
+				intlog.Errorf(m.GetCtx(), `%+v`, err)
 			}
 		} else {
 			// In case of Cache Penetration.
 			if result.IsEmpty() && m.cacheOption.Force {
 				result = Result{}
 			}
-			if err := cacheObj.Set(ctx, cacheKey, result, m.cacheOption.Duration); err != nil {
-				intlog.Error(m.GetCtx(), err)
+			if err = cacheObj.Set(ctx, cacheKey, result, m.cacheOption.Duration); err != nil {
+				intlog.Errorf(m.GetCtx(), `%+v`, err)
 			}
 		}
 	}
@@ -604,23 +614,21 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 		tableForMappingAndFiltering = m.tables
 	)
 	if len(m.whereHolder) > 0 {
-		for _, v := range m.whereHolder {
+		for _, holder := range m.whereHolder {
 			tableForMappingAndFiltering = m.tables
-			if v.Prefix == "" {
-				v.Prefix = autoPrefix
+			if holder.Prefix == "" {
+				holder.Prefix = autoPrefix
 			}
 
-			switch v.Operator {
+			switch holder.Operator {
 			case whereHolderOperatorWhere:
 				if conditionWhere == "" {
 					newWhere, newArgs := formatWhereHolder(m.db, formatWhereHolderInput{
-						Where:     v.Where,
-						Args:      v.Args,
-						OmitNil:   m.option&optionOmitNilWhere > 0,
-						OmitEmpty: m.option&optionOmitEmptyWhere > 0,
-						Schema:    m.schema,
-						Table:     tableForMappingAndFiltering,
-						Prefix:    v.Prefix,
+						ModelWhereHolder: holder,
+						OmitNil:          m.option&optionOmitNilWhere > 0,
+						OmitEmpty:        m.option&optionOmitEmptyWhere > 0,
+						Schema:           m.schema,
+						Table:            tableForMappingAndFiltering,
 					})
 					if len(newWhere) > 0 {
 						conditionWhere = newWhere
@@ -632,13 +640,11 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 
 			case whereHolderOperatorAnd:
 				newWhere, newArgs := formatWhereHolder(m.db, formatWhereHolderInput{
-					Where:     v.Where,
-					Args:      v.Args,
-					OmitNil:   m.option&optionOmitNilWhere > 0,
-					OmitEmpty: m.option&optionOmitEmptyWhere > 0,
-					Schema:    m.schema,
-					Table:     tableForMappingAndFiltering,
-					Prefix:    v.Prefix,
+					ModelWhereHolder: holder,
+					OmitNil:          m.option&optionOmitNilWhere > 0,
+					OmitEmpty:        m.option&optionOmitEmptyWhere > 0,
+					Schema:           m.schema,
+					Table:            tableForMappingAndFiltering,
 				})
 				if len(newWhere) > 0 {
 					if len(conditionWhere) == 0 {
@@ -653,13 +659,11 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 
 			case whereHolderOperatorOr:
 				newWhere, newArgs := formatWhereHolder(m.db, formatWhereHolderInput{
-					Where:     v.Where,
-					Args:      v.Args,
-					OmitNil:   m.option&optionOmitNilWhere > 0,
-					OmitEmpty: m.option&optionOmitEmptyWhere > 0,
-					Schema:    m.schema,
-					Table:     tableForMappingAndFiltering,
-					Prefix:    v.Prefix,
+					ModelWhereHolder: holder,
+					OmitNil:          m.option&optionOmitNilWhere > 0,
+					OmitEmpty:        m.option&optionOmitEmptyWhere > 0,
+					Schema:           m.schema,
+					Table:            tableForMappingAndFiltering,
 				})
 				if len(newWhere) > 0 {
 					if len(conditionWhere) == 0 {
@@ -700,14 +704,17 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 	}
 	// HAVING.
 	if len(m.having) > 0 {
+		havingHolder := ModelWhereHolder{
+			Where:  m.having[0],
+			Args:   gconv.Interfaces(m.having[1]),
+			Prefix: autoPrefix,
+		}
 		havingStr, havingArgs := formatWhereHolder(m.db, formatWhereHolderInput{
-			Where:     m.having[0],
-			Args:      gconv.Interfaces(m.having[1]),
-			OmitNil:   m.option&optionOmitNilWhere > 0,
-			OmitEmpty: m.option&optionOmitEmptyWhere > 0,
-			Schema:    m.schema,
-			Table:     m.tables,
-			Prefix:    autoPrefix,
+			ModelWhereHolder: havingHolder,
+			OmitNil:          m.option&optionOmitNilWhere > 0,
+			OmitEmpty:        m.option&optionOmitEmptyWhere > 0,
+			Schema:           m.schema,
+			Table:            m.tables,
 		})
 		if len(havingStr) > 0 {
 			conditionExtra += " HAVING " + havingStr

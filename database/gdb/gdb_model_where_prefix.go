@@ -16,6 +16,7 @@ func (m *Model) WherePrefix(prefix string, where interface{}, args ...interface{
 		model.whereHolder = make([]ModelWhereHolder, 0)
 	}
 	model.whereHolder = append(model.whereHolder, ModelWhereHolder{
+		Type:     whereHolderTypeDefault,
 		Operator: whereHolderOperatorWhere,
 		Where:    where,
 		Args:     args,
@@ -56,7 +57,7 @@ func (m *Model) WherePrefixLike(prefix string, column string, like interface{}) 
 
 // WherePrefixIn builds `prefix.column IN (in)` statement.
 func (m *Model) WherePrefixIn(prefix string, column string, in interface{}) *Model {
-	return m.Wheref(`%s.%s IN (?)`, m.QuoteWord(prefix), m.QuoteWord(column), in)
+	return m.doWherefType(whereHolderTypeIn, `%s.%s IN (?)`, m.QuoteWord(prefix), m.QuoteWord(column), in)
 }
 
 // WherePrefixNull builds `prefix.columns[0] IS NULL AND prefix.columns[1] IS NULL ...` statement.
@@ -85,7 +86,7 @@ func (m *Model) WherePrefixNot(prefix string, column string, value interface{}) 
 
 // WherePrefixNotIn builds `prefix.column NOT IN (in)` statement.
 func (m *Model) WherePrefixNotIn(prefix string, column string, in interface{}) *Model {
-	return m.Wheref(`%s.%s NOT IN (?)`, m.QuoteWord(prefix), m.QuoteWord(column), in)
+	return m.doWherefType(whereHolderTypeIn, `%s.%s NOT IN (?)`, m.QuoteWord(prefix), m.QuoteWord(column), in)
 }
 
 // WherePrefixNotNull builds `prefix.columns[0] IS NOT NULL AND prefix.columns[1] IS NOT NULL ...` statement.

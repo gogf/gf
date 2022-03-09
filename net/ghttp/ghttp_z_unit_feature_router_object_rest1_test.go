@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 type ObjectRest struct{}
@@ -55,11 +56,9 @@ func (o *ObjectRest) Head(r *ghttp.Request) {
 }
 
 func Test_Router_ObjectRest(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindObjectRest("/", new(ObjectRest))
 	s.BindObjectRest("/{.struct}/{.method}", new(ObjectRest))
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -67,7 +66,7 @@ func Test_Router_ObjectRest(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "1Object Get2")
 		t.Assert(client.PutContent(ctx, "/"), "1Object Put2")

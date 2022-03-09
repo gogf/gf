@@ -197,7 +197,7 @@ func Test_Struct1(t *testing.T) {
 	}]
 }`
 		data := new(UserCollectionAddReq)
-		j, err := gjson.LoadJson(jsonContent)
+		j, err := gjson.LoadJson(jsonContent, true)
 		t.Assert(err, nil)
 		err = j.Scan(data)
 		t.Assert(err, nil)

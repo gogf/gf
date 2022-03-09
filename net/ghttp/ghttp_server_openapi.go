@@ -58,6 +58,6 @@ func (s *Server) openapiSpec(r *Request) {
 	}
 
 	if err != nil {
-		intlog.Error(r.Context(), err)
+		intlog.Errorf(r.Context(), `%+v`, err)
 	}
 }

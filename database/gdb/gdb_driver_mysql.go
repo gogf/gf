@@ -36,8 +36,11 @@ func (d *DriverMysql) New(core *Core, node *ConfigNode) (DB, error) {
 
 // Open creates and returns an underlying sql.DB object for mysql.
 // Note that it converts time.Time argument to local timezone in default.
-func (d *DriverMysql) Open(config *ConfigNode) (*sql.DB, error) {
-	var source string
+func (d *DriverMysql) Open(config *ConfigNode) (db *sql.DB, err error) {
+	var (
+		source               string
+		underlyingDriverName = "mysql"
+	)
 	if config.Link != "" {
 		source = config.Link
 		// Custom changing the schema in runtime.
@@ -54,11 +57,14 @@ func (d *DriverMysql) Open(config *ConfigNode) (*sql.DB, error) {
 		}
 	}
 	intlog.Printf(d.GetCtx(), "Open: %s", source)
-	if db, err := sql.Open("mysql", source); err == nil {
-		return db, nil
-	} else {
+	if db, err = sql.Open(underlyingDriverName, source); err != nil {
+		err = gerror.WrapCodef(
+			gcode.CodeDbOperationError, err,
+			`sql.Open failed for driver "%s" by source "%s"`, underlyingDriverName, source,
+		)
 		return nil, err
 	}
+	return
 }
 
 // FilteredLink retrieves and returns filtered `linkInfo` that can be using for
@@ -81,9 +87,9 @@ func (d *DriverMysql) GetChars() (charLeft string, charRight string) {
 	return "`", "`"
 }
 
-// DoCommit handles the sql before posts it to database.
-func (d *DriverMysql) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
-	return d.Core.DoCommit(ctx, link, sql, args)
+// DoFilter handles the sql before posts it to database.
+func (d *DriverMysql) DoFilter(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+	return d.Core.DoFilter(ctx, link, sql, args)
 }
 
 // Tables retrieves and returns the tables of current schema.
@@ -122,9 +128,12 @@ func (d *DriverMysql) TableFields(ctx context.Context, table string, schema ...s
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
-		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "function TableFields supports only single table operations")
+		return nil, gerror.NewCode(
+			gcode.CodeInvalidParameter,
+			"function TableFields supports only single table operations",
+		)
 	}
-	useSchema := d.schema.Val()
+	useSchema := d.schema
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	}
@@ -138,7 +147,10 @@ func (d *DriverMysql) TableFields(ctx context.Context, table string, schema ...s
 			if link, err = d.SlaveLink(useSchema); err != nil {
 				return nil
 			}
-			result, err = d.DoGetAll(ctx, link, fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.QuoteWord(table)))
+			result, err = d.DoGetAll(
+				ctx, link,
+				fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.QuoteWord(table)),
+			)
 			if err != nil {
 				return nil
 			}

@@ -196,7 +196,7 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 		elemFieldType  reflect.StructField
 		elemFieldValue reflect.Value
 		elemType       = pointerElemReflectValue.Type()
-		attrMap        = make(map[string]string)
+		attrMap        = make(map[string]string) // Attribute name to its check name which has no symbols.
 	)
 	for i := 0; i < pointerElemReflectValue.NumField(); i++ {
 		elemFieldType = elemType.Field(i)
@@ -229,7 +229,7 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 	// The key of the tagMap is the attribute name of the struct,
 	// and the value is its replaced tag name for later comparison to improve performance.
 	var (
-		tagMap           = make(map[string]string)
+		tagMap           = make(map[string]string) // Tag name to its check name which has no symbols.
 		priorityTagArray []string
 	)
 	if priorityTag != "" {
@@ -248,6 +248,18 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 		// orm:"id, priority"
 		// orm:"name, with:uid=id"
 		tagMap[attributeName] = utils.RemoveSymbols(strings.Split(tagName, ",")[0])
+		// If tag and attribute values both exist in `paramsMap`,
+		// it then uses the tag value overwriting the attribute value in `paramsMap`.
+		if paramsMap[tagName] != nil {
+			for paramsKey, _ := range paramsMap {
+				if paramsKey == tagName {
+					continue
+				}
+				if utils.EqualFoldWithoutChars(paramsKey, attributeName) {
+					paramsMap[paramsKey] = paramsMap[tagName]
+				}
+			}
+		}
 	}
 
 	var (
@@ -269,7 +281,7 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 			// string cases and chars like '-'/'_'/'.'/' '.
 
 			// Matching the parameters to struct tag names.
-			// The `tagV` is the attribute name of the struct.
+			// The `attrKey` is the attribute name of the struct.
 			for attrKey, cmpKey := range tagMap {
 				if strings.EqualFold(checkName, cmpKey) {
 					attrName = attrKey
@@ -297,12 +309,12 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 			continue
 		}
 		// If the attribute name is already checked converting, then skip it.
-		if _, ok := doneMap[attrName]; ok {
+		if _, ok = doneMap[attrName]; ok {
 			continue
 		}
 		// Mark it done.
 		doneMap[attrName] = struct{}{}
-		if err := bindVarToStructAttr(pointerElemReflectValue, attrName, mapV, mapping); err != nil {
+		if err = bindVarToStructAttr(pointerElemReflectValue, attrName, mapV, mapping); err != nil {
 			return err
 		}
 	}
@@ -322,7 +334,7 @@ func bindVarToStructAttr(elem reflect.Value, name string, value interface{}, map
 	defer func() {
 		if exception := recover(); exception != nil {
 			if err = bindVarToReflectValue(structFieldValue, value, mapping); err != nil {
-				err = gerror.WrapCodef(gcode.CodeInternalError, err, `error binding value to attribute "%s"`, name)
+				err = gerror.Wrapf(err, `error binding value to attribute "%s"`, name)
 			}
 		}
 	}()
@@ -330,6 +342,12 @@ func bindVarToStructAttr(elem reflect.Value, name string, value interface{}, map
 	if empty.IsNil(value) {
 		structFieldValue.Set(reflect.Zero(structFieldValue.Type()))
 	} else {
+		// Common interface check.
+		var ok bool
+		if err, ok = bindVarToReflectValueWithInterfaceCheck(structFieldValue, value); ok {
+			return err
+		}
+		// Default converting.
 		structFieldValue.Set(reflect.ValueOf(doConvert(
 			doConvertInput{
 				FromValue:  value,
@@ -412,11 +430,6 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 		return nil
 	}
 
-	// Common interface check.
-	if err, ok := bindVarToReflectValueWithInterfaceCheck(structFieldValue, value); ok {
-		return err
-	}
-
 	kind := structFieldValue.Kind()
 	// Converting using interface, for some kinds.
 	switch kind {
@@ -444,55 +457,88 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 	// Note that the slice element might be type of struct,
 	// so it uses Struct function doing the converting internally.
 	case reflect.Slice, reflect.Array:
-		a := reflect.Value{}
-		v := reflect.ValueOf(value)
-		if v.Kind() == reflect.Slice || v.Kind() == reflect.Array {
-			a = reflect.MakeSlice(structFieldValue.Type(), v.Len(), v.Len())
-			if v.Len() > 0 {
-				t := a.Index(0).Type()
-				for i := 0; i < v.Len(); i++ {
-					if t.Kind() == reflect.Ptr {
-						e := reflect.New(t.Elem()).Elem()
-						if err = doStruct(v.Index(i).Interface(), e, nil, ""); err != nil {
-							// Note there's reflect conversion mechanism here.
-							e.Set(reflect.ValueOf(v.Index(i).Interface()).Convert(t))
-						}
-						a.Index(i).Set(e.Addr())
-					} else {
-						e := reflect.New(t).Elem()
-						if err = doStruct(v.Index(i).Interface(), e, nil, ""); err != nil {
-							// Note there's reflect conversion mechanism here.
-							e.Set(reflect.ValueOf(v.Index(i).Interface()).Convert(t))
-						}
-						a.Index(i).Set(e)
+		var (
+			reflectArray reflect.Value
+			reflectValue = reflect.ValueOf(value)
+		)
+		if reflectValue.Kind() == reflect.Slice || reflectValue.Kind() == reflect.Array {
+			reflectArray = reflect.MakeSlice(structFieldValue.Type(), reflectValue.Len(), reflectValue.Len())
+			if reflectValue.Len() > 0 {
+				var (
+					elemType     = reflectArray.Index(0).Type()
+					elemTypeName string
+					converted    bool
+				)
+				for i := 0; i < reflectValue.Len(); i++ {
+					converted = false
+					elemTypeName = elemType.Name()
+					if elemTypeName == "" {
+						elemTypeName = elemType.String()
 					}
+					var elem reflect.Value
+					if elemType.Kind() == reflect.Ptr {
+						elem = reflect.New(elemType.Elem()).Elem()
+					} else {
+						elem = reflect.New(elemType).Elem()
+					}
+					if elem.Kind() == reflect.Struct {
+						if err = doStruct(reflectValue.Index(i).Interface(), elem, nil, ""); err == nil {
+							converted = true
+						}
+					}
+					if !converted {
+						elem.Set(reflect.ValueOf(doConvert(doConvertInput{
+							FromValue:  reflectValue.Index(i).Interface(),
+							ToTypeName: elemTypeName,
+							ReferValue: elem,
+						})))
+					}
+					if elemType.Kind() == reflect.Ptr {
+						// Before it sets the `elem` to array, do pointer converting if necessary.
+						elem = elem.Addr()
+					}
+					reflectArray.Index(i).Set(elem)
 				}
 			}
 		} else {
-			a = reflect.MakeSlice(structFieldValue.Type(), 1, 1)
-			t := a.Index(0).Type()
-			if t.Kind() == reflect.Ptr {
-				// Pointer element.
-				e := reflect.New(t.Elem()).Elem()
-				if err = doStruct(value, e, nil, ""); err != nil {
-					// Note there's reflect conversion mechanism here.
-					e.Set(reflect.ValueOf(value).Convert(t))
-				}
-				a.Index(0).Set(e.Addr())
-			} else {
-				// Just consider it as struct element. (Although it might be other types but not basic types, eg: map)
-				e := reflect.New(t).Elem()
-				if err = doStruct(value, e, nil, ""); err != nil {
-					return err
-				}
-				a.Index(0).Set(e)
+			reflectArray = reflect.MakeSlice(structFieldValue.Type(), 1, 1)
+			var (
+				elem         reflect.Value
+				elemType     = reflectArray.Index(0).Type()
+				elemTypeName = elemType.Name()
+				converted    bool
+			)
+			if elemTypeName == "" {
+				elemTypeName = elemType.String()
 			}
+			if elemType.Kind() == reflect.Ptr {
+				elem = reflect.New(elemType.Elem()).Elem()
+			} else {
+				elem = reflect.New(elemType).Elem()
+			}
+			if elem.Kind() == reflect.Struct {
+				if err = doStruct(value, elem, nil, ""); err == nil {
+					converted = true
+				}
+			}
+			if !converted {
+				elem.Set(reflect.ValueOf(doConvert(doConvertInput{
+					FromValue:  value,
+					ToTypeName: elemTypeName,
+					ReferValue: elem,
+				})))
+			}
+			if elemType.Kind() == reflect.Ptr {
+				// Before it sets the `elem` to array, do pointer converting if necessary.
+				elem = elem.Addr()
+			}
+			reflectArray.Index(0).Set(elem)
 		}
-		structFieldValue.Set(a)
+		structFieldValue.Set(reflectArray)
 
 	case reflect.Ptr:
 		item := reflect.New(structFieldValue.Type().Elem())
-		if err, ok := bindVarToReflectValueWithInterfaceCheck(item, value); ok {
+		if err, ok = bindVarToReflectValueWithInterfaceCheck(item, value); ok {
 			structFieldValue.Set(item)
 			return err
 		}

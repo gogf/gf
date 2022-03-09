@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 type Object struct{}
@@ -39,11 +40,9 @@ func (o *Object) Info(r *ghttp.Request) {
 }
 
 func Test_Router_Object1(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindObject("/", new(Object))
 	s.BindObject("/{.struct}/{.method}", new(Object))
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -51,7 +50,7 @@ func Test_Router_Object1(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "1Object Index2")
 		t.Assert(client.GetContent(ctx, "/init"), "Not Found")
@@ -70,10 +69,8 @@ func Test_Router_Object1(t *testing.T) {
 }
 
 func Test_Router_Object2(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindObject("/object", new(Object), "Show, Info")
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -81,7 +78,7 @@ func Test_Router_Object2(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/object"), "Not Found")
@@ -96,10 +93,8 @@ func Test_Router_Object2(t *testing.T) {
 }
 
 func Test_Router_ObjectMethod(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindObjectMethod("/object-info", new(Object), "Info")
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -107,7 +102,7 @@ func Test_Router_ObjectMethod(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/object"), "Not Found")

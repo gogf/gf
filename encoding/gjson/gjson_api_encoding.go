@@ -120,6 +120,12 @@ func (j *Json) ToYaml() ([]byte, error) {
 	return gyaml.Encode(*(j.p))
 }
 
+func (j *Json) ToYamlIndent(indent string) ([]byte, error) {
+	j.mu.RLock()
+	defer j.mu.RUnlock()
+	return gyaml.EncodeIndent(*(j.p), indent)
+}
+
 func (j *Json) ToYamlString() (string, error) {
 	b, e := j.ToYaml()
 	return string(b), e
@@ -170,9 +176,7 @@ func (j *Json) MustToTomlString() string {
 
 // ToIni json to ini
 func (j *Json) ToIni() ([]byte, error) {
-	j.mu.RLock()
-	defer j.mu.RUnlock()
-	return gini.Encode((*(j.p)).(map[string]interface{}))
+	return gini.Encode(j.Map())
 }
 
 // ToIniString ini to string

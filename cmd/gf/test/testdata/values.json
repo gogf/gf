@@ -1,0 +1,8 @@
+{
+    "server": {
+        "address": "https://goframe.org"
+    },
+    "sql":{
+        "table": "table_name"
+    }
+}

@@ -60,7 +60,7 @@ func (v *Uint) String() string {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (v *Uint) MarshalJSON() ([]byte, error) {
+func (v Uint) MarshalJSON() ([]byte, error) {
 	return []byte(strconv.FormatUint(uint64(v.Val()), 10)), nil
 }
 

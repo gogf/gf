@@ -50,33 +50,33 @@ func CopyFile(src, dst string) (err error) {
 	if src == dst {
 		return nil
 	}
-	in, err := os.Open(src)
+	in, err := Open(src)
 	if err != nil {
 		return
 	}
 	defer func() {
 		if e := in.Close(); e != nil {
-			err = e
+			err = gerror.Wrapf(e, `file close failed for "%s"`, src)
 		}
 	}()
-	out, err := os.Create(dst)
+	out, err := Create(dst)
 	if err != nil {
 		return
 	}
 	defer func() {
 		if e := out.Close(); e != nil {
-			err = e
+			err = gerror.Wrapf(e, `file close failed for "%s"`, dst)
 		}
 	}()
-	_, err = io.Copy(out, in)
-	if err != nil {
+	if _, err = io.Copy(out, in); err != nil {
+		err = gerror.Wrapf(err, `io.Copy failed from "%s" to "%s"`, src, dst)
 		return
 	}
-	err = out.Sync()
-	if err != nil {
+	if err = out.Sync(); err != nil {
+		err = gerror.Wrapf(err, `file sync failed for file "%s"`, dst)
 		return
 	}
-	err = os.Chmod(dst, DefaultPermCopy)
+	err = Chmod(dst, DefaultPermCopy)
 	if err != nil {
 		return
 	}
@@ -99,7 +99,7 @@ func CopyDir(src string, dst string) (err error) {
 	}
 	src = filepath.Clean(src)
 	dst = filepath.Clean(dst)
-	si, err := os.Stat(src)
+	si, err := Stat(src)
 	if err != nil {
 		return err
 	}
@@ -107,21 +107,21 @@ func CopyDir(src string, dst string) (err error) {
 		return gerror.NewCode(gcode.CodeInvalidParameter, "source is not a directory")
 	}
 	if !Exists(dst) {
-		err = os.MkdirAll(dst, DefaultPermCopy)
-		if err != nil {
+		if err = os.MkdirAll(dst, DefaultPermCopy); err != nil {
+			err = gerror.Wrapf(err, `create directory failed for path "%s", perm "%s"`, dst, DefaultPermCopy)
 			return
 		}
 	}
 	entries, err := ioutil.ReadDir(src)
 	if err != nil {
+		err = gerror.Wrapf(err, `read directory failed for path "%s"`, src)
 		return
 	}
 	for _, entry := range entries {
 		srcPath := filepath.Join(src, entry.Name())
 		dstPath := filepath.Join(dst, entry.Name())
 		if entry.IsDir() {
-			err = CopyDir(srcPath, dstPath)
-			if err != nil {
+			if err = CopyDir(srcPath, dstPath); err != nil {
 				return
 			}
 		} else {
@@ -129,8 +129,7 @@ func CopyDir(src string, dst string) (err error) {
 			if entry.Mode()&os.ModeSymlink != 0 {
 				continue
 			}
-			err = CopyFile(srcPath, dstPath)
-			if err != nil {
+			if err = CopyFile(srcPath, dstPath); err != nil {
 				return
 			}
 		}
