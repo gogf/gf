@@ -47,9 +47,10 @@ func (s *Server) handleErrorLog(err error, r *Request) {
 		code          = gerror.Code(err)
 		scheme        = "http"
 		codeDetail    = code.Detail()
+		proto         = r.Header.Get("X-Forwarded-Proto")
 		codeDetailStr string
 	)
-	if r.TLS != nil {
+	if r.TLS != nil || gstr.Equal(proto, "https") {
 		scheme = "https"
 	}
 	if codeDetail != nil {
