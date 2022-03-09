@@ -24,10 +24,10 @@ import (
 // retrieved and overwrote in order of priority: router < query < body < form < custom.
 func (r *Request) GetRequest(key string, def ...interface{}) *gvar.Var {
 	value := r.GetParam(key)
-	if value.Val() == nil {
+	if value.IsNil() {
 		value = r.GetForm(key)
 	}
-	if value.Val() == nil {
+	if value.IsNil() {
 		r.parseBody()
 		if len(r.bodyMap) > 0 {
 			if v := r.bodyMap[key]; v != nil {
@@ -35,13 +35,13 @@ func (r *Request) GetRequest(key string, def ...interface{}) *gvar.Var {
 			}
 		}
 	}
-	if value.Val() == nil {
+	if value.IsNil() {
 		value = r.GetQuery(key)
 	}
-	if value.Val() == nil {
+	if value.IsNil() {
 		value = r.GetRouter(key)
 	}
-	if value.Val() != nil {
+	if value.IsNil() {
 		return value
 	}
 	if len(def) > 0 {
