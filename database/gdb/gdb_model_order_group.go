@@ -6,15 +6,19 @@
 
 package gdb
 
-import "strings"
+import (
+	"github.com/gogf/gf/v2/util/gconv"
+	"strings"
+)
 
 // Order sets the "ORDER BY" statement for the model.
 //
 // Eg:
 // Order("id desc")
-// Order("id", "desc")
+// Order("id", "desc").
 // Order("id desc,name asc").
-func (m *Model) Order(orderBy ...string) *Model {
+// Order(gdb.Raw("field(id, 3,1,2)")).
+func (m *Model) Order(orderBy ...interface{}) *Model {
 	if len(orderBy) == 0 {
 		return m
 	}
@@ -22,7 +26,13 @@ func (m *Model) Order(orderBy ...string) *Model {
 	if model.orderBy != "" {
 		model.orderBy += ","
 	}
-	model.orderBy += model.db.GetCore().QuoteString(strings.Join(orderBy, " "))
+	for _, o := range orderBy {
+		if v, ok := o.(Raw); ok {
+			model.orderBy += gconv.String(v)
+			return model
+		}
+	}
+	model.orderBy += model.db.GetCore().QuoteString(strings.Join(gconv.SliceStr(orderBy), " "))
 	return model
 }
 

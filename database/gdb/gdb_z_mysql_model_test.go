@@ -442,10 +442,10 @@ func Test_Model_Clone(t *testing.T) {
 		count, err := md.Count()
 		t.AssertNil(err)
 
-		record, err := md.Order("id DESC").One()
+		record, err := md.Safe(true).Order("id DESC").One()
 		t.AssertNil(err)
 
-		result, err := md.Order("id ASC").All()
+		result, err := md.Safe(true).Order("id ASC").All()
 		t.AssertNil(err)
 
 		t.Assert(count, 2)
@@ -1113,6 +1113,15 @@ func Test_Model_OrderBy(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(result), TableSize)
 		t.Assert(result[0]["nickname"].String(), "name_1")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Order(gdb.Raw("field(id, 10,1,2,3,4,5,6,7,8,9)")).All()
+		t.AssertNil(err)
+		t.Assert(len(result), TableSize)
+		t.Assert(result[0]["nickname"].String(), "name_10")
+		t.Assert(result[1]["nickname"].String(), "name_1")
+		t.Assert(result[2]["nickname"].String(), "name_2")
 	})
 }
 
