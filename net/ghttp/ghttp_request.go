@@ -224,8 +224,11 @@ func (r *Request) GetRemoteIp() string {
 
 // GetUrl returns current URL of this request.
 func (r *Request) GetUrl() string {
-	scheme := "http"
-	proto := r.Header.Get("X-Forwarded-Proto")
+	var (
+		scheme = "http"
+		proto  = r.Header.Get("X-Forwarded-Proto")
+	)
+
 	if r.TLS != nil || (proto != "" && strings.ToLower(proto) == "https") {
 		scheme = "https"
 	}
