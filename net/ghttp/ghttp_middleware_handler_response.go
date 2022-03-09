@@ -7,6 +7,8 @@
 package ghttp
 
 import (
+	"net/http"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
@@ -28,29 +30,33 @@ func MiddlewareHandlerResponse(r *Request) {
 	}
 
 	var (
-		ctx         = r.Context()
-		err         = r.GetError()
-		res         = r.GetHandlerResponse()
-		internalErr error
+		msg  string
+		ctx  = r.Context()
+		err  = r.GetError()
+		res  = r.GetHandlerResponse()
+		code = gerror.Code(err)
 	)
 	if err != nil {
-		code := gerror.Code(err)
 		if code == gcode.CodeNil {
 			code = gcode.CodeInternalError
 		}
-		internalErr = r.Response.WriteJson(DefaultHandlerResponse{
-			Code:    code.Code(),
-			Message: err.Error(),
-			Data:    nil,
-		})
-		if internalErr != nil {
-			intlog.Errorf(ctx, `%+v`, internalErr)
+		msg = err.Error()
+	} else if r.Response.Status > 0 && r.Response.Status != http.StatusOK {
+		msg = http.StatusText(r.Response.Status)
+		switch r.Response.Status {
+		case http.StatusNotFound:
+			code = gcode.CodeNotFound
+		case http.StatusForbidden:
+			code = gcode.CodeNotAuthorized
+		default:
+			code = gcode.CodeUnknown
 		}
-		return
+	} else {
+		code = gcode.CodeOK
 	}
-	internalErr = r.Response.WriteJson(DefaultHandlerResponse{
-		Code:    gcode.CodeOK.Code(),
-		Message: "",
+	internalErr := r.Response.WriteJson(DefaultHandlerResponse{
+		Code:    code.Code(),
+		Message: msg,
 		Data:    res,
 	})
 	if internalErr != nil {

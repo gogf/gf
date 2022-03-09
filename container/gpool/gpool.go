@@ -109,7 +109,7 @@ func (p *Pool) Get() (interface{}, error) {
 			if f.expireAt == 0 || f.expireAt > gtime.TimestampMilli() {
 				return f.value, nil
 			} else if p.ExpireFunc != nil {
-				// TODO: move expire function calling asynchronously from `Get` operation.
+				// TODO: move expire function calling asynchronously out from `Get` operation.
 				p.ExpireFunc(f.value)
 			}
 		} else {
@@ -129,7 +129,7 @@ func (p *Pool) Size() int {
 
 // Close closes the pool. If `p` has ExpireFunc,
 // then it automatically closes all items using this function before it's closed.
-// Commonly you do not need call this function manually.
+// Commonly you do not need to call this function manually.
 func (p *Pool) Close() {
 	p.closed.Set(true)
 }

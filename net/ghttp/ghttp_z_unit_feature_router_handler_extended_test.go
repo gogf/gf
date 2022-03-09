@@ -56,7 +56,7 @@ func Test_Router_Handler_Extended_Handler_WithObject(t *testing.T) {
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/test?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18,"Name":"john"}}`)
-		t.Assert(client.GetContent(ctx, "/test/error"), `{"code":50,"message":"error","data":null}`)
+		t.Assert(client.GetContent(ctx, "/test/error"), `{"code":50,"message":"error","data":{"Id":1,"Age":0,"Name":""}}`)
 	})
 }
 
@@ -146,10 +146,10 @@ func Test_Router_Handler_Extended_Handler_WithObjectAndMeta(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
-		t.Assert(client.GetContent(ctx, "/"), `{"code":0,"message":"","data":null}`)
+		t.Assert(client.GetContent(ctx, "/"), `{"code":65,"message":"Not Found","data":null}`)
 		t.Assert(client.GetContent(ctx, "/custom-test1?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18}}`)
 		t.Assert(client.GetContent(ctx, "/custom-test2?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Name":"john"}}`)
-		t.Assert(client.PostContent(ctx, "/custom-test2?age=18&name=john"), `{"code":0,"message":"","data":null}`)
+		t.Assert(client.PostContent(ctx, "/custom-test2?age=18&name=john"), `{"code":65,"message":"Not Found","data":null}`)
 	})
 }
 
@@ -177,10 +177,10 @@ func Test_Router_Handler_Extended_Handler_Group_Bind(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
-		t.Assert(client.GetContent(ctx, "/"), `{"code":0,"message":"","data":null}`)
+		t.Assert(client.GetContent(ctx, "/"), `{"code":65,"message":"Not Found","data":null}`)
 		t.Assert(client.GetContent(ctx, "/api/v1/custom-test1?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18}}`)
 		t.Assert(client.GetContent(ctx, "/api/v1/custom-test2?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Name":"john"}}`)
-		t.Assert(client.PostContent(ctx, "/api/v1/custom-test2?age=18&name=john"), `{"code":0,"message":"","data":null}`)
+		t.Assert(client.PostContent(ctx, "/api/v1/custom-test2?age=18&name=john"), `{"code":65,"message":"Not Found","data":null}`)
 
 		t.Assert(client.GetContent(ctx, "/api/v1/custom-test3?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18}}`)
 		t.Assert(client.GetContent(ctx, "/api/v1/custom-test4?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Name":"john"}}`)

@@ -51,18 +51,19 @@ func (oai *OpenApiV3) getResponseSchemaRef(in getResponseSchemaRefInput) (*Schem
 	}
 
 	var (
-		dataFieldsPartsArray                                        = gstr.Split(in.CommonResponseDataField, ".")
-		bizResponseStructSchemaRef, bizResponseStructSchemaRefExist = oai.Components.Schemas[in.BusinessStructName]
-		schema, err                                                 = oai.structToSchema(in.CommonResponseObject)
+		dataFieldsPartsArray       = gstr.Split(in.CommonResponseDataField, ".")
+		bizResponseStructSchemaRef = oai.Components.Schemas.Get(in.BusinessStructName)
+		schema, err                = oai.structToSchema(in.CommonResponseObject)
 	)
 	if err != nil {
 		return nil, err
 	}
-	if in.CommonResponseDataField == "" && bizResponseStructSchemaRefExist {
+	if in.CommonResponseDataField == "" && bizResponseStructSchemaRef != nil {
 		// Normal response.
-		for k, v := range bizResponseStructSchemaRef.Value.Properties {
-			schema.Properties[k] = v
-		}
+		bizResponseStructSchemaRef.Value.Properties.Iterator(func(key string, ref SchemaRef) bool {
+			schema.Properties.Set(key, ref)
+			return true
+		})
 	} else {
 		// Common response.
 		structFields, _ := gstructs.Fields(gstructs.FieldsInput{
@@ -80,7 +81,7 @@ func (oai *OpenApiV3) getResponseSchemaRef(in getResponseSchemaRefInput) (*Schem
 					if err = oai.tagMapToSchema(structField.TagMap(), bizResponseStructSchemaRef.Value); err != nil {
 						return nil, err
 					}
-					schema.Properties[fieldName] = bizResponseStructSchemaRef
+					schema.Properties.Set(fieldName, *bizResponseStructSchemaRef)
 					break
 				}
 			default:
@@ -95,7 +96,7 @@ func (oai *OpenApiV3) getResponseSchemaRef(in getResponseSchemaRefInput) (*Schem
 					if err != nil {
 						return nil, err
 					}
-					schema.Properties[fieldName] = *schemaRef
+					schema.Properties.Set(fieldName, *schemaRef)
 					break
 				}
 			}
