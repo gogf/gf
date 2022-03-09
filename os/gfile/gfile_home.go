@@ -14,7 +14,6 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 )
 
@@ -53,12 +52,13 @@ func homeUnix() (string, error) {
 	cmd := exec.Command("sh", "-c", "eval echo ~$USER")
 	cmd.Stdout = &stdout
 	if err := cmd.Run(); err != nil {
+		err = gerror.Wrapf(err, `retrieve home directory failed`)
 		return "", err
 	}
 
 	result := strings.TrimSpace(stdout.String())
 	if result == "" {
-		return "", gerror.NewCode(gcode.CodeInternalError, "blank output when reading home directory")
+		return "", gerror.New("blank output when reading home directory")
 	}
 
 	return result, nil
@@ -75,7 +75,7 @@ func homeWindows() (string, error) {
 		home = os.Getenv("USERPROFILE")
 	}
 	if home == "" {
-		return "", gerror.NewCode(gcode.CodeOperationFailed, "HOMEDRIVE, HOMEPATH, and USERPROFILE are blank")
+		return "", gerror.New("environment keys HOMEDRIVE, HOMEPATH and USERPROFILE are empty")
 	}
 
 	return home, nil

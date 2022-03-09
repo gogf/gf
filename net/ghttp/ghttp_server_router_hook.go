@@ -61,6 +61,9 @@ func (s *Server) BindHookHandlerByMap(pattern string, hookMap map[string]Handler
 
 // callHookHandler calls the hook handler by their registered sequences.
 func (s *Server) callHookHandler(hook string, r *Request) {
+	if !r.hasHookHandler {
+		return
+	}
 	hookItems := r.getHookHandlers(hook)
 	if len(hookItems) > 0 {
 		// Backup the old router variable map.
@@ -91,9 +94,6 @@ func (s *Server) callHookHandler(hook string, r *Request) {
 
 // getHookHandlers retrieves and returns the hook handlers of specified hook.
 func (r *Request) getHookHandlers(hook string) []*handlerParsedItem {
-	if !r.hasHookHandler {
-		return nil
-	}
 	parsedItems := make([]*handlerParsedItem, 0, 4)
 	for _, v := range r.handlers {
 		if v.Handler.HookName != hook {

@@ -571,6 +571,7 @@ func Test_Dir(t *testing.T) {
 
 		t.Assert(readlPath, testpath())
 
+		t.Assert(len(gfile.Dir(".")) > 0, true)
 	})
 }
 
@@ -610,9 +611,9 @@ func Test_ExtName(t *testing.T) {
 func Test_TempDir(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		if gfile.Separator != "/" || !gfile.Exists("/tmp") {
-			t.Assert(gfile.TempDir(), os.TempDir())
+			t.Assert(gfile.Temp(), os.TempDir())
 		} else {
-			t.Assert(gfile.TempDir(), "/tmp")
+			t.Assert(gfile.Temp(), "/tmp")
 		}
 	})
 }
@@ -665,5 +666,17 @@ func Test_MainPkgPath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		reads := gfile.MainPkgPath()
 		t.Assert(reads, "")
+	})
+}
+
+func Test_SelfName(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(len(gfile.SelfName()) > 0, true)
+	})
+}
+
+func Test_MTimestamp(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gfile.MTimestamp(gfile.Temp()) > 0, true)
 	})
 }

@@ -11,6 +11,7 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -91,7 +92,7 @@ func (r *Response) ServeFileDownload(path string, name ...string) {
 	}
 	r.Header().Set("Content-Type", "application/force-download")
 	r.Header().Set("Accept-Ranges", "bytes")
-	r.Header().Set("Content-Disposition", fmt.Sprintf(`attachment;filename="%s"`, downloadName))
+	r.Header().Set("Content-Disposition", fmt.Sprintf(`attachment;filename=%s`, url.QueryEscape(downloadName)))
 	r.Server.serveFile(r.Request, serveFile)
 }
 
@@ -143,7 +144,7 @@ func (r *Response) ClearBuffer() {
 
 // Flush outputs the buffer content to the client and clears the buffer.
 func (r *Response) Flush() {
-	r.Header().Set(responseTraceIdHeader, gtrace.GetTraceID(r.Request.Context()))
+	r.Header().Set(responseTraceIDHeader, gtrace.GetTraceID(r.Request.Context()))
 	if r.Server.config.ServerAgent != "" {
 		r.Header().Set("Server", r.Server.config.ServerAgent)
 	}

@@ -33,7 +33,7 @@ func (l *Logger) rotateFileBySize(ctx context.Context, now time.Time) {
 	}
 	if err := l.doRotateFile(ctx, l.getFilePath(now)); err != nil {
 		// panic(err)
-		intlog.Error(ctx, err)
+		intlog.Errorf(ctx, `%+v`, err)
 	}
 }
 
@@ -133,7 +133,7 @@ func (l *Logger) rotateChecksTimely(ctx context.Context) {
 		files, err = gfile.ScanDirFile(l.config.Path, pattern, true)
 	)
 	if err != nil {
-		intlog.Error(ctx, err)
+		intlog.Errorf(ctx, `%+v`, err)
 	}
 	intlog.Printf(ctx, "logging rotation start checks: %+v", files)
 	// =============================================================
@@ -159,7 +159,7 @@ func (l *Logger) rotateChecksTimely(ctx context.Context) {
 					now, mtime, subDuration, l.config.RotateExpire, file,
 				)
 				if err := l.doRotateFile(ctx, file); err != nil {
-					intlog.Error(ctx, err)
+					intlog.Errorf(ctx, `%+v`, err)
 				}
 			}
 		}
@@ -167,7 +167,7 @@ func (l *Logger) rotateChecksTimely(ctx context.Context) {
 			// Update the files array.
 			files, err = gfile.ScanDirFile(l.config.Path, pattern, true)
 			if err != nil {
-				intlog.Error(ctx, err)
+				intlog.Errorf(ctx, `%+v`, err)
 			}
 		}
 	}
@@ -204,7 +204,7 @@ func (l *Logger) rotateChecksTimely(ctx context.Context) {
 			// Update the files array.
 			files, err = gfile.ScanDirFile(l.config.Path, pattern, true)
 			if err != nil {
-				intlog.Error(ctx, err)
+				intlog.Errorf(ctx, `%+v`, err)
 			}
 		}
 	}
@@ -246,7 +246,7 @@ func (l *Logger) rotateChecksTimely(ctx context.Context) {
 				path, _ := array.PopLeft()
 				intlog.Printf(ctx, `remove exceeded backup limit file: %s`, path)
 				if err := gfile.Remove(path.(string)); err != nil {
-					intlog.Error(ctx, err)
+					intlog.Errorf(ctx, `%+v`, err)
 				}
 			}
 		}
@@ -268,7 +268,7 @@ func (l *Logger) rotateChecksTimely(ctx context.Context) {
 							now, mtime, subDuration, l.config.RotateBackupExpire, path,
 						)
 						if err := gfile.Remove(path); err != nil {
-							intlog.Error(ctx, err)
+							intlog.Errorf(ctx, `%+v`, err)
 						}
 						return true
 					} else {

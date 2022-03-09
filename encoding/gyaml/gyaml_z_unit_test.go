@@ -38,6 +38,39 @@ dd = 11
     cache = "127.0.0.1:6379,1"
 `
 
+func Test_Encode(t *testing.T) {
+	// Map.
+	gtest.C(t, func(t *gtest.T) {
+		b, err := gyaml.Encode(g.Map{
+			"k": "v",
+		})
+		t.AssertNil(err)
+		t.Assert(string(b), `k: v
+`)
+	})
+	// Array.
+	gtest.C(t, func(t *gtest.T) {
+		b, err := gyaml.Encode([]string{"a", "b", "c"})
+		t.AssertNil(err)
+		t.Assert(string(b), `- a
+- b
+- c
+`)
+	})
+}
+
+func Test_EncodeIndent(t *testing.T) {
+	// Array.
+	gtest.C(t, func(t *gtest.T) {
+		b, err := gyaml.EncodeIndent([]string{"a", "b", "c"}, "####")
+		t.AssertNil(err)
+		t.Assert(string(b), `####- a
+####- b
+####- c
+`)
+	})
+}
+
 func Test_Decode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		result, err := gyaml.Decode([]byte(yamlStr))

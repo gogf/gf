@@ -7,9 +7,9 @@
 package gstructs
 
 import (
-	"errors"
-	"fmt"
 	"reflect"
+
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 // StructType retrieves and returns the struct Type of specified struct/*struct.
@@ -49,11 +49,9 @@ func StructType(object interface{}) (*Type, error) {
 
 exitLoop:
 	if reflectKind != reflect.Struct {
-		return nil, errors.New(
-			fmt.Sprintf(
-				`invalid object kind "%s", kind of "struct" is required`,
-				reflectKind,
-			),
+		return nil, gerror.Newf(
+			`invalid object kind "%s", kind of "struct" is required`,
+			reflectKind,
 		)
 	}
 	reflectType = reflectValue.Type()

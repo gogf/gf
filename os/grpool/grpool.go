@@ -116,7 +116,7 @@ func (p *Pool) AddWithRecover(ctx context.Context, userFunc Func, recoverFunc ..
 					if v, ok := exception.(error); ok && gerror.HasStack(v) {
 						recoverFunc[0](v)
 					} else {
-						recoverFunc[0](gerror.NewCodef(gcode.CodeInternalError, `%+v`, exception))
+						recoverFunc[0](gerror.Newf(`%+v`, exception))
 					}
 				}
 			}

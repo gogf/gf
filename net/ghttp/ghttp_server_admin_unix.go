@@ -55,7 +55,7 @@ func handleProcessSignal() {
 		// Restart the servers.
 		case syscall.SIGUSR1:
 			if err := restartWebServers(ctx, sig.String()); err != nil {
-				intlog.Error(ctx, err)
+				intlog.Errorf(ctx, `%+v`, err)
 			}
 			return
 

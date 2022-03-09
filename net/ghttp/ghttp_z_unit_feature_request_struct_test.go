@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 	"github.com/gogf/gf/v2/util/gvalid"
 )
 
@@ -23,8 +24,7 @@ func Test_Params_Parse(t *testing.T) {
 		Name string
 		Map  map[string]interface{}
 	}
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/parse", func(r *ghttp.Request) {
 		var user *User
 		if err := r.Parse(&user); err != nil {
@@ -32,7 +32,6 @@ func Test_Params_Parse(t *testing.T) {
 		}
 		r.Response.WriteExit(user.Map["id"], user.Map["score"])
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -40,7 +39,7 @@ func Test_Params_Parse(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		t.Assert(client.PostContent(ctx, "/parse", `{"id":1,"name":"john","map":{"id":1,"score":100}}`), `1100`)
 	})
 }
@@ -50,8 +49,7 @@ func Test_Params_ParseQuery(t *testing.T) {
 		Id   int
 		Name string
 	}
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/parse-query", func(r *ghttp.Request) {
 		var user *User
 		if err := r.ParseQuery(&user); err != nil {
@@ -59,7 +57,6 @@ func Test_Params_ParseQuery(t *testing.T) {
 		}
 		r.Response.WriteExit(user.Id, user.Name)
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -67,7 +64,7 @@ func Test_Params_ParseQuery(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
-		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		t.Assert(c.GetContent(ctx, "/parse-query"), `0`)
 		t.Assert(c.GetContent(ctx, "/parse-query?id=1&name=john"), `1john`)
 		t.Assert(c.PostContent(ctx, "/parse-query"), `0`)
@@ -83,8 +80,7 @@ func Test_Params_ParseForm(t *testing.T) {
 		Id   int
 		Name string
 	}
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/parse-form", func(r *ghttp.Request) {
 		var user *User
 		if err := r.ParseForm(&user); err != nil {
@@ -92,7 +88,6 @@ func Test_Params_ParseForm(t *testing.T) {
 		}
 		r.Response.WriteExit(user.Id, user.Name)
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -100,7 +95,7 @@ func Test_Params_ParseForm(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
-		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		t.Assert(c.GetContent(ctx, "/parse-form"), `0`)
 		t.Assert(c.GetContent(ctx, "/parse-form", g.Map{
 			"id":   1,
@@ -182,8 +177,7 @@ func Test_Params_ComplexJsonStruct(t *testing.T) {
 		ReadinessProbe ItemProbe
 	}
 
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/parse", func(r *ghttp.Request) {
 		if m := r.GetMap(); len(m) > 0 {
 			var data *SaveRequest
@@ -193,7 +187,6 @@ func Test_Params_ComplexJsonStruct(t *testing.T) {
 			r.Response.WriteExit(data)
 		}
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -201,7 +194,7 @@ func Test_Params_ComplexJsonStruct(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		content := `
 {
     "app_id": 5,
@@ -294,8 +287,7 @@ func Test_Params_Parse_Attr_Pointer1(t *testing.T) {
 		Id   *int
 		Name *string
 	}
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/parse1", func(r *ghttp.Request) {
 		if m := r.GetMap(); len(m) > 0 {
 			var user *User
@@ -314,7 +306,6 @@ func Test_Params_Parse_Attr_Pointer1(t *testing.T) {
 			r.Response.WriteExit(user.Id, user.Name)
 		}
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -322,7 +313,7 @@ func Test_Params_Parse_Attr_Pointer1(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		t.Assert(client.PostContent(ctx, "/parse1", `{"id":1,"name":"john"}`), `1john`)
 		t.Assert(client.PostContent(ctx, "/parse2", `{"id":1,"name":"john"}`), `1john`)
 		t.Assert(client.PostContent(ctx, "/parse2?id=1&name=john"), `1john`)
@@ -334,8 +325,7 @@ func Test_Params_Parse_Attr_Pointer2(t *testing.T) {
 	type User struct {
 		Id *int `v:"required"`
 	}
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/parse", func(r *ghttp.Request) {
 		var user *User
 		if err := r.Parse(&user); err != nil {
@@ -343,7 +333,6 @@ func Test_Params_Parse_Attr_Pointer2(t *testing.T) {
 		}
 		r.Response.WriteExit(user.Id)
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -351,7 +340,7 @@ func Test_Params_Parse_Attr_Pointer2(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		t.Assert(client.PostContent(ctx, "/parse"), `The Id field is required`)
 		t.Assert(client.PostContent(ctx, "/parse?id=1"), `1`)
 	})
@@ -364,8 +353,7 @@ func Test_Params_Parse_Attr_Pointer2(t *testing.T) {
 //		Name   string
 //		Scores [][]int
 //	}
-//	p, _ := ports.PopRand()
-//	s := g.Server(p)
+//	//	s := g.Server(guid.S())
 //	s.BindHandler("/parse", func(r *ghttp.Request) {
 //		if m := r.GetMap(); len(m) > 0 {
 //			var user *User
@@ -375,15 +363,14 @@ func Test_Params_Parse_Attr_Pointer2(t *testing.T) {
 //			r.Response.WriteExit(user.Scores)
 //		}
 //	})
-//	s.SetPort(p)
-//	s.SetDumpRouterMap(false)
+//	//	s.SetDumpRouterMap(false)
 //	s.Start()
 //	defer s.Shutdown()
 //
 //	time.Sleep(100 * time.Millisecond)
 //	gtest.C(t, func(t *gtest.T) {
 //		client := g.Client()
-//		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+//		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 //		t.Assert(client.PostContent(ctx, "/parse", `{"id":1,"name":"john","scores":[[1,2,3]]}`), `1100`)
 //	})
 // }
@@ -396,8 +383,7 @@ func Test_Params_Struct(t *testing.T) {
 		Pass1 string `p:"password1"`
 		Pass2 string `p:"password2" v:"password2 @required|length:2,20|password3#||密码强度不足"`
 	}
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/struct1", func(r *ghttp.Request) {
 		if m := r.GetMap(); len(m) > 0 {
 			user := new(User)
@@ -438,7 +424,6 @@ func Test_Params_Struct(t *testing.T) {
 			r.Response.WriteExit(user.Id, user.Name, user.Pass1, user.Pass2)
 		}
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -446,13 +431,13 @@ func Test_Params_Struct(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		t.Assert(client.GetContent(ctx, "/struct1", `id=1&name=john&password1=123&password2=456`), `1john123456`)
 		t.Assert(client.PostContent(ctx, "/struct1", `id=1&name=john&password1=123&password2=456`), `1john123456`)
 		t.Assert(client.PostContent(ctx, "/struct2", `id=1&name=john&password1=123&password2=456`), `1john123456`)
 		t.Assert(client.PostContent(ctx, "/struct2", ``), ``)
 		t.Assert(client.PostContent(ctx, "/struct-valid", `id=1&name=john&password1=123&password2=0`), "The password2 value `0` length must be between 2 and 20; 密码强度不足")
-		t.Assert(client.PostContent(ctx, "/parse", `id=1&name=john&password1=123&password2=0`), "The password2 value `0` length must be between 2 and 20; 密码强度不足")
+		t.Assert(client.PostContent(ctx, "/parse", `id=1&name=john&password1=123&password2=0`), "The password2 value `0` length must be between 2 and 20")
 		t.Assert(client.PostContent(ctx, "/parse", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}`), `1john123Abc!@#123Abc!@#`)
 	})
 }
@@ -465,8 +450,7 @@ func Test_Params_Structs(t *testing.T) {
 		Pass1 string `p:"password1"`
 		Pass2 string `p:"password2" v:"password2 @required|length:2,20|password3#||密码强度不足"`
 	}
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/parse1", func(r *ghttp.Request) {
 		var users []*User
 		if err := r.Parse(&users); err != nil {
@@ -474,7 +458,6 @@ func Test_Params_Structs(t *testing.T) {
 		}
 		r.Response.WriteExit(users[0].Id, users[1].Id)
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -482,7 +465,7 @@ func Test_Params_Structs(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		t.Assert(client.PostContent(ctx,
 			"/parse1",
 			`[{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}, {"id":2,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}]`),
@@ -496,8 +479,7 @@ func Test_Params_Struct_Validation(t *testing.T) {
 		Id   int    `v:"required"`
 		Name string `v:"name@required-with:id"`
 	}
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.ALL("/", func(r *ghttp.Request) {
 			var (
@@ -511,7 +493,6 @@ func Test_Params_Struct_Validation(t *testing.T) {
 			r.Response.WriteExit(user.Id, user.Name)
 		})
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -519,10 +500,55 @@ func Test_Params_Struct_Validation(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
-		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		t.Assert(c.GetContent(ctx, "/", ``), `The Id field is required`)
 		t.Assert(c.GetContent(ctx, "/", `id=1&name=john`), `1john`)
 		t.Assert(c.PostContent(ctx, "/", `id=1&name=john&password1=123&password2=456`), `1john`)
 		t.Assert(c.PostContent(ctx, "/", `id=1`), `The name field is required`)
+	})
+}
+
+// https://github.com/gogf/gf/issues/1488
+func Test_Params_Parse_Issue1488(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.ALL("/", func(r *ghttp.Request) {
+			type Request struct {
+				Type         []int  `p:"type"`
+				Keyword      string `p:"keyword"`
+				Limit        int    `p:"per_page" d:"10"`
+				Page         int    `p:"page" d:"1"`
+				Order        string
+				CreatedAtLte string
+				CreatedAtGte string
+				CreatorID    []int
+			}
+			for i := 0; i < 10; i++ {
+				r.SetParamMap(g.Map{
+					"type[]":           0,
+					"keyword":          "",
+					"t_start":          "",
+					"t_end":            "",
+					"reserve_at_start": "",
+					"reserve_at_end":   "",
+					"user_name":        "",
+					"flag":             "",
+					"per_page":         6,
+				})
+				var parsed Request
+				_ = r.Parse(&parsed)
+				r.Response.Write(parsed.Page, parsed.Limit)
+			}
+		})
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		t.Assert(c.GetContent(ctx, "/", ``), `16161616161616161616`)
 	})
 }

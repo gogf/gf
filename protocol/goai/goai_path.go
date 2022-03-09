@@ -80,6 +80,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	}
 
 	var (
+		mime                 string
 		path                 = Path{}
 		inputMetaMap         = gmeta.Data(inputObject.Interface())
 		outputMetaMap        = gmeta.Data(outputObject.Interface())
@@ -126,11 +127,16 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	}
 
 	if len(inputMetaMap) > 0 {
-		if err := gconv.Struct(oai.fileMapWithShortTags(inputMetaMap), &path); err != nil {
-			return gerror.WrapCode(gcode.CodeInternalError, err, `mapping struct tags to Path failed`)
+		inputMetaMap = oai.fileMapWithShortTags(inputMetaMap)
+		if err := gconv.Struct(inputMetaMap, &path); err != nil {
+			return gerror.Wrap(err, `mapping struct tags to Path failed`)
 		}
-		if err := gconv.Struct(oai.fileMapWithShortTags(inputMetaMap), &operation); err != nil {
-			return gerror.WrapCode(gcode.CodeInternalError, err, `mapping struct tags to Operation failed`)
+		if err := gconv.Struct(inputMetaMap, &operation); err != nil {
+			return gerror.Wrap(err, `mapping struct tags to Operation failed`)
+		}
+		// Allowed request mime.
+		if mime = inputMetaMap[TagNameMime]; mime == "" {
+			mime = inputMetaMap[TagNameConsumes]
 		}
 	}
 
@@ -205,7 +211,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		)
 		if len(outputMetaMap) > 0 {
 			if err := gconv.Struct(oai.fileMapWithShortTags(outputMetaMap), &response); err != nil {
-				return gerror.WrapCode(gcode.CodeInternalError, err, `mapping struct tags to Response failed`)
+				return gerror.Wrap(err, `mapping struct tags to Response failed`)
 			}
 		}
 		// Supported mime types of response.
@@ -213,9 +219,9 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			contentTypes = oai.Config.ReadContentTypes
 			tagMimeValue = gmeta.Get(outputObject.Interface(), TagNameMime).String()
 			refInput     = getResponseSchemaRefInput{
-				BusinessStructName: outputStructTypeName,
-				ResponseObject:     oai.Config.CommonResponse,
-				ResponseDataField:  oai.Config.CommonResponseDataField,
+				BusinessStructName:      outputStructTypeName,
+				CommonResponseObject:    oai.Config.CommonResponse,
+				CommonResponseDataField: oai.Config.CommonResponseDataField,
 			}
 		)
 		if tagMimeValue != "" {
@@ -224,8 +230,8 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		for _, v := range contentTypes {
 			// If customized response mime type, it then ignores common response feature.
 			if tagMimeValue != "" {
-				refInput.ResponseObject = nil
-				refInput.ResponseDataField = ""
+				refInput.CommonResponseObject = nil
+				refInput.CommonResponseDataField = ""
 			}
 			schemaRef, err := oai.getResponseSchemaRef(refInput)
 			if err != nil {

@@ -24,7 +24,7 @@ type StorageRedis struct {
 	updatingIdMap *gmap.StrIntMap // Updating TTL set for session id.
 }
 
-var (
+const (
 	// DefaultStorageRedisLoopInterval is the interval updating TTL for session ids
 	// in last duration.
 	DefaultStorageRedisLoopInterval = 10 * time.Second
@@ -56,7 +56,7 @@ func NewStorageRedis(redis *gredis.Redis, prefix ...string) *StorageRedis {
 				break
 			} else {
 				if err = s.doUpdateTTL(context.TODO(), id, ttlSeconds); err != nil {
-					intlog.Error(context.TODO(), err)
+					intlog.Errorf(context.TODO(), `%+v`, err)
 				}
 			}
 		}

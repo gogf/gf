@@ -8,8 +8,12 @@ package gvalid
 
 import (
 	"context"
+	"fmt"
+	"reflect"
+	"runtime"
 
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/intlog"
 )
 
 // RuleFunc is the custom function for data validation.
@@ -39,6 +43,14 @@ var (
 
 // RegisterRule registers custom validation rule and function for package.
 func RegisterRule(rule string, f RuleFunc) {
+	if customRuleFuncMap[rule] != nil {
+		intlog.PrintFunc(context.TODO(), func() string {
+			return fmt.Sprintf(
+				`rule "%s" is overwrotten by function "%s"`,
+				rule, runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name(),
+			)
+		})
+	}
 	customRuleFuncMap[rule] = f
 }
 
@@ -47,6 +59,18 @@ func RegisterRuleByMap(m map[string]RuleFunc) {
 	for k, v := range m {
 		customRuleFuncMap[k] = v
 	}
+}
+
+// GetRegisteredRuleMap returns all the custom registered rules and associated functions.
+func GetRegisteredRuleMap() map[string]RuleFunc {
+	if len(customRuleFuncMap) == 0 {
+		return nil
+	}
+	ruleMap := make(map[string]RuleFunc)
+	for k, v := range customRuleFuncMap {
+		ruleMap[k] = v
+	}
+	return ruleMap
 }
 
 // DeleteRule deletes custom defined validation one or more rules and associated functions from global package.

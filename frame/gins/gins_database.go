@@ -143,7 +143,7 @@ func Database(name ...string) gdb.DB {
 		}
 
 		// Create a new ORM object with given configurations.
-		if db, err := gdb.New(name...); err == nil {
+		if db, err := gdb.NewByGroup(name...); err == nil {
 			// Initialize logger for ORM.
 			var (
 				loggerConfigMap map[string]interface{}
@@ -180,19 +180,18 @@ func parseDBConfigNode(value interface{}) *gdb.ConfigNode {
 	if !ok {
 		return nil
 	}
-	node := &gdb.ConfigNode{}
-	err := gconv.Struct(nodeMap, node)
+	var (
+		node = &gdb.ConfigNode{}
+		err  = gconv.Struct(nodeMap, node)
+	)
 	if err != nil {
 		panic(err)
 	}
-	// Be compatible with old version.
-	if _, v := gutil.MapPossibleItemByKey(nodeMap, "LinkInfo"); v != nil {
-		node.Link = gconv.String(v)
-	}
+	// Find possible `Link` configuration content.
 	if _, v := gutil.MapPossibleItemByKey(nodeMap, "Link"); v != nil {
 		node.Link = gconv.String(v)
 	}
-	// Parse link syntax.
+	// Parse `Link` configuration syntax.
 	if node.Link != "" && node.Type == "" {
 		match, _ := gregex.MatchString(`([a-z]+):(.+)`, node.Link)
 		if len(match) == 3 {

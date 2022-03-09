@@ -41,11 +41,11 @@ func (d *MyDriver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 	}, nil
 }
 
-// DoCommit handles the sql before posts it to database.
+// DoFilter handles the sql before posts it to database.
 // It here overwrites the same method of gdb.DriverMysql and makes some custom changes.
-func (d *MyDriver) DoCommit(ctx context.Context, link gdb.Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+func (d *MyDriver) DoFilter(ctx context.Context, link gdb.Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
 	latestSqlString.Set(sql)
-	return d.DriverMysql.DoCommit(ctx, link, sql, args)
+	return d.DriverMysql.DoFilter(ctx, link, sql, args)
 }
 
 func init() {

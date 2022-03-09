@@ -65,7 +65,7 @@ func GetBytesWithCache(path string, duration ...time.Duration) []byte {
 			_, _ = gfsnotify.Add(path, func(event *gfsnotify.Event) {
 				_, err := internalCache.Remove(ctx, cacheKey)
 				if err != nil {
-					intlog.Error(ctx, err)
+					intlog.Errorf(ctx, `%+v`, err)
 				}
 				gfsnotify.Exit()
 			})

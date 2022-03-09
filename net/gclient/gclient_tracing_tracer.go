@@ -26,6 +26,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+// clientTracer is used for implementing httptrace.ClientTrace.
 type clientTracer struct {
 	context.Context
 	span        trace.Span
@@ -35,6 +36,7 @@ type clientTracer struct {
 	mtx         sync.Mutex
 }
 
+// newClientTrace creates and returns object of newClientTrace.
 func newClientTrace(ctx context.Context, span trace.Span, request *http.Request) *httptrace.ClientTrace {
 	ct := &clientTracer{
 		Context: ctx,
@@ -67,9 +69,7 @@ func newClientTrace(ctx context.Context, span trace.Span, request *http.Request)
 	}
 }
 
-func (ct *clientTracer) getConn(host string) {
-
-}
+func (ct *clientTracer) getConn(host string) {}
 
 func (ct *clientTracer) gotConn(info httptrace.GotConnInfo) {
 	ct.span.SetAttributes(
@@ -121,9 +121,7 @@ func (ct *clientTracer) connectDone(network, addr string, err error) {
 	)
 }
 
-func (ct *clientTracer) tlsHandshakeStart() {
-
-}
+func (ct *clientTracer) tlsHandshakeStart() {}
 
 func (ct *clientTracer) tlsHandshakeDone(_ tls.ConnectionState, err error) {
 	if err != nil {
@@ -139,9 +137,7 @@ func (ct *clientTracer) wroteHeaderField(k string, v []string) {
 	}
 }
 
-func (ct *clientTracer) wroteHeaders() {
-
-}
+func (ct *clientTracer) wroteHeaders() {}
 
 func (ct *clientTracer) wroteRequest(info httptrace.WroteRequestInfo) {
 	if info.Err != nil {
@@ -159,17 +155,11 @@ func (ct *clientTracer) wroteRequest(info httptrace.WroteRequestInfo) {
 	))
 }
 
-func (ct *clientTracer) got100Continue() {
+func (ct *clientTracer) got100Continue() {}
 
-}
+func (ct *clientTracer) wait100Continue() {}
 
-func (ct *clientTracer) wait100Continue() {
-
-}
-
-func (ct *clientTracer) gotFirstResponseByte() {
-
-}
+func (ct *clientTracer) gotFirstResponseByte() {}
 
 func (ct *clientTracer) got1xxResponse(code int, header textproto.MIMEHeader) error {
 	return nil

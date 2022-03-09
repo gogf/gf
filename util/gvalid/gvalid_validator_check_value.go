@@ -122,7 +122,9 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 			customMsgMap[ruleKey] = strings.TrimSpace(msgArray[index])
 		}
 
-		// Custom rule handling.
+		// ===========================================================================================
+		// Custom rule handling
+		// ===========================================================================================
 		// 1. It firstly checks and uses the custom registered rules functions in the current Validator.
 		// 2. It secondly checks and uses the globally registered rules functions.
 		// 3. It finally checks and uses the build-in rules functions.

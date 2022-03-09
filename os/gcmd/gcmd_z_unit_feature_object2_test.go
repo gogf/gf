@@ -149,7 +149,7 @@ func TestNewFromObject(t *testing.T) {
 		t.AssertNil(err)
 
 		os.Args = []string{"build", "-h"}
-		err = cmd.Run(ctx)
+		err = cmd.RunWithError(ctx)
 		t.AssertNil(err)
 	})
 }

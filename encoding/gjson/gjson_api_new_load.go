@@ -68,31 +68,29 @@ func NewWithOptions(data interface{}, options Options) *Json {
 		}
 	default:
 		var (
+			pointedData interface{}
 			reflectInfo = utils.OriginValueAndKind(data)
 		)
 		switch reflectInfo.OriginKind {
 		case reflect.Slice, reflect.Array:
-			i := interface{}(nil)
-			i = gconv.Interfaces(data)
-			j = &Json{
-				p:  &i,
-				c:  byte(defaultSplitChar),
-				vc: false,
+			pointedData = gconv.Interfaces(data)
+
+		case reflect.Map:
+			pointedData = gconv.MapDeep(data, options.Tags)
+
+		case reflect.Struct:
+			if v, ok := data.(iVal); ok {
+				return NewWithOptions(v.Val(), options)
 			}
-		case reflect.Map, reflect.Struct:
-			i := interface{}(nil)
-			i = gconv.MapDeep(data, options.Tags)
-			j = &Json{
-				p:  &i,
-				c:  byte(defaultSplitChar),
-				vc: false,
-			}
+			pointedData = gconv.MapDeep(data, options.Tags)
+
 		default:
-			j = &Json{
-				p:  &data,
-				c:  byte(defaultSplitChar),
-				vc: false,
-			}
+			pointedData = data
+		}
+		j = &Json{
+			p:  &pointedData,
+			c:  byte(defaultSplitChar),
+			vc: false,
 		}
 	}
 	j.mu = rwmutex.New(options.Safe)
@@ -275,7 +273,7 @@ func doLoadContentWithOptions(dataType string, data []byte, options Options) (*J
 	}
 	switch result.(type) {
 	case string, []byte:
-		return nil, gerror.NewCodef(gcode.CodeInternalError, `json decoding failed for content: %s`, data)
+		return nil, gerror.Newf(`json decoding failed for content: %s`, data)
 	}
 	return NewWithOptions(result, options), nil
 }

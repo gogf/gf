@@ -8,10 +8,8 @@
 package gutil
 
 import (
-	"fmt"
 	"reflect"
 
-	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -34,7 +32,7 @@ func Try(try func()) (err error) {
 			if v, ok := exception.(error); ok && gerror.HasStack(v) {
 				err = v
 			} else {
-				err = gerror.NewCodef(gcode.CodeInternalError, `%+v`, exception)
+				err = gerror.Newf(`%+v`, exception)
 			}
 		}
 	}()
@@ -50,7 +48,7 @@ func TryCatch(try func(), catch ...func(exception error)) {
 			if v, ok := exception.(error); ok && gerror.HasStack(v) {
 				catch[0](v)
 			} else {
-				catch[0](fmt.Errorf(`%+v`, exception))
+				catch[0](gerror.Newf(`%+v`, exception))
 			}
 		}
 	}()

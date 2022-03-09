@@ -12,6 +12,7 @@ import (
 
 	"github.com/gogf/gf/v2/container/gpool"
 	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gfsnotify"
 )
 
@@ -41,6 +42,7 @@ func newFilePool(p *Pool, path string, flag int, perm os.FileMode, ttl time.Dura
 	pool := gpool.New(ttl, func() (interface{}, error) {
 		file, err := os.OpenFile(path, flag, perm)
 		if err != nil {
+			err = gerror.Wrapf(err, `os.OpenFile failed for file "%s", flag "%d", perm "%s"`, path, flag, perm)
 			return nil, err
 		}
 		return &File{
@@ -65,7 +67,6 @@ func (p *Pool) File() (*File, error) {
 	if v, err := p.pool.Get(); err != nil {
 		return nil, err
 	} else {
-		var err error
 		f := v.(*File)
 		f.stat, err = os.Stat(f.path)
 		if f.flag&os.O_CREATE > 0 {

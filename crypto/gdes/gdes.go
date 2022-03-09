@@ -29,9 +29,9 @@ func EncryptECB(plainText []byte, key []byte, padding int) ([]byte, error) {
 	}
 
 	cipherText := make([]byte, len(text))
-
 	block, err := des.NewCipher(key)
 	if err != nil {
+		err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `des.NewCipher failed for key "%s"`, key)
 		return nil, err
 	}
 
@@ -48,6 +48,7 @@ func DecryptECB(cipherText []byte, key []byte, padding int) ([]byte, error) {
 	text := make([]byte, len(cipherText))
 	block, err := des.NewCipher(key)
 	if err != nil {
+		err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `des.NewCipher failed for key "%s"`, key)
 		return nil, err
 	}
 
@@ -86,6 +87,7 @@ func EncryptECBTriple(plainText []byte, key []byte, padding int) ([]byte, error)
 
 	block, err := des.NewTripleDESCipher(newKey)
 	if err != nil {
+		err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `des.NewTripleDESCipher failed for key "%s"`, newKey)
 		return nil, err
 	}
 
@@ -115,6 +117,7 @@ func DecryptECBTriple(cipherText []byte, key []byte, padding int) ([]byte, error
 
 	block, err := des.NewTripleDESCipher(newKey)
 	if err != nil {
+		err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `des.NewTripleDESCipher failed for key "%s"`, newKey)
 		return nil, err
 	}
 
@@ -136,11 +139,12 @@ func DecryptECBTriple(cipherText []byte, key []byte, padding int) ([]byte, error
 func EncryptCBC(plainText []byte, key []byte, iv []byte, padding int) ([]byte, error) {
 	block, err := des.NewCipher(key)
 	if err != nil {
+		err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `des.NewCipher failed for key "%s"`, key)
 		return nil, err
 	}
 
 	if len(iv) != block.BlockSize() {
-		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "iv length invalid")
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "invalid iv length")
 	}
 
 	text, err := Padding(plainText, padding)
@@ -149,8 +153,8 @@ func EncryptCBC(plainText []byte, key []byte, iv []byte, padding int) ([]byte, e
 	}
 	cipherText := make([]byte, len(text))
 
-	encrypter := cipher.NewCBCEncrypter(block, iv)
-	encrypter.CryptBlocks(cipherText, text)
+	encryptor := cipher.NewCBCEncrypter(block, iv)
+	encryptor.CryptBlocks(cipherText, text)
 
 	return cipherText, nil
 }
@@ -159,6 +163,7 @@ func EncryptCBC(plainText []byte, key []byte, iv []byte, padding int) ([]byte, e
 func DecryptCBC(cipherText []byte, key []byte, iv []byte, padding int) ([]byte, error) {
 	block, err := des.NewCipher(key)
 	if err != nil {
+		err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `des.NewCipher failed for key "%s"`, key)
 		return nil, err
 	}
 
@@ -194,11 +199,12 @@ func EncryptCBCTriple(plainText []byte, key []byte, iv []byte, padding int) ([]b
 
 	block, err := des.NewTripleDESCipher(newKey)
 	if err != nil {
+		err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `des.NewTripleDESCipher failed for key "%s"`, newKey)
 		return nil, err
 	}
 
 	if len(iv) != block.BlockSize() {
-		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "iv length invalid")
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "invalid iv length")
 	}
 
 	text, err := Padding(plainText, padding)
@@ -229,11 +235,12 @@ func DecryptCBCTriple(cipherText []byte, key []byte, iv []byte, padding int) ([]
 
 	block, err := des.NewTripleDESCipher(newKey)
 	if err != nil {
+		err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `des.NewTripleDESCipher failed for key "%s"`, newKey)
 		return nil, err
 	}
 
 	if len(iv) != block.BlockSize() {
-		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "iv length invalid")
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "invalid iv length")
 	}
 
 	text := make([]byte, len(cipherText))
@@ -264,12 +271,14 @@ func Padding(text []byte, padding int) ([]byte, error) {
 	switch padding {
 	case NOPADDING:
 		if len(text)%8 != 0 {
-			return nil, gerror.NewCode(gcode.CodeInvalidParameter, "text length invalid")
+			return nil, gerror.NewCode(gcode.CodeInvalidParameter, "invalid text length")
 		}
+
 	case PKCS5PADDING:
 		return PaddingPKCS5(text, 8), nil
+
 	default:
-		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "padding type error")
+		return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `unsupported padding type "%d"`, padding)
 	}
 
 	return text, nil
@@ -279,12 +288,14 @@ func UnPadding(text []byte, padding int) ([]byte, error) {
 	switch padding {
 	case NOPADDING:
 		if len(text)%8 != 0 {
-			return nil, gerror.NewCode(gcode.CodeInvalidParameter, "text length invalid")
+			return nil, gerror.NewCode(gcode.CodeInvalidParameter, "invalid text length")
 		}
+
 	case PKCS5PADDING:
 		return UnPaddingPKCS5(text), nil
+
 	default:
-		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "padding type error")
+		return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `unsupported padding type "%d"`, padding)
 	}
 	return text, nil
 }

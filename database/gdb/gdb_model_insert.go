@@ -73,25 +73,25 @@ func (m *Model) Data(data ...interface{}) *Model {
 			switch reflectInfo.OriginKind {
 			case reflect.Slice, reflect.Array:
 				if reflectInfo.OriginValue.Len() > 0 {
-					// If the `data` parameter is a DTO struct,
+					// If the `data` parameter is a DO struct,
 					// it then adds `OmitNilData` option for this condition,
 					// which will filter all nil parameters in `data`.
-					if isDtoStruct(reflectInfo.OriginValue.Index(0).Interface()) {
+					if isDoStruct(reflectInfo.OriginValue.Index(0).Interface()) {
 						model = model.OmitNilData()
 						model.option |= optionOmitNilDataInternal
 					}
 				}
 				list := make(List, reflectInfo.OriginValue.Len())
 				for i := 0; i < reflectInfo.OriginValue.Len(); i++ {
-					list[i] = ConvertDataForTableRecord(reflectInfo.OriginValue.Index(i).Interface())
+					list[i] = m.db.ConvertDataForRecord(m.GetCtx(), reflectInfo.OriginValue.Index(i).Interface())
 				}
 				model.data = list
 
 			case reflect.Struct:
-				// If the `data` parameter is a DTO struct,
+				// If the `data` parameter is a DO struct,
 				// it then adds `OmitNilData` option for this condition,
 				// which will filter all nil parameters in `data`.
-				if isDtoStruct(value) {
+				if isDoStruct(value) {
 					model = model.OmitNilData()
 				}
 				if v, ok := data[0].(iInterfaces); ok {
@@ -100,15 +100,15 @@ func (m *Model) Data(data ...interface{}) *Model {
 						list  = make(List, len(array))
 					)
 					for i := 0; i < len(array); i++ {
-						list[i] = ConvertDataForTableRecord(array[i])
+						list[i] = m.db.ConvertDataForRecord(m.GetCtx(), array[i])
 					}
 					model.data = list
 				} else {
-					model.data = ConvertDataForTableRecord(data[0])
+					model.data = m.db.ConvertDataForRecord(m.GetCtx(), data[0])
 				}
 
 			case reflect.Map:
-				model.data = ConvertDataForTableRecord(data[0])
+				model.data = m.db.ConvertDataForRecord(m.GetCtx(), data[0])
 
 			default:
 				model.data = data[0]
@@ -167,7 +167,7 @@ func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
 		return m.Data(data...).Insert()
 	}
-	return m.doInsertWithOption(insertOptionDefault)
+	return m.doInsertWithOption(InsertOptionDefault)
 }
 
 // InsertAndGetId performs action Insert and returns the last insert id that automatically generated.
@@ -175,7 +175,7 @@ func (m *Model) InsertAndGetId(data ...interface{}) (lastInsertId int64, err err
 	if len(data) > 0 {
 		return m.Data(data...).InsertAndGetId()
 	}
-	result, err := m.doInsertWithOption(insertOptionDefault)
+	result, err := m.doInsertWithOption(InsertOptionDefault)
 	if err != nil {
 		return 0, err
 	}
@@ -189,7 +189,7 @@ func (m *Model) InsertIgnore(data ...interface{}) (result sql.Result, err error)
 	if len(data) > 0 {
 		return m.Data(data...).InsertIgnore()
 	}
-	return m.doInsertWithOption(insertOptionIgnore)
+	return m.doInsertWithOption(InsertOptionIgnore)
 }
 
 // Replace does "REPLACE INTO ..." statement for the model.
@@ -199,7 +199,7 @@ func (m *Model) Replace(data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
 		return m.Data(data...).Replace()
 	}
-	return m.doInsertWithOption(insertOptionReplace)
+	return m.doInsertWithOption(InsertOptionReplace)
 }
 
 // Save does "INSERT INTO ... ON DUPLICATE KEY UPDATE..." statement for the model.
@@ -212,7 +212,7 @@ func (m *Model) Save(data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
 		return m.Data(data...).Save()
 	}
-	return m.doInsertWithOption(insertOptionSave)
+	return m.doInsertWithOption(InsertOptionSave)
 }
 
 // doInsertWithOption inserts data with option parameter.
@@ -246,11 +246,11 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 	case List:
 		list = value
 		for i, v := range list {
-			list[i] = ConvertDataForTableRecord(v)
+			list[i] = m.db.ConvertDataForRecord(m.GetCtx(), v)
 		}
 
 	case Map:
-		list = List{ConvertDataForTableRecord(value)}
+		list = List{m.db.ConvertDataForRecord(m.GetCtx(), value)}
 
 	default:
 		reflectInfo := utils.OriginValueAndKind(newData)
@@ -259,21 +259,21 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 		case reflect.Slice, reflect.Array:
 			list = make(List, reflectInfo.OriginValue.Len())
 			for i := 0; i < reflectInfo.OriginValue.Len(); i++ {
-				list[i] = ConvertDataForTableRecord(reflectInfo.OriginValue.Index(i).Interface())
+				list[i] = m.db.ConvertDataForRecord(m.GetCtx(), reflectInfo.OriginValue.Index(i).Interface())
 			}
 
 		case reflect.Map:
-			list = List{ConvertDataForTableRecord(value)}
+			list = List{m.db.ConvertDataForRecord(m.GetCtx(), value)}
 
 		case reflect.Struct:
 			if v, ok := value.(iInterfaces); ok {
 				array := v.Interfaces()
 				list = make(List, len(array))
 				for i := 0; i < len(array); i++ {
-					list[i] = ConvertDataForTableRecord(array[i])
+					list[i] = m.db.ConvertDataForRecord(m.GetCtx(), array[i])
 				}
 			} else {
-				list = List{ConvertDataForTableRecord(value)}
+				list = List{m.db.ConvertDataForRecord(m.GetCtx(), value)}
 			}
 
 		default:
@@ -318,7 +318,7 @@ func (m *Model) formatDoInsertOption(insertOption int, columnNames []string) (op
 		InsertOption: insertOption,
 		BatchCount:   m.getBatch(),
 	}
-	if insertOption == insertOptionSave {
+	if insertOption == InsertOptionSave {
 		onDuplicateExKeys, err := m.formatOnDuplicateExKeys(m.onDuplicateEx)
 		if err != nil {
 			return option, err

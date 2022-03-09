@@ -29,7 +29,7 @@ func Test_ZipPath(t *testing.T) {
 		defer gfile.Remove(dstPath)
 
 		// unzip to temporary dir.
-		tempDirPath := gfile.TempDir(gtime.TimestampNanoStr())
+		tempDirPath := gfile.Temp(gtime.TimestampNanoStr())
 		t.Assert(gfile.Mkdir(tempDirPath), nil)
 		t.Assert(gcompress.UnZipFile(dstPath, tempDirPath), nil)
 		defer gfile.Remove(tempDirPath)
@@ -44,7 +44,7 @@ func Test_ZipPath(t *testing.T) {
 		var (
 			srcPath1 = gdebug.TestDataPath("zip", "path1", "1.txt")
 			srcPath2 = gdebug.TestDataPath("zip", "path2", "2.txt")
-			dstPath  = gfile.TempDir(gtime.TimestampNanoStr(), "zip.zip")
+			dstPath  = gfile.Temp(gtime.TimestampNanoStr(), "zip.zip")
 		)
 		if p := gfile.Dir(dstPath); !gfile.Exists(p) {
 			t.Assert(gfile.Mkdir(p), nil)
@@ -57,7 +57,7 @@ func Test_ZipPath(t *testing.T) {
 		defer gfile.Remove(dstPath)
 
 		// unzip to another temporary dir.
-		tempDirPath := gfile.TempDir(gtime.TimestampNanoStr())
+		tempDirPath := gfile.Temp(gtime.TimestampNanoStr())
 		t.Assert(gfile.Mkdir(tempDirPath), nil)
 		err = gcompress.UnZipFile(dstPath, tempDirPath)
 		t.Assert(err, nil)
@@ -77,7 +77,7 @@ func Test_ZipPath(t *testing.T) {
 		var (
 			srcPath1 = gdebug.TestDataPath("zip", "path1")
 			srcPath2 = gdebug.TestDataPath("zip", "path2", "2.txt")
-			dstPath  = gfile.TempDir(gtime.TimestampNanoStr(), "zip.zip")
+			dstPath  = gfile.Temp(gtime.TimestampNanoStr(), "zip.zip")
 		)
 		if p := gfile.Dir(dstPath); !gfile.Exists(p) {
 			t.Assert(gfile.Mkdir(p), nil)
@@ -90,7 +90,7 @@ func Test_ZipPath(t *testing.T) {
 		defer gfile.Remove(dstPath)
 
 		// unzip to another temporary dir.
-		tempDirPath := gfile.TempDir(gtime.TimestampNanoStr())
+		tempDirPath := gfile.Temp(gtime.TimestampNanoStr())
 		t.Assert(gfile.Mkdir(tempDirPath), nil)
 		err = gcompress.UnZipFile(dstPath, tempDirPath)
 		t.Assert(err, nil)
@@ -121,7 +121,7 @@ func Test_ZipPath(t *testing.T) {
 		t.Assert(gfile.Exists(dstPath), true)
 		defer gfile.Remove(dstPath)
 
-		tempDirPath := gfile.TempDir(gtime.TimestampNanoStr())
+		tempDirPath := gfile.Temp(gtime.TimestampNanoStr())
 		err = gfile.Mkdir(tempDirPath)
 		t.Assert(err, nil)
 
@@ -157,7 +157,7 @@ func Test_ZipPath(t *testing.T) {
 		t.Assert(gfile.Exists(dstPath), true)
 		defer gfile.Remove(dstPath)
 
-		tempDirPath := gfile.TempDir(gtime.TimestampNanoStr())
+		tempDirPath := gfile.Temp(gtime.TimestampNanoStr())
 		err = gfile.Mkdir(tempDirPath)
 		t.Assert(err, nil)
 
@@ -196,7 +196,7 @@ func Test_ZipPathWriter(t *testing.T) {
 		t.Assert(err, nil)
 		t.AssertGT(writer.Len(), 0)
 
-		tempDirPath := gfile.TempDir(gtime.TimestampNanoStr())
+		tempDirPath := gfile.Temp(gtime.TimestampNanoStr())
 		err = gfile.Mkdir(tempDirPath)
 		t.Assert(err, nil)
 

@@ -12,87 +12,87 @@ import (
 
 // Expose returns the default logger of package glog.
 func Expose() *Logger {
-	return logger
+	return defaultLogger
 }
 
 // To is a chaining function,
 // which redirects current logging content output to the sepecified `writer`.
 func To(writer io.Writer) *Logger {
-	return logger.To(writer)
+	return defaultLogger.To(writer)
 }
 
 // Path is a chaining function,
 // which sets the directory path to `path` for current logging content output.
 func Path(path string) *Logger {
-	return logger.Path(path)
+	return defaultLogger.Path(path)
 }
 
 // Cat is a chaining function,
 // which sets the category to `category` for current logging content output.
 func Cat(category string) *Logger {
-	return logger.Cat(category)
+	return defaultLogger.Cat(category)
 }
 
 // File is a chaining function,
 // which sets file name `pattern` for the current logging content output.
 func File(pattern string) *Logger {
-	return logger.File(pattern)
+	return defaultLogger.File(pattern)
 }
 
 // Level is a chaining function,
 // which sets logging level for the current logging content output.
 func Level(level int) *Logger {
-	return logger.Level(level)
+	return defaultLogger.Level(level)
 }
 
 // LevelStr is a chaining function,
 // which sets logging level for the current logging content output using level string.
 func LevelStr(levelStr string) *Logger {
-	return logger.LevelStr(levelStr)
+	return defaultLogger.LevelStr(levelStr)
 }
 
 // Skip is a chaining function,
 // which sets stack skip for the current logging content output.
 // It also affects the caller file path checks when line number printing enabled.
 func Skip(skip int) *Logger {
-	return logger.Skip(skip)
+	return defaultLogger.Skip(skip)
 }
 
 // Stack is a chaining function,
 // which sets stack options for the current logging content output .
 func Stack(enabled bool, skip ...int) *Logger {
-	return logger.Stack(enabled, skip...)
+	return defaultLogger.Stack(enabled, skip...)
 }
 
 // StackWithFilter is a chaining function,
 // which sets stack filter for the current logging content output .
 func StackWithFilter(filter string) *Logger {
-	return logger.StackWithFilter(filter)
+	return defaultLogger.StackWithFilter(filter)
 }
 
 // Stdout is a chaining function,
 // which enables/disables stdout for the current logging content output.
 // It's enabled in default.
 func Stdout(enabled ...bool) *Logger {
-	return logger.Stdout(enabled...)
+	return defaultLogger.Stdout(enabled...)
 }
 
 // Header is a chaining function,
 // which enables/disables log header for the current logging content output.
 // It's enabled in default.
 func Header(enabled ...bool) *Logger {
-	return logger.Header(enabled...)
+	return defaultLogger.Header(enabled...)
 }
 
 // Line is a chaining function,
 // which enables/disables printing its caller file along with its line number.
 // The parameter `long` specified whether print the long absolute file path, eg: /a/b/c/d.go:23.
 func Line(long ...bool) *Logger {
-	return logger.Line(long...)
+	return defaultLogger.Line(long...)
 }
 
 // Async is a chaining function,
 // which enables/disables async logging output feature.
 func Async(enabled ...bool) *Logger {
-	return logger.Async(enabled...)
+	return defaultLogger.Async(enabled...)
 }

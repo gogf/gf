@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/fileinfo"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -75,8 +76,11 @@ func doZipPathWriter(path string, exclude string, zipWriter *zip.Writer, prefix 
 			intlog.Printf(context.TODO(), `exclude file path: %s`, file)
 			continue
 		}
-		err = zipFile(file, headerPrefix+gfile.Dir(file[len(path):]), zipWriter)
-		if err != nil {
+		subFilePath := file[len(path):]
+		if subFilePath != "" {
+			subFilePath = gfile.Dir(subFilePath)
+		}
+		if err = zipFile(file, headerPrefix+subFilePath, zipWriter); err != nil {
 			return err
 		}
 	}
@@ -86,10 +90,7 @@ func doZipPathWriter(path string, exclude string, zipWriter *zip.Writer, prefix 
 		path = headerPrefix
 		for {
 			name = strings.Replace(gfile.Basename(path), `\`, `/`, -1)
-			err = zipFileVirtual(
-				fileinfo.New(name, 0, os.ModeDir|os.ModePerm, time.Now()), path, zipWriter,
-			)
-			if err != nil {
+			if err = zipFileVirtual(fileinfo.New(name, 0, os.ModeDir|os.ModePerm, time.Now()), path, zipWriter); err != nil {
 				return err
 			}
 			if path == `/` || !strings.Contains(path, `/`) {
@@ -107,11 +108,13 @@ func zipFile(path string, prefix string, zw *zip.Writer) error {
 	prefix = strings.Replace(prefix, `//`, `/`, -1)
 	file, err := os.Open(path)
 	if err != nil {
+		err = gerror.Wrapf(err, `os.Open failed for file "%s"`, path)
 		return nil
 	}
 	defer file.Close()
 	info, err := file.Stat()
 	if err != nil {
+		err = gerror.Wrapf(err, `read file stat failed for file "%s"`, path)
 		return err
 	}
 	header, err := createFileHeader(info, prefix)
@@ -123,10 +126,12 @@ func zipFile(path string, prefix string, zw *zip.Writer) error {
 	}
 	writer, err := zw.CreateHeader(header)
 	if err != nil {
+		err = gerror.Wrapf(err, `create zip header failed for %#v`, header)
 		return err
 	}
 	if !info.IsDir() {
 		if _, err = io.Copy(writer, file); err != nil {
+			err = gerror.Wrapf(err, `io.Copy failed for file "%s"`, path)
 			return err
 		}
 	}
@@ -140,6 +145,7 @@ func zipFileVirtual(info os.FileInfo, path string, zw *zip.Writer) error {
 	}
 	header.Name = path
 	if _, err = zw.CreateHeader(header); err != nil {
+		err = gerror.Wrapf(err, `create zip header failed for %#v`, header)
 		return err
 	}
 	return nil
@@ -148,6 +154,7 @@ func zipFileVirtual(info os.FileInfo, path string, zw *zip.Writer) error {
 func createFileHeader(info os.FileInfo, prefix string) (*zip.FileHeader, error) {
 	header, err := zip.FileInfoHeader(info)
 	if err != nil {
+		err = gerror.Wrapf(err, `create file header failed for name "%s"`, info.Name())
 		return nil, err
 	}
 	if len(prefix) > 0 {

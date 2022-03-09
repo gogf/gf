@@ -28,10 +28,7 @@ func Test_Set(t *testing.T) {
 		v.Set(123.456)
 		t.Assert(v.Val(), 123.456)
 	})
-	gtest.C(t, func(t *gtest.T) {
-		v := gvar.Create(123.456)
-		t.Assert(v.Val(), 123.456)
-	})
+
 	gtest.C(t, func(t *gtest.T) {
 		objOne := gvar.New("old", true)
 		objOneOld, _ := objOne.Set("new").(string)

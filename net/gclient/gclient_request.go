@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -21,7 +22,6 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/httputil"
-	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -33,55 +33,77 @@ import (
 // Get send GET request and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
 func (c *Client) Get(ctx context.Context, url string, data ...interface{}) (*Response, error) {
-	return c.DoRequest(ctx, "GET", url, data...)
+	return c.DoRequest(ctx, http.MethodGet, url, data...)
 }
 
 // Put send PUT request and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
 func (c *Client) Put(ctx context.Context, url string, data ...interface{}) (*Response, error) {
-	return c.DoRequest(ctx, "PUT", url, data...)
+	return c.DoRequest(ctx, http.MethodPut, url, data...)
 }
 
 // Post sends request using HTTP method POST and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
 func (c *Client) Post(ctx context.Context, url string, data ...interface{}) (*Response, error) {
-	return c.DoRequest(ctx, "POST", url, data...)
+	return c.DoRequest(ctx, http.MethodPost, url, data...)
 }
 
 // Delete send DELETE request and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
 func (c *Client) Delete(ctx context.Context, url string, data ...interface{}) (*Response, error) {
-	return c.DoRequest(ctx, "DELETE", url, data...)
+	return c.DoRequest(ctx, http.MethodDelete, url, data...)
 }
 
 // Head send HEAD request and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
 func (c *Client) Head(ctx context.Context, url string, data ...interface{}) (*Response, error) {
-	return c.DoRequest(ctx, "HEAD", url, data...)
+	return c.DoRequest(ctx, http.MethodHead, url, data...)
 }
 
 // Patch send PATCH request and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
 func (c *Client) Patch(ctx context.Context, url string, data ...interface{}) (*Response, error) {
-	return c.DoRequest(ctx, "PATCH", url, data...)
+	return c.DoRequest(ctx, http.MethodPatch, url, data...)
 }
 
 // Connect send CONNECT request and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
 func (c *Client) Connect(ctx context.Context, url string, data ...interface{}) (*Response, error) {
-	return c.DoRequest(ctx, "CONNECT", url, data...)
+	return c.DoRequest(ctx, http.MethodConnect, url, data...)
 }
 
 // Options send OPTIONS request and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
 func (c *Client) Options(ctx context.Context, url string, data ...interface{}) (*Response, error) {
-	return c.DoRequest(ctx, "OPTIONS", url, data...)
+	return c.DoRequest(ctx, http.MethodOptions, url, data...)
 }
 
 // Trace send TRACE request and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
 func (c *Client) Trace(ctx context.Context, url string, data ...interface{}) (*Response, error) {
-	return c.DoRequest(ctx, "TRACE", url, data...)
+	return c.DoRequest(ctx, http.MethodTrace, url, data...)
+}
+
+// PostForm issues a POST to the specified URL,
+// with data's keys and values URL-encoded as the request body.
+//
+// The Content-Type header is set to application/x-www-form-urlencoded.
+// To set other headers, use NewRequest and Client.Do.
+//
+// When err is nil, resp always contains a non-nil resp.Body.
+// Caller should close resp.Body when done reading from it.
+//
+// See the Client.Do method documentation for details on how redirects
+// are handled.
+//
+// To make a request with a specified context.Context, use NewRequestWithContext
+// and Client.Do.
+// Deprecated, use Post instead.
+func (c *Client) PostForm(url string, data url.Values) (resp *Response, err error) {
+	return nil, gerror.NewCode(
+		gcode.CodeNotSupported,
+		`PostForm is not supported, please use Post instead`,
+	)
 }
 
 // DoRequest sends request with given HTTP method and data and returns the response object.
@@ -123,10 +145,13 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 	if len(c.prefix) > 0 {
 		url = c.prefix + gstr.Trim(url)
 	}
+	if !gstr.ContainsI(url, httpProtocolName) {
+		url = httpProtocolName + `://` + url
+	}
 	var params string
 	if len(data) > 0 {
-		switch c.header["Content-Type"] {
-		case "application/json":
+		switch c.header[httpHeaderContentType] {
+		case httpHeaderContentTypeJson:
 			switch data[0].(type) {
 			case string, []byte:
 				params = gconv.String(data[0])
@@ -138,7 +163,7 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 				}
 			}
 
-		case "application/xml":
+		case httpHeaderContentTypeXml:
 			switch data[0].(type) {
 			case string, []byte:
 				params = gconv.String(data[0])
@@ -153,13 +178,13 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 			params = httputil.BuildParams(data[0])
 		}
 	}
-	if method == "GET" {
+	if method == http.MethodGet {
 		var bodyBuffer *bytes.Buffer
 		if params != "" {
-			switch c.header["Content-Type"] {
+			switch c.header[httpHeaderContentType] {
 			case
-				"application/json",
-				"application/xml":
+				httpHeaderContentTypeJson,
+				httpHeaderContentTypeXml:
 				bodyBuffer = bytes.NewBuffer([]byte(params))
 			default:
 				// It appends the parameters to the url
@@ -175,10 +200,11 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 			bodyBuffer = bytes.NewBuffer(nil)
 		}
 		if req, err = http.NewRequest(method, url, bodyBuffer); err != nil {
+			err = gerror.Wrapf(err, `http.NewRequest failed with method "%s" and URL "%s"`, method, url)
 			return nil, err
 		}
 	} else {
-		if strings.Contains(params, "@file:") {
+		if strings.Contains(params, httpParamFileHolder) {
 			// File uploading request.
 			var (
 				buffer = bytes.NewBuffer(nil)
@@ -186,30 +212,38 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 			)
 			for _, item := range strings.Split(params, "&") {
 				array := strings.Split(item, "=")
-				if len(array[1]) > 6 && strings.Compare(array[1][0:6], "@file:") == 0 {
+				if len(array[1]) > 6 && strings.Compare(array[1][0:6], httpParamFileHolder) == 0 {
 					path := array[1][6:]
 					if !gfile.Exists(path) {
 						return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `"%s" does not exist`, path)
 					}
-					if file, err := writer.CreateFormFile(array[0], gfile.Basename(path)); err == nil {
-						if f, err := os.Open(path); err == nil {
-							if _, err = io.Copy(file, f); err != nil {
-								if err := f.Close(); err != nil {
-									intlog.Errorf(ctx, `%+v`, err)
-								}
-								return nil, err
-							}
-							if err := f.Close(); err != nil {
-								intlog.Errorf(ctx, `%+v`, err)
-							}
-						} else {
+					var (
+						file          io.Writer
+						formFileName  = gfile.Basename(path)
+						formFieldName = array[0]
+					)
+					if file, err = writer.CreateFormFile(formFieldName, formFileName); err != nil {
+						err = gerror.Wrapf(err, `CreateFormFile failed with "%s", "%s"`, formFieldName, formFileName)
+						return nil, err
+					} else {
+						var f *os.File
+						if f, err = gfile.Open(path); err != nil {
 							return nil, err
 						}
-					} else {
-						return nil, err
+						if _, err = io.Copy(file, f); err != nil {
+							err = gerror.Wrapf(err, `io.Copy failed from "%s" to form "%s"`, path, formFieldName)
+							_ = f.Close()
+							return nil, err
+						}
+						_ = f.Close()
 					}
 				} else {
-					if err = writer.WriteField(array[0], array[1]); err != nil {
+					var (
+						fieldName  = array[0]
+						fieldValue = array[1]
+					)
+					if err = writer.WriteField(fieldName, fieldValue); err != nil {
+						err = gerror.Wrapf(err, `write form field failed with "%s", "%s"`, fieldName, fieldValue)
 						return nil, err
 					}
 				}
@@ -217,30 +251,33 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 			// Close finishes the multipart message and writes the trailing
 			// boundary end line to the output.
 			if err = writer.Close(); err != nil {
+				err = gerror.Wrapf(err, `form writer close failed`)
 				return nil, err
 			}
 
 			if req, err = http.NewRequest(method, url, buffer); err != nil {
+				err = gerror.Wrapf(err, `http.NewRequest failed for method "%s" and URL "%s"`, method, url)
 				return nil, err
 			} else {
-				req.Header.Set("Content-Type", writer.FormDataContentType())
+				req.Header.Set(httpHeaderContentType, writer.FormDataContentType())
 			}
 		} else {
 			// Normal request.
 			paramBytes := []byte(params)
 			if req, err = http.NewRequest(method, url, bytes.NewReader(paramBytes)); err != nil {
+				err = gerror.Wrapf(err, `http.NewRequest failed for method "%s" and URL "%s"`, method, url)
 				return nil, err
 			} else {
-				if v, ok := c.header["Content-Type"]; ok {
+				if v, ok := c.header[httpHeaderContentType]; ok {
 					// Custom Content-Type.
-					req.Header.Set("Content-Type", v)
+					req.Header.Set(httpHeaderContentType, v)
 				} else if len(paramBytes) > 0 {
 					if (paramBytes[0] == '[' || paramBytes[0] == '{') && json.Valid(paramBytes) {
-						// Auto detecting and setting the post content format: JSON.
-						req.Header.Set("Content-Type", "application/json")
-					} else if gregex.IsMatchString(`^[\w\[\]]+=.+`, params) {
+						// Auto-detecting and setting the post content format: JSON.
+						req.Header.Set(httpHeaderContentType, httpHeaderContentTypeJson)
+					} else if gregex.IsMatchString(httpRegexParamJson, params) {
 						// If the parameters passed like "name=value", it then uses form type.
-						req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+						req.Header.Set(httpHeaderContentType, httpHeaderContentTypeForm)
 					}
 				}
 			}
@@ -259,8 +296,8 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 	}
 	// It's necessary set the req.Host if you want to custom the host value of the request.
 	// It uses the "Host" value from header if it's not empty.
-	if host := req.Header.Get("Host"); host != "" {
-		req.Host = host
+	if reqHeaderHost := req.Header.Get(httpHeaderHost); reqHeaderHost != "" {
+		req.Host = reqHeaderHost
 	}
 	// Custom Cookie.
 	if len(c.cookies) > 0 {
@@ -272,7 +309,7 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 			headerCookie += k + "=" + v
 		}
 		if len(headerCookie) > 0 {
-			req.Header.Set("Cookie", headerCookie)
+			req.Header.Set(httpHeaderCookie, headerCookie)
 		}
 	}
 	// HTTP basic authentication.
@@ -285,7 +322,6 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 // callRequest sends request with give http.Request, and returns the responses object.
 // Note that the response object MUST be closed if it'll never be used.
 func (c *Client) callRequest(req *http.Request) (resp *Response, err error) {
-	ctx := req.Context()
 	resp = &Response{
 		request: req,
 	}
@@ -297,11 +333,10 @@ func (c *Client) callRequest(req *http.Request) (resp *Response, err error) {
 	req.Body = utils.NewReadCloser(reqBodyContent, false)
 	for {
 		if resp.Response, err = c.Do(req); err != nil {
+			err = gerror.Wrapf(err, `request failed`)
 			// The response might not be nil when err != nil.
 			if resp.Response != nil {
-				if err := resp.Response.Body.Close(); err != nil {
-					intlog.Errorf(ctx, `%+v`, err)
-				}
+				_ = resp.Response.Body.Close()
 			}
 			if c.retryCount > 0 {
 				c.retryCount--

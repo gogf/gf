@@ -19,13 +19,13 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 func Test_Log(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		logDir := gfile.TempDir(gtime.TimestampNanoStr())
-		p, _ := ports.PopRand()
-		s := g.Server(p)
+		logDir := gfile.Temp(gtime.TimestampNanoStr())
+		s := g.Server(guid.S())
 		s.BindHandler("/hello", func(r *ghttp.Request) {
 			r.Response.Write("hello")
 		})
@@ -36,16 +36,15 @@ func Test_Log(t *testing.T) {
 		s.SetAccessLogEnabled(true)
 		s.SetErrorLogEnabled(true)
 		s.SetLogStdout(false)
-		s.SetPort(p)
 		s.Start()
 		defer s.Shutdown()
 		defer gfile.Remove(logDir)
 		time.Sleep(100 * time.Millisecond)
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/hello"), "hello")
-		t.Assert(client.GetContent(ctx, "/error"), "custom error")
+		t.Assert(client.GetContent(ctx, "/error"), "exception recovered: custom error")
 
 		var (
 			logPath1 = gfile.Join(logDir, gtime.Now().Format("Y-m-d")+".log")

@@ -35,8 +35,8 @@ type Json struct {
 
 // Options for Json object creating.
 type Options struct {
-	Safe      bool   // Mark this object is for in concurrent-safe usage.
-	Tags      string // Custom priority tags for decoding.
+	Safe      bool   // Mark this object is for in concurrent-safe usage. This is especially for Json object creating.
+	Tags      string // Custom priority tags for decoding. Eg: "json,yaml,MyTag". This is especially for struct parsing into Json object.
 	StrNumber bool   // StrNumber causes the Decoder to unmarshal a number into an interface{} as a string instead of as a float64.
 }
 
@@ -50,6 +50,11 @@ type iMapStrAny interface {
 	MapStrAny() map[string]interface{}
 }
 
+// iVal is the interface for underlying interface{} retrieving.
+type iVal interface {
+	Val() interface{}
+}
+
 // setValue sets `value` to `j` by `pattern`.
 // Note:
 // 1. If value is nil and removed is true, means deleting this value;
@@ -61,7 +66,7 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 		length = len(array)
 	)
 	if value, err = j.convertValue(value); err != nil {
-		return gerror.Wrap(err, `Json Set failed`)
+		return err
 	}
 	// Initialization checks.
 	if *j.p == nil {
@@ -71,8 +76,10 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 			*j.p = make(map[string]interface{})
 		}
 	}
-	var pparent *interface{} = nil // Parent pointer.
-	var pointer *interface{} = j.p // Current pointer.
+	var (
+		pparent *interface{} = nil // Parent pointer.
+		pointer *interface{} = j.p // Current pointer.
+	)
 	j.mu.Lock()
 	defer j.mu.Unlock()
 	for i := 0; i < length; i++ {
@@ -83,6 +90,9 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 					// Delete item from map.
 					delete((*pointer).(map[string]interface{}), array[i])
 				} else {
+					if (*pointer).(map[string]interface{}) == nil {
+						*pointer = map[string]interface{}{}
+					}
 					(*pointer).(map[string]interface{})[array[i]] = value
 				}
 			} else {
@@ -126,6 +136,7 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 			// Numeric index.
 			valueNum, err := strconv.Atoi(array[i])
 			if err != nil {
+				err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `strconv.Atoi failed for string "%s"`, array[i])
 				return err
 			}
 

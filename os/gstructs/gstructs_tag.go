@@ -7,10 +7,11 @@
 package gstructs
 
 import (
-	"errors"
 	"reflect"
 	"strconv"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/util/gtag"
 )
 
@@ -154,7 +155,10 @@ exitLoop:
 		reflectKind = reflectValue.Kind()
 	}
 	if reflectKind != reflect.Struct {
-		return nil, errors.New("given value should be either type of struct/*struct/[]struct/[]*struct")
+		return nil, gerror.NewCode(
+			gcode.CodeInvalidParameter,
+			"given value should be either type of struct/*struct/[]struct/[]*struct",
+		)
 	}
 	var (
 		structType = reflectValue.Type()
@@ -176,7 +180,8 @@ func getFieldValuesByTagPriority(pointer interface{}, priority []string, tagMap 
 		return nil, err
 	}
 	var (
-		tagValue  = ""
+		tagName   string
+		tagValue  string
 		tagFields = make([]Field, 0)
 	)
 	for _, field := range fields {
@@ -186,6 +191,7 @@ func getFieldValuesByTagPriority(pointer interface{}, priority []string, tagMap 
 		}
 		tagValue = ""
 		for _, p := range priority {
+			tagName = p
 			tagValue = field.Tag(p)
 			if tagValue != "" && tagValue != "-" {
 				break
@@ -197,6 +203,7 @@ func getFieldValuesByTagPriority(pointer interface{}, priority []string, tagMap 
 				continue
 			}
 			tagField := field
+			tagField.TagName = tagName
 			tagField.TagValue = tagValue
 			tagFields = append(tagFields, tagField)
 		}

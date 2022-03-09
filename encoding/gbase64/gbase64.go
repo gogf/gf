@@ -10,6 +10,8 @@ package gbase64
 import (
 	"encoding/base64"
 	"io/ioutil"
+
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 // Encode encodes bytes with BASE64 algorithm.
@@ -33,6 +35,7 @@ func EncodeToString(src []byte) string {
 func EncodeFile(path string) ([]byte, error) {
 	content, err := ioutil.ReadFile(path)
 	if err != nil {
+		err = gerror.Wrapf(err, `ioutil.ReadFile failed for filename "%s"`, path)
 		return nil, err
 	}
 	return Encode(content), nil
@@ -69,8 +72,13 @@ func MustEncodeFileToString(path string) string {
 
 // Decode decodes bytes with BASE64 algorithm.
 func Decode(data []byte) ([]byte, error) {
-	src := make([]byte, base64.StdEncoding.DecodedLen(len(data)))
-	n, err := base64.StdEncoding.Decode(src, data)
+	var (
+		src    = make([]byte, base64.StdEncoding.DecodedLen(len(data)))
+		n, err = base64.StdEncoding.Decode(src, data)
+	)
+	if err != nil {
+		err = gerror.Wrap(err, `base64.StdEncoding.Decode failed`)
+	}
 	return src[:n], err
 }
 

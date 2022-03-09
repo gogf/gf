@@ -15,26 +15,25 @@ import (
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 func Test_OTEL_TraceID(t *testing.T) {
 	var (
 		traceId string
 	)
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/", func(r *ghttp.Request) {
 		traceId = gtrace.GetTraceID(r.Context())
 		r.Response.Write(r.GetUrl())
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
 		client := g.Client()
 		client.SetBrowserMode(true)
 		client.SetPrefix(prefix)

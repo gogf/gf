@@ -8,10 +8,12 @@ package gtree
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"strings"
 
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/rwmutex"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -573,8 +575,10 @@ func (tree *BTree) output(buffer *bytes.Buffer, node *BTreeNode, level int, isTa
 		}
 		if e < len(node.Entries) {
 			if _, err := buffer.WriteString(strings.Repeat("    ", level)); err != nil {
+				intlog.Errorf(context.TODO(), `%+v`, err)
 			}
 			if _, err := buffer.WriteString(fmt.Sprintf("%v", node.Entries[e].Key) + "\n"); err != nil {
+				intlog.Errorf(context.TODO(), `%+v`, err)
 			}
 		}
 	}
@@ -940,8 +944,26 @@ func (tree *BTree) deleteChild(node *BTreeNode, index int) {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (tree *BTree) MarshalJSON() ([]byte, error) {
-	return json.Marshal(tree.MapStrAny())
+func (tree BTree) MarshalJSON() (jsonBytes []byte, err error) {
+	if tree.root == nil {
+		return []byte("null"), nil
+	}
+	buffer := bytes.NewBuffer(nil)
+	buffer.WriteByte('{')
+	tree.Iterator(func(key, value interface{}) bool {
+		valueBytes, valueJsonErr := json.Marshal(value)
+		if valueJsonErr != nil {
+			err = valueJsonErr
+			return false
+		}
+		if buffer.Len() > 1 {
+			buffer.WriteByte(',')
+		}
+		buffer.WriteString(fmt.Sprintf(`"%v":%s`, key, valueBytes))
+		return true
+	})
+	buffer.WriteByte('}')
+	return buffer.Bytes(), nil
 }
 
 // getComparator returns the comparator if it's previously set,

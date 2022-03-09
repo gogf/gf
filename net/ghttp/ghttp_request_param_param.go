@@ -16,12 +16,24 @@ func (r *Request) SetParam(key string, value interface{}) {
 	r.paramsMap[key] = value
 }
 
+// SetParamMap sets custom parameter with key-value pair map.
+func (r *Request) SetParamMap(data map[string]interface{}) {
+	if r.paramsMap == nil {
+		r.paramsMap = make(map[string]interface{})
+	}
+	for k, v := range data {
+		r.paramsMap[k] = v
+	}
+}
+
 // GetParam returns custom parameter with given name `key`.
 // It returns `def` if `key` does not exist.
 // It returns nil if `def` is not passed.
 func (r *Request) GetParam(key string, def ...interface{}) *gvar.Var {
-	if r.paramsMap != nil {
-		return gvar.New(r.paramsMap[key])
+	if len(r.paramsMap) > 0 {
+		if value, ok := r.paramsMap[key]; ok {
+			return gvar.New(value)
+		}
 	}
 	if len(def) > 0 {
 		return gvar.New(def[0])

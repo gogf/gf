@@ -7,10 +7,13 @@
 package gdb
 
 import (
+	"context"
+	"reflect"
 	"strings"
 	"time"
 
 	"github.com/gogf/gf/v2/encoding/gbinary"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -18,17 +21,85 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
+// ConvertDataForRecord is a very important function, which does converting for any data that
+// will be inserted into table/collection as a record.
+//
+// The parameter `value` should be type of *map/map/*struct/struct.
+// It supports embedded struct definition for struct.
+func (c *Core) ConvertDataForRecord(ctx context.Context, value interface{}) map[string]interface{} {
+	var data = DataToMapDeep(value)
+	for k, v := range data {
+		data[k] = c.ConvertDataForRecordValue(ctx, v)
+	}
+	return data
+}
+
+func (c *Core) ConvertDataForRecordValue(ctx context.Context, value interface{}) interface{} {
+	var (
+		rvValue = reflect.ValueOf(value)
+		rvKind  = rvValue.Kind()
+	)
+	for rvKind == reflect.Ptr {
+		rvValue = rvValue.Elem()
+		rvKind = rvValue.Kind()
+	}
+	switch rvKind {
+	case reflect.Slice, reflect.Array, reflect.Map:
+		// It should ignore the bytes type.
+		if _, ok := value.([]byte); !ok {
+			// Convert the value to JSON.
+			value, _ = json.Marshal(value)
+		}
+
+	case reflect.Struct:
+		switch r := value.(type) {
+		// If the time is zero, it then updates it to nil,
+		// which will insert/update the value to database as "null".
+		case time.Time:
+			if r.IsZero() {
+				value = nil
+			}
+
+		case gtime.Time:
+			if r.IsZero() {
+				value = nil
+			}
+
+		case *gtime.Time:
+			if r.IsZero() {
+				value = nil
+			}
+
+		case *time.Time:
+			// Nothing to do.
+
+		case Counter, *Counter:
+			// Nothing to do.
+
+		default:
+			// Use string conversion in default.
+			if s, ok := value.(iString); ok {
+				value = s.String()
+			} else {
+				// Convert the value to JSON.
+				value, _ = json.Marshal(value)
+			}
+		}
+	}
+	return value
+}
+
 // convertFieldValueToLocalValue automatically checks and converts field value from database type
-// to golang variable type.
+// to golang variable type as underlying value of Value.
 func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType string) interface{} {
 	// If there's no type retrieved, it returns the `fieldValue` directly
 	// to use its original data type, as `fieldValue` is type of interface{}.
 	if fieldType == "" {
 		return fieldValue
 	}
-	t, _ := gregex.ReplaceString(`\(.+\)`, "", fieldType)
-	t = strings.ToLower(t)
-	switch t {
+	typeName, _ := gregex.ReplaceString(`\(.+\)`, "", fieldType)
+	typeName = strings.ToLower(typeName)
+	switch typeName {
 	case
 		"binary",
 		"varbinary",
@@ -88,6 +159,7 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 		return gconv.Bool(fieldValue)
 
 	case "date":
+		// Date without time.
 		if t, ok := fieldValue.(time.Time); ok {
 			return gtime.NewFromTime(t).Format("Y-m-d")
 		}
@@ -102,41 +174,41 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 			return gtime.NewFromTime(t)
 		}
 		t, _ := gtime.StrToTime(gconv.String(fieldValue))
-		return t.String()
+		return t
 
 	default:
 		// Auto-detect field type, using key match.
 		switch {
-		case strings.Contains(t, "text") || strings.Contains(t, "char") || strings.Contains(t, "character"):
+		case strings.Contains(typeName, "text") || strings.Contains(typeName, "char") || strings.Contains(typeName, "character"):
 			return gconv.String(fieldValue)
 
-		case strings.Contains(t, "float") || strings.Contains(t, "double") || strings.Contains(t, "numeric"):
+		case strings.Contains(typeName, "float") || strings.Contains(typeName, "double") || strings.Contains(typeName, "numeric"):
 			return gconv.Float64(gconv.String(fieldValue))
 
-		case strings.Contains(t, "bool"):
+		case strings.Contains(typeName, "bool"):
 			return gconv.Bool(gconv.String(fieldValue))
 
-		case strings.Contains(t, "binary") || strings.Contains(t, "blob"):
+		case strings.Contains(typeName, "binary") || strings.Contains(typeName, "blob"):
 			return fieldValue
 
-		case strings.Contains(t, "int"):
+		case strings.Contains(typeName, "int"):
 			return gconv.Int(gconv.String(fieldValue))
 
-		case strings.Contains(t, "time"):
+		case strings.Contains(typeName, "time"):
 			s := gconv.String(fieldValue)
 			t, err := gtime.StrToTime(s)
 			if err != nil {
 				return s
 			}
-			return t.String()
+			return t
 
-		case strings.Contains(t, "date"):
+		case strings.Contains(typeName, "date"):
 			s := gconv.String(fieldValue)
 			t, err := gtime.StrToTime(s)
 			if err != nil {
 				return s
 			}
-			return t.Format("Y-m-d")
+			return t
 
 		default:
 			return gconv.String(fieldValue)
@@ -147,7 +219,7 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 // mappingAndFilterData automatically mappings the map key to table field and removes
 // all key-value pairs that are not the field of given table.
 func (c *Core) mappingAndFilterData(schema, table string, data map[string]interface{}, filter bool) (map[string]interface{}, error) {
-	fieldsMap, err := c.db.TableFields(c.GetCtx(), c.guessPrimaryTableName(table), schema)
+	fieldsMap, err := c.TableFields(c.guessPrimaryTableName(table), schema)
 	if err != nil {
 		return nil, err
 	}

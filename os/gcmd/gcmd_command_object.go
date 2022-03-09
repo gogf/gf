@@ -46,6 +46,16 @@ func NewFromObject(object interface{}) (rootCmd *Command, err error) {
 		)
 		return
 	}
+	var reflectValue = originValueAndKind.InputValue
+	// If given `object` is not pointer, it then creates a temporary one,
+	// of which the value is `reflectValue`.
+	// It then can retrieve all the methods both of struct/*struct.
+	if reflectValue.Kind() == reflect.Struct {
+		newValue := reflect.New(reflectValue.Type())
+		newValue.Elem().Set(reflectValue)
+		reflectValue = newValue
+	}
+
 	// Root command creating.
 	rootCmd, err = newCommandFromObjectMeta(object)
 	if err != nil {
@@ -60,9 +70,9 @@ func NewFromObject(object interface{}) (rootCmd *Command, err error) {
 	if rootCommandName == "" {
 		rootCommandName = rootCmd.Name
 	}
-	for i := 0; i < originValueAndKind.InputValue.NumMethod(); i++ {
+	for i := 0; i < reflectValue.NumMethod(); i++ {
 		var (
-			method    = originValueAndKind.InputValue.Method(i)
+			method    = reflectValue.Method(i)
 			methodCmd *Command
 		)
 		methodCmd, err = newCommandFromMethod(object, method)
@@ -211,9 +221,7 @@ func newCommandFromMethod(object interface{}, method reflect.Value) (command *Co
 		return
 	}
 
-	var (
-		inputObject reflect.Value
-	)
+	var inputObject reflect.Value
 	if method.Type().In(1).Kind() == reflect.Ptr {
 		inputObject = reflect.New(method.Type().In(1).Elem()).Elem()
 	} else {
@@ -235,17 +243,6 @@ func newCommandFromMethod(object interface{}, method reflect.Value) (command *Co
 	// =============================================================================================
 	command.FuncWithValue = func(ctx context.Context, parser *Parser) (out interface{}, err error) {
 		ctx = context.WithValue(ctx, CtxKeyParser, parser)
-
-		defer func() {
-			if exception := recover(); exception != nil {
-				if v, ok := exception.(error); ok && gerror.HasStack(v) {
-					err = v
-				} else {
-					err = gerror.New(`exception recovered:` + gconv.String(exception))
-				}
-			}
-		}()
-
 		var (
 			data        = gconv.Map(parser.GetOptAll())
 			argIndex    = 0
@@ -265,8 +262,19 @@ func newCommandFromMethod(object interface{}, method reflect.Value) (command *Co
 				}
 			} else {
 				// Read argument from command line option name.
-				if arg.Orphan && parser.ContainsOpt(arg.Name) {
-					data[arg.Name] = "true"
+				if arg.Orphan {
+					if orphanValue := parser.GetOpt(arg.Name); orphanValue != nil {
+						if orphanValue.String() == "" {
+							// Eg: gf -f
+							data[arg.Name] = "true"
+						} else {
+							// Adapter with common user habits.
+							// Eg:
+							// `gf -f=0`: which parameter `f` is parsed as false
+							// `gf -f=1`: which parameter `f` is parsed as true
+							data[arg.Name] = orphanValue.Bool()
+						}
+					}
 				}
 			}
 		}

@@ -7,7 +7,7 @@
 package gjson
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (j *Json) MarshalJSON() ([]byte, error) {
+func (j Json) MarshalJSON() ([]byte, error) {
 	return j.ToJson()
 }
 

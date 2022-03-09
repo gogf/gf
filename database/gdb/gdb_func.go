@@ -8,17 +8,13 @@ package gdb
 
 import (
 	"bytes"
-	"database/sql"
 	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/empty"
-	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -60,7 +56,7 @@ const (
 	OrmTagForWith      = "with"
 	OrmTagForWithWhere = "where"
 	OrmTagForWithOrder = "order"
-	OrmTagForDto       = "dto"
+	OrmTagForDo        = "do"
 )
 
 var (
@@ -71,18 +67,18 @@ var (
 	structTagPriority = append([]string{OrmTagForStruct}, gconv.StructTagPriority...)
 )
 
-// isDtoStruct checks and returns whether given type is a DTO struct.
-func isDtoStruct(object interface{}) bool {
+// isDoStruct checks and returns whether given type is a DO struct.
+func isDoStruct(object interface{}) bool {
 	// It checks by struct name like "XxxForDao", to be compatible with old version.
 	// TODO remove this compatible codes in future.
 	reflectType := reflect.TypeOf(object)
 	if gstr.HasSuffix(reflectType.String(), modelForDaoSuffix) {
 		return true
 	}
-	// It checks by struct meta for DTO struct in version.
+	// It checks by struct meta for DO struct in version.
 	if ormTag := gmeta.Get(object, OrmTagForStruct); !ormTag.IsEmpty() {
 		match, _ := gregex.MatchString(
-			fmt.Sprintf(`%s\s*:\s*([^,]+)`, OrmTagForDto),
+			fmt.Sprintf(`%s\s*:\s*([^,]+)`, OrmTagForDo),
 			ormTag.String(),
 		)
 		if len(match) > 1 {
@@ -151,79 +147,14 @@ func ListItemValuesUnique(list interface{}, key string, subKey ...interface{}) [
 func GetInsertOperationByOption(option int) string {
 	var operator string
 	switch option {
-	case insertOptionReplace:
+	case InsertOptionReplace:
 		operator = "REPLACE"
-	case insertOptionIgnore:
+	case InsertOptionIgnore:
 		operator = "INSERT IGNORE"
 	default:
 		operator = "INSERT"
 	}
 	return operator
-}
-
-// ConvertDataForTableRecord is a very important function, which does converting for any data that
-// will be inserted into table as a record.
-//
-// The parameter `value` should be type of *map/map/*struct/struct.
-// It supports embedded struct definition for struct.
-func ConvertDataForTableRecord(value interface{}) map[string]interface{} {
-	var (
-		rvValue reflect.Value
-		rvKind  reflect.Kind
-		data    = DataToMapDeep(value)
-	)
-	for k, v := range data {
-		rvValue = reflect.ValueOf(v)
-		rvKind = rvValue.Kind()
-		for rvKind == reflect.Ptr {
-			rvValue = rvValue.Elem()
-			rvKind = rvValue.Kind()
-		}
-		switch rvKind {
-		case reflect.Slice, reflect.Array, reflect.Map:
-			// It should ignore the bytes type.
-			if _, ok := v.([]byte); !ok {
-				// Convert the value to JSON.
-				data[k], _ = json.Marshal(v)
-			}
-
-		case reflect.Struct:
-			switch r := v.(type) {
-			// If the time is zero, it then updates it to nil,
-			// which will insert/update the value to database as "null".
-			case time.Time:
-				if r.IsZero() {
-					data[k] = nil
-				}
-
-			case gtime.Time:
-				if r.IsZero() {
-					data[k] = nil
-				}
-
-			case *gtime.Time:
-				if r.IsZero() {
-					data[k] = nil
-				}
-
-			case *time.Time:
-				continue
-
-			case Counter, *Counter:
-				continue
-
-			default:
-				// Use string conversion in default.
-				if s, ok := v.(iString); ok {
-					data[k] = s.String()
-				} else {
-					// Convert the value to JSON.
-					data[k], _ = json.Marshal(v)
-				}
-			}
-		}
-	}
-	return data
 }
 
 // DataToMapDeep converts `value` to map type recursively(if attribute struct is embedded).
@@ -399,13 +330,36 @@ func formatSql(sql string, args []interface{}) (newSql string, newArgs []interfa
 }
 
 type formatWhereHolderInput struct {
-	Where     interface{}
-	Args      []interface{}
+	ModelWhereHolder
 	OmitNil   bool
 	OmitEmpty bool
 	Schema    string
 	Table     string // Table is used for fields mapping and filtering internally.
-	Prefix    string // Field prefix, eg: "user.", "order.".
+}
+
+func isKeyValueCanBeOmitEmpty(omitEmpty bool, whereType string, key, value interface{}) bool {
+	if !omitEmpty {
+		return false
+	}
+	// Eg:
+	// Where("id", []int{}).All()             -> SELECT xxx FROM xxx WHERE 0=1
+	// Where("name", "").All()                -> SELECT xxx FROM xxx WHERE `name`=''
+	// OmitEmpty().Where("id", []int{}).All() -> SELECT xxx FROM xxx
+	// OmitEmpty().Where("name", "").All()    -> SELECT xxx FROM xxx
+	// OmitEmpty().Where("1").All()           -> SELECT xxx FROM xxx WHERE 1
+	switch whereType {
+	case whereHolderTypeNoArgs:
+		return false
+
+	case whereHolderTypeIn:
+		return gutil.IsEmpty(value)
+
+	default:
+		if gstr.Count(gconv.String(key), "?") == 0 && gutil.IsEmpty(value) {
+			return true
+		}
+	}
+	return false
 }
 
 // formatWhereHolder formats where statement and its arguments for `Where` and `Having` statements.
@@ -420,13 +374,11 @@ func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newAr
 
 	case reflect.Map:
 		for key, value := range DataToMapDeep(in.Where) {
-			if gregex.IsMatchString(regularFieldNameRegPattern, key) {
-				if in.OmitNil && empty.IsNil(value) {
-					continue
-				}
-				if in.OmitEmpty && empty.IsEmpty(value) {
-					continue
-				}
+			if in.OmitNil && empty.IsNil(value) {
+				continue
+			}
+			if in.OmitEmpty && empty.IsEmpty(value) {
+				continue
 			}
 			newArgs = formatWhereKeyValue(formatWhereKeyValueInput{
 				Db:     db,
@@ -435,13 +387,14 @@ func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newAr
 				Key:    key,
 				Value:  value,
 				Prefix: in.Prefix,
+				Type:   in.Type,
 			})
 		}
 
 	case reflect.Struct:
-		// If the `where` parameter is DTO struct, it then adds `OmitNil` option for this condition,
+		// If the `where` parameter is DO struct, it then adds `OmitNil` option for this condition,
 		// which will filter all nil parameters in `where`.
-		if isDtoStruct(in.Where) {
+		if isDoStruct(in.Where) {
 			in.OmitNil = true
 		}
 		// If `where` struct implements `iIterator` interface,
@@ -451,13 +404,11 @@ func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newAr
 		if iterator, ok := in.Where.(iIterator); ok {
 			iterator.Iterator(func(key, value interface{}) bool {
 				ketStr := gconv.String(key)
-				if gregex.IsMatchString(regularFieldNameRegPattern, ketStr) {
-					if in.OmitNil && empty.IsNil(value) {
-						return true
-					}
-					if in.OmitEmpty && empty.IsEmpty(value) {
-						return true
-					}
+				if in.OmitNil && empty.IsNil(value) {
+					return true
+				}
+				if in.OmitEmpty && empty.IsEmpty(value) {
+					return true
 				}
 				newArgs = formatWhereKeyValue(formatWhereKeyValueInput{
 					Db:        db,
@@ -467,6 +418,7 @@ func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newAr
 					Value:     value,
 					OmitEmpty: in.OmitEmpty,
 					Prefix:    in.Prefix,
+					Type:      in.Type,
 				})
 				return true
 			})
@@ -513,11 +465,22 @@ func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newAr
 					Value:     foundValue,
 					OmitEmpty: in.OmitEmpty,
 					Prefix:    in.Prefix,
+					Type:      in.Type,
 				})
 			}
 		}
 
 	default:
+		// Where filter.
+		var omitEmptyCheckValue interface{}
+		if len(in.Args) == 1 {
+			omitEmptyCheckValue = in.Args[0]
+		} else {
+			omitEmptyCheckValue = in.Args
+		}
+		if isKeyValueCanBeOmitEmpty(in.OmitEmpty, in.Type, in.Where, omitEmptyCheckValue) {
+			return
+		}
 		// Usually a string.
 		whereStr := gconv.String(in.Where)
 		// Is `whereStr` a field name which composed as a key-value condition?
@@ -533,6 +496,7 @@ func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newAr
 				Value:     in.Args[0],
 				OmitEmpty: in.OmitEmpty,
 				Prefix:    in.Prefix,
+				Type:      in.Type,
 			})
 			in.Args = in.Args[:0]
 			break
@@ -644,6 +608,7 @@ type formatWhereKeyValueInput struct {
 	Args      []interface{} // Args is the full arguments of current operation.
 	Key       string        // The field name, eg: "id", "name", etc.
 	Value     interface{}   // The field value, can be any types.
+	Type      string        // The value in Where type.
 	OmitEmpty bool          // Ignores current condition key if `value` is empty.
 	Prefix    string        // Field prefix, eg: "user", "order", etc.
 }
@@ -654,12 +619,7 @@ func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []interface{}) {
 		quotedKey   = in.Db.GetCore().QuoteWord(in.Key)
 		holderCount = gstr.Count(quotedKey, "?")
 	)
-	// Eg:
-	// Where("id", []int{}).All()             -> SELECT xxx FROM xxx WHERE 0=1
-	// Where("name", "").All()                -> SELECT xxx FROM xxx WHERE `name`=''
-	// OmitEmpty().Where("id", []int{}).All() -> SELECT xxx FROM xxx
-	// OmitEmpty().("name", "").All()         -> SELECT xxx FROM xxx
-	if in.OmitEmpty && holderCount == 0 && gutil.IsEmpty(in.Value) {
+	if isKeyValueCanBeOmitEmpty(in.OmitEmpty, in.Type, quotedKey, in.Value) {
 		return in.Args
 	}
 	if in.Prefix != "" && !gstr.Contains(quotedKey, ".") {
@@ -838,14 +798,6 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 		}
 	}
 	return
-}
-
-// formatError customizes and returns the SQL error.
-func formatError(err error, s string, args ...interface{}) error {
-	if err != nil && err != sql.ErrNoRows {
-		return gerror.NewCodef(gcode.CodeDbOperationError, "%s, %s\n", err.Error(), FormatSqlWithArgs(s, args))
-	}
-	return err
 }
 
 // FormatSqlWithArgs binds the arguments to the sql string and returns a complete

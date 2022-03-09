@@ -220,7 +220,7 @@ func (m *Manager) init(ctx context.Context) {
 						m.data[lang][k] = gconv.String(v)
 					}
 				} else {
-					intlog.Errorf(ctx, "load i18n file '%s' failed: %v", name, err)
+					intlog.Errorf(ctx, "load i18n file '%s' failed: %+v", name, err)
 				}
 			}
 		}
@@ -251,7 +251,7 @@ func (m *Manager) init(ctx context.Context) {
 					m.data[lang][k] = gconv.String(v)
 				}
 			} else {
-				intlog.Errorf(ctx, "load i18n file '%s' failed: %v", file, err)
+				intlog.Errorf(ctx, "load i18n file '%s' failed: %+v", file, err)
 			}
 		}
 		// Monitor changes of i18n files for hot reload feature.

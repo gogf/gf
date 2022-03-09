@@ -23,8 +23,8 @@ import (
 
 // UploadFile wraps the multipart uploading file with more and convenient features.
 type UploadFile struct {
-	*multipart.FileHeader
-	ctx context.Context
+	*multipart.FileHeader `json:"-"`
+	ctx                   context.Context
 }
 
 // UploadFiles is array type for *UploadFile.
@@ -32,7 +32,7 @@ type UploadFiles []*UploadFile
 
 // Save saves the single uploading file to directory path and returns the saved file name.
 //
-// The parameter `dirPath` should be a directory path or it returns error.
+// The parameter `dirPath` should be a directory path, or it returns error.
 //
 // Note that it will OVERWRITE the target file if there's already a same name file exist.
 func (f *UploadFile) Save(dirPath string, randomlyRename ...bool) (filename string, err error) {
@@ -52,6 +52,7 @@ func (f *UploadFile) Save(dirPath string, randomlyRename ...bool) (filename stri
 
 	file, err := f.Open()
 	if err != nil {
+		err = gerror.Wrapf(err, `UploadFile.Open failed`)
 		return "", err
 	}
 	defer file.Close()
@@ -68,7 +69,8 @@ func (f *UploadFile) Save(dirPath string, randomlyRename ...bool) (filename stri
 	}
 	defer newFile.Close()
 	intlog.Printf(f.ctx, `save upload file: %s`, filePath)
-	if _, err := io.Copy(newFile, file); err != nil {
+	if _, err = io.Copy(newFile, file); err != nil {
+		err = gerror.Wrapf(err, `io.Copy failed from "%s" to "%s"`, f.Filename, filePath)
 		return "", err
 	}
 	return gfile.Basename(filePath), nil

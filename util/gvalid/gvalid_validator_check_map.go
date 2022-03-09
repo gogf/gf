@@ -31,7 +31,7 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 	// Sequence has order for error results.
 	case []string:
 		for _, tag := range assertValue {
-			name, rule, msg := parseSequenceTag(tag)
+			name, rule, msg := ParseTagValue(tag)
 			if len(name) == 0 {
 				continue
 			}

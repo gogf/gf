@@ -10,12 +10,13 @@ import (
 	"context"
 
 	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 // Entry is the timing job.
 type Entry struct {
 	job         JobFunc         // The job function.
-	ctx         context.Context // The context for the job.
+	ctx         context.Context // The context for the job, for READ ONLY.
 	timer       *Timer          // Belonged timer.
 	ticks       int64           // The job runs every tick.
 	times       *gtype.Int      // Limit running times.
@@ -45,9 +46,13 @@ func (entry *Entry) Run() {
 	}
 	go func() {
 		defer func() {
-			if err := recover(); err != nil {
-				if err != panicExit {
-					panic(err)
+			if exception := recover(); exception != nil {
+				if exception != panicExit {
+					if v, ok := exception.(error); ok && gerror.HasStack(v) {
+						panic(v)
+					} else {
+						panic(gerror.Newf(`exception recovered: %+v`, exception))
+					}
 				} else {
 					entry.Close()
 					return

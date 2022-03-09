@@ -42,7 +42,7 @@ type Model struct {
 	filter        bool               // Filter data and where key-value pairs according to the fields of the table.
 	distinct      string             // Force the query to only return distinct results.
 	lockInfo      string             // Lock for update or in shared lock.
-	cacheEnabled  bool               // Enable sql result cache feature.
+	cacheEnabled  bool               // Enable sql result cache feature, which is mainly for indicating cache duration(especially 0) usage.
 	cacheOption   CacheOption        // Cache option for query statement.
 	unscoped      bool               // Disables soft deleting features when select/delete operations.
 	safe          bool               // If true, it clones and returns a new model object whenever operation done; or else it changes the attribute of current model.
@@ -59,6 +59,7 @@ type ChunkHandler func(result Result, err error) bool
 
 // ModelWhereHolder is the holder for where condition preparing.
 type ModelWhereHolder struct {
+	Type     string        // Type of this holder.
 	Operator int           // Operator for this holder.
 	Where    interface{}   // Where parameter, which can commonly be type of string/map/struct.
 	Args     []interface{} // Arguments for where parameter.
@@ -68,10 +69,13 @@ type ModelWhereHolder struct {
 const (
 	linkTypeMaster           = 1
 	linkTypeSlave            = 2
+	defaultFields            = "*"
 	whereHolderOperatorWhere = 1
 	whereHolderOperatorAnd   = 2
 	whereHolderOperatorOr    = 3
-	defaultFields            = "*"
+	whereHolderTypeDefault   = "Default"
+	whereHolderTypeNoArgs    = "NoArgs"
+	whereHolderTypeIn        = "In"
 )
 
 // Model creates and returns a new ORM model from given schema.
@@ -95,13 +99,16 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 	if len(tableNameQueryOrStruct) > 1 {
 		conditionStr := gconv.String(tableNameQueryOrStruct[0])
 		if gstr.Contains(conditionStr, "?") {
+			whereHolder := ModelWhereHolder{
+				Where: conditionStr,
+				Args:  tableNameQueryOrStruct[1:],
+			}
 			tableStr, extraArgs = formatWhereHolder(c.db, formatWhereHolderInput{
-				Where:     conditionStr,
-				Args:      tableNameQueryOrStruct[1:],
-				OmitNil:   false,
-				OmitEmpty: false,
-				Schema:    "",
-				Table:     "",
+				ModelWhereHolder: whereHolder,
+				OmitNil:          false,
+				OmitEmpty:        false,
+				Schema:           "",
+				Table:            "",
 			})
 		}
 	}
@@ -125,6 +132,7 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 	}
 	m := &Model{
 		db:         c.db,
+		schema:     c.schema,
 		tablesInit: tableStr,
 		tables:     tableStr,
 		fields:     defaultFields,

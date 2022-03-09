@@ -204,7 +204,12 @@ type printLineBriefInput struct {
 }
 
 func (c *Command) printLineBrief(in printLineBriefInput) {
-	for i, line := range gstr.SplitAndTrim(in.Brief, "\n") {
+	briefArray := gstr.SplitAndTrim(in.Brief, "\n")
+	if len(briefArray) == 0 {
+		// If command brief is empty, it just prints its command name.
+		briefArray = []string{""}
+	}
+	for i, line := range briefArray {
 		var lineStr string
 		if i == 0 {
 			lineStr = fmt.Sprintf(

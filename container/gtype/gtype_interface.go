@@ -52,15 +52,14 @@ func (v *Interface) String() string {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (v *Interface) MarshalJSON() ([]byte, error) {
+func (v Interface) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.Val())
 }
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (v *Interface) UnmarshalJSON(b []byte) error {
 	var i interface{}
-	err := json.UnmarshalUseNumber(b, &i)
-	if err != nil {
+	if err := json.UnmarshalUseNumber(b, &i); err != nil {
 		return err
 	}
 	v.Set(i)

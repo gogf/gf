@@ -299,7 +299,7 @@ func (g *RouterGroup) doBindRoutersToServer(ctx context.Context, item *preBindIt
 	if len(prefix) > 0 {
 		domain, method, path, err := g.server.parsePattern(pattern)
 		if err != nil {
-			g.server.Logger().Fatalf(ctx, "invalid pattern: %s", pattern)
+			g.server.Logger().Fatalf(ctx, "invalid route pattern: %s", pattern)
 		}
 		// If there is already a domain, unset the domain field in the pattern.
 		if g.domain != nil {
