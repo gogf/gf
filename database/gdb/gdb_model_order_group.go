@@ -22,7 +22,7 @@ func (m *Model) Order(orderBy ...string) *Model {
 	if model.orderBy != "" {
 		model.orderBy += ","
 	}
-	model.orderBy = model.db.GetCore().QuoteString(strings.Join(orderBy, " "))
+	model.orderBy += model.db.GetCore().QuoteString(strings.Join(orderBy, " "))
 	return model
 }
 
