@@ -47,7 +47,7 @@ func (s *Server) swaggerUI(r *Request) {
 	if r.StaticFile != nil && r.StaticFile.File != nil && r.StaticFile.IsDir {
 		content := gstr.ReplaceByMap(swaggerUITemplate, map[string]string{
 			swaggerUIDocURLPlaceHolder:  s.config.OpenApiPath,
-			swaggerUIDocNamePlaceHolder: gstr.TrimRight(fmt.Sprintf(`//%s%s`, r.Host, r.URL.String()), "/") + "/" + swaggerUIDocName,
+			swaggerUIDocNamePlaceHolder: gstr.TrimRight(fmt.Sprintf(`//%s%s`, r.Host, r.Server.config.SwaggerPath), "/") + "/" + swaggerUIDocName,
 		})
 		r.Response.Write(content)
 		r.ExitAll()
