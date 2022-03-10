@@ -176,7 +176,7 @@ func Test_Func(t *testing.T) {
 
 		str = `{{concat "I" "Love" "GoFrame"}}`
 		result, err = gview.ParseContent(context.TODO(), str, nil)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(result, `ILoveGoFrame`)
 	})
 	// eq: multiple values.
@@ -198,7 +198,7 @@ func Test_FuncNl2Br(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		str := `{{"Go\nFrame" | nl2br}}`
 		result, err := gview.ParseContent(context.TODO(), str, nil)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(result, `Go<br>Frame`)
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -210,7 +210,7 @@ func Test_FuncNl2Br(t *testing.T) {
 		result, err := gview.ParseContent(context.TODO(), str, g.Map{
 			"content": s,
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(result, strings.Replace(s, "\n", "<br>", -1))
 	})
 }
@@ -305,7 +305,7 @@ func Test_HotReload(t *testing.T) {
 
 		// Initialize data.
 		err := gfile.PutContents(filePath, "test:{{.var}}")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		view := gview.New(dirPath)
 
@@ -313,18 +313,18 @@ func Test_HotReload(t *testing.T) {
 		result, err := view.Parse(context.TODO(), "test.html", g.Map{
 			"var": "1",
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(result, `test:1`)
 
 		// Update data.
 		err = gfile.PutContents(filePath, "test2:{{.var}}")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		time.Sleep(100 * time.Millisecond)
 		result, err = view.Parse(context.TODO(), "test.html", g.Map{
 			"var": "2",
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(result, `test2:2`)
 	})
 }
@@ -336,7 +336,7 @@ func Test_XSS(t *testing.T) {
 		r, err := v.ParseContent(context.TODO(), "{{.v}}", g.Map{
 			"v": s,
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(r, s)
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -346,7 +346,7 @@ func Test_XSS(t *testing.T) {
 		r, err := v.ParseContent(context.TODO(), "{{.v}}", g.Map{
 			"v": s,
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(r, ghtml.Entities(s))
 	})
 	// Tag "if".
@@ -357,7 +357,7 @@ func Test_XSS(t *testing.T) {
 		r, err := v.ParseContent(context.TODO(), "{{if eq 1 1}}{{.v}}{{end}}", g.Map{
 			"v": s,
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(r, ghtml.Entities(s))
 	})
 }
@@ -376,7 +376,7 @@ func Test_BuildInFuncMap(t *testing.T) {
 		v := gview.New()
 		v.Assign("v", new(TypeForBuildInFuncMap))
 		r, err := v.ParseContent(context.TODO(), "{{range $k, $v := map .v.Test}} {{$k}}:{{$v}} {{end}}")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(gstr.Contains(r, "Name:john"), true)
 		t.Assert(gstr.Contains(r, "Score:99.9"), true)
 	})
@@ -399,7 +399,7 @@ func Test_BuildInFuncMaps(t *testing.T) {
 		v := gview.New()
 		v.Assign("v", new(TypeForBuildInFuncMaps))
 		r, err := v.ParseContent(context.TODO(), "{{range $k, $v := maps .v.Test}} {{$k}}:{{$v.Name}} {{$v.Score}} {{end}}")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(r, ` 0:john 99.9  1:smith 100 `)
 	})
 }
@@ -412,7 +412,7 @@ func Test_BuildInFuncDump(t *testing.T) {
 			"score": 100,
 		})
 		r, err := v.ParseContent(context.TODO(), "{{dump .}}")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		fmt.Println(r)
 		t.Assert(gstr.Contains(r, `"name":  "john"`), true)
 		t.Assert(gstr.Contains(r, `"score": 100`), true)
@@ -426,7 +426,7 @@ func Test_BuildInFuncJson(t *testing.T) {
 			"name": "john",
 		})
 		r, err := v.ParseContent(context.TODO(), "{{json .v}}")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(r, `{"name":"john"}`)
 	})
 }
@@ -438,7 +438,7 @@ func Test_BuildInFuncXml(t *testing.T) {
 			"name": "john",
 		})
 		r, err := v.ParseContent(context.TODO(), "{{xml .v}}")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(r, `<name>john</name>`)
 	})
 }
@@ -499,7 +499,7 @@ func Test_BuildInFuncPlus(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		r, err := v.ParseContent(gctx.New(), "{{plus 1 2 3}}")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(r, `6`)
 	})
 }
@@ -508,7 +508,7 @@ func Test_BuildInFuncMinus(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		r, err := v.ParseContent(gctx.New(), "{{minus 1 2 3}}")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(r, `-4`)
 	})
 }
@@ -517,7 +517,7 @@ func Test_BuildInFuncTimes(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		r, err := v.ParseContent(gctx.New(), "{{times 1 2 3 4}}")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(r, `24`)
 	})
 }
@@ -526,7 +526,7 @@ func Test_BuildInFuncDivide(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		r, err := v.ParseContent(gctx.New(), "{{divide 8 2 2}}")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(r, `2`)
 	})
 }

@@ -207,7 +207,7 @@ func Test_Middleware_Status(t *testing.T) {
 
 		resp, err := client.Get(ctx, "/")
 		defer resp.Close()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(resp.StatusCode, 404)
 	})
 }
@@ -583,7 +583,7 @@ func Test_Middleware_CORSAndAuth(t *testing.T) {
 		t.Assert(client.PostContent(ctx, "/api.v2/user/list", "token=123456"), "list")
 		// CORS Checks.
 		resp, err := client.Post(ctx, "/api.v2/user/list", "token=123456")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(resp.Header["Access-Control-Allow-Headers"]), 1)
 		t.Assert(resp.Header["Access-Control-Allow-Headers"][0], "Origin,Content-Type,Accept,User-Agent,Cookie,Authorization,X-Auth-Token,X-Requested-With")
 		t.Assert(resp.Header["Access-Control-Allow-Methods"][0], "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE")

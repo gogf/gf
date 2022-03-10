@@ -24,7 +24,7 @@ func Test_SetConfigWithMap(t *testing.T) {
 			"StStatus": 0,
 		}
 		err := l.SetConfigWithMap(m)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(l.config.Path, m["path"])
 		t.Assert(l.config.Level, LEVEL_ALL)
 		t.Assert(l.config.StdoutPrint, m["stdout"])
@@ -39,7 +39,7 @@ func Test_SetConfigWithMap_LevelStr(t *testing.T) {
 			"level": "all",
 		}
 		err := l.SetConfigWithMap(m)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		l.SetWriter(buffer)
 
@@ -56,7 +56,7 @@ func Test_SetConfigWithMap_LevelStr(t *testing.T) {
 			"level": "warn",
 		}
 		err := l.SetConfigWithMap(m)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		l.SetWriter(buffer)
 		l.Debug(ctx, "test")
 		l.Warning(ctx, "test")

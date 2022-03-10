@@ -80,7 +80,7 @@ func Test_Router_GroupRest1(t *testing.T) {
 		if err == nil {
 			defer resp2.Close()
 		}
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(resp2.Header.Get("head-ok"), "1")
 
 		t.Assert(client.GetContent(ctx, "/api/group-obj-rest"), "Not Found")
@@ -94,7 +94,7 @@ func Test_Router_GroupRest1(t *testing.T) {
 		if err == nil {
 			defer resp4.Close()
 		}
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(resp4.Header.Get("head-ok"), "1")
 	})
 }
@@ -125,7 +125,7 @@ func Test_Router_GroupRest2(t *testing.T) {
 		if err == nil {
 			defer resp2.Close()
 		}
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(resp2.Header.Get("head-ok"), "1")
 
 		t.Assert(client.GetContent(ctx, "/api/group-obj-rest"), "Not Found")
@@ -139,7 +139,7 @@ func Test_Router_GroupRest2(t *testing.T) {
 		if err == nil {
 			defer resp4.Close()
 		}
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(resp4.Header.Get("head-ok"), "1")
 	})
 }
