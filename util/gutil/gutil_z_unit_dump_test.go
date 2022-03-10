@@ -7,6 +7,7 @@
 package gutil_test
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/gogf/gf/v2/net/ghttp"
@@ -140,5 +141,111 @@ func Test_Dump_Slashes(t *testing.T) {
 
 		gutil.DumpWithType(req)
 		gutil.DumpWithType(req.Content)
+	})
+}
+
+// https://github.com/gogf/gf/issues/1661
+func Test_Dump_Issue1661(t *testing.T) {
+	type B struct {
+		ba int
+		bb string
+	}
+	type A struct {
+		aa int
+		ab string
+		cc []B
+	}
+	gtest.C(t, func(t *gtest.T) {
+		var q1 []A
+		var q2 []A
+		q2 = make([]A, 0)
+		q1 = []A{{aa: 1, ab: "1", cc: []B{{ba: 1}, {ba: 2}, {ba: 3}}}, {aa: 2, ab: "2", cc: []B{{ba: 1}, {ba: 2}, {ba: 3}}}}
+		for _, q1v := range q1 {
+			x := []string{"11", "22"}
+			for _, iv2 := range x {
+				ls := q1v
+				for i, _ := range ls.cc {
+					sj := iv2
+					ls.cc[i].bb = sj
+				}
+				q2 = append(q2, ls)
+			}
+		}
+		buffer := bytes.NewBuffer(nil)
+		gutil.DumpTo(buffer, q2, gutil.DumpOption{})
+		t.Assert(buffer.String(), `[
+    {
+        aa: 1,
+        ab: "1",
+        cc: [
+            {
+                ba: 1,
+                bb: "22",
+            },
+            {
+                ba: 2,
+                bb: "22",
+            },
+            {
+                ba: 3,
+                bb: "22",
+            },
+        ],
+    },
+    {
+        aa: 1,
+        ab: "1",
+        cc: [
+            {
+                ba: 1,
+                bb: "22",
+            },
+            {
+                ba: 2,
+                bb: "22",
+            },
+            {
+                ba: 3,
+                bb: "22",
+            },
+        ],
+    },
+    {
+        aa: 2,
+        ab: "2",
+        cc: [
+            {
+                ba: 1,
+                bb: "22",
+            },
+            {
+                ba: 2,
+                bb: "22",
+            },
+            {
+                ba: 3,
+                bb: "22",
+            },
+        ],
+    },
+    {
+        aa: 2,
+        ab: "2",
+        cc: [
+            {
+                ba: 1,
+                bb: "22",
+            },
+            {
+                ba: 2,
+                bb: "22",
+            },
+            {
+                ba: 3,
+                bb: "22",
+            },
+        ],
+    },
+]`)
 	})
 }
