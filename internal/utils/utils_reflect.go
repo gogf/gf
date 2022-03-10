@@ -83,6 +83,8 @@ func ReflectValueToInterface(v reflect.Value) (value interface{}, ok bool) {
 		return v.String(), true
 	case reflect.Ptr:
 		return ReflectValueToInterface(v.Elem())
+	case reflect.Interface:
+		return ReflectValueToInterface(v.Elem())
 	default:
 		return nil, false
 	}

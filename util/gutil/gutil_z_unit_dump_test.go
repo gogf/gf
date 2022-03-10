@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -69,6 +70,23 @@ func Test_Dump(t *testing.T) {
 			100: 100,
 		})
 		gutil.Dump(req)
+	})
+}
+
+func Test_Dump_Map(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		buffer := bytes.NewBuffer(nil)
+		m := g.Map{
+			"k1": g.Map{
+				"k2": "v2",
+			},
+		}
+		gutil.DumpTo(buffer, m, gutil.DumpOption{})
+		t.Assert(buffer.String(), `{
+    "k1": {
+        "k2": "v2",
+    },
+}`)
 	})
 }
 

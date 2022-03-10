@@ -169,6 +169,9 @@ func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDum
 			buffer.WriteString(fmt.Sprintf(`<%s>`, reflectTypeName))
 		}
 
+	case reflect.Interface:
+		doDump(exportInternalInput.ReflectValue.Elem(), indent, buffer, option)
+
 	default:
 		doDumpDefault(exportInternalInput)
 	}
@@ -283,7 +286,17 @@ func doDumpStruct(in doDumpInternalInput) {
 		Pointer:         in.Value,
 		RecursiveOption: gstructs.RecursiveOptionEmbedded,
 	})
-	if len(structFields) == 0 {
+	var (
+		hasNoExportedFields = true
+		_, isReflectValue   = in.Value.(reflect.Value)
+	)
+	for _, field := range structFields {
+		if field.IsExported() {
+			hasNoExportedFields = false
+			break
+		}
+	}
+	if !isReflectValue && (len(structFields) == 0 || hasNoExportedFields) {
 		var (
 			structContentStr  = ""
 			attributeCountStr = "0"
@@ -295,6 +308,11 @@ func doDumpStruct(in doDumpInternalInput) {
 		} else if v, ok := in.Value.(iMarshalJSON); ok {
 			b, _ := v.MarshalJSON()
 			structContentStr = string(b)
+		} else {
+			// Has no common interface implements.
+			if len(structFields) != 0 {
+				goto dumpStructFields
+			}
 		}
 		if structContentStr == "" {
 			structContentStr = "{}"
@@ -314,6 +332,8 @@ func doDumpStruct(in doDumpInternalInput) {
 		}
 		return
 	}
+
+dumpStructFields:
 	var (
 		maxSpaceNum = 0
 		tmpSpaceNum = 0
