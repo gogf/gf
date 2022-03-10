@@ -22,7 +22,6 @@ import (
 //
 // Note that if there are multiple parameters with the same name, the parameters are
 // retrieved and overwrote in order of priority: router < query < body < form < custom.
-
 func (r *Request) GetRequest(key string, def ...interface{}) *gvar.Var {
 	value := r.GetParam(key)
 	if value.IsNil() {
