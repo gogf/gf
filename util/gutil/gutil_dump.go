@@ -13,6 +13,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
 )
@@ -83,10 +84,27 @@ func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDum
 		buffer.WriteString(`<nil>`)
 		return
 	}
+	var reflectValue reflect.Value
+	if v, ok := value.(reflect.Value); ok {
+		reflectValue = v
+		if v.CanInterface() {
+			value = v.Interface()
+		} else {
+			if convertedValue, ok := utils.ReflectValueToInterface(v); ok {
+				value = convertedValue
+			}
+		}
+	} else {
+		reflectValue = reflect.ValueOf(value)
+	}
+	// Double check nil value.
+	if value == nil {
+		buffer.WriteString(`<nil>`)
+		return
+	}
 	var (
-		reflectValue    = reflect.ValueOf(value)
 		reflectKind     = reflectValue.Kind()
-		reflectTypeName = reflect.TypeOf(value).String()
+		reflectTypeName = reflectValue.Type().String()
 		newIndent       = indent + dumpIndent
 	)
 	reflectTypeName = strings.ReplaceAll(reflectTypeName, `[]uint8`, `[]byte`)
@@ -142,13 +160,13 @@ func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDum
 		doDumpNumber(exportInternalInput)
 
 	case reflect.Chan:
-		buffer.WriteString(fmt.Sprintf(`<%s>`, reflect.TypeOf(value).String()))
+		buffer.WriteString(fmt.Sprintf(`<%s>`, reflectTypeName))
 
 	case reflect.Func:
 		if reflectValue.IsNil() || !reflectValue.IsValid() {
 			buffer.WriteString(`<nil>`)
 		} else {
-			buffer.WriteString(fmt.Sprintf(`<%s>`, reflect.TypeOf(value).String()))
+			buffer.WriteString(fmt.Sprintf(`<%s>`, reflectTypeName))
 		}
 
 	default:
@@ -195,7 +213,7 @@ func doDumpSlice(in doDumpInternalInput) {
 	}
 	for i := 0; i < in.ReflectValue.Len(); i++ {
 		in.Buffer.WriteString(in.NewIndent)
-		doDump(in.ReflectValue.Index(i).Interface(), in.NewIndent, in.Buffer, in.Option)
+		doDump(in.ReflectValue.Index(i), in.NewIndent, in.Buffer, in.Option)
 		in.Buffer.WriteString(",\n")
 	}
 	in.Buffer.WriteString(fmt.Sprintf("%s]", in.Indent))
@@ -254,7 +272,7 @@ func doDumpMap(in doDumpInternalInput) {
 			))
 		}
 		// Map value dump.
-		doDump(in.ReflectValue.MapIndex(mapKey).Interface(), in.NewIndent, in.Buffer, in.Option)
+		doDump(in.ReflectValue.MapIndex(mapKey), in.NewIndent, in.Buffer, in.Option)
 		in.Buffer.WriteString(",\n")
 	}
 	in.Buffer.WriteString(fmt.Sprintf("%s}", in.Indent))
@@ -319,7 +337,7 @@ func doDumpStruct(in doDumpInternalInput) {
 			field.Name(),
 			strings.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
 		))
-		doDump(field.Value.Interface(), in.NewIndent, in.Buffer, in.Option)
+		doDump(field.Value, in.NewIndent, in.Buffer, in.Option)
 		in.Buffer.WriteString(",\n")
 	}
 	in.Buffer.WriteString(fmt.Sprintf("%s}", in.Indent))
@@ -371,7 +389,13 @@ func doDumpBool(in doDumpInternalInput) {
 }
 
 func doDumpDefault(in doDumpInternalInput) {
-	s := fmt.Sprintf("%v", in.Value)
+	var s string
+	if in.ReflectValue.CanInterface() {
+		s = fmt.Sprintf("%v", in.ReflectValue.Interface())
+	}
+	if s == "" {
+		s = fmt.Sprintf("%v", in.Value)
+	}
 	s = gstr.Trim(s, `<>`)
 	if !in.Option.WithType {
 		in.Buffer.WriteString(s)

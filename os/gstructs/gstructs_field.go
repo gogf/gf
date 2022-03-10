@@ -122,19 +122,12 @@ func Fields(in FieldsInput) ([]Field, error) {
 
 	for index := 0; index < len(rangeFields); index++ {
 		field := rangeFields[index]
-		if !field.IsExported() {
-			continue
-		}
 		currentLevelFieldMap[field.Name()] = field
 	}
 
 	for index := 0; index < len(rangeFields); index++ {
 		field := rangeFields[index]
 		if _, ok = fieldFilterMap[field.Name()]; ok {
-			continue
-		}
-		// It only retrieves exported attributes.
-		if !field.IsExported() {
 			continue
 		}
 		if field.IsEmbedded() {
