@@ -41,7 +41,7 @@ func (r *Request) GetRequest(key string, def ...interface{}) *gvar.Var {
 	if value.IsNil() {
 		value = r.GetRouter(key)
 	}
-	if value.IsNil() {
+	if !value.IsNil() {
 		return value
 	}
 	if len(def) > 0 {
