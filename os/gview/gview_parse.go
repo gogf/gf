@@ -60,7 +60,7 @@ var (
 // and returns the parsed template content.
 func (view *View) Parse(ctx context.Context, file string, params ...Params) (result string, err error) {
 	var tpl interface{}
-	// It caches the file, folder and its content to enhance performance.
+	// It caches the file, folder and content to enhance performance.
 	r := view.fileCacheMap.GetOrSetFuncLock(file, func() interface{} {
 		var (
 			path     string
@@ -272,10 +272,9 @@ func (view *View) getTemplate(filePath, folderPath, pattern string) (tpl interfa
 				}
 			}
 
-			// Secondly checking the file system.
-			var (
-				files []string
-			)
+			// Secondly checking the file system,
+			// and then automatically parsing all its sub-files recursively.
+			var files []string
 			files, err = gfile.ScanDir(folderPath, pattern, true)
 			if err != nil {
 				return nil
