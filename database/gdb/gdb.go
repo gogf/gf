@@ -409,7 +409,8 @@ func doNewByNode(node ConfigNode, group string) (db DB, err error) {
 		return c.db, nil
 	}
 	errorMsg := `cannot find database driver for specified database type "%s"`
-	errorMsg += `, did you misspell type name "%s" or forget importing the database driver?`
+	errorMsg += `, did you misspell type name "%s" or forget importing the database driver? `
+	errorMsg += `possible reference: https://github.com/gogf/gf/tree/master/contrib/drivers`
 	return nil, gerror.NewCodef(gcode.CodeInvalidConfiguration, errorMsg, node.Type, node.Type)
 }
 
