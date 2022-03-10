@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/encoding/ghtml"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
@@ -23,6 +24,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 func init() {
@@ -222,7 +224,7 @@ func Test_FuncInclude(t *testing.T) {
 			layout = `{{include "header.html" .}}
 {{include "main.html" .}}
 {{include "footer.html" .}}`
-			templatePath = gfile.Temp("template")
+			templatePath = gfile.Temp(guid.S())
 		)
 
 		gfile.Mkdir(templatePath)
@@ -526,5 +528,22 @@ func Test_BuildInFuncDivide(t *testing.T) {
 		r, err := v.ParseContent(gctx.New(), "{{divide 8 2 2}}")
 		t.Assert(err, nil)
 		t.Assert(r, `2`)
+	})
+}
+
+func Test_Issue1416(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		err := v.SetPath(gdebug.TestDataPath("issue1416"))
+		t.AssertNil(err)
+		r, err := v.ParseOption(context.TODO(), gview.Option{
+			File:   "gview.tpl",
+			Orphan: true,
+			Params: map[string]interface{}{
+				"hello": "world",
+			},
+		})
+		t.AssertNil(err)
+		t.Assert(r, `test.tpl content, vars: world`)
 	})
 }
