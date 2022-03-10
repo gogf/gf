@@ -25,7 +25,7 @@ func Test_Parse(t *testing.T) {
 			"f,force":   false,
 			"q,quiet":   false,
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(p.GetArgAll()), 3)
 		t.Assert(p.GetArg(0), "gf")
 		t.Assert(p.GetArg(1), "remove")
@@ -64,7 +64,7 @@ func Test_ParseArgs(t *testing.T) {
 				"f,force":   false,
 				"q,quiet":   false,
 			})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(p.GetArgAll()), 3)
 		t.Assert(p.GetArg(0), "gf")
 		t.Assert(p.GetArg(1), "remove")

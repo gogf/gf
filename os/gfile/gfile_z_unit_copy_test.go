@@ -127,7 +127,7 @@ func Test_CopyDir(t *testing.T) {
 		t.Assert(gfile.GetContents(dst), dstContent)
 
 		err := gfile.CopyDir(gfile.Dir(src), gfile.Dir(dst))
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(gfile.GetContents(src), srcContent)
 		t.Assert(gfile.GetContents(dst), srcContent)
 

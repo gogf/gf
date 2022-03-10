@@ -34,7 +34,7 @@ func Test_ConfigFromMap(t *testing.T) {
 			"cookieHttpOnly":  true,
 		}
 		config, err := ghttp.ConfigFromMap(m)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		d1, _ := time.ParseDuration(gconv.String(m["readTimeout"]))
 		d2, _ := time.ParseDuration(gconv.String(m["cookieMaxAge"]))
 		t.Assert(config.Address, m["address"])
@@ -67,7 +67,7 @@ func Test_SetConfigWithMap(t *testing.T) {
 		}
 		s := g.Server()
 		err := s.SetConfigWithMap(m)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 }
 

@@ -2067,7 +2067,7 @@ func Test_Model_OmitEmpty(t *testing.T) {
 			"id":   1,
 			"name": "",
 		}).Save()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 }
 
@@ -2096,14 +2096,14 @@ func Test_Model_OmitNil(t *testing.T) {
 			"id":   1,
 			"name": "",
 		}).Save()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Model(table).OmitNilWhere().Data(g.Map{
 			"id":   1,
 			"name": "",
 		}).Save()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 }
 

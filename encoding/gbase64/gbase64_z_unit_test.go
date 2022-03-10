@@ -70,12 +70,12 @@ func Test_File(t *testing.T) {
 	expect := "dGVzdA=="
 	gtest.C(t, func(t *gtest.T) {
 		b, err := gbase64.EncodeFile(path)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(string(b), expect)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		s, err := gbase64.EncodeFileToString(path)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(s, expect)
 	})
 }

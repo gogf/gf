@@ -25,7 +25,7 @@ func Test_Encode_Parse(t *testing.T) {
 		result, err := v.Parse(context.TODO(), "encode.tpl", g.Map{
 			"title": "<b>my title</b>",
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(result, "<div>&lt;b&gt;my title&lt;/b&gt;</div>")
 	})
 }
@@ -38,7 +38,7 @@ func Test_Encode_ParseContent(t *testing.T) {
 		result, err := v.ParseContent(context.TODO(), tplContent, g.Map{
 			"title": "<b>my title</b>",
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(result, "<div>&lt;b&gt;my title&lt;/b&gt;</div>")
 	})
 }

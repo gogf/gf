@@ -22,7 +22,7 @@ func Test_StorageRedis(t *testing.T) {
 		Address: "127.0.0.1:6379",
 		Db:      0,
 	})
-	gtest.Assert(err, nil)
+	gtest.AssertNil(err)
 
 	storage := gsession.NewStorageRedis(redis)
 	manager := gsession.New(time.Second, storage)
@@ -86,7 +86,7 @@ func Test_StorageRedisPrefix(t *testing.T) {
 		Address: "127.0.0.1:6379",
 		Db:      0,
 	})
-	gtest.Assert(err, nil)
+	gtest.AssertNil(err)
 
 	prefix := "s_"
 	storage := gsession.NewStorageRedis(redis, prefix)

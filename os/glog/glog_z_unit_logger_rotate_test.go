@@ -38,7 +38,7 @@ func Test_Rotate_Size(t *testing.T) {
 			"RotateBackupCompress": 9,
 			"RotateCheckInterval":  time.Second, // For unit testing only.
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer gfile.Remove(p)
 
 		s := "1234567890abcdefg"
@@ -50,7 +50,7 @@ func Test_Rotate_Size(t *testing.T) {
 		time.Sleep(time.Second * 3)
 
 		files, err := gfile.ScanDirFile(p, "*.gz")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(files), 2)
 
 		content := gfile.GetContents(gfile.Join(p, "access.log"))
@@ -58,7 +58,7 @@ func Test_Rotate_Size(t *testing.T) {
 
 		time.Sleep(time.Second * 5)
 		files, err = gfile.ScanDirFile(p, "*.gz")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(files), 0)
 	})
 }
@@ -77,7 +77,7 @@ func Test_Rotate_Expire(t *testing.T) {
 			"RotateBackupCompress": 9,
 			"RotateCheckInterval":  time.Second, // For unit testing only.
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer gfile.Remove(p)
 
 		s := "1234567890abcdefg"
@@ -86,7 +86,7 @@ func Test_Rotate_Expire(t *testing.T) {
 		}
 
 		files, err := gfile.ScanDirFile(p, "*.gz")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(files), 0)
 
 		t.Assert(gstr.Count(gfile.GetContents(gfile.Join(p, "access.log")), s), 10)
@@ -94,14 +94,14 @@ func Test_Rotate_Expire(t *testing.T) {
 		time.Sleep(time.Second * 3)
 
 		files, err = gfile.ScanDirFile(p, "*.gz")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(files), 1)
 
 		t.Assert(gstr.Count(gfile.GetContents(gfile.Join(p, "access.log")), s), 0)
 
 		time.Sleep(time.Second * 5)
 		files, err = gfile.ScanDirFile(p, "*.gz")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(files), 0)
 	})
 }

@@ -65,7 +65,7 @@ func Test_New_CustomStruct(t *testing.T) {
 		t.AssertNE(j, nil)
 
 		s, err := j.ToJsonString()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(s == `{"Id":1,"Name":"john"}` || s == `{"Name":"john","Id":1}`, true)
 	})
 }

@@ -50,13 +50,13 @@ func Test_Gzip_UnGzip_File(t *testing.T) {
 	// Compress.
 	gtest.C(t, func(t *gtest.T) {
 		err := gcompress.GzipFile(srcPath, dstPath1, 9)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer gfile.Remove(dstPath1)
 		t.Assert(gfile.Exists(dstPath1), true)
 
 		// Decompress.
 		err = gcompress.UnGzipFile(dstPath1, dstPath2)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer gfile.Remove(dstPath2)
 		t.Assert(gfile.Exists(dstPath2), true)
 

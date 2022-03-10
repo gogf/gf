@@ -105,7 +105,7 @@ func Test_SetFileName(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		path := "config.json"
 		err := gfile.PutContents(path, config)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer func() {
 			_ = gfile.Remove(path)
 		}()
@@ -155,18 +155,18 @@ func TestCfg_Get_WrongConfigFile(t *testing.T) {
 		var err error
 		configPath := gfile.Temp(gtime.TimestampNanoStr())
 		err = gfile.Mkdir(configPath)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer gfile.Remove(configPath)
 
 		defer gfile.Chdir(gfile.Pwd())
 		err = gfile.Chdir(configPath)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		err = gfile.PutContents(
 			gfile.Join(configPath, "config.yml"),
 			"wrong config",
 		)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		adapterFile, err := gcfg.NewAdapterFile("config.yml")
 		t.AssertNil(err)
 

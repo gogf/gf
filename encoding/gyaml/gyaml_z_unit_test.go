@@ -74,7 +74,7 @@ func Test_EncodeIndent(t *testing.T) {
 func Test_Decode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		result, err := gyaml.Decode([]byte(yamlStr))
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		m, ok := result.(map[string]interface{})
 		t.Assert(ok, true)
@@ -92,7 +92,7 @@ func Test_DecodeTo(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		result := make(map[string]interface{})
 		err := gyaml.DecodeTo([]byte(yamlStr), &result)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(result, map[string]interface{}{
 			"url":      "https://goframe.org",
 			"server":   g.Slice{"120.168.117.21", "120.168.117.22"},
@@ -121,9 +121,9 @@ m:
  k: v
     `)
 		v, err := gyaml.Decode(data)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		b, err := json.Marshal(v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(b, `{"m":{"k":"v"}}`)
 	})
 }

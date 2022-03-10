@@ -27,15 +27,15 @@ func Test_Redis(t *testing.T) {
 		var err error
 		dirPath := gfile.Temp(gtime.TimestampNanoStr())
 		err = gfile.Mkdir(dirPath)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer gfile.Remove(dirPath)
 
 		name := "config.toml"
 		err = gfile.PutContents(gfile.Join(dirPath, name), redisContent)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		err = gins.Config().GetAdapter().(*gcfg.AdapterFile).AddPath(dirPath)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		defer gins.Config().GetAdapter().(*gcfg.AdapterFile).Clear()
 
@@ -58,13 +58,13 @@ func Test_Redis(t *testing.T) {
 		t.Assert(r, "PONG")
 
 		r, err = redisCache.Do(ctx, "PING")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(r, "PONG")
 
 		_, err = redisDisk.Do(ctx, "SET", "k", "v")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		r, err = redisDisk.Do(ctx, "GET", "k")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(r, []byte("v"))
 	})
 }
