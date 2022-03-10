@@ -563,9 +563,7 @@ func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValue
 		}
 
 	case reflect.Map:
-		var (
-			dataMap = gconv.Map(in.Value)
-		)
+		var dataMap = gconv.Map(in.Value)
 		for _, item := range dataMap {
 			originTypeAndKind := utils.OriginTypeAndKind(item)
 			v.doCheckValueRecursively(ctx, doCheckValueRecursivelyInput{

@@ -41,6 +41,9 @@ type OriginTypeAndKindOutput struct {
 
 // OriginTypeAndKind retrieves and returns the original reflect type and kind.
 func OriginTypeAndKind(value interface{}) (out OriginTypeAndKindOutput) {
+	if value == nil {
+		return
+	}
 	if reflectType, ok := value.(reflect.Type); ok {
 		out.InputType = reflectType
 	} else {
