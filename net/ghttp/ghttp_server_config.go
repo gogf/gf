@@ -135,6 +135,13 @@ type ServerConfig struct {
 	// It is automatically set enabled if any static path is set.
 	FileServerEnabled bool `json:"fileServerEnabled"`
 
+	// TryFilesModeEnabled is the global switch for static service.
+	// Set it to enable try static file to handle history mode static file.
+	TryFilesModeEnabled bool `json:"tryFilesModeEnabled"`
+
+	// TryFilesIndexFile specifies try files point index,default index.html
+	TryFilesIndexFile string `json:"tryFilesIndexFile"`
+
 	// ======================================================================================================
 	// Cookie.
 	// ======================================================================================================
@@ -266,6 +273,8 @@ func NewConfig() ServerConfig {
 		ServerRoot:          "",
 		StaticPaths:         make([]staticPathItem, 0),
 		FileServerEnabled:   false,
+		TryFilesModeEnabled: false,
+		TryFilesIndexFile:   "index.html",
 		CookieMaxAge:        time.Hour * 24 * 365,
 		CookiePath:          "/",
 		CookieDomain:        "",

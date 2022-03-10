@@ -112,6 +112,13 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Core serving handling.
 	if !request.IsExited() {
+		if s.config.TryFilesModeEnabled && !request.hasServeHandler {
+			//  try static file.
+			s.serveFile(request, &staticFile{
+				Path:  s.config.ServerRoot + "/" + s.config.TryFilesIndexFile,
+				IsDir: false,
+			})
+		}
 		if request.isFileRequest {
 			// Static file service.
 			s.serveFile(request, request.StaticFile)
