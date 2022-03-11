@@ -87,7 +87,7 @@ func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDum
 	var reflectValue reflect.Value
 	if v, ok := value.(reflect.Value); ok {
 		reflectValue = v
-		if v.CanInterface() {
+		if v.IsValid() && v.CanInterface() {
 			value = v.Interface()
 		} else {
 			if convertedValue, ok := reflection.ValueToInterface(v); ok {
@@ -410,7 +410,7 @@ func doDumpBool(in doDumpInternalInput) {
 
 func doDumpDefault(in doDumpInternalInput) {
 	var s string
-	if in.ReflectValue.CanInterface() {
+	if in.ReflectValue.IsValid() && in.ReflectValue.CanInterface() {
 		s = fmt.Sprintf("%v", in.ReflectValue.Interface())
 	}
 	if s == "" {
