@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/net/gipv4"
 	"github.com/gogf/gf/v2/net/gipv6"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -565,7 +565,7 @@ func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValue
 	case reflect.Map:
 		var dataMap = gconv.Map(in.Value)
 		for _, item := range dataMap {
-			originTypeAndKind := utils.OriginTypeAndKind(item)
+			originTypeAndKind := reflection.OriginTypeAndKind(item)
 			v.doCheckValueRecursively(ctx, doCheckValueRecursivelyInput{
 				Value:               item,
 				Type:                originTypeAndKind.InputType,
@@ -585,7 +585,7 @@ func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValue
 			return
 		}
 		for _, item := range array {
-			originTypeAndKind := utils.OriginTypeAndKind(item)
+			originTypeAndKind := reflection.OriginTypeAndKind(item)
 			v.doCheckValueRecursively(ctx, doCheckValueRecursivelyInput{
 				Value:               item,
 				Type:                originTypeAndKind.InputType,

@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -38,7 +39,7 @@ var (
 
 // NewFromObject creates and returns a root command object using given object.
 func NewFromObject(object interface{}) (rootCmd *Command, err error) {
-	originValueAndKind := utils.OriginValueAndKind(object)
+	originValueAndKind := reflection.OriginValueAndKind(object)
 	if originValueAndKind.OriginKind != reflect.Struct {
 		err = gerror.Newf(
 			`input object should be type of struct, but got "%s"`,

@@ -166,3 +166,61 @@ func Test_Issue1653(t *testing.T) {
 		t.Assert(resContent, `{"code":0,"message":"","data":{"uuid":"28ee701c-7daf-4cdc-9a62-6d6704e6112b","feed_back":"P00001"}}`)
 	})
 }
+
+type LbseMasterHead struct {
+	Code     string   `json:"code" v:"code@required|min-length:1#The code is required"`
+	Active   bool     `json:"active"`
+	Preset   bool     `json:"preset"`
+	Superior string   `json:"superior"`
+	Path     []string `json:"path"`
+	Sort     int      `json:"sort"`
+	Folder   bool     `json:"folder"`
+	Test     string   `json:"test" v:"required"`
+}
+
+type Template struct {
+	LbseMasterHead
+	Datasource string `json:"datasource" v:"required|length:32,32#The datasource is required"`
+	SQLText    string `json:"sql_text"`
+}
+
+type TemplateCreateReq struct {
+	g.Meta `path:"/test" method:"post" summary:"Create template" tags:"Template"`
+	Master Template `json:"master"`
+}
+
+type TemplateCreateRes struct{}
+
+type cFoo1 struct{}
+
+var Foo1 = new(cFoo1)
+
+func (r cFoo1) PostTest1(ctx context.Context, req *TemplateCreateReq) (res *TemplateCreateRes, err error) {
+	g.Dump(req)
+	return
+}
+
+// https://github.com/gogf/gf/issues/1662
+func Test_Issue662(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Use(ghttp.MiddlewareHandlerResponse)
+	s.Group("/boot", func(grp *ghttp.RouterGroup) {
+		grp.Bind(Foo1)
+	})
+	s.SetPort(8888)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(1000 * time.Millisecond)
+
+	// g.Client()测试：
+	// code字段传入空字符串时，校验没有提示
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		dataReq := `
+{"master":{"active":true,"code":"","created_at":"","created_by":"","created_by_text":"","datasource":"38b6f170-a584-43fc-8912-cc1e9bf1b1a9","description":"币种","folder":false,"path":"[\"XCUR\"]","preset":false,"sort":1000,"sql_text":"SELECT!!!!","superior":null,"updated_at":"","updated_by":"","updated_by_text":"","updated_tick":0,"uuid":""},"translation":[{"code":"zh_CN","text":"币种"},{"code":"en_US","text":"币种"}],"filters":null,"fields":[{"code":"F001","created_at":"2022-01-18 23:37:38","created_by":"3ed72aba-1622-4262-a61e-83581e020763","field":"value","hide":false,"min_width":120,"name":"value","parent":"296154bf-b718-4e8f-8b70-efb969b831ec","updated_at":"2022-01-18 23:37:38","updated_by":"3ed72aba-1622-4262-a61e-83581e020763","updated_tick":1,"uuid":"f2140b7a-044c-41c3-b70e-852e6160b21b"},{"code":"F002","created_at":"2022-01-18 23:37:38","created_by":"3ed72aba-1622-4262-a61e-83581e020763","field":"label","hide":false,"min_width":120,"name":"label","parent":"296154bf-b718-4e8f-8b70-efb969b831ec","updated_at":"2022-01-18 23:37:38","updated_by":"3ed72aba-1622-4262-a61e-83581e020763","updated_tick":1,"uuid":"2d3bba5d-308b-4dba-bcac-f093e6556eca"}],"limit":0}
+`
+		t.Assert(c.PostContent(ctx, "/boot/test", dataReq), `{"code":51,"message":"The code is required","data":null}`)
+	})
+}

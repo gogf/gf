@@ -13,7 +13,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
 )
@@ -90,7 +90,7 @@ func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDum
 		if v.CanInterface() {
 			value = v.Interface()
 		} else {
-			if convertedValue, ok := utils.ReflectValueToInterface(v); ok {
+			if convertedValue, ok := reflection.ValueToInterface(v); ok {
 				value = convertedValue
 			}
 		}

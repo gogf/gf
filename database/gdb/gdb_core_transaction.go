@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -341,7 +341,7 @@ func (tx *TX) GetStructs(objPointerSlice interface{}, sql string, args ...interf
 // the conversion. If parameter `pointer` is type of slice, it calls GetStructs internally
 // for conversion.
 func (tx *TX) GetScan(pointer interface{}, sql string, args ...interface{}) error {
-	reflectInfo := utils.OriginTypeAndKind(pointer)
+	reflectInfo := reflection.OriginTypeAndKind(pointer)
 	if reflectInfo.InputKind != reflect.Ptr {
 		return gerror.NewCodef(
 			gcode.CodeInvalidParameter,

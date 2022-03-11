@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -366,7 +367,7 @@ func isKeyValueCanBeOmitEmpty(omitEmpty bool, whereType string, key, value inter
 func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newArgs []interface{}) {
 	var (
 		buffer      = bytes.NewBuffer(nil)
-		reflectInfo = utils.OriginValueAndKind(in.Where)
+		reflectInfo = reflection.OriginValueAndKind(in.Where)
 	)
 	switch reflectInfo.OriginKind {
 	case reflect.Array, reflect.Slice:
@@ -707,7 +708,7 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 	// Handles the slice arguments.
 	if len(args) > 0 {
 		for index, arg := range args {
-			reflectInfo := utils.OriginValueAndKind(arg)
+			reflectInfo := reflection.OriginValueAndKind(arg)
 			switch reflectInfo.OriginKind {
 			case reflect.Slice, reflect.Array:
 				// It does not split the type of []byte.
@@ -817,7 +818,7 @@ func FormatSqlWithArgs(sql string, args []interface{}) string {
 				if v, ok := args[index].(Raw); ok {
 					return gconv.String(v)
 				}
-				reflectInfo := utils.OriginValueAndKind(args[index])
+				reflectInfo := reflection.OriginValueAndKind(args[index])
 				if reflectInfo.OriginKind == reflect.Ptr &&
 					(reflectInfo.OriginValue.IsNil() || !reflectInfo.OriginValue.IsValid()) {
 					return "null"
