@@ -9,7 +9,7 @@ package gconv
 import (
 	"reflect"
 
-	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/internal/reflection"
 )
 
 // SliceStr is alias of Strings.
@@ -118,7 +118,7 @@ func Strings(any interface{}) []string {
 		return array
 	}
 	// Not a common type, it then uses reflection for conversion.
-	originValueAndKind := utils.OriginValueAndKind(any)
+	originValueAndKind := reflection.OriginValueAndKind(any)
 	switch originValueAndKind.OriginKind {
 	case reflect.Slice, reflect.Array:
 		var (

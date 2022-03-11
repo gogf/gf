@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/internal/utils"
 )
 
@@ -141,7 +142,7 @@ func Uints(any interface{}) []uint {
 		return array
 	}
 	// Not a common type, it then uses reflection for conversion.
-	originValueAndKind := utils.OriginValueAndKind(any)
+	originValueAndKind := reflection.OriginValueAndKind(any)
 	switch originValueAndKind.OriginKind {
 	case reflect.Slice, reflect.Array:
 		var (
@@ -271,7 +272,7 @@ func Uint32s(any interface{}) []uint32 {
 		return array
 	}
 	// Not a common type, it then uses reflection for conversion.
-	originValueAndKind := utils.OriginValueAndKind(any)
+	originValueAndKind := reflection.OriginValueAndKind(any)
 	switch originValueAndKind.OriginKind {
 	case reflect.Slice, reflect.Array:
 		var (
@@ -401,7 +402,7 @@ func Uint64s(any interface{}) []uint64 {
 		return array
 	}
 	// Not a common type, it then uses reflection for conversion.
-	originValueAndKind := utils.OriginValueAndKind(any)
+	originValueAndKind := reflection.OriginValueAndKind(any)
 	switch originValueAndKind.OriginKind {
 	case reflect.Slice, reflect.Array:
 		var (

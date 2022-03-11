@@ -9,7 +9,7 @@ package gconv
 import (
 	"reflect"
 
-	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/internal/reflection"
 )
 
 // SliceInt is alias of Ints.
@@ -132,7 +132,7 @@ func Ints(any interface{}) []int {
 		return array
 	}
 	// Not a common type, it then uses reflection for conversion.
-	originValueAndKind := utils.OriginValueAndKind(any)
+	originValueAndKind := reflection.OriginValueAndKind(any)
 	switch originValueAndKind.OriginKind {
 	case reflect.Slice, reflect.Array:
 		var (
@@ -257,7 +257,7 @@ func Int32s(any interface{}) []int32 {
 		return array
 	}
 	// Not a common type, it then uses reflection for conversion.
-	originValueAndKind := utils.OriginValueAndKind(any)
+	originValueAndKind := reflection.OriginValueAndKind(any)
 	switch originValueAndKind.OriginKind {
 	case reflect.Slice, reflect.Array:
 		var (
@@ -382,7 +382,7 @@ func Int64s(any interface{}) []int64 {
 		return array
 	}
 	// Not a common type, it then uses reflection for conversion.
-	originValueAndKind := utils.OriginValueAndKind(any)
+	originValueAndKind := reflection.OriginValueAndKind(any)
 	switch originValueAndKind.OriginKind {
 	case reflect.Slice, reflect.Array:
 		var (

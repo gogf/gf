@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -97,7 +97,7 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 	validator.rules = nil
 	validator.messages = nil
 	for _, item := range inputParamMap {
-		originTypeAndKind := utils.OriginTypeAndKind(item)
+		originTypeAndKind := reflection.OriginTypeAndKind(item)
 		switch originTypeAndKind.OriginKind {
 		case reflect.Map, reflect.Struct, reflect.Slice, reflect.Array:
 			v.doCheckValueRecursively(ctx, doCheckValueRecursivelyInput{

@@ -4,9 +4,12 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package utils
+// Package reflection provides some reflection functions for internal usage.
+package reflection
 
-import "reflect"
+import (
+	"reflect"
+)
 
 type OriginValueAndKindOutput struct {
 	InputValue  reflect.Value
@@ -63,8 +66,8 @@ func OriginTypeAndKind(value interface{}) (out OriginTypeAndKindOutput) {
 	return
 }
 
-// ReflectValueToInterface converts reflect value to its interface type.
-func ReflectValueToInterface(v reflect.Value) (value interface{}, ok bool) {
+// ValueToInterface converts reflect value to its interface type.
+func ValueToInterface(v reflect.Value) (value interface{}, ok bool) {
 	if v.IsValid() && v.CanInterface() {
 		return v.Interface(), true
 	}
@@ -82,9 +85,9 @@ func ReflectValueToInterface(v reflect.Value) (value interface{}, ok bool) {
 	case reflect.String:
 		return v.String(), true
 	case reflect.Ptr:
-		return ReflectValueToInterface(v.Elem())
+		return ValueToInterface(v.Elem())
 	case reflect.Interface:
-		return ReflectValueToInterface(v.Elem())
+		return ValueToInterface(v.Elem())
 	default:
 		return nil, false
 	}

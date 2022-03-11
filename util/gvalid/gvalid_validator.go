@@ -12,6 +12,7 @@ import (
 	"reflect"
 
 	"github.com/gogf/gf/v2/i18n/gi18n"
+	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -46,7 +47,7 @@ func (v *Validator) Run(ctx context.Context) Error {
 		)
 	}
 
-	originValueAndKind := utils.OriginValueAndKind(v.data)
+	originValueAndKind := reflection.OriginValueAndKind(v.data)
 	switch originValueAndKind.OriginKind {
 	case reflect.Map:
 		isMapValidation := false
