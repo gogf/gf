@@ -143,7 +143,7 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 		}
 
 		// Recursively with feature checks.
-		model = m.db.With(field.Value)
+		model = m.db.With(field.Value).Hook(m.hook)
 		if m.withAll {
 			model = model.WithAll()
 		} else {
@@ -258,7 +258,7 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 			fieldKeys = structType.FieldKeys()
 		}
 		// Recursively with feature checks.
-		model = m.db.With(field.Value)
+		model = m.db.With(field.Value).Hook(m.hook)
 		if m.withAll {
 			model = model.WithAll()
 		} else {

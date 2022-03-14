@@ -532,9 +532,21 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 			}
 		}
 	}
-	result, err = m.db.DoSelect(
-		m.GetCtx(), m.getLink(false), sql, m.mergeArguments(args)...,
-	)
+
+	in := &HookSelectInput{
+		internalParamHookSelect: internalParamHookSelect{
+			internalParamHook: internalParamHook{
+				db:   m.db,
+				link: m.getLink(false),
+			},
+			handler: m.hook.Select,
+		},
+		Table: m.tables,
+		Sql:   sql,
+		Args:  m.mergeArguments(args),
+	}
+	result, err = in.Next(m.GetCtx())
+
 	// Cache the result.
 	if cacheKey != "" && err == nil {
 		if m.cacheOption.Duration < 0 {
