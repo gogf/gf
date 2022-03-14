@@ -145,11 +145,11 @@ func (c *Core) Slave(schema ...string) (*sql.DB, error) {
 
 // GetAll queries and returns data records from database.
 func (c *Core) GetAll(ctx context.Context, sql string, args ...interface{}) (Result, error) {
-	return c.db.DoGetAll(ctx, nil, sql, args...)
+	return c.db.DoSelect(ctx, nil, sql, args...)
 }
 
-// DoGetAll queries and returns data records from database.
-func (c *Core) DoGetAll(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error) {
+// DoSelect queries and returns data records from database.
+func (c *Core) DoSelect(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error) {
 	return c.db.DoQuery(ctx, link, sql, args...)
 }
 
@@ -168,7 +168,7 @@ func (c *Core) GetOne(ctx context.Context, sql string, args ...interface{}) (Rec
 // GetArray queries and returns data values as slice from database.
 // Note that if there are multiple columns in the result, it returns just one column values randomly.
 func (c *Core) GetArray(ctx context.Context, sql string, args ...interface{}) ([]Value, error) {
-	all, err := c.db.DoGetAll(ctx, nil, sql, args...)
+	all, err := c.db.DoSelect(ctx, nil, sql, args...)
 	if err != nil {
 		return nil, err
 	}

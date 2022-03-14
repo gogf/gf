@@ -140,7 +140,7 @@ func (m *Model) OnDuplicate(onDuplicate ...interface{}) *Model {
 	return model
 }
 
-// OnDuplicateEx sets the excluding columns for operations when columns conflicts occurs.
+// OnDuplicateEx sets the excluding columns for operations when columns conflict occurs.
 // In MySQL, this is used for "ON DUPLICATE KEY UPDATE" statement.
 // The parameter `onDuplicateEx` can be type of string/map/slice.
 // Example:
