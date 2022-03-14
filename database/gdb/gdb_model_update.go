@@ -74,14 +74,21 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	if !gstr.ContainsI(conditionStr, " WHERE ") {
 		return nil, gerror.NewCode(gcode.CodeMissingParameter, "there should be WHERE condition statement for UPDATE operation")
 	}
-	return m.db.DoUpdate(
-		m.GetCtx(),
-		m.getLink(true),
-		m.tables,
-		newData,
-		conditionStr,
-		m.mergeArguments(conditionArgs)...,
-	)
+
+	in := &HookUpdateInput{
+		internalParamHookUpdate: internalParamHookUpdate{
+			internalParamHook: internalParamHook{
+				db:   m.db,
+				link: m.getLink(true),
+			},
+			handler: m.hook.Update,
+		},
+		Table:     m.tables,
+		Data:      newData,
+		Condition: conditionStr,
+		Args:      m.mergeArguments(conditionArgs),
+	}
+	return in.Next(m.GetCtx())
 }
 
 // Increment increments a column's value by a given amount.

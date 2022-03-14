@@ -20,6 +20,7 @@ import (
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gcmd"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/util/grand"
 )
@@ -215,9 +216,6 @@ type Driver interface {
 
 // Link is a common database function wrapper interface.
 type Link interface {
-	Query(sql string, args ...interface{}) (*sql.Rows, error)
-	Exec(sql string, args ...interface{}) (sql.Result, error)
-	Prepare(sql string) (*sql.Stmt, error)
 	QueryContext(ctx context.Context, sql string, args ...interface{}) (*sql.Rows, error)
 	ExecContext(ctx context.Context, sql string, args ...interface{}) (sql.Result, error)
 	PrepareContext(ctx context.Context, sql string) (*sql.Stmt, error)
@@ -287,9 +285,10 @@ const (
 	ctxTimeoutTypeExec      = iota
 	ctxTimeoutTypeQuery
 	ctxTimeoutTypePrepare
-	commandEnvKeyForDryRun = "gf.gdb.dryrun"
-	modelForDaoSuffix      = `ForDao`
-	dbRoleSlave            = `slave`
+	commandEnvKeyForDryRun             = "gf.gdb.dryrun"
+	modelForDaoSuffix                  = `ForDao`
+	dbRoleSlave                        = `slave`
+	contextKeyForDB        gctx.StrKey = `DBInContext`
 )
 
 const (

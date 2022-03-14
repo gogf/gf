@@ -45,7 +45,6 @@ func (c *Core) Ctx(ctx context.Context) DB {
 		configNode = c.db.GetConfig()
 	)
 	*newCore = *c
-	newCore.ctx = ctx
 	// It creates a new DB object, which is commonly a wrapper for object `Core`.
 	newCore.db, err = driverMap[configNode.Type].New(newCore, configNode)
 	if err != nil {
@@ -53,6 +52,7 @@ func (c *Core) Ctx(ctx context.Context) DB {
 		// Do not let it continue.
 		panic(err)
 	}
+	newCore.ctx = WithDB(ctx, newCore.db)
 	return newCore.db
 }
 
