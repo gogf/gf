@@ -57,13 +57,13 @@ func IsNumeric(s string) bool {
 	if length == 0 {
 		return false
 	}
-	for i := 0; i < len(s); i++ {
+	for i := 0; i < length; i++ {
 		if s[i] == '-' && i == 0 {
 			continue
 		}
 		if s[i] == '.' {
 			dotCount++
-			if i > 0 && i < len(s)-1 {
+			if i > 0 && i < length-1 {
 				continue
 			} else {
 				return false
@@ -101,10 +101,12 @@ func ReplaceByMap(origin string, replaces map[string]string) string {
 
 // RemoveSymbols removes all symbols from string and lefts only numbers and letters.
 func RemoveSymbols(s string) string {
-	var b []byte
+	var b = make([]rune, 0, len(s))
 	for _, c := range s {
-		if (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') {
-			b = append(b, byte(c))
+		if c > 127 {
+			b = append(b, c)
+		} else if (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') {
+			b = append(b, c)
 		}
 	}
 	return string(b)

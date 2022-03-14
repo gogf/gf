@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gmeta"
@@ -23,6 +24,8 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 		errorMaps           = make(map[string]map[string]error) // Returning error.
 		fieldToAliasNameMap = make(map[string]string)           // Field names to alias name map.
 		resultSequenceRules = make([]fieldRule, 0)
+		isEmptyData         = empty.IsEmpty(v.data)
+		isEmptyAssoc        = empty.IsEmpty(v.assoc)
 	)
 	fieldMap, err := gstructs.FieldMap(gstructs.FieldMapInput{
 		Pointer:          object,
@@ -39,7 +42,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 		return newValidationErrorByStr(internalObjectErrRuleName, err)
 	}
 	// If there's no struct tag and validation rules, it does nothing and returns quickly.
-	if len(tagFields) == 0 && v.messages == nil {
+	if len(tagFields) == 0 && v.messages == nil && isEmptyData && isEmptyAssoc {
 		return nil
 	}
 
@@ -58,7 +61,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 	// Sequence has order for error results.
 	case []string:
 		for _, tag := range assertValue {
-			name, rule, msg := parseSequenceTag(tag)
+			name, rule, msg := ParseTagValue(tag)
 			if len(name) == 0 {
 				continue
 			}
@@ -102,7 +105,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 		}
 	}
 	// If there's no struct tag and validation rules, it does nothing and returns quickly.
-	if len(tagFields) == 0 && len(checkRules) == 0 {
+	if len(tagFields) == 0 && len(checkRules) == 0 && isEmptyData && isEmptyAssoc {
 		return nil
 	}
 	// Input parameter map handling.
@@ -126,8 +129,8 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 	for _, field := range tagFields {
 		var (
 			isMeta          bool
-			fieldName       = field.Name()                     // Attribute name.
-			name, rule, msg = parseSequenceTag(field.TagValue) // The `name` is different from `attribute alias`, which is used for validation only.
+			fieldName       = field.Name()                  // Attribute name.
+			name, rule, msg = ParseTagValue(field.TagValue) // The `name` is different from `attribute alias`, which is used for validation only.
 		)
 		if len(name) == 0 {
 			if value, ok := fieldToAliasNameMap[fieldName]; ok {
@@ -221,9 +224,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 	}
 
 	// Temporary variable for value.
-	var (
-		value interface{}
-	)
+	var value interface{}
 
 	// It checks the struct recursively if its attribute is an embedded struct.
 	for _, field := range fieldMap {

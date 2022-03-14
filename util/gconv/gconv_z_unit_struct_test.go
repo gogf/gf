@@ -341,7 +341,7 @@ func Test_Struct_Attr_CustomType1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		user := new(User)
 		err := gconv.Struct(g.Map{"id": 1, "name": "john"}, user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.Id, 1)
 		t.Assert(user.Name, "john")
 	})
@@ -356,7 +356,7 @@ func Test_Struct_Attr_CustomType2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		user := new(User)
 		err := gconv.Struct(g.Map{"id": g.Slice{1, 2}, "name": "john"}, user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.Id, g.Slice{1, 2})
 		t.Assert(user.Name, "john")
 	})
@@ -409,7 +409,7 @@ func Test_Struct_PrivateAttribute(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		user := new(User)
 		err := gconv.Struct(g.Map{"id": 1, "name": "john"}, user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.Id, 1)
 		t.Assert(user.name, "")
 	})
@@ -432,7 +432,7 @@ func Test_StructEmbedded1(t *testing.T) {
 			"age":  18,
 		}
 		err := gconv.Struct(params, user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.Id, params["id"])
 		t.Assert(user.Name, params["name"])
 		t.Assert(user.Age, 18)
@@ -460,7 +460,7 @@ func Test_StructEmbedded2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		user := new(User)
 		err := gconv.Struct(params, user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.Id, 1)
 		t.Assert(user.Uid, 10)
 		t.Assert(user.Name, "john")
@@ -493,7 +493,7 @@ func Test_StructEmbedded3(t *testing.T) {
 		}
 		user := new(User)
 		err := gconv.Struct(data, user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.Id, 100)
 		t.Assert(user.Uid, 101)
 		t.Assert(user.Nickname, "T1")
@@ -565,16 +565,16 @@ func Test_StructEmbedded5(t *testing.T) {
 		user1 := new(UserWithBase1)
 		user2 := new(UserWithBase2)
 		err = gconv.Struct(data, user1)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user1, &UserWithBase1{1, "john", Base{"123", "456"}})
 
 		err = gconv.Struct(data, user2)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user2, &UserWithBase2{1, "john", Base{"", ""}})
 
 		var user3 *UserWithBase1
 		err = gconv.Struct(user1, &user3)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user3, user1)
 	})
 }
@@ -670,7 +670,7 @@ func Test_Struct_Create(t *testing.T) {
 			"Name": "john",
 		}
 		err := gconv.Struct(params, &user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.Uid, 1)
 		t.Assert(user.Name, "john")
 	})
@@ -703,7 +703,7 @@ func Test_Struct_Interface(t *testing.T) {
 			"Name": nil,
 		}
 		err := gconv.Struct(params, &user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.Uid, 1)
 		t.Assert(user.Name, nil)
 	})
@@ -732,7 +732,7 @@ func Test_Struct_NilAttribute(t *testing.T) {
 			"txt":   "hello",
 			"items": nil,
 		}, m)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.AssertNE(m.Me, nil)
 		t.Assert(m.Me["day"], "20009")
 		t.Assert(m.Items, nil)
@@ -875,11 +875,11 @@ func Test_Struct_Complex(t *testing.T) {
 }`
 		m := make(g.Map)
 		err := json.UnmarshalUseNumber([]byte(data), &m)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		model := new(XinYanModel)
 		err = gconv.Struct(m, model)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(model.ErrorCode, nil)
 		t.Assert(model.ErrorMsg, nil)
 		t.Assert(model.Success, true)
@@ -934,7 +934,7 @@ func Test_Struct_Embedded(t *testing.T) {
 		}
 		v2 := g.Map{}
 		err := gconv.Struct(v2, &v1)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v1.Test(), "john")
 	})
 	// Implemented interface attribute.
@@ -946,7 +946,7 @@ func Test_Struct_Embedded(t *testing.T) {
 			"name": "test",
 		}
 		err := gconv.Struct(v2, &v1)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v1.Test(), "test")
 	})
 	// No implemented interface attribute.
@@ -956,7 +956,7 @@ func Test_Struct_Embedded(t *testing.T) {
 			"name": "test",
 		}
 		err := gconv.Struct(v2, &v1)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v1.TestInterface, nil)
 	})
 }
@@ -969,7 +969,7 @@ func Test_Struct_Slice(t *testing.T) {
 		user := new(User)
 		array := g.Slice{1, 2, 3}
 		err := gconv.Struct(g.Map{"scores": array}, user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.Scores, array)
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -979,7 +979,7 @@ func Test_Struct_Slice(t *testing.T) {
 		user := new(User)
 		array := g.Slice{1, 2, 3}
 		err := gconv.Struct(g.Map{"scores": array}, user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.Scores, array)
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -989,7 +989,7 @@ func Test_Struct_Slice(t *testing.T) {
 		user := new(User)
 		array := g.Slice{1, 2, 3}
 		err := gconv.Struct(g.Map{"scores": array}, user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.Scores, array)
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -999,7 +999,7 @@ func Test_Struct_Slice(t *testing.T) {
 		user := new(User)
 		array := g.Slice{1, 2, 3}
 		err := gconv.Struct(g.Map{"scores": array}, user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.Scores, array)
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -1009,7 +1009,7 @@ func Test_Struct_Slice(t *testing.T) {
 		user := new(User)
 		array := g.Slice{1, 2, 3}
 		err := gconv.Struct(g.Map{"scores": array}, user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.Scores, array)
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -1019,7 +1019,7 @@ func Test_Struct_Slice(t *testing.T) {
 		user := new(User)
 		array := g.Slice{1, 2, 3}
 		err := gconv.Struct(g.Map{"scores": array}, user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.Scores, array)
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -1029,7 +1029,7 @@ func Test_Struct_Slice(t *testing.T) {
 		user := new(User)
 		array := g.Slice{1, 2, 3}
 		err := gconv.Struct(g.Map{"scores": array}, user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.Scores, array)
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -1039,7 +1039,7 @@ func Test_Struct_Slice(t *testing.T) {
 		user := new(User)
 		array := g.Slice{1, 2, 3}
 		err := gconv.Struct(g.Map{"scores": array}, user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.Scores, array)
 	})
 }
@@ -1079,7 +1079,7 @@ func Test_Struct_WithJson(t *testing.T) {
 		b, _ := json.Marshal(b1)
 		b2 := &B{}
 		err := gconv.Struct(b, b2)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(b2, b1)
 	})
 }
@@ -1103,7 +1103,7 @@ func Test_Struct_AttrStructHasTheSameTag(t *testing.T) {
 		}
 		order := new(Order)
 		err := gconv.Struct(data, order)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(order.Id, data["id"])
 		t.Assert(order.UpdatedAt, data["updated_at"])
 		t.Assert(order.Product.Id, 0)
@@ -1127,7 +1127,7 @@ func Test_Struct_DirectReflectSet(t *testing.T) {
 			b *A
 		)
 		err := gconv.Struct(a, &b)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.AssertEQ(a, b)
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -1139,7 +1139,7 @@ func Test_Struct_DirectReflectSet(t *testing.T) {
 			b A
 		)
 		err := gconv.Struct(a, &b)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.AssertEQ(a, b)
 	})
 }
@@ -1161,7 +1161,7 @@ func Test_Struct_NilEmbeddedStructAttribute(t *testing.T) {
 			"id":   1,
 			"name": nil,
 		}, &b)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(b.Id, 1)
 		t.Assert(b.Name, "")
 	})
@@ -1176,7 +1176,7 @@ func Test_Struct_JsonParam(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var a = A{}
 		err := gconv.Struct([]byte(`{"id":1,"name":"john"}`), &a)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(a.Id, 1)
 		t.Assert(a.Name, "john")
 	})
@@ -1184,7 +1184,7 @@ func Test_Struct_JsonParam(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var a = &A{}
 		err := gconv.Struct([]byte(`{"id":1,"name":"john"}`), a)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(a.Id, 1)
 		t.Assert(a.Name, "john")
 	})
@@ -1192,7 +1192,7 @@ func Test_Struct_JsonParam(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var a *A
 		err := gconv.Struct([]byte(`{"id":1,"name":"john"}`), &a)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(a.Id, 1)
 		t.Assert(a.Name, "john")
 	})
@@ -1214,7 +1214,7 @@ func Test_Struct_GVarAttribute(t *testing.T) {
 			}
 		)
 		err := gconv.Struct(data, &a)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(a.Id, data["id"])
 		t.Assert(a.Name, data["name"])
 		t.Assert(a.Status, data["status"])
@@ -1271,6 +1271,7 @@ func Test_Struct_Issue1563(t *testing.T) {
 			params2 := g.Map{
 				"password1": "111",
 				"PASS1":     "222",
+				"Pass1":     "333",
 			}
 			if err := gconv.Struct(params2, user); err == nil {
 				t.Assert(user.Pass1, `111`)
@@ -1300,4 +1301,23 @@ func Test_Struct_Issue1597(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(s.B, `{"c":3}`)
 	})
+}
+
+func Test_Scan_WithDoubleSliceAttribute(t *testing.T) {
+	inputData := [][]string{
+		{"aa", "bb", "cc"},
+		{"11", "22", "33"},
+	}
+	data := struct {
+		Data [][]string
+	}{
+		Data: inputData,
+	}
+	gtest.C(t, func(t *gtest.T) {
+		jv := gjson.New(gjson.MustEncodeString(data))
+		err := jv.Scan(&data)
+		t.AssertNil(err)
+		t.Assert(data.Data, inputData)
+	})
+
 }

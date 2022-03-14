@@ -13,7 +13,7 @@ import (
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -69,7 +69,7 @@ func (m *Model) Data(data ...interface{}) *Model {
 			model.data = gutil.MapCopy(value)
 
 		default:
-			reflectInfo := utils.OriginValueAndKind(value)
+			reflectInfo := reflection.OriginValueAndKind(value)
 			switch reflectInfo.OriginKind {
 			case reflect.Slice, reflect.Array:
 				if reflectInfo.OriginValue.Len() > 0 {
@@ -253,7 +253,7 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 		list = List{m.db.ConvertDataForRecord(m.GetCtx(), value)}
 
 	default:
-		reflectInfo := utils.OriginValueAndKind(newData)
+		reflectInfo := reflection.OriginValueAndKind(newData)
 		switch reflectInfo.OriginKind {
 		// If it's slice type, it then converts it to List type.
 		case reflect.Slice, reflect.Array:
@@ -330,7 +330,7 @@ func (m *Model) formatDoInsertOption(insertOption int, columnNames []string) (op
 				option.OnDuplicateStr = gconv.String(m.onDuplicate)
 
 			default:
-				reflectInfo := utils.OriginValueAndKind(m.onDuplicate)
+				reflectInfo := reflection.OriginValueAndKind(m.onDuplicate)
 				switch reflectInfo.OriginKind {
 				case reflect.String:
 					option.OnDuplicateMap = make(map[string]interface{})
@@ -385,7 +385,7 @@ func (m *Model) formatOnDuplicateExKeys(onDuplicateEx interface{}) ([]string, er
 		return nil, nil
 	}
 
-	reflectInfo := utils.OriginValueAndKind(onDuplicateEx)
+	reflectInfo := reflection.OriginValueAndKind(onDuplicateEx)
 	switch reflectInfo.OriginKind {
 	case reflect.String:
 		return gstr.SplitAndTrim(reflectInfo.OriginValue.String(), ","), nil

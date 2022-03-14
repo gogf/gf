@@ -28,16 +28,16 @@ func Test_Config(t *testing.T) {
 		}
 		view := gview.New()
 		err := view.SetConfig(config)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		str := `hello ${.name},version:${.version}`
 		view.Assigns(g.Map{"version": "1.7.0"})
 		result, err := view.ParseContent(context.TODO(), str, nil)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(result, "hello gf,version:1.7.0")
 
 		result, err = view.ParseDefault(context.TODO())
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(result, "name:gf")
 	})
 }
@@ -53,16 +53,16 @@ func Test_ConfigWithMap(t *testing.T) {
 				"name": "gf",
 			},
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		str := `hello ${.name},version:${.version}`
 		view.Assigns(g.Map{"version": "1.7.0"})
 		result, err := view.ParseContent(context.TODO(), str, nil)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(result, "hello gf,version:1.7.0")
 
 		result, err = view.ParseDefault(context.TODO())
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(result, "name:gf")
 	})
 }

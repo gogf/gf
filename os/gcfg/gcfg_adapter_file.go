@@ -30,7 +30,6 @@ type AdapterFile struct {
 }
 
 const (
-	DefaultConfigFile    = "config.toml"  // DefaultConfigFile is the default configuration file name.
 	commandEnvKeyForFile = "gf.gcfg.file" // commandEnvKeyForFile is the configuration key for command argument or environment configuring file name.
 	commandEnvKeyForPath = "gf.gcfg.path" // commandEnvKeyForPath is the configuration key for command argument or environment configuring directory path.
 )
@@ -47,7 +46,7 @@ var (
 	}
 
 	// Prefix array for trying searching in local system.
-	localSystemTryFolders = []string{"", "hack/", "config/", "manifest/config"}
+	localSystemTryFolders = []string{"", "config/", "manifest/config"}
 )
 
 // NewAdapterFile returns a new configuration management object.
@@ -55,7 +54,7 @@ var (
 func NewAdapterFile(file ...string) (*AdapterFile, error) {
 	var (
 		err  error
-		name = DefaultConfigFile
+		name = DefaultConfigFileName
 	)
 	if len(file) > 0 {
 		name = file[0]
@@ -224,6 +223,7 @@ func (c *AdapterFile) getJson(fileName ...string) (configJson *gjson.Json, err e
 	} else {
 		usedFileName = c.defaultName
 	}
+	// It uses json map to cache specified configuration file content.
 	result := c.jsonMap.GetOrSetFuncLock(usedFileName, func() interface{} {
 		var (
 			content  string

@@ -23,9 +23,7 @@ import (
 // 1. func(*ghttp.Request)
 // 2. func(context.Context, BizRequest)(BizResponse, error)
 func (s *Server) BindHandler(pattern string, handler interface{}) {
-	var (
-		ctx = context.TODO()
-	)
+	var ctx = context.TODO()
 	funcInfo, err := s.checkAndCreateFuncInfo(handler, "", "", "")
 	if err != nil {
 		s.Logger().Fatalf(ctx, `%+v`, err)

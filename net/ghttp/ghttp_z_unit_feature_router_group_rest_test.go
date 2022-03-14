@@ -13,8 +13,8 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 type GroupObjRest struct{}
@@ -56,13 +56,11 @@ func (o *GroupObjRest) Head(r *ghttp.Request) {
 }
 
 func Test_Router_GroupRest1(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	group := s.Group("/api")
 	obj := new(GroupObjRest)
 	group.REST("/obj", obj)
 	group.REST("/{.struct}/{.method}", obj)
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -70,7 +68,7 @@ func Test_Router_GroupRest1(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/api/obj"), "1Object Get2")
 		t.Assert(client.PutContent(ctx, "/api/obj"), "1Object Put2")
@@ -82,7 +80,7 @@ func Test_Router_GroupRest1(t *testing.T) {
 		if err == nil {
 			defer resp2.Close()
 		}
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(resp2.Header.Get("head-ok"), "1")
 
 		t.Assert(client.GetContent(ctx, "/api/group-obj-rest"), "Not Found")
@@ -96,20 +94,18 @@ func Test_Router_GroupRest1(t *testing.T) {
 		if err == nil {
 			defer resp4.Close()
 		}
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(resp4.Header.Get("head-ok"), "1")
 	})
 }
 
 func Test_Router_GroupRest2(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.Group("/api", func(group *ghttp.RouterGroup) {
 		obj := new(GroupObjRest)
 		group.REST("/obj", obj)
 		group.REST("/{.struct}/{.method}", obj)
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -117,7 +113,7 @@ func Test_Router_GroupRest2(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/api/obj"), "1Object Get2")
 		t.Assert(client.PutContent(ctx, "/api/obj"), "1Object Put2")
@@ -129,7 +125,7 @@ func Test_Router_GroupRest2(t *testing.T) {
 		if err == nil {
 			defer resp2.Close()
 		}
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(resp2.Header.Get("head-ok"), "1")
 
 		t.Assert(client.GetContent(ctx, "/api/group-obj-rest"), "Not Found")
@@ -143,7 +139,7 @@ func Test_Router_GroupRest2(t *testing.T) {
 		if err == nil {
 			defer resp4.Close()
 		}
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(resp4.Header.Get("head-ok"), "1")
 	})
 }

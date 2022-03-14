@@ -91,7 +91,7 @@ func Test_MapToMap2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := (map[string]User)(nil)
 		err := gconv.MapToMap(params, &m)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(m), 1)
 		t.Assert(m["key"].Id, 1)
 		t.Assert(m["key"].Name, "john")
@@ -99,7 +99,7 @@ func Test_MapToMap2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := make(map[string]*User)
 		err := gconv.MapToMap(params, &m)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(m), 1)
 		t.Assert(m["key"].Id, 1)
 		t.Assert(m["key"].Name, "john")
@@ -107,7 +107,7 @@ func Test_MapToMap2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := (map[string]*User)(nil)
 		err := gconv.MapToMap(params, &m)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(m), 1)
 		t.Assert(m["key"].Id, 1)
 		t.Assert(m["key"].Name, "john")
@@ -136,7 +136,7 @@ func Test_MapToMapDeep(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := (map[string]*User)(nil)
 		err := gconv.MapToMap(params, &m)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(m), 1)
 		t.Assert(m["key"].Id, 1)
 		t.Assert(m["key"].Name, "john")

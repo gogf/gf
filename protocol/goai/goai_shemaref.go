@@ -9,9 +9,7 @@ package goai
 import (
 	"reflect"
 
-	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/util/gconv"
 )
 
 type SchemaRefs []SchemaRef
@@ -32,8 +30,8 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 		}
 	)
 	if len(tagMap) > 0 {
-		if err := gconv.Struct(oai.fileMapWithShortTags(tagMap), schema); err != nil {
-			return nil, gerror.Wrap(err, `mapping struct tags to Schema failed`)
+		if err := oai.tagMapToSchema(tagMap, schema); err != nil {
+			return nil, err
 		}
 	}
 	schemaRef.Value = schema
@@ -72,7 +70,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 			var (
 				structTypeName = oai.golangTypeToSchemaName(golangType)
 			)
-			if _, ok := oai.Components.Schemas[structTypeName]; !ok {
+			if oai.Components.Schemas.Get(structTypeName) == nil {
 				if err := oai.addSchema(reflect.New(golangType).Interface()); err != nil {
 					return nil, err
 				}
@@ -82,10 +80,8 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 
 		default:
 			// Normal struct object.
-			var (
-				structTypeName = oai.golangTypeToSchemaName(golangType)
-			)
-			if _, ok := oai.Components.Schemas[structTypeName]; !ok {
+			var structTypeName = oai.golangTypeToSchemaName(golangType)
+			if oai.Components.Schemas.Get(structTypeName) == nil {
 				if err := oai.addSchema(reflect.New(golangType).Elem().Interface()); err != nil {
 					return nil, err
 				}

@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gogf/gf/v2/net/ghttp/internal/swaggerui"
 	"github.com/olekukonko/tablewriter"
 
 	"github.com/gogf/gf/v2/container/garray"
@@ -24,7 +25,6 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/net/ghttp/internal/swaggerui"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/genv"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -128,7 +128,7 @@ func (s *Server) Start() error {
 		swaggerui.Init()
 		s.AddStaticPath(s.config.SwaggerPath, swaggerUIPackedPath)
 		s.BindHookHandler(s.config.SwaggerPath+"/*", HookBeforeServe, s.swaggerUI)
-		s.Logger().Debugf(
+		s.Logger().Infof(
 			ctx,
 			`swagger ui is serving at address: %s%s/`,
 			s.getListenAddress(),
@@ -201,7 +201,7 @@ func (s *Server) Start() error {
 
 	// Default HTTP handler.
 	if s.config.Handler == nil {
-		s.config.Handler = s
+		s.config.Handler = s.ServeHTTP
 	}
 
 	// Install external plugins.
@@ -600,4 +600,22 @@ func (s *Server) getListenerFdMap() map[string]string {
 		}
 	}
 	return m
+}
+
+// GetListenedPort retrieves and returns one port which is listened by current server.
+func (s *Server) GetListenedPort() int {
+	ports := s.GetListenedPorts()
+	if len(ports) > 0 {
+		return ports[0]
+	}
+	return 0
+}
+
+// GetListenedPorts retrieves and returns the ports which are listened by current server.
+func (s *Server) GetListenedPorts() []int {
+	ports := make([]int, 0)
+	for _, server := range s.servers {
+		ports = append(ports, server.GetListenedPort())
+	}
+	return ports
 }

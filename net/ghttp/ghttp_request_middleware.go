@@ -138,12 +138,12 @@ func (m *middleware) callHandlerFunc(funcInfo handlerFuncInfo) {
 				)
 				if funcInfo.Type.In(1).Kind() == reflect.Ptr {
 					inputObject = reflect.New(funcInfo.Type.In(1).Elem())
-					m.request.handlerResponse.Error = m.request.Parse(inputObject.Interface())
+					m.request.error = m.request.Parse(inputObject.Interface())
 				} else {
 					inputObject = reflect.New(funcInfo.Type.In(1).Elem()).Elem()
-					m.request.handlerResponse.Error = m.request.Parse(inputObject.Addr().Interface())
+					m.request.error = m.request.Parse(inputObject.Addr().Interface())
 				}
-				if m.request.handlerResponse.Error != nil {
+				if m.request.error != nil {
 					return
 				}
 				inputValues = append(inputValues, inputObject)
@@ -155,15 +155,15 @@ func (m *middleware) callHandlerFunc(funcInfo handlerFuncInfo) {
 			case 1:
 				if !results[0].IsNil() {
 					if err, ok := results[0].Interface().(error); ok {
-						m.request.handlerResponse.Error = err
+						m.request.error = err
 					}
 				}
 
 			case 2:
-				m.request.handlerResponse.Object = results[0].Interface()
+				m.request.handlerResponse = results[0].Interface()
 				if !results[1].IsNil() {
 					if err, ok := results[1].Interface().(error); ok {
-						m.request.handlerResponse.Error = err
+						m.request.error = err
 					}
 				}
 			}

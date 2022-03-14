@@ -10,6 +10,8 @@ package empty
 import (
 	"reflect"
 	"time"
+
+	"github.com/gogf/gf/v2/internal/reflection"
 )
 
 // iString is used for type assert api for String().
@@ -151,8 +153,10 @@ func IsEmpty(value interface{}) bool {
 			return rv.Len() == 0
 
 		case reflect.Struct:
+			var fieldValueInterface interface{}
 			for i := 0; i < rv.NumField(); i++ {
-				if !IsEmpty(rv.Field(i).Interface()) {
+				fieldValueInterface, _ = reflection.ValueToInterface(rv.Field(i))
+				if !IsEmpty(fieldValueInterface) {
 					return false
 				}
 			}
