@@ -19,15 +19,15 @@ import (
 
 // Validator is the validation manager for chaining operations.
 type Validator struct {
-	i18nManager                      *gi18n.Manager      // I18n manager for error message translation.
-	data                             interface{}         // Validation data, which can be a map, struct or a certain value to be validated.
-	assoc                            interface{}         // Associated data, which is usually a map, for union validation.
-	rules                            interface{}         // Custom validation data.
-	messages                         interface{}         // Custom validation error messages, which can be string or type of CustomMsg.
-	ruleFuncMap                      map[string]RuleFunc // ruleFuncMap stores custom rule functions for current Validator.
-	useDataInsteadOfObjectAttributes bool                // Using `data` as its validation source instead of attribute values from `Object`.
-	bail                             bool                // Stop validation after the first validation error.
-	caseInsensitive                  bool                // Case-Insensitive configuration for those rules that need value comparison.
+	i18nManager                       *gi18n.Manager      // I18n manager for error message translation.
+	data                              interface{}         // Validation data, which can be a map, struct or a certain value to be validated.
+	assoc                             interface{}         // Associated data, which is usually a map, for union validation.
+	rules                             interface{}         // Custom validation data.
+	messages                          interface{}         // Custom validation error messages, which can be string or type of CustomMsg.
+	ruleFuncMap                       map[string]RuleFunc // ruleFuncMap stores custom rule functions for current Validator.
+	useAssocInsteadOfObjectAttributes bool                // Using `assoc` as its validation source instead of attribute values from `Object`.
+	bail                              bool                // Stop validation after the first validation error.
+	caseInsensitive                   bool                // Case-Insensitive configuration for those rules that need value comparison.
 }
 
 // New creates and returns a new Validator.
@@ -125,14 +125,14 @@ func (v *Validator) Data(data interface{}) *Validator {
 
 // Assoc is a chaining operation function, which sets associated validation data for current operation.
 // The optional parameter `assoc` is usually type of map, which specifies the parameter map used in union validation.
-// Calling this function with `assoc` also sets `useDataInsteadOfObjectAttributes` true
+// Calling this function with `assoc` also sets `useAssocInsteadOfObjectAttributes` true
 func (v *Validator) Assoc(assoc interface{}) *Validator {
 	if assoc == nil {
 		return v
 	}
 	newValidator := v.Clone()
 	newValidator.assoc = assoc
-	newValidator.useDataInsteadOfObjectAttributes = true
+	newValidator.useAssocInsteadOfObjectAttributes = true
 	return newValidator
 }
 

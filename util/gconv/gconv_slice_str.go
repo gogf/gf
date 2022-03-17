@@ -9,6 +9,7 @@ package gconv
 import (
 	"reflect"
 
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/reflection"
 )
 
@@ -57,9 +58,13 @@ func Strings(any interface{}) []string {
 			array[k] = String(v)
 		}
 	case []uint8:
-		array = make([]string, len(value))
-		for k, v := range value {
-			array[k] = String(v)
+		if json.Valid(value) {
+			_ = json.UnmarshalUseNumber(value, &array)
+		} else {
+			array = make([]string, len(value))
+			for k, v := range value {
+				array[k] = String(v)
+			}
 		}
 	case []uint16:
 		array = make([]string, len(value))
