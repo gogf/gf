@@ -109,13 +109,13 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 		return nil
 	}
 	// Input parameter map handling.
-	if v.assoc == nil || !v.useDataInsteadOfObjectAttributes {
+	if v.assoc == nil || !v.useAssocInsteadOfObjectAttributes {
 		inputParamMap = make(map[string]interface{})
 	} else {
 		inputParamMap = gconv.Map(v.assoc)
 	}
 	// Checks and extends the parameters map with struct alias tag.
-	if !v.useDataInsteadOfObjectAttributes {
+	if !v.useAssocInsteadOfObjectAttributes {
 		for nameOrTag, field := range fieldMap {
 			inputParamMap[nameOrTag] = field.Value.Interface()
 			if nameOrTag != field.Name() {
@@ -147,7 +147,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 		// It here extends the params map using alias names.
 		// Note that the variable `name` might be alias name or attribute name.
 		if _, ok := inputParamMap[name]; !ok {
-			if !v.useDataInsteadOfObjectAttributes {
+			if !v.useAssocInsteadOfObjectAttributes {
 				inputParamMap[name] = field.Value.Interface()
 			} else {
 				if name != fieldName {
@@ -226,7 +226,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 	// Temporary variable for value.
 	var value interface{}
 
-	// It checks the struct recursively if its attribute is an embedded struct.
+	// It checks the struct recursively if its attribute is a struct/struct slice.
 	for _, field := range fieldMap {
 		// No validation interface implements check.
 		if _, ok := field.Value.Interface().(iNoValidation); ok {

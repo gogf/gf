@@ -9,6 +9,7 @@ package gconv
 import (
 	"reflect"
 
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/reflection"
 )
 
@@ -81,9 +82,13 @@ func Float32s(any interface{}) []float32 {
 			array = append(array, Float32(v))
 		}
 	case []uint8:
-		array = make([]float32, len(value))
-		for k, v := range value {
-			array[k] = Float32(v)
+		if json.Valid(value) {
+			_ = json.UnmarshalUseNumber(value, &array)
+		} else {
+			array = make([]float32, len(value))
+			for k, v := range value {
+				array[k] = Float32(v)
+			}
 		}
 	case []uint16:
 		array = make([]float32, len(value))
@@ -201,9 +206,13 @@ func Float64s(any interface{}) []float64 {
 			array = append(array, Float64(v))
 		}
 	case []uint8:
-		array = make([]float64, len(value))
-		for k, v := range value {
-			array[k] = Float64(v)
+		if json.Valid(value) {
+			_ = json.UnmarshalUseNumber(value, &array)
+		} else {
+			array = make([]float64, len(value))
+			for k, v := range value {
+				array[k] = Float64(v)
+			}
 		}
 	case []uint16:
 		array = make([]float64, len(value))
