@@ -92,6 +92,7 @@ func (r *Response) buildInVars(params ...map[string]interface{}) map[string]inte
 		"Request": r.Request.GetMap(),
 		"Cookie":  r.Request.Cookie.Map(),
 		"Session": sessionMap,
+		"Ctx":     r.Request.Context(),
 	})
 	// Note that it should assign no Config variable to template
 	// if there's no configuration file.
