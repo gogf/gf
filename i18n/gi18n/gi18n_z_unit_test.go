@@ -24,7 +24,7 @@ import (
 func Test_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		i18n := gi18n.New(gi18n.Options{
-			Path: gdebug.TestDataPath("i18n"),
+			Path: gtest.DataPath("i18n"),
 		})
 		i18n.SetLanguage("none")
 		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "{#hello}{#world}")
@@ -41,7 +41,7 @@ func Test_Basic(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		i18n := gi18n.New(gi18n.Options{
-			Path: gdebug.TestDataPath("i18n-file"),
+			Path: gtest.DataPath("i18n-file"),
 		})
 		i18n.SetLanguage("none")
 		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "{#hello}{#world}")
@@ -72,7 +72,7 @@ func Test_TranslateFormat(t *testing.T) {
 	// Tf
 	gtest.C(t, func(t *gtest.T) {
 		i18n := gi18n.New(gi18n.Options{
-			Path: gdebug.TestDataPath("i18n"),
+			Path: gtest.DataPath("i18n"),
 		})
 		i18n.SetLanguage("none")
 		t.Assert(i18n.Tf(context.Background(), "{#hello}{#world} %d", 2020), "{#hello}{#world} 2020")
@@ -84,7 +84,7 @@ func Test_TranslateFormat(t *testing.T) {
 
 func Test_DefaultManager(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		err := gi18n.SetPath(gdebug.TestDataPath("i18n"))
+		err := gi18n.SetPath(gtest.DataPath("i18n"))
 		t.AssertNil(err)
 
 		gi18n.SetLanguage("none")

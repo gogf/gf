@@ -14,7 +14,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/encoding/ghtml"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
@@ -534,7 +533,7 @@ func Test_BuildInFuncDivide(t *testing.T) {
 func Test_Issue1416(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
-		err := v.SetPath(gdebug.TestDataPath("issue1416"))
+		err := v.SetPath(gtest.DataPath("issue1416"))
 		t.AssertNil(err)
 		r, err := v.ParseOption(context.TODO(), gview.Option{
 			File:   "gview.tpl",

@@ -13,7 +13,6 @@ import (
 	"testing"
 
 	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/os/genv"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -60,7 +59,7 @@ func Test_Instance_AutoLocateConfigFile(t *testing.T) {
 	// Automatically locate the configuration file with supported file extensions.
 	gtest.C(t, func(t *gtest.T) {
 		pwd := gfile.Pwd()
-		t.AssertNil(gfile.Chdir(gdebug.TestDataPath()))
+		t.AssertNil(gfile.Chdir(gtest.DataPath()))
 		defer gfile.Chdir(pwd)
 		t.Assert(Instance("c1") != nil, true)
 		t.Assert(Instance("c1").MustGet(ctx, "my-config"), "1")
@@ -69,7 +68,7 @@ func Test_Instance_AutoLocateConfigFile(t *testing.T) {
 	// Automatically locate the configuration file with supported file extensions.
 	gtest.C(t, func(t *gtest.T) {
 		pwd := gfile.Pwd()
-		t.AssertNil(gfile.Chdir(gdebug.TestDataPath("folder1")))
+		t.AssertNil(gfile.Chdir(gtest.DataPath("folder1")))
 		defer gfile.Chdir(pwd)
 		t.Assert(Instance("c2").MustGet(ctx, "my-config"), 2)
 	})
@@ -77,7 +76,7 @@ func Test_Instance_AutoLocateConfigFile(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		localInstances.Clear()
 		pwd := gfile.Pwd()
-		t.AssertNil(gfile.Chdir(gdebug.TestDataPath("default")))
+		t.AssertNil(gfile.Chdir(gtest.DataPath("default")))
 		defer gfile.Chdir(pwd)
 		t.Assert(Instance().MustGet(ctx, "my-config"), 1)
 
@@ -90,7 +89,7 @@ func Test_Instance_AutoLocateConfigFile(t *testing.T) {
 
 func Test_Instance_EnvPath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		genv.Set("GF_GCFG_PATH", gdebug.TestDataPath("envpath"))
+		genv.Set("GF_GCFG_PATH", gtest.DataPath("envpath"))
 		defer genv.Set("GF_GCFG_PATH", "")
 		t.Assert(Instance("c3") != nil, true)
 		t.Assert(Instance("c3").MustGet(ctx, "my-config"), "3")
@@ -101,7 +100,7 @@ func Test_Instance_EnvPath(t *testing.T) {
 
 func Test_Instance_EnvFile(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		genv.Set("GF_GCFG_PATH", gdebug.TestDataPath("envfile"))
+		genv.Set("GF_GCFG_PATH", gtest.DataPath("envfile"))
 		defer genv.Set("GF_GCFG_PATH", "")
 		genv.Set("GF_GCFG_FILE", "c6.json")
 		defer genv.Set("GF_GCFG_FILE", "")

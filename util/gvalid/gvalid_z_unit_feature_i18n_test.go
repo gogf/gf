@@ -10,7 +10,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/i18n/gi18n"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gvalid"
@@ -19,7 +18,7 @@ import (
 func TestValidator_I18n(t *testing.T) {
 	var (
 		err         gvalid.Error
-		i18nManager = gi18n.New(gi18n.Options{Path: gdebug.TestDataPath("i18n")})
+		i18nManager = gi18n.New(gi18n.Options{Path: gtest.DataPath("i18n")})
 		ctxCn       = gi18n.WithLanguage(context.TODO(), "cn")
 		validator   = gvalid.New().I18n(i18nManager)
 	)

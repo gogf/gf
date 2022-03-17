@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -168,7 +167,7 @@ func Test_Middleware_With_Static(t *testing.T) {
 		})
 	})
 	s.SetDumpRouterMap(false)
-	s.SetServerRoot(gdebug.TestDataPath("static1"))
+	s.SetServerRoot(gtest.DataPath("static1"))
 	s.Start()
 	defer s.Shutdown()
 	time.Sleep(100 * time.Millisecond)
@@ -236,7 +235,7 @@ func Test_Middleware_Hook_With_Static(t *testing.T) {
 		})
 	})
 	s.SetDumpRouterMap(false)
-	s.SetServerRoot(gdebug.TestDataPath("static1"))
+	s.SetServerRoot(gtest.DataPath("static1"))
 	s.Start()
 	defer s.Shutdown()
 	time.Sleep(100 * time.Millisecond)

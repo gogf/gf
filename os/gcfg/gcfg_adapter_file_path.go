@@ -85,7 +85,17 @@ func (c *AdapterFile) SetPath(path string) (err error) {
 }
 
 // AddPath adds an absolute or relative path to the search paths.
-func (c *AdapterFile) AddPath(path string) (err error) {
+func (c *AdapterFile) AddPath(paths ...string) (err error) {
+	for _, path := range paths {
+		if err = c.doAddPath(path); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// doAddPath adds an absolute or relative path to the search paths.
+func (c *AdapterFile) doAddPath(path string) (err error) {
 	var (
 		isDir    = false
 		realPath = ""
@@ -137,6 +147,11 @@ func (c *AdapterFile) AddPath(path string) (err error) {
 	c.searchPaths.Append(realPath)
 	intlog.Print(context.TODO(), "AddPath:", realPath)
 	return nil
+}
+
+// GetPaths returns the searching path array of current configuration manager.
+func (c *AdapterFile) GetPaths() []string {
+	return c.searchPaths.Slice()
 }
 
 // doGetFilePath returns the absolute configuration file path for the given filename by `file`.

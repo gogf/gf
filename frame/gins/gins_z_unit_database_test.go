@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/gins"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -20,7 +19,7 @@ import (
 
 func Test_Database(t *testing.T) {
 	databaseContent := gfile.GetContents(
-		gdebug.TestDataPath("database", "config.toml"),
+		gtest.DataPath("database", "config.toml"),
 	)
 	gtest.C(t, func(t *gtest.T) {
 		var err error
