@@ -12,7 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/gins"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -23,7 +22,7 @@ import (
 var (
 	ctx           = context.Background()
 	configContent = gfile.GetContents(
-		gdebug.TestDataPath("config", "config.toml"),
+		gtest.DataPath("config", "config.toml"),
 	)
 )
 

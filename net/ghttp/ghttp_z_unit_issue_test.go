@@ -12,7 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -45,7 +44,7 @@ func Test_Issue1611(t *testing.T) {
 	s := g.Server(guid.S())
 	v := g.View(guid.S())
 	content := "This is header"
-	gtest.AssertNil(v.SetPath(gdebug.TestDataPath("issue1611")))
+	gtest.AssertNil(v.SetPath(gtest.DataPath("issue1611")))
 	s.SetView(v)
 	s.BindHandler("/", func(r *ghttp.Request) {
 		gtest.AssertNil(r.Response.WriteTpl("index/layout.html", g.Map{

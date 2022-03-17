@@ -9,7 +9,6 @@ package gcompress_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/encoding/gcompress"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -43,7 +42,7 @@ func Test_Gzip_UnGzip(t *testing.T) {
 }
 
 func Test_Gzip_UnGzip_File(t *testing.T) {
-	srcPath := gdebug.TestDataPath("gzip", "file.txt")
+	srcPath := gtest.DataPath("gzip", "file.txt")
 	dstPath1 := gfile.Temp(gtime.TimestampNanoStr(), "gzip.zip")
 	dstPath2 := gfile.Temp(gtime.TimestampNanoStr(), "file.txt")
 

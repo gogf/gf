@@ -10,7 +10,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gview"
@@ -20,7 +19,7 @@ import (
 func Test_Encode_Parse(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
-		v.SetPath(gdebug.TestDataPath("tpl"))
+		v.SetPath(gtest.DataPath("tpl"))
 		v.SetAutoEncode(true)
 		result, err := v.Parse(context.TODO(), "encode.tpl", g.Map{
 			"title": "<b>my title</b>",
@@ -33,7 +32,7 @@ func Test_Encode_Parse(t *testing.T) {
 func Test_Encode_ParseContent(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
-		tplContent := gfile.GetContents(gdebug.TestDataPath("tpl", "encode.tpl"))
+		tplContent := gfile.GetContents(gtest.DataPath("tpl", "encode.tpl"))
 		v.SetAutoEncode(true)
 		result, err := v.ParseContent(context.TODO(), tplContent, g.Map{
 			"title": "<b>my title</b>",
