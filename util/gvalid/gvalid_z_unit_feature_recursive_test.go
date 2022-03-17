@@ -214,3 +214,47 @@ func Test_CheckMap_Recursive_SliceStruct(t *testing.T) {
 		t.Assert(err.Maps()["Pass2"], g.Map{"same": "The Pass2 value `4` must be the same as field Pass1"})
 	})
 }
+
+func Test_CheckStruct_Recursively_SliceAttribute(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Student struct {
+			Name string `v:"required#Student Name is required"`
+			Age  int    `v:"required"`
+		}
+		type Teacher struct {
+			Name     string    `v:"required#Teacher Name is required"`
+			Students []Student `v:"required"`
+		}
+		var (
+			teacher = Teacher{}
+			data    = g.Map{
+				"name":     "john",
+				"students": `[{"age":2}, {"name":"jack", "age":4}]`,
+			}
+		)
+		err := g.Validator().Assoc(data).Data(teacher).Run(ctx)
+		t.Assert(err, `Student Name is required`)
+	})
+}
+
+func Test_CheckStruct_Recursively_MapAttribute(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Student struct {
+			Name string `v:"required#Student Name is required"`
+			Age  int    `v:"required"`
+		}
+		type Teacher struct {
+			Name     string             `v:"required#Teacher Name is required"`
+			Students map[string]Student `v:"required"`
+		}
+		var (
+			teacher = Teacher{}
+			data    = g.Map{
+				"name":     "john",
+				"students": `{"john":{"age":18}}`,
+			}
+		)
+		err := g.Validator().Assoc(data).Data(teacher).Run(ctx)
+		t.Assert(err, `Student Name is required`)
+	})
+}

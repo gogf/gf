@@ -404,50 +404,6 @@ func Test_CheckStruct_InvalidRule(t *testing.T) {
 	})
 }
 
-func Test_CheckStruct_Recursively_SliceAttribute(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		type Student struct {
-			Name string `v:"required#Student Name is required"`
-			Age  int    `v:"required"`
-		}
-		type Teacher struct {
-			Name     string    `v:"required#Teacher Name is required"`
-			Students []Student `v:"required"`
-		}
-		var (
-			teacher = Teacher{}
-			data    = g.Map{
-				"name":     "john",
-				"students": `[{"age":2}, {"name":"jack", "age":4}]`,
-			}
-		)
-		err := g.Validator().Assoc(data).Data(teacher).Run(ctx)
-		t.Assert(err, `Student Name is required`)
-	})
-}
-
-func Test_CheckStruct_Recursively_MapAttribute(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		type Student struct {
-			Name string `v:"required#Student Name is required"`
-			Age  int    `v:"required"`
-		}
-		type Teacher struct {
-			Name     string             `v:"required#Teacher Name is required"`
-			Students map[string]Student `v:"required"`
-		}
-		var (
-			teacher = Teacher{}
-			data    = g.Map{
-				"name":     "john",
-				"students": `{"john":{"age":18}}`,
-			}
-		)
-		err := g.Validator().Assoc(data).Data(teacher).Run(ctx)
-		t.Assert(err, `Student Name is required`)
-	})
-}
-
 func TestValidator_CheckStructWithData(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type UserApiSearch struct {
