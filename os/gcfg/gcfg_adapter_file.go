@@ -146,6 +146,20 @@ func (c *AdapterFile) Get(ctx context.Context, pattern string) (value interface{
 	return nil, nil
 }
 
+// Set sets value with specified `pattern`.
+// It supports hierarchical data access by char separator, which is '.' in default.
+// It is commonly used for updates certain configuration value in runtime.
+func (c *AdapterFile) Set(pattern string, value interface{}) error {
+	j, err := c.getJson()
+	if err != nil {
+		return err
+	}
+	if j != nil {
+		return j.Set(pattern, value)
+	}
+	return nil
+}
+
 // Data retrieves and returns all configuration data as map type.
 func (c *AdapterFile) Data(ctx context.Context) (data map[string]interface{}, err error) {
 	j, err := c.getJson()
