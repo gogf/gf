@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/internal/utils"
 	"github.com/gogf/gf/net/gtrace"
 	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/util/gconv"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -147,8 +148,8 @@ func (ct *clientTracer) wroteRequest(info httptrace.WroteRequestInfo) {
 	}
 
 	ct.span.AddEvent(tracingEventHttpRequest, trace.WithAttributes(
-		attribute.Any(tracingEventHttpRequestHeaders, ct.headers),
-		attribute.Any(tracingEventHttpRequestBaggage, gtrace.GetBaggageMap(ct.Context)),
+		attribute.String(tracingEventHttpRequestHeaders, gconv.String(ct.headers)),
+		attribute.String(tracingEventHttpRequestBaggage, gconv.String(gtrace.GetBaggageMap(ct.Context))),
 		attribute.String(tracingEventHttpRequestBody, gstr.StrLimit(
 			string(ct.requestBody),
 			gtrace.MaxContentLogSize(),

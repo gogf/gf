@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/net/ghttp/internal/httputil"
 	"github.com/gogf/gf/net/gtrace"
 	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/util/gconv"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -56,8 +57,8 @@ func MiddlewareServerTracing(r *Request) {
 	r.Body = utils.NewReadCloser(reqBodyContentBytes, false)
 
 	span.AddEvent(tracingEventHttpRequest, trace.WithAttributes(
-		attribute.Any(tracingEventHttpRequestHeaders, httputil.HeaderToMap(r.Header)),
-		attribute.Any(tracingEventHttpRequestBaggage, gtrace.GetBaggageMap(ctx)),
+		attribute.String(tracingEventHttpRequestHeaders, gconv.String(httputil.HeaderToMap(r.Header))),
+		attribute.String(tracingEventHttpRequestBaggage, gconv.String(gtrace.GetBaggageMap(ctx))),
 		attribute.String(tracingEventHttpRequestBody, gstr.StrLimit(
 			string(reqBodyContentBytes),
 			gtrace.MaxContentLogSize(),
@@ -82,8 +83,8 @@ func MiddlewareServerTracing(r *Request) {
 	)
 
 	span.AddEvent(tracingEventHttpResponse, trace.WithAttributes(
-		attribute.Any(tracingEventHttpResponseHeaders, httputil.HeaderToMap(r.Response.Header())),
+		attribute.String(tracingEventHttpResponseHeaders, gconv.String(httputil.HeaderToMap(r.Response.Header()))),
 		attribute.String(tracingEventHttpResponseBody, resBodyContent),
 	))
-	return
+
 }
