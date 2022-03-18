@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"runtime"
@@ -262,6 +263,12 @@ func (s *Server) getListenAddress() string {
 	} else {
 		port = gconv.Int(array[0])
 	}
+	if s.config.Listeners != nil {
+		for _, v := range s.config.Listeners {
+			portArray := gstr.SplitAndTrim(v.Addr().String(), ":")
+			port = gconv.Int(portArray[len(portArray)-1])
+		}
+	}
 	return fmt.Sprintf(`http://%s:%d`, host, port)
 }
 
@@ -496,10 +503,14 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 					fd = gconv.Int(addrAndFd[1])
 				}
 			}
+			var ln net.Listener
+			if s.config.Listeners != nil {
+				ln = s.config.Listeners[v]
+			}
 			if fd > 0 {
-				s.servers = append(s.servers, s.newGracefulServer(itemFunc, fd))
+				s.servers = append(s.servers, s.newGracefulServer(itemFunc, ln, fd))
 			} else {
-				s.servers = append(s.servers, s.newGracefulServer(itemFunc))
+				s.servers = append(s.servers, s.newGracefulServer(itemFunc, ln))
 			}
 			s.servers[len(s.servers)-1].isHttps = true
 		}
@@ -531,10 +542,14 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 				fd = gconv.Int(addrAndFd[1])
 			}
 		}
+		var ln net.Listener
+		if s.config.Listeners != nil {
+			ln = s.config.Listeners[v]
+		}
 		if fd > 0 {
-			s.servers = append(s.servers, s.newGracefulServer(itemFunc, fd))
+			s.servers = append(s.servers, s.newGracefulServer(itemFunc, ln, fd))
 		} else {
-			s.servers = append(s.servers, s.newGracefulServer(itemFunc))
+			s.servers = append(s.servers, s.newGracefulServer(itemFunc, ln))
 		}
 	}
 	// Start listening asynchronously.

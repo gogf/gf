@@ -9,6 +9,7 @@ package ghttp
 import (
 	"context"
 	"crypto/tls"
+	"net"
 	"net/http"
 	"strconv"
 	"time"
@@ -49,6 +50,9 @@ type ServerConfig struct {
 
 	// HTTPSAddr specifies the HTTPS addresses, multiple addresses joined using char ','.
 	HTTPSAddr string `json:"httpsAddr"`
+
+	// Listeners specifies custom listeners, size should match address provided
+	Listeners map[string]net.Listener `json:"listeners"`
 
 	// HTTPSCertPath specifies certification file path for HTTPS service.
 	HTTPSCertPath string `json:"httpsCertPath"`
@@ -406,6 +410,10 @@ func (s *Server) SetHTTPSPort(port ...int) {
 			s.config.HTTPSAddr += ":" + strconv.Itoa(v)
 		}
 	}
+}
+
+func (s *Server) SetListener(ln map[string]net.Listener) {
+	s.config.Listeners = ln
 }
 
 // EnableHTTPS enables HTTPS with given certification and key files for the server.
