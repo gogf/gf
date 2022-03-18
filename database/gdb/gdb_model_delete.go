@@ -34,18 +34,40 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 	)
 	// Soft deleting.
 	if !m.unscoped && fieldNameDelete != "" {
-		return m.db.DoUpdate(
-			m.GetCtx(),
-			m.getLink(true),
-			m.tables,
-			fmt.Sprintf(`%s=?`, m.db.GetCore().QuoteString(fieldNameDelete)),
-			conditionWhere+conditionExtra,
-			append([]interface{}{gtime.Now().String()}, conditionArgs...),
-		)
+		in := &HookUpdateInput{
+			internalParamHookUpdate: internalParamHookUpdate{
+				internalParamHook: internalParamHook{
+					db:   m.db,
+					link: m.getLink(true),
+				},
+				handler: m.hook.Update,
+			},
+			Table:     m.tables,
+			Data:      fmt.Sprintf(`%s=?`, m.db.GetCore().QuoteString(fieldNameDelete)),
+			Condition: conditionWhere + conditionExtra,
+			Args:      append([]interface{}{gtime.Now().String()}, conditionArgs...),
+		}
+		return in.Next(m.GetCtx())
 	}
 	conditionStr := conditionWhere + conditionExtra
 	if !gstr.ContainsI(conditionStr, " WHERE ") {
-		return nil, gerror.NewCode(gcode.CodeMissingParameter, "there should be WHERE condition statement for DELETE operation")
+		return nil, gerror.NewCode(
+			gcode.CodeMissingParameter,
+			"there should be WHERE condition statement for DELETE operation",
+		)
 	}
-	return m.db.DoDelete(m.GetCtx(), m.getLink(true), m.tables, conditionStr, conditionArgs...)
+
+	in := &HookDeleteInput{
+		internalParamHookDelete: internalParamHookDelete{
+			internalParamHook: internalParamHook{
+				db:   m.db,
+				link: m.getLink(true),
+			},
+			handler: m.hook.Delete,
+		},
+		Table:     m.tables,
+		Condition: conditionStr,
+		Args:      conditionArgs,
+	}
+	return in.Next(m.GetCtx())
 }

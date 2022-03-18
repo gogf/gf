@@ -13,7 +13,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -60,7 +59,7 @@ func Test_Static_ServerRoot(t *testing.T) {
 func Test_Static_ServerRoot_Security(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
-		s.SetServerRoot(gdebug.TestDataPath("static1"))
+		s.SetServerRoot(gtest.DataPath("static1"))
 		s.Start()
 		defer s.Shutdown()
 		time.Sleep(100 * time.Millisecond)

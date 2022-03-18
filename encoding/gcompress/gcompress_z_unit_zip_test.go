@@ -10,7 +10,6 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/encoding/gcompress"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -20,8 +19,8 @@ import (
 func Test_ZipPath(t *testing.T) {
 	// file
 	gtest.C(t, func(t *gtest.T) {
-		srcPath := gdebug.TestDataPath("zip", "path1", "1.txt")
-		dstPath := gdebug.TestDataPath("zip", "zip.zip")
+		srcPath := gtest.DataPath("zip", "path1", "1.txt")
+		dstPath := gtest.DataPath("zip", "zip.zip")
 
 		t.Assert(gfile.Exists(dstPath), false)
 		t.Assert(gcompress.ZipPath(srcPath, dstPath), nil)
@@ -42,8 +41,8 @@ func Test_ZipPath(t *testing.T) {
 	// multiple files
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			srcPath1 = gdebug.TestDataPath("zip", "path1", "1.txt")
-			srcPath2 = gdebug.TestDataPath("zip", "path2", "2.txt")
+			srcPath1 = gtest.DataPath("zip", "path1", "1.txt")
+			srcPath2 = gtest.DataPath("zip", "path2", "2.txt")
 			dstPath  = gfile.Temp(gtime.TimestampNanoStr(), "zip.zip")
 		)
 		if p := gfile.Dir(dstPath); !gfile.Exists(p) {
@@ -75,8 +74,8 @@ func Test_ZipPath(t *testing.T) {
 	// one dir and one file.
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			srcPath1 = gdebug.TestDataPath("zip", "path1")
-			srcPath2 = gdebug.TestDataPath("zip", "path2", "2.txt")
+			srcPath1 = gtest.DataPath("zip", "path1")
+			srcPath2 = gtest.DataPath("zip", "path2", "2.txt")
 			dstPath  = gfile.Temp(gtime.TimestampNanoStr(), "zip.zip")
 		)
 		if p := gfile.Dir(dstPath); !gfile.Exists(p) {
@@ -107,8 +106,8 @@ func Test_ZipPath(t *testing.T) {
 	})
 	// directory.
 	gtest.C(t, func(t *gtest.T) {
-		srcPath := gdebug.TestDataPath("zip")
-		dstPath := gdebug.TestDataPath("zip", "zip.zip")
+		srcPath := gtest.DataPath("zip")
+		dstPath := gtest.DataPath("zip", "zip.zip")
 
 		pwd := gfile.Pwd()
 		err := gfile.Chdir(srcPath)
@@ -141,10 +140,10 @@ func Test_ZipPath(t *testing.T) {
 	// multiple directory paths joined using char ','.
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			srcPath  = gdebug.TestDataPath("zip")
-			srcPath1 = gdebug.TestDataPath("zip", "path1")
-			srcPath2 = gdebug.TestDataPath("zip", "path2")
-			dstPath  = gdebug.TestDataPath("zip", "zip.zip")
+			srcPath  = gtest.DataPath("zip")
+			srcPath1 = gtest.DataPath("zip", "path1")
+			srcPath2 = gtest.DataPath("zip", "path2")
+			dstPath  = gtest.DataPath("zip", "zip.zip")
 		)
 		pwd := gfile.Pwd()
 		err := gfile.Chdir(srcPath)
@@ -181,9 +180,9 @@ func Test_ZipPath(t *testing.T) {
 func Test_ZipPathWriter(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			srcPath  = gdebug.TestDataPath("zip")
-			srcPath1 = gdebug.TestDataPath("zip", "path1")
-			srcPath2 = gdebug.TestDataPath("zip", "path2")
+			srcPath  = gtest.DataPath("zip")
+			srcPath1 = gtest.DataPath("zip", "path1")
+			srcPath2 = gtest.DataPath("zip", "path2")
 		)
 		pwd := gfile.Pwd()
 		err := gfile.Chdir(srcPath)

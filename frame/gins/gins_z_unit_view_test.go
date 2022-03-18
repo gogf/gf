@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -53,7 +52,7 @@ func Test_View(t *testing.T) {
 func Test_View_Config(t *testing.T) {
 	// view1 test1
 	gtest.C(t, func(t *gtest.T) {
-		dirPath := gdebug.TestDataPath("view1")
+		dirPath := gtest.DataPath("view1")
 		Config().GetAdapter().(*gcfg.AdapterFile).SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
 		defer Config().GetAdapter().(*gcfg.AdapterFile).ClearContent()
 		defer localInstances.Clear()
@@ -75,7 +74,7 @@ func Test_View_Config(t *testing.T) {
 	})
 	// view1 test2
 	gtest.C(t, func(t *gtest.T) {
-		dirPath := gdebug.TestDataPath("view1")
+		dirPath := gtest.DataPath("view1")
 		Config().GetAdapter().(*gcfg.AdapterFile).SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
 		defer Config().GetAdapter().(*gcfg.AdapterFile).ClearContent()
 		defer localInstances.Clear()
@@ -97,7 +96,7 @@ func Test_View_Config(t *testing.T) {
 	})
 	// view2
 	gtest.C(t, func(t *gtest.T) {
-		dirPath := gdebug.TestDataPath("view2")
+		dirPath := gtest.DataPath("view2")
 		Config().GetAdapter().(*gcfg.AdapterFile).SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
 		defer Config().GetAdapter().(*gcfg.AdapterFile).ClearContent()
 		defer localInstances.Clear()
@@ -119,7 +118,7 @@ func Test_View_Config(t *testing.T) {
 	})
 	// view2
 	gtest.C(t, func(t *gtest.T) {
-		dirPath := gdebug.TestDataPath("view2")
+		dirPath := gtest.DataPath("view2")
 		Config().GetAdapter().(*gcfg.AdapterFile).SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
 		defer Config().GetAdapter().(*gcfg.AdapterFile).ClearContent()
 		defer localInstances.Clear()

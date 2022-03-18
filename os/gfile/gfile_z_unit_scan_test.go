@@ -10,13 +10,12 @@ import (
 	"testing"
 
 	"github.com/gogf/gf/v2/container/garray"
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_ScanDir(t *testing.T) {
-	teatPath := gdebug.TestDataPath()
+	teatPath := gtest.DataPath()
 	gtest.C(t, func(t *gtest.T) {
 		files, err := gfile.ScanDir(teatPath, "*", false)
 		t.AssertNil(err)
@@ -35,7 +34,7 @@ func Test_ScanDir(t *testing.T) {
 }
 
 func Test_ScanDirFunc(t *testing.T) {
-	teatPath := gdebug.TestDataPath()
+	teatPath := gtest.DataPath()
 	gtest.C(t, func(t *gtest.T) {
 		files, err := gfile.ScanDirFunc(teatPath, "*", true, func(path string) string {
 			if gfile.Name(path) != "file1" {
@@ -50,7 +49,7 @@ func Test_ScanDirFunc(t *testing.T) {
 }
 
 func Test_ScanDirFile(t *testing.T) {
-	teatPath := gdebug.TestDataPath()
+	teatPath := gtest.DataPath()
 	gtest.C(t, func(t *gtest.T) {
 		files, err := gfile.ScanDirFile(teatPath, "*", false)
 		t.AssertNil(err)
@@ -67,7 +66,7 @@ func Test_ScanDirFile(t *testing.T) {
 }
 
 func Test_ScanDirFileFunc(t *testing.T) {
-	teatPath := gdebug.TestDataPath()
+	teatPath := gtest.DataPath()
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.New()
 		files, err := gfile.ScanDirFileFunc(teatPath, "*", false, func(path string) string {

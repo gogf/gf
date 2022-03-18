@@ -8,11 +8,38 @@
 package gdb
 
 import (
+	"context"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 )
+
+// WithDB injects given db object into context and returns a new context.
+func WithDB(ctx context.Context, db DB) context.Context {
+	if db == nil {
+		return ctx
+	}
+	dbCtx := db.GetCtx()
+	if ctxDb := DBFromCtx(dbCtx); ctxDb != nil {
+		return dbCtx
+	}
+	ctx = context.WithValue(ctx, contextKeyForDB, db)
+	return ctx
+}
+
+// DBFromCtx retrieves and returns DB object from context.
+func DBFromCtx(ctx context.Context) DB {
+	if ctx == nil {
+		return nil
+	}
+	v := ctx.Value(contextKeyForDB)
+	if v != nil {
+		return v.(DB)
+	}
+	return nil
+}
 
 // MasterLink acts like function Master but with additional `schema` parameter specifying
 // the schema for the connection. It is defined for internal usage.

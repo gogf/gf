@@ -117,7 +117,6 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 		input = &HandlerInput{
 			Logger:       l,
 			Buffer:       bytes.NewBuffer(nil),
-			Ctx:          ctx,
 			Time:         now,
 			Color:        defaultLevelColor[level],
 			Level:        level,
@@ -221,13 +220,13 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 	if l.config.Flags&F_ASYNC > 0 {
 		input.IsAsync = true
 		err := asyncPool.Add(ctx, func(ctx context.Context) {
-			input.Next()
+			input.Next(ctx)
 		})
 		if err != nil {
 			intlog.Errorf(ctx, `%+v`, err)
 		}
 	} else {
-		input.Next()
+		input.Next(ctx)
 	}
 }
 

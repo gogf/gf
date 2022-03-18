@@ -15,7 +15,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gclient"
@@ -337,7 +336,7 @@ func Test_Client_File_And_Param(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	gtest.C(t, func(t *gtest.T) {
-		path := gdebug.TestDataPath("upload", "file1.txt")
+		path := gtest.DataPath("upload", "file1.txt")
 		data := g.Map{
 			"file": "@file:" + path,
 			"json": `{"uuid": "luijquiopm", "isRelative": false, "fileName": "test111.xls"}`,
