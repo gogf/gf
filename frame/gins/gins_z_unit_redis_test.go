@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/gins"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -20,7 +19,7 @@ import (
 
 func Test_Redis(t *testing.T) {
 	redisContent := gfile.GetContents(
-		gdebug.TestDataPath("redis", "config.toml"),
+		gtest.DataPath("redis", "config.toml"),
 	)
 
 	gtest.C(t, func(t *gtest.T) {

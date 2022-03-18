@@ -13,7 +13,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/encoding/ghtml"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
@@ -24,7 +23,7 @@ import (
 
 func Test_Template_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		v := gview.New(gdebug.TestDataPath("template", "basic"))
+		v := gview.New(gtest.DataPath("template", "basic"))
 		s := g.Server(guid.S())
 		s.SetView(v)
 		s.BindHandler("/", func(r *ghttp.Request) {
@@ -47,7 +46,7 @@ func Test_Template_Basic(t *testing.T) {
 
 func Test_Template_Encode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		v := gview.New(gdebug.TestDataPath("template", "basic"))
+		v := gview.New(gtest.DataPath("template", "basic"))
 		v.SetAutoEncode(true)
 		s := g.Server(guid.S())
 		s.SetView(v)
@@ -71,7 +70,7 @@ func Test_Template_Encode(t *testing.T) {
 
 func Test_Template_Layout1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		v := gview.New(gdebug.TestDataPath("template", "layout1"))
+		v := gview.New(gtest.DataPath("template", "layout1"))
 		s := g.Server(guid.S())
 		s.SetView(v)
 		s.BindHandler("/layout", func(r *ghttp.Request) {
@@ -99,7 +98,7 @@ func Test_Template_Layout1(t *testing.T) {
 
 func Test_Template_Layout2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		v := gview.New(gdebug.TestDataPath("template", "layout2"))
+		v := gview.New(gtest.DataPath("template", "layout2"))
 		s := g.Server(guid.S())
 		s.SetView(v)
 		s.BindHandler("/main1", func(r *ghttp.Request) {

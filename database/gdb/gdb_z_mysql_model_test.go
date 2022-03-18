@@ -18,7 +18,6 @@ import (
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -2195,7 +2194,7 @@ func Test_Model_FieldsEx_WithReservedWords(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			table      = "fieldsex_test_table"
-			sqlTpcPath = gdebug.TestDataPath("reservedwords_table_tpl.sql")
+			sqlTpcPath = gtest.DataPath("reservedwords_table_tpl.sql")
 			sqlContent = gfile.GetContents(sqlTpcPath)
 		)
 		t.AssertNE(sqlContent, "")

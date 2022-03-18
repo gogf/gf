@@ -10,7 +10,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gview"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -19,7 +18,7 @@ import (
 func Test_Config(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		config := gview.Config{
-			Paths: []string{gdebug.TestDataPath("config")},
+			Paths: []string{gtest.DataPath("config")},
 			Data: g.Map{
 				"name": "gf",
 			},
@@ -46,7 +45,7 @@ func Test_ConfigWithMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		view := gview.New()
 		err := view.SetConfigWithMap(g.Map{
-			"Paths":       []string{gdebug.TestDataPath("config")},
+			"Paths":       []string{gtest.DataPath("config")},
 			"DefaultFile": "test.html",
 			"Delimiters":  []string{"${", "}"},
 			"Data": g.Map{

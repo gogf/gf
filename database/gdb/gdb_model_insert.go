@@ -140,7 +140,7 @@ func (m *Model) OnDuplicate(onDuplicate ...interface{}) *Model {
 	return model
 }
 
-// OnDuplicateEx sets the excluding columns for operations when columns conflicts occurs.
+// OnDuplicateEx sets the excluding columns for operations when columns conflict occurs.
 // In MySQL, this is used for "ON DUPLICATE KEY UPDATE" statement.
 // The parameter `onDuplicateEx` can be type of string/map/slice.
 // Example:
@@ -310,7 +310,20 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 	if err != nil {
 		return result, err
 	}
-	return m.db.DoInsert(m.GetCtx(), m.getLink(true), m.tables, list, doInsertOption)
+
+	in := &HookInsertInput{
+		internalParamHookInsert: internalParamHookInsert{
+			internalParamHook: internalParamHook{
+				db:   m.db,
+				link: m.getLink(true),
+			},
+			handler: m.hook.Insert,
+		},
+		Table:  m.tables,
+		Data:   list,
+		Option: doInsertOption,
+	}
+	return in.Next(m.GetCtx())
 }
 
 func (m *Model) formatDoInsertOption(insertOption int, columnNames []string) (option DoInsertOption, err error) {

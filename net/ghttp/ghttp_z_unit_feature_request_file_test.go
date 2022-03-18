@@ -12,7 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -46,7 +45,7 @@ func Test_Params_File_Single(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
-		srcPath := gdebug.TestDataPath("upload", "file1.txt")
+		srcPath := gtest.DataPath("upload", "file1.txt")
 		dstPath := gfile.Join(dstDirPath, "file1.txt")
 		content := client.PostContent(ctx, "/upload/single", g.Map{
 			"file": "@file:" + srcPath,
@@ -62,7 +61,7 @@ func Test_Params_File_Single(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
-		srcPath := gdebug.TestDataPath("upload", "file2.txt")
+		srcPath := gtest.DataPath("upload", "file2.txt")
 		content := client.PostContent(ctx, "/upload/single", g.Map{
 			"file":           "@file:" + srcPath,
 			"randomlyRename": true,
@@ -97,7 +96,7 @@ func Test_Params_File_CustomName(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
-		srcPath := gdebug.TestDataPath("upload", "file1.txt")
+		srcPath := gtest.DataPath("upload", "file1.txt")
 		dstPath := gfile.Join(dstDirPath, "my.txt")
 		content := client.PostContent(ctx, "/upload/single", g.Map{
 			"file": "@file:" + srcPath,
@@ -132,8 +131,8 @@ func Test_Params_File_Batch(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
-		srcPath1 := gdebug.TestDataPath("upload", "file1.txt")
-		srcPath2 := gdebug.TestDataPath("upload", "file2.txt")
+		srcPath1 := gtest.DataPath("upload", "file1.txt")
+		srcPath2 := gtest.DataPath("upload", "file2.txt")
 		dstPath1 := gfile.Join(dstDirPath, "file1.txt")
 		dstPath2 := gfile.Join(dstDirPath, "file2.txt")
 		content := client.PostContent(ctx, "/upload/batch", g.Map{
@@ -152,8 +151,8 @@ func Test_Params_File_Batch(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
-		srcPath1 := gdebug.TestDataPath("upload", "file1.txt")
-		srcPath2 := gdebug.TestDataPath("upload", "file2.txt")
+		srcPath1 := gtest.DataPath("upload", "file1.txt")
+		srcPath2 := gtest.DataPath("upload", "file2.txt")
 		content := client.PostContent(ctx, "/upload/batch", g.Map{
 			"file[0]":        "@file:" + srcPath1,
 			"file[1]":        "@file:" + srcPath2,
@@ -205,7 +204,7 @@ func Test_Params_Strict_Route_File_Single(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
-		srcPath := gdebug.TestDataPath("upload", "file1.txt")
+		srcPath := gtest.DataPath("upload", "file1.txt")
 		dstPath := gfile.Join(dstDirPath, "file1.txt")
 		content := client.PostContent(ctx, "/upload/single", g.Map{
 			"file": "@file:" + srcPath,
