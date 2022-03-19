@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/internal/intlog"
 )
 
+// DefaultHandlerResponse is the default implementation of HandlerResponse.
 type DefaultHandlerResponse struct {
 	Code    int         `json:"code"    dc:"Error code"`
 	Message string      `json:"message" dc:"Error message"`
