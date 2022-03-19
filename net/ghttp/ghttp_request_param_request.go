@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-// GetRequest retrieves and returns the parameter named `key` passed from client and
+// GetRequest retrieves and returns the parameter named `key` passed from the client and
 // custom params as interface{}, no matter what HTTP method the client is using. The
 // parameter `def` specifies the default value if the `key` does not exist.
 //
@@ -50,8 +50,8 @@ func (r *Request) GetRequest(key string, def ...interface{}) *gvar.Var {
 	return nil
 }
 
-// GetRequestMap retrieves and returns all parameters passed from client and custom params
-// as map, no matter what HTTP method the client is using. The parameter `kvMap` specifies
+// GetRequestMap retrieves and returns all parameters passed from the client and custom params
+// as the map, no matter what HTTP method the client is using. The parameter `kvMap` specifies
 // the keys retrieving from client parameters, the associated values are the default values
 // if the client does not pass the according keys.
 //
@@ -131,7 +131,7 @@ func (r *Request) GetRequestMap(kvMap ...map[string]interface{}) map[string]inte
 	return m
 }
 
-// GetRequestMapStrStr retrieves and returns all parameters passed from client and custom
+// GetRequestMapStrStr retrieve and returns all parameters passed from the client and custom
 // params as map[string]string, no matter what HTTP method the client is using. The parameter
 // `kvMap` specifies the keys retrieving from client parameters, the associated values are the
 // default values if the client does not pass.
@@ -147,7 +147,7 @@ func (r *Request) GetRequestMapStrStr(kvMap ...map[string]interface{}) map[strin
 	return nil
 }
 
-// GetRequestMapStrVar retrieves and returns all parameters passed from client and custom
+// GetRequestMapStrVar retrieve and returns all parameters passed from the client and custom
 // params as map[string]*gvar.Var, no matter what HTTP method the client is using. The parameter
 // `kvMap` specifies the keys retrieving from client parameters, the associated values are the
 // default values if the client does not pass.
@@ -163,8 +163,8 @@ func (r *Request) GetRequestMapStrVar(kvMap ...map[string]interface{}) map[strin
 	return nil
 }
 
-// GetRequestStruct retrieves all parameters passed from client and custom params no matter
-// what HTTP method the client is using, and converts them to given struct object. Note that
+// GetRequestStruct retrieves all parameters passed from the client and custom params no matter
+// what HTTP method the client is using, and converts them to give the struct object. Note that
 // the parameter `pointer` is a pointer to the struct object.
 // The optional parameter `mapping` is used to specify the key to attribute mapping.
 func (r *Request) GetRequestStruct(pointer interface{}, mapping ...map[string]string) error {

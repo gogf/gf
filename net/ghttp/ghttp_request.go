@@ -32,7 +32,7 @@ type Request struct {
 	Response   *Response         // Corresponding Response of this request.
 	Router     *Router           // Matched Router for this request. Note that it's not available in HOOK handler.
 	EnterTime  int64             // Request starting time in microseconds.
-	LeaveTime  int64             // Request ending time in microseconds.
+	LeaveTime  int64             // Request to end time in microseconds.
 	Middleware *middleware       // Middleware manager.
 	StaticFile *staticFile       // Static file object for static file serving.
 
@@ -49,10 +49,10 @@ type Request struct {
 	parsedBody      bool                   // A bool marking whether the request body parsed.
 	parsedForm      bool                   // A bool marking whether request Form parsed for HTTP method PUT, POST, PATCH.
 	paramsMap       map[string]interface{} // Custom parameters map.
-	routerMap       map[string]string      // Router parameters map, which might be nil if there're no router parameters.
+	routerMap       map[string]string      // Router parameters map, which might be nil if there are no router parameters.
 	queryMap        map[string]interface{} // Query parameters map, which is nil if there's no query string.
-	formMap         map[string]interface{} // Form parameters map, which is nil if there's no form data from client.
-	bodyMap         map[string]interface{} // Body parameters map, which might be nil if there're no body content.
+	formMap         map[string]interface{} // Form parameters map, which is nil if there's no form of data from the client.
+	bodyMap         map[string]interface{} // Body parameters map, which might be nil if their nobody content.
 	error           error                  // Current executing error of the request.
 	exitAll         bool                   // A bool marking whether current request is exited.
 	parsedHost      string                 // The parsed host name for current host used by GetHost function.

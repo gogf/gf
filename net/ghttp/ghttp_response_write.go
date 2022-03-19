@@ -37,7 +37,7 @@ func (r *Response) Write(content ...interface{}) {
 }
 
 // WriteExit writes `content` to the response buffer and exits executing of current handler.
-// The "Exit" feature is commonly used to replace usage of return statement in the handler,
+// The "Exit" feature is commonly used to replace usage of return statements in the handler,
 // for convenience.
 func (r *Response) WriteExit(content ...interface{}) {
 	r.Write(content...)
@@ -52,7 +52,7 @@ func (r *Response) WriteOver(content ...interface{}) {
 
 // WriteOverExit overwrites the response buffer with `content` and exits executing
 // of current handler. The "Exit" feature is commonly used to replace usage of return
-// statement in the handler, for convenience.
+// statements in the handler, for convenience.
 func (r *Response) WriteOverExit(content ...interface{}) {
 	r.WriteOver(content...)
 	r.Request.Exit()
@@ -64,7 +64,7 @@ func (r *Response) Writef(format string, params ...interface{}) {
 }
 
 // WritefExit writes the response with fmt.Sprintf and exits executing of current handler.
-// The "Exit" feature is commonly used to replace usage of return statement in the handler,
+// The "Exit" feature is commonly used to replace usage of return statements in the handler,
 // for convenience.
 func (r *Response) WritefExit(format string, params ...interface{}) {
 	r.Writef(format, params...)
@@ -82,7 +82,7 @@ func (r *Response) Writeln(content ...interface{}) {
 
 // WritelnExit writes the response with `content` and new line and exits executing
 // of current handler. The "Exit" feature is commonly used to replace usage of return
-// statement in the handler, for convenience.
+// statements in the handler, for convenience.
 func (r *Response) WritelnExit(content ...interface{}) {
 	r.Writeln(content...)
 	r.Request.Exit()
@@ -104,7 +104,7 @@ func (r *Response) WriteflnExit(format string, params ...interface{}) {
 // WriteJson writes `content` to the response with JSON format.
 func (r *Response) WriteJson(content interface{}) error {
 	r.Header().Set("Content-Type", contentTypeJson)
-	// If given string/[]byte, response it directly to client.
+	// If given string/[]byte, response it directly to the client.
 	switch content.(type) {
 	case string, []byte:
 		r.Write(gconv.String(content))
@@ -121,7 +121,7 @@ func (r *Response) WriteJson(content interface{}) error {
 
 // WriteJsonExit writes `content` to the response with JSON format and exits executing
 // of current handler if success. The "Exit" feature is commonly used to replace usage of
-// return statement in the handler, for convenience.
+// return statements in the handler, for convenience.
 func (r *Response) WriteJsonExit(content interface{}) error {
 	if err := r.WriteJson(content); err != nil {
 		return err
@@ -161,7 +161,7 @@ func (r *Response) WriteJsonP(content interface{}) error {
 
 // WriteJsonPExit writes `content` to the response with JSONP format and exits executing
 // of current handler if success. The "Exit" feature is commonly used to replace usage of
-// return statement in the handler, for convenience.
+// return statements in the handler, for convenience.
 //
 // Note that there should be a "callback" parameter in the request for JSONP format.
 func (r *Response) WriteJsonPExit(content interface{}) error {
@@ -175,7 +175,7 @@ func (r *Response) WriteJsonPExit(content interface{}) error {
 // WriteXml writes `content` to the response with XML format.
 func (r *Response) WriteXml(content interface{}, rootTag ...string) error {
 	r.Header().Set("Content-Type", contentTypeXml)
-	// If given string/[]byte, response it directly to client.
+	// If given string/[]byte, response it directly to clients.
 	switch content.(type) {
 	case string, []byte:
 		r.Write(gconv.String(content))
@@ -191,7 +191,7 @@ func (r *Response) WriteXml(content interface{}, rootTag ...string) error {
 
 // WriteXmlExit writes `content` to the response with XML format and exits executing
 // of current handler if success. The "Exit" feature is commonly used to replace usage
-// of return statement in the handler, for convenience.
+// of return statements in the handler, for convenience.
 func (r *Response) WriteXmlExit(content interface{}, rootTag ...string) error {
 	if err := r.WriteXml(content, rootTag...); err != nil {
 		return err
@@ -201,7 +201,7 @@ func (r *Response) WriteXmlExit(content interface{}, rootTag ...string) error {
 }
 
 // WriteStatus writes HTTP `status` and `content` to the response.
-// Note that do not set Content-Type header here.
+// Note that it does not set a Content-Type header here.
 func (r *Response) WriteStatus(status int, content ...interface{}) {
 	r.WriteHeader(status)
 	if len(content) > 0 {
@@ -213,7 +213,7 @@ func (r *Response) WriteStatus(status int, content ...interface{}) {
 
 // WriteStatusExit writes HTTP `status` and `content` to the response and exits executing
 // of current handler if success. The "Exit" feature is commonly used to replace usage of
-// return statement in the handler, for convenience.
+// return statements in the handler, for convenience.
 func (r *Response) WriteStatusExit(status int, content ...interface{}) {
 	r.WriteStatus(status, content...)
 	r.Request.Exit()

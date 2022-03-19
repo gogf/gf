@@ -26,7 +26,7 @@ func (s *Server) SetCookieDomain(domain string) {
 	s.config.CookieDomain = domain
 }
 
-// GetCookieMaxAge returns the CookieMaxAge of server.
+// GetCookieMaxAge returns the CookieMaxAge of the server.
 func (s *Server) GetCookieMaxAge() time.Duration {
 	return s.config.CookieMaxAge
 }

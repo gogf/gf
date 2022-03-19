@@ -15,7 +15,7 @@ import (
 // BuildParams builds the request string for the http client. The `params` can be type of:
 // string/[]byte/map/struct/*struct.
 //
-// The optional parameter `noUrlEncode` specifies whether ignore the url encoding for the data.
+// The optional parameter `noUrlEncode` specifies whether to ignore the url encoding for the data.
 func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr string) {
 	return httputil.BuildParams(params, noUrlEncode...)
 }
