@@ -77,7 +77,7 @@ type HookInsertInput struct {
 type HookUpdateInput struct {
 	internalParamHookUpdate
 	Table     string
-	Data      interface{}
+	Data      interface{} // Data can be type of: map[string]interface{}/string. You can use type assertion on `Data`.
 	Condition string
 	Args      []interface{}
 }
