@@ -70,7 +70,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 			var (
 				structTypeName = oai.golangTypeToSchemaName(golangType)
 			)
-			if _, ok := oai.Components.Schemas[structTypeName]; !ok {
+			if oai.Components.Schemas.Get(structTypeName) == nil {
 				if err := oai.addSchema(reflect.New(golangType).Interface()); err != nil {
 					return nil, err
 				}
@@ -81,7 +81,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 		default:
 			// Normal struct object.
 			var structTypeName = oai.golangTypeToSchemaName(golangType)
-			if _, ok := oai.Components.Schemas[structTypeName]; !ok {
+			if oai.Components.Schemas.Get(structTypeName) == nil {
 				if err := oai.addSchema(reflect.New(golangType).Elem().Interface()); err != nil {
 					return nil, err
 				}

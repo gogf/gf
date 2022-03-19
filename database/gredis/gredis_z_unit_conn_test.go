@@ -30,11 +30,11 @@ func TestConn_DoWithTimeout(t *testing.T) {
 		defer conn.Close(ctx)
 
 		_, err = conn.Do(ctx, "set", "test", "123")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer conn.Do(ctx, "del", "test")
 
 		r, err := conn.Do(ctx, "get", "test")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(r.String(), "123")
 	})
 }

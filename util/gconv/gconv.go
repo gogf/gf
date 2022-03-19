@@ -21,7 +21,7 @@ import (
 	"github.com/gogf/gf/v2/encoding/gbinary"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/os/gtime"
 )
 
@@ -317,7 +317,7 @@ func Bytes(any interface{}) []byte {
 		if f, ok := value.(iBytes); ok {
 			return f.Bytes()
 		}
-		originValueAndKind := utils.OriginValueAndKind(any)
+		originValueAndKind := reflection.OriginValueAndKind(any)
 		switch originValueAndKind.OriginKind {
 		case reflect.Map:
 			bytes, err := json.Marshal(any)

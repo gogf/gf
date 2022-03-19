@@ -40,7 +40,7 @@ func Test_CheckMap2(t *testing.T) {
 	var params interface{}
 	gtest.C(t, func(t *gtest.T) {
 		if err := g.Validator().Data(params).Run(context.TODO()); err == nil {
-			t.Assert(err, nil)
+			t.AssertNil(err)
 		}
 	})
 

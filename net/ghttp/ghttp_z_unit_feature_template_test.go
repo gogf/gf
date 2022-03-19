@@ -13,7 +13,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/encoding/ghtml"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
@@ -24,14 +23,14 @@ import (
 
 func Test_Template_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		v := gview.New(gdebug.TestDataPath("template", "basic"))
+		v := gview.New(gtest.DataPath("template", "basic"))
 		s := g.Server(guid.S())
 		s.SetView(v)
 		s.BindHandler("/", func(r *ghttp.Request) {
 			err := r.Response.WriteTpl("index.html", g.Map{
 				"name": "john",
 			})
-			t.Assert(err, nil)
+			t.AssertNil(err)
 		})
 		s.SetDumpRouterMap(false)
 		s.Start()
@@ -47,7 +46,7 @@ func Test_Template_Basic(t *testing.T) {
 
 func Test_Template_Encode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		v := gview.New(gdebug.TestDataPath("template", "basic"))
+		v := gview.New(gtest.DataPath("template", "basic"))
 		v.SetAutoEncode(true)
 		s := g.Server(guid.S())
 		s.SetView(v)
@@ -55,7 +54,7 @@ func Test_Template_Encode(t *testing.T) {
 			err := r.Response.WriteTpl("index.html", g.Map{
 				"name": "john",
 			})
-			t.Assert(err, nil)
+			t.AssertNil(err)
 		})
 		s.SetDumpRouterMap(false)
 		s.Start()
@@ -71,18 +70,18 @@ func Test_Template_Encode(t *testing.T) {
 
 func Test_Template_Layout1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		v := gview.New(gdebug.TestDataPath("template", "layout1"))
+		v := gview.New(gtest.DataPath("template", "layout1"))
 		s := g.Server(guid.S())
 		s.SetView(v)
 		s.BindHandler("/layout", func(r *ghttp.Request) {
 			err := r.Response.WriteTpl("layout.html", g.Map{
 				"mainTpl": "main/main1.html",
 			})
-			t.Assert(err, nil)
+			t.AssertNil(err)
 		})
 		s.BindHandler("/nil", func(r *ghttp.Request) {
 			err := r.Response.WriteTpl("layout.html", nil)
-			t.Assert(err, nil)
+			t.AssertNil(err)
 		})
 		s.SetDumpRouterMap(false)
 		s.Start()
@@ -99,24 +98,24 @@ func Test_Template_Layout1(t *testing.T) {
 
 func Test_Template_Layout2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		v := gview.New(gdebug.TestDataPath("template", "layout2"))
+		v := gview.New(gtest.DataPath("template", "layout2"))
 		s := g.Server(guid.S())
 		s.SetView(v)
 		s.BindHandler("/main1", func(r *ghttp.Request) {
 			err := r.Response.WriteTpl("layout.html", g.Map{
 				"mainTpl": "main/main1.html",
 			})
-			t.Assert(err, nil)
+			t.AssertNil(err)
 		})
 		s.BindHandler("/main2", func(r *ghttp.Request) {
 			err := r.Response.WriteTpl("layout.html", g.Map{
 				"mainTpl": "main/main2.html",
 			})
-			t.Assert(err, nil)
+			t.AssertNil(err)
 		})
 		s.BindHandler("/nil", func(r *ghttp.Request) {
 			err := r.Response.WriteTpl("layout.html", nil)
-			t.Assert(err, nil)
+			t.AssertNil(err)
 		})
 		s.SetDumpRouterMap(false)
 		s.Start()
@@ -137,7 +136,7 @@ func Test_Template_BuildInVarRequest(t *testing.T) {
 		s := g.Server(guid.S())
 		s.BindHandler("/:table/test", func(r *ghttp.Request) {
 			err := r.Response.WriteTplContent("{{.Request.table}}")
-			t.Assert(err, nil)
+			t.AssertNil(err)
 		})
 		s.SetDumpRouterMap(false)
 		s.Start()
@@ -162,7 +161,7 @@ func Test_Template_XSS(t *testing.T) {
 			err := r.Response.WriteTplContent("{{if eq 1 1}}{{.v}}{{end}}", g.Map{
 				"v": c,
 			})
-			t.Assert(err, nil)
+			t.AssertNil(err)
 		})
 		s.SetDumpRouterMap(false)
 		s.Start()

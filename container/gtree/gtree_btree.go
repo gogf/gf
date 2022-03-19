@@ -944,8 +944,26 @@ func (tree *BTree) deleteChild(node *BTreeNode, index int) {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (tree BTree) MarshalJSON() ([]byte, error) {
-	return json.Marshal(tree.MapStrAny())
+func (tree BTree) MarshalJSON() (jsonBytes []byte, err error) {
+	if tree.root == nil {
+		return []byte("null"), nil
+	}
+	buffer := bytes.NewBuffer(nil)
+	buffer.WriteByte('{')
+	tree.Iterator(func(key, value interface{}) bool {
+		valueBytes, valueJsonErr := json.Marshal(value)
+		if valueJsonErr != nil {
+			err = valueJsonErr
+			return false
+		}
+		if buffer.Len() > 1 {
+			buffer.WriteByte(',')
+		}
+		buffer.WriteString(fmt.Sprintf(`"%v":%s`, key, valueBytes))
+		return true
+	})
+	buffer.WriteByte('}')
+	return buffer.Bytes(), nil
 }
 
 // getComparator returns the comparator if it's previously set,

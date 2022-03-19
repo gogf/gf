@@ -246,11 +246,11 @@ func Test_IntStrMap_Json(t *testing.T) {
 			2: "v2",
 		}
 		b, err := json.Marshal(data)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		m := gmap.NewIntStrMap()
 		err = json.UnmarshalUseNumber(b, m)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(m.Get(1), data[1])
 		t.Assert(m.Get(2), data[2])
 	})
@@ -321,7 +321,7 @@ func TestIntStrMap_UnmarshalValue(t *testing.T) {
 			"name": "john",
 			"map":  []byte(`{"1":"v1","2":"v2"}`),
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Map.Size(), 2)
 		t.Assert(v.Map.Get(1), "v1")
@@ -337,7 +337,7 @@ func TestIntStrMap_UnmarshalValue(t *testing.T) {
 				2: "v2",
 			},
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Map.Size(), 2)
 		t.Assert(v.Map.Get(1), "v1")

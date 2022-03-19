@@ -54,7 +54,7 @@ func Test_Byte_JSON(t *testing.T) {
 		var err error
 		i := gtype.NewByte()
 		err = json.UnmarshalUseNumber([]byte("49"), &i)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(i.Val(), "49")
 	})
 }
@@ -70,7 +70,7 @@ func Test_Byte_UnmarshalValue(t *testing.T) {
 			"name": "john",
 			"var":  "2",
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Var.Val(), "2")
 	})

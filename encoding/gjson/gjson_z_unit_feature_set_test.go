@@ -236,7 +236,7 @@ func Test_Set15(t *testing.T) {
 		t.Assert(j.Set("k", "v"), nil)
 
 		s, err := j.ToJsonString()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(
 			gstr.Contains(s, `"root":[{"k1":"v1"},{"k2":"v2"}`) ||
 				gstr.Contains(s, `"root":[{"k2":"v2"},{"k1":"v1"}`),
@@ -259,7 +259,7 @@ func Test_Set16(t *testing.T) {
 		t.Assert(j.Set("description", "3"), nil)
 
 		s, err := j.ToJsonString()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(
 			gstr.Contains(s, `"processors":[{"set":{"0field":"2","0value":"1"}}]`) ||
 				gstr.Contains(s, `"processors":[{"set":{"0value":"1","0field":"2"}}]`),
@@ -282,7 +282,7 @@ func Test_Set17(t *testing.T) {
 		t.Assert(j.Set("k", "v"), nil)
 
 		s, err := j.ToJsonString()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(s, `{"k":"v"}`)
 	})
 }
@@ -294,7 +294,7 @@ func Test_Set18(t *testing.T) {
 		t.Assert(j.Set("0.1.k1", "v1"), nil)
 		t.Assert(j.Set("0.2.k2", "v2"), nil)
 		s, err := j.ToJsonString()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(s, `[[null,{"k1":"v1"},{"k2":"v2"}]]`)
 	})
 }
@@ -306,7 +306,7 @@ func Test_Set19(t *testing.T) {
 		t.Assert(j.Set("0.1.1.k1", "v1"), nil)
 		t.Assert(j.Set("0.2.1.k2", "v2"), nil)
 		s, err := j.ToJsonString()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(s, `[[null,[null,{"k1":"v1"}],[null,{"k2":"v2"}]]]`)
 	})
 }
@@ -320,7 +320,7 @@ func Test_Set20(t *testing.T) {
 		t.Assert(j.Set("k2.1", 20), nil)
 		t.Assert(j.Set("k2.2", g.Map{"k3": "v3"}), nil)
 		s, err := j.ToJsonString()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(gstr.InArray(
 			g.SliceStr{
 				`{"k1":"v1","k2":[1,20,{"k3":"v3"}]}`,

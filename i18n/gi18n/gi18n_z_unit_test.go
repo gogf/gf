@@ -24,7 +24,7 @@ import (
 func Test_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		i18n := gi18n.New(gi18n.Options{
-			Path: gdebug.TestDataPath("i18n"),
+			Path: gtest.DataPath("i18n"),
 		})
 		i18n.SetLanguage("none")
 		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "{#hello}{#world}")
@@ -41,7 +41,7 @@ func Test_Basic(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		i18n := gi18n.New(gi18n.Options{
-			Path: gdebug.TestDataPath("i18n-file"),
+			Path: gtest.DataPath("i18n-file"),
 		})
 		i18n.SetLanguage("none")
 		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "{#hello}{#world}")
@@ -72,7 +72,7 @@ func Test_TranslateFormat(t *testing.T) {
 	// Tf
 	gtest.C(t, func(t *gtest.T) {
 		i18n := gi18n.New(gi18n.Options{
-			Path: gdebug.TestDataPath("i18n"),
+			Path: gtest.DataPath("i18n"),
 		})
 		i18n.SetLanguage("none")
 		t.Assert(i18n.Tf(context.Background(), "{#hello}{#world} %d", 2020), "{#hello}{#world} 2020")
@@ -84,8 +84,8 @@ func Test_TranslateFormat(t *testing.T) {
 
 func Test_DefaultManager(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		err := gi18n.SetPath(gdebug.TestDataPath("i18n"))
-		t.Assert(err, nil)
+		err := gi18n.SetPath(gtest.DataPath("i18n"))
+		t.AssertNil(err)
 
 		gi18n.SetLanguage("none")
 		t.Assert(gi18n.T(context.Background(), "{#hello}{#world}"), "{#hello}{#world}")
@@ -99,7 +99,7 @@ func Test_DefaultManager(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		err := gi18n.SetPath(gdebug.CallerDirectory() + gfile.Separator + "testdata" + gfile.Separator + "i18n-dir")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		gi18n.SetLanguage("none")
 		t.Assert(gi18n.Translate(context.Background(), "{#hello}{#world}"), "{#hello}{#world}")
@@ -117,7 +117,7 @@ func Test_Instance(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gi18n.Instance()
 		err := m.SetPath("i18n-dir")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		m.SetLanguage("zh-CN")
 		t.Assert(m.T(context.Background(), "{#hello}{#world}"), "你好世界")
 	})
@@ -141,7 +141,7 @@ func Test_Resource(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := g.I18n("resource")
 		err := m.SetPath("i18n-dir")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		m.SetLanguage("none")
 		t.Assert(m.T(context.Background(), "{#hello}{#world}"), "{#hello}{#world}")

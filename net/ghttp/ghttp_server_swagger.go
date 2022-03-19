@@ -7,12 +7,16 @@
 package ghttp
 
 import (
+	"fmt"
+
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
 const (
-	swaggerUIDefaultURL = `https://petstore.swagger.io/v2/swagger.json`
-	swaggerUITemplate   = `
+	swaggerUIDocName            = `redoc.standalone.js`
+	swaggerUIDocNamePlaceHolder = `{SwaggerUIDocName}`
+	swaggerUIDocURLPlaceHolder  = `{SwaggerUIDocUrl}`
+	swaggerUITemplate           = `
 <!DOCTYPE html>
 <html>
 	<head>
@@ -27,8 +31,8 @@ const (
 	</style>
 	</head>
 	<body>
-		<redoc spec-url="https://petstore.swagger.io/v2/swagger.json"></redoc>
-		<script src="redoc.standalone.js"> </script>
+		<redoc spec-url="{SwaggerUIDocUrl}"></redoc>
+		<script src="{SwaggerUIDocName}"> </script>
 	</body>
 </html>
 `
@@ -41,11 +45,11 @@ func (s *Server) swaggerUI(r *Request) {
 		return
 	}
 	if r.StaticFile != nil && r.StaticFile.File != nil && r.StaticFile.IsDir {
-		r.Response.Write(gstr.Replace(
-			swaggerUITemplate,
-			swaggerUIDefaultURL,
-			s.config.OpenApiPath,
-		))
+		content := gstr.ReplaceByMap(swaggerUITemplate, map[string]string{
+			swaggerUIDocURLPlaceHolder:  s.config.OpenApiPath,
+			swaggerUIDocNamePlaceHolder: gstr.TrimRight(fmt.Sprintf(`//%s%s`, r.Host, r.Server.config.SwaggerPath), "/") + "/" + swaggerUIDocName,
+		})
+		r.Response.Write(content)
 		r.ExitAll()
 	}
 }

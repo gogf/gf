@@ -464,14 +464,14 @@ field3:
 		parsed := &Outer{}
 
 		err := yaml.Unmarshal(problemYaml, parsed)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		_, err = json.Marshal(parsed)
 		t.Assert(err.Error(), "json: unsupported type: map[interface {}]interface {}")
 
 		converted := gconv.MapDeep(parsed)
 		jsonData, err := json.Marshal(converted)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		t.Assert(string(jsonData), `{"field3":{"123":"integer_key"},"outer_struct":{"field1":{"inner1":123,"inner2":345},"field2":{"inner1":123,"inner2":345,"inner3":456,"inner4":789}}}`)
 	})

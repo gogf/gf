@@ -78,7 +78,7 @@ func Test_Router_DomainObjectRest(t *testing.T) {
 		if err == nil {
 			defer resp1.Close()
 		}
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(resp1.Header.Get("head-ok"), "")
 		t.Assert(client.GetContent(ctx, "/none-exist"), "Not Found")
 	})
@@ -96,7 +96,7 @@ func Test_Router_DomainObjectRest(t *testing.T) {
 		if err == nil {
 			defer resp1.Close()
 		}
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(resp1.Header.Get("head-ok"), "1")
 		t.Assert(client.GetContent(ctx, "/none-exist"), "Not Found")
 	})
@@ -114,7 +114,7 @@ func Test_Router_DomainObjectRest(t *testing.T) {
 		if err == nil {
 			defer resp1.Close()
 		}
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(resp1.Header.Get("head-ok"), "1")
 		t.Assert(client.GetContent(ctx, "/none-exist"), "Not Found")
 	})

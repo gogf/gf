@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -168,7 +167,7 @@ func Test_Middleware_With_Static(t *testing.T) {
 		})
 	})
 	s.SetDumpRouterMap(false)
-	s.SetServerRoot(gdebug.TestDataPath("static1"))
+	s.SetServerRoot(gtest.DataPath("static1"))
 	s.Start()
 	defer s.Shutdown()
 	time.Sleep(100 * time.Millisecond)
@@ -207,7 +206,7 @@ func Test_Middleware_Status(t *testing.T) {
 
 		resp, err := client.Get(ctx, "/")
 		defer resp.Close()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(resp.StatusCode, 404)
 	})
 }
@@ -236,7 +235,7 @@ func Test_Middleware_Hook_With_Static(t *testing.T) {
 		})
 	})
 	s.SetDumpRouterMap(false)
-	s.SetServerRoot(gdebug.TestDataPath("static1"))
+	s.SetServerRoot(gtest.DataPath("static1"))
 	s.Start()
 	defer s.Shutdown()
 	time.Sleep(100 * time.Millisecond)
@@ -583,7 +582,7 @@ func Test_Middleware_CORSAndAuth(t *testing.T) {
 		t.Assert(client.PostContent(ctx, "/api.v2/user/list", "token=123456"), "list")
 		// CORS Checks.
 		resp, err := client.Post(ctx, "/api.v2/user/list", "token=123456")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(resp.Header["Access-Control-Allow-Headers"]), 1)
 		t.Assert(resp.Header["Access-Control-Allow-Headers"][0], "Origin,Content-Type,Accept,User-Agent,Cookie,Authorization,X-Auth-Token,X-Requested-With")
 		t.Assert(resp.Header["Access-Control-Allow-Methods"][0], "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE")

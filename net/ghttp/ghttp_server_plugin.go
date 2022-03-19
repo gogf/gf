@@ -12,11 +12,11 @@ type Plugin interface {
 	Author() string          // Author returns the author of the plugin.
 	Version() string         // Version returns the version of the plugin, like "v1.0.0".
 	Description() string     // Description returns the description of the plugin.
-	Install(s *Server) error // Install installs the plugin before server starts.
+	Install(s *Server) error // Install installs the plugin before the server starts.
 	Remove() error           // Remove removes the plugin.
 }
 
-// Plugin adds plugin to server.
+// Plugin adds plugin to the server.
 func (s *Server) Plugin(plugin ...Plugin) {
 	s.plugins = append(s.plugins, plugin...)
 }

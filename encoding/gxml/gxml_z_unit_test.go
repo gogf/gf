@@ -112,7 +112,7 @@ func Test_Decode2(t *testing.T) {
 <?xml version="1.0" encoding="UTF-8"?><doc><username>johngcn</username><password1>123456</password1><password2>123456</password2></doc>
 `
 		m, err := gxml.Decode([]byte(content))
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(m["doc"].(map[string]interface{})["username"], "johngcn")
 		t.Assert(m["doc"].(map[string]interface{})["password1"], "123456")
 		t.Assert(m["doc"].(map[string]interface{})["password2"], "123456")
@@ -125,7 +125,7 @@ func Test_DecodeWitoutRoot(t *testing.T) {
 <?xml version="1.0" encoding="UTF-8"?><doc><username>johngcn</username><password1>123456</password1><password2>123456</password2></doc>
 `
 		m, err := gxml.DecodeWithoutRoot([]byte(content))
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(m["username"], "johngcn")
 		t.Assert(m["password1"], "123456")
 		t.Assert(m["password2"], "123456")

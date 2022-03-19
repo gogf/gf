@@ -21,10 +21,17 @@ type Cookie struct {
 	response *Response              // Belonged HTTP response.
 }
 
+// CookieOptions provides security config for cookies
+type CookieOptions struct {
+	SameSite http.SameSite // cookie SameSite property
+	Secure   bool          // cookie Secure property
+	HttpOnly bool          // cookie HttpOnly property
+}
+
 // cookieItem is the item stored in Cookie.
 type cookieItem struct {
 	*http.Cookie      // Underlying cookie items.
-	FromClient   bool // Mark this cookie received from client.
+	FromClient   bool // Mark this cookie received from the client.
 }
 
 // GetCookie creates or retrieves a cookie object with given request.
@@ -40,7 +47,7 @@ func GetCookie(r *Request) *Cookie {
 	}
 }
 
-// init does lazy initialization for cookie object.
+// init does lazy initialization for the cookie object.
 func (c *Cookie) init() {
 	if c.data != nil {
 		return
@@ -69,7 +76,7 @@ func (c *Cookie) Map() map[string]string {
 	return m
 }
 
-// Contains checks if given key exists and not expired in cookie.
+// Contains checks if given key exists and not expire in cookie.
 func (c *Cookie) Contains(key string) bool {
 	c.init()
 	if r, ok := c.data[key]; ok {
@@ -88,24 +95,31 @@ func (c *Cookie) Set(key, value string) {
 		c.request.Server.GetCookieDomain(),
 		c.request.Server.GetCookiePath(),
 		c.request.Server.GetCookieMaxAge(),
+		CookieOptions{
+			SameSite: c.request.Server.GetCookieSameSite(),
+			Secure:   c.request.Server.GetCookieSecure(),
+			HttpOnly: c.request.Server.GetCookieHttpOnly(),
+		},
 	)
 }
 
 // SetCookie sets cookie item with given domain, path and expiration age.
-// The optional parameter `httpOnly` specifies if the cookie item is only available in HTTP,
+// The optional parameter `options` specifies extra security configurations,
 // which is usually empty.
-func (c *Cookie) SetCookie(key, value, domain, path string, maxAge time.Duration, httpOnly ...bool) {
+func (c *Cookie) SetCookie(key, value, domain, path string, maxAge time.Duration, options ...CookieOptions) {
 	c.init()
-	isHttpOnly := false
-	if len(httpOnly) > 0 {
-		isHttpOnly = httpOnly[0]
+	config := CookieOptions{}
+	if len(options) > 0 {
+		config = options[0]
 	}
 	httpCookie := &http.Cookie{
 		Name:     key,
 		Value:    value,
 		Path:     path,
 		Domain:   domain,
-		HttpOnly: isHttpOnly,
+		HttpOnly: config.HttpOnly,
+		SameSite: config.SameSite,
+		Secure:   config.Secure,
 	}
 	if maxAge != 0 {
 		httpCookie.Expires = time.Now().Add(maxAge)
@@ -136,6 +150,11 @@ func (c *Cookie) SetSessionId(id string) {
 		c.request.Server.GetCookieDomain(),
 		c.request.Server.GetCookiePath(),
 		c.server.GetSessionCookieMaxAge(),
+		CookieOptions{
+			SameSite: c.request.Server.GetCookieSameSite(),
+			Secure:   c.request.Server.GetCookieSecure(),
+			HttpOnly: c.request.Server.GetCookieHttpOnly(),
+		},
 	)
 }
 
@@ -172,7 +191,7 @@ func (c *Cookie) RemoveCookie(key, domain, path string) {
 	c.SetCookie(key, "", domain, path, -24*time.Hour)
 }
 
-// Flush outputs the cookie items to client.
+// Flush outputs the cookie items to the client.
 func (c *Cookie) Flush() {
 	if len(c.data) == 0 {
 		return

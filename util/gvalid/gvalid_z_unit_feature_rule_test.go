@@ -670,7 +670,7 @@ func Test_Domain(t *testing.T) {
 			err = g.Validator().Data(k).Rules("domain").Run(ctx)
 			if v {
 				// fmt.Println(k)
-				t.Assert(err, nil)
+				t.AssertNil(err)
 			} else {
 				// fmt.Println(k)
 				t.AssertNE(err, nil)

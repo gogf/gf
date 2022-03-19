@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -294,7 +294,7 @@ func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 // users := ([]*User)(nil)
 // err   := db.Model("user").Scan(&users).
 func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
-	reflectInfo := utils.OriginTypeAndKind(pointer)
+	reflectInfo := reflection.OriginTypeAndKind(pointer)
 	if reflectInfo.InputKind != reflect.Ptr {
 		return gerror.NewCode(
 			gcode.CodeInvalidParameter,
@@ -532,22 +532,34 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 			}
 		}
 	}
-	result, err = m.db.DoGetAll(
-		m.GetCtx(), m.getLink(false), sql, m.mergeArguments(args)...,
-	)
+
+	in := &HookSelectInput{
+		internalParamHookSelect: internalParamHookSelect{
+			internalParamHook: internalParamHook{
+				db:   m.db,
+				link: m.getLink(false),
+			},
+			handler: m.hook.Select,
+		},
+		Table: m.tables,
+		Sql:   sql,
+		Args:  m.mergeArguments(args),
+	}
+	result, err = in.Next(m.GetCtx())
+
 	// Cache the result.
 	if cacheKey != "" && err == nil {
 		if m.cacheOption.Duration < 0 {
-			if _, err = cacheObj.Remove(ctx, cacheKey); err != nil {
-				intlog.Errorf(m.GetCtx(), `%+v`, err)
+			if _, errCache := cacheObj.Remove(ctx, cacheKey); errCache != nil {
+				intlog.Errorf(m.GetCtx(), `%+v`, errCache)
 			}
 		} else {
 			// In case of Cache Penetration.
 			if result.IsEmpty() && m.cacheOption.Force {
 				result = Result{}
 			}
-			if err = cacheObj.Set(ctx, cacheKey, result, m.cacheOption.Duration); err != nil {
-				intlog.Errorf(m.GetCtx(), `%+v`, err)
+			if errCache := cacheObj.Set(ctx, cacheKey, result, m.cacheOption.Duration); errCache != nil {
+				intlog.Errorf(m.GetCtx(), `%+v`, errCache)
 			}
 		}
 	}
