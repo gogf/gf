@@ -31,7 +31,7 @@ type CookieOptions struct {
 // cookieItem is the item stored in Cookie.
 type cookieItem struct {
 	*http.Cookie      // Underlying cookie items.
-	FromClient   bool // Mark this cookie received from client.
+	FromClient   bool // Mark this cookie received from the client.
 }
 
 // GetCookie creates or retrieves a cookie object with given request.
@@ -47,7 +47,7 @@ func GetCookie(r *Request) *Cookie {
 	}
 }
 
-// init does lazy initialization for cookie object.
+// init does lazy initialization for the cookie object.
 func (c *Cookie) init() {
 	if c.data != nil {
 		return
@@ -76,7 +76,7 @@ func (c *Cookie) Map() map[string]string {
 	return m
 }
 
-// Contains checks if given key exists and not expired in cookie.
+// Contains checks if given key exists and not expire in cookie.
 func (c *Cookie) Contains(key string) bool {
 	c.init()
 	if r, ok := c.data[key]; ok {
@@ -191,7 +191,7 @@ func (c *Cookie) RemoveCookie(key, domain, path string) {
 	c.SetCookie(key, "", domain, path, -24*time.Hour)
 }
 
-// Flush outputs the cookie items to client.
+// Flush outputs the cookie items to the client.
 func (c *Cookie) Flush() {
 	if len(c.data) == 0 {
 		return
