@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/encoding/gbase64"
 )
 
-// BasicAuth enables the http basic authentication feature with given passport and password
+// BasicAuth enables the http basic authentication feature with a given passport and password
 // and asks client for authentication. It returns true if authentication success, else returns
 // false if failure.
 func (r *Request) BasicAuth(user, pass string, tips ...string) bool {

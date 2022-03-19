@@ -17,10 +17,10 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-// BindObject registers object to server routes with given pattern.
+// BindObject registers object to server routes with a given pattern.
 //
 // The optional parameter `method` is used to specify the method to be registered, which
-// supports multiple method names, multiple methods are separated by char ',', case-sensitive.
+// supports multiple method names; multiple methods are separated by char ',', case-sensitive.
 func (s *Server) BindObject(pattern string, object interface{}, method ...string) {
 	var (
 		bindMethod = ""
@@ -38,10 +38,10 @@ func (s *Server) BindObject(pattern string, object interface{}, method ...string
 	})
 }
 
-// BindObjectMethod registers specified method of object to server routes with given pattern.
+// BindObjectMethod registers specified method of the object to server routes with a given pattern.
 //
 // The optional parameter `method` is used to specify the method to be registered, which
-// does not supports multiple method names but only one, case-sensitive.
+// does not support multiple method names but only one, case-sensitive.
 func (s *Server) BindObjectMethod(pattern string, object interface{}, method string) {
 	s.doBindObjectMethod(context.TODO(), doBindObjectMethodInput{
 		Prefix:     "",
@@ -53,7 +53,7 @@ func (s *Server) BindObjectMethod(pattern string, object interface{}, method str
 	})
 }
 
-// BindObjectRest registers object in REST API styles to server with specified pattern.
+// BindObjectRest registers object in REST API styles to server with a specified pattern.
 func (s *Server) BindObjectRest(pattern string, object interface{}) {
 	s.doBindObjectRest(context.TODO(), doBindObjectInput{
 		Prefix:     "",
