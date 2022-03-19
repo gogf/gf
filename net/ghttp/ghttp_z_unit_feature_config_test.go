@@ -8,6 +8,7 @@ package ghttp_test
 
 import (
 	"fmt"
+	"net"
 	"testing"
 	"time"
 
@@ -23,8 +24,13 @@ import (
 
 func Test_ConfigFromMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
+		ln, err := net.Listen("tcp", ":8199")
+		t.AssertNil(err)
+		listeners := map[int]net.Listener{8199: ln}
+
 		m := g.Map{
 			"address":         ":8199",
+			"listeners":       listeners,
 			"readTimeout":     "60s",
 			"indexFiles":      g.Slice{"index.php", "main.php"},
 			"errorLogEnabled": true,
@@ -38,6 +44,7 @@ func Test_ConfigFromMap(t *testing.T) {
 		d1, _ := time.ParseDuration(gconv.String(m["readTimeout"]))
 		d2, _ := time.ParseDuration(gconv.String(m["cookieMaxAge"]))
 		t.Assert(config.Address, m["address"])
+		t.Assert(config.Listeners, listeners)
 		t.Assert(config.ReadTimeout, d1)
 		t.Assert(config.CookieMaxAge, d2)
 		t.Assert(config.IndexFiles, m["indexFiles"])
