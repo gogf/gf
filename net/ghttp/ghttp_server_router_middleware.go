@@ -65,7 +65,7 @@ func (s *Server) BindMiddlewareDefault(handlers ...HandlerFunc) {
 	}
 }
 
-// Use is alias of BindMiddlewareDefault.
+// Use is the alias of BindMiddlewareDefault.
 // See BindMiddlewareDefault.
 func (s *Server) Use(handlers ...HandlerFunc) {
 	s.BindMiddlewareDefault(handlers...)

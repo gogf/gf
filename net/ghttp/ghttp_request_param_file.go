@@ -27,7 +27,7 @@ type UploadFile struct {
 	ctx                   context.Context
 }
 
-// UploadFiles is array type for *UploadFile.
+// UploadFiles is an array type of *UploadFile.
 type UploadFiles []*UploadFile
 
 // Save saves the single uploading file to directory path and returns the saved file name.

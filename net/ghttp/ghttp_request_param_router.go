@@ -8,7 +8,7 @@ package ghttp
 
 import "github.com/gogf/gf/v2/container/gvar"
 
-// GetRouterMap retrieves and returns a copy of router map.
+// GetRouterMap retrieves and returns a copy of the router map.
 func (r *Request) GetRouterMap() map[string]string {
 	if r.routerMap != nil {
 		m := make(map[string]string, len(r.routerMap))
