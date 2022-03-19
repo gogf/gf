@@ -44,27 +44,28 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	}
 	var (
 		updateData                                    = m.data
+		reflectInfo                                   = reflection.OriginTypeAndKind(updateData)
 		fieldNameUpdate                               = m.getSoftFieldNameUpdated()
 		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false, false)
 	)
-	// Automatically update the record updating time.
-	if !m.unscoped && fieldNameUpdate != "" {
-		reflectInfo := reflection.OriginTypeAndKind(m.data)
-		switch reflectInfo.OriginKind {
-		case reflect.Map, reflect.Struct:
-			dataMap := m.db.ConvertDataForRecord(m.GetCtx(), m.data)
-			if fieldNameUpdate != "" {
-				dataMap[fieldNameUpdate] = gtime.Now().String()
-			}
-			updateData = dataMap
+	switch reflectInfo.OriginKind {
+	case reflect.Map, reflect.Struct:
+		dataMap := m.db.ConvertDataForRecord(m.GetCtx(), m.data)
+		// Automatically update the record updating time.
+		if !m.unscoped && fieldNameUpdate != "" {
+			dataMap[fieldNameUpdate] = gtime.Now().String()
+		}
+		updateData = dataMap
 
-		default:
-			updates := gconv.String(m.data)
+	default:
+		updates := gconv.String(m.data)
+		// Automatically update the record updating time.
+		if !m.unscoped && fieldNameUpdate != "" {
 			if fieldNameUpdate != "" && !gstr.Contains(updates, fieldNameUpdate) {
 				updates += fmt.Sprintf(`,%s='%s'`, fieldNameUpdate, gtime.Now().String())
 			}
-			updateData = updates
 		}
+		updateData = updates
 	}
 	newData, err := m.filterDataForInsertOrUpdate(updateData)
 	if err != nil {
