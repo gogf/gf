@@ -51,8 +51,9 @@ type ServerConfig struct {
 	// HTTPSAddr specifies the HTTPS addresses, multiple addresses joined using char ','.
 	HTTPSAddr string `json:"httpsAddr"`
 
-	// Listeners specifies custom listeners, size should match address provided
-	Listeners map[string]net.Listener `json:"listeners"`
+	// Listeners specifies the custom listeners.
+	// Listeners is a map, the key of map must specify the port of Address or HTTPSAddr.
+	Listeners map[int]net.Listener `json:"listeners"`
 
 	// HTTPSCertPath specifies certification file path for HTTPS service.
 	HTTPSCertPath string `json:"httpsCertPath"`
@@ -258,6 +259,7 @@ func NewConfig() ServerConfig {
 		Name:                DefaultServerName,
 		Address:             ":0",
 		HTTPSAddr:           "",
+		Listeners:           nil,
 		Handler:             nil,
 		ReadTimeout:         60 * time.Second,
 		WriteTimeout:        0, // No timeout.
@@ -412,8 +414,25 @@ func (s *Server) SetHTTPSPort(port ...int) {
 	}
 }
 
-func (s *Server) SetListener(ln map[string]net.Listener) {
-	s.config.Listeners = ln
+// SetListeners set the custom listener for the server.
+// The key of map should specify the port like: SetListeners(map[int]net.Listener{80: ln}).
+// If no port found, the listener will be ignored.
+// If the listener's port not match the port provided in map, the listener will be ignored.
+func (s *Server) SetListeners(listeners map[int]net.Listener) {
+	for k, v := range listeners {
+		addrArray := gstr.SplitAndTrim(v.Addr().String(), ":")
+		port, err := strconv.Atoi(addrArray[len(addrArray)-1])
+		if err != nil {
+			intlog.Printf(context.TODO(), `ignore the listener with port %d`, k)
+			delete(listeners, k)
+			continue
+		}
+		if port != k {
+			intlog.Printf(context.TODO(), `ignore the listener with port %d`, k)
+			delete(listeners, k)
+		}
+	}
+	s.config.Listeners = listeners
 }
 
 // EnableHTTPS enables HTTPS with given certification and key files for the server.

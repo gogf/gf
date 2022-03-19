@@ -10,7 +10,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"net"
 	"net/http"
 	"os"
 	"runtime"
@@ -503,14 +502,10 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 					fd = gconv.Int(addrAndFd[1])
 				}
 			}
-			var ln net.Listener
-			if s.config.Listeners != nil {
-				ln = s.config.Listeners[v]
-			}
 			if fd > 0 {
-				s.servers = append(s.servers, s.newGracefulServer(itemFunc, ln, fd))
+				s.servers = append(s.servers, s.newGracefulServer(itemFunc, fd))
 			} else {
-				s.servers = append(s.servers, s.newGracefulServer(itemFunc, ln))
+				s.servers = append(s.servers, s.newGracefulServer(itemFunc))
 			}
 			s.servers[len(s.servers)-1].isHttps = true
 		}
@@ -542,14 +537,10 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 				fd = gconv.Int(addrAndFd[1])
 			}
 		}
-		var ln net.Listener
-		if s.config.Listeners != nil {
-			ln = s.config.Listeners[v]
-		}
 		if fd > 0 {
-			s.servers = append(s.servers, s.newGracefulServer(itemFunc, ln, fd))
+			s.servers = append(s.servers, s.newGracefulServer(itemFunc, fd))
 		} else {
-			s.servers = append(s.servers, s.newGracefulServer(itemFunc, ln))
+			s.servers = append(s.servers, s.newGracefulServer(itemFunc))
 		}
 	}
 	// Start listening asynchronously.

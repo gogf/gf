@@ -13,6 +13,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"sync"
 
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -36,19 +37,25 @@ type gracefulServer struct {
 
 // newGracefulServer creates and returns a graceful http server with given address.
 // The optional parameter `fd` specifies the file descriptor which is passed from parent server.
-func (s *Server) newGracefulServer(address string, ln net.Listener, fd ...int) *gracefulServer {
+func (s *Server) newGracefulServer(address string, fd ...int) *gracefulServer {
 	// Change port to address like: 80 -> :80
 	if gstr.IsNumeric(address) {
 		address = ":" + address
 	}
 	gs := &gracefulServer{
-		server:      s,
-		address:     address,
-		httpServer:  s.newHttpServer(address),
-		rawListener: ln,
+		server:     s,
+		address:    address,
+		httpServer: s.newHttpServer(address),
 	}
 	if len(fd) > 0 && fd[0] > 0 {
 		gs.fd = uintptr(fd[0])
+	}
+	if s.config.Listeners != nil {
+		addrArray := gstr.SplitAndTrim(address, ":")
+		port, err := strconv.Atoi(addrArray[len(addrArray)-1])
+		if err == nil {
+			gs.rawListener = s.config.Listeners[port]
+		}
 	}
 	return gs
 }
