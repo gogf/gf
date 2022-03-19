@@ -28,10 +28,10 @@ import (
 const (
 	defaultHttpAddr  = ":80"  // Default listening port for HTTP.
 	defaultHttpsAddr = ":443" // Default listening port for HTTPS.
-	UriTypeDefault   = 0      // Method names to URI converting type, which converts name to its lower case and joins the words using char '-'.
-	UriTypeFullName  = 1      // Method names to URI converting type, which does no converting to the method name.
-	UriTypeAllLower  = 2      // Method names to URI converting type, which converts name to its lower case.
-	UriTypeCamel     = 3      // Method names to URI converting type, which converts name to its camel case.
+	UriTypeDefault   = 0      // Method names to the URI converting type, which converts name to its lower case and joins the words using char '-'.
+	UriTypeFullName  = 1      // Method names to the URI converting type, which does not convert to the method name.
+	UriTypeAllLower  = 2      // Method names to the URI converting type, which converts name to its lower case.
+	UriTypeCamel     = 3      // Method names to the URI converting type, which converts name to its camel case.
 )
 
 // ServerConfig is the HTTP Server configuration manager.

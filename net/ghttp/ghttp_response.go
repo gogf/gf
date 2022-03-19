@@ -96,7 +96,7 @@ func (r *Response) ServeFileDownload(path string, name ...string) {
 	r.Server.serveFile(r.Request, serveFile)
 }
 
-// RedirectTo redirects client to another location.
+// RedirectTo redirects the client to another location.
 // The optional parameter `code` specifies the http status code for redirecting,
 // which commonly can be 301 or 302. It's 302 in default.
 func (r *Response) RedirectTo(location string, code ...int) {
@@ -109,7 +109,7 @@ func (r *Response) RedirectTo(location string, code ...int) {
 	r.Request.Exit()
 }
 
-// RedirectBack redirects client back to referer.
+// RedirectBack redirects the client back to referer.
 // The optional parameter `code` specifies the http status code for redirecting,
 // which commonly can be 301 or 302. It's 302 in default.
 func (r *Response) RedirectBack(code ...int) {
