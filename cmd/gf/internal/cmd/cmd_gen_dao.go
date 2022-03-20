@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/olekukonko/tablewriter"
+
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
@@ -17,12 +19,11 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gtag"
-	"github.com/olekukonko/tablewriter"
 
 	_ "github.com/gogf/gf/contrib/drivers/mssql/v2"
 	_ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
 	_ "github.com/gogf/gf/contrib/drivers/sqlite/v2"
-	//_ "github.com/gogf/gf/contrib/drivers/oracle/v2"
+	// _ "github.com/gogf/gf/contrib/drivers/oracle/v2"
 )
 
 const (
@@ -159,7 +160,7 @@ type (
 		cGenDaoInput
 		TableName    string // TableName specifies the table name of the table.
 		NewTableName string // NewTableName specifies the prefix-stripped name of the table.
-		ModName      string // ModName specifies the module name of current golang project, which is used for import purpose.
+		ModName      string // ModName specifies the module name of the current golang project, which is used for import purpose.
 	}
 )
 
@@ -180,7 +181,7 @@ func (c cGen) Dao(ctx context.Context, in cGenDaoInput) (out *cGenDaoOutput, err
 	return
 }
 
-// doGenDaoForArray implements the "gen dao" command for configuration array.
+// doGenDaoForArray implements the "gen dao" command for the configuration array.
 func doGenDaoForArray(ctx context.Context, index int, in cGenDaoInput) {
 	var (
 		err     error

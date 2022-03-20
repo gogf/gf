@@ -10,6 +10,7 @@ package gdb
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -19,6 +20,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gcache"
+	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/glog"
@@ -256,7 +258,7 @@ type TableField struct {
 	Comment string      // Field comment.
 }
 
-// Counter  is the type for update count.
+// Counter is the type for update count.
 type Counter struct {
 	Field string
 	Value float64
@@ -265,15 +267,15 @@ type Counter struct {
 type (
 	Raw    string                   // Raw is a raw sql that will not be treated as argument but as a direct sql part.
 	Value  = *gvar.Var              // Value is the field value type.
-	Record map[string]Value         // Record is the row record of the table.
-	Result []Record                 // Result is the row record array.
-	Map    = map[string]interface{} // Map is alias of map[string]interface{}, which is the most common usage map type.
-	List   = []Map                  // List is type of map array.
+	Record map[string]Value         // The Record is the row record of the table.
+	Result []Record                 // The result is the row record array.
+	Map    = map[string]interface{} // Map is the alias of map[string]interface{}, which is the most common usage map type.
+	List   = []Map                  // The list is a type of map array.
 )
 
 const (
 	defaultModelSafe        = false
-	defaultCharset          = `utf8`
+	defaultCharset          = `utf8mb4`
 	queryTypeNormal         = 0
 	queryTypeCount          = 1
 	unionTypeNormal         = 0
@@ -289,6 +291,8 @@ const (
 	modelForDaoSuffix                  = `ForDao`
 	dbRoleSlave                        = `slave`
 	contextKeyForDB        gctx.StrKey = `DBInContext`
+	configNodeKey                      = "database"
+	configNodeNameLogger               = "logger"
 )
 
 const (
@@ -381,16 +385,14 @@ func NewByGroup(group ...string) (db DB, err error) {
 		var node *ConfigNode
 		if node, err = getConfigNodeByGroup(groupName, true); err == nil {
 			return doNewByNode(*node, groupName)
-		} else {
-			return nil, err
 		}
-	} else {
-		return nil, gerror.NewCodef(
-			gcode.CodeInvalidConfiguration,
-			`database configuration node "%s" is not found, did you misspell group name "%s" or miss the database configuration?`,
-			groupName, groupName,
-		)
+		return nil, err
 	}
+	return nil, gerror.NewCodef(
+		gcode.CodeInvalidConfiguration,
+		`database configuration node "%s" is not found, did you misspell group name "%s" or miss the database configuration?`,
+		groupName, groupName,
+	)
 }
 
 // doNewByNode creates and returns an ORM object with given configuration node and group name.
@@ -426,6 +428,28 @@ func Instance(name ...string) (db DB, err error) {
 	}
 	v := instances.GetOrSetFuncLock(group, func() interface{} {
 		db, err = NewByGroup(group)
+		if err == nil {
+			// Initialize logger for ORM.
+			var (
+				loggerConfigMap map[string]interface{}
+				loggerNodeName  = fmt.Sprintf("%s.%s", configNodeKey, configNodeNameLogger)
+				ctx             = context.TODO()
+			)
+
+			if v, _ := gcfg.Instance().Get(ctx, loggerNodeName); !v.IsEmpty() {
+				loggerConfigMap = v.Map()
+			}
+			if len(loggerConfigMap) == 0 {
+				if v, _ := gcfg.Instance().Get(ctx, configNodeKey); !v.IsEmpty() {
+					loggerConfigMap = v.Map()
+				}
+			}
+			if len(loggerConfigMap) > 0 {
+				if err = db.GetLogger().SetConfigWithMap(loggerConfigMap); err != nil {
+					return db
+				}
+			}
+		}
 		return db
 	})
 	if v != nil {
@@ -464,16 +488,14 @@ func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 		}
 		if master {
 			return getConfigNodeByWeight(masterList), nil
-		} else {
-			return getConfigNodeByWeight(slaveList), nil
 		}
-	} else {
-		return nil, gerror.NewCodef(
-			gcode.CodeInvalidConfiguration,
-			"empty database configuration for item name '%s'",
-			group,
-		)
+		return getConfigNodeByWeight(slaveList), nil
 	}
+	return nil, gerror.NewCodef(
+		gcode.CodeInvalidConfiguration,
+		"empty database configuration for item name '%s'",
+		group,
+	)
 }
 
 // getConfigNodeByWeight calculates the configuration weights and randomly returns a node.
@@ -509,9 +531,8 @@ func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 		// fmt.Printf("r: %d, min: %d, max: %d\n", r, min, max)
 		if random >= min && random < max {
 			return &cg[i]
-		} else {
-			min = max
 		}
+		min = max
 	}
 	return nil
 }

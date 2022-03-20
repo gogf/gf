@@ -700,7 +700,7 @@ func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []interface{}) {
 }
 
 // handleArguments is an important function, which handles the sql and all its arguments
-// before committing them to underlying driver.
+// before committing them to underlying drivers.
 func handleArguments(sql string, args []interface{}) (newSql string, newArgs []interface{}) {
 	newSql = sql
 	// insertHolderCount is used to calculate the inserting position for the '?' holder.
@@ -743,7 +743,7 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 				if len(args) == 1 && gstr.Count(newSql, "?") == reflectInfo.OriginValue.Len() {
 					break
 				}
-				// counter is used to finding the inserting position for the '?' holder.
+				// the counter is used to finding the inserting position for the '?' holder.
 				var (
 					counter  = 0
 					replaced = false
@@ -772,8 +772,8 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 				// Special handling for gtime.Time/*gtime.Time.
 				//
 				// DO NOT use its underlying gtime.Time.Time as its argument,
-				// because the std time.Time will be converted to certain timezone
-				// according to underlying driver. And the underlying driver also
+				// because the std time.Time will be converted to a certain timezone according to the
+				// underlying driver. And the underlying driver also
 				// converts the time.Time to string automatically as the following does.
 				case gtime.Time:
 					newArgs = append(newArgs, v.String())

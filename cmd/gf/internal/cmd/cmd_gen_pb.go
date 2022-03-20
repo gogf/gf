@@ -63,8 +63,8 @@ func (c cGen) Pb(ctx context.Context, in cGenPbInput) (out *cGenPbOutput, err er
 		return true
 	})
 	// Custom replacement.
-	//pbFolder := "protobuf"
-	//_, _ = gfile.ScanDirFileFunc(pbFolder, "*.go", true, func(path string) string {
+	// pbFolder := "protobuf"
+	// _, _ = gfile.ScanDirFileFunc(pbFolder, "*.go", true, func(path string) string {
 	//	content := gfile.GetContents(path)
 	//	content = gstr.ReplaceByArray(content, g.SliceStr{
 	//		`gtime "gtime"`, `gtime "github.com/gogf/gf/v2/os/gtime"`,
@@ -72,7 +72,7 @@ func (c cGen) Pb(ctx context.Context, in cGenPbInput) (out *cGenPbOutput, err er
 	//	_ = gfile.PutContents(path, content)
 	//	utils.GoFmt(path)
 	//	return path
-	//})
+	// })
 	mlog.Print("done!")
 	return
 }
