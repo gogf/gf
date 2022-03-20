@@ -262,12 +262,6 @@ func (s *Server) getListenAddress() string {
 	} else {
 		port = gconv.Int(array[0])
 	}
-	if s.config.Listeners != nil {
-		for _, v := range s.config.Listeners {
-			portArray := gstr.SplitAndTrim(v.Addr().String(), ":")
-			port = gconv.Int(portArray[len(portArray)-1])
-		}
-	}
 	return fmt.Sprintf(`http://%s:%d`, host, port)
 }
 
