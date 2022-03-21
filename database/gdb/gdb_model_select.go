@@ -536,8 +536,8 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 	in := &HookSelectInput{
 		internalParamHookSelect: internalParamHookSelect{
 			internalParamHook: internalParamHook{
-				db:   m.db,
-				link: m.getLink(false),
+				link:  m.getLink(false),
+				model: m,
 			},
 			handler: m.hookHandler.Select,
 		},

@@ -266,6 +266,7 @@ func (m *Model) Clone() *Model {
 	} else {
 		newModel = m.db.Model(m.tablesInit)
 	}
+	// Basic attributes copy.
 	*newModel = *m
 	// Shallow copy slice attributes.
 	if n := len(m.extraArgs); n > 0 {

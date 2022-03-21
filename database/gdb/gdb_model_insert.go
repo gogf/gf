@@ -314,8 +314,8 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 	in := &HookInsertInput{
 		internalParamHookInsert: internalParamHookInsert{
 			internalParamHook: internalParamHook{
-				db:   m.db,
-				link: m.getLink(true),
+				link:  m.getLink(true),
+				model: m,
 			},
 			handler: m.hookHandler.Insert,
 		},
