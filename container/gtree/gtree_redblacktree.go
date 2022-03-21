@@ -623,6 +623,9 @@ func (tree *RedBlackTree) Replace(data map[interface{}]interface{}) {
 
 // String returns a string representation of container.
 func (tree *RedBlackTree) String() string {
+	if tree == nil {
+		return ""
+	}
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	str := ""

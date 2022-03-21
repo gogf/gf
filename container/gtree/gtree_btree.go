@@ -367,6 +367,9 @@ func (tree *BTree) Right() *BTreeEntry {
 
 // String returns a string representation of container (for debugging purposes)
 func (tree *BTree) String() string {
+	if tree == nil {
+		return ""
+	}
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	var buffer bytes.Buffer

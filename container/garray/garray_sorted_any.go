@@ -653,6 +653,9 @@ func (a *SortedArray) IteratorDesc(f func(k int, v interface{}) bool) {
 
 // String returns current array as a string, which implements like json.Marshal does.
 func (a *SortedArray) String() string {
+	if a == nil {
+		return ""
+	}
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	buffer := bytes.NewBuffer(nil)
