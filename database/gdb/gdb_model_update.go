@@ -82,7 +82,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 				db:   m.db,
 				link: m.getLink(true),
 			},
-			handler: m.hook.Update,
+			handler: m.hookHandler.Update,
 		},
 		Table:     m.tables,
 		Data:      newData,

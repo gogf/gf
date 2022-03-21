@@ -539,7 +539,7 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 				db:   m.db,
 				link: m.getLink(false),
 			},
-			handler: m.hook.Select,
+			handler: m.hookHandler.Select,
 		},
 		Table: m.tables,
 		Sql:   sql,
