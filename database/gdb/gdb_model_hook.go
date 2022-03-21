@@ -31,10 +31,10 @@ type HookHandler struct {
 // internalParamHook manages all internal parameters for hook operations.
 // The `internal` obviously means you cannot access these parameters outside this package.
 type internalParamHook struct {
-	db            DB   // Underlying DB object.
-	link          Link // Connection object from third party sql driver.
-	handlerCalled bool // Simple mark for custom handler called, in case of recursive calling.
-	removedWhere  bool // Removed mark for condition string that was removed `WHERE` prefix.
+	link          Link   // Connection object from third party sql driver.
+	model         *Model // Underlying Model object.
+	handlerCalled bool   // Simple mark for custom handler called, in case of recursive calling.
+	removedWhere  bool   // Removed mark for condition string that was removed `WHERE` prefix.
 }
 
 type internalParamHookSelect struct {
@@ -90,13 +90,22 @@ type HookDeleteInput struct {
 	Args      []interface{}
 }
 
+const (
+	whereKeyInCondition = " WHERE "
+)
+
+// IsTransaction checks and returns whether current operation is during transaction.
+func (h *internalParamHook) IsTransaction() bool {
+	return h.link.IsTransaction()
+}
+
 // Next calls the next hook handler.
 func (h *HookSelectInput) Next(ctx context.Context) (result Result, err error) {
 	if h.handler != nil && !h.handlerCalled {
 		h.handlerCalled = true
 		return h.handler(ctx, h)
 	}
-	return h.db.DoSelect(ctx, h.link, h.Sql, h.Args...)
+	return h.model.db.DoSelect(ctx, h.link, h.Sql, h.Args...)
 }
 
 // Next calls the next hook handler.
@@ -105,39 +114,39 @@ func (h *HookInsertInput) Next(ctx context.Context) (result sql.Result, err erro
 		h.handlerCalled = true
 		return h.handler(ctx, h)
 	}
-	return h.db.DoInsert(ctx, h.link, h.Table, h.Data, h.Option)
+	return h.model.db.DoInsert(ctx, h.link, h.Table, h.Data, h.Option)
 }
 
 // Next calls the next hook handler.
 func (h *HookUpdateInput) Next(ctx context.Context) (result sql.Result, err error) {
 	if h.handler != nil && !h.handlerCalled {
 		h.handlerCalled = true
-		if gstr.HasPrefix(h.Condition, " WHERE ") {
+		if gstr.HasPrefix(h.Condition, whereKeyInCondition) {
 			h.removedWhere = true
-			h.Condition = gstr.TrimLeftStr(h.Condition, " WHERE ")
+			h.Condition = gstr.TrimLeftStr(h.Condition, whereKeyInCondition)
 		}
 		return h.handler(ctx, h)
 	}
 	if h.removedWhere {
-		h.Condition = " WHERE " + h.Condition
+		h.Condition = whereKeyInCondition + h.Condition
 	}
-	return h.db.DoUpdate(ctx, h.link, h.Table, h.Data, h.Condition, h.Args...)
+	return h.model.db.DoUpdate(ctx, h.link, h.Table, h.Data, h.Condition, h.Args...)
 }
 
 // Next calls the next hook handler.
 func (h *HookDeleteInput) Next(ctx context.Context) (result sql.Result, err error) {
 	if h.handler != nil && !h.handlerCalled {
 		h.handlerCalled = true
-		if gstr.HasPrefix(h.Condition, " WHERE ") {
+		if gstr.HasPrefix(h.Condition, whereKeyInCondition) {
 			h.removedWhere = true
-			h.Condition = gstr.TrimLeftStr(h.Condition, " WHERE ")
+			h.Condition = gstr.TrimLeftStr(h.Condition, whereKeyInCondition)
 		}
 		return h.handler(ctx, h)
 	}
 	if h.removedWhere {
-		h.Condition = " WHERE " + h.Condition
+		h.Condition = whereKeyInCondition + h.Condition
 	}
-	return h.db.DoDelete(ctx, h.link, h.Table, h.Condition, h.Args...)
+	return h.model.db.DoDelete(ctx, h.link, h.Table, h.Condition, h.Args...)
 }
 
 // Hook sets the hook functions for current model.

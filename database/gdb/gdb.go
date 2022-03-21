@@ -215,10 +215,12 @@ type Driver interface {
 }
 
 // Link is a common database function wrapper interface.
+// Note that, any operation using `Link` will have no SQL logging.
 type Link interface {
 	QueryContext(ctx context.Context, sql string, args ...interface{}) (*sql.Rows, error)
 	ExecContext(ctx context.Context, sql string, args ...interface{}) (sql.Result, error)
 	PrepareContext(ctx context.Context, sql string) (*sql.Stmt, error)
+	IsOnMaster() bool
 	IsTransaction() bool
 }
 

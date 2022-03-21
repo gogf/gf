@@ -129,6 +129,7 @@ func (c *Core) DoFilter(ctx context.Context, link Link, sql string, args []inter
 
 // DoCommit commits current sql and arguments to underlying sql driver.
 func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutput, err error) {
+
 	var (
 		sqlTx                *sql.Tx
 		sqlStmt              *sql.Stmt
@@ -137,9 +138,31 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 		stmtSqlRows          *sql.Rows
 		stmtSqlRow           *sql.Row
 		rowsAffected         int64
+		shardingOut          *callShardingHandlerFromCtxOutput
 		cancelFuncForTimeout context.CancelFunc
+		formattedSql         = FormatSqlWithArgs(in.Sql, in.Args)
 		timestampMilli1      = gtime.TimestampMilli()
 	)
+	shardingOut, err = c.callShardingHandlerFromCtx(ctx, callShardingHandlerFromCtxInput{
+		Sql:          in.Sql,
+		FormattedSql: formattedSql,
+	})
+	if err != nil {
+		return
+	}
+	// Sharding handling.
+	if shardingOut != nil {
+		if shardingOut.Sql != "" {
+			in.Sql = shardingOut.Sql
+		}
+		// If schema changes, it here creates and uses a new DB link operation object.
+		if shardingOut.Schema != c.db.GetSchema() {
+			in.Link, err = c.db.GetCore().GetLink(ctx, in.Link.IsOnMaster(), shardingOut.Schema)
+			if err != nil {
+				return
+			}
+		}
+	}
 
 	// Trace span start.
 	tr := otel.GetTracerProvider().Tracer(traceInstrumentName, trace.WithInstrumentationVersion(gf.VERSION))
@@ -232,7 +255,7 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 			Sql:           in.Sql,
 			Type:          in.Type,
 			Args:          in.Args,
-			Format:        FormatSqlWithArgs(in.Sql, in.Args),
+			Format:        formattedSql,
 			Error:         err,
 			Start:         timestampMilli1,
 			End:           timestampMilli2,

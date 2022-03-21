@@ -37,8 +37,8 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 		in := &HookUpdateInput{
 			internalParamHookUpdate: internalParamHookUpdate{
 				internalParamHook: internalParamHook{
-					db:   m.db,
-					link: m.getLink(true),
+					link:  m.getLink(true),
+					model: m,
 				},
 				handler: m.hookHandler.Update,
 			},
@@ -60,8 +60,8 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 	in := &HookDeleteInput{
 		internalParamHookDelete: internalParamHookDelete{
 			internalParamHook: internalParamHook{
-				db:   m.db,
-				link: m.getLink(true),
+				link:  m.getLink(true),
+				model: m,
 			},
 			handler: m.hookHandler.Delete,
 		},

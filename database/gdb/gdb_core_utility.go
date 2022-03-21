@@ -41,6 +41,27 @@ func DBFromCtx(ctx context.Context) DB {
 	return nil
 }
 
+// GetLink creates and returns the underlying database link object with transaction checks.
+// The parameter `master` specifies whether using the master node if master-slave configured.
+func (c *Core) GetLink(ctx context.Context, master bool, schema string) (Link, error) {
+	tx := TXFromCtx(ctx, c.db.GetGroup())
+	if tx != nil {
+		return &txLink{tx.tx}, nil
+	}
+	if master {
+		link, err := c.db.GetCore().MasterLink(schema)
+		if err != nil {
+			return nil, err
+		}
+		return link, nil
+	}
+	link, err := c.db.GetCore().SlaveLink(schema)
+	if err != nil {
+		return nil, err
+	}
+	return link, nil
+}
+
 // MasterLink acts like function Master but with additional `schema` parameter specifying
 // the schema for the connection. It is defined for internal usage.
 // Also see Master.
@@ -49,7 +70,10 @@ func (c *Core) MasterLink(schema ...string) (Link, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &dbLink{db}, nil
+	return &dbLink{
+		DB:         db,
+		isOnMaster: true,
+	}, nil
 }
 
 // SlaveLink acts like function Slave but with additional `schema` parameter specifying
@@ -60,7 +84,10 @@ func (c *Core) SlaveLink(schema ...string) (Link, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &dbLink{db}, nil
+	return &dbLink{
+		DB:         db,
+		isOnMaster: false,
+	}, nil
 }
 
 // QuoteWord checks given string `s` a word,

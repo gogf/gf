@@ -79,8 +79,8 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	in := &HookUpdateInput{
 		internalParamHookUpdate: internalParamHookUpdate{
 			internalParamHook: internalParamHook{
-				db:   m.db,
-				link: m.getLink(true),
+				link:  m.getLink(true),
+				model: m,
 			},
 			handler: m.hookHandler.Update,
 		},
