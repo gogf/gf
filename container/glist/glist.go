@@ -503,6 +503,9 @@ func (l *List) Join(glue string) string {
 
 // String returns current list as a string.
 func (l *List) String() string {
+	if l == nil {
+		return ""
+	}
 	return "[" + l.Join(",") + "]"
 }
 

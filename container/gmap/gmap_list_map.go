@@ -521,6 +521,9 @@ func (m *ListMap) Merge(other *ListMap) {
 
 // String returns the map as a string.
 func (m *ListMap) String() string {
+	if m == nil {
+		return ""
+	}
 	b, _ := m.MarshalJSON()
 	return string(b)
 }
