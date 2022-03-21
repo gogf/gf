@@ -317,7 +317,7 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 				db:   m.db,
 				link: m.getLink(true),
 			},
-			handler: m.hook.Insert,
+			handler: m.hookHandler.Insert,
 		},
 		Table:  m.tables,
 		Data:   list,
