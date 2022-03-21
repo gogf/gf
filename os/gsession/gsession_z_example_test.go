@@ -1,12 +1,19 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package gsession_test
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gredis"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gsession"
-	"time"
 )
 
 func ExampleNew() {
@@ -342,7 +349,7 @@ func ExampleStorageRedisHashTable_GetSession() {
 	fmt.Println(err)
 
 	// Output:
-	// <nil>
+	//
 	// redis adapter not initialized, missing configuration or adapter register?
 }
 
