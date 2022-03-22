@@ -420,11 +420,10 @@ func (s *Server) SetHTTPSPort(port ...int) {
 // SetListener set the custom listener for the server.
 // It will overwrite the address you specified before.
 func (s *Server) SetListener(l net.Listener) error {
-	addrArray := gstr.SplitAndTrim(l.Addr().String(), ":")
-	port, err := strconv.Atoi(addrArray[len(addrArray)-1])
-	if err != nil {
-		return err
+	if l == nil {
+		return gerror.NewCodef(gcode.CodeInvalidParameter, "listener is nil")
 	}
+	port := (l.Addr().(*net.TCPAddr)).Port
 	s.config.Address = fmt.Sprintf(":%d", port)
 	s.config.Listeners = map[int]net.Listener{port: l}
 	return nil
@@ -435,16 +434,12 @@ func (s *Server) SetListener(l net.Listener) error {
 // If the listener's port not match the port provided in map, the method will return error.
 func (s *Server) SetListeners(listeners map[int]net.Listener) error {
 	for k, v := range listeners {
-		addrArray := gstr.SplitAndTrim(v.Addr().String(), ":")
-		port, err := strconv.Atoi(addrArray[len(addrArray)-1])
-		if err != nil {
-			return err
-		}
-		if port != k {
+		portIndeed := (v.Addr().(*net.TCPAddr)).Port
+		if portIndeed != k {
 			return gerror.NewCodef(
 				gcode.CodeInvalidParameter,
-				"listener specified by port %d should listen at port %d, but got port: %d",
-				k, k, port,
+				"listener specified by port %d listen at port %d indeed",
+				k, portIndeed,
 			)
 		}
 	}
