@@ -16,6 +16,29 @@ import (
 	"github.com/gogf/gf/v2/net/ghttp"
 )
 
+func Test_SetCustomListener(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := g.Server()
+		s.Group("/", func(group *ghttp.RouterGroup) {
+			group.GET("/test", func(r *ghttp.Request) {
+				r.Response.Write("test")
+			})
+		})
+		ln, err := net.Listen("tcp", ":8199")
+		t.AssertNil(err)
+		err = s.SetListener(ln)
+		t.AssertNil(err)
+
+		s.Start()
+		defer s.Shutdown()
+
+		time.Sleep(100 * time.Millisecond)
+		s.GetListenedPort()
+
+		t.AssertEQ(s.GetListenedPort(), 8199)
+	})
+}
+
 func Test_SetRightCustomListeners(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server()
@@ -27,7 +50,10 @@ func Test_SetRightCustomListeners(t *testing.T) {
 		s.SetAddr(":8199")
 		ln, err := net.Listen("tcp", ":8199")
 		t.AssertNil(err)
-		s.SetListeners(map[int]net.Listener{8199: ln})
+		err = s.SetListeners(map[int]net.Listener{8299: ln})
+		t.AssertNE(err, nil)
+		err = s.SetListeners(map[int]net.Listener{8199: ln})
+		t.AssertNil(err)
 
 		s.Start()
 		defer s.Shutdown()
