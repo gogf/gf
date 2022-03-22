@@ -76,8 +76,8 @@ func Test_SetWrongCustomListeners(t *testing.T) {
 		s.SetAddr(":8199")
 		ln, err := net.Listen("tcp", ":8299")
 		t.AssertNil(err)
-		s.SetListeners(map[int]net.Listener{8199: ln})
-
+		err = s.SetListeners(map[int]net.Listener{8199: ln})
+		t.AssertNQ(err, nil)
 		s.Start()
 		defer s.Shutdown()
 
