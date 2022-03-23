@@ -32,7 +32,7 @@ const (
 	</head>
 	<body>
 		<redoc spec-url="{SwaggerUIDocUrl}"></redoc>
-		<script src="{SwaggerUIDocName}"> </script>
+		<script src="https://cdn.jsdelivr.net/npm/redoc@latest/bundles/redoc.standalone.js"> </script>
 	</body>
 </html>
 `
