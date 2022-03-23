@@ -58,11 +58,14 @@ type internalParamHookDelete struct {
 }
 
 // HookSelectInput holds the parameters for select hook operation.
+// Note that, COUNT statement will also be hooked by this feature,
+// which is usually not be interesting for upper business hook handler.
 type HookSelectInput struct {
 	internalParamHookSelect
-	Table string
-	Sql   string
-	Args  []interface{}
+	Table            string
+	Sql              string
+	Args             []interface{}
+	IsCountStatement bool // IsCountStatement marks this SELECT statement is COUNT statement.
 }
 
 // HookInsertInput holds the parameters for insert hook operation.

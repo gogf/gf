@@ -44,7 +44,7 @@ func (m *Model) doGetAll(limit1 bool, where ...interface{}) (Result, error) {
 		return m.Where(where[0], where[1:]...).All()
 	}
 	sqlWithHolder, holderArgs := m.getFormattedSqlAndArgs(queryTypeNormal, limit1)
-	return m.doGetAllBySql(sqlWithHolder, holderArgs...)
+	return m.doGetAllBySql(queryTypeNormal, sqlWithHolder, holderArgs...)
 }
 
 // getFieldsFiltered checks the fields and fieldsEx attributes, filters and returns the fields that will
@@ -367,7 +367,7 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 	}
 	var (
 		sqlWithHolder, holderArgs = m.getFormattedSqlAndArgs(queryTypeCount, false)
-		list, err                 = m.doGetAllBySql(sqlWithHolder, holderArgs...)
+		list, err                 = m.doGetAllBySql(queryTypeCount, sqlWithHolder, holderArgs...)
 	)
 	if err != nil {
 		return 0, err
@@ -502,7 +502,7 @@ func (m *Model) Having(having interface{}, args ...interface{}) *Model {
 }
 
 // doGetAllBySql does the select statement on the database.
-func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, err error) {
+func (m *Model) doGetAllBySql(queryType int, sql string, args ...interface{}) (result Result, err error) {
 	var (
 		ok       bool
 		ctx      = m.GetCtx()
@@ -541,9 +541,10 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 			},
 			handler: m.hookHandler.Select,
 		},
-		Table: m.tables,
-		Sql:   sql,
-		Args:  m.mergeArguments(args),
+		Table:            m.tables,
+		Sql:              sql,
+		Args:             m.mergeArguments(args),
+		IsCountStatement: queryType == queryTypeCount,
 	}
 	result, err = in.Next(m.GetCtx())
 
