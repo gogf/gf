@@ -34,9 +34,6 @@ type Path struct {
 	Parameters  Parameters `json:"parameters,omitempty"  yaml:"parameters,omitempty"`
 }
 
-// Paths are specified by OpenAPI/Swagger standard version 3.0.
-type Paths map[string]Path
-
 const (
 	responseOkKey = `200`
 )
@@ -49,10 +46,6 @@ type addPathInput struct {
 }
 
 func (oai *OpenApiV3) addPath(in addPathInput) error {
-	if oai.Paths == nil {
-		oai.Paths = map[string]Path{}
-	}
-
 	var (
 		reflectType = reflect.TypeOf(in.Function)
 	)
@@ -106,8 +99,8 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		)
 	}
 
-	if v, ok := oai.Paths[in.Path]; ok {
-		path = v
+	if v := oai.Paths.Get(in.Path); v != nil {
+		path = *v
 	}
 
 	// Method check.
@@ -280,7 +273,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	default:
 		return gerror.NewCodef(gcode.CodeInvalidParameter, `invalid method "%s"`, in.Method)
 	}
-	oai.Paths[in.Path] = path
+	oai.Paths.Set(in.Path, path)
 	return nil
 }
 

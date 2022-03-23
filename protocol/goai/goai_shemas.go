@@ -11,7 +11,7 @@ import (
 )
 
 type Schemas struct {
-	refs *gmap.ListMap
+	refs *gmap.ListMap // map[string]SchemaRef
 }
 
 func createSchemas() Schemas {
@@ -26,7 +26,7 @@ func (s *Schemas) init() {
 	}
 }
 
-func (s Schemas) Get(name string) *SchemaRef {
+func (s *Schemas) Get(name string) *SchemaRef {
 	s.init()
 	value := s.refs.Get(name)
 	if value != nil {
@@ -36,12 +36,12 @@ func (s Schemas) Get(name string) *SchemaRef {
 	return nil
 }
 
-func (s Schemas) Set(name string, ref SchemaRef) {
+func (s *Schemas) Set(name string, ref SchemaRef) {
 	s.init()
 	s.refs.Set(name, ref)
 }
 
-func (s Schemas) Map() map[string]SchemaRef {
+func (s *Schemas) Map() map[string]SchemaRef {
 	s.init()
 	m := make(map[string]SchemaRef)
 	s.refs.Iterator(func(key, value interface{}) bool {
@@ -51,7 +51,7 @@ func (s Schemas) Map() map[string]SchemaRef {
 	return m
 }
 
-func (s Schemas) Iterator(f func(key string, ref SchemaRef) bool) {
+func (s *Schemas) Iterator(f func(key string, ref SchemaRef) bool) {
 	s.init()
 	s.refs.Iterator(func(key, value interface{}) bool {
 		return f(key.(string), value.(SchemaRef))
