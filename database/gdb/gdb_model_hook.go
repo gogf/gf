@@ -39,7 +39,8 @@ type internalParamHook struct {
 
 type internalParamHookSelect struct {
 	internalParamHook
-	handler HookFuncSelect
+	handler   HookFuncSelect
+	queryType int
 }
 
 type internalParamHookInsert struct {
@@ -62,10 +63,9 @@ type internalParamHookDelete struct {
 // which is usually not be interesting for upper business hook handler.
 type HookSelectInput struct {
 	internalParamHookSelect
-	Table            string
-	Sql              string
-	Args             []interface{}
-	IsCountStatement bool // IsCountStatement marks this SELECT statement is COUNT statement.
+	Table string
+	Sql   string
+	Args  []interface{}
 }
 
 // HookInsertInput holds the parameters for insert hook operation.
@@ -109,6 +109,11 @@ func (h *HookSelectInput) Next(ctx context.Context) (result Result, err error) {
 		return h.handler(ctx, h)
 	}
 	return h.model.db.DoSelect(ctx, h.link, h.Sql, h.Args...)
+}
+
+// IsCountStatement checks and returns whether current SELECT statement is COUNT statement.
+func (h *HookSelectInput) IsCountStatement() bool {
+	return h.queryType == queryTypeCount
 }
 
 // Next calls the next hook handler.
