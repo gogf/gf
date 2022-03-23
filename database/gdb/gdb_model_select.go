@@ -539,12 +539,12 @@ func (m *Model) doGetAllBySql(queryType int, sql string, args ...interface{}) (r
 				link:  m.getLink(false),
 				model: m,
 			},
-			handler: m.hookHandler.Select,
+			handler:   m.hookHandler.Select,
+			queryType: queryType,
 		},
-		Table:            m.tables,
-		Sql:              sql,
-		Args:             m.mergeArguments(args),
-		IsCountStatement: queryType == queryTypeCount,
+		Table: m.tables,
+		Sql:   sql,
+		Args:  m.mergeArguments(args),
 	}
 	result, err = in.Next(m.GetCtx())
 
