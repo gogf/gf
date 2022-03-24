@@ -7,6 +7,7 @@
 package gdb
 
 import (
+	"context"
 	"time"
 
 	"github.com/gogf/gf/v2/internal/intlog"
@@ -44,11 +45,9 @@ func (m *Model) Cache(option CacheOption) *Model {
 
 // checkAndRemoveCache checks and removes the cache in insert/update/delete statement if
 // cache feature is enabled.
-func (m *Model) checkAndRemoveCache() {
+func (m *Model) checkAndRemoveCache(ctx context.Context) {
 	if m.cacheEnabled && m.cacheOption.Duration < 0 && len(m.cacheOption.Name) > 0 {
-		ctx := m.GetCtx()
-		_, err := m.db.GetCache().Remove(ctx, m.cacheOption.Name)
-		if err != nil {
+		if _, err := m.db.GetCache().Remove(ctx, m.cacheOption.Name); err != nil {
 			intlog.Errorf(ctx, `%+v`, err)
 		}
 	}

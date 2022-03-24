@@ -20,17 +20,18 @@ import (
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
+	var ctx = m.GetCtx()
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).Delete()
 	}
 	defer func() {
 		if err == nil {
-			m.checkAndRemoveCache()
+			m.checkAndRemoveCache(ctx)
 		}
 	}()
 	var (
 		fieldNameDelete                               = m.getSoftFieldNameDeleted()
-		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false, false)
+		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(ctx, false, false)
 	)
 	// Soft deleting.
 	if !m.unscoped && fieldNameDelete != "" {
@@ -47,7 +48,7 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 			Condition: conditionWhere + conditionExtra,
 			Args:      append([]interface{}{gtime.Now().String()}, conditionArgs...),
 		}
-		return in.Next(m.GetCtx())
+		return in.Next(ctx)
 	}
 	conditionStr := conditionWhere + conditionExtra
 	if !gstr.ContainsI(conditionStr, " WHERE ") {
@@ -69,5 +70,5 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 		Condition: conditionStr,
 		Args:      conditionArgs,
 	}
-	return in.Next(m.GetCtx())
+	return in.Next(ctx)
 }

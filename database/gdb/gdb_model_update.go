@@ -25,6 +25,7 @@ import (
 // and dataAndWhere[1:] is treated as where condition fields.
 // Also see Model.Data and Model.Where functions.
 func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err error) {
+	var ctx = m.GetCtx()
 	if len(dataAndWhere) > 0 {
 		if len(dataAndWhere) > 2 {
 			return m.Data(dataAndWhere[0]).Where(dataAndWhere[1], dataAndWhere[2:]...).Update()
@@ -36,7 +37,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	}
 	defer func() {
 		if err == nil {
-			m.checkAndRemoveCache()
+			m.checkAndRemoveCache(ctx)
 		}
 	}()
 	if m.data == nil {
@@ -46,11 +47,11 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		updateData                                    = m.data
 		reflectInfo                                   = reflection.OriginTypeAndKind(updateData)
 		fieldNameUpdate                               = m.getSoftFieldNameUpdated()
-		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false, false)
+		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(ctx, false, false)
 	)
 	switch reflectInfo.OriginKind {
 	case reflect.Map, reflect.Struct:
-		dataMap := m.db.ConvertDataForRecord(m.GetCtx(), m.data)
+		dataMap := m.db.ConvertDataForRecord(ctx, m.data)
 		// Automatically update the record updating time.
 		if !m.unscoped && fieldNameUpdate != "" {
 			dataMap[fieldNameUpdate] = gtime.Now().String()
@@ -89,7 +90,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		Condition: conditionStr,
 		Args:      m.mergeArguments(conditionArgs),
 	}
-	return in.Next(m.GetCtx())
+	return in.Next(ctx)
 }
 
 // Increment increments a column's value by a given amount.

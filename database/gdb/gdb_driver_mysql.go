@@ -38,6 +38,7 @@ func (d *DriverMysql) New(core *Core, node *ConfigNode) (DB, error) {
 // Note that it converts time.Time argument to local timezone in default.
 func (d *DriverMysql) Open(config *ConfigNode) (db *sql.DB, err error) {
 	var (
+		ctx                  = d.GetCtx()
 		source               string
 		underlyingDriverName = "mysql"
 	)
@@ -56,7 +57,7 @@ func (d *DriverMysql) Open(config *ConfigNode) (db *sql.DB, err error) {
 			source = fmt.Sprintf("%s&loc=%s", source, url.QueryEscape(config.Timezone))
 		}
 	}
-	intlog.Printf(d.GetCtx(), "Open: %s", source)
+	intlog.Printf(ctx, "Open: %s", source)
 	if db, err = sql.Open(underlyingDriverName, source); err != nil {
 		err = gerror.WrapCodef(
 			gcode.CodeDbOperationError, err,
