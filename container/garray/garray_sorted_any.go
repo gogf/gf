@@ -36,9 +36,9 @@ type SortedArray struct {
 // NewSortedArray creates and returns an empty sorted array.
 // The parameter `safe` is used to specify whether using array in concurrent-safety, which is false in default.
 // The parameter `comparator` used to compare values to sort in array,
-// if it returns value < 0, means v1 < v2; the v1 will be inserted before v2;
-// if it returns value = 0, means v1 = v2; the v1 will be replaced by v2;
-// if it returns value > 0, means v1 > v2; the v1 will be inserted after v2;
+// if it returns value < 0, means `a` < `b`; the `a` will be inserted before `b`;
+// if it returns value = 0, means `a` = `b`; the `a` will be replaced by     `b`;
+// if it returns value > 0, means `a` > `b`; the `a` will be inserted after  `b`;
 func NewSortedArray(comparator func(a, b interface{}) int, safe ...bool) *SortedArray {
 	return NewSortedArraySize(0, comparator, safe...)
 }

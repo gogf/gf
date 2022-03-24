@@ -18,21 +18,25 @@ import (
 )
 
 type Path struct {
-	Ref         string     `json:"$ref,omitempty"        yaml:"$ref,omitempty"`
-	Summary     string     `json:"summary,omitempty"     yaml:"summary,omitempty"`
-	Description string     `json:"description,omitempty" yaml:"description,omitempty"`
-	Connect     *Operation `json:"connect,omitempty"     yaml:"connect,omitempty"`
-	Delete      *Operation `json:"delete,omitempty"      yaml:"delete,omitempty"`
-	Get         *Operation `json:"get,omitempty"         yaml:"get,omitempty"`
-	Head        *Operation `json:"head,omitempty"        yaml:"head,omitempty"`
-	Options     *Operation `json:"options,omitempty"     yaml:"options,omitempty"`
-	Patch       *Operation `json:"patch,omitempty"       yaml:"patch,omitempty"`
-	Post        *Operation `json:"post,omitempty"        yaml:"post,omitempty"`
-	Put         *Operation `json:"put,omitempty"         yaml:"put,omitempty"`
-	Trace       *Operation `json:"trace,omitempty"       yaml:"trace,omitempty"`
-	Servers     Servers    `json:"servers,omitempty"     yaml:"servers,omitempty"`
-	Parameters  Parameters `json:"parameters,omitempty"  yaml:"parameters,omitempty"`
+	Ref         string     `json:"$ref,omitempty"`
+	Summary     string     `json:"summary,omitempty"`
+	Description string     `json:"description,omitempty"`
+	Connect     *Operation `json:"connect,omitempty"`
+	Delete      *Operation `json:"delete,omitempty"`
+	Get         *Operation `json:"get,omitempty"`
+	Head        *Operation `json:"head,omitempty"`
+	Options     *Operation `json:"options,omitempty"`
+	Patch       *Operation `json:"patch,omitempty"`
+	Post        *Operation `json:"post,omitempty"`
+	Put         *Operation `json:"put,omitempty"`
+	Trace       *Operation `json:"trace,omitempty"`
+	Servers     Servers    `json:"servers,omitempty"`
+	Parameters  Parameters `json:"parameters,omitempty"`
+	Sort        int        `json:"-"`
 }
+
+// Paths are specified by OpenAPI/Swagger standard version 3.0.
+type Paths map[string]Path
 
 const (
 	responseOkKey = `200`
@@ -46,6 +50,10 @@ type addPathInput struct {
 }
 
 func (oai *OpenApiV3) addPath(in addPathInput) error {
+	if oai.Paths == nil {
+		oai.Paths = map[string]Path{}
+	}
+
 	var (
 		reflectType = reflect.TypeOf(in.Function)
 	)
@@ -99,8 +107,8 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		)
 	}
 
-	if v := oai.Paths.Get(in.Path); v != nil {
-		path = *v
+	if v, ok := oai.Paths[in.Path]; ok {
+		path = v
 	}
 
 	// Method check.
@@ -273,7 +281,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	default:
 		return gerror.NewCodef(gcode.CodeInvalidParameter, `invalid method "%s"`, in.Method)
 	}
-	oai.Paths.Set(in.Path, path)
+	oai.Paths[in.Path] = path
 	return nil
 }
 

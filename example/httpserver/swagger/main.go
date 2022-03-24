@@ -9,7 +9,7 @@ import (
 )
 
 type HelloReq struct {
-	g.Meta `path:"/hello" method:"get"`
+	g.Meta `path:"/hello" method:"get" sort:"1"`
 	Name   string `v:"required" dc:"Your name"`
 }
 type HelloRes struct {

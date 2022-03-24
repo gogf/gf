@@ -16,10 +16,10 @@ import (
 
 // Response is specified by OpenAPI/Swagger 3.0 standard.
 type Response struct {
-	Description string  `json:"description"           yaml:"description"`
-	Headers     Headers `json:"headers,omitempty"     yaml:"headers,omitempty"`
-	Content     Content `json:"content,omitempty"     yaml:"content,omitempty"`
-	Links       Links   `json:"links,omitempty"       yaml:"links,omitempty"`
+	Description string  `json:"description"`
+	Headers     Headers `json:"headers,omitempty"`
+	Content     Content `json:"content,omitempty"`
+	Links       Links   `json:"links,omitempty"`
 }
 
 // Responses is specified by OpenAPI/Swagger 3.0 standard.
