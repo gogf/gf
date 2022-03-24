@@ -11,6 +11,7 @@ import (
 
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/protocol/goai"
+	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
@@ -24,23 +25,35 @@ func (s *Server) initOpenApi() {
 		err    error
 		method string
 	)
-	for _, item := range s.GetRoutes() {
-		switch item.Type {
-		case HandlerTypeMiddleware, HandlerTypeHook:
-			continue
-		}
-		method = item.Method
-		if gstr.Equal(method, defaultMethod) {
-			method = ""
-		}
-		if item.Handler.Info.Func == nil {
-			err = s.openapi.Add(goai.AddInput{
-				Path:   item.Route,
-				Method: method,
-				Object: item.Handler.Info.Value.Interface(),
-			})
-			if err != nil {
-				s.Logger().Fatalf(ctx, `%+v`, err)
+	for routeKey, registeredItems := range s.routesMap {
+		array, _ := gregex.MatchString(`(.*?)%([A-Z]+):(.+)@(.+)`, routeKey)
+		for _, registeredItem := range registeredItems {
+			item := RouterItem{
+				Server:     s.config.Name,
+				Domain:     array[4],
+				Type:       registeredItem.Handler.Type,
+				Middleware: array[1],
+				Method:     array[2],
+				Route:      array[3],
+				Handler:    registeredItem.Handler,
+			}
+			switch item.Type {
+			case HandlerTypeMiddleware, HandlerTypeHook:
+				continue
+			}
+			method = item.Method
+			if gstr.Equal(method, defaultMethod) {
+				method = ""
+			}
+			if item.Handler.Info.Func == nil {
+				err = s.openapi.Add(goai.AddInput{
+					Path:   item.Route,
+					Method: method,
+					Object: item.Handler.Info.Value.Interface(),
+				})
+				if err != nil {
+					s.Logger().Fatalf(ctx, `%+v`, err)
+				}
 			}
 		}
 	}
