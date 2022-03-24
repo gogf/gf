@@ -10,10 +10,13 @@
 package goai
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"reflect"
 
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
@@ -25,15 +28,15 @@ import (
 // https://swagger.io/specification/
 // https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.0.md
 type OpenApiV3 struct {
-	Config       Config                `json:"-"                      yaml:"-"`
-	OpenAPI      string                `json:"openapi"                yaml:"openapi"`
-	Components   Components            `json:"components,omitempty"   yaml:"components,omitempty"`
-	Info         Info                  `json:"info"                   yaml:"info"`
-	Paths        Paths                 `json:"paths"                  yaml:"paths"`
-	Security     *SecurityRequirements `json:"security,omitempty"     yaml:"security,omitempty"`
-	Servers      *Servers              `json:"servers,omitempty"      yaml:"servers,omitempty"`
-	Tags         *Tags                 `json:"tags,omitempty"         yaml:"tags,omitempty"`
-	ExternalDocs *ExternalDocs         `json:"externalDocs,omitempty" yaml:"externalDocs,omitempty"`
+	Config       Config                `json:"-"`
+	OpenAPI      string                `json:"openapi"`
+	Components   Components            `json:"components,omitempty"`
+	Info         Info                  `json:"info"`
+	Paths        Paths                 `json:"paths"`
+	Security     *SecurityRequirements `json:"security,omitempty"`
+	Servers      *Servers              `json:"servers,omitempty"`
+	Tags         *Tags                 `json:"tags,omitempty"`
+	ExternalDocs *ExternalDocs         `json:"externalDocs,omitempty"`
 }
 
 // ExternalDocs is specified by OpenAPI/Swagger standard version 3.0.
@@ -236,6 +239,63 @@ func (oai *OpenApiV3) fileMapWithShortTags(m map[string]string) map[string]strin
 		}
 	}
 	return m
+}
+
+func (oai OpenApiV3) MustJson() []byte {
+	b, err := oai.Json()
+	if err != nil {
+		panic(err)
+	}
+	return b
+}
+
+// Json converts current OpenApi object to JSON format.
+// Note that this function support `Sort` feature of Path which sets the Path in custom sequence.
+func (oai OpenApiV3) Json() ([]byte, error) {
+	// Marshal Paths in sequence by `Sort` attribute.
+	type PathItem struct {
+		Name string
+		Path Path
+	}
+	array := garray.NewSortedArray(func(a, b interface{}) int {
+		path1 := a.(PathItem)
+		path2 := b.(PathItem)
+		return path1.Path.Sort - path2.Path.Sort
+	})
+	for name, path := range oai.Paths {
+		array.Add(PathItem{
+			Name: name,
+			Path: path,
+		})
+	}
+	buffer := bytes.NewBuffer(nil)
+	buffer.WriteString("{")
+	array.Iterator(func(k int, v interface{}) bool {
+		if buffer.Len() > 1 {
+			buffer.WriteString(",")
+		}
+		item := v.(PathItem)
+		buffer.WriteString(fmt.Sprintf(`"%s":%s`, item.Name, gjson.MustEncodeString(item.Path)))
+		return true
+	})
+	buffer.WriteString("}")
+	// Produce JSON content.
+	oaiJsonBytes, err := json.Marshal(oai)
+	if err != nil {
+		return nil, err
+	}
+	oaiJson, err := gjson.LoadJson(oaiJsonBytes)
+	if err != nil {
+		return nil, err
+	}
+	pathJson, err := gjson.LoadJson(buffer.Bytes())
+	if err != nil {
+		return nil, err
+	}
+	if err = oaiJson.Set(`paths`, pathJson); err != nil {
+		return nil, err
+	}
+	return oaiJson.ToJson()
 }
 
 func formatRefToBytes(ref string) []byte {

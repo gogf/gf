@@ -16,9 +16,9 @@ import (
 
 // RequestBody is specified by OpenAPI/Swagger 3.0 standard.
 type RequestBody struct {
-	Description string  `json:"description,omitempty" yaml:"description,omitempty"`
-	Required    bool    `json:"required,omitempty"    yaml:"required,omitempty"`
-	Content     Content `json:"content,omitempty"     yaml:"content,omitempty"`
+	Description string  `json:"description,omitempty"`
+	Required    bool    `json:"required,omitempty"`
+	Content     Content `json:"content,omitempty"`
 }
 
 type RequestBodyRef struct {

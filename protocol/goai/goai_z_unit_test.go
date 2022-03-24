@@ -118,13 +118,13 @@ func TestOpenApiV3_Add(t *testing.T) {
 		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.SetSpecInfo`).Value.Properties.Get(`Params`).Value.Type, goai.TypeArray)
 
 		// Paths.
-		t.Assert(len(oai.Paths.Map()), 1)
-		t.AssertNE(oai.Paths.Map()[`/test1/{appId}`].Put, nil)
-		t.Assert(len(oai.Paths.Map()[`/test1/{appId}`].Put.Tags), 1)
-		t.Assert(len(oai.Paths.Map()[`/test1/{appId}`].Put.Parameters), 2)
-		t.AssertNE(oai.Paths.Map()[`/test1/{appId}`].Post, nil)
-		t.Assert(len(oai.Paths.Map()[`/test1/{appId}`].Post.Tags), 1)
-		t.Assert(len(oai.Paths.Map()[`/test1/{appId}`].Post.Parameters), 2)
+		t.Assert(len(oai.Paths), 1)
+		t.AssertNE(oai.Paths[`/test1/{appId}`].Put, nil)
+		t.Assert(len(oai.Paths[`/test1/{appId}`].Put.Tags), 1)
+		t.Assert(len(oai.Paths[`/test1/{appId}`].Put.Parameters), 2)
+		t.AssertNE(oai.Paths[`/test1/{appId}`].Post, nil)
+		t.Assert(len(oai.Paths[`/test1/{appId}`].Post.Tags), 1)
+		t.Assert(len(oai.Paths[`/test1/{appId}`].Post.Parameters), 2)
 	})
 }
 
@@ -223,15 +223,15 @@ func TestOpenApiV3_Add_AutoDetectIn(t *testing.T) {
 		fmt.Println(oai.String())
 
 		t.Assert(len(oai.Components.Schemas.Map()), 2)
-		t.Assert(len(oai.Paths.Map()), 1)
-		t.AssertNE(oai.Paths.Map()[path].Get, nil)
-		t.Assert(len(oai.Paths.Map()[path].Get.Parameters), 3)
-		t.Assert(oai.Paths.Map()[path].Get.Parameters[0].Value.Name, `Name`)
-		t.Assert(oai.Paths.Map()[path].Get.Parameters[0].Value.In, goai.ParameterInPath)
-		t.Assert(oai.Paths.Map()[path].Get.Parameters[1].Value.Name, `Product`)
-		t.Assert(oai.Paths.Map()[path].Get.Parameters[1].Value.In, goai.ParameterInPath)
-		t.Assert(oai.Paths.Map()[path].Get.Parameters[2].Value.Name, `Region`)
-		t.Assert(oai.Paths.Map()[path].Get.Parameters[2].Value.In, goai.ParameterInQuery)
+		t.Assert(len(oai.Paths), 1)
+		t.AssertNE(oai.Paths[path].Get, nil)
+		t.Assert(len(oai.Paths[path].Get.Parameters), 3)
+		t.Assert(oai.Paths[path].Get.Parameters[0].Value.Name, `Name`)
+		t.Assert(oai.Paths[path].Get.Parameters[0].Value.In, goai.ParameterInPath)
+		t.Assert(oai.Paths[path].Get.Parameters[1].Value.Name, `Product`)
+		t.Assert(oai.Paths[path].Get.Parameters[1].Value.In, goai.ParameterInPath)
+		t.Assert(oai.Paths[path].Get.Parameters[2].Value.Name, `Region`)
+		t.Assert(oai.Paths[path].Get.Parameters[2].Value.In, goai.ParameterInQuery)
 	})
 }
 
@@ -275,8 +275,8 @@ func TestOpenApiV3_CommonRequest(t *testing.T) {
 		t.AssertNil(err)
 		// Schema asserts.
 		t.Assert(len(oai.Components.Schemas.Map()), 3)
-		t.Assert(len(oai.Paths.Map()), 1)
-		t.Assert(len(oai.Paths.Map()["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties.Map()), 3)
+		t.Assert(len(oai.Paths), 1)
+		t.Assert(len(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties.Map()), 3)
 	})
 }
 
@@ -320,8 +320,8 @@ func TestOpenApiV3_CommonRequest_WithoutDataField_Setting(t *testing.T) {
 		// Schema asserts.
 		// fmt.Println(oai.String())
 		t.Assert(len(oai.Components.Schemas.Map()), 3)
-		t.Assert(len(oai.Paths.Map()), 1)
-		t.Assert(len(oai.Paths.Map()["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties.Map()), 5)
+		t.Assert(len(oai.Paths), 1)
+		t.Assert(len(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties.Map()), 5)
 	})
 }
 
@@ -360,8 +360,8 @@ func TestOpenApiV3_CommonRequest_EmptyRequest(t *testing.T) {
 		// Schema asserts.
 		// fmt.Println(oai.String())
 		t.Assert(len(oai.Components.Schemas.Map()), 3)
-		t.Assert(len(oai.Paths.Map()), 1)
-		t.Assert(len(oai.Paths.Map()["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties.Map()), 3)
+		t.Assert(len(oai.Paths), 1)
+		t.Assert(len(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties.Map()), 3)
 	})
 }
 
@@ -415,9 +415,9 @@ func TestOpenApiV3_CommonRequest_SubDataField(t *testing.T) {
 		// Schema asserts.
 		// fmt.Println(oai.String())
 		t.Assert(len(oai.Components.Schemas.Map()), 4)
-		t.Assert(len(oai.Paths.Map()), 1)
-		t.Assert(len(oai.Paths.Map()["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties.Map()), 1)
-		t.Assert(len(oai.Paths.Map()["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties.Get(`Request`).Value.Properties.Map()), 4)
+		t.Assert(len(oai.Paths), 1)
+		t.Assert(len(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties.Map()), 1)
+		t.Assert(len(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties.Get(`Request`).Value.Properties.Map()), 4)
 	})
 }
 
@@ -460,13 +460,13 @@ func TestOpenApiV3_CommonResponse(t *testing.T) {
 		})
 		t.AssertNil(err)
 
-		//g.Dump(oai.Paths.Map()["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Map())
+		//g.Dump(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Map())
 		// Schema asserts.
 		t.Assert(len(oai.Components.Schemas.Map()), 3)
-		t.Assert(len(oai.Paths.Map()), 1)
-		t.Assert(len(oai.Paths.Map()["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Map()), 3)
+		t.Assert(len(oai.Paths), 1)
+		t.Assert(len(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Map()), 3)
 		t.Assert(
-			oai.Paths.Map()["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Get("data").Value.Description,
+			oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Get("data").Value.Description,
 			`Result data for certain request according API definition`,
 		)
 	})
@@ -512,8 +512,8 @@ func TestOpenApiV3_CommonResponse_WithoutDataField_Setting(t *testing.T) {
 		// Schema asserts.
 		fmt.Println(oai.String())
 		t.Assert(len(oai.Components.Schemas.Map()), 3)
-		t.Assert(len(oai.Paths.Map()), 1)
-		t.Assert(len(oai.Paths.Map()["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Map()), 8)
+		t.Assert(len(oai.Paths), 1)
+		t.Assert(len(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Map()), 8)
 	})
 }
 
@@ -552,9 +552,9 @@ func TestOpenApiV3_CommonResponse_EmptyResponse(t *testing.T) {
 		// Schema asserts.
 		// fmt.Println(oai.String())
 		t.Assert(len(oai.Components.Schemas.Map()), 3)
-		t.Assert(len(oai.Paths.Map()), 1)
-		t.Assert(oai.Paths.Map()["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Ref, `github.com.gogf.gf.v2.protocol.goai_test.Req`)
-		t.Assert(len(oai.Paths.Map()["/index"].Put.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Map()), 3)
+		t.Assert(len(oai.Paths), 1)
+		t.Assert(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Ref, `github.com.gogf.gf.v2.protocol.goai_test.Req`)
+		t.Assert(len(oai.Paths["/index"].Put.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Map()), 3)
 	})
 }
 
@@ -608,9 +608,9 @@ func TestOpenApiV3_CommonResponse_SubDataField(t *testing.T) {
 		// Schema asserts.
 		// fmt.Println(oai.String())
 		t.Assert(len(oai.Components.Schemas.Map()), 4)
-		t.Assert(len(oai.Paths.Map()), 1)
-		t.Assert(len(oai.Paths.Map()["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Map()), 1)
-		t.Assert(len(oai.Paths.Map()["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Get(`Response`).Value.Properties.Map()), 7)
+		t.Assert(len(oai.Paths), 1)
+		t.Assert(len(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Map()), 1)
+		t.Assert(len(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Get(`Response`).Value.Properties.Map()), 7)
 	})
 }
 
@@ -664,7 +664,7 @@ func TestOpenApiV3_ShortTags(t *testing.T) {
 		// fmt.Println(oai.String())
 		// Schema asserts.
 		t.Assert(len(oai.Components.Schemas.Map()), 3)
-		t.Assert(oai.Paths.Map()[`/test1/{appId}`].Summary, `CreateResourceReq sum`)
+		t.Assert(oai.Paths[`/test1/{appId}`].Summary, `CreateResourceReq sum`)
 		t.Assert(oai.
 			Components.
 			Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`).

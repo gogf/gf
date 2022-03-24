@@ -11,7 +11,6 @@ import (
 
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/protocol/goai"
-	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
@@ -25,35 +24,23 @@ func (s *Server) initOpenApi() {
 		err    error
 		method string
 	)
-	for routeKey, registeredItems := range s.routesMap {
-		array, _ := gregex.MatchString(`(.*?)%([A-Z]+):(.+)@(.+)`, routeKey)
-		for _, registeredItem := range registeredItems {
-			item := RouterItem{
-				Server:     s.config.Name,
-				Domain:     array[4],
-				Type:       registeredItem.Handler.Type,
-				Middleware: array[1],
-				Method:     array[2],
-				Route:      array[3],
-				Handler:    registeredItem.Handler,
-			}
-			switch item.Type {
-			case HandlerTypeMiddleware, HandlerTypeHook:
-				continue
-			}
-			method = item.Method
-			if gstr.Equal(method, defaultMethod) {
-				method = ""
-			}
-			if item.Handler.Info.Func == nil {
-				err = s.openapi.Add(goai.AddInput{
-					Path:   item.Route,
-					Method: method,
-					Object: item.Handler.Info.Value.Interface(),
-				})
-				if err != nil {
-					s.Logger().Fatalf(ctx, `%+v`, err)
-				}
+	for _, item := range s.GetRoutes() {
+		switch item.Type {
+		case HandlerTypeMiddleware, HandlerTypeHook:
+			continue
+		}
+		method = item.Method
+		if gstr.Equal(method, defaultMethod) {
+			method = ""
+		}
+		if item.Handler.Info.Func == nil {
+			err = s.openapi.Add(goai.AddInput{
+				Path:   item.Route,
+				Method: method,
+				Object: item.Handler.Info.Value.Interface(),
+			})
+			if err != nil {
+				s.Logger().Fatalf(ctx, `%+v`, err)
 			}
 		}
 	}
@@ -61,13 +48,11 @@ func (s *Server) initOpenApi() {
 
 // openapiSpec is a build-in handler automatic producing for openapi specification json file.
 func (s *Server) openapiSpec(r *Request) {
-	var (
-		err error
-	)
+	var err error
 	if s.config.OpenApiPath == "" {
 		r.Response.Write(`OpenApi specification file producing is disabled`)
 	} else {
-		err = r.Response.WriteJson(s.openapi)
+		err = r.Response.WriteJson(s.openapi.MustJson())
 	}
 
 	if err != nil {
