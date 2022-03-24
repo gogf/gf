@@ -523,7 +523,7 @@ func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newAr
 				whereStr, _ = gregex.ReplaceStringFunc(`(\?)`, whereStr, func(s string) string {
 					index++
 					if i+len(newArgs) == index {
-						sqlWithHolder, holderArgs := model.getFormattedSqlAndArgs(queryTypeNormal, false)
+						sqlWithHolder, holderArgs := model.getFormattedSqlAndArgs(model.GetCtx(), queryTypeNormal, false)
 						newArgs = append(newArgs, holderArgs...)
 						// Automatically adding the brackets.
 						return "(" + sqlWithHolder + ")"
