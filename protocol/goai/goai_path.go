@@ -32,7 +32,6 @@ type Path struct {
 	Trace       *Operation `json:"trace,omitempty"`
 	Servers     Servers    `json:"servers,omitempty"`
 	Parameters  Parameters `json:"parameters,omitempty"`
-	Sort        int        `json:"-"`
 }
 
 // Paths are specified by OpenAPI/Swagger standard version 3.0.
