@@ -71,7 +71,7 @@ func (c *Core) doBeginCtx(ctx context.Context) (*TX, error) {
 func (c *Core) Transaction(ctx context.Context, f func(ctx context.Context, tx *TX) error) (err error) {
 	var tx *TX
 	if ctx == nil {
-		ctx = c.GetCtx()
+		ctx = c.db.GetCtx()
 	}
 	// Check transaction object from context.
 	tx = TXFromCtx(ctx, c.db.GetGroup())

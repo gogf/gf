@@ -93,6 +93,7 @@ const (
 //    db.Model("? AS a, ? AS b", subQuery1, subQuery2)
 func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 	var (
+		ctx       = c.db.GetCtx()
 		tableStr  string
 		tableName string
 		extraArgs []interface{}
@@ -105,7 +106,7 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 				Where: conditionStr,
 				Args:  tableNameQueryOrStruct[1:],
 			}
-			tableStr, extraArgs = formatWhereHolder(c.db, formatWhereHolderInput{
+			tableStr, extraArgs = formatWhereHolder(ctx, c.db, formatWhereHolderInput{
 				ModelWhereHolder: whereHolder,
 				OmitNil:          false,
 				OmitEmpty:        false,

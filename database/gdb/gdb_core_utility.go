@@ -150,11 +150,12 @@ func (c *Core) Tables(schema ...string) (tables []string, err error) {
 //
 // It does nothing in default.
 func (c *Core) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
+	var ctx = c.db.GetCtx()
 	// It does nothing if given table is empty, especially in sub-query.
 	if table == "" {
 		return map[string]*TableField{}, nil
 	}
-	return c.db.TableFields(c.GetCtx(), table, schema...)
+	return c.db.TableFields(ctx, table, schema...)
 }
 
 // HasField determine whether the field exists in the table.

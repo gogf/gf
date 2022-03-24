@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -364,7 +365,7 @@ func isKeyValueCanBeOmitEmpty(omitEmpty bool, whereType string, key, value inter
 }
 
 // formatWhereHolder formats where statement and its arguments for `Where` and `Having` statements.
-func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newArgs []interface{}) {
+func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (newWhere string, newArgs []interface{}) {
 	var (
 		buffer      = bytes.NewBuffer(nil)
 		reflectInfo = reflection.OriginValueAndKind(in.Where)
@@ -393,7 +394,7 @@ func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newAr
 		}
 
 	case reflect.Struct:
-		// If the `where` parameter is DO struct, it then adds `OmitNil` option for this condition,
+		// If the `where` parameter is `DO` struct, it then adds `OmitNil` option for this condition,
 		// which will filter all nil parameters in `where`.
 		if isDoStruct(in.Where) {
 			in.OmitNil = true
@@ -523,7 +524,9 @@ func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newAr
 				whereStr, _ = gregex.ReplaceStringFunc(`(\?)`, whereStr, func(s string) string {
 					index++
 					if i+len(newArgs) == index {
-						sqlWithHolder, holderArgs := model.getFormattedSqlAndArgs(model.GetCtx(), queryTypeNormal, false)
+						sqlWithHolder, holderArgs := model.getFormattedSqlAndArgs(
+							ctx, queryTypeNormal, false,
+						)
 						newArgs = append(newArgs, holderArgs...)
 						// Automatically adding the brackets.
 						return "(" + sqlWithHolder + ")"
