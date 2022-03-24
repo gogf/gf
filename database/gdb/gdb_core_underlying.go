@@ -127,8 +127,44 @@ func (c *Core) DoFilter(ctx context.Context, link Link, sql string, args []inter
 	return sql, args, nil
 }
 
+type sqlParsingHandlerInput struct {
+	DoCommitInput
+	FormattedSql string
+}
+
+type sqlParsingHandlerOutput struct {
+	DoCommitInput
+}
+
+func (c *Core) sqlParsingHandler(ctx context.Context, in sqlParsingHandlerInput) (out *sqlParsingHandlerOutput, err error) {
+	var shardingOut *callShardingHandlerFromCtxOutput
+	// Sharding handling.
+	shardingOut, err = c.callShardingHandlerFromCtx(ctx, callShardingHandlerFromCtxInput{
+		Sql:          in.Sql,
+		FormattedSql: in.FormattedSql,
+	})
+	if err != nil {
+		return
+	}
+	if shardingOut != nil {
+		if shardingOut.Sql != "" {
+			in.Sql = shardingOut.Sql
+		}
+		// If schema changes, it here creates and uses a new DB link operation object.
+		if shardingOut.Schema != c.db.GetSchema() {
+			in.Link, err = c.db.GetCore().GetLink(ctx, in.Link.IsOnMaster(), shardingOut.Schema)
+		}
+	}
+	out = &sqlParsingHandlerOutput{
+		DoCommitInput: in.DoCommitInput,
+	}
+	return
+}
+
 // DoCommit commits current sql and arguments to underlying sql driver.
 func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutput, err error) {
+	// Inject internal data into ctx, just for double check.
+	ctx = c.injectInternalCtxData(ctx)
 
 	var (
 		sqlTx                *sql.Tx
@@ -138,30 +174,21 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 		stmtSqlRows          *sql.Rows
 		stmtSqlRow           *sql.Row
 		rowsAffected         int64
-		shardingOut          *callShardingHandlerFromCtxOutput
 		cancelFuncForTimeout context.CancelFunc
 		formattedSql         = FormatSqlWithArgs(in.Sql, in.Args)
 		timestampMilli1      = gtime.TimestampMilli()
 	)
-	shardingOut, err = c.callShardingHandlerFromCtx(ctx, callShardingHandlerFromCtxInput{
-		Sql:          in.Sql,
-		FormattedSql: formattedSql,
+
+	// SQL parser handler.
+	sqlParsingHandlerOut, err := c.sqlParsingHandler(ctx, sqlParsingHandlerInput{
+		DoCommitInput: in,
+		FormattedSql:  formattedSql,
 	})
 	if err != nil {
 		return
 	}
-	// Sharding handling.
-	if shardingOut != nil {
-		if shardingOut.Sql != "" {
-			in.Sql = shardingOut.Sql
-		}
-		// If schema changes, it here creates and uses a new DB link operation object.
-		if shardingOut.Schema != c.db.GetSchema() {
-			in.Link, err = c.db.GetCore().GetLink(ctx, in.Link.IsOnMaster(), shardingOut.Schema)
-			if err != nil {
-				return
-			}
-		}
+	if sqlParsingHandlerOut != nil {
+		in = sqlParsingHandlerOut.DoCommitInput
 	}
 
 	// Trace span start.
@@ -371,6 +398,11 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 	for k, v := range columns {
 		columnTypes[k] = v.DatabaseTypeName()
 		columnNames[k] = v.Name()
+	}
+	if len(columnNames) > 0 {
+		if internalData := c.getInternalCtxDataFromCtx(ctx); internalData != nil {
+			internalData.FirstResultColumn = columnNames[0]
+		}
 	}
 	var (
 		values   = make([]interface{}, len(columnNames))

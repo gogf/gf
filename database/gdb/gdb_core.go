@@ -53,6 +53,7 @@ func (c *Core) Ctx(ctx context.Context) DB {
 		panic(err)
 	}
 	newCore.ctx = WithDB(ctx, newCore.db)
+	newCore.ctx = c.injectInternalCtxData(newCore.ctx)
 	return newCore.db
 }
 
@@ -62,7 +63,7 @@ func (c *Core) GetCtx() context.Context {
 	if c.ctx != nil {
 		return c.ctx
 	}
-	return context.TODO()
+	return c.injectInternalCtxData(context.TODO())
 }
 
 // GetCtxTimeout returns the context and cancel function for specified timeout type.
@@ -264,6 +265,7 @@ func (c *Core) UnionAll(unions ...*Model) *Model {
 
 func (c *Core) doUnion(unionType int, unions ...*Model) *Model {
 	var (
+		ctx            = c.db.GetCtx()
 		unionTypeStr   string
 		composedSqlStr string
 		composedArgs   = make([]interface{}, 0)
@@ -274,7 +276,7 @@ func (c *Core) doUnion(unionType int, unions ...*Model) *Model {
 		unionTypeStr = "UNION"
 	}
 	for _, v := range unions {
-		sqlWithHolder, holderArgs := v.getFormattedSqlAndArgs(queryTypeNormal, false)
+		sqlWithHolder, holderArgs := v.getFormattedSqlAndArgs(ctx, queryTypeNormal, false)
 		if composedSqlStr == "" {
 			composedSqlStr += fmt.Sprintf(`(%s)`, sqlWithHolder)
 		} else {

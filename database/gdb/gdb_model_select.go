@@ -7,6 +7,7 @@
 package gdb
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 
@@ -29,7 +30,7 @@ import (
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 func (m *Model) All(where ...interface{}) (Result, error) {
-	return m.doGetAll(false, where...)
+	return m.doGetAll(m.GetCtx(), false, where...)
 }
 
 // doGetAll does "SELECT FROM ..." statement for the model.
@@ -39,12 +40,12 @@ func (m *Model) All(where ...interface{}) (Result, error) {
 // The parameter `limit1` specifies whether limits querying only one record if m.limit is not set.
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
-func (m *Model) doGetAll(limit1 bool, where ...interface{}) (Result, error) {
+func (m *Model) doGetAll(ctx context.Context, limit1 bool, where ...interface{}) (Result, error) {
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).All()
 	}
-	sqlWithHolder, holderArgs := m.getFormattedSqlAndArgs(queryTypeNormal, limit1)
-	return m.doGetAllBySql(queryTypeNormal, sqlWithHolder, holderArgs...)
+	sqlWithHolder, holderArgs := m.getFormattedSqlAndArgs(m.GetCtx(), queryTypeNormal, limit1)
+	return m.doGetAllBySql(ctx, queryTypeNormal, sqlWithHolder, holderArgs...)
 }
 
 // getFieldsFiltered checks the fields and fieldsEx attributes, filters and returns the fields that will
@@ -133,7 +134,7 @@ func (m *Model) One(where ...interface{}) (Record, error) {
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).One()
 	}
-	all, err := m.doGetAll(true)
+	all, err := m.doGetAll(m.GetCtx(), true)
 	if err != nil {
 		return nil, err
 	}
@@ -159,14 +160,24 @@ func (m *Model) Value(fieldsAndWhere ...interface{}) (Value, error) {
 			return m.Fields(gconv.String(fieldsAndWhere[0])).Value()
 		}
 	}
-	one, err := m.One()
-	if err != nil {
-		return gvar.New(nil), err
+	var (
+		all Result
+		err error
+		ctx = m.GetCtx()
+	)
+	if all, err = m.doGetAll(ctx, true); err != nil {
+		return nil, err
 	}
-	for _, v := range one {
-		return v, nil
+	if len(all) == 0 {
+		return gvar.New(nil), nil
 	}
-	return gvar.New(nil), nil
+	if internalData := m.db.GetCore().getInternalCtxDataFromCtx(ctx); internalData != nil {
+		record := all[0]
+		if v, ok := record[internalData.FirstResultColumn]; ok {
+			return v, nil
+		}
+	}
+	return nil, gerror.NewCode(gcode.CodeInternalError, `query value error`)
 }
 
 // Array queries and returns data values as slice from database.
@@ -366,16 +377,21 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 		return m.Where(where[0], where[1:]...).Count()
 	}
 	var (
-		sqlWithHolder, holderArgs = m.getFormattedSqlAndArgs(queryTypeCount, false)
-		list, err                 = m.doGetAllBySql(queryTypeCount, sqlWithHolder, holderArgs...)
+		ctx                       = m.GetCtx()
+		sqlWithHolder, holderArgs = m.getFormattedSqlAndArgs(ctx, queryTypeCount, false)
+		all, err                  = m.doGetAllBySql(ctx, queryTypeCount, sqlWithHolder, holderArgs...)
 	)
 	if err != nil {
 		return 0, err
 	}
-	if len(list) > 0 {
-		for _, v := range list[0] {
-			return v.Int(), nil
+	if len(all) > 0 {
+		if internalData := m.db.GetCore().getInternalCtxDataFromCtx(ctx); internalData != nil {
+			record := all[0]
+			if v, ok := record[internalData.FirstResultColumn]; ok {
+				return v.Int(), nil
+			}
 		}
+		return 0, gerror.NewCode(gcode.CodeInternalError, `query count error`)
 	}
 	return 0, nil
 }
@@ -502,10 +518,9 @@ func (m *Model) Having(having interface{}, args ...interface{}) *Model {
 }
 
 // doGetAllBySql does the select statement on the database.
-func (m *Model) doGetAllBySql(queryType int, sql string, args ...interface{}) (result Result, err error) {
+func (m *Model) doGetAllBySql(ctx context.Context, queryType int, sql string, args ...interface{}) (result Result, err error) {
 	var (
 		ok       bool
-		ctx      = m.GetCtx()
 		cacheKey = ""
 		cacheObj = m.db.GetCache()
 	)
@@ -539,14 +554,13 @@ func (m *Model) doGetAllBySql(queryType int, sql string, args ...interface{}) (r
 				link:  m.getLink(false),
 				model: m,
 			},
-			handler:   m.hookHandler.Select,
-			queryType: queryType,
+			handler: m.hookHandler.Select,
 		},
 		Table: m.tables,
 		Sql:   sql,
 		Args:  m.mergeArguments(args),
 	}
-	result, err = in.Next(m.GetCtx())
+	result, err = in.Next(ctx)
 
 	// Cache the result.
 	if cacheKey != "" && err == nil {
@@ -567,22 +581,22 @@ func (m *Model) doGetAllBySql(queryType int, sql string, args ...interface{}) (r
 	return result, err
 }
 
-func (m *Model) getFormattedSqlAndArgs(queryType int, limit1 bool) (sqlWithHolder string, holderArgs []interface{}) {
+func (m *Model) getFormattedSqlAndArgs(ctx context.Context, queryType int, limit1 bool) (sqlWithHolder string, holderArgs []interface{}) {
 	switch queryType {
 	case queryTypeCount:
-		countFields := "COUNT(1)"
+		queryFields := "COUNT(1)"
 		if m.fields != "" && m.fields != "*" {
 			// DO NOT quote the m.fields here, in case of fields like:
 			// DISTINCT t.user_id uid
-			countFields = fmt.Sprintf(`COUNT(%s%s)`, m.distinct, m.fields)
+			queryFields = fmt.Sprintf(`COUNT(%s%s)`, m.distinct, m.fields)
 		}
 		// Raw SQL Model.
 		if m.rawSql != "" {
-			sqlWithHolder = fmt.Sprintf("SELECT %s FROM (%s) AS T", countFields, m.rawSql)
+			sqlWithHolder = fmt.Sprintf("SELECT %s FROM (%s) AS T", queryFields, m.rawSql)
 			return sqlWithHolder, nil
 		}
 		conditionWhere, conditionExtra, conditionArgs := m.formatCondition(false, true)
-		sqlWithHolder = fmt.Sprintf("SELECT %s FROM %s%s", countFields, m.tables, conditionWhere+conditionExtra)
+		sqlWithHolder = fmt.Sprintf("SELECT %s FROM %s%s", queryFields, m.tables, conditionWhere+conditionExtra)
 		if len(m.groupBy) > 0 {
 			sqlWithHolder = fmt.Sprintf("SELECT COUNT(1) FROM (%s) count_alias", sqlWithHolder)
 		}
@@ -603,10 +617,7 @@ func (m *Model) getFormattedSqlAndArgs(queryType int, limit1 bool) (sqlWithHolde
 		// DISTINCT t.user_id uid
 		sqlWithHolder = fmt.Sprintf(
 			"SELECT %s%s FROM %s%s",
-			m.distinct,
-			m.getFieldsFiltered(),
-			m.tables,
-			conditionWhere+conditionExtra,
+			m.distinct, m.getFieldsFiltered(), m.tables, conditionWhere+conditionExtra,
 		)
 		return sqlWithHolder, conditionArgs
 	}

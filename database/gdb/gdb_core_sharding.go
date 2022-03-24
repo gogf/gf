@@ -66,9 +66,10 @@ type callShardingHandlerFromCtxInput struct {
 }
 
 type callShardingHandlerFromCtxOutput struct {
-	Sql    string
-	Table  string
-	Schema string
+	Sql             string
+	Table           string
+	Schema          string
+	ParsedSqlOutput *parseFormattedSqlOutput
 }
 
 func (c *Core) callShardingHandlerFromCtx(
@@ -80,6 +81,7 @@ func (c *Core) callShardingHandlerFromCtx(
 		shardingHandler ShardingHandler
 		ok              bool
 	)
+	// If no sharding handler, it does nothing.
 	if ctxValue = ctx.Value(ctxKeyForShardingHandler); ctxValue == nil {
 		return nil, nil
 	}
@@ -108,9 +110,10 @@ func (c *Core) callShardingHandlerFromCtx(
 			}
 		}
 		out = &callShardingHandlerFromCtxOutput{
-			Sql:    newSql,
-			Table:  shardingOut.Table,
-			Schema: shardingOut.Schema,
+			Sql:             newSql,
+			Table:           shardingOut.Table,
+			Schema:          shardingOut.Schema,
+			ParsedSqlOutput: parsedOut,
 		}
 		return out, nil
 	}
@@ -143,10 +146,11 @@ func (c *Core) formatSqlWithNewTable(sql, table string) (newSql string, err erro
 }
 
 type parseFormattedSqlOutput struct {
-	Table         string
-	OperationData map[string]Value
-	ConditionData map[string]Value
-	ParsedStmt    sqlparser.Statement
+	Table          string
+	OperationData  map[string]Value
+	ConditionData  map[string]Value
+	ParsedStmt     sqlparser.Statement
+	SelectedFields []string
 }
 
 func (c *Core) parseFormattedSql(formattedSql string) (*parseFormattedSqlOutput, error) {
@@ -154,8 +158,9 @@ func (c *Core) parseFormattedSql(formattedSql string) (*parseFormattedSqlOutput,
 		condition sqlparser.Expr
 		err       error
 		out       = &parseFormattedSqlOutput{
-			OperationData: make(map[string]Value),
-			ConditionData: make(map[string]Value),
+			SelectedFields: make([]string, 0),
+			OperationData:  make(map[string]Value),
+			ConditionData:  make(map[string]Value),
 		}
 	)
 	out.ParsedStmt, err = sqlparser.NewParser(strings.NewReader(formattedSql)).ParseStatement()
@@ -164,18 +169,30 @@ func (c *Core) parseFormattedSql(formattedSql string) (*parseFormattedSqlOutput,
 	}
 	switch stmt := out.ParsedStmt.(type) {
 	case *sqlparser.SelectStatement:
-		table, ok := stmt.FromItems.(*sqlparser.TableName)
-		if !ok {
-			return nil, gerror.Newf(
-				`invalid table name "%s" in SQL: %s`,
-				stmt.FromItems.String(), formattedSql,
-			)
+		if stmt.FromItems != nil {
+			table, ok := stmt.FromItems.(*sqlparser.TableName)
+			if !ok {
+				return nil, gerror.Newf(
+					`invalid table name "%s" in SQL: %s`,
+					stmt.FromItems.String(), formattedSql,
+				)
+			}
+			out.Table = table.TableName()
 		}
-		out.Table = table.TableName()
 		condition = stmt.Condition
+		if stmt.Columns != nil {
+			for _, column := range *stmt.Columns {
+				if column.Alias != nil {
+					out.SelectedFields = append(out.SelectedFields, column.Alias.Name)
+				} else if column.Expr != nil {
+					out.SelectedFields = append(out.SelectedFields, column.Expr.String())
+				}
+			}
+		}
+
 	case *sqlparser.InsertStatement:
 		out.Table = stmt.TableName.TableName()
-		if len(stmt.Expressions) > 0 {
+		if len(stmt.Expressions) > 0 && len(stmt.ColumnNames) > 0 {
 			names := make([]string, len(stmt.ColumnNames))
 			for i, ident := range stmt.ColumnNames {
 				names[i] = ident.Name
