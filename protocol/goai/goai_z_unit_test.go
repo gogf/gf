@@ -799,3 +799,35 @@ func Test_Required_In_Schema(t *testing.T) {
 		})
 	})
 }
+
+func Test_Properties_In_Sequence(t *testing.T) {
+	type ResourceCreateReq struct {
+		g.Meta           `path:"/resource" tags:"OSS Resource" method:"put" summary:"创建实例(发货)"`
+		AppId            uint64 `v:"required" dc:"应用Id"`
+		Uin              string `v:"required" dc:"主用户账号，该资源隶属于的账号"`
+		CreateUin        string `v:"required" dc:"创建实例的用户账号"`
+		Product          string `v:"required" dc:"业务类型" eg:"tdach"`
+		Region           string `v:"required" dc:"地域" eg:"ap-guangzhou"`
+		Zone             string `v:"required" dc:"区域" eg:"ap-guangzhou-1"`
+		Tenant           string `v:"required" dc:"业务自定义数据，透传到底层"`
+		VpcId            string `dc:"业务Vpc Id, TCS场景下非必须"`
+		SubnetId         string `dc:"业务Vpc子网Id"`
+		Name             string `dc:"自定义实例名称，默认和ResourceId一致"`
+		ClusterPreset    string `dc:"业务自定义Cluster定义，透传到底层"`
+		Engine           string `dc:"引擎名称，例如：TxLightning"`
+		Version          string `dc:"引擎版本，例如：10.3.213 (兼容ClickHouse 21.3.12)"`
+		SkipUpdateStatus bool   `dc:"是否跳过状态更新，继续保持creating"`
+	}
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+			req = new(ResourceCreateReq)
+		)
+		err = oai.Add(goai.AddInput{
+			Object: req,
+		})
+		t.AssertNil(err)
+		//fmt.Println(oai)
+	})
+}
