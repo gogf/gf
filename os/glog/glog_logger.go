@@ -10,6 +10,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"os"
+	"strings"
+	"time"
+
 	"github.com/fatih/color"
 	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/internal/intlog"
@@ -18,10 +23,6 @@ import (
 	"github.com/gogf/gf/os/gmlock"
 	"github.com/gogf/gf/os/gtimer"
 	"go.opentelemetry.io/otel/trace"
-	"io"
-	"os"
-	"strings"
-	"time"
 
 	"github.com/gogf/gf/debug/gdebug"
 
@@ -152,7 +153,7 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 
 		// Caller path and Fn name.
 		if l.config.Flags&(F_FILE_LONG|F_FILE_SHORT|F_CALLER_FN) > 0 {
-			callerFnName, path, line := gdebug.CallerWithFilter(pathFilterKey, l.config.StSkip)
+			callerFnName, path, line := gdebug.CallerWithFilter([]string{pathFilterKey}, l.config.StSkip)
 			if l.config.Flags&F_CALLER_FN > 0 {
 				if len(callerFnName) > 2 {
 					input.CallerFunc = fmt.Sprintf(`[%s]`, callerFnName)

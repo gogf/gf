@@ -8,10 +8,11 @@ package ghttp
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
-	"strings"
 
 	"github.com/gogf/gf/debug/gdebug"
 
@@ -69,7 +70,7 @@ func (s *Server) parsePattern(pattern string) (domain, method, path string, err 
 func (s *Server) setHandler(pattern string, handler *handlerItem) {
 	handler.Id = handlerIdGenerator.Add(1)
 	if handler.Source == "" {
-		_, file, line := gdebug.CallerWithFilter(stackFilterKey)
+		_, file, line := gdebug.CallerWithFilter([]string{stackFilterKey})
 		handler.Source = fmt.Sprintf(`%s:%d`, file, line)
 	}
 	domain, method, uri, err := s.parsePattern(pattern)

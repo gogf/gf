@@ -8,13 +8,14 @@ package gtest
 
 import (
 	"fmt"
-	"github.com/gogf/gf/internal/empty"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
 	"github.com/gogf/gf/debug/gdebug"
-
+	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/util/gconv"
 )
 
@@ -22,31 +23,17 @@ const (
 	pathFilterKey = "/test/gtest/gtest"
 )
 
-// C creates an unit testing case.
+// C creates a unit testing case.
 // The parameter `t` is the pointer to testing.T of stdlib (*testing.T).
 // The parameter `f` is the closure function for unit testing case.
 func C(t *testing.T, f func(t *T)) {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Fprintf(os.Stderr, "%v\n%s", err, gdebug.StackWithFilter(pathFilterKey))
+			_, _ = fmt.Fprintf(os.Stderr, "%v\n%s", err, gdebug.StackWithFilter([]string{pathFilterKey}))
 			t.Fail()
 		}
 	}()
 	f(&T{t})
-}
-
-// Case creates an unit testing case.
-// The parameter `t` is the pointer to testing.T of stdlib (*testing.T).
-// The parameter `f` is the closure function for unit testing case.
-// Deprecated.
-func Case(t *testing.T, f func()) {
-	defer func() {
-		if err := recover(); err != nil {
-			fmt.Fprintf(os.Stderr, "%v\n%s", err, gdebug.StackWithFilter(pathFilterKey))
-			t.Fail()
-		}
-	}()
-	f()
 }
 
 // Assert checks `value` and `expect` EQUAL.
@@ -302,7 +289,7 @@ func Error(message ...interface{}) {
 
 // Fatal prints `message` to stderr and exit the process.
 func Fatal(message ...interface{}) {
-	fmt.Fprintf(os.Stderr, "[FATAL] %s\n%s", fmt.Sprint(message...), gdebug.StackWithFilter(pathFilterKey))
+	fmt.Fprintf(os.Stderr, "[FATAL] %s\n%s", fmt.Sprint(message...), gdebug.StackWithFilter([]string{pathFilterKey}))
 	os.Exit(1)
 }
 
@@ -356,4 +343,29 @@ func AssertNil(value interface{}) {
 		panic(fmt.Sprintf(`%+v`, err))
 	}
 	AssertNE(value, nil)
+}
+
+// DataPath retrieves and returns the testdata path of current package,
+// which is used for unit testing cases only.
+// The optional parameter `names` specifies the sub-folders/sub-files,
+// which will be joined with current system separator and returned with the path.
+func DataPath(names ...string) string {
+	_, path, _ := gdebug.CallerWithFilter([]string{pathFilterKey})
+	path = filepath.Dir(path) + string(filepath.Separator) + "testdata"
+	for _, name := range names {
+		path += string(filepath.Separator) + name
+	}
+	return path
+}
+
+// DataContent retrieves and returns the file content for specified testdata path of current package
+func DataContent(names ...string) string {
+	path := DataPath(names...)
+	if path != "" {
+		data, err := ioutil.ReadFile(path)
+		if err == nil {
+			return string(data)
+		}
+	}
+	return ""
 }
