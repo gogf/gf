@@ -9,6 +9,7 @@ package gvalid
 
 import (
 	"context"
+	"reflect"
 	"regexp"
 	"strings"
 
@@ -22,9 +23,10 @@ type CustomMsg = map[string]interface{}
 
 // fieldRule defined the alias name and rule string for specified field.
 type fieldRule struct {
-	Name   string // Alias name for the field.
-	Rule   string // Rule string like: "max:6"
-	IsMeta bool   // Is this rule is from gmeta.Meta, which marks it as whole struct rule.
+	Name      string       // Alias name for the field.
+	Rule      string       // Rule string like: "max:6"
+	IsMeta    bool         // Is this rule is from gmeta.Meta, which marks it as whole struct rule.
+	FieldKind reflect.Kind // Kind of struct field, which is used for parameter type checks.
 }
 
 // iNoValidation is an interface that marks current struct not validated by package `gvalid`.
@@ -43,6 +45,8 @@ const (
 	noValidationTagName       = "nv"                  // no validation tag name for struct attribute.
 	ruleNameBail              = "bail"                // the name for rule "bail"
 	ruleNameCi                = "ci"                  // the name for rule "ci"
+	emptyJsonArrayStr         = "[]"                  // Empty json string for array type.
+	emptyJsonObjectStr        = "{}"                  // Empty json string for object type.
 )
 
 var (

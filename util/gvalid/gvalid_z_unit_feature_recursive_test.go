@@ -216,8 +216,6 @@ func Test_CheckMap_Recursive_SliceStruct(t *testing.T) {
 }
 
 func Test_CheckStruct_Recursively_SliceAttribute(t *testing.T) {
-	// TODO
-	return
 	gtest.C(t, func(t *gtest.T) {
 		type Student struct {
 			Name string `v:"required#Student Name is required"`
@@ -235,8 +233,9 @@ func Test_CheckStruct_Recursively_SliceAttribute(t *testing.T) {
 			}
 		)
 		err := g.Validator().Assoc(data).Data(teacher).Run(ctx)
-		t.Assert(err, `Student Name is required`)
+		t.Assert(err, `The Students field is required`)
 	})
+
 	gtest.C(t, func(t *gtest.T) {
 		type Student struct {
 			Name string `v:"required#Student Name is required"`
