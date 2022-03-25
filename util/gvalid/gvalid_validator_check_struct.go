@@ -177,9 +177,10 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 					_, isMeta = fieldValue.(gmeta.Meta)
 				}
 				checkRules = append(checkRules, fieldRule{
-					Name:   name,
-					Rule:   rule,
-					IsMeta: isMeta,
+					Name:      name,
+					Rule:      rule,
+					IsMeta:    isMeta,
+					FieldKind: field.OriginalKind(),
 				})
 			}
 		} else {
@@ -278,6 +279,19 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 				}
 			}
 		}
+		// Empty json string checks according to mapping field kind.
+		if value != nil {
+			switch checkRuleItem.FieldKind {
+			case reflect.Struct, reflect.Map:
+				if gconv.String(value) == emptyJsonObjectStr {
+					value = ""
+				}
+			case reflect.Slice, reflect.Array:
+				if gconv.String(value) == emptyJsonArrayStr {
+					value = ""
+				}
+			}
+		}
 		// It checks each rule and its value in loop.
 		if validatedError := v.doCheckValue(ctx, doCheckValueInput{
 			Name:     checkRuleItem.Name,
@@ -299,6 +313,11 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 				for ruleKey := range errorItem {
 					// Default required rules.
 					if _, ok := mustCheckRulesEvenValueEmpty[ruleKey]; ok {
+						required = true
+						break
+					}
+					// All custom validation rules are required rules.
+					if _, ok := customRuleFuncMap[ruleKey]; ok {
 						required = true
 						break
 					}
