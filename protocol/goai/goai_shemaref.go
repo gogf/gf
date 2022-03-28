@@ -37,6 +37,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 	schemaRef.Value = schema
 	switch oaiType {
 	case
+		TypeInteger,
 		TypeNumber,
 		TypeString,
 		TypeBoolean:
