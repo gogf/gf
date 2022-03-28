@@ -20,4 +20,5 @@ type Operation struct {
 	Security     *SecurityRequirements `json:"security,omitempty"`
 	Servers      *Servers              `json:"servers,omitempty"`
 	ExternalDocs *ExternalDocs         `json:"externalDocs,omitempty"`
+	Sort         int                   `json:"sort"`
 }
