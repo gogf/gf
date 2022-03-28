@@ -19,7 +19,7 @@ import (
 // The optional parameter can be type of: time.Time/*time.Time, string or integer.
 func ExampleNew() {
 	curTime := "2018-08-08 08:08:08"
-	timer, _ := time.Parse("2006-01-02 15:04:05", curTime)
+	timer, _ := time.ParseInLocation("2006-01-02 15:04:05", curTime, time.Local)
 	t1 := gtime.New(&timer)
 	t2 := gtime.New(curTime)
 	t3 := gtime.New(curTime, "Y-m-d H:i:s")
@@ -51,7 +51,7 @@ func ExampleNow() {
 
 // NewFromTime creates and returns a Time object with given time.Time object.
 func ExampleNewFromTime() {
-	timer, _ := time.Parse("2006-01-02 15:04:05", "2018-08-08 08:08:08")
+	timer, _ := time.ParseInLocation("2006-01-02 15:04:05", "2018-08-08 08:08:08", time.Local)
 	nTime := gtime.NewFromTime(timer)
 
 	fmt.Println(nTime)
@@ -401,7 +401,7 @@ func ExampleTime_EndOfMinute() {
 	fmt.Println(gt1.EndOfMinute())
 
 	// Output:
-	// 2018-08-08 08:08:59
+	// 2018-08-08 08:08:59.999999999
 }
 
 func ExampleTime_EndOfHour() {
@@ -410,7 +410,7 @@ func ExampleTime_EndOfHour() {
 	fmt.Println(gt1.EndOfHour())
 
 	// Output:
-	// 2018-08-08 08:59:59
+	// 2018-08-08 08:59:59.999999999
 }
 
 func ExampleTime_EndOfDay() {
@@ -419,7 +419,7 @@ func ExampleTime_EndOfDay() {
 	fmt.Println(gt1.EndOfDay())
 
 	// Output:
-	// 2018-08-08 23:59:59
+	// 2018-08-08 23:59:59.999999999
 }
 
 func ExampleTime_EndOfWeek() {
@@ -428,7 +428,7 @@ func ExampleTime_EndOfWeek() {
 	fmt.Println(gt1.EndOfWeek())
 
 	// Output:
-	// 2018-08-11 23:59:59
+	// 2018-08-11 23:59:59.999999999
 }
 
 func ExampleTime_EndOfMonth() {
@@ -437,7 +437,7 @@ func ExampleTime_EndOfMonth() {
 	fmt.Println(gt1.EndOfMonth())
 
 	// Output:
-	// 2018-08-31 23:59:59
+	// 2018-08-31 23:59:59.999999999
 }
 
 func ExampleTime_EndOfQuarter() {
@@ -446,7 +446,7 @@ func ExampleTime_EndOfQuarter() {
 	fmt.Println(gt1.EndOfQuarter())
 
 	// Output:
-	// 2018-09-30 23:59:59
+	// 2018-09-30 23:59:59.999999999
 }
 
 func ExampleTime_EndOfHalf() {
@@ -455,7 +455,7 @@ func ExampleTime_EndOfHalf() {
 	fmt.Println(gt1.EndOfHalf())
 
 	// Output:
-	// 2018-12-31 23:59:59
+	// 2018-12-31 23:59:59.999999999
 }
 
 func ExampleTime_EndOfYear() {
@@ -464,7 +464,7 @@ func ExampleTime_EndOfYear() {
 	fmt.Println(gt1.EndOfYear())
 
 	// Output:
-	// 2018-12-31 23:59:59
+	// 2018-12-31 23:59:59.999999999
 }
 
 func ExampleTime_MarshalJSON() {
