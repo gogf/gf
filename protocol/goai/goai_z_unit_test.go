@@ -816,7 +816,7 @@ func Test_Properties_In_Sequence(t *testing.T) {
 		ClusterPreset    string `dc:"业务自定义Cluster定义，透传到底层"`
 		Engine           string `dc:"引擎名称，例如：TxLightning"`
 		Version          string `dc:"引擎版本，例如：10.3.213 (兼容ClickHouse 21.3.12)"`
-		SkipUpdateStatus bool   `dc:"是否跳过状态更新，继续保持creating"`
+		SkipUpdateStatus bool   `dc:"是否跳过状态更新，继续保持creating" ed:"http://goframe.org"`
 	}
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -828,6 +828,6 @@ func Test_Properties_In_Sequence(t *testing.T) {
 			Object: req,
 		})
 		t.AssertNil(err)
-		//fmt.Println(oai)
+		fmt.Println(oai)
 	})
 }
