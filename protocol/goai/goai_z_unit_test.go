@@ -51,7 +51,7 @@ func Test_Basic(t *testing.T) {
 		t.Assert(len(oai.Components.Schemas.Map()), 2)
 		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`).Value.Type, goai.TypeObject)
 		t.Assert(len(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`).Value.Properties.Map()), 7)
-		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`).Value.Properties.Get(`appId`).Value.Type, goai.TypeNumber)
+		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`).Value.Properties.Get(`appId`).Value.Type, goai.TypeInteger)
 		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`).Value.Properties.Get(`resourceId`).Value.Type, goai.TypeString)
 
 		t.Assert(len(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.SetSpecInfo`).Value.Properties.Map()), 3)
@@ -111,7 +111,7 @@ func TestOpenApiV3_Add(t *testing.T) {
 		t.Assert(len(oai.Components.Schemas.Map()), 3)
 		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`).Value.Type, goai.TypeObject)
 		t.Assert(len(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`).Value.Properties.Map()), 7)
-		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`).Value.Properties.Get(`appId`).Value.Type, goai.TypeNumber)
+		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`).Value.Properties.Get(`appId`).Value.Type, goai.TypeInteger)
 		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`).Value.Properties.Get(`resourceId`).Value.Type, goai.TypeString)
 
 		t.Assert(len(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.SetSpecInfo`).Value.Properties.Map()), 3)
