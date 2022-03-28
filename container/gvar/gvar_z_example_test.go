@@ -18,10 +18,10 @@ import (
 // New
 func ExampleVarNew() {
 	v := gvar.New(400)
-	g.Dump(v)
+	fmt.Println(v)
 
 	// Output:
-	// "400"
+	// 400
 }
 
 // Clone

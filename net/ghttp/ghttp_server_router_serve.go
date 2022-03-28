@@ -9,6 +9,7 @@ package ghttp
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/gogf/gf/v2/container/glist"
@@ -36,31 +37,33 @@ func (s *Server) serveHandlerKey(method, path, domain string) string {
 	return strings.ToUpper(method) + ":" + path + strings.ToLower(domain)
 }
 
-// getHandlersWithCache searches the router item with cache feature for given request.
+// getHandlersWithCache searches the router item with cache feature for a given request.
 func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedItem, hasHook, hasServe bool) {
 	var (
 		ctx    = r.Context()
 		method = r.Method
+		path   = r.URL.Path
+		host   = r.GetHost()
 	)
 	// Special http method OPTIONS handling.
 	// It searches the handler with the request method instead of OPTIONS method.
-	if method == "OPTIONS" {
+	if method == http.MethodOptions {
 		if v := r.Request.Header.Get("Access-Control-Request-Method"); v != "" {
 			method = v
 		}
 	}
 	// Search and cache the router handlers.
-	value, err := s.serveCache.GetOrSetFunc(
-		ctx,
-		s.serveHandlerKey(method, r.URL.Path, r.GetHost()),
-		func(ctx context.Context) (interface{}, error) {
-			parsedItems, hasHook, hasServe = s.searchHandlers(method, r.URL.Path, r.GetHost())
-			if parsedItems != nil {
-				return &handlerCacheItem{parsedItems, hasHook, hasServe}, nil
-			}
-			return nil, nil
-		}, routeCacheDuration,
-	)
+	if xUrlPath := r.Header.Get(HeaderXUrlPath); xUrlPath != "" {
+		path = xUrlPath
+	}
+	var handlerKey = s.serveHandlerKey(method, path, host)
+	value, err := s.serveCache.GetOrSetFunc(ctx, handlerKey, func(ctx context.Context) (interface{}, error) {
+		parsedItems, hasHook, hasServe = s.searchHandlers(method, path, host)
+		if parsedItems != nil {
+			return &handlerCacheItem{parsedItems, hasHook, hasServe}, nil
+		}
+		return nil, nil
+	}, routeCacheDuration)
 	if err != nil {
 		intlog.Errorf(ctx, `%+v`, err)
 	}
@@ -71,7 +74,7 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedI
 	return
 }
 
-// searchHandlers retrieves and returns the routers with given parameters.
+// searchHandlers retrieve and returns the routers with given parameters.
 // Note that the returned routers contain serving handler, middleware handlers and hook handlers.
 func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*handlerParsedItem, hasHook, hasServe bool) {
 	if len(path) == 0 {
@@ -106,16 +109,16 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 		repeatHandlerCheckMap = make(map[int]struct{}, 16)
 	)
 
-	// Default domain has the most priority when iteration.
-	for _, domain := range []string{DefaultDomainName, domain} {
-		p, ok := s.serveTree[domain]
+	// The default domain has the most priority when iteration.
+	for _, domainItem := range []string{DefaultDomainName, domain} {
+		p, ok := s.serveTree[domainItem]
 		if !ok {
 			continue
 		}
-		// Make a list array with capacity of 16.
+		// Make a list array with a capacity of 16.
 		lists := make([]*glist.List, 0, 16)
 		for i, part := range array {
-			// Add all list of each node to the list array.
+			// Add all lists of each node to the list array.
 			if v, ok := p.(map[string]interface{})["*list"]; ok {
 				lists = append(lists, v.(*glist.List))
 			}
@@ -150,7 +153,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 		for i := len(lists) - 1; i >= 0; i-- {
 			for e := lists[i].Front(); e != nil; e = e.Next() {
 				item := e.Value.(*handlerItem)
-				// Filter repeated handler item, especially the middleware and hook handlers.
+				// Filter repeated handler items, especially the middleware and hook handlers.
 				// It is necessary, do not remove this checks logic unless you really know how it is necessary.
 				if _, ok := repeatHandlerCheckMap[item.Id]; ok {
 					continue
@@ -180,7 +183,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 							}
 						}
 						switch item.Type {
-						// The serving handler can be only added just once.
+						// The serving handler can be added just once.
 						case HandlerTypeHandler, HandlerTypeObject:
 							hasServe = true
 							parsedItemList.PushBack(parsedItem)

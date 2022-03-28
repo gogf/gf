@@ -23,16 +23,16 @@ import (
 
 // UploadFile wraps the multipart uploading file with more and convenient features.
 type UploadFile struct {
-	*multipart.FileHeader
-	ctx context.Context
+	*multipart.FileHeader `json:"-"`
+	ctx                   context.Context
 }
 
-// UploadFiles is array type for *UploadFile.
+// UploadFiles is an array type of *UploadFile.
 type UploadFiles []*UploadFile
 
 // Save saves the single uploading file to directory path and returns the saved file name.
 //
-// The parameter `dirPath` should be a directory path or it returns error.
+// The parameter `dirPath` should be a directory path, or it returns error.
 //
 // Note that it will OVERWRITE the target file if there's already a same name file exist.
 func (f *UploadFile) Save(dirPath string, randomlyRename ...bool) (filename string, err error) {

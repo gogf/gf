@@ -336,7 +336,7 @@ func TestSet_Json(t *testing.T) {
 
 		var a3 gset.Set
 		err := json.UnmarshalUseNumber(b2, &a3)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(a3.Contains("a"), true)
 		t.Assert(a3.Contains("b"), true)
 		t.Assert(a3.Contains("c"), true)
@@ -438,7 +438,7 @@ func TestSet_UnmarshalValue(t *testing.T) {
 			"name": "john",
 			"set":  []byte(`["k1","k2","k3"]`),
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Set.Size(), 3)
 		t.Assert(v.Set.Contains("k1"), true)
@@ -453,7 +453,7 @@ func TestSet_UnmarshalValue(t *testing.T) {
 			"name": "john",
 			"set":  g.Slice{"k1", "k2", "k3"},
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Set.Size(), 3)
 		t.Assert(v.Set.Contains("k1"), true)

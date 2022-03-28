@@ -709,20 +709,20 @@ func TestList_Json(t *testing.T) {
 		a := []interface{}{"a", "b", "c"}
 		l := New()
 		b, err := json.Marshal(a)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		err = json.UnmarshalUseNumber(b, l)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(l.FrontAll(), a)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var l List
 		a := []interface{}{"a", "b", "c"}
 		b, err := json.Marshal(a)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		err = json.UnmarshalUseNumber(b, &l)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(l.FrontAll(), a)
 	})
 }
@@ -739,7 +739,7 @@ func TestList_UnmarshalValue(t *testing.T) {
 			"name": "john",
 			"list": []byte(`[1,2,3]`),
 		}, &tlist)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(tlist.Name, "john")
 		t.Assert(tlist.List.FrontAll(), []interface{}{1, 2, 3})
 	})
@@ -750,7 +750,7 @@ func TestList_UnmarshalValue(t *testing.T) {
 			"name": "john",
 			"list": []interface{}{1, 2, 3},
 		}, &tlist)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(tlist.Name, "john")
 		t.Assert(tlist.List.FrontAll(), []interface{}{1, 2, 3})
 	})

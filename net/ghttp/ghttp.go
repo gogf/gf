@@ -12,11 +12,11 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gorilla/websocket"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gsession"
 	"github.com/gogf/gf/v2/protocol/goai"
@@ -31,7 +31,7 @@ type (
 		servers          []*gracefulServer                // Underlying http.Server array.
 		serverCount      *gtype.Int                       // Underlying http.Server count.
 		closeChan        chan struct{}                    // Used for underlying server closing event notification.
-		serveTree        map[string]interface{}           // The route map tree.
+		serveTree        map[string]interface{}           // The route maps tree.
 		serveCache       *gcache.Cache                    // Server caches for internal usage.
 		routesMap        map[string][]registeredRouteItem // Route map mainly for route dumps and repeated route checks.
 		statusHandlerMap map[string][]HandlerFunc         // Custom status handler map.
@@ -70,8 +70,8 @@ type (
 	// handlerFuncInfo contains the HandlerFunc address and its reflection type.
 	handlerFuncInfo struct {
 		Func  HandlerFunc   // Handler function address.
-		Type  reflect.Type  // Reflect type information for current handler, which is used for extension of handler feature.
-		Value reflect.Value // Reflect value information for current handler, which is used for extension of handler feature.
+		Type  reflect.Type  // Reflect type information for current handler, which is used for extensions of the handler feature.
+		Value reflect.Value // Reflect value information for current handler, which is used for extensions of the handler feature.
 	}
 
 	// handlerItem is the registered handler for route handling,
@@ -84,7 +84,7 @@ type (
 		InitFunc   HandlerFunc     // Initialization function when request enters the object (only available for object register type).
 		ShutFunc   HandlerFunc     // Shutdown function when request leaves out the object (only available for object register type).
 		Middleware []HandlerFunc   // Bound middleware array.
-		HookName   string          // Hook type name, only available for hook type.
+		HookName   string          // Hook type name, only available for the hook type.
 		Router     *Router         // Router object.
 		Source     string          // Registering source file `path:line`.
 	}
@@ -107,10 +107,11 @@ type (
 )
 
 const (
-	HookBeforeServe       = "HOOK_BEFORE_SERVE"
-	HookAfterServe        = "HOOK_AFTER_SERVE"
-	HookBeforeOutput      = "HOOK_BEFORE_OUTPUT"
-	HookAfterOutput       = "HOOK_AFTER_OUTPUT"
+	HeaderXUrlPath        = "x-url-path"         // Used for custom route handler, which does not change URL.Path.
+	HookBeforeServe       = "HOOK_BEFORE_SERVE"  // Hook handler before route handler/file serving.
+	HookAfterServe        = "HOOK_AFTER_SERVE"   // Hook handler after route handler/file serving.
+	HookBeforeOutput      = "HOOK_BEFORE_OUTPUT" // Hook handler before response output.
+	HookAfterOutput       = "HOOK_AFTER_OUTPUT"  // Hook handler after response output.
 	ServerStatusStopped   = 0
 	ServerStatusRunning   = 1
 	DefaultServerName     = "default"
@@ -122,32 +123,33 @@ const (
 )
 
 const (
-	supportedHttpMethods  = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
-	defaultMethod         = "ALL"
-	exceptionExit         = "exit"
-	exceptionExitAll      = "exit_all"
-	exceptionExitHook     = "exit_hook"
-	routeCacheDuration    = time.Hour
-	methodNameInit        = "Init"
-	methodNameShut        = "Shut"
-	ctxKeyForRequest      = "gHttpRequestObject"
-	contentTypeXml        = "text/xml"
-	contentTypeHtml       = "text/html"
-	contentTypeJson       = "application/json"
-	swaggerUIPackedPath   = "/goframe/swaggerui"
-	responseTraceIDHeader = "Trace-ID"
+	supportedHttpMethods   = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
+	defaultMethod          = "ALL"
+	exceptionExit          = "exit"
+	exceptionExitAll       = "exit_all"
+	exceptionExitHook      = "exit_hook"
+	routeCacheDuration     = time.Hour
+	ctxKeyForRequest       = "gHttpRequestObject"
+	contentTypeXml         = "text/xml"
+	contentTypeHtml        = "text/html"
+	contentTypeJson        = "application/json"
+	swaggerUIPackedPath    = "/goframe/swaggerui"
+	responseTraceIDHeader  = "Trace-ID"
+	specialMethodNameInit  = "Init"
+	specialMethodNameShut  = "Shut"
+	specialMethodNameIndex = "Index"
 )
 
 var (
-	// methodsMap stores all supported HTTP method,
-	// it is used for quick HTTP method searching using map.
+	// methodsMap stores all supported HTTP method.
+	// It is used for quick HTTP method searching using map.
 	methodsMap = make(map[string]struct{})
 
-	// serverMapping stores more than one server instances for current process.
+	// serverMapping stores more than one server instances for current processes.
 	// The key is the name of the server, and the value is its instance.
 	serverMapping = gmap.NewStrAnyMap(true)
 
-	// serverRunning marks the running server count.
+	// serverRunning marks the running server counts.
 	// If there is no successful server running or all servers' shutdown, this value is 0.
 	serverRunning = gtype.NewInt()
 
@@ -158,7 +160,7 @@ var (
 			return true
 		},
 	}
-	// allDoneChan is the event for all server have done its serving and exit.
+	// allDoneChan is the event for all servers have done its serving and exit.
 	// It is used for process blocking purpose.
 	allDoneChan = make(chan struct{}, 1000)
 
@@ -166,9 +168,9 @@ var (
 	// The process can only be initialized once.
 	serverProcessInitialized = gtype.NewBool()
 
-	// gracefulEnabled is used for graceful reload feature, which is false in default.
+	// gracefulEnabled is used for a graceful reload feature, which is false in default.
 	gracefulEnabled = false
 
-	// defaultValueTags is the struct tag names for default value storing.
+	// defaultValueTags are the struct tag names for default value storing.
 	defaultValueTags = []string{"d", "default"}
 )

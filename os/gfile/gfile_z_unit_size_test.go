@@ -68,6 +68,11 @@ func Test_StrToSize(t *testing.T) {
 		t.Assert(gfile.StrToSize("8.53P"), gconv.Int64(8.53*1024*1024*1024*1024*1024))
 		t.Assert(gfile.StrToSize("8.53PB"), gconv.Int64(8.53*1024*1024*1024*1024*1024))
 		t.Assert(gfile.StrToSize("8.01EB"), gconv.Int64(8.01*1024*1024*1024*1024*1024*1024))
+		t.Assert(gfile.StrToSize("0.01ZB"), gconv.Int64(0.01*1024*1024*1024*1024*1024*1024*1024))
+		t.Assert(gfile.StrToSize("0.01YB"), gconv.Int64(0.01*1024*1024*1024*1024*1024*1024*1024*1024))
+		t.Assert(gfile.StrToSize("0.01BB"), gconv.Int64(0.01*1024*1024*1024*1024*1024*1024*1024*1024*1024))
+		t.Assert(gfile.StrToSize("0.01AB"), gconv.Int64(-1))
+		t.Assert(gfile.StrToSize("123456789"), 123456789)
 	})
 }
 

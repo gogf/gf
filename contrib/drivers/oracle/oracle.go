@@ -32,8 +32,8 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-// DriverOracle is the driver for oracle database.
-type DriverOracle struct {
+// Driver is the driver for oracle database.
+type Driver struct {
 	*gdb.Core
 }
 
@@ -50,19 +50,19 @@ func init() {
 
 // New create and returns a driver that implements gdb.Driver, which supports operations for Oracle.
 func New() gdb.Driver {
-	return &DriverOracle{}
+	return &Driver{}
 }
 
 // New creates and returns a database object for oracle.
 // It implements the interface of gdb.Driver for extra database driver installation.
-func (d *DriverOracle) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
-	return &DriverOracle{
+func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
+	return &Driver{
 		Core: core,
 	}, nil
 }
 
 // Open creates and returns an underlying sql.DB object for oracle.
-func (d *DriverOracle) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
+func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	var (
 		source               string
 		underlyingDriverName = "oci8"
@@ -88,7 +88,7 @@ func (d *DriverOracle) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 
 // FilteredLink retrieves and returns filtered `linkInfo` that can be using for
 // logging or tracing purpose.
-func (d *DriverOracle) FilteredLink() string {
+func (d *Driver) FilteredLink() string {
 	linkInfo := d.GetConfig().Link
 	if linkInfo == "" {
 		return ""
@@ -102,12 +102,12 @@ func (d *DriverOracle) FilteredLink() string {
 }
 
 // GetChars returns the security char for this type of database.
-func (d *DriverOracle) GetChars() (charLeft string, charRight string) {
+func (d *Driver) GetChars() (charLeft string, charRight string) {
 	return "\"", "\""
 }
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
-func (d *DriverOracle) DoFilter(ctx context.Context, link gdb.Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
 	defer func() {
 		newSql, newArgs, err = d.Core.DoFilter(ctx, link, newSql, newArgs)
 	}()
@@ -136,7 +136,7 @@ func (d *DriverOracle) DoFilter(ctx context.Context, link gdb.Link, sql string, 
 
 // parseSql does some replacement of the sql before commits it to underlying driver,
 // for support of oracle server.
-func (d *DriverOracle) parseSql(sql string) string {
+func (d *Driver) parseSql(sql string) string {
 	var (
 		patten      = `^\s*(?i)(SELECT)|(LIMIT\s*(\d+)\s*,{0,1}\s*(\d*))`
 		allMatch, _ = gregex.MatchAllString(patten, sql)
@@ -192,9 +192,9 @@ func (d *DriverOracle) parseSql(sql string) string {
 // Tables retrieves and returns the tables of current schema.
 // It's mainly used in cli tool chain for automatically generating the models.
 // Note that it ignores the parameter `schema` in oracle database, as it is not necessary.
-func (d *DriverOracle) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
+func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
 	var result gdb.Result
-	result, err = d.DoGetAll(ctx, nil, "SELECT TABLE_NAME FROM USER_TABLES ORDER BY TABLE_NAME")
+	result, err = d.DoSelect(ctx, nil, "SELECT TABLE_NAME FROM USER_TABLES ORDER BY TABLE_NAME")
 	if err != nil {
 		return
 	}
@@ -209,7 +209,7 @@ func (d *DriverOracle) Tables(ctx context.Context, schema ...string) (tables []s
 // TableFields retrieves and returns the fields' information of specified table of current schema.
 //
 // Also see DriverMysql.TableFields.
-func (d *DriverOracle) TableFields(
+func (d *Driver) TableFields(
 	ctx context.Context, table string, schema ...string,
 ) (fields map[string]*gdb.TableField, err error) {
 	charL, charR := d.GetChars()
@@ -245,7 +245,7 @@ FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`,
 				return nil
 			}
 			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
-			result, err = d.DoGetAll(ctx, link, structureSql)
+			result, err = d.DoSelect(ctx, link, structureSql)
 			if err != nil {
 				return nil
 			}
@@ -278,7 +278,7 @@ FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`,
 // 1: replace: if there's unique/primary key in the data, it deletes it from table and inserts a new one;
 // 2: save:    if there's unique/primary key in the data, it updates it or else inserts a new one;
 // 3: ignore:  if there's unique/primary key in the data, it ignores the inserting;
-func (d *DriverOracle) DoInsert(
+func (d *Driver) DoInsert(
 	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
 ) (result sql.Result, err error) {
 	switch option.InsertOption {

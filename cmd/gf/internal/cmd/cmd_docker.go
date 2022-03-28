@@ -37,7 +37,8 @@ It runs "gf build" firstly to compile the project to binary file.
 It then runs "docker build" command automatically to generate the docker image.
 You should have docker installed, and there must be a Dockerfile in the root of the project.
 `
-	cDockerMainBrief  = `main golang file path for "gf build", it's "main.go" in default`
+	cDockerMainBrief  = `main file path for "gf build", it's "main.go" in default. empty string for no binary build`
+	cDockerBuildBrief = `binary build options before docker image build, it's "-a amd64 -s linux" in default`
 	cDockerFileBrief  = `file path of the Dockerfile. it's "manifest/docker/Dockerfile" in default`
 	cDockerShellBrief = `path of the shell file which is executed before docker build`
 	cDockerPushBrief  = `auto push the docker image to docker registry if "-t" option passed`
@@ -54,6 +55,7 @@ func init() {
 		`cDockerMainBrief`:  cDockerMainBrief,
 		`cDockerFileBrief`:  cDockerFileBrief,
 		`cDockerShellBrief`: cDockerShellBrief,
+		`cDockerBuildBrief`: cDockerBuildBrief,
 		`cDockerPushBrief`:  cDockerPushBrief,
 		`cDockerTagBrief`:   cDockerTagBrief,
 		`cDockerExtraBrief`: cDockerExtraBrief,
@@ -65,6 +67,7 @@ type cDockerInput struct {
 	Main   string `name:"MAIN"  arg:"true" brief:"{cDockerMainBrief}"  d:"main.go"`
 	File   string `name:"file"  short:"f"  brief:"{cDockerFileBrief}"  d:"manifest/docker/Dockerfile"`
 	Shell  string `name:"shell" short:"s"  brief:"{cDockerShellBrief}" d:"manifest/docker/docker.sh"`
+	Build  string `name:"build" short:"b"  brief:"{cDockerBuildBrief}" d:"-a amd64 -s linux"`
 	Tag    string `name:"tag"   short:"t"  brief:"{cDockerTagBrief}"`
 	Push   bool   `name:"push"  short:"p"  brief:"{cDockerPushBrief}" orphan:"true"`
 	Extra  string `name:"extra" short:"e"  brief:"{cDockerExtraBrief}"`
@@ -78,9 +81,13 @@ func (c cDocker) Index(ctx context.Context, in cDockerInput) (out *cDockerOutput
 	}
 
 	// Binary build.
-	if err = gproc.ShellRun(fmt.Sprintf(`gf build %s -a amd64 -s linux`, in.Main)); err != nil {
-		return
+	in.Build += " --exit"
+	if in.Main != "" {
+		if err = gproc.ShellRun(fmt.Sprintf(`gf build %s %s`, in.Main, in.Build)); err != nil {
+			return
+		}
 	}
+
 	// Shell executing.
 	if gfile.Exists(in.Shell) {
 		if err = gproc.ShellRun(gfile.GetContents(in.Shell)); err != nil {

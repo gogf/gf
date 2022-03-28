@@ -45,7 +45,7 @@ var (
 //
 // The parameter `pointer` can be type of: *struct/**struct/*[]struct/*[]*struct.
 //
-// It supports single and multiple struct convertion:
+// It supports single and multiple struct converting:
 // 1. Single struct, post content like: {"id":1, "name":"john"} or ?id=1&name=john
 // 2. Multiple struct, post content like: [{"id":1, "name":"john"}, {"id":, "name":"smith"}]
 //
@@ -107,14 +107,18 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 			}
 		}
 		// Validation.
-		if err = gvalid.New().Data(pointer).Assoc(data).Run(r.Context()); err != nil {
+		if err = gvalid.New().
+			Bail().
+			Data(pointer).
+			Assoc(data).
+			Run(r.Context()); err != nil {
 			return err
 		}
 
 	// Multiple struct, it only supports JSON type post content like:
 	// [{"id":1, "name":"john"}, {"id":, "name":"smith"}]
 	case reflect.Array, reflect.Slice:
-		// If struct slice conversion, it might post JSON/XML content,
+		// If struct slice conversion, it might post JSON/XML/... content,
 		// so it uses `gjson` for the conversion.
 		j, err := gjson.LoadContent(r.GetBody())
 		if err != nil {
@@ -125,7 +129,9 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 		}
 		for i := 0; i < reflectVal2.Len(); i++ {
 			if err = gvalid.New().
-				Data(reflectVal2.Index(i)).Assoc(j.Get(gconv.String(i)).Map()).
+				Bail().
+				Data(reflectVal2.Index(i)).
+				Assoc(j.Get(gconv.String(i)).Map()).
 				Run(r.Context()); err != nil {
 				return err
 			}
@@ -314,7 +320,7 @@ func (r *Request) parseForm() {
 	}
 }
 
-// GetMultipartForm parses and returns the form as multipart form.
+// GetMultipartForm parses and returns the form as multipart forms.
 func (r *Request) GetMultipartForm() *multipart.Form {
 	r.parseForm()
 	return r.MultipartForm

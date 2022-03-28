@@ -27,8 +27,8 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-// DriverSqlite is the driver for sqlite database.
-type DriverSqlite struct {
+// Driver is the driver for sqlite database.
+type Driver struct {
 	*gdb.Core
 }
 
@@ -45,19 +45,19 @@ func init() {
 
 // New create and returns a driver that implements gdb.Driver, which supports operations for SQLite.
 func New() gdb.Driver {
-	return &DriverSqlite{}
+	return &Driver{}
 }
 
 // New creates and returns a database object for sqlite.
 // It implements the interface of gdb.Driver for extra database driver installation.
-func (d *DriverSqlite) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
-	return &DriverSqlite{
+func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
+	return &Driver{
 		Core: core,
 	}, nil
 }
 
 // Open creates and returns a underlying sql.DB object for sqlite.
-func (d *DriverSqlite) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
+func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	var (
 		source               string
 		underlyingDriverName = "sqlite3"
@@ -83,30 +83,30 @@ func (d *DriverSqlite) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 
 // FilteredLink retrieves and returns filtered `linkInfo` that can be using for
 // logging or tracing purpose.
-func (d *DriverSqlite) FilteredLink() string {
+func (d *Driver) FilteredLink() string {
 	return d.GetConfig().Link
 }
 
 // GetChars returns the security char for this type of database.
-func (d *DriverSqlite) GetChars() (charLeft string, charRight string) {
+func (d *Driver) GetChars() (charLeft string, charRight string) {
 	return "`", "`"
 }
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
-func (d *DriverSqlite) DoFilter(ctx context.Context, link gdb.Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
 	return d.Core.DoFilter(ctx, link, sql, args)
 }
 
 // Tables retrieves and returns the tables of current schema.
 // It's mainly used in cli tool chain for automatically generating the models.
-func (d *DriverSqlite) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
+func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
 	var result gdb.Result
 	link, err := d.SlaveLink(schema...)
 	if err != nil {
 		return nil, err
 	}
 
-	result, err = d.DoGetAll(ctx, link, `SELECT NAME FROM SQLITE_MASTER WHERE TYPE='table' ORDER BY NAME`)
+	result, err = d.DoSelect(ctx, link, `SELECT NAME FROM SQLITE_MASTER WHERE TYPE='table' ORDER BY NAME`)
 	if err != nil {
 		return
 	}
@@ -121,7 +121,7 @@ func (d *DriverSqlite) Tables(ctx context.Context, schema ...string) (tables []s
 // TableFields retrieves and returns the fields' information of specified table of current schema.
 //
 // Also see DriverMysql.TableFields.
-func (d *DriverSqlite) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
+func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
@@ -141,7 +141,7 @@ func (d *DriverSqlite) TableFields(ctx context.Context, table string, schema ...
 			if link, err = d.SlaveLink(useSchema); err != nil {
 				return nil
 			}
-			result, err = d.DoGetAll(ctx, link, fmt.Sprintf(`PRAGMA TABLE_INFO(%s)`, table))
+			result, err = d.DoSelect(ctx, link, fmt.Sprintf(`PRAGMA TABLE_INFO(%s)`, table))
 			if err != nil {
 				return nil
 			}
@@ -163,7 +163,7 @@ func (d *DriverSqlite) TableFields(ctx context.Context, table string, schema ...
 }
 
 // DoInsert is not supported in sqlite.
-func (d *DriverSqlite) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
+func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
 	switch option.InsertOption {
 	case gdb.InsertOptionSave:
 		return nil, gerror.NewCode(gcode.CodeNotSupported, `Save operation is not supported by sqlite driver`)

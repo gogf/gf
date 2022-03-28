@@ -29,7 +29,7 @@ const (
 func C(t *testing.T, f func(t *T)) {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Fprintf(os.Stderr, "%v\n%s", err, gdebug.StackWithFilter([]string{pathFilterKey}))
+			_, _ = fmt.Fprintf(os.Stderr, "%v\n%s", err, gdebug.StackWithFilter([]string{pathFilterKey}))
 			t.Fail()
 		}
 	}()
@@ -345,11 +345,11 @@ func AssertNil(value interface{}) {
 	AssertNE(value, nil)
 }
 
-// TestDataPath retrieves and returns the testdata path of current package,
+// DataPath retrieves and returns the testdata path of current package,
 // which is used for unit testing cases only.
 // The optional parameter `names` specifies the sub-folders/sub-files,
 // which will be joined with current system separator and returned with the path.
-func TestDataPath(names ...string) string {
+func DataPath(names ...string) string {
 	_, path, _ := gdebug.CallerWithFilter([]string{pathFilterKey})
 	path = filepath.Dir(path) + string(filepath.Separator) + "testdata"
 	for _, name := range names {
@@ -358,9 +358,9 @@ func TestDataPath(names ...string) string {
 	return path
 }
 
-// TestDataContent retrieves and returns the file content for specified testdata path of current package
-func TestDataContent(names ...string) string {
-	path := TestDataPath(names...)
+// DataContent retrieves and returns the file content for specified testdata path of current package
+func DataContent(names ...string) string {
+	path := DataPath(names...)
 	if path != "" {
 		data, err := ioutil.ReadFile(path)
 		if err == nil {

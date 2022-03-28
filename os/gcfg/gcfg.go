@@ -9,9 +9,7 @@ package gcfg
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -24,11 +22,11 @@ import (
 // Config is the configuration management object.
 type Config struct {
 	adapter Adapter
-	dataMap *gmap.StrAnyMap
 }
 
 const (
-	DefaultName = "config" // DefaultName is the default group name for instance usage.
+	DefaultInstanceName   = "config" // DefaultName is the default instance name for instance usage.
+	DefaultConfigFileName = "config" // DefaultConfigFile is the default configuration file name.
 )
 
 // New creates and returns a Config object with default adapter of AdapterFile.
@@ -39,7 +37,6 @@ func New() (*Config, error) {
 	}
 	return &Config{
 		adapter: adapterFile,
-		dataMap: gmap.NewStrAnyMap(true),
 	}, nil
 }
 
@@ -47,7 +44,6 @@ func New() (*Config, error) {
 func NewWithAdapter(adapter Adapter) *Config {
 	return &Config{
 		adapter: adapter,
-		dataMap: gmap.NewStrAnyMap(true),
 	}
 }
 
@@ -56,31 +52,20 @@ func NewWithAdapter(adapter Adapter) *Config {
 // exists in the configuration directory, it then sets it as the default configuration file. The
 // toml file type is the default configuration file type.
 func Instance(name ...string) *Config {
-	var (
-		ctx = context.TODO()
-		key = DefaultName
-	)
+	var instanceName = DefaultInstanceName
 	if len(name) > 0 && name[0] != "" {
-		key = name[0]
+		instanceName = name[0]
 	}
-	return localInstances.GetOrSetFuncLock(key, func() interface{} {
-		adapter, err := NewAdapterFile()
+	return localInstances.GetOrSetFuncLock(instanceName, func() interface{} {
+		adapterFile, err := NewAdapterFile()
 		if err != nil {
 			intlog.Errorf(context.Background(), `%+v`, err)
 			return nil
 		}
-		// If it's not using default configuration or its configuration file is not available,
-		// it searches the possible configuration file according to the name and all supported
-		// file types.
-		if key != DefaultName || !adapter.Available(ctx) {
-			for _, fileType := range supportedFileTypes {
-				if file := fmt.Sprintf(`%s.%s`, key, fileType); adapter.Available(ctx, file) {
-					adapter.SetFileName(file)
-					break
-				}
-			}
+		if instanceName != DefaultInstanceName {
+			adapterFile.SetFileName(instanceName)
 		}
-		return NewWithAdapter(adapter)
+		return NewWithAdapter(adapterFile)
 	}).(*Config)
 }
 
@@ -103,13 +88,6 @@ func (c *Config) Available(ctx context.Context, resource ...string) (ok bool) {
 	return c.adapter.Available(ctx, resource...)
 }
 
-// Set sets value with specified `pattern`.
-// It supports hierarchical data access by char separator, which is '.' in default.
-// It is commonly used for updates certain configuration value in runtime.
-func (c *Config) Set(ctx context.Context, pattern string, value interface{}) {
-	c.dataMap.Set(pattern, value)
-}
-
 // Get retrieves and returns value by specified `pattern`.
 // It returns all values of current Json object if `pattern` is given empty or string ".".
 // It returns nil if no value found by `pattern`.
@@ -120,17 +98,15 @@ func (c *Config) Get(ctx context.Context, pattern string, def ...interface{}) (*
 		err   error
 		value interface{}
 	)
-	if value = c.dataMap.Get(pattern); value == nil {
-		value, err = c.adapter.Get(ctx, pattern)
-		if err != nil {
-			return nil, err
+	value, err = c.adapter.Get(ctx, pattern)
+	if err != nil {
+		return nil, err
+	}
+	if value == nil {
+		if len(def) > 0 {
+			return gvar.New(def[0]), nil
 		}
-		if value == nil {
-			if len(def) > 0 {
-				return gvar.New(def[0]), nil
-			}
-			return nil, nil
-		}
+		return nil, nil
 	}
 	return gvar.New(value), nil
 }
@@ -181,19 +157,7 @@ func (c *Config) GetWithCmd(ctx context.Context, pattern string, def ...interfac
 
 // Data retrieves and returns all configuration data as map type.
 func (c *Config) Data(ctx context.Context) (data map[string]interface{}, err error) {
-	adapterData, err := c.adapter.Data(ctx)
-	if err != nil {
-		return nil, err
-	}
-	data = make(map[string]interface{})
-	for k, v := range adapterData {
-		data[k] = v
-	}
-	c.dataMap.Iterator(func(k string, v interface{}) bool {
-		data[k] = v
-		return true
-	})
-	return
+	return c.adapter.Data(ctx)
 }
 
 // MustGet acts as function Get, but it panics if error occurs.

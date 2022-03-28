@@ -48,14 +48,14 @@ func Test_Basic(t *testing.T) {
 		})
 		t.AssertNil(err)
 		// Schema asserts.
-		t.Assert(len(oai.Components.Schemas), 2)
-		t.Assert(oai.Components.Schemas[`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`].Value.Type, goai.TypeObject)
-		t.Assert(len(oai.Components.Schemas[`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`].Value.Properties), 7)
-		t.Assert(oai.Components.Schemas[`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`].Value.Properties[`appId`].Value.Type, goai.TypeNumber)
-		t.Assert(oai.Components.Schemas[`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`].Value.Properties[`resourceId`].Value.Type, goai.TypeString)
+		t.Assert(len(oai.Components.Schemas.Map()), 2)
+		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`).Value.Type, goai.TypeObject)
+		t.Assert(len(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`).Value.Properties.Map()), 7)
+		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`).Value.Properties.Get(`appId`).Value.Type, goai.TypeInteger)
+		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`).Value.Properties.Get(`resourceId`).Value.Type, goai.TypeString)
 
-		t.Assert(len(oai.Components.Schemas[`github.com.gogf.gf.v2.protocol.goai_test.SetSpecInfo`].Value.Properties), 3)
-		t.Assert(oai.Components.Schemas[`github.com.gogf.gf.v2.protocol.goai_test.SetSpecInfo`].Value.Properties[`Params`].Value.Type, goai.TypeArray)
+		t.Assert(len(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.SetSpecInfo`).Value.Properties.Map()), 3)
+		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.SetSpecInfo`).Value.Properties.Get(`Params`).Value.Type, goai.TypeArray)
 	})
 }
 
@@ -108,14 +108,14 @@ func TestOpenApiV3_Add(t *testing.T) {
 		t.AssertNil(err)
 		// fmt.Println(oai.String())
 		// Schema asserts.
-		t.Assert(len(oai.Components.Schemas), 3)
-		t.Assert(oai.Components.Schemas[`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`].Value.Type, goai.TypeObject)
-		t.Assert(len(oai.Components.Schemas[`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`].Value.Properties), 7)
-		t.Assert(oai.Components.Schemas[`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`].Value.Properties[`appId`].Value.Type, goai.TypeNumber)
-		t.Assert(oai.Components.Schemas[`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`].Value.Properties[`resourceId`].Value.Type, goai.TypeString)
+		t.Assert(len(oai.Components.Schemas.Map()), 3)
+		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`).Value.Type, goai.TypeObject)
+		t.Assert(len(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`).Value.Properties.Map()), 7)
+		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`).Value.Properties.Get(`appId`).Value.Type, goai.TypeInteger)
+		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`).Value.Properties.Get(`resourceId`).Value.Type, goai.TypeString)
 
-		t.Assert(len(oai.Components.Schemas[`github.com.gogf.gf.v2.protocol.goai_test.SetSpecInfo`].Value.Properties), 3)
-		t.Assert(oai.Components.Schemas[`github.com.gogf.gf.v2.protocol.goai_test.SetSpecInfo`].Value.Properties[`Params`].Value.Type, goai.TypeArray)
+		t.Assert(len(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.SetSpecInfo`).Value.Properties.Map()), 3)
+		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.SetSpecInfo`).Value.Properties.Get(`Params`).Value.Type, goai.TypeArray)
 
 		// Paths.
 		t.Assert(len(oai.Paths), 1)
@@ -158,9 +158,9 @@ func TestOpenApiV3_Add_Recursive(t *testing.T) {
 		})
 		t.AssertNil(err)
 		// Schema asserts.
-		t.Assert(len(oai.Components.Schemas), 3)
-		t.Assert(oai.Components.Schemas[`github.com.gogf.gf.v2.protocol.goai_test.CategoryTreeItem`].Value.Type, goai.TypeObject)
-		t.Assert(len(oai.Components.Schemas[`github.com.gogf.gf.v2.protocol.goai_test.CategoryTreeItem`].Value.Properties), 3)
+		t.Assert(len(oai.Components.Schemas.Map()), 3)
+		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.CategoryTreeItem`).Value.Type, goai.TypeObject)
+		t.Assert(len(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.CategoryTreeItem`).Value.Properties.Map()), 3)
 	})
 }
 
@@ -222,7 +222,7 @@ func TestOpenApiV3_Add_AutoDetectIn(t *testing.T) {
 
 		fmt.Println(oai.String())
 
-		t.Assert(len(oai.Components.Schemas), 2)
+		t.Assert(len(oai.Components.Schemas.Map()), 2)
 		t.Assert(len(oai.Paths), 1)
 		t.AssertNE(oai.Paths[path].Get, nil)
 		t.Assert(len(oai.Paths[path].Get.Parameters), 3)
@@ -274,9 +274,9 @@ func TestOpenApiV3_CommonRequest(t *testing.T) {
 		})
 		t.AssertNil(err)
 		// Schema asserts.
-		t.Assert(len(oai.Components.Schemas), 3)
+		t.Assert(len(oai.Components.Schemas.Map()), 3)
 		t.Assert(len(oai.Paths), 1)
-		t.Assert(len(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties), 3)
+		t.Assert(len(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties.Map()), 3)
 	})
 }
 
@@ -319,9 +319,9 @@ func TestOpenApiV3_CommonRequest_WithoutDataField_Setting(t *testing.T) {
 		t.AssertNil(err)
 		// Schema asserts.
 		// fmt.Println(oai.String())
-		t.Assert(len(oai.Components.Schemas), 3)
+		t.Assert(len(oai.Components.Schemas.Map()), 3)
 		t.Assert(len(oai.Paths), 1)
-		t.Assert(len(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties), 5)
+		t.Assert(len(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties.Map()), 5)
 	})
 }
 
@@ -359,9 +359,9 @@ func TestOpenApiV3_CommonRequest_EmptyRequest(t *testing.T) {
 		t.AssertNil(err)
 		// Schema asserts.
 		// fmt.Println(oai.String())
-		t.Assert(len(oai.Components.Schemas), 3)
+		t.Assert(len(oai.Components.Schemas.Map()), 3)
 		t.Assert(len(oai.Paths), 1)
-		t.Assert(len(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties), 3)
+		t.Assert(len(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties.Map()), 3)
 	})
 }
 
@@ -414,10 +414,10 @@ func TestOpenApiV3_CommonRequest_SubDataField(t *testing.T) {
 		t.AssertNil(err)
 		// Schema asserts.
 		// fmt.Println(oai.String())
-		t.Assert(len(oai.Components.Schemas), 4)
+		t.Assert(len(oai.Components.Schemas.Map()), 4)
 		t.Assert(len(oai.Paths), 1)
-		t.Assert(len(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties), 1)
-		t.Assert(len(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties[`Request`].Value.Properties), 4)
+		t.Assert(len(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties.Map()), 1)
+		t.Assert(len(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties.Get(`Request`).Value.Properties.Map()), 4)
 	})
 }
 
@@ -459,10 +459,16 @@ func TestOpenApiV3_CommonResponse(t *testing.T) {
 			Object: f,
 		})
 		t.AssertNil(err)
+
+		//g.Dump(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Map())
 		// Schema asserts.
-		t.Assert(len(oai.Components.Schemas), 3)
+		t.Assert(len(oai.Components.Schemas.Map()), 3)
 		t.Assert(len(oai.Paths), 1)
-		t.Assert(len(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties), 3)
+		t.Assert(len(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Map()), 3)
+		t.Assert(
+			oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Get("data").Value.Description,
+			`Result data for certain request according API definition`,
+		)
 	})
 }
 
@@ -505,9 +511,9 @@ func TestOpenApiV3_CommonResponse_WithoutDataField_Setting(t *testing.T) {
 		t.AssertNil(err)
 		// Schema asserts.
 		fmt.Println(oai.String())
-		t.Assert(len(oai.Components.Schemas), 3)
+		t.Assert(len(oai.Components.Schemas.Map()), 3)
 		t.Assert(len(oai.Paths), 1)
-		t.Assert(len(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties), 8)
+		t.Assert(len(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Map()), 8)
 	})
 }
 
@@ -545,10 +551,10 @@ func TestOpenApiV3_CommonResponse_EmptyResponse(t *testing.T) {
 		t.AssertNil(err)
 		// Schema asserts.
 		// fmt.Println(oai.String())
-		t.Assert(len(oai.Components.Schemas), 3)
+		t.Assert(len(oai.Components.Schemas.Map()), 3)
 		t.Assert(len(oai.Paths), 1)
 		t.Assert(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Ref, `github.com.gogf.gf.v2.protocol.goai_test.Req`)
-		t.Assert(len(oai.Paths["/index"].Put.Responses["200"].Value.Content["application/json"].Schema.Value.Properties), 3)
+		t.Assert(len(oai.Paths["/index"].Put.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Map()), 3)
 	})
 }
 
@@ -601,10 +607,10 @@ func TestOpenApiV3_CommonResponse_SubDataField(t *testing.T) {
 		t.AssertNil(err)
 		// Schema asserts.
 		// fmt.Println(oai.String())
-		t.Assert(len(oai.Components.Schemas), 4)
+		t.Assert(len(oai.Components.Schemas.Map()), 4)
 		t.Assert(len(oai.Paths), 1)
-		t.Assert(len(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties), 1)
-		t.Assert(len(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties[`Response`].Value.Properties), 7)
+		t.Assert(len(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Map()), 1)
+		t.Assert(len(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Get(`Response`).Value.Properties.Map()), 7)
 	})
 }
 
@@ -657,12 +663,12 @@ func TestOpenApiV3_ShortTags(t *testing.T) {
 		t.AssertNil(err)
 		// fmt.Println(oai.String())
 		// Schema asserts.
-		t.Assert(len(oai.Components.Schemas), 3)
+		t.Assert(len(oai.Components.Schemas.Map()), 3)
 		t.Assert(oai.Paths[`/test1/{appId}`].Summary, `CreateResourceReq sum`)
 		t.Assert(oai.
 			Components.
-			Schemas[`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`].
-			Value.Properties[`resourceId`].Value.Description, `资源Id`)
+			Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`).
+			Value.Properties.Get(`resourceId`).Value.Description, `资源Id`)
 	})
 }
 
@@ -692,7 +698,7 @@ func TestOpenApiV3_HtmlResponse(t *testing.T) {
 		t.AssertNil(err)
 
 		// fmt.Println(oai.String())
-		t.Assert(oai.Components.Schemas[`github.com.gogf.gf.v2.protocol.goai_test.Res`].Value.Type, goai.TypeString)
+		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.Res`).Value.Type, goai.TypeString)
 	})
 }
 
@@ -739,6 +745,89 @@ func TestOpenApiV3_HtmlResponseWithCommonResponse(t *testing.T) {
 		t.AssertNil(err)
 
 		// fmt.Println(oai.String())
-		t.Assert(oai.Components.Schemas[`github.com.gogf.gf.v2.protocol.goai_test.Res`].Value.Type, goai.TypeString)
+		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.Res`).Value.Type, goai.TypeString)
+	})
+}
+
+func Test_Required_In_Schema(t *testing.T) {
+	type CommonReq struct {
+		AppId      int64  `json:"appId" v:"required" in:"cookie" description:"应用Id"`
+		ResourceId string `json:"resourceId" in:"query" description:"资源Id"`
+	}
+	type SetSpecInfo struct {
+		StorageType string   `v:"required|in:CLOUD_PREMIUM,CLOUD_SSD,CLOUD_HSSD" description:"StorageType"`
+		Shards      int32    `description:"shards 分片数"`
+		Params      []string `description:"默认参数(json 串-ClickHouseParams)"`
+	}
+	type CreateResourceReq struct {
+		CommonReq
+		gmeta.Meta `path:"/CreateResourceReq" method:"POST" tags:"default"`
+		Name       string                  `description:"实例名称"`
+		Product    string                  `description:"业务类型"`
+		Region     string                  `v:"required|min:1" description:"区域"`
+		SetMap     map[string]*SetSpecInfo `v:"required|min:1" description:"配置Map"`
+		SetSlice   []SetSpecInfo           `v:"required|min:1" description:"配置Slice"`
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+			req = new(CreateResourceReq)
+		)
+		err = oai.Add(goai.AddInput{
+			Object: req,
+		})
+		t.AssertNil(err)
+		var (
+			schemaKey1 = `github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`
+			schemaKey2 = `github.com.gogf.gf.v2.protocol.goai_test.SetSpecInfo`
+		)
+		t.Assert(oai.Components.Schemas.Map()[schemaKey1].Value.Required, g.Slice{
+			"appId",
+			"Region",
+			"SetMap",
+			"SetSlice",
+		})
+		t.Assert(oai.Components.Schemas.Map()[schemaKey2].Value.Required, g.Slice{
+			"StorageType",
+		})
+		t.Assert(oai.Components.Schemas.Map()[schemaKey2].Value.Properties.Map()["StorageType"].Value.Enum, g.Slice{
+			"CLOUD_PREMIUM",
+			"CLOUD_SSD",
+			"CLOUD_HSSD",
+		})
+	})
+}
+
+func Test_Properties_In_Sequence(t *testing.T) {
+	type ResourceCreateReq struct {
+		g.Meta           `path:"/resource" tags:"OSS Resource" method:"put" summary:"创建实例(发货)"`
+		AppId            uint64 `v:"required" dc:"应用Id"`
+		Uin              string `v:"required" dc:"主用户账号，该资源隶属于的账号"`
+		CreateUin        string `v:"required" dc:"创建实例的用户账号"`
+		Product          string `v:"required" dc:"业务类型" eg:"tdach"`
+		Region           string `v:"required" dc:"地域" eg:"ap-guangzhou"`
+		Zone             string `v:"required" dc:"区域" eg:"ap-guangzhou-1"`
+		Tenant           string `v:"required" dc:"业务自定义数据，透传到底层"`
+		VpcId            string `dc:"业务Vpc Id, TCS场景下非必须"`
+		SubnetId         string `dc:"业务Vpc子网Id"`
+		Name             string `dc:"自定义实例名称，默认和ResourceId一致"`
+		ClusterPreset    string `dc:"业务自定义Cluster定义，透传到底层"`
+		Engine           string `dc:"引擎名称，例如：TxLightning"`
+		Version          string `dc:"引擎版本，例如：10.3.213 (兼容ClickHouse 21.3.12)"`
+		SkipUpdateStatus bool   `dc:"是否跳过状态更新，继续保持creating" ed:"http://goframe.org"`
+	}
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+			req = new(ResourceCreateReq)
+		)
+		err = oai.Add(goai.AddInput{
+			Object: req,
+		})
+		t.AssertNil(err)
+		fmt.Println(oai)
 	})
 }

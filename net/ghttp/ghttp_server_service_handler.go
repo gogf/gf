@@ -17,15 +17,13 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-// BindHandler registers a handler function to server with given pattern.
+// BindHandler registers a handler function to server with a given pattern.
 //
 // Note that the parameter `handler` can be type of:
 // 1. func(*ghttp.Request)
 // 2. func(context.Context, BizRequest)(BizResponse, error)
 func (s *Server) BindHandler(pattern string, handler interface{}) {
-	var (
-		ctx = context.TODO()
-	)
+	var ctx = context.TODO()
 	funcInfo, err := s.checkAndCreateFuncInfo(handler, "", "", "")
 	if err != nil {
 		s.Logger().Fatalf(ctx, `%+v`, err)
@@ -103,7 +101,7 @@ func (s *Server) mergeBuildInNameToPattern(pattern string, structName, methodNam
 	return uri
 }
 
-// nameToUri converts the given name to URL format using following rules:
+// nameToUri converts the given name to the URL format using the following rules:
 // Rule 0: Convert all method names to lowercase, add char '-' between words.
 // Rule 1: Do not convert the method name, construct the URI with the original method name.
 // Rule 2: Convert all method names to lowercase, no connecting symbols between words.

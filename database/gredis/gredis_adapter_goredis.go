@@ -28,6 +28,7 @@ const (
 	defaultPoolIdleTimeout = 10 * time.Second
 	defaultPoolWaitTimeout = 10 * time.Second
 	defaultPoolMaxLifeTime = 30 * time.Second
+	defaultMaxRetries      = -1
 )
 
 // NewAdapterGoRedis creates and returns a redis adapter using go-redis.
@@ -37,6 +38,7 @@ func NewAdapterGoRedis(config *Config) *AdapterGoRedis {
 		Addrs:        gstr.SplitAndTrim(config.Address, ","),
 		Password:     config.Pass,
 		DB:           config.Db,
+		MaxRetries:   defaultMaxRetries,
 		MinIdleConns: config.MinIdle,
 		MaxConnAge:   config.MaxConnLifetime,
 		IdleTimeout:  config.IdleTimeout,
@@ -89,5 +91,11 @@ func fillWithDefaultConfiguration(config *Config) {
 	}
 	if config.MaxConnLifetime == 0 {
 		config.MaxConnLifetime = defaultPoolMaxLifeTime
+	}
+	if config.WriteTimeout == 0 {
+		config.WriteTimeout = -1
+	}
+	if config.ReadTimeout == 0 {
+		config.ReadTimeout = -1
 	}
 }

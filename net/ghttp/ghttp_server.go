@@ -39,7 +39,7 @@ import (
 )
 
 func init() {
-	// Initialize the methods map.
+	// Initialize the method map.
 	for _, v := range strings.Split(supportedHttpMethods, ",") {
 		methodsMap[v] = struct{}{}
 	}
@@ -51,7 +51,7 @@ func serverProcessInit() {
 	if !serverProcessInitialized.Cas(false, true) {
 		return
 	}
-	// This means it is a restart server, it should kill its parent before starting its listening,
+	// This means it is a restart server. It should kill its parent before starting its listening,
 	// to avoid duplicated port listening in two processes.
 	if !genv.Get(adminActionRestartEnvKey).IsEmpty() {
 		if p, err := os.FindProcess(gproc.PPid()); err == nil {
@@ -70,7 +70,7 @@ func serverProcessInit() {
 	go handleProcessSignal()
 
 	// Process message handler.
-	// It's enabled only graceful feature is enabled.
+	// It enabled only a graceful feature is enabled.
 	if gracefulEnabled {
 		intlog.Printf(ctx, "%d: graceful reload feature is enabled", gproc.Pid())
 		go handleProcessMessage()
@@ -80,7 +80,7 @@ func serverProcessInit() {
 
 	// It's an ugly calling for better initializing the main package path
 	// in source development environment. It is useful only be used in main goroutine.
-	// It fails retrieving the main package path in asynchronous goroutines.
+	// It fails to retrieve the main package path in asynchronous goroutines.
 	gfile.MainPkgPath()
 }
 
@@ -128,7 +128,7 @@ func (s *Server) Start() error {
 		swaggerui.Init()
 		s.AddStaticPath(s.config.SwaggerPath, swaggerUIPackedPath)
 		s.BindHookHandler(s.config.SwaggerPath+"/*", HookBeforeServe, s.swaggerUI)
-		s.Logger().Debugf(
+		s.Logger().Infof(
 			ctx,
 			`swagger ui is serving at address: %s%s/`,
 			s.getListenAddress(),
@@ -139,7 +139,7 @@ func (s *Server) Start() error {
 	// OpenApi specification json producing handler.
 	if s.config.OpenApiPath != "" {
 		s.BindHandler(s.config.OpenApiPath, s.openapiSpec)
-		s.Logger().Debugf(
+		s.Logger().Infof(
 			ctx,
 			`openapi specification is serving at address: %s%s`,
 			s.getListenAddress(),
@@ -147,12 +147,12 @@ func (s *Server) Start() error {
 		)
 	} else {
 		if s.config.SwaggerPath != "" {
-			s.Logger().Notice(
+			s.Logger().Warning(
 				ctx,
 				`openapi specification is disabled but swagger ui is serving, which might make no sense`,
 			)
 		} else {
-			s.Logger().Debug(
+			s.Logger().Info(
 				ctx,
 				`openapi specification is disabled`,
 			)
@@ -201,7 +201,7 @@ func (s *Server) Start() error {
 
 	// Default HTTP handler.
 	if s.config.Handler == nil {
-		s.config.Handler = s
+		s.config.Handler = s.ServeHTTP
 	}
 
 	// Install external plugins.
@@ -213,7 +213,7 @@ func (s *Server) Start() error {
 	// Check the group routes again.
 	s.handlePreBindItems(ctx)
 
-	// If there's no route registered  and no static service enabled,
+	// If there's no route registered and no static service enabled,
 	// it then returns an error of invalid usage of server.
 	if len(s.routesMap) == 0 && !s.config.FileServerEnabled {
 		return gerror.NewCode(
@@ -525,8 +525,8 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 		)
 		if len(addrAndFd) > 1 {
 			itemFunc = addrAndFd[0]
-			// The Windows OS does not support socket file descriptor passing
-			// from parent process.
+			// The Window OS does not support socket file descriptor passing
+			// from the parent process.
 			if runtime.GOOS != "windows" {
 				fd = gconv.Int(addrAndFd[1])
 			}
@@ -600,4 +600,22 @@ func (s *Server) getListenerFdMap() map[string]string {
 		}
 	}
 	return m
+}
+
+// GetListenedPort retrieves and returns one port which is listened by current server.
+func (s *Server) GetListenedPort() int {
+	ports := s.GetListenedPorts()
+	if len(ports) > 0 {
+		return ports[0]
+	}
+	return 0
+}
+
+// GetListenedPorts retrieves and returns the ports which are listened by current server.
+func (s *Server) GetListenedPorts() []int {
+	ports := make([]int, 0)
+	for _, server := range s.servers {
+		ports = append(ports, server.GetListenedPort())
+	}
+	return ports
 }

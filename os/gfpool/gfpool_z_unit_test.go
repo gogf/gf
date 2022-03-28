@@ -147,66 +147,66 @@ func stop(testFile string) {
 
 func Test_ConcurrentOS(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		path := gfile.TempDir(gtime.TimestampNanoStr())
+		path := gfile.Temp(gtime.TimestampNanoStr())
 		defer gfile.Remove(path)
 		f1, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer f1.Close()
 
 		f2, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer f2.Close()
 
 		for i := 0; i < 100; i++ {
 			_, err = f1.Write([]byte("@1234567890#"))
-			t.Assert(err, nil)
+			t.AssertNil(err)
 		}
 		for i := 0; i < 100; i++ {
 			_, err = f2.Write([]byte("@1234567890#"))
-			t.Assert(err, nil)
+			t.AssertNil(err)
 		}
 
 		for i := 0; i < 1000; i++ {
 			_, err = f1.Write([]byte("@1234567890#"))
-			t.Assert(err, nil)
+			t.AssertNil(err)
 		}
 		for i := 0; i < 1000; i++ {
 			_, err = f2.Write([]byte("@1234567890#"))
-			t.Assert(err, nil)
+			t.AssertNil(err)
 		}
 		t.Assert(gstr.Count(gfile.GetContents(path), "@1234567890#"), 2200)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		path := gfile.TempDir(gtime.TimestampNanoStr())
+		path := gfile.Temp(gtime.TimestampNanoStr())
 		defer gfile.Remove(path)
 		f1, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer f1.Close()
 
 		f2, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer f2.Close()
 
 		for i := 0; i < 1000; i++ {
 			_, err = f1.Write([]byte("@1234567890#"))
-			t.Assert(err, nil)
+			t.AssertNil(err)
 		}
 		for i := 0; i < 1000; i++ {
 			_, err = f2.Write([]byte("@1234567890#"))
-			t.Assert(err, nil)
+			t.AssertNil(err)
 		}
 		t.Assert(gstr.Count(gfile.GetContents(path), "@1234567890#"), 2000)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		path := gfile.TempDir(gtime.TimestampNanoStr())
+		path := gfile.Temp(gtime.TimestampNanoStr())
 		defer gfile.Remove(path)
 		f1, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer f1.Close()
 
 		f2, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer f2.Close()
 
 		s1 := ""
@@ -214,27 +214,27 @@ func Test_ConcurrentOS(t *testing.T) {
 			s1 += "@1234567890#"
 		}
 		_, err = f2.Write([]byte(s1))
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		s2 := ""
 		for i := 0; i < 1000; i++ {
 			s2 += "@1234567890#"
 		}
 		_, err = f2.Write([]byte(s2))
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		t.Assert(gstr.Count(gfile.GetContents(path), "@1234567890#"), 2000)
 	})
 	// DATA RACE
 	// gtest.C(t, func(t *gtest.T) {
-	//	path := gfile.TempDir(gtime.TimestampNanoStr())
+	//	path := gfile.Temp(gtime.TimestampNanoStr())
 	//	defer gfile.Remove(path)
 	//	f1, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
-	//	t.Assert(err, nil)
+	//	t.AssertNil(err)
 	//	defer f1.Close()
 	//
 	//	f2, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
-	//	t.Assert(err, nil)
+	//	t.AssertNil(err)
 	//	defer f2.Close()
 	//
 	//	wg := sync.WaitGroup{}
@@ -245,7 +245,7 @@ func Test_ConcurrentOS(t *testing.T) {
 	//			defer wg.Done()
 	//			<-ch
 	//			_, err = f1.Write([]byte("@1234567890#"))
-	//			t.Assert(err, nil)
+	//			t.AssertNil(err)
 	//		}()
 	//	}
 	//	for i := 0; i < 1000; i++ {
@@ -254,7 +254,7 @@ func Test_ConcurrentOS(t *testing.T) {
 	//			defer wg.Done()
 	//			<-ch
 	//			_, err = f2.Write([]byte("@1234567890#"))
-	//			t.Assert(err, nil)
+	//			t.AssertNil(err)
 	//		}()
 	//	}
 	//	close(ch)
@@ -265,36 +265,36 @@ func Test_ConcurrentOS(t *testing.T) {
 
 func Test_ConcurrentGFPool(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		path := gfile.TempDir(gtime.TimestampNanoStr())
+		path := gfile.Temp(gtime.TimestampNanoStr())
 		defer gfile.Remove(path)
 		f1, err := gfpool.Open(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer f1.Close()
 
 		f2, err := gfpool.Open(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer f2.Close()
 
 		for i := 0; i < 1000; i++ {
 			_, err = f1.Write([]byte("@1234567890#"))
-			t.Assert(err, nil)
+			t.AssertNil(err)
 		}
 		for i := 0; i < 1000; i++ {
 			_, err = f2.Write([]byte("@1234567890#"))
-			t.Assert(err, nil)
+			t.AssertNil(err)
 		}
 		t.Assert(gstr.Count(gfile.GetContents(path), "@1234567890#"), 2000)
 	})
 	// DATA RACE
 	// gtest.C(t, func(t *gtest.T) {
-	//	path := gfile.TempDir(gtime.TimestampNanoStr())
+	//	path := gfile.Temp(gtime.TimestampNanoStr())
 	//	defer gfile.Remove(path)
 	//	f1, err := gfpool.Open(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
-	//	t.Assert(err, nil)
+	//	t.AssertNil(err)
 	//	defer f1.Close()
 	//
 	//	f2, err := gfpool.Open(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
-	//	t.Assert(err, nil)
+	//	t.AssertNil(err)
 	//	defer f2.Close()
 	//
 	//	wg := sync.WaitGroup{}
@@ -305,7 +305,7 @@ func Test_ConcurrentGFPool(t *testing.T) {
 	//			defer wg.Done()
 	//			<-ch
 	//			_, err = f1.Write([]byte("@1234567890#"))
-	//			t.Assert(err, nil)
+	//			t.AssertNil(err)
 	//		}()
 	//	}
 	//	for i := 0; i < 1000; i++ {
@@ -314,7 +314,7 @@ func Test_ConcurrentGFPool(t *testing.T) {
 	//			defer wg.Done()
 	//			<-ch
 	//			_, err = f2.Write([]byte("@1234567890#"))
-	//			t.Assert(err, nil)
+	//			t.AssertNil(err)
 	//		}()
 	//	}
 	//	close(ch)

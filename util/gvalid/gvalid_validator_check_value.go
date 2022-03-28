@@ -15,10 +15,10 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/net/gipv4"
 	"github.com/gogf/gf/v2/net/gipv6"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -538,11 +538,11 @@ func (v *Validator) doCheckSingleBuildInRules(ctx context.Context, in doCheckBui
 }
 
 type doCheckValueRecursivelyInput struct {
-	Value               interface{}
-	Type                reflect.Type
-	OriginKind          reflect.Kind
-	ErrorMaps           map[string]map[string]error
-	ResultSequenceRules *[]fieldRule
+	Value               interface{}                 // Value to be validated.
+	Type                reflect.Type                // Struct/map/slice type which to be recursively validated.
+	OriginKind          reflect.Kind                // Struct/map/slice kind to be asserted in following switch case.
+	ErrorMaps           map[string]map[string]error // The validated failed error map.
+	ResultSequenceRules *[]fieldRule                // The validated failed rule in sequence.
 }
 
 func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValueRecursivelyInput) {
@@ -564,14 +564,15 @@ func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValue
 
 	case reflect.Map:
 		var (
-			dataMap = gconv.Map(in.Value)
+			dataMap     = gconv.Map(in.Value)
+			mapTypeElem = in.Type.Elem()
+			mapTypeKind = mapTypeElem.Kind()
 		)
 		for _, item := range dataMap {
-			originTypeAndKind := utils.OriginTypeAndKind(item)
 			v.doCheckValueRecursively(ctx, doCheckValueRecursivelyInput{
 				Value:               item,
-				Type:                originTypeAndKind.InputType,
-				OriginKind:          originTypeAndKind.OriginKind,
+				Type:                mapTypeElem,
+				OriginKind:          mapTypeKind,
 				ErrorMaps:           in.ErrorMaps,
 				ResultSequenceRules: in.ResultSequenceRules,
 			})
@@ -582,16 +583,20 @@ func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValue
 		}
 
 	case reflect.Slice, reflect.Array:
-		array := gconv.Interfaces(in.Value)
+		var array []interface{}
+		if gjson.Valid(in.Value) {
+			array = gconv.Interfaces(gconv.Bytes(in.Value))
+		} else {
+			array = gconv.Interfaces(in.Value)
+		}
 		if len(array) == 0 {
 			return
 		}
 		for _, item := range array {
-			originTypeAndKind := utils.OriginTypeAndKind(item)
 			v.doCheckValueRecursively(ctx, doCheckValueRecursivelyInput{
 				Value:               item,
-				Type:                originTypeAndKind.InputType,
-				OriginKind:          originTypeAndKind.OriginKind,
+				Type:                in.Type.Elem(),
+				OriginKind:          in.Type.Elem().Kind(),
 				ErrorMaps:           in.ErrorMaps,
 				ResultSequenceRules: in.ResultSequenceRules,
 			})

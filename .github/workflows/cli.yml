@@ -6,6 +6,10 @@ on:
     tags:
     - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
+env:
+  TZ: Asia/Shanghai
+
+
 jobs:
   build:
     name: Build And Release
@@ -26,37 +30,21 @@ jobs:
           GOOS=linux GOARCH=amd64 go build main.go
           chmod +x main
           ./main install -y
-      
-      # gf build 
+
       - name: Build CLI Binary For All Platform
         run: |
           cd cmd/gf
           gf build main.go -n gf -a all -s all
-      
-      # 处理gf-cli批量编译后的文件结构
-      - name: Move Files Before Upx
+
+      - name: Move Files Before Release
         run: |
-          cd cmd/gf/bin
+          cd cmd/gf/temp
           for OS in *;do for FILE in $OS/*;\
           do if [[ ${OS} =~ 'windows' ]];\
-          then rm -rf noupx &&  mkdir noupx && mv $FILE noupx/gf_$OS.exe && rm -rf $OS;\
+          then mv $FILE gf_$OS.exe && rm -rf $OS;\
           else mv $FILE gf_$OS && rm -rf $OS;\
           fi;done;done
 
-      # UPX 加壳所有文件
-      - name: Upx All Binary
-        uses: gacts/upx@master
-        with:
-          dir:      'cmd/gf/bin'
-          upx_args: '-9'
-      
-      # 移动未UPX的windows程序到上传bin目录下
-      - name: Move Files After Upx
-        run: |
-          cd cmd/gf/bin
-          mv noupx/* ./ && rm -rf noupx
-          ls -l
-           
       - name: Create Github Release
         id: create_release
         uses: actions/create-release@v1
@@ -74,4 +62,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          asset_paths: '["cmd/gf/bin/gf_*"]'
+          asset_paths: '["cmd/gf/temp/gf_*"]'

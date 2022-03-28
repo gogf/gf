@@ -21,7 +21,7 @@ var arrayForHandlerTest1 = garray.NewStrArray()
 
 func customHandler1(ctx context.Context, input *glog.HandlerInput) {
 	arrayForHandlerTest1.Append(input.String(false))
-	input.Next()
+	input.Next(ctx)
 }
 
 func TestLogger_SetHandlers1(t *testing.T) {

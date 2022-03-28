@@ -34,7 +34,7 @@ var (
 	handlerIdGenerator = gtype.NewInt()
 )
 
-// routerMapKey creates and returns an unique router key for given parameters.
+// routerMapKey creates and returns a unique router key for given parameters.
 // This key is used for Server.routerMap attribute, which is mainly for checks for
 // repeated router registering.
 func (s *Server) routerMapKey(hook, method, path, domain string) string {
@@ -73,8 +73,8 @@ type setHandlerInput struct {
 	HandlerItem *handlerItem
 }
 
-// setHandler creates router item with given handler and pattern and registers the handler to the router tree.
-// The router tree can be treated as a multilayer hash table, please refer to the comment in following codes.
+// setHandler creates router item with a given handler and pattern and registers the handler to the router tree.
+// The router tree can be treated as a multilayer hash table, please refer to the comment in the following codes.
 // This function is called during server starts up, which cares little about the performance. What really cares
 // is the well-designed router storage structure for router searching when the request is under serving.
 func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
@@ -97,11 +97,9 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 		return
 	}
 
-	// Change the registered route according meta info from its request structure.
+	// Change the registered route according to meta info from its request structure.
 	if handler.Info.Type != nil && handler.Info.Type.NumIn() == 2 {
-		var (
-			objectReq = reflect.New(handler.Info.Type.In(1))
-		)
+		var objectReq = reflect.New(handler.Info.Type.In(1))
 		if v := gmeta.Get(objectReq, goai.TagNamePath); !v.IsEmpty() {
 			uri = v.String()
 		}
@@ -117,6 +115,10 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 	if prefix != "" {
 		uri = prefix + "/" + strings.TrimLeft(uri, "/")
 	}
+	uri = strings.TrimRight(uri, "/")
+	if uri == "" {
+		uri = "/"
+	}
 
 	if len(uri) == 0 || uri[0] != '/' {
 		s.Logger().Fatalf(ctx, `invalid pattern "%s", URI should lead with '/'`, pattern)
@@ -128,12 +130,22 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 	if !s.config.RouteOverWrite {
 		switch handler.Type {
 		case HandlerTypeHandler, HandlerTypeObject:
-			if item, ok := s.routesMap[routerKey]; ok {
-				s.Logger().Fatalf(
-					ctx,
-					`duplicated route registry "%s" at %s , already registered at %s`,
-					pattern, handler.Source, item[0].Source,
-				)
+			if items, ok := s.routesMap[routerKey]; ok {
+				var duplicatedHandler *handlerItem
+				for _, item := range items {
+					switch item.Handler.Type {
+					case HandlerTypeHandler, HandlerTypeObject:
+						duplicatedHandler = item.Handler
+						break
+					}
+				}
+				if duplicatedHandler != nil {
+					s.Logger().Fatalf(
+						ctx,
+						`duplicated route registry "%s" at %s , already registered at %s`,
+						pattern, handler.Source, duplicatedHandler.Source,
+					)
+				}
 				return
 			}
 		}
@@ -189,7 +201,7 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 				lists = append(lists, v.(*glist.List))
 			}
 		}
-		// Make a new bucket for current node.
+		// Make a new bucket for the current node.
 		if _, ok := p.(map[string]interface{})[part]; !ok {
 			p.(map[string]interface{})[part] = make(map[string]interface{})
 		}
@@ -258,7 +270,7 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 // 2. URI: The deeper, the higher (simply check the count of char '/' in the URI).
 // 3. Route type: {xxx} > :xxx > *xxx.
 func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerItem) bool {
-	// If they're all type of middleware, the priority is according their registered sequence.
+	// If they're all types of middleware, the priority is according to their registered sequence.
 	if newItem.Type == HandlerTypeMiddleware && oldItem.Type == HandlerTypeMiddleware {
 		return false
 	}
@@ -336,7 +348,7 @@ func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerIte
 		return false
 	}
 
-	// If the counts of their fuzzy rules equal.
+	// If the counts of their fuzzy rules are equal.
 
 	// Eg: /name/{act} > /name/:act
 	if fuzzyCountFieldNew > fuzzyCountFieldOld {
@@ -373,7 +385,7 @@ func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerIte
 	return false
 }
 
-// patternToRegular converts route rule to according regular expression.
+// patternToRegular converts route rule to according to regular expression.
 func (s *Server) patternToRegular(rule string) (regular string, names []string) {
 	if len(rule) < 2 {
 		return rule, nil

@@ -13,7 +13,7 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -25,6 +25,7 @@ import (
 // and dataAndWhere[1:] is treated as where condition fields.
 // Also see Model.Data and Model.Where functions.
 func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err error) {
+	var ctx = m.GetCtx()
 	if len(dataAndWhere) > 0 {
 		if len(dataAndWhere) > 2 {
 			return m.Data(dataAndWhere[0]).Where(dataAndWhere[1], dataAndWhere[2:]...).Update()
@@ -36,7 +37,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	}
 	defer func() {
 		if err == nil {
-			m.checkAndRemoveCache()
+			m.checkAndRemoveCache(ctx)
 		}
 	}()
 	if m.data == nil {
@@ -44,27 +45,28 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	}
 	var (
 		updateData                                    = m.data
+		reflectInfo                                   = reflection.OriginTypeAndKind(updateData)
 		fieldNameUpdate                               = m.getSoftFieldNameUpdated()
-		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false, false)
+		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(ctx, false, false)
 	)
-	// Automatically update the record updating time.
-	if !m.unscoped && fieldNameUpdate != "" {
-		reflectInfo := utils.OriginTypeAndKind(m.data)
-		switch reflectInfo.OriginKind {
-		case reflect.Map, reflect.Struct:
-			dataMap := m.db.ConvertDataForRecord(m.GetCtx(), m.data)
-			if fieldNameUpdate != "" {
-				dataMap[fieldNameUpdate] = gtime.Now().String()
-			}
-			updateData = dataMap
+	switch reflectInfo.OriginKind {
+	case reflect.Map, reflect.Struct:
+		dataMap := m.db.ConvertDataForRecord(ctx, m.data)
+		// Automatically update the record updating time.
+		if !m.unscoped && fieldNameUpdate != "" {
+			dataMap[fieldNameUpdate] = gtime.Now().String()
+		}
+		updateData = dataMap
 
-		default:
-			updates := gconv.String(m.data)
+	default:
+		updates := gconv.String(m.data)
+		// Automatically update the record updating time.
+		if !m.unscoped && fieldNameUpdate != "" {
 			if fieldNameUpdate != "" && !gstr.Contains(updates, fieldNameUpdate) {
 				updates += fmt.Sprintf(`,%s='%s'`, fieldNameUpdate, gtime.Now().String())
 			}
-			updateData = updates
 		}
+		updateData = updates
 	}
 	newData, err := m.filterDataForInsertOrUpdate(updateData)
 	if err != nil {
@@ -74,14 +76,21 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	if !gstr.ContainsI(conditionStr, " WHERE ") {
 		return nil, gerror.NewCode(gcode.CodeMissingParameter, "there should be WHERE condition statement for UPDATE operation")
 	}
-	return m.db.DoUpdate(
-		m.GetCtx(),
-		m.getLink(true),
-		m.tables,
-		newData,
-		conditionStr,
-		m.mergeArguments(conditionArgs)...,
-	)
+
+	in := &HookUpdateInput{
+		internalParamHookUpdate: internalParamHookUpdate{
+			internalParamHook: internalParamHook{
+				link:  m.getLink(true),
+				model: m,
+			},
+			handler: m.hookHandler.Update,
+		},
+		Table:     m.tables,
+		Data:      newData,
+		Condition: conditionStr,
+		Args:      m.mergeArguments(conditionArgs),
+	}
+	return in.Next(ctx)
 }
 
 // Increment increments a column's value by a given amount.

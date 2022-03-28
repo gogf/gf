@@ -9,6 +9,7 @@ package goai
 import (
 	"fmt"
 
+	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
@@ -20,19 +21,19 @@ import (
 // Parameter is specified by OpenAPI/Swagger 3.0 standard.
 // See https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.0.md#parameterObject
 type Parameter struct {
-	Name            string      `json:"name,omitempty"            yaml:"name,omitempty"`
-	In              string      `json:"in,omitempty"              yaml:"in,omitempty"`
-	Description     string      `json:"description,omitempty"     yaml:"description,omitempty"`
-	Style           string      `json:"style,omitempty"           yaml:"style,omitempty"`
-	Explode         *bool       `json:"explode,omitempty"         yaml:"explode,omitempty"`
-	AllowEmptyValue bool        `json:"allowEmptyValue,omitempty" yaml:"allowEmptyValue,omitempty"`
-	AllowReserved   bool        `json:"allowReserved,omitempty"   yaml:"allowReserved,omitempty"`
-	Deprecated      bool        `json:"deprecated,omitempty"      yaml:"deprecated,omitempty"`
-	Required        bool        `json:"required,omitempty"        yaml:"required,omitempty"`
-	Schema          *SchemaRef  `json:"schema,omitempty"          yaml:"schema,omitempty"`
-	Example         interface{} `json:"example,omitempty"         yaml:"example,omitempty"`
-	Examples        *Examples   `json:"examples,omitempty"        yaml:"examples,omitempty"`
-	Content         *Content    `json:"content,omitempty"         yaml:"content,omitempty"`
+	Name            string      `json:"name,omitempty"`
+	In              string      `json:"in,omitempty"`
+	Description     string      `json:"description,omitempty"`
+	Style           string      `json:"style,omitempty"`
+	Explode         *bool       `json:"explode,omitempty"`
+	AllowEmptyValue bool        `json:"allowEmptyValue,omitempty"`
+	AllowReserved   bool        `json:"allowReserved,omitempty"`
+	Deprecated      bool        `json:"deprecated,omitempty"`
+	Required        bool        `json:"required,omitempty"`
+	Schema          *SchemaRef  `json:"schema,omitempty"`
+	Example         interface{} `json:"example,omitempty"`
+	Examples        *Examples   `json:"examples,omitempty"`
+	Content         *Content    `json:"content,omitempty"`
 }
 
 // Parameters is specified by OpenAPI/Swagger 3.0 standard.
@@ -81,10 +82,6 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path
 		parameter.Required = true
 
 	case ParameterInCookie, ParameterInHeader, ParameterInQuery:
-		// Check validation tag.
-		if validateTagValue := field.Tag(TagNameValidate); gstr.ContainsI(validateTagValue, `required`) {
-			parameter.Required = true
-		}
 
 	default:
 		return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid tag value "%s" for In`, parameter.In)
@@ -95,6 +92,13 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path
 		return nil, err
 	}
 	parameter.Schema = schemaRef
+
+	// Required check.
+	if parameter.Schema.Value != nil && parameter.Schema.Value.Pattern != "" {
+		if gset.NewStrSetFrom(gstr.Split(parameter.Schema.Value.Pattern, "|")).Contains(patternKeyForRequired) {
+			parameter.Required = true
+		}
+	}
 
 	return &ParameterRef{
 		Ref:   "",

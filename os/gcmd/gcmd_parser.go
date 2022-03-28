@@ -200,7 +200,7 @@ func (p *Parser) GetOptAll() map[string]string {
 
 // GetArg returns the argument at `index` as gvar.Var.
 func (p *Parser) GetArg(index int, def ...string) *gvar.Var {
-	if index < len(p.parsedArgs) {
+	if index >= 0 && index < len(p.parsedArgs) {
 		return gvar.New(p.parsedArgs[index])
 	}
 	if len(def) > 0 {

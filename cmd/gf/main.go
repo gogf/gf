@@ -2,6 +2,8 @@ package main
 
 import (
 	_ "github.com/gogf/gf/cmd/gf/v2/internal/packed"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gcfg"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/allyes"
@@ -10,6 +12,10 @@ import (
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gstr"
+)
+
+const (
+	cliFolderName = `hack`
 )
 
 func main() {
@@ -22,6 +28,15 @@ func main() {
 			}
 		}
 	}()
+
+	// CLI configuration.
+	if path, _ := gfile.Search(cliFolderName); path != "" {
+		if adapter, ok := g.Cfg().GetAdapter().(*gcfg.AdapterFile); ok {
+			if err := adapter.SetPath(path); err != nil {
+				mlog.Fatal(err)
+			}
+		}
+	}
 
 	// zsh alias "git fetch" conflicts checks.
 	handleZshAlias()

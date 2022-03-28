@@ -18,20 +18,21 @@ import (
 )
 
 type Path struct {
-	Ref         string     `json:"$ref,omitempty"        yaml:"$ref,omitempty"`
-	Summary     string     `json:"summary,omitempty"     yaml:"summary,omitempty"`
-	Description string     `json:"description,omitempty" yaml:"description,omitempty"`
-	Connect     *Operation `json:"connect,omitempty"     yaml:"connect,omitempty"`
-	Delete      *Operation `json:"delete,omitempty"      yaml:"delete,omitempty"`
-	Get         *Operation `json:"get,omitempty"         yaml:"get,omitempty"`
-	Head        *Operation `json:"head,omitempty"        yaml:"head,omitempty"`
-	Options     *Operation `json:"options,omitempty"     yaml:"options,omitempty"`
-	Patch       *Operation `json:"patch,omitempty"       yaml:"patch,omitempty"`
-	Post        *Operation `json:"post,omitempty"        yaml:"post,omitempty"`
-	Put         *Operation `json:"put,omitempty"         yaml:"put,omitempty"`
-	Trace       *Operation `json:"trace,omitempty"       yaml:"trace,omitempty"`
-	Servers     Servers    `json:"servers,omitempty"     yaml:"servers,omitempty"`
-	Parameters  Parameters `json:"parameters,omitempty"  yaml:"parameters,omitempty"`
+	Ref         string     `json:"$ref,omitempty"`
+	Summary     string     `json:"summary,omitempty"`
+	Description string     `json:"description,omitempty"`
+	Connect     *Operation `json:"connect,omitempty"`
+	Delete      *Operation `json:"delete,omitempty"`
+	Get         *Operation `json:"get,omitempty"`
+	Head        *Operation `json:"head,omitempty"`
+	Options     *Operation `json:"options,omitempty"`
+	Patch       *Operation `json:"patch,omitempty"`
+	Post        *Operation `json:"post,omitempty"`
+	Put         *Operation `json:"put,omitempty"`
+	Trace       *Operation `json:"trace,omitempty"`
+	Servers     Servers    `json:"servers,omitempty"`
+	Parameters  Parameters `json:"parameters,omitempty"`
+	Sort        int        `json:"sort"`
 }
 
 // Paths are specified by OpenAPI/Swagger standard version 3.0.
@@ -80,6 +81,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	}
 
 	var (
+		mime                 string
 		path                 = Path{}
 		inputMetaMap         = gmeta.Data(inputObject.Interface())
 		outputMetaMap        = gmeta.Data(outputObject.Interface())
@@ -126,11 +128,16 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	}
 
 	if len(inputMetaMap) > 0 {
-		if err := gconv.Struct(oai.fileMapWithShortTags(inputMetaMap), &path); err != nil {
+		inputMetaMap = oai.fileMapWithShortTags(inputMetaMap)
+		if err := gconv.Struct(inputMetaMap, &path); err != nil {
 			return gerror.Wrap(err, `mapping struct tags to Path failed`)
 		}
-		if err := gconv.Struct(oai.fileMapWithShortTags(inputMetaMap), &operation); err != nil {
+		if err := gconv.Struct(inputMetaMap, &operation); err != nil {
 			return gerror.Wrap(err, `mapping struct tags to Operation failed`)
+		}
+		// Allowed request mime.
+		if mime = inputMetaMap[TagNameMime]; mime == "" {
+			mime = inputMetaMap[TagNameConsumes]
 		}
 	}
 
@@ -213,9 +220,9 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			contentTypes = oai.Config.ReadContentTypes
 			tagMimeValue = gmeta.Get(outputObject.Interface(), TagNameMime).String()
 			refInput     = getResponseSchemaRefInput{
-				BusinessStructName: outputStructTypeName,
-				ResponseObject:     oai.Config.CommonResponse,
-				ResponseDataField:  oai.Config.CommonResponseDataField,
+				BusinessStructName:      outputStructTypeName,
+				CommonResponseObject:    oai.Config.CommonResponse,
+				CommonResponseDataField: oai.Config.CommonResponseDataField,
 			}
 		)
 		if tagMimeValue != "" {
@@ -224,8 +231,8 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		for _, v := range contentTypes {
 			// If customized response mime type, it then ignores common response feature.
 			if tagMimeValue != "" {
-				refInput.ResponseObject = nil
-				refInput.ResponseDataField = ""
+				refInput.CommonResponseObject = nil
+				refInput.CommonResponseDataField = ""
 			}
 			schemaRef, err := oai.getResponseSchemaRef(refInput)
 			if err != nil {

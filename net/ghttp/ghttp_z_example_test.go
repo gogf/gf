@@ -31,7 +31,7 @@ func ExampleUploadFile_Save() {
 			return
 		}
 		file.Filename = "MyCustomFileName.txt"
-		fileName, err := file.Save(gfile.TempDir())
+		fileName, err := file.Save(gfile.Temp())
 		if err != nil {
 			r.Response.Write(err)
 			return

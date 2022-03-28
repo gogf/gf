@@ -117,7 +117,6 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 		input = &HandlerInput{
 			Logger:       l,
 			Buffer:       bytes.NewBuffer(nil),
-			Ctx:          ctx,
 			Time:         now,
 			Color:        defaultLevelColor[level],
 			Level:        level,
@@ -221,13 +220,13 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 	if l.config.Flags&F_ASYNC > 0 {
 		input.IsAsync = true
 		err := asyncPool.Add(ctx, func(ctx context.Context) {
-			input.Next()
+			input.Next(ctx)
 		})
 		if err != nil {
 			intlog.Errorf(ctx, `%+v`, err)
 		}
 	} else {
-		input.Next()
+		input.Next(ctx)
 	}
 }
 
@@ -276,21 +275,14 @@ func (l *Logger) printToStdout(ctx context.Context, input *HandlerInput) *bytes.
 	if l.config.StdoutPrint {
 		var (
 			err    error
-			buffer = input.getRealBuffer(true)
+			buffer = input.getRealBuffer(!l.config.StdoutColorDisabled)
 		)
-		if l.config.StdoutColorDisabled {
-			// Output to stdout without color.
-			if _, err = os.Stdout.Write(buffer.Bytes()); err != nil {
-				intlog.Errorf(ctx, `%+v`, err)
-			}
-		} else {
-			// This will lose color in Windows os system.
-			// if _, err := os.Stdout.Write(input.getRealBuffer(true).Bytes()); err != nil {
+		// This will lose color in Windows os system.
+		// if _, err := os.Stdout.Write(input.getRealBuffer(true).Bytes()); err != nil {
 
-			// This will print color in Windows os system.
-			if _, err = fmt.Fprint(color.Output, buffer.String()); err != nil {
-				intlog.Errorf(ctx, `%+v`, err)
-			}
+		// This will print color in Windows os system.
+		if _, err = fmt.Fprint(color.Output, buffer.String()); err != nil {
+			intlog.Errorf(ctx, `%+v`, err)
 		}
 		return buffer
 	}

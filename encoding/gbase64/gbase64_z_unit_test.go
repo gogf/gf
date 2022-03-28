@@ -9,7 +9,6 @@ package gbase64_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/encoding/gbase64"
 	"github.com/gogf/gf/v2/test/gtest"
 )
@@ -66,16 +65,16 @@ func Test_Basic(t *testing.T) {
 }
 
 func Test_File(t *testing.T) {
-	path := gdebug.TestDataPath("test")
+	path := gtest.DataPath("test")
 	expect := "dGVzdA=="
 	gtest.C(t, func(t *gtest.T) {
 		b, err := gbase64.EncodeFile(path)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(string(b), expect)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		s, err := gbase64.EncodeFileToString(path)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(s, expect)
 	})
 }

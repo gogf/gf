@@ -43,7 +43,7 @@ func Test_Ctx_Config(t *testing.T) {
 			"CtxKeys": g.SliceStr{"Trace-Id", "Span-Id", "Test"},
 		}
 		err := l.SetConfigWithMap(m)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		ctx := context.WithValue(context.Background(), "Trace-Id", "1234567890")
 		ctx = context.WithValue(ctx, "Span-Id", "abcdefg")
 
@@ -60,7 +60,7 @@ func Test_Concurrent(t *testing.T) {
 		l := glog.New()
 		s := "@1234567890#"
 		f := "test.log"
-		p := gfile.TempDir(gtime.TimestampNanoStr())
+		p := gfile.Temp(gtime.TimestampNanoStr())
 		t.Assert(l.SetPath(p), nil)
 		defer gfile.Remove(p)
 		wg := sync.WaitGroup{}

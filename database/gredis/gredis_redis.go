@@ -46,6 +46,12 @@ func (r *Redis) Conn(ctx context.Context) (*RedisConn, error) {
 	if r == nil {
 		return nil, gerror.NewCode(gcode.CodeInvalidParameter, errorNilRedis)
 	}
+	if r.adapter == nil {
+		return nil, gerror.NewCodef(
+			gcode.CodeMissingConfiguration,
+			`redis adapter not initialized, missing configuration or adapter register?`,
+		)
+	}
 	conn, err := r.adapter.Conn(ctx)
 	if err != nil {
 		return nil, err
@@ -67,11 +73,29 @@ func (r *Redis) Do(ctx context.Context, command string, args ...interface{}) (*g
 		return nil, err
 	}
 	defer func() {
-		if err := conn.Close(ctx); err != nil {
-			intlog.Errorf(ctx, `%+v`, err)
+		if closeErr := conn.Close(ctx); closeErr != nil {
+			intlog.Errorf(ctx, `%+v`, closeErr)
 		}
 	}()
 	return conn.Do(ctx, command, args...)
+}
+
+// MustConn performs as function Conn, but it panics if any error occurs internally.
+func (r *Redis) MustConn(ctx context.Context) *RedisConn {
+	c, err := r.Conn(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return c
+}
+
+// MustDo performs as function Do, but it panics if any error occurs internally.
+func (r *Redis) MustDo(ctx context.Context, command string, args ...interface{}) *gvar.Var {
+	v, err := r.Do(ctx, command, args...)
+	if err != nil {
+		panic(err)
+	}
+	return v
 }
 
 // Close closes current redis client, closes its connection pool and releases all its related resources.
