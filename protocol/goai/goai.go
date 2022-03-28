@@ -36,12 +36,6 @@ type OpenApiV3 struct {
 	ExternalDocs *ExternalDocs         `json:"externalDocs,omitempty"`
 }
 
-// ExternalDocs is specified by OpenAPI/Swagger standard version 3.0.
-type ExternalDocs struct {
-	URL         string `json:"url,omitempty"`
-	Description string `json:"description,omitempty"`
-}
-
 const (
 	HttpMethodGet     = `GET`
 	HttpMethodPut     = `PUT`
@@ -95,13 +89,14 @@ var (
 	defaultReadContentTypes  = []string{`application/json`}
 	defaultWriteContentTypes = []string{`application/json`}
 	shortTypeMapForTag       = map[string]string{
-		"d":   "default",
-		"sum": "summary",
-		"sm":  "summary",
-		"des": "description",
-		"dc":  "description",
-		"eg":  "example",
-		"egs": "examples",
+		"d":   "Default",
+		"sum": "Summary",
+		"sm":  "Summary",
+		"des": "Description",
+		"dc":  "Description",
+		"eg":  "Example",
+		"egs": "Examples",
+		"ed":  "ExternalDocs",
 	}
 )
 
