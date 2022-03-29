@@ -15,6 +15,7 @@ import (
 	"net"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gogf/gf/v2/internal/intlog"
@@ -55,8 +56,7 @@ type ServerConfig struct {
 	HTTPSAddr string `json:"httpsAddr"`
 
 	// Listeners specifies the custom listeners.
-	// Listeners is a map, the key of map must specify the port of Address or HTTPSAddr.
-	Listeners map[int]net.Listener `json:"listeners"`
+	Listeners []net.Listener `json:"listeners"`
 
 	// HTTPSCertPath specifies certification file path for HTTPS service.
 	HTTPSCertPath string `json:"httpsCertPath"`
@@ -418,32 +418,21 @@ func (s *Server) SetHTTPSPort(port ...int) {
 }
 
 // SetListener set the custom listener for the server.
-// It will overwrite the address you specified before.
-func (s *Server) SetListener(l net.Listener) error {
-	if l == nil {
-		return gerror.NewCodef(gcode.CodeInvalidParameter, "listener is nil")
+func (s *Server) SetListener(listeners ...net.Listener) error {
+	if listeners == nil {
+		return gerror.NewCodef(gcode.CodeInvalidParameter, "listener can not be nil")
 	}
-	port := (l.Addr().(*net.TCPAddr)).Port
-	s.config.Address = fmt.Sprintf(":%d", port)
-	s.config.Listeners = map[int]net.Listener{port: l}
-	return nil
-}
-
-// SetListeners set the custom listeners for the server.
-// The key of map should specify the port like: SetListeners(map[int]net.Listener{80: ln}).
-// If the listener's port not match the port provided in map, the method will return error.
-func (s *Server) SetListeners(listeners map[int]net.Listener) error {
-	for k, v := range listeners {
-		portIndeed := (v.Addr().(*net.TCPAddr)).Port
-		if portIndeed != k {
-			return gerror.NewCodef(
-				gcode.CodeInvalidParameter,
-				"listener specified by port %d listen at port %d indeed",
-				k, portIndeed,
-			)
+	if len(listeners) > 0 {
+		ports := make([]string, len(listeners))
+		for k, v := range listeners {
+			if v == nil {
+				return gerror.NewCodef(gcode.CodeInvalidParameter, "listener can not be nil")
+			}
+			ports[k] = fmt.Sprintf(":%d", (v.Addr().(*net.TCPAddr)).Port)
 		}
+		s.config.Address = strings.Join(ports, ",")
+		s.config.Listeners = listeners
 	}
-	s.config.Listeners = listeners
 	return nil
 }
 

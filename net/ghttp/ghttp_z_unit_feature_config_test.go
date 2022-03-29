@@ -8,6 +8,7 @@ package ghttp_test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"net"
 	"testing"
 	"time"
@@ -24,12 +25,14 @@ import (
 
 func Test_ConfigFromMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		ln, err := net.Listen("tcp", ":8199")
+		p, _ := gtcp.GetFreePort()
+		addr := fmt.Sprintf(":%d", p)
+		ln, err := net.Listen("tcp", addr)
 		t.AssertNil(err)
-		listeners := map[int]net.Listener{8199: ln}
+		listeners := []net.Listener{ln}
 
 		m := g.Map{
-			"address":         ":8199",
+			"address":         addr,
 			"listeners":       listeners,
 			"readTimeout":     "60s",
 			"indexFiles":      g.Slice{"index.php", "main.php"},
