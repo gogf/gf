@@ -802,7 +802,7 @@ func Test_Required_In_Schema(t *testing.T) {
 
 func Test_Properties_In_Sequence(t *testing.T) {
 	type ResourceCreateReq struct {
-		g.Meta           `path:"/resource" tags:"OSS Resource" method:"put" summary:"创建实例(发货)"`
+		g.Meta           `path:"/resource" tags:"OSS Resource" method:"put" x-sort:"1" summary:"创建实例(发货)"`
 		AppId            uint64 `v:"required" dc:"应用Id"`
 		Uin              string `v:"required" dc:"主用户账号，该资源隶属于的账号"`
 		CreateUin        string `v:"required" dc:"创建实例的用户账号"`

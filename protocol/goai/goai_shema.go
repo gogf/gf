@@ -12,6 +12,7 @@ import (
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -58,6 +59,29 @@ type Schema struct {
 	MaxProps             *uint64        `json:"maxProperties,omitempty"`
 	AdditionalProperties *SchemaRef     `json:"additionalProperties,omitempty"`
 	Discriminator        *Discriminator `json:"discriminator,omitempty"`
+	XExtensions          `json:"-"`
+}
+
+func (s Schema) MarshalJSON() ([]byte, error) {
+	var (
+		b   []byte
+		m   map[string]json.RawMessage
+		err error
+	)
+	type tempSchema Schema // To prevent JSON marshal recursion error.
+	if b, err = json.Marshal(tempSchema(s)); err != nil {
+		return nil, err
+	}
+	if err = json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	for k, v := range s.XExtensions {
+		if b, err = json.Marshal(v); err != nil {
+			return nil, err
+		}
+		m[k] = b
+	}
+	return json.Marshal(m)
 }
 
 // Discriminator is specified by OpenAPI/Swagger standard version 3.0.
@@ -111,7 +135,8 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 	var (
 		tagMap = gmeta.Data(object)
 		schema = &Schema{
-			Properties: createSchemas(),
+			Properties:  createSchemas(),
+			XExtensions: make(XExtensions),
 		}
 	)
 	if len(tagMap) > 0 {
@@ -173,6 +198,7 @@ func (oai *OpenApiV3) tagMapToSchema(tagMap map[string]string, schema *Schema) e
 	if err := gconv.Struct(mergedTagMap, schema); err != nil {
 		return gerror.Wrap(err, `mapping struct tags to Schema failed`)
 	}
+	oai.tagMapToXExtensions(mergedTagMap, schema.XExtensions)
 	// Validation info to OpenAPI schema pattern.
 	for _, tag := range gvalid.GetTags() {
 		if validationTagValue, ok := tagMap[tag]; ok {

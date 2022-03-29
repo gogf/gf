@@ -11,6 +11,7 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -32,7 +33,7 @@ type Path struct {
 	Trace       *Operation `json:"trace,omitempty"`
 	Servers     Servers    `json:"servers,omitempty"`
 	Parameters  Parameters `json:"parameters,omitempty"`
-	Sort        int        `json:"sort"`
+	XExtensions `json:"-"`
 }
 
 // Paths are specified by OpenAPI/Swagger standard version 3.0.
@@ -82,14 +83,15 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 
 	var (
 		mime                 string
-		path                 = Path{}
+		path                 = Path{XExtensions: make(XExtensions)}
 		inputMetaMap         = gmeta.Data(inputObject.Interface())
 		outputMetaMap        = gmeta.Data(outputObject.Interface())
 		isInputStructEmpty   = oai.doesStructHasNoFields(inputObject.Interface())
 		inputStructTypeName  = oai.golangTypeToSchemaName(inputObject.Type())
 		outputStructTypeName = oai.golangTypeToSchemaName(outputObject.Type())
 		operation            = Operation{
-			Responses: map[string]ResponseRef{},
+			Responses:   map[string]ResponseRef{},
+			XExtensions: make(XExtensions),
 		}
 	)
 	// Path check.
@@ -128,12 +130,11 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	}
 
 	if len(inputMetaMap) > 0 {
-		inputMetaMap = oai.fileMapWithShortTags(inputMetaMap)
-		if err := gconv.Struct(inputMetaMap, &path); err != nil {
-			return gerror.Wrap(err, `mapping struct tags to Path failed`)
+		if err := oai.tagMapToPath(inputMetaMap, &path); err != nil {
+			return err
 		}
-		if err := gconv.Struct(inputMetaMap, &operation); err != nil {
-			return gerror.Wrap(err, `mapping struct tags to Operation failed`)
+		if err := oai.tagMapToOperation(inputMetaMap, &operation); err != nil {
+			return err
 		}
 		// Allowed request mime.
 		if mime = inputMetaMap[TagNameMime]; mime == "" {
@@ -207,12 +208,13 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	if _, ok := operation.Responses[responseOkKey]; !ok {
 		var (
 			response = Response{
-				Content: map[string]MediaType{},
+				Content:     map[string]MediaType{},
+				XExtensions: make(XExtensions),
 			}
 		)
 		if len(outputMetaMap) > 0 {
-			if err := gconv.Struct(oai.fileMapWithShortTags(outputMetaMap), &response); err != nil {
-				return gerror.Wrap(err, `mapping struct tags to Response failed`)
+			if err := oai.tagMapToResponse(outputMetaMap, &response); err != nil {
+				return err
 			}
 		}
 		// Supported mime types of response.
@@ -287,4 +289,35 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 
 func (oai *OpenApiV3) doesStructHasNoFields(s interface{}) bool {
 	return reflect.TypeOf(s).NumField() == 0
+}
+
+func (oai *OpenApiV3) tagMapToPath(tagMap map[string]string, path *Path) error {
+	var mergedTagMap = oai.fileMapWithShortTags(tagMap)
+	if err := gconv.Struct(mergedTagMap, path); err != nil {
+		return gerror.Wrap(err, `mapping struct tags to Path failed`)
+	}
+	oai.tagMapToXExtensions(mergedTagMap, path.XExtensions)
+	return nil
+}
+
+func (p Path) MarshalJSON() ([]byte, error) {
+	var (
+		b   []byte
+		m   map[string]json.RawMessage
+		err error
+	)
+	type tempPath Path // To prevent JSON marshal recursion error.
+	if b, err = json.Marshal(tempPath(p)); err != nil {
+		return nil, err
+	}
+	if err = json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	for k, v := range p.XExtensions {
+		if b, err = json.Marshal(v); err != nil {
+			return nil, err
+		}
+		m[k] = b
+	}
+	return json.Marshal(m)
 }

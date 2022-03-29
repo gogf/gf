@@ -22,9 +22,7 @@ import (
 // The optional parameter `method` is used to specify the method to be registered, which
 // supports multiple method names; multiple methods are separated by char ',', case-sensitive.
 func (s *Server) BindObject(pattern string, object interface{}, method ...string) {
-	var (
-		bindMethod = ""
-	)
+	var bindMethod = ""
 	if len(method) > 0 {
 		bindMethod = method[0]
 	}

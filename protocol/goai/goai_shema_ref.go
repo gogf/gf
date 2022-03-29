@@ -25,8 +25,9 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 		oaiFormat = oai.golangTypeToOAIFormat(golangType)
 		schemaRef = &SchemaRef{}
 		schema    = &Schema{
-			Type:   oaiType,
-			Format: oaiFormat,
+			Type:        oaiType,
+			Format:      oaiFormat,
+			XExtensions: make(XExtensions),
 		}
 	)
 	if len(tagMap) > 0 {

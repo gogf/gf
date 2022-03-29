@@ -133,9 +133,7 @@ func (m *middleware) callHandlerFunc(funcInfo handlerFuncInfo) {
 				reflect.ValueOf(m.request.Context()),
 			}
 			if funcInfo.Type.NumIn() == 2 {
-				var (
-					inputObject reflect.Value
-				)
+				var inputObject reflect.Value
 				if funcInfo.Type.In(1).Kind() == reflect.Ptr {
 					inputObject = reflect.New(funcInfo.Type.In(1).Elem())
 					m.request.error = m.request.Parse(inputObject.Interface())

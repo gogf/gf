@@ -208,7 +208,7 @@ func getFieldValuesByTagPriority(pointer interface{}, priority []string, tagMap 
 			tagFields = append(tagFields, tagField)
 		}
 		// If this is an embedded attribute, it retrieves the tags recursively.
-		if field.IsEmbedded() {
+		if field.IsEmbedded() && field.OriginalKind() == reflect.Struct {
 			if subTagFields, err := getFieldValuesByTagPriority(field.Value, priority, tagMap); err != nil {
 				return nil, err
 			} else {
