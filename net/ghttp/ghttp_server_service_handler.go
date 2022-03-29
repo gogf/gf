@@ -151,13 +151,13 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 			if pkgPath != "" {
 				err = gerror.NewCodef(
 					gcode.CodeInvalidParameter,
-					`invalid handler: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" or "func(context.Context, BizRequest)(BizResponse, error)" is required`,
+					`invalid handler: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" or "func(context.Context, *BizRequest)(*BizResponse, error)" is required`,
 					pkgPath, structName, methodName, reflect.TypeOf(f).String(),
 				)
 			} else {
 				err = gerror.NewCodef(
 					gcode.CodeInvalidParameter,
-					`invalid handler: defined as "%s", but "func(*ghttp.Request)" or "func(context.Context, BizRequest)(BizResponse, error)" is required`,
+					`invalid handler: defined as "%s", but "func(*ghttp.Request)" or "func(context.Context, *BizRequest)(*BizResponse, error)" is required`,
 					reflect.TypeOf(f).String(),
 				)
 			}
@@ -186,7 +186,7 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 		if !gstr.HasSuffix(reflectType.In(1).String(), `Req`) {
 			err = gerror.NewCodef(
 				gcode.CodeInvalidParameter,
-				`invalid struct naming for request: defined as "%s", but it should be named with "Req" suffix like "xxxReq"`,
+				`invalid struct naming for request: defined as "%s", but it should be named with "Req" suffix like "XxxReq"`,
 				reflectType.In(1).String(),
 			)
 			return
@@ -196,7 +196,7 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 		if !gstr.HasSuffix(reflectType.Out(0).String(), `Res`) {
 			err = gerror.NewCodef(
 				gcode.CodeInvalidParameter,
-				`invalid struct naming for response: defined as "%s", but it should be named with "Res" suffix like "xxxRes"`,
+				`invalid struct naming for response: defined as "%s", but it should be named with "Res" suffix like "XxxRes"`,
 				reflectType.Out(0).String(),
 			)
 			return
