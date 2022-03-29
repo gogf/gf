@@ -7,6 +7,8 @@
 package ghttp_test
 
 import (
+	"fmt"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
 	"net"
 	"testing"
@@ -16,15 +18,19 @@ import (
 	"github.com/gogf/gf/v2/net/ghttp"
 )
 
-func Test_SetCustomListener(t *testing.T) {
+func Test_SetSingleCustomListener(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		s := g.Server()
+		p, _ := gtcp.GetFreePort()
+		addr := fmt.Sprintf(":%d", p)
+		s := g.Server(g.Map{
+			"address": addr,
+		})
 		s.Group("/", func(group *ghttp.RouterGroup) {
 			group.GET("/test", func(r *ghttp.Request) {
 				r.Response.Write("test")
 			})
 		})
-		ln, err := net.Listen("tcp", ":8199")
+		ln, err := net.Listen("tcp", addr)
 		t.AssertNil(err)
 		err = s.SetListener(ln)
 		t.AssertNil(err)
@@ -33,13 +39,10 @@ func Test_SetCustomListener(t *testing.T) {
 		defer s.Shutdown()
 
 		time.Sleep(100 * time.Millisecond)
-		s.GetListenedPort()
-
-		t.AssertEQ(s.GetListenedPort(), 8199)
 	})
 }
 
-func Test_SetRightCustomListeners(t *testing.T) {
+func Test_SetMultipleCustomListeners(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server()
 		s.Group("/", func(group *ghttp.RouterGroup) {
@@ -47,21 +50,22 @@ func Test_SetRightCustomListeners(t *testing.T) {
 				r.Response.Write("test")
 			})
 		})
-		s.SetAddr(":8199")
-		ln, err := net.Listen("tcp", ":8199")
-		t.AssertNil(err)
-		err = s.SetListeners(map[int]net.Listener{8299: ln})
-		t.AssertNE(err, nil)
-		err = s.SetListeners(map[int]net.Listener{8199: ln})
-		t.AssertNil(err)
+		p1, _ := gtcp.GetFreePort()
+		p2, _ := gtcp.GetFreePort()
+
+		ln1, err := net.Listen("tcp", fmt.Sprintf(":%d", p1))
+		ln2, err := net.Listen("tcp", fmt.Sprintf(":%d", p2))
+		err = s.SetListener(ln1, ln2)
+		t.AssertEQ(err, nil)
 
 		s.Start()
 		defer s.Shutdown()
 
 		time.Sleep(100 * time.Millisecond)
-		s.GetListenedPort()
-
-		t.AssertEQ(s.GetListenedPort(), 8199)
+		ports := []int{p1, p2}
+		for _, p := range s.GetListenedPorts() {
+			t.AssertIN(p, ports)
+		}
 	})
 }
 
@@ -73,17 +77,7 @@ func Test_SetWrongCustomListeners(t *testing.T) {
 				r.Response.Write("test")
 			})
 		})
-		s.SetAddr(":8199")
-		ln, err := net.Listen("tcp", ":8299")
-		t.AssertNil(err)
-		err = s.SetListeners(map[int]net.Listener{8199: ln})
+		err := s.SetListener(nil)
 		t.AssertNQ(err, nil)
-		s.Start()
-		defer s.Shutdown()
-
-		time.Sleep(100 * time.Millisecond)
-		s.GetListenedPort()
-
-		t.AssertEQ(s.GetListenedPort(), 8199)
 	})
 }
