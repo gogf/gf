@@ -516,16 +516,25 @@ func (a *StrArray) Search(value string) int {
 // Example: [1,1,2,3,2] -> [1,2,3]
 func (a *StrArray) Unique() *StrArray {
 	a.mu.Lock()
-	for i := 0; i < len(a.array)-1; i++ {
-		for j := i + 1; j < len(a.array); {
-			if a.array[i] == a.array[j] {
-				a.array = append(a.array[:j], a.array[j+1:]...)
-			} else {
-				j++
-			}
-		}
+	defer a.mu.Unlock()
+	if len(a.array) == 0 {
+		return a
 	}
-	a.mu.Unlock()
+	var (
+		ok          bool
+		temp        string
+		uniqueSet   = make(map[string]struct{})
+		uniqueArray = make([]string, 0, len(a.array))
+	)
+	for i := 0; i < len(a.array); i++ {
+		temp = a.array[i]
+		if _, ok = uniqueSet[temp]; ok {
+			continue
+		}
+		uniqueSet[temp] = struct{}{}
+		uniqueArray = append(uniqueArray, temp)
+	}
+	a.array = uniqueArray
 	return a
 }
 

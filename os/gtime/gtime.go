@@ -454,10 +454,10 @@ func ParseDuration(s string) (duration time.Duration, err error) {
 }
 
 // FuncCost calculates the cost time of function `f` in nanoseconds.
-func FuncCost(f func()) int64 {
-	t := TimestampNano()
+func FuncCost(f func()) time.Duration {
+	t := time.Now()
 	f()
-	return TimestampNano() - t
+	return time.Now().Sub(t)
 }
 
 // isTimestampStr checks and returns whether given string a timestamp string.
