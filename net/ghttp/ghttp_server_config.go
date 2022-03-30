@@ -420,13 +420,13 @@ func (s *Server) SetHTTPSPort(port ...int) {
 // SetListener set the custom listener for the server.
 func (s *Server) SetListener(listeners ...net.Listener) error {
 	if listeners == nil {
-		return gerror.NewCodef(gcode.CodeInvalidParameter, "listener can not be nil")
+		return gerror.NewCodef(gcode.CodeInvalidParameter, "SetListener failed: listener can not be nil")
 	}
 	if len(listeners) > 0 {
 		ports := make([]string, len(listeners))
 		for k, v := range listeners {
 			if v == nil {
-				return gerror.NewCodef(gcode.CodeInvalidParameter, "listener can not be nil")
+				return gerror.NewCodef(gcode.CodeInvalidParameter, "SetListener failed: listener can not be nil")
 			}
 			ports[k] = fmt.Sprintf(":%d", (v.Addr().(*net.TCPAddr)).Port)
 		}
