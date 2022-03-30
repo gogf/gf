@@ -181,12 +181,12 @@ func DataToMapDeep(value interface{}) map[string]interface{} {
 	return m
 }
 
-// doHandleTableName adds prefix string and quote chars for the table. It handles table string like:
+// doHandleTableName adds prefix string and quote chars for table name. It handles table string like:
 // "user", "user u", "user,user_detail", "user u, user_detail ut", "user as u, user_detail as ut",
 // "user.user u", "`user`.`user` u".
 //
-// Note that, this will automatically checks the table prefix whether already added, if true it does
-// nothing to the table name, or else adds the prefix to the table name.
+// Note that, this will automatically check the table prefix whether already added, if true it does
+// nothing to the table name, or else adds the prefix to the table name and returns new table name with prefix.
 func doHandleTableName(table, prefix, charLeft, charRight string) string {
 	var (
 		index  = 0
