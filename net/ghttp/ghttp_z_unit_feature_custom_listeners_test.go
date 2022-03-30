@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/guid"
 	"net"
 	"testing"
 	"time"
@@ -19,59 +21,75 @@ import (
 )
 
 func Test_SetSingleCustomListener(t *testing.T) {
+	p, _ := gtcp.GetFreePort()
+	ln, _ := net.Listen("tcp", fmt.Sprintf(":%d", p))
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.GET("/test", func(r *ghttp.Request) {
+			r.Response.Write("test")
+		})
+	})
+
+	s.SetListener(ln)
+
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
 	gtest.C(t, func(t *gtest.T) {
-		p, _ := gtcp.GetFreePort()
-		addr := fmt.Sprintf(":%d", p)
-		s := g.Server(g.Map{
-			"address": addr,
-		})
-		s.Group("/", func(group *ghttp.RouterGroup) {
-			group.GET("/test", func(r *ghttp.Request) {
-				r.Response.Write("test")
-			})
-		})
-		ln, err := net.Listen("tcp", addr)
-		t.AssertNil(err)
-		err = s.SetListener(ln)
-		t.AssertNil(err)
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
-		s.Start()
-		defer s.Shutdown()
-
-		time.Sleep(100 * time.Millisecond)
+		t.Assert(
+			gstr.Trim(c.GetContent(ctx, "/test")),
+			"test",
+		)
 	})
 }
 
 func Test_SetMultipleCustomListeners(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		s := g.Server()
-		s.Group("/", func(group *ghttp.RouterGroup) {
-			group.GET("/test", func(r *ghttp.Request) {
-				r.Response.Write("test")
-			})
+	p1, _ := gtcp.GetFreePort()
+	p2, _ := gtcp.GetFreePort()
+
+	ln1, _ := net.Listen("tcp", fmt.Sprintf(":%d", p1))
+	ln2, _ := net.Listen("tcp", fmt.Sprintf(":%d", p2))
+
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.GET("/test", func(r *ghttp.Request) {
+			r.Response.Write("test")
 		})
-		p1, _ := gtcp.GetFreePort()
-		p2, _ := gtcp.GetFreePort()
+	})
 
-		ln1, err := net.Listen("tcp", fmt.Sprintf(":%d", p1))
-		ln2, err := net.Listen("tcp", fmt.Sprintf(":%d", p2))
-		err = s.SetListener(ln1, ln2)
-		t.AssertEQ(err, nil)
+	s.SetListener(ln1, ln2)
 
-		s.Start()
-		defer s.Shutdown()
+	s.Start()
+	defer s.Shutdown()
 
-		time.Sleep(100 * time.Millisecond)
-		ports := []int{p1, p2}
-		for _, p := range s.GetListenedPorts() {
-			t.AssertIN(p, ports)
-		}
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p1))
+
+		t.Assert(
+			gstr.Trim(c.GetContent(ctx, "/test")),
+			"test",
+		)
+
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p2))
+
+		t.Assert(
+			gstr.Trim(c.GetContent(ctx, "/test")),
+			"test",
+		)
 	})
 }
 
 func Test_SetWrongCustomListeners(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		s := g.Server()
+		s := g.Server(guid.S())
 		s.Group("/", func(group *ghttp.RouterGroup) {
 			group.GET("/test", func(r *ghttp.Request) {
 				r.Response.Write("test")
