@@ -34,9 +34,10 @@ type CacheOption struct {
 	Force bool
 }
 
+// selectCacheItem is the cache item for SELECT statement result.
 type selectCacheItem struct {
-	Result            Result
-	FirstResultColumn string
+	Result            Result // Sql result of SELECT statement.
+	FirstResultColumn string // The first column name of result, for Value/Count functions.
 }
 
 // Cache sets the cache feature for the model. It caches the result of the sql, which means
@@ -128,7 +129,6 @@ func (m *Model) makeSelectCacheKey(sql string, args ...interface{}) string {
 	if len(cacheKey) == 0 {
 		cacheKey = fmt.Sprintf(
 			`GCache@Schema(%s):%s`,
-			m.db.GetSchema(),
 			gmd5.MustEncryptString(sql+", @PARAMS:"+gconv.String(args)),
 		)
 	}
