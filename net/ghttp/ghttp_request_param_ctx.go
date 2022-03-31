@@ -48,7 +48,7 @@ func (r *Request) SetCtx(ctx context.Context) {
 	r.context = ctx
 }
 
-// GetCtxVar retrieves and returns a Var with given key name.
+// GetCtxVar retrieves and returns a Var with a given key name.
 // The optional parameter `def` specifies the default value of the Var if given `key`
 // does not exist in the context.
 func (r *Request) GetCtxVar(key interface{}, def ...interface{}) *gvar.Var {
@@ -59,7 +59,7 @@ func (r *Request) GetCtxVar(key interface{}, def ...interface{}) *gvar.Var {
 	return gvar.New(value)
 }
 
-// SetCtxVar sets custom parameter to context with key-value pair.
+// SetCtxVar sets custom parameter to context with key-value pairs.
 func (r *Request) SetCtxVar(key interface{}, value interface{}) {
 	r.context = context.WithValue(r.Context(), key, value)
 }

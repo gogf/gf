@@ -56,16 +56,16 @@ func Test_Bool_JSON(t *testing.T) {
 		var err error
 		i := gtype.NewBool()
 		err = json.UnmarshalUseNumber([]byte("true"), &i)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(i.Val(), true)
 		err = json.UnmarshalUseNumber([]byte("false"), &i)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(i.Val(), false)
 		err = json.UnmarshalUseNumber([]byte("1"), &i)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(i.Val(), true)
 		err = json.UnmarshalUseNumber([]byte("0"), &i)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(i.Val(), false)
 	})
 
@@ -79,7 +79,7 @@ func Test_Bool_JSON(t *testing.T) {
 
 		i2 := gtype.NewBool()
 		err := json.UnmarshalUseNumber(b2, &i2)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(i2.Val(), i.Val())
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -92,7 +92,7 @@ func Test_Bool_JSON(t *testing.T) {
 
 		i2 := gtype.NewBool()
 		err := json.UnmarshalUseNumber(b2, &i2)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(i2.Val(), i.Val())
 	})
 }
@@ -108,7 +108,7 @@ func Test_Bool_UnmarshalValue(t *testing.T) {
 			"name": "john",
 			"var":  "true",
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Var.Val(), true)
 	})
@@ -118,7 +118,7 @@ func Test_Bool_UnmarshalValue(t *testing.T) {
 			"name": "john",
 			"var":  "false",
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Var.Val(), false)
 	})

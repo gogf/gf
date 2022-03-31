@@ -9,7 +9,8 @@ package gconv
 import (
 	"reflect"
 
-	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/internal/reflection"
 )
 
 // SliceInt is alias of Ints.
@@ -69,9 +70,13 @@ func Ints(any interface{}) []int {
 			array[k] = int(v)
 		}
 	case []uint8:
-		array = make([]int, len(value))
-		for k, v := range value {
-			array[k] = int(v)
+		if json.Valid(value) {
+			_ = json.UnmarshalUseNumber(value, &array)
+		} else {
+			array = make([]int, len(value))
+			for k, v := range value {
+				array[k] = int(v)
+			}
 		}
 	case []uint16:
 		array = make([]int, len(value))
@@ -132,7 +137,7 @@ func Ints(any interface{}) []int {
 		return array
 	}
 	// Not a common type, it then uses reflection for conversion.
-	originValueAndKind := utils.OriginValueAndKind(any)
+	originValueAndKind := reflection.OriginValueAndKind(any)
 	switch originValueAndKind.OriginKind {
 	case reflect.Slice, reflect.Array:
 		var (
@@ -194,9 +199,13 @@ func Int32s(any interface{}) []int32 {
 			array[k] = int32(v)
 		}
 	case []uint8:
-		array = make([]int32, len(value))
-		for k, v := range value {
-			array[k] = int32(v)
+		if json.Valid(value) {
+			_ = json.UnmarshalUseNumber(value, &array)
+		} else {
+			array = make([]int32, len(value))
+			for k, v := range value {
+				array[k] = int32(v)
+			}
 		}
 	case []uint16:
 		array = make([]int32, len(value))
@@ -257,7 +266,7 @@ func Int32s(any interface{}) []int32 {
 		return array
 	}
 	// Not a common type, it then uses reflection for conversion.
-	originValueAndKind := utils.OriginValueAndKind(any)
+	originValueAndKind := reflection.OriginValueAndKind(any)
 	switch originValueAndKind.OriginKind {
 	case reflect.Slice, reflect.Array:
 		var (
@@ -319,9 +328,13 @@ func Int64s(any interface{}) []int64 {
 			array[k] = int64(v)
 		}
 	case []uint8:
-		array = make([]int64, len(value))
-		for k, v := range value {
-			array[k] = int64(v)
+		if json.Valid(value) {
+			_ = json.UnmarshalUseNumber(value, &array)
+		} else {
+			array = make([]int64, len(value))
+			for k, v := range value {
+				array[k] = int64(v)
+			}
 		}
 	case []uint16:
 		array = make([]int64, len(value))
@@ -382,7 +395,7 @@ func Int64s(any interface{}) []int64 {
 		return array
 	}
 	// Not a common type, it then uses reflection for conversion.
-	originValueAndKind := utils.OriginValueAndKind(any)
+	originValueAndKind := reflection.OriginValueAndKind(any)
 	switch originValueAndKind.OriginKind {
 	case reflect.Slice, reflect.Array:
 		var (

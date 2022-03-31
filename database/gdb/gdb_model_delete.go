@@ -20,32 +20,55 @@ import (
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
+	var ctx = m.GetCtx()
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).Delete()
 	}
 	defer func() {
 		if err == nil {
-			m.checkAndRemoveCache()
+			m.checkAndRemoveSelectCache(ctx)
 		}
 	}()
 	var (
 		fieldNameDelete                               = m.getSoftFieldNameDeleted()
-		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false, false)
+		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(ctx, false, false)
 	)
 	// Soft deleting.
 	if !m.unscoped && fieldNameDelete != "" {
-		return m.db.DoUpdate(
-			m.GetCtx(),
-			m.getLink(true),
-			m.tables,
-			fmt.Sprintf(`%s=?`, m.db.GetCore().QuoteString(fieldNameDelete)),
-			conditionWhere+conditionExtra,
-			append([]interface{}{gtime.Now().String()}, conditionArgs...),
-		)
+		in := &HookUpdateInput{
+			internalParamHookUpdate: internalParamHookUpdate{
+				internalParamHook: internalParamHook{
+					link:  m.getLink(true),
+					model: m,
+				},
+				handler: m.hookHandler.Update,
+			},
+			Table:     m.tables,
+			Data:      fmt.Sprintf(`%s=?`, m.db.GetCore().QuoteString(fieldNameDelete)),
+			Condition: conditionWhere + conditionExtra,
+			Args:      append([]interface{}{gtime.Now().String()}, conditionArgs...),
+		}
+		return in.Next(ctx)
 	}
 	conditionStr := conditionWhere + conditionExtra
 	if !gstr.ContainsI(conditionStr, " WHERE ") {
-		return nil, gerror.NewCode(gcode.CodeMissingParameter, "there should be WHERE condition statement for DELETE operation")
+		return nil, gerror.NewCode(
+			gcode.CodeMissingParameter,
+			"there should be WHERE condition statement for DELETE operation",
+		)
 	}
-	return m.db.DoDelete(m.GetCtx(), m.getLink(true), m.tables, conditionStr, conditionArgs...)
+
+	in := &HookDeleteInput{
+		internalParamHookDelete: internalParamHookDelete{
+			internalParamHook: internalParamHook{
+				link:  m.getLink(true),
+				model: m,
+			},
+			handler: m.hookHandler.Delete,
+		},
+		Table:     m.tables,
+		Condition: conditionStr,
+		Args:      conditionArgs,
+	}
+	return in.Next(ctx)
 }

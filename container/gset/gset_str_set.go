@@ -218,6 +218,9 @@ func (set *StrSet) Join(glue string) string {
 
 // String returns items as a string, which implements like json.Marshal does.
 func (set *StrSet) String() string {
+	if set == nil {
+		return ""
+	}
 	set.mu.RLock()
 	defer set.mu.RUnlock()
 	var (

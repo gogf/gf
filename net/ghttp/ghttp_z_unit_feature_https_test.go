@@ -11,7 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	_ "github.com/gogf/gf/v2/net/ghttp/testdata/https/packed"
@@ -31,8 +30,8 @@ func Test_HTTPS_Basic(t *testing.T) {
 		})
 	})
 	s.EnableHTTPS(
-		gdebug.TestDataPath("https", "files", "server.crt"),
-		gdebug.TestDataPath("https", "files", "server.key"),
+		gtest.DataPath("https", "files", "server.crt"),
+		gtest.DataPath("https", "files", "server.key"),
 	)
 	s.SetDumpRouterMap(false)
 	s.Start()
@@ -101,8 +100,8 @@ func Test_HTTPS_HTTP_Basic(t *testing.T) {
 		})
 	})
 	s.EnableHTTPS(
-		gdebug.TestDataPath("https", "files", "server.crt"),
-		gdebug.TestDataPath("https", "files", "server.key"),
+		gtest.DataPath("https", "files", "server.crt"),
+		gtest.DataPath("https", "files", "server.key"),
 	)
 	s.SetPort(portHttp)
 	s.SetHTTPSPort(portHttps)

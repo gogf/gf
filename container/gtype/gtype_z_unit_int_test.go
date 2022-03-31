@@ -52,7 +52,7 @@ func Test_Int_JSON(t *testing.T) {
 
 		i2 := gtype.NewInt()
 		err := json.UnmarshalUseNumber(b2, &i2)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(i2.Val(), v)
 	})
 }
@@ -68,7 +68,7 @@ func Test_Int_UnmarshalValue(t *testing.T) {
 			"name": "john",
 			"var":  "123",
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Var.Val(), "123")
 	})

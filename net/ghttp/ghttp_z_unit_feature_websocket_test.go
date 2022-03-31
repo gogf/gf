@@ -44,15 +44,15 @@ func Test_WebSocket(t *testing.T) {
 		conn, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf(
 			"ws://127.0.0.1:%d/ws", s.GetListenedPort(),
 		), nil)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer conn.Close()
 
 		msg := []byte("hello")
 		err = conn.WriteMessage(websocket.TextMessage, msg)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		mt, data, err := conn.ReadMessage()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(mt, websocket.TextMessage)
 		t.Assert(data, msg)
 	})

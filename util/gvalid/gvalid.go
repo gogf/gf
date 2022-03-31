@@ -8,9 +8,12 @@
 package gvalid
 
 import (
+	"context"
+	"reflect"
 	"regexp"
 	"strings"
 
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/text/gregex"
 )
 
@@ -20,9 +23,10 @@ type CustomMsg = map[string]interface{}
 
 // fieldRule defined the alias name and rule string for specified field.
 type fieldRule struct {
-	Name   string // Alias name for the field.
-	Rule   string // Rule string like: "max:6"
-	IsMeta bool   // Is this rule is from gmeta.Meta, which marks it as whole struct rule.
+	Name      string       // Alias name for the field.
+	Rule      string       // Rule string like: "max:6"
+	IsMeta    bool         // Is this rule is from gmeta.Meta, which marks it as whole struct rule.
+	FieldKind reflect.Kind // Kind of struct field, which is used for parameter type checks.
 }
 
 // iNoValidation is an interface that marks current struct not validated by package `gvalid`.
@@ -41,6 +45,8 @@ const (
 	noValidationTagName       = "nv"                  // no validation tag name for struct attribute.
 	ruleNameBail              = "bail"                // the name for rule "bail"
 	ruleNameCi                = "ci"                  // the name for rule "ci"
+	emptyJsonArrayStr         = "[]"                  // Empty json string for array type.
+	emptyJsonObjectStr        = "{}"                  // Empty json string for object type.
 )
 
 var (
@@ -198,11 +204,23 @@ var (
 	}
 )
 
-// parseSequenceTag parses one sequence tag to field, rule and error message.
+// ParseTagValue parses one sequence tag to field, rule and error message.
 // The sequence tag is like: [alias@]rule[...#msg...]
-func parseSequenceTag(tag string) (field, rule, msg string) {
+func ParseTagValue(tag string) (field, rule, msg string) {
 	// Complete sequence tag.
 	// Example: name@required|length:2,20|password3|same:password1#||密码强度不足|两次密码不一致
 	match, _ := gregex.MatchString(`\s*((\w+)\s*@){0,1}\s*([^#]+)\s*(#\s*(.*)){0,1}\s*`, tag)
-	return strings.TrimSpace(match[2]), strings.TrimSpace(match[3]), strings.TrimSpace(match[5])
+	if len(match) > 5 {
+		msg = strings.TrimSpace(match[5])
+		rule = strings.TrimSpace(match[3])
+		field = strings.TrimSpace(match[2])
+	} else {
+		intlog.Errorf(context.TODO(), `invalid validation tag value: %s`, tag)
+	}
+	return
+}
+
+// GetTags returns the validation tags.
+func GetTags() []string {
+	return structTagPriority
 }
