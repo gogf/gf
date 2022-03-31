@@ -194,8 +194,7 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 	var (
 		tempName       string
 		elemFieldType  reflect.StructField
-		elemTempValue  reflect.Value
-		elemOriginKind reflect.Kind
+		elemFieldValue reflect.Value
 		elemType       = pointerElemReflectValue.Type()
 		attrMap        = make(map[string]string) // Attribute name to its check name which has no symbols.
 	)
@@ -205,15 +204,17 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 		if !utils.IsLetterUpper(elemFieldType.Name[0]) {
 			continue
 		}
-		elemTempValue = pointerElemReflectValue.Field(i)
-		elemOriginKind = elemTempValue.Kind()
-		for elemOriginKind == reflect.Ptr || elemOriginKind == reflect.Interface {
-			elemTempValue = elemTempValue.Elem()
-			elemOriginKind = elemTempValue.Kind()
-		}
 		// Maybe it's struct/*struct embedded.
-		if elemFieldType.Anonymous && elemOriginKind == reflect.Struct {
-			if err = doStruct(paramsMap, pointerElemReflectValue.Field(i), mapping, priorityTag); err != nil {
+		if elemFieldType.Anonymous {
+			elemFieldValue = pointerElemReflectValue.Field(i)
+			// Ignore the interface attribute if it's nil.
+			if elemFieldValue.Kind() == reflect.Interface {
+				elemFieldValue = elemFieldValue.Elem()
+				if !elemFieldValue.IsValid() {
+					continue
+				}
+			}
+			if err = doStruct(paramsMap, elemFieldValue, mapping, priorityTag); err != nil {
 				return err
 			}
 		} else {

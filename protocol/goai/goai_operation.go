@@ -26,7 +26,7 @@ type Operation struct {
 	Security     *SecurityRequirements `json:"security,omitempty"`
 	Servers      *Servers              `json:"servers,omitempty"`
 	ExternalDocs *ExternalDocs         `json:"externalDocs,omitempty"`
-	XExtensions  `json:"-"`
+	XExtensions  XExtensions           `json:"-"`
 }
 
 func (oai *OpenApiV3) tagMapToOperation(tagMap map[string]string, operation *Operation) error {

@@ -158,6 +158,9 @@ func (tx *TX) transactionKeyForNestedPoint() string {
 // Ctx sets the context for current transaction.
 func (tx *TX) Ctx(ctx context.Context) *TX {
 	tx.ctx = ctx
+	if tx.ctx != nil {
+		tx.ctx = tx.db.GetCore().injectInternalCtxData(tx.ctx)
+	}
 	return tx
 }
 

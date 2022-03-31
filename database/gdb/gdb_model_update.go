@@ -37,7 +37,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	}
 	defer func() {
 		if err == nil {
-			m.checkAndRemoveCache(ctx)
+			m.checkAndRemoveSelectCache(ctx)
 		}
 	}()
 	if m.data == nil {
