@@ -99,3 +99,8 @@ func fillWithDefaultConfiguration(config *Config) {
 		config.ReadTimeout = -1
 	}
 }
+
+// Client export current go-redis client to external.
+func (r *AdapterGoRedis) Client(ctx context.Context) redis.UniversalClient {
+	return r.client
+}

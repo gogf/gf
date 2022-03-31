@@ -8,6 +8,7 @@ package gredis
 
 import (
 	"context"
+	"github.com/go-redis/redis/v8"
 
 	"github.com/gogf/gf/v2/container/gvar"
 )
@@ -20,6 +21,9 @@ type Adapter interface {
 
 	// Close closes current redis client, closes its connection pool and releases all its related resources.
 	Close(ctx context.Context) (err error)
+
+	// Client export current go-redis client to external.
+	Client(ctx context.Context) redis.UniversalClient
 }
 
 // Conn is an interface of a connection from universal redis client.

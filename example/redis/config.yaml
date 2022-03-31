@@ -1,0 +1,12 @@
+server:
+  address:     ":8199"
+  openapiPath: "/api.json"
+  swaggerPath: "/swagger"
+
+# Redis 配置示例
+redis:
+  # 单实例配置示例1
+  default:
+    address: 127.0.0.1:6379
+    db:      1
+    pass:    "123456"
