@@ -129,6 +129,7 @@ func (m *Model) makeSelectCacheKey(sql string, args ...interface{}) string {
 	if len(cacheKey) == 0 {
 		cacheKey = fmt.Sprintf(
 			`GCache@Schema(%s):%s`,
+			m.db.GetSchema(),
 			gmd5.MustEncryptString(sql+", @PARAMS:"+gconv.String(args)),
 		)
 	}
