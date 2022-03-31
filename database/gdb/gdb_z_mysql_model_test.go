@@ -24,6 +24,7 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/guid"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
@@ -687,6 +688,18 @@ func Test_Model_Count(t *testing.T) {
 		count, err := db.Model(table).Count()
 		t.AssertNil(err)
 		t.Assert(count, TableSize)
+	})
+	// Count with cache, check internal ctx data feature.
+	gtest.C(t, func(t *gtest.T) {
+		for i := 0; i < 10; i++ {
+			count, err := db.Model(table).Cache(gdb.CacheOption{
+				Duration: time.Second * 10,
+				Name:     guid.S(),
+				Force:    false,
+			}).Count()
+			t.AssertNil(err)
+			t.Assert(count, TableSize)
+		}
 	})
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).FieldsEx("id").Where("id>8").Count()
