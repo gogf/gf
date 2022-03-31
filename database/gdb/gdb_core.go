@@ -60,10 +60,11 @@ func (c *Core) Ctx(ctx context.Context) DB {
 // GetCtx returns the context for current DB.
 // It returns `context.Background()` is there's no context previously set.
 func (c *Core) GetCtx() context.Context {
-	if c.ctx != nil {
-		return c.ctx
+	ctx := c.ctx
+	if ctx == nil {
+		ctx = context.TODO()
 	}
-	return c.injectInternalCtxData(context.TODO())
+	return c.injectInternalCtxData(ctx)
 }
 
 // GetCtxTimeout returns the context and cancel function for specified timeout type.
@@ -241,7 +242,7 @@ func (c *Core) GetValue(ctx context.Context, sql string, args ...interface{}) (V
 
 // GetCount queries and returns the count from database.
 func (c *Core) GetCount(ctx context.Context, sql string, args ...interface{}) (int, error) {
-	// If the query fields do not contains function "COUNT",
+	// If the query fields do not contain function "COUNT",
 	// it replaces the sql string and adds the "COUNT" function to the fields.
 	if !gregex.IsMatchString(`(?i)SELECT\s+COUNT\(.+\)\s+FROM`, sql) {
 		sql, _ = gregex.ReplaceString(`(?i)(SELECT)\s+(.+)\s+(FROM)`, `$1 COUNT($2) $3`, sql)

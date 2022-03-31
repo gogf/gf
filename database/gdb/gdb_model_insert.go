@@ -228,7 +228,7 @@ func (m *Model) Save(data ...interface{}) (result sql.Result, err error) {
 func (m *Model) doInsertWithOption(ctx context.Context, insertOption int) (result sql.Result, err error) {
 	defer func() {
 		if err == nil {
-			m.checkAndRemoveCache(ctx)
+			m.checkAndRemoveSelectCache(ctx)
 		}
 	}()
 	if m.data == nil {

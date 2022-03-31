@@ -26,7 +26,7 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 	}
 	defer func() {
 		if err == nil {
-			m.checkAndRemoveCache(ctx)
+			m.checkAndRemoveSelectCache(ctx)
 		}
 	}()
 	var (

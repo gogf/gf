@@ -14,11 +14,11 @@ import (
 
 // Response is specified by OpenAPI/Swagger 3.0 standard.
 type Response struct {
-	Description string  `json:"description"`
-	Headers     Headers `json:"headers,omitempty"`
-	Content     Content `json:"content,omitempty"`
-	Links       Links   `json:"links,omitempty"`
-	XExtensions `json:"-"`
+	Description string      `json:"description"`
+	Headers     Headers     `json:"headers,omitempty"`
+	Content     Content     `json:"content,omitempty"`
+	Links       Links       `json:"links,omitempty"`
+	XExtensions XExtensions `json:"-"`
 }
 
 func (oai *OpenApiV3) tagMapToResponse(tagMap map[string]string, response *Response) error {

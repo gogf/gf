@@ -163,7 +163,7 @@ func (c *Core) sqlParsingHandler(ctx context.Context, in sqlParsingHandlerInput)
 
 // DoCommit commits current sql and arguments to underlying sql driver.
 func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutput, err error) {
-	// Inject internal data into ctx, just for double check.
+	// Inject internal data into ctx, especially for transaction creating.
 	ctx = c.injectInternalCtxData(ctx)
 
 	var (

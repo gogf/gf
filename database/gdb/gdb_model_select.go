@@ -13,11 +13,8 @@ import (
 
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/crypto/gmd5"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -521,33 +518,8 @@ func (m *Model) Having(having interface{}, args ...interface{}) *Model {
 
 // doGetAllBySql does the select statement on the database.
 func (m *Model) doGetAllBySql(ctx context.Context, queryType int, sql string, args ...interface{}) (result Result, err error) {
-	var (
-		ok       bool
-		cacheKey = ""
-		cacheObj = m.db.GetCache()
-	)
-	// Retrieve from cache.
-	if m.cacheEnabled && m.tx == nil {
-		cacheKey = m.cacheOption.Name
-		if len(cacheKey) == 0 {
-			cacheKey = fmt.Sprintf(
-				`GCache@Schema(%s):%s`,
-				m.db.GetSchema(),
-				gmd5.MustEncryptString(sql+", @PARAMS:"+gconv.String(args)),
-			)
-		}
-		if v, _ := cacheObj.Get(ctx, cacheKey); !v.IsNil() {
-			if result, ok = v.Val().(Result); ok {
-				// In-memory cache.
-				return result, nil
-			}
-			// Other cache, it needs conversion.
-			if err = json.UnmarshalUseNumber(v.Bytes(), &result); err != nil {
-				return nil, err
-			} else {
-				return result, nil
-			}
-		}
+	if result, err = m.getSelectResultFromCache(ctx, sql, args...); err != nil || result != nil {
+		return
 	}
 
 	in := &HookSelectInput{
@@ -562,25 +534,12 @@ func (m *Model) doGetAllBySql(ctx context.Context, queryType int, sql string, ar
 		Sql:   sql,
 		Args:  m.mergeArguments(args),
 	}
-	result, err = in.Next(ctx)
-
-	// Cache the result.
-	if cacheKey != "" && err == nil {
-		if m.cacheOption.Duration < 0 {
-			if _, errCache := cacheObj.Remove(ctx, cacheKey); errCache != nil {
-				intlog.Errorf(ctx, `%+v`, errCache)
-			}
-		} else {
-			// In case of Cache Penetration.
-			if result.IsEmpty() && m.cacheOption.Force {
-				result = Result{}
-			}
-			if errCache := cacheObj.Set(ctx, cacheKey, result, m.cacheOption.Duration); errCache != nil {
-				intlog.Errorf(ctx, `%+v`, errCache)
-			}
-		}
+	if result, err = in.Next(ctx); err != nil {
+		return
 	}
-	return result, err
+
+	err = m.saveSelectResultToCache(ctx, result, sql, args...)
+	return
 }
 
 func (m *Model) getFormattedSqlAndArgs(ctx context.Context, queryType int, limit1 bool) (sqlWithHolder string, holderArgs []interface{}) {

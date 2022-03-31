@@ -28,7 +28,7 @@ type Parameter struct {
 	Example         interface{} `json:"example,omitempty"`
 	Examples        *Examples   `json:"examples,omitempty"`
 	Content         *Content    `json:"content,omitempty"`
-	XExtensions     `json:"-"`
+	XExtensions     XExtensions `json:"-"`
 }
 
 func (oai *OpenApiV3) tagMapToParameter(tagMap map[string]string, parameter *Parameter) error {

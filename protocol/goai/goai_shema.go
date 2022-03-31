@@ -59,7 +59,7 @@ type Schema struct {
 	MaxProps             *uint64        `json:"maxProperties,omitempty"`
 	AdditionalProperties *SchemaRef     `json:"additionalProperties,omitempty"`
 	Discriminator        *Discriminator `json:"discriminator,omitempty"`
-	XExtensions          `json:"-"`
+	XExtensions          XExtensions    `json:"-"`
 }
 
 func (s Schema) MarshalJSON() ([]byte, error) {
