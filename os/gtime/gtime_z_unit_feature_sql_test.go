@@ -30,12 +30,12 @@ func TestTime_Value(t1 *testing.T) {
 	gtest.C(t1, func(t *gtest.T) {
 		tt := gtime.Now()
 		s, err := tt.Value()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(s, tt.Time)
 		// test nil
 		none := (*gtime.Time)(nil)
 		s, err = none.Value()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(s, nil)
 
 	})

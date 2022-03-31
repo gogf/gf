@@ -14,6 +14,7 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/internal/rwmutex"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -282,7 +283,7 @@ func (j *Json) convertValue(value interface{}) (convertedValue interface{}, err 
 
 	default:
 		var (
-			reflectInfo = utils.OriginValueAndKind(value)
+			reflectInfo = reflection.OriginValueAndKind(value)
 		)
 		switch reflectInfo.OriginKind {
 		case reflect.Array:

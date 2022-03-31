@@ -41,7 +41,7 @@ func (j *Json) IsNil() bool {
 }
 
 // Get retrieves and returns value by specified `pattern`.
-// It returns all values of current Json object if `pattern` is given empty or string ".".
+// It returns all values of current Json object if `pattern` is given ".".
 // It returns nil if no value found by `pattern`.
 //
 // We can also access slice item by its index number in `pattern` like:
@@ -60,12 +60,7 @@ func (j *Json) Get(pattern string, def ...interface{}) *gvar.Var {
 		return nil
 	}
 
-	var result *interface{}
-	if j.vc {
-		result = j.getPointerByPattern(pattern)
-	} else {
-		result = j.getPointerByPatternWithoutViolenceCheck(pattern)
-	}
+	result := j.getPointerByPattern(pattern)
 	if result != nil {
 		return gvar.New(*result)
 	}
@@ -76,7 +71,7 @@ func (j *Json) Get(pattern string, def ...interface{}) *gvar.Var {
 }
 
 // GetJson gets the value by specified `pattern`,
-// and converts it to a un-concurrent-safe Json object.
+// and converts it to an un-concurrent-safe Json object.
 func (j *Json) GetJson(pattern string, def ...interface{}) *Json {
 	return New(j.Get(pattern, def...).Val())
 }

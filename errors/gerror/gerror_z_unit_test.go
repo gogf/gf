@@ -251,7 +251,7 @@ func Test_Next(t *testing.T) {
 		t.Assert(err.Error(), "1")
 
 		err = gerror.Next(err)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 }
 

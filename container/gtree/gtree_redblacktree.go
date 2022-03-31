@@ -7,6 +7,7 @@
 package gtree
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/gogf/gf/v2/container/gvar"
@@ -622,6 +623,9 @@ func (tree *RedBlackTree) Replace(data map[interface{}]interface{}) {
 
 // String returns a string representation of container.
 func (tree *RedBlackTree) String() string {
+	if tree == nil {
+		return ""
+	}
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	str := ""
@@ -925,8 +929,26 @@ func (tree *RedBlackTree) nodeColor(node *RedBlackTreeNode) color {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (tree RedBlackTree) MarshalJSON() ([]byte, error) {
-	return json.Marshal(gconv.Map(tree.Map()))
+func (tree RedBlackTree) MarshalJSON() (jsonBytes []byte, err error) {
+	if tree.root == nil {
+		return []byte("null"), nil
+	}
+	buffer := bytes.NewBuffer(nil)
+	buffer.WriteByte('{')
+	tree.Iterator(func(key, value interface{}) bool {
+		valueBytes, valueJsonErr := json.Marshal(value)
+		if valueJsonErr != nil {
+			err = valueJsonErr
+			return false
+		}
+		if buffer.Len() > 1 {
+			buffer.WriteByte(',')
+		}
+		buffer.WriteString(fmt.Sprintf(`"%v":%s`, key, valueBytes))
+		return true
+	})
+	buffer.WriteByte('}')
+	return buffer.Bytes(), nil
 }
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.

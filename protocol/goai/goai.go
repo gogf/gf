@@ -25,25 +25,18 @@ import (
 // https://swagger.io/specification/
 // https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.0.md
 type OpenApiV3 struct {
-	Config       Config                `json:"-"                      yaml:"-"`
-	OpenAPI      string                `json:"openapi"                yaml:"openapi"`
-	Components   Components            `json:"components,omitempty"   yaml:"components,omitempty"`
-	Info         Info                  `json:"info"                   yaml:"info"`
-	Paths        Paths                 `json:"paths"                  yaml:"paths"`
-	Security     *SecurityRequirements `json:"security,omitempty"     yaml:"security,omitempty"`
-	Servers      *Servers              `json:"servers,omitempty"      yaml:"servers,omitempty"`
-	Tags         *Tags                 `json:"tags,omitempty"         yaml:"tags,omitempty"`
-	ExternalDocs *ExternalDocs         `json:"externalDocs,omitempty" yaml:"externalDocs,omitempty"`
-}
-
-// ExternalDocs is specified by OpenAPI/Swagger standard version 3.0.
-type ExternalDocs struct {
-	URL         string `json:"url,omitempty"`
-	Description string `json:"description,omitempty"`
+	Config       Config                `json:"-"`
+	OpenAPI      string                `json:"openapi"`
+	Components   Components            `json:"components,omitempty"`
+	Info         Info                  `json:"info"`
+	Paths        Paths                 `json:"paths"`
+	Security     *SecurityRequirements `json:"security,omitempty"`
+	Servers      *Servers              `json:"servers,omitempty"`
+	Tags         *Tags                 `json:"tags,omitempty"`
+	ExternalDocs *ExternalDocs         `json:"externalDocs,omitempty"`
 }
 
 const (
-	HttpMethodAll     = `ALL`
 	HttpMethodGet     = `GET`
 	HttpMethodPut     = `PUT`
 	HttpMethodPost    = `POST`
@@ -56,6 +49,7 @@ const (
 )
 
 const (
+	TypeInteger    = `integer`
 	TypeNumber     = `number`
 	TypeBoolean    = `boolean`
 	TypeArray      = `array`
@@ -82,22 +76,28 @@ const (
 	TagNamePath     = `path`
 	TagNameMethod   = `method`
 	TagNameMime     = `mime`
+	TagNameConsumes = `consumes`
 	TagNameType     = `type`
 	TagNameDomain   = `domain`
-	TagNameValidate = `v`
+)
+
+const (
+	patternKeyForRequired = `required`
+	patternKeyForIn       = `in:`
 )
 
 var (
 	defaultReadContentTypes  = []string{`application/json`}
 	defaultWriteContentTypes = []string{`application/json`}
 	shortTypeMapForTag       = map[string]string{
-		"d":   "default",
-		"sum": "summary",
-		"sm":  "summary",
-		"des": "description",
-		"dc":  "description",
-		"eg":  "example",
-		"egs": "examples",
+		"d":   "Default",
+		"sum": "Summary",
+		"sm":  "Summary",
+		"des": "Description",
+		"dc":  "Description",
+		"eg":  "Example",
+		"egs": "Examples",
+		"ed":  "ExternalDocs",
 	}
 )
 
@@ -180,7 +180,10 @@ func (oai *OpenApiV3) golangTypeToOAIType(t reflect.Type) string {
 
 	case
 		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return TypeInteger
+
+	case
 		reflect.Float32, reflect.Float64,
 		reflect.Complex64, reflect.Complex128:
 		return TypeNumber

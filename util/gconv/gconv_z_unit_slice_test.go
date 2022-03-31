@@ -163,7 +163,7 @@ func Test_Slice_Structs(t *testing.T) {
 			{"id": 2, "name": "smith", "age": 20},
 		}
 		err := gconv.Structs(params, &users)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(users), 2)
 		t.Assert(users[0].Id, params[0]["id"])
 		t.Assert(users[0].Name, params[0]["name"])

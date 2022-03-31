@@ -8,11 +8,59 @@
 package gdb
 
 import (
+	"context"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 )
+
+// WithDB injects given db object into context and returns a new context.
+func WithDB(ctx context.Context, db DB) context.Context {
+	if db == nil {
+		return ctx
+	}
+	dbCtx := db.GetCtx()
+	if ctxDb := DBFromCtx(dbCtx); ctxDb != nil {
+		return dbCtx
+	}
+	ctx = context.WithValue(ctx, contextKeyForDB, db)
+	return ctx
+}
+
+// DBFromCtx retrieves and returns DB object from context.
+func DBFromCtx(ctx context.Context) DB {
+	if ctx == nil {
+		return nil
+	}
+	v := ctx.Value(contextKeyForDB)
+	if v != nil {
+		return v.(DB)
+	}
+	return nil
+}
+
+// GetLink creates and returns the underlying database link object with transaction checks.
+// The parameter `master` specifies whether using the master node if master-slave configured.
+func (c *Core) GetLink(ctx context.Context, master bool, schema string) (Link, error) {
+	tx := TXFromCtx(ctx, c.db.GetGroup())
+	if tx != nil {
+		return &txLink{tx.tx}, nil
+	}
+	if master {
+		link, err := c.db.GetCore().MasterLink(schema)
+		if err != nil {
+			return nil, err
+		}
+		return link, nil
+	}
+	link, err := c.db.GetCore().SlaveLink(schema)
+	if err != nil {
+		return nil, err
+	}
+	return link, nil
+}
 
 // MasterLink acts like function Master but with additional `schema` parameter specifying
 // the schema for the connection. It is defined for internal usage.
@@ -22,7 +70,10 @@ func (c *Core) MasterLink(schema ...string) (Link, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &dbLink{db}, nil
+	return &dbLink{
+		DB:         db,
+		isOnMaster: true,
+	}, nil
 }
 
 // SlaveLink acts like function Slave but with additional `schema` parameter specifying
@@ -33,7 +84,10 @@ func (c *Core) SlaveLink(schema ...string) (Link, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &dbLink{db}, nil
+	return &dbLink{
+		DB:         db,
+		isOnMaster: false,
+	}, nil
 }
 
 // QuoteWord checks given string `s` a word,
@@ -96,11 +150,12 @@ func (c *Core) Tables(schema ...string) (tables []string, err error) {
 //
 // It does nothing in default.
 func (c *Core) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
+	var ctx = c.db.GetCtx()
 	// It does nothing if given table is empty, especially in sub-query.
 	if table == "" {
 		return map[string]*TableField{}, nil
 	}
-	return c.db.TableFields(c.GetCtx(), table, schema...)
+	return c.db.TableFields(ctx, table, schema...)
 }
 
 // HasField determine whether the field exists in the table.

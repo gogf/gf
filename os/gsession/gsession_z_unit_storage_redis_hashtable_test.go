@@ -88,7 +88,7 @@ func Test_StorageRedisHashTablePrefix(t *testing.T) {
 		Db:      0,
 	})
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 
 	prefix := "s_"

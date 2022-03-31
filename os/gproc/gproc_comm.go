@@ -107,10 +107,12 @@ func getCommPidFolderPath() (folderPath string, err error) {
 				break
 			}
 		}
-		err = gerror.Newf(
-			`cannot find available folder for storing pid to port mapping files in paths: %+v`,
-			availablePaths,
-		)
+		if commPidFolderPath == "" {
+			err = gerror.Newf(
+				`cannot find available folder for storing pid to port mapping files in paths: %+v`,
+				availablePaths,
+			)
+		}
 	})
 	folderPath = commPidFolderPath
 	return

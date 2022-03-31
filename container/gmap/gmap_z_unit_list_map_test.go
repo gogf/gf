@@ -186,12 +186,12 @@ func Test_ListMap_Json(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		data := g.MapAnyAny{
 			"k1": "v1",
-			"k2": "v2",
 		}
 		m1 := gmap.NewListMapFrom(data)
 		b1, err1 := json.Marshal(m1)
+		t.AssertNil(err1)
 		b2, err2 := json.Marshal(gconv.Map(data))
-		t.Assert(err1, err2)
+		t.AssertNil(err2)
 		t.Assert(b1, b2)
 	})
 	// Unmarshal
@@ -201,11 +201,11 @@ func Test_ListMap_Json(t *testing.T) {
 			"k2": "v2",
 		}
 		b, err := json.Marshal(gconv.Map(data))
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		m := gmap.NewListMap()
 		err = json.UnmarshalUseNumber(b, m)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(m.Get("k1"), data["k1"])
 		t.Assert(m.Get("k2"), data["k2"])
 	})
@@ -216,13 +216,34 @@ func Test_ListMap_Json(t *testing.T) {
 			"k2": "v2",
 		}
 		b, err := json.Marshal(gconv.Map(data))
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		var m gmap.ListMap
 		err = json.UnmarshalUseNumber(b, &m)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(m.Get("k1"), data["k1"])
 		t.Assert(m.Get("k2"), data["k2"])
+	})
+}
+
+func Test_ListMap_Json_Sequence(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewListMap()
+		for i := 'z'; i >= 'a'; i-- {
+			m.Set(string(i), i)
+		}
+		b, err := json.Marshal(m)
+		t.AssertNil(err)
+		t.Assert(b, `{"z":122,"y":121,"x":120,"w":119,"v":118,"u":117,"t":116,"s":115,"r":114,"q":113,"p":112,"o":111,"n":110,"m":109,"l":108,"k":107,"j":106,"i":105,"h":104,"g":103,"f":102,"e":101,"d":100,"c":99,"b":98,"a":97}`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewListMap()
+		for i := 'a'; i <= 'z'; i++ {
+			m.Set(string(i), i)
+		}
+		b, err := json.Marshal(m)
+		t.AssertNil(err)
+		t.Assert(b, `{"a":97,"b":98,"c":99,"d":100,"e":101,"f":102,"g":103,"h":104,"i":105,"j":106,"k":107,"l":108,"m":109,"n":110,"o":111,"p":112,"q":113,"r":114,"s":115,"t":116,"u":117,"v":118,"w":119,"x":120,"y":121,"z":122}`)
 	})
 }
 
@@ -291,7 +312,7 @@ func TestListMap_UnmarshalValue(t *testing.T) {
 			"name": "john",
 			"map":  []byte(`{"1":"v1","2":"v2"}`),
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Map.Size(), 2)
 		t.Assert(v.Map.Get("1"), "v1")
@@ -307,7 +328,7 @@ func TestListMap_UnmarshalValue(t *testing.T) {
 				2: "v2",
 			},
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Map.Size(), 2)
 		t.Assert(v.Map.Get("1"), "v1")

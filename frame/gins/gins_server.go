@@ -58,10 +58,10 @@ func Server(name ...interface{}) *ghttp.Server {
 					}
 				}
 			}
-			// Server configuration.
+			// Automatically retrieve configuration by instance name.
 			serverConfigMap = Config().MustGet(
 				ctx,
-				fmt.Sprintf(`%s.%s`, configNodeName, server.GetName()),
+				fmt.Sprintf(`%s.%s`, configNodeName, instanceName),
 			).Map()
 			if len(serverConfigMap) == 0 {
 				serverConfigMap = Config().MustGet(ctx, configNodeName).Map()
@@ -81,7 +81,7 @@ func Server(name ...interface{}) *ghttp.Server {
 			// Server logger configuration checks.
 			serverLoggerConfigMap = Config().MustGet(
 				ctx,
-				fmt.Sprintf(`%s.%s.%s`, configNodeName, server.GetName(), configNodeNameLogger),
+				fmt.Sprintf(`%s.%s.%s`, configNodeName, instanceName, configNodeNameLogger),
 			).Map()
 			if len(serverLoggerConfigMap) > 0 {
 				if err = server.Logger().SetConfigWithMap(serverLoggerConfigMap); err != nil {

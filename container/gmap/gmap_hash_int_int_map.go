@@ -426,6 +426,9 @@ func (m *IntIntMap) Merge(other *IntIntMap) {
 
 // String returns the map as a string.
 func (m *IntIntMap) String() string {
+	if m == nil {
+		return ""
+	}
 	b, _ := m.MarshalJSON()
 	return string(b)
 }

@@ -105,7 +105,7 @@ func Test_StrToTime(t *testing.T) {
 
 		for _, item := range testDateTimes {
 			timeTemp, err := gtime.StrToTime(item)
-			t.Assert(err, nil)
+			t.AssertNil(err)
 			t.Assert(timeTemp.Time.Format("2006-01-02 15:04:05"), "2006-01-02 15:04:05")
 		}
 
@@ -118,7 +118,7 @@ func Test_StrToTime(t *testing.T) {
 
 		for _, item := range testDates {
 			timeTemp, err := gtime.StrToTime(item)
-			t.Assert(err, nil)
+			t.AssertNil(err)
 			t.Assert(timeTemp.Time.Format("2006-01-02 15:04:05"), "2006-01-02 00:00:00")
 		}
 
@@ -130,9 +130,9 @@ func Test_StrToTime(t *testing.T) {
 
 		for k, v := range testTimes {
 			time1, err := gtime.StrToTime(k)
-			t.Assert(err, nil)
+			t.AssertNil(err)
 			time2, err := time.ParseInLocation(v, k, time.Local)
-			t.Assert(err, nil)
+			t.AssertNil(err)
 			t.Assert(time1.Time, time2)
 		}
 
@@ -232,22 +232,22 @@ func Test_ConvertZone(t *testing.T) {
 func Test_ParseDuration(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		d, err := gtime.ParseDuration("1d")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(d.String(), "24h0m0s")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		d, err := gtime.ParseDuration("1d2h3m")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(d.String(), "26h3m0s")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		d, err := gtime.ParseDuration("-1d2h3m")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(d.String(), "-26h3m0s")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		d, err := gtime.ParseDuration("3m")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(d.String(), "3m0s")
 	})
 	// error

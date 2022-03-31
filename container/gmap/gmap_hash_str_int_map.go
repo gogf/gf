@@ -430,6 +430,9 @@ func (m *StrIntMap) Merge(other *StrIntMap) {
 
 // String returns the map as a string.
 func (m *StrIntMap) String() string {
+	if m == nil {
+		return ""
+	}
 	b, _ := m.MarshalJSON()
 	return string(b)
 }

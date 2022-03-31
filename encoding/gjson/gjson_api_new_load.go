@@ -17,8 +17,8 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/internal/rwmutex"
-	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -69,7 +69,7 @@ func NewWithOptions(data interface{}, options Options) *Json {
 	default:
 		var (
 			pointedData interface{}
-			reflectInfo = utils.OriginValueAndKind(data)
+			reflectInfo = reflection.OriginValueAndKind(data)
 		)
 		switch reflectInfo.OriginKind {
 		case reflect.Slice, reflect.Array:

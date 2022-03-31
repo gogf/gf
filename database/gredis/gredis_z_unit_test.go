@@ -46,16 +46,16 @@ func Test_Do(t *testing.T) {
 		defer redis.Close(ctx)
 
 		_, err = redis.Do(ctx, "SET", "k", "v")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		r, err := redis.Do(ctx, "GET", "k")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(r, []byte("v"))
 
 		_, err = redis.Do(ctx, "DEL", "k")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		r, err = redis.Do(ctx, "GET", "k")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(r, nil)
 	})
 }
@@ -74,16 +74,16 @@ func Test_Conn(t *testing.T) {
 		key := gconv.String(gtime.TimestampNano())
 		value := []byte("v")
 		r, err := conn.Do(ctx, "SET", key, value)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		r, err = conn.Do(ctx, "GET", key)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(r, value)
 
 		_, err = conn.Do(ctx, "DEL", key)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		r, err = conn.Do(ctx, "GET", key)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(r, nil)
 	})
 }
@@ -102,16 +102,16 @@ func Test_Instance(t *testing.T) {
 		defer conn.Close(ctx)
 
 		_, err = conn.Do(ctx, "SET", "k", "v")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		r, err := conn.Do(ctx, "GET", "k")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(r, []byte("v"))
 
 		_, err = conn.Do(ctx, "DEL", "k")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		r, err = conn.Do(ctx, "GET", "k")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(r, nil)
 	})
 }
@@ -153,10 +153,10 @@ func Test_Error(t *testing.T) {
 		defer redis.Close(ctx)
 
 		_, err = redis.Do(ctx, "SET", "k", "v")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		v, err := redis.Do(ctx, "GET", "k")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.String(), "v")
 
 		conn, err := redis.Conn(ctx)
@@ -197,17 +197,17 @@ func Test_Bool(t *testing.T) {
 		}()
 
 		_, err = redis.Do(ctx, "SET", "key-true", true)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		_, err = redis.Do(ctx, "SET", "key-false", false)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		r, err := redis.Do(ctx, "GET", "key-true")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(r.Bool(), true)
 
 		r, err = redis.Do(ctx, "GET", "key-false")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(r.Bool(), false)
 	})
 }
@@ -223,10 +223,10 @@ func Test_Int(t *testing.T) {
 		defer redis.Do(ctx, "DEL", key)
 
 		_, err = redis.Do(ctx, "SET", key, 1)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		r, err := redis.Do(ctx, "GET", key)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(r.Int(), 1)
 	})
 }
@@ -242,10 +242,10 @@ func Test_HSet(t *testing.T) {
 		defer redis.Do(ctx, "DEL", key)
 
 		_, err = redis.Do(ctx, "HSET", key, "name", "john")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		r, err := redis.Do(ctx, "HGETALL", key)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(r.Strings(), g.ArrayStr{"name", "john"})
 	})
 }
@@ -262,12 +262,12 @@ func Test_HGetAll1(t *testing.T) {
 		defer redis.Do(ctx, "DEL", key)
 
 		_, err = redis.Do(ctx, "HSET", key, "id", 100)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		_, err = redis.Do(ctx, "HSET", key, "name", "john")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		r, err := redis.Do(ctx, "HGETALL", key)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(r.Map(), g.MapStrAny{
 			"id":   100,
 			"name": "john",
@@ -287,12 +287,12 @@ func Test_HGetAll2(t *testing.T) {
 		defer redis.Do(ctx, "DEL", key)
 
 		_, err = redis.Do(ctx, "HSET", key, "id", 100)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		_, err = redis.Do(ctx, "HSET", key, "name", "john")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		result, err := redis.Do(ctx, "HGETALL", key)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		t.Assert(gconv.Uint(result.MapStrVar()["id"]), 100)
 		t.Assert(result.MapStrVar()["id"].Uint(), 100)
@@ -317,9 +317,9 @@ func Test_HMSet(t *testing.T) {
 		defer redis.Do(ctx, "DEL", key)
 
 		_, err = redis.Do(ctx, "HMSET", append(g.Slice{key}, gutil.MapToSlice(data)...)...)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		v, err := redis.Do(ctx, "HMGET", key, "name")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Slice(), g.Slice{data["name"]})
 	})
 	// struct
@@ -344,9 +344,9 @@ func Test_HMSet(t *testing.T) {
 		defer redis.Do(ctx, "DEL", key)
 
 		_, err = redis.Do(ctx, "HMSET", append(g.Slice{key}, gutil.StructToSlice(data)...)...)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		v, err := redis.Do(ctx, "HMGET", key, "name")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Slice(), g.Slice{data.Name})
 	})
 }
@@ -374,10 +374,10 @@ func Test_Auto_Marshal(t *testing.T) {
 		}
 
 		_, err = redis.Do(ctx, "SET", key, user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		r, err := redis.Do(ctx, "GET", key)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(r.Map(), g.MapStrAny{
 			"Id":   user.Id,
 			"Name": user.Name,
@@ -418,14 +418,14 @@ func Test_Auto_MarshalSlice(t *testing.T) {
 		)
 
 		_, err = redis.Do(ctx, "SET", key, users1)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		result, err = redis.Do(ctx, "GET", key)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		var users2 []User
 		err = result.Structs(&users2)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(users2, users1)
 	})
 }

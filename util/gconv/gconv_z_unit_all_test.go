@@ -1366,7 +1366,7 @@ func Test_Struct_PrivateAttribute_All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		user := new(User)
 		err := gconv.Struct(g.Map{"id": 1, "name": "john"}, user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.Id, 1)
 		t.Assert(user.name, "")
 	})

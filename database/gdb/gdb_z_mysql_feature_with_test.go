@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -353,20 +352,20 @@ PRIMARY KEY (id)
 			"id":   i,
 			"name": fmt.Sprintf(`name_%d`, i),
 		})
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		// Detail.
 		_, err = db.Insert(ctx, tableUserDetail, g.Map{
 			"uid":     i,
 			"address": fmt.Sprintf(`address_%d`, i),
 		})
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		// Scores.
 		for j := 1; j <= 5; j++ {
 			_, err = db.Insert(ctx, tableUserScores, g.Map{
 				"uid":   i,
 				"score": j,
 			})
-			gtest.Assert(err, nil)
+			gtest.AssertNil(err)
 		}
 	}
 
@@ -553,20 +552,20 @@ PRIMARY KEY (id)
 			"id":   i,
 			"name": fmt.Sprintf(`name_%d`, i),
 		})
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		// Detail.
 		_, err = db.Insert(ctx, tableUserDetail, g.Map{
 			"uid":     i,
 			"address": fmt.Sprintf(`address_%d`, i),
 		})
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		// Scores.
 		for j := 1; j <= 5; j++ {
 			_, err = db.Insert(ctx, tableUserScores, g.Map{
 				"uid":   i,
 				"score": j,
 			})
-			gtest.Assert(err, nil)
+			gtest.AssertNil(err)
 		}
 	}
 	gtest.C(t, func(t *gtest.T) {
@@ -668,20 +667,20 @@ PRIMARY KEY (id)
 			"id":   i,
 			"name": fmt.Sprintf(`name_%d`, i),
 		})
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		// Detail.
 		_, err = db.Insert(ctx, tableUserDetail, g.Map{
 			"uid":     i,
 			"address": fmt.Sprintf(`address_%d`, i),
 		})
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		// Scores.
 		for j := 1; j <= 5; j++ {
 			_, err = db.Insert(ctx, tableUserScores, g.Map{
 				"uid":   i,
 				"score": j,
 			})
-			gtest.Assert(err, nil)
+			gtest.AssertNil(err)
 		}
 	}
 	gtest.C(t, func(t *gtest.T) {
@@ -809,20 +808,20 @@ PRIMARY KEY (id)
 			"id":   i,
 			"name": fmt.Sprintf(`name_%d`, i),
 		})
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		// Detail.
 		_, err = db.Insert(ctx, tableUserDetail, g.Map{
 			"uid":     i,
 			"address": fmt.Sprintf(`address_%d`, i),
 		})
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		// Scores.
 		for j := 1; j <= 5; j++ {
 			_, err = db.Insert(ctx, tableUserScores, g.Map{
 				"uid":   i,
 				"score": j,
 			})
-			gtest.Assert(err, nil)
+			gtest.AssertNil(err)
 		}
 	}
 
@@ -945,20 +944,20 @@ PRIMARY KEY (id)
 			"id":   i,
 			"name": fmt.Sprintf(`name_%d`, i),
 		})
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		// Detail.
 		_, err = db.Insert(ctx, tableUserDetail, g.Map{
 			"uid":     i,
 			"address": fmt.Sprintf(`address_%d`, i),
 		})
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		// Scores.
 		for j := 1; j <= 5; j++ {
 			_, err = db.Insert(ctx, tableUserScores, g.Map{
 				"uid":   i,
 				"score": j,
 			})
-			gtest.Assert(err, nil)
+			gtest.AssertNil(err)
 		}
 	}
 	gtest.C(t, func(t *gtest.T) {
@@ -1065,20 +1064,20 @@ PRIMARY KEY (id)
 			"id":   i,
 			"name": fmt.Sprintf(`name_%d`, i),
 		})
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		// Detail.
 		_, err = db.Insert(ctx, tableUserDetail, g.Map{
 			"uid":     i,
 			"address": fmt.Sprintf(`address_%d`, i),
 		})
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		// Scores.
 		for j := 1; j <= 5; j++ {
 			_, err = db.Insert(ctx, tableUserScores, g.Map{
 				"uid":   i,
 				"score": j,
 			})
-			gtest.Assert(err, nil)
+			gtest.AssertNil(err)
 		}
 	}
 	db.SetDebug(true)
@@ -1184,20 +1183,20 @@ PRIMARY KEY (id)
 			"id":   i,
 			"name": fmt.Sprintf(`name_%d`, i),
 		})
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		// Detail.
 		_, err = db.Insert(ctx, tableUserDetail, g.Map{
 			"uid":     i,
 			"address": fmt.Sprintf(`address_%d`, i),
 		})
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		// Scores.
 		for j := 1; j <= 5; j++ {
 			_, err = db.Insert(ctx, tableUserScores, g.Map{
 				"uid":   i,
 				"score": j,
 			})
-			gtest.Assert(err, nil)
+			gtest.AssertNil(err)
 		}
 	}
 	gtest.C(t, func(t *gtest.T) {
@@ -1299,20 +1298,20 @@ PRIMARY KEY (id)
 			"id":   i,
 			"name": fmt.Sprintf(`name_%d`, i),
 		})
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		// Detail.
 		_, err = db.Insert(ctx, tableUserDetail, g.Map{
 			"uid":     i,
 			"address": fmt.Sprintf(`address_%d`, i),
 		})
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		// Scores.
 		for j := 1; j <= 5; j++ {
 			_, err = db.Insert(ctx, tableUserScores, g.Map{
 				"uid":   i,
 				"score": j,
 			})
-			gtest.Assert(err, nil)
+			gtest.AssertNil(err)
 		}
 	}
 
@@ -1439,20 +1438,20 @@ PRIMARY KEY (id)
 			"id":   i,
 			"name": fmt.Sprintf(`name_%d`, i),
 		})
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		// Detail.
 		_, err = db.Insert(ctx, tableUserDetail, g.Map{
 			"uid":     i,
 			"address": fmt.Sprintf(`address_%d`, i),
 		})
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		// Scores.
 		for j := 1; j <= 5; j++ {
 			_, err = db.Insert(ctx, tableUserScores, g.Map{
 				"uid":   i,
 				"score": j,
 			})
-			gtest.Assert(err, nil)
+			gtest.AssertNil(err)
 		}
 	}
 
@@ -1585,20 +1584,20 @@ PRIMARY KEY (id)
 			"id":   i,
 			"name": fmt.Sprintf(`name_%d`, i),
 		})
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		// Detail.
 		_, err = db.Insert(ctx, tableUserDetail, g.Map{
 			"uid":     i,
 			"address": fmt.Sprintf(`address_%d`, i),
 		})
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		// Scores.
 		for j := 1; j <= 5; j++ {
 			_, err = db.Insert(ctx, tableUserScores, g.Map{
 				"uid":   i,
 				"score": j,
 			})
-			gtest.Assert(err, nil)
+			gtest.AssertNil(err)
 		}
 	}
 
@@ -1644,7 +1643,7 @@ func Test_Table_Relation_With_MultipleDepends1(t *testing.T) {
 		dropTable("table_b")
 		dropTable("table_c")
 	}()
-	for _, v := range gstr.SplitAndTrim(gfile.GetContents(gdebug.TestDataPath("with_multiple_depends.sql")), ";") {
+	for _, v := range gstr.SplitAndTrim(gfile.GetContents(gtest.DataPath("with_multiple_depends.sql")), ";") {
 		if _, err := db.Exec(ctx, v); err != nil {
 			gtest.Error(err)
 		}
@@ -1716,7 +1715,7 @@ func Test_Table_Relation_With_MultipleDepends2(t *testing.T) {
 		dropTable("table_b")
 		dropTable("table_c")
 	}()
-	for _, v := range gstr.SplitAndTrim(gfile.GetContents(gdebug.TestDataPath("with_multiple_depends.sql")), ";") {
+	for _, v := range gstr.SplitAndTrim(gfile.GetContents(gtest.DataPath("with_multiple_depends.sql")), ";") {
 		if _, err := db.Exec(ctx, v); err != nil {
 			gtest.Error(err)
 		}
@@ -1803,7 +1802,7 @@ func Test_Table_Relation_With_MultipleDepends_Embedded(t *testing.T) {
 		dropTable("table_b")
 		dropTable("table_c")
 	}()
-	for _, v := range gstr.SplitAndTrim(gfile.GetContents(gdebug.TestDataPath("with_multiple_depends.sql")), ";") {
+	for _, v := range gstr.SplitAndTrim(gfile.GetContents(gtest.DataPath("with_multiple_depends.sql")), ";") {
 		if _, err := db.Exec(ctx, v); err != nil {
 			gtest.Error(err)
 		}
@@ -1996,7 +1995,7 @@ func Test_With_Feature_Issue1401(t *testing.T) {
 		table1 = "parcels"
 		table2 = "parcel_items"
 	)
-	array := gstr.SplitAndTrim(gtest.TestDataContent(`issue1401.sql`), ";")
+	array := gstr.SplitAndTrim(gtest.DataContent(`issue1401.sql`), ";")
 	for _, v := range array {
 		if _, err := db.Exec(ctx, v); err != nil {
 			gtest.Error(err)
@@ -2038,7 +2037,7 @@ func Test_With_Feature_Issue1412(t *testing.T) {
 		table1 = "parcels"
 		table2 = "items"
 	)
-	array := gstr.SplitAndTrim(gtest.TestDataContent(`issue1412.sql`), ";")
+	array := gstr.SplitAndTrim(gtest.DataContent(`issue1412.sql`), ";")
 	for _, v := range array {
 		if _, err := db.Exec(ctx, v); err != nil {
 			gtest.Error(err)

@@ -179,7 +179,7 @@ func Test_Session_Custom_Id(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		r, err := client.Get(ctx, "/id")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer r.Close()
 		t.Assert(r.ReadAllString(), sessionId)
 		t.Assert(r.GetCookie(s.GetSessionIdName()), sessionId)

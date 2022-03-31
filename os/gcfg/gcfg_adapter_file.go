@@ -30,7 +30,6 @@ type AdapterFile struct {
 }
 
 const (
-	DefaultConfigFile    = "config.toml"  // DefaultConfigFile is the default configuration file name.
 	commandEnvKeyForFile = "gf.gcfg.file" // commandEnvKeyForFile is the configuration key for command argument or environment configuring file name.
 	commandEnvKeyForPath = "gf.gcfg.path" // commandEnvKeyForPath is the configuration key for command argument or environment configuring directory path.
 )
@@ -55,7 +54,7 @@ var (
 func NewAdapterFile(file ...string) (*AdapterFile, error) {
 	var (
 		err  error
-		name = DefaultConfigFile
+		name = DefaultConfigFileName
 	)
 	if len(file) > 0 {
 		name = file[0]
@@ -147,6 +146,22 @@ func (c *AdapterFile) Get(ctx context.Context, pattern string) (value interface{
 	return nil, nil
 }
 
+// Set sets value with specified `pattern`.
+// It supports hierarchical data access by char separator, which is '.' in default.
+// It is commonly used for updates certain configuration value in runtime.
+// Note that, it is not recommended using `Set` configuration at runtime as the configuration would be
+// automatically refreshed if underlying configuration file changed.
+func (c *AdapterFile) Set(pattern string, value interface{}) error {
+	j, err := c.getJson()
+	if err != nil {
+		return err
+	}
+	if j != nil {
+		return j.Set(pattern, value)
+	}
+	return nil
+}
+
 // Data retrieves and returns all configuration data as map type.
 func (c *AdapterFile) Data(ctx context.Context) (data map[string]interface{}, err error) {
 	j, err := c.getJson()
@@ -224,6 +239,7 @@ func (c *AdapterFile) getJson(fileName ...string) (configJson *gjson.Json, err e
 	} else {
 		usedFileName = c.defaultName
 	}
+	// It uses json map to cache specified configuration file content.
 	result := c.jsonMap.GetOrSetFuncLock(usedFileName, func() interface{} {
 		var (
 			content  string

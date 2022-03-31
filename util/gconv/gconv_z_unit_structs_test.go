@@ -32,7 +32,7 @@ func Test_Structs_WithTag(t *testing.T) {
 			},
 		}
 		err := gconv.Structs(params, &users)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(users), 2)
 		t.Assert(users[0].Uid, 1)
 		t.Assert(users[0].NickName, "name1")
@@ -52,7 +52,7 @@ func Test_Structs_WithTag(t *testing.T) {
 			},
 		}
 		err := gconv.Structs(params, &users)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(users), 2)
 		t.Assert(users[0].Uid, 1)
 		t.Assert(users[0].NickName, "name1")
@@ -79,7 +79,7 @@ func Test_Structs_WithoutTag(t *testing.T) {
 			},
 		}
 		err := gconv.Structs(params, &users)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(users), 2)
 		t.Assert(users[0].Uid, 1)
 		t.Assert(users[0].NickName, "name1")
@@ -99,7 +99,7 @@ func Test_Structs_WithoutTag(t *testing.T) {
 			},
 		}
 		err := gconv.Structs(params, &users)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(users), 2)
 		t.Assert(users[0].Uid, 1)
 		t.Assert(users[0].NickName, "name1")
@@ -166,7 +166,7 @@ func Test_Structs_DirectReflectSet(t *testing.T) {
 			b []*A
 		)
 		err := gconv.Structs(a, &b)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.AssertEQ(a, b)
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -178,7 +178,7 @@ func Test_Structs_DirectReflectSet(t *testing.T) {
 			b []A
 		)
 		err := gconv.Structs(a, &b)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.AssertEQ(a, b)
 	})
 }
@@ -199,7 +199,7 @@ func Test_Structs_IntSliceAttribute(t *testing.T) {
 			g.Map{"id": nil, "name": "john"},
 			g.Map{"id": nil, "name": "smith"},
 		}, &array)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(array), 2)
 		t.Assert(array[0].Name, "john")
 		t.Assert(array[1].Name, "smith")

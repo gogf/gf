@@ -48,7 +48,7 @@ func TestEncryptFile(t *testing.T) {
 		file, err := os.Create(path)
 		defer os.Remove(path)
 		defer file.Close()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		_, _ = file.Write([]byte("Hello Go Frame"))
 		encryptFile, _ := gsha1.EncryptFile(path)
 		t.AssertEQ(encryptFile, result)

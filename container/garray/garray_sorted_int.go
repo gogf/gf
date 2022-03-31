@@ -646,6 +646,9 @@ func (a *SortedIntArray) IteratorDesc(f func(k int, v int) bool) {
 
 // String returns current array as a string, which implements like json.Marshal does.
 func (a *SortedIntArray) String() string {
+	if a == nil {
+		return ""
+	}
 	return "[" + a.Join(",") + "]"
 }
 

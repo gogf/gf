@@ -340,13 +340,16 @@ func ExampleIsReadable() {
 func ExampleIsWritable() {
 	// init
 	var (
-		path = gfile.Pwd() + gfile.Separator + "testdata/readline/file.log"
+		path = gfile.Pwd() + gfile.Separator + "testdata/readline/"
+		file = "file.log"
 	)
 
 	// Checks whether given `path` is writable.
 	fmt.Println(gfile.IsWritable(path))
+	fmt.Println(gfile.IsWritable(path + file))
 
 	// Output:
+	// true
 	// true
 }
 
