@@ -55,9 +55,9 @@ func (s *Server) newGracefulServer(address string, fd ...int) *gracefulServer {
 		addrPort, err := strconv.Atoi(addrArray[len(addrArray)-1])
 		if err == nil {
 			for _, v := range s.config.Listeners {
-				listenerPort := (v.Addr().(*net.TCPAddr)).Port
-				if listenerPort == addrPort {
+				if listenerPort := (v.Addr().(*net.TCPAddr)).Port; listenerPort == addrPort {
 					gs.rawListener = v
+					break
 				}
 			}
 		}
