@@ -18,7 +18,6 @@ import (
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -438,14 +437,14 @@ func Test_Model_Clone(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		md := db.Model(table).Where("id IN(?)", g.Slice{1, 3})
+		md := db.Model(table).Safe(true).Where("id IN(?)", g.Slice{1, 3})
 		count, err := md.Count()
 		t.AssertNil(err)
 
-		record, err := md.Order("id DESC").One()
+		record, err := md.Safe(true).Order("id DESC").One()
 		t.AssertNil(err)
 
-		result, err := md.Order("id ASC").All()
+		result, err := md.Safe(true).Order("id ASC").All()
 		t.AssertNil(err)
 
 		t.Assert(count, 2)
@@ -1113,6 +1112,15 @@ func Test_Model_OrderBy(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(result), TableSize)
 		t.Assert(result[0]["nickname"].String(), "name_1")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Order(gdb.Raw("field(id, 10,1,2,3,4,5,6,7,8,9)")).All()
+		t.AssertNil(err)
+		t.Assert(len(result), TableSize)
+		t.Assert(result[0]["nickname"].String(), "name_10")
+		t.Assert(result[1]["nickname"].String(), "name_1")
+		t.Assert(result[2]["nickname"].String(), "name_2")
 	})
 }
 
@@ -2058,7 +2066,7 @@ func Test_Model_OmitEmpty(t *testing.T) {
 			"id":   1,
 			"name": "",
 		}).Save()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 }
 
@@ -2087,14 +2095,14 @@ func Test_Model_OmitNil(t *testing.T) {
 			"id":   1,
 			"name": "",
 		}).Save()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Model(table).OmitNilWhere().Data(g.Map{
 			"id":   1,
 			"name": "",
 		}).Save()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 }
 
@@ -2186,7 +2194,7 @@ func Test_Model_FieldsEx_WithReservedWords(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			table      = "fieldsex_test_table"
-			sqlTpcPath = gdebug.TestDataPath("reservedwords_table_tpl.sql")
+			sqlTpcPath = gtest.DataPath("reservedwords_table_tpl.sql")
 			sqlContent = gfile.GetContents(sqlTpcPath)
 		)
 		t.AssertNE(sqlContent, "")

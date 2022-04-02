@@ -295,17 +295,19 @@ func StrToTime(str string, format ...string) (*Time, error) {
 			if h > 24 || m > 59 || s > 59 {
 				return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid zone string "%s"`, match[6])
 			}
+			operation := match[5]
+			if operation != "+" && operation != "-" {
+				operation = "-"
+			}
 			// Comparing the given time zone whether equals to current time zone,
-			// it converts it to UTC if they does not equal.
+			// it converts it to UTC if they do not equal.
 			_, localOffset := time.Now().Zone()
 			// Comparing in seconds.
-			if (h*3600 + m*60 + s) != localOffset {
+			if (h*3600+m*60+s) != localOffset ||
+				(localOffset > 0 && operation == "-") ||
+				(localOffset < 0 && operation == "+") {
 				local = time.UTC
 				// UTC conversion.
-				operation := match[5]
-				if operation != "+" && operation != "-" {
-					operation = "-"
-				}
 				switch operation {
 				case "+":
 					if h > 0 {
@@ -452,10 +454,10 @@ func ParseDuration(s string) (duration time.Duration, err error) {
 }
 
 // FuncCost calculates the cost time of function `f` in nanoseconds.
-func FuncCost(f func()) int64 {
-	t := TimestampNano()
+func FuncCost(f func()) time.Duration {
+	t := time.Now()
 	f()
-	return TimestampNano() - t
+	return time.Now().Sub(t)
 }
 
 // isTimestampStr checks and returns whether given string a timestamp string.

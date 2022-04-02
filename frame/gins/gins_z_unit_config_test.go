@@ -12,7 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/gins"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -23,7 +22,7 @@ import (
 var (
 	ctx           = context.Background()
 	configContent = gfile.GetContents(
-		gdebug.TestDataPath("config", "config.toml"),
+		gtest.DataPath("config", "config.toml"),
 	)
 )
 
@@ -42,15 +41,15 @@ func Test_Config2(t *testing.T) {
 		var err error
 		dirPath := gfile.Temp(gtime.TimestampNanoStr())
 		err = gfile.Mkdir(dirPath)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer gfile.Remove(dirPath)
 
 		name := "config.toml"
 		err = gfile.PutContents(gfile.Join(dirPath, name), configContent)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		err = gins.Config().GetAdapter().(*gcfg.AdapterFile).AddPath(dirPath)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		defer gins.Config().GetAdapter().(*gcfg.AdapterFile).Clear()
 
@@ -65,16 +64,15 @@ func Test_Config2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var err error
 		dirPath := gfile.Temp(gtime.TimestampNanoStr())
-		err = gfile.Mkdir(dirPath)
-		t.Assert(err, nil)
+		t.AssertNil(gfile.Mkdir(dirPath))
 		defer gfile.Remove(dirPath)
 
 		name := "config/config.toml"
 		err = gfile.PutContents(gfile.Join(dirPath, name), configContent)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		err = gins.Config().GetAdapter().(*gcfg.AdapterFile).AddPath(dirPath)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		defer gins.Config().GetAdapter().(*gcfg.AdapterFile).Clear()
 
@@ -92,15 +90,15 @@ func Test_Config3(t *testing.T) {
 		var err error
 		dirPath := gfile.Temp(gtime.TimestampNanoStr())
 		err = gfile.Mkdir(dirPath)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer gfile.Remove(dirPath)
 
 		name := "test.toml"
 		err = gfile.PutContents(gfile.Join(dirPath, name), configContent)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		err = gins.Config("test").GetAdapter().(*gcfg.AdapterFile).AddPath(dirPath)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		defer gins.Config("test").GetAdapter().(*gcfg.AdapterFile).Clear()
 		gins.Config("test").GetAdapter().(*gcfg.AdapterFile).SetFileName("test.toml")
@@ -116,15 +114,15 @@ func Test_Config3(t *testing.T) {
 		var err error
 		dirPath := gfile.Temp(gtime.TimestampNanoStr())
 		err = gfile.Mkdir(dirPath)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer gfile.Remove(dirPath)
 
 		name := "config/test.toml"
 		err = gfile.PutContents(gfile.Join(dirPath, name), configContent)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		err = gins.Config("test").GetAdapter().(*gcfg.AdapterFile).AddPath(dirPath)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		defer gins.Config("test").GetAdapter().(*gcfg.AdapterFile).Clear()
 		gins.Config("test").GetAdapter().(*gcfg.AdapterFile).SetFileName("test.toml")
@@ -143,7 +141,7 @@ func Test_Config4(t *testing.T) {
 		path := fmt.Sprintf(`%s/%d`, gfile.Temp(), gtime.TimestampNano())
 		file := fmt.Sprintf(`%s/%s`, path, "config.toml")
 		err := gfile.PutContents(file, configContent)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer gfile.Remove(file)
 		defer gins.Config().GetAdapter().(*gcfg.AdapterFile).Clear()
 
@@ -158,7 +156,7 @@ func Test_Config4(t *testing.T) {
 		path := fmt.Sprintf(`%s/%d/config`, gfile.Temp(), gtime.TimestampNano())
 		file := fmt.Sprintf(`%s/%s`, path, "config.toml")
 		err := gfile.PutContents(file, configContent)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer gfile.Remove(file)
 		defer gins.Config().GetAdapter().(*gcfg.AdapterFile).Clear()
 		t.Assert(gins.Config().GetAdapter().(*gcfg.AdapterFile).AddPath(path), nil)
@@ -172,7 +170,7 @@ func Test_Config4(t *testing.T) {
 		path := fmt.Sprintf(`%s/%d`, gfile.Temp(), gtime.TimestampNano())
 		file := fmt.Sprintf(`%s/%s`, path, "test.toml")
 		err := gfile.PutContents(file, configContent)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer gfile.Remove(file)
 		defer gins.Config("test").GetAdapter().(*gcfg.AdapterFile).Clear()
 		gins.Config("test").GetAdapter().(*gcfg.AdapterFile).SetFileName("test.toml")
@@ -187,7 +185,7 @@ func Test_Config4(t *testing.T) {
 		path := fmt.Sprintf(`%s/%d/config`, gfile.Temp(), gtime.TimestampNano())
 		file := fmt.Sprintf(`%s/%s`, path, "test.toml")
 		err := gfile.PutContents(file, configContent)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer gfile.Remove(file)
 		defer gins.Config().GetAdapter().(*gcfg.AdapterFile).Clear()
 		gins.Config("test").GetAdapter().(*gcfg.AdapterFile).SetFileName("test.toml")
@@ -200,9 +198,11 @@ func Test_Config4(t *testing.T) {
 func Test_Basic2(t *testing.T) {
 	config := `log-path = "logs"`
 	gtest.C(t, func(t *gtest.T) {
-		path := gcfg.DefaultConfigFile
-		err := gfile.PutContents(path, config)
-		t.Assert(err, nil)
+		var (
+			path = gcfg.DefaultConfigFileName
+			err  = gfile.PutContents(path, config)
+		)
+		t.AssertNil(err)
 		defer func() {
 			_ = gfile.Remove(path)
 		}()

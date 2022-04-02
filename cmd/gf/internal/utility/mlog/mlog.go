@@ -3,7 +3,6 @@ package mlog
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/genv"
 	"github.com/gogf/gf/v2/os/glog"
@@ -36,9 +35,9 @@ func init() {
 func SetHeaderPrint(enabled bool) {
 	logger.SetHeaderPrint(enabled)
 	if enabled {
-		genv.Set(headerPrintEnvName, "1")
+		_ = genv.Set(headerPrintEnvName, "1")
 	} else {
-		genv.Set(headerPrintEnvName, "0")
+		_ = genv.Set(headerPrintEnvName, "0")
 	}
 }
 
@@ -51,17 +50,17 @@ func Printf(format string, v ...interface{}) {
 }
 
 func Fatal(v ...interface{}) {
-	logger.Fatal(ctx, append(g.Slice{"ERROR:"}, v...)...)
+	logger.Fatal(ctx, v...)
 }
 
 func Fatalf(format string, v ...interface{}) {
-	logger.Fatalf(ctx, "ERROR: "+format, v...)
+	logger.Fatalf(ctx, format, v...)
 }
 
 func Debug(v ...interface{}) {
-	logger.Debug(ctx, append(g.Slice{"DEBUG:"}, v...)...)
+	logger.Debug(ctx, v...)
 }
 
 func Debugf(format string, v ...interface{}) {
-	logger.Debugf(ctx, "DEBUG: "+format, v...)
+	logger.Debugf(ctx, format, v...)
 }

@@ -31,13 +31,13 @@ func Test_Search(t *testing.T) {
 		ypaths1 = paths1
 
 		tpath, err = gfile.Search(testpath() + paths1)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		tpath = filepath.ToSlash(tpath)
 
 		// 自定义优先路径
 		tpath2, err = gfile.Search(testpath() + paths1)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		tpath2 = filepath.ToSlash(tpath2)
 
 		tempstr = testpath()

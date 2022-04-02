@@ -28,7 +28,8 @@ func Test_Copy(t *testing.T) {
 		defer delTestFiles(topath)
 
 		t.Assert(gfile.IsFile(testpath()+topath), true)
-		t.AssertNE(gfile.Copy("", ""), nil)
+		t.AssertNE(gfile.Copy(paths, ""), nil)
+		t.AssertNE(gfile.Copy("", topath), nil)
 	})
 }
 
@@ -46,7 +47,8 @@ func Test_CopyFile(t *testing.T) {
 		defer delTestFiles(topath)
 
 		t.Assert(gfile.IsFile(testpath()+topath), true)
-		t.AssertNE(gfile.CopyFile("", ""), nil)
+		t.AssertNE(gfile.CopyFile(paths, ""), nil)
+		t.AssertNE(gfile.CopyFile("", topath), nil)
 	})
 	// Content replacement.
 	gtest.C(t, func(t *gtest.T) {
@@ -125,8 +127,11 @@ func Test_CopyDir(t *testing.T) {
 		t.Assert(gfile.GetContents(dst), dstContent)
 
 		err := gfile.CopyDir(gfile.Dir(src), gfile.Dir(dst))
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(gfile.GetContents(src), srcContent)
 		t.Assert(gfile.GetContents(dst), srcContent)
+
+		t.AssertNE(gfile.CopyDir(gfile.Dir(src), ""), nil)
+		t.AssertNE(gfile.CopyDir("", gfile.Dir(dst)), nil)
 	})
 }

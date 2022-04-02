@@ -106,7 +106,7 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 		return nil, err
 	}
 
-	result, err = d.DoGetAll(ctx, link, `SELECT NAME FROM SQLITE_MASTER WHERE TYPE='table' ORDER BY NAME`)
+	result, err = d.DoSelect(ctx, link, `SELECT NAME FROM SQLITE_MASTER WHERE TYPE='table' ORDER BY NAME`)
 	if err != nil {
 		return
 	}
@@ -141,7 +141,7 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 			if link, err = d.SlaveLink(useSchema); err != nil {
 				return nil
 			}
-			result, err = d.DoGetAll(ctx, link, fmt.Sprintf(`PRAGMA TABLE_INFO(%s)`, table))
+			result, err = d.DoSelect(ctx, link, fmt.Sprintf(`PRAGMA TABLE_INFO(%s)`, table))
 			if err != nil {
 				return nil
 			}

@@ -13,7 +13,7 @@ import (
 	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/os/gtime"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
@@ -33,7 +33,7 @@ func (c *RedisConn) Do(ctx context.Context, command string, args ...interface{})
 	}
 	for k, v := range args {
 		var (
-			reflectInfo = utils.OriginTypeAndKind(v)
+			reflectInfo = reflection.OriginTypeAndKind(v)
 		)
 		switch reflectInfo.OriginKind {
 		case

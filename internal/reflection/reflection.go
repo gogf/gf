@@ -4,9 +4,12 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package utils
+// Package reflection provides some reflection functions for internal usage.
+package reflection
 
-import "reflect"
+import (
+	"reflect"
+)
 
 type OriginValueAndKindOutput struct {
 	InputValue  reflect.Value
@@ -41,6 +44,9 @@ type OriginTypeAndKindOutput struct {
 
 // OriginTypeAndKind retrieves and returns the original reflect type and kind.
 func OriginTypeAndKind(value interface{}) (out OriginTypeAndKindOutput) {
+	if value == nil {
+		return
+	}
 	if reflectType, ok := value.(reflect.Type); ok {
 		out.InputType = reflectType
 	} else {
@@ -58,4 +64,31 @@ func OriginTypeAndKind(value interface{}) (out OriginTypeAndKindOutput) {
 		out.OriginKind = out.OriginType.Kind()
 	}
 	return
+}
+
+// ValueToInterface converts reflect value to its interface type.
+func ValueToInterface(v reflect.Value) (value interface{}, ok bool) {
+	if v.IsValid() && v.CanInterface() {
+		return v.Interface(), true
+	}
+	switch v.Kind() {
+	case reflect.Bool:
+		return v.Bool(), true
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return v.Int(), true
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return v.Uint(), true
+	case reflect.Float32, reflect.Float64:
+		return v.Float(), true
+	case reflect.Complex64, reflect.Complex128:
+		return v.Complex(), true
+	case reflect.String:
+		return v.String(), true
+	case reflect.Ptr:
+		return ValueToInterface(v.Elem())
+	case reflect.Interface:
+		return ValueToInterface(v.Elem())
+	default:
+		return nil, false
+	}
 }

@@ -35,7 +35,7 @@ func Test_Scan_StructStructs(t *testing.T) {
 			}
 		)
 		err := gconv.Scan(params, user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user, &User{
 			Uid:   1,
 			Name:  "john",
@@ -93,7 +93,7 @@ func Test_Scan_StructStr(t *testing.T) {
 			params = `{"uid":1,"name":"john", "pass1":"123","pass2":"456"}`
 		)
 		err := gconv.Scan(params, user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user, &User{
 			Uid:   1,
 			Name:  "john",
@@ -110,7 +110,7 @@ func Test_Scan_StructStr(t *testing.T) {
 ]`
 		)
 		err := gconv.Scan(params, &users)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(users, g.Slice{
 			&User{
 				Uid:   1,

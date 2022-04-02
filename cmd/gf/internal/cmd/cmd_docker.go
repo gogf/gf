@@ -81,6 +81,7 @@ func (c cDocker) Index(ctx context.Context, in cDockerInput) (out *cDockerOutput
 	}
 
 	// Binary build.
+	in.Build += " --exit"
 	if in.Main != "" {
 		if err = gproc.ShellRun(fmt.Sprintf(`gf build %s %s`, in.Main, in.Build)); err != nil {
 			return

@@ -35,7 +35,7 @@ func Test_CheckStruct(t *testing.T) {
 		}
 		obj := &Object{"john", 16}
 		err := g.Validator().Data(obj).Rules(rules).Messages(msgs).Run(context.TODO())
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -133,7 +133,7 @@ func Test_CheckStruct(t *testing.T) {
 		}
 		var login LoginRequest
 		err := g.Validator().Data(login).Run(context.TODO())
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -249,7 +249,7 @@ func Test_CheckStruct_EmbeddedObject_Attribute(t *testing.T) {
 		obj.Name = "john"
 		obj.Time = gtime.Now()
 		err := g.Validator().Data(obj).Rules(rules).Messages(ruleMsg).Run(context.TODO())
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type Base struct {
@@ -273,7 +273,7 @@ func Test_CheckStruct_EmbeddedObject_Attribute(t *testing.T) {
 		obj.Type = 1
 		obj.Name = "john"
 		err := g.Validator().Data(obj).Rules(rules).Messages(ruleMsg).Run(context.TODO())
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 }
 
@@ -341,7 +341,7 @@ func Test_CheckStruct_Optional(t *testing.T) {
 			Size: 10,
 		}
 		err := g.Validator().Data(obj).Run(context.TODO())
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type Params struct {
@@ -354,7 +354,7 @@ func Test_CheckStruct_Optional(t *testing.T) {
 			Size: 10,
 		}
 		err := g.Validator().Data(obj).Run(context.TODO())
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type Params struct {
@@ -383,7 +383,7 @@ func Test_CheckStruct_NoTag(t *testing.T) {
 			Size: 10,
 		}
 		err := g.Validator().Data(obj).Run(context.TODO())
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 }
 

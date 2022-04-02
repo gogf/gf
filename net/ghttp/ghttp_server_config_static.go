@@ -12,10 +12,9 @@ import (
 	"context"
 	"strings"
 
-	"github.com/gogf/gf/v2/os/gres"
-
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gres"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -30,7 +29,7 @@ func (s *Server) SetIndexFiles(indexFiles []string) {
 	s.config.IndexFiles = indexFiles
 }
 
-// GetIndexFiles retrieves and returns the index files from server.
+// GetIndexFiles retrieves and returns the index files from the server.
 func (s *Server) GetIndexFiles() []string {
 	return s.config.IndexFiles
 }

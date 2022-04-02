@@ -142,7 +142,7 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 			schema[0],
 		)
 	}
-	result, err = d.DoGetAll(ctx, link, query)
+	result, err = d.DoSelect(ctx, link, query)
 	if err != nil {
 		return
 	}
@@ -198,7 +198,7 @@ ORDER BY a.attnum`,
 				return nil
 			}
 			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
-			result, err = d.DoGetAll(ctx, link, structureSql)
+			result, err = d.DoSelect(ctx, link, structureSql)
 			if err != nil {
 				return nil
 			}

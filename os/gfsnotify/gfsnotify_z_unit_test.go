@@ -24,31 +24,31 @@ func TestWatcher_AddOnce(t *testing.T) {
 		value := gtype.New()
 		path := gfile.Temp(gconv.String(gtime.TimestampNano()))
 		err := gfile.PutContents(path, "init")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer gfile.Remove(path)
 
 		time.Sleep(100 * time.Millisecond)
 		callback1, err := gfsnotify.AddOnce("mywatch", path, func(event *gfsnotify.Event) {
 			value.Set(1)
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		callback2, err := gfsnotify.AddOnce("mywatch", path, func(event *gfsnotify.Event) {
 			value.Set(2)
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(callback2, nil)
 
 		err = gfile.PutContents(path, "1")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		time.Sleep(100 * time.Millisecond)
 		t.Assert(value, 1)
 
 		err = gfsnotify.RemoveCallback(callback1.Id)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		err = gfile.PutContents(path, "2")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		time.Sleep(100 * time.Millisecond)
 		t.Assert(value, 1)
@@ -76,7 +76,7 @@ func TestWatcher_AddRemove(t *testing.T) {
 				return
 			}
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.AssertNE(callback, nil)
 
 		gfile.PutContents(path1, "2")
@@ -105,7 +105,7 @@ func TestWatcher_AddRemove(t *testing.T) {
 				return
 			}
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.AssertNE(callback, nil)
 
 		gfile.PutContents(path1, "2")
@@ -136,7 +136,7 @@ func TestWatcher_Callback1(t *testing.T) {
 				return
 			}
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.AssertNE(callback, nil)
 
 		gfile.PutContents(path1, "2")

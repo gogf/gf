@@ -70,7 +70,7 @@ func Test_Match(t *testing.T) {
 		wantSubs := "aaabb"
 		s := "acbb" + wantSubs + "dd"
 		subs, err := gregex.Match(re, []byte(s))
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		if string(subs[0]) != wantSubs {
 			t.Fatalf("regex:%s,Match(%q)[0] = %q; want %q", re, s, subs[0], wantSubs)
 		}
@@ -89,7 +89,7 @@ func Test_MatchString(t *testing.T) {
 		wantSubs := "aaabb"
 		s := "acbb" + wantSubs + "dd"
 		subs, err := gregex.MatchString(re, s)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		if string(subs[0]) != wantSubs {
 			t.Fatalf("regex:%s,Match(%q)[0] = %q; want %q", re, s, subs[0], wantSubs)
 		}
@@ -109,7 +109,7 @@ func Test_MatchAll(t *testing.T) {
 		s := "acbb" + wantSubs + "dd"
 		s = s + `其他的` + s
 		subs, err := gregex.MatchAll(re, []byte(s))
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		if string(subs[0][0]) != wantSubs {
 			t.Fatalf("regex:%s,Match(%q)[0] = %q; want %q", re, s, subs[0][0], wantSubs)
 		}
@@ -135,7 +135,7 @@ func Test_MatchAllString(t *testing.T) {
 		wantSubs := "aaabb"
 		s := "acbb" + wantSubs + "dd"
 		subs, err := gregex.MatchAllString(re, s+`其他的`+s)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		if string(subs[0][0]) != wantSubs {
 			t.Fatalf("regex:%s,Match(%q)[0] = %q; want %q", re, s, subs[0][0], wantSubs)
 		}
@@ -163,7 +163,7 @@ func Test_Replace(t *testing.T) {
 		s := "acbb" + wantSubs + "dd"
 		wanted := "acbb" + replace + "dd"
 		replacedStr, err := gregex.Replace(re, []byte(replace), []byte(s))
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		if string(replacedStr) != wanted {
 			t.Fatalf("regex:%s,old:%s; want %q", re, s, wanted)
 		}
@@ -181,7 +181,7 @@ func Test_ReplaceString(t *testing.T) {
 		s := "acbb" + wantSubs + "dd"
 		wanted := "acbb" + replace + "dd"
 		replacedStr, err := gregex.ReplaceString(re, replace, s)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		if replacedStr != wanted {
 			t.Fatalf("regex:%s,old:%s; want %q", re, s, wanted)
 		}
@@ -205,7 +205,7 @@ func Test_ReplaceFun(t *testing.T) {
 			}
 			return []byte("[x" + string(s) + "y]")
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		if string(replacedStr) != wanted {
 			t.Fatalf("regex:%s,old:%s; want %q", re, s, wanted)
 		}
@@ -263,7 +263,7 @@ func Test_ReplaceStringFunc(t *testing.T) {
 			}
 			return "[x" + s + "y]"
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		if replacedStr != wanted {
 			t.Fatalf("regex:%s,old:%s; want %q", re, s, wanted)
 		}

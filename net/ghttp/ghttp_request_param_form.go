@@ -11,7 +11,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-// SetForm sets custom form value with key-value pair.
+// SetForm sets custom form value with key-value pairs.
 func (r *Request) SetForm(key string, value interface{}) {
 	r.parseForm()
 	if r.formMap == nil {
@@ -25,8 +25,8 @@ func (r *Request) SetForm(key string, value interface{}) {
 func (r *Request) GetForm(key string, def ...interface{}) *gvar.Var {
 	r.parseForm()
 	if len(r.formMap) > 0 {
-		if v, ok := r.formMap[key]; ok {
-			return gvar.New(v)
+		if value, ok := r.formMap[key]; ok {
+			return gvar.New(value)
 		}
 	}
 	if len(def) > 0 {

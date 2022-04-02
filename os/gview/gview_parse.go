@@ -59,9 +59,64 @@ var (
 // Parse parses given template file `file` with given template variables `params`
 // and returns the parsed template content.
 func (view *View) Parse(ctx context.Context, file string, params ...Params) (result string, err error) {
-	var tpl interface{}
-	// It caches the file, folder and its content to enhance performance.
-	r := view.fileCacheMap.GetOrSetFuncLock(file, func() interface{} {
+	var usedParams Params
+	if len(params) > 0 {
+		usedParams = params[0]
+	}
+	return view.ParseOption(ctx, Option{
+		File:    file,
+		Content: "",
+		Orphan:  false,
+		Params:  usedParams,
+	})
+}
+
+// ParseDefault parses the default template file with params.
+func (view *View) ParseDefault(ctx context.Context, params ...Params) (result string, err error) {
+	var usedParams Params
+	if len(params) > 0 {
+		usedParams = params[0]
+	}
+	return view.ParseOption(ctx, Option{
+		File:    view.config.DefaultFile,
+		Content: "",
+		Orphan:  false,
+		Params:  usedParams,
+	})
+}
+
+// ParseContent parses given template content `content`  with template variables `params`
+// and returns the parsed content in []byte.
+func (view *View) ParseContent(ctx context.Context, content string, params ...Params) (string, error) {
+	var usedParams Params
+	if len(params) > 0 {
+		usedParams = params[0]
+	}
+	return view.ParseOption(ctx, Option{
+		Content: content,
+		Orphan:  false,
+		Params:  usedParams,
+	})
+}
+
+// Option for template parsing.
+type Option struct {
+	File    string // Template file path in absolute or relative to searching paths.
+	Content string // Template content, it ignores `File` if `Content` is given.
+	Orphan  bool   // If true, the `File` is considered as a single file parsing without files recursively parsing from its folder.
+	Params  Params // Template parameters map.
+}
+
+// ParseOption implements template parsing using Option.
+func (view *View) ParseOption(ctx context.Context, option Option) (result string, err error) {
+	if option.Content != "" {
+		return view.doParseContent(ctx, option.Content, option.Params)
+	}
+	if option.File == "" {
+		return "", gerror.New(`template file cannot be empty`)
+	}
+	// It caches the file, folder and content to enhance performance.
+	r := view.fileCacheMap.GetOrSetFuncLock(option.File, func() interface{} {
 		var (
 			path     string
 			folder   string
@@ -69,7 +124,7 @@ func (view *View) Parse(ctx context.Context, file string, params ...Params) (res
 			resource *gres.File
 		)
 		// Searching the absolute file path for `file`.
-		path, folder, resource, err = view.searchFile(ctx, file)
+		path, folder, resource, err = view.searchFile(ctx, option.File)
 		if err != nil {
 			return nil
 		}
@@ -103,7 +158,12 @@ func (view *View) Parse(ctx context.Context, file string, params ...Params) (res
 	if item.content == "" {
 		return "", nil
 	}
+	// If it's Orphan option, it just parses the single file by ParseContent.
+	if option.Orphan {
+		return view.doParseContent(ctx, item.content, option.Params)
+	}
 	// Get the template object instance for `folder`.
+	var tpl interface{}
 	tpl, err = view.getTemplate(item.path, item.folder, fmt.Sprintf(`*%s`, gfile.Ext(item.path)))
 	if err != nil {
 		return "", err
@@ -125,7 +185,7 @@ func (view *View) Parse(ctx context.Context, file string, params ...Params) (res
 	// Note that the template variable assignment cannot change the value
 	// of the existing `params` or view.data because both variables are pointers.
 	// It needs to merge the values of the two maps into a new map.
-	variables := gutil.MapMergeCopy(params...)
+	variables := gutil.MapMergeCopy(option.Params)
 	if len(view.data) > 0 {
 		gutil.MapMerge(variables, view.data)
 	}
@@ -152,14 +212,9 @@ func (view *View) Parse(ctx context.Context, file string, params ...Params) (res
 	return result, nil
 }
 
-// ParseDefault parses the default template file with params.
-func (view *View) ParseDefault(ctx context.Context, params ...Params) (result string, err error) {
-	return view.Parse(ctx, view.config.DefaultFile, params...)
-}
-
-// ParseContent parses given template content `content`  with template variables `params`
+// doParseContent parses given template content `content`  with template variables `params`
 // and returns the parsed content in []byte.
-func (view *View) ParseContent(ctx context.Context, content string, params ...Params) (string, error) {
+func (view *View) doParseContent(ctx context.Context, content string, params Params) (string, error) {
 	// It's not necessary continuing parsing if template content is empty.
 	if content == "" {
 		return "", nil
@@ -196,7 +251,7 @@ func (view *View) ParseContent(ctx context.Context, content string, params ...Pa
 	// Note that the template variable assignment cannot change the value
 	// of the existing `params` or view.data because both variables are pointers.
 	// It needs to merge the values of the two maps into a new map.
-	variables := gutil.MapMergeCopy(params...)
+	variables := gutil.MapMergeCopy(params)
 	if len(view.data) > 0 {
 		gutil.MapMerge(variables, view.data)
 	}
@@ -272,10 +327,9 @@ func (view *View) getTemplate(filePath, folderPath, pattern string) (tpl interfa
 				}
 			}
 
-			// Secondly checking the file system.
-			var (
-				files []string
-			)
+			// Secondly checking the file system,
+			// and then automatically parsing all its sub-files recursively.
+			var files []string
 			files, err = gfile.ScanDir(folderPath, pattern, true)
 			if err != nil {
 				return nil

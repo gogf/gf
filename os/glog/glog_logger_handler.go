@@ -17,30 +17,29 @@ type Handler func(ctx context.Context, in *HandlerInput)
 
 // HandlerInput is the input parameter struct for logging Handler.
 type HandlerInput struct {
-	Logger       *Logger         // Logger.
-	Ctx          context.Context // Context.
-	Buffer       *bytes.Buffer   // Buffer for logging content outputs.
-	Time         time.Time       // Logging time, which is the time that logging triggers.
-	TimeFormat   string          // Formatted time string, like "2016-01-09 12:00:00".
-	Color        int             // Using color, like COLOR_RED, COLOR_BLUE, etc.
-	Level        int             // Using level, like LEVEL_INFO, LEVEL_ERRO, etc.
-	LevelFormat  string          // Formatted level string, like "DEBU", "ERRO", etc.
-	CallerFunc   string          // The source function name that calls logging.
-	CallerPath   string          // The source file path and its line number that calls logging.
-	CtxStr       string          // The retrieved context value string from context.
-	Prefix       string          // Custom prefix string for logging content.
-	Content      string          // Content is the main logging content that passed by you.
-	IsAsync      bool            // IsAsync marks it is in asynchronous logging.
-	handlerIndex int             // Middleware handling index for internal usage.
+	Logger       *Logger       // Logger.
+	Buffer       *bytes.Buffer // Buffer for logging content outputs.
+	Time         time.Time     // Logging time, which is the time that logging triggers.
+	TimeFormat   string        // Formatted time string, like "2016-01-09 12:00:00".
+	Color        int           // Using color, like COLOR_RED, COLOR_BLUE, etc.
+	Level        int           // Using level, like LEVEL_INFO, LEVEL_ERRO, etc.
+	LevelFormat  string        // Formatted level string, like "DEBU", "ERRO", etc.
+	CallerFunc   string        // The source function name that calls logging.
+	CallerPath   string        // The source file path and its line number that calls logging.
+	CtxStr       string        // The retrieved context value string from context.
+	Prefix       string        // Custom prefix string for logging content.
+	Content      string        // Content is the main logging content that passed by you.
+	IsAsync      bool          // IsAsync marks it is in asynchronous logging.
+	handlerIndex int           // Middleware handling index for internal usage.
 }
 
 // Next calls the next logging handler in middleware way.
-func (i *HandlerInput) Next() {
+func (i *HandlerInput) Next(ctx context.Context) {
 	if len(i.Logger.config.Handlers)-1 > i.handlerIndex {
 		i.handlerIndex++
-		i.Logger.config.Handlers[i.handlerIndex](i.Ctx, i)
+		i.Logger.config.Handlers[i.handlerIndex](ctx, i)
 	} else {
-		defaultHandler(i.Ctx, i)
+		defaultHandler(ctx, i)
 	}
 }
 

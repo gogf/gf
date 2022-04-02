@@ -253,7 +253,7 @@ func Test_UnmarshalJson(t *testing.T) {
 			"name": "john",
 			"var":  "v",
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Var.String(), "v")
 	})
@@ -267,7 +267,7 @@ func Test_UnmarshalJson(t *testing.T) {
 			"name": "john",
 			"var":  "v",
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Var.String(), "v")
 	})
@@ -284,7 +284,7 @@ func Test_UnmarshalValue(t *testing.T) {
 			"name": "john",
 			"var":  "v",
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Var.String(), "v")
 	})
@@ -298,7 +298,7 @@ func Test_UnmarshalValue(t *testing.T) {
 			"name": "john",
 			"var":  "v",
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Var.String(), "v")
 	})

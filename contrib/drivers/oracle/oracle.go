@@ -194,7 +194,7 @@ func (d *Driver) parseSql(sql string) string {
 // Note that it ignores the parameter `schema` in oracle database, as it is not necessary.
 func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
 	var result gdb.Result
-	result, err = d.DoGetAll(ctx, nil, "SELECT TABLE_NAME FROM USER_TABLES ORDER BY TABLE_NAME")
+	result, err = d.DoSelect(ctx, nil, "SELECT TABLE_NAME FROM USER_TABLES ORDER BY TABLE_NAME")
 	if err != nil {
 		return
 	}
@@ -245,7 +245,7 @@ FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`,
 				return nil
 			}
 			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
-			result, err = d.DoGetAll(ctx, link, structureSql)
+			result, err = d.DoSelect(ctx, link, structureSql)
 			if err != nil {
 				return nil
 			}

@@ -7,6 +7,7 @@
 package gtree
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/gogf/gf/v2/container/gvar"
@@ -398,6 +399,9 @@ func (tree *AVLTree) Replace(data map[interface{}]interface{}) {
 
 // String returns a string representation of container
 func (tree *AVLTree) String() string {
+	if tree == nil {
+		return ""
+	}
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	str := ""
@@ -780,8 +784,26 @@ func output(node *AVLTreeNode, prefix string, isTail bool, str *string) {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (tree AVLTree) MarshalJSON() ([]byte, error) {
-	return json.Marshal(tree.MapStrAny())
+func (tree AVLTree) MarshalJSON() (jsonBytes []byte, err error) {
+	if tree.root == nil {
+		return []byte("null"), nil
+	}
+	buffer := bytes.NewBuffer(nil)
+	buffer.WriteByte('{')
+	tree.Iterator(func(key, value interface{}) bool {
+		valueBytes, valueJsonErr := json.Marshal(value)
+		if valueJsonErr != nil {
+			err = valueJsonErr
+			return false
+		}
+		if buffer.Len() > 1 {
+			buffer.WriteByte(',')
+		}
+		buffer.WriteString(fmt.Sprintf(`"%v":%s`, key, valueBytes))
+		return true
+	})
+	buffer.WriteByte('}')
+	return buffer.Bytes(), nil
 }
 
 // getComparator returns the comparator if it's previously set,

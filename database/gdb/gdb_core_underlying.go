@@ -129,8 +129,45 @@ func (c *Core) DoFilter(ctx context.Context, link Link, sql string, args []inter
 	return sql, args, nil
 }
 
+type sqlParsingHandlerInput struct {
+	DoCommitInput
+	FormattedSql string
+}
+
+type sqlParsingHandlerOutput struct {
+	DoCommitInput
+}
+
+func (c *Core) sqlParsingHandler(ctx context.Context, in sqlParsingHandlerInput) (out *sqlParsingHandlerOutput, err error) {
+	var shardingOut *callShardingHandlerFromCtxOutput
+	// Sharding handling.
+	shardingOut, err = c.callShardingHandlerFromCtx(ctx, callShardingHandlerFromCtxInput{
+		Sql:          in.Sql,
+		FormattedSql: in.FormattedSql,
+	})
+	if err != nil {
+		return
+	}
+	if shardingOut != nil {
+		if shardingOut.Sql != "" {
+			in.Sql = shardingOut.Sql
+		}
+		// If schema changes, it here creates and uses a new DB link operation object.
+		if shardingOut.Schema != c.db.GetSchema() {
+			in.Link, err = c.db.GetCore().GetLink(ctx, in.Link.IsOnMaster(), shardingOut.Schema)
+		}
+	}
+	out = &sqlParsingHandlerOutput{
+		DoCommitInput: in.DoCommitInput,
+	}
+	return
+}
+
 // DoCommit commits current sql and arguments to underlying sql driver.
 func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutput, err error) {
+	// Inject internal data into ctx, especially for transaction creating.
+	ctx = c.injectInternalCtxData(ctx)
+
 	var (
 		sqlTx                *sql.Tx
 		sqlStmt              *sql.Stmt
@@ -140,8 +177,21 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 		stmtSqlRow           *sql.Row
 		rowsAffected         int64
 		cancelFuncForTimeout context.CancelFunc
+		formattedSql         = FormatSqlWithArgs(in.Sql, in.Args)
 		timestampMilli1      = gtime.TimestampMilli()
 	)
+
+	// SQL parser handler.
+	sqlParsingHandlerOut, err := c.sqlParsingHandler(ctx, sqlParsingHandlerInput{
+		DoCommitInput: in,
+		FormattedSql:  formattedSql,
+	})
+	if err != nil {
+		return
+	}
+	if sqlParsingHandlerOut != nil {
+		in = sqlParsingHandlerOut.DoCommitInput
+	}
 
 	// Trace span start.
 	tr := otel.GetTracerProvider().Tracer(traceInstrumentName, trace.WithInstrumentationVersion(gf.VERSION))
@@ -186,7 +236,7 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 		out.RawResult = sqlStmt
 
 	case SqlTypeStmtExecContext:
-		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctxTimeoutTypeExec, ctx)
+		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctx, ctxTimeoutTypeExec)
 		defer cancelFuncForTimeout()
 		if c.db.GetDryRun() {
 			sqlResult = new(SqlResult)
@@ -196,13 +246,13 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 		out.RawResult = sqlResult
 
 	case SqlTypeStmtQueryContext:
-		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctxTimeoutTypeQuery, ctx)
+		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctx, ctxTimeoutTypeQuery)
 		defer cancelFuncForTimeout()
 		stmtSqlRows, err = in.Stmt.QueryContext(ctx, in.Args...)
 		out.RawResult = stmtSqlRows
 
 	case SqlTypeStmtQueryRowContext:
-		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctxTimeoutTypeQuery, ctx)
+		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctx, ctxTimeoutTypeQuery)
 		defer cancelFuncForTimeout()
 		stmtSqlRow = in.Stmt.QueryRowContext(ctx, in.Args...)
 		out.RawResult = stmtSqlRow
@@ -234,7 +284,7 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 			Sql:           in.Sql,
 			Type:          in.Type,
 			Args:          in.Args,
-			Format:        FormatSqlWithArgs(in.Sql, in.Args),
+			Format:        formattedSql,
 			Error:         err,
 			Start:         timestampMilli1,
 			End:           timestampMilli2,
@@ -350,6 +400,11 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 	for k, v := range columns {
 		columnTypes[k] = v.DatabaseTypeName()
 		columnNames[k] = v.Name()
+	}
+	if len(columnNames) > 0 {
+		if internalData := c.getInternalCtxDataFromCtx(ctx); internalData != nil {
+			internalData.FirstResultColumn = columnNames[0]
+		}
 	}
 	var (
 		values   = make([]interface{}, len(columnNames))

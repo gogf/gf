@@ -32,7 +32,7 @@ type serviceInstallAvailablePath struct {
 
 func (s serviceInstall) Run(ctx context.Context) (err error) {
 	// Ask where to install.
-	paths := s.getInstallPathsData()
+	paths := s.getAvailablePaths()
 	if len(paths) <= 0 {
 		mlog.Printf("no path detected, you can manually install gf by copying the binary to path folder.")
 		return
@@ -43,16 +43,21 @@ func (s serviceInstall) Run(ctx context.Context) (err error) {
 	// Print all paths status and determine the default selectedID value.
 	var (
 		selectedID = -1
+		newPaths   []serviceInstallAvailablePath
 		pathSet    = gset.NewStrSet() // Used for repeated items filtering.
 	)
-	for id, aPath := range paths {
-		if !pathSet.AddIfNotExist(aPath.dirPath) {
+	for _, path := range paths {
+		if !pathSet.AddIfNotExist(path.dirPath) {
 			continue
 		}
-		mlog.Printf("  %2d | %8t | %9t | %s", id, aPath.writable, aPath.installed, aPath.dirPath)
+		newPaths = append(newPaths, path)
+	}
+	paths = newPaths
+	for id, path := range paths {
+		mlog.Printf("  %2d | %8t | %9t | %s", id, path.writable, path.installed, path.dirPath)
 		if selectedID == -1 {
 			// Use the previously installed path as the most priority choice.
-			if aPath.installed {
+			if path.installed {
 				selectedID = id
 			}
 		}
@@ -61,6 +66,7 @@ func (s serviceInstall) Run(ctx context.Context) (err error) {
 	if selectedID == -1 {
 		// Order by choosing priority.
 		commonPaths := garray.NewStrArrayFrom(g.SliceStr{
+			s.getGoPathBin(),
 			`/usr/local/bin`,
 			`/usr/bin`,
 			`/usr/sbin`,
@@ -121,10 +127,10 @@ func (s serviceInstall) Run(ctx context.Context) (err error) {
 	}
 
 	// Uninstall the old binary.
-	for _, aPath := range paths {
+	for _, path := range paths {
 		// Do not delete myself.
-		if aPath.filePath != "" && aPath.filePath != dstPath.filePath && gfile.SelfPath() != aPath.filePath {
-			_ = gfile.Remove(aPath.filePath)
+		if path.filePath != "" && path.filePath != dstPath.filePath && gfile.SelfPath() != path.filePath {
+			_ = gfile.Remove(path.filePath)
 		}
 	}
 	return
@@ -132,7 +138,7 @@ func (s serviceInstall) Run(ctx context.Context) (err error) {
 
 // IsInstalled checks and returns whether the binary is installed.
 func (s serviceInstall) IsInstalled() bool {
-	paths := s.getInstallPathsData()
+	paths := s.getAvailablePaths()
 	for _, aPath := range paths {
 		if aPath.installed {
 			return true
@@ -141,11 +147,26 @@ func (s serviceInstall) IsInstalled() bool {
 	return false
 }
 
-// GetInstallPathsData returns the installation paths data for the binary.
-func (s serviceInstall) getInstallPathsData() []serviceInstallAvailablePath {
-	var folderPaths []serviceInstallAvailablePath
-	// Pre generate binaryFileName.
-	binaryFileName := "gf" + gfile.Ext(gfile.SelfPath())
+// getGoPathBinFilePath retrieves ad returns the GOPATH/bin path for binary.
+func (s serviceInstall) getGoPathBin() string {
+	if goPath := genv.Get(`GOPATH`).String(); goPath != "" {
+		return gfile.Join(goPath, "bin")
+	}
+	return ""
+}
+
+// getAvailablePaths returns the installation paths data for the binary.
+func (s serviceInstall) getAvailablePaths() []serviceInstallAvailablePath {
+	var (
+		folderPaths    []serviceInstallAvailablePath
+		binaryFileName = "gf" + gfile.Ext(gfile.SelfPath())
+	)
+	// $GOPATH/bin
+	if goPathBin := s.getGoPathBin(); goPathBin != "" {
+		folderPaths = s.checkAndAppendToAvailablePath(
+			folderPaths, goPathBin, binaryFileName,
+		)
+	}
 	switch runtime.GOOS {
 	case "darwin":
 		darwinInstallationCheckPaths := []string{"/usr/local/bin"}
@@ -157,21 +178,24 @@ func (s serviceInstall) getInstallPathsData() []serviceInstallAvailablePath {
 		fallthrough
 
 	default:
-		// $GOPATH/bin
-		gopath := gfile.Join(runtime.GOROOT(), "bin")
-		folderPaths = s.checkAndAppendToAvailablePath(
-			folderPaths, gopath, binaryFileName,
-		)
 		// Search and find the writable directory path.
 		envPath := genv.Get("PATH", genv.Get("Path").String()).String()
 		if gstr.Contains(envPath, ";") {
+			// windows.
 			for _, v := range gstr.SplitAndTrim(envPath, ";") {
+				if v == "." {
+					continue
+				}
 				folderPaths = s.checkAndAppendToAvailablePath(
 					folderPaths, v, binaryFileName,
 				)
 			}
 		} else if gstr.Contains(envPath, ":") {
+			// *nix.
 			for _, v := range gstr.SplitAndTrim(envPath, ":") {
+				if v == "." {
+					continue
+				}
 				folderPaths = s.checkAndAppendToAvailablePath(
 					folderPaths, v, binaryFileName,
 				)

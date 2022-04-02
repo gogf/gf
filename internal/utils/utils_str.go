@@ -57,13 +57,13 @@ func IsNumeric(s string) bool {
 	if length == 0 {
 		return false
 	}
-	for i := 0; i < len(s); i++ {
+	for i := 0; i < length; i++ {
 		if s[i] == '-' && i == 0 {
 			continue
 		}
 		if s[i] == '.' {
 			dotCount++
-			if i > 0 && i < len(s)-1 {
+			if i > 0 && i < length-1 {
 				continue
 			} else {
 				return false

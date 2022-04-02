@@ -40,7 +40,7 @@ func Test_Float64_JSON(t *testing.T) {
 
 		i2 := gtype.NewFloat64()
 		err := json.UnmarshalUseNumber(b2, &i2)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(i2.Val(), v)
 	})
 }
@@ -56,7 +56,7 @@ func Test_Float64_UnmarshalValue(t *testing.T) {
 			"name": "john",
 			"var":  "123.456",
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Var.Val(), "123.456")
 	})

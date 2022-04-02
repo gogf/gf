@@ -43,7 +43,7 @@ func Test_Ctx_Config(t *testing.T) {
 			"CtxKeys": g.SliceStr{"Trace-Id", "Span-Id", "Test"},
 		}
 		err := l.SetConfigWithMap(m)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		ctx := context.WithValue(context.Background(), "Trace-Id", "1234567890")
 		ctx = context.WithValue(ctx, "Span-Id", "abcdefg")
 

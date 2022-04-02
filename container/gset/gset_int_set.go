@@ -204,6 +204,9 @@ func (set *IntSet) Join(glue string) string {
 
 // String returns items as a string, which implements like json.Marshal does.
 func (set *IntSet) String() string {
+	if set == nil {
+		return ""
+	}
 	return "[" + set.Join(",") + "]"
 }
 
