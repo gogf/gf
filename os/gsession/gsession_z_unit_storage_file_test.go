@@ -25,9 +25,15 @@ func Test_StorageFile(t *testing.T) {
 		defer s.Close()
 		s.Set("k1", "v1")
 		s.Set("k2", "v2")
+		s.MustSet("k3", "v3")
+		s.MustSet("k4", "v4")
 		s.SetMap(g.Map{
-			"k3": "v3",
-			"k4": "v4",
+			"kmap1": "kval1",
+			"kmap2": "kval2",
+		})
+		s.MustSetMap(g.Map{
+			"kmap3": "kval3",
+			"kmap4": "kval4",
 		})
 		t.Assert(s.IsDirty(), true)
 		sessionId = s.MustId()
@@ -40,16 +46,17 @@ func Test_StorageFile(t *testing.T) {
 		t.Assert(s.MustGet("k2"), "v2")
 		t.Assert(s.MustGet("k3"), "v3")
 		t.Assert(s.MustGet("k4"), "v4")
-		t.Assert(len(s.MustData()), 4)
+		t.Assert(len(s.MustData()), 8)
 		t.Assert(s.MustData()["k1"], "v1")
 		t.Assert(s.MustData()["k4"], "v4")
 		t.Assert(s.MustId(), sessionId)
-		t.Assert(s.MustSize(), 4)
+		t.Assert(s.MustSize(), 8)
 		t.Assert(s.MustContains("k1"), true)
 		t.Assert(s.MustContains("k3"), true)
 		t.Assert(s.MustContains("k5"), false)
 		s.Remove("k4")
-		t.Assert(s.MustSize(), 3)
+		s.MustRemove("k4")
+		t.Assert(s.MustSize(), 7)
 		t.Assert(s.MustContains("k3"), true)
 		t.Assert(s.MustContains("k4"), false)
 		s.RemoveAll()

@@ -25,7 +25,7 @@ func Test_Parse(t *testing.T) {
 			"f,force":   false,
 			"q,quiet":   false,
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(p.GetArgAll()), 3)
 		t.Assert(p.GetArg(0), "gf")
 		t.Assert(p.GetArg(1), "remove")
@@ -48,6 +48,9 @@ func Test_Parse(t *testing.T) {
 		t.Assert(p.GetOpt("q") != nil, true)
 		t.Assert(p.GetOpt("quiet") != nil, true)
 		t.Assert(p.GetOpt("none") != nil, false)
+
+		_, err = p.MarshalJSON()
+		t.AssertNil(err)
 	})
 }
 
@@ -61,7 +64,7 @@ func Test_ParseArgs(t *testing.T) {
 				"f,force":   false,
 				"q,quiet":   false,
 			})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(p.GetArgAll()), 3)
 		t.Assert(p.GetArg(0), "gf")
 		t.Assert(p.GetArg(1), "remove")

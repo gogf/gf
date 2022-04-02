@@ -100,7 +100,7 @@ func (p *Pool) File() (*File, error) {
 		// It firstly checks using !p.init.Val() for performance purpose.
 		if !p.init.Val() && p.init.Cas(false, true) {
 			_, _ = gfsnotify.Add(f.path, func(event *gfsnotify.Event) {
-				// If teh file is removed or renamed, recreates the pool by increasing the pool id.
+				// If the file is removed or renamed, recreates the pool by increasing the pool id.
 				if event.IsRemove() || event.IsRename() {
 					// It drops the old pool.
 					p.id.Add(1)

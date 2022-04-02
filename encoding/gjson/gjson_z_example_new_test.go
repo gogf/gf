@@ -34,7 +34,7 @@ func ExampleNewWithTag() {
 		Score: 100,
 		Title: "engineer",
 	}
-	j := gjson.NewWithTag(me, "tag")
+	j := gjson.NewWithTag(me, "tag", true)
 	fmt.Println(j.Get("name"))
 	fmt.Println(j.Get("score"))
 	fmt.Println(j.Get("Title"))
@@ -68,6 +68,26 @@ func ExampleNewWithOptions() {
 	// john
 	// 100
 	// engineer
+}
+
+func ExampleNewWithOptions_UTF8BOM() {
+	jsonContent := `{"name":"john", "score":"100"}`
+
+	content := make([]byte, 3, len(jsonContent)+3)
+	content[0] = 0xEF
+	content[1] = 0xBB
+	content[2] = 0xBF
+	content = append(content, jsonContent...)
+
+	j := gjson.NewWithOptions(content, gjson.Options{
+		Tags: "tag",
+	})
+	fmt.Println(j.Get("name"))
+	fmt.Println(j.Get("score"))
+
+	// Output:
+	// john
+	// 100
 }
 
 func ExampleNew_Xml() {

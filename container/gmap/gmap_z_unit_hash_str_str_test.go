@@ -241,11 +241,11 @@ func Test_StrStrMap_Json(t *testing.T) {
 			"k2": "v2",
 		}
 		b, err := json.Marshal(data)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		m := gmap.NewStrStrMap()
 		err = json.UnmarshalUseNumber(b, m)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(m.Get("k1"), data["k1"])
 		t.Assert(m.Get("k2"), data["k2"])
 	})
@@ -255,11 +255,11 @@ func Test_StrStrMap_Json(t *testing.T) {
 			"k2": "v2",
 		}
 		b, err := json.Marshal(data)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		var m gmap.StrStrMap
 		err = json.UnmarshalUseNumber(b, &m)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(m.Get("k1"), data["k1"])
 		t.Assert(m.Get("k2"), data["k2"])
 	})
@@ -330,7 +330,7 @@ func TestStrStrMap_UnmarshalValue(t *testing.T) {
 			"name": "john",
 			"map":  []byte(`{"k1":"v1","k2":"v2"}`),
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Map.Size(), 2)
 		t.Assert(v.Map.Get("k1"), "v1")
@@ -346,7 +346,7 @@ func TestStrStrMap_UnmarshalValue(t *testing.T) {
 				"k2": "v2",
 			},
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Map.Size(), 2)
 		t.Assert(v.Map.Get("k1"), "v1")

@@ -96,7 +96,7 @@ jobs:
       with:
         timezoneLinux: "Asia/Shanghai"
 
-    - name: Checkout Repositary
+    - name: Checkout Repository
       uses: actions/checkout@v2
 
     - name: Set Up Go

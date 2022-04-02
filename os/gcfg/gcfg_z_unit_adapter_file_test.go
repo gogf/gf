@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/gogf/gf/v2/os/gcfg"
+	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
@@ -97,5 +98,24 @@ func TestAdapterFile_With_UTF8_BOM(t *testing.T) {
 		c.SetFileName("cfg-with-utf8-bom.toml")
 		t.Assert(c.MustGet(ctx, "test.testInt"), 1)
 		t.Assert(c.MustGet(ctx, "test.testStr"), "test")
+	})
+}
+
+func TestAdapterFile_Set(t *testing.T) {
+	config := `log-path = "logs"`
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			path = gcfg.DefaultConfigFileName
+			err  = gfile.PutContents(path, config)
+		)
+		t.Assert(err, nil)
+		defer gfile.Remove(path)
+
+		c, err := gcfg.New()
+		t.Assert(c.MustGet(ctx, "log-path").String(), "logs")
+
+		err = c.GetAdapter().(*gcfg.AdapterFile).Set("log-path", "custom-logs")
+		t.Assert(err, nil)
+		t.Assert(c.MustGet(ctx, "log-path").String(), "custom-logs")
 	})
 }
