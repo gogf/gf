@@ -3081,8 +3081,8 @@ func Test_TimeZoneInsert(t *testing.T) {
 		userEntity := &User{}
 		err := db.Model(tableName).Where("id", 1).Unscoped().Scan(&userEntity)
 		t.AssertNil(err)
-		t.Assert(userEntity.CreatedAt.String(), "2020-11-22 12:23:45")
-		t.Assert(userEntity.UpdatedAt.String(), "2020-11-22 13:23:45")
+		t.Assert(userEntity.CreatedAt.String(), "2020-11-22 04:23:45")
+		t.Assert(userEntity.UpdatedAt.String(), "2020-11-22 05:23:45")
 		t.Assert(gtime.NewFromTime(userEntity.DeletedAt).String(), "2020-11-22 06:23:45")
 	})
 }

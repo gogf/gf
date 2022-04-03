@@ -157,7 +157,7 @@ func Test_Time_Millisecond(t *testing.T) {
 func Test_Time_String(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.Now()
-		t.Assert(timeTemp.String(), timeTemp.Time.Format("2006-01-02 15:04:05.999999"))
+		t.Assert(timeTemp.String(), timeTemp.Time.Format("2006-01-02 15:04:05"))
 	})
 }
 
