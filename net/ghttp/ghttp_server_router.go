@@ -126,7 +126,7 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 	}
 
 	// Repeated router checks, this feature can be disabled by server configuration.
-	routerKey := s.routerMapKey(handler.HookName, method, uri, domain)
+	var routerKey = s.routerMapKey(handler.HookName, method, uri, domain)
 	if !s.config.RouteOverWrite {
 		switch handler.Type {
 		case HandlerTypeHandler, HandlerTypeObject:
@@ -164,8 +164,10 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 	}
 	// List array, very important for router registering.
 	// There may be multiple lists adding into this array when searching from root to leaf.
-	lists := make([]*glist.List, 0)
-	array := ([]string)(nil)
+	var (
+		array []string
+		lists = make([]*glist.List, 0)
+	)
 	if strings.EqualFold("/", uri) {
 		array = []string{"/"}
 	} else {
@@ -182,7 +184,7 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 	//    priorities from high to low.
 	// 3. There may be repeated router items in the router lists. The lists' priorities
 	//    from root to leaf are from low to high.
-	p := s.serveTree[domain]
+	var p = s.serveTree[domain]
 	for i, part := range array {
 		// Ignore empty URI part, like: /user//index
 		if part == "" {
@@ -223,7 +225,7 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 	}
 	// It iterates the list array of `lists`, compares priorities and inserts the new router item in
 	// the proper position of each list. The priority of the list is ordered from high to low.
-	item := (*handlerItem)(nil)
+	var item *handlerItem
 	for _, l := range lists {
 		pushed := false
 		for e := l.Front(); e != nil; e = e.Next() {
@@ -247,7 +249,7 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 		s.routesMap[routerKey] = make([]registeredRouteItem, 0)
 	}
 
-	routeItem := registeredRouteItem{
+	var routeItem = registeredRouteItem{
 		Source:  handler.Source,
 		Handler: handler,
 	}
@@ -391,7 +393,7 @@ func (s *Server) patternToRegular(rule string) (regular string, names []string) 
 		return rule, nil
 	}
 	regular = "^"
-	array := strings.Split(rule[1:], "/")
+	var array = strings.Split(rule[1:], "/")
 	for _, v := range array {
 		if len(v) == 0 {
 			continue

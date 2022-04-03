@@ -21,8 +21,8 @@ import (
 
 	_ "github.com/gogf/gf/contrib/drivers/mssql/v2"
 	_ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
-	_ "github.com/gogf/gf/contrib/drivers/sqlite/v2"
-	//_ "github.com/gogf/gf/contrib/drivers/oracle/v2"
+	// _ "github.com/gogf/gf/contrib/drivers/sqlite/v2"
+	// _ "github.com/gogf/gf/contrib/drivers/oracle/v2"
 )
 
 const (
@@ -35,7 +35,7 @@ const (
 	cGenDaoEg         = `
 gf gen dao
 gf gen dao -l "mysql:root:12345678@tcp(127.0.0.1:3306)/test"
-gf gen dao -p ./model -c config.yaml -g user-center -t user,user_detail,user_login
+gf gen dao -p ./model -g user-center -t user,user_detail,user_login
 gf gen dao -r user_
 `
 

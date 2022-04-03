@@ -71,7 +71,7 @@ func (c *Core) doBeginCtx(ctx context.Context) (*TX, error) {
 func (c *Core) Transaction(ctx context.Context, f func(ctx context.Context, tx *TX) error) (err error) {
 	var tx *TX
 	if ctx == nil {
-		ctx = c.GetCtx()
+		ctx = c.db.GetCtx()
 	}
 	// Check transaction object from context.
 	tx = TXFromCtx(ctx, c.db.GetGroup())
@@ -158,6 +158,9 @@ func (tx *TX) transactionKeyForNestedPoint() string {
 // Ctx sets the context for current transaction.
 func (tx *TX) Ctx(ctx context.Context) *TX {
 	tx.ctx = ctx
+	if tx.ctx != nil {
+		tx.ctx = tx.db.GetCore().injectInternalCtxData(tx.ctx)
+	}
 	return tx
 }
 

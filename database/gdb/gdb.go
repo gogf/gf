@@ -215,10 +215,12 @@ type Driver interface {
 }
 
 // Link is a common database function wrapper interface.
+// Note that, any operation using `Link` will have no SQL logging.
 type Link interface {
 	QueryContext(ctx context.Context, sql string, args ...interface{}) (*sql.Rows, error)
 	ExecContext(ctx context.Context, sql string, args ...interface{}) (sql.Result, error)
 	PrepareContext(ctx context.Context, sql string) (*sql.Stmt, error)
+	IsOnMaster() bool
 	IsTransaction() bool
 }
 
@@ -520,8 +522,11 @@ func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 // The parameter `master` specifies whether retrieves master node connection if
 // master-slave nodes are configured.
 func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error) {
+	var (
+		ctx  = c.db.GetCtx()
+		node *ConfigNode
+	)
 	// Load balance.
-	var node *ConfigNode
 	if c.group != "" {
 		node, err = getConfigNodeByGroup(c.group, master)
 		if err != nil {
@@ -547,20 +552,12 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 	}
 	// Cache the underlying connection pool object by node.
 	v := c.links.GetOrSetFuncLock(node.String(), func() interface{} {
-		intlog.Printf(
-			c.db.GetCtx(),
-			`open new connection, master:%#v, config:%#v, node:%#v`,
-			master, c.config, node,
-		)
+		intlog.Printf(ctx, `open new connection, master:%#v, config:%#v, node:%#v`, master, c.config, node)
 		defer func() {
 			if err != nil {
-				intlog.Printf(c.db.GetCtx(), `open new connection failed: %v, %#v`, err, node)
+				intlog.Printf(ctx, `open new connection failed: %v, %#v`, err, node)
 			} else {
-				intlog.Printf(
-					c.db.GetCtx(),
-					`open new connection success, master:%#v, config:%#v, node:%#v`,
-					master, c.config, node,
-				)
+				intlog.Printf(ctx, `open new connection success, master:%#v, config:%#v, node:%#v`, master, c.config, node)
 			}
 		}()
 

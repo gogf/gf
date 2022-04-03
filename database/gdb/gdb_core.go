@@ -53,22 +53,24 @@ func (c *Core) Ctx(ctx context.Context) DB {
 		panic(err)
 	}
 	newCore.ctx = WithDB(ctx, newCore.db)
+	newCore.ctx = c.injectInternalCtxData(newCore.ctx)
 	return newCore.db
 }
 
 // GetCtx returns the context for current DB.
 // It returns `context.Background()` is there's no context previously set.
 func (c *Core) GetCtx() context.Context {
-	if c.ctx != nil {
-		return c.ctx
+	ctx := c.ctx
+	if ctx == nil {
+		ctx = context.TODO()
 	}
-	return context.TODO()
+	return c.injectInternalCtxData(ctx)
 }
 
 // GetCtxTimeout returns the context and cancel function for specified timeout type.
-func (c *Core) GetCtxTimeout(timeoutType int, ctx context.Context) (context.Context, context.CancelFunc) {
+func (c *Core) GetCtxTimeout(ctx context.Context, timeoutType int) (context.Context, context.CancelFunc) {
 	if ctx == nil {
-		ctx = c.GetCtx()
+		ctx = c.db.GetCtx()
 	} else {
 		ctx = context.WithValue(ctx, "WrappedByGetCtxTimeout", nil)
 	}
@@ -240,7 +242,7 @@ func (c *Core) GetValue(ctx context.Context, sql string, args ...interface{}) (V
 
 // GetCount queries and returns the count from database.
 func (c *Core) GetCount(ctx context.Context, sql string, args ...interface{}) (int, error) {
-	// If the query fields do not contains function "COUNT",
+	// If the query fields do not contain function "COUNT",
 	// it replaces the sql string and adds the "COUNT" function to the fields.
 	if !gregex.IsMatchString(`(?i)SELECT\s+COUNT\(.+\)\s+FROM`, sql) {
 		sql, _ = gregex.ReplaceString(`(?i)(SELECT)\s+(.+)\s+(FROM)`, `$1 COUNT($2) $3`, sql)
@@ -254,15 +256,17 @@ func (c *Core) GetCount(ctx context.Context, sql string, args ...interface{}) (i
 
 // Union does "(SELECT xxx FROM xxx) UNION (SELECT xxx FROM xxx) ..." statement.
 func (c *Core) Union(unions ...*Model) *Model {
-	return c.doUnion(unionTypeNormal, unions...)
+	var ctx = c.db.GetCtx()
+	return c.doUnion(ctx, unionTypeNormal, unions...)
 }
 
 // UnionAll does "(SELECT xxx FROM xxx) UNION ALL (SELECT xxx FROM xxx) ..." statement.
 func (c *Core) UnionAll(unions ...*Model) *Model {
-	return c.doUnion(unionTypeAll, unions...)
+	var ctx = c.db.GetCtx()
+	return c.doUnion(ctx, unionTypeAll, unions...)
 }
 
-func (c *Core) doUnion(unionType int, unions ...*Model) *Model {
+func (c *Core) doUnion(ctx context.Context, unionType int, unions ...*Model) *Model {
 	var (
 		unionTypeStr   string
 		composedSqlStr string
@@ -274,7 +278,7 @@ func (c *Core) doUnion(unionType int, unions ...*Model) *Model {
 		unionTypeStr = "UNION"
 	}
 	for _, v := range unions {
-		sqlWithHolder, holderArgs := v.getFormattedSqlAndArgs(queryTypeNormal, false)
+		sqlWithHolder, holderArgs := v.getFormattedSqlAndArgs(ctx, queryTypeNormal, false)
 		if composedSqlStr == "" {
 			composedSqlStr += fmt.Sprintf(`(%s)`, sqlWithHolder)
 		} else {
@@ -287,10 +291,11 @@ func (c *Core) doUnion(unionType int, unions ...*Model) *Model {
 
 // PingMaster pings the master node to check authentication or keeps the connection alive.
 func (c *Core) PingMaster() error {
+	var ctx = c.db.GetCtx()
 	if master, err := c.db.Master(); err != nil {
 		return err
 	} else {
-		if err = master.PingContext(c.GetCtx()); err != nil {
+		if err = master.PingContext(ctx); err != nil {
 			err = gerror.WrapCode(gcode.CodeDbOperationError, err, `master.Ping failed`)
 		}
 		return err
@@ -299,10 +304,11 @@ func (c *Core) PingMaster() error {
 
 // PingSlave pings the slave node to check authentication or keeps the connection alive.
 func (c *Core) PingSlave() error {
+	var ctx = c.db.GetCtx()
 	if slave, err := c.db.Slave(); err != nil {
 		return err
 	} else {
-		if err = slave.PingContext(c.GetCtx()); err != nil {
+		if err = slave.PingContext(ctx); err != nil {
 			err = gerror.WrapCode(gcode.CodeDbOperationError, err, `slave.Ping failed`)
 		}
 		return err
@@ -661,21 +667,22 @@ func (c *Core) writeSqlToLogger(ctx context.Context, sql *Sql) {
 
 // HasTable determine whether the table name exists in the database.
 func (c *Core) HasTable(name string) (bool, error) {
-	result, err := c.GetCache().GetOrSetFuncLock(
-		c.GetCtx(),
-		fmt.Sprintf(`HasTable: %s`, name),
-		func(ctx context.Context) (interface{}, error) {
-			tableList, err := c.db.Tables(ctx)
-			if err != nil {
-				return false, err
+	var (
+		ctx      = c.db.GetCtx()
+		cacheKey = fmt.Sprintf(`HasTable: %s`, name)
+	)
+	result, err := c.GetCache().GetOrSetFuncLock(ctx, cacheKey, func(ctx context.Context) (interface{}, error) {
+		tableList, err := c.db.Tables(ctx)
+		if err != nil {
+			return false, err
+		}
+		for _, table := range tableList {
+			if table == name {
+				return true, nil
 			}
-			for _, table := range tableList {
-				if table == name {
-					return true, nil
-				}
-			}
-			return false, nil
-		}, 0,
+		}
+		return false, nil
+	}, 0,
 	)
 	if err != nil {
 		return false, err

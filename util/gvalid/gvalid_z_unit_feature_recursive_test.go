@@ -229,6 +229,45 @@ func Test_CheckStruct_Recursively_SliceAttribute(t *testing.T) {
 			teacher = Teacher{}
 			data    = g.Map{
 				"name":     "john",
+				"students": `[]`,
+			}
+		)
+		err := g.Validator().Assoc(data).Data(teacher).Run(ctx)
+		t.Assert(err, `The Students field is required`)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		type Student struct {
+			Name string `v:"required#Student Name is required"`
+			Age  int    `v:"required"`
+		}
+		type Teacher struct {
+			Name     string `v:"required#Teacher Name is required"`
+			Students []Student
+		}
+		var (
+			teacher = Teacher{}
+			data    = g.Map{
+				"name": "john",
+			}
+		)
+		err := g.Validator().Assoc(data).Data(teacher).Run(ctx)
+		t.Assert(err, ``)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		type Student struct {
+			Name string `v:"required#Student Name is required"`
+			Age  int    `v:"required"`
+		}
+		type Teacher struct {
+			Name     string    `v:"required#Teacher Name is required"`
+			Students []Student `v:"required"`
+		}
+		var (
+			teacher = Teacher{}
+			data    = g.Map{
+				"name":     "john",
 				"students": `[{"age":2}, {"name":"jack", "age":4}]`,
 			}
 		)

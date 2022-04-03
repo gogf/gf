@@ -7,16 +7,14 @@
 package gdb
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/crypto/gmd5"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -29,7 +27,8 @@ import (
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 func (m *Model) All(where ...interface{}) (Result, error) {
-	return m.doGetAll(false, where...)
+	var ctx = m.GetCtx()
+	return m.doGetAll(ctx, false, where...)
 }
 
 // doGetAll does "SELECT FROM ..." statement for the model.
@@ -39,12 +38,12 @@ func (m *Model) All(where ...interface{}) (Result, error) {
 // The parameter `limit1` specifies whether limits querying only one record if m.limit is not set.
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
-func (m *Model) doGetAll(limit1 bool, where ...interface{}) (Result, error) {
+func (m *Model) doGetAll(ctx context.Context, limit1 bool, where ...interface{}) (Result, error) {
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).All()
 	}
-	sqlWithHolder, holderArgs := m.getFormattedSqlAndArgs(queryTypeNormal, limit1)
-	return m.doGetAllBySql(sqlWithHolder, holderArgs...)
+	sqlWithHolder, holderArgs := m.getFormattedSqlAndArgs(ctx, queryTypeNormal, limit1)
+	return m.doGetAllBySql(ctx, queryTypeNormal, sqlWithHolder, holderArgs...)
 }
 
 // getFieldsFiltered checks the fields and fieldsEx attributes, filters and returns the fields that will
@@ -130,10 +129,11 @@ func (m *Model) Chunk(size int, handler ChunkHandler) {
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 func (m *Model) One(where ...interface{}) (Record, error) {
+	var ctx = m.GetCtx()
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).One()
 	}
-	all, err := m.doGetAll(true)
+	all, err := m.doGetAll(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -150,6 +150,7 @@ func (m *Model) One(where ...interface{}) (Record, error) {
 // and fieldsAndWhere[1:] is treated as where condition fields.
 // Also see Model.Fields and Model.Where functions.
 func (m *Model) Value(fieldsAndWhere ...interface{}) (Value, error) {
+	var ctx = m.GetCtx()
 	if len(fieldsAndWhere) > 0 {
 		if len(fieldsAndWhere) > 2 {
 			return m.Fields(gconv.String(fieldsAndWhere[0])).Where(fieldsAndWhere[1], fieldsAndWhere[2:]...).Value()
@@ -159,14 +160,26 @@ func (m *Model) Value(fieldsAndWhere ...interface{}) (Value, error) {
 			return m.Fields(gconv.String(fieldsAndWhere[0])).Value()
 		}
 	}
-	one, err := m.One()
-	if err != nil {
-		return gvar.New(nil), err
+	var (
+		all Result
+		err error
+	)
+	if all, err = m.doGetAll(ctx, true); err != nil {
+		return nil, err
 	}
-	for _, v := range one {
-		return v, nil
+	if len(all) == 0 {
+		return gvar.New(nil), nil
 	}
-	return gvar.New(nil), nil
+	if internalData := m.db.GetCore().getInternalCtxDataFromCtx(ctx); internalData != nil {
+		record := all[0]
+		if v, ok := record[internalData.FirstResultColumn]; ok {
+			return v, nil
+		}
+	}
+	return nil, gerror.NewCode(
+		gcode.CodeInternalError,
+		`query value error: the internal context data is missing. there's' internal issue should be fixed'`,
+	)
 }
 
 // Array queries and returns data values as slice from database.
@@ -362,20 +375,28 @@ func (m *Model) ScanList(structSlicePointer interface{}, bindToAttrName string, 
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 func (m *Model) Count(where ...interface{}) (int, error) {
+	var ctx = m.GetCtx()
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).Count()
 	}
 	var (
-		sqlWithHolder, holderArgs = m.getFormattedSqlAndArgs(queryTypeCount, false)
-		list, err                 = m.doGetAllBySql(sqlWithHolder, holderArgs...)
+		sqlWithHolder, holderArgs = m.getFormattedSqlAndArgs(ctx, queryTypeCount, false)
+		all, err                  = m.doGetAllBySql(ctx, queryTypeCount, sqlWithHolder, holderArgs...)
 	)
 	if err != nil {
 		return 0, err
 	}
-	if len(list) > 0 {
-		for _, v := range list[0] {
-			return v.Int(), nil
+	if len(all) > 0 {
+		if internalData := m.db.GetCore().getInternalCtxDataFromCtx(ctx); internalData != nil {
+			record := all[0]
+			if v, ok := record[internalData.FirstResultColumn]; ok {
+				return v.Int(), nil
+			}
 		}
+		return 0, gerror.NewCode(
+			gcode.CodeInternalError,
+			`query count error: the internal context data is missing. there's' internal issue should be fixed'`,
+		)
 	}
 	return 0, nil
 }
@@ -502,93 +523,54 @@ func (m *Model) Having(having interface{}, args ...interface{}) *Model {
 }
 
 // doGetAllBySql does the select statement on the database.
-func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, err error) {
-	var (
-		ok       bool
-		ctx      = m.GetCtx()
-		cacheKey = ""
-		cacheObj = m.db.GetCache()
-	)
-	// Retrieve from cache.
-	if m.cacheEnabled && m.tx == nil {
-		cacheKey = m.cacheOption.Name
-		if len(cacheKey) == 0 {
-			cacheKey = fmt.Sprintf(
-				`GCache@Schema(%s):%s`,
-				m.db.GetSchema(),
-				gmd5.MustEncryptString(sql+", @PARAMS:"+gconv.String(args)),
-			)
-		}
-		if v, _ := cacheObj.Get(ctx, cacheKey); !v.IsNil() {
-			if result, ok = v.Val().(Result); ok {
-				// In-memory cache.
-				return result, nil
-			}
-			// Other cache, it needs conversion.
-			if err = json.UnmarshalUseNumber(v.Bytes(), &result); err != nil {
-				return nil, err
-			} else {
-				return result, nil
-			}
-		}
+func (m *Model) doGetAllBySql(ctx context.Context, queryType int, sql string, args ...interface{}) (result Result, err error) {
+	if result, err = m.getSelectResultFromCache(ctx, sql, args...); err != nil || result != nil {
+		return
 	}
 
 	in := &HookSelectInput{
 		internalParamHookSelect: internalParamHookSelect{
 			internalParamHook: internalParamHook{
-				db:   m.db,
-				link: m.getLink(false),
+				link:  m.getLink(false),
+				model: m,
 			},
-			handler: m.hook.Select,
+			handler: m.hookHandler.Select,
 		},
 		Table: m.tables,
 		Sql:   sql,
 		Args:  m.mergeArguments(args),
 	}
-	result, err = in.Next(m.GetCtx())
-
-	// Cache the result.
-	if cacheKey != "" && err == nil {
-		if m.cacheOption.Duration < 0 {
-			if _, errCache := cacheObj.Remove(ctx, cacheKey); errCache != nil {
-				intlog.Errorf(m.GetCtx(), `%+v`, errCache)
-			}
-		} else {
-			// In case of Cache Penetration.
-			if result.IsEmpty() && m.cacheOption.Force {
-				result = Result{}
-			}
-			if errCache := cacheObj.Set(ctx, cacheKey, result, m.cacheOption.Duration); errCache != nil {
-				intlog.Errorf(m.GetCtx(), `%+v`, errCache)
-			}
-		}
+	if result, err = in.Next(ctx); err != nil {
+		return
 	}
-	return result, err
+
+	err = m.saveSelectResultToCache(ctx, result, sql, args...)
+	return
 }
 
-func (m *Model) getFormattedSqlAndArgs(queryType int, limit1 bool) (sqlWithHolder string, holderArgs []interface{}) {
+func (m *Model) getFormattedSqlAndArgs(ctx context.Context, queryType int, limit1 bool) (sqlWithHolder string, holderArgs []interface{}) {
 	switch queryType {
 	case queryTypeCount:
-		countFields := "COUNT(1)"
+		queryFields := "COUNT(1)"
 		if m.fields != "" && m.fields != "*" {
 			// DO NOT quote the m.fields here, in case of fields like:
 			// DISTINCT t.user_id uid
-			countFields = fmt.Sprintf(`COUNT(%s%s)`, m.distinct, m.fields)
+			queryFields = fmt.Sprintf(`COUNT(%s%s)`, m.distinct, m.fields)
 		}
 		// Raw SQL Model.
 		if m.rawSql != "" {
-			sqlWithHolder = fmt.Sprintf("SELECT %s FROM (%s) AS T", countFields, m.rawSql)
+			sqlWithHolder = fmt.Sprintf("SELECT %s FROM (%s) AS T", queryFields, m.rawSql)
 			return sqlWithHolder, nil
 		}
-		conditionWhere, conditionExtra, conditionArgs := m.formatCondition(false, true)
-		sqlWithHolder = fmt.Sprintf("SELECT %s FROM %s%s", countFields, m.tables, conditionWhere+conditionExtra)
+		conditionWhere, conditionExtra, conditionArgs := m.formatCondition(ctx, false, true)
+		sqlWithHolder = fmt.Sprintf("SELECT %s FROM %s%s", queryFields, m.tables, conditionWhere+conditionExtra)
 		if len(m.groupBy) > 0 {
 			sqlWithHolder = fmt.Sprintf("SELECT COUNT(1) FROM (%s) count_alias", sqlWithHolder)
 		}
 		return sqlWithHolder, conditionArgs
 
 	default:
-		conditionWhere, conditionExtra, conditionArgs := m.formatCondition(limit1, false)
+		conditionWhere, conditionExtra, conditionArgs := m.formatCondition(ctx, limit1, false)
 		// Raw SQL Model, especially for UNION/UNION ALL featured SQL.
 		if m.rawSql != "" {
 			sqlWithHolder = fmt.Sprintf(
@@ -602,10 +584,7 @@ func (m *Model) getFormattedSqlAndArgs(queryType int, limit1 bool) (sqlWithHolde
 		// DISTINCT t.user_id uid
 		sqlWithHolder = fmt.Sprintf(
 			"SELECT %s%s FROM %s%s",
-			m.distinct,
-			m.getFieldsFiltered(),
-			m.tables,
-			conditionWhere+conditionExtra,
+			m.distinct, m.getFieldsFiltered(), m.tables, conditionWhere+conditionExtra,
 		)
 		return sqlWithHolder, conditionArgs
 	}
@@ -615,7 +594,7 @@ func (m *Model) getFormattedSqlAndArgs(queryType int, limit1 bool) (sqlWithHolde
 // Note that this function does not change any attribute value of the `m`.
 //
 // The parameter `limit1` specifies whether limits querying only one record if m.limit is not set.
-func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWhere string, conditionExtra string, conditionArgs []interface{}) {
+func (m *Model) formatCondition(ctx context.Context, limit1 bool, isCountStatement bool) (conditionWhere string, conditionExtra string, conditionArgs []interface{}) {
 	autoPrefix := ""
 	if gstr.Contains(m.tables, " JOIN ") {
 		autoPrefix = m.db.GetCore().QuoteWord(
@@ -635,7 +614,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 			switch holder.Operator {
 			case whereHolderOperatorWhere:
 				if conditionWhere == "" {
-					newWhere, newArgs := formatWhereHolder(m.db, formatWhereHolderInput{
+					newWhere, newArgs := formatWhereHolder(ctx, m.db, formatWhereHolderInput{
 						ModelWhereHolder: holder,
 						OmitNil:          m.option&optionOmitNilWhere > 0,
 						OmitEmpty:        m.option&optionOmitEmptyWhere > 0,
@@ -651,7 +630,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 				fallthrough
 
 			case whereHolderOperatorAnd:
-				newWhere, newArgs := formatWhereHolder(m.db, formatWhereHolderInput{
+				newWhere, newArgs := formatWhereHolder(ctx, m.db, formatWhereHolderInput{
 					ModelWhereHolder: holder,
 					OmitNil:          m.option&optionOmitNilWhere > 0,
 					OmitEmpty:        m.option&optionOmitEmptyWhere > 0,
@@ -670,7 +649,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 				}
 
 			case whereHolderOperatorOr:
-				newWhere, newArgs := formatWhereHolder(m.db, formatWhereHolderInput{
+				newWhere, newArgs := formatWhereHolder(ctx, m.db, formatWhereHolderInput{
 					ModelWhereHolder: holder,
 					OmitNil:          m.option&optionOmitNilWhere > 0,
 					OmitEmpty:        m.option&optionOmitEmptyWhere > 0,
@@ -721,7 +700,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 			Args:   gconv.Interfaces(m.having[1]),
 			Prefix: autoPrefix,
 		}
-		havingStr, havingArgs := formatWhereHolder(m.db, formatWhereHolderInput{
+		havingStr, havingArgs := formatWhereHolder(ctx, m.db, formatWhereHolderInput{
 			ModelWhereHolder: havingHolder,
 			OmitNil:          m.option&optionOmitNilWhere > 0,
 			OmitEmpty:        m.option&optionOmitEmptyWhere > 0,

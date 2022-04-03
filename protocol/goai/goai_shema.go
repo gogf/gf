@@ -12,6 +12,7 @@ import (
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -22,48 +23,71 @@ import (
 
 // Schema is specified by OpenAPI/Swagger 3.0 standard.
 type Schema struct {
-	OneOf                SchemaRefs     `json:"oneOf,omitempty"                yaml:"oneOf,omitempty"`
-	AnyOf                SchemaRefs     `json:"anyOf,omitempty"                yaml:"anyOf,omitempty"`
-	AllOf                SchemaRefs     `json:"allOf,omitempty"                yaml:"allOf,omitempty"`
-	Not                  *SchemaRef     `json:"not,omitempty"                  yaml:"not,omitempty"`
-	Type                 string         `json:"type,omitempty"                 yaml:"type,omitempty"`
-	Title                string         `json:"title,omitempty"                yaml:"title,omitempty"`
-	Format               string         `json:"format,omitempty"               yaml:"format,omitempty"`
-	Description          string         `json:"description,omitempty"          yaml:"description,omitempty"`
-	Enum                 []interface{}  `json:"enum,omitempty"                 yaml:"enum,omitempty"`
-	Default              interface{}    `json:"default,omitempty"              yaml:"default,omitempty"`
-	Example              interface{}    `json:"example,omitempty"              yaml:"example,omitempty"`
-	ExternalDocs         *ExternalDocs  `json:"externalDocs,omitempty"         yaml:"externalDocs,omitempty"`
-	UniqueItems          bool           `json:"uniqueItems,omitempty"          yaml:"uniqueItems,omitempty"`
-	ExclusiveMin         bool           `json:"exclusiveMinimum,omitempty"     yaml:"exclusiveMinimum,omitempty"`
-	ExclusiveMax         bool           `json:"exclusiveMaximum,omitempty"     yaml:"exclusiveMaximum,omitempty"`
-	Nullable             bool           `json:"nullable,omitempty"             yaml:"nullable,omitempty"`
-	ReadOnly             bool           `json:"readOnly,omitempty"             yaml:"readOnly,omitempty"`
-	WriteOnly            bool           `json:"writeOnly,omitempty"            yaml:"writeOnly,omitempty"`
-	AllowEmptyValue      bool           `json:"allowEmptyValue,omitempty"      yaml:"allowEmptyValue,omitempty"`
-	XML                  interface{}    `json:"xml,omitempty"                  yaml:"xml,omitempty"`
-	Deprecated           bool           `json:"deprecated,omitempty"           yaml:"deprecated,omitempty"`
-	Min                  *float64       `json:"minimum,omitempty"              yaml:"minimum,omitempty"`
-	Max                  *float64       `json:"maximum,omitempty"              yaml:"maximum,omitempty"`
-	MultipleOf           *float64       `json:"multipleOf,omitempty"           yaml:"multipleOf,omitempty"`
-	MinLength            uint64         `json:"minLength,omitempty"            yaml:"minLength,omitempty"`
-	MaxLength            *uint64        `json:"maxLength,omitempty"            yaml:"maxLength,omitempty"`
-	Pattern              string         `json:"pattern,omitempty"              yaml:"pattern,omitempty"`
-	MinItems             uint64         `json:"minItems,omitempty"             yaml:"minItems,omitempty"`
-	MaxItems             *uint64        `json:"maxItems,omitempty"             yaml:"maxItems,omitempty"`
-	Items                *SchemaRef     `json:"items,omitempty"                yaml:"items,omitempty"`
-	Required             []string       `json:"required,omitempty"             yaml:"required,omitempty"`
-	Properties           Schemas        `json:"properties,omitempty"           yaml:"properties,omitempty"`
-	MinProps             uint64         `json:"minProperties,omitempty"        yaml:"minProperties,omitempty"`
-	MaxProps             *uint64        `json:"maxProperties,omitempty"        yaml:"maxProperties,omitempty"`
-	AdditionalProperties *SchemaRef     `json:"additionalProperties,omitempty" yaml:"additionalProperties"`
-	Discriminator        *Discriminator `json:"discriminator,omitempty"        yaml:"discriminator,omitempty"`
+	OneOf                SchemaRefs     `json:"oneOf,omitempty"`
+	AnyOf                SchemaRefs     `json:"anyOf,omitempty"`
+	AllOf                SchemaRefs     `json:"allOf,omitempty"`
+	Not                  *SchemaRef     `json:"not,omitempty"`
+	Type                 string         `json:"type,omitempty"`
+	Title                string         `json:"title,omitempty"`
+	Format               string         `json:"format,omitempty"`
+	Description          string         `json:"description,omitempty"`
+	Enum                 []interface{}  `json:"enum,omitempty"`
+	Default              interface{}    `json:"default,omitempty"`
+	Example              interface{}    `json:"example,omitempty"`
+	ExternalDocs         *ExternalDocs  `json:"externalDocs,omitempty"`
+	UniqueItems          bool           `json:"uniqueItems,omitempty"`
+	ExclusiveMin         bool           `json:"exclusiveMinimum,omitempty"`
+	ExclusiveMax         bool           `json:"exclusiveMaximum,omitempty"`
+	Nullable             bool           `json:"nullable,omitempty"`
+	ReadOnly             bool           `json:"readOnly,omitempty"`
+	WriteOnly            bool           `json:"writeOnly,omitempty"`
+	AllowEmptyValue      bool           `json:"allowEmptyValue,omitempty"`
+	XML                  interface{}    `json:"xml,omitempty"`
+	Deprecated           bool           `json:"deprecated,omitempty"`
+	Min                  *float64       `json:"minimum,omitempty"`
+	Max                  *float64       `json:"maximum,omitempty"`
+	MultipleOf           *float64       `json:"multipleOf,omitempty"`
+	MinLength            uint64         `json:"minLength,omitempty"`
+	MaxLength            *uint64        `json:"maxLength,omitempty"`
+	Pattern              string         `json:"pattern,omitempty"`
+	MinItems             uint64         `json:"minItems,omitempty"`
+	MaxItems             *uint64        `json:"maxItems,omitempty"`
+	Items                *SchemaRef     `json:"items,omitempty"`
+	Required             []string       `json:"required,omitempty"`
+	Properties           Schemas        `json:"properties,omitempty"`
+	MinProps             uint64         `json:"minProperties,omitempty"`
+	MaxProps             *uint64        `json:"maxProperties,omitempty"`
+	AdditionalProperties *SchemaRef     `json:"additionalProperties,omitempty"`
+	Discriminator        *Discriminator `json:"discriminator,omitempty"`
+	XExtensions          XExtensions    `json:"-"`
+}
+
+func (s Schema) MarshalJSON() ([]byte, error) {
+	var (
+		b   []byte
+		m   map[string]json.RawMessage
+		err error
+	)
+	type tempSchema Schema // To prevent JSON marshal recursion error.
+	if b, err = json.Marshal(tempSchema(s)); err != nil {
+		return nil, err
+	}
+	if err = json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	for k, v := range s.XExtensions {
+		if b, err = json.Marshal(v); err != nil {
+			return nil, err
+		}
+		m[k] = b
+	}
+	return json.Marshal(m)
 }
 
 // Discriminator is specified by OpenAPI/Swagger standard version 3.0.
 type Discriminator struct {
-	PropertyName string            `json:"propertyName"      yaml:"propertyName"`
-	Mapping      map[string]string `json:"mapping,omitempty" yaml:"mapping,omitempty"`
+	PropertyName string            `json:"propertyName"`
+	Mapping      map[string]string `json:"mapping,omitempty"`
 }
 
 // addSchema creates schemas with objects.
@@ -111,7 +135,8 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 	var (
 		tagMap = gmeta.Data(object)
 		schema = &Schema{
-			Properties: createSchemas(),
+			Properties:  createSchemas(),
+			XExtensions: make(XExtensions),
 		}
 	)
 	if len(tagMap) > 0 {
@@ -173,6 +198,7 @@ func (oai *OpenApiV3) tagMapToSchema(tagMap map[string]string, schema *Schema) e
 	if err := gconv.Struct(mergedTagMap, schema); err != nil {
 		return gerror.Wrap(err, `mapping struct tags to Schema failed`)
 	}
+	oai.tagMapToXExtensions(mergedTagMap, schema.XExtensions)
 	// Validation info to OpenAPI schema pattern.
 	for _, tag := range gvalid.GetTags() {
 		if validationTagValue, ok := tagMap[tag]; ok {
