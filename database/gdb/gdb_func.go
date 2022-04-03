@@ -766,7 +766,7 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 
 			// Special struct handling.
 			case reflect.Struct:
-				switch v := arg.(type) {
+				switch arg.(type) {
 				// The underlying driver supports time.Time/*time.Time types.
 				case time.Time, *time.Time:
 					newArgs = append(newArgs, arg)
@@ -779,11 +779,11 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 				// according to underlying driver. And the underlying driver also
 				// converts the time.Time to string automatically as the following does.
 				case gtime.Time:
-					newArgs = append(newArgs, v.String())
+					newArgs = append(newArgs, arg.(gtime.Time).Time)
 					continue
 
 				case *gtime.Time:
-					newArgs = append(newArgs, v.String())
+					newArgs = append(newArgs, arg.(*gtime.Time).Time)
 					continue
 
 				default:
