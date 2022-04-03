@@ -3009,8 +3009,8 @@ func Test_Model_Issue1002(t *testing.T) {
 	})
 	// where + time.Time arguments, UTC.
 	gtest.C(t, func(t *gtest.T) {
-		t1, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 19:03:32")
-		t2, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 19:03:34")
+		t1, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 11:03:32")
+		t2, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 11:03:34")
 		{
 			v, err := db.Model(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).Value()
 			t.AssertNil(err)
@@ -3067,7 +3067,7 @@ func Test_TimeZoneInsert(t *testing.T) {
 	tableName := createTableForTimeZoneTest()
 	defer dropTable(tableName)
 
-	asiaLocal, err := time.LoadLocation("Asia/Shanghai")
+	tokyoLoc, err := time.LoadLocation("Asia/Tokyo")
 	gtest.AssertNil(err)
 
 	CreateTime := "2020-11-22 12:23:45"
@@ -3079,9 +3079,9 @@ func Test_TimeZoneInsert(t *testing.T) {
 		UpdatedAt gtime.Time  `json:"updated_at"`
 		DeletedAt time.Time   `json:"deleted_at"`
 	}
-	t1, _ := time.ParseInLocation("2006-01-02 15:04:05", CreateTime, asiaLocal)
-	t2, _ := time.ParseInLocation("2006-01-02 15:04:05", UpdateTime, asiaLocal)
-	t3, _ := time.ParseInLocation("2006-01-02 15:04:05", DeleteTime, asiaLocal)
+	t1, _ := time.ParseInLocation("2006-01-02 15:04:05", CreateTime, tokyoLoc)
+	t2, _ := time.ParseInLocation("2006-01-02 15:04:05", UpdateTime, tokyoLoc)
+	t3, _ := time.ParseInLocation("2006-01-02 15:04:05", DeleteTime, tokyoLoc)
 	u := &User{
 		Id:        1,
 		CreatedAt: gtime.New(t1.UTC()),
@@ -3094,9 +3094,9 @@ func Test_TimeZoneInsert(t *testing.T) {
 		userEntity := &User{}
 		err := db.Model(tableName).Where("id", 1).Unscoped().Scan(&userEntity)
 		t.AssertNil(err)
-		t.Assert(userEntity.CreatedAt.String(), "2020-11-22 04:23:45")
-		t.Assert(userEntity.UpdatedAt.String(), "2020-11-22 05:23:45")
-		t.Assert(gtime.NewFromTime(userEntity.DeletedAt).String(), "2020-11-22 06:23:45")
+		t.Assert(userEntity.CreatedAt.String(), "2020-11-22 11:23:45")
+		t.Assert(userEntity.UpdatedAt.String(), "2020-11-22 12:23:45")
+		t.Assert(gtime.NewFromTime(userEntity.DeletedAt).String(), "2020-11-22 13:23:45")
 	})
 }
 
