@@ -52,6 +52,7 @@ func init() {
 		Type:             parser.GetOpt("type", "mysql").String(),
 		Role:             "master",
 		Charset:          "utf8",
+		Timezone:         "Asia/Shanghai",
 		Weight:           1,
 		MaxIdleConnCount: 10,
 		MaxOpenConnCount: 10,
