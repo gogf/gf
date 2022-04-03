@@ -780,7 +780,7 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 					continue
 
 				case *gtime.Time:
-					newArgs = append(newArgs, arg.(gtime.Time).Time)
+					newArgs = append(newArgs, arg.(*gtime.Time).Time)
 					continue
 
 				default:
