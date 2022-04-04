@@ -55,7 +55,7 @@ func (c *Core) InjectIgnoreResult(ctx context.Context) context.Context {
 }
 
 func (c *Core) GetIgnoreResultFromCtx(ctx context.Context) *internalCtxData {
-	if v := ctx.Value(internalCtxDataKeyInCtx); v != nil {
+	if v := ctx.Value(IgnoreResultInCtx); v != nil {
 		return v.(*internalCtxData)
 	}
 	return nil
