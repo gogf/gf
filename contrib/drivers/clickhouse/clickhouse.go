@@ -93,7 +93,7 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 		return nil, err
 	}
 	query := fmt.Sprintf("select name from `system`.tables where database = '%s'", d.GetConfig().Name)
-	result, err = d.DoGetAll(ctx, link, query)
+	result, err = d.DoSelect(ctx, link, query)
 	if err != nil {
 		return
 	}
@@ -126,7 +126,7 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 				return nil
 			}
 			getColumnsSql := fmt.Sprintf("select name,position,default_expression,comment from `system`.columns c where database = '%s' and `table` = '%s'", d.GetConfig().Name, table)
-			result, err = d.DoGetAll(ctx, link, getColumnsSql)
+			result, err = d.DoSelect(ctx, link, getColumnsSql)
 			if err != nil {
 				return nil
 			}
@@ -204,18 +204,18 @@ func (d *Driver) ping(conn *sql.DB) error {
 }
 
 // DoFilter handles the sql before posts it to database.
-func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, originSql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
 	// replace MySQL to Clickhouse SQL grammar
 	// MySQL eg: UPDATE visits SET xxx
 	// Clickhouse eg: ALTER TABLE visits UPDATE xxx
 	// MySQL eg: DELETE FROM VISIT
 	// Clickhouse eg: ALTER TABLE VISIT DELETE WHERE filter_expr
-	result, err := gregex.MatchString("(?i)^UPDATE|DELETE", sql)
+	result, err := gregex.MatchString("(?i)^UPDATE|DELETE", originSql)
 	if err != nil {
 		return "", nil, err
 	}
 	if len(result) != 0 {
-		sqlSlice := strings.Split(sql, " ")
+		sqlSlice := strings.Split(originSql, " ")
 		if len(sqlSlice) < 3 {
 			return "", nil, ErrSQLNull
 		}
@@ -229,12 +229,13 @@ func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args [
 			return strings.Join(sqlSlice, " "), args, nil
 		}
 	}
-	return sql, args, nil
+	return originSql, args, nil
 }
 
 // DoCommit commits current sql and arguments to underlying sql driver.
 func (d *Driver) DoCommit(ctx context.Context, in gdb.DoCommitInput) (out gdb.DoCommitOutput, err error) {
-	return d.Core.DoCommit(context.WithValue(ctx, "isIgnoreResult", true), in)
+	ctx = d.InjectIgnoreResult(ctx)
+	return d.Core.DoCommit(ctx, in)
 }
 
 func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
