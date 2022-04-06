@@ -81,7 +81,8 @@ func (i *HandlerInput) getDefaultBuffer(withColor bool) *bytes.Buffer {
 	if i.Content != "" {
 		i.addStringToBuffer(buffer, i.Content)
 	}
-	i.addStringToBuffer(buffer, "\n")
+	// avoid a single space at the end of a line.
+	buffer.WriteString("\n")
 	return buffer
 }
 
