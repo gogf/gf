@@ -170,7 +170,10 @@ func (r *Request) GetBodyString() string {
 // GetJson parses current request content as JSON format, and returns the JSON object.
 // Note that the request content is read from request BODY, not from any field of FORM.
 func (r *Request) GetJson() (*gjson.Json, error) {
-	return gjson.LoadJson(r.GetBody())
+	return gjson.LoadWithOptions(r.GetBody(), gjson.Options{
+		Type:      gjson.ContentTypeJson,
+		StrNumber: true,
+	})
 }
 
 // GetMap is an alias and convenient function for GetRequestMap.
