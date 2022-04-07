@@ -9,8 +9,13 @@ package ghttp
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"net"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gogf/gf/v2/internal/intlog"
@@ -49,6 +54,9 @@ type ServerConfig struct {
 
 	// HTTPSAddr specifies the HTTPS addresses, multiple addresses joined using char ','.
 	HTTPSAddr string `json:"httpsAddr"`
+
+	// Listeners specifies the custom listeners.
+	Listeners []net.Listener `json:"listeners"`
 
 	// HTTPSCertPath specifies certification file path for HTTPS service.
 	HTTPSCertPath string `json:"httpsCertPath"`
@@ -254,6 +262,7 @@ func NewConfig() ServerConfig {
 		Name:                DefaultServerName,
 		Address:             ":0",
 		HTTPSAddr:           "",
+		Listeners:           nil,
 		Handler:             nil,
 		ReadTimeout:         60 * time.Second,
 		WriteTimeout:        0, // No timeout.
@@ -406,6 +415,25 @@ func (s *Server) SetHTTPSPort(port ...int) {
 			s.config.HTTPSAddr += ":" + strconv.Itoa(v)
 		}
 	}
+}
+
+// SetListener set the custom listener for the server.
+func (s *Server) SetListener(listeners ...net.Listener) error {
+	if listeners == nil {
+		return gerror.NewCodef(gcode.CodeInvalidParameter, "SetListener failed: listener can not be nil")
+	}
+	if len(listeners) > 0 {
+		ports := make([]string, len(listeners))
+		for k, v := range listeners {
+			if v == nil {
+				return gerror.NewCodef(gcode.CodeInvalidParameter, "SetListener failed: listener can not be nil")
+			}
+			ports[k] = fmt.Sprintf(":%d", (v.Addr().(*net.TCPAddr)).Port)
+		}
+		s.config.Address = strings.Join(ports, ",")
+		s.config.Listeners = listeners
+	}
+	return nil
 }
 
 // EnableHTTPS enables HTTPS with given certification and key files for the server.
