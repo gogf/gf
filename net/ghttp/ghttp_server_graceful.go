@@ -13,6 +13,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"sync"
 
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -48,6 +49,18 @@ func (s *Server) newGracefulServer(address string, fd ...int) *gracefulServer {
 	}
 	if len(fd) > 0 && fd[0] > 0 {
 		gs.fd = uintptr(fd[0])
+	}
+	if s.config.Listeners != nil {
+		addrArray := gstr.SplitAndTrim(address, ":")
+		addrPort, err := strconv.Atoi(addrArray[len(addrArray)-1])
+		if err == nil {
+			for _, v := range s.config.Listeners {
+				if listenerPort := (v.Addr().(*net.TCPAddr)).Port; listenerPort == addrPort {
+					gs.rawListener = v
+					break
+				}
+			}
+		}
 	}
 	return gs
 }
@@ -175,6 +188,9 @@ func (s *gracefulServer) doServe(ctx context.Context) error {
 
 // getNetListener retrieves and returns the wrapped net.Listener.
 func (s *gracefulServer) getNetListener() (net.Listener, error) {
+	if s.rawListener != nil {
+		return s.rawListener, nil
+	}
 	var (
 		ln  net.Listener
 		err error
