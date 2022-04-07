@@ -23,7 +23,7 @@ You can also install `gf` tool using pre-built binaries: https://github.com/gogf
 ## 2) Manually Install
 
  ```shell
-git clone https://github.com/gogf/gf && cd cmd/gf && go install
+git clone https://github.com/gogf/gf && cd gf/cmd/gf && go install
  ```
 
 
