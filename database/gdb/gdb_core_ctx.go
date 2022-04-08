@@ -26,6 +26,13 @@ type internalCtxData struct {
 
 const (
 	internalCtxDataKeyInCtx gctx.StrKey = "InternalCtxData"
+
+	// IgnoreResultInCtx
+	// This option is only available in ClickHouse.
+	// Because ClickHouse does not support fetching insert/update results and returns errors when executed
+	// So need to ignore the results to avoid triggering errors
+	// Rather than ignoring errors after they are triggered
+	IgnoreResultInCtx gctx.StrKey = "IgnoreResult"
 )
 
 func (c *Core) injectInternalCtxData(ctx context.Context) context.Context {
@@ -36,6 +43,22 @@ func (c *Core) injectInternalCtxData(ctx context.Context) context.Context {
 	return context.WithValue(ctx, internalCtxDataKeyInCtx, &internalCtxData{
 		DB: c.db,
 	})
+}
+
+func (c *Core) InjectIgnoreResult(ctx context.Context) context.Context {
+	if ctx.Value(IgnoreResultInCtx) != nil {
+		return ctx
+	}
+	return context.WithValue(ctx, IgnoreResultInCtx, &internalCtxData{
+		DB: c.db,
+	})
+}
+
+func (c *Core) GetIgnoreResultFromCtx(ctx context.Context) *internalCtxData {
+	if v := ctx.Value(IgnoreResultInCtx); v != nil {
+		return v.(*internalCtxData)
+	}
+	return nil
 }
 
 func (c *Core) getInternalCtxDataFromCtx(ctx context.Context) *internalCtxData {

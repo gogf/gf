@@ -242,3 +242,13 @@ func TestDriver_TableFields(t *testing.T) {
 	gtest.AssertEQ(len(field), 4)
 	gtest.AssertNQ(field, nil)
 }
+
+func TestDriver_OpenLink(t *testing.T) {
+	connect, err := gdb.New(gdb.ConfigNode{
+		Link: "clickhouse://default@127.0.0.1:9000/default?dial_timeout=200ms&max_execution_time=60&skip_verify=true&secure=false&compress=true",
+		Type: "clickhouse",
+	})
+	gtest.AssertNil(err)
+	gtest.AssertNE(connect, nil)
+	gtest.AssertNil(connect.PingMaster())
+}
