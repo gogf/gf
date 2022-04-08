@@ -4227,3 +4227,47 @@ func Test_Model_WherePrefixLike(t *testing.T) {
 		t.Assert(r[0]["id"], "3")
 	})
 }
+
+// https://github.com/gogf/gf/issues/1700
+func Test_Model_Issue1700(t *testing.T) {
+	table := "user_" + gtime.Now().TimestampNanoStr()
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+	    CREATE TABLE %s (
+	        id         int(10) unsigned NOT NULL AUTO_INCREMENT,
+	        user_id    int(10) unsigned NOT NULL,
+	        UserId    int(10) unsigned NOT NULL,
+	        PRIMARY KEY (id)
+	    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	    `, table,
+	)); err != nil {
+		gtest.AssertNil(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id     int `orm:"id"`
+			Userid int `orm:"user_id"`
+			UserId int `orm:"UserId"`
+		}
+		_, err := db.Model(table).Data(User{
+			Id:     1,
+			Userid: 2,
+			UserId: 3,
+		}).Insert()
+		t.AssertNil(err)
+		one, err := db.Model(table).One()
+		t.AssertNil(err)
+		t.Assert(one, g.Map{
+			"id":      1,
+			"user_id": 2,
+			"UserId":  3,
+		})
+		var user *User
+		err = db.Model(table).Scan(&user)
+		t.AssertNil(err)
+		t.Assert(user.Id, 1)
+		t.Assert(user.Userid, 2)
+		t.Assert(user.UserId, 3)
+	})
+}
