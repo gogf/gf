@@ -433,6 +433,18 @@ func Test_Model_Update(t *testing.T) {
 	})
 }
 
+func Test_Model_UpdateAndGetAffected(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		n, err := db.Model(table).Data("nickname", "T100").
+			Where(1).Order("id desc").Limit(2).
+			UpdateAndGetAffected()
+		t.AssertNil(err)
+		t.Assert(n, 2)
+	})
+}
+
 func Test_Model_Clone(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
