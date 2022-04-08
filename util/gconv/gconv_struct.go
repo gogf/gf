@@ -250,15 +250,8 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 		tagMap[attributeName] = utils.RemoveSymbols(strings.Split(tagName, ",")[0])
 		// If tag and attribute values both exist in `paramsMap`,
 		// it then uses the tag value overwriting the attribute value in `paramsMap`.
-		if paramsMap[tagName] != nil {
-			for paramsKey, _ := range paramsMap {
-				if paramsKey == tagName {
-					continue
-				}
-				if utils.EqualFoldWithoutChars(paramsKey, attributeName) {
-					paramsMap[paramsKey] = paramsMap[tagName]
-				}
-			}
+		if paramsMap[tagName] != nil && paramsMap[attributeName] != nil {
+			paramsMap[attributeName] = paramsMap[tagName]
 		}
 	}
 
@@ -276,18 +269,23 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 		}
 		// It secondly checks the predefined tags and matching rules.
 		if attrName == "" {
-			checkName = utils.RemoveSymbols(mapK)
-			// Loop to find the matched attribute name with or without
-			// string cases and chars like '-'/'_'/'.'/' '.
+			// It firstly considers `mapK` as accurate tag name, and retrieve attribute name from `tagToNameMap` .
+			attrName = tagToNameMap[mapK]
+			if attrName == "" {
+				checkName = utils.RemoveSymbols(mapK)
+				// Loop to find the matched attribute name with or without
+				// string cases and chars like '-'/'_'/'.'/' '.
 
-			// Matching the parameters to struct tag names.
-			// The `attrKey` is the attribute name of the struct.
-			for attrKey, cmpKey := range tagMap {
-				if strings.EqualFold(checkName, cmpKey) {
-					attrName = attrKey
-					break
+				// Matching the parameters to struct tag names.
+				// The `attrKey` is the attribute name of the struct.
+				for attrKey, cmpKey := range tagMap {
+					if strings.EqualFold(checkName, cmpKey) {
+						attrName = attrKey
+						break
+					}
 				}
 			}
+
 			// Matching the parameters to struct attributes.
 			if attrName == "" {
 				for attrKey, cmpKey := range attrMap {
