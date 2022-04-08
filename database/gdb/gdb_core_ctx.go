@@ -31,7 +31,7 @@ const (
 	// for example: `clickhouse`. The `clickhouse` does not support fetching insert/update results,
 	// but returns errors when execute `RowsAffected`. It here ignores the calling of `RowsAffected`
 	// to avoid triggering errors, rather than ignoring errors after they are triggered.
-	ignoreResultInCtx gctx.StrKey = "ignoreResult"
+	ignoreResultInCtx gctx.StrKey = "IgnoreResult"
 )
 
 func (c *Core) injectInternalCtxData(ctx context.Context) context.Context {
