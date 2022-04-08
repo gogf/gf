@@ -113,19 +113,19 @@ func TestDriverClickhouse_Select(t *testing.T) {
 func TestDriver_InsertIgnore(t *testing.T) {
 	connect := InitClickhouse()
 	_, err := connect.InsertIgnore(context.Background(), "", nil)
-	gtest.AssertEQ(err, ErrUnsupportedInsertIgnore)
+	gtest.AssertEQ(err, errUnsupportedInsertIgnore)
 }
 
 func TestDriver_InsertAndGetId(t *testing.T) {
 	connect := InitClickhouse()
 	_, err := connect.InsertAndGetId(context.Background(), "", nil)
-	gtest.AssertEQ(err, ErrUnsupportedInsertGetId)
+	gtest.AssertEQ(err, errUnsupportedInsertGetId)
 }
 
 func TestDriver_Replace(t *testing.T) {
 	connect := InitClickhouse()
 	_, err := connect.Replace(context.Background(), "", nil)
-	gtest.AssertEQ(err, ErrUnsupportedReplace)
+	gtest.AssertEQ(err, errUnsupportedReplace)
 }
 
 func TestDriverClickhouse_DoInsertOne(t *testing.T) {
@@ -146,7 +146,7 @@ func TestDriver_DoInsertMany(t *testing.T) {
 	gtest.AssertEQ(createClickhouseTable(connect), nil)
 	defer dropClickhouseTable(connect)
 	tx, err := connect.Begin(context.Background())
-	gtest.AssertEQ(err, ErrUnsupportedBegin)
+	gtest.AssertEQ(err, errUnsupportedBegin)
 	gtest.AssertNil(tx)
 }
 

@@ -261,7 +261,7 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 	}
 	// Result handling.
 	switch {
-	case sqlResult != nil && c.GetIgnoreResultFromCtx(ctx) == nil:
+	case sqlResult != nil && c.getIgnoreResultFromCtx(ctx) == nil:
 		rowsAffected, err = sqlResult.RowsAffected()
 		out.Result = sqlResult
 

@@ -32,12 +32,12 @@ type Driver struct {
 var (
 	// tableFieldsMap caches the table information retrieved from database.
 	tableFieldsMap             = gmap.New(true)
-	ErrUnsupportedInsertIgnore = errors.New("unsupported method:InsertIgnore")
-	ErrUnsupportedInsertGetId  = errors.New("unsupported method:InsertGetId")
-	ErrUnsupportedReplace      = errors.New("unsupported method:Replace")
-	ErrUnsupportedBegin        = errors.New("unsupported method:Begin")
-	ErrUnsupportedTransaction  = errors.New("unsupported method:Transaction")
-	ErrSQLNull                 = errors.New("SQL cannot be null")
+	errUnsupportedInsertIgnore = errors.New("unsupported method:InsertIgnore")
+	errUnsupportedInsertGetId  = errors.New("unsupported method:InsertGetId")
+	errUnsupportedReplace      = errors.New("unsupported method:Replace")
+	errUnsupportedBegin        = errors.New("unsupported method:Begin")
+	errUnsupportedTransaction  = errors.New("unsupported method:Transaction")
+	errSQLNull                 = errors.New("SQL cannot be null")
 )
 
 func init() {
@@ -205,7 +205,7 @@ func (d *Driver) ping(conn *sql.DB) error {
 
 // DoFilter handles the sql before posts it to database.
 func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, originSql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
-	// replace MySQL to Clickhouse SQL grammar
+	// replace STD SQL to Clickhouse SQL grammar
 	// MySQL eg: UPDATE visits SET xxx
 	// Clickhouse eg: ALTER TABLE visits UPDATE xxx
 	// MySQL eg: DELETE FROM VISIT
@@ -217,7 +217,7 @@ func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, originSql string, 
 	if len(result) != 0 {
 		sqlSlice := strings.Split(originSql, " ")
 		if len(sqlSlice) < 3 {
-			return "", nil, ErrSQLNull
+			return "", nil, errSQLNull
 		}
 		ck := []string{"ALTER", "TABLE"}
 		switch strings.ToUpper(result[0]) {
@@ -285,23 +285,23 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 
 // InsertIgnore Other queries for modifying data parts are not supported: REPLACE, MERGE, UPSERT, INSERT UPDATE.
 func (d *Driver) InsertIgnore(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
-	return nil, ErrUnsupportedInsertIgnore
+	return nil, errUnsupportedInsertIgnore
 }
 
 // InsertAndGetId Other queries for modifying data parts are not supported: REPLACE, MERGE, UPSERT, INSERT UPDATE.
 func (d *Driver) InsertAndGetId(ctx context.Context, table string, data interface{}, batch ...int) (int64, error) {
-	return 0, ErrUnsupportedInsertGetId
+	return 0, errUnsupportedInsertGetId
 }
 
 // Replace Other queries for modifying data parts are not supported: REPLACE, MERGE, UPSERT, INSERT UPDATE.
 func (d *Driver) Replace(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
-	return nil, ErrUnsupportedReplace
+	return nil, errUnsupportedReplace
 }
 
 func (d *Driver) Begin(ctx context.Context) (tx *gdb.TX, err error) {
-	return nil, ErrUnsupportedBegin
+	return nil, errUnsupportedBegin
 }
 
 func (d *Driver) Transaction(ctx context.Context, f func(ctx context.Context, tx *gdb.TX) error) error {
-	return ErrUnsupportedTransaction
+	return errUnsupportedTransaction
 }
