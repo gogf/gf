@@ -87,6 +87,7 @@ func TagFields(pointer interface{}, priority []string) ([]Field, error) {
 // Note that,
 // 1. It only retrieves the exported attributes with first letter up-case from struct.
 // 2. The parameter `priority` should be given, it only retrieves fields that has given tag.
+// 3. If one field has no specified tag, it uses its field name as result map key.
 func TagMapName(pointer interface{}, priority []string) (map[string]string, error) {
 	fields, err := TagFields(pointer, priority)
 	if err != nil {
@@ -94,7 +95,11 @@ func TagMapName(pointer interface{}, priority []string) (map[string]string, erro
 	}
 	tagMap := make(map[string]string, len(fields))
 	for _, field := range fields {
-		tagMap[field.TagValue] = field.Name()
+		if field.TagValue == "" {
+			tagMap[field.Name()] = field.Name()
+		} else {
+			tagMap[field.TagValue] = field.Name()
+		}
 	}
 	return tagMap, nil
 }
@@ -105,6 +110,7 @@ func TagMapName(pointer interface{}, priority []string) (map[string]string, erro
 // Note that,
 // 1. It only retrieves the exported attributes with first letter up-case from struct.
 // 2. The parameter `priority` should be given, it only retrieves fields that has given tag.
+// 3. If one field has no specified tag, it uses its field name as result map key.
 func TagMapField(object interface{}, priority []string) (map[string]Field, error) {
 	fields, err := TagFields(object, priority)
 	if err != nil {
@@ -113,7 +119,11 @@ func TagMapField(object interface{}, priority []string) (map[string]Field, error
 	tagMap := make(map[string]Field, len(fields))
 	for _, field := range fields {
 		tagField := field
-		tagMap[field.TagValue] = tagField
+		if field.TagValue == "" {
+			tagMap[tagField.Name()] = tagField
+		} else {
+			tagMap[field.TagValue] = tagField
+		}
 	}
 	return tagMap, nil
 }
@@ -174,7 +184,9 @@ exitLoop:
 	return fields, nil
 }
 
-func getFieldValuesByTagPriority(pointer interface{}, priority []string, tagMap map[string]struct{}) ([]Field, error) {
+func getFieldValuesByTagPriority(
+	pointer interface{}, priority []string, repeatedTagFilteringMap map[string]struct{},
+) ([]Field, error) {
 	fields, err := getFieldValues(pointer)
 	if err != nil {
 		return nil, err
@@ -199,17 +211,18 @@ func getFieldValuesByTagPriority(pointer interface{}, priority []string, tagMap 
 		}
 		if tagValue != "" {
 			// Filter repeated tag.
-			if _, ok := tagMap[tagValue]; ok {
+			if _, ok := repeatedTagFilteringMap[tagValue]; ok {
 				continue
 			}
-			tagField := field
-			tagField.TagName = tagName
-			tagField.TagValue = tagValue
-			tagFields = append(tagFields, tagField)
 		}
+		tagField := field
+		tagField.TagName = tagName
+		tagField.TagValue = tagValue
+		tagFields = append(tagFields, tagField)
 		// If this is an embedded attribute, it retrieves the tags recursively.
 		if field.IsEmbedded() && field.OriginalKind() == reflect.Struct {
-			if subTagFields, err := getFieldValuesByTagPriority(field.Value, priority, tagMap); err != nil {
+			subTagFields, err := getFieldValuesByTagPriority(field.Value, priority, repeatedTagFilteringMap)
+			if err != nil {
 				return nil, err
 			} else {
 				tagFields = append(tagFields, subTagFields...)

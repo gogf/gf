@@ -192,11 +192,11 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 	// The key of the attrMap is the attribute name of the struct,
 	// and the value is its replaced name for later comparison to improve performance.
 	var (
-		tempName       string
-		elemFieldType  reflect.StructField
-		elemFieldValue reflect.Value
-		elemType       = pointerElemReflectValue.Type()
-		attrMap        = make(map[string]string) // Attribute name to its check name which has no symbols.
+		tempName           string
+		elemFieldType      reflect.StructField
+		elemFieldValue     reflect.Value
+		elemType           = pointerElemReflectValue.Type()
+		attrToCheckNameMap = make(map[string]string)
 	)
 	for i := 0; i < pointerElemReflectValue.NumField(); i++ {
 		elemFieldType = elemType.Field(i)
@@ -219,35 +219,35 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 			}
 		} else {
 			tempName = elemFieldType.Name
-			attrMap[tempName] = utils.RemoveSymbols(tempName)
+			attrToCheckNameMap[tempName] = utils.RemoveSymbols(tempName)
 		}
 	}
-	if len(attrMap) == 0 {
+	if len(attrToCheckNameMap) == 0 {
 		return nil
 	}
 
 	// The key of the tagMap is the attribute name of the struct,
 	// and the value is its replaced tag name for later comparison to improve performance.
 	var (
-		tagMap           = make(map[string]string) // Tag name to its check name which has no symbols.
-		priorityTagArray []string
+		attrToTagCheckNameMap = make(map[string]string)
+		priorityTagArray      []string
 	)
 	if priorityTag != "" {
 		priorityTagArray = append(utils.SplitAndTrim(priorityTag, ","), StructTagPriority...)
 	} else {
 		priorityTagArray = StructTagPriority
 	}
-	tagToNameMap, err := gstructs.TagMapName(pointerElemReflectValue, priorityTagArray)
+	tagToAttrNameMap, err := gstructs.TagMapName(pointerElemReflectValue, priorityTagArray)
 	if err != nil {
 		return err
 	}
-	for tagName, attributeName := range tagToNameMap {
+	for tagName, attributeName := range tagToAttrNameMap {
 		// If there's something else in the tag string,
 		// it uses the first part which is split using char ','.
 		// Eg:
 		// orm:"id, priority"
 		// orm:"name, with:uid=id"
-		tagMap[attributeName] = utils.RemoveSymbols(strings.Split(tagName, ",")[0])
+		attrToTagCheckNameMap[attributeName] = utils.RemoveSymbols(strings.Split(tagName, ",")[0])
 		// If tag and attribute values both exist in `paramsMap`,
 		// it then uses the tag value overwriting the attribute value in `paramsMap`.
 		if paramsMap[tagName] != nil && paramsMap[attributeName] != nil {
@@ -259,26 +259,27 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 		attrName  string
 		checkName string
 	)
-	for mapK, mapV := range paramsMap {
+	for paramName, paramValue := range paramsMap {
 		attrName = ""
 		// It firstly checks the passed mapping rules.
 		if len(mapping) > 0 {
-			if passedAttrKey, ok := mapping[mapK]; ok {
+			if passedAttrKey, ok := mapping[paramName]; ok {
 				attrName = passedAttrKey
 			}
 		}
 		// It secondly checks the predefined tags and matching rules.
 		if attrName == "" {
-			// It firstly considers `mapK` as accurate tag name, and retrieve attribute name from `tagToNameMap` .
-			attrName = tagToNameMap[mapK]
+			// It firstly considers `paramName` as accurate tag name,
+			// and retrieve attribute name from `tagToAttrNameMap` .
+			attrName = tagToAttrNameMap[paramName]
 			if attrName == "" {
-				checkName = utils.RemoveSymbols(mapK)
+				checkName = utils.RemoveSymbols(paramName)
 				// Loop to find the matched attribute name with or without
 				// string cases and chars like '-'/'_'/'.'/' '.
 
 				// Matching the parameters to struct tag names.
 				// The `attrKey` is the attribute name of the struct.
-				for attrKey, cmpKey := range tagMap {
+				for attrKey, cmpKey := range attrToTagCheckNameMap {
 					if strings.EqualFold(checkName, cmpKey) {
 						attrName = attrKey
 						break
@@ -288,7 +289,7 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 
 			// Matching the parameters to struct attributes.
 			if attrName == "" {
-				for attrKey, cmpKey := range attrMap {
+				for attrKey, cmpKey := range attrToCheckNameMap {
 					// Eg:
 					// UserName  eq user_name
 					// User-Name eq username
@@ -312,7 +313,7 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 		}
 		// Mark it done.
 		doneMap[attrName] = struct{}{}
-		if err = bindVarToStructAttr(pointerElemReflectValue, attrName, mapV, mapping); err != nil {
+		if err = bindVarToStructAttr(pointerElemReflectValue, attrName, paramValue, mapping); err != nil {
 			return err
 		}
 	}
