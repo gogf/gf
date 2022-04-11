@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func Test_New(t *testing.T) {
@@ -574,5 +575,15 @@ func Test_Issue1617(t *testing.T) {
 			F法文:   3,
 			F西班牙语: 4,
 		})
+	})
+}
+
+// https://github.com/gogf/gf/issues/1747
+func Test_Issue1747(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var j *gjson.Json
+		err := gconv.Struct(gvar.New("[1, 2, 336371793314971759]"), &j)
+		t.AssertNil(err)
+		t.Assert(j.Get("2"), `336371793314971759`)
 	})
 }

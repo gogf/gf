@@ -13,7 +13,10 @@ func (j Json) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (j *Json) UnmarshalJSON(b []byte) error {
-	r, err := LoadContent(b)
+	r, err := loadContentWithOptions(b, Options{
+		Type:      ContentTypeJson,
+		StrNumber: true,
+	})
 	if r != nil {
 		// Value copy.
 		*j = *r
