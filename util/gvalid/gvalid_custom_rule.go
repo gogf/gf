@@ -41,7 +41,7 @@ var (
 	customRuleFuncMap = make(map[string]RuleFunc)
 )
 
-// RegisterRule registers custom validation rule and function for package.
+// RegisterRule registers custom validation rules and function for package.
 func RegisterRule(rule string, f RuleFunc) {
 	if customRuleFuncMap[rule] != nil {
 		intlog.PrintFunc(context.TODO(), func() string {
@@ -54,7 +54,7 @@ func RegisterRule(rule string, f RuleFunc) {
 	customRuleFuncMap[rule] = f
 }
 
-// RegisterRuleByMap registers custom validation rules using map for package.
+// RegisterRuleByMap registers custom validation rules using maps for package.
 func RegisterRuleByMap(m map[string]RuleFunc) {
 	for k, v := range m {
 		customRuleFuncMap[k] = v

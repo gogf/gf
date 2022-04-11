@@ -107,7 +107,7 @@ func (f *Field) OriginalKind() reflect.Kind {
 	return kind
 }
 
-// Fields retrieves and returns the fields of `pointer` as slice.
+// Fields retrieve and return the fields of `pointer` as slice.
 func Fields(in FieldsInput) ([]Field, error) {
 	var (
 		ok                   bool

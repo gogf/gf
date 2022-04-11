@@ -49,7 +49,6 @@ type Watcher interface {
 
 // Service definition.
 type Service struct {
-	ID         string   // ID is the unique instance ID as registered. `json:"id"`
 	Prefix     string   // Service prefix.
 	Deployment string   // Service deployment name, eg: dev, qa, staging, prod, etc.
 	Namespace  string   // Service Namespace, to indicate different service in the same environment with the same Name.
