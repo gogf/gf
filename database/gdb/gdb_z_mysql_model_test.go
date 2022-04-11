@@ -4275,3 +4275,14 @@ func Test_Model_Issue1700(t *testing.T) {
 		}
 	})
 }
+
+// https://github.com/gogf/gf/issues/1701
+func Test_Model_Issue1701(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		value, err := db.Model(table).Fields(gdb.Raw("if(id=1,100,null)")).WherePri(1).Value()
+		t.AssertNil(err)
+		t.Assert(value.String(), 100)
+	})
+}

@@ -43,12 +43,12 @@ func (m *Model) Fields(fieldNamesOrMapStruct ...interface{}) *Model {
 			return m.appendFieldsByStr(gstr.Join(
 				m.mappingAndFilterToTableFields([]string{r}, false), ",",
 			))
-
 		case []string:
 			return m.appendFieldsByStr(gstr.Join(
 				m.mappingAndFilterToTableFields(r, true), ",",
 			))
-
+		case Raw, *Raw:
+			return m.appendFieldsByStr(gconv.String(structOrMap))
 		default:
 			return m.appendFieldsByStr(gstr.Join(
 				m.mappingAndFilterToTableFields(getFieldsFromStructOrMap(structOrMap), true), ",",
@@ -92,6 +92,8 @@ func (m *Model) FieldsEx(fieldNamesOrMapStruct ...interface{}) *Model {
 			model.fieldsEx = gstr.Join(m.mappingAndFilterToTableFields([]string{r}, false), ",")
 		case []string:
 			model.fieldsEx = gstr.Join(m.mappingAndFilterToTableFields(r, true), ",")
+		case Raw, *Raw:
+			model.fieldsEx = gconv.String(fieldNamesOrMapStruct[0])
 		default:
 			model.fieldsEx = gstr.Join(m.mappingAndFilterToTableFields(getFieldsFromStructOrMap(r), true), ",")
 		}

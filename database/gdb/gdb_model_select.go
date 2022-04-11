@@ -50,8 +50,12 @@ func (m *Model) doGetAll(ctx context.Context, limit1 bool, where ...interface{})
 // really be committed to underlying database driver.
 func (m *Model) getFieldsFiltered() string {
 	if m.fieldsEx == "" {
+		// No filtering, containing special chars.
+		if gstr.ContainsAny(m.fields, "()") {
+			return m.fields
+		}
 		// No filtering.
-		if !gstr.Contains(m.fields, ".") && !gstr.Contains(m.fields, " ") {
+		if !gstr.ContainsAny(m.fields, ". ") {
 			return m.db.GetCore().QuoteString(m.fields)
 		}
 		return m.fields
