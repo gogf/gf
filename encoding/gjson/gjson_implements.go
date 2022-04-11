@@ -26,7 +26,9 @@ func (j *Json) UnmarshalJSON(b []byte) error {
 
 // UnmarshalValue is an interface implement which sets any type of value for Json.
 func (j *Json) UnmarshalValue(value interface{}) error {
-	if r := New(value); r != nil {
+	if r := NewWithOptions(value, Options{
+		StrNumber: true,
+	}); r != nil {
 		// Value copy.
 		*j = *r
 	}
