@@ -4256,6 +4256,7 @@ func Test_Model_Issue1700(t *testing.T) {
 			UserId: 3,
 		}).Insert()
 		t.AssertNil(err)
+
 		one, err := db.Model(table).One()
 		t.AssertNil(err)
 		t.Assert(one, g.Map{
@@ -4263,11 +4264,14 @@ func Test_Model_Issue1700(t *testing.T) {
 			"user_id": 2,
 			"UserId":  3,
 		})
-		var user *User
-		err = db.Model(table).Scan(&user)
-		t.AssertNil(err)
-		t.Assert(user.Id, 1)
-		t.Assert(user.Userid, 2)
-		t.Assert(user.UserId, 3)
+
+		for i := 0; i < 1000; i++ {
+			var user *User
+			err = db.Model(table).Scan(&user)
+			t.AssertNil(err)
+			t.Assert(user.Id, 1)
+			t.Assert(user.Userid, 2)
+			t.Assert(user.UserId, 3)
+		}
 	})
 }
