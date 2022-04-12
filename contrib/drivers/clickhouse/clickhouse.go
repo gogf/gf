@@ -12,8 +12,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/ClickHouse/clickhouse-go"
 	"strings"
+
+	"github.com/ClickHouse/clickhouse-go"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -32,11 +33,11 @@ type Driver struct {
 var (
 	// tableFieldsMap caches the table information retrieved from database.
 	tableFieldsMap             = gmap.New(true)
-	errUnsupportedInsertIgnore = errors.New("unsupported method:InsertIgnore")
-	errUnsupportedInsertGetId  = errors.New("unsupported method:InsertGetId")
-	errUnsupportedReplace      = errors.New("unsupported method:Replace")
-	errUnsupportedBegin        = errors.New("unsupported method:Begin")
-	errUnsupportedTransaction  = errors.New("unsupported method:Transaction")
+	errUnsupportedInsertIgnore = errors.New("unsupported method: InsertIgnore")
+	errUnsupportedInsertGetId  = errors.New("unsupported method: InsertGetId")
+	errUnsupportedReplace      = errors.New("unsupported method: Replace")
+	errUnsupportedBegin        = errors.New("unsupported method: Begin")
+	errUnsupportedTransaction  = errors.New("unsupported method: Transaction")
 	errSQLNull                 = errors.New("SQL cannot be null")
 )
 
@@ -105,7 +106,9 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 
 // TableFields retrieves and returns the fields' information of specified table of current schema.
 // Also see DriverMysql.TableFields.
-func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
+func (d *Driver) TableFields(
+	ctx context.Context, table string, schema ...string,
+) (fields map[string]*gdb.TableField, err error) {
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
@@ -204,11 +207,13 @@ func (d *Driver) ping(conn *sql.DB) error {
 }
 
 // DoFilter handles the sql before posts it to database.
-func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, originSql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
-	// replace STD SQL to Clickhouse SQL grammar
-	// MySQL eg: UPDATE visits SET xxx
+func (d *Driver) DoFilter(
+	ctx context.Context, link gdb.Link, originSql string, args []interface{},
+) (newSql string, newArgs []interface{}, err error) {
+	// It replaces STD SQL to Clickhouse SQL grammar.
+	// MySQL eg:      UPDATE visits SET xxx
 	// Clickhouse eg: ALTER TABLE visits UPDATE xxx
-	// MySQL eg: DELETE FROM VISIT
+	// MySQL eg:      DELETE FROM VISIT
 	// Clickhouse eg: ALTER TABLE VISIT DELETE WHERE filter_expr
 	result, err := gregex.MatchString("(?i)^UPDATE|DELETE", originSql)
 	if err != nil {
@@ -238,7 +243,9 @@ func (d *Driver) DoCommit(ctx context.Context, in gdb.DoCommitInput) (out gdb.Do
 	return d.Core.DoCommit(ctx, in)
 }
 
-func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
+func (d *Driver) DoInsert(
+	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
+) (result sql.Result, err error) {
 	var (
 		keys        []string // Field names.
 		valueHolder = make([]string, 0)
@@ -270,7 +277,7 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 		return
 	}
 	for i := 0; i < len(list); i++ {
-		params := []interface{}{} // Values that will be committed to underlying database driver.
+		params := make([]interface{}, 0) // Values that will be committed to underlying database driver.
 		for _, k := range keys {
 			params = append(params, list[i][k])
 		}
