@@ -152,9 +152,10 @@ func (r *Request) Get(key string, def ...interface{}) *gvar.Var {
 func (r *Request) GetBody() []byte {
 	if r.bodyContent == nil {
 		var err error
-		r.bodyContent, err = ioutil.ReadAll(r.Body)
-		if err != nil {
-			panic(gerror.WrapCode(gcode.CodeInternalError, err, `ReadAll from body failed`))
+		if r.bodyContent, err = ioutil.ReadAll(r.Body); err != nil {
+			errMsg := `Read from request Body failed`
+			errMsg += `, the Body might be closed or read manually from middleware/hook/other package previously`
+			panic(gerror.WrapCode(gcode.CodeInternalError, err, errMsg))
 		}
 		r.Body = utils.NewReadCloser(r.bodyContent, true)
 	}
