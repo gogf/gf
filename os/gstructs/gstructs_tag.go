@@ -95,11 +95,7 @@ func TagMapName(pointer interface{}, priority []string) (map[string]string, erro
 	}
 	tagMap := make(map[string]string, len(fields))
 	for _, field := range fields {
-		if field.TagValue == "" {
-			tagMap[field.Name()] = field.Name()
-		} else {
-			tagMap[field.TagValue] = field.Name()
-		}
+		tagMap[field.TagValue] = field.Name()
 	}
 	return tagMap, nil
 }
@@ -119,11 +115,7 @@ func TagMapField(object interface{}, priority []string) (map[string]Field, error
 	tagMap := make(map[string]Field, len(fields))
 	for _, field := range fields {
 		tagField := field
-		if field.TagValue == "" {
-			tagMap[tagField.Name()] = tagField
-		} else {
-			tagMap[field.TagValue] = tagField
-		}
+		tagMap[field.TagValue] = tagField
 	}
 	return tagMap, nil
 }
@@ -214,11 +206,11 @@ func getFieldValuesByTagPriority(
 			if _, ok := repeatedTagFilteringMap[tagValue]; ok {
 				continue
 			}
+			tagField := field
+			tagField.TagName = tagName
+			tagField.TagValue = tagValue
+			tagFields = append(tagFields, tagField)
 		}
-		tagField := field
-		tagField.TagName = tagName
-		tagField.TagValue = tagValue
-		tagFields = append(tagFields, tagField)
 		// If this is an embedded attribute, it retrieves the tags recursively.
 		if field.IsEmbedded() && field.OriginalKind() == reflect.Struct {
 			subTagFields, err := getFieldValuesByTagPriority(field.Value, priority, repeatedTagFilteringMap)

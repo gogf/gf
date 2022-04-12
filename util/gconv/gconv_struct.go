@@ -321,8 +321,8 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 }
 
 // bindVarToStructAttr sets value to struct object attribute by name.
-func bindVarToStructAttr(elem reflect.Value, name string, value interface{}, mapping map[string]string) (err error) {
-	structFieldValue := elem.FieldByName(name)
+func bindVarToStructAttr(structReflectValue reflect.Value, attrName string, value interface{}, mapping map[string]string) (err error) {
+	structFieldValue := structReflectValue.FieldByName(attrName)
 	if !structFieldValue.IsValid() {
 		return nil
 	}
@@ -333,7 +333,7 @@ func bindVarToStructAttr(elem reflect.Value, name string, value interface{}, map
 	defer func() {
 		if exception := recover(); exception != nil {
 			if err = bindVarToReflectValue(structFieldValue, value, mapping); err != nil {
-				err = gerror.Wrapf(err, `error binding value to attribute "%s"`, name)
+				err = gerror.Wrapf(err, `error binding value to attribute "%s"`, attrName)
 			}
 		}
 	}()
@@ -347,13 +347,11 @@ func bindVarToStructAttr(elem reflect.Value, name string, value interface{}, map
 			return err
 		}
 		// Default converting.
-		structFieldValue.Set(reflect.ValueOf(doConvert(
-			doConvertInput{
-				FromValue:  value,
-				ToTypeName: structFieldValue.Type().String(),
-				ReferValue: structFieldValue,
-			},
-		)))
+		doConvertWithReflectValueSet(structFieldValue, doConvertInput{
+			FromValue:  value,
+			ToTypeName: structFieldValue.Type().String(),
+			ReferValue: structFieldValue,
+		})
 	}
 	return nil
 }
@@ -430,7 +428,7 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 	}
 
 	kind := structFieldValue.Kind()
-	// Converting using interface, for some kinds.
+	// Converting using `Set` interface implements, for some types.
 	switch kind {
 	case reflect.Slice, reflect.Array, reflect.Ptr, reflect.Interface:
 		if !structFieldValue.IsNil() {
@@ -441,7 +439,7 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 		}
 	}
 
-	// Converting by kind.
+	// Converting using reflection by kind.
 	switch kind {
 	case reflect.Map:
 		return doMapToMap(value, structFieldValue, mapping)
@@ -486,11 +484,11 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 						}
 					}
 					if !converted {
-						elem.Set(reflect.ValueOf(doConvert(doConvertInput{
+						doConvertWithReflectValueSet(elem, doConvertInput{
 							FromValue:  reflectValue.Index(i).Interface(),
 							ToTypeName: elemTypeName,
 							ReferValue: elem,
-						})))
+						})
 					}
 					if elemType.Kind() == reflect.Ptr {
 						// Before it sets the `elem` to array, do pointer converting if necessary.
@@ -521,11 +519,11 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 				}
 			}
 			if !converted {
-				elem.Set(reflect.ValueOf(doConvert(doConvertInput{
+				doConvertWithReflectValueSet(elem, doConvertInput{
 					FromValue:  value,
 					ToTypeName: elemTypeName,
 					ReferValue: elem,
-				})))
+				})
 			}
 			if elemType.Kind() == reflect.Ptr {
 				// Before it sets the `elem` to array, do pointer converting if necessary.
