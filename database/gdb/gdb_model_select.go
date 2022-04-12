@@ -174,7 +174,7 @@ func (m *Model) Value(fieldsAndWhere ...interface{}) (Value, error) {
 	if len(all) == 0 {
 		return gvar.New(nil), nil
 	}
-	if internalData := m.db.GetCore().getInternalCtxDataFromCtx(ctx); internalData != nil {
+	if internalData := m.db.GetCore().GetInternalCtxDataFromCtx(ctx); internalData != nil {
 		record := all[0]
 		if v, ok := record[internalData.FirstResultColumn]; ok {
 			return v, nil
@@ -391,7 +391,7 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 		return 0, err
 	}
 	if len(all) > 0 {
-		if internalData := m.db.GetCore().getInternalCtxDataFromCtx(ctx); internalData != nil {
+		if internalData := m.db.GetCore().GetInternalCtxDataFromCtx(ctx); internalData != nil {
 			record := all[0]
 			if v, ok := record[internalData.FirstResultColumn]; ok {
 				return v.Int(), nil

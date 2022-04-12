@@ -75,7 +75,7 @@ func (m *Model) getSelectResultFromCache(ctx context.Context, sql string, args .
 	)
 	defer func() {
 		if cacheItem != nil {
-			if internalData := m.db.GetCore().getInternalCtxDataFromCtx(ctx); internalData != nil {
+			if internalData := m.db.GetCore().GetInternalCtxDataFromCtx(ctx); internalData != nil {
 				if internalData.FirstResultColumn == "" {
 					internalData.FirstResultColumn = cacheItem.FirstResultColumn
 				}
@@ -114,7 +114,7 @@ func (m *Model) saveSelectResultToCache(ctx context.Context, result Result, sql 
 		var cacheItem = &selectCacheItem{
 			Result: result,
 		}
-		if internalData := m.db.GetCore().getInternalCtxDataFromCtx(ctx); internalData != nil {
+		if internalData := m.db.GetCore().GetInternalCtxDataFromCtx(ctx); internalData != nil {
 			cacheItem.FirstResultColumn = internalData.FirstResultColumn
 		}
 		if errCache := cacheObj.Set(ctx, cacheKey, cacheItem, m.cacheOption.Duration); errCache != nil {
