@@ -276,6 +276,30 @@ func Test_CheckStruct_Recursively_SliceAttribute(t *testing.T) {
 	})
 }
 
+func Test_CheckStruct_Recursively_SliceAttribute_WithTypeAlias(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type ParamsItemBase struct {
+			Component string `v:"required" dc:"组件名称"`
+			Params    string `v:"required" dc:"配置参数(一般是JSON)"`
+			Version   uint64 `v:"required" dc:"参数版本"`
+		}
+		type ParamsItem = ParamsItemBase
+		type ParamsModifyReq struct {
+			Revision  uint64       `v:"required"`
+			BizParams []ParamsItem `v:"required"`
+		}
+		var (
+			req  = ParamsModifyReq{}
+			data = g.Map{
+				"Revision":  "1",
+				"BizParams": `[{}]`,
+			}
+		)
+		err := g.Validator().Assoc(data).Data(req).Run(ctx)
+		t.Assert(err, `The Component field is required; The Params field is required; The Version field is required`)
+	})
+}
+
 func Test_CheckStruct_Recursively_MapAttribute(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Student struct {
