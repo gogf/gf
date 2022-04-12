@@ -255,6 +255,24 @@ func Test_Next(t *testing.T) {
 	})
 }
 
+func Test_Unwrap(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err := errors.New("1")
+		err = gerror.Wrap(err, "2")
+		err = gerror.Wrap(err, "3")
+		t.Assert(err.Error(), "3: 2: 1")
+
+		err = gerror.Unwrap(err)
+		t.Assert(err.Error(), "2: 1")
+
+		err = gerror.Unwrap(err)
+		t.Assert(err.Error(), "1")
+
+		err = gerror.Unwrap(err)
+		t.AssertNil(err)
+	})
+}
+
 func Test_Code(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err := errors.New("123")
@@ -338,5 +356,28 @@ func Test_HasStack(t *testing.T) {
 		err2 := gerror.New("1")
 		t.Assert(gerror.HasStack(err1), false)
 		t.Assert(gerror.HasStack(err2), true)
+	})
+}
+
+func Test_Equal(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err1 := errors.New("1")
+		err2 := errors.New("1")
+		err3 := gerror.New("1")
+		err4 := gerror.New("4")
+		t.Assert(gerror.Equal(err1, err2), false)
+		t.Assert(gerror.Equal(err1, err3), true)
+		t.Assert(gerror.Equal(err2, err3), true)
+		t.Assert(gerror.Equal(err3, err4), false)
+		t.Assert(gerror.Equal(err1, err4), false)
+	})
+}
+
+func Test_Is(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err1 := errors.New("1")
+		err2 := gerror.Wrap(err1, "2")
+		err2 = gerror.Wrap(err2, "3")
+		t.Assert(gerror.Is(err2, err1), true)
 	})
 }

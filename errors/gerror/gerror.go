@@ -17,36 +17,6 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 )
 
-// iCode is the interface for Code feature.
-type iCode interface {
-	Error() string
-	Code() gcode.Code
-}
-
-// iStack is the interface for Stack feature.
-type iStack interface {
-	Error() string
-	Stack() string
-}
-
-// iCause is the interface for Cause feature.
-type iCause interface {
-	Error() string
-	Cause() error
-}
-
-// iCurrent is the interface for Current feature.
-type iCurrent interface {
-	Error() string
-	Current() error
-}
-
-// iNext is the interface for Next feature.
-type iNext interface {
-	Error() string
-	Next() error
-}
-
 // New creates and returns an error which is formatted from given text.
 func New(text string) error {
 	return &Error{
@@ -305,8 +275,39 @@ func Next(err error) error {
 	return nil
 }
 
+// Unwrap is alias of function `Next`.
+// It is just for implements for stdlib errors.Unwrap from Go version 1.17.
+func Unwrap(err error) error {
+	return Next(err)
+}
+
 // HasStack checks and returns whether `err` implemented interface `iStack`.
 func HasStack(err error) bool {
 	_, ok := err.(iStack)
 	return ok
+}
+
+// Equal reports whether current error `err` equals to error `target`.
+// Please note that, in default comparison for `Error`,
+// the errors are considered the same if both the `code` and `text` of them are the same.
+func Equal(err, target error) bool {
+	if err == target {
+		return true
+	}
+	if e, ok := err.(iEqual); ok {
+		return e.Equal(target)
+	}
+	if e, ok := target.(iEqual); ok {
+		return e.Equal(err)
+	}
+	return false
+}
+
+// Is reports whether current error `err` has error `target` in its chaining errors.
+// It is just for implements for stdlib errors.Unwrap from Go version 1.17.
+func Is(err, target error) bool {
+	if e, ok := err.(iIs); ok {
+		return e.Is(target)
+	}
+	return false
 }

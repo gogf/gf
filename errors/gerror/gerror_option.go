@@ -16,7 +16,7 @@ type Option struct {
 	Code  gcode.Code // Error code if necessary.
 }
 
-// NewOption creates and returns an error with Option.
+// NewOption creates and returns a custom error with Option.
 // It is the senior usage for creating error, which is often used internally in framework.
 func NewOption(option Option) error {
 	err := &Error{
