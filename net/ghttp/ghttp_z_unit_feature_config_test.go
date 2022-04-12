@@ -8,10 +8,11 @@ package ghttp_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/v2/net/gtcp"
 	"net"
 	"testing"
 	"time"
+
+	"github.com/gogf/gf/v2/net/gtcp"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
@@ -108,7 +109,7 @@ func Test_ClientMaxBodySize(t *testing.T) {
 		}
 		t.Assert(
 			gstr.Trim(c.PostContent(ctx, "/", data)),
-			`ReadAll from body failed: http: request body too large`,
+			`Read from request Body failed: http: request body too large`,
 		)
 	})
 }

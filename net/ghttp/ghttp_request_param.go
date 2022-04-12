@@ -9,6 +9,7 @@ package ghttp
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"mime/multipart"
 	"reflect"
@@ -154,7 +155,9 @@ func (r *Request) GetBody() []byte {
 		var err error
 		if r.bodyContent, err = ioutil.ReadAll(r.Body); err != nil {
 			errMsg := `Read from request Body failed`
-			errMsg += `, the Body might be closed or read manually from middleware/hook/other package previously`
+			if gerror.Is(err, io.EOF) {
+				errMsg += `, the Body might be closed or read manually from middleware/hook/other package previously`
+			}
 			panic(gerror.WrapCode(gcode.CodeInternalError, err, errMsg))
 		}
 		r.Body = utils.NewReadCloser(r.bodyContent, true)
