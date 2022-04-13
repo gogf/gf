@@ -10,13 +10,14 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"net"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/net/gtcp"
@@ -339,7 +340,7 @@ func (s *Server) SetConfigWithMap(m map[string]interface{}) error {
 func (s *Server) SetConfig(c ServerConfig) error {
 	s.config = c
 	// Automatically add ':' prefix for address if it is missed.
-	if s.config.Address != "" && !gstr.HasPrefix(s.config.Address, ":") {
+	if s.config.Address != "" && !gstr.Contains(s.config.Address, ":") {
 		s.config.Address = ":" + s.config.Address
 	}
 	// It checks and uses a random free port.
