@@ -34,7 +34,7 @@ func (view *View) buildInFuncDump(values ...interface{}) string {
 			buffer.WriteString("\n")
 		}
 	} else {
-		buffer.WriteString("dump feature is disabled as server is not running in develop mode\n")
+		buffer.WriteString("dump feature is disabled as process is not running in develop mode\n")
 	}
 	buffer.WriteString("-->\n")
 	return buffer.String()
