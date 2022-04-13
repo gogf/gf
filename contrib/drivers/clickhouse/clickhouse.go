@@ -12,8 +12,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/ClickHouse/clickhouse-go"
+	"net/url"
 	"strings"
+
+	"github.com/ClickHouse/clickhouse-go"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -21,7 +23,6 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Driver is the driver for postgresql database.
@@ -69,12 +70,12 @@ func (d *Driver) Open(config *gdb.ConfigNode) (*sql.DB, error) {
 		source = config.Link
 	} else if config.Pass != "" {
 		source = fmt.Sprintf(
-			"clickhouse://%s:%s@%s:%s/%s?charset=%s&debug=%s",
-			config.User, config.Pass, config.Host, config.Port, config.Name, config.Charset, gconv.String(config.Debug))
+			"clickhouse://%s:%s@%s:%s/%s?charset=%s&debug=%t",
+			config.User, config.Pass, url.PathEscape(config.Host), config.Port, config.Name, config.Charset, config.Debug)
 	} else {
 		source = fmt.Sprintf(
-			"clickhouse://%s@%s:%s/%s?charset=%s&debug=%s",
-			config.User, config.Host, config.Port, config.Name, config.Charset, gconv.String(config.Debug))
+			"clickhouse://%s@%s:%s/%s?charset=%s&debug=%t",
+			config.User, config.Host, config.Port, config.Name, config.Charset, config.Debug)
 	}
 	db, err := sql.Open(driver, source)
 	if err != nil {
