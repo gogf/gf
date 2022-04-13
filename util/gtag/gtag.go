@@ -11,8 +11,9 @@
 package gtag
 
 import (
-	"fmt"
 	"regexp"
+
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 var (
@@ -21,20 +22,30 @@ var (
 )
 
 // Set sets tag content for specified name.
+// Note that it panics if `name` already exists.
 func Set(name, value string) {
 	if _, ok := data[name]; ok {
-		panic(fmt.Sprintf(`value for tag "%s" already exists`, name))
+		panic(gerror.Newf(`value for tag name "%s" already exists`, name))
 	}
+	data[name] = value
+}
+
+// SetOver performs as Set, but it overwrites the old value if `name` already exists.
+func SetOver(name, value string) {
 	data[name] = value
 }
 
 // Sets sets multiple tag content by map.
 func Sets(m map[string]string) {
 	for k, v := range m {
-		if _, ok := data[k]; ok {
-			panic(fmt.Sprintf(`value for tag "%s" already exists`, k))
-		}
-		data[k] = v
+		Set(k, v)
+	}
+}
+
+// SetsOver performs as Sets, but it overwrites the old value if `name` already exists.
+func SetsOver(m map[string]string) {
+	for k, v := range m {
+		SetOver(k, v)
 	}
 }
 
@@ -46,8 +57,8 @@ func Get(name string) string {
 // Parse parses and returns the content by replacing all tag name variable to
 // its content for given `content`.
 // Eg:
-// If "Demo:content" in tag mapping,
-// Parse(`This is {Demo}`) -> `This is content`.
+// gtag.Set("demo", "content")
+// Parse(`This is {demo}`) -> `This is content`.
 func Parse(content string) string {
 	return regex.ReplaceAllStringFunc(content, func(s string) string {
 		if v, ok := data[s[1:len(s)-1]]; ok {

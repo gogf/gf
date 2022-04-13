@@ -13,6 +13,8 @@ import (
 
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/encoding/ghash"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gipv4"
 	"github.com/gogf/gf/v2/util/grand"
 )
@@ -67,7 +69,7 @@ func init() {
 // Note that：
 // 1. The returned length is fixed to 32 bytes for performance purpose.
 // 2. The custom parameter `data` composed should have unique attribute in your
-//    business situation.
+//    business scenario.
 func S(data ...[]byte) string {
 	var (
 		b       = make([]byte, 32)
@@ -92,7 +94,10 @@ func S(data ...[]byte) string {
 		copy(b[n+12:], getSequence())
 		copy(b[n+12+3:], getRandomStr(32-n-12-3))
 	} else {
-		panic("too many data parts, it should be no more than 2 parts")
+		panic(gerror.NewCode(
+			gcode.CodeInvalidParameter,
+			"too many data parts, it should be no more than 2 parts",
+		))
 	}
 	return string(b)
 }
