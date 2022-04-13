@@ -252,3 +252,25 @@ func TestDriver_OpenLink(t *testing.T) {
 	gtest.AssertNE(connect, nil)
 	gtest.AssertNil(connect.PingMaster())
 }
+
+func TestDriver_Select(t *testing.T) {
+	connect := InitClickhouse()
+	gtest.AssertNil(createClickhouseTable(connect))
+	defer dropClickhouseTable(connect)
+	_, err := connect.Model("visits").Data(g.Map{
+		"url":      "goframe.org",
+		"duration": float64(1),
+	}).Insert()
+	gtest.AssertNil(err)
+	temp, err := connect.Model("visits").Where("url", "goframe.org").Where("duration >= ", 1).One()
+	gtest.AssertNil(err)
+	gtest.AssertEQ(temp.IsEmpty(), false)
+	_, err = connect.Model("visits").Data(g.Map{
+		"url":      "goframe.org",
+		"duration": float64(2),
+	}).Insert()
+	gtest.AssertNil(err)
+	data, err := connect.Model("visits").Where("url", "goframe.org").Where("duration >= ", 1).All()
+	gtest.AssertNil(err)
+	gtest.AssertEQ(len(data), 2)
+}
