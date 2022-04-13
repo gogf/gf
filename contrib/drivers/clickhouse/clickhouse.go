@@ -71,7 +71,7 @@ func (d *Driver) Open(config *gdb.ConfigNode) (*sql.DB, error) {
 	} else if config.Pass != "" {
 		source = fmt.Sprintf(
 			"clickhouse://%s:%s@%s:%s/%s?charset=%s&debug=%t",
-			config.User, config.Pass, url.PathEscape(config.Host), config.Port, config.Name, config.Charset, config.Debug)
+			config.User, url.PathEscape(config.Pass), config.Host, config.Port, config.Name, config.Charset, config.Debug)
 	} else {
 		source = fmt.Sprintf(
 			"clickhouse://%s@%s:%s/%s?charset=%s&debug=%t",
