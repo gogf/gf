@@ -184,7 +184,7 @@ var (
 	}
 
 	structTagPriority    = []string{"gvalid", "valid", "v"} // structTagPriority specifies the validation tag priority array.
-	aliasNameTagPriority = []string{"param", "params", "p"} // aliasNameTagPriority specifies the alias tag priority array.
+	aliasNameTagPriority = []string{"gconv", "param", "params", "c", "p", "json"} // aliasNameTagPriority specifies the alias tag priority array. Consistent with gconv.StructTagPriority.
 
 	// all internal error keys.
 	internalErrKeyMap = map[string]string{
