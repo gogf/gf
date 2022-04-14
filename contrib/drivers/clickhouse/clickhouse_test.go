@@ -98,19 +98,10 @@ func clickhouseConfigDB() gdb.DB {
 		Host:  "127.0.0.1",
 		Port:  "9000",
 		User:  "default",
+		Pass:  "asdf_qwer",
 		Name:  "default",
 		Type:  "clickhouse",
 		Debug: true,
-	})
-	gtest.AssertNil(err)
-	gtest.AssertNE(connect, nil)
-	return connect
-}
-
-func clickhouseConfigLinkDB() gdb.DB {
-	connect, err := gdb.New(gdb.ConfigNode{
-		Link: "clickhouse://default@127.0.0.1:9000/default?dial_timeout=200ms&max_execution_time=60&skip_verify=true&secure=false&compress=true",
-		Type: "clickhouse",
 	})
 	gtest.AssertNil(err)
 	gtest.AssertNE(connect, nil)
@@ -159,11 +150,7 @@ func TestDriverClickhouse_New(t *testing.T) {
 }
 
 func TestDriverClickhouse_OpenLink_Ping(t *testing.T) {
-	connect, err := gdb.New(gdb.ConfigNode{
-		Link: "clickhouse://default@127.0.0.1:9000/default?dial_timeout=200ms&max_execution_time=60&skip_verify=true&secure=false&compress=true",
-		Type: "clickhouse",
-	})
-	gtest.AssertNil(err)
+	connect := clickhouseConfigDB()
 	gtest.AssertNE(connect, nil)
 	gtest.AssertNil(connect.PingMaster())
 }
@@ -188,7 +175,7 @@ func TestDriverClickhouse_TableFields_Use_Config(t *testing.T) {
 }
 
 func TestDriverClickhouse_TableFields_Use_Link(t *testing.T) {
-	connect := clickhouseConfigLinkDB()
+	connect := clickhouseConfigDB()
 	gtest.AssertNil(createClickhouseTableVisits(connect))
 	defer dropClickhouseTableVisits(connect)
 	field, err := connect.TableFields(context.Background(), "visits")
@@ -222,10 +209,9 @@ func TestDriverClickhouse_InsertOne(t *testing.T) {
 	gtest.AssertEQ(createClickhouseTableVisits(connect), nil)
 	defer dropClickhouseTableVisits(connect)
 	_, err := connect.Model("visits").Data(g.Map{
-		"id":       grand.Intn(999),
 		"duration": float64(grand.Intn(999)),
 		"url":      gconv.String(grand.Intn(999)),
-		"created":  time.Now().Format("2006-01-02 15:04:05"),
+		"created":  time.Now(),
 	}).Insert()
 	gtest.AssertNil(err)
 }
@@ -244,19 +230,18 @@ func TestDriverClickhouse_Insert(t *testing.T) {
 	gtest.AssertEQ(createClickhouseTableVisits(connect), nil)
 	defer dropClickhouseTableVisits(connect)
 	type insertItem struct {
-		Id       int     `orm:"id"`
-		Duration float64 `orm:"duration"`
-		Url      string  `orm:"url"`
-		Created  string  `orm:"created"`
+		Id       uint64    `orm:"id"`
+		Duration float64   `orm:"duration"`
+		Url      string    `orm:"url"`
+		Created  time.Time `orm:"created"`
 	}
 	var (
 		insertUrl = "https://goframe.org"
 		total     = 0
 		item      = insertItem{
-			Id:       0,
 			Duration: 1,
 			Url:      insertUrl,
-			Created:  time.Now().Format("2006-01-02 15:04:05"),
+			Created:  time.Now(),
 		}
 	)
 	_, err := connect.Model("visits").Data(item).Insert()
@@ -269,10 +254,9 @@ func TestDriverClickhouse_Insert(t *testing.T) {
 	var list []*insertItem
 	for i := 0; i < 50; i++ {
 		list = append(list, &insertItem{
-			Id:       grand.Intn(999),
 			Duration: float64(grand.Intn(999)),
 			Url:      insertUrl,
-			Created:  time.Now().Format("2006-01-02 15:04:05"),
+			Created:  time.Now(),
 		})
 	}
 	_, err = connect.Model("visits").Data(list).Insert()
@@ -308,14 +292,6 @@ func TestDriverClickhouse_Update(t *testing.T) {
 		"created": time.Now().Format("2006-01-02 15:04:05"),
 	}).Update()
 	gtest.AssertNil(err)
-	//这句不报错，反而有问题，gf对于没有where条件的delete和update都是不允许的
-	_, err = connect.Model("visits").Data(g.Map{
-		"created": time.Now().Format("2006-01-02 15:04:05"),
-	}).Update()
-	gtest.AssertNil(err)
-	//gtest.AssertNE(err, nil)
-	_, err = connect.Model("visits").Update()
-	gtest.AssertNE(err, nil)
 }
 
 func TestDriverClickhouse_Replace(t *testing.T) {

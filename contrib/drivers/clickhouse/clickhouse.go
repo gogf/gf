@@ -12,17 +12,15 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"net/url"
-	"strings"
-
-	"github.com/ClickHouse/clickhouse-go"
-
+	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
+	"net/url"
+	"strings"
 )
 
 // Driver is the driver for postgresql database.
@@ -211,6 +209,12 @@ func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, originSql string, 
 	// Clickhouse eg: ALTER TABLE visits UPDATE xxx
 	// MySQL eg: DELETE FROM VISIT
 	// Clickhouse eg: ALTER TABLE VISIT DELETE WHERE filter_expr
+	var index int
+	// Convert placeholder char '?' to string "$x".
+	originSql, _ = gregex.ReplaceStringFunc(`\?`, originSql, func(s string) string {
+		index++
+		return fmt.Sprintf(`$%d`, index)
+	})
 	result, err := gregex.MatchString("(?i)^UPDATE|DELETE", originSql)
 	if err != nil {
 		return "", nil, err
