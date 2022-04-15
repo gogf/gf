@@ -98,7 +98,6 @@ func clickhouseConfigDB() gdb.DB {
 		Host:  "127.0.0.1",
 		Port:  "9000",
 		User:  "default",
-		Pass:  "asdf_qwer",
 		Name:  "default",
 		Type:  "clickhouse",
 		Debug: true,
