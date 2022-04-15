@@ -35,14 +35,16 @@ type iMarshalJSON interface {
 
 // DumpOption specifies the behavior of function Export.
 type DumpOption struct {
-	WithType bool // WithType specifies dumping content with type information.
+	WithType     bool // WithType specifies dumping content with type information.
+	ExportedOnly bool // Only dump Exported fields for structs.
 }
 
 // Dump prints variables `values` to stdout with more manually readable.
 func Dump(values ...interface{}) {
 	for _, value := range values {
 		DumpWithOption(value, DumpOption{
-			WithType: false,
+			WithType:     false,
+			ExportedOnly: false,
 		})
 	}
 }
@@ -52,7 +54,8 @@ func Dump(values ...interface{}) {
 func DumpWithType(values ...interface{}) {
 	for _, value := range values {
 		DumpWithOption(value, DumpOption{
-			WithType: true,
+			WithType:     true,
+			ExportedOnly: false,
 		})
 	}
 }
@@ -61,7 +64,8 @@ func DumpWithType(values ...interface{}) {
 func DumpWithOption(value interface{}, option DumpOption) {
 	buffer := bytes.NewBuffer(nil)
 	DumpTo(buffer, value, DumpOption{
-		WithType: option.WithType,
+		WithType:     option.WithType,
+		ExportedOnly: option.ExportedOnly,
 	})
 	fmt.Println(buffer.String())
 }
@@ -70,13 +74,15 @@ func DumpWithOption(value interface{}, option DumpOption) {
 func DumpTo(writer io.Writer, value interface{}, option DumpOption) {
 	buffer := bytes.NewBuffer(nil)
 	doDump(value, "", buffer, doDumpOption{
-		WithType: option.WithType,
+		WithType:     option.WithType,
+		ExportedOnly: option.ExportedOnly,
 	})
 	_, _ = writer.Write(buffer.Bytes())
 }
 
 type doDumpOption struct {
-	WithType bool
+	WithType     bool
+	ExportedOnly bool
 }
 
 func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDumpOption) {
@@ -124,6 +130,7 @@ func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDum
 			Option:          option,
 			ReflectValue:    reflectValue,
 			ReflectTypeName: reflectTypeName,
+			ExportedOnly:    option.ExportedOnly,
 		}
 	)
 	switch reflectKind {
@@ -160,13 +167,13 @@ func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDum
 		doDumpNumber(exportInternalInput)
 
 	case reflect.Chan:
-		buffer.WriteString(fmt.Sprintf(`<%s>`, reflectTypeName))
+		buffer.WriteString(fmt.Sprintf(`<%s>`, reflectValue.Type().String()))
 
 	case reflect.Func:
 		if reflectValue.IsNil() || !reflectValue.IsValid() {
 			buffer.WriteString(`<nil>`)
 		} else {
-			buffer.WriteString(fmt.Sprintf(`<%s>`, reflectTypeName))
+			buffer.WriteString(fmt.Sprintf(`<%s>`, reflectValue.Type().String()))
 		}
 
 	case reflect.Interface:
@@ -185,6 +192,7 @@ type doDumpInternalInput struct {
 	Option          doDumpOption
 	ReflectValue    reflect.Value
 	ReflectTypeName string
+	ExportedOnly    bool
 }
 
 func doDumpSlice(in doDumpInternalInput) {
@@ -223,9 +231,14 @@ func doDumpSlice(in doDumpInternalInput) {
 }
 
 func doDumpMap(in doDumpInternalInput) {
-	var (
-		mapKeys = in.ReflectValue.MapKeys()
-	)
+	var mapKeys = make([]reflect.Value, 0)
+	for _, key := range in.ReflectValue.MapKeys() {
+		if !key.CanInterface() {
+			continue
+		}
+		mapKey := key
+		mapKeys = append(mapKeys, mapKey)
+	}
 	if len(mapKeys) == 0 {
 		if !in.Option.WithType {
 			in.Buffer.WriteString("{}")
@@ -339,6 +352,9 @@ dumpStructFields:
 		tmpSpaceNum = 0
 	)
 	for _, field := range structFields {
+		if in.ExportedOnly && !field.IsExported() {
+			continue
+		}
 		tmpSpaceNum = len(field.Name())
 		if tmpSpaceNum > maxSpaceNum {
 			maxSpaceNum = tmpSpaceNum
@@ -350,6 +366,9 @@ dumpStructFields:
 		in.Buffer.WriteString(fmt.Sprintf("%s(%d) {\n", in.ReflectTypeName, len(structFields)))
 	}
 	for _, field := range structFields {
+		if in.ExportedOnly && !field.IsExported() {
+			continue
+		}
 		tmpSpaceNum = len(fmt.Sprintf(`%v`, field.Name()))
 		in.Buffer.WriteString(fmt.Sprintf(
 			"%s%s:%s",
