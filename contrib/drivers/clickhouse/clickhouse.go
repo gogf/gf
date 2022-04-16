@@ -128,7 +128,7 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 			if link, err = d.SlaveLink(useSchema); err != nil {
 				return nil
 			}
-			getColumnsSql := fmt.Sprintf("select name,position,default_expression,comment from `system`.columns c where database = '%s' and `table` = '%s'", d.GetConfig().Name, table)
+			getColumnsSql := fmt.Sprintf("select name,position,default_expression,comment,type from `system`.columns c where database = '%s' and `table` = '%s'", d.GetConfig().Name, table)
 			result, err = d.DoSelect(ctx, link, getColumnsSql)
 			if err != nil {
 				return nil
