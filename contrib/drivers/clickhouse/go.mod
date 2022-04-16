@@ -8,6 +8,5 @@ require (
 )
 
 replace (
-	github.com/ClickHouse/clickhouse-go/v2 => github.com/DGuang21/clickhouse-go/v2 v2.0.13
 	github.com/gogf/gf/v2 => ../../../
 )
