@@ -20,6 +20,7 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/longbridgeapp/sqlparser"
 	"net/url"
 	"strings"
 )
@@ -37,7 +38,9 @@ var (
 	errUnsupportedReplace      = errors.New("unsupported method:Replace")
 	errUnsupportedBegin        = errors.New("unsupported method:Begin")
 	errUnsupportedTransaction  = errors.New("unsupported method:Transaction")
-	errSQLNull                 = errors.New("SQL cannot be null")
+	errUpdateNotCondition      = errors.New("there should be WHERE condition statement for UPDATE operation")
+	errDeleteNotCondition      = errors.New("there should be WHERE condition statement for DELETE operation")
+	errUpdateNotAssignment     = errors.New("there should be WHERE condition statement for Assignment operation")
 )
 
 func init() {
@@ -205,37 +208,78 @@ func (d *Driver) ping(conn *sql.DB) error {
 
 // DoFilter handles the sql before posts it to database.
 func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, originSql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
-	// replace STD SQL to Clickhouse SQL grammar
-	// MySQL eg: UPDATE visits SET xxx
-	// Clickhouse eg: ALTER TABLE visits UPDATE xxx
-	// MySQL eg: DELETE FROM VISIT
-	// Clickhouse eg: ALTER TABLE VISIT DELETE WHERE filter_expr
+	if len(args) == 0 {
+		return originSql, args, nil
+	}
 	var index int
 	// Convert placeholder char '?' to string "$x".
 	originSql, _ = gregex.ReplaceStringFunc(`\?`, originSql, func(s string) string {
 		index++
 		return fmt.Sprintf(`$%d`, index)
 	})
-	result, err := gregex.MatchString("(?i)^UPDATE|DELETE", originSql)
+	// replace STD SQL to Clickhouse SQL grammar
+	parsedStmt, err := sqlparser.NewParser(strings.NewReader(originSql)).ParseStatement()
 	if err != nil {
-		return "", nil, err
+		return originSql, args, err
 	}
-	if len(result) != 0 {
-		sqlSlice := strings.Split(originSql, " ")
-		if len(sqlSlice) < 3 {
-			return "", nil, errSQLNull
+	switch stmt := parsedStmt.(type) {
+	case *sqlparser.UpdateStatement:
+		// MySQL eg: UPDATE visits SET xxx
+		// Clickhouse eg: ALTER TABLE visits UPDATE xxx
+		newSql, err = d.doFilterUpdate(stmt)
+		if err != nil {
+			return originSql, args, err
 		}
-		ck := []string{"ALTER", "TABLE"}
-		switch strings.ToUpper(result[0]) {
-		case "UPDATE":
-			sqlSlice = append(append(append(ck, sqlSlice[1]), result[0]), sqlSlice[3:]...)
-			return strings.Join(sqlSlice, " "), args, nil
-		case "DELETE":
-			sqlSlice = append(append(append(ck, sqlSlice[2]), result[0]), sqlSlice[3:]...)
-			return strings.Join(sqlSlice, " "), args, nil
+		return newSql, args, nil
+	case *sqlparser.DeleteStatement:
+		// MySQL eg: DELETE FROM VISIT
+		// Clickhouse eg: ALTER TABLE VISIT DELETE WHERE filter_expr
+		newSql, err = d.doFilterDelete(stmt)
+		if err != nil {
+			return originSql, args, err
 		}
+		return newSql, args, nil
 	}
 	return originSql, args, nil
+}
+
+func (d *Driver) doFilterDelete(stmt *sqlparser.DeleteStatement) (string, error) {
+	if stmt.Condition == nil {
+		return "", errDeleteNotCondition
+	}
+	var (
+		condition = stmt.Condition.String()
+		tableName = stmt.TableName
+	)
+	if condition == "" {
+		return "", errDeleteNotCondition
+	}
+	newSql := fmt.Sprintf("ALTER TABLE %s DELETE WHERE %s", tableName, condition)
+	return newSql, nil
+}
+
+func (d *Driver) doFilterUpdate(stmt *sqlparser.UpdateStatement) (string, error) {
+	if stmt.Condition == nil {
+		return "", errUpdateNotCondition
+	}
+	var (
+		condition   = stmt.Condition.String()
+		assignment  string
+		tableName   = stmt.TableName
+		assignments = []string{}
+	)
+	for _, item := range stmt.Assignments {
+		assignments = append(assignments, item.String())
+	}
+	if len(condition) == 0 {
+		return "", errUpdateNotCondition
+	}
+	if len(assignments) == 0 {
+		return "", errUpdateNotAssignment
+	}
+	assignment = strings.Join(assignments, ",")
+	newSql := fmt.Sprintf("ALTER TABLE %s UPDATE %s WHERE %s", tableName, assignment, condition)
+	return newSql, nil
 }
 
 // DoCommit commits current sql and arguments to underlying sql driver.
