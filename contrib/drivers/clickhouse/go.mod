@@ -7,6 +7,4 @@ require (
 	github.com/gogf/gf/v2 v2.0.0-rc
 )
 
-replace (
-	github.com/gogf/gf/v2 => ../../../
-)
+replace github.com/gogf/gf/v2 => ../../../

@@ -19,6 +19,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 	"net/url"
 	"strings"
 )
@@ -286,6 +287,19 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 		}
 	}
 	return stdSqlResult, tx.Commit()
+}
+
+// ConvertDataForRecord converting for any data that will be inserted into table/collection as a record.
+func (d *Driver) ConvertDataForRecord(ctx context.Context, value interface{}) map[string]interface{} {
+	// Clickhouse does not need to preprocess the value and can be inserted directly
+	// So it is not processed here
+	return gconv.Map(value, gdb.OrmTagForStruct)
+}
+
+func (d *Driver) ConvertDataForRecordValue(ctx context.Context, value interface{}) interface{} {
+	// Clickhouse does not need to preprocess the value and can be inserted directly
+	// So it is not processed here
+	return value
 }
 
 // InsertIgnore Other queries for modifying data parts are not supported: REPLACE, MERGE, UPSERT, INSERT UPDATE.
