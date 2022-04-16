@@ -110,12 +110,11 @@ values  (607970943242866688, 607973669943119880, 607972403489804288, 2022, 3, 20
 
 func clickhouseConfigDB() gdb.DB {
 	connect, err := gdb.New(gdb.ConfigNode{
-		Host:  "127.0.0.1",
-		Port:  "9000",
-		User:  "default",
-		Name:  "default",
-		Type:  "clickhouse",
-		Debug: true,
+		Host: "127.0.0.1",
+		Port: "9000",
+		User: "default",
+		Name: "default",
+		Type: "clickhouse",
 	})
 	gtest.AssertNil(err)
 	gtest.AssertNE(connect, nil)
@@ -327,30 +326,29 @@ func TestDriverClickhouse_Replace(t *testing.T) {
 func TestDriverClickhouse_DoFilter(t *testing.T) {
 	rawSQL := "select * from visits where 1 = 1"
 	this := Driver{}
-	replaceSQL, _, err := this.DoFilter(nil, nil, rawSQL, nil)
+	replaceSQL, _, err := this.DoFilter(nil, nil, rawSQL, []interface{}{1})
 	gtest.AssertNil(err)
 	gtest.AssertEQ(rawSQL, replaceSQL)
+
+	// this SQL can't run ,clickhouse will report an error because there is no WHERE statement
 	rawSQL = "update visit set url = '1'"
-	replaceSQL, _, err = this.DoFilter(nil, nil, rawSQL, nil)
-	gtest.AssertNil(err)
+	replaceSQL, _, err = this.DoFilter(nil, nil, rawSQL, []interface{}{1})
+	gtest.AssertEQ(err, errUpdateNotCondition)
+
 	// this SQL can't run ,clickhouse will report an error because there is no WHERE statement
-	gtest.AssertEQ(replaceSQL, "ALTER TABLE visit update url = '1'")
 	rawSQL = "delete from visit"
-	replaceSQL, _, err = this.DoFilter(nil, nil, rawSQL, nil)
-	gtest.AssertNil(err)
-	// this SQL can't run ,clickhouse will report an error because there is no WHERE statement
-	gtest.AssertEQ(replaceSQL, "ALTER TABLE visit delete")
+	replaceSQL, _, err = this.DoFilter(nil, nil, rawSQL, []interface{}{1})
+	gtest.AssertEQ(err, errDeleteNotCondition)
 
 	rawSQL = "update visit set url = '1' where url = '0'"
-	replaceSQL, _, err = this.DoFilter(nil, nil, rawSQL, nil)
+	replaceSQL, _, err = this.DoFilter(nil, nil, rawSQL, []interface{}{1})
 	gtest.AssertNil(err)
-	// this SQL can't run ,clickhouse will report an error because there is no WHERE statement
-	gtest.AssertEQ(replaceSQL, "ALTER TABLE visit update url = '1' where url = '0'")
+	gtest.AssertEQ(replaceSQL, "ALTER TABLE visit UPDATE url = '1' WHERE url = '0'")
+
 	rawSQL = "delete from visit where url='0'"
-	replaceSQL, _, err = this.DoFilter(nil, nil, rawSQL, nil)
+	replaceSQL, _, err = this.DoFilter(nil, nil, rawSQL, []interface{}{1})
 	gtest.AssertNil(err)
-	// this SQL can't run ,clickhouse will report an error because there is no WHERE statement
-	gtest.AssertEQ(replaceSQL, "ALTER TABLE visit delete where url='0'")
+	gtest.AssertEQ(replaceSQL, "ALTER TABLE visit DELETE WHERE url = '0'")
 }
 
 func TestDriverClickhouse_Select(t *testing.T) {
@@ -433,7 +431,7 @@ func TestDriverClickhouse_Open(t *testing.T) {
 	// link
 	// DSM
 	// clickhouse://username:password@host1:9000,host2:9000/database?dial_timeout=200ms&max_execution_time=60
-	link := "clickhouse://default:asdf_qwer@127.0.0.1:9000,127.0.0.1:9000/default?dial_timeout=200ms&max_execution_time=60"
+	link := "clickhouse://default@127.0.0.1:9000,127.0.0.1:9000/default?dial_timeout=200ms&max_execution_time=60"
 	db, err := gdb.New(gdb.ConfigNode{
 		Link: link,
 		Type: "clickhouse",
