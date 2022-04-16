@@ -419,14 +419,7 @@ func TestDriverClickhouse_BatchInsert(t *testing.T) {
 	gtest.AssertNil(err)
 	count, err := connect.Model("data_type").Where("Col2", "ClickHouse").Where("Col3", "Inc").Count()
 	gtest.AssertNil(err)
-	t.Log(count)
 	gtest.AssertEQ(count, 10000)
-	_, err = connect.Model("data_type").Where("Col2", "ClickHouse").Where("Col3", "Inc").Delete()
-	gtest.AssertNil(err)
-	after, err := connect.Model("data_type").Where("Col2", "ClickHouse").Where("Col3", "Inc").Count()
-	gtest.AssertNil(err)
-	t.Log(after)
-	gtest.AssertEQ(after, 0)
 }
 
 func TestDriverClickhouse_Open(t *testing.T) {
