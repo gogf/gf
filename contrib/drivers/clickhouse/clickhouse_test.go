@@ -3,6 +3,7 @@ package clickhouse
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"testing"
 	"time"
 
@@ -91,6 +92,20 @@ insert into fact (adjustment_level, data_version, accounting_legislation, fiscal
 values  (607970943242866688, 607973669943119880, 607972403489804288, 2022, 3, 202203, 607974511316307985, 0, 607976190010986520, 607996702456025136, 1, 607985607569838111, 8674.39, 0, 607974898261823505, 8674.39, 0, '2022-03-05', 2022, 1, 3, 11, '{}', '摘要', 607992882741121073, 0, 0),
         (607970943242866688, 607973669943119880, 607972403489804288, 2022, 4, 202204, 607974511316307985, 0, 607976190010986520, 607993586419503145, 1, 607985607569838111, 9999.88, 0, 607974898261823505, 9999.88, 0, '2022-04-10', 2022, 2, 4, 18, '{}', '摘要', 607996939140599857, 0, 0);
 `
+	expmSqlDDL = `
+		CREATE TABLE IF NOT EXISTS data_type (
+			  Col1 UInt8
+			, Col2 String
+			, Col3 FixedString(3)
+			, Col4 UUID
+			, Col5 Map(String, UInt8)
+			, Col6 Array(String)
+			, Col7 Tuple(String, UInt8, Array(Map(String, String)))
+			, Col8 DateTime
+		) ENGINE = MergeTree() 
+		PRIMARY KEY Col4 
+		ORDER BY Col4
+`
 )
 
 func clickhouseConfigDB() gdb.DB {
@@ -122,6 +137,11 @@ func createClickhouseTableFact(connect gdb.DB) error {
 	return err
 }
 
+func createClickhouseExampleTable(connect gdb.DB) error {
+	_, err := connect.Exec(context.Background(), expmSqlDDL)
+	return err
+}
+
 func dropClickhouseTableVisits(conn gdb.DB) {
 	sqlStr := fmt.Sprintf("DROP TABLE IF EXISTS `visits`")
 	_, _ = conn.Exec(context.Background(), sqlStr)
@@ -134,6 +154,11 @@ func dropClickhouseTableDim(conn gdb.DB) {
 
 func dropClickhouseTableFact(conn gdb.DB) {
 	sqlStr := fmt.Sprintf("DROP TABLE IF EXISTS `fact`")
+	_, _ = conn.Exec(context.Background(), sqlStr)
+}
+
+func dropClickhouseExampleTable(conn gdb.DB) {
+	sqlStr := fmt.Sprintf("DROP TABLE IF EXISTS `example1`")
 	_, _ = conn.Exec(context.Background(), sqlStr)
 }
 
@@ -365,4 +390,54 @@ func TestDriverClickhouse_ExecInsert(t *testing.T) {
 	defer dropClickhouseTableDim(connect)
 	_, err := connect.Exec(context.Background(), dimSqlDML)
 	gtest.AssertNil(err)
+}
+
+func TestDriverClickhouse_BatchInsert(t *testing.T) {
+	// example from
+	// https://github.com/ClickHouse/clickhouse-go/blob/v2/examples/std/batch/main.go
+	connect := clickhouseConfigDB()
+	gtest.AssertNil(createClickhouseExampleTable(connect))
+	defer dropClickhouseExampleTable(connect)
+	insertData := []g.Map{}
+	for i := 0; i < 10000; i++ {
+		insertData = append(insertData, g.Map{
+			"Col1": uint8(42),
+			"Col2": "ClickHouse",
+			"Col3": "Inc",
+			"Col4": uuid.New(),
+			"Col5": map[string]uint8{"key": 1},             // Map(String, UInt8)
+			"Col6": []string{"Q", "W", "E", "R", "T", "Y"}, // Array(String)
+			"Col7": []interface{}{ // Tuple(String, UInt8, Array(Map(String, String)))
+				"String Value", uint8(5), []map[string]string{
+					map[string]string{"key": "value"},
+					map[string]string{"key": "value"},
+					map[string]string{"key": "value"},
+				},
+			},
+			"Col8": time.Now(),
+		})
+	}
+	_, err := connect.Model("data_type").Data(insertData).Insert()
+	gtest.AssertNil(err)
+	count, err := connect.Model("data_type").Where("Col2", "ClickHouse").Where("Col3", "Inc").Count()
+	gtest.AssertNil(err)
+	gtest.AssertEQ(count, 10000)
+	_, err = connect.Model("data_type").Where("Col2", "ClickHouse").Where("Col3", "Inc").Delete()
+	gtest.AssertNil(err)
+	count, err = connect.Model("data_type").Where("Col2", "ClickHouse").Where("Col3", "Inc").Count()
+	gtest.AssertNil(err)
+	gtest.AssertEQ(count, 0)
+}
+
+func TestDriverClickhouse_Open(t *testing.T) {
+	// link
+	// DSM
+	// clickhouse://username:password@host1:9000,host2:9000/database?dial_timeout=200ms&max_execution_time=60
+	link := "clickhouse://default:asdf_qwer@127.0.0.1:9000,127.0.0.1:9000/default?dial_timeout=200ms&max_execution_time=60"
+	db, err := gdb.New(gdb.ConfigNode{
+		Link: link,
+		Type: "clickhouse",
+	})
+	gtest.AssertNil(err)
+	gtest.AssertNil(db.PingMaster())
 }
