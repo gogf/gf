@@ -9,7 +9,4 @@ require (
 	github.com/longbridgeapp/sqlparser v0.3.1
 )
 
-replace (
-	github.com/ClickHouse/clickhouse-go/v2 => github.com/DGuang21/clickhouse-go/v2 v2.0.15
-	github.com/gogf/gf/v2 => ../../../
-)
+replace github.com/gogf/gf/v2 => ../../../
