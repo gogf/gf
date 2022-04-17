@@ -1,6 +1,6 @@
 module github.com/gogf/gf/contrib/drivers/clickhouse/v2
 
-go 1.15
+go 1.16
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.0.12

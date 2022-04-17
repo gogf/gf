@@ -50,6 +50,16 @@ Note:
 - It does not support `Save/Replace` features.
 - It does not support `LastInsertId`.
 
+## Clickhouse
+```
+import _ "github.com/gogf/gf/contrib/drivers/clickhouse/v2"
+```
+Note:
+- It does not support `Replace/Ignore` features.
+- It does not support `LastInsertId`.
+- It does not support `Transaction`.
+- It does not support `RowsAffected`.
+
 # Custom Drivers
 
 It's quick and easy, please refer to current driver source. 
