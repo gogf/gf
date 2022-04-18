@@ -39,7 +39,7 @@ var (
 	errUnsupportedReplace      = errors.New("unsupported method: Replace")
 	errUnsupportedBegin        = errors.New("unsupported method: Begin")
 	errUnsupportedTransaction  = errors.New("unsupported method: Transaction")
-	errUpdateNotAssignment     = errors.New("there should be WHERE condition statement for Assignment operation")
+	errNoAssignment            = errors.New("there should be WHERE condition statement for Assignment operation")
 )
 
 func init() {
@@ -271,7 +271,7 @@ func (d *Driver) doFilterUpdate(stmt *sqlparser.UpdateStatement) (string, error)
 		return "", nil
 	}
 	if len(stmt.Assignments) == 0 {
-		return "", errUpdateNotAssignment
+		return "", errNoAssignment
 	}
 	var (
 		condition   = stmt.Condition.String()

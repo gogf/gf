@@ -3,7 +3,7 @@ package clickhouse
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/util/guid"
+	"github.com/google/uuid"
 	"testing"
 	"time"
 
@@ -157,7 +157,7 @@ func dropClickhouseTableFact(conn gdb.DB) {
 }
 
 func dropClickhouseExampleTable(conn gdb.DB) {
-	sqlStr := fmt.Sprintf("DROP TABLE IF EXISTS `example1`")
+	sqlStr := fmt.Sprintf("DROP TABLE IF EXISTS `data_type`")
 	_, _ = conn.Exec(context.Background(), sqlStr)
 }
 
@@ -404,7 +404,7 @@ func TestDriverClickhouse_BatchInsert(t *testing.T) {
 			"Col1": uint8(42),
 			"Col2": "ClickHouse",
 			"Col3": "Inc",
-			"Col4": guid.S(),
+			"Col4": uuid.New(),
 			"Col5": map[string]uint8{"key": 1},             // Map(String, UInt8)
 			"Col6": []string{"Q", "W", "E", "R", "T", "Y"}, // Array(String)
 			"Col7": []interface{}{ // Tuple(String, UInt8, Array(Map(String, String)))
