@@ -103,6 +103,10 @@ func Test_Strings(t *testing.T) {
 		}
 		t.AssertEQ(gconv.Strings(array), []string{"1", "2", "3"})
 	})
+	// https://github.com/gogf/gf/issues/1750
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gconv.Strings("123"), []string{"123"})
+	})
 }
 
 func Test_Slice_Interfaces(t *testing.T) {
