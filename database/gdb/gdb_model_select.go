@@ -50,8 +50,12 @@ func (m *Model) doGetAll(ctx context.Context, limit1 bool, where ...interface{})
 // really be committed to underlying database driver.
 func (m *Model) getFieldsFiltered() string {
 	if m.fieldsEx == "" {
+		// No filtering, containing special chars.
+		if gstr.ContainsAny(m.fields, "()") {
+			return m.fields
+		}
 		// No filtering.
-		if !gstr.Contains(m.fields, ".") && !gstr.Contains(m.fields, " ") {
+		if !gstr.ContainsAny(m.fields, ". ") {
 			return m.db.GetCore().QuoteString(m.fields)
 		}
 		return m.fields
@@ -170,7 +174,7 @@ func (m *Model) Value(fieldsAndWhere ...interface{}) (Value, error) {
 	if len(all) == 0 {
 		return gvar.New(nil), nil
 	}
-	if internalData := m.db.GetCore().getInternalCtxDataFromCtx(ctx); internalData != nil {
+	if internalData := m.db.GetCore().GetInternalCtxDataFromCtx(ctx); internalData != nil {
 		record := all[0]
 		if v, ok := record[internalData.FirstResultColumn]; ok {
 			return v, nil
@@ -178,7 +182,7 @@ func (m *Model) Value(fieldsAndWhere ...interface{}) (Value, error) {
 	}
 	return nil, gerror.NewCode(
 		gcode.CodeInternalError,
-		`query value error: the internal context data is missing. there's' internal issue should be fixed'`,
+		`query value error: the internal context data is missing. there's internal issue should be fixed`,
 	)
 }
 
@@ -387,7 +391,7 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 		return 0, err
 	}
 	if len(all) > 0 {
-		if internalData := m.db.GetCore().getInternalCtxDataFromCtx(ctx); internalData != nil {
+		if internalData := m.db.GetCore().GetInternalCtxDataFromCtx(ctx); internalData != nil {
 			record := all[0]
 			if v, ok := record[internalData.FirstResultColumn]; ok {
 				return v.Int(), nil
@@ -395,7 +399,7 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 		}
 		return 0, gerror.NewCode(
 			gcode.CodeInternalError,
-			`query count error: the internal context data is missing. there's' internal issue should be fixed'`,
+			`query count error: the internal context data is missing. there's internal issue should be fixed`,
 		)
 	}
 	return 0, nil

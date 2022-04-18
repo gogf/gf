@@ -12,6 +12,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -33,13 +34,11 @@ type Driver struct {
 var (
 	// tableFieldsMap caches the table information retrieved from database.
 	tableFieldsMap             = gmap.New(true)
-	errUnsupportedInsertIgnore = errors.New("unsupported method:InsertIgnore")
-	errUnsupportedInsertGetId  = errors.New("unsupported method:InsertGetId")
-	errUnsupportedReplace      = errors.New("unsupported method:Replace")
-	errUnsupportedBegin        = errors.New("unsupported method:Begin")
-	errUnsupportedTransaction  = errors.New("unsupported method:Transaction")
-	errUpdateNotCondition      = errors.New("there should be WHERE condition statement for UPDATE operation")
-	errDeleteNotCondition      = errors.New("there should be WHERE condition statement for DELETE operation")
+	errUnsupportedInsertIgnore = errors.New("unsupported method: InsertIgnore")
+	errUnsupportedInsertGetId  = errors.New("unsupported method: InsertGetId")
+	errUnsupportedReplace      = errors.New("unsupported method: Replace")
+	errUnsupportedBegin        = errors.New("unsupported method: Begin")
+	errUnsupportedTransaction  = errors.New("unsupported method: Transaction")
 	errUpdateNotAssignment     = errors.New("there should be WHERE condition statement for Assignment operation")
 )
 
@@ -108,7 +107,9 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 
 // TableFields retrieves and returns the fields' information of specified table of current schema.
 // Also see DriverMysql.TableFields.
-func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
+func (d *Driver) TableFields(
+	ctx context.Context, table string, schema ...string,
+) (fields map[string]*gdb.TableField, err error) {
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
@@ -207,7 +208,9 @@ func (d *Driver) ping(conn *sql.DB) error {
 }
 
 // DoFilter handles the sql before posts it to database.
-func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, originSql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+func (d *Driver) DoFilter(
+	ctx context.Context, link gdb.Link, originSql string, args []interface{},
+) (newSql string, newArgs []interface{}, err error) {
 	if len(args) == 0 {
 		return originSql, args, nil
 	}
@@ -230,6 +233,10 @@ func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, originSql string, 
 		if err != nil {
 			return originSql, args, err
 		}
+		// If this is an update with no parameters , it indicates that the statement was connected by the user , who knows what they are doing, so do nothing with the statement.
+		if len(newSql) == 0 {
+			return originSql, args, nil
+		}
 		return newSql, args, nil
 	case *sqlparser.DeleteStatement:
 		// MySQL eg: DELETE FROM VISIT
@@ -238,6 +245,10 @@ func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, originSql string, 
 		if err != nil {
 			return originSql, args, err
 		}
+		// If this is an update with no parameters , it indicates that the statement was connected by the user , who knows what they are doing, so do nothing with the statement.
+		if len(newSql) == 0 {
+			return originSql, args, nil
+		}
 		return newSql, args, nil
 	}
 	return originSql, args, nil
@@ -245,22 +256,22 @@ func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, originSql string, 
 
 func (d *Driver) doFilterDelete(stmt *sqlparser.DeleteStatement) (string, error) {
 	if stmt.Condition == nil {
-		return "", errDeleteNotCondition
+		return "", nil
 	}
 	var (
 		condition = stmt.Condition.String()
 		tableName = stmt.TableName
 	)
-	if condition == "" {
-		return "", errDeleteNotCondition
-	}
 	newSql := fmt.Sprintf("ALTER TABLE %s DELETE WHERE %s", tableName, condition)
 	return newSql, nil
 }
 
 func (d *Driver) doFilterUpdate(stmt *sqlparser.UpdateStatement) (string, error) {
 	if stmt.Condition == nil {
-		return "", errUpdateNotCondition
+		return "", nil
+	}
+	if len(stmt.Assignments) == 0 {
+		return "", errUpdateNotAssignment
 	}
 	var (
 		condition   = stmt.Condition.String()
@@ -270,12 +281,6 @@ func (d *Driver) doFilterUpdate(stmt *sqlparser.UpdateStatement) (string, error)
 	)
 	for _, item := range stmt.Assignments {
 		assignments = append(assignments, item.String())
-	}
-	if len(condition) == 0 {
-		return "", errUpdateNotCondition
-	}
-	if len(assignments) == 0 {
-		return "", errUpdateNotAssignment
 	}
 	assignment = strings.Join(assignments, ",")
 	newSql := fmt.Sprintf("ALTER TABLE %s UPDATE %s WHERE %s", tableName, assignment, condition)
@@ -288,7 +293,9 @@ func (d *Driver) DoCommit(ctx context.Context, in gdb.DoCommitInput) (out gdb.Do
 	return d.Core.DoCommit(ctx, in)
 }
 
-func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
+func (d *Driver) DoInsert(
+	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
+) (result sql.Result, err error) {
 	var (
 		keys        []string // Field names.
 		valueHolder = make([]string, 0)
@@ -320,7 +327,7 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 		return
 	}
 	for i := 0; i < len(list); i++ {
-		params := []interface{}{} // Values that will be committed to underlying database driver.
+		params := make([]interface{}, 0) // Values that will be committed to underlying database driver.
 		for _, k := range keys {
 			params = append(params, list[i][k])
 		}

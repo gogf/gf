@@ -11,6 +11,7 @@ import (
 	"fmt"
 
 	"github.com/gogf/gf/v2/database/gredis"
+	"github.com/gogf/gf/v2/internal/consts"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
@@ -18,7 +19,6 @@ import (
 
 const (
 	frameCoreComponentNameRedis = "gf.core.component.redis"
-	configNodeNameRedis         = "redis"
 )
 
 // Redis returns an instance of redis client with specified configuration group name.
@@ -47,7 +47,7 @@ func Redis(name ...string) *gredis.Redis {
 			if configMap, err = Config().Data(ctx); err != nil {
 				intlog.Errorf(ctx, `retrieve config data map failed: %+v`, err)
 			}
-			if _, v := gutil.MapPossibleItemByKey(configMap, configNodeNameRedis); v != nil {
+			if _, v := gutil.MapPossibleItemByKey(configMap, consts.ConfigNodeNameRedis); v != nil {
 				configMap = gconv.Map(v)
 			}
 			if len(configMap) > 0 {

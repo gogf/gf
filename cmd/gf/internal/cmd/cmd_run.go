@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/os/gtimer"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gtag"
 )
 
@@ -149,9 +150,9 @@ func (app *cRunApp) Run() {
 	if runtime.GOOS == "windows" {
 		// Special handling for windows platform.
 		// DO NOT USE "cmd /c" command.
-		process = gproc.NewProcess(runCommand, nil)
+		process = gproc.NewProcess(outputPath, gstr.SplitAndTrim(" ", app.Args))
 	} else {
-		process = gproc.NewProcessCmd(runCommand, nil)
+		process = gproc.NewProcessCmd(outputPath, gstr.SplitAndTrim(" ", app.Args))
 	}
 	if pid, err := process.Start(); err != nil {
 		mlog.Printf("build running error: %s", err.Error())

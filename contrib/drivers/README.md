@@ -14,9 +14,11 @@ import _ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
 
 # Supported Drivers
 
-## MySQL
+## MySQL/MariaDB/TiDB
 
-BuiltIn supported, nothing todo.
+```
+import _ "github.com/gogf/gf/contrib/drivers/mysql/v2"
+```
 
 ## SQLite
 ```
@@ -50,15 +52,16 @@ Note:
 - It does not support `Save/Replace` features.
 - It does not support `LastInsertId`.
 
-## Clickhouse
+## ClickHouse
 ```
 import _ "github.com/gogf/gf/contrib/drivers/clickhouse/v2"
 ```
 Note:
-- It does not support `Replace/Ignore` features.
-- It does not support `LastInsertId`.
-- It does not support `Transaction`.
-- It does not support `RowsAffected`.
+- It does not support `InsertIgnore/InsertGetId` features.
+- It does not support `Ignore/Replace` features.
+- It does not support `Transaction` feature.
+- It does not support `RowsAffected` feature.
+
 
 # Custom Drivers
 
