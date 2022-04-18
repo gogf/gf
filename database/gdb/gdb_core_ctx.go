@@ -26,9 +26,15 @@ type internalCtxData struct {
 
 const (
 	internalCtxDataKeyInCtx gctx.StrKey = "InternalCtxData"
+
+	// `ignoreResultKeyInCtx` is a mark for some db drivers that do not support `RowsAffected` function,
+	// for example: `clickhouse`. The `clickhouse` does not support fetching insert/update results,
+	// but returns errors when execute `RowsAffected`. It here ignores the calling of `RowsAffected`
+	// to avoid triggering errors, rather than ignoring errors after they are triggered.
+	ignoreResultKeyInCtx gctx.StrKey = "IgnoreResult"
 )
 
-func (c *Core) injectInternalCtxData(ctx context.Context) context.Context {
+func (c *Core) InjectInternalCtxData(ctx context.Context) context.Context {
 	// If the internal data is already injected, it does nothing.
 	if ctx.Value(internalCtxDataKeyInCtx) != nil {
 		return ctx
@@ -38,9 +44,23 @@ func (c *Core) injectInternalCtxData(ctx context.Context) context.Context {
 	})
 }
 
-func (c *Core) getInternalCtxDataFromCtx(ctx context.Context) *internalCtxData {
+func (c *Core) GetInternalCtxDataFromCtx(ctx context.Context) *internalCtxData {
 	if v := ctx.Value(internalCtxDataKeyInCtx); v != nil {
 		return v.(*internalCtxData)
 	}
 	return nil
+}
+
+func (c *Core) InjectIgnoreResult(ctx context.Context) context.Context {
+	if ctx.Value(ignoreResultKeyInCtx) != nil {
+		return ctx
+	}
+	return context.WithValue(ctx, ignoreResultKeyInCtx, true)
+}
+
+func (c *Core) GetIgnoreResultFromCtx(ctx context.Context) bool {
+	if ctx.Value(ignoreResultKeyInCtx) != nil {
+		return true
+	}
+	return false
 }

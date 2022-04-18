@@ -9,6 +9,7 @@ package ghttp
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"mime/multipart"
 	"reflect"
@@ -152,9 +153,12 @@ func (r *Request) Get(key string, def ...interface{}) *gvar.Var {
 func (r *Request) GetBody() []byte {
 	if r.bodyContent == nil {
 		var err error
-		r.bodyContent, err = ioutil.ReadAll(r.Body)
-		if err != nil {
-			panic(gerror.WrapCode(gcode.CodeInternalError, err, `ReadAll from body failed`))
+		if r.bodyContent, err = ioutil.ReadAll(r.Body); err != nil {
+			errMsg := `Read from request Body failed`
+			if gerror.Is(err, io.EOF) {
+				errMsg += `, the Body might be closed or read manually from middleware/hook/other package previously`
+			}
+			panic(gerror.WrapCode(gcode.CodeInternalError, err, errMsg))
 		}
 		r.Body = utils.NewReadCloser(r.bodyContent, true)
 	}
@@ -170,7 +174,10 @@ func (r *Request) GetBodyString() string {
 // GetJson parses current request content as JSON format, and returns the JSON object.
 // Note that the request content is read from request BODY, not from any field of FORM.
 func (r *Request) GetJson() (*gjson.Json, error) {
-	return gjson.LoadJson(r.GetBody())
+	return gjson.LoadWithOptions(r.GetBody(), gjson.Options{
+		Type:      gjson.ContentTypeJson,
+		StrNumber: true,
+	})
 }
 
 // GetMap is an alias and convenient function for GetRequestMap.

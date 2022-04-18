@@ -11,6 +11,9 @@ import (
 	"context"
 	"database/sql"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -18,8 +21,6 @@ import (
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/util/guid"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // Query commits one query SQL to underlying driver and returns the execution result.
@@ -164,7 +165,7 @@ func (c *Core) sqlParsingHandler(ctx context.Context, in sqlParsingHandlerInput)
 // DoCommit commits current sql and arguments to underlying sql driver.
 func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutput, err error) {
 	// Inject internal data into ctx, especially for transaction creating.
-	ctx = c.injectInternalCtxData(ctx)
+	ctx = c.InjectInternalCtxData(ctx)
 
 	var (
 		sqlTx                *sql.Tx
@@ -260,7 +261,7 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 	}
 	// Result handling.
 	switch {
-	case sqlResult != nil:
+	case sqlResult != nil && !c.GetIgnoreResultFromCtx(ctx):
 		rowsAffected, err = sqlResult.RowsAffected()
 		out.Result = sqlResult
 
@@ -400,7 +401,7 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 		columnNames[k] = v.Name()
 	}
 	if len(columnNames) > 0 {
-		if internalData := c.getInternalCtxDataFromCtx(ctx); internalData != nil {
+		if internalData := c.GetInternalCtxDataFromCtx(ctx); internalData != nil {
 			internalData.FirstResultColumn = columnNames[0]
 		}
 	}

@@ -22,8 +22,17 @@ import (
 )
 
 const (
-	// Separator char for hierarchical data access.
-	defaultSplitChar = '.'
+	ContentTypeJson = `json`
+	ContentTypeJs   = `js`
+	ContentTypeXml  = `xml`
+	ContentTypeIni  = `ini`
+	ContentTypeYaml = `yaml`
+	ContentTypeYml  = `yml`
+	ContentTypeToml = `toml`
+)
+
+const (
+	defaultSplitChar = '.' // Separator char for hierarchical data access.
 )
 
 // Json is the customized JSON struct.
@@ -34,10 +43,11 @@ type Json struct {
 	vc bool         // Violence Check(false in default), which is used to access data when the hierarchical data key contains separator char.
 }
 
-// Options for Json object creating.
+// Options for Json object creating/loading.
 type Options struct {
 	Safe      bool   // Mark this object is for in concurrent-safe usage. This is especially for Json object creating.
-	Tags      string // Custom priority tags for decoding. Eg: "json,yaml,MyTag". This is especially for struct parsing into Json object.
+	Tags      string // Custom priority tags for decoding, eg: "json,yaml,MyTag". This is especially for struct parsing into Json object.
+	Type      string // Type specifies the data content type, eg: json, xml, yaml, toml, ini.
 	StrNumber bool   // StrNumber causes the Decoder to unmarshal a number into an interface{} as a string instead of as a float64.
 }
 

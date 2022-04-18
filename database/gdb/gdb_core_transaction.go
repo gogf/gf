@@ -159,7 +159,7 @@ func (tx *TX) transactionKeyForNestedPoint() string {
 func (tx *TX) Ctx(ctx context.Context) *TX {
 	tx.ctx = ctx
 	if tx.ctx != nil {
-		tx.ctx = tx.db.GetCore().injectInternalCtxData(tx.ctx)
+		tx.ctx = tx.db.GetCore().InjectInternalCtxData(tx.ctx)
 	}
 	return tx
 }

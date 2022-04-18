@@ -93,6 +93,15 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	return in.Next(ctx)
 }
 
+// UpdateAndGetAffected performs update statement and returns the affected rows number.
+func (m *Model) UpdateAndGetAffected(dataAndWhere ...interface{}) (affected int64, err error) {
+	result, err := m.Update(dataAndWhere...)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
 // Increment increments a column's value by a given amount.
 // The parameter `amount` can be type of float or integer.
 func (m *Model) Increment(column string, amount interface{}) (sql.Result, error) {
