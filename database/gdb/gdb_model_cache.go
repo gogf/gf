@@ -86,9 +86,13 @@ func (m *Model) getSelectResultFromCache(ctx context.Context, sql string, args .
 		if cacheItem, ok = v.Val().(*selectCacheItem); ok {
 			// In-memory cache.
 			return cacheItem.Result, nil
-		} else if err = json.UnmarshalUseNumber(v.Bytes(), &cacheItem); err != nil {
+		} else {
 			// Other cache, it needs conversion.
-			return nil, err
+			err = json.UnmarshalUseNumber(v.Bytes(), &cacheItem)
+			if err != nil {
+				return nil, err
+			}
+			return cacheItem.Result, nil
 		}
 	}
 	return
