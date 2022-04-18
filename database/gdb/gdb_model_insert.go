@@ -428,9 +428,5 @@ func (m *Model) formatOnDuplicateExKeys(onDuplicateEx interface{}) ([]string, er
 }
 
 func (m *Model) getBatch() int {
-	batch := defaultBatchNumber
-	if m.batch > 0 {
-		batch = m.batch
-	}
-	return batch
+	return m.batch
 }
