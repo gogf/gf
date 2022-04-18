@@ -333,12 +333,14 @@ func TestDriverClickhouse_DoFilter(t *testing.T) {
 	// this SQL can't run ,clickhouse will report an error because there is no WHERE statement
 	rawSQL = "update visit set url = '1'"
 	replaceSQL, _, err = this.DoFilter(nil, nil, rawSQL, []interface{}{1})
-	gtest.AssertEQ(err, errUpdateNotCondition)
+	gtest.AssertNil(err)
+	gtest.AssertEQ(replaceSQL, rawSQL)
 
 	// this SQL can't run ,clickhouse will report an error because there is no WHERE statement
 	rawSQL = "delete from visit"
 	replaceSQL, _, err = this.DoFilter(nil, nil, rawSQL, []interface{}{1})
-	gtest.AssertEQ(err, errDeleteNotCondition)
+	gtest.AssertNil(err)
+	gtest.AssertEQ(replaceSQL, rawSQL)
 
 	rawSQL = "update visit set url = '1' where url = '0'"
 	replaceSQL, _, err = this.DoFilter(nil, nil, rawSQL, []interface{}{1})
