@@ -280,7 +280,6 @@ const (
 	queryTypeCount          = 1
 	unionTypeNormal         = 0
 	unionTypeAll            = 1
-	defaultBatchNumber      = 10               // Per count for batch insert/replace/save.
 	defaultMaxIdleConnCount = 10               // Max idle connection count in pool.
 	defaultMaxOpenConnCount = 0                // Max open connection count in pool. Default is no limit.
 	defaultMaxConnLifeTime  = 30 * time.Second // Max lifetime for per connection in pool in seconds.

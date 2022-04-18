@@ -182,7 +182,7 @@ func (m *Model) Value(fieldsAndWhere ...interface{}) (Value, error) {
 	}
 	return nil, gerror.NewCode(
 		gcode.CodeInternalError,
-		`query value error: the internal context data is missing. there's' internal issue should be fixed'`,
+		`query value error: the internal context data is missing. there's internal issue should be fixed`,
 	)
 }
 
@@ -399,7 +399,7 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 		}
 		return 0, gerror.NewCode(
 			gcode.CodeInternalError,
-			`query count error: the internal context data is missing. there's' internal issue should be fixed'`,
+			`query count error: the internal context data is missing. there's internal issue should be fixed`,
 		)
 	}
 	return 0, nil
