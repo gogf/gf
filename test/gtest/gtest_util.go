@@ -342,7 +342,7 @@ func AssertNil(value interface{}) {
 	if err, ok := value.(error); ok {
 		panic(fmt.Sprintf(`%+v`, err))
 	}
-	AssertNE(value, nil)
+	Assert(value, nil)
 }
 
 // DataPath retrieves and returns the testdata path of current package,
