@@ -76,7 +76,7 @@ func (m *Model) getSelectResultFromCache(ctx context.Context, sql string, args .
 	defer func() {
 		if cacheItem != nil {
 			if internalData := m.db.GetCore().GetInternalCtxDataFromCtx(ctx); internalData != nil {
-				if internalData.FirstResultColumn == "" {
+				if cacheItem.FirstResultColumn != "" {
 					internalData.FirstResultColumn = cacheItem.FirstResultColumn
 				}
 			}
