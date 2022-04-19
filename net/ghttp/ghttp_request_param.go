@@ -9,6 +9,11 @@ package ghttp
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
+	"mime/multipart"
+	"reflect"
+	"strings"
+
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/encoding/gurl"
@@ -21,10 +26,6 @@ import (
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gvalid"
-	"io/ioutil"
-	"mime/multipart"
-	"reflect"
-	"strings"
 )
 
 const (
@@ -319,7 +320,9 @@ func (r *Request) parseBody() {
 	}
 	if body := r.GetBody(); len(body) > 0 {
 		// Trim space/new line characters.
-		body = bytes.TrimSpace(body)
+		newBody := make([]byte, len(body))
+		copy(body, newBody)
+		body = bytes.TrimSpace(newBody)
 		// JSON format checks.
 		if body[0] == '{' && body[len(body)-1] == '}' {
 			_ = json.UnmarshalUseNumber(body, &r.bodyMap)
