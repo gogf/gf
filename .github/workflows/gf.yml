@@ -4,14 +4,14 @@ name: GoFrame Main CI
 on:
   push:
     branches:
-    - master
-    - develop
-    - fix/*
+    - 'master'
+    - 'develop'
+    - 'fix/**'
   pull_request:
     branches:
-    - master
-    - develop
-    - fix/**
+    - 'master'
+    - 'develop'
+    - 'fix/**'
 
 
 env:
