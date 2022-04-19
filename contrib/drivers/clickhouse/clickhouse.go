@@ -224,7 +224,7 @@ func (d *Driver) DoFilter(
 	// replace STD SQL to Clickhouse SQL grammar
 	parsedStmt, err := sqlparser.NewParser(strings.NewReader(originSql)).ParseStatement()
 	if err != nil {
-		return originSql, args, err
+		return "", nil, err
 	}
 	switch stmt := parsedStmt.(type) {
 	case *sqlparser.UpdateStatement:
@@ -320,7 +320,7 @@ func (d *Driver) DoInsert(
 		return
 	}
 	for i := 0; i < len(list); i++ {
-		params := []interface{}{} // Values that will be committed to underlying database driver.
+		params := make([]interface{}, 0) // Values that will be committed to underlying database driver.
 		for _, k := range keys {
 			params = append(params, list[i][k])
 		}
