@@ -9,6 +9,11 @@ package ghttp
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
+	"mime/multipart"
+	"reflect"
+	"strings"
+
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/encoding/gurl"
@@ -21,10 +26,6 @@ import (
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gvalid"
-	"io/ioutil"
-	"mime/multipart"
-	"reflect"
-	"strings"
 )
 
 const (
@@ -174,7 +175,7 @@ func (r *Request) GetBody() []byte {
 // GetBodyString retrieves and returns request body content as string.
 // It can be called multiple times retrieving the same body content.
 func (r *Request) GetBodyString() string {
-	return gconv.UnsafeBytesToStr(r.GetBody())
+	return string(r.GetBody())
 }
 
 // GetJson parses current request content as JSON format, and returns the JSON object.
@@ -374,7 +375,7 @@ func (r *Request) parseForm() {
 					// It might be JSON/XML content.
 					if s := gstr.Trim(name + strings.Join(values, " ")); len(s) > 0 {
 						if s[0] == '{' && s[len(s)-1] == '}' || s[0] == '<' && s[len(s)-1] == '>' {
-							r.bodyContent = gconv.UnsafeStrToBytes(s)
+							r.bodyContent = []byte(s)
 							params = ""
 							break
 						}

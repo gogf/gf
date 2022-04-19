@@ -7,9 +7,10 @@
 package gtype
 
 import (
-	"github.com/gogf/gf/util/gconv"
 	"strconv"
 	"sync/atomic"
+
+	"github.com/gogf/gf/util/gconv"
 )
 
 // Uint is a struct for concurrent-safe operation for type uint.
@@ -60,12 +61,12 @@ func (v *Uint) String() string {
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (v *Uint) MarshalJSON() ([]byte, error) {
-	return gconv.UnsafeStrToBytes(strconv.FormatUint(uint64(v.Val()), 10)), nil
+	return []byte(strconv.FormatUint(uint64(v.Val()), 10)), nil
 }
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (v *Uint) UnmarshalJSON(b []byte) error {
-	v.Set(gconv.Uint(gconv.UnsafeBytesToStr(b)))
+	v.Set(gconv.Uint(string(b)))
 	return nil
 }
 
