@@ -58,9 +58,10 @@ import _ "github.com/gogf/gf/contrib/drivers/clickhouse/v2"
 ```
 Note:
 - It does not support `InsertIgnore/InsertGetId` features.
-- It does not support `Save/Replace` features.
 - It does not support `Transaction` feature.
 - It does not support `Transaction` feature.
+- It does not support `RowsAffected` feature.
+
 
 
 # Custom Drivers

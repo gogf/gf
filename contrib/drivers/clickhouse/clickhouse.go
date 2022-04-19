@@ -12,9 +12,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/ClickHouse/clickhouse-go/v2"
+	"github.com/longbridgeapp/sqlparser"
+	"net/url"
 	"strings"
-
-	"github.com/ClickHouse/clickhouse-go"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -33,12 +34,13 @@ type Driver struct {
 var (
 	// tableFieldsMap caches the table information retrieved from database.
 	tableFieldsMap             = gmap.New(true)
-	errUnsupportedInsertIgnore = errors.New("unsupported method: InsertIgnore")
-	errUnsupportedInsertGetId  = errors.New("unsupported method: InsertGetId")
-	errUnsupportedReplace      = errors.New("unsupported method: Replace")
-	errUnsupportedBegin        = errors.New("unsupported method: Begin")
-	errUnsupportedTransaction  = errors.New("unsupported method: Transaction")
-	errSQLNull                 = errors.New("SQL cannot be null")
+	errUnsupportedInsertIgnore = errors.New("unsupported method:InsertIgnore")
+	errUnsupportedInsertGetId  = errors.New("unsupported method:InsertGetId")
+	errUnsupportedReplace      = errors.New("unsupported method:Replace")
+	errUnsupportedBegin        = errors.New("unsupported method:Begin")
+	errUnsupportedTransaction  = errors.New("unsupported method:Transaction")
+	errNotCondition            = errors.New("there should be WHERE condition statement for UPDATE/DELETE operation")
+	errNotAssignment           = errors.New("there should be WHERE condition statement for Assignment operation")
 )
 
 func init() {
@@ -70,12 +72,12 @@ func (d *Driver) Open(config *gdb.ConfigNode) (*sql.DB, error) {
 		source = config.Link
 	} else if config.Pass != "" {
 		source = fmt.Sprintf(
-			"clickhouse://%s:%s@%s:%s/%s?charset=%s&debug=%s",
-			config.User, config.Pass, config.Host, config.Port, config.Name, config.Charset, gconv.String(config.Debug))
+			"clickhouse://%s:%s@%s:%s/%s?charset=%s&debug=%t",
+			config.User, url.PathEscape(config.Pass), config.Host, config.Port, config.Name, config.Charset, config.Debug)
 	} else {
 		source = fmt.Sprintf(
-			"clickhouse://%s@%s:%s/%s?charset=%s&debug=%s",
-			config.User, config.Host, config.Port, config.Name, config.Charset, gconv.String(config.Debug))
+			"clickhouse://%s@%s:%s/%s?charset=%s&debug=%t",
+			config.User, config.Host, config.Port, config.Name, config.Charset, config.Debug)
 	}
 	db, err := sql.Open(driver, source)
 	if err != nil {
@@ -106,9 +108,7 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 
 // TableFields retrieves and returns the fields' information of specified table of current schema.
 // Also see DriverMysql.TableFields.
-func (d *Driver) TableFields(
-	ctx context.Context, table string, schema ...string,
-) (fields map[string]*gdb.TableField, err error) {
+func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
@@ -128,7 +128,7 @@ func (d *Driver) TableFields(
 			if link, err = d.SlaveLink(useSchema); err != nil {
 				return nil
 			}
-			getColumnsSql := fmt.Sprintf("select name,position,default_expression,comment from `system`.columns c where database = '%s' and `table` = '%s'", d.GetConfig().Name, table)
+			getColumnsSql := fmt.Sprintf("select name,position,default_expression,comment,type from `system`.columns c where database = '%s' and `table` = '%s'", d.GetConfig().Name, table)
 			result, err = d.DoSelect(ctx, link, getColumnsSql)
 			if err != nil {
 				return nil
@@ -210,31 +210,72 @@ func (d *Driver) ping(conn *sql.DB) error {
 func (d *Driver) DoFilter(
 	ctx context.Context, link gdb.Link, originSql string, args []interface{},
 ) (newSql string, newArgs []interface{}, err error) {
-	// It replaces STD SQL to Clickhouse SQL grammar.
-	// MySQL eg:      UPDATE visits SET xxx
-	// Clickhouse eg: ALTER TABLE visits UPDATE xxx
-	// MySQL eg:      DELETE FROM VISIT
-	// Clickhouse eg: ALTER TABLE VISIT DELETE WHERE filter_expr
-	result, err := gregex.MatchString("(?i)^UPDATE|DELETE", originSql)
-	if err != nil {
-		return "", nil, err
+	if len(args) == 0 {
+		return originSql, args, nil
 	}
-	if len(result) != 0 {
-		sqlSlice := strings.Split(originSql, " ")
-		if len(sqlSlice) < 3 {
-			return "", nil, errSQLNull
+	var index int
+	// Convert placeholder char '?' to string "$x".
+	originSql, _ = gregex.ReplaceStringFunc(`\?`, originSql, func(s string) string {
+		index++
+		return fmt.Sprintf(`$%d`, index)
+	})
+	// replace STD SQL to Clickhouse SQL grammar
+	parsedStmt, err := sqlparser.NewParser(strings.NewReader(originSql)).ParseStatement()
+	if err != nil {
+		return originSql, args, err
+	}
+	switch stmt := parsedStmt.(type) {
+	case *sqlparser.UpdateStatement:
+		// MySQL eg: UPDATE visits SET xxx
+		// Clickhouse eg: ALTER TABLE visits UPDATE xxx
+		newSql, err = d.doFilterUpdate(stmt)
+		if err != nil {
+			return originSql, args, err
 		}
-		ck := []string{"ALTER", "TABLE"}
-		switch strings.ToUpper(result[0]) {
-		case "UPDATE":
-			sqlSlice = append(append(append(ck, sqlSlice[1]), result[0]), sqlSlice[3:]...)
-			return strings.Join(sqlSlice, " "), args, nil
-		case "DELETE":
-			sqlSlice = append(append(append(ck, sqlSlice[2]), result[0]), sqlSlice[3:]...)
-			return strings.Join(sqlSlice, " "), args, nil
+		return newSql, args, nil
+	case *sqlparser.DeleteStatement:
+		// MySQL eg: DELETE FROM VISIT
+		// Clickhouse eg: ALTER TABLE VISIT DELETE WHERE filter_expr
+		newSql, err = d.doFilterDelete(stmt)
+		if err != nil {
+			return originSql, args, err
 		}
+		return newSql, args, nil
 	}
 	return originSql, args, nil
+}
+
+func (d *Driver) doFilterDelete(stmt *sqlparser.DeleteStatement) (string, error) {
+	if stmt.Condition == nil {
+		return "", errNotCondition
+	}
+	var (
+		condition = stmt.Condition.String()
+		tableName = stmt.TableName
+	)
+	newSql := fmt.Sprintf("ALTER TABLE %s DELETE WHERE %s", tableName, condition)
+	return newSql, nil
+}
+
+func (d *Driver) doFilterUpdate(stmt *sqlparser.UpdateStatement) (string, error) {
+	if stmt.Condition == nil {
+		return "", errNotCondition
+	}
+	if len(stmt.Assignments) == 0 {
+		return "", errNotAssignment
+	}
+	var (
+		condition   = stmt.Condition.String()
+		assignment  string
+		tableName   = stmt.TableName
+		assignments = []string{}
+	)
+	for _, item := range stmt.Assignments {
+		assignments = append(assignments, item.String())
+	}
+	assignment = strings.Join(assignments, ",")
+	newSql := fmt.Sprintf("ALTER TABLE %s UPDATE %s WHERE %s", tableName, assignment, condition)
+	return newSql, nil
 }
 
 // DoCommit commits current sql and arguments to underlying sql driver.
@@ -243,9 +284,7 @@ func (d *Driver) DoCommit(ctx context.Context, in gdb.DoCommitInput) (out gdb.Do
 	return d.Core.DoCommit(ctx, in)
 }
 
-func (d *Driver) DoInsert(
-	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
-) (result sql.Result, err error) {
+func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
 	var (
 		keys        []string // Field names.
 		valueHolder = make([]string, 0)
@@ -277,7 +316,7 @@ func (d *Driver) DoInsert(
 		return
 	}
 	for i := 0; i < len(list); i++ {
-		params := make([]interface{}, 0) // Values that will be committed to underlying database driver.
+		params := []interface{}{} // Values that will be committed to underlying database driver.
 		for _, k := range keys {
 			params = append(params, list[i][k])
 		}
@@ -288,6 +327,19 @@ func (d *Driver) DoInsert(
 		}
 	}
 	return stdSqlResult, tx.Commit()
+}
+
+// ConvertDataForRecord converting for any data that will be inserted into table/collection as a record.
+func (d *Driver) ConvertDataForRecord(ctx context.Context, value interface{}) map[string]interface{} {
+	// Clickhouse does not need to preprocess the value and can be inserted directly
+	// So it is not processed here
+	return gconv.Map(value, gdb.OrmTagForStruct)
+}
+
+func (d *Driver) ConvertDataForRecordValue(ctx context.Context, value interface{}) interface{} {
+	// Clickhouse does not need to preprocess the value and can be inserted directly
+	// So it is not processed here
+	return value
 }
 
 // InsertIgnore Other queries for modifying data parts are not supported: REPLACE, MERGE, UPSERT, INSERT UPDATE.
