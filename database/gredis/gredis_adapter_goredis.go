@@ -48,6 +48,7 @@ func NewAdapterGoRedis(config *Config) *AdapterGoRedis {
 		WriteTimeout: config.WriteTimeout,
 		MasterName:   config.MasterName,
 		TLSConfig:    config.TLSConfig,
+		PoolSize:     config.MaxActive,
 	})
 	return &AdapterGoRedis{
 		client: client,
