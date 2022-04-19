@@ -10,12 +10,14 @@ package gdb
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf"
-	"github.com/gogf/gf/net/gtrace"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/gogf/gf"
+	"github.com/gogf/gf/net/gtrace"
 )
 
 const (
@@ -52,6 +54,7 @@ func (c *Core) addSqlToTracing(ctx context.Context, sql *Sql) {
 	labels = append(labels, gtrace.CommonLabels()...)
 	labels = append(labels,
 		attribute.String(tracingAttrDbType, c.db.GetConfig().Type),
+		semconv.DBStatementKey.String(sql.Format),
 	)
 	if c.db.GetConfig().Host != "" {
 		labels = append(labels, attribute.String(tracingAttrDbHost, c.db.GetConfig().Host))
