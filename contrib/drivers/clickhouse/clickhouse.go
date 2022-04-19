@@ -108,7 +108,9 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 
 // TableFields retrieves and returns the fields' information of specified table of current schema.
 // Also see DriverMysql.TableFields.
-func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
+func (d *Driver) TableFields(
+	ctx context.Context, table string, schema ...string,
+) (fields map[string]*gdb.TableField, err error) {
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
@@ -284,7 +286,9 @@ func (d *Driver) DoCommit(ctx context.Context, in gdb.DoCommitInput) (out gdb.Do
 	return d.Core.DoCommit(ctx, in)
 }
 
-func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
+func (d *Driver) DoInsert(
+	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
+) (result sql.Result, err error) {
 	var (
 		keys        []string // Field names.
 		valueHolder = make([]string, 0)
