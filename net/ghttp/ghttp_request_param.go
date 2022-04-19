@@ -318,11 +318,11 @@ func (r *Request) parseBody() {
 	if r.ContentLength == 0 {
 		return
 	}
-	if body := r.GetBody(); len(body) > 0 {
+	if tempBody := r.GetBody(); len(tempBody) > 0 {
+		body := make([]byte, len(tempBody))
+		copy(body, tempBody)
 		// Trim space/new line characters.
-		newBody := make([]byte, len(body))
-		copy(body, newBody)
-		body = bytes.TrimSpace(newBody)
+		body = bytes.TrimSpace(body)
 		// JSON format checks.
 		if body[0] == '{' && body[len(body)-1] == '}' {
 			_ = json.UnmarshalUseNumber(body, &r.bodyMap)
