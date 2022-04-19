@@ -69,7 +69,7 @@ type (
 	cRunInput struct {
 		g.Meta `name:"run"`
 		File   string `name:"FILE"  arg:"true" brief:"{cRunFileBrief}" v:"required"`
-		Path   string `name:"path"  short:"p"  brief:"{cRunPathBrief}" d:"./"`
+		Path   string `name:"path"  short:"p"  brief:"{cRunPathBrief}" d:"./manifest/output"`
 		Extra  string `name:"extra" short:"e"  brief:"{cRunExtraBrief}"`
 	}
 	cRunOutput struct{}
