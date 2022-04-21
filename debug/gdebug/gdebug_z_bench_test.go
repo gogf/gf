@@ -58,7 +58,7 @@ func Benchmark_StackOfStdlib(b *testing.B) {
 
 func Benchmark_StackWithFilter(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		StackWithFilter("test")
+		StackWithFilter([]string{"test"})
 	}
 }
 
@@ -70,7 +70,7 @@ func Benchmark_Caller(b *testing.B) {
 
 func Benchmark_CallerWithFilter(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		CallerWithFilter("test")
+		CallerWithFilter([]string{"test"})
 	}
 }
 
