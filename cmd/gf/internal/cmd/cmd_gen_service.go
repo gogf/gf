@@ -24,7 +24,7 @@ type (
 	cGenServiceOutput struct{}
 )
 
-func (c cGen) Service(ctx context.Context, in cGenServiceInput) (out *cGenPbOutput, err error) {
+func (c cGen) Service(ctx context.Context, in cGenServiceInput) (out *cGenServiceOutput, err error) {
 	in.Logic = gstr.Trim(in.Logic, `\/`)
 	in.WatchFile = gstr.Trim(in.WatchFile, `\/`)
 	if !gfile.Exists(in.Logic) {
