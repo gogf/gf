@@ -33,21 +33,17 @@ func ReplaceI(origin, search, replace string, count ...int) string {
 		return origin
 	}
 	var (
-		searchLength = len(search)
-		searchLower  = strings.ToLower(search)
-		originLower  string
-		pos          int
-		diff         = len(replace) - searchLength
+		searchLength  = len(search)
+		replaceLength = len(replace)
+		searchLower   = strings.ToLower(search)
+		originLower   string
+		pos           int
 	)
 	for {
 		originLower = strings.ToLower(origin)
 		if pos = Pos(originLower, searchLower, pos); pos != -1 {
 			origin = origin[:pos] + replace + origin[pos+searchLength:]
-			if diff < 0 {
-				pos += -diff
-			} else {
-				pos += diff + 1
-			}
+			pos += replaceLength
 			if n--; n == 0 {
 				break
 			}
