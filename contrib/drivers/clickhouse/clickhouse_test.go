@@ -326,27 +326,29 @@ func TestDriverClickhouse_Replace(t *testing.T) {
 func TestDriverClickhouse_DoFilter(t *testing.T) {
 	rawSQL := "select * from visits where 1 = 1"
 	this := Driver{}
-	replaceSQL, _, err := this.DoFilter(nil, nil, rawSQL, []interface{}{1})
+	replaceSQL, _, err := this.DoFilter(context.Background(), nil, rawSQL, []interface{}{1})
 	gtest.AssertNil(err)
 	gtest.AssertEQ(rawSQL, replaceSQL)
 
 	// this SQL can't run ,clickhouse will report an error because there is no WHERE statement
 	rawSQL = "update visit set url = '1'"
-	replaceSQL, _, err = this.DoFilter(nil, nil, rawSQL, []interface{}{1})
-	gtest.AssertEQ(err, errNotCondition)
+	replaceSQL, _, err = this.DoFilter(context.Background(), nil, rawSQL, []interface{}{1})
+	gtest.AssertNil(err)
 
 	// this SQL can't run ,clickhouse will report an error because there is no WHERE statement
 	rawSQL = "delete from visit"
-	replaceSQL, _, err = this.DoFilter(nil, nil, rawSQL, []interface{}{1})
-	gtest.AssertEQ(err, errNotCondition)
+	replaceSQL, _, err = this.DoFilter(context.Background(), nil, rawSQL, []interface{}{1})
+	gtest.AssertNil(err)
 
+	core := gdb.Core{}
+	ctx := core.InjectNeedParsedSql(context.Background())
 	rawSQL = "update visit set url = '1' where url = '0'"
-	replaceSQL, _, err = this.DoFilter(nil, nil, rawSQL, []interface{}{1})
+	replaceSQL, _, err = this.DoFilter(ctx, nil, rawSQL, []interface{}{1})
 	gtest.AssertNil(err)
 	gtest.AssertEQ(replaceSQL, "ALTER TABLE visit UPDATE url = '1' WHERE url = '0'")
 
 	rawSQL = "delete from visit where url='0'"
-	replaceSQL, _, err = this.DoFilter(nil, nil, rawSQL, []interface{}{1})
+	replaceSQL, _, err = this.DoFilter(ctx, nil, rawSQL, []interface{}{1})
 	gtest.AssertNil(err)
 	gtest.AssertEQ(replaceSQL, "ALTER TABLE visit DELETE WHERE url = '0'")
 }

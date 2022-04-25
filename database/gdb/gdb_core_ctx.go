@@ -32,6 +32,8 @@ const (
 	// but returns errors when execute `RowsAffected`. It here ignores the calling of `RowsAffected`
 	// to avoid triggering errors, rather than ignoring errors after they are triggered.
 	ignoreResultKeyInCtx gctx.StrKey = "IgnoreResult"
+
+	needParsedSqlInCtx gctx.StrKey = "NeedParsedSql"
 )
 
 func (c *Core) InjectInternalCtxData(ctx context.Context) context.Context {
@@ -60,6 +62,20 @@ func (c *Core) InjectIgnoreResult(ctx context.Context) context.Context {
 
 func (c *Core) GetIgnoreResultFromCtx(ctx context.Context) bool {
 	if ctx.Value(ignoreResultKeyInCtx) != nil {
+		return true
+	}
+	return false
+}
+
+func (c *Core) InjectNeedParsedSql(ctx context.Context) context.Context {
+	if ctx.Value(needParsedSqlInCtx) != nil {
+		return ctx
+	}
+	return context.WithValue(ctx, needParsedSqlInCtx, true)
+}
+
+func (c *Core) GetNeedParsedSqlFromCtx(ctx context.Context) bool {
+	if ctx.Value(needParsedSqlInCtx) != nil {
 		return true
 	}
 	return false

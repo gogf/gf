@@ -221,6 +221,10 @@ func (d *Driver) DoFilter(
 		index++
 		return fmt.Sprintf(`$%d`, index)
 	})
+	// Only SQL generated through the framework is processed.
+	if !d.GetNeedParsedSqlFromCtx(ctx) {
+		return originSql, args, nil
+	}
 	// replace STD SQL to Clickhouse SQL grammar
 	parsedStmt, err := sqlparser.NewParser(strings.NewReader(originSql)).ParseStatement()
 	if err != nil {
@@ -344,6 +348,16 @@ func (d *Driver) ConvertDataForRecordValue(ctx context.Context, value interface{
 	// Clickhouse does not need to preprocess the value and can be inserted directly
 	// So it is not processed here
 	return value
+}
+
+func (d *Driver) DoDelete(ctx context.Context, link gdb.Link, table string, condition string, args ...interface{}) (result sql.Result, err error) {
+	ctx = d.InjectNeedParsedSql(ctx)
+	return d.Core.DoDelete(ctx, link, table, condition, args...)
+}
+
+func (d *Driver) DoUpdate(ctx context.Context, link gdb.Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
+	ctx = d.InjectNeedParsedSql(ctx)
+	return d.Core.DoUpdate(ctx, link, table, data, condition, args...)
 }
 
 // InsertIgnore Other queries for modifying data parts are not supported: REPLACE, MERGE, UPSERT, INSERT UPDATE.
