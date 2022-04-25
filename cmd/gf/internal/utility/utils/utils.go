@@ -15,16 +15,23 @@ var (
 // GoFmt formats the source file using command `gofmt -w -s PATH`.
 func GoFmt(path string) {
 	if gofmtPath == "" {
-		mlog.Debug(`command "gofmt" not found`)
-		return
+		mlog.Fatal(`command "gofmt" not found`)
 	}
-	gproc.ShellExec(fmt.Sprintf(`%s -w -s %s`, gofmtPath, path))
+	var command = fmt.Sprintf(`%s -w -s %s`, gofmtPath, path)
+	result, err := gproc.ShellExec(command)
+	if err != nil {
+		mlog.Fatal(`error executing command "%s": %s`, command, result)
+	}
 }
 
 // GoImports formats the source file using command `goimports -w PATH`.
 func GoImports(path string) {
 	if goimportsPath == "" {
-		mlog.Debug(`command "goimports" not found`)
+		mlog.Fatal(`command "goimports" not found`)
 	}
-	gproc.ShellExec(fmt.Sprintf(`%s -w %s`, goimportsPath, path))
+	var command = fmt.Sprintf(`%s -w -s %s`, goimportsPath, path)
+	result, err := gproc.ShellExec(command)
+	if err != nil {
+		mlog.Fatal(`error executing command "%s": %s`, command, result)
+	}
 }
