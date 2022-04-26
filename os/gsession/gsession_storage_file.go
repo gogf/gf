@@ -39,7 +39,7 @@ const (
 
 var (
 	DefaultStorageFilePath      = gfile.Temp("gsessions")
-	DefaultStorageFileCryptoKey = []byte("Session storage file crypto key!")
+	DefaultStorageFileCryptoKey = []byte("Session storage file crypto sessionIdToRedisKey!")
 )
 
 // NewStorageFile creates and returns a file storage object for session.
@@ -73,22 +73,22 @@ func NewStorageFile(path ...string) *StorageFile {
 // updateSessionTimely batch updates the TTL for sessions timely.
 func (s *StorageFile) updateSessionTimely(ctx context.Context) {
 	var (
-		id  string
-		err error
+		sessionId string
+		err       error
 	)
 	// Batch updating sessions.
 	for {
-		if id = s.updatingIdSet.Pop(); id == "" {
+		if sessionId = s.updatingIdSet.Pop(); sessionId == "" {
 			break
 		}
-		if err = s.updateSessionTTl(context.TODO(), id); err != nil {
+		if err = s.updateSessionTTl(context.TODO(), sessionId); err != nil {
 			intlog.Errorf(context.TODO(), `%+v`, err)
 		}
 	}
 }
 
-// SetCryptoKey sets the crypto key for session storage.
-// The crypto key is used when crypto feature is enabled.
+// SetCryptoKey sets the crypto sessionIdToRedisKey for session storage.
+// The crypto sessionIdToRedisKey is used when crypto feature is enabled.
 func (s *StorageFile) SetCryptoKey(key []byte) {
 	s.cryptoKey = key
 }
@@ -109,42 +109,42 @@ func (s *StorageFile) New(ctx context.Context, ttl time.Duration) (id string, er
 	return "", ErrorDisabled
 }
 
-// Get retrieves session value with given key.
-// It returns nil if the key does not exist in the session.
-func (s *StorageFile) Get(ctx context.Context, id string, key string) (value interface{}, err error) {
+// Get retrieves session value with given sessionIdToRedisKey.
+// It returns nil if the sessionIdToRedisKey does not exist in the session.
+func (s *StorageFile) Get(ctx context.Context, sessionId string, key string) (value interface{}, err error) {
 	return nil, ErrorDisabled
 }
 
-// Data retrieves all key-value pairs as map from storage.
-func (s *StorageFile) Data(ctx context.Context, id string) (data map[string]interface{}, err error) {
+// Data retrieves all sessionIdToRedisKey-value pairs as map from storage.
+func (s *StorageFile) Data(ctx context.Context, sessionId string) (data map[string]interface{}, err error) {
 	return nil, ErrorDisabled
 }
 
-// GetSize retrieves the size of key-value pairs from storage.
-func (s *StorageFile) GetSize(ctx context.Context, id string) (size int, err error) {
+// GetSize retrieves the size of sessionIdToRedisKey-value pairs from storage.
+func (s *StorageFile) GetSize(ctx context.Context, sessionId string) (size int, err error) {
 	return -1, ErrorDisabled
 }
 
-// Set sets key-value session pair to the storage.
-// The parameter `ttl` specifies the TTL for the session id (not for the key-value pair).
-func (s *StorageFile) Set(ctx context.Context, id string, key string, value interface{}, ttl time.Duration) error {
+// Set sets sessionIdToRedisKey-value session pair to the storage.
+// The parameter `ttl` specifies the TTL for the session id (not for the sessionIdToRedisKey-value pair).
+func (s *StorageFile) Set(ctx context.Context, sessionId string, key string, value interface{}, ttl time.Duration) error {
 	return ErrorDisabled
 }
 
-// SetMap batch sets key-value session pairs with map to the storage.
-// The parameter `ttl` specifies the TTL for the session id(not for the key-value pair).
-func (s *StorageFile) SetMap(ctx context.Context, id string, data map[string]interface{}, ttl time.Duration) error {
+// SetMap batch sets sessionIdToRedisKey-value session pairs with map to the storage.
+// The parameter `ttl` specifies the TTL for the session id(not for the sessionIdToRedisKey-value pair).
+func (s *StorageFile) SetMap(ctx context.Context, sessionId string, data map[string]interface{}, ttl time.Duration) error {
 	return ErrorDisabled
 }
 
-// Remove deletes key with its value from storage.
-func (s *StorageFile) Remove(ctx context.Context, id string, key string) error {
+// Remove deletes sessionIdToRedisKey with its value from storage.
+func (s *StorageFile) Remove(ctx context.Context, sessionId string, key string) error {
 	return ErrorDisabled
 }
 
-// RemoveAll deletes all key-value pairs from storage.
-func (s *StorageFile) RemoveAll(ctx context.Context, id string) error {
-	return ErrorDisabled
+// RemoveAll deletes all sessionIdToRedisKey-value pairs from storage.
+func (s *StorageFile) RemoveAll(ctx context.Context, sessionId string) error {
+	return gfile.Remove(s.sessionFilePath(sessionId))
 }
 
 // GetSession returns the session data as *gmap.StrAnyMap for given session id from storage.
@@ -154,12 +154,15 @@ func (s *StorageFile) RemoveAll(ctx context.Context, id string) error {
 // and for some storage it might be nil if memory storage is disabled.
 //
 // This function is called ever when session starts.
-func (s *StorageFile) GetSession(ctx context.Context, id string, ttl time.Duration, data *gmap.StrAnyMap) (*gmap.StrAnyMap, error) {
+func (s *StorageFile) GetSession(ctx context.Context, sessionId string, ttl time.Duration, data *gmap.StrAnyMap) (*gmap.StrAnyMap, error) {
 	if data != nil {
 		return data, nil
 	}
-	path := s.sessionFilePath(id)
-	content := gfile.GetBytes(path)
+	var (
+		path    = s.sessionFilePath(sessionId)
+		content = gfile.GetBytes(path)
+	)
+	// It updates the TTL only if the session file already exists.
 	if len(content) > 8 {
 		timestampMilli := gbinary.DecodeToInt64(content[:8])
 		if timestampMilli+ttl.Nanoseconds()/1e6 < gtime.TimestampMilli() {
@@ -189,9 +192,9 @@ func (s *StorageFile) GetSession(ctx context.Context, id string, ttl time.Durati
 // SetSession updates the data map for specified session id.
 // This function is called ever after session, which is changed dirty, is closed.
 // This copy all session data map from memory to storage.
-func (s *StorageFile) SetSession(ctx context.Context, id string, data *gmap.StrAnyMap, ttl time.Duration) error {
-	intlog.Printf(ctx, "StorageFile.SetSession: %s, %v, %v", id, data, ttl)
-	path := s.sessionFilePath(id)
+func (s *StorageFile) SetSession(ctx context.Context, sessionId string, data *gmap.StrAnyMap, ttl time.Duration) error {
+	intlog.Printf(ctx, "StorageFile.SetSession: %s, %v, %v", sessionId, data, ttl)
+	path := s.sessionFilePath(sessionId)
 	content, err := json.Marshal(data)
 	if err != nil {
 		return err
@@ -224,18 +227,18 @@ func (s *StorageFile) SetSession(ctx context.Context, id string, data *gmap.StrA
 // UpdateTTL updates the TTL for specified session id.
 // This function is called ever after session, which is not dirty, is closed.
 // It just adds the session id to the async handling queue.
-func (s *StorageFile) UpdateTTL(ctx context.Context, id string, ttl time.Duration) error {
-	intlog.Printf(ctx, "StorageFile.UpdateTTL: %s, %v", id, ttl)
+func (s *StorageFile) UpdateTTL(ctx context.Context, sessionId string, ttl time.Duration) error {
+	intlog.Printf(ctx, "StorageFile.UpdateTTL: %s, %v", sessionId, ttl)
 	if ttl >= DefaultStorageFileLoopInterval {
-		s.updatingIdSet.Add(id)
+		s.updatingIdSet.Add(sessionId)
 	}
 	return nil
 }
 
 // updateSessionTTL updates the TTL for specified session id.
-func (s *StorageFile) updateSessionTTl(ctx context.Context, id string) error {
-	intlog.Printf(ctx, "StorageFile.updateSession: %s", id)
-	path := s.sessionFilePath(id)
+func (s *StorageFile) updateSessionTTl(ctx context.Context, sessionId string) error {
+	intlog.Printf(ctx, "StorageFile.updateSession: %s", sessionId)
+	path := s.sessionFilePath(sessionId)
 	file, err := gfile.OpenWithFlag(path, os.O_WRONLY)
 	if err != nil {
 		return err

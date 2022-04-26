@@ -42,17 +42,19 @@ func (s *Session) init() error {
 	var err error
 	if s.id != "" {
 		// Retrieve memory session data from manager.
-		r, err := s.manager.sessionData.Get(s.ctx, s.id)
+		var v *gvar.Var
+		v, err = s.manager.sessionData.Get(s.ctx, s.id)
 		if err != nil && err != ErrorDisabled {
 			return err
 		}
-		if r != nil {
-			s.data = r.Val().(*gmap.StrAnyMap)
+		if v != nil {
+			s.data = v.Val().(*gmap.StrAnyMap)
 			intlog.Print(s.ctx, "session init data:", s.data)
 		}
 		// Retrieve stored session data from storage.
 		if s.manager.storage != nil {
-			if s.data, err = s.manager.storage.GetSession(s.ctx, s.id, s.manager.ttl, s.data); err != nil && err != ErrorDisabled {
+			s.data, err = s.manager.storage.GetSession(s.ctx, s.id, s.manager.ttl, s.data)
+			if err != nil && err != ErrorDisabled {
 				intlog.Errorf(s.ctx, `session restoring failed for id "%s": %+v`, s.id, err)
 				return err
 			}
@@ -93,11 +95,13 @@ func (s *Session) Close() error {
 		size := s.data.Size()
 		if s.manager.storage != nil {
 			if s.dirty {
-				if err := s.manager.storage.SetSession(s.ctx, s.id, s.data, s.manager.ttl); err != nil && err != ErrorDisabled {
+				err := s.manager.storage.SetSession(s.ctx, s.id, s.data, s.manager.ttl)
+				if err != nil && err != ErrorDisabled {
 					return err
 				}
 			} else if size > 0 {
-				if err := s.manager.storage.UpdateTTL(s.ctx, s.id, s.manager.ttl); err != nil && err != ErrorDisabled {
+				err := s.manager.storage.UpdateTTL(s.ctx, s.id, s.manager.ttl)
+				if err != nil && err != ErrorDisabled {
 					return err
 				}
 			}
@@ -109,7 +113,7 @@ func (s *Session) Close() error {
 	return nil
 }
 
-// Set sets key-value pair to this session.
+// Set sets sessionIdToRedisKey-value pair to this session.
 func (s *Session) Set(key string, value interface{}) error {
 	if err := s.init(); err != nil {
 		return err
@@ -141,7 +145,7 @@ func (s *Session) SetMap(data map[string]interface{}) error {
 	return nil
 }
 
-// Remove removes key along with its value from this session.
+// Remove removes sessionIdToRedisKey along with its value from this session.
 func (s *Session) Remove(keys ...string) error {
 	if s.id == "" {
 		return nil
@@ -162,20 +166,22 @@ func (s *Session) Remove(keys ...string) error {
 	return nil
 }
 
-// RemoveAll deletes all key-value pairs from this session.
-func (s *Session) RemoveAll() error {
+// RemoveAll deletes all sessionIdToRedisKey-value pairs from this session.
+func (s *Session) RemoveAll() (err error) {
 	if s.id == "" {
 		return nil
 	}
-	if err := s.init(); err != nil {
+	if err = s.init(); err != nil {
 		return err
 	}
-	if err := s.manager.storage.RemoveAll(s.ctx, s.id); err != nil {
-		if err == ErrorDisabled {
-			s.data.Clear()
-		} else {
+	if err = s.manager.storage.RemoveAll(s.ctx, s.id); err != nil {
+		if err != ErrorDisabled {
 			return err
 		}
+	}
+	// Remove data from memory.
+	if s.data != nil {
+		s.data.Clear()
 	}
 	s.dirty = true
 	return nil
@@ -247,7 +253,7 @@ func (s *Session) Size() (int, error) {
 	return s.data.Size(), nil
 }
 
-// Contains checks whether key exist in the session.
+// Contains checks whether sessionIdToRedisKey exist in the session.
 func (s *Session) Contains(key string) (bool, error) {
 	if s.id == "" {
 		return false, nil
@@ -267,8 +273,8 @@ func (s *Session) IsDirty() bool {
 	return s.dirty
 }
 
-// Get retrieves session value with given key.
-// It returns `def` if the key does not exist in the session if `def` is given,
+// Get retrieves session value with given sessionIdToRedisKey.
+// It returns `def` if the sessionIdToRedisKey does not exist in the session if `def` is given,
 // or else it returns nil.
 func (s *Session) Get(key string, def ...interface{}) (*gvar.Var, error) {
 	if s.id == "" {

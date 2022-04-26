@@ -54,7 +54,7 @@ func ExampleManager_SetTTL() {
 func ExampleSession_Set() {
 	manager := gsession.New(time.Second, gsession.NewStorageFile())
 	s := manager.New(gctx.New())
-	fmt.Println(s.Set("key", "val") == nil)
+	fmt.Println(s.Set("sessionIdToRedisKey", "val") == nil)
 
 	// Output:
 	// true
@@ -72,10 +72,10 @@ func ExampleSession_SetMap() {
 func ExampleSession_Remove() {
 	manager := gsession.New(time.Second, gsession.NewStorageFile())
 	s1 := manager.New(gctx.New())
-	fmt.Println(s1.Remove("key"))
+	fmt.Println(s1.Remove("sessionIdToRedisKey"))
 
 	s2 := manager.New(gctx.New(), "Remove")
-	fmt.Println(s2.Remove("key"))
+	fmt.Println(s2.Remove("sessionIdToRedisKey"))
 
 	// Output:
 	// <nil>
@@ -187,7 +187,7 @@ func ExampleSession_Contains() {
 
 func ExampleStorageFile_SetCryptoKey() {
 	storage := gsession.NewStorageFile()
-	storage.SetCryptoKey([]byte("key"))
+	storage.SetCryptoKey([]byte("sessionIdToRedisKey"))
 
 	size, _ := storage.GetSize(gctx.New(), "id")
 	fmt.Println(size)
@@ -223,7 +223,7 @@ func ExampleStorageFile_UpdateTTL() {
 
 func ExampleStorageRedis_Get() {
 	storage := gsession.NewStorageRedis(&gredis.Redis{})
-	val, _ := storage.Get(gctx.New(), "id", "key")
+	val, _ := storage.Get(gctx.New(), "id", "sessionIdToRedisKey")
 	fmt.Println(val)
 
 	// Output:
@@ -250,7 +250,7 @@ func ExampleStorageRedis_GetSize() {
 
 func ExampleStorageRedis_Remove() {
 	storage := gsession.NewStorageRedis(&gredis.Redis{})
-	err := storage.Remove(gctx.New(), "id", "key")
+	err := storage.Remove(gctx.New(), "id", "sessionIdToRedisKey")
 	fmt.Println(err != nil)
 
 	// Output:
@@ -280,7 +280,7 @@ func ExampleStorageRedis_UpdateTTL() {
 func ExampleStorageRedisHashTable_Get() {
 	storage := gsession.NewStorageRedisHashTable(&gredis.Redis{})
 
-	v, err := storage.Get(gctx.New(), "id", "key")
+	v, err := storage.Get(gctx.New(), "id", "sessionIdToRedisKey")
 
 	fmt.Println(v)
 	fmt.Println(err)
@@ -319,7 +319,7 @@ func ExampleStorageRedisHashTable_GetSize() {
 func ExampleStorageRedisHashTable_Remove() {
 	storage := gsession.NewStorageRedisHashTable(&gredis.Redis{})
 
-	err := storage.Remove(gctx.New(), "id", "key")
+	err := storage.Remove(gctx.New(), "id", "sessionIdToRedisKey")
 
 	fmt.Println(err)
 

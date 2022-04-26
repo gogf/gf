@@ -258,9 +258,14 @@ func Glob(pattern string, onlyNames ...bool) ([]string, error) {
 
 // Remove deletes all file/directory with `path` parameter.
 // If parameter `path` is directory, it deletes it recursively.
+//
+// It does nothing if given `path` does not exist or is empty.
 func Remove(path string) (err error) {
-	err = os.RemoveAll(path)
-	if err != nil {
+	// It does nothing if `path` is empty.
+	if path == "" {
+		return nil
+	}
+	if err = os.RemoveAll(path); err != nil {
 		err = gerror.Wrapf(err, `os.RemoveAll failed for path "%s"`, path)
 	}
 	return
