@@ -5,7 +5,7 @@ on:
     branches:
       - 'master'
       - 'develop'
-      - 'fix-unsafe'
+      - 'fix/unsafe'
   pull_request:
     branches: ['master', 'develop','fix/**']
 env:
