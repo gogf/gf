@@ -169,6 +169,9 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 		}
 		var fieldName = structField.Name()
 		if jsonName := structField.TagJsonName(); jsonName != "" {
+			if jsonName == "-" {
+				continue
+			}
 			fieldName = jsonName
 		}
 		schemaRef, err := oai.newSchemaRefWithGolangType(
