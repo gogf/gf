@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -48,7 +49,7 @@ var (
 
 func init() {
 	// Initialize internal package variable: tempDir.
-	if Separator != "/" || !Exists(tempDir) {
+	if runtime.GOOS == "windows" || Separator != "/" || !Exists(tempDir) {
 		tempDir = os.TempDir()
 	}
 	// Initialize internal package variable: selfPath.

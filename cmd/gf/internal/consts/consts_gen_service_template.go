@@ -14,6 +14,9 @@ type I{StructName} interface {
 var local{StructName} I{StructName}
 
 func {StructName}() I{StructName} {
+	if local{StructName} == nil {
+		panic("implement not found for interface I{StructName}, forgot register?")
+	}
 	return local{StructName}
 }
 

@@ -17,10 +17,10 @@ func GoFmt(path string) {
 	if gofmtPath == "" {
 		mlog.Fatal(`command "gofmt" not found`)
 	}
-	var command = fmt.Sprintf(`%s -w -s %s`, gofmtPath, path)
+	var command = fmt.Sprintf(`%s -w %s`, gofmtPath, path)
 	result, err := gproc.ShellExec(command)
 	if err != nil {
-		mlog.Fatal(`error executing command "%s": %s`, command, result)
+		mlog.Fatalf(`error executing command "%s": %s`, command, result)
 	}
 }
 
@@ -29,9 +29,9 @@ func GoImports(path string) {
 	if goimportsPath == "" {
 		mlog.Fatal(`command "goimports" not found`)
 	}
-	var command = fmt.Sprintf(`%s -w -s %s`, goimportsPath, path)
+	var command = fmt.Sprintf(`%s -w %s`, goimportsPath, path)
 	result, err := gproc.ShellExec(command)
 	if err != nil {
-		mlog.Fatal(`error executing command "%s": %s`, command, result)
+		mlog.Fatalf(`error executing command "%s": %s`, command, result)
 	}
 }
