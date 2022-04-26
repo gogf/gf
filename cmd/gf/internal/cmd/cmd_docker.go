@@ -102,6 +102,7 @@ func (c cDocker) Index(ctx context.Context, in cDockerInput) (out *cDockerOutput
 	var (
 		dockerBuildOptions string
 		dockerTags         []string
+		dockerTagBase      string
 	)
 	if len(in.TagPrefixes) > 0 {
 		for _, tagPrefix := range in.TagPrefixes {
@@ -112,7 +113,15 @@ func (c cDocker) Index(ctx context.Context, in cDockerInput) (out *cDockerOutput
 	if len(dockerTags) == 0 {
 		dockerTags = []string{""}
 	}
-	for _, dockerTag := range dockerTags {
+	for i, dockerTag := range dockerTags {
+		if i > 0 {
+			err = gproc.ShellRun(fmt.Sprintf(`docker tag %s %s`, dockerTagBase, dockerTag))
+			if err != nil {
+				return
+			}
+			continue
+		}
+		dockerTagBase = dockerTag
 		dockerBuildOptions = ""
 		if dockerTag != "" {
 			dockerBuildOptions = fmt.Sprintf(`-t %s`, dockerTag)
