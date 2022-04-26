@@ -7,7 +7,7 @@ on:
       - 'develop'
       - 'fix-unsafe'
   pull_request:
-    branches: ['master', 'develop','fix/*']
+    branches: ['master', 'develop','fix/**']
 env:
   GF_DEBUG: 1
 
