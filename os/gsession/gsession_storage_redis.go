@@ -19,8 +19,9 @@ import (
 
 // StorageRedis implements the Session Storage interface with redis.
 type StorageRedis struct {
+	StorageBase
 	redis         *gredis.Redis   // Redis client for session storage.
-	prefix        string          // Redis sessionIdToRedisKey prefix for session id.
+	prefix        string          // Redis key prefix for session id.
 	updatingIdMap *gmap.StrIntMap // Updating TTL set for session id.
 }
 
@@ -55,7 +56,7 @@ func NewStorageRedis(redis *gredis.Redis, prefix ...string) *StorageRedis {
 			if sessionId, ttlSeconds = s.updatingIdMap.Pop(); sessionId == "" {
 				break
 			} else {
-				if err = s.doUpdateTTL(context.TODO(), sessionId, ttlSeconds); err != nil {
+				if err = s.doUpdateExpireForSession(context.TODO(), sessionId, ttlSeconds); err != nil {
 					intlog.Errorf(context.TODO(), `%+v`, err)
 				}
 			}
@@ -65,46 +66,7 @@ func NewStorageRedis(redis *gredis.Redis, prefix ...string) *StorageRedis {
 	return s
 }
 
-// New creates a session id.
-// This function can be used for custom session creation.
-func (s *StorageRedis) New(ctx context.Context, ttl time.Duration) (id string, err error) {
-	return "", ErrorDisabled
-}
-
-// Get retrieves session value with given sessionIdToRedisKey.
-// It returns nil if the sessionIdToRedisKey does not exist in the session.
-func (s *StorageRedis) Get(ctx context.Context, sessionId string, key string) (value interface{}, err error) {
-	return nil, ErrorDisabled
-}
-
-// Data retrieves all sessionIdToRedisKey-value pairs as map from storage.
-func (s *StorageRedis) Data(ctx context.Context, sessionId string) (data map[string]interface{}, err error) {
-	return nil, ErrorDisabled
-}
-
-// GetSize retrieves the size of sessionIdToRedisKey-value pairs from storage.
-func (s *StorageRedis) GetSize(ctx context.Context, sessionId string) (size int, err error) {
-	return -1, ErrorDisabled
-}
-
-// Set sets sessionIdToRedisKey-value session pair to the storage.
-// The parameter `ttl` specifies the TTL for the session id (not for the sessionIdToRedisKey-value pair).
-func (s *StorageRedis) Set(ctx context.Context, sessionId string, key string, value interface{}, ttl time.Duration) error {
-	return ErrorDisabled
-}
-
-// SetMap batch sets sessionIdToRedisKey-value session pairs with map to the storage.
-// The parameter `ttl` specifies the TTL for the session id(not for the sessionIdToRedisKey-value pair).
-func (s *StorageRedis) SetMap(ctx context.Context, sessionId string, data map[string]interface{}, ttl time.Duration) error {
-	return ErrorDisabled
-}
-
-// Remove deletes sessionIdToRedisKey with its value from storage.
-func (s *StorageRedis) Remove(ctx context.Context, sessionId string, key string) error {
-	return ErrorDisabled
-}
-
-// RemoveAll deletes all sessionIdToRedisKey-value pairs from storage.
+// RemoveAll deletes all key-value pairs from storage.
 func (s *StorageRedis) RemoveAll(ctx context.Context, sessionId string) error {
 	_, err := s.redis.Do(ctx, "DEL", s.sessionIdToRedisKey(sessionId))
 	return err
@@ -117,7 +79,7 @@ func (s *StorageRedis) RemoveAll(ctx context.Context, sessionId string) error {
 // and for some storage it might be nil if memory storage is disabled.
 //
 // This function is called ever when session starts.
-func (s *StorageRedis) GetSession(ctx context.Context, sessionId string, ttl time.Duration, data *gmap.StrAnyMap) (*gmap.StrAnyMap, error) {
+func (s *StorageRedis) GetSession(ctx context.Context, sessionId string, ttl time.Duration) (*gmap.StrAnyMap, error) {
 	intlog.Printf(ctx, "StorageRedis.GetSession: %s, %v", sessionId, ttl)
 	r, err := s.redis.Do(ctx, "GET", s.sessionIdToRedisKey(sessionId))
 	if err != nil {
@@ -134,19 +96,15 @@ func (s *StorageRedis) GetSession(ctx context.Context, sessionId string, ttl tim
 	if m == nil {
 		return nil, nil
 	}
-	if data == nil {
-		return gmap.NewStrAnyMapFrom(m, true), nil
-	}
-	data.Replace(m)
-	return data, nil
+	return gmap.NewStrAnyMapFrom(m, true), nil
 }
 
 // SetSession updates the data map for specified session id.
 // This function is called ever after session, which is changed dirty, is closed.
 // This copy all session data map from memory to storage.
-func (s *StorageRedis) SetSession(ctx context.Context, sessionId string, data *gmap.StrAnyMap, ttl time.Duration) error {
-	intlog.Printf(ctx, "StorageRedis.SetSession: %s, %v, %v", sessionId, data, ttl)
-	content, err := json.Marshal(data)
+func (s *StorageRedis) SetSession(ctx context.Context, sessionId string, sessionData *gmap.StrAnyMap, ttl time.Duration) error {
+	intlog.Printf(ctx, "StorageRedis.SetSession: %s, %v, %v", sessionId, sessionData, ttl)
+	content, err := json.Marshal(sessionData)
 	if err != nil {
 		return err
 	}
@@ -166,12 +124,13 @@ func (s *StorageRedis) UpdateTTL(ctx context.Context, sessionId string, ttl time
 }
 
 // doUpdateTTL updates the TTL for session id.
-func (s *StorageRedis) doUpdateTTL(ctx context.Context, sessionId string, ttlSeconds int) error {
+func (s *StorageRedis) doUpdateExpireForSession(ctx context.Context, sessionId string, ttlSeconds int) error {
 	intlog.Printf(ctx, "StorageRedis.doUpdateTTL: %s, %d", sessionId, ttlSeconds)
 	_, err := s.redis.Do(ctx, "EXPIRE", s.sessionIdToRedisKey(sessionId), ttlSeconds)
 	return err
 }
 
+// sessionIdToRedisKey converts and returns the redis key for given session id.
 func (s *StorageRedis) sessionIdToRedisKey(sessionId string) string {
 	return s.prefix + sessionId
 }

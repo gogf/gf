@@ -186,7 +186,7 @@ func (s *Server) Start() error {
 				}
 			}
 		}
-		s.config.SessionStorage = gsession.NewStorageFile(path)
+		s.config.SessionStorage = gsession.NewStorageFile(path, s.config.SessionMaxAge)
 	}
 	// Initialize session manager when start running.
 	s.sessionManager = gsession.New(

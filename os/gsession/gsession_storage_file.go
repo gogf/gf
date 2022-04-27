@@ -8,6 +8,7 @@ package gsession
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"time"
 
@@ -26,32 +27,38 @@ import (
 
 // StorageFile implements the Session Storage interface with file system.
 type StorageFile struct {
-	path          string
-	cryptoKey     []byte
-	cryptoEnabled bool
-	updatingIdSet *gset.StrSet
+	StorageBase
+	path          string        // Session file storage folder path.
+	ttl           time.Duration // Session TTL.
+	cryptoKey     []byte        // Used when enable crypto feature.
+	cryptoEnabled bool          // Used when enable crypto feature.
+	updatingIdSet *gset.StrSet  // To be batched updated session id set.
 }
 
 const (
-	DefaultStorageFileCryptoEnabled = false
-	DefaultStorageFileLoopInterval  = 10 * time.Second
+	DefaultStorageFileCryptoEnabled        = false
+	DefaultStorageFileUpdateTTLInterval    = 10 * time.Second
+	DefaultStorageFileClearExpiredInterval = time.Hour
 )
 
 var (
 	DefaultStorageFilePath      = gfile.Temp("gsessions")
-	DefaultStorageFileCryptoKey = []byte("Session storage file crypto sessionIdToRedisKey!")
+	DefaultStorageFileCryptoKey = []byte("Session storage file crypto key!")
 )
 
 // NewStorageFile creates and returns a file storage object for session.
-func NewStorageFile(path ...string) *StorageFile {
-	storagePath := DefaultStorageFilePath
-	if len(path) > 0 && path[0] != "" {
-		storagePath, _ = gfile.Search(path[0])
+func NewStorageFile(path string, ttl time.Duration) *StorageFile {
+	var (
+		ctx         = context.TODO()
+		storagePath = DefaultStorageFilePath
+	)
+	if path != "" {
+		storagePath, _ = gfile.Search(path)
 		if storagePath == "" {
-			panic(gerror.NewCodef(gcode.CodeInvalidParameter, `"%s" does not exist`, path[0]))
+			panic(gerror.NewCodef(gcode.CodeInvalidParameter, `"%s" does not exist`, path))
 		}
 		if !gfile.IsWritable(storagePath) {
-			panic(gerror.NewCodef(gcode.CodeInvalidParameter, `"%s" is not writable`, path[0]))
+			panic(gerror.NewCodef(gcode.CodeInvalidParameter, `"%s" is not writable`, path))
 		}
 	}
 	if storagePath != "" {
@@ -61,17 +68,19 @@ func NewStorageFile(path ...string) *StorageFile {
 	}
 	s := &StorageFile{
 		path:          storagePath,
+		ttl:           ttl,
 		cryptoKey:     DefaultStorageFileCryptoKey,
 		cryptoEnabled: DefaultStorageFileCryptoEnabled,
 		updatingIdSet: gset.NewStrSet(true),
 	}
 
-	gtimer.AddSingleton(context.Background(), DefaultStorageFileLoopInterval, s.updateSessionTimely)
+	gtimer.AddSingleton(ctx, DefaultStorageFileUpdateTTLInterval, s.timelyUpdateSessionTTL)
+	gtimer.AddSingleton(ctx, DefaultStorageFileClearExpiredInterval, s.timelyClearExpiredSessionFile)
 	return s
 }
 
-// updateSessionTimely batch updates the TTL for sessions timely.
-func (s *StorageFile) updateSessionTimely(ctx context.Context) {
+// timelyUpdateSessionTTL batch updates the TTL for sessions timely.
+func (s *StorageFile) timelyUpdateSessionTTL(ctx context.Context) {
 	var (
 		sessionId string
 		err       error
@@ -87,8 +96,22 @@ func (s *StorageFile) updateSessionTimely(ctx context.Context) {
 	}
 }
 
-// SetCryptoKey sets the crypto sessionIdToRedisKey for session storage.
-// The crypto sessionIdToRedisKey is used when crypto feature is enabled.
+// timelyClearExpiredSessionFile deletes all expired files timely.
+func (s *StorageFile) timelyClearExpiredSessionFile(ctx context.Context) {
+	files, err := gfile.ScanDirFile(s.path, "*.session", false)
+	if err != nil {
+		intlog.Errorf(ctx, `%+v`, err)
+		return
+	}
+	for _, file := range files {
+		if err = s.checkAndClearSessionFile(ctx, file); err != nil {
+			intlog.Errorf(ctx, `%+v`, err)
+		}
+	}
+}
+
+// SetCryptoKey sets the crypto key for session storage.
+// The crypto key is used when crypto feature is enabled.
 func (s *StorageFile) SetCryptoKey(key []byte) {
 	s.cryptoKey = key
 }
@@ -99,50 +122,11 @@ func (s *StorageFile) SetCryptoEnabled(enabled bool) {
 }
 
 // sessionFilePath returns the storage file path for given session id.
-func (s *StorageFile) sessionFilePath(id string) string {
-	return gfile.Join(s.path, id)
+func (s *StorageFile) sessionFilePath(sessionId string) string {
+	return gfile.Join(s.path, sessionId) + ".session"
 }
 
-// New creates a session id.
-// This function can be used for custom session creation.
-func (s *StorageFile) New(ctx context.Context, ttl time.Duration) (id string, err error) {
-	return "", ErrorDisabled
-}
-
-// Get retrieves session value with given sessionIdToRedisKey.
-// It returns nil if the sessionIdToRedisKey does not exist in the session.
-func (s *StorageFile) Get(ctx context.Context, sessionId string, key string) (value interface{}, err error) {
-	return nil, ErrorDisabled
-}
-
-// Data retrieves all sessionIdToRedisKey-value pairs as map from storage.
-func (s *StorageFile) Data(ctx context.Context, sessionId string) (data map[string]interface{}, err error) {
-	return nil, ErrorDisabled
-}
-
-// GetSize retrieves the size of sessionIdToRedisKey-value pairs from storage.
-func (s *StorageFile) GetSize(ctx context.Context, sessionId string) (size int, err error) {
-	return -1, ErrorDisabled
-}
-
-// Set sets sessionIdToRedisKey-value session pair to the storage.
-// The parameter `ttl` specifies the TTL for the session id (not for the sessionIdToRedisKey-value pair).
-func (s *StorageFile) Set(ctx context.Context, sessionId string, key string, value interface{}, ttl time.Duration) error {
-	return ErrorDisabled
-}
-
-// SetMap batch sets sessionIdToRedisKey-value session pairs with map to the storage.
-// The parameter `ttl` specifies the TTL for the session id(not for the sessionIdToRedisKey-value pair).
-func (s *StorageFile) SetMap(ctx context.Context, sessionId string, data map[string]interface{}, ttl time.Duration) error {
-	return ErrorDisabled
-}
-
-// Remove deletes sessionIdToRedisKey with its value from storage.
-func (s *StorageFile) Remove(ctx context.Context, sessionId string, key string) error {
-	return ErrorDisabled
-}
-
-// RemoveAll deletes all sessionIdToRedisKey-value pairs from storage.
+// RemoveAll deletes all key-value pairs from storage.
 func (s *StorageFile) RemoveAll(ctx context.Context, sessionId string) error {
 	return gfile.Remove(s.sessionFilePath(sessionId))
 }
@@ -154,10 +138,7 @@ func (s *StorageFile) RemoveAll(ctx context.Context, sessionId string) error {
 // and for some storage it might be nil if memory storage is disabled.
 //
 // This function is called ever when session starts.
-func (s *StorageFile) GetSession(ctx context.Context, sessionId string, ttl time.Duration, data *gmap.StrAnyMap) (*gmap.StrAnyMap, error) {
-	if data != nil {
-		return data, nil
-	}
+func (s *StorageFile) GetSession(ctx context.Context, sessionId string, ttl time.Duration) (sessionData *gmap.StrAnyMap, err error) {
 	var (
 		path    = s.sessionFilePath(sessionId)
 		content = gfile.GetBytes(path)
@@ -168,7 +149,6 @@ func (s *StorageFile) GetSession(ctx context.Context, sessionId string, ttl time
 		if timestampMilli+ttl.Nanoseconds()/1e6 < gtime.TimestampMilli() {
 			return nil, nil
 		}
-		var err error
 		content = content[8:]
 		// Decrypt with AES.
 		if s.cryptoEnabled {
@@ -192,10 +172,10 @@ func (s *StorageFile) GetSession(ctx context.Context, sessionId string, ttl time
 // SetSession updates the data map for specified session id.
 // This function is called ever after session, which is changed dirty, is closed.
 // This copy all session data map from memory to storage.
-func (s *StorageFile) SetSession(ctx context.Context, sessionId string, data *gmap.StrAnyMap, ttl time.Duration) error {
-	intlog.Printf(ctx, "StorageFile.SetSession: %s, %v, %v", sessionId, data, ttl)
+func (s *StorageFile) SetSession(ctx context.Context, sessionId string, sessionData *gmap.StrAnyMap, ttl time.Duration) error {
+	intlog.Printf(ctx, "StorageFile.SetSession: %s, %v, %v", sessionId, sessionData, ttl)
 	path := s.sessionFilePath(sessionId)
-	content, err := json.Marshal(data)
+	content, err := json.Marshal(sessionData)
 	if err != nil {
 		return err
 	}
@@ -229,7 +209,7 @@ func (s *StorageFile) SetSession(ctx context.Context, sessionId string, data *gm
 // It just adds the session id to the async handling queue.
 func (s *StorageFile) UpdateTTL(ctx context.Context, sessionId string, ttl time.Duration) error {
 	intlog.Printf(ctx, "StorageFile.UpdateTTL: %s, %v", sessionId, ttl)
-	if ttl >= DefaultStorageFileLoopInterval {
+	if ttl >= DefaultStorageFileUpdateTTLInterval {
 		s.updatingIdSet.Add(sessionId)
 	}
 	return nil
@@ -248,4 +228,41 @@ func (s *StorageFile) updateSessionTTl(ctx context.Context, sessionId string) er
 		return err
 	}
 	return file.Close()
+}
+
+func (s *StorageFile) checkAndClearSessionFile(ctx context.Context, path string) (err error) {
+	var (
+		file                *os.File
+		readBytesCount      int
+		timestampMilliBytes = make([]byte, 8)
+	)
+	file, err = gfile.OpenWithFlag(path, os.O_RDONLY)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	// Read the session file updated timestamp in milliseconds.
+	readBytesCount, err = file.Read(timestampMilliBytes)
+	if err != nil {
+		return
+	}
+	if readBytesCount != 8 {
+		return gerror.Newf(`invalid read bytes count "%d", expect "8"`, readBytesCount)
+	}
+	// Remove expired session file.
+	var (
+		ttlInMilliseconds     = s.ttl.Nanoseconds() / 1e6
+		fileTimestampMilli    = gbinary.DecodeToInt64(timestampMilliBytes)
+		currentTimestampMilli = gtime.TimestampMilli()
+	)
+	if fileTimestampMilli+ttlInMilliseconds < currentTimestampMilli {
+		intlog.PrintFunc(ctx, func() string {
+			return fmt.Sprintf(
+				`clear expired session file "%s": updated datetime "%s", ttl "%s"`,
+				path, gtime.NewFromTimeStamp(fileTimestampMilli), s.ttl,
+			)
+		})
+		return gfile.Remove(path)
+	}
+	return nil
 }

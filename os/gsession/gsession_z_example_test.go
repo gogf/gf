@@ -18,7 +18,7 @@ import (
 
 func ExampleNew() {
 	manager := gsession.New(time.Second)
-	fmt.Println(manager.TTL())
+	fmt.Println(manager.GetTTL())
 
 	// Output:
 	// 1s
@@ -27,7 +27,7 @@ func ExampleNew() {
 func ExampleManager_SetStorage() {
 	manager := gsession.New(time.Second)
 	manager.SetStorage(gsession.NewStorageMemory())
-	fmt.Println(manager.TTL())
+	fmt.Println(manager.GetTTL())
 
 	// Output:
 	// 1s
@@ -39,29 +39,31 @@ func ExampleManager_GetStorage() {
 	fmt.Println(size)
 
 	// Output:
-	// -1
+	// 0
 }
 
 func ExampleManager_SetTTL() {
 	manager := gsession.New(time.Second)
 	manager.SetTTL(time.Minute)
-	fmt.Println(manager.TTL())
+	fmt.Println(manager.GetTTL())
 
 	// Output:
 	// 1m0s
 }
 
 func ExampleSession_Set() {
-	manager := gsession.New(time.Second, gsession.NewStorageFile())
+	storage := gsession.NewStorageFile("", time.Second)
+	manager := gsession.New(time.Second, storage)
 	s := manager.New(gctx.New())
-	fmt.Println(s.Set("sessionIdToRedisKey", "val") == nil)
+	fmt.Println(s.Set("key", "val") == nil)
 
 	// Output:
 	// true
 }
 
 func ExampleSession_SetMap() {
-	manager := gsession.New(time.Second, gsession.NewStorageFile())
+	storage := gsession.NewStorageFile("", time.Second)
+	manager := gsession.New(time.Second, storage)
 	s := manager.New(gctx.New())
 	fmt.Println(s.SetMap(map[string]interface{}{}) == nil)
 
@@ -70,12 +72,13 @@ func ExampleSession_SetMap() {
 }
 
 func ExampleSession_Remove() {
-	manager := gsession.New(time.Second, gsession.NewStorageFile())
+	storage := gsession.NewStorageFile("", time.Second)
+	manager := gsession.New(time.Second, storage)
 	s1 := manager.New(gctx.New())
-	fmt.Println(s1.Remove("sessionIdToRedisKey"))
+	fmt.Println(s1.Remove("key"))
 
 	s2 := manager.New(gctx.New(), "Remove")
-	fmt.Println(s2.Remove("sessionIdToRedisKey"))
+	fmt.Println(s2.Remove("key"))
 
 	// Output:
 	// <nil>
@@ -83,7 +86,8 @@ func ExampleSession_Remove() {
 }
 
 func ExampleSession_RemoveAll() {
-	manager := gsession.New(time.Second, gsession.NewStorageFile())
+	storage := gsession.NewStorageFile("", time.Second)
+	manager := gsession.New(time.Second, storage)
 	s1 := manager.New(gctx.New())
 	fmt.Println(s1.RemoveAll())
 
@@ -96,7 +100,8 @@ func ExampleSession_RemoveAll() {
 }
 
 func ExampleSession_Id() {
-	manager := gsession.New(time.Second, gsession.NewStorageFile())
+	storage := gsession.NewStorageFile("", time.Second)
+	manager := gsession.New(time.Second, storage)
 	s := manager.New(gctx.New(), "Id")
 	id, _ := s.Id()
 	fmt.Println(id)
@@ -109,7 +114,8 @@ func ExampleSession_SetId() {
 	nilSession := &gsession.Session{}
 	fmt.Println(nilSession.SetId("id"))
 
-	manager := gsession.New(time.Second, gsession.NewStorageFile())
+	storage := gsession.NewStorageFile("", time.Second)
+	manager := gsession.New(time.Second, storage)
 	s := manager.New(gctx.New())
 	s.Id()
 	fmt.Println(s.SetId("id"))
@@ -125,7 +131,8 @@ func ExampleSession_SetIdFunc() {
 		return "id"
 	}))
 
-	manager := gsession.New(time.Second, gsession.NewStorageFile())
+	storage := gsession.NewStorageFile("", time.Second)
+	manager := gsession.New(time.Second, storage)
 	s := manager.New(gctx.New())
 	s.Id()
 	fmt.Println(s.SetIdFunc(func(ttl time.Duration) string {
@@ -138,7 +145,8 @@ func ExampleSession_SetIdFunc() {
 }
 
 func ExampleSession_Data() {
-	manager := gsession.New(time.Second, gsession.NewStorageFile())
+	storage := gsession.NewStorageFile("", time.Second)
+	manager := gsession.New(time.Second, storage)
 
 	s1 := manager.New(gctx.New())
 	data1, _ := s1.Data()
@@ -154,7 +162,8 @@ func ExampleSession_Data() {
 }
 
 func ExampleSession_Size() {
-	manager := gsession.New(time.Second, gsession.NewStorageFile())
+	storage := gsession.NewStorageFile("", time.Second)
+	manager := gsession.New(time.Second, storage)
 
 	s1 := manager.New(gctx.New())
 	size1, _ := s1.Size()
@@ -170,7 +179,8 @@ func ExampleSession_Size() {
 }
 
 func ExampleSession_Contains() {
-	manager := gsession.New(time.Second, gsession.NewStorageFile())
+	storage := gsession.NewStorageFile("", time.Second)
+	manager := gsession.New(time.Second, storage)
 
 	s1 := manager.New(gctx.New())
 	notContains, _ := s1.Contains("Contains")
@@ -186,25 +196,25 @@ func ExampleSession_Contains() {
 }
 
 func ExampleStorageFile_SetCryptoKey() {
-	storage := gsession.NewStorageFile()
-	storage.SetCryptoKey([]byte("sessionIdToRedisKey"))
+	storage := gsession.NewStorageFile("", time.Second)
+	storage.SetCryptoKey([]byte("key"))
 
 	size, _ := storage.GetSize(gctx.New(), "id")
 	fmt.Println(size)
 
 	// Output:
-	// -1
+	// 0
 }
 
 func ExampleStorageFile_SetCryptoEnabled() {
-	storage := gsession.NewStorageFile()
+	storage := gsession.NewStorageFile("", time.Second)
 	storage.SetCryptoEnabled(true)
 
 	size, _ := storage.GetSize(gctx.New(), "id")
 	fmt.Println(size)
 
 	// Output:
-	// -1
+	// 0
 }
 
 func ExampleStorageFile_UpdateTTL() {
@@ -212,7 +222,7 @@ func ExampleStorageFile_UpdateTTL() {
 		ctx = gctx.New()
 	)
 
-	storage := gsession.NewStorageFile()
+	storage := gsession.NewStorageFile("", time.Second)
 	fmt.Println(storage.UpdateTTL(ctx, "id", time.Second*15))
 
 	time.Sleep(time.Second * 11)
@@ -223,7 +233,7 @@ func ExampleStorageFile_UpdateTTL() {
 
 func ExampleStorageRedis_Get() {
 	storage := gsession.NewStorageRedis(&gredis.Redis{})
-	val, _ := storage.Get(gctx.New(), "id", "sessionIdToRedisKey")
+	val, _ := storage.Get(gctx.New(), "id", "key")
 	fmt.Println(val)
 
 	// Output:
@@ -245,12 +255,12 @@ func ExampleStorageRedis_GetSize() {
 	fmt.Println(val)
 
 	// Output:
-	// -1
+	// 0
 }
 
 func ExampleStorageRedis_Remove() {
 	storage := gsession.NewStorageRedis(&gredis.Redis{})
-	err := storage.Remove(gctx.New(), "id", "sessionIdToRedisKey")
+	err := storage.Remove(gctx.New(), "id", "key")
 	fmt.Println(err != nil)
 
 	// Output:
@@ -280,7 +290,7 @@ func ExampleStorageRedis_UpdateTTL() {
 func ExampleStorageRedisHashTable_Get() {
 	storage := gsession.NewStorageRedisHashTable(&gredis.Redis{})
 
-	v, err := storage.Get(gctx.New(), "id", "sessionIdToRedisKey")
+	v, err := storage.Get(gctx.New(), "id", "key")
 
 	fmt.Println(v)
 	fmt.Println(err)
@@ -312,14 +322,14 @@ func ExampleStorageRedisHashTable_GetSize() {
 	fmt.Println(err)
 
 	// Output:
-	// -1
+	// 0
 	// redis adapter not initialized, missing configuration or adapter register?
 }
 
 func ExampleStorageRedisHashTable_Remove() {
 	storage := gsession.NewStorageRedisHashTable(&gredis.Redis{})
 
-	err := storage.Remove(gctx.New(), "id", "sessionIdToRedisKey")
+	err := storage.Remove(gctx.New(), "id", "key")
 
 	fmt.Println(err)
 
@@ -340,10 +350,7 @@ func ExampleStorageRedisHashTable_RemoveAll() {
 
 func ExampleStorageRedisHashTable_GetSession() {
 	storage := gsession.NewStorageRedisHashTable(&gredis.Redis{})
-
-	strAnyMap := gmap.StrAnyMap{}
-
-	data, err := storage.GetSession(gctx.New(), "id", time.Second, &strAnyMap)
+	data, err := storage.GetSession(gctx.New(), "id", time.Second)
 
 	fmt.Println(data)
 	fmt.Println(err)

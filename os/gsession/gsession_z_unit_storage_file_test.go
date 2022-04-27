@@ -17,7 +17,7 @@ import (
 )
 
 func Test_StorageFile(t *testing.T) {
-	storage := gsession.NewStorageFile()
+	storage := gsession.NewStorageFile("", time.Second)
 	manager := gsession.New(time.Second, storage)
 	sessionId := ""
 	gtest.C(t, func(t *gtest.T) {
