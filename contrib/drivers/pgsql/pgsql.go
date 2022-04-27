@@ -65,6 +65,10 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	)
 	if config.Link != "" {
 		source = config.Link
+		// Custom changing the schema in runtime.
+		if config.Name != "" {
+			source, _ = gregex.ReplaceString(`dbname=([\w\.\-]+)+`, "dbname="+config.Name, source)
+		}
 	} else {
 		source = fmt.Sprintf(
 			"user=%s password=%s host=%s port=%s dbname=%s sslmode=disable",

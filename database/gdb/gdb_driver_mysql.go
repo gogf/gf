@@ -42,6 +42,7 @@ func (d *DriverMysql) Open(config *ConfigNode) (db *sql.DB, err error) {
 		source               string
 		underlyingDriverName = "mysql"
 	)
+	// [username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
 	if config.Link != "" {
 		source = config.Link
 		// Custom changing the schema in runtime.
