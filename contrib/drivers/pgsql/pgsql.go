@@ -135,13 +135,27 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 	if err != nil {
 		return nil, err
 	}
-	query := "SELECT TABLENAME FROM PG_TABLES WHERE SCHEMANAME = 'public' ORDER BY TABLENAME"
+	querySchema := "public"
 	if len(schema) > 0 && schema[0] != "" {
-		query = fmt.Sprintf(
-			"SELECT TABLENAME FROM PG_TABLES WHERE SCHEMANAME = '%s' ORDER BY TABLENAME",
-			schema[0],
-		)
+		querySchema = schema[0]
 	}
+	// list table names exclude partitions
+	query := fmt.Sprintf(`
+SELECT
+	c.relname
+FROM
+	pg_class c
+INNER JOIN pg_namespace n ON
+	c.relnamespace = n.oid
+WHERE
+	n.nspname = '%s'
+	AND c.relkind IN ('r', 'p')
+	AND c.relpartbound IS NULL
+	AND PG_TABLE_IS_VISIBLE(c.oid)
+ORDER BY
+	c.relname`,
+		querySchema,
+	)
 	result, err = d.DoSelect(ctx, link, query)
 	if err != nil {
 		return
