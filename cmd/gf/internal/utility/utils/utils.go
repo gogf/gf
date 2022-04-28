@@ -3,8 +3,11 @@ package utils
 import (
 	"fmt"
 
+	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
+	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gproc"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 var (
@@ -34,4 +37,9 @@ func GoImports(path string) {
 	if err != nil {
 		mlog.Fatalf(`error executing command "%s": %s`, command, result)
 	}
+}
+
+// IsFileDoNotEdit checks and returns whether file contains `do not edit` key.
+func IsFileDoNotEdit(filePath string) bool {
+	return gstr.Contains(gfile.GetContents(filePath), consts.DoNotEditKey)
 }

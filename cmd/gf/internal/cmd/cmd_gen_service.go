@@ -101,6 +101,7 @@ func (c cGen) Service(ctx context.Context, in cGenServiceInput) (out *cGenServic
 	}
 
 	var (
+		isDirty           bool
 		files             []string
 		fileContent       string
 		matches           [][]string
@@ -124,9 +125,9 @@ func (c cGen) Service(ctx context.Context, in cGenServiceInput) (out *cGenServic
 		}
 		var (
 			// StructName => FunctionDefinitions
-			interfaceMap       = make(map[string]*garray.StrArray)
-			interfaceFuncArray *garray.StrArray
-			ok                 bool
+			srcPkgInterfaceMap       = make(map[string]*garray.StrArray)
+			srcPkgInterfaceFuncArray *garray.StrArray
+			ok                       bool
 		)
 		for _, file := range files {
 			fileContent = gfile.GetContents(file)
@@ -140,6 +141,10 @@ func (c cGen) Service(ctx context.Context, in cGenServiceInput) (out *cGenServic
 					structName   = gstr.Trim(match[1], "*")
 					functionHead = gstr.Trim(gstr.Replace(match[2], "\n", ""))
 				)
+				// Xxx(     ctx context.Context, req *v1.XxxReq,) -> Xxx(ctx context.Context, req *v1.XxxReq)
+				functionHead = gstr.Replace(functionHead, `,)`, `)`)
+				functionHead, _ = gregex.ReplaceString(`\(\s+`, `(`, functionHead)
+				functionHead, _ = gregex.ReplaceString(`\s{2,}`, ` `, functionHead)
 				if !gstr.IsLetterUpper(functionHead[0]) {
 					continue
 				}
@@ -150,13 +155,13 @@ func (c cGen) Service(ctx context.Context, in cGenServiceInput) (out *cGenServic
 					continue
 				}
 				structName = gstr.CaseCamel(structMatch[1])
-				if interfaceFuncArray, ok = interfaceMap[structName]; !ok {
-					interfaceMap[structName] = garray.NewStrArray()
-					interfaceFuncArray = interfaceMap[structName]
+				if srcPkgInterfaceFuncArray, ok = srcPkgInterfaceMap[structName]; !ok {
+					srcPkgInterfaceMap[structName] = garray.NewStrArray()
+					srcPkgInterfaceFuncArray = srcPkgInterfaceMap[structName]
 				}
 				// Remove package name calls of `dstPackageName` in produced codes.
 				functionHead, _ = gregex.ReplaceString(fmt.Sprintf(`\*{0,1}%s\.`, dstPackageName), ``, functionHead)
-				interfaceFuncArray.Append(functionHead)
+				srcPkgInterfaceFuncArray.Append(functionHead)
 			}
 		}
 		importSrcPackages = append(
@@ -172,43 +177,42 @@ func (c cGen) Service(ctx context.Context, in cGenServiceInput) (out *cGenServic
 			continue
 		}
 		// Generating go files for service.
-		if err = c.generateServiceFiles(in, interfaceMap, dstPackageName); err != nil {
+		if ok, err = c.generateServiceFiles(in, srcPkgInterfaceMap, dstPackageName); err != nil {
 			return
 		}
-	}
-	// Generate initialization go file.
-	if len(importSrcPackages) > 0 {
-		if err = c.generateInitializationFile(in, importSrcPackages); err != nil {
-			return
+		if ok {
+			isDirty = true
 		}
 	}
 
-	// Go imports updating.
-	mlog.Printf(`goimports go files in "%s", it may take seconds...`, in.DstFolder)
-	utils.GoImports(in.DstFolder)
-
-	// Replica v1 to v2 for GoFrame.
-	err = gfile.ReplaceDirFunc(func(path, content string) string {
-		if gstr.Contains(content, `"github.com/gogf/gf`) && !gstr.Contains(content, `"github.com/gogf/gf/v2`) {
-			content = gstr.Replace(content, `"github.com/gogf/gf"`, `"github.com/gogf/gf/v2"`)
-			content = gstr.Replace(content, `"github.com/gogf/gf/`, `"github.com/gogf/gf/v2/`)
-			return content
+	if isDirty {
+		// Generate initialization go file.
+		if len(importSrcPackages) > 0 {
+			if err = c.generateInitializationFile(in, importSrcPackages); err != nil {
+				return
+			}
 		}
-		return content
-	}, in.DstFolder, "*.go", false)
-	if err != nil {
-		return nil, err
+
+		// Go imports updating.
+		mlog.Printf(`goimports go files in "%s", it may take seconds...`, in.DstFolder)
+		utils.GoImports(in.DstFolder)
+
+		// Replica v1 to v2 for GoFrame.
+		if err = c.replaceGeneratedServiceContentGFV2(in); err != nil {
+			return nil, err
+		}
+		mlog.Printf(`gofmt go files in "%s"`, in.DstFolder)
+		utils.GoFmt(in.DstFolder)
 	}
-	mlog.Printf(`gofmt go files in "%s"`, in.DstFolder)
-	utils.GoFmt(in.DstFolder)
+
 	mlog.Print(`done!`)
 	return
 }
 
 func (c cGen) generateServiceFiles(
-	in cGenServiceInput, interfaceMap map[string]*garray.StrArray, dstPackageName string,
-) (err error) {
-	for structName, funcArray := range interfaceMap {
+	in cGenServiceInput, srcPkgInterfaceMap map[string]*garray.StrArray, dstPackageName string,
+) (ok bool, err error) {
+	for structName, funcArray := range srcPkgInterfaceMap {
 		var (
 			filePath         = gfile.Join(in.DstFolder, gstr.ToLower(structName)+".go")
 			generatedContent = gstr.ReplaceByMap(consts.TemplateGenServiceContent, g.MapStrStr{
@@ -219,17 +223,52 @@ func (c cGen) generateServiceFiles(
 		)
 		if gfile.Exists(filePath) {
 			if !in.OverWrite {
-				mlog.Printf(`ignore generating service go file: %s`, filePath)
+				mlog.Printf(`not overwrite, ignore generating service go file: %s`, filePath)
+				continue
+			}
+			if !c.isToGenerateServiceGoFile(filePath, funcArray) {
+				mlog.Printf(`not dirty, ignore generating service go file: %s`, filePath)
 				continue
 			}
 		}
-
+		ok = true
 		mlog.Printf(`generating service go file: %s`, filePath)
 		if err = gfile.PutContents(filePath, generatedContent); err != nil {
-			return err
+			return ok, err
 		}
 	}
-	return nil
+	return ok, nil
+}
+
+// isToGenerateServiceGoFile checks and returns whether the service content dirty.
+func (c cGen) isToGenerateServiceGoFile(filePath string, funcArray *garray.StrArray) bool {
+	if !utils.IsFileDoNotEdit(filePath) {
+		mlog.Debugf(`ignore file as it is manually maintained: %s`, filePath)
+		return false
+	}
+	var (
+		fileContent        = gfile.GetContents(filePath)
+		generatedFuncArray = garray.NewSortedStrArrayFrom(funcArray.Slice())
+		contentFuncArray   = garray.NewSortedStrArray()
+	)
+	if fileContent == "" {
+		return true
+	}
+	match, _ := gregex.MatchString(`interface\s+{([\s\S]+?)}`, fileContent)
+	if len(match) != 2 {
+		return false
+	}
+	contentFuncArray.Append(gstr.SplitAndTrim(match[1], "\n")...)
+	if generatedFuncArray.Len() != contentFuncArray.Len() {
+		return true
+	}
+	for i := 0; i < generatedFuncArray.Len(); i++ {
+		if generatedFuncArray.At(i) != contentFuncArray.At(i) {
+			mlog.Debugf(`dirty, %s != %s`, generatedFuncArray.At(i), contentFuncArray.At(i))
+			return true
+		}
+	}
+	return false
 }
 
 func (c cGen) generateInitializationFile(in cGenServiceInput, importSrcPackages []string) (err error) {
@@ -239,6 +278,10 @@ func (c cGen) generateInitializationFile(in cGenServiceInput, importSrcPackages 
 		srcImports       string
 		generatedContent string
 	)
+	if !utils.IsFileDoNotEdit(srcFilePath) {
+		mlog.Debugf(`ignore file as it is manually maintained: %s`, srcFilePath)
+		return nil
+	}
 	for _, importSrcPackage := range importSrcPackages {
 		srcImports += fmt.Sprintf(`%s_ "%s"%s`, "\t", importSrcPackage, "\n")
 	}
@@ -252,4 +295,15 @@ func (c cGen) generateInitializationFile(in cGenServiceInput, importSrcPackages 
 	}
 	utils.GoFmt(srcFilePath)
 	return nil
+}
+
+func (c cGen) replaceGeneratedServiceContentGFV2(in cGenServiceInput) (err error) {
+	return gfile.ReplaceDirFunc(func(path, content string) string {
+		if gstr.Contains(content, `"github.com/gogf/gf`) && !gstr.Contains(content, `"github.com/gogf/gf/v2`) {
+			content = gstr.Replace(content, `"github.com/gogf/gf"`, `"github.com/gogf/gf/v2"`)
+			content = gstr.Replace(content, `"github.com/gogf/gf/`, `"github.com/gogf/gf/v2/`)
+			return content
+		}
+		return content
+	}, in.DstFolder, "*.go", false)
 }
