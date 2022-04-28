@@ -110,11 +110,12 @@ values  (607970943242866688, 607973669943119880, 607972403489804288, 2022, 3, 20
 
 func clickhouseConfigDB() gdb.DB {
 	connect, err := gdb.New(gdb.ConfigNode{
-		Host: "127.0.0.1",
-		Port: "9000",
-		User: "default",
-		Name: "default",
-		Type: "clickhouse",
+		Host:  "127.0.0.1",
+		Port:  "9000",
+		User:  "default",
+		Name:  "default",
+		Type:  "clickhouse",
+		Debug: true,
 	})
 	gtest.AssertNil(err)
 	gtest.AssertNE(connect, nil)
