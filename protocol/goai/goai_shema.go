@@ -138,6 +138,7 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 			Properties:  createSchemas(),
 			XExtensions: make(XExtensions),
 		}
+		ignoreProperties []interface{}
 	)
 	if len(tagMap) > 0 {
 		if err := oai.tagMapToSchema(tagMap, schema); err != nil {
@@ -169,9 +170,6 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 		}
 		var fieldName = structField.Name()
 		if jsonName := structField.TagJsonName(); jsonName != "" {
-			if jsonName == "-" {
-				continue
-			}
 			fieldName = jsonName
 		}
 		schemaRef, err := oai.newSchemaRefWithGolangType(
@@ -191,8 +189,16 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 				schema.Required = append(schema.Required, key)
 			}
 		}
+		if !isValidTag(key) {
+			ignoreProperties = append(ignoreProperties, key)
+		}
 		return true
 	})
+
+	if len(ignoreProperties) > 0 {
+		schema.Properties.Removes(ignoreProperties)
+	}
+
 	return schema, nil
 }
 

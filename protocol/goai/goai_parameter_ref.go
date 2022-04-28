@@ -37,9 +37,6 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path
 		parameter.Name = field.Name()
 	}
 	if len(tagMap) > 0 {
-		if v, ok := tagMap["json"]; ok && v == "-" {
-			return nil, nil
-		}
 		if err := oai.tagMapToParameter(tagMap, parameter); err != nil {
 			return nil, err
 		}
@@ -76,6 +73,11 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path
 		return nil, err
 	}
 	parameter.Schema = schemaRef
+
+	// Ignore parameter.
+	if !isValidTag(parameter.Name) {
+		return nil, nil
+	}
 
 	// Required check.
 	if parameter.Schema.Value != nil && parameter.Schema.Value.Pattern != "" {
