@@ -75,7 +75,7 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path
 	parameter.Schema = schemaRef
 
 	// Ignore parameter.
-	if !isValidTag(parameter.Name) {
+	if !isValidParameterName(parameter.Name) {
 		return nil, nil
 	}
 

@@ -241,7 +241,7 @@ func formatRefToBytes(ref string) []byte {
 	return []byte(fmt.Sprintf(`{"$ref":"#/components/schemas/%s"}`, ref))
 }
 
-func isValidTag(key string) bool {
+func isValidParameterName(key string) bool {
 	if key == "-" {
 		return false
 	}
