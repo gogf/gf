@@ -831,3 +831,47 @@ func Test_Properties_In_Sequence(t *testing.T) {
 		fmt.Println(oai)
 	})
 }
+
+func TestOpenApiV3_Ignore_Parameter(t *testing.T) {
+	type CommonResponse struct {
+		Code    int         `json:"code"    description:"Error code"`
+		Message string      `json:"message" description:"Error message"`
+		Data    interface{} `json:"data"    description:"Result data for certain request according API definition"`
+	}
+	type ProductSearchReq struct {
+		gmeta.Meta `path:"/test" method:"get"`
+		Product    string `json:"-" in:"query" v:"required|max:5" description:"Unique product key"`
+		Name       string `json:"name"    in:"query"  v:"required" description:"Instance name"`
+	}
+	type ProductSearchRes struct {
+		ID           int64  `json:"-"                         description:"Product ID"`
+		Product      string `json:"product"      v:"required" description:"Unique product key"`
+		TemplateName string `json:"templateName" v:"required" description:"Workflow template name"`
+		Version      string `json:"version"      v:"required" description:"Workflow template version"`
+		TxID         string `json:"txID"         v:"required" description:"Transaction ID for creating instance"`
+		Globals      string `json:"globals"                   description:"Globals"`
+	}
+
+	f := func(ctx context.Context, req *ProductSearchReq) (res *ProductSearchRes, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+		)
+
+		oai.Config.CommonResponse = CommonResponse{}
+
+		err = oai.Add(goai.AddInput{
+			Object: f,
+		})
+		t.AssertNil(err)
+		// Schema asserts.
+		// fmt.Println(oai.String())
+		t.Assert(len(oai.Components.Schemas.Map()), 3)
+		t.Assert(len(oai.Paths), 1)
+		t.Assert(len(oai.Paths["/test"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Map()), 8)
+	})
+}

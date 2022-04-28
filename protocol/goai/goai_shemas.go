@@ -41,6 +41,11 @@ func (s *Schemas) Set(name string, ref SchemaRef) {
 	s.refs.Set(name, ref)
 }
 
+func (s *Schemas) Removes(names []interface{}) {
+	s.init()
+	s.refs.Removes(names)
+}
+
 func (s *Schemas) Map() map[string]SchemaRef {
 	s.init()
 	m := make(map[string]SchemaRef)
