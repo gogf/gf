@@ -189,7 +189,7 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 				schema.Required = append(schema.Required, key)
 			}
 		}
-		if !isValidTag(key) {
+		if !isValidParameterName(key) {
 			ignoreProperties = append(ignoreProperties, key)
 		}
 		return true
