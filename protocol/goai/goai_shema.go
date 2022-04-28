@@ -217,7 +217,21 @@ func (oai *OpenApiV3) tagMapToSchema(tagMap map[string]string, schema *Schema) e
 			if len(schema.Enum) == 0 {
 				for _, rule := range gstr.SplitAndTrim(validationRules, "|") {
 					if gstr.HasPrefix(rule, patternKeyForIn) {
-						schema.Enum = gconv.Interfaces(gstr.SplitAndTrim(rule[len(patternKeyForIn):], ","))
+						var (
+							isAllEnumNumber = true
+							enumArray       = gstr.SplitAndTrim(rule[len(patternKeyForIn):], ",")
+						)
+						for _, enum := range enumArray {
+							if !gstr.IsNumeric(enum) {
+								isAllEnumNumber = false
+								break
+							}
+						}
+						if isAllEnumNumber {
+							schema.Enum = gconv.Interfaces(gconv.Int64s(enumArray))
+						} else {
+							schema.Enum = gconv.Interfaces(enumArray)
+						}
 					}
 				}
 			}
