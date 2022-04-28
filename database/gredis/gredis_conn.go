@@ -8,15 +8,16 @@ package gredis
 
 import (
 	"context"
+	"github.com/gomodule/redigo/redis"
+	"reflect"
+	"time"
+
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/util/gconv"
-	"github.com/gomodule/redigo/redis"
-	"reflect"
-	"time"
 )
 
 // Do sends a command to the server and returns the received reply.
@@ -117,7 +118,7 @@ func (c *Conn) ReceiveVarWithTimeout(timeout time.Duration) (*gvar.Var, error) {
 func resultToVar(result interface{}, err error) (*gvar.Var, error) {
 	if err == nil {
 		if result, ok := result.([]byte); ok {
-			return gvar.New(gconv.UnsafeBytesToStr(result)), err
+			return gvar.New(string(result)), err
 		}
 		// It treats all returned slice as string slice.
 		if result, ok := result.([]interface{}); ok {

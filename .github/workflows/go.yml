@@ -3,10 +3,11 @@ name: GoFrame CI
 on:
   push:
     branches:
-      - master
-      - develop
+      - 'master'
+      - 'develop'
+      - 'fix/unsafe'
   pull_request:
-    branches: [master, develop]
+    branches: ['master', 'develop','fix/**']
 env:
   GF_DEBUG: 1
 
@@ -16,7 +17,7 @@ jobs:
     # Service containers to run with `code-test`
     services:
       redis:
-        image  : redis
+        image: redis
         options: >-
           --health-cmd      "redis-cli ping"
           --health-interval 10s
@@ -28,7 +29,7 @@ jobs:
       mysql:
         image: mysql:5.7
         env:
-          MYSQL_DATABASE     : test
+          MYSQL_DATABASE: test
           MYSQL_ROOT_PASSWORD: 12345678
         ports:
           # Maps tcp port 3306 on service container to the host
@@ -37,35 +38,35 @@ jobs:
     # strategy set
     strategy:
       matrix:
-        go: ["1.14", "1.15", "1.16"]
+        go: [ "1.15", "1.16", "1.17" ]
 
     steps:
-    - name: Set Up Timezone
-      uses: szenius/set-timezone@v1.0
-      with:
-        timezoneLinux: "Asia/Shanghai"
+      - name: Set Up Timezone
+        uses: szenius/set-timezone@v1.0
+        with:
+          timezoneLinux: "Asia/Shanghai"
 
-    - name: Checkout Repositary
-      uses: actions/checkout@v2
+      - name: Checkout Repositary
+        uses: actions/checkout@v2
 
-    - name: Set Up Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: ${{ matrix.go }}
+      - name: Set Up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
 
-    - name: Before Script
-      run: |
-        date
-        find . -name "*.go" | xargs gofmt -w
-        git diff --name-only --exit-code || exit 1
-        sudo echo "127.0.0.1   local" | sudo tee -a /etc/hosts
+      - name: Before Script
+        run: |
+          date
+          find . -name "*.go" | xargs gofmt -w
+          git diff --name-only --exit-code || exit 1
+          sudo echo "127.0.0.1   local" | sudo tee -a /etc/hosts
 
-    - name: Run i386 Arch Test
-      run: GOARCH=386 go test -v ./... || exit 1
+      - name: Run i386 Arch Test
+        run: GOARCH=386 go test -v ./... || exit 1
 
-    - name: Run amd64 Arch Test
-      run: GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
+      - name: Run amd64 Arch Test
+        run: GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
 
-    - name: Report Coverage
-      run: bash <(curl -s https://codecov.io/bash)
+      - name: Report Coverage
+        run: bash <(curl -s https://codecov.io/bash)
 

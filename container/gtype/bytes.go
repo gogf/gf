@@ -9,8 +9,9 @@ package gtype
 import (
 	"bytes"
 	"encoding/base64"
-	"github.com/gogf/gf/util/gconv"
 	"sync/atomic"
+
+	"github.com/gogf/gf/util/gconv"
 )
 
 // Bytes is a struct for concurrent-safe operation for type []byte.
@@ -59,7 +60,7 @@ func (v *Bytes) MarshalJSON() ([]byte, error) {
 	val := v.Val()
 	dst := make([]byte, base64.StdEncoding.EncodedLen(len(val)))
 	base64.StdEncoding.Encode(dst, val)
-	return gconv.UnsafeStrToBytes(`"` + gconv.UnsafeBytesToStr(dst) + `"`), nil
+	return []byte(`"` + string(dst) + `"`), nil
 }
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.

@@ -11,10 +11,10 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+
 	"github.com/gogf/gf/encoding/gbase64"
 	"github.com/gogf/gf/encoding/gcompress"
 	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
 
 	"github.com/gogf/gf/os/gfile"
 )
@@ -116,7 +116,7 @@ func UnpackContent(content string) ([]*File, error) {
 			return nil, err
 		}
 	} else {
-		data, err = gcompress.UnGzip(gconv.UnsafeStrToBytes(content))
+		data, err = gcompress.UnGzip([]byte(content))
 		if err != nil {
 			return nil, err
 		}
@@ -166,7 +166,7 @@ func isHexStr(s string) bool {
 
 // hexStrToBytes converts hex string content to []byte.
 func hexStrToBytes(s string) []byte {
-	src := gconv.UnsafeStrToBytes(s)
+	src := []byte(s)
 	dst := make([]byte, hex.DecodedLen(len(src)))
 	hex.Decode(dst, src)
 	return dst

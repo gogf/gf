@@ -10,6 +10,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	htmltpl "html/template"
+	"strconv"
+	"strings"
+	texttpl "text/template"
+
 	"github.com/gogf/gf/encoding/ghash"
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
@@ -17,12 +22,7 @@ import (
 	"github.com/gogf/gf/os/gfsnotify"
 	"github.com/gogf/gf/os/gmlock"
 	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gutil"
-	htmltpl "html/template"
-	"strconv"
-	"strings"
-	texttpl "text/template"
 
 	"github.com/gogf/gf/os/gres"
 
@@ -71,7 +71,7 @@ func (view *View) Parse(ctx context.Context, file string, params ...Params) (res
 			return nil
 		}
 		if resource != nil {
-			content = gconv.UnsafeBytesToStr(resource.Content())
+			content = string(resource.Content())
 		} else {
 			content = gfile.GetContentsWithCache(path)
 		}

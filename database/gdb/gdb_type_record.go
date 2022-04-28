@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"database/sql"
+
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/encoding/gparser"
 	"github.com/gogf/gf/internal/empty"
@@ -22,13 +23,13 @@ func (r Record) Interface() interface{} {
 // Json converts `r` to JSON format content.
 func (r Record) Json() string {
 	content, _ := gparser.VarToJson(r.Map())
-	return gconv.UnsafeBytesToStr(content)
+	return string(content)
 }
 
 // Xml converts `r` to XML format content.
 func (r Record) Xml(rootTag ...string) string {
 	content, _ := gparser.VarToXml(r.Map(), rootTag...)
-	return gconv.UnsafeBytesToStr(content)
+	return string(content)
 }
 
 // Map converts `r` to map[string]interface{}.

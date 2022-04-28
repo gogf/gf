@@ -7,11 +7,12 @@
 package gtype
 
 import (
-	"github.com/gogf/gf/util/gconv"
 	"math"
 	"strconv"
 	"sync/atomic"
 	"unsafe"
+
+	"github.com/gogf/gf/util/gconv"
 )
 
 // Float32 is a struct for concurrent-safe operation for type float32.
@@ -73,12 +74,12 @@ func (v *Float32) String() string {
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (v *Float32) MarshalJSON() ([]byte, error) {
-	return gconv.UnsafeStrToBytes(strconv.FormatFloat(float64(v.Val()), 'g', -1, 32)), nil
+	return []byte(strconv.FormatFloat(float64(v.Val()), 'g', -1, 32)), nil
 }
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (v *Float32) UnmarshalJSON(b []byte) error {
-	v.Set(gconv.Float32(gconv.UnsafeBytesToStr(b)))
+	v.Set(gconv.Float32(string(b)))
 	return nil
 }
 
