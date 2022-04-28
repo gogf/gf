@@ -74,6 +74,11 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path
 	}
 	parameter.Schema = schemaRef
 
+	// Ignore parameter.
+	if !isValidTag(parameter.Name) {
+		return nil, nil
+	}
+
 	// Required check.
 	if parameter.Schema.Value != nil && parameter.Schema.Value.Pattern != "" {
 		if gset.NewStrSetFrom(gstr.Split(parameter.Schema.Value.Pattern, "|")).Contains(patternKeyForRequired) {
