@@ -41,5 +41,8 @@ func GoImports(path string) {
 
 // IsFileDoNotEdit checks and returns whether file contains `do not edit` key.
 func IsFileDoNotEdit(filePath string) bool {
+	if !gfile.Exists(filePath) {
+		return true
+	}
 	return gstr.Contains(gfile.GetContents(filePath), consts.DoNotEditKey)
 }
