@@ -17,24 +17,35 @@ type Handler func(ctx context.Context, in *HandlerInput)
 
 // HandlerInput is the input parameter struct for logging Handler.
 type HandlerInput struct {
-	Logger       *Logger       // Logger.
-	Buffer       *bytes.Buffer // Buffer for logging content outputs.
-	Time         time.Time     // Logging time, which is the time that logging triggers.
-	TimeFormat   string        // Formatted time string, like "2016-01-09 12:00:00".
-	Color        int           // Using color, like COLOR_RED, COLOR_BLUE, etc. Eg: 34
-	Level        int           // Using level, like LEVEL_INFO, LEVEL_ERRO, etc. Eg: 256
-	LevelFormat  string        // Formatted level string, like "DEBU", "ERRO", etc. Eg: ERRO
-	CallerFunc   string        // The source function name that calls logging.
-	CallerPath   string        // The source file path and its line number that calls logging.
-	CtxStr       string        // The retrieved context value string from context. Usually a TraceId string.
-	Prefix       string        // Custom prefix string for logging content.
-	Content      string        // Content is the main logging content, containing error stack string produced by logger.
-	IsAsync      bool          // IsAsync marks it is in asynchronous logging.
-	handlerIndex int           // Middleware handling index for internal usage.
+	internalHandlerInfo
+	Logger      *Logger       // Logger.
+	Buffer      *bytes.Buffer // Buffer for logging content outputs.
+	Time        time.Time     // Logging time, which is the time that logging triggers.
+	TimeFormat  string        // Formatted time string, like "2016-01-09 12:00:00".
+	Color       int           // Using color, like COLOR_RED, COLOR_BLUE, etc. Eg: 34
+	Level       int           // Using level, like LEVEL_INFO, LEVEL_ERRO, etc. Eg: 256
+	LevelFormat string        // Formatted level string, like "DEBU", "ERRO", etc. Eg: ERRO
+	CallerFunc  string        // The source function name that calls logging, only available if F_CALLER_FN set.
+	CallerPath  string        // The source file path and its line number that calls logging, only available if F_FILE_SHORT or F_FILE_LONG set.
+	CtxStr      string        // The retrieved context value string from context, only available if Config.CtxKeys configured.
+	TraceId     string        // Trace id, only available if tracing is enabled.
+	Prefix      string        // Custom prefix string for logging content.
+	Content     string        // Content is the main logging content without error stack string produced by logger.
+	Stack       string        // Stack string produced by logger, only available if Config.StStatus configured.
+	IsAsync     bool          // IsAsync marks it is in asynchronous logging.
+}
+
+type internalHandlerInfo struct {
+	index    int       // Middleware handling index for internal usage.
+	handlers []Handler // Handler array calling bu index.
 }
 
 // defaultHandler is the default handler for package.
-var defaultHandler Handler = func(ctx context.Context, in *HandlerInput) {
+var defaultHandler Handler
+
+// defaultPrintHandler is a handler for logging content printing.
+// This handler outputs logging content to file/stdout/write if any of them configured.
+func defaultPrintHandler(ctx context.Context, in *HandlerInput) {
 	buffer := in.Logger.doDefaultPrint(ctx, in)
 	if in.Buffer.Len() == 0 {
 		in.Buffer = buffer
@@ -46,18 +57,16 @@ func SetDefaultHandler(handler Handler) {
 	defaultHandler = handler
 }
 
-// HandlerJson is a handler for output logging content as a single json string.
-func HandlerJson(ctx context.Context, in *HandlerInput) {
-
+// GetDefaultHandler returns the default handler of package.
+func GetDefaultHandler() Handler {
+	return defaultHandler
 }
 
 // Next calls the next logging handler in middleware way.
 func (in *HandlerInput) Next(ctx context.Context) {
-	if len(in.Logger.config.Handlers)-1 > in.handlerIndex {
-		in.handlerIndex++
-		in.Logger.config.Handlers[in.handlerIndex](ctx, in)
-	} else if defaultHandler != nil {
-		defaultHandler(ctx, in)
+	in.index++
+	if in.index < len(in.handlers) {
+		in.handlers[in.index](ctx, in)
 	}
 }
 
@@ -76,19 +85,23 @@ func (in *HandlerInput) getDefaultBuffer(withColor bool) *bytes.Buffer {
 		buffer.WriteString(in.TimeFormat)
 	}
 	if in.LevelFormat != "" {
+		var levelStr = "[" + in.LevelFormat + "]"
 		if withColor {
 			in.addStringToBuffer(buffer, in.Logger.getColoredStr(
-				in.Logger.getColorByLevel(in.Level), in.LevelFormat,
+				in.Logger.getColorByLevel(in.Level), levelStr,
 			))
 		} else {
-			in.addStringToBuffer(buffer, in.LevelFormat)
+			in.addStringToBuffer(buffer, levelStr)
 		}
 	}
 	if in.Prefix != "" {
 		in.addStringToBuffer(buffer, in.Prefix)
 	}
+	if in.TraceId != "" {
+		in.addStringToBuffer(buffer, "{"+in.TraceId+"}")
+	}
 	if in.CtxStr != "" {
-		in.addStringToBuffer(buffer, in.CtxStr)
+		in.addStringToBuffer(buffer, "{"+in.CtxStr+"}")
 	}
 	if in.CallerFunc != "" {
 		in.addStringToBuffer(buffer, in.CallerFunc)
@@ -97,7 +110,11 @@ func (in *HandlerInput) getDefaultBuffer(withColor bool) *bytes.Buffer {
 		in.addStringToBuffer(buffer, in.CallerPath)
 	}
 	if in.Content != "" {
-		in.addStringToBuffer(buffer, in.Content)
+		if in.Stack != "" {
+			in.addStringToBuffer(buffer, in.Content+"\nStack:\n"+in.Stack)
+		} else {
+			in.addStringToBuffer(buffer, in.Content)
+		}
 	}
 	// avoid a single space at the end of a line.
 	buffer.WriteString("\n")
