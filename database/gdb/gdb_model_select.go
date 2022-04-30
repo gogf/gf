@@ -594,122 +594,41 @@ func (m *Model) getFormattedSqlAndArgs(ctx context.Context, queryType int, limit
 	}
 }
 
-// formatCondition formats where arguments of the model and returns a new condition sql and its arguments.
-// Note that this function does not change any attribute value of the `m`.
-//
-// The parameter `limit1` specifies whether limits querying only one record if m.limit is not set.
-func (m *Model) formatCondition(ctx context.Context, limit1 bool, isCountStatement bool) (conditionWhere string, conditionExtra string, conditionArgs []interface{}) {
+func (m *Model) getAutoPrefix() string {
 	autoPrefix := ""
 	if gstr.Contains(m.tables, " JOIN ") {
 		autoPrefix = m.db.GetCore().QuoteWord(
 			m.db.GetCore().guessPrimaryTableName(m.tablesInit),
 		)
 	}
-	var (
-		tableForMappingAndFiltering = m.tables
-	)
-	if len(m.whereHolder) > 0 {
-		for _, holder := range m.whereHolder {
-			tableForMappingAndFiltering = m.tables
-			if holder.Prefix == "" {
-				holder.Prefix = autoPrefix
-			}
+	return autoPrefix
+}
 
-			switch holder.Operator {
-			case whereHolderOperatorWhere:
-				if conditionWhere == "" {
-					newWhere, newArgs := formatWhereHolder(ctx, m.db, formatWhereHolderInput{
-						ModelWhereHolder: holder,
-						OmitNil:          m.option&optionOmitNilWhere > 0,
-						OmitEmpty:        m.option&optionOmitEmptyWhere > 0,
-						Schema:           m.schema,
-						Table:            tableForMappingAndFiltering,
-					})
-					if len(newWhere) > 0 {
-						conditionWhere = newWhere
-						conditionArgs = newArgs
-					}
-					continue
-				}
-				fallthrough
-
-			case whereHolderOperatorAnd:
-				newWhere, newArgs := formatWhereHolder(ctx, m.db, formatWhereHolderInput{
-					ModelWhereHolder: holder,
-					OmitNil:          m.option&optionOmitNilWhere > 0,
-					OmitEmpty:        m.option&optionOmitEmptyWhere > 0,
-					Schema:           m.schema,
-					Table:            tableForMappingAndFiltering,
-				})
-				if len(newWhere) > 0 {
-					if len(conditionWhere) == 0 {
-						conditionWhere = newWhere
-					} else if conditionWhere[0] == '(' {
-						conditionWhere = fmt.Sprintf(`%s AND (%s)`, conditionWhere, newWhere)
-					} else {
-						conditionWhere = fmt.Sprintf(`(%s) AND (%s)`, conditionWhere, newWhere)
-					}
-					conditionArgs = append(conditionArgs, newArgs...)
-				}
-
-			case whereHolderOperatorOr:
-				newWhere, newArgs := formatWhereHolder(ctx, m.db, formatWhereHolderInput{
-					ModelWhereHolder: holder,
-					OmitNil:          m.option&optionOmitNilWhere > 0,
-					OmitEmpty:        m.option&optionOmitEmptyWhere > 0,
-					Schema:           m.schema,
-					Table:            tableForMappingAndFiltering,
-				})
-				if len(newWhere) > 0 {
-					if len(conditionWhere) == 0 {
-						conditionWhere = newWhere
-					} else if conditionWhere[0] == '(' {
-						conditionWhere = fmt.Sprintf(`%s OR (%s)`, conditionWhere, newWhere)
-					} else {
-						conditionWhere = fmt.Sprintf(`(%s) OR (%s)`, conditionWhere, newWhere)
-					}
-					conditionArgs = append(conditionArgs, newArgs...)
-				}
-			}
-		}
-	}
-	// Soft deletion.
-	softDeletingCondition := m.getConditionForSoftDeleting()
-	if m.rawSql != "" && conditionWhere != "" {
-		if gstr.ContainsI(m.rawSql, " WHERE ") {
-			conditionWhere = " AND " + conditionWhere
-		} else {
-			conditionWhere = " WHERE " + conditionWhere
-		}
-	} else if !m.unscoped && softDeletingCondition != "" {
-		if conditionWhere == "" {
-			conditionWhere = fmt.Sprintf(` WHERE %s`, softDeletingCondition)
-		} else {
-			conditionWhere = fmt.Sprintf(` WHERE (%s) AND %s`, conditionWhere, softDeletingCondition)
-		}
-	} else {
-		if conditionWhere != "" {
-			conditionWhere = " WHERE " + conditionWhere
-		}
-	}
-
+// formatCondition formats where arguments of the model and returns a new condition sql and its arguments.
+// Note that this function does not change any attribute value of the `m`.
+//
+// The parameter `limit1` specifies whether limits querying only one record if m.limit is not set.
+func (m *Model) formatCondition(ctx context.Context, limit1 bool, isCountStatement bool) (conditionWhere string, conditionExtra string, conditionArgs []interface{}) {
+	var autoPrefix = m.getAutoPrefix()
 	// GROUP BY.
 	if m.groupBy != "" {
 		conditionExtra += " GROUP BY " + m.groupBy
 	}
+	// WHERE
+	conditionWhere, conditionArgs = m.whereBuilder.Build()
 	// HAVING.
 	if len(m.having) > 0 {
-		havingHolder := ModelWhereHolder{
+		havingHolder := WhereHolder{
 			Where:  m.having[0],
 			Args:   gconv.Interfaces(m.having[1]),
 			Prefix: autoPrefix,
 		}
 		havingStr, havingArgs := formatWhereHolder(ctx, m.db, formatWhereHolderInput{
-			ModelWhereHolder: havingHolder,
-			OmitNil:          m.option&optionOmitNilWhere > 0,
-			OmitEmpty:        m.option&optionOmitEmptyWhere > 0,
-			Schema:           m.schema,
-			Table:            m.tables,
+			WhereHolder: havingHolder,
+			OmitNil:     m.option&optionOmitNilWhere > 0,
+			OmitEmpty:   m.option&optionOmitEmptyWhere > 0,
+			Schema:      m.schema,
+			Table:       m.tables,
 		})
 		if len(havingStr) > 0 {
 			conditionExtra += " HAVING " + havingStr
