@@ -332,7 +332,7 @@ func formatSql(sql string, args []interface{}) (newSql string, newArgs []interfa
 }
 
 type formatWhereHolderInput struct {
-	ModelWhereHolder
+	WhereHolder
 	OmitNil   bool
 	OmitEmpty bool
 	Schema    string
