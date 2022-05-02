@@ -186,6 +186,24 @@ func ExampleUnmarshal() {
 	// {Name:john Score:100}
 }
 
+func ExampleEncode() {
+	type BaseInfo struct {
+		Name string
+		Age  int
+	}
+
+	info := BaseInfo{
+		Name: "John",
+		Age:  18,
+	}
+
+	infoData, _ := gjson.Encode(info)
+	fmt.Println(string(infoData))
+
+	// Output:
+	// {"Name":"John","Age":18}
+}
+
 func ExampleMustEncode() {
 	type BaseInfo struct {
 		Name string
