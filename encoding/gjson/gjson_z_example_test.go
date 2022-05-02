@@ -37,10 +37,13 @@ func ExampleJson_SetViolenceCheck() {
 	if j, err := gjson.DecodeToJson(data); err != nil {
 		fmt.Println(err)
 	} else {
+		j.SetViolenceCheck(false)
+		fmt.Println("Users Count:", j.Get("users.count"))
 		j.SetViolenceCheck(true)
 		fmt.Println("Users Count:", j.Get("users.count"))
 	}
 	// Output:
+	// Users Count: 100
 	// Users Count: 101
 }
 
