@@ -25,7 +25,7 @@ type Registrar interface {
 	// Register registers `service` to Registry.
 	Register(ctx context.Context, service *Service) error
 
-	// Deregister off-lines and removes `service` from Registry.
+	// Deregister off-lines and removes `service` from the Registry.
 	Deregister(ctx context.Context, service *Service) error
 }
 
@@ -49,9 +49,10 @@ type Watcher interface {
 
 // Service definition.
 type Service struct {
+	ID         string   // ID is the unique instance ID as registered.
 	Prefix     string   // Service prefix.
 	Deployment string   // Service deployment name, eg: dev, qa, staging, prod, etc.
-	Namespace  string   // Service Namespace, to indicate different service in the same environment with the same Name.
+	Namespace  string   // Service Namespace, to indicate different services in the same environment with the same Name.
 	Name       string   // Name for the service.
 	Version    string   // Service version, eg: v1.0.0, v2.1.1, etc.
 	Endpoints  []string // Service Endpoints, pattern: IP:port, eg: 192.168.1.2:8000.
@@ -63,18 +64,20 @@ type Metadata map[string]interface{}
 
 // SearchInput is the input for service searching.
 type SearchInput struct {
+	ID         string // ID is the unique instance ID as registered.
 	Prefix     string // Service prefix.
 	Deployment string // Service deployment name, eg: dev, qa, staging, prod, etc.
-	Namespace  string // Service Namespace, to indicate different service in the same environment with the same Name.
+	Namespace  string // Service Namespace, to indicate different services in the same environment with the same Name.
 	Name       string // Name for the service.
 	Version    string // Service version, eg: v1.0.0, v2.1.1, etc.}
 }
 
 // WatchInput is the input for service watching.
 type WatchInput struct {
+	ID         string // ID is the unique instance ID as registered.
 	Prefix     string // Service prefix.
 	Deployment string // Service deployment name, eg: dev, qa, staging, prod, etc.
-	Namespace  string // Service Namespace, to indicate different service in the same environment with the same Name.
+	Namespace  string // Service Namespace, to indicate different services in the same environment with the same Name.
 	Name       string // Name for the service.
 	Version    string // Service version, eg: v1.0.0, v2.1.1, etc.}
 }
@@ -111,5 +114,6 @@ func SetRegistry(registry Registry) {
 // GetRegistry returns the default Registry that is previously set.
 // It returns nil if no Registry is set.
 func GetRegistry() Registry {
+
 	return defaultRegistry
 }

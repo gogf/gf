@@ -254,7 +254,7 @@ func (r *Registry) Register(ctx context.Context, serviceInstance *gsvc.Service) 
 		ids = append(ids, instanceID)
 	}
 	// need to set InstanceID for Deregister
-	// serviceInstance.ID = strings.Join(ids, _instanceIDSeparator)
+	serviceInstance.ID = strings.Join(ids, _instanceIDSeparator)
 	return nil
 }
 
@@ -375,7 +375,7 @@ func (w *Watcher) Proceed() ([]*gsvc.Service, error) {
 				if instanceEvent.DeleteEvent != nil {
 					for _, instance := range instanceEvent.DeleteEvent.Instances {
 						for i, serviceInstance := range w.ServiceInstances {
-							if serviceInstance.Key() == instance.GetId() {
+							if serviceInstance.ID == instance.GetId() {
 								// remove equal
 								if len(w.ServiceInstances) <= 1 {
 									w.ServiceInstances = w.ServiceInstances[0:0]
@@ -390,7 +390,7 @@ func (w *Watcher) Proceed() ([]*gsvc.Service, error) {
 				if instanceEvent.UpdateEvent != nil {
 					for i, serviceInstance := range w.ServiceInstances {
 						for _, update := range instanceEvent.UpdateEvent.UpdateList {
-							if serviceInstance.Key() == update.Before.GetId() {
+							if serviceInstance.ID == update.Before.GetId() {
 								w.ServiceInstances[i] = instanceToServiceInstance(update.After)
 							}
 						}
@@ -425,7 +425,7 @@ func instancesToServiceInstances(instances []model.Instance) []*gsvc.Service {
 
 func instanceToServiceInstance(instance model.Instance) *gsvc.Service {
 	metadata := instance.GetMetadata()
-	// Usually, it won't fail in kratos if register correctly
+	// Usually, it won't fail in goframe if register correctly
 	kind := ""
 	if k, ok := metadata["kind"]; ok {
 		kind = k
