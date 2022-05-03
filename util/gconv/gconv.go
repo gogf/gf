@@ -264,14 +264,18 @@ func checkJsonAndUnmarshalUseNumber(any interface{}, target interface{}) bool {
 	switch r := any.(type) {
 	case []byte:
 		if json.Valid(r) {
-			_ = json.UnmarshalUseNumber(r, &target)
+			if err := json.UnmarshalUseNumber(r, &target); err != nil {
+				return false
+			}
 			return true
 		}
 
 	case string:
 		anyAsBytes := []byte(r)
 		if json.Valid(anyAsBytes) {
-			_ = json.UnmarshalUseNumber(anyAsBytes, &target)
+			if err := json.UnmarshalUseNumber(anyAsBytes, &target); err != nil {
+				return false
+			}
 			return true
 		}
 	}

@@ -69,11 +69,12 @@ func (c *Core) doBeginCtx(ctx context.Context) (*TX, error) {
 // Note that, you should not Commit or Rollback the transaction in function `f`
 // as it is automatically handled by this function.
 func (c *Core) Transaction(ctx context.Context, f func(ctx context.Context, tx *TX) error) (err error) {
-	var tx *TX
 	if ctx == nil {
 		ctx = c.db.GetCtx()
 	}
+	ctx = c.InjectInternalCtxData(ctx)
 	// Check transaction object from context.
+	var tx *TX
 	tx = TXFromCtx(ctx, c.db.GetGroup())
 	if tx != nil {
 		return tx.Transaction(ctx, f)
