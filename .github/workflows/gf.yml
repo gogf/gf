@@ -6,12 +6,12 @@ on:
     branches:
     - master
     - develop
-    - feature/
+    - feature/polaris
   pull_request:
     branches:
     - master
     - develop
-    - feature/
+    - feature/polaris
 
 
 env:
