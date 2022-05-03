@@ -15,6 +15,7 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 var (
@@ -120,6 +121,7 @@ func WithHeartbeat(heartbeat bool) Option {
 	return func(o *options) { o.Heartbeat = heartbeat }
 }
 
+// NewRegistry 创建一个注册服务
 func NewRegistry(provider api.ProviderAPI, consumer api.ConsumerAPI, opts ...Option) (r *Registry) {
 	op := options{
 		Namespace:    "default",
@@ -158,7 +160,7 @@ func NewRegistryWithConfig(conf config.Configuration, opts ...Option) (r *Regist
 }
 
 // Register the registration.
-func (r *Registry) Register(ctx context.Context, service *gsvc.Service) error {
+func (r *Registry) Register(ctx context.Context, serviceInstance *gsvc.Service) error {
 	ids := make([]string, 0, len(serviceInstance.Endpoints))
 	for _, endpoint := range serviceInstance.Endpoints {
 		// get url
@@ -180,14 +182,14 @@ func (r *Registry) Register(ctx context.Context, service *gsvc.Service) error {
 		}
 
 		// medata
-		var rmd map[string]string
+		var rmd map[string]interface{}
 		if serviceInstance.Metadata == nil {
-			rmd = map[string]string{
+			rmd = map[string]interface{}{
 				"kind":    u.Scheme,
 				"version": serviceInstance.Version,
 			}
 		} else {
-			rmd = make(map[string]string, len(serviceInstance.Metadata)+2)
+			rmd = make(map[string]interface{}, len(serviceInstance.Metadata)+2)
 			for k, v := range serviceInstance.Metadata {
 				rmd[k] = v
 			}
@@ -207,7 +209,7 @@ func (r *Registry) Register(ctx context.Context, service *gsvc.Service) error {
 					Weight:       &r.opt.Weight,
 					Priority:     &r.opt.Priority,
 					Version:      &serviceInstance.Version,
-					Metadata:     rmd,
+					Metadata:     gconv.MapStrStr(rmd),
 					Healthy:      &r.opt.Healthy,
 					Isolate:      &r.opt.Isolate,
 					TTL:          &r.opt.TTL,
@@ -252,13 +254,13 @@ func (r *Registry) Register(ctx context.Context, service *gsvc.Service) error {
 		ids = append(ids, instanceID)
 	}
 	// need to set InstanceID for Deregister
-	serviceInstance.ID = strings.Join(ids, _instanceIDSeparator)
+	// serviceInstance.ID = strings.Join(ids, _instanceIDSeparator)
 	return nil
 }
 
 // Deregister the registration.
-func (r *Registry) Deregister(ctx context.Context, service *gsvc.Service) error {
-	split := strings.Split(serviceInstance.ID, _instanceIDSeparator)
+func (r *Registry) Deregister(ctx context.Context, serviceInstance *gsvc.Service) error {
+	split := strings.Split(serviceInstance.Key(), _instanceIDSeparator)
 	for i, endpoint := range serviceInstance.Endpoints {
 		// get url
 		u, err := url.Parse(endpoint)
@@ -367,13 +369,13 @@ func (w *Watcher) Proceed() ([]*gsvc.Service, error) {
 		return nil, w.Ctx.Err()
 	case event := <-w.Channel:
 		if event.GetSubScribeEventType() == model.EventInstance {
-			// this always true, but we need to check it to make sure EventType not change
+			// these are always true, but we need to check it to make sure EventType not change
 			if instanceEvent, ok := event.(*model.InstanceEvent); ok {
 				// handle DeleteEvent
 				if instanceEvent.DeleteEvent != nil {
 					for _, instance := range instanceEvent.DeleteEvent.Instances {
 						for i, serviceInstance := range w.ServiceInstances {
-							if serviceInstance.ID == instance.GetId() {
+							if serviceInstance.Key() == instance.GetId() {
 								// remove equal
 								if len(w.ServiceInstances) <= 1 {
 									w.ServiceInstances = w.ServiceInstances[0:0]
@@ -388,7 +390,7 @@ func (w *Watcher) Proceed() ([]*gsvc.Service, error) {
 				if instanceEvent.UpdateEvent != nil {
 					for i, serviceInstance := range w.ServiceInstances {
 						for _, update := range instanceEvent.UpdateEvent.UpdateList {
-							if serviceInstance.ID == update.Before.GetId() {
+							if serviceInstance.Key() == update.Before.GetId() {
 								w.ServiceInstances[i] = instanceToServiceInstance(update.After)
 							}
 						}
@@ -412,7 +414,7 @@ func (w *Watcher) Close() error {
 }
 
 func instancesToServiceInstances(instances []model.Instance) []*gsvc.Service {
-	serviceInstances := make([]*registry.ServiceInstance, 0, len(instances))
+	serviceInstances := make([]*gsvc.Service, 0, len(instances))
 	for _, instance := range instances {
 		if instance.IsHealthy() {
 			serviceInstances = append(serviceInstances, instanceToServiceInstance(instance))
@@ -428,11 +430,10 @@ func instanceToServiceInstance(instance model.Instance) *gsvc.Service {
 	if k, ok := metadata["kind"]; ok {
 		kind = k
 	}
-	return &registry.ServiceInstance{
-		ID:        instance.GetId(),
+	return &gsvc.Service{
 		Name:      instance.GetService(),
 		Version:   metadata["version"],
-		Metadata:  metadata,
+		Metadata:  gconv.Map(metadata),
 		Endpoints: []string{fmt.Sprintf("%s://%s:%d", kind, instance.GetHost(), instance.GetPort())},
 	}
 }

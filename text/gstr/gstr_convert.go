@@ -9,12 +9,13 @@ package gstr
 import (
 	"bytes"
 	"fmt"
-	"github.com/gogf/gf/v2/util/grand"
 	"math"
 	"regexp"
 	"strconv"
 	"strings"
 	"unicode"
+
+	"github.com/gogf/gf/v2/util/grand"
 )
 
 // Chr return the ascii string of a number(0-255).
@@ -27,14 +28,12 @@ func Ord(char string) int {
 	return int(char[0])
 }
 
-var (
-	// octReg is the regular expression object for checks octal string.
-	octReg = regexp.MustCompile(`\\[0-7]{3}`)
-)
+// octReg is the regular expression object for checks octal string.
+var octReg = regexp.MustCompile(`\\[0-7]{3}`)
 
 // OctStr converts string container octal string to its original string,
 // for example, to Chinese string.
-// Eg: `\346\200\241` -> 怡
+// Eg: `\346\200\241` -> 怡.
 func OctStr(str string) string {
 	return octReg.ReplaceAllStringFunc(
 		str,

@@ -12,7 +12,7 @@ import (
 	"github.com/gogf/gf/v2/os/gctx"
 )
 
-// TestRegistry . TestRegistryManyService
+// TestRegistry TestRegistryManyService
 func TestRegistry(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
 
@@ -25,9 +25,9 @@ func TestRegistry(t *testing.T) {
 	ctx := context.Background()
 
 	svc := &gsvc.Service{
-		Name:      "kratos-provider-0-",
+		Name:      "goframe-provider-0-",
 		Version:   "test",
-		Metadata:  map[string]string{"app": "kratos"},
+		Metadata:  map[string]interface{}{"app": "goframe"},
 		Endpoints: []string{"tcp://127.0.0.1:9000?isSecure=false"},
 	}
 
@@ -53,21 +53,21 @@ func TestRegistryMany(t *testing.T) {
 	)
 
 	svc := &gsvc.Service{
-		Name:      "kratos-provider-1-",
+		Name:      "goframe-provider-1-",
 		Version:   "test",
-		Metadata:  map[string]string{"app": "kratos"},
+		Metadata:  map[string]interface{}{"app": "goframe"},
 		Endpoints: []string{"tcp://127.0.0.1:9000?isSecure=false"},
 	}
 	svc1 := &gsvc.Service{
-		Name:      "kratos-provider-2-",
+		Name:      "goframe-provider-2-",
 		Version:   "test",
-		Metadata:  map[string]string{"app": "kratos"},
+		Metadata:  map[string]interface{}{"app": "goframe"},
 		Endpoints: []string{"tcp://127.0.0.1:9001?isSecure=false"},
 	}
 	svc2 := &gsvc.Service{
-		Name:      "kratos-provider-3-",
+		Name:      "goframe-provider-3-",
 		Version:   "test",
-		Metadata:  map[string]string{"app": "kratos"},
+		Metadata:  map[string]interface{}{"app": "goframe"},
 		Endpoints: []string{"tcp://127.0.0.1:9002?isSecure=false"},
 	}
 
@@ -102,7 +102,7 @@ func TestRegistryMany(t *testing.T) {
 	}
 }
 
-// TestGetService . TestGetService
+// TestGetService Test GetService
 func TestGetService(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
 
@@ -115,9 +115,9 @@ func TestGetService(t *testing.T) {
 	ctx := context.Background()
 
 	svc := &gsvc.Service{
-		Name:      "kratos-provider-4-",
+		Name:      "goframe-provider-4-",
 		Version:   "test",
-		Metadata:  map[string]string{"app": "kratos"},
+		Metadata:  map[string]interface{}{"app": "goframe"},
 		Endpoints: []string{"tcp://127.0.0.1:9000?isSecure=false"},
 	}
 
@@ -126,7 +126,7 @@ func TestGetService(t *testing.T) {
 		t.Fatal(err)
 	}
 	time.Sleep(time.Second * 1)
-	serviceInstances, err := r.GetService(ctx, "kratos-provider-4-tcp")
+	serviceInstances, err := r.Registry(ctx, "goframe-provider-4-tcp")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -140,7 +140,7 @@ func TestGetService(t *testing.T) {
 	}
 }
 
-// TestWatch . TestWatch
+// TestWatch Test Watch
 func TestWatch(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
 
@@ -152,14 +152,14 @@ func TestWatch(t *testing.T) {
 
 	ctx := gctx.New()
 
-	svc := &registry.ServiceInstance{
-		Name:      "kratos-provider-4-",
+	svc := &gsvc.Service{
+		Name:      "goframe-provider-4-",
 		Version:   "test",
-		Metadata:  map[string]string{"app": "kratos"},
+		Metadata:  map[string]interface{}{"app": "goframe"},
 		Endpoints: []string{"tcp://127.0.0.1:9000?isSecure=false"},
 	}
 
-	watch, err := r.Watch(context.Background(), "kratos-provider-4-tcp")
+	watch, err := r.Watch(context.Background(), "goframe-provider-4-tcp")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -172,7 +172,7 @@ func TestWatch(t *testing.T) {
 	time.Sleep(time.Second * 1)
 
 	// svc register, AddEvent
-	next, err := watch.Next()
+	next, err := watch.Proceed()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -187,7 +187,7 @@ func TestWatch(t *testing.T) {
 	}
 
 	// svc deregister, DeleteEvent
-	next, err = watch.Next()
+	next, err = watch.Proceed()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -200,7 +200,7 @@ func TestWatch(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = watch.Next()
+	_, err = watch.Proceed()
 	if err == nil {
 		// if nil, stop failed
 		t.Fatal()

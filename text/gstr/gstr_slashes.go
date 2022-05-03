@@ -8,6 +8,7 @@ package gstr
 
 import (
 	"bytes"
+
 	"github.com/gogf/gf/v2/internal/utils"
 )
 
@@ -30,7 +31,7 @@ func StripSlashes(str string) string {
 }
 
 // QuoteMeta returns a version of str with a backslash character (\)
-// before every character that is among: .\+*?[^]($)
+// before every character that is among: .\+*?[^]($).
 func QuoteMeta(str string, chars ...string) string {
 	var buf bytes.Buffer
 	for _, char := range str {
