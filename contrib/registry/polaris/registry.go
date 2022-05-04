@@ -8,6 +8,7 @@ package polaris
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/url"
@@ -21,6 +22,7 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -47,13 +49,13 @@ type options struct {
 	// service priority. Default value is 0. The smaller the value, the lower the priority
 	Priority int
 
-	// To show service is healthy or not. Default value is True .
+	// To show service is healthy or not. Default value is True.
 	Healthy bool
 
 	// Heartbeat enable .Not in polaris . Default value is True.
 	Heartbeat bool
 
-	// To show service is isolate or not. Default value is False .
+	// To show service is isolate or not. Default value is False.
 	Isolate bool
 
 	// TTL timeout. if node needs to use heartbeat to report,required. If not set,server will throw ErrorCode-400141
@@ -266,7 +268,7 @@ func (r *Registry) Register(ctx context.Context, serviceInstance *gsvc.Service) 
 
 // Deregister the registration.
 func (r *Registry) Deregister(ctx context.Context, serviceInstance *gsvc.Service) error {
-	split := strings.Split(serviceInstance.Key(), _instanceIDSeparator)
+	split := strings.Split(serviceInstance.ID, _instanceIDSeparator)
 	for i, endpoint := range serviceInstance.Endpoints {
 		// get url
 		u, err := url.Parse(endpoint)
@@ -307,8 +309,34 @@ func (r *Registry) Deregister(ctx context.Context, serviceInstance *gsvc.Service
 	return nil
 }
 
-// Registry returns the service instances in memory according to the service name.
-func (r *Registry) Registry(_ context.Context, serviceName string) ([]*gsvc.Service, error) {
+// Search returns the service instances in memory according to the service name.
+func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]*gsvc.Service, error) {
+	var (
+		u           *url.URL
+		err         error
+		serviceName string
+	)
+	if len(in.Endpoints) > 0 {
+		u, err = url.Parse(in.Endpoints[0])
+		if err != nil {
+			return nil, err
+		}
+		if u == nil {
+			return nil, errors.New("invalid endpoint")
+		}
+		serviceName = in.Name + u.Scheme
+	} else {
+		req := g.RequestFromCtx(ctx)
+		scheme := "http"
+		if req != nil {
+			proto := req.Header.Get("X-Forwarded-Proto")
+			if req.TLS != nil || gstr.Equal(proto, "https") {
+				scheme = "https"
+			}
+		}
+		serviceName = in.Name + scheme
+	}
+
 	// get all instances
 	instancesResponse, err := r.consumer.GetAllInstances(&api.GetAllInstancesRequest{
 		GetAllInstancesRequest: model.GetAllInstancesRequest{

@@ -64,22 +64,26 @@ type Metadata map[string]interface{}
 
 // SearchInput is the input for service searching.
 type SearchInput struct {
-	ID         string // ID is the unique instance ID as registered.
-	Prefix     string // Service prefix.
-	Deployment string // Service deployment name, eg: dev, qa, staging, prod, etc.
-	Namespace  string // Service Namespace, to indicate different services in the same environment with the same Name.
-	Name       string // Name for the service.
-	Version    string // Service version, eg: v1.0.0, v2.1.1, etc.}
+	ID         string   // ID is the unique instance ID as registered.
+	Prefix     string   // Service prefix.
+	Deployment string   // Service deployment name, eg: dev, qa, staging, prod, etc.
+	Namespace  string   // Service Namespace, to indicate different services in the same environment with the same Name.
+	Name       string   // Name for the service.
+	Version    string   // Service version, eg: v1.0.0, v2.1.1, etc.}
+	Endpoints  []string // Service Endpoints, pattern: IP:port, eg: 192.168.1.2:8000.
+	Metadata   Metadata // Custom data for this service, which can be set using JSON by environment or command-line.
 }
 
 // WatchInput is the input for service watching.
 type WatchInput struct {
-	ID         string // ID is the unique instance ID as registered.
-	Prefix     string // Service prefix.
-	Deployment string // Service deployment name, eg: dev, qa, staging, prod, etc.
-	Namespace  string // Service Namespace, to indicate different services in the same environment with the same Name.
-	Name       string // Name for the service.
-	Version    string // Service version, eg: v1.0.0, v2.1.1, etc.}
+	ID         string   // ID is the unique instance ID as registered.
+	Prefix     string   // Service prefix.
+	Deployment string   // Service deployment name, eg: dev, qa, staging, prod, etc.
+	Namespace  string   // Service Namespace, to indicate different services in the same environment with the same Name.
+	Name       string   // Name for the service.
+	Version    string   // Service version, eg: v1.0.0, v2.1.1, etc.}
+	Endpoints  []string // Service Endpoints, pattern: IP:port, eg: 192.168.1.2:8000.
+	Metadata   Metadata // Custom data for this service, which can be set using JSON by environment or command-line.
 }
 
 const (
@@ -112,6 +116,5 @@ func SetRegistry(registry Registry) {
 // GetRegistry returns the default Registry that is previously set.
 // It returns nil if no Registry is set.
 func GetRegistry() Registry {
-
 	return defaultRegistry
 }

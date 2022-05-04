@@ -47,7 +47,7 @@ func (s *Server) doServiceRegister() {
 	}
 	s.service = &gsvc.Service{
 		Name:      s.GetName(),
-		Endpoints: []string{fmt.Sprintf(`%s:%s`, ip, port)},
+		Endpoints: []string{fmt.Sprintf(`%s://%s:%s`, protocol, ip, port)},
 		Metadata:  metadata,
 	}
 	s.Logger().Debugf(ctx, `service register: %+v`, s.service)

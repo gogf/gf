@@ -19,12 +19,15 @@ import (
 
 var watchedServiceMap = gmap.New(true)
 
+// ServiceWatch is used to watch the service status.
 type ServiceWatch func(service *Service)
 
+// Get the watched service map.
 func Get(ctx context.Context, name string) (service *Service, err error) {
 	return GetWithWatch(ctx, name, nil)
 }
 
+// GetWithWatch is used to getting the service with watch.
 func GetWithWatch(ctx context.Context, name string, watch ServiceWatch) (service *Service, err error) {
 	v := watchedServiceMap.GetOrSetFuncLock(name, func() interface{} {
 		var (
@@ -32,18 +35,22 @@ func GetWithWatch(ctx context.Context, name string, watch ServiceWatch) (service
 			services []*Service
 			watcher  Watcher
 		)
+
 		services, err = Search(ctx, SearchInput{
 			Prefix:     s.Prefix,
 			Deployment: s.Deployment,
 			Namespace:  s.Namespace,
 			Name:       s.Name,
 			Version:    s.Version,
+			Endpoints:  s.Endpoints,
+			Metadata:   s.Metadata,
 		})
 		if err != nil {
 			return nil
 		}
 		if len(services) == 0 {
 			err = gerror.NewCodef(gcode.CodeNotFound, `service not found with name "%s"`, name)
+
 			return nil
 		}
 		service = services[0]
@@ -53,6 +60,7 @@ func GetWithWatch(ctx context.Context, name string, watch ServiceWatch) (service
 			return nil
 		}
 		go watchAndUpdateService(watcher, service, watch)
+
 		return service
 	})
 	if v != nil {
@@ -72,6 +80,7 @@ func watchAndUpdateService(watcher Watcher, service *Service, watchFunc ServiceW
 		services, err = watcher.Proceed()
 		if err != nil {
 			intlog.Errorf(ctx, `%+v`, err)
+
 			continue
 		}
 		if len(services) > 0 {
