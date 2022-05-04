@@ -8,7 +8,6 @@ package polaris
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
 	"net/url"
@@ -22,7 +21,6 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gsvc"
-	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -311,36 +309,10 @@ func (r *Registry) Deregister(ctx context.Context, serviceInstance *gsvc.Service
 
 // Search returns the service instances in memory according to the service name.
 func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]*gsvc.Service, error) {
-	var (
-		u           *url.URL
-		err         error
-		serviceName string
-	)
-	if len(in.Endpoints) > 0 {
-		u, err = url.Parse(in.Endpoints[0])
-		if err != nil {
-			return nil, err
-		}
-		if u == nil {
-			return nil, errors.New("invalid endpoint")
-		}
-		serviceName = in.Name + u.Scheme
-	} else {
-		req := g.RequestFromCtx(ctx)
-		scheme := "http"
-		if req != nil {
-			proto := req.Header.Get("X-Forwarded-Proto")
-			if req.TLS != nil || gstr.Equal(proto, "https") {
-				scheme = "https"
-			}
-		}
-		serviceName = in.Name + scheme
-	}
-
 	// get all instances
 	instancesResponse, err := r.consumer.GetAllInstances(&api.GetAllInstancesRequest{
 		GetAllInstancesRequest: model.GetAllInstancesRequest{
-			Service:    serviceName,
+			Service:    in.Name,
 			Namespace:  r.opt.Namespace,
 			Timeout:    &r.opt.Timeout,
 			RetryCount: &r.opt.RetryCount,
