@@ -3,14 +3,21 @@ package jaeger
 import (
 	"strings"
 
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/text/gregex"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
-	"go.opentelemetry.io/otel/semconv/v1.7.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/net/gipv4"
+	"github.com/gogf/gf/v2/text/gregex"
+)
+
+const (
+	tracerHostnameTagKey = "hostname"
 )
 
 // Init initializes and registers jaeger to global TracerProvider.
@@ -42,6 +49,10 @@ func Init(serviceName, endpoint string) (*trace.TracerProvider, error) {
 			jaeger.WithAgentHost(host), jaeger.WithAgentPort(port),
 		)
 	}
+	hostIP, err := gipv4.GetIntranetIp()
+	if err != nil {
+		return nil, err
+	}
 	exp, err := jaeger.New(endpointOption)
 	if err != nil {
 		return nil, err
@@ -53,9 +64,11 @@ func Init(serviceName, endpoint string) (*trace.TracerProvider, error) {
 		trace.WithResource(resource.NewWithAttributes(
 			semconv.SchemaURL,
 			semconv.ServiceNameKey.String(serviceName),
+			semconv.HostNameKey.String(hostIP),
+			attribute.String(tracerHostnameTagKey, hostIP),
 		)),
 	)
-	// Register our TracerProvider as the global so any imported
+	// Register our TracerProvider as the global, so any imported
 	// instrumentation in the future will default to using it.
 	otel.SetTracerProvider(tp)
 	return tp, nil
