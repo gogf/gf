@@ -22,13 +22,13 @@ const (
 	separator = "/"
 	delimiter = ","
 
-	zero = iota
-	one
-	two
-	three
-	four
-	five
-	six
+	zero  = 0
+	one   = 1
+	two   = 2
+	three = 3
+	four  = 4
+	five  = 5
+	six   = 6
 )
 
 // NewServiceWithName creates and returns service from `name`.
@@ -88,7 +88,7 @@ func (s *Service) KeyWithSchema() string {
 func (s *Service) KeyWithoutEndpoints() string {
 	s.autoFillDefaultAttributes()
 
-	return "/" + gstr.Join([]string{s.Prefix, s.Deployment, s.Namespace, s.Name, s.Version}, separator)
+	return separator + gstr.Join([]string{s.Prefix, s.Deployment, s.Namespace, s.Name, s.Version}, separator)
 }
 
 // Value formats the service information and returns the Service as registering value.
