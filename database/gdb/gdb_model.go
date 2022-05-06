@@ -136,6 +136,9 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 		extraArgs:  extraArgs,
 	}
 	m.whereBuilder = m.Builder()
+	// Assign the safe attribute of WhereBuilder to nil,
+	// to make it use the safe attribute of its bound model.
+	m.whereBuilder.safe = nil
 	if defaultModelSafe {
 		m.safe = true
 	}
@@ -262,7 +265,7 @@ func (m *Model) Clone() *Model {
 	// Basic attributes copy.
 	*newModel = *m
 	// WhereBuilder copy, note the attribute pointer.
-	newModel.whereBuilder = m.whereBuilder.Clone()
+	newModel.whereBuilder = m.whereBuilder.clone()
 	newModel.whereBuilder.model = newModel
 	// Shallow copy slice attributes.
 	if n := len(m.extraArgs); n > 0 {
