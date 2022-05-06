@@ -216,10 +216,10 @@ func (d *Driver) DoFilter(
 	ctx context.Context, link gdb.Link, originSql string, args []interface{},
 ) (newSql string, newArgs []interface{}, err error) {
 	// It replaces STD SQL to Clickhouse SQL grammar.
-	// MySQL eg:      UPDATE visits SET xxx
-	// Clickhouse eg: ALTER TABLE visits UPDATE xxx
-	// MySQL eg:      DELETE FROM VISIT
-	// Clickhouse eg: ALTER TABLE VISIT DELETE WHERE filter_expr
+	// MySQL eg:      UPDATE `table` SET xxx
+	// Clickhouse eg: ALTER TABLE `table` UPDATE xxx
+	// MySQL eg:      DELETE FROM `table`
+	// Clickhouse eg: ALTER TABLE `table` DELETE WHERE filter_expr
 	result, err := gregex.MatchString("(?i)^UPDATE|DELETE", originSql)
 	if err != nil {
 		return "", nil, err
