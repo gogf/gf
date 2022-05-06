@@ -92,7 +92,7 @@ func (s *Server) doBindObject(ctx context.Context, in doBindObjectInput) {
 		in.Pattern = s.serveHandlerKey("", path, domain)
 	}
 	var (
-		handlerMap   = make(map[string]*handlerItem)
+		handlerMap   = make(map[string]*HandlerItem)
 		reflectValue = reflect.ValueOf(in.Object)
 		reflectType  = reflectValue.Type()
 		initFunc     func(*Request)
@@ -135,7 +135,7 @@ func (s *Server) doBindObject(ctx context.Context, in doBindObjectInput) {
 		}
 
 		key := s.mergeBuildInNameToPattern(in.Pattern, structName, methodName, true)
-		handlerMap[key] = &handlerItem{
+		handlerMap[key] = &HandlerItem{
 			Name:       fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, methodName),
 			Type:       HandlerTypeObject,
 			Info:       funcInfo,
@@ -162,7 +162,7 @@ func (s *Server) doBindObject(ctx context.Context, in doBindObjectInput) {
 			if len(k) == 0 || k[0] == '@' {
 				k = "/" + k
 			}
-			handlerMap[k] = &handlerItem{
+			handlerMap[k] = &HandlerItem{
 				Name:       fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, methodName),
 				Type:       HandlerTypeObject,
 				Info:       funcInfo,
@@ -187,7 +187,7 @@ type doBindObjectMethodInput struct {
 
 func (s *Server) doBindObjectMethod(ctx context.Context, in doBindObjectMethodInput) {
 	var (
-		handlerMap   = make(map[string]*handlerItem)
+		handlerMap   = make(map[string]*HandlerItem)
 		reflectValue = reflect.ValueOf(in.Object)
 		reflectType  = reflectValue.Type()
 		initFunc     func(*Request)
@@ -231,7 +231,7 @@ func (s *Server) doBindObjectMethod(ctx context.Context, in doBindObjectMethodIn
 	}
 
 	key := s.mergeBuildInNameToPattern(in.Pattern, structName, methodName, false)
-	handlerMap[key] = &handlerItem{
+	handlerMap[key] = &HandlerItem{
 		Name:       fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, methodName),
 		Type:       HandlerTypeObject,
 		Info:       funcInfo,
@@ -246,7 +246,7 @@ func (s *Server) doBindObjectMethod(ctx context.Context, in doBindObjectMethodIn
 
 func (s *Server) doBindObjectRest(ctx context.Context, in doBindObjectInput) {
 	var (
-		handlerMap   = make(map[string]*handlerItem)
+		handlerMap   = make(map[string]*HandlerItem)
 		reflectValue = reflect.ValueOf(in.Object)
 		reflectType  = reflectValue.Type()
 		initFunc     func(*Request)
@@ -290,7 +290,7 @@ func (s *Server) doBindObjectRest(ctx context.Context, in doBindObjectInput) {
 		}
 
 		key := s.mergeBuildInNameToPattern(methodName+":"+in.Pattern, structName, methodName, false)
-		handlerMap[key] = &handlerItem{
+		handlerMap[key] = &HandlerItem{
 			Name:       fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, methodName),
 			Type:       HandlerTypeObject,
 			Info:       funcInfo,
