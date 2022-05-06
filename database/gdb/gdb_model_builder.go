@@ -8,12 +8,11 @@ package gdb
 
 import (
 	"fmt"
-
-	"github.com/gogf/gf/v2/text/gstr"
 )
 
 type WhereBuilder struct {
-	model       *Model        // Bound to parent model.
+	safe        *bool         // If nil, it uses the safe attribute of its model.
+	model       *Model        // A WhereBuilder should be bound to certain Model.
 	whereHolder []WhereHolder // Condition strings for where operation.
 }
 
@@ -27,7 +26,10 @@ type WhereHolder struct {
 }
 
 func (m *Model) Builder() *WhereBuilder {
+	// The WhereBuilder is safe in default when it is created using Builder().
+	var isSafe = true
 	b := &WhereBuilder{
+		safe:        &isSafe,
 		model:       m,
 		whereHolder: make([]WhereHolder, 0),
 	}
@@ -37,15 +39,22 @@ func (m *Model) Builder() *WhereBuilder {
 // getBuilder creates and returns a cloned WhereBuilder of current WhereBuilder if `safe` is true,
 // or else it returns the current WhereBuilder.
 func (b *WhereBuilder) getBuilder() *WhereBuilder {
-	if !b.model.safe {
+	var isSafe bool
+	if b.safe != nil {
+		isSafe = *b.safe
+	} else {
+		isSafe = b.model.safe
+	}
+	if !isSafe {
 		return b
 	} else {
-		return b.Clone()
+		return b.clone()
 	}
 }
 
-func (b *WhereBuilder) Clone() *WhereBuilder {
+func (b *WhereBuilder) clone() *WhereBuilder {
 	newBuilder := b.model.Builder()
+	newBuilder.safe = b.safe
 	newBuilder.whereHolder = make([]WhereHolder, len(b.whereHolder))
 	copy(newBuilder.whereHolder, b.whereHolder)
 	return newBuilder
@@ -63,24 +72,7 @@ func (b *WhereBuilder) Build() (conditionWhere string, conditionArgs []interface
 				holder.Prefix = autoPrefix
 			}
 			switch holder.Operator {
-			case whereHolderOperatorWhere:
-				if conditionWhere == "" {
-					newWhere, newArgs := formatWhereHolder(ctx, b.model.db, formatWhereHolderInput{
-						WhereHolder: holder,
-						OmitNil:     b.model.option&optionOmitNilWhere > 0,
-						OmitEmpty:   b.model.option&optionOmitEmptyWhere > 0,
-						Schema:      b.model.schema,
-						Table:       tableForMappingAndFiltering,
-					})
-					if len(newWhere) > 0 {
-						conditionWhere = newWhere
-						conditionArgs = newArgs
-					}
-					continue
-				}
-				fallthrough
-
-			case whereHolderOperatorAnd:
+			case whereHolderOperatorWhere, whereHolderOperatorAnd:
 				newWhere, newArgs := formatWhereHolder(ctx, b.model.db, formatWhereHolderInput{
 					WhereHolder: holder,
 					OmitNil:     b.model.option&optionOmitNilWhere > 0,
@@ -118,25 +110,6 @@ func (b *WhereBuilder) Build() (conditionWhere string, conditionArgs []interface
 					conditionArgs = append(conditionArgs, newArgs...)
 				}
 			}
-		}
-	}
-	// Soft deletion.
-	softDeletingCondition := b.model.getConditionForSoftDeleting()
-	if b.model.rawSql != "" && conditionWhere != "" {
-		if gstr.ContainsI(b.model.rawSql, " WHERE ") {
-			conditionWhere = " AND " + conditionWhere
-		} else {
-			conditionWhere = " WHERE " + conditionWhere
-		}
-	} else if !b.model.unscoped && softDeletingCondition != "" {
-		if conditionWhere == "" {
-			conditionWhere = fmt.Sprintf(` WHERE %s`, softDeletingCondition)
-		} else {
-			conditionWhere = fmt.Sprintf(` WHERE (%s) AND %s`, conditionWhere, softDeletingCondition)
-		}
-	} else {
-		if conditionWhere != "" {
-			conditionWhere = " WHERE " + conditionWhere
 		}
 	}
 	return
