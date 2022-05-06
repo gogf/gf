@@ -41,7 +41,7 @@ func (s *Server) doBindHookHandler(ctx context.Context, in doBindHookHandlerInpu
 		setHandlerInput{
 			Prefix:  in.Prefix,
 			Pattern: in.Pattern,
-			HandlerItem: &handlerItem{
+			HandlerItem: &HandlerItem{
 				Type: HandlerTypeHook,
 				Name: gdebug.FuncPath(in.Handler),
 				Info: handlerFuncInfo{

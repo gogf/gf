@@ -70,7 +70,7 @@ func (s *Server) parsePattern(pattern string) (domain, method, path string, err 
 type setHandlerInput struct {
 	Prefix      string
 	Pattern     string
-	HandlerItem *handlerItem
+	HandlerItem *HandlerItem
 }
 
 // setHandler creates router item with a given handler and pattern and registers the handler to the router tree.
@@ -131,11 +131,11 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 		switch handler.Type {
 		case HandlerTypeHandler, HandlerTypeObject:
 			if items, ok := s.routesMap[routerKey]; ok {
-				var duplicatedHandler *handlerItem
-				for _, item := range items {
-					switch item.Handler.Type {
+				var duplicatedHandler *HandlerItem
+				for i, item := range items {
+					switch item.Type {
 					case HandlerTypeHandler, HandlerTypeObject:
-						duplicatedHandler = item.Handler
+						duplicatedHandler = items[i]
 						break
 					}
 				}
@@ -225,11 +225,11 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 	}
 	// It iterates the list array of `lists`, compares priorities and inserts the new router item in
 	// the proper position of each list. The priority of the list is ordered from high to low.
-	var item *handlerItem
+	var item *HandlerItem
 	for _, l := range lists {
 		pushed := false
 		for e := l.Front(); e != nil; e = e.Next() {
-			item = e.Value.(*handlerItem)
+			item = e.Value.(*HandlerItem)
 			// Checks the priority whether inserting the route item before current item,
 			// which means it has higher priority.
 			if s.compareRouterPriority(handler, item) {
@@ -246,20 +246,16 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 	}
 	// Initialize the route map item.
 	if _, ok := s.routesMap[routerKey]; !ok {
-		s.routesMap[routerKey] = make([]registeredRouteItem, 0)
+		s.routesMap[routerKey] = make([]*HandlerItem, 0)
 	}
 
-	var routeItem = registeredRouteItem{
-		Source:  handler.Source,
-		Handler: handler,
-	}
 	switch handler.Type {
 	case HandlerTypeHandler, HandlerTypeObject:
 		// Overwrite the route.
-		s.routesMap[routerKey] = []registeredRouteItem{routeItem}
+		s.routesMap[routerKey] = []*HandlerItem{handler}
 	default:
 		// Append the route.
-		s.routesMap[routerKey] = append(s.routesMap[routerKey], routeItem)
+		s.routesMap[routerKey] = append(s.routesMap[routerKey], handler)
 	}
 }
 
@@ -271,7 +267,7 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 // 1. The middleware has the most high priority.
 // 2. URI: The deeper, the higher (simply check the count of char '/' in the URI).
 // 3. Route type: {xxx} > :xxx > *xxx.
-func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerItem) bool {
+func (s *Server) compareRouterPriority(newItem *HandlerItem, oldItem *HandlerItem) bool {
 	// If they're all types of middleware, the priority is according to their registered sequence.
 	if newItem.Type == HandlerTypeMiddleware && oldItem.Type == HandlerTypeMiddleware {
 		return false

@@ -53,7 +53,7 @@ func (s *Server) doBindHandler(ctx context.Context, in doBindHandlerInput) {
 	s.setHandler(ctx, setHandlerInput{
 		Prefix:  in.Prefix,
 		Pattern: in.Pattern,
-		HandlerItem: &handlerItem{
+		HandlerItem: &HandlerItem{
 			Type:       HandlerTypeHandler,
 			Info:       in.FuncInfo,
 			Middleware: in.Middleware,
@@ -63,7 +63,7 @@ func (s *Server) doBindHandler(ctx context.Context, in doBindHandlerInput) {
 }
 
 // bindHandlerByMap registers handlers to server using map.
-func (s *Server) bindHandlerByMap(ctx context.Context, prefix string, m map[string]*handlerItem) {
+func (s *Server) bindHandlerByMap(ctx context.Context, prefix string, m map[string]*HandlerItem) {
 	for pattern, handler := range m {
 		s.setHandler(ctx, setHandlerInput{
 			Prefix:      prefix,
