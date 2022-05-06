@@ -15,20 +15,20 @@ import (
 // doWhereType sets the condition statement for the model. The parameter `where` can be type of
 // string/map/gmap/slice/struct/*struct, etc. Note that, if it's called more than one times,
 // multiple conditions will be joined into where statement using "AND".
-func (b *WhereBuilder) doWhereType(t string, where interface{}, args ...interface{}) *WhereBuilder {
+func (b *WhereBuilder) doWhereType(whereType string, where interface{}, args ...interface{}) *WhereBuilder {
 	builder := b.getBuilder()
 	if builder.whereHolder == nil {
 		builder.whereHolder = make([]WhereHolder, 0)
 	}
-	if t == "" {
+	if whereType == "" {
 		if len(args) == 0 {
-			t = whereHolderTypeNoArgs
+			whereType = whereHolderTypeNoArgs
 		} else {
-			t = whereHolderTypeDefault
+			whereType = whereHolderTypeDefault
 		}
 	}
 	builder.whereHolder = append(builder.whereHolder, WhereHolder{
-		Type:     t,
+		Type:     whereType,
 		Operator: whereHolderOperatorWhere,
 		Where:    where,
 		Args:     args,
@@ -59,6 +59,20 @@ func (b *WhereBuilder) doWherefType(t string, format string, args ...interface{}
 // Where("age IN(?,?)", 18, 50)
 // Where(User{ Id : 1, UserName : "john"}).
 func (b *WhereBuilder) Where(where interface{}, args ...interface{}) *WhereBuilder {
+	var builder *WhereBuilder
+	switch v := where.(type) {
+	case WhereBuilder:
+		builder = &v
+	case *WhereBuilder:
+		builder = v
+	}
+	if builder != nil {
+		conditionWhere, conditionArgs := builder.Build()
+		if len(b.whereHolder) == 0 {
+			conditionWhere = "(" + conditionWhere + ")"
+		}
+		return b.doWhereType(``, conditionWhere, conditionArgs...)
+	}
 	return b.doWhereType(``, where, args...)
 }
 

@@ -616,6 +616,24 @@ func (m *Model) formatCondition(ctx context.Context, limit1 bool, isCountStateme
 	}
 	// WHERE
 	conditionWhere, conditionArgs = m.whereBuilder.Build()
+	softDeletingCondition := m.getConditionForSoftDeleting()
+	if m.rawSql != "" && conditionWhere != "" {
+		if gstr.ContainsI(m.rawSql, " WHERE ") {
+			conditionWhere = " AND " + conditionWhere
+		} else {
+			conditionWhere = " WHERE " + conditionWhere
+		}
+	} else if !m.unscoped && softDeletingCondition != "" {
+		if conditionWhere == "" {
+			conditionWhere = fmt.Sprintf(` WHERE %s`, softDeletingCondition)
+		} else {
+			conditionWhere = fmt.Sprintf(` WHERE (%s) AND %s`, conditionWhere, softDeletingCondition)
+		}
+	} else {
+		if conditionWhere != "" {
+			conditionWhere = " WHERE " + conditionWhere
+		}
+	}
 	// HAVING.
 	if len(m.having) > 0 {
 		havingHolder := WhereHolder{
