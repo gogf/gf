@@ -168,6 +168,7 @@ func NewRegistryWithConfig(conf config.Configuration, opts ...Option) (r *Regist
 // Register the registration.
 func (r *Registry) Register(ctx context.Context, serviceInstance *gsvc.Service) error {
 	ids := make([]string, 0, len(serviceInstance.Endpoints))
+	serviceInstance.Separator = _instanceIDSeparator
 	for _, endpoint := range serviceInstance.Endpoints {
 		// get url
 		u, err := url.Parse(endpoint)
@@ -261,7 +262,7 @@ func (r *Registry) Register(ctx context.Context, serviceInstance *gsvc.Service) 
 	}
 	// need to set InstanceID for Deregister
 	serviceInstance.ID = strings.Join(ids, _instanceIDSeparator)
-	serviceInstance.Separator = _instanceIDSeparator
+
 	return nil
 }
 
