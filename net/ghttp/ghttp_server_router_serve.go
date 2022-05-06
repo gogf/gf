@@ -56,8 +56,8 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedI
 	if xUrlPath := r.Header.Get(HeaderXUrlPath); xUrlPath != "" {
 		path = xUrlPath
 	}
-	var handlerKey = s.serveHandlerKey(method, path, host)
-	value, err := s.serveCache.GetOrSetFunc(ctx, handlerKey, func(ctx context.Context) (interface{}, error) {
+	var handlerCacheKey = s.serveHandlerKey(method, path, host)
+	value, err := s.serveCache.GetOrSetFunc(ctx, handlerCacheKey, func(ctx context.Context) (interface{}, error) {
 		parsedItems, hasHook, hasServe = s.searchHandlers(method, path, host)
 		if parsedItems != nil {
 			return &handlerCacheItem{parsedItems, hasHook, hasServe}, nil
@@ -152,7 +152,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 		// As the tail of the list array has the most priority, it iterates the list array from its tail to head.
 		for i := len(lists) - 1; i >= 0; i-- {
 			for e := lists[i].Front(); e != nil; e = e.Next() {
-				item := e.Value.(*handlerItem)
+				item := e.Value.(*HandlerItem)
 				// Filter repeated handler items, especially the middleware and hook handlers.
 				// It is necessary, do not remove this checks logic unless you really know how it is necessary.
 				if _, ok := repeatHandlerCheckMap[item.Id]; ok {
@@ -212,7 +212,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 		}
 	}
 	if parsedItemList.Len() > 0 {
-		index := 0
+		var index = 0
 		parsedItems = make([]*handlerParsedItem, parsedItemList.Len())
 		for e := parsedItemList.Front(); e != nil; e = e.Next() {
 			parsedItems[index] = e.Value.(*handlerParsedItem)
@@ -223,7 +223,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (item handlerItem) MarshalJSON() ([]byte, error) {
+func (item HandlerItem) MarshalJSON() ([]byte, error) {
 	switch item.Type {
 	case HandlerTypeHook:
 		return json.Marshal(
