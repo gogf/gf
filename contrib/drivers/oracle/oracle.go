@@ -108,7 +108,7 @@ func (d *Driver) FilteredLink() string {
 
 // GetChars returns the security char for this type of database.
 func (d *Driver) GetChars() (charLeft string, charRight string) {
-	return "\"", "\""
+	return `"`, `"`
 }
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
