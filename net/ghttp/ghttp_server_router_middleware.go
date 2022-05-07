@@ -23,9 +23,7 @@ const (
 // before or after service handler. The parameter `pattern` specifies what route pattern the middleware intercepts,
 // which is usually a "fuzzy" pattern like "/:name", "/*any" or "/{field}".
 func (s *Server) BindMiddleware(pattern string, handlers ...HandlerFunc) {
-	var (
-		ctx = context.TODO()
-	)
+	ctx := context.TODO()
 	for _, handler := range handlers {
 		s.setHandler(ctx, setHandlerInput{
 			Prefix:  "",
@@ -46,9 +44,7 @@ func (s *Server) BindMiddleware(pattern string, handlers ...HandlerFunc) {
 // Global middleware can be used standalone without service handler, which intercepts all dynamic requests
 // before or after service handler.
 func (s *Server) BindMiddlewareDefault(handlers ...HandlerFunc) {
-	var (
-		ctx = context.TODO()
-	)
+	ctx := context.TODO()
 	for _, handler := range handlers {
 		s.setHandler(ctx, setHandlerInput{
 			Prefix:  "",

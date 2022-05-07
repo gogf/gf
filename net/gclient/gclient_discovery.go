@@ -34,13 +34,11 @@ func (n *discoveryNode) Address() string {
 	return n.address
 }
 
-var (
-	clientSelectorMap = gmap.New(true)
-)
+var clientSelectorMap = gmap.New(true)
 
 // internalMiddlewareDiscovery is a client middleware that enables service discovery feature for client.
 func internalMiddlewareDiscovery(c *Client, r *http.Request) (response *Response, err error) {
-	var ctx = r.Context()
+	ctx := r.Context()
 	// Mark this request is handled by server tracing middleware,
 	// to avoid repeated handling by the same middleware.
 	if ctx.Value(discoveryMiddlewareHandled) != nil {
@@ -54,7 +52,7 @@ func internalMiddlewareDiscovery(c *Client, r *http.Request) (response *Response
 		intlog.Printf(ctx, `http client watching service "%s" changed`, service.KeyWithoutEndpoints())
 		if v := clientSelectorMap.Get(service.KeyWithoutEndpoints()); v != nil {
 			if err = updateSelectorNodesByService(v.(gsel.Selector), service); err != nil {
-				intlog.Errorf(context.Background(), `%+v`, err)
+				intlog.Errorf(context.Background(), `%+w`, err)
 			}
 		}
 	})
@@ -65,9 +63,10 @@ func internalMiddlewareDiscovery(c *Client, r *http.Request) (response *Response
 		return c.Next(r)
 	}
 	// Balancer.
-	var selectorMapKey = service.KeyWithoutEndpoints()
+	selectorMapKey := service.KeyWithoutEndpoints()
 	selector := clientSelectorMap.GetOrSetFuncLock(selectorMapKey, func() interface{} {
 		intlog.Printf(ctx, `http client create selector for service "%s"`, selectorMapKey)
+
 		return gsel.GetBuilder().Build()
 	}).(gsel.Selector)
 	// Update selector nodes.
@@ -77,6 +76,7 @@ func internalMiddlewareDiscovery(c *Client, r *http.Request) (response *Response
 	// Pick one node from multiple addresses.
 	node, done, err := selector.Pick(ctx)
 	if err != nil {
+
 		return nil, err
 	}
 	if done != nil {

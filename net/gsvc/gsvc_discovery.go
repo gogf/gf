@@ -59,6 +59,7 @@ func GetWithWatch(ctx context.Context, name string, watch ServiceWatch) (service
 		if err != nil {
 			return nil
 		}
+
 		go watchAndUpdateService(watcher, service, watch)
 
 		return service
@@ -66,6 +67,7 @@ func GetWithWatch(ctx context.Context, name string, watch ServiceWatch) (service
 	if v != nil {
 		service = v.(*Service)
 	}
+
 	return
 }
 
@@ -102,6 +104,7 @@ func Search(ctx context.Context, in SearchInput) ([]*Service, error) {
 		return nil, gerror.NewCodef(gcode.CodeNotImplemented, `no Registry is registered`)
 	}
 	ctx, _ = context.WithTimeout(ctx, defaultTimeout)
+
 	return defaultRegistry.Search(ctx, in)
 }
 
@@ -110,5 +113,6 @@ func Watch(ctx context.Context, key string) (Watcher, error) {
 	if defaultRegistry == nil {
 		return nil, gerror.NewCodef(gcode.CodeNotImplemented, `no Registry is registered`)
 	}
+
 	return defaultRegistry.Watch(ctx, key)
 }

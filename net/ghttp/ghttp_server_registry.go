@@ -61,7 +61,7 @@ func (s *Server) doServiceDeregister() {
 	if gsvc.GetRegistry() == nil {
 		return
 	}
-	var ctx = context.Background()
+	ctx := context.Background()
 	s.Logger().Debugf(ctx, `service deregister: %+v`, s.service)
 	if err := gsvc.Deregister(ctx, s.service); err != nil {
 		s.Logger().Errorf(ctx, `%+v`, err)

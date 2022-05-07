@@ -9,9 +9,10 @@ package etcd
 import (
 	"context"
 
+	etcd3 "go.etcd.io/etcd/client/v3"
+
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gsvc"
-	etcd3 "go.etcd.io/etcd/client/v3"
 )
 
 func (r *Registry) Register(ctx context.Context, service *gsvc.Service) error {
@@ -42,6 +43,7 @@ func (r *Registry) Register(ctx context.Context, service *gsvc.Service) error {
 		return err
 	}
 	go r.doKeepAlive(grant.ID, keepAliceCh)
+	service.Separator = separator
 	return nil
 }
 
@@ -64,7 +66,7 @@ func (r *Registry) doKeepAlive(leaseID etcd3.LeaseID, keepAliceCh <-chan *etcd3.
 
 		case res, ok := <-keepAliceCh:
 			if res != nil {
-				//r.logger.Debugf(ctx, `keepalive loop: %v, %s`, ok, res.String())
+				// r.logger.Debugf(ctx, `keepalive loop: %v, %s`, ok, res.String())
 			}
 			if !ok {
 				r.logger.Noticef(ctx, `keepalive exit, lease id: %d`, leaseID)

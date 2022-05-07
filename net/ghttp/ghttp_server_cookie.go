@@ -21,7 +21,7 @@ type Cookie struct {
 	response *Response              // Belonged HTTP response.
 }
 
-// CookieOptions provides security config for cookies
+// CookieOptions provides security config for cookies.
 type CookieOptions struct {
 	SameSite http.SameSite // cookie SameSite property
 	Secure   bool          // cookie Secure property

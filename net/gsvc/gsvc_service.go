@@ -73,8 +73,11 @@ func NewServiceWithKV(key, value []byte) (s *Service, err error) {
 
 // Key formats the service information and return the Service as registering key.
 func (s *Service) Key() string {
+	if s.Separator == "" {
+		s.Separator = separator
+	}
 	serviceNameUnique := s.KeyWithoutEndpoints()
-	serviceNameUnique += separator + gstr.Join(s.Endpoints, ",")
+	serviceNameUnique += s.Separator + gstr.Join(s.Endpoints, ",")
 
 	return serviceNameUnique
 }
@@ -87,8 +90,11 @@ func (s *Service) KeyWithSchema() string {
 // KeyWithoutEndpoints formats the service information and returns a string as a unique name of service.
 func (s *Service) KeyWithoutEndpoints() string {
 	s.autoFillDefaultAttributes()
+	if s.Separator == "" {
+		s.Separator = separator
+	}
 
-	return separator + gstr.Join([]string{s.Prefix, s.Deployment, s.Namespace, s.Name, s.Version}, separator)
+	return s.Separator + gstr.Join([]string{s.Prefix, s.Deployment, s.Namespace, s.Name, s.Version}, s.Separator)
 }
 
 // Value formats the service information and returns the Service as registering value.

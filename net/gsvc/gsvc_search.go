@@ -8,21 +8,25 @@ package gsvc
 
 // Key formats and returns a string for prefix searching purpose.
 func (s *SearchInput) Key() string {
+	if s.Separator == "" {
+		s.Separator = separator
+	}
 	keyPrefix := ""
 	if s.Prefix != "" {
-		keyPrefix += "/" + s.Prefix
+		keyPrefix += s.Separator + s.Prefix
 	}
 	if s.Deployment != "" {
-		keyPrefix += "/" + s.Deployment
+		keyPrefix += s.Separator + s.Deployment
 		if s.Namespace != "" {
-			keyPrefix += "/" + s.Namespace
+			keyPrefix += s.Separator + s.Namespace
 			if s.Name != "" {
-				keyPrefix += "/" + s.Name
+				keyPrefix += s.Separator + s.Name
 				if s.Version != "" {
-					keyPrefix += "/" + s.Version
+					keyPrefix += s.Separator + s.Version
 				}
 			}
 		}
 	}
+
 	return keyPrefix
 }

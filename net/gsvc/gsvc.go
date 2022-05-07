@@ -57,6 +57,7 @@ type Service struct {
 	Version    string   // Service version, eg: v1.0.0, v2.1.1, etc.
 	Endpoints  []string // Service Endpoints, pattern: IP:port, eg: 192.168.1.2:8000.
 	Metadata   Metadata // Custom data for this service, which can be set using JSON by environment or command-line.
+	Separator  string   // Separator for service name and version, eg: _, -, etc.
 }
 
 // Metadata stores custom key-value pairs.
@@ -72,6 +73,7 @@ type SearchInput struct {
 	Version    string   // Service version, eg: v1.0.0, v2.1.1, etc.}
 	Endpoints  []string // Service Endpoints, pattern: IP:port, eg: 192.168.1.2:8000.
 	Metadata   Metadata // Custom data for this service, which can be set using JSON by environment or command-line.
+	Separator  string   // Separator for service name and version, eg: _, -, etc.
 }
 
 // WatchInput is the input for service watching.
@@ -84,6 +86,7 @@ type WatchInput struct {
 	Version    string   // Service version, eg: v1.0.0, v2.1.1, etc.}
 	Endpoints  []string // Service Endpoints, pattern: IP:port, eg: 192.168.1.2:8000.
 	Metadata   Metadata // Custom data for this service, which can be set using JSON by environment or command-line.
+	Separator  string   // Separator for service name and version, eg: _, -, etc.
 }
 
 const (

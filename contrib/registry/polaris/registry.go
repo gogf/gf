@@ -206,7 +206,7 @@ func (r *Registry) Register(ctx context.Context, serviceInstance *gsvc.Service) 
 		service, err := r.provider.Register(
 			&api.InstanceRegisterRequest{
 				InstanceRegisterRequest: model.InstanceRegisterRequest{
-					Service:      serviceInstance.Name + u.Scheme,
+					Service:      serviceInstance.KeyWithoutEndpoints(),
 					ServiceToken: r.opt.ServiceToken,
 					Namespace:    r.opt.Namespace,
 					Host:         host,
@@ -239,7 +239,7 @@ func (r *Registry) Register(ctx context.Context, serviceInstance *gsvc.Service) 
 
 					err = r.provider.Heartbeat(&api.InstanceHeartbeatRequest{
 						InstanceHeartbeatRequest: model.InstanceHeartbeatRequest{
-							Service:      serviceInstance.Name + u.Scheme,
+							Service:      serviceInstance.KeyWithoutEndpoints(),
 							Namespace:    r.opt.Namespace,
 							Host:         host,
 							Port:         portNum,
@@ -261,6 +261,7 @@ func (r *Registry) Register(ctx context.Context, serviceInstance *gsvc.Service) 
 	}
 	// need to set InstanceID for Deregister
 	serviceInstance.ID = strings.Join(ids, _instanceIDSeparator)
+	serviceInstance.Separator = _instanceIDSeparator
 	return nil
 }
 
@@ -289,7 +290,7 @@ func (r *Registry) Deregister(ctx context.Context, serviceInstance *gsvc.Service
 		err = r.provider.Deregister(
 			&api.InstanceDeRegisterRequest{
 				InstanceDeRegisterRequest: model.InstanceDeRegisterRequest{
-					Service:      serviceInstance.Name + u.Scheme,
+					Service:      serviceInstance.KeyWithoutEndpoints(),
 					ServiceToken: r.opt.ServiceToken,
 					Namespace:    r.opt.Namespace,
 					InstanceID:   split[i],
@@ -312,7 +313,7 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]*gsvc.Ser
 	// get all instances
 	instancesResponse, err := r.consumer.GetAllInstances(&api.GetAllInstancesRequest{
 		GetAllInstancesRequest: model.GetAllInstancesRequest{
-			Service:    in.Name,
+			Service:    in.Key(),
 			Namespace:  r.opt.Namespace,
 			Timeout:    &r.opt.Timeout,
 			RetryCount: &r.opt.RetryCount,
@@ -441,5 +442,6 @@ func instanceToServiceInstance(instance model.Instance) *gsvc.Service {
 		Version:   metadata["version"],
 		Metadata:  gconv.Map(metadata),
 		Endpoints: []string{fmt.Sprintf("%s://%s:%d", kind, instance.GetHost(), instance.GetPort())},
+		Separator: _instanceIDSeparator,
 	}
 }

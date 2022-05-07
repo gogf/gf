@@ -56,7 +56,7 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedI
 	if xUrlPath := r.Header.Get(HeaderXUrlPath); xUrlPath != "" {
 		path = xUrlPath
 	}
-	var handlerCacheKey = s.serveHandlerKey(method, path, host)
+	handlerCacheKey := s.serveHandlerKey(method, path, host)
 	value, err := s.serveCache.GetOrSetFunc(ctx, handlerCacheKey, func(ctx context.Context) (interface{}, error) {
 		parsedItems, hasHook, hasServe = s.searchHandlers(method, path, host)
 		if parsedItems != nil {
@@ -82,7 +82,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 	}
 	// In case of double '/' URI, for example:
 	// /user//index, //user/index, //user//index//
-	var previousIsSep = false
+	previousIsSep := false
 	for i := 0; i < len(path); {
 		if path[i] == '/' {
 			if previousIsSep {
@@ -212,7 +212,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 		}
 	}
 	if parsedItemList.Len() > 0 {
-		var index = 0
+		index := 0
 		parsedItems = make([]*handlerParsedItem, parsedItemList.Len())
 		for e := parsedItemList.Front(); e != nil; e = e.Next() {
 			parsedItems[index] = e.Value.(*handlerParsedItem)

@@ -48,9 +48,7 @@ func (s *Server) initOpenApi() {
 
 // openapiSpec is a build-in handler automatic producing for openapi specification json file.
 func (s *Server) openapiSpec(r *Request) {
-	var (
-		err error
-	)
+	var err error
 	if s.config.OpenApiPath == "" {
 		r.Response.Write(`OpenApi specification file producing is disabled`)
 	} else {

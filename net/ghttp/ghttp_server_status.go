@@ -22,7 +22,7 @@ func (s *Server) getStatusHandler(status int, r *Request) []HandlerFunc {
 }
 
 // addStatusHandler sets the handler for given status code.
-// The parameter `pattern` is like: domain#status
+// The parameter `pattern` is like: domain#status.
 func (s *Server) addStatusHandler(pattern string, handler HandlerFunc) {
 	if s.statusHandlerMap[pattern] == nil {
 		s.statusHandlerMap[pattern] = make([]HandlerFunc, 0)
