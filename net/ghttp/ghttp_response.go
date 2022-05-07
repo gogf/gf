@@ -42,9 +42,7 @@ func newResponse(s *Server, w http.ResponseWriter) *Response {
 
 // ServeFile serves the file to the response.
 func (r *Response) ServeFile(path string, allowIndex ...bool) {
-	var (
-		serveFile *staticFile
-	)
+	var serveFile *staticFile
 	if file := gres.Get(path); file != nil {
 		serveFile = &staticFile{
 			File:  file,

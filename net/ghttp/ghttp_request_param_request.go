@@ -63,9 +63,7 @@ func (r *Request) GetRequestMap(kvMap ...map[string]interface{}) map[string]inte
 	r.parseQuery()
 	r.parseForm()
 	r.parseBody()
-	var (
-		ok, filter bool
-	)
+	var ok, filter bool
 	if len(kvMap) > 0 && kvMap[0] != nil {
 		filter = true
 	}

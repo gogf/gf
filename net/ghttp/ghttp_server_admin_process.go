@@ -114,9 +114,7 @@ func checkActionFrequency() error {
 
 // forkReloadProcess creates a new child process and copies the fd to child process.
 func forkReloadProcess(ctx context.Context, newExeFilePath ...string) error {
-	var (
-		path = os.Args[0]
-	)
+	path := os.Args[0]
 	if len(newExeFilePath) > 0 {
 		path = newExeFilePath[0]
 	}
@@ -157,9 +155,7 @@ func forkReloadProcess(ctx context.Context, newExeFilePath ...string) error {
 
 // forkRestartProcess creates a new server process.
 func forkRestartProcess(ctx context.Context, newExeFilePath ...string) error {
-	var (
-		path = os.Args[0]
-	)
+	path := os.Args[0]
 	if len(newExeFilePath) > 0 {
 		path = newExeFilePath[0]
 	}
@@ -289,9 +285,7 @@ func forceCloseWebServers(ctx context.Context) {
 // handleProcessMessage receives and handles the message from processes,
 // which are commonly used for graceful reloading feature.
 func handleProcessMessage() {
-	var (
-		ctx = context.TODO()
-	)
+	ctx := context.TODO()
 	for {
 		if msg := gproc.Receive(adminGProcCommGroup); msg != nil {
 			if bytes.EqualFold(msg.Data, []byte("exit")) {

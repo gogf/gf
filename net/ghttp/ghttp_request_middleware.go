@@ -27,7 +27,7 @@ type middleware struct {
 // It's an important function controlling the workflow of the server request execution.
 func (m *middleware) Next() {
 	var item *handlerParsedItem
-	var loop = true
+	loop := true
 	for loop {
 		// Check whether the request is excited.
 		if m.request.IsExited() || m.handlerIndex >= len(m.request.handlers) {
@@ -129,7 +129,7 @@ func (m *middleware) callHandlerFunc(funcInfo handlerFuncInfo) {
 		if funcInfo.Func != nil {
 			funcInfo.Func(m.request)
 		} else {
-			var inputValues = []reflect.Value{
+			inputValues := []reflect.Value{
 				reflect.ValueOf(m.request.Context()),
 			}
 			if funcInfo.Type.NumIn() == 2 {
