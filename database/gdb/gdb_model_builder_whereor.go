@@ -14,6 +14,8 @@ import (
 
 // WhereOr adds "OR" condition to the where statement.
 func (b *WhereBuilder) doWhereOrType(t string, where interface{}, args ...interface{}) *WhereBuilder {
+	where, args = b.convertWrappedBuilder(where, args)
+
 	builder := b.getBuilder()
 	if builder.whereHolder == nil {
 		builder.whereHolder = make([]WhereHolder, 0)

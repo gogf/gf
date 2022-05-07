@@ -16,6 +16,8 @@ import (
 // string/map/gmap/slice/struct/*struct, etc. Note that, if it's called more than one times,
 // multiple conditions will be joined into where statement using "AND".
 func (b *WhereBuilder) doWhereType(whereType string, where interface{}, args ...interface{}) *WhereBuilder {
+	where, args = b.convertWrappedBuilder(where, args)
+
 	builder := b.getBuilder()
 	if builder.whereHolder == nil {
 		builder.whereHolder = make([]WhereHolder, 0)
@@ -59,20 +61,6 @@ func (b *WhereBuilder) doWherefType(t string, format string, args ...interface{}
 // Where("age IN(?,?)", 18, 50)
 // Where(User{ Id : 1, UserName : "john"}).
 func (b *WhereBuilder) Where(where interface{}, args ...interface{}) *WhereBuilder {
-	var builder *WhereBuilder
-	switch v := where.(type) {
-	case WhereBuilder:
-		builder = &v
-	case *WhereBuilder:
-		builder = v
-	}
-	if builder != nil {
-		conditionWhere, conditionArgs := builder.Build()
-		if len(b.whereHolder) == 0 {
-			conditionWhere = "(" + conditionWhere + ")"
-		}
-		return b.doWhereType(``, conditionWhere, conditionArgs...)
-	}
 	return b.doWhereType(``, where, args...)
 }
 
