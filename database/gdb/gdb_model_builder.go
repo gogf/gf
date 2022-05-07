@@ -10,6 +10,7 @@ import (
 	"fmt"
 )
 
+// WhereBuilder holds multiple where conditions in a group.
 type WhereBuilder struct {
 	safe        *bool         // If nil, it uses the safe attribute of its model.
 	model       *Model        // A WhereBuilder should be bound to certain Model.
@@ -25,6 +26,7 @@ type WhereHolder struct {
 	Prefix   string        // Field prefix, eg: "user.", "order.".
 }
 
+// Builder creates and returns a WhereBuilder.
 func (m *Model) Builder() *WhereBuilder {
 	// The WhereBuilder is safe in default when it is created using Builder().
 	var isSafe = true
@@ -52,6 +54,7 @@ func (b *WhereBuilder) getBuilder() *WhereBuilder {
 	}
 }
 
+// Clone clones and returns a WhereBuilder that is a copy of current one.
 func (b *WhereBuilder) Clone() *WhereBuilder {
 	newBuilder := b.model.Builder()
 	newBuilder.safe = b.safe
@@ -60,6 +63,7 @@ func (b *WhereBuilder) Clone() *WhereBuilder {
 	return newBuilder
 }
 
+// Build builds current WhereBuilder and returns the condition string and parameters.
 func (b *WhereBuilder) Build() (conditionWhere string, conditionArgs []interface{}) {
 	var (
 		ctx                         = b.model.GetCtx()
@@ -115,7 +119,8 @@ func (b *WhereBuilder) Build() (conditionWhere string, conditionArgs []interface
 	return
 }
 
-func (b *WhereBuilder) convertWrappedBuilder(where interface{}, args []interface{}) (newWhere interface{}, newArgs []interface{}) {
+// convertWhereBuilder converts parameter `where` to condition string and parameters if `where` is also a WhereBuilder.
+func (b *WhereBuilder) convertWhereBuilder(where interface{}, args []interface{}) (newWhere interface{}, newArgs []interface{}) {
 	var builder *WhereBuilder
 	switch v := where.(type) {
 	case WhereBuilder:

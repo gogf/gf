@@ -28,6 +28,7 @@ func Test_Model_Builder(t *testing.T) {
 		t.Assert(len(all), 6)
 	})
 
+	// Where And
 	gtest.C(t, func(t *gtest.T) {
 		m := db.Model(table)
 		b := m.Builder()
@@ -43,4 +44,20 @@ func Test_Model_Builder(t *testing.T) {
 		t.Assert(len(all), 1)
 	})
 
+	db.SetDebug(true)
+	// Where Or
+	gtest.C(t, func(t *gtest.T) {
+		m := db.Model(table)
+		b := m.Builder()
+
+		all, err := m.WhereOr(
+			b.Where("id", g.Slice{1, 2, 3}).WhereOr("id", g.Slice{4, 5, 6}),
+		).WhereOr(
+			b.Where("id", g.Slice{2, 3}).WhereOr("id", g.Slice{5, 6}),
+		).WhereOr(
+			b.Where("id", g.Slice{3}).Where("id", g.Slice{1, 2, 3}),
+		).All()
+		t.AssertNil(err)
+		t.Assert(len(all), 6)
+	})
 }
