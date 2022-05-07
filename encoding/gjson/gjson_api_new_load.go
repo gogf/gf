@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/encoding/gtoml"
 	"github.com/gogf/gf/v2/encoding/gxml"
 	"github.com/gogf/gf/v2/encoding/gyaml"
+	"github.com/gogf/gf/v2/encoding/gproperties"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
@@ -286,6 +287,10 @@ func doLoadContentWithOptions(data []byte, options Options) (*Json, error) {
 
 	case ContentTypeIni:
 		if data, err = gini.ToJson(data); err != nil {
+			return nil, err
+		}
+	case ContentTypeProperties:
+		if data, err = gproperties.ToJson(data); err != nil {
 			return nil, err
 		}
 
