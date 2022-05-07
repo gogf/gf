@@ -48,11 +48,11 @@ func (b *WhereBuilder) getBuilder() *WhereBuilder {
 	if !isSafe {
 		return b
 	} else {
-		return b.clone()
+		return b.Clone()
 	}
 }
 
-func (b *WhereBuilder) clone() *WhereBuilder {
+func (b *WhereBuilder) Clone() *WhereBuilder {
 	newBuilder := b.model.Builder()
 	newBuilder.safe = b.safe
 	newBuilder.whereHolder = make([]WhereHolder, len(b.whereHolder))
@@ -113,4 +113,22 @@ func (b *WhereBuilder) Build() (conditionWhere string, conditionArgs []interface
 		}
 	}
 	return
+}
+
+func (b *WhereBuilder) convertWrappedBuilder(where interface{}, args []interface{}) (newWhere interface{}, newArgs []interface{}) {
+	var builder *WhereBuilder
+	switch v := where.(type) {
+	case WhereBuilder:
+		builder = &v
+	case *WhereBuilder:
+		builder = v
+	}
+	if builder != nil {
+		conditionWhere, conditionArgs := builder.Build()
+		if len(b.whereHolder) == 0 {
+			conditionWhere = "(" + conditionWhere + ")"
+		}
+		return conditionWhere, conditionArgs
+	}
+	return where, args
 }
