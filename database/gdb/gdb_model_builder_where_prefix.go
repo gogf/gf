@@ -11,6 +11,8 @@ package gdb
 // WherePrefix("order", "status", "paid")                        => WHERE `order`.`status`='paid'
 // WherePrefix("order", struct{Status:"paid", "channel":"bank"}) => WHERE `order`.`status`='paid' AND `order`.`channel`='bank'
 func (b *WhereBuilder) WherePrefix(prefix string, where interface{}, args ...interface{}) *WhereBuilder {
+	where, args = b.convertWrappedBuilder(where, args)
+
 	builder := b.getBuilder()
 	if builder.whereHolder == nil {
 		builder.whereHolder = make([]WhereHolder, 0)
