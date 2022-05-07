@@ -17,6 +17,7 @@ import (
 
 // Model is core struct implementing the DAO for ORM.
 type Model struct {
+	*modelWhereBuilder
 	db              DB              // Underlying DB interface.
 	tx              *TX             // Underlying TX interface.
 	rawSql          string          // rawSql is the raw SQL string which marks a raw SQL based Model not a table based Model.
@@ -51,6 +52,8 @@ type Model struct {
 	onDuplicate     interface{}     // onDuplicate is used for ON "DUPLICATE KEY UPDATE" statement.
 	onDuplicateEx   interface{}     // onDuplicateEx is used for excluding some columns ON "DUPLICATE KEY UPDATE" statement.
 }
+
+type modelWhereBuilder = WhereBuilder
 
 // ModelHandler is a function that handles given Model and returns a new Model that is custom modified.
 type ModelHandler func(m *Model) *Model
