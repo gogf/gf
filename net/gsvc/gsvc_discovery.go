@@ -17,9 +17,7 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-var (
-	watchedServiceMap = gmap.New(true)
-)
+var watchedServiceMap = gmap.New(true)
 
 type ServiceWatch func(service *Service)
 

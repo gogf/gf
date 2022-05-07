@@ -99,9 +99,7 @@ const (
 	defaultTimeout    = 5 * time.Second
 )
 
-var (
-	defaultRegistry Registry
-)
+var defaultRegistry Registry
 
 // SetRegistry sets the default Registry implements as your own implemented interface.
 func SetRegistry(registry Registry) {
