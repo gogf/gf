@@ -11,6 +11,7 @@ import (
 	"reflect"
 
 	"github.com/gogf/gf/v2/encoding/gini"
+	"github.com/gogf/gf/v2/encoding/gproperties"
 	"github.com/gogf/gf/v2/encoding/gtoml"
 	"github.com/gogf/gf/v2/encoding/gxml"
 	"github.com/gogf/gf/v2/encoding/gyaml"
@@ -288,6 +289,10 @@ func doLoadContentWithOptions(data []byte, options Options) (*Json, error) {
 		if data, err = gini.ToJson(data); err != nil {
 			return nil, err
 		}
+	case ContentTypeProperties:
+		if data, err = gproperties.ToJson(data); err != nil {
+			return nil, err
+		}
 
 	default:
 		err = gerror.NewCodef(
@@ -335,6 +340,8 @@ func checkDataType(content []byte) string {
 		(gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*".+"`, content) || gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*\w+`, content)) {
 		// Must contain "[xxx]" section.
 		return ContentTypeIni
+	} else if gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*\w+`, content) {
+		return ContentTypeProperties
 	} else {
 		return ""
 	}
