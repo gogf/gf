@@ -44,7 +44,6 @@ func Test_Model_Builder(t *testing.T) {
 		t.Assert(len(all), 1)
 	})
 
-	db.SetDebug(true)
 	// Where Or
 	gtest.C(t, func(t *gtest.T) {
 		m := db.Model(table)
