@@ -40,7 +40,7 @@ func init() {
 		Port:             "3306",
 		User:             TestDbUser,
 		Pass:             TestDbPass,
-		Timezone:         "Asia/Shanghai",
+		Timezone:         "Asia/Shanghai", // For calculating UT cases of datetime zones in convenience.
 		Name:             parser.GetOpt("name", "").String(),
 		Type:             parser.GetOpt("type", "mysql").String(),
 		Role:             "master",
