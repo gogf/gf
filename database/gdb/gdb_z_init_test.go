@@ -48,6 +48,7 @@ func init() {
 		Port:             "3306",
 		User:             TestDbUser,
 		Pass:             TestDbPass,
+		Timezone:         "Asia/Shanghai",
 		Name:             parser.GetOpt("name", "").String(),
 		Type:             parser.GetOpt("type", "mysql").String(),
 		Role:             "master",
