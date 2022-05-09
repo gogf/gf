@@ -104,12 +104,6 @@ func Uint64(any interface{}) uint64 {
 				return v
 			}
 		}
-		// Octal
-		if len(s) > 1 && s[0] == '0' {
-			if v, e := strconv.ParseUint(s[1:], 8, 64); e == nil {
-				return v
-			}
-		}
 		// Decimal
 		if v, e := strconv.ParseUint(s, 10, 64); e == nil {
 			return v
