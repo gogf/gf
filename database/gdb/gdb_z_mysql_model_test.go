@@ -4286,3 +4286,34 @@ func Test_Model_Issue1701(t *testing.T) {
 		t.Assert(value.String(), 100)
 	})
 }
+
+// https://github.com/gogf/gf/issues/1733
+func Test_Model_Issue1733(t *testing.T) {
+	table := "user_" + guid.S()
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+	    CREATE TABLE %s (
+	        id int(8) unsigned zerofill NOT NULL AUTO_INCREMENT,
+	        PRIMARY KEY (id)
+	    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	    `, table,
+	)); err != nil {
+		gtest.AssertNil(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		for i := 1; i <= 10; i++ {
+			_, err := db.Model(table).Data(g.Map{
+				"id": i,
+			}).Insert()
+			t.AssertNil(err)
+		}
+
+		all, err := db.Model(table).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(all), 10)
+		for i := 0; i < 10; i++ {
+			t.Assert(all[i]["id"].Int(), i+1)
+		}
+	})
+}
