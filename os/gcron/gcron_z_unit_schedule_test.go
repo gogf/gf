@@ -15,7 +15,6 @@ import (
 )
 
 func TestSlash(t *testing.T) {
-
 	runs := []struct {
 		spec     string
 		expected map[int]struct{}
@@ -23,7 +22,6 @@ func TestSlash(t *testing.T) {
 		{"0 0 0 * Feb Mon/2", map[int]struct{}{1: struct{}{}, 3: struct{}{}, 5: struct{}{}}},
 		{"0 0 0 * Feb *", map[int]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}, 4: struct{}{}, 5: struct{}{}, 6: struct{}{}, 0: struct{}{}}},
 	}
-
 	gtest.C(t, func(t *gtest.T) {
 		for _, c := range runs {
 			sched, err := newSchedule(c.spec)
