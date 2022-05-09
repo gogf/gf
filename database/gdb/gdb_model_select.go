@@ -535,11 +535,11 @@ func (m *Model) doGetAllBySql(ctx context.Context, queryType int, sql string, ar
 	in := &HookSelectInput{
 		internalParamHookSelect: internalParamHookSelect{
 			internalParamHook: internalParamHook{
-				link:  m.getLink(false),
-				model: m,
+				link: m.getLink(false),
 			},
 			handler: m.hookHandler.Select,
 		},
+		Model: m,
 		Table: m.tables,
 		Sql:   sql,
 		Args:  m.mergeArguments(args),

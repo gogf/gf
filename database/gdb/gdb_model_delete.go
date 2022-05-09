@@ -38,11 +38,11 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 		in := &HookUpdateInput{
 			internalParamHookUpdate: internalParamHookUpdate{
 				internalParamHook: internalParamHook{
-					link:  m.getLink(true),
-					model: m,
+					link: m.getLink(true),
 				},
 				handler: m.hookHandler.Update,
 			},
+			Model:     m,
 			Table:     m.tables,
 			Data:      fmt.Sprintf(`%s=?`, m.db.GetCore().QuoteString(fieldNameDelete)),
 			Condition: conditionWhere + conditionExtra,
@@ -61,11 +61,11 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 	in := &HookDeleteInput{
 		internalParamHookDelete: internalParamHookDelete{
 			internalParamHook: internalParamHook{
-				link:  m.getLink(true),
-				model: m,
+				link: m.getLink(true),
 			},
 			handler: m.hookHandler.Delete,
 		},
+		Model:     m,
 		Table:     m.tables,
 		Condition: conditionStr,
 		Args:      conditionArgs,
