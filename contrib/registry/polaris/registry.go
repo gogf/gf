@@ -168,6 +168,7 @@ func NewRegistryWithConfig(conf config.Configuration, opts ...Option) (r *Regist
 // Register the registration.
 func (r *Registry) Register(ctx context.Context, serviceInstance *gsvc.Service) error {
 	ids := make([]string, 0, len(serviceInstance.Endpoints))
+	// set separator
 	serviceInstance.Separator = _instanceIDSeparator
 	for _, endpoint := range serviceInstance.Endpoints {
 		// get url
@@ -269,6 +270,7 @@ func (r *Registry) Register(ctx context.Context, serviceInstance *gsvc.Service) 
 // Deregister the registration.
 func (r *Registry) Deregister(ctx context.Context, serviceInstance *gsvc.Service) error {
 	split := strings.Split(serviceInstance.ID, _instanceIDSeparator)
+	serviceInstance.Separator = _instanceIDSeparator
 	for i, endpoint := range serviceInstance.Endpoints {
 		// get url
 		u, err := url.Parse(endpoint)
@@ -311,6 +313,7 @@ func (r *Registry) Deregister(ctx context.Context, serviceInstance *gsvc.Service
 
 // Search returns the service instances in memory according to the service name.
 func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]*gsvc.Service, error) {
+	in.Separator = _instanceIDSeparator
 	// get all instances
 	instancesResponse, err := r.consumer.GetAllInstances(&api.GetAllInstancesRequest{
 		GetAllInstancesRequest: model.GetAllInstancesRequest{
