@@ -307,13 +307,19 @@ linters-settings:
     min-complexity: 30
 
   godot:
-    # comments to be checked: `declarations`, `toplevel`, or `all`
-    scope: declarations
-    # list of regexps for excluding particular comment lines from check
+    # Comments to be checked: `declarations`, `toplevel`, or `all`.
+    # Default: declarations
+    scope: toplevel
     exclude:
-      # example: exclude comments which contain numbers
-      # - '[0-9]+'
-    # check that each sentence starts with a capital letter
+      # Exclude sentence fragments for lists.
+      - '^[ ]*[-•]'
+      # Exclude sentences prefixing a list.
+      - ':$'
+    # Check that each sentence ends with a period.
+    # Default: true
+    period: false
+    # Check that each sentence starts with a capital letter.
+    # Default: false
     capital: false
 
   godox:
@@ -372,9 +378,9 @@ linters-settings:
     # it's a comma-separated list of prefixes
     local-prefixes: github.com/gogf/gf
 
-  golint:
+  #golint:
     # minimal confidence for issues, default is 0.8
-    min-confidence: 0.9
+    #min-confidence: 0.9
 
   gomnd:
     settings:
