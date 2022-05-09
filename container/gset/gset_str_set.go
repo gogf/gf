@@ -228,6 +228,7 @@ func (set *StrSet) String() string {
 		i      = 0
 		buffer = bytes.NewBuffer(nil)
 	)
+	buffer.WriteByte('[')
 	for k, _ := range set.data {
 		buffer.WriteString(`"` + gstr.QuoteMeta(k, `"\`) + `"`)
 		if i != l-1 {
@@ -235,6 +236,7 @@ func (set *StrSet) String() string {
 		}
 		i++
 	}
+	buffer.WriteByte(']')
 	return buffer.String()
 }
 
