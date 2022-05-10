@@ -29,7 +29,7 @@ func Test_New(t *testing.T) {
 			Port: "3306",
 			User: TestDbUser,
 			Pass: TestDbPass,
-			Type: gdb.DriverNameMysql,
+			Type: "mysql",
 		}
 		newDb, err := gdb.New(node)
 		t.AssertNil(err)
