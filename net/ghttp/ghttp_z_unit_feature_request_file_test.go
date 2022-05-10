@@ -174,7 +174,7 @@ func Test_Params_File_Batch(t *testing.T) {
 func Test_Params_Strict_Route_File_Single(t *testing.T) {
 	type Req struct {
 		gmeta.Meta `method:"post" mime:"multipart/form-data"`
-		File       *ghttp.UploadFile `type:"file"`
+		File       *ghttp.UploadFile `type:"file" v:"required"`
 	}
 	type Res struct{}
 
@@ -214,5 +214,75 @@ func Test_Params_Strict_Route_File_Single(t *testing.T) {
 		t.AssertNE(content, "upload failed")
 		t.Assert(content, "file1.txt")
 		t.Assert(gfile.GetContents(dstPath), gfile.GetContents(srcPath))
+	})
+}
+
+func Test_Params_File_Batch_List(t *testing.T) {
+	type Req struct {
+		gmeta.Meta `method:"post" mime:"multipart/form-data"`
+		File       ghttp.UploadFiles `type:"file" v:"required"`
+	}
+	type Res struct{}
+
+	dstDirPath := gfile.Temp(gtime.TimestampNanoStr())
+	s := g.Server(guid.S())
+	s.BindHandler("/upload/batch", func(ctx context.Context, req *Req) (res *Res, err error) {
+		var (
+			r    = g.RequestFromCtx(ctx)
+			file = req.File
+		)
+		if file == nil {
+			r.Response.WriteExit("upload file cannot be empty")
+		}
+
+		if names, err := file.Save(dstDirPath, r.Get("randomlyRename").Bool()); err == nil {
+			r.Response.WriteExit(gstr.Join(names, ","))
+		}
+		r.Response.WriteExit("upload failed")
+		return
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+	// normal name
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		srcPath1 := gtest.DataPath("upload", "file1.txt")
+		srcPath2 := gtest.DataPath("upload", "file2.txt")
+		dstPath1 := gfile.Join(dstDirPath, "file1.txt")
+		dstPath2 := gfile.Join(dstDirPath, "file2.txt")
+		content := client.PostContent(ctx, "/upload/batch",
+			fmt.Sprintf(`file=@file:%s&file=@file:%s`, srcPath1, srcPath2),
+		)
+		t.AssertNE(content, "")
+		t.AssertNE(content, "upload file cannot be empty")
+		t.AssertNE(content, "upload failed")
+		t.Assert(content, "file1.txt,file2.txt")
+		t.Assert(gfile.GetContents(dstPath1), gfile.GetContents(srcPath1))
+		t.Assert(gfile.GetContents(dstPath2), gfile.GetContents(srcPath2))
+	})
+	// randomly rename.
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		srcPath1 := gtest.DataPath("upload", "file1.txt")
+		srcPath2 := gtest.DataPath("upload", "file2.txt")
+		content := client.PostContent(ctx, "/upload/batch",
+			fmt.Sprintf(`file=@file:%s&file=@file:%s&randomlyRename=true`, srcPath1, srcPath2),
+		)
+		t.AssertNE(content, "")
+		t.AssertNE(content, "upload file cannot be empty")
+		t.AssertNE(content, "upload failed")
+
+		array := gstr.SplitAndTrim(content, ",")
+		t.Assert(len(array), 2)
+		dstPath1 := gfile.Join(dstDirPath, array[0])
+		dstPath2 := gfile.Join(dstDirPath, array[1])
+		t.Assert(gfile.GetContents(dstPath1), gfile.GetContents(srcPath1))
+		t.Assert(gfile.GetContents(dstPath2), gfile.GetContents(srcPath2))
 	})
 }

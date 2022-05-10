@@ -16,11 +16,12 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/net/proxy"
+
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
-	"golang.org/x/net/proxy"
 )
 
 // SetBrowserMode enables browser mode of the client.
@@ -140,7 +141,7 @@ func (c *Client) SetProxy(proxyURL string) {
 			v.Proxy = http.ProxyURL(_proxy)
 		}
 	} else {
-		var auth = &proxy.Auth{}
+		auth := &proxy.Auth{}
 		user := _proxy.User.Username()
 		if user != "" {
 			auth.User = user
