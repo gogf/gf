@@ -311,18 +311,12 @@ const (
 	SqlTypeStmtQueryRowContext = "DB.Statement.QueryRowContext"
 )
 
-const (
-	DriverNameMysql = `mysql`
-)
-
 var (
 	// instances is the management map for instances.
 	instances = gmap.NewStrAnyMap(true)
 
 	// driverMap manages all custom registered driver.
-	driverMap = map[string]Driver{
-		DriverNameMysql: &DriverMysql{},
-	}
+	driverMap = map[string]Driver{}
 
 	// lastOperatorRegPattern is the regular expression pattern for a string
 	// which has operator at its tail.
@@ -559,11 +553,12 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 				intlog.Printf(ctx, `open new connection success, master:%#v, config:%#v, node:%#v`, master, c.config, node)
 			}
 		}()
-
 		if sqlDb, err = c.db.Open(node); err != nil {
 			return nil
 		}
-
+		if sqlDb == nil {
+			return nil
+		}
 		if c.config.MaxIdleConnCount > 0 {
 			sqlDb.SetMaxIdleConns(c.config.MaxIdleConnCount)
 		} else {

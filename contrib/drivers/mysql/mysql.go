@@ -39,7 +39,7 @@ func init() {
 
 // New create and returns a driver that implements gdb.Driver, which supports operations for MySQL.
 func New() gdb.Driver {
-	return &gdb.DriverMysql{}
+	return &DriverMysql{}
 }
 
 // New creates and returns a database object for mysql.
