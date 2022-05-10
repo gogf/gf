@@ -120,34 +120,37 @@ jobs:
         go mod tidy
         go build ./...
         go test  ./...
+        GOARCH=386 go test  ./... || exit 1
+        GOARCH=amd64 go test  ./... -race -coverprofile=coverage.txt -covermode=atomic || exit 1
 
     - name: Example Build & Test
       run: |
         cd example
         go mod tidy
         go build ./...
-        go test  ./...
+        GOARCH=386 go test  ./... || exit 1
+        GOARCH=amd64 go test  ./... -race -coverprofile=coverage.txt -covermode=atomic || exit 1
 
     - name: Contrib Build & Test
       run: |
         cd contrib
         for file in `find . -name go.mod`; do
-            path=$(dirname $file)
+            dirpath=$(dirname $file)
             # Ignore oracle database driver build&test.
-            if [ "oracle" = $(basename $path) ]; then
+            if [ "oracle" = $(basename $dirpath) ]; then
                 continue 1
             fi
-            cd $path
+            cd $dirpath
             go mod tidy
             go build ./...
-            GOARCH=386   go test  ./... -race -coverprofile=coverage.txt -covermode=atomic || exit 1
+            GOARCH=386 go test  ./... || exit 1
             GOARCH=amd64 go test  ./... -race -coverprofile=coverage.txt -covermode=atomic || exit 1
             cd -
         done
 
     - name: Run i386 Arch Test
       run: |
-        GOARCH=386   go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic || exit 1
+        GOARCH=386 go test -v ./... || exit 1
 
     - name: Run amd64 Arch Test
       run: |
