@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/encoding/gproperties"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -43,7 +44,7 @@ func TestDecode(t *testing.T) {
 func TestEncode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 
-		decodeStr, err := gproperties.Encode(map[string]interface{}{
+		encStr, err := gproperties.Encode(map[string]interface{}{
 			"sql": g.Map{
 				"userName": "admin",
 				"password": "123456",
@@ -55,6 +56,34 @@ func TestEncode(t *testing.T) {
 			t.Errorf("decode failed. %v", err)
 			return
 		}
-		fmt.Printf("%v\n", string(decodeStr))
+		fmt.Printf("%v\n", string(encStr))
+	})
+}
+
+func TestToJson(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		res, err := gproperties.Encode(map[string]interface{}{
+			"sql": g.Map{
+				"userName": "admin",
+				"password": "123456",
+			},
+			"user": "admin",
+			"no":   123,
+		})
+		fmt.Print(string(res))
+		jsonPr, err := gproperties.ToJson(res)
+		if err != nil {
+			t.Errorf("ToJson failed. %v", err)
+			return
+		}
+		fmt.Print(string(jsonPr))
+
+		p := gjson.New(res)
+		expectJson, err := p.ToJson()
+		if err != nil {
+			t.Errorf("parser ToJson failed. %v", err)
+			return
+		}
+		t.Assert(jsonPr, expectJson)
 	})
 }
