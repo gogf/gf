@@ -503,11 +503,14 @@ func (l *List) Join(glue string) string {
 
 // String returns current list as a string.
 func (l *List) String() string {
+	if l == nil {
+		return ""
+	}
 	return "[" + l.Join(",") + "]"
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (l *List) MarshalJSON() ([]byte, error) {
+func (l List) MarshalJSON() ([]byte, error) {
 	return json.Marshal(l.FrontAll())
 }
 

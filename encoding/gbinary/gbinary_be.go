@@ -63,7 +63,7 @@ func BeEncode(values ...interface{}) []byte {
 			buf.Write(BeEncodeFloat64(value))
 		default:
 			if err := binary.Write(buf, binary.BigEndian, value); err != nil {
-				intlog.Error(context.TODO(), err)
+				intlog.Errorf(context.TODO(), `%+v`, err)
 				buf.Write(BeEncodeString(fmt.Sprintf("%v", value)))
 			}
 		}

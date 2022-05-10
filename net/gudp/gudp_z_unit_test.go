@@ -12,28 +12,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/net/gudp"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-var (
-	ports = garray.NewIntArray(true)
-)
-
-func init() {
-	for i := 9000; i <= 10000; i++ {
-		ports.Append(i)
-	}
-}
-
 func Test_Basic(t *testing.T) {
 	var (
 		ctx = context.TODO()
 	)
-	p, _ := ports.PopRand()
+	p, _ := gudp.GetFreePort()
 	s := gudp.NewServer(fmt.Sprintf("127.0.0.1:%d", p), func(conn *gudp.Conn) {
 		defer conn.Close()
 		for {
@@ -55,7 +44,7 @@ func Test_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
 			conn, err := gudp.NewConn(fmt.Sprintf("127.0.0.1:%d", p))
-			t.Assert(err, nil)
+			t.AssertNil(err)
 			t.Assert(conn.Send([]byte(gconv.String(i))), nil)
 			conn.Close()
 		}
@@ -64,9 +53,9 @@ func Test_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
 			conn, err := gudp.NewConn(fmt.Sprintf("127.0.0.1:%d", p))
-			t.Assert(err, nil)
+			t.AssertNil(err)
 			_, err = conn.SendRecv([]byte(gconv.String(i)), -1)
-			t.Assert(err, nil)
+			t.AssertNil(err)
 			//t.Assert(string(result), fmt.Sprintf(`> %d`, i))
 			conn.Close()
 		}
@@ -75,14 +64,14 @@ func Test_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
 			err := gudp.Send(fmt.Sprintf("127.0.0.1:%d", p), []byte(gconv.String(i)))
-			t.Assert(err, nil)
+			t.AssertNil(err)
 		}
 	})
 	// gudp.SendRecv
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
 			result, err := gudp.SendRecv(fmt.Sprintf("127.0.0.1:%d", p), []byte(gconv.String(i)), -1)
-			t.Assert(err, nil)
+			t.AssertNil(err)
 			t.Assert(string(result), fmt.Sprintf(`> %d`, i))
 		}
 	})
@@ -94,7 +83,7 @@ func Test_Buffer(t *testing.T) {
 	var (
 		ctx = context.TODO()
 	)
-	p, _ := ports.PopRand()
+	p, _ := gudp.GetFreePort()
 	s := gudp.NewServer(fmt.Sprintf("127.0.0.1:%d", p), func(conn *gudp.Conn) {
 		defer conn.Close()
 		for {
@@ -114,12 +103,12 @@ func Test_Buffer(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		result, err := gudp.SendRecv(fmt.Sprintf("127.0.0.1:%d", p), []byte("123"), -1)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(string(result), "1")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		result, err := gudp.SendRecv(fmt.Sprintf("127.0.0.1:%d", p), []byte("456"), -1)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(string(result), "4")
 	})
 }

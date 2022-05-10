@@ -29,7 +29,7 @@ func Instance(name ...string) *Redis {
 		if config, ok := GetConfig(group); ok {
 			r, err := New(config)
 			if err != nil {
-				intlog.Error(context.TODO(), err)
+				intlog.Errorf(context.TODO(), `%+v`, err)
 				return nil
 			}
 			return r

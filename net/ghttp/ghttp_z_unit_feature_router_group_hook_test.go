@@ -14,11 +14,11 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 func Test_Router_Group_Hook1(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	group := s.Group("/api")
 	group.GET("/handler", func(r *ghttp.Request) {
 		r.Response.Write("1")
@@ -30,7 +30,6 @@ func Test_Router_Group_Hook1(t *testing.T) {
 		r.Response.Write("2")
 	}, ghttp.HookAfterServe)
 
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -38,7 +37,7 @@ func Test_Router_Group_Hook1(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		t.Assert(client.GetContent(ctx, "/api/handler"), "012")
 		t.Assert(client.PostContent(ctx, "/api/handler"), "02")
 		t.Assert(client.GetContent(ctx, "/api/ThisDoesNotExist"), "Not Found")
@@ -46,8 +45,7 @@ func Test_Router_Group_Hook1(t *testing.T) {
 }
 
 func Test_Router_Group_Hook2(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	group := s.Group("/api")
 	group.GET("/handler", func(r *ghttp.Request) {
 		r.Response.Write("1")
@@ -59,7 +57,6 @@ func Test_Router_Group_Hook2(t *testing.T) {
 		r.Response.Write("2")
 	}, ghttp.HookAfterServe)
 
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -67,7 +64,7 @@ func Test_Router_Group_Hook2(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		t.Assert(client.GetContent(ctx, "/api/handler"), "012")
 		t.Assert(client.PostContent(ctx, "/api/handler"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/api/ThisDoesNotExist"), "02")

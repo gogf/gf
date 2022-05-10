@@ -36,6 +36,6 @@ func Test_Struct_CustomTimeDuration_Attribute(t *testing.T) {
 			"name":    "john",
 			"timeout": "1s",
 		}, &a)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 }

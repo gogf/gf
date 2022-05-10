@@ -21,7 +21,7 @@ var arrayForHandlerTest1 = garray.NewStrArray()
 
 func customHandler1(ctx context.Context, input *glog.HandlerInput) {
 	arrayForHandlerTest1.Append(input.String(false))
-	input.Next()
+	input.Next(ctx)
 }
 
 func TestLogger_SetHandlers1(t *testing.T) {
@@ -69,5 +69,44 @@ func TestLogger_SetHandlers2(t *testing.T) {
 		t.Assert(gstr.Count(arrayForHandlerTest2.At(0), "1234567890"), 1)
 		t.Assert(gstr.Count(arrayForHandlerTest2.At(0), "abcdefg"), 1)
 		t.Assert(gstr.Count(arrayForHandlerTest2.At(0), "1 2 3"), 1)
+	})
+}
+
+func TestLogger_SetHandlers_HandlerJson(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		w := bytes.NewBuffer(nil)
+		l := glog.NewWithWriter(w)
+		l.SetHandlers(glog.HandlerJson)
+		l.SetCtxKeys("Trace-Id", "Span-Id", "Test")
+		ctx := context.WithValue(context.Background(), "Trace-Id", "1234567890")
+		ctx = context.WithValue(ctx, "Span-Id", "abcdefg")
+
+		l.Debug(ctx, 1, 2, 3)
+		t.Assert(gstr.Count(w.String(), "1234567890"), 1)
+		t.Assert(gstr.Count(w.String(), "abcdefg"), 1)
+		t.Assert(gstr.Count(w.String(), `"1 2 3"`), 1)
+		t.Assert(gstr.Count(w.String(), `"DEBU"`), 1)
+	})
+}
+
+func Test_SetDefaultHandler(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		oldHandler := glog.GetDefaultHandler()
+		glog.SetDefaultHandler(func(ctx context.Context, in *glog.HandlerInput) {
+			glog.HandlerJson(ctx, in)
+		})
+		defer glog.SetDefaultHandler(oldHandler)
+
+		w := bytes.NewBuffer(nil)
+		l := glog.NewWithWriter(w)
+		l.SetCtxKeys("Trace-Id", "Span-Id", "Test")
+		ctx := context.WithValue(context.Background(), "Trace-Id", "1234567890")
+		ctx = context.WithValue(ctx, "Span-Id", "abcdefg")
+
+		l.Debug(ctx, 1, 2, 3)
+		t.Assert(gstr.Count(w.String(), "1234567890"), 1)
+		t.Assert(gstr.Count(w.String(), "abcdefg"), 1)
+		t.Assert(gstr.Count(w.String(), `"1 2 3"`), 1)
+		t.Assert(gstr.Count(w.String(), `"DEBU"`), 1)
 	})
 }

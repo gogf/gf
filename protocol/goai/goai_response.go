@@ -7,100 +7,47 @@
 package goai
 
 import (
-	"reflect"
-
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/os/gstructs"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Response is specified by OpenAPI/Swagger 3.0 standard.
 type Response struct {
-	Description string  `json:"description"           yaml:"description"`
-	Headers     Headers `json:"headers,omitempty"     yaml:"headers,omitempty"`
-	Content     Content `json:"content,omitempty"     yaml:"content,omitempty"`
-	Links       Links   `json:"links,omitempty"       yaml:"links,omitempty"`
+	Description string      `json:"description"`
+	Headers     Headers     `json:"headers,omitempty"`
+	Content     Content     `json:"content,omitempty"`
+	Links       Links       `json:"links,omitempty"`
+	XExtensions XExtensions `json:"-"`
 }
 
-// Responses is specified by OpenAPI/Swagger 3.0 standard.
-type Responses map[string]ResponseRef
-
-type ResponseRef struct {
-	Ref   string
-	Value *Response
-}
-
-func (r ResponseRef) MarshalJSON() ([]byte, error) {
-	if r.Ref != "" {
-		return formatRefToBytes(r.Ref), nil
+func (oai *OpenApiV3) tagMapToResponse(tagMap map[string]string, response *Response) error {
+	var mergedTagMap = oai.fileMapWithShortTags(tagMap)
+	if err := gconv.Struct(mergedTagMap, response); err != nil {
+		return gerror.Wrap(err, `mapping struct tags to Response failed`)
 	}
-	return json.Marshal(r.Value)
+	oai.tagMapToXExtensions(mergedTagMap, response.XExtensions)
+	return nil
 }
 
-type getResponseSchemaRefInput struct {
-	BusinessStructName string      // The business struct name.
-	ResponseObject     interface{} // Common response object.
-	ResponseDataField  string      // Common response data field.
-}
-
-func (oai *OpenApiV3) getResponseSchemaRef(in getResponseSchemaRefInput) (*SchemaRef, error) {
-	if in.ResponseObject == nil {
-		return &SchemaRef{
-			Ref: in.BusinessStructName,
-		}, nil
-	}
-
+func (r Response) MarshalJSON() ([]byte, error) {
 	var (
-		dataFieldsPartsArray                                        = gstr.Split(in.ResponseDataField, ".")
-		bizResponseStructSchemaRef, bizResponseStructSchemaRefExist = oai.Components.Schemas[in.BusinessStructName]
-		schema, err                                                 = oai.structToSchema(in.ResponseObject)
+		b   []byte
+		m   map[string]json.RawMessage
+		err error
 	)
-	if err != nil {
+	type tempResponse Response // To prevent JSON marshal recursion error.
+	if b, err = json.Marshal(tempResponse(r)); err != nil {
 		return nil, err
 	}
-	if in.ResponseDataField == "" && bizResponseStructSchemaRefExist {
-		for k, v := range bizResponseStructSchemaRef.Value.Properties {
-			schema.Properties[k] = v
-		}
-	} else {
-		structFields, _ := gstructs.Fields(gstructs.FieldsInput{
-			Pointer:         in.ResponseObject,
-			RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
-		})
-		for _, structField := range structFields {
-			var (
-				fieldName = structField.Name()
-			)
-			if jsonName := structField.TagJsonName(); jsonName != "" {
-				fieldName = jsonName
-			}
-			switch len(dataFieldsPartsArray) {
-			case 1:
-				if structField.Name() == dataFieldsPartsArray[0] {
-					schema.Properties[fieldName] = bizResponseStructSchemaRef
-					break
-				}
-			default:
-				if structField.Name() == dataFieldsPartsArray[0] {
-					var (
-						structFieldInstance = reflect.New(structField.Type().Type).Elem()
-					)
-					schemaRef, err := oai.getResponseSchemaRef(getResponseSchemaRefInput{
-						BusinessStructName: in.BusinessStructName,
-						ResponseObject:     structFieldInstance,
-						ResponseDataField:  gstr.Join(dataFieldsPartsArray[1:], "."),
-					})
-					if err != nil {
-						return nil, err
-					}
-					schema.Properties[fieldName] = *schemaRef
-					break
-				}
-			}
-		}
+	if err = json.Unmarshal(b, &m); err != nil {
+		return nil, err
 	}
-
-	return &SchemaRef{
-		Value: schema,
-	}, nil
+	for k, v := range r.XExtensions {
+		if b, err = json.Marshal(v); err != nil {
+			return nil, err
+		}
+		m[k] = b
+	}
+	return json.Marshal(m)
 }

@@ -426,12 +426,15 @@ func (m *IntIntMap) Merge(other *IntIntMap) {
 
 // String returns the map as a string.
 func (m *IntIntMap) String() string {
+	if m == nil {
+		return ""
+	}
 	b, _ := m.MarshalJSON()
 	return string(b)
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (m *IntIntMap) MarshalJSON() ([]byte, error) {
+func (m IntIntMap) MarshalJSON() ([]byte, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return json.Marshal(m.data)

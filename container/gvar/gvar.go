@@ -26,28 +26,15 @@ type Var struct {
 // The optional parameter `safe` specifies whether Var is used in concurrent-safety,
 // which is false in default.
 func New(value interface{}, safe ...bool) *Var {
-	v := Var{}
 	if len(safe) > 0 && !safe[0] {
-		v.safe = true
-		v.value = gtype.NewInterface(value)
-	} else {
-		v.value = value
+		return &Var{
+			value: gtype.NewInterface(value),
+			safe:  true,
+		}
 	}
-	return &v
-}
-
-// Create creates and returns a new Var with given `value`.
-// The optional parameter `safe` specifies whether Var is used in concurrent-safety,
-// which is false in default.
-func Create(value interface{}, safe ...bool) Var {
-	v := Var{}
-	if len(safe) > 0 && !safe[0] {
-		v.safe = true
-		v.value = gtype.NewInterface(value)
-	} else {
-		v.value = value
+	return &Var{
+		value: value,
 	}
-	return v
 }
 
 // Clone does a shallow copy of current Var and returns a pointer to this Var.
@@ -182,7 +169,7 @@ func (v *Var) GTime(format ...string) *gtime.Time {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (v *Var) MarshalJSON() ([]byte, error) {
+func (v Var) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.Val())
 }
 

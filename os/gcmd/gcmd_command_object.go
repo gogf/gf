@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -38,7 +39,7 @@ var (
 
 // NewFromObject creates and returns a root command object using given object.
 func NewFromObject(object interface{}) (rootCmd *Command, err error) {
-	originValueAndKind := utils.OriginValueAndKind(object)
+	originValueAndKind := reflection.OriginValueAndKind(object)
 	if originValueAndKind.OriginKind != reflect.Struct {
 		err = gerror.Newf(
 			`input object should be type of struct, but got "%s"`,
@@ -221,9 +222,7 @@ func newCommandFromMethod(object interface{}, method reflect.Value) (command *Co
 		return
 	}
 
-	var (
-		inputObject reflect.Value
-	)
+	var inputObject reflect.Value
 	if method.Type().In(1).Kind() == reflect.Ptr {
 		inputObject = reflect.New(method.Type().In(1).Elem()).Elem()
 	} else {
@@ -245,17 +244,6 @@ func newCommandFromMethod(object interface{}, method reflect.Value) (command *Co
 	// =============================================================================================
 	command.FuncWithValue = func(ctx context.Context, parser *Parser) (out interface{}, err error) {
 		ctx = context.WithValue(ctx, CtxKeyParser, parser)
-
-		defer func() {
-			if exception := recover(); exception != nil {
-				if v, ok := exception.(error); ok && gerror.HasStack(v) {
-					err = v
-				} else {
-					err = gerror.New(`exception recovered:` + gconv.String(exception))
-				}
-			}
-		}()
-
 		var (
 			data        = gconv.Map(parser.GetOptAll())
 			argIndex    = 0
@@ -275,8 +263,19 @@ func newCommandFromMethod(object interface{}, method reflect.Value) (command *Co
 				}
 			} else {
 				// Read argument from command line option name.
-				if arg.Orphan && parser.ContainsOpt(arg.Name) {
-					data[arg.Name] = "true"
+				if arg.Orphan {
+					if orphanValue := parser.GetOpt(arg.Name); orphanValue != nil {
+						if orphanValue.String() == "" {
+							// Eg: gf -f
+							data[arg.Name] = "true"
+						} else {
+							// Adapter with common user habits.
+							// Eg:
+							// `gf -f=0`: which parameter `f` is parsed as false
+							// `gf -f=1`: which parameter `f` is parsed as true
+							data[arg.Name] = orphanValue.Bool()
+						}
+					}
 				}
 			}
 		}

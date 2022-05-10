@@ -9,6 +9,7 @@ package gjson
 import (
 	"bytes"
 
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -18,6 +19,21 @@ import (
 // bytes or string type.
 func Valid(data interface{}) bool {
 	return json.Valid(gconv.Bytes(data))
+}
+
+// Marshal is alias of Encode in order to fit the habit of json.Marshal/Unmarshal functions.
+func Marshal(v interface{}) (marshaledBytes []byte, err error) {
+	return Encode(v)
+}
+
+// MarshalIndent is alias of json.MarshalIndent in order to fit the habit of json.MarshalIndent function.
+func MarshalIndent(v interface{}, prefix, indent string) (marshaledBytes []byte, err error) {
+	return json.MarshalIndent(v, prefix, indent)
+}
+
+// Unmarshal is alias of DecodeTo in order to fit the habit of json.Marshal/Unmarshal functions.
+func Unmarshal(data []byte, v interface{}) (err error) {
+	return DecodeTo(data, v)
 }
 
 // Encode encodes any golang variable `value` to JSON bytes.
@@ -48,9 +64,9 @@ func MustEncodeString(value interface{}) string {
 
 // Decode decodes json format `data` to golang variable.
 // The parameter `data` can be either bytes or string type.
-func Decode(data interface{}) (interface{}, error) {
+func Decode(data interface{}, options ...Options) (interface{}, error) {
 	var value interface{}
-	if err := DecodeTo(gconv.Bytes(data), &value); err != nil {
+	if err := DecodeTo(gconv.Bytes(data), &value, options...); err != nil {
 		return nil, err
 	} else {
 		return value, nil
@@ -60,21 +76,30 @@ func Decode(data interface{}) (interface{}, error) {
 // DecodeTo decodes json format `data` to specified golang variable `v`.
 // The parameter `data` can be either bytes or string type.
 // The parameter `v` should be a pointer type.
-func DecodeTo(data interface{}, v interface{}) error {
+func DecodeTo(data interface{}, v interface{}, options ...Options) (err error) {
 	decoder := json.NewDecoder(bytes.NewReader(gconv.Bytes(data)))
-	// Do not use number, it converts float64 to json.Number type,
-	// which actually a string type. It causes converting issue for other data formats,
-	// for example: yaml.
-	// decoder.UseNumber()
-	return decoder.Decode(v)
+	if len(options) > 0 {
+		// The StrNumber option is for certain situations, not for all.
+		// For example, it causes converting issue for other data formats, for example: yaml.
+		if options[0].StrNumber {
+			decoder.UseNumber()
+		}
+	}
+	if err = decoder.Decode(v); err != nil {
+		err = gerror.Wrap(err, `json Decode failed`)
+	}
+	return
 }
 
 // DecodeToJson codes json format `data` to a Json object.
 // The parameter `data` can be either bytes or string type.
-func DecodeToJson(data interface{}, safe ...bool) (*Json, error) {
-	if v, err := Decode(gconv.Bytes(data)); err != nil {
+func DecodeToJson(data interface{}, options ...Options) (*Json, error) {
+	if v, err := Decode(gconv.Bytes(data), options...); err != nil {
 		return nil, err
 	} else {
-		return New(v, safe...), nil
+		if len(options) > 0 {
+			return New(v, options[0].Safe), nil
+		}
+		return New(v), nil
 	}
 }

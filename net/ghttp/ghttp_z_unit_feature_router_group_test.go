@@ -13,7 +13,9 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 // 执行对象
@@ -44,8 +46,7 @@ func Handler(r *ghttp.Request) {
 }
 
 func Test_Router_GroupBasic1(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	obj := new(GroupObject)
 	// 分组路由方法注册
 	group := s.Group("/api")
@@ -53,7 +54,6 @@ func Test_Router_GroupBasic1(t *testing.T) {
 	group.ALL("/obj", obj)
 	group.GET("/obj/my-show", obj, "Show")
 	group.REST("/obj/rest", obj)
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -61,7 +61,7 @@ func Test_Router_GroupBasic1(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/api/handler"), "Handler")
 
@@ -79,13 +79,11 @@ func Test_Router_GroupBasic1(t *testing.T) {
 }
 
 func Test_Router_GroupBuildInVar(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	obj := new(GroupObject)
 	// 分组路由方法注册
 	group := s.Group("/api")
 	group.ALL("/{.struct}/{.method}", obj)
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -93,7 +91,7 @@ func Test_Router_GroupBuildInVar(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/api/group-object/index"), "1Object Index2")
 		t.Assert(client.GetContent(ctx, "/api/group-object/delete"), "1Object Delete2")
@@ -105,12 +103,10 @@ func Test_Router_GroupBuildInVar(t *testing.T) {
 }
 
 func Test_Router_Group_Methods(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	obj := new(GroupObject)
 	group := s.Group("/")
 	group.ALL("/obj", obj, "Show, Delete")
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -118,15 +114,15 @@ func Test_Router_Group_Methods(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		t.Assert(client.GetContent(ctx, "/obj/show"), "1Object Show2")
 		t.Assert(client.GetContent(ctx, "/obj/delete"), "1Object Delete2")
 	})
 }
 
 func Test_Router_Group_MultiServer(t *testing.T) {
-	p1, _ := ports.PopRand()
-	p2, _ := ports.PopRand()
+	p1, _ := gtcp.GetFreePort()
+	p2, _ := gtcp.GetFreePort()
 	s1 := g.Server(p1)
 	s2 := g.Server(p2)
 	s1.Group("/", func(group *ghttp.RouterGroup) {
@@ -166,15 +162,13 @@ func Test_Router_Group_Map(t *testing.T) {
 	testFuncPost := func(r *ghttp.Request) {
 		r.Response.Write("post")
 	}
-	p, _ := ports.PopRand()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Map(map[string]interface{}{
 			"Get: /test": testFuncGet,
 			"Post:/test": testFuncPost,
 		})
 	})
-	s.SetPort(p)
 	//s.SetDumpRouterMap(false)
 	gtest.Assert(s.Start(), nil)
 	defer s.Shutdown()
@@ -182,7 +176,7 @@ func Test_Router_Group_Map(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
-		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(c.GetContent(ctx, "/test"), "get")
 		t.Assert(c.PostContent(ctx, "/test"), "post")

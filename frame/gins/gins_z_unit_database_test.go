@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/gins"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -20,21 +19,21 @@ import (
 
 func Test_Database(t *testing.T) {
 	databaseContent := gfile.GetContents(
-		gdebug.TestDataPath("database", "config.toml"),
+		gtest.DataPath("database", "config.toml"),
 	)
 	gtest.C(t, func(t *gtest.T) {
 		var err error
-		dirPath := gfile.TempDir(gtime.TimestampNanoStr())
+		dirPath := gfile.Temp(gtime.TimestampNanoStr())
 		err = gfile.Mkdir(dirPath)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer gfile.Remove(dirPath)
 
 		name := "config.toml"
 		err = gfile.PutContents(gfile.Join(dirPath, name), databaseContent)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		err = gins.Config().GetAdapter().(*gcfg.AdapterFile).AddPath(dirPath)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		defer gins.Config().GetAdapter().(*gcfg.AdapterFile).Clear()
 

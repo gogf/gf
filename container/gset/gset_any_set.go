@@ -223,6 +223,9 @@ func (set *Set) Join(glue string) string {
 
 // String returns items as a string, which implements like json.Marshal does.
 func (set *Set) String() string {
+	if set == nil {
+		return ""
+	}
 	set.mu.RLock()
 	defer set.mu.RUnlock()
 	var (
@@ -467,7 +470,7 @@ func (set *Set) Walk(f func(item interface{}) interface{}) *Set {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (set *Set) MarshalJSON() ([]byte, error) {
+func (set Set) MarshalJSON() ([]byte, error) {
 	return json.Marshal(set.Slice())
 }
 

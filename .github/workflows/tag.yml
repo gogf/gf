@@ -1,0 +1,30 @@
+name: GoFrame AutoCreating SubMod Tags
+
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+    - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
+env:
+  TZ: Asia/Shanghai
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+jobs:
+  build:
+    name: Auto Creating Tags
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Github Code
+        uses: actions/checkout@v2
+
+      - name: Auto Creating Tags
+        run: |
+          git config --global user.email "tagrobot@goframe.org"
+          git config --global user.name  "TagRobot"
+          for file in `find contrib -name go.mod`; do
+              tag=$(dirname $file)/$GITHUB_REF_NAME
+              git tag $tag
+              git push origin $tag
+          done

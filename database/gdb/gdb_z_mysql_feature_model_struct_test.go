@@ -550,7 +550,7 @@ func Test_Scan_JsonAttributes(t *testing.T) {
 	}
 
 	table := "jfy_gift"
-	array := gstr.SplitAndTrim(gtest.TestDataContent(`issue1380.sql`), ";")
+	array := gstr.SplitAndTrim(gtest.DataContent(`issue1380.sql`), ";")
 	for _, v := range array {
 		if _, err := db.Exec(ctx, v); err != nil {
 			gtest.Error(err)

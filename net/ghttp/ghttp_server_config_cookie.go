@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"net/http"
 	"time"
 )
 
@@ -25,7 +26,7 @@ func (s *Server) SetCookieDomain(domain string) {
 	s.config.CookieDomain = domain
 }
 
-// GetCookieMaxAge returns the CookieMaxAge of server.
+// GetCookieMaxAge returns the CookieMaxAge of the server.
 func (s *Server) GetCookieMaxAge() time.Duration {
 	return s.config.CookieMaxAge
 }
@@ -38,4 +39,26 @@ func (s *Server) GetCookiePath() string {
 // GetCookieDomain returns CookieDomain of server.
 func (s *Server) GetCookieDomain() string {
 	return s.config.CookieDomain
+}
+
+// GetCookieSameSite return CookieSameSite of server.
+func (s *Server) GetCookieSameSite() http.SameSite {
+	switch s.config.CookieSameSite {
+	case "lax":
+		return http.SameSiteLaxMode
+	case "none":
+		return http.SameSiteNoneMode
+	case "strict":
+		return http.SameSiteStrictMode
+	default:
+		return http.SameSiteDefaultMode
+	}
+}
+
+func (s *Server) GetCookieSecure() bool {
+	return s.config.CookieSecure
+}
+
+func (s *Server) GetCookieHttpOnly() bool {
+	return s.config.CookieHttpOnly
 }

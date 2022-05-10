@@ -55,7 +55,7 @@ func TestVar_Var_Attribute_Struct(t *testing.T) {
 				"uid":  gvar.New(1),
 				"name": gvar.New("john"),
 			}, user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.Uid, 1)
 		t.Assert(user.Name, "john")
 	})
@@ -70,7 +70,7 @@ func TestVar_Var_Attribute_Struct(t *testing.T) {
 				"uid":  gvar.New(1),
 				"name": gvar.New("john"),
 			}, &user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.Uid, 1)
 		t.Assert(user.Name, "john")
 	})

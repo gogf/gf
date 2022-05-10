@@ -13,7 +13,6 @@ import (
 	"net/url"
 
 	_ "github.com/go-sql-driver/mysql"
-
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
@@ -38,9 +37,11 @@ func (d *DriverMysql) New(core *Core, node *ConfigNode) (DB, error) {
 // Note that it converts time.Time argument to local timezone in default.
 func (d *DriverMysql) Open(config *ConfigNode) (db *sql.DB, err error) {
 	var (
-		source string
-		driver = "mysql"
+		ctx                  = d.GetCtx()
+		source               string
+		underlyingDriverName = "mysql"
 	)
+	// [username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
 	if config.Link != "" {
 		source = config.Link
 		// Custom changing the schema in runtime.
@@ -56,11 +57,11 @@ func (d *DriverMysql) Open(config *ConfigNode) (db *sql.DB, err error) {
 			source = fmt.Sprintf("%s&loc=%s", source, url.QueryEscape(config.Timezone))
 		}
 	}
-	intlog.Printf(d.GetCtx(), "Open: %s", source)
-	if db, err = sql.Open(driver, source); err != nil {
+	intlog.Printf(ctx, "Open: %s", source)
+	if db, err = sql.Open(underlyingDriverName, source); err != nil {
 		err = gerror.WrapCodef(
 			gcode.CodeDbOperationError, err,
-			`sql.Open failed for driver "%s" by source "%s"`, driver, source,
+			`sql.Open failed for driver "%s" by source "%s"`, underlyingDriverName, source,
 		)
 		return nil, err
 	}
@@ -100,7 +101,7 @@ func (d *DriverMysql) Tables(ctx context.Context, schema ...string) (tables []st
 	if err != nil {
 		return nil, err
 	}
-	result, err = d.DoGetAll(ctx, link, `SHOW TABLES`)
+	result, err = d.DoSelect(ctx, link, `SHOW TABLES`)
 	if err != nil {
 		return
 	}
@@ -128,9 +129,12 @@ func (d *DriverMysql) TableFields(ctx context.Context, table string, schema ...s
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
-		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "function TableFields supports only single table operations")
+		return nil, gerror.NewCode(
+			gcode.CodeInvalidParameter,
+			"function TableFields supports only single table operations",
+		)
 	}
-	useSchema := d.schema.Val()
+	useSchema := d.schema
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	}
@@ -144,7 +148,10 @@ func (d *DriverMysql) TableFields(ctx context.Context, table string, schema ...s
 			if link, err = d.SlaveLink(useSchema); err != nil {
 				return nil
 			}
-			result, err = d.DoGetAll(ctx, link, fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.QuoteWord(table)))
+			result, err = d.DoSelect(
+				ctx, link,
+				fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.QuoteWord(table)),
+			)
 			if err != nil {
 				return nil
 			}

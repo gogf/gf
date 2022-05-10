@@ -18,13 +18,13 @@ import (
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/guid"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
@@ -433,19 +433,31 @@ func Test_Model_Update(t *testing.T) {
 	})
 }
 
+func Test_Model_UpdateAndGetAffected(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		n, err := db.Model(table).Data("nickname", "T100").
+			Where(1).Order("id desc").Limit(2).
+			UpdateAndGetAffected()
+		t.AssertNil(err)
+		t.Assert(n, 2)
+	})
+}
+
 func Test_Model_Clone(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		md := db.Model(table).Where("id IN(?)", g.Slice{1, 3})
+		md := db.Model(table).Safe(true).Where("id IN(?)", g.Slice{1, 3})
 		count, err := md.Count()
 		t.AssertNil(err)
 
-		record, err := md.Order("id DESC").One()
+		record, err := md.Safe(true).Order("id DESC").One()
 		t.AssertNil(err)
 
-		result, err := md.Order("id ASC").All()
+		result, err := md.Safe(true).Order("id ASC").All()
 		t.AssertNil(err)
 
 		t.Assert(count, 2)
@@ -688,6 +700,18 @@ func Test_Model_Count(t *testing.T) {
 		count, err := db.Model(table).Count()
 		t.AssertNil(err)
 		t.Assert(count, TableSize)
+	})
+	// Count with cache, check internal ctx data feature.
+	gtest.C(t, func(t *gtest.T) {
+		for i := 0; i < 10; i++ {
+			count, err := db.Model(table).Cache(gdb.CacheOption{
+				Duration: time.Second * 10,
+				Name:     guid.S(),
+				Force:    false,
+			}).Count()
+			t.AssertNil(err)
+			t.Assert(count, TableSize)
+		}
 	})
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).FieldsEx("id").Where("id>8").Count()
@@ -1075,6 +1099,28 @@ func Test_Model_Scan(t *testing.T) {
 	})
 }
 
+func Test_Model_Scan_NilSliceAttrWhenNoRecordsFound(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime gtime.Time
+		}
+		type Response struct {
+			Users []User `json:"users"`
+		}
+		var res Response
+		err := db.Model(table).Scan(&res.Users)
+		t.AssertNil(err)
+		t.Assert(res.Users, nil)
+	})
+}
+
 func Test_Model_OrderBy(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
@@ -1091,6 +1137,15 @@ func Test_Model_OrderBy(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(result), TableSize)
 		t.Assert(result[0]["nickname"].String(), "name_1")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Order(gdb.Raw("field(id, 10,1,2,3,4,5,6,7,8,9)")).All()
+		t.AssertNil(err)
+		t.Assert(len(result), TableSize)
+		t.Assert(result[0]["nickname"].String(), "name_10")
+		t.Assert(result[1]["nickname"].String(), "name_1")
+		t.Assert(result[2]["nickname"].String(), "name_2")
 	})
 }
 
@@ -1432,7 +1487,7 @@ func Test_Model_Where_ISNULL_2(t *testing.T) {
 			"create_time > 0":    nil,
 			"id":                 g.Slice{1, 2, 3},
 		}
-		result, err := db.Model(table).WherePri(conditions).Order("id asc").All()
+		result, err := db.Model(table).Where(conditions).Order("id asc").All()
 		t.AssertNil(err)
 		t.Assert(len(result), 3)
 		t.Assert(result[0]["id"].Int(), 1)
@@ -1446,19 +1501,19 @@ func Test_Model_Where_OmitEmpty(t *testing.T) {
 		conditions := g.Map{
 			"id < 4": "",
 		}
-		result, err := db.Model(table).WherePri(conditions).Order("id asc").All()
+		result, err := db.Model(table).Where(conditions).Order("id desc").All()
 		t.AssertNil(err)
 		t.Assert(len(result), 3)
-		t.Assert(result[0]["id"].Int(), 1)
+		t.Assert(result[0]["id"].Int(), 3)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		conditions := g.Map{
 			"id < 4": "",
 		}
-		result, err := db.Model(table).WherePri(conditions).OmitEmpty().Order("id asc").All()
+		result, err := db.Model(table).Where(conditions).OmitEmpty().Order("id desc").All()
 		t.AssertNil(err)
-		t.Assert(len(result), 3)
-		t.Assert(result[0]["id"].Int(), 1)
+		t.Assert(len(result), 10)
+		t.Assert(result[0]["id"].Int(), 10)
 	})
 }
 
@@ -2036,7 +2091,7 @@ func Test_Model_OmitEmpty(t *testing.T) {
 			"id":   1,
 			"name": "",
 		}).Save()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 }
 
@@ -2065,14 +2120,14 @@ func Test_Model_OmitNil(t *testing.T) {
 			"id":   1,
 			"name": "",
 		}).Save()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Model(table).OmitNilWhere().Data(g.Map{
 			"id":   1,
 			"name": "",
 		}).Save()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 }
 
@@ -2164,7 +2219,7 @@ func Test_Model_FieldsEx_WithReservedWords(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			table      = "fieldsex_test_table"
-			sqlTpcPath = gdebug.TestDataPath("reservedwords_table_tpl.sql")
+			sqlTpcPath = gtest.DataPath("reservedwords_table_tpl.sql")
 			sqlContent = gfile.GetContents(sqlTpcPath)
 		)
 		t.AssertNE(sqlContent, "")
@@ -2233,22 +2288,21 @@ func Test_Model_Prefix(t *testing.T) {
 func Test_Model_Schema1(t *testing.T) {
 	// db.SetDebug(true)
 
-	db.SetSchema(TestSchema1)
+	db = db.Schema(TestSchema1)
 	table := fmt.Sprintf(`%s_%s`, TableName, gtime.TimestampNanoStr())
 	createInitTableWithDb(db, table)
-	db.SetSchema(TestSchema2)
+	db = db.Schema(TestSchema2)
 	createInitTableWithDb(db, table)
 	defer func() {
-		db.SetSchema(TestSchema1)
+		db = db.Schema(TestSchema1)
 		dropTableWithDb(db, table)
-		db.SetSchema(TestSchema2)
+		db = db.Schema(TestSchema2)
 		dropTableWithDb(db, table)
-
-		db.SetSchema(TestSchema1)
+		db = db.Schema(TestSchema1)
 	}()
 	// Method.
 	gtest.C(t, func(t *gtest.T) {
-		db.SetSchema(TestSchema1)
+		db = db.Schema(TestSchema1)
 		r, err := db.Model(table).Update(g.Map{"nickname": "name_100"}, "id=1")
 		t.AssertNil(err)
 		n, _ := r.RowsAffected()
@@ -2258,7 +2312,7 @@ func Test_Model_Schema1(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(v.String(), "name_100")
 
-		db.SetSchema(TestSchema2)
+		db = db.Schema(TestSchema2)
 		v, err = db.Model(table).Value("nickname", "id=1")
 		t.AssertNil(err)
 		t.Assert(v.String(), "name_1")
@@ -2312,18 +2366,18 @@ func Test_Model_Schema1(t *testing.T) {
 func Test_Model_Schema2(t *testing.T) {
 	// db.SetDebug(true)
 
-	db.SetSchema(TestSchema1)
+	db = db.Schema(TestSchema1)
 	table := fmt.Sprintf(`%s_%s`, TableName, gtime.TimestampNanoStr())
 	createInitTableWithDb(db, table)
-	db.SetSchema(TestSchema2)
+	db = db.Schema(TestSchema2)
 	createInitTableWithDb(db, table)
 	defer func() {
-		db.SetSchema(TestSchema1)
+		db = db.Schema(TestSchema1)
 		dropTableWithDb(db, table)
-		db.SetSchema(TestSchema2)
+		db = db.Schema(TestSchema2)
 		dropTableWithDb(db, table)
 
-		db.SetSchema(TestSchema1)
+		db = db.Schema(TestSchema1)
 	}()
 	// Schema.
 	gtest.C(t, func(t *gtest.T) {
@@ -2967,8 +3021,8 @@ func Test_Model_Issue1002(t *testing.T) {
 	})
 	// where + time.Time arguments, UTC.
 	gtest.C(t, func(t *gtest.T) {
-		t1, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 19:03:32")
-		t2, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 19:03:34")
+		t1, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 11:03:32")
+		t2, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 11:03:34")
 		{
 			v, err := db.Model(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).Value()
 			t.AssertNil(err)
@@ -3025,7 +3079,7 @@ func Test_TimeZoneInsert(t *testing.T) {
 	tableName := createTableForTimeZoneTest()
 	defer dropTable(tableName)
 
-	asiaLocal, err := time.LoadLocation("Asia/Shanghai")
+	tokyoLoc, err := time.LoadLocation("Asia/Tokyo")
 	gtest.AssertNil(err)
 
 	CreateTime := "2020-11-22 12:23:45"
@@ -3037,9 +3091,9 @@ func Test_TimeZoneInsert(t *testing.T) {
 		UpdatedAt gtime.Time  `json:"updated_at"`
 		DeletedAt time.Time   `json:"deleted_at"`
 	}
-	t1, _ := time.ParseInLocation("2006-01-02 15:04:05", CreateTime, asiaLocal)
-	t2, _ := time.ParseInLocation("2006-01-02 15:04:05", UpdateTime, asiaLocal)
-	t3, _ := time.ParseInLocation("2006-01-02 15:04:05", DeleteTime, asiaLocal)
+	t1, _ := time.ParseInLocation("2006-01-02 15:04:05", CreateTime, tokyoLoc)
+	t2, _ := time.ParseInLocation("2006-01-02 15:04:05", UpdateTime, tokyoLoc)
+	t3, _ := time.ParseInLocation("2006-01-02 15:04:05", DeleteTime, tokyoLoc)
 	u := &User{
 		Id:        1,
 		CreatedAt: gtime.New(t1.UTC()),
@@ -3052,9 +3106,9 @@ func Test_TimeZoneInsert(t *testing.T) {
 		userEntity := &User{}
 		err := db.Model(tableName).Where("id", 1).Unscoped().Scan(&userEntity)
 		t.AssertNil(err)
-		t.Assert(userEntity.CreatedAt.String(), "2020-11-22 04:23:45")
-		t.Assert(userEntity.UpdatedAt.String(), "2020-11-22 05:23:45")
-		t.Assert(gtime.NewFromTime(userEntity.DeletedAt).String(), "2020-11-22 06:23:45")
+		t.Assert(userEntity.CreatedAt.String(), "2020-11-22 11:23:45")
+		t.Assert(userEntity.UpdatedAt.String(), "2020-11-22 12:23:45")
+		t.Assert(gtime.NewFromTime(userEntity.DeletedAt).String(), "2020-11-22 13:23:45")
 	})
 }
 
@@ -4171,5 +4225,95 @@ func Test_Model_WherePrefixLike(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(r), 1)
 		t.Assert(r[0]["id"], "3")
+	})
+}
+
+// https://github.com/gogf/gf/issues/1700
+func Test_Model_Issue1700(t *testing.T) {
+	table := "user_" + gtime.Now().TimestampNanoStr()
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+	    CREATE TABLE %s (
+	        id         int(10) unsigned NOT NULL AUTO_INCREMENT,
+	        user_id    int(10) unsigned NOT NULL,
+	        UserId    int(10) unsigned NOT NULL,
+	        PRIMARY KEY (id)
+	    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	    `, table,
+	)); err != nil {
+		gtest.AssertNil(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id     int `orm:"id"`
+			Userid int `orm:"user_id"`
+			UserId int `orm:"UserId"`
+		}
+		_, err := db.Model(table).Data(User{
+			Id:     1,
+			Userid: 2,
+			UserId: 3,
+		}).Insert()
+		t.AssertNil(err)
+
+		one, err := db.Model(table).One()
+		t.AssertNil(err)
+		t.Assert(one, g.Map{
+			"id":      1,
+			"user_id": 2,
+			"UserId":  3,
+		})
+
+		for i := 0; i < 1000; i++ {
+			var user *User
+			err = db.Model(table).Scan(&user)
+			t.AssertNil(err)
+			t.Assert(user.Id, 1)
+			t.Assert(user.Userid, 2)
+			t.Assert(user.UserId, 3)
+		}
+	})
+}
+
+// https://github.com/gogf/gf/issues/1701
+func Test_Model_Issue1701(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		value, err := db.Model(table).Fields(gdb.Raw("if(id=1,100,null)")).WherePri(1).Value()
+		t.AssertNil(err)
+		t.Assert(value.String(), 100)
+	})
+}
+
+// https://github.com/gogf/gf/issues/1733
+func Test_Model_Issue1733(t *testing.T) {
+	table := "user_" + guid.S()
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+	    CREATE TABLE %s (
+	        id int(8) unsigned zerofill NOT NULL AUTO_INCREMENT,
+	        PRIMARY KEY (id)
+	    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	    `, table,
+	)); err != nil {
+		gtest.AssertNil(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		for i := 1; i <= 10; i++ {
+			_, err := db.Model(table).Data(g.Map{
+				"id": i,
+			}).Insert()
+			t.AssertNil(err)
+		}
+
+		all, err := db.Model(table).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(all), 10)
+		for i := 0; i < 10; i++ {
+			t.Assert(all[i]["id"].Int(), i+1)
+		}
 	})
 }

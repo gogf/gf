@@ -12,7 +12,7 @@ import (
 	"github.com/gogf/gf/v2/encoding/gjson"
 )
 
-func Example_patternGet() {
+func ExampleDecodeToJson_PatternGet() {
 	data :=
 		`{
         "users" : {
@@ -32,28 +32,7 @@ func Example_patternGet() {
 	// John Score: 99.5
 }
 
-func Example_patternCustomSplitChar() {
-	data :=
-		`{
-        "users" : {
-            "count" : 2,
-            "list"  : [
-                {"name" : "Ming",  "score" : 60},
-                {"name" : "John", "score" : 99.5}
-            ]
-        }
-    }`
-	if j, err := gjson.DecodeToJson(data); err != nil {
-		panic(err)
-	} else {
-		j.SetSplitChar('#')
-		fmt.Println("John Score:", j.Get("users#list#1#score").Float32())
-	}
-	// Output:
-	// John Score: 99.5
-}
-
-func Example_patternViolenceCheck() {
+func ExampleDecodeToJson_PatternViolenceCheck() {
 	data :=
 		`{
         "users" : {
@@ -71,7 +50,7 @@ func Example_patternViolenceCheck() {
 	// Users Count: 101
 }
 
-func Example_mapSliceChange() {
+func ExampleJson_Get_MapSliceChange() {
 	jsonContent := `{"map":{"key":"value"}, "slice":[59,90]}`
 	j, _ := gjson.LoadJson(jsonContent)
 	m := j.Get("map").Map()

@@ -9,6 +9,7 @@ package ghttp
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"mime/multipart"
 	"reflect"
@@ -45,7 +46,7 @@ var (
 //
 // The parameter `pointer` can be type of: *struct/**struct/*[]struct/*[]*struct.
 //
-// It supports single and multiple struct convertion:
+// It supports single and multiple struct converting:
 // 1. Single struct, post content like: {"id":1, "name":"john"} or ?id=1&name=john
 // 2. Multiple struct, post content like: [{"id":1, "name":"john"}, {"id":, "name":"smith"}]
 //
@@ -107,14 +108,18 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 			}
 		}
 		// Validation.
-		if err = gvalid.New().Data(pointer).Assoc(data).Run(r.Context()); err != nil {
+		if err = gvalid.New().
+			Bail().
+			Data(pointer).
+			Assoc(data).
+			Run(r.Context()); err != nil {
 			return err
 		}
 
 	// Multiple struct, it only supports JSON type post content like:
 	// [{"id":1, "name":"john"}, {"id":, "name":"smith"}]
 	case reflect.Array, reflect.Slice:
-		// If struct slice conversion, it might post JSON/XML content,
+		// If struct slice conversion, it might post JSON/XML/... content,
 		// so it uses `gjson` for the conversion.
 		j, err := gjson.LoadContent(r.GetBody())
 		if err != nil {
@@ -124,9 +129,10 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 			return err
 		}
 		for i := 0; i < reflectVal2.Len(); i++ {
-
 			if err = gvalid.New().
-				Data(reflectVal2.Index(i)).Assoc(j.Get(gconv.String(i)).Map()).
+				Bail().
+				Data(reflectVal2.Index(i)).
+				Assoc(j.Get(gconv.String(i)).Map()).
 				Run(r.Context()); err != nil {
 				return err
 			}
@@ -146,7 +152,14 @@ func (r *Request) Get(key string, def ...interface{}) *gvar.Var {
 // It can be called multiple times retrieving the same body content.
 func (r *Request) GetBody() []byte {
 	if r.bodyContent == nil {
-		r.bodyContent, _ = ioutil.ReadAll(r.Body)
+		var err error
+		if r.bodyContent, err = ioutil.ReadAll(r.Body); err != nil {
+			errMsg := `Read from request Body failed`
+			if gerror.Is(err, io.EOF) {
+				errMsg += `, the Body might be closed or read manually from middleware/hook/other package previously`
+			}
+			panic(gerror.WrapCode(gcode.CodeInternalError, err, errMsg))
+		}
 		r.Body = utils.NewReadCloser(r.bodyContent, true)
 	}
 	return r.bodyContent
@@ -161,7 +174,10 @@ func (r *Request) GetBodyString() string {
 // GetJson parses current request content as JSON format, and returns the JSON object.
 // Note that the request content is read from request BODY, not from any field of FORM.
 func (r *Request) GetJson() (*gjson.Json, error) {
-	return gjson.LoadJson(r.GetBody())
+	return gjson.LoadWithOptions(r.GetBody(), gjson.Options{
+		Type:      gjson.ContentTypeJson,
+		StrNumber: true,
+	})
 }
 
 // GetMap is an alias and convenient function for GetRequestMap.
@@ -192,7 +208,7 @@ func (r *Request) parseQuery() {
 		var err error
 		r.queryMap, err = gstr.Parse(r.URL.RawQuery)
 		if err != nil {
-			panic(gerror.WrapCode(gcode.CodeInvalidParameter, err, ""))
+			panic(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse Query failed"))
 		}
 	}
 }
@@ -311,7 +327,7 @@ func (r *Request) parseForm() {
 	}
 }
 
-// GetMultipartForm parses and returns the form as multipart form.
+// GetMultipartForm parses and returns the form as multipart forms.
 func (r *Request) GetMultipartForm() *multipart.Form {
 	r.parseForm()
 	return r.MultipartForm

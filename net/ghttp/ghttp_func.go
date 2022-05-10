@@ -15,7 +15,7 @@ import (
 // BuildParams builds the request string for the http client. The `params` can be type of:
 // string/[]byte/map/struct/*struct.
 //
-// The optional parameter `noUrlEncode` specifies whether ignore the url encoding for the data.
+// The optional parameter `noUrlEncode` specifies whether to ignore the url encoding for the data.
 func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr string) {
 	return httputil.BuildParams(params, noUrlEncode...)
 }
@@ -32,20 +32,24 @@ func niceCallFunc(f func()) {
 				if v, ok := exception.(error); ok && gerror.HasStack(v) {
 					// It's already an error that has stack info.
 					panic(v)
-				} else {
-					// Create a new error with stack info.
-					// Note that there's a skip pointing the start stacktrace
-					// of the real error point.
-					if v, ok := exception.(error); ok {
-						if gerror.Code(v) != gcode.CodeNil {
-							panic(v)
-						} else {
-							panic(gerror.WrapCodeSkip(gcode.CodeInternalError, 1, v, ""))
-						}
-					} else {
-						panic(gerror.NewCodeSkipf(gcode.CodeInternalError, 1, "%+v", exception))
-					}
 				}
+				// Create a new error with stack info.
+				// Note that there's a skip pointing the start stacktrace
+				// of the real error point.
+				if v, ok := exception.(error); ok {
+					if gerror.Code(v) != gcode.CodeNil {
+						panic(v)
+					} else {
+						panic(gerror.WrapCodeSkip(
+							gcode.CodeInternalError, 1, v, "exception recovered",
+						))
+					}
+				} else {
+					panic(gerror.NewCodeSkipf(
+						gcode.CodeInternalError, 1, "exception recovered: %+v", exception,
+					))
+				}
+
 			}
 		}
 	}()

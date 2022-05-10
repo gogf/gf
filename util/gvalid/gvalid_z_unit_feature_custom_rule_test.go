@@ -11,8 +11,10 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 	"github.com/gogf/gf/v2/util/gvalid"
 )
 
@@ -37,7 +39,7 @@ func Test_CustomRule1(t *testing.T) {
 		err := g.Validator().Data("123456").Rules(rule).Messages("custom message").Run(ctx)
 		t.Assert(err.String(), "custom message")
 		err = g.Validator().Data("123456").Assoc(g.Map{"data": "123456"}).Rules(rule).Messages("custom message").Run(ctx)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 	// Error with struct validation.
 	gtest.C(t, func(t *gtest.T) {
@@ -63,7 +65,7 @@ func Test_CustomRule1(t *testing.T) {
 			Data:  "123456",
 		}
 		err := g.Validator().Data(st).Run(ctx)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 }
 
@@ -106,7 +108,7 @@ func Test_CustomRule2(t *testing.T) {
 			Data:  "123456",
 		}
 		err := g.Validator().Data(st).Run(ctx)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 }
 
@@ -137,7 +139,7 @@ func Test_CustomRule_AllowEmpty(t *testing.T) {
 			Data:  "123456",
 		}
 		err := g.Validator().Data(st).Run(ctx)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 	// No error with struct validation.
 	gtest.C(t, func(t *gtest.T) {
@@ -270,4 +272,19 @@ func TestValidator_RuleFuncMap(t *testing.T) {
 			}).Data(st).Run(ctx)
 		t.AssertNil(err)
 	})
+}
+
+func Test_CustomRule_Overwrite(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var rule = "custom-" + guid.S()
+		gvalid.RegisterRule(rule, func(ctx context.Context, in gvalid.RuleFuncInput) error {
+			return gerror.New("1")
+		})
+		t.Assert(g.Validator().Rules(rule).Data(1).Run(ctx), "1")
+		gvalid.RegisterRule(rule, func(ctx context.Context, in gvalid.RuleFuncInput) error {
+			return gerror.New("2")
+		})
+		t.Assert(g.Validator().Rules(rule).Data(1).Run(ctx), "2")
+	})
+	g.Dump(gvalid.GetRegisteredRuleMap())
 }

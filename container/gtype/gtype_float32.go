@@ -72,7 +72,7 @@ func (v *Float32) String() string {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (v *Float32) MarshalJSON() ([]byte, error) {
+func (v Float32) MarshalJSON() ([]byte, error) {
 	return []byte(strconv.FormatFloat(float64(v.Val()), 'g', -1, 32)), nil
 }
 

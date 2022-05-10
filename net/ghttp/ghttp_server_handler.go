@@ -27,7 +27,7 @@ import (
 // It should not create new goroutine handling the request as
 // it's called by am already created new goroutine from http.Server.
 //
-// This function also make serve implementing the interface of http.Handler.
+// This function also makes serve implementing the interface of http.Handler.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Max body size limit.
 	if s.config.ClientMaxBodySize > 0 {
@@ -68,19 +68,19 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// Close the session, which automatically update the TTL
 		// of the session if it exists.
 		if err := request.Session.Close(); err != nil {
-			intlog.Error(request.Context(), err)
+			intlog.Errorf(request.Context(), `%+v`, err)
 		}
 
 		// Close the request and response body
 		// to release the file descriptor in time.
 		err := request.Request.Body.Close()
 		if err != nil {
-			intlog.Error(request.Context(), err)
+			intlog.Errorf(request.Context(), `%+v`, err)
 		}
 		if request.Request.Response != nil {
 			err = request.Request.Response.Body.Close()
 			if err != nil {
-				intlog.Error(request.Context(), err)
+				intlog.Errorf(request.Context(), `%+v`, err)
 			}
 		}
 	}()
@@ -174,9 +174,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		request.Session.MustId() != request.GetSessionId() {
 		request.Cookie.SetSessionId(request.Session.MustId())
 	}
-	// Output the cookie content to client.
+	// Output the cookie content to the client.
 	request.Cookie.Flush()
-	// Output the buffer content to client.
+	// Output the buffer content to the client.
 	request.Response.Flush()
 	// HOOK - AfterOutput
 	if !request.IsExited() {
@@ -248,8 +248,8 @@ func (s *Server) searchStaticFile(uri string) *staticFile {
 	return nil
 }
 
-// serveFile serves the static file for client.
-// The optional parameter `allowIndex` specifies if allowing directory listing if `f` is directory.
+// serveFile serves the static file for the client.
+// The optional parameter `allowIndex` specifies if allowing directory listing if `f` is a directory.
 func (s *Server) serveFile(r *Request, f *staticFile, allowIndex ...bool) {
 	// Use resource file from memory.
 	if f.File != nil {
@@ -291,7 +291,7 @@ func (s *Server) serveFile(r *Request, f *staticFile, allowIndex ...bool) {
 	}
 }
 
-// listDir lists the sub files of specified directory as HTML content to client.
+// listDir lists the sub files of specified directory as HTML content to the client.
 func (s *Server) listDir(r *Request, f http.File) {
 	files, err := f.Readdir(-1)
 	if err != nil {

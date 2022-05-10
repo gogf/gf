@@ -9,6 +9,7 @@ package gvalid
 import (
 	"strings"
 
+	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -32,7 +33,7 @@ type Error interface {
 // validationError is the validation error for validation result.
 type validationError struct {
 	code      gcode.Code                  // Error code.
-	rules     []fieldRule                 // Rules by sequence, which is used for keeping error sequence.
+	rules     []fieldRule                 // Rules by sequence, which is used for keeping error sequence only.
 	errors    map[string]map[string]error // Error map:map[field]map[rule]message
 	firstKey  string                      // The first error rule key(empty in default).
 	firstItem map[string]error            // The first error rule value(nil in default).
@@ -51,6 +52,16 @@ func newValidationError(code gcode.Code, rules []fieldRule, fieldRuleErrorMap ma
 			}
 		}
 		fieldRuleErrorMap[field] = ruleErrorMap
+	}
+	// Filter repeated sequence rules.
+	var ruleNameSet = gset.NewStrSet()
+	for i := 0; i < len(rules); {
+		if !ruleNameSet.AddIfNotExist(rules[i].Name) {
+			// Delete repeated rule.
+			rules = append(rules[:i], rules[i+1:]...)
+			continue
+		}
+		i++
 	}
 	return &validationError{
 		code:   code,

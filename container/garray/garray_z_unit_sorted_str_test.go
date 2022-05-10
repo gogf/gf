@@ -583,7 +583,7 @@ func TestSortedStrArray_Json(t *testing.T) {
 
 		var a3 garray.SortedStrArray
 		err := json.UnmarshalUseNumber(b2, &a3)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(a3.Slice(), s1)
 		t.Assert(a3.Interfaces(), s1)
 	})
@@ -604,7 +604,7 @@ func TestSortedStrArray_Json(t *testing.T) {
 
 		var a3 garray.SortedStrArray
 		err := json.UnmarshalUseNumber(b2, &a3)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(a3.Slice(), s1)
 		t.Assert(a3.Interfaces(), s1)
 	})
@@ -619,11 +619,11 @@ func TestSortedStrArray_Json(t *testing.T) {
 			"Scores": []string{"A+", "A", "A"},
 		}
 		b, err := json.Marshal(data)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		user := new(User)
 		err = json.UnmarshalUseNumber(b, user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.Name, data["Name"])
 		t.Assert(user.Scores, []string{"A", "A", "A+"})
 	})
@@ -638,11 +638,11 @@ func TestSortedStrArray_Json(t *testing.T) {
 			"Scores": []string{"A+", "A", "A"},
 		}
 		b, err := json.Marshal(data)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		user := new(User)
 		err = json.UnmarshalUseNumber(b, user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.Name, data["Name"])
 		t.Assert(user.Scores, []string{"A", "A", "A+"})
 	})
@@ -719,7 +719,7 @@ func TestSortedStrArray_UnmarshalValue(t *testing.T) {
 			"name":  "john",
 			"array": []byte(`["1","3","2"]`),
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Array.Slice(), g.SliceStr{"1", "2", "3"})
 	})
@@ -730,7 +730,7 @@ func TestSortedStrArray_UnmarshalValue(t *testing.T) {
 			"name":  "john",
 			"array": g.SliceStr{"1", "3", "2"},
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Array.Slice(), g.SliceStr{"1", "2", "3"})
 	})

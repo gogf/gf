@@ -185,11 +185,11 @@ func Test_TreeMap_Json(t *testing.T) {
 			"k2": "v2",
 		}
 		b, err := json.Marshal(gconv.Map(data))
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		m := gmap.NewTreeMap(gutil.ComparatorString)
 		err = json.UnmarshalUseNumber(b, m)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(m.Get("k1"), data["k1"])
 		t.Assert(m.Get("k2"), data["k2"])
 	})
@@ -199,11 +199,11 @@ func Test_TreeMap_Json(t *testing.T) {
 			"k2": "v2",
 		}
 		b, err := json.Marshal(gconv.Map(data))
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		var m gmap.TreeMap
 		err = json.UnmarshalUseNumber(b, &m)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(m.Get("k1"), data["k1"])
 		t.Assert(m.Get("k2"), data["k2"])
 	})
@@ -221,7 +221,7 @@ func TestTreeMap_UnmarshalValue(t *testing.T) {
 			"name": "john",
 			"map":  []byte(`{"k1":"v1","k2":"v2"}`),
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Map.Size(), 2)
 		t.Assert(v.Map.Get("k1"), "v1")
@@ -237,7 +237,7 @@ func TestTreeMap_UnmarshalValue(t *testing.T) {
 				"k2": "v2",
 			},
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Map.Size(), 2)
 		t.Assert(v.Map.Get("k1"), "v1")

@@ -13,6 +13,7 @@ import (
 
 	"github.com/gogf/gf/v2/container/gqueue"
 	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -51,26 +52,27 @@ func Receive(group ...string) *MsgRequest {
 
 // receiveTcpListening scans local for available port and starts listening.
 func receiveTcpListening() {
-	var listen *net.TCPListener
-	// Scan the available port for listening.
-	for i := defaultTcpPortForProcComm; ; i++ {
-		addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("127.0.0.1:%d", i))
-		if err != nil {
-			continue
-		}
-		listen, err = net.ListenTCP("tcp", addr)
-		if err != nil {
-			continue
-		}
-		// Save the port to the pid file.
-		if err := gfile.PutContents(getCommFilePath(Pid()), gconv.String(i)); err != nil {
-			panic(err)
-		}
-		break
+	var (
+		listen  *net.TCPListener
+		conn    net.Conn
+		port    = gtcp.MustGetFreePort()
+		address = fmt.Sprintf("127.0.0.1:%d", port)
+	)
+	tcpAddress, err := net.ResolveTCPAddr("tcp", address)
+	if err != nil {
+		panic(gerror.Wrap(err, `net.ResolveTCPAddr failed`))
+	}
+	listen, err = net.ListenTCP("tcp", tcpAddress)
+	if err != nil {
+		panic(gerror.Wrapf(err, `net.ListenTCP failed for address "%s"`, address))
+	}
+	// Save the port to the pid file.
+	if err = gfile.PutContents(getCommFilePath(Pid()), gconv.String(port)); err != nil {
+		panic(err)
 	}
 	// Start listening.
 	for {
-		if conn, err := listen.Accept(); err != nil {
+		if conn, err = listen.Accept(); err != nil {
 			glog.Error(context.TODO(), err)
 		} else if conn != nil {
 			go receiveTcpHandler(gtcp.NewConnByNetConn(conn))
@@ -96,9 +98,12 @@ func receiveTcpHandler(conn *gtcp.Conn) {
 			if err = json.UnmarshalUseNumber(buffer, msg); err != nil {
 				continue
 			}
-			if msg.RecvPid != Pid() {
+			if msg.ReceiverPid != Pid() {
 				// Not mine package.
-				response.Message = fmt.Sprintf("receiver pid not match, target: %d, current: %d", msg.RecvPid, Pid())
+				response.Message = fmt.Sprintf(
+					"receiver pid not match, target: %d, current: %d",
+					msg.ReceiverPid, Pid(),
+				)
 			} else if v := commReceiveQueues.Get(msg.Group); v == nil {
 				// Group check.
 				response.Message = fmt.Sprintf("group [%s] does not exist", msg.Group)

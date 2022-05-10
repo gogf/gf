@@ -18,10 +18,10 @@ import (
 	"github.com/gogf/gf/v2/internal/intlog"
 )
 
-// procSignalChan is the channel for listening the signal.
+// procSignalChan is the channel for listening to the signal.
 var procSignalChan = make(chan os.Signal)
 
-// handleProcessSignal handles all signal from system.
+// handleProcessSignal handles all signals from system.
 func handleProcessSignal() {
 	var (
 		ctx = context.TODO()
@@ -55,7 +55,7 @@ func handleProcessSignal() {
 		// Restart the servers.
 		case syscall.SIGUSR1:
 			if err := restartWebServers(ctx, sig.String()); err != nil {
-				intlog.Error(ctx, err)
+				intlog.Errorf(ctx, `%+v`, err)
 			}
 			return
 

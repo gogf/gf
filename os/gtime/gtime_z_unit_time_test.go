@@ -390,3 +390,20 @@ func Test_EndOfYear(t *testing.T) {
 		t.Assert(timeTemp1.Format("Y-m-d H:i:s"), "2020-12-31 23:59:59")
 	})
 }
+
+func Test_OnlyTime(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		obj := gtime.NewFromStr("18:24:06")
+		t.Assert(obj.String(), "18:24:06")
+	})
+}
+
+// https://github.com/gogf/gf/issues/1681
+func Test_Issue1681(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gtime.New("2022-03-08T03:01:14-07:00").Local().Time, gtime.New("2022-03-08T10:01:14Z").Local().Time)
+		t.Assert(gtime.New("2022-03-08T03:01:14-08:00").Local().Time, gtime.New("2022-03-08T11:01:14Z").Local().Time)
+		t.Assert(gtime.New("2022-03-08T03:01:14-09:00").Local().Time, gtime.New("2022-03-08T12:01:14Z").Local().Time)
+		t.Assert(gtime.New("2022-03-08T03:01:14+08:00").Local().Time, gtime.New("2022-03-07T19:01:14Z").Local().Time)
+	})
+}

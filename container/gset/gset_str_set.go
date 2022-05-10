@@ -69,7 +69,7 @@ func (set *StrSet) Add(item ...string) {
 }
 
 // AddIfNotExist checks whether item exists in the set,
-// it adds the item to set and returns true if it does not exists in the set,
+// it adds the item to set and returns true if it does not exist in the set,
 // or else it does nothing and returns false.
 func (set *StrSet) AddIfNotExist(item string) bool {
 	if !set.Contains(item) {
@@ -218,6 +218,9 @@ func (set *StrSet) Join(glue string) string {
 
 // String returns items as a string, which implements like json.Marshal does.
 func (set *StrSet) String() string {
+	if set == nil {
+		return ""
+	}
 	set.mu.RLock()
 	defer set.mu.RUnlock()
 	var (
@@ -454,7 +457,7 @@ func (set *StrSet) Walk(f func(item string) string) *StrSet {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (set *StrSet) MarshalJSON() ([]byte, error) {
+func (set StrSet) MarshalJSON() ([]byte, error) {
 	return json.Marshal(set.Slice())
 }
 
