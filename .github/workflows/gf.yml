@@ -157,7 +157,7 @@ jobs:
       run: |
         for file in `find . -name coverage.txt`; do
             # In case of recursively incremental selffile in root directory.
-            if [ ".coverage.txt" = $file ]; then
+            if [ "./coverage.txt" = $file ]; then
                 continue 1
             fi
             cat $file >> coverage.txt
