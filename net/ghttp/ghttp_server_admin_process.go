@@ -164,7 +164,7 @@ func forkRestartProcess(ctx context.Context, newExeFilePath ...string) error {
 		path = newExeFilePath[0]
 	}
 	if err := os.Unsetenv(adminActionReloadEnvKey); err != nil {
-		intlog.Error(ctx, err)
+		intlog.Errorf(ctx, `%+v`, err)
 	}
 	env := os.Environ()
 	env = append(env, adminActionRestartEnvKey+"=1")
@@ -196,7 +196,7 @@ func bufferToServerFdMap(buffer []byte) map[string]listenerFdMap {
 	sfm := make(map[string]listenerFdMap)
 	if len(buffer) > 0 {
 		j, _ := gjson.LoadContent(buffer)
-		for k, _ := range j.Var().Map() {
+		for k := range j.Var().Map() {
 			m := make(map[string]string)
 			for k, v := range j.Get(k).Map() {
 				m[k] = gconv.String(v)
@@ -215,7 +215,7 @@ func restartWebServers(ctx context.Context, signal string, newExeFilePath ...str
 			// Controlled by signal.
 			forceCloseWebServers(ctx)
 			if err := forkRestartProcess(ctx, newExeFilePath...); err != nil {
-				intlog.Error(ctx, err)
+				intlog.Errorf(ctx, `%+v`, err)
 			}
 		} else {
 			// Controlled by web page.
@@ -223,7 +223,7 @@ func restartWebServers(ctx context.Context, signal string, newExeFilePath ...str
 			gtimer.SetTimeout(ctx, time.Second, func(ctx context.Context) {
 				forceCloseWebServers(ctx)
 				if err := forkRestartProcess(ctx, newExeFilePath...); err != nil {
-					intlog.Error(ctx, err)
+					intlog.Errorf(ctx, `%+v`, err)
 				}
 			})
 		}

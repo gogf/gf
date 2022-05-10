@@ -28,10 +28,7 @@ func Test_Set(t *testing.T) {
 		v.Set(123.456)
 		t.Assert(v.Val(), 123.456)
 	})
-	gtest.C(t, func(t *gtest.T) {
-		v := gvar.Create(123.456)
-		t.Assert(v.Val(), 123.456)
-	})
+
 	gtest.C(t, func(t *gtest.T) {
 		objOne := gvar.New("old", true)
 		objOneOld, _ := objOne.Set("new").(string)
@@ -256,7 +253,7 @@ func Test_UnmarshalJson(t *testing.T) {
 			"name": "john",
 			"var":  "v",
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Var.String(), "v")
 	})
@@ -270,7 +267,7 @@ func Test_UnmarshalJson(t *testing.T) {
 			"name": "john",
 			"var":  "v",
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Var.String(), "v")
 	})
@@ -287,7 +284,7 @@ func Test_UnmarshalValue(t *testing.T) {
 			"name": "john",
 			"var":  "v",
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Var.String(), "v")
 	})
@@ -301,7 +298,7 @@ func Test_UnmarshalValue(t *testing.T) {
 			"name": "john",
 			"var":  "v",
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Var.String(), "v")
 	})

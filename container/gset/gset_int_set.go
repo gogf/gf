@@ -204,6 +204,9 @@ func (set *IntSet) Join(glue string) string {
 
 // String returns items as a string, which implements like json.Marshal does.
 func (set *IntSet) String() string {
+	if set == nil {
+		return ""
+	}
 	return "[" + set.Join(",") + "]"
 }
 
@@ -426,7 +429,7 @@ func (set *IntSet) Walk(f func(item int) int) *IntSet {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (set *IntSet) MarshalJSON() ([]byte, error) {
+func (set IntSet) MarshalJSON() ([]byte, error) {
 	return json.Marshal(set.Slice())
 }
 

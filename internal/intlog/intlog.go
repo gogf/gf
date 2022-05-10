@@ -45,23 +45,35 @@ func SetEnabled(enabled bool) {
 // Print prints `v` with newline using fmt.Println.
 // The parameter `v` can be multiple variables.
 func Print(ctx context.Context, v ...interface{}) {
+	if !isGFDebug {
+		return
+	}
 	doPrint(ctx, fmt.Sprint(v...), false)
 }
 
 // Printf prints `v` with format `format` using fmt.Printf.
 // The parameter `v` can be multiple variables.
 func Printf(ctx context.Context, format string, v ...interface{}) {
+	if !isGFDebug {
+		return
+	}
 	doPrint(ctx, fmt.Sprintf(format, v...), false)
 }
 
 // Error prints `v` with newline using fmt.Println.
 // The parameter `v` can be multiple variables.
 func Error(ctx context.Context, v ...interface{}) {
+	if !isGFDebug {
+		return
+	}
 	doPrint(ctx, fmt.Sprint(v...), true)
 }
 
 // Errorf prints `v` with format `format` using fmt.Printf.
 func Errorf(ctx context.Context, format string, v ...interface{}) {
+	if !isGFDebug {
+		return
+	}
 	doPrint(ctx, fmt.Sprintf(format, v...), true)
 }
 
@@ -96,7 +108,7 @@ func doPrint(ctx context.Context, content string, stack bool) {
 		return
 	}
 	buffer := bytes.NewBuffer(nil)
-	buffer.WriteString(now())
+	buffer.WriteString(time.Now().Format("2006-01-02 15:04:05.000"))
 	buffer.WriteString(" [INTE] ")
 	buffer.WriteString(file())
 	buffer.WriteString(" ")
@@ -121,11 +133,6 @@ func traceIdStr(ctx context.Context) string {
 		return "{" + traceId.String() + "}"
 	}
 	return ""
-}
-
-// now returns current time string.
-func now() string {
-	return time.Now().Format("2006-01-02 15:04:05.000")
 }
 
 // file returns caller file name along with its line number.

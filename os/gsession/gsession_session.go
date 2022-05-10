@@ -22,11 +22,11 @@ import (
 // for functionality implements.
 type Session struct {
 	id      string          // Session id. It retrieves the session if id is custom specified.
-	ctx     context.Context // Context for current session. Please note that, session live along with context.
-	data    *gmap.StrAnyMap // Session data.
+	ctx     context.Context // Context for current session. Please note that, session lives along with context.
+	data    *gmap.StrAnyMap // Current Session data, which is retrieved from Storage.
 	dirty   bool            // Used to mark session is modified.
 	start   bool            // Used to mark session is started.
-	manager *Manager        // Parent manager.
+	manager *Manager        // Parent session Manager.
 
 	// idFunc is a callback function used for creating custom session id.
 	// This is called if session id is empty ever when session starts.
@@ -40,20 +40,13 @@ func (s *Session) init() error {
 		return nil
 	}
 	var err error
+	// Session retrieving.
 	if s.id != "" {
-		// Retrieve memory session data from manager.
-		r, err := s.manager.sessionData.Get(s.ctx, s.id)
-		if err != nil && err != ErrorDisabled {
-			return err
-		}
-		if r != nil {
-			s.data = r.Val().(*gmap.StrAnyMap)
-			intlog.Print(s.ctx, "session init data:", s.data)
-		}
 		// Retrieve stored session data from storage.
 		if s.manager.storage != nil {
-			if s.data, err = s.manager.storage.GetSession(s.ctx, s.id, s.manager.ttl, s.data); err != nil && err != ErrorDisabled {
-				intlog.Errorf(s.ctx, "session restoring failed for id '%s': %v", s.id, err)
+			s.data, err = s.manager.storage.GetSession(s.ctx, s.id, s.manager.GetTTL())
+			if err != nil && err != ErrorDisabled {
+				intlog.Errorf(s.ctx, `session restoring failed for id "%s": %+v`, s.id, err)
 				return err
 			}
 		}
@@ -67,7 +60,7 @@ func (s *Session) init() error {
 			// Use default session id creating function of storage.
 			s.id, err = s.manager.storage.New(s.ctx, s.manager.ttl)
 			if err != nil && err != ErrorDisabled {
-				intlog.Errorf(s.ctx, "create session id failed: %v", err)
+				intlog.Errorf(s.ctx, "create session id failed: %+v", err)
 				return err
 			}
 			// If session storage does not implements id generating functionality,
@@ -89,32 +82,32 @@ func (s *Session) init() error {
 //
 // NOTE that this function must be called ever after a session request done.
 func (s *Session) Close() error {
+	if s.manager.storage == nil {
+		return nil
+	}
 	if s.start && s.id != "" {
 		size := s.data.Size()
-		if s.manager.storage != nil {
-			if s.dirty {
-				if err := s.manager.storage.SetSession(s.ctx, s.id, s.data, s.manager.ttl); err != nil && err != ErrorDisabled {
-					return err
-				}
-			} else if size > 0 {
-				if err := s.manager.storage.UpdateTTL(s.ctx, s.id, s.manager.ttl); err != nil && err != ErrorDisabled {
-					return err
-				}
+		if s.dirty {
+			err := s.manager.storage.SetSession(s.ctx, s.id, s.data, s.manager.ttl)
+			if err != nil && err != ErrorDisabled {
+				return err
 			}
-		}
-		if s.dirty || size > 0 {
-			s.manager.UpdateSessionTTL(s.id, s.data)
+		} else if size > 0 {
+			err := s.manager.storage.UpdateTTL(s.ctx, s.id, s.manager.ttl)
+			if err != nil && err != ErrorDisabled {
+				return err
+			}
 		}
 	}
 	return nil
 }
 
 // Set sets key-value pair to this session.
-func (s *Session) Set(key string, value interface{}) error {
-	if err := s.init(); err != nil {
+func (s *Session) Set(key string, value interface{}) (err error) {
+	if err = s.init(); err != nil {
 		return err
 	}
-	if err := s.manager.storage.Set(s.ctx, s.id, key, value, s.manager.ttl); err != nil {
+	if err = s.manager.storage.Set(s.ctx, s.id, key, value, s.manager.ttl); err != nil {
 		if err == ErrorDisabled {
 			s.data.Set(key, value)
 		} else {
@@ -126,11 +119,11 @@ func (s *Session) Set(key string, value interface{}) error {
 }
 
 // SetMap batch sets the session using map.
-func (s *Session) SetMap(data map[string]interface{}) error {
-	if err := s.init(); err != nil {
+func (s *Session) SetMap(data map[string]interface{}) (err error) {
+	if err = s.init(); err != nil {
 		return err
 	}
-	if err := s.manager.storage.SetMap(s.ctx, s.id, data, s.manager.ttl); err != nil {
+	if err = s.manager.storage.SetMap(s.ctx, s.id, data, s.manager.ttl); err != nil {
 		if err == ErrorDisabled {
 			s.data.Sets(data)
 		} else {
@@ -142,15 +135,15 @@ func (s *Session) SetMap(data map[string]interface{}) error {
 }
 
 // Remove removes key along with its value from this session.
-func (s *Session) Remove(keys ...string) error {
+func (s *Session) Remove(keys ...string) (err error) {
 	if s.id == "" {
 		return nil
 	}
-	if err := s.init(); err != nil {
+	if err = s.init(); err != nil {
 		return err
 	}
 	for _, key := range keys {
-		if err := s.manager.storage.Remove(s.ctx, s.id, key); err != nil {
+		if err = s.manager.storage.Remove(s.ctx, s.id, key); err != nil {
 			if err == ErrorDisabled {
 				s.data.Remove(key)
 			} else {
@@ -163,19 +156,21 @@ func (s *Session) Remove(keys ...string) error {
 }
 
 // RemoveAll deletes all key-value pairs from this session.
-func (s *Session) RemoveAll() error {
+func (s *Session) RemoveAll() (err error) {
 	if s.id == "" {
 		return nil
 	}
-	if err := s.init(); err != nil {
+	if err = s.init(); err != nil {
 		return err
 	}
-	if err := s.manager.storage.RemoveAll(s.ctx, s.id); err != nil {
-		if err == ErrorDisabled {
-			s.data.Clear()
-		} else {
+	if err = s.manager.storage.RemoveAll(s.ctx, s.id); err != nil {
+		if err != ErrorDisabled {
 			return err
 		}
+	}
+	// Remove data from memory.
+	if s.data != nil {
+		s.data.Clear()
 	}
 	s.dirty = true
 	return nil
@@ -183,8 +178,8 @@ func (s *Session) RemoveAll() error {
 
 // Id returns the session id for this session.
 // It creates and returns a new session id if the session id is not passed in initialization.
-func (s *Session) Id() (string, error) {
-	if err := s.init(); err != nil {
+func (s *Session) Id() (id string, err error) {
+	if err = s.init(); err != nil {
 		return "", err
 	}
 	return s.id, nil
@@ -212,47 +207,47 @@ func (s *Session) SetIdFunc(f func(ttl time.Duration) string) error {
 
 // Data returns all data as map.
 // Note that it's using value copy internally for concurrent-safe purpose.
-func (s *Session) Data() (map[string]interface{}, error) {
+func (s *Session) Data() (sessionData map[string]interface{}, err error) {
 	if s.id == "" {
 		return map[string]interface{}{}, nil
 	}
-	if err := s.init(); err != nil {
+	if err = s.init(); err != nil {
 		return nil, err
 	}
-	data, err := s.manager.storage.Data(s.ctx, s.id)
+	sessionData, err = s.manager.storage.Data(s.ctx, s.id)
 	if err != nil && err != ErrorDisabled {
-		intlog.Error(s.ctx, err)
+		intlog.Errorf(s.ctx, `%+v`, err)
 	}
-	if data != nil {
-		return data, nil
+	if sessionData != nil {
+		return sessionData, nil
 	}
 	return s.data.Map(), nil
 }
 
 // Size returns the size of the session.
-func (s *Session) Size() (int, error) {
+func (s *Session) Size() (size int, err error) {
 	if s.id == "" {
 		return 0, nil
 	}
-	if err := s.init(); err != nil {
+	if err = s.init(); err != nil {
 		return 0, err
 	}
-	size, err := s.manager.storage.GetSize(s.ctx, s.id)
+	size, err = s.manager.storage.GetSize(s.ctx, s.id)
 	if err != nil && err != ErrorDisabled {
-		intlog.Error(s.ctx, err)
+		intlog.Errorf(s.ctx, `%+v`, err)
 	}
-	if size >= 0 {
+	if size > 0 {
 		return size, nil
 	}
 	return s.data.Size(), nil
 }
 
 // Contains checks whether key exist in the session.
-func (s *Session) Contains(key string) (bool, error) {
+func (s *Session) Contains(key string) (ok bool, err error) {
 	if s.id == "" {
 		return false, nil
 	}
-	if err := s.init(); err != nil {
+	if err = s.init(); err != nil {
 		return false, err
 	}
 	v, err := s.Get(key)
@@ -270,22 +265,22 @@ func (s *Session) IsDirty() bool {
 // Get retrieves session value with given key.
 // It returns `def` if the key does not exist in the session if `def` is given,
 // or else it returns nil.
-func (s *Session) Get(key string, def ...interface{}) (*gvar.Var, error) {
+func (s *Session) Get(key string, def ...interface{}) (value *gvar.Var, err error) {
 	if s.id == "" {
 		return nil, nil
 	}
-	if err := s.init(); err != nil {
+	if err = s.init(); err != nil {
 		return nil, err
 	}
 	v, err := s.manager.storage.Get(s.ctx, s.id, key)
 	if err != nil && err != ErrorDisabled {
-		intlog.Error(s.ctx, err)
+		intlog.Errorf(s.ctx, `%+v`, err)
 		return nil, err
 	}
 	if v != nil {
 		return gvar.New(v), nil
 	}
-	if v := s.data.Get(key); v != nil {
+	if v = s.data.Get(key); v != nil {
 		return gvar.New(v), nil
 	}
 	if len(def) > 0 {

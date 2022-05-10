@@ -34,6 +34,15 @@ func GetIpArray() (ips []string, err error) {
 	return ips, nil
 }
 
+// MustGetIntranetIp performs as GetIntranetIp, but it panics if any error occurs.
+func MustGetIntranetIp() string {
+	ip, err := GetIntranetIp()
+	if err != nil {
+		panic(err)
+	}
+	return ip
+}
+
 // GetIntranetIp retrieves and returns the first intranet ip of current machine.
 func GetIntranetIp() (ip string, err error) {
 	ips, err := GetIntranetIpArray()
@@ -63,7 +72,7 @@ func GetIntranetIpArray() (ips []string, err error) {
 			continue
 		}
 		if interFace.Flags&net.FlagLoopback != 0 {
-			// loopback interface
+			// loop back interface
 			continue
 		}
 		// ignore warden bridge

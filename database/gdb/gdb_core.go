@@ -18,6 +18,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -44,7 +45,6 @@ func (c *Core) Ctx(ctx context.Context) DB {
 		configNode = c.db.GetConfig()
 	)
 	*newCore = *c
-	newCore.ctx = ctx
 	// It creates a new DB object, which is commonly a wrapper for object `Core`.
 	newCore.db, err = driverMap[configNode.Type].New(newCore, configNode)
 	if err != nil {
@@ -52,22 +52,25 @@ func (c *Core) Ctx(ctx context.Context) DB {
 		// Do not let it continue.
 		panic(err)
 	}
+	newCore.ctx = WithDB(ctx, newCore.db)
+	newCore.ctx = c.InjectInternalCtxData(newCore.ctx)
 	return newCore.db
 }
 
 // GetCtx returns the context for current DB.
 // It returns `context.Background()` is there's no context previously set.
 func (c *Core) GetCtx() context.Context {
-	if c.ctx != nil {
-		return c.ctx
+	ctx := c.ctx
+	if ctx == nil {
+		ctx = context.TODO()
 	}
-	return context.TODO()
+	return c.InjectInternalCtxData(ctx)
 }
 
 // GetCtxTimeout returns the context and cancel function for specified timeout type.
-func (c *Core) GetCtxTimeout(timeoutType int, ctx context.Context) (context.Context, context.CancelFunc) {
+func (c *Core) GetCtxTimeout(ctx context.Context, timeoutType int) (context.Context, context.CancelFunc) {
 	if ctx == nil {
-		ctx = c.GetCtx()
+		ctx = c.db.GetCtx()
 	} else {
 		ctx = context.WithValue(ctx, "WrappedByGetCtxTimeout", nil)
 	}
@@ -97,6 +100,9 @@ func (c *Core) GetCtxTimeout(timeoutType int, ctx context.Context) (context.Cont
 // It is rare to Close a DB, as the DB handle is meant to be
 // long-lived and shared between many goroutines.
 func (c *Core) Close(ctx context.Context) (err error) {
+	if err = c.cache.Close(ctx); err != nil {
+		return err
+	}
 	c.links.LockFunc(func(m map[string]interface{}) {
 		for k, v := range m {
 			if db, ok := v.(*sql.DB); ok {
@@ -122,7 +128,7 @@ func (c *Core) Master(schema ...string) (*sql.DB, error) {
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	} else {
-		useSchema = c.schema.Val()
+		useSchema = c.schema
 	}
 	return c.getSqlDb(true, useSchema)
 }
@@ -134,18 +140,18 @@ func (c *Core) Slave(schema ...string) (*sql.DB, error) {
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	} else {
-		useSchema = c.schema.Val()
+		useSchema = c.schema
 	}
 	return c.getSqlDb(false, useSchema)
 }
 
 // GetAll queries and returns data records from database.
 func (c *Core) GetAll(ctx context.Context, sql string, args ...interface{}) (Result, error) {
-	return c.db.DoGetAll(ctx, nil, sql, args...)
+	return c.db.DoSelect(ctx, nil, sql, args...)
 }
 
-// DoGetAll queries and returns data records from database.
-func (c *Core) DoGetAll(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error) {
+// DoSelect queries and returns data records from database.
+func (c *Core) DoSelect(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error) {
 	return c.db.DoQuery(ctx, link, sql, args...)
 }
 
@@ -164,7 +170,7 @@ func (c *Core) GetOne(ctx context.Context, sql string, args ...interface{}) (Rec
 // GetArray queries and returns data values as slice from database.
 // Note that if there are multiple columns in the result, it returns just one column values randomly.
 func (c *Core) GetArray(ctx context.Context, sql string, args ...interface{}) ([]Value, error) {
-	all, err := c.db.DoGetAll(ctx, nil, sql, args...)
+	all, err := c.db.DoSelect(ctx, nil, sql, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +204,7 @@ func (c *Core) GetStructs(ctx context.Context, pointer interface{}, sql string, 
 // the conversion. If parameter `pointer` is type of slice, it calls GetStructs internally
 // for conversion.
 func (c *Core) GetScan(ctx context.Context, pointer interface{}, sql string, args ...interface{}) error {
-	reflectInfo := utils.OriginTypeAndKind(pointer)
+	reflectInfo := reflection.OriginTypeAndKind(pointer)
 	if reflectInfo.InputKind != reflect.Ptr {
 		return gerror.NewCodef(
 			gcode.CodeInvalidParameter,
@@ -236,7 +242,7 @@ func (c *Core) GetValue(ctx context.Context, sql string, args ...interface{}) (V
 
 // GetCount queries and returns the count from database.
 func (c *Core) GetCount(ctx context.Context, sql string, args ...interface{}) (int, error) {
-	// If the query fields do not contains function "COUNT",
+	// If the query fields do not contain function "COUNT",
 	// it replaces the sql string and adds the "COUNT" function to the fields.
 	if !gregex.IsMatchString(`(?i)SELECT\s+COUNT\(.+\)\s+FROM`, sql) {
 		sql, _ = gregex.ReplaceString(`(?i)(SELECT)\s+(.+)\s+(FROM)`, `$1 COUNT($2) $3`, sql)
@@ -250,15 +256,17 @@ func (c *Core) GetCount(ctx context.Context, sql string, args ...interface{}) (i
 
 // Union does "(SELECT xxx FROM xxx) UNION (SELECT xxx FROM xxx) ..." statement.
 func (c *Core) Union(unions ...*Model) *Model {
-	return c.doUnion(unionTypeNormal, unions...)
+	var ctx = c.db.GetCtx()
+	return c.doUnion(ctx, unionTypeNormal, unions...)
 }
 
 // UnionAll does "(SELECT xxx FROM xxx) UNION ALL (SELECT xxx FROM xxx) ..." statement.
 func (c *Core) UnionAll(unions ...*Model) *Model {
-	return c.doUnion(unionTypeAll, unions...)
+	var ctx = c.db.GetCtx()
+	return c.doUnion(ctx, unionTypeAll, unions...)
 }
 
-func (c *Core) doUnion(unionType int, unions ...*Model) *Model {
+func (c *Core) doUnion(ctx context.Context, unionType int, unions ...*Model) *Model {
 	var (
 		unionTypeStr   string
 		composedSqlStr string
@@ -270,7 +278,7 @@ func (c *Core) doUnion(unionType int, unions ...*Model) *Model {
 		unionTypeStr = "UNION"
 	}
 	for _, v := range unions {
-		sqlWithHolder, holderArgs := v.getFormattedSqlAndArgs(queryTypeNormal, false)
+		sqlWithHolder, holderArgs := v.getFormattedSqlAndArgs(ctx, queryTypeNormal, false)
 		if composedSqlStr == "" {
 			composedSqlStr += fmt.Sprintf(`(%s)`, sqlWithHolder)
 		} else {
@@ -283,10 +291,11 @@ func (c *Core) doUnion(unionType int, unions ...*Model) *Model {
 
 // PingMaster pings the master node to check authentication or keeps the connection alive.
 func (c *Core) PingMaster() error {
+	var ctx = c.db.GetCtx()
 	if master, err := c.db.Master(); err != nil {
 		return err
 	} else {
-		if err = master.Ping(); err != nil {
+		if err = master.PingContext(ctx); err != nil {
 			err = gerror.WrapCode(gcode.CodeDbOperationError, err, `master.Ping failed`)
 		}
 		return err
@@ -295,10 +304,11 @@ func (c *Core) PingMaster() error {
 
 // PingSlave pings the slave node to check authentication or keeps the connection alive.
 func (c *Core) PingSlave() error {
+	var ctx = c.db.GetCtx()
 	if slave, err := c.db.Slave(); err != nil {
 		return err
 	} else {
-		if err = slave.Ping(); err != nil {
+		if err = slave.PingContext(ctx); err != nil {
 			err = gerror.WrapCode(gcode.CodeDbOperationError, err, `slave.Ping failed`)
 		}
 		return err
@@ -412,7 +422,7 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 		keysStr      = charL + strings.Join(keys, charR+","+charL) + charR
 		operation    = GetInsertOperationByOption(option.InsertOption)
 	)
-	if option.InsertOption == insertOptionSave {
+	if option.InsertOption == InsertOptionSave {
 		onDuplicateStr = c.formatOnDuplicate(keys, option)
 	}
 	var (
@@ -451,8 +461,8 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 				err = gerror.WrapCode(gcode.CodeDbOperationError, err, `sql.Result.RowsAffected failed`)
 				return stdSqlResult, err
 			} else {
-				batchResult.result = stdSqlResult
-				batchResult.affected += affectedRows
+				batchResult.Result = stdSqlResult
+				batchResult.Affected += affectedRows
 			}
 			params = params[:0]
 			valueHolder = valueHolder[:0]
@@ -630,7 +640,7 @@ func (c *Core) DoDelete(ctx context.Context, link Link, table string, condition 
 //
 // Note that this interface implements mainly for workaround for a json infinite loop bug
 // of Golang version < v1.14.
-func (c *Core) MarshalJSON() ([]byte, error) {
+func (c Core) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf(`%+v`, c)), nil
 }
 
@@ -657,21 +667,22 @@ func (c *Core) writeSqlToLogger(ctx context.Context, sql *Sql) {
 
 // HasTable determine whether the table name exists in the database.
 func (c *Core) HasTable(name string) (bool, error) {
-	result, err := c.GetCache().GetOrSetFuncLock(
-		c.GetCtx(),
-		fmt.Sprintf(`HasTable: %s`, name),
-		func(ctx context.Context) (interface{}, error) {
-			tableList, err := c.db.Tables(ctx)
-			if err != nil {
-				return false, err
+	var (
+		ctx      = c.db.GetCtx()
+		cacheKey = fmt.Sprintf(`HasTable: %s`, name)
+	)
+	result, err := c.GetCache().GetOrSetFuncLock(ctx, cacheKey, func(ctx context.Context) (interface{}, error) {
+		tableList, err := c.db.Tables(ctx)
+		if err != nil {
+			return false, err
+		}
+		for _, table := range tableList {
+			if table == name {
+				return true, nil
 			}
-			for _, table := range tableList {
-				if table == name {
-					return true, nil
-				}
-			}
-			return false, nil
-		}, 0,
+		}
+		return false, nil
+	}, 0,
 	)
 	if err != nil {
 		return false, err

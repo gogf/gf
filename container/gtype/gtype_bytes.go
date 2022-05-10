@@ -57,7 +57,7 @@ func (v *Bytes) String() string {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (v *Bytes) MarshalJSON() ([]byte, error) {
+func (v Bytes) MarshalJSON() ([]byte, error) {
 	val := v.Val()
 	dst := make([]byte, base64.StdEncoding.EncodedLen(len(val)))
 	base64.StdEncoding.Encode(dst, val)

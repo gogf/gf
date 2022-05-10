@@ -12,8 +12,10 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gmeta"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
@@ -22,6 +24,8 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 		errorMaps           = make(map[string]map[string]error) // Returning error.
 		fieldToAliasNameMap = make(map[string]string)           // Field names to alias name map.
 		resultSequenceRules = make([]fieldRule, 0)
+		isEmptyData         = empty.IsEmpty(v.data)
+		isEmptyAssoc        = empty.IsEmpty(v.assoc)
 	)
 	fieldMap, err := gstructs.FieldMap(gstructs.FieldMapInput{
 		Pointer:          object,
@@ -38,7 +42,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 		return newValidationErrorByStr(internalObjectErrRuleName, err)
 	}
 	// If there's no struct tag and validation rules, it does nothing and returns quickly.
-	if len(tagFields) == 0 && v.messages == nil {
+	if len(tagFields) == 0 && v.messages == nil && isEmptyData && isEmptyAssoc {
 		return nil
 	}
 
@@ -57,7 +61,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 	// Sequence has order for error results.
 	case []string:
 		for _, tag := range assertValue {
-			name, rule, msg := parseSequenceTag(tag)
+			name, rule, msg := ParseTagValue(tag)
 			if len(name) == 0 {
 				continue
 			}
@@ -101,17 +105,17 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 		}
 	}
 	// If there's no struct tag and validation rules, it does nothing and returns quickly.
-	if len(tagFields) == 0 && len(checkRules) == 0 {
+	if len(tagFields) == 0 && len(checkRules) == 0 && isEmptyData && isEmptyAssoc {
 		return nil
 	}
 	// Input parameter map handling.
-	if v.assoc == nil || !v.useDataInsteadOfObjectAttributes {
+	if v.assoc == nil || !v.useAssocInsteadOfObjectAttributes {
 		inputParamMap = make(map[string]interface{})
 	} else {
 		inputParamMap = gconv.Map(v.assoc)
 	}
 	// Checks and extends the parameters map with struct alias tag.
-	if !v.useDataInsteadOfObjectAttributes {
+	if !v.useAssocInsteadOfObjectAttributes {
 		for nameOrTag, field := range fieldMap {
 			inputParamMap[nameOrTag] = field.Value.Interface()
 			if nameOrTag != field.Name() {
@@ -124,8 +128,9 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 	// The custom rules has the most high priority that can overwrite the struct tag rules.
 	for _, field := range tagFields {
 		var (
-			fieldName       = field.Name()                     // Attribute name.
-			name, rule, msg = parseSequenceTag(field.TagValue) // The `name` is different from `attribute alias`, which is used for validation only.
+			isMeta          bool
+			fieldName       = field.Name()                  // Attribute name.
+			name, rule, msg = ParseTagValue(field.TagValue) // The `name` is different from `attribute alias`, which is used for validation only.
 		)
 		if len(name) == 0 {
 			if value, ok := fieldToAliasNameMap[fieldName]; ok {
@@ -142,7 +147,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 		// It here extends the params map using alias names.
 		// Note that the variable `name` might be alias name or attribute name.
 		if _, ok := inputParamMap[name]; !ok {
-			if !v.useDataInsteadOfObjectAttributes {
+			if !v.useAssocInsteadOfObjectAttributes {
 				inputParamMap[name] = field.Value.Interface()
 			} else {
 				if name != fieldName {
@@ -168,9 +173,14 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 				}
 			} else {
 				nameToRuleMap[name] = rule
+				if fieldValue := field.Value.Interface(); fieldValue != nil {
+					_, isMeta = fieldValue.(gmeta.Meta)
+				}
 				checkRules = append(checkRules, fieldRule{
-					Name: name,
-					Rule: rule,
+					Name:      name,
+					Rule:      rule,
+					IsMeta:    isMeta,
+					FieldKind: field.OriginalKind(),
 				})
 			}
 		} else {
@@ -215,11 +225,9 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 	}
 
 	// Temporary variable for value.
-	var (
-		value interface{}
-	)
+	var value interface{}
 
-	// It checks the struct recursively if its attribute is an embedded struct.
+	// It checks the struct recursively if its attribute is a struct/struct slice.
 	for _, field := range fieldMap {
 		// No validation interface implements check.
 		if _, ok := field.Value.Interface().(iNoValidation); ok {
@@ -263,10 +271,25 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 
 	// The following logic is the same as some of CheckMap but with sequence support.
 	for _, checkRuleItem := range checkRules {
-		_, value = gutil.MapPossibleItemByKey(inputParamMap, checkRuleItem.Name)
-		if value == nil {
-			if aliasName := fieldToAliasNameMap[checkRuleItem.Name]; aliasName != "" {
-				_, value = gutil.MapPossibleItemByKey(inputParamMap, aliasName)
+		if !checkRuleItem.IsMeta {
+			_, value = gutil.MapPossibleItemByKey(inputParamMap, checkRuleItem.Name)
+			if value == nil {
+				if aliasName := fieldToAliasNameMap[checkRuleItem.Name]; aliasName != "" {
+					_, value = gutil.MapPossibleItemByKey(inputParamMap, aliasName)
+				}
+			}
+		}
+		// Empty json string checks according to mapping field kind.
+		if value != nil {
+			switch checkRuleItem.FieldKind {
+			case reflect.Struct, reflect.Map:
+				if gconv.String(value) == emptyJsonObjectStr {
+					value = ""
+				}
+			case reflect.Slice, reflect.Array:
+				if gconv.String(value) == emptyJsonArrayStr {
+					value = ""
+				}
 			}
 		}
 		// It checks each rule and its value in loop.
@@ -284,12 +307,17 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 			// If value is nil or empty string and has no required* rules,
 			// it clears the error message.
 			// ============================================================
-			if value == nil || gconv.String(value) == "" {
+			if !checkRuleItem.IsMeta && (value == nil || gconv.String(value) == "") {
 				required := false
 				// rule => error
 				for ruleKey := range errorItem {
 					// Default required rules.
 					if _, ok := mustCheckRulesEvenValueEmpty[ruleKey]; ok {
+						required = true
+						break
+					}
+					// All custom validation rules are required rules.
+					if _, ok := customRuleFuncMap[ruleKey]; ok {
 						required = true
 						break
 					}

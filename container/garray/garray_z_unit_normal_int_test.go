@@ -619,7 +619,7 @@ func TestIntArray_Json(t *testing.T) {
 
 		var a3 garray.IntArray
 		err := json.UnmarshalUseNumber(b2, &a3)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(a3.Slice(), s1)
 	})
 	// array value
@@ -637,7 +637,7 @@ func TestIntArray_Json(t *testing.T) {
 
 		var a3 garray.IntArray
 		err := json.UnmarshalUseNumber(b2, &a3)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(a3.Slice(), s1)
 	})
 	// array pointer
@@ -651,11 +651,11 @@ func TestIntArray_Json(t *testing.T) {
 			"Scores": []int{99, 100, 98},
 		}
 		b, err := json.Marshal(data)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		user := new(User)
 		err = json.UnmarshalUseNumber(b, user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.Name, data["Name"])
 		t.Assert(user.Scores, data["Scores"])
 	})
@@ -670,11 +670,11 @@ func TestIntArray_Json(t *testing.T) {
 			"Scores": []int{99, 100, 98},
 		}
 		b, err := json.Marshal(data)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		user := new(User)
 		err = json.UnmarshalUseNumber(b, user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.Name, data["Name"])
 		t.Assert(user.Scores, data["Scores"])
 	})
@@ -752,7 +752,7 @@ func TestIntArray_UnmarshalValue(t *testing.T) {
 			"name":  "john",
 			"array": []byte(`[1,2,3]`),
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Array.Slice(), g.Slice{1, 2, 3})
 	})
@@ -763,7 +763,7 @@ func TestIntArray_UnmarshalValue(t *testing.T) {
 	//		"name":  "john",
 	//		"array": g.Slice{1, 2, 3},
 	//	}, &v)
-	//	t.Assert(err, nil)
+	//	t.AssertNil(err)
 	//	t.Assert(v.Name, "john")
 	//	t.Assert(v.Array.Slice(), g.Slice{1, 2, 3})
 	// })

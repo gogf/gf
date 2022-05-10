@@ -9,7 +9,8 @@ package gconv
 import (
 	"reflect"
 
-	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/internal/reflection"
 )
 
 // SliceStr is alias of Strings.
@@ -57,9 +58,13 @@ func Strings(any interface{}) []string {
 			array[k] = String(v)
 		}
 	case []uint8:
-		array = make([]string, len(value))
-		for k, v := range value {
-			array[k] = String(v)
+		if json.Valid(value) {
+			_ = json.UnmarshalUseNumber(value, &array)
+		} else {
+			array = make([]string, len(value))
+			for k, v := range value {
+				array[k] = String(v)
+			}
 		}
 	case []uint16:
 		array = make([]string, len(value))
@@ -118,7 +123,7 @@ func Strings(any interface{}) []string {
 		return array
 	}
 	// Not a common type, it then uses reflection for conversion.
-	originValueAndKind := utils.OriginValueAndKind(any)
+	originValueAndKind := reflection.OriginValueAndKind(any)
 	switch originValueAndKind.OriginKind {
 	case reflect.Slice, reflect.Array:
 		var (

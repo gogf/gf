@@ -24,7 +24,7 @@ func BinVersion() string {
 	if binaryVersion == "" {
 		binaryContent, _ := ioutil.ReadFile(selfPath)
 		binaryVersion = strconv.FormatInt(
-			int64(ghash.BKDRHash(binaryContent)),
+			int64(ghash.BKDR(binaryContent)),
 			36,
 		)
 	}

@@ -29,7 +29,7 @@ func Test_GEnv_Map(t *testing.T) {
 		value := gconv.String(gtime.TimestampNano())
 		key := "TEST_ENV_" + value
 		err := os.Setenv(key, "TEST")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(genv.Map()[key], "TEST")
 	})
 }
@@ -39,7 +39,7 @@ func Test_GEnv_Get(t *testing.T) {
 		value := gconv.String(gtime.TimestampNano())
 		key := "TEST_ENV_" + value
 		err := os.Setenv(key, "TEST")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.AssertEQ(genv.Get(key).String(), "TEST")
 	})
 }
@@ -49,7 +49,7 @@ func Test_GEnv_GetVar(t *testing.T) {
 		value := gconv.String(gtime.TimestampNano())
 		key := "TEST_ENV_" + value
 		err := os.Setenv(key, "TEST")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.AssertEQ(genv.Get(key).String(), "TEST")
 	})
 }
@@ -59,7 +59,7 @@ func Test_GEnv_Contains(t *testing.T) {
 		value := gconv.String(gtime.TimestampNano())
 		key := "TEST_ENV_" + value
 		err := os.Setenv(key, "TEST")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.AssertEQ(genv.Contains(key), true)
 		t.AssertEQ(genv.Contains("none"), false)
 	})
@@ -70,7 +70,7 @@ func Test_GEnv_Set(t *testing.T) {
 		value := gconv.String(gtime.TimestampNano())
 		key := "TEST_ENV_" + value
 		err := genv.Set(key, "TEST")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.AssertEQ(os.Getenv(key), "TEST")
 	})
 }
@@ -81,7 +81,7 @@ func Test_GEnv_SetMap(t *testing.T) {
 			"K1": "TEST1",
 			"K2": "TEST2",
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.AssertEQ(os.Getenv("K1"), "TEST1")
 		t.AssertEQ(os.Getenv("K2"), "TEST2")
 	})
@@ -102,9 +102,9 @@ func Test_GEnv_Remove(t *testing.T) {
 		value := gconv.String(gtime.TimestampNano())
 		key := "TEST_ENV_" + value
 		err := os.Setenv(key, "TEST")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		err = genv.Remove(key)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.AssertEQ(os.Getenv(key), "")
 	})
 }

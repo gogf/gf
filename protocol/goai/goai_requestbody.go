@@ -16,9 +16,9 @@ import (
 
 // RequestBody is specified by OpenAPI/Swagger 3.0 standard.
 type RequestBody struct {
-	Description string  `json:"description,omitempty" yaml:"description,omitempty"`
-	Required    bool    `json:"required,omitempty"    yaml:"required,omitempty"`
-	Content     Content `json:"content,omitempty"     yaml:"content,omitempty"`
+	Description string  `json:"description,omitempty"`
+	Required    bool    `json:"required,omitempty"`
+	Content     Content `json:"content,omitempty"`
 }
 
 type RequestBodyRef struct {
@@ -47,40 +47,42 @@ func (oai *OpenApiV3) getRequestSchemaRef(in getRequestSchemaRefInput) (*SchemaR
 	}
 
 	var (
-		dataFieldsPartsArray                                      = gstr.Split(in.RequestDataField, ".")
-		bizRequestStructSchemaRef, bizRequestStructSchemaRefExist = oai.Components.Schemas[in.BusinessStructName]
-		schema, err                                               = oai.structToSchema(in.RequestObject)
+		dataFieldsPartsArray      = gstr.Split(in.RequestDataField, ".")
+		bizRequestStructSchemaRef = oai.Components.Schemas.Get(in.BusinessStructName)
+		schema, err               = oai.structToSchema(in.RequestObject)
 	)
 	if err != nil {
 		return nil, err
 	}
-	if in.RequestDataField == "" && bizRequestStructSchemaRefExist {
-		for k, v := range bizRequestStructSchemaRef.Value.Properties {
-			schema.Properties[k] = v
-		}
+	if in.RequestDataField == "" && bizRequestStructSchemaRef != nil {
+		// Normal request.
+		bizRequestStructSchemaRef.Value.Properties.Iterator(func(key string, ref SchemaRef) bool {
+			schema.Properties.Set(key, ref)
+			return true
+		})
 	} else {
+		// Common request.
 		structFields, _ := gstructs.Fields(gstructs.FieldsInput{
 			Pointer:         in.RequestObject,
 			RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
 		})
 		for _, structField := range structFields {
-			var (
-				fieldName = structField.Name()
-			)
+			var fieldName = structField.Name()
 			if jsonName := structField.TagJsonName(); jsonName != "" {
 				fieldName = jsonName
 			}
 			switch len(dataFieldsPartsArray) {
 			case 1:
 				if structField.Name() == dataFieldsPartsArray[0] {
-					schema.Properties[fieldName] = bizRequestStructSchemaRef
+					if err = oai.tagMapToSchema(structField.TagMap(), bizRequestStructSchemaRef.Value); err != nil {
+						return nil, err
+					}
+					schema.Properties.Set(fieldName, *bizRequestStructSchemaRef)
 					break
 				}
 			default:
 				if structField.Name() == dataFieldsPartsArray[0] {
-					var (
-						structFieldInstance = reflect.New(structField.Type().Type).Elem()
-					)
+					var structFieldInstance = reflect.New(structField.Type().Type).Elem()
 					schemaRef, err := oai.getRequestSchemaRef(getRequestSchemaRefInput{
 						BusinessStructName: in.BusinessStructName,
 						RequestObject:      structFieldInstance,
@@ -89,13 +91,12 @@ func (oai *OpenApiV3) getRequestSchemaRef(in getRequestSchemaRefInput) (*SchemaR
 					if err != nil {
 						return nil, err
 					}
-					schema.Properties[fieldName] = *schemaRef
+					schema.Properties.Set(fieldName, *schemaRef)
 					break
 				}
 			}
 		}
 	}
-
 	return &SchemaRef{
 		Value: schema,
 	}, nil

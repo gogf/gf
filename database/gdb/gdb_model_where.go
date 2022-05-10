@@ -2,74 +2,32 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://githum.com/gogf/gf.
 
 package gdb
 
-import (
-	"fmt"
-
-	"github.com/gogf/gf/v2/text/gstr"
-)
-
-// doWhereType sets the condition statement for the model. The parameter `where` can be type of
-// string/map/gmap/slice/struct/*struct, etc. Note that, if it's called more than one times,
-// multiple conditions will be joined into where statement using "AND".
-func (m *Model) doWhereType(t string, where interface{}, args ...interface{}) *Model {
+// callWhereBuilder creates and returns a new Model, and sets its WhereBuilder if current Model is safe.
+// It sets the WhereBuilder and returns current Model directly if it is not safe.
+func (m *Model) callWhereBuilder(builder *WhereBuilder) *Model {
 	model := m.getModel()
-	if model.whereHolder == nil {
-		model.whereHolder = make([]ModelWhereHolder, 0)
-	}
-	if t == "" {
-		if len(args) == 0 {
-			t = whereHolderTypeNoArgs
-		} else {
-			t = whereHolderTypeDefault
-		}
-	}
-	model.whereHolder = append(model.whereHolder, ModelWhereHolder{
-		Type:     t,
-		Operator: whereHolderOperatorWhere,
-		Where:    where,
-		Args:     args,
-	})
+	model.whereBuilder = builder
 	return model
 }
 
-// doWherefType builds condition string using fmt.Sprintf and arguments.
-// Note that if the number of `args` is more than the placeholder in `format`,
-// the extra `args` will be used as the where condition arguments of the Model.
-func (m *Model) doWherefType(t string, format string, args ...interface{}) *Model {
-	var (
-		placeHolderCount = gstr.Count(format, "?")
-		conditionStr     = fmt.Sprintf(format, args[:len(args)-placeHolderCount]...)
-	)
-	return m.doWhereType(t, conditionStr, args[len(args)-placeHolderCount:]...)
-}
-
-// Where sets the condition statement for the model. The parameter `where` can be type of
+// Where sets the condition statement for the builder. The parameter `where` can be type of
 // string/map/gmap/slice/struct/*struct, etc. Note that, if it's called more than one times,
 // multiple conditions will be joined into where statement using "AND".
-// Eg:
-// Where("uid=10000")
-// Where("uid", 10000)
-// Where("money>? AND name like ?", 99999, "vip_%")
-// Where("uid", 1).Where("name", "john")
-// Where("status IN (?)", g.Slice{1,2,3})
-// Where("age IN(?,?)", 18, 50)
-// Where(User{ Id : 1, UserName : "john"}).
+// See WhereBuilder.Where.
 func (m *Model) Where(where interface{}, args ...interface{}) *Model {
-	return m.doWhereType(``, where, args...)
+	return m.callWhereBuilder(m.whereBuilder.Where(where, args...))
 }
 
 // Wheref builds condition string using fmt.Sprintf and arguments.
 // Note that if the number of `args` is more than the placeholder in `format`,
 // the extra `args` will be used as the where condition arguments of the Model.
-// Eg:
-// Wheref(`amount<? and status=%s`, "paid", 100)  => WHERE `amount`<100 and status='paid'
-// Wheref(`amount<%d and status=%s`, 100, "paid") => WHERE `amount`<100 and status='paid'
+// See WhereBuilder.Wheref.
 func (m *Model) Wheref(format string, args ...interface{}) *Model {
-	return m.doWherefType(``, format, args...)
+	return m.callWhereBuilder(m.whereBuilder.Wheref(format, args...))
 }
 
 // WherePri does the same logic as Model.Where except that if the parameter `where`
@@ -77,83 +35,85 @@ func (m *Model) Wheref(format string, args ...interface{}) *Model {
 // key value. That is, if primary key is "id" and given `where` parameter as "123", the
 // WherePri function treats the condition as "id=123", but Model.Where treats the condition
 // as string "123".
+// See WhereBuilder.WherePri.
 func (m *Model) WherePri(where interface{}, args ...interface{}) *Model {
-	if len(args) > 0 {
-		return m.Where(where, args...)
-	}
-	newWhere := GetPrimaryKeyCondition(m.getPrimaryKey(), where)
-	return m.Where(newWhere[0], newWhere[1:]...)
+	return m.callWhereBuilder(m.whereBuilder.WherePri(where, args...))
 }
 
 // WhereLT builds `column < value` statement.
+// See WhereBuilder.WhereLT.
 func (m *Model) WhereLT(column string, value interface{}) *Model {
-	return m.Wheref(`%s < ?`, m.QuoteWord(column), value)
+	return m.callWhereBuilder(m.whereBuilder.WhereLT(column, value))
 }
 
 // WhereLTE builds `column <= value` statement.
+// See WhereBuilder.WhereLTE.
 func (m *Model) WhereLTE(column string, value interface{}) *Model {
-	return m.Wheref(`%s <= ?`, m.QuoteWord(column), value)
+	return m.callWhereBuilder(m.whereBuilder.WhereLTE(column, value))
 }
 
 // WhereGT builds `column > value` statement.
+// See WhereBuilder.WhereGT.
 func (m *Model) WhereGT(column string, value interface{}) *Model {
-	return m.Wheref(`%s > ?`, m.QuoteWord(column), value)
+	return m.callWhereBuilder(m.whereBuilder.WhereGT(column, value))
 }
 
 // WhereGTE builds `column >= value` statement.
+// See WhereBuilder.WhereGTE.
 func (m *Model) WhereGTE(column string, value interface{}) *Model {
-	return m.Wheref(`%s >= ?`, m.QuoteWord(column), value)
+	return m.callWhereBuilder(m.whereBuilder.WhereGTE(column, value))
 }
 
 // WhereBetween builds `column BETWEEN min AND max` statement.
+// See WhereBuilder.WhereBetween.
 func (m *Model) WhereBetween(column string, min, max interface{}) *Model {
-	return m.Wheref(`%s BETWEEN ? AND ?`, m.QuoteWord(column), min, max)
+	return m.callWhereBuilder(m.whereBuilder.WhereBetween(column, min, max))
 }
 
 // WhereLike builds `column LIKE like` statement.
+// See WhereBuilder.WhereLike.
 func (m *Model) WhereLike(column string, like string) *Model {
-	return m.Wheref(`%s LIKE ?`, m.QuoteWord(column), like)
+	return m.callWhereBuilder(m.whereBuilder.WhereLike(column, like))
 }
 
 // WhereIn builds `column IN (in)` statement.
+// See WhereBuilder.WhereIn.
 func (m *Model) WhereIn(column string, in interface{}) *Model {
-	return m.doWherefType(whereHolderTypeIn, `%s IN (?)`, m.QuoteWord(column), in)
+	return m.callWhereBuilder(m.whereBuilder.WhereIn(column, in))
 }
 
 // WhereNull builds `columns[0] IS NULL AND columns[1] IS NULL ...` statement.
+// See WhereBuilder.WhereNull.
 func (m *Model) WhereNull(columns ...string) *Model {
-	model := m
-	for _, column := range columns {
-		model = m.Wheref(`%s IS NULL`, m.QuoteWord(column))
-	}
-	return model
+	return m.callWhereBuilder(m.whereBuilder.WhereNull(columns...))
 }
 
 // WhereNotBetween builds `column NOT BETWEEN min AND max` statement.
+// See WhereBuilder.WhereNotBetween.
 func (m *Model) WhereNotBetween(column string, min, max interface{}) *Model {
-	return m.Wheref(`%s NOT BETWEEN ? AND ?`, m.QuoteWord(column), min, max)
+	return m.callWhereBuilder(m.whereBuilder.WhereNotBetween(column, min, max))
 }
 
 // WhereNotLike builds `column NOT LIKE like` statement.
+// See WhereBuilder.WhereNotLike.
 func (m *Model) WhereNotLike(column string, like interface{}) *Model {
-	return m.Wheref(`%s NOT LIKE ?`, m.QuoteWord(column), like)
+	return m.callWhereBuilder(m.whereBuilder.WhereNotLike(column, like))
 }
 
 // WhereNot builds `column != value` statement.
+// See WhereBuilder.WhereNot.
 func (m *Model) WhereNot(column string, value interface{}) *Model {
-	return m.Wheref(`%s != ?`, m.QuoteWord(column), value)
+	return m.callWhereBuilder(m.whereBuilder.WhereNot(column, value))
 }
 
 // WhereNotIn builds `column NOT IN (in)` statement.
+// See WhereBuilder.WhereNotIn.
 func (m *Model) WhereNotIn(column string, in interface{}) *Model {
-	return m.doWherefType(whereHolderTypeIn, `%s NOT IN (?)`, m.QuoteWord(column), in)
+	return m.callWhereBuilder(m.whereBuilder.WhereNotIn(column, in))
 }
 
 // WhereNotNull builds `columns[0] IS NOT NULL AND columns[1] IS NOT NULL ...` statement.
+// See WhereBuilder.WhereNotNull.
 func (m *Model) WhereNotNull(columns ...string) *Model {
-	model := m
-	for _, column := range columns {
-		model = m.Wheref(`%s IS NOT NULL`, m.QuoteWord(column))
-	}
-	return model
+	return m.callWhereBuilder(m.whereBuilder.WhereNotNull(columns...))
 }

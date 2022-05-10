@@ -30,7 +30,7 @@ func (s *Server) BindMiddleware(pattern string, handlers ...HandlerFunc) {
 		s.setHandler(ctx, setHandlerInput{
 			Prefix:  "",
 			Pattern: pattern,
-			HandlerItem: &handlerItem{
+			HandlerItem: &HandlerItem{
 				Type: HandlerTypeMiddleware,
 				Name: gdebug.FuncPath(handler),
 				Info: handlerFuncInfo{
@@ -53,7 +53,7 @@ func (s *Server) BindMiddlewareDefault(handlers ...HandlerFunc) {
 		s.setHandler(ctx, setHandlerInput{
 			Prefix:  "",
 			Pattern: defaultMiddlewarePattern,
-			HandlerItem: &handlerItem{
+			HandlerItem: &HandlerItem{
 				Type: HandlerTypeMiddleware,
 				Name: gdebug.FuncPath(handler),
 				Info: handlerFuncInfo{
@@ -65,7 +65,7 @@ func (s *Server) BindMiddlewareDefault(handlers ...HandlerFunc) {
 	}
 }
 
-// Use is alias of BindMiddlewareDefault.
+// Use is the alias of BindMiddlewareDefault.
 // See BindMiddlewareDefault.
 func (s *Server) Use(handlers ...HandlerFunc) {
 	s.BindMiddlewareDefault(handlers...)

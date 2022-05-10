@@ -7,23 +7,41 @@
 package gjson_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func Test_New(t *testing.T) {
-	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
+	// New with json map.
 	gtest.C(t, func(t *gtest.T) {
+		data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 		j := gjson.New(data)
 		t.Assert(j.Get("n").String(), "123456789")
 		t.Assert(j.Get("m").Map(), g.Map{"k": "v"})
 		t.Assert(j.Get("a").Array(), g.Slice{1, 2, 3})
 	})
-
+	// New with json array map.
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(`[{"a":1},{"b":2},{"c":3}]`)
+		t.Assert(j.Get(".").String(), `[{"a":1},{"b":2},{"c":3}]`)
+		t.Assert(j.Get("2.c").String(), `3`)
+	})
+	// New with gvar.
+	// https://github.com/gogf/gf/issues/1571
+	gtest.C(t, func(t *gtest.T) {
+		v := gvar.New(`[{"a":1},{"b":2},{"c":3}]`)
+		j := gjson.New(v)
+		t.Assert(j.Get(".").String(), `[{"a":1},{"b":2},{"c":3}]`)
+		t.Assert(j.Get("2.c").String(), `3`)
+	})
+	// New with gmap.
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewAnyAnyMapFrom(g.MapAnyAny{
 			"k1": "v1",
@@ -49,7 +67,7 @@ func Test_Encode(t *testing.T) {
 	value := g.Slice{1, 2, 3}
 	gtest.C(t, func(t *gtest.T) {
 		b, err := gjson.Encode(value)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(b, []byte(`[1,2,3]`))
 	})
 }
@@ -58,7 +76,7 @@ func Test_Decode(t *testing.T) {
 	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 	gtest.C(t, func(t *gtest.T) {
 		v, err := gjson.Decode(data)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v, g.Map{
 			"n": 123456789,
 			"a": g.Slice{1, 2, 3},
@@ -70,7 +88,7 @@ func Test_Decode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var v interface{}
 		err := gjson.DecodeTo(data, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v, g.Map{
 			"n": 123456789,
 			"a": g.Slice{1, 2, 3},
@@ -81,7 +99,7 @@ func Test_Decode(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.DecodeToJson(data)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("n").String(), "123456789")
 		t.Assert(j.Get("m").Map(), g.Map{"k": "v"})
 		t.Assert(j.Get("m.k"), "v")
@@ -95,7 +113,7 @@ func Test_SplitChar(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.DecodeToJson(data)
 		j.SetSplitChar(byte('#'))
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("n").String(), "123456789")
 		t.Assert(j.Get("m").Map(), g.Map{"k": "v"})
 		t.Assert(j.Get("m#k").String(), "v")
@@ -108,7 +126,7 @@ func Test_ViolenceCheck(t *testing.T) {
 	data := []byte(`{"m":{"a":[1,2,3], "v1.v2":"4"}}`)
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.DecodeToJson(data)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("m.a.2"), 3)
 		t.Assert(j.Get("m.v1.v2"), nil)
 		j.SetViolenceCheck(true)
@@ -120,7 +138,7 @@ func Test_GetVar(t *testing.T) {
 	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.DecodeToJson(data)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("n").String(), "123456789")
 		t.Assert(j.Get("m").Map(), g.Map{"k": "v"})
 		t.Assert(j.Get("a").Interfaces(), g.Slice{1, 2, 3})
@@ -133,7 +151,7 @@ func Test_GetMap(t *testing.T) {
 	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.DecodeToJson(data)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("n").Map(), nil)
 		t.Assert(j.Get("m").Map(), g.Map{"k": "v"})
 		t.Assert(j.Get("a").Map(), g.Map{"1": "2", "3": nil})
@@ -144,7 +162,7 @@ func Test_GetJson(t *testing.T) {
 	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.DecodeToJson(data)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		j2 := j.GetJson("m")
 		t.AssertNE(j2, nil)
 		t.Assert(j2.Get("k"), "v")
@@ -157,7 +175,7 @@ func Test_GetArray(t *testing.T) {
 	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.DecodeToJson(data)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("n").Array(), g.Array{123456789})
 		t.Assert(j.Get("m").Array(), g.Array{g.Map{"k": "v"}})
 		t.Assert(j.Get("a").Array(), g.Array{1, 2, 3})
@@ -168,7 +186,7 @@ func Test_GetString(t *testing.T) {
 	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.DecodeToJson(data)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.AssertEQ(j.Get("n").String(), "123456789")
 		t.AssertEQ(j.Get("m").String(), `{"k":"v"}`)
 		t.AssertEQ(j.Get("a").String(), `[1,2,3]`)
@@ -180,7 +198,7 @@ func Test_GetStrings(t *testing.T) {
 	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.DecodeToJson(data)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.AssertEQ(j.Get("n").Strings(), g.SliceStr{"123456789"})
 		t.AssertEQ(j.Get("m").Strings(), g.SliceStr{`{"k":"v"}`})
 		t.AssertEQ(j.Get("a").Strings(), g.SliceStr{"1", "2", "3"})
@@ -192,7 +210,7 @@ func Test_GetInterfaces(t *testing.T) {
 	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.DecodeToJson(data)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.AssertEQ(j.Get("n").Interfaces(), g.Array{123456789})
 		t.AssertEQ(j.Get("m").Interfaces(), g.Array{g.Map{"k": "v"}})
 		t.AssertEQ(j.Get("a").Interfaces(), g.Array{1, 2, 3})
@@ -315,37 +333,37 @@ func Test_Convert(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		j := gjson.New(`{"name":"gf"}`)
 		arr, err := j.ToXml()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(string(arr), "<name>gf</name>")
 		arr, err = j.ToXmlIndent()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(string(arr), "<name>gf</name>")
 		str, err := j.ToXmlString()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(str, "<name>gf</name>")
 		str, err = j.ToXmlIndentString()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(str, "<name>gf</name>")
 
 		arr, err = j.ToJsonIndent()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(string(arr), "{\n\t\"name\": \"gf\"\n}")
 		str, err = j.ToJsonIndentString()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(string(arr), "{\n\t\"name\": \"gf\"\n}")
 
 		arr, err = j.ToYaml()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(string(arr), "name: gf\n")
 		str, err = j.ToYamlString()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(string(arr), "name: gf\n")
 
 		arr, err = j.ToToml()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(string(arr), "name = \"gf\"\n")
 		str, err = j.ToTomlString()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(string(arr), "name = \"gf\"\n")
 	})
 }
@@ -370,19 +388,19 @@ func Test_Convert2(t *testing.T) {
 		t.Assert(j.Get("time").Duration().String(), "0s")
 
 		err := j.Var().Scan(&name)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(name.Name, "gf")
 		// j.Dump()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		j = gjson.New(`{"person":{"name":"gf"}}`)
 		err = j.Get("person").Scan(&name)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(name.Name, "gf")
 
 		j = gjson.New(`{"name":"gf""}`)
 		// j.Dump()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		j = gjson.New(`[1,2,3]`)
 		t.Assert(len(j.Var().Array()), 3)
@@ -400,12 +418,12 @@ func Test_Basic(t *testing.T) {
 		t.Assert(j.Get(".").Interface().(g.Map)["name"], "gf")
 
 		err := j.Set("name", "gf1")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("name"), "gf1")
 
 		j = gjson.New(`[1,2,3]`)
 		err = j.Set("\"0\".1", 11)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("1"), 11)
 
 		j = gjson.New(`[1,2,3]`)
@@ -414,7 +432,7 @@ func Test_Basic(t *testing.T) {
 
 		j = gjson.New(`[1,2,3]`)
 		err = j.Remove("1")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("0"), 1)
 		t.Assert(len(j.Var().Array()), 2)
 
@@ -428,18 +446,18 @@ func Test_Basic(t *testing.T) {
 
 		j = gjson.New(`[1,2,3]`)
 		err = j.Remove("3")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("0"), 1)
 		t.Assert(len(j.Var().Array()), 3)
 
 		j = gjson.New(`[1,2,3]`)
 		err = j.Remove("0.3")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("0"), 1)
 
 		j = gjson.New(`[1,2,3]`)
 		err = j.Remove("0.a")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("0"), 1)
 
 		name := struct {
@@ -448,35 +466,35 @@ func Test_Basic(t *testing.T) {
 		j = gjson.New(name)
 		t.Assert(j.Get("Name"), "gf")
 		err = j.Remove("Name")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("Name"), nil)
 
 		err = j.Set("Name", "gf1")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("Name"), "gf1")
 
 		j = gjson.New(nil)
 		err = j.Remove("Name")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("Name"), nil)
 
 		j = gjson.New(name)
 		t.Assert(j.Get("Name"), "gf")
 		err = j.Set("Name1", g.Map{"Name": "gf1"})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("Name1").Interface().(g.Map)["Name"], "gf1")
 		err = j.Set("Name2", g.Slice{1, 2, 3})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("Name2").Interface().(g.Slice)[0], 1)
 		err = j.Set("Name3", name)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("Name3").Interface().(g.Map)["Name"], "gf")
 		err = j.Set("Name4", &name)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("Name4").Interface().(g.Map)["Name"], "gf")
 		arr := [3]int{1, 2, 3}
 		err = j.Set("Name5", arr)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("Name5").Interface().(g.Array)[0], 1)
 
 	})
@@ -513,5 +531,59 @@ func TestJson_Set_With_Struct(t *testing.T) {
 		t.AssertNil(user1.Set("id", 111))
 		t.AssertNil(v.Set("user1", user1))
 		t.Assert(v.Get("user1.id"), 111)
+	})
+}
+
+func TestJson_Options(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type S struct {
+			Id int64
+		}
+		s := S{
+			Id: 53687091200,
+		}
+		m := make(map[string]interface{})
+		t.AssertNil(gjson.DecodeTo(gjson.MustEncode(s), &m, gjson.Options{
+			StrNumber: false,
+		}))
+		t.Assert(fmt.Sprintf(`%v`, m["Id"]), `5.36870912e+10`)
+		t.AssertNil(gjson.DecodeTo(gjson.MustEncode(s), &m, gjson.Options{
+			StrNumber: true,
+		}))
+		t.Assert(fmt.Sprintf(`%v`, m["Id"]), `53687091200`)
+	})
+}
+
+// https://github.com/gogf/gf/issues/1617
+func Test_Issue1617(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type MyJsonName struct {
+			F中文   int64 `json:"F中文"`
+			F英文   int64 `json:"F英文"`
+			F法文   int64 `json:"F法文"`
+			F西班牙语 int64 `json:"F西班牙语"`
+		}
+		jso := `{"F中文":1,"F英文":2,"F法文":3,"F西班牙语":4}`
+		var a MyJsonName
+		json, err := gjson.DecodeToJson(jso)
+		t.AssertNil(err)
+		err = json.Scan(&a)
+		t.AssertNil(err)
+		t.Assert(a, MyJsonName{
+			F中文:   1,
+			F英文:   2,
+			F法文:   3,
+			F西班牙语: 4,
+		})
+	})
+}
+
+// https://github.com/gogf/gf/issues/1747
+func Test_Issue1747(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var j *gjson.Json
+		err := gconv.Struct(gvar.New("[1, 2, 336371793314971759]"), &j)
+		t.AssertNil(err)
+		t.Assert(j.Get("2"), `336371793314971759`)
 	})
 }

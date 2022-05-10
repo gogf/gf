@@ -18,98 +18,98 @@ var (
 	str = []byte("This is the test string for hash.")
 )
 
-func BenchmarkBKDRHash(b *testing.B) {
+func Benchmark_BKDR(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ghash.BKDRHash(str)
+		ghash.BKDR(str)
 	}
 }
 
-func BenchmarkBKDRHash64(b *testing.B) {
+func Benchmark_BKDR64(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ghash.BKDRHash64(str)
+		ghash.BKDR64(str)
 	}
 }
 
-func BenchmarkSDBMHash(b *testing.B) {
+func Benchmark_SDBM(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ghash.SDBMHash(str)
+		ghash.SDBM(str)
 	}
 }
 
-func BenchmarkSDBMHash64(b *testing.B) {
+func Benchmark_SDBM64(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ghash.SDBMHash64(str)
+		ghash.SDBM64(str)
 	}
 }
 
-func BenchmarkRSHash(b *testing.B) {
+func Benchmark_RS(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ghash.RSHash(str)
+		ghash.RS(str)
 	}
 }
 
-func BenchmarkSRSHash64(b *testing.B) {
+func Benchmark_RS64(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ghash.RSHash64(str)
+		ghash.RS64(str)
 	}
 }
 
-func BenchmarkJSHash(b *testing.B) {
+func Benchmark_JS(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ghash.JSHash(str)
+		ghash.JS(str)
 	}
 }
 
-func BenchmarkJSHash64(b *testing.B) {
+func Benchmark_JS64(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ghash.JSHash64(str)
+		ghash.JS64(str)
 	}
 }
 
-func BenchmarkPJWHash(b *testing.B) {
+func Benchmark_PJW(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ghash.PJWHash(str)
+		ghash.PJW(str)
 	}
 }
 
-func BenchmarkPJWHash64(b *testing.B) {
+func Benchmark_PJW64(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ghash.PJWHash64(str)
+		ghash.PJW64(str)
 	}
 }
 
-func BenchmarkELFHash(b *testing.B) {
+func Benchmark_ELF(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ghash.ELFHash(str)
+		ghash.ELF(str)
 	}
 }
 
-func BenchmarkELFHash64(b *testing.B) {
+func Benchmark_ELF64(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ghash.ELFHash64(str)
+		ghash.ELF64(str)
 	}
 }
 
-func BenchmarkDJBHash(b *testing.B) {
+func Benchmark_DJB(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ghash.DJBHash(str)
+		ghash.DJB(str)
 	}
 }
 
-func BenchmarkDJBHash64(b *testing.B) {
+func Benchmark_DJB64(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ghash.DJBHash64(str)
+		ghash.DJB64(str)
 	}
 }
 
-func BenchmarkAPHash(b *testing.B) {
+func Benchmark_AP(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ghash.APHash(str)
+		ghash.AP(str)
 	}
 }
 
-func BenchmarkAPHash64(b *testing.B) {
+func Benchmark_AP64(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ghash.APHash64(str)
+		ghash.AP64(str)
 	}
 }

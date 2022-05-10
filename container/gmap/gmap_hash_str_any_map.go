@@ -451,12 +451,15 @@ func (m *StrAnyMap) Merge(other *StrAnyMap) {
 
 // String returns the map as a string.
 func (m *StrAnyMap) String() string {
+	if m == nil {
+		return ""
+	}
 	b, _ := m.MarshalJSON()
 	return string(b)
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (m *StrAnyMap) MarshalJSON() ([]byte, error) {
+func (m StrAnyMap) MarshalJSON() ([]byte, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return json.Marshal(m.data)
