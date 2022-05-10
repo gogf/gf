@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"net/url"
 
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
