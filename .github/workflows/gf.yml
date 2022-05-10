@@ -140,17 +140,18 @@ jobs:
             cd $path
             go mod tidy
             go build ./...
-            go test  ./...
+            GOARCH=386   go test  ./... -race -coverprofile=coverage.txt -covermode=atomic || exit 1
+            GOARCH=amd64 go test  ./... -race -coverprofile=coverage.txt -covermode=atomic || exit 1
             cd -
         done
 
     - name: Run i386 Arch Test
       run: |
-        GOARCH=386 go test -v ./... || exit 1
+        GOARCH=386   go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic || exit 1
 
     - name: Run amd64 Arch Test
       run: |
-        GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
+        GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic || exit 1
 
     - name: Report Coverage
       uses: codecov/codecov-action@v2
