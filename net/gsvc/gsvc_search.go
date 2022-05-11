@@ -13,7 +13,11 @@ func (s *SearchInput) Key() string {
 	}
 	keyPrefix := ""
 	if s.Prefix != "" {
-		keyPrefix += s.Separator + s.Prefix
+		if s.Separator == separator {
+			keyPrefix += s.Separator + s.Prefix
+		} else {
+			keyPrefix += s.Prefix
+		}
 	}
 	if s.Deployment != "" {
 		keyPrefix += s.Separator + s.Deployment
