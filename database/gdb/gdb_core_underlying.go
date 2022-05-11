@@ -137,31 +137,6 @@ type sqlParsingHandlerOutput struct {
 	DoCommitInput
 }
 
-func (c *Core) sqlParsingHandler(ctx context.Context, in sqlParsingHandlerInput) (out *sqlParsingHandlerOutput, err error) {
-	var shardingOut *callShardingHandlerFromCtxOutput
-	// Sharding handling.
-	shardingOut, err = c.callShardingHandlerFromCtx(ctx, callShardingHandlerFromCtxInput{
-		Sql:          in.Sql,
-		FormattedSql: in.FormattedSql,
-	})
-	if err != nil {
-		return
-	}
-	if shardingOut != nil {
-		if shardingOut.Sql != "" {
-			in.Sql = shardingOut.Sql
-		}
-		// If schema changes, it here creates and uses a new DB link operation object.
-		if shardingOut.Schema != c.db.GetSchema() {
-			in.Link, err = c.db.GetCore().GetLink(ctx, in.Link.IsOnMaster(), shardingOut.Schema)
-		}
-	}
-	out = &sqlParsingHandlerOutput{
-		DoCommitInput: in.DoCommitInput,
-	}
-	return
-}
-
 // DoCommit commits current sql and arguments to underlying sql driver.
 func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutput, err error) {
 	// Inject internal data into ctx, especially for transaction creating.
@@ -179,18 +154,6 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 		formattedSql         = FormatSqlWithArgs(in.Sql, in.Args)
 		timestampMilli1      = gtime.TimestampMilli()
 	)
-
-	// SQL parser handler.
-	sqlParsingHandlerOut, err := c.sqlParsingHandler(ctx, sqlParsingHandlerInput{
-		DoCommitInput: in,
-		FormattedSql:  formattedSql,
-	})
-	if err != nil {
-		return
-	}
-	if sqlParsingHandlerOut != nil {
-		in = sqlParsingHandlerOut.DoCommitInput
-	}
 
 	// Trace span start.
 	tr := otel.GetTracerProvider().Tracer(traceInstrumentName, trace.WithInstrumentationVersion(gf.VERSION))

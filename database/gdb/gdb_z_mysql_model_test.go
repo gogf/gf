@@ -3021,8 +3021,8 @@ func Test_Model_Issue1002(t *testing.T) {
 	})
 	// where + time.Time arguments, UTC.
 	gtest.C(t, func(t *gtest.T) {
-		t1, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 19:03:32")
-		t2, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 19:03:34")
+		t1, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 11:03:32")
+		t2, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 11:03:34")
 		{
 			v, err := db.Model(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).Value()
 			t.AssertNil(err)
@@ -3079,7 +3079,7 @@ func Test_TimeZoneInsert(t *testing.T) {
 	tableName := createTableForTimeZoneTest()
 	defer dropTable(tableName)
 
-	asiaLocal, err := time.LoadLocation("Asia/Shanghai")
+	tokyoLoc, err := time.LoadLocation("Asia/Tokyo")
 	gtest.AssertNil(err)
 
 	CreateTime := "2020-11-22 12:23:45"
@@ -3091,9 +3091,9 @@ func Test_TimeZoneInsert(t *testing.T) {
 		UpdatedAt gtime.Time  `json:"updated_at"`
 		DeletedAt time.Time   `json:"deleted_at"`
 	}
-	t1, _ := time.ParseInLocation("2006-01-02 15:04:05", CreateTime, asiaLocal)
-	t2, _ := time.ParseInLocation("2006-01-02 15:04:05", UpdateTime, asiaLocal)
-	t3, _ := time.ParseInLocation("2006-01-02 15:04:05", DeleteTime, asiaLocal)
+	t1, _ := time.ParseInLocation("2006-01-02 15:04:05", CreateTime, tokyoLoc)
+	t2, _ := time.ParseInLocation("2006-01-02 15:04:05", UpdateTime, tokyoLoc)
+	t3, _ := time.ParseInLocation("2006-01-02 15:04:05", DeleteTime, tokyoLoc)
 	u := &User{
 		Id:        1,
 		CreatedAt: gtime.New(t1.UTC()),
@@ -3106,9 +3106,9 @@ func Test_TimeZoneInsert(t *testing.T) {
 		userEntity := &User{}
 		err := db.Model(tableName).Where("id", 1).Unscoped().Scan(&userEntity)
 		t.AssertNil(err)
-		t.Assert(userEntity.CreatedAt.String(), "2020-11-22 04:23:45")
-		t.Assert(userEntity.UpdatedAt.String(), "2020-11-22 05:23:45")
-		t.Assert(gtime.NewFromTime(userEntity.DeletedAt).String(), "2020-11-22 06:23:45")
+		t.Assert(userEntity.CreatedAt.String(), "2020-11-22 11:23:45")
+		t.Assert(userEntity.UpdatedAt.String(), "2020-11-22 12:23:45")
+		t.Assert(gtime.NewFromTime(userEntity.DeletedAt).String(), "2020-11-22 13:23:45")
 	})
 }
 
@@ -4284,5 +4284,36 @@ func Test_Model_Issue1701(t *testing.T) {
 		value, err := db.Model(table).Fields(gdb.Raw("if(id=1,100,null)")).WherePri(1).Value()
 		t.AssertNil(err)
 		t.Assert(value.String(), 100)
+	})
+}
+
+// https://github.com/gogf/gf/issues/1733
+func Test_Model_Issue1733(t *testing.T) {
+	table := "user_" + guid.S()
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+	    CREATE TABLE %s (
+	        id int(8) unsigned zerofill NOT NULL AUTO_INCREMENT,
+	        PRIMARY KEY (id)
+	    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	    `, table,
+	)); err != nil {
+		gtest.AssertNil(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		for i := 1; i <= 10; i++ {
+			_, err := db.Model(table).Data(g.Map{
+				"id": i,
+			}).Insert()
+			t.AssertNil(err)
+		}
+
+		all, err := db.Model(table).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(all), 10)
+		for i := 0; i < 10; i++ {
+			t.Assert(all[i]["id"].Int(), i+1)
+		}
 	})
 }

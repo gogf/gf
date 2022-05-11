@@ -240,3 +240,10 @@ func (oai *OpenApiV3) fileMapWithShortTags(m map[string]string) map[string]strin
 func formatRefToBytes(ref string) []byte {
 	return []byte(fmt.Sprintf(`{"$ref":"#/components/schemas/%s"}`, ref))
 }
+
+func isValidParameterName(key string) bool {
+	if key == "-" {
+		return false
+	}
+	return true
+}

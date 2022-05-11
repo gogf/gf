@@ -67,8 +67,13 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 		source               string
 		underlyingDriverName = "oci8"
 	)
+	// [username/[password]@]host[:port][/service_name][?param1=value1&...&paramN=valueN]
 	if config.Link != "" {
 		source = config.Link
+		// Custom changing the schema in runtime.
+		if config.Name != "" {
+			source, _ = gregex.ReplaceString(`@(.+?)/([\w\.\-]+)+`, "@$1/"+config.Name, source)
+		}
 	} else {
 		source = fmt.Sprintf(
 			"%s/%s@%s:%s/%s",
@@ -103,7 +108,7 @@ func (d *Driver) FilteredLink() string {
 
 // GetChars returns the security char for this type of database.
 func (d *Driver) GetChars() (charLeft string, charRight string) {
-	return "\"", "\""
+	return `"`, `"`
 }
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.

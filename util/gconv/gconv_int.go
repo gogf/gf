@@ -97,8 +97,10 @@ func Int64(any interface{}) int64 {
 		if f, ok := value.(iInt64); ok {
 			return f.Int64()
 		}
-		s := String(value)
-		isMinus := false
+		var (
+			s       = String(value)
+			isMinus = false
+		)
 		if len(s) > 0 {
 			if s[0] == '-' {
 				isMinus = true
@@ -110,15 +112,6 @@ func Int64(any interface{}) int64 {
 		// Hexadecimal
 		if len(s) > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X') {
 			if v, e := strconv.ParseInt(s[2:], 16, 64); e == nil {
-				if isMinus {
-					return -v
-				}
-				return v
-			}
-		}
-		// Octal
-		if len(s) > 1 && s[0] == '0' {
-			if v, e := strconv.ParseInt(s[1:], 8, 64); e == nil {
 				if isMinus {
 					return -v
 				}

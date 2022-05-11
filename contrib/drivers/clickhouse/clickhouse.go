@@ -68,8 +68,13 @@ func (d *Driver) Open(config *gdb.ConfigNode) (*sql.DB, error) {
 		source string
 		driver = "clickhouse"
 	)
+	// clickhouse://username:password@host1:9000,host2:9000/database?dial_timeout=200ms&max_execution_time=60
 	if config.Link != "" {
 		source = config.Link
+		// Custom changing the schema in runtime.
+		if config.Name != "" {
+			source, _ = gregex.ReplaceString(`@(.+?)/([\w\.\-]+)+`, "@$1/"+config.Name, source)
+		}
 	} else if config.Pass != "" {
 		source = fmt.Sprintf(
 			"clickhouse://%s:%s@%s:%s/%s?charset=%s&debug=%t",
@@ -232,16 +237,16 @@ func (d *Driver) DoFilter(
 	}
 	switch stmt := parsedStmt.(type) {
 	case *sqlparser.UpdateStatement:
-		// MySQL eg: UPDATE visits SET xxx
-		// Clickhouse eg: ALTER TABLE visits UPDATE xxx
+		// MySQL eg: UPDATE `table` SET xxx
+		// Clickhouse eg: ALTER TABLE `table` UPDATE xxx
 		newSql, err = d.doFilterUpdate(stmt)
 		if err != nil {
 			return originSql, args, err
 		}
 		return newSql, args, nil
 	case *sqlparser.DeleteStatement:
-		// MySQL eg: DELETE FROM VISIT
-		// Clickhouse eg: ALTER TABLE VISIT DELETE WHERE filter_expr
+		// MySQL eg: DELETE FROM `table`
+		// Clickhouse eg: ALTER TABLE `table` DELETE WHERE filter_expr
 		newSql, err = d.doFilterDelete(stmt)
 		if err != nil {
 			return originSql, args, err

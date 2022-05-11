@@ -104,7 +104,7 @@ func GetServer(name ...interface{}) *Server {
 		statusHandlerMap: make(map[string][]HandlerFunc),
 		serveTree:        make(map[string]interface{}),
 		serveCache:       gcache.New(),
-		routesMap:        make(map[string][]registeredRouteItem),
+		routesMap:        make(map[string][]*HandlerItem),
 		openapi:          goai.New(),
 	}
 	// Initialize the server using default configurations.
@@ -186,7 +186,7 @@ func (s *Server) Start() error {
 				}
 			}
 		}
-		s.config.SessionStorage = gsession.NewStorageFile(path)
+		s.config.SessionStorage = gsession.NewStorageFile(path, s.config.SessionMaxAge)
 	}
 	// Initialize session manager when start running.
 	s.sessionManager = gsession.New(
@@ -345,19 +345,19 @@ func (s *Server) GetRoutes() []RouterItem {
 		}
 		address += "tls" + s.config.HTTPSAddr
 	}
-	for k, registeredItems := range s.routesMap {
+	for k, handlerItems := range s.routesMap {
 		array, _ := gregex.MatchString(`(.*?)%([A-Z]+):(.+)@(.+)`, k)
-		for index, registeredItem := range registeredItems {
+		for index, handlerItem := range handlerItems {
 			item := RouterItem{
 				Server:     s.config.Name,
 				Address:    address,
 				Domain:     array[4],
-				Type:       registeredItem.Handler.Type,
+				Type:       handlerItem.Type,
 				Middleware: array[1],
 				Method:     array[2],
 				Route:      array[3],
-				Priority:   len(registeredItems) - index - 1,
-				Handler:    registeredItem.Handler,
+				Priority:   len(handlerItems) - index - 1,
+				Handler:    handlerItem,
 			}
 			switch item.Handler.Type {
 			case HandlerTypeObject, HandlerTypeHandler:

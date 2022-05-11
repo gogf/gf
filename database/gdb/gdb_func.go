@@ -332,7 +332,7 @@ func formatSql(sql string, args []interface{}) (newSql string, newArgs []interfa
 }
 
 type formatWhereHolderInput struct {
-	ModelWhereHolder
+	WhereHolder
 	OmitNil   bool
 	OmitEmpty bool
 	Schema    string
@@ -766,24 +766,18 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 
 			// Special struct handling.
 			case reflect.Struct:
-				switch v := arg.(type) {
+				switch arg.(type) {
 				// The underlying driver supports time.Time/*time.Time types.
 				case time.Time, *time.Time:
 					newArgs = append(newArgs, arg)
 					continue
 
-				// Special handling for gtime.Time/*gtime.Time.
-				//
-				// DO NOT use its underlying gtime.Time.Time as its argument,
-				// because the std time.Time will be converted to certain timezone
-				// according to underlying driver. And the underlying driver also
-				// converts the time.Time to string automatically as the following does.
 				case gtime.Time:
-					newArgs = append(newArgs, v.String())
+					newArgs = append(newArgs, arg.(gtime.Time).Time)
 					continue
 
 				case *gtime.Time:
-					newArgs = append(newArgs, v.String())
+					newArgs = append(newArgs, arg.(*gtime.Time).Time)
 					continue
 
 				default:

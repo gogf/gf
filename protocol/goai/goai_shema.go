@@ -138,6 +138,7 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 			Properties:  createSchemas(),
 			XExtensions: make(XExtensions),
 		}
+		ignoreProperties []interface{}
 	)
 	if len(tagMap) > 0 {
 		if err := oai.tagMapToSchema(tagMap, schema); err != nil {
@@ -188,8 +189,16 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 				schema.Required = append(schema.Required, key)
 			}
 		}
+		if !isValidParameterName(key) {
+			ignoreProperties = append(ignoreProperties, key)
+		}
 		return true
 	})
+
+	if len(ignoreProperties) > 0 {
+		schema.Properties.Removes(ignoreProperties)
+	}
+
 	return schema, nil
 }
 
@@ -208,7 +217,21 @@ func (oai *OpenApiV3) tagMapToSchema(tagMap map[string]string, schema *Schema) e
 			if len(schema.Enum) == 0 {
 				for _, rule := range gstr.SplitAndTrim(validationRules, "|") {
 					if gstr.HasPrefix(rule, patternKeyForIn) {
-						schema.Enum = gconv.Interfaces(gstr.SplitAndTrim(rule[len(patternKeyForIn):], ","))
+						var (
+							isAllEnumNumber = true
+							enumArray       = gstr.SplitAndTrim(rule[len(patternKeyForIn):], ",")
+						)
+						for _, enum := range enumArray {
+							if !gstr.IsNumeric(enum) {
+								isAllEnumNumber = false
+								break
+							}
+						}
+						if isAllEnumNumber {
+							schema.Enum = gconv.Interfaces(gconv.Int64s(enumArray))
+						} else {
+							schema.Enum = gconv.Interfaces(enumArray)
+						}
 					}
 				}
 			}

@@ -31,10 +31,9 @@ type HookHandler struct {
 // internalParamHook manages all internal parameters for hook operations.
 // The `internal` obviously means you cannot access these parameters outside this package.
 type internalParamHook struct {
-	link          Link   // Connection object from third party sql driver.
-	model         *Model // Underlying Model object.
-	handlerCalled bool   // Simple mark for custom handler called, in case of recursive calling.
-	removedWhere  bool   // Removed mark for condition string that was removed `WHERE` prefix.
+	link          Link // Connection object from third party sql driver.
+	handlerCalled bool // Simple mark for custom handler called, in case of recursive calling.
+	removedWhere  bool // Removed mark for condition string that was removed `WHERE` prefix.
 }
 
 type internalParamHookSelect struct {
@@ -62,6 +61,7 @@ type internalParamHookDelete struct {
 // which is usually not be interesting for upper business hook handler.
 type HookSelectInput struct {
 	internalParamHookSelect
+	Model *Model
 	Table string
 	Sql   string
 	Args  []interface{}
@@ -70,6 +70,7 @@ type HookSelectInput struct {
 // HookInsertInput holds the parameters for insert hook operation.
 type HookInsertInput struct {
 	internalParamHookInsert
+	Model  *Model
 	Table  string
 	Data   List
 	Option DoInsertOption
@@ -78,6 +79,7 @@ type HookInsertInput struct {
 // HookUpdateInput holds the parameters for update hook operation.
 type HookUpdateInput struct {
 	internalParamHookUpdate
+	Model     *Model
 	Table     string
 	Data      interface{} // Data can be type of: map[string]interface{}/string. You can use type assertion on `Data`.
 	Condition string
@@ -87,6 +89,7 @@ type HookUpdateInput struct {
 // HookDeleteInput holds the parameters for delete hook operation.
 type HookDeleteInput struct {
 	internalParamHookDelete
+	Model     *Model
 	Table     string
 	Condition string
 	Args      []interface{}
@@ -107,7 +110,7 @@ func (h *HookSelectInput) Next(ctx context.Context) (result Result, err error) {
 		h.handlerCalled = true
 		return h.handler(ctx, h)
 	}
-	return h.model.db.DoSelect(ctx, h.link, h.Sql, h.Args...)
+	return h.Model.db.DoSelect(ctx, h.link, h.Sql, h.Args...)
 }
 
 // Next calls the next hook handler.
@@ -116,7 +119,7 @@ func (h *HookInsertInput) Next(ctx context.Context) (result sql.Result, err erro
 		h.handlerCalled = true
 		return h.handler(ctx, h)
 	}
-	return h.model.db.DoInsert(ctx, h.link, h.Table, h.Data, h.Option)
+	return h.Model.db.DoInsert(ctx, h.link, h.Table, h.Data, h.Option)
 }
 
 // Next calls the next hook handler.
@@ -132,7 +135,7 @@ func (h *HookUpdateInput) Next(ctx context.Context) (result sql.Result, err erro
 	if h.removedWhere {
 		h.Condition = whereKeyInCondition + h.Condition
 	}
-	return h.model.db.DoUpdate(ctx, h.link, h.Table, h.Data, h.Condition, h.Args...)
+	return h.Model.db.DoUpdate(ctx, h.link, h.Table, h.Data, h.Condition, h.Args...)
 }
 
 // Next calls the next hook handler.
@@ -148,7 +151,7 @@ func (h *HookDeleteInput) Next(ctx context.Context) (result sql.Result, err erro
 	if h.removedWhere {
 		h.Condition = whereKeyInCondition + h.Condition
 	}
-	return h.model.db.DoDelete(ctx, h.link, h.Table, h.Condition, h.Args...)
+	return h.Model.db.DoDelete(ctx, h.link, h.Table, h.Condition, h.Args...)
 }
 
 // Hook sets the hook functions for current model.

@@ -13,7 +13,6 @@ import (
 	"net/url"
 
 	_ "github.com/go-sql-driver/mysql"
-
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
@@ -42,6 +41,7 @@ func (d *DriverMysql) Open(config *ConfigNode) (db *sql.DB, err error) {
 		source               string
 		underlyingDriverName = "mysql"
 	)
+	// [username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
 	if config.Link != "" {
 		source = config.Link
 		// Custom changing the schema in runtime.

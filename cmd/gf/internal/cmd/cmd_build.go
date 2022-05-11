@@ -109,7 +109,7 @@ func init() {
 
 type cBuildInput struct {
 	g.Meta        `name:"build" config:"gfcli.build"`
-	File          string `name:"FILE" arg:"true"   brief:"building file path"`
+	File          string `name:"FILE" arg:"true"    brief:"building file path"`
 	Name          string `short:"n"  name:"name"    brief:"output binary name"`
 	Version       string `short:"v"  name:"version" brief:"output binary version"`
 	Arch          string `short:"a"  name:"arch"    brief:"output binary architecture, multiple arch separated with ','"`
