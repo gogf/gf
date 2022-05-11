@@ -94,6 +94,10 @@ func (s *Service) KeyWithoutEndpoints() string {
 		s.Separator = separator
 	}
 
+	if s.Separator != separator {
+		return gstr.Join([]string{s.Prefix, s.Deployment, s.Namespace, s.Name, s.Version}, s.Separator)
+	}
+
 	return s.Separator + gstr.Join([]string{s.Prefix, s.Deployment, s.Namespace, s.Name, s.Version}, s.Separator)
 }
 
