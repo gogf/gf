@@ -132,7 +132,12 @@ func TestGetService(t *testing.T) {
 		t.Fatal(err)
 	}
 	time.Sleep(time.Second * 1)
-	serviceInstances, err := r.Registry(ctx, "goframe-provider-4-tcp")
+	serviceInstances, err := r.Search(ctx, gsvc.SearchInput{
+		Name:      svc.Name,
+		Version:   svc.Version,
+		Metadata:  svc.Metadata,
+		Endpoints: svc.Endpoints,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
