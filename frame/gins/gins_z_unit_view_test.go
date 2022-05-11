@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -50,12 +51,17 @@ func Test_View(t *testing.T) {
 }
 
 func Test_View_Config(t *testing.T) {
+	var ctx = context.TODO()
 	// view1 test1
 	gtest.C(t, func(t *gtest.T) {
 		dirPath := gtest.DataPath("view1")
 		Config().GetAdapter().(*gcfg.AdapterFile).SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
 		defer Config().GetAdapter().(*gcfg.AdapterFile).ClearContent()
 		defer localInstances.Clear()
+
+		g.Dump(Config().GetAdapter().(*gcfg.AdapterFile).GetPaths())
+		g.Dump(Config().GetAdapter().(*gcfg.AdapterFile).GetFileName())
+		g.Dump(Config().Data(ctx))
 
 		view := View("test1")
 		t.AssertNE(view, nil)
@@ -64,11 +70,11 @@ func Test_View_Config(t *testing.T) {
 
 		str := `hello ${.name},version:${.version}`
 		view.Assigns(map[string]interface{}{"version": "1.9.0"})
-		result, err := view.ParseContent(context.TODO(), str, nil)
+		result, err := view.ParseContent(ctx, str, nil)
 		t.AssertNil(err)
 		t.Assert(result, "hello test1,version:1.9.0")
 
-		result, err = view.ParseDefault(context.TODO())
+		result, err = view.ParseDefault(ctx)
 		t.AssertNil(err)
 		t.Assert(result, "test1:test1")
 	})
