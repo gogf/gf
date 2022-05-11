@@ -6,13 +6,15 @@ on:
     branches:
     - master
     - develop
-    - feature/polaris
+    - feature/**
+    - fix/**
+
   pull_request:
     branches:
     - master
     - develop
-    - feature/polaris
-
+    - feature/**
+    - fix/**
 
 env:
   GF_DEBUG: 0
