@@ -118,7 +118,7 @@ func ExampleNew() {
 	// {"id":1,"name":"john"}
 }
 
-func ExampleNew_MultiConn_BadExamle() {
+func ExampleNew_MultiConn_BadExample() {
 	var (
 		ctx = gctx.New()
 	)
@@ -127,7 +127,7 @@ func ExampleNew_MultiConn_BadExamle() {
 	// See ExampleNew_MultiConn_Recommend for a better way.
 	for i := 0; i < 5; i++ {
 		go func() {
-			c := g.Client()
+			c := gclient.New()
 			defer c.CloseIdleConnections()
 			r, err := c.Get(ctx, "http://127.0.0.1:8999/var/json")
 			defer r.Close()
