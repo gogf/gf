@@ -8,8 +8,8 @@
 package gproperties_test
 
 import (
-	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/gogf/gf/v2/encoding/gjson"
@@ -19,44 +19,74 @@ import (
 )
 
 var pStr string = `
-# template
-data = "/home/www/templates/"
-# MySQL 
-sql.disk.0  = 127.0.0.1:6379,0
-sql.cache.0 = 127.0.0.1:6379,1=
-sql.cache.1=0
-sql.disk.a = 10
+# 模板引擎目录
+viewpath = "/home/www/templates/"
+# MySQL数据库配置
+redis.disk  = "127.0.0.1:6379,0"
+redis.cache = "127.0.0.1:6379,1"
 `
+var errorTests = []struct {
+	input, msg string
+}{
+	// unicode literals
+	{"key\\u1 = value", "invalid unicode literal"},
+	{"key\\u12 = value", "invalid unicode literal"},
+	{"key\\u123 = value", "invalid unicode literal"},
+	{"key\\u123g = value", "invalid unicode literal"},
+	{"key\\u123", "invalid unicode literal"},
+
+	// circular references
+	{"key=${key}", `circular reference in:\nkey=\$\{key\}`},
+	{"key1=${key2}\nkey2=${key1}", `circular reference in:\n(key1=\$\{key2\}\nkey2=\$\{key1\}|key2=\$\{key1\}\nkey1=\$\{key2\})`},
+
+	// malformed expressions
+	{"key=${ke", "malformed expression"},
+	{"key=valu${ke", "malformed expression"},
+}
 
 func TestDecode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-
-		decodeStr, err := gproperties.Decode(([]byte)(pStr))
+		m := make(map[string]interface{})
+		m["properties"] = pStr
+		res, err := gproperties.Encode(m)
+		if err != nil {
+			t.Errorf("encode failed. %v", err)
+			return
+		}
+		decodeMap, err := gproperties.Decode(res)
 		if err != nil {
 			t.Errorf("decode failed. %v", err)
 			return
 		}
-		fmt.Printf("%v\n", decodeStr)
-		v, _ := json.Marshal(decodeStr)
-		fmt.Printf("%v\n", string(v))
+		t.Assert(decodeMap["properties"], pStr)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		for _, v := range errorTests {
+			_, err := gproperties.Decode(([]byte)(v.input))
+			if err == nil {
+				t.Errorf("encode should be failed. %v", err)
+				return
+			}
+			t.AssertIN(`Lib magiconair load Properties data failed.`, strings.Split(err.Error(), ":"))
+		}
 	})
 }
 func TestEncode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-
-		encStr, err := gproperties.Encode(map[string]interface{}{
-			"sql": g.Map{
-				"userName": "admin",
-				"password": "123456",
-			},
-			"user": "admin",
-			"no":   123,
-		})
+		m := make(map[string]interface{})
+		m["properties"] = pStr
+		res, err := gproperties.Encode(m)
+		if err != nil {
+			t.Errorf("encode failed. %v", err)
+			return
+		}
+		decodeMap, err := gproperties.Decode(res)
 		if err != nil {
 			t.Errorf("decode failed. %v", err)
 			return
 		}
-		fmt.Printf("%v\n", string(encStr))
+		t.Assert(decodeMap["properties"], pStr)
 	})
 }
 
