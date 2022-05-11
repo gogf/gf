@@ -31,7 +31,7 @@ func TestRegistry(t *testing.T) {
 	ctx := context.Background()
 
 	svc := &gsvc.Service{
-		Name:      "goframe-provider-0-",
+		Name:      "goframe-provider-0-tcp",
 		Version:   "test",
 		Metadata:  map[string]interface{}{"app": "goframe"},
 		Endpoints: []string{"tcp://127.0.0.1:9000?isSecure=false"},
@@ -48,7 +48,7 @@ func TestRegistry(t *testing.T) {
 	}
 }
 
-// TestRegistryMany . TestRegistryManyService
+// TestRegistryMany TestRegistryManyService
 func TestRegistryMany(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
 
@@ -59,19 +59,19 @@ func TestRegistryMany(t *testing.T) {
 	)
 
 	svc := &gsvc.Service{
-		Name:      "goframe-provider-1-",
+		Name:      "goframe-provider-1-tcp",
 		Version:   "test",
 		Metadata:  map[string]interface{}{"app": "goframe"},
 		Endpoints: []string{"tcp://127.0.0.1:9000?isSecure=false"},
 	}
 	svc1 := &gsvc.Service{
-		Name:      "goframe-provider-2-",
+		Name:      "goframe-provider-2-tcp",
 		Version:   "test",
 		Metadata:  map[string]interface{}{"app": "goframe"},
 		Endpoints: []string{"tcp://127.0.0.1:9001?isSecure=false"},
 	}
 	svc2 := &gsvc.Service{
-		Name:      "goframe-provider-3-",
+		Name:      "goframe-provider-3-tcp",
 		Version:   "test",
 		Metadata:  map[string]interface{}{"app": "goframe"},
 		Endpoints: []string{"tcp://127.0.0.1:9002?isSecure=false"},
@@ -121,7 +121,7 @@ func TestGetService(t *testing.T) {
 	ctx := context.Background()
 
 	svc := &gsvc.Service{
-		Name:      "goframe-provider-4-",
+		Name:      "goframe-provider-4-tcp",
 		Version:   "test",
 		Metadata:  map[string]interface{}{"app": "goframe"},
 		Endpoints: []string{"tcp://127.0.0.1:9000?isSecure=false"},
@@ -164,7 +164,7 @@ func TestWatch(t *testing.T) {
 	ctx := gctx.New()
 
 	svc := &gsvc.Service{
-		Name:      "goframe-provider-4-",
+		Name:      "goframe-provider-4-tcp",
 		Version:   "test",
 		Metadata:  map[string]interface{}{"app": "goframe"},
 		Endpoints: []string{"tcp://127.0.0.1:9000?isSecure=false"},
