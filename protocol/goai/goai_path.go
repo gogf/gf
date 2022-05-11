@@ -142,6 +142,17 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		}
 	}
 
+	// path security
+	// note: the security schema type only support http and apiKey;not support oauth2 and openIdConnect.
+	// multi schema separate with comma, e.g. `security: apiKey1,apiKey2`
+	TagNameSecurity := gmeta.Get(inputObject.Interface(), TagNameSecurity).String()
+	securities := gstr.SplitAndTrim(TagNameSecurity, ",")
+	seRequirements := SecurityRequirement{}
+	for _, sec := range securities {
+		seRequirements[sec] = []string{}
+	}
+	operation.Security = &SecurityRequirements{seRequirements}
+
 	// =================================================================================================================
 	// Request.
 	// =================================================================================================================
