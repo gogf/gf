@@ -9,6 +9,9 @@ package gclient_test
 import (
 	"context"
 	"fmt"
+	"github.com/gogf/gf/v2/net/gclient"
+	"github.com/gogf/gf/v2/os/gctx"
+	"net/http"
 	"time"
 
 	"github.com/gogf/gf/v2/frame/g"
@@ -96,6 +99,76 @@ func init() {
 		panic(err)
 	}
 	time.Sleep(time.Millisecond * 500)
+}
+
+func ExampleNew() {
+	var (
+		ctx    = gctx.New()
+		client = gclient.New()
+	)
+
+	if r, err := client.Get(ctx, "http://127.0.0.1:8999/var/json"); err != nil {
+		panic(err)
+	} else {
+		defer r.Close()
+		fmt.Println(r.ReadAllString())
+	}
+
+	// Output:
+	// {"id":1,"name":"john"}
+}
+
+func ExampleNew_MultiConn_BadExamle() {
+	var (
+		ctx = gctx.New()
+	)
+
+	// When you want to make a concurrent request, The following code is a bad example.
+	// See ExampleNew_MultiConn_Recommend for a better way.
+	for i := 0; i < 5; i++ {
+		go func() {
+			c := g.Client()
+			defer c.CloseIdleConnections()
+			r, err := c.Get(ctx, "http://127.0.0.1:8999/var/json")
+			defer r.Close()
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				fmt.Println(r.StatusCode)
+			}
+		}()
+	}
+}
+
+func ExampleNew_MultiConn_Recommend() {
+	var (
+		ctx    = gctx.New()
+		client = gclient.New()
+	)
+
+	// controls the maximum idle(keep-alive) connections to keep per-host
+	client.Transport.(*http.Transport).MaxIdleConnsPerHost = 5
+
+	for i := 0; i < 5; i++ {
+		go func() {
+			if r, err := client.Get(ctx, "http://127.0.0.1:8999/var/json"); err != nil {
+				panic(err)
+			} else {
+				defer r.Close()
+				// Make sure call the ReadAllString() Funcion, Otherwise the program will block here
+				fmt.Println(r.ReadAllString())
+			}
+		}()
+	}
+
+	time.Sleep(time.Second * 1)
+
+	// Output:
+	//{"id":1,"name":"john"}
+	//{"id":1,"name":"john"}
+	//{"id":1,"name":"john"}
+	//{"id":1,"name":"john"}
+	//{"id":1,"name":"john"}
 }
 
 func ExampleClient_Header() {
