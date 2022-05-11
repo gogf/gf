@@ -170,7 +170,7 @@ func TestWatch(t *testing.T) {
 		Endpoints: []string{"tcp://127.0.0.1:9000?isSecure=false"},
 	}
 
-	watch, err := r.Watch(context.Background(), "goframe-provider-4-tcp")
+	watch, err := r.Watch(context.Background(), svc.Key())
 	if err != nil {
 		t.Fatal(err)
 	}
