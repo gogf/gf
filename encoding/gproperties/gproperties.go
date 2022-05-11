@@ -5,7 +5,6 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gproperties provides accessing and converting for .properties content.
-
 package gproperties
 
 import (
