@@ -35,6 +35,7 @@ func TestRegistry(t *testing.T) {
 		Version:   "test",
 		Metadata:  map[string]interface{}{"app": "goframe"},
 		Endpoints: []string{"tcp://127.0.0.1:9000?isSecure=false"},
+		Separator: _instanceIDSeparator,
 	}
 
 	err := r.Register(ctx, svc)
@@ -63,18 +64,21 @@ func TestRegistryMany(t *testing.T) {
 		Version:   "test",
 		Metadata:  map[string]interface{}{"app": "goframe"},
 		Endpoints: []string{"tcp://127.0.0.1:9000?isSecure=false"},
+		Separator: _instanceIDSeparator,
 	}
 	svc1 := &gsvc.Service{
 		Name:      "goframe-provider-2-tcp",
 		Version:   "test",
 		Metadata:  map[string]interface{}{"app": "goframe"},
 		Endpoints: []string{"tcp://127.0.0.1:9001?isSecure=false"},
+		Separator: _instanceIDSeparator,
 	}
 	svc2 := &gsvc.Service{
 		Name:      "goframe-provider-3-tcp",
 		Version:   "test",
 		Metadata:  map[string]interface{}{"app": "goframe"},
 		Endpoints: []string{"tcp://127.0.0.1:9002?isSecure=false"},
+		Separator: _instanceIDSeparator,
 	}
 
 	err := r.Register(context.Background(), svc)
@@ -125,6 +129,7 @@ func TestGetService(t *testing.T) {
 		Version:   "test",
 		Metadata:  map[string]interface{}{"app": "goframe"},
 		Endpoints: []string{"tcp://127.0.0.1:9000?isSecure=false"},
+		Separator: _instanceIDSeparator,
 	}
 
 	err := r.Register(ctx, svc)
@@ -137,6 +142,7 @@ func TestGetService(t *testing.T) {
 		Version:   svc.Version,
 		Metadata:  svc.Metadata,
 		Endpoints: svc.Endpoints,
+		Separator: _instanceIDSeparator,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -168,6 +174,7 @@ func TestWatch(t *testing.T) {
 		Version:   "test",
 		Metadata:  map[string]interface{}{"app": "goframe"},
 		Endpoints: []string{"tcp://127.0.0.1:9000?isSecure=false"},
+		Separator: _instanceIDSeparator,
 	}
 
 	watch, err := r.Watch(context.Background(), svc.KeyWithoutEndpoints())
