@@ -11,11 +11,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 func Test_View(t *testing.T) {
@@ -59,9 +59,9 @@ func Test_View_Config(t *testing.T) {
 		defer Config().GetAdapter().(*gcfg.AdapterFile).ClearContent()
 		defer localInstances.Clear()
 
-		g.Dump(Config().GetAdapter().(*gcfg.AdapterFile).GetPaths())
-		g.Dump(Config().GetAdapter().(*gcfg.AdapterFile).GetFileName())
-		g.Dump(Config().Data(ctx))
+		gutil.Dump(Config().GetAdapter().(*gcfg.AdapterFile).GetPaths())
+		gutil.Dump(Config().GetAdapter().(*gcfg.AdapterFile).GetFileName())
+		gutil.Dump(Config().Data(ctx))
 
 		view := View("test1")
 		t.AssertNE(view, nil)
