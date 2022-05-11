@@ -19,7 +19,6 @@ import (
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/grand"
 )
 
@@ -31,7 +30,7 @@ type UploadFile struct {
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (f UploadFile) MarshalJSON() ([]byte, error) {
-	return json.Marshal(gconv.Map(f))
+	return json.Marshal(f.FileHeader)
 }
 
 // UploadFiles is an array type of *UploadFile.
