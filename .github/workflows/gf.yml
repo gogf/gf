@@ -16,7 +16,7 @@ on:
     - fix/**
 
 env:
-  GF_DEBUG: 0
+  GF_DEBUG: 1
 
 
 jobs:
@@ -154,7 +154,7 @@ jobs:
       run: |
         go build ./...
         GOARCH=386   go test -v ./... || exit 1
-        GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic || exit 1
+        GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
 
 #    - name: Merge Coverage
 #      run: |
