@@ -641,6 +641,81 @@ func ExampleJson_MustToIniString() {
 	//Name=John
 }
 
+// ========================================================================
+// Properties
+// ========================================================================
+func ExampleJson_ToProperties() {
+	type BaseInfo struct {
+		Name string
+		Age  int
+	}
+
+	info := BaseInfo{
+		Name: "John",
+		Age:  18,
+	}
+
+	j := gjson.New(info)
+	pr, _ := j.ToProperties()
+	fmt.Println(string(pr))
+
+	// May Output:
+	// name = John
+	// age = 18
+}
+
+func ExampleJson_ToPropertiesString() {
+	type BaseInfo struct {
+		Name string
+	}
+
+	info := BaseInfo{
+		Name: "John",
+	}
+
+	j := gjson.New(info)
+	pr, _ := j.ToPropertiesString()
+	fmt.Println(pr)
+
+	// Output:
+	// name = John
+}
+
+func ExampleJson_MustToProperties() {
+	type BaseInfo struct {
+		Name string
+	}
+
+	info := BaseInfo{
+		Name: "John",
+	}
+
+	j := gjson.New(info)
+	pr := j.MustToProperties()
+	fmt.Println(string(pr))
+
+	// Output:
+	// name = John
+}
+
+func ExampleJson_MustToPropertiesString() {
+	type BaseInfo struct {
+		Name string
+	}
+
+	info := BaseInfo{
+		Name: "John",
+	}
+
+	j := gjson.New(info)
+	pr := j.MustToPropertiesString()
+	fmt.Println(pr)
+
+	// Output:
+	// name = John
+}
+
+
 func ExampleJson_MarshalJSON() {
 	type BaseInfo struct {
 		Name string
@@ -1111,3 +1186,5 @@ func ExampleJson_Dump() {
 	//	"age":  "18",
 	//}
 }
+
+
