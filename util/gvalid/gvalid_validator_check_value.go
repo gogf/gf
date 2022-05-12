@@ -34,13 +34,12 @@ type iTime interface {
 }
 
 type doCheckValueInput struct {
-    Name     string      // Name specifies the name of parameter `value`.
-    Value    interface{} // Value specifies the value for the rules to be validated.
-    Rule     string      // Rule specifies the validation rules string, like "required", "required|between:1,100", etc.
-    Messages interface{} // Messages specifies the custom error messages for this rule from parameters
-    // input, which is usually type of map/slice.
-    DataRaw interface{}            // DataRaw specifies the `raw data` which is passed to the Validator. It might be type of map/struct or a nil value.
-    DataMap map[string]interface{} // DataMap specifies the map that is converted from `dataRaw`. It is usually used internally
+    Name     string                 // Name specifies the name of parameter `value`.
+    Value    interface{}            // Value specifies the value for the rules to be validated.
+    Rule     string                 // Rule specifies the validation rules string, like "required", "required|between:1,100", etc.
+    Messages interface{}            // Messages specifies the custom error messages for this rule from parameters input, which is usually type of map/slice.
+    DataRaw  interface{}            // DataRaw specifies the `raw data` which is passed to the Validator. It might be type of map/struct or a nil value.
+    DataMap  map[string]interface{} // DataMap specifies the map that is converted from `dataRaw`. It is usually used internally
 }
 
 // doCheckSingleValue does the really rules validation for single key-value.
@@ -308,7 +307,7 @@ func (v *Validator) doCheckSingleBuildInRules(ctx context.Context, in doCheckBui
             match = true
         } else {
             var (
-            	msg string
+                msg string
             )
             msg = v.getErrorMessageByRule(ctx, in.RuleKey, in.CustomMsgMap)
             return match, errors.New(msg)
