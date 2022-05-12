@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gdb_test
+package mysql_test
 
 import (
 	"context"
@@ -29,7 +29,7 @@ func Test_New(t *testing.T) {
 			Port: "3306",
 			User: TestDbUser,
 			Pass: TestDbPass,
-			Type: gdb.DriverNameMysql,
+			Type: "mysql",
 		}
 		newDb, err := gdb.New(node)
 		t.AssertNil(err)
