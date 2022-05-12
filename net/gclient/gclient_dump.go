@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/internal/utils"
 )
 
-// dumpTextFormat is the format of the dumped raw string.
+// dumpTextFormat is the format of the dumped raw string
 const dumpTextFormat = `+---------------------------------------------+
 |                   %s                  |
 +---------------------------------------------+

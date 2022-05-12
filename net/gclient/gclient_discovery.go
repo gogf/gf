@@ -38,7 +38,7 @@ var clientSelectorMap = gmap.New(true)
 
 // internalMiddlewareDiscovery is a client middleware that enables service discovery feature for client.
 func internalMiddlewareDiscovery(c *Client, r *http.Request) (response *Response, err error) {
-	ctx := r.Context()
+	var ctx = r.Context()
 	// Mark this request is handled by server tracing middleware,
 	// to avoid repeated handling by the same middleware.
 	if ctx.Value(discoveryMiddlewareHandled) != nil {
@@ -63,7 +63,7 @@ func internalMiddlewareDiscovery(c *Client, r *http.Request) (response *Response
 		return c.Next(r)
 	}
 	// Balancer.
-	selectorMapKey := service.KeyWithoutEndpoints()
+	var selectorMapKey = service.KeyWithoutEndpoints()
 	selector := clientSelectorMap.GetOrSetFuncLock(selectorMapKey, func() interface{} {
 		intlog.Printf(ctx, `http client create selector for service "%s"`, selectorMapKey)
 

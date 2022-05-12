@@ -112,7 +112,7 @@ func (c *Client) SetRetry(retryCount int, retryInterval time.Duration) *Client {
 	return c
 }
 
-// SetRedirectLimit limit the number of jumps.
+// SetRedirectLimit limit the number of jumps
 func (c *Client) SetRedirectLimit(redirectLimit int) *Client {
 	c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		if len(via) >= redirectLimit {
@@ -141,7 +141,7 @@ func (c *Client) SetProxy(proxyURL string) {
 			v.Proxy = http.ProxyURL(_proxy)
 		}
 	} else {
-		auth := &proxy.Auth{}
+		var auth = &proxy.Auth{}
 		user := _proxy.User.Username()
 		if user != "" {
 			auth.User = user
