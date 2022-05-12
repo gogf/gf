@@ -14,8 +14,8 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/magiconair/properties"
-	"github.com/spf13/cast"
 )
 
 // Decode converts properties format to map.
@@ -57,7 +57,7 @@ func Encode(data map[string]interface{}) (res []byte, err error) {
 	sort.Strings(keys)
 
 	for _, key := range keys {
-		_, _, err := pr.Set(key, cast.ToString(flattened[key]))
+		_, _, err := pr.Set(key, gconv.String(flattened[key]))
 		if err != nil {
 			err = gerror.Wrapf(err, `Sets the property key to the corresponding value failed.`)
 			return nil, err
@@ -124,7 +124,7 @@ func flattenAndMergeMap(shadow map[string]interface{}, m map[string]interface{},
 		case map[string]interface{}:
 			m2 = val.(map[string]interface{})
 		case map[interface{}]interface{}:
-			m2 = cast.ToStringMap(val)
+			m2 = gconv.Map(val)
 		default:
 			// immediate value
 			shadow[strings.ToLower(fullKey)] = val
