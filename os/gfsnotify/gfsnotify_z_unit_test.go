@@ -30,11 +30,11 @@ func TestWatcher_AddOnce(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 		callback1, err := gfsnotify.AddOnce("mywatch", path, func(event *gfsnotify.Event) {
 			value.Set(1)
-		})
+		}, ``)
 		t.AssertNil(err)
 		callback2, err := gfsnotify.AddOnce("mywatch", path, func(event *gfsnotify.Event) {
 			value.Set(2)
-		})
+		}, ``)
 		t.AssertNil(err)
 		t.Assert(callback2, nil)
 
@@ -75,7 +75,7 @@ func TestWatcher_AddRemove(t *testing.T) {
 				gfsnotify.Exit()
 				return
 			}
-		})
+		}, ``)
 		t.AssertNil(err)
 		t.AssertNE(callback, nil)
 
@@ -104,7 +104,7 @@ func TestWatcher_AddRemove(t *testing.T) {
 				v.Set(4)
 				return
 			}
-		})
+		}, ``)
 		t.AssertNil(err)
 		t.AssertNE(callback, nil)
 
@@ -135,7 +135,7 @@ func TestWatcher_Callback1(t *testing.T) {
 				v.Set(2)
 				return
 			}
-		})
+		}, ``)
 		t.AssertNil(err)
 		t.AssertNE(callback, nil)
 
@@ -166,13 +166,13 @@ func TestWatcher_Callback2(t *testing.T) {
 				v1.Set(2)
 				return
 			}
-		})
+		}, ``)
 		callback2, err2 := gfsnotify.Add(path1, func(event *gfsnotify.Event) {
 			if event.IsWrite() {
 				v2.Set(2)
 				return
 			}
-		})
+		}, ``)
 		t.Assert(err1, nil)
 		t.Assert(err2, nil)
 		t.AssertNE(callback1, nil)
@@ -206,7 +206,7 @@ func TestWatcher_WatchFolderWithoutRecursively(t *testing.T) {
 		_, err = gfsnotify.Add(dirPath, func(event *gfsnotify.Event) {
 			// fmt.Println(event.String())
 			array.Append(1)
-		}, false)
+		}, ``, false)
 		t.AssertNil(err)
 		time.Sleep(time.Millisecond * 100)
 		t.Assert(array.Len(), 0)
