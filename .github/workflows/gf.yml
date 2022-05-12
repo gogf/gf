@@ -47,7 +47,48 @@ jobs:
           # Maps tcp port 3306 on service container to the host
           - 3306:3306
 
+      # PostgreSQL backend server.
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: 12345678
+          POSTGRES_USER:     root
+          POSTGRES_DB:       test
+          TZ:                Asia/Shanghai
+        ports:
+          - 5432:5432
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
+      # MSSQL backend server.
+      mssql:
+        image: mcmoe/mssqldocker:latest
+        env:
+          ACCEPT_EULA:    Y
+          SA_PASSWORD:    LoremIpsum86
+          MSSQL_DB:       test
+          MSSQL_USER:     root
+          MSSQL_PASSWORD: LoremIpsum86
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd="/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P LoremIpsum86 -l 30 -Q \"SELECT 1\" || exit 1"
+          --health-start-period 10s
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+      # ClickHouse backend server.
+      clickhouse-server:
+        image: yandex/clickhouse-server
+        ports:
+          - 9000:9000
+          - 8123:8123
+          - 9001:9001
 
 
     strategy:
@@ -76,10 +117,54 @@ jobs:
         echo "gofmt check pass."
         sudo echo "127.0.0.1   local" | sudo tee -a /etc/hosts
 
+    - name: CLI Build & Test
+      run: |
+        cd cmd/gf
+        go mod tidy
+        go build ./...
+        GOARCH=386 go test  ./... || exit 1
+        GOARCH=amd64 go test  ./... -race -coverprofile=coverage.txt -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
+
+    - name: Example Build & Test
+      run: |
+        cd example
+        go mod tidy
+        go build ./...
+        GOARCH=386 go test  ./... || exit 1
+        GOARCH=amd64 go test  ./... -race -coverprofile=coverage.txt -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
+
+    - name: Contrib Build & Test
+      run: |
+        cd contrib
+        for file in `find . -name go.mod`; do
+            dirpath=$(dirname $file)
+            # Ignore oracle database driver build&test.
+            if [ "oracle" = $(basename $dirpath) ]; then
+                continue 1
+            fi
+            cd $dirpath
+            go mod tidy
+            go build ./...
+            GOARCH=386 go test  ./... || exit 1
+            GOARCH=amd64 go test  ./... -race -coverprofile=coverage.txt -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
+            cd -
+        done
+
     - name: Main Build & Test
       run: |
         go build ./...
+        GOARCH=386   go test -v ./... || exit 1
         GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
+
+#    - name: Merge Coverage
+#      run: |
+#        for file in `find . -name coverage.txt`; do
+#            # In case of recursively incremental selffile in root directory.
+#            if [ "./coverage.txt" = $file ]; then
+#                continue 1
+#            fi
+#            cat $file >> coverage.txt
+#        done
 
     - name: Report Coverage
       uses: codecov/codecov-action@v2
