@@ -19,9 +19,13 @@ import (
 var pStr string = `
 # 模板引擎目录
 viewpath = "/home/www/templates/"
-# MySQL数据库配置
+# redis数据库配置
 redis.disk  = "127.0.0.1:6379,0"
 redis.cache = "127.0.0.1:6379,1"
+#SQL配置
+sql.mysql.0.type = mysql
+sql.mysql.0.ip = 127.0.0.1
+sql.mysql.0.user = root
 `
 var errorTests = []struct {
 	input, msg string
@@ -113,5 +117,15 @@ func TestToJson(t *testing.T) {
 			return
 		}
 		t.Assert(jsonPr, expectJson)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		for _, v := range errorTests {
+			_, err := gproperties.ToJson(([]byte)(v.input))
+			if err == nil {
+				t.Errorf("encode should be failed. %v", err)
+				return
+			}
+			t.AssertIN(`Lib magiconair load Properties data failed.`, strings.Split(err.Error(), ":"))
+		}
 	})
 }

@@ -99,8 +99,6 @@ func deepSearch(m map[string]interface{}, path []string) map[string]interface{} 
 		}
 		m3, ok := m2.(map[string]interface{})
 		if !ok {
-			// intermediate key is a value
-			// => replace with a new map
 			m3 = make(map[string]interface{})
 			m[k] = m3
 		}
@@ -113,11 +111,7 @@ func deepSearch(m map[string]interface{}, path []string) map[string]interface{} 
 // flattenAndMergeMap recursively flattens the given map into a new map
 func flattenAndMergeMap(shadow map[string]interface{}, m map[string]interface{}, prefix string, delimiter string) map[string]interface{} {
 	if shadow != nil && prefix != "" && shadow[prefix] != nil {
-		// prefix is shadowed => nothing more to flatten
 		return shadow
-	}
-	if shadow == nil {
-		shadow = make(map[string]interface{})
 	}
 
 	var m2 map[string]interface{}
