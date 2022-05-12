@@ -40,7 +40,9 @@ const (
 
 // internalMiddlewareServerTracing is a serer middleware that enables tracing feature using standards of OpenTelemetry.
 func internalMiddlewareServerTracing(r *Request) {
-	var ctx = r.Context()
+	var (
+		ctx = r.Context()
+	)
 	// Mark this request is handled by server tracing middleware,
 	// to avoid repeated handling by the same middleware.
 	if ctx.Value(tracingMiddlewareHandled) != nil {

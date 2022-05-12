@@ -88,7 +88,9 @@ func (s *Server) EnableAdmin(pattern ...string) {
 
 // Shutdown shuts down current server.
 func (s *Server) Shutdown() error {
-	var ctx = context.TODO()
+	var (
+		ctx = context.TODO()
+	)
 	// Only shut down current servers.
 	// It may have multiple underlying http servers.
 	for _, v := range s.servers {

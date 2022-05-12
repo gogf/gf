@@ -289,7 +289,9 @@ func forceCloseWebServers(ctx context.Context) {
 // handleProcessMessage receives and handles the message from processes,
 // which are commonly used for graceful reloading feature.
 func handleProcessMessage() {
-	var ctx = context.TODO()
+	var (
+		ctx = context.TODO()
+	)
 	for {
 		if msg := gproc.Receive(adminGProcCommGroup); msg != nil {
 			if bytes.EqualFold(msg.Data, []byte("exit")) {

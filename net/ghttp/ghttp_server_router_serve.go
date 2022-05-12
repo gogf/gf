@@ -56,7 +56,6 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedI
 	if xUrlPath := r.Header.Get(HeaderXUrlPath); xUrlPath != "" {
 		path = xUrlPath
 	}
-
 	var handlerCacheKey = s.serveHandlerKey(method, path, host)
 	value, err := s.serveCache.GetOrSetFunc(ctx, handlerCacheKey, func(ctx context.Context) (interface{}, error) {
 		parsedItems, hasHook, hasServe = s.searchHandlers(method, path, host)
