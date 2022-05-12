@@ -446,7 +446,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 		}
 		// Mapping and filtering fields if `Table` is given.
 		if in.Table != "" {
-			data, _ = db.GetCore().mappingAndFilterData(in.Schema, in.Table, data, true)
+			data, _ = db.GetCore().mappingAndFilterData(ctx, in.Schema, in.Table, data, true)
 		}
 		// Put the struct attributes in sequence in Where statement.
 		for i := 0; i < reflectType.NumField(); i++ {
@@ -506,7 +506,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 		// If the first part is column name, it automatically adds prefix to the column.
 		if in.Prefix != "" {
 			array := gstr.Split(whereStr, " ")
-			if ok, _ := db.GetCore().HasField(in.Table, array[0]); ok {
+			if ok, _ := db.GetCore().HasField(ctx, in.Table, array[0]); ok {
 				whereStr = in.Prefix + "." + whereStr
 			}
 		}
@@ -766,24 +766,18 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 
 			// Special struct handling.
 			case reflect.Struct:
-				switch v := arg.(type) {
+				switch arg.(type) {
 				// The underlying driver supports time.Time/*time.Time types.
 				case time.Time, *time.Time:
 					newArgs = append(newArgs, arg)
 					continue
 
-				// Special handling for gtime.Time/*gtime.Time.
-				//
-				// DO NOT use its underlying gtime.Time.Time as its argument,
-				// because the std time.Time will be converted to certain timezone
-				// according to underlying driver. And the underlying driver also
-				// converts the time.Time to string automatically as the following does.
 				case gtime.Time:
-					newArgs = append(newArgs, v.String())
+					newArgs = append(newArgs, arg.(gtime.Time).Time)
 					continue
 
 				case *gtime.Time:
-					newArgs = append(newArgs, v.String())
+					newArgs = append(newArgs, arg.(*gtime.Time).Time)
 					continue
 
 				default:

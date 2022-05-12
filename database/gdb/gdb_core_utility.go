@@ -135,33 +135,30 @@ func (c *Core) GetChars() (charLeft string, charRight string) {
 
 // Tables retrieves and returns the tables of current schema.
 // It's mainly used in cli tool chain for automatically generating the models.
-//
-// It does nothing in default.
-func (c *Core) Tables(schema ...string) (tables []string, err error) {
+func (c *Core) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
 	return
 }
 
-// TableFields retrieves and returns the fields' information of specified table of current schema.
+// TableFields retrieves and returns the fields' information of specified table of current
+// schema.
+//
+// The parameter `link` is optional, if given nil it automatically retrieves a raw sql connection
+// as its link to proceed necessary sql query.
 //
 // Note that it returns a map containing the field name and its corresponding fields.
-// As a map is unsorted, the TableField struct has an "Index" field marks its sequence in the fields.
+// As a map is unsorted, the TableField struct has an "Index" field marks its sequence in
+// the fields.
 //
-// It's using cache feature to enhance the performance, which is never expired util the process restarts.
-//
-// It does nothing in default.
-func (c *Core) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
-	var ctx = c.db.GetCtx()
-	// It does nothing if given table is empty, especially in sub-query.
-	if table == "" {
-		return map[string]*TableField{}, nil
-	}
-	return c.db.TableFields(ctx, table, schema...)
+// It's using cache feature to enhance the performance, which is never expired util the
+// process restarts.
+func (c *Core) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {
+	return
 }
 
 // HasField determine whether the field exists in the table.
-func (c *Core) HasField(table, field string, schema ...string) (bool, error) {
+func (c *Core) HasField(ctx context.Context, table, field string, schema ...string) (bool, error) {
 	table = c.guessPrimaryTableName(table)
-	tableFields, err := c.TableFields(table, schema...)
+	tableFields, err := c.db.TableFields(ctx, table, schema...)
 	if err != nil {
 		return false, err
 	}

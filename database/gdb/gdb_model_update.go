@@ -80,11 +80,11 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	in := &HookUpdateInput{
 		internalParamHookUpdate: internalParamHookUpdate{
 			internalParamHook: internalParamHook{
-				link:  m.getLink(true),
-				model: m,
+				link: m.getLink(true),
 			},
 			handler: m.hookHandler.Update,
 		},
+		Model:     m,
 		Table:     m.tables,
 		Data:      newData,
 		Condition: conditionStr,

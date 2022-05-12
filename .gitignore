@@ -14,5 +14,4 @@ bin/
 cbuild
 **/.DS_Store
 .test/
-main
-gf
+cmd/gf/main
