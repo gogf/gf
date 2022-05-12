@@ -175,6 +175,17 @@ func LoadToml(data interface{}, safe ...bool) (*Json, error) {
 	return doLoadContentWithOptions(gconv.Bytes(data), option)
 }
 
+// LoadProperties creates a Json object from given TOML format content.
+func LoadProperties(data interface{}, safe ...bool) (*Json, error) {
+	option := Options{
+		Type: ContentTypeProperties,
+	}
+	if len(safe) > 0 && safe[0] {
+		option.Safe = true
+	}
+	return doLoadContentWithOptions(gconv.Bytes(data), option)
+}
+
 // LoadContent creates a Json object from given content, it checks the data type of `content`
 // automatically, supporting data content type as follows:
 // JSON, XML, INI, YAML and TOML.
@@ -223,7 +234,8 @@ func IsValidDataType(dataType string) bool {
 		ContentTypeYaml,
 		ContentTypeYml,
 		ContentTypeToml,
-		ContentTypeIni:
+		ContentTypeIni,
+		ContentTypeProperties:
 		return true
 	}
 	return false
