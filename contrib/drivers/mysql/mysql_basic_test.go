@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gdb_test
+package mysql_test
 
 import (
 	"testing"
@@ -41,5 +41,32 @@ func Test_Func_ConvertDataForRecord(t *testing.T) {
 		t.Assert(len(m), 1)
 		t.AssertNE(m["reset_password_token_at"], nil)
 		t.Assert(m["reset_password_token_at"], new(mysql.NullTime))
+	})
+}
+
+func Test_Func_FormatSqlWithArgs(t *testing.T) {
+	// mysql
+	gtest.C(t, func(t *gtest.T) {
+		var s string
+		s = gdb.FormatSqlWithArgs("select * from table where id>=? and sex=?", []interface{}{100, 1})
+		t.Assert(s, "select * from table where id>=100 and sex=1")
+	})
+	// mssql
+	gtest.C(t, func(t *gtest.T) {
+		var s string
+		s = gdb.FormatSqlWithArgs("select * from table where id>=@p1 and sex=@p2", []interface{}{100, 1})
+		t.Assert(s, "select * from table where id>=100 and sex=1")
+	})
+	// pgsql
+	gtest.C(t, func(t *gtest.T) {
+		var s string
+		s = gdb.FormatSqlWithArgs("select * from table where id>=$1 and sex=$2", []interface{}{100, 1})
+		t.Assert(s, "select * from table where id>=100 and sex=1")
+	})
+	// oracle
+	gtest.C(t, func(t *gtest.T) {
+		var s string
+		s = gdb.FormatSqlWithArgs("select * from table where id>=:v1 and sex=:v2", []interface{}{100, 1})
+		t.Assert(s, "select * from table where id>=100 and sex=1")
 	})
 }
