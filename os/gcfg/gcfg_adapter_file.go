@@ -206,10 +206,12 @@ func (c *AdapterFile) Available(ctx context.Context, fileName ...string) bool {
 	} else {
 		usedFileName = c.defaultName
 	}
-	if path, _ := c.GetFilePath(usedFileName); path != "" {
+	// Custom configuration content exists.
+	if c.GetContent(usedFileName) != "" {
 		return true
 	}
-	if c.GetContent(usedFileName) != "" {
+	// Configuration file exists in system path.
+	if path, _ := c.GetFilePath(usedFileName); path != "" {
 		return true
 	}
 	return false
