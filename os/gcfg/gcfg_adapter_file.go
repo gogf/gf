@@ -8,7 +8,6 @@ package gcfg
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
@@ -260,7 +259,6 @@ func (c *AdapterFile) getJson(fileName ...string) (configJson *gjson.Json, err e
 				return nil
 			}
 			if file := gres.Get(filePath); file != nil {
-				fmt.Println("retrieve file content from gres:", filePath)
 				content = string(file.Content())
 			} else {
 				content = gfile.GetContents(filePath)
