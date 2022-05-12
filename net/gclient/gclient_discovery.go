@@ -26,10 +26,12 @@ type discoveryNode struct {
 	address string
 }
 
+// Service is the client discovery service.
 func (n *discoveryNode) Service() *gsvc.Service {
 	return n.service
 }
 
+// Address returns the address of the node.
 func (n *discoveryNode) Address() string {
 	return n.address
 }
@@ -38,7 +40,7 @@ var clientSelectorMap = gmap.New(true)
 
 // internalMiddlewareDiscovery is a client middleware that enables service discovery feature for client.
 func internalMiddlewareDiscovery(c *Client, r *http.Request) (response *Response, err error) {
-	var ctx = r.Context()
+	ctx := r.Context()
 	// Mark this request is handled by server tracing middleware,
 	// to avoid repeated handling by the same middleware.
 	if ctx.Value(discoveryMiddlewareHandled) != nil {
@@ -63,10 +65,9 @@ func internalMiddlewareDiscovery(c *Client, r *http.Request) (response *Response
 		return c.Next(r)
 	}
 	// Balancer.
-	var selectorMapKey = service.KeyWithoutEndpoints()
+	selectorMapKey := service.KeyWithoutEndpoints()
 	selector := clientSelectorMap.GetOrSetFuncLock(selectorMapKey, func() interface{} {
 		intlog.Printf(ctx, `http client create selector for service "%s"`, selectorMapKey)
-
 		return gsel.GetBuilder().Build()
 	}).(gsel.Selector)
 	// Update selector nodes.
