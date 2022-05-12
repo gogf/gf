@@ -137,7 +137,6 @@ func ExampleNew_MultiConn_Recommend() {
 			}
 		}()
 	}
-
 	time.Sleep(time.Second * 1)
 
 	// Output:
