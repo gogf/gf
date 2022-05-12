@@ -37,7 +37,7 @@ type RuleFuncInput struct {
 
 var (
 	// customRuleFuncMap stores the custom rule functions.
-	// map[Rule]RuleFunc.
+	// map[Rule]RuleFunc
 	customRuleFuncMap = make(map[string]RuleFunc)
 )
 

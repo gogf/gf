@@ -125,7 +125,7 @@ func (v *Validator) Data(data interface{}) *Validator {
 
 // Assoc is a chaining operation function, which sets associated validation data for current operation.
 // The optional parameter `assoc` is usually type of map, which specifies the parameter map used in union validation.
-// Calling this function with `assoc` also sets `useAssocInsteadOfObjectAttributes` true.
+// Calling this function with `assoc` also sets `useAssocInsteadOfObjectAttributes` true
 func (v *Validator) Assoc(assoc interface{}) *Validator {
 	if assoc == nil {
 		return v
