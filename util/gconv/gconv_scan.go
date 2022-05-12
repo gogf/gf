@@ -70,7 +70,6 @@ func Scan(params interface{}, pointer interface{}, mapping ...map[string]string)
 	// For performance enhancement purpose.
 
 	pointerValueElem := pointerValue.Elem()
-
 	if pointerValueElem.CanSet() && paramsType == pointerValueElem.Type() {
 		pointerValueElem.Set(paramsValue)
 		return nil

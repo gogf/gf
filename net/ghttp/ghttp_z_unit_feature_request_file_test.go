@@ -236,10 +236,6 @@ func Test_Params_File_Upload_Required(t *testing.T) {
 		}
 		file := req.File
 
-		if file == nil {
-			r.Response.WriteExit("upload file cannot be empty")
-		}
-
 		if name, err := file.Save(dstDirPath, r.Get("randomlyRename").Bool()); err == nil {
 			r.Response.WriteExit(name)
 		}
@@ -262,7 +258,6 @@ func Test_Params_File_Upload_Required(t *testing.T) {
 		)
 		t.AssertNE(content, "")
 		t.AssertNE(content, "upload file is required")
-		t.AssertNE(content, "upload file cannot be empty")
 		t.AssertNE(content, "upload failed")
 		t.Assert(content, "file1.txt")
 		t.Assert(gfile.GetContents(dstPath1), gfile.GetContents(srcPath1))
@@ -278,7 +273,6 @@ func Test_Params_File_Upload_Required(t *testing.T) {
 		)
 		t.AssertNE(content, "")
 		t.AssertNE(content, "upload file is required")
-		t.AssertNE(content, "upload file cannot be empty")
 		t.AssertNE(content, "upload failed")
 
 		array := gstr.SplitAndTrim(content, ",")
