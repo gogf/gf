@@ -101,7 +101,7 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 			mlog.Printf(`go file changes: %s`, event.String())
 			app.Run()
 		})
-	})
+	}, ``)
 	if err != nil {
 		mlog.Fatal(err)
 	}

@@ -261,6 +261,6 @@ func (m *Manager) init(ctx context.Context) {
 			m.data = nil
 			m.mu.Unlock()
 			gfsnotify.Exit()
-		})
+		}, ``)
 	}
 }

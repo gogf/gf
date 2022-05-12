@@ -8,6 +8,7 @@ package gfsnotify
 
 import (
 	"context"
+	"regexp"
 
 	"github.com/gogf/gf/v2/container/glist"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -18,8 +19,8 @@ import (
 // Add monitors `path` with callback function `callbackFunc` to the watcher.
 // The optional parameter `recursive` specifies whether monitoring the `path` recursively,
 // which is true in default.
-func (w *Watcher) Add(path string, callbackFunc func(event *Event), recursive ...bool) (callback *Callback, err error) {
-	return w.AddOnce("", path, callbackFunc, recursive...)
+func (w *Watcher) Add(path string, callbackFunc func(event *Event), excludeDirExpr string, recursive ...bool) (callback *Callback, err error) {
+	return w.AddOnce("", path, callbackFunc, excludeDirExpr, recursive...)
 }
 
 // AddOnce monitors `path` with callback function `callbackFunc` only once using unique name
@@ -30,7 +31,7 @@ func (w *Watcher) Add(path string, callbackFunc func(event *Event), recursive ..
 //
 // The optional parameter `recursive` specifies whether monitoring the `path` recursively,
 // which is true in default.
-func (w *Watcher) AddOnce(name, path string, callbackFunc func(event *Event), recursive ...bool) (callback *Callback, err error) {
+func (w *Watcher) AddOnce(name, path string, callbackFunc func(event *Event), excludeDirExpr string, recursive ...bool) (callback *Callback, err error) {
 	w.nameSet.AddIfNotExistFuncLock(name, func() bool {
 		// Firstly add the path to watcher.
 		callback, err = w.addWithCallbackFunc(name, path, callbackFunc, recursive...)
@@ -44,8 +45,19 @@ func (w *Watcher) AddOnce(name, path string, callbackFunc func(event *Event), re
 		// 2. It bounds no callbacks to the folders, because it will search the callbacks
 		//    from its parent recursively if any event produced.
 		if fileIsDir(path) && (len(recursive) == 0 || recursive[0]) {
+			var reg *regexp.Regexp
+			if len(excludeDirExpr) > 0 {
+				reg, err = regexp.Compile(excludeDirExpr)
+				if err != nil {
+					intlog.Errorf(context.TODO(), "excludeDirExpr(%s) err: %v", excludeDirExpr, err)
+				}
+			}
 			for _, subPath := range fileAllDirs(path) {
 				if fileIsDir(subPath) {
+					if reg != nil && reg.MatchString(subPath) {
+						intlog.Printf(context.TODO(), "watcher exclude dir match: %s", subPath)
+						continue
+					}
 					if err = w.watcher.Add(subPath); err != nil {
 						err = gerror.Wrapf(err, `add watch failed for path "%s"`, subPath)
 					} else {

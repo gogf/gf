@@ -140,7 +140,7 @@ func (view *View) ParseOption(ctx context.Context, option Option) (result string
 				view.fileCacheMap.Clear()
 				templates.Clear()
 				gfsnotify.Exit()
-			}); err != nil {
+			}, ``); err != nil {
 				intlog.Errorf(ctx, `%+v`, err)
 			}
 		}
