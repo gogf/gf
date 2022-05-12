@@ -118,32 +118,10 @@ func ExampleNew() {
 	// {"id":1,"name":"john"}
 }
 
-func ExampleNew_MultiConn_BadExample() {
-	var (
-		ctx = gctx.New()
-	)
-
-	// When you want to make a concurrent request, The following code is a bad example.
-	// See ExampleNew_MultiConn_Recommend for a better way.
-	for i := 0; i < 5; i++ {
-		go func() {
-			c := gclient.New()
-			defer c.CloseIdleConnections()
-			r, err := c.Get(ctx, "http://127.0.0.1:8999/var/json")
-			defer r.Close()
-			if err != nil {
-				fmt.Println(err)
-			} else {
-				fmt.Println(r.StatusCode)
-			}
-		}()
-	}
-}
-
 func ExampleNew_MultiConn_Recommend() {
 	var (
 		ctx    = gctx.New()
-		client = gclient.New()
+		client = g.Client()
 	)
 
 	// controls the maximum idle(keep-alive) connections to keep per-host
@@ -154,9 +132,9 @@ func ExampleNew_MultiConn_Recommend() {
 			if r, err := client.Get(ctx, "http://127.0.0.1:8999/var/json"); err != nil {
 				panic(err)
 			} else {
-				defer r.Close()
 				// Make sure call the ReadAllString() Funcion, Otherwise the program will block here
 				fmt.Println(r.ReadAllString())
+				r.Close()
 			}
 		}()
 	}
