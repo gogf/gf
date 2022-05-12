@@ -12,7 +12,7 @@ package gstr
 // costDel: Defines the cost of deletion.
 // See http://php.net/manual/en/function.levenshtein.php.
 func Levenshtein(str1, str2 string, costIns, costRep, costDel int) int {
-	maxLen := 255
+	var maxLen = 255
 	l1 := len(str1)
 	l2 := len(str2)
 	if l1 == 0 {

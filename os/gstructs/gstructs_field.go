@@ -50,7 +50,7 @@ func (f *Field) TagLookup(key string) (value string, ok bool) {
 	return
 }
 
-// IsEmbedded returns true if the given field is an anonymous field (embedded).
+// IsEmbedded returns true if the given field is an anonymous field (embedded)
 func (f *Field) IsEmbedded() bool {
 	return f.Field.Anonymous
 }
@@ -62,7 +62,9 @@ func (f *Field) TagStr() string {
 
 // TagMap returns all the tag of the field along with its value string as map.
 func (f *Field) TagMap() map[string]string {
-	data := ParseTag(f.TagStr())
+	var (
+		data = ParseTag(f.TagStr())
+	)
 	for k, v := range data {
 		data[k] = utils.StripSlashes(gtag.Parse(v))
 	}
@@ -105,7 +107,7 @@ func (f *Field) OriginalKind() reflect.Kind {
 	return kind
 }
 
-// Fields retrieve and returns the fields of `pointer` as slice.
+// Fields retrieves and returns the fields of `pointer` as slice.
 func Fields(in FieldsInput) ([]Field, error) {
 	var (
 		ok                   bool

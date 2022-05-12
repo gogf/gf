@@ -83,7 +83,7 @@ func CaseSnakeFirstUpper(word string, underscore ...string) string {
 	return TrimLeft(word, replace)
 }
 
-// CaseKebab converts a string to kebab-case.
+// CaseKebab converts a string to kebab-case
 func CaseKebab(s string) string {
 	return CaseDelimited(s, '-')
 }
@@ -154,7 +154,7 @@ func addWordBoundariesToNumbers(s string) string {
 	return string(r)
 }
 
-// Converts a string to CamelCase.
+// Converts a string to CamelCase
 func toCamelInitCase(s string, initCase bool) string {
 	s = addWordBoundariesToNumbers(s)
 	s = strings.Trim(s, " ")
