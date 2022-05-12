@@ -33,6 +33,7 @@ func Test_PackFolderToGoFile(t *testing.T) {
 }
 
 func Test_PackMultiFilesToGoFile(t *testing.T) {
+	gres.Dump()
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			srcPath    = gtest.DataPath("files")
@@ -237,7 +238,7 @@ func Test_Export(t *testing.T) {
 	gres.Dump()
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			src = `template`
+			src = `template-res`
 			dst = gfile.Temp(gtime.TimestampNanoStr())
 			err = gres.Export(src, dst)
 		)
@@ -247,15 +248,15 @@ func Test_Export(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(files), 14)
 
-		name := `template/index.html`
+		name := `template-res/index.html`
 		t.Assert(gfile.GetContents(gfile.Join(dst, name)), gres.GetContent(name))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			src = `template`
+			src = `template-res`
 			dst = gfile.Temp(gtime.TimestampNanoStr())
 			err = gres.Export(src, dst, gres.ExportOption{
-				RemovePrefix: `template`,
+				RemovePrefix: `template-res`,
 			})
 		)
 		defer gfile.Remove(dst)
@@ -264,7 +265,7 @@ func Test_Export(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(files), 13)
 
-		nameInRes := `template/index.html`
+		nameInRes := `template-res/index.html`
 		nameInSys := `index.html`
 		t.Assert(gfile.GetContents(gfile.Join(dst, nameInSys)), gres.GetContent(nameInRes))
 	})
