@@ -156,16 +156,6 @@ jobs:
         GOARCH=386   go test -v ./... || exit 1
         GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
 
-    - name: Merge Coverage
-      run: |
-        for file in `find . -name coverage.txt`; do
-            # In case of recursively incremental selffile in root directory.
-            if [ "./coverage.txt" = $file ]; then
-                continue 1
-            fi
-            cat $file | tail -n +2 >> coverage.txt
-        done
-
     - name: Report Coverage
       uses: codecov/codecov-action@v2
       with:
