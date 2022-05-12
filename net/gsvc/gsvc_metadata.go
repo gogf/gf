@@ -15,11 +15,10 @@ func (m Metadata) Set(key string, value string) {
 	m[key] = value
 }
 
-// Get retrieves and return value of specified key as gvar.
+// Get retrieves and returns value of specified key as gvar.
 func (m Metadata) Get(key string) *gvar.Var {
 	if v, ok := m[key]; ok {
 		return gvar.New(v)
 	}
-
 	return nil
 }

@@ -42,7 +42,6 @@ type Option struct {
 const (
 	// DefaultKeepAliveTTL is the default keepalive TTL.
 	DefaultKeepAliveTTL = 10 * time.Second
-	separator           = "/"
 )
 
 // New creates and returns a new etcd registry.

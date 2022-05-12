@@ -9,11 +9,11 @@ package gsvc
 // Key formats and returns a string for prefix searching purpose.
 func (s *SearchInput) Key() string {
 	if s.Separator == "" {
-		s.Separator = separator
+		s.Separator = defaultSeparator
 	}
 	keyPrefix := ""
 	if s.Prefix != "" {
-		if s.Separator == separator {
+		if s.Separator == defaultSeparator {
 			keyPrefix += s.Separator + s.Prefix
 		} else {
 			keyPrefix += s.Prefix

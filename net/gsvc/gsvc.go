@@ -71,7 +71,6 @@ type SearchInput struct {
 	Namespace  string   // Service Namespace, to indicate different services in the same environment with the same Name.
 	Name       string   // Name for the service.
 	Version    string   // Service version, eg: v1.0.0, v2.1.1, etc.}
-	Endpoints  []string // Service Endpoints, pattern: IP:port, eg: 192.168.1.2:8000.
 	Metadata   Metadata // Custom data for this service, which can be set using JSON by environment or command-line.
 	Separator  string   // Separator for service name and version, eg: _, -, etc.
 }
@@ -84,7 +83,6 @@ type WatchInput struct {
 	Namespace  string   // Service Namespace, to indicate different services in the same environment with the same Name.
 	Name       string   // Name for the service.
 	Version    string   // Service version, eg: v1.0.0, v2.1.1, etc.}
-	Endpoints  []string // Service Endpoints, pattern: IP:port, eg: 192.168.1.2:8000.
 	Metadata   Metadata // Custom data for this service, which can be set using JSON by environment or command-line.
 	Separator  string   // Separator for service name and version, eg: _, -, etc.
 }

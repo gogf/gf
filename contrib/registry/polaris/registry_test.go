@@ -144,7 +144,6 @@ func TestGetService(t *testing.T) {
 		Name:       svc.Name,
 		Version:    svc.Version,
 		Metadata:   svc.Metadata,
-		Endpoints:  svc.Endpoints,
 	})
 	if err != nil {
 		t.Fatal(err)
