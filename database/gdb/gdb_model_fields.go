@@ -249,5 +249,5 @@ func (m *Model) GetFieldsExStr(fields string, prefix ...string) string {
 
 // HasField determine whether the field exists in the table.
 func (m *Model) HasField(field string) (bool, error) {
-	return m.db.GetCore().HasField(m.tablesInit, field)
+	return m.db.GetCore().HasField(m.GetCtx(), m.tablesInit, field)
 }

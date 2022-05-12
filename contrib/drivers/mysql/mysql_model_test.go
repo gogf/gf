@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gdb_test
+package mysql_test
 
 import (
 	"bytes"
@@ -17,6 +17,7 @@ import (
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
@@ -3021,8 +3022,8 @@ func Test_Model_Issue1002(t *testing.T) {
 	})
 	// where + time.Time arguments, UTC.
 	gtest.C(t, func(t *gtest.T) {
-		t1, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 19:03:32")
-		t2, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 19:03:34")
+		t1, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 11:03:32")
+		t2, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 11:03:34")
 		{
 			v, err := db.Model(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).Value()
 			t.AssertNil(err)
@@ -3079,7 +3080,7 @@ func Test_TimeZoneInsert(t *testing.T) {
 	tableName := createTableForTimeZoneTest()
 	defer dropTable(tableName)
 
-	asiaLocal, err := time.LoadLocation("Asia/Shanghai")
+	tokyoLoc, err := time.LoadLocation("Asia/Tokyo")
 	gtest.AssertNil(err)
 
 	CreateTime := "2020-11-22 12:23:45"
@@ -3091,9 +3092,9 @@ func Test_TimeZoneInsert(t *testing.T) {
 		UpdatedAt gtime.Time  `json:"updated_at"`
 		DeletedAt time.Time   `json:"deleted_at"`
 	}
-	t1, _ := time.ParseInLocation("2006-01-02 15:04:05", CreateTime, asiaLocal)
-	t2, _ := time.ParseInLocation("2006-01-02 15:04:05", UpdateTime, asiaLocal)
-	t3, _ := time.ParseInLocation("2006-01-02 15:04:05", DeleteTime, asiaLocal)
+	t1, _ := time.ParseInLocation("2006-01-02 15:04:05", CreateTime, tokyoLoc)
+	t2, _ := time.ParseInLocation("2006-01-02 15:04:05", UpdateTime, tokyoLoc)
+	t3, _ := time.ParseInLocation("2006-01-02 15:04:05", DeleteTime, tokyoLoc)
 	u := &User{
 		Id:        1,
 		CreatedAt: gtime.New(t1.UTC()),
@@ -3106,9 +3107,9 @@ func Test_TimeZoneInsert(t *testing.T) {
 		userEntity := &User{}
 		err := db.Model(tableName).Where("id", 1).Unscoped().Scan(&userEntity)
 		t.AssertNil(err)
-		t.Assert(userEntity.CreatedAt.String(), "2020-11-22 04:23:45")
-		t.Assert(userEntity.UpdatedAt.String(), "2020-11-22 05:23:45")
-		t.Assert(gtime.NewFromTime(userEntity.DeletedAt).String(), "2020-11-22 06:23:45")
+		t.Assert(userEntity.CreatedAt.String(), "2020-11-22 11:23:45")
+		t.Assert(userEntity.UpdatedAt.String(), "2020-11-22 12:23:45")
+		t.Assert(gtime.NewFromTime(userEntity.DeletedAt).String(), "2020-11-22 13:23:45")
 	})
 }
 
@@ -4284,5 +4285,379 @@ func Test_Model_Issue1701(t *testing.T) {
 		value, err := db.Model(table).Fields(gdb.Raw("if(id=1,100,null)")).WherePri(1).Value()
 		t.AssertNil(err)
 		t.Assert(value.String(), 100)
+	})
+}
+
+// https://github.com/gogf/gf/issues/1733
+func Test_Model_Issue1733(t *testing.T) {
+	table := "user_" + guid.S()
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+	    CREATE TABLE %s (
+	        id int(8) unsigned zerofill NOT NULL AUTO_INCREMENT,
+	        PRIMARY KEY (id)
+	    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	    `, table,
+	)); err != nil {
+		gtest.AssertNil(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		for i := 1; i <= 10; i++ {
+			_, err := db.Model(table).Data(g.Map{
+				"id": i,
+			}).Insert()
+			t.AssertNil(err)
+		}
+
+		all, err := db.Model(table).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(all), 10)
+		for i := 0; i < 10; i++ {
+			t.Assert(all[i]["id"].Int(), i+1)
+		}
+	})
+}
+
+// https://github.com/gogf/gf/issues/1159
+func Test_ScanList_NoRecreate_PtrAttribute(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type S1 struct {
+			Id    int
+			Name  string
+			Age   int
+			Score int
+		}
+		type S3 struct {
+			One *S1
+		}
+		var (
+			s   []*S3
+			err error
+		)
+		r1 := gdb.Result{
+			gdb.Record{
+				"id":   gvar.New(1),
+				"name": gvar.New("john"),
+				"age":  gvar.New(16),
+			},
+			gdb.Record{
+				"id":   gvar.New(2),
+				"name": gvar.New("smith"),
+				"age":  gvar.New(18),
+			},
+		}
+		err = r1.ScanList(&s, "One")
+		t.AssertNil(err)
+		t.Assert(len(s), 2)
+		t.Assert(s[0].One.Name, "john")
+		t.Assert(s[0].One.Age, 16)
+		t.Assert(s[1].One.Name, "smith")
+		t.Assert(s[1].One.Age, 18)
+
+		r2 := gdb.Result{
+			gdb.Record{
+				"id":  gvar.New(1),
+				"age": gvar.New(20),
+			},
+			gdb.Record{
+				"id":  gvar.New(2),
+				"age": gvar.New(21),
+			},
+		}
+		err = r2.ScanList(&s, "One", "One", "id:Id")
+		t.AssertNil(err)
+		t.Assert(len(s), 2)
+		t.Assert(s[0].One.Name, "john")
+		t.Assert(s[0].One.Age, 20)
+		t.Assert(s[1].One.Name, "smith")
+		t.Assert(s[1].One.Age, 21)
+	})
+}
+
+// https://github.com/gogf/gf/issues/1159
+func Test_ScanList_NoRecreate_StructAttribute(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type S1 struct {
+			Id    int
+			Name  string
+			Age   int
+			Score int
+		}
+		type S3 struct {
+			One S1
+		}
+		var (
+			s   []*S3
+			err error
+		)
+		r1 := gdb.Result{
+			gdb.Record{
+				"id":   gvar.New(1),
+				"name": gvar.New("john"),
+				"age":  gvar.New(16),
+			},
+			gdb.Record{
+				"id":   gvar.New(2),
+				"name": gvar.New("smith"),
+				"age":  gvar.New(18),
+			},
+		}
+		err = r1.ScanList(&s, "One")
+		t.AssertNil(err)
+		t.Assert(len(s), 2)
+		t.Assert(s[0].One.Name, "john")
+		t.Assert(s[0].One.Age, 16)
+		t.Assert(s[1].One.Name, "smith")
+		t.Assert(s[1].One.Age, 18)
+
+		r2 := gdb.Result{
+			gdb.Record{
+				"id":  gvar.New(1),
+				"age": gvar.New(20),
+			},
+			gdb.Record{
+				"id":  gvar.New(2),
+				"age": gvar.New(21),
+			},
+		}
+		err = r2.ScanList(&s, "One", "One", "id:Id")
+		t.AssertNil(err)
+		t.Assert(len(s), 2)
+		t.Assert(s[0].One.Name, "john")
+		t.Assert(s[0].One.Age, 20)
+		t.Assert(s[1].One.Name, "smith")
+		t.Assert(s[1].One.Age, 21)
+	})
+}
+
+// https://github.com/gogf/gf/issues/1159
+func Test_ScanList_NoRecreate_SliceAttribute_Ptr(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type S1 struct {
+			Id    int
+			Name  string
+			Age   int
+			Score int
+		}
+		type S2 struct {
+			Id    int
+			Pid   int
+			Name  string
+			Age   int
+			Score int
+		}
+		type S3 struct {
+			One  *S1
+			Many []*S2
+		}
+		var (
+			s   []*S3
+			err error
+		)
+		r1 := gdb.Result{
+			gdb.Record{
+				"id":   gvar.New(1),
+				"name": gvar.New("john"),
+				"age":  gvar.New(16),
+			},
+			gdb.Record{
+				"id":   gvar.New(2),
+				"name": gvar.New("smith"),
+				"age":  gvar.New(18),
+			},
+		}
+		err = r1.ScanList(&s, "One")
+		t.AssertNil(err)
+		t.Assert(len(s), 2)
+		t.Assert(s[0].One.Name, "john")
+		t.Assert(s[0].One.Age, 16)
+		t.Assert(s[1].One.Name, "smith")
+		t.Assert(s[1].One.Age, 18)
+
+		r2 := gdb.Result{
+			gdb.Record{
+				"id":   gvar.New(100),
+				"pid":  gvar.New(1),
+				"age":  gvar.New(30),
+				"name": gvar.New("john"),
+			},
+			gdb.Record{
+				"id":   gvar.New(200),
+				"pid":  gvar.New(1),
+				"age":  gvar.New(31),
+				"name": gvar.New("smith"),
+			},
+		}
+		err = r2.ScanList(&s, "Many", "One", "pid:Id")
+		// fmt.Printf("%+v", err)
+		t.AssertNil(err)
+		t.Assert(len(s), 2)
+		t.Assert(s[0].One.Name, "john")
+		t.Assert(s[0].One.Age, 16)
+		t.Assert(len(s[0].Many), 2)
+		t.Assert(s[0].Many[0].Name, "john")
+		t.Assert(s[0].Many[0].Age, 30)
+		t.Assert(s[0].Many[1].Name, "smith")
+		t.Assert(s[0].Many[1].Age, 31)
+
+		t.Assert(s[1].One.Name, "smith")
+		t.Assert(s[1].One.Age, 18)
+		t.Assert(len(s[1].Many), 0)
+
+		r3 := gdb.Result{
+			gdb.Record{
+				"id":  gvar.New(100),
+				"pid": gvar.New(1),
+				"age": gvar.New(40),
+			},
+			gdb.Record{
+				"id":  gvar.New(200),
+				"pid": gvar.New(1),
+				"age": gvar.New(41),
+			},
+		}
+		err = r3.ScanList(&s, "Many", "One", "pid:Id")
+		// fmt.Printf("%+v", err)
+		t.AssertNil(err)
+		t.Assert(len(s), 2)
+		t.Assert(s[0].One.Name, "john")
+		t.Assert(s[0].One.Age, 16)
+		t.Assert(len(s[0].Many), 2)
+		t.Assert(s[0].Many[0].Name, "john")
+		t.Assert(s[0].Many[0].Age, 40)
+		t.Assert(s[0].Many[1].Name, "smith")
+		t.Assert(s[0].Many[1].Age, 41)
+
+		t.Assert(s[1].One.Name, "smith")
+		t.Assert(s[1].One.Age, 18)
+		t.Assert(len(s[1].Many), 0)
+	})
+}
+
+// https://github.com/gogf/gf/issues/1159
+func Test_ScanList_NoRecreate_SliceAttribute_Struct(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type S1 struct {
+			Id    int
+			Name  string
+			Age   int
+			Score int
+		}
+		type S2 struct {
+			Id    int
+			Pid   int
+			Name  string
+			Age   int
+			Score int
+		}
+		type S3 struct {
+			One  S1
+			Many []S2
+		}
+		var (
+			s   []S3
+			err error
+		)
+		r1 := gdb.Result{
+			gdb.Record{
+				"id":   gvar.New(1),
+				"name": gvar.New("john"),
+				"age":  gvar.New(16),
+			},
+			gdb.Record{
+				"id":   gvar.New(2),
+				"name": gvar.New("smith"),
+				"age":  gvar.New(18),
+			},
+		}
+		err = r1.ScanList(&s, "One")
+		t.AssertNil(err)
+		t.Assert(len(s), 2)
+		t.Assert(s[0].One.Name, "john")
+		t.Assert(s[0].One.Age, 16)
+		t.Assert(s[1].One.Name, "smith")
+		t.Assert(s[1].One.Age, 18)
+
+		r2 := gdb.Result{
+			gdb.Record{
+				"id":   gvar.New(100),
+				"pid":  gvar.New(1),
+				"age":  gvar.New(30),
+				"name": gvar.New("john"),
+			},
+			gdb.Record{
+				"id":   gvar.New(200),
+				"pid":  gvar.New(1),
+				"age":  gvar.New(31),
+				"name": gvar.New("smith"),
+			},
+		}
+		err = r2.ScanList(&s, "Many", "One", "pid:Id")
+		// fmt.Printf("%+v", err)
+		t.AssertNil(err)
+		t.Assert(len(s), 2)
+		t.Assert(s[0].One.Name, "john")
+		t.Assert(s[0].One.Age, 16)
+		t.Assert(len(s[0].Many), 2)
+		t.Assert(s[0].Many[0].Name, "john")
+		t.Assert(s[0].Many[0].Age, 30)
+		t.Assert(s[0].Many[1].Name, "smith")
+		t.Assert(s[0].Many[1].Age, 31)
+
+		t.Assert(s[1].One.Name, "smith")
+		t.Assert(s[1].One.Age, 18)
+		t.Assert(len(s[1].Many), 0)
+
+		r3 := gdb.Result{
+			gdb.Record{
+				"id":  gvar.New(100),
+				"pid": gvar.New(1),
+				"age": gvar.New(40),
+			},
+			gdb.Record{
+				"id":  gvar.New(200),
+				"pid": gvar.New(1),
+				"age": gvar.New(41),
+			},
+		}
+		err = r3.ScanList(&s, "Many", "One", "pid:Id")
+		// fmt.Printf("%+v", err)
+		t.AssertNil(err)
+		t.Assert(len(s), 2)
+		t.Assert(s[0].One.Name, "john")
+		t.Assert(s[0].One.Age, 16)
+		t.Assert(len(s[0].Many), 2)
+		t.Assert(s[0].Many[0].Name, "john")
+		t.Assert(s[0].Many[0].Age, 40)
+		t.Assert(s[0].Many[1].Name, "smith")
+		t.Assert(s[0].Many[1].Age, 41)
+
+		t.Assert(s[1].One.Name, "smith")
+		t.Assert(s[1].One.Age, 18)
+		t.Assert(len(s[1].Many), 0)
+	})
+}
+
+func TestResult_Structs1(t *testing.T) {
+	type A struct {
+		Id int `orm:"id"`
+	}
+	type B struct {
+		*A
+		Name string
+	}
+	gtest.C(t, func(t *gtest.T) {
+		r := gdb.Result{
+			gdb.Record{"id": gvar.New(nil), "name": gvar.New("john")},
+			gdb.Record{"id": gvar.New(nil), "name": gvar.New("smith")},
+		}
+		array := make([]*B, 2)
+		err := r.Structs(&array)
+		t.AssertNil(err)
+		t.Assert(array[0].Id, 0)
+		t.Assert(array[1].Id, 0)
+		t.Assert(array[0].Name, "john")
+		t.Assert(array[1].Name, "smith")
 	})
 }

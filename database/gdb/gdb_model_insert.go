@@ -323,11 +323,11 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption int) (resul
 	in := &HookInsertInput{
 		internalParamHookInsert: internalParamHookInsert{
 			internalParamHook: internalParamHook{
-				link:  m.getLink(true),
-				model: m,
+				link: m.getLink(true),
 			},
 			handler: m.hookHandler.Insert,
 		},
+		Model:  m,
 		Table:  m.tables,
 		Data:   list,
 		Option: doInsertOption,

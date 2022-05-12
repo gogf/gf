@@ -78,7 +78,7 @@ func (c *Cron) doAddEntry(in doAddEntryInput) (*Entry, error) {
 	entry.timerEntry = gtimer.AddEntry(
 		in.Ctx,
 		time.Second,
-		entry.check,
+		entry.checkAndRun,
 		in.IsSingleton,
 		-1,
 		gtimer.StatusStopped,
@@ -130,10 +130,10 @@ func (entry *Entry) Close() {
 	entry.timerEntry.Close()
 }
 
-// check is the core timing task check logic.
+// checkAndRun is the core timing task check logic.
 // The running times limits feature is implemented by gcron.Entry and cannot be implemented by gtimer.Entry.
 // gcron.Entry relies on gtimer to implement a scheduled task check for gcron.Entry per second.
-func (entry *Entry) check(ctx context.Context) {
+func (entry *Entry) checkAndRun(ctx context.Context) {
 	if entry.schedule.meet(time.Now()) {
 		switch entry.cron.status.Val() {
 		case StatusStopped:
