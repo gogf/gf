@@ -75,5 +75,6 @@ func (r *Response) Close() error {
 		return nil
 	}
 	r.Response.Close = true
+	r.ReadAll()
 	return r.Response.Body.Close()
 }
