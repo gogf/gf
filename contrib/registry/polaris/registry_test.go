@@ -138,11 +138,13 @@ func TestGetService(t *testing.T) {
 	}
 	time.Sleep(time.Second * 1)
 	serviceInstances, err := r.Search(ctx, gsvc.SearchInput{
-		Name:      svc.Name,
-		Version:   svc.Version,
-		Metadata:  svc.Metadata,
-		Endpoints: svc.Endpoints,
-		Separator: _instanceIDSeparator,
+		Prefix:     svc.Prefix,
+		Deployment: svc.Deployment,
+		Namespace:  svc.Namespace,
+		Name:       svc.Name,
+		Version:    svc.Version,
+		Metadata:   svc.Metadata,
+		Endpoints:  svc.Endpoints,
 	})
 	if err != nil {
 		t.Fatal(err)
