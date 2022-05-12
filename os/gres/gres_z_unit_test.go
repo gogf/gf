@@ -19,7 +19,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_PackToGoFile(t *testing.T) {
+func Test_PackFolderToGoFile(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			srcPath    = gtest.DataPath("files")
@@ -29,6 +29,23 @@ func Test_PackToGoFile(t *testing.T) {
 		)
 		t.AssertNil(err)
 		_ = gfile.Remove(goFilePath)
+	})
+}
+
+func Test_PackMultiFilesToGoFile(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			srcPath    = gtest.DataPath("files")
+			goFilePath = gfile.Temp(gtime.TimestampNanoStr(), "data.go")
+			pkgName    = "data"
+			array, err = gfile.ScanDir(srcPath, "*", false)
+		)
+		t.AssertNil(err)
+		err = gres.PackToGoFile(strings.Join(array, ","), goFilePath, pkgName)
+		t.AssertNil(err)
+		defer gfile.Remove(goFilePath)
+
+		t.AssertNil(gfile.CopyFile(goFilePath, gtest.DataPath("data/data.go")))
 	})
 }
 
@@ -62,21 +79,6 @@ func Test_PackToFile(t *testing.T) {
 		err = r.Load(dstPath)
 		t.AssertNil(err)
 		t.Assert(r.Contains("files"), true)
-	})
-}
-
-func Test_PackMulti(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		var (
-			srcPath    = gtest.DataPath("files")
-			goFilePath = gfile.Temp(gtime.TimestampNanoStr(), "data.go")
-			pkgName    = "data"
-			array, err = gfile.ScanDir(srcPath, "*", false)
-		)
-		t.AssertNil(err)
-		err = gres.PackToGoFile(strings.Join(array, ","), goFilePath, pkgName)
-		t.AssertNil(err)
-		_ = gfile.Remove(goFilePath)
 	})
 }
 
