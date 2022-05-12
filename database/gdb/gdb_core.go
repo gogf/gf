@@ -635,6 +635,12 @@ func (c *Core) DoDelete(ctx context.Context, link Link, table string, condition 
 	return c.db.DoExec(ctx, link, fmt.Sprintf("DELETE FROM %s%s", table, condition), args...)
 }
 
+// FilteredLink retrieves and returns filtered `linkInfo` that can be using for
+// logging or tracing purpose.
+func (c *Core) FilteredLink() string {
+	return c.config.Link
+}
+
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 // It just returns the pointer address.
 //
