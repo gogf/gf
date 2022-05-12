@@ -21,7 +21,7 @@ func (v *Validator) getErrorMessageByRule(ctx context.Context, ruleKey string, c
 		}
 		return content
 	}
-	// Retrieve default messages according to certain rule.
+	// Retrieve default message according to certain rule.
 	content = v.i18nManager.GetContent(ctx, ruleMessagePrefixForI18n+ruleKey)
 	if content == "" {
 		content = defaultMessages[ruleKey]

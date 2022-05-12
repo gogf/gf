@@ -15,7 +15,7 @@ func (v *Validator) checkLuHn(value string) bool {
 		parity  = nDigits % 2
 	)
 	for i := 0; i < nDigits; i++ {
-		var digit = int(value[i] - 48)
+		digit := int(value[i] - 48)
 		if i%2 == parity {
 			digit *= 2
 			if digit > 9 {

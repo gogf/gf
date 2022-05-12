@@ -35,11 +35,9 @@ type RuleFuncInput struct {
 	Data *gvar.Var
 }
 
-var (
-	// customRuleFuncMap stores the custom rule functions.
-	// map[Rule]RuleFunc
-	customRuleFuncMap = make(map[string]RuleFunc)
-)
+// customRuleFuncMap stores the custom rule functions.
+// map[Rule]RuleFunc.
+var customRuleFuncMap = make(map[string]RuleFunc)
 
 // RegisterRule registers custom validation rules and function for package.
 func RegisterRule(rule string, f RuleFunc) {
@@ -54,7 +52,7 @@ func RegisterRule(rule string, f RuleFunc) {
 	customRuleFuncMap[rule] = f
 }
 
-// RegisterRuleByMap registers custom validation rules using maps for package.
+// RegisterRuleByMap registers custom validation rules using map for package.
 func RegisterRuleByMap(m map[string]RuleFunc) {
 	for k, v := range m {
 		customRuleFuncMap[k] = v
