@@ -1,17 +1,24 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package gsession_test
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gredis"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gsession"
-	"time"
 )
 
 func ExampleNew() {
 	manager := gsession.New(time.Second)
-	fmt.Println(manager.TTL())
+	fmt.Println(manager.GetTTL())
 
 	// Output:
 	// 1s
@@ -20,7 +27,7 @@ func ExampleNew() {
 func ExampleManager_SetStorage() {
 	manager := gsession.New(time.Second)
 	manager.SetStorage(gsession.NewStorageMemory())
-	fmt.Println(manager.TTL())
+	fmt.Println(manager.GetTTL())
 
 	// Output:
 	// 1s
@@ -32,20 +39,21 @@ func ExampleManager_GetStorage() {
 	fmt.Println(size)
 
 	// Output:
-	// -1
+	// 0
 }
 
 func ExampleManager_SetTTL() {
 	manager := gsession.New(time.Second)
 	manager.SetTTL(time.Minute)
-	fmt.Println(manager.TTL())
+	fmt.Println(manager.GetTTL())
 
 	// Output:
 	// 1m0s
 }
 
 func ExampleSession_Set() {
-	manager := gsession.New(time.Second, gsession.NewStorageFile())
+	storage := gsession.NewStorageFile("", time.Second)
+	manager := gsession.New(time.Second, storage)
 	s := manager.New(gctx.New())
 	fmt.Println(s.Set("key", "val") == nil)
 
@@ -54,7 +62,8 @@ func ExampleSession_Set() {
 }
 
 func ExampleSession_SetMap() {
-	manager := gsession.New(time.Second, gsession.NewStorageFile())
+	storage := gsession.NewStorageFile("", time.Second)
+	manager := gsession.New(time.Second, storage)
 	s := manager.New(gctx.New())
 	fmt.Println(s.SetMap(map[string]interface{}{}) == nil)
 
@@ -63,7 +72,8 @@ func ExampleSession_SetMap() {
 }
 
 func ExampleSession_Remove() {
-	manager := gsession.New(time.Second, gsession.NewStorageFile())
+	storage := gsession.NewStorageFile("", time.Second)
+	manager := gsession.New(time.Second, storage)
 	s1 := manager.New(gctx.New())
 	fmt.Println(s1.Remove("key"))
 
@@ -76,7 +86,8 @@ func ExampleSession_Remove() {
 }
 
 func ExampleSession_RemoveAll() {
-	manager := gsession.New(time.Second, gsession.NewStorageFile())
+	storage := gsession.NewStorageFile("", time.Second)
+	manager := gsession.New(time.Second, storage)
 	s1 := manager.New(gctx.New())
 	fmt.Println(s1.RemoveAll())
 
@@ -89,7 +100,8 @@ func ExampleSession_RemoveAll() {
 }
 
 func ExampleSession_Id() {
-	manager := gsession.New(time.Second, gsession.NewStorageFile())
+	storage := gsession.NewStorageFile("", time.Second)
+	manager := gsession.New(time.Second, storage)
 	s := manager.New(gctx.New(), "Id")
 	id, _ := s.Id()
 	fmt.Println(id)
@@ -102,7 +114,8 @@ func ExampleSession_SetId() {
 	nilSession := &gsession.Session{}
 	fmt.Println(nilSession.SetId("id"))
 
-	manager := gsession.New(time.Second, gsession.NewStorageFile())
+	storage := gsession.NewStorageFile("", time.Second)
+	manager := gsession.New(time.Second, storage)
 	s := manager.New(gctx.New())
 	s.Id()
 	fmt.Println(s.SetId("id"))
@@ -118,7 +131,8 @@ func ExampleSession_SetIdFunc() {
 		return "id"
 	}))
 
-	manager := gsession.New(time.Second, gsession.NewStorageFile())
+	storage := gsession.NewStorageFile("", time.Second)
+	manager := gsession.New(time.Second, storage)
 	s := manager.New(gctx.New())
 	s.Id()
 	fmt.Println(s.SetIdFunc(func(ttl time.Duration) string {
@@ -131,7 +145,8 @@ func ExampleSession_SetIdFunc() {
 }
 
 func ExampleSession_Data() {
-	manager := gsession.New(time.Second, gsession.NewStorageFile())
+	storage := gsession.NewStorageFile("", time.Second)
+	manager := gsession.New(time.Second, storage)
 
 	s1 := manager.New(gctx.New())
 	data1, _ := s1.Data()
@@ -147,7 +162,8 @@ func ExampleSession_Data() {
 }
 
 func ExampleSession_Size() {
-	manager := gsession.New(time.Second, gsession.NewStorageFile())
+	storage := gsession.NewStorageFile("", time.Second)
+	manager := gsession.New(time.Second, storage)
 
 	s1 := manager.New(gctx.New())
 	size1, _ := s1.Size()
@@ -163,7 +179,8 @@ func ExampleSession_Size() {
 }
 
 func ExampleSession_Contains() {
-	manager := gsession.New(time.Second, gsession.NewStorageFile())
+	storage := gsession.NewStorageFile("", time.Second)
+	manager := gsession.New(time.Second, storage)
 
 	s1 := manager.New(gctx.New())
 	notContains, _ := s1.Contains("Contains")
@@ -179,25 +196,25 @@ func ExampleSession_Contains() {
 }
 
 func ExampleStorageFile_SetCryptoKey() {
-	storage := gsession.NewStorageFile()
+	storage := gsession.NewStorageFile("", time.Second)
 	storage.SetCryptoKey([]byte("key"))
 
 	size, _ := storage.GetSize(gctx.New(), "id")
 	fmt.Println(size)
 
 	// Output:
-	// -1
+	// 0
 }
 
 func ExampleStorageFile_SetCryptoEnabled() {
-	storage := gsession.NewStorageFile()
+	storage := gsession.NewStorageFile("", time.Second)
 	storage.SetCryptoEnabled(true)
 
 	size, _ := storage.GetSize(gctx.New(), "id")
 	fmt.Println(size)
 
 	// Output:
-	// -1
+	// 0
 }
 
 func ExampleStorageFile_UpdateTTL() {
@@ -205,7 +222,7 @@ func ExampleStorageFile_UpdateTTL() {
 		ctx = gctx.New()
 	)
 
-	storage := gsession.NewStorageFile()
+	storage := gsession.NewStorageFile("", time.Second)
 	fmt.Println(storage.UpdateTTL(ctx, "id", time.Second*15))
 
 	time.Sleep(time.Second * 11)
@@ -238,7 +255,7 @@ func ExampleStorageRedis_GetSize() {
 	fmt.Println(val)
 
 	// Output:
-	// -1
+	// 0
 }
 
 func ExampleStorageRedis_Remove() {
@@ -305,7 +322,7 @@ func ExampleStorageRedisHashTable_GetSize() {
 	fmt.Println(err)
 
 	// Output:
-	// -1
+	// 0
 	// redis adapter not initialized, missing configuration or adapter register?
 }
 
@@ -333,16 +350,13 @@ func ExampleStorageRedisHashTable_RemoveAll() {
 
 func ExampleStorageRedisHashTable_GetSession() {
 	storage := gsession.NewStorageRedisHashTable(&gredis.Redis{})
-
-	strAnyMap := gmap.StrAnyMap{}
-
-	data, err := storage.GetSession(gctx.New(), "id", time.Second, &strAnyMap)
+	data, err := storage.GetSession(gctx.New(), "id", time.Second)
 
 	fmt.Println(data)
 	fmt.Println(err)
 
 	// Output:
-	// <nil>
+	//
 	// redis adapter not initialized, missing configuration or adapter register?
 }
 

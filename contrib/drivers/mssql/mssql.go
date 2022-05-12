@@ -66,6 +66,10 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	)
 	if config.Link != "" {
 		source = config.Link
+		// Custom changing the schema in runtime.
+		if config.Name != "" {
+			source, _ = gregex.ReplaceString(`database=([\w\.\-]+)+`, "database="+config.Name, source)
+		}
 	} else {
 		source = fmt.Sprintf(
 			"user id=%s;password=%s;server=%s;port=%s;database=%s;encrypt=disable",
@@ -100,7 +104,7 @@ func (d *Driver) FilteredLink() string {
 
 // GetChars returns the security char for this type of database.
 func (d *Driver) GetChars() (charLeft string, charRight string) {
-	return "\"", "\""
+	return `"`, `"`
 }
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
@@ -223,7 +227,7 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 		return nil, err
 	}
 
-	result, err = d.DoGetAll(ctx, link, `SELECT NAME FROM SYSOBJECTS WHERE XTYPE='U' AND STATUS >= 0 ORDER BY NAME`)
+	result, err = d.DoSelect(ctx, link, `SELECT NAME FROM SYSOBJECTS WHERE XTYPE='U' AND STATUS >= 0 ORDER BY NAME`)
 	if err != nil {
 		return
 	}
@@ -289,13 +293,13 @@ ORDER BY a.id,a.colorder`,
 				table,
 			)
 			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
-			result, err = d.DoGetAll(ctx, link, structureSql)
+			result, err = d.DoSelect(ctx, link, structureSql)
 			if err != nil {
 				return nil
 			}
 			fields = make(map[string]*gdb.TableField)
 			for i, m := range result {
-				fields[strings.ToLower(m["Field"].String())] = &gdb.TableField{
+				fields[m["Field"].String()] = &gdb.TableField{
 					Index:   i,
 					Name:    m["Field"].String(),
 					Type:    m["Type"].String(),

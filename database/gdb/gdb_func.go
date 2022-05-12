@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -15,6 +16,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -179,12 +181,12 @@ func DataToMapDeep(value interface{}) map[string]interface{} {
 	return m
 }
 
-// doHandleTableName adds prefix string and quote chars for the table. It handles table string like:
+// doHandleTableName adds prefix string and quote chars for table name. It handles table string like:
 // "user", "user u", "user,user_detail", "user u, user_detail ut", "user as u, user_detail as ut",
 // "user.user u", "`user`.`user` u".
 //
-// Note that, this will automatically checks the table prefix whether already added, if true it does
-// nothing to the table name, or else adds the prefix to the table name.
+// Note that, this will automatically check the table prefix whether already added, if true it does
+// nothing to the table name, or else adds the prefix to the table name and returns new table name with prefix.
 func doHandleTableName(table, prefix, charLeft, charRight string) string {
 	var (
 		index  = 0
@@ -330,7 +332,7 @@ func formatSql(sql string, args []interface{}) (newSql string, newArgs []interfa
 }
 
 type formatWhereHolderInput struct {
-	ModelWhereHolder
+	WhereHolder
 	OmitNil   bool
 	OmitEmpty bool
 	Schema    string
@@ -363,10 +365,10 @@ func isKeyValueCanBeOmitEmpty(omitEmpty bool, whereType string, key, value inter
 }
 
 // formatWhereHolder formats where statement and its arguments for `Where` and `Having` statements.
-func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newArgs []interface{}) {
+func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (newWhere string, newArgs []interface{}) {
 	var (
 		buffer      = bytes.NewBuffer(nil)
-		reflectInfo = utils.OriginValueAndKind(in.Where)
+		reflectInfo = reflection.OriginValueAndKind(in.Where)
 	)
 	switch reflectInfo.OriginKind {
 	case reflect.Array, reflect.Slice:
@@ -392,7 +394,7 @@ func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newAr
 		}
 
 	case reflect.Struct:
-		// If the `where` parameter is DO struct, it then adds `OmitNil` option for this condition,
+		// If the `where` parameter is `DO` struct, it then adds `OmitNil` option for this condition,
 		// which will filter all nil parameters in `where`.
 		if isDoStruct(in.Where) {
 			in.OmitNil = true
@@ -444,7 +446,7 @@ func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newAr
 		}
 		// Mapping and filtering fields if `Table` is given.
 		if in.Table != "" {
-			data, _ = db.GetCore().mappingAndFilterData(in.Schema, in.Table, data, true)
+			data, _ = db.GetCore().mappingAndFilterData(ctx, in.Schema, in.Table, data, true)
 		}
 		// Put the struct attributes in sequence in Where statement.
 		for i := 0; i < reflectType.NumField(); i++ {
@@ -504,7 +506,7 @@ func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newAr
 		// If the first part is column name, it automatically adds prefix to the column.
 		if in.Prefix != "" {
 			array := gstr.Split(whereStr, " ")
-			if ok, _ := db.GetCore().HasField(in.Table, array[0]); ok {
+			if ok, _ := db.GetCore().HasField(ctx, in.Table, array[0]); ok {
 				whereStr = in.Prefix + "." + whereStr
 			}
 		}
@@ -522,7 +524,9 @@ func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newAr
 				whereStr, _ = gregex.ReplaceStringFunc(`(\?)`, whereStr, func(s string) string {
 					index++
 					if i+len(newArgs) == index {
-						sqlWithHolder, holderArgs := model.getFormattedSqlAndArgs(queryTypeNormal, false)
+						sqlWithHolder, holderArgs := model.getFormattedSqlAndArgs(
+							ctx, queryTypeNormal, false,
+						)
 						newArgs = append(newArgs, holderArgs...)
 						// Automatically adding the brackets.
 						return "(" + sqlWithHolder + ")"
@@ -707,7 +711,7 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 	// Handles the slice arguments.
 	if len(args) > 0 {
 		for index, arg := range args {
-			reflectInfo := utils.OriginValueAndKind(arg)
+			reflectInfo := reflection.OriginValueAndKind(arg)
 			switch reflectInfo.OriginKind {
 			case reflect.Slice, reflect.Array:
 				// It does not split the type of []byte.
@@ -762,24 +766,18 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 
 			// Special struct handling.
 			case reflect.Struct:
-				switch v := arg.(type) {
+				switch arg.(type) {
 				// The underlying driver supports time.Time/*time.Time types.
 				case time.Time, *time.Time:
 					newArgs = append(newArgs, arg)
 					continue
 
-				// Special handling for gtime.Time/*gtime.Time.
-				//
-				// DO NOT use its underlying gtime.Time.Time as its argument,
-				// because the std time.Time will be converted to certain timezone
-				// according to underlying driver. And the underlying driver also
-				// converts the time.Time to string automatically as the following does.
 				case gtime.Time:
-					newArgs = append(newArgs, v.String())
+					newArgs = append(newArgs, arg.(gtime.Time).Time)
 					continue
 
 				case *gtime.Time:
-					newArgs = append(newArgs, v.String())
+					newArgs = append(newArgs, arg.(*gtime.Time).Time)
 					continue
 
 				default:
@@ -817,7 +815,7 @@ func FormatSqlWithArgs(sql string, args []interface{}) string {
 				if v, ok := args[index].(Raw); ok {
 					return gconv.String(v)
 				}
-				reflectInfo := utils.OriginValueAndKind(args[index])
+				reflectInfo := reflection.OriginValueAndKind(args[index])
 				if reflectInfo.OriginKind == reflect.Ptr &&
 					(reflectInfo.OriginValue.IsNil() || !reflectInfo.OriginValue.IsValid()) {
 					return "null"

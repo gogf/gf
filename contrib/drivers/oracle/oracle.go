@@ -67,8 +67,13 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 		source               string
 		underlyingDriverName = "oci8"
 	)
+	// [username/[password]@]host[:port][/service_name][?param1=value1&...&paramN=valueN]
 	if config.Link != "" {
 		source = config.Link
+		// Custom changing the schema in runtime.
+		if config.Name != "" {
+			source, _ = gregex.ReplaceString(`@(.+?)/([\w\.\-]+)+`, "@$1/"+config.Name, source)
+		}
 	} else {
 		source = fmt.Sprintf(
 			"%s/%s@%s:%s/%s",
@@ -103,7 +108,7 @@ func (d *Driver) FilteredLink() string {
 
 // GetChars returns the security char for this type of database.
 func (d *Driver) GetChars() (charLeft string, charRight string) {
-	return "\"", "\""
+	return `"`, `"`
 }
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
@@ -194,7 +199,7 @@ func (d *Driver) parseSql(sql string) string {
 // Note that it ignores the parameter `schema` in oracle database, as it is not necessary.
 func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
 	var result gdb.Result
-	result, err = d.DoGetAll(ctx, nil, "SELECT TABLE_NAME FROM USER_TABLES ORDER BY TABLE_NAME")
+	result, err = d.DoSelect(ctx, nil, "SELECT TABLE_NAME FROM USER_TABLES ORDER BY TABLE_NAME")
 	if err != nil {
 		return
 	}
@@ -245,7 +250,7 @@ FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`,
 				return nil
 			}
 			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
-			result, err = d.DoGetAll(ctx, link, structureSql)
+			result, err = d.DoSelect(ctx, link, structureSql)
 			if err != nil {
 				return nil
 			}

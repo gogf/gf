@@ -29,7 +29,7 @@ func (m *middleware) Next() {
 	var item *handlerParsedItem
 	var loop = true
 	for loop {
-		// Check whether the request is exited.
+		// Check whether the request is excited.
 		if m.request.IsExited() || m.handlerIndex >= len(m.request.handlers) {
 			break
 		}
@@ -112,7 +112,7 @@ func (m *middleware) Next() {
 			loop = false
 		})
 	}
-	// Check the http status code after all handler and middleware done.
+	// Check the http status code after all handlers and middleware done.
 	if m.request.IsExited() || m.handlerIndex >= len(m.request.handlers) {
 		if m.request.Response.Status == 0 {
 			if m.request.Middleware.served {
@@ -133,9 +133,7 @@ func (m *middleware) callHandlerFunc(funcInfo handlerFuncInfo) {
 				reflect.ValueOf(m.request.Context()),
 			}
 			if funcInfo.Type.NumIn() == 2 {
-				var (
-					inputObject reflect.Value
-				)
+				var inputObject reflect.Value
 				if funcInfo.Type.In(1).Kind() == reflect.Ptr {
 					inputObject = reflect.New(funcInfo.Type.In(1).Elem())
 					m.request.error = m.request.Parse(inputObject.Interface())

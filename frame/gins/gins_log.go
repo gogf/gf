@@ -10,13 +10,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gogf/gf/v2/internal/consts"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
 const (
 	frameCoreComponentNameLogger = "gf.core.component.logger"
-	configNodeNameLogger         = "logger"
 )
 
 // Log returns an instance of glog.Logger.
@@ -36,11 +36,11 @@ func Log(name ...string) *glog.Logger {
 		// To avoid file no found error while it's not necessary.
 		var (
 			configMap      map[string]interface{}
-			loggerNodeName = configNodeNameLogger
+			loggerNodeName = consts.ConfigNodeNameLogger
 		)
 		// Try to find possible `loggerNodeName` in case-insensitive way.
 		if configData, _ := Config().Data(ctx); len(configData) > 0 {
-			if v, _ := gutil.MapPossibleItemByKey(configData, configNodeNameLogger); v != "" {
+			if v, _ := gutil.MapPossibleItemByKey(configData, consts.ConfigNodeNameLogger); v != "" {
 				loggerNodeName = v
 			}
 		}

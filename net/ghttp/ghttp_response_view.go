@@ -93,7 +93,7 @@ func (r *Response) buildInVars(params ...map[string]interface{}) map[string]inte
 		"Cookie":  r.Request.Cookie.Map(),
 		"Session": sessionMap,
 	})
-	// Note that it should assign no Config variable to template
+	// Note that it should assign no Config variable to a template
 	// if there's no configuration file.
 	if v, _ := gcfg.Instance().Data(r.Request.Context()); len(v) > 0 {
 		m["Config"] = v

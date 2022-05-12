@@ -11,6 +11,9 @@ import (
 	"context"
 	"database/sql"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -18,8 +21,6 @@ import (
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/util/guid"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // Query commits one query SQL to underlying driver and returns the execution result.
@@ -127,8 +128,20 @@ func (c *Core) DoFilter(ctx context.Context, link Link, sql string, args []inter
 	return sql, args, nil
 }
 
+type sqlParsingHandlerInput struct {
+	DoCommitInput
+	FormattedSql string
+}
+
+type sqlParsingHandlerOutput struct {
+	DoCommitInput
+}
+
 // DoCommit commits current sql and arguments to underlying sql driver.
 func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutput, err error) {
+	// Inject internal data into ctx, especially for transaction creating.
+	ctx = c.InjectInternalCtxData(ctx)
+
 	var (
 		sqlTx                *sql.Tx
 		sqlStmt              *sql.Stmt
@@ -138,6 +151,7 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 		stmtSqlRow           *sql.Row
 		rowsAffected         int64
 		cancelFuncForTimeout context.CancelFunc
+		formattedSql         = FormatSqlWithArgs(in.Sql, in.Args)
 		timestampMilli1      = gtime.TimestampMilli()
 	)
 
@@ -184,7 +198,7 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 		out.RawResult = sqlStmt
 
 	case SqlTypeStmtExecContext:
-		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctxTimeoutTypeExec, ctx)
+		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctx, ctxTimeoutTypeExec)
 		defer cancelFuncForTimeout()
 		if c.db.GetDryRun() {
 			sqlResult = new(SqlResult)
@@ -194,13 +208,13 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 		out.RawResult = sqlResult
 
 	case SqlTypeStmtQueryContext:
-		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctxTimeoutTypeQuery, ctx)
+		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctx, ctxTimeoutTypeQuery)
 		defer cancelFuncForTimeout()
 		stmtSqlRows, err = in.Stmt.QueryContext(ctx, in.Args...)
 		out.RawResult = stmtSqlRows
 
 	case SqlTypeStmtQueryRowContext:
-		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctxTimeoutTypeQuery, ctx)
+		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctx, ctxTimeoutTypeQuery)
 		defer cancelFuncForTimeout()
 		stmtSqlRow = in.Stmt.QueryRowContext(ctx, in.Args...)
 		out.RawResult = stmtSqlRow
@@ -210,7 +224,7 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 	}
 	// Result handling.
 	switch {
-	case sqlResult != nil:
+	case sqlResult != nil && !c.GetIgnoreResultFromCtx(ctx):
 		rowsAffected, err = sqlResult.RowsAffected()
 		out.Result = sqlResult
 
@@ -232,7 +246,7 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 			Sql:           in.Sql,
 			Type:          in.Type,
 			Args:          in.Args,
-			Format:        FormatSqlWithArgs(in.Sql, in.Args),
+			Format:        formattedSql,
 			Error:         err,
 			Start:         timestampMilli1,
 			End:           timestampMilli2,
@@ -348,6 +362,11 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 	for k, v := range columns {
 		columnTypes[k] = v.DatabaseTypeName()
 		columnNames[k] = v.Name()
+	}
+	if len(columnNames) > 0 {
+		if internalData := c.GetInternalCtxDataFromCtx(ctx); internalData != nil {
+			internalData.FirstResultColumn = columnNames[0]
+		}
 	}
 	var (
 		values   = make([]interface{}, len(columnNames))

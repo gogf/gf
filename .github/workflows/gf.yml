@@ -1,4 +1,4 @@
-name: GoFrame CI
+name: GoFrame Main CI
 
 
 on:
@@ -6,11 +6,14 @@ on:
     branches:
     - master
     - develop
+    - feature/**
+    - fix/**
   pull_request:
     branches:
     - master
     - develop
-
+    - feature/**
+    - fix/**
 
 env:
   GF_DEBUG: 0
@@ -20,9 +23,9 @@ jobs:
   code-test:
     runs-on: ubuntu-latest
 
-
     # Service containers to run with `code-test`
     services:
+      # Redis backend server.
       redis:
         image  : redis
         options: >-
@@ -34,6 +37,7 @@ jobs:
           # Maps tcp port 6379 on service container to the host
           - 6379:6379
 
+      # MySQL backend server.
       mysql:
         image: mysql:5.7
         env:
@@ -43,6 +47,7 @@ jobs:
           # Maps tcp port 3306 on service container to the host
           - 3306:3306
 
+      # PostgreSQL backend server.
       postgres:
         image: postgres:13
         env:
@@ -59,6 +64,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+      # MSSQL backend server.
       mssql:
         image: mcmoe/mssqldocker:latest
         env:
@@ -76,8 +82,15 @@ jobs:
           --health-timeout 5s
           --health-retries 10
 
+      # ClickHouse backend server.
+      clickhouse-server:
+        image: yandex/clickhouse-server
+        ports:
+          - 9000:9000
+          - 8123:8123
+          - 9001:9001
 
-    # strategy set
+
     strategy:
       matrix:
         go: ["1.15", "1.16", "1.17"]
@@ -89,7 +102,7 @@ jobs:
       with:
         timezoneLinux: "Asia/Shanghai"
 
-    - name: Checkout Repositary
+    - name: Checkout Repository
       uses: actions/checkout@v2
 
     - name: Set Up Go
@@ -109,38 +122,49 @@ jobs:
         cd cmd/gf
         go mod tidy
         go build ./...
-        go test  ./...
+        GOARCH=386 go test  ./... || exit 1
+        GOARCH=amd64 go test  ./... -race -coverprofile=coverage.txt -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
 
     - name: Example Build & Test
       run: |
         cd example
         go mod tidy
         go build ./...
-        go test  ./...
+        GOARCH=386 go test  ./... || exit 1
+        GOARCH=amd64 go test  ./... -race -coverprofile=coverage.txt -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
 
     - name: Contrib Build & Test
       run: |
         cd contrib
         for file in `find . -name go.mod`; do
-            path=$(dirname $file)
+            dirpath=$(dirname $file)
             # Ignore oracle database driver build&test.
-            if [ "oracle" = $(basename $path) ]; then
+            if [ "oracle" = $(basename $dirpath) ]; then
                 continue 1
             fi
-            cd $path
+            cd $dirpath
             go mod tidy
             go build ./...
-            go test  ./...
+            GOARCH=386 go test  ./... || exit 1
+            GOARCH=amd64 go test  ./... -race -coverprofile=coverage.txt -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
             cd -
         done
 
-    - name: Run i386 Arch Test
+    - name: Main Build & Test
       run: |
-        GOARCH=386 go test -v ./... || exit 1
+        go build ./...
+        GOARCH=386   go test -v ./... || exit 1
+        GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
 
-    - name: Run amd64 Arch Test
-      run: |
-        GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
+#    - name: Merge Coverage
+#      run: |
+#        for file in `find . -name coverage.txt`; do
+#            # In case of recursively incremental selffile in root directory.
+#            if [ "./coverage.txt" = $file ]; then
+#                continue 1
+#            fi
+#            cat $file >> coverage.txt
+#        done
 
     - name: Report Coverage
       uses: codecov/codecov-action@v2

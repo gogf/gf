@@ -36,7 +36,7 @@ func Test_ToJson(t *testing.T) {
 		jsonContent := `{"dataSetId":2001,"fieldInfos":{"duration":{"id":80079,"value":"59"},"om_level":{"id":2409,"value":"4"}},"id":"g0936lt1u0f","modifyFieldInfos":{"om_level":{"id":2409,"new":"4","old":""}},"timeStamp":1584599734}`
 		var info MediaRequestModifyInfo
 		err := gjson.DecodeTo(jsonContent, &info)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		content := gjson.New(info).MustToJsonString()
 		t.Assert(gstr.Contains(content, `"feed_id":""`), true)
 		t.Assert(gstr.Contains(content, `"fieldInfos":{`), true)
@@ -56,14 +56,14 @@ func Test_MapAttributeConvert(t *testing.T) {
 `
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.LoadContent(data)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 
 		tx := struct {
 			Title map[string]interface{}
 		}{}
 
 		err = j.Var().Scan(&tx)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		t.Assert(tx.Title, g.Map{
 			"l1": "标签1", "l2": "标签2",
 		})
@@ -76,14 +76,14 @@ func Test_MapAttributeConvert(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.LoadContent(data)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 
 		tx := struct {
 			Title map[string]string
 		}{}
 
 		err = j.Var().Scan(&tx)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		t.Assert(tx.Title, g.Map{
 			"l1": "标签1", "l2": "标签2",
 		})

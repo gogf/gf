@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/gogf/gf/v2/os/gctx"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -22,6 +21,7 @@ import (
 	"github.com/gogf/gf/v2/internal/httputil"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/net/gtrace"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -73,7 +73,7 @@ func internalMiddlewareServerTracing(r *Request) {
 	// Inject tracing context.
 	r.SetCtx(ctx)
 
-	// If it is now using default trace provider, it then does no complex tracing jobs.
+	// If it is now using a default trace provider, it then does no complex tracing jobs.
 	if gtrace.IsUsingDefaultProvider() {
 		r.Middleware.Next()
 		return

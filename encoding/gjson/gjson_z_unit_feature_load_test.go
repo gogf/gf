@@ -20,7 +20,7 @@ func Test_Load_JSON1(t *testing.T) {
 	// JSON
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.LoadContent(data)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("n").String(), "123456789")
 		t.Assert(j.Get("m").Map(), g.Map{"k": "v"})
 		t.Assert(j.Get("m.k").String(), "v")
@@ -39,7 +39,7 @@ func Test_Load_JSON1(t *testing.T) {
 		gfile.PutBytes(path, data)
 		defer gfile.Remove(path)
 		j, err := gjson.Load(path, true)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("n").String(), "123456789")
 		t.Assert(j.Get("m").Map(), g.Map{"k": "v"})
 		t.Assert(j.Get("m.k").String(), "v")
@@ -52,7 +52,7 @@ func Test_Load_JSON2(t *testing.T) {
 	data := []byte(`{"n":123456789000000000000, "m":{"k":"v"}, "a":[1,2,3]}`)
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.LoadContent(data)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("n").String(), "123456789000000000000")
 		t.Assert(j.Get("m").Map(), g.Map{"k": "v"})
 		t.Assert(j.Get("m.k").String(), "v")
@@ -66,7 +66,7 @@ func Test_Load_XML(t *testing.T) {
 	// XML
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.LoadContent(data)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("doc.n").String(), "123456789")
 		t.Assert(j.Get("doc.m").Map(), g.Map{"k": "v"})
 		t.Assert(j.Get("doc.m.k").String(), "v")
@@ -76,7 +76,7 @@ func Test_Load_XML(t *testing.T) {
 	// XML
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.LoadXml(data, true)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("doc.n").String(), "123456789")
 		t.Assert(j.Get("doc.m").Map(), g.Map{"k": "v"})
 		t.Assert(j.Get("doc.m.k").String(), "v")
@@ -95,7 +95,7 @@ func Test_Load_XML(t *testing.T) {
 		gfile.PutBytes(path, data)
 		defer gfile.Remove(path)
 		j, err := gjson.Load(path)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("doc.n").String(), "123456789")
 		t.Assert(j.Get("doc.m").Map(), g.Map{"k": "v"})
 		t.Assert(j.Get("doc.m.k").String(), "v")
@@ -116,7 +116,7 @@ func Test_Load_XML(t *testing.T) {
 	<nworkOrderFrontXML/>
 	</Output>`
 		j, err := gjson.LoadContent(xml)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("Output.ipageIndex"), "2")
 		t.Assert(j.Get("Output.itotalRecords"), "GF框架")
 	})
@@ -135,7 +135,7 @@ m:
 	// YAML
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.LoadContent(data)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("n").String(), "123456789")
 		t.Assert(j.Get("m").Map(), g.Map{"k": "v"})
 		t.Assert(j.Get("m.k").String(), "v")
@@ -145,7 +145,7 @@ m:
 	// YAML
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.LoadYaml(data, true)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("n").String(), "123456789")
 		t.Assert(j.Get("m").Map(), g.Map{"k": "v"})
 		t.Assert(j.Get("m.k").String(), "v")
@@ -158,7 +158,7 @@ m:
 		gfile.PutBytes(path, data)
 		defer gfile.Remove(path)
 		j, err := gjson.Load(path)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("n").String(), "123456789")
 		t.Assert(j.Get("m").Map(), g.Map{"k": "v"})
 		t.Assert(j.Get("m.k").String(), "v")
@@ -171,7 +171,7 @@ func Test_Load_YAML2(t *testing.T) {
 	data := []byte("i : 123456789")
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.LoadContent(data)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("i"), "123456789")
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -192,7 +192,7 @@ n = 123456789
 	// TOML
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.LoadContent(data)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("n").String(), "123456789")
 		t.Assert(j.Get("m").Map(), g.Map{"k": "v"})
 		t.Assert(j.Get("m.k").String(), "v")
@@ -202,7 +202,7 @@ n = 123456789
 	// TOML
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.LoadToml(data, true)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("n").String(), "123456789")
 		t.Assert(j.Get("m").Map(), g.Map{"k": "v"})
 		t.Assert(j.Get("m.k").String(), "v")
@@ -215,7 +215,7 @@ n = 123456789
 		gfile.PutBytes(path, data)
 		defer gfile.Remove(path)
 		j, err := gjson.Load(path)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("n").String(), "123456789")
 		t.Assert(j.Get("m").Map(), g.Map{"k": "v"})
 		t.Assert(j.Get("m.k").String(), "v")
@@ -228,7 +228,7 @@ func Test_Load_TOML2(t *testing.T) {
 	data := []byte("i=123456789")
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.LoadContent(data)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Get("i"), "123456789")
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -247,11 +247,11 @@ func Test_Load_Basic(t *testing.T) {
 		_, err = gjson.DecodeToJson(nil)
 		t.AssertNE(err, nil)
 		j, err = gjson.LoadContent(nil)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(j.Interface(), nil)
 
 		j, err = gjson.LoadContent(`{"name": "gf"}`)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		j, err = gjson.LoadContent(`{"name": "gf"""}`)
 		t.AssertNE(err, nil)

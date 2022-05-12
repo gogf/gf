@@ -12,11 +12,11 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gorilla/websocket"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gsession"
 	"github.com/gogf/gf/v2/protocol/goai"
@@ -25,19 +25,19 @@ import (
 type (
 	// Server wraps the http.Server and provides more rich features.
 	Server struct {
-		instance         string                           // Instance name.
-		config           ServerConfig                     // Configuration.
-		plugins          []Plugin                         // Plugin array to extend server functionality.
-		servers          []*gracefulServer                // Underlying http.Server array.
-		serverCount      *gtype.Int                       // Underlying http.Server count.
-		closeChan        chan struct{}                    // Used for underlying server closing event notification.
-		serveTree        map[string]interface{}           // The route map tree.
-		serveCache       *gcache.Cache                    // Server caches for internal usage.
-		routesMap        map[string][]registeredRouteItem // Route map mainly for route dumps and repeated route checks.
-		statusHandlerMap map[string][]HandlerFunc         // Custom status handler map.
-		sessionManager   *gsession.Manager                // Session manager.
-		openapi          *goai.OpenApiV3                  // The OpenApi specification management object.
-		service          *gsvc.Service                    // The service for Registry.
+		instance         string                    // Instance name of current HTTP server.
+		config           ServerConfig              // Server configuration.
+		plugins          []Plugin                  // Plugin array to extend server functionality.
+		servers          []*gracefulServer         // Underlying http.Server array.
+		serverCount      *gtype.Int                // Underlying http.Server number for internal usage.
+		closeChan        chan struct{}             // Used for underlying server closing event notification.
+		serveTree        map[string]interface{}    // The route maps tree.
+		serveCache       *gcache.Cache             // Server caches for internal usage.
+		routesMap        map[string][]*HandlerItem // Route map mainly for route dumps and repeated route checks.
+		statusHandlerMap map[string][]HandlerFunc  // Custom status handler map.
+		sessionManager   *gsession.Manager         // Session manager.
+		openapi          *goai.OpenApiV3           // The OpenApi specification management object.
+		service          *gsvc.Service             // The service for Registry.
 	}
 
 	// Router object.
@@ -52,7 +52,7 @@ type (
 
 	// RouterItem is just for route dumps.
 	RouterItem struct {
-		Handler          *handlerItem // The handler.
+		Handler          *HandlerItem // The handler.
 		Server           string       // Server name.
 		Address          string       // Listening address.
 		Domain           string       // Bound domain.
@@ -70,13 +70,13 @@ type (
 	// handlerFuncInfo contains the HandlerFunc address and its reflection type.
 	handlerFuncInfo struct {
 		Func  HandlerFunc   // Handler function address.
-		Type  reflect.Type  // Reflect type information for current handler, which is used for extension of handler feature.
-		Value reflect.Value // Reflect value information for current handler, which is used for extension of handler feature.
+		Type  reflect.Type  // Reflect type information for current handler, which is used for extensions of the handler feature.
+		Value reflect.Value // Reflect value information for current handler, which is used for extensions of the handler feature.
 	}
 
-	// handlerItem is the registered handler for route handling,
+	// HandlerItem is the registered handler for route handling,
 	// including middleware and hook functions.
-	handlerItem struct {
+	HandlerItem struct {
 		Id         int             // Unique handler item id mark.
 		Name       string          // Handler name, which is automatically retrieved from runtime stack when registered.
 		Type       string          // Handler type: object/handler/middleware/hook.
@@ -84,21 +84,15 @@ type (
 		InitFunc   HandlerFunc     // Initialization function when request enters the object (only available for object register type).
 		ShutFunc   HandlerFunc     // Shutdown function when request leaves out the object (only available for object register type).
 		Middleware []HandlerFunc   // Bound middleware array.
-		HookName   string          // Hook type name, only available for hook type.
+		HookName   string          // Hook type name, only available for the hook type.
 		Router     *Router         // Router object.
 		Source     string          // Registering source file `path:line`.
 	}
 
 	// handlerParsedItem is the item parsed from URL.Path.
 	handlerParsedItem struct {
-		Handler *handlerItem      // Handler information.
+		Handler *HandlerItem      // Handler information.
 		Values  map[string]string // Router values parsed from URL.Path.
-	}
-
-	// registeredRouteItem stores the information of the router and is used for route map.
-	registeredRouteItem struct {
-		Source  string       // Source file path and its line number.
-		Handler *handlerItem // Handler object.
 	}
 
 	// Listening file descriptor mapping.
@@ -141,15 +135,15 @@ const (
 )
 
 var (
-	// methodsMap stores all supported HTTP method,
-	// it is used for quick HTTP method searching using map.
+	// methodsMap stores all supported HTTP method.
+	// It is used for quick HTTP method searching using map.
 	methodsMap = make(map[string]struct{})
 
-	// serverMapping stores more than one server instances for current process.
+	// serverMapping stores more than one server instances for current processes.
 	// The key is the name of the server, and the value is its instance.
 	serverMapping = gmap.NewStrAnyMap(true)
 
-	// serverRunning marks the running server count.
+	// serverRunning marks the running server counts.
 	// If there is no successful server running or all servers' shutdown, this value is 0.
 	serverRunning = gtype.NewInt()
 
@@ -160,7 +154,7 @@ var (
 			return true
 		},
 	}
-	// allDoneChan is the event for all server have done its serving and exit.
+	// allDoneChan is the event for all servers have done its serving and exit.
 	// It is used for process blocking purpose.
 	allDoneChan = make(chan struct{}, 1000)
 
@@ -168,9 +162,9 @@ var (
 	// The process can only be initialized once.
 	serverProcessInitialized = gtype.NewBool()
 
-	// gracefulEnabled is used for graceful reload feature, which is false in default.
+	// gracefulEnabled is used for a graceful reload feature, which is false in default.
 	gracefulEnabled = false
 
-	// defaultValueTags is the struct tag names for default value storing.
+	// defaultValueTags are the struct tag names for default value storing.
 	defaultValueTags = []string{"d", "default"}
 )

@@ -15,7 +15,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gclient"
@@ -144,7 +143,7 @@ func Test_Client_Cookies(t *testing.T) {
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		resp, err := c.Get(ctx, "/cookie")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer resp.Close()
 
 		t.AssertNE(resp.Header.Get("Set-Cookie"), "")
@@ -318,12 +317,12 @@ func Test_Client_File_And_Param(t *testing.T) {
 	s.BindHandler("/", func(r *ghttp.Request) {
 		tmpPath := gfile.Temp(guid.S())
 		err := gfile.Mkdir(tmpPath)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		defer gfile.Remove(tmpPath)
 
 		file := r.GetUploadFile("file")
 		_, err = file.Save(tmpPath)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		r.Response.Write(
 			r.Get("json"),
 			gfile.GetContents(gfile.Join(tmpPath, gfile.Basename(file.Filename))),
@@ -337,7 +336,7 @@ func Test_Client_File_And_Param(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	gtest.C(t, func(t *gtest.T) {
-		path := gdebug.TestDataPath("upload", "file1.txt")
+		path := gtest.DataPath("upload", "file1.txt")
 		data := g.Map{
 			"file": "@file:" + path,
 			"json": `{"uuid": "luijquiopm", "isRelative": false, "fileName": "test111.xls"}`,
@@ -398,7 +397,7 @@ func Test_Client_Middleware(t *testing.T) {
 		})
 		resp, err := c.Get(ctx, "/")
 		t.Assert(str1, "acefdb")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(resp.ReadAllString(), str2)
 		t.Assert(isServerHandler, true)
 
@@ -473,7 +472,7 @@ func Test_Client_Request_13_Dump(t *testing.T) {
 		url := fmt.Sprintf("http://127.0.0.1:%d", p)
 		client := g.Client().SetPrefix(url).ContentJson()
 		r, err := client.Post(ctx, "/hello", g.Map{"field": "test_for_request_body"})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		dumpedText := r.RawRequest()
 		t.Assert(gstr.Contains(dumpedText, "test_for_request_body"), true)
 		dumpedText2 := r.RawResponse()
@@ -482,7 +481,7 @@ func Test_Client_Request_13_Dump(t *testing.T) {
 
 		client2 := g.Client().SetPrefix(url).ContentType("text/html")
 		r2, err := client2.Post(ctx, "/hello2", g.Map{"field": "test_for_request_body"})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		dumpedText3 := r2.RawRequest()
 		t.Assert(gstr.Contains(dumpedText3, "test_for_request_body"), true)
 		dumpedText4 := r2.RawResponse()
@@ -520,15 +519,15 @@ func Test_WebSocketClient(t *testing.T) {
 		client.HandshakeTimeout = time.Minute
 
 		conn, _, err := client.Dial(fmt.Sprintf("ws://127.0.0.1:%d/ws", p), nil)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer conn.Close()
 
 		msg := []byte("hello")
 		err = conn.WriteMessage(websocket.TextMessage, msg)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		mt, data, err := conn.ReadMessage()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(mt, websocket.TextMessage)
 		t.Assert(data, msg)
 	})

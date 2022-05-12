@@ -11,10 +11,13 @@ import (
 	"{TplImportPrefix}/internal"
 )
 
+// internal{TplTableNameCamelCase}Dao is internal type for wrapping internal DAO implements.
+type internal{TplTableNameCamelCase}Dao = *internal.{TplTableNameCamelCase}Dao
+
 // {TplTableNameCamelLowerCase}Dao is the data access object for table {TplTableName}.
 // You can define custom methods on it to extend its functionality as you wish.
 type {TplTableNameCamelLowerCase}Dao struct {
-	*internal.{TplTableNameCamelCase}Dao
+	internal{TplTableNameCamelCase}Dao
 }
 
 var (

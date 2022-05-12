@@ -31,7 +31,7 @@ type CORSOptions struct {
 
 var (
 	// defaultAllowHeaders is the default allowed headers for CORS.
-	// It's defined another map for better header key searching performance.
+	// It defined another map for better header key searching performance.
 	defaultAllowHeaders    = "Origin,Content-Type,Accept,User-Agent,Cookie,Authorization,X-Auth-Token,X-Requested-With"
 	defaultAllowHeadersMap = make(map[string]struct{})
 )

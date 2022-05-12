@@ -25,6 +25,7 @@ func (s *Server) BindHookHandler(pattern string, hook string, handler HandlerFun
 	})
 }
 
+// doBindHookHandlerInput is the input for BindHookHandler.
 type doBindHookHandlerInput struct {
 	Prefix   string
 	Pattern  string
@@ -33,13 +34,14 @@ type doBindHookHandlerInput struct {
 	Source   string
 }
 
+// doBindHookHandler is the internal handler for BindHookHandler.
 func (s *Server) doBindHookHandler(ctx context.Context, in doBindHookHandlerInput) {
 	s.setHandler(
 		ctx,
 		setHandlerInput{
 			Prefix:  in.Prefix,
 			Pattern: in.Pattern,
-			HandlerItem: &handlerItem{
+			HandlerItem: &HandlerItem{
 				Type: HandlerTypeHook,
 				Name: gdebug.FuncPath(in.Handler),
 				Info: handlerFuncInfo{
@@ -53,6 +55,7 @@ func (s *Server) doBindHookHandler(ctx context.Context, in doBindHookHandlerInpu
 	)
 }
 
+// BindHookHandlerByMap registers handler for specified hook.
 func (s *Server) BindHookHandlerByMap(pattern string, hookMap map[string]HandlerFunc) {
 	for k, v := range hookMap {
 		s.BindHookHandler(pattern, k, v)

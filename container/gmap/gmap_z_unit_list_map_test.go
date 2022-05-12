@@ -186,7 +186,6 @@ func Test_ListMap_Json(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		data := g.MapAnyAny{
 			"k1": "v1",
-			"k2": "v2",
 		}
 		m1 := gmap.NewListMapFrom(data)
 		b1, err1 := json.Marshal(m1)
@@ -202,11 +201,11 @@ func Test_ListMap_Json(t *testing.T) {
 			"k2": "v2",
 		}
 		b, err := json.Marshal(gconv.Map(data))
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		m := gmap.NewListMap()
 		err = json.UnmarshalUseNumber(b, m)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(m.Get("k1"), data["k1"])
 		t.Assert(m.Get("k2"), data["k2"])
 	})
@@ -217,11 +216,11 @@ func Test_ListMap_Json(t *testing.T) {
 			"k2": "v2",
 		}
 		b, err := json.Marshal(gconv.Map(data))
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		var m gmap.ListMap
 		err = json.UnmarshalUseNumber(b, &m)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(m.Get("k1"), data["k1"])
 		t.Assert(m.Get("k2"), data["k2"])
 	})
@@ -313,7 +312,7 @@ func TestListMap_UnmarshalValue(t *testing.T) {
 			"name": "john",
 			"map":  []byte(`{"1":"v1","2":"v2"}`),
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Map.Size(), 2)
 		t.Assert(v.Map.Get("1"), "v1")
@@ -329,7 +328,7 @@ func TestListMap_UnmarshalValue(t *testing.T) {
 				2: "v2",
 			},
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Map.Size(), 2)
 		t.Assert(v.Map.Get("1"), "v1")

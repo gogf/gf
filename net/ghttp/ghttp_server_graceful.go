@@ -13,6 +13,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"sync"
 
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -24,7 +25,7 @@ import (
 // gracefulServer wraps the net/http.Server with graceful reload/restart feature.
 type gracefulServer struct {
 	server      *Server      // Belonged server.
-	fd          uintptr      // File descriptor for passing to child process when graceful reload.
+	fd          uintptr      // File descriptor for passing to the child process when graceful reload.
 	address     string       // Listening address like:":80", ":8080".
 	httpServer  *http.Server // Underlying http.Server.
 	rawListener net.Listener // Underlying net.Listener.
@@ -34,7 +35,7 @@ type gracefulServer struct {
 	status      int          // Status of current server.
 }
 
-// newGracefulServer creates and returns a graceful http server with given address.
+// newGracefulServer creates and returns a graceful http server with a given address.
 // The optional parameter `fd` specifies the file descriptor which is passed from parent server.
 func (s *Server) newGracefulServer(address string, fd ...int) *gracefulServer {
 	// Change port to address like: 80 -> :80
@@ -49,10 +50,22 @@ func (s *Server) newGracefulServer(address string, fd ...int) *gracefulServer {
 	if len(fd) > 0 && fd[0] > 0 {
 		gs.fd = uintptr(fd[0])
 	}
+	if s.config.Listeners != nil {
+		addrArray := gstr.SplitAndTrim(address, ":")
+		addrPort, err := strconv.Atoi(addrArray[len(addrArray)-1])
+		if err == nil {
+			for _, v := range s.config.Listeners {
+				if listenerPort := (v.Addr().(*net.TCPAddr)).Port; listenerPort == addrPort {
+					gs.rawListener = v
+					break
+				}
+			}
+		}
+	}
 	return gs
 }
 
-// newGracefulServer creates and returns an underlying http.Server with given address.
+// newHttpServer creates and returns an underlying http.Server with a given address.
 func (s *Server) newHttpServer(address string) *http.Server {
 	server := &http.Server{
 		Addr:           address,
@@ -78,8 +91,8 @@ func (s *gracefulServer) ListenAndServe() error {
 	return s.doServe(context.TODO())
 }
 
-// Fd retrieves and returns the file descriptor of current server.
-// It is available ony in *nix like operating systems like: linux, unix, darwin.
+// Fd retrieves and returns the file descriptor of the current server.
+// It is available ony in *nix like operating systems like linux, unix, darwin.
 func (s *gracefulServer) Fd() uintptr {
 	if ln := s.getRawListener(); ln != nil {
 		file, err := ln.(*net.TCPListener).File()
@@ -139,7 +152,7 @@ func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig .
 	return s.doServe(ctx)
 }
 
-// GetListenedPort retrieves and returns one port which is listened by current server.
+// GetListenedPort retrieves and returns one port which is listened to by current server.
 func (s *gracefulServer) GetListenedPort() int {
 	if ln := s.getRawListener(); ln != nil {
 		return ln.Addr().(*net.TCPAddr).Port
@@ -175,6 +188,9 @@ func (s *gracefulServer) doServe(ctx context.Context) error {
 
 // getNetListener retrieves and returns the wrapped net.Listener.
 func (s *gracefulServer) getNetListener() (net.Listener, error) {
+	if s.rawListener != nil {
+		return s.rawListener, nil
+	}
 	var (
 		ln  net.Listener
 		err error

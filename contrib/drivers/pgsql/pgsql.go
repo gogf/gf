@@ -65,6 +65,10 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	)
 	if config.Link != "" {
 		source = config.Link
+		// Custom changing the schema in runtime.
+		if config.Name != "" {
+			source, _ = gregex.ReplaceString(`dbname=([\w\.\-]+)+`, "dbname="+config.Name, source)
+		}
 	} else {
 		source = fmt.Sprintf(
 			"user=%s password=%s host=%s port=%s dbname=%s sslmode=disable",
@@ -102,7 +106,7 @@ func (d *Driver) FilteredLink() string {
 
 // GetChars returns the security char for this type of database.
 func (d *Driver) GetChars() (charLeft string, charRight string) {
-	return "\"", "\""
+	return `"`, `"`
 }
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
@@ -142,7 +146,7 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 			schema[0],
 		)
 	}
-	result, err = d.DoGetAll(ctx, link, query)
+	result, err = d.DoSelect(ctx, link, query)
 	if err != nil {
 		return
 	}
@@ -198,7 +202,7 @@ ORDER BY a.attnum`,
 				return nil
 			}
 			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
-			result, err = d.DoGetAll(ctx, link, structureSql)
+			result, err = d.DoSelect(ctx, link, structureSql)
 			if err != nil {
 				return nil
 			}

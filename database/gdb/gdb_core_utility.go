@@ -8,11 +8,59 @@
 package gdb
 
 import (
+	"context"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 )
+
+// WithDB injects given db object into context and returns a new context.
+func WithDB(ctx context.Context, db DB) context.Context {
+	if db == nil {
+		return ctx
+	}
+	dbCtx := db.GetCtx()
+	if ctxDb := DBFromCtx(dbCtx); ctxDb != nil {
+		return dbCtx
+	}
+	ctx = context.WithValue(ctx, contextKeyForDB, db)
+	return ctx
+}
+
+// DBFromCtx retrieves and returns DB object from context.
+func DBFromCtx(ctx context.Context) DB {
+	if ctx == nil {
+		return nil
+	}
+	v := ctx.Value(contextKeyForDB)
+	if v != nil {
+		return v.(DB)
+	}
+	return nil
+}
+
+// GetLink creates and returns the underlying database link object with transaction checks.
+// The parameter `master` specifies whether using the master node if master-slave configured.
+func (c *Core) GetLink(ctx context.Context, master bool, schema string) (Link, error) {
+	tx := TXFromCtx(ctx, c.db.GetGroup())
+	if tx != nil {
+		return &txLink{tx.tx}, nil
+	}
+	if master {
+		link, err := c.db.GetCore().MasterLink(schema)
+		if err != nil {
+			return nil, err
+		}
+		return link, nil
+	}
+	link, err := c.db.GetCore().SlaveLink(schema)
+	if err != nil {
+		return nil, err
+	}
+	return link, nil
+}
 
 // MasterLink acts like function Master but with additional `schema` parameter specifying
 // the schema for the connection. It is defined for internal usage.
@@ -22,7 +70,10 @@ func (c *Core) MasterLink(schema ...string) (Link, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &dbLink{db}, nil
+	return &dbLink{
+		DB:         db,
+		isOnMaster: true,
+	}, nil
 }
 
 // SlaveLink acts like function Slave but with additional `schema` parameter specifying
@@ -33,7 +84,10 @@ func (c *Core) SlaveLink(schema ...string) (Link, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &dbLink{db}, nil
+	return &dbLink{
+		DB:         db,
+		isOnMaster: false,
+	}, nil
 }
 
 // QuoteWord checks given string `s` a word,
@@ -81,32 +135,30 @@ func (c *Core) GetChars() (charLeft string, charRight string) {
 
 // Tables retrieves and returns the tables of current schema.
 // It's mainly used in cli tool chain for automatically generating the models.
-//
-// It does nothing in default.
-func (c *Core) Tables(schema ...string) (tables []string, err error) {
+func (c *Core) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
 	return
 }
 
-// TableFields retrieves and returns the fields' information of specified table of current schema.
+// TableFields retrieves and returns the fields' information of specified table of current
+// schema.
+//
+// The parameter `link` is optional, if given nil it automatically retrieves a raw sql connection
+// as its link to proceed necessary sql query.
 //
 // Note that it returns a map containing the field name and its corresponding fields.
-// As a map is unsorted, the TableField struct has an "Index" field marks its sequence in the fields.
+// As a map is unsorted, the TableField struct has an "Index" field marks its sequence in
+// the fields.
 //
-// It's using cache feature to enhance the performance, which is never expired util the process restarts.
-//
-// It does nothing in default.
-func (c *Core) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
-	// It does nothing if given table is empty, especially in sub-query.
-	if table == "" {
-		return map[string]*TableField{}, nil
-	}
-	return c.db.TableFields(c.GetCtx(), table, schema...)
+// It's using cache feature to enhance the performance, which is never expired util the
+// process restarts.
+func (c *Core) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {
+	return
 }
 
 // HasField determine whether the field exists in the table.
-func (c *Core) HasField(table, field string, schema ...string) (bool, error) {
+func (c *Core) HasField(ctx context.Context, table, field string, schema ...string) (bool, error) {
 	table = c.guessPrimaryTableName(table)
-	tableFields, err := c.TableFields(table, schema...)
+	tableFields, err := c.db.TableFields(ctx, table, schema...)
 	if err != nil {
 		return false, err
 	}

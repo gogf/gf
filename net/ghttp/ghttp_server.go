@@ -16,7 +16,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/v2/net/ghttp/internal/swaggerui"
 	"github.com/olekukonko/tablewriter"
 
 	"github.com/gogf/gf/v2/container/garray"
@@ -25,6 +24,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/net/ghttp/internal/swaggerui"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/genv"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -39,7 +39,7 @@ import (
 )
 
 func init() {
-	// Initialize the methods map.
+	// Initialize the method map.
 	for _, v := range strings.Split(supportedHttpMethods, ",") {
 		methodsMap[v] = struct{}{}
 	}
@@ -51,7 +51,7 @@ func serverProcessInit() {
 	if !serverProcessInitialized.Cas(false, true) {
 		return
 	}
-	// This means it is a restart server, it should kill its parent before starting its listening,
+	// This means it is a restart server. It should kill its parent before starting its listening,
 	// to avoid duplicated port listening in two processes.
 	if !genv.Get(adminActionRestartEnvKey).IsEmpty() {
 		if p, err := os.FindProcess(gproc.PPid()); err == nil {
@@ -70,7 +70,7 @@ func serverProcessInit() {
 	go handleProcessSignal()
 
 	// Process message handler.
-	// It's enabled only graceful feature is enabled.
+	// It enabled only a graceful feature is enabled.
 	if gracefulEnabled {
 		intlog.Printf(ctx, "%d: graceful reload feature is enabled", gproc.Pid())
 		go handleProcessMessage()
@@ -80,7 +80,7 @@ func serverProcessInit() {
 
 	// It's an ugly calling for better initializing the main package path
 	// in source development environment. It is useful only be used in main goroutine.
-	// It fails retrieving the main package path in asynchronous goroutines.
+	// It fails to retrieve the main package path in asynchronous goroutines.
 	gfile.MainPkgPath()
 }
 
@@ -104,7 +104,7 @@ func GetServer(name ...interface{}) *Server {
 		statusHandlerMap: make(map[string][]HandlerFunc),
 		serveTree:        make(map[string]interface{}),
 		serveCache:       gcache.New(),
-		routesMap:        make(map[string][]registeredRouteItem),
+		routesMap:        make(map[string][]*HandlerItem),
 		openapi:          goai.New(),
 	}
 	// Initialize the server using default configurations.
@@ -186,7 +186,7 @@ func (s *Server) Start() error {
 				}
 			}
 		}
-		s.config.SessionStorage = gsession.NewStorageFile(path)
+		s.config.SessionStorage = gsession.NewStorageFile(path, s.config.SessionMaxAge)
 	}
 	// Initialize session manager when start running.
 	s.sessionManager = gsession.New(
@@ -213,7 +213,7 @@ func (s *Server) Start() error {
 	// Check the group routes again.
 	s.handlePreBindItems(ctx)
 
-	// If there's no route registered  and no static service enabled,
+	// If there's no route registered and no static service enabled,
 	// it then returns an error of invalid usage of server.
 	if len(s.routesMap) == 0 && !s.config.FileServerEnabled {
 		return gerror.NewCode(
@@ -345,19 +345,19 @@ func (s *Server) GetRoutes() []RouterItem {
 		}
 		address += "tls" + s.config.HTTPSAddr
 	}
-	for k, registeredItems := range s.routesMap {
+	for k, handlerItems := range s.routesMap {
 		array, _ := gregex.MatchString(`(.*?)%([A-Z]+):(.+)@(.+)`, k)
-		for index, registeredItem := range registeredItems {
+		for index, handlerItem := range handlerItems {
 			item := RouterItem{
 				Server:     s.config.Name,
 				Address:    address,
 				Domain:     array[4],
-				Type:       registeredItem.Handler.Type,
+				Type:       handlerItem.Type,
 				Middleware: array[1],
 				Method:     array[2],
 				Route:      array[3],
-				Priority:   len(registeredItems) - index - 1,
-				Handler:    registeredItem.Handler,
+				Priority:   len(handlerItems) - index - 1,
+				Handler:    handlerItem,
 			}
 			switch item.Handler.Type {
 			case HandlerTypeObject, HandlerTypeHandler:
@@ -525,8 +525,8 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 		)
 		if len(addrAndFd) > 1 {
 			itemFunc = addrAndFd[0]
-			// The Windows OS does not support socket file descriptor passing
-			// from parent process.
+			// The Window OS does not support socket file descriptor passing
+			// from the parent process.
 			if runtime.GOOS != "windows" {
 				fd = gconv.Int(addrAndFd[1])
 			}

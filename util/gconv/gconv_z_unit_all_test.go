@@ -308,7 +308,7 @@ func Test_Int64_All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var any interface{} = nil
 		t.AssertEQ(gconv.Int64("0x00e"), int64(14))
-		t.Assert(gconv.Int64("022"), int64(18))
+		t.Assert(gconv.Int64("022"), int64(22))
 
 		t.Assert(gconv.Int64(any), int64(0))
 		t.Assert(gconv.Int64(true), 1)
@@ -502,7 +502,7 @@ func Test_Uint64_All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var any interface{} = nil
 		t.AssertEQ(gconv.Uint64("0x00e"), uint64(14))
-		t.Assert(gconv.Uint64("022"), uint64(18))
+		t.Assert(gconv.Uint64("022"), uint64(22))
 
 		t.AssertEQ(gconv.Uint64(any), uint64(0))
 		t.AssertEQ(gconv.Uint64(true), uint64(1))
@@ -1366,7 +1366,7 @@ func Test_Struct_PrivateAttribute_All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		user := new(User)
 		err := gconv.Struct(g.Map{"id": 1, "name": "john"}, user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.Id, 1)
 		t.Assert(user.name, "")
 	})

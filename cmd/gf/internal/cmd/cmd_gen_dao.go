@@ -26,16 +26,13 @@ import (
 )
 
 const (
-	defaultDaoPath    = `service/internal/dao`
-	defaultDoPath     = `service/internal/do`
-	defaultEntityPath = `model/entity`
-	cGenDaoConfig     = `gfcli.gen.dao`
-	cGenDaoUsage      = `gf gen dao [OPTION]`
-	cGenDaoBrief      = `automatically generate go files for dao/do/entity`
-	cGenDaoEg         = `
+	cGenDaoConfig = `gfcli.gen.dao`
+	cGenDaoUsage  = `gf gen dao [OPTION]`
+	cGenDaoBrief  = `automatically generate go files for dao/do/entity`
+	cGenDaoEg     = `
 gf gen dao
 gf gen dao -l "mysql:root:12345678@tcp(127.0.0.1:3306)/test"
-gf gen dao -p ./model -c config.yaml -g user-center -t user,user_detail,user_login
+gf gen dao -p ./model -g user-center -t user,user_detail,user_login
 gf gen dao -r user_
 `
 
@@ -66,6 +63,9 @@ CONFIGURATION SUPPORT
 	cGenDaoBriefWithTime        = `add created time for auto produced go files`
 	cGenDaoBriefGJsonSupport    = `use gJsonSupport to use *gjson.Json instead of string for generated json fields of tables`
 	cGenDaoBriefImportPrefix    = `custom import prefix for generated go files`
+	cGenDaoBriefDaoPath         = `directory path for storing generated dao files under path`
+	cGenDaoBriefDoPath          = `directory path for storing generated do files under path`
+	cGenDaoBriefEntityPath      = `directory path for storing generated entity files under path`
 	cGenDaoBriefOverwriteDao    = `overwrite all dao files both inside/outside internal folder`
 	cGenDaoBriefModelFile       = `custom file name for storing generated model content`
 	cGenDaoBriefModelFileForDao = `custom file name generating model for DAO operations like Where/Data. It's empty in default`
@@ -120,6 +120,9 @@ func init() {
 		`cGenDaoBriefRemovePrefix`:    cGenDaoBriefRemovePrefix,
 		`cGenDaoBriefStdTime`:         cGenDaoBriefStdTime,
 		`cGenDaoBriefWithTime`:        cGenDaoBriefWithTime,
+		`cGenDaoBriefDaoPath`:         cGenDaoBriefDaoPath,
+		`cGenDaoBriefDoPath`:          cGenDaoBriefDoPath,
+		`cGenDaoBriefEntityPath`:      cGenDaoBriefEntityPath,
 		`cGenDaoBriefGJsonSupport`:    cGenDaoBriefGJsonSupport,
 		`cGenDaoBriefImportPrefix`:    cGenDaoBriefImportPrefix,
 		`cGenDaoBriefOverwriteDao`:    cGenDaoBriefOverwriteDao,
@@ -136,22 +139,25 @@ func init() {
 type (
 	cGenDaoInput struct {
 		g.Meta         `name:"dao" config:"{cGenDaoConfig}" usage:"{cGenDaoUsage}" brief:"{cGenDaoBrief}" eg:"{cGenDaoEg}" ad:"{cGenDaoAd}"`
-		Path           string `name:"path"            short:"p" brief:"{cGenDaoBriefPath}" d:"internal"`
-		Link           string `name:"link"            short:"l" brief:"{cGenDaoBriefLink}"`
-		Tables         string `name:"tables"          short:"t" brief:"{cGenDaoBriefTables}"`
-		TablesEx       string `name:"tablesEx"        short:"e" brief:"{cGenDaoBriefTablesEx}"`
-		Group          string `name:"group"           short:"g" brief:"{cGenDaoBriefGroup}" d:"default"`
-		Prefix         string `name:"prefix"          short:"f" brief:"{cGenDaoBriefPrefix}"`
-		RemovePrefix   string `name:"removePrefix"    short:"r" brief:"{cGenDaoBriefRemovePrefix}"`
-		JsonCase       string `name:"jsonCase"        short:"j" brief:"{cGenDaoBriefJsonCase}" d:"CamelLower"`
-		ImportPrefix   string `name:"importPrefix"    short:"i" brief:"{cGenDaoBriefImportPrefix}"`
-		StdTime        bool   `name:"stdTime"         short:"s" brief:"{cGenDaoBriefStdTime}"         orphan:"true"`
-		WithTime       bool   `name:"withTime"        short:"c" brief:"{cGenDaoBriefWithTime}"        orphan:"true"`
-		GJsonSupport   bool   `name:"gJsonSupport"    short:"n" brief:"{cGenDaoBriefGJsonSupport}"    orphan:"true"`
-		OverwriteDao   bool   `name:"overwriteDao"    short:"o" brief:"{cGenDaoBriefOverwriteDao}"    orphan:"true"`
-		DescriptionTag bool   `name:"descriptionTag"  short:"d" brief:"{cGenDaoBriefDescriptionTag}"  orphan:"true"`
-		NoJsonTag      bool   `name:"noJsonTag"       short:"k" brief:"{cGenDaoBriefNoJsonTag"        orphan:"true"`
-		NoModelComment bool   `name:"noModelComment"  short:"m" brief:"{cGenDaoBriefNoModelComment}"  orphan:"true"`
+		Path           string `name:"path"            short:"p"  brief:"{cGenDaoBriefPath}" d:"internal"`
+		Link           string `name:"link"            short:"l"  brief:"{cGenDaoBriefLink}"`
+		Tables         string `name:"tables"          short:"t"  brief:"{cGenDaoBriefTables}"`
+		TablesEx       string `name:"tablesEx"        short:"x"  brief:"{cGenDaoBriefTablesEx}"`
+		Group          string `name:"group"           short:"g"  brief:"{cGenDaoBriefGroup}" d:"default"`
+		Prefix         string `name:"prefix"          short:"f"  brief:"{cGenDaoBriefPrefix}"`
+		RemovePrefix   string `name:"removePrefix"    short:"r"  brief:"{cGenDaoBriefRemovePrefix}"`
+		JsonCase       string `name:"jsonCase"        short:"j"  brief:"{cGenDaoBriefJsonCase}" d:"CamelLower"`
+		ImportPrefix   string `name:"importPrefix"    short:"i"  brief:"{cGenDaoBriefImportPrefix}"`
+		DaoPath        string `name:"daoPath"         short:"d"  brief:"{cGenDaoBriefDaoPath}"    d:"dao"`
+		DoPath         string `name:"doPath"          short:"o"  brief:"{cGenDaoBriefDoPath}"     d:"model/do"`
+		EntityPath     string `name:"entityPath"      short:"e"  brief:"{cGenDaoBriefEntityPath}" d:"model/entity"`
+		StdTime        bool   `name:"stdTime"         short:"s"  brief:"{cGenDaoBriefStdTime}"         orphan:"true"`
+		WithTime       bool   `name:"withTime"        short:"w"  brief:"{cGenDaoBriefWithTime}"        orphan:"true"`
+		GJsonSupport   bool   `name:"gJsonSupport"    short:"n"  brief:"{cGenDaoBriefGJsonSupport}"    orphan:"true"`
+		OverwriteDao   bool   `name:"overwriteDao"    short:"v"  brief:"{cGenDaoBriefOverwriteDao}"    orphan:"true"`
+		DescriptionTag bool   `name:"descriptionTag"  short:"c"  brief:"{cGenDaoBriefDescriptionTag}"  orphan:"true"`
+		NoJsonTag      bool   `name:"noJsonTag"       short:"k"  brief:"{cGenDaoBriefNoJsonTag"        orphan:"true"`
+		NoModelComment bool   `name:"noModelComment"  short:"m"  brief:"{cGenDaoBriefNoModelComment}"  orphan:"true"`
 	}
 	cGenDaoOutput struct{}
 
@@ -295,7 +301,7 @@ func generateDao(ctx context.Context, db gdb.DB, in cGenDaoInternalInput) {
 	}
 	var (
 		dirRealPath             = gfile.RealPath(in.Path)
-		dirPathDao              = gfile.Join(in.Path, defaultDaoPath)
+		dirPathDao              = gfile.Join(in.Path, in.DaoPath)
 		tableNameCamelCase      = gstr.CaseCamel(in.NewTableName)
 		tableNameCamelLowerCase = gstr.CaseCamelLower(in.NewTableName)
 		tableNameSnakeCase      = gstr.CaseSnake(in.NewTableName)
@@ -310,8 +316,10 @@ func generateDao(ctx context.Context, db gdb.DB, in cGenDaoInternalInput) {
 			importPrefix = gstr.Replace(dirRealPath, gfile.Pwd(), "")
 		}
 		importPrefix = gstr.Replace(importPrefix, gfile.Separator, "/")
-		importPrefix = gstr.Join(g.SliceStr{in.ModName, importPrefix, defaultDaoPath}, "/")
+		importPrefix = gstr.Join(g.SliceStr{in.ModName, importPrefix, in.DaoPath}, "/")
 		importPrefix, _ = gregex.ReplaceString(`\/{2,}`, `/`, gstr.Trim(importPrefix, "/"))
+	} else {
+		importPrefix = gstr.Join(g.SliceStr{importPrefix, in.DaoPath}, "/")
 	}
 
 	fileName := gstr.Trim(tableNameSnakeCase, "-_.")
@@ -330,7 +338,7 @@ func generateDao(ctx context.Context, db gdb.DB, in cGenDaoInternalInput) {
 
 func generateDo(ctx context.Context, db gdb.DB, tableNames, newTableNames []string, in cGenDaoInternalInput) {
 	var (
-		doDirPath = gfile.Join(in.Path, defaultDoPath)
+		doDirPath = gfile.Join(in.Path, in.DoPath)
 	)
 	in.NoJsonTag = true
 	in.DescriptionTag = false
@@ -382,7 +390,7 @@ func generateDo(ctx context.Context, db gdb.DB, tableNames, newTableNames []stri
 
 func generateEntity(ctx context.Context, db gdb.DB, tableNames, newTableNames []string, in cGenDaoInternalInput) {
 	var (
-		entityDirPath = gfile.Join(in.Path, defaultEntityPath)
+		entityDirPath = gfile.Join(in.Path, in.EntityPath)
 	)
 
 	// Model content.

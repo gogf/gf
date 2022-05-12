@@ -5,6 +5,7 @@
 
 ## 1. Install
 
+## 1) PreCompiled Binary
 You can also install `gf` tool using pre-built binaries: https://github.com/gogf/gf/releases
 
 1. `Mac` & `Linux`
@@ -18,6 +19,13 @@ You can also install `gf` tool using pre-built binaries: https://github.com/gogf
    Manually download, execute it and then follow the instruction.
 
 3. Database `sqlite` and `oracle` are not support in `gf gen` command in default as it needs `cgo` and `gcc`, you can manually make some changes to the source codes and do the building.
+
+## 2) Manually Install
+
+ ```shell
+git clone https://github.com/gogf/gf && cd gf/cmd/gf && go install
+ ```
+
 
 ## 2. Commands
 ```html

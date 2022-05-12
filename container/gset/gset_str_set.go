@@ -218,6 +218,9 @@ func (set *StrSet) Join(glue string) string {
 
 // String returns items as a string, which implements like json.Marshal does.
 func (set *StrSet) String() string {
+	if set == nil {
+		return ""
+	}
 	set.mu.RLock()
 	defer set.mu.RUnlock()
 	var (
@@ -225,6 +228,7 @@ func (set *StrSet) String() string {
 		i      = 0
 		buffer = bytes.NewBuffer(nil)
 	)
+	buffer.WriteByte('[')
 	for k, _ := range set.data {
 		buffer.WriteString(`"` + gstr.QuoteMeta(k, `"\`) + `"`)
 		if i != l-1 {
@@ -232,6 +236,7 @@ func (set *StrSet) String() string {
 		}
 		i++
 	}
+	buffer.WriteByte(']')
 	return buffer.String()
 }
 

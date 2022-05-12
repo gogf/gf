@@ -20,6 +20,7 @@ import (
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gcmd"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/util/grand"
 )
@@ -94,15 +95,18 @@ type DB interface {
 	// Internal APIs for CURD, which can be overwritten by custom CURD implements.
 	// ===========================================================================
 
-	DoGetAll(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error)                                           // See Core.DoGetAll.
+	DoSelect(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error)                                           // See Core.DoSelect.
 	DoInsert(ctx context.Context, link Link, table string, data List, option DoInsertOption) (result sql.Result, err error)                        // See Core.DoInsert.
 	DoUpdate(ctx context.Context, link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) // See Core.DoUpdate.
 	DoDelete(ctx context.Context, link Link, table string, condition string, args ...interface{}) (result sql.Result, err error)                   // See Core.DoDelete.
-	DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error)                                            // See Core.DoQuery.
-	DoExec(ctx context.Context, link Link, sql string, args ...interface{}) (result sql.Result, err error)                                         // See Core.DoExec.
-	DoFilter(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error)                     // See Core.DoFilter.
-	DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutput, err error)                                                                // See Core.DoCommit.
-	DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, error)                                                                           // See Core.DoPrepare.
+
+	DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error)    // See Core.DoQuery.
+	DoExec(ctx context.Context, link Link, sql string, args ...interface{}) (result sql.Result, err error) // See Core.DoExec.
+
+	DoFilter(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) // See Core.DoFilter.
+	DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutput, err error)                                            // See Core.DoCommit.
+
+	DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, error) // See Core.DoPrepare.
 
 	// ===========================================================================
 	// Query APIs for convenience purpose.
@@ -211,13 +215,12 @@ type Driver interface {
 }
 
 // Link is a common database function wrapper interface.
+// Note that, any operation using `Link` will have no SQL logging.
 type Link interface {
-	Query(sql string, args ...interface{}) (*sql.Rows, error)
-	Exec(sql string, args ...interface{}) (sql.Result, error)
-	Prepare(sql string) (*sql.Stmt, error)
 	QueryContext(ctx context.Context, sql string, args ...interface{}) (*sql.Rows, error)
 	ExecContext(ctx context.Context, sql string, args ...interface{}) (sql.Result, error)
 	PrepareContext(ctx context.Context, sql string) (*sql.Stmt, error)
+	IsOnMaster() bool
 	IsTransaction() bool
 }
 
@@ -237,10 +240,10 @@ type Sql struct {
 
 // DoInsertOption is the input struct for function DoInsert.
 type DoInsertOption struct {
-	OnDuplicateStr string
-	OnDuplicateMap map[string]interface{}
-	InsertOption   int // Insert operation.
-	BatchCount     int // Batch count for batch inserting.
+	OnDuplicateStr string                 // Custom string for `on duplicated` statement.
+	OnDuplicateMap map[string]interface{} // Custom key-value map from `OnDuplicateEx` function for `on duplicated` statement.
+	InsertOption   int                    // Insert operation in constant value.
+	BatchCount     int                    // Batch count for batch inserting.
 }
 
 // TableField is the struct for table field.
@@ -277,16 +280,16 @@ const (
 	queryTypeCount          = 1
 	unionTypeNormal         = 0
 	unionTypeAll            = 1
-	defaultBatchNumber      = 10               // Per count for batch insert/replace/save.
 	defaultMaxIdleConnCount = 10               // Max idle connection count in pool.
 	defaultMaxOpenConnCount = 0                // Max open connection count in pool. Default is no limit.
 	defaultMaxConnLifeTime  = 30 * time.Second // Max lifetime for per connection in pool in seconds.
 	ctxTimeoutTypeExec      = iota
 	ctxTimeoutTypeQuery
 	ctxTimeoutTypePrepare
-	commandEnvKeyForDryRun = "gf.gdb.dryrun"
-	modelForDaoSuffix      = `ForDao`
-	dbRoleSlave            = `slave`
+	commandEnvKeyForDryRun             = "gf.gdb.dryrun"
+	modelForDaoSuffix                  = `ForDao`
+	dbRoleSlave                        = `slave`
+	contextKeyForDB        gctx.StrKey = `DBInContext`
 )
 
 const (
@@ -308,18 +311,12 @@ const (
 	SqlTypeStmtQueryRowContext = "DB.Statement.QueryRowContext"
 )
 
-const (
-	DriverNameMysql = `mysql`
-)
-
 var (
 	// instances is the management map for instances.
 	instances = gmap.NewStrAnyMap(true)
 
 	// driverMap manages all custom registered driver.
-	driverMap = map[string]Driver{
-		DriverNameMysql: &DriverMysql{},
-	}
+	driverMap = map[string]Driver{}
 
 	// lastOperatorRegPattern is the regular expression pattern for a string
 	// which has operator at its tail.
@@ -409,7 +406,8 @@ func doNewByNode(node ConfigNode, group string) (db DB, err error) {
 		return c.db, nil
 	}
 	errorMsg := `cannot find database driver for specified database type "%s"`
-	errorMsg += `, did you misspell type name "%s" or forget importing the database driver?`
+	errorMsg += `, did you misspell type name "%s" or forget importing the database driver? `
+	errorMsg += `possible reference: https://github.com/gogf/gf/tree/master/contrib/drivers`
 	return nil, gerror.NewCodef(gcode.CodeInvalidConfiguration, errorMsg, node.Type, node.Type)
 }
 
@@ -517,8 +515,11 @@ func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 // The parameter `master` specifies whether retrieves master node connection if
 // master-slave nodes are configured.
 func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error) {
+	var (
+		ctx  = c.db.GetCtx()
+		node *ConfigNode
+	)
 	// Load balance.
-	var node *ConfigNode
 	if c.group != "" {
 		node, err = getConfigNodeByGroup(c.group, master)
 		if err != nil {
@@ -544,27 +545,20 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 	}
 	// Cache the underlying connection pool object by node.
 	v := c.links.GetOrSetFuncLock(node.String(), func() interface{} {
-		intlog.Printf(
-			c.db.GetCtx(),
-			`open new connection, master:%#v, config:%#v, node:%#v`,
-			master, c.config, node,
-		)
+		intlog.Printf(ctx, `open new connection, master:%#v, config:%#v, node:%#v`, master, c.config, node)
 		defer func() {
 			if err != nil {
-				intlog.Printf(c.db.GetCtx(), `open new connection failed: %v, %#v`, err, node)
+				intlog.Printf(ctx, `open new connection failed: %v, %#v`, err, node)
 			} else {
-				intlog.Printf(
-					c.db.GetCtx(),
-					`open new connection success, master:%#v, config:%#v, node:%#v`,
-					master, c.config, node,
-				)
+				intlog.Printf(ctx, `open new connection success, master:%#v, config:%#v, node:%#v`, master, c.config, node)
 			}
 		}()
-
 		if sqlDb, err = c.db.Open(node); err != nil {
 			return nil
 		}
-
+		if sqlDb == nil {
+			return nil
+		}
 		if c.config.MaxIdleConnCount > 0 {
 			sqlDb.SetMaxIdleConns(c.config.MaxIdleConnCount)
 		} else {

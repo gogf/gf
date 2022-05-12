@@ -9,17 +9,17 @@ package gjson_test
 import (
 	"fmt"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func ExampleLoad() {
-	jsonFilePath := gdebug.TestDataPath("json", "data1.json")
+	jsonFilePath := gtest.DataPath("json", "data1.json")
 	j, _ := gjson.Load(jsonFilePath)
 	fmt.Println(j.Get("name"))
 	fmt.Println(j.Get("score"))
 
-	notExistFilePath := gdebug.TestDataPath("json", "data2.json")
+	notExistFilePath := gtest.DataPath("json", "data2.json")
 	j2, _ := gjson.Load(notExistFilePath)
 	fmt.Println(j2.Get("name"))
 
@@ -195,7 +195,7 @@ func ExampleIsValidDataType() {
 }
 
 func ExampleLoad_Xml() {
-	jsonFilePath := gdebug.TestDataPath("xml", "data1.xml")
+	jsonFilePath := gtest.DataPath("xml", "data1.xml")
 	j, _ := gjson.Load(jsonFilePath)
 	fmt.Println(j.Get("doc.name"))
 	fmt.Println(j.Get("doc.score"))
