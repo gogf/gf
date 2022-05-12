@@ -132,7 +132,6 @@ func ExampleNew_MultiConn_Recommend() {
 			if r, err := client.Get(ctx, "http://127.0.0.1:8999/var/json"); err != nil {
 				panic(err)
 			} else {
-				// Make sure call the ReadAllString() Funcion, Otherwise the program will block here
 				fmt.Println(r.ReadAllString())
 				r.Close()
 			}
