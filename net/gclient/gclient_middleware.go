@@ -6,7 +6,7 @@ import (
 	"github.com/gogf/gf/v2/os/gctx"
 )
 
-// HandlerFunc middleware handler func
+// HandlerFunc middleware handler func.
 type HandlerFunc = func(c *Client, r *http.Request) (*Response, error)
 
 // clientMiddleware is the plugin for http client request workflow management.

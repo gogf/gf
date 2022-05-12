@@ -52,7 +52,7 @@ func internalMiddlewareDiscovery(c *Client, r *http.Request) (response *Response
 		intlog.Printf(ctx, `http client watching service "%s" changed`, service.KeyWithoutEndpoints())
 		if v := clientSelectorMap.Get(service.KeyWithoutEndpoints()); v != nil {
 			if err = updateSelectorNodesByService(v.(gsel.Selector), service); err != nil {
-				intlog.Errorf(context.Background(), `%+w`, err)
+				intlog.Errorf(context.Background(), `%+v`, err)
 			}
 		}
 	})
@@ -76,7 +76,6 @@ func internalMiddlewareDiscovery(c *Client, r *http.Request) (response *Response
 	// Pick one node from multiple addresses.
 	node, done, err := selector.Pick(ctx)
 	if err != nil {
-
 		return nil, err
 	}
 	if done != nil {
