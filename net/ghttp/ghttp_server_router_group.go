@@ -48,7 +48,9 @@ const (
 	groupBindTypeMiddleware = "MIDDLEWARE"
 )
 
-var preBindItems = make([]*preBindItem, 0, 64)
+var (
+	preBindItems = make([]*preBindItem, 0, 64)
+)
 
 // handlePreBindItems is called when server starts, which does really route registering to the server.
 func (s *Server) handlePreBindItems(ctx context.Context) {

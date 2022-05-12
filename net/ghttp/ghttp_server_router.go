@@ -29,8 +29,10 @@ const (
 	stackFilterKey = "/net/ghttp/ghttp"
 )
 
-// handlerIdGenerator is handler item id generator.
-var handlerIdGenerator = gtype.NewInt()
+var (
+	// handlerIdGenerator is handler item id generator.
+	handlerIdGenerator = gtype.NewInt()
+)
 
 // routerMapKey creates and returns a unique router key for given parameters.
 // This key is used for Server.routerMap attribute, which is mainly for checks for
@@ -97,7 +99,7 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 
 	// Change the registered route according to meta info from its request structure.
 	if handler.Info.Type != nil && handler.Info.Type.NumIn() == 2 {
-		objectReq := reflect.New(handler.Info.Type.In(1))
+		var objectReq = reflect.New(handler.Info.Type.In(1))
 		if v := gmeta.Get(objectReq, goai.TagNamePath); !v.IsEmpty() {
 			uri = v.String()
 		}
@@ -124,7 +126,7 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 	}
 
 	// Repeated router checks, this feature can be disabled by server configuration.
-	routerKey := s.routerMapKey(handler.HookName, method, uri, domain)
+	var routerKey = s.routerMapKey(handler.HookName, method, uri, domain)
 	if !s.config.RouteOverWrite {
 		switch handler.Type {
 		case HandlerTypeHandler, HandlerTypeObject:
@@ -182,7 +184,7 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 	//    priorities from high to low.
 	// 3. There may be repeated router items in the router lists. The lists' priorities
 	//    from root to leaf are from low to high.
-	p := s.serveTree[domain]
+	var p = s.serveTree[domain]
 	for i, part := range array {
 		// Ignore empty URI part, like: /user//index
 		if part == "" {
@@ -387,7 +389,7 @@ func (s *Server) patternToRegular(rule string) (regular string, names []string) 
 		return rule, nil
 	}
 	regular = "^"
-	array := strings.Split(rule[1:], "/")
+	var array = strings.Split(rule[1:], "/")
 	for _, v := range array {
 		if len(v) == 0 {
 			continue

@@ -35,8 +35,10 @@ const (
 	parseTypeForm    = 2
 )
 
-// xmlHeaderBytes is the most common XML format header.
-var xmlHeaderBytes = []byte("<?xml")
+var (
+	// xmlHeaderBytes is the most common XML format header.
+	xmlHeaderBytes = []byte("<?xml")
+)
 
 // Parse is the most commonly used function, which converts request parameters to struct or struct
 // slice. It also automatically validates the struct or every element of the struct slice according

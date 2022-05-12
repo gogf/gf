@@ -47,7 +47,7 @@ func init() {
 
 // serverProcessInit initializes some process configurations, which can only be done once.
 func serverProcessInit() {
-	ctx := context.TODO()
+	var ctx = context.TODO()
 	if !serverProcessInitialized.Cas(false, true) {
 		return
 	}
@@ -121,7 +121,7 @@ func GetServer(name ...interface{}) *Server {
 // Start starts listening on configured port.
 // This function does not block the process, you can use function Wait blocking the process.
 func (s *Server) Start() error {
-	ctx := context.TODO()
+	var ctx = context.TODO()
 
 	// Swagger UI.
 	if s.config.SwaggerPath != "" {
@@ -414,7 +414,7 @@ func (s *Server) GetRoutes() []RouterItem {
 // Run starts server listening in blocking way.
 // It's commonly used for single server situation.
 func (s *Server) Run() {
-	ctx := context.TODO()
+	var ctx = context.TODO()
 
 	if err := s.Start(); err != nil {
 		s.Logger().Fatalf(ctx, `%+v`, err)
@@ -437,7 +437,7 @@ func (s *Server) Run() {
 // Wait blocks to wait for all servers done.
 // It's commonly used in multiple server situation.
 func Wait() {
-	ctx := context.TODO()
+	var ctx = context.TODO()
 
 	<-allDoneChan
 	// Remove plugins.

@@ -440,7 +440,7 @@ func (s *Server) SetListener(listeners ...net.Listener) error {
 // EnableHTTPS enables HTTPS with given certification and key files for the server.
 // The optional parameter `tlsConfig` specifies custom TLS configuration.
 func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...*tls.Config) {
-	ctx := context.TODO()
+	var ctx = context.TODO()
 	certFileRealPath := gfile.RealPath(certFile)
 	if certFileRealPath == "" {
 		certFileRealPath = gfile.RealPath(gfile.Pwd() + gfile.Separator + certFile)
