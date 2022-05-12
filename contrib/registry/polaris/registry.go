@@ -441,8 +441,24 @@ func instanceToServiceInstance(instance model.Instance) *gsvc.Service {
 	if k, ok := metadata["kind"]; ok {
 		kind = k
 	}
+
+	name := ""
+	names := strings.Split(instance.GetService(), _instanceIDSeparator)
+	if names != nil && len(names) > 4 {
+		return &gsvc.Service{
+			Prefix:     names[0],
+			Deployment: names[1],
+			Namespace:  names[2],
+			Name:       names[3],
+			Version:    metadata["version"],
+			Metadata:   gconv.Map(metadata),
+			Endpoints:  []string{fmt.Sprintf("%s:%d", instance.GetHost(), instance.GetPort())},
+			Separator:  _instanceIDSeparator,
+		}
+	}
+
 	return &gsvc.Service{
-		Name:      instance.GetService(),
+		Name:      name,
 		Version:   metadata["version"],
 		Metadata:  gconv.Map(metadata),
 		Endpoints: []string{fmt.Sprintf("%s://%s:%d", kind, instance.GetHost(), instance.GetPort())},
