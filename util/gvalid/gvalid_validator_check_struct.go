@@ -22,7 +22,7 @@ import (
 func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error {
 	var (
 		errorMaps           = make(map[string]map[string]error) // Returning error.
-		fieldToAliasNameMap = make(map[string]string)           // Field names to alias name maps.
+		fieldToAliasNameMap = make(map[string]string)           // Field names to alias name map.
 		resultSequenceRules = make([]fieldRule, 0)
 		isEmptyData         = empty.IsEmpty(v.data)
 		isEmptyAssoc        = empty.IsEmpty(v.assoc)
@@ -51,7 +51,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 		checkRules     = make([]fieldRule, 0)
 		nameToRuleMap  = make(map[string]string) // just for internally searching index purpose.
 		customMessage  = make(CustomMsg)         // Custom rule error message map.
-		checkValueData = v.assoc                 // Ready to be validated data, which can be type of.
+		checkValueData = v.assoc                 // Ready to be validated data, which can be type of
 	)
 	if checkValueData == nil {
 		checkValueData = object

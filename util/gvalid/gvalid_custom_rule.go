@@ -35,11 +35,13 @@ type RuleFuncInput struct {
 	Data *gvar.Var
 }
 
-// customRuleFuncMap stores the custom rule functions.
-// map[Rule]RuleFunc.
-var customRuleFuncMap = make(map[string]RuleFunc)
+var (
+	// customRuleFuncMap stores the custom rule functions.
+	// map[Rule]RuleFunc.
+	customRuleFuncMap = make(map[string]RuleFunc)
+)
 
-// RegisterRule registers custom validation rules and function for package.
+// RegisterRule registers custom validation rule and function for package.
 func RegisterRule(rule string, f RuleFunc) {
 	if customRuleFuncMap[rule] != nil {
 		intlog.PrintFunc(context.TODO(), func() string {

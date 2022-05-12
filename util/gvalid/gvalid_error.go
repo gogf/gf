@@ -54,7 +54,7 @@ func newValidationError(code gcode.Code, rules []fieldRule, fieldRuleErrorMap ma
 		fieldRuleErrorMap[field] = ruleErrorMap
 	}
 	// Filter repeated sequence rules.
-	ruleNameSet := gset.NewStrSet()
+	var ruleNameSet = gset.NewStrSet()
 	for i := 0; i < len(rules); {
 		if !ruleNameSet.AddIfNotExist(rules[i].Name) {
 			// Delete repeated rule.
