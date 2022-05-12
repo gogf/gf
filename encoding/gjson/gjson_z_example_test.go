@@ -715,7 +715,6 @@ func ExampleJson_MustToPropertiesString() {
 	// name = John
 }
 
-
 func ExampleJson_MarshalJSON() {
 	type BaseInfo struct {
 		Name string
@@ -1186,5 +1185,3 @@ func ExampleJson_Dump() {
 	//	"age":  "18",
 	//}
 }
-
-
