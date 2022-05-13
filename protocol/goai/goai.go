@@ -82,8 +82,8 @@ const (
 )
 
 const (
-	patternKeyForRequired = `required`
-	patternKeyForIn       = `in:`
+	validationRuleKeyForRequired = `required`
+	validationRuleKeyForIn       = `in:`
 )
 
 var (
