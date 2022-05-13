@@ -80,8 +80,9 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path
 	}
 
 	// Required check.
-	if parameter.Schema.Value != nil && parameter.Schema.Value.Pattern != "" {
-		if gset.NewStrSetFrom(gstr.Split(parameter.Schema.Value.Pattern, "|")).Contains(patternKeyForRequired) {
+	if parameter.Schema.Value != nil && parameter.Schema.Value.ValidationRules != "" {
+		validationRuleArray := gstr.Split(parameter.Schema.Value.ValidationRules, "|")
+		if gset.NewStrSetFrom(validationRuleArray).Contains(validationRuleKeyForRequired) {
 			parameter.Required = true
 		}
 	}
