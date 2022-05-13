@@ -19,14 +19,10 @@ import (
 )
 
 const (
-	defaultSeparator = "/"
-	delimiter        = ","
+	// DefaultSeparator is the default separator for the service name and method name.
+	DefaultSeparator  = "/"
+	endpointDelimiter = ","
 )
-
-// Separator is the default defaultSeparator for path.
-func Separator() string {
-	return defaultSeparator
-}
 
 // NewServiceWithName creates and returns service from `name`.
 func NewServiceWithName(name string) (s *Service) {
@@ -40,7 +36,7 @@ func NewServiceWithName(name string) (s *Service) {
 
 // NewServiceWithKV creates and returns service from `key` and `value`.
 func NewServiceWithKV(key, value []byte) (s *Service, err error) {
-	array := gstr.Split(gstr.Trim(string(key), defaultSeparator), defaultSeparator)
+	array := gstr.Split(gstr.Trim(string(key), DefaultSeparator), DefaultSeparator)
 	if len(array) < 6 {
 		err = gerror.NewCodef(gcode.CodeInvalidParameter, `invalid service key "%s"`, key)
 
@@ -52,9 +48,9 @@ func NewServiceWithKV(key, value []byte) (s *Service, err error) {
 		Namespace:  array[2],
 		Name:       array[3],
 		Version:    array[4],
-		Endpoints:  gstr.Split(array[5], delimiter),
+		Endpoints:  gstr.Split(array[5], endpointDelimiter),
 		Metadata:   make(Metadata),
-		Separator:  defaultSeparator,
+		Separator:  DefaultSeparator,
 	}
 	s.autoFillDefaultAttributes()
 	if len(value) > 0 {
@@ -68,11 +64,12 @@ func NewServiceWithKV(key, value []byte) (s *Service, err error) {
 
 // Key formats the service information and returns the Service as registering key.
 func (s *Service) Key() string {
-	if s.Separator == "" {
-		s.Separator = defaultSeparator
+	defaultSeparator := DefaultSeparator
+	if s.Separator != "" {
+		defaultSeparator = s.Separator
 	}
 	serviceNameUnique := s.KeyWithoutEndpoints()
-	serviceNameUnique += s.Separator + gstr.Join(s.Endpoints, ",")
+	serviceNameUnique += defaultSeparator + gstr.Join(s.Endpoints, ",")
 	return serviceNameUnique
 }
 
@@ -84,13 +81,14 @@ func (s *Service) KeyWithSchema() string {
 // KeyWithoutEndpoints formats the service information and returns a string as a unique name of service.
 func (s *Service) KeyWithoutEndpoints() string {
 	s.autoFillDefaultAttributes()
-	if s.Separator == "" {
-		s.Separator = defaultSeparator
+	defaultSeparator := DefaultSeparator
+	if s.Separator != "" {
+		defaultSeparator = s.Separator
 	}
-	if s.Separator != defaultSeparator {
-		return gstr.Join([]string{s.Prefix, s.Deployment, s.Namespace, s.Name, s.Version}, s.Separator)
+	if s.Separator != DefaultSeparator {
+		return gstr.Join([]string{s.Prefix, s.Deployment, s.Namespace, s.Name, s.Version}, defaultSeparator)
 	}
-	return s.Separator + gstr.Join([]string{s.Prefix, s.Deployment, s.Namespace, s.Name, s.Version}, s.Separator)
+	return defaultSeparator + gstr.Join([]string{s.Prefix, s.Deployment, s.Namespace, s.Name, s.Version}, defaultSeparator)
 }
 
 // Value formats the service information and returns the Service as registering value.

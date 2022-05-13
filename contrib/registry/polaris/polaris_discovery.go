@@ -17,7 +17,7 @@ import (
 
 // Search returns the service instances in memory according to the service name.
 func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]*gsvc.Service, error) {
-	in.Separator = _instanceIDSeparator
+	in.Separator = instanceIDSeparator
 	// get all instances
 	instancesResponse, err := r.consumer.GetAllInstances(&api.GetAllInstancesRequest{
 		GetAllInstancesRequest: model.GetAllInstancesRequest{

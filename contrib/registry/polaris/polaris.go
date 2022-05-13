@@ -21,11 +21,14 @@ import (
 )
 
 var (
-	_ gsvc.Registrar = &Registry{}
+	_ gsvc.Registry = &Registry{}
 )
 
-// _instanceIDSeparator Instance id Separator.
-const _instanceIDSeparator = "-"
+const (
+	// instanceIDSeparator Instance id Separator.
+	instanceIDSeparator = "-"
+	endpointDelimiter   = ":"
+)
 
 type options struct {
 	// required, namespace in polaris
@@ -180,7 +183,7 @@ func instanceToServiceInstance(instance model.Instance) *gsvc.Service {
 	}
 
 	name := ""
-	names := strings.Split(instance.GetService(), _instanceIDSeparator)
+	names := strings.Split(instance.GetService(), instanceIDSeparator)
 	if names != nil && len(names) > 4 {
 		return &gsvc.Service{
 			Prefix:     names[0],
@@ -190,7 +193,7 @@ func instanceToServiceInstance(instance model.Instance) *gsvc.Service {
 			Version:    metadata["version"],
 			Metadata:   gconv.Map(metadata),
 			Endpoints:  []string{fmt.Sprintf("%s:%d", instance.GetHost(), instance.GetPort())},
-			Separator:  _instanceIDSeparator,
+			Separator:  instanceIDSeparator,
 		}
 	}
 
@@ -199,6 +202,6 @@ func instanceToServiceInstance(instance model.Instance) *gsvc.Service {
 		Version:   metadata["version"],
 		Metadata:  gconv.Map(metadata),
 		Endpoints: []string{fmt.Sprintf("%s://%s:%d", kind, instance.GetHost(), instance.GetPort())},
-		Separator: _instanceIDSeparator,
+		Separator: instanceIDSeparator,
 	}
 }

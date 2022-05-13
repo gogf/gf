@@ -102,6 +102,7 @@ const (
 	MDInsecure        = `insecure`
 	MDWeight          = `weight`
 	defaultTimeout    = 5 * time.Second
+	DefaultProtocol   = `http`
 )
 
 var defaultRegistry Registry

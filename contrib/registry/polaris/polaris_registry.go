@@ -8,6 +8,7 @@ package polaris
 
 import (
 	"context"
+	"errors"
 	"net"
 	"net/url"
 	"strconv"
@@ -26,22 +27,16 @@ import (
 func (r *Registry) Register(ctx context.Context, serviceInstance *gsvc.Service) error {
 	ids := make([]string, 0, len(serviceInstance.Endpoints))
 	// set separator
-	serviceInstance.Separator = _instanceIDSeparator
+	serviceInstance.Separator = instanceIDSeparator
 	for _, endpoint := range serviceInstance.Endpoints {
-		// get url
-		u, err := url.Parse(endpoint)
-		if err != nil {
-			return err
+		httpArr := strings.Split(endpoint, endpointDelimiter)
+		if len(httpArr) < 2 {
+			return errors.New("invalid endpoint")
 		}
-
-		// get host and port
-		host, port, err := net.SplitHostPort(u.Host)
-		if err != nil {
-			return err
-		}
+		host := httpArr[0]
 
 		// port to int
-		portNum, err := strconv.Atoi(port)
+		portNum, err := strconv.Atoi(httpArr[1])
 		if err != nil {
 			return err
 		}
@@ -50,16 +45,20 @@ func (r *Registry) Register(ctx context.Context, serviceInstance *gsvc.Service) 
 		var rmd map[string]interface{}
 		if serviceInstance.Metadata == nil {
 			rmd = map[string]interface{}{
-				"kind":    u.Scheme,
+				"kind":    gsvc.DefaultProtocol,
 				"version": serviceInstance.Version,
 			}
 		} else {
 			rmd = make(map[string]interface{}, len(serviceInstance.Metadata)+2)
+			if protocol, ok := serviceInstance.Metadata[gsvc.MDProtocol].(string); !ok {
+				rmd["kind"] = gsvc.DefaultProtocol
+			} else {
+				rmd["kind"] = protocol
+			}
+			rmd["version"] = serviceInstance.Version
 			for k, v := range serviceInstance.Metadata {
 				rmd[k] = v
 			}
-			rmd["kind"] = u.Scheme
-			rmd["version"] = serviceInstance.Version
 		}
 		// Register
 		service, err := r.provider.Register(
@@ -119,15 +118,15 @@ func (r *Registry) Register(ctx context.Context, serviceInstance *gsvc.Service) 
 		ids = append(ids, instanceID)
 	}
 	// need to set InstanceID for Deregister
-	serviceInstance.ID = strings.Join(ids, _instanceIDSeparator)
+	serviceInstance.ID = strings.Join(ids, instanceIDSeparator)
 
 	return nil
 }
 
 // Deregister the registration.
 func (r *Registry) Deregister(ctx context.Context, serviceInstance *gsvc.Service) error {
-	split := strings.Split(serviceInstance.ID, _instanceIDSeparator)
-	serviceInstance.Separator = _instanceIDSeparator
+	split := strings.Split(serviceInstance.ID, instanceIDSeparator)
+	serviceInstance.Separator = instanceIDSeparator
 	for i, endpoint := range serviceInstance.Endpoints {
 		// get url
 		u, err := url.Parse(endpoint)

@@ -43,7 +43,7 @@ func (r *Registry) Register(ctx context.Context, service *gsvc.Service) error {
 		return err
 	}
 	go r.doKeepAlive(grant.ID, keepAliceCh)
-	service.Separator = gsvc.Separator()
+	service.Separator = gsvc.DefaultSeparator
 	return nil
 }
 

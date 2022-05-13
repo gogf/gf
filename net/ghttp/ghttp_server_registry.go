@@ -22,7 +22,7 @@ func (s *Server) doServiceRegister() {
 	}
 	var (
 		ctx      = context.Background()
-		protocol = `http`
+		protocol = gsvc.DefaultProtocol
 		insecure = true
 		address  = s.config.Address
 	)
@@ -47,7 +47,7 @@ func (s *Server) doServiceRegister() {
 	}
 	s.service = &gsvc.Service{
 		Name:      s.GetName(),
-		Endpoints: []string{fmt.Sprintf(`%s://%s:%s`, protocol, ip, port)},
+		Endpoints: []string{fmt.Sprintf(`%s:%s`, ip, port)},
 		Metadata:  metadata,
 	}
 	s.Logger().Debugf(ctx, `service register: %+v`, s.service)
