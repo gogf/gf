@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"runtime"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/frame/g"
@@ -93,8 +94,8 @@ func (c cDocker) Index(ctx context.Context, in cDockerInput) (out *cDockerOutput
 	}
 
 	// Shell executing.
-	if gfile.Exists(in.Shell) {
-		if err = gproc.ShellRun(gfile.GetContents(in.Shell)); err != nil {
+	if in.Shell != "" && gfile.Exists(in.Shell) {
+		if err = c.exeDockerShell(in.Shell); err != nil {
 			return
 		}
 	}
@@ -149,4 +150,12 @@ func (c cDocker) Index(ctx context.Context, in cDockerInput) (out *cDockerOutput
 		}
 	}
 	return
+}
+
+func (c cDocker) exeDockerShell(shellFilePath string) error {
+	if gfile.ExtName(shellFilePath) == "sh" && runtime.GOOS == "windows" {
+		mlog.Debugf(`ignore shell file "%s", as it cannot be run on windows system`, shellFilePath)
+		return nil
+	}
+	return gproc.ShellRun(gfile.GetContents(shellFilePath))
 }

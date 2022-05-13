@@ -8,6 +8,7 @@ package gjson
 
 import (
 	"github.com/gogf/gf/v2/encoding/gini"
+	"github.com/gogf/gf/v2/encoding/gproperties"
 	"github.com/gogf/gf/v2/encoding/gtoml"
 	"github.com/gogf/gf/v2/encoding/gxml"
 	"github.com/gogf/gf/v2/encoding/gyaml"
@@ -196,4 +197,31 @@ func (j *Json) MustToIni() []byte {
 // MustToIniString .
 func (j *Json) MustToIniString() string {
 	return string(j.MustToIni())
+}
+
+// ========================================================================
+// properties
+// ========================================================================
+// Toproperties json to properties
+func (j *Json) ToProperties() ([]byte, error) {
+	return gproperties.Encode(j.Map())
+}
+
+// TopropertiesString properties to string
+func (j *Json) ToPropertiesString() (string, error) {
+	b, e := j.ToProperties()
+	return string(b), e
+}
+
+func (j *Json) MustToProperties() []byte {
+	result, err := j.ToProperties()
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+
+// MustTopropertiesString
+func (j *Json) MustToPropertiesString() string {
+	return string(j.MustToProperties())
 }
