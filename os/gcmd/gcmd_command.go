@@ -28,6 +28,7 @@ type Command struct {
 	Examples      string        // Usage examples.
 	Additional    string        // Additional info about this command, which will be appended to the end of help info.
 	Strict        bool          // Strict parsing options, which means it returns error if invalid option given.
+	CaseSensitive bool          // CaseSensitive parsing options, which means it parses input options in case-sensitive way.
 	Config        string        // Config node name, which also retrieves the values from config component along with command line.
 	parent        *Command      // Parent command for internal usage.
 	commands      []*Command    // Sub commands of this command.
