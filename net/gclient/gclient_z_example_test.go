@@ -128,16 +128,13 @@ func ExampleNew_MultiConn_Recommend() {
 	client.Transport.(*http.Transport).MaxIdleConnsPerHost = 5
 
 	for i := 0; i < 5; i++ {
-		go func() {
-			if r, err := client.Get(ctx, "http://127.0.0.1:8999/var/json"); err != nil {
-				panic(err)
-			} else {
-				fmt.Println(r.ReadAllString())
-				r.Close()
-			}
-		}()
+		if r, err := client.Get(ctx, "http://127.0.0.1:8999/var/json"); err != nil {
+			panic(err)
+		} else {
+			fmt.Println(r.ReadAllString())
+			r.Close()
+		}
 	}
-	time.Sleep(time.Second * 1)
 
 	// Output:
 	//{"id":1,"name":"john"}
