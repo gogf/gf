@@ -68,8 +68,9 @@ func Scan(params interface{}, pointer interface{}, mapping ...map[string]string)
 	}
 	// If `params` and `pointer` are the same type, the do directly assignment.
 	// For performance enhancement purpose.
-
-	pointerValueElem := pointerValue.Elem()
+	var (
+		pointerValueElem = pointerValue.Elem()
+	)
 	if pointerValueElem.CanSet() && paramsType == pointerValueElem.Type() {
 		pointerValueElem.Set(paramsValue)
 		return nil
@@ -191,7 +192,9 @@ func ScanList(structSlice interface{}, structSlicePointer interface{}, bindToAtt
 // doScanList converts `structSlice` to struct slice which contains other complex struct attributes recursively.
 // Note that the parameter `structSlicePointer` should be type of *[]struct/*[]*struct.
 func doScanList(structSlice interface{}, structSlicePointer interface{}, bindToAttrName, relationAttrName, relationFields string) (err error) {
-	maps := Maps(structSlice)
+	var (
+		maps = Maps(structSlice)
+	)
 	if len(maps) == 0 {
 		return nil
 	}
@@ -378,10 +381,12 @@ func doScanList(structSlice interface{}, structSlicePointer interface{}, bindToA
 		if relationFields != "" && !relationBindToFieldNameChecked {
 			relationFromAttrField = relationFromAttrValue.FieldByName(relationBindToFieldName)
 			if !relationFromAttrField.IsValid() {
-				filedMap, _ := gstructs.FieldMap(gstructs.FieldMapInput{
-					Pointer:         relationFromAttrValue,
-					RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
-				})
+				var (
+					filedMap, _ = gstructs.FieldMap(gstructs.FieldMapInput{
+						Pointer:         relationFromAttrValue,
+						RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
+					})
+				)
 				if key, _ := utils.MapPossibleItemByKey(Map(filedMap), relationBindToFieldName); key == "" {
 					return gerror.NewCodef(
 						gcode.CodeInvalidParameter,

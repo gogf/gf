@@ -141,7 +141,7 @@ func (c *Client) SetProxy(proxyURL string) {
 			v.Proxy = http.ProxyURL(_proxy)
 		}
 	} else {
-		auth := &proxy.Auth{}
+		var auth = &proxy.Auth{}
 		user := _proxy.User.Username()
 		if user != "" {
 			auth.User = user
