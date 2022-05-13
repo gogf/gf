@@ -182,6 +182,7 @@ func ExampleIsValidDataType() {
 	fmt.Println(gjson.IsValidDataType("txt"))
 	fmt.Println(gjson.IsValidDataType(""))
 	fmt.Println(gjson.IsValidDataType(".json"))
+	fmt.Println(gjson.IsValidDataType(".properties"))
 
 	// Output:
 	// true
@@ -192,6 +193,7 @@ func ExampleIsValidDataType() {
 	// false
 	// false
 	// true
+	// true
 }
 
 func ExampleLoad_Xml() {
@@ -199,4 +201,17 @@ func ExampleLoad_Xml() {
 	j, _ := gjson.Load(jsonFilePath)
 	fmt.Println(j.Get("doc.name"))
 	fmt.Println(j.Get("doc.score"))
+}
+
+func ExampleLoad_Properties() {
+	jsonFilePath := gtest.DataPath("properties", "data1.properties")
+	j, _ := gjson.Load(jsonFilePath)
+	fmt.Println(j.Get("pr.name"))
+	fmt.Println(j.Get("pr.score"))
+	fmt.Println(j.Get("pr.sex"))
+
+	//Output:
+	// john
+	// 100
+	// 0
 }

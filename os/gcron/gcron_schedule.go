@@ -32,8 +32,7 @@ type cronSchedule struct {
 
 const (
 	// regular expression for cron pattern, which contains 6 parts of time units.
-	regexForCron = `^([\-/\d\*\?,]+)\s+([\-/\d\*\?,]+)\s+([\-/\d\*\?,]+)\s+([\-/\d\*\?,]+)\s+([\-/\d\*\?,A-Za-z]+)\s+([\-/\d\*\?,A-Za-z]+)$`
-
+	regexForCron           = `^([\-/\d\*\?,]+)\s+([\-/\d\*\?,]+)\s+([\-/\d\*\?,]+)\s+([\-/\d\*\?,]+)\s+([\-/\d\*\?,A-Za-z]+)\s+([\-/\d\*\?,A-Za-z]+)$`
 	patternItemTypeUnknown = iota
 	patternItemTypeWeek
 	patternItemTypeMonth

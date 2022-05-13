@@ -9,12 +9,18 @@ package gstr
 import (
 	"bytes"
 	"fmt"
-	"github.com/gogf/gf/v2/util/grand"
 	"math"
 	"regexp"
 	"strconv"
 	"strings"
 	"unicode"
+
+	"github.com/gogf/gf/v2/util/grand"
+)
+
+var (
+	// octReg is the regular expression object for checks octal string.
+	octReg = regexp.MustCompile(`\\[0-7]{3}`)
 )
 
 // Chr return the ascii string of a number(0-255).
@@ -26,11 +32,6 @@ func Chr(ascii int) string {
 func Ord(char string) int {
 	return int(char[0])
 }
-
-var (
-	// octReg is the regular expression object for checks octal string.
-	octReg = regexp.MustCompile(`\\[0-7]{3}`)
-)
 
 // OctStr converts string container octal string to its original string,
 // for example, to Chinese string.
@@ -175,7 +176,8 @@ func Nl2Br(str string, isXhtml ...bool) string {
 }
 
 // WordWrap wraps a string to a given number of characters.
-// TODO: Enable cut parameter, see http://php.net/manual/en/function.wordwrap.php.
+// This function supports cut parameters of both english and chinese punctuations.
+// TODO: Enable custom cut parameter, see http://php.net/manual/en/function.wordwrap.php.
 func WordWrap(str string, width int, br string) string {
 	if br == "" {
 		br = "\n"
@@ -185,9 +187,11 @@ func WordWrap(str string, width int, br string) string {
 		wordBuf, spaceBuf bytes.Buffer
 		init              = make([]byte, 0, len(str))
 		buf               = bytes.NewBuffer(init)
+		strRunes          = []rune(str)
 	)
-	for _, char := range []rune(str) {
-		if char == '\n' {
+	for _, char := range strRunes {
+		switch {
+		case char == '\n':
 			if wordBuf.Len() == 0 {
 				if current+spaceBuf.Len() > width {
 					current = 0
@@ -205,7 +209,8 @@ func WordWrap(str string, width int, br string) string {
 			}
 			buf.WriteRune(char)
 			current = 0
-		} else if unicode.IsSpace(char) {
+
+		case unicode.IsSpace(char):
 			if spaceBuf.Len() == 0 || wordBuf.Len() > 0 {
 				current += spaceBuf.Len() + wordBuf.Len()
 				spaceBuf.WriteTo(buf)
@@ -214,7 +219,18 @@ func WordWrap(str string, width int, br string) string {
 				wordBuf.Reset()
 			}
 			spaceBuf.WriteRune(char)
-		} else {
+
+		case isPunctuation(char):
+			wordBuf.WriteRune(char)
+			if spaceBuf.Len() == 0 || wordBuf.Len() > 0 {
+				current += spaceBuf.Len() + wordBuf.Len()
+				spaceBuf.WriteTo(buf)
+				spaceBuf.Reset()
+				wordBuf.WriteTo(buf)
+				wordBuf.Reset()
+			}
+
+		default:
 			wordBuf.WriteRune(char)
 			if current+spaceBuf.Len()+wordBuf.Len() > width && wordBuf.Len() < width {
 				buf.WriteString(br)
@@ -233,4 +249,17 @@ func WordWrap(str string, width int, br string) string {
 		wordBuf.WriteTo(buf)
 	}
 	return buf.String()
+}
+
+func isPunctuation(char int32) bool {
+	switch char {
+	// English Punctuations.
+	case ';', '.', ',', ':', '~':
+		return true
+	// Chinese Punctuations.
+	case '；', '，', '。', '：', '？', '！', '…', '、':
+		return true
+	default:
+		return false
+	}
 }

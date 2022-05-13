@@ -446,7 +446,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 		}
 		// Mapping and filtering fields if `Table` is given.
 		if in.Table != "" {
-			data, _ = db.GetCore().mappingAndFilterData(in.Schema, in.Table, data, true)
+			data, _ = db.GetCore().mappingAndFilterData(ctx, in.Schema, in.Table, data, true)
 		}
 		// Put the struct attributes in sequence in Where statement.
 		for i := 0; i < reflectType.NumField(); i++ {
@@ -506,7 +506,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 		// If the first part is column name, it automatically adds prefix to the column.
 		if in.Prefix != "" {
 			array := gstr.Split(whereStr, " ")
-			if ok, _ := db.GetCore().HasField(in.Table, array[0]); ok {
+			if ok, _ := db.GetCore().HasField(ctx, in.Table, array[0]); ok {
 				whereStr = in.Prefix + "." + whereStr
 			}
 		}
