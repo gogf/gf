@@ -8,7 +8,10 @@
 package polaris
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -17,6 +20,7 @@ import (
 	"github.com/polarismesh/polaris-go/pkg/model"
 
 	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -204,4 +208,22 @@ func instanceToServiceInstance(instance model.Instance) *gsvc.Service {
 		Endpoints: []string{fmt.Sprintf("%s://%s:%d", kind, instance.GetHost(), instance.GetPort())},
 		Separator: instanceIDSeparator,
 	}
+}
+
+// getHostAndPortFromEndpoint get host and port from endpoint.
+func getHostAndPortFromEndpoint(ctx context.Context, endpoint string) (host string, port int, err error) {
+	endpoint = gstr.ReplaceByArray(endpoint, []string{"tcp://", "udp://", "http://", "https://"})
+	httpArr := gstr.Split(endpoint, endpointDelimiter)
+	if len(httpArr) < 2 {
+		err = errors.New("invalid endpoint")
+		return
+	}
+	host = httpArr[0]
+
+	// port to int
+	port, err = strconv.Atoi(httpArr[1])
+	if err != nil {
+		return
+	}
+	return
 }

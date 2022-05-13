@@ -8,11 +8,6 @@ package polaris
 
 import (
 	"context"
-	"errors"
-	"net"
-	"net/url"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/polarismesh/polaris-go/api"
@@ -20,6 +15,7 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -29,14 +25,7 @@ func (r *Registry) Register(ctx context.Context, serviceInstance *gsvc.Service) 
 	// set separator
 	serviceInstance.Separator = instanceIDSeparator
 	for _, endpoint := range serviceInstance.Endpoints {
-		httpArr := strings.Split(endpoint, endpointDelimiter)
-		if len(httpArr) < 2 {
-			return errors.New("invalid endpoint")
-		}
-		host := httpArr[0]
-
-		// port to int
-		portNum, err := strconv.Atoi(httpArr[1])
+		host, portNum, err := getHostAndPortFromEndpoint(ctx, endpoint)
 		if err != nil {
 			return err
 		}
@@ -50,10 +39,9 @@ func (r *Registry) Register(ctx context.Context, serviceInstance *gsvc.Service) 
 			}
 		} else {
 			rmd = make(map[string]interface{}, len(serviceInstance.Metadata)+2)
-			if protocol, ok := serviceInstance.Metadata[gsvc.MDProtocol].(string); !ok {
-				rmd["kind"] = gsvc.DefaultProtocol
-			} else {
-				rmd["kind"] = protocol
+			rmd["kind"] = gsvc.DefaultProtocol
+			if protocol, ok := serviceInstance.Metadata[gsvc.MDProtocol]; ok {
+				rmd["kind"] = gconv.String(protocol)
 			}
 			rmd["version"] = serviceInstance.Version
 			for k, v := range serviceInstance.Metadata {
@@ -118,30 +106,17 @@ func (r *Registry) Register(ctx context.Context, serviceInstance *gsvc.Service) 
 		ids = append(ids, instanceID)
 	}
 	// need to set InstanceID for Deregister
-	serviceInstance.ID = strings.Join(ids, instanceIDSeparator)
+	serviceInstance.ID = gstr.Join(ids, instanceIDSeparator)
 
 	return nil
 }
 
 // Deregister the registration.
 func (r *Registry) Deregister(ctx context.Context, serviceInstance *gsvc.Service) error {
-	split := strings.Split(serviceInstance.ID, instanceIDSeparator)
+	split := gstr.Split(serviceInstance.ID, instanceIDSeparator)
 	serviceInstance.Separator = instanceIDSeparator
 	for i, endpoint := range serviceInstance.Endpoints {
-		// get url
-		u, err := url.Parse(endpoint)
-		if err != nil {
-			return err
-		}
-
-		// get host and port
-		host, port, err := net.SplitHostPort(u.Host)
-		if err != nil {
-			return err
-		}
-
-		// port to int
-		portNum, err := strconv.Atoi(port)
+		host, portNum, err := getHostAndPortFromEndpoint(ctx, endpoint)
 		if err != nil {
 			return err
 		}
