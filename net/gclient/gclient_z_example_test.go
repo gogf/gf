@@ -9,6 +9,9 @@ package gclient_test
 import (
 	"context"
 	"fmt"
+	"github.com/gogf/gf/v2/net/gclient"
+	"github.com/gogf/gf/v2/os/gctx"
+	"net/http"
 	"time"
 
 	"github.com/gogf/gf/v2/frame/g"
@@ -96,6 +99,49 @@ func init() {
 		panic(err)
 	}
 	time.Sleep(time.Millisecond * 500)
+}
+
+func ExampleNew() {
+	var (
+		ctx    = gctx.New()
+		client = gclient.New()
+	)
+
+	if r, err := client.Get(ctx, "http://127.0.0.1:8999/var/json"); err != nil {
+		panic(err)
+	} else {
+		defer r.Close()
+		fmt.Println(r.ReadAllString())
+	}
+
+	// Output:
+	// {"id":1,"name":"john"}
+}
+
+func ExampleNew_MultiConn_Recommend() {
+	var (
+		ctx    = gctx.New()
+		client = g.Client()
+	)
+
+	// controls the maximum idle(keep-alive) connections to keep per-host
+	client.Transport.(*http.Transport).MaxIdleConnsPerHost = 5
+
+	for i := 0; i < 5; i++ {
+		if r, err := client.Get(ctx, "http://127.0.0.1:8999/var/json"); err != nil {
+			panic(err)
+		} else {
+			fmt.Println(r.ReadAllString())
+			r.Close()
+		}
+	}
+
+	// Output:
+	//{"id":1,"name":"john"}
+	//{"id":1,"name":"john"}
+	//{"id":1,"name":"john"}
+	//{"id":1,"name":"john"}
+	//{"id":1,"name":"john"}
 }
 
 func ExampleClient_Header() {
