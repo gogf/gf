@@ -41,7 +41,7 @@ func init() {
 	parser, err := gcmd.Parse(g.MapStrBool{
 		"name": true,
 		"type": true,
-	}, false)
+	})
 	gtest.AssertNil(err)
 	configNode = gdb.ConfigNode{
 		Host:             "127.0.0.1",
