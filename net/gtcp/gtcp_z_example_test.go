@@ -136,6 +136,40 @@ func ExampleConn_Send() {
 	// true
 }
 
+func ExampleConn_SendWithTimeout() {
+	var (
+		addr = "127.0.0.1:80"
+	)
+
+	s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
+		time.Sleep(time.Second * 2)
+		conn.Close()
+	})
+	defer s.Close()
+	go s.Run()
+
+	time.Sleep(time.Millisecond * 10)
+
+	var (
+		err error
+	)
+	conn, _ := gtcp.NewConn(addr)
+	if conn != nil {
+		for {
+			err = conn.SendWithTimeout([]byte("hello"), time.Second, gtcp.Retry{Count: 1})
+			if err != nil {
+				break
+			}
+			time.Sleep(time.Second)
+		}
+	}
+
+	fmt.Println(err != nil)
+
+	// Output:
+	// true
+}
+
 func ExampleConn_Recv() {
 	var (
 		addr        = "127.0.0.1:80"
@@ -194,7 +228,7 @@ func ExampleConn_RecvWithTimeout() {
 
 	s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
 		for {
-			if _, err := conn.RecvWithTimeout(-1, time.Millisecond*500, gtcp.Retry{Count: 2}); err != nil {
+			if _, err := conn.RecvWithTimeout(-1, time.Millisecond*500, gtcp.Retry{Count: 1}); err != nil {
 			}
 		}
 	})
@@ -219,6 +253,92 @@ func ExampleConn_RecvWithTimeout() {
 				break
 			}
 			time.Sleep(time.Millisecond * 200 * time.Duration(sendCount))
+		}
+	}
+
+	fmt.Println(err != nil)
+
+	// Output:
+	// false
+}
+
+func ExampleConn_RecvLine() {
+	var (
+		addr = "127.0.0.1:80"
+	)
+
+	s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
+		for {
+			if c, err := conn.RecvLine(gtcp.Retry{Count: 1}); err != nil {
+				fmt.Println(c)
+			}
+		}
+	})
+	defer s.Close()
+	go s.Run()
+
+	time.Sleep(time.Millisecond * 10)
+
+	var (
+		err         error
+		sendContent = []string{"hello", "\n", "world"}
+	)
+	conn, _ := gtcp.NewConn(addr)
+	if conn != nil {
+		sendCount := 0
+		for {
+			sendCount++
+			if sendCount >= len(sendContent) {
+				break
+			}
+			err = conn.Send([]byte(sendContent[sendCount]))
+			if err != nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 200)
+		}
+	}
+
+	fmt.Println(err != nil)
+
+	// Output:
+	// false
+}
+
+func ExampleConn_RecvTill() {
+	var (
+		addr = "127.0.0.1:80"
+	)
+
+	s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
+		for {
+			if c, err := conn.RecvTill([]byte("finish"), gtcp.Retry{Count: 1}); err != nil {
+				fmt.Println(c)
+			}
+		}
+	})
+	defer s.Close()
+	go s.Run()
+
+	time.Sleep(time.Millisecond * 10)
+
+	var (
+		err         error
+		sendContent = []string{"hello", "world", "finish"}
+	)
+	conn, _ := gtcp.NewConn(addr)
+	if conn != nil {
+		sendCount := 0
+		for {
+			sendCount++
+			if sendCount >= len(sendContent) {
+				break
+			}
+			err = conn.Send([]byte(sendContent[sendCount]))
+			if err != nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 200)
 		}
 	}
 
