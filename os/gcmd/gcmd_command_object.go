@@ -9,11 +9,14 @@ package gcmd
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 
 	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gstructs"
@@ -285,11 +288,17 @@ func newCommandFromMethod(object interface{}, method reflect.Value) (command *Co
 		}
 		// Construct input parameters.
 		if len(data) > 0 {
+			intlog.PrintFunc(ctx, func() string {
+				return fmt.Sprintf(`input command data map: %s`, gjson.MustEncode(data))
+			})
 			if inputObject.Kind() == reflect.Ptr {
 				err = gconv.Scan(data, inputObject.Interface())
 			} else {
 				err = gconv.Struct(data, inputObject.Addr().Interface())
 			}
+			intlog.PrintFunc(ctx, func() string {
+				return fmt.Sprintf(`input object assigned data: %s`, gjson.MustEncode(inputObject.Interface()))
+			})
 			if err != nil {
 				return
 			}
