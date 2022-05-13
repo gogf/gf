@@ -361,3 +361,58 @@ gfcli:
 		t.AssertNil(err)
 	})
 }
+
+func Test_Load_Properties(t *testing.T) {
+	var data = `
+
+#注释
+
+
+addr.ip = 127.0.0.1
+addr.port=9001
+addr.enable=true
+DBINFO.type=mysql
+DBINFO.user=root
+DBINFO.password=password
+
+`
+
+	gtest.C(t, func(t *gtest.T) {
+		j, err := gjson.LoadContent(data)
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		t.Assert(j.Get("addr.ip").String(), "127.0.0.1")
+		t.Assert(j.Get("addr.port").String(), "9001")
+		t.Assert(j.Get("addr.enable").String(), "true")
+		t.Assert(j.Get("DBINFO.type").String(), "mysql")
+		t.Assert(j.Get("DBINFO.user").String(), "root")
+		t.Assert(j.Get("DBINFO.password").String(), "password")
+
+		_, err = j.ToProperties()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		j, err := gjson.LoadProperties(data, true)
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		t.Assert(j.Get("addr.ip").String(), "127.0.0.1")
+		t.Assert(j.Get("addr.port").String(), "9001")
+		t.Assert(j.Get("addr.enable").String(), "true")
+		t.Assert(j.Get("DBINFO.type").String(), "mysql")
+		t.Assert(j.Get("DBINFO.user").String(), "root")
+		t.Assert(j.Get("DBINFO.password").String(), "password")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		errData := []byte("i\\u1 : 123456789")
+		_, err := gjson.LoadContentType("properties", errData, true)
+		t.AssertNE(err, nil)
+	})
+}

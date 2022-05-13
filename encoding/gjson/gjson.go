@@ -22,13 +22,14 @@ import (
 )
 
 const (
-	ContentTypeJson = `json`
-	ContentTypeJs   = `js`
-	ContentTypeXml  = `xml`
-	ContentTypeIni  = `ini`
-	ContentTypeYaml = `yaml`
-	ContentTypeYml  = `yml`
-	ContentTypeToml = `toml`
+	ContentTypeJson       = `json`
+	ContentTypeJs         = `js`
+	ContentTypeXml        = `xml`
+	ContentTypeIni        = `ini`
+	ContentTypeYaml       = `yaml`
+	ContentTypeYml        = `yml`
+	ContentTypeToml       = `toml`
+	ContentTypeProperties = `properties`
 )
 
 const (
