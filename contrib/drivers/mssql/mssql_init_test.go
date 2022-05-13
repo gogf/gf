@@ -18,7 +18,6 @@ import (
 )
 
 var (
-	// 数据库对象/接口
 	db     gdb.DB
 	dblink gdb.DB
 	dbErr  gdb.DB
@@ -110,10 +109,7 @@ func createTable(table ...string) (name string) {
 		gtest.Fatal(err)
 	}
 
-	// 选择操作数据库
 	db.Schema("test")
-
-	//db.SetDebug(true)
 	return
 }
 
@@ -138,7 +134,6 @@ func createInitTable(table ...string) (name string) {
 	return
 }
 
-// 删除指定表.
 func dropTable(table string) {
 	if _, err := db.Exec(context.Background(), fmt.Sprintf(`
 		IF EXISTS (SELECT * FROM sysobjects WHERE name='%s' and xtype='U')
