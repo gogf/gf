@@ -40,6 +40,11 @@ func Test_Pool_Basic1(t *testing.T) {
 		err = conn.SendPkgWithTimeout(data, time.Second)
 		t.AssertNil(err)
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		_, err := gtcp.NewPoolConn(fmt.Sprintf("127.0.0.1:80"))
+		t.AssertNE(err, nil)
+	})
 }
 
 func Test_Pool_Basic2(t *testing.T) {
