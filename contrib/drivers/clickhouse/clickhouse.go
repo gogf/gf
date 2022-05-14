@@ -38,8 +38,6 @@ var (
 	errUnsupportedReplace      = errors.New("unsupported method:Replace")
 	errUnsupportedBegin        = errors.New("unsupported method:Begin")
 	errUnsupportedTransaction  = errors.New("unsupported method:Transaction")
-	errNotCondition            = errors.New("there should be WHERE condition statement for UPDATE/DELETE operation")
-	errNotAssignment           = errors.New("there should be WHERE condition statement for Assignment operation")
 )
 
 const (
@@ -71,32 +69,30 @@ func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 // Open creates and returns an underlying sql.DB object for clickhouse.
 func (d *Driver) Open(config *gdb.ConfigNode) (*sql.DB, error) {
 	var (
-		source string
 		driver = "clickhouse"
 	)
 	// clickhouse://username:password@host1:9000,host2:9000/database?dial_timeout=200ms&max_execution_time=60
 	if config.Link != "" {
-		source = config.Link
 		// Custom changing the schema in runtime.
 		if config.Name != "" {
-			source, _ = gregex.ReplaceString(replaceSchemaPattern, "@$1/"+config.Name, source)
+			config.Link, _ = gregex.ReplaceString(replaceSchemaPattern, "@$1/"+config.Name, config.Link)
 		} else {
 			// If no schema, the link is matched for replacement
-			dbName, _ := gregex.MatchString(replaceSchemaPattern, source)
+			dbName, _ := gregex.MatchString(replaceSchemaPattern, config.Link)
 			if len(dbName) > 0 {
 				config.Name = dbName[len(dbName)-1]
 			}
 		}
 	} else if config.Pass != "" {
-		source = fmt.Sprintf(
+		config.Link = fmt.Sprintf(
 			"clickhouse://%s:%s@%s:%s/%s?charset=%s&debug=%t",
 			config.User, url.PathEscape(config.Pass), config.Host, config.Port, config.Name, config.Charset, config.Debug)
 	} else {
-		source = fmt.Sprintf(
+		config.Link = fmt.Sprintf(
 			"clickhouse://%s@%s:%s/%s?charset=%s&debug=%t",
 			config.User, config.Host, config.Port, config.Name, config.Charset, config.Debug)
 	}
-	db, err := sql.Open(driver, source)
+	db, err := sql.Open(driver, config.Link)
 	if err != nil {
 		return nil, err
 	}

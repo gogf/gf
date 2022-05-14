@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/gogf/gf/v2/util/guid"
+	"strings"
 	"testing"
 	"time"
 
@@ -449,4 +450,19 @@ func TestDriverClickhouse_Open(t *testing.T) {
 	})
 	gtest.AssertNil(err)
 	gtest.AssertNil(db.PingMaster())
+}
+
+func TestDriverClickhouse_ReplaceConfig(t *testing.T) {
+	db := &Driver{}
+	// parse link's name set to config
+	c1 := &gdb.ConfigNode{}
+	c1.Link = "clickhouse://default@127.0.0.1:9000,127.0.0.1:9000/default?dial_timeout=200ms&max_execution_time=60"
+	_, _ = db.Open(c1)
+	gtest.AssertEQ(c1.Name, "default")
+	// replace link's name from config
+	c2 := &gdb.ConfigNode{}
+	c2.Name = "clickhouseJohn"
+	c2.Link = "clickhouse://default@127.0.0.1:9000,127.0.0.1:9000/default?dial_timeout=200ms&max_execution_time=60"
+	_, _ = db.Open(c2)
+	gtest.AssertEQ(strings.Contains(c2.Link, "clickhouseJohn"), true)
 }
