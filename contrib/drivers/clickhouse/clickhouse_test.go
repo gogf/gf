@@ -3,6 +3,7 @@ package clickhouse
 import (
 	"context"
 	"fmt"
+	"github.com/gogf/gf/v2/util/guid"
 	"testing"
 	"time"
 
@@ -96,6 +97,7 @@ values  (607970943242866688, 607973669943119880, 607972403489804288, 2022, 3, 20
 			  Col1 UInt8
 			, Col2 String
 			, Col3 FixedString(3)
+			, Col4 String
 			, Col5 Map(String, UInt8)
 			, Col6 Array(String)
 			, Col7 Tuple(String, UInt8, Array(Map(String, String)))
@@ -416,6 +418,7 @@ func TestDriverClickhouse_BatchInsert(t *testing.T) {
 			"Col1": uint8(42),
 			"Col2": "ClickHouse",
 			"Col3": "Inc",
+			"Col4": guid.S(),
 			"Col5": map[string]uint8{"key": 1},             // Map(String, UInt8)
 			"Col6": []string{"Q", "W", "E", "R", "T", "Y"}, // Array(String)
 			"Col7": []interface{}{ // Tuple(String, UInt8, Array(Map(String, String)))
