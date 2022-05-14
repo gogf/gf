@@ -10,10 +10,39 @@ import (
 	"testing"
 
 	"github.com/gogf/gf/contrib/drivers/pgsql/v2"
+	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/test/gtest"
 )
+
+func Test_New(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		node := gdb.ConfigNode{
+			Host: "127.0.0.1",
+			Port: "5432",
+			User: TestDbUser,
+			Pass: TestDbPass,
+			Type: "pgsql",
+			Name: configNode.Name,
+		}
+		newDb, err := gdb.New(node)
+		t.AssertNil(err)
+		value, err := newDb.GetValue(ctx, `select 1`)
+		t.AssertNil(err)
+		t.Assert(value, `1`)
+		t.AssertNil(newDb.Close(ctx))
+	})
+}
+
+func Test_DB_Ping(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err1 := db.PingMaster()
+		err2 := db.PingSlave()
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
+	})
+}
 
 func Test_Driver_DoFilter(t *testing.T) {
 	var (
