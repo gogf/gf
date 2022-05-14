@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gdb_test
+package mysql_test
 
 import (
 	"context"
@@ -41,7 +41,7 @@ func init() {
 	parser, err := gcmd.Parse(g.MapStrBool{
 		"name": true,
 		"type": true,
-	}, false)
+	})
 	gtest.AssertNil(err)
 	configNode = gdb.ConfigNode{
 		Host:             "127.0.0.1",
