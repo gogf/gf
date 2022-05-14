@@ -141,6 +141,10 @@ func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
 					// If it exceeds the buffer size, it then automatically increases its buffer size.
 					buffer = append(buffer, make([]byte, defaultReadBufferSize)...)
 				} else {
+					// Just read once from buffer.
+					if length == 0 {
+						break
+					}
 					// It returns immediately if received size is lesser than buffer size.
 					if !bufferWait {
 						break
@@ -174,10 +178,6 @@ func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
 				time.Sleep(retry[0].Interval)
 				continue
 			}
-			break
-		}
-		// Just read once from buffer.
-		if length == 0 {
 			break
 		}
 	}

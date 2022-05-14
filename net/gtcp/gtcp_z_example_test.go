@@ -49,9 +49,9 @@ func ExampleGetFreePorts() {
 }
 
 func ExampleNewConn() {
-	var (
-		addr = "127.0.0.1:80"
-	)
+	addr := "127.0.0.1:%d"
+	freePort, _ := gtcp.GetFreePort()
+	addr = fmt.Sprintf(addr, freePort)
 
 	conn, _ := gtcp.NewConn(addr, time.Second)
 	fmt.Println(conn)
@@ -71,9 +71,11 @@ func ExampleNewConn() {
 
 func ExampleNewConnTLS() {
 	var (
-		addr      = "127.0.0.1:80"
 		tlsConfig = &tls.Config{}
 	)
+	addr := "127.0.0.1:%d"
+	freePort, _ := gtcp.GetFreePort()
+	addr = fmt.Sprintf(addr, freePort)
 
 	conn, _ := gtcp.NewConnTLS(addr, tlsConfig)
 	fmt.Println(conn)
@@ -94,11 +96,14 @@ func ExampleNewConnTLS() {
 
 func ExampleNewConnKeyCrt() {
 	var (
-		addr      = "127.0.0.1:80"
 		tlsConfig = &tls.Config{}
 		crtFile   = "crtFile"
 		keyFile   = "keyFile"
 	)
+
+	addr := "127.0.0.1:%d"
+	freePort, _ := gtcp.GetFreePort()
+	addr = fmt.Sprintf(addr, freePort)
 
 	conn, _ := gtcp.NewConnKeyCrt(addr, crtFile, keyFile)
 	fmt.Println(conn)
@@ -273,9 +278,13 @@ func ExampleConn_SendRecvWithTimeout() {
 
 func ExampleConn_Recv() {
 	var (
-		addr        = "127.0.0.1:80"
 		sendContent = make([]byte, 512)
 	)
+
+	addr := "127.0.0.1:%d"
+	freePort, _ := gtcp.GetFreePort()
+	addr = fmt.Sprintf(addr, freePort)
+
 	for i := 0; i < 512; i++ {
 		sendContent[i] = 'a'
 	}
@@ -318,11 +327,52 @@ func ExampleConn_Recv() {
 	// false
 }
 
+func ExampleConn_Recv_Once() {
+	addr := "127.0.0.1:%d"
+	freePort, _ := gtcp.GetFreePort()
+	addr = fmt.Sprintf(addr, freePort)
+
+	s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
+		if _, err := conn.Recv(0); err == nil {
+			conn.Close()
+		} else {
+			fmt.Println(err)
+		}
+	})
+	defer s.Close()
+	go s.Run()
+
+	time.Sleep(time.Millisecond * 10)
+
+	var (
+		err error
+	)
+	conn, _ := gtcp.NewConn(addr)
+	if conn != nil {
+		for {
+			_, err = conn.SendRecv([]byte("hello"), -1)
+			if err != nil {
+				break
+			}
+			time.Sleep(time.Second)
+		}
+	}
+
+	fmt.Println(err != nil)
+
+	// Output:
+	// true
+}
+
 func ExampleConn_RecvWithTimeout() {
 	var (
-		addr        = "127.0.0.1:80"
 		sendContent = make([]byte, 512)
 	)
+
+	addr := "127.0.0.1:%d"
+	freePort, _ := gtcp.GetFreePort()
+	addr = fmt.Sprintf(addr, freePort)
+
 	for i := 0; i < 512; i++ {
 		sendContent[i] = 'a'
 	}
@@ -637,6 +687,9 @@ func ExampleSendPkg() {
 	time.Sleep(time.Millisecond * 10)
 
 	err := gtcp.SendPkg(addr, []byte("hello"))
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	fmt.Println(err == nil)
 
