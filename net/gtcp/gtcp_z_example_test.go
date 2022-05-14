@@ -732,3 +732,90 @@ func ExampleSendRecvPkgWithTimeout() {
 	// Output:
 	// true
 }
+
+func ExampleGetServer() {
+	var (
+		addr = "127.0.0.1:80"
+	)
+
+	gtcp.NewServer(addr, func(conn *gtcp.Conn) {
+		conn.SendPkg([]byte("Server Received"))
+	}, "GetServer")
+
+	s := gtcp.GetServer("GetServer")
+	defer s.Close()
+	go s.Run()
+
+	time.Sleep(time.Millisecond * 10)
+
+	err := gtcp.Send(addr, []byte("hello"), gtcp.Retry{Count: 1})
+
+	fmt.Println(err == nil)
+
+	// Output:
+	// true
+}
+
+func ExampleSetAddress() {
+	var (
+		addr = "127.0.0.1:80"
+	)
+
+	s := gtcp.NewServer("", func(conn *gtcp.Conn) {
+		time.Sleep(time.Second * 2)
+		conn.Close()
+	})
+	s.SetAddress(addr)
+	defer s.Close()
+	go s.Run()
+
+	time.Sleep(time.Millisecond * 10)
+
+	err := gtcp.Send(addr, []byte("hello"), gtcp.Retry{Count: 1})
+
+	fmt.Println(err == nil)
+
+	// Output:
+	// true
+}
+
+func ExampleSetHandler() {
+	var (
+		addr = "127.0.0.1:80"
+	)
+
+	s := gtcp.NewServer(addr, nil)
+	s.SetHandler(func(conn *gtcp.Conn) {
+		time.Sleep(time.Second * 2)
+		conn.Close()
+	})
+	defer s.Close()
+	go s.Run()
+
+	time.Sleep(time.Millisecond * 10)
+
+	err := gtcp.Send(addr, []byte("hello"), gtcp.Retry{Count: 1})
+
+	fmt.Println(err == nil)
+
+	// Output:
+	// true
+}
+
+func ExampleRun_NilHandle() {
+	var (
+		addr = "127.0.0.1:80"
+	)
+
+	s := gtcp.NewServer(addr, nil)
+	defer s.Close()
+	go func() {
+		err := s.Run()
+		fmt.Println(err != nil)
+	}()
+
+	time.Sleep(time.Millisecond * 100)
+
+	// Output:
+	// true
+}
