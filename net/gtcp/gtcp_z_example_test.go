@@ -33,10 +33,7 @@ func ExampleGetFreePorts() {
 		addr := fmt.Sprintf("%s:%d", host, port)
 
 		s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
-			time.Sleep(time.Second * 2)
-			conn.Close()
 		})
-		defer s.Close()
 		go s.Run()
 	}
 
@@ -83,7 +80,6 @@ func ExampleNewConnTLS() {
 
 	//
 	s := gtcp.NewServerTLS(addr, tlsConfig, func(conn *gtcp.Conn) {
-		defer conn.Close()
 	})
 	go s.Run()
 	defer s.Close()
@@ -109,7 +105,6 @@ func ExampleNewConnKeyCrt() {
 
 	//
 	s := gtcp.NewServerTLS(addr, tlsConfig, func(conn *gtcp.Conn) {
-		defer conn.Close()
 	})
 	go s.Run()
 	defer s.Close()
@@ -529,8 +524,6 @@ func ExampleSend() {
 	addr = fmt.Sprintf(addr, freePort)
 
 	s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
-		time.Sleep(time.Second * 2)
-		conn.Close()
 	})
 	defer s.Close()
 	go s.Run()
@@ -552,8 +545,6 @@ func ExampleSendRecv() {
 
 	s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
 		conn.Send([]byte("Server Received"))
-		time.Sleep(time.Second * 2)
-		conn.Close()
 	})
 	defer s.Close()
 	go s.Run()
@@ -575,8 +566,6 @@ func ExampleSendWithTimeout() {
 
 	s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
 		conn.Send([]byte("Server Received"))
-		time.Sleep(time.Second * 2)
-		conn.Close()
 	})
 	defer s.Close()
 	go s.Run()
@@ -598,8 +587,6 @@ func ExampleSendRecvWithTimeout() {
 
 	s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
 		conn.Send([]byte("Server Received"))
-		time.Sleep(time.Second * 2)
-		conn.Close()
 	})
 	defer s.Close()
 	go s.Run()
@@ -623,8 +610,6 @@ func ExampleMustGetFreePort() {
 	addr := fmt.Sprintf("%s:%d", host, port)
 
 	s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
-		time.Sleep(time.Second * 2)
-		conn.Close()
 	})
 	defer s.Close()
 	go s.Run()
@@ -645,8 +630,6 @@ func ExampleSendPkg() {
 	addr = fmt.Sprintf(addr, freePort)
 
 	s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
-		time.Sleep(time.Second * 2)
-		conn.Close()
 	})
 	defer s.Close()
 	go s.Run()
@@ -668,8 +651,6 @@ func ExampleSendRecvPkg() {
 
 	s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
 		conn.SendPkg([]byte("Server Received"))
-		time.Sleep(time.Second * 2)
-		conn.Close()
 	})
 	defer s.Close()
 	go s.Run()
@@ -712,8 +693,6 @@ func ExampleSendRecvPkgWithTimeout() {
 
 	s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
 		conn.SendPkg([]byte("Server Received"))
-		time.Sleep(time.Second * 2)
-		conn.Close()
 	})
 	defer s.Close()
 	go s.Run()
@@ -757,8 +736,6 @@ func ExampleSetAddress() {
 	addr = fmt.Sprintf(addr, freePort)
 
 	s := gtcp.NewServer("", func(conn *gtcp.Conn) {
-		time.Sleep(time.Second * 2)
-		conn.Close()
 	})
 	s.SetAddress(addr)
 	defer s.Close()
@@ -781,8 +758,6 @@ func ExampleSetHandler() {
 
 	s := gtcp.NewServer(addr, nil)
 	s.SetHandler(func(conn *gtcp.Conn) {
-		time.Sleep(time.Second * 2)
-		conn.Close()
 	})
 	defer s.Close()
 	go s.Run()
