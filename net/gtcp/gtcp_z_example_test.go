@@ -691,8 +691,6 @@ func ExampleSendPkgWithTimeout() {
 
 	s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
 		conn.SendPkg([]byte("Server Received"))
-		time.Sleep(time.Second * 2)
-		conn.Close()
 	})
 	defer s.Close()
 	go s.Run()
