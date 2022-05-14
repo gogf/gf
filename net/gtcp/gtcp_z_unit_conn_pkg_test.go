@@ -193,10 +193,9 @@ func Test_Package_Option_HeadSize4(t *testing.T) {
 		conn, err := gtcp.NewConn(fmt.Sprintf("127.0.0.1:%d", p))
 		t.AssertNil(err)
 		defer conn.Close()
-		data := make([]byte, 0xFFFFFFFF+1)
-		result, err := conn.SendRecvPkg(data, gtcp.PkgOption{HeaderSize: 4})
-		t.AssertNE(err, nil)
-		t.Assert(result, nil)
+		data := make([]byte, 0xFFFF+1)
+		_, err = conn.SendRecvPkg(data, gtcp.PkgOption{HeaderSize: 4})
+		t.Assert(err, nil)
 	})
 	// SendRecvPkg with big data - success.
 	gtest.C(t, func(t *gtest.T) {
@@ -247,7 +246,7 @@ func Test_Package_Option_Error(t *testing.T) {
 		conn, err := gtcp.NewConn(fmt.Sprintf("127.0.0.1:%d", p))
 		t.AssertNil(err)
 		defer conn.Close()
-		data := make([]byte, 0xFFFFFFFF+1)
+		data := make([]byte, 0xFFFF+1)
 		_, err = conn.SendRecvPkg(data, gtcp.PkgOption{HeaderSize: 4})
 
 		time.Sleep(100 * time.Millisecond)
@@ -275,7 +274,7 @@ func Test_Package_Option_Error(t *testing.T) {
 		conn, err := gtcp.NewConn(fmt.Sprintf("127.0.0.1:%d", p))
 		t.AssertNil(err)
 		defer conn.Close()
-		data := make([]byte, 0xFFFFFFFF+1)
+		data := make([]byte, 0xFFFF+1)
 		_, err = conn.SendRecvPkg(data, gtcp.PkgOption{HeaderSize: 4})
 
 		time.Sleep(100 * time.Millisecond)
