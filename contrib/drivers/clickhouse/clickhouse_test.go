@@ -306,6 +306,12 @@ func TestDriverClickhouse_Delete(t *testing.T) {
 	defer dropClickhouseTableVisits(connect)
 	_, err := connect.Model("visits").Where("created >", "2021-01-01 00:00:00").Delete()
 	gtest.AssertNil(err)
+	_, err = connect.Model("visits").
+		Where("created >", "2021-01-01 00:00:00").
+		Where("duration > ", 0).
+		Where("url is not null").
+		Delete()
+	gtest.AssertNil(err)
 }
 
 func TestDriverClickhouse_Update(t *testing.T) {
@@ -316,6 +322,13 @@ func TestDriverClickhouse_Update(t *testing.T) {
 		"created": time.Now().Format("2006-01-02 15:04:05"),
 	}).Update()
 	gtest.AssertNil(err)
+	_, err = connect.Model("visits").
+		Where("created > ", "2021-01-01 15:15:15").
+		Where("duration > ", 0).
+		Where("url is not null").
+		Data(g.Map{
+			"created": time.Now().Format("2006-01-02 15:04:05"),
+		}).Update()
 }
 
 func TestDriverClickhouse_Replace(t *testing.T) {
@@ -343,12 +356,12 @@ func TestDriverClickhouse_DoFilter(t *testing.T) {
 
 	core := gdb.Core{}
 	ctx := core.InjectNeedParsedSql(context.Background())
-	rawSQL = "update visit set url = '1' where url = '0'"
+	rawSQL = "UPDATE visit SET url = '1' WHERE url = '0'"
 	replaceSQL, _, err = this.DoFilter(ctx, nil, rawSQL, []interface{}{1})
 	gtest.AssertNil(err)
 	gtest.AssertEQ(replaceSQL, "ALTER TABLE visit UPDATE url = '1' WHERE url = '0'")
 
-	rawSQL = "delete from visit where url='0'"
+	rawSQL = "DELETE FROM visit WHERE url = '0'"
 	replaceSQL, _, err = this.DoFilter(ctx, nil, rawSQL, []interface{}{1})
 	gtest.AssertNil(err)
 	gtest.AssertEQ(replaceSQL, "ALTER TABLE visit DELETE WHERE url = '0'")

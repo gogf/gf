@@ -13,7 +13,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ClickHouse/clickhouse-go/v2"
-	"github.com/longbridgeapp/sqlparser"
 	"net/url"
 	"strings"
 
@@ -41,6 +40,13 @@ var (
 	errUnsupportedTransaction  = errors.New("unsupported method:Transaction")
 	errNotCondition            = errors.New("there should be WHERE condition statement for UPDATE/DELETE operation")
 	errNotAssignment           = errors.New("there should be WHERE condition statement for Assignment operation")
+)
+
+const (
+	updateFilterPattern  = `(?i)UPDATE[\s]+?(\w+[\.]?\w+)[\s]+?SET`
+	deleteFilterPattern  = `(?i)DELETE[\s]+?FROM[\s]+?(\w+[\.]?\w+)`
+	filterTypePattern    = `(?i)^UPDATE|DELETE`
+	replaceSchemaPattern = `@(.+?)/([\w\.\-]+)+`
 )
 
 func init() {
@@ -73,7 +79,13 @@ func (d *Driver) Open(config *gdb.ConfigNode) (*sql.DB, error) {
 		source = config.Link
 		// Custom changing the schema in runtime.
 		if config.Name != "" {
-			source, _ = gregex.ReplaceString(`@(.+?)/([\w\.\-]+)+`, "@$1/"+config.Name, source)
+			source, _ = gregex.ReplaceString(replaceSchemaPattern, "@$1/"+config.Name, source)
+		} else {
+			// If no schema, the link is matched for replacement
+			dbName, _ := gregex.MatchString(replaceSchemaPattern, source)
+			if len(dbName) > 0 {
+				config.Name = dbName[len(dbName)-1]
+			}
 		}
 	} else if config.Pass != "" {
 		source = fmt.Sprintf(
@@ -220,73 +232,53 @@ func (d *Driver) DoFilter(
 	if len(args) == 0 {
 		return originSql, args, nil
 	}
+
 	var index int
 	// Convert placeholder char '?' to string "$x".
 	originSql, _ = gregex.ReplaceStringFunc(`\?`, originSql, func(s string) string {
 		index++
 		return fmt.Sprintf(`$%d`, index)
 	})
+
 	// Only SQL generated through the framework is processed.
 	if !d.GetNeedParsedSqlFromCtx(ctx) {
 		return originSql, args, nil
 	}
+
 	// replace STD SQL to Clickhouse SQL grammar
-	parsedStmt, err := sqlparser.NewParser(strings.NewReader(originSql)).ParseStatement()
-	if err != nil {
-		return "", nil, err
+	var (
+		modeRes, _ = gregex.MatchString(filterTypePattern, strings.TrimSpace(originSql))
+	)
+	if len(modeRes) == 0 {
+		return originSql, args, nil
 	}
-	switch stmt := parsedStmt.(type) {
-	case *sqlparser.UpdateStatement:
-		// MySQL eg: UPDATE `table` SET xxx
-		// Clickhouse eg: ALTER TABLE `table` UPDATE xxx
-		newSql, err = d.doFilterUpdate(stmt)
+
+	// Only delete/ UPDATE statements require filter
+	switch strings.ToUpper(modeRes[0]) {
+	case "UPDATE":
+		// MySQL eg: UPDATE table_name SET field1=new-value1, field2=new-value2 [WHERE Clause]
+		// Clickhouse eg: ALTER TABLE [db.]table UPDATE column1 = expr1 [, ...] WHERE filter_expr
+		newSql, err = gregex.ReplaceStringFuncMatch(updateFilterPattern, originSql, func(s []string) string {
+			return fmt.Sprintf("ALTER TABLE %s UPDATE", s[1])
+		})
 		if err != nil {
-			return originSql, args, err
+			return "", nil, err
 		}
 		return newSql, args, nil
-	case *sqlparser.DeleteStatement:
-		// MySQL eg: DELETE FROM `table`
-		// Clickhouse eg: ALTER TABLE `table` DELETE WHERE filter_expr
-		newSql, err = d.doFilterDelete(stmt)
+
+	case "DELETE":
+		// MySQL eg: DELETE FROM table_name [WHERE Clause]
+		// Clickhouse eg: ALTER TABLE [db.]table [ON CLUSTER cluster] DELETE WHERE filter_expr
+		newSql, err = gregex.ReplaceStringFuncMatch(deleteFilterPattern, originSql, func(s []string) string {
+			return fmt.Sprintf("ALTER TABLE %s DELETE", s[1])
+		})
 		if err != nil {
-			return originSql, args, err
+			return "", nil, err
 		}
 		return newSql, args, nil
+
 	}
 	return originSql, args, nil
-}
-
-func (d *Driver) doFilterDelete(stmt *sqlparser.DeleteStatement) (string, error) {
-	if stmt.Condition == nil {
-		return "", errNotCondition
-	}
-	var (
-		condition = stmt.Condition.String()
-		tableName = stmt.TableName
-	)
-	newSql := fmt.Sprintf("ALTER TABLE %s DELETE WHERE %s", tableName, condition)
-	return newSql, nil
-}
-
-func (d *Driver) doFilterUpdate(stmt *sqlparser.UpdateStatement) (string, error) {
-	if stmt.Condition == nil {
-		return "", errNotCondition
-	}
-	if len(stmt.Assignments) == 0 {
-		return "", errNotAssignment
-	}
-	var (
-		condition   = stmt.Condition.String()
-		assignment  string
-		tableName   = stmt.TableName
-		assignments = []string{}
-	)
-	for _, item := range stmt.Assignments {
-		assignments = append(assignments, item.String())
-	}
-	assignment = strings.Join(assignments, ",")
-	newSql := fmt.Sprintf("ALTER TABLE %s UPDATE %s WHERE %s", tableName, assignment, condition)
-	return newSql, nil
 }
 
 // DoCommit commits current sql and arguments to underlying sql driver.
