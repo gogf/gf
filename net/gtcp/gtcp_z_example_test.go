@@ -37,7 +37,7 @@ func ExampleGetFreePorts() {
 		go s.Run()
 	}
 
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 500)
 
 	err1 := gtcp.Send(fmt.Sprintf("%s:%d", host, ports[0]), []byte("hello"), gtcp.Retry{Count: 1})
 	err2 := gtcp.Send(fmt.Sprintf("%s:%d", host, ports[1]), []byte("hello"), gtcp.Retry{Count: 1})
@@ -134,7 +134,7 @@ func ExampleConn_Send() {
 	defer s.Close()
 	go s.Run()
 
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 500)
 
 	var (
 		err error
@@ -168,7 +168,7 @@ func ExampleConn_SendWithTimeout() {
 	defer s.Close()
 	go s.Run()
 
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 500)
 
 	var (
 		err error
@@ -205,7 +205,7 @@ func ExampleConn_SendRecv() {
 	defer s.Close()
 	go s.Run()
 
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 500)
 
 	var (
 		err error
@@ -248,7 +248,7 @@ func ExampleConn_SendRecvWithTimeout() {
 	defer s.Close()
 	go s.Run()
 
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 500)
 
 	var (
 		err error
@@ -300,7 +300,7 @@ func ExampleConn_Recv() {
 	defer s.Close()
 	go s.Run()
 
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 500)
 
 	var (
 		err error
@@ -342,7 +342,7 @@ func ExampleConn_Recv_Once() {
 	defer s.Close()
 	go s.Run()
 
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 500)
 
 	var (
 		err error
@@ -386,7 +386,7 @@ func ExampleConn_RecvWithTimeout() {
 	defer s.Close()
 	go s.Run()
 
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 500)
 
 	var (
 		err error
@@ -427,7 +427,7 @@ func ExampleConn_RecvLine() {
 	defer s.Close()
 	go s.Run()
 
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 500)
 
 	var (
 		err         error
@@ -470,7 +470,7 @@ func ExampleConn_RecvTill() {
 	defer s.Close()
 	go s.Run()
 
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 500)
 
 	var (
 		err         error
@@ -510,7 +510,7 @@ func ExampleConn_SetDeadline() {
 	defer s.Close()
 	go s.Run()
 
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 500)
 
 	var (
 		err error
@@ -545,7 +545,7 @@ func ExampleConn_SetReceiveBufferWait() {
 	defer s.Close()
 	go s.Run()
 
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 500)
 
 	var (
 		err error
@@ -578,9 +578,12 @@ func ExampleSend() {
 	defer s.Close()
 	go s.Run()
 
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 500)
 
 	err := gtcp.Send(addr, []byte("hello"), gtcp.Retry{Count: 1})
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	fmt.Println(err == nil)
 
@@ -599,9 +602,12 @@ func ExampleSendRecv() {
 	defer s.Close()
 	go s.Run()
 
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 500)
 
 	_, err := gtcp.SendRecv(addr, []byte("hello"), -1, gtcp.Retry{Count: 1})
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	fmt.Println(err == nil)
 
@@ -620,9 +626,12 @@ func ExampleSendWithTimeout() {
 	defer s.Close()
 	go s.Run()
 
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 500)
 
 	err := gtcp.SendWithTimeout(addr, []byte("hello"), time.Millisecond*500, gtcp.Retry{Count: 1})
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	fmt.Println(err == nil)
 
@@ -641,9 +650,12 @@ func ExampleSendRecvWithTimeout() {
 	defer s.Close()
 	go s.Run()
 
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 500)
 
 	_, err := gtcp.SendRecvWithTimeout(addr, []byte("hello"), -1, time.Millisecond*500, gtcp.Retry{Count: 1})
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	fmt.Println(err == nil)
 
@@ -664,9 +676,12 @@ func ExampleMustGetFreePort() {
 	defer s.Close()
 	go s.Run()
 
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 500)
 
 	err := gtcp.Send(addr, []byte("hello"), gtcp.Retry{Count: 1})
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	fmt.Println(err == nil)
 
@@ -684,7 +699,7 @@ func ExampleSendPkg() {
 	defer s.Close()
 	go s.Run()
 
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 500)
 
 	err := gtcp.SendPkg(addr, []byte("hello"))
 	if err != nil {
@@ -708,9 +723,12 @@ func ExampleSendRecvPkg() {
 	defer s.Close()
 	go s.Run()
 
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 500)
 
 	_, err := gtcp.SendRecvPkg(addr, []byte("hello"))
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	fmt.Println(err == nil)
 
@@ -729,9 +747,12 @@ func ExampleSendPkgWithTimeout() {
 	defer s.Close()
 	go s.Run()
 
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 500)
 
 	err := gtcp.SendPkgWithTimeout(addr, []byte("hello"), time.Second)
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	fmt.Println(err == nil)
 
@@ -750,9 +771,12 @@ func ExampleSendRecvPkgWithTimeout() {
 	defer s.Close()
 	go s.Run()
 
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 500)
 
 	_, err := gtcp.SendRecvPkgWithTimeout(addr, []byte("hello"), time.Second)
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	fmt.Println(err == nil)
 
@@ -773,9 +797,12 @@ func ExampleGetServer() {
 	defer s.Close()
 	go s.Run()
 
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 500)
 
 	err := gtcp.Send(addr, []byte("hello"), gtcp.Retry{Count: 1})
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	fmt.Println(err == nil)
 
@@ -794,7 +821,7 @@ func ExampleSetAddress() {
 	defer s.Close()
 	go s.Run()
 
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 500)
 
 	err := gtcp.Send(addr, []byte("hello"), gtcp.Retry{Count: 1})
 	if err != nil {
@@ -818,9 +845,12 @@ func ExampleSetHandler() {
 	defer s.Close()
 	go s.Run()
 
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 500)
 
 	err := gtcp.Send(addr, []byte("hello"), gtcp.Retry{Count: 1})
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	fmt.Println(err == nil)
 
@@ -841,6 +871,7 @@ func ExampleRun_NilHandle() {
 	}()
 
 	time.Sleep(time.Millisecond * 100)
+
 	// Output:
 	// true
 }
