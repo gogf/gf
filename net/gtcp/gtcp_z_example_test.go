@@ -66,12 +66,10 @@ func ExampleNewConn() {
 	go s.Run()
 	defer s.Close()
 
-	conn, _ = gtcp.NewConn(addr, time.Second)
-	fmt.Println(conn.RemoteAddr())
+	gtcp.NewConn(addr, time.Second)
 
 	// Output:
 	// <nil>
-	// 127.0.0.1:80
 }
 
 func ExampleNewConnTLS() {
