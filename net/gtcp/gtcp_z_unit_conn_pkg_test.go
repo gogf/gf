@@ -221,34 +221,3 @@ func Test_Package_Option_HeadSize4(t *testing.T) {
 		t.AssertNE(err, nil)
 	})
 }
-
-func Test_Package_Option_Error(t *testing.T) {
-	// HeaderSize oversize
-	gtest.C(t, func(t *gtest.T) {
-		var err error
-		p, _ := gtcp.GetFreePort()
-		s := gtcp.NewServer(fmt.Sprintf(`:%d`, p), func(conn *gtcp.Conn) {
-			defer conn.Close()
-			option := gtcp.PkgOption{HeaderSize: 5}
-			for {
-				_, err = conn.RecvPkg(option)
-				if err != nil {
-					break
-				}
-			}
-			t.AssertNE(err, nil)
-		})
-		go s.Run()
-		defer s.Close()
-
-		time.Sleep(100 * time.Millisecond)
-
-		conn, err := gtcp.NewConn(fmt.Sprintf("127.0.0.1:%d", p))
-		t.AssertNil(err)
-		defer conn.Close()
-		data := make([]byte, 0xFFFF+1)
-		_, err = conn.SendRecvPkg(data, gtcp.PkgOption{HeaderSize: 4})
-
-		time.Sleep(100 * time.Millisecond)
-	})
-}
