@@ -418,8 +418,8 @@ func ExampleConn_RecvTill() {
 
 	s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
 		for {
-			if c, err := conn.RecvTill([]byte("finish"), gtcp.Retry{Count: 1}); err != nil {
-				fmt.Println(c)
+			if _, err := conn.RecvTill([]byte("finish"), gtcp.Retry{Count: 1}); err != nil {
+
 			}
 		}
 	})
