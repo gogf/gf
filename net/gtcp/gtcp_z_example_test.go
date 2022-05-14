@@ -9,6 +9,8 @@ package gtcp_test
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/util/gutil"
 	"time"
 
@@ -97,8 +99,8 @@ func ExampleNewConnTLS() {
 func ExampleNewConnKeyCrt() {
 	var (
 		tlsConfig = &tls.Config{}
-		crtFile   = "crtFile"
-		keyFile   = "keyFile"
+		crtFile   = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/crtFile"
+		keyFile   = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/keyFile"
 	)
 
 	addr := "127.0.0.1:%d"
@@ -913,6 +915,30 @@ func ExampleRun_NilHandle() {
 	}()
 
 	time.Sleep(time.Millisecond * 100)
+
+	// Output:
+	// true
+}
+
+func ExampleNewServerKeyCrt() {
+	var (
+		crtFile = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/crtFile"
+		keyFile = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/keyFile"
+	)
+	addr := "127.0.0.1:%d"
+	freePort, _ := gtcp.GetFreePort()
+	addr = fmt.Sprintf(addr, freePort)
+
+	s, err := gtcp.NewServerKeyCrt(addr, crtFile, keyFile, func(conn *gtcp.Conn) {
+	})
+	if err != nil {
+		fmt.Println(s == nil)
+		return
+	}
+	defer s.Close()
+	s.Run()
+
+	fmt.Println(s != nil)
 
 	// Output:
 	// true
