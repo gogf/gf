@@ -737,7 +737,7 @@ func ExampleSendRecvPkg() {
 	addr = fmt.Sprintf(addr, freePort)
 
 	s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
-		conn.SendPkg([]byte("Server Received"))
+		conn.SendPkg([]byte("Server Received"), gtcp.PkgOption{Retry: gtcp.Retry{Count: 1}})
 	})
 	defer s.Close()
 	go s.Run()

@@ -8,6 +8,8 @@ package gtcp_test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/os/gfile"
 	"testing"
 	"time"
 
@@ -219,5 +221,44 @@ func Test_Package_Option_HeadSize4(t *testing.T) {
 		data[200] = byte(85)
 		_, err = conn.SendRecvPkg(data, gtcp.PkgOption{HeaderSize: 5})
 		t.AssertNE(err, nil)
+	})
+}
+
+func Test_Server_NewServerKeyCrt(t *testing.T) {
+	var (
+		noCrtFile = "noCrtFile"
+		noKeyFile = "noKeyFile"
+		crtFile   = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/crtFile"
+		keyFile   = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/keyFile"
+	)
+	gtest.C(t, func(t *gtest.T) {
+		addr := "127.0.0.1:%d"
+		freePort, _ := gtcp.GetFreePort()
+		addr = fmt.Sprintf(addr, freePort)
+		s, err := gtcp.NewServerKeyCrt(addr, noCrtFile, noKeyFile, func(conn *gtcp.Conn) {
+		})
+		if err != nil {
+			t.AssertNil(s)
+		}
+	})
+	gtest.C(t, func(t *gtest.T) {
+		addr := "127.0.0.1:%d"
+		freePort, _ := gtcp.GetFreePort()
+		addr = fmt.Sprintf(addr, freePort)
+		s, err := gtcp.NewServerKeyCrt(addr, crtFile, noKeyFile, func(conn *gtcp.Conn) {
+		})
+		if err != nil {
+			t.AssertNil(s)
+		}
+	})
+	gtest.C(t, func(t *gtest.T) {
+		addr := "127.0.0.1:%d"
+		freePort, _ := gtcp.GetFreePort()
+		addr = fmt.Sprintf(addr, freePort)
+		s, err := gtcp.NewServerKeyCrt(addr, crtFile, keyFile, func(conn *gtcp.Conn) {
+		})
+		if err != nil {
+			t.AssertNil(s)
+		}
 	})
 }
