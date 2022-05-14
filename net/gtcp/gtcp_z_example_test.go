@@ -375,8 +375,7 @@ func ExampleConn_RecvLine() {
 
 	s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
 		for {
-			if c, err := conn.RecvLine(gtcp.Retry{Count: 1}); err != nil {
-				fmt.Println(c)
+			if _, err := conn.RecvLine(gtcp.Retry{Count: 1}); err != nil {
 			}
 		}
 	})
