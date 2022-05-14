@@ -61,8 +61,7 @@ func ExampleNewConn() {
 
 	//
 	s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
-		time.Sleep(time.Millisecond * 500)
-		defer conn.Close()
+		conn.Send([]byte("Server Received"))
 	})
 	go s.Run()
 	defer s.Close()
