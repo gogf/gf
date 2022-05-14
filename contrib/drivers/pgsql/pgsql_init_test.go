@@ -11,6 +11,7 @@ import (
 	"fmt"
 
 	_ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
+	_ "github.com/lib/pq"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -106,8 +107,6 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 		name = fmt.Sprintf(`%s_%d`, TableName, gtime.TimestampNano())
 	}
 
-	dropTableWithDb(db, name)
-
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 		CREATE TABLE %s (
 		   id bigint  NOT NULL,
@@ -158,7 +157,7 @@ func createInitTableWithDb(db gdb.DB, table ...string) (name string) {
 }
 
 func dropTableWithDb(db gdb.DB, table string) {
-	if _, err := db.Exec(ctx, fmt.Sprintf("DROP TABLE IF EXIST %s", table)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf("DROP TABLE %s", table)); err != nil {
 		gtest.Error(err)
 	}
 }
