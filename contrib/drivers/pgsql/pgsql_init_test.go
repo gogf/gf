@@ -25,8 +25,8 @@ const (
 	TableName   = "t_user"
 	TestSchema1 = "test1"
 	TestSchema2 = "test2"
-	TestDbUser  = "postgres"
-	TestDbPass  = "default"
+	TestDbUser  = "root"
+	TestDbPass  = "12345678"
 	CreateTime  = "2018-10-24 10:00:00"
 )
 
@@ -46,7 +46,7 @@ func init() {
 		Pass:             TestDbPass,
 		Timezone:         "Asia/Shanghai", // For calculating UT cases of datetime zones in convenience.
 		Type:             "pgsql",
-		Name:             "default",
+		Name:             "test",
 		Role:             "master",
 		Charset:          "utf8",
 		Weight:           1,
