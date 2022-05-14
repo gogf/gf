@@ -580,7 +580,11 @@ func ExampleSend() {
 
 	time.Sleep(time.Millisecond * 500)
 
-	err := gtcp.Send(addr, []byte("hello"), gtcp.Retry{Count: 1})
+	err := gtcp.Send("127.0.0.1:80", []byte("hello"))
+
+	fmt.Println(err != nil)
+
+	err = gtcp.Send(addr, []byte("hello"), gtcp.Retry{Count: 1})
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -588,6 +592,7 @@ func ExampleSend() {
 	fmt.Println(err == nil)
 
 	// Output:
+	// true
 	// true
 }
 
@@ -604,14 +609,14 @@ func ExampleSendRecv() {
 
 	time.Sleep(time.Millisecond * 500)
 
-	_, err := gtcp.SendRecv(addr, []byte("hello"), -1, gtcp.Retry{Count: 1})
-	if err != nil {
-		fmt.Println(err)
-	}
+	_, err := gtcp.SendRecv("127.0.0.1:80", []byte("hello"), -1)
+	fmt.Println(err != nil)
 
+	_, err = gtcp.SendRecv(addr, []byte("hello"), -1, gtcp.Retry{Count: 1})
 	fmt.Println(err == nil)
 
 	// Output:
+	// true
 	// true
 }
 
@@ -628,7 +633,10 @@ func ExampleSendWithTimeout() {
 
 	time.Sleep(time.Millisecond * 500)
 
-	err := gtcp.SendWithTimeout(addr, []byte("hello"), time.Millisecond*500, gtcp.Retry{Count: 1})
+	err := gtcp.SendWithTimeout("127.0.0.1:80", []byte("hello"), time.Millisecond*500)
+	fmt.Println(err != nil)
+
+	err = gtcp.SendWithTimeout(addr, []byte("hello"), time.Millisecond*500, gtcp.Retry{Count: 1})
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -636,6 +644,7 @@ func ExampleSendWithTimeout() {
 	fmt.Println(err == nil)
 
 	// Output:
+	// true
 	// true
 }
 
@@ -652,7 +661,10 @@ func ExampleSendRecvWithTimeout() {
 
 	time.Sleep(time.Millisecond * 500)
 
-	_, err := gtcp.SendRecvWithTimeout(addr, []byte("hello"), -1, time.Millisecond*500, gtcp.Retry{Count: 1})
+	_, err := gtcp.SendRecvWithTimeout("127.0.0.1:80", []byte("hello"), -1, time.Millisecond*500)
+	fmt.Println(err != nil)
+
+	_, err = gtcp.SendRecvWithTimeout(addr, []byte("hello"), -1, time.Millisecond*500, gtcp.Retry{Count: 1})
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -660,6 +672,7 @@ func ExampleSendRecvWithTimeout() {
 	fmt.Println(err == nil)
 
 	// Output:
+	// true
 	// true
 }
 
