@@ -345,6 +345,8 @@ func Test_Conn_RecvPkgError(t *testing.T) {
 	go s.Run()
 	defer s.Close()
 
+	time.Sleep(100 * time.Millisecond)
+
 	gtest.C(t, func(t *gtest.T) {
 		conn, err := gtcp.NewConn(fmt.Sprintf("127.0.0.1:%d", p))
 		t.AssertNil(err)
