@@ -744,6 +744,9 @@ func ExampleSetAddress() {
 	time.Sleep(time.Millisecond * 10)
 
 	err := gtcp.Send(addr, []byte("hello"), gtcp.Retry{Count: 1})
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	fmt.Println(err == nil)
 
