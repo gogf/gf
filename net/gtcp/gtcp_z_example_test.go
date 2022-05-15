@@ -570,6 +570,30 @@ func ExampleConn_SetReceiveBufferWait() {
 	// true
 }
 
+func ExampleNewNetConnKeyCrt() {
+	var (
+		crtFile = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/server.crt"
+		keyFile = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/server.key"
+	)
+
+	addr := "127.0.0.1:%d"
+	freePort, _ := gtcp.GetFreePort()
+	addr = fmt.Sprintf(addr, freePort)
+
+	s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
+	})
+	defer s.Close()
+	go s.Run()
+
+	time.Sleep(time.Millisecond * 500)
+
+	conn, _ := gtcp.NewNetConnKeyCrt(addr, crtFile, keyFile, time.Second)
+	fmt.Println(conn != nil)
+
+	// Output:
+	// false
+}
+
 func ExampleSend() {
 	addr := "127.0.0.1:%d"
 	freePort, _ := gtcp.GetFreePort()
