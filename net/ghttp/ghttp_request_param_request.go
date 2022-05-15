@@ -209,3 +209,39 @@ func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer i
 	}
 	return nil
 }
+
+//GetAllRequestParams get all params from Request struct
+func (r *Request) GetAllRequestParams() (params map[string]interface{}) {
+	r.parseBody()
+	r.parseQuery()
+	r.parseForm()
+
+	params = map[string]interface{}{}
+
+	if r.parsedQuery && r.queryMap != nil {
+		for k, v := range r.queryMap {
+			params[k] = v
+		}
+	}
+	if r.parsedForm && r.formMap != nil {
+		for k, v := range r.formMap {
+			params[k] = v
+		}
+	}
+	if r.parsedBody && r.bodyMap != nil {
+		for k, v := range r.bodyMap {
+			params[k] = v
+		}
+	}
+	if r.routerMap != nil {
+		for k, v := range r.routerMap {
+			params[k] = v
+		}
+	}
+
+	if len(params) > 0 {
+		return
+	} else {
+		return nil
+	}
+}
