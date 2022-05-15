@@ -107,6 +107,8 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 		name = fmt.Sprintf(`%s_%d`, TableName, gtime.TimestampNano())
 	}
 
+	dropTableWithDb(db, name)
+
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 		CREATE TABLE %s (
 		   id bigint  NOT NULL,
@@ -157,7 +159,7 @@ func createInitTableWithDb(db gdb.DB, table ...string) (name string) {
 }
 
 func dropTableWithDb(db gdb.DB, table string) {
-	if _, err := db.Exec(ctx, fmt.Sprintf("DROP TABLE %s", table)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf("DROP TABLE IF EXISTS %s", table)); err != nil {
 		gtest.Error(err)
 	}
 }
