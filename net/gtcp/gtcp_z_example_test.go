@@ -99,8 +99,8 @@ func ExampleNewConnTLS() {
 func ExampleNewConnKeyCrt() {
 	var (
 		tlsConfig = &tls.Config{}
-		crtFile   = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/crtFile"
-		keyFile   = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/keyFile"
+		crtFile   = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/server.crt"
+		keyFile   = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/server.key"
 	)
 
 	addr := "127.0.0.1:%d"
@@ -591,7 +591,7 @@ func ExampleNewNetConnKeyCrt() {
 	fmt.Println(conn != nil)
 
 	// Output:
-	// false
+	// true
 }
 
 func ExampleSend() {
@@ -694,7 +694,6 @@ func ExampleSendRecvWithTimeout() {
 	if err != nil {
 		fmt.Println(err)
 	}
-
 	fmt.Println(err == nil)
 
 	// Output:
@@ -946,8 +945,8 @@ func ExampleRun_NilHandle() {
 
 func ExampleNewServerKeyCrt() {
 	var (
-		crtFile = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/crtFile"
-		keyFile = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/keyFile"
+		crtFile = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/server.crt"
+		keyFile = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/server.key"
 	)
 	addr := "127.0.0.1:%d"
 	freePort, _ := gtcp.GetFreePort()
@@ -960,7 +959,7 @@ func ExampleNewServerKeyCrt() {
 		return
 	}
 	defer s.Close()
-	s.Run()
+	go s.Run()
 
 	fmt.Println(s != nil)
 
