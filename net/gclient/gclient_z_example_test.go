@@ -57,10 +57,39 @@ func init() {
 			)
 		})
 		group.HEAD("/", func(r *ghttp.Request) {
-			r.Response.Write("head")
+			r.Response.Writef(
+				"HEAD: form: %d, %s",
+				r.GetForm("id").Int(),
+				r.GetForm("name").String(),
+			)
+		})
+		group.PATCH("/", func(r *ghttp.Request) {
+			r.Response.Writef(
+				"PATCH: form: %d, %s",
+				r.GetForm("id").Int(),
+				r.GetForm("name").String(),
+			)
+		})
+		group.CONNECT("/", func(r *ghttp.Request) {
+			r.Response.Writef(
+				"CONNECT: form: %d, %s",
+				r.GetForm("id").Int(),
+				r.GetForm("name").String(),
+			)
 		})
 		group.OPTIONS("/", func(r *ghttp.Request) {
-			r.Response.Write("options")
+			r.Response.Writef(
+				"OPTIONS: form: %d, %s",
+				r.GetForm("id").Int(),
+				r.GetForm("name").String(),
+			)
+		})
+		group.TRACE("/", func(r *ghttp.Request) {
+			r.Response.Writef(
+				"TRACE: form: %d, %s",
+				r.GetForm("id").Int(),
+				r.GetForm("name").String(),
+			)
 		})
 	})
 	// Client chaining operations handlers.
@@ -311,6 +340,71 @@ func ExampleClient_PostBytes() {
 	// POST: form: 10000, john
 }
 
+func ExampleClient_DeleteBytes() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(string(g.Client().DeleteBytes(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})))
+
+	// Output:
+	// DELETE: form: 10000, john
+}
+
+func ExampleClient_HeadBytes() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(string(g.Client().HeadBytes(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})))
+
+	// Output:
+}
+
+func ExampleClient_PatchBytes() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(string(g.Client().PatchBytes(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})))
+
+	// Output:
+	// PATCH: form: 10000, john
+}
+
+func ExampleClient_ConnectBytes() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(string(g.Client().ConnectBytes(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})))
+
+	// Output:
+	// CONNECT: form: 10000, john
+}
+
+func ExampleClient_OptionsBytes() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(string(g.Client().OptionsBytes(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})))
+
+	// Output:
+	// OPTIONS: form: 10000, john
+}
+
+func ExampleClient_TraceBytes() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(string(g.Client().TraceBytes(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})))
+
+	// Output:
+	// TRACE: form: 10000, john
+}
+
 func ExampleClient_PostContent() {
 	url := "http://127.0.0.1:8999"
 	fmt.Println(g.Client().PostContent(ctx, url, g.Map{
@@ -392,6 +486,20 @@ func ExampleClient_GetBytes() {
 
 	// Output:
 	// GET: query: 10000, john
+}
+
+func ExampleClient_PutBytes() {
+	var (
+		ctx = context.Background()
+		url = "http://127.0.0.1:8999"
+	)
+	fmt.Println(string(g.Client().PutBytes(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})))
+
+	// Output:
+	// PUT: form: 10000, john
 }
 
 func ExampleClient_GetContent() {
