@@ -8,9 +8,13 @@ package gclient_test
 
 import (
 	"context"
+	"crypto/tls"
+	"encoding/hex"
 	"fmt"
+	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/net/gclient"
 	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/os/gfile"
 	"net/http"
 	"time"
 
@@ -116,6 +120,59 @@ func ExampleNew() {
 
 	// Output:
 	// {"id":1,"name":"john"}
+}
+
+func ExampleClient_Clone() {
+	var (
+		ctx    = gctx.New()
+		client = gclient.New()
+	)
+
+	client.SetCookie("key", "value")
+	cloneClient := client.Clone()
+
+	if r, err := cloneClient.Get(ctx, "http://127.0.0.1:8999/var/json"); err != nil {
+		panic(err)
+	} else {
+		defer r.Close()
+		fmt.Println(r.ReadAllString())
+	}
+
+	// Output:
+	// {"id":1,"name":"john"}
+}
+
+func fromHex(s string) []byte {
+	b, _ := hex.DecodeString(s)
+	return b
+}
+
+func ExampleLoadKeyCrt() {
+	var (
+		testCrtFile = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/upload/file1.txt"
+		testKeyFile = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/upload/file2.txt"
+		crtFile     = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/server.crt"
+		keyFile     = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/server.key"
+		tlsConfig   = &tls.Config{}
+	)
+
+	tlsConfig, _ = gclient.LoadKeyCrt("crtFile", "keyFile")
+	fmt.Println(tlsConfig == nil)
+
+	tlsConfig, _ = gclient.LoadKeyCrt(crtFile, "keyFile")
+	fmt.Println(tlsConfig == nil)
+
+	tlsConfig, _ = gclient.LoadKeyCrt(testCrtFile, testKeyFile)
+	fmt.Println(tlsConfig == nil)
+
+	tlsConfig, _ = gclient.LoadKeyCrt(crtFile, keyFile)
+	fmt.Println(tlsConfig == nil)
+
+	// Output:
+	// true
+	// true
+	// true
+	// false
 }
 
 func ExampleNew_MultiConn_Recommend() {
