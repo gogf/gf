@@ -22,7 +22,8 @@ import (
 
 const (
 	TableSize   = 10
-	TableName   = "t_user"
+	TablePrefix = "t_"
+	TableName   = "test"
 	TestSchema1 = "test1"
 	TestSchema2 = "test2"
 	TestDbUser  = "root"
@@ -46,7 +47,7 @@ func init() {
 		Pass:             TestDbPass,
 		Timezone:         "Asia/Shanghai", // For calculating UT cases of datetime zones in convenience.
 		Type:             "pgsql",
-		Name:             "test",
+		Name:             TableName,
 		Role:             "master",
 		Charset:          "utf8",
 		Weight:           1,
@@ -104,7 +105,7 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 	if len(table) > 0 {
 		name = table[0]
 	} else {
-		name = fmt.Sprintf(`%s_%d`, TableName, gtime.TimestampNano())
+		name = fmt.Sprintf(`%s_%d`, TablePrefix+"test", gtime.TimestampNano())
 	}
 
 	dropTableWithDb(db, name)
@@ -113,7 +114,7 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 		CREATE TABLE %s (
 		   id bigint  NOT NULL,
 		   passport varchar(45),
-		   password char(32) NOT NULL,
+		   password varchar(32) NOT NULL,
 		   nickname varchar(45) NOT NULL,
 		   create_time timestamp NOT NULL,
 		   PRIMARY KEY (id)
