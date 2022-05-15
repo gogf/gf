@@ -9,7 +9,7 @@ package polaris
 import (
 	"context"
 
-	"github.com/polarismesh/polaris-go/api"
+	"github.com/polarismesh/polaris-go"
 	"github.com/polarismesh/polaris-go/pkg/model"
 
 	"github.com/gogf/gf/v2/net/gsvc"
@@ -19,7 +19,7 @@ import (
 func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]*gsvc.Service, error) {
 	in.Separator = instanceIDSeparator
 	// get all instances
-	instancesResponse, err := r.consumer.GetAllInstances(&api.GetAllInstancesRequest{
+	instancesResponse, err := r.consumer.GetAllInstances(&polaris.GetAllInstancesRequest{
 		GetAllInstancesRequest: model.GetAllInstancesRequest{
 			Service:    in.Key(),
 			Namespace:  r.opt.Namespace,
@@ -30,9 +30,7 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]*gsvc.Ser
 	if err != nil {
 		return nil, err
 	}
-
 	serviceInstances := instancesToServiceInstances(instancesResponse.GetInstances())
-
 	return serviceInstances, nil
 }
 

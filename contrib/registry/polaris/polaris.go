@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/polarismesh/polaris-go/api"
+	"github.com/polarismesh/polaris-go"
 	"github.com/polarismesh/polaris-go/pkg/config"
 	"github.com/polarismesh/polaris-go/pkg/model"
 
@@ -76,8 +76,8 @@ type Option func(o *options)
 // Registry is polaris registry.
 type Registry struct {
 	opt      options
-	provider api.ProviderAPI
-	consumer api.ConsumerAPI
+	provider polaris.ProviderAPI
+	consumer polaris.ConsumerAPI
 }
 
 // WithNamespace with the Namespace option.
@@ -131,7 +131,7 @@ func WithHeartbeat(heartbeat bool) Option {
 }
 
 // NewRegistry create a new registry.
-func NewRegistry(provider api.ProviderAPI, consumer api.ConsumerAPI, opts ...Option) (r *Registry) {
+func NewRegistry(provider polaris.ProviderAPI, consumer polaris.ConsumerAPI, opts ...Option) (r *Registry) {
 	op := options{
 		Namespace:    "default",
 		ServiceToken: "",
@@ -157,11 +157,11 @@ func NewRegistry(provider api.ProviderAPI, consumer api.ConsumerAPI, opts ...Opt
 
 // NewRegistryWithConfig new a registry with config.
 func NewRegistryWithConfig(conf config.Configuration, opts ...Option) (r *Registry) {
-	provider, err := api.NewProviderAPIByConfig(conf)
+	provider, err := polaris.NewProviderAPIByConfig(conf)
 	if err != nil {
 		panic(err)
 	}
-	consumer, err := api.NewConsumerAPIByConfig(conf)
+	consumer, err := polaris.NewConsumerAPIByConfig(conf)
 	if err != nil {
 		panic(err)
 	}

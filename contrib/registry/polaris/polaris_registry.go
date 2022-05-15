@@ -10,7 +10,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/polarismesh/polaris-go/api"
+	"github.com/polarismesh/polaris-go"
 	"github.com/polarismesh/polaris-go/pkg/model"
 
 	"github.com/gogf/gf/v2/frame/g"
@@ -50,7 +50,7 @@ func (r *Registry) Register(ctx context.Context, serviceInstance *gsvc.Service) 
 		}
 		// Register
 		service, err := r.provider.Register(
-			&api.InstanceRegisterRequest{
+			&polaris.InstanceRegisterRequest{
 				InstanceRegisterRequest: model.InstanceRegisterRequest{
 					Service:      serviceInstance.KeyWithoutEndpoints(),
 					ServiceToken: r.opt.ServiceToken,
@@ -83,7 +83,7 @@ func (r *Registry) Register(ctx context.Context, serviceInstance *gsvc.Service) 
 				for {
 					<-ticker.C
 
-					err = r.provider.Heartbeat(&api.InstanceHeartbeatRequest{
+					err = r.provider.Heartbeat(&polaris.InstanceHeartbeatRequest{
 						InstanceHeartbeatRequest: model.InstanceHeartbeatRequest{
 							Service:      serviceInstance.KeyWithoutEndpoints(),
 							Namespace:    r.opt.Namespace,
@@ -122,7 +122,7 @@ func (r *Registry) Deregister(ctx context.Context, serviceInstance *gsvc.Service
 		}
 		// Deregister
 		err = r.provider.Deregister(
-			&api.InstanceDeRegisterRequest{
+			&polaris.InstanceDeRegisterRequest{
 				InstanceDeRegisterRequest: model.InstanceDeRegisterRequest{
 					Service:      serviceInstance.KeyWithoutEndpoints(),
 					ServiceToken: r.opt.ServiceToken,
