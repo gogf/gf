@@ -24,8 +24,7 @@ const (
 	TableSize   = 10
 	TablePrefix = "t_"
 	TableName   = "test"
-	TestSchema1 = "test1"
-	TestSchema2 = "test2"
+	TestSchema  = "test1"
 	TestDbUser  = "root"
 	TestDbPass  = "12345678"
 	CreateTime  = "2018-10-24 10:00:00"
@@ -33,8 +32,7 @@ const (
 
 var (
 	db         gdb.DB
-	dbT1       gdb.DB
-	dbT2       gdb.DB
+	dbTest     gdb.DB
 	configNode gdb.ConfigNode
 	ctx        = context.TODO()
 )
@@ -56,14 +54,6 @@ func init() {
 		MaxConnLifeTime:  600,
 	}
 
-	subNode1 := configNode
-	subNode1.Role = "slave"
-	subNode1.Name = TestSchema1
-
-	subNode2 := configNode
-	subNode2.Role = "slave"
-	subNode2.Name = TestSchema2
-
 	//pgsql only permit to connect to the designation database.
 	//so you need to create the pgsql database before you use orm
 
@@ -74,31 +64,19 @@ func init() {
 		db = r
 	}
 
-	nodeT1 := gdb.ConfigNode{
+	nodeTest := gdb.ConfigNode{
 		Type: "pgsql",
 		Link: fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable",
-			configNode.User, configNode.Pass, configNode.Host, configNode.Port, TestSchema1),
+			configNode.User, configNode.Pass, configNode.Host, configNode.Port, TestSchema),
 	}
 
-	nodeT2 := gdb.ConfigNode{
-		Type: "pgsql",
-		Link: fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable",
-			configNode.User, "configNode.Pass", configNode.Host, configNode.Port, TestSchema2),
-	}
-
-	gdb.AddConfigNode("dbTest", nodeT1)
-	if r, err := gdb.New(nodeT1); err != nil {
+	gdb.AddConfigNode("dbTest", nodeTest)
+	if r, err := gdb.New(nodeTest); err != nil {
 		gtest.Fatal(err)
 	} else {
-		dbT1 = r
+		dbTest = r
 	}
 
-	gdb.AddConfigNode("dbTest", nodeT2)
-	if r, err := gdb.New(nodeT2); err != nil {
-		gtest.Fatal(err)
-	} else {
-		dbT2 = r
-	}
 }
 
 func createTableWithDb(db gdb.DB, table ...string) (name string) {
@@ -115,8 +93,8 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 		   id bigint  NOT NULL,
 		   passport varchar(45),
 		   password varchar(32) NOT NULL,
-		   nickname varchar(45) NOT NULL,
-		   create_time timestamp NOT NULL,
+		   nickname varchar(45) NULL,
+		   create_time timestamp NULL,
 		   PRIMARY KEY (id)
 		) ;`, name,
 	)); err != nil {
