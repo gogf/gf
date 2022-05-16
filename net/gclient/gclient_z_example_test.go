@@ -663,3 +663,83 @@ func ExampleClient_RedirectLimit() {
 	// Output:
 	// GET: query: 10000, john
 }
+
+func ExampleClient_SetBrowserMode() {
+	var (
+		ctx = gctx.New()
+		url = "http://127.0.0.1:8999"
+	)
+	client := g.Client().SetBrowserMode(true)
+
+	fmt.Println(string(client.GetBytes(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})))
+
+	// Output:
+	// GET: query: 10000, john
+}
+
+func ExampleClient_SetHeader() {
+	var (
+		ctx = gctx.New()
+		url = "http://127.0.0.1:8999"
+	)
+	client := g.Client()
+	client.SetHeader("Server", "GoFrameServer")
+	client.SetHeader("Client", "g.Client()")
+
+	fmt.Println(string(client.GetBytes(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})))
+
+	// Output:
+	// GET: query: 10000, john
+}
+
+func ExampleClient_SetRedirectLimit() {
+	go func() {
+		s := g.Server()
+		s.BindHandler("/hello", func(r *ghttp.Request) {
+			r.Response.Writeln("hello world")
+		})
+		s.BindHandler("/back", func(r *ghttp.Request) {
+			r.Response.RedirectBack()
+		})
+		s.SetDumpRouterMap(false)
+		s.SetPort(8199)
+		s.Run()
+	}()
+
+	var (
+		ctx      = gctx.New()
+		urlHello = "http://127.0.0.1:8199/hello"
+		urlBack  = "http://127.0.0.1:8199/back"
+	)
+	client := g.Client().SetRedirectLimit(1)
+	client.SetHeader("Referer", urlHello)
+
+	resp, err := client.DoRequest(ctx, http.MethodGet, urlBack, g.Map{
+		"id":   10000,
+		"name": "john",
+	})
+	if err == nil {
+		fmt.Println(resp.ReadAllString())
+		resp.Close()
+	}
+
+	client.SetRedirectLimit(2)
+	resp, err = client.DoRequest(ctx, http.MethodGet, urlBack, g.Map{
+		"id":   10000,
+		"name": "john",
+	})
+	if err == nil {
+		fmt.Println(resp.ReadAllString())
+		resp.Close()
+	}
+
+	// Output:
+	// Found
+	// hello world
+}
