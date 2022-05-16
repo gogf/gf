@@ -39,6 +39,23 @@ func Open(path string, flag int, perm os.FileMode, ttl ...time.Duration) (file *
 	return pool.File()
 }
 
+// Get returns a file item with given file path, flag and opening permission.
+// It retrieves a file item from the file pointer pool after then.
+func Get(path string, flag int, perm os.FileMode, ttl ...time.Duration) (file *File, err error) {
+	var fpTTL time.Duration
+	if len(ttl) > 0 {
+		fpTTL = ttl[0]
+	}
+
+	f, found := pools.Search(fmt.Sprintf("%s&%d&%d&%d", path, flag, fpTTL, perm))
+	if !found {
+		return nil, gerror.New("can not find the key. path:" + path)
+	}
+
+	fp, err := f.(*Pool).pool.Get()
+	return fp.(*File), err
+}
+
 // Stat returns the FileInfo structure describing file.
 func (f *File) Stat() (os.FileInfo, error) {
 	if f.stat == nil {
