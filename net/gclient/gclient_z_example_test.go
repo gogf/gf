@@ -22,6 +22,11 @@ import (
 	"github.com/gogf/gf/v2/net/ghttp"
 )
 
+var (
+	crtFile = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/server.crt"
+	keyFile = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/server.key"
+)
+
 func init() {
 	// Default server for client.
 	p := 8999
@@ -180,9 +185,8 @@ func ExampleLoadKeyCrt() {
 	var (
 		testCrtFile = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/upload/file1.txt"
 		testKeyFile = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/upload/file2.txt"
-		crtFile     = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/server.crt"
-		keyFile     = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/server.key"
-		tlsConfig   = &tls.Config{}
+
+		tlsConfig = &tls.Config{}
 	)
 
 	tlsConfig, _ = gclient.LoadKeyCrt("crtFile", "keyFile")
@@ -542,45 +546,48 @@ func ExampleClient_SetProxy() {
 	client := g.Client()
 	client.SetProxy("http://127.0.0.1:1081")
 	client.SetTimeout(5 * time.Second) // it's suggested to set http client timeout
-	response, err := client.Get(ctx, "https://api.ip.sb/ip")
+	_, err := client.Get(ctx, "http://127.0.0.1:8999")
 	if err != nil {
 		// err is not nil when your proxy server is down.
-		// eg. Get "https://api.ip.sb/ip": proxyconnect tcp: dial tcp 127.0.0.1:1087: connect: connection refused
-		fmt.Println(err)
+		// eg. Get "http://127.0.0.1:8999": proxyconnect tcp: dial tcp 127.0.0.1:1087: connect: connection refused
 	}
-	response.RawDump()
+	fmt.Println(err != nil)
+
 	// connect to a http proxy server which needs auth
 	client.SetProxy("http://user:password:127.0.0.1:1081")
 	client.SetTimeout(5 * time.Second) // it's suggested to set http client timeout
-	response, err = client.Get(ctx, "https://api.ip.sb/ip")
+	_, err = client.Get(ctx, "http://127.0.0.1:8999")
 	if err != nil {
 		// err is not nil when your proxy server is down.
-		// eg. Get "https://api.ip.sb/ip": proxyconnect tcp: dial tcp 127.0.0.1:1087: connect: connection refused
-		fmt.Println(err)
+		// eg. Get "http://127.0.0.1:8999": proxyconnect tcp: dial tcp 127.0.0.1:1087: connect: connection refused
 	}
-	response.RawDump()
+	fmt.Println(err != nil)
 
 	// connect to a socks5 proxy server
 	client.SetProxy("socks5://127.0.0.1:1080")
 	client.SetTimeout(5 * time.Second) // it's suggested to set http client timeout
-	response, err = client.Get(ctx, "https://api.ip.sb/ip")
+	_, err = client.Get(ctx, "http://127.0.0.1:8999")
 	if err != nil {
 		// err is not nil when your proxy server is down.
-		// eg. Get "https://api.ip.sb/ip": socks connect tcp 127.0.0.1:1087->api.ip.sb:443: dial tcp 127.0.0.1:1087: connect: connection refused
-		fmt.Println(err)
+		// eg. Get "http://127.0.0.1:8999": socks connect tcp 127.0.0.1:1087->api.ip.sb:443: dial tcp 127.0.0.1:1087: connect: connection refused
 	}
-	fmt.Println(response.RawResponse())
+	fmt.Println(err != nil)
 
 	// connect to a socks5 proxy server which needs auth
 	client.SetProxy("socks5://user:password@127.0.0.1:1080")
 	client.SetTimeout(5 * time.Second) // it's suggested to set http client timeout
-	response, err = client.Get(ctx, "https://api.ip.sb/ip")
+	_, err = client.Get(ctx, "http://127.0.0.1:8999")
 	if err != nil {
 		// err is not nil when your proxy server is down.
-		// eg. Get "https://api.ip.sb/ip": socks connect tcp 127.0.0.1:1087->api.ip.sb:443: dial tcp 127.0.0.1:1087: connect: connection refused
-		fmt.Println(err)
+		// eg. Get "http://127.0.0.1:8999": socks connect tcp 127.0.0.1:1087->api.ip.sb:443: dial tcp 127.0.0.1:1087: connect: connection refused
 	}
-	fmt.Println(response.RawResponse())
+	fmt.Println(err != nil)
+
+	// Output:
+	// true
+	// true
+	// true
+	// true
 }
 
 // ExampleClientChain_Proxy a chain version of example for `gclient.Client.Proxy` method.
@@ -593,25 +600,26 @@ func ExampleClient_Proxy() {
 		ctx = context.Background()
 	)
 	client := g.Client()
-	_, err := client.Proxy("http://127.0.0.1:1081").Get(ctx, "https://api.ip.sb/ip")
-	if err != nil {
-		// err is not nil when your proxy server is down.
-		// eg. Get "https://api.ip.sb/ip": proxyconnect tcp: dial tcp 127.0.0.1:1087: connect: connection refused
-		// fmt.Println(err)
-	}
+	_, err := client.Proxy("http://127.0.0.1:1081").Get(ctx, "http://127.0.0.1:8999")
 	fmt.Println(err != nil)
 
 	client2 := g.Client()
-	_, err = client2.Proxy("socks5://127.0.0.1:1080").Get(ctx, "https://api.ip.sb/ip")
-	if err != nil {
-		// err is not nil when your proxy server is down.
-		// eg. Get "https://api.ip.sb/ip": socks connect tcp 127.0.0.1:1087->api.ip.sb:443: dial tcp 127.0.0.1:1087: connect: connection refused
-		// fmt.Println(err)
-	}
+	_, err = client2.Proxy("socks5://127.0.0.1:1080").Get(ctx, "http://127.0.0.1:8999")
+	fmt.Println(err != nil)
+
+	client3 := g.Client()
+	_, err = client3.Proxy("").Get(ctx, "http://127.0.0.1:8999")
+	fmt.Println(err != nil)
+
+	client4 := g.Client()
+	url := "http://127.0.0.1:1081" + string([]byte{0x7f})
+	_, err = client4.Proxy(url).Get(ctx, "http://127.0.0.1:8999")
 	fmt.Println(err != nil)
 
 	// Output:
 	// true
+	// true
+	// false
 	// false
 }
 
@@ -742,4 +750,40 @@ func ExampleClient_SetRedirectLimit() {
 	// Output:
 	// Found
 	// hello world
+}
+
+func ExampleClient_SetTLSKeyCrt() {
+	var (
+		ctx         = gctx.New()
+		url         = "http://127.0.0.1:8999"
+		testCrtFile = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/upload/file1.txt"
+		testKeyFile = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/upload/file2.txt"
+	)
+	client := g.Client()
+	client.SetTLSKeyCrt(testCrtFile, testKeyFile)
+	client.SetTLSKeyCrt(crtFile, keyFile)
+	fmt.Println(string(client.GetBytes(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})))
+
+	// Output:
+	// GET: query: 10000, john
+}
+
+func ExampleClient_SetTLSConfig() {
+	var (
+		ctx       = gctx.New()
+		url       = "http://127.0.0.1:8999"
+		tlsConfig = &tls.Config{}
+	)
+	client := g.Client()
+	client.SetTLSConfig(tlsConfig)
+	fmt.Println(string(client.GetBytes(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})))
+
+	// Output:
+	// GET: query: 10000, john
 }
