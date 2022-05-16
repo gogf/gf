@@ -220,7 +220,7 @@ func Test_Params_Strict_Route_File_Single(t *testing.T) {
 func Test_Params_File_Upload_Required(t *testing.T) {
 	type Req struct {
 		gmeta.Meta `method:"post" mime:"multipart/form-data"`
-		File       *ghttp.UploadFile `type:"file" v:"required"`
+		File       *ghttp.UploadFile `type:"file" v:"required#upload file is required"`
 	}
 	type Res struct{}
 
@@ -279,5 +279,15 @@ func Test_Params_File_Upload_Required(t *testing.T) {
 		t.Assert(len(array), 1)
 		dstPath1 := gfile.Join(dstDirPath, array[0])
 		t.Assert(gfile.GetContents(dstPath1), gfile.GetContents(srcPath1))
+	})
+
+	// file is empty
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		content := client.PostContent(ctx, "/upload/required")
+		t.AssertNE(content, "upload file is required")
+		t.AssertNE(content, "upload failed")
 	})
 }
