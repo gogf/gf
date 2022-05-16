@@ -130,8 +130,8 @@ func WithHeartbeat(heartbeat bool) Option {
 	return func(o *options) { o.Heartbeat = heartbeat }
 }
 
-// NewRegistry create a new registry.
-func NewRegistry(provider polaris.ProviderAPI, consumer polaris.ConsumerAPI, opts ...Option) (r *Registry) {
+// New create a new registry.
+func New(provider polaris.ProviderAPI, consumer polaris.ConsumerAPI, opts ...Option) (r *Registry) {
 	op := options{
 		Namespace:    "default",
 		ServiceToken: "",
@@ -155,8 +155,8 @@ func NewRegistry(provider polaris.ProviderAPI, consumer polaris.ConsumerAPI, opt
 	}
 }
 
-// NewRegistryWithConfig new a registry with config.
-func NewRegistryWithConfig(conf config.Configuration, opts ...Option) (r *Registry) {
+// NewWithConfig new a registry with config.
+func NewWithConfig(conf config.Configuration, opts ...Option) (r *Registry) {
 	provider, err := polaris.NewProviderAPIByConfig(conf)
 	if err != nil {
 		panic(err)
@@ -165,7 +165,7 @@ func NewRegistryWithConfig(conf config.Configuration, opts ...Option) (r *Regist
 	if err != nil {
 		panic(err)
 	}
-	return NewRegistry(provider, consumer, opts...)
+	return New(provider, consumer, opts...)
 }
 
 func instancesToServiceInstances(instances []model.Instance) []*gsvc.Service {
@@ -180,13 +180,6 @@ func instancesToServiceInstances(instances []model.Instance) []*gsvc.Service {
 
 func instanceToServiceInstance(instance model.Instance) *gsvc.Service {
 	metadata := instance.GetMetadata()
-	// Usually, it won't fail in goframe if register correctly
-	kind := ""
-	if k, ok := metadata["kind"]; ok {
-		kind = k
-	}
-
-	name := ""
 	names := strings.Split(instance.GetService(), instanceIDSeparator)
 	if names != nil && len(names) > 4 {
 		return &gsvc.Service{
@@ -202,34 +195,25 @@ func instanceToServiceInstance(instance model.Instance) *gsvc.Service {
 	}
 
 	return &gsvc.Service{
-		Name:      name,
+		Name:      instance.GetService(),
+		Namespace: instance.GetNamespace(),
 		Version:   metadata["version"],
 		Metadata:  gconv.Map(metadata),
-		Endpoints: []string{fmt.Sprintf("%s://%s:%d", kind, instance.GetHost(), instance.GetPort())},
+		Endpoints: []string{fmt.Sprintf("%s:%d", instance.GetHost(), instance.GetPort())},
 		Separator: instanceIDSeparator,
 	}
 }
 
 // getHostAndPortFromEndpoint get host and port from endpoint.
 func getHostAndPortFromEndpoint(ctx context.Context, endpoint string) (host string, port int, err error) {
-	endpoint = gstr.ReplaceByArray(endpoint, []string{"tcp://", "", "udp://", "", "http://", "", "https://", "", "ws://", "", "wss://", ""})
-	httpArr := gstr.Split(endpoint, endpointDelimiter)
-	if len(httpArr) < 2 {
+	endpoints := gstr.SplitAndTrim(endpoint, endpointDelimiter)
+	if len(endpoints) < 2 {
 		err = gerror.New("invalid endpoint")
 		return
 	}
-	host = httpArr[0]
-
-	portArr := gstr.Split(httpArr[1], "?")
-	if len(portArr) > 1 {
-		// port to int
-		port, err = strconv.Atoi(portArr[0])
-	} else {
-		// port to int
-		port, err = strconv.Atoi(httpArr[1])
-	}
-
-	if err != nil {
+	host = endpoints[0]
+	// port to int
+	if port, err = strconv.Atoi(endpoints[1]); err != nil {
 		return
 	}
 	return

@@ -64,12 +64,12 @@ func NewServiceWithKV(key, value []byte) (s *Service, err error) {
 
 // Key formats the service information and returns the Service as registering key.
 func (s *Service) Key() string {
-	defaultSeparator := DefaultSeparator
+	separator := DefaultSeparator
 	if s.Separator != "" {
-		defaultSeparator = s.Separator
+		separator = s.Separator
 	}
 	serviceNameUnique := s.KeyWithoutEndpoints()
-	serviceNameUnique += defaultSeparator + gstr.Join(s.Endpoints, ",")
+	serviceNameUnique += separator + gstr.Join(s.Endpoints, ",")
 	return serviceNameUnique
 }
 
@@ -81,14 +81,14 @@ func (s *Service) KeyWithSchema() string {
 // KeyWithoutEndpoints formats the service information and returns a string as a unique name of service.
 func (s *Service) KeyWithoutEndpoints() string {
 	s.autoFillDefaultAttributes()
-	defaultSeparator := DefaultSeparator
+	separator := DefaultSeparator
 	if s.Separator != "" {
-		defaultSeparator = s.Separator
+		separator = s.Separator
 	}
-	if s.Separator != DefaultSeparator {
-		return gstr.Join([]string{s.Prefix, s.Deployment, s.Namespace, s.Name, s.Version}, defaultSeparator)
+	if separator != DefaultSeparator {
+		return gstr.Join([]string{s.Prefix, s.Deployment, s.Namespace, s.Name, s.Version}, separator)
 	}
-	return defaultSeparator + gstr.Join([]string{s.Prefix, s.Deployment, s.Namespace, s.Name, s.Version}, defaultSeparator)
+	return separator + gstr.Join([]string{s.Prefix, s.Deployment, s.Namespace, s.Name, s.Version}, separator)
 }
 
 // Value formats the service information and returns the Service as registering value.

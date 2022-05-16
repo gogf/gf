@@ -14,7 +14,7 @@ func (s *SearchInput) Key() string {
 	}
 	keyPrefix := ""
 	if s.Prefix != "" {
-		if s.Separator == DefaultSeparator {
+		if separator == DefaultSeparator {
 			keyPrefix += separator + s.Prefix
 		} else {
 			keyPrefix += s.Prefix

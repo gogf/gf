@@ -22,7 +22,7 @@ import (
 func TestRegistry(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
 
-	r := NewRegistryWithConfig(
+	r := NewWithConfig(
 		conf,
 		WithTimeout(time.Second*10),
 		WithTTL(100),
@@ -33,8 +33,8 @@ func TestRegistry(t *testing.T) {
 	svc := &gsvc.Service{
 		Name:      "goframe-provider-0-tcp",
 		Version:   "test",
-		Metadata:  map[string]interface{}{"app": "goframe"},
-		Endpoints: []string{"tcp://127.0.0.1:9000?isSecure=false"},
+		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Endpoints: []string{"127.0.0.1:9000"},
 		Separator: instanceIDSeparator,
 	}
 
@@ -53,7 +53,7 @@ func TestRegistry(t *testing.T) {
 func TestRegistryMany(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
 
-	r := NewRegistryWithConfig(
+	r := NewWithConfig(
 		conf,
 		WithTimeout(time.Second*10),
 		WithTTL(100),
@@ -62,22 +62,22 @@ func TestRegistryMany(t *testing.T) {
 	svc := &gsvc.Service{
 		Name:      "goframe-provider-1-tcp",
 		Version:   "test",
-		Metadata:  map[string]interface{}{"app": "goframe"},
-		Endpoints: []string{"tcp://127.0.0.1:9000?isSecure=false"},
+		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Endpoints: []string{"127.0.0.1:9000"},
 		Separator: instanceIDSeparator,
 	}
 	svc1 := &gsvc.Service{
 		Name:      "goframe-provider-2-tcp",
 		Version:   "test",
-		Metadata:  map[string]interface{}{"app": "goframe"},
-		Endpoints: []string{"tcp://127.0.0.1:9001?isSecure=false"},
+		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Endpoints: []string{"127.0.0.1:9001"},
 		Separator: instanceIDSeparator,
 	}
 	svc2 := &gsvc.Service{
 		Name:      "goframe-provider-3-tcp",
 		Version:   "test",
-		Metadata:  map[string]interface{}{"app": "goframe"},
-		Endpoints: []string{"tcp://127.0.0.1:9002?isSecure=false"},
+		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Endpoints: []string{"127.0.0.1:9002"},
 		Separator: instanceIDSeparator,
 	}
 
@@ -116,7 +116,7 @@ func TestRegistryMany(t *testing.T) {
 func TestGetService(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
 
-	r := NewRegistryWithConfig(
+	r := NewWithConfig(
 		conf,
 		WithTimeout(time.Second*10),
 		WithTTL(100),
@@ -127,8 +127,8 @@ func TestGetService(t *testing.T) {
 	svc := &gsvc.Service{
 		Name:      "goframe-provider-4-tcp",
 		Version:   "test",
-		Metadata:  map[string]interface{}{"app": "goframe"},
-		Endpoints: []string{"tcp://127.0.0.1:9000?isSecure=false"},
+		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Endpoints: []string{"127.0.0.1:9000"},
 		Separator: instanceIDSeparator,
 	}
 
@@ -162,7 +162,7 @@ func TestGetService(t *testing.T) {
 func TestWatch(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
 
-	r := NewRegistryWithConfig(
+	r := NewWithConfig(
 		conf,
 		WithTimeout(time.Second*10),
 		WithTTL(100),
@@ -173,8 +173,8 @@ func TestWatch(t *testing.T) {
 	svc := &gsvc.Service{
 		Name:      "goframe-provider-4-tcp",
 		Version:   "test",
-		Metadata:  map[string]interface{}{"app": "goframe"},
-		Endpoints: []string{"tcp://127.0.0.1:9000?isSecure=false"},
+		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Endpoints: []string{"127.0.0.1:9000"},
 		Separator: instanceIDSeparator,
 	}
 

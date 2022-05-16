@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/v2/net/gsvc"
 )
 
+// Register implements the gsvc.Register interface.
 func (r *Registry) Register(ctx context.Context, service *gsvc.Service) error {
 	r.lease = etcd3.NewLease(r.client)
 	grant, err := r.lease.Grant(ctx, int64(r.keepaliveTTL.Seconds()))
@@ -47,6 +48,7 @@ func (r *Registry) Register(ctx context.Context, service *gsvc.Service) error {
 	return nil
 }
 
+// Deregister implements the gsvc.Deregister interface.
 func (r *Registry) Deregister(ctx context.Context, service *gsvc.Service) error {
 	_, err := r.client.Delete(ctx, service.Key())
 	if r.lease != nil {

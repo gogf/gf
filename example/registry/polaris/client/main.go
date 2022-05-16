@@ -16,7 +16,7 @@ import (
 func main() {
 	conf := config.NewDefaultConfiguration([]string{"192.168.100.222:8091"})
 
-	gsvc.SetRegistry(polaris.NewRegistryWithConfig(conf, polaris.WithTTL(100)))
+	gsvc.SetRegistry(polaris.NewWithConfig(conf, polaris.WithTTL(100)))
 
 	for i := 0; i < 100; i++ {
 		res, err := g.Client().Get(gctx.New(), `http://hello.svc/`)
