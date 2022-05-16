@@ -208,12 +208,13 @@ func instanceToServiceInstance(instance model.Instance) *gsvc.Service {
 func getHostAndPortFromEndpoint(ctx context.Context, endpoint string) (host string, port int, err error) {
 	endpoints := gstr.SplitAndTrim(endpoint, endpointDelimiter)
 	if len(endpoints) < 2 {
-		err = gerror.New("invalid endpoint")
+		err = gerror.Newf(`invalid endpoint "%s"`, endpoint)
 		return
 	}
 	host = endpoints[0]
 	// port to int
 	if port, err = strconv.Atoi(endpoints[1]); err != nil {
+		err = gerror.Wrapf(err, `convert port string "%s" to int failed`, endpoints[1])
 		return
 	}
 	return
