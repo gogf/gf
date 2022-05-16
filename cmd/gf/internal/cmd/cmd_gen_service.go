@@ -23,10 +23,10 @@ type (
 		SrcFolder    string `short:"s" name:"srcFolder" brief:"source folder path to be parsed. default: internal/logic" d:"internal/logic"`
 		DstFolder    string `short:"d" name:"dstFolder" brief:"destination folder path storing automatically generated go files. default: internal/service" d:"internal/service"`
 		WatchFile    string `short:"w" name:"watchFile" brief:"used in file watcher, it generates service go files only if given file is under srcFolder"`
-		StPattern    string `short:"a" name:"stPattern" brief:"regular expression matching struct name for generating service. default: s(\\w+)" d:"s(\\w+)"`
+		StPattern    string `short:"a" name:"stPattern" brief:"regular expression matching struct name for generating service. default: s([A-Z]\\w+)" d:"s([A-Z]\\w+)"`
 		Packages     string `short:"p" name:"packages" brief:"produce go files only for given source packages, multiple packages joined with char ','"`
-		ImportPrefix string `short:"i" name:"importPrefix" brief:"custom import prefix to calculate import path for generated go files"`
-		OverWrite    bool   `short:"o" name:"overwrite" brief:"overwrite files that already exist in generating folder. default: true" d:"true" orphan:"true"`
+		ImportPrefix string `short:"i" name:"importPrefix" brief:"custom import prefix to calculate import path for generated importing go file of logic"`
+		OverWrite    bool   `short:"o" name:"overwrite" brief:"overwrite service go files that already exist in generating folder. default: true" d:"true" orphan:"true"`
 	}
 	cGenServiceOutput struct{}
 )
@@ -131,17 +131,26 @@ func (c cGen) Service(ctx context.Context, in cGenServiceInput) (out *cGenServic
 		)
 		for _, file := range files {
 			fileContent = gfile.GetContents(file)
-			matches, err = gregex.MatchAllString(`func \(\w+ (.+?)\) ([\s\S]+?) {`, fileContent)
+			matches, err = gregex.MatchAllString(`func \((.+?)\) ([\s\S]+?) {`, fileContent)
 			if err != nil {
 				return nil, err
 			}
 			for _, match := range matches {
 				var (
-					structMatch  []string
-					structName   = gstr.Trim(match[1], "*")
-					functionHead = gstr.Trim(gstr.Replace(match[2], "\n", ""))
+					structName    string
+					structMatch   []string
+					funcReceiver  = gstr.Trim(match[1])
+					receiverArray = gstr.SplitAndTrim(funcReceiver, " ")
+					functionHead  = gstr.Trim(gstr.Replace(match[2], "\n", ""))
 				)
-				// Xxx(     ctx context.Context, req *v1.XxxReq,) -> Xxx(ctx context.Context, req *v1.XxxReq)
+				if len(receiverArray) > 1 {
+					structName = receiverArray[1]
+				} else {
+					structName = receiverArray[0]
+				}
+				structName = gstr.Trim(structName, "*")
+
+				// Xxx(\n    ctx context.Context, req *v1.XxxReq,\n) -> Xxx(ctx context.Context, req *v1.XxxReq)
 				functionHead = gstr.Replace(functionHead, `,)`, `)`)
 				functionHead, _ = gregex.ReplaceString(`\(\s+`, `(`, functionHead)
 				functionHead, _ = gregex.ReplaceString(`\s{2,}`, ` `, functionHead)
