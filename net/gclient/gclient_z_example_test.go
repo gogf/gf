@@ -787,3 +787,90 @@ func ExampleClient_SetTLSConfig() {
 	// Output:
 	// GET: query: 10000, john
 }
+
+func ExampleClient_PutContent() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(g.Client().PutContent(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	}))
+
+	// Output:
+	// PUT: form: 10000, john
+}
+
+func ExampleClient_DeleteContent() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(g.Client().DeleteContent(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	}))
+
+	// Output:
+	// DELETE: form: 10000, john
+}
+
+func ExampleClient_HeadContent() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(g.Client().HeadContent(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	}))
+
+	// Output:
+}
+
+func ExampleClient_PatchContent() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(g.Client().PatchContent(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	}))
+
+	// Output:
+	// PATCH: form: 10000, john
+}
+
+func ExampleClient_ConnectContent() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(g.Client().ConnectContent(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	}))
+
+	// Output:
+	// CONNECT: form: 10000, john
+}
+
+func ExampleClient_OptionsContent() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(g.Client().OptionsContent(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	}))
+
+	// Output:
+	// OPTIONS: form: 10000, john
+}
+
+func ExampleClient_TraceContent() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(g.Client().TraceContent(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	}))
+
+	// Output:
+	// TRACE: form: 10000, john
+}
+
+func ExampleClient_RequestContent() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(g.Client().RequestContent(ctx, http.MethodGet, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	}))
+
+	// Output:
+	// GET: query: 10000, john
+}
