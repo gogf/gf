@@ -51,6 +51,10 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 			return nil, err
 		}
 		schema.Items = subSchemaRef
+		if len(schema.Enum) > 0 {
+			schema.Items.Value.Enum = schema.Enum
+			schema.Enum = nil
+		}
 
 	case
 		TypeObject:
