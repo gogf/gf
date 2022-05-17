@@ -71,8 +71,8 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 		}
 	} else {
 		source = fmt.Sprintf(
-			"user=%s password=%s host=%s port=%s dbname=%s sslmode=disable",
-			config.User, config.Pass, config.Host, config.Port, config.Name,
+			"user=%s password=%s host=%s port=%s sslmode=disable",
+			config.User, config.Pass, config.Host, config.Port,
 		)
 		if config.Timezone != "" {
 			source = fmt.Sprintf("%s timezone=%s", source, config.Timezone)
