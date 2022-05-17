@@ -487,6 +487,16 @@ func Test_Client_Request_13_Dump(t *testing.T) {
 		dumpedText4 := r2.RawResponse()
 		t.Assert(gstr.Contains(dumpedText4, "test_for_request_body"), false)
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		url := fmt.Sprintf("http://127.0.0.1:%d", p)
+		response, _ := g.Client().Get(ctx, url, g.Map{
+			"id":   10000,
+			"name": "john",
+		})
+		response = nil
+		t.Assert(response.RawRequest(), "")
+	})
 }
 
 func Test_WebSocketClient(t *testing.T) {

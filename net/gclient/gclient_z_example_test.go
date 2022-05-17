@@ -874,3 +874,15 @@ func ExampleClient_RequestContent() {
 	// Output:
 	// GET: query: 10000, john
 }
+
+func ExampleClient_RawRequest() {
+	url := "http://127.0.0.1:8999"
+	response, _ := g.Client().Get(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})
+	fmt.Println(len(response.RawResponse()) > 100)
+
+	// Output:
+	// true
+}
