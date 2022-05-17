@@ -60,6 +60,7 @@ type Schema struct {
 	AdditionalProperties *SchemaRef     `json:"additionalProperties,omitempty"`
 	Discriminator        *Discriminator `json:"discriminator,omitempty"`
 	XExtensions          XExtensions    `json:"-"`
+	ValidationRules      string         `json:"-"`
 }
 
 func (s Schema) MarshalJSON() ([]byte, error) {
@@ -183,9 +184,9 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 	}
 
 	schema.Properties.Iterator(func(key string, ref SchemaRef) bool {
-		if ref.Value != nil && ref.Value.Pattern != "" {
-			validationRuleSet := gset.NewStrSetFrom(gstr.Split(ref.Value.Pattern, "|"))
-			if validationRuleSet.Contains(patternKeyForRequired) {
+		if ref.Value != nil && ref.Value.ValidationRules != "" {
+			validationRuleSet := gset.NewStrSetFrom(gstr.Split(ref.Value.ValidationRules, "|"))
+			if validationRuleSet.Contains(validationRuleKeyForRequired) {
 				schema.Required = append(schema.Required, key)
 			}
 		}
@@ -212,14 +213,14 @@ func (oai *OpenApiV3) tagMapToSchema(tagMap map[string]string, schema *Schema) e
 	for _, tag := range gvalid.GetTags() {
 		if validationTagValue, ok := tagMap[tag]; ok {
 			_, validationRules, _ := gvalid.ParseTagValue(validationTagValue)
-			schema.Pattern = validationRules
+			schema.ValidationRules = validationRules
 			// Enum checks.
 			if len(schema.Enum) == 0 {
 				for _, rule := range gstr.SplitAndTrim(validationRules, "|") {
-					if gstr.HasPrefix(rule, patternKeyForIn) {
+					if gstr.HasPrefix(rule, validationRuleKeyForIn) {
 						var (
 							isAllEnumNumber = true
-							enumArray       = gstr.SplitAndTrim(rule[len(patternKeyForIn):], ",")
+							enumArray       = gstr.SplitAndTrim(rule[len(validationRuleKeyForIn):], ",")
 						)
 						for _, enum := range enumArray {
 							if !gstr.IsNumeric(enum) {
