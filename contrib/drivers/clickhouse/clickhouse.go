@@ -13,6 +13,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ClickHouse/clickhouse-go/v2"
+	"github.com/gogf/gf/v2/os/gctx"
 	"net/url"
 	"strings"
 
@@ -41,10 +42,11 @@ var (
 )
 
 const (
-	updateFilterPattern  = `(?i)UPDATE[\s]+?(\w+[\.]?\w+)[\s]+?SET`
-	deleteFilterPattern  = `(?i)DELETE[\s]+?FROM[\s]+?(\w+[\.]?\w+)`
-	filterTypePattern    = `(?i)^UPDATE|DELETE`
-	replaceSchemaPattern = `@(.+?)/([\w\.\-]+)+`
+	updateFilterPattern              = `(?i)UPDATE[\s]+?(\w+[\.]?\w+)[\s]+?SET`
+	deleteFilterPattern              = `(?i)DELETE[\s]+?FROM[\s]+?(\w+[\.]?\w+)`
+	filterTypePattern                = `(?i)^UPDATE|DELETE`
+	replaceSchemaPattern             = `@(.+?)/([\w\.\-]+)+`
+	needParsedSqlInCtx   gctx.StrKey = "NeedParsedSql"
 )
 
 func init() {
@@ -237,14 +239,15 @@ func (d *Driver) DoFilter(
 	})
 
 	// Only SQL generated through the framework is processed.
-	if !d.GetNeedParsedSqlFromCtx(ctx) {
+	if !d.getNeedParsedSqlFromCtx(ctx) {
 		return originSql, args, nil
 	}
 
 	// replace STD SQL to Clickhouse SQL grammar
-	var (
-		modeRes, _ = gregex.MatchString(filterTypePattern, strings.TrimSpace(originSql))
-	)
+	modeRes, err := gregex.MatchString(filterTypePattern, strings.TrimSpace(originSql))
+	if err != nil {
+		return "", nil, err
+	}
 	if len(modeRes) == 0 {
 		return originSql, args, nil
 	}
@@ -337,19 +340,13 @@ func (d *Driver) ConvertDataForRecord(ctx context.Context, value interface{}) ma
 	return gconv.Map(value, gdb.OrmTagForStruct)
 }
 
-func (d *Driver) ConvertDataForRecordValue(ctx context.Context, value interface{}) interface{} {
-	// Clickhouse does not need to preprocess the value and can be inserted directly
-	// So it is not processed here
-	return value
-}
-
 func (d *Driver) DoDelete(ctx context.Context, link gdb.Link, table string, condition string, args ...interface{}) (result sql.Result, err error) {
-	ctx = d.InjectNeedParsedSql(ctx)
+	ctx = d.injectNeedParsedSql(ctx)
 	return d.Core.DoDelete(ctx, link, table, condition, args...)
 }
 
 func (d *Driver) DoUpdate(ctx context.Context, link gdb.Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
-	ctx = d.InjectNeedParsedSql(ctx)
+	ctx = d.injectNeedParsedSql(ctx)
 	return d.Core.DoUpdate(ctx, link, table, data, condition, args...)
 }
 
@@ -374,4 +371,18 @@ func (d *Driver) Begin(ctx context.Context) (tx *gdb.TX, err error) {
 
 func (d *Driver) Transaction(ctx context.Context, f func(ctx context.Context, tx *gdb.TX) error) error {
 	return errUnsupportedTransaction
+}
+
+func (d *Driver) injectNeedParsedSql(ctx context.Context) context.Context {
+	if ctx.Value(needParsedSqlInCtx) != nil {
+		return ctx
+	}
+	return context.WithValue(ctx, needParsedSqlInCtx, true)
+}
+
+func (d *Driver) getNeedParsedSqlFromCtx(ctx context.Context) bool {
+	if ctx.Value(needParsedSqlInCtx) != nil {
+		return true
+	}
+	return false
 }

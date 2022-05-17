@@ -355,8 +355,7 @@ func TestDriverClickhouse_DoFilter(t *testing.T) {
 	replaceSQL, _, err = this.DoFilter(context.Background(), nil, rawSQL, []interface{}{1})
 	gtest.AssertNil(err)
 
-	core := gdb.Core{}
-	ctx := core.InjectNeedParsedSql(context.Background())
+	ctx := this.injectNeedParsedSql(context.Background())
 	rawSQL = "UPDATE visit SET url = '1' WHERE url = '0'"
 	replaceSQL, _, err = this.DoFilter(ctx, nil, rawSQL, []interface{}{1})
 	gtest.AssertNil(err)
