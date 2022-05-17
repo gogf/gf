@@ -875,3 +875,29 @@ func TestOpenApiV3_Ignore_Parameter(t *testing.T) {
 		t.Assert(len(oai.Paths["/test"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Map()), 8)
 	})
 }
+
+func Test_EnumOfSchemaItems(t *testing.T) {
+	type CreateResourceReq struct {
+		gmeta.Meta `path:"/CreateResourceReq" method:"POST"`
+		Members    []string `v:"required|in:a,b,c"`
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+			req = new(CreateResourceReq)
+		)
+		err = oai.Add(goai.AddInput{
+			Object: req,
+		})
+		t.AssertNil(err)
+
+		t.Assert(
+			oai.Components.Schemas.Get(`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`).Value.
+				Properties.Get(`Members`).Value.
+				Items.Value.Enum,
+			g.Slice{"a", "b", "c"},
+		)
+	})
+}
