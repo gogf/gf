@@ -9,6 +9,7 @@ package glog
 import (
 	"context"
 	"fmt"
+	"runtime"
 	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
@@ -152,15 +153,42 @@ func (l *Logger) rotateChecksTimely(ctx context.Context) {
 			mtime = gfile.MTime(file)
 			subDuration = now.Sub(mtime)
 			if subDuration > l.config.RotateExpire {
-				expireRotated = true
-				intlog.Printf(
-					ctx,
-					`%v - %v = %v > %v, rotation expire logging file: %s`,
-					now, mtime, subDuration, l.config.RotateExpire, file,
-				)
-				if err := l.doRotateFile(ctx, file); err != nil {
-					intlog.Errorf(ctx, `%+v`, err)
-				}
+				func() {
+					memoryLockFileKey := memoryLockPrefixForPrintingToFile + file
+					if !gmlock.TryLock(memoryLockFileKey) {
+						return
+					}
+					defer gmlock.Unlock(memoryLockFileKey)
+
+					fp := l.getOpenedFilePointer(ctx, file)
+					if fp == nil {
+						intlog.Errorf(ctx, `got nil file pointer for: %s`, file)
+						return
+					}
+
+					if runtime.GOOS == "windows" {
+						if err := fp.Close(); err != nil {
+							intlog.Errorf(ctx, `%+v`, err)
+						}
+
+						if err := fp.File.Close(); err != nil {
+							intlog.Errorf(ctx, `%+v`, err)
+						}
+
+					}
+
+					expireRotated = true
+					intlog.Printf(
+						ctx,
+						`%v - %v = %v > %v, rotation expire logging file: %s`,
+						now, mtime, subDuration, l.config.RotateExpire, file,
+					)
+					if err := l.doRotateFile(ctx, file); err != nil {
+						intlog.Errorf(ctx, `%+v`, err)
+					}
+
+				}()
+
 			}
 		}
 		if expireRotated {
