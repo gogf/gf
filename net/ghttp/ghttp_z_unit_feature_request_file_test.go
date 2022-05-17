@@ -235,8 +235,7 @@ func Test_Params_File_Upload_Required(t *testing.T) {
 			r.Response.WriteExit("upload file is required")
 		}
 		file := req.File
-
-		if name, err := file.Save(dstDirPath, r.Get("randomlyRename").Bool()); err == nil {
+		if name, err := file.Save(dstDirPath); err == nil {
 			r.Response.WriteExit(name)
 		}
 		r.Response.WriteExit("upload failed")
@@ -246,46 +245,10 @@ func Test_Params_File_Upload_Required(t *testing.T) {
 	s.Start()
 	defer s.Shutdown()
 	time.Sleep(100 * time.Millisecond)
-	// normal name
-	gtest.C(t, func(t *gtest.T) {
-		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
-
-		srcPath1 := gtest.DataPath("upload", "file1.txt")
-		dstPath1 := gfile.Join(dstDirPath, "file1.txt")
-		content := client.PostContent(ctx, "/upload/required",
-			fmt.Sprintf(`file=@file:%s`, srcPath1),
-		)
-		t.AssertNE(content, "")
-		t.AssertNE(content, "upload file is required")
-		t.AssertNE(content, "upload failed")
-		t.Assert(content, "file1.txt")
-		t.Assert(gfile.GetContents(dstPath1), gfile.GetContents(srcPath1))
-	})
-	// randomly rename.
-	gtest.C(t, func(t *gtest.T) {
-		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
-
-		srcPath1 := gtest.DataPath("upload", "file1.txt")
-		content := client.PostContent(ctx, "/upload/required",
-			fmt.Sprintf(`file=@file:%s&randomlyRename=true`, srcPath1),
-		)
-		t.AssertNE(content, "")
-		t.AssertNE(content, "upload file is required")
-		t.AssertNE(content, "upload failed")
-
-		array := gstr.SplitAndTrim(content, ",")
-		t.Assert(len(array), 1)
-		dstPath1 := gfile.Join(dstDirPath, array[0])
-		t.Assert(gfile.GetContents(dstPath1), gfile.GetContents(srcPath1))
-	})
-
 	// file is empty
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
-
 		content := client.PostContent(ctx, "/upload/required")
 		t.AssertNE(content, "upload file is required")
 		t.AssertNE(content, "upload failed")
