@@ -23,14 +23,22 @@ func TestWatcher_AddOnce(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		value := gtype.New()
 		path := gfile.Temp(gconv.String(gtime.TimestampNano()))
-		err := gfile.PutContents(path, "init")
+		fileName := "file"
+		fullPath := gfile.Join(path, fileName)
+
+		t.Log(fullPath)
+		err := gfile.PutContents(fullPath, "init")
 		t.AssertNil(err)
 		defer gfile.Remove(path)
+
+		// will exclude dir
+		err = gfile.Mkdir(gfile.Join(path, "test"))
+		t.AssertNil(err)
 
 		time.Sleep(100 * time.Millisecond)
 		callback1, err := gfsnotify.AddOnce("mywatch", path, func(event *gfsnotify.Event) {
 			value.Set(1)
-		}, ``)
+		}, `test`)
 		t.AssertNil(err)
 		callback2, err := gfsnotify.AddOnce("mywatch", path, func(event *gfsnotify.Event) {
 			value.Set(2)
@@ -38,7 +46,7 @@ func TestWatcher_AddOnce(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(callback2, nil)
 
-		err = gfile.PutContents(path, "1")
+		err = gfile.PutContents(fullPath, "1")
 		t.AssertNil(err)
 
 		time.Sleep(100 * time.Millisecond)
@@ -47,7 +55,7 @@ func TestWatcher_AddOnce(t *testing.T) {
 		err = gfsnotify.RemoveCallback(callback1.Id)
 		t.AssertNil(err)
 
-		err = gfile.PutContents(path, "2")
+		err = gfile.PutContents(fullPath, "2")
 		t.AssertNil(err)
 
 		time.Sleep(100 * time.Millisecond)
