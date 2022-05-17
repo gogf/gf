@@ -146,7 +146,10 @@ func (c *Command) reParse(ctx context.Context, parser *Parser) (*Parser, error) 
 		}
 		supportedOptions[optionKey] = !arg.Orphan
 	}
-	parser, err := Parse(supportedOptions, c.Strict)
+	parser, err := Parse(supportedOptions, ParserOption{
+		CaseSensitive: c.CaseSensitive,
+		Strict:        c.Strict,
+	})
 	if err != nil {
 		return nil, err
 	}
