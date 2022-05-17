@@ -25,75 +25,10 @@ func ExampleGetFreePort() {
 }
 
 func ExampleGetFreePorts() {
-	var (
-		host = "127.0.0.1"
-	)
+	fmt.Println(gtcp.GetFreePorts(2))
 
-	ports, _ := gtcp.GetFreePorts(2)
-
-	for _, port := range ports {
-		addr := fmt.Sprintf("%s:%d", host, port)
-
-		s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
-		})
-		go s.Run()
-	}
-
-	time.Sleep(time.Millisecond * 500)
-
-	err1 := gtcp.Send(fmt.Sprintf("%s:%d", host, ports[0]), []byte("hello"), gtcp.Retry{Count: 1})
-	err2 := gtcp.Send(fmt.Sprintf("%s:%d", host, ports[1]), []byte("hello"), gtcp.Retry{Count: 1})
-
-	fmt.Println(err1 == nil && err2 == nil)
-
-	// Output:
-	// true
-}
-
-func ExampleNewConn() {
-	addr := "127.0.0.1:%d"
-	freePort, _ := gtcp.GetFreePort()
-	addr = fmt.Sprintf(addr, freePort)
-
-	conn, _ := gtcp.NewConn(addr, time.Second)
-	fmt.Println(conn)
-
-	//
-	s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
-		conn.Send([]byte("Server Received"))
-	})
-	go s.Run()
-	defer s.Close()
-
-	gtcp.NewConn(addr, time.Second)
-
-	// Output:
-	// <nil>
-}
-
-func ExampleNewConnTLS() {
-	var (
-		tlsConfig = &tls.Config{}
-	)
-	addr := "127.0.0.1:%d"
-	freePort, _ := gtcp.GetFreePort()
-	addr = fmt.Sprintf(addr, freePort)
-
-	conn, _ := gtcp.NewConnTLS(addr, tlsConfig)
-	fmt.Println(conn)
-
-	//
-	s := gtcp.NewServerTLS(addr, tlsConfig, func(conn *gtcp.Conn) {
-	})
-	go s.Run()
-	defer s.Close()
-
-	gutil.TryCatch(func() {
-		gtcp.NewNetConnTLS(addr, &tls.Config{}, time.Second)
-	})
-
-	// Output:
-	// <nil>
+	// May Output:
+	// [57743 57744] <nil>
 }
 
 func ExampleNewConnKeyCrt() {
