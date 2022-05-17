@@ -39,14 +39,16 @@ const (
 gf run main.go
 gf run main.go --args "server -p 8080"
 gf run main.go -mod=vendor
+gf run main.go -ede "(test)|(vendor)"
 `
 	cRunDc = `
 The "run" command is used for running go codes with hot-compiled-like feature,
 which compiles and runs the go codes asynchronously when codes change.
 `
-	cRunFileBrief  = `building file path.`
-	cRunPathBrief  = `output directory path for built binary file. it's "manifest/output" in default`
-	cRunExtraBrief = `the same options as "go run"/"go build" except some options as follows defined`
+	cRunFileBrief           = `building file path.`
+	cRunPathBrief           = `output directory path for built binary file. it's "manifest/output" in default`
+	cRunExtraBrief          = `the same options as "go run"/"go build" except some options as follows defined`
+	cRunExcludeDirExprBrief = `exclude directory expression, which is used for excluding some directories from watching.`
 )
 
 var (
@@ -55,22 +57,24 @@ var (
 
 func init() {
 	gtag.Sets(g.MapStrStr{
-		`cRunUsage`:      cRunUsage,
-		`cRunBrief`:      cRunBrief,
-		`cRunEg`:         cRunEg,
-		`cRunDc`:         cRunDc,
-		`cRunFileBrief`:  cRunFileBrief,
-		`cRunPathBrief`:  cRunPathBrief,
-		`cRunExtraBrief`: cRunExtraBrief,
+		`cRunUsage`:               cRunUsage,
+		`cRunBrief`:               cRunBrief,
+		`cRunEg`:                  cRunEg,
+		`cRunDc`:                  cRunDc,
+		`cRunFileBrief`:           cRunFileBrief,
+		`cRunPathBrief`:           cRunPathBrief,
+		`cRunExtraBrief`:          cRunExtraBrief,
+		`cRunExcludeDirExprBrief`: cRunExcludeDirExprBrief,
 	})
 }
 
 type (
 	cRunInput struct {
-		g.Meta `name:"run"`
-		File   string `name:"FILE"  arg:"true" brief:"{cRunFileBrief}" v:"required"`
-		Path   string `name:"path"  short:"p"  brief:"{cRunPathBrief}" d:"./"`
-		Extra  string `name:"extra" short:"e"  brief:"{cRunExtraBrief}"`
+		g.Meta         `name:"run"`
+		File           string `name:"FILE"  arg:"true" brief:"{cRunFileBrief}" v:"required"`
+		Path           string `name:"path"  short:"p"  brief:"{cRunPathBrief}" d:"./"`
+		Extra          string `name:"extra" short:"e"  brief:"{cRunExtraBrief}"`
+		ExcludeDirExpr string `name:"excludeDirExpr" short:"ede" brief:"{cRunExcludeDirExprBrief}"`
 	}
 	cRunOutput struct{}
 )
@@ -101,7 +105,7 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 			mlog.Printf(`go file changes: %s`, event.String())
 			app.Run()
 		})
-	}, ``)
+	}, in.ExcludeDirExpr)
 	if err != nil {
 		mlog.Fatal(err)
 	}

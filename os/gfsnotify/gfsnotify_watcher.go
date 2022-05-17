@@ -26,6 +26,7 @@ func (w *Watcher) Add(path string, callbackFunc func(event *Event), excludeDirEx
 // AddOnce monitors `path` with callback function `callbackFunc` only once using unique name
 // `name` to the watcher. If AddOnce is called multiple times with the same `name` parameter,
 // `path` is only added to monitor once.
+// `excludeDirExpr` specifies the regular expression of directory names to be excluded.
 //
 // It returns error if it's called twice with the same `name`.
 //
