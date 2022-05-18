@@ -280,7 +280,7 @@ func (c *AdapterFile) getJson(fileName ...string) (configJson *gjson.Json, err e
 		if filePath != "" && !gres.Contains(filePath) {
 			_, err = gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
 				c.jsonMap.Remove(usedFileName)
-			}, ``)
+			})
 			if err != nil {
 				return nil
 			}

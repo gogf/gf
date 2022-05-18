@@ -110,7 +110,7 @@ func (p *Pool) File() (*File, error) {
 					// Whenever the pool id changes, the pool will be recreated.
 					p.id.Add(1)
 				}
-			}, ``, false)
+			}, false)
 		}
 		return f, nil
 	}

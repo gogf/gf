@@ -100,12 +100,12 @@ func New() (*Watcher, error) {
 
 // Add monitors `path` using default watcher with callback function `callbackFunc`.
 // The optional parameter `recursive` specifies whether monitoring the `path` recursively, which is true in default.
-func Add(path string, callbackFunc func(event *Event), excludeDirExpr string, recursive ...bool) (callback *Callback, err error) {
+func Add(path string, callbackFunc func(event *Event), recursive ...bool) (callback *Callback, err error) {
 	w, err := getDefaultWatcher()
 	if err != nil {
 		return nil, err
 	}
-	return w.Add(path, callbackFunc, excludeDirExpr, recursive...)
+	return w.Add(path, callbackFunc, recursive...)
 }
 
 // AddOnce monitors `path` using default watcher with callback function `callbackFunc` only once using unique name `name`.
@@ -113,12 +113,12 @@ func Add(path string, callbackFunc func(event *Event), excludeDirExpr string, re
 // if it's called twice with the same `name`.
 //
 // The optional parameter `recursive` specifies whether monitoring the `path` recursively, which is true in default.
-func AddOnce(name, path string, callbackFunc func(event *Event), excludeDirExpr string, recursive ...bool) (callback *Callback, err error) {
+func AddOnce(name, path string, callbackFunc func(event *Event), recursive ...bool) (callback *Callback, err error) {
 	w, err := getDefaultWatcher()
 	if err != nil {
 		return nil, err
 	}
-	return w.AddOnce(name, path, callbackFunc, excludeDirExpr, recursive...)
+	return w.AddOnce(name, path, callbackFunc, recursive...)
 }
 
 // Remove removes all monitoring callbacks of given `path` from watcher recursively.

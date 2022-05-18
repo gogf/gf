@@ -3,6 +3,9 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
+	"regexp"
 	"runtime"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
@@ -91,7 +94,17 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 		Options: in.Extra,
 	}
 	dirty := gtype.NewBool()
-	_, err = gfsnotify.Add(gfile.RealPath("."), func(event *gfsnotify.Event) {
+
+	var reg *regexp.Regexp
+	excludeDirExpr := in.ExcludeDirExpr
+	if len(excludeDirExpr) > 0 {
+		reg, err = regexp.Compile(excludeDirExpr)
+		if err != nil {
+			mlog.Printf("excludeDirExpr(%s) err: %v", excludeDirExpr, err)
+		}
+	}
+
+	callback := func(event *gfsnotify.Event) {
 		if gfile.ExtName(event.Path) != "go" {
 			return
 		}
@@ -105,10 +118,19 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 			mlog.Printf(`go file changes: %s`, event.String())
 			app.Run()
 		})
-	}, in.ExcludeDirExpr)
-	if err != nil {
-		mlog.Fatal(err)
 	}
+
+	for _, subPath := range fileAllDirs(gfile.RealPath(".")) {
+		if reg != nil && reg.MatchString(subPath) {
+			mlog.Printf("watcher exclude dir match: %s", subPath)
+			continue
+		}
+		_, err = gfsnotify.Add(subPath, callback, false)
+		if err != nil {
+			mlog.Fatal(err)
+		}
+	}
+
 	go app.Run()
 	select {}
 }
@@ -163,4 +185,36 @@ func (app *cRunApp) Run() {
 	} else {
 		mlog.Printf("build running pid: %d", pid)
 	}
+}
+
+// fileIsDir checks whether given `path` a directory.
+func fileIsDir(path string) bool {
+	s, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return s.IsDir()
+}
+
+// fileAllDirs returns all sub-folders including itself of given `path` recursively.
+func fileAllDirs(path string) (list []string) {
+	list = []string{path}
+	file, err := os.Open(path)
+	if err != nil {
+		return list
+	}
+	defer file.Close()
+	names, err := file.Readdirnames(-1)
+	if err != nil {
+		return list
+	}
+	for _, name := range names {
+		tempPath := fmt.Sprintf("%s%s%s", path, string(filepath.Separator), name)
+		if fileIsDir(tempPath) {
+			if array := fileAllDirs(tempPath); len(array) > 0 {
+				list = append(list, array...)
+			}
+		}
+	}
+	return
 }

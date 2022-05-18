@@ -102,7 +102,7 @@ func (sp *SPath) addMonitorByPath(path string) {
 		case event.IsCreate():
 			sp.addToCache(event.Path, path)
 		}
-	}, ``)
+	})
 }
 
 // removeMonitorByPath removes gfsnotify monitoring of `path` recursively.

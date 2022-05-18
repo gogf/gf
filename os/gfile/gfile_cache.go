@@ -68,7 +68,7 @@ func GetBytesWithCache(path string, duration ...time.Duration) []byte {
 					intlog.Errorf(ctx, `%+v`, err)
 				}
 				gfsnotify.Exit()
-			}, ``)
+			})
 		}
 		return b, nil
 	}, expire)
