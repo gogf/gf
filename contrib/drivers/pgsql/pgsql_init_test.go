@@ -11,7 +11,6 @@ import (
 	"fmt"
 
 	_ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
-	_ "github.com/lib/pq"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -88,10 +87,10 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 		CREATE TABLE %s (
 		   id bigserial  NOT NULL,
-		   passport varchar(45) NULL,
-		   password varchar(32) NULL,
-		   nickname varchar(45) NULL,
-		   create_time timestamp NULL,
+		   passport varchar(45) NOT NULL,
+		   password varchar(32) NOT NULL,
+		   nickname varchar(45) NOT NULL,
+		   create_time timestamp NOT NULL,
 		   PRIMARY KEY (id)
 		) ;`, name,
 	)); err != nil {

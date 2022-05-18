@@ -48,6 +48,12 @@ func Test_DB_Insert(t *testing.T) {
 			"create_time": gtime.Now().String(),
 		})
 		t.AssertNil(err)
+		answer, err := db.GetAll(ctx, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 1)
+		t.AssertNil(err)
+		t.Assert(len(answer), 1)
+		t.Assert(answer[0]["passport"], "t1")
+		t.Assert(answer[0]["password"], "25d55ad283aa400af464c76d713c07ad")
+		t.Assert(answer[0]["nickname"], "T1")
 
 		// normal map
 		result, err := db.Insert(ctx, table, g.Map{
@@ -60,6 +66,12 @@ func Test_DB_Insert(t *testing.T) {
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
+		answer, err = db.GetAll(ctx, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 2)
+		t.AssertNil(err)
+		t.Assert(len(answer), 1)
+		t.Assert(answer[0]["passport"], "t2")
+		t.Assert(answer[0]["password"], "25d55ad283aa400af464c76d713c07ad")
+		t.Assert(answer[0]["nickname"], "name_2")
 	})
 }
 
@@ -288,30 +300,33 @@ func Test_DB_Tables(t *testing.T) {
 
 func Test_DB_TableFields(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		createTable("t_user")
-		defer dropTable("t_user")
+		table := createTable()
+		defer dropTable(table)
 
-		var expect = map[string]string{
-			"id":          "int",
-			"passport":    "varchar(45)",
-			"password":    "varchar(32)",
-			"nickname":    "varchar(45)",
-			"create_time": "time",
+		var expect = map[string][]interface{}{
+			//[]string: Index Type Null Key Default Comment
+			//id is bigserial so the default is a pgsql function
+			"id":          {0, "int8", false, "pri", fmt.Sprintf("nextval('%s_id_seq'::regclass)", table), ""},
+			"passport":    {1, "varchar", false, "", nil, ""},
+			"password":    {2, "varchar", false, "", nil, ""},
+			"nickname":    {3, "varchar", false, "", nil, ""},
+			"create_time": {4, "timestamp", false, "", nil, ""},
 		}
 
-		res, err := db.TableFields(ctx, "t_user")
+		res, err := db.TableFields(ctx, table)
 		gtest.Assert(err, nil)
 
-		for k := range expect {
+		for k, v := range expect {
 			_, ok := res[k]
 			gtest.AssertEQ(ok, true)
 
+			gtest.AssertEQ(res[k].Index, v[0])
 			gtest.AssertEQ(res[k].Name, k)
+			gtest.AssertEQ(res[k].Type, v[1])
+			gtest.AssertEQ(res[k].Null, v[2])
+			gtest.AssertEQ(res[k].Key, v[3])
+			gtest.AssertEQ(res[k].Default, v[4])
+			gtest.AssertEQ(res[k].Comment, v[5])
 		}
-	})
-
-	gtest.C(t, func(t *gtest.T) {
-		_, err := db.TableFields(ctx, "t_user t_user2")
-		gtest.AssertNE(err, nil)
 	})
 }

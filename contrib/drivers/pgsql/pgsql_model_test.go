@@ -54,11 +54,12 @@ func Test_Model_Insert(t *testing.T) {
 		}
 		// Model inserting.
 		result, err = db.Model(table).Data(User{
-			Id:       3,
-			Uid:      3,
-			Passport: "t3",
-			Password: "25d55ad283aa400af464c76d713c07ad",
-			Nickname: "name_3",
+			Id:         3,
+			Uid:        3,
+			Passport:   "t3",
+			Password:   "25d55ad283aa400af464c76d713c07ad",
+			Nickname:   "name_3",
+			CreateTime: gtime.Now(),
 		}).Insert()
 		t.AssertNil(err)
 		n, _ = result.RowsAffected()
