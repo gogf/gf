@@ -123,10 +123,6 @@ jobs:
         for file in `find . -name go.mod`; do
             dirpath=$(dirname $file)
 
-            # if [ "." = $dirpath ]; then
-            #     continue 1
-            # fi
-
             if [ "oracle" = $(basename $dirpath) ]; then
                 continue 1
             fi
@@ -134,7 +130,7 @@ jobs:
             cd $dirpath
             go mod tidy
             go build ./...
-            go test ./... -race -coverprofile=coverage.out -covermode=atomic || exit 1
+            go test ./... -race -coverprofile=coverage.out -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
             if grep -q "/gogf/gf/.*/v2" go.mod; then
                 sed -i "s/gogf\/gf\(\/.*\)\/v2/gogf\/gf\/v2\1/g" coverage.out
             fi
