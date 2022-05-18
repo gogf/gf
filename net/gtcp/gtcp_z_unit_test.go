@@ -117,7 +117,7 @@ func TestNewConnTLS(t *testing.T) {
 	addr := getFreePortAddr()
 
 	gtest.C(t, func(t *gtest.T) {
-		conn, err := gtcp.NewNetConnTLS(addr, &tls.Config{}, simpleTimeout)
+		conn, err := gtcp.NewConnTLS(addr, &tls.Config{})
 		t.AssertNil(conn)
 		t.AssertNE(err, nil)
 	})
@@ -127,7 +127,7 @@ func TestNewConnTLS(t *testing.T) {
 
 		time.Sleep(simpleTimeout)
 
-		conn, err := gtcp.NewNetConnTLS(addr, &tls.Config{}, simpleTimeout)
+		conn, err := gtcp.NewConnTLS(addr, &tls.Config{})
 		t.AssertNil(conn)
 		t.AssertNE(err, nil)
 	})
@@ -348,6 +348,35 @@ func TestSend(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		err := gtcp.Send(addr, []byte("hello"), gtcp.Retry{Count: 1})
+		t.AssertNil(err)
+	})
+}
+
+func TestSendRecv(t *testing.T) {
+	addr := getFreePortAddr()
+
+	startTCPServer(addr)
+
+	time.Sleep(simpleTimeout)
+
+	gtest.C(t, func(t *gtest.T) {
+		recv, err := gtcp.SendRecv(addr, []byte("hello"), -1)
+		t.AssertNil(err)
+		t.AssertGT(len(recv), 0)
+	})
+}
+
+func TestSendWithTimeout(t *testing.T) {
+	addr := getFreePortAddr()
+
+	startTCPServer(addr)
+
+	time.Sleep(simpleTimeout)
+
+	gtest.C(t, func(t *gtest.T) {
+		err := gtcp.SendWithTimeout("127.0.0.1:80", []byte("hello"), time.Millisecond*500)
+		t.AssertNE(err, nil)
+		err = gtcp.SendWithTimeout(addr, []byte("hello"), time.Millisecond*500)
 		t.AssertNil(err)
 	})
 }

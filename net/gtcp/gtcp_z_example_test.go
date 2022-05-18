@@ -29,58 +29,6 @@ func ExampleGetFreePorts() {
 	// [57743 57744] <nil>
 }
 
-func ExampleSendRecv() {
-	addr := "127.0.0.1:%d"
-	freePort, _ := gtcp.GetFreePort()
-	addr = fmt.Sprintf(addr, freePort)
-
-	s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
-		conn.Send([]byte("Server Received"))
-	})
-	defer s.Close()
-	go s.Run()
-
-	time.Sleep(time.Millisecond * 500)
-
-	_, err := gtcp.SendRecv("127.0.0.1:80", []byte("hello"), -1)
-	fmt.Println(err != nil)
-
-	_, err = gtcp.SendRecv(addr, []byte("hello"), -1, gtcp.Retry{Count: 1})
-	fmt.Println(err == nil)
-
-	// Output:
-	// true
-	// true
-}
-
-func ExampleSendWithTimeout() {
-	addr := "127.0.0.1:%d"
-	freePort, _ := gtcp.GetFreePort()
-	addr = fmt.Sprintf(addr, freePort)
-
-	s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
-		conn.Send([]byte("Server Received"))
-	})
-	defer s.Close()
-	go s.Run()
-
-	time.Sleep(time.Millisecond * 500)
-
-	err := gtcp.SendWithTimeout("127.0.0.1:80", []byte("hello"), time.Millisecond*500)
-	fmt.Println(err != nil)
-
-	err = gtcp.SendWithTimeout(addr, []byte("hello"), time.Millisecond*500, gtcp.Retry{Count: 1})
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	fmt.Println(err == nil)
-
-	// Output:
-	// true
-	// true
-}
-
 func ExampleSendRecvWithTimeout() {
 	addr := "127.0.0.1:%d"
 	freePort, _ := gtcp.GetFreePort()
