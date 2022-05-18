@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/encoding/gbinary"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gregex"
@@ -27,27 +28,33 @@ import (
 //
 // The parameter `value` should be type of *map/map/*struct/struct.
 // It supports embedded struct definition for struct.
-func (c *Core) ConvertDataForRecord(ctx context.Context, value interface{}) map[string]interface{} {
-	var data = DataToMapDeep(value)
+func (c *Core) ConvertDataForRecord(ctx context.Context, value interface{}) (map[string]interface{}, error) {
+	var (
+		err  error
+		data = DataToMapDeep(value)
+	)
 	for k, v := range data {
-		data[k] = c.ConvertDataForRecordValue(ctx, v)
+		data[k], err = c.ConvertDataForRecordValue(ctx, v)
+		if err != nil {
+			return nil, gerror.Wrapf(err, `ConvertDataForRecordValue failed for value: %#v`, v)
+		}
 	}
-	return data
+	return data, nil
 }
 
-func (c *Core) ConvertDataForRecordValue(ctx context.Context, value interface{}) interface{} {
+func (c *Core) ConvertDataForRecordValue(ctx context.Context, value interface{}) (interface{}, error) {
 	var (
 		err            error
-		convertedValue interface{}
+		convertedValue = value
 	)
 	// If `value` implements interface `driver.Valuer`, it then uses the interface for value converting.
 	if valuer, ok := value.(driver.Valuer); ok {
 		if convertedValue, err = valuer.Value(); err != nil {
 			if err != nil {
-				return nil
+				return nil, err
 			}
 		}
-		return convertedValue
+		return convertedValue, nil
 	}
 	// Default value converting.
 	var (
@@ -63,7 +70,10 @@ func (c *Core) ConvertDataForRecordValue(ctx context.Context, value interface{})
 		// It should ignore the bytes type.
 		if _, ok := value.([]byte); !ok {
 			// Convert the value to JSON.
-			convertedValue, _ = json.Marshal(value)
+			convertedValue, err = json.Marshal(value)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 	case reflect.Struct:
@@ -97,11 +107,14 @@ func (c *Core) ConvertDataForRecordValue(ctx context.Context, value interface{})
 				convertedValue = s.String()
 			} else {
 				// Convert the value to JSON.
-				convertedValue, _ = json.Marshal(value)
+				convertedValue, err = json.Marshal(value)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 	}
-	return convertedValue
+	return convertedValue, nil
 }
 
 // convertFieldValueToLocalValue automatically checks and converts field value from database type
