@@ -37,10 +37,10 @@ func Test_Func_ConvertDataForRecord(t *testing.T) {
 	}
 	gtest.C(t, func(t *gtest.T) {
 		c := &gdb.Core{}
-		m := c.ConvertDataForRecord(nil, new(Test))
+		m, err := c.ConvertDataForRecord(nil, new(Test))
+		t.AssertNil(err)
 		t.Assert(len(m), 1)
-		t.AssertNE(m["reset_password_token_at"], nil)
-		t.Assert(m["reset_password_token_at"], new(mysql.NullTime))
+		t.Assert(m["reset_password_token_at"], nil)
 	})
 }
 
