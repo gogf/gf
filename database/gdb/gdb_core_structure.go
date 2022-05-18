@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"context"
+	"database/sql/driver"
 	"reflect"
 	"strings"
 	"time"
@@ -36,6 +37,18 @@ func (c *Core) ConvertDataForRecord(ctx context.Context, value interface{}) map[
 
 func (c *Core) ConvertDataForRecordValue(ctx context.Context, value interface{}) interface{} {
 	var (
+		err            error
+		convertedValue interface{}
+	)
+	// If `value` implements interface `driver.Valuer`, it then uses the interface for value converting.
+	if valuer, ok := value.(driver.Valuer); ok {
+		if convertedValue, err = valuer.Value(); err != nil {
+			panic(err)
+		}
+		return convertedValue
+	}
+	// Default value converting.
+	var (
 		rvValue = reflect.ValueOf(value)
 		rvKind  = rvValue.Kind()
 	)
@@ -48,7 +61,7 @@ func (c *Core) ConvertDataForRecordValue(ctx context.Context, value interface{})
 		// It should ignore the bytes type.
 		if _, ok := value.([]byte); !ok {
 			// Convert the value to JSON.
-			value, _ = json.Marshal(value)
+			convertedValue, _ = json.Marshal(value)
 		}
 
 	case reflect.Struct:
@@ -57,17 +70,17 @@ func (c *Core) ConvertDataForRecordValue(ctx context.Context, value interface{})
 		// which will insert/update the value to database as "null".
 		case time.Time:
 			if r.IsZero() {
-				value = nil
+				convertedValue = nil
 			}
 
 		case gtime.Time:
 			if r.IsZero() {
-				value = nil
+				convertedValue = nil
 			}
 
 		case *gtime.Time:
 			if r.IsZero() {
-				value = nil
+				convertedValue = nil
 			}
 
 		case *time.Time:
@@ -79,14 +92,14 @@ func (c *Core) ConvertDataForRecordValue(ctx context.Context, value interface{})
 		default:
 			// Use string conversion in default.
 			if s, ok := value.(iString); ok {
-				value = s.String()
+				convertedValue = s.String()
 			} else {
 				// Convert the value to JSON.
-				value, _ = json.Marshal(value)
+				convertedValue, _ = json.Marshal(value)
 			}
 		}
 	}
-	return value
+	return convertedValue
 }
 
 // convertFieldValueToLocalValue automatically checks and converts field value from database type
