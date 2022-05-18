@@ -120,7 +120,7 @@ jobs:
       run: |
         for file in `find . -name go.mod`; do
             dirpath=$(dirname $file)
-            if [ "./cmd/sub" = $dirpath ]; then
+            if [ "." = $dirpath ]; then
                 continue 1
             fi
             if [ "oracle" = $(basename $dirpath) ]; then
