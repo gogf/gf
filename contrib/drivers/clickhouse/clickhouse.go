@@ -14,20 +14,19 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ClickHouse/clickhouse-go/v2"
-	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/google/uuid"
-	"net/url"
-	"strings"
-	"time"
-
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/google/uuid"
+	"net/url"
+	"strings"
+	"time"
 )
 
 // Driver is the driver for postgresql database.
@@ -338,53 +337,69 @@ func (d *Driver) DoInsert(
 }
 
 // ConvertDataForRecord converting for any data that will be inserted into table/collection as a record.
-func (d *Driver) ConvertDataForRecord(ctx context.Context, value interface{}) map[string]interface{} {
+func (d *Driver) ConvertDataForRecord(ctx context.Context, value interface{}) (map[string]interface{}, error) {
 	m := gconv.Map(value, OrmTagForStruct)
+
+	// transforms a value of a particular type
 	for k, v := range m {
 		switch itemValue := v.(type) {
 
-		case time.Time, *time.Time:
-			// for the native time.Time, no processing is required
+		case time.Time:
 			m[k] = itemValue
+			// If the time is zero, it then updates it to nil,
+			// which will insert/update the value to database as "null".
+			if itemValue.IsZero() {
+				m[k] = nil
+			}
+
+		case uuid.UUID:
+			m[k] = itemValue
+
+		case *time.Time:
+			m[k] = itemValue
+			// If the time is zero, it then updates it to nil,
+			// which will insert/update the value to database as "null".
+			if itemValue == nil || itemValue.IsZero() {
+				m[k] = nil
+			}
 
 		case gtime.Time:
 			// for gtime type, needs to get time.Time
 			m[k] = itemValue.Time
+			// If the time is zero, it then updates it to nil,
+			// which will insert/update the value to database as "null".
+			if itemValue.IsZero() {
+				m[k] = nil
+			}
 
 		case *gtime.Time:
 			// for gtime type, needs to get time.Time
 			if itemValue != nil {
 				m[k] = itemValue.Time
 			}
-
-		case uuid.UUID:
-			// the UUID type does not need to be handled
-			// because ClickHouse only accepts Google's UUID package type
-			m[k] = itemValue
+			// If the time is zero, it then updates it to nil,
+			// which will insert/update the value to database as "null".
+			if itemValue == nil || itemValue.IsZero() {
+				m[k] = nil
+			}
 
 		default:
 			// if the other type implements valuer for the driver package
 			// the converted result is used
 			// otherwise the interface data is committed
-			m[k] = d.ConvertDataForRecordValue(ctx, v)
+			valuer, ok := itemValue.(driver.Valuer)
+			if !ok {
+				m[k] = itemValue
+				continue
+			}
+			convertedValue, err := valuer.Value()
+			if err != nil {
+				return nil, err
+			}
+			m[k] = convertedValue
 		}
 	}
-	return m
-}
-
-func (d *Driver) ConvertDataForRecordValue(ctx context.Context, value interface{}) interface{} {
-	var (
-		err            error
-		convertedValue interface{}
-	)
-	// If `value` implements interface `driver.Valuer`, it then uses the interface for value converting.
-	if valuer, ok := value.(driver.Valuer); ok {
-		if convertedValue, err = valuer.Value(); err != nil {
-			panic(err)
-		}
-		return convertedValue
-	}
-	return value
+	return m, nil
 }
 
 func (d *Driver) DoDelete(ctx context.Context, link gdb.Link, table string, condition string, args ...interface{}) (result sql.Result, err error) {

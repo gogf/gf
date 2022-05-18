@@ -106,6 +106,7 @@ values  (607970943242866688, 607973669943119880, 607972403489804288, 2022, 3, 20
 			, Col7 Tuple(String, UInt8, Array(Map(String, String)))
 			, Col8 DateTime
 			, Col9 UUID
+			, Col10 DateTime
 		) ENGINE = MergeTree()
 		PRIMARY KEY Col4
 		ORDER BY Col4
@@ -409,6 +410,42 @@ func TestDriverClickhouse_ExecInsert(t *testing.T) {
 	gtest.AssertNil(err)
 }
 
+func TestDriverClickhouse_NilTime(t *testing.T) {
+	connect := clickhouseConfigDB()
+	gtest.AssertNil(createClickhouseExampleTable(connect))
+	defer dropClickhouseExampleTable(connect)
+	type testNilTime struct {
+		Col1  uint8
+		Col2  string
+		Col3  string
+		Col4  string
+		Col5  map[string]uint8
+		Col6  []string
+		Col7  []interface{}
+		Col8  *time.Time
+		Col9  uuid.UUID
+		Col10 *gtime.Time
+	}
+	insertData := []*testNilTime{}
+	for i := 0; i < 10000; i++ {
+		insertData = append(insertData, &testNilTime{
+			Col4: "Inc.",
+			Col9: uuid.New(),
+			Col7: []interface{}{ // Tuple(String, UInt8, Array(Map(String, String)))
+				"String Value", uint8(5), []map[string]string{
+					map[string]string{"key": "value"},
+					map[string]string{"key": "value"},
+					map[string]string{"key": "value"},
+				}},
+		})
+	}
+	_, err := connect.Model("data_type").Data(insertData).Insert()
+	gtest.AssertNil(err)
+	count, err := connect.Model("data_type").Where("Col4", "Inc.").Count()
+	gtest.AssertNil(err)
+	gtest.AssertEQ(count, 10000)
+}
+
 func TestDriverClickhouse_BatchInsert(t *testing.T) {
 	// example from
 	// https://github.com/ClickHouse/clickhouse-go/blob/v2/examples/std/batch/main.go
@@ -431,8 +468,9 @@ func TestDriverClickhouse_BatchInsert(t *testing.T) {
 					map[string]string{"key": "value"},
 				},
 			},
-			"Col8": gtime.Now(),
-			"Col9": uuid.New(),
+			"Col8":  gtime.Now(),
+			"Col9":  uuid.New(),
+			"Col10": nil,
 		})
 	}
 	_, err := connect.Model("data_type").Data(insertData).Insert()
