@@ -160,6 +160,10 @@ jobs:
         for file in `find . -name go.mod`; do
             dirpath=$(dirname $file)
             cd $dirpath
+            if [ "." = $dirpath ]; then
+                continue 1
+            fi
+            go mod tidy
             go test -race -coverprofile=coverage.out -covermode=atomic ./...
             if grep -q "/gogf/gf/.*/v2" go.mod; then
                 sed -i "s/gogf\/gf\(\/.*\)\/v2/gogf\/gf\/v2\1/g" coverage.out
