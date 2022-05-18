@@ -24,8 +24,6 @@ const (
 	TableSize   = 10
 	TablePrefix = "t_"
 	SchemaName  = "test"
-	TableName   = "test1"
-	TestSchema1 = "test2"
 	TestDbUser  = "postgres"
 	TestDbPass  = "12345678"
 	CreateTime  = "2018-10-24 10:00:00"
@@ -33,7 +31,6 @@ const (
 
 var (
 	db         gdb.DB
-	dbTest     gdb.DB
 	configNode gdb.ConfigNode
 	ctx        = context.TODO()
 )
@@ -71,6 +68,14 @@ func init() {
 	db = db.Schema(SchemaName)
 }
 
+func createTable(table ...string) string {
+	return createTableWithDb(db, table...)
+}
+
+func createInitTable(table ...string) string {
+	return createInitTableWithDb(db, table...)
+}
+
 func createTableWithDb(db gdb.DB, table ...string) (name string) {
 	if len(table) > 0 {
 		name = table[0]
@@ -93,14 +98,6 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 		gtest.Fatal(err)
 	}
 	return
-}
-
-func createTable(table ...string) string {
-	return createTableWithDb(db, table...)
-}
-
-func createInitTable(table ...string) string {
-	return createInitTableWithDb(db, table...)
 }
 
 func dropTable(table string) {
