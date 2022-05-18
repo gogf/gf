@@ -160,22 +160,24 @@ jobs:
     #         cd -
     #     done
 
-    - name: Main Build & Test
-      run: |
-        go build ./...
-        GOARCH=386   go test -v ./... || exit 1
-        GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
+    # - name: Main Build & Test
+    #   run: |
+    #     go build ./...
+    #     GOARCH=386   go test -v ./... || exit 1
+    #     GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
     - name: Run coverage
       run: |
         for file in `find . -name go.mod`; do
             dirpath=$(dirname $file)
-            cd $dirpath
             if [ "." = $dirpath ]; then
                 continue 1
             fi
             if [ "oracle" = $(basename $dirpath) ]; then
                 continue 1
             fi
+            
+            cd $dirpath
+            
             go mod tidy
             go test -race -coverprofile=coverage.out -covermode=atomic ./...
             if grep -q "/gogf/gf/.*/v2" go.mod; then
