@@ -16,11 +16,12 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/net/proxy"
+
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
-	"golang.org/x/net/proxy"
 )
 
 // SetBrowserMode enables browser mode of the client.
@@ -111,7 +112,7 @@ func (c *Client) SetRetry(retryCount int, retryInterval time.Duration) *Client {
 	return c
 }
 
-// SetRedirectLimit limit the number of jumps
+// SetRedirectLimit limits the number of jumps.
 func (c *Client) SetRedirectLimit(redirectLimit int) *Client {
 	c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		if len(via) >= redirectLimit {
@@ -140,7 +141,7 @@ func (c *Client) SetProxy(proxyURL string) {
 			v.Proxy = http.ProxyURL(_proxy)
 		}
 	} else {
-		var auth = &proxy.Auth{}
+		auth := &proxy.Auth{}
 		user := _proxy.User.Username()
 		if user != "" {
 			auth.User = user
