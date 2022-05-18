@@ -304,3 +304,50 @@ func TestConn_SetDeadline(t *testing.T) {
 		t.AssertNE(recv, nil)
 	})
 }
+
+func TestConn_SetReceiveBufferWait(t *testing.T) {
+	addr := getFreePortAddr()
+
+	startTCPServer(addr)
+
+	time.Sleep(simpleTimeout)
+
+	gtest.C(t, func(t *gtest.T) {
+		conn, err := gtcp.NewConn(addr)
+		t.AssertNil(err)
+		t.AssertNE(conn, nil)
+		conn.SetReceiveBufferWait(time.Millisecond * 100)
+		err = conn.Send([]byte("hello"), gtcp.Retry{Count: 1})
+		t.AssertNil(err)
+		recv, err := conn.Recv(-1)
+		t.AssertNil(err)
+		t.AssertNE(recv, nil)
+	})
+}
+
+func TestNewNetConnKeyCrt(t *testing.T) {
+	addr := getFreePortAddr()
+
+	startTCPKeyCrtServer(addr)
+
+	time.Sleep(simpleTimeout)
+
+	gtest.C(t, func(t *gtest.T) {
+		conn, err := gtcp.NewNetConnKeyCrt(addr, crtFile, keyFile, time.Second)
+		t.AssertNil(conn)
+		t.AssertNE(err, nil)
+	})
+}
+
+func TestSend(t *testing.T) {
+	addr := getFreePortAddr()
+
+	startTCPServer(addr)
+
+	time.Sleep(simpleTimeout)
+
+	gtest.C(t, func(t *gtest.T) {
+		err := gtcp.Send(addr, []byte("hello"), gtcp.Retry{Count: 1})
+		t.AssertNil(err)
+	})
+}
