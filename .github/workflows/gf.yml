@@ -94,6 +94,7 @@ jobs:
     strategy:
       matrix:
         go: ["1.15", "1.16", "1.17"]
+        goarch: ["386","amd64"]
 
 
     steps:
@@ -118,11 +119,14 @@ jobs:
         sudo echo "127.0.0.1   local" | sudo tee -a /etc/hosts
     - name: Build & Test
       run: |
+        GOARCH=${{ matrix.goarch }}
         for file in `find . -name go.mod`; do
             dirpath=$(dirname $file)
-            if [ "." = $dirpath ]; then
-                continue 1
-            fi
+
+            # if [ "." = $dirpath ]; then
+            #     continue 1
+            # fi
+
             if [ "oracle" = $(basename $dirpath) ]; then
                 continue 1
             fi
@@ -130,8 +134,7 @@ jobs:
             cd $dirpath
             go mod tidy
             go build ./...
-            # GOARCH=386 go test ./... -v || exit 1
-            GOARCH=amd64 go test ./... -race -coverprofile=coverage.out -covermode=atomic || exit 1
+            go test ./... -race -coverprofile=coverage.out -covermode=atomic || exit 1
             if grep -q "/gogf/gf/.*/v2" go.mod; then
                 sed -i "s/gogf\/gf\(\/.*\)\/v2/gogf\/gf\/v2\1/g" coverage.out
             fi
@@ -140,5 +143,5 @@ jobs:
     - name: Report Coverage
       uses: codecov/codecov-action@v2
       with:
-        flags: go-${{ matrix.go }}
+        flags: go-${{ matrix.go }}-${{ matrix.goarch }}
 
