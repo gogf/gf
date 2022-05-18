@@ -35,9 +35,9 @@ const (
 )
 
 var (
-	supportedFileTypes     = []string{"toml", "yaml", "yml", "json", "ini", "xml"} // All supported file types suffixes.
-	localInstances         = gmap.NewStrAnyMap(true)                               // Instances map containing configuration instances.
-	customConfigContentMap = gmap.NewStrStrMap(true)                               // Customized configuration content.
+	supportedFileTypes     = []string{"toml", "yaml", "yml", "json", "ini", "xml", "properties"} // All supported file types suffixes.
+	localInstances         = gmap.NewStrAnyMap(true)                                             // Instances map containing configuration instances.
+	customConfigContentMap = gmap.NewStrStrMap(true)                                             // Customized configuration content.
 
 	// Prefix array for trying searching in resource manager.
 	resourceTryFolders = []string{
@@ -260,7 +260,7 @@ func (c *AdapterFile) getJson(fileName ...string) (configJson *gjson.Json, err e
 			}
 		}
 		// Note that the underlying configuration json object operations are concurrent safe.
-		dataType := gfile.ExtName(usedFileName)
+		dataType := gfile.ExtName(filePath)
 		if gjson.IsValidDataType(dataType) && !isFromConfigContent {
 			configJson, err = gjson.LoadContentType(dataType, content, true)
 		} else {
