@@ -93,7 +93,8 @@ jobs:
 
     strategy:
       matrix:
-        go: ["1.15", "1.16", "1.17"]
+        go:     ["1.15", "1.16", "1.17"]
+        goarch: ["386", "amd64"]
 
 
     steps:
@@ -117,47 +118,28 @@ jobs:
         echo "gofmt check pass."
         sudo echo "127.0.0.1   local" | sudo tee -a /etc/hosts
 
-    - name: CLI Build & Test
+    - name: Build & Test
       run: |
-        cd cmd/gf
-        go mod tidy
-        go build ./...
-        GOARCH=386 go test -v ./... || exit 1
-        GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
-
-    - name: Example Build & Test
-      run: |
-        cd example
-        go mod tidy
-        go build ./...
-        GOARCH=386 go test -v ./... || exit 1
-        GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
-
-    - name: Contrib Build & Test
-      run: |
-        cd contrib
+        GOARCH=${{ matrix.goarch }}
         for file in `find . -name go.mod`; do
             dirpath=$(dirname $file)
-            # Ignore oracle database driver build&test.
+
             if [ "oracle" = $(basename $dirpath) ]; then
                 continue 1
             fi
+
             cd $dirpath
             go mod tidy
             go build ./...
-            GOARCH=386 go test -v ./... || exit 1
-            GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
+            go test ./... -race -coverprofile=coverage.out -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
+            if grep -q "/gogf/gf/.*/v2" go.mod; then
+                sed -i "s/gogf\/gf\(\/.*\)\/v2/gogf\/gf\/v2\1/g" coverage.out
+            fi
             cd -
         done
-
-    - name: Main Build & Test
-      run: |
-        go build ./...
-        GOARCH=386   go test -v ./... || exit 1
-        GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
 
     - name: Report Coverage
       uses: codecov/codecov-action@v2
       with:
-        flags: go-${{ matrix.go }}
+        flags: go-${{ matrix.go }}-${{ matrix.goarch }}
 

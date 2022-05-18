@@ -35,9 +35,9 @@ const (
 )
 
 var (
-	supportedFileTypes     = []string{"toml", "yaml", "yml", "json", "ini", "xml"} // All supported file types suffixes.
-	localInstances         = gmap.NewStrAnyMap(true)                               // Instances map containing configuration instances.
-	customConfigContentMap = gmap.NewStrStrMap(true)                               // Customized configuration content.
+	supportedFileTypes     = []string{"toml", "yaml", "yml", "json", "ini", "xml", "properties"} // All supported file types suffixes.
+	localInstances         = gmap.NewStrAnyMap(true)                                             // Instances map containing configuration instances.
+	customConfigContentMap = gmap.NewStrStrMap(true)                                             // Customized configuration content.
 
 	// Prefix array for trying searching in resource manager.
 	resourceTryFolders = []string{
@@ -197,21 +197,16 @@ func (c *AdapterFile) Dump() {
 }
 
 // Available checks and returns whether configuration of given `file` is available.
-func (c *AdapterFile) Available(ctx context.Context, fileName ...string) bool {
-	var (
-		usedFileName string
-	)
-	if len(fileName) > 0 && fileName[0] != "" {
-		usedFileName = fileName[0]
-	} else {
-		usedFileName = c.defaultName
+func (c *AdapterFile) Available(ctx context.Context, fileName string) bool {
+	if fileName == "" {
+		fileName = c.defaultName
 	}
 	// Custom configuration content exists.
-	if c.GetContent(usedFileName) != "" {
+	if c.GetContent(fileName) != "" {
 		return true
 	}
 	// Configuration file exists in system path.
-	if path, _ := c.GetFilePath(usedFileName); path != "" {
+	if path, _ := c.GetFilePath(fileName); path != "" {
 		return true
 	}
 	return false
@@ -265,7 +260,7 @@ func (c *AdapterFile) getJson(fileName ...string) (configJson *gjson.Json, err e
 			}
 		}
 		// Note that the underlying configuration json object operations are concurrent safe.
-		dataType := gfile.ExtName(usedFileName)
+		dataType := gfile.ExtName(filePath)
 		if gjson.IsValidDataType(dataType) && !isFromConfigContent {
 			configJson, err = gjson.LoadContentType(dataType, content, true)
 		} else {
