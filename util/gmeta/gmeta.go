@@ -16,8 +16,8 @@ import (
 type Meta struct{}
 
 const (
-	// metaAttributeName is the attribute name of metadata in struct.
-	metaAttributeName = "Meta"
+	metaAttributeName = "Meta"       // metaAttributeName is the attribute name of metadata in struct.
+	metaTypeName      = "gmeta.Meta" // metaTypeName is for type string comparison.
 )
 
 // Data retrieves and returns all metadata from `object`.
@@ -27,7 +27,9 @@ func Data(object interface{}) map[string]string {
 		return nil
 	}
 	if field, ok := reflectType.FieldByName(metaAttributeName); ok {
-		return gstructs.ParseTag(string(field.Tag))
+		if field.Type.String() == metaTypeName {
+			return gstructs.ParseTag(string(field.Tag))
+		}
 	}
 	return map[string]string{}
 }
