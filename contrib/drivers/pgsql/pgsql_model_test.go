@@ -7,12 +7,13 @@
 package pgsql_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gutil"
-	"testing"
 )
 
 func Test_Model_Insert(t *testing.T) {
@@ -173,7 +174,7 @@ func Test_Model_Where(t *testing.T) {
 		t.AssertGT(len(result), 0)
 		t.Assert(result["id"].Int(), 3)
 	})
-	
+
 	// map like
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Model(table).Where(g.Map{
