@@ -10,19 +10,21 @@ package etcd
 import (
 	"time"
 
+	etcd3 "go.etcd.io/etcd/client/v3"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/text/gstr"
-	etcd3 "go.etcd.io/etcd/client/v3"
 )
 
 var (
 	_ gsvc.Registry = &Registry{}
 )
 
+// Registry implements gsvc.Registry interface.
 type Registry struct {
 	client       *etcd3.Client
 	kv           etcd3.KV
@@ -31,15 +33,18 @@ type Registry struct {
 	logger       *glog.Logger
 }
 
+// Option is the option for the etcd registry.
 type Option struct {
 	Logger       *glog.Logger
 	KeepaliveTTL time.Duration
 }
 
 const (
+	// DefaultKeepAliveTTL is the default keepalive TTL.
 	DefaultKeepAliveTTL = 10 * time.Second
 )
 
+// New creates and returns a new etcd registry.
 func New(address string, option ...Option) *Registry {
 	endpoints := gstr.SplitAndTrim(address, ",")
 	if len(endpoints) == 0 {
@@ -54,6 +59,7 @@ func New(address string, option ...Option) *Registry {
 	return NewWithClient(client, option...)
 }
 
+// NewWithClient creates and returns a new etcd registry with the given client.
 func NewWithClient(client *etcd3.Client, option ...Option) *Registry {
 	r := &Registry{
 		client: client,

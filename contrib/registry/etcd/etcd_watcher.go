@@ -9,8 +9,9 @@ package etcd
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/net/gsvc"
 	etcd3 "go.etcd.io/etcd/client/v3"
+
+	"github.com/gogf/gf/v2/net/gsvc"
 )
 
 var (
@@ -41,6 +42,7 @@ func newWatcher(key string, client *etcd3.Client) (*watcher, error) {
 	return w, nil
 }
 
+// Proceed is used to watch the key.
 func (w *watcher) Proceed() ([]*gsvc.Service, error) {
 	select {
 	case <-w.ctx.Done():
@@ -50,6 +52,7 @@ func (w *watcher) Proceed() ([]*gsvc.Service, error) {
 	}
 }
 
+// Close is used to close the watcher.
 func (w *watcher) Close() error {
 	w.cancel()
 	return w.watcher.Close()

@@ -8,6 +8,7 @@ package gstr
 
 import (
 	"bytes"
+
 	"github.com/gogf/gf/v2/internal/utils"
 )
 

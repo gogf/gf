@@ -7,8 +7,9 @@
 package gstr
 
 import (
-	"github.com/gogf/gf/v2/internal/utils"
 	"strings"
+
+	"github.com/gogf/gf/v2/internal/utils"
 )
 
 // ToLower returns a copy of the string s with all Unicode letters mapped to their lower case.

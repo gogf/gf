@@ -17,16 +17,17 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-var (
-	watchedServiceMap = gmap.New(true)
-)
+var watchedServiceMap = gmap.New(true)
 
+// ServiceWatch is used to watch the service status.
 type ServiceWatch func(service *Service)
 
+// Get the watched service map.
 func Get(ctx context.Context, name string) (service *Service, err error) {
 	return GetWithWatch(ctx, name, nil)
 }
 
+// GetWithWatch is used to getting the service with watch.
 func GetWithWatch(ctx context.Context, name string, watch ServiceWatch) (service *Service, err error) {
 	v := watchedServiceMap.GetOrSetFuncLock(name, func() interface{} {
 		var (
@@ -40,6 +41,7 @@ func GetWithWatch(ctx context.Context, name string, watch ServiceWatch) (service
 			Namespace:  s.Namespace,
 			Name:       s.Name,
 			Version:    s.Version,
+			Metadata:   s.Metadata,
 		})
 		if err != nil {
 			return nil
