@@ -82,7 +82,7 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 		CREATE TABLE %s (
-		   id bigint  NOT NULL,
+		   id bigserial  NOT NULL,
 		   passport varchar(45) NULL,
 		   password varchar(32) NULL,
 		   nickname varchar(45) NULL,
