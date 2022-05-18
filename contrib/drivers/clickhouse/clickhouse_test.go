@@ -3,7 +3,9 @@ package clickhouse
 import (
 	"context"
 	"fmt"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/util/guid"
+	"github.com/google/uuid"
 	"strings"
 	"testing"
 	"time"
@@ -103,6 +105,7 @@ values  (607970943242866688, 607973669943119880, 607972403489804288, 2022, 3, 20
 			, Col6 Array(String)
 			, Col7 Tuple(String, UInt8, Array(Map(String, String)))
 			, Col8 DateTime
+			, Col9 UUID
 		) ENGINE = MergeTree()
 		PRIMARY KEY Col4
 		ORDER BY Col4
@@ -428,7 +431,8 @@ func TestDriverClickhouse_BatchInsert(t *testing.T) {
 					map[string]string{"key": "value"},
 				},
 			},
-			"Col8": time.Now(),
+			"Col8": gtime.Now(),
+			"Col9": uuid.New(),
 		})
 	}
 	_, err := connect.Model("data_type").Data(insertData).Insert()

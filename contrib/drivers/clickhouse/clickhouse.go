@@ -10,12 +10,16 @@ package clickhouse
 import (
 	"context"
 	"database/sql"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/google/uuid"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -33,7 +37,8 @@ type Driver struct {
 
 var (
 	// tableFieldsMap caches the table information retrieved from database.
-	tableFieldsMap             = gmap.New(true)
+	tableFieldsMap = gmap.New(true)
+
 	errUnsupportedInsertIgnore = errors.New("unsupported method:InsertIgnore")
 	errUnsupportedInsertGetId  = errors.New("unsupported method:InsertGetId")
 	errUnsupportedReplace      = errors.New("unsupported method:Replace")
@@ -47,6 +52,8 @@ const (
 	filterTypePattern                = `(?i)^UPDATE|DELETE`
 	replaceSchemaPattern             = `@(.+?)/([\w\.\-]+)+`
 	needParsedSqlInCtx   gctx.StrKey = "NeedParsedSql"
+	OrmTagForStruct                  = "orm"
+	driverName                       = "clickhouse"
 )
 
 func init() {
@@ -70,9 +77,6 @@ func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 
 // Open creates and returns an underlying sql.DB object for clickhouse.
 func (d *Driver) Open(config *gdb.ConfigNode) (*sql.DB, error) {
-	var (
-		driver = "clickhouse"
-	)
 	// clickhouse://username:password@host1:9000,host2:9000/database?dial_timeout=200ms&max_execution_time=60
 	if config.Link != "" {
 		// Custom changing the schema in runtime.
@@ -94,7 +98,7 @@ func (d *Driver) Open(config *gdb.ConfigNode) (*sql.DB, error) {
 			"clickhouse://%s@%s:%s/%s?charset=%s&debug=%t",
 			config.User, config.Host, config.Port, config.Name, config.Charset, config.Debug)
 	}
-	db, err := sql.Open(driver, config.Link)
+	db, err := sql.Open(driverName, config.Link)
 	if err != nil {
 		return nil, err
 	}
@@ -335,9 +339,52 @@ func (d *Driver) DoInsert(
 
 // ConvertDataForRecord converting for any data that will be inserted into table/collection as a record.
 func (d *Driver) ConvertDataForRecord(ctx context.Context, value interface{}) map[string]interface{} {
-	// Clickhouse does not need to preprocess the value and can be inserted directly
-	// So it is not processed here
-	return gconv.Map(value, gdb.OrmTagForStruct)
+	m := gconv.Map(value, OrmTagForStruct)
+	for k, v := range m {
+		switch itemValue := v.(type) {
+
+		case time.Time, *time.Time:
+			// for the native time.Time, no processing is required
+			m[k] = itemValue
+
+		case gtime.Time:
+			// for gtime type, needs to get time.Time
+			m[k] = itemValue.Time
+
+		case *gtime.Time:
+			// for gtime type, needs to get time.Time
+			if itemValue != nil {
+				m[k] = itemValue.Time
+			}
+
+		case uuid.UUID:
+			// the UUID type does not need to be handled
+			// because ClickHouse only accepts Google's UUID package type
+			m[k] = itemValue
+
+		default:
+			// if the other type implements valuer for the driver package
+			// the converted result is used
+			// otherwise the interface data is committed
+			m[k] = d.ConvertDataForRecordValue(ctx, v)
+		}
+	}
+	return m
+}
+
+func (d *Driver) ConvertDataForRecordValue(ctx context.Context, value interface{}) interface{} {
+	var (
+		err            error
+		convertedValue interface{}
+	)
+	// If `value` implements interface `driver.Valuer`, it then uses the interface for value converting.
+	if valuer, ok := value.(driver.Valuer); ok {
+		if convertedValue, err = valuer.Value(); err != nil {
+			panic(err)
+		}
+		return convertedValue
+	}
+	return value
 }
 
 func (d *Driver) DoDelete(ctx context.Context, link gdb.Link, table string, condition string, args ...interface{}) (result sql.Result, err error) {
