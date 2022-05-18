@@ -153,7 +153,7 @@ func New(provider polaris.ProviderAPI, consumer polaris.ConsumerAPI, opts ...Opt
 		opt:      op,
 		provider: provider,
 		consumer: consumer,
-		c:        make(chan struct{}, 1),
+		c:        make(chan struct{}),
 	}
 }
 
