@@ -28,7 +28,7 @@ jobs:
       # Redis backend server.
       redis:
         image  : redis
-        options: >-
+        options: |
           --health-cmd      "redis-cli ping"
           --health-interval 10s
           --health-timeout  5s
@@ -58,7 +58,7 @@ jobs:
         ports:
           - 5432:5432
         # Set health checks to wait until postgres has started
-        options: >-
+        options: |
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
@@ -75,7 +75,7 @@ jobs:
           MSSQL_PASSWORD: LoremIpsum86
         ports:
           - 1433:1433
-        options: >-
+        options: |
           --health-cmd="/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P LoremIpsum86 -l 30 -Q \"SELECT 1\" || exit 1"
           --health-start-period 10s
           --health-interval 10s
@@ -93,8 +93,8 @@ jobs:
 
     strategy:
       matrix:
-        go: ["1.15", "1.16", "1.17"]
-        goarch: ["386","amd64"]
+        go:     ["1.15", "1.16", "1.17"]
+        goarch: ["386", "amd64"]
 
 
     steps:
@@ -117,6 +117,7 @@ jobs:
         git diff --name-only --exit-code || if [ $? != 0 ]; then echo "Notice: gofmt check failed,please gofmt before pr." && exit 1; fi
         echo "gofmt check pass."
         sudo echo "127.0.0.1   local" | sudo tee -a /etc/hosts
+
     - name: Build & Test
       run: |
         GOARCH=${{ matrix.goarch }}
@@ -136,6 +137,7 @@ jobs:
             fi
             cd -
         done
+
     - name: Report Coverage
       uses: codecov/codecov-action@v2
       with:
