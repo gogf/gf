@@ -197,21 +197,16 @@ func (c *AdapterFile) Dump() {
 }
 
 // Available checks and returns whether configuration of given `file` is available.
-func (c *AdapterFile) Available(ctx context.Context, fileName ...string) bool {
-	var (
-		usedFileName string
-	)
-	if len(fileName) > 0 && fileName[0] != "" {
-		usedFileName = fileName[0]
-	} else {
-		usedFileName = c.defaultName
+func (c *AdapterFile) Available(ctx context.Context, fileName string) bool {
+	if fileName == "" {
+		fileName = c.defaultName
 	}
 	// Custom configuration content exists.
-	if c.GetContent(usedFileName) != "" {
+	if c.GetContent(fileName) != "" {
 		return true
 	}
 	// Configuration file exists in system path.
-	if path, _ := c.GetFilePath(usedFileName); path != "" {
+	if path, _ := c.GetFilePath(fileName); path != "" {
 		return true
 	}
 	return false
