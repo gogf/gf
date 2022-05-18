@@ -60,15 +60,17 @@ func startTCPKeyCrtServer(addr string) {
 	go s.Run()
 }
 
-/*
 func TestGetFreePorts(t *testing.T) {
 	ports, _ := gtcp.GetFreePorts(2)
-	for _, port := range ports {
-		addr := fmt.Sprintf("%s:%d", "127.0.0.1:%d", port)
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertGT(ports[0], 0)
+		t.AssertGT(ports[1], 0)
+	})
 
-		startTCPServer(addr)
-	}
+	addr := fmt.Sprintf("%s:%d", "127.0.0.1", ports[0])
+	startTCPServer(addr)
 	time.Sleep(simpleTimeout)
+
 	gtest.C(t, func(t *gtest.T) {
 		conn, err := gtcp.NewPoolConn(fmt.Sprintf("127.0.0.1:%d", ports[0]))
 		t.AssertNil(err)
@@ -84,7 +86,7 @@ func TestGetFreePorts(t *testing.T) {
 		t.AssertNil(conn)
 	})
 }
-*/
+
 func TestNewConn(t *testing.T) {
 	addr := getFreePortAddr()
 
@@ -96,6 +98,8 @@ func TestNewConn(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		startTCPServer(addr)
+
+		time.Sleep(simpleTimeout)
 
 		conn, err := gtcp.NewConn(addr, simpleTimeout)
 		t.AssertNil(err)
@@ -121,6 +125,8 @@ func TestNewConnTLS(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		startTCPTLSServer(addr)
 
+		time.Sleep(simpleTimeout)
+
 		conn, err := gtcp.NewNetConnTLS(addr, &tls.Config{}, simpleTimeout)
 		t.AssertNil(conn)
 		t.AssertNE(err, nil)
@@ -138,6 +144,8 @@ func TestNewConnKeyCrt(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		startTCPKeyCrtServer(addr)
+
+		time.Sleep(simpleTimeout)
 
 		conn, err := gtcp.NewConnKeyCrt(addr, crtFile, keyFile)
 		t.AssertNil(conn)
