@@ -116,56 +116,7 @@ jobs:
         git diff --name-only --exit-code || if [ $? != 0 ]; then echo "Notice: gofmt check failed,please gofmt before pr." && exit 1; fi
         echo "gofmt check pass."
         sudo echo "127.0.0.1   local" | sudo tee -a /etc/hosts
-
-    # - name: CLI Build & Test
-    #   run: |
-    #     cd cmd/gf
-    #     go mod tidy
-    #     go build ./...
-    #     GOARCH=386 go test -v ./... || exit 1
-    #     GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
-    # - name: CLI Build & Test
-    #   run: |
-    #     cd cmd/gf
-    #     go mod tidy
-    #     go build ./...
-    #     GOARCH=386 go test -v ./... || exit 1
-    #     GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
-    #     if grep -q "/gogf/gf/.*/v2" go.mod; then
-    #         sed -i "s/gogf\/gf\(\/.*\)\/v2/gogf\/gf\/v2\1/g" coverage.txt
-    #     fi
-
-    # - name: Example Build & Test
-    #   run: |
-    #     cd example
-    #     go mod tidy
-    #     go build ./...
-    #     GOARCH=386 go test -v ./... || exit 1
-    #     GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
-
-    # - name: Contrib Build & Test
-    #   run: |
-    #     cd contrib
-    #     for file in `find . -name go.mod`; do
-    #         dirpath=$(dirname $file)
-    #         # Ignore oracle database driver build&test.
-    #         if [ "oracle" = $(basename $dirpath) ]; then
-    #             continue 1
-    #         fi
-    #         cd $dirpath
-    #         go mod tidy
-    #         go build ./...
-    #         GOARCH=386 go test -v ./... || exit 1
-    #         GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
-    #         cd -
-    #     done
-
-    # - name: Main Build & Test
-    #   run: |
-    #     go build ./...
-    #     GOARCH=386   go test -v ./... || exit 1
-    #     GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
-    - name: Run coverage
+    - name: Build & Test
       run: |
         for file in `find . -name go.mod`; do
             dirpath=$(dirname $file)
@@ -177,8 +128,8 @@ jobs:
             cd $dirpath
             go mod tidy
             go build ./...
-            GOARCH=386 go test ./... -v
-            GOARCH=amd64 go test ./... -v -race -coverprofile=coverage.out -covermode=atomic 
+            # GOARCH=386 go test ./... -v || exit 1
+            GOARCH=amd64 go test ./... -race -coverprofile=coverage.out -covermode=atomic || exit 1
             if grep -q "/gogf/gf/.*/v2" go.mod; then
                 sed -i "s/gogf\/gf\(\/.*\)\/v2/gogf\/gf\/v2\1/g" coverage.out
             fi
