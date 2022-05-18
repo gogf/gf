@@ -43,7 +43,9 @@ func (c *Core) ConvertDataForRecordValue(ctx context.Context, value interface{})
 	// If `value` implements interface `driver.Valuer`, it then uses the interface for value converting.
 	if valuer, ok := value.(driver.Valuer); ok {
 		if convertedValue, err = valuer.Value(); err != nil {
-			panic(err)
+			if err != nil {
+				return nil
+			}
 		}
 		return convertedValue
 	}
