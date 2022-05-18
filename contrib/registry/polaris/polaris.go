@@ -78,6 +78,7 @@ type Registry struct {
 	opt      options
 	provider polaris.ProviderAPI
 	consumer polaris.ConsumerAPI
+	c        chan struct{}
 }
 
 // WithNamespace with the Namespace option.
@@ -152,6 +153,7 @@ func New(provider polaris.ProviderAPI, consumer polaris.ConsumerAPI, opts ...Opt
 		opt:      op,
 		provider: provider,
 		consumer: consumer,
+		c:        make(chan struct{}, 1),
 	}
 }
 

@@ -81,38 +81,41 @@ func (r *Registry) Register(ctx context.Context, serviceInstance *gsvc.Service) 
 				defer ticker.Stop()
 
 				for {
-					<-ticker.C
-
-					err = r.provider.Heartbeat(&polaris.InstanceHeartbeatRequest{
-						InstanceHeartbeatRequest: model.InstanceHeartbeatRequest{
-							Service:      serviceInstance.KeyWithoutEndpoints(),
-							Namespace:    r.opt.Namespace,
-							Host:         host,
-							Port:         portNum,
-							ServiceToken: r.opt.ServiceToken,
-							InstanceID:   instanceID,
-							Timeout:      &r.opt.Timeout,
-							RetryCount:   &r.opt.RetryCount,
-						},
-					})
-					if err != nil {
-						g.Log().Error(ctx, err.Error())
-						continue
+					select {
+					case <-ticker.C:
+						err = r.provider.Heartbeat(&polaris.InstanceHeartbeatRequest{
+							InstanceHeartbeatRequest: model.InstanceHeartbeatRequest{
+								Service:      serviceInstance.KeyWithoutEndpoints(),
+								Namespace:    r.opt.Namespace,
+								Host:         host,
+								Port:         portNum,
+								ServiceToken: r.opt.ServiceToken,
+								InstanceID:   instanceID,
+								Timeout:      &r.opt.Timeout,
+								RetryCount:   &r.opt.RetryCount,
+							},
+						})
+						if err != nil {
+							g.Log().Error(ctx, err.Error())
+							continue
+						}
+					case <-r.c:
+						g.Log().Debug(ctx, "stop heartbeat")
+						return
 					}
 				}
 			}()
 		}
-
 		ids = append(ids, instanceID)
 	}
 	// need to set InstanceID for Deregister
 	serviceInstance.ID = gstr.Join(ids, instanceIDSeparator)
-
 	return nil
 }
 
 // Deregister the registration.
 func (r *Registry) Deregister(ctx context.Context, serviceInstance *gsvc.Service) error {
+	r.c <- struct{}{}
 	split := gstr.Split(serviceInstance.ID, instanceIDSeparator)
 	serviceInstance.Separator = instanceIDSeparator
 	for i, endpoint := range serviceInstance.Endpoints {
