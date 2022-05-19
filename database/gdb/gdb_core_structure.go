@@ -88,11 +88,15 @@ func (c *Core) ConvertDataForRecordValue(ctx context.Context, value interface{})
 		case gtime.Time:
 			if r.IsZero() {
 				convertedValue = nil
+			} else {
+				convertedValue = r.Time
 			}
 
 		case *gtime.Time:
 			if r.IsZero() {
 				convertedValue = nil
+			} else {
+				convertedValue = r.Time
 			}
 
 		case *time.Time:
