@@ -65,19 +65,6 @@ type Metadata map[string]interface{}
 
 // SearchInput is the input for service searching.
 type SearchInput struct {
-	ID         string   // ID is the unique instance ID as registered.
-	Prefix     string   // Service prefix.
-	Deployment string   // Service deployment name, eg: dev, qa, staging, prod, etc.
-	Namespace  string   // Service Namespace, to indicate different services in the same environment with the same Name.
-	Name       string   // Name for the service.
-	Version    string   // Service version, eg: v1.0.0, v2.1.1, etc.}
-	Metadata   Metadata // Custom data for this service, which can be set using JSON by environment or command-line.
-	Separator  string   // Separator for service name and version, eg: _, -, etc.
-}
-
-// WatchInput is the input for service watching.
-type WatchInput struct {
-	ID         string   // ID is the unique instance ID as registered.
 	Prefix     string   // Service prefix.
 	Deployment string   // Service deployment name, eg: dev, qa, staging, prod, etc.
 	Namespace  string   // Service Namespace, to indicate different services in the same environment with the same Name.
