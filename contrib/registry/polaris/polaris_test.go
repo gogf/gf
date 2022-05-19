@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/polarismesh/polaris-go/api"
 	"github.com/polarismesh/polaris-go/pkg/config"
 
 	"github.com/gogf/gf/v2/frame/g"
@@ -21,7 +22,11 @@ import (
 // TestRegistry TestRegistryManyService
 func TestRegistry(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
-
+	conf.Consumer.LocalCache.SetPersistDir("/tmp/polaris/backup")
+	err := api.SetLoggersDir("/tmp/polaris/log")
+	if err != nil {
+		t.Fatal(err)
+	}
 	r := NewWithConfig(
 		conf,
 		WithTimeout(time.Second*10),
@@ -38,7 +43,7 @@ func TestRegistry(t *testing.T) {
 		Separator: instanceIDSeparator,
 	}
 
-	err := r.Register(ctx, svc)
+	err = r.Register(ctx, svc)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,6 +57,12 @@ func TestRegistry(t *testing.T) {
 // TestRegistryMany TestRegistryManyService
 func TestRegistryMany(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
+	conf.Consumer.LocalCache.SetPersistDir("/tmp/polaris/backup")
+
+	err := api.SetLoggersDir("/tmp/polaris/log")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	r := NewWithConfig(
 		conf,
@@ -81,7 +92,7 @@ func TestRegistryMany(t *testing.T) {
 		Separator: instanceIDSeparator,
 	}
 
-	err := r.Register(context.Background(), svc)
+	err = r.Register(context.Background(), svc)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -115,6 +126,11 @@ func TestRegistryMany(t *testing.T) {
 // TestGetService Test GetService
 func TestGetService(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
+	conf.Consumer.LocalCache.SetPersistDir("/tmp/polaris/backup")
+	err := api.SetLoggersDir("/tmp/polaris/log")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	r := NewWithConfig(
 		conf,
@@ -132,7 +148,7 @@ func TestGetService(t *testing.T) {
 		Separator: instanceIDSeparator,
 	}
 
-	err := r.Register(ctx, svc)
+	err = r.Register(ctx, svc)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -161,7 +177,11 @@ func TestGetService(t *testing.T) {
 // TestWatch Test Watch
 func TestWatch(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
-
+	conf.Consumer.LocalCache.SetPersistDir("/tmp/polaris/backup")
+	err := api.SetLoggersDir("/tmp/polaris/log")
+	if err != nil {
+		t.Fatal(err)
+	}
 	r := NewWithConfig(
 		conf,
 		WithTimeout(time.Second*10),
