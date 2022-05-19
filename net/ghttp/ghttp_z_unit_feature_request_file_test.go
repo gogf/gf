@@ -232,7 +232,7 @@ func Test_Params_File_Upload_Required(t *testing.T) {
 		)
 
 		if err = r.Parse(&req); err != nil {
-			r.Response.WriteExit("upload file is required")
+			r.Response.WriteExit(err.Error())
 		}
 		file := req.File
 		if name, err := file.Save(dstDirPath); err == nil {
