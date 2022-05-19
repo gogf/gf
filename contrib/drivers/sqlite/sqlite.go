@@ -12,12 +12,12 @@
 package sqlite
 
 import (
-	_ "github.com/mattn/go-sqlite3"
-
 	"context"
 	"database/sql"
 	"fmt"
 	"strings"
+
+	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"

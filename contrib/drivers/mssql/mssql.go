@@ -13,13 +13,13 @@
 package mssql
 
 import (
-	_ "github.com/denisenkom/go-mssqldb"
-
 	"context"
 	"database/sql"
 	"fmt"
 	"strconv"
 	"strings"
+
+	_ "github.com/denisenkom/go-mssqldb"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"

@@ -13,6 +13,8 @@ import (
 	"fmt"
 	"net/url"
 
+	_ "github.com/go-sql-driver/mysql"
+
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
