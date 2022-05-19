@@ -63,32 +63,42 @@ func TestTableFields(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		createTable("t_user")
 		defer dropTable("t_user")
-		var expect map[string]string = map[string]string{
-			"ID":          "numeric(10,0)",
-			"PASSPORT":    "VARCHAR(45)",
-			"PASSWORD":    "CHAR(32)",
-			"NICKNAME":    "VARCHAR(45)",
-			"CREATE_TIME": "time",
+		var expect = map[string][]interface{}{
+			"ID":          {"numeric(10,0)", false, "PRI", "", "", ""},
+			"PASSPORT":    {"varchar(45)", false, "", "", "", ""},
+			"PASSWORD":    {"char(32)", false, "", "", "", ""},
+			"NICKNAME":    {"varchar(45)", false, "", "", "", ""},
+			"CREATE_TIME": {"datetime", false, "", "", "", ""},
 		}
 
 		res, err := db.TableFields(context.Background(), "t_user")
 		gtest.Assert(err, nil)
 
-		for k, _ := range expect {
+		for k, v := range expect {
 			_, ok := res[k]
 			gtest.AssertEQ(ok, true)
-
 			gtest.AssertEQ(res[k].Name, k)
+			gtest.AssertEQ(res[k].Type, v[0])
+			gtest.AssertEQ(res[k].Null, v[1])
+			gtest.AssertEQ(res[k].Key, v[2])
+			gtest.AssertEQ(res[k].Default, v[3])
+			gtest.AssertEQ(res[k].Extra, v[4])
+			gtest.AssertEQ(res[k].Comment, v[5])
 		}
 
 		res, err = db.TableFields(context.Background(), "t_user", "test")
 		gtest.Assert(err, nil)
 
-		for k, _ := range expect {
+		for k, v := range expect {
 			_, ok := res[k]
 			gtest.AssertEQ(ok, true)
-
 			gtest.AssertEQ(res[k].Name, k)
+			gtest.AssertEQ(res[k].Type, v[0])
+			gtest.AssertEQ(res[k].Null, v[1])
+			gtest.AssertEQ(res[k].Key, v[2])
+			gtest.AssertEQ(res[k].Default, v[3])
+			gtest.AssertEQ(res[k].Extra, v[4])
+			gtest.AssertEQ(res[k].Comment, v[5])
 		}
 	})
 
