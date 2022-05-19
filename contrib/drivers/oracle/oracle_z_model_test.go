@@ -12,10 +12,13 @@ import (
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
 	"github.com/gogf/gf/v2/util/gutil"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -1111,3 +1114,16 @@ func Test_Model_FieldMax(t *testing.T) {
 		t.Assert(all[0]["total"], 1)
 	})
 }*/
+
+func Test_Z_Clear(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		pwd, err := os.Getwd()
+		gtest.Assert(err, nil)
+
+		filename := filepath.Join(pwd, "oracle_trace.log")
+		if gfile.Exists(filename) {
+			gfile.Remove(filename)
+		}
+	})
+
+}
