@@ -59,12 +59,17 @@ func init() {
 		db = r
 	}
 
-	schemaTemplate := "SELECT 'CREATE DATABASE %s' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '%s')"
-	if _, err := db.Exec(ctx, fmt.Sprintf(schemaTemplate, SchemaName, SchemaName)); err != nil {
-		gtest.Error(err)
+	if configNode.Name == "" {
+		schemaTemplate := "SELECT 'CREATE DATABASE %s' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '%s')"
+		if _, err := db.Exec(ctx, fmt.Sprintf(schemaTemplate, SchemaName, SchemaName)); err != nil {
+			gtest.Error(err)
+		}
+
+		db = db.Schema(SchemaName)
+	} else {
+		db = db.Schema(configNode.Name)
 	}
 
-	db = db.Schema(SchemaName)
 }
 
 func createTable(table ...string) string {
