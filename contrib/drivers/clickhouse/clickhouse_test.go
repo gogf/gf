@@ -97,16 +97,16 @@ values  (607970943242866688, 607973669943119880, 607972403489804288, 2022, 3, 20
 `
 	expmSqlDDL = `
 		CREATE TABLE IF NOT EXISTS data_type (
-			  Col1 UInt8
-			, Col2 String
-			, Col3 FixedString(3)
-			, Col4 String
-			, Col5 Map(String, UInt8)
-			, Col6 Array(String)
-			, Col7 Tuple(String, UInt8, Array(Map(String, String)))
-			, Col8 DateTime
-			, Col9 UUID
-			, Col10 DateTime
+			  Col1 UInt8 COMMENT '列1'
+			, Col2 Nullable(String) COMMENT '列2'
+			, Col3 FixedString(3) COMMENT '列3'
+			, Col4 String COMMENT '列4'
+			, Col5 Map(String, UInt8) COMMENT '列5'
+			, Col6 Array(String) COMMENT '列6'
+			, Col7 Tuple(String, UInt8, Array(Map(String, String))) COMMENT '列7'
+			, Col8 DateTime COMMENT '列8'
+			, Col9 UUID COMMENT '列9'
+			, Col10 DateTime COMMENT '列10'
 		) ENGINE = MergeTree()
 		PRIMARY KEY Col4
 		ORDER BY Col4
@@ -506,4 +506,37 @@ func TestDriverClickhouse_ReplaceConfig(t *testing.T) {
 	c2.Link = "clickhouse://default@127.0.0.1:9000,127.0.0.1:9000/default?dial_timeout=200ms&max_execution_time=60"
 	_, _ = db.Open(c2)
 	gtest.AssertEQ(strings.Contains(c2.Link, "clickhouseJohn"), true)
+}
+
+func TestDriverClickhouse_TableFields(t *testing.T) {
+	connect := clickhouseConfigDB()
+	gtest.AssertNil(createClickhouseExampleTable(connect))
+	defer dropClickhouseExampleTable(connect)
+	dataTypeTable, err := connect.TableFields(context.Background(), "data_type")
+	gtest.AssertNil(err)
+	gtest.AssertNE(dataTypeTable, nil)
+
+	var result = map[string][]interface{}{
+		"Col1":  {1, "Col1", "UInt8", false, "", "", "", "列1"},
+		"Col2":  {2, "Col2", "String", true, "", "", "", "列2"},
+		"Col3":  {3, "Col3", "FixedString(3)", false, "", "", "", "列3"},
+		"Col4":  {4, "Col4", "String", false, "", "", "", "列4"},
+		"Col5":  {5, "Col5", "Map(String, UInt8)", false, "", "", "", "列5"},
+		"Col6":  {6, "Col6", "Array(String)", false, "", "", "", "列6"},
+		"Col7":  {7, "Col7", "Tuple(String, UInt8, Array(Map(String, String)))", false, "", "", "", "列7"},
+		"Col8":  {8, "Col8", "DateTime", false, "", "", "", "列8"},
+		"Col9":  {9, "Col9", "UUID", false, "", "", "", "列9"},
+		"Col10": {10, "Col10", "DateTime", false, "", "", "", "列10"},
+	}
+	for k, v := range result {
+		_, ok := dataTypeTable[k]
+		gtest.AssertEQ(ok, true)
+		gtest.AssertEQ(dataTypeTable[k].Index, v[0])
+		gtest.AssertEQ(dataTypeTable[k].Name, v[1])
+		gtest.AssertEQ(dataTypeTable[k].Type, v[2])
+		gtest.AssertEQ(dataTypeTable[k].Null, v[3])
+		gtest.AssertEQ(dataTypeTable[k].Key, v[4])
+		gtest.AssertEQ(dataTypeTable[k].Default, v[5])
+		gtest.AssertEQ(dataTypeTable[k].Comment, v[7])
+	}
 }
