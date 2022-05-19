@@ -13,8 +13,6 @@
 package oracle
 
 import (
-	_ "github.com/mattn/go-oci8"
-
 	"context"
 	"database/sql"
 	"fmt"
@@ -22,6 +20,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	_ "github.com/mattn/go-oci8"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"

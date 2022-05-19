@@ -552,7 +552,7 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 	case reflect.Map, reflect.Struct:
 		var (
 			fields         []string
-			dataMap        = c.db.ConvertDataForRecord(ctx, data)
+			dataMap        map[string]interface{}
 			counterHandler = func(column string, counter Counter) {
 				if counter.Value != 0 {
 					column = c.QuoteWord(column)
@@ -570,7 +570,10 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 				}
 			}
 		)
-
+		dataMap, err = c.db.ConvertDataForRecord(ctx, data)
+		if err != nil {
+			return nil, err
+		}
 		for k, v := range dataMap {
 			switch value := v.(type) {
 			case *Counter:

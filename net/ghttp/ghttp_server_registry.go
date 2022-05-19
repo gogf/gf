@@ -22,7 +22,7 @@ func (s *Server) doServiceRegister() {
 	}
 	var (
 		ctx      = context.Background()
-		protocol = `http`
+		protocol = gsvc.DefaultProtocol
 		insecure = true
 		address  = s.config.Address
 	)

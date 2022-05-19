@@ -59,7 +59,6 @@ func (v *Validator) checkRange(ctx context.Context, value, ruleKey, ruleVal stri
 			msg = v.getErrorMessageByRule(ctx, ruleKey, customMsgMap)
 			msg = strings.Replace(msg, "{max}", strconv.FormatFloat(max, 'f', -1, 64), -1)
 		}
-
 	}
 	return msg
 }
