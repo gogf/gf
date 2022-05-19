@@ -95,12 +95,16 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 	}
 	dirty := gtype.NewBool()
 
+	// exclude dir
 	var reg *regexp.Regexp
 	excludeDirExpr := in.ExcludeDirExpr
+	excludeDirCount := 0
 	if len(excludeDirExpr) > 0 {
 		reg, err = regexp.Compile(excludeDirExpr)
 		if err != nil {
-			mlog.Printf("excludeDirExpr(%s) err: %v", excludeDirExpr, err)
+			mlog.Printf("excludeDirExpr[%s] err: %v", excludeDirExpr, err)
+		} else {
+			mlog.Printf("excludeDirExpr[%s]", excludeDirExpr)
 		}
 	}
 
@@ -122,13 +126,18 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 
 	for _, subPath := range fileAllDirs(gfile.RealPath(".")) {
 		if reg != nil && reg.MatchString(subPath) {
-			mlog.Printf("watcher exclude dir match: %s", subPath)
+			excludeDirCount++
+			mlog.Debugf("exclude dir: %s", subPath)
 			continue
 		}
 		_, err = gfsnotify.Add(subPath, callback, false)
 		if err != nil {
 			mlog.Fatal(err)
 		}
+	}
+
+	if reg != nil {
+		mlog.Printf("exclude dir count: %d", excludeDirCount)
 	}
 
 	go app.Run()
@@ -138,7 +147,7 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 func (app *cRunApp) Run() {
 	// Rebuild and run the codes.
 	renamePath := ""
-	mlog.Printf("build: %s", app.File)
+	mlog.Printf("build file: %s", app.File)
 	outputPath := gfile.Join(app.Path, gfile.Name(app.File))
 	if runtime.GOOS == "windows" {
 		outputPath += ".exe"
@@ -157,7 +166,7 @@ func (app *cRunApp) Run() {
 		app.Options,
 		app.File,
 	)
-	mlog.Print(buildCommand)
+	mlog.Printf("buildCommand: %s", buildCommand)
 	result, err := gproc.ShellExec(buildCommand)
 	if err != nil {
 		mlog.Printf("build error: \n%s%s", result, err.Error())
@@ -172,7 +181,7 @@ func (app *cRunApp) Run() {
 	}
 	// Run the binary file.
 	runCommand := fmt.Sprintf(`%s %s`, outputPath, app.Args)
-	mlog.Print(runCommand)
+	mlog.Printf("runCommand: %s", runCommand)
 	if runtime.GOOS == "windows" {
 		// Special handling for windows platform.
 		// DO NOT USE "cmd /c" command.
@@ -185,15 +194,6 @@ func (app *cRunApp) Run() {
 	} else {
 		mlog.Printf("build running pid: %d", pid)
 	}
-}
-
-// fileIsDir checks whether given `path` a directory.
-func fileIsDir(path string) bool {
-	s, err := os.Stat(path)
-	if err != nil {
-		return false
-	}
-	return s.IsDir()
 }
 
 // fileAllDirs returns all sub-folders including itself of given `path` recursively.
@@ -210,7 +210,8 @@ func fileAllDirs(path string) (list []string) {
 	}
 	for _, name := range names {
 		tempPath := fmt.Sprintf("%s%s%s", path, string(filepath.Separator), name)
-		if fileIsDir(tempPath) {
+
+		if gfile.IsDir(tempPath) {
 			if array := fileAllDirs(tempPath); len(array) > 0 {
 				list = append(list, array...)
 			}
