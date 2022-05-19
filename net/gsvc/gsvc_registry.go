@@ -20,6 +20,7 @@ func Register(ctx context.Context, service *Service) error {
 	}
 	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
 	defer cancel()
+
 	return defaultRegistry.Register(ctx, service)
 }
 
@@ -30,5 +31,6 @@ func Deregister(ctx context.Context, service *Service) error {
 	}
 	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
 	defer cancel()
+
 	return defaultRegistry.Deregister(ctx, service)
 }

@@ -19,7 +19,9 @@ import (
 )
 
 const (
-	separator = "/"
+	// DefaultSeparator is the default separator for the service name and method name.
+	DefaultSeparator  = "/"
+	endpointDelimiter = ","
 )
 
 // NewServiceWithName creates and returns service from `name`.
@@ -29,14 +31,16 @@ func NewServiceWithName(name string) (s *Service) {
 		Metadata: make(Metadata),
 	}
 	s.autoFillDefaultAttributes()
-	return s
+	return
 }
 
 // NewServiceWithKV creates and returns service from `key` and `value`.
 func NewServiceWithKV(key, value []byte) (s *Service, err error) {
-	array := gstr.Split(gstr.Trim(string(key), separator), separator)
+	array := gstr.Split(gstr.Trim(string(key), DefaultSeparator), DefaultSeparator)
 	if len(array) < 6 {
-		return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid service key "%s"`, key)
+		err = gerror.NewCodef(gcode.CodeInvalidParameter, `invalid service key "%s"`, key)
+
+		return
 	}
 	s = &Service{
 		Prefix:     array[0],
@@ -44,13 +48,15 @@ func NewServiceWithKV(key, value []byte) (s *Service, err error) {
 		Namespace:  array[2],
 		Name:       array[3],
 		Version:    array[4],
-		Endpoints:  gstr.Split(array[5], ","),
+		Endpoints:  gstr.Split(array[5], endpointDelimiter),
 		Metadata:   make(Metadata),
+		Separator:  DefaultSeparator,
 	}
 	s.autoFillDefaultAttributes()
 	if len(value) > 0 {
 		if err = gjson.Unmarshal(value, &s.Metadata); err != nil {
-			return nil, gerror.WrapCodef(gcode.CodeInvalidParameter, err, `invalid service value "%s"`, value)
+			err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `invalid service value "%s"`, value)
+			return nil, err
 		}
 	}
 	return s, nil
@@ -58,6 +64,10 @@ func NewServiceWithKV(key, value []byte) (s *Service, err error) {
 
 // Key formats the service information and returns the Service as registering key.
 func (s *Service) Key() string {
+	separator := DefaultSeparator
+	if s.Separator != "" {
+		separator = s.Separator
+	}
 	serviceNameUnique := s.KeyWithoutEndpoints()
 	serviceNameUnique += separator + gstr.Join(s.Endpoints, ",")
 	return serviceNameUnique
@@ -68,18 +78,20 @@ func (s *Service) KeyWithSchema() string {
 	return fmt.Sprintf(`%s://%s`, Schema, s.Key())
 }
 
-// KeyWithoutEndpoints formats the service information and returns a string as unique name of service.
+// KeyWithoutEndpoints formats the service information and returns a string as a unique name of service.
 func (s *Service) KeyWithoutEndpoints() string {
 	s.autoFillDefaultAttributes()
-	return "/" + gstr.Join([]string{
-		s.Prefix,
-		s.Deployment,
-		s.Namespace,
-		s.Name,
-		s.Version,
-	}, separator)
+	separator := DefaultSeparator
+	if s.Separator != "" {
+		separator = s.Separator
+	}
+	if separator != DefaultSeparator {
+		return gstr.Join([]string{s.Prefix, s.Deployment, s.Namespace, s.Name, s.Version}, separator)
+	}
+	return separator + gstr.Join([]string{s.Prefix, s.Deployment, s.Namespace, s.Name, s.Version}, separator)
 }
 
+// Value formats the service information and returns the Service as registering value.
 func (s *Service) Value() string {
 	b, err := gjson.Marshal(s.Metadata)
 	if err != nil {
