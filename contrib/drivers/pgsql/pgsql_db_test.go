@@ -280,7 +280,6 @@ func Test_DB_Tables(t *testing.T) {
 
 		for _, v := range tables {
 			createTable(v)
-
 		}
 
 		result, err := db.Tables(ctx)
