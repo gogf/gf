@@ -28,7 +28,7 @@ jobs:
     services:
       # Redis backend server.
       redis:
-        image  : redis
+        image  : loads/redis:latest
         options: >-
           --health-cmd      "redis-cli ping"
           --health-interval 10s
@@ -40,7 +40,7 @@ jobs:
 
       # MySQL backend server.
       mysql:
-        image: mysql:5.7
+        image: loads/mysql:5.7
         env:
           MYSQL_DATABASE     : test
           MYSQL_ROOT_PASSWORD: 12345678
@@ -50,7 +50,7 @@ jobs:
 
       # PostgreSQL backend server.
       postgres:
-        image: postgres:13
+        image: loads/postgres:13
         env:
           POSTGRES_PASSWORD: 12345678
           POSTGRES_USER:     root
@@ -67,7 +67,7 @@ jobs:
 
       # MSSQL backend server.
       mssql:
-        image: mcmoe/mssqldocker:latest
+        image: loads/mssqldocker:latest
         env:
           ACCEPT_EULA:    Y
           SA_PASSWORD:    LoremIpsum86
@@ -85,11 +85,12 @@ jobs:
 
       # ClickHouse backend server.
       clickhouse-server:
-        image: yandex/clickhouse-server
+        image: loads/clickhouse-server:latest
         ports:
           - 9000:9000
           - 8123:8123
           - 9001:9001
+
       polaris:
         image: huyuanxin/polaris-server-with-config:latest
         ports:
@@ -98,7 +99,7 @@ jobs:
 
       #oracle 11g server
       oracle-server:
-        image: wnameless/oracle-xe-11g-r2:latest
+        image: loads/oracle-xe-11g-r2:latest
         env:
           ORACLE_ALLOW_REMOTE: true
           ORACLE_SID: XE
