@@ -103,9 +103,11 @@ func Test_Package_Basic_HeaderSize1(t *testing.T) {
 	s := gtcp.NewServer(fmt.Sprintf(`:%d`, p), func(conn *gtcp.Conn) {
 		defer conn.Close()
 		for {
-			conn.RecvPkg(gtcp.PkgOption{HeaderSize: 1})
-			conn.Close()
-			break
+			data, err := conn.RecvPkg(gtcp.PkgOption{HeaderSize: 1})
+			if err != nil {
+				break
+			}
+			conn.SendPkg(data)
 		}
 	})
 	go s.Run()
@@ -117,10 +119,9 @@ func Test_Package_Basic_HeaderSize1(t *testing.T) {
 		conn, err := gtcp.NewConn(fmt.Sprintf("127.0.0.1:%d", p))
 		t.AssertNil(err)
 		defer conn.Close()
-		data := make([]byte, 1)
-		data[0] = byte(0)
+		data := make([]byte, 0)
 		result, err := conn.SendRecvPkg(data)
-		t.AssertNE(err, nil)
+		t.AssertNil(err)
 		t.AssertNil(result)
 	})
 }

@@ -50,7 +50,12 @@ func startTCPPkgServer(addr string) {
 }
 
 func startTCPTLSServer(addr string) {
-	tlsConfig := &tls.Config{}
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: true,
+		Certificates: []tls.Certificate{
+			tls.Certificate{},
+		},
+	}
 	s := gtcp.NewServerTLS(addr, tlsConfig, func(conn *gtcp.Conn) {
 		data := []byte("gtcp tls Server received")
 		conn.Send(data)
@@ -150,7 +155,12 @@ func TestNewConnTLS(t *testing.T) {
 
 		time.Sleep(simpleTimeout)
 
-		conn, err := gtcp.NewConnTLS(addr, &tls.Config{})
+		conn, err := gtcp.NewConnTLS(addr, &tls.Config{
+			InsecureSkipVerify: true,
+			Certificates: []tls.Certificate{
+				tls.Certificate{},
+			},
+		})
 		t.AssertNil(conn)
 		t.AssertNE(err, nil)
 	})
@@ -397,7 +407,7 @@ func TestSendWithTimeout(t *testing.T) {
 	time.Sleep(simpleTimeout)
 
 	gtest.C(t, func(t *gtest.T) {
-		err := gtcp.SendWithTimeout("127.0.0.1:80", []byte("hello"), time.Millisecond*500)
+		err := gtcp.SendWithTimeout("127.0.0.1:99999", []byte("hello"), time.Millisecond*500)
 		t.AssertNE(err, nil)
 		err = gtcp.SendWithTimeout(addr, []byte("hello"), time.Millisecond*500)
 		t.AssertNil(err)
@@ -412,7 +422,7 @@ func TestSendRecvWithTimeout(t *testing.T) {
 	time.Sleep(simpleTimeout)
 
 	gtest.C(t, func(t *gtest.T) {
-		recv, err := gtcp.SendRecvWithTimeout("127.0.0.1:80", []byte("hello"), -1, time.Millisecond*500)
+		recv, err := gtcp.SendRecvWithTimeout("127.0.0.1:99999", []byte("hello"), -1, time.Millisecond*500)
 		t.AssertNil(recv)
 		t.AssertNE(err, nil)
 		recv, err = gtcp.SendRecvWithTimeout(addr, []byte("hello"), -1, time.Millisecond*500)
@@ -431,7 +441,7 @@ func TestSendPkg(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err := gtcp.SendPkg(addr, []byte("hello"))
 		t.AssertNil(err)
-		err = gtcp.SendPkg("127.0.0.1:80", []byte("hello"))
+		err = gtcp.SendPkg("127.0.0.1:99999", []byte("hello"))
 		t.AssertNE(err, nil)
 	})
 }
