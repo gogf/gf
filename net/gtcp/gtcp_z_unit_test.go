@@ -431,4 +431,79 @@ func TestSendPkg(t *testing.T) {
 		err = gtcp.SendPkg("127.0.0.1:99999", sendData)
 		t.AssertNE(err, nil)
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		err := gtcp.SendPkg(addr, sendData)
+		t.AssertNil(err)
+		err = gtcp.SendPkg(addr, sendData)
+		t.AssertNil(err)
+	})
+}
+
+func TestSendRecvPkg(t *testing.T) {
+	addr := getFreePortAddr()
+
+	startTCPPkgServer(addr)
+
+	time.Sleep(simpleTimeout)
+
+	gtest.C(t, func(t *gtest.T) {
+		err := gtcp.SendPkg(addr, sendData)
+		t.AssertNil(err)
+		_, err = gtcp.SendRecvPkg("127.0.0.1:99999", sendData)
+		t.AssertNE(err, nil)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		err := gtcp.SendPkg(addr, sendData)
+		t.AssertNil(err)
+		recv, err := gtcp.SendRecvPkg(addr, sendData)
+		t.AssertNil(err)
+		t.Assert(recv, sendData)
+	})
+}
+
+func TestSendPkgWithTimeout(t *testing.T) {
+	addr := getFreePortAddr()
+
+	startTCPPkgServer(addr)
+
+	time.Sleep(simpleTimeout)
+
+	gtest.C(t, func(t *gtest.T) {
+		err := gtcp.SendPkg(addr, sendData)
+		t.AssertNil(err)
+		err = gtcp.SendPkgWithTimeout("127.0.0.1:99999", sendData, time.Second)
+		t.AssertNE(err, nil)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		err := gtcp.SendPkg(addr, sendData)
+		t.AssertNil(err)
+		err = gtcp.SendPkgWithTimeout(addr, sendData, time.Second)
+		t.AssertNil(err)
+	})
+}
+
+func TestSendRecvPkgWithTimeout(t *testing.T) {
+	addr := getFreePortAddr()
+
+	startTCPPkgServer(addr)
+
+	time.Sleep(simpleTimeout)
+
+	gtest.C(t, func(t *gtest.T) {
+		err := gtcp.SendPkg(addr, sendData)
+		t.AssertNil(err)
+		_, err = gtcp.SendRecvPkgWithTimeout("127.0.0.1:99999", sendData, time.Second)
+		t.AssertNE(err, nil)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		err := gtcp.SendPkg(addr, sendData)
+		t.AssertNil(err)
+		recv, err := gtcp.SendRecvPkgWithTimeout(addr, sendData, time.Second)
+		t.AssertNil(err)
+		t.Assert(recv, sendData)
+	})
 }
