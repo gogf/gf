@@ -18,8 +18,6 @@ import (
 	"fmt"
 	gora "github.com/sijms/go-ora/v2"
 
-	_ "github.com/mattn/go-oci8"
-
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
