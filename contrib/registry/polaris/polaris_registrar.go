@@ -113,9 +113,7 @@ func (r *Registry) Deregister(ctx context.Context, service gsvc.Service) error {
 	return nil
 }
 
-func (r *Registry) doHeartBeat(
-	ctx context.Context, instanceID string, service gsvc.Service, endpoint gsvc.Endpoint,
-) {
+func (r *Registry) doHeartBeat(ctx context.Context, instanceID string, service gsvc.Service, endpoint gsvc.Endpoint) {
 	go func() {
 		ticker := time.NewTicker(time.Second * time.Duration(r.opt.TTL))
 		defer ticker.Stop()
