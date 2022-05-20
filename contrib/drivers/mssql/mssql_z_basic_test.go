@@ -66,7 +66,7 @@ func TestTableFields(t *testing.T) {
 		var expect = map[string][]interface{}{
 			"ID":          {"numeric(10,0)", false, "PRI", "", "", ""},
 			"PASSPORT":    {"varchar(45)", true, "", "", "", ""},
-			"PASSWORD":    {"char(32)", true, "", "", "", ""},
+			"PASSWORD":    {"varchar(32)", true, "", "", "", ""},
 			"NICKNAME":    {"varchar(45)", true, "", "", "", ""},
 			"CREATE_TIME": {"datetime", true, "", "", "", ""},
 		}
