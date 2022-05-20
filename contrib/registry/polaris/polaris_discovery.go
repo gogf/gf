@@ -16,7 +16,7 @@ import (
 )
 
 // Search returns the service instances in memory according to the service name.
-func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]*gsvc.Service, error) {
+func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]gsvc.Service, error) {
 	in.Separator = instanceIDSeparator
 	// get all instances
 	instancesResponse, err := r.consumer.GetAllInstances(&polaris.GetAllInstancesRequest{

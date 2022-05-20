@@ -14,7 +14,7 @@ import (
 )
 
 // Register registers `service` to default registry..
-func Register(ctx context.Context, service *Service) error {
+func Register(ctx context.Context, service Service) error {
 	if defaultRegistry == nil {
 		return gerror.NewCodef(gcode.CodeNotImplemented, `no Registry is registered`)
 	}
@@ -25,7 +25,7 @@ func Register(ctx context.Context, service *Service) error {
 }
 
 // Deregister removes `service` from default registry.
-func Deregister(ctx context.Context, service *Service) error {
+func Deregister(ctx context.Context, service Service) error {
 	if defaultRegistry == nil {
 		return gerror.NewCodef(gcode.CodeNotImplemented, `no Registry is registered`)
 	}

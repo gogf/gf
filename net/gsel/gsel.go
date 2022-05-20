@@ -29,7 +29,7 @@ type Selector interface {
 
 // Node is node interface.
 type Node interface {
-	Service() *gsvc.Service
+	Service() gsvc.Service
 	Address() string
 }
 

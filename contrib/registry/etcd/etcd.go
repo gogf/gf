@@ -8,6 +8,7 @@
 package etcd
 
 import (
+	"reflect"
 	"time"
 
 	etcd3 "go.etcd.io/etcd/client/v3"
@@ -79,26 +80,34 @@ func NewWithClient(client *etcd3.Client, option ...Option) *Registry {
 }
 
 // extractResponseToServices extracts etcd watch response context to service list.
-func extractResponseToServices(res *etcd3.GetResponse) ([]*gsvc.Service, error) {
+func extractResponseToServices(res *etcd3.GetResponse) ([]gsvc.Service, error) {
 	if res == nil || res.Kvs == nil {
 		return nil, nil
 	}
 	var (
-		services   []*gsvc.Service
+		services   []gsvc.Service
 		serviceKey string
-		serviceMap = make(map[string]*gsvc.Service)
+		serviceMap = make(map[string]*gsvc.LocalService)
 	)
 	for _, kv := range res.Kvs {
 		service, err := gsvc.NewServiceWithKV(kv.Key, kv.Value)
 		if err != nil {
 			return services, err
 		}
-		if service != nil {
-			serviceKey = service.KeyWithoutEndpoints()
-			if s, ok := serviceMap[serviceKey]; ok {
-				s.Endpoints = append(s.Endpoints, service.Endpoints...)
+		localService, ok := service.(*gsvc.LocalService)
+		if !ok {
+			return nil, gerror.Newf(
+				`service from "gsvc.NewServiceWithKV" is not "*gsvc.LocalService", but "%s"`,
+				reflect.TypeOf(service),
+			)
+		}
+		if localService != nil {
+			serviceKey = localService.GetPrefix()
+			var localServiceInMap *gsvc.LocalService
+			if localServiceInMap, ok = serviceMap[serviceKey]; ok {
+				localServiceInMap.Endpoints = append(localServiceInMap.Endpoints, localService.Endpoints...)
 			} else {
-				serviceMap[serviceKey] = service
+				serviceMap[serviceKey] = localService
 				services = append(services, service)
 			}
 		}

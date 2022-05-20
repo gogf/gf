@@ -20,7 +20,7 @@ import (
 )
 
 // Register the registration.
-func (r *Registry) Register(ctx context.Context, serviceInstance *gsvc.Service) error {
+func (r *Registry) Register(ctx context.Context, serviceInstance gsvc.Service) error {
 	ids := make([]string, 0, len(serviceInstance.Endpoints))
 	// set separator
 	serviceInstance.Separator = instanceIDSeparator
@@ -114,7 +114,7 @@ func (r *Registry) Register(ctx context.Context, serviceInstance *gsvc.Service) 
 }
 
 // Deregister the registration.
-func (r *Registry) Deregister(ctx context.Context, serviceInstance *gsvc.Service) error {
+func (r *Registry) Deregister(ctx context.Context, serviceInstance gsvc.Service) error {
 	r.c <- struct{}{}
 	split := gstr.Split(serviceInstance.ID, instanceIDSeparator)
 	serviceInstance.Separator = instanceIDSeparator

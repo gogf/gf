@@ -15,8 +15,8 @@ import (
 )
 
 // Search is the etcd discovery search function.
-func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]*gsvc.Service, error) {
-	res, err := r.kv.Get(ctx, in.Key(), etcd3.WithPrefix())
+func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]gsvc.Service, error) {
+	res, err := r.kv.Get(ctx, in.Prefix, etcd3.WithPrefix())
 	if err != nil {
 		return nil, err
 	}
@@ -25,18 +25,12 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]*gsvc.Ser
 		return nil, err
 	}
 	// Service filter.
-	filteredServices := make([]*gsvc.Service, 0)
+	filteredServices := make([]gsvc.Service, 0)
 	for _, v := range services {
-		if in.Deployment != "" && in.Deployment != v.Deployment {
+		if in.Name != "" && in.Name != v.GetName() {
 			continue
 		}
-		if in.Namespace != "" && in.Namespace != v.Namespace {
-			continue
-		}
-		if in.Name != "" && in.Name != v.Name {
-			continue
-		}
-		if in.Version != "" && in.Version != v.Version {
+		if in.Version != "" && in.Version != v.GetVersion() {
 			continue
 		}
 		service := v

@@ -22,7 +22,7 @@ type Watcher struct {
 	Ctx              context.Context
 	Cancel           context.CancelFunc
 	Channel          <-chan model.SubScribeEvent
-	ServiceInstances []*gsvc.Service
+	ServiceInstances []gsvc.Service
 }
 
 func newWatcher(ctx context.Context, namespace string, serviceName string, consumer polaris.ConsumerAPI) (*Watcher, error) {
@@ -52,7 +52,7 @@ func newWatcher(ctx context.Context, namespace string, serviceName string, consu
 // 1.the first time to watch and the service instance list is not empty.
 // 2.any service instance changes found.
 // if the above two conditions are not met, it will block until the context deadline is exceeded or canceled
-func (w *Watcher) Proceed() ([]*gsvc.Service, error) {
+func (w *Watcher) Proceed() ([]gsvc.Service, error) {
 	select {
 	case <-w.Ctx.Done():
 		return nil, w.Ctx.Err()

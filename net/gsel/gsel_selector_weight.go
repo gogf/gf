@@ -51,5 +51,5 @@ func (s *selectorWeight) Pick(ctx context.Context) (node Node, done DoneFunc, er
 }
 
 func (s *selectorWeight) getWeight(node Node) int {
-	return node.Service().Metadata.Get(gsvc.MDWeight).Int()
+	return node.Service().GetMetadata().Get(gsvc.MDWeight).Int()
 }

@@ -170,8 +170,8 @@ func NewWithConfig(conf config.Configuration, opts ...Option) (r *Registry) {
 	return New(provider, consumer, opts...)
 }
 
-func instancesToServiceInstances(instances []model.Instance) []*gsvc.Service {
-	serviceInstances := make([]*gsvc.Service, 0, len(instances))
+func instancesToServiceInstances(instances []model.Instance) []gsvc.Service {
+	serviceInstances := make([]gsvc.Service, 0, len(instances))
 	for _, instance := range instances {
 		if instance.IsHealthy() {
 			serviceInstances = append(serviceInstances, instanceToServiceInstance(instance))
@@ -180,7 +180,7 @@ func instancesToServiceInstances(instances []model.Instance) []*gsvc.Service {
 	return serviceInstances
 }
 
-func instanceToServiceInstance(instance model.Instance) *gsvc.Service {
+func instanceToServiceInstance(instance model.Instance) gsvc.Service {
 	metadata := instance.GetMetadata()
 	names := strings.Split(instance.GetService(), instanceIDSeparator)
 	if names != nil && len(names) > 4 {

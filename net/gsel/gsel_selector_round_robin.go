@@ -9,6 +9,9 @@ package gsel
 import (
 	"context"
 	"sync"
+
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/internal/intlog"
 )
 
 const SelectorRoundRobin = "BalancerRoundRobin"
@@ -26,6 +29,7 @@ func NewSelectorRoundRobin() Selector {
 }
 
 func (s *selectorRoundRobin) Update(nodes []Node) error {
+	intlog.Printf(context.Background(), `Update nodes: %s`, gjson.MustEncode(nodes))
 	s.mu.Lock()
 	s.nodes = nodes
 	s.mu.Unlock()
@@ -37,5 +41,6 @@ func (s *selectorRoundRobin) Pick(ctx context.Context) (node Node, done DoneFunc
 	defer s.mu.RUnlock()
 	node = s.nodes[s.next]
 	s.next = (s.next + 1) % len(s.nodes)
+	intlog.Printf(ctx, `Pick node: %s`, node.Address())
 	return
 }
