@@ -53,7 +53,7 @@ func internalMiddlewareDiscovery(c *Client, r *http.Request) (response *Response
 	service, err = gsvc.GetAndWatch(ctx, r.URL.Host, func(service gsvc.Service) {
 		intlog.Printf(ctx, `http client watching service "%s" changed`, service.GetPrefix())
 		if v := clientSelectorMap.Get(service.GetPrefix()); v != nil {
-			if err = updateSelectorNodesByService(v.(gsel.Selector), service); err != nil {
+			if err = updateSelectorNodesByService(ctx, v.(gsel.Selector), service); err != nil {
 				intlog.Errorf(context.Background(), `%+v`, err)
 			}
 		}
@@ -71,7 +71,7 @@ func internalMiddlewareDiscovery(c *Client, r *http.Request) (response *Response
 		return gsel.GetBuilder().Build()
 	}).(gsel.Selector)
 	// Update selector nodes.
-	if err = updateSelectorNodesByService(selector, service); err != nil {
+	if err = updateSelectorNodesByService(ctx, selector, service); err != nil {
 		return nil, err
 	}
 	// Pick one node from multiple addresses.
@@ -87,13 +87,13 @@ func internalMiddlewareDiscovery(c *Client, r *http.Request) (response *Response
 	return c.Next(r)
 }
 
-func updateSelectorNodesByService(selector gsel.Selector, service gsvc.Service) error {
-	nodes := make([]gsel.Node, 0)
+func updateSelectorNodesByService(ctx context.Context, selector gsel.Selector, service gsvc.Service) error {
+	nodes := make(gsel.Nodes, 0)
 	for _, endpoint := range service.GetEndpoints() {
 		nodes = append(nodes, &discoveryNode{
 			service: service,
 			address: endpoint.String(),
 		})
 	}
-	return selector.Update(nodes)
+	return selector.Update(ctx, nodes)
 }

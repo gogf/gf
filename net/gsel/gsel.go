@@ -24,7 +24,7 @@ type Selector interface {
 	Pick(ctx context.Context) (node Node, done DoneFunc, err error)
 
 	// Update updates services into Selector.
-	Update(nodes []Node) error
+	Update(ctx context.Context, nodes Nodes) error
 }
 
 // Node is node interface.
@@ -32,6 +32,9 @@ type Node interface {
 	Service() gsvc.Service
 	Address() string
 }
+
+// Nodes contains multiple Node.
+type Nodes []Node
 
 // DoneFunc is callback function when RPC invoke done.
 type DoneFunc func(ctx context.Context, di DoneInfo)
@@ -82,4 +85,16 @@ type DoneInfoMD interface {
 	// Delete removes the values for a given key k which is converted to lowercase
 	// before removing it from md.
 	Delete(k string)
+}
+
+// String formats and returns Nodes as string.
+func (ns Nodes) String() string {
+	var s string
+	for _, node := range ns {
+		if s != "" {
+			s += ","
+		}
+		s += node.Address()
+	}
+	return s
 }

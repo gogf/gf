@@ -10,6 +10,7 @@ import (
 	"context"
 	"sync"
 
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/util/grand"
 )
@@ -18,16 +19,17 @@ const SelectorWeight = "BalancerWeight"
 
 type selectorWeight struct {
 	mu    sync.RWMutex
-	nodes []Node
+	nodes Nodes
 }
 
 func NewSelectorWeight() Selector {
 	return &selectorWeight{
-		nodes: make([]Node, 0),
+		nodes: make(Nodes, 0),
 	}
 }
 
-func (s *selectorWeight) Update(nodes []Node) error {
+func (s *selectorWeight) Update(ctx context.Context, nodes Nodes) error {
+	intlog.Printf(ctx, `Update nodes: %s`, nodes.String())
 	var newNodes []Node
 	for _, v := range nodes {
 		node := v
@@ -47,7 +49,9 @@ func (s *selectorWeight) Pick(ctx context.Context) (node Node, done DoneFunc, er
 	if len(s.nodes) == 0 {
 		return nil, nil, nil
 	}
-	return s.nodes[grand.Intn(len(s.nodes))], nil, nil
+	node = s.nodes[grand.Intn(len(s.nodes))]
+	intlog.Printf(ctx, `Picked node: %s`, node.Address())
+	return node, nil, nil
 }
 
 func (s *selectorWeight) getWeight(node Node) int {

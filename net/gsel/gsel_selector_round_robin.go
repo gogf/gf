@@ -10,7 +10,6 @@ import (
 	"context"
 	"sync"
 
-	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/internal/intlog"
 )
 
@@ -18,18 +17,18 @@ const SelectorRoundRobin = "BalancerRoundRobin"
 
 type selectorRoundRobin struct {
 	mu    sync.RWMutex
-	nodes []Node
+	nodes Nodes
 	next  int
 }
 
 func NewSelectorRoundRobin() Selector {
 	return &selectorRoundRobin{
-		nodes: make([]Node, 0),
+		nodes: make(Nodes, 0),
 	}
 }
 
-func (s *selectorRoundRobin) Update(nodes []Node) error {
-	intlog.Printf(context.Background(), `Update nodes: %s`, gjson.MustEncode(nodes))
+func (s *selectorRoundRobin) Update(ctx context.Context, nodes Nodes) error {
+	intlog.Printf(ctx, `Update nodes: %s`, nodes.String())
 	s.mu.Lock()
 	s.nodes = nodes
 	s.mu.Unlock()
@@ -41,6 +40,6 @@ func (s *selectorRoundRobin) Pick(ctx context.Context) (node Node, done DoneFunc
 	defer s.mu.RUnlock()
 	node = s.nodes[s.next]
 	s.next = (s.next + 1) % len(s.nodes)
-	intlog.Printf(ctx, `Pick node: %s`, node.Address())
+	intlog.Printf(ctx, `Picked node: %s`, node.Address())
 	return
 }
