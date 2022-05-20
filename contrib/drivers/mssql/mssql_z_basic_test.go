@@ -65,10 +65,10 @@ func TestTableFields(t *testing.T) {
 		defer dropTable("t_user")
 		var expect = map[string][]interface{}{
 			"ID":          {"numeric(10,0)", false, "PRI", "", "", ""},
-			"PASSPORT":    {"varchar(45)", false, "", "", "", ""},
-			"PASSWORD":    {"char(32)", false, "", "", "", ""},
-			"NICKNAME":    {"varchar(45)", false, "", "", "", ""},
-			"CREATE_TIME": {"datetime", false, "", "", "", ""},
+			"PASSPORT":    {"varchar(45)", true, "", "", "", ""},
+			"PASSWORD":    {"char(32)", true, "", "", "", ""},
+			"NICKNAME":    {"varchar(45)", true, "", "", "", ""},
+			"CREATE_TIME": {"datetime", true, "", "", "", ""},
 		}
 
 		res, err := db.TableFields(context.Background(), "t_user")
