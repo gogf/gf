@@ -3,9 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
-	"regexp"
 	"runtime"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
@@ -16,6 +13,7 @@ import (
 	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/os/gtimer"
+	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gtag"
 )
@@ -95,18 +93,39 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 	}
 	dirty := gtype.NewBool()
 
+	currentPath := gfile.RealPath(".")
+
 	// exclude dir
-	var reg *regexp.Regexp
+	hasReg := false
 	excludeDirExpr := in.ExcludeDirExpr
 	excludeDirCount := 0
 	if len(excludeDirExpr) > 0 {
-		reg, err = regexp.Compile(excludeDirExpr)
+		err := gregex.Validate(excludeDirExpr)
 		if err != nil {
-			mlog.Printf("excludeDirExpr[%s] err: %v", excludeDirExpr, err)
+			mlog.Printf("exclude directory expression[%s] err: %v", excludeDirExpr, err)
 		} else {
-			mlog.Printf("excludeDirExpr[%s]", excludeDirExpr)
+			mlog.Printf("exclude directory expression[%s]", excludeDirExpr)
+			hasReg = true
 		}
 	}
+
+	listDir, err := gfile.ScanDirFunc(currentPath, "*", true, func(path string) string {
+		if gfile.IsDir(path) {
+			if hasReg && gregex.IsMatchString(excludeDirExpr, path) {
+				excludeDirCount++
+				mlog.Debugf("exclude directory path: %s", path)
+				return ""
+			}
+			return path
+		}
+		return ""
+	})
+
+	if hasReg {
+		mlog.Printf("exclude directory count: %d \n", excludeDirCount)
+	}
+
+	listDir = append(listDir, currentPath)
 
 	callback := func(event *gfsnotify.Event) {
 		if gfile.ExtName(event.Path) != "go" {
@@ -124,20 +143,12 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 		})
 	}
 
-	for _, subPath := range fileAllDirs(gfile.RealPath(".")) {
-		if reg != nil && reg.MatchString(subPath) {
-			excludeDirCount++
-			mlog.Debugf("exclude dir: %s", subPath)
-			continue
-		}
+	for _, subPath := range listDir {
+		mlog.Debugf("watch directory: %v", subPath)
 		_, err = gfsnotify.Add(subPath, callback, false)
 		if err != nil {
 			mlog.Fatal(err)
 		}
-	}
-
-	if reg != nil {
-		mlog.Printf("exclude dir count: %d", excludeDirCount)
 	}
 
 	go app.Run()
@@ -194,28 +205,4 @@ func (app *cRunApp) Run() {
 	} else {
 		mlog.Printf("build running pid: %d", pid)
 	}
-}
-
-// fileAllDirs returns all sub-folders including itself of given `path` recursively.
-func fileAllDirs(path string) (list []string) {
-	list = []string{path}
-	file, err := os.Open(path)
-	if err != nil {
-		return list
-	}
-	defer file.Close()
-	names, err := file.Readdirnames(-1)
-	if err != nil {
-		return list
-	}
-	for _, name := range names {
-		tempPath := fmt.Sprintf("%s%s%s", path, string(filepath.Separator), name)
-
-		if gfile.IsDir(tempPath) {
-			if array := fileAllDirs(tempPath); len(array) > 0 {
-				list = append(list, array...)
-			}
-		}
-	}
-	return
 }
