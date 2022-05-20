@@ -84,6 +84,11 @@ func (s *Server) SetAddress(address string) {
 	s.address = address
 }
 
+// GetAddress get the listening address for server.
+func (s *Server) GetAddress() string {
+	return s.address
+}
+
 // SetHandler sets the connection handler for server.
 func (s *Server) SetHandler(handler func(*Conn)) {
 	s.handler = handler

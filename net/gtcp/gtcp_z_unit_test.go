@@ -507,3 +507,153 @@ func TestSendRecvPkgWithTimeout(t *testing.T) {
 		t.Assert(recv, sendData)
 	})
 }
+
+func TestNewServer(t *testing.T) {
+	addr := getFreePortAddr()
+
+	gtest.C(t, func(t *gtest.T) {
+		s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
+			defer conn.Close()
+			for {
+				data, err := conn.Recv(-1)
+				if err != nil {
+					break
+				}
+				conn.Send(data)
+			}
+		}, "NewServer")
+		defer s.Close()
+		go s.Run()
+		t.AssertNE(s, nil)
+
+		time.Sleep(simpleTimeout)
+
+		recv, err := gtcp.SendRecv(addr, sendData, -1)
+		t.AssertNil(err)
+		t.Assert(recv, sendData)
+	})
+}
+
+func TestGetServer(t *testing.T) {
+	addr := getFreePortAddr()
+
+	gtest.C(t, func(t *gtest.T) {
+		s := gtcp.GetServer("GetServer")
+		defer s.Close()
+		go s.Run()
+
+		t.AssertNE(s, nil)
+		t.Assert(s.GetAddress(), "")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		gtcp.NewServer(addr, func(conn *gtcp.Conn) {
+			defer conn.Close()
+			for {
+				data, err := conn.Recv(-1)
+				if err != nil {
+					break
+				}
+				conn.Send(data)
+			}
+		}, "NewServer")
+
+		s := gtcp.GetServer("NewServer")
+		defer s.Close()
+		t.AssertNE(s, nil)
+		go s.Run()
+
+		time.Sleep(simpleTimeout)
+
+		recv, err := gtcp.SendRecv(addr, sendData, -1)
+		t.AssertNil(err)
+		t.Assert(recv, sendData)
+	})
+}
+
+func TestServer_SetAddress(t *testing.T) {
+	addr := getFreePortAddr()
+
+	gtest.C(t, func(t *gtest.T) {
+		s := gtcp.NewServer("", func(conn *gtcp.Conn) {
+			defer conn.Close()
+			for {
+				data, err := conn.Recv(-1)
+				if err != nil {
+					break
+				}
+				conn.Send(data)
+			}
+		})
+		defer s.Close()
+		t.Assert(s.GetAddress(), "")
+		s.SetAddress(addr)
+		go s.Run()
+
+		time.Sleep(simpleTimeout)
+
+		recv, err := gtcp.SendRecv(addr, sendData, -1)
+		t.AssertNil(err)
+		t.Assert(recv, sendData)
+	})
+}
+
+func TestServer_SetHandler(t *testing.T) {
+	addr := getFreePortAddr()
+
+	gtest.C(t, func(t *gtest.T) {
+		s := gtcp.NewServer(addr, nil)
+		defer s.Close()
+		s.SetHandler(func(conn *gtcp.Conn) {
+			defer conn.Close()
+			for {
+				data, err := conn.Recv(-1)
+				if err != nil {
+					break
+				}
+				conn.Send(data)
+			}
+		})
+		go s.Run()
+
+		time.Sleep(simpleTimeout)
+
+		recv, err := gtcp.SendRecv(addr, sendData, -1)
+		t.AssertNil(err)
+		t.Assert(recv, sendData)
+	})
+}
+
+func TestServer_Run(t *testing.T) {
+	addr := getFreePortAddr()
+
+	gtest.C(t, func(t *gtest.T) {
+		s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
+			defer conn.Close()
+			for {
+				data, err := conn.Recv(-1)
+				if err != nil {
+					break
+				}
+				conn.Send(data)
+			}
+		})
+		defer s.Close()
+		go s.Run()
+
+		time.Sleep(simpleTimeout)
+
+		recv, err := gtcp.SendRecv(addr, sendData, -1)
+		t.AssertNil(err)
+		t.Assert(recv, sendData)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		s := gtcp.NewServer(addr, nil)
+		defer s.Close()
+		go func() {
+			err := s.Run()
+			t.AssertNE(err, nil)
+		}()
+	})
+}
