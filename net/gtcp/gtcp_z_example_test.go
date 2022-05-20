@@ -29,33 +29,6 @@ func ExampleGetFreePorts() {
 	// [57743 57744] <nil>
 }
 
-func ExampleSendPkg() {
-	addr := "127.0.0.1:%d"
-	freePort, _ := gtcp.GetFreePort()
-	addr = fmt.Sprintf(addr, freePort)
-
-	s := gtcp.NewServer(addr, func(conn *gtcp.Conn) {
-	})
-	defer s.Close()
-	go s.Run()
-
-	time.Sleep(time.Millisecond * 500)
-
-	err := gtcp.SendPkg("127.0.0.1:80", []byte("hello"))
-	fmt.Println(err != nil)
-
-	err = gtcp.SendPkg(addr, []byte("hello"))
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	fmt.Println(err == nil)
-
-	// Output:
-	// true
-	// true
-}
-
 func ExampleSendRecvPkg() {
 	addr := "127.0.0.1:%d"
 	freePort, _ := gtcp.GetFreePort()
