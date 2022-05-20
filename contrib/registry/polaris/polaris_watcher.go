@@ -25,7 +25,9 @@ type Watcher struct {
 	ServiceInstances []gsvc.Service
 }
 
-func newWatcher(ctx context.Context, namespace string, serviceName string, consumer polaris.ConsumerAPI) (*Watcher, error) {
+func newWatcher(
+	ctx context.Context, namespace string, serviceName string, consumer polaris.ConsumerAPI,
+) (*Watcher, error) {
 	watchServiceResponse, err := consumer.WatchService(&polaris.WatchServiceRequest{
 		WatchServiceRequest: model.WatchServiceRequest{
 			Key: model.ServiceKey{
@@ -67,7 +69,7 @@ func (w *Watcher) Proceed() ([]gsvc.Service, error) {
 			if instanceEvent.DeleteEvent != nil {
 				for _, instance := range instanceEvent.DeleteEvent.Instances {
 					for i, serviceInstance := range w.ServiceInstances {
-						if serviceInstance.ID == instance.GetId() {
+						if serviceInstance.(*Service).ID == instance.GetId() {
 							// remove equal
 							if len(w.ServiceInstances) <= 1 {
 								w.ServiceInstances = w.ServiceInstances[0:0]
@@ -82,7 +84,7 @@ func (w *Watcher) Proceed() ([]gsvc.Service, error) {
 			if instanceEvent.UpdateEvent != nil {
 				for i, serviceInstance := range w.ServiceInstances {
 					for _, update := range instanceEvent.UpdateEvent.UpdateList {
-						if serviceInstance.ID == update.Before.GetId() {
+						if serviceInstance.(*Service).ID == update.Before.GetId() {
 							w.ServiceInstances[i] = instanceToServiceInstance(update.After)
 						}
 					}
@@ -90,7 +92,10 @@ func (w *Watcher) Proceed() ([]gsvc.Service, error) {
 			}
 			// handle AddEvent
 			if instanceEvent.AddEvent != nil {
-				w.ServiceInstances = append(w.ServiceInstances, instancesToServiceInstances(instanceEvent.AddEvent.Instances)...)
+				w.ServiceInstances = append(
+					w.ServiceInstances,
+					instancesToServiceInstances(instanceEvent.AddEvent.Instances)...,
+				)
 			}
 		}
 	}

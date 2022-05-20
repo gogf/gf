@@ -16,6 +16,9 @@ import (
 
 // Search is the etcd discovery search function.
 func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]gsvc.Service, error) {
+	if in.Prefix == "" && in.Name != "" {
+		in.Prefix = gsvc.NewServiceWithName(in.Name).GetPrefix()
+	}
 	res, err := r.kv.Get(ctx, in.Prefix, etcd3.WithPrefix())
 	if err != nil {
 		return nil, err

@@ -18,11 +18,11 @@ import (
 
 // LocalEndpoint implements interface Endpoint.
 type LocalEndpoint struct {
-	ip   string // ip can be either IPv4 or IPv6 address.
+	host string // host can be either IPv4 or IPv6 address.
 	port int    // port is port as commonly known.
 }
 
-// NewEndpoint creates and returns an Endpoint from address string of pattern "ip:port",
+// NewEndpoint creates and returns an Endpoint from address string of pattern "host:port",
 // eg: "192.168.1.100:80".
 func NewEndpoint(address string) Endpoint {
 	array := gstr.SplitAndTrim(address, endpointIpPortDelimiter)
@@ -34,14 +34,14 @@ func NewEndpoint(address string) Endpoint {
 		))
 	}
 	return &LocalEndpoint{
-		ip:   array[0],
+		host: array[0],
 		port: gconv.Int(array[1]),
 	}
 }
 
-// IP returns the IPv4/IPv6 address of a service.
-func (e *LocalEndpoint) IP() string {
-	return e.ip
+// Host returns the IPv4/IPv6 address of a service.
+func (e *LocalEndpoint) Host() string {
+	return e.host
 }
 
 // Port returns the port of a service.
@@ -51,5 +51,5 @@ func (e *LocalEndpoint) Port() int {
 
 // String formats and returns the Endpoint as a string, like: 192.168.1.100:80.
 func (e *LocalEndpoint) String() string {
-	return fmt.Sprintf(`%s:%d`, e.ip, e.port)
+	return fmt.Sprintf(`%s:%d`, e.host, e.port)
 }

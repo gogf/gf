@@ -29,3 +29,8 @@ func (m Metadata) Get(key string) *gvar.Var {
 	}
 	return nil
 }
+
+// IsEmpty checks and returns whether current Metadata is empty.
+func (m Metadata) IsEmpty() bool {
+	return len(m) == 0
+}

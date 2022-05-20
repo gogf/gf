@@ -30,12 +30,11 @@ func TestRegistry(t *testing.T) {
 
 	ctx := context.Background()
 
-	svc := &gsvc.Service{
+	svc := &gsvc.LocalService{
 		Name:      "goframe-provider-0-tcp",
 		Version:   "test",
 		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
-		Endpoints: []string{"127.0.0.1:9000"},
-		Separator: instanceIDSeparator,
+		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
 	}
 
 	err := r.Register(ctx, svc)
@@ -59,26 +58,23 @@ func TestRegistryMany(t *testing.T) {
 		WithTTL(100),
 	)
 
-	svc := &gsvc.Service{
+	svc := &gsvc.LocalService{
 		Name:      "goframe-provider-1-tcp",
 		Version:   "test",
 		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
-		Endpoints: []string{"127.0.0.1:9000"},
-		Separator: instanceIDSeparator,
+		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
 	}
-	svc1 := &gsvc.Service{
+	svc1 := &gsvc.LocalService{
 		Name:      "goframe-provider-2-tcp",
 		Version:   "test",
 		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
-		Endpoints: []string{"127.0.0.1:9001"},
-		Separator: instanceIDSeparator,
+		Endpoints: gsvc.NewEndpoints("127.0.0.1:9001"),
 	}
-	svc2 := &gsvc.Service{
+	svc2 := &gsvc.LocalService{
 		Name:      "goframe-provider-3-tcp",
 		Version:   "test",
 		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
-		Endpoints: []string{"127.0.0.1:9002"},
-		Separator: instanceIDSeparator,
+		Endpoints: gsvc.NewEndpoints("127.0.0.1:9002"),
 	}
 
 	err := r.Register(context.Background(), svc)
@@ -124,12 +120,11 @@ func TestGetService(t *testing.T) {
 
 	ctx := context.Background()
 
-	svc := &gsvc.Service{
+	svc := &gsvc.LocalService{
 		Name:      "goframe-provider-4-tcp",
 		Version:   "test",
 		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
-		Endpoints: []string{"127.0.0.1:9000"},
-		Separator: instanceIDSeparator,
+		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
 	}
 
 	err := r.Register(ctx, svc)
@@ -138,12 +133,10 @@ func TestGetService(t *testing.T) {
 	}
 	time.Sleep(time.Second * 1)
 	serviceInstances, err := r.Search(ctx, gsvc.SearchInput{
-		Prefix:     svc.Prefix,
-		Deployment: svc.Deployment,
-		Namespace:  svc.Namespace,
-		Name:       svc.Name,
-		Version:    svc.Version,
-		Metadata:   svc.Metadata,
+		Prefix:   svc.GetPrefix(),
+		Name:     svc.Name,
+		Version:  svc.Version,
+		Metadata: svc.Metadata,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -170,15 +163,14 @@ func TestWatch(t *testing.T) {
 
 	ctx := gctx.New()
 
-	svc := &gsvc.Service{
+	svc := &gsvc.LocalService{
 		Name:      "goframe-provider-4-tcp",
 		Version:   "test",
 		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
-		Endpoints: []string{"127.0.0.1:9000"},
-		Separator: instanceIDSeparator,
+		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
 	}
 
-	watch, err := r.Watch(context.Background(), svc.KeyWithoutEndpoints())
+	watch, err := r.Watch(context.Background(), svc.GetPrefix())
 	if err != nil {
 		t.Fatal(err)
 	}

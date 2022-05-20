@@ -8,20 +8,11 @@
 package polaris
 
 import (
-	"context"
-	"fmt"
-	"strconv"
-	"strings"
 	"time"
 
+	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/polarismesh/polaris-go"
 	"github.com/polarismesh/polaris-go/pkg/config"
-	"github.com/polarismesh/polaris-go/pkg/model"
-
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/net/gsvc"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
 )
 
 var (
@@ -29,9 +20,9 @@ var (
 )
 
 const (
-	// instanceIDSeparator Instance id Separator.
 	instanceIDSeparator = "-"
-	endpointDelimiter   = ":"
+	metadataKeyKind     = "kind"
+	metadataKeyVersion  = "version"
 )
 
 type options struct {
@@ -168,56 +159,4 @@ func NewWithConfig(conf config.Configuration, opts ...Option) (r *Registry) {
 		panic(err)
 	}
 	return New(provider, consumer, opts...)
-}
-
-func instancesToServiceInstances(instances []model.Instance) []gsvc.Service {
-	serviceInstances := make([]gsvc.Service, 0, len(instances))
-	for _, instance := range instances {
-		if instance.IsHealthy() {
-			serviceInstances = append(serviceInstances, instanceToServiceInstance(instance))
-		}
-	}
-	return serviceInstances
-}
-
-func instanceToServiceInstance(instance model.Instance) gsvc.Service {
-	metadata := instance.GetMetadata()
-	names := strings.Split(instance.GetService(), instanceIDSeparator)
-	if names != nil && len(names) > 4 {
-		return &gsvc.Service{
-			Prefix:     names[0],
-			Deployment: names[1],
-			Namespace:  names[2],
-			Name:       names[3],
-			Version:    metadata["version"],
-			Metadata:   gconv.Map(metadata),
-			Endpoints:  []string{fmt.Sprintf("%s:%d", instance.GetHost(), instance.GetPort())},
-			Separator:  instanceIDSeparator,
-		}
-	}
-
-	return &gsvc.Service{
-		Name:      instance.GetService(),
-		Namespace: instance.GetNamespace(),
-		Version:   metadata["version"],
-		Metadata:  gconv.Map(metadata),
-		Endpoints: []string{fmt.Sprintf("%s:%d", instance.GetHost(), instance.GetPort())},
-		Separator: instanceIDSeparator,
-	}
-}
-
-// getHostAndPortFromEndpoint get host and port from endpoint.
-func getHostAndPortFromEndpoint(ctx context.Context, endpoint string) (host string, port int, err error) {
-	endpoints := gstr.SplitAndTrim(endpoint, endpointDelimiter)
-	if len(endpoints) < 2 {
-		err = gerror.Newf(`invalid endpoint "%s"`, endpoint)
-		return
-	}
-	host = endpoints[0]
-	// port to int
-	if port, err = strconv.Atoi(endpoints[1]); err != nil {
-		err = gerror.Wrapf(err, `convert port string "%s" to int failed`, endpoints[1])
-		return
-	}
-	return
 }

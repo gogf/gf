@@ -86,8 +86,8 @@ type Service interface {
 
 // Endpoint interface for service.
 type Endpoint interface {
-	// IP returns the IPv4/IPv6 address of a service.
-	IP() string
+	// Host returns the IPv4/IPv6 address of a service.
+	Host() string
 
 	// Port returns the port of a service.
 	Port() int
@@ -104,7 +104,6 @@ type Metadata map[string]interface{}
 
 // SearchInput is the input for service searching.
 type SearchInput struct {
-	ID       string   // Unique ID for service.
 	Prefix   string   // Search by key prefix.
 	Name     string   // Search by service name.
 	Version  string   // Search by service version.

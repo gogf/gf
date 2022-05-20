@@ -19,7 +19,6 @@ import (
 
 // LocalService provides a default implements for interface Service.
 type LocalService struct {
-	ID         string    // ID is the unique instance ID as registered.
 	Head       string    // Service custom head string in service key.
 	Deployment string    // Service deployment name, eg: dev, qa, staging, prod, etc.
 	Namespace  string    // Service Namespace, to indicate different services in the same environment with the same Name.
