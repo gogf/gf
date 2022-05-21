@@ -37,12 +37,12 @@ func TestRegistry(t *testing.T) {
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
 	}
 
-	err := r.Register(ctx, svc)
+	s, err := r.Register(ctx, svc)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = r.Deregister(ctx, svc)
+	err = r.Deregister(ctx, s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -77,32 +77,32 @@ func TestRegistryMany(t *testing.T) {
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:9002"),
 	}
 
-	err := r.Register(context.Background(), svc)
+	s0, err := r.Register(context.Background(), svc)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = r.Register(context.Background(), svc1)
+	s1, err := r.Register(context.Background(), svc1)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = r.Register(context.Background(), svc2)
+	s2, err := r.Register(context.Background(), svc2)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = r.Deregister(context.Background(), svc)
+	err = r.Deregister(context.Background(), s0)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = r.Deregister(context.Background(), svc1)
+	err = r.Deregister(context.Background(), s1)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = r.Deregister(context.Background(), svc2)
+	err = r.Deregister(context.Background(), s2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -127,13 +127,13 @@ func TestGetService(t *testing.T) {
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
 	}
 
-	err := r.Register(ctx, svc)
+	s, err := r.Register(ctx, svc)
 	if err != nil {
 		t.Fatal(err)
 	}
 	time.Sleep(time.Second * 1)
 	serviceInstances, err := r.Search(ctx, gsvc.SearchInput{
-		Prefix:   svc.GetPrefix(),
+		Prefix:   s.GetPrefix(),
 		Name:     svc.Name,
 		Version:  svc.Version,
 		Metadata: svc.Metadata,
@@ -145,7 +145,7 @@ func TestGetService(t *testing.T) {
 		g.Log().Info(ctx, instance)
 	}
 
-	err = r.Deregister(ctx, svc)
+	err = r.Deregister(ctx, s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -170,12 +170,16 @@ func TestWatch(t *testing.T) {
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
 	}
 
-	watch, err := r.Watch(context.Background(), svc.GetPrefix())
+	s := &Service{
+		Service: svc,
+	}
+
+	watch, err := r.Watch(context.Background(), s.GetPrefix())
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = r.Register(context.Background(), svc)
+	s1, err := r.Register(context.Background(), svc)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -189,10 +193,10 @@ func TestWatch(t *testing.T) {
 	}
 	for _, instance := range next {
 		// it will output one instance
-		g.Log().Info(ctx, instance)
+		g.Log().Info(ctx, "Register Proceed service: ", instance)
 	}
 
-	err = r.Deregister(context.Background(), svc)
+	err = r.Deregister(context.Background(), s1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -204,7 +208,7 @@ func TestWatch(t *testing.T) {
 	}
 	for _, instance := range next {
 		// it will output nothing
-		g.Log().Info(ctx, instance)
+		g.Log().Info(ctx, "Deregister Proceed service: ", instance)
 	}
 
 	err = watch.Close()

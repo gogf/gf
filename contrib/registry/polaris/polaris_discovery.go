@@ -11,11 +11,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/polarismesh/polaris-go"
 	"github.com/polarismesh/polaris-go/pkg/model"
 
 	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Search returns the service instances in memory according to the service name.

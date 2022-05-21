@@ -10,9 +10,10 @@ package polaris
 import (
 	"time"
 
-	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/polarismesh/polaris-go"
 	"github.com/polarismesh/polaris-go/pkg/config"
+
+	"github.com/gogf/gf/v2/net/gsvc"
 )
 
 var (

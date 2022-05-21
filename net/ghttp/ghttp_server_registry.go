@@ -25,6 +25,7 @@ func (s *Server) doServiceRegister() {
 		protocol = gsvc.DefaultProtocol
 		insecure = true
 		address  = s.config.Address
+		err      error
 	)
 	if address == "" {
 		address = s.config.HTTPSAddr
@@ -51,7 +52,7 @@ func (s *Server) doServiceRegister() {
 		Metadata:  metadata,
 	}
 	s.Logger().Debugf(ctx, `service register: %+v`, s.service)
-	if err := gsvc.Register(ctx, s.service); err != nil {
+	if s.service, err = gsvc.Register(ctx, s.service); err != nil {
 		s.Logger().Fatalf(ctx, `%+v`, err)
 	}
 }

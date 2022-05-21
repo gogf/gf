@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/gogf/gf/v2 v2.0.0
-	go.etcd.io/etcd/client/v3 v3.5.1
+	go.etcd.io/etcd/client/v3 v3.5.4
 )
 
 replace github.com/gogf/gf/v2 => ../../../

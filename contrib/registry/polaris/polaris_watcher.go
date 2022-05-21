@@ -25,9 +25,7 @@ type Watcher struct {
 	ServiceInstances []gsvc.Service
 }
 
-func newWatcher(
-	ctx context.Context, namespace string, serviceName string, consumer polaris.ConsumerAPI,
-) (*Watcher, error) {
+func newWatcher(ctx context.Context, namespace string, serviceName string, consumer polaris.ConsumerAPI) (*Watcher, error) {
 	watchServiceResponse, err := consumer.WatchService(&polaris.WatchServiceRequest{
 		WatchServiceRequest: model.WatchServiceRequest{
 			Key: model.ServiceKey{

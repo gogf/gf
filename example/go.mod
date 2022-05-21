@@ -11,7 +11,7 @@ require (
 	github.com/gogf/katyusha v0.3.1-0.20220520092852-cd19a309028c
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/protobuf v1.5.2
-	github.com/polarismesh/polaris-go v1.1.0
+	github.com/polarismesh/polaris-go v1.2.0-beta.0.0.20220517041223-596a6a63b00f
 	google.golang.org/grpc v1.46.2
 )
 

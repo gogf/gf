@@ -23,7 +23,7 @@ type Registry interface {
 // Registrar interface for service registrar.
 type Registrar interface {
 	// Register registers `service` to Registry.
-	Register(ctx context.Context, service Service) error
+	Register(ctx context.Context, service Service) (Service, error)
 
 	// Deregister off-lines and removes `service` from the Registry.
 	Deregister(ctx context.Context, service Service) error
