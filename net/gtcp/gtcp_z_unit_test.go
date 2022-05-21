@@ -21,6 +21,7 @@ import (
 var (
 	simpleTimeout = time.Millisecond * 100
 	sendData      = []byte("hello")
+	invalidAddr   = "127.0.0.1:99999"
 	crtFile       = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/server.crt"
 	keyFile       = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/server.key"
 )
@@ -357,6 +358,12 @@ func TestNewNetConnKeyCrt(t *testing.T) {
 	startTCPKeyCrtServer(addr)
 
 	gtest.C(t, func(t *gtest.T) {
+		conn, err := gtcp.NewNetConnKeyCrt(addr, "crtFile", keyFile, time.Second)
+		t.AssertNil(conn)
+		t.AssertNE(err, nil)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
 		conn, err := gtcp.NewNetConnKeyCrt(addr, crtFile, keyFile, time.Second)
 		t.AssertNil(conn)
 		t.AssertNE(err, nil)
@@ -369,6 +376,11 @@ func TestSend(t *testing.T) {
 	startTCPServer(addr)
 
 	gtest.C(t, func(t *gtest.T) {
+		err := gtcp.Send(invalidAddr, sendData, gtcp.Retry{Count: 1})
+		t.AssertNE(err, nil)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
 		err := gtcp.Send(addr, sendData, gtcp.Retry{Count: 1})
 		t.AssertNil(err)
 	})
@@ -378,6 +390,12 @@ func TestSendRecv(t *testing.T) {
 	addr := getFreePortAddr()
 
 	startTCPServer(addr)
+
+	gtest.C(t, func(t *gtest.T) {
+		recv, err := gtcp.SendRecv(invalidAddr, sendData, -1)
+		t.AssertNE(err, nil)
+		t.Assert(recv, nil)
+	})
 
 	gtest.C(t, func(t *gtest.T) {
 		recv, err := gtcp.SendRecv(addr, sendData, -1)
@@ -394,7 +412,7 @@ func TestSendWithTimeout(t *testing.T) {
 	time.Sleep(simpleTimeout)
 
 	gtest.C(t, func(t *gtest.T) {
-		err := gtcp.SendWithTimeout("127.0.0.1:99999", sendData, time.Millisecond*500)
+		err := gtcp.SendWithTimeout(invalidAddr, sendData, time.Millisecond*500)
 		t.AssertNE(err, nil)
 		err = gtcp.SendWithTimeout(addr, sendData, time.Millisecond*500)
 		t.AssertNil(err)
@@ -409,7 +427,7 @@ func TestSendRecvWithTimeout(t *testing.T) {
 	time.Sleep(simpleTimeout)
 
 	gtest.C(t, func(t *gtest.T) {
-		recv, err := gtcp.SendRecvWithTimeout("127.0.0.1:99999", sendData, -1, time.Millisecond*500)
+		recv, err := gtcp.SendRecvWithTimeout(invalidAddr, sendData, -1, time.Millisecond*500)
 		t.AssertNil(recv)
 		t.AssertNE(err, nil)
 		recv, err = gtcp.SendRecvWithTimeout(addr, sendData, -1, time.Millisecond*500)
@@ -428,12 +446,12 @@ func TestSendPkg(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err := gtcp.SendPkg(addr, sendData)
 		t.AssertNil(err)
-		err = gtcp.SendPkg("127.0.0.1:99999", sendData)
+		err = gtcp.SendPkg(invalidAddr, sendData)
 		t.AssertNE(err, nil)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		err := gtcp.SendPkg(addr, sendData)
+		err := gtcp.SendPkg(addr, sendData, gtcp.PkgOption{Retry: gtcp.Retry{Count: 3}})
 		t.AssertNil(err)
 		err = gtcp.SendPkg(addr, sendData)
 		t.AssertNil(err)
@@ -450,7 +468,7 @@ func TestSendRecvPkg(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err := gtcp.SendPkg(addr, sendData)
 		t.AssertNil(err)
-		_, err = gtcp.SendRecvPkg("127.0.0.1:99999", sendData)
+		_, err = gtcp.SendRecvPkg(invalidAddr, sendData)
 		t.AssertNE(err, nil)
 	})
 
@@ -473,7 +491,7 @@ func TestSendPkgWithTimeout(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err := gtcp.SendPkg(addr, sendData)
 		t.AssertNil(err)
-		err = gtcp.SendPkgWithTimeout("127.0.0.1:99999", sendData, time.Second)
+		err = gtcp.SendPkgWithTimeout(invalidAddr, sendData, time.Second)
 		t.AssertNE(err, nil)
 	})
 
@@ -495,7 +513,7 @@ func TestSendRecvPkgWithTimeout(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err := gtcp.SendPkg(addr, sendData)
 		t.AssertNil(err)
-		_, err = gtcp.SendRecvPkgWithTimeout("127.0.0.1:99999", sendData, time.Second)
+		_, err = gtcp.SendRecvPkgWithTimeout(invalidAddr, sendData, time.Second)
 		t.AssertNE(err, nil)
 	})
 
