@@ -542,7 +542,6 @@ func TestNewServer(t *testing.T) {
 		}, "NewServer")
 		defer s.Close()
 		go s.Run()
-		t.AssertNE(s, nil)
 
 		time.Sleep(simpleTimeout)
 
@@ -560,7 +559,6 @@ func TestGetServer(t *testing.T) {
 		defer s.Close()
 		go s.Run()
 
-		t.AssertNE(s, nil)
 		t.Assert(s.GetAddress(), "")
 	})
 
@@ -578,7 +576,6 @@ func TestGetServer(t *testing.T) {
 
 		s := gtcp.GetServer("NewServer")
 		defer s.Close()
-		t.AssertNE(s, nil)
 		go s.Run()
 
 		time.Sleep(simpleTimeout)
