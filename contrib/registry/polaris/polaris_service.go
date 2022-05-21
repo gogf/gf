@@ -13,7 +13,7 @@ type Service struct {
 
 // GetKey overwrites the GetKey function of gsvc.Service for replacing separator string.
 func (s *Service) GetKey() string {
-	key := s.Service.GetKey()
+	key := s.GetKey()
 	key = gstr.Replace(key, gsvc.DefaultSeparator, instanceIDSeparator)
 	key = gstr.TrimLeft(key, instanceIDSeparator)
 	return key

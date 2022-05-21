@@ -20,7 +20,7 @@ import (
 )
 
 // Register the registration.
-func (r *Registry) Register(ctx context.Context, service gsvc.Service) error {
+func (r *Registry) Register(ctx context.Context, service gsvc.Service) (gsvc.Service, error) {
 	// Replace input service to custom service type.
 	service = &Service{
 		Service: service,
@@ -71,7 +71,7 @@ func (r *Registry) Register(ctx context.Context, service gsvc.Service) error {
 				},
 			})
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if r.opt.Heartbeat {
 			r.doHeartBeat(ctx, registeredService.InstanceID, service, endpoint)
@@ -80,7 +80,7 @@ func (r *Registry) Register(ctx context.Context, service gsvc.Service) error {
 	}
 	// need to set InstanceID for Deregister
 	service.(*Service).ID = gstr.Join(ids, instanceIDSeparator)
-	return nil
+	return service, nil
 }
 
 // Deregister the registration.
@@ -137,6 +137,7 @@ func (r *Registry) doHeartBeat(ctx context.Context, instanceID string, service g
 					g.Log().Error(ctx, err.Error())
 					continue
 				}
+				g.Log().Debug(ctx, "heartbeat success")
 			case <-r.c:
 				g.Log().Debug(ctx, "stop heartbeat")
 				return
