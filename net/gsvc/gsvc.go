@@ -23,6 +23,7 @@ type Registry interface {
 // Registrar interface for service registrar.
 type Registrar interface {
 	// Register registers `service` to Registry.
+	// Note that it returns a new Service if it changes the input Service with custom one.
 	Register(ctx context.Context, service Service) (Service, error)
 
 	// Deregister off-lines and removes `service` from the Registry.
@@ -80,7 +81,7 @@ type Service interface {
 	GetMetadata() Metadata
 
 	// GetEndpoints returns the Endpoints of service.
-	// The Endpoints contain multiple ip/port information of service.
+	// The Endpoints contain multiple host/port information of service.
 	GetEndpoints() Endpoints
 }
 
@@ -111,24 +112,24 @@ type SearchInput struct {
 }
 
 const (
-	Schema                  = `services`
-	DefaultHead             = `services`
-	DefaultDeployment       = `default`
-	DefaultNamespace        = `default`
-	DefaultVersion          = `latest`
-	EnvPrefix               = `GF_GSVC_PREFIX`
-	EnvDeployment           = `GF_GSVC_DEPLOYMENT`
-	EnvNamespace            = `GF_GSVC_NAMESPACE`
-	EnvName                 = `GF_GSVC_Name`
-	EnvVersion              = `GF_GSVC_VERSION`
-	MDProtocol              = `protocol`
-	MDInsecure              = `insecure`
-	MDWeight                = `weight`
-	DefaultProtocol         = `http`
-	DefaultSeparator        = "/"
-	defaultTimeout          = 5 * time.Second
-	endpointIpPortDelimiter = ":"
-	endpointsDelimiter      = ","
+	Schema                    = `services`
+	DefaultHead               = `services`
+	DefaultDeployment         = `default`
+	DefaultNamespace          = `default`
+	DefaultVersion            = `latest`
+	EnvPrefix                 = `GF_GSVC_PREFIX`
+	EnvDeployment             = `GF_GSVC_DEPLOYMENT`
+	EnvNamespace              = `GF_GSVC_NAMESPACE`
+	EnvName                   = `GF_GSVC_Name`
+	EnvVersion                = `GF_GSVC_VERSION`
+	MDProtocol                = `protocol`
+	MDInsecure                = `insecure`
+	MDWeight                  = `weight`
+	DefaultProtocol           = `http`
+	DefaultSeparator          = "/"
+	defaultTimeout            = 5 * time.Second
+	endpointHostPortDelimiter = ":"
+	endpointsDelimiter        = ","
 )
 
 var defaultRegistry Registry

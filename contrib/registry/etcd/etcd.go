@@ -90,7 +90,7 @@ func extractResponseToServices(res *etcd3.GetResponse) ([]gsvc.Service, error) {
 		serviceMap = make(map[string]*gsvc.LocalService)
 	)
 	for _, kv := range res.Kvs {
-		service, err := gsvc.NewServiceWithKV(kv.Key, kv.Value)
+		service, err := gsvc.NewServiceWithKV(string(kv.Key), string(kv.Value))
 		if err != nil {
 			return services, err
 		}

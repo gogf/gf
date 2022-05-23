@@ -39,10 +39,10 @@ func NewServiceWithName(name string) Service {
 }
 
 // NewServiceWithKV creates and returns a default implements for interface Service by key-value pair string.
-func NewServiceWithKV(key, value []byte) (Service, error) {
+func NewServiceWithKV(key, value string) (Service, error) {
 	var (
 		err   error
-		array = gstr.Split(gstr.Trim(string(key), DefaultSeparator), DefaultSeparator)
+		array = gstr.Split(gstr.Trim(key, DefaultSeparator), DefaultSeparator)
 	)
 	if len(array) < 6 {
 		err = gerror.NewCodef(gcode.CodeInvalidParameter, `invalid service key "%s"`, key)
@@ -59,7 +59,7 @@ func NewServiceWithKV(key, value []byte) (Service, error) {
 	}
 	s.autoFillDefaultAttributes()
 	if len(value) > 0 {
-		if err = gjson.Unmarshal(value, &s.Metadata); err != nil {
+		if err = gjson.Unmarshal([]byte(value), &s.Metadata); err != nil {
 			err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `invalid service value "%s"`, value)
 			return nil, err
 		}
@@ -126,7 +126,7 @@ func (s *LocalService) GetMetadata() Metadata {
 }
 
 // GetEndpoints returns the Endpoints of service.
-// The Endpoints contain multiple ip/port information of service.
+// The Endpoints contain multiple host/port information of service.
 func (s *LocalService) GetEndpoints() Endpoints {
 	return s.Endpoints
 }

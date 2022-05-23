@@ -19,6 +19,7 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]gsvc.Serv
 	if in.Prefix == "" && in.Name != "" {
 		in.Prefix = gsvc.NewServiceWithName(in.Name).GetPrefix()
 	}
+
 	res, err := r.kv.Get(ctx, in.Prefix, etcd3.WithPrefix())
 	if err != nil {
 		return nil, err
