@@ -105,7 +105,7 @@ func TestTableFields(t *testing.T) {
 func TestFilteredLink(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := dblink.FilteredLink()
-		gtest.AssertEQ(s, "")
+		gtest.AssertEQ(s, "oracle:xxx@127.0.0.1:1521/XE")
 	})
 
 }
