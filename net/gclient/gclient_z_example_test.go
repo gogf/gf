@@ -181,33 +181,6 @@ func fromHex(s string) []byte {
 	return b
 }
 
-func ExampleLoadKeyCrt() {
-	var (
-		testCrtFile = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/upload/file1.txt"
-		testKeyFile = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/upload/file2.txt"
-
-		tlsConfig = &tls.Config{}
-	)
-
-	tlsConfig, _ = gclient.LoadKeyCrt("crtFile", "keyFile")
-	fmt.Println(tlsConfig == nil)
-
-	tlsConfig, _ = gclient.LoadKeyCrt(crtFile, "keyFile")
-	fmt.Println(tlsConfig == nil)
-
-	tlsConfig, _ = gclient.LoadKeyCrt(testCrtFile, testKeyFile)
-	fmt.Println(tlsConfig == nil)
-
-	tlsConfig, _ = gclient.LoadKeyCrt(crtFile, keyFile)
-	fmt.Println(tlsConfig == nil)
-
-	// Output:
-	// true
-	// true
-	// true
-	// false
-}
-
 func ExampleNew_MultiConn_Recommend() {
 	var (
 		ctx    = gctx.New()
