@@ -246,10 +246,9 @@ func Test_Params_File_Upload_Required(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
-		content, err := client.Post(ctx, "/upload/required")
+		_, err := client.Post(ctx, "/upload/required")
 		if err != nil {
 			t.Assert(err.Error(), "upload file is required")
 		}
-		t.AssertNE(content, "upload failed")
 	})
 }
