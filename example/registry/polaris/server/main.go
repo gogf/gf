@@ -1,6 +1,9 @@
 package main
 
 import (
+	"context"
+
+	"github.com/polarismesh/polaris-go/api"
 	"github.com/polarismesh/polaris-go/pkg/config"
 
 	"github.com/gogf/gf/contrib/registry/polaris/v2"
@@ -11,6 +14,11 @@ import (
 
 func main() {
 	conf := config.NewDefaultConfiguration([]string{"192.168.100.222:8091"})
+	conf.Consumer.LocalCache.SetPersistDir("/tmp/polaris/backup")
+	err := api.SetLoggersDir("/tmp/polaris/log")
+	if err != nil {
+		g.Log().Fatal(context.Background(), err)
+	}
 
 	// TTL egt 2*time.Second
 	gsvc.SetRegistry(polaris.NewWithConfig(conf, polaris.WithTTL(10)))

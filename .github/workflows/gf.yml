@@ -92,7 +92,7 @@ jobs:
           - 9001:9001
 
       polaris:
-        image: huyuanxin/polaris-server-with-config:latest
+        image: houseme/polaris-server-with-config:latest
         ports:
           - 8090:8090
           - 8091:8091
