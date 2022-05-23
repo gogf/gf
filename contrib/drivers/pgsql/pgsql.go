@@ -70,10 +70,18 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 			source, _ = gregex.ReplaceString(`dbname=([\w\.\-]+)+`, "dbname="+config.Name, source)
 		}
 	} else {
-		source = fmt.Sprintf(
-			"user=%s password=%s host=%s port=%s dbname=%s sslmode=disable",
-			config.User, config.Pass, config.Host, config.Port, config.Name,
-		)
+		if config.Name != "" {
+			source = fmt.Sprintf(
+				"user=%s password=%s host=%s port=%s dbname=%s sslmode=disable",
+				config.User, config.Pass, config.Host, config.Port, config.Name,
+			)
+		} else {
+			source = fmt.Sprintf(
+				"user=%s password=%s host=%s port=%s sslmode=disable",
+				config.User, config.Pass, config.Host, config.Port,
+			)
+		}
+
 		if config.Timezone != "" {
 			source = fmt.Sprintf("%s timezone=%s", source, config.Timezone)
 		}
@@ -212,7 +220,7 @@ ORDER BY a.attnum`,
 					Index:   i,
 					Name:    m["field"].String(),
 					Type:    m["type"].String(),
-					Null:    m["null"].Bool(),
+					Null:    !m["null"].Bool(),
 					Key:     m["key"].String(),
 					Default: m["default_value"].Val(),
 					Comment: m["comment"].String(),
