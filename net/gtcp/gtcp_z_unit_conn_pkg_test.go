@@ -8,6 +8,8 @@ package gtcp_test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/os/gfile"
 	"testing"
 	"time"
 
@@ -96,6 +98,34 @@ func Test_Package_Basic(t *testing.T) {
 	})
 }
 
+func Test_Package_Basic_HeaderSize1(t *testing.T) {
+	p, _ := gtcp.GetFreePort()
+	s := gtcp.NewServer(fmt.Sprintf(`:%d`, p), func(conn *gtcp.Conn) {
+		defer conn.Close()
+		for {
+			data, err := conn.RecvPkg(gtcp.PkgOption{HeaderSize: 1})
+			if err != nil {
+				break
+			}
+			conn.SendPkg(data)
+		}
+	})
+	go s.Run()
+	defer s.Close()
+	time.Sleep(100 * time.Millisecond)
+
+	// SendRecvPkg with empty data.
+	gtest.C(t, func(t *gtest.T) {
+		conn, err := gtcp.NewConn(fmt.Sprintf("127.0.0.1:%d", p))
+		t.AssertNil(err)
+		defer conn.Close()
+		data := make([]byte, 0)
+		result, err := conn.SendRecvPkg(data)
+		t.AssertNil(err)
+		t.AssertNil(result)
+	})
+}
+
 func Test_Package_Timeout(t *testing.T) {
 	p, _ := gtcp.GetFreePort()
 	s := gtcp.NewServer(fmt.Sprintf(`:%d`, p), func(conn *gtcp.Conn) {
@@ -129,6 +159,15 @@ func Test_Package_Timeout(t *testing.T) {
 		result, err := conn.SendRecvPkgWithTimeout(data, time.Second*2)
 		t.AssertNil(err)
 		t.Assert(result, data)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		conn, err := gtcp.NewConn(fmt.Sprintf("127.0.0.1:%d", p))
+		t.AssertNil(err)
+		defer conn.Close()
+		data := []byte("10000")
+		result, err := conn.SendRecvPkgWithTimeout(data, time.Second*2, gtcp.PkgOption{HeaderSize: 5})
+		t.AssertNE(err, nil)
+		t.AssertNil(result)
 	})
 }
 
@@ -169,5 +208,153 @@ func Test_Package_Option(t *testing.T) {
 		result, err := conn.SendRecvPkg(data, gtcp.PkgOption{HeaderSize: 1})
 		t.AssertNil(err)
 		t.Assert(result, data)
+	})
+}
+
+func Test_Package_Option_HeadSize3(t *testing.T) {
+	p, _ := gtcp.GetFreePort()
+	s := gtcp.NewServer(fmt.Sprintf(`:%d`, p), func(conn *gtcp.Conn) {
+		defer conn.Close()
+		option := gtcp.PkgOption{HeaderSize: 3}
+		for {
+			data, err := conn.RecvPkg(option)
+			if err != nil {
+				break
+			}
+			gtest.Assert(conn.SendPkg(data, option), nil)
+		}
+	})
+	go s.Run()
+	defer s.Close()
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		conn, err := gtcp.NewConn(fmt.Sprintf("127.0.0.1:%d", p))
+		t.AssertNil(err)
+		defer conn.Close()
+		data := make([]byte, 0xFF)
+		data[100] = byte(65)
+		data[200] = byte(85)
+		result, err := conn.SendRecvPkg(data, gtcp.PkgOption{HeaderSize: 3})
+		t.AssertNil(err)
+		t.Assert(result, data)
+	})
+}
+
+func Test_Package_Option_HeadSize4(t *testing.T) {
+	p, _ := gtcp.GetFreePort()
+	s := gtcp.NewServer(fmt.Sprintf(`:%d`, p), func(conn *gtcp.Conn) {
+		defer conn.Close()
+		option := gtcp.PkgOption{HeaderSize: 4}
+		for {
+			data, err := conn.RecvPkg(option)
+			if err != nil {
+				break
+			}
+			gtest.Assert(conn.SendPkg(data, option), nil)
+		}
+	})
+	go s.Run()
+	defer s.Close()
+	time.Sleep(100 * time.Millisecond)
+	// SendRecvPkg with big data - failure.
+	gtest.C(t, func(t *gtest.T) {
+		conn, err := gtcp.NewConn(fmt.Sprintf("127.0.0.1:%d", p))
+		t.AssertNil(err)
+		defer conn.Close()
+		data := make([]byte, 0xFFFF+1)
+		_, err = conn.SendRecvPkg(data, gtcp.PkgOption{HeaderSize: 4})
+		t.Assert(err, nil)
+	})
+	// SendRecvPkg with big data - success.
+	gtest.C(t, func(t *gtest.T) {
+		conn, err := gtcp.NewConn(fmt.Sprintf("127.0.0.1:%d", p))
+		t.AssertNil(err)
+		defer conn.Close()
+		data := make([]byte, 0xFF)
+		data[100] = byte(65)
+		data[200] = byte(85)
+		result, err := conn.SendRecvPkg(data, gtcp.PkgOption{HeaderSize: 4})
+		t.AssertNil(err)
+		t.Assert(result, data)
+	})
+	// pkgOption.HeaderSize oversize
+	gtest.C(t, func(t *gtest.T) {
+		conn, err := gtcp.NewConn(fmt.Sprintf("127.0.0.1:%d", p))
+		t.AssertNil(err)
+		defer conn.Close()
+		data := make([]byte, 0xFF)
+		data[100] = byte(65)
+		data[200] = byte(85)
+		_, err = conn.SendRecvPkg(data, gtcp.PkgOption{HeaderSize: 5})
+		t.AssertNE(err, nil)
+	})
+}
+
+func Test_Server_NewServerKeyCrt(t *testing.T) {
+	var (
+		noCrtFile = "noCrtFile"
+		noKeyFile = "noKeyFile"
+		crtFile   = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/crtFile"
+		keyFile   = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/keyFile"
+	)
+	gtest.C(t, func(t *gtest.T) {
+		addr := "127.0.0.1:%d"
+		freePort, _ := gtcp.GetFreePort()
+		addr = fmt.Sprintf(addr, freePort)
+		s, err := gtcp.NewServerKeyCrt(addr, noCrtFile, noKeyFile, func(conn *gtcp.Conn) {
+		})
+		if err != nil {
+			t.AssertNil(s)
+		}
+	})
+	gtest.C(t, func(t *gtest.T) {
+		addr := "127.0.0.1:%d"
+		freePort, _ := gtcp.GetFreePort()
+		addr = fmt.Sprintf(addr, freePort)
+		s, err := gtcp.NewServerKeyCrt(addr, crtFile, noKeyFile, func(conn *gtcp.Conn) {
+		})
+		if err != nil {
+			t.AssertNil(s)
+		}
+	})
+	gtest.C(t, func(t *gtest.T) {
+		addr := "127.0.0.1:%d"
+		freePort, _ := gtcp.GetFreePort()
+		addr = fmt.Sprintf(addr, freePort)
+		s, err := gtcp.NewServerKeyCrt(addr, crtFile, keyFile, func(conn *gtcp.Conn) {
+		})
+		if err != nil {
+			t.AssertNil(s)
+		}
+	})
+}
+
+func Test_Conn_RecvPkgError(t *testing.T) {
+	p, _ := gtcp.GetFreePort()
+
+	s := gtcp.NewServer(fmt.Sprintf(`:%d`, p), func(conn *gtcp.Conn) {
+		defer conn.Close()
+		option := gtcp.PkgOption{HeaderSize: 5}
+		for {
+			_, err := conn.RecvPkg(option)
+			if err != nil {
+				break
+			}
+		}
+	})
+	go s.Run()
+	defer s.Close()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		conn, err := gtcp.NewConn(fmt.Sprintf("127.0.0.1:%d", p))
+		t.AssertNil(err)
+		defer conn.Close()
+		data := make([]byte, 65536)
+		result, err := conn.SendRecvPkg(data)
+		t.AssertNE(err, nil)
+		t.Assert(result, nil)
 	})
 }

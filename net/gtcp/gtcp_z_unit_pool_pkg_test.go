@@ -170,4 +170,26 @@ func Test_Pool_Package_Option(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(result, data)
 	})
+	// SendRecvPkgWithTimeout with big data - failure.
+	gtest.C(t, func(t *gtest.T) {
+		conn, err := gtcp.NewPoolConn(fmt.Sprintf("127.0.0.1:%d", p))
+		t.AssertNil(err)
+		defer conn.Close()
+		data := make([]byte, 0xFF+1)
+		result, err := conn.SendRecvPkgWithTimeout(data, time.Second, gtcp.PkgOption{HeaderSize: 1})
+		t.AssertNE(err, nil)
+		t.Assert(result, nil)
+	})
+	// SendRecvPkgWithTimeout with big data - success.
+	gtest.C(t, func(t *gtest.T) {
+		conn, err := gtcp.NewPoolConn(fmt.Sprintf("127.0.0.1:%d", p))
+		t.AssertNil(err)
+		defer conn.Close()
+		data := make([]byte, 0xFF)
+		data[100] = byte(65)
+		data[200] = byte(85)
+		result, err := conn.SendRecvPkgWithTimeout(data, time.Second, gtcp.PkgOption{HeaderSize: 1})
+		t.AssertNil(err)
+		t.Assert(result, data)
+	})
 }
