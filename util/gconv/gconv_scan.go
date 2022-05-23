@@ -53,7 +53,6 @@ func Scan(params interface{}, pointer interface{}, mapping ...map[string]string)
 				pointerType,
 			)
 		}
-
 	}
 	// Direct assignment checks!
 	var (

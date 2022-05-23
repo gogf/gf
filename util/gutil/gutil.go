@@ -66,7 +66,7 @@ func IsEmpty(value interface{}) bool {
 func Keys(mapOrStruct interface{}) (keysOrAttrs []string) {
 	keysOrAttrs = make([]string, 0)
 	if m, ok := mapOrStruct.(map[string]interface{}); ok {
-		for k, _ := range m {
+		for k := range m {
 			keysOrAttrs = append(keysOrAttrs, k)
 		}
 		return
