@@ -8,7 +8,6 @@ package gclient_test
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"github.com/gogf/gf/v2/net/gclient"
 	"github.com/gogf/gf/v2/os/gctx"
@@ -137,11 +136,6 @@ func ExampleClient_Clone() {
 
 	// Output:
 	// {"id":1,"name":"john"}
-}
-
-func fromHex(s string) []byte {
-	b, _ := hex.DecodeString(s)
-	return b
 }
 
 func ExampleNew_MultiConn_Recommend() {
