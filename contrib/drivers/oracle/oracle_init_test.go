@@ -75,7 +75,6 @@ func init() {
 		Role:    "master",
 		Charset: "utf8",
 		Weight:  1,
-		Debug:   true,
 	}
 
 	gdb.AddConfigNode(gdb.DefaultGroupName, node)

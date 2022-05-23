@@ -60,12 +60,12 @@ func TestTableFields(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		createTable("t_user")
 		defer dropTable("t_user")
-		var expect = map[string]string{
-			"ID":          "NUMBER(10,0)",
-			"PASSPORT":    "VARCHAR2(45)",
-			"PASSWORD":    "CHAR(32)",
-			"NICKNAME":    "VARCHAR2(45)",
-			"CREATE_TIME": "VARCHAR2(45)",
+		var expect = map[string][]interface{}{
+			"ID":          {"NUMBER(10,0)", false},
+			"PASSPORT":    {"VARCHAR2(45)", false},
+			"PASSWORD":    {"CHAR(32)", false},
+			"NICKNAME":    {"VARCHAR2(45)", false},
+			"CREATE_TIME": {"VARCHAR2(45)", true},
 		}
 
 		_, err := dbErr.TableFields(ctx, "t_user")
@@ -79,7 +79,8 @@ func TestTableFields(t *testing.T) {
 			gtest.AssertEQ(ok, true)
 
 			gtest.AssertEQ(res[k].Name, k)
-			gtest.Assert(res[k].Type, v)
+			gtest.Assert(res[k].Type, v[0])
+			gtest.Assert(res[k].Null, v[1])
 		}
 
 		res, err = db.TableFields(ctx, "t_user", TestSchema)
@@ -90,7 +91,8 @@ func TestTableFields(t *testing.T) {
 			gtest.AssertEQ(ok, true)
 
 			gtest.AssertEQ(res[k].Name, k)
-			gtest.Assert(res[k].Type, v)
+			gtest.Assert(res[k].Type, v[0])
+			gtest.Assert(res[k].Null, v[1])
 		}
 	})
 
@@ -102,22 +104,10 @@ func TestTableFields(t *testing.T) {
 
 func TestFilteredLink(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		s := db.FilteredLink()
+		s := dblink.FilteredLink()
 		gtest.AssertEQ(s, "")
 	})
 
-	gtest.C(t, func(t *gtest.T) {
-		_, err := dblink.Query(ctx, "select 1 from dual")
-		gtest.Assert(err, nil)
-
-		s := dblink.FilteredLink()
-		gtest.AssertNE(s, nil)
-	})
-
-	gtest.C(t, func(t *gtest.T) {
-		_, err := dbErr.Query(ctx, "select 1 from dual")
-		gtest.AssertNE(err, nil)
-	})
 }
 func TestDoInsert(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {

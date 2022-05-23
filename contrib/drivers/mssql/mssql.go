@@ -299,16 +299,12 @@ ORDER BY a.id,a.colorder`,
 			}
 			fields = make(map[string]*gdb.TableField)
 			for i, m := range result {
-				isNull := false
-				if m["Null"].String() == "YES" {
-					isNull = true
-				}
 
 				fields[m["Field"].String()] = &gdb.TableField{
 					Index:   i,
 					Name:    m["Field"].String(),
 					Type:    m["Type"].String(),
-					Null:    isNull,
+					Null:    m["Null"].Bool(),
 					Key:     m["Key"].String(),
 					Default: m["Default"].Val(),
 					Extra:   m["Extra"].String(),

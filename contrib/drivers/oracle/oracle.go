@@ -128,17 +128,6 @@ func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args [
 	})
 	newSql, _ = gregex.ReplaceString("\"", "", newSql)
 
-	//Why convert date?
-	// Handle string datetime argument.
-	/*for i, v := range args {
-		if reflect.TypeOf(v).Kind() == reflect.String {
-			valueStr := gconv.String(v)
-			if gregex.IsMatchString(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$`, valueStr) {
-				// args[i] = fmt.Sprintf(`TO_DATE('%s','yyyy-MM-dd HH:MI:SS')`, valueStr)
-				args[i], _ = time.ParseInLocation("2006-01-02 15:04:05", valueStr, time.Local)
-			}
-		}
-	}*/
 	newSql = d.parseSql(newSql)
 	newArgs = args
 	return
@@ -269,10 +258,16 @@ FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`,
 			}
 			fields = make(map[string]*gdb.TableField)
 			for i, m := range result {
+				isNull := false
+				if m["NULLABLE"].String() == "Y" {
+					isNull = true
+				}
+
 				fields[m["FIELD"].String()] = &gdb.TableField{
 					Index: i,
 					Name:  m["FIELD"].String(),
 					Type:  m["TYPE"].String(),
+					Null:  isNull,
 				}
 			}
 			return fields
