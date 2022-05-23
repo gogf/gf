@@ -216,3 +216,39 @@ func Test_Params_Strict_Route_File_Single(t *testing.T) {
 		t.Assert(gfile.GetContents(dstPath), gfile.GetContents(srcPath))
 	})
 }
+
+func Test_Params_File_Upload_Required(t *testing.T) {
+	type Req struct {
+		gmeta.Meta `method:"post" mime:"multipart/form-data"`
+		File       *ghttp.UploadFile `type:"file" v:"required#upload file is required"`
+	}
+	type Res struct{}
+
+	dstDirPath := gfile.Temp(gtime.TimestampNanoStr())
+	s := g.Server(guid.S())
+	s.BindHandler("/upload/required", func(ctx context.Context, req *Req) (res *Res, err error) {
+		var (
+			r = g.RequestFromCtx(ctx)
+		)
+
+		file := req.File
+		if name, err := file.Save(dstDirPath); err == nil {
+			r.Response.WriteExit(name)
+		}
+		r.Response.WriteExit("upload failed")
+		return
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+	// file is empty
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		_, err := client.Post(ctx, "/upload/required")
+		if err != nil {
+			t.Assert(err.Error(), "upload file is required")
+		}
+	})
+}
