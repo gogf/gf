@@ -21,7 +21,7 @@ func main() {
 	}
 
 	// TTL egt 2*time.Second
-	gsvc.SetRegistry(polaris.NewWithConfig(conf, polaris.WithTTL(100)))
+	gsvc.SetRegistry(polaris.NewWithConfig(conf, polaris.WithTTL(10)))
 
 	s := g.Server(`hello.svc`)
 	s.BindHandler("/", func(r *ghttp.Request) {
