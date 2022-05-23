@@ -451,6 +451,19 @@ func ExampleClient_Get() {
 	// GET: query: 10000, john
 }
 
+func ExampleClient_Put() {
+	url := "http://127.0.0.1:8999"
+	r, _ := g.Client().Put(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})
+	defer r.Close()
+	fmt.Println(r.ReadAllString())
+
+	// Output:
+	// PUT: form: 10000, john
+}
+
 func ExampleClient_GetBytes() {
 	var (
 		ctx = context.Background()
@@ -858,4 +871,82 @@ func ExampleClient_RawRequest() {
 
 	// Output:
 	// true
+}
+
+func ExampleClient_Delete() {
+	url := "http://127.0.0.1:8999"
+	r, _ := g.Client().Delete(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})
+	defer r.Close()
+	fmt.Println(r.ReadAllString())
+
+	// Output:
+	// DELETE: form: 10000, john
+}
+
+func ExampleClient_Head() {
+	url := "http://127.0.0.1:8999"
+	r, _ := g.Client().Head(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})
+	defer r.Close()
+	fmt.Println(r.ReadAllString())
+
+	// Output:
+	//
+}
+
+func ExampleClient_Patch() {
+	url := "http://127.0.0.1:8999"
+	r, _ := g.Client().Patch(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})
+	defer r.Close()
+	fmt.Println(r.ReadAllString())
+
+	// Output:
+	// PATCH: form: 10000, john
+}
+
+func ExampleClient_Connect() {
+	url := "http://127.0.0.1:8999"
+	r, _ := g.Client().Connect(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})
+	defer r.Close()
+	fmt.Println(r.ReadAllString())
+
+	// Output:
+	// CONNECT: form: 10000, john
+}
+
+func ExampleClient_Options() {
+	url := "http://127.0.0.1:8999"
+	r, _ := g.Client().Options(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})
+	defer r.Close()
+	fmt.Println(r.ReadAllString())
+
+	// Output:
+	// OPTIONS: form: 10000, john
+}
+
+func ExampleClient_Trace() {
+	url := "http://127.0.0.1:8999"
+	r, _ := g.Client().Trace(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})
+	defer r.Close()
+	fmt.Println(r.ReadAllString())
+
+	// Output:
+	// TRACE: form: 10000, john
 }
