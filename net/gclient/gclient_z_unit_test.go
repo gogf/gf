@@ -580,3 +580,31 @@ func TestLoadKeyCrt(t *testing.T) {
 		t.AssertNE(tlsConfig, nil)
 	})
 }
+
+func TestClient_DoRequest(t *testing.T) {
+	p, _ := gtcp.GetFreePort()
+	s := g.Server(p)
+	s.BindHandler("/hello", func(r *ghttp.Request) {
+		r.Response.WriteHeader(200)
+		r.Response.WriteJson(g.Map{"field": "test_for_response_body"})
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		url := fmt.Sprintf("127.0.0.1:%d/hello", p)
+		resp, err := c.DoRequest(ctx, http.MethodGet, url)
+		t.AssertNil(err)
+		t.AssertNE(resp, nil)
+		t.Assert(resp.ReadAllString(), "{\"field\":\"test_for_response_body\"}")
+
+		resp.Response = nil
+		bytes := resp.ReadAll()
+		t.Assert(bytes, []byte{})
+		resp.Close()
+	})
+}
