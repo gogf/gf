@@ -488,6 +488,8 @@ func Test_Client_Request_13_Dump(t *testing.T) {
 		t.Assert(gstr.Contains(dumpedText3, "test_for_request_body"), true)
 		dumpedText4 := r2.RawResponse()
 		t.Assert(gstr.Contains(dumpedText4, "test_for_request_body"), false)
+		r2 = nil
+		t.Assert(r2.RawRequest(), "")
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -498,6 +500,16 @@ func Test_Client_Request_13_Dump(t *testing.T) {
 		})
 		response = nil
 		t.Assert(response.RawRequest(), "")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		url := fmt.Sprintf("http://127.0.0.1:%d", p)
+		response, _ := g.Client().Get(ctx, url, g.Map{
+			"id":   10000,
+			"name": "john",
+		})
+		response.RawDump()
+		t.AssertGT(len(response.Raw()), 0)
 	})
 }
 
