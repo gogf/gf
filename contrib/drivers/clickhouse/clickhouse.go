@@ -10,19 +10,23 @@ package clickhouse
 import (
 	"context"
 	"database/sql"
+	"database/sql/driver"
 	"errors"
 	"fmt"
-	"strings"
-
-	"github.com/ClickHouse/clickhouse-go"
-
+	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/google/uuid"
+	"net/url"
+	"strings"
+	"time"
 )
 
 // Driver is the driver for postgresql database.
@@ -32,13 +36,23 @@ type Driver struct {
 
 var (
 	// tableFieldsMap caches the table information retrieved from database.
-	tableFieldsMap             = gmap.New(true)
-	errUnsupportedInsertIgnore = errors.New("unsupported method: InsertIgnore")
-	errUnsupportedInsertGetId  = errors.New("unsupported method: InsertGetId")
-	errUnsupportedReplace      = errors.New("unsupported method: Replace")
-	errUnsupportedBegin        = errors.New("unsupported method: Begin")
-	errUnsupportedTransaction  = errors.New("unsupported method: Transaction")
-	errSQLNull                 = errors.New("SQL cannot be null")
+	tableFieldsMap = gmap.New(true)
+
+	errUnsupportedInsertIgnore = errors.New("unsupported method:InsertIgnore")
+	errUnsupportedInsertGetId  = errors.New("unsupported method:InsertGetId")
+	errUnsupportedReplace      = errors.New("unsupported method:Replace")
+	errUnsupportedBegin        = errors.New("unsupported method:Begin")
+	errUnsupportedTransaction  = errors.New("unsupported method:Transaction")
+)
+
+const (
+	updateFilterPattern              = `(?i)UPDATE[\s]+?(\w+[\.]?\w+)[\s]+?SET`
+	deleteFilterPattern              = `(?i)DELETE[\s]+?FROM[\s]+?(\w+[\.]?\w+)`
+	filterTypePattern                = `(?i)^UPDATE|DELETE`
+	replaceSchemaPattern             = `@(.+?)/([\w\.\-]+)+`
+	needParsedSqlInCtx   gctx.StrKey = "NeedParsedSql"
+	OrmTagForStruct                  = "orm"
+	driverName                       = "clickhouse"
 )
 
 func init() {
@@ -62,27 +76,28 @@ func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 
 // Open creates and returns an underlying sql.DB object for clickhouse.
 func (d *Driver) Open(config *gdb.ConfigNode) (*sql.DB, error) {
-	var (
-		source string
-		driver = "clickhouse"
-	)
 	// clickhouse://username:password@host1:9000,host2:9000/database?dial_timeout=200ms&max_execution_time=60
 	if config.Link != "" {
-		source = config.Link
 		// Custom changing the schema in runtime.
 		if config.Name != "" {
-			source, _ = gregex.ReplaceString(`@(.+?)/([\w\.\-]+)+`, "@$1/"+config.Name, source)
+			config.Link, _ = gregex.ReplaceString(replaceSchemaPattern, "@$1/"+config.Name, config.Link)
+		} else {
+			// If no schema, the link is matched for replacement
+			dbName, _ := gregex.MatchString(replaceSchemaPattern, config.Link)
+			if len(dbName) > 0 {
+				config.Name = dbName[len(dbName)-1]
+			}
 		}
 	} else if config.Pass != "" {
-		source = fmt.Sprintf(
-			"clickhouse://%s:%s@%s:%s/%s?charset=%s&debug=%s",
-			config.User, config.Pass, config.Host, config.Port, config.Name, config.Charset, gconv.String(config.Debug))
+		config.Link = fmt.Sprintf(
+			"clickhouse://%s:%s@%s:%s/%s?charset=%s&debug=%t",
+			config.User, url.PathEscape(config.Pass), config.Host, config.Port, config.Name, config.Charset, config.Debug)
 	} else {
-		source = fmt.Sprintf(
-			"clickhouse://%s@%s:%s/%s?charset=%s&debug=%s",
-			config.User, config.Host, config.Port, config.Name, config.Charset, gconv.String(config.Debug))
+		config.Link = fmt.Sprintf(
+			"clickhouse://%s@%s:%s/%s?charset=%s&debug=%t",
+			config.User, config.Host, config.Port, config.Name, config.Charset, config.Debug)
 	}
-	db, err := sql.Open(driver, source)
+	db, err := sql.Open(driverName, config.Link)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +148,7 @@ func (d *Driver) TableFields(
 			if link, err = d.SlaveLink(useSchema); err != nil {
 				return nil
 			}
-			getColumnsSql := fmt.Sprintf("select name,position,default_expression,comment from `system`.columns c where database = '%s' and `table` = '%s'", d.GetConfig().Name, table)
+			getColumnsSql := fmt.Sprintf("select name,position,default_expression,comment,type,is_in_partition_key,is_in_sorting_key,is_in_primary_key,is_in_sampling_key from `system`.columns c where database = '%s' and `table` = '%s'", d.GetConfig().Name, table)
 			result, err = d.DoSelect(ctx, link, getColumnsSql)
 			if err != nil {
 				return nil
@@ -215,29 +230,55 @@ func (d *Driver) ping(conn *sql.DB) error {
 func (d *Driver) DoFilter(
 	ctx context.Context, link gdb.Link, originSql string, args []interface{},
 ) (newSql string, newArgs []interface{}, err error) {
-	// It replaces STD SQL to Clickhouse SQL grammar.
-	// MySQL eg:      UPDATE `table` SET xxx
-	// Clickhouse eg: ALTER TABLE `table` UPDATE xxx
-	// MySQL eg:      DELETE FROM `table`
-	// Clickhouse eg: ALTER TABLE `table` DELETE WHERE filter_expr
-	result, err := gregex.MatchString("(?i)^UPDATE|DELETE", originSql)
+	if len(args) == 0 {
+		return originSql, args, nil
+	}
+
+	var index int
+	// Convert placeholder char '?' to string "$x".
+	originSql, _ = gregex.ReplaceStringFunc(`\?`, originSql, func(s string) string {
+		index++
+		return fmt.Sprintf(`$%d`, index)
+	})
+
+	// Only SQL generated through the framework is processed.
+	if !d.getNeedParsedSqlFromCtx(ctx) {
+		return originSql, args, nil
+	}
+
+	// replace STD SQL to Clickhouse SQL grammar
+	modeRes, err := gregex.MatchString(filterTypePattern, strings.TrimSpace(originSql))
 	if err != nil {
 		return "", nil, err
 	}
-	if len(result) != 0 {
-		sqlSlice := strings.Split(originSql, " ")
-		if len(sqlSlice) < 3 {
-			return "", nil, errSQLNull
+	if len(modeRes) == 0 {
+		return originSql, args, nil
+	}
+
+	// Only delete/ UPDATE statements require filter
+	switch strings.ToUpper(modeRes[0]) {
+	case "UPDATE":
+		// MySQL eg: UPDATE table_name SET field1=new-value1, field2=new-value2 [WHERE Clause]
+		// Clickhouse eg: ALTER TABLE [db.]table UPDATE column1 = expr1 [, ...] WHERE filter_expr
+		newSql, err = gregex.ReplaceStringFuncMatch(updateFilterPattern, originSql, func(s []string) string {
+			return fmt.Sprintf("ALTER TABLE %s UPDATE", s[1])
+		})
+		if err != nil {
+			return "", nil, err
 		}
-		ck := []string{"ALTER", "TABLE"}
-		switch strings.ToUpper(result[0]) {
-		case "UPDATE":
-			sqlSlice = append(append(append(ck, sqlSlice[1]), result[0]), sqlSlice[3:]...)
-			return strings.Join(sqlSlice, " "), args, nil
-		case "DELETE":
-			sqlSlice = append(append(append(ck, sqlSlice[2]), result[0]), sqlSlice[3:]...)
-			return strings.Join(sqlSlice, " "), args, nil
+		return newSql, args, nil
+
+	case "DELETE":
+		// MySQL eg: DELETE FROM table_name [WHERE Clause]
+		// Clickhouse eg: ALTER TABLE [db.]table [ON CLUSTER cluster] DELETE WHERE filter_expr
+		newSql, err = gregex.ReplaceStringFuncMatch(deleteFilterPattern, originSql, func(s []string) string {
+			return fmt.Sprintf("ALTER TABLE %s DELETE", s[1])
+		})
+		if err != nil {
+			return "", nil, err
 		}
+		return newSql, args, nil
+
 	}
 	return originSql, args, nil
 }
@@ -295,6 +336,82 @@ func (d *Driver) DoInsert(
 	return stdSqlResult, tx.Commit()
 }
 
+// ConvertDataForRecord converting for any data that will be inserted into table/collection as a record.
+func (d *Driver) ConvertDataForRecord(ctx context.Context, value interface{}) (map[string]interface{}, error) {
+	m := gconv.Map(value, OrmTagForStruct)
+
+	// transforms a value of a particular type
+	for k, v := range m {
+		switch itemValue := v.(type) {
+
+		case time.Time:
+			m[k] = itemValue
+			// If the time is zero, it then updates it to nil,
+			// which will insert/update the value to database as "null".
+			if itemValue.IsZero() {
+				m[k] = nil
+			}
+
+		case uuid.UUID:
+			m[k] = itemValue
+
+		case *time.Time:
+			m[k] = itemValue
+			// If the time is zero, it then updates it to nil,
+			// which will insert/update the value to database as "null".
+			if itemValue == nil || itemValue.IsZero() {
+				m[k] = nil
+			}
+
+		case gtime.Time:
+			// for gtime type, needs to get time.Time
+			m[k] = itemValue.Time
+			// If the time is zero, it then updates it to nil,
+			// which will insert/update the value to database as "null".
+			if itemValue.IsZero() {
+				m[k] = nil
+			}
+
+		case *gtime.Time:
+			// for gtime type, needs to get time.Time
+			if itemValue != nil {
+				m[k] = itemValue.Time
+			}
+			// If the time is zero, it then updates it to nil,
+			// which will insert/update the value to database as "null".
+			if itemValue == nil || itemValue.IsZero() {
+				m[k] = nil
+			}
+
+		default:
+			// if the other type implements valuer for the driver package
+			// the converted result is used
+			// otherwise the interface data is committed
+			valuer, ok := itemValue.(driver.Valuer)
+			if !ok {
+				m[k] = itemValue
+				continue
+			}
+			convertedValue, err := valuer.Value()
+			if err != nil {
+				return nil, err
+			}
+			m[k] = convertedValue
+		}
+	}
+	return m, nil
+}
+
+func (d *Driver) DoDelete(ctx context.Context, link gdb.Link, table string, condition string, args ...interface{}) (result sql.Result, err error) {
+	ctx = d.injectNeedParsedSql(ctx)
+	return d.Core.DoDelete(ctx, link, table, condition, args...)
+}
+
+func (d *Driver) DoUpdate(ctx context.Context, link gdb.Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
+	ctx = d.injectNeedParsedSql(ctx)
+	return d.Core.DoUpdate(ctx, link, table, data, condition, args...)
+}
+
 // InsertIgnore Other queries for modifying data parts are not supported: REPLACE, MERGE, UPSERT, INSERT UPDATE.
 func (d *Driver) InsertIgnore(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
 	return nil, errUnsupportedInsertIgnore
@@ -316,4 +433,18 @@ func (d *Driver) Begin(ctx context.Context) (tx *gdb.TX, err error) {
 
 func (d *Driver) Transaction(ctx context.Context, f func(ctx context.Context, tx *gdb.TX) error) error {
 	return errUnsupportedTransaction
+}
+
+func (d *Driver) injectNeedParsedSql(ctx context.Context) context.Context {
+	if ctx.Value(needParsedSqlInCtx) != nil {
+		return ctx
+	}
+	return context.WithValue(ctx, needParsedSqlInCtx, true)
+}
+
+func (d *Driver) getNeedParsedSqlFromCtx(ctx context.Context) bool {
+	if ctx.Value(needParsedSqlInCtx) != nil {
+		return true
+	}
+	return false
 }
