@@ -75,3 +75,8 @@ func (v *Uint64) UnmarshalValue(value interface{}) error {
 	v.Set(gconv.Uint64(value))
 	return nil
 }
+
+// DeepCopy implements interface for deep copy of current type.
+func (v *Uint64) DeepCopy() interface{} {
+	return NewUint64(v.Val())
+}
