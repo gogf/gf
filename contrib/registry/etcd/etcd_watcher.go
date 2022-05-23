@@ -43,7 +43,7 @@ func newWatcher(key string, client *etcd3.Client) (*watcher, error) {
 }
 
 // Proceed is used to watch the key.
-func (w *watcher) Proceed() ([]*gsvc.Service, error) {
+func (w *watcher) Proceed() ([]gsvc.Service, error) {
 	select {
 	case <-w.ctx.Done():
 		return nil, w.ctx.Err()
@@ -58,7 +58,7 @@ func (w *watcher) Close() error {
 	return w.watcher.Close()
 }
 
-func (w *watcher) getServicesByPrefix() ([]*gsvc.Service, error) {
+func (w *watcher) getServicesByPrefix() ([]gsvc.Service, error) {
 	res, err := w.kv.Get(w.ctx, w.key, etcd3.WithPrefix())
 	if err != nil {
 		return nil, err

@@ -20,47 +20,48 @@ import (
 )
 
 // Register the registration.
-func (r *Registry) Register(ctx context.Context, serviceInstance *gsvc.Service) error {
-	ids := make([]string, 0, len(serviceInstance.Endpoints))
-	// set separator
-	serviceInstance.Separator = instanceIDSeparator
-	for _, endpoint := range serviceInstance.Endpoints {
-		host, portNum, err := getHostAndPortFromEndpoint(ctx, endpoint)
-		if err != nil {
-			return err
-		}
-
+func (r *Registry) Register(ctx context.Context, service gsvc.Service) (gsvc.Service, error) {
+	// Replace input service to custom service type.
+	service = &Service{
+		Service: service,
+	}
+	// Register logic.
+	var (
+		ids            = make([]string, 0, len(service.GetEndpoints()))
+		serviceVersion = service.GetVersion()
+	)
+	for _, endpoint := range service.GetEndpoints() {
 		// medata
 		var rmd map[string]interface{}
-		if serviceInstance.Metadata == nil {
+		if service.GetMetadata().IsEmpty() {
 			rmd = map[string]interface{}{
-				"kind":    gsvc.DefaultProtocol,
-				"version": serviceInstance.Version,
+				metadataKeyKind:    gsvc.DefaultProtocol,
+				metadataKeyVersion: service.GetVersion(),
 			}
 		} else {
-			rmd = make(map[string]interface{}, len(serviceInstance.Metadata)+2)
-			rmd["kind"] = gsvc.DefaultProtocol
-			if protocol, ok := serviceInstance.Metadata[gsvc.MDProtocol]; ok {
-				rmd["kind"] = gconv.String(protocol)
+			rmd = make(map[string]interface{}, len(service.GetMetadata())+2)
+			rmd[metadataKeyKind] = gsvc.DefaultProtocol
+			if protocol, ok := service.GetMetadata()[gsvc.MDProtocol]; ok {
+				rmd[metadataKeyKind] = gconv.String(protocol)
 			}
-			rmd["version"] = serviceInstance.Version
-			for k, v := range serviceInstance.Metadata {
+			rmd[metadataKeyVersion] = serviceVersion
+			for k, v := range service.GetMetadata() {
 				rmd[k] = v
 			}
 		}
 		// Register
-		service, err := r.provider.Register(
+		registeredService, err := r.provider.Register(
 			&polaris.InstanceRegisterRequest{
 				InstanceRegisterRequest: model.InstanceRegisterRequest{
-					Service:      serviceInstance.KeyWithoutEndpoints(),
+					Service:      service.GetPrefix(),
 					ServiceToken: r.opt.ServiceToken,
 					Namespace:    r.opt.Namespace,
-					Host:         host,
-					Port:         portNum,
+					Host:         endpoint.Host(),
+					Port:         endpoint.Port(),
 					Protocol:     r.opt.Protocol,
 					Weight:       &r.opt.Weight,
 					Priority:     &r.opt.Priority,
-					Version:      &serviceInstance.Version,
+					Version:      &serviceVersion,
 					Metadata:     gconv.MapStrStr(rmd),
 					Healthy:      &r.opt.Healthy,
 					Isolate:      &r.opt.Isolate,
@@ -70,69 +71,36 @@ func (r *Registry) Register(ctx context.Context, serviceInstance *gsvc.Service) 
 				},
 			})
 		if err != nil {
-			return err
+			return nil, err
 		}
-		instanceID := service.InstanceID
-
 		if r.opt.Heartbeat {
-			// start heartbeat report
-			go func() {
-				ticker := time.NewTicker(time.Second * time.Duration(r.opt.TTL))
-				defer ticker.Stop()
-
-				for {
-					select {
-					case <-ticker.C:
-						err = r.provider.Heartbeat(&polaris.InstanceHeartbeatRequest{
-							InstanceHeartbeatRequest: model.InstanceHeartbeatRequest{
-								Service:      serviceInstance.KeyWithoutEndpoints(),
-								Namespace:    r.opt.Namespace,
-								Host:         host,
-								Port:         portNum,
-								ServiceToken: r.opt.ServiceToken,
-								InstanceID:   instanceID,
-								Timeout:      &r.opt.Timeout,
-								RetryCount:   &r.opt.RetryCount,
-							},
-						})
-						if err != nil {
-							g.Log().Error(ctx, err.Error())
-							continue
-						}
-					case <-r.c:
-						g.Log().Debug(ctx, "stop heartbeat")
-						return
-					}
-				}
-			}()
+			r.doHeartBeat(ctx, registeredService.InstanceID, service, endpoint)
 		}
-		ids = append(ids, instanceID)
+		ids = append(ids, registeredService.InstanceID)
 	}
 	// need to set InstanceID for Deregister
-	serviceInstance.ID = gstr.Join(ids, instanceIDSeparator)
-	return nil
+	service.(*Service).ID = gstr.Join(ids, instanceIDSeparator)
+	return service, nil
 }
 
 // Deregister the registration.
-func (r *Registry) Deregister(ctx context.Context, serviceInstance *gsvc.Service) error {
+func (r *Registry) Deregister(ctx context.Context, service gsvc.Service) error {
 	r.c <- struct{}{}
-	split := gstr.Split(serviceInstance.ID, instanceIDSeparator)
-	serviceInstance.Separator = instanceIDSeparator
-	for i, endpoint := range serviceInstance.Endpoints {
-		host, portNum, err := getHostAndPortFromEndpoint(ctx, endpoint)
-		if err != nil {
-			return err
-		}
+	var (
+		err   error
+		split = gstr.Split(service.(*Service).ID, instanceIDSeparator)
+	)
+	for i, endpoint := range service.GetEndpoints() {
 		// Deregister
 		err = r.provider.Deregister(
 			&polaris.InstanceDeRegisterRequest{
 				InstanceDeRegisterRequest: model.InstanceDeRegisterRequest{
-					Service:      serviceInstance.KeyWithoutEndpoints(),
+					Service:      service.GetPrefix(),
 					ServiceToken: r.opt.ServiceToken,
 					Namespace:    r.opt.Namespace,
 					InstanceID:   split[i],
-					Host:         host,
-					Port:         portNum,
+					Host:         endpoint.Host(),
+					Port:         endpoint.Port(),
 					Timeout:      &r.opt.Timeout,
 					RetryCount:   &r.opt.RetryCount,
 				},
@@ -143,4 +111,37 @@ func (r *Registry) Deregister(ctx context.Context, serviceInstance *gsvc.Service
 		}
 	}
 	return nil
+}
+
+func (r *Registry) doHeartBeat(ctx context.Context, instanceID string, service gsvc.Service, endpoint gsvc.Endpoint) {
+	go func() {
+		ticker := time.NewTicker(time.Second * time.Duration(r.opt.TTL))
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ticker.C:
+				err := r.provider.Heartbeat(&polaris.InstanceHeartbeatRequest{
+					InstanceHeartbeatRequest: model.InstanceHeartbeatRequest{
+						Service:      service.GetPrefix(),
+						Namespace:    r.opt.Namespace,
+						Host:         endpoint.Host(),
+						Port:         endpoint.Port(),
+						ServiceToken: r.opt.ServiceToken,
+						InstanceID:   instanceID,
+						Timeout:      &r.opt.Timeout,
+						RetryCount:   &r.opt.RetryCount,
+					},
+				})
+				if err != nil {
+					g.Log().Error(ctx, err.Error())
+					continue
+				}
+				g.Log().Debug(ctx, "heartbeat success")
+			case <-r.c:
+				g.Log().Debug(ctx, "stop heartbeat")
+				return
+			}
+		}
+	}()
 }

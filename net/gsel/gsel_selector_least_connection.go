@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/internal/intlog"
 )
 
 const SelectorLeastConnection = "BalancerLeastConnection"
@@ -31,7 +32,8 @@ func NewSelectorLeastConnection() Selector {
 	}
 }
 
-func (s *selectorLeastConnection) Update(nodes []Node) error {
+func (s *selectorLeastConnection) Update(ctx context.Context, nodes Nodes) error {
+	intlog.Printf(ctx, `Update nodes: %s`, nodes.String())
 	var newNodes []*leastConnectionNode
 	for _, v := range nodes {
 		node := v
@@ -65,5 +67,7 @@ func (s *selectorLeastConnection) Pick(ctx context.Context) (node Node, done Don
 	done = func(ctx context.Context, di DoneInfo) {
 		pickedNode.inflight.Add(-1)
 	}
-	return pickedNode.Node, done, nil
+	node = pickedNode.Node
+	intlog.Printf(ctx, `Picked node: %s`, node.Address())
+	return node, done, nil
 }
