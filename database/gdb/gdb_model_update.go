@@ -51,7 +51,11 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	)
 	switch reflectInfo.OriginKind {
 	case reflect.Map, reflect.Struct:
-		dataMap := m.db.ConvertDataForRecord(ctx, m.data)
+		var dataMap map[string]interface{}
+		dataMap, err = m.db.ConvertDataForRecord(ctx, m.data)
+		if err != nil {
+			return nil, err
+		}
 		// Automatically update the record updating time.
 		if !m.unscoped && fieldNameUpdate != "" {
 			dataMap[fieldNameUpdate] = gtime.Now().String()

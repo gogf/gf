@@ -8,6 +8,7 @@ package gtcp_test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/v2/text/gstr"
 	"testing"
 	"time"
 
@@ -73,7 +74,13 @@ func Test_Pool_Basic2(t *testing.T) {
 func Test_Pool_Send(t *testing.T) {
 	p, _ := gtcp.GetFreePort()
 	s := gtcp.NewServer(fmt.Sprintf(`:%d`, p), func(conn *gtcp.Conn) {
-		conn.Close()
+		for {
+			data, err := conn.Recv(-1)
+			if err != nil {
+				break
+			}
+			conn.Send(data)
+		}
 	})
 	go s.Run()
 	defer s.Close()
@@ -85,18 +92,22 @@ func Test_Pool_Send(t *testing.T) {
 		data := []byte("9999")
 		err = conn.Send(data)
 		t.AssertNil(err)
-		conn.Close()
-		conn.Conn.Close()
-		time.Sleep(100 * time.Millisecond)
-		err = conn.Send(data)
+		recv, err := conn.Recv(-1)
 		t.AssertNil(err)
+		t.Assert(recv, data)
 	})
 }
 
 func Test_Pool_Recv(t *testing.T) {
 	p, _ := gtcp.GetFreePort()
 	s := gtcp.NewServer(fmt.Sprintf(`:%d`, p), func(conn *gtcp.Conn) {
-		conn.Send([]byte("Server Received"))
+		for {
+			data, err := conn.Recv(-1)
+			if err != nil {
+				break
+			}
+			conn.Send(data)
+		}
 	})
 	go s.Run()
 	defer s.Close()
@@ -109,15 +120,22 @@ func Test_Pool_Recv(t *testing.T) {
 		err = conn.Send(data)
 		t.AssertNil(err)
 		time.Sleep(100 * time.Millisecond)
-		_, err = conn.Recv(-1)
+		recv, err := conn.Recv(-1)
 		t.AssertNil(err)
+		t.Assert(recv, data)
 	})
 }
 
 func Test_Pool_RecvLine(t *testing.T) {
 	p, _ := gtcp.GetFreePort()
 	s := gtcp.NewServer(fmt.Sprintf(`:%d`, p), func(conn *gtcp.Conn) {
-		conn.Send([]byte("Server Received\n"))
+		for {
+			data, err := conn.Recv(-1)
+			if err != nil {
+				break
+			}
+			conn.Send(data)
+		}
 	})
 	go s.Run()
 	defer s.Close()
@@ -126,23 +144,27 @@ func Test_Pool_RecvLine(t *testing.T) {
 		conn, err := gtcp.NewPoolConn(fmt.Sprintf("127.0.0.1:%d", p))
 		t.AssertNil(err)
 		defer conn.Close()
-		data := []byte("9999")
+		data := []byte("9999\n")
 		err = conn.Send(data)
 		t.AssertNil(err)
 		time.Sleep(100 * time.Millisecond)
-		_, err = conn.RecvLine()
+		recv, err := conn.RecvLine()
 		t.AssertNil(err)
-		conn.Close()
-		conn.Conn.Close()
-		_, err = conn.RecvLine()
-		t.AssertNE(err, nil)
+		splitData := gstr.Split(string(data), "\n")
+		t.Assert(recv, splitData[0])
 	})
 }
 
 func Test_Pool_RecvTill(t *testing.T) {
 	p, _ := gtcp.GetFreePort()
 	s := gtcp.NewServer(fmt.Sprintf(`:%d`, p), func(conn *gtcp.Conn) {
-		conn.Send([]byte("Server Received\n"))
+		for {
+			data, err := conn.Recv(-1)
+			if err != nil {
+				break
+			}
+			conn.Send(data)
+		}
 	})
 	go s.Run()
 	defer s.Close()
@@ -151,23 +173,26 @@ func Test_Pool_RecvTill(t *testing.T) {
 		conn, err := gtcp.NewPoolConn(fmt.Sprintf("127.0.0.1:%d", p))
 		t.AssertNil(err)
 		defer conn.Close()
-		data := []byte("9999")
+		data := []byte("9999\n")
 		err = conn.Send(data)
 		t.AssertNil(err)
 		time.Sleep(100 * time.Millisecond)
-		_, err = conn.RecvTill([]byte("\n"))
+		recv, err := conn.RecvTill([]byte("\n"))
 		t.AssertNil(err)
-		conn.Close()
-		conn.Conn.Close()
-		_, err = conn.RecvTill([]byte("\n"))
-		t.AssertNE(err, nil)
+		t.Assert(recv, data)
 	})
 }
 
 func Test_Pool_RecvWithTimeout(t *testing.T) {
 	p, _ := gtcp.GetFreePort()
 	s := gtcp.NewServer(fmt.Sprintf(`:%d`, p), func(conn *gtcp.Conn) {
-		conn.Send([]byte("Server Received\n"))
+		for {
+			data, err := conn.Recv(-1)
+			if err != nil {
+				break
+			}
+			conn.Send(data)
+		}
 	})
 	go s.Run()
 	defer s.Close()
@@ -180,15 +205,22 @@ func Test_Pool_RecvWithTimeout(t *testing.T) {
 		err = conn.Send(data)
 		t.AssertNil(err)
 		time.Sleep(100 * time.Millisecond)
-		_, err = conn.RecvWithTimeout(-1, time.Millisecond*500)
+		recv, err := conn.RecvWithTimeout(-1, time.Millisecond*500)
 		t.AssertNil(err)
+		t.Assert(data, recv)
 	})
 }
 
 func Test_Pool_SendWithTimeout(t *testing.T) {
 	p, _ := gtcp.GetFreePort()
 	s := gtcp.NewServer(fmt.Sprintf(`:%d`, p), func(conn *gtcp.Conn) {
-		conn.Send([]byte("Server Received\n"))
+		for {
+			data, err := conn.Recv(-1)
+			if err != nil {
+				break
+			}
+			conn.Send(data)
+		}
 	})
 	go s.Run()
 	defer s.Close()
@@ -200,13 +232,22 @@ func Test_Pool_SendWithTimeout(t *testing.T) {
 		data := []byte("9999")
 		err = conn.SendWithTimeout(data, time.Millisecond*500)
 		t.AssertNil(err)
+		recv, err := conn.Recv(-1)
+		t.AssertNil(err)
+		t.Assert(data, recv)
 	})
 }
 
 func Test_Pool_SendRecvWithTimeout(t *testing.T) {
 	p, _ := gtcp.GetFreePort()
 	s := gtcp.NewServer(fmt.Sprintf(`:%d`, p), func(conn *gtcp.Conn) {
-		conn.Send([]byte("Server Received\n"))
+		for {
+			data, err := conn.Recv(-1)
+			if err != nil {
+				break
+			}
+			conn.Send(data)
+		}
 	})
 	go s.Run()
 	defer s.Close()
@@ -216,7 +257,8 @@ func Test_Pool_SendRecvWithTimeout(t *testing.T) {
 		t.AssertNil(err)
 		defer conn.Close()
 		data := []byte("9999")
-		_, err = conn.SendRecvWithTimeout(data, -1, time.Millisecond*500)
+		recv, err := conn.SendRecvWithTimeout(data, -1, time.Millisecond*500)
 		t.AssertNil(err)
+		t.Assert(data, recv)
 	})
 }

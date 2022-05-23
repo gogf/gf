@@ -9,7 +9,9 @@ package gclient_test
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"fmt"
+	"github.com/gogf/gf/v2/debug/gdebug"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -540,5 +542,29 @@ func Test_WebSocketClient(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(mt, websocket.TextMessage)
 		t.Assert(data, msg)
+	})
+}
+
+func TestLoadKeyCrt(t *testing.T) {
+	var (
+		testCrtFile = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/upload/file1.txt"
+		testKeyFile = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/upload/file2.txt"
+		crtFile     = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/server.crt"
+		keyFile     = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/server.key"
+		tlsConfig   = &tls.Config{}
+	)
+
+	gtest.C(t, func(t *gtest.T) {
+		tlsConfig, _ = gclient.LoadKeyCrt("crtFile", "keyFile")
+		t.AssertNil(tlsConfig)
+
+		tlsConfig, _ = gclient.LoadKeyCrt(crtFile, "keyFile")
+		t.AssertNil(tlsConfig)
+
+		tlsConfig, _ = gclient.LoadKeyCrt(testCrtFile, testKeyFile)
+		t.AssertNil(tlsConfig)
+
+		tlsConfig, _ = gclient.LoadKeyCrt(crtFile, keyFile)
+		t.AssertNE(tlsConfig, nil)
 	})
 }

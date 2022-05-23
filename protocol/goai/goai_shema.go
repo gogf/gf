@@ -157,6 +157,10 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 			return nil, err
 		}
 		schema.Items = subSchemaRef
+		if len(schema.Enum) > 0 {
+			schema.Items.Value.Enum = schema.Enum
+			schema.Enum = nil
+		}
 		return schema, nil
 	}
 	// struct.

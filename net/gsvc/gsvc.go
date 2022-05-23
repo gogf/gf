@@ -25,7 +25,7 @@ type Registrar interface {
 	// Register registers `service` to Registry.
 	Register(ctx context.Context, service *Service) error
 
-	// Deregister off-lines and removes `service` from Registry.
+	// Deregister off-lines and removes `service` from the Registry.
 	Deregister(ctx context.Context, service *Service) error
 }
 
@@ -49,13 +49,15 @@ type Watcher interface {
 
 // Service definition.
 type Service struct {
+	ID         string   // ID is the unique instance ID as registered.
 	Prefix     string   // Service prefix.
 	Deployment string   // Service deployment name, eg: dev, qa, staging, prod, etc.
-	Namespace  string   // Service Namespace, to indicate different service in the same environment with the same Name.
+	Namespace  string   // Service Namespace, to indicate different services in the same environment with the same Name.
 	Name       string   // Name for the service.
 	Version    string   // Service version, eg: v1.0.0, v2.1.1, etc.
 	Endpoints  []string // Service Endpoints, pattern: IP:port, eg: 192.168.1.2:8000.
 	Metadata   Metadata // Custom data for this service, which can be set using JSON by environment or command-line.
+	Separator  string   // Separator for service name and version, eg: _, -, etc.
 }
 
 // Metadata stores custom key-value pairs.
@@ -63,20 +65,13 @@ type Metadata map[string]interface{}
 
 // SearchInput is the input for service searching.
 type SearchInput struct {
-	Prefix     string // Service prefix.
-	Deployment string // Service deployment name, eg: dev, qa, staging, prod, etc.
-	Namespace  string // Service Namespace, to indicate different service in the same environment with the same Name.
-	Name       string // Name for the service.
-	Version    string // Service version, eg: v1.0.0, v2.1.1, etc.}
-}
-
-// WatchInput is the input for service watching.
-type WatchInput struct {
-	Prefix     string // Service prefix.
-	Deployment string // Service deployment name, eg: dev, qa, staging, prod, etc.
-	Namespace  string // Service Namespace, to indicate different service in the same environment with the same Name.
-	Name       string // Name for the service.
-	Version    string // Service version, eg: v1.0.0, v2.1.1, etc.}
+	Prefix     string   // Service prefix.
+	Deployment string   // Service deployment name, eg: dev, qa, staging, prod, etc.
+	Namespace  string   // Service Namespace, to indicate different services in the same environment with the same Name.
+	Name       string   // Name for the service.
+	Version    string   // Service version, eg: v1.0.0, v2.1.1, etc.}
+	Metadata   Metadata // Custom data for this service, which can be set using JSON by environment or command-line.
+	Separator  string   // Separator for service name and version, eg: _, -, etc.
 }
 
 const (
@@ -94,11 +89,10 @@ const (
 	MDInsecure        = `insecure`
 	MDWeight          = `weight`
 	defaultTimeout    = 5 * time.Second
+	DefaultProtocol   = `http`
 )
 
-var (
-	defaultRegistry Registry
-)
+var defaultRegistry Registry
 
 // SetRegistry sets the default Registry implements as your own implemented interface.
 func SetRegistry(registry Registry) {
