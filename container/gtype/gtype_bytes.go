@@ -30,7 +30,7 @@ func NewBytes(value ...[]byte) *Bytes {
 	return t
 }
 
-// Clone clones and returns a new concurrent-safe object for []byte type.
+// Clone clones and returns a new shallow copy object for []byte type.
 func (v *Bytes) Clone() *Bytes {
 	return NewBytes(v.Val())
 }
@@ -82,4 +82,12 @@ func (v *Bytes) UnmarshalJSON(b []byte) error {
 func (v *Bytes) UnmarshalValue(value interface{}) error {
 	v.Set(gconv.Bytes(value))
 	return nil
+}
+
+// DeepCopy implements interface for deep copy of current type.
+func (v *Bytes) DeepCopy() interface{} {
+	oldBytes := v.Val()
+	newBytes := make([]byte, len(oldBytes))
+	copy(newBytes, oldBytes)
+	return NewBytes(newBytes)
 }

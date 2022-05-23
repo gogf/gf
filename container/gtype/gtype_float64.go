@@ -87,3 +87,8 @@ func (v *Float64) UnmarshalValue(value interface{}) error {
 	v.Set(gconv.Float64(value))
 	return nil
 }
+
+// DeepCopy implements interface for deep copy of current type.
+func (v *Float64) DeepCopy() interface{} {
+	return NewFloat64(v.Val())
+}

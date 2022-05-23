@@ -12,6 +12,7 @@ import (
 
 	"github.com/gogf/gf/v2/container/glist"
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/deepcopy"
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/rwmutex"
@@ -589,4 +590,20 @@ func (m *ListMap) UnmarshalValue(value interface{}) (err error) {
 		}
 	}
 	return
+}
+
+// DeepCopy implements interface for deep copy of current type.
+func (m *ListMap) DeepCopy() interface{} {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	data := make(map[interface{}]interface{}, len(m.data))
+	if m.list != nil {
+		var node *gListMapNode
+		m.list.IteratorAsc(func(e *glist.Element) bool {
+			node = e.Value.(*gListMapNode)
+			data[node.key] = deepcopy.Copy(node.value)
+			return true
+		})
+	}
+	return NewListMapFrom(data, m.mu.IsSafe())
 }

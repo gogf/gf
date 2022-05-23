@@ -9,6 +9,7 @@ package gtype
 import (
 	"sync/atomic"
 
+	"github.com/gogf/gf/v2/internal/deepcopy"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -70,4 +71,9 @@ func (v *Interface) UnmarshalJSON(b []byte) error {
 func (v *Interface) UnmarshalValue(value interface{}) error {
 	v.Set(value)
 	return nil
+}
+
+// DeepCopy implements interface for deep copy of current type.
+func (v *Interface) DeepCopy() interface{} {
+	return NewInterface(deepcopy.Copy(v.Val()))
 }

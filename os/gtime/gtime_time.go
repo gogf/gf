@@ -479,3 +479,8 @@ func (t *Time) UnmarshalText(data []byte) error {
 
 // NoValidation marks this struct object will not be validated by package gvalid.
 func (t *Time) NoValidation() {}
+
+// DeepCopy implements interface for deep copy of current type.
+func (t *Time) DeepCopy() interface{} {
+	return New(t.Time)
+}

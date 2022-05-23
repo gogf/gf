@@ -8,6 +8,7 @@ package gmap
 
 import (
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/deepcopy"
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/rwmutex"
@@ -72,7 +73,7 @@ func (m *AnyAnyMap) Map() map[interface{}]interface{} {
 	return data
 }
 
-// MapCopy returns a copy of the underlying data of the hash map.
+// MapCopy returns a shallow copy of the underlying data of the hash map.
 func (m *AnyAnyMap) MapCopy() map[interface{}]interface{} {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -496,4 +497,15 @@ func (m *AnyAnyMap) UnmarshalValue(value interface{}) (err error) {
 		m.data[k] = v
 	}
 	return
+}
+
+// DeepCopy implements interface for deep copy of current type.
+func (m *AnyAnyMap) DeepCopy() interface{} {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	data := make(map[interface{}]interface{}, len(m.data))
+	for k, v := range m.data {
+		data[k] = deepcopy.Copy(v)
+	}
+	return NewFrom(data, m.mu.IsSafe())
 }

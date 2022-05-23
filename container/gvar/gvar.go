@@ -11,9 +11,11 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/internal/deepcopy"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // Var is an universal variable type implementer.
@@ -35,6 +37,11 @@ func New(value interface{}, safe ...bool) *Var {
 	return &Var{
 		value: value,
 	}
+}
+
+// Copy does a deep copy of current Var and returns a pointer to this Var.
+func (v *Var) Copy() *Var {
+	return New(gutil.Copy(v.Val()), v.safe)
 }
 
 // Clone does a shallow copy of current Var and returns a pointer to this Var.
@@ -187,4 +194,9 @@ func (v *Var) UnmarshalJSON(b []byte) error {
 func (v *Var) UnmarshalValue(value interface{}) error {
 	v.Set(value)
 	return nil
+}
+
+// DeepCopy implements interface for deep copy of current type.
+func (v *Var) DeepCopy() interface{} {
+	return New(deepcopy.Copy(v.Val()), v.safe)
 }

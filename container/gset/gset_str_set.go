@@ -499,3 +499,18 @@ func (set *StrSet) UnmarshalValue(value interface{}) (err error) {
 	}
 	return
 }
+
+// DeepCopy implements interface for deep copy of current type.
+func (set *StrSet) DeepCopy() interface{} {
+	set.mu.RLock()
+	defer set.mu.RUnlock()
+	var (
+		slice = make([]string, len(set.data))
+		index = 0
+	)
+	for k := range set.data {
+		slice[index] = k
+		index++
+	}
+	return NewStrSetFrom(slice, set.mu.IsSafe())
+}
