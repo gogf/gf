@@ -231,9 +231,6 @@ func Test_Params_File_Upload_Required(t *testing.T) {
 			r = g.RequestFromCtx(ctx)
 		)
 
-		if err = r.Parse(&req); err != nil {
-			r.Response.WriteExit(err.Error())
-		}
 		file := req.File
 		if name, err := file.Save(dstDirPath); err == nil {
 			r.Response.WriteExit(name)
@@ -249,8 +246,10 @@ func Test_Params_File_Upload_Required(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
-		content := client.PostContent(ctx, "/upload/required")
-		t.AssertNE(content, "upload file is required")
+		content, err := client.Post(ctx, "/upload/required")
+		if err != nil {
+			t.Assert(err.Error(), "upload file is required")
+		}
 		t.AssertNE(content, "upload failed")
 	})
 }
