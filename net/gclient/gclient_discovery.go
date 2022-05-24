@@ -65,15 +65,22 @@ func internalMiddlewareDiscovery(c *Client, r *http.Request) (response *Response
 		return c.Next(r)
 	}
 	// Balancer.
-	selectorMapKey := service.GetPrefix()
-	selector := clientSelectorMap.GetOrSetFuncLock(selectorMapKey, func() interface{} {
-		intlog.Printf(ctx, `http client create selector for service "%s"`, selectorMapKey)
-		return gsel.GetBuilder().Build()
-	}).(gsel.Selector)
-	// Update selector nodes.
-	if err = updateSelectorNodesByService(ctx, selector, service); err != nil {
+	var (
+		selectorMapKey   = service.GetPrefix()
+		selectorMapValue = clientSelectorMap.GetOrSetFuncLock(selectorMapKey, func() interface{} {
+			intlog.Printf(ctx, `http client create selector for service "%s"`, selectorMapKey)
+			selector := gsel.GetBuilder().Build()
+			// Update selector nodes.
+			if err = updateSelectorNodesByService(ctx, selector, service); err != nil {
+				return nil
+			}
+			return selector
+		})
+	)
+	if err != nil {
 		return nil, err
 	}
+	selector := selectorMapValue.(gsel.Selector)
 	// Pick one node from multiple addresses.
 	node, done, err := selector.Pick(ctx)
 	if err != nil {
