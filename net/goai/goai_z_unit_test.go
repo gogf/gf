@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/protocol/goai"
+	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gmeta"
 )
