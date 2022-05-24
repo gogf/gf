@@ -35,8 +35,7 @@ func newWatcher(key string, client *etcd3.Client) (*watcher, error) {
 	}
 	w.ctx, w.cancel = context.WithCancel(context.Background())
 	w.watchChan = w.watcher.Watch(w.ctx, key, etcd3.WithPrefix(), etcd3.WithRev(0))
-	err := w.watcher.RequestProgress(context.Background())
-	if err != nil {
+	if err := w.watcher.RequestProgress(context.Background()); err != nil {
 		return nil, err
 	}
 	return w, nil

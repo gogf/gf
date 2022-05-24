@@ -42,6 +42,7 @@ type Discovery interface {
 // Watcher interface for service.
 type Watcher interface {
 	// Proceed proceeds watch in blocking way.
+	// It returns all complete services that watched by `key` if any change.
 	Proceed() ([]Service, error)
 
 	// Close closes the watcher.
