@@ -13,7 +13,6 @@ import (
 	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/os/gtimer"
-	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gtag"
 )
 
@@ -71,6 +70,7 @@ type (
 		File   string `name:"FILE"  arg:"true" brief:"{cRunFileBrief}" v:"required"`
 		Path   string `name:"path"  short:"p"  brief:"{cRunPathBrief}" d:"./"`
 		Extra  string `name:"extra" short:"e"  brief:"{cRunExtraBrief}"`
+		Args   string `name:"args"  short:"a"  brief:"custom arguments"`
 	}
 	cRunOutput struct{}
 )
@@ -85,6 +85,7 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 		File:    in.File,
 		Path:    in.Path,
 		Options: in.Extra,
+		Args:    in.Args,
 	}
 	dirty := gtype.NewBool()
 	_, err = gfsnotify.Add(gfile.RealPath("."), func(event *gfsnotify.Event) {
@@ -146,13 +147,15 @@ func (app *cRunApp) Run() {
 	}
 	// Run the binary file.
 	runCommand := fmt.Sprintf(`%s %s`, outputPath, app.Args)
+	mlog.Print(outputPath)
+	mlog.Print(app.Args)
 	mlog.Print(runCommand)
 	if runtime.GOOS == "windows" {
 		// Special handling for windows platform.
 		// DO NOT USE "cmd /c" command.
-		process = gproc.NewProcess(outputPath, gstr.SplitAndTrim(" ", app.Args))
+		process = gproc.NewProcess(runCommand, nil)
 	} else {
-		process = gproc.NewProcessCmd(outputPath, gstr.SplitAndTrim(" ", app.Args))
+		process = gproc.NewProcessCmd(runCommand, nil)
 	}
 	if pid, err := process.Start(); err != nil {
 		mlog.Printf("build running error: %s", err.Error())
