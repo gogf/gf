@@ -14,6 +14,7 @@ import (
 	"net/url"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/gogf/gf/v2/frame/g"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -34,8 +35,15 @@ var (
 )
 
 func init() {
-	if err := gdb.Register(`mysql`, New()); err != nil {
-		panic(err)
+	var (
+		err         error
+		driverObj   = New()
+		driverNames = g.SliceStr{"mysql", "mariadb", "tidb"}
+	)
+	for _, driverName := range driverNames {
+		if err = gdb.Register(driverName, driverObj); err != nil {
+			panic(err)
+		}
 	}
 }
 
