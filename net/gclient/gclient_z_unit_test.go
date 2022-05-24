@@ -607,4 +607,35 @@ func TestClient_DoRequest(t *testing.T) {
 		t.Assert(bytes, []byte{})
 		resp.Close()
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		url := "127.0.0.1:99999/hello"
+		resp, err := c.DoRequest(ctx, http.MethodGet, url)
+		t.AssertNil(resp.Response)
+		t.AssertNE(err, nil)
+	})
+}
+
+func TestClient_RequestVar(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			url = "http://127.0.0.1:99999/var/jsons"
+		)
+		varValue := g.Client().RequestVar(ctx, http.MethodGet, url)
+		t.AssertNil(varValue)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id   int
+			Name string
+		}
+		var (
+			users []User
+			url   = "http://127.0.0.1:8999/var/jsons"
+		)
+		err := g.Client().RequestVar(ctx, http.MethodGet, url).Scan(&users)
+		t.AssertNil(err)
+		t.AssertNE(users, nil)
+	})
 }

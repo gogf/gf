@@ -950,3 +950,137 @@ func ExampleClient_Trace() {
 	// Output:
 	// TRACE: form: 10000, john
 }
+
+func ExampleClient_PutVar() {
+	type User struct {
+		Id   int
+		Name string
+	}
+	var (
+		user *User
+		ctx  = context.Background()
+		url  = "http://127.0.0.1:8999/var/json"
+	)
+	err := g.Client().PutVar(ctx, url).Scan(&user)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(user)
+
+	// Output:
+	// &{1 john}
+}
+
+func ExampleClient_DeleteVar() {
+	type User struct {
+		Id   int
+		Name string
+	}
+	var (
+		users []User
+		url   = "http://127.0.0.1:8999/var/jsons"
+	)
+	err := g.Client().DeleteVar(ctx, url).Scan(&users)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(users)
+
+	// Output:
+	// [{1 john} {2 smith}]
+}
+
+func ExampleClient_HeadVar() {
+	type User struct {
+		Id   int
+		Name string
+	}
+	var (
+		users []User
+		url   = "http://127.0.0.1:8999/var/jsons"
+	)
+	err := g.Client().HeadVar(ctx, url).Scan(&users)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(users)
+
+	// Output:
+	// []
+}
+
+func ExampleClient_PatchVar() {
+	type User struct {
+		Id   int
+		Name string
+	}
+	var (
+		users []User
+		url   = "http://127.0.0.1:8999/var/jsons"
+	)
+	err := g.Client().PatchVar(ctx, url).Scan(&users)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(users)
+
+	// Output:
+	// [{1 john} {2 smith}]
+}
+
+func ExampleClient_ConnectVar() {
+	type User struct {
+		Id   int
+		Name string
+	}
+	var (
+		users []User
+		url   = "http://127.0.0.1:8999/var/jsons"
+	)
+	err := g.Client().ConnectVar(ctx, url).Scan(&users)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(users)
+
+	// Output:
+	// [{1 john} {2 smith}]
+}
+
+func ExampleClient_OptionsVar() {
+	type User struct {
+		Id   int
+		Name string
+	}
+	var (
+		users []User
+		url   = "http://127.0.0.1:8999/var/jsons"
+	)
+	err := g.Client().OptionsVar(ctx, url).Scan(&users)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(users)
+
+	// Output:
+	// [{1 john} {2 smith}]
+}
+
+func ExampleClient_TraceVar() {
+	type User struct {
+		Id   int
+		Name string
+	}
+	var (
+		users []User
+		url   = "http://127.0.0.1:8999/var/jsons"
+	)
+	err := g.Client().TraceVar(ctx, url).Scan(&users)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(users)
+
+	// Output:
+	// [{1 john} {2 smith}]
+}
