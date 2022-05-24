@@ -706,7 +706,7 @@ func ExampleClient_SetRedirectLimit() {
 		s.Run()
 	}()
 
-	time.Sleep(time.Millisecond * 100)
+	time.Sleep(time.Second)
 
 	var (
 		ctx      = gctx.New()
