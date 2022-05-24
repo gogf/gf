@@ -706,6 +706,8 @@ func ExampleClient_SetRedirectLimit() {
 		s.Run()
 	}()
 
+	time.Sleep(time.Millisecond * 100)
+
 	var (
 		ctx      = gctx.New()
 		urlHello = "http://127.0.0.1:8199/hello"
