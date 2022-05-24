@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/gogf/gf/v2/os/gcfg"
 	"strings"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
@@ -67,6 +68,7 @@ CONFIGURATION SUPPORT
 	cGenDaoBriefDaoPath         = `directory path for storing generated dao files under path`
 	cGenDaoBriefDoPath          = `directory path for storing generated do files under path`
 	cGenDaoBriefEntityPath      = `directory path for storing generated entity files under path`
+	cGenDaoBriefConfigPath      = `specify config file path`
 	cGenDaoBriefOverwriteDao    = `overwrite all dao files both inside/outside internal folder`
 	cGenDaoBriefModelFile       = `custom file name for storing generated model content`
 	cGenDaoBriefModelFileForDao = `custom file name generating model for DAO operations like Where/Data. It's empty in default`
@@ -124,6 +126,7 @@ func init() {
 		`cGenDaoBriefDaoPath`:         cGenDaoBriefDaoPath,
 		`cGenDaoBriefDoPath`:          cGenDaoBriefDoPath,
 		`cGenDaoBriefEntityPath`:      cGenDaoBriefEntityPath,
+		`cGenDaoBriefConfigPath`:      cGenDaoBriefConfigPath,
 		`cGenDaoBriefGJsonSupport`:    cGenDaoBriefGJsonSupport,
 		`cGenDaoBriefImportPrefix`:    cGenDaoBriefImportPrefix,
 		`cGenDaoBriefOverwriteDao`:    cGenDaoBriefOverwriteDao,
@@ -152,6 +155,7 @@ type (
 		DaoPath        string `name:"daoPath"         short:"d"  brief:"{cGenDaoBriefDaoPath}"    d:"dao"`
 		DoPath         string `name:"doPath"          short:"o"  brief:"{cGenDaoBriefDoPath}"     d:"model/do"`
 		EntityPath     string `name:"entityPath"      short:"e"  brief:"{cGenDaoBriefEntityPath}" d:"model/entity"`
+		ConfigPath     string `name:"configPath"      short:"cfg" brief:"{cGenDaoBriefConfigPath}"`
 		StdTime        bool   `name:"stdTime"         short:"s"  brief:"{cGenDaoBriefStdTime}"         orphan:"true"`
 		WithTime       bool   `name:"withTime"        short:"w"  brief:"{cGenDaoBriefWithTime}"        orphan:"true"`
 		GJsonSupport   bool   `name:"gJsonSupport"    short:"n"  brief:"{cGenDaoBriefGJsonSupport}"    orphan:"true"`
@@ -171,8 +175,15 @@ type (
 )
 
 func (c cGen) Dao(ctx context.Context, in cGenDaoInput) (out *cGenDaoOutput, err error) {
-	if g.Cfg().Available(ctx) {
-		v := g.Cfg().MustGet(ctx, cGenDaoConfig)
+	configName := gcfg.DefaultInstanceName
+	if in.ConfigPath != "" {
+		configName = gfile.Basename(in.ConfigPath)
+		cfg := g.Cfg(configName).GetAdapter().(*gcfg.AdapterFile)
+		cfg.AddPath(gfile.Dir(in.ConfigPath))
+		cfg.SetFileName(configName)
+	}
+	if g.Cfg(configName).Available(ctx) {
+		v := g.Cfg(configName).MustGet(ctx, cGenDaoConfig)
 		if v.IsSlice() {
 			for i := 0; i < len(v.Interfaces()); i++ {
 				doGenDaoForArray(ctx, i, in)
@@ -195,7 +206,11 @@ func doGenDaoForArray(ctx context.Context, index int, in cGenDaoInput) {
 		modName string // Go module name, eg: github.com/gogf/gf.
 	)
 	if index >= 0 {
-		err = g.Cfg().MustGet(
+		configName := gcfg.DefaultInstanceName
+		if in.ConfigPath != "" {
+			configName = gfile.Basename(in.ConfigPath)
+		}
+		err = g.Cfg(configName).MustGet(
 			ctx,
 			fmt.Sprintf(`%s.%d`, cGenDaoConfig, index),
 		).Scan(&in)

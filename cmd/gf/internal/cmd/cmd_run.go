@@ -46,6 +46,7 @@ which compiles and runs the go codes asynchronously when codes change.
 	cRunFileBrief  = `building file path.`
 	cRunPathBrief  = `output directory path for built binary file. it's "manifest/output" in default`
 	cRunExtraBrief = `the same options as "go run"/"go build" except some options as follows defined`
+	cRunArgsBrief  = `custom arguments`
 )
 
 var (
@@ -61,6 +62,7 @@ func init() {
 		`cRunFileBrief`:  cRunFileBrief,
 		`cRunPathBrief`:  cRunPathBrief,
 		`cRunExtraBrief`: cRunExtraBrief,
+		`cRunArgsBrief`:  cRunArgsBrief,
 	})
 }
 
@@ -70,7 +72,7 @@ type (
 		File   string `name:"FILE"  arg:"true" brief:"{cRunFileBrief}" v:"required"`
 		Path   string `name:"path"  short:"p"  brief:"{cRunPathBrief}" d:"./"`
 		Extra  string `name:"extra" short:"e"  brief:"{cRunExtraBrief}"`
-		Args   string `name:"args"  short:"a"  brief:"custom arguments"`
+		Args   string `name:"args"  short:"a"  brief:"{cRunArgsBrief}"`
 	}
 	cRunOutput struct{}
 )
