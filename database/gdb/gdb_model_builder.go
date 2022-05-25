@@ -12,7 +12,6 @@ import (
 
 // WhereBuilder holds multiple where conditions in a group.
 type WhereBuilder struct {
-	safe        *bool         // If nil, it uses the safe attribute of its model.
 	model       *Model        // A WhereBuilder should be bound to certain Model.
 	whereHolder []WhereHolder // Condition strings for where operation.
 }
@@ -28,10 +27,7 @@ type WhereHolder struct {
 
 // Builder creates and returns a WhereBuilder.
 func (m *Model) Builder() *WhereBuilder {
-	// The WhereBuilder is safe in default when it is created using Builder().
-	var isSafe = true
 	b := &WhereBuilder{
-		safe:        &isSafe,
 		model:       m,
 		whereHolder: make([]WhereHolder, 0),
 	}
@@ -41,23 +37,12 @@ func (m *Model) Builder() *WhereBuilder {
 // getBuilder creates and returns a cloned WhereBuilder of current WhereBuilder if `safe` is true,
 // or else it returns the current WhereBuilder.
 func (b *WhereBuilder) getBuilder() *WhereBuilder {
-	var isSafe bool
-	if b.safe != nil {
-		isSafe = *b.safe
-	} else {
-		isSafe = b.model.safe
-	}
-	if !isSafe {
-		return b
-	} else {
-		return b.Clone()
-	}
+	return b.Clone()
 }
 
 // Clone clones and returns a WhereBuilder that is a copy of current one.
 func (b *WhereBuilder) Clone() *WhereBuilder {
 	newBuilder := b.model.Builder()
-	newBuilder.safe = b.safe
 	newBuilder.whereHolder = make([]WhereHolder, len(b.whereHolder))
 	copy(newBuilder.whereHolder, b.whereHolder)
 	return newBuilder
@@ -125,6 +110,7 @@ func (b *WhereBuilder) convertWhereBuilder(where interface{}, args []interface{}
 	switch v := where.(type) {
 	case WhereBuilder:
 		builder = &v
+
 	case *WhereBuilder:
 		builder = v
 	}
