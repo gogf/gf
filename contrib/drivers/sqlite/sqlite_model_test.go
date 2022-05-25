@@ -2164,12 +2164,13 @@ func Test_Model_FieldsEx(t *testing.T) {
 
 func Test_Model_Prefix(t *testing.T) {
 	db := dbPrefix
-	table := fmt.Sprintf(`%s_%d`, TableName, gtime.TimestampNano())
-	createInitTableWithDb(db, TableNamePrefix1+table)
-	defer dropTable(TableNamePrefix1 + table)
+	noPrefixName := fmt.Sprintf(`%s_%d`, TableName, gtime.TimestampNano())
+	table := TableNamePrefix + noPrefixName
+	createInitTableWithDb(db, table)
+	defer dropTable(table)
 	// Select.
 	gtest.C(t, func(t *gtest.T) {
-		r, err := db.Model(table).Where("id in (?)", g.Slice{1, 2}).Order("id asc").All()
+		r, err := db.Model(noPrefixName).Where("id in (?)", g.Slice{1, 2}).Order("id asc").All()
 		t.AssertNil(err)
 		t.Assert(len(r), 2)
 		t.Assert(r[0]["id"], "1")
@@ -2177,7 +2178,7 @@ func Test_Model_Prefix(t *testing.T) {
 	})
 	// Select with alias.
 	gtest.C(t, func(t *gtest.T) {
-		r, err := db.Model(table+" as u").Where("u.id in (?)", g.Slice{1, 2}).Order("u.id asc").All()
+		r, err := db.Model(noPrefixName+" as u").Where("u.id in (?)", g.Slice{1, 2}).Order("u.id asc").All()
 		t.AssertNil(err)
 		t.Assert(len(r), 2)
 		t.Assert(r[0]["id"], "1")
@@ -2192,7 +2193,7 @@ func Test_Model_Prefix(t *testing.T) {
 			NickName string
 		}
 		var users []User
-		err := db.Model(table+" u").Where("u.id in (?)", g.Slice{1, 5}).Order("u.id asc").Scan(&users)
+		err := db.Model(noPrefixName+" u").Where("u.id in (?)", g.Slice{1, 5}).Order("u.id asc").Scan(&users)
 		t.AssertNil(err)
 		t.Assert(len(users), 2)
 		t.Assert(users[0].Id, 1)
@@ -2200,14 +2201,14 @@ func Test_Model_Prefix(t *testing.T) {
 	})
 	// Select with alias and join statement.
 	gtest.C(t, func(t *gtest.T) {
-		r, err := db.Model(table+" as u1").LeftJoin(table+" as u2", "u2.id=u1.id").Where("u1.id in (?)", g.Slice{1, 2}).Order("u1.id asc").All()
+		r, err := db.Model(noPrefixName+" as u1").LeftJoin(noPrefixName+" as u2", "u2.id=u1.id").Where("u1.id in (?)", g.Slice{1, 2}).Order("u1.id asc").All()
 		t.AssertNil(err)
 		t.Assert(len(r), 2)
 		t.Assert(r[0]["id"], "1")
 		t.Assert(r[1]["id"], "2")
 	})
 	gtest.C(t, func(t *gtest.T) {
-		r, err := db.Model(table).As("u1").LeftJoin(table+" as u2", "u2.id=u1.id").Where("u1.id in (?)", g.Slice{1, 2}).Order("u1.id asc").All()
+		r, err := db.Model(noPrefixName).As("u1").LeftJoin(noPrefixName+" as u2", "u2.id=u1.id").Where("u1.id in (?)", g.Slice{1, 2}).Order("u1.id asc").All()
 		t.AssertNil(err)
 		t.Assert(len(r), 2)
 		t.Assert(r[0]["id"], "1")

@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/encoding/gxml"
@@ -280,30 +281,30 @@ func Test_DB_Upadte_KeyFieldNameMapping(t *testing.T) {
 }
 
 // This is no longer used as the filter feature is automatically enabled from GoFrame v1.16.0.
-// func Test_DB_Insert_KeyFieldNameMapping_Error(t *testing.T) {
-//	table := createTable()
-//	defer dropTable(table)
-//
-//	gtest.C(t, func(t *gtest.T) {
-//		type User struct {
-//			Id             int
-//			Passport       string
-//			Password       string
-//			Nickname       string
-//			CreateTime     string
-//			NoneExistField string
-//		}
-//		data := User{
-//			Id:         1,
-//			Passport:   "user_1",
-//			Password:   "pass_1",
-//			Nickname:   "name_1",
-//			CreateTime: "2020-10-10 12:00:01",
-//		}
-//		_, err := db.Insert(ctx, table, data)
-//		t.AssertNil(err)
-//	})
-// }
+func Test_DB_Insert_KeyFieldNameMapping_Error(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id             int
+			Passport       string
+			Password       string
+			Nickname       string
+			CreateTime     string
+			NoneExistField string
+		}
+		data := User{
+			Id:         1,
+			Passport:   "user_1",
+			Password:   "pass_1",
+			Nickname:   "name_1",
+			CreateTime: "2020-10-10 12:00:01",
+		}
+		_, err := db.Insert(ctx, table, data)
+		t.AssertNil(err)
+	})
+}
 
 func Test_DB_InsertIgnore(t *testing.T) {
 	table := createTable()
@@ -1198,107 +1199,91 @@ func Test_DB_ToUintRecord(t *testing.T) {
 // 	gtest.Assert(result[0], data)
 // }
 
-// func Test_DB_Prefix(t *testing.T) {
-// 	db := dbPrefix
-// 	name := fmt.Sprintf(`%s_%d`, TableName, gtime.TimestampNano())
-// 	table := TableNamePrefix1 + name
-// 	createTableWithDb(db, table)
-// 	defer dropTable(table)
+func Test_DB_Prefix(t *testing.T) {
+	db := dbPrefix
+	noPrefixName := fmt.Sprintf(`%s_%d`, TableName, gtime.TimestampNano())
+	table := TableNamePrefix + noPrefixName
+	createTableWithDb(db, table)
+	defer dropTable(table)
 
-// 	gtest.C(t, func(t *gtest.T) {
-// 		id := 10000
-// 		result, err := db.Insert(ctx, name, g.Map{
-// 			"id":          id,
-// 			"passport":    fmt.Sprintf(`user_%d`, id),
-// 			"password":    fmt.Sprintf(`pass_%d`, id),
-// 			"nickname":    fmt.Sprintf(`name_%d`, id),
-// 			"create_time": gtime.NewFromStr(CreateTime).String(),
-// 		})
-// 		t.AssertNil(err)
+	gtest.C(t, func(t *gtest.T) {
+		id := 10000
+		result, err := db.Insert(ctx, noPrefixName, g.Map{
+			"id":          id,
+			"passport":    fmt.Sprintf(`user_%d`, id),
+			"password":    fmt.Sprintf(`pass_%d`, id),
+			"nickname":    fmt.Sprintf(`name_%d`, id),
+			"create_time": gtime.NewFromStr(CreateTime).String(),
+		})
+		t.AssertNil(err)
 
-// 		n, e := result.RowsAffected()
-// 		t.Assert(e, nil)
-// 		t.Assert(n, 1)
-// 	})
+		n, e := result.RowsAffected()
+		t.Assert(e, nil)
+		t.Assert(n, 1)
+	})
 
-// 	gtest.C(t, func(t *gtest.T) {
-// 		id := 10000
-// 		result, err := db.Replace(ctx, name, g.Map{
-// 			"id":          id,
-// 			"passport":    fmt.Sprintf(`user_%d`, id),
-// 			"password":    fmt.Sprintf(`pass_%d`, id),
-// 			"nickname":    fmt.Sprintf(`name_%d`, id),
-// 			"create_time": gtime.NewFromStr("2018-10-24 10:00:01").String(),
-// 		})
-// 		t.AssertNil(err)
+	gtest.C(t, func(t *gtest.T) {
+		id := 10000
+		result, err := db.Replace(ctx, noPrefixName, g.Map{
+			"id":          id,
+			"passport":    fmt.Sprintf(`user_%d`, id),
+			"password":    fmt.Sprintf(`pass_%d`, id),
+			"nickname":    fmt.Sprintf(`name_%d`, id),
+			"create_time": gtime.Now().String(),
+		})
+		t.AssertNil(err)
 
-// 		n, e := result.RowsAffected()
-// 		t.Assert(e, nil)
-// 		t.Assert(n, 2)
-// 	})
+		n, e := result.RowsAffected()
+		t.Assert(e, nil)
+		t.Assert(n, 1)
+	})
 
-// 	gtest.C(t, func(t *gtest.T) {
-// 		id := 10000
-// 		result, err := db.Save(ctx, name, g.Map{
-// 			"id":          id,
-// 			"passport":    fmt.Sprintf(`user_%d`, id),
-// 			"password":    fmt.Sprintf(`pass_%d`, id),
-// 			"nickname":    fmt.Sprintf(`name_%d`, id),
-// 			"create_time": gtime.NewFromStr("2018-10-24 10:00:02").String(),
-// 		})
-// 		t.AssertNil(err)
+	gtest.C(t, func(t *gtest.T) {
+		id := 10000
+		result, err := db.Update(ctx, noPrefixName, g.Map{
+			"id":          id,
+			"passport":    fmt.Sprintf(`user_%d`, id),
+			"password":    fmt.Sprintf(`pass_%d`, id),
+			"nickname":    fmt.Sprintf(`name_%d`, id),
+			"create_time": gtime.NewFromStr("2018-10-24 10:00:03").String(),
+		}, "id=?", id)
+		t.AssertNil(err)
 
-// 		n, e := result.RowsAffected()
-// 		t.Assert(e, nil)
-// 		t.Assert(n, 2)
-// 	})
+		n, e := result.RowsAffected()
+		t.Assert(e, nil)
+		t.Assert(n, 1)
+	})
 
-// 	gtest.C(t, func(t *gtest.T) {
-// 		id := 10000
-// 		result, err := db.Update(ctx, name, g.Map{
-// 			"id":          id,
-// 			"passport":    fmt.Sprintf(`user_%d`, id),
-// 			"password":    fmt.Sprintf(`pass_%d`, id),
-// 			"nickname":    fmt.Sprintf(`name_%d`, id),
-// 			"create_time": gtime.NewFromStr("2018-10-24 10:00:03").String(),
-// 		}, "id=?", id)
-// 		t.AssertNil(err)
+	gtest.C(t, func(t *gtest.T) {
+		id := 10000
+		result, err := db.Delete(ctx, noPrefixName, "id=?", id)
+		t.AssertNil(err)
 
-// 		n, e := result.RowsAffected()
-// 		t.Assert(e, nil)
-// 		t.Assert(n, 1)
-// 	})
+		n, e := result.RowsAffected()
+		t.Assert(e, nil)
+		t.Assert(n, 1)
+	})
 
-// 	gtest.C(t, func(t *gtest.T) {
-// 		id := 10000
-// 		result, err := db.Delete(ctx, name, "id=?", id)
-// 		t.AssertNil(err)
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.New(true)
+		for i := 1; i <= TableSize; i++ {
+			array.Append(g.Map{
+				"id":          i,
+				"passport":    fmt.Sprintf(`user_%d`, i),
+				"password":    fmt.Sprintf(`pass_%d`, i),
+				"nickname":    fmt.Sprintf(`name_%d`, i),
+				"create_time": gtime.NewFromStr(CreateTime).String(),
+			})
+		}
 
-// 		n, e := result.RowsAffected()
-// 		t.Assert(e, nil)
-// 		t.Assert(n, 1)
-// 	})
+		result, err := db.Insert(ctx, noPrefixName, array.Slice())
+		t.AssertNil(err)
 
-// 	gtest.C(t, func(t *gtest.T) {
-// 		array := garray.New(true)
-// 		for i := 1; i <= TableSize; i++ {
-// 			array.Append(g.Map{
-// 				"id":          i,
-// 				"passport":    fmt.Sprintf(`user_%d`, i),
-// 				"password":    fmt.Sprintf(`pass_%d`, i),
-// 				"nickname":    fmt.Sprintf(`name_%d`, i),
-// 				"create_time": gtime.NewFromStr(CreateTime).String(),
-// 			})
-// 		}
-
-// 		result, err := db.Insert(ctx, name, array.Slice())
-// 		t.AssertNil(err)
-
-// 		n, e := result.RowsAffected()
-// 		t.Assert(e, nil)
-// 		t.Assert(n, TableSize)
-// 	})
-// }
+		n, e := result.RowsAffected()
+		t.Assert(e, nil)
+		t.Assert(n, TableSize)
+	})
+}
 
 func Test_Model_InnerJoin(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {

@@ -33,15 +33,15 @@ var (
 )
 
 const (
-	TableSize        = 10
-	TableName        = "user"
-	TestSchema1      = "test1"
-	TestSchema2      = "test2"
-	TableNamePrefix1 = "gf_"
-	CreateTime       = "2018-10-24 10:00:00"
-	DBGroupTest      = "test"
-	DBGroupPrefix    = "prefix"
-	DBGroupInvalid   = "invalid"
+	TableSize       = 10
+	TableName       = "user"
+	TestSchema1     = "test1"
+	TestSchema2     = "test2"
+	TableNamePrefix = "gf_"
+	CreateTime      = "2018-10-24 10:00:00"
+	DBGroupTest     = "test"
+	DBGroupPrefix   = "prefix"
+	DBGroupInvalid  = "invalid"
 )
 
 func init() {
@@ -59,7 +59,7 @@ func init() {
 		Charset: "utf8",
 	}
 	nodePrefix := configNode
-	nodePrefix.Prefix = TableNamePrefix1
+	nodePrefix.Prefix = TableNamePrefix
 
 	nodeInvalid := configNode
 
