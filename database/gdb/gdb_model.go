@@ -135,7 +135,6 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 		extraArgs:  extraArgs,
 	}
 	m.whereBuilder = m.Builder()
-	m.whereBuilder.safe = &m.safe
 	if defaultModelSafe {
 		m.safe = true
 	}
