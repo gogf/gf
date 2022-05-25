@@ -82,3 +82,27 @@ func Test_Model_InnerJoinOnField(t *testing.T) {
 		t.Assert(r[1]["id"], "2")
 	})
 }
+
+func Test_Model_FieldsPrefix(t *testing.T) {
+	var (
+		table1 = gtime.TimestampNanoStr() + "_table1"
+		table2 = gtime.TimestampNanoStr() + "_table2"
+	)
+	createInitTable(table1)
+	defer dropTable(table1)
+	createInitTable(table2)
+	defer dropTable(table2)
+
+	gtest.C(t, func(t *gtest.T) {
+		r, err := db.Model(table1).
+			FieldsPrefix(table1, "id").
+			FieldsPrefix(table2, "nickname").
+			LeftJoinOnField(table2, "id").
+			WhereIn("id", g.Slice{1, 2}).
+			Order("id asc").All()
+		t.AssertNil(err)
+		t.Assert(len(r), 2)
+		t.Assert(r[0]["id"], "1")
+		t.Assert(r[0]["nickname"], "name_1")
+	})
+}
