@@ -12,6 +12,7 @@ import (
 	"math"
 	"sort"
 
+	"github.com/gogf/gf/v2/internal/deepcopy"
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/rwmutex"
@@ -795,4 +796,15 @@ func (a *SortedArray) getComparator() func(a, b interface{}) int {
 		panic("comparator is missing for sorted array")
 	}
 	return a.comparator
+}
+
+// DeepCopy implements interface for deep copy of current type.
+func (a *SortedArray) DeepCopy() interface{} {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	newSlice := make([]interface{}, len(a.array))
+	for i, v := range a.array {
+		newSlice[i] = deepcopy.Copy(v)
+	}
+	return NewSortedArrayFrom(newSlice, a.comparator, a.mu.IsSafe())
 }

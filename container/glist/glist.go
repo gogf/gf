@@ -12,6 +12,7 @@ import (
 	"bytes"
 	"container/list"
 
+	"github.com/gogf/gf/v2/internal/deepcopy"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/rwmutex"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -545,4 +546,24 @@ func (l *List) UnmarshalValue(value interface{}) (err error) {
 	}
 	l.PushBacks(array)
 	return err
+}
+
+// DeepCopy implements interface for deep copy of current type.
+func (l *List) DeepCopy() interface{} {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+
+	if l.list == nil {
+		return nil
+	}
+	var (
+		length = l.list.Len()
+		values = make([]interface{}, length)
+	)
+	if length > 0 {
+		for i, e := 0, l.list.Front(); i < length; i, e = i+1, e.Next() {
+			values[i] = deepcopy.Copy(e.Value)
+		}
+	}
+	return NewFrom(values, l.mu.IsSafe())
 }

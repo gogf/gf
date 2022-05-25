@@ -17,31 +17,26 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
+// watchedServiceMap stores used service
 var watchedServiceMap = gmap.New(true)
 
 // ServiceWatch is used to watch the service status.
-type ServiceWatch func(service *Service)
+type ServiceWatch func(service Service)
 
-// Get the watched service map.
-func Get(ctx context.Context, name string) (service *Service, err error) {
-	return GetWithWatch(ctx, name, nil)
+// Get retrieves and returns the service by service name.
+func Get(ctx context.Context, name string) (service Service, err error) {
+	return GetAndWatch(ctx, name, nil)
 }
 
-// GetWithWatch is used to getting the service with watch.
-func GetWithWatch(ctx context.Context, name string, watch ServiceWatch) (service *Service, err error) {
+// GetAndWatch is used to getting the service with custom watch callback function.
+func GetAndWatch(ctx context.Context, name string, watch ServiceWatch) (service Service, err error) {
 	v := watchedServiceMap.GetOrSetFuncLock(name, func() interface{} {
 		var (
-			s        = NewServiceWithName(name)
-			services []*Service
+			services []Service
 			watcher  Watcher
 		)
 		services, err = Search(ctx, SearchInput{
-			Prefix:     s.Prefix,
-			Deployment: s.Deployment,
-			Namespace:  s.Namespace,
-			Name:       s.Name,
-			Version:    s.Version,
-			Metadata:   s.Metadata,
+			Name: name,
 		})
 		if err != nil {
 			return nil
@@ -50,26 +45,31 @@ func GetWithWatch(ctx context.Context, name string, watch ServiceWatch) (service
 			err = gerror.NewCodef(gcode.CodeNotFound, `service not found with name "%s"`, name)
 			return nil
 		}
+
+		// Just pick one if multiple.
 		service = services[0]
+
 		// Watch the service changes in goroutine.
-		watcher, err = Watch(ctx, service.KeyWithoutEndpoints())
-		if err != nil {
-			return nil
+		if watch != nil {
+			if watcher, err = Watch(ctx, service.GetPrefix()); err != nil {
+				return nil
+			}
+			go watchAndUpdateService(watcher, service, watch)
 		}
-		go watchAndUpdateService(watcher, service, watch)
 		return service
 	})
 	if v != nil {
-		service = v.(*Service)
+		service = v.(Service)
 	}
 	return
 }
 
-func watchAndUpdateService(watcher Watcher, service *Service, watchFunc ServiceWatch) {
+// watchAndUpdateService watches and updates the service in memory if it is changed.
+func watchAndUpdateService(watcher Watcher, service Service, watchFunc ServiceWatch) {
 	var (
 		ctx      = context.Background()
 		err      error
-		services []*Service
+		services []Service
 	)
 	for {
 		time.Sleep(time.Second)
@@ -79,7 +79,7 @@ func watchAndUpdateService(watcher Watcher, service *Service, watchFunc ServiceW
 			continue
 		}
 		if len(services) > 0 {
-			watchedServiceMap.Set(service.Name, services[0])
+			watchedServiceMap.Set(service.GetName(), services[0])
 			if watchFunc != nil {
 				gutil.TryCatch(func() {
 					watchFunc(services[0])
@@ -92,7 +92,7 @@ func watchAndUpdateService(watcher Watcher, service *Service, watchFunc ServiceW
 }
 
 // Search searches and returns services with specified condition.
-func Search(ctx context.Context, in SearchInput) ([]*Service, error) {
+func Search(ctx context.Context, in SearchInput) ([]Service, error) {
 	if defaultRegistry == nil {
 		return nil, gerror.NewCodef(gcode.CodeNotImplemented, `no Registry is registered`)
 	}

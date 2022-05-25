@@ -799,3 +799,12 @@ func (a *IntArray) Walk(f func(value int) int) *IntArray {
 func (a *IntArray) IsEmpty() bool {
 	return a.Len() == 0
 }
+
+// DeepCopy implements interface for deep copy of current type.
+func (a *IntArray) DeepCopy() interface{} {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	newSlice := make([]int, len(a.array))
+	copy(newSlice, a.array)
+	return NewIntArrayFrom(newSlice, a.mu.IsSafe())
+}

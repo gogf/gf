@@ -1,6 +1,6 @@
 ## This file contains all available configuration options
 ## with their default values.
-#
+
 # See https://github.com/golangci/golangci-lint#config-file
 run:
   issues-exit-code: 1 #Default

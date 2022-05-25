@@ -16,19 +16,19 @@ import (
 )
 
 // Register implements the gsvc.Register interface.
-func (r *Registry) Register(ctx context.Context, service *gsvc.Service) error {
+func (r *Registry) Register(ctx context.Context, service gsvc.Service) (gsvc.Service, error) {
 	r.lease = etcd3.NewLease(r.client)
 	grant, err := r.lease.Grant(ctx, int64(r.keepaliveTTL.Seconds()))
 	if err != nil {
-		return gerror.Wrapf(err, `etcd grant failed with keepalive ttl "%s"`, r.keepaliveTTL)
+		return nil, gerror.Wrapf(err, `etcd grant failed with keepalive ttl "%s"`, r.keepaliveTTL)
 	}
 	var (
-		key   = service.Key()
-		value = service.Value()
+		key   = service.GetKey()
+		value = service.GetValue()
 	)
 	_, err = r.client.Put(ctx, key, value, etcd3.WithLease(grant.ID))
 	if err != nil {
-		return gerror.Wrapf(
+		return nil, gerror.Wrapf(
 			err,
 			`etcd put failed with key "%s", value "%s", lease "%d"`,
 			key, value, grant.ID,
@@ -41,16 +41,15 @@ func (r *Registry) Register(ctx context.Context, service *gsvc.Service) error {
 	)
 	keepAliceCh, err := r.client.KeepAlive(context.Background(), grant.ID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	go r.doKeepAlive(grant.ID, keepAliceCh)
-	service.Separator = gsvc.DefaultSeparator
-	return nil
+	return service, nil
 }
 
 // Deregister implements the gsvc.Deregister interface.
-func (r *Registry) Deregister(ctx context.Context, service *gsvc.Service) error {
-	_, err := r.client.Delete(ctx, service.Key())
+func (r *Registry) Deregister(ctx context.Context, service gsvc.Service) error {
+	_, err := r.client.Delete(ctx, service.GetKey())
 	if r.lease != nil {
 		_ = r.lease.Close()
 	}

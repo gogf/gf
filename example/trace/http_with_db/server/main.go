@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	_ "github.com/gogf/gf/contrib/drivers/mysql/v2"
+
 	"github.com/gogf/gf/contrib/trace/jaeger/v2"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
