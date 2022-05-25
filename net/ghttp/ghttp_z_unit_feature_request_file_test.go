@@ -224,18 +224,9 @@ func Test_Params_File_Upload_Required(t *testing.T) {
 	}
 	type Res struct{}
 
-	dstDirPath := gfile.Temp(gtime.TimestampNanoStr())
 	s := g.Server(guid.S())
+	s.Use(ghttp.MiddlewareHandlerResponse)
 	s.BindHandler("/upload/required", func(ctx context.Context, req *Req) (res *Res, err error) {
-		var (
-			r = g.RequestFromCtx(ctx)
-		)
-
-		file := req.File
-		if name, err := file.Save(dstDirPath); err == nil {
-			r.Response.WriteExit(name)
-		}
-		r.Response.WriteExit("upload failed")
 		return
 	})
 	s.SetDumpRouterMap(false)
@@ -246,9 +237,7 @@ func Test_Params_File_Upload_Required(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
-		_, err := client.Post(ctx, "/upload/required")
-		if err != nil {
-			t.Assert(err.Error(), "upload file is required")
-		}
+		content := client.PostContent(ctx, "/upload/required")
+		t.Assert(content, `{"code":51,"message":"upload file is required","data":null}`)
 	})
 }
