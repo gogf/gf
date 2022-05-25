@@ -299,6 +299,7 @@ ORDER BY a.id,a.colorder`,
 			}
 			fields = make(map[string]*gdb.TableField)
 			for i, m := range result {
+
 				fields[m["Field"].String()] = &gdb.TableField{
 					Index:   i,
 					Name:    m["Field"].String(),
