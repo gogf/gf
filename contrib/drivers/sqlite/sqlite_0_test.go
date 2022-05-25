@@ -7,12 +7,12 @@
 package sqlite_test
 
 import (
-	"context"
 	"fmt"
 
-	_ "github.com/gogf/gf/contrib/drivers/sqlite/v2"
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -25,8 +25,11 @@ var (
 	dbPrefix   gdb.DB
 	dbInvalid  gdb.DB
 	configNode gdb.ConfigNode
-	dbDir      string
-	ctx        context.Context
+	dbDir      = gfile.Temp("sqlite")
+	ctx        = gctx.New()
+
+	// Error
+	ErrorSave = gerror.NewCode(gcode.CodeNotSupported, `Save operation is not supported by sqlite driver`)
 )
 
 const (
@@ -43,9 +46,7 @@ const (
 
 func init() {
 	fmt.Println("init sqlite db start")
-	ctx = gctx.New()
 
-	dbDir = gfile.Temp("testsqlite")
 	if err := gfile.Mkdir(dbDir); err != nil {
 		gtest.Error(err)
 	}
@@ -114,12 +115,14 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 	CREATE TABLE %s (
 		id          INTEGER       PRIMARY KEY AUTOINCREMENT
-								  UNIQUE
-								  NOT NULL,
-		passport    VARCHAR (45)  NOT NULL,
-		password    VARCHAR (128) NOT NULL,
-		nickname    VARCHAR (45)  NULL,
-		create_time DATETIME      NOT NULL
+									UNIQUE
+									NOT NULL,
+		passport    VARCHAR (45)  NOT NULL
+									DEFAULT passport,
+		password    VARCHAR (128) NOT NULL
+									DEFAULT password,
+		nickname    VARCHAR (45),
+		create_time DATETIME
 	);
 	`, name,
 	)); err != nil {

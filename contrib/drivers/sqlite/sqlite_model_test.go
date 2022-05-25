@@ -236,32 +236,32 @@ func Test_Model_BatchInsertWithArrayStruct(t *testing.T) {
 	})
 }
 
-// func Test_Model_InsertIgnore(t *testing.T) {
-// 	table := createInitTable()
-// 	defer dropTable(table)
-// 	gtest.C(t, func(t *gtest.T) {
-// 		_, err := db.Model(table).Data(g.Map{
-// 			"id":          1,
-// 			"uid":         1,
-// 			"passport":    "t1",
-// 			"password":    "25d55ad283aa400af464c76d713c07ad",
-// 			"nickname":    "name_1",
-// 			"create_time": gtime.Now().String(),
-// 		}).Insert()
-// 		t.AssertNE(err, nil)
-// 	})
-// 	gtest.C(t, func(t *gtest.T) {
-// 		_, err := db.Model(table).Data(g.Map{
-// 			"id":          1,
-// 			"uid":         1,
-// 			"passport":    "t1",
-// 			"password":    "25d55ad283aa400af464c76d713c07ad",
-// 			"nickname":    "name_1",
-// 			"create_time": gtime.Now().String(),
-// 		}).InsertIgnore()
-// 		t.AssertNil(err)
-// 	})
-// }
+func Test_Model_InsertIgnore(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model(table).Data(g.Map{
+			"id":          1,
+			"uid":         1,
+			"passport":    "t1",
+			"password":    "25d55ad283aa400af464c76d713c07ad",
+			"nickname":    "name_1",
+			"create_time": CreateTime,
+		}).Insert()
+		t.AssertNil(err)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model(table).Data(g.Map{
+			"id":          1,
+			"uid":         1,
+			"passport":    "t1",
+			"password":    "25d55ad283aa400af464c76d713c07ad",
+			"nickname":    "name_1",
+			"create_time": CreateTime,
+		}).InsertIgnore()
+		t.AssertNil(err)
+	})
+}
 
 func Test_Model_Batch(t *testing.T) {
 	// batch insert
@@ -311,75 +311,65 @@ func Test_Model_Batch(t *testing.T) {
 		t.Assert(n, 5)
 	})
 
-	// // batch save
-	// gtest.C(t, func(t *gtest.T) {
-	// 	table := createInitTable()
-	// 	defer dropTable(table)
-	// 	result, err := db.Model(table).All()
-	// 	t.AssertNil(err)
-	// 	t.Assert(len(result), TableSize)
-	// 	for _, v := range result {
-	// 		v["nickname"].Set(v["nickname"].String() + v["id"].String())
-	// 	}
-	// 	r, e := db.Model(table).Data(result).Save()
-	// 	t.Assert(e, nil)
-	// 	n, e := r.RowsAffected()
-	// 	t.Assert(e, nil)
-	// 	t.Assert(n, TableSize*2)
-	// })
-
-	// // batch replace
-	// gtest.C(t, func(t *gtest.T) {
-	// 	table := createInitTable()
-	// 	defer dropTable(table)
-	// 	result, err := db.Model(table).All()
-	// 	t.AssertNil(err)
-	// 	t.Assert(len(result), TableSize)
-	// 	for _, v := range result {
-	// 		v["nickname"].Set(v["nickname"].String() + v["id"].String())
-	// 	}
-	// 	r, e := db.Model(table).Data(result).Replace()
-	// 	t.Assert(e, nil)
-	// 	n, e := r.RowsAffected()
-	// 	t.Assert(e, nil)
-	// 	t.Assert(n, TableSize*2)
-	// })
+	// batch replace
+	gtest.C(t, func(t *gtest.T) {
+		table := createInitTable()
+		defer dropTable(table)
+		result, err := db.Model(table).All()
+		t.AssertNil(err)
+		t.Assert(len(result), TableSize)
+		for _, v := range result {
+			v["nickname"].Set(v["nickname"].String() + v["id"].String())
+			v["id"].Set(v["id"].Int() + 100)
+		}
+		r, e := db.Model(table).Data(result).Replace()
+		t.Assert(e, nil)
+		n, e := r.RowsAffected()
+		t.Assert(e, nil)
+		t.Assert(n, TableSize)
+	})
 }
 
-// func Test_Model_Replace(t *testing.T) {
-// 	table := createTable()
-// 	defer dropTable(table)
+func Test_Model_Replace(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
 
-// 	gtest.C(t, func(t *gtest.T) {
-// 		result, err := db.Model(table).Data(g.Map{
-// 			"id":          1,
-// 			"passport":    "t11",
-// 			"password":    "25d55ad283aa400af464c76d713c07ad",
-// 			"nickname":    "T11",
-// 			"create_time": "2018-10-24 10:00:00",
-// 		}).Replace()
-// 		t.AssertNil(err)
-// 		n, _ := result.RowsAffected()
-// 		t.Assert(n, 1)
-// 	})
-// }
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Data(g.Map{
+			"id":          1,
+			"passport":    "t11",
+			"password":    "25d55ad283aa400af464c76d713c07ad",
+			"nickname":    "T11",
+			"create_time": CreateTime,
+		}).Replace()
+		t.AssertNil(err)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
 
-// func Test_Model_Save(t *testing.T) {
-// 	table := createTable()
-// 	defer dropTable(table)
-// 	gtest.C(t, func(t *gtest.T) {
-// 		result, err := db.Model(table).Data(g.Map{
-// 			"id":          1,
-// 			"passport":    "t111",
-// 			"password":    "25d55ad283aa400af464c76d713c07ad",
-// 			"nickname":    "T111",
-// 			"create_time": "2018-10-24 10:00:00",
-// 		}).Save()
-// 		t.AssertNil(err)
-// 		n, _ := result.RowsAffected()
-// 		t.Assert(n, 1)
-// 	})
-// }
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["id"].Int(), 1)
+		t.Assert(one["passport"].String(), "t11")
+		t.Assert(one["password"].String(), "25d55ad283aa400af464c76d713c07ad")
+		t.Assert(one["nickname"].String(), "T11")
+		t.Assert(one["create_time"].GTime().String(), CreateTime)
+	})
+}
+
+func Test_Model_Save(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model(table).Data(g.Map{
+			"id":          1,
+			"passport":    "t111",
+			"password":    "25d55ad283aa400af464c76d713c07ad",
+			"nickname":    "T111",
+			"create_time": CreateTime,
+		}).Save()
+		t.Assert(err, ErrorSave)
+	})
+}
 
 func Test_Model_Update(t *testing.T) {
 	table := createInitTable()
@@ -776,7 +766,7 @@ func Test_Model_Struct(t *testing.T) {
 		err := db.Model(table).Where("id=1").Scan(user)
 		t.AssertNil(err)
 		t.Assert(user.NickName, "name_1")
-		t.Assert(user.CreateTime.String(), "2018-10-24 10:00:00")
+		t.Assert(user.CreateTime.String(), CreateTime)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
@@ -790,7 +780,7 @@ func Test_Model_Struct(t *testing.T) {
 		err := db.Model(table).Where("id=1").Scan(user)
 		t.AssertNil(err)
 		t.Assert(user.NickName, "name_1")
-		t.Assert(user.CreateTime.String(), "2018-10-24 10:00:00")
+		t.Assert(user.CreateTime.String(), CreateTime)
 	})
 	// Auto creating struct object.
 	gtest.C(t, func(t *gtest.T) {
@@ -805,7 +795,7 @@ func Test_Model_Struct(t *testing.T) {
 		err := db.Model(table).Where("id=1").Scan(&user)
 		t.AssertNil(err)
 		t.Assert(user.NickName, "name_1")
-		t.Assert(user.CreateTime.String(), "2018-10-24 10:00:00")
+		t.Assert(user.CreateTime.String(), CreateTime)
 	})
 	// Just using Scan.
 	gtest.C(t, func(t *gtest.T) {
@@ -822,7 +812,7 @@ func Test_Model_Struct(t *testing.T) {
 			gtest.Error(err)
 		}
 		t.Assert(user.NickName, "name_1")
-		t.Assert(user.CreateTime.String(), "2018-10-24 10:00:00")
+		t.Assert(user.CreateTime.String(), CreateTime)
 	})
 	// sql.ErrNoRows
 	gtest.C(t, func(t *gtest.T) {
@@ -869,7 +859,7 @@ func Test_Model_Struct_CustomType(t *testing.T) {
 		err := db.Model(table).Where("id=1").Scan(user)
 		t.AssertNil(err)
 		t.Assert(user.NickName, "name_1")
-		t.Assert(user.CreateTime.String(), "2018-10-24 10:00:00")
+		t.Assert(user.CreateTime.String(), CreateTime)
 	})
 }
 
@@ -897,7 +887,7 @@ func Test_Model_Structs(t *testing.T) {
 		t.Assert(users[0].NickName, "name_1")
 		t.Assert(users[1].NickName, "name_2")
 		t.Assert(users[2].NickName, "name_3")
-		t.Assert(users[0].CreateTime.String(), "2018-10-24 10:00:00")
+		t.Assert(users[0].CreateTime.String(), CreateTime)
 	})
 	// Auto create struct slice.
 	gtest.C(t, func(t *gtest.T) {
@@ -920,7 +910,7 @@ func Test_Model_Structs(t *testing.T) {
 		t.Assert(users[0].NickName, "name_1")
 		t.Assert(users[1].NickName, "name_2")
 		t.Assert(users[2].NickName, "name_3")
-		t.Assert(users[0].CreateTime.String(), "2018-10-24 10:00:00")
+		t.Assert(users[0].CreateTime.String(), CreateTime)
 	})
 	// Just using Scan.
 	gtest.C(t, func(t *gtest.T) {
@@ -943,7 +933,7 @@ func Test_Model_Structs(t *testing.T) {
 		t.Assert(users[0].NickName, "name_1")
 		t.Assert(users[1].NickName, "name_2")
 		t.Assert(users[2].NickName, "name_3")
-		t.Assert(users[0].CreateTime.String(), "2018-10-24 10:00:00")
+		t.Assert(users[0].CreateTime.String(), CreateTime)
 	})
 	// sql.ErrNoRows
 	gtest.C(t, func(t *gtest.T) {
@@ -1022,7 +1012,7 @@ func Test_Model_Scan(t *testing.T) {
 		err := db.Model(table).Where("id=1").Scan(user)
 		t.AssertNil(err)
 		t.Assert(user.NickName, "name_1")
-		t.Assert(user.CreateTime.String(), "2018-10-24 10:00:00")
+		t.Assert(user.CreateTime.String(), CreateTime)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
@@ -1036,7 +1026,7 @@ func Test_Model_Scan(t *testing.T) {
 		err := db.Model(table).Where("id=1").Scan(user)
 		t.AssertNil(err)
 		t.Assert(user.NickName, "name_1")
-		t.Assert(user.CreateTime.String(), "2018-10-24 10:00:00")
+		t.Assert(user.CreateTime.String(), CreateTime)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
@@ -1056,7 +1046,7 @@ func Test_Model_Scan(t *testing.T) {
 		t.Assert(users[0].NickName, "name_1")
 		t.Assert(users[1].NickName, "name_2")
 		t.Assert(users[2].NickName, "name_3")
-		t.Assert(users[0].CreateTime.String(), "2018-10-24 10:00:00")
+		t.Assert(users[0].CreateTime.String(), CreateTime)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
@@ -1076,7 +1066,7 @@ func Test_Model_Scan(t *testing.T) {
 		t.Assert(users[0].NickName, "name_1")
 		t.Assert(users[1].NickName, "name_2")
 		t.Assert(users[2].NickName, "name_3")
-		t.Assert(users[0].CreateTime.String(), "2018-10-24 10:00:00")
+		t.Assert(users[0].CreateTime.String(), CreateTime)
 	})
 	// sql.ErrNoRows
 	gtest.C(t, func(t *gtest.T) {
@@ -1889,72 +1879,23 @@ func Test_Model_Option_Map(t *testing.T) {
 		t.Assert(one["nickname"].String(), "")
 	})
 
-	// // Replace
-	// gtest.C(t, func(t *gtest.T) {
-	// 	table := createInitTable()
-	// 	defer dropTable(table)
-	// 	_, err := db.Model(table).OmitEmptyData().Data(g.Map{
-	// 		"id":       1,
-	// 		"passport": 0,
-	// 		"password": 0,
-	// 		"nickname": "1",
-	// 	}).Replace()
-	// 	t.AssertNil(err)
-	// 	one, err := db.Model(table).Where("id", 1).One()
-	// 	t.AssertNil(err)
-	// 	t.AssertNE(one["passport"].String(), "0")
-	// 	t.AssertNE(one["password"].String(), "0")
-	// 	t.Assert(one["nickname"].String(), "1")
-	// })
-
-	// // Save
-	// gtest.C(t, func(t *gtest.T) {
-	// 	table := createTable()
-	// 	defer dropTable(table)
-	// 	r, err := db.Model(table).Fields("id, passport").Data(g.Map{
-	// 		"id":       1,
-	// 		"passport": "1",
-	// 		"password": "1",
-	// 		"nickname": "1",
-	// 	}).Save()
-	// 	t.AssertNil(err)
-	// 	n, _ := r.RowsAffected()
-	// 	t.Assert(n, 1)
-	// 	one, err := db.Model(table).Where("id", 1).One()
-	// 	t.AssertNil(err)
-	// 	t.AssertNE(one["password"].String(), "1")
-	// 	t.AssertNE(one["nickname"].String(), "1")
-	// 	t.Assert(one["passport"].String(), "1")
-	// })
-	// gtest.C(t, func(t *gtest.T) {
-	// 	table := createTable()
-	// 	defer dropTable(table)
-	// 	_, err := db.Model(table).OmitEmptyData().Data(g.Map{
-	// 		"id":       1,
-	// 		"passport": 0,
-	// 		"password": 0,
-	// 		"nickname": "1",
-	// 	}).Save()
-	// 	t.AssertNil(err)
-	// 	one, err := db.Model(table).Where("id", 1).One()
-	// 	t.AssertNil(err)
-	// 	t.AssertNE(one["passport"].String(), "0")
-	// 	t.AssertNE(one["password"].String(), "0")
-	// 	t.Assert(one["nickname"].String(), "1")
-
-	// 	_, err = db.Model(table).Data(g.Map{
-	// 		"id":       1,
-	// 		"passport": 0,
-	// 		"password": 0,
-	// 		"nickname": "1",
-	// 	}).Save()
-	// 	t.AssertNil(err)
-	// 	one, err = db.Model(table).Where("id", 1).One()
-	// 	t.AssertNil(err)
-	// 	t.Assert(one["passport"].String(), "0")
-	// 	t.Assert(one["password"].String(), "0")
-	// 	t.Assert(one["nickname"].String(), "1")
-	// })
+	// Replace
+	gtest.C(t, func(t *gtest.T) {
+		table := createInitTable()
+		defer dropTable(table)
+		_, err := db.Model(table).OmitEmptyData().Data(g.Map{
+			"id":       1,
+			"passport": 0,
+			"password": 0,
+			"nickname": "1",
+		}).Replace()
+		t.AssertNil(err)
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.AssertNE(one["passport"].String(), "0")
+		t.AssertNE(one["password"].String(), "0")
+		t.Assert(one["nickname"].String(), "1")
+	})
 
 	// Update
 	gtest.C(t, func(t *gtest.T) {
@@ -1966,16 +1907,16 @@ func Test_Model_Option_Map(t *testing.T) {
 		n, _ := r.RowsAffected()
 		t.Assert(n, 1)
 
-		_, err = db.Model(table).OmitEmptyData().Data(g.Map{"nickname": ""}).Where("id", 2).Update()
-		t.AssertNE(err, nil)
+		_, err = db.Model(table).OmitEmptyData().Data(g.Map{"nickname": "", "password": "123"}).Where("id", 2).Update()
+		t.AssertNil(err)
 
 		r, err = db.Model(table).OmitEmpty().Data(g.Map{"nickname": "", "password": "123"}).Where("id", 3).Update()
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
 
-		_, err = db.Model(table).OmitEmpty().Fields("nickname").Data(g.Map{"nickname": "", "password": "123"}).Where("id", 4).Update()
-		t.AssertNE(err, nil)
+		_, err = db.Model(table).OmitEmpty().Fields("nickname,password").Data(g.Map{"nickname": "", "password": "123"}).Where("id", 4).Update()
+		t.AssertNil(err)
 
 		r, err = db.Model(table).OmitEmpty().
 			Fields("password").Data(g.Map{
@@ -2083,14 +2024,14 @@ func Test_Model_Option_Map(t *testing.T) {
 // 			"id":   1,
 // 			"name": "",
 // 		}).Save()
-// 		t.AssertNE(err, nil)
+// 		t.AssertNil(err)
 // 	})
 // 	gtest.C(t, func(t *gtest.T) {
 // 		_, err := db.Model(table).OmitEmptyData().Data(g.Map{
 // 			"id":   1,
 // 			"name": "",
 // 		}).Save()
-// 		t.AssertNE(err, nil)
+// 		t.AssertNil(err)
 // 	})
 // 	gtest.C(t, func(t *gtest.T) {
 // 		_, err := db.Model(table).OmitEmptyWhere().Data(g.Map{
@@ -2119,7 +2060,7 @@ func Test_Model_Option_Map(t *testing.T) {
 // 			"id":   1,
 // 			"name": nil,
 // 		}).Save()
-// 		t.AssertNE(err, nil)
+// 		t.AssertNil(err)
 // 	})
 // 	gtest.C(t, func(t *gtest.T) {
 // 		_, err := db.Model(table).OmitNil().Data(g.Map{
@@ -2337,7 +2278,7 @@ func Test_Model_Prefix(t *testing.T) {
 // 			"passport":         fmt.Sprintf(`user_%d`, i),
 // 			"password":         fmt.Sprintf(`pass_%d`, i),
 // 			"nickname":         fmt.Sprintf(`name_%d`, i),
-// 			"create_time":      gtime.NewFromStr("2018-10-24 10:00:00").String(),
+// 			"create_time":      gtime.NewFromStr(CreateTime).String(),
 // 			"none-exist-field": 1,
 // 		})
 // 		t.AssertNil(err)
@@ -2399,7 +2340,7 @@ func Test_Model_Prefix(t *testing.T) {
 // 			"passport":         fmt.Sprintf(`user_%d`, i),
 // 			"password":         fmt.Sprintf(`pass_%d`, i),
 // 			"nickname":         fmt.Sprintf(`name_%d`, i),
-// 			"create_time":      gtime.NewFromStr("2018-10-24 10:00:00").String(),
+// 			"create_time":      gtime.NewFromStr(CreateTime).String(),
 // 			"none-exist-field": 1,
 // 		})
 // 		t.AssertNil(err)
@@ -2808,7 +2749,7 @@ func Test_Model_FieldsEx_AutoMapping(t *testing.T) {
 	// "passport":    fmt.Sprintf(`user_%d`, i),
 	// "password":    fmt.Sprintf(`pass_%d`, i),
 	// "nickname":    fmt.Sprintf(`name_%d`, i),
-	// "create_time": gtime.NewFromStr("2018-10-24 10:00:00").String(),
+	// "create_time": gtime.NewFromStr(CreateTime).String(),
 
 	gtest.C(t, func(t *gtest.T) {
 		value, err := db.Model(table).FieldsEx("Passport, Password, NickName, CreateTime").Where("id", 2).Value()
@@ -4049,7 +3990,7 @@ func Test_Model_Embedded_Filter(t *testing.T) {
 //			CreateTime: "2020-10-10 12:00:01",
 //		}
 //		_, err := db.Model(table).Data(data).Insert()
-//		t.AssertNE(err, nil)
+//		t.AssertNil(err)
 //	})
 // }
 

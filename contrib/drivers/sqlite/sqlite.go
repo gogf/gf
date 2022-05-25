@@ -25,6 +25,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Driver is the driver for sqlite database.
@@ -35,6 +36,8 @@ type Driver struct {
 var (
 	// tableFieldsMap caches the table information retrieved from database.
 	tableFieldsMap = gmap.New(true)
+	// Error
+	ErrorSave = gerror.NewCode(gcode.CodeNotSupported, `Save operation is not supported by sqlite driver`)
 )
 
 func init() {
@@ -166,11 +169,73 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
 	switch option.InsertOption {
 	case gdb.InsertOptionSave:
-		return nil, gerror.NewCode(gcode.CodeNotSupported, `Save operation is not supported by sqlite driver`)
+		return nil, ErrorSave
+	case gdb.InsertOptionIgnore, gdb.InsertOptionReplace:
+		var (
+			keys           []string      // Field names.
+			values         []string      // Value holder string array, like: (?,?,?)
+			params         []interface{} // Values that will be committed to underlying database driver.
+			onDuplicateStr string        // onDuplicateStr is used in "ON DUPLICATE KEY UPDATE" statement.
+		)
+		// Handle the field names and placeholders.
+		for k := range list[0] {
+			keys = append(keys, k)
+		}
+		// Prepare the batch result pointer.
+		var (
+			charL, charR = d.GetChars()
+			batchResult  = new(gdb.SqlResult)
+			keysStr      = charL + strings.Join(keys, charR+","+charL) + charR
+			operation    = "INSERT OR IGNORE"
+		)
 
-	case gdb.InsertOptionReplace:
-		return nil, gerror.NewCode(gcode.CodeNotSupported, `Replace operation is not supported by sqlite driver`)
-
+		if option.InsertOption == gdb.InsertOptionReplace {
+			operation = "INSERT OR REPLACE"
+		}
+		var (
+			listLength  = len(list)
+			valueHolder = make([]string, 0)
+		)
+		for i := 0; i < listLength; i++ {
+			values = values[:0]
+			// Note that the map type is unordered,
+			// so it should use slice+key to retrieve the value.
+			for _, k := range keys {
+				if s, ok := list[i][k].(gdb.Raw); ok {
+					values = append(values, gconv.String(s))
+				} else {
+					values = append(values, "?")
+					params = append(params, list[i][k])
+				}
+			}
+			valueHolder = append(valueHolder, "("+gstr.Join(values, ",")+")")
+			// Batch package checks: It meets the batch number, or it is the last element.
+			if len(valueHolder) == option.BatchCount || (i == listLength-1 && len(valueHolder) > 0) {
+				var (
+					stdSqlResult sql.Result
+					affectedRows int64
+				)
+				stdSqlResult, err = d.DoExec(ctx, link, fmt.Sprintf(
+					"%s INTO %s(%s) VALUES%s %s",
+					operation, d.QuotePrefixTableName(table), keysStr,
+					gstr.Join(valueHolder, ","),
+					onDuplicateStr,
+				), params...)
+				if err != nil {
+					return stdSqlResult, err
+				}
+				if affectedRows, err = stdSqlResult.RowsAffected(); err != nil {
+					err = gerror.WrapCode(gcode.CodeDbOperationError, err, `sql.Result.RowsAffected failed`)
+					return stdSqlResult, err
+				} else {
+					batchResult.Result = stdSqlResult
+					batchResult.Affected += affectedRows
+				}
+				params = params[:0]
+				valueHolder = valueHolder[:0]
+			}
+		}
+		return batchResult, nil
 	default:
 		return d.Core.DoInsert(ctx, link, table, list, option)
 	}
