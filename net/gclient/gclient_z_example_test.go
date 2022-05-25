@@ -118,6 +118,26 @@ func ExampleNew() {
 	// {"id":1,"name":"john"}
 }
 
+func ExampleClient_Clone() {
+	var (
+		ctx    = gctx.New()
+		client = gclient.New()
+	)
+
+	client.SetCookie("key", "value")
+	cloneClient := client.Clone()
+
+	if r, err := cloneClient.Get(ctx, "http://127.0.0.1:8999/var/json"); err != nil {
+		panic(err)
+	} else {
+		defer r.Close()
+		fmt.Println(r.ReadAllString())
+	}
+
+	// Output:
+	// {"id":1,"name":"john"}
+}
+
 func ExampleNew_MultiConn_Recommend() {
 	var (
 		ctx    = gctx.New()

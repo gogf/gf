@@ -8,7 +8,6 @@ package gtcp_test
 
 import (
 	"fmt"
-
 	"github.com/gogf/gf/v2/net/gtcp"
 )
 
