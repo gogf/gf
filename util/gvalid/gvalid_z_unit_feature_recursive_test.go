@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/gogf/gf/v2/frame/g"
-
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
@@ -273,6 +272,27 @@ func Test_CheckStruct_Recursively_SliceAttribute(t *testing.T) {
 		)
 		err := g.Validator().Assoc(data).Data(teacher).Run(ctx)
 		t.Assert(err, `Student Name is required`)
+	})
+
+	// https://github.com/gogf/gf/issues/1864
+	gtest.C(t, func(t *gtest.T) {
+		type Student struct {
+			Name string `v:"required"`
+			Age  int
+		}
+		type Teacher struct {
+			Name     string
+			Students []*Student
+		}
+		var (
+			teacher = Teacher{}
+			data    = g.Map{
+				"name":     "john",
+				"students": `[{"age":2},{"name":"jack", "age":4}]`,
+			}
+		)
+		err := g.Validator().Assoc(data).Data(teacher).Run(ctx)
+		t.Assert(err, `The Name field is required`)
 	})
 }
 

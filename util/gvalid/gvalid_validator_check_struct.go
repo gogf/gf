@@ -250,11 +250,11 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 			}
 			switch field.OriginalKind() {
 			case reflect.Map, reflect.Struct, reflect.Slice, reflect.Array:
-				// Recursively check attribute struct/[]string/map/[]map.
+				// Recursively check attribute slice/map.
 				_, value = gutil.MapPossibleItemByKey(inputParamMap, field.Name())
 				v.doCheckValueRecursively(ctx, doCheckValueRecursivelyInput{
 					Value:               value,
-					OriginKind:          field.OriginalKind(),
+					Kind:                field.OriginalKind(),
 					Type:                field.Type().Type,
 					ErrorMaps:           errorMaps,
 					ResultSequenceRules: &resultSequenceRules,
