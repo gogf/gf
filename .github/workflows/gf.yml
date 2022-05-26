@@ -97,10 +97,23 @@ jobs:
           - 8090:8090
           - 8091:8091
 
+      #oracle 11g server
+      oracle-server:
+        image: loads/oracle-xe-11g-r2:latest
+        env:
+          ORACLE_ALLOW_REMOTE: true
+          ORACLE_SID: XE
+          ORACLE_DB_USER_NAME: system
+          ORACLE_DB_PASSWORD: oracle
+        ports:
+          - 1521:1521
+
+
+
     strategy:
       matrix:
-        go:     ["1.15", "1.16", "1.17"]
-        goarch: ["386", "amd64"]
+        go: [ "1.15", "1.16", "1.17" ]
+        goarch: [ "386", "amd64" ]
 
 
     steps:
@@ -131,7 +144,9 @@ jobs:
             dirpath=$(dirname $file)
 
             if [ "oracle" = $(basename $dirpath) ]; then
-                continue 1
+                if ! go version|grep -q "1.17"; then
+                  continue 1
+                fi
             fi
 
             cd $dirpath
