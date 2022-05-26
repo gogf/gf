@@ -280,34 +280,8 @@ func Test_DB_Upadte_KeyFieldNameMapping(t *testing.T) {
 	})
 }
 
-// This is no longer used as the filter feature is automatically enabled from GoFrame v1.16.0.
-func Test_DB_Insert_KeyFieldNameMapping_Error(t *testing.T) {
-	table := createTable()
-	defer dropTable(table)
-
-	gtest.C(t, func(t *gtest.T) {
-		type User struct {
-			Id             int
-			Passport       string
-			Password       string
-			Nickname       string
-			CreateTime     string
-			NoneExistField string
-		}
-		data := User{
-			Id:         1,
-			Passport:   "user_1",
-			Password:   "pass_1",
-			Nickname:   "name_1",
-			CreateTime: "2020-10-10 12:00:01",
-		}
-		_, err := db.Insert(ctx, table, data)
-		t.AssertNil(err)
-	})
-}
-
 func Test_DB_InsertIgnore(t *testing.T) {
-	table := createTable()
+	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Insert(ctx, table, g.Map{
@@ -317,7 +291,7 @@ func Test_DB_InsertIgnore(t *testing.T) {
 			"nickname":    "T1",
 			"create_time": CreateTime,
 		})
-		t.AssertNil(err)
+		t.AssertNE(err, nil)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.InsertIgnore(ctx, table, g.Map{
@@ -800,72 +774,79 @@ func Test_DB_Time(t *testing.T) {
 		t.Assert(n, 2)
 	})
 }
+func Test_DB_ToJson(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	_, err := db.Update(ctx, table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
+	gtest.AssertNil(err)
 
-// func Test_DB_ToJson(t *testing.T) {
-// 	table := createInitTable()
-// 	defer dropTable(table)
-// 	_, err := db.Update(ctx, table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
-// 	gtest.AssertNil(err)
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Fields("*").Where("id =? ", 1).All()
+		if err != nil {
+			gtest.Fatal(err)
+		}
 
-// 	gtest.C(t, func(t *gtest.T) {
-// 		result, err := db.Model(table).Fields("*").Where("id =? ", 1).All()
-// 		if err != nil {
-// 			gtest.Fatal(err)
-// 		}
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime string
+		}
 
-// 		type User struct {
-// 			Id         int
-// 			Passport   string
-// 			Password   string
-// 			NickName   string
-// 			CreateTime string
-// 		}
+		users := make([]User, 0)
 
-// 		users := make([]User, 0)
+		err = result.Structs(users)
+		t.AssertNE(err, nil)
 
-// 		err = result.Structs(users)
-// 		t.AssertNil(err)
+		err = result.Structs(&users)
+		if err != nil {
+			gtest.Fatal(err)
+		}
 
-// 		// ToJson
-// 		resultJson, err := gjson.LoadContent(result.Json())
-// 		if err != nil {
-// 			gtest.Fatal(err)
-// 		}
+		// ToJson
+		resultJson, err := gjson.LoadContent(result.Json())
+		if err != nil {
+			gtest.Fatal(err)
+		}
 
-// 		t.Assert(users[0].Id, resultJson.Get("0.id").Int())
-// 		t.Assert(users[0].Passport, resultJson.Get("0.passport").String())
-// 		t.Assert(users[0].Password, resultJson.Get("0.password").String())
-// 		t.Assert(users[0].NickName, resultJson.Get("0.nickname").String())
-// 		t.Assert(users[0].CreateTime, resultJson.Get("0.create_time").String())
+		t.Assert(users[0].Id, resultJson.Get("0.id").Int())
+		t.Assert(users[0].Passport, resultJson.Get("0.passport").String())
+		t.Assert(users[0].Password, resultJson.Get("0.password").String())
+		t.Assert(users[0].NickName, resultJson.Get("0.nickname").String())
+		t.Assert(users[0].CreateTime, resultJson.Get("0.create_time").String())
 
-// 	})
+		result = nil
+		err = result.Structs(&users)
+		t.AssertNil(err)
+	})
 
-// 	gtest.C(t, func(t *gtest.T) {
-// 		result, err := db.Model(table).Fields("*").Where("id =? ", 1).One()
-// 		if err != nil {
-// 			gtest.Fatal(err)
-// 		}
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Fields("*").Where("id =? ", 1).One()
+		if err != nil {
+			gtest.Fatal(err)
+		}
 
-// 		type User struct {
-// 			Id         int
-// 			Passport   string
-// 			Password   string
-// 			NickName   string
-// 			CreateTime string
-// 		}
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime string
+		}
 
-// 		users := User{}
+		users := User{}
 
-// 		err = result.Struct(&users)
-// 		if err != nil {
-// 			gtest.Fatal(err)
-// 		}
+		err = result.Struct(&users)
+		if err != nil {
+			gtest.Fatal(err)
+		}
 
-// 		result = nil
-// 		err = result.Struct(&users)
-// 		t.AssertNil(err)
-// 	})
-// }
+		result = nil
+		err = result.Struct(&users)
+		t.AssertNE(err, nil)
+	})
+}
 
 func Test_DB_ToXml(t *testing.T) {
 	table := createInitTable()
@@ -1147,57 +1128,55 @@ func Test_DB_ToUintRecord(t *testing.T) {
 	})
 }
 
-// func Test_DB_TableField(t *testing.T) {
-// 	name := "field_test"
-// 	dropTable(name)
-// 	defer dropTable(name)
-// 	_, err := db.Exec(ctx, fmt.Sprintf(`
-// 		CREATE TABLE %s (
-// 		field_tinyint  tinyint(8) NULL ,
-// 		field_int  int(8) NULL ,
-// 		field_integer  integer(8) NULL ,
-// 		field_bigint  bigint(8) NULL ,
-// 		field_bit  bit(3) NULL ,
-// 		field_real  real(8,0) NULL ,
-// 		field_double  double(12,2) NULL ,
-// 		field_varchar  varchar(10) NULL ,
-// 		field_varbinary  varbinary(255) NULL
-// 	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-// 	`, name))
-// 	if err != nil {
-// 		gtest.Fatal(err)
-// 	}
+func Test_DB_TableField(t *testing.T) {
+	name := "field_test"
+	dropTable(name)
+	defer dropTable(name)
+	_, err := db.Exec(ctx, fmt.Sprintf(`
+		CREATE TABLE %s (
+		field_tinyint  tinyint(8) NULL ,
+		field_int  int(8) NULL ,
+		field_integer  integer(8) NULL ,
+		field_bigint  bigint(8) NULL ,
+		field_real  real(8,0) NULL ,
+		field_double  double(12,2) NULL ,
+		field_varchar  varchar(10) NULL ,
+		field_varbinary  varbinary(255) NULL
+	);
+	`, name))
+	if err != nil {
+		gtest.Fatal(err)
+	}
 
-// 	data := gdb.Map{
-// 		"field_tinyint":   1,
-// 		"field_int":       2,
-// 		"field_integer":   3,
-// 		"field_bigint":    4,
-// 		"field_bit":       6,
-// 		"field_real":      123,
-// 		"field_double":    123.25,
-// 		"field_varchar":   "abc",
-// 		"field_varbinary": "aaa",
-// 	}
-// 	res, err := db.Model(name).Data(data).Insert()
-// 	if err != nil {
-// 		gtest.Fatal(err)
-// 	}
+	data := gdb.Map{
+		"field_tinyint":   1,
+		"field_int":       2,
+		"field_integer":   3,
+		"field_bigint":    4,
+		"field_real":      123,
+		"field_double":    123.25,
+		"field_varchar":   "abc",
+		"field_varbinary": "aaa",
+	}
+	res, err := db.Model(name).Data(data).Insert()
+	if err != nil {
+		gtest.Fatal(err)
+	}
 
-// 	n, err := res.RowsAffected()
-// 	if err != nil {
-// 		gtest.Fatal(err)
-// 	} else {
-// 		gtest.Assert(n, 1)
-// 	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		gtest.Fatal(err)
+	} else {
+		gtest.Assert(n, 1)
+	}
 
-// 	result, err := db.Model(name).Fields("*").Where("field_int = ?", 2).All()
-// 	if err != nil {
-// 		gtest.Fatal(err)
-// 	}
+	result, err := db.Model(name).Fields("*").Where("field_int = ?", 2).All()
+	if err != nil {
+		gtest.Fatal(err)
+	}
 
-// 	gtest.Assert(result[0], data)
-// }
+	gtest.Assert(result[0], data)
+}
 
 func Test_DB_Prefix(t *testing.T) {
 	db := dbPrefix
@@ -1357,40 +1336,6 @@ func Test_Model_LeftJoin(t *testing.T) {
 	})
 }
 
-// func Test_Model_RightJoin(t *testing.T) {
-// 	gtest.C(t, func(t *gtest.T) {
-// 		table1 := createInitTable("user1")
-// 		table2 := createInitTable("user2")
-
-// 		defer dropTable(table1)
-// 		defer dropTable(table2)
-
-// 		res, err := db.Model(table1).Where("id > ?", 3).Delete()
-// 		if err != nil {
-// 			t.Fatal(err)
-// 		}
-
-// 		n, err := res.RowsAffected()
-// 		if err != nil {
-// 			t.Fatal(err)
-// 		}
-
-// 		t.Assert(n, 7)
-
-// 		result, err := db.Model(table1+" u1").RightJoin(table2+" u2", "u1.id = u2.id").All()
-// 		if err != nil {
-// 			t.Fatal(err)
-// 		}
-// 		t.Assert(len(result), 10)
-
-// 		result, err = db.Model(table1+" u1").RightJoin(table2+" u2", "u1.id = u2.id").Where("u1.id > 2").All()
-// 		if err != nil {
-// 			t.Fatal(err)
-// 		}
-// 		t.Assert(len(result), 1)
-// 	})
-// }
-
 func Test_Empty_Slice_Argument(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
@@ -1402,76 +1347,69 @@ func Test_Empty_Slice_Argument(t *testing.T) {
 }
 
 // update counter test.
-// func Test_DB_UpdateCounter(t *testing.T) {
-// 	tableName := "gf_update_counter_test_" + gtime.TimestampNanoStr()
-// 	_, err := db.Exec(ctx, fmt.Sprintf(`
-// 		CREATE TABLE IF NOT EXISTS %s (
-// 		id int(10) unsigned NOT NULL,
-// 		views  int(8) unsigned DEFAULT '0'  NOT NULL ,
-// 		updated_time int(10) unsigned DEFAULT '0' NOT NULL
-// 	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-// 	`, tableName))
-// 	if err != nil {
-// 		gtest.Fatal(err)
-// 	}
-// 	defer dropTable(tableName)
+func Test_DB_UpdateCounter(t *testing.T) {
+	tableName := "gf_update_counter_test_" + gtime.TimestampNanoStr()
+	_, err := db.Exec(ctx, fmt.Sprintf(`
+		CREATE TABLE IF NOT EXISTS %s (
+		id INTEGER	PRIMARY KEY AUTOINCREMENT
+					UNIQUE
+					NOT NULL,
+		views  int(8) DEFAULT '0'  NOT NULL ,
+		updated_time int(10) DEFAULT '0' NOT NULL
+	);
+	`, tableName))
+	if err != nil {
+		gtest.Fatal(err)
+	}
+	defer dropTable(tableName)
 
-// 	gtest.C(t, func(t *gtest.T) {
-// 		insertData := g.Map{
-// 			"id":           1,
-// 			"views":        0,
-// 			"updated_time": 0,
-// 		}
-// 		_, err = db.Insert(ctx, tableName, insertData)
-// 		t.AssertNil(err)
-// 	})
+	gtest.C(t, func(t *gtest.T) {
+		insertData := g.Map{
+			"id":           1,
+			"views":        0,
+			"updated_time": 0,
+		}
+		_, err = db.Insert(ctx, tableName, insertData)
+		t.AssertNil(err)
+	})
 
-// 	gtest.C(t, func(t *gtest.T) {
-// 		gdbCounter := &gdb.Counter{
-// 			Field: "id",
-// 			Value: 1,
-// 		}
-// 		updateData := g.Map{
-// 			"views": gdbCounter,
-// 		}
-// 		result, err := db.Update(ctx, tableName, updateData, "id", 1)
-// 		t.AssertNil(err)
-// 		n, _ := result.RowsAffected()
-// 		t.Assert(n, 1)
-// 		one, err := db.Model(tableName).Where("id", 1).One()
-// 		t.AssertNil(err)
-// 		t.Assert(one["id"].Int(), 1)
-// 		t.Assert(one["views"].Int(), 2)
-// 	})
+	gtest.C(t, func(t *gtest.T) {
+		gdbCounter := &gdb.Counter{
+			Field: "id",
+			Value: 1,
+		}
+		updateData := g.Map{
+			"views": gdbCounter,
+		}
+		result, err := db.Update(ctx, tableName, updateData, "id", 1)
+		t.AssertNil(err)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+		one, err := db.Model(tableName).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["id"].Int(), 1)
+		t.Assert(one["views"].Int(), 2)
+	})
 
-// 	gtest.C(t, func(t *gtest.T) {
-// 		gdbCounter := &gdb.Counter{
-// 			Field: "views",
-// 			Value: -1,
-// 		}
-// 		updateData := g.Map{
-// 			"views":        gdbCounter,
-// 			"updated_time": gtime.Now().Unix(),
-// 		}
-// 		result, err := db.Update(ctx, tableName, updateData, "id", 1)
-// 		t.AssertNil(err)
-// 		n, _ := result.RowsAffected()
-// 		t.Assert(n, 1)
-// 		one, err := db.Model(tableName).Where("id", 1).One()
-// 		t.AssertNil(err)
-// 		t.Assert(one["id"].Int(), 1)
-// 		t.Assert(one["views"].Int(), 1)
-// 	})
-// }
-
-// func Test_DB_Ctx(t *testing.T) {
-// 	gtest.C(t, func(t *gtest.T) {
-// 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-// 		defer cancel()
-// 		_, err := db.Query(ctx, "SELECT SLEEP(10)")
-// 		t.Assert(gstr.Contains(err.Error(), "deadline"), true)
-// 	})
-// }
+	gtest.C(t, func(t *gtest.T) {
+		gdbCounter := &gdb.Counter{
+			Field: "views",
+			Value: -1,
+		}
+		updateData := g.Map{
+			"views":        gdbCounter,
+			"updated_time": gtime.Now().Unix(),
+		}
+		result, err := db.Update(ctx, tableName, updateData, "id", 1)
+		t.AssertNil(err)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+		one, err := db.Model(tableName).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["id"].Int(), 1)
+		t.Assert(one["views"].Int(), 1)
+	})
+}
 
 func Test_DB_Ctx_Logger(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
@@ -1485,92 +1423,91 @@ func Test_DB_Ctx_Logger(t *testing.T) {
 }
 
 // All types testing.
-// func Test_Types(t *testing.T) {
-// 	gtest.C(t, func(t *gtest.T) {
-// 		if _, err := db.Exec(ctx, fmt.Sprintf(`
-//     CREATE TABLE IF NOT EXISTS types (
-//         id int(10) unsigned NOT NULL AUTO_INCREMENT,
-//         %s blob NOT NULL,
-//         %s binary(8) NOT NULL,
-//         %s date NOT NULL,
-//         %s time NOT NULL,
-//         %s timestamp(6) NOT NULL,
-//         %s decimal(5,2) NOT NULL,
-//         %s double NOT NULL,
-//         %s bit(2) NOT NULL,
-//         %s tinyint(1) NOT NULL,
-//         %s bool NOT NULL,
-//         PRIMARY KEY (id)
-//     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-//     `,
-// 			"`blob`",
-// 			"`binary`",
-// 			"`date`",
-// 			"`time`",
-// 			"`timestamp`",
-// 			"`decimal`",
-// 			"`double`",
-// 			"`bit`",
-// 			"`tinyint`",
-// 			"`bool`")); err != nil {
-// 			gtest.Error(err)
-// 		}
-// 		defer dropTable("types")
-// 		data := g.Map{
-// 			"id":        1,
-// 			"blob":      "i love gf",
-// 			"binary":    []byte("abcdefgh"),
-// 			"date":      "1880-10-24",
-// 			"time":      "10:00:01",
-// 			"timestamp": "2022-02-14 12:00:01.123456",
-// 			"decimal":   -123.456,
-// 			"double":    -123.456,
-// 			"bit":       2,
-// 			"tinyint":   true,
-// 			"bool":      false,
-// 		}
-// 		r, err := db.Model("types").Data(data).Insert()
-// 		t.AssertNil(err)
-// 		n, _ := r.RowsAffected()
-// 		t.Assert(n, 1)
+// https://www.sqlite.org/datatype3.html
+func Test_Types(t *testing.T) {
+	tableName := "types_" + gtime.TimestampNanoStr()
+	gtest.C(t, func(t *gtest.T) {
+		if _, err := db.Exec(ctx, fmt.Sprintf(`
+    CREATE TABLE IF NOT EXISTS %s (
+		id INTEGER	PRIMARY KEY AUTOINCREMENT
+					UNIQUE
+					NOT NULL,
+		%s blob NOT NULL,
+		%s binary(8) NOT NULL,
+		%s date NOT NULL,
+		%s time NOT NULL,
+		%s timestamp(6) NOT NULL,
+		%s decimal(5,2) NOT NULL,
+		%s double NOT NULL,
+		%s tinyint(1) NOT NULL,
+		%s bool NOT NULL
+	);
+	`,
+			tableName,
+			"`blob`",
+			"`binary`",
+			"`date`",
+			"`time`",
+			"`timestamp`",
+			"`decimal`",
+			"`double`",
+			"`tinyint`",
+			"`bool`")); err != nil {
+			gtest.Error(err)
+		}
+		defer dropTable(tableName)
+		data := g.Map{
+			"id":        1,
+			"blob":      "i love gf",
+			"binary":    []byte("abcdefgh"),
+			"date":      "1880-10-24",
+			"time":      "10:00:01",
+			"timestamp": "2022-02-14 12:00:01.123456",
+			"decimal":   -123.456,
+			"double":    -123.456,
+			"tinyint":   true,
+			"bool":      false,
+		}
+		r, err := db.Model(tableName).Data(data).Insert()
+		t.AssertNil(err)
+		n, _ := r.RowsAffected()
+		t.Assert(n, 1)
 
-// 		one, err := db.Model("types").One()
-// 		t.AssertNil(err)
-// 		t.Assert(one["id"].Int(), 1)
-// 		t.Assert(one["blob"].String(), data["blob"])
-// 		t.Assert(one["binary"].String(), data["binary"])
-// 		t.Assert(one["date"].String(), data["date"])
-// 		t.Assert(one["time"].String(), `10:00:01`)
-// 		t.Assert(one["timestamp"].GTime().Format(`Y-m-d H:i:s.u`), `2022-02-14 12:00:01.123`)
-// 		t.Assert(one["decimal"].String(), -123.46)
-// 		t.Assert(one["double"].String(), data["double"])
-// 		t.Assert(one["bit"].Int(), data["bit"])
-// 		t.Assert(one["tinyint"].Bool(), data["tinyint"])
+		one, err := db.Model(tableName).One()
+		t.AssertNil(err)
+		t.Assert(one["id"].Int(), 1)
+		t.Assert(one["blob"].String(), data["blob"])
+		t.Assert(one["binary"].String(), data["binary"])
+		t.Assert(one["date"].String(), data["date"])
+		t.Assert(one["time"].String(), `10:00:01`)
+		t.Assert(one["timestamp"].GTime().Format(`Y-m-d H:i:s.u`), `2022-02-14 12:00:01.123`)
+		t.Assert(one["decimal"].String(), data["decimal"]) // In SQLite, the datatype of a value is associated with the value itself, not with its container.
+		t.Assert(one["double"].String(), data["double"])
+		t.Assert(one["tinyint"].Bool(), data["tinyint"])
 
-// 		type T struct {
-// 			Id        int
-// 			Blob      []byte
-// 			Binary    []byte
-// 			Date      *gtime.Time
-// 			Time      *gtime.Time
-// 			Timestamp *gtime.Time
-// 			Decimal   float64
-// 			Double    float64
-// 			Bit       int8
-// 			TinyInt   bool
-// 		}
-// 		var obj *T
-// 		err = db.Model("types").Scan(&obj)
-// 		t.AssertNil(err)
-// 		t.Assert(obj.Id, 1)
-// 		t.Assert(obj.Blob, data["blob"])
-// 		t.Assert(obj.Binary, data["binary"])
-// 		t.Assert(obj.Date.Format("Y-m-d"), data["date"])
-// 		t.Assert(obj.Time.String(), `10:00:01`)
-// 		t.Assert(obj.Timestamp.Format(`Y-m-d H:i:s.u`), `2022-02-14 12:00:01.123`)
-// 		t.Assert(obj.Decimal, -123.46)
-// 		t.Assert(obj.Double, data["double"])
-// 		t.Assert(obj.Bit, data["bit"])
-// 		t.Assert(obj.TinyInt, data["tinyint"])
-// 	})
-// }
+		type T struct {
+			Id        int
+			Blob      []byte
+			Binary    []byte
+			Date      *gtime.Time
+			Time      *gtime.Time
+			Timestamp *gtime.Time
+			Decimal   float64
+			Double    float64
+			Bit       int8
+			TinyInt   bool
+		}
+		var obj *T
+		err = db.Model(tableName).Scan(&obj)
+		t.AssertNil(err)
+		t.Assert(obj.Id, 1)
+		t.Assert(obj.Blob, data["blob"])
+		t.Assert(obj.Binary, data["binary"])
+		t.Assert(obj.Date.Format("Y-m-d"), data["date"])
+		t.Assert(obj.Time.String(), `10:00:01`)
+		t.Assert(obj.Timestamp.Format(`Y-m-d H:i:s.u`), `2022-02-14 12:00:01.123`)
+		t.Assert(obj.Decimal, data["decimal"])
+		t.Assert(obj.Double, data["double"])
+		t.Assert(obj.TinyInt, data["tinyint"])
+	})
+}

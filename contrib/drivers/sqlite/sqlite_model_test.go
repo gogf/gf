@@ -1907,16 +1907,16 @@ func Test_Model_Option_Map(t *testing.T) {
 		n, _ := r.RowsAffected()
 		t.Assert(n, 1)
 
-		_, err = db.Model(table).OmitEmptyData().Data(g.Map{"nickname": "", "password": "123"}).Where("id", 2).Update()
-		t.AssertNil(err)
+		_, err = db.Model(table).OmitEmptyData().Data(g.Map{"nickname": ""}).Where("id", 2).Update()
+		t.AssertNE(err, nil)
 
 		r, err = db.Model(table).OmitEmpty().Data(g.Map{"nickname": "", "password": "123"}).Where("id", 3).Update()
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
 
-		_, err = db.Model(table).OmitEmpty().Fields("nickname,password").Data(g.Map{"nickname": "", "password": "123"}).Where("id", 4).Update()
-		t.AssertNil(err)
+		_, err = db.Model(table).OmitEmpty().Fields("nickname").Data(g.Map{"nickname": "", "password": "123"}).Where("id", 4).Update()
+		t.AssertNE(err, nil)
 
 		r, err = db.Model(table).OmitEmpty().
 			Fields("password").Data(g.Map{
