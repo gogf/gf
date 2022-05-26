@@ -150,10 +150,17 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 			}
 			fields = make(map[string]*gdb.TableField)
 			for i, m := range result {
+				mKey := ""
+				if m["pk"].Bool() {
+					mKey = "pri"
+				}
 				fields[strings.ToLower(m["name"].String())] = &gdb.TableField{
-					Index: i,
-					Name:  strings.ToLower(m["name"].String()),
-					Type:  strings.ToLower(m["type"].String()),
+					Index:   i,
+					Name:    strings.ToLower(m["name"].String()),
+					Type:    strings.ToLower(m["type"].String()),
+					Key:     mKey,
+					Default: m["dflt_value"].Val(),
+					Null:    !m["notnull"].Bool(),
 				}
 			}
 			return fields
