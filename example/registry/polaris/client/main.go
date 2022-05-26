@@ -22,7 +22,7 @@ func main() {
 		g.Log().Fatal(context.Background(), err)
 	}
 
-	gsvc.SetRegistry(polaris.NewWithConfig(conf, polaris.WithTTL(100)))
+	gsvc.SetRegistry(polaris.NewWithConfig(conf, polaris.WithTTL(10)))
 
 	for i := 0; i < 100; i++ {
 		res, err := g.Client().Get(gctx.New(), `http://hello.svc/`)
