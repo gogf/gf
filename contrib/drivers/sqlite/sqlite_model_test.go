@@ -576,14 +576,14 @@ func Test_Model_Fields(t *testing.T) {
 
 	tableName2 := "user_" + gtime.Now().TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
-	    CREATE TABLE %s (
-	        id         INTEGER       PRIMARY KEY AUTOINCREMENT
-										UNIQUE
-										NOT NULL,
-	        name       varchar(45) NULL,
-			age        int(10)
-	    );
-	    `, tableName2,
+	CREATE TABLE %s (
+		id         INTEGER       PRIMARY KEY AUTOINCREMENT
+									UNIQUE
+									NOT NULL,
+		name       varchar(45) NULL,
+		age        int(10)
+	);
+	`, tableName2,
 	)); err != nil {
 		gtest.AssertNil(err)
 	}
@@ -3532,7 +3532,7 @@ func Test_Model_Fields_AutoFilterInJoinStatement(t *testing.T) {
 						NOT NULL,
 			name varchar(500) NOT NULL DEFAULT ''
 		);
-	    `, table1,
+		`, table1,
 		)); err != nil {
 			t.AssertNil(err)
 		}
@@ -3571,7 +3571,7 @@ func Test_Model_Fields_AutoFilterInJoinStatement(t *testing.T) {
 			user_id int(11) NOT NULL DEFAULT 0,
 			description varchar(500) NOT NULL DEFAULT ''
 		);
-	    `, table3,
+		`, table3,
 		)); err != nil {
 			t.AssertNil(err)
 		}

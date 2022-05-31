@@ -1133,7 +1133,7 @@ func Test_DB_TableField(t *testing.T) {
 	dropTable(name)
 	defer dropTable(name)
 	_, err := db.Exec(ctx, fmt.Sprintf(`
-		CREATE TABLE %s (
+	CREATE TABLE %s (
 		field_tinyint  tinyint(8) NULL ,
 		field_int  int(8) NULL ,
 		field_integer  integer(8) NULL ,
@@ -1350,7 +1350,7 @@ func Test_Empty_Slice_Argument(t *testing.T) {
 func Test_DB_UpdateCounter(t *testing.T) {
 	tableName := "gf_update_counter_test_" + gtime.TimestampNanoStr()
 	_, err := db.Exec(ctx, fmt.Sprintf(`
-		CREATE TABLE IF NOT EXISTS %s (
+	CREATE TABLE IF NOT EXISTS %s (
 		id INTEGER	PRIMARY KEY AUTOINCREMENT
 					UNIQUE
 					NOT NULL,
@@ -1509,5 +1509,43 @@ func Test_Types(t *testing.T) {
 		t.Assert(obj.Decimal, data["decimal"])
 		t.Assert(obj.Double, data["double"])
 		t.Assert(obj.TinyInt, data["tinyint"])
+	})
+}
+
+func Test_TableFields(t *testing.T) {
+
+	gtest.C(t, func(t *gtest.T) {
+		tableName := "fields_" + gtime.TimestampNanoStr()
+		createTable(tableName)
+		defer dropTable(tableName)
+		var expect = map[string][]interface{}{
+			// fields		type	null	key	default	extra	comment
+			"id":          {"integer", false, "pri", nil, "", ""},
+			"passport":    {"varchar(45)", false, "", "passport", "", ""},
+			"password":    {"varchar(128)", false, "", "password", "", ""},
+			"nickname":    {"varchar(45)", true, "", nil, "", ""},
+			"create_time": {"datetime", true, "", nil, "", ""},
+		}
+
+		res, err := db.TableFields(context.Background(), tableName)
+		gtest.Assert(err, nil)
+
+		for k, v := range expect {
+			_, ok := res[k]
+			gtest.AssertEQ(ok, true)
+			gtest.AssertEQ(res[k].Name, k)
+			gtest.AssertEQ(res[k].Type, v[0])
+			gtest.AssertEQ(res[k].Null, v[1])
+			gtest.AssertEQ(res[k].Key, v[2])
+			gtest.AssertEQ(res[k].Default, v[3])
+			gtest.AssertEQ(res[k].Extra, v[4])
+			gtest.AssertEQ(res[k].Comment, v[5])
+		}
+
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.TableFields(context.Background(), "t1 t2")
+		gtest.AssertNE(err, nil)
 	})
 }
