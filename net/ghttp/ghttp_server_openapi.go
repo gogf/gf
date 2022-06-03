@@ -10,7 +10,7 @@ import (
 	"context"
 
 	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/protocol/goai"
+	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
