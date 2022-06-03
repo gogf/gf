@@ -149,8 +149,8 @@ type (
 		RemovePrefix   string `name:"removePrefix"    short:"r"  brief:"{cGenDaoBriefRemovePrefix}"`
 		JsonCase       string `name:"jsonCase"        short:"j"  brief:"{cGenDaoBriefJsonCase}" d:"CamelLower"`
 		ImportPrefix   string `name:"importPrefix"    short:"i"  brief:"{cGenDaoBriefImportPrefix}"`
-		DaoPath        string `name:"daoPath"         short:"d"  brief:"{cGenDaoBriefDaoPath}"    d:"dao"`
-		DoPath         string `name:"doPath"          short:"o"  brief:"{cGenDaoBriefDoPath}"     d:"model/do"`
+		DaoPath        string `name:"daoPath"         short:"d"  brief:"{cGenDaoBriefDaoPath}"    d:"service/internal/dao"`
+		DoPath         string `name:"doPath"          short:"o"  brief:"{cGenDaoBriefDoPath}"     d:"service/internal/do"`
 		EntityPath     string `name:"entityPath"      short:"e"  brief:"{cGenDaoBriefEntityPath}" d:"model/entity"`
 		StdTime        bool   `name:"stdTime"         short:"s"  brief:"{cGenDaoBriefStdTime}"         orphan:"true"`
 		WithTime       bool   `name:"withTime"        short:"w"  brief:"{cGenDaoBriefWithTime}"        orphan:"true"`
