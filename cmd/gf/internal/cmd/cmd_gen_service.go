@@ -65,7 +65,7 @@ func (c cGen) Service(ctx context.Context, in cGenServiceInput) (out *cGenServic
 		)
 		mlog.Debug("watchFileDir:", watchFileDir)
 		mlog.Debug("logicFolderDir:", srcFolderDir)
-		if !gstr.HasSuffix(srcFolderDir, in.SrcFolder) {
+		if !gstr.HasSuffix(gstr.Replace(srcFolderDir, `\`, `/`), in.SrcFolder) {
 			mlog.Printf(`ignore watch file "%s", not in source path "%s"`, in.WatchFile, in.SrcFolder)
 			return
 		}
