@@ -23,7 +23,7 @@ import (
 type Response struct {
 	*ResponseWriter                 // Underlying ResponseWriter.
 	Server          *Server         // Parent server.
-	Writer          *ResponseWriter // Alias of ResponseWriter.
+	Writer          IResponseWriter // Alias of ResponseWriter.
 	Request         *Request        // According request.
 }
 
