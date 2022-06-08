@@ -209,3 +209,33 @@ func Test_GetFreePorts(t *testing.T) {
 		t.AssertEQ(len(ports), 2)
 	})
 }
+
+func Test_Server(t *testing.T) {
+	p, _ := gudp.GetFreePort()
+	gudp.NewServer(fmt.Sprintf("127.0.0.1:%d", p), func(conn *gudp.Conn) {
+		defer conn.Close()
+		for {
+			data, err := conn.Recv(1)
+			if len(data) > 0 {
+				conn.Send(data)
+			}
+			if err != nil {
+				break
+			}
+		}
+	}, "GoFrameUDPServer")
+
+	gtest.C(t, func(t *gtest.T) {
+		server := gudp.GetServer("GoFrameUDPServer")
+		t.AssertNE(server, nil)
+		server = gudp.GetServer("TestUDPServer")
+		t.AssertNE(server, nil)
+		server.SetAddress("127.0.0.1:8888")
+		server.SetHandler(func(conn *gudp.Conn) {
+			defer conn.Close()
+			for {
+				conn.Send([]byte("OtherHandle"))
+			}
+		})
+	})
+}
