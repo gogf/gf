@@ -671,7 +671,9 @@ func (id *CustomIDGenerator) NewSpanID(ctx context.Context, traceID trace.TraceI
 }
 
 func TestClient_CustomProvider(t *testing.T) {
-	//
+	provider := otel.GetTracerProvider()
+	defer otel.SetTracerProvider(provider)
+
 	otel.SetTracerProvider(NewCustomProvider())
 
 	p, _ := gtcp.GetFreePort()
@@ -695,5 +697,4 @@ func TestClient_CustomProvider(t *testing.T) {
 		t.Assert(resp.ReadAllString(), "{\"field\":\"test_for_response_body\"}")
 	})
 
-	//otel.SetTracerProvider(provider)
 }
