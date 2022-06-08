@@ -25,9 +25,20 @@ func Test_Array_Basic(t *testing.T) {
 		array := garray.NewArrayFrom(expect)
 		array2 := garray.NewArrayFrom(expect)
 		array3 := garray.NewArrayFrom([]interface{}{})
+		array4 := garray.NewArrayRange(1, 5, 1)
+
 		t.Assert(array.Slice(), expect)
 		t.Assert(array.Interfaces(), expect)
-		array.Set(0, 100)
+		err := array.Set(0, 100)
+		t.AssertNil(err)
+
+		err = array.Set(100, 100)
+		t.AssertNE(err, nil)
+
+		t.Assert(array.IsEmpty(), false)
+
+		copyArray := array.DeepCopy()
+		t.Assert(copyArray, array)
 
 		v, ok := array.Get(0)
 		t.Assert(v, 100)
@@ -36,6 +47,10 @@ func Test_Array_Basic(t *testing.T) {
 		v, ok = array.Get(1)
 		t.Assert(v, 1)
 		t.Assert(ok, true)
+
+		v, ok = array.Get(4)
+		t.Assert(v, nil)
+		t.Assert(ok, false)
 
 		t.Assert(array.Search(100), 0)
 		t.Assert(array3.Search(100), -1)
@@ -71,6 +86,12 @@ func Test_Array_Basic(t *testing.T) {
 		array.InsertAfter(6, 400)
 		t.Assert(array.Slice(), []interface{}{100, 200, 2, 2, 3, 300, 4, 400})
 		t.Assert(array.Clear().Len(), 0)
+		err = array.InsertBefore(99, 9900)
+		t.AssertNE(err, nil)
+		err = array.InsertAfter(99, 9900)
+		t.AssertNE(err, nil)
+
+		t.Assert(array4.String(), "[1,2,3,4,5]")
 	})
 }
 
@@ -98,6 +119,11 @@ func TestArray_Unique(t *testing.T) {
 		expect := []interface{}{1, 2, 3, 4, 5, 3, 2, 2, 3, 5, 5}
 		array := garray.NewArrayFrom(expect)
 		t.Assert(array.Unique().Slice(), []interface{}{1, 2, 3, 4, 5})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		expect := []interface{}{}
+		array := garray.NewArrayFrom(expect)
+		t.Assert(array.Unique().Slice(), []interface{}{})
 	})
 }
 
@@ -382,6 +408,21 @@ func TestArray_Rand(t *testing.T) {
 		t.Assert(a1.Contains(i1), true)
 		t.Assert(a1.Len(), 4)
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		a1 := []interface{}{}
+		array1 := garray.NewArrayFrom(a1)
+		rand, found := array1.Rand()
+		t.AssertNil(rand)
+		t.Assert(found, false)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		a1 := []interface{}{}
+		array1 := garray.NewArrayFrom(a1)
+		rand := array1.Rands(1)
+		t.AssertNil(rand)
+	})
 }
 
 func TestArray_Shuffle(t *testing.T) {
@@ -412,6 +453,12 @@ func TestArray_Join(t *testing.T) {
 		array1 := garray.NewArrayFrom(a1)
 		t.Assert(array1.Join("."), `0.1."a".\a`)
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		a1 := []interface{}{}
+		array1 := garray.NewArrayFrom(a1)
+		t.Assert(len(array1.Join(".")), 0)
+	})
 }
 
 func TestArray_String(t *testing.T) {
@@ -419,6 +466,8 @@ func TestArray_String(t *testing.T) {
 		a1 := []interface{}{0, 1, 2, 3, 4, 5, 6}
 		array1 := garray.NewArrayFrom(a1)
 		t.Assert(array1.String(), `[0,1,2,3,4,5,6]`)
+		array1 = nil
+		t.Assert(array1.String(), "")
 	})
 }
 
