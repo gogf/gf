@@ -54,6 +54,14 @@ func ExampleNewIntArraySize() {
 	// [10 20 15] 3 5
 }
 
+func ExampleNewIntArrayRange() {
+	s := garray.NewIntArrayRange(1, 5, 1)
+	fmt.Println(s.Slice(), s.Len(), cap(s.Slice()))
+
+	// Output:
+	// [1 2 3 4 5] 5 5
+}
+
 func ExampleNewIntArrayFrom() {
 	s := garray.NewIntArrayFrom(g.SliceInt{10, 20, 15, 30})
 	fmt.Println(s.Slice(), s.Len(), cap(s.Slice()))
@@ -83,9 +91,12 @@ func ExampleIntArray_Get() {
 	s := garray.NewIntArrayFrom(g.SliceInt{10, 20, 15, 30})
 	sGet, sBool := s.Get(3)
 	fmt.Println(sGet, sBool)
+	sGet, sBool = s.Get(99)
+	fmt.Println(sGet, sBool)
 
 	// Output:
 	// 30 true
+	// 0 false
 }
 
 func ExampleIntArray_Set() {
