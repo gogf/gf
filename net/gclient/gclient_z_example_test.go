@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/net/gclient"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gfile"
 	"net/http"
@@ -614,12 +615,13 @@ func ExampleClient_Proxy() {
 }
 
 func ExampleClient_Prefix() {
+	p := gtcp.MustGetFreePort()
+
 	var (
 		ctx    = gctx.New()
-		prefix = "http://127.0.0.1:9000/api/v1/"
+		prefix = fmt.Sprintf("http://127.0.0.1:%d/api/v1/", p)
 	)
 
-	p := 9000
 	s := g.Server(p)
 	// HTTP method handlers.
 	s.Group("/api", func(group *ghttp.RouterGroup) {
