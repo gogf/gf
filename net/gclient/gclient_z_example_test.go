@@ -532,42 +532,46 @@ func ExampleClient_SetProxy() {
 	client := g.Client()
 	client.SetProxy("http://127.0.0.1:1081")
 	client.SetTimeout(5 * time.Second) // it's suggested to set http client timeout
-	_, err := client.Get(ctx, "http://127.0.0.1:8999")
+	resp, err := client.Get(ctx, "http://127.0.0.1:8999")
 	if err != nil {
 		// err is not nil when your proxy server is down.
 		// eg. Get "http://127.0.0.1:8999": proxyconnect tcp: dial tcp 127.0.0.1:1087: connect: connection refused
 	}
 	fmt.Println(err != nil)
+	resp.Close()
 
 	// connect to a http proxy server which needs auth
 	client.SetProxy("http://user:password:127.0.0.1:1081")
 	client.SetTimeout(5 * time.Second) // it's suggested to set http client timeout
-	_, err = client.Get(ctx, "http://127.0.0.1:8999")
+	resp, err = client.Get(ctx, "http://127.0.0.1:8999")
 	if err != nil {
 		// err is not nil when your proxy server is down.
 		// eg. Get "http://127.0.0.1:8999": proxyconnect tcp: dial tcp 127.0.0.1:1087: connect: connection refused
 	}
 	fmt.Println(err != nil)
+	resp.Close()
 
 	// connect to a socks5 proxy server
 	client.SetProxy("socks5://127.0.0.1:1080")
 	client.SetTimeout(5 * time.Second) // it's suggested to set http client timeout
-	_, err = client.Get(ctx, "http://127.0.0.1:8999")
+	resp, err = client.Get(ctx, "http://127.0.0.1:8999")
 	if err != nil {
 		// err is not nil when your proxy server is down.
 		// eg. Get "http://127.0.0.1:8999": socks connect tcp 127.0.0.1:1087->api.ip.sb:443: dial tcp 127.0.0.1:1087: connect: connection refused
 	}
 	fmt.Println(err != nil)
+	resp.Close()
 
 	// connect to a socks5 proxy server which needs auth
 	client.SetProxy("socks5://user:password@127.0.0.1:1080")
 	client.SetTimeout(5 * time.Second) // it's suggested to set http client timeout
-	_, err = client.Get(ctx, "http://127.0.0.1:8999")
+	resp, err = client.Get(ctx, "http://127.0.0.1:8999")
 	if err != nil {
 		// err is not nil when your proxy server is down.
 		// eg. Get "http://127.0.0.1:8999": socks connect tcp 127.0.0.1:1087->api.ip.sb:443: dial tcp 127.0.0.1:1087: connect: connection refused
 	}
 	fmt.Println(err != nil)
+	resp.Close()
 
 	// Output:
 	// true
@@ -611,19 +615,36 @@ func ExampleClient_Proxy() {
 
 func ExampleClient_Prefix() {
 	var (
-		ctx = gctx.New()
-		url = "127.0.0.1:8999"
+		ctx    = gctx.New()
+		prefix = "http://127.0.0.1:9000/api/v1/"
 	)
-	client := g.Client().Prefix("http://")
-	client.Get(ctx, "")
 
-	fmt.Println(string(client.GetBytes(ctx, url, g.Map{
-		"id":   10000,
-		"name": "john",
-	})))
+	p := 9000
+	s := g.Server(p)
+	// HTTP method handlers.
+	s.Group("/api", func(group *ghttp.RouterGroup) {
+		group.GET("/v1/prefix", func(r *ghttp.Request) {
+			r.Response.Write("this is v1 prefix")
+		})
+		group.GET("/v1/hello", func(r *ghttp.Request) {
+			r.Response.Write("this is v1 hello")
+		})
+	})
+	s.SetAccessLogEnabled(false)
+	s.SetDumpRouterMap(false)
+	s.SetPort(p)
+	s.Start()
+	time.Sleep(time.Millisecond * 100)
+
+	// Add Client URI Prefix
+	client := g.Client().Prefix(prefix)
+
+	fmt.Println(string(client.GetBytes(ctx, "prefix")))
+	fmt.Println(string(client.GetBytes(ctx, "hello")))
 
 	// Output:
-	// GET: query: 10000, john
+	// this is v1 prefix
+	// this is v1 hello
 }
 
 func ExampleClient_Retry() {
