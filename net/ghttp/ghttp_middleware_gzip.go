@@ -30,6 +30,7 @@ type Options struct {
 
 type Option func(*Options)
 
+// WithExcludedExts set excluded extensions for gzip.
 func WithExcludedExts(exts []string) Option {
 	return func(o *Options) {
 		o.ExcludedExts = NewExcludedExts(exts)
@@ -49,6 +50,7 @@ func (e ExcludedExts) Contains(ext string) bool {
 	return ok
 }
 
+// WithExcludedPaths set excluded paths for gzip.
 func WithExcludedPaths(paths []string) Option {
 	return func(o *Options) {
 		o.ExcludedPaths = NewExcludedPaths(paths)
@@ -68,6 +70,7 @@ func (e ExcludedPaths) Contains(URI string) bool {
 	return false
 }
 
+// WithExcludedPathRegexps set excluded path regexps for gzip.
 func WithExcludedPathRegexps(regexps []string) Option {
 	return func(o *Options) {
 		o.ExcludedPathRegexps = NewExcludedPathRegexps(regexps)
@@ -92,6 +95,7 @@ func (e ExcludedPathRegexps) Contains(URI string) bool {
 }
 
 var (
+	// DefaultOptions is the default option which set excluded extensions for gzip middleware.
 	DefaultOptions = &Options{
 		ExcludedExts: NewExcludedExts([]string{
 			".png", ".jpg", "jpeg", ".gif",
@@ -107,10 +111,11 @@ const (
 )
 
 type gzipHandler struct {
-	level int
+	level int // Compression level
 	*Options
 }
 
+// newGzipHandler create a gzipHandler.
 func newGzipHandler(level int, options ...Option) *gzipHandler {
 	handler := &gzipHandler{
 		level:   level,
@@ -124,7 +129,10 @@ func newGzipHandler(level int, options ...Option) *gzipHandler {
 	return handler
 }
 
+// Handle Represents specific gzip processing.
 func (g *gzipHandler) Handle(r *Request) {
+	r.Middleware.Next()
+
 	if g.shouldCompress(r) {
 		gzipBuffer := bytes.NewBuffer(nil)
 		gz, err := gzip.NewWriterLevel(gzipBuffer, g.level)
@@ -133,13 +141,17 @@ func (g *gzipHandler) Handle(r *Request) {
 		} else {
 			r.Response.Header().Set("Content-Encoding", "gzip")
 			r.Response.Header().Set("Vary", "Accept-Encoding")
-			r.Response.Writer = &gzipWriter{r.Response.ResponseWriter, gz, gzipBuffer}
+			r.Response.Header().Set("Content-Type", http.DetectContentType(r.Response.buffer.Bytes()))
+
+			gz.Write(r.Response.buffer.Bytes())
+			gz.Close()
+			r.Response.buffer.Reset()
+			gzipBuffer.WriteTo(r.Response.buffer)
 		}
 	}
-
-	r.Middleware.Next()
 }
 
+// shouldCompress Determines whether compression is required.
 func (g *gzipHandler) shouldCompress(r *Request) bool {
 	if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") ||
 		strings.Contains(r.Header.Get("Connection"), "Upgrade") ||
@@ -163,22 +175,7 @@ func (g *gzipHandler) shouldCompress(r *Request) bool {
 	return true
 }
 
+// MiddlewareGzip is a middleware handler for gzip compression.
 func MiddlewareGzip(level int, options ...Option) HandlerFunc {
 	return newGzipHandler(level, options...).Handle
-}
-
-type gzipWriter struct {
-	*ResponseWriter
-	writer     *gzip.Writer
-	gzipBuffer *bytes.Buffer
-}
-
-func (g *gzipWriter) Flush() {
-	g.ResponseWriter.Header().Set("Content-Type", http.DetectContentType(g.buffer.Bytes()))
-	g.writer.Write(g.buffer.Bytes())
-	g.writer.Close()
-	g.buffer.Reset()
-
-	g.gzipBuffer.WriteTo(g.buffer)
-	g.ResponseWriter.Flush()
 }

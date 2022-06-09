@@ -14,16 +14,6 @@ import (
 	"net/http"
 )
 
-// IResponseWriter
-type IResponseWriter interface {
-	RawWriter() http.ResponseWriter
-	Header() http.Header
-	Write(data []byte) (int, error)
-	WriteHeader(status int)
-	Hijack() (net.Conn, *bufio.ReadWriter, error)
-	Flush()
-}
-
 // ResponseWriter is the custom writer for http response.
 type ResponseWriter struct {
 	Status      int                 // HTTP status.
