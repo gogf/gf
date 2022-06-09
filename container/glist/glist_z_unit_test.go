@@ -755,3 +755,11 @@ func TestList_UnmarshalValue(t *testing.T) {
 		t.Assert(tlist.List.FrontAll(), []interface{}{1, 2, 3})
 	})
 }
+
+func TestList_DeepCopy(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := NewFrom([]interface{}{1, 2, "a", `"b"`, `\c`})
+		copyList := l.DeepCopy()
+		t.Assert(l, copyList)
+	})
+}
