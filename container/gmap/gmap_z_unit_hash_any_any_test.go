@@ -171,6 +171,9 @@ func Test_AnyAnyMap_Merge(t *testing.T) {
 		m2.Set(2, "2")
 		m1.Merge(m2)
 		t.Assert(m1.Map(), map[interface{}]interface{}{1: 1, 2: "2"})
+		m3 := gmap.NewAnyAnyMapFrom(nil)
+		m3.Merge(m2)
+		t.Assert(m3.Map(), m2.Map())
 	})
 }
 
@@ -296,6 +299,10 @@ func Test_AnyAnyMap_Pop(t *testing.T) {
 
 		t.AssertNE(k1, k2)
 		t.AssertNE(v1, v2)
+
+		k3, v3 := m.Pop()
+		t.AssertNil(k3)
+		t.AssertNil(v3)
 	})
 }
 
@@ -327,6 +334,11 @@ func Test_AnyAnyMap_Pops(t *testing.T) {
 
 		t.Assert(kArray.Unique().Len(), 3)
 		t.Assert(vArray.Unique().Len(), 3)
+
+		v := m.Pops(1)
+		t.AssertNil(v)
+		v = m.Pops(-1)
+		t.AssertNil(v)
 	})
 }
 
@@ -363,5 +375,18 @@ func TestAnyAnyMap_UnmarshalValue(t *testing.T) {
 		t.Assert(v.Map.Size(), 2)
 		t.Assert(v.Map.Get("k1"), "v1")
 		t.Assert(v.Map.Get("k2"), "v2")
+	})
+}
+
+func Test_AnyAnyMap_DeepCopy(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewAnyAnyMapFrom(g.MapAnyAny{
+			"k1": "v1",
+			"k2": "v2",
+		})
+		t.Assert(m.Size(), 2)
+
+		n := m.DeepCopy()
+		t.Assert(m, n)
 	})
 }
