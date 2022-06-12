@@ -86,6 +86,12 @@ func Test_IntIntMap_Basic(t *testing.T) {
 		m2 := gmap.NewIntIntMapFrom(map[int]int{1: 1, 2: 2})
 		t.Assert(m2.Map(), map[int]int{1: 1, 2: 2})
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewIntIntMap(true)
+		m.Set(1, 1)
+		t.Assert(m.Map(), map[int]int{1: 1})
+	})
 }
 
 func Test_IntIntMap_Set_Fun(t *testing.T) {
@@ -101,6 +107,11 @@ func Test_IntIntMap_Set_Fun(t *testing.T) {
 
 		t.Assert(m.SetIfNotExistFuncLock(2, getInt), false)
 		t.Assert(m.SetIfNotExistFuncLock(4, getInt), true)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewIntIntMapFrom(nil)
+		t.Assert(m.GetOrSetFuncLock(1, getInt), getInt())
 	})
 }
 
@@ -177,6 +188,9 @@ func Test_IntIntMap_Merge(t *testing.T) {
 		m2.Set(2, 2)
 		m1.Merge(m2)
 		t.Assert(m1.Map(), map[int]int{1: 1, 2: 2})
+		m3 := gmap.NewIntIntMapFrom(nil)
+		m3.Merge(m2)
+		t.Assert(m3.Map(), m2.Map())
 	})
 }
 
@@ -277,6 +291,10 @@ func Test_IntIntMap_Pop(t *testing.T) {
 
 		t.AssertNE(k1, k2)
 		t.AssertNE(v1, v2)
+
+		k3, v3 := m.Pop()
+		t.Assert(k3, 0)
+		t.Assert(v3, 0)
 	})
 }
 
@@ -308,6 +326,11 @@ func Test_IntIntMap_Pops(t *testing.T) {
 
 		t.Assert(kArray.Unique().Len(), 3)
 		t.Assert(vArray.Unique().Len(), 3)
+
+		v := m.Pops(1)
+		t.AssertNil(v)
+		v = m.Pops(-1)
+		t.AssertNil(v)
 	})
 }
 
@@ -344,5 +367,18 @@ func TestIntIntMap_UnmarshalValue(t *testing.T) {
 		t.Assert(v.Map.Size(), 2)
 		t.Assert(v.Map.Get(1), "1")
 		t.Assert(v.Map.Get(2), "2")
+	})
+}
+
+func Test_IntIntMap_DeepCopy(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewIntIntMapFrom(g.MapIntInt{
+			1: 1,
+			2: 2,
+		})
+		t.Assert(m.Size(), 2)
+
+		n := m.DeepCopy()
+		t.Assert(m, n)
 	})
 }
