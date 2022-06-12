@@ -154,6 +154,9 @@ func Test_ListMap_Basic_Merge(t *testing.T) {
 		m2.Set("key2", "val2")
 		m1.Merge(m2)
 		t.Assert(m1.Map(), map[interface{}]interface{}{"key1": "val1", "key2": "val2"})
+		m3 := gmap.NewListMapFrom(nil)
+		m3.Merge(m2)
+		t.Assert(m3.Map(), m2.Map())
 	})
 }
 
@@ -266,6 +269,10 @@ func Test_ListMap_Pop(t *testing.T) {
 
 		t.AssertNE(k1, k2)
 		t.AssertNE(v1, v2)
+
+		k3, v3 := m.Pop()
+		t.AssertNil(k3)
+		t.AssertNil(v3)
 	})
 }
 
@@ -297,6 +304,11 @@ func Test_ListMap_Pops(t *testing.T) {
 
 		t.Assert(kArray.Unique().Len(), 3)
 		t.Assert(vArray.Unique().Len(), 3)
+
+		v := m.Pops(1)
+		t.AssertNil(v)
+		v = m.Pops(-1)
+		t.AssertNil(v)
 	})
 }
 
@@ -333,5 +345,45 @@ func TestListMap_UnmarshalValue(t *testing.T) {
 		t.Assert(v.Map.Size(), 2)
 		t.Assert(v.Map.Get("1"), "v1")
 		t.Assert(v.Map.Get("2"), "v2")
+	})
+}
+
+func TestListMap_String(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewListMap()
+		m.Set(1, "")
+		m.Set(2, "2")
+		t.Assert(m.String(), "{\"1\":\"\",\"2\":\"2\"}")
+
+		m1 := gmap.NewListMapFrom(nil)
+		t.Assert(m1.String(), "{}")
+	})
+}
+
+func TestListMap_MarshalJSON(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewListMap()
+		m.Set(1, "")
+		m.Set(2, "2")
+		res, err := m.MarshalJSON()
+		t.Assert(res, []byte("{\"1\":\"\",\"2\":\"2\"}"))
+		t.AssertNil(err)
+
+		m1 := gmap.NewListMapFrom(nil)
+		res, err = m1.MarshalJSON()
+		t.Assert(res, []byte("{}"))
+		t.AssertNil(err)
+	})
+}
+
+func TestListMap_DeepCopy(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewListMap()
+		m.Set(1, "")
+		m.Set(2, "2")
+		t.Assert(m.Size(), 2)
+
+		n := m.DeepCopy()
+		t.Assert(m, n)
 	})
 }
