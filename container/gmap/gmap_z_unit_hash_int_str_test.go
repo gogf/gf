@@ -134,6 +134,11 @@ func Test_IntStrMap_Set_Fun(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntStrMapFrom(nil)
+		t.Assert(m.GetOrSetFuncLock(1, getStr), "z")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewIntStrMapFrom(nil)
 		t.Assert(m.SetIfNotExistFuncLock(1, getStr), true)
 	})
 }
