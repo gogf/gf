@@ -282,7 +282,7 @@ func Test_IntAnyMap_Pop(t *testing.T) {
 		t.AssertNE(v1, v2)
 
 		k3, v3 := m.Pop()
-		t.AssertNil(k3)
+		t.Assert(k3, 0)
 		t.AssertNil(v3)
 	})
 }
