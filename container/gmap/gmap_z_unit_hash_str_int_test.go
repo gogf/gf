@@ -373,3 +373,16 @@ func TestStrIntMap_UnmarshalValue(t *testing.T) {
 		t.Assert(v.Map.Get("k2"), 2)
 	})
 }
+
+func Test_StrIntMap_DeepCopy(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewStrIntMapFrom(g.MapStrInt{
+			"key1": 1,
+			"key2": 2,
+		})
+		t.Assert(m.Size(), 2)
+
+		n := m.DeepCopy()
+		t.Assert(m, n)
+	})
+}

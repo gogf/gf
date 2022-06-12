@@ -8,13 +8,10 @@ package gmap_test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
-	"testing"
-
-	"github.com/gogf/gf/v2/container/gmap"
 )
 
 func ExampleStrIntMap_Iterator() {
@@ -597,17 +594,4 @@ func ExampleStrIntMap_UnmarshalValue() {
 	}
 	// Output:
 	// map[string]int{"echo":3, "gin":2, "goframe":1}
-}
-
-func Test_StrIntMap_DeepCopy(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		m := gmap.NewStrIntMapFrom(g.MapStrInt{
-			"key1": 1,
-			"key2": 2,
-		})
-		t.Assert(m.Size(), 2)
-
-		n := m.DeepCopy()
-		t.Assert(m, n)
-	})
 }
