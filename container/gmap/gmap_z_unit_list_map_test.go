@@ -384,6 +384,6 @@ func TestListMap_DeepCopy(t *testing.T) {
 		t.Assert(m.Size(), 2)
 
 		n := m.DeepCopy()
-		t.Assert(m, n)
+		t.Assert(m.Size(), n.(*gmap.ListMap).Size())
 	})
 }
