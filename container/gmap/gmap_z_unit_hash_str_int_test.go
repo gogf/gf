@@ -100,6 +100,11 @@ func Test_StrIntMap_Set_Fun(t *testing.T) {
 		t.Assert(m.SetIfNotExistFuncLock("b", getInt), false)
 		t.Assert(m.SetIfNotExistFuncLock("d", getInt), true)
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewStrIntMapFrom(nil)
+		t.Assert(m.GetOrSetFuncLock("a", getInt), 123)
+	})
 }
 
 func Test_StrIntMap_Batch(t *testing.T) {
@@ -173,6 +178,9 @@ func Test_StrIntMap_Merge(t *testing.T) {
 		m2.Set("b", 2)
 		m1.Merge(m2)
 		t.Assert(m1.Map(), map[string]int{"a": 1, "b": 2})
+		m3 := gmap.NewStrIntMapFrom(nil)
+		m3.Merge(m2)
+		t.Assert(m3.Map(), m2.Map())
 	})
 }
 
@@ -287,6 +295,10 @@ func Test_StrIntMap_Pop(t *testing.T) {
 
 		t.AssertNE(k1, k2)
 		t.AssertNE(v1, v2)
+
+		k3, v3 := m.Pop()
+		t.Assert(k3, "")
+		t.Assert(v3, 0)
 	})
 }
 
@@ -318,6 +330,11 @@ func Test_StrIntMap_Pops(t *testing.T) {
 
 		t.Assert(kArray.Unique().Len(), 3)
 		t.Assert(vArray.Unique().Len(), 3)
+
+		v := m.Pops(1)
+		t.AssertNil(v)
+		v = m.Pops(-1)
+		t.AssertNil(v)
 	})
 }
 
