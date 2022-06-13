@@ -9,6 +9,7 @@ package dao
 
 import (
 	"{TplImportPrefix}/internal"
+	"time"
 )
 
 // internal{TplTableNameCamelCase}Dao is internal type for wrapping internal DAO implements.
