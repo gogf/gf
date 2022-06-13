@@ -37,10 +37,7 @@ func getResponseBody(res *http.Response) string {
 // RawRequest returns the raw content of the request.
 func (r *Response) RawRequest() string {
 	// Response can be nil.
-	if r == nil {
-		return ""
-	}
-	if r.request == nil {
+	if r == nil || r.request == nil {
 		return ""
 	}
 	// DumpRequestOut writes more request headers than DumpRequest, such as User-Agent.
