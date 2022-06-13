@@ -89,7 +89,7 @@ generated json tag case for model struct, cases are as follows:
 | KebabScreaming  | ANY-KIND-OF-STRING |
 `
 	cGenDaoBriefTableSeparator = `
-tableSeparator is used to join table names and table suffix, It's empty in "_"
+tableSeparator is used to join table names and table suffix, It's empty in '_'
 `
 	tplVarTableName               = `{TplTableName}`
 	tplVarTableNameCamelCase      = `{TplTableNameCamelCase}`
