@@ -10,6 +10,7 @@ package dao
 import (
 	"{TplImportPrefix}/internal"
 	"time"
+	"strconv"
 )
 
 // internal{TplTableNameCamelCase}Dao is internal type for wrapping internal DAO implements.
@@ -96,7 +97,7 @@ func (dao *{TplTableNameCamelCase}Dao) Suffix(suffix string) *{TplTableNameCamel
 }
 // Mod is a modular sub table help function
 func (dao *{TplTableNameCamelCase}Dao) Mod(i int64, mod int64) *{TplTableNameCamelCase}Dao {
-	dao.Suffix(string(i % mod))
+	dao.Suffix(strconv.Itoa(i % mod))
 	return dao
 }
 // Month is a help function that divides tables by month
