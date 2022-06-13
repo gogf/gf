@@ -97,7 +97,7 @@ func (dao *{TplTableNameCamelCase}Dao) Suffix(suffix string) *{TplTableNameCamel
 }
 // Mod is a modular sub table help function
 func (dao *{TplTableNameCamelCase}Dao) Mod(i int64, mod int64) *{TplTableNameCamelCase}Dao {
-	dao.Suffix(strconv.Itoa(i % mod))
+	dao.Suffix(strconv.Itoa(int(i % mod)))
 	return dao
 }
 // Month is a help function that divides tables by month
