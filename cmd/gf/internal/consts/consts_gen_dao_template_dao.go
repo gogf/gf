@@ -46,8 +46,10 @@ import (
 
 // {TplTableNameCamelCase}Dao is the data access object for table {TplTableName}.
 type {TplTableNameCamelCase}Dao struct {
-	table   string          // table is the underlying table name of the DAO.
-	group   string          // group is the database configuration group name of current DAO.
+	table          string          // table is the underlying table name of the DAO.
+	tableSeparator string          // tableSeparator is used to join table names and suffixes
+	tableSuffix    string          // tableSuffix is the suffix of the table name and can be used to divide tables
+	group          string          // group is the database configuration group name of current DAO.
 	columns {TplTableNameCamelCase}Columns // columns contains all the column names of Table for convenient usage.
 }
 
@@ -66,6 +68,8 @@ func New{TplTableNameCamelCase}Dao() *{TplTableNameCamelCase}Dao {
 	return &{TplTableNameCamelCase}Dao{
 		group:   "{TplGroupName}",
 		table:   "{TplTableName}",
+		tableSeparator: "{TplTableSeparator}",
+		tableSuffix: "",
 		columns: {TplTableNameCamelLowerCase}Columns,
 	}
 }
@@ -84,7 +88,26 @@ func (dao *{TplTableNameCamelCase}Dao) Table() string {
 func (dao *{TplTableNameCamelCase}Dao) Columns() {TplTableNameCamelCase}Columns {
 	return dao.columns
 }
-
+// Suffix is the suffix of the table name and can be used to divide tables
+func (dao *{TplTableNameCamelCase}Dao) Suffix(suffix string) *{TplTableNameCamelCase}Dao {
+	dao.tableSuffix = suffix
+	return dao
+}
+// Mod is a modular sub table help function
+func (dao *{TplTableNameCamelCase}Dao) Mod(i int64, mod int64) *{TplTableNameCamelCase}Dao {
+	dao.Suffix(string(i % mod))
+	return dao
+}
+// Month is a help function that divides tables by month
+func (dao *{TplTableNameCamelCase}Dao) Month() *{TplTableNameCamelCase}Dao {
+	dao.Suffix(time.Now().Format("200601"))
+	return dao
+}
+// Year is a help function by year
+func (dao *{TplTableNameCamelCase}Dao) Year() *OrgTryPlayUserGameListDao {
+	dao.Suffix(time.Now().Format("2006"))
+	return dao
+}
 // Group returns the configuration group name of database of current dao.
 func (dao *{TplTableNameCamelCase}Dao) Group() string {
 	return dao.group
@@ -92,7 +115,11 @@ func (dao *{TplTableNameCamelCase}Dao) Group() string {
 
 // Ctx creates and returns the Model for current DAO, It automatically sets the context for current operation.
 func (dao *{TplTableNameCamelCase}Dao) Ctx(ctx context.Context) *gdb.Model {
-	return dao.DB().Model(dao.table).Safe().Ctx(ctx)
+	tableName := dao.table
+	if dao.tableSuffix != "" {
+		tableName = tableName + dao.tableSeparator + dao.tableSuffix
+	}
+	return dao.DB().Model(tableName).Safe().Ctx(ctx)
 }
 
 // Transaction wraps the transaction logic using function f.

@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"strings"
-
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
@@ -18,6 +16,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gtag"
 	"github.com/olekukonko/tablewriter"
+	"strings"
 
 	_ "github.com/gogf/gf/contrib/drivers/mssql/v2"
 	_ "github.com/gogf/gf/contrib/drivers/mysql/v2"
@@ -89,7 +88,10 @@ generated json tag case for model struct, cases are as follows:
 | Kebab           | any-kind-of-string |
 | KebabScreaming  | ANY-KIND-OF-STRING |
 `
-
+	cGenDaoBriefTableSeparator = `
+tableSeparator is used to join table names and table suffix,
+it's not necessary and the default value is "default"
+`
 	tplVarTableName               = `{TplTableName}`
 	tplVarTableNameCamelCase      = `{TplTableNameCamelCase}`
 	tplVarTableNameCamelLowerCase = `{TplTableNameCamelLowerCase}`
@@ -100,6 +102,7 @@ generated json tag case for model struct, cases are as follows:
 	tplVarColumnNames             = `{TplColumnNames}`
 	tplVarGroupName               = `{TplGroupName}`
 	tplVarDatetimeStr             = `{TplDatetimeStr}`
+	tplVarTableSeparator          = `{TplTableSeparator}`
 )
 
 var (
@@ -133,6 +136,7 @@ func init() {
 		`cGenDaoBriefNoJsonTag`:       cGenDaoBriefNoJsonTag,
 		`cGenDaoBriefNoModelComment`:  cGenDaoBriefNoModelComment,
 		`cGenDaoBriefGroup`:           cGenDaoBriefGroup,
+		`cGenDaoBriefTableSeparator`:  cGenDaoBriefTableSeparator,
 		`cGenDaoBriefJsonCase`:        cGenDaoBriefJsonCase,
 	})
 }
@@ -145,6 +149,7 @@ type (
 		Tables         string `name:"tables"          short:"t"  brief:"{cGenDaoBriefTables}"`
 		TablesEx       string `name:"tablesEx"        short:"x"  brief:"{cGenDaoBriefTablesEx}"`
 		Group          string `name:"group"           short:"g"  brief:"{cGenDaoBriefGroup}" d:"default"`
+		TableSeparator string `name:"tableSeparator"  short:"ts" brief:"{cGenDaoBriefTableSeparator}" d:"_"`
 		Prefix         string `name:"prefix"          short:"f"  brief:"{cGenDaoBriefPrefix}"`
 		RemovePrefix   string `name:"removePrefix"    short:"r"  brief:"{cGenDaoBriefRemovePrefix}"`
 		JsonCase       string `name:"jsonCase"        short:"j"  brief:"{cGenDaoBriefJsonCase}" d:"CamelLower"`
@@ -257,8 +262,23 @@ func doGenDaoForArray(ctx context.Context, index int, in cGenDaoInput) {
 	}
 	// Table excluding.
 	if in.TablesEx != "" {
+		var removeTableList []string
 		array := garray.NewStrArrayFrom(tableNames)
-		for _, v := range gstr.SplitAndTrim(in.TablesEx, ",") {
+		tableEx := strings.Replace(in.TablesEx, `\,`, "#[#_#]#", -1)
+		tableExList := gstr.SplitAndTrim(tableEx, ",")
+		for _, v := range tableExList {
+			v = strings.Replace(v, "#[#_#]#", "\\,", -1)
+			if array.Len() > 0 {
+				for _, vv := range array.Range(0, array.Len()) {
+					// regexp find excluding table name
+					if gregex.IsMatchString(v, vv) {
+						removeTableList = append(removeTableList, vv)
+					}
+				}
+			}
+		}
+		// Remove excluding table name
+		for _, v := range removeTableList {
 			array.RemoveValue(v)
 		}
 		tableNames = array.Slice()
@@ -506,6 +526,7 @@ func generateDaoInternal(
 		tplVarImportPrefix:            importPrefix,
 		tplVarTableName:               in.TableName,
 		tplVarGroupName:               in.Group,
+		tplVarTableSeparator:          in.TableSeparator,
 		tplVarTableNameCamelCase:      tableNameCamelCase,
 		tplVarTableNameCamelLowerCase: tableNameCamelLowerCase,
 		tplVarColumnDefine:            gstr.Trim(generateColumnDefinitionForDao(fieldMap)),
