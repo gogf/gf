@@ -9,8 +9,6 @@ package dao
 
 import (
 	"{TplImportPrefix}/internal"
-	"time"
-	"strconv"
 )
 
 // internal{TplTableNameCamelCase}Dao is internal type for wrapping internal DAO implements.
@@ -44,6 +42,8 @@ import (
 	"context"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
+	"time"
+	"strconv"
 )
 
 // {TplTableNameCamelCase}Dao is the data access object for table {TplTableName}.
