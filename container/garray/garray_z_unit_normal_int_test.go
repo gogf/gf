@@ -67,9 +67,15 @@ func Test_IntArray_Basic(t *testing.T) {
 		t.AssertNE(err, nil)
 		err = array.InsertAfter(99, 400)
 		t.AssertNE(err, nil)
+	})
 
-		copyArray := array.DeepCopy()
-		t.Assert(array, copyArray)
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewIntArrayFrom([]int{0, 1, 2, 3})
+		copyArray := array.DeepCopy().(*garray.IntArray)
+		copyArray.Set(0, 1)
+		cval, _ := copyArray.Get(0)
+		val, _ := array.Get(0)
+		t.AssertNE(cval, val)
 	})
 }
 

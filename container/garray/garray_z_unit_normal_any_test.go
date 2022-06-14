@@ -38,7 +38,11 @@ func Test_Array_Basic(t *testing.T) {
 		t.Assert(array.IsEmpty(), false)
 
 		copyArray := array.DeepCopy()
-		t.Assert(copyArray, array)
+		ca := copyArray.(*garray.Array)
+		ca.Set(0, 1)
+		cval, _ := ca.Get(0)
+		val, _ := array.Get(0)
+		t.AssertNE(cval, val)
 
 		v, ok := array.Get(0)
 		t.Assert(v, 100)

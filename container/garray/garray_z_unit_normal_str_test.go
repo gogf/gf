@@ -70,8 +70,16 @@ func Test_StrArray_Basic(t *testing.T) {
 		array.InsertAfter(99, "400")
 		t.AssertNE(err, nil)
 
-		copyArray := array.DeepCopy()
-		t.Assert(copyArray, array)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewStrArrayFrom([]string{"0", "1", "2", "3"})
+
+		copyArray := array.DeepCopy().(*garray.StrArray)
+		copyArray.Set(0, "1")
+		cval, _ := copyArray.Get(0)
+		val, _ := array.Get(0)
+		t.AssertNE(cval, val)
 	})
 }
 
