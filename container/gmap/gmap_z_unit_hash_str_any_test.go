@@ -374,7 +374,8 @@ func Test_StrAnyMap_DeepCopy(t *testing.T) {
 		})
 		t.Assert(m.Size(), 2)
 
-		n := m.DeepCopy()
-		t.Assert(m, n)
+		n := m.DeepCopy().(*gmap.StrAnyMap)
+		n.Set("key1", "v1")
+		t.AssertNE(m.Get("key1"), n.Get("key1"))
 	})
 }

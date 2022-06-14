@@ -378,7 +378,8 @@ func Test_IntIntMap_DeepCopy(t *testing.T) {
 		})
 		t.Assert(m.Size(), 2)
 
-		n := m.DeepCopy()
-		t.Assert(m, n)
+		n := m.DeepCopy().(*gmap.IntIntMap)
+		n.Set(1, 2)
+		t.AssertNE(m.Get(1), n.Get(1))
 	})
 }
