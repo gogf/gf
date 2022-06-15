@@ -63,6 +63,19 @@ func Test_IntArray_Basic(t *testing.T) {
 		array.InsertAfter(6, 400)
 		t.Assert(array.Slice(), []int{100, 200, 1, 2, 3, 300, 4, 400})
 		t.Assert(array.Clear().Len(), 0)
+		err := array.InsertBefore(99, 300)
+		t.AssertNE(err, nil)
+		err = array.InsertAfter(99, 400)
+		t.AssertNE(err, nil)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewIntArrayFrom([]int{0, 1, 2, 3})
+		copyArray := array.DeepCopy().(*garray.IntArray)
+		copyArray.Set(0, 1)
+		cval, _ := copyArray.Get(0)
+		val, _ := array.Get(0)
+		t.AssertNE(cval, val)
 	})
 }
 
@@ -89,6 +102,8 @@ func TestIntArray_Unique(t *testing.T) {
 		expect := []int{1, 2, 3, 4, 5, 3, 2, 2, 3, 5, 5}
 		array := garray.NewIntArrayFrom(expect)
 		t.Assert(array.Unique().Slice(), []int{1, 2, 3, 4, 5})
+		array2 := garray.NewIntArrayFrom([]int{})
+		t.Assert(array2.Unique().Slice(), []int{})
 	})
 }
 
@@ -374,6 +389,14 @@ func TestIntArray_Rand(t *testing.T) {
 		v, ok := array1.Rand()
 		t.AssertIN(v, a1)
 		t.Assert(ok, true)
+
+		array2 := garray.NewIntArrayFrom([]int{})
+		v, ok = array2.Rand()
+		t.Assert(v, 0)
+		t.Assert(ok, false)
+
+		intSlices := array2.Rands(1)
+		t.Assert(intSlices, nil)
 	})
 }
 
@@ -420,6 +443,8 @@ func TestIntArray_String(t *testing.T) {
 		a1 := []int{0, 1, 2, 3, 4, 5, 6}
 		array1 := garray.NewIntArrayFrom(a1)
 		t.Assert(array1.String(), "[0,1,2,3,4,5,6]")
+		array1 = nil
+		t.Assert(array1.String(), "")
 	})
 }
 
