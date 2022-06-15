@@ -34,6 +34,10 @@ func Test_StrArray_Basic(t *testing.T) {
 		t.Assert(v, 100)
 		t.Assert(ok, true)
 
+		v, ok = array3.Get(0)
+		t.Assert(v, "")
+		t.Assert(ok, false)
+
 		t.Assert(array.Search("100"), 0)
 		t.Assert(array.Contains("100"), true)
 
@@ -61,12 +65,28 @@ func Test_StrArray_Basic(t *testing.T) {
 		t.Assert(array.Clear().Len(), 0)
 		t.Assert(array2.Slice(), expect)
 		t.Assert(array3.Search("100"), -1)
+		err := array.InsertBefore(99, "300")
+		t.AssertNE(err, nil)
+		array.InsertAfter(99, "400")
+		t.AssertNE(err, nil)
+
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewStrArrayFrom([]string{"0", "1", "2", "3"})
+
+		copyArray := array.DeepCopy().(*garray.StrArray)
+		copyArray.Set(0, "1")
+		cval, _ := copyArray.Get(0)
+		val, _ := array.Get(0)
+		t.AssertNE(cval, val)
 	})
 }
 
 func TestStrArray_ContainsI(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := garray.NewStrArray()
+		t.Assert(s.Contains("A"), false)
 		s.Append("a", "b", "C")
 		t.Assert(s.Contains("A"), false)
 		t.Assert(s.Contains("a"), true)
@@ -94,6 +114,8 @@ func TestStrArray_Unique(t *testing.T) {
 		expect := []string{"1", "1", "2", "2", "3", "3", "2", "2"}
 		array := garray.NewStrArrayFrom(expect)
 		t.Assert(array.Unique().Slice(), []string{"1", "2", "3"})
+		array1 := garray.NewStrArrayFrom([]string{})
+		t.Assert(array1.Unique().Slice(), []string{})
 	})
 }
 
@@ -364,6 +386,13 @@ func TestStrArray_Rand(t *testing.T) {
 		v, ok := array1.Rand()
 		t.Assert(ok, true)
 		t.AssertIN(v, a1)
+
+		array2 := garray.NewStrArrayFrom([]string{})
+		v, ok = array2.Rand()
+		t.Assert(ok, false)
+		t.Assert(v, "")
+		strArray := array2.Rands(1)
+		t.AssertNil(strArray)
 	})
 }
 
@@ -406,6 +435,11 @@ func TestStrArray_Join(t *testing.T) {
 		array1 := garray.NewStrArrayFrom(a1)
 		t.Assert(array1.Join("."), `0.1."a".\a`)
 	})
+	gtest.C(t, func(t *gtest.T) {
+		a1 := []string{}
+		array1 := garray.NewStrArrayFrom(a1)
+		t.Assert(array1.Join("."), "")
+	})
 }
 
 func TestStrArray_String(t *testing.T) {
@@ -413,6 +447,9 @@ func TestStrArray_String(t *testing.T) {
 		a1 := []string{"0", "1", "2", "3", "4", "5", "6"}
 		array1 := garray.NewStrArrayFrom(a1)
 		t.Assert(array1.String(), `["0","1","2","3","4","5","6"]`)
+
+		array1 = nil
+		t.Assert(array1.String(), "")
 	})
 }
 
