@@ -11,13 +11,14 @@ import (
 	"crypto/tls"
 	"encoding/hex"
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/net/gclient"
 	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gfile"
-	"net/http"
-	"time"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
