@@ -8,14 +8,24 @@ package gclient_test
 
 import (
 	"context"
+	"crypto/tls"
+	"encoding/hex"
 	"fmt"
+	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/net/gclient"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/os/gfile"
 	"net/http"
 	"time"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+)
+
+var (
+	crtFile = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/server.crt"
+	keyFile = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/server.key"
 )
 
 func init() {
@@ -53,10 +63,39 @@ func init() {
 			)
 		})
 		group.HEAD("/", func(r *ghttp.Request) {
-			r.Response.Write("head")
+			r.Response.Writef(
+				"HEAD: form: %d, %s",
+				r.GetForm("id").Int(),
+				r.GetForm("name").String(),
+			)
+		})
+		group.PATCH("/", func(r *ghttp.Request) {
+			r.Response.Writef(
+				"PATCH: form: %d, %s",
+				r.GetForm("id").Int(),
+				r.GetForm("name").String(),
+			)
+		})
+		group.CONNECT("/", func(r *ghttp.Request) {
+			r.Response.Writef(
+				"CONNECT: form: %d, %s",
+				r.GetForm("id").Int(),
+				r.GetForm("name").String(),
+			)
 		})
 		group.OPTIONS("/", func(r *ghttp.Request) {
-			r.Response.Write("options")
+			r.Response.Writef(
+				"OPTIONS: form: %d, %s",
+				r.GetForm("id").Int(),
+				r.GetForm("name").String(),
+			)
+		})
+		group.TRACE("/", func(r *ghttp.Request) {
+			r.Response.Writef(
+				"TRACE: form: %d, %s",
+				r.GetForm("id").Int(),
+				r.GetForm("name").String(),
+			)
 		})
 	})
 	// Client chaining operations handlers.
@@ -136,6 +175,11 @@ func ExampleClient_Clone() {
 
 	// Output:
 	// {"id":1,"name":"john"}
+}
+
+func fromHex(s string) []byte {
+	b, _ := hex.DecodeString(s)
+	return b
 }
 
 func ExampleNew_MultiConn_Recommend() {
@@ -274,6 +318,71 @@ func ExampleClient_PostBytes() {
 	// POST: form: 10000, john
 }
 
+func ExampleClient_DeleteBytes() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(string(g.Client().DeleteBytes(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})))
+
+	// Output:
+	// DELETE: form: 10000, john
+}
+
+func ExampleClient_HeadBytes() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(string(g.Client().HeadBytes(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})))
+
+	// Output:
+}
+
+func ExampleClient_PatchBytes() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(string(g.Client().PatchBytes(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})))
+
+	// Output:
+	// PATCH: form: 10000, john
+}
+
+func ExampleClient_ConnectBytes() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(string(g.Client().ConnectBytes(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})))
+
+	// Output:
+	// CONNECT: form: 10000, john
+}
+
+func ExampleClient_OptionsBytes() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(string(g.Client().OptionsBytes(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})))
+
+	// Output:
+	// OPTIONS: form: 10000, john
+}
+
+func ExampleClient_TraceBytes() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(string(g.Client().TraceBytes(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})))
+
+	// Output:
+	// TRACE: form: 10000, john
+}
+
 func ExampleClient_PostContent() {
 	url := "http://127.0.0.1:8999"
 	fmt.Println(g.Client().PostContent(ctx, url, g.Map{
@@ -343,6 +452,19 @@ func ExampleClient_Get() {
 	// GET: query: 10000, john
 }
 
+func ExampleClient_Put() {
+	url := "http://127.0.0.1:8999"
+	r, _ := g.Client().Put(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})
+	defer r.Close()
+	fmt.Println(r.ReadAllString())
+
+	// Output:
+	// PUT: form: 10000, john
+}
+
 func ExampleClient_GetBytes() {
 	var (
 		ctx = context.Background()
@@ -355,6 +477,20 @@ func ExampleClient_GetBytes() {
 
 	// Output:
 	// GET: query: 10000, john
+}
+
+func ExampleClient_PutBytes() {
+	var (
+		ctx = context.Background()
+		url = "http://127.0.0.1:8999"
+	)
+	fmt.Println(string(g.Client().PutBytes(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})))
+
+	// Output:
+	// PUT: form: 10000, john
 }
 
 func ExampleClient_GetContent() {
@@ -397,45 +533,52 @@ func ExampleClient_SetProxy() {
 	client := g.Client()
 	client.SetProxy("http://127.0.0.1:1081")
 	client.SetTimeout(5 * time.Second) // it's suggested to set http client timeout
-	response, err := client.Get(ctx, "https://api.ip.sb/ip")
+	resp, err := client.Get(ctx, "http://127.0.0.1:8999")
 	if err != nil {
 		// err is not nil when your proxy server is down.
-		// eg. Get "https://api.ip.sb/ip": proxyconnect tcp: dial tcp 127.0.0.1:1087: connect: connection refused
-		fmt.Println(err)
+		// eg. Get "http://127.0.0.1:8999": proxyconnect tcp: dial tcp 127.0.0.1:1087: connect: connection refused
 	}
-	response.RawDump()
+	fmt.Println(err != nil)
+	resp.Close()
+
 	// connect to a http proxy server which needs auth
 	client.SetProxy("http://user:password:127.0.0.1:1081")
 	client.SetTimeout(5 * time.Second) // it's suggested to set http client timeout
-	response, err = client.Get(ctx, "https://api.ip.sb/ip")
+	resp, err = client.Get(ctx, "http://127.0.0.1:8999")
 	if err != nil {
 		// err is not nil when your proxy server is down.
-		// eg. Get "https://api.ip.sb/ip": proxyconnect tcp: dial tcp 127.0.0.1:1087: connect: connection refused
-		fmt.Println(err)
+		// eg. Get "http://127.0.0.1:8999": proxyconnect tcp: dial tcp 127.0.0.1:1087: connect: connection refused
 	}
-	response.RawDump()
+	fmt.Println(err != nil)
+	resp.Close()
 
 	// connect to a socks5 proxy server
 	client.SetProxy("socks5://127.0.0.1:1080")
 	client.SetTimeout(5 * time.Second) // it's suggested to set http client timeout
-	response, err = client.Get(ctx, "https://api.ip.sb/ip")
+	resp, err = client.Get(ctx, "http://127.0.0.1:8999")
 	if err != nil {
 		// err is not nil when your proxy server is down.
-		// eg. Get "https://api.ip.sb/ip": socks connect tcp 127.0.0.1:1087->api.ip.sb:443: dial tcp 127.0.0.1:1087: connect: connection refused
-		fmt.Println(err)
+		// eg. Get "http://127.0.0.1:8999": socks connect tcp 127.0.0.1:1087->api.ip.sb:443: dial tcp 127.0.0.1:1087: connect: connection refused
 	}
-	fmt.Println(response.RawResponse())
+	fmt.Println(err != nil)
+	resp.Close()
 
 	// connect to a socks5 proxy server which needs auth
 	client.SetProxy("socks5://user:password@127.0.0.1:1080")
 	client.SetTimeout(5 * time.Second) // it's suggested to set http client timeout
-	response, err = client.Get(ctx, "https://api.ip.sb/ip")
+	resp, err = client.Get(ctx, "http://127.0.0.1:8999")
 	if err != nil {
 		// err is not nil when your proxy server is down.
-		// eg. Get "https://api.ip.sb/ip": socks connect tcp 127.0.0.1:1087->api.ip.sb:443: dial tcp 127.0.0.1:1087: connect: connection refused
-		fmt.Println(err)
+		// eg. Get "http://127.0.0.1:8999": socks connect tcp 127.0.0.1:1087->api.ip.sb:443: dial tcp 127.0.0.1:1087: connect: connection refused
 	}
-	fmt.Println(response.RawResponse())
+	fmt.Println(err != nil)
+	resp.Close()
+
+	// Output:
+	// true
+	// true
+	// true
+	// true
 }
 
 // ExampleClientChain_Proxy a chain version of example for `gclient.Client.Proxy` method.
@@ -448,20 +591,521 @@ func ExampleClient_Proxy() {
 		ctx = context.Background()
 	)
 	client := g.Client()
-	response, err := client.Proxy("http://127.0.0.1:1081").Get(ctx, "https://api.ip.sb/ip")
-	if err != nil {
-		// err is not nil when your proxy server is down.
-		// eg. Get "https://api.ip.sb/ip": proxyconnect tcp: dial tcp 127.0.0.1:1087: connect: connection refused
-		fmt.Println(err)
-	}
-	fmt.Println(response.RawResponse())
+	_, err := client.Proxy("http://127.0.0.1:1081").Get(ctx, "http://127.0.0.1:8999")
+	fmt.Println(err != nil)
 
 	client2 := g.Client()
-	response, err = client2.Proxy("socks5://127.0.0.1:1080").Get(ctx, "https://api.ip.sb/ip")
-	if err != nil {
-		// err is not nil when your proxy server is down.
-		// eg. Get "https://api.ip.sb/ip": socks connect tcp 127.0.0.1:1087->api.ip.sb:443: dial tcp 127.0.0.1:1087: connect: connection refused
-		fmt.Println(err)
+	_, err = client2.Proxy("socks5://127.0.0.1:1080").Get(ctx, "http://127.0.0.1:8999")
+	fmt.Println(err != nil)
+
+	client3 := g.Client()
+	_, err = client3.Proxy("").Get(ctx, "http://127.0.0.1:8999")
+	fmt.Println(err != nil)
+
+	client4 := g.Client()
+	url := "http://127.0.0.1:1081" + string([]byte{0x7f})
+	_, err = client4.Proxy(url).Get(ctx, "http://127.0.0.1:8999")
+	fmt.Println(err != nil)
+
+	// Output:
+	// true
+	// true
+	// false
+	// false
+}
+
+func ExampleClient_Prefix() {
+	p := gtcp.MustGetFreePort()
+
+	var (
+		ctx    = gctx.New()
+		prefix = fmt.Sprintf("http://127.0.0.1:%d/api/v1/", p)
+	)
+
+	s := g.Server(p)
+	// HTTP method handlers.
+	s.Group("/api", func(group *ghttp.RouterGroup) {
+		group.GET("/v1/prefix", func(r *ghttp.Request) {
+			r.Response.Write("this is v1 prefix")
+		})
+		group.GET("/v1/hello", func(r *ghttp.Request) {
+			r.Response.Write("this is v1 hello")
+		})
+	})
+	s.SetAccessLogEnabled(false)
+	s.SetDumpRouterMap(false)
+	s.SetPort(p)
+	s.Start()
+	time.Sleep(time.Millisecond * 100)
+
+	// Add Client URI Prefix
+	client := g.Client().Prefix(prefix)
+
+	fmt.Println(string(client.GetBytes(ctx, "prefix")))
+	fmt.Println(string(client.GetBytes(ctx, "hello")))
+
+	// Output:
+	// this is v1 prefix
+	// this is v1 hello
+}
+
+func ExampleClient_Retry() {
+	var (
+		ctx = gctx.New()
+		url = "http://127.0.0.1:8999"
+	)
+	client := g.Client().Retry(2, time.Second)
+
+	fmt.Println(string(client.GetBytes(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})))
+
+	// Output:
+	// GET: query: 10000, john
+}
+
+func ExampleClient_RedirectLimit() {
+	var (
+		ctx = gctx.New()
+		url = "http://127.0.0.1:8999"
+	)
+	client := g.Client().RedirectLimit(1)
+
+	fmt.Println(string(client.GetBytes(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})))
+
+	// Output:
+	// GET: query: 10000, john
+}
+
+func ExampleClient_SetBrowserMode() {
+	var (
+		ctx = gctx.New()
+		url = "http://127.0.0.1:8999"
+	)
+	client := g.Client().SetBrowserMode(true)
+
+	fmt.Println(string(client.GetBytes(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})))
+
+	// Output:
+	// GET: query: 10000, john
+}
+
+func ExampleClient_SetHeader() {
+	var (
+		ctx = gctx.New()
+		url = "http://127.0.0.1:8999"
+	)
+	client := g.Client()
+	client.SetHeader("Server", "GoFrameServer")
+	client.SetHeader("Client", "g.Client()")
+
+	fmt.Println(string(client.GetBytes(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})))
+
+	// Output:
+	// GET: query: 10000, john
+}
+
+func ExampleClient_SetRedirectLimit() {
+	go func() {
+		s := g.Server()
+		s.BindHandler("/hello", func(r *ghttp.Request) {
+			r.Response.Writeln("hello world")
+		})
+		s.BindHandler("/back", func(r *ghttp.Request) {
+			r.Response.RedirectBack()
+		})
+		s.SetDumpRouterMap(false)
+		s.SetPort(8199)
+		s.Run()
+	}()
+
+	time.Sleep(time.Second)
+
+	var (
+		ctx      = gctx.New()
+		urlHello = "http://127.0.0.1:8199/hello"
+		urlBack  = "http://127.0.0.1:8199/back"
+	)
+	client := g.Client().SetRedirectLimit(1)
+	client.SetHeader("Referer", urlHello)
+
+	resp, err := client.DoRequest(ctx, http.MethodGet, urlBack, g.Map{
+		"id":   10000,
+		"name": "john",
+	})
+	if err == nil {
+		fmt.Println(resp.ReadAllString())
+		resp.Close()
 	}
-	fmt.Println(response.RawResponse())
+
+	client.SetRedirectLimit(2)
+	resp, err = client.DoRequest(ctx, http.MethodGet, urlBack, g.Map{
+		"id":   10000,
+		"name": "john",
+	})
+	if err == nil {
+		fmt.Println(resp.ReadAllString())
+		resp.Close()
+	}
+
+	// Output:
+	// Found
+	// hello world
+}
+
+func ExampleClient_SetTLSKeyCrt() {
+	var (
+		ctx         = gctx.New()
+		url         = "http://127.0.0.1:8999"
+		testCrtFile = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/upload/file1.txt"
+		testKeyFile = gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/upload/file2.txt"
+	)
+	client := g.Client()
+	client.SetTLSKeyCrt(testCrtFile, testKeyFile)
+	client.SetTLSKeyCrt(crtFile, keyFile)
+	fmt.Println(string(client.GetBytes(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})))
+
+	// Output:
+	// GET: query: 10000, john
+}
+
+func ExampleClient_SetTLSConfig() {
+	var (
+		ctx       = gctx.New()
+		url       = "http://127.0.0.1:8999"
+		tlsConfig = &tls.Config{}
+	)
+	client := g.Client()
+	client.SetTLSConfig(tlsConfig)
+	fmt.Println(string(client.GetBytes(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})))
+
+	// Output:
+	// GET: query: 10000, john
+}
+
+func ExampleClient_PutContent() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(g.Client().PutContent(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	}))
+
+	// Output:
+	// PUT: form: 10000, john
+}
+
+func ExampleClient_DeleteContent() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(g.Client().DeleteContent(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	}))
+
+	// Output:
+	// DELETE: form: 10000, john
+}
+
+func ExampleClient_HeadContent() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(g.Client().HeadContent(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	}))
+
+	// Output:
+}
+
+func ExampleClient_PatchContent() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(g.Client().PatchContent(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	}))
+
+	// Output:
+	// PATCH: form: 10000, john
+}
+
+func ExampleClient_ConnectContent() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(g.Client().ConnectContent(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	}))
+
+	// Output:
+	// CONNECT: form: 10000, john
+}
+
+func ExampleClient_OptionsContent() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(g.Client().OptionsContent(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	}))
+
+	// Output:
+	// OPTIONS: form: 10000, john
+}
+
+func ExampleClient_TraceContent() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(g.Client().TraceContent(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	}))
+
+	// Output:
+	// TRACE: form: 10000, john
+}
+
+func ExampleClient_RequestContent() {
+	url := "http://127.0.0.1:8999"
+	fmt.Println(g.Client().RequestContent(ctx, http.MethodGet, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	}))
+
+	// Output:
+	// GET: query: 10000, john
+}
+
+func ExampleClient_RawRequest() {
+	url := "http://127.0.0.1:8999"
+	response, _ := g.Client().Get(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})
+	fmt.Println(len(response.RawResponse()) > 100)
+
+	// Output:
+	// true
+}
+
+func ExampleClient_Delete() {
+	url := "http://127.0.0.1:8999"
+	r, _ := g.Client().Delete(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})
+	defer r.Close()
+	fmt.Println(r.ReadAllString())
+
+	// Output:
+	// DELETE: form: 10000, john
+}
+
+func ExampleClient_Head() {
+	url := "http://127.0.0.1:8999"
+	r, _ := g.Client().Head(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})
+	defer r.Close()
+	fmt.Println(r.ReadAllString())
+
+	// Output:
+	//
+}
+
+func ExampleClient_Patch() {
+	url := "http://127.0.0.1:8999"
+	r, _ := g.Client().Patch(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})
+	defer r.Close()
+	fmt.Println(r.ReadAllString())
+
+	// Output:
+	// PATCH: form: 10000, john
+}
+
+func ExampleClient_Connect() {
+	url := "http://127.0.0.1:8999"
+	r, _ := g.Client().Connect(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})
+	defer r.Close()
+	fmt.Println(r.ReadAllString())
+
+	// Output:
+	// CONNECT: form: 10000, john
+}
+
+func ExampleClient_Options() {
+	url := "http://127.0.0.1:8999"
+	r, _ := g.Client().Options(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})
+	defer r.Close()
+	fmt.Println(r.ReadAllString())
+
+	// Output:
+	// OPTIONS: form: 10000, john
+}
+
+func ExampleClient_Trace() {
+	url := "http://127.0.0.1:8999"
+	r, _ := g.Client().Trace(ctx, url, g.Map{
+		"id":   10000,
+		"name": "john",
+	})
+	defer r.Close()
+	fmt.Println(r.ReadAllString())
+
+	// Output:
+	// TRACE: form: 10000, john
+}
+
+func ExampleClient_PutVar() {
+	type User struct {
+		Id   int
+		Name string
+	}
+	var (
+		user *User
+		ctx  = context.Background()
+		url  = "http://127.0.0.1:8999/var/json"
+	)
+	err := g.Client().PutVar(ctx, url).Scan(&user)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(user)
+
+	// Output:
+	// &{1 john}
+}
+
+func ExampleClient_DeleteVar() {
+	type User struct {
+		Id   int
+		Name string
+	}
+	var (
+		users []User
+		url   = "http://127.0.0.1:8999/var/jsons"
+	)
+	err := g.Client().DeleteVar(ctx, url).Scan(&users)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(users)
+
+	// Output:
+	// [{1 john} {2 smith}]
+}
+
+func ExampleClient_HeadVar() {
+	type User struct {
+		Id   int
+		Name string
+	}
+	var (
+		users []User
+		url   = "http://127.0.0.1:8999/var/jsons"
+	)
+	err := g.Client().HeadVar(ctx, url).Scan(&users)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(users)
+
+	// Output:
+	// []
+}
+
+func ExampleClient_PatchVar() {
+	type User struct {
+		Id   int
+		Name string
+	}
+	var (
+		users []User
+		url   = "http://127.0.0.1:8999/var/jsons"
+	)
+	err := g.Client().PatchVar(ctx, url).Scan(&users)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(users)
+
+	// Output:
+	// [{1 john} {2 smith}]
+}
+
+func ExampleClient_ConnectVar() {
+	type User struct {
+		Id   int
+		Name string
+	}
+	var (
+		users []User
+		url   = "http://127.0.0.1:8999/var/jsons"
+	)
+	err := g.Client().ConnectVar(ctx, url).Scan(&users)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(users)
+
+	// Output:
+	// [{1 john} {2 smith}]
+}
+
+func ExampleClient_OptionsVar() {
+	type User struct {
+		Id   int
+		Name string
+	}
+	var (
+		users []User
+		url   = "http://127.0.0.1:8999/var/jsons"
+	)
+	err := g.Client().OptionsVar(ctx, url).Scan(&users)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(users)
+
+	// Output:
+	// [{1 john} {2 smith}]
+}
+
+func ExampleClient_TraceVar() {
+	type User struct {
+		Id   int
+		Name string
+	}
+	var (
+		users []User
+		url   = "http://127.0.0.1:8999/var/jsons"
+	)
+	err := g.Client().TraceVar(ctx, url).Scan(&users)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(users)
+
+	// Output:
+	// [{1 john} {2 smith}]
 }
