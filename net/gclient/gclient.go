@@ -79,13 +79,17 @@ func New() *Client {
 func (c *Client) Clone() *Client {
 	newClient := New()
 	*newClient = *c
-	newClient.header = make(map[string]string)
-	newClient.cookies = make(map[string]string)
-	for k, v := range c.header {
-		newClient.header[k] = v
+	if len(c.header) > 0 {
+		newClient.header = make(map[string]string)
+		for k, v := range c.header {
+			newClient.header[k] = v
+		}
 	}
-	for k, v := range c.cookies {
-		newClient.cookies[k] = v
+	if len(c.cookies) > 0 {
+		newClient.cookies = make(map[string]string)
+		for k, v := range c.cookies {
+			newClient.cookies[k] = v
+		}
 	}
 	return newClient
 }

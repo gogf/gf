@@ -222,6 +222,9 @@ func Code(err error) gcode.Code {
 	if e, ok := err.(iNext); ok {
 		return Code(e.Next())
 	}
+	if e, ok := err.(iUnwrap); ok {
+		return Code(e.Unwrap())
+	}
 	return gcode.CodeNil
 }
 
@@ -235,6 +238,9 @@ func Cause(err error) error {
 	}
 	if e, ok := err.(iNext); ok {
 		return Cause(e.Next())
+	}
+	if e, ok := err.(iUnwrap); ok {
+		return Cause(e.Unwrap())
 	}
 	return err
 }
