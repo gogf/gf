@@ -801,7 +801,11 @@ func TestSortedStrArray_Walk(t *testing.T) {
 func TestSortedStrArray_DeepCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewSortedStrArrayFrom([]string{"a", "b", "c", "d"})
-		copyArray := array.DeepCopy()
-		t.Assert(array, copyArray)
+		copyArray := array.DeepCopy().(*garray.SortedStrArray)
+		array.Add("e")
+		copyArray.Add("f")
+		cval, _ := copyArray.Get(4)
+		val, _ := array.Get(4)
+		t.AssertNE(cval, val)
 	})
 }

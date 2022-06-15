@@ -760,6 +760,8 @@ func TestList_DeepCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := NewFrom([]interface{}{1, 2, "a", `"b"`, `\c`})
 		copyList := l.DeepCopy()
-		t.Assert(l, copyList)
+		cl := copyList.(*List)
+		cl.PopBack()
+		t.AssertNE(l.Size(), cl.Size())
 	})
 }

@@ -940,7 +940,11 @@ func TestSortedArray_IsEmpty(t *testing.T) {
 func TestSortedArray_DeepCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewSortedArrayFrom([]interface{}{1, 2, 3, 4, 5}, gutil.ComparatorString)
-		copyArrary := array.DeepCopy()
-		t.Assert(array, copyArrary)
+		copyArray := array.DeepCopy().(*garray.SortedArray)
+		array.Add(6)
+		copyArray.Add(7)
+		cval, _ := copyArray.Get(5)
+		val, _ := array.Get(5)
+		t.AssertNE(cval, val)
 	})
 }

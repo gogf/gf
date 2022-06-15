@@ -796,7 +796,11 @@ func TestSortedIntArray_IsEmpty(t *testing.T) {
 func TestSortedIntArray_DeepCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewSortedIntArrayFrom([]int{1, 2, 3, 4, 5})
-		copyArray := array.DeepCopy()
-		t.Assert(array, copyArray)
+		copyArray := array.DeepCopy().(*garray.SortedIntArray)
+		array.Add(6)
+		copyArray.Add(7)
+		cval, _ := copyArray.Get(5)
+		val, _ := array.Get(5)
+		t.AssertNE(cval, val)
 	})
 }
