@@ -11,7 +11,6 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/intlog"
 )
 
 // DefaultHandlerResponse is the default implementation of HandlerResponse.
@@ -32,7 +31,6 @@ func MiddlewareHandlerResponse(r *Request) {
 
 	var (
 		msg  string
-		ctx  = r.Context()
 		err  = r.GetError()
 		res  = r.GetHandlerResponse()
 		code = gerror.Code(err)
@@ -55,12 +53,9 @@ func MiddlewareHandlerResponse(r *Request) {
 	} else {
 		code = gcode.CodeOK
 	}
-	internalErr := r.Response.WriteJson(DefaultHandlerResponse{
+	r.Response.WriteJson(DefaultHandlerResponse{
 		Code:    code.Code(),
 		Message: msg,
 		Data:    res,
 	})
-	if internalErr != nil {
-		intlog.Errorf(ctx, `%+v`, internalErr)
-	}
 }

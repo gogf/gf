@@ -2,7 +2,7 @@
 
 [English](README.MD) | 简体中文
 
-使用Polarismesh作为服务注册、发现管理和心跳上报
+使用`PolarisMesh`作为服务注册、发现管理和心跳上报。
 
 
 ## Installation
