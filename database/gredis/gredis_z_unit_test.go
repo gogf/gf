@@ -169,7 +169,7 @@ func Test_Error(t *testing.T) {
 		t.AssertNil(err)
 
 		time.Sleep(time.Second)
-		
+
 		_, err = redis.Do(ctx, "PUBLISH", "gf", "test")
 		t.AssertNil(err)
 
