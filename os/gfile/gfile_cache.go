@@ -10,6 +10,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/command"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gcache"
@@ -17,22 +19,28 @@ import (
 )
 
 const (
-	defaultCacheExpire    = "1m"             // defaultCacheExpire is the expire time for file content caching in seconds.
+	defaultCacheDuration  = "1m"             // defaultCacheExpire is the expire time for file content caching in seconds.
 	commandEnvKeyForCache = "gf.gfile.cache" // commandEnvKeyForCache is the configuration key for command argument or environment configuring cache expire duration.
 )
 
 var (
 	// Default expire time for file content caching.
-	cacheExpire = getCacheExpire()
+	cacheDuration = getCacheDuration()
 
 	// internalCache is the memory cache for internal usage.
 	internalCache = gcache.New()
 )
 
-func getCacheExpire() time.Duration {
-	d, err := time.ParseDuration(command.GetOptWithEnv(commandEnvKeyForCache, defaultCacheExpire))
+func getCacheDuration() time.Duration {
+	cacheDurationConfigured := command.GetOptWithEnv(commandEnvKeyForCache, defaultCacheDuration)
+	d, err := time.ParseDuration(cacheDurationConfigured)
 	if err != nil {
-		panic(err)
+		panic(gerror.WrapCodef(
+			gcode.CodeInvalidConfiguration,
+			err,
+			`error parsing string "%s" to time duration`,
+			cacheDurationConfigured,
+		))
 	}
 	return d
 }
@@ -50,7 +58,7 @@ func GetContentsWithCache(path string, duration ...time.Duration) string {
 func GetBytesWithCache(path string, duration ...time.Duration) []byte {
 	var (
 		ctx      = context.Background()
-		expire   = cacheExpire
+		expire   = cacheDuration
 		cacheKey = commandEnvKeyForCache + path
 	)
 
