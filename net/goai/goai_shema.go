@@ -91,18 +91,29 @@ type Discriminator struct {
 	Mapping      map[string]string `json:"mapping,omitempty"`
 }
 
+type schemaWithIgnore struct {
+	object           interface{}
+	ignoreProperties []string
+}
+
 // addSchema creates schemas with objects.
 // Note that the `object` can be array alias like: `type Res []Item`.
 func (oai *OpenApiV3) addSchema(object ...interface{}) error {
 	for _, v := range object {
-		if err := oai.doAddSchemaSingle(v); err != nil {
+		var err error
+		if s, ok := v.(*schemaWithIgnore); ok {
+			err = oai.doAddSchemaSingle(s.object, s.ignoreProperties...)
+		} else {
+			err = oai.doAddSchemaSingle(v)
+		}
+		if err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (oai *OpenApiV3) doAddSchemaSingle(object interface{}) error {
+func (oai *OpenApiV3) doAddSchemaSingle(object interface{}, ignoreProperties ...string) error {
 	if oai.Components.Schemas.refs == nil {
 		oai.Components.Schemas.refs = gmap.NewListMap()
 	}
@@ -119,7 +130,7 @@ func (oai *OpenApiV3) doAddSchemaSingle(object interface{}) error {
 	// Take the holder first.
 	oai.Components.Schemas.Set(structTypeName, SchemaRef{})
 
-	schema, err := oai.structToSchema(object)
+	schema, err := oai.structToSchema(object, ignoreProperties...)
 	if err != nil {
 		return err
 	}
@@ -132,15 +143,19 @@ func (oai *OpenApiV3) doAddSchemaSingle(object interface{}) error {
 }
 
 // structToSchema converts and returns given struct object as Schema.
-func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
+func (oai *OpenApiV3) structToSchema(object interface{}, ignoreProperties ...string) (*Schema, error) {
 	var (
 		tagMap = gmeta.Data(object)
 		schema = &Schema{
 			Properties:  createSchemas(),
 			XExtensions: make(XExtensions),
 		}
-		ignoreProperties []interface{}
+		removeProperties []interface{}
 	)
+	// ignore properties.
+	for _, v := range ignoreProperties {
+		removeProperties = append(removeProperties, v)
+	}
 	if len(tagMap) > 0 {
 		if err := oai.tagMapToSchema(tagMap, schema); err != nil {
 			return nil, err
@@ -195,13 +210,13 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 			}
 		}
 		if !isValidParameterName(key) {
-			ignoreProperties = append(ignoreProperties, key)
+			removeProperties = append(removeProperties, key)
 		}
 		return true
 	})
 
-	if len(ignoreProperties) > 0 {
-		schema.Properties.Removes(ignoreProperties)
+	if len(removeProperties) > 0 {
+		schema.Properties.Removes(removeProperties)
 	}
 
 	return schema, nil

@@ -125,10 +125,6 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		)
 	}
 
-	if err := oai.addSchema(inputObject.Interface(), outputObject.Interface()); err != nil {
-		return err
-	}
-
 	if len(inputMetaMap) > 0 {
 		if err := oai.tagMapToPath(inputMetaMap, &path); err != nil {
 			return err
@@ -145,6 +141,25 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	// =================================================================================================================
 	// Request.
 	// =================================================================================================================
+	var requestSchemaIgnoreKey []string
+	structFields, _ := gstructs.Fields(gstructs.FieldsInput{
+		Pointer:         inputObject.Interface(),
+		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
+	})
+	for _, structField := range structFields {
+		if operation.Parameters == nil {
+			operation.Parameters = []ParameterRef{}
+		}
+		parameterRef, err := oai.newParameterRefWithStructMethod(structField, in.Path, in.Method)
+		if err != nil {
+			return err
+		}
+		if parameterRef != nil {
+			operation.Parameters = append(operation.Parameters, *parameterRef)
+			requestSchemaIgnoreKey = append(requestSchemaIgnoreKey, parameterRef.Value.Name)
+		}
+	}
+	// It also sets request parameters.
 	if operation.RequestBody == nil {
 		operation.RequestBody = &RequestBodyRef{}
 	}
@@ -182,23 +197,6 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		}
 		operation.RequestBody = &RequestBodyRef{
 			Value: &requestBody,
-		}
-	}
-	// It also sets request parameters.
-	structFields, _ := gstructs.Fields(gstructs.FieldsInput{
-		Pointer:         inputObject.Interface(),
-		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
-	})
-	for _, structField := range structFields {
-		if operation.Parameters == nil {
-			operation.Parameters = []ParameterRef{}
-		}
-		parameterRef, err := oai.newParameterRefWithStructMethod(structField, in.Path, in.Method)
-		if err != nil {
-			return err
-		}
-		if parameterRef != nil {
-			operation.Parameters = append(operation.Parameters, *parameterRef)
 		}
 	}
 
@@ -245,6 +243,15 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			}
 		}
 		operation.Responses[responseOkKey] = ResponseRef{Value: &response}
+	}
+
+	// =================================================================================================================
+	// Schemas.
+	// =================================================================================================================
+	if err := oai.addSchema(&schemaWithIgnore{
+		object: inputObject.Interface(), ignoreProperties: requestSchemaIgnoreKey,
+	}, outputObject.Interface()); err != nil {
+		return err
 	}
 
 	// Assign to certain operation attribute.
