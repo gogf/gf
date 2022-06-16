@@ -141,7 +141,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	// =================================================================================================================
 	// Request.
 	// =================================================================================================================
-	var requestSchemaIgnoreKey []string
+	var requestSchemaIgnoreProperties []string
 	structFields, _ := gstructs.Fields(gstructs.FieldsInput{
 		Pointer:         inputObject.Interface(),
 		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
@@ -156,10 +156,10 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		}
 		if parameterRef != nil {
 			operation.Parameters = append(operation.Parameters, *parameterRef)
-			requestSchemaIgnoreKey = append(requestSchemaIgnoreKey, parameterRef.Value.Name)
+			requestSchemaIgnoreProperties = append(requestSchemaIgnoreProperties, parameterRef.Value.Name)
 		}
 	}
-	// It also sets request parameters.
+	// It also sets request body.
 	if operation.RequestBody == nil {
 		operation.RequestBody = &RequestBodyRef{}
 	}
@@ -249,7 +249,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	// Schemas.
 	// =================================================================================================================
 	if err := oai.addSchema(&schemaWithIgnore{
-		object: inputObject.Interface(), ignoreProperties: requestSchemaIgnoreKey,
+		object: inputObject.Interface(), ignoreProperties: requestSchemaIgnoreProperties,
 	}, outputObject.Interface()); err != nil {
 		return err
 	}
