@@ -7,6 +7,8 @@ const TemplateGenServiceContent = `
 
 package {PackageName}
 
+{Imports}
+
 type I{StructName} interface {
 	{FuncDefinition}
 }

@@ -8,6 +8,9 @@ package grand
 
 import (
 	"crypto/rand"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 const (
@@ -33,7 +36,7 @@ func asyncProducingRandomBufferBytesLoop() {
 	for {
 		buffer := make([]byte, 1024)
 		if n, err := rand.Read(buffer); err != nil {
-			panic(err)
+			panic(gerror.WrapCode(gcode.CodeInternalError, err, `error reading random buffer from system`))
 		} else {
 			// The random buffer from system is very expensive,
 			// so fully reuse the random buffer by changing

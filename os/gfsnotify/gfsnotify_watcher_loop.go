@@ -120,7 +120,7 @@ func (w *Watcher) eventLoop() {
 
 				}
 				// Calling the callbacks in order.
-				for _, v := range callbacks {
+				for _, callback := range callbacks {
 					go func(callback *Callback) {
 						defer func() {
 							if err := recover(); err != nil {
@@ -133,7 +133,7 @@ func (w *Watcher) eventLoop() {
 							}
 						}()
 						callback.Func(event)
-					}(v)
+					}(callback)
 				}
 			} else {
 				break
