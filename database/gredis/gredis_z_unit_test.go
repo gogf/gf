@@ -168,8 +168,12 @@ func Test_Error(t *testing.T) {
 		_, err = conn.Do(ctx, "Subscribe", "gf")
 		t.AssertNil(err)
 
+		time.Sleep(time.Second)
+		
 		_, err = redis.Do(ctx, "PUBLISH", "gf", "test")
 		t.AssertNil(err)
+
+		time.Sleep(time.Second)
 
 		v, err = conn.Receive(ctx)
 		t.AssertNil(err)
