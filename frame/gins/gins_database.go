@@ -16,8 +16,6 @@ import (
 	"github.com/gogf/gf/v2/internal/consts"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gcfg"
-	"github.com/gogf/gf/v2/text/gregex"
-	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
 )
@@ -172,14 +170,6 @@ func parseDBConfigNode(value interface{}) *gdb.ConfigNode {
 	// Find possible `Link` configuration content.
 	if _, v := gutil.MapPossibleItemByKey(nodeMap, "Link"); v != nil {
 		node.Link = gconv.String(v)
-	}
-	// Parse `Link` configuration syntax.
-	if node.Link != "" && node.Type == "" {
-		match, _ := gregex.MatchString(`([a-z]+):(.+)`, node.Link)
-		if len(match) == 3 {
-			node.Type = gstr.Trim(match[1])
-			node.Link = gstr.Trim(match[2])
-		}
 	}
 	return node
 }
