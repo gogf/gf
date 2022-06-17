@@ -58,7 +58,7 @@ func (c *Command) RunWithValue(ctx context.Context) (value interface{}) {
 			fmt.Println(buffer.String())
 			os.Exit(1)
 		}
-		glog.Fatal(ctx, buffer.String())
+		glog.Stack(false).Fatal(ctx, buffer.String())
 	}
 	return value
 }
