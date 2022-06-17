@@ -8,6 +8,7 @@
 package gcmd
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -18,6 +19,7 @@ import (
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/genv"
+	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
@@ -40,18 +42,23 @@ func (c *Command) RunWithValue(ctx context.Context) (value interface{}) {
 		var (
 			code   = gerror.Code(err)
 			detail = code.Detail()
+			buffer = bytes.NewBuffer(nil)
 		)
 		if code.Code() == gcode.CodeNotFound.Code() {
-			fmt.Printf("ERROR: %s\n", gstr.Trim(err.Error()))
+			buffer.WriteString(fmt.Sprintf("ERROR: %s\n", gstr.Trim(err.Error())))
 			if lastCmd, ok := detail.(*Command); ok {
-				lastCmd.Print()
+				lastCmd.PrintTo(buffer)
 			} else {
-				c.Print()
+				c.PrintTo(buffer)
 			}
 		} else {
-			fmt.Printf("%+v\n", err)
+			buffer.WriteString(fmt.Sprintf("%+v\n", err))
 		}
-		os.Exit(1)
+		if gtrace.GetTraceID(ctx) == "" {
+			fmt.Println(buffer.String())
+			os.Exit(1)
+		}
+		glog.Fatal(ctx, buffer.String())
 	}
 	return value
 }
