@@ -139,7 +139,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	}
 
 	// =================================================================================================================
-	// Request.
+	// Request Param.
 	// =================================================================================================================
 	var requestSchemaIgnoreProperties []string
 	structFields, _ := gstructs.Fields(gstructs.FieldsInput{
@@ -159,7 +159,19 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			requestSchemaIgnoreProperties = append(requestSchemaIgnoreProperties, parameterRef.Value.Name)
 		}
 	}
-	// It also sets request body.
+
+	// =================================================================================================================
+	// Schemas.
+	// =================================================================================================================
+	if err := oai.addSchema(&ObjectWithIgnore{
+		Object: inputObject.Interface(), IgnoreProperties: requestSchemaIgnoreProperties,
+	}, outputObject.Interface()); err != nil {
+		return err
+	}
+
+	// =================================================================================================================
+	// Request Body.
+	// =================================================================================================================
 	if operation.RequestBody == nil {
 		operation.RequestBody = &RequestBodyRef{}
 	}
@@ -243,15 +255,6 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			}
 		}
 		operation.Responses[responseOkKey] = ResponseRef{Value: &response}
-	}
-
-	// =================================================================================================================
-	// Schemas.
-	// =================================================================================================================
-	if err := oai.addSchema(&schemaWithIgnore{
-		object: inputObject.Interface(), ignoreProperties: requestSchemaIgnoreProperties,
-	}, outputObject.Interface()); err != nil {
-		return err
 	}
 
 	// Assign to certain operation attribute.

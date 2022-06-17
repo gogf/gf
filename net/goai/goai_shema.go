@@ -91,9 +91,9 @@ type Discriminator struct {
 	Mapping      map[string]string `json:"mapping,omitempty"`
 }
 
-type schemaWithIgnore struct {
-	object           interface{}
-	ignoreProperties []string
+type ObjectWithIgnore struct {
+	Object           interface{}
+	IgnoreProperties []string
 }
 
 // addSchema creates schemas with objects.
@@ -101,8 +101,8 @@ type schemaWithIgnore struct {
 func (oai *OpenApiV3) addSchema(object ...interface{}) error {
 	for _, v := range object {
 		var err error
-		if s, ok := v.(*schemaWithIgnore); ok {
-			err = oai.doAddSchemaSingle(s.object, s.ignoreProperties...)
+		if s, ok := v.(*ObjectWithIgnore); ok {
+			err = oai.doAddSchemaSingle(s.Object, s.IgnoreProperties...)
 		} else {
 			err = oai.doAddSchemaSingle(v)
 		}
