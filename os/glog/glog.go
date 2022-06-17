@@ -8,8 +8,9 @@
 package glog
 
 import (
-	"github.com/gogf/gf/v2/os/gcmd"
+	"github.com/gogf/gf/v2/internal/command"
 	"github.com/gogf/gf/v2/os/grpool"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 const (
@@ -30,7 +31,7 @@ var (
 )
 
 func init() {
-	defaultDebug = gcmd.GetOptWithEnv(commandEnvKeyForDebug, true).Bool()
+	defaultDebug = gconv.Bool(command.GetOptWithEnv(commandEnvKeyForDebug, "true"))
 	SetDebug(defaultDebug)
 }
 
