@@ -22,8 +22,6 @@ import (
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/glog"
-	"github.com/gogf/gf/v2/text/gregex"
-	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/grand"
 )
 
@@ -398,8 +396,7 @@ func doNewByNode(node ConfigNode, group string) (db DB, err error) {
 		config: &node,
 	}
 	if v, ok := driverMap[node.Type]; ok {
-		c.db, err = v.New(c, &node)
-		if err != nil {
+		if c.db, err = v.New(c, &node); err != nil {
 			return nil, err
 		}
 		return c.db, nil
@@ -526,14 +523,6 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		}
 	} else {
 		node = c.config
-	}
-	// Parse `Link` configuration syntax.
-	if node.Link != "" && node.Type == "" {
-		match, _ := gregex.MatchString(`([a-z]+):(.+)`, node.Link)
-		if len(match) == 3 {
-			node.Type = gstr.Trim(match[1])
-			node.Link = gstr.Trim(match[2])
-		}
 	}
 	// Default value checks.
 	if node.Charset == "" {
