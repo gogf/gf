@@ -13,6 +13,8 @@ import (
 
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // Config is the configuration management object.
@@ -72,6 +74,12 @@ func SetConfig(config Config) {
 	defer instances.Clear()
 	configs.Lock()
 	defer configs.Unlock()
+	for k, nodes := range config {
+		for i, node := range nodes {
+			nodes[i] = parseConfigNode(node)
+		}
+		config[k] = nodes
+	}
 	configs.config = config
 }
 
@@ -80,6 +88,9 @@ func SetConfigGroup(group string, nodes ConfigGroup) {
 	defer instances.Clear()
 	configs.Lock()
 	defer configs.Unlock()
+	for i, node := range nodes {
+		nodes[i] = parseConfigNode(node)
+	}
 	configs.config[group] = nodes
 }
 
@@ -88,7 +99,19 @@ func AddConfigNode(group string, node ConfigNode) {
 	defer instances.Clear()
 	configs.Lock()
 	defer configs.Unlock()
-	configs.config[group] = append(configs.config[group], node)
+	configs.config[group] = append(configs.config[group], parseConfigNode(node))
+}
+
+// parseConfigNode parses `Link` configuration syntax.
+func parseConfigNode(node ConfigNode) ConfigNode {
+	if node.Link != "" && node.Type == "" {
+		match, _ := gregex.MatchString(`([a-z]+):(.+)`, node.Link)
+		if len(match) == 3 {
+			node.Type = gstr.Trim(match[1])
+			node.Link = gstr.Trim(match[2])
+		}
+	}
+	return node
 }
 
 // AddDefaultConfigNode adds one node configuration to configuration of default group.
