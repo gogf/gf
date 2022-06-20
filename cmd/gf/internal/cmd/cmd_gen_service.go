@@ -23,7 +23,7 @@ type (
 		SrcFolder    string `short:"s" name:"srcFolder" brief:"source folder path to be parsed. default: internal/logic" d:"internal/logic"`
 		DstFolder    string `short:"d" name:"dstFolder" brief:"destination folder path storing automatically generated go files. default: internal/service" d:"internal/service"`
 		WatchFile    string `short:"w" name:"watchFile" brief:"used in file watcher, it generates service go files only if given file is under srcFolder"`
-		StPattern    string `short:"a" name:"stPattern" brief:"regular expression matching struct name for generating service. default: s([A-Z]\\w+)" d:"s([A-Z]\\w+)"`
+		StPattern    string `short:"a" name:"stPattern" brief:"regular expression matching struct name for generating service. default: s([A-Z]\\\w+)" d:"s([A-Z]\\w+)"`
 		Packages     string `short:"p" name:"packages" brief:"produce go files only for given source packages, multiple packages joined with char ','"`
 		ImportPrefix string `short:"i" name:"importPrefix" brief:"custom import prefix to calculate import path for generated importing go file of logic"`
 		OverWrite    bool   `short:"o" name:"overwrite" brief:"overwrite service go files that already exist in generating folder. default: true" d:"true" orphan:"true"`
@@ -65,7 +65,7 @@ func (c cGen) Service(ctx context.Context, in cGenServiceInput) (out *cGenServic
 		)
 		mlog.Debug("watchFileDir:", watchFileDir)
 		mlog.Debug("logicFolderDir:", srcFolderDir)
-		if !gstr.HasSuffix(srcFolderDir, in.SrcFolder) {
+		if !gstr.HasSuffix(gstr.Replace(srcFolderDir, `\`, `/`), in.SrcFolder) {
 			mlog.Printf(`ignore watch file "%s", not in source path "%s"`, in.WatchFile, in.SrcFolder)
 			return
 		}

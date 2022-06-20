@@ -16,3 +16,4 @@ cbuild
 .test/
 cmd/gf/main
 *.exe
+go.work

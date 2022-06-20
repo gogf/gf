@@ -11,11 +11,12 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"io/ioutil"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/gogf/gf/v2/debug/gdebug"
 
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
@@ -488,6 +489,28 @@ func Test_Client_Request_13_Dump(t *testing.T) {
 		t.Assert(gstr.Contains(dumpedText3, "test_for_request_body"), true)
 		dumpedText4 := r2.RawResponse()
 		t.Assert(gstr.Contains(dumpedText4, "test_for_request_body"), false)
+		r2 = nil
+		t.Assert(r2.RawRequest(), "")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		url := fmt.Sprintf("http://127.0.0.1:%d", p)
+		response, _ := g.Client().Get(ctx, url, g.Map{
+			"id":   10000,
+			"name": "john",
+		})
+		response = nil
+		t.Assert(response.RawRequest(), "")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		url := fmt.Sprintf("http://127.0.0.1:%d", p)
+		response, _ := g.Client().Get(ctx, url, g.Map{
+			"id":   10000,
+			"name": "john",
+		})
+		response.RawDump()
+		t.AssertGT(len(response.Raw()), 0)
 	})
 }
 
@@ -556,5 +579,64 @@ func TestLoadKeyCrt(t *testing.T) {
 
 		tlsConfig, _ = gclient.LoadKeyCrt(crtFile, keyFile)
 		t.AssertNE(tlsConfig, nil)
+	})
+}
+
+func TestClient_DoRequest(t *testing.T) {
+	p, _ := gtcp.GetFreePort()
+	s := g.Server(p)
+	s.BindHandler("/hello", func(r *ghttp.Request) {
+		r.Response.WriteHeader(200)
+		r.Response.WriteJson(g.Map{"field": "test_for_response_body"})
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		url := fmt.Sprintf("127.0.0.1:%d/hello", p)
+		resp, err := c.DoRequest(ctx, http.MethodGet, url)
+		t.AssertNil(err)
+		t.AssertNE(resp, nil)
+		t.Assert(resp.ReadAllString(), "{\"field\":\"test_for_response_body\"}")
+
+		resp.Response = nil
+		bytes := resp.ReadAll()
+		t.Assert(bytes, []byte{})
+		resp.Close()
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		url := "127.0.0.1:99999/hello"
+		resp, err := c.DoRequest(ctx, http.MethodGet, url)
+		t.AssertNil(resp.Response)
+		t.AssertNE(err, nil)
+	})
+}
+
+func TestClient_RequestVar(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			url = "http://127.0.0.1:99999/var/jsons"
+		)
+		varValue := g.Client().RequestVar(ctx, http.MethodGet, url)
+		t.AssertNil(varValue)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id   int
+			Name string
+		}
+		var (
+			users []User
+			url   = "http://127.0.0.1:8999/var/jsons"
+		)
+		err := g.Client().RequestVar(ctx, http.MethodGet, url).Scan(&users)
+		t.AssertNil(err)
+		t.AssertNE(users, nil)
 	})
 }

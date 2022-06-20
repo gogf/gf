@@ -53,45 +53,24 @@ func Database(name ...string) gdb.DB {
 		if v, _ := Config().Get(ctx, configNodeKey); !v.IsEmpty() {
 			configMap = v.Map()
 		}
+		// No configuration found, it formats and panics error.
 		if len(configMap) == 0 && !gdb.IsConfigured() {
 			// File configuration object checks.
-			var (
-				err            error
-				configFilePath string
-			)
+			var err error
 			if fileConfig, ok := Config().GetAdapter().(*gcfg.AdapterFile); ok {
-				if configFilePath, _ = fileConfig.GetFilePath(); configFilePath == "" {
-					var (
-						exampleFileName       = "config.example.toml"
-						exampleConfigFilePath string
-					)
-					if exampleConfigFilePath, _ = fileConfig.GetFilePath(exampleFileName); exampleConfigFilePath != "" {
-						err = gerror.NewCodef(
-							gcode.CodeMissingConfiguration,
-							`configuration file "%s" not found, but found "%s", did you miss renaming the example configuration file?`,
-							fileConfig.GetFileName(),
-							exampleFileName,
-						)
-					} else {
-						err = gerror.NewCodef(
-							gcode.CodeMissingConfiguration,
-							`configuration file "%s" not found, did you miss the configuration file or the misspell the configuration file name?`,
-							fileConfig.GetFileName(),
-						)
-					}
-					if err != nil {
-						panic(err)
-					}
+				if _, err = fileConfig.GetFilePath(); err != nil {
+					panic(gerror.WrapCode(gcode.CodeMissingConfiguration, err,
+						`configuration not found, did you miss the configuration file or the misspell the configuration file name`,
+					))
 				}
 			}
 			// Panic if nothing found in Config object or in gdb configuration.
 			if len(configMap) == 0 && !gdb.IsConfigured() {
-				err = gerror.NewCodef(
+				panic(gerror.NewCodef(
 					gcode.CodeMissingConfiguration,
-					`database initialization failed: "%s" node not found, is configuration file or configuration node missing?`,
+					`database initialization failed: configuration missing for database node "%s"`,
 					consts.ConfigNodeNameDatabase,
-				)
-				panic(err)
+				))
 			}
 		}
 

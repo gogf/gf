@@ -601,8 +601,12 @@ func ExampleIntAnyMap_String() {
 
 	fmt.Println(m.String())
 
+	var m1 *gmap.IntAnyMap = nil
+	fmt.Println(len(m1.String()))
+
 	// Output:
 	// {"1":"v1"}
+	// 0
 }
 
 func ExampleIntAnyMap_MarshalJSON() {

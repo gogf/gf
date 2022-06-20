@@ -540,13 +540,22 @@ func (v *Validator) doCheckSingleBuildInRules(ctx context.Context, in doCheckBui
 type doCheckValueRecursivelyInput struct {
 	Value               interface{}                 // Value to be validated.
 	Type                reflect.Type                // Struct/map/slice type which to be recursively validated.
-	OriginKind          reflect.Kind                // Struct/map/slice kind to be asserted in following switch case.
+	Kind                reflect.Kind                // Struct/map/slice kind to be asserted in following switch case.
 	ErrorMaps           map[string]map[string]error // The validated failed error map.
 	ResultSequenceRules *[]fieldRule                // The validated failed rule in sequence.
 }
 
 func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValueRecursivelyInput) {
-	switch in.OriginKind {
+	switch in.Kind {
+	case reflect.Ptr:
+		v.doCheckValueRecursively(ctx, doCheckValueRecursivelyInput{
+			Value:               in.Value,
+			Type:                in.Type.Elem(),
+			Kind:                in.Type.Elem().Kind(),
+			ErrorMaps:           in.ErrorMaps,
+			ResultSequenceRules: in.ResultSequenceRules,
+		})
+
 	case reflect.Struct:
 		// Ignore data, rules and messages from parent.
 		validator := v.Clone()
@@ -572,7 +581,7 @@ func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValue
 			v.doCheckValueRecursively(ctx, doCheckValueRecursivelyInput{
 				Value:               item,
 				Type:                mapTypeElem,
-				OriginKind:          mapTypeKind,
+				Kind:                mapTypeKind,
 				ErrorMaps:           in.ErrorMaps,
 				ResultSequenceRules: in.ResultSequenceRules,
 			})
@@ -596,7 +605,7 @@ func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValue
 			v.doCheckValueRecursively(ctx, doCheckValueRecursivelyInput{
 				Value:               item,
 				Type:                in.Type.Elem(),
-				OriginKind:          in.Type.Elem().Kind(),
+				Kind:                in.Type.Elem().Kind(),
 				ErrorMaps:           in.ErrorMaps,
 				ResultSequenceRules: in.ResultSequenceRules,
 			})

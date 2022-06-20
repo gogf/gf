@@ -2,7 +2,7 @@
 
 English | [简体中文](README_ZH.MD)
 
-Use Polaris mesh as service registration, discovery management and heartbeat reporting
+Use `PolarisMesh` as service registration, discovery management and heartbeat reporting.
 
 
 ## Installation
@@ -12,11 +12,6 @@ go get -u -v github.com/gogf/gf/contrib/registry/polaris/v2
 suggested using `go.mod`:
 ```
 require github.com/gogf/gf/contrib/registry/polaris/v2 latest
-```
-
-## Limitation
-```
-golang version >= 1.15
 ```
 
 
@@ -50,7 +45,6 @@ func main() {
     })
     s.Run()
 }
-
 ```
 
 [client](example/registry/polaris/client/main.go)
@@ -85,7 +79,6 @@ func main() {
         time.Sleep(time.Second)
     }
 }
-
 ```
 
 ## License
