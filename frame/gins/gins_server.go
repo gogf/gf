@@ -83,6 +83,9 @@ func Server(name ...interface{}) *ghttp.Server {
 				ctx,
 				fmt.Sprintf(`%s.%s.%s`, configNodeName, instanceName, consts.ConfigNodeNameLogger),
 			).Map()
+			if len(serverLoggerConfigMap) == 0 && len(serverConfigMap) > 0 {
+				serverLoggerConfigMap = gconv.Map(serverConfigMap[consts.ConfigNodeNameLogger])
+			}
 			if len(serverLoggerConfigMap) > 0 {
 				if err = server.Logger().SetConfigWithMap(serverLoggerConfigMap); err != nil {
 					panic(err)
