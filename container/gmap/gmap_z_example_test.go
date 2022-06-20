@@ -90,7 +90,7 @@ func ExampleNewFrom() {
 }
 
 func ExampleNewHashMap() {
-	m := gmap.New()
+	m := gmap.NewHashMap()
 
 	m.Set("key1", "val1")
 	fmt.Println(m)
@@ -105,7 +105,7 @@ func ExampleNewHashMapFrom() {
 	m.Set("key1", "val1")
 	fmt.Println(m)
 
-	n := gmap.NewFrom(m.MapCopy(), true)
+	n := gmap.NewHashMapFrom(m.MapCopy(), true)
 	fmt.Println(n)
 
 	// Output:

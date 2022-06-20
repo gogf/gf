@@ -599,8 +599,12 @@ func ExampleStrAnyMap_String() {
 
 	fmt.Println(m.String())
 
+	var m1 *gmap.StrAnyMap = nil
+	fmt.Println(len(m1.String()))
+
 	// Output:
 	// {"k1":"v1"}
+	// 0
 }
 
 func ExampleStrAnyMap_MarshalJSON() {

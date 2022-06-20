@@ -98,6 +98,12 @@ func Test_StrStrMap_Set_Fun(t *testing.T) {
 		t.Assert(m.SetIfNotExistFuncLock("b", getStr), false)
 		t.Assert(m.SetIfNotExistFuncLock("d", getStr), true)
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewStrStrMapFrom(nil)
+
+		t.Assert(m.GetOrSetFuncLock("b", getStr), "z")
+	})
 }
 
 func Test_StrStrMap_Batch(t *testing.T) {
@@ -170,6 +176,9 @@ func Test_StrStrMap_Merge(t *testing.T) {
 		m2.Set("b", "b")
 		m1.Merge(m2)
 		t.Assert(m1.Map(), map[string]string{"a": "a", "b": "b"})
+		m3 := gmap.NewStrStrMapFrom(nil)
+		m3.Merge(m2)
+		t.Assert(m3.Map(), m2.Map())
 	})
 }
 
@@ -284,6 +293,10 @@ func Test_StrStrMap_Pop(t *testing.T) {
 
 		t.AssertNE(k1, k2)
 		t.AssertNE(v1, v2)
+
+		k3, v3 := m.Pop()
+		t.Assert(k3, "")
+		t.Assert(v3, "")
 	})
 }
 
@@ -315,6 +328,11 @@ func Test_StrStrMap_Pops(t *testing.T) {
 
 		t.Assert(kArray.Unique().Len(), 3)
 		t.Assert(vArray.Unique().Len(), 3)
+
+		v := m.Pops(1)
+		t.AssertNil(v)
+		v = m.Pops(-1)
+		t.AssertNil(v)
 	})
 }
 
@@ -351,5 +369,19 @@ func TestStrStrMap_UnmarshalValue(t *testing.T) {
 		t.Assert(v.Map.Size(), 2)
 		t.Assert(v.Map.Get("k1"), "v1")
 		t.Assert(v.Map.Get("k2"), "v2")
+	})
+}
+
+func Test_StrStrMap_DeepCopy(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewStrStrMapFrom(g.MapStrStr{
+			"key1": "val1",
+			"key2": "val2",
+		})
+		t.Assert(m.Size(), 2)
+
+		n := m.DeepCopy().(*gmap.StrStrMap)
+		n.Set("key1", "v1")
+		t.AssertNE(m.Get("key1"), n.Get("key1"))
 	})
 }

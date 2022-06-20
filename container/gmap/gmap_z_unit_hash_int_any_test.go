@@ -82,6 +82,12 @@ func Test_IntAnyMap_Basic(t *testing.T) {
 		m2 := gmap.NewIntAnyMapFrom(map[int]interface{}{1: 1, 2: "2"})
 		t.Assert(m2.Map(), map[int]interface{}{1: 1, 2: "2"})
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewIntAnyMap(true)
+		m.Set(1, 1)
+		t.Assert(m.Map(), map[int]interface{}{1: 1})
+	})
 }
 
 func Test_IntAnyMap_Set_Fun(t *testing.T) {
@@ -171,6 +177,9 @@ func Test_IntAnyMap_Merge(t *testing.T) {
 		m2.Set(2, "2")
 		m1.Merge(m2)
 		t.Assert(m1.Map(), map[int]interface{}{1: 1, 2: "2"})
+		m3 := gmap.NewIntAnyMapFrom(nil)
+		m3.Merge(m2)
+		t.Assert(m3.Map(), m2.Map())
 	})
 }
 
@@ -271,6 +280,10 @@ func Test_IntAnyMap_Pop(t *testing.T) {
 
 		t.AssertNE(k1, k2)
 		t.AssertNE(v1, v2)
+
+		k3, v3 := m.Pop()
+		t.Assert(k3, 0)
+		t.AssertNil(v3)
 	})
 }
 
@@ -302,6 +315,11 @@ func Test_IntAnyMap_Pops(t *testing.T) {
 
 		t.Assert(kArray.Unique().Len(), 3)
 		t.Assert(vArray.Unique().Len(), 3)
+
+		v := m.Pops(1)
+		t.AssertNil(v)
+		v = m.Pops(-1)
+		t.AssertNil(v)
 	})
 }
 
@@ -338,5 +356,19 @@ func TestIntAnyMap_UnmarshalValue(t *testing.T) {
 		t.Assert(v.Map.Size(), 2)
 		t.Assert(v.Map.Get(1), "v1")
 		t.Assert(v.Map.Get(2), "v2")
+	})
+}
+
+func Test_IntAnyMap_DeepCopy(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewIntAnyMapFrom(g.MapIntAny{
+			1: "v1",
+			2: "v2",
+		})
+		t.Assert(m.Size(), 2)
+
+		n := m.DeepCopy().(*gmap.IntAnyMap)
+		n.Set(1, "val1")
+		t.AssertNE(m.Get(1), n.Get(1))
 	})
 }
