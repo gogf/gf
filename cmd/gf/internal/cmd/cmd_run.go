@@ -40,7 +40,7 @@ const (
 gf run main.go
 gf run main.go --args "server -p 8080"
 gf run main.go -mod=vendor
-gf run main.go -ede "(test)|(vendor)"
+gf run main.go -d "(test)|(vendor)"
 `
 	cRunDc = `
 The "run" command is used for running go codes with hot-compiled-like feature,
@@ -75,7 +75,7 @@ type (
 		File           string `name:"FILE"  arg:"true" brief:"{cRunFileBrief}" v:"required"`
 		Path           string `name:"path"  short:"p"  brief:"{cRunPathBrief}" d:"./"`
 		Extra          string `name:"extra" short:"e"  brief:"{cRunExtraBrief}"`
-		ExcludeDirExpr string `name:"excludeDirExpr" short:"ede" brief:"{cRunExcludeDirExprBrief}"`
+		ExcludeDirExpr string `name:"excludeDirExpr" short:"d" brief:"{cRunExcludeDirExprBrief}"`
 	}
 	cRunOutput struct{}
 )
