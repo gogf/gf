@@ -115,7 +115,7 @@ func Test_AddWithRecover(t *testing.T) {
 		grpool.AddWithRecover(ctx, func(ctx context.Context) {
 			array.Append(1)
 			panic(1)
-		}, func(err error) {
+		}, func(ctx context.Context, err error) {
 			array.Append(1)
 		})
 		grpool.AddWithRecover(ctx, func(ctx context.Context) {

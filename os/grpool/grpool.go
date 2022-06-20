@@ -19,6 +19,9 @@ import (
 // Func is the pool function which contains context parameter.
 type Func func(ctx context.Context)
 
+// RecoverFunc is the pool runtime panic recover function which contains context parameter.
+type RecoverFunc func(ctx context.Context, err error)
+
 // Pool manages the goroutines using pool.
 type Pool struct {
 	limit  int         // Max goroutine count limit.
@@ -63,7 +66,7 @@ func Add(ctx context.Context, f Func) error {
 // The optional `recoverFunc` is called when any panic during executing of `userFunc`.
 // If `recoverFunc` is not passed or given nil, it ignores the panic from `userFunc`.
 // The job will be executed asynchronously.
-func AddWithRecover(ctx context.Context, userFunc Func, recoverFunc ...func(err error)) error {
+func AddWithRecover(ctx context.Context, userFunc Func, recoverFunc ...RecoverFunc) error {
 	return pool.AddWithRecover(ctx, userFunc, recoverFunc...)
 }
 
@@ -108,15 +111,15 @@ func (p *Pool) Add(ctx context.Context, f Func) error {
 // The optional `recoverFunc` is called when any panic during executing of `userFunc`.
 // If `recoverFunc` is not passed or given nil, it ignores the panic from `userFunc`.
 // The job will be executed asynchronously.
-func (p *Pool) AddWithRecover(ctx context.Context, userFunc Func, recoverFunc ...func(err error)) error {
+func (p *Pool) AddWithRecover(ctx context.Context, userFunc Func, recoverFunc ...RecoverFunc) error {
 	return p.Add(ctx, func(ctx context.Context) {
 		defer func() {
 			if exception := recover(); exception != nil {
 				if len(recoverFunc) > 0 && recoverFunc[0] != nil {
 					if v, ok := exception.(error); ok && gerror.HasStack(v) {
-						recoverFunc[0](v)
+						recoverFunc[0](ctx, v)
 					} else {
-						recoverFunc[0](gerror.Newf(`%+v`, exception))
+						recoverFunc[0](ctx, gerror.Newf(`%+v`, exception))
 					}
 				}
 			}

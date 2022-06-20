@@ -81,9 +81,9 @@ func watchAndUpdateService(watcher Watcher, service Service, watchFunc ServiceWa
 		if len(services) > 0 {
 			watchedServiceMap.Set(service.GetName(), services[0])
 			if watchFunc != nil {
-				gutil.TryCatch(func() {
+				gutil.TryCatch(ctx, func(ctx context.Context) {
 					watchFunc(services[0])
-				}, func(exception error) {
+				}, func(ctx context.Context, exception error) {
 					intlog.Errorf(ctx, `%+v`, exception)
 				})
 			}

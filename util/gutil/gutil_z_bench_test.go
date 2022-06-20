@@ -9,6 +9,7 @@
 package gutil
 
 import (
+	"context"
 	"testing"
 )
 
@@ -22,10 +23,11 @@ var (
 )
 
 func Benchmark_TryCatch(b *testing.B) {
+	ctx := context.TODO()
 	for i := 0; i < b.N; i++ {
-		TryCatch(func() {
+		TryCatch(ctx, func(ctx context.Context) {
 
-		}, func(err error) {
+		}, func(ctx context.Context, err error) {
 
 		})
 	}

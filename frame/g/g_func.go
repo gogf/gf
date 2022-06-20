@@ -63,14 +63,14 @@ func Throw(exception interface{}) {
 
 // Try implements try... logistics using internal panic...recover.
 // It returns error if any exception occurs, or else it returns nil.
-func Try(try func()) (err error) {
-	return gutil.Try(try)
+func Try(ctx context.Context, try func(ctx context.Context)) (err error) {
+	return gutil.Try(ctx, try)
 }
 
 // TryCatch implements try...catch... logistics using internal panic...recover.
 // It automatically calls function `catch` if any exception occurs ans passes the exception as an error.
-func TryCatch(try func(), catch ...func(exception error)) {
-	gutil.TryCatch(try, catch...)
+func TryCatch(ctx context.Context, try func(ctx context.Context), catch ...func(ctx context.Context, exception error)) {
+	gutil.TryCatch(ctx, try, catch...)
 }
 
 // IsNil checks whether given `value` is nil.

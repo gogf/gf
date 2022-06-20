@@ -7,6 +7,7 @@
 package gutil_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/gogf/gf/v2/frame/g"
@@ -14,10 +15,14 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
+var (
+	ctx = context.TODO()
+)
+
 func Test_Try(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := `gutil Try test`
-		t.Assert(gutil.Try(func() {
+		t.Assert(gutil.Try(ctx, func(ctx context.Context) {
 			panic(s)
 		}), s)
 	})
@@ -25,16 +30,16 @@ func Test_Try(t *testing.T) {
 
 func Test_TryCatch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		gutil.TryCatch(func() {
+		gutil.TryCatch(ctx, func(ctx context.Context) {
 			panic("gutil TryCatch test")
 		})
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		gutil.TryCatch(func() {
+		gutil.TryCatch(ctx, func(ctx context.Context) {
 			panic("gutil TryCatch test")
 
-		}, func(err error) {
+		}, func(ctx context.Context, err error) {
 			t.Assert(err, "gutil TryCatch test")
 		})
 	})
