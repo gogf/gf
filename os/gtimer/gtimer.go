@@ -25,6 +25,8 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/command"
 )
 
@@ -58,9 +60,13 @@ var (
 )
 
 func getDefaultInterval() time.Duration {
-	n, err := strconv.Atoi(command.GetOptWithEnv(commandEnvKeyForInterval, defaultTimerInterval))
+	interval := command.GetOptWithEnv(commandEnvKeyForInterval, defaultTimerInterval)
+	n, err := strconv.Atoi(interval)
 	if err != nil {
-		panic(err)
+		panic(gerror.WrapCodef(
+			gcode.CodeInvalidConfiguration, err, `error converting string "%s" to int number`,
+			interval,
+		))
 	}
 	return time.Duration(n) * time.Millisecond
 }

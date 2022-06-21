@@ -27,7 +27,8 @@ func Test_Client_DoRequestObj(t *testing.T) {
 		Id int
 	}
 	type UserQueryReq struct {
-		g.Meta `path:"/user" method:"get"`
+		g.Meta `path:"/user/{id}" method:"get"`
+		Id     int
 	}
 	type UserQueryRes struct {
 		Id   int
@@ -36,8 +37,8 @@ func Test_Client_DoRequestObj(t *testing.T) {
 	p, _ := gtcp.GetFreePort()
 	s := g.Server(p)
 	s.Group("/user", func(group *ghttp.RouterGroup) {
-		group.GET("/", func(r *ghttp.Request) {
-			r.Response.WriteJson(g.Map{"id": 1, "name": "john"})
+		group.GET("/{id}", func(r *ghttp.Request) {
+			r.Response.WriteJson(g.Map{"id": r.Get("id").Int(), "name": "john"})
 		})
 		group.POST("/", func(r *ghttp.Request) {
 			r.Response.WriteJson(g.Map{"id": r.Get("Id")})
@@ -68,7 +69,9 @@ func Test_Client_DoRequestObj(t *testing.T) {
 		client := g.Client().SetPrefix(url).ContentJson()
 		var (
 			queryRes *UserQueryRes
-			queryReq = UserQueryReq{}
+			queryReq = UserQueryReq{
+				Id: 1,
+			}
 		)
 		err := client.DoRequestObj(ctx, queryReq, &queryRes)
 		t.AssertNil(err)
