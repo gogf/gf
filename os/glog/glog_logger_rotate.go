@@ -167,14 +167,9 @@ func (l *Logger) rotateChecksTimely(ctx context.Context) {
 					}
 
 					if runtime.GOOS == "windows" {
-						if err := fp.Close(); err != nil {
+						if err := fp.Close(true); err != nil {
 							intlog.Errorf(ctx, `%+v`, err)
 						}
-
-						if err := fp.File.Close(); err != nil {
-							intlog.Errorf(ctx, `%+v`, err)
-						}
-
 					}
 
 					expireRotated = true

@@ -8,7 +8,6 @@ package glog_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -42,9 +41,17 @@ func Test_Rotate_Size(t *testing.T) {
 		defer gfile.Remove(p)
 
 		s := "1234567890abcdefg"
-		for i := 0; i < 10; i++ {
-			fmt.Println(ctx, "logging content index:", i)
+		for i := 0; i < 8; i++ {
 			l.Print(ctx, s)
+			time.Sleep(time.Second)
+		}
+
+		logFiles, err := gfile.ScanDirFile(p, "access*")
+		t.AssertNil(err)
+
+		for _, v := range logFiles {
+			content := gfile.GetContents(v)
+			t.AssertIN(gstr.Count(content, s), []int{1, 2})
 		}
 
 		time.Sleep(time.Second * 3)
@@ -52,9 +59,6 @@ func Test_Rotate_Size(t *testing.T) {
 		files, err := gfile.ScanDirFile(p, "*.gz")
 		t.AssertNil(err)
 		t.Assert(len(files), 2)
-
-		//content := gfile.GetContents(gfile.Join(p, "access.log"))
-		//t.Assert(gstr.Count(content, s), 1)
 
 		time.Sleep(time.Second * 5)
 		files, err = gfile.ScanDirFile(p, "*.gz")

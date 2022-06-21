@@ -310,31 +310,27 @@ func (l *Logger) printToFile(ctx context.Context, t time.Time, in *HandlerInput)
 	defer gmlock.Unlock(memoryLockKey)
 
 	// Rotation file size checks.
-	if l.config.RotateSize > 0 {
-		if gfile.Size(logFilePath) > l.config.RotateSize {
-			if runtime.GOOS == "windows" {
-				if file := l.getFilePointer(ctx, logFilePath); file == nil {
-					intlog.Errorf(ctx, `got nil file pointer for: %s`, logFilePath)
-				} else {
-					if _, err := file.Write(buffer.Bytes()); err != nil {
-						intlog.Errorf(ctx, `%+v`, err)
-					}
-
-					if err := file.Close(); err != nil {
-						intlog.Errorf(ctx, `%+v`, err)
-					}
-
-					if err := file.File.Close(); err != nil {
-						intlog.Errorf(ctx, `%+v`, err)
-					}
-					l.rotateFileBySize(ctx, t)
-				}
+	if l.config.RotateSize > 0 && gfile.Size(logFilePath) > l.config.RotateSize {
+		if runtime.GOOS == "windows" {
+			file := l.getFilePointer(ctx, logFilePath)
+			if file == nil {
+				intlog.Errorf(ctx, `got nil file pointer for: %s`, logFilePath)
 				return buffer
-			} else {
-				l.rotateFileBySize(ctx, t)
 			}
 
+			if _, err := file.Write(buffer.Bytes()); err != nil {
+				intlog.Errorf(ctx, `%+v`, err)
+			}
+
+			if err := file.Close(true); err != nil {
+				intlog.Errorf(ctx, `%+v`, err)
+			}
+			l.rotateFileBySize(ctx, t)
+
+			return buffer
 		}
+
+		l.rotateFileBySize(ctx, t)
 	}
 	// Logging content outputting to disk file.
 	if file := l.getFilePointer(ctx, logFilePath); file == nil {
@@ -368,15 +364,14 @@ func (l *Logger) getFilePointer(ctx context.Context, path string) *gfpool.File {
 // getFilePointer retrieves and returns a file pointer from file pool.
 func (l *Logger) getOpenedFilePointer(ctx context.Context, path string) *gfpool.File {
 
-	file, err := gfpool.Get(
+	file := gfpool.Get(
 		path,
 		defaultFileFlags,
 		defaultFilePerm,
 		defaultFileExpire,
 	)
-	if err != nil {
-		// panic(err)
-		intlog.Errorf(ctx, `%+v, path:%s`, err, path)
+	if file == nil {
+		intlog.Errorf(ctx, `can not find the file, path:%s`, path)
 	}
 	return file
 }
