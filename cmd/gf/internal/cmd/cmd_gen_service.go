@@ -80,7 +80,7 @@ func (c cGenService) Service(ctx context.Context, in cGenServiceInput) (out *cGe
 			`%s gen service -packages=%s`,
 			gfile.SelfName(), gfile.Basename(watchFileDir),
 		)
-		err = gproc.ShellRun(command)
+		err = gproc.ShellRun(ctx, command)
 		return
 	}
 
