@@ -26,7 +26,7 @@ type cEnvInput struct {
 type cEnvOutput struct{}
 
 func (c cEnv) Index(ctx context.Context, in cEnvInput) (out *cEnvOutput, err error) {
-	result, err := gproc.ShellExec("go env")
+	result, err := gproc.ShellExec(ctx, "go env")
 	if err != nil {
 		mlog.Fatal(err)
 	}
