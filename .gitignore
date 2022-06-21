@@ -15,4 +15,5 @@ cbuild
 **/.DS_Store
 .test/
 cmd/gf/main
+cmd/gf/gf
 go.work

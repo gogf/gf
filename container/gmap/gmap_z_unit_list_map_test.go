@@ -379,11 +379,12 @@ func TestListMap_MarshalJSON(t *testing.T) {
 func TestListMap_DeepCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewListMap()
-		m.Set(1, "")
+		m.Set(1, "1")
 		m.Set(2, "2")
 		t.Assert(m.Size(), 2)
 
-		n := m.DeepCopy()
-		t.Assert(m.Size(), n.(*gmap.ListMap).Size())
+		n := m.DeepCopy().(*gmap.ListMap)
+		n.Set(1, "val1")
+		t.AssertNE(m.Get(1), n.Get(1))
 	})
 }

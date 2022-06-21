@@ -18,15 +18,16 @@ import (
 )
 
 type (
+	cGenService      struct{}
 	cGenServiceInput struct {
 		g.Meta       `name:"service" config:"gfcli.gen.service" brief:"parse struct and associated functions from packages to generate service go file"`
-		SrcFolder    string `short:"s" name:"srcFolder" brief:"source folder path to be parsed. default: internal/logic" d:"internal/logic"`
-		DstFolder    string `short:"d" name:"dstFolder" brief:"destination folder path storing automatically generated go files. default: internal/service" d:"internal/service"`
-		WatchFile    string `short:"w" name:"watchFile" brief:"used in file watcher, it generates service go files only if given file is under srcFolder"`
-		StPattern    string `short:"a" name:"stPattern" brief:"regular expression matching struct name for generating service. default: s([A-Z]\\\w+)" d:"s([A-Z]\\w+)"`
-		Packages     string `short:"p" name:"packages" brief:"produce go files only for given source packages, multiple packages joined with char ','"`
-		ImportPrefix string `short:"i" name:"importPrefix" brief:"custom import prefix to calculate import path for generated importing go file of logic"`
-		OverWrite    bool   `short:"o" name:"overwrite" brief:"overwrite service go files that already exist in generating folder. default: true" d:"true" orphan:"true"`
+		SrcFolder    string   `short:"s" name:"srcFolder" brief:"source folder path to be parsed. default: internal/logic" d:"internal/logic"`
+		DstFolder    string   `short:"d" name:"dstFolder" brief:"destination folder path storing automatically generated go files. default: internal/service" d:"internal/service"`
+		WatchFile    string   `short:"w" name:"watchFile" brief:"used in file watcher, it generates service go files only if given file is under srcFolder"`
+		StPattern    string   `short:"a" name:"stPattern" brief:"regular expression matching struct name for generating service. default: s([A-Z]\\\\w+)" d:"s([A-Z]\\w+)"`
+		Packages     []string `short:"p" name:"packages" brief:"produce go files only for given source packages"`
+		ImportPrefix string   `short:"i" name:"importPrefix" brief:"custom import prefix to calculate import path for generated importing go file of logic"`
+		OverWrite    bool     `short:"o" name:"overwrite" brief:"overwrite service go files that already exist in generating folder. default: true" d:"true" orphan:"true"`
 	}
 	cGenServiceOutput struct{}
 )
@@ -35,7 +36,7 @@ const (
 	genServiceFileLockSeconds = 10
 )
 
-func (c cGen) Service(ctx context.Context, in cGenServiceInput) (out *cGenServiceOutput, err error) {
+func (c cGenService) Service(ctx context.Context, in cGenServiceInput) (out *cGenServiceOutput, err error) {
 	// File lock to avoid multiple processes.
 	var (
 		flockFilePath = gfile.Temp("gf.cli.gen.service.lock")
@@ -79,7 +80,7 @@ func (c cGen) Service(ctx context.Context, in cGenServiceInput) (out *cGenServic
 			`%s gen service -packages=%s`,
 			gfile.SelfName(), gfile.Basename(watchFileDir),
 		)
-		err = gproc.ShellRun(command)
+		err = gproc.ShellRun(ctx, command)
 		return
 	}
 
@@ -101,13 +102,12 @@ func (c cGen) Service(ctx context.Context, in cGenServiceInput) (out *cGenServic
 	}
 
 	var (
-		isDirty           bool
-		files             []string
-		fileContent       string
-		matches           [][]string
-		importSrcPackages []string
-		inputPackages     = gstr.SplitAndTrim(in.Packages, ",")
-		dstPackageName    = gstr.ToLower(gfile.Basename(in.DstFolder))
+		isDirty               bool
+		files                 []string
+		fileContent           string
+		initImportSrcPackages []string
+		inputPackages         = in.Packages
+		dstPackageName        = gstr.ToLower(gfile.Basename(in.DstFolder))
 	)
 	srcFolders, err := gfile.ScanDir(in.SrcFolder, "*", false)
 	if err != nil {
@@ -125,56 +125,25 @@ func (c cGen) Service(ctx context.Context, in cGenServiceInput) (out *cGenServic
 		}
 		var (
 			// StructName => FunctionDefinitions
-			srcPkgInterfaceMap       = make(map[string]*garray.StrArray)
-			srcPkgInterfaceFuncArray *garray.StrArray
-			ok                       bool
+			srcPkgInterfaceMap  = make(map[string]*garray.StrArray)
+			srcImportedPackages = garray.NewSortedStrArray().SetUnique(true)
+			ok                  bool
 		)
 		for _, file := range files {
 			fileContent = gfile.GetContents(file)
-			matches, err = gregex.MatchAllString(`func \((.+?)\) ([\s\S]+?) {`, fileContent)
+			// Calculate imported packages of source go files.
+			err = c.calculateImportedPackages(fileContent, srcImportedPackages)
 			if err != nil {
 				return nil, err
 			}
-			for _, match := range matches {
-				var (
-					structName    string
-					structMatch   []string
-					funcReceiver  = gstr.Trim(match[1])
-					receiverArray = gstr.SplitAndTrim(funcReceiver, " ")
-					functionHead  = gstr.Trim(gstr.Replace(match[2], "\n", ""))
-				)
-				if len(receiverArray) > 1 {
-					structName = receiverArray[1]
-				} else {
-					structName = receiverArray[0]
-				}
-				structName = gstr.Trim(structName, "*")
-
-				// Xxx(\n    ctx context.Context, req *v1.XxxReq,\n) -> Xxx(ctx context.Context, req *v1.XxxReq)
-				functionHead = gstr.Replace(functionHead, `,)`, `)`)
-				functionHead, _ = gregex.ReplaceString(`\(\s+`, `(`, functionHead)
-				functionHead, _ = gregex.ReplaceString(`\s{2,}`, ` `, functionHead)
-				if !gstr.IsLetterUpper(functionHead[0]) {
-					continue
-				}
-				if structMatch, err = gregex.MatchString(in.StPattern, structName); err != nil {
-					return nil, err
-				}
-				if len(structMatch) < 1 {
-					continue
-				}
-				structName = gstr.CaseCamel(structMatch[1])
-				if srcPkgInterfaceFuncArray, ok = srcPkgInterfaceMap[structName]; !ok {
-					srcPkgInterfaceMap[structName] = garray.NewStrArray()
-					srcPkgInterfaceFuncArray = srcPkgInterfaceMap[structName]
-				}
-				// Remove package name calls of `dstPackageName` in produced codes.
-				functionHead, _ = gregex.ReplaceString(fmt.Sprintf(`\*{0,1}%s\.`, dstPackageName), ``, functionHead)
-				srcPkgInterfaceFuncArray.Append(functionHead)
+			// Calculate functions and interfaces for service generating.
+			err = c.calculateInterfaceFunctions(in, fileContent, srcPkgInterfaceMap, dstPackageName)
+			if err != nil {
+				return nil, err
 			}
 		}
-		importSrcPackages = append(
-			importSrcPackages,
+		initImportSrcPackages = append(
+			initImportSrcPackages,
 			fmt.Sprintf(`%s/%s`, in.ImportPrefix, gfile.Basename(srcFolder)),
 		)
 		// Ignore source packages if input packages given.
@@ -186,7 +155,7 @@ func (c cGen) Service(ctx context.Context, in cGenServiceInput) (out *cGenServic
 			continue
 		}
 		// Generating go files for service.
-		if ok, err = c.generateServiceFiles(in, srcPkgInterfaceMap, dstPackageName); err != nil {
+		if ok, err = c.generateServiceFiles(in, srcPkgInterfaceMap, srcImportedPackages.Slice(), dstPackageName); err != nil {
 			return
 		}
 		if ok {
@@ -196,8 +165,8 @@ func (c cGen) Service(ctx context.Context, in cGenServiceInput) (out *cGenServic
 
 	if isDirty {
 		// Generate initialization go file.
-		if len(importSrcPackages) > 0 {
-			if err = c.generateInitializationFile(in, importSrcPackages); err != nil {
+		if len(initImportSrcPackages) > 0 {
+			if err = c.generateInitializationFile(in, initImportSrcPackages); err != nil {
 				return
 			}
 		}
@@ -218,13 +187,86 @@ func (c cGen) Service(ctx context.Context, in cGenServiceInput) (out *cGenServic
 	return
 }
 
-func (c cGen) generateServiceFiles(
-	in cGenServiceInput, srcPkgInterfaceMap map[string]*garray.StrArray, dstPackageName string,
+func (c cGenService) calculateImportedPackages(fileContent string, srcImportedPackages *garray.SortedStrArray) (err error) {
+	var match []string
+	match, err = gregex.MatchString(`\s+import\s+\(([\s\S]+?)\)`, fileContent)
+	if err != nil {
+		return err
+	}
+	if len(match) < 2 {
+		return nil
+	}
+	importPart := gstr.Trim(match[1])
+	srcImportedPackages.Append(gstr.SplitAndTrim(importPart, "\n")...)
+	return nil
+}
+
+func (c cGenService) calculateInterfaceFunctions(
+	in cGenServiceInput, fileContent string, srcPkgInterfaceMap map[string]*garray.StrArray, dstPackageName string,
+) (err error) {
+	var (
+		ok                       bool
+		matches                  [][]string
+		srcPkgInterfaceFuncArray *garray.StrArray
+	)
+	matches, err = gregex.MatchAllString(`func \((.+?)\) ([\s\S]+?) {`, fileContent)
+	if err != nil {
+		return err
+	}
+	for _, match := range matches {
+		var (
+			structName    string
+			structMatch   []string
+			funcReceiver  = gstr.Trim(match[1])
+			receiverArray = gstr.SplitAndTrim(funcReceiver, " ")
+			functionHead  = gstr.Trim(gstr.Replace(match[2], "\n", ""))
+		)
+		if len(receiverArray) > 1 {
+			structName = receiverArray[1]
+		} else {
+			structName = receiverArray[0]
+		}
+		structName = gstr.Trim(structName, "*")
+
+		// Xxx(\n    ctx context.Context, req *v1.XxxReq,\n) -> Xxx(ctx context.Context, req *v1.XxxReq)
+		functionHead = gstr.Replace(functionHead, `,)`, `)`)
+		functionHead, _ = gregex.ReplaceString(`\(\s+`, `(`, functionHead)
+		functionHead, _ = gregex.ReplaceString(`\s{2,}`, ` `, functionHead)
+		if !gstr.IsLetterUpper(functionHead[0]) {
+			continue
+		}
+		if structMatch, err = gregex.MatchString(in.StPattern, structName); err != nil {
+			return err
+		}
+		if len(structMatch) < 1 {
+			continue
+		}
+		structName = gstr.CaseCamel(structMatch[1])
+		if srcPkgInterfaceFuncArray, ok = srcPkgInterfaceMap[structName]; !ok {
+			srcPkgInterfaceMap[structName] = garray.NewStrArray()
+			srcPkgInterfaceFuncArray = srcPkgInterfaceMap[structName]
+		}
+		// Remove package name calls of `dstPackageName` in produced codes.
+		functionHead, _ = gregex.ReplaceString(fmt.Sprintf(`\*{0,1}%s\.`, dstPackageName), ``, functionHead)
+		srcPkgInterfaceFuncArray.Append(functionHead)
+	}
+	return nil
+}
+
+func (c cGenService) generateServiceFiles(
+	in cGenServiceInput,
+	srcPkgInterfaceMap map[string]*garray.StrArray,
+	srcImportedPackages []string,
+	dstPackageName string,
 ) (ok bool, err error) {
+	srcImportedPackagesContent := fmt.Sprintf(
+		"import (\n%s\n)", gstr.Join(srcImportedPackages, "\n"),
+	)
 	for structName, funcArray := range srcPkgInterfaceMap {
 		var (
 			filePath         = gfile.Join(in.DstFolder, gstr.ToLower(structName)+".go")
 			generatedContent = gstr.ReplaceByMap(consts.TemplateGenServiceContent, g.MapStrStr{
+				"{Imports}":        srcImportedPackagesContent,
 				"{StructName}":     structName,
 				"{PackageName}":    dstPackageName,
 				"{FuncDefinition}": funcArray.Join("\n\t"),
@@ -250,7 +292,7 @@ func (c cGen) generateServiceFiles(
 }
 
 // isToGenerateServiceGoFile checks and returns whether the service content dirty.
-func (c cGen) isToGenerateServiceGoFile(filePath string, funcArray *garray.StrArray) bool {
+func (c cGenService) isToGenerateServiceGoFile(filePath string, funcArray *garray.StrArray) bool {
 	if !utils.IsFileDoNotEdit(filePath) {
 		mlog.Debugf(`ignore file as it is manually maintained: %s`, filePath)
 		return false
@@ -280,7 +322,7 @@ func (c cGen) isToGenerateServiceGoFile(filePath string, funcArray *garray.StrAr
 	return false
 }
 
-func (c cGen) generateInitializationFile(in cGenServiceInput, importSrcPackages []string) (err error) {
+func (c cGenService) generateInitializationFile(in cGenServiceInput, importSrcPackages []string) (err error) {
 	var (
 		srcPackageName   = gstr.ToLower(gfile.Basename(in.SrcFolder))
 		srcFilePath      = gfile.Join(in.SrcFolder, srcPackageName+".go")
@@ -306,7 +348,7 @@ func (c cGen) generateInitializationFile(in cGenServiceInput, importSrcPackages 
 	return nil
 }
 
-func (c cGen) replaceGeneratedServiceContentGFV2(in cGenServiceInput) (err error) {
+func (c cGenService) replaceGeneratedServiceContentGFV2(in cGenServiceInput) (err error) {
 	return gfile.ReplaceDirFunc(func(path, content string) string {
 		if gstr.Contains(content, `"github.com/gogf/gf`) && !gstr.Contains(content, `"github.com/gogf/gf/v2`) {
 			content = gstr.Replace(content, `"github.com/gogf/gf"`, `"github.com/gogf/gf/v2"`)
