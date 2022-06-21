@@ -59,66 +59,7 @@ func Test_Basic(t *testing.T) {
 	})
 }
 
-func TestOpenApiV3_AddStruct(t *testing.T) {
-	type CommonReq struct {
-		AppId      int64  `json:"appId" v:"required" in:"cookie" description:"应用Id"`
-		ResourceId string `json:"resourceId" in:"query" description:"资源Id"`
-	}
-	type SetSpecInfo struct {
-		StorageType string   `v:"required|in:CLOUD_PREMIUM,CLOUD_SSD,CLOUD_HSSD" description:"StorageType"`
-		Shards      int32    `description:"shards 分片数"`
-		Params      []string `description:"默认参数(json 串-ClickHouseParams)"`
-	}
-	type CreateResourceReq struct {
-		CommonReq
-		gmeta.Meta `path:"/CreateResourceReq" method:"POST" tags:"default"`
-		Name       string                  `description:"实例名称"`
-		Product    string                  `description:"业务类型"`
-		Region     string                  `v:"required" description:"区域"`
-		SetMap     map[string]*SetSpecInfo `v:"required" description:"配置Map"`
-		SetSlice   []SetSpecInfo           `v:"required" description:"配置Slice"`
-	}
-	type CreateResourceReq2 struct {
-		CommonReq
-		gmeta.Meta `path:"/CreateResourceReq2" method:"POST" tags:"default"`
-		Name       string                  `description:"实例名称"`
-		Product    string                  `description:"业务类型"`
-		Region     string                  `v:"required" description:"区域"`
-		SetMap     map[string]*SetSpecInfo `v:"required" description:"配置Map"`
-		SetSlice   []SetSpecInfo           `v:"required" description:"配置Slice"`
-	}
-
-	gtest.C(t, func(t *gtest.T) {
-		var (
-			err  error
-			oai  = goai.New()
-			req  = new(CreateResourceReq)
-			req2 = new(CreateResourceReq2)
-		)
-
-		err = oai.Add(goai.AddInput{
-			Object: req,
-		})
-		t.AssertNil(err)
-
-		err = oai.Add(goai.AddInput{
-			Object: &goai.ObjectWithIgnore{Object: req2, IgnoreProperties: []string{"appId", "resourceId"}},
-		})
-		t.AssertNil(err)
-
-		// Schema asserts.
-		t.Assert(len(oai.Components.Schemas.Map()), 3)
-		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.CreateResourceReq`).Value.Type, goai.TypeObject)
-		t.Assert(len(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.CreateResourceReq`).Value.Properties.Map()), 7)
-		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.CreateResourceReq2`).Value.Type, goai.TypeObject)
-		t.Assert(len(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.CreateResourceReq2`).Value.Properties.Map()), 5)
-
-		t.Assert(len(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.SetSpecInfo`).Value.Properties.Map()), 3)
-		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.SetSpecInfo`).Value.Properties.Get(`Params`).Value.Type, goai.TypeArray)
-	})
-}
-
-func TestOpenApiV3_AddPath(t *testing.T) {
+func TestOpenApiV3_Add(t *testing.T) {
 	type CommonReq struct {
 		AppId      int64  `json:"appId" v:"required" in:"path" description:"应用Id"`
 		ResourceId string `json:"resourceId" in:"query" description:"资源Id"`

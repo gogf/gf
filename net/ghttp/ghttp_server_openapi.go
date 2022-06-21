@@ -43,6 +43,7 @@ func (s *Server) initOpenApi() {
 			}
 		}
 	}
+	s.openapi.RemoveAllRepeatProperties()
 }
 
 // openapiSpec is a build-in handler automatic producing for openapi specification json file.

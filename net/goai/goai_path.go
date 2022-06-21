@@ -139,9 +139,15 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	}
 
 	// =================================================================================================================
+	// Schemas.
+	// =================================================================================================================
+	if err := oai.addSchema(inputObject.Interface(), outputObject.Interface()); err != nil {
+		return err
+	}
+
+	// =================================================================================================================
 	// Request Param.
 	// =================================================================================================================
-	var requestSchemaIgnoreProperties []string
 	structFields, _ := gstructs.Fields(gstructs.FieldsInput{
 		Pointer:         inputObject.Interface(),
 		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
@@ -156,17 +162,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		}
 		if parameterRef != nil {
 			operation.Parameters = append(operation.Parameters, *parameterRef)
-			requestSchemaIgnoreProperties = append(requestSchemaIgnoreProperties, parameterRef.Value.Name)
 		}
-	}
-
-	// =================================================================================================================
-	// Schemas.
-	// =================================================================================================================
-	if err := oai.addSchema(&ObjectWithIgnore{
-		Object: inputObject.Interface(), IgnoreProperties: requestSchemaIgnoreProperties,
-	}, outputObject.Interface()); err != nil {
-		return err
 	}
 
 	// =================================================================================================================

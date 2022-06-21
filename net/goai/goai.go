@@ -129,12 +129,15 @@ func (oai *OpenApiV3) Add(in AddInput) error {
 		return oai.addSchema(in.Object)
 
 	case reflect.Func:
-		return oai.addPath(addPathInput{
+		if err := oai.addPath(addPathInput{
 			Path:     in.Path,
 			Prefix:   in.Prefix,
 			Method:   in.Method,
 			Function: in.Object,
-		})
+		}); err != nil {
+			return err
+		}
+		return oai.removePathRepeatProperties(in.Path, in.Prefix, in.Method)
 
 	default:
 		return gerror.NewCodef(
@@ -190,6 +193,75 @@ func (oai *OpenApiV3) golangTypeToOAIType(t reflect.Type) string {
 
 	default:
 		return TypeObject
+	}
+}
+
+func (oai *OpenApiV3) removePathRepeatProperties(path, prefix, method string) error {
+	if prefix != "" {
+		path = gstr.TrimRight(prefix, "/") + "/" + gstr.TrimLeft(path, "/")
+	}
+
+	p := oai.Paths[path]
+	reflectType := reflect.TypeOf(p)
+	reflectValue := reflect.ValueOf(p)
+	val := reflect.Value{}
+	for i := 0; i < reflectValue.NumField(); i++ {
+		if gstr.ToUpper(reflectType.Field(i).Name) == method {
+			val = reflectValue.Field(i)
+			break
+		}
+	}
+	if !val.IsValid() {
+		return nil
+	}
+
+	var repeatField []interface{}
+	op, ok := val.Interface().(*Operation)
+	if !ok || op == nil || op.RequestBody == nil {
+		return nil
+	}
+
+	for _, parameter := range op.Parameters {
+		repeatField = append(repeatField, parameter.Value.Name)
+	}
+
+	for schemaRef, schema := range oai.Components.Schemas.Map() {
+		for _, content := range op.RequestBody.Value.Content {
+			if schemaRef == content.Schema.Ref {
+				schema.Value.Properties.Removes(repeatField)
+			}
+			//if content. {
+			//}
+		}
+	}
+
+	return nil
+}
+
+// RemoveAllRepeatProperties Delete Schema fields that appear in parameters
+func (oai *OpenApiV3) RemoveAllRepeatProperties() {
+	for _, path := range oai.Paths {
+		reflectValue := reflect.ValueOf(path)
+		for i := 0; i < reflectValue.NumField(); i++ {
+			op, ok := reflectValue.Field(i).Interface().(*Operation)
+			if !ok || op == nil || op.RequestBody == nil {
+				continue
+			}
+			var repeatField []interface{}
+			for _, parameter := range op.Parameters {
+				repeatField = append(repeatField, parameter.Value.Name)
+			}
+			for schemaRef, schema := range oai.Components.Schemas.Map() {
+				for _, content := range op.RequestBody.Value.Content {
+					if schemaRef == content.Schema.Ref {
+						schema.Value.Properties.Removes(repeatField)
+					}
+					if content.Schema.Value != nil {
+						content.Schema.Value.Properties.Removes(repeatField)
+					}
+				}
+			}
+		}
 	}
 }
 
