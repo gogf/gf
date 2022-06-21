@@ -19,6 +19,29 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
+type (
+	cGenPbEntity      struct{}
+	cGenPbEntityInput struct {
+		g.Meta       `name:"pbentity" config:"{cGenPbEntityConfig}" brief:"{cGenPbEntityBrief}" eg:"{cGenPbEntityEg}" ad:"{cGenPbEntityAd}"`
+		Path         string `name:"path"         short:"p" brief:"{cGenPbEntityBriefPath}"`
+		Package      string `name:"package"      short:"k" brief:"{cGenPbEntityBriefPackage}"`
+		Link         string `name:"link"         short:"l" brief:"{cGenPbEntityBriefLink}"`
+		Tables       string `name:"tables"       short:"t" brief:"{cGenPbEntityBriefTables}"`
+		Prefix       string `name:"prefix"       short:"f" brief:"{cGenPbEntityBriefPrefix}"`
+		RemovePrefix string `name:"removePrefix" short:"r" brief:"{cGenPbEntityBriefRemovePrefix}"`
+		NameCase     string `name:"nameCase"     short:"n" brief:"{cGenPbEntityBriefNameCase}" d:"Camel"`
+		JsonCase     string `name:"jsonCase"     short:"j" brief:"{cGenPbEntityBriefJsonCase}" d:"CamelLower"`
+		Option       string `name:"option"       short:"o" brief:"{cGenPbEntityBriefOption}"`
+	}
+	cGenPbEntityOutput struct{}
+
+	cGenPbEntityInternalInput struct {
+		cGenPbEntityInput
+		TableName    string // TableName specifies the table name of the table.
+		NewTableName string // NewTableName specifies the prefix-stripped name of the table.
+	}
+)
+
 const (
 	cGenPbEntityConfig = `gfcli.gen.pbentity`
 	cGenPbEntityBrief  = `generate entity message files in protobuf3 format`
@@ -83,28 +106,6 @@ set it to "none" to ignore json tag generating.
 `
 )
 
-type (
-	cGenPbEntityInput struct {
-		g.Meta       `name:"pbentity" config:"{cGenPbEntityConfig}" brief:"{cGenPbEntityBrief}" eg:"{cGenPbEntityEg}" ad:"{cGenPbEntityAd}"`
-		Path         string `name:"path"         short:"p" brief:"{cGenPbEntityBriefPath}"`
-		Package      string `name:"package"      short:"k" brief:"{cGenPbEntityBriefPackage}"`
-		Link         string `name:"link"         short:"l" brief:"{cGenPbEntityBriefLink}"`
-		Tables       string `name:"tables"       short:"t" brief:"{cGenPbEntityBriefTables}"`
-		Prefix       string `name:"prefix"       short:"f" brief:"{cGenPbEntityBriefPrefix}"`
-		RemovePrefix string `name:"removePrefix" short:"r" brief:"{cGenPbEntityBriefRemovePrefix}"`
-		NameCase     string `name:"nameCase"     short:"n" brief:"{cGenPbEntityBriefNameCase}" d:"Camel"`
-		JsonCase     string `name:"jsonCase"     short:"j" brief:"{cGenPbEntityBriefJsonCase}" d:"CamelLower"`
-		Option       string `name:"option"       short:"o" brief:"{cGenPbEntityBriefOption}"`
-	}
-	cGenPbEntityOutput struct{}
-
-	cGenPbEntityInternalInput struct {
-		cGenPbEntityInput
-		TableName    string // TableName specifies the table name of the table.
-		NewTableName string // NewTableName specifies the prefix-stripped name of the table.
-	}
-)
-
 func init() {
 	gtag.Sets(g.MapStrStr{
 		`cGenPbEntityConfig`:            cGenPbEntityConfig,
@@ -124,7 +125,7 @@ func init() {
 	})
 }
 
-func (c cGen) PbEntity(ctx context.Context, in cGenPbEntityInput) (out *cGenPbEntityOutput, err error) {
+func (c cGenPbEntity) PbEntity(ctx context.Context, in cGenPbEntityInput) (out *cGenPbEntityOutput, err error) {
 	var (
 		config = g.Cfg()
 	)

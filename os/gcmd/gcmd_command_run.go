@@ -8,16 +8,24 @@
 package gcmd
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
 
+	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/os/gcfg"
+	"github.com/gogf/gf/v2/os/genv"
+	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Run calls custom function that bound to this command.
@@ -34,18 +42,23 @@ func (c *Command) RunWithValue(ctx context.Context) (value interface{}) {
 		var (
 			code   = gerror.Code(err)
 			detail = code.Detail()
+			buffer = bytes.NewBuffer(nil)
 		)
 		if code.Code() == gcode.CodeNotFound.Code() {
-			fmt.Printf("ERROR: %s\n", gstr.Trim(err.Error()))
+			buffer.WriteString(fmt.Sprintf("ERROR: %s\n", gstr.Trim(err.Error())))
 			if lastCmd, ok := detail.(*Command); ok {
-				lastCmd.Print()
+				lastCmd.PrintTo(buffer)
 			} else {
-				c.Print()
+				c.PrintTo(buffer)
 			}
 		} else {
-			fmt.Printf("%+v\n", err)
+			buffer.WriteString(fmt.Sprintf("%+v\n", err))
 		}
-		os.Exit(1)
+		if gtrace.GetTraceID(ctx) == "" {
+			fmt.Println(buffer.String())
+			os.Exit(1)
+		}
+		glog.Stack(false).Fatal(ctx, buffer.String())
 	}
 	return value
 }
@@ -107,6 +120,24 @@ func (c *Command) doRun(ctx context.Context, parser *Parser) (value interface{},
 		}
 		return nil, c.defaultHelpFunc(ctx, parser)
 	}
+	// OpenTelemetry for command.
+	var (
+		span trace.Span
+		tr   = otel.GetTracerProvider().Tracer(
+			tracingInstrumentName,
+			trace.WithInstrumentationVersion(gf.VERSION),
+		)
+	)
+	ctx, span = tr.Start(
+		otel.GetTextMapPropagator().Extract(
+			ctx,
+			propagation.MapCarrier(genv.Map()),
+		),
+		gstr.Join(os.Args, " "),
+		trace.WithSpanKind(trace.SpanKindServer),
+	)
+	defer span.End()
+	span.SetAttributes(gtrace.CommonLabels()...)
 	// Reparse the arguments for current command configuration.
 	parser, err = c.reParse(ctx, parser)
 	if err != nil {
@@ -126,7 +157,7 @@ func (c *Command) doRun(ctx context.Context, parser *Parser) (value interface{},
 	return nil, c.defaultHelpFunc(ctx, parser)
 }
 
-// reParse re-parses the arguments using option configuration of current command.
+// reParse parses the arguments using option configuration of current command.
 func (c *Command) reParse(ctx context.Context, parser *Parser) (*Parser, error) {
 	if len(c.Arguments) == 0 {
 		return parser, nil

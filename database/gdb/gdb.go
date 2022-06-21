@@ -331,9 +331,6 @@ var (
 	// in the field name as it conflicts with "db.table.field" pattern in SOME situations.
 	regularFieldNameWithoutDotRegPattern = `^[\w\-]+$`
 
-	// tableFieldsMap caches the table information retrieved from database.
-	tableFieldsMap = gmap.New(true)
-
 	// allDryRun sets dry-run feature for all database connections.
 	// It is commonly used for command options for convenience.
 	allDryRun = false
@@ -399,8 +396,7 @@ func doNewByNode(node ConfigNode, group string) (db DB, err error) {
 		config: &node,
 	}
 	if v, ok := driverMap[node.Type]; ok {
-		c.db, err = v.New(c, &node)
-		if err != nil {
+		if c.db, err = v.New(c, &node); err != nil {
 			return nil, err
 		}
 		return c.db, nil

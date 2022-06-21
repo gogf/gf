@@ -138,6 +138,7 @@ func init() {
 }
 
 type (
+	cGenDao      struct{}
 	cGenDaoInput struct {
 		g.Meta         `name:"dao" config:"{cGenDaoConfig}" usage:"{cGenDaoUsage}" brief:"{cGenDaoBrief}" eg:"{cGenDaoEg}" ad:"{cGenDaoAd}"`
 		Path           string `name:"path"            short:"p"  brief:"{cGenDaoBriefPath}" d:"internal"`
@@ -170,7 +171,7 @@ type (
 	}
 )
 
-func (c cGen) Dao(ctx context.Context, in cGenDaoInput) (out *cGenDaoOutput, err error) {
+func (c cGenDao) Dao(ctx context.Context, in cGenDaoInput) (out *cGenDaoOutput, err error) {
 	if g.Cfg().Available(ctx) {
 		v := g.Cfg().MustGet(ctx, cGenDaoConfig)
 		if v.IsSlice() {

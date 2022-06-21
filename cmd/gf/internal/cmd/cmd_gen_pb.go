@@ -13,13 +13,14 @@ import (
 )
 
 type (
+	cGenPb      struct{}
 	cGenPbInput struct {
 		g.Meta `name:"pb" brief:"parse proto files and generate protobuf go files"`
 	}
 	cGenPbOutput struct{}
 )
 
-func (c cGen) Pb(ctx context.Context, in cGenPbInput) (out *cGenPbOutput, err error) {
+func (c cGenPb) Pb(ctx context.Context, in cGenPbInput) (out *cGenPbOutput, err error) {
 	// Necessary check.
 	if gproc.SearchBinary("protoc") == "" {
 		mlog.Fatalf(`command "protoc" not found in your environment, please install protoc first to proceed this command`)
