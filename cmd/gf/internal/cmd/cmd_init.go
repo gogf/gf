@@ -98,7 +98,7 @@ func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err 
 		if in.Name != "." {
 			updateCommand = fmt.Sprintf(`cd %s && %s`, in.Name, updateCommand)
 		}
-		if err = gproc.ShellRun(updateCommand); err != nil {
+		if err = gproc.ShellRun(ctx, updateCommand); err != nil {
 			mlog.Fatal(err)
 		}
 	}
