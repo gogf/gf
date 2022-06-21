@@ -57,7 +57,7 @@ func (c cGenPb) Pb(ctx context.Context, in cGenPbInput) (out *cGenPbOutput, err 
 			parsingCommand += " -I" + goPathSrc
 		}
 		mlog.Print(parsingCommand)
-		if output, err := gproc.ShellExec(parsingCommand); err != nil {
+		if output, err := gproc.ShellExec(ctx, parsingCommand); err != nil {
 			mlog.Print(output)
 			mlog.Fatal(err)
 		}

@@ -206,11 +206,14 @@ func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, e
 		}
 		packCmd := fmt.Sprintf(`gf pack %s %s`, in.PackSrc, in.PackDst)
 		mlog.Print(packCmd)
-		gproc.MustShellRun(packCmd)
+		gproc.MustShellRun(ctx, packCmd)
 	}
 
 	// Injected information by building flags.
-	ldFlags := fmt.Sprintf(`-X 'github.com/gogf/gf/v2/os/gbuild.builtInVarStr=%v'`, c.getBuildInVarStr(in))
+	ldFlags := fmt.Sprintf(
+		`-X 'github.com/gogf/gf/v2/os/gbuild.builtInVarStr=%v'`,
+		c.getBuildInVarStr(ctx, in),
+	)
 
 	// start building
 	mlog.Print("start building...")
@@ -261,7 +264,7 @@ func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, e
 			// It's not necessary printing the complete command string.
 			cmdShow, _ := gregex.ReplaceString(`\s+(-ldflags ".+?")\s+`, " ", cmd)
 			mlog.Print(cmdShow)
-			if result, err := gproc.ShellExec(cmd); err != nil {
+			if result, err := gproc.ShellExec(ctx, cmd); err != nil {
 				mlog.Printf(
 					"failed to build, os:%s, arch:%s, error:\n%s\n\n%s\n",
 					system, arch, gstr.Trim(result),
@@ -287,12 +290,12 @@ buildDone:
 
 // getBuildInVarMapJson retrieves and returns the custom build-in variables in configuration
 // file as json.
-func (c cBuild) getBuildInVarStr(in cBuildInput) string {
+func (c cBuild) getBuildInVarStr(ctx context.Context, in cBuildInput) string {
 	buildInVarMap := in.VarMap
 	if buildInVarMap == nil {
 		buildInVarMap = make(g.Map)
 	}
-	buildInVarMap["builtGit"] = c.getGitCommit()
+	buildInVarMap["builtGit"] = c.getGitCommit(ctx)
 	buildInVarMap["builtTime"] = gtime.Now().String()
 	b, err := json.Marshal(buildInVarMap)
 	if err != nil {
@@ -302,13 +305,13 @@ func (c cBuild) getBuildInVarStr(in cBuildInput) string {
 }
 
 // getGitCommit retrieves and returns the latest git commit hash string if present.
-func (c cBuild) getGitCommit() string {
+func (c cBuild) getGitCommit(ctx context.Context) string {
 	if gproc.SearchBinary("git") == "" {
 		return ""
 	}
 	var (
 		cmd  = `git log -1 --format="%cd %H" --date=format:"%Y-%m-%d %H:%M:%S"`
-		s, _ = gproc.ShellExec(cmd)
+		s, _ = gproc.ShellExec(ctx, cmd)
 	)
 	mlog.Debug(cmd)
 	if s != "" {

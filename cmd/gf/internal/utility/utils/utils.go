@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
@@ -31,7 +32,7 @@ func GoFmt(path string) {
 		mlog.Fatal(`command "gofmt" not found`)
 	}
 	var command = fmt.Sprintf(`%s -w %s`, gofmtPath, path)
-	result, err := gproc.ShellExec(command)
+	result, err := gproc.ShellExec(context.Background(), command)
 	if err != nil {
 		mlog.Fatalf(`error executing command "%s": %s`, command, result)
 	}
@@ -43,7 +44,7 @@ func GoImports(path string) {
 		mlog.Fatal(`command "goimports" not found`)
 	}
 	var command = fmt.Sprintf(`%s -w %s`, goimportsPath, path)
-	result, err := gproc.ShellExec(command)
+	result, err := gproc.ShellExec(context.Background(), command)
 	if err != nil {
 		mlog.Fatalf(`error executing command "%s": %s`, command, result)
 	}

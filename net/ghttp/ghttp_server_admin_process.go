@@ -144,7 +144,7 @@ func forkReloadProcess(ctx context.Context, newExeFilePath ...string) error {
 	}
 	buffer, _ := gjson.Encode(sfm)
 	p.Env = append(p.Env, adminActionReloadEnvKey+"="+string(buffer))
-	if _, err := p.Start(); err != nil {
+	if _, err := p.Start(ctx); err != nil {
 		glog.Errorf(
 			ctx,
 			"%d: fork process failed, error:%s, %s",
@@ -169,7 +169,7 @@ func forkRestartProcess(ctx context.Context, newExeFilePath ...string) error {
 	env := os.Environ()
 	env = append(env, adminActionRestartEnvKey+"=1")
 	p := gproc.NewProcess(path, os.Args, env)
-	if _, err := p.Start(); err != nil {
+	if _, err := p.Start(ctx); err != nil {
 		glog.Errorf(
 			ctx,
 			`%d: fork process failed, error:%s, are you running using "go run"?`,
