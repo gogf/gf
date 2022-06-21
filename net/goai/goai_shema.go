@@ -102,7 +102,7 @@ func (oai *OpenApiV3) addSchema(object ...interface{}) error {
 	return nil
 }
 
-func (oai *OpenApiV3) doAddSchemaSingle(object interface{}, ignoreProperties ...string) error {
+func (oai *OpenApiV3) doAddSchemaSingle(object interface{}) error {
 	if oai.Components.Schemas.refs == nil {
 		oai.Components.Schemas.refs = gmap.NewListMap()
 	}
@@ -119,7 +119,7 @@ func (oai *OpenApiV3) doAddSchemaSingle(object interface{}, ignoreProperties ...
 	// Take the holder first.
 	oai.Components.Schemas.Set(structTypeName, SchemaRef{})
 
-	schema, err := oai.structToSchema(object, ignoreProperties...)
+	schema, err := oai.structToSchema(object)
 	if err != nil {
 		return err
 	}
@@ -132,7 +132,7 @@ func (oai *OpenApiV3) doAddSchemaSingle(object interface{}, ignoreProperties ...
 }
 
 // structToSchema converts and returns given struct object as Schema.
-func (oai *OpenApiV3) structToSchema(object interface{}, ignoreProperties ...string) (*Schema, error) {
+func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 	var (
 		tagMap = gmeta.Data(object)
 		schema = &Schema{
@@ -141,10 +141,6 @@ func (oai *OpenApiV3) structToSchema(object interface{}, ignoreProperties ...str
 		}
 		removeProperties []interface{}
 	)
-	// ignore properties.
-	for _, v := range ignoreProperties {
-		removeProperties = append(removeProperties, v)
-	}
 	if len(tagMap) > 0 {
 		if err := oai.tagMapToSchema(tagMap, schema); err != nil {
 			return nil, err
