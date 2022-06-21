@@ -18,6 +18,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gmeta"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // DoRequestObj does HTTP request using standard request/response object.
@@ -81,13 +82,14 @@ func (c *Client) DoRequestObj(ctx context.Context, req, res interface{}) error {
 // /user/{name} -> /order/john
 func (c *Client) handlePathForObjRequest(path string, req interface{}) string {
 	if gstr.Contains(path, "{") {
-		requestParamsMap := gconv.MapStrStr(req)
+		requestParamsMap := gconv.Map(req)
 		if len(requestParamsMap) > 0 {
 			path, _ = gregex.ReplaceStringFuncMatch(`\{(\w+)\}`, path, func(match []string) string {
-				if v, ok := requestParamsMap[match[1]]; ok {
-					return v
+				foundKey, foundValue := gutil.MapPossibleItemByKey(requestParamsMap, match[1])
+				if foundKey != "" {
+					return gconv.String(foundValue)
 				}
-				return match[1]
+				return match[0]
 			})
 		}
 	}

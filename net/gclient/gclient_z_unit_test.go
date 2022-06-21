@@ -640,3 +640,27 @@ func TestClient_RequestVar(t *testing.T) {
 		t.AssertNE(users, nil)
 	})
 }
+
+func TestClient_SetBodyContent(t *testing.T) {
+	p, _ := gtcp.GetFreePort()
+	s := g.Server(p)
+	s.BindHandler("/", func(r *ghttp.Request) {
+		r.Response.Write("hello")
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		res, err := c.Get(ctx, "/")
+		t.AssertNil(err)
+		defer res.Close()
+		t.Assert(res.ReadAllString(), "hello")
+		res.SetBodyContent([]byte("world"))
+		t.Assert(res.ReadAllString(), "world")
+	})
+}
