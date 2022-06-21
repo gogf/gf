@@ -15,7 +15,7 @@ var (
 		Brief: "main process",
 		Func: func(ctx context.Context, parser *gcmd.Parser) (err error) {
 			g.Log().Debug(ctx, `this is main process`)
-			return gproc.ShellRun(ctx, `go run sub.go`)
+			return gproc.ShellRun(ctx, `go run sub/sub.go`)
 		},
 	}
 )
