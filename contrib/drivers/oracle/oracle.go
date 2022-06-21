@@ -5,7 +5,7 @@
 // You can obtain one at https://github.com/gogf/gf.
 //
 // Note:
-// 1. It needs manually import: _ "github.com/mattn/go-oci8"
+// 1. It needs manually import: _ "github.com/sijms/go-ora/v2"
 // 2. It does not support Save/Replace features.
 // 3. It does not support LastInsertId.
 
@@ -13,15 +13,10 @@
 package oracle
 
 import (
-	_ "github.com/mattn/go-oci8"
-
 	"context"
 	"database/sql"
 	"fmt"
-	"reflect"
-	"strconv"
-	"strings"
-	"time"
+	gora "github.com/sijms/go-ora/v2"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -30,6 +25,8 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+	"strconv"
+	"strings"
 )
 
 // Driver is the driver for oracle database.
@@ -65,9 +62,18 @@ func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	var (
 		source               string
-		underlyingDriverName = "oci8"
+		underlyingDriverName = "oracle"
 	)
-	// [username/[password]@]host[:port][/service_name][?param1=value1&...&paramN=valueN]
+
+	options := map[string]string{
+		"CONNECTION TIMEOUT": "60",
+		"PREFETCH_ROWS":      "25",
+	}
+
+	if config.Debug {
+		options["TRACE FILE"] = "oracle_trace.log"
+	}
+	// [username:[password]@]host[:port][/service_name][?param1=value1&...&paramN=valueN]
 	if config.Link != "" {
 		source = config.Link
 		// Custom changing the schema in runtime.
@@ -75,10 +81,7 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 			source, _ = gregex.ReplaceString(`@(.+?)/([\w\.\-]+)+`, "@$1/"+config.Name, source)
 		}
 	} else {
-		source = fmt.Sprintf(
-			"%s/%s@%s:%s/%s",
-			config.User, config.Pass, config.Host, config.Port, config.Name,
-		)
+		source = gora.BuildUrl(config.Host, gconv.Int(config.Port), config.Name, config.User, config.Pass, options)
 	}
 
 	if db, err = sql.Open(underlyingDriverName, source); err != nil {
@@ -99,8 +102,8 @@ func (d *Driver) FilteredLink() string {
 		return ""
 	}
 	s, _ := gregex.ReplaceString(
-		`(.+?)\s*/\s*(.+)\s*@\s*(.+)\s*:\s*(\d+)\s*/\s*(.+)`,
-		`$1/xxx@$3:$4/$5`,
+		`(.+?)\s*:\s*(.+)\s*@\s*(.+)\s*:\s*(\d+)\s*/\s*(.+)`,
+		`$1:xxx@$3:$4/$5`,
 		linkInfo,
 	)
 	return s
@@ -124,16 +127,7 @@ func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args [
 		return fmt.Sprintf(":v%d", index)
 	})
 	newSql, _ = gregex.ReplaceString("\"", "", newSql)
-	// Handle string datetime argument.
-	for i, v := range args {
-		if reflect.TypeOf(v).Kind() == reflect.String {
-			valueStr := gconv.String(v)
-			if gregex.IsMatchString(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$`, valueStr) {
-				// args[i] = fmt.Sprintf(`TO_DATE('%s','yyyy-MM-dd HH:MI:SS')`, valueStr)
-				args[i], _ = time.ParseInLocation("2006-01-02 15:04:05", valueStr, time.Local)
-			}
-		}
-	}
+
 	newSql = d.parseSql(newSql)
 	newArgs = args
 	return
@@ -168,7 +162,7 @@ func (d *Driver) parseSql(sql string) string {
 			strings.EqualFold(queryExpr[3], "LIMIT") == false {
 			break
 		}
-		first, limit := 0, 0
+		page, limit := 0, 0
 		for i := 1; i < len(allMatch[index]); i++ {
 			if len(strings.TrimSpace(allMatch[index][i])) == 0 {
 				continue
@@ -176,8 +170,16 @@ func (d *Driver) parseSql(sql string) string {
 
 			if strings.HasPrefix(allMatch[index][i], "LIMIT") {
 				if allMatch[index][i+2] != "" {
-					first, _ = strconv.Atoi(allMatch[index][i+1])
+					page, _ = strconv.Atoi(allMatch[index][i+1])
 					limit, _ = strconv.Atoi(allMatch[index][i+2])
+
+					if page <= 0 {
+						page = 1
+					}
+
+					limit = (page/limit + 1) * limit
+
+					page, _ = strconv.Atoi(allMatch[index][i+1])
 				} else {
 					limit, _ = strconv.Atoi(allMatch[index][i+1])
 				}
@@ -187,8 +189,8 @@ func (d *Driver) parseSql(sql string) string {
 		sql = fmt.Sprintf(
 			"SELECT * FROM "+
 				"(SELECT GFORM.*, ROWNUM ROWNUM_ FROM (%s %s) GFORM WHERE ROWNUM <= %d)"+
-				" WHERE ROWNUM_ >= %d",
-			queryExpr[1], queryExpr[2], limit, first,
+				" WHERE ROWNUM_ > %d",
+			queryExpr[1], queryExpr[2], limit, page,
 		)
 	}
 	return sql
@@ -241,7 +243,7 @@ SELECT
 	CASE DATA_TYPE  
 	WHEN 'NUMBER' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
 	WHEN 'FLOAT' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
-	ELSE DATA_TYPE||'('||DATA_LENGTH||')' END AS TYPE  
+	ELSE DATA_TYPE||'('||DATA_LENGTH||')' END AS TYPE,NULLABLE  
 FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`,
 					strings.ToUpper(table),
 				)
@@ -256,10 +258,16 @@ FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`,
 			}
 			fields = make(map[string]*gdb.TableField)
 			for i, m := range result {
-				fields[strings.ToLower(m["FIELD"].String())] = &gdb.TableField{
+				isNull := false
+				if m["NULLABLE"].String() == "Y" {
+					isNull = true
+				}
+
+				fields[m["FIELD"].String()] = &gdb.TableField{
 					Index: i,
-					Name:  strings.ToLower(m["FIELD"].String()),
-					Type:  strings.ToLower(m["TYPE"].String()),
+					Name:  m["FIELD"].String(),
+					Type:  m["TYPE"].String(),
+					Null:  isNull,
 				}
 			}
 			return fields
@@ -288,10 +296,10 @@ func (d *Driver) DoInsert(
 ) (result sql.Result, err error) {
 	switch option.InsertOption {
 	case gdb.InsertOptionSave:
-		return nil, gerror.NewCode(gcode.CodeNotSupported, `Save operation is not supported by mssql driver`)
+		return nil, gerror.NewCode(gcode.CodeNotSupported, `Save operation is not supported by oracle driver`)
 
 	case gdb.InsertOptionReplace:
-		return nil, gerror.NewCode(gcode.CodeNotSupported, `Replace operation is not supported by mssql driver`)
+		return nil, gerror.NewCode(gcode.CodeNotSupported, `Replace operation is not supported by oracle driver`)
 	}
 
 	var (

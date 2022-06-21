@@ -170,7 +170,7 @@ type DB interface {
 	GetChars() (charLeft string, charRight string)                                                   // See Core.GetChars.
 	Tables(ctx context.Context, schema ...string) (tables []string, err error)                       // See Core.Tables.
 	TableFields(ctx context.Context, table string, schema ...string) (map[string]*TableField, error) // See Core.TableFields.
-	ConvertDataForRecord(ctx context.Context, data interface{}) map[string]interface{}               // See Core.ConvertDataForRecord
+	ConvertDataForRecord(ctx context.Context, data interface{}) (map[string]interface{}, error)      // See Core.ConvertDataForRecord
 	FilteredLink() string                                                                            // FilteredLink is used for filtering sensitive information in `Link` configuration before output it to tracing server.
 }
 
@@ -311,18 +311,12 @@ const (
 	SqlTypeStmtQueryRowContext = "DB.Statement.QueryRowContext"
 )
 
-const (
-	DriverNameMysql = `mysql`
-)
-
 var (
 	// instances is the management map for instances.
 	instances = gmap.NewStrAnyMap(true)
 
 	// driverMap manages all custom registered driver.
-	driverMap = map[string]Driver{
-		DriverNameMysql: &DriverMysql{},
-	}
+	driverMap = map[string]Driver{}
 
 	// lastOperatorRegPattern is the regular expression pattern for a string
 	// which has operator at its tail.
@@ -336,9 +330,6 @@ var (
 	// Note that, although some databases allow char '.' in the field name, but it here does not allow '.'
 	// in the field name as it conflicts with "db.table.field" pattern in SOME situations.
 	regularFieldNameWithoutDotRegPattern = `^[\w\-]+$`
-
-	// tableFieldsMap caches the table information retrieved from database.
-	tableFieldsMap = gmap.New(true)
 
 	// allDryRun sets dry-run feature for all database connections.
 	// It is commonly used for command options for convenience.
@@ -405,8 +396,7 @@ func doNewByNode(node ConfigNode, group string) (db DB, err error) {
 		config: &node,
 	}
 	if v, ok := driverMap[node.Type]; ok {
-		c.db, err = v.New(c, &node)
-		if err != nil {
+		if c.db, err = v.New(c, &node); err != nil {
 			return nil, err
 		}
 		return c.db, nil
@@ -559,11 +549,12 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 				intlog.Printf(ctx, `open new connection success, master:%#v, config:%#v, node:%#v`, master, c.config, node)
 			}
 		}()
-
 		if sqlDb, err = c.db.Open(node); err != nil {
 			return nil
 		}
-
+		if sqlDb == nil {
+			return nil
+		}
 		if c.config.MaxIdleConnCount > 0 {
 			sqlDb.SetMaxIdleConns(c.config.MaxIdleConnCount)
 		} else {

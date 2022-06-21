@@ -10,12 +10,13 @@ import (
 	"context"
 	"testing"
 
+	_ "github.com/gogf/gf/v2/os/gres/testdata/data"
+
 	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/i18n/gi18n"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gres"
-	_ "github.com/gogf/gf/v2/os/gres/testdata/data"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -133,6 +134,7 @@ func Test_Instance(t *testing.T) {
 	// Default language is: en
 	gtest.C(t, func(t *gtest.T) {
 		m := gi18n.Instance(gconv.String(gtime.TimestampNano()))
+		m.SetPath("i18n-dir")
 		t.Assert(m.T(context.Background(), "{#hello}{#world}"), "HelloWorld")
 	})
 }

@@ -49,3 +49,9 @@ type iNext interface {
 	Error() string
 	Next() error
 }
+
+// iUnwrap is the interface for Unwrap feature.
+type iUnwrap interface {
+	Error() string
+	Unwrap() error
+}

@@ -61,7 +61,8 @@ func Test_WithTraceID(t *testing.T) {
 
 		time.Sleep(100 * time.Millisecond)
 
-		ctx := gtrace.WithTraceID(context.TODO(), traceID)
+		ctx, err := gtrace.WithTraceID(context.TODO(), traceID.String())
+		t.AssertNil(err)
 
 		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
 		client := g.Client()

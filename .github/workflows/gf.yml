@@ -8,6 +8,7 @@ on:
     - develop
     - feature/**
     - fix/**
+
   pull_request:
     branches:
     - master
@@ -23,11 +24,11 @@ jobs:
   code-test:
     runs-on: ubuntu-latest
 
-
     # Service containers to run with `code-test`
     services:
+      # Redis backend server.
       redis:
-        image  : redis
+        image  : loads/redis:latest
         options: >-
           --health-cmd      "redis-cli ping"
           --health-interval 10s
@@ -37,8 +38,9 @@ jobs:
           # Maps tcp port 6379 on service container to the host
           - 6379:6379
 
+      # MySQL backend server.
       mysql:
-        image: mysql:5.7
+        image: loads/mysql:5.7
         env:
           MYSQL_DATABASE     : test
           MYSQL_ROOT_PASSWORD: 12345678
@@ -46,8 +48,9 @@ jobs:
           # Maps tcp port 3306 on service container to the host
           - 3306:3306
 
+      # PostgreSQL backend server.
       postgres:
-        image: postgres:13
+        image: loads/postgres:13
         env:
           POSTGRES_PASSWORD: 12345678
           POSTGRES_USER:     root
@@ -62,8 +65,9 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+      # MSSQL backend server.
       mssql:
-        image: mcmoe/mssqldocker:latest
+        image: loads/mssqldocker:latest
         env:
           ACCEPT_EULA:    Y
           SA_PASSWORD:    LoremIpsum86
@@ -79,18 +83,37 @@ jobs:
           --health-timeout 5s
           --health-retries 10
 
+      # ClickHouse backend server.
       clickhouse-server:
-        image: yandex/clickhouse-server
+        image: loads/clickhouse-server:latest
         ports:
           - 9000:9000
           - 8123:8123
           - 9001:9001
 
+      polaris:
+        image: polarismesh/polaris-server-standalone:latest
+        ports:
+          - 8090:8090
+          - 8091:8091
 
-    # strategy set
+      #oracle 11g server
+      oracle-server:
+        image: loads/oracle-xe-11g-r2:latest
+        env:
+          ORACLE_ALLOW_REMOTE: true
+          ORACLE_SID: XE
+          ORACLE_DB_USER_NAME: system
+          ORACLE_DB_PASSWORD: oracle
+        ports:
+          - 1521:1521
+
+
+
     strategy:
       matrix:
-        go: ["1.15", "1.16", "1.17"]
+        go: [ "1.15", "1.16", "1.17" ]
+        goarch: [ "386", "amd64" ]
 
 
     steps:
@@ -114,46 +137,30 @@ jobs:
         echo "gofmt check pass."
         sudo echo "127.0.0.1   local" | sudo tee -a /etc/hosts
 
-    - name: CLI Build & Test
+    - name: Build & Test
       run: |
-        cd cmd/gf
-        go mod tidy
-        go build ./...
-        go test  ./...
-
-    - name: Example Build & Test
-      run: |
-        cd example
-        go mod tidy
-        go build ./...
-        go test  ./...
-
-    - name: Contrib Build & Test
-      run: |
-        cd contrib
+        GOARCH=${{ matrix.goarch }}
         for file in `find . -name go.mod`; do
-            path=$(dirname $file)
-            # Ignore oracle database driver build&test.
-            if [ "oracle" = $(basename $path) ]; then
-                continue 1
+            dirpath=$(dirname $file)
+
+            if [ "oracle" = $(basename $dirpath) ]; then
+                if ! go version|grep -q "1.17"; then
+                  continue 1
+                fi
             fi
-            cd $path
+
+            cd $dirpath
             go mod tidy
             go build ./...
-            go test  ./...
+            go test ./... -race -coverprofile=coverage.out -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
+            if grep -q "/gogf/gf/.*/v2" go.mod; then
+                sed -i "s/gogf\/gf\(\/.*\)\/v2/gogf\/gf\/v2\1/g" coverage.out
+            fi
             cd -
         done
-
-    - name: Run i386 Arch Test
-      run: |
-        GOARCH=386 go test -v ./... || exit 1
-
-    - name: Run amd64 Arch Test
-      run: |
-        GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
 
     - name: Report Coverage
       uses: codecov/codecov-action@v2
       with:
-        flags: go-${{ matrix.go }}
+        flags: go-${{ matrix.go }}-${{ matrix.goarch }}
 

@@ -46,6 +46,8 @@ func ExampleNew() {
 	a.Set(0, 100)
 	fmt.Println(a.Slice())
 
+	fmt.Println(a.At(0))
+
 	// Search item and return its index.
 	fmt.Println(a.Search(5))
 
@@ -66,6 +68,7 @@ func ExampleNew() {
 	// false
 	// [0 1 2 3 4 5 6 7 8 9 10 11]
 	// [100 1 2 3 4 5 6 7 8 9 10 11]
+	// 100
 	// 5
 	// [1 2 3 4 5 6 7 8 9 10 11]
 	// [1 2 3 4 5 6 7 8 9 10 11]

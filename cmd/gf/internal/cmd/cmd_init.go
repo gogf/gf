@@ -10,6 +10,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/os/gres"
 	"github.com/gogf/gf/v2/util/gtag"
 )
@@ -48,7 +49,8 @@ func init() {
 type cInitInput struct {
 	g.Meta `name:"init"`
 	Name   string `name:"NAME" arg:"true" v:"required" brief:"{cInitNameBrief}"`
-	Mono   bool   `name:"mono" short:"m" brief:"initialize a mono-repo instead a single-repo" orphan:"true"`
+	Mono   bool   `name:"mono"   short:"m" brief:"initialize a mono-repo instead a single-repo" orphan:"true"`
+	Update bool   `name:"update" short:"u" brief:"update to the latest goframe version" orphan:"true"`
 }
 type cInitOutput struct{}
 
@@ -87,6 +89,18 @@ func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err 
 	)
 	if err != nil {
 		return
+	}
+
+	// Update the GoFrame version.
+	if in.Update {
+		mlog.Print("update goframe...")
+		updateCommand := `go get -u github.com/gogf/gf/v2@latest`
+		if in.Name != "." {
+			updateCommand = fmt.Sprintf(`cd %s && %s`, in.Name, updateCommand)
+		}
+		if err = gproc.ShellRun(ctx, updateCommand); err != nil {
+			mlog.Fatal(err)
+		}
 	}
 
 	mlog.Print("initialization done! ")

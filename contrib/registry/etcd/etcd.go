@@ -8,7 +8,10 @@
 package etcd
 
 import (
+	"reflect"
 	"time"
+
+	etcd3 "go.etcd.io/etcd/client/v3"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -16,13 +19,13 @@ import (
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/text/gstr"
-	etcd3 "go.etcd.io/etcd/client/v3"
 )
 
 var (
 	_ gsvc.Registry = &Registry{}
 )
 
+// Registry implements gsvc.Registry interface.
 type Registry struct {
 	client       *etcd3.Client
 	kv           etcd3.KV
@@ -31,15 +34,18 @@ type Registry struct {
 	logger       *glog.Logger
 }
 
+// Option is the option for the etcd registry.
 type Option struct {
 	Logger       *glog.Logger
 	KeepaliveTTL time.Duration
 }
 
 const (
+	// DefaultKeepAliveTTL is the default keepalive TTL.
 	DefaultKeepAliveTTL = 10 * time.Second
 )
 
+// New creates and returns a new etcd registry.
 func New(address string, option ...Option) *Registry {
 	endpoints := gstr.SplitAndTrim(address, ",")
 	if len(endpoints) == 0 {
@@ -54,6 +60,7 @@ func New(address string, option ...Option) *Registry {
 	return NewWithClient(client, option...)
 }
 
+// NewWithClient creates and returns a new etcd registry with the given client.
 func NewWithClient(client *etcd3.Client, option ...Option) *Registry {
 	r := &Registry{
 		client: client,
@@ -73,26 +80,34 @@ func NewWithClient(client *etcd3.Client, option ...Option) *Registry {
 }
 
 // extractResponseToServices extracts etcd watch response context to service list.
-func extractResponseToServices(res *etcd3.GetResponse) ([]*gsvc.Service, error) {
+func extractResponseToServices(res *etcd3.GetResponse) ([]gsvc.Service, error) {
 	if res == nil || res.Kvs == nil {
 		return nil, nil
 	}
 	var (
-		services   []*gsvc.Service
+		services   []gsvc.Service
 		serviceKey string
-		serviceMap = make(map[string]*gsvc.Service)
+		serviceMap = make(map[string]*gsvc.LocalService)
 	)
 	for _, kv := range res.Kvs {
-		service, err := gsvc.NewServiceWithKV(kv.Key, kv.Value)
+		service, err := gsvc.NewServiceWithKV(string(kv.Key), string(kv.Value))
 		if err != nil {
 			return services, err
 		}
-		if service != nil {
-			serviceKey = service.KeyWithoutEndpoints()
-			if s, ok := serviceMap[serviceKey]; ok {
-				s.Endpoints = append(s.Endpoints, service.Endpoints...)
+		localService, ok := service.(*gsvc.LocalService)
+		if !ok {
+			return nil, gerror.Newf(
+				`service from "gsvc.NewServiceWithKV" is not "*gsvc.LocalService", but "%s"`,
+				reflect.TypeOf(service),
+			)
+		}
+		if localService != nil {
+			serviceKey = localService.GetPrefix()
+			var localServiceInMap *gsvc.LocalService
+			if localServiceInMap, ok = serviceMap[serviceKey]; ok {
+				localServiceInMap.Endpoints = append(localServiceInMap.Endpoints, localService.Endpoints...)
 			} else {
-				serviceMap[serviceKey] = service
+				serviceMap[serviceKey] = localService
 				services = append(services, service)
 			}
 		}

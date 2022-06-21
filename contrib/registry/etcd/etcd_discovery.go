@@ -9,12 +9,18 @@ package etcd
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/net/gsvc"
 	etcd3 "go.etcd.io/etcd/client/v3"
+
+	"github.com/gogf/gf/v2/net/gsvc"
 )
 
-func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]*gsvc.Service, error) {
-	res, err := r.kv.Get(ctx, in.Key(), etcd3.WithPrefix())
+// Search is the etcd discovery search function.
+func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]gsvc.Service, error) {
+	if in.Prefix == "" && in.Name != "" {
+		in.Prefix = gsvc.NewServiceWithName(in.Name).GetPrefix()
+	}
+
+	res, err := r.kv.Get(ctx, in.Prefix, etcd3.WithPrefix())
 	if err != nil {
 		return nil, err
 	}
@@ -23,18 +29,12 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]*gsvc.Ser
 		return nil, err
 	}
 	// Service filter.
-	filteredServices := make([]*gsvc.Service, 0)
+	filteredServices := make([]gsvc.Service, 0)
 	for _, v := range services {
-		if in.Deployment != "" && in.Deployment != v.Deployment {
+		if in.Name != "" && in.Name != v.GetName() {
 			continue
 		}
-		if in.Namespace != "" && in.Namespace != v.Namespace {
-			continue
-		}
-		if in.Name != "" && in.Name != v.Name {
-			continue
-		}
-		if in.Version != "" && in.Version != v.Version {
+		if in.Version != "" && in.Version != v.GetVersion() {
 			continue
 		}
 		service := v
@@ -43,6 +43,7 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]*gsvc.Ser
 	return filteredServices, nil
 }
 
+// Watch is the etcd discovery watch function.
 func (r *Registry) Watch(ctx context.Context, key string) (gsvc.Watcher, error) {
 	return newWatcher(key, r.client)
 }

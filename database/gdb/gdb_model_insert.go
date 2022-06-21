@@ -40,6 +40,7 @@ func (m *Model) Batch(batch int) *Model {
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"}).
 func (m *Model) Data(data ...interface{}) *Model {
 	var (
+		err   error
 		ctx   = m.GetCtx()
 		model = m.getModel()
 	)
@@ -87,7 +88,10 @@ func (m *Model) Data(data ...interface{}) *Model {
 				}
 				list := make(List, reflectInfo.OriginValue.Len())
 				for i := 0; i < reflectInfo.OriginValue.Len(); i++ {
-					list[i] = m.db.ConvertDataForRecord(ctx, reflectInfo.OriginValue.Index(i).Interface())
+					list[i], err = m.db.ConvertDataForRecord(ctx, reflectInfo.OriginValue.Index(i).Interface())
+					if err != nil {
+						panic(err)
+					}
 				}
 				model.data = list
 
@@ -104,15 +108,24 @@ func (m *Model) Data(data ...interface{}) *Model {
 						list  = make(List, len(array))
 					)
 					for i := 0; i < len(array); i++ {
-						list[i] = m.db.ConvertDataForRecord(ctx, array[i])
+						list[i], err = m.db.ConvertDataForRecord(ctx, array[i])
+						if err != nil {
+							panic(err)
+						}
 					}
 					model.data = list
 				} else {
-					model.data = m.db.ConvertDataForRecord(ctx, data[0])
+					model.data, err = m.db.ConvertDataForRecord(ctx, data[0])
+					if err != nil {
+						panic(err)
+					}
 				}
 
 			case reflect.Map:
-				model.data = m.db.ConvertDataForRecord(ctx, data[0])
+				model.data, err = m.db.ConvertDataForRecord(ctx, data[0])
+				if err != nil {
+					panic(err)
+				}
 
 			default:
 				model.data = data[0]
@@ -255,11 +268,18 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption int) (resul
 	case List:
 		list = value
 		for i, v := range list {
-			list[i] = m.db.ConvertDataForRecord(ctx, v)
+			list[i], err = m.db.ConvertDataForRecord(ctx, v)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 	case Map:
-		list = List{m.db.ConvertDataForRecord(ctx, value)}
+		var listItem map[string]interface{}
+		if listItem, err = m.db.ConvertDataForRecord(ctx, value); err != nil {
+			return nil, err
+		}
+		list = List{listItem}
 
 	default:
 		reflectInfo := reflection.OriginValueAndKind(newData)
@@ -268,21 +288,32 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption int) (resul
 		case reflect.Slice, reflect.Array:
 			list = make(List, reflectInfo.OriginValue.Len())
 			for i := 0; i < reflectInfo.OriginValue.Len(); i++ {
-				list[i] = m.db.ConvertDataForRecord(ctx, reflectInfo.OriginValue.Index(i).Interface())
+				list[i], err = m.db.ConvertDataForRecord(ctx, reflectInfo.OriginValue.Index(i).Interface())
 			}
 
 		case reflect.Map:
-			list = List{m.db.ConvertDataForRecord(ctx, value)}
+			var listItem map[string]interface{}
+			if listItem, err = m.db.ConvertDataForRecord(ctx, value); err != nil {
+				return nil, err
+			}
+			list = List{listItem}
 
 		case reflect.Struct:
 			if v, ok := value.(iInterfaces); ok {
 				array := v.Interfaces()
 				list = make(List, len(array))
 				for i := 0; i < len(array); i++ {
-					list[i] = m.db.ConvertDataForRecord(ctx, array[i])
+					list[i], err = m.db.ConvertDataForRecord(ctx, array[i])
+					if err != nil {
+						return nil, err
+					}
 				}
 			} else {
-				list = List{m.db.ConvertDataForRecord(ctx, value)}
+				var listItem map[string]interface{}
+				if listItem, err = m.db.ConvertDataForRecord(ctx, value); err != nil {
+					return nil, err
+				}
+				list = List{listItem}
 			}
 
 		default:

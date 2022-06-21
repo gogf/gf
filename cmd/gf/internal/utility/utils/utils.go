@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
@@ -15,13 +16,23 @@ var (
 	goimportsPath = gproc.SearchBinaryPath("goimports") // gofmtPath is the binary path of command `goimports`.
 )
 
+func init() {
+	// Wraps the command binary path with char '"' if there's space char in the path.
+	if gstr.Contains(gofmtPath, " ") {
+		gofmtPath = fmt.Sprintf(`"%s"`, gofmtPath)
+	}
+	if gstr.Contains(goimportsPath, " ") {
+		goimportsPath = fmt.Sprintf(`"%s"`, goimportsPath)
+	}
+}
+
 // GoFmt formats the source file using command `gofmt -w -s PATH`.
 func GoFmt(path string) {
 	if gofmtPath == "" {
 		mlog.Fatal(`command "gofmt" not found`)
 	}
 	var command = fmt.Sprintf(`%s -w %s`, gofmtPath, path)
-	result, err := gproc.ShellExec(command)
+	result, err := gproc.ShellExec(context.Background(), command)
 	if err != nil {
 		mlog.Fatalf(`error executing command "%s": %s`, command, result)
 	}
@@ -33,7 +44,7 @@ func GoImports(path string) {
 		mlog.Fatal(`command "goimports" not found`)
 	}
 	var command = fmt.Sprintf(`%s -w %s`, goimportsPath, path)
-	result, err := gproc.ShellExec(command)
+	result, err := gproc.ShellExec(context.Background(), command)
 	if err != nil {
 		mlog.Fatalf(`error executing command "%s": %s`, command, result)
 	}

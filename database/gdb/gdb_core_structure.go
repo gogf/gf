@@ -8,11 +8,13 @@ package gdb
 
 import (
 	"context"
+	"database/sql/driver"
 	"reflect"
 	"strings"
 	"time"
 
 	"github.com/gogf/gf/v2/encoding/gbinary"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gregex"
@@ -26,15 +28,35 @@ import (
 //
 // The parameter `value` should be type of *map/map/*struct/struct.
 // It supports embedded struct definition for struct.
-func (c *Core) ConvertDataForRecord(ctx context.Context, value interface{}) map[string]interface{} {
-	var data = DataToMapDeep(value)
+func (c *Core) ConvertDataForRecord(ctx context.Context, value interface{}) (map[string]interface{}, error) {
+	var (
+		err  error
+		data = DataToMapDeep(value)
+	)
 	for k, v := range data {
-		data[k] = c.ConvertDataForRecordValue(ctx, v)
+		data[k], err = c.ConvertDataForRecordValue(ctx, v)
+		if err != nil {
+			return nil, gerror.Wrapf(err, `ConvertDataForRecordValue failed for value: %#v`, v)
+		}
 	}
-	return data
+	return data, nil
 }
 
-func (c *Core) ConvertDataForRecordValue(ctx context.Context, value interface{}) interface{} {
+func (c *Core) ConvertDataForRecordValue(ctx context.Context, value interface{}) (interface{}, error) {
+	var (
+		err            error
+		convertedValue = value
+	)
+	// If `value` implements interface `driver.Valuer`, it then uses the interface for value converting.
+	if valuer, ok := value.(driver.Valuer); ok {
+		if convertedValue, err = valuer.Value(); err != nil {
+			if err != nil {
+				return nil, err
+			}
+		}
+		return convertedValue, nil
+	}
+	// Default value converting.
 	var (
 		rvValue = reflect.ValueOf(value)
 		rvKind  = rvValue.Kind()
@@ -48,7 +70,10 @@ func (c *Core) ConvertDataForRecordValue(ctx context.Context, value interface{})
 		// It should ignore the bytes type.
 		if _, ok := value.([]byte); !ok {
 			// Convert the value to JSON.
-			value, _ = json.Marshal(value)
+			convertedValue, err = json.Marshal(value)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 	case reflect.Struct:
@@ -57,17 +82,21 @@ func (c *Core) ConvertDataForRecordValue(ctx context.Context, value interface{})
 		// which will insert/update the value to database as "null".
 		case time.Time:
 			if r.IsZero() {
-				value = nil
+				convertedValue = nil
 			}
 
 		case gtime.Time:
 			if r.IsZero() {
-				value = nil
+				convertedValue = nil
+			} else {
+				convertedValue = r.Time
 			}
 
 		case *gtime.Time:
 			if r.IsZero() {
-				value = nil
+				convertedValue = nil
+			} else {
+				convertedValue = r.Time
 			}
 
 		case *time.Time:
@@ -79,14 +108,17 @@ func (c *Core) ConvertDataForRecordValue(ctx context.Context, value interface{})
 		default:
 			// Use string conversion in default.
 			if s, ok := value.(iString); ok {
-				value = s.String()
+				convertedValue = s.String()
 			} else {
 				// Convert the value to JSON.
-				value, _ = json.Marshal(value)
+				convertedValue, err = json.Marshal(value)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 	}
-	return value
+	return convertedValue, nil
 }
 
 // convertFieldValueToLocalValue automatically checks and converts field value from database type
@@ -218,8 +250,8 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 
 // mappingAndFilterData automatically mappings the map key to table field and removes
 // all key-value pairs that are not the field of given table.
-func (c *Core) mappingAndFilterData(schema, table string, data map[string]interface{}, filter bool) (map[string]interface{}, error) {
-	fieldsMap, err := c.TableFields(c.guessPrimaryTableName(table), schema)
+func (c *Core) mappingAndFilterData(ctx context.Context, schema, table string, data map[string]interface{}, filter bool) (map[string]interface{}, error) {
+	fieldsMap, err := c.db.TableFields(ctx, c.guessPrimaryTableName(table), schema)
 	if err != nil {
 		return nil, err
 	}

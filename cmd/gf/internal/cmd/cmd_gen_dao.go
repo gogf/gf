@@ -20,8 +20,9 @@ import (
 	"github.com/olekukonko/tablewriter"
 
 	_ "github.com/gogf/gf/contrib/drivers/mssql/v2"
+	_ "github.com/gogf/gf/contrib/drivers/mysql/v2"
 	_ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
-	_ "github.com/gogf/gf/contrib/drivers/sqlite/v2"
+	//_ "github.com/gogf/gf/contrib/drivers/sqlite/v2"
 	//_ "github.com/gogf/gf/contrib/drivers/oracle/v2"
 )
 
@@ -137,6 +138,7 @@ func init() {
 }
 
 type (
+	cGenDao      struct{}
 	cGenDaoInput struct {
 		g.Meta         `name:"dao" config:"{cGenDaoConfig}" usage:"{cGenDaoUsage}" brief:"{cGenDaoBrief}" eg:"{cGenDaoEg}" ad:"{cGenDaoAd}"`
 		Path           string `name:"path"            short:"p"  brief:"{cGenDaoBriefPath}" d:"internal"`
@@ -169,7 +171,7 @@ type (
 	}
 )
 
-func (c cGen) Dao(ctx context.Context, in cGenDaoInput) (out *cGenDaoOutput, err error) {
+func (c cGenDao) Dao(ctx context.Context, in cGenDaoInput) (out *cGenDaoOutput, err error) {
 	if g.Cfg().Available(ctx) {
 		v := g.Cfg().MustGet(ctx, cGenDaoConfig)
 		if v.IsSlice() {

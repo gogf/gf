@@ -214,7 +214,6 @@ func (s *Server) searchStaticFile(uri string) *staticFile {
 						IsDir: dir,
 					}
 				}
-
 			}
 		}
 	}

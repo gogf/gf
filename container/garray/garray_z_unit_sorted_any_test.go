@@ -61,6 +61,18 @@ func TestNewSortedArrayFromCopy(t *testing.T) {
 	})
 }
 
+func TestNewSortedArrayRange(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		func1 := func(v1, v2 interface{}) int {
+			return gconv.Int(v1) - gconv.Int(v2)
+		}
+
+		array1 := garray.NewSortedArrayRange(1, 5, 1, func1)
+		t.Assert(array1.Len(), 5)
+		t.Assert(array1, []interface{}{1, 2, 3, 4, 5})
+	})
+}
+
 func TestSortedArray_SetArray(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []interface{}{"a", "f", "c"}
@@ -106,8 +118,24 @@ func TestSortedArray_Get(t *testing.T) {
 		v, ok = array1.Get(1)
 		t.Assert(v, "c")
 		t.Assert(ok, true)
+
+		v, ok = array1.Get(99)
+		t.Assert(v, nil)
+		t.Assert(ok, false)
 	})
 
+}
+
+func TestSortedArray_At(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		a1 := []interface{}{"a", "f", "c"}
+		func1 := func(v1, v2 interface{}) int {
+			return strings.Compare(gconv.String(v1), gconv.String(v2))
+		}
+		array1 := garray.NewSortedArrayFrom(a1, func1)
+		v := array1.At(2)
+		t.Assert(v, "f")
+	})
 }
 
 func TestSortedArray_Remove(t *testing.T) {
@@ -461,6 +489,11 @@ func TestSortedArray_Rand(t *testing.T) {
 		t.Assert(ok, true)
 		t.AssertIN(i1, []interface{}{"a", "d", "c"})
 		t.Assert(array1.Len(), 3)
+
+		array2 := garray.NewSortedArrayFrom([]interface{}{}, func1)
+		v, ok := array2.Rand()
+		t.Assert(ok, false)
+		t.Assert(v, nil)
 	})
 }
 
@@ -479,6 +512,10 @@ func TestSortedArray_Rands(t *testing.T) {
 
 		i1 = array1.Rands(4)
 		t.Assert(len(i1), 4)
+
+		array2 := garray.NewSortedArrayFrom([]interface{}{}, func1)
+		v := array2.Rands(1)
+		t.Assert(v, nil)
 	})
 }
 
@@ -498,6 +535,12 @@ func TestSortedArray_Join(t *testing.T) {
 		array1 := garray.NewSortedArrayFrom(a1, gutil.ComparatorString)
 		t.Assert(array1.Join("."), `"a".0.1.\a`)
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		a1 := []interface{}{}
+		array1 := garray.NewSortedArrayFrom(a1, gutil.ComparatorString)
+		t.Assert(array1.Join("."), "")
+	})
 }
 
 func TestSortedArray_String(t *testing.T) {
@@ -505,6 +548,9 @@ func TestSortedArray_String(t *testing.T) {
 		a1 := []interface{}{0, 1, "a", "b"}
 		array1 := garray.NewSortedArrayFrom(a1, gutil.ComparatorString)
 		t.Assert(array1.String(), `[0,1,"a","b"]`)
+
+		array1 = nil
+		t.Assert(array1.String(), "")
 	})
 }
 
@@ -541,6 +587,11 @@ func TestSortedArray_Unique(t *testing.T) {
 		array1.Unique()
 		t.Assert(array1.Len(), 5)
 		t.Assert(array1, []interface{}{1, 2, 3, 4, 5})
+
+		array2 := garray.NewSortedArrayFrom([]interface{}{}, gutil.ComparatorInt)
+		array2.Unique()
+		t.Assert(array2.Len(), 0)
+		t.Assert(array2, []interface{}{})
 	})
 }
 
@@ -876,5 +927,24 @@ func TestSortedArray_Walk(t *testing.T) {
 		t.Assert(array.Walk(func(value interface{}) interface{} {
 			return "key-" + gconv.String(value)
 		}), g.Slice{"key-1", "key-2"})
+	})
+}
+
+func TestSortedArray_IsEmpty(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedArrayFrom([]interface{}{}, gutil.ComparatorString)
+		t.Assert(array.IsEmpty(), true)
+	})
+}
+
+func TestSortedArray_DeepCopy(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedArrayFrom([]interface{}{1, 2, 3, 4, 5}, gutil.ComparatorString)
+		copyArray := array.DeepCopy().(*garray.SortedArray)
+		array.Add(6)
+		copyArray.Add(7)
+		cval, _ := copyArray.Get(5)
+		val, _ := array.Get(5)
+		t.AssertNE(cval, val)
 	})
 }

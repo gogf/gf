@@ -9,8 +9,9 @@ package etcd
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/net/gsvc"
 	etcd3 "go.etcd.io/etcd/client/v3"
+
+	"github.com/gogf/gf/v2/net/gsvc"
 )
 
 var (
@@ -34,14 +35,14 @@ func newWatcher(key string, client *etcd3.Client) (*watcher, error) {
 	}
 	w.ctx, w.cancel = context.WithCancel(context.Background())
 	w.watchChan = w.watcher.Watch(w.ctx, key, etcd3.WithPrefix(), etcd3.WithRev(0))
-	err := w.watcher.RequestProgress(context.Background())
-	if err != nil {
+	if err := w.watcher.RequestProgress(context.Background()); err != nil {
 		return nil, err
 	}
 	return w, nil
 }
 
-func (w *watcher) Proceed() ([]*gsvc.Service, error) {
+// Proceed is used to watch the key.
+func (w *watcher) Proceed() ([]gsvc.Service, error) {
 	select {
 	case <-w.ctx.Done():
 		return nil, w.ctx.Err()
@@ -50,12 +51,13 @@ func (w *watcher) Proceed() ([]*gsvc.Service, error) {
 	}
 }
 
+// Close is used to close the watcher.
 func (w *watcher) Close() error {
 	w.cancel()
 	return w.watcher.Close()
 }
 
-func (w *watcher) getServicesByPrefix() ([]*gsvc.Service, error) {
+func (w *watcher) getServicesByPrefix() ([]gsvc.Service, error) {
 	res, err := w.kv.Get(w.ctx, w.key, etcd3.WithPrefix())
 	if err != nil {
 		return nil, err

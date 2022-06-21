@@ -11,6 +11,7 @@ import (
 	"reflect"
 
 	"github.com/gogf/gf/v2/encoding/gini"
+	"github.com/gogf/gf/v2/encoding/gproperties"
 	"github.com/gogf/gf/v2/encoding/gtoml"
 	"github.com/gogf/gf/v2/encoding/gxml"
 	"github.com/gogf/gf/v2/encoding/gyaml"
@@ -174,6 +175,17 @@ func LoadToml(data interface{}, safe ...bool) (*Json, error) {
 	return doLoadContentWithOptions(gconv.Bytes(data), option)
 }
 
+// LoadProperties creates a Json object from given TOML format content.
+func LoadProperties(data interface{}, safe ...bool) (*Json, error) {
+	option := Options{
+		Type: ContentTypeProperties,
+	}
+	if len(safe) > 0 && safe[0] {
+		option.Safe = true
+	}
+	return doLoadContentWithOptions(gconv.Bytes(data), option)
+}
+
 // LoadContent creates a Json object from given content, it checks the data type of `content`
 // automatically, supporting data content type as follows:
 // JSON, XML, INI, YAML and TOML.
@@ -222,7 +234,8 @@ func IsValidDataType(dataType string) bool {
 		ContentTypeYaml,
 		ContentTypeYml,
 		ContentTypeToml,
-		ContentTypeIni:
+		ContentTypeIni,
+		ContentTypeProperties:
 		return true
 	}
 	return false
@@ -288,6 +301,10 @@ func doLoadContentWithOptions(data []byte, options Options) (*Json, error) {
 		if data, err = gini.ToJson(data); err != nil {
 			return nil, err
 		}
+	case ContentTypeProperties:
+		if data, err = gproperties.ToJson(data); err != nil {
+			return nil, err
+		}
 
 	default:
 		err = gerror.NewCodef(
@@ -335,6 +352,8 @@ func checkDataType(content []byte) string {
 		(gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*".+"`, content) || gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*\w+`, content)) {
 		// Must contain "[xxx]" section.
 		return ContentTypeIni
+	} else if gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*\w+`, content) {
+		return ContentTypeProperties
 	} else {
 		return ""
 	}
