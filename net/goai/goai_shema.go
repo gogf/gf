@@ -139,7 +139,7 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 			Properties:  createSchemas(),
 			XExtensions: make(XExtensions),
 		}
-		removeProperties []interface{}
+		ignoreProperties []interface{}
 	)
 	if len(tagMap) > 0 {
 		if err := oai.tagMapToSchema(tagMap, schema); err != nil {
@@ -195,13 +195,13 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 			}
 		}
 		if !isValidParameterName(key) {
-			removeProperties = append(removeProperties, key)
+			ignoreProperties = append(ignoreProperties, key)
 		}
 		return true
 	})
 
-	if len(removeProperties) > 0 {
-		schema.Properties.Removes(removeProperties)
+	if len(ignoreProperties) > 0 {
+		schema.Properties.Removes(ignoreProperties)
 	}
 
 	return schema, nil
