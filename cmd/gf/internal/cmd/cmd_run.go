@@ -46,7 +46,7 @@ which compiles and runs the go codes asynchronously when codes change.
 	cRunFileBrief  = `building file path.`
 	cRunPathBrief  = `output directory path for built binary file. it's "manifest/output" in default`
 	cRunExtraBrief = `the same options as "go run"/"go build" except some options as follows defined`
-	cRunArgsBrief  = `custom arguments`
+	cRunArgsBrief  = `custom arguments for your process`
 )
 
 var (
@@ -149,8 +149,6 @@ func (app *cRunApp) Run() {
 	}
 	// Run the binary file.
 	runCommand := fmt.Sprintf(`%s %s`, outputPath, app.Args)
-	mlog.Print(outputPath)
-	mlog.Print(app.Args)
 	mlog.Print(runCommand)
 	if runtime.GOOS == "windows" {
 		// Special handling for windows platform.
