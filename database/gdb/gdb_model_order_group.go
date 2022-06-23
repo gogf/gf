@@ -72,6 +72,6 @@ func (m *Model) Group(groupBy ...string) *Model {
 	if model.groupBy != "" {
 		model.groupBy += ","
 	}
-	model.groupBy = model.db.GetCore().QuoteString(strings.Join(groupBy, ","))
+	model.groupBy += model.db.GetCore().QuoteString(strings.Join(groupBy, ","))
 	return model
 }
