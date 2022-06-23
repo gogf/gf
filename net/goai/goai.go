@@ -19,7 +19,6 @@ import (
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gmeta"
 )
 
 // OpenApiV3 is the structure defined from:
@@ -130,15 +129,12 @@ func (oai *OpenApiV3) Add(in AddInput) error {
 		return oai.addSchema(in.Object)
 
 	case reflect.Func:
-		if err := oai.addPath(addPathInput{
+		return oai.addPath(addPathInput{
 			Path:     in.Path,
 			Prefix:   in.Prefix,
 			Method:   in.Method,
 			Function: in.Object,
-		}); err != nil {
-			return err
-		}
-		return oai.removePathRepeatProperties(in.Path, in.Prefix, in.Method, in.Object)
+		})
 
 	default:
 		return gerror.NewCodef(
@@ -195,82 +191,6 @@ func (oai *OpenApiV3) golangTypeToOAIType(t reflect.Type) string {
 	default:
 		return TypeObject
 	}
-}
-
-func (oai *OpenApiV3) removePathRepeatProperties(path, prefix, method string, function interface{}) error {
-	if prefix != "" {
-		path = gstr.TrimRight(prefix, "/") + "/" + gstr.TrimLeft(path, "/")
-	}
-
-	if method == "" {
-		var (
-			reflectType = reflect.TypeOf(function)
-		)
-		if reflectType.NumIn() != 2 || reflectType.NumOut() != 2 {
-			return gerror.NewCodef(
-				gcode.CodeInvalidParameter,
-				`unsupported function "%s" for OpenAPI Path register, there should be input & output structures`,
-				reflectType.String(),
-			)
-		}
-		var (
-			inputObject reflect.Value
-		)
-		// Create instance according input/output types.
-		if reflectType.In(1).Kind() == reflect.Ptr {
-			inputObject = reflect.New(reflectType.In(1).Elem()).Elem()
-		} else {
-			inputObject = reflect.New(reflectType.In(1)).Elem()
-		}
-		method = gmeta.Get(inputObject.Interface(), TagNameMethod).String()
-	}
-
-	p := oai.Paths[path]
-	var (
-		reflectType  = reflect.TypeOf(p)
-		reflectValue = reflect.ValueOf(p)
-		object       reflect.Value
-		repeatField  []interface{}
-	)
-
-	for i := 0; i < reflectValue.NumField(); i++ {
-		if gstr.ToUpper(reflectType.Field(i).Name) == gstr.ToUpper(method) {
-			object = reflectValue.Field(i)
-			break
-		}
-	}
-	if !object.IsValid() {
-		return nil
-	}
-
-	op, ok := object.Interface().(*Operation)
-	if !ok || op == nil || op.RequestBody == nil {
-		return nil
-	}
-
-	for _, parameter := range op.Parameters {
-		repeatField = append(repeatField, parameter.Value.Name)
-	}
-
-	for _, content := range op.RequestBody.Value.Content {
-		if oai.Config.CommonRequestDataField != "" {
-			dataFieldsPartsArray := gstr.Split(oai.Config.CommonRequestDataField, ".")
-			if commonRequest := content.Schema.Value.Properties.Get(dataFieldsPartsArray[0]); commonRequest != nil {
-				commonRequest.Value.Properties.Removes(repeatField)
-			}
-		}
-		if content.Schema.Value != nil {
-			content.Schema.Value.Properties.Removes(repeatField)
-			break
-		}
-		for schemaRef, schema := range oai.Components.Schemas.Map() {
-			if schemaRef != "" && schemaRef == content.Schema.Ref {
-				schema.Value.Properties.Removes(repeatField)
-			}
-		}
-	}
-
-	return nil
 }
 
 // golangTypeToOAIFormat converts and returns OpenAPI parameter format for given golang type `t`.
