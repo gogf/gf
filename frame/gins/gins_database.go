@@ -16,8 +16,6 @@ import (
 	"github.com/gogf/gf/v2/internal/consts"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gcfg"
-	"github.com/gogf/gf/v2/text/gregex"
-	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
 )
@@ -53,45 +51,24 @@ func Database(name ...string) gdb.DB {
 		if v, _ := Config().Get(ctx, configNodeKey); !v.IsEmpty() {
 			configMap = v.Map()
 		}
+		// No configuration found, it formats and panics error.
 		if len(configMap) == 0 && !gdb.IsConfigured() {
 			// File configuration object checks.
-			var (
-				err            error
-				configFilePath string
-			)
+			var err error
 			if fileConfig, ok := Config().GetAdapter().(*gcfg.AdapterFile); ok {
-				if configFilePath, _ = fileConfig.GetFilePath(); configFilePath == "" {
-					var (
-						exampleFileName       = "config.example.toml"
-						exampleConfigFilePath string
-					)
-					if exampleConfigFilePath, _ = fileConfig.GetFilePath(exampleFileName); exampleConfigFilePath != "" {
-						err = gerror.NewCodef(
-							gcode.CodeMissingConfiguration,
-							`configuration file "%s" not found, but found "%s", did you miss renaming the example configuration file?`,
-							fileConfig.GetFileName(),
-							exampleFileName,
-						)
-					} else {
-						err = gerror.NewCodef(
-							gcode.CodeMissingConfiguration,
-							`configuration file "%s" not found, did you miss the configuration file or the misspell the configuration file name?`,
-							fileConfig.GetFileName(),
-						)
-					}
-					if err != nil {
-						panic(err)
-					}
+				if _, err = fileConfig.GetFilePath(); err != nil {
+					panic(gerror.WrapCode(gcode.CodeMissingConfiguration, err,
+						`configuration not found, did you miss the configuration file or the misspell the configuration file name`,
+					))
 				}
 			}
 			// Panic if nothing found in Config object or in gdb configuration.
 			if len(configMap) == 0 && !gdb.IsConfigured() {
-				err = gerror.NewCodef(
+				panic(gerror.NewCodef(
 					gcode.CodeMissingConfiguration,
-					`database initialization failed: "%s" node not found, is configuration file or configuration node missing?`,
+					`database initialization failed: configuration missing for database node "%s"`,
 					consts.ConfigNodeNameDatabase,
-				)
-				panic(err)
+				))
 			}
 		}
 
@@ -193,14 +170,6 @@ func parseDBConfigNode(value interface{}) *gdb.ConfigNode {
 	// Find possible `Link` configuration content.
 	if _, v := gutil.MapPossibleItemByKey(nodeMap, "Link"); v != nil {
 		node.Link = gconv.String(v)
-	}
-	// Parse `Link` configuration syntax.
-	if node.Link != "" && node.Type == "" {
-		match, _ := gregex.MatchString(`([a-z]+):(.+)`, node.Link)
-		if len(match) == 3 {
-			node.Type = gstr.Trim(match[1])
-			node.Link = gstr.Trim(match[2])
-		}
 	}
 	return node
 }

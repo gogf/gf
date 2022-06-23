@@ -196,7 +196,13 @@ func GetFreePort() (port int, err error) {
 		)
 	}
 	port = l.Addr().(*net.TCPAddr).Port
-	err = l.Close()
+	if err = l.Close(); err != nil {
+		err = gerror.Wrapf(
+			err,
+			`close listening failed for network "%s", address "%s", port "%d"`,
+			network, resolvedAddr.String(), port,
+		)
+	}
 	return
 }
 

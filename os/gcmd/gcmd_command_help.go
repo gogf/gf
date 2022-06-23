@@ -11,12 +11,19 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"os"
 
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // Print prints help info to stdout for current command.
 func (c *Command) Print() {
+	c.PrintTo(os.Stdout)
+}
+
+// PrintTo prints help info to custom io.Writer.
+func (c *Command) PrintTo(writer io.Writer) {
 	var (
 		prefix    = gstr.Repeat(" ", 4)
 		buffer    = bytes.NewBuffer(nil)
@@ -191,7 +198,7 @@ func (c *Command) Print() {
 	}
 	content := buffer.String()
 	content = gstr.Replace(content, "\t", "    ")
-	fmt.Println(content)
+	_, _ = writer.Write([]byte(content))
 }
 
 type printLineBriefInput struct {

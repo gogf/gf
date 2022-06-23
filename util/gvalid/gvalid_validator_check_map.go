@@ -101,10 +101,10 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 		switch originTypeAndKind.OriginKind {
 		case reflect.Map, reflect.Struct, reflect.Slice, reflect.Array:
 			v.doCheckValueRecursively(ctx, doCheckValueRecursivelyInput{
-				Value:      item,
-				Type:       originTypeAndKind.InputType,
-				OriginKind: originTypeAndKind.OriginKind,
-				ErrorMaps:  errorMaps,
+				Value:     item,
+				Type:      originTypeAndKind.InputType,
+				Kind:      originTypeAndKind.OriginKind,
+				ErrorMaps: errorMaps,
 			})
 		}
 		// Bail feature.

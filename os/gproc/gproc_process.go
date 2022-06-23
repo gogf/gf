@@ -14,9 +14,16 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/net/gtrace"
+	"github.com/gogf/gf/v2/os/genv"
+	"github.com/gogf/gf/v2/text/gstr"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Process is the struct for a single process.
@@ -64,11 +71,37 @@ func NewProcessCmd(cmd string, environment ...[]string) *Process {
 
 // Start starts executing the process in non-blocking way.
 // It returns the pid if success, or else it returns an error.
-func (p *Process) Start() (int, error) {
+func (p *Process) Start(ctx context.Context) (int, error) {
 	if p.Process != nil {
 		return p.Pid(), nil
 	}
+	// OpenTelemetry for command.
+	var (
+		span trace.Span
+		tr   = otel.GetTracerProvider().Tracer(
+			tracingInstrumentName,
+			trace.WithInstrumentationVersion(gf.VERSION),
+		)
+	)
+	ctx, span = tr.Start(
+		otel.GetTextMapPropagator().Extract(
+			ctx,
+			propagation.MapCarrier(genv.Map()),
+		),
+		gstr.Join(os.Args, " "),
+		trace.WithSpanKind(trace.SpanKindInternal),
+	)
+	defer span.End()
+	span.SetAttributes(gtrace.CommonLabels()...)
+
+	// OpenTelemetry propagation.
+	tracingEnv := tracingEnvFromCtx(ctx)
+	if len(tracingEnv) > 0 {
+		p.Env = append(p.Env, tracingEnv...)
+	}
 	p.Env = append(p.Env, fmt.Sprintf("%s=%d", envKeyPPid, p.PPid))
+	p.Env = genv.Filter(p.Env)
+
 	if err := p.Cmd.Start(); err == nil {
 		if p.Manager != nil {
 			p.Manager.processes.Set(p.Process.Pid, p)
@@ -80,8 +113,8 @@ func (p *Process) Start() (int, error) {
 }
 
 // Run executes the process in blocking way.
-func (p *Process) Run() error {
-	if _, err := p.Start(); err == nil {
+func (p *Process) Run(ctx context.Context) error {
+	if _, err := p.Start(ctx); err == nil {
 		return p.Wait()
 	} else {
 		return err

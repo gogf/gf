@@ -8,6 +8,7 @@
 package genv
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -25,13 +26,7 @@ func All() []string {
 
 // Map returns a copy of strings representing the environment as a map.
 func Map() map[string]string {
-	m := make(map[string]string)
-	i := 0
-	for _, s := range os.Environ() {
-		i = strings.IndexByte(s, '=')
-		m[s[0:i]] = s[i+1:]
-	}
-	return m
+	return MapFromEnv(os.Environ())
 }
 
 // Get creates and returns a Var with the value of the environment variable
@@ -116,4 +111,29 @@ func Build(m map[string]string) []string {
 		index++
 	}
 	return array
+}
+
+// MapFromEnv converts environment variables from slice to map.
+func MapFromEnv(envs []string) map[string]string {
+	m := make(map[string]string)
+	i := 0
+	for _, s := range envs {
+		i = strings.IndexByte(s, '=')
+		m[s[0:i]] = s[i+1:]
+	}
+	return m
+}
+
+// MapToEnv converts environment variables from map to slice.
+func MapToEnv(m map[string]string) []string {
+	envs := make([]string, 0)
+	for k, v := range m {
+		envs = append(envs, fmt.Sprintf(`%s=%s`, k, v))
+	}
+	return envs
+}
+
+// Filter filters repeated items from given environment variables.
+func Filter(envs []string) []string {
+	return MapToEnv(MapFromEnv(envs))
 }

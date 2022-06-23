@@ -16,10 +16,10 @@ import (
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gsession"
-	"github.com/gogf/gf/v2/protocol/goai"
 )
 
 type (
@@ -117,21 +117,22 @@ const (
 )
 
 const (
-	supportedHttpMethods   = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
-	defaultMethod          = "ALL"
-	exceptionExit          = "exit"
-	exceptionExitAll       = "exit_all"
-	exceptionExitHook      = "exit_hook"
-	routeCacheDuration     = time.Hour
-	ctxKeyForRequest       = "gHttpRequestObject"
-	contentTypeXml         = "text/xml"
-	contentTypeHtml        = "text/html"
-	contentTypeJson        = "application/json"
-	swaggerUIPackedPath    = "/goframe/swaggerui"
-	responseTraceIDHeader  = "Trace-ID"
-	specialMethodNameInit  = "Init"
-	specialMethodNameShut  = "Shut"
-	specialMethodNameIndex = "Index"
+	supportedHttpMethods    = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
+	defaultMethod           = "ALL"
+	exceptionExit           = "exit"
+	exceptionExitAll        = "exit_all"
+	exceptionExitHook       = "exit_hook"
+	routeCacheDuration      = time.Hour
+	ctxKeyForRequest        = "gHttpRequestObject"
+	contentTypeXml          = "text/xml"
+	contentTypeHtml         = "text/html"
+	contentTypeJson         = "application/json"
+	swaggerUIPackedPath     = "/goframe/swaggerui"
+	responseTraceIDHeader   = "Trace-ID"
+	specialMethodNameInit   = "Init"
+	specialMethodNameShut   = "Shut"
+	specialMethodNameIndex  = "Index"
+	gracefulShutdownTimeout = 5 * time.Second
 )
 
 var (
