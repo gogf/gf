@@ -68,7 +68,7 @@ CONFIGURATION SUPPORT
 	cGenDaoBriefDaoPath         = `directory path for storing generated dao files under path`
 	cGenDaoBriefDoPath          = `directory path for storing generated do files under path`
 	cGenDaoBriefEntityPath      = `directory path for storing generated entity files under path`
-	cGenDaoBriefConfigPath      = `specify config file path`
+	cGenDaoBriefConfigPath      = `custom arguments for your process`
 	cGenDaoBriefOverwriteDao    = `overwrite all dao files both inside/outside internal folder`
 	cGenDaoBriefModelFile       = `custom file name for storing generated model content`
 	cGenDaoBriefModelFileForDao = `custom file name generating model for DAO operations like Where/Data. It's empty in default`
