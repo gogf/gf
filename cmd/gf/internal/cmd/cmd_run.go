@@ -158,7 +158,7 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 func (app *cRunApp) Run() {
 	// Rebuild and run the codes.
 	renamePath := ""
-	mlog.Printf("build file: %s", app.File)
+	mlog.Printf("build: %s", app.File)
 	outputPath := gfile.Join(app.Path, gfile.Name(app.File))
 	if runtime.GOOS == "windows" {
 		outputPath += ".exe"
@@ -177,7 +177,7 @@ func (app *cRunApp) Run() {
 		app.Options,
 		app.File,
 	)
-	mlog.Printf("buildCommand: %s", buildCommand)
+	mlog.Print(buildCommand)
 	result, err := gproc.ShellExec(buildCommand)
 	if err != nil {
 		mlog.Printf("build error: \n%s%s", result, err.Error())
@@ -192,7 +192,7 @@ func (app *cRunApp) Run() {
 	}
 	// Run the binary file.
 	runCommand := fmt.Sprintf(`%s %s`, outputPath, app.Args)
-	mlog.Printf("runCommand: %s", runCommand)
+	mlog.Print(runCommand)
 	if runtime.GOOS == "windows" {
 		// Special handling for windows platform.
 		// DO NOT USE "cmd /c" command.
