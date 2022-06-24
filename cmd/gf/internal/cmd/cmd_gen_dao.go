@@ -225,20 +225,12 @@ func doGenDaoForArray(ctx context.Context, index int, in cGenDaoInput) {
 
 	// It uses user passed database configuration.
 	if in.Link != "" {
-		var (
-			tempGroup = gtime.TimestampNanoStr()
-			match, _  = gregex.MatchString(`([a-z]+):(.+)`, in.Link)
-		)
-		if len(match) == 3 {
-			gdb.AddConfigNode(tempGroup, gdb.ConfigNode{
-				Type: gstr.Trim(match[1]),
-				Link: gstr.Trim(match[2]),
-			})
-			if db, err = gdb.Instance(tempGroup); err != nil {
-				mlog.Debugf(`database initialization failed: %+v`, err)
-			}
-		} else {
-			mlog.Fatalf(`invalid database configuration: %s`, in.Link)
+		var tempGroup = gtime.TimestampNanoStr()
+		gdb.AddConfigNode(tempGroup, gdb.ConfigNode{
+			Link: in.Link,
+		})
+		if db, err = gdb.Instance(tempGroup); err != nil {
+			mlog.Fatalf(`database initialization failed: %+v`, err)
 		}
 	} else {
 		db = g.DB(in.Group)
