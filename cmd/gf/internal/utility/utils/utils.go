@@ -10,15 +10,8 @@ import (
 
 // GoFmt formats the source file.
 func GoFmt(path string) {
-	if err := pretty(path, true); err != nil {
+	if err := doGoFmt(path, true); err != nil {
 		mlog.Fatalf(`error format "%s" go files: %v`, path, err)
-	}
-}
-
-// GoImports adds or removes import statements as necessary for the source file.
-func GoImports(path string) {
-	if err := pretty(path); err != nil {
-		mlog.Fatalf(`error update "%s" go file imports: %v`, path, err)
 	}
 }
 
@@ -30,8 +23,8 @@ func IsFileDoNotEdit(filePath string) bool {
 	return gstr.Contains(gfile.GetContents(filePath), consts.DoNotEditKey)
 }
 
-// pretty format go file and adds or removes import statements as necessary.
-func pretty(filePath string, formatOnly ...bool) error {
+// doGoFmt format go file and adds or removes import statements as necessary.
+func doGoFmt(path string, formatOnly ...bool) error {
 	var genOpt *imports.Options
 	if len(formatOnly) > 0 {
 		genOpt = &imports.Options{
@@ -49,11 +42,13 @@ func pretty(filePath string, formatOnly ...bool) error {
 		}
 		return string(res)
 	}
-	if gfile.IsFile(filePath) {
-		if gfile.ExtName(filePath) != "go" {
+	// File format.
+	if gfile.IsFile(path) {
+		if gfile.ExtName(path) != "go" {
 			return nil
 		}
-		return gfile.ReplaceFileFunc(replaceFunc, filePath)
+		return gfile.ReplaceFileFunc(replaceFunc, path)
 	}
-	return gfile.ReplaceDirFunc(replaceFunc, filePath, "*.go", true)
+	// Folder format.
+	return gfile.ReplaceDirFunc(replaceFunc, path, "*.go", true)
 }

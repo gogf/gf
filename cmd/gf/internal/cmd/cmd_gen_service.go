@@ -171,11 +171,7 @@ func (c cGenService) Service(ctx context.Context, in cGenServiceInput) (out *cGe
 			}
 		}
 
-		// Go imports updating.
-		mlog.Printf(`goimports go files in "%s", it may take seconds...`, in.DstFolder)
-		utils.GoImports(in.DstFolder)
-
-		// Replica v1 to v2 for GoFrame.
+		// Replace v1 to v2 for GoFrame.
 		if err = c.replaceGeneratedServiceContentGFV2(in); err != nil {
 			return nil, err
 		}
