@@ -12,6 +12,32 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// IsGNUVersion checks and returns whether given `version` is valid GNU version string.
+func IsGNUVersion(version string) bool {
+	if version != "" && (version[0] == 'v' || version[0] == 'V') {
+		version = version[1:]
+	}
+	if version == "" {
+		return false
+	}
+	var array = strings.Split(version, ".")
+	if len(array) > 3 {
+		return false
+	}
+	for _, v := range array {
+		if v == "" {
+			return false
+		}
+		if !IsNumeric(v) {
+			return false
+		}
+		if v[0] == '-' || v[0] == '+' {
+			return false
+		}
+	}
+	return true
+}
+
 // CompareVersion compares `a` and `b` as standard GNU version.
 // It returns  1 if `a` > `b`.
 // It returns -1 if `a` < `b`.
