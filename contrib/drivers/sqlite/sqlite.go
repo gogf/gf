@@ -5,7 +5,7 @@
 // You can obtain one at https://github.com/gogf/gf.
 //
 // Note:
-// 1. It needs manually import: _ "github.com/mattn/go-sqlite3"
+// 1. It needs manually import: _ "github.com/glebarez/go-sqlite"
 // 2. It does not support Save/Replace features.
 
 // Package sqlite implements gdb.Driver, which supports operations for SQLite.
@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"strings"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/glebarez/go-sqlite"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -63,7 +63,7 @@ func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	var (
 		source               string
-		underlyingDriverName = "sqlite3"
+		underlyingDriverName = "sqlite"
 	)
 	if config.Link != "" {
 		source = config.Link
