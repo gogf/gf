@@ -230,7 +230,7 @@ func doGenDaoForArray(ctx context.Context, index int, in cGenDaoInput) {
 			Link: in.Link,
 		})
 		if db, err = gdb.Instance(tempGroup); err != nil {
-			mlog.Debugf(`database initialization failed: %+v`, err)
+			mlog.Fatalf(`database initialization failed: %+v`, err)
 		}
 	} else {
 		db = g.DB(in.Group)
