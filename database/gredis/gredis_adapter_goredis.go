@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
+
 	"github.com/gogf/gf/v2/errors/gerror"
 
 	"github.com/gogf/gf/v2/text/gstr"
@@ -34,7 +35,7 @@ const (
 // NewAdapterGoRedis creates and returns a redis adapter using go-redis.
 func NewAdapterGoRedis(config *Config) *AdapterGoRedis {
 	fillWithDefaultConfiguration(config)
-	client := redis.NewUniversalClient(&redis.UniversalOptions{
+	opts := &redis.UniversalOptions{
 		Addrs:        gstr.SplitAndTrim(config.Address, ","),
 		Password:     config.Pass,
 		DB:           config.Db,
@@ -48,7 +49,20 @@ func NewAdapterGoRedis(config *Config) *AdapterGoRedis {
 		WriteTimeout: config.WriteTimeout,
 		MasterName:   config.MasterName,
 		TLSConfig:    config.TLSConfig,
-	})
+	}
+
+	var client redis.UniversalClient
+
+	if opts.MasterName != "" {
+		redisSentinel := opts.Failover()
+		redisSentinel.SlaveOnly = config.SlaveOnly
+		client = redis.NewFailoverClient(redisSentinel)
+	} else if len(opts.Addrs) > 1 {
+		client = redis.NewClusterClient(opts.Cluster())
+	} else {
+		client = redis.NewClient(opts.Simple())
+	}
+
 	return &AdapterGoRedis{
 		client: client,
 		config: config,
