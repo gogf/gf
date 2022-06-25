@@ -113,7 +113,6 @@ func AddConfigNodeWithMap(group string, m map[string]interface{}) error {
 	}
 	m = gutil.MapCopy(m)
 	var node ConfigNode
-
 	if err := gconv.Struct(m, &node); err != nil {
 		return err
 	}
