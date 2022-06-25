@@ -8,6 +8,10 @@ package gdb
 
 import (
 	"fmt"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 	"sync"
 	"time"
 
@@ -100,6 +104,21 @@ func AddConfigNode(group string, node ConfigNode) {
 	configs.Lock()
 	defer configs.Unlock()
 	configs.config[group] = append(configs.config[group], parseConfigNode(node))
+}
+
+// AddConfigNodeWithMap adds one node configuration with map to configuration of given group.
+func AddConfigNodeWithMap(group string, m map[string]interface{}) error {
+	if m == nil || len(m) == 0 {
+		return gerror.NewCode(gcode.CodeInvalidParameter, "configuration cannot be empty")
+	}
+	m = gutil.MapCopy(m)
+	var node ConfigNode
+
+	if err := gconv.Struct(m, &node); err != nil {
+		return err
+	}
+	AddConfigNode(group, node)
+	return nil
 }
 
 // parseConfigNode parses `Link` configuration syntax.
