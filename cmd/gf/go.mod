@@ -6,6 +6,7 @@ require (
 	github.com/gogf/gf/contrib/drivers/mssql/v2 v2.1.0
 	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.1.0
 	github.com/gogf/gf/contrib/drivers/pgsql/v2 v2.1.0
+	github.com/gogf/gf/contrib/drivers/sqlite/v2 v2.1.0
 	github.com/gogf/gf/v2 v2.1.0
 	github.com/olekukonko/tablewriter v0.0.5
 	golang.org/x/tools v0.1.11
