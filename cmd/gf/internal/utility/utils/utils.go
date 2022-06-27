@@ -1,52 +1,17 @@
 package utils
 
 import (
-	"context"
-	"fmt"
-
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/text/gstr"
+	"golang.org/x/tools/imports"
 )
 
-var (
-	gofmtPath     = gproc.SearchBinaryPath("gofmt")     // gofmtPath is the binary path of command `gofmt`.
-	goimportsPath = gproc.SearchBinaryPath("goimports") // gofmtPath is the binary path of command `goimports`.
-)
-
-func init() {
-	// Wraps the command binary path with char '"' if there's space char in the path.
-	if gstr.Contains(gofmtPath, " ") {
-		gofmtPath = fmt.Sprintf(`"%s"`, gofmtPath)
-	}
-	if gstr.Contains(goimportsPath, " ") {
-		goimportsPath = fmt.Sprintf(`"%s"`, goimportsPath)
-	}
-}
-
-// GoFmt formats the source file using command `gofmt -w -s PATH`.
+// GoFmt formats the source file.
 func GoFmt(path string) {
-	if gofmtPath == "" {
-		mlog.Fatal(`command "gofmt" not found`)
-	}
-	var command = fmt.Sprintf(`%s -w %s`, gofmtPath, path)
-	result, err := gproc.ShellExec(context.Background(), command)
-	if err != nil {
-		mlog.Fatalf(`error executing command "%s": %s`, command, result)
-	}
-}
-
-// GoImports formats the source file using command `goimports -w PATH`.
-func GoImports(path string) {
-	if goimportsPath == "" {
-		mlog.Fatal(`command "goimports" not found`)
-	}
-	var command = fmt.Sprintf(`%s -w %s`, goimportsPath, path)
-	result, err := gproc.ShellExec(context.Background(), command)
-	if err != nil {
-		mlog.Fatalf(`error executing command "%s": %s`, command, result)
+	if err := doGoFmt(path, true); err != nil {
+		mlog.Fatalf(`error format "%s" go files: %v`, path, err)
 	}
 }
 
@@ -56,4 +21,34 @@ func IsFileDoNotEdit(filePath string) bool {
 		return true
 	}
 	return gstr.Contains(gfile.GetContents(filePath), consts.DoNotEditKey)
+}
+
+// doGoFmt format go file and adds or removes import statements as necessary.
+func doGoFmt(path string, formatOnly ...bool) error {
+	var genOpt *imports.Options
+	if len(formatOnly) > 0 {
+		genOpt = &imports.Options{
+			Comments:   true,
+			TabIndent:  true,
+			TabWidth:   8,
+			FormatOnly: true,
+		}
+	}
+	replaceFunc := func(path, content string) string {
+		res, err := imports.Process(path, []byte(content), genOpt)
+		if err != nil {
+			mlog.Printf(`pretty go file "%s" failed: %v`, path, err)
+			return content
+		}
+		return string(res)
+	}
+	// File format.
+	if gfile.IsFile(path) {
+		if gfile.ExtName(path) != "go" {
+			return nil
+		}
+		return gfile.ReplaceFileFunc(replaceFunc, path)
+	}
+	// Folder format.
+	return gfile.ReplaceDirFunc(replaceFunc, path, "*.go", true)
 }
