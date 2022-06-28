@@ -32,7 +32,7 @@ gf gen service -f Snake
 destination file name storing automatically generated go files, cases are as follows:
 | Case            | Example            |
 |---------------- |--------------------|
-| lower           | anykindofstring    | default
+| Lower           | anykindofstring    | default
 | Camel           | AnyKindOfString    |
 | CamelLower      | anyKindOfString    |
 | Snake           | any_kind_of_string |
@@ -71,7 +71,7 @@ type (
 		g.Meta          `name:"service" config:"{cGenServiceConfig}" usage:"{cGenServiceUsage}" brief:"{cGenServiceBrief}" eg:"{cGenServiceEg}"`
 		SrcFolder       string   `short:"s" name:"srcFolder" brief:"{cGenServiceBriefSrcFolder}" d:"internal/logic"`
 		DstFolder       string   `short:"d" name:"dstFolder" brief:"{cGenServiceBriefDstFolder}" d:"internal/service"`
-		DstFileNameCase string   `short:"f" name:"dstFileNameCase" brief:"{cGenServiceBriefFileNameCase}" d:"lower"`
+		DstFileNameCase string   `short:"f" name:"dstFileNameCase" brief:"{cGenServiceBriefFileNameCase}" d:"Lower"`
 		WatchFile       string   `short:"w" name:"watchFile" brief:"{cGenServiceBriefWatchFile}"`
 		StPattern       string   `short:"a" name:"stPattern" brief:"{cGenServiceBriefStPattern}" d:"s([A-Z]\\w+)"`
 		Packages        []string `short:"p" name:"packages" brief:"{cGenServiceBriefPackages}"`
