@@ -177,16 +177,16 @@ func (s *Server) Start() error {
 	}
 	// Default session storage.
 	if s.config.SessionStorage == nil {
-		path := ""
+		sessionStoragePath := ""
 		if s.config.SessionPath != "" {
-			path = gfile.Join(s.config.SessionPath, s.config.Name)
-			if !gfile.Exists(path) {
-				if err := gfile.Mkdir(path); err != nil {
-					return gerror.Wrapf(err, `mkdir failed for "%s"`, path)
+			sessionStoragePath = gfile.Join(s.config.SessionPath, s.config.Name)
+			if !gfile.Exists(sessionStoragePath) {
+				if err := gfile.Mkdir(sessionStoragePath); err != nil {
+					return gerror.Wrapf(err, `mkdir failed for "%s"`, sessionStoragePath)
 				}
 			}
 		}
-		s.config.SessionStorage = gsession.NewStorageFile(path, s.config.SessionMaxAge)
+		s.config.SessionStorage = gsession.NewStorageFile(sessionStoragePath, s.config.SessionMaxAge)
 	}
 	// Initialize session manager when start running.
 	s.sessionManager = gsession.New(
