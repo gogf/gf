@@ -32,10 +32,10 @@ gf gen service -f Snake
 destination file name storing automatically generated go files, cases are as follows:
 | Case            | Example            |
 |---------------- |--------------------|
-| Lower           | anykindofstring    | default
+| Lower           | anykindofstring    |
 | Camel           | AnyKindOfString    |
 | CamelLower      | anyKindOfString    |
-| Snake           | any_kind_of_string |
+| Snake           | any_kind_of_string | default
 | SnakeScreaming  | ANY_KIND_OF_STRING |
 | SnakeFirstUpper | rgb_code_md5       |
 | Kebab           | any-kind-of-string |
@@ -71,7 +71,7 @@ type (
 		g.Meta          `name:"service" config:"{cGenServiceConfig}" usage:"{cGenServiceUsage}" brief:"{cGenServiceBrief}" eg:"{cGenServiceEg}"`
 		SrcFolder       string   `short:"s" name:"srcFolder" brief:"{cGenServiceBriefSrcFolder}" d:"internal/logic"`
 		DstFolder       string   `short:"d" name:"dstFolder" brief:"{cGenServiceBriefDstFolder}" d:"internal/service"`
-		DstFileNameCase string   `short:"f" name:"dstFileNameCase" brief:"{cGenServiceBriefFileNameCase}" d:"Lower"`
+		DstFileNameCase string   `short:"f" name:"dstFileNameCase" brief:"{cGenServiceBriefFileNameCase}" d:"Snake"`
 		WatchFile       string   `short:"w" name:"watchFile" brief:"{cGenServiceBriefWatchFile}"`
 		StPattern       string   `short:"a" name:"stPattern" brief:"{cGenServiceBriefStPattern}" d:"s([A-Z]\\w+)"`
 		Packages        []string `short:"p" name:"packages" brief:"{cGenServiceBriefPackages}"`
@@ -407,6 +407,9 @@ func (c cGenService) replaceGeneratedServiceContentGFV2(in cGenServiceInput) (er
 // getDstFileNameCase call gstr.Case* function to convert the s to specified case.
 func getDstFileNameCase(str, caseStr string) string {
 	switch gstr.ToLower(caseStr) {
+	case gstr.ToLower("Lower"):
+		return gstr.ToLower(str)
+
 	case gstr.ToLower("Camel"):
 		return gstr.CaseCamel(str)
 
@@ -419,14 +422,11 @@ func getDstFileNameCase(str, caseStr string) string {
 	case gstr.ToLower("KebabScreaming"):
 		return gstr.CaseKebabScreaming(str)
 
-	case gstr.ToLower("Snake"):
-		return gstr.CaseSnake(str)
-
 	case gstr.ToLower("SnakeFirstUpper"):
 		return gstr.CaseSnakeFirstUpper(str)
 
 	case gstr.ToLower("SnakeScreaming"):
 		return gstr.CaseSnakeScreaming(str)
 	}
-	return gstr.ToLower(str)
+	return gstr.CaseSnake(str)
 }
