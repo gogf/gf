@@ -26,7 +26,7 @@ type Entry struct {
 	infinite    *gtype.Bool     // No times limit.
 }
 
-// JobFunc is the job function.
+// JobFunc is the timing called job function in timer.
 type JobFunc = func(ctx context.Context)
 
 // Status returns the status of the job.
