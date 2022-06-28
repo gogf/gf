@@ -8,6 +8,7 @@ package gcron
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"runtime"
 	"time"
@@ -19,6 +20,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// JobFunc is the timing called job function in cron.
 type JobFunc = gtimer.JobFunc
 
 // Entry is timing task entry.
@@ -140,7 +142,7 @@ func (entry *Entry) checkAndRun(ctx context.Context) {
 			return
 
 		case StatusClosed:
-			entry.logDebugf(ctx, "[gcron] %s %s removed", entry.schedule.pattern, entry.jobName)
+			entry.logDebugf(ctx, `cron job "%s" is removed`, entry.getJobNameWithPattern())
 			entry.Close()
 
 		case StatusReady:
@@ -149,11 +151,11 @@ func (entry *Entry) checkAndRun(ctx context.Context) {
 			defer func() {
 				if exception := recover(); exception != nil {
 					entry.logErrorf(ctx,
-						"[gcron] %s %s end with error: %+v",
-						entry.schedule.pattern, entry.jobName, exception,
+						`cron job "%s(%s)" end with error: %+v`,
+						entry.jobName, entry.schedule.pattern, exception,
 					)
 				} else {
-					entry.logDebugf(ctx, "[gcron] %s %s end", entry.schedule.pattern, entry.jobName)
+					entry.logDebugf(ctx, `cron job "%s" ends`, entry.getJobNameWithPattern())
 				}
 
 				if entry.timerEntry.Status() == StatusClosed {
@@ -170,11 +172,15 @@ func (entry *Entry) checkAndRun(ctx context.Context) {
 					}
 				}
 			}
-			entry.logDebugf(ctx, "[gcron] %s %s start", entry.schedule.pattern, entry.jobName)
+			entry.logDebugf(ctx, `cron job "%s" starts`, entry.getJobNameWithPattern())
 
 			entry.Job(ctx)
 		}
 	}
+}
+
+func (entry *Entry) getJobNameWithPattern() string {
+	return fmt.Sprintf(`%s(%s)`, entry.jobName, entry.schedule.pattern)
 }
 
 func (entry *Entry) logDebugf(ctx context.Context, format string, v ...interface{}) {

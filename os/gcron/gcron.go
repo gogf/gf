@@ -28,12 +28,12 @@ var (
 )
 
 // SetLogger sets the logger for cron.
-func SetLogger(logger *glog.Logger) {
+func SetLogger(logger glog.ILogger) {
 	defaultCron.SetLogger(logger)
 }
 
 // GetLogger returns the logger in the cron.
-func GetLogger() *glog.Logger {
+func GetLogger() glog.ILogger {
 	return defaultCron.GetLogger()
 }
 

@@ -94,14 +94,14 @@ func (in *HandlerInput) getDefaultBuffer(withColor bool) *bytes.Buffer {
 			in.addStringToBuffer(buffer, levelStr)
 		}
 	}
-	if in.Prefix != "" {
-		in.addStringToBuffer(buffer, in.Prefix)
-	}
 	if in.TraceId != "" {
 		in.addStringToBuffer(buffer, "{"+in.TraceId+"}")
 	}
 	if in.CtxStr != "" {
 		in.addStringToBuffer(buffer, "{"+in.CtxStr+"}")
+	}
+	if in.Prefix != "" {
+		in.addStringToBuffer(buffer, in.Prefix)
 	}
 	if in.CallerFunc != "" {
 		in.addStringToBuffer(buffer, in.CallerFunc)
