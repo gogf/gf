@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// AnyAnyMap wraps map type `map[interface{}]interface{}` and provides more map features.
 type AnyAnyMap struct {
 	mu   rwmutex.RWMutex
 	data map[interface{}]interface{}
@@ -501,6 +502,10 @@ func (m *AnyAnyMap) UnmarshalValue(value interface{}) (err error) {
 
 // DeepCopy implements interface for deep copy of current type.
 func (m *AnyAnyMap) DeepCopy() interface{} {
+	if m == nil {
+		return nil
+	}
+
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	data := make(map[interface{}]interface{}, len(m.data))

@@ -800,6 +800,9 @@ func (a *SortedArray) getComparator() func(a, b interface{}) int {
 
 // DeepCopy implements interface for deep copy of current type.
 func (a *SortedArray) DeepCopy() interface{} {
+	if a == nil {
+		return nil
+	}
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	newSlice := make([]interface{}, len(a.array))
