@@ -502,6 +502,9 @@ func (set *StrSet) UnmarshalValue(value interface{}) (err error) {
 
 // DeepCopy implements interface for deep copy of current type.
 func (set *StrSet) DeepCopy() interface{} {
+	if set == nil {
+		return nil
+	}
 	set.mu.RLock()
 	defer set.mu.RUnlock()
 	var (
