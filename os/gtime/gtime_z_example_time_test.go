@@ -15,9 +15,7 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 )
 
-// New creates and returns a Time object with given parameter.
-// The optional parameter can be type of: time.Time/*time.Time, string or integer.
-func ExampleNew() {
+func ExampleNew_Basic() {
 	curTime := "2018-08-08 08:08:08"
 	timer, _ := time.Parse("2006-01-02 15:04:05", curTime)
 	t1 := gtime.New(&timer)
@@ -38,6 +36,13 @@ func ExampleNew() {
 	// 2018-08-08 08:08:08
 	// 2018-08-08 08:08:08
 	// 2018-08-08 08:08:08
+}
+
+func ExampleNew_WithFormat() {
+	fmt.Println(gtime.New("20220629133225", "YmdHis").Format("Y-m-d H:i:s"))
+
+	// Output:
+	// 2022-06-29 13:32:25
 }
 
 // Now creates and returns a time object of now.

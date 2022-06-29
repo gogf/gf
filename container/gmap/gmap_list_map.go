@@ -594,6 +594,9 @@ func (m *ListMap) UnmarshalValue(value interface{}) (err error) {
 
 // DeepCopy implements interface for deep copy of current type.
 func (m *ListMap) DeepCopy() interface{} {
+	if m == nil {
+		return nil
+	}
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	data := make(map[interface{}]interface{}, len(m.data))

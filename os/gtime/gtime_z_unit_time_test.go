@@ -13,6 +13,7 @@ import (
 
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 func Test_New(t *testing.T) {
@@ -405,5 +406,26 @@ func Test_Issue1681(t *testing.T) {
 		t.Assert(gtime.New("2022-03-08T03:01:14-08:00").Local().Time, gtime.New("2022-03-08T11:01:14Z").Local().Time)
 		t.Assert(gtime.New("2022-03-08T03:01:14-09:00").Local().Time, gtime.New("2022-03-08T12:01:14Z").Local().Time)
 		t.Assert(gtime.New("2022-03-08T03:01:14+08:00").Local().Time, gtime.New("2022-03-07T19:01:14Z").Local().Time)
+	})
+}
+
+func Test_DeepCopy(t *testing.T) {
+	type User struct {
+		Id          int
+		CreatedTime *gtime.Time
+	}
+	gtest.C(t, func(t *gtest.T) {
+		u1 := &User{
+			Id:          1,
+			CreatedTime: gtime.New("2022-03-08T03:01:14+08:00"),
+		}
+		u2 := gutil.Copy(u1).(*User)
+		t.Assert(u1, u2)
+	})
+	// nil attribute.
+	gtest.C(t, func(t *gtest.T) {
+		u1 := &User{}
+		u2 := gutil.Copy(u1).(*User)
+		t.Assert(u1, u2)
 	})
 }

@@ -198,5 +198,8 @@ func (v *Var) UnmarshalValue(value interface{}) error {
 
 // DeepCopy implements interface for deep copy of current type.
 func (v *Var) DeepCopy() interface{} {
+	if v == nil {
+		return nil
+	}
 	return New(deepcopy.Copy(v.Val()), v.safe)
 }

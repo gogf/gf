@@ -550,6 +550,10 @@ func (l *List) UnmarshalValue(value interface{}) (err error) {
 
 // DeepCopy implements interface for deep copy of current type.
 func (l *List) DeepCopy() interface{} {
+	if l == nil {
+		return nil
+	}
+
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 

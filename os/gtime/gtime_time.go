@@ -482,5 +482,8 @@ func (t *Time) NoValidation() {}
 
 // DeepCopy implements interface for deep copy of current type.
 func (t *Time) DeepCopy() interface{} {
+	if t == nil {
+		return nil
+	}
 	return New(t.Time)
 }
