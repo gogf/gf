@@ -815,6 +815,9 @@ func (a *StrArray) IsEmpty() bool {
 
 // DeepCopy implements interface for deep copy of current type.
 func (a *StrArray) DeepCopy() interface{} {
+	if a == nil {
+		return nil
+	}
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	newSlice := make([]string, len(a.array))
