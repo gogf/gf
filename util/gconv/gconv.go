@@ -148,6 +148,8 @@ func String(any interface{}) string {
 		return value
 	case []byte:
 		return string(value)
+	case []rune:
+		return string(value)
 	case time.Time:
 		if value.IsZero() {
 			return ""
