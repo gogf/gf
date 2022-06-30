@@ -109,6 +109,17 @@ func Test_PackWithPrefix2(t *testing.T) {
 	})
 }
 
+func Test_Unpack(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			srcPath    = gtest.DataPath("testdata.txt")
+			files, err = gres.Unpack(srcPath)
+		)
+		t.AssertNil(err)
+		t.Assert(len(files), 63)
+	})
+}
+
 func Test_Basic(t *testing.T) {
 	gres.Dump()
 	gtest.C(t, func(t *gtest.T) {
@@ -285,8 +296,13 @@ func Test_Export(t *testing.T) {
 	})
 }
 
+func Test_IsEmpty(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gres.IsEmpty(), false)
+	})
+}
+
 func TestFile_Name(t *testing.T) {
-	gres.Dump()
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			src = `template-res`
