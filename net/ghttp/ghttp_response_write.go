@@ -109,6 +109,7 @@ func (r *Response) WriteJson(content interface{}) {
 	switch content.(type) {
 	case string, []byte:
 		r.Write(gconv.String(content))
+		return
 	}
 	// Else use json.Marshal function to encode the parameter.
 	if b, err := json.Marshal(content); err != nil {
@@ -135,6 +136,7 @@ func (r *Response) WriteJsonP(content interface{}) {
 	switch content.(type) {
 	case string, []byte:
 		r.Write(gconv.String(content))
+		return
 	}
 	// Else use json.Marshal function to encode the parameter.
 	if b, err := json.Marshal(content); err != nil {
@@ -170,6 +172,7 @@ func (r *Response) WriteXml(content interface{}, rootTag ...string) {
 	switch content.(type) {
 	case string, []byte:
 		r.Write(gconv.String(content))
+		return
 	}
 	if b, err := gjson.New(content).ToXml(rootTag...); err != nil {
 		panic(gerror.Wrap(err, `WriteXml failed`))

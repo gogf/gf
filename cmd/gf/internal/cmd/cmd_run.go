@@ -139,7 +139,7 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 		gtimer.SetTimeout(ctx, 1500*gtime.MS, func(ctx context.Context) {
 			defer dirty.Set(false)
 			mlog.Printf(`go file changes: %s`, event.String())
-			app.Run()
+			app.Run(ctx)
 		})
 	}
 
@@ -151,11 +151,11 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 		}
 	}
 
-	go app.Run()
+	go app.Run(ctx)
 	select {}
 }
 
-func (app *cRunApp) Run() {
+func (app *cRunApp) Run(ctx context.Context) {
 	// Rebuild and run the codes.
 	renamePath := ""
 	mlog.Printf("build: %s", app.File)
@@ -178,7 +178,7 @@ func (app *cRunApp) Run() {
 		app.File,
 	)
 	mlog.Print(buildCommand)
-	result, err := gproc.ShellExec(buildCommand)
+	result, err := gproc.ShellExec(ctx, buildCommand)
 	if err != nil {
 		mlog.Printf("build error: \n%s%s", result, err.Error())
 		return
@@ -200,7 +200,7 @@ func (app *cRunApp) Run() {
 	} else {
 		process = gproc.NewProcessCmd(outputPath, gstr.SplitAndTrim(" ", app.Args))
 	}
-	if pid, err := process.Start(); err != nil {
+	if pid, err := process.Start(ctx); err != nil {
 		mlog.Printf("build running error: %s", err.Error())
 	} else {
 		mlog.Printf("build running pid: %d", pid)

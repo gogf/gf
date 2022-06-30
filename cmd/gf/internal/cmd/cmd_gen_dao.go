@@ -22,7 +22,7 @@ import (
 	_ "github.com/gogf/gf/contrib/drivers/mssql/v2"
 	_ "github.com/gogf/gf/contrib/drivers/mysql/v2"
 	_ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
-	//_ "github.com/gogf/gf/contrib/drivers/sqlite/v2"
+	_ "github.com/gogf/gf/contrib/drivers/sqlite/v2"
 	//_ "github.com/gogf/gf/contrib/drivers/oracle/v2"
 )
 
@@ -138,6 +138,7 @@ func init() {
 }
 
 type (
+	cGenDao      struct{}
 	cGenDaoInput struct {
 		g.Meta         `name:"dao" config:"{cGenDaoConfig}" usage:"{cGenDaoUsage}" brief:"{cGenDaoBrief}" eg:"{cGenDaoEg}" ad:"{cGenDaoAd}"`
 		Path           string `name:"path"            short:"p"  brief:"{cGenDaoBriefPath}" d:"internal"`
@@ -170,7 +171,7 @@ type (
 	}
 )
 
-func (c cGen) Dao(ctx context.Context, in cGenDaoInput) (out *cGenDaoOutput, err error) {
+func (c cGenDao) Dao(ctx context.Context, in cGenDaoInput) (out *cGenDaoOutput, err error) {
 	if g.Cfg().Available(ctx) {
 		v := g.Cfg().MustGet(ctx, cGenDaoConfig)
 		if v.IsSlice() {
@@ -224,20 +225,12 @@ func doGenDaoForArray(ctx context.Context, index int, in cGenDaoInput) {
 
 	// It uses user passed database configuration.
 	if in.Link != "" {
-		var (
-			tempGroup = gtime.TimestampNanoStr()
-			match, _  = gregex.MatchString(`([a-z]+):(.+)`, in.Link)
-		)
-		if len(match) == 3 {
-			gdb.AddConfigNode(tempGroup, gdb.ConfigNode{
-				Type: gstr.Trim(match[1]),
-				Link: gstr.Trim(match[2]),
-			})
-			if db, err = gdb.Instance(tempGroup); err != nil {
-				mlog.Debugf(`database initialization failed: %+v`, err)
-			}
-		} else {
-			mlog.Fatalf(`invalid database configuration: %s`, in.Link)
+		var tempGroup = gtime.TimestampNanoStr()
+		gdb.AddConfigNode(tempGroup, gdb.ConfigNode{
+			Link: in.Link,
+		})
+		if db, err = gdb.Instance(tempGroup); err != nil {
+			mlog.Fatalf(`database initialization failed: %+v`, err)
 		}
 	} else {
 		db = g.DB(in.Group)
