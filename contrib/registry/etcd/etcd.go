@@ -31,12 +31,12 @@ type Registry struct {
 	kv           etcd3.KV
 	lease        etcd3.Lease
 	keepaliveTTL time.Duration
-	logger       *glog.Logger
+	logger       glog.ILogger
 }
 
 // Option is the option for the etcd registry.
 type Option struct {
-	Logger       *glog.Logger
+	Logger       glog.ILogger
 	KeepaliveTTL time.Duration
 }
 

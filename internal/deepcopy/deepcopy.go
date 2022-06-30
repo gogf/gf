@@ -57,7 +57,7 @@ func Copy(src interface{}) interface{} {
 // limited support for what it can handle. Add as needed.
 func copyRecursive(original, cpy reflect.Value) {
 	// check for implement deepcopy.Interface
-	if original.CanInterface() {
+	if original.CanInterface() && original.IsValid() && !original.IsZero() {
 		if copier, ok := original.Interface().(Interface); ok {
 			cpy.Set(reflect.ValueOf(copier.DeepCopy()))
 			return
