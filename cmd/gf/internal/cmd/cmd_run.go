@@ -40,7 +40,9 @@ const (
 gf run main.go
 gf run main.go --args "server -p 8080"
 gf run main.go -mod=vendor
-gf run main.go -d "(test)|(vendor)"
+gf run main.go -excludeDirExpr "test"
+gf run main.go -excludeDirExpr "node_modules"
+gf run main.go -excludeDirExpr "test|node_modules|vendor"
 `
 	cRunDc = `
 The "run" command is used for running go codes with hot-compiled-like feature,
@@ -96,9 +98,11 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 	currentPath := gfile.RealPath(".")
 
 	// exclude dir
-	hasReg := false
-	excludeDirExpr := in.ExcludeDirExpr
-	excludeDirCount := 0
+	var (
+		hasReg          bool   = false
+		excludeDirExpr  string = in.ExcludeDirExpr
+		excludeDirCount int    = 0
+	)
 	if len(excludeDirExpr) > 0 {
 		err := gregex.Validate(excludeDirExpr)
 		if err != nil {
@@ -109,13 +113,14 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 		}
 	}
 
-	listDir, err := gfile.ScanDirFunc(currentPath, "*", true, func(path string) string {
+	listDir, err := gfile.ScanDirFunc(currentPath, "*", false, func(path string) string {
 		if gfile.IsDir(path) {
 			if hasReg && gregex.IsMatchString(excludeDirExpr, path) {
 				excludeDirCount++
 				mlog.Debugf("exclude directory path: %s", path)
 				return ""
 			}
+			mlog.Debugf("will watch directory path: %s", path)
 			return path
 		}
 		return ""
@@ -145,7 +150,7 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 
 	for _, subPath := range listDir {
 		mlog.Debugf("watch directory: %v", subPath)
-		_, err = gfsnotify.Add(subPath, callback, false)
+		_, err = gfsnotify.Add(subPath, callback, true)
 		if err != nil {
 			mlog.Fatal(err)
 		}
