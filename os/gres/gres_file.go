@@ -54,6 +54,7 @@ func (f *File) FileInfo() os.FileInfo {
 	return f.file.FileInfo()
 }
 
+// Export exports and saves all its sub files to specified system path `dst` recursively.
 func (f *File) Export(dst string, option ...ExportOption) error {
 	return f.resource.Export(f.Name(), dst, option...)
 }
