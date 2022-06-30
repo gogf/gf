@@ -309,7 +309,7 @@ func (c cGenService) generateServiceFiles(
 	)
 	for structName, funcArray := range srcPkgInterfaceMap {
 		var (
-			filePath         = gfile.Join(in.DstFolder, getDstFileNameCase(structName, in.DstFileNameCase)+".go")
+			filePath         = gfile.Join(in.DstFolder, c.getDstFileNameCase(structName, in.DstFileNameCase)+".go")
 			generatedContent = gstr.ReplaceByMap(consts.TemplateGenServiceContent, g.MapStrStr{
 				"{Imports}":        srcImportedPackagesContent,
 				"{StructName}":     structName,
@@ -405,7 +405,7 @@ func (c cGenService) replaceGeneratedServiceContentGFV2(in cGenServiceInput) (er
 }
 
 // getDstFileNameCase call gstr.Case* function to convert the s to specified case.
-func getDstFileNameCase(str, caseStr string) string {
+func (c cGenService) getDstFileNameCase(str, caseStr string) string {
 	switch gstr.ToLower(caseStr) {
 	case gstr.ToLower("Lower"):
 		return gstr.ToLower(str)
