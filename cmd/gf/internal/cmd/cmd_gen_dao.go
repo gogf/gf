@@ -48,7 +48,6 @@ CONFIGURATION SUPPORT
 		- link:     "mysql:root:12345678@tcp(127.0.0.1:3306)/test"
 		  tables:   "order,products"
 		  jsonCase: "CamelLower"
-
 		- link:   "mysql:root:12345678@tcp(127.0.0.1:3306)/primary"
 		  path:   "./my-app"
 		  prefix: "primary_"
