@@ -275,28 +275,27 @@ func (s *cronSchedule) checkMeetAndUpdateLastSeconds(t time.Time) bool {
 			return diff%s.every == 0
 		}
 		return false
-	} else {
-		// It checks using normal cron pattern.
-		if _, ok := s.second[s.getFixedSecond(t)]; !ok {
-			return false
-		}
-		if _, ok := s.minute[t.Minute()]; !ok {
-			return false
-		}
-		if _, ok := s.hour[t.Hour()]; !ok {
-			return false
-		}
-		if _, ok := s.day[t.Day()]; !ok {
-			return false
-		}
-		if _, ok := s.month[int(t.Month())]; !ok {
-			return false
-		}
-		if _, ok := s.week[int(t.Weekday())]; !ok {
-			return false
-		}
-		return true
 	}
+	// It checks using normal cron pattern.
+	if _, ok := s.second[s.getFixedSecond(t)]; !ok {
+		return false
+	}
+	if _, ok := s.minute[t.Minute()]; !ok {
+		return false
+	}
+	if _, ok := s.hour[t.Hour()]; !ok {
+		return false
+	}
+	if _, ok := s.day[t.Day()]; !ok {
+		return false
+	}
+	if _, ok := s.month[int(t.Month())]; !ok {
+		return false
+	}
+	if _, ok := s.week[int(t.Weekday())]; !ok {
+		return false
+	}
+	return true
 }
 
 // getFixedSecond checks, fixes and returns the seconds that have delay in some seconds.
