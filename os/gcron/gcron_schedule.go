@@ -329,6 +329,7 @@ func (s *cronSchedule) getFixedSecond(t time.Time) int {
 			lastTimestamp, currentTimestamp,
 		)
 	}
+	second %= 60
 	s.lastTimestamp.Set(lastTimestamp)
 	return second
 }
