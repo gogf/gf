@@ -150,13 +150,16 @@ func GetBaggageVar(ctx context.Context, key string) *gvar.Var {
 func WithTraceID(ctx context.Context, traceID string) (context.Context, error) {
 	generatedTraceID, err := trace.TraceIDFromHex(traceID)
 	if err != nil {
-		return nil, gerror.WrapCodef(gcode.CodeInvalidParameter, err, `invalid traceID: %s`, traceID)
+		return ctx, gerror.WrapCodef(
+			gcode.CodeInvalidParameter,
+			err,
+			`invalid custom traceID "%s", a traceID string should be composed with [0-9a-z] and fixed length 32`,
+			traceID,
+		)
 	}
 	sc := trace.SpanContextFromContext(ctx)
 	if !sc.HasTraceID() {
-		var (
-			span trace.Span
-		)
+		var span trace.Span
 		ctx, span = NewSpan(ctx, "gtrace.WithTraceID")
 		defer span.End()
 		sc = trace.SpanContextFromContext(ctx)

@@ -466,6 +466,9 @@ func (m *StrStrMap) UnmarshalValue(value interface{}) (err error) {
 
 // DeepCopy implements interface for deep copy of current type.
 func (m *StrStrMap) DeepCopy() interface{} {
+	if m == nil {
+		return nil
+	}
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	data := make(map[string]string, len(m.data))
