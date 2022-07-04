@@ -26,91 +26,6 @@ jobs:
 
     # Service containers to run with `code-test`
     services:
-      # redis sentinel
-      redis-master:
-        image: 'bitnami/redis:latest'
-        env:
-          REDIS_REPLICATION_MODE: master
-          REDIS_PASSWORD: 111111
-        ports:
-          - 6380:6379
-      redis-slave1:
-        image: 'bitnami/redis:latest'
-        env:
-          REDIS_REPLICATION_MODE: slave
-          REDIS_MASTER_HOST: redis-master
-          REDIS_MASTER_PASSWORD: 111111
-          REDIS_PASSWORD: 111111
-        ports:
-          - 6381:6379
-        depends_on:
-          - redis-master
-        links:
-          - redis-master
-      redis-slave2:
-        image: 'bitnami/redis:latest'
-        env:
-          REDIS_REPLICATION_MODE: slave
-          REDIS_MASTER_HOST: redis-master
-          REDIS_MASTER_PASSWORD: 111111
-          REDIS_PASSWORD: 111111
-        ports:
-          - 6382:6379
-        depends_on:
-          - redis-master
-        links:
-          - redis-master
-      redis-sentinel-1:
-        image: 'bitnami/redis-sentinel:latest'
-        env:
-          REDIS_MASTER_HOST: redis-master
-          REDIS_MASTER_PORT_NUMBER: 6379
-          REDIS_MASTER_PASSWORD: 111111
-        depends_on:
-          - redis-master
-          - redis-slave1
-          - redis-slave2
-        ports:
-          - 26379:26379
-        links:
-          - redis-master
-          - redis-slave1
-          - redis-slave2
-
-      redis-sentinel-2:
-        image: 'bitnami/redis-sentinel:latest'
-        env:
-          REDIS_MASTER_HOST: redis-master
-          REDIS_MASTER_PORT_NUMBER: 6379
-          REDIS_MASTER_PASSWORD: 111111
-        depends_on:
-          - redis-master
-          - redis-slave1
-          - redis-slave2
-        links:
-          - redis-master
-          - redis-slave1
-          - redis-slave2
-        ports:
-          - 26380:26379
-
-      redis-sentinel-3:
-        image: 'bitnami/redis-sentinel:latest'
-        env:
-          REDIS_MASTER_HOST: redis-master
-          REDIS_MASTER_PORT_NUMBER: 6379
-          REDIS_MASTER_PASSWORD: 111111
-        depends_on:
-          - redis-master
-          - redis-slave1
-          - redis-slave2
-        ports:
-          - 26381:26379
-        links:
-          - redis-master
-          - redis-slave1
-          - redis-slave2
-
       # Redis backend server.
       redis:
         image  : loads/redis:latest
@@ -215,6 +130,9 @@ jobs:
       with:
         go-version: ${{ matrix.go }}
 
+    - name: Start containers
+      run: docker-compose -f "docker/docker-compose.yml" up -d --build
+
     - name: Before Script
       run: |
         find . -name "*.go" | xargs gofmt -w
@@ -243,6 +161,9 @@ jobs:
             fi
             cd -
         done
+
+    - name: Stop containers
+      run: docker-compose -f "docker/docker-compose.yml" down
 
     - name: Report Coverage
       uses: codecov/codecov-action@v2
