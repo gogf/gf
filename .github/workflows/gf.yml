@@ -24,10 +24,6 @@ jobs:
   code-test:
     runs-on: ubuntu-latest
 
-    networks:
-      app-tier:
-        driver: bridge
-
     # Service containers to run with `code-test`
     services:
       # redis sentinel
@@ -37,8 +33,6 @@ jobs:
         environment:
           - REDIS_REPLICATION_MODE=master
           - REDIS_PASSWORD=111111
-        networks:
-          - app-tier
         ports:
           - 6380:6379
         redis-slave1:
@@ -53,8 +47,8 @@ jobs:
             - 6381:6379
           depends_on:
             - redis-master
-          networks:
-            - app-tier
+          links:
+            - redis-master
         redis-slave2:
           container_name: redis-slave2
           image: 'bitnami/redis:latest'
@@ -67,8 +61,8 @@ jobs:
             - 6382:6379
           depends_on:
             - redis-master
-          networks:
-            - app-tier
+          links:
+            - redis-master
         redis-sentinel-1:
           container_name: redis-sentinel-1
           image: 'bitnami/redis-sentinel:latest'
@@ -82,8 +76,10 @@ jobs:
             - redis-slave2
           ports:
             - 26379:26379
-          networks:
-            - app-tier
+          links:
+            - redis-master
+            - redis-slave1
+            - redis-slave2
 
         redis-sentinel-2:
           container_name: redis-sentinel-2
@@ -96,10 +92,13 @@ jobs:
             - redis-master
             - redis-slave1
             - redis-slave2
+          links:
+            - redis-master
+            - redis-slave1
+            - redis-slave2
           ports:
             - 26380:26379
-          networks:
-            - app-tier
+
 
         redis-sentinel-3:
           container_name: redis-sentinel-3
@@ -114,8 +113,10 @@ jobs:
             - redis-slave2
           ports:
             - 26381:26379
-          networks:
-            - app-tier
+          links:
+            - redis-master
+            - redis-slave1
+            - redis-slave2
 
       # Redis backend server.
       redis:
