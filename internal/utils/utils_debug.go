@@ -39,3 +39,8 @@ func init() {
 func IsDebugEnabled() bool {
 	return isDebugEnabled
 }
+
+// SetDebugEnabled enables/disables the internal debug info.
+func SetDebugEnabled(enabled bool) {
+	isDebugEnabled = enabled
+}
