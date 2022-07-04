@@ -131,7 +131,7 @@ jobs:
         go-version: ${{ matrix.go }}
 
     - name: Start containers
-      run: docker-compose -f "docker/docker-compose.yml" up -d --build
+      run: docker-compose -f "docker-compose.yml" up -d --build
 
     - name: Before Script
       run: |
@@ -163,7 +163,7 @@ jobs:
         done
 
     - name: Stop containers
-      run: docker-compose -f "docker/docker-compose.yml" down
+      run: docker-compose -f "docker-compose.yml" down
 
     - name: Report Coverage
       uses: codecov/codecov-action@v2
