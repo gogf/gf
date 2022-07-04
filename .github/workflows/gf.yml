@@ -30,17 +30,17 @@ jobs:
       redis-master:
         image: 'bitnami/redis:latest'
         env:
-          - REDIS_REPLICATION_MODE=master
-          - REDIS_PASSWORD=111111
+          REDIS_REPLICATION_MODE: master
+          REDIS_PASSWORD: 111111
         ports:
           - 6380:6379
       redis-slave1:
         image: 'bitnami/redis:latest'
         env:
-          - REDIS_REPLICATION_MODE=slave
-          - REDIS_MASTER_HOST=redis-master
-          - REDIS_MASTER_PASSWORD=111111
-          - REDIS_PASSWORD=111111
+          REDIS_REPLICATION_MODE: slave
+          REDIS_MASTER_HOST: redis-master
+          REDIS_MASTER_PASSWORD: 111111
+          REDIS_PASSWORD: 111111
         ports:
           - 6381:6379
         depends_on:
@@ -50,10 +50,10 @@ jobs:
       redis-slave2:
         image: 'bitnami/redis:latest'
         env:
-          - REDIS_REPLICATION_MODE=slave
-          - REDIS_MASTER_HOST=redis-master
-          - REDIS_MASTER_PASSWORD=111111
-          - REDIS_PASSWORD=111111
+          REDIS_REPLICATION_MODE: slave
+          REDIS_MASTER_HOST: redis-master
+          REDIS_MASTER_PASSWORD: 111111
+          REDIS_PASSWORD: 111111
         ports:
           - 6382:6379
         depends_on:
@@ -63,9 +63,9 @@ jobs:
       redis-sentinel-1:
         image: 'bitnami/redis-sentinel:latest'
         env:
-          - REDIS_MASTER_HOST=redis-master
-          - REDIS_MASTER_PORT_NUMBER=6379
-          - REDIS_MASTER_PASSWORD=111111
+          REDIS_MASTER_HOST: redis-master
+          REDIS_MASTER_PORT_NUMBER: 6379
+          REDIS_MASTER_PASSWORD: 111111
         depends_on:
           - redis-master
           - redis-slave1
@@ -80,9 +80,9 @@ jobs:
       redis-sentinel-2:
         image: 'bitnami/redis-sentinel:latest'
         env:
-          - REDIS_MASTER_HOST=redis-master
-          - REDIS_MASTER_PORT_NUMBER=6379
-          - REDIS_MASTER_PASSWORD=111111
+          REDIS_MASTER_HOST: redis-master
+          REDIS_MASTER_PORT_NUMBER: 6379
+          REDIS_MASTER_PASSWORD: 111111
         depends_on:
           - redis-master
           - redis-slave1
@@ -97,9 +97,9 @@ jobs:
       redis-sentinel-3:
         image: 'bitnami/redis-sentinel:latest'
         env:
-          - REDIS_MASTER_HOST=redis-master
-          - REDIS_MASTER_PORT_NUMBER=6379
-          - REDIS_MASTER_PASSWORD=111111
+          REDIS_MASTER_HOST: redis-master
+          REDIS_MASTER_PORT_NUMBER: 6379
+          REDIS_MASTER_PASSWORD: 111111
         depends_on:
           - redis-master
           - redis-slave1
