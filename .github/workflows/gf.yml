@@ -28,7 +28,6 @@ jobs:
     services:
       # redis sentinel
       redis-master:
-        container_name: redis-master
         image: 'bitnami/redis:latest'
         env:
           - REDIS_REPLICATION_MODE=master
@@ -36,7 +35,6 @@ jobs:
         ports:
           - 6380:6379
       redis-slave1:
-        container_name: redis-slave1
         image: 'bitnami/redis:latest'
         env:
           - REDIS_REPLICATION_MODE=slave
@@ -50,7 +48,6 @@ jobs:
         links:
           - redis-master
       redis-slave2:
-        container_name: redis-slave2
         image: 'bitnami/redis:latest'
         env:
           - REDIS_REPLICATION_MODE=slave
@@ -64,7 +61,6 @@ jobs:
         links:
           - redis-master
       redis-sentinel-1:
-        container_name: redis-sentinel-1
         image: 'bitnami/redis-sentinel:latest'
         env:
           - REDIS_MASTER_HOST=redis-master
@@ -82,7 +78,6 @@ jobs:
           - redis-slave2
 
       redis-sentinel-2:
-        container_name: redis-sentinel-2
         image: 'bitnami/redis-sentinel:latest'
         env:
           - REDIS_MASTER_HOST=redis-master
@@ -99,9 +94,7 @@ jobs:
         ports:
           - 26380:26379
 
-
       redis-sentinel-3:
-        container_name: redis-sentinel-3
         image: 'bitnami/redis-sentinel:latest'
         env:
           - REDIS_MASTER_HOST=redis-master
