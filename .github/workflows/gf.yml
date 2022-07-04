@@ -6,6 +6,7 @@ on:
     branches:
     - master
     - develop
+    - personal/**
     - feature/**
     - fix/**
 
@@ -13,11 +14,13 @@ on:
     branches:
     - master
     - develop
+    - personal/**
     - feature/**
     - fix/**
 
 env:
-  GF_DEBUG: 0
+  TZ: "Asia/Shanghai"
+  GF_DEBUG: 1
 
 
 jobs:

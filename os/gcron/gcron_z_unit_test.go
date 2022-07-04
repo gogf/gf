@@ -99,6 +99,8 @@ func TestCron_Add_FixedPattern(t *testing.T) {
 				seconds, now.Minute(), now.Hour(), now.Day(), now.Month(), now.Weekday().String(),
 			)
 		)
+		cron.SetLogger(g.Log())
+		g.Log().Debugf(ctx, `pattern: %s`, pattern)
 		_, err := cron.Add(ctx, pattern, func(ctx context.Context) {
 			array.Append(1)
 		})
