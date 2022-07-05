@@ -8,6 +8,7 @@ package gcron
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"runtime"
 	"time"
@@ -15,10 +16,12 @@ import (
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gtimer"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// JobFunc is the timing called job function in cron.
 type JobFunc = gtimer.JobFunc
 
 // Entry is timing task entry.
@@ -51,7 +54,6 @@ func (c *Cron) doAddEntry(in doAddEntryInput) (*Entry, error) {
 			return nil, gerror.NewCodef(gcode.CodeInvalidOperation, `cron job "%s" already exists`, in.Name)
 		}
 	}
-
 	schedule, err := newSchedule(in.Pattern)
 	if err != nil {
 		return nil, err
@@ -134,47 +136,61 @@ func (entry *Entry) Close() {
 // The running times limits feature is implemented by gcron.Entry and cannot be implemented by gtimer.Entry.
 // gcron.Entry relies on gtimer to implement a scheduled task check for gcron.Entry per second.
 func (entry *Entry) checkAndRun(ctx context.Context) {
-	if entry.schedule.meet(time.Now()) {
-		switch entry.cron.status.Val() {
-		case StatusStopped:
-			return
+	currentTime := time.Now()
+	if !entry.schedule.checkMeetAndUpdateLastSeconds(currentTime) {
+		intlog.Printf(
+			ctx,
+			`timely check, current time does not meet cron job "%s"`,
+			entry.getJobNameWithPattern(),
+		)
+		return
+	}
+	intlog.Printf(
+		ctx,
+		`timely check, current time meets cron job "%s"`,
+		entry.getJobNameWithPattern(),
+	)
+	switch entry.cron.status.Val() {
+	case StatusStopped:
+		return
 
-		case StatusClosed:
-			entry.logDebugf(ctx, "[gcron] %s %s removed", entry.schedule.pattern, entry.jobName)
-			entry.Close()
+	case StatusClosed:
+		entry.logDebugf(ctx, `cron job "%s" is removed`, entry.getJobNameWithPattern())
+		entry.Close()
 
-		case StatusReady:
-			fallthrough
-		case StatusRunning:
-			defer func() {
-				if exception := recover(); exception != nil {
-					entry.logErrorf(ctx,
-						"[gcron] %s %s end with error: %+v",
-						entry.schedule.pattern, entry.jobName, exception,
-					)
-				} else {
-					entry.logDebugf(ctx, "[gcron] %s %s end", entry.schedule.pattern, entry.jobName)
-				}
+	case StatusReady, StatusRunning:
+		defer func() {
+			if exception := recover(); exception != nil {
+				entry.logErrorf(ctx,
+					`cron job "%s(%s)" end with error: %+v`,
+					entry.jobName, entry.schedule.pattern, exception,
+				)
+			} else {
+				entry.logDebugf(ctx, `cron job "%s" ends`, entry.getJobNameWithPattern())
+			}
 
-				if entry.timerEntry.Status() == StatusClosed {
-					entry.Close()
-				}
-			}()
+			if entry.timerEntry.Status() == StatusClosed {
+				entry.Close()
+			}
+		}()
 
-			// Running times check.
-			if !entry.infinite.Val() {
-				times := entry.times.Add(-1)
-				if times <= 0 {
-					if entry.timerEntry.SetStatus(StatusClosed) == StatusClosed || times < 0 {
-						return
-					}
+		// Running times check.
+		if !entry.infinite.Val() {
+			times := entry.times.Add(-1)
+			if times <= 0 {
+				if entry.timerEntry.SetStatus(StatusClosed) == StatusClosed || times < 0 {
+					return
 				}
 			}
-			entry.logDebugf(ctx, "[gcron] %s %s start", entry.schedule.pattern, entry.jobName)
-
-			entry.Job(ctx)
 		}
+		entry.logDebugf(ctx, `cron job "%s" starts`, entry.getJobNameWithPattern())
+
+		entry.Job(ctx)
 	}
+}
+
+func (entry *Entry) getJobNameWithPattern() string {
+	return fmt.Sprintf(`%s(%s)`, entry.jobName, entry.schedule.pattern)
 }
 
 func (entry *Entry) logDebugf(ctx context.Context, format string, v ...interface{}) {

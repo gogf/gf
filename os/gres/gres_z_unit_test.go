@@ -109,6 +109,17 @@ func Test_PackWithPrefix2(t *testing.T) {
 	})
 }
 
+func Test_Unpack(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			srcPath    = gtest.DataPath("testdata.txt")
+			files, err = gres.Unpack(srcPath)
+		)
+		t.AssertNil(err)
+		t.Assert(len(files), 63)
+	})
+}
+
 func Test_Basic(t *testing.T) {
 	gres.Dump()
 	gtest.C(t, func(t *gtest.T) {
@@ -268,5 +279,78 @@ func Test_Export(t *testing.T) {
 		nameInRes := `template-res/index.html`
 		nameInSys := `index.html`
 		t.Assert(gfile.GetContents(gfile.Join(dst, nameInSys)), gres.GetContent(nameInRes))
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			src = `template-res/layout1/container.html`
+			dst = gfile.Temp(gtime.TimestampNanoStr())
+			err = gres.Export(src, dst, gres.ExportOption{
+				RemovePrefix: `template-res`,
+			})
+		)
+		defer gfile.Remove(dst)
+		t.AssertNil(err)
+		files, err := gfile.ScanDir(dst, "*", true)
+		t.AssertNil(err)
+		t.Assert(len(files), 2)
+	})
+}
+
+func Test_IsEmpty(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gres.IsEmpty(), false)
+	})
+}
+
+func TestFile_Name(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			src = `template-res`
+		)
+		t.Assert(gres.Get(src).Name(), src)
+	})
+}
+
+func TestFile_Export(t *testing.T) {
+	gres.Dump()
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			src = `template-res`
+			dst = gfile.Temp(gtime.TimestampNanoStr())
+			err = gres.Get(src).Export(dst)
+		)
+		defer gfile.Remove(dst)
+		t.AssertNil(err)
+		files, err := gfile.ScanDir(dst, "*", true)
+		t.AssertNil(err)
+		t.Assert(len(files), 14)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			src = `template-res`
+			dst = gfile.Temp(gtime.TimestampNanoStr())
+			err = gres.Get(src).Export(dst, gres.ExportOption{
+				RemovePrefix: `template-res`,
+			})
+		)
+		defer gfile.Remove(dst)
+		t.AssertNil(err)
+		files, err := gfile.ScanDir(dst, "*", true)
+		t.AssertNil(err)
+		t.Assert(len(files), 13)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			src = `template-res/layout1/container.html`
+			dst = gfile.Temp(gtime.TimestampNanoStr())
+			err = gres.Get(src).Export(dst, gres.ExportOption{
+				RemovePrefix: `template-res`,
+			})
+		)
+		defer gfile.Remove(dst)
+		t.AssertNil(err)
+		files, err := gfile.ScanDir(dst, "*", true)
+		t.AssertNil(err)
+		t.Assert(len(files), 2)
 	})
 }

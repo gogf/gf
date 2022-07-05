@@ -21,7 +21,7 @@ type Cron struct {
 	idGen   *gtype.Int64    // Used for unique name generation.
 	status  *gtype.Int      // Timed task status(0: Not Start; 1: Running; 2: Stopped; -1: Closed)
 	entries *gmap.StrAnyMap // All timed task entries.
-	logger  *glog.Logger    // Logger, it is nil in default.
+	logger  glog.ILogger    // Logger, it is nil in default.
 }
 
 // New returns a new Cron object with default settings.
@@ -34,12 +34,12 @@ func New() *Cron {
 }
 
 // SetLogger sets the logger for cron.
-func (c *Cron) SetLogger(logger *glog.Logger) {
+func (c *Cron) SetLogger(logger glog.ILogger) {
 	c.logger = logger
 }
 
 // GetLogger returns the logger in the cron.
-func (c *Cron) GetLogger() *glog.Logger {
+func (c *Cron) GetLogger() glog.ILogger {
 	return c.logger
 }
 
