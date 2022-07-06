@@ -518,9 +518,9 @@ func (set *Set) DeepCopy() interface{} {
 	}
 	set.mu.RLock()
 	defer set.mu.RUnlock()
-	data := make(map[interface{}]struct{}, len(set.data))
-	for k, v := range set.data {
-		data[k] = v
+	data := make([]interface{}, 0)
+	for k, _ := range set.data {
+		data = append(data, k)
 	}
 	return NewFrom(data, set.mu.IsSafe())
 }
