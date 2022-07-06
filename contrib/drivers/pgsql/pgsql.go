@@ -112,7 +112,7 @@ func (d *Driver) GetChars() (charLeft string, charRight string) {
 
 // ConvertValueForLocal converts value to local Golang type of value according field type name from database.
 // The parameter `fieldType` is in lower case, like:
-// `float(5,2)`, `double(5,2)`, `decimal(10,2)`, `char(45)`, `varchar(100)`, etc.
+// `float(5,2)`, `unsigned double(5,2)`, `decimal(10,2)`, `char(45)`, `varchar(100)`, etc.
 func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) {
 	typeName, _ := gregex.ReplaceString(`\(.+\)`, "", fieldType)
 	typeName = strings.ToLower(typeName)
@@ -123,6 +123,36 @@ func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fie
 			return gconv.Uint64(gconv.String(fieldValue)), nil
 		}
 		return gconv.Int64(gconv.String(fieldValue)), nil
+
+	// Int32 slice.
+	case
+		"_int2":
+		if gstr.ContainsI(fieldType, "unsigned") {
+			gconv.Uints(gconv.String(fieldValue))
+		}
+		return gconv.Ints(
+			gstr.ReplaceByMap(gconv.String(fieldValue),
+				map[string]string{
+					"{": "[",
+					"}": "]",
+				},
+			),
+		), nil
+
+	// Int64 slice.
+	case
+		"_int4", "_int8":
+		if gstr.ContainsI(fieldType, "unsigned") {
+			gconv.Uint64(gconv.String(fieldValue))
+		}
+		return gconv.Int64s(
+			gstr.ReplaceByMap(gconv.String(fieldValue),
+				map[string]string{
+					"{": "[",
+					"}": "]",
+				},
+			),
+		), nil
 
 	default:
 		return d.Core.ConvertValueForLocal(ctx, fieldType, fieldValue)
@@ -159,13 +189,27 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 	if err != nil {
 		return nil, err
 	}
-	query := "SELECT TABLENAME FROM PG_TABLES WHERE SCHEMANAME = 'public' ORDER BY TABLENAME"
+	querySchema := "public"
 	if len(schema) > 0 && schema[0] != "" {
-		query = fmt.Sprintf(
-			"SELECT TABLENAME FROM PG_TABLES WHERE SCHEMANAME = '%s' ORDER BY TABLENAME",
-			schema[0],
-		)
+		querySchema = schema[0]
 	}
+	// list table names exclude partitions
+	query := fmt.Sprintf(`
+SELECT
+	c.relname
+FROM
+	pg_class c
+INNER JOIN pg_namespace n ON
+	c.relnamespace = n.oid
+WHERE
+	n.nspname = '%s'
+	AND c.relkind IN ('r', 'p')
+	AND c.relpartbound IS NULL
+	AND PG_TABLE_IS_VISIBLE(c.oid)
+ORDER BY
+	c.relname`,
+		querySchema,
+	)
 	result, err = d.DoSelect(ctx, link, query)
 	if err != nil {
 		return

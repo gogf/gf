@@ -568,6 +568,7 @@ func generateStructFieldDefinition(field *gdb.TableField, in generateStructDefin
 	t, _ := gregex.ReplaceString(`\(.+\)`, "", field.Type)
 	t = gstr.Split(gstr.Trim(t), " ")[0]
 	t = gstr.ToLower(t)
+
 	switch t {
 	case "binary", "varbinary", "blob", "tinyblob", "mediumblob", "longblob":
 		typeName = "[]byte"
@@ -584,6 +585,22 @@ func generateStructFieldDefinition(field *gdb.TableField, in generateStructDefin
 			typeName = "uint64"
 		} else {
 			typeName = "int64"
+		}
+
+	// pgsql int32 slice.
+	case "_int2":
+		if gstr.ContainsI(field.Type, "unsigned") {
+			typeName = "[]uint"
+		} else {
+			typeName = "[]int"
+		}
+
+	// pgsql int64 slice.
+	case "_int4", "_int8":
+		if gstr.ContainsI(field.Type, "unsigned") {
+			typeName = "[]uint64"
+		} else {
+			typeName = "[]int64"
 		}
 
 	case "real":
