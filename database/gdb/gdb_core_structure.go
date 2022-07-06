@@ -153,7 +153,24 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 			gconv.Uint(gconv.String(fieldValue))
 		}
 		return gconv.Int(gconv.String(fieldValue))
-
+	case
+		"_int2":
+		if gstr.ContainsI(fieldType, "unsigned") {
+			gconv.Uints(gconv.String(fieldValue))
+		}
+		return gconv.Ints(gstr.ReplaceByMap(gconv.String(fieldValue), map[string]string{
+			"{": "[",
+			"}": "]",
+		}))
+	case
+		"_int4", "_int8":
+		if gstr.ContainsI(fieldType, "unsigned") {
+			gconv.Uint64(gconv.String(fieldValue))
+		}
+		return gconv.Int64s(gstr.ReplaceByMap(gconv.String(fieldValue), map[string]string{
+			"{": "[",
+			"}": "]",
+		}))
 	case
 		"int8", // For pgsql, int8 = bigint.
 		"big_int",
