@@ -154,7 +154,7 @@ func TestSet_IsSubsetOf(t *testing.T) {
 		t.Assert(s3.IsSubsetOf(s2), false)
 
 		s4 := s1
-		t.Assert(s1.Equal(s4), true)
+		t.Assert(s1.IsSubsetOf(s4), true)
 	})
 }
 
