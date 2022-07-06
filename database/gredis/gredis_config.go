@@ -36,6 +36,7 @@ type Config struct {
 	TLS             bool          `json:"tls"`             // Specifies whether TLS should be used when connecting to the server.
 	TLSSkipVerify   bool          `json:"tlsSkipVerify"`   // Disables server name verification when connecting over TLS.
 	TLSConfig       *tls.Config   `json:"-"`               // TLS Config to use. When set TLS will be negotiated.
+	SlaveOnly       bool          `json:"slaveOnly"`       // Route all commands to slave read-only nodes.
 }
 
 const (
