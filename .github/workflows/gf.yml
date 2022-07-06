@@ -132,6 +132,9 @@ jobs:
       with:
         go-version: ${{ matrix.go }}
 
+    - name: Start containers
+      run: docker-compose -f ".github/workflows/docker-compose.yml" up -d --build
+
     - name: Before Script
       run: |
         find . -name "*.go" | xargs gofmt -w
@@ -160,6 +163,9 @@ jobs:
             fi
             cd -
         done
+
+    - name: Stop containers
+      run: docker-compose -f ".github/workflows/docker-compose.yml" down
 
     - name: Report Coverage
       uses: codecov/codecov-action@v2
