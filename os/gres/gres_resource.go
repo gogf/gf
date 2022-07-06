@@ -237,8 +237,15 @@ func (r *Resource) Export(src, dst string, option ...ExportOption) error {
 		name         string
 		path         string
 		exportOption ExportOption
-		files        = r.doScanDir(src, "*", true, false)
+		files        []*File
 	)
+
+	if r.Get(src).FileInfo().IsDir() {
+		files = r.doScanDir(src, "*", true, false)
+	} else {
+		files = append(files, r.Get(src))
+	}
+
 	if len(option) > 0 {
 		exportOption = option[0]
 	}

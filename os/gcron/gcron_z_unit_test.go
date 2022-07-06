@@ -14,8 +14,8 @@ import (
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gcron"
-	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
@@ -89,9 +89,15 @@ func TestCron_Remove(t *testing.T) {
 }
 
 func TestCron_Add_FixedPattern(t *testing.T) {
+	debug := utils.IsDebugEnabled()
+	utils.SetDebugEnabled(true)
+	defer func() {
+		utils.SetDebugEnabled(debug)
+	}()
+
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			now     = gtime.Now()
+			now     = time.Now()
 			cron    = gcron.New()
 			array   = garray.New(true)
 			seconds = (now.Second() + 2) % 60
@@ -100,11 +106,13 @@ func TestCron_Add_FixedPattern(t *testing.T) {
 				seconds, now.Minute(), now.Hour(), now.Day(), now.Month(), now.Weekday().String(),
 			)
 		)
+		cron.SetLogger(g.Log())
+		g.Log().Debugf(ctx, `pattern: %s`, pattern)
 		_, err := cron.Add(ctx, pattern, func(ctx context.Context) {
 			array.Append(1)
 		})
 		t.AssertNil(err)
-		time.Sleep(2500 * time.Millisecond)
+		time.Sleep(2800 * time.Millisecond)
 		t.Assert(array.Len(), 1)
 	})
 }
