@@ -1,9 +1,9 @@
-version: 2
+version: "2"
 
 services:
   redis-master:
     container_name: redis-master
-    image: loads/redis:7.0
+    image: "loads/redis:7.0"
     environment:
       - REDIS_REPLICATION_MODE=master
       - REDIS_PASSWORD=111111
@@ -12,7 +12,7 @@ services:
 
   redis-slave1:
     container_name: redis-slave1
-    image: loads/redis:7.0
+    image: "loads/redis:7.0"
     environment:
       - REDIS_REPLICATION_MODE=slave
       - REDIS_MASTER_HOST=redis-master
@@ -27,7 +27,7 @@ services:
 
   redis-slave2:
     container_name: redis-slave2
-    image: loads/redis:7.0
+    image: "loads/redis:7.0"
     environment:
       - REDIS_REPLICATION_MODE=slave
       - REDIS_MASTER_HOST=redis-master
@@ -42,7 +42,7 @@ services:
 
   redis-sentinel-1:
     container_name: redis-sentinel-1
-    image: loads/redis-sentinel:7.0
+    image: "loads/redis-sentinel:7.0"
     environment:
       - REDIS_MASTER_HOST=redis-master
       - REDIS_MASTER_PORT_NUMBER=6379
@@ -60,7 +60,7 @@ services:
 
   redis-sentinel-2:
     container_name: redis-sentinel-2
-    image: loads/redis-sentinel:7.0
+    image: "loads/redis-sentinel:7.0"
     environment:
       - REDIS_MASTER_HOST=redis-master
       - REDIS_MASTER_PORT_NUMBER=6379
@@ -78,7 +78,7 @@ services:
 
   redis-sentinel-3:
     container_name: redis-sentinel-3
-    image: loads/redis-sentinel:7.0
+    image: "loads/redis-sentinel:7.0"
     environment:
       - REDIS_MASTER_HOST=redis-master
       - REDIS_MASTER_PORT_NUMBER=6379
