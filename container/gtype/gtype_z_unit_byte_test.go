@@ -37,6 +37,20 @@ func Test_Byte(t *testing.T) {
 		// 空参测试
 		i1 := gtype.NewByte()
 		t.AssertEQ(i1.Val(), byte(0))
+
+		//
+		i2 := gtype.NewByte(byte(64))
+		t.AssertEQ(i2.String(), "64")
+		t.AssertEQ(i2.Cas(byte(63), byte(65)), false)
+		t.AssertEQ(i2.Cas(byte(64), byte(65)), true)
+
+		//
+		copyVal := i2.DeepCopy()
+		i2.Set(byte(65))
+		t.AssertNE(copyVal, iClone.Val())
+		i2 = nil
+		copyVal = i2.DeepCopy()
+		t.AssertNil(copyVal)
 	})
 }
 

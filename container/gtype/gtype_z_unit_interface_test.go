@@ -27,6 +27,16 @@ func Test_Interface(t *testing.T) {
 		// 空参测试
 		i1 := gtype.New()
 		t.AssertEQ(i1.Val(), nil)
+
+		//
+		i2 := gtype.New("gf")
+		t.AssertEQ(i2.String(), "gf")
+		copyVal := i2.DeepCopy()
+		i2.Set("goframe")
+		t.AssertNE(copyVal, iClone.Val())
+		i2 = nil
+		copyVal = i2.DeepCopy()
+		t.AssertNil(copyVal)
 	})
 }
 

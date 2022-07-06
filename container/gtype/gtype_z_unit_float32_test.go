@@ -26,6 +26,20 @@ func Test_Float32(t *testing.T) {
 		// 空参测试
 		i1 := gtype.NewFloat32()
 		t.AssertEQ(i1.Val(), float32(0))
+
+		//
+		i2 := gtype.NewFloat32(1.23)
+		t.AssertEQ(i2.Add(3.21), float32(4.44))
+		t.AssertEQ(i2.Cas(4.45, 5.55), false)
+		t.AssertEQ(i2.Cas(4.44, 5.55), true)
+		t.AssertEQ(i2.String(), "5.55")
+
+		copyVal := i2.DeepCopy()
+		i2.Set(float32(6.66))
+		t.AssertNE(copyVal, iClone.Val())
+		i2 = nil
+		copyVal = i2.DeepCopy()
+		t.AssertNil(copyVal)
 	})
 }
 
