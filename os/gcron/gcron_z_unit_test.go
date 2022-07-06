@@ -112,7 +112,7 @@ func TestCron_Add_FixedPattern(t *testing.T) {
 			array.Append(1)
 		})
 		t.AssertNil(err)
-		time.Sleep(2800 * time.Millisecond)
+		time.Sleep(3000 * time.Millisecond)
 		t.Assert(array.Len(), 1)
 	})
 }
