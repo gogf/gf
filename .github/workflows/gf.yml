@@ -94,7 +94,7 @@ jobs:
           - 9001:9001
 
       polaris:
-        image: houseme/polaris-server-with-config:latest
+        image: polarismesh/polaris-server-standalone:latest
         ports:
           - 8090:8090
           - 8091:8091
