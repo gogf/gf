@@ -6,10 +6,6 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
-	_ "github.com/gogf/gf/contrib/drivers/mssql/v2"
-	_ "github.com/gogf/gf/contrib/drivers/mysql/v2"
-	_ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
-	_ "github.com/gogf/gf/contrib/drivers/sqlite/v2"
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
@@ -18,7 +14,6 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gtag"
-	//_ "github.com/gogf/gf/contrib/drivers/oracle/v2"
 )
 
 const (
