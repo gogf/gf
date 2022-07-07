@@ -12,7 +12,6 @@ import (
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // New
@@ -756,11 +755,10 @@ func ExampleVar_Scan() {
 			"Scores": []int{100, 99, 98},
 		}
 	)
-	if err := gconv.Scan(m, &s); err != nil {
-		panic(err)
+	v := gvar.New(m)
+	if err := v.Scan(&s); err == nil {
+		g.DumpWithType(s)
 	}
-
-	g.DumpWithType(s)
 
 	// Output:
 	// gvar_test.Student(3) {
