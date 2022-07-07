@@ -32,7 +32,6 @@ func Test_Bool(t *testing.T) {
 		t.AssertEQ(iClone1.Cas(true, false), true)
 		t.AssertEQ(iClone1.String(), "false")
 
-		//
 		copyVal := i1.DeepCopy()
 		iClone.Set(true)
 		t.AssertNE(copyVal, iClone.Val())
@@ -40,7 +39,7 @@ func Test_Bool(t *testing.T) {
 		copyVal = iClone.DeepCopy()
 		t.AssertNil(copyVal)
 
-		// 空参测试
+		// empty param test
 		i2 := gtype.NewBool()
 		t.AssertEQ(i2.Val(), false)
 	})
