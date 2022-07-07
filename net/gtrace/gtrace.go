@@ -12,6 +12,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
@@ -145,22 +147,29 @@ func GetBaggageVar(ctx context.Context, key string) *gvar.Var {
 }
 
 // WithTraceID injects custom trace id into context to propagate.
-func WithTraceID(ctx context.Context, traceID trace.TraceID) context.Context {
+func WithTraceID(ctx context.Context, traceID string) (context.Context, error) {
+	generatedTraceID, err := trace.TraceIDFromHex(traceID)
+	if err != nil {
+		return ctx, gerror.WrapCodef(
+			gcode.CodeInvalidParameter,
+			err,
+			`invalid custom traceID "%s", a traceID string should be composed with [0-9a-z] and fixed length 32`,
+			traceID,
+		)
+	}
 	sc := trace.SpanContextFromContext(ctx)
 	if !sc.HasTraceID() {
-		var (
-			span trace.Span
-		)
+		var span trace.Span
 		ctx, span = NewSpan(ctx, "gtrace.WithTraceID")
 		defer span.End()
 		sc = trace.SpanContextFromContext(ctx)
 	}
 	ctx = trace.ContextWithRemoteSpanContext(ctx, trace.NewSpanContext(trace.SpanContextConfig{
-		TraceID:    traceID,
+		TraceID:    generatedTraceID,
 		SpanID:     sc.SpanID(),
 		TraceFlags: sc.TraceFlags(),
 		TraceState: sc.TraceState(),
 		Remote:     sc.IsRemote(),
 	}))
-	return ctx
+	return ctx, nil
 }

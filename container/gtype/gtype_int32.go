@@ -75,3 +75,11 @@ func (v *Int32) UnmarshalValue(value interface{}) error {
 	v.Set(gconv.Int32(value))
 	return nil
 }
+
+// DeepCopy implements interface for deep copy of current type.
+func (v *Int32) DeepCopy() interface{} {
+	if v == nil {
+		return nil
+	}
+	return NewInt32(v.Val())
+}

@@ -552,7 +552,7 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 	case reflect.Map, reflect.Struct:
 		var (
 			fields         []string
-			dataMap        = c.db.ConvertDataForRecord(ctx, data)
+			dataMap        map[string]interface{}
 			counterHandler = func(column string, counter Counter) {
 				if counter.Value != 0 {
 					column = c.QuoteWord(column)
@@ -570,7 +570,10 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 				}
 			}
 		)
-
+		dataMap, err = c.db.ConvertDataForRecord(ctx, data)
+		if err != nil {
+			return nil, err
+		}
 		for k, v := range dataMap {
 			switch value := v.(type) {
 			case *Counter:
@@ -633,6 +636,12 @@ func (c *Core) DoDelete(ctx context.Context, link Link, table string, condition 
 	}
 	table = c.QuotePrefixTableName(table)
 	return c.db.DoExec(ctx, link, fmt.Sprintf("DELETE FROM %s%s", table, condition), args...)
+}
+
+// FilteredLink retrieves and returns filtered `linkInfo` that can be using for
+// logging or tracing purpose.
+func (c *Core) FilteredLink() string {
+	return c.config.Link
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.

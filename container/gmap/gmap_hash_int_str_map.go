@@ -470,3 +470,17 @@ func (m *IntStrMap) UnmarshalValue(value interface{}) (err error) {
 	}
 	return
 }
+
+// DeepCopy implements interface for deep copy of current type.
+func (m *IntStrMap) DeepCopy() interface{} {
+	if m == nil {
+		return nil
+	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	data := make(map[int]string, len(m.data))
+	for k, v := range m.data {
+		data[k] = v
+	}
+	return NewIntStrMapFrom(data, m.mu.IsSafe())
+}

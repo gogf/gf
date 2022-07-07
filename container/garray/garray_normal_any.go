@@ -14,6 +14,7 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/deepcopy"
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/rwmutex"
@@ -819,4 +820,18 @@ func (a *Array) Walk(f func(value interface{}) interface{}) *Array {
 // IsEmpty checks whether the array is empty.
 func (a *Array) IsEmpty() bool {
 	return a.Len() == 0
+}
+
+// DeepCopy implements interface for deep copy of current type.
+func (a *Array) DeepCopy() interface{} {
+	if a == nil {
+		return nil
+	}
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	newSlice := make([]interface{}, len(a.array))
+	for i, v := range a.array {
+		newSlice[i] = deepcopy.Copy(v)
+	}
+	return NewArrayFrom(newSlice, a.mu.IsSafe())
 }

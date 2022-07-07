@@ -7,6 +7,7 @@
 package gclient
 
 import (
+	"bytes"
 	"io/ioutil"
 	"net/http"
 
@@ -69,11 +70,17 @@ func (r *Response) ReadAllString() string {
 	return string(r.ReadAll())
 }
 
+// SetBodyContent overwrites response content with custom one.
+func (r *Response) SetBodyContent(content []byte) {
+	buffer := bytes.NewBuffer(content)
+	r.Body = ioutil.NopCloser(buffer)
+	r.ContentLength = int64(buffer.Len())
+}
+
 // Close closes the response when it will never be used.
 func (r *Response) Close() error {
-	if r == nil || r.Response == nil || r.Response.Close {
+	if r == nil || r.Response == nil {
 		return nil
 	}
-	r.Response.Close = true
 	return r.Response.Body.Close()
 }

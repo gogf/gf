@@ -75,3 +75,11 @@ func (v *Byte) UnmarshalValue(value interface{}) error {
 	v.Set(gconv.Byte(value))
 	return nil
 }
+
+// DeepCopy implements interface for deep copy of current type.
+func (v *Byte) DeepCopy() interface{} {
+	if v == nil {
+		return nil
+	}
+	return NewByte(v.Val())
+}

@@ -25,6 +25,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/net/ghttp/internal/swaggerui"
+	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/genv"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -32,7 +33,6 @@ import (
 	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/os/gsession"
 	"github.com/gogf/gf/v2/os/gtimer"
-	"github.com/gogf/gf/v2/protocol/goai"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -177,16 +177,16 @@ func (s *Server) Start() error {
 	}
 	// Default session storage.
 	if s.config.SessionStorage == nil {
-		path := ""
+		sessionStoragePath := ""
 		if s.config.SessionPath != "" {
-			path = gfile.Join(s.config.SessionPath, s.config.Name)
-			if !gfile.Exists(path) {
-				if err := gfile.Mkdir(path); err != nil {
-					return gerror.Wrapf(err, `mkdir failed for "%s"`, path)
+			sessionStoragePath = gfile.Join(s.config.SessionPath, s.config.Name)
+			if !gfile.Exists(sessionStoragePath) {
+				if err := gfile.Mkdir(sessionStoragePath); err != nil {
+					return gerror.Wrapf(err, `mkdir failed for "%s"`, sessionStoragePath)
 				}
 			}
 		}
-		s.config.SessionStorage = gsession.NewStorageFile(path, s.config.SessionMaxAge)
+		s.config.SessionStorage = gsession.NewStorageFile(sessionStoragePath, s.config.SessionMaxAge)
 	}
 	// Initialize session manager when start running.
 	s.sessionManager = gsession.New(

@@ -744,3 +744,15 @@ func (a *SortedIntArray) getComparator() func(a, b int) int {
 	}
 	return a.comparator
 }
+
+// DeepCopy implements interface for deep copy of current type.
+func (a *SortedIntArray) DeepCopy() interface{} {
+	if a == nil {
+		return nil
+	}
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	newSlice := make([]int, len(a.array))
+	copy(newSlice, a.array)
+	return NewSortedIntArrayFrom(newSlice, a.mu.IsSafe())
+}

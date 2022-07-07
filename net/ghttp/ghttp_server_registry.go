@@ -22,9 +22,10 @@ func (s *Server) doServiceRegister() {
 	}
 	var (
 		ctx      = context.Background()
-		protocol = `http`
+		protocol = gsvc.DefaultProtocol
 		insecure = true
 		address  = s.config.Address
+		err      error
 	)
 	if address == "" {
 		address = s.config.HTTPSAddr
@@ -45,13 +46,13 @@ func (s *Server) doServiceRegister() {
 		gsvc.MDProtocol: protocol,
 		gsvc.MDInsecure: insecure,
 	}
-	s.service = &gsvc.Service{
+	s.service = &gsvc.LocalService{
 		Name:      s.GetName(),
-		Endpoints: []string{fmt.Sprintf(`%s:%s`, ip, port)},
+		Endpoints: gsvc.NewEndpoints(fmt.Sprintf(`%s:%s`, ip, port)),
 		Metadata:  metadata,
 	}
 	s.Logger().Debugf(ctx, `service register: %+v`, s.service)
-	if err := gsvc.Register(ctx, s.service); err != nil {
+	if s.service, err = gsvc.Register(ctx, s.service); err != nil {
 		s.Logger().Fatalf(ctx, `%+v`, err)
 	}
 }

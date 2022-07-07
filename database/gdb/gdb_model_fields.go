@@ -27,44 +27,21 @@ func (m *Model) Fields(fieldNamesOrMapStruct ...interface{}) *Model {
 	if length == 0 {
 		return m
 	}
-	switch {
-	// String slice.
-	case length >= 2:
-		return m.appendFieldsByStr(gstr.Join(
-			m.mappingAndFilterToTableFields(gconv.Strings(fieldNamesOrMapStruct), true),
-			",",
-		))
-
-	// It needs type asserting.
-	case length == 1:
-		structOrMap := fieldNamesOrMapStruct[0]
-		switch r := structOrMap.(type) {
-		case string:
-			return m.appendFieldsByStr(gstr.Join(
-				m.mappingAndFilterToTableFields([]string{r}, false), ",",
-			))
-		case []string:
-			return m.appendFieldsByStr(gstr.Join(
-				m.mappingAndFilterToTableFields(r, true), ",",
-			))
-		case Raw, *Raw:
-			return m.appendFieldsByStr(gconv.String(structOrMap))
-		default:
-			return m.appendFieldsByStr(gstr.Join(
-				m.mappingAndFilterToTableFields(getFieldsFromStructOrMap(structOrMap), true), ",",
-			))
-		}
+	fields := m.getFieldsFrom(fieldNamesOrMapStruct...)
+	if len(fields) == 0 {
+		return m
 	}
-	return m
+	return m.appendFieldsByStr(gstr.Join(fields, ","))
 }
 
 // FieldsPrefix performs as function Fields but add extra prefix for each field.
 func (m *Model) FieldsPrefix(prefix string, fieldNamesOrMapStruct ...interface{}) *Model {
-	model := m.Fields(fieldNamesOrMapStruct...)
-	array := gstr.SplitAndTrim(model.fields, ",")
-	gstr.PrefixArray(array, prefix+".")
-	model.fields = gstr.Join(array, ",")
-	return model
+	fields := m.getFieldsFrom(fieldNamesOrMapStruct...)
+	if len(fields) == 0 {
+		return m
+	}
+	gstr.PrefixArray(fields, prefix+".")
+	return m.appendFieldsByStr(gstr.Join(fields, ","))
 }
 
 // FieldsEx appends `fieldNamesOrMapStruct` to the excluded operation fields of the model,
@@ -78,28 +55,11 @@ func (m *Model) FieldsEx(fieldNamesOrMapStruct ...interface{}) *Model {
 	if length == 0 {
 		return m
 	}
-	model := m.getModel()
-	switch {
-	case length >= 2:
-		model.fieldsEx = gstr.Join(
-			m.mappingAndFilterToTableFields(gconv.Strings(fieldNamesOrMapStruct), true),
-			",",
-		)
-		return model
-	case length == 1:
-		switch r := fieldNamesOrMapStruct[0].(type) {
-		case string:
-			model.fieldsEx = gstr.Join(m.mappingAndFilterToTableFields([]string{r}, false), ",")
-		case []string:
-			model.fieldsEx = gstr.Join(m.mappingAndFilterToTableFields(r, true), ",")
-		case Raw, *Raw:
-			model.fieldsEx = gconv.String(fieldNamesOrMapStruct[0])
-		default:
-			model.fieldsEx = gstr.Join(m.mappingAndFilterToTableFields(getFieldsFromStructOrMap(r), true), ",")
-		}
-		return model
+	fields := m.getFieldsFrom(fieldNamesOrMapStruct...)
+	if len(fields) == 0 {
+		return m
 	}
-	return m
+	return m.appendFieldsExByStr(gstr.Join(fields, ","))
 }
 
 // FieldsExPrefix performs as function FieldsEx but add extra prefix for each field.
@@ -154,33 +114,6 @@ func (m *Model) FieldAvg(column string, as ...string) *Model {
 		asStr = fmt.Sprintf(` AS %s`, m.db.GetCore().QuoteWord(as[0]))
 	}
 	return m.appendFieldsByStr(fmt.Sprintf(`AVG(%s)%s`, m.QuoteWord(column), asStr))
-}
-
-func (m *Model) appendFieldsByStr(fields string) *Model {
-	if fields != "" {
-		model := m.getModel()
-		if model.fields == defaultFields {
-			model.fields = ""
-		}
-		if model.fields != "" {
-			model.fields += ","
-		}
-		model.fields += fields
-		return model
-	}
-	return m
-}
-
-func (m *Model) appendFieldsExByStr(fieldsEx string) *Model {
-	if fieldsEx != "" {
-		model := m.getModel()
-		if model.fieldsEx != "" {
-			model.fieldsEx += ","
-		}
-		model.fieldsEx += fieldsEx
-		return model
-	}
-	return m
 }
 
 // GetFieldsStr retrieves and returns all fields from the table, joined with char ','.
@@ -249,5 +182,64 @@ func (m *Model) GetFieldsExStr(fields string, prefix ...string) string {
 
 // HasField determine whether the field exists in the table.
 func (m *Model) HasField(field string) (bool, error) {
-	return m.db.GetCore().HasField(m.tablesInit, field)
+	return m.db.GetCore().HasField(m.GetCtx(), m.tablesInit, field)
+}
+
+func (m *Model) getFieldsFrom(fieldNamesOrMapStruct ...interface{}) []string {
+	length := len(fieldNamesOrMapStruct)
+	if length == 0 {
+		return nil
+	}
+	switch {
+	// String slice.
+	case length >= 2:
+		return m.mappingAndFilterToTableFields(gconv.Strings(fieldNamesOrMapStruct), true)
+
+	// It needs type asserting.
+	case length == 1:
+		structOrMap := fieldNamesOrMapStruct[0]
+		switch r := structOrMap.(type) {
+		case string:
+			return m.mappingAndFilterToTableFields([]string{r}, false)
+
+		case []string:
+			return m.mappingAndFilterToTableFields(r, true)
+
+		case Raw, *Raw:
+			return []string{gconv.String(structOrMap)}
+
+		default:
+			return m.mappingAndFilterToTableFields(getFieldsFromStructOrMap(structOrMap), true)
+		}
+
+	default:
+		return nil
+	}
+}
+
+func (m *Model) appendFieldsByStr(fields string) *Model {
+	if fields != "" {
+		model := m.getModel()
+		if model.fields == defaultFields {
+			model.fields = ""
+		}
+		if model.fields != "" {
+			model.fields += ","
+		}
+		model.fields += fields
+		return model
+	}
+	return m
+}
+
+func (m *Model) appendFieldsExByStr(fieldsEx string) *Model {
+	if fieldsEx != "" {
+		model := m.getModel()
+		if model.fieldsEx != "" {
+			model.fieldsEx += ","
+		}
+		model.fieldsEx += fieldsEx
+		return model
+	}
+	return m
 }

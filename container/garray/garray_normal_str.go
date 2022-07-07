@@ -812,3 +812,15 @@ func (a *StrArray) Walk(f func(value string) string) *StrArray {
 func (a *StrArray) IsEmpty() bool {
 	return a.Len() == 0
 }
+
+// DeepCopy implements interface for deep copy of current type.
+func (a *StrArray) DeepCopy() interface{} {
+	if a == nil {
+		return nil
+	}
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	newSlice := make([]string, len(a.array))
+	copy(newSlice, a.array)
+	return NewStrArrayFrom(newSlice, a.mu.IsSafe())
+}

@@ -1,0 +1,95 @@
+version: "2"
+
+services:
+  redis-master:
+    container_name: redis-master
+    image: "loads/redis:7.0"
+    environment:
+      - REDIS_REPLICATION_MODE=master
+      - REDIS_PASSWORD=111111
+    ports:
+      - 6380:6379
+
+  redis-slave1:
+    container_name: redis-slave1
+    image: "loads/redis:7.0"
+    environment:
+      - REDIS_REPLICATION_MODE=slave
+      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_PASSWORD=111111
+      - REDIS_PASSWORD=111111
+    ports:
+      - 6381:6379
+    depends_on:
+      - redis-master
+    links:
+      - redis-master
+
+  redis-slave2:
+    container_name: redis-slave2
+    image: "loads/redis:7.0"
+    environment:
+      - REDIS_REPLICATION_MODE=slave
+      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_PASSWORD=111111
+      - REDIS_PASSWORD=111111
+    ports:
+      - 6382:6379
+    depends_on:
+      - redis-master
+    links:
+      - redis-master
+
+  redis-sentinel-1:
+    container_name: redis-sentinel-1
+    image: "loads/redis-sentinel:7.0"
+    environment:
+      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_PORT_NUMBER=6379
+      - REDIS_MASTER_PASSWORD=111111
+    depends_on:
+      - redis-master
+      - redis-slave1
+      - redis-slave2
+    ports:
+      - 26379:26379
+    links:
+      - redis-master
+      - redis-slave1
+      - redis-slave2
+
+  redis-sentinel-2:
+    container_name: redis-sentinel-2
+    image: "loads/redis-sentinel:7.0"
+    environment:
+      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_PORT_NUMBER=6379
+      - REDIS_MASTER_PASSWORD=111111
+    depends_on:
+      - redis-master
+      - redis-slave1
+      - redis-slave2
+    links:
+      - redis-master
+      - redis-slave1
+      - redis-slave2
+    ports:
+      - 26380:26379
+
+  redis-sentinel-3:
+    container_name: redis-sentinel-3
+    image: "loads/redis-sentinel:7.0"
+    environment:
+      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_PORT_NUMBER=6379
+      - REDIS_MASTER_PASSWORD=111111
+    depends_on:
+      - redis-master
+      - redis-slave1
+      - redis-slave2
+    ports:
+      - 26381:26379
+    links:
+      - redis-master
+      - redis-slave1
+      - redis-slave2

@@ -14,5 +14,6 @@ bin/
 cbuild
 **/.DS_Store
 .test/
-main
-gf
+cmd/gf/main
+cmd/gf/gf
+go.work

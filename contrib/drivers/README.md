@@ -1,15 +1,30 @@
 # drivers
-Database drivers for package gdb.
+Powerful database drivers for package gdb.
 
 # Installation
-Let's take `pgsql` for example.
+Let's take `mysql` for example.
 ```
-go get -u github.com/gogf/gf/contrib/drivers/pgsql/v2
+go get -u github.com/gogf/gf/contrib/drivers/mysql/v2
 ```
 
 Choose and import the driver to your project:
 ```
-import _ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
+import _ "github.com/gogf/gf/contrib/drivers/mysql/v2"
+```
+
+Commonly imported at top of `main.go`:
+```go
+package main
+
+import (
+	_ "github.com/gogf/gf/contrib/drivers/mysql/v2"
+
+	// Other imported packages.
+)
+
+func main() {
+	// Main logics.
+}
 ```
 
 # Supported Drivers
@@ -25,7 +40,7 @@ import _ "github.com/gogf/gf/contrib/drivers/mysql/v2"
 import _ "github.com/gogf/gf/contrib/drivers/sqlite/v2"
 ```
 Note:
-- It does not support `Save/Replace` features.
+- It does not support `Save` features.
 
 ## PostgreSQL
 ```
@@ -60,8 +75,7 @@ Note:
 - It does not support `InsertIgnore/InsertGetId` features.
 - It does not support `Save/Replace` features.
 - It does not support `Transaction` feature.
-- It does not support `Transaction` feature.
-
+- It does not support `RowsAffected` feature.
 
 # Custom Drivers
 

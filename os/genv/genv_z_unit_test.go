@@ -121,3 +121,24 @@ func Test_GetWithCmd(t *testing.T) {
 		t.Assert(genv.GetWithCmd("test"), 1)
 	})
 }
+
+func Test_MapFromEnv(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := genv.MapFromEnv([]string{"a=1", "b=2"})
+		t.Assert(m, g.Map{"a": 1, "b": 2})
+	})
+}
+
+func Test_MapToEnv(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := genv.MapToEnv(g.MapStrStr{"a": "1"})
+		t.Assert(s, []string{"a=1"})
+	})
+}
+
+func Test_Filter(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := genv.Filter([]string{"a=1", "a=3"})
+		t.Assert(s, []string{"a=3"})
+	})
+}

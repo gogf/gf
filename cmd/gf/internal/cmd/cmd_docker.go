@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"runtime"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/frame/g"
@@ -87,14 +88,14 @@ func (c cDocker) Index(ctx context.Context, in cDockerInput) (out *cDockerOutput
 	// Binary build.
 	in.Build += " --exit"
 	if in.Main != "" {
-		if err = gproc.ShellRun(fmt.Sprintf(`gf build %s %s`, in.Main, in.Build)); err != nil {
+		if err = gproc.ShellRun(ctx, fmt.Sprintf(`gf build %s %s`, in.Main, in.Build)); err != nil {
 			return
 		}
 	}
 
 	// Shell executing.
-	if gfile.Exists(in.Shell) {
-		if err = gproc.ShellRun(gfile.GetContents(in.Shell)); err != nil {
+	if in.Shell != "" && gfile.Exists(in.Shell) {
+		if err = c.exeDockerShell(ctx, in.Shell); err != nil {
 			return
 		}
 	}
@@ -115,7 +116,7 @@ func (c cDocker) Index(ctx context.Context, in cDockerInput) (out *cDockerOutput
 	}
 	for i, dockerTag := range dockerTags {
 		if i > 0 {
-			err = gproc.ShellRun(fmt.Sprintf(`docker tag %s %s`, dockerTagBase, dockerTag))
+			err = gproc.ShellRun(ctx, fmt.Sprintf(`docker tag %s %s`, dockerTagBase, dockerTag))
 			if err != nil {
 				return
 			}
@@ -129,7 +130,7 @@ func (c cDocker) Index(ctx context.Context, in cDockerInput) (out *cDockerOutput
 		if in.Extra != "" {
 			dockerBuildOptions = fmt.Sprintf(`%s %s`, dockerBuildOptions, in.Extra)
 		}
-		err = gproc.ShellRun(fmt.Sprintf(`docker build -f %s . %s`, in.File, dockerBuildOptions))
+		err = gproc.ShellRun(ctx, fmt.Sprintf(`docker build -f %s . %s`, in.File, dockerBuildOptions))
 		if err != nil {
 			return
 		}
@@ -143,10 +144,18 @@ func (c cDocker) Index(ctx context.Context, in cDockerInput) (out *cDockerOutput
 		if dockerTag == "" {
 			continue
 		}
-		err = gproc.ShellRun(fmt.Sprintf(`docker push %s`, dockerTag))
+		err = gproc.ShellRun(ctx, fmt.Sprintf(`docker push %s`, dockerTag))
 		if err != nil {
 			return
 		}
 	}
 	return
+}
+
+func (c cDocker) exeDockerShell(ctx context.Context, shellFilePath string) error {
+	if gfile.ExtName(shellFilePath) == "sh" && runtime.GOOS == "windows" {
+		mlog.Debugf(`ignore shell file "%s", as it cannot be run on windows system`, shellFilePath)
+		return nil
+	}
+	return gproc.ShellRun(ctx, gfile.GetContents(shellFilePath))
 }

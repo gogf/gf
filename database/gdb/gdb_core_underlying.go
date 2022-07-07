@@ -128,15 +128,6 @@ func (c *Core) DoFilter(ctx context.Context, link Link, sql string, args []inter
 	return sql, args, nil
 }
 
-type sqlParsingHandlerInput struct {
-	DoCommitInput
-	FormattedSql string
-}
-
-type sqlParsingHandlerOutput struct {
-	DoCommitInput
-}
-
 // DoCommit commits current sql and arguments to underlying sql driver.
 func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutput, err error) {
 	// Inject internal data into ctx, especially for transaction creating.
@@ -266,7 +257,7 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 	if err != nil && err != sql.ErrNoRows {
 		err = gerror.NewCodef(
 			gcode.CodeDbOperationError,
-			"%s, %s\n",
+			"%s, %s",
 			err.Error(),
 			FormatSqlWithArgs(in.Sql, in.Args),
 		)
@@ -385,7 +376,11 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 			if value == nil {
 				record[columnNames[i]] = gvar.New(nil)
 			} else {
-				record[columnNames[i]] = gvar.New(c.convertFieldValueToLocalValue(value, columnTypes[i]))
+				var convertedValue interface{}
+				if convertedValue, err = c.db.ConvertValueForLocal(ctx, columnTypes[i], value); err != nil {
+					return nil, err
+				}
+				record[columnNames[i]] = gvar.New(convertedValue)
 			}
 		}
 		result = append(result, record)

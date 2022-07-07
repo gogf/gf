@@ -22,25 +22,25 @@ const (
 )
 
 type discoveryNode struct {
-	service *gsvc.Service
+	service gsvc.Service
 	address string
 }
 
-func (n *discoveryNode) Service() *gsvc.Service {
+// Service is the client discovery service.
+func (n *discoveryNode) Service() gsvc.Service {
 	return n.service
 }
 
+// Address returns the address of the node.
 func (n *discoveryNode) Address() string {
 	return n.address
 }
 
-var (
-	clientSelectorMap = gmap.New(true)
-)
+var clientSelectorMap = gmap.New(true)
 
 // internalMiddlewareDiscovery is a client middleware that enables service discovery feature for client.
 func internalMiddlewareDiscovery(c *Client, r *http.Request) (response *Response, err error) {
-	var ctx = r.Context()
+	ctx := r.Context()
 	// Mark this request is handled by server tracing middleware,
 	// to avoid repeated handling by the same middleware.
 	if ctx.Value(discoveryMiddlewareHandled) != nil {
@@ -49,11 +49,11 @@ func internalMiddlewareDiscovery(c *Client, r *http.Request) (response *Response
 	if gsvc.GetRegistry() == nil {
 		return c.Next(r)
 	}
-	var service *gsvc.Service
-	service, err = gsvc.GetWithWatch(ctx, r.URL.Host, func(service *gsvc.Service) {
-		intlog.Printf(ctx, `http client watching service "%s" changed`, service.KeyWithoutEndpoints())
-		if v := clientSelectorMap.Get(service.KeyWithoutEndpoints()); v != nil {
-			if err = updateSelectorNodesByService(v.(gsel.Selector), service); err != nil {
+	var service gsvc.Service
+	service, err = gsvc.GetAndWatch(ctx, r.URL.Host, func(service gsvc.Service) {
+		intlog.Printf(ctx, `http client watching service "%s" changed`, service.GetPrefix())
+		if v := clientSelectorMap.Get(service.GetPrefix()); v != nil {
+			if err = updateSelectorNodesByService(ctx, v.(gsel.Selector), service); err != nil {
 				intlog.Errorf(context.Background(), `%+v`, err)
 			}
 		}
@@ -65,15 +65,22 @@ func internalMiddlewareDiscovery(c *Client, r *http.Request) (response *Response
 		return c.Next(r)
 	}
 	// Balancer.
-	var selectorMapKey = service.KeyWithoutEndpoints()
-	selector := clientSelectorMap.GetOrSetFuncLock(selectorMapKey, func() interface{} {
-		intlog.Printf(ctx, `http client create selector for service "%s"`, selectorMapKey)
-		return gsel.GetBuilder().Build()
-	}).(gsel.Selector)
-	// Update selector nodes.
-	if err = updateSelectorNodesByService(selector, service); err != nil {
+	var (
+		selectorMapKey   = service.GetPrefix()
+		selectorMapValue = clientSelectorMap.GetOrSetFuncLock(selectorMapKey, func() interface{} {
+			intlog.Printf(ctx, `http client create selector for service "%s"`, selectorMapKey)
+			selector := gsel.GetBuilder().Build()
+			// Update selector nodes.
+			if err = updateSelectorNodesByService(ctx, selector, service); err != nil {
+				return nil
+			}
+			return selector
+		})
+	)
+	if err != nil {
 		return nil, err
 	}
+	selector := selectorMapValue.(gsel.Selector)
 	// Pick one node from multiple addresses.
 	node, done, err := selector.Pick(ctx)
 	if err != nil {
@@ -87,13 +94,13 @@ func internalMiddlewareDiscovery(c *Client, r *http.Request) (response *Response
 	return c.Next(r)
 }
 
-func updateSelectorNodesByService(selector gsel.Selector, service *gsvc.Service) error {
-	nodes := make([]gsel.Node, 0)
-	for _, address := range service.Endpoints {
+func updateSelectorNodesByService(ctx context.Context, selector gsel.Selector, service gsvc.Service) error {
+	nodes := make(gsel.Nodes, 0)
+	for _, endpoint := range service.GetEndpoints() {
 		nodes = append(nodes, &discoveryNode{
 			service: service,
-			address: address,
+			address: endpoint.String(),
 		})
 	}
-	return selector.Update(nodes)
+	return selector.Update(ctx, nodes)
 }

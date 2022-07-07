@@ -9,6 +9,7 @@ package gmap
 
 import (
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/deepcopy"
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/rwmutex"
@@ -484,4 +485,18 @@ func (m *StrAnyMap) UnmarshalValue(value interface{}) (err error) {
 	defer m.mu.Unlock()
 	m.data = gconv.Map(value)
 	return
+}
+
+// DeepCopy implements interface for deep copy of current type.
+func (m *StrAnyMap) DeepCopy() interface{} {
+	if m == nil {
+		return nil
+	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	data := make(map[string]interface{}, len(m.data))
+	for k, v := range m.data {
+		data[k] = deepcopy.Copy(v)
+	}
+	return NewStrAnyMapFrom(data, m.mu.IsSafe())
 }
