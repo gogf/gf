@@ -3,6 +3,8 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"go/parser"
+	"go/token"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
@@ -233,16 +235,23 @@ func (c cGenService) Service(ctx context.Context, in cGenServiceInput) (out *cGe
 }
 
 func (c cGenService) calculateImportedPackages(fileContent string, srcImportedPackages *garray.SortedStrArray) (err error) {
-	var match []string
-	match, err = gregex.MatchString(`\s+import\s+\(([\s\S]+?)\)`, fileContent)
+	f, err := parser.ParseFile(token.NewFileSet(), "", fileContent, parser.ImportsOnly)
 	if err != nil {
 		return err
 	}
-	if len(match) < 2 {
-		return nil
+	for _, s := range f.Imports {
+		if s.Path != nil {
+			if s.Name != nil {
+				// has alias and is not `_`
+				if pkgAlias := s.Name.String(); pkgAlias != "_" {
+					srcImportedPackages.Add(pkgAlias + " " + s.Path.Value)
+				}
+			} else {
+				// no alias
+				srcImportedPackages.Add(s.Path.Value)
+			}
+		}
 	}
-	importPart := gstr.Trim(match[1])
-	srcImportedPackages.Append(gstr.SplitAndTrim(importPart, "\n")...)
 	return nil
 }
 
