@@ -49,9 +49,9 @@ func init() {
 		{"name": "john_3"},
 	})
 	fmt.Println(err)
-	fmt.Print("LastInsertId")
+	fmt.Print("LastInsertId: ")
 	fmt.Println(res.LastInsertId())
-	fmt.Print("RowsAffected")
+	fmt.Print("RowsAffected: ")
 	fmt.Println(res.RowsAffected())
 
 }
