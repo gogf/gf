@@ -16,7 +16,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
+	"github.com/gogf/gf/v2/util/gconv"
 	_ "github.com/lib/pq"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -106,6 +108,55 @@ func (d *Driver) FilteredLink() string {
 // GetChars returns the security char for this type of database.
 func (d *Driver) GetChars() (charLeft string, charRight string) {
 	return `"`, `"`
+}
+
+// ConvertValueForLocal converts value to local Golang type of value according field type name from database.
+// The parameter `fieldType` is in lower case, like:
+// `float(5,2)`, `unsigned double(5,2)`, `decimal(10,2)`, `char(45)`, `varchar(100)`, etc.
+func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) {
+	typeName, _ := gregex.ReplaceString(`\(.+\)`, "", fieldType)
+	typeName = strings.ToLower(typeName)
+	switch typeName {
+	// For pgsql, int8 = bigint.
+	case "int8":
+		if gstr.ContainsI(fieldType, "unsigned") {
+			return gconv.Uint64(gconv.String(fieldValue)), nil
+		}
+		return gconv.Int64(gconv.String(fieldValue)), nil
+
+	// Int32 slice.
+	case
+		"_int2":
+		if gstr.ContainsI(fieldType, "unsigned") {
+			gconv.Uints(gconv.String(fieldValue))
+		}
+		return gconv.Ints(
+			gstr.ReplaceByMap(gconv.String(fieldValue),
+				map[string]string{
+					"{": "[",
+					"}": "]",
+				},
+			),
+		), nil
+
+	// Int64 slice.
+	case
+		"_int4", "_int8":
+		if gstr.ContainsI(fieldType, "unsigned") {
+			gconv.Uint64(gconv.String(fieldValue))
+		}
+		return gconv.Int64s(
+			gstr.ReplaceByMap(gconv.String(fieldValue),
+				map[string]string{
+					"{": "[",
+					"}": "]",
+				},
+			),
+		), nil
+
+	default:
+		return d.Core.ConvertValueForLocal(ctx, fieldType, fieldValue)
+	}
 }
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
