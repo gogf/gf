@@ -154,8 +154,8 @@ type DB interface {
 	GetGroup() string                   // See Core.GetGroup.
 	SetDryRun(enabled bool)             // See Core.SetDryRun.
 	GetDryRun() bool                    // See Core.GetDryRun.
-	SetLogger(logger *glog.Logger)      // See Core.SetLogger.
-	GetLogger() *glog.Logger            // See Core.GetLogger.
+	SetLogger(logger glog.ILogger)      // See Core.SetLogger.
+	GetLogger() glog.ILogger            // See Core.GetLogger.
 	GetConfig() *ConfigNode             // See Core.GetConfig.
 	SetMaxIdleConnCount(n int)          // See Core.SetMaxIdleConnCount.
 	SetMaxOpenConnCount(n int)          // See Core.SetMaxOpenConnCount.
@@ -165,13 +165,14 @@ type DB interface {
 	// Utility methods.
 	// ===========================================================================
 
-	GetCtx() context.Context                                                                         // See Core.GetCtx.
-	GetCore() *Core                                                                                  // See Core.GetCore
-	GetChars() (charLeft string, charRight string)                                                   // See Core.GetChars.
-	Tables(ctx context.Context, schema ...string) (tables []string, err error)                       // See Core.Tables.
-	TableFields(ctx context.Context, table string, schema ...string) (map[string]*TableField, error) // See Core.TableFields.
-	ConvertDataForRecord(ctx context.Context, data interface{}) (map[string]interface{}, error)      // See Core.ConvertDataForRecord
-	FilteredLink() string                                                                            // FilteredLink is used for filtering sensitive information in `Link` configuration before output it to tracing server.
+	GetCtx() context.Context                                                                                 // See Core.GetCtx.
+	GetCore() *Core                                                                                          // See Core.GetCore
+	GetChars() (charLeft string, charRight string)                                                           // See Core.GetChars.
+	Tables(ctx context.Context, schema ...string) (tables []string, err error)                               // See Core.Tables.
+	TableFields(ctx context.Context, table string, schema ...string) (map[string]*TableField, error)         // See Core.TableFields.
+	ConvertDataForRecord(ctx context.Context, data interface{}) (map[string]interface{}, error)              // See Core.ConvertDataForRecord
+	ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) // See Core.ConvertValueForLocal
+	FilteredLink() string                                                                                    // FilteredLink is used for filtering sensitive information in `Link` configuration before output it to tracing server.
 }
 
 // Core is the base struct for database management.
@@ -183,7 +184,7 @@ type Core struct {
 	debug  *gtype.Bool     // Enable debug mode for the database, which can be changed in runtime.
 	cache  *gcache.Cache   // Cache manager, SQL result cache only.
 	links  *gmap.StrAnyMap // links caches all created links by node.
-	logger *glog.Logger    // Logger for logging functionality.
+	logger glog.ILogger    // Logger for logging functionality.
 	config *ConfigNode     // Current config node.
 }
 

@@ -21,6 +21,7 @@ import (
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -959,8 +960,8 @@ func Test_Model_StructsWithOrmTag(t *testing.T) {
 			users  []User
 			buffer = bytes.NewBuffer(nil)
 		)
-		db.GetLogger().SetWriter(buffer)
-		defer db.GetLogger().SetWriter(os.Stdout)
+		db.GetLogger().(*glog.Logger).SetWriter(buffer)
+		defer db.GetLogger().(*glog.Logger).SetWriter(os.Stdout)
 		db.Model(table).Order("id asc").Scan(&users)
 		// fmt.Println(buffer.String())
 		t.Assert(

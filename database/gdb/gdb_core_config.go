@@ -156,12 +156,12 @@ func IsConfigured() bool {
 }
 
 // SetLogger sets the logger for orm.
-func (c *Core) SetLogger(logger *glog.Logger) {
+func (c *Core) SetLogger(logger glog.ILogger) {
 	c.logger = logger
 }
 
 // GetLogger returns the (logger) of the orm.
-func (c *Core) GetLogger() *glog.Logger {
+func (c *Core) GetLogger() glog.ILogger {
 	return c.logger
 }
 

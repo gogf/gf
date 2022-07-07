@@ -153,10 +153,10 @@ func doGenPbEntityForArray(ctx context.Context, index int, in cGenPbEntityInput)
 	if index >= 0 {
 		err = g.Cfg().MustGet(
 			ctx,
-			fmt.Sprintf(`%s.%d`, cGenDaoConfig, index),
+			fmt.Sprintf(`%s.%d`, cGenPbEntityConfig, index),
 		).Scan(&in)
 		if err != nil {
-			mlog.Fatalf(`invalid configuration of "%s": %+v`, cGenDaoConfig, err)
+			mlog.Fatalf(`invalid configuration of "%s": %+v`, cGenPbEntityConfig, err)
 		}
 	}
 	if in.Package == "" {

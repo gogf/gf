@@ -16,6 +16,7 @@ import (
 	"github.com/gogf/gf/v2/internal/consts"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gcfg"
+	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
 )
@@ -138,8 +139,10 @@ func Database(name ...string) gdb.DB {
 				}
 			}
 			if len(loggerConfigMap) > 0 {
-				if err = db.GetLogger().SetConfigWithMap(loggerConfigMap); err != nil {
-					panic(err)
+				if logger, ok := db.GetLogger().(*glog.Logger); ok {
+					if err = logger.SetConfigWithMap(loggerConfigMap); err != nil {
+						panic(err)
+					}
 				}
 			}
 			return db
