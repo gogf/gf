@@ -55,7 +55,7 @@ jobs:
         image: loads/postgres:13
         env:
           POSTGRES_PASSWORD: 12345678
-          POSTGRES_USER:     root
+          POSTGRES_USER:     postgres
           POSTGRES_DB:       test
           TZ:                Asia/Shanghai
         ports:
