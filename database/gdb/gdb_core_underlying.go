@@ -376,7 +376,11 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 			if value == nil {
 				record[columnNames[i]] = gvar.New(nil)
 			} else {
-				record[columnNames[i]] = gvar.New(c.convertFieldValueToLocalValue(value, columnTypes[i]))
+				var convertedValue interface{}
+				if convertedValue, err = c.db.ConvertValueForLocal(ctx, columnTypes[i], value); err != nil {
+					return nil, err
+				}
+				record[columnNames[i]] = gvar.New(convertedValue)
 			}
 		}
 		result = append(result, record)

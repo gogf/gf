@@ -22,6 +22,7 @@ import (
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -978,8 +979,8 @@ func Test_Model_StructsWithOrmTag(t *testing.T) {
 			users  []User
 			buffer = bytes.NewBuffer(nil)
 		)
-		dbInvalid.GetLogger().SetWriter(buffer)
-		defer dbInvalid.GetLogger().SetWriter(os.Stdout)
+		dbInvalid.GetLogger().(*glog.Logger).SetWriter(buffer)
+		defer dbInvalid.GetLogger().(*glog.Logger).SetWriter(os.Stdout)
 		dbInvalid.Model(table).Order("id asc").Scan(&users)
 		//fmt.Println(buffer.String())
 		t.Assert(
