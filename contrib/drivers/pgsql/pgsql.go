@@ -16,6 +16,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	_ "github.com/lib/pq"
 
@@ -242,6 +243,7 @@ ORDER BY a.attnum`,
 
 // DoInsert is not supported in pgsql.
 func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
+	fmt.Printf("%+v\n", option)
 	switch option.InsertOption {
 	case gdb.InsertOptionSave:
 		return nil, gerror.NewCode(
@@ -254,8 +256,75 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 			gcode.CodeNotSupported,
 			`Replace operation is not supported by pgsql driver`,
 		)
-
 	default:
 		return d.Core.DoInsert(ctx, link, table, list, option)
 	}
+}
+
+type pgResult struct {
+	sql.Result
+	affected     int64
+	lastInsertId int64
+}
+
+func (pgr pgResult) LastInsertId() (int64, error) {
+	return pgr.lastInsertId, nil
+}
+
+func (pgr pgResult) RowsAffected() (int64, error) {
+	return pgr.affected, nil
+}
+
+func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...interface{}) (result sql.Result, err error) {
+	if strings.Contains(sql, "INSERT INTO") {
+		sql += "RETURNING ID"
+	} else {
+		return d.Core.DoExec(ctx, link, sql, args...)
+	}
+	// // Transaction checks.
+	// if link == nil {
+	// 	if tx := gdb.TXFromCtx(ctx, d.GetGroup()); tx != nil {
+	// 		// Firstly, check and retrieve transaction link from context.
+	// 		link = &txLink{tx.tx}
+	// 	} else if link, err = d.MasterLink(); err != nil {
+	// 		// Or else it creates one from master node.
+	// 		return nil, err
+	// 	}
+	// } else if !link.IsTransaction() {
+	// 	// If current link is not transaction link, it checks and retrieves transaction from context.
+	// 	if tx := gdb.TXFromCtx(ctx, d.GetGroup()); tx != nil {
+	// 		link = &txLink{tx.tx}
+	// 	}
+	// }
+
+	if d.GetConfig().ExecTimeout > 0 {
+		var cancelFunc context.CancelFunc
+		ctx, cancelFunc = context.WithTimeout(ctx, d.GetConfig().ExecTimeout)
+		defer cancelFunc()
+	}
+
+	// Sql filtering.
+	// sql, args = formatSql(sql, args)
+	sql, args, err = d.DoFilter(ctx, link, sql, args)
+	if err != nil {
+		return nil, err
+	}
+
+	// Link execution.
+	var out gdb.DoCommitOutput
+	out, err = d.DoCommit(ctx, gdb.DoCommitInput{
+		Link:          link,
+		Sql:           sql,
+		Args:          args,
+		Stmt:          nil,
+		Type:          gdb.SqlTypeQueryContext,
+		IsTransaction: link.IsTransaction(),
+	})
+
+	fmt.Printf("%+v\n", out)
+	affected := len(out.Records)
+	return pgResult{
+		affected:     int64(affected),
+		lastInsertId: int64(out.Records[affected-1].Map()["id"].(int)),
+	}, err
 }
