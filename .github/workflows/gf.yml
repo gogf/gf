@@ -6,6 +6,7 @@ on:
     branches:
     - master
     - develop
+    - personal/**
     - feature/**
     - fix/**
 
@@ -13,11 +14,12 @@ on:
     branches:
     - master
     - develop
+    - personal/**
     - feature/**
     - fix/**
 
 env:
-  GF_DEBUG: 0
+  TZ: "Asia/Shanghai"
 
 
 jobs:
@@ -53,7 +55,7 @@ jobs:
         image: loads/postgres:13
         env:
           POSTGRES_PASSWORD: 12345678
-          POSTGRES_USER:     root
+          POSTGRES_USER:     postgres
           POSTGRES_DB:       test
           TZ:                Asia/Shanghai
         ports:
@@ -130,6 +132,9 @@ jobs:
       with:
         go-version: ${{ matrix.go }}
 
+    - name: Start containers
+      run: docker-compose -f ".github/workflows/docker-compose.yml" up -d --build
+
     - name: Before Script
       run: |
         find . -name "*.go" | xargs gofmt -w
@@ -158,6 +163,9 @@ jobs:
             fi
             cd -
         done
+
+    - name: Stop containers
+      run: docker-compose -f ".github/workflows/docker-compose.yml" down
 
     - name: Report Coverage
       uses: codecov/codecov-action@v2

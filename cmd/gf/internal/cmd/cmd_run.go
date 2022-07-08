@@ -14,7 +14,6 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/os/gtimer"
 	"github.com/gogf/gf/v2/text/gregex"
-	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gtag"
 )
 
@@ -51,6 +50,7 @@ which compiles and runs the go codes asynchronously when codes change.
 	cRunFileBrief           = `building file path.`
 	cRunPathBrief           = `output directory path for built binary file. it's "manifest/output" in default`
 	cRunExtraBrief          = `the same options as "go run"/"go build" except some options as follows defined`
+	cRunArgsBrief           = `custom arguments for your process`
 	cRunExcludeDirExprBrief = `exclude directory expression, which is used for excluding some directories from watching.`
 )
 
@@ -67,6 +67,7 @@ func init() {
 		`cRunFileBrief`:           cRunFileBrief,
 		`cRunPathBrief`:           cRunPathBrief,
 		`cRunExtraBrief`:          cRunExtraBrief,
+		`cRunArgsBrief`:           cRunArgsBrief,
 		`cRunExcludeDirExprBrief`: cRunExcludeDirExprBrief,
 	})
 }
@@ -77,6 +78,7 @@ type (
 		File           string `name:"FILE"  arg:"true" brief:"{cRunFileBrief}" v:"required"`
 		Path           string `name:"path"  short:"p"  brief:"{cRunPathBrief}" d:"./"`
 		Extra          string `name:"extra" short:"e"  brief:"{cRunExtraBrief}"`
+		Args           string `name:"args"  short:"a"  brief:"{cRunArgsBrief}"`
 		ExcludeDirExpr string `name:"excludeDirExpr" short:"d" brief:"{cRunExcludeDirExprBrief}"`
 	}
 	cRunOutput struct{}
@@ -92,6 +94,7 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 		File:    in.File,
 		Path:    in.Path,
 		Options: in.Extra,
+		Args:    in.Args,
 	}
 	dirty := gtype.NewBool()
 
@@ -201,9 +204,9 @@ func (app *cRunApp) Run(ctx context.Context) {
 	if runtime.GOOS == "windows" {
 		// Special handling for windows platform.
 		// DO NOT USE "cmd /c" command.
-		process = gproc.NewProcess(outputPath, gstr.SplitAndTrim(" ", app.Args))
+		process = gproc.NewProcess(runCommand, nil)
 	} else {
-		process = gproc.NewProcessCmd(outputPath, gstr.SplitAndTrim(" ", app.Args))
+		process = gproc.NewProcessCmd(runCommand, nil)
 	}
 	if pid, err := process.Start(ctx); err != nil {
 		mlog.Printf("build running error: %s", err.Error())

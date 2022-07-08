@@ -3,6 +3,8 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"go/parser"
+	"go/token"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
@@ -15,19 +17,68 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gtag"
 )
+
+const (
+	cGenServiceConfig = `gfcli.gen.service`
+	cGenServiceUsage  = `gf gen service [OPTION]`
+	cGenServiceBrief  = `parse struct and associated functions from packages to generate service go file`
+	cGenServiceEg     = `
+gf gen service
+gf gen service -f Snake
+`
+	cGenServiceBriefSrcFolder    = `source folder path to be parsed. default: internal/logic`
+	cGenServiceBriefDstFolder    = `destination folder path storing automatically generated go files. default: internal/service`
+	cGenServiceBriefFileNameCase = `
+destination file name storing automatically generated go files, cases are as follows:
+| Case            | Example            |
+|---------------- |--------------------|
+| Lower           | anykindofstring    |
+| Camel           | AnyKindOfString    |
+| CamelLower      | anyKindOfString    |
+| Snake           | any_kind_of_string | default
+| SnakeScreaming  | ANY_KIND_OF_STRING |
+| SnakeFirstUpper | rgb_code_md5       |
+| Kebab           | any-kind-of-string |
+| KebabScreaming  | ANY-KIND-OF-STRING |
+`
+	cGenServiceBriefWatchFile    = `used in file watcher, it generates service go files only if given file is under srcFolder`
+	cGenServiceBriefStPattern    = `regular expression matching struct name for generating service. default: s([A-Z]\\\\w+)`
+	cGenServiceBriefPackages     = `produce go files only for given source packages`
+	cGenServiceBriefImportPrefix = `custom import prefix to calculate import path for generated importing go file of logic`
+	cGenServiceBriefOverWrite    = `overwrite service go files that already exist in generating folder. default: true`
+)
+
+func init() {
+	gtag.Sets(g.MapStrStr{
+		`cGenServiceConfig`:            cGenServiceConfig,
+		`cGenServiceUsage`:             cGenServiceUsage,
+		`cGenServiceBrief`:             cGenServiceBrief,
+		`cGenServiceEg`:                cGenServiceEg,
+		`cGenServiceBriefSrcFolder`:    cGenServiceBriefSrcFolder,
+		`cGenServiceBriefDstFolder`:    cGenServiceBriefDstFolder,
+		`cGenServiceBriefFileNameCase`: cGenServiceBriefFileNameCase,
+		`cGenServiceBriefWatchFile`:    cGenServiceBriefWatchFile,
+		`cGenServiceBriefStPattern`:    cGenServiceBriefStPattern,
+		`cGenServiceBriefPackages`:     cGenServiceBriefPackages,
+		`cGenServiceBriefImportPrefix`: cGenServiceBriefImportPrefix,
+		`cGenServiceBriefOverWrite`:    cGenServiceBriefOverWrite,
+	})
+}
 
 type (
 	cGenService      struct{}
 	cGenServiceInput struct {
-		g.Meta       `name:"service" config:"gfcli.gen.service" brief:"parse struct and associated functions from packages to generate service go file"`
-		SrcFolder    string   `short:"s" name:"srcFolder" brief:"source folder path to be parsed. default: internal/logic" d:"internal/logic"`
-		DstFolder    string   `short:"d" name:"dstFolder" brief:"destination folder path storing automatically generated go files. default: internal/service" d:"internal/service"`
-		WatchFile    string   `short:"w" name:"watchFile" brief:"used in file watcher, it generates service go files only if given file is under srcFolder"`
-		StPattern    string   `short:"a" name:"stPattern" brief:"regular expression matching struct name for generating service. default: s([A-Z]\\\\w+)" d:"s([A-Z]\\w+)"`
-		Packages     []string `short:"p" name:"packages" brief:"produce go files only for given source packages"`
-		ImportPrefix string   `short:"i" name:"importPrefix" brief:"custom import prefix to calculate import path for generated importing go file of logic"`
-		OverWrite    bool     `short:"o" name:"overwrite" brief:"overwrite service go files that already exist in generating folder. default: true" d:"true" orphan:"true"`
+		g.Meta          `name:"service" config:"{cGenServiceConfig}" usage:"{cGenServiceUsage}" brief:"{cGenServiceBrief}" eg:"{cGenServiceEg}"`
+		SrcFolder       string   `short:"s" name:"srcFolder" brief:"{cGenServiceBriefSrcFolder}" d:"internal/logic"`
+		DstFolder       string   `short:"d" name:"dstFolder" brief:"{cGenServiceBriefDstFolder}" d:"internal/service"`
+		DstFileNameCase string   `short:"f" name:"dstFileNameCase" brief:"{cGenServiceBriefFileNameCase}" d:"Snake"`
+		WatchFile       string   `short:"w" name:"watchFile" brief:"{cGenServiceBriefWatchFile}"`
+		StPattern       string   `short:"a" name:"stPattern" brief:"{cGenServiceBriefStPattern}" d:"s([A-Z]\\w+)"`
+		Packages        []string `short:"p" name:"packages" brief:"{cGenServiceBriefPackages}"`
+		ImportPrefix    string   `short:"i" name:"importPrefix" brief:"{cGenServiceBriefImportPrefix}"`
+		OverWrite       bool     `short:"o" name:"overwrite" brief:"{cGenServiceBriefOverWrite}" d:"true" orphan:"true"`
 	}
 	cGenServiceOutput struct{}
 )
@@ -184,16 +235,23 @@ func (c cGenService) Service(ctx context.Context, in cGenServiceInput) (out *cGe
 }
 
 func (c cGenService) calculateImportedPackages(fileContent string, srcImportedPackages *garray.SortedStrArray) (err error) {
-	var match []string
-	match, err = gregex.MatchString(`\s+import\s+\(([\s\S]+?)\)`, fileContent)
+	f, err := parser.ParseFile(token.NewFileSet(), "", fileContent, parser.ImportsOnly)
 	if err != nil {
 		return err
 	}
-	if len(match) < 2 {
-		return nil
+	for _, s := range f.Imports {
+		if s.Path != nil {
+			if s.Name != nil {
+				// has alias and is not `_`
+				if pkgAlias := s.Name.String(); pkgAlias != "_" {
+					srcImportedPackages.Add(pkgAlias + " " + s.Path.Value)
+				}
+			} else {
+				// no alias
+				srcImportedPackages.Add(s.Path.Value)
+			}
+		}
 	}
-	importPart := gstr.Trim(match[1])
-	srcImportedPackages.Append(gstr.SplitAndTrim(importPart, "\n")...)
 	return nil
 }
 
@@ -260,7 +318,7 @@ func (c cGenService) generateServiceFiles(
 	)
 	for structName, funcArray := range srcPkgInterfaceMap {
 		var (
-			filePath         = gfile.Join(in.DstFolder, gstr.ToLower(structName)+".go")
+			filePath         = gfile.Join(in.DstFolder, c.getDstFileNameCase(structName, in.DstFileNameCase)+".go")
 			generatedContent = gstr.ReplaceByMap(consts.TemplateGenServiceContent, g.MapStrStr{
 				"{Imports}":        srcImportedPackagesContent,
 				"{StructName}":     structName,
@@ -353,4 +411,31 @@ func (c cGenService) replaceGeneratedServiceContentGFV2(in cGenServiceInput) (er
 		}
 		return content
 	}, in.DstFolder, "*.go", false)
+}
+
+// getDstFileNameCase call gstr.Case* function to convert the s to specified case.
+func (c cGenService) getDstFileNameCase(str, caseStr string) string {
+	switch gstr.ToLower(caseStr) {
+	case gstr.ToLower("Lower"):
+		return gstr.ToLower(str)
+
+	case gstr.ToLower("Camel"):
+		return gstr.CaseCamel(str)
+
+	case gstr.ToLower("CamelLower"):
+		return gstr.CaseCamelLower(str)
+
+	case gstr.ToLower("Kebab"):
+		return gstr.CaseKebab(str)
+
+	case gstr.ToLower("KebabScreaming"):
+		return gstr.CaseKebabScreaming(str)
+
+	case gstr.ToLower("SnakeFirstUpper"):
+		return gstr.CaseSnakeFirstUpper(str)
+
+	case gstr.ToLower("SnakeScreaming"):
+		return gstr.CaseSnakeScreaming(str)
+	}
+	return gstr.CaseSnake(str)
 }
