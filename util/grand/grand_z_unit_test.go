@@ -9,6 +9,7 @@
 package grand_test
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -119,6 +120,9 @@ func Test_S(t *testing.T) {
 			t.Assert(len(grand.S(5, true)), 5)
 		}
 	})
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(len(grand.S(0)), 0)
+	})
 }
 
 func Test_B(t *testing.T) {
@@ -128,6 +132,10 @@ func Test_B(t *testing.T) {
 			t.Assert(len(b), 5)
 			t.AssertNE(b, make([]byte, 5))
 		}
+	})
+	gtest.C(t, func(t *gtest.T) {
+		b := grand.B(0)
+		t.AssertNil(b)
 	})
 }
 
@@ -156,6 +164,21 @@ func Test_RandStr(t *testing.T) {
 			t.Assert(gstr.Contains(s, "w"), false)
 		}
 	})
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(grand.Str(str, 0), "")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		list := []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"}
+		str := ""
+		for _, s := range list {
+			tmp := ""
+			for i := 0; i < 15; i++ {
+				tmp += tmp + s
+			}
+			str += tmp
+		}
+		t.Assert(grand.Str(str, 300), 300)
+	})
 }
 
 func Test_Digits(t *testing.T) {
@@ -171,6 +194,9 @@ func Test_RandDigits(t *testing.T) {
 		for i := 0; i < 100; i++ {
 			t.Assert(len(grand.Digits(5)), 5)
 		}
+	})
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(len(grand.Digits(0)), 0)
 	})
 }
 
@@ -188,6 +214,9 @@ func Test_RandLetters(t *testing.T) {
 			t.Assert(len(grand.Letters(5)), 5)
 		}
 	})
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(len(grand.Letters(0)), 0)
+	})
 }
 
 func Test_Perm(t *testing.T) {
@@ -195,5 +224,20 @@ func Test_Perm(t *testing.T) {
 		for i := 0; i < 100; i++ {
 			t.AssertIN(grand.Perm(5), []int{0, 1, 2, 3, 4})
 		}
+	})
+}
+
+func Test_Symbols(t *testing.T) {
+	symbols := "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+	gtest.C(t, func(t *gtest.T) {
+		for i := 0; i < 100; i++ {
+			syms := []byte(grand.Symbols(5))
+			for _, sym := range syms {
+				t.AssertNE(strings.Index(symbols, string(sym)), -1)
+			}
+		}
+	})
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(grand.Symbols(0), "")
 	})
 }
