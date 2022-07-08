@@ -8,6 +8,7 @@ package gutil_test
 
 import (
 	"context"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"testing"
 
 	"github.com/gogf/gf/v2/frame/g"
@@ -26,6 +27,12 @@ func Test_Try(t *testing.T) {
 			panic(s)
 		}), s)
 	})
+	gtest.C(t, func(t *gtest.T) {
+		s := `gutil Try test`
+		t.Assert(gutil.Try(ctx, func(ctx context.Context) {
+			panic(gerror.New(s))
+		}), s)
+	})
 }
 
 func Test_TryCatch(t *testing.T) {
@@ -38,6 +45,15 @@ func Test_TryCatch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		gutil.TryCatch(ctx, func(ctx context.Context) {
 			panic("gutil TryCatch test")
+
+		}, func(ctx context.Context, err error) {
+			t.Assert(err, "gutil TryCatch test")
+		})
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		gutil.TryCatch(ctx, func(ctx context.Context) {
+			panic(gerror.New("gutil TryCatch test"))
 
 		}, func(ctx context.Context, err error) {
 			t.Assert(err, "gutil TryCatch test")
