@@ -37,23 +37,7 @@ func (w *Watcher) AddOnce(name, path string, callbackFunc func(event *Event), re
 		if err != nil {
 			return false
 		}
-		// If it's recursive adding, it then adds all sub-folders to the monitor.
-		// NOTE:
-		// 1. It only recursively adds **folders** to the monitor, NOT files,
-		//    because if the folders are monitored and their sub-files are also monitored.
-		// 2. It bounds no callbacks to the folders, because it will search the callbacks
-		//    from its parent recursively if any event produced.
-		if fileIsDir(path) && (len(recursive) == 0 || recursive[0]) {
-			for _, subPath := range fileAllDirs(path) {
-				if fileIsDir(subPath) {
-					if err = w.watcher.Add(subPath); err != nil {
-						err = gerror.Wrapf(err, `add watch failed for path "%s"`, subPath)
-					} else {
-						intlog.Printf(context.TODO(), "watcher adds monitor for: %s", subPath)
-					}
-				}
-			}
-		}
+
 		if name == "" {
 			return false
 		}
@@ -82,6 +66,31 @@ func (w *Watcher) addWithCallbackFunc(name, path string, callbackFunc func(event
 	if len(recursive) > 0 {
 		callback.recursive = recursive[0]
 	}
+	// Add the path to underlying monitor.
+	if err = w.watcher.Add(path); err != nil {
+		err = gerror.Wrapf(err, `add watch failed for path "%s"`, path)
+		return nil, err
+	} else {
+		intlog.Printf(context.TODO(), "watcher adds monitor for: %s", path)
+		// If it's recursive adding, it then adds all sub-folders to the monitor.
+		// NOTE:
+		// 1. It only recursively adds **folders** to the monitor, NOT files,
+		//    because if the folders are monitored and their sub-files are also monitored.
+		// 2. It bounds no callbacks to the folders, because it will search the callbacks
+		//    from its parent recursively if any event produced.
+		if fileIsDir(path) && callback.recursive {
+			for _, subPath := range fileAllDirs(path) {
+				if fileIsDir(subPath) {
+					if err = w.watcher.Add(subPath); err != nil {
+						err = gerror.Wrapf(err, `add watch failed for path "%s"`, subPath)
+					} else {
+						intlog.Printf(context.TODO(), "watcher adds monitor for: %s", subPath)
+					}
+				}
+			}
+		}
+	}
+
 	// Register the callback to watcher.
 	w.callbacks.LockFunc(func(m map[string]interface{}) {
 		list := (*glist.List)(nil)
@@ -93,12 +102,7 @@ func (w *Watcher) addWithCallbackFunc(name, path string, callbackFunc func(event
 		}
 		callback.elem = list.PushBack(callback)
 	})
-	// Add the path to underlying monitor.
-	if err = w.watcher.Add(path); err != nil {
-		err = gerror.Wrapf(err, `add watch failed for path "%s"`, path)
-	} else {
-		intlog.Printf(context.TODO(), "watcher adds monitor for: %s", path)
-	}
+
 	// Add the callback to global callback map.
 	callbackIdMap.Set(callback.Id, callback)
 	return

@@ -23,8 +23,11 @@ func TestWatcher_AddOnce(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		value := gtype.New()
 		path := gfile.Temp(gconv.String(gtime.TimestampNano()))
-		err := gfile.PutContents(path, "init")
+		subPath := gfile.Join(path, "sub")
+		filePath := gfile.Join(path, "file")
+		err := gfile.PutContents(filePath, "init")
 		t.AssertNil(err)
+		gfile.Mkdir(subPath)
 		defer gfile.Remove(path)
 
 		time.Sleep(100 * time.Millisecond)
@@ -38,7 +41,7 @@ func TestWatcher_AddOnce(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(callback2, nil)
 
-		err = gfile.PutContents(path, "1")
+		err = gfile.PutContents(filePath, "1")
 		t.AssertNil(err)
 
 		time.Sleep(100 * time.Millisecond)
@@ -47,11 +50,19 @@ func TestWatcher_AddOnce(t *testing.T) {
 		err = gfsnotify.RemoveCallback(callback1.Id)
 		t.AssertNil(err)
 
-		err = gfile.PutContents(path, "2")
+		err = gfile.PutContents(filePath, "2")
 		t.AssertNil(err)
 
 		time.Sleep(100 * time.Millisecond)
 		t.Assert(value, 1)
+	})
+
+	// not exist path
+	gtest.C(t, func(t *gtest.T) {
+		callback1, err := gfsnotify.AddOnce("", "!@#$%^&*()_+", func(event *gfsnotify.Event) {
+		})
+		t.AssertNil(callback1)
+		t.AssertNE(err, nil)
 	})
 }
 
