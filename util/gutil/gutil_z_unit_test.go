@@ -186,3 +186,13 @@ func Test_Values(t *testing.T) {
 		t.Assert(keys, g.Slice{"1", 2})
 	})
 }
+
+func TestListToMapByKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		listMap := []map[string]interface{}{
+			{"key1": 1, "key2": 2},
+			{"key3": 3, "key4": 4},
+		}
+		t.Assert(gutil.ListToMapByKey(listMap, "key1"), "{\"1\":{\"key1\":1,\"key2\":2}}")
+	})
+}

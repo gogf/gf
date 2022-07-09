@@ -14,6 +14,28 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
+func Test_SliceCopy(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := g.Slice{
+			"K1", "v1", "K2", "v2",
+		}
+		s1 := gutil.SliceCopy(s)
+		t.Assert(s, s1)
+	})
+}
+
+func Test_SliceDelete(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := g.Slice{
+			"K1", "v1", "K2", "v2",
+		}
+		t.Assert(gutil.SliceDelete(s, 0), g.Slice{
+			"v1", "K2", "v2",
+		})
+		t.Assert(gutil.SliceDelete(s, 5), s)
+	})
+}
+
 func Test_SliceToMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Slice{
@@ -22,6 +44,13 @@ func Test_SliceToMap(t *testing.T) {
 		m := gutil.SliceToMap(s)
 		t.Assert(len(m), 2)
 		t.Assert(m, g.Map{
+			"K1": "v1",
+			"K2": "v2",
+		})
+
+		m1 := gutil.SliceToMap(&s)
+		t.Assert(len(m1), 2)
+		t.Assert(m1, g.Map{
 			"K1": "v1",
 			"K2": "v2",
 		})
@@ -34,6 +63,11 @@ func Test_SliceToMap(t *testing.T) {
 		t.Assert(len(m), 0)
 		t.Assert(m, nil)
 	})
+	gtest.C(t, func(t *gtest.T) {
+		m := gutil.SliceToMap(1)
+		t.Assert(len(m), 0)
+		t.Assert(m, nil)
+	})
 }
 
 func Test_SliceToMapWithColumnAsKey(t *testing.T) {
@@ -43,6 +77,12 @@ func Test_SliceToMapWithColumnAsKey(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gutil.SliceToMapWithColumnAsKey(s, "K1")
 		t.Assert(m, g.MapAnyAny{
+			"v1": m1,
+			"v2": m2,
+		})
+
+		m1 := gutil.SliceToMapWithColumnAsKey(&s, "K1")
+		t.Assert(m1, g.MapAnyAny{
 			"v1": m1,
 			"v2": m2,
 		})
