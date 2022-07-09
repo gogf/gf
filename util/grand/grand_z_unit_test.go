@@ -177,7 +177,7 @@ func Test_RandStr(t *testing.T) {
 			}
 			str += tmp
 		}
-		t.Assert(grand.Str(str, 300), 300)
+		t.Assert(len(grand.Str(str, 300)), 300)
 	})
 }
 
