@@ -81,8 +81,8 @@ func Test_SliceToMapWithColumnAsKey(t *testing.T) {
 			"v2": m2,
 		})
 
-		m1 := gutil.SliceToMapWithColumnAsKey(&s, "K1")
-		t.Assert(m1, g.MapAnyAny{
+		n := gutil.SliceToMapWithColumnAsKey(&s, "K1")
+		t.Assert(n, g.MapAnyAny{
 			"v1": m1,
 			"v2": m2,
 		})
