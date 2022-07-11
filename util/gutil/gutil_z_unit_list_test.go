@@ -22,6 +22,7 @@ func Test_ListItemValues_Map(t *testing.T) {
 			g.Map{"id": 3, "score": 99},
 		}
 		t.Assert(gutil.ListItemValues(listMap, "id"), g.Slice{1, 2, 3})
+		t.Assert(gutil.ListItemValues(&listMap, "id"), g.Slice{1, 2, 3})
 		t.Assert(gutil.ListItemValues(listMap, "score"), g.Slice{100, 99, 99})
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -32,6 +33,10 @@ func Test_ListItemValues_Map(t *testing.T) {
 		}
 		t.Assert(gutil.ListItemValues(listMap, "id"), g.Slice{1, 2, 3})
 		t.Assert(gutil.ListItemValues(listMap, "score"), g.Slice{100, nil, 0})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		listMap := g.List{}
+		t.Assert(len(gutil.ListItemValues(listMap, "id")), 0)
 	})
 }
 

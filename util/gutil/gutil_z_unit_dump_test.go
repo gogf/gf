@@ -8,6 +8,7 @@ package gutil_test
 
 import (
 	"bytes"
+	"github.com/gogf/gf/v2/container/gtype"
 	"testing"
 
 	"github.com/gogf/gf/v2/frame/g"
@@ -70,6 +71,11 @@ func Test_Dump(t *testing.T) {
 			100: 100,
 		})
 		gutil.Dump(req)
+		gutil.Dump(true, false)
+		gutil.Dump(make(chan int))
+		gutil.Dump(func() {})
+		gutil.Dump(nil)
+		gutil.Dump(gtype.NewInt(1))
 	})
 }
 

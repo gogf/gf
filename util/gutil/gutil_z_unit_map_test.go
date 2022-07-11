@@ -37,6 +37,20 @@ func Test_MapContains(t *testing.T) {
 		t.Assert(gutil.MapContains(m1, "k1"), true)
 		t.Assert(gutil.MapContains(m1, "K1"), false)
 		t.Assert(gutil.MapContains(m1, "k2"), false)
+		m2 := g.Map{}
+		t.Assert(gutil.MapContains(m2, "k1"), false)
+	})
+}
+
+func Test_MapDelete(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m1 := g.Map{
+			"k1": "v1",
+		}
+		gutil.MapDelete(m1, "k1")
+		gutil.MapDelete(m1, "K1")
+		m2 := g.Map{}
+		gutil.MapDelete(m2, "k1")
 	})
 }
 
@@ -57,6 +71,7 @@ func Test_MapMerge(t *testing.T) {
 		t.Assert(m1["k3"], "v3")
 		t.Assert(m2["k1"], nil)
 		t.Assert(m3["k1"], nil)
+		gutil.MapMerge(nil)
 	})
 }
 
@@ -132,6 +147,9 @@ func Test_MapOmitEmpty(t *testing.T) {
 		t.Assert(len(m), 2)
 		t.AssertNE(m["k1"], nil)
 		t.AssertNE(m["k2"], nil)
+		m1 := g.Map{}
+		gutil.MapOmitEmpty(m1)
+		t.Assert(len(m1), 0)
 	})
 }
 
@@ -147,6 +165,12 @@ func Test_MapToSlice(t *testing.T) {
 		t.AssertIN(s[1], g.Slice{"k1", "k2", "v1", "v2"})
 		t.AssertIN(s[2], g.Slice{"k1", "k2", "v1", "v2"})
 		t.AssertIN(s[3], g.Slice{"k1", "k2", "v1", "v2"})
+		s1 := gutil.MapToSlice(&m)
+		t.Assert(len(s1), 4)
+		t.AssertIN(s1[0], g.Slice{"k1", "k2", "v1", "v2"})
+		t.AssertIN(s1[1], g.Slice{"k1", "k2", "v1", "v2"})
+		t.AssertIN(s1[2], g.Slice{"k1", "k2", "v1", "v2"})
+		t.AssertIN(s1[3], g.Slice{"k1", "k2", "v1", "v2"})
 	})
 	gtest.C(t, func(t *gtest.T) {
 		m := g.MapStrStr{
