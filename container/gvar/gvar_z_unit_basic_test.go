@@ -50,6 +50,9 @@ func Test_Val(t *testing.T) {
 		objTwo := gvar.New(1, false)
 		objTwoOld, _ := objTwo.Val().(int)
 		t.Assert(objTwoOld, 1)
+
+		objOne = nil
+		t.Assert(objOne.Val(), nil)
 	})
 }
 func Test_Interface(t *testing.T) {
@@ -326,5 +329,24 @@ func Test_Copy(t *testing.T) {
 			"k2": "v2",
 			"k3": "v3",
 		})
+	})
+}
+
+func Test_DeepCopy(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		src := g.Map{
+			"k1": "v1",
+			"k2": "v2",
+		}
+		srcVar := gvar.New(src)
+		copyVar := srcVar.DeepCopy().(*gvar.Var)
+		copyVar.Set(g.Map{
+			"k3": "v3",
+			"k4": "v4",
+		})
+		t.AssertNE(srcVar, copyVar)
+
+		srcVar = nil
+		t.AssertNil(srcVar.DeepCopy())
 	})
 }

@@ -12,7 +12,6 @@ import (
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // New
@@ -647,14 +646,18 @@ func ExampleVar_MapStrVarDeep() {
 	var (
 		m1 = g.Map{"id": 1, "price": 100}
 		m2 = g.Map{"product": m1}
+		m3 = g.Map{}
 		v  = gvar.New(m2)
 		v2 = v.MapStrVarDeep()
+		v3 = gvar.New(m3).MapStrVarDeep()
 	)
 
 	fmt.Println(v2["product"])
+	fmt.Println(v3)
 
 	// Output:
 	// {"id":1,"price":100}
+	// map[]
 }
 
 // Maps
@@ -718,21 +721,23 @@ func ExampleVar_MapToMaps() {
 	// []map[string]string{map[string]string{"product":"{\"id\":1,\"price\":100}"}, map[string]string{"product":"{\"id\":2,\"price\":200}"}}
 }
 
-// MapToMapDeep
-func ExampleVar_MapToMapDeep() {
+// MapToMapsDeep
+func ExampleVar_MapToMapsDeep() {
 	var (
-		p1 = gvar.New(g.MapStrAny{"product": g.Map{"id": 1, "price": 100}})
-		p2 = g.MapStrAny{}
+		p1 = g.MapStrAny{"product": g.Map{"id": 1, "price": 100}}
+		p2 = g.MapStrAny{"product": g.Map{"id": 2, "price": 200}}
+		v  = gvar.New(g.ListStrAny{p1, p2})
+		v2 []g.MapStrStr
 	)
 
-	err := p1.MapToMap(&p2)
+	err := v.MapToMapsDeep(&v2)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("%#v", p2)
+	fmt.Printf("%#v", v2)
 
 	// Output:
-	// map[string]interface {}{"product":map[string]interface {}{"id":1, "price":100}}
+	// []map[string]string{map[string]string{"product":"{\"id\":1,\"price\":100}"}, map[string]string{"product":"{\"id\":2,\"price\":200}"}}
 }
 
 // Scan
@@ -750,11 +755,10 @@ func ExampleVar_Scan() {
 			"Scores": []int{100, 99, 98},
 		}
 	)
-	if err := gconv.Scan(m, &s); err != nil {
-		panic(err)
+	v := gvar.New(m)
+	if err := v.Scan(&s); err == nil {
+		g.DumpWithType(s)
 	}
-
-	g.DumpWithType(s)
 
 	// Output:
 	// gvar_test.Student(3) {

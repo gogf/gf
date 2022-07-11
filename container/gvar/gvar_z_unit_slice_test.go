@@ -108,5 +108,8 @@ func TestVar_Vars(t *testing.T) {
 		t.Assert(len(objOne.Vars()), 5)
 		t.Assert(objOne.Vars()[0].Int(), 1)
 		t.Assert(objOne.Vars()[4].Int(), 5)
+
+		objEmpty := gvar.New([]int{})
+		t.Assert(objEmpty.Vars(), nil)
 	})
 }
