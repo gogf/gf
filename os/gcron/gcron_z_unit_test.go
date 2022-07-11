@@ -100,11 +100,16 @@ func TestCron_Add_FixedPattern(t *testing.T) {
 			now     = time.Now()
 			cron    = gcron.New()
 			array   = garray.New(true)
-			seconds = (now.Second() + 2) % 60
-			pattern = fmt.Sprintf(
-				`%d %d %d %d %d %s`,
-				seconds, now.Minute(), now.Hour(), now.Day(), now.Month(), now.Weekday().String(),
-			)
+			minutes = now.Minute()
+			seconds = now.Second() + 2
+		)
+		if seconds >= 60 {
+			seconds %= 60
+			minutes++
+		}
+		var pattern = fmt.Sprintf(
+			`%d %d %d %d %d %s`,
+			seconds, minutes, now.Hour(), now.Day(), now.Month(), now.Weekday().String(),
 		)
 		cron.SetLogger(g.Log())
 		g.Log().Debugf(ctx, `pattern: %s`, pattern)
