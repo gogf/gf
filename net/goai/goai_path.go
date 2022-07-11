@@ -93,6 +93,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			Responses:   map[string]ResponseRef{},
 			XExtensions: make(XExtensions),
 		}
+		seRequirement = SecurityRequirement{}
 	)
 	// Path check.
 	if in.Path == "" {
@@ -141,6 +142,16 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			mime = inputMetaMap[TagNameConsumes]
 		}
 	}
+
+	// path security
+	// note: the security schema type only support http and apiKey;not support oauth2 and openIdConnect.
+	// multi schema separate with comma, e.g. `security: apiKey1,apiKey2`
+	TagNameSecurity := gmeta.Get(inputObject.Interface(), TagNameSecurity).String()
+	securities := gstr.SplitAndTrim(TagNameSecurity, ",")
+	for _, sec := range securities {
+		seRequirement[sec] = []string{}
+	}
+	operation.Security = &SecurityRequirements{seRequirement}
 
 	// =================================================================================================================
 	// Request.

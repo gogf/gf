@@ -73,6 +73,7 @@ const (
 )
 
 const (
+	TagNameSecurity     = `security`
 	TagNamePath     = `path`
 	TagNameMethod   = `method`
 	TagNameMime     = `mime`
