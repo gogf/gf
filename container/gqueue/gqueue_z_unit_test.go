@@ -62,4 +62,12 @@ func TestQueue_Close(t *testing.T) {
 		t.Assert(q1.Len(), 2)
 		q1.Close()
 	})
+	gtest.C(t, func(t *gtest.T) {
+		q1 := gqueue.New(2)
+		q1.Push(1)
+		q1.Push(2)
+		time.Sleep(time.Millisecond)
+		t.Assert(q1.Len(), 2)
+		q1.Close()
+	})
 }
