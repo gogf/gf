@@ -22,11 +22,10 @@ func Test_Float64(t *testing.T) {
 		iClone := i.Clone()
 		t.AssertEQ(iClone.Set(0.1), float64(0))
 		t.AssertEQ(iClone.Val(), float64(0.1))
-		// 空参测试
+		// empty param test
 		i1 := gtype.NewFloat64()
 		t.AssertEQ(i1.Val(), float64(0))
 
-		//
 		i2 := gtype.NewFloat64(1.1)
 		t.AssertEQ(i2.Add(3.3), 4.4)
 		t.AssertEQ(i2.Cas(4.5, 5.5), false)

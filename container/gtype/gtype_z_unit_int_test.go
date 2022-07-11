@@ -34,7 +34,7 @@ func Test_Int(t *testing.T) {
 		wg.Wait()
 		t.AssertEQ(addTimes, i.Val())
 
-		// 空参测试
+		// empty param test
 		i1 := gtype.NewInt()
 		t.AssertEQ(i1.Val(), 0)
 

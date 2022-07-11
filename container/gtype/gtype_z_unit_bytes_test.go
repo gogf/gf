@@ -22,11 +22,10 @@ func Test_Bytes(t *testing.T) {
 		t.AssertEQ(iClone.Set([]byte("123")), []byte("abc"))
 		t.AssertEQ(iClone.Val(), []byte("123"))
 
-		// 空参测试
+		// empty param test
 		i1 := gtype.NewBytes()
 		t.AssertEQ(i1.Val(), nil)
 
-		//
 		i2 := gtype.NewBytes([]byte("abc"))
 		t.Assert(i2.String(), "abc")
 

@@ -34,11 +34,10 @@ func Test_Uint(t *testing.T) {
 		wg.Wait()
 		t.AssertEQ(uint(addTimes), i.Val())
 
-		// 空参测试
+		// empty param test
 		i1 := gtype.NewUint()
 		t.AssertEQ(i1.Val(), uint(0))
 
-		//
 		i2 := gtype.NewUint(11)
 		t.AssertEQ(i2.Add(1), uint(12))
 		t.AssertEQ(i2.Cas(11, 13), false)

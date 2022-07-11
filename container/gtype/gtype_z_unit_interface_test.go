@@ -24,11 +24,10 @@ func Test_Interface(t *testing.T) {
 		t.AssertEQ(iClone.Set(t2), t1)
 		t.AssertEQ(iClone.Val().(Temp), t2)
 
-		// 空参测试
+		// empty param test
 		i1 := gtype.New()
 		t.AssertEQ(i1.Val(), nil)
 
-		//
 		i2 := gtype.New("gf")
 		t.AssertEQ(i2.String(), "gf")
 		copyVal := i2.DeepCopy()

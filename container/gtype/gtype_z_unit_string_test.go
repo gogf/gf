@@ -29,7 +29,7 @@ func Test_String(t *testing.T) {
 		iClone = nil
 		copyVal = iClone.DeepCopy()
 		t.AssertNil(copyVal)
-		// 空参测试
+		// empty param test
 		i1 := gtype.NewString()
 		t.AssertEQ(i1.Val(), "")
 	})
