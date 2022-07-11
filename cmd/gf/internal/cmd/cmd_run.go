@@ -3,7 +3,9 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/container/gtype"
@@ -13,7 +15,6 @@ import (
 	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/os/gtimer"
-	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/util/gtag"
 )
 
@@ -39,19 +40,19 @@ const (
 gf run main.go
 gf run main.go --args "server -p 8080"
 gf run main.go -mod=vendor
-gf run main.go -excludeDirExpr "test"
-gf run main.go -excludeDirExpr "node_modules"
-gf run main.go -excludeDirExpr "test|node_modules|vendor"
+gf run main.go -excludeDirs="test"
+gf run main.go -excludeDirs="test,node_modules"
+gf run main.go -excludeDirs="test,node_modules,temp"
 `
 	cRunDc = `
 The "run" command is used for running go codes with hot-compiled-like feature,
 which compiles and runs the go codes asynchronously when codes change.
 `
-	cRunFileBrief           = `building file path.`
-	cRunPathBrief           = `output directory path for built binary file. it's "manifest/output" in default`
-	cRunExtraBrief          = `the same options as "go run"/"go build" except some options as follows defined`
-	cRunArgsBrief           = `custom arguments for your process`
-	cRunExcludeDirExprBrief = `exclude directory expression, which is used for excluding some directories from watching.`
+	cRunFileBrief        = `building file path.`
+	cRunPathBrief        = `output directory path for built binary file. it's "manifest/output" in default`
+	cRunExtraBrief       = `the same options as "go run"/"go build" except some options as follows defined`
+	cRunArgsBrief        = `custom arguments for your process`
+	cRunExcludeDirsBrief = `exclude directories, which is used for excluding some directories from watching.`
 )
 
 var (
@@ -60,26 +61,26 @@ var (
 
 func init() {
 	gtag.Sets(g.MapStrStr{
-		`cRunUsage`:               cRunUsage,
-		`cRunBrief`:               cRunBrief,
-		`cRunEg`:                  cRunEg,
-		`cRunDc`:                  cRunDc,
-		`cRunFileBrief`:           cRunFileBrief,
-		`cRunPathBrief`:           cRunPathBrief,
-		`cRunExtraBrief`:          cRunExtraBrief,
-		`cRunArgsBrief`:           cRunArgsBrief,
-		`cRunExcludeDirExprBrief`: cRunExcludeDirExprBrief,
+		`cRunUsage`:            cRunUsage,
+		`cRunBrief`:            cRunBrief,
+		`cRunEg`:               cRunEg,
+		`cRunDc`:               cRunDc,
+		`cRunFileBrief`:        cRunFileBrief,
+		`cRunPathBrief`:        cRunPathBrief,
+		`cRunExtraBrief`:       cRunExtraBrief,
+		`cRunArgsBrief`:        cRunArgsBrief,
+		`cRunExcludeDirsBrief`: cRunExcludeDirsBrief,
 	})
 }
 
 type (
 	cRunInput struct {
-		g.Meta         `name:"run"`
-		File           string `name:"FILE"  arg:"true" brief:"{cRunFileBrief}" v:"required"`
-		Path           string `name:"path"  short:"p"  brief:"{cRunPathBrief}" d:"./"`
-		Extra          string `name:"extra" short:"e"  brief:"{cRunExtraBrief}"`
-		Args           string `name:"args"  short:"a"  brief:"{cRunArgsBrief}"`
-		ExcludeDirExpr string `name:"excludeDirExpr" short:"d" brief:"{cRunExcludeDirExprBrief}"`
+		g.Meta      `name:"run"`
+		File        string `name:"FILE"  arg:"true" brief:"{cRunFileBrief}" v:"required"`
+		Path        string `name:"path"  short:"p"  brief:"{cRunPathBrief}" d:"./"`
+		Extra       string `name:"extra" short:"e"  brief:"{cRunExtraBrief}"`
+		Args        string `name:"args"  short:"a"  brief:"{cRunArgsBrief}"`
+		ExcludeDirs string `name:"excludeDirs" short:"d" brief:"{cRunExcludeDirsBrief}"`
 	}
 	cRunOutput struct{}
 )
@@ -90,6 +91,8 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 		mlog.Fatalf(`command "go" not found in your environment, please install golang first to proceed this command`)
 	}
 
+	mlog.Debugf("show input: %+v", in)
+
 	app := &cRunApp{
 		File:    in.File,
 		Path:    in.Path,
@@ -98,39 +101,29 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 	}
 	dirty := gtype.NewBool()
 
+	var listDir []string
 	currentPath := gfile.RealPath(".")
+	if in.ExcludeDirs != "" {
+		excludeDirs := strings.Split(in.ExcludeDirs, ",")
+		mlog.Debugf("ExcludeDirs: %v", excludeDirs)
 
-	// exclude dir
-	var (
-		hasReg          bool   = false
-		excludeDirExpr  string = in.ExcludeDirExpr
-		excludeDirCount int    = 0
-	)
-	if len(excludeDirExpr) > 0 {
-		err := gregex.Validate(excludeDirExpr)
-		if err != nil {
-			mlog.Printf("exclude directory expression[%s] err: %v", excludeDirExpr, err)
-		} else {
-			mlog.Printf("exclude directory expression[%s]", excludeDirExpr)
-			hasReg = true
-		}
-	}
-
-	listDir, err := gfile.ScanDirFunc(currentPath, "*", false, func(path string) string {
-		if gfile.IsDir(path) {
-			if hasReg && gregex.IsMatchString(excludeDirExpr, path) {
-				excludeDirCount++
-				mlog.Debugf("exclude directory path: %s", path)
-				return ""
+		// exclude dir
+		listDir, _ = gfile.ScanDirFunc(currentPath, "*", false, func(path string) string {
+			if gfile.IsDir(path) {
+				for _, excludeDir := range excludeDirs {
+					tempPath, err := filepath.Abs(excludeDir)
+					if err != nil {
+						continue
+					}
+					if tempPath == path {
+						mlog.Debugf("exclude directory path: %s", path)
+						return ""
+					}
+				}
+				return path
 			}
-			mlog.Debugf("will watch directory path: %s", path)
-			return path
-		}
-		return ""
-	})
-
-	if hasReg {
-		mlog.Printf("exclude directory count: %d \n", excludeDirCount)
+			return ""
+		})
 	}
 
 	listDir = append(listDir, currentPath)
