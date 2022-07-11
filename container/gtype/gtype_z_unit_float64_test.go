@@ -22,9 +22,22 @@ func Test_Float64(t *testing.T) {
 		iClone := i.Clone()
 		t.AssertEQ(iClone.Set(0.1), float64(0))
 		t.AssertEQ(iClone.Val(), float64(0.1))
-		// 空参测试
+		// empty param test
 		i1 := gtype.NewFloat64()
 		t.AssertEQ(i1.Val(), float64(0))
+
+		i2 := gtype.NewFloat64(1.1)
+		t.AssertEQ(i2.Add(3.3), 4.4)
+		t.AssertEQ(i2.Cas(4.5, 5.5), false)
+		t.AssertEQ(i2.Cas(4.4, 5.5), true)
+		t.AssertEQ(i2.String(), "5.5")
+
+		copyVal := i2.DeepCopy()
+		i2.Set(6.6)
+		t.AssertNE(copyVal, iClone.Val())
+		i2 = nil
+		copyVal = i2.DeepCopy()
+		t.AssertNil(copyVal)
 	})
 }
 

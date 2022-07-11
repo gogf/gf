@@ -35,9 +35,22 @@ func Test_Int32(t *testing.T) {
 		wg.Wait()
 		t.AssertEQ(int32(addTimes), i.Val())
 
-		// 空参测试
+		// empty param test
 		i1 := gtype.NewInt32()
 		t.AssertEQ(i1.Val(), int32(0))
+
+		i2 := gtype.NewInt32(11)
+		t.AssertEQ(i2.Add(1), int32(12))
+		t.AssertEQ(i2.Cas(11, 13), false)
+		t.AssertEQ(i2.Cas(12, 13), true)
+		t.AssertEQ(i2.String(), "13")
+
+		copyVal := i2.DeepCopy()
+		i2.Set(14)
+		t.AssertNE(copyVal, iClone.Val())
+		i2 = nil
+		copyVal = i2.DeepCopy()
+		t.AssertNil(copyVal)
 	})
 }
 

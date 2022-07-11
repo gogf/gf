@@ -40,9 +40,22 @@ func Test_Uint64(t *testing.T) {
 		wg.Wait()
 		t.AssertEQ(uint64(addTimes), i.Val())
 
-		// 空参测试
+		// empty param test
 		i1 := gtype.NewUint64()
 		t.AssertEQ(i1.Val(), uint64(0))
+
+		i2 := gtype.NewUint64(11)
+		t.AssertEQ(i2.Add(1), uint64(12))
+		t.AssertEQ(i2.Cas(11, 13), false)
+		t.AssertEQ(i2.Cas(12, 13), true)
+		t.AssertEQ(i2.String(), "13")
+
+		copyVal := i2.DeepCopy()
+		i2.Set(14)
+		t.AssertNE(copyVal, iClone.Val())
+		i2 = nil
+		copyVal = i2.DeepCopy()
+		t.AssertNil(copyVal)
 	})
 }
 func Test_Uint64_JSON(t *testing.T) {

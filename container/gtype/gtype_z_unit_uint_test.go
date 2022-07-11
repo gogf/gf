@@ -34,9 +34,22 @@ func Test_Uint(t *testing.T) {
 		wg.Wait()
 		t.AssertEQ(uint(addTimes), i.Val())
 
-		// 空参测试
+		// empty param test
 		i1 := gtype.NewUint()
 		t.AssertEQ(i1.Val(), uint(0))
+
+		i2 := gtype.NewUint(11)
+		t.AssertEQ(i2.Add(1), uint(12))
+		t.AssertEQ(i2.Cas(11, 13), false)
+		t.AssertEQ(i2.Cas(12, 13), true)
+		t.AssertEQ(i2.String(), "13")
+
+		copyVal := i2.DeepCopy()
+		i2.Set(14)
+		t.AssertNE(copyVal, iClone.Val())
+		i2 = nil
+		copyVal = i2.DeepCopy()
+		t.AssertNil(copyVal)
 	})
 }
 
