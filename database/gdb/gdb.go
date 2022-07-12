@@ -432,6 +432,9 @@ func Instance(name ...string) (db DB, err error) {
 // The parameter `master` specifies whether retrieving a master node, or else a slave node
 // if master-slave configured.
 func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
+	configs.RLock()
+	defer configs.RUnlock()
+
 	if list, ok := configs.config[group]; ok {
 		// Separates master and slave configuration nodes array.
 		var (
