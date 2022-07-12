@@ -374,16 +374,14 @@ func NewByGroup(group ...string) (db DB, err error) {
 		var node *ConfigNode
 		if node, err = getConfigNodeByGroup(groupName, true); err == nil {
 			return doNewByNode(*node, groupName)
-		} else {
-			return nil, err
 		}
-	} else {
-		return nil, gerror.NewCodef(
-			gcode.CodeInvalidConfiguration,
-			`database configuration node "%s" is not found, did you misspell group name "%s" or miss the database configuration?`,
-			groupName, groupName,
-		)
+		return nil, err
 	}
+	return nil, gerror.NewCodef(
+		gcode.CodeInvalidConfiguration,
+		`database configuration node "%s" is not found, did you misspell group name "%s" or miss the database configuration?`,
+		groupName, groupName,
+	)
 }
 
 // doNewByNode creates and returns an ORM object with given configuration node and group name.
@@ -432,9 +430,6 @@ func Instance(name ...string) (db DB, err error) {
 // The parameter `master` specifies whether retrieving a master node, or else a slave node
 // if master-slave configured.
 func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
-	configs.RLock()
-	defer configs.RUnlock()
-
 	if list, ok := configs.config[group]; ok {
 		// Separates master and slave configuration nodes array.
 		var (
@@ -462,13 +457,12 @@ func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 		} else {
 			return getConfigNodeByWeight(slaveList), nil
 		}
-	} else {
-		return nil, gerror.NewCodef(
-			gcode.CodeInvalidConfiguration,
-			"empty database configuration for item name '%s'",
-			group,
-		)
 	}
+	return nil, gerror.NewCodef(
+		gcode.CodeInvalidConfiguration,
+		"empty database configuration for item name '%s'",
+		group,
+	)
 }
 
 // getConfigNodeByWeight calculates the configuration weights and randomly returns a node.
@@ -501,12 +495,13 @@ func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 	)
 	for i := 0; i < len(cg); i++ {
 		max = min + cg[i].Weight*100
-		// fmt.Printf("r: %d, min: %d, max: %d\n", r, min, max)
 		if random >= min && random < max {
-			return &cg[i]
-		} else {
-			min = max
+			// Return a copy of the ConfigNode.
+			node := ConfigNode{}
+			node = cg[i]
+			return &node
 		}
+		min = max
 	}
 	return nil
 }
@@ -521,6 +516,8 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 	)
 	// Load balance.
 	if c.group != "" {
+		configs.RLock()
+		defer configs.RUnlock()
 		node, err = getConfigNodeByGroup(c.group, master)
 		if err != nil {
 			return nil, err
