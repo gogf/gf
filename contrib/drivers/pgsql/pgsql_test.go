@@ -7,53 +7,47 @@
 package pgsql_test
 
 import (
-	"context"
-	"fmt"
 	"testing"
 
 	"github.com/gogf/gf/contrib/drivers/pgsql/v2"
-	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func init() {
-	fmt.Println("init pgsql db")
-	myDB, err := gdb.New(gdb.ConfigNode{
-		Type: "pgsql",
-		// Link: "pgsql://postgres:123456@127.0.0.1:5432/user?sslmode=disable",
-		User:  "postgres",
-		Pass:  "123456",
-		Host:  "127.0.0.1",
-		Port:  "5432",
-		Name:  "postgres",
-		Debug: true,
-	})
-	if err != nil {
-		glog.Fatal(context.TODO(), err.Error())
-		return
-	}
-	list, err := myDB.Tables(context.TODO())
-	if err != nil {
-		glog.Fatal(context.TODO(), err.Error())
-		return
-	}
-	fmt.Println(list)
-	// fmt.Println(myDB.Model("user").InsertAndGetId(g.Map{"name": "hailaz"}))
+// Test_LastInsertId description
+//
+// createTime: 2022-07-12 11:09:12
+//
+// author: hailaz
+func Test_LastInsertId(t *testing.T) {
 
-	res, err := myDB.Model("user").Insert(g.List{
-		{"name": "john_1"},
-		{"name": "john_2"},
-		{"name": "john_3"},
+	// err not nil
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model("notexist").Insert(g.List{
+			{"name": "user1"},
+			{"name": "user2"},
+			{"name": "user3"},
+		})
+		t.AssertNE(err, nil)
 	})
-	fmt.Println(err)
-	fmt.Print("LastInsertId: ")
-	fmt.Println(res.LastInsertId())
-	fmt.Print("RowsAffected: ")
-	fmt.Println(res.RowsAffected())
 
+	gtest.C(t, func(t *gtest.T) {
+		tableName := createTable()
+		defer dropTable(tableName)
+		res, err := db.Model(tableName).Insert(g.List{
+			{"passport": "user1", "password": "pwd", "nickname": "nickname", "create_time": CreateTime},
+			{"passport": "user2", "password": "pwd", "nickname": "nickname", "create_time": CreateTime},
+			{"passport": "user3", "password": "pwd", "nickname": "nickname", "create_time": CreateTime},
+		})
+		t.Assert(err, nil)
+		lastInsertId, err := res.LastInsertId()
+		t.Assert(err, nil)
+		t.Assert(lastInsertId, int64(3))
+		rowsAffected, err := res.RowsAffected()
+		t.Assert(err, nil)
+		t.Assert(rowsAffected, int64(3))
+	})
 }
 
 func Test_Driver_DoFilter(t *testing.T) {

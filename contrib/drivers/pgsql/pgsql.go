@@ -18,15 +18,15 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gogf/gf/v2/util/gconv"
-	_ "github.com/lib/pq"
-
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
+	_ "github.com/lib/pq"
 )
 
 // Driver is the driver for postgresql database.
@@ -37,6 +37,10 @@ type Driver struct {
 var (
 	// tableFieldsMap caches the table information retrieved from database.
 	tableFieldsMap = gmap.New(true)
+)
+
+const (
+	internalPrimaryKeyInCtx gctx.StrKey = "primary_key"
 )
 
 func init() {
@@ -301,7 +305,6 @@ ORDER BY a.attnum`,
 
 // DoInsert is not supported in pgsql.
 func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
-	fmt.Printf("%+v\n", option)
 	switch option.InsertOption {
 	case gdb.InsertOptionSave:
 		return nil, gerror.NewCode(
@@ -314,46 +317,64 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 			gcode.CodeNotSupported,
 			`Replace operation is not supported by pgsql driver`,
 		)
-	default:
-		return d.Core.DoInsert(ctx, link, table, list, option)
+
+	case gdb.InsertOptionDefault:
+		tableFields, err := d.TableFields(ctx, table)
+		if err == nil {
+			for _, field := range tableFields {
+				if field.Key == "pri" {
+					pkField := *field
+					ctx = context.WithValue(ctx, internalPrimaryKeyInCtx, pkField)
+				}
+			}
+		}
 	}
+	return d.Core.DoInsert(ctx, link, table, list, option)
 }
 
 type pgResult struct {
 	sql.Result
-	affected     int64
-	lastInsertId int64
-}
-
-func (pgr pgResult) LastInsertId() (int64, error) {
-	return pgr.lastInsertId, nil
+	affected          int64
+	lastInsertId      int64
+	lastInsertIdError error
 }
 
 func (pgr pgResult) RowsAffected() (int64, error) {
 	return pgr.affected, nil
 }
 
+func (pgr pgResult) LastInsertId() (int64, error) {
+	return pgr.lastInsertId, pgr.lastInsertIdError
+}
+
 func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...interface{}) (result sql.Result, err error) {
-	if strings.Contains(sql, "INSERT INTO") {
-		sql += "RETURNING ID"
+	var (
+		useCore    bool   = false
+		primaryKey string = ""
+	)
+
+	// Transaction checks.
+	if link == nil {
+		if tx := gdb.TXFromCtx(ctx, d.GetGroup()); tx != nil {
+			useCore = true
+		}
+	} else if link.IsTransaction() {
+		useCore = true
+	}
+
+	pkField, ok := ctx.Value(internalPrimaryKeyInCtx).(gdb.TableField)
+
+	if !ok {
+		useCore = true
+	}
+
+	// check if it is a insert operation.
+	if !useCore && strings.Contains(sql, "INSERT INTO") {
+		primaryKey = pkField.Name
+		sql += "RETURNING " + primaryKey
 	} else {
 		return d.Core.DoExec(ctx, link, sql, args...)
 	}
-	// // Transaction checks.
-	// if link == nil {
-	// 	if tx := gdb.TXFromCtx(ctx, d.GetGroup()); tx != nil {
-	// 		// Firstly, check and retrieve transaction link from context.
-	// 		link = &txLink{tx.tx}
-	// 	} else if link, err = d.MasterLink(); err != nil {
-	// 		// Or else it creates one from master node.
-	// 		return nil, err
-	// 	}
-	// } else if !link.IsTransaction() {
-	// 	// If current link is not transaction link, it checks and retrieves transaction from context.
-	// 	if tx := gdb.TXFromCtx(ctx, d.GetGroup()); tx != nil {
-	// 		link = &txLink{tx.tx}
-	// 	}
-	// }
 
 	if d.GetConfig().ExecTimeout > 0 {
 		var cancelFunc context.CancelFunc
@@ -362,7 +383,7 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 	}
 
 	// Sql filtering.
-	// sql, args = formatSql(sql, args)
+	// sql, args = formatSql(sql, args) //TODO: internal function
 	sql, args, err = d.DoFilter(ctx, link, sql, args)
 	if err != nil {
 		return nil, err
@@ -379,10 +400,31 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 		IsTransaction: link.IsTransaction(),
 	})
 
-	fmt.Printf("%+v\n", out)
+	if err != nil {
+		return nil, err
+	}
 	affected := len(out.Records)
+	if affected > 0 {
+		if !strings.Contains(pkField.Type, "int") {
+			return pgResult{
+				affected:     int64(affected),
+				lastInsertId: 0,
+				lastInsertIdError: gerror.NewCodef(
+					gcode.CodeNotSupported,
+					"LastInsertId is not supported by primary key type: %s", pkField.Type),
+			}, nil
+		}
+		if out.Records[affected-1][primaryKey] != nil {
+			lastInsertId := out.Records[affected-1][primaryKey].Int()
+			return pgResult{
+				affected:     int64(affected),
+				lastInsertId: int64(lastInsertId),
+			}, nil
+		}
+	}
+
 	return pgResult{
-		affected:     int64(affected),
-		lastInsertId: int64(out.Records[affected-1].Map()["id"].(int)),
+		affected:     0,
+		lastInsertId: 0,
 	}, err
 }
