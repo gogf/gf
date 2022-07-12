@@ -30,3 +30,12 @@ func Test_WithCtx(t *testing.T) {
 		t.Assert(ctx.Value("TEST"), 1)
 	})
 }
+
+func Test_SetInitCtx(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		ctx := context.WithValue(context.TODO(), "TEST", 1)
+		gctx.SetInitCtx(ctx)
+		t.AssertNE(gctx.GetInitCtx(), "")
+		t.Assert(gctx.GetInitCtx().Value("TEST"), 1)
+	})
+}

@@ -23,8 +23,8 @@ type (
 )
 
 var (
-	// processCtx is the context initialized from process environment.
-	processCtx context.Context
+	processCtx context.Context // processCtx is the context initialized from process environment.
+	initCtx    context.Context // initCtx is the context for init function of packages.
 )
 
 func init() {
@@ -40,6 +40,8 @@ func init() {
 		context.Background(),
 		propagation.MapCarrier(m),
 	)
+	// Initialize initialization context.
+	initCtx = New()
 }
 
 // New creates and returns a context which contains context id.
@@ -63,4 +65,15 @@ func WithCtx(ctx context.Context) context.Context {
 // CtxId retrieves and returns the context id from context.
 func CtxId(ctx context.Context) string {
 	return gtrace.GetTraceID(ctx)
+}
+
+// SetInitCtx sets custom initialization context.
+// Note that this function cannot be called in multiple goroutines.
+func SetInitCtx(ctx context.Context) {
+	initCtx = ctx
+}
+
+// GetInitCtx returns the initialization context.
+func GetInitCtx() context.Context {
+	return initCtx
 }
