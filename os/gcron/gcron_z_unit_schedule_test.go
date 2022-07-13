@@ -29,7 +29,7 @@ func TestSlash(t *testing.T) {
 				t.Fatal(err)
 
 			}
-			t.AssertEQ(sched.week, c.expected)
+			t.AssertEQ(sched.weekMap, c.expected)
 		}
 	})
 
