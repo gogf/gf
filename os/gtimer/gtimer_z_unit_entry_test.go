@@ -20,7 +20,7 @@ import (
 
 func TestJob_Start_Stop_Close(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		timer := New()
+		timer := gtimer.New()
 		array := garray.New(true)
 		job := timer.Add(ctx, 200*time.Millisecond, func(ctx context.Context) {
 			array.Append(1)
@@ -43,7 +43,7 @@ func TestJob_Start_Stop_Close(t *testing.T) {
 
 func TestJob_Singleton(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		timer := New()
+		timer := gtimer.New()
 		array := garray.New(true)
 		job := timer.Add(ctx, 200*time.Millisecond, func(ctx context.Context) {
 			array.Append(1)
@@ -62,7 +62,7 @@ func TestJob_Singleton(t *testing.T) {
 
 func TestJob_SetTimes(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		timer := New()
+		timer := gtimer.New()
 		array := garray.New(true)
 		job := timer.Add(ctx, 200*time.Millisecond, func(ctx context.Context) {
 			array.Append(1)
@@ -76,7 +76,7 @@ func TestJob_SetTimes(t *testing.T) {
 
 func TestJob_Run(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		timer := New()
+		timer := gtimer.New()
 		array := garray.New(true)
 		job := timer.Add(ctx, 1000*time.Millisecond, func(ctx context.Context) {
 			array.Append(1)

@@ -44,14 +44,17 @@ type TimerOptions struct {
 	Interval time.Duration // Interval is the interval escaped of the timer.
 }
 
+// internalPanic is the custom panic for internal usage.
+type internalPanic string
+
 const (
-	StatusReady              = 0                    // Job or Timer is ready for running.
-	StatusRunning            = 1                    // Job or Timer is already running.
-	StatusStopped            = 2                    // Job or Timer is stopped.
-	StatusClosed             = -1                   // Job or Timer is closed and waiting to be deleted.
-	panicExit                = "exit"               // panicExit is used for custom job exit with panic.
-	defaultTimerInterval     = "100"                // defaultTimerInterval is the default timer interval in milliseconds.
-	commandEnvKeyForInterval = "gf.gtimer.interval" // commandEnvKeyForInterval is the key for command argument or environment configuring default interval duration for timer.
+	StatusReady                            = 0                    // Job or Timer is ready for running.
+	StatusRunning                          = 1                    // Job or Timer is already running.
+	StatusStopped                          = 2                    // Job or Timer is stopped.
+	StatusClosed                           = -1                   // Job or Timer is closed and waiting to be deleted.
+	panicExit                internalPanic = "exit"               // panicExit is used for custom job exit with panic.
+	defaultTimerInterval                   = "100"                // defaultTimerInterval is the default timer interval in milliseconds.
+	commandEnvKeyForInterval               = "gf.gtimer.interval" // commandEnvKeyForInterval is the key for command argument or environment configuring default interval duration for timer.
 )
 
 var (
@@ -153,12 +156,4 @@ func DelayAddOnce(ctx context.Context, delay time.Duration, interval time.Durati
 // Also see AddTimes.
 func DelayAddTimes(ctx context.Context, delay time.Duration, interval time.Duration, times int, job JobFunc) {
 	defaultTimer.DelayAddTimes(ctx, delay, interval, times, job)
-}
-
-// Exit is used in timing job internally, which exits and marks it closed from timer.
-// The timing job will be automatically removed from timer later. It uses "panic-recover"
-// mechanism internally implementing this feature, which is designed for simplification
-// and convenience.
-func Exit() {
-	panic(panicExit)
 }

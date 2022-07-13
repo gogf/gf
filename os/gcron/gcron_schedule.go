@@ -15,23 +15,22 @@ import (
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gregex"
 )
 
 // cronSchedule is the schedule for cron job.
 type cronSchedule struct {
-	create        int64            // Created timestamp.
-	every         int64            // Running interval in seconds.
-	pattern       string           // The raw cron pattern string.
-	second        map[int]struct{} // Job can run in these second numbers.
-	minute        map[int]struct{} // Job can run in these minute numbers.
-	hour          map[int]struct{} // Job can run in these hour numbers.
-	day           map[int]struct{} // Job can run in these day numbers.
-	week          map[int]struct{} // Job can run in these week numbers.
-	month         map[int]struct{} // Job can run in these moth numbers.
-	lastTimestamp *gtype.Int64     // Last timestamp number, for seconds fix.
+	createTimestamp int64            // Created timestamp in seconds.
+	everySeconds    int64            // Running interval in seconds.
+	pattern         string           // The raw cron pattern string.
+	secondMap       map[int]struct{} // Job can run in these second numbers.
+	minuteMap       map[int]struct{} // Job can run in these minute numbers.
+	hourMap         map[int]struct{} // Job can run in these hour numbers.
+	dayMap          map[int]struct{} // Job can run in these day numbers.
+	weekMap         map[int]struct{} // Job can run in these week numbers.
+	monthMap        map[int]struct{} // Job can run in these moth numbers.
+	lastTimestamp   *gtype.Int64     // Last timestamp number, for timestamp fix in some delay.
 }
 
 const (
@@ -107,6 +106,7 @@ var (
 
 // newSchedule creates and returns a schedule object for given cron pattern.
 func newSchedule(pattern string) (*cronSchedule, error) {
+	var currentTimestamp = time.Now().Unix()
 	// Check if the predefined patterns.
 	if match, _ := gregex.MatchString(`(@\w+)\s*(\w*)\s*`, pattern); len(match) > 0 {
 		key := strings.ToLower(match[1])
@@ -118,10 +118,10 @@ func newSchedule(pattern string) (*cronSchedule, error) {
 				return nil, err
 			}
 			return &cronSchedule{
-				create:        time.Now().Unix(),
-				every:         int64(d.Seconds()),
-				pattern:       pattern,
-				lastTimestamp: gtype.NewInt64(),
+				createTimestamp: currentTimestamp,
+				everySeconds:    int64(d.Seconds()),
+				pattern:         pattern,
+				lastTimestamp:   gtype.NewInt64(currentTimestamp),
 			}, nil
 		}
 		return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid pattern: "%s"`, pattern)
@@ -130,46 +130,46 @@ func newSchedule(pattern string) (*cronSchedule, error) {
 	// 0 0 0 1 1 2
 	if match, _ := gregex.MatchString(regexForCron, pattern); len(match) == 7 {
 		schedule := &cronSchedule{
-			create:        time.Now().Unix(),
-			every:         0,
-			pattern:       pattern,
-			lastTimestamp: gtype.NewInt64(),
+			createTimestamp: currentTimestamp,
+			everySeconds:    0,
+			pattern:         pattern,
+			lastTimestamp:   gtype.NewInt64(currentTimestamp),
 		}
 		// Second.
 		if m, err := parsePatternItem(match[1], 0, 59, false); err != nil {
 			return nil, err
 		} else {
-			schedule.second = m
+			schedule.secondMap = m
 		}
 		// Minute.
 		if m, err := parsePatternItem(match[2], 0, 59, false); err != nil {
 			return nil, err
 		} else {
-			schedule.minute = m
+			schedule.minuteMap = m
 		}
 		// Hour.
 		if m, err := parsePatternItem(match[3], 0, 23, false); err != nil {
 			return nil, err
 		} else {
-			schedule.hour = m
+			schedule.hourMap = m
 		}
 		// Day.
 		if m, err := parsePatternItem(match[4], 1, 31, true); err != nil {
 			return nil, err
 		} else {
-			schedule.day = m
+			schedule.dayMap = m
 		}
 		// Month.
 		if m, err := parsePatternItem(match[5], 1, 12, false); err != nil {
 			return nil, err
 		} else {
-			schedule.month = m
+			schedule.monthMap = m
 		}
 		// Week.
 		if m, err := parsePatternItem(match[6], 0, 6, true); err != nil {
 			return nil, err
 		} else {
-			schedule.week = m
+			schedule.weekMap = m
 		}
 		return schedule, nil
 	}
@@ -208,6 +208,7 @@ func parsePatternItem(item string, min int, max int, allowQuestionMark bool) (ma
 		case 6:
 			// It's checking week field.
 			itemType = patternItemTypeWeek
+
 		case 12:
 			// It's checking month field.
 			itemType = patternItemTypeMonth
@@ -268,78 +269,48 @@ func parsePatternItemValue(value string, itemType int) (int, error) {
 }
 
 // checkMeetAndUpdateLastSeconds checks if the given time `t` meets the runnable point for the job.
-func (s *cronSchedule) checkMeetAndUpdateLastSeconds(t time.Time) bool {
-	if s.every != 0 {
+func (s *cronSchedule) checkMeetAndUpdateLastSeconds(ctx context.Context, t time.Time) bool {
+	if s.everySeconds != 0 {
 		// It checks using interval.
-		if diff := t.Unix() - s.create; diff > 0 {
-			return diff%s.every == 0
+		secondsAfterCreated := t.Unix() - s.createTimestamp
+		secondsAfterCreated += int64(s.getFixedTimestampDelta(ctx, t))
+		if secondsAfterCreated > 0 {
+			return secondsAfterCreated%s.everySeconds == 0
 		}
 		return false
 	}
+
 	// It checks using normal cron pattern.
-	if _, ok := s.second[s.getFixedSecond(t)]; !ok {
+	if _, ok := s.secondMap[s.getFixedSecond(ctx, t)]; !ok {
 		return false
 	}
-	if _, ok := s.minute[t.Minute()]; !ok {
+	if _, ok := s.minuteMap[t.Minute()]; !ok {
 		return false
 	}
-	if _, ok := s.hour[t.Hour()]; !ok {
+	if _, ok := s.hourMap[t.Hour()]; !ok {
 		return false
 	}
-	if _, ok := s.day[t.Day()]; !ok {
+	if _, ok := s.dayMap[t.Day()]; !ok {
 		return false
 	}
-	if _, ok := s.month[int(t.Month())]; !ok {
+	if _, ok := s.monthMap[int(t.Month())]; !ok {
 		return false
 	}
-	if _, ok := s.week[int(t.Weekday())]; !ok {
+	if _, ok := s.weekMap[int(t.Weekday())]; !ok {
 		return false
 	}
 	return true
 }
 
-// getFixedSecond checks, fixes and returns the seconds that have delay in some seconds.
-// Reference: https://github.com/golang/go/issues/14410
-func (s *cronSchedule) getFixedSecond(t time.Time) int {
-	var (
-		second           = t.Second()
-		currentTimestamp = t.Unix()
-		lastTimestamp    = s.lastTimestamp.Val()
-	)
-	switch {
-	case
-		lastTimestamp == 0,
-		lastTimestamp == currentTimestamp-1:
-		lastTimestamp = currentTimestamp
-
-	case
-		lastTimestamp == currentTimestamp-2,
-		lastTimestamp == currentTimestamp-3,
-		lastTimestamp == currentTimestamp:
-		lastTimestamp += 1
-		second += 1
-
-	default:
-		// Too much delay, let's update the last timestamp to current one.
-		lastTimestamp = currentTimestamp
-		intlog.Printf(
-			context.Background(),
-			`too much delay, last "%d", current "%d"`,
-			lastTimestamp, currentTimestamp,
-		)
-	}
-	second %= 60
-	s.lastTimestamp.Set(lastTimestamp)
-	return second
-}
-
 // Next returns the next time this schedule is activated, greater than the given
 // time.  If no time can be found to satisfy the schedule, return the zero time.
 func (s *cronSchedule) Next(t time.Time) time.Time {
-	if s.every != 0 {
-		diff := t.Unix() - s.create
-		cnt := diff/s.every + 1
-		return t.Add(time.Duration(cnt*s.every) * time.Second)
+	if s.everySeconds != 0 {
+		var (
+			diff  = t.Unix() - s.createTimestamp
+			count = diff/s.everySeconds + 1
+		)
+		return t.Add(time.Duration(count*s.everySeconds) * time.Second)
 	}
 
 	// Start at the earliest possible time (the upcoming second).
@@ -355,7 +326,7 @@ WRAP:
 		return t // who will care the job that run in five years later
 	}
 
-	for !s.match(s.month, int(t.Month())) {
+	for !s.match(s.monthMap, int(t.Month())) {
 		if !added {
 			added = true
 			t = time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, loc)
@@ -387,7 +358,7 @@ WRAP:
 			goto WRAP
 		}
 	}
-	for !s.match(s.hour, t.Hour()) {
+	for !s.match(s.hourMap, t.Hour()) {
 		if !added {
 			added = true
 			t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 0, 0, 0, loc)
@@ -398,7 +369,7 @@ WRAP:
 			goto WRAP
 		}
 	}
-	for !s.match(s.minute, t.Minute()) {
+	for !s.match(s.minuteMap, t.Minute()) {
 		if !added {
 			added = true
 			t = t.Truncate(time.Minute)
@@ -409,7 +380,7 @@ WRAP:
 			goto WRAP
 		}
 	}
-	for !s.match(s.second, t.Second()) {
+	for !s.match(s.secondMap, t.Second()) {
 		if !added {
 			added = true
 			t = t.Truncate(time.Second)
@@ -425,8 +396,8 @@ WRAP:
 // dayMatches returns true if the schedule's day-of-week and day-of-month
 // restrictions are satisfied by the given time.
 func (s *cronSchedule) dayMatches(t time.Time) bool {
-	_, ok1 := s.day[t.Day()]
-	_, ok2 := s.week[int(t.Weekday())]
+	_, ok1 := s.dayMap[t.Day()]
+	_, ok2 := s.weekMap[int(t.Weekday())]
 	return ok1 && ok2
 }
 
