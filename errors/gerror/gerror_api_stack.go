@@ -56,8 +56,8 @@ func Current(err error) error {
 	return err
 }
 
-// Unwrap is alias of function `Next`.
-// It is just for implements for stdlib errors.Unwrap from Go version 1.17.
+// Unwrap returns the next level error.
+// It returns nil if current level error or the next level error is nil.
 func Unwrap(err error) error {
 	if err == nil {
 		return nil
@@ -75,7 +75,7 @@ func HasStack(err error) bool {
 }
 
 // Equal reports whether current error `err` equals to error `target`.
-// Please note that, in default comparison for `Error`,
+// Please note that, in default comparison logic for `Error`,
 // the errors are considered the same if both the `code` and `text` of them are the same.
 func Equal(err, target error) bool {
 	if err == target {
