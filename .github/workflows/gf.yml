@@ -159,7 +159,7 @@ jobs:
             cd $dirpath
             go mod tidy
             go build ./...
-            go test ./... -race -p=10 -coverprofile=coverage.out -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
+            go test ./... -race -coverprofile=coverage.out -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
             if grep -q "/gogf/gf/.*/v2" go.mod; then
                 sed -i "s/gogf\/gf\(\/.*\)\/v2/gogf\/gf\/v2\1/g" coverage.out
             fi
