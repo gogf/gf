@@ -68,7 +68,7 @@ func (err *Error) Cause() error {
 			if e, ok := loop.error.(*Error); ok {
 				// Internal Error struct.
 				loop = e
-			} else if e, ok := loop.error.(iCause); ok {
+			} else if e, ok := loop.error.(ICause); ok {
 				// Other Error that implements ApiCause interface.
 				return e.Cause()
 			} else {
@@ -76,6 +76,7 @@ func (err *Error) Cause() error {
 			}
 		} else {
 			// return loop
+			//
 			// To be compatible with Case of https://github.com/pkg/errors.
 			return errors.New(loop.text)
 		}
@@ -97,19 +98,13 @@ func (err *Error) Current() error {
 	}
 }
 
-// Next returns the next level error.
-// It returns nil if current level error or the next level error is nil.
-func (err *Error) Next() error {
+// Unwrap is alias of function `Next`.
+// It is just for implements for stdlib errors.Unwrap from Go version 1.17.
+func (err *Error) Unwrap() error {
 	if err == nil {
 		return nil
 	}
 	return err.error
-}
-
-// Unwrap is alias of function `Next`.
-// It is just for implements for stdlib errors.Unwrap from Go version 1.17.
-func (err *Error) Unwrap() error {
-	return err.Next()
 }
 
 // Equal reports whether current error `err` equals to error `target`.
@@ -132,19 +127,19 @@ func (err *Error) Equal(target error) bool {
 }
 
 // Is reports whether current error `err` has error `target` in its chaining errors.
-// It is just for implements for stdlib errors.Unwrap from Go version 1.17.
+// It is just for implements for stdlib errors.Is from Go version 1.17.
 func (err *Error) Is(target error) bool {
 	if Equal(err, target) {
 		return true
 	}
-	nextErr := err.Next()
+	nextErr := err.Unwrap()
 	if nextErr == nil {
 		return false
 	}
 	if Equal(nextErr, target) {
 		return true
 	}
-	if e, ok := nextErr.(iIs); ok {
+	if e, ok := nextErr.(IIs); ok {
 		return e.Is(target)
 	}
 	return false

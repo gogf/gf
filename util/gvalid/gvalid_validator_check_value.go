@@ -558,10 +558,13 @@ func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValue
 
 	case reflect.Struct:
 		// Ignore data, rules and messages from parent.
-		validator := v.Clone()
+		var (
+			validator           = v.Clone()
+			toBeValidatedObject = reflect.New(in.Type).Interface()
+		)
 		validator.rules = nil
 		validator.messages = nil
-		if err := validator.Data(reflect.New(in.Type).Interface()).Assoc(in.Value).Run(ctx); err != nil {
+		if err := validator.Data(toBeValidatedObject).Assoc(in.Value).Run(ctx); err != nil {
 			// It merges the errors into single error map.
 			for k, m := range err.(*validationError).errors {
 				in.ErrorMaps[k] = m
