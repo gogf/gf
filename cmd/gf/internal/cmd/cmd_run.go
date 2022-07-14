@@ -99,35 +99,8 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 		Options: in.Extra,
 		Args:    in.Args,
 	}
+
 	dirty := gtype.NewBool()
-
-	var listDir []string
-	currentPath := gfile.RealPath(".")
-	if in.ExcludeDirs != "" {
-		excludeDirs := strings.Split(in.ExcludeDirs, ",")
-		mlog.Debugf("ExcludeDirs: %v", excludeDirs)
-
-		// exclude dir
-		listDir, _ = gfile.ScanDirFunc(currentPath, "*", false, func(path string) string {
-			if gfile.IsDir(path) {
-				for _, excludeDir := range excludeDirs {
-					tempPath, err := filepath.Abs(excludeDir)
-					if err != nil {
-						continue
-					}
-					if tempPath == path {
-						mlog.Debugf("exclude directory path: %s", path)
-						return ""
-					}
-				}
-				return path
-			}
-			return ""
-		})
-	}
-
-	listDir = append(listDir, currentPath)
-
 	callback := func(event *gfsnotify.Event) {
 		if gfile.ExtName(event.Path) != "go" {
 			return
@@ -144,9 +117,44 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 		})
 	}
 
-	for _, subPath := range listDir {
-		mlog.Debugf("watch directory: %v", subPath)
-		_, err = gfsnotify.Add(subPath, callback, true)
+	currentPath := gfile.RealPath(".")
+	if in.ExcludeDirs != "" {
+		excludeDirs := strings.Split(in.ExcludeDirs, ",")
+		mlog.Debugf("ExcludeDirs: %v", excludeDirs)
+
+		// exclude dir
+		listDir, _ := gfile.ScanDirFunc(currentPath, "*", false, func(path string) string {
+			if gfile.IsDir(path) {
+				for _, excludeDir := range excludeDirs {
+					tempPath, err := filepath.Abs(excludeDir)
+					if err != nil {
+						continue
+					}
+					if tempPath == path {
+						mlog.Debugf("exclude directory path: %s", path)
+						return ""
+					}
+				}
+				return path
+			}
+			return ""
+		})
+		// watch sub dir with recursive
+		for _, subPath := range listDir {
+			mlog.Debugf("watch directory: %v", subPath)
+			_, err = gfsnotify.Add(subPath, callback, true)
+			if err != nil {
+				mlog.Fatal(err)
+			}
+		}
+		// watch current dir without recursive
+		_, err = gfsnotify.Add(currentPath, callback, false)
+		if err != nil {
+			mlog.Fatal(err)
+		}
+	} else {
+		// watch current dir with recursive
+		_, err = gfsnotify.Add(currentPath, callback, true)
 		if err != nil {
 			mlog.Fatal(err)
 		}
