@@ -115,7 +115,7 @@ jobs:
 
     strategy:
       matrix:
-        go: [ "1.15", "1.16", "1.17" ]
+        go-version: [ "1.15", "1.16", "1.17" ]
         goarch: [ "386", "amd64" ]
 
     steps:
@@ -127,10 +127,10 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v2
 
-    - name: Setup Golang
+    - name: Setup Golang ${{ matrix.go-version }}
       uses: actions/setup-go@v2
       with:
-        go-version: ${{ matrix.go }}
+        go-version: ${{ matrix.go-version }}
 
     - name: Setup Golang caches
       uses: actions/cache@v3
@@ -145,9 +145,9 @@ jobs:
           ~/.cache/go-build
           ~/Library/Caches/go-build
           ~\AppData\Local\go-build
-        key: ${{ runner.os }}-go-${{ matrix.go }}-${{ hashFiles('**/go.sum') }}
+        key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
         restore-keys: |
-          ${{ runner.os }}-go-${{ matrix.go }}-
+          ${{ runner.os }}-go-${{ matrix.go-version }}-
 
     - name: Start containers
       run: docker-compose -f ".github/workflows/docker/docker-compose.yml" up -d --build
@@ -187,5 +187,5 @@ jobs:
     - name: Report Coverage
       uses: codecov/codecov-action@v2
       with:
-        flags: go-${{ matrix.go }}-${{ matrix.goarch }}
+        flags: go-${{ matrix.go-version }}-${{ matrix.goarch }}
 
