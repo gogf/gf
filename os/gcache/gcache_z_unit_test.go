@@ -167,6 +167,7 @@ func TestCache_LRU(t *testing.T) {
 		for i := 0; i < 10; i++ {
 			t.AssertNil(cache.Set(ctx, i, i, 0))
 		}
+
 		t.Log(cache.Keys(ctx))
 		n, _ := cache.Size(ctx)
 		t.Assert(n, 10)
