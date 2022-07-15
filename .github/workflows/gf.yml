@@ -146,9 +146,9 @@ jobs:
           ~/.cache/go-build
           ~/Library/Caches/go-build
           ~\AppData\Local\go-build
-        key: ${{ matrix.goarch }}-go-${{ matrix.go }}-${{ hashFiles('**/go.sum') }}
+        key: ${{ runner.os }}-go-${{ matrix.go }}-${{ hashFiles('**/go.sum') }}
         restore-keys: |
-          ${{ matrix.goarch }}-go-${{ matrix.go }}-
+          ${{ runner.os }}-go-${{ matrix.go }}-
 
     - name: Start containers
       run: docker-compose -f ".github/workflows/docker/docker-compose.yml" up -d --build
