@@ -97,9 +97,9 @@ func TestDelayAddEntry(t *testing.T) {
 		gtimer.DelayAddEntry(ctx, 200*time.Millisecond, 200*time.Millisecond, func(ctx context.Context) {
 			array.Append(1)
 		}, false, 2, gtimer.StatusReady)
+		time.Sleep(300 * time.Millisecond)
 		t.Assert(array.Len(), 0)
-		// TODO: Assert 1
-		time.Sleep(700 * time.Millisecond)
+		time.Sleep(1000 * time.Millisecond)
 		t.Assert(array.Len(), 2)
 	})
 }
