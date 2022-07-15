@@ -127,7 +127,7 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v2
 
-    - name: Setup Go
+    - name: Setup Golang
       uses: actions/setup-go@v2
       with:
         go-version: ${{ matrix.go }}
