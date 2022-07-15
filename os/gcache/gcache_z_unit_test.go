@@ -167,11 +167,15 @@ func TestCache_LRU(t *testing.T) {
 		for i := 0; i < 10; i++ {
 			t.AssertNil(cache.Set(ctx, i, i, 0))
 		}
+		t.Log(cache.Keys(ctx))
 		n, _ := cache.Size(ctx)
 		t.Assert(n, 10)
+		t.Log(cache.Keys(ctx))
 		v, _ := cache.Get(ctx, 6)
 		t.Assert(v, 6)
+		t.Log(cache.Keys(ctx))
 		time.Sleep(4 * time.Second)
+		t.Log(cache.Keys(ctx))
 		n, _ = cache.Size(ctx)
 		t.Assert(n, 2)
 		v, _ = cache.Get(ctx, 6)
