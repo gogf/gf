@@ -98,6 +98,9 @@ type (
 	// Listening file descriptor mapping.
 	// The key is either "http" or "https" and the value is its FD.
 	listenerFdMap = map[string]string
+
+	// internalPanic is the custom panic for internal usage.
+	internalPanic string
 )
 
 const (
@@ -119,9 +122,6 @@ const (
 const (
 	supportedHttpMethods    = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
 	defaultMethod           = "ALL"
-	exceptionExit           = "exit"
-	exceptionExitAll        = "exit_all"
-	exceptionExitHook       = "exit_hook"
 	routeCacheDuration      = time.Hour
 	ctxKeyForRequest        = "gHttpRequestObject"
 	contentTypeXml          = "text/xml"
@@ -133,6 +133,12 @@ const (
 	specialMethodNameShut   = "Shut"
 	specialMethodNameIndex  = "Index"
 	gracefulShutdownTimeout = 5 * time.Second
+)
+
+const (
+	exceptionExit     internalPanic = "exit"
+	exceptionExitAll  internalPanic = "exit_all"
+	exceptionExitHook internalPanic = "exit_hook"
 )
 
 var (

@@ -85,6 +85,7 @@ func Test_Gpool(t *testing.T) {
 		assertIndex = 0
 		p2.Close()
 		time.Sleep(3 * time.Second)
+		t.AssertNE(p2.Put(1), nil)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -94,5 +95,28 @@ func Test_Gpool(t *testing.T) {
 		v3, err3 := p3.Get()
 		t.Assert(err3, errors.New("pool is empty"))
 		t.Assert(v3, nil)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		p := gpool.New(time.Millisecond*200, nil, func(i interface{}) {})
+		p.Put(1)
+		time.Sleep(time.Millisecond * 100)
+		p.Put(2)
+		time.Sleep(time.Millisecond * 200)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		s := make([]int, 0)
+		p := gpool.New(time.Millisecond*200, nil, func(i interface{}) {
+			s = append(s, i.(int))
+		})
+		for i := 0; i < 5; i++ {
+			p.Put(i)
+			time.Sleep(time.Millisecond * 50)
+		}
+		val, err := p.Get()
+		t.Assert(val, 2)
+		t.AssertNil(err)
+		t.Assert(p.Size(), 2)
 	})
 }
