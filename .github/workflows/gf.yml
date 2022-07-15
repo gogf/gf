@@ -134,6 +134,22 @@ jobs:
       with:
         go-version: ${{ matrix.go }}
 
+    - uses: actions/cache@v3
+      with:
+        # In order:
+        # * Module download cache
+        # * Build cache (Linux)
+        # * Build cache (Mac)
+        # * Build cache (Windows)
+        path: |
+          ~/go/pkg/mod
+          ~/.cache/go-build
+          ~/Library/Caches/go-build
+          ~\AppData\Local\go-build
+        key: ${{ matrix.goarch }}-go-${{ matrix.go }}-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ matrix.goarch }}-go-${{ matrix.go }}-
+
     - name: Start containers
       run: docker-compose -f ".github/workflows/docker/docker-compose.yml" up -d --build
 
