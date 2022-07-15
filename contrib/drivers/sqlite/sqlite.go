@@ -36,8 +36,7 @@ type Driver struct {
 var (
 	// tableFieldsMap caches the table information retrieved from database.
 	tableFieldsMap = gmap.New(true)
-	// Error
-	ErrorSave = gerror.NewCode(gcode.CodeNotSupported, `Save operation is not supported by sqlite driver`)
+	ErrorSave      = gerror.NewCode(gcode.CodeNotSupported, `Save operation is not supported by sqlite driver`)
 )
 
 func init() {

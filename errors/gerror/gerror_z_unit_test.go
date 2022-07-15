@@ -237,24 +237,6 @@ func Test_Current(t *testing.T) {
 	})
 }
 
-func Test_Next(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		err := errors.New("1")
-		err = gerror.Wrap(err, "2")
-		err = gerror.Wrap(err, "3")
-		t.Assert(err.Error(), "3: 2: 1")
-
-		err = gerror.Next(err)
-		t.Assert(err.Error(), "2: 1")
-
-		err = gerror.Next(err)
-		t.Assert(err.Error(), "1")
-
-		err = gerror.Next(err)
-		t.AssertNil(err)
-	})
-}
-
 func Test_Unwrap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err := errors.New("1")
@@ -379,5 +361,27 @@ func Test_Is(t *testing.T) {
 		err2 := gerror.Wrap(err1, "2")
 		err2 = gerror.Wrap(err2, "3")
 		t.Assert(gerror.Is(err2, err1), true)
+	})
+}
+
+func Test_HashError(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err1 := errors.New("1")
+		err2 := gerror.Wrap(err1, "2")
+		err2 = gerror.Wrap(err2, "3")
+		t.Assert(gerror.HasError(err2, err1), true)
+	})
+}
+
+func Test_HashCode(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err1 := errors.New("1")
+		err2 := gerror.WrapCode(gcode.CodeNotAuthorized, err1, "2")
+		err3 := gerror.Wrap(err2, "3")
+		err4 := gerror.Wrap(err3, "4")
+		t.Assert(gerror.HasCode(err1, gcode.CodeNotAuthorized), false)
+		t.Assert(gerror.HasCode(err2, gcode.CodeNotAuthorized), true)
+		t.Assert(gerror.HasCode(err3, gcode.CodeNotAuthorized), true)
+		t.Assert(gerror.HasCode(err4, gcode.CodeNotAuthorized), true)
 	})
 }
