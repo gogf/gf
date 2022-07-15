@@ -113,15 +113,13 @@ jobs:
           - 1521:1521
 
 
-
     strategy:
       matrix:
         go: [ "1.15", "1.16", "1.17" ]
         goarch: [ "386", "amd64" ]
 
-
     steps:
-    - name: Set Up Timezone
+    - name: Setup Timezone
       uses: szenius/set-timezone@v1.0
       with:
         timezoneLinux: "Asia/Shanghai"
@@ -129,12 +127,13 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v2
 
-    - name: Set Up Go
+    - name: Setup Go
       uses: actions/setup-go@v2
       with:
         go-version: ${{ matrix.go }}
 
-    - uses: actions/cache@v3
+    - name: Setup Golang caches
+      uses: actions/cache@v3
       with:
         # In order:
         # * Module download cache
