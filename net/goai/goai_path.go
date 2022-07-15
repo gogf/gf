@@ -311,6 +311,12 @@ func (oai *OpenApiV3) removeOperationDuplicatedProperties(operation Operation) {
 	}
 
 	for _, requestBodyContent := range operation.RequestBody.Value.Content {
+		
+		// Check request body schema
+		if requestBodyContent.Schema == nil {
+			continue
+		}
+		
 		// Check request body schema ref.
 		if schema := oai.Components.Schemas.Get(requestBodyContent.Schema.Ref); schema != nil {
 			schema.Value.Required = oai.removeItemsFromArray(schema.Value.Required, duplicatedParameterNames)
