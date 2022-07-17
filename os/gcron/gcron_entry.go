@@ -137,7 +137,7 @@ func (entry *Entry) Close() {
 // gcron.Entry relies on gtimer to implement a scheduled task check for gcron.Entry per second.
 func (entry *Entry) checkAndRun(ctx context.Context) {
 	currentTime := time.Now()
-	if !entry.schedule.checkMeetAndUpdateLastSeconds(currentTime) {
+	if !entry.schedule.checkMeetAndUpdateLastSeconds(ctx, currentTime) {
 		intlog.Printf(
 			ctx,
 			`timely check, current time does not meet cron job "%s"`,
