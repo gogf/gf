@@ -16,7 +16,6 @@ import (
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gtimer"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -138,14 +137,14 @@ func (entry *Entry) Close() {
 func (entry *Entry) checkAndRun(ctx context.Context) {
 	currentTime := time.Now()
 	if !entry.schedule.checkMeetAndUpdateLastSeconds(ctx, currentTime) {
-		intlog.Printf(
+		entry.logDebugf(
 			ctx,
 			`timely check, current time does not meet cron job "%s"`,
 			entry.getJobNameWithPattern(),
 		)
 		return
 	}
-	intlog.Printf(
+	entry.logDebugf(
 		ctx,
 		`timely check, current time meets cron job "%s"`,
 		entry.getJobNameWithPattern(),
