@@ -17,7 +17,7 @@ func (err *Error) Code() gcode.Code {
 		return gcode.CodeNil
 	}
 	if err.code == gcode.CodeNil {
-		return Code(err.Next())
+		return Code(err.Unwrap())
 	}
 	return err.code
 }

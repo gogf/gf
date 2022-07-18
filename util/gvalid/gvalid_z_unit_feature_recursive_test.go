@@ -341,3 +341,61 @@ func Test_CheckStruct_Recursively_MapAttribute(t *testing.T) {
 		t.Assert(err, `Student Name is required`)
 	})
 }
+
+// https://github.com/gogf/gf/issues/1983
+func Test_Issue1983(t *testing.T) {
+	// Error as the attribute Student in Teacher is a initialized struct, which has default value.
+	gtest.C(t, func(t *gtest.T) {
+		type Student struct {
+			Name string `v:"required"`
+			Age  int
+		}
+		type Teacher struct {
+			Students Student
+		}
+		var (
+			teacher = Teacher{}
+			data    = g.Map{
+				"students": nil,
+			}
+		)
+		err := g.Validator().Assoc(data).Data(teacher).Run(ctx)
+		t.Assert(err, `The Name field is required`)
+	})
+	// The same as upper, it is not affected by association values.
+	gtest.C(t, func(t *gtest.T) {
+		type Student struct {
+			Name string `v:"required"`
+			Age  int
+		}
+		type Teacher struct {
+			Students Student
+		}
+		var (
+			teacher = Teacher{}
+			data    = g.Map{
+				"name":     "john",
+				"students": nil,
+			}
+		)
+		err := g.Validator().Assoc(data).Data(teacher).Run(ctx)
+		t.Assert(err, `The Name field is required`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Student struct {
+			Name string `v:"required"`
+			Age  int
+		}
+		type Teacher struct {
+			Students *Student
+		}
+		var (
+			teacher = Teacher{}
+			data    = g.Map{
+				"students": nil,
+			}
+		)
+		err := g.Validator().Assoc(data).Data(teacher).Run(ctx)
+		t.AssertNil(err)
+	})
+}
