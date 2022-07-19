@@ -93,7 +93,7 @@ func TestCron_Add_FixedPattern(t *testing.T) {
 	//defer func() {
 	//	utils.SetDebugEnabled(debug)
 	//}()
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 5; i++ {
 		doTestCronAddFixedPattern(t)
 	}
 }
@@ -107,6 +107,8 @@ func doTestCronAddFixedPattern(t *testing.T) {
 			minutes = now.Minute()
 			seconds = now.Second() + 2
 		)
+		defer cron.Close()
+
 		if seconds >= 60 {
 			seconds %= 60
 			minutes++
