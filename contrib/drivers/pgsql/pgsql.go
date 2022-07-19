@@ -218,6 +218,7 @@ ORDER BY
 	c.relname`,
 		querySchema,
 	)
+	query, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(query))
 	result, err = d.DoSelect(ctx, link, query)
 	if err != nil {
 		return
