@@ -33,6 +33,7 @@ const (
 	typeBool        = "bool"
 )
 
+// CheckValueForLocalType checks and returns corresponding type for given db type.
 func CheckValueForLocalType(ctx context.Context, fieldType string, fieldValue interface{}) (string, error) {
 	var (
 		typeName    string
