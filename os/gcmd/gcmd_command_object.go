@@ -28,9 +28,9 @@ import (
 )
 
 const (
-	tagNameDc   = `dc`
-	tagNameAd   = `ad`
-	tagNameEg   = `eg`
+	tagNameDc   = `dc` // description.
+	tagNameAd   = `ad` // additional
+	tagNameEg   = `eg` // examples.
 	tagNameArg  = `arg`
 	tagNameRoot = `root`
 )
@@ -61,7 +61,7 @@ func NewFromObject(object interface{}) (rootCmd *Command, err error) {
 	}
 
 	// Root command creating.
-	rootCmd, err = newCommandFromObjectMeta(object)
+	rootCmd, err = newCommandFromObjectMeta(object, "")
 	if err != nil {
 		return
 	}
@@ -76,17 +76,19 @@ func NewFromObject(object interface{}) (rootCmd *Command, err error) {
 	}
 	for i := 0; i < reflectValue.NumMethod(); i++ {
 		var (
-			method    = reflectValue.Method(i)
-			methodCmd *Command
+			method      = reflectValue.Type().Method(i)
+			methodValue = reflectValue.Method(i)
+			methodType  = methodValue.Type()
+			methodCmd   *Command
 		)
-		methodCmd, err = newCommandFromMethod(object, method)
+		methodCmd, err = newCommandFromMethod(object, method, methodValue, methodType)
 		if err != nil {
 			return
 		}
 		if nameSet.Contains(methodCmd.Name) {
 			err = gerror.Newf(
 				`command name should be unique, found duplicated command name in method "%s"`,
-				method.Type().String(),
+				methodType.String(),
 			)
 			return
 		}
@@ -135,27 +137,23 @@ func methodToRootCmdWhenNameEqual(rootCmd *Command, methodCmd *Command) {
 	}
 }
 
-func newCommandFromObjectMeta(object interface{}) (command *Command, err error) {
-	var (
-		metaData = gmeta.Data(object)
-	)
-	if len(metaData) == 0 {
-		err = gerror.Newf(
-			`no meta data found in struct "%s"`,
-			reflect.TypeOf(object).String(),
-		)
-		return
-	}
+// The `object` is the Meta attribute from business object, and the `name` is the command name,
+// commonly from method name, which is used when no name tag is defined in Meta.
+func newCommandFromObjectMeta(object interface{}, name string) (command *Command, err error) {
+	var metaData = gmeta.Data(object)
 	if err = gconv.Scan(metaData, &command); err != nil {
 		return
 	}
 	// Name filed is necessary.
 	if command.Name == "" {
-		err = gerror.Newf(
-			`command name cannot be empty, "name" tag not found in meta of struct "%s"`,
-			reflect.TypeOf(object).String(),
-		)
-		return
+		if name == "" {
+			err = gerror.Newf(
+				`command name cannot be empty, "name" tag not found in meta of struct "%s"`,
+				reflect.TypeOf(object).String(),
+			)
+			return
+		}
+		command.Name = name
 	}
 	if command.Description == "" {
 		command.Description = metaData[tagNameDc]
@@ -169,71 +167,70 @@ func newCommandFromObjectMeta(object interface{}) (command *Command, err error) 
 	return
 }
 
-func newCommandFromMethod(object interface{}, method reflect.Value) (command *Command, err error) {
-	var (
-		reflectType = method.Type()
-	)
+func newCommandFromMethod(
+	object interface{}, method reflect.Method, methodValue reflect.Value, methodType reflect.Type,
+) (command *Command, err error) {
 	// Necessary validation for input/output parameters and naming.
-	if reflectType.NumIn() != 2 || reflectType.NumOut() != 2 {
-		if reflectType.PkgPath() != "" {
+	if methodType.NumIn() != 2 || methodType.NumOut() != 2 {
+		if methodType.PkgPath() != "" {
 			err = gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`invalid command: %s.%s.%s defined as "%s", but "func(context.Context, Input)(Output, error)" is required`,
-				reflectType.PkgPath(), reflect.TypeOf(object).Name(), reflectType.Name(), reflectType.String(),
+				methodType.PkgPath(), reflect.TypeOf(object).Name(), methodType.Name(), methodType.String(),
 			)
 		} else {
 			err = gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`invalid command: defined as "%s", but "func(context.Context, Input)(Output, error)" is required`,
-				reflectType.String(),
+				methodType.String(),
 			)
 		}
 		return
 	}
-	if reflectType.In(0).String() != "context.Context" {
+	if methodType.In(0).String() != "context.Context" {
 		err = gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			`invalid command: defined as "%s", but the first input parameter should be type of "context.Context"`,
-			reflectType.String(),
+			methodType.String(),
 		)
 		return
 	}
-	if reflectType.Out(1).String() != "error" {
+	if methodType.Out(1).String() != "error" {
 		err = gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			`invalid command: defined as "%s", but the last output parameter should be type of "error"`,
-			reflectType.String(),
+			methodType.String(),
 		)
 		return
 	}
 	// The input struct should be named as `xxxInput`.
-	if !gstr.HasSuffix(reflectType.In(1).String(), `Input`) {
+	if !gstr.HasSuffix(methodType.In(1).String(), `Input`) {
 		err = gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			`invalid struct naming for input: defined as "%s", but it should be named with "Input" suffix like "xxxInput"`,
-			reflectType.In(1).String(),
+			methodType.In(1).String(),
 		)
 		return
 	}
 	// The output struct should be named as `xxxOutput`.
-	if !gstr.HasSuffix(reflectType.Out(0).String(), `Output`) {
+	if !gstr.HasSuffix(methodType.Out(0).String(), `Output`) {
 		err = gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			`invalid struct naming for output: defined as "%s", but it should be named with "Output" suffix like "xxxOutput"`,
-			reflectType.Out(0).String(),
+			methodType.Out(0).String(),
 		)
 		return
 	}
 
 	var inputObject reflect.Value
-	if method.Type().In(1).Kind() == reflect.Ptr {
-		inputObject = reflect.New(method.Type().In(1).Elem()).Elem()
+	if methodType.In(1).Kind() == reflect.Ptr {
+		inputObject = reflect.New(methodType.In(1).Elem()).Elem()
 	} else {
-		inputObject = reflect.New(method.Type().In(1)).Elem()
+		inputObject = reflect.New(methodType.In(1)).Elem()
 	}
 
 	// Command creating.
-	if command, err = newCommandFromObjectMeta(inputObject.Interface()); err != nil {
+	if command, err = newCommandFromObjectMeta(inputObject.Interface(), method.Name); err != nil {
 		return
 	}
 
@@ -312,7 +309,7 @@ func newCommandFromMethod(object interface{}, method reflect.Value) (command *Co
 		inputValues = append(inputValues, inputObject)
 
 		// Call handler with dynamic created parameter values.
-		results := method.Call(inputValues)
+		results := methodValue.Call(inputValues)
 		out = results[0].Interface()
 		if !results[1].IsNil() {
 			if v, ok := results[1].Interface().(error); ok {
