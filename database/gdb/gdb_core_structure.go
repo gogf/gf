@@ -17,8 +17,6 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/text/gregex"
-	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
 )
@@ -130,53 +128,42 @@ func (c *Core) ConvertValueForLocal(ctx context.Context, fieldType string, field
 	if fieldType == "" {
 		return fieldValue, nil
 	}
-	typeName, _ := gregex.ReplaceString(`\(.+\)`, "", fieldType)
-	typeName = strings.ToLower(typeName)
+	typeName, err := CheckValueForLocalType(ctx, fieldType, fieldValue)
+	if err != nil {
+		return nil, err
+	}
 	switch typeName {
-	case
-		"binary",
-		"varbinary",
-		"blob",
-		"tinyblob",
-		"mediumblob",
-		"longblob":
+	case typeBytes:
+		if strings.Contains(typeName, "binary") || strings.Contains(typeName, "blob") {
+			return fieldValue, nil
+		}
 		return gconv.Bytes(fieldValue), nil
 
-	case
-		"int",
-		"tinyint",
-		"small_int",
-		"smallint",
-		"medium_int",
-		"mediumint",
-		"serial":
-		if gstr.ContainsI(fieldType, "unsigned") {
-			return gconv.Uint(gconv.String(fieldValue)), nil
-		}
+	case typeInt:
 		return gconv.Int(gconv.String(fieldValue)), nil
 
-	case
-		"big_int",
-		"bigint",
-		"bigserial":
-		if gstr.ContainsI(fieldType, "unsigned") {
-			return gconv.Uint64(gconv.String(fieldValue)), nil
-		}
+	case typeUint:
+		return gconv.Uint(gconv.String(fieldValue)), nil
+
+	case typeInt64:
 		return gconv.Int64(gconv.String(fieldValue)), nil
 
-	case "real":
+	case typeUint64:
+		return gconv.Uint64(gconv.String(fieldValue)), nil
+
+	case typeInt64Bytes:
+		return gbinary.BeDecodeToInt64(gconv.Bytes(fieldValue)), nil
+
+	case typeUint64Bytes:
+		return gbinary.BeDecodeToUint64(gconv.Bytes(fieldValue)), nil
+
+	case typeFloat32:
 		return gconv.Float32(gconv.String(fieldValue)), nil
 
-	case
-		"float",
-		"double",
-		"decimal",
-		"money",
-		"numeric",
-		"smallmoney":
+	case typeFloat64:
 		return gconv.Float64(gconv.String(fieldValue)), nil
 
-	case "bit":
+	case typeBool:
 		s := gconv.String(fieldValue)
 		// mssql is true|false string.
 		if strings.EqualFold(s, "true") {
@@ -185,12 +172,9 @@ func (c *Core) ConvertValueForLocal(ctx context.Context, fieldType string, field
 		if strings.EqualFold(s, "false") {
 			return 0, nil
 		}
-		return gbinary.BeDecodeToInt64(gconv.Bytes(fieldValue)), nil
-
-	case "bool":
 		return gconv.Bool(fieldValue), nil
 
-	case "date":
+	case typeDate:
 		// Date without time.
 		if t, ok := fieldValue.(time.Time); ok {
 			return gtime.NewFromTime(t).Format("Y-m-d"), nil
@@ -198,10 +182,7 @@ func (c *Core) ConvertValueForLocal(ctx context.Context, fieldType string, field
 		t, _ := gtime.StrToTime(gconv.String(fieldValue))
 		return t.Format("Y-m-d"), nil
 
-	case
-		"datetime",
-		"timestamp",
-		"timestamptz":
+	case typeDatetime:
 		if t, ok := fieldValue.(time.Time); ok {
 			return gtime.NewFromTime(t), nil
 		}
@@ -209,42 +190,7 @@ func (c *Core) ConvertValueForLocal(ctx context.Context, fieldType string, field
 		return t, nil
 
 	default:
-		// Auto-detect field type, using key match.
-		switch {
-		case strings.Contains(typeName, "text") || strings.Contains(typeName, "char") || strings.Contains(typeName, "character"):
-			return gconv.String(fieldValue), nil
-
-		case strings.Contains(typeName, "float") || strings.Contains(typeName, "double") || strings.Contains(typeName, "numeric"):
-			return gconv.Float64(gconv.String(fieldValue)), nil
-
-		case strings.Contains(typeName, "bool"):
-			return gconv.Bool(gconv.String(fieldValue)), nil
-
-		case strings.Contains(typeName, "binary") || strings.Contains(typeName, "blob"):
-			return fieldValue, nil
-
-		case strings.Contains(typeName, "int"):
-			return gconv.Int(gconv.String(fieldValue)), nil
-
-		case strings.Contains(typeName, "time"):
-			s := gconv.String(fieldValue)
-			t, err := gtime.StrToTime(s)
-			if err != nil {
-				return s, nil
-			}
-			return t, nil
-
-		case strings.Contains(typeName, "date"):
-			s := gconv.String(fieldValue)
-			t, err := gtime.StrToTime(s)
-			if err != nil {
-				return s, nil
-			}
-			return t, nil
-
-		default:
-			return gconv.String(fieldValue), nil
-		}
+		return gconv.String(fieldValue), nil
 	}
 }
 

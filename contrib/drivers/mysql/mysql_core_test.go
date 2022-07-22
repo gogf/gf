@@ -1190,24 +1190,26 @@ func Test_DB_TableField(t *testing.T) {
 		"field_varchar":   "abc",
 		"field_varbinary": "aaa",
 	}
-	res, err := db.Model(name).Data(data).Insert()
-	if err != nil {
-		gtest.Fatal(err)
-	}
+	gtest.C(t, func(t *gtest.T) {
+		res, err := db.Model(name).Data(data).Insert()
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	n, err := res.RowsAffected()
-	if err != nil {
-		gtest.Fatal(err)
-	} else {
-		gtest.Assert(n, 1)
-	}
+		n, err := res.RowsAffected()
+		if err != nil {
+			t.Fatal(err)
+		} else {
+			t.Assert(n, 1)
+		}
 
-	result, err := db.Model(name).Fields("*").Where("field_int = ?", 2).All()
-	if err != nil {
-		gtest.Fatal(err)
-	}
+		result, err := db.Model(name).Fields("*").Where("field_int = ?", 2).All()
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Assert(result[0], data)
+	})
 
-	gtest.Assert(result[0], data)
 }
 
 func Test_DB_Prefix(t *testing.T) {

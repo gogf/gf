@@ -72,7 +72,7 @@ func Test_Func_addTablePrefix(t *testing.T) {
 			"UserCenter..user as u, user_detail as ut": "`UserCenter`..`user` as u,`user_detail` as ut",
 		}
 		for k, v := range array {
-			t.Assert(doHandleTableName(k, prefix, "`", "`"), v)
+			t.Assert(doQuoteTableName(k, prefix, "`", "`"), v)
 		}
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -91,7 +91,7 @@ func Test_Func_addTablePrefix(t *testing.T) {
 			"UserCenter..user as u, user_detail as ut": "`UserCenter`..`gf_user` as u,`gf_user_detail` as ut",
 		}
 		for k, v := range array {
-			t.Assert(doHandleTableName(k, prefix, "`", "`"), v)
+			t.Assert(doQuoteTableName(k, prefix, "`", "`"), v)
 		}
 	})
 }

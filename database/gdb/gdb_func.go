@@ -42,11 +42,6 @@ type iInterfaces interface {
 	Interfaces() []interface{}
 }
 
-// iMapStrAny is the interface support for converting struct parameter to map.
-type iMapStrAny interface {
-	MapStrAny() map[string]interface{}
-}
-
 // iTableName is the interface for retrieving table name fro struct.
 type iTableName interface {
 	TableName() string
@@ -187,7 +182,7 @@ func DataToMapDeep(value interface{}) map[string]interface{} {
 //
 // Note that, this will automatically check the table prefix whether already added, if true it does
 // nothing to the table name, or else adds the prefix to the table name and returns new table name with prefix.
-func doHandleTableName(table, prefix, charLeft, charRight string) string {
+func doQuoteTableName(table, prefix, charLeft, charRight string) string {
 	var (
 		index  = 0
 		chars  = charLeft + charRight
