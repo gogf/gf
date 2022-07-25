@@ -68,12 +68,14 @@ func generateDo(ctx context.Context, db gdb.DB, tableNames, newTableNames []stri
 }
 
 func generateDoContent(in CGenDaoInternalInput, tableName, tableNameCamelCase, structDefine string) string {
-	doContent := gstr.ReplaceByMap(consts.TemplateGenDaoDoContent, g.MapStrStr{
-		tplVarTableName:          tableName,
-		tplVarPackageImports:     getImportPartContent(structDefine, true),
-		tplVarTableNameCamelCase: tableNameCamelCase,
-		tplVarStructDefine:       structDefine,
-	})
+	doContent := gstr.ReplaceByMap(
+		getTemplateFromPathOrDefault(in.TplDaoDoPath, consts.TemplateGenDaoDoContent),
+		g.MapStrStr{
+			tplVarTableName:          tableName,
+			tplVarPackageImports:     getImportPartContent(structDefine, true),
+			tplVarTableNameCamelCase: tableNameCamelCase,
+			tplVarStructDefine:       structDefine,
+		})
 	doContent = replaceDefaultVar(in, doContent)
 	return doContent
 }
