@@ -93,7 +93,8 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 	)
 
 	// It checks the struct recursively if its attribute is an embedded struct.
-	// Ignore inputParamMap, rules and messages from parent.
+	// Ignore inputParamMap, assoc, rules and messages from parent.
+	validator.assoc = nil
 	validator.rules = nil
 	validator.messages = nil
 	for _, item := range inputParamMap {

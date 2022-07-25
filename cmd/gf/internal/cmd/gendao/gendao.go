@@ -147,7 +147,7 @@ type (
 		GJsonSupport   bool   `name:"gJsonSupport"    short:"n"  brief:"{CGenDaoBriefGJsonSupport}"    orphan:"true"`
 		OverwriteDao   bool   `name:"overwriteDao"    short:"v"  brief:"{CGenDaoBriefOverwriteDao}"    orphan:"true"`
 		DescriptionTag bool   `name:"descriptionTag"  short:"c"  brief:"{CGenDaoBriefDescriptionTag}"  orphan:"true"`
-		NoJsonTag      bool   `name:"noJsonTag"       short:"k"  brief:"{CGenDaoBriefNoJsonTag"        orphan:"true"`
+		NoJsonTag      bool   `name:"noJsonTag"       short:"k"  brief:"{CGenDaoBriefNoJsonTag}"        orphan:"true"`
 		NoModelComment bool   `name:"noModelComment"  short:"m"  brief:"{CGenDaoBriefNoModelComment}"  orphan:"true"`
 	}
 	CGenDaoOutput struct{}
