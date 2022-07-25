@@ -333,46 +333,36 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 	return d.Core.DoInsert(ctx, link, table, list, option)
 }
 
-type pgResult struct {
-	sql.Result
-	affected          int64
-	lastInsertId      int64
-	lastInsertIdError error
-}
-
-func (pgr pgResult) RowsAffected() (int64, error) {
-	return pgr.affected, nil
-}
-
-func (pgr pgResult) LastInsertId() (int64, error) {
-	return pgr.lastInsertId, pgr.lastInsertIdError
-}
-
 func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...interface{}) (result sql.Result, err error) {
 	var (
-		useCore    bool   = false
-		primaryKey string = ""
+		isUseCoreDoExec bool   = false // Check whether the default method needs to be used
+		primaryKey      string = ""
+		pkField         gdb.TableField
 	)
 
 	// Transaction checks.
 	if link == nil {
 		if tx := gdb.TXFromCtx(ctx, d.GetGroup()); tx != nil {
-			useCore = true
+			isUseCoreDoExec = true
 		}
 	} else if link.IsTransaction() {
-		useCore = true
+		isUseCoreDoExec = true
 	}
 
-	pkField, ok := ctx.Value(internalPrimaryKeyInCtx).(gdb.TableField)
-
-	if !ok {
-		useCore = true
+	if value := ctx.Value(internalPrimaryKeyInCtx); value != nil {
+		var ok bool
+		pkField, ok = value.(gdb.TableField)
+		if !ok {
+			isUseCoreDoExec = true
+		}
+	} else {
+		isUseCoreDoExec = true
 	}
 
 	// check if it is a insert operation.
-	if !useCore && strings.Contains(sql, "INSERT INTO") {
+	if !isUseCoreDoExec && strings.Contains(sql, "INSERT INTO") {
 		primaryKey = pkField.Name
-		sql += "RETURNING " + primaryKey
+		sql += " RETURNING " + primaryKey
 	} else {
 		return d.Core.DoExec(ctx, link, sql, args...)
 	}
@@ -384,7 +374,8 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 	}
 
 	// Sql filtering.
-	// sql, args = formatSql(sql, args) //TODO: internal function
+	// TODO: internal function
+	// sql, args = formatSql(sql, args)
 	sql, args, err = d.DoFilter(ctx, link, sql, args)
 	if err != nil {
 		return nil, err
@@ -407,7 +398,7 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 	affected := len(out.Records)
 	if affected > 0 {
 		if !strings.Contains(pkField.Type, "int") {
-			return pgResult{
+			return Result{
 				affected:     int64(affected),
 				lastInsertId: 0,
 				lastInsertIdError: gerror.NewCodef(
@@ -417,14 +408,14 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 		}
 		if out.Records[affected-1][primaryKey] != nil {
 			lastInsertId := out.Records[affected-1][primaryKey].Int()
-			return pgResult{
+			return Result{
 				affected:     int64(affected),
 				lastInsertId: int64(lastInsertId),
 			}, nil
 		}
 	}
 
-	return pgResult{
+	return Result{
 		affected:     0,
 		lastInsertId: 0,
 	}, err
