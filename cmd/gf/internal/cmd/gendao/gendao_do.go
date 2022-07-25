@@ -32,7 +32,7 @@ func generateDo(ctx context.Context, db gdb.DB, tableNames, newTableNames []stri
 		var (
 			newTableName     = newTableNames[i]
 			doFilePath       = gfile.Join(doDirPath, gstr.CaseSnake(newTableName)+".go")
-			structDefinition = generateStructDefinition(generateStructDefinitionInput{
+			structDefinition = generateStructDefinition(ctx, generateStructDefinitionInput{
 				CGenDaoInternalInput: in,
 				StructName:           gstr.CaseCamel(newTableName),
 				FieldMap:             fieldMap,
