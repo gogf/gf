@@ -64,12 +64,14 @@ func generateDao(ctx context.Context, db gdb.DB, in CGenDaoInternalInput) {
 func generateDaoIndex(in CGenDaoInternalInput, tableNameCamelCase, tableNameCamelLowerCase, importPrefix, dirPathDao, fileName string) {
 	path := gfile.Join(dirPathDao, fileName+".go")
 	if in.OverwriteDao || !gfile.Exists(path) {
-		indexContent := gstr.ReplaceByMap(getTplDaoIndexContent(""), g.MapStrStr{
-			tplVarImportPrefix:            importPrefix,
-			tplVarTableName:               in.TableName,
-			tplVarTableNameCamelCase:      tableNameCamelCase,
-			tplVarTableNameCamelLowerCase: tableNameCamelLowerCase,
-		})
+		indexContent := gstr.ReplaceByMap(
+			getTemplateFromPathOrDefault(in.TplDaoIndexPath, consts.TemplateGenDaoIndexContent),
+			g.MapStrStr{
+				tplVarImportPrefix:            importPrefix,
+				tplVarTableName:               in.TableName,
+				tplVarTableNameCamelCase:      tableNameCamelCase,
+				tplVarTableNameCamelLowerCase: tableNameCamelLowerCase,
+			})
 		indexContent = replaceDefaultVar(in, indexContent)
 		if err := gfile.PutContents(path, strings.TrimSpace(indexContent)); err != nil {
 			mlog.Fatalf("writing content to '%s' failed: %v", path, err)
@@ -87,15 +89,17 @@ func generateDaoInternal(
 	fieldMap map[string]*gdb.TableField,
 ) {
 	path := gfile.Join(dirPathDao, "internal", fileName+".go")
-	modelContent := gstr.ReplaceByMap(getTplDaoInternalContent(""), g.MapStrStr{
-		tplVarImportPrefix:            importPrefix,
-		tplVarTableName:               in.TableName,
-		tplVarGroupName:               in.Group,
-		tplVarTableNameCamelCase:      tableNameCamelCase,
-		tplVarTableNameCamelLowerCase: tableNameCamelLowerCase,
-		tplVarColumnDefine:            gstr.Trim(generateColumnDefinitionForDao(fieldMap)),
-		tplVarColumnNames:             gstr.Trim(generateColumnNamesForDao(fieldMap)),
-	})
+	modelContent := gstr.ReplaceByMap(
+		getTemplateFromPathOrDefault(in.TplDaoInternalPath, consts.TemplateGenDaoInternalContent),
+		g.MapStrStr{
+			tplVarImportPrefix:            importPrefix,
+			tplVarTableName:               in.TableName,
+			tplVarGroupName:               in.Group,
+			tplVarTableNameCamelCase:      tableNameCamelCase,
+			tplVarTableNameCamelLowerCase: tableNameCamelLowerCase,
+			tplVarColumnDefine:            gstr.Trim(generateColumnDefinitionForDao(fieldMap)),
+			tplVarColumnNames:             gstr.Trim(generateColumnNamesForDao(fieldMap)),
+		})
 	modelContent = replaceDefaultVar(in, modelContent)
 	if err := gfile.PutContents(path, strings.TrimSpace(modelContent)); err != nil {
 		mlog.Fatalf("writing content to '%s' failed: %v", path, err)
@@ -103,20 +107,6 @@ func generateDaoInternal(
 		utils.GoFmt(path)
 		mlog.Print("generated:", path)
 	}
-}
-
-func getTplDaoIndexContent(tplDaoIndexPath string) string {
-	if tplDaoIndexPath != "" {
-		return gfile.GetContents(tplDaoIndexPath)
-	}
-	return consts.TemplateDaoDaoIndexContent
-}
-
-func getTplDaoInternalContent(tplDaoInternalPath string) string {
-	if tplDaoInternalPath != "" {
-		return gfile.GetContents(tplDaoInternalPath)
-	}
-	return consts.TemplateDaoDaoInternalContent
 }
 
 // generateColumnNamesForDao generates and returns the column names assignment content of column struct

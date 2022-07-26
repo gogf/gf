@@ -78,6 +78,10 @@ generated json tag case for model struct, cases are as follows:
 | Kebab           | any-kind-of-string |
 | KebabScreaming  | ANY-KIND-OF-STRING |
 `
+	CGenDaoBriefTplDaoIndexPath    = `template file path for dao index file`
+	CGenDaoBriefTplDaoInternalPath = `template file path for dao internal file`
+	CGenDaoBriefTplDaoDoPathPath   = `template file path for dao do file`
+	CGenDaoBriefTplDaoEntityPath   = `template file path for dao entity file`
 
 	tplVarTableName               = `{TplTableName}`
 	tplVarTableNameCamelCase      = `{TplTableNameCamelCase}`
@@ -89,6 +93,7 @@ generated json tag case for model struct, cases are as follows:
 	tplVarColumnNames             = `{TplColumnNames}`
 	tplVarGroupName               = `{TplGroupName}`
 	tplVarDatetimeStr             = `{TplDatetimeStr}`
+	tplVarCreatedAtDatetimeStr    = `{TplCreatedAtDatetimeStr}`
 )
 
 var (
@@ -97,58 +102,66 @@ var (
 
 func init() {
 	gtag.Sets(g.MapStrStr{
-		`CGenDaoConfig`:               CGenDaoConfig,
-		`CGenDaoUsage`:                CGenDaoUsage,
-		`CGenDaoBrief`:                CGenDaoBrief,
-		`CGenDaoEg`:                   CGenDaoEg,
-		`CGenDaoAd`:                   CGenDaoAd,
-		`CGenDaoBriefPath`:            CGenDaoBriefPath,
-		`CGenDaoBriefLink`:            CGenDaoBriefLink,
-		`CGenDaoBriefTables`:          CGenDaoBriefTables,
-		`CGenDaoBriefTablesEx`:        CGenDaoBriefTablesEx,
-		`CGenDaoBriefPrefix`:          CGenDaoBriefPrefix,
-		`CGenDaoBriefRemovePrefix`:    CGenDaoBriefRemovePrefix,
-		`CGenDaoBriefStdTime`:         CGenDaoBriefStdTime,
-		`CGenDaoBriefWithTime`:        CGenDaoBriefWithTime,
-		`CGenDaoBriefDaoPath`:         CGenDaoBriefDaoPath,
-		`CGenDaoBriefDoPath`:          CGenDaoBriefDoPath,
-		`CGenDaoBriefEntityPath`:      CGenDaoBriefEntityPath,
-		`CGenDaoBriefGJsonSupport`:    CGenDaoBriefGJsonSupport,
-		`CGenDaoBriefImportPrefix`:    CGenDaoBriefImportPrefix,
-		`CGenDaoBriefOverwriteDao`:    CGenDaoBriefOverwriteDao,
-		`CGenDaoBriefModelFile`:       CGenDaoBriefModelFile,
-		`CGenDaoBriefModelFileForDao`: CGenDaoBriefModelFileForDao,
-		`CGenDaoBriefDescriptionTag`:  CGenDaoBriefDescriptionTag,
-		`CGenDaoBriefNoJsonTag`:       CGenDaoBriefNoJsonTag,
-		`CGenDaoBriefNoModelComment`:  CGenDaoBriefNoModelComment,
-		`CGenDaoBriefGroup`:           CGenDaoBriefGroup,
-		`CGenDaoBriefJsonCase`:        CGenDaoBriefJsonCase,
+		`CGenDaoConfig`:                  CGenDaoConfig,
+		`CGenDaoUsage`:                   CGenDaoUsage,
+		`CGenDaoBrief`:                   CGenDaoBrief,
+		`CGenDaoEg`:                      CGenDaoEg,
+		`CGenDaoAd`:                      CGenDaoAd,
+		`CGenDaoBriefPath`:               CGenDaoBriefPath,
+		`CGenDaoBriefLink`:               CGenDaoBriefLink,
+		`CGenDaoBriefTables`:             CGenDaoBriefTables,
+		`CGenDaoBriefTablesEx`:           CGenDaoBriefTablesEx,
+		`CGenDaoBriefPrefix`:             CGenDaoBriefPrefix,
+		`CGenDaoBriefRemovePrefix`:       CGenDaoBriefRemovePrefix,
+		`CGenDaoBriefStdTime`:            CGenDaoBriefStdTime,
+		`CGenDaoBriefWithTime`:           CGenDaoBriefWithTime,
+		`CGenDaoBriefDaoPath`:            CGenDaoBriefDaoPath,
+		`CGenDaoBriefDoPath`:             CGenDaoBriefDoPath,
+		`CGenDaoBriefEntityPath`:         CGenDaoBriefEntityPath,
+		`CGenDaoBriefGJsonSupport`:       CGenDaoBriefGJsonSupport,
+		`CGenDaoBriefImportPrefix`:       CGenDaoBriefImportPrefix,
+		`CGenDaoBriefOverwriteDao`:       CGenDaoBriefOverwriteDao,
+		`CGenDaoBriefModelFile`:          CGenDaoBriefModelFile,
+		`CGenDaoBriefModelFileForDao`:    CGenDaoBriefModelFileForDao,
+		`CGenDaoBriefDescriptionTag`:     CGenDaoBriefDescriptionTag,
+		`CGenDaoBriefNoJsonTag`:          CGenDaoBriefNoJsonTag,
+		`CGenDaoBriefNoModelComment`:     CGenDaoBriefNoModelComment,
+		`CGenDaoBriefGroup`:              CGenDaoBriefGroup,
+		`CGenDaoBriefJsonCase`:           CGenDaoBriefJsonCase,
+		`CGenDaoBriefTplDaoIndexPath`:    CGenDaoBriefTplDaoIndexPath,
+		`CGenDaoBriefTplDaoInternalPath`: CGenDaoBriefTplDaoInternalPath,
+		`CGenDaoBriefTplDaoDoPathPath`:   CGenDaoBriefTplDaoDoPathPath,
+		`CGenDaoBriefTplDaoEntityPath`:   CGenDaoBriefTplDaoEntityPath,
 	})
 }
 
 type (
 	CGenDao      struct{}
 	CGenDaoInput struct {
-		g.Meta         `name:"dao" config:"{CGenDaoConfig}" usage:"{CGenDaoUsage}" brief:"{CGenDaoBrief}" eg:"{CGenDaoEg}" ad:"{CGenDaoAd}"`
-		Path           string `name:"path"            short:"p"  brief:"{CGenDaoBriefPath}" d:"internal"`
-		Link           string `name:"link"            short:"l"  brief:"{CGenDaoBriefLink}"`
-		Tables         string `name:"tables"          short:"t"  brief:"{CGenDaoBriefTables}"`
-		TablesEx       string `name:"tablesEx"        short:"x"  brief:"{CGenDaoBriefTablesEx}"`
-		Group          string `name:"group"           short:"g"  brief:"{CGenDaoBriefGroup}" d:"default"`
-		Prefix         string `name:"prefix"          short:"f"  brief:"{CGenDaoBriefPrefix}"`
-		RemovePrefix   string `name:"removePrefix"    short:"r"  brief:"{CGenDaoBriefRemovePrefix}"`
-		JsonCase       string `name:"jsonCase"        short:"j"  brief:"{CGenDaoBriefJsonCase}" d:"CamelLower"`
-		ImportPrefix   string `name:"importPrefix"    short:"i"  brief:"{CGenDaoBriefImportPrefix}"`
-		DaoPath        string `name:"daoPath"         short:"d"  brief:"{CGenDaoBriefDaoPath}"    d:"dao"`
-		DoPath         string `name:"doPath"          short:"o"  brief:"{CGenDaoBriefDoPath}"     d:"model/do"`
-		EntityPath     string `name:"entityPath"      short:"e"  brief:"{CGenDaoBriefEntityPath}" d:"model/entity"`
-		StdTime        bool   `name:"stdTime"         short:"s"  brief:"{CGenDaoBriefStdTime}"         orphan:"true"`
-		WithTime       bool   `name:"withTime"        short:"w"  brief:"{CGenDaoBriefWithTime}"        orphan:"true"`
-		GJsonSupport   bool   `name:"gJsonSupport"    short:"n"  brief:"{CGenDaoBriefGJsonSupport}"    orphan:"true"`
-		OverwriteDao   bool   `name:"overwriteDao"    short:"v"  brief:"{CGenDaoBriefOverwriteDao}"    orphan:"true"`
-		DescriptionTag bool   `name:"descriptionTag"  short:"c"  brief:"{CGenDaoBriefDescriptionTag}"  orphan:"true"`
-		NoJsonTag      bool   `name:"noJsonTag"       short:"k"  brief:"{CGenDaoBriefNoJsonTag}"        orphan:"true"`
-		NoModelComment bool   `name:"noModelComment"  short:"m"  brief:"{CGenDaoBriefNoModelComment}"  orphan:"true"`
+		g.Meta             `name:"dao" config:"{CGenDaoConfig}" usage:"{CGenDaoUsage}" brief:"{CGenDaoBrief}" eg:"{CGenDaoEg}" ad:"{CGenDaoAd}"`
+		Path               string `name:"path"                short:"p"  brief:"{CGenDaoBriefPath}" d:"internal"`
+		Link               string `name:"link"                short:"l"  brief:"{CGenDaoBriefLink}"`
+		Tables             string `name:"tables"              short:"t"  brief:"{CGenDaoBriefTables}"`
+		TablesEx           string `name:"tablesEx"            short:"x"  brief:"{CGenDaoBriefTablesEx}"`
+		Group              string `name:"group"               short:"g"  brief:"{CGenDaoBriefGroup}" d:"default"`
+		Prefix             string `name:"prefix"              short:"f"  brief:"{CGenDaoBriefPrefix}"`
+		RemovePrefix       string `name:"removePrefix"        short:"r"  brief:"{CGenDaoBriefRemovePrefix}"`
+		JsonCase           string `name:"jsonCase"            short:"j"  brief:"{CGenDaoBriefJsonCase}" d:"CamelLower"`
+		ImportPrefix       string `name:"importPrefix"        short:"i"  brief:"{CGenDaoBriefImportPrefix}"`
+		DaoPath            string `name:"daoPath"             short:"d"  brief:"{CGenDaoBriefDaoPath}"    d:"dao"`
+		DoPath             string `name:"doPath"              short:"o"  brief:"{CGenDaoBriefDoPath}"     d:"model/do"`
+		EntityPath         string `name:"entityPath"          short:"e"  brief:"{CGenDaoBriefEntityPath}" d:"model/entity"`
+		TplDaoIndexPath    string `name:"tplDaoIndexPath"     short:"t1" brief:"{CGenDaoBriefTplDaoIndexPath}"`
+		TplDaoInternalPath string `name:"tplDaoInternalPath"  short:"t2" brief:"{CGenDaoBriefTplDaoInternalPath}"`
+		TplDaoDoPath       string `name:"tplDaoDoPath"        short:"t3" brief:"{CGenDaoBriefTplDaoDoPathPath}"`
+		TplDaoEntitylPath  string `name:"tplDaoEntityPath"    short:"t4" brief:"{CGenDaoBriefTplDaoEntityPath}"`
+		StdTime            bool   `name:"stdTime"             short:"s"  brief:"{CGenDaoBriefStdTime}"         orphan:"true"`
+		WithTime           bool   `name:"withTime"            short:"w"  brief:"{CGenDaoBriefWithTime}"        orphan:"true"`
+		GJsonSupport       bool   `name:"gJsonSupport"        short:"n"  brief:"{CGenDaoBriefGJsonSupport}"    orphan:"true"`
+		OverwriteDao       bool   `name:"overwriteDao"        short:"v"  brief:"{CGenDaoBriefOverwriteDao}"    orphan:"true"`
+		DescriptionTag     bool   `name:"descriptionTag"      short:"c"  brief:"{CGenDaoBriefDescriptionTag}"  orphan:"true"`
+		NoJsonTag          bool   `name:"noJsonTag"           short:"k"  brief:"{CGenDaoBriefNoJsonTag}"       orphan:"true"`
+		NoModelComment     bool   `name:"noModelComment"      short:"m"  brief:"{CGenDaoBriefNoModelComment}"  orphan:"true"`
 	}
 	CGenDaoOutput struct{}
 
@@ -305,12 +318,14 @@ func getImportPartContent(source string, isDo bool) string {
 }
 
 func replaceDefaultVar(in CGenDaoInternalInput, origin string) string {
-	var tplDatetimeStr string
+	var tplCreatedAtDatetimeStr string
+	var tplDatetimeStr string = createdAt.String()
 	if in.WithTime {
-		tplDatetimeStr = fmt.Sprintf(`Created at %s`, createdAt.String())
+		tplCreatedAtDatetimeStr = fmt.Sprintf(`Created at %s`, tplDatetimeStr)
 	}
 	return gstr.ReplaceByMap(origin, g.MapStrStr{
-		tplVarDatetimeStr: tplDatetimeStr,
+		tplVarDatetimeStr:          tplDatetimeStr,
+		tplVarCreatedAtDatetimeStr: tplCreatedAtDatetimeStr,
 	})
 }
 
@@ -336,4 +351,13 @@ func sortFieldKeyForDao(fieldMap map[string]*gdb.TableField) []string {
 		i++
 	}
 	return result
+}
+
+func getTemplateFromPathOrDefault(filePath string, def string) string {
+	if filePath != "" {
+		if contents := gfile.GetContents(filePath); contents != "" {
+			return contents
+		}
+	}
+	return def
 }
