@@ -15,11 +15,6 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-// Test_LastInsertId description
-//
-// createTime: 2022-07-12 11:09:12
-//
-// author: hailaz
 func Test_LastInsertId(t *testing.T) {
 
 	// err not nil
