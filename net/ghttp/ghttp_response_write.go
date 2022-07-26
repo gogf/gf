@@ -119,11 +119,37 @@ func (r *Response) WriteJson(content interface{}) {
 	}
 }
 
+// WritePureJson writes `content` to the response with JSON format without escaping JSON quoted string,
+// followed by a newline character
+func (r *Response) WritePureJson(content interface{}) {
+	r.Header().Set("Content-Type", contentTypeJson)
+	// If given string/[]byte, response it directly to the client.
+	switch content.(type) {
+	case string, []byte:
+		r.Write(gconv.String(content))
+		return
+	}
+	encoder := json.NewEncoder(r.ResponseWriter)
+	encoder.SetEscapeHTML(false)
+	if err := encoder.Encode(content); err != nil {
+		panic(gerror.Wrap(err, `WritePureJson failed`))
+	}
+}
+
 // WriteJsonExit writes `content` to the response with JSON format and exits executing
 // of current handler if success. The "Exit" feature is commonly used to replace usage of
 // return statements in the handler, for convenience.
 func (r *Response) WriteJsonExit(content interface{}) {
 	r.WriteJson(content)
+	r.Request.Exit()
+}
+
+// WritePureJsonExit writes `content` to the response with JSON format without escaping,
+// followed by a newline character
+// JSON quoted string and exits executing of current handler if success. The "Exit"
+// feature is commonly used to replace usage of return statements in the handler, for convenience.
+func (r *Response) WritePureJsonExit(content interface{}) {
+	r.WritePureJson(content)
 	r.Request.Exit()
 }
 

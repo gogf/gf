@@ -173,3 +173,39 @@ func Test_Params_Json_Response(t *testing.T) {
 		t.Assert(map4["message"], g.Map{"body": "测试", "code": 3, "error": "error"})
 	})
 }
+
+func Test_Pure_Json_Response(t *testing.T) {
+	type User struct {
+		Name    string `json:"name,omitempty"`
+		SiteUrl string `json:"siteUrl,omitempty"`
+	}
+
+	s := g.Server()
+	s.BindHandler("/json1", func(r *ghttp.Request) {
+		r.Response.WritePureJson(&User{
+			Name:    "john",
+			SiteUrl: "https://goframe.org?key1=value1&key2=a&1",
+		})
+	})
+	s.BindHandler("/json2", func(r *ghttp.Request) {
+		r.Response.WriteJson(&User{
+			Name:    "john",
+			SiteUrl: "https://goframe.org?key1=value1&key2=a&1",
+		})
+	})
+
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		// Encode writes the JSON encoding of v to the stream, followed by a newline character.
+		// refer https://pkg.go.dev/encoding/json#Encoder.Encode
+		t.Assert(client.GetContent(ctx, "/json1"), `{"name":"john","siteUrl":"https://goframe.org?key1=value1&key2=a&1"}`+"\n")
+		t.Assert(client.GetContent(ctx, "/json2"), `{"name":"john","siteUrl":"https://goframe.org?key1=value1\u0026key2=a\u00261"}`)
+	})
+}
