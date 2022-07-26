@@ -318,6 +318,11 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 			gcode.CodeNotSupported,
 			`Replace operation is not supported by pgsql driver`,
 		)
+	case gdb.InsertOptionIgnore:
+		return nil, gerror.NewCode(
+			gcode.CodeNotSupported,
+			`Insert ignore operation is not supported by pgsql driver`,
+		)
 
 	case gdb.InsertOptionDefault:
 		tableFields, err := d.TableFields(ctx, table)
@@ -360,7 +365,7 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 	}
 
 	// check if it is a insert operation.
-	if !isUseCoreDoExec && strings.Contains(sql, "INSERT INTO") {
+	if !isUseCoreDoExec && pkField.Name != "" && strings.Contains(sql, "INSERT INTO") {
 		primaryKey = pkField.Name
 		sql += " RETURNING " + primaryKey
 	} else {
@@ -374,7 +379,7 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 	}
 
 	// Sql filtering.
-	// TODO: internal function
+	// TODO: internal function formatSql
 	// sql, args = formatSql(sql, args)
 	sql, args, err = d.DoFilter(ctx, link, sql, args)
 	if err != nil {
@@ -406,6 +411,7 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 					"LastInsertId is not supported by primary key type: %s", pkField.Type),
 			}, nil
 		}
+
 		if out.Records[affected-1][primaryKey] != nil {
 			lastInsertId := out.Records[affected-1][primaryKey].Int()
 			return Result{
@@ -415,8 +421,5 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 		}
 	}
 
-	return Result{
-		affected:     0,
-		lastInsertId: 0,
-	}, err
+	return nil, gerror.NewCodef(gcode.CodeUnknown, "No affected rows")
 }
