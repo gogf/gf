@@ -89,6 +89,12 @@ type iUnmarshalValue interface {
 	UnmarshalValue(interface{}) error
 }
 
+// iUnmarshalValueWithTarget is the interface for custom defined types customizing value assignment.
+// Note that only pointer can implement interface iUnmarshalValueWithTarget.
+type iUnmarshalValueWithTarget interface {
+	UnmarshalValueWithTarget(target interface{}, value interface{}) (error, bool)
+}
+
 // iUnmarshalText is the interface for custom defined types customizing value assignment.
 // Note that only pointer can implement interface iUnmarshalText.
 type iUnmarshalText interface {

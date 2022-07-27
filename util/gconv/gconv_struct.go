@@ -376,6 +376,13 @@ func bindVarToReflectValueWithInterfaceCheck(reflectValue reflect.Value, value i
 	if v, ok := pointer.(iUnmarshalValue); ok {
 		return v.UnmarshalValue(value), ok
 	}
+	// iUnmarshalValueWithTarget
+	if v, ok := pointer.(iUnmarshalValueWithTarget); ok {
+		if err, ok = v.UnmarshalValueWithTarget(pointer, value); ok {
+			panic(err)
+			return err, ok
+		}
+	}
 	// UnmarshalText.
 	if v, ok := pointer.(iUnmarshalText); ok {
 		var valueBytes []byte
