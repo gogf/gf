@@ -379,7 +379,6 @@ func bindVarToReflectValueWithInterfaceCheck(reflectValue reflect.Value, value i
 	// iUnmarshalValueWithTarget
 	if v, ok := pointer.(iUnmarshalValueWithTarget); ok {
 		if err, ok = v.UnmarshalValueWithTarget(pointer, value); ok {
-			panic(err)
 			return err, ok
 		}
 	}
