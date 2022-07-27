@@ -674,3 +674,26 @@ func Test_Middleware_Panic(t *testing.T) {
 		t.Assert(client.GetContent(ctx, "/"), "exception recovered: error")
 	})
 }
+
+func Test_Middleware_JsonBody(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(ghttp.MiddlewareJsonBody)
+		group.ALL("/", func(r *ghttp.Request) {
+			r.Response.Write("hello")
+		})
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		t.Assert(client.GetContent(ctx, "/"), "hello")
+		t.Assert(client.PutContent(ctx, "/"), "hello")
+		t.Assert(client.PutContent(ctx, "/", `{"name":"john"}`), "hello")
+		t.Assert(client.PutContent(ctx, "/", `{"name":}`), "the request body content should be JSON format")
+	})
+}

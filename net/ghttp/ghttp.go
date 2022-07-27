@@ -12,6 +12,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gorilla/websocket"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -174,4 +176,11 @@ var (
 
 	// defaultValueTags are the struct tag names for default value storing.
 	defaultValueTags = []string{"d", "default"}
+)
+
+var (
+	ErrNeedJsonBody = gerror.NewOption(gerror.Option{
+		Text: "the request body content should be JSON format",
+		Code: gcode.CodeInvalidRequest,
+	})
 )

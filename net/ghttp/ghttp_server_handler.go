@@ -148,6 +148,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if request.Response.Status == 0 {
 		if request.StaticFile != nil || request.Middleware.served || request.Response.buffer.Len() > 0 {
 			request.Response.WriteHeader(http.StatusOK)
+		} else if err := request.GetError(); err != nil {
+			if request.Response.BufferLength() == 0 {
+				request.Response.Write(err.Error())
+			}
+			request.Response.WriteHeader(http.StatusInternalServerError)
 		} else {
 			request.Response.WriteHeader(http.StatusNotFound)
 		}
