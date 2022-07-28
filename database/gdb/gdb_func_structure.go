@@ -65,9 +65,6 @@ func CheckValueForLocalType(ctx context.Context, fieldType string, fieldValue in
 		"medium_int",
 		"mediumint",
 		"serial":
-		if typePattern == "1" {
-			return typeBool, nil
-		}
 		if gstr.ContainsI(fieldType, "unsigned") {
 			return typeUint, nil
 		}
@@ -101,6 +98,7 @@ func CheckValueForLocalType(ctx context.Context, fieldType string, fieldValue in
 		return typeFloat64, nil
 
 	case "bit":
+		// It is suggested using bit(1) as boolean.
 		if typePattern == "1" {
 			return typeBool, nil
 		}
