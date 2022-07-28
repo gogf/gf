@@ -7,7 +7,6 @@
 // Note:
 // 1. It needs manually import: _ "github.com/lib/pq"
 // 2. It does not support Save/Replace features.
-// 3. It does not support LastInsertId.
 
 // Package pgsql implements gdb.Driver, which supports operations for PostgreSql.
 package pgsql
@@ -318,6 +317,7 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 			gcode.CodeNotSupported,
 			`Replace operation is not supported by pgsql driver`,
 		)
+
 	case gdb.InsertOptionIgnore:
 		return nil, gerror.NewCode(
 			gcode.CodeNotSupported,
@@ -369,8 +369,11 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 		primaryKey = pkField.Name
 		sql += " RETURNING " + primaryKey
 	} else {
+		// use default DoExec
 		return d.Core.DoExec(ctx, link, sql, args...)
 	}
+
+	// Only the insert operation with primary key can execute the following code
 
 	if d.GetConfig().ExecTimeout > 0 {
 		var cancelFunc context.CancelFunc
@@ -421,5 +424,5 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 		}
 	}
 
-	return nil, gerror.NewCodef(gcode.CodeUnknown, "No affected rows")
+	return Result{}, nil
 }
