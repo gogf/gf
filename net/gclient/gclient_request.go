@@ -291,7 +291,9 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 	// Custom header.
 	if len(c.header) > 0 {
 		for k, v := range c.header {
-			req.Header.Set(k, v)
+			if len(req.Header.Get(httpHeaderContentType)) < 0 {
+				req.Header.Set(k, v)
+			}
 		}
 	}
 	// It's necessary set the req.Host if you want to custom the host value of the request.
