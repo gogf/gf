@@ -136,56 +136,55 @@ func (l *Logger) print(ctx context.Context, level int, stack string, values ...i
 	}
 	input.handlers = append(input.handlers, defaultPrintHandler)
 
-	if l.config.HeaderPrint {
-		// Time.
-		timeFormat := ""
-		if l.config.Flags&F_TIME_DATE > 0 {
-			timeFormat += "2006-01-02"
+	// Time.
+	timeFormat := ""
+	if l.config.Flags&F_TIME_DATE > 0 {
+		timeFormat += "2006-01-02"
+	}
+	if l.config.Flags&F_TIME_TIME > 0 {
+		if timeFormat != "" {
+			timeFormat += " "
 		}
-		if l.config.Flags&F_TIME_TIME > 0 {
-			if timeFormat != "" {
-				timeFormat += " "
-			}
-			timeFormat += "15:04:05"
+		timeFormat += "15:04:05"
+	}
+	if l.config.Flags&F_TIME_MILLI > 0 {
+		if timeFormat != "" {
+			timeFormat += " "
 		}
-		if l.config.Flags&F_TIME_MILLI > 0 {
-			if timeFormat != "" {
-				timeFormat += " "
-			}
-			timeFormat += "15:04:05.000"
-		}
-		if len(timeFormat) > 0 {
-			input.TimeFormat = now.Format(timeFormat)
-		}
+		timeFormat += "15:04:05.000"
+	}
+	if len(timeFormat) > 0 {
+		input.TimeFormat = now.Format(timeFormat)
+	}
 
-		// Level string.
-		input.LevelFormat = l.GetLevelPrefix(level)
+	// Level string.
+	input.LevelFormat = l.GetLevelPrefix(level)
 
-		// Caller path and Fn name.
-		if l.config.Flags&(F_FILE_LONG|F_FILE_SHORT|F_CALLER_FN) > 0 {
-			callerFnName, path, line := gdebug.CallerWithFilter(
-				[]string{utils.StackFilterKeyForGoFrame},
-				l.config.StSkip,
-			)
-			if l.config.Flags&F_CALLER_FN > 0 {
-				if len(callerFnName) > 2 {
-					input.CallerFunc = fmt.Sprintf(`[%s]`, callerFnName)
-				}
-			}
-			if line >= 0 && len(path) > 1 {
-				if l.config.Flags&F_FILE_LONG > 0 {
-					input.CallerPath = fmt.Sprintf(`%s:%d:`, path, line)
-				}
-				if l.config.Flags&F_FILE_SHORT > 0 {
-					input.CallerPath = fmt.Sprintf(`%s:%d:`, gfile.Basename(path), line)
-				}
+	// Caller path and Fn name.
+	if l.config.Flags&(F_FILE_LONG|F_FILE_SHORT|F_CALLER_FN) > 0 {
+		callerFnName, path, line := gdebug.CallerWithFilter(
+			[]string{utils.StackFilterKeyForGoFrame},
+			l.config.StSkip,
+		)
+		if l.config.Flags&F_CALLER_FN > 0 {
+			if len(callerFnName) > 2 {
+				input.CallerFunc = fmt.Sprintf(`[%s]`, callerFnName)
 			}
 		}
-		// Prefix.
-		if len(l.config.Prefix) > 0 {
-			input.Prefix = l.config.Prefix
+		if line >= 0 && len(path) > 1 {
+			if l.config.Flags&F_FILE_LONG > 0 {
+				input.CallerPath = fmt.Sprintf(`%s:%d:`, path, line)
+			}
+			if l.config.Flags&F_FILE_SHORT > 0 {
+				input.CallerPath = fmt.Sprintf(`%s:%d:`, gfile.Basename(path), line)
+			}
 		}
 	}
+	// Prefix.
+	if len(l.config.Prefix) > 0 {
+		input.Prefix = l.config.Prefix
+	}
+
 	// Convert value to string.
 	if ctx != nil {
 		// Tracing values.
