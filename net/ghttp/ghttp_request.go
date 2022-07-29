@@ -263,7 +263,7 @@ func (r *Request) SetError(err error) {
 
 // ReloadParam is used for modifying request parameter.
 // Sometimes, we want to modify request parameters through middleware, but directly modifying Request.Body
-// is invalid, so it clears the parsed* marks to make the parameters re-parsed.
+// is invalid, so it clears the parsed* marks of Request to make the parameters rehearsed.
 func (r *Request) ReloadParam() {
 	r.parsedBody = false
 	r.parsedForm = false
