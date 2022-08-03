@@ -210,7 +210,8 @@ func LoadContentType(dataType string, data interface{}, safe ...bool) (*Json, er
 		content = content[3:]
 	}
 	options := Options{
-		Type: dataType,
+		Type:      dataType,
+		StrNumber: true,
 	}
 	if len(safe) > 0 && safe[0] {
 		options.Safe = true
