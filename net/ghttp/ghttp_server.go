@@ -147,7 +147,7 @@ func (s *Server) Start() error {
 		)
 	} else {
 		if s.config.SwaggerPath != "" {
-			s.Logger().Warning(
+			s.Logger().Warn(
 				ctx,
 				`openapi specification is disabled but swagger ui is serving, which might make no sense`,
 			)

@@ -74,6 +74,17 @@ func Test_Warning(t *testing.T) {
 	})
 }
 
+func Test_Warn(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		w := bytes.NewBuffer(nil)
+		l := NewWithWriter(w)
+		l.Warn(ctx, 1, 2, 3)
+		l.Warnf(ctx, "%d %d %d", 1, 2, 3)
+		t.Assert(gstr.Count(w.String(), defaultLevelPrefixes[LEVEL_WARN]), 2)
+		t.Assert(gstr.Count(w.String(), "1 2 3"), 2)
+	})
+}
+
 func Test_Error(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		w := bytes.NewBuffer(nil)

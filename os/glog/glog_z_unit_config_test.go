@@ -44,7 +44,7 @@ func Test_SetConfigWithMap_LevelStr(t *testing.T) {
 		l.SetWriter(buffer)
 
 		l.Debug(ctx, "test")
-		l.Warning(ctx, "test")
+		l.Warn(ctx, "test")
 		t.Assert(strings.Contains(buffer.String(), "DEBU"), true)
 		t.Assert(strings.Contains(buffer.String(), "WARN"), true)
 	})
@@ -59,7 +59,7 @@ func Test_SetConfigWithMap_LevelStr(t *testing.T) {
 		t.AssertNil(err)
 		l.SetWriter(buffer)
 		l.Debug(ctx, "test")
-		l.Warning(ctx, "test")
+		l.Warn(ctx, "test")
 		t.Assert(strings.Contains(buffer.String(), "DEBU"), false)
 		t.Assert(strings.Contains(buffer.String(), "WARN"), true)
 	})
