@@ -74,14 +74,28 @@ func Noticef(ctx context.Context, format string, v ...interface{}) {
 
 // Warning prints the logging content with [WARN] header and newline.
 // It also prints caller stack info if stack feature is enabled.
+// Deprecated,use Warn instead.
 func Warning(ctx context.Context, v ...interface{}) {
 	defaultLogger.Warning(ctx, v...)
 }
 
 // Warningf prints the logging content with [WARN] header, custom format and newline.
 // It also prints caller stack info if stack feature is enabled.
+// Deprecated,use Warnf instead.
 func Warningf(ctx context.Context, format string, v ...interface{}) {
 	defaultLogger.Warningf(ctx, format, v...)
+}
+
+// Warn prints the logging content with [WARN] header and newline.
+// It also prints caller stack info if stack feature is enabled.
+func Warn(ctx context.Context, v ...interface{}) {
+	defaultLogger.Warn(ctx, v...)
+}
+
+// Warnf prints the logging content with [WARN] header, custom format and newline.
+// It also prints caller stack info if stack feature is enabled.
+func Warnf(ctx context.Context, format string, v ...interface{}) {
+	defaultLogger.Warnf(ctx, format, v...)
 }
 
 // Error prints the logging content with [ERRO] header and newline.

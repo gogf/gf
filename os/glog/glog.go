@@ -27,6 +27,8 @@ type ILogger interface {
 	Noticef(ctx context.Context, format string, v ...interface{})
 	Warning(ctx context.Context, v ...interface{})
 	Warningf(ctx context.Context, format string, v ...interface{})
+	Warn(ctx context.Context, v ...interface{})
+	Warnf(ctx context.Context, format string, v ...interface{})
 	Error(ctx context.Context, v ...interface{})
 	Errorf(ctx context.Context, format string, v ...interface{})
 	Critical(ctx context.Context, v ...interface{})

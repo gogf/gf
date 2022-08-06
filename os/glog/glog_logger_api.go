@@ -94,6 +94,7 @@ func (l *Logger) Noticef(ctx context.Context, format string, v ...interface{}) {
 
 // Warning prints the logging content with [WARN] header and newline.
 // It also prints caller stack info if stack feature is enabled.
+// Deprecated,use Warn instead.
 func (l *Logger) Warning(ctx context.Context, v ...interface{}) {
 	if l.checkLevel(LEVEL_WARN) {
 		l.printStd(ctx, LEVEL_WARN, v...)
@@ -102,7 +103,24 @@ func (l *Logger) Warning(ctx context.Context, v ...interface{}) {
 
 // Warningf prints the logging content with [WARN] header, custom format and newline.
 // It also prints caller stack info if stack feature is enabled.
+// Deprecated,use Warnf instead.
 func (l *Logger) Warningf(ctx context.Context, format string, v ...interface{}) {
+	if l.checkLevel(LEVEL_WARN) {
+		l.printStd(ctx, LEVEL_WARN, l.format(format, v...))
+	}
+}
+
+// Warn prints the logging content with [WARN] header and newline.
+// It also prints caller stack info if stack feature is enabled.
+func (l *Logger) Warn(ctx context.Context, v ...interface{}) {
+	if l.checkLevel(LEVEL_WARN) {
+		l.printStd(ctx, LEVEL_WARN, v...)
+	}
+}
+
+// Warnf prints the logging content with [WARN] header, custom format and newline.
+// It also prints caller stack info if stack feature is enabled.
+func (l *Logger) Warnf(ctx context.Context, format string, v ...interface{}) {
 	if l.checkLevel(LEVEL_WARN) {
 		l.printStd(ctx, LEVEL_WARN, l.format(format, v...))
 	}
