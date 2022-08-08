@@ -24,6 +24,8 @@ const (
 	typeDatetime    = "datetime"
 	typeInt64Bytes  = "int64-bytes"
 	typeUint64Bytes = "uint64-bytes"
+	typeJson        = "json"
+	typeJsonb       = "jsonb"
 )
 
 func generateStructDefinition(ctx context.Context, in generateStructDefinitionInput) string {
@@ -84,7 +86,7 @@ func generateStructFieldDefinition(
 		typeName = "uint64"
 
 	// Special type handle.
-	case "json", "jsonb":
+	case typeJson, typeJsonb:
 		if in.GJsonSupport {
 			typeName = "*gjson.Json"
 		} else {

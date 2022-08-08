@@ -125,19 +125,17 @@ func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fie
 	typeName, _ := gregex.ReplaceString(`\(.+\)`, "", fieldType)
 	typeName = strings.ToLower(typeName)
 	switch typeName {
+	// For pgsql, int2 = smallint and int4 = integer.
+	case "int2", "int4":
+		return gconv.Int(gconv.String(fieldValue)), nil
+
 	// For pgsql, int8 = bigint.
 	case "int8":
-		if gstr.ContainsI(fieldType, "unsigned") {
-			return gconv.Uint64(gconv.String(fieldValue)), nil
-		}
 		return gconv.Int64(gconv.String(fieldValue)), nil
 
 	// Int32 slice.
 	case
-		"_int2":
-		if gstr.ContainsI(fieldType, "unsigned") {
-			gconv.Uints(gconv.String(fieldValue))
-		}
+		"_int2", "_int4":
 		return gconv.Ints(
 			gstr.ReplaceByMap(gconv.String(fieldValue),
 				map[string]string{
@@ -149,10 +147,7 @@ func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fie
 
 	// Int64 slice.
 	case
-		"_int4", "_int8":
-		if gstr.ContainsI(fieldType, "unsigned") {
-			gconv.Uint64(gconv.String(fieldValue))
-		}
+		"_int8":
 		return gconv.Int64s(
 			gstr.ReplaceByMap(gconv.String(fieldValue),
 				map[string]string{
