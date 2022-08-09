@@ -167,7 +167,8 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 		}
 		return LocalTypeInt64, nil
 
-	case "real":
+	case
+		"real":
 		return LocalTypeFloat32, nil
 
 	case
@@ -179,7 +180,8 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 		"smallmoney":
 		return LocalTypeFloat64, nil
 
-	case "bit":
+	case
+		"bit":
 		// It is suggested using bit(1) as boolean.
 		if typePattern == "1" {
 			return LocalTypeBool, nil
@@ -194,10 +196,12 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 		}
 		return LocalTypeInt64Bytes, nil
 
-	case "bool":
+	case
+		"bool":
 		return LocalTypeBool, nil
 
-	case "date":
+	case
+		"date":
 		return LocalTypeDate, nil
 
 	case
@@ -206,10 +210,12 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 		"timestamptz":
 		return LocalTypeDatetime, nil
 
-	case "json":
+	case
+		"json":
 		return LocalTypeJson, nil
 
-	case "jsonb":
+	case
+		"jsonb":
 		return LocalTypeJsonb, nil
 
 	default:

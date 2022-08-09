@@ -141,10 +141,13 @@ func (d *Driver) CheckLocalTypeForValue(ctx context.Context, fieldType string, f
 		"int8":
 		return gdb.LocalTypeInt64, nil
 
-	case "_int2", "_int4":
+	case
+		"_int2",
+		"_int4":
 		return gdb.LocalTypeIntSlice, nil
 
-	case "_int8":
+	case
+		"_int8":
 		return gdb.LocalTypeInt64Slice, nil
 
 	default:
