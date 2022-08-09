@@ -23,6 +23,7 @@ const (
 	typeUint        = "uint"
 	typeInt64       = "int64"
 	typeUint64      = "uint64"
+	typeIntSlice    = "[]int"
 	typeInt64Slice  = "[]int64"
 	typeUint64Slice = "[]uint64"
 	typeInt64Bytes  = "int64-bytes"
@@ -31,6 +32,8 @@ const (
 	typeFloat64     = "float64"
 	typeBytes       = "[]byte"
 	typeBool        = "bool"
+	typeJson        = "json"
+	typeJsonb       = "jsonb"
 )
 
 // CheckValueForLocalType checks and returns corresponding type for given db type.
@@ -58,6 +61,8 @@ func CheckValueForLocalType(ctx context.Context, fieldType string, fieldValue in
 		return typeBytes, nil
 
 	case
+		"int2", // For pgsql, int2 = smallint.
+		"int4", // For pgsql, int4 = integer.
 		"int",
 		"tinyint",
 		"small_int",
@@ -65,21 +70,13 @@ func CheckValueForLocalType(ctx context.Context, fieldType string, fieldValue in
 		"medium_int",
 		"mediumint",
 		"serial":
-		if typePattern == "1" {
-			return typeBool, nil
-		}
 		if gstr.ContainsI(fieldType, "unsigned") {
 			return typeUint, nil
 		}
 		return typeInt, nil
 
-	case "_int4", "_int8":
-		if gstr.ContainsI(fieldType, "unsigned") {
-			return typeUint64Slice, nil
-		}
-		return typeInt64Slice, nil
-
 	case
+		"int8", // For pgsql, int8 = bigint.
 		"big_int",
 		"bigint",
 		"bigserial":
@@ -87,6 +84,12 @@ func CheckValueForLocalType(ctx context.Context, fieldType string, fieldValue in
 			return typeUint64, nil
 		}
 		return typeInt64, nil
+
+	case "_int2", "_int4":
+		return typeIntSlice, nil
+
+	case "_int8":
+		return typeInt64Slice, nil
 
 	case "real":
 		return typeFloat32, nil
@@ -101,6 +104,7 @@ func CheckValueForLocalType(ctx context.Context, fieldType string, fieldValue in
 		return typeFloat64, nil
 
 	case "bit":
+		// It is suggested using bit(1) as boolean.
 		if typePattern == "1" {
 			return typeBool, nil
 		}
@@ -125,6 +129,12 @@ func CheckValueForLocalType(ctx context.Context, fieldType string, fieldValue in
 		"timestamp",
 		"timestamptz":
 		return typeDatetime, nil
+
+	case "json":
+		return typeJson, nil
+
+	case "jsonb":
+		return typeJsonb, nil
 
 	default:
 		// Auto-detect field type, using key match.

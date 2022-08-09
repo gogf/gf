@@ -42,7 +42,7 @@ func Try(ctx context.Context, try func(ctx context.Context)) (err error) {
 }
 
 // TryCatch implements try...catch... logistics using internal panic...recover.
-// It automatically calls function `catch` if any exception occurs ans passes the exception as an error.
+// It automatically calls function `catch` if any exception occurs and passes the exception as an error.
 func TryCatch(ctx context.Context, try func(ctx context.Context), catch ...func(ctx context.Context, exception error)) {
 	defer func() {
 		if exception := recover(); exception != nil && len(catch) > 0 {
