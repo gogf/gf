@@ -15,6 +15,36 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
+func Test_LastInsertId(t *testing.T) {
+
+	// err not nil
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model("notexist").Insert(g.List{
+			{"name": "user1"},
+			{"name": "user2"},
+			{"name": "user3"},
+		})
+		t.AssertNE(err, nil)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		tableName := createTable()
+		defer dropTable(tableName)
+		res, err := db.Model(tableName).Insert(g.List{
+			{"passport": "user1", "password": "pwd", "nickname": "nickname", "create_time": CreateTime},
+			{"passport": "user2", "password": "pwd", "nickname": "nickname", "create_time": CreateTime},
+			{"passport": "user3", "password": "pwd", "nickname": "nickname", "create_time": CreateTime},
+		})
+		t.Assert(err, nil)
+		lastInsertId, err := res.LastInsertId()
+		t.Assert(err, nil)
+		t.Assert(lastInsertId, int64(3))
+		rowsAffected, err := res.RowsAffected()
+		t.Assert(err, nil)
+		t.Assert(rowsAffected, int64(3))
+	})
+}
+
 func Test_Driver_DoFilter(t *testing.T) {
 	var (
 		ctx    = gctx.New()
