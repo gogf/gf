@@ -14,19 +14,11 @@ import (
 
 type generateStructDefinitionInput struct {
 	CGenDaoInternalInput
+	DB         gdb.DB                     // Current DB.
 	StructName string                     // Struct name.
 	FieldMap   map[string]*gdb.TableField // Table field map.
 	IsDo       bool                       // Is generating DTO struct.
 }
-
-const (
-	typeDate        = "date"
-	typeDatetime    = "datetime"
-	typeInt64Bytes  = "int64-bytes"
-	typeUint64Bytes = "uint64-bytes"
-	typeJson        = "json"
-	typeJsonb       = "jsonb"
-)
 
 func generateStructDefinition(ctx context.Context, in generateStructDefinitionInput) string {
 	buffer := bytes.NewBuffer(nil)
@@ -67,26 +59,26 @@ func generateStructFieldDefinition(
 		typeName string
 		jsonTag  = getJsonTagFromCase(field.Name, in.JsonCase)
 	)
-	typeName, err = gdb.CheckValueForLocalType(ctx, field.Type, nil)
+	typeName, err = in.DB.CheckLocalTypeForField(ctx, field.Type, nil)
 	if err != nil {
 		panic(err)
 	}
 	switch typeName {
-	case typeDate, typeDatetime:
+	case gdb.LocalTypeDate, gdb.LocalTypeDatetime:
 		if in.StdTime {
 			typeName = "time.Time"
 		} else {
 			typeName = "*gtime.Time"
 		}
 
-	case typeInt64Bytes:
+	case gdb.LocalTypeInt64Bytes:
 		typeName = "int64"
 
-	case typeUint64Bytes:
+	case gdb.LocalTypeUint64Bytes:
 		typeName = "uint64"
 
 	// Special type handle.
-	case typeJson, typeJsonb:
+	case gdb.LocalTypeJson, gdb.LocalTypeJsonb:
 		if in.GJsonSupport {
 			typeName = "*gjson.Json"
 		} else {

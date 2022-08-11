@@ -30,6 +30,7 @@ func generateEntity(ctx context.Context, db gdb.DB, tableNames, newTableNames []
 				gstr.CaseCamel(newTableName),
 				generateStructDefinition(ctx, generateStructDefinitionInput{
 					CGenDaoInternalInput: in,
+					DB:                   db,
 					StructName:           gstr.CaseCamel(newTableName),
 					FieldMap:             fieldMap,
 					IsDo:                 false,

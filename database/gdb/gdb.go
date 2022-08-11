@@ -172,6 +172,7 @@ type DB interface {
 	TableFields(ctx context.Context, table string, schema ...string) (map[string]*TableField, error)         // See Core.TableFields.
 	ConvertDataForRecord(ctx context.Context, data interface{}) (map[string]interface{}, error)              // See Core.ConvertDataForRecord
 	ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) // See Core.ConvertValueForLocal
+	CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (string, error)    // See Core.CheckLocalTypeForField
 	FilteredLink() string                                                                                    // FilteredLink is used for filtering sensitive information in `Link` configuration before output it to tracing server.
 }
 
@@ -310,6 +311,27 @@ const (
 	SqlTypeStmtExecContext     = "DB.Statement.ExecContext"
 	SqlTypeStmtQueryContext    = "DB.Statement.QueryContext"
 	SqlTypeStmtQueryRowContext = "DB.Statement.QueryRowContext"
+)
+
+const (
+	LocalTypeString      = "string"
+	LocalTypeDate        = "date"
+	LocalTypeDatetime    = "datetime"
+	LocalTypeInt         = "int"
+	LocalTypeUint        = "uint"
+	LocalTypeInt64       = "int64"
+	LocalTypeUint64      = "uint64"
+	LocalTypeIntSlice    = "[]int"
+	LocalTypeInt64Slice  = "[]int64"
+	LocalTypeUint64Slice = "[]uint64"
+	LocalTypeInt64Bytes  = "int64-bytes"
+	LocalTypeUint64Bytes = "uint64-bytes"
+	LocalTypeFloat32     = "float32"
+	LocalTypeFloat64     = "float64"
+	LocalTypeBytes       = "[]byte"
+	LocalTypeBool        = "bool"
+	LocalTypeJson        = "json"
+	LocalTypeJsonb       = "jsonb"
 )
 
 var (
