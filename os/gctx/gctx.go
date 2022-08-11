@@ -34,7 +34,7 @@ func init() {
 	for _, s := range os.Environ() {
 		i = strings.IndexByte(s, '=')
 		if i == -1 {
-		    continue
+			continue
 		}
 		m[s[0:i]] = s[i+1:]
 	}
