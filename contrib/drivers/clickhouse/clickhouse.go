@@ -152,8 +152,8 @@ func (d *Driver) TableFields(
 			var (
 				columns       = "name,position,default_expression,comment,type,is_in_partition_key,is_in_sorting_key,is_in_primary_key,is_in_sampling_key"
 				getColumnsSql = fmt.Sprintf(
-					"select %s from `system`.columns c where database = '%s' and `table` = '%s'",
-					columns, d.GetConfig().Name, table,
+					"select %s from `system`.columns c where  `table` = '%s'",
+					columns, table,
 				)
 			)
 			result, err = d.DoSelect(ctx, link, getColumnsSql)
@@ -293,6 +293,7 @@ func (d *Driver) DoFilter(
 // DoCommit commits current sql and arguments to underlying sql driver.
 func (d *Driver) DoCommit(ctx context.Context, in gdb.DoCommitInput) (out gdb.DoCommitOutput, err error) {
 	ctx = d.InjectIgnoreResult(ctx)
+	fmt.Printf("%v", ctx)
 	return d.Core.DoCommit(ctx, in)
 }
 
