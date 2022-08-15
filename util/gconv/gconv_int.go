@@ -7,6 +7,7 @@
 package gconv
 
 import (
+	"math"
 	"strconv"
 
 	"github.com/gogf/gf/v2/encoding/gbinary"
@@ -126,6 +127,10 @@ func Int64(any interface{}) int64 {
 			return v
 		}
 		// Float64
-		return int64(Float64(value))
+		if valueInt64 := Float64(value); math.IsNaN(valueInt64) {
+			return 0
+		} else {
+			return int64(valueInt64)
+		}
 	}
 }
