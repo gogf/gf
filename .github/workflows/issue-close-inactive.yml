@@ -1,5 +1,5 @@
 # 规则描述：每天0点(GMT+8)执行一次，将最近30天没有活跃且非BUG的ISSUE关闭
-name: Issue Close Require
+name: Issue Close Inactive
 
 on:
   schedule:
