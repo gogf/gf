@@ -501,6 +501,12 @@ func Test_BuildInFuncPlus(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(r, `6`)
 	})
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		r, err := v.ParseContent(gctx.New(), "{{1| plus 2}}")
+		t.AssertNil(err)
+		t.Assert(r, `3`)
+	})
 }
 
 func Test_BuildInFuncMinus(t *testing.T) {
@@ -509,6 +515,12 @@ func Test_BuildInFuncMinus(t *testing.T) {
 		r, err := v.ParseContent(gctx.New(), "{{minus 1 2 3}}")
 		t.AssertNil(err)
 		t.Assert(r, `-4`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		r, err := v.ParseContent(gctx.New(), "{{2 | minus 3}}")
+		t.AssertNil(err)
+		t.Assert(r, `1`)
 	})
 }
 
@@ -519,12 +531,24 @@ func Test_BuildInFuncTimes(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(r, `24`)
 	})
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		r, err := v.ParseContent(gctx.New(), "{{2 | times 3}}")
+		t.AssertNil(err)
+		t.Assert(r, `6`)
+	})
 }
 
 func Test_BuildInFuncDivide(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		r, err := v.ParseContent(gctx.New(), "{{divide 8 2 2}}")
+		t.AssertNil(err)
+		t.Assert(r, `2`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		r, err := v.ParseContent(gctx.New(), "{{2 | divide 4}}")
 		t.AssertNil(err)
 		t.Assert(r, `2`)
 	})
