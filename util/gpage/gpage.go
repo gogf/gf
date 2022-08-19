@@ -117,7 +117,7 @@ func (p *Page) PageBar() string {
 				barText := gconv.String(i)
 				barContent += p.GetLink(i, barText, barText)
 			} else {
-				barContent += fmt.Sprintf(`<span class="%s">%d</span>`, p.SpanStyle, i)
+				barContent += fmt.Sprintf(`<span class="%s">%d</span>`, p.SelectStyle, i)
 			}
 		} else {
 			break
