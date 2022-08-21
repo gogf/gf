@@ -1,37 +1,27 @@
-/**
- * @Author ZhangDafang
- * @create 2022-08-15 23:02
- */
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
 
+// Package glimiter provides a rate limiter implementation
 package glimiter
 
 import "context"
 
-type Option struct {
-
-	// max connection 
-	MaxConnections int64
-
-	//max qps
-	MaxQPS         int64
-
-	//filter , include user_id , ip etc .
-	ReqFilterInfo   	   interface{}
-}
-
 type Adaper interface {
 
 	// All interfaces add context , you can add special parameters through the content value, and make judgments through RefFilterInfo in Adapter, such as ip, user_id, etc
-	// is acquire 
-	Acquire(ctx context.Context) bool
+	// is acquire  
+	Acquire(ctx context.Context, reqCount ... int64) bool
+
 	// reset limiter status
 	ResetStatus(ctx context.Context) 
-	// get current status 
-	Status(ctx context.Context) (currentConnctions , currentQPS int64) 
-	// update options 
-	UpdateOption(options []*Option) bool 
-}
 
+	// try acquire . Reference:   guava RateLimiter  
+	TryAcuqire(ctx context.Context, reqCount ...  int64) bool 
+
+}
 
 type localAdapter = Adaper
 
@@ -39,31 +29,26 @@ type Limiter struct {
 	localAdapter 
 }
 
-func NewLimiter(adapter Adaper, options... *Option ) *Limiter {
-
-	if len(options) > 0{
-		adapter.UpdateOption(options)
-	}
-
-	return &Limiter{
-		localAdapter: adapter,
-	}
+// Crate a new limiter with given adapter 
+func NewWithAdapter(adapter Adaper) *Limiter {
+	return &Limiter{adapter}
 }
 
-func (l *Limiter) Acquire(ctx context.Context) bool {
-	return l.Acquire(ctx)
+
+// Crate a new limiter with given rate and burst . default adapter is TokenBucketAdapter(use golang.org/x/time/rate)
+func New(rate float64, burstCount int64) *Limiter{
+	tba := &TokenBucketAdapter{rate, burstCount}
+	return &Limiter{tba}
 }
 
-func (l *Limiter) ResetStatus(ctx context.Context) {
+func (l *Limiter ) IsAcquire(ctx context.Context, reqCount ... int64) bool {
+	return l.Acquire(ctx, reqCount...)
+}
+
+func (l *Limiter) Reset(ctx context.Context) {
 	l.ResetStatus(ctx)
 }
 
-func (l *Limiter)Status(ctx context.Context) (currentConnctions , currentQPS int64)  {
-	return l.Status(ctx)
+func (l *Limiter) TryReqAcquire(ctx context.Context, reqCount ... int64) bool {
+	return l.TryAcuqire(ctx, reqCount...)	
 }
-
-func (l *Limiter) UpdateOption(ctx context.Context, options []*Option ) bool {
-	return l.UpdateOption(ctx, options)
-}
-
-
