@@ -2,8 +2,8 @@ package gendao
 
 import (
 	"bytes"
+	"context"
 	"fmt"
-	"strings"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
@@ -14,18 +14,19 @@ import (
 
 type generateStructDefinitionInput struct {
 	CGenDaoInternalInput
+	DB         gdb.DB                     // Current DB.
 	StructName string                     // Struct name.
 	FieldMap   map[string]*gdb.TableField // Table field map.
 	IsDo       bool                       // Is generating DTO struct.
 }
 
-func generateStructDefinition(in generateStructDefinitionInput) string {
+func generateStructDefinition(ctx context.Context, in generateStructDefinitionInput) string {
 	buffer := bytes.NewBuffer(nil)
 	array := make([][]string, len(in.FieldMap))
 	names := sortFieldKeyForDao(in.FieldMap)
 	for index, name := range names {
 		field := in.FieldMap[name]
-		array[index] = generateStructFieldDefinition(field, in)
+		array[index] = generateStructFieldDefinition(ctx, field, in)
 	}
 	tw := tablewriter.NewWriter(buffer)
 	tw.SetBorder(false)
@@ -50,90 +51,37 @@ func generateStructDefinition(in generateStructDefinitionInput) string {
 }
 
 // generateStructFieldForModel generates and returns the attribute definition for specified field.
-func generateStructFieldDefinition(field *gdb.TableField, in generateStructDefinitionInput) []string {
+func generateStructFieldDefinition(
+	ctx context.Context, field *gdb.TableField, in generateStructDefinitionInput,
+) []string {
 	var (
+		err      error
 		typeName string
 		jsonTag  = getJsonTagFromCase(field.Name, in.JsonCase)
 	)
-	t, _ := gregex.ReplaceString(`\(.+\)`, "", field.Type)
-	t = gstr.Split(gstr.Trim(t), " ")[0]
-	t = gstr.ToLower(t)
-
-	switch t {
-	case "binary", "varbinary", "blob", "tinyblob", "mediumblob", "longblob":
-		typeName = "[]byte"
-
-	case "bit", "int", "int2", "tinyint", "small_int", "smallint", "medium_int", "mediumint", "serial":
-		if gstr.ContainsI(field.Type, "unsigned") {
-			typeName = "uint"
-		} else {
-			typeName = "int"
-		}
-
-	case "int4", "int8", "big_int", "bigint", "bigserial":
-		if gstr.ContainsI(field.Type, "unsigned") {
-			typeName = "uint64"
-		} else {
-			typeName = "int64"
-		}
-
-	// pgsql int32 slice.
-	case "_int2":
-		if gstr.ContainsI(field.Type, "unsigned") {
-			typeName = "[]uint"
-		} else {
-			typeName = "[]int"
-		}
-
-	// pgsql int64 slice.
-	case "_int4", "_int8":
-		if gstr.ContainsI(field.Type, "unsigned") {
-			typeName = "[]uint64"
-		} else {
-			typeName = "[]int64"
-		}
-
-	case "real":
-		typeName = "float32"
-
-	case "float", "double", "decimal", "smallmoney", "numeric":
-		typeName = "float64"
-
-	case "bool":
-		typeName = "bool"
-
-	case "datetime", "timestamp", "date", "time":
+	typeName, err = in.DB.CheckLocalTypeForField(ctx, field.Type, nil)
+	if err != nil {
+		panic(err)
+	}
+	switch typeName {
+	case gdb.LocalTypeDate, gdb.LocalTypeDatetime:
 		if in.StdTime {
 			typeName = "time.Time"
 		} else {
 			typeName = "*gtime.Time"
 		}
-	case "json", "jsonb":
+
+	case gdb.LocalTypeInt64Bytes:
+		typeName = "int64"
+
+	case gdb.LocalTypeUint64Bytes:
+		typeName = "uint64"
+
+	// Special type handle.
+	case gdb.LocalTypeJson, gdb.LocalTypeJsonb:
 		if in.GJsonSupport {
 			typeName = "*gjson.Json"
 		} else {
-			typeName = "string"
-		}
-	default:
-		// Automatically detect its data type.
-		switch {
-		case strings.Contains(t, "int"):
-			typeName = "int"
-		case strings.Contains(t, "text") || strings.Contains(t, "char"):
-			typeName = "string"
-		case strings.Contains(t, "float") || strings.Contains(t, "double"):
-			typeName = "float64"
-		case strings.Contains(t, "bool"):
-			typeName = "bool"
-		case strings.Contains(t, "binary") || strings.Contains(t, "blob"):
-			typeName = "[]byte"
-		case strings.Contains(t, "date") || strings.Contains(t, "time"):
-			if in.StdTime {
-				typeName = "time.Time"
-			} else {
-				typeName = "*gtime.Time"
-			}
-		default:
 			typeName = "string"
 		}
 	}

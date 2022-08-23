@@ -110,3 +110,13 @@ func Test_NewWithOptions(t *testing.T) {
 		t.Assert(array, []uint64{9223372036854775807, 9223372036854775806})
 	})
 }
+
+func Test_LoadContentType(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		data := []byte("value = 79937385836643329")
+		j, err := gjson.LoadContentType("toml", data)
+		t.AssertNil(err)
+		value := j.Get("value").Int64()
+		t.Assert(value, 79937385836643329)
+	})
+}

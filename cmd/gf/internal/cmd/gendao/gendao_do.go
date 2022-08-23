@@ -32,8 +32,9 @@ func generateDo(ctx context.Context, db gdb.DB, tableNames, newTableNames []stri
 		var (
 			newTableName     = newTableNames[i]
 			doFilePath       = gfile.Join(doDirPath, gstr.CaseSnake(newTableName)+".go")
-			structDefinition = generateStructDefinition(generateStructDefinitionInput{
+			structDefinition = generateStructDefinition(ctx, generateStructDefinitionInput{
 				CGenDaoInternalInput: in,
+				DB:                   db,
 				StructName:           gstr.CaseCamel(newTableName),
 				FieldMap:             fieldMap,
 				IsDo:                 true,
@@ -68,12 +69,14 @@ func generateDo(ctx context.Context, db gdb.DB, tableNames, newTableNames []stri
 }
 
 func generateDoContent(in CGenDaoInternalInput, tableName, tableNameCamelCase, structDefine string) string {
-	doContent := gstr.ReplaceByMap(consts.TemplateGenDaoDoContent, g.MapStrStr{
-		tplVarTableName:          tableName,
-		tplVarPackageImports:     getImportPartContent(structDefine, true),
-		tplVarTableNameCamelCase: tableNameCamelCase,
-		tplVarStructDefine:       structDefine,
-	})
+	doContent := gstr.ReplaceByMap(
+		getTemplateFromPathOrDefault(in.TplDaoDoPath, consts.TemplateGenDaoDoContent),
+		g.MapStrStr{
+			tplVarTableName:          tableName,
+			tplVarPackageImports:     getImportPartContent(structDefine, true),
+			tplVarTableNameCamelCase: tableNameCamelCase,
+			tplVarStructDefine:       structDefine,
+		})
 	doContent = replaceDefaultVar(in, doContent)
 	return doContent
 }

@@ -28,8 +28,9 @@ func generateEntity(ctx context.Context, db gdb.DB, tableNames, newTableNames []
 				in,
 				newTableName,
 				gstr.CaseCamel(newTableName),
-				generateStructDefinition(generateStructDefinitionInput{
+				generateStructDefinition(ctx, generateStructDefinitionInput{
 					CGenDaoInternalInput: in,
+					DB:                   db,
 					StructName:           gstr.CaseCamel(newTableName),
 					FieldMap:             fieldMap,
 					IsDo:                 false,
@@ -47,12 +48,14 @@ func generateEntity(ctx context.Context, db gdb.DB, tableNames, newTableNames []
 }
 
 func generateEntityContent(in CGenDaoInternalInput, tableName, tableNameCamelCase, structDefine string) string {
-	entityContent := gstr.ReplaceByMap(consts.TemplateGenDaoEntityContent, g.MapStrStr{
-		tplVarTableName:          tableName,
-		tplVarPackageImports:     getImportPartContent(structDefine, false),
-		tplVarTableNameCamelCase: tableNameCamelCase,
-		tplVarStructDefine:       structDefine,
-	})
+	entityContent := gstr.ReplaceByMap(
+		getTemplateFromPathOrDefault(in.TplDaoEntitylPath, consts.TemplateGenDaoEntityContent),
+		g.MapStrStr{
+			tplVarTableName:          tableName,
+			tplVarPackageImports:     getImportPartContent(structDefine, false),
+			tplVarTableNameCamelCase: tableNameCamelCase,
+			tplVarStructDefine:       structDefine,
+		})
 	entityContent = replaceDefaultVar(in, entityContent)
 	return entityContent
 }

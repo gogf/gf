@@ -936,3 +936,40 @@ func Test_EnumOfSchemaItems(t *testing.T) {
 		)
 	})
 }
+
+func Test_AliasNameOfAtrribute(t *testing.T) {
+	type CreateResourceReq struct {
+		gmeta.Meta `path:"/CreateResourceReq" method:"POST"`
+		Name       string `p:"n"`
+		Age        string `json:"a"`
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+			req = new(CreateResourceReq)
+		)
+		err = oai.Add(goai.AddInput{
+			Object: req,
+		})
+		t.AssertNil(err)
+
+		t.Assert(
+			oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.CreateResourceReq`).Value.
+				Properties.Get(`Name`), nil,
+		)
+		t.Assert(
+			oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.CreateResourceReq`).Value.
+				Properties.Get(`Age`), nil,
+		)
+		t.AssertNE(
+			oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.CreateResourceReq`).Value.
+				Properties.Get(`n`), nil,
+		)
+		t.AssertNE(
+			oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.CreateResourceReq`).Value.
+				Properties.Get(`a`), nil,
+		)
+	})
+}
