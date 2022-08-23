@@ -158,6 +158,12 @@ func addWordBoundariesToNumbers(s string) string {
 func toCamelInitCase(s string, initCase bool) string {
 	s = addWordBoundariesToNumbers(s)
 	s = strings.Trim(s, " ")
+
+	// special case, all characters are uppercase or numbers or underscores, eg:HELLO_WORLD->HelloWorld
+	if isSpecial(s) {
+		return doCamel(s)
+	}
+
 	n := ""
 	capNext := initCase
 	for _, v := range s {
@@ -181,4 +187,30 @@ func toCamelInitCase(s string, initCase bool) string {
 		}
 	}
 	return n
+}
+
+func isSpecial(s string) bool {
+	for _, c := range s {
+		if !((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_') {
+			return false
+		}
+	}
+	return true
+}
+
+func doCamel(s string) string {
+	if s == "" {
+		return ""
+	}
+	builder := strings.Builder{}
+	splits := strings.Split(s, "_")
+	for _, split := range splits {
+		if split == "" {
+			continue
+		}
+		first := SubStr(split, 0, 1)
+		other := SubStr(split, 1)
+		builder.WriteString(strings.ToUpper(first) + strings.ToLower(other))
+	}
+	return builder.String()
 }

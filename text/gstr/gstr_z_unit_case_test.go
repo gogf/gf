@@ -25,6 +25,11 @@ func Test_CaseCamel(t *testing.T) {
 		{"AnyKind of_string", "AnyKindOfString"},
 		{"odd-fix", "OddFix"},
 		{"numbers2And55with000", "Numbers2And55With000"},
+		{"TEST_CASE", "TestCase"},
+		{"TEST__CASE", "TestCase"},
+		{"_TEST_CASE", "TestCase"},
+		{"_TEST_CASE_", "TestCase"},
+		{"TESTCASE", "Testcase"},
 	}
 	for _, i := range cases {
 		in := i[0]
