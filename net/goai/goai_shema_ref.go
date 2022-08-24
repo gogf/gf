@@ -10,6 +10,7 @@ import (
 	"reflect"
 
 	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 type SchemaRefs []SchemaRef
@@ -19,8 +20,25 @@ type SchemaRef struct {
 	Value *Schema
 }
 
+// isEmbeddedStructDefine checks and returns whether given golang type is embedded struct definition, like:
+// struct A struct{
+//     B struct{
+//         // ...
+//     }
+// }
+// The `B` in `A` is called `embedded struct definition`.
+func (oai *OpenApiV3) isEmbeddedStructDefinition(golangType reflect.Type) bool {
+	s := golangType.String()
+	if gstr.Contains(s, `struct {`) {
+		return true
+	}
+	return false
+}
+
+// newSchemaRefWithGolangType creates a new Schema and returns its SchemaRef.
 func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap map[string]string) (*SchemaRef, error) {
 	var (
+		err       error
 		oaiType   = oai.golangTypeToOAIType(golangType)
 		oaiFormat = oai.golangTypeToOAIFormat(golangType)
 		schemaRef = &SchemaRef{}
@@ -85,15 +103,24 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 			schemaRef.Value = nil
 
 		default:
-			// Normal struct object.
-			var structTypeName = oai.golangTypeToSchemaName(golangType)
-			if oai.Components.Schemas.Get(structTypeName) == nil {
-				if err := oai.addSchema(reflect.New(golangType).Elem().Interface()); err != nil {
+			golangTypeInstance := reflect.New(golangType).Elem().Interface()
+			if oai.isEmbeddedStructDefinition(golangType) {
+				schema, err = oai.structToSchema(golangTypeInstance)
+				if err != nil {
 					return nil, err
 				}
+				schemaRef.Ref = ""
+				schemaRef.Value = schema
+			} else {
+				var structTypeName = oai.golangTypeToSchemaName(golangType)
+				if oai.Components.Schemas.Get(structTypeName) == nil {
+					if err := oai.addSchema(golangTypeInstance); err != nil {
+						return nil, err
+					}
+				}
+				schemaRef.Ref = structTypeName
+				schemaRef.Value = nil
 			}
-			schemaRef.Ref = structTypeName
-			schemaRef.Value = nil
 		}
 	}
 	return schemaRef, nil
