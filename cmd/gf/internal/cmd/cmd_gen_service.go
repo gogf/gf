@@ -331,6 +331,10 @@ func (c cGenService) generateServiceFiles(
 				mlog.Printf(`not overwrite, ignore generating service go file: %s`, filePath)
 				continue
 			}
+			if !utils.IsFileDoNotEdit(filePath) {
+				mlog.Printf(`ignore file as it is manually maintained: %s`, filePath)
+				continue
+			}
 			if !c.isToGenerateServiceGoFile(filePath, funcArray) {
 				mlog.Printf(`not dirty, ignore generating service go file: %s`, filePath)
 				continue
@@ -347,10 +351,6 @@ func (c cGenService) generateServiceFiles(
 
 // isToGenerateServiceGoFile checks and returns whether the service content dirty.
 func (c cGenService) isToGenerateServiceGoFile(filePath string, funcArray *garray.StrArray) bool {
-	if !utils.IsFileDoNotEdit(filePath) {
-		mlog.Debugf(`ignore file as it is manually maintained: %s`, filePath)
-		return false
-	}
 	var (
 		fileContent        = gfile.GetContents(filePath)
 		generatedFuncArray = garray.NewSortedStrArrayFrom(funcArray.Slice())
