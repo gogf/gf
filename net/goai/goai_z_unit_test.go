@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gmeta"
@@ -937,7 +938,7 @@ func Test_EnumOfSchemaItems(t *testing.T) {
 	})
 }
 
-func Test_AliasNameOfAtrribute(t *testing.T) {
+func Test_AliasNameOfAttribute(t *testing.T) {
 	type CreateResourceReq struct {
 		gmeta.Meta `path:"/CreateResourceReq" method:"POST"`
 		Name       string `p:"n"`
@@ -971,5 +972,31 @@ func Test_AliasNameOfAtrribute(t *testing.T) {
 			oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.CreateResourceReq`).Value.
 				Properties.Get(`a`), nil,
 		)
+	})
+}
+
+func Test_EmbeddedStructAttribute(t *testing.T) {
+	type CreateResourceReq struct {
+		gmeta.Meta `path:"/CreateResourceReq" method:"POST"`
+		Name       string `dc:"This is name."`
+		Embedded   struct {
+			Age uint `dc:"This is embedded age."`
+		}
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+			req = new(CreateResourceReq)
+		)
+		err = oai.Add(goai.AddInput{
+			Object: req,
+		})
+		t.AssertNil(err)
+
+		b, err := json.Marshal(oai)
+		t.AssertNil(err)
+		t.Assert(b, `{"openapi":"3.0.0","components":{"schemas":{"github.com.gogf.gf.v2.net.goai_test.CreateResourceReq":{"properties":{"Name":{"description":"This is name.","format":"string","properties":{},"type":"string"},"Embedded":{"properties":{"Age":{"description":"This is embedded age.","format":"uint","properties":{},"type":"integer"}},"type":"object"}},"type":"object"}}},"info":{"title":"","version":""},"paths":null}`)
 	})
 }
