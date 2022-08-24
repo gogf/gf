@@ -399,3 +399,25 @@ func Test_Issue1983(t *testing.T) {
 		t.AssertNil(err)
 	})
 }
+
+// https://github.com/gogf/gf/issues/1921
+func Test_Issue1921(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type SearchOption struct {
+			Size int `v:"max:100"`
+		}
+		type SearchReq struct {
+			Option *SearchOption `json:"option,omitempty"`
+		}
+
+		var (
+			req = SearchReq{
+				Option: &SearchOption{
+					Size: 10000,
+				},
+			}
+		)
+		err := g.Validator().Data(req).Run(ctx)
+		t.Assert(err, "The Size value `10000` must be equal or lesser than 100")
+	})
+}
