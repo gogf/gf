@@ -127,14 +127,13 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 		typeName    string
 		typePattern string
 	)
-	match, _ := gregex.MatchString(`(.+?)\((.+)\)`, fieldType)
-	if len(match) == 3 {
-		typeName = gstr.Trim(match[1])
-		typePattern = gstr.Trim(match[2])
-	} else {
-		typeName = gstr.Split(fieldType, " ")[0]
+	fieldType = gstr.Replace(fieldType, "(", " ")
+	fieldType = gstr.Replace(fieldType, ")", "")
+	fieldTypeSplit := gstr.Split(gstr.Trim(fieldType), " ")
+	typeName = gstr.ToLower(fieldTypeSplit[0])
+	if len(fieldTypeSplit) == 2 {
+		typePattern = gstr.ToLower(fieldTypeSplit[1])
 	}
-	typeName = strings.ToLower(typeName)
 	switch typeName {
 	case
 		"binary",
