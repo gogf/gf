@@ -113,7 +113,7 @@ func Uint64(any interface{}) uint64 {
 		if valueFloat64 := Float64(value); math.IsNaN(valueFloat64) {
 			return 0
 		} else {
-			return uint64(Float64(value))
+			return uint64(valueFloat64)
 		}
 	}
 }
