@@ -560,8 +560,13 @@ func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValue
 		// Ignore data, assoc, rules and messages from parent.
 		var (
 			validator           = v.Clone()
-			toBeValidatedObject = reflect.New(in.Type).Interface()
+			toBeValidatedObject interface{}
 		)
+		if in.Type.Kind() == reflect.Ptr {
+			toBeValidatedObject = reflect.New(in.Type.Elem()).Interface()
+		} else {
+			toBeValidatedObject = reflect.New(in.Type).Interface()
+		}
 		validator.assoc = nil
 		validator.rules = nil
 		validator.messages = nil
