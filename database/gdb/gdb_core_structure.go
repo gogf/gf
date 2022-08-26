@@ -132,7 +132,7 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 		typeName = gstr.Trim(match[1])
 		typePattern = gstr.Trim(match[2])
 	} else {
-		typeName = fieldType
+		typeName = gstr.Split(fieldType, " ")[0]
 	}
 	typeName = strings.ToLower(typeName)
 	switch typeName {
@@ -234,6 +234,9 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 			return LocalTypeBytes, nil
 
 		case strings.Contains(typeName, "int"):
+			if gstr.ContainsI(fieldType, "unsigned") {
+				return LocalTypeUint, nil
+			}
 			return LocalTypeInt, nil
 
 		case strings.Contains(typeName, "time"):
