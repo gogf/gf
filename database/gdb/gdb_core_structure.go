@@ -127,13 +127,17 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 		typeName    string
 		typePattern string
 	)
+
 	fieldType = gstr.Replace(fieldType, "(", " ")
 	fieldType = gstr.Replace(fieldType, ")", "")
+
 	fieldTypeSplit := gstr.Split(gstr.Trim(fieldType), " ")
+
 	typeName = gstr.ToLower(fieldTypeSplit[0])
 	if len(fieldTypeSplit) == 2 {
 		typePattern = gstr.ToLower(fieldTypeSplit[1])
 	}
+
 	switch typeName {
 	case
 		"binary",
