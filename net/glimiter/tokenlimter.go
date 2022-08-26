@@ -15,7 +15,7 @@ func (t *TokenBucketAdapter) Acquire(ctx context.Context, reqCount ...int64) boo
 	return false
 }
 
-// Reset Status of limiter  
+// Reset Status of limiter
 func (t *TokenBucketAdapter) ResetStatus(ctx context.Context) {
 
 }
