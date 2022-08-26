@@ -100,6 +100,7 @@ func doPrint(ctx context.Context, content string, stack bool) {
 	buffer.WriteString(content)
 	buffer.WriteString("\n")
 	if stack {
+		buffer.WriteString("Caller Stack:\n")
 		buffer.WriteString(gdebug.StackWithFilter([]string{stackFilterKey}))
 	}
 	fmt.Print(buffer.String())
