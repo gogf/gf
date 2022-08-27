@@ -45,6 +45,18 @@ func CaseCamelLower(s string) string {
 	return toCamelInitCase(s, false)
 }
 
+// CaseCamelAllUpper converts a string to CamelCase and the string is all uppercase and underscore.
+// eg : HELLO_WORLD -> HelloWorld
+func CaseCamelAllUpper(s string) string {
+	if s == "" {
+		return s
+	}
+	if isSpecial(s) {
+		return doSpecialCamel(s)
+	}
+	return toCamelInitCase(s, true)
+}
+
 // CaseSnake converts a string to snake_case.
 func CaseSnake(s string) string {
 	return CaseDelimited(s, '_')
@@ -158,12 +170,6 @@ func addWordBoundariesToNumbers(s string) string {
 func toCamelInitCase(s string, initCase bool) string {
 	s = addWordBoundariesToNumbers(s)
 	s = strings.Trim(s, " ")
-
-	// special case, all characters are uppercase or numbers or underscores, eg:HELLO_WORLD->HelloWorld
-	if isSpecial(s) {
-		return doCamel(s)
-	}
-
 	n := ""
 	capNext := initCase
 	for _, v := range s {
@@ -190,27 +196,24 @@ func toCamelInitCase(s string, initCase bool) string {
 }
 
 func isSpecial(s string) bool {
-	for _, c := range s {
-		if !((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_') {
+	for _, v := range s {
+		if !((v >= 'A' && v <= 'Z') || (v >= '0' && v <= '9') || (v == '_' || v == ' ' || v == '-' || v == '.')) {
 			return false
 		}
 	}
 	return true
 }
 
-func doCamel(s string) string {
-	if s == "" {
-		return ""
-	}
+func doSpecialCamel(s string) string {
 	builder := strings.Builder{}
-	splits := strings.Split(s, "_")
+	splits := strings.FieldsFunc(s, func(r rune) bool {
+		return r == '_' || r == ' ' || r == '-' || r == '.'
+	})
 	for _, split := range splits {
 		if split == "" {
 			continue
 		}
-		first := SubStr(split, 0, 1)
-		other := SubStr(split, 1)
-		builder.WriteString(strings.ToUpper(first) + strings.ToLower(other))
+		builder.WriteString(strings.ToUpper(split[:1]) + strings.ToLower(split[1:]))
 	}
 	return builder.String()
 }

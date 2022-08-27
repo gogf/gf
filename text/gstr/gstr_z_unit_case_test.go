@@ -25,11 +25,6 @@ func Test_CaseCamel(t *testing.T) {
 		{"AnyKind of_string", "AnyKindOfString"},
 		{"odd-fix", "OddFix"},
 		{"numbers2And55with000", "Numbers2And55With000"},
-		{"TEST_CASE", "TestCase"},
-		{"TEST__CASE", "TestCase"},
-		{"_TEST_CASE", "TestCase"},
-		{"_TEST_CASE_", "TestCase"},
-		{"TESTCASE", "Testcase"},
 	}
 	for _, i := range cases {
 		in := i[0]
@@ -52,6 +47,41 @@ func Test_CaseCamelLower(t *testing.T) {
 		in := i[0]
 		out := i[1]
 		result := gstr.CaseCamelLower(in)
+		if result != out {
+			t.Error("'" + result + "' != '" + out + "'")
+		}
+	}
+}
+
+func Test_CaseCamelAllUpper(t *testing.T) {
+	cases := [][]string{
+		{"test_case", "TestCase"},
+		{"test", "Test"},
+		{"TestCase", "TestCase"},
+		{" test  case ", "TestCase"},
+		{"userLogin_log.bak", "UserLoginLogBak"},
+		{"", ""},
+		{"many_many_words", "ManyManyWords"},
+		{"AnyKind of_string", "AnyKindOfString"},
+		{"odd-fix", "OddFix"},
+		{"numbers2And55with000", "Numbers2And55With000"},
+		{"TEST_CASE", "TestCase"},
+		{"TEST__CASE", "TestCase"},
+		{"_TEST_CASE", "TestCase"},
+		{"_TEST_CASE_", "TestCase"},
+		{"TESTCASE", "Testcase"},
+		{" _ ", ""},
+		{"A_", "A"},
+		{"_A", "A"},
+		{"_A", "A"},
+		{"_TEST_ CASE_ ", "TestCase"},
+		{"TEST-CASE ", "TestCase"},
+		{"TEST 9 CASE ", "Test9Case"},
+	}
+	for _, i := range cases {
+		in := i[0]
+		out := i[1]
+		result := gstr.CaseCamelAllUpper(in)
 		if result != out {
 			t.Error("'" + result + "' != '" + out + "'")
 		}
