@@ -81,7 +81,7 @@ func Test_CaseCamelAllUpper(t *testing.T) {
 	for _, i := range cases {
 		in := i[0]
 		out := i[1]
-		result := gstr.CaseCamelAllUpper(in)
+		result := gstr.CaseCamelFirstUpper(in)
 		if result != out {
 			t.Error("'" + result + "' != '" + out + "'")
 		}

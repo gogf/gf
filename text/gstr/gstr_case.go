@@ -4,17 +4,18 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 //
-//   | Function                          | Result             |
-//   |-----------------------------------|--------------------|
-//   | CaseSnake(s)                      | any_kind_of_string |
-//   | CaseSnakeScreaming(s)             | ANY_KIND_OF_STRING |
-//   | CaseSnakeFirstUpper("RGBCodeMd5") | rgb_code_md5       |
-//   | CaseKebab(s)                      | any-kind-of-string |
-//   | CaseKebabScreaming(s)             | ANY-KIND-OF-STRING |
-//   | CaseDelimited(s, '.')             | any.kind.of.string |
-//   | CaseDelimitedScreaming(s, '.')    | ANY.KIND.OF.STRING |
-//   | CaseCamel(s)                      | AnyKindOfString    |
-//   | CaseCamelLower(s)                 | anyKindOfString    |
+//   | Function                          		| Result             |
+//   |------------------------------------------|--------------------|
+//   | CaseSnake(s)                      		| any_kind_of_string |
+//   | CaseSnakeScreaming(s)             		| ANY_KIND_OF_STRING |
+//   | CaseSnakeFirstUpper("RGBCodeMd5") 		| rgb_code_md5       |
+//   | CaseKebab(s)                      		| any-kind-of-string |
+//   | CaseKebabScreaming(s)             		| ANY-KIND-OF-STRING |
+//   | CaseDelimited(s, '.')             		| any.kind.of.string |
+//   | CaseDelimitedScreaming(s, '.')    		| ANY.KIND.OF.STRING |
+//   | CaseCamel(s)                      		| AnyKindOfString    |
+//   | CaseCamelLower(s)                 		| anyKindOfString    |
+//   | CaseCamelFirstUpper("ANY_KIND_OF_STRING")| AnyKindOfString    |
 
 package gstr
 
@@ -45,9 +46,9 @@ func CaseCamelLower(s string) string {
 	return toCamelInitCase(s, false)
 }
 
-// CaseCamelAllUpper converts a string to CamelCase and the string is all uppercase and underscore.
+// CaseCamelFirstUpper converts a string to CamelCase and the string is all uppercase and underscore.
 // eg : HELLO_WORLD -> HelloWorld
-func CaseCamelAllUpper(s string) string {
+func CaseCamelFirstUpper(s string) string {
 	if s == "" {
 		return s
 	}
