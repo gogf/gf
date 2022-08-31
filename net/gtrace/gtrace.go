@@ -153,7 +153,7 @@ func WithTraceID(ctx context.Context, traceID string) (context.Context, error) {
 		return ctx, gerror.WrapCodef(
 			gcode.CodeInvalidParameter,
 			err,
-			`invalid custom traceID "%s", a traceID string should be composed with [0-9a-z] and fixed length 32`,
+			`invalid custom traceID "%s", a traceID string should be composed with [0-f] and fixed length 32`,
 			traceID,
 		)
 	}
