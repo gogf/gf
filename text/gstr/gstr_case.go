@@ -4,18 +4,18 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 //
-//   | Function                          		| Result             |
-//   |------------------------------------------|--------------------|
-//   | CaseSnake(s)                      		| any_kind_of_string |
-//   | CaseSnakeScreaming(s)             		| ANY_KIND_OF_STRING |
-//   | CaseSnakeFirstUpper("RGBCodeMd5") 		| rgb_code_md5       |
-//   | CaseKebab(s)                      		| any-kind-of-string |
-//   | CaseKebabScreaming(s)             		| ANY-KIND-OF-STRING |
-//   | CaseDelimited(s, '.')             		| any.kind.of.string |
-//   | CaseDelimitedScreaming(s, '.')    		| ANY.KIND.OF.STRING |
-//   | CaseCamel(s)                      		| AnyKindOfString    |
-//   | CaseCamelLower(s)                 		| anyKindOfString    |
-//   | CaseCamelFirstUpper("ANY_KIND_OF_STRING")| AnyKindOfString    |
+//   | Function                          | Result             |
+//   |-----------------------------------|--------------------|
+//   | CaseSnake(s)                      | any_kind_of_string |
+//   | CaseSnakeScreaming(s)             | ANY_KIND_OF_STRING |
+//   | CaseSnakeFirstUpper("RGBCodeMd5") | rgb_code_md5       |
+//   | CaseKebab(s)                      | any-kind-of-string |
+//   | CaseKebabScreaming(s)             | ANY-KIND-OF-STRING |
+//   | CaseDelimited(s, '.')             | any.kind.of.string |
+//   | CaseDelimitedScreaming(s, '.')    | ANY.KIND.OF.STRING |
+//   | CaseCamel(s)                      | AnyKindOfString    |
+//   | CaseCamelLower(s)                 | anyKindOfString    |
+//   | CaseCamelFirstUpper("HELLO_WORLD")| HelloWorld         |
 
 package gstr
 
