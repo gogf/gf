@@ -57,9 +57,9 @@ func GzipFile(src, dst string, level ...int) (err error) {
 	return GzipPathWriter(src, dstFile)
 }
 
-// GzipPathWriter compresses `paths` to `writer` using gzip compressing algorithm.
+// GzipPathWriter compresses `path` to `writer` using gzip compressing algorithm.
 //
-// Note that the parameter `paths` can be either a directory or a file.
+// Note that the parameter `path` can be either a directory or a file.
 func GzipPathWriter(path string, writer io.Writer, level ...int) error {
 	var (
 		gzipWriter *gzip.Writer
