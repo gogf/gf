@@ -252,17 +252,15 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	}
-	v := tableFieldsMap.GetOrSetFuncLock(
-		fmt.Sprintf(`mssql_table_fields_%s_%s@group:%s`, table, useSchema, d.GetGroup()),
-		func() interface{} {
-			var (
-				result gdb.Result
-				link   gdb.Link
-			)
-			if link, err = d.SlaveLink(useSchema); err != nil {
-				return nil
-			}
-			structureSql := fmt.Sprintf(`
+	resultFields := func() interface{} {
+		var (
+			result gdb.Result
+			link   gdb.Link
+		)
+		if link, err = d.SlaveLink(useSchema); err != nil {
+			return nil
+		}
+		structureSql := fmt.Sprintf(`
 SELECT 
 	a.name Field,
 	CASE b.name 
@@ -290,29 +288,41 @@ LEFT JOIN sys.extended_properties g ON a.id=g.major_id AND a.colid=g.minor_id
 LEFT JOIN sys.extended_properties f ON d.id=f.major_id AND f.minor_id =0
 WHERE d.name='%s'
 ORDER BY a.id,a.colorder`,
-				table,
-			)
-			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
-			result, err = d.DoSelect(ctx, link, structureSql)
-			if err != nil {
-				return nil
-			}
-			fields = make(map[string]*gdb.TableField)
-			for i, m := range result {
+			table,
+		)
+		structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
+		result, err = d.DoSelect(ctx, link, structureSql)
+		if err != nil {
+			return nil
+		}
+		fields = make(map[string]*gdb.TableField)
+		for i, m := range result {
 
-				fields[m["Field"].String()] = &gdb.TableField{
-					Index:   i,
-					Name:    m["Field"].String(),
-					Type:    m["Type"].String(),
-					Null:    m["Null"].Bool(),
-					Key:     m["Key"].String(),
-					Default: m["Default"].Val(),
-					Extra:   m["Extra"].String(),
-					Comment: m["Comment"].String(),
-				}
+			fields[m["Field"].String()] = &gdb.TableField{
+				Index:   i,
+				Name:    m["Field"].String(),
+				Type:    m["Type"].String(),
+				Null:    m["Null"].Bool(),
+				Key:     m["Key"].String(),
+				Default: m["Default"].Val(),
+				Extra:   m["Extra"].String(),
+				Comment: m["Comment"].String(),
 			}
-			return fields
-		},
+		}
+		return fields
+	}
+	key := fmt.Sprintf(`mssql_table_fields_%s_%s@group:%s`, table, useSchema, d.GetGroup())
+	if ctx.Value("refresh_fields") != nil && ctx.Value("refresh_fields").(bool) {
+		//example:
+		//      _, err := g.DB().TableFields(context.WithValue(ctx, "refresh_fields", true), "user")
+		//		if err != nil {
+		//			return err
+		//		}
+		//if refresh_fields is true, change buffer value
+		tableFieldsMap.Set(key, resultFields())
+	}
+	v := tableFieldsMap.GetOrSetFuncLock(
+		key, resultFields,
 	)
 	if v != nil {
 		fields = v.(map[string]*gdb.TableField)

@@ -165,38 +165,49 @@ func (d *DriverMysql) TableFields(
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	}
+
+	resultFields := func() interface{} {
+		var (
+			result gdb.Result
+			link   gdb.Link
+		)
+		if link, err = d.SlaveLink(useSchema); err != nil {
+			return nil
+		}
+		result, err = d.DoSelect(
+			ctx, link,
+			fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.QuoteWord(table)),
+		)
+		if err != nil {
+			return nil
+		}
+		fields = make(map[string]*gdb.TableField)
+		for i, m := range result {
+			fields[m["Field"].String()] = &gdb.TableField{
+				Index:   i,
+				Name:    m["Field"].String(),
+				Type:    m["Type"].String(),
+				Null:    m["Null"].Bool(),
+				Key:     m["Key"].String(),
+				Default: m["Default"].Val(),
+				Extra:   m["Extra"].String(),
+				Comment: m["Comment"].String(),
+			}
+		}
+		return fields
+	}
+	key := fmt.Sprintf(`mysql_table_fields_%s_%s@group:%s`, table, useSchema, d.GetGroup())
+	if ctx.Value("refresh_fields") != nil && ctx.Value("refresh_fields").(bool) {
+		//example:
+		//      _, err := g.DB().TableFields(context.WithValue(ctx, "refresh_fields", true), "user")
+		//		if err != nil {
+		//			return err
+		//		}
+		//if refresh_fields is true, change buffer value
+		tableFieldsMap.Set(key, resultFields())
+	}
 	v := tableFieldsMap.GetOrSetFuncLock(
-		fmt.Sprintf(`mysql_table_fields_%s_%s@group:%s`, table, useSchema, d.GetGroup()),
-		func() interface{} {
-			var (
-				result gdb.Result
-				link   gdb.Link
-			)
-			if link, err = d.SlaveLink(useSchema); err != nil {
-				return nil
-			}
-			result, err = d.DoSelect(
-				ctx, link,
-				fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.QuoteWord(table)),
-			)
-			if err != nil {
-				return nil
-			}
-			fields = make(map[string]*gdb.TableField)
-			for i, m := range result {
-				fields[m["Field"].String()] = &gdb.TableField{
-					Index:   i,
-					Name:    m["Field"].String(),
-					Type:    m["Type"].String(),
-					Null:    m["Null"].Bool(),
-					Key:     m["Key"].String(),
-					Default: m["Default"].Val(),
-					Extra:   m["Extra"].String(),
-					Comment: m["Comment"].String(),
-				}
-			}
-			return fields
-		},
+		key, resultFields,
 	)
 	if v != nil {
 		fields = v.(map[string]*gdb.TableField)

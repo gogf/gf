@@ -133,37 +133,47 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	}
+	resultFields := func() interface{} {
+		var (
+			result gdb.Result
+			link   gdb.Link
+		)
+		if link, err = d.SlaveLink(useSchema); err != nil {
+			return nil
+		}
+		result, err = d.DoSelect(ctx, link, fmt.Sprintf(`PRAGMA TABLE_INFO(%s)`, table))
+		if err != nil {
+			return nil
+		}
+		fields = make(map[string]*gdb.TableField)
+		for i, m := range result {
+			mKey := ""
+			if m["pk"].Bool() {
+				mKey = "pri"
+			}
+			fields[strings.ToLower(m["name"].String())] = &gdb.TableField{
+				Index:   i,
+				Name:    strings.ToLower(m["name"].String()),
+				Type:    strings.ToLower(m["type"].String()),
+				Key:     mKey,
+				Default: m["dflt_value"].Val(),
+				Null:    !m["notnull"].Bool(),
+			}
+		}
+		return fields
+	}
+	key := fmt.Sprintf(`sqlite_table_fields_%s_%s@group:%s`, table, useSchema, d.GetGroup())
+	if ctx.Value("refresh_fields") != nil && ctx.Value("refresh_fields").(bool) {
+		//example:
+		//      _, err := g.DB().TableFields(context.WithValue(ctx, "refresh_fields", true), "user")
+		//		if err != nil {
+		//			return err
+		//		}
+		//if refresh_fields is true, change buffer value
+		tableFieldsMap.Set(key, resultFields())
+	}
 	v := tableFieldsMap.GetOrSetFuncLock(
-		fmt.Sprintf(`sqlite_table_fields_%s_%s@group:%s`, table, useSchema, d.GetGroup()),
-		func() interface{} {
-			var (
-				result gdb.Result
-				link   gdb.Link
-			)
-			if link, err = d.SlaveLink(useSchema); err != nil {
-				return nil
-			}
-			result, err = d.DoSelect(ctx, link, fmt.Sprintf(`PRAGMA TABLE_INFO(%s)`, table))
-			if err != nil {
-				return nil
-			}
-			fields = make(map[string]*gdb.TableField)
-			for i, m := range result {
-				mKey := ""
-				if m["pk"].Bool() {
-					mKey = "pri"
-				}
-				fields[strings.ToLower(m["name"].String())] = &gdb.TableField{
-					Index:   i,
-					Name:    strings.ToLower(m["name"].String()),
-					Type:    strings.ToLower(m["type"].String()),
-					Key:     mKey,
-					Default: m["dflt_value"].Val(),
-					Null:    !m["notnull"].Bool(),
-				}
-			}
-			return fields
-		},
+		key, resultFields,
 	)
 	if v != nil {
 		fields = v.(map[string]*gdb.TableField)

@@ -231,13 +231,12 @@ func (d *Driver) TableFields(
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	}
-	v := tableFieldsMap.GetOrSetFuncLock(
-		fmt.Sprintf(`oracle_table_fields_%s_%s@group:%s`, table, useSchema, d.GetGroup()),
-		func() interface{} {
-			var (
-				result       gdb.Result
-				link         gdb.Link
-				structureSql = fmt.Sprintf(`
+
+	resultFields := func() interface{} {
+		var (
+			result       gdb.Result
+			link         gdb.Link
+			structureSql = fmt.Sprintf(`
 SELECT 
 	COLUMN_NAME AS FIELD, 
 	CASE DATA_TYPE  
@@ -245,33 +244,39 @@ SELECT
 	WHEN 'FLOAT' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
 	ELSE DATA_TYPE||'('||DATA_LENGTH||')' END AS TYPE,NULLABLE  
 FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`,
-					strings.ToUpper(table),
-				)
+				strings.ToUpper(table),
 			)
-			if link, err = d.SlaveLink(useSchema); err != nil {
-				return nil
+		)
+		if link, err = d.SlaveLink(useSchema); err != nil {
+			return nil
+		}
+		structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
+		result, err = d.DoSelect(ctx, link, structureSql)
+		if err != nil {
+			return nil
+		}
+		fields = make(map[string]*gdb.TableField)
+		for i, m := range result {
+			isNull := false
+			if m["NULLABLE"].String() == "Y" {
+				isNull = true
 			}
-			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
-			result, err = d.DoSelect(ctx, link, structureSql)
-			if err != nil {
-				return nil
-			}
-			fields = make(map[string]*gdb.TableField)
-			for i, m := range result {
-				isNull := false
-				if m["NULLABLE"].String() == "Y" {
-					isNull = true
-				}
 
-				fields[m["FIELD"].String()] = &gdb.TableField{
-					Index: i,
-					Name:  m["FIELD"].String(),
-					Type:  m["TYPE"].String(),
-					Null:  isNull,
-				}
+			fields[m["FIELD"].String()] = &gdb.TableField{
+				Index: i,
+				Name:  m["FIELD"].String(),
+				Type:  m["TYPE"].String(),
+				Null:  isNull,
 			}
-			return fields
-		},
+		}
+		return fields
+	}
+	key := fmt.Sprintf(`oracle_table_fields_%s_%s@group:%s`, table, useSchema, d.GetGroup())
+	if ctx.Value("refresh_fields") != nil && ctx.Value("refresh_fields").(bool) {
+		tableFieldsMap.Set(key, resultFields())
+	}
+	v := tableFieldsMap.GetOrSetFuncLock(
+		key, resultFields,
 	)
 	if v != nil {
 		fields = v.(map[string]*gdb.TableField)
