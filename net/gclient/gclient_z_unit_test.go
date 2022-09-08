@@ -535,7 +535,8 @@ func Test_WebSocketClient(t *testing.T) {
 	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
-	defer s.Shutdown()
+	// No closing in case of DATA RACE due to keep alive connection of WebSocket.
+	//defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
