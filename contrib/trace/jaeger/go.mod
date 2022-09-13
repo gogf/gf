@@ -1,6 +1,6 @@
 module github.com/gogf/gf/contrib/trace/jaeger/v2
 
-go 1.16
+go 1.15
 
 require (
 	github.com/gogf/gf/v2 v2.1.4
