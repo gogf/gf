@@ -7,25 +7,28 @@ import (
 
 	_ "github.com/gogf/gf/contrib/drivers/mysql/v2"
 
+	"github.com/gogf/katyusha/krpc"
+
 	"github.com/gogf/gf/contrib/trace/jaeger/v2"
 	"github.com/gogf/gf/example/trace/grpc_with_db/protobuf/user"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/katyusha/krpc"
 )
 
 type server struct{}
 
 const (
-	ServiceName       = "grpc-server-with-db"
-	JaegerUdpEndpoint = "localhost:6831"
+	// ServiceName is the name of the service.
+	ServiceName = "grpc-server-with-db"
+	// JaegerUDPEndpoint is the endpoint of jaeger udp server.
+	JaegerUDPEndpoint = "localhost:6831"
 )
 
 func main() {
 	var ctx = gctx.New()
-	tp, err := jaeger.Init(ServiceName, JaegerUdpEndpoint)
+	tp, err := jaeger.Init(ServiceName, JaegerUDPEndpoint)
 	if err != nil {
 		g.Log().Fatal(ctx, err)
 	}
