@@ -12,9 +12,9 @@ require (
 	github.com/grokify/html-strip-tags-go v0.0.1
 	github.com/magiconair/properties v1.8.6
 	github.com/olekukonko/tablewriter v0.0.5
-	go.opentelemetry.io/otel v1.10.0
-	go.opentelemetry.io/otel/sdk v1.10.0
-	go.opentelemetry.io/otel/trace v1.10.0
+	go.opentelemetry.io/otel v1.7.0
+	go.opentelemetry.io/otel/sdk v1.7.0
+	go.opentelemetry.io/otel/trace v1.7.0
 	golang.org/x/net v0.0.0-20220909164309-bea034e7d591
 	golang.org/x/text v0.3.8-0.20220817174131-b0ca10ff35f1
 	gopkg.in/yaml.v3 v3.0.1
