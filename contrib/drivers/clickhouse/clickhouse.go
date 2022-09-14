@@ -13,9 +13,7 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
-	"net/url"
-	"strings"
-	"time"
+
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -27,6 +25,9 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/google/uuid"
+	"net/url"
+	"strings"
+	"time"
 )
 
 // Driver is the driver for postgresql database.
