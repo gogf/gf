@@ -8,33 +8,32 @@ import (
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
-	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func generateDo(ctx context.Context, db gdb.DB, tableNames, newTableNames []string, in CGenDaoInternalInput) {
-	var (
-		doDirPath = gfile.Join(in.Path, in.DoPath)
-	)
+func generateDo(ctx context.Context, in CGenDaoInternalInput) {
+	var dirPathDo = gfile.Join(in.Path, in.DoPath)
+	if in.Clear {
+		doClear(ctx, dirPathDo)
+	}
 	in.NoJsonTag = true
 	in.DescriptionTag = false
 	in.NoModelComment = false
 	// Model content.
-	for i, tableName := range tableNames {
-		in.TableName = tableName
-		fieldMap, err := db.TableFields(ctx, tableName)
+	for i, tableName := range in.TableNames {
+		fieldMap, err := in.DB.TableFields(ctx, tableName)
 		if err != nil {
-			mlog.Fatalf("fetching tables fields failed for table '%s':\n%v", in.TableName, err)
+			mlog.Fatalf("fetching tables fields failed for table '%s':\n%v", tableName, err)
 		}
 		var (
-			newTableName     = newTableNames[i]
-			doFilePath       = gfile.Join(doDirPath, gstr.CaseSnake(newTableName)+".go")
+			newTableName     = in.NewTableNames[i]
+			doFilePath       = gfile.Join(dirPathDo, gstr.CaseSnake(newTableName)+".go")
 			structDefinition = generateStructDefinition(ctx, generateStructDefinitionInput{
 				CGenDaoInternalInput: in,
-				DB:                   db,
+				TableName:            tableName,
 				StructName:           gstr.CaseCamel(newTableName),
 				FieldMap:             fieldMap,
 				IsDo:                 true,
