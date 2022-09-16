@@ -22,6 +22,9 @@ import (
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/grand"
 )
 
@@ -56,7 +59,7 @@ type DB interface {
 	// Open creates a raw connection object for database with given node configuration.
 	// Note that it is not recommended using the function manually.
 	// Also see DriverMysql.Open.
-	Open(config *ConfigNode) (*sql.DB, error)
+	Open(config ConfigNode) (*sql.DB, error)
 
 	// Ctx is a chaining function, which creates and returns a new DB that is a shallow copy
 	// of current DB object and with given context in it.
@@ -213,7 +216,7 @@ type DoCommitOutput struct {
 // Driver is the interface for integrating sql drivers into package gdb.
 type Driver interface {
 	// New creates and returns a database object for specified database server.
-	New(core *Core, node *ConfigNode) (DB, error)
+	New(core *Core, node ConfigNode) (DB, error)
 }
 
 // Link is a common database function wrapper interface.
@@ -278,6 +281,7 @@ type (
 const (
 	defaultModelSafe        = false
 	defaultCharset          = `utf8`
+	defaultProtocol         = `tcp`
 	queryTypeNormal         = 0
 	queryTypeCount          = 1
 	unionTypeNormal         = 0
@@ -357,6 +361,10 @@ var (
 	// allDryRun sets dry-run feature for all database connections.
 	// It is commonly used for command options for convenience.
 	allDryRun = false
+
+	// [username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
+	linkPatternWithType    = `(\w+):([\w\-]+):(.+?)@(.+?)\((.+?):(\d+)\)/{0,1}([\w\-]*)\?{0,1}(.*)`
+	linkPatternWithoutType = `([\w\-]+):(.+?)@(.+?)\((.+?):(\d+)\)/{0,1}([\w\-]*)\?{0,1}(.*)`
 )
 
 func init() {
@@ -406,8 +414,56 @@ func NewByGroup(group ...string) (db DB, err error) {
 	)
 }
 
+func parseConfigNodeLink(node ConfigNode) ConfigNode {
+	var match []string
+	match, _ = gregex.MatchString(linkPatternWithType, node.Link)
+	if len(match) > 6 {
+		node.Type = match[1]
+		node.User = match[2]
+		node.Pass = match[3]
+		node.Protocol = match[4]
+		node.Host = match[5]
+		node.Port = match[6]
+		node.Name = match[7]
+		if len(match) > 7 {
+			node.Extra = match[8]
+		}
+		node.Link = ""
+	} else {
+		match, _ = gregex.MatchString(linkPatternWithoutType, node.Link)
+		if len(match) > 6 {
+			node.User = match[1]
+			node.Pass = match[2]
+			node.Protocol = match[3]
+			node.Host = match[4]
+			node.Port = match[5]
+			node.Name = match[6]
+			if len(match) > 7 {
+				node.Extra = match[7]
+			}
+			node.Link = ""
+		}
+	}
+	if node.Extra != "" {
+		if m, _ := gstr.Parse(node.Extra); len(m) > 0 {
+			_ = gconv.Struct(m, &node)
+		}
+	}
+	// Default value checks.
+	if node.Charset == "" {
+		node.Charset = defaultCharset
+	}
+	if node.Protocol == "" {
+		node.Protocol = defaultProtocol
+	}
+	return node
+}
+
 // doNewByNode creates and returns an ORM object with given configuration node and group name.
 func doNewByNode(node ConfigNode, group string) (db DB, err error) {
+	if node.Link != "" {
+		node = parseConfigNodeLink(node)
+	}
 	c := &Core{
 		group:  group,
 		debug:  gtype.NewBool(),
@@ -417,7 +473,7 @@ func doNewByNode(node ConfigNode, group string) (db DB, err error) {
 		config: &node,
 	}
 	if v, ok := driverMap[node.Type]; ok {
-		if c.db, err = v.New(c, &node); err != nil {
+		if c.db, err = v.New(c, node); err != nil {
 			return nil, err
 		}
 		return c.db, nil
@@ -547,7 +603,6 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 	} else {
 		node = c.config
 	}
-	// Default value checks.
 	if node.Charset == "" {
 		node.Charset = defaultCharset
 	}
@@ -572,7 +627,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 				intlog.Printf(ctx, `open new connection success, master:%#v, config:%#v, node:%#v`, master, c.config, node)
 			}
 		}()
-		if sqlDb, err = c.db.Open(node); err != nil {
+		if sqlDb, err = c.db.Open(*node); err != nil {
 			return nil
 		}
 		if sqlDb == nil {

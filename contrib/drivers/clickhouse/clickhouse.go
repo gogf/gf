@@ -69,19 +69,23 @@ func New() gdb.Driver {
 
 // New creates and returns a database object for clickhouse.
 // It implements the interface of gdb.Driver for extra database driver installation.
-func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
+func (d *Driver) New(core *gdb.Core, node gdb.ConfigNode) (gdb.DB, error) {
 	return &Driver{
 		Core: core,
 	}, nil
 }
 
 // Open creates and returns an underlying sql.DB object for clickhouse.
-func (d *Driver) Open(config *gdb.ConfigNode) (*sql.DB, error) {
+func (d *Driver) Open(config gdb.ConfigNode) (*sql.DB, error) {
+	var source string
 	// clickhouse://username:password@host1:9000,host2:9000/database?dial_timeout=200ms&max_execution_time=60
 	if config.Link != "" {
+		// ============================================================================
+		// Deprecated from v2.2.0.
+		// ============================================================================
 		// Custom changing the schema in runtime.
 		if config.Name != "" {
-			config.Link, _ = gregex.ReplaceString(replaceSchemaPattern, "@$1/"+config.Name, config.Link)
+			source, _ = gregex.ReplaceString(replaceSchemaPattern, "@$1/"+config.Name, config.Link)
 		} else {
 			// If no schema, the link is matched for replacement
 			dbName, _ := gregex.MatchString(replaceSchemaPattern, config.Link)
@@ -89,16 +93,24 @@ func (d *Driver) Open(config *gdb.ConfigNode) (*sql.DB, error) {
 				config.Name = dbName[len(dbName)-1]
 			}
 		}
-	} else if config.Pass != "" {
-		config.Link = fmt.Sprintf(
-			"clickhouse://%s:%s@%s:%s/%s?charset=%s&debug=%t",
-			config.User, url.PathEscape(config.Pass), config.Host, config.Port, config.Name, config.Charset, config.Debug)
 	} else {
-		config.Link = fmt.Sprintf(
-			"clickhouse://%s@%s:%s/%s?charset=%s&debug=%t",
-			config.User, config.Host, config.Port, config.Name, config.Charset, config.Debug)
+		if config.Pass != "" {
+			source = fmt.Sprintf(
+				"clickhouse://%s:%s@%s:%s/%s?charset=%s&debug=%t",
+				config.User, url.PathEscape(config.Pass),
+				config.Host, config.Port, config.Name, config.Charset, config.Debug,
+			)
+		} else {
+			source = fmt.Sprintf(
+				"clickhouse://%s@%s:%s/%s?charset=%s&debug=%t",
+				config.User, config.Host, config.Port, config.Name, config.Charset, config.Debug,
+			)
+		}
+		if config.Extra != "" {
+			source = fmt.Sprintf("%s&%s", source, config.Extra)
+		}
 	}
-	db, err := sql.Open(driverName, config.Link)
+	db, err := sql.Open(driverName, source)
 	if err != nil {
 		return nil, err
 	}

@@ -46,7 +46,7 @@ func (c *Core) Ctx(ctx context.Context) DB {
 	)
 	*newCore = *c
 	// It creates a new DB object, which is commonly a wrapper for object `Core`.
-	newCore.db, err = driverMap[configNode.Type].New(newCore, configNode)
+	newCore.db, err = driverMap[configNode.Type].New(newCore, *configNode)
 	if err != nil {
 		// It is really a serious error here.
 		// Do not let it continue.

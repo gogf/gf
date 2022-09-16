@@ -18,6 +18,7 @@ import (
 	"strings"
 
 	_ "github.com/glebarez/go-sqlite"
+	"github.com/gogf/gf/v2/encoding/gurl"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -52,19 +53,23 @@ func New() gdb.Driver {
 
 // New creates and returns a database object for sqlite.
 // It implements the interface of gdb.Driver for extra database driver installation.
-func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
+func (d *Driver) New(core *gdb.Core, node gdb.ConfigNode) (gdb.DB, error) {
 	return &Driver{
 		Core: core,
 	}, nil
 }
 
 // Open creates and returns a underlying sql.DB object for sqlite.
-func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
+// https://github.com/glebarez/go-sqlite
+func (d *Driver) Open(config gdb.ConfigNode) (db *sql.DB, err error) {
 	var (
 		source               string
 		underlyingDriverName = "sqlite"
 	)
 	if config.Link != "" {
+		// ============================================================================
+		// Deprecated from v2.2.0.
+		// ============================================================================
 		source = config.Link
 	} else {
 		source = config.Name
@@ -73,6 +78,28 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	if absolutePath, _ := gfile.Search(source); absolutePath != "" {
 		source = absolutePath
 	}
+
+	// Multiple PRAGMAs can be specified, e.g.:
+	// path/to/some.db?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)
+	if config.Extra != "" {
+		var (
+			options  string
+			extraMap map[string]interface{}
+		)
+		if extraMap, err = gstr.Parse(config.Extra); err != nil {
+			return nil, err
+		}
+		for k, v := range extraMap {
+			if options != "" {
+				options += "&"
+			}
+			options += fmt.Sprintf(`_pragma=%s(%s)`, k, gurl.Encode(gconv.String(v)))
+		}
+		if len(options) > 1 {
+			source += "?" + options
+		}
+	}
+
 	if db, err = sql.Open(underlyingDriverName, source); err != nil {
 		err = gerror.WrapCodef(
 			gcode.CodeDbOperationError, err,

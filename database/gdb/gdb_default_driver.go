@@ -23,7 +23,7 @@ func init() {
 
 // New creates and returns a database object for mysql.
 // It implements the interface of gdb.Driver for extra database driver installation.
-func (d *DriverTest) New(core *Core, node *ConfigNode) (DB, error) {
+func (d *DriverTest) New(core *Core, node ConfigNode) (DB, error) {
 	return &DriverTest{
 		Core: core,
 	}, nil
@@ -31,7 +31,7 @@ func (d *DriverTest) New(core *Core, node *ConfigNode) (DB, error) {
 
 // Open creates and returns an underlying sql.DB object for mysql.
 // Note that it converts time.Time argument to local timezone in default.
-func (d *DriverTest) Open(config *ConfigNode) (db *sql.DB, err error) {
+func (d *DriverTest) Open(config ConfigNode) (db *sql.DB, err error) {
 	return
 }
 
