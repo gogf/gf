@@ -14,7 +14,7 @@ import (
 
 type generateStructDefinitionInput struct {
 	CGenDaoInternalInput
-	DB         gdb.DB                     // Current DB.
+	TableName  string                     // Table name.
 	StructName string                     // Struct name.
 	FieldMap   map[string]*gdb.TableField // Table field map.
 	IsDo       bool                       // Is generating DTO struct.

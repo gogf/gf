@@ -202,6 +202,9 @@ func (oai *OpenApiV3) golangTypeToOAIFormat(t reflect.Type) string {
 		return FormatBinary
 
 	default:
+		if oai.isEmbeddedStructDefinition(t) {
+			return `EmbeddedStructDefinition`
+		}
 		return format
 	}
 }
