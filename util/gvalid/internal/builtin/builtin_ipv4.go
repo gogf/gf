@@ -19,18 +19,18 @@ import (
 type RuleIpv4 struct{}
 
 func init() {
-	Register(&RuleIpv4{})
+	Register(RuleIpv4{})
 }
 
-func (r *RuleIpv4) Name() string {
+func (r RuleIpv4) Name() string {
 	return "ipv4"
 }
 
-func (r *RuleIpv4) Message() string {
-	return "The {attribute} value `{value}` is not a valid IPv4 address"
+func (r RuleIpv4) Message() string {
+	return "The {field} value `{value}` is not a valid IPv4 address"
 }
 
-func (r *RuleIpv4) Run(in RunInput) error {
+func (r RuleIpv4) Run(in RunInput) error {
 	var (
 		ok    bool
 		value = in.Value.String()

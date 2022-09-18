@@ -19,18 +19,18 @@ import (
 type RuleEmail struct{}
 
 func init() {
-	Register(&RuleEmail{})
+	Register(RuleEmail{})
 }
 
-func (r *RuleEmail) Name() string {
+func (r RuleEmail) Name() string {
 	return "email"
 }
 
-func (r *RuleEmail) Message() string {
-	return "The {attribute} value `{value}` is not a valid email address"
+func (r RuleEmail) Message() string {
+	return "The {field} value `{value}` is not a valid email address"
 }
 
-func (r *RuleEmail) Run(in RunInput) error {
+func (r RuleEmail) Run(in RunInput) error {
 	ok := gregex.IsMatchString(
 		`^[a-zA-Z0-9_\-\.]+@[a-zA-Z0-9_\-]+(\.[a-zA-Z0-9_\-]+)+$`,
 		in.Value.String(),

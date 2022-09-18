@@ -22,18 +22,18 @@ import (
 type RuleMinLength struct{}
 
 func init() {
-	Register(&RuleMinLength{})
+	Register(RuleMinLength{})
 }
 
-func (r *RuleMinLength) Name() string {
+func (r RuleMinLength) Name() string {
 	return "min-length"
 }
 
-func (r *RuleMinLength) Message() string {
-	return "The {attribute} value `{value}` length must be equal or greater than {min}"
+func (r RuleMinLength) Message() string {
+	return "The {field} value `{value}` length must be equal or greater than {min}"
 }
 
-func (r *RuleMinLength) Run(in RunInput) error {
+func (r RuleMinLength) Run(in RunInput) error {
 	var (
 		valueRunes = gconv.Runes(in.Value.String())
 		valueLen   = len(valueRunes)

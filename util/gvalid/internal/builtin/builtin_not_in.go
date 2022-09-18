@@ -20,24 +20,24 @@ import (
 type RuleNotIn struct{}
 
 func init() {
-	Register(&RuleNotIn{})
+	Register(RuleNotIn{})
 }
 
-func (r *RuleNotIn) Name() string {
+func (r RuleNotIn) Name() string {
 	return "not-in"
 }
 
-func (r *RuleNotIn) Message() string {
-	return "The {attribute} value `{value}` must not be in range: {pattern}"
+func (r RuleNotIn) Message() string {
+	return "The {field} value `{value}` must not be in range: {pattern}"
 }
 
-func (r *RuleNotIn) Run(in RunInput) error {
+func (r RuleNotIn) Run(in RunInput) error {
 	var (
 		ok    = true
 		value = in.Value.String()
 	)
 	for _, rulePattern := range gstr.SplitAndTrim(in.RulePattern, ",") {
-		if in.CaseInsensitive {
+		if in.Option.CaseInsensitive {
 			ok = !strings.EqualFold(value, strings.TrimSpace(rulePattern))
 		} else {
 			ok = strings.Compare(value, strings.TrimSpace(rulePattern)) != 0

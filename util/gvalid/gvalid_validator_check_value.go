@@ -96,13 +96,12 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 		if !hasBailRule && ruleKey == ruleNameBail {
 			hasBailRule = true
 		}
-
 		if !hasCaseInsensitive && ruleKey == ruleNameCi {
 			hasCaseInsensitive = true
 		}
 
 		// Ignore logic executing for marked rules.
-		if markedRuleMap[ruleKey] {
+		if decorativeRuleMap[ruleKey] {
 			index++
 			continue
 		}
@@ -135,16 +134,18 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 		// Builtin validation rules.
 		case customRuleFunc == nil && builtinRule != nil:
 			err = builtinRule.Run(builtin.RunInput{
-				RuleKey:         ruleKey,
-				RulePattern:     rulePattern,
-				Message:         message,
-				Value:           gvar.New(in.Value),
-				Data:            gvar.New(in.DataRaw),
-				CaseInsensitive: hasCaseInsensitive,
+				RuleKey:     ruleKey,
+				RulePattern: rulePattern,
+				Message:     message,
+				Value:       gvar.New(in.Value),
+				Data:        gvar.New(in.DataRaw),
+				Option: builtin.RunOption{
+					CaseInsensitive: hasCaseInsensitive,
+				},
 			})
 
 		default:
-
+			// It never comes across here.
 		}
 
 		// Error handling.
@@ -160,9 +161,10 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 			if !gerror.HasStack(err) {
 				var s string
 				s = gstr.ReplaceByMap(err.Error(), map[string]string{
+					"{field}":     in.Name,
 					"{value}":     gconv.String(in.Value),
 					"{pattern}":   rulePattern,
-					"{attribute}": in.Name,
+					"{attribute}": in.Name, // The same as `{field}`. It is deprecated.
 				})
 				s, _ = gregex.ReplaceString(`\s{2,}`, ` `, s)
 				err = errors.New(s)

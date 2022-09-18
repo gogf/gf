@@ -20,18 +20,18 @@ import (
 type RuleIp struct{}
 
 func init() {
-	Register(&RuleIp{})
+	Register(RuleIp{})
 }
 
-func (r *RuleIp) Name() string {
+func (r RuleIp) Name() string {
 	return "ip"
 }
 
-func (r *RuleIp) Message() string {
-	return "The {attribute} value `{value}` is not a valid IP address"
+func (r RuleIp) Message() string {
+	return "The {field} value `{value}` is not a valid IP address"
 }
 
-func (r *RuleIp) Run(in RunInput) error {
+func (r RuleIp) Run(in RunInput) error {
 	var (
 		ok    bool
 		value = in.Value.String()

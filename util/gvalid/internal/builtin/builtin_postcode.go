@@ -19,18 +19,18 @@ import (
 type RulePostcode struct{}
 
 func init() {
-	Register(&RulePostcode{})
+	Register(RulePostcode{})
 }
 
-func (r *RulePostcode) Name() string {
+func (r RulePostcode) Name() string {
 	return "postcode"
 }
 
-func (r *RulePostcode) Message() string {
-	return "The {attribute} value `{value}` is not a valid postcode format"
+func (r RulePostcode) Message() string {
+	return "The {field} value `{value}` is not a valid postcode format"
 }
 
-func (r *RulePostcode) Run(in RunInput) error {
+func (r RulePostcode) Run(in RunInput) error {
 	ok := gregex.IsMatchString(
 		`^\d{6}$`,
 		in.Value.String(),

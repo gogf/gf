@@ -18,18 +18,18 @@ import (
 type RuleFloat struct{}
 
 func init() {
-	Register(&RuleFloat{})
+	Register(RuleFloat{})
 }
 
-func (r *RuleFloat) Name() string {
+func (r RuleFloat) Name() string {
 	return "float"
 }
 
-func (r *RuleFloat) Message() string {
-	return "The {attribute} value `{value}` is not of valid float type"
+func (r RuleFloat) Message() string {
+	return "The {field} value `{value}` is not of valid float type"
 }
 
-func (r *RuleFloat) Run(in RunInput) error {
+func (r RuleFloat) Run(in RunInput) error {
 	if _, err := strconv.ParseFloat(in.Value.String(), 10); err == nil {
 		return nil
 	}

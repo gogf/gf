@@ -20,18 +20,18 @@ import (
 type RuleDatetime struct{}
 
 func init() {
-	Register(&RuleDatetime{})
+	Register(RuleDatetime{})
 }
 
-func (r *RuleDatetime) Name() string {
+func (r RuleDatetime) Name() string {
 	return "datetime"
 }
 
-func (r *RuleDatetime) Message() string {
-	return "The {attribute} value `{value}` is not a valid datetime"
+func (r RuleDatetime) Message() string {
+	return "The {field} value `{value}` is not a valid datetime"
 }
 
-func (r *RuleDatetime) Run(in RunInput) error {
+func (r RuleDatetime) Run(in RunInput) error {
 	type iTime interface {
 		Date() (year int, month time.Month, day int)
 		IsZero() bool

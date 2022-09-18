@@ -22,18 +22,18 @@ import (
 type RuleMaxLength struct{}
 
 func init() {
-	Register(&RuleMaxLength{})
+	Register(RuleMaxLength{})
 }
 
-func (r *RuleMaxLength) Name() string {
+func (r RuleMaxLength) Name() string {
 	return "max-length"
 }
 
-func (r *RuleMaxLength) Message() string {
-	return "The {attribute} value `{value}` length must be equal or lesser than {max}"
+func (r RuleMaxLength) Message() string {
+	return "The {field} value `{value}` length must be equal or lesser than {max}"
 }
 
-func (r *RuleMaxLength) Run(in RunInput) error {
+func (r RuleMaxLength) Run(in RunInput) error {
 	var (
 		valueRunes = gconv.Runes(in.Value.String())
 		valueLen   = len(valueRunes)

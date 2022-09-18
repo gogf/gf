@@ -19,18 +19,18 @@ import (
 type RuleQQ struct{}
 
 func init() {
-	Register(&RuleQQ{})
+	Register(RuleQQ{})
 }
 
-func (r *RuleQQ) Name() string {
+func (r RuleQQ) Name() string {
 	return "qq"
 }
 
-func (r *RuleQQ) Message() string {
-	return "The {attribute} value `{value}` is not a valid QQ number"
+func (r RuleQQ) Message() string {
+	return "The {field} value `{value}` is not a valid QQ number"
 }
 
-func (r *RuleQQ) Run(in RunInput) error {
+func (r RuleQQ) Run(in RunInput) error {
 	ok := gregex.IsMatchString(
 		`^[1-9][0-9]{4,}$`,
 		in.Value.String(),

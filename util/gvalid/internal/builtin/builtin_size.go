@@ -22,18 +22,18 @@ import (
 type RuleSize struct{}
 
 func init() {
-	Register(&RuleSize{})
+	Register(RuleSize{})
 }
 
-func (r *RuleSize) Name() string {
+func (r RuleSize) Name() string {
 	return "size"
 }
 
-func (r *RuleSize) Message() string {
-	return "The {attribute} value `{value}` length must be {size}"
+func (r RuleSize) Message() string {
+	return "The {field} value `{value}` length must be {size}"
 }
 
-func (r *RuleSize) Run(in RunInput) error {
+func (r RuleSize) Run(in RunInput) error {
 	var (
 		valueRunes = gconv.Runes(in.Value.String())
 		valueLen   = len(valueRunes)

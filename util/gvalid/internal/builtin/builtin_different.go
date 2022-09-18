@@ -21,25 +21,25 @@ import (
 type RuleDifferent struct{}
 
 func init() {
-	Register(&RuleDifferent{})
+	Register(RuleDifferent{})
 }
 
-func (r *RuleDifferent) Name() string {
+func (r RuleDifferent) Name() string {
 	return "different"
 }
 
-func (r *RuleDifferent) Message() string {
-	return "The {attribute} value `{value}` must be different from field {pattern}"
+func (r RuleDifferent) Message() string {
+	return "The {field} value `{value}` must be different from field {pattern}"
 }
 
-func (r *RuleDifferent) Run(in RunInput) error {
+func (r RuleDifferent) Run(in RunInput) error {
 	var (
 		ok    = true
 		value = in.Value.String()
 	)
 	_, foundValue := gutil.MapPossibleItemByKey(in.Data.Map(), in.RulePattern)
 	if foundValue != nil {
-		if in.CaseInsensitive {
+		if in.Option.CaseInsensitive {
 			ok = !strings.EqualFold(value, gconv.String(foundValue))
 		} else {
 			ok = strings.Compare(value, gconv.String(foundValue)) != 0

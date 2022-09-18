@@ -19,18 +19,18 @@ import (
 type RuleRegex struct{}
 
 func init() {
-	Register(&RuleRegex{})
+	Register(RuleRegex{})
 }
 
-func (r *RuleRegex) Name() string {
+func (r RuleRegex) Name() string {
 	return "regex"
 }
 
-func (r *RuleRegex) Message() string {
-	return "The {attribute} value `{value}` must be in regex of: {pattern}"
+func (r RuleRegex) Message() string {
+	return "The {field} value `{value}` must be in regex of: {pattern}"
 }
 
-func (r *RuleRegex) Run(in RunInput) error {
+func (r RuleRegex) Run(in RunInput) error {
 	if !gregex.IsMatchString(in.RulePattern, in.Value.String()) {
 		return errors.New(in.Message)
 	}

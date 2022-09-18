@@ -13,17 +13,17 @@ package builtin
 type RuleBail struct{}
 
 func init() {
-	Register(&RuleBail{})
+	Register(RuleBail{})
 }
 
-func (r *RuleBail) Name() string {
+func (r RuleBail) Name() string {
 	return "bail"
 }
 
-func (r *RuleBail) Message() string {
+func (r RuleBail) Message() string {
 	return ""
 }
 
-func (r *RuleBail) Run(in RunInput) error {
+func (r RuleBail) Run(in RunInput) error {
 	return nil
 }

@@ -21,25 +21,25 @@ import (
 type RuleSame struct{}
 
 func init() {
-	Register(&RuleSame{})
+	Register(RuleSame{})
 }
 
-func (r *RuleSame) Name() string {
+func (r RuleSame) Name() string {
 	return "same"
 }
 
-func (r *RuleSame) Message() string {
-	return "The {attribute} value `{value}` must be the same as field {pattern}"
+func (r RuleSame) Message() string {
+	return "The {field} value `{value}` must be the same as field {pattern}"
 }
 
-func (r *RuleSame) Run(in RunInput) error {
+func (r RuleSame) Run(in RunInput) error {
 	var (
 		ok    bool
 		value = in.Value.String()
 	)
 	_, foundValue := gutil.MapPossibleItemByKey(in.Data.Map(), in.RulePattern)
 	if foundValue != nil {
-		if in.CaseInsensitive {
+		if in.Option.CaseInsensitive {
 			ok = strings.EqualFold(value, gconv.String(foundValue))
 		} else {
 			ok = strings.Compare(value, gconv.String(foundValue)) == 0

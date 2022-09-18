@@ -21,18 +21,18 @@ import (
 type RuleBetween struct{}
 
 func init() {
-	Register(&RuleBetween{})
+	Register(RuleBetween{})
 }
 
-func (r *RuleBetween) Name() string {
+func (r RuleBetween) Name() string {
 	return "between"
 }
 
-func (r *RuleBetween) Message() string {
-	return "The {attribute} value `{value}` must be between {min} and {max}"
+func (r RuleBetween) Message() string {
+	return "The {field} value `{value}` must be between {min} and {max}"
 }
 
-func (r *RuleBetween) Run(in RunInput) error {
+func (r RuleBetween) Run(in RunInput) error {
 	var (
 		array = strings.Split(in.RulePattern, ",")
 		min   = float64(0)

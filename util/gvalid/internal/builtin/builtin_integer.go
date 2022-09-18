@@ -18,18 +18,18 @@ import (
 type RuleInteger struct{}
 
 func init() {
-	Register(&RuleInteger{})
+	Register(RuleInteger{})
 }
 
-func (r *RuleInteger) Name() string {
+func (r RuleInteger) Name() string {
 	return "integer"
 }
 
-func (r *RuleInteger) Message() string {
-	return "The {attribute} value `{value}` is not an integer"
+func (r RuleInteger) Message() string {
+	return "The {field} value `{value}` is not an integer"
 }
 
-func (r *RuleInteger) Run(in RunInput) error {
+func (r RuleInteger) Run(in RunInput) error {
 	if _, err := strconv.Atoi(in.Value.String()); err == nil {
 		return nil
 	}

@@ -23,18 +23,18 @@ import (
 type RuleLength struct{}
 
 func init() {
-	Register(&RuleLength{})
+	Register(RuleLength{})
 }
 
-func (r *RuleLength) Name() string {
+func (r RuleLength) Name() string {
 	return "length"
 }
 
-func (r *RuleLength) Message() string {
-	return "The {attribute} value `{value}` length must be between {min} and {max}"
+func (r RuleLength) Message() string {
+	return "The {field} value `{value}` length must be between {min} and {max}"
 }
 
-func (r *RuleLength) Run(in RunInput) error {
+func (r RuleLength) Run(in RunInput) error {
 	var (
 		valueRunes = gconv.Runes(in.Value.String())
 		valueLen   = len(valueRunes)

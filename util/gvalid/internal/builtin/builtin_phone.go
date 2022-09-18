@@ -37,18 +37,18 @@ import (
 type RulePhone struct{}
 
 func init() {
-	Register(&RulePhone{})
+	Register(RulePhone{})
 }
 
-func (r *RulePhone) Name() string {
+func (r RulePhone) Name() string {
 	return "phone"
 }
 
-func (r *RulePhone) Message() string {
-	return "The {attribute} value `{value}` is not a valid phone number"
+func (r RulePhone) Message() string {
+	return "The {field} value `{value}` is not a valid phone number"
 }
 
-func (r *RulePhone) Run(in RunInput) error {
+func (r RulePhone) Run(in RunInput) error {
 	ok := gregex.IsMatchString(
 		`^13[\d]{9}$|^14[5,7]{1}\d{8}$|^15[^4]{1}\d{8}$|^16[\d]{9}$|^17[0,2,3,5,6,7,8]{1}\d{8}$|^18[\d]{9}$|^19[\d]{9}$`,
 		in.Value.String(),

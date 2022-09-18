@@ -21,18 +21,18 @@ import (
 type RuleResidentId struct{}
 
 func init() {
-	Register(&RuleResidentId{})
+	Register(RuleResidentId{})
 }
 
-func (r *RuleResidentId) Name() string {
+func (r RuleResidentId) Name() string {
 	return "resident-id"
 }
 
-func (r *RuleResidentId) Message() string {
-	return "The {attribute} value `{value}` is not a valid resident id number"
+func (r RuleResidentId) Message() string {
+	return "The {field} value `{value}` is not a valid resident id number"
 }
 
-func (r *RuleResidentId) Run(in RunInput) error {
+func (r RuleResidentId) Run(in RunInput) error {
 	if r.checkResidentId(in.Value.String()) {
 		return nil
 	}
@@ -59,7 +59,7 @@ func (r *RuleResidentId) Run(in RunInput) error {
 //
 // 总：
 // (^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$)|(^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}$)
-func (r *RuleResidentId) checkResidentId(id string) bool {
+func (r RuleResidentId) checkResidentId(id string) bool {
 	id = strings.ToUpper(strings.TrimSpace(id))
 	if len(id) != 18 {
 		return false

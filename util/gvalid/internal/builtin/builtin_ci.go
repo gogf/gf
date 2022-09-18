@@ -14,17 +14,17 @@ package builtin
 type RuleCi struct{}
 
 func init() {
-	Register(&RuleCi{})
+	Register(RuleCi{})
 }
 
-func (r *RuleCi) Name() string {
+func (r RuleCi) Name() string {
 	return "ci"
 }
 
-func (r *RuleCi) Message() string {
+func (r RuleCi) Message() string {
 	return ""
 }
 
-func (r *RuleCi) Run(in RunInput) error {
+func (r RuleCi) Run(in RunInput) error {
 	return nil
 }

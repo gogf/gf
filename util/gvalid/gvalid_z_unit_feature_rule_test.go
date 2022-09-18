@@ -973,6 +973,52 @@ func Test_Different(t *testing.T) {
 	})
 }
 
+func Test_EQ(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		rule := "eq:id"
+		val1 := "100"
+		params1 := g.Map{
+			"age": 18,
+		}
+		params2 := g.Map{
+			"id": 100,
+		}
+		params3 := g.Map{
+			"id":   100,
+			"name": "john",
+		}
+		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Run(ctx)
+		t.AssertNE(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(err3, nil)
+	})
+}
+
+func Test_Not_EQ(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		rule := "not-eq:id"
+		val1 := "100"
+		params1 := g.Map{
+			"age": 18,
+		}
+		params2 := g.Map{
+			"id": 100,
+		}
+		params3 := g.Map{
+			"id":   100,
+			"name": "john",
+		}
+		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Run(ctx)
+		t.Assert(err1, nil)
+		t.AssertNE(err2, nil)
+		t.AssertNE(err3, nil)
+	})
+}
+
 func Test_In(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "in:100,200"
@@ -1142,5 +1188,365 @@ func Test_Bail(t *testing.T) {
 		err := g.Validator().Data(obj).Run(ctx)
 		t.AssertNE(err, nil)
 		t.Assert(err.Error(), "min number is 1")
+	})
+}
+
+func Test_After(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			T1 string `v:"after:T2"`
+			T2 string
+		}
+		obj := &Params{
+			T1: "2022-09-02",
+			T2: "2022-09-01",
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.AssertNil(err)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			T1 string `v:"after:T2"`
+			T2 string
+		}
+		obj := &Params{
+			T1: "2022-09-01",
+			T2: "2022-09-02",
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.Assert(err, "The T1 value `2022-09-01` must be after field T2")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			T1 *gtime.Time `v:"after:T2"`
+			T2 *gtime.Time
+		}
+		obj := &Params{
+			T1: gtime.New("2022-09-02"),
+			T2: gtime.New("2022-09-01"),
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.AssertNil(err)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			T1 *gtime.Time `v:"after:T2"`
+			T2 *gtime.Time
+		}
+		obj := &Params{
+			T1: gtime.New("2022-09-01"),
+			T2: gtime.New("2022-09-02"),
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.Assert(err, "The T1 value `2022-09-01 00:00:00` must be after field T2")
+	})
+}
+
+func Test_After_Equal(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			T1 string `v:"after-equal:T2"`
+			T2 string
+		}
+		obj := &Params{
+			T1: "2022-09-02",
+			T2: "2022-09-01",
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.AssertNil(err)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			T1 string `v:"after-equal:T2"`
+			T2 string
+		}
+		obj := &Params{
+			T1: "2022-09-01",
+			T2: "2022-09-02",
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.Assert(err, "The T1 value `2022-09-01` must be after or equal to field T2")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			T1 *gtime.Time `v:"after-equal:T2"`
+			T2 *gtime.Time
+		}
+		obj := &Params{
+			T1: gtime.New("2022-09-02"),
+			T2: gtime.New("2022-09-01"),
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.AssertNil(err)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			T1 *gtime.Time `v:"after-equal:T2"`
+			T2 *gtime.Time
+		}
+		obj := &Params{
+			T1: gtime.New("2022-09-01"),
+			T2: gtime.New("2022-09-01"),
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.AssertNil(err)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			T1 *gtime.Time `v:"after-equal:T2"`
+			T2 *gtime.Time
+		}
+		obj := &Params{
+			T1: gtime.New("2022-09-01"),
+			T2: gtime.New("2022-09-02"),
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.Assert(err, "The T1 value `2022-09-01 00:00:00` must be after or equal to field T2")
+	})
+}
+
+func Test_Before(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			T1 string `v:"before:T2"`
+			T2 string
+		}
+		obj := &Params{
+			T1: "2022-09-01",
+			T2: "2022-09-02",
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.AssertNil(err)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			T1 string `v:"before:T2"`
+			T2 string
+		}
+		obj := &Params{
+			T1: "2022-09-02",
+			T2: "2022-09-01",
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.Assert(err, "The T1 value `2022-09-02` must be before field T2")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			T1 *gtime.Time `v:"before:T2"`
+			T2 *gtime.Time
+		}
+		obj := &Params{
+			T1: gtime.New("2022-09-01"),
+			T2: gtime.New("2022-09-02"),
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.AssertNil(err)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			T1 *gtime.Time `v:"before:T2"`
+			T2 *gtime.Time
+		}
+		obj := &Params{
+			T1: gtime.New("2022-09-02"),
+			T2: gtime.New("2022-09-01"),
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.Assert(err, "The T1 value `2022-09-02 00:00:00` must be before field T2")
+	})
+}
+
+func Test_Before_Equal(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			T1 string `v:"before-equal:T2"`
+			T2 string
+		}
+		obj := &Params{
+			T1: "2022-09-01",
+			T2: "2022-09-02",
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.AssertNil(err)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			T1 string `v:"before-equal:T2"`
+			T2 string
+		}
+		obj := &Params{
+			T1: "2022-09-02",
+			T2: "2022-09-01",
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.Assert(err, "The T1 value `2022-09-02` must be before or equal to field T2")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			T1 *gtime.Time `v:"before-equal:T2"`
+			T2 *gtime.Time
+		}
+		obj := &Params{
+			T1: gtime.New("2022-09-01"),
+			T2: gtime.New("2022-09-02"),
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.AssertNil(err)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			T1 *gtime.Time `v:"before-equal:T2"`
+			T2 *gtime.Time
+		}
+		obj := &Params{
+			T1: gtime.New("2022-09-01"),
+			T2: gtime.New("2022-09-01"),
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.AssertNil(err)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			T1 *gtime.Time `v:"before-equal:T2"`
+			T2 *gtime.Time
+		}
+		obj := &Params{
+			T1: gtime.New("2022-09-02"),
+			T2: gtime.New("2022-09-01"),
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.Assert(err, "The T1 value `2022-09-02 00:00:00` must be before or equal to field T2")
+	})
+}
+
+func Test_GT(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			V1 string `v:"gt:V2"`
+			V2 string
+		}
+		obj := &Params{
+			V1: "1.2",
+			V2: "1.1",
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.AssertNil(err)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			V1 string `v:"gt:V2"`
+			V2 string
+		}
+		obj := &Params{
+			V1: "1.1",
+			V2: "1.2",
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.Assert(err, "The V1 value `1.1` must be greater than field V2")
+	})
+}
+
+func Test_GTE(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			V1 string `v:"gte:V2"`
+			V2 string
+		}
+		obj := &Params{
+			V1: "1.2",
+			V2: "1.1",
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.AssertNil(err)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			V1 string `v:"gte:V2"`
+			V2 string
+		}
+		obj := &Params{
+			V1: "1.1",
+			V2: "1.2",
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.Assert(err, "The V1 value `1.1` must be greater than or equal to field V2")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			V1 string `v:"gte:V2"`
+			V2 string
+		}
+		obj := &Params{
+			V1: "1.1",
+			V2: "1.1",
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.AssertNil(err)
+	})
+}
+
+func Test_LT(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			V1 string `v:"lt:V2"`
+			V2 string
+		}
+		obj := &Params{
+			V1: "1.1",
+			V2: "1.2",
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.AssertNil(err)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			V1 string `v:"lt:V2"`
+			V2 string
+		}
+		obj := &Params{
+			V1: "1.2",
+			V2: "1.1",
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.Assert(err, "The V1 value `1.2` must be lesser than field V2")
+	})
+}
+
+func Test_LTE(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			V1 string `v:"lte:V2"`
+			V2 string
+		}
+		obj := &Params{
+			V1: "1.1",
+			V2: "1.2",
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.AssertNil(err)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			V1 string `v:"lte:V2"`
+			V2 string
+		}
+		obj := &Params{
+			V1: "1.2",
+			V2: "1.1",
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.Assert(err, "The V1 value `1.2` must be lesser than or equal to field V2")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			V1 string `v:"lte:V2"`
+			V2 string
+		}
+		obj := &Params{
+			V1: "1.1",
+			V2: "1.1",
+		}
+		err := g.Validator().Data(obj).Run(ctx)
+		t.AssertNil(err)
 	})
 }

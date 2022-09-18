@@ -19,18 +19,18 @@ import (
 type RuleIpv6 struct{}
 
 func init() {
-	Register(&RuleIpv6{})
+	Register(RuleIpv6{})
 }
 
-func (r *RuleIpv6) Name() string {
+func (r RuleIpv6) Name() string {
 	return "ipv6"
 }
 
-func (r *RuleIpv6) Message() string {
-	return "The {attribute} value `{value}` is not a valid IPv6 address"
+func (r RuleIpv6) Message() string {
+	return "The {field} value `{value}` is not a valid IPv6 address"
 }
 
-func (r *RuleIpv6) Run(in RunInput) error {
+func (r RuleIpv6) Run(in RunInput) error {
 	var (
 		ok    bool
 		value = in.Value.String()

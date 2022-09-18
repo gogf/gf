@@ -31,18 +31,18 @@ var boolMap = map[string]struct{}{
 }
 
 func init() {
-	Register(&RuleBoolean{})
+	Register(RuleBoolean{})
 }
 
-func (r *RuleBoolean) Name() string {
+func (r RuleBoolean) Name() string {
 	return "boolean"
 }
 
-func (r *RuleBoolean) Message() string {
-	return "The {attribute} value `{value}` field must be true or false"
+func (r RuleBoolean) Message() string {
+	return "The {field} value `{value}` field must be true or false"
 }
 
-func (r *RuleBoolean) Run(in RunInput) error {
+func (r RuleBoolean) Run(in RunInput) error {
 	if _, ok := boolMap[strings.ToLower(in.Value.String())]; ok {
 		return nil
 	}

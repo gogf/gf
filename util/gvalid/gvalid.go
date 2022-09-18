@@ -54,7 +54,7 @@ var (
 	// defaultErrorMessages is the default error messages.
 	// Note that these messages are synchronized from ./i18n/en/validation.toml .
 	defaultErrorMessages = map[string]string{
-		internalDefaultRuleName: "The {attribute} value `{value}` is invalid",
+		internalDefaultRuleName: "The {field} value `{value}` is invalid",
 	}
 
 	structTagPriority    = []string{"gvalid", "valid", "v"} // structTagPriority specifies the validation tag priority array.
@@ -70,9 +70,9 @@ var (
 	// which is compiled just once and of repeatable usage.
 	ruleRegex, _ = regexp.Compile(singleRulePattern)
 
-	// markedRuleMap defines all rules that are just marked rules which have neither functional meaning
+	// decorativeRuleMap defines all rules that are just marked rules which have neither functional meaning
 	// nor error messages.
-	markedRuleMap = map[string]bool{
+	decorativeRuleMap = map[string]bool{
 		ruleNameBail: true,
 		ruleNameCi:   true,
 	}

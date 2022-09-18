@@ -20,18 +20,18 @@ import (
 type RulePassword3 struct{}
 
 func init() {
-	Register(&RulePassword3{})
+	Register(RulePassword3{})
 }
 
-func (r *RulePassword3) Name() string {
+func (r RulePassword3) Name() string {
 	return "password3"
 }
 
-func (r *RulePassword3) Message() string {
-	return "The {attribute} value `{value}` is not a valid passport format"
+func (r RulePassword3) Message() string {
+	return "The {field} value `{value}` is not a valid passport format"
 }
 
-func (r *RulePassword3) Run(in RunInput) error {
+func (r RulePassword3) Run(in RunInput) error {
 	var value = in.Value.String()
 	if gregex.IsMatchString(`^[\w\S]{6,18}$`, value) &&
 		gregex.IsMatchString(`[a-z]+`, value) &&

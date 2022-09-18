@@ -22,18 +22,18 @@ import (
 type RulePhoneLoose struct{}
 
 func init() {
-	Register(&RulePhoneLoose{})
+	Register(RulePhoneLoose{})
 }
 
-func (r *RulePhoneLoose) Name() string {
+func (r RulePhoneLoose) Name() string {
 	return "phone-loose"
 }
 
-func (r *RulePhoneLoose) Message() string {
-	return "The {attribute} value `{value}` is not a valid phone number"
+func (r RulePhoneLoose) Message() string {
+	return "The {field} value `{value}` is not a valid phone number"
 }
 
-func (r *RulePhoneLoose) Run(in RunInput) error {
+func (r RulePhoneLoose) Run(in RunInput) error {
 	ok := gregex.IsMatchString(
 		`^1(3|4|5|6|7|8|9)\d{9}$`,
 		in.Value.String(),

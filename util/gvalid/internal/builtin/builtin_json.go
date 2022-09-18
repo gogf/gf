@@ -19,18 +19,18 @@ import (
 type RuleJson struct{}
 
 func init() {
-	Register(&RuleJson{})
+	Register(RuleJson{})
 }
 
-func (r *RuleJson) Name() string {
+func (r RuleJson) Name() string {
 	return "json"
 }
 
-func (r *RuleJson) Message() string {
-	return "The {attribute} value `{value}` is not a valid JSON string"
+func (r RuleJson) Message() string {
+	return "The {field} value `{value}` is not a valid JSON string"
 }
 
-func (r *RuleJson) Run(in RunInput) error {
+func (r RuleJson) Run(in RunInput) error {
 	if json.Valid(in.Value.Bytes()) {
 		return nil
 	}

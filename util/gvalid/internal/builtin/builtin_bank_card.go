@@ -17,18 +17,18 @@ import (
 type RuleBankCard struct{}
 
 func init() {
-	Register(&RuleBankCard{})
+	Register(RuleBankCard{})
 }
 
-func (r *RuleBankCard) Name() string {
+func (r RuleBankCard) Name() string {
 	return "bank-card"
 }
 
-func (r *RuleBankCard) Message() string {
-	return "The {attribute} value `{value}` is not a valid bank card number"
+func (r RuleBankCard) Message() string {
+	return "The {field} value `{value}` is not a valid bank card number"
 }
 
-func (r *RuleBankCard) Run(in RunInput) error {
+func (r RuleBankCard) Run(in RunInput) error {
 	if r.checkLuHn(in.Value.String()) {
 		return nil
 	}
@@ -37,7 +37,7 @@ func (r *RuleBankCard) Run(in RunInput) error {
 
 // checkLuHn checks `value` with LUHN algorithm.
 // It's usually used for bank card number validation.
-func (r *RuleBankCard) checkLuHn(value string) bool {
+func (r RuleBankCard) checkLuHn(value string) bool {
 	var (
 		sum     = 0
 		nDigits = len(value)

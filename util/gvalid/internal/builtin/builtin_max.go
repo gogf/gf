@@ -20,18 +20,18 @@ import (
 type RuleMax struct{}
 
 func init() {
-	Register(&RuleMax{})
+	Register(RuleMax{})
 }
 
-func (r *RuleMax) Name() string {
+func (r RuleMax) Name() string {
 	return "max"
 }
 
-func (r *RuleMax) Message() string {
-	return "The {attribute} value `{value}` must be equal or lesser than {max}"
+func (r RuleMax) Message() string {
+	return "The {field} value `{value}` must be equal or lesser than {max}"
 }
 
-func (r *RuleMax) Run(in RunInput) error {
+func (r RuleMax) Run(in RunInput) error {
 	var (
 		max, err1    = strconv.ParseFloat(in.RulePattern, 10)
 		valueN, err2 = strconv.ParseFloat(in.Value.String(), 10)

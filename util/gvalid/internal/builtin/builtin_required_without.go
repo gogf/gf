@@ -22,18 +22,18 @@ import (
 type RuleRequiredWithout struct{}
 
 func init() {
-	Register(&RuleRequiredWithout{})
+	Register(RuleRequiredWithout{})
 }
 
-func (r *RuleRequiredWithout) Name() string {
+func (r RuleRequiredWithout) Name() string {
 	return "required-without"
 }
 
-func (r *RuleRequiredWithout) Message() string {
-	return "The {attribute} field is required"
+func (r RuleRequiredWithout) Message() string {
+	return "The {field} field is required"
 }
 
-func (r *RuleRequiredWithout) Run(in RunInput) error {
+func (r RuleRequiredWithout) Run(in RunInput) error {
 	var (
 		required   = false
 		array      = strings.Split(in.RulePattern, ",")

@@ -19,18 +19,18 @@ import (
 type RuleArray struct{}
 
 func init() {
-	Register(&RuleArray{})
+	Register(RuleArray{})
 }
 
-func (r *RuleArray) Name() string {
+func (r RuleArray) Name() string {
 	return "array"
 }
 
-func (r *RuleArray) Message() string {
-	return "The {attribute} value `{value}` is not a valid array type"
+func (r RuleArray) Message() string {
+	return "The {field} value `{value}` is not a valid array type"
 }
 
-func (r *RuleArray) Run(in RunInput) error {
+func (r RuleArray) Run(in RunInput) error {
 	if in.Value.IsSlice() {
 		return nil
 	}

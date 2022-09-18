@@ -22,18 +22,18 @@ import (
 type RuleRequiredIf struct{}
 
 func init() {
-	Register(&RuleRequiredIf{})
+	Register(RuleRequiredIf{})
 }
 
-func (r *RuleRequiredIf) Name() string {
+func (r RuleRequiredIf) Name() string {
 	return "required-if"
 }
 
-func (r *RuleRequiredIf) Message() string {
-	return "The {attribute} field is required"
+func (r RuleRequiredIf) Message() string {
+	return "The {field} field is required"
 }
 
-func (r *RuleRequiredIf) Run(in RunInput) error {
+func (r RuleRequiredIf) Run(in RunInput) error {
 	var (
 		required   = false
 		array      = strings.Split(in.RulePattern, ",")
@@ -45,7 +45,7 @@ func (r *RuleRequiredIf) Run(in RunInput) error {
 			tk := array[i]
 			tv := array[i+1]
 			_, foundValue = gutil.MapPossibleItemByKey(in.Data.Map(), tk)
-			if in.CaseInsensitive {
+			if in.Option.CaseInsensitive {
 				required = strings.EqualFold(tv, gconv.String(foundValue))
 			} else {
 				required = strings.Compare(tv, gconv.String(foundValue)) == 0

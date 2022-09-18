@@ -7,8 +7,7 @@
 // Package builtin implements built-in validation rules.
 //
 // Referred to Laravel validation:
-// https://laravel.com/docs/5.5/validation#available-validation-rules
-// https://learnku.com/docs/laravel/5.4/validation
+// https://laravel.com/docs/master/validation#available-validation-rules
 package builtin
 
 import (
@@ -27,12 +26,16 @@ type Rule interface {
 }
 
 type RunInput struct {
-	RuleKey         string    // RuleKey is like the "max" in rule "max: 6"
-	RulePattern     string    // RulePattern is like "6" in rule:"max:6"
-	Message         string    // Message specifies the custom error message or configured i18n message for this rule.
-	Value           *gvar.Var // Value specifies the value for this rule to validate.
-	Data            *gvar.Var // Data specifies the `data` which is passed to the Validator.
-	CaseInsensitive bool      // CaseInsensitive indicates that it does Case-Insensitive comparison in string.
+	RuleKey     string    // RuleKey is like the "max" in rule "max: 6"
+	RulePattern string    // RulePattern is like "6" in rule:"max:6"
+	Message     string    // Message specifies the custom error message or configured i18n message for this rule.
+	Value       *gvar.Var // Value specifies the value for this rule to validate.
+	Data        *gvar.Var // Data specifies the `data` which is passed to the Validator.
+	Option      RunOption // Option provides extra configuration for validation rule.
+}
+
+type RunOption struct {
+	CaseInsensitive bool // CaseInsensitive indicates that it does Case-Insensitive comparison in string.
 }
 
 var (

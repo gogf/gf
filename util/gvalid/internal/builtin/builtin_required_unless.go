@@ -18,22 +18,22 @@ import (
 // Required unless all given field and its value are not equal.
 //
 // Format:  required-unless:field,value,...
-// Example: required-unless: id,1,age,18
+// Example: required-unless:id,1,age,18
 type RuleRequiredUnless struct{}
 
 func init() {
-	Register(&RuleRequiredUnless{})
+	Register(RuleRequiredUnless{})
 }
 
-func (r *RuleRequiredUnless) Name() string {
+func (r RuleRequiredUnless) Name() string {
 	return "required-unless"
 }
 
-func (r *RuleRequiredUnless) Message() string {
-	return "The {attribute} field is required"
+func (r RuleRequiredUnless) Message() string {
+	return "The {field} field is required"
 }
 
-func (r *RuleRequiredUnless) Run(in RunInput) error {
+func (r RuleRequiredUnless) Run(in RunInput) error {
 	var (
 		required   = true
 		array      = strings.Split(in.RulePattern, ",")
@@ -45,7 +45,7 @@ func (r *RuleRequiredUnless) Run(in RunInput) error {
 			tk := array[i]
 			tv := array[i+1]
 			_, foundValue = gutil.MapPossibleItemByKey(in.Data.Map(), tk)
-			if in.CaseInsensitive {
+			if in.Option.CaseInsensitive {
 				required = !strings.EqualFold(tv, gconv.String(foundValue))
 			} else {
 				required = strings.Compare(tv, gconv.String(foundValue)) != 0

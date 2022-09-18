@@ -19,18 +19,18 @@ import (
 type RuleUrl struct{}
 
 func init() {
-	Register(&RuleUrl{})
+	Register(RuleUrl{})
 }
 
-func (r *RuleUrl) Name() string {
+func (r RuleUrl) Name() string {
 	return "url"
 }
 
-func (r *RuleUrl) Message() string {
-	return "The {attribute} value `{value}` is not a valid URL address"
+func (r RuleUrl) Message() string {
+	return "The {field} value `{value}` is not a valid URL address"
 }
 
-func (r *RuleUrl) Run(in RunInput) error {
+func (r RuleUrl) Run(in RunInput) error {
 	ok := gregex.IsMatchString(
 		`(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]`,
 		in.Value.String(),

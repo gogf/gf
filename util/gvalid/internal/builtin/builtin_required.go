@@ -18,18 +18,18 @@ import (
 type RuleRequired struct{}
 
 func init() {
-	Register(&RuleRequired{})
+	Register(RuleRequired{})
 }
 
-func (r *RuleRequired) Name() string {
+func (r RuleRequired) Name() string {
 	return "required"
 }
 
-func (r *RuleRequired) Message() string {
-	return "The {attribute} field is required"
+func (r RuleRequired) Message() string {
+	return "The {field} field is required"
 }
 
-func (r *RuleRequired) Run(in RunInput) error {
+func (r RuleRequired) Run(in RunInput) error {
 	if isRequiredEmpty(in.Value.Val()) {
 		return errors.New(in.Message)
 	}

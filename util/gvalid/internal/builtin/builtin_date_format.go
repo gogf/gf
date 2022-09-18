@@ -20,18 +20,18 @@ import (
 type RuleDateFormat struct{}
 
 func init() {
-	Register(&RuleDateFormat{})
+	Register(RuleDateFormat{})
 }
 
-func (r *RuleDateFormat) Name() string {
+func (r RuleDateFormat) Name() string {
 	return "date-format"
 }
 
-func (r *RuleDateFormat) Message() string {
-	return "The {attribute} value `{value}` does not match the format: {pattern}"
+func (r RuleDateFormat) Message() string {
+	return "The {field} value `{value}` does not match the format: {pattern}"
 }
 
-func (r *RuleDateFormat) Run(in RunInput) error {
+func (r RuleDateFormat) Run(in RunInput) error {
 	type iTime interface {
 		Date() (year int, month time.Month, day int)
 		IsZero() bool
