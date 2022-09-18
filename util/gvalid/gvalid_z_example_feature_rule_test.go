@@ -9,6 +9,7 @@ package gvalid_test
 import (
 	"context"
 	"fmt"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/text/gstr"
 )
@@ -379,8 +380,8 @@ func Example_Rule_PhoneLoose() {
 	}
 
 	// Output:
-	// The PhoneNumber2 value `11578912345` is invalid
-	// The PhoneNumber4 value `1357891234` is invalid
+	// The PhoneNumber2 value `11578912345` is not a valid phone number
+	// The PhoneNumber4 value `1357891234` is not a valid phone number
 }
 
 func Example_Rule_Telephone() {
@@ -959,7 +960,7 @@ func Example_Rule_Float() {
 	}
 
 	// Output:
-	// The Str value `goframe` is invalid
+	// The Str value `goframe` is not of valid float type
 }
 
 func Example_Rule_Boolean() {

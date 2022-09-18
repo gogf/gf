@@ -6,8 +6,10 @@
 
 package builtin
 
-// RuleBail implements `bail` rule: Stop validating when this field's validation failed.
-// Format:  bail
+// RuleBail implements `bail` rule:
+// Stop validating when this field's validation failed.
+//
+// Format: bail
 type RuleBail struct{}
 
 func init() {

@@ -1,3 +1,4 @@
+# This i18n file is just for reference.
 "gf.gvalid.rule.required" =              "The {attribute} field is required"
 "gf.gvalid.rule.required-if" =           "The {attribute} field is required"
 "gf.gvalid.rule.required-unless" =       "The {attribute} field is required"
@@ -34,7 +35,7 @@
 "gf.gvalid.rule.max" =                   "The {attribute} value `{value}` must be equal or lesser than {max}"
 "gf.gvalid.rule.json" =                  "The {attribute} value `{value}` is not a valid JSON string"
 "gf.gvalid.rule.xml" =                   "The {attribute} value `{value}` is not a valid XML string"
-"gf.gvalid.rule.array" =                 "The {attribute} value `{value}` is not an array"
+"gf.gvalid.rule.array" =                 "The {attribute} value `{value}` is not a valid array type"
 "gf.gvalid.rule.integer" =               "The {attribute} value `{value}` is not an integer"
 "gf.gvalid.rule.boolean" =               "The {attribute} value `{value}` field must be true or false"
 "gf.gvalid.rule.same" =                  "The {attribute} value `{value}` must be the same as field {pattern}"

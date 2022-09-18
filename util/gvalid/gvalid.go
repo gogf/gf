@@ -51,9 +51,9 @@ const (
 )
 
 var (
-	// defaultMessages is the default error messages.
+	// defaultErrorMessages is the default error messages.
 	// Note that these messages are synchronized from ./i18n/en/validation.toml .
-	defaultMessages = map[string]string{
+	defaultErrorMessages = map[string]string{
 		internalDefaultRuleName: "The {attribute} value `{value}` is invalid",
 	}
 

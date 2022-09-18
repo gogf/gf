@@ -20,7 +20,7 @@ import (
 // "XXXXXXX"
 // "XXXXXXXX"
 //
-// Format:  telephone
+// Format: telephone
 type RuleTelephone struct{}
 
 func init() {

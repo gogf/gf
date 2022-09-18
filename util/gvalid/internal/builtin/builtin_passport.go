@@ -16,7 +16,7 @@ import (
 // Universal passport format rule:
 // Starting with letter, containing only numbers or underscores, length between 6 and 18
 //
-// Format:  passport
+// Format: passport
 type RulePassport struct{}
 
 func init() {

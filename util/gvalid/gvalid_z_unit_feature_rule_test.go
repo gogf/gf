@@ -37,6 +37,33 @@ func Test_Check(t *testing.T) {
 	})
 }
 
+func Test_Array(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err := g.Validator().Data("1").Rules("array").Run(ctx)
+		t.Assert(err, "The value `1` is not a valid array type")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := g.Validator().Data("").Rules("array").Run(ctx)
+		t.Assert(err, "The value `` is not a valid array type")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := g.Validator().Data("[1,2,3]").Rules("array").Run(ctx)
+		t.Assert(err, "")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := g.Validator().Data("[]").Rules("array").Run(ctx)
+		t.Assert(err, "")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := g.Validator().Data([]int{1, 2, 3}).Rules("array").Run(ctx)
+		t.Assert(err, "")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := g.Validator().Data([]int{}).Rules("array").Run(ctx)
+		t.Assert(err, "")
+	})
+}
+
 func Test_Required(t *testing.T) {
 	if m := g.Validator().Data("1").Rules("required").Run(ctx); m != nil {
 		t.Error(m)
@@ -1022,6 +1049,18 @@ func Test_Regex2(t *testing.T) {
 
 		t.AssertNE(err1.Map()["required"], nil)
 		t.AssertNE(err2.Map()["min-length"], nil)
+	})
+}
+
+func Test_Not_Regex(t *testing.T) {
+	rule := `not-regex:\d{6}|\D{6}|length:6,16`
+	gtest.C(t, func(t *gtest.T) {
+		err := g.Validator().Data("123456").Rules(rule).Run(ctx)
+		t.Assert(err, "The value `123456` should not be in regex of: \\d{6}|\\D{6}")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := g.Validator().Data("abcde6").Rules(rule).Run(ctx)
+		t.AssertNil(err)
 	})
 }
 

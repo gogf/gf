@@ -17,7 +17,8 @@ import (
 // As long as the 11 digits numbers beginning with
 // 13, 14, 15, 16, 17, 18, 19 can pass the verification
 // (只要满足 13、14、15、16、17、18、19开头的11位数字都可以通过验证).
-// Format:  phone-loose
+//
+// Format: phone-loose
 type RulePhoneLoose struct{}
 
 func init() {

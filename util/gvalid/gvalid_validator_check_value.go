@@ -62,7 +62,10 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 	for i := 0; ; {
 		array := strings.Split(ruleItems[i], ":")
 		if builtin.GetRule(array[0]) == nil && v.getCustomRuleFunc(array[0]) == nil {
-			if i > 0 && ruleItems[i-1][:5] == "regex" {
+			// ============================ SPECIAL ============================
+			// Special `regex` and `not-regex` rules.
+			// ============================ SPECIAL ============================
+			if i > 0 && (ruleItems[i-1][:5] == "regex" || ruleItems[i-1][:9] == "not-regex") {
 				ruleItems[i-1] += "|" + ruleItems[i]
 				ruleItems = append(ruleItems[:i], ruleItems[i+1:]...)
 			} else {

@@ -12,8 +12,10 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 )
 
-// RuleEmail implements `email` rule: Email address.
-// Format:  email
+// RuleEmail implements `email` rule:
+// Email address.
+//
+// Format: email
 type RuleEmail struct{}
 
 func init() {

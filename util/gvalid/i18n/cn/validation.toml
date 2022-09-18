@@ -1,3 +1,4 @@
+# 本i18n文件仅供参考
 "gf.gvalid.rule.required"             = "{attribute}字段不能为空"
 "gf.gvalid.rule.required-if"          = "{attribute}字段不能为空"
 "gf.gvalid.rule.required-unless"      = "{attribute}字段不能为空"

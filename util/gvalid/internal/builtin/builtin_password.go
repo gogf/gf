@@ -16,7 +16,7 @@ import (
 // Universal password format rule1:
 // Containing any visible chars, length between 6 and 18.
 //
-// Format:  password
+// Format: password
 type RulePassword struct{}
 
 func init() {

@@ -26,7 +26,7 @@ func (r *RuleFloat) Name() string {
 }
 
 func (r *RuleFloat) Message() string {
-	return "The {attribute} value `{value}` is not a float"
+	return "The {attribute} value `{value}` is not of valid float type"
 }
 
 func (r *RuleFloat) Run(in RunInput) error {

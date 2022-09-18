@@ -33,7 +33,7 @@ import (
 // 6. 2018:
 //    16x, 19x
 //
-// Format:  phone
+// Format: phone
 type RulePhone struct{}
 
 func init() {
