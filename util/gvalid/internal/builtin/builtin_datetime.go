@@ -37,6 +37,7 @@ func (r *RuleDatetime) Run(in RunInput) error {
 		if obj.IsZero() {
 			return errors.New(in.Message)
 		}
+		return nil
 	}
 	if _, err := gtime.StrToTimeFormat(in.Value.String(), `Y-m-d H:i:s`); err != nil {
 		return errors.New(in.Message)

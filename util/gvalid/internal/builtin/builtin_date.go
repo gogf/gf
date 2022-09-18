@@ -38,7 +38,7 @@ func (r *RuleDate) Run(in RunInput) error {
 			return errors.New(in.Message)
 		}
 	}
-	if gregex.IsMatchString(
+	if !gregex.IsMatchString(
 		`\d{4}[\.\-\_/]{0,1}\d{2}[\.\-\_/]{0,1}\d{2}`,
 		in.Value.String(),
 	) {

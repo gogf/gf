@@ -33,7 +33,7 @@ func (r *RulePhoneLoose) Message() string {
 
 func (r *RulePhoneLoose) Run(in RunInput) error {
 	ok := gregex.IsMatchString(
-		`^13[\d]{9}$|^14[5,7]{1}\d{8}$|^15[^4]{1}\d{8}$|^16[\d]{9}$|^17[0,2,3,5,6,7,8]{1}\d{8}$|^18[\d]{9}$|^19[\d]{9}$`,
+		`^1(3|4|5|6|7|8|9)\d{9}$`,
 		in.Value.String(),
 	)
 	if ok {

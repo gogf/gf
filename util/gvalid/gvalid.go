@@ -47,6 +47,7 @@ const (
 	ruleNameCi                = "ci"                  // the name for rule "ci"
 	emptyJsonArrayStr         = "[]"                  // Empty json string for array type.
 	emptyJsonObjectStr        = "{}"                  // Empty json string for object type.
+	requiredRulesPrefix       = "required"            // requiredRulesPrefix specifies the rule prefix that must be validated even the value is empty (nil or empty).
 )
 
 var (
@@ -106,81 +107,7 @@ var (
 	// defaultMessages is the default error messages.
 	// Note that these messages are synchronized from ./i18n/en/validation.toml .
 	defaultMessages = map[string]string{
-		"required":              "The {attribute} field is required",
-		"required-if":           "The {attribute} field is required",
-		"required-unless":       "The {attribute} field is required",
-		"required-with":         "The {attribute} field is required",
-		"required-with-all":     "The {attribute} field is required",
-		"required-without":      "The {attribute} field is required",
-		"required-without-all":  "The {attribute} field is required",
-		"date":                  "The {attribute} value `{value}` is not a valid date",
-		"datetime":              "The {attribute} value `{value}` is not a valid datetime",
-		"date-format":           "The {attribute} value `{value}` does not match the format: {pattern}",
-		"email":                 "The {attribute} value `{value}` is not a valid email address",
-		"phone":                 "The {attribute} value `{value}` is not a valid phone number",
-		"telephone":             "The {attribute} value `{value}` is not a valid telephone number",
-		"passport":              "The {attribute} value `{value}` is not a valid passport format",
-		"password":              "The {attribute} value `{value}` is not a valid password format",
-		"password2":             "The {attribute} value `{value}` is not a valid password format",
-		"password3":             "The {attribute} value `{value}` is not a valid password format",
-		"postcode":              "The {attribute} value `{value}` is not a valid postcode format",
-		"resident-id":           "The {attribute} value `{value}` is not a valid resident id number",
-		"bank-card":             "The {attribute} value `{value}` is not a valid bank card number",
-		"qq":                    "The {attribute} value `{value}` is not a valid QQ number",
-		"ip":                    "The {attribute} value `{value}` is not a valid IP address",
-		"ipv4":                  "The {attribute} value `{value}` is not a valid IPv4 address",
-		"ipv6":                  "The {attribute} value `{value}` is not a valid IPv6 address",
-		"mac":                   "The {attribute} value `{value}` is not a valid MAC address",
-		"url":                   "The {attribute} value `{value}` is not a valid URL address",
-		"domain":                "The {attribute} value `{value}` is not a valid domain format",
-		"length":                "The {attribute} value `{value}` length must be between {min} and {max}",
-		"min-length":            "The {attribute} value `{value}` length must be equal or greater than {min}",
-		"max-length":            "The {attribute} value `{value}` length must be equal or lesser than {max}",
-		"size":                  "The {attribute} value `{value}` length must be {size}",
-		"between":               "The {attribute} value `{value}` must be between {min} and {max}",
-		"min":                   "The {attribute} value `{value}` must be equal or greater than {min}",
-		"max":                   "The {attribute} value `{value}` must be equal or lesser than {max}",
-		"json":                  "The {attribute} value `{value}` is not a valid JSON string",
-		"xml":                   "The {attribute} value `{value}` is not a valid XML string",
-		"array":                 "The {attribute} value `{value}` is not an array",
-		"integer":               "The {attribute} value `{value}` is not an integer",
-		"boolean":               "The {attribute} value `{value}` field must be true or false",
-		"same":                  "The {attribute} value `{value}` must be the same as field {pattern}",
-		"different":             "The {attribute} value `{value}` must be different from field {pattern}",
-		"in":                    "The {attribute} value `{value}` is not in acceptable range: {pattern}",
-		"not-in":                "The {attribute} value `{value}` must not be in range: {pattern}",
-		"regex":                 "The {attribute} value `{value}` must be in regex of: {pattern}",
 		internalDefaultRuleName: "The {attribute} value `{value}` is invalid",
-	}
-
-	// mustCheckRulesEvenValueEmpty specifies some rules that must be validated
-	// even the value is empty (nil or empty).
-	mustCheckRulesEvenValueEmpty = map[string]struct{}{
-		"required":             {},
-		"required-if":          {},
-		"required-unless":      {},
-		"required-with":        {},
-		"required-with-all":    {},
-		"required-without":     {},
-		"required-without-all": {},
-		//"same":                 {},
-		//"different":            {},
-		//"in":                   {},
-		//"not-in":               {},
-		//"regex":                {},
-	}
-
-	// boolMap defines the boolean values.
-	boolMap = map[string]struct{}{
-		"1":     {},
-		"true":  {},
-		"on":    {},
-		"yes":   {},
-		"":      {},
-		"0":     {},
-		"false": {},
-		"off":   {},
-		"no":    {},
 	}
 
 	structTagPriority    = []string{"gvalid", "valid", "v"} // structTagPriority specifies the validation tag priority array.

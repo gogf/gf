@@ -8,6 +8,9 @@ package builtin
 
 import (
 	"errors"
+	"reflect"
+
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 type RuleRequired struct{}
@@ -25,8 +28,20 @@ func (r *RuleRequired) Message() string {
 }
 
 func (r *RuleRequired) Run(in RunInput) error {
-	if in.Value.IsEmpty() {
+	if isRequiredEmpty(in.Value.Val()) {
 		return errors.New(in.Message)
 	}
 	return nil
+}
+
+func isRequiredEmpty(value interface{}) bool {
+	reflectValue := reflect.ValueOf(value)
+	for reflectValue.Kind() == reflect.Ptr {
+		reflectValue = reflectValue.Elem()
+	}
+	switch reflectValue.Kind() {
+	case reflect.String, reflect.Map, reflect.Array, reflect.Slice:
+		return reflectValue.Len() == 0
+	}
+	return gconv.String(value) == ""
 }

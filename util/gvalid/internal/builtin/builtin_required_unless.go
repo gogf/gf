@@ -55,7 +55,7 @@ func (r *RuleRequiredUnless) Run(in RunInput) error {
 		}
 	}
 
-	if required && in.Value.IsEmpty() {
+	if required && isRequiredEmpty(in.Value.Val()) {
 		return errors.New(in.Message)
 	}
 	return nil

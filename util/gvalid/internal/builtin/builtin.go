@@ -5,6 +5,10 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package builtin implements built-in validation rules.
+//
+// Referred to Laravel validation:
+// https://laravel.com/docs/5.5/validation#available-validation-rules
+// https://learnku.com/docs/laravel/5.4/validation
 package builtin
 
 import (

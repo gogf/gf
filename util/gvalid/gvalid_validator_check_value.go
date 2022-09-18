@@ -19,6 +19,7 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gvalid/internal/builtin"
 )
 
 type doCheckValueInput struct {
@@ -61,7 +62,7 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 	for i := 0; ; {
 		array := strings.Split(ruleItems[i], ":")
 		_, ok := allSupportedRules[array[0]]
-		if !ok && v.getRuleFunc(array[0]) == nil {
+		if !ok && v.getCustomRuleFunc(array[0]) == nil {
 			if i > 0 && ruleItems[i-1][:5] == "regex" {
 				ruleItems[i-1] += "|" + ruleItems[i]
 				ruleItems = append(ruleItems[:i], ruleItems[i+1:]...)
@@ -84,12 +85,10 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 	)
 	for index := 0; index < len(ruleItems); {
 		var (
-			err            error
-			match          = false                                          // whether this rule is matched(has no error)
-			results        = ruleRegex.FindStringSubmatch(ruleItems[index]) // split single rule.
-			ruleKey        = gstr.Trim(results[1])                          // rule key like "max" in rule "max: 6"
-			rulePattern    = gstr.Trim(results[2])                          // rule pattern is like "6" in rule:"max:6"
-			customRuleFunc RuleFunc
+			err         error
+			results     = ruleRegex.FindStringSubmatch(ruleItems[index]) // split single rule.
+			ruleKey     = gstr.Trim(results[1])                          // rule key like "max" in rule "max: 6"
+			rulePattern = gstr.Trim(results[2])                          // rule pattern is like "6" in rule:"max:6"
 		)
 
 		if !hasBailRule && ruleKey == ruleNameBail {
@@ -110,67 +109,53 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 			customMsgMap[ruleKey] = strings.TrimSpace(msgArray[index])
 		}
 
-		// ===========================================================================================
-		// Custom rule handling
-		// ===========================================================================================
-		// 1. It firstly checks and uses the custom registered rules functions in the current Validator.
-		// 2. It secondly checks and uses the globally registered rules functions.
-		// 3. It finally checks and uses the build-in rules functions.
-		customRuleFunc = v.getRuleFunc(ruleKey)
-		if customRuleFunc != nil {
-			// It checks custom validation rules with most priority.
-			message := v.getErrorMessageByRule(ctx, ruleKey, customMsgMap)
+		var (
+			message        = v.getErrorMessageByRule(ctx, ruleKey, customMsgMap)
+			customRuleFunc = v.getCustomRuleFunc(ruleKey)
+			builtinRule    = builtin.GetRule(ruleKey)
+		)
+
+		switch {
+		// Custom validation rules.
+		case customRuleFunc != nil:
 			if err = customRuleFunc(ctx, RuleFuncInput{
 				Rule:    ruleItems[index],
 				Message: message,
 				Value:   gvar.New(in.Value),
 				Data:    gvar.New(in.DataRaw),
 			}); err != nil {
-				match = false
 				// The error should have stack info to indicate the error position.
 				if !gerror.HasStack(err) {
 					err = gerror.NewCodeSkip(gcode.CodeValidationFailed, 1, err.Error())
 				}
-				// The error should have error code that is `gcode.CodeValidationFailed`.
-				if gerror.Code(err) == gcode.CodeNil {
-					if e, ok := err.(*gerror.Error); ok {
-						e.SetCode(gcode.CodeValidationFailed)
-					}
-				}
-				ruleErrorMap[ruleKey] = err
-			} else {
-				match = true
 			}
-		} else {
-			// It checks build-in validation rules if there's no custom rule.
-			match, err = v.doCheckSingleBuildInRules(
-				ctx,
-				doCheckBuildInRulesInput{
-					Index:           index,
-					Value:           in.Value,
-					RuleKey:         ruleKey,
-					RulePattern:     rulePattern,
-					RuleItems:       ruleItems,
-					DataMap:         in.DataMap,
-					CustomMsgMap:    customMsgMap,
-					CaseInsensitive: hasCaseInsensitive,
-				},
-			)
-			if !match && err != nil {
-				ruleErrorMap[ruleKey] = err
-			}
+
+		// Builtin validation rules.
+		case customRuleFunc == nil && builtinRule != nil:
+			err = builtinRule.Run(builtin.RunInput{
+				RuleKey:         ruleKey,
+				RulePattern:     rulePattern,
+				Message:         message,
+				Value:           gvar.New(in.Value),
+				Data:            gvar.New(in.DataRaw),
+				CaseInsensitive: hasCaseInsensitive,
+			})
+
+		default:
+
 		}
 
-		// Error message handling.
-		if !match {
-			// It does nothing if the error message for this rule
-			// is already set in previous validation.
-			if _, ok := ruleErrorMap[ruleKey]; !ok {
-				ruleErrorMap[ruleKey] = errors.New(v.getErrorMessageByRule(ctx, ruleKey, customMsgMap))
+		// Error handling.
+		if err != nil {
+			// The error should have error code that is `gcode.CodeValidationFailed`.
+			if gerror.Code(err) == gcode.CodeNil {
+				if e, ok := err.(*gerror.Error); ok {
+					e.SetCode(gcode.CodeValidationFailed)
+				}
 			}
 
 			// Error variable replacement for error message.
-			if err = ruleErrorMap[ruleKey]; !gerror.HasStack(err) {
+			if !gerror.HasStack(err) {
 				var s string
 				s = gstr.ReplaceByMap(err.Error(), map[string]string{
 					"{value}":     gconv.String(in.Value),
@@ -178,8 +163,9 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 					"{attribute}": in.Name,
 				})
 				s, _ = gregex.ReplaceString(`\s{2,}`, ` `, s)
-				ruleErrorMap[ruleKey] = errors.New(s)
+				err = errors.New(s)
 			}
+			ruleErrorMap[ruleKey] = err
 
 			// If it is with error and there's bail rule,
 			// it then does not continue validating for left rules.
@@ -187,6 +173,7 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 				break
 			}
 		}
+
 		index++
 	}
 	if len(ruleErrorMap) > 0 {
