@@ -43,6 +43,8 @@ const (
 	internalDefaultRuleName   = "__default__"         // default rule name for i18n error message format if no i18n message found for specified error rule.
 	ruleMessagePrefixForI18n  = "gf.gvalid.rule."     // prefix string for each rule configuration in i18n content.
 	noValidationTagName       = "nv"                  // no validation tag name for struct attribute.
+	ruleNameRegex             = "regex"               // the name for rule "regex"
+	ruleNameNotRegex          = "not-regex"           // the name for rule "not-regex"
 	ruleNameBail              = "bail"                // the name for rule "bail"
 	ruleNameCi                = "ci"                  // the name for rule "ci"
 	emptyJsonArrayStr         = "[]"                  // Empty json string for array type.

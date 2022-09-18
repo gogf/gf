@@ -10,6 +10,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
 )
@@ -29,7 +30,7 @@ func (r RuleDifferent) Name() string {
 }
 
 func (r RuleDifferent) Message() string {
-	return "The {field} value `{value}` must be different from field {pattern}"
+	return "The {field} value `{value}` must be different from field {field1} value `{value1}`"
 }
 
 func (r RuleDifferent) Run(in RunInput) error {
@@ -37,16 +38,19 @@ func (r RuleDifferent) Run(in RunInput) error {
 		ok    = true
 		value = in.Value.String()
 	)
-	_, foundValue := gutil.MapPossibleItemByKey(in.Data.Map(), in.RulePattern)
-	if foundValue != nil {
+	fieldName, fieldValue := gutil.MapPossibleItemByKey(in.Data.Map(), in.RulePattern)
+	if fieldValue != nil {
 		if in.Option.CaseInsensitive {
-			ok = !strings.EqualFold(value, gconv.String(foundValue))
+			ok = !strings.EqualFold(value, gconv.String(fieldValue))
 		} else {
-			ok = strings.Compare(value, gconv.String(foundValue)) != 0
+			ok = strings.Compare(value, gconv.String(fieldValue)) != 0
 		}
 	}
-	if !ok {
-		return errors.New(in.Message)
+	if ok {
+		return nil
 	}
-	return nil
+	return errors.New(gstr.ReplaceByMap(in.Message, map[string]string{
+		"{field1}": fieldName,
+		"{value1}": gconv.String(fieldValue),
+	}))
 }

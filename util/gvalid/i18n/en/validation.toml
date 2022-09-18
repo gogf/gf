@@ -1,4 +1,4 @@
-# This i18n file is just for reference.
+# This i18n file is just for reference, no functionanity purpose.
 "gf.gvalid.rule.required" =              "The {field} field is required"
 "gf.gvalid.rule.required-if" =           "The {field} field is required"
 "gf.gvalid.rule.required-unless" =       "The {field} field is required"

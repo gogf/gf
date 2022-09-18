@@ -9,6 +9,7 @@ package builtin
 import (
 	"errors"
 
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
 )
@@ -33,15 +34,15 @@ func (r RuleBeforeEqual) Message() string {
 
 func (r RuleBeforeEqual) Run(in RunInput) error {
 	var (
-		_, fieldValue = gutil.MapPossibleItemByKey(in.Data.Map(), in.RulePattern)
-		valueDatetime = in.Value.Time()
-		fieldDatetime = gconv.Time(fieldValue)
+		fieldName, fieldValue = gutil.MapPossibleItemByKey(in.Data.Map(), in.RulePattern)
+		valueDatetime         = in.Value.Time()
+		fieldDatetime         = gconv.Time(fieldValue)
 	)
-	if valueDatetime.IsZero() || fieldDatetime.IsZero() {
-		return errors.New(in.Message)
-	}
 	if valueDatetime.Before(fieldDatetime) || valueDatetime.Equal(fieldDatetime) {
 		return nil
 	}
-	return errors.New(in.Message)
+	return errors.New(gstr.ReplaceByMap(in.Message, map[string]string{
+		"{field1}": fieldName,
+		"{value1}": gconv.String(fieldValue),
+	}))
 }

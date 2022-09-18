@@ -28,9 +28,10 @@ type Rule interface {
 type RunInput struct {
 	RuleKey     string    // RuleKey is like the "max" in rule "max: 6"
 	RulePattern string    // RulePattern is like "6" in rule:"max:6"
-	Message     string    // Message specifies the custom error message or configured i18n message for this rule.
+	Field       string    // The field name of Value.
 	Value       *gvar.Var // Value specifies the value for this rule to validate.
 	Data        *gvar.Var // Data specifies the `data` which is passed to the Validator.
+	Message     string    // Message specifies the custom error message or configured i18n message for this rule.
 	Option      RunOption // Option provides extra configuration for validation rule.
 }
 

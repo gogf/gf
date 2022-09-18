@@ -23,7 +23,7 @@ func (r RuleEq) Name() string {
 }
 
 func (r RuleEq) Message() string {
-	return "The {field} value `{value}` must be equal to field {pattern}"
+	return "The {field} value `{value}` must be equal to field {field1} value `{value1}`"
 }
 
 func (r RuleEq) Run(in RunInput) error {

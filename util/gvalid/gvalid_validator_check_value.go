@@ -64,8 +64,22 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 		if builtin.GetRule(array[0]) == nil && v.getCustomRuleFunc(array[0]) == nil {
 			// ============================ SPECIAL ============================
 			// Special `regex` and `not-regex` rules.
+			// Merge the regex pattern if there are special chars, like ':', '|', in pattern.
 			// ============================ SPECIAL ============================
-			if i > 0 && (ruleItems[i-1][:5] == "regex" || ruleItems[i-1][:9] == "not-regex") {
+			var (
+				ruleNameRegexLengthMatch    bool
+				ruleNameNotRegexLengthMatch bool
+			)
+			if i > 0 {
+				ruleItem := ruleItems[i-1]
+				if len(ruleItem) >= len(ruleNameRegex) && ruleItem[:len(ruleNameRegex)] == ruleNameRegex {
+					ruleNameRegexLengthMatch = true
+				}
+				if len(ruleItem) >= len(ruleNameNotRegex) && ruleItem[:len(ruleNameNotRegex)] == ruleNameNotRegex {
+					ruleNameNotRegexLengthMatch = true
+				}
+			}
+			if i > 0 && (ruleNameRegexLengthMatch || ruleNameNotRegexLengthMatch) {
 				ruleItems[i-1] += "|" + ruleItems[i]
 				ruleItems = append(ruleItems[:i], ruleItems[i+1:]...)
 			} else {
@@ -136,9 +150,10 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 			err = builtinRule.Run(builtin.RunInput{
 				RuleKey:     ruleKey,
 				RulePattern: rulePattern,
-				Message:     message,
+				Field:       in.Name,
 				Value:       gvar.New(in.Value),
 				Data:        gvar.New(in.DataRaw),
+				Message:     message,
 				Option: builtin.RunOption{
 					CaseInsensitive: hasCaseInsensitive,
 				},
@@ -161,10 +176,10 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 			if !gerror.HasStack(err) {
 				var s string
 				s = gstr.ReplaceByMap(err.Error(), map[string]string{
-					"{field}":     in.Name,
-					"{value}":     gconv.String(in.Value),
-					"{pattern}":   rulePattern,
-					"{attribute}": in.Name, // The same as `{field}`. It is deprecated.
+					"{field}":     in.Name,                // Field name of the `value`.
+					"{value}":     gconv.String(in.Value), // Current validating value.
+					"{pattern}":   rulePattern,            // The variable part of the rule.
+					"{attribute}": in.Name,                // The same as `{field}`. It is deprecated.
 				})
 				s, _ = gregex.ReplaceString(`\s{2,}`, ` `, s)
 				err = errors.New(s)
