@@ -12,6 +12,10 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 )
 
+// RuleQQ implements `qq` rule:
+// Tencent QQ number.
+//
+// Format: qq
 type RuleQQ struct{}
 
 func init() {

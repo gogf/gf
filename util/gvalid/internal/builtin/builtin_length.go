@@ -15,6 +15,11 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// RuleLength implements `length` rule:
+// Length between :min and :max.
+// The length is calculated using unicode string, which means one chinese character or letter both has the length of 1.
+//
+// Format: length:min,max
 type RuleLength struct{}
 
 func init() {

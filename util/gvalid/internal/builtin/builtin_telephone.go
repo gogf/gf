@@ -12,14 +12,15 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 )
 
-// Telephone number:
+// RuleTelephone implements `telephone` rule:
 // "XXXX-XXXXXXX"
 // "XXXX-XXXXXXXX"
 // "XXX-XXXXXXX"
 // "XXX-XXXXXXXX"
 // "XXXXXXX"
 // "XXXXXXXX"
-
+//
+// Format:  telephone
 type RuleTelephone struct{}
 
 func init() {

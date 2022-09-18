@@ -14,6 +14,10 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
+// RuleBetween implements `between` rule:
+// Range between :min and :max. It supports both integer and float.
+//
+// Format: between:min,max
 type RuleBetween struct{}
 
 func init() {

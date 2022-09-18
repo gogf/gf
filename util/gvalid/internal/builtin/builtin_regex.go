@@ -12,6 +12,10 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 )
 
+// RuleRegex implements `regex` rule:
+// Value should match custom regular expression pattern.
+//
+// Format: regex:pattern
 type RuleRegex struct{}
 
 func init() {

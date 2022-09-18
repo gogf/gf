@@ -12,6 +12,10 @@ import (
 	"github.com/gogf/gf/v2/net/gipv6"
 )
 
+// RuleIpv6 implements `ipv6` rule:
+// IPv6.
+//
+// Format: ipv6
 type RuleIpv6 struct{}
 
 func init() {

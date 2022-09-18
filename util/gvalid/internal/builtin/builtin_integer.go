@@ -11,6 +11,10 @@ import (
 	"strconv"
 )
 
+// RuleInteger implements `integer` rule:
+// Integer.
+//
+// Format: integer
 type RuleInteger struct{}
 
 func init() {

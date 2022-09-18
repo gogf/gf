@@ -12,6 +12,10 @@ import (
 	"github.com/gogf/gf/v2/net/gipv4"
 )
 
+// RuleIpv4 implements `ipv4` rule:
+// IPv4.
+//
+// Format: ipv4
 type RuleIpv4 struct{}
 
 func init() {

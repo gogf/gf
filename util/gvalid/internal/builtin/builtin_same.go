@@ -14,6 +14,10 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
+// RuleSame implements `same` rule:
+// Value should be the same as value of field.
+//
+// Format: same:field
 type RuleSame struct{}
 
 func init() {

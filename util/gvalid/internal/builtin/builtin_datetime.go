@@ -13,6 +13,8 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 )
 
+// RuleDatetime implements `datetime` rule: Standard datetime, like: 2006-01-02 12:00:00.
+// Format:  datetime
 type RuleDatetime struct{}
 
 func init() {

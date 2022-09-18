@@ -14,6 +14,10 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
+// RuleDifferent implements `different` rule:
+// Value should be different from value of field.
+//
+// Format: different:field
 type RuleDifferent struct{}
 
 func init() {

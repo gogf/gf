@@ -13,6 +13,8 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 )
 
+// RuleDateFormat implements `date-format` rule: Custom date format.
+// Format:  date-format:format
 type RuleDateFormat struct{}
 
 func init() {

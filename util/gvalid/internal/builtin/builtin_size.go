@@ -14,6 +14,11 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// RuleSize implements `size` rule:
+// Length must be :size.
+// The length is calculated using unicode string, which means one chinese character or letter both has the length of 1.
+//
+// Format: size:size
 type RuleSize struct{}
 
 func init() {

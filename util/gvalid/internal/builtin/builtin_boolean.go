@@ -11,6 +11,10 @@ import (
 	"strings"
 )
 
+// RuleBoolean implements `boolean` rule:
+// Boolean(1,true,on,yes:true | 0,false,off,no,"":false)
+//
+// Format: boolean
 type RuleBoolean struct{}
 
 // boolMap defines the boolean values.

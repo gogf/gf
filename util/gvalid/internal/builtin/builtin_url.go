@@ -12,6 +12,10 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 )
 
+// RuleUrl implements `url` rule:
+// URL.
+//
+// Format: url
 type RuleUrl struct{}
 
 func init() {

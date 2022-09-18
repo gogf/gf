@@ -13,6 +13,10 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
+// RuleNotIn implements `not-in` rule:
+// Value should not be in: value1,value2,...
+//
+// Format: not-in:value1,value2,...
 type RuleNotIn struct{}
 
 func init() {

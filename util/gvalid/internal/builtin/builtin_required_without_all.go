@@ -14,9 +14,9 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-// Required if all given fields are empty.
+// RuleRequiredWithoutAll implements `required-without-all` rule: Required if all given fields are empty.
+// Format:  required-without-all:field1,field2,...
 // Example: required-without-all:id,name
-
 type RuleRequiredWithoutAll struct{}
 
 func init() {

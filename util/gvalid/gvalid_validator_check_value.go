@@ -61,8 +61,7 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 	ruleItems := strings.Split(strings.TrimSpace(in.Rule), "|")
 	for i := 0; ; {
 		array := strings.Split(ruleItems[i], ":")
-		_, ok := allSupportedRules[array[0]]
-		if !ok && v.getCustomRuleFunc(array[0]) == nil {
+		if builtin.GetRule(array[0]) == nil && v.getCustomRuleFunc(array[0]) == nil {
 			if i > 0 && ruleItems[i-1][:5] == "regex" {
 				ruleItems[i-1] += "|" + ruleItems[i]
 				ruleItems = append(ruleItems[:i], ruleItems[i+1:]...)

@@ -12,6 +12,7 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 )
 
+// RulePhone implements `phone` rule:
 // 1. China Mobile:
 //    134, 135, 136, 137, 138, 139, 150, 151, 152, 157, 158, 159, 182, 183, 184, 187, 188,
 //    178(4G), 147(Net)；
@@ -31,7 +32,8 @@ import (
 //
 // 6. 2018:
 //    16x, 19x
-
+//
+// Format:  phone
 type RulePhone struct{}
 
 func init() {

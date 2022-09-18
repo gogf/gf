@@ -12,6 +12,11 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 )
 
+// RulePassport implements `passport` rule:
+// Universal passport format rule:
+// Starting with letter, containing only numbers or underscores, length between 6 and 18
+//
+// Format:  passport
 type RulePassport struct{}
 
 func init() {

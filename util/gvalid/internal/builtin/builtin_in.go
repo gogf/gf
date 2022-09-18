@@ -13,6 +13,10 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
+// RuleIn implements `in` rule:
+// Value should be in: value1,value2,...
+//
+// Format: in:value1,value2,...
 type RuleIn struct{}
 
 func init() {

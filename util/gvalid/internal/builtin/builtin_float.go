@@ -11,6 +11,10 @@ import (
 	"strconv"
 )
 
+// RuleFloat implements `float` rule:
+// Float. Note that an integer is actually a float number.
+//
+// Format: float
 type RuleFloat struct{}
 
 func init() {

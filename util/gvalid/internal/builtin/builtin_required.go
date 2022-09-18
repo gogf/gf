@@ -13,6 +13,8 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// RuleRequired implements `required` rule.
+// Format: required
 type RuleRequired struct{}
 
 func init() {

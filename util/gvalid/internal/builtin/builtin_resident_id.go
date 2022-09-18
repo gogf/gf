@@ -14,6 +14,10 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 )
 
+// RuleResidentId implements `resident-id` rule:
+// Resident id number.
+//
+// Format: resident-id
 type RuleResidentId struct{}
 
 func init() {

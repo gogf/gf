@@ -13,6 +13,10 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
+// RuleMax implements `max` rule:
+// Equal or lesser than :max. It supports both integer and float.
+//
+// Format: max:max
 type RuleMax struct{}
 
 func init() {

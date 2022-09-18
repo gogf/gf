@@ -36,13 +36,16 @@ type RunInput struct {
 }
 
 var (
+	// ruleMap stores all builtin validation rules.
 	ruleMap = map[string]Rule{}
 )
 
+// Register registers builtin rule into manager.
 func Register(rule Rule) {
 	ruleMap[rule.Name()] = rule
 }
 
+// GetRule retrieves and returns rule by `name`.
 func GetRule(name string) Rule {
 	return ruleMap[name]
 }

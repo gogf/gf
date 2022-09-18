@@ -12,6 +12,11 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 )
 
+// RulePassword2 implements `password2` rule:
+// Universal password format rule2:
+// Must meet password rule1, must contain lower and upper letters and numbers.
+//
+// Format: password2
 type RulePassword2 struct{}
 
 func init() {

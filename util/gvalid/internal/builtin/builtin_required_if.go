@@ -14,9 +14,9 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-// Required unless all given field and its value are equal.
+// RuleRequiredIf implements `required-if` rule: Required unless all given field and its value are equal.
+// Format:  required-if:field,value,...
 // Example: required-if: id,1,age,18
-
 type RuleRequiredIf struct{}
 
 func init() {

@@ -10,6 +10,10 @@ import (
 	"errors"
 )
 
+// RuleBankCard implements `bank-card` rule:
+// Bank card number.
+//
+// Format: bank-card
 type RuleBankCard struct{}
 
 func init() {

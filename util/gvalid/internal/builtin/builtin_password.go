@@ -12,6 +12,11 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 )
 
+// RulePassword implements `password` rule:
+// Universal password format rule1:
+// Containing any visible chars, length between 6 and 18.
+//
+// Format:  password
 type RulePassword struct{}
 
 func init() {

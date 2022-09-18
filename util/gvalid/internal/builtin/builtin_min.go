@@ -13,6 +13,10 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
+// RuleMin implements `min` rule:
+// Equal or greater than :min. It supports both integer and float.
+//
+// Format: min:min
 type RuleMin struct{}
 
 func init() {

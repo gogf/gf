@@ -14,6 +14,11 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// RuleMinLength implements `min-length` rule:
+// Length is equal or greater than :min.
+// The length is calculated using unicode string, which means one chinese character or letter both has the length of 1.
+//
+// Format: min-length:min
 type RuleMinLength struct{}
 
 func init() {

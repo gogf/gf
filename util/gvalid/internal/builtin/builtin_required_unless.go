@@ -14,9 +14,9 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-// Required unless all given field and its value are not equal.
+// RuleRequiredUnless implements `required-unless` rule: Required unless all given field and its value are not equal.
+// Format:  required-unless:field,value,...
 // Example: required-unless: id,1,age,18
-
 type RuleRequiredUnless struct{}
 
 func init() {

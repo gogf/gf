@@ -12,6 +12,10 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 )
 
+// RulePostcode implements `postcode` rule:
+// Postcode number.
+//
+// Format: postcode
 type RulePostcode struct{}
 
 func init() {

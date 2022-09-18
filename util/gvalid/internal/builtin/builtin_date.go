@@ -13,6 +13,8 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 )
 
+// RuleDate implements `date` rule: Standard date, like: 2006-01-02, 20060102, 2006.01.02.
+// Format:  date
 type RuleDate struct{}
 
 func init() {

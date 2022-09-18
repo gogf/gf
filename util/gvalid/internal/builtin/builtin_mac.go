@@ -12,6 +12,10 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 )
 
+// RuleMac implements `mac` rule:
+// MAC.
+//
+// Format: mac
 type RuleMac struct{}
 
 func init() {

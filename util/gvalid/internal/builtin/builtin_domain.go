@@ -12,6 +12,10 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 )
 
+// RuleDomain implements `domain` rule:
+// Domain.
+//
+// Format: domain
 type RuleDomain struct{}
 
 func init() {

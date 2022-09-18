@@ -12,6 +12,10 @@ import (
 	"github.com/gogf/gf/v2/internal/json"
 )
 
+// RuleJson implements `json` rule:
+// JSON.
+//
+// Format: json
 type RuleJson struct{}
 
 func init() {
