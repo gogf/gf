@@ -23,8 +23,8 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-// DriverMysql is the driver for mysql database.
-type DriverMysql struct {
+// Driver is the driver for mysql database.
+type Driver struct {
 	*gdb.Core
 }
 
@@ -43,26 +43,29 @@ func init() {
 
 // New create and returns a driver that implements gdb.Driver, which supports operations for MySQL.
 func New() gdb.Driver {
-	return &DriverMysql{}
+	return &Driver{}
 }
 
 // New creates and returns a database object for mysql.
 // It implements the interface of gdb.Driver for extra database driver installation.
-func (d *DriverMysql) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
-	return &DriverMysql{
+func (d *Driver) New(core *gdb.Core, node gdb.ConfigNode) (gdb.DB, error) {
+	return &Driver{
 		Core: core,
 	}, nil
 }
 
 // Open creates and returns an underlying sql.DB object for mysql.
 // Note that it converts time.Time argument to local timezone in default.
-func (d *DriverMysql) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
+func (d *Driver) Open(config gdb.ConfigNode) (db *sql.DB, err error) {
 	var (
 		source               string
 		underlyingDriverName = "mysql"
 	)
 	// [username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
 	if config.Link != "" {
+		// ============================================================================
+		// Deprecated from v2.2.0.
+		// ============================================================================
 		source = config.Link
 		// Custom changing the schema in runtime.
 		if config.Name != "" {
@@ -75,6 +78,9 @@ func (d *DriverMysql) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 		)
 		if config.Timezone != "" {
 			source = fmt.Sprintf("%s&loc=%s", source, url.QueryEscape(config.Timezone))
+		}
+		if config.Extra != "" {
+			source = fmt.Sprintf("%s&%s", source, config.Extra)
 		}
 	}
 	if db, err = sql.Open(underlyingDriverName, source); err != nil {
@@ -89,7 +95,7 @@ func (d *DriverMysql) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 
 // FilteredLink retrieves and returns filtered `linkInfo` that can be using for
 // logging or tracing purpose.
-func (d *DriverMysql) FilteredLink() string {
+func (d *Driver) FilteredLink() string {
 	linkInfo := d.GetConfig().Link
 	if linkInfo == "" {
 		return ""
@@ -103,18 +109,18 @@ func (d *DriverMysql) FilteredLink() string {
 }
 
 // GetChars returns the security char for this type of database.
-func (d *DriverMysql) GetChars() (charLeft string, charRight string) {
+func (d *Driver) GetChars() (charLeft string, charRight string) {
 	return "`", "`"
 }
 
 // DoFilter handles the sql before posts it to database.
-func (d *DriverMysql) DoFilter(ctx context.Context, link gdb.Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
 	return d.Core.DoFilter(ctx, link, sql, args)
 }
 
 // Tables retrieves and returns the tables of current schema.
 // It's mainly used in cli tool chain for automatically generating the models.
-func (d *DriverMysql) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
+func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
 	var result gdb.Result
 	link, err := d.SlaveLink(schema...)
 	if err != nil {
@@ -144,7 +150,7 @@ func (d *DriverMysql) Tables(ctx context.Context, schema ...string) (tables []st
 //
 // It's using cache feature to enhance the performance, which is never expired util the
 // process restarts.
-func (d *DriverMysql) TableFields(
+func (d *Driver) TableFields(
 	ctx context.Context, table string, schema ...string,
 ) (fields map[string]*gdb.TableField, err error) {
 	charL, charR := d.GetChars()

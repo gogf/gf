@@ -52,19 +52,22 @@ func New() gdb.Driver {
 
 // New creates and returns a database object for SQL server.
 // It implements the interface of gdb.Driver for extra database driver installation.
-func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
+func (d *Driver) New(core *gdb.Core, node gdb.ConfigNode) (gdb.DB, error) {
 	return &Driver{
 		Core: core,
 	}, nil
 }
 
 // Open creates and returns an underlying sql.DB object for mssql.
-func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
+func (d *Driver) Open(config gdb.ConfigNode) (db *sql.DB, err error) {
 	var (
 		source               string
 		underlyingDriverName = "sqlserver"
 	)
 	if config.Link != "" {
+		// ============================================================================
+		// Deprecated from v2.2.0.
+		// ============================================================================
 		source = config.Link
 		// Custom changing the schema in runtime.
 		if config.Name != "" {
@@ -75,6 +78,15 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 			"user id=%s;password=%s;server=%s;port=%s;database=%s;encrypt=disable",
 			config.User, config.Pass, config.Host, config.Port, config.Name,
 		)
+		if config.Extra != "" {
+			var extraMap map[string]interface{}
+			if extraMap, err = gstr.Parse(config.Extra); err != nil {
+				return nil, err
+			}
+			for k, v := range extraMap {
+				source += fmt.Sprintf(`;%s=%s`, k, v)
+			}
+		}
 	}
 
 	if db, err = sql.Open(underlyingDriverName, source); err != nil {
