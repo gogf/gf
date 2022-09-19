@@ -9,18 +9,12 @@ package mutex
 
 import (
 	"sync"
-
-	"github.com/gogf/gf/v2/container/gtype"
 )
 
 // Mutex is a sync.Mutex with a switch for concurrent safe feature.
 type Mutex struct {
 	// Underlying mutex.
 	mutex *sync.Mutex
-
-	// Indicates the state of mutex (-1: writing locked; > 1 reading locked).
-	// This variable is just for reference, not accurate.
-	state *gtype.Int32
 }
 
 // New creates and returns a new *Mutex.
@@ -37,7 +31,6 @@ func New(safe ...bool) *Mutex {
 func Create(safe ...bool) Mutex {
 	if len(safe) > 0 && safe[0] {
 		return Mutex{
-			state: gtype.NewInt32(),
 			mutex: new(sync.Mutex),
 		}
 	}

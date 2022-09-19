@@ -9,8 +9,6 @@ package rwmutex
 
 import (
 	"sync"
-
-	"github.com/gogf/gf/v2/container/gtype"
 )
 
 // RWMutex is a sync.RWMutex with a switch for concurrent safe feature.
@@ -19,10 +17,6 @@ import (
 type RWMutex struct {
 	// Underlying mutex.
 	mutex *sync.RWMutex
-
-	// Indicates the state of mutex (-1: writing locked; > 1 reading locked).
-	// This variable is just for reference, not accurate.
-	state *gtype.Int32
 }
 
 // New creates and returns a new *RWMutex.
@@ -39,7 +33,6 @@ func New(safe ...bool) *RWMutex {
 func Create(safe ...bool) RWMutex {
 	if len(safe) > 0 && safe[0] {
 		return RWMutex{
-			state: gtype.NewInt32(),
 			mutex: new(sync.RWMutex),
 		}
 	}
