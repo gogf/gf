@@ -357,6 +357,9 @@ var (
 	// allDryRun sets dry-run feature for all database connections.
 	// It is commonly used for command options for convenience.
 	allDryRun = false
+
+	// tableFieldsMap caches the table information retrieved from database.
+	tableFieldsMap = gmap.NewStrAnyMap(true)
 )
 
 func init() {

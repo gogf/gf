@@ -1602,3 +1602,25 @@ func Test_Types(t *testing.T) {
 		t.Assert(obj.TinyInt, data["tinyint"])
 	})
 }
+
+func Test_Core_ClearTableFields(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		fields, err := db.GetCore().TableFields(ctx, table)
+		t.AssertNil(err)
+		t.Assert(len(fields), 5)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := db.GetCore().ClearTableFields(ctx)
+		t.AssertNil(err)
+	})
+}
+
+func Test_Core_ClearCache(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err := db.GetCore().ClearCache(ctx)
+		t.AssertNil(err)
+	})
+}

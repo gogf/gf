@@ -9,6 +9,7 @@ package gdb
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -152,13 +153,53 @@ func (c *Core) Tables(ctx context.Context, schema ...string) (tables []string, e
 // It's using cache feature to enhance the performance, which is never expired util the
 // process restarts.
 func (c *Core) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {
+	usedSchema := c.db.GetSchema()
+	if len(schema) > 0 && schema[0] != "" {
+		usedSchema = schema[0]
+	}
+	var (
+		cacheKey = fmt.Sprintf(`TableFields:%s#%s@%s`, c.db.GetGroup(), table, usedSchema)
+		value    = tableFieldsMap.GetOrSetFuncLock(cacheKey, func() interface{} {
+			fields, err = c.db.TableFields(ctx, table, schema...)
+			if err != nil {
+				return nil
+			}
+			return fields
+		})
+	)
+	if value != nil {
+		fields = value.(map[string]*TableField)
+	}
 	return
+}
+
+// ClearTableFields removes all cached table fields of current configuration group.
+func (c *Core) ClearTableFields(ctx context.Context) (err error) {
+	var (
+		keys        = tableFieldsMap.Keys()
+		keyPrefix   = fmt.Sprintf(`TableFields:%s#`, c.db.GetGroup())
+		removedKeys = make([]string, 0)
+	)
+	for _, key := range keys {
+		if gstr.HasPrefix(key, keyPrefix) {
+			removedKeys = append(removedKeys, key)
+		}
+	}
+	if len(removedKeys) > 0 {
+		tableFieldsMap.Removes(removedKeys)
+	}
+	return
+}
+
+// ClearCache removes all cached sql result from cache
+func (c *Core) ClearCache(ctx context.Context) (err error) {
+	return c.db.GetCache().Clear(ctx)
 }
 
 // HasField determine whether the field exists in the table.
 func (c *Core) HasField(ctx context.Context, table, field string, schema ...string) (bool, error) {
 	table = c.guessPrimaryTableName(table)
-	tableFields, err := c.db.TableFields(ctx, table, schema...)
+	tableFields, err := c.TableFields(ctx, table, schema...)
 	if err != nil {
 		return false, err
 	}
