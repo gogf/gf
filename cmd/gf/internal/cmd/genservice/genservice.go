@@ -42,7 +42,7 @@ destination file name storing automatically generated go files, cases are as fol
 | KebabScreaming  | ANY-KIND-OF-STRING |
 `
 	CGenServiceBriefWatchFile    = `used in file watcher, it re-generates all service go files only if given file is under srcFolder`
-	CGenServiceBriefStPattern    = `regular expression matching struct name for generating service. default: s([A-Z]\\\\w+)`
+	CGenServiceBriefStPattern    = `regular expression matching struct name for generating service. default: ^s([A-Z]\\\\w+)$`
 	CGenServiceBriefPackages     = `produce go files only for given source packages`
 	CGenServiceBriefImportPrefix = `custom import prefix to calculate import path for generated importing go file of logic`
 	CGenServiceBriefClear        = `delete all generated go files that are not used any further`
@@ -73,7 +73,7 @@ type (
 		DstFolder       string   `short:"d" name:"dstFolder" brief:"{CGenServiceBriefDstFolder}" d:"internal/service"`
 		DstFileNameCase string   `short:"f" name:"dstFileNameCase" brief:"{CGenServiceBriefFileNameCase}" d:"Snake"`
 		WatchFile       string   `short:"w" name:"watchFile" brief:"{CGenServiceBriefWatchFile}"`
-		StPattern       string   `short:"a" name:"stPattern" brief:"{CGenServiceBriefStPattern}" d:"s([A-Z]\\w+)"`
+		StPattern       string   `short:"a" name:"stPattern" brief:"{CGenServiceBriefStPattern}" d:"^s([A-Z]\\w+)$"`
 		Packages        []string `short:"p" name:"packages" brief:"{CGenServiceBriefPackages}"`
 		ImportPrefix    string   `short:"i" name:"importPrefix" brief:"{CGenServiceBriefImportPrefix}"`
 		Clear           bool     `short:"l" name:"clear" brief:"{CGenServiceBriefClear}" orphan:"true"`
