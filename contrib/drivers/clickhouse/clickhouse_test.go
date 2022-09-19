@@ -3,12 +3,13 @@ package clickhouse
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/util/guid"
-	"github.com/google/uuid"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/util/guid"
+	"github.com/google/uuid"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
@@ -506,12 +507,12 @@ func TestDriverClickhouse_Open(t *testing.T) {
 func TestDriverClickhouse_ReplaceConfig(t *testing.T) {
 	db := &Driver{}
 	// parse link's name set to config
-	c1 := &gdb.ConfigNode{}
+	c1 := gdb.ConfigNode{}
 	c1.Link = "clickhouse://default@127.0.0.1:9000,127.0.0.1:9000/default?dial_timeout=200ms&max_execution_time=60"
 	_, _ = db.Open(c1)
 	gtest.AssertEQ(c1.Name, "default")
 	// replace link's name from config
-	c2 := &gdb.ConfigNode{}
+	c2 := gdb.ConfigNode{}
 	c2.Name = "clickhouseJohn"
 	c2.Link = "clickhouse://default@127.0.0.1:9000,127.0.0.1:9000/default?dial_timeout=200ms&max_execution_time=60"
 	_, _ = db.Open(c2)
