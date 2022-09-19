@@ -18,7 +18,6 @@ import (
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
-	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -36,9 +35,6 @@ type Driver struct {
 }
 
 var (
-	// tableFieldsMap caches the table information retrieved from database.
-	tableFieldsMap = gmap.New(true)
-
 	errUnsupportedInsertIgnore = errors.New("unsupported method:InsertIgnore")
 	errUnsupportedInsertGetId  = errors.New("unsupported method:InsertGetId")
 	errUnsupportedReplace      = errors.New("unsupported method:Replace")
@@ -151,56 +147,47 @@ func (d *Driver) TableFields(
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	}
-	v := tableFieldsMap.GetOrSetFuncLock(
-		fmt.Sprintf(`clickhouse_table_fields_%s_%s@group:%s`, table, useSchema, d.GetGroup()),
-		func() interface{} {
-			var (
-				result gdb.Result
-				link   gdb.Link
-			)
-			if link, err = d.SlaveLink(useSchema); err != nil {
-				return nil
-			}
-			var (
-				columns       = "name,position,default_expression,comment,type,is_in_partition_key,is_in_sorting_key,is_in_primary_key,is_in_sampling_key"
-				getColumnsSql = fmt.Sprintf(
-					"select %s from `system`.columns c where `table` = '%s'",
-					columns, table,
-				)
-			)
-			result, err = d.DoSelect(ctx, link, getColumnsSql)
-			if err != nil {
-				return nil
-			}
-			fields = make(map[string]*gdb.TableField)
-			for _, m := range result {
-				var (
-					isNull    = false
-					fieldType = m["type"].String()
-				)
-				// in clickhouse , filed type like is Nullable(int)
-				fieldsResult, _ := gregex.MatchString(`^Nullable\((.*?)\)`, fieldType)
-				if len(fieldsResult) == 2 {
-					isNull = true
-					fieldType = fieldsResult[1]
-				}
-				fields[m["name"].String()] = &gdb.TableField{
-					Index:   m["position"].Int(),
-					Name:    m["name"].String(),
-					Default: m["default_expression"].Val(),
-					Comment: m["comment"].String(),
-					//Key:     m["Key"].String(),
-					Type: fieldType,
-					Null: isNull,
-				}
-			}
-			return fields
-		},
+	var (
+		result gdb.Result
+		link   gdb.Link
 	)
-	if v != nil {
-		fields = v.(map[string]*gdb.TableField)
+	if link, err = d.SlaveLink(useSchema); err != nil {
+		return nil, err
 	}
-	return
+	var (
+		columns       = "name,position,default_expression,comment,type,is_in_partition_key,is_in_sorting_key,is_in_primary_key,is_in_sampling_key"
+		getColumnsSql = fmt.Sprintf(
+			"select %s from `system`.columns c where `table` = '%s'",
+			columns, table,
+		)
+	)
+	result, err = d.DoSelect(ctx, link, getColumnsSql)
+	if err != nil {
+		return nil, err
+	}
+	fields = make(map[string]*gdb.TableField)
+	for _, m := range result {
+		var (
+			isNull    = false
+			fieldType = m["type"].String()
+		)
+		// in clickhouse , filed type like is Nullable(int)
+		fieldsResult, _ := gregex.MatchString(`^Nullable\((.*?)\)`, fieldType)
+		if len(fieldsResult) == 2 {
+			isNull = true
+			fieldType = fieldsResult[1]
+		}
+		fields[m["name"].String()] = &gdb.TableField{
+			Index:   m["position"].Int(),
+			Name:    m["name"].String(),
+			Default: m["default_expression"].Val(),
+			Comment: m["comment"].String(),
+			//Key:     m["Key"].String(),
+			Type: fieldType,
+			Null: isNull,
+		}
+	}
+	return fields, nil
 }
 
 // FilteredLink retrieves and returns filtered `linkInfo` that can be using for
