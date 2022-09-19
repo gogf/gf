@@ -1,9 +1,9 @@
-# 规则描述：每天0点(GMT+8)执行一次，将最近30天没有活跃且非BUG的ISSUE关闭
+# 规则描述：每天凌晨4点(GMT+8)执行一次，将最近30天没有活跃且非BUG的ISSUE关闭
 name: Issue Close Inactive
 
 on:
   schedule:
-    - cron: "0 3 * * *"
+    - cron: "0 20 * * *"
 
 env: # 设置环境变量
   TZ: Asia/Shanghai #时区（设置时区可使页面中的`最近更新时间`使用时区时间）
@@ -19,4 +19,5 @@ jobs:
 #          token: ${{ secrets.GF_TOKEN }}
           labels: 'inactive'
           inactive-day: 30
-          exclude-labels: 'bug'
+          exclude-labels: 'bug,$exclude-empty'
+          close-reason: 'not active'
