@@ -153,10 +153,10 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 				if m["pk"].Bool() {
 					mKey = "pri"
 				}
-				fields[strings.ToLower(m["name"].String())] = &gdb.TableField{
+				fields[m["name"].String()] = &gdb.TableField{
 					Index:   i,
-					Name:    strings.ToLower(m["name"].String()),
-					Type:    strings.ToLower(m["type"].String()),
+					Name:    m["name"].String(),
+					Type:    m["type"].String(),
 					Key:     mKey,
 					Default: m["dflt_value"].Val(),
 					Null:    !m["notnull"].Bool(),
