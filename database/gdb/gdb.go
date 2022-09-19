@@ -416,6 +416,7 @@ func NewByGroup(group ...string) (db DB, err error) {
 
 func parseConfigNodeLink(node ConfigNode) ConfigNode {
 	var match []string
+	// It firstly parses `link` using with type pattern.
 	match, _ = gregex.MatchString(linkPatternWithType, node.Link)
 	if len(match) > 6 {
 		node.Type = match[1]
@@ -430,6 +431,7 @@ func parseConfigNodeLink(node ConfigNode) ConfigNode {
 		}
 		node.Link = ""
 	} else {
+		// Else it parses `link` using without type pattern.
 		match, _ = gregex.MatchString(linkPatternWithoutType, node.Link)
 		if len(match) > 6 {
 			node.User = match[1]
