@@ -1613,14 +1613,28 @@ func Test_Core_ClearTableFields(t *testing.T) {
 		t.Assert(len(fields), 5)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		err := db.GetCore().ClearTableFields(ctx)
+		err := db.GetCore().ClearTableFields(ctx, table)
+		t.AssertNil(err)
+	})
+}
+
+func Test_Core_ClearTableFieldsAll(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err := db.GetCore().ClearTableFieldsAll(ctx)
 		t.AssertNil(err)
 	})
 }
 
 func Test_Core_ClearCache(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		err := db.GetCore().ClearCache(ctx)
+		err := db.GetCore().ClearCache(ctx, "")
+		t.AssertNil(err)
+	})
+}
+
+func Test_Core_ClearCacheAll(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err := db.GetCore().ClearCacheAll(ctx)
 		t.AssertNil(err)
 	})
 }

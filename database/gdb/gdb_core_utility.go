@@ -11,10 +11,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gogf/gf/v2/crypto/gmd5"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // WithDB injects given db object into context and returns a new context.
@@ -153,13 +156,15 @@ func (c *Core) Tables(ctx context.Context, schema ...string) (tables []string, e
 // It's using cache feature to enhance the performance, which is never expired util the
 // process restarts.
 func (c *Core) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {
-	usedSchema := c.db.GetSchema()
-	if len(schema) > 0 && schema[0] != "" {
-		usedSchema = schema[0]
-	}
 	var (
-		cacheKey = fmt.Sprintf(`TableFields:%s#%s@%s`, c.db.GetGroup(), table, usedSchema)
-		value    = tableFieldsMap.GetOrSetFuncLock(cacheKey, func() interface{} {
+		cacheKey = fmt.Sprintf(
+			`%s%s@%s#%s`,
+			cachePrefixTableFields,
+			c.db.GetGroup(),
+			gutil.GetOrDefaultStr(c.db.GetSchema(), schema...),
+			table,
+		)
+		value = tableFieldsMap.GetOrSetFuncLock(cacheKey, func() interface{} {
 			fields, err = c.db.TableFields(ctx, table, schema...)
 			if err != nil {
 				return nil
@@ -173,15 +178,27 @@ func (c *Core) TableFields(ctx context.Context, table string, schema ...string) 
 	return
 }
 
-// ClearTableFields removes all cached table fields of current configuration group.
-func (c *Core) ClearTableFields(ctx context.Context) (err error) {
+// ClearTableFields removes certain cached table fields of current configuration group.
+func (c *Core) ClearTableFields(ctx context.Context, table string, schema ...string) (err error) {
+	tableFieldsMap.Remove(fmt.Sprintf(
+		`%s%s@%s#%s`,
+		cachePrefixTableFields,
+		c.db.GetGroup(),
+		gutil.GetOrDefaultStr(c.db.GetSchema(), schema...),
+		table,
+	))
+	return
+}
+
+// ClearTableFieldsAll removes all cached table fields of current configuration group.
+func (c *Core) ClearTableFieldsAll(ctx context.Context) (err error) {
 	var (
 		keys        = tableFieldsMap.Keys()
-		keyPrefix   = fmt.Sprintf(`TableFields:%s#`, c.db.GetGroup())
+		cachePrefix = fmt.Sprintf(`%s@%s`, cachePrefixTableFields, c.db.GetGroup())
 		removedKeys = make([]string, 0)
 	)
 	for _, key := range keys {
-		if gstr.HasPrefix(key, keyPrefix) {
+		if gstr.HasPrefix(key, cachePrefix) {
 			removedKeys = append(removedKeys, key)
 		}
 	}
@@ -191,9 +208,27 @@ func (c *Core) ClearTableFields(ctx context.Context) (err error) {
 	return
 }
 
-// ClearCache removes all cached sql result from cache
-func (c *Core) ClearCache(ctx context.Context) (err error) {
+// ClearCache removes cached sql result of certain table.
+func (c *Core) ClearCache(ctx context.Context, table string) (err error) {
 	return c.db.GetCache().Clear(ctx)
+}
+
+// ClearCacheAll removes all cached sql result from cache
+func (c *Core) ClearCacheAll(ctx context.Context) (err error) {
+	return c.db.GetCache().Clear(ctx)
+}
+
+func (c *Core) makeSelectCacheKey(name, schema, table, sql string, args ...interface{}) string {
+	if name == "" {
+		name = fmt.Sprintf(
+			`%s@%s#%s:%s`,
+			c.db.GetGroup(),
+			schema,
+			table,
+			gmd5.MustEncryptString(sql+", @PARAMS:"+gconv.String(args)),
+		)
+	}
+	return fmt.Sprintf(`%s%s`, cachePrefixSelectCache, name)
 }
 
 // HasField determine whether the field exists in the table.

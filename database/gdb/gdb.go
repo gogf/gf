@@ -292,6 +292,8 @@ const (
 	ctxTimeoutTypeExec      = iota
 	ctxTimeoutTypeQuery
 	ctxTimeoutTypePrepare
+	cachePrefixTableFields             = `TableFields:`
+	cachePrefixSelectCache             = `SelectCache:`
 	commandEnvKeyForDryRun             = "gf.gdb.dryrun"
 	modelForDaoSuffix                  = `ForDao`
 	dbRoleSlave                        = `slave`

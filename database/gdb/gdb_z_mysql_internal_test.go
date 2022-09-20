@@ -263,6 +263,24 @@ func Test_parseConfigNodeLink_WithoutType(t *testing.T) {
 	})
 }
 
+func Test_parseConfigNodeLink_WithoutType_Clickhouse(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		node := ConfigNode{
+			Link: `clickhouse://default@127.0.0.1:9000,127.0.0.1:9000/default?dial_timeout=200ms&max_execution_time=60`,
+		}
+		newNode := parseConfigNodeLink(node)
+		t.Assert(newNode.Type, ``)
+		t.Assert(newNode.User, `root`)
+		t.Assert(newNode.Pass, `CxzhD*624:27jh`)
+		t.Assert(newNode.Host, `9.135.69.119`)
+		t.Assert(newNode.Port, `3306`)
+		t.Assert(newNode.Name, `khaos_oss`)
+		t.Assert(newNode.Extra, `loc=Local&parseTime=true&charset=latin`)
+		t.Assert(newNode.Charset, `latin`)
+		t.Assert(newNode.Protocol, `tcp`)
+	})
+}
+
 func Test_Func_doQuoteWord(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := map[string]string{
