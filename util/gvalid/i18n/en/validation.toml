@@ -35,7 +35,6 @@
 "gf.gvalid.rule.max" =                   "The {field} value `{value}` must be equal or lesser than {max}"
 "gf.gvalid.rule.json" =                  "The {field} value `{value}` is not a valid JSON string"
 "gf.gvalid.rule.xml" =                   "The {field} value `{value}` is not a valid XML string"
-"gf.gvalid.rule.array" =                 "The {field} value `{value}` is not a valid array type"
 "gf.gvalid.rule.integer" =               "The {field} value `{value}` is not an integer"
 "gf.gvalid.rule.boolean" =               "The {field} value `{value}` field must be true or false"
 "gf.gvalid.rule.same" =                  "The {field} value `{value}` must be the same as field {pattern}"

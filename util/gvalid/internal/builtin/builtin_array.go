@@ -27,7 +27,7 @@ func (r RuleArray) Name() string {
 }
 
 func (r RuleArray) Message() string {
-	return "The {field} value `{value}` is not a valid array type"
+	return "The {field} value `{value}` is not of valid array type"
 }
 
 func (r RuleArray) Run(in RunInput) error {

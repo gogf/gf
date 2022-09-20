@@ -40,11 +40,11 @@ func Test_Check(t *testing.T) {
 func Test_Array(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err := g.Validator().Data("1").Rules("array").Run(ctx)
-		t.Assert(err, "The value `1` is not a valid array type")
+		t.Assert(err, "The value `1` is not of valid array type")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		err := g.Validator().Data("").Rules("array").Run(ctx)
-		t.Assert(err, "The value `` is not a valid array type")
+		t.Assert(err, "The value `` is not of valid array type")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		err := g.Validator().Data("[1,2,3]").Rules("array").Run(ctx)

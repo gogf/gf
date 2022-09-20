@@ -1103,3 +1103,267 @@ func Example_Rule_Regex() {
 	// The Regex1 value `1234` must be in regex of: [1-9][0-9]{4,14}
 	// The Regex2 value `01234` must be in regex of: [1-9][0-9]{4,14}
 }
+
+func Example_Rule_NotRegex() {
+	type BizReq struct {
+		Regex1 string `v:"regex:\\d{4}"`
+		Regex2 string `v:"not-regex:\\d{4}"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Regex1: "1234",
+			Regex2: "1234",
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
+	}
+
+	// Output:
+	// The Regex2 value `1234` should not be in regex of: \d{4}
+}
+
+func Example_Rule_After() {
+	type BizReq struct {
+		Time1 string
+		Time2 string `v:"after:Time1"`
+		Time3 string `v:"after:Time1"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Time1: "2022-09-01",
+			Time2: "2022-09-01",
+			Time3: "2022-09-02",
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Println(err.String())
+	}
+
+	// Output:
+	// The Time2 value `2022-09-01` must be after field Time1 value `2022-09-01`
+}
+
+func Example_Rule_AfterEqual() {
+	type BizReq struct {
+		Time1 string
+		Time2 string `v:"after-equal:Time1"`
+		Time3 string `v:"after-equal:Time1"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Time1: "2022-09-02",
+			Time2: "2022-09-01",
+			Time3: "2022-09-02",
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
+	}
+
+	// Output:
+	// The Time2 value `2022-09-01` must be after or equal to field Time1 value `2022-09-02`
+}
+
+func Example_Rule_Before() {
+	type BizReq struct {
+		Time1 string `v:"before:Time3"`
+		Time2 string `v:"before:Time3"`
+		Time3 string
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Time1: "2022-09-02",
+			Time2: "2022-09-03",
+			Time3: "2022-09-03",
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Println(err.String())
+	}
+
+	// Output:
+	// The Time2 value `2022-09-03` must be before field Time3 value `2022-09-03`
+}
+
+func Example_Rule_BeforeEqual() {
+	type BizReq struct {
+		Time1 string `v:"before-equal:Time3"`
+		Time2 string `v:"before-equal:Time3"`
+		Time3 string
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Time1: "2022-09-02",
+			Time2: "2022-09-01",
+			Time3: "2022-09-01",
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
+	}
+
+	// Output:
+	// The Time1 value `2022-09-02` must be before or equal to field Time3
+}
+
+func Example_Rule_Array() {
+	type BizReq struct {
+		Value1 string   `v:"array"`
+		Value2 string   `v:"array"`
+		Value3 string   `v:"array"`
+		Value4 []string `v:"array"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Value1: "1,2,3",
+			Value2: "[]",
+			Value3: "[1,2,3]",
+			Value4: []string{},
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
+	}
+
+	// Output:
+	// The Value1 value `1,2,3` is not of valid array type
+}
+
+func Example_Rule_EQ() {
+	type BizReq struct {
+		Name      string `v:"required"`
+		Password  string `v:"required|eq:Password2"`
+		Password2 string `v:"required"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Name:      "gf",
+			Password:  "goframe.org",
+			Password2: "goframe.net",
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// The Password value `goframe.org` must be equal to field Password2 value `goframe.net`
+}
+
+func Example_Rule_NotEQ() {
+	type BizReq struct {
+		Name          string `v:"required"`
+		MailAddr      string `v:"required"`
+		OtherMailAddr string `v:"required|not-eq:MailAddr"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Name:          "gf",
+			MailAddr:      "gf@goframe.org",
+			OtherMailAddr: "gf@goframe.org",
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// The OtherMailAddr value `gf@goframe.org` must not be equal to field MailAddr value `gf@goframe.org`
+}
+
+func Example_Rule_GT() {
+	type BizReq struct {
+		Value1 int
+		Value2 int `v:"gt:Value1"`
+		Value3 int `v:"gt:Value1"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Value1: 1,
+			Value2: 1,
+			Value3: 2,
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Println(err.String())
+	}
+
+	// Output:
+	// The Value2 value `1` must be greater than field Value1 value `1`
+}
+
+func Example_Rule_GTE() {
+	type BizReq struct {
+		Value1 int
+		Value2 int `v:"gte:Value1"`
+		Value3 int `v:"gte:Value1"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Value1: 2,
+			Value2: 1,
+			Value3: 2,
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Println(err.String())
+	}
+
+	// Output:
+	// The Value2 value `1` must be greater than or equal to field Value1 value `2`
+}
+
+func Example_Rule_LT() {
+	type BizReq struct {
+		Value1 int
+		Value2 int `v:"lt:Value1"`
+		Value3 int `v:"lt:Value1"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Value1: 2,
+			Value2: 1,
+			Value3: 2,
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Println(err.String())
+	}
+
+	// Output:
+	// The Value3 value `2` must be lesser than field Value1 value `2`
+}
+
+func Example_Rule_LTE() {
+	type BizReq struct {
+		Value1 int
+		Value2 int `v:"lte:Value1"`
+		Value3 int `v:"lte:Value1"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Value1: 1,
+			Value2: 1,
+			Value3: 2,
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Println(err.String())
+	}
+
+	// Output:
+	// The Value3 value `2` must be lesser than or equal to field Value1 value `1`
+}
