@@ -75,7 +75,7 @@ func (d *Driver) New(core *gdb.Core, node gdb.ConfigNode) (gdb.DB, error) {
 
 // Open creates and returns an underlying sql.DB object for clickhouse.
 func (d *Driver) Open(config gdb.ConfigNode) (*sql.DB, error) {
-	var source string
+	source := config.Link
 	// clickhouse://username:password@host1:9000,host2:9000/database?dial_timeout=200ms&max_execution_time=60
 	if config.Link != "" {
 		// ============================================================================
