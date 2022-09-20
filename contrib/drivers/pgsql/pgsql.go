@@ -378,12 +378,12 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 	)
 
 	// Transaction checks.
-	if link == nil {
+	if link != nil && link.IsTransaction() {
+		isUseCoreDoExec = true
+	} else {
 		if tx := gdb.TXFromCtx(ctx, d.GetGroup()); tx != nil {
 			isUseCoreDoExec = true
 		}
-	} else if link.IsTransaction() {
-		isUseCoreDoExec = true
 	}
 
 	if value := ctx.Value(internalPrimaryKeyInCtx); value != nil {
