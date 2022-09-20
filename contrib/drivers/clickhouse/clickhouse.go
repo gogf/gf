@@ -13,11 +13,14 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
+	"github.com/shopspring/decimal"
 	"net/url"
 	"strings"
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
+	"github.com/google/uuid"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -26,7 +29,6 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/google/uuid"
 )
 
 // Driver is the driver for postgresql database.
@@ -387,6 +389,15 @@ func (d *Driver) ConvertDataForRecord(ctx context.Context, value interface{}) (m
 			// which will insert/update the value to database as "null".
 			if itemValue == nil || itemValue.IsZero() {
 				m[k] = nil
+			}
+
+		case decimal.Decimal:
+			m[k] = itemValue
+
+		case *decimal.Decimal:
+			m[k] = nil
+			if itemValue != nil {
+				m[k] = *itemValue
 			}
 
 		default:

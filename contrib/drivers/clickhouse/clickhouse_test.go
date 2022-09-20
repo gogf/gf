@@ -7,9 +7,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/util/guid"
-	"github.com/google/uuid"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
@@ -132,6 +133,7 @@ func clickhouseLink() gdb.DB {
 	connect, err := gdb.New(gdb.ConfigNode{
 		Link: "clickhouse://default@127.0.0.1:9000,127.0.0.1:9000/default?dial_timeout=200ms&max_execution_time=60",
 		Type: "clickhouse",
+		Name: "default",
 	})
 	gtest.AssertNil(err)
 	gtest.AssertNE(connect, nil)
