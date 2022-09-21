@@ -8,6 +8,7 @@ package gcron_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -86,6 +87,48 @@ func TestCron_Remove(t *testing.T) {
 	})
 }
 
+func TestCron_Add_FixedPattern(t *testing.T) {
+	//debug := utils.IsDebugEnabled()
+	//utils.SetDebugEnabled(true)
+	//defer func() {
+	//	utils.SetDebugEnabled(debug)
+	//}()
+	for i := 0; i < 5; i++ {
+		doTestCronAddFixedPattern(t)
+	}
+}
+
+func doTestCronAddFixedPattern(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			now     = time.Now()
+			cron    = gcron.New()
+			array   = garray.New(true)
+			minutes = now.Minute()
+			seconds = now.Second() + 2
+		)
+		defer cron.Close()
+
+		if seconds >= 60 {
+			seconds %= 60
+			minutes++
+		}
+		var pattern = fmt.Sprintf(
+			`%d %d %d %d %d %s`,
+			seconds, minutes, now.Hour(), now.Day(), now.Month(), now.Weekday().String(),
+		)
+		cron.SetLogger(g.Log())
+		g.Log().Debugf(ctx, `pattern: %s`, pattern)
+		_, err := cron.Add(ctx, pattern, func(ctx context.Context) {
+			array.Append(1)
+		})
+		t.AssertNil(err)
+		time.Sleep(3000 * time.Millisecond)
+		g.Log().Debug(ctx, `current time`)
+		t.Assert(array.Len(), 1)
+	})
+}
+
 func TestCron_AddSingleton(t *testing.T) {
 	// un used, can be removed
 	gtest.C(t, func(t *gtest.T) {
@@ -154,7 +197,7 @@ func TestCron_AddTimes(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cron := gcron.New()
 		array := garray.New(true)
-		cron.AddTimes(ctx, "* * * * * *", 2, func(ctx context.Context) {
+		_, _ = cron.AddTimes(ctx, "* * * * * *", 2, func(ctx context.Context) {
 			array.Append(1)
 		})
 		time.Sleep(3500 * time.Millisecond)

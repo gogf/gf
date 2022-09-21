@@ -8,15 +8,43 @@
 package glog
 
 import (
-	"github.com/gogf/gf/v2/os/gcmd"
+	"context"
+
+	"github.com/gogf/gf/v2/internal/command"
 	"github.com/gogf/gf/v2/os/grpool"
+	"github.com/gogf/gf/v2/util/gconv"
 )
+
+// ILogger is the API interface for logger.
+type ILogger interface {
+	Print(ctx context.Context, v ...interface{})
+	Printf(ctx context.Context, format string, v ...interface{})
+	Debug(ctx context.Context, v ...interface{})
+	Debugf(ctx context.Context, format string, v ...interface{})
+	Info(ctx context.Context, v ...interface{})
+	Infof(ctx context.Context, format string, v ...interface{})
+	Notice(ctx context.Context, v ...interface{})
+	Noticef(ctx context.Context, format string, v ...interface{})
+	Warning(ctx context.Context, v ...interface{})
+	Warningf(ctx context.Context, format string, v ...interface{})
+	Error(ctx context.Context, v ...interface{})
+	Errorf(ctx context.Context, format string, v ...interface{})
+	Critical(ctx context.Context, v ...interface{})
+	Criticalf(ctx context.Context, format string, v ...interface{})
+	Panic(ctx context.Context, v ...interface{})
+	Panicf(ctx context.Context, format string, v ...interface{})
+	Fatal(ctx context.Context, v ...interface{})
+	Fatalf(ctx context.Context, format string, v ...interface{})
+}
 
 const (
 	commandEnvKeyForDebug = "gf.glog.debug"
 )
 
 var (
+	// Ensure Logger implements ILogger.
+	_ ILogger = &Logger{}
+
 	// Default logger object, for package method usage.
 	defaultLogger = New()
 
@@ -30,7 +58,7 @@ var (
 )
 
 func init() {
-	defaultDebug = gcmd.GetOptWithEnv(commandEnvKeyForDebug, true).Bool()
+	defaultDebug = gconv.Bool(command.GetOptWithEnv(commandEnvKeyForDebug, "true"))
 	SetDebug(defaultDebug)
 }
 

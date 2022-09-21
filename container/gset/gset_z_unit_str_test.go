@@ -69,6 +69,7 @@ func TestStrSet_ContainsI(t *testing.T) {
 		t.Assert(s.Contains("A"), false)
 		t.Assert(s.Contains("a"), true)
 		t.Assert(s.ContainsI("A"), true)
+		t.Assert(s.ContainsI("d"), false)
 	})
 }
 
@@ -116,11 +117,16 @@ func TestStrSet_Equal(t *testing.T) {
 		s1 := gset.NewStrSet()
 		s2 := gset.NewStrSet()
 		s3 := gset.NewStrSet()
+		s4 := gset.NewStrSet()
 		s1.Add("1", "2", "3")
 		s2.Add("1", "2", "3")
 		s3.Add("1", "2", "3", "4")
+		s4.Add("4", "5", "6")
 		t.Assert(s1.Equal(s2), true)
 		t.Assert(s1.Equal(s3), false)
+		t.Assert(s1.Equal(s4), false)
+		s5 := s1
+		t.Assert(s1.Equal(s5), true)
 	})
 }
 
@@ -137,6 +143,9 @@ func TestStrSet_IsSubsetOf(t *testing.T) {
 		t.Assert(s1.IsSubsetOf(s3), true)
 		t.Assert(s2.IsSubsetOf(s1), false)
 		t.Assert(s3.IsSubsetOf(s2), false)
+
+		s4 := s1
+		t.Assert(s1.IsSubsetOf(s4), true)
 	})
 }
 
@@ -165,6 +174,13 @@ func TestStrSet_Diff(t *testing.T) {
 		t.Assert(s3.Contains("2"), true)
 		t.Assert(s3.Contains("3"), false)
 		t.Assert(s3.Contains("4"), false)
+
+		s4 := s1
+		s5 := s1.Diff(s2, s4)
+		t.Assert(s5.Contains("1"), true)
+		t.Assert(s5.Contains("2"), true)
+		t.Assert(s5.Contains("3"), false)
+		t.Assert(s5.Contains("4"), false)
 	})
 }
 
@@ -239,6 +255,7 @@ func TestStrSet_Join(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewStrSet()
+		t.Assert(s1.Join(","), "")
 		s1.Add("a", `"b"`, `\c`)
 		str1 := s1.Join(",")
 		t.Assert(strings.Contains(str1, `"b"`), true)
@@ -253,6 +270,8 @@ func TestStrSet_String(t *testing.T) {
 		str1 := s1.String()
 		t.Assert(strings.Contains(str1, "b"), true)
 		t.Assert(strings.Contains(str1, "d"), false)
+		s1 = nil
+		t.Assert(s1.String(), "")
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -300,6 +319,9 @@ func TestStrSet_Pop(t *testing.T) {
 		t.Assert(s.Size(), 3)
 		t.AssertIN(s.Pop(), a)
 		t.Assert(s.Size(), 2)
+
+		s1 := gset.StrSet{}
+		t.Assert(s1.Pop(), "")
 	})
 }
 
@@ -337,6 +359,10 @@ func TestStrSet_AddIfNotExist(t *testing.T) {
 		t.Assert(s.AddIfNotExist("2"), false)
 		t.Assert(s.Contains("2"), true)
 	})
+	gtest.C(t, func(t *gtest.T) {
+		s := gset.StrSet{}
+		t.Assert(s.AddIfNotExist("1"), true)
+	})
 }
 
 func TestStrSet_AddIfNotExistFunc(t *testing.T) {
@@ -367,6 +393,10 @@ func TestStrSet_AddIfNotExistFunc(t *testing.T) {
 		s.Add("1")
 		wg.Wait()
 	})
+	gtest.C(t, func(t *gtest.T) {
+		s := gset.StrSet{}
+		t.Assert(s.AddIfNotExistFunc("1", func() bool { return true }), true)
+	})
 }
 
 func TestStrSet_AddIfNotExistFuncLock(t *testing.T) {
@@ -391,6 +421,10 @@ func TestStrSet_AddIfNotExistFuncLock(t *testing.T) {
 			t.Assert(r, false)
 		}()
 		wg.Wait()
+	})
+	gtest.C(t, func(t *gtest.T) {
+		s := gset.StrSet{}
+		t.Assert(s.AddIfNotExistFuncLock("1", func() bool { return true }), true)
 	})
 }
 
@@ -475,5 +509,20 @@ func TestStrSet_UnmarshalValue(t *testing.T) {
 		t.Assert(v.Set.Contains("2"), true)
 		t.Assert(v.Set.Contains("3"), true)
 		t.Assert(v.Set.Contains("4"), false)
+	})
+}
+
+func TestStrSet_DeepCopy(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		set := gset.NewStrSet()
+		set.Add("1", "2", "3")
+
+		copySet := set.DeepCopy().(*gset.StrSet)
+		copySet.Add("4")
+		t.AssertNE(set.Size(), copySet.Size())
+		t.AssertNE(set.String(), copySet.String())
+
+		set = nil
+		t.AssertNil(set.DeepCopy())
 	})
 }

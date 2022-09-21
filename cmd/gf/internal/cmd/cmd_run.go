@@ -13,7 +13,6 @@ import (
 	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/os/gtimer"
-	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gtag"
 )
 
@@ -47,6 +46,7 @@ which compiles and runs the go codes asynchronously when codes change.
 	cRunFileBrief  = `building file path.`
 	cRunPathBrief  = `output directory path for built binary file. it's "manifest/output" in default`
 	cRunExtraBrief = `the same options as "go run"/"go build" except some options as follows defined`
+	cRunArgsBrief  = `custom arguments for your process`
 )
 
 var (
@@ -62,6 +62,7 @@ func init() {
 		`cRunFileBrief`:  cRunFileBrief,
 		`cRunPathBrief`:  cRunPathBrief,
 		`cRunExtraBrief`: cRunExtraBrief,
+		`cRunArgsBrief`:  cRunArgsBrief,
 	})
 }
 
@@ -71,6 +72,7 @@ type (
 		File   string `name:"FILE"  arg:"true" brief:"{cRunFileBrief}" v:"required"`
 		Path   string `name:"path"  short:"p"  brief:"{cRunPathBrief}" d:"./"`
 		Extra  string `name:"extra" short:"e"  brief:"{cRunExtraBrief}"`
+		Args   string `name:"args"  short:"a"  brief:"{cRunArgsBrief}"`
 	}
 	cRunOutput struct{}
 )
@@ -85,6 +87,7 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 		File:    in.File,
 		Path:    in.Path,
 		Options: in.Extra,
+		Args:    in.Args,
 	}
 	dirty := gtype.NewBool()
 	_, err = gfsnotify.Add(gfile.RealPath("."), func(event *gfsnotify.Event) {
@@ -99,17 +102,17 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 		gtimer.SetTimeout(ctx, 1500*gtime.MS, func(ctx context.Context) {
 			defer dirty.Set(false)
 			mlog.Printf(`go file changes: %s`, event.String())
-			app.Run()
+			app.Run(ctx)
 		})
 	})
 	if err != nil {
 		mlog.Fatal(err)
 	}
-	go app.Run()
+	go app.Run(ctx)
 	select {}
 }
 
-func (app *cRunApp) Run() {
+func (app *cRunApp) Run(ctx context.Context) {
 	// Rebuild and run the codes.
 	renamePath := ""
 	mlog.Printf("build: %s", app.File)
@@ -132,7 +135,7 @@ func (app *cRunApp) Run() {
 		app.File,
 	)
 	mlog.Print(buildCommand)
-	result, err := gproc.ShellExec(buildCommand)
+	result, err := gproc.ShellExec(ctx, buildCommand)
 	if err != nil {
 		mlog.Printf("build error: \n%s%s", result, err.Error())
 		return
@@ -150,11 +153,11 @@ func (app *cRunApp) Run() {
 	if runtime.GOOS == "windows" {
 		// Special handling for windows platform.
 		// DO NOT USE "cmd /c" command.
-		process = gproc.NewProcess(outputPath, gstr.SplitAndTrim(" ", app.Args))
+		process = gproc.NewProcess(runCommand, nil)
 	} else {
-		process = gproc.NewProcessCmd(outputPath, gstr.SplitAndTrim(" ", app.Args))
+		process = gproc.NewProcessCmd(runCommand, nil)
 	}
-	if pid, err := process.Start(); err != nil {
+	if pid, err := process.Start(ctx); err != nil {
 		mlog.Printf("build running error: %s", err.Error())
 	} else {
 		mlog.Printf("build running pid: %d", pid)

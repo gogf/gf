@@ -121,15 +121,19 @@ func (c *Core) ConvertDataForRecordValue(ctx context.Context, value interface{})
 	return convertedValue, nil
 }
 
-// convertFieldValueToLocalValue automatically checks and converts field value from database type
-// to golang variable type as underlying value of Value.
-func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType string) interface{} {
-	// If there's no type retrieved, it returns the `fieldValue` directly
-	// to use its original data type, as `fieldValue` is type of interface{}.
-	if fieldType == "" {
-		return fieldValue
+// CheckLocalTypeForField checks and returns corresponding type for given db type.
+func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (string, error) {
+	var (
+		typeName    string
+		typePattern string
+	)
+	match, _ := gregex.MatchString(`(.+?)\((.+)\)`, fieldType)
+	if len(match) == 3 {
+		typeName = gstr.Trim(match[1])
+		typePattern = gstr.Trim(match[2])
+	} else {
+		typeName = gstr.Split(fieldType, " ")[0]
 	}
-	typeName, _ := gregex.ReplaceString(`\(.+\)`, "", fieldType)
 	typeName = strings.ToLower(typeName)
 	switch typeName {
 	case
@@ -139,7 +143,7 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 		"tinyblob",
 		"mediumblob",
 		"longblob":
-		return gconv.Bytes(fieldValue)
+		return LocalTypeBytes, nil
 
 	case
 		"int",
@@ -150,22 +154,22 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 		"mediumint",
 		"serial":
 		if gstr.ContainsI(fieldType, "unsigned") {
-			gconv.Uint(gconv.String(fieldValue))
+			return LocalTypeUint, nil
 		}
-		return gconv.Int(gconv.String(fieldValue))
+		return LocalTypeInt, nil
 
 	case
-		"int8", // For pgsql, int8 = bigint.
 		"big_int",
 		"bigint",
 		"bigserial":
 		if gstr.ContainsI(fieldType, "unsigned") {
-			gconv.Uint64(gconv.String(fieldValue))
+			return LocalTypeUint64, nil
 		}
-		return gconv.Int64(gconv.String(fieldValue))
+		return LocalTypeInt64, nil
 
-	case "real":
-		return gconv.Float32(gconv.String(fieldValue))
+	case
+		"real":
+		return LocalTypeFloat32, nil
 
 	case
 		"float",
@@ -174,77 +178,151 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 		"money",
 		"numeric",
 		"smallmoney":
-		return gconv.Float64(gconv.String(fieldValue))
+		return LocalTypeFloat64, nil
 
-	case "bit":
+	case
+		"bit":
+		// It is suggested using bit(1) as boolean.
+		if typePattern == "1" {
+			return LocalTypeBool, nil
+		}
 		s := gconv.String(fieldValue)
 		// mssql is true|false string.
-		if strings.EqualFold(s, "true") {
-			return 1
+		if strings.EqualFold(s, "true") || strings.EqualFold(s, "false") {
+			return LocalTypeBool, nil
 		}
-		if strings.EqualFold(s, "false") {
-			return 0
+		if gstr.ContainsI(fieldType, "unsigned") {
+			return LocalTypeUint64Bytes, nil
 		}
-		return gbinary.BeDecodeToInt64(gconv.Bytes(fieldValue))
+		return LocalTypeInt64Bytes, nil
 
-	case "bool":
-		return gconv.Bool(fieldValue)
+	case
+		"bool":
+		return LocalTypeBool, nil
 
-	case "date":
-		// Date without time.
-		if t, ok := fieldValue.(time.Time); ok {
-			return gtime.NewFromTime(t).Format("Y-m-d")
-		}
-		t, _ := gtime.StrToTime(gconv.String(fieldValue))
-		return t.Format("Y-m-d")
+	case
+		"date":
+		return LocalTypeDate, nil
 
 	case
 		"datetime",
 		"timestamp",
 		"timestamptz":
-		if t, ok := fieldValue.(time.Time); ok {
-			return gtime.NewFromTime(t)
-		}
-		t, _ := gtime.StrToTime(gconv.String(fieldValue))
-		return t
+		return LocalTypeDatetime, nil
+
+	case
+		"json":
+		return LocalTypeJson, nil
+
+	case
+		"jsonb":
+		return LocalTypeJsonb, nil
 
 	default:
 		// Auto-detect field type, using key match.
 		switch {
 		case strings.Contains(typeName, "text") || strings.Contains(typeName, "char") || strings.Contains(typeName, "character"):
-			return gconv.String(fieldValue)
+			return LocalTypeString, nil
 
 		case strings.Contains(typeName, "float") || strings.Contains(typeName, "double") || strings.Contains(typeName, "numeric"):
-			return gconv.Float64(gconv.String(fieldValue))
+			return LocalTypeFloat64, nil
 
 		case strings.Contains(typeName, "bool"):
-			return gconv.Bool(gconv.String(fieldValue))
+			return LocalTypeBool, nil
 
 		case strings.Contains(typeName, "binary") || strings.Contains(typeName, "blob"):
-			return fieldValue
+			return LocalTypeBytes, nil
 
 		case strings.Contains(typeName, "int"):
-			return gconv.Int(gconv.String(fieldValue))
+			if gstr.ContainsI(fieldType, "unsigned") {
+				return LocalTypeUint, nil
+			}
+			return LocalTypeInt, nil
 
 		case strings.Contains(typeName, "time"):
-			s := gconv.String(fieldValue)
-			t, err := gtime.StrToTime(s)
-			if err != nil {
-				return s
-			}
-			return t
+			return LocalTypeDatetime, nil
 
 		case strings.Contains(typeName, "date"):
-			s := gconv.String(fieldValue)
-			t, err := gtime.StrToTime(s)
-			if err != nil {
-				return s
-			}
-			return t
+			return LocalTypeDatetime, nil
 
 		default:
-			return gconv.String(fieldValue)
+			return LocalTypeString, nil
 		}
+	}
+}
+
+// ConvertValueForLocal converts value to local Golang type of value according field type name from database.
+// The parameter `fieldType` is in lower case, like:
+// `float(5,2)`, `unsigned double(5,2)`, `decimal(10,2)`, `char(45)`, `varchar(100)`, etc.
+func (c *Core) ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) {
+	// If there's no type retrieved, it returns the `fieldValue` directly
+	// to use its original data type, as `fieldValue` is type of interface{}.
+	if fieldType == "" {
+		return fieldValue, nil
+	}
+	typeName, err := c.db.CheckLocalTypeForField(ctx, fieldType, fieldValue)
+	if err != nil {
+		return nil, err
+	}
+	switch typeName {
+	case LocalTypeBytes:
+		if strings.Contains(typeName, "binary") || strings.Contains(typeName, "blob") {
+			return fieldValue, nil
+		}
+		return gconv.Bytes(fieldValue), nil
+
+	case LocalTypeInt:
+		return gconv.Int(gconv.String(fieldValue)), nil
+
+	case LocalTypeUint:
+		return gconv.Uint(gconv.String(fieldValue)), nil
+
+	case LocalTypeInt64:
+		return gconv.Int64(gconv.String(fieldValue)), nil
+
+	case LocalTypeUint64:
+		return gconv.Uint64(gconv.String(fieldValue)), nil
+
+	case LocalTypeInt64Bytes:
+		return gbinary.BeDecodeToInt64(gconv.Bytes(fieldValue)), nil
+
+	case LocalTypeUint64Bytes:
+		return gbinary.BeDecodeToUint64(gconv.Bytes(fieldValue)), nil
+
+	case LocalTypeFloat32:
+		return gconv.Float32(gconv.String(fieldValue)), nil
+
+	case LocalTypeFloat64:
+		return gconv.Float64(gconv.String(fieldValue)), nil
+
+	case LocalTypeBool:
+		s := gconv.String(fieldValue)
+		// mssql is true|false string.
+		if strings.EqualFold(s, "true") {
+			return 1, nil
+		}
+		if strings.EqualFold(s, "false") {
+			return 0, nil
+		}
+		return gconv.Bool(fieldValue), nil
+
+	case LocalTypeDate:
+		// Date without time.
+		if t, ok := fieldValue.(time.Time); ok {
+			return gtime.NewFromTime(t).Format("Y-m-d"), nil
+		}
+		t, _ := gtime.StrToTime(gconv.String(fieldValue))
+		return t.Format("Y-m-d"), nil
+
+	case LocalTypeDatetime:
+		if t, ok := fieldValue.(time.Time); ok {
+			return gtime.NewFromTime(t), nil
+		}
+		t, _ := gtime.StrToTime(gconv.String(fieldValue))
+		return t, nil
+
+	default:
+		return gconv.String(fieldValue), nil
 	}
 }
 

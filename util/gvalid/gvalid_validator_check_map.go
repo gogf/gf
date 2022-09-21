@@ -93,7 +93,8 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 	)
 
 	// It checks the struct recursively if its attribute is an embedded struct.
-	// Ignore inputParamMap, rules and messages from parent.
+	// Ignore inputParamMap, assoc, rules and messages from parent.
+	validator.assoc = nil
 	validator.rules = nil
 	validator.messages = nil
 	for _, item := range inputParamMap {
@@ -101,10 +102,10 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 		switch originTypeAndKind.OriginKind {
 		case reflect.Map, reflect.Struct, reflect.Slice, reflect.Array:
 			v.doCheckValueRecursively(ctx, doCheckValueRecursivelyInput{
-				Value:      item,
-				Type:       originTypeAndKind.InputType,
-				OriginKind: originTypeAndKind.OriginKind,
-				ErrorMaps:  errorMaps,
+				Value:     item,
+				Type:      originTypeAndKind.InputType,
+				Kind:      originTypeAndKind.OriginKind,
+				ErrorMaps: errorMaps,
 			})
 		}
 		// Bail feature.

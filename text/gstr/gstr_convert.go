@@ -162,7 +162,7 @@ func Nl2Br(str string, isXhtml ...bool) string {
 		}
 		switch v {
 		case n, r:
-			if (i+1 < length) && (v == r && runes[i+1] == n) || (v == n && runes[i+1] == r) {
+			if (i+1 < length) && ((v == r && runes[i+1] == n) || (v == n && runes[i+1] == r)) {
 				buf.Write(br)
 				skip = true
 				continue

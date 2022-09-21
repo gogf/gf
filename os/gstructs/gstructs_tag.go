@@ -62,7 +62,7 @@ func ParseTag(tag string) map[string]string {
 		tag = tag[i+1:]
 		value, err := strconv.Unquote(quotedValue)
 		if err != nil {
-			panic(err)
+			panic(gerror.WrapCodef(gcode.CodeInvalidParameter, err, `error parsing tag "%s"`, tag))
 		}
 		data[key] = gtag.Parse(value)
 	}

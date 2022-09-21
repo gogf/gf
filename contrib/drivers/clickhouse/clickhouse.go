@@ -13,6 +13,10 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
+	"net/url"
+	"strings"
+	"time"
+
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -24,9 +28,6 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/google/uuid"
-	"net/url"
-	"strings"
-	"time"
 )
 
 // Driver is the driver for postgresql database.
@@ -148,7 +149,13 @@ func (d *Driver) TableFields(
 			if link, err = d.SlaveLink(useSchema); err != nil {
 				return nil
 			}
-			getColumnsSql := fmt.Sprintf("select name,position,default_expression,comment,type,is_in_partition_key,is_in_sorting_key,is_in_primary_key,is_in_sampling_key from `system`.columns c where database = '%s' and `table` = '%s'", d.GetConfig().Name, table)
+			var (
+				columns       = "name,position,default_expression,comment,type,is_in_partition_key,is_in_sorting_key,is_in_primary_key,is_in_sampling_key"
+				getColumnsSql = fmt.Sprintf(
+					"select %s from `system`.columns c where `table` = '%s'",
+					columns, table,
+				)
+			)
 			result, err = d.DoSelect(ctx, link, getColumnsSql)
 			if err != nil {
 				return nil

@@ -124,7 +124,7 @@ func (c *Core) QuoteString(s string) string {
 // if true it does nothing to the table name, or else adds the prefix to the table name.
 func (c *Core) QuotePrefixTableName(table string) string {
 	charLeft, charRight := c.db.GetChars()
-	return doHandleTableName(table, c.db.GetPrefix(), charLeft, charRight)
+	return doQuoteTableName(table, c.db.GetPrefix(), charLeft, charRight)
 }
 
 // GetChars returns the security char for current database.

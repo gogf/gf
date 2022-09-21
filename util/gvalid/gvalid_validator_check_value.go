@@ -540,19 +540,37 @@ func (v *Validator) doCheckSingleBuildInRules(ctx context.Context, in doCheckBui
 type doCheckValueRecursivelyInput struct {
 	Value               interface{}                 // Value to be validated.
 	Type                reflect.Type                // Struct/map/slice type which to be recursively validated.
-	OriginKind          reflect.Kind                // Struct/map/slice kind to be asserted in following switch case.
+	Kind                reflect.Kind                // Struct/map/slice kind to be asserted in following switch case.
 	ErrorMaps           map[string]map[string]error // The validated failed error map.
 	ResultSequenceRules *[]fieldRule                // The validated failed rule in sequence.
 }
 
 func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValueRecursivelyInput) {
-	switch in.OriginKind {
+	switch in.Kind {
+	case reflect.Ptr:
+		v.doCheckValueRecursively(ctx, doCheckValueRecursivelyInput{
+			Value:               in.Value,
+			Type:                in.Type.Elem(),
+			Kind:                in.Type.Elem().Kind(),
+			ErrorMaps:           in.ErrorMaps,
+			ResultSequenceRules: in.ResultSequenceRules,
+		})
+
 	case reflect.Struct:
-		// Ignore data, rules and messages from parent.
-		validator := v.Clone()
+		// Ignore data, assoc, rules and messages from parent.
+		var (
+			validator           = v.Clone()
+			toBeValidatedObject interface{}
+		)
+		if in.Type.Kind() == reflect.Ptr {
+			toBeValidatedObject = reflect.New(in.Type.Elem()).Interface()
+		} else {
+			toBeValidatedObject = reflect.New(in.Type).Interface()
+		}
+		validator.assoc = nil
 		validator.rules = nil
 		validator.messages = nil
-		if err := validator.Data(reflect.New(in.Type).Interface()).Assoc(in.Value).Run(ctx); err != nil {
+		if err := validator.Data(toBeValidatedObject).Assoc(in.Value).Run(ctx); err != nil {
 			// It merges the errors into single error map.
 			for k, m := range err.(*validationError).errors {
 				in.ErrorMaps[k] = m
@@ -572,7 +590,7 @@ func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValue
 			v.doCheckValueRecursively(ctx, doCheckValueRecursivelyInput{
 				Value:               item,
 				Type:                mapTypeElem,
-				OriginKind:          mapTypeKind,
+				Kind:                mapTypeKind,
 				ErrorMaps:           in.ErrorMaps,
 				ResultSequenceRules: in.ResultSequenceRules,
 			})
@@ -596,7 +614,7 @@ func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValue
 			v.doCheckValueRecursively(ctx, doCheckValueRecursivelyInput{
 				Value:               item,
 				Type:                in.Type.Elem(),
-				OriginKind:          in.Type.Elem().Kind(),
+				Kind:                in.Type.Elem().Kind(),
 				ErrorMaps:           in.ErrorMaps,
 				ResultSequenceRules: in.ResultSequenceRules,
 			})

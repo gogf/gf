@@ -31,8 +31,8 @@ type Request struct {
 	Session    *gsession.Session // Session.
 	Response   *Response         // Corresponding Response of this request.
 	Router     *Router           // Matched Router for this request. Note that it's not available in HOOK handler.
-	EnterTime  int64             // Request starting time in microseconds.
-	LeaveTime  int64             // Request to end time in microseconds.
+	EnterTime  int64             // Request starting time in milliseconds.
+	LeaveTime  int64             // Request to end time in milliseconds.
 	Middleware *middleware       // Middleware manager.
 	StaticFile *staticFile       // Static file object for static file serving.
 
@@ -263,7 +263,7 @@ func (r *Request) SetError(err error) {
 
 // ReloadParam is used for modifying request parameter.
 // Sometimes, we want to modify request parameters through middleware, but directly modifying Request.Body
-// is invalid, so it clears the parsed* marks to make the parameters re-parsed.
+// is invalid, so it clears the parsed* marks of Request to make the parameters reparsed.
 func (r *Request) ReloadParam() {
 	r.parsedBody = false
 	r.parsedForm = false

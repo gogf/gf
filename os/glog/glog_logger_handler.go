@@ -81,21 +81,20 @@ func (in *HandlerInput) String(withColor ...bool) string {
 
 func (in *HandlerInput) getDefaultBuffer(withColor bool) *bytes.Buffer {
 	buffer := bytes.NewBuffer(nil)
-	if in.TimeFormat != "" {
-		buffer.WriteString(in.TimeFormat)
-	}
-	if in.LevelFormat != "" {
-		var levelStr = "[" + in.LevelFormat + "]"
-		if withColor {
-			in.addStringToBuffer(buffer, in.Logger.getColoredStr(
-				in.Logger.getColorByLevel(in.Level), levelStr,
-			))
-		} else {
-			in.addStringToBuffer(buffer, levelStr)
+	if in.Logger.config.HeaderPrint {
+		if in.TimeFormat != "" {
+			buffer.WriteString(in.TimeFormat)
 		}
-	}
-	if in.Prefix != "" {
-		in.addStringToBuffer(buffer, in.Prefix)
+		if in.LevelFormat != "" {
+			var levelStr = "[" + in.LevelFormat + "]"
+			if withColor {
+				in.addStringToBuffer(buffer, in.Logger.getColoredStr(
+					in.Logger.getColorByLevel(in.Level), levelStr,
+				))
+			} else {
+				in.addStringToBuffer(buffer, levelStr)
+			}
+		}
 	}
 	if in.TraceId != "" {
 		in.addStringToBuffer(buffer, "{"+in.TraceId+"}")
@@ -103,11 +102,16 @@ func (in *HandlerInput) getDefaultBuffer(withColor bool) *bytes.Buffer {
 	if in.CtxStr != "" {
 		in.addStringToBuffer(buffer, "{"+in.CtxStr+"}")
 	}
-	if in.CallerFunc != "" {
-		in.addStringToBuffer(buffer, in.CallerFunc)
-	}
-	if in.CallerPath != "" {
-		in.addStringToBuffer(buffer, in.CallerPath)
+	if in.Logger.config.HeaderPrint {
+		if in.Prefix != "" {
+			in.addStringToBuffer(buffer, in.Prefix)
+		}
+		if in.CallerFunc != "" {
+			in.addStringToBuffer(buffer, in.CallerFunc)
+		}
+		if in.CallerPath != "" {
+			in.addStringToBuffer(buffer, in.CallerPath)
+		}
 	}
 	if in.Content != "" {
 		if in.Stack != "" {

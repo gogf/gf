@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"context"
 	"net/http"
 	"reflect"
 
@@ -44,8 +45,8 @@ func (m *middleware) Next() {
 
 		// Router values switching.
 		m.request.routerMap = item.Values
-
-		gutil.TryCatch(func() {
+		ctx := m.request.context
+		gutil.TryCatch(ctx, func(ctx context.Context) {
 			// Execute bound middleware array of the item if it's not empty.
 			if m.handlerMDIndex < len(item.Handler.Middleware) {
 				md := item.Handler.Middleware[m.handlerMDIndex]
@@ -98,7 +99,7 @@ func (m *middleware) Next() {
 				// There should be a "Next" function to be called in the middleware in order to manage the workflow.
 				loop = false
 			}
-		}, func(exception error) {
+		}, func(ctx context.Context, exception error) {
 			if v, ok := exception.(error); ok && gerror.HasStack(v) {
 				// It's already an error that has stack info.
 				m.request.error = v

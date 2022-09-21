@@ -6,18 +6,27 @@ on:
     branches:
     - master
     - develop
+    - personal/**
     - feature/**
+    - enhance/**
     - fix/**
 
   pull_request:
     branches:
     - master
     - develop
+    - personal/**
     - feature/**
+    - enhance/**
     - fix/**
 
+# This allows a subsequently queued workflow run to interrupt previous runs
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
 env:
-  GF_DEBUG: 0
+  TZ: "Asia/Shanghai"
 
 
 jobs:
@@ -53,7 +62,7 @@ jobs:
         image: loads/postgres:13
         env:
           POSTGRES_PASSWORD: 12345678
-          POSTGRES_USER:     root
+          POSTGRES_USER:     postgres
           POSTGRES_DB:       test
           TZ:                Asia/Shanghai
         ports:
@@ -92,7 +101,7 @@ jobs:
           - 9001:9001
 
       polaris:
-        image: houseme/polaris-server-with-config:latest
+        image: polarismesh/polaris-server-standalone:latest
         ports:
           - 8090:8090
           - 8091:8091
@@ -109,15 +118,13 @@ jobs:
           - 1521:1521
 
 
-
     strategy:
       matrix:
-        go: [ "1.15", "1.16", "1.17" ]
+        go-version: [ "1.15", "1.16", "1.17", "1.18" ]
         goarch: [ "386", "amd64" ]
 
-
     steps:
-    - name: Set Up Timezone
+    - name: Setup Timezone
       uses: szenius/set-timezone@v1.0
       with:
         timezoneLinux: "Asia/Shanghai"
@@ -125,10 +132,30 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v2
 
-    - name: Set Up Go
+    - name: Setup Golang ${{ matrix.go-version }}
       uses: actions/setup-go@v2
       with:
-        go-version: ${{ matrix.go }}
+        go-version: ${{ matrix.go-version }}
+
+    - name: Setup Golang caches
+      uses: actions/cache@v3
+      with:
+        # In order:
+        # * Module download cache
+        # * Build cache (Linux)
+        # * Build cache (Mac)
+        # * Build cache (Windows)
+        path: |
+          ~/go/pkg/mod
+          ~/.cache/go-build
+          ~/Library/Caches/go-build
+          ~\AppData\Local\go-build
+        key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-${{ matrix.go-version }}-
+
+    - name: Start containers
+      run: docker-compose -f ".github/workflows/docker/docker-compose.yml" up -d --build
 
     - name: Before Script
       run: |
@@ -159,8 +186,11 @@ jobs:
             cd -
         done
 
+    - name: Stop containers
+      run: docker-compose -f ".github/workflows/docker/docker-compose.yml" down
+
     - name: Report Coverage
       uses: codecov/codecov-action@v2
       with:
-        flags: go-${{ matrix.go }}-${{ matrix.goarch }}
+        flags: go-${{ matrix.go-version }}-${{ matrix.goarch }}
 

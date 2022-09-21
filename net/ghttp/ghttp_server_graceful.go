@@ -215,7 +215,9 @@ func (s *gracefulServer) shutdown(ctx context.Context) {
 	if s.status == ServerStatusStopped {
 		return
 	}
-	if err := s.httpServer.Shutdown(context.Background()); err != nil {
+	timeoutCtx, cancelFunc := context.WithTimeout(ctx, gracefulShutdownTimeout)
+	defer cancelFunc()
+	if err := s.httpServer.Shutdown(timeoutCtx); err != nil {
 		s.server.Logger().Errorf(
 			ctx,
 			"%d: %s server [%s] shutdown error: %v",

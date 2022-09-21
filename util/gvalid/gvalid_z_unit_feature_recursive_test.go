@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/gogf/gf/v2/frame/g"
-
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
@@ -274,6 +273,27 @@ func Test_CheckStruct_Recursively_SliceAttribute(t *testing.T) {
 		err := g.Validator().Assoc(data).Data(teacher).Run(ctx)
 		t.Assert(err, `Student Name is required`)
 	})
+
+	// https://github.com/gogf/gf/issues/1864
+	gtest.C(t, func(t *gtest.T) {
+		type Student struct {
+			Name string `v:"required"`
+			Age  int
+		}
+		type Teacher struct {
+			Name     string
+			Students []*Student
+		}
+		var (
+			teacher = Teacher{}
+			data    = g.Map{
+				"name":     "john",
+				"students": `[{"age":2},{"name":"jack", "age":4}]`,
+			}
+		)
+		err := g.Validator().Assoc(data).Data(teacher).Run(ctx)
+		t.Assert(err, `The Name field is required`)
+	})
 }
 
 func Test_CheckStruct_Recursively_SliceAttribute_WithTypeAlias(t *testing.T) {
@@ -319,5 +339,85 @@ func Test_CheckStruct_Recursively_MapAttribute(t *testing.T) {
 		)
 		err := g.Validator().Assoc(data).Data(teacher).Run(ctx)
 		t.Assert(err, `Student Name is required`)
+	})
+}
+
+// https://github.com/gogf/gf/issues/1983
+func Test_Issue1983(t *testing.T) {
+	// Error as the attribute Student in Teacher is a initialized struct, which has default value.
+	gtest.C(t, func(t *gtest.T) {
+		type Student struct {
+			Name string `v:"required"`
+			Age  int
+		}
+		type Teacher struct {
+			Students Student
+		}
+		var (
+			teacher = Teacher{}
+			data    = g.Map{
+				"students": nil,
+			}
+		)
+		err := g.Validator().Assoc(data).Data(teacher).Run(ctx)
+		t.Assert(err, `The Name field is required`)
+	})
+	// The same as upper, it is not affected by association values.
+	gtest.C(t, func(t *gtest.T) {
+		type Student struct {
+			Name string `v:"required"`
+			Age  int
+		}
+		type Teacher struct {
+			Students Student
+		}
+		var (
+			teacher = Teacher{}
+			data    = g.Map{
+				"name":     "john",
+				"students": nil,
+			}
+		)
+		err := g.Validator().Assoc(data).Data(teacher).Run(ctx)
+		t.Assert(err, `The Name field is required`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Student struct {
+			Name string `v:"required"`
+			Age  int
+		}
+		type Teacher struct {
+			Students *Student
+		}
+		var (
+			teacher = Teacher{}
+			data    = g.Map{
+				"students": nil,
+			}
+		)
+		err := g.Validator().Assoc(data).Data(teacher).Run(ctx)
+		t.AssertNil(err)
+	})
+}
+
+// https://github.com/gogf/gf/issues/1921
+func Test_Issue1921(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type SearchOption struct {
+			Size int `v:"max:100"`
+		}
+		type SearchReq struct {
+			Option *SearchOption `json:"option,omitempty"`
+		}
+
+		var (
+			req = SearchReq{
+				Option: &SearchOption{
+					Size: 10000,
+				},
+			}
+		)
+		err := g.Validator().Data(req).Run(ctx)
+		t.Assert(err, "The Size value `10000` must be equal or lesser than 100")
 	})
 }

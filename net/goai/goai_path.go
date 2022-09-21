@@ -7,12 +7,13 @@
 package goai
 
 import (
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/os/gstructs"
 	"reflect"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gmeta"
@@ -143,7 +144,27 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	}
 
 	// =================================================================================================================
-	// Request.
+	// Request Parameter.
+	// =================================================================================================================
+	structFields, _ := gstructs.Fields(gstructs.FieldsInput{
+		Pointer:         inputObject.Interface(),
+		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
+	})
+	for _, structField := range structFields {
+		if operation.Parameters == nil {
+			operation.Parameters = []ParameterRef{}
+		}
+		parameterRef, err := oai.newParameterRefWithStructMethod(structField, in.Path, in.Method)
+		if err != nil {
+			return err
+		}
+		if parameterRef != nil {
+			operation.Parameters = append(operation.Parameters, *parameterRef)
+		}
+	}
+
+	// =================================================================================================================
+	// Request Body.
 	// =================================================================================================================
 	if operation.RequestBody == nil {
 		operation.RequestBody = &RequestBodyRef{}
@@ -182,23 +203,6 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		}
 		operation.RequestBody = &RequestBodyRef{
 			Value: &requestBody,
-		}
-	}
-	// It also sets request parameters.
-	structFields, _ := gstructs.Fields(gstructs.FieldsInput{
-		Pointer:         inputObject.Interface(),
-		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
-	})
-	for _, structField := range structFields {
-		if operation.Parameters == nil {
-			operation.Parameters = []ParameterRef{}
-		}
-		parameterRef, err := oai.newParameterRefWithStructMethod(structField, in.Path, in.Method)
-		if err != nil {
-			return err
-		}
-		if parameterRef != nil {
-			operation.Parameters = append(operation.Parameters, *parameterRef)
 		}
 	}
 
@@ -247,6 +251,9 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		operation.Responses[responseOkKey] = ResponseRef{Value: &response}
 	}
 
+	// Remove operation body duplicated properties.
+	oai.removeOperationDuplicatedProperties(operation)
+
 	// Assign to certain operation attribute.
 	switch gstr.ToUpper(in.Method) {
 	case HttpMethodGet:
@@ -285,6 +292,62 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	}
 	oai.Paths[in.Path] = path
 	return nil
+}
+
+func (oai *OpenApiV3) removeOperationDuplicatedProperties(operation Operation) {
+	var (
+		duplicatedParameterNames []interface{}
+		dataField                string
+	)
+
+	for _, parameter := range operation.Parameters {
+		duplicatedParameterNames = append(duplicatedParameterNames, parameter.Value.Name)
+	}
+
+	// Check operation request body have common request data field.
+	dataFields := gstr.Split(oai.Config.CommonRequestDataField, ".")
+	if len(dataFields) > 0 && dataFields[0] != "" {
+		dataField = dataFields[0]
+	}
+
+	for _, requestBodyContent := range operation.RequestBody.Value.Content {
+
+		// Check request body schema
+		if requestBodyContent.Schema == nil {
+			continue
+		}
+
+		// Check request body schema ref.
+		if schema := oai.Components.Schemas.Get(requestBodyContent.Schema.Ref); schema != nil {
+			schema.Value.Required = oai.removeItemsFromArray(schema.Value.Required, duplicatedParameterNames)
+			schema.Value.Properties.Removes(duplicatedParameterNames)
+			continue
+		}
+
+		// Check the Value public field for the request body.
+		if commonRequest := requestBodyContent.Schema.Value.Properties.Get(dataField); commonRequest != nil {
+			commonRequest.Value.Required = oai.removeItemsFromArray(commonRequest.Value.Required, duplicatedParameterNames)
+			commonRequest.Value.Properties.Removes(duplicatedParameterNames)
+			continue
+		}
+
+		// Check request body schema value.
+		if requestBodyContent.Schema.Value != nil {
+			requestBodyContent.Schema.Value.Required = oai.removeItemsFromArray(requestBodyContent.Schema.Value.Required, duplicatedParameterNames)
+			requestBodyContent.Schema.Value.Properties.Removes(duplicatedParameterNames)
+			continue
+		}
+	}
+}
+
+func (oai *OpenApiV3) removeItemsFromArray(array []string, items []interface{}) []string {
+	arr := garray.NewStrArrayFrom(array)
+	for _, item := range items {
+		if value, ok := item.(string); ok {
+			arr.RemoveValue(value)
+		}
+	}
+	return arr.Slice()
 }
 
 func (oai *OpenApiV3) doesStructHasNoFields(s interface{}) bool {

@@ -56,6 +56,9 @@ type Event struct {
 // Op is the bits union for file operations.
 type Op uint32
 
+// internalPanic is the custom panic for internal usage.
+type internalPanic string
+
 const (
 	CREATE Op = 1 << iota
 	WRITE
@@ -65,8 +68,8 @@ const (
 )
 
 const (
-	repeatEventFilterDuration = time.Millisecond // Duration for repeated event filter.
-	callbackExitEventPanicStr = "exit"           // Custom exit event for internal usage.
+	repeatEventFilterDuration               = time.Millisecond // Duration for repeated event filter.
+	callbackExitEventPanicStr internalPanic = "exit"           // Custom exit event for internal usage.
 )
 
 var (
