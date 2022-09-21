@@ -292,6 +292,8 @@ const (
 	ctxTimeoutTypeExec      = iota
 	ctxTimeoutTypeQuery
 	ctxTimeoutTypePrepare
+	cachePrefixTableFields             = `TableFields:`
+	cachePrefixSelectCache             = `SelectCache:`
 	commandEnvKeyForDryRun             = "gf.gdb.dryrun"
 	modelForDaoSuffix                  = `ForDao`
 	dbRoleSlave                        = `slave`
@@ -361,6 +363,9 @@ var (
 	// allDryRun sets dry-run feature for all database connections.
 	// It is commonly used for command options for convenience.
 	allDryRun = false
+
+	// tableFieldsMap caches the table information retrieved from database.
+	tableFieldsMap = gmap.NewStrAnyMap(true)
 
 	// [username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
 	linkPatternWithType    = `(\w+):([\w\-]+):(.+?)@(.+?)\((.+?):(\d+)\)/{0,1}([\w\-]*)\?{0,1}(.*)`

@@ -21,7 +21,6 @@ import (
 
 	gora "github.com/sijms/go-ora/v2"
 
-	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -34,11 +33,6 @@ import (
 type Driver struct {
 	*gdb.Core
 }
-
-var (
-	// tableFieldsMap caches the table information retrieved from database.
-	tableFieldsMap = gmap.New(true)
-)
 
 func init() {
 	if err := gdb.Register(`oracle`, New()); err != nil {
@@ -246,13 +240,11 @@ func (d *Driver) TableFields(
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	}
-	v := tableFieldsMap.GetOrSetFuncLock(
-		fmt.Sprintf(`oracle_table_fields_%s_%s@group:%s`, table, useSchema, d.GetGroup()),
-		func() interface{} {
-			var (
-				result       gdb.Result
-				link         gdb.Link
-				structureSql = fmt.Sprintf(`
+
+	var (
+		result       gdb.Result
+		link         gdb.Link
+		structureSql = fmt.Sprintf(`
 SELECT 
 	COLUMN_NAME AS FIELD, 
 	CASE DATA_TYPE  
@@ -260,38 +252,32 @@ SELECT
 	WHEN 'FLOAT' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
 	ELSE DATA_TYPE||'('||DATA_LENGTH||')' END AS TYPE,NULLABLE  
 FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`,
-					strings.ToUpper(table),
-				)
-			)
-			if link, err = d.SlaveLink(useSchema); err != nil {
-				return nil
-			}
-			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
-			result, err = d.DoSelect(ctx, link, structureSql)
-			if err != nil {
-				return nil
-			}
-			fields = make(map[string]*gdb.TableField)
-			for i, m := range result {
-				isNull := false
-				if m["NULLABLE"].String() == "Y" {
-					isNull = true
-				}
-
-				fields[m["FIELD"].String()] = &gdb.TableField{
-					Index: i,
-					Name:  m["FIELD"].String(),
-					Type:  m["TYPE"].String(),
-					Null:  isNull,
-				}
-			}
-			return fields
-		},
+			strings.ToUpper(table),
+		)
 	)
-	if v != nil {
-		fields = v.(map[string]*gdb.TableField)
+	if link, err = d.SlaveLink(useSchema); err != nil {
+		return nil, err
 	}
-	return
+	structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
+	result, err = d.DoSelect(ctx, link, structureSql)
+	if err != nil {
+		return nil, err
+	}
+	fields = make(map[string]*gdb.TableField)
+	for i, m := range result {
+		isNull := false
+		if m["NULLABLE"].String() == "Y" {
+			isNull = true
+		}
+
+		fields[m["FIELD"].String()] = &gdb.TableField{
+			Index: i,
+			Name:  m["FIELD"].String(),
+			Type:  m["TYPE"].String(),
+			Null:  isNull,
+		}
+	}
+	return fields, nil
 }
 
 // DoInsert inserts or updates data for given table.
