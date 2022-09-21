@@ -18,7 +18,9 @@ import (
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
-	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -27,7 +29,6 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/google/uuid"
 )
 
 // Driver is the driver for postgresql database.
@@ -36,9 +37,6 @@ type Driver struct {
 }
 
 var (
-	// tableFieldsMap caches the table information retrieved from database.
-	tableFieldsMap = gmap.New(true)
-
 	errUnsupportedInsertIgnore = errors.New("unsupported method:InsertIgnore")
 	errUnsupportedInsertGetId  = errors.New("unsupported method:InsertGetId")
 	errUnsupportedReplace      = errors.New("unsupported method:Replace")
@@ -77,7 +75,7 @@ func (d *Driver) New(core *gdb.Core, node gdb.ConfigNode) (gdb.DB, error) {
 
 // Open creates and returns an underlying sql.DB object for clickhouse.
 func (d *Driver) Open(config gdb.ConfigNode) (*sql.DB, error) {
-	var source string
+	source := config.Link
 	// clickhouse://username:password@host1:9000,host2:9000/database?dial_timeout=200ms&max_execution_time=60
 	if config.Link != "" {
 		// ============================================================================
@@ -151,56 +149,47 @@ func (d *Driver) TableFields(
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	}
-	v := tableFieldsMap.GetOrSetFuncLock(
-		fmt.Sprintf(`clickhouse_table_fields_%s_%s@group:%s`, table, useSchema, d.GetGroup()),
-		func() interface{} {
-			var (
-				result gdb.Result
-				link   gdb.Link
-			)
-			if link, err = d.SlaveLink(useSchema); err != nil {
-				return nil
-			}
-			var (
-				columns       = "name,position,default_expression,comment,type,is_in_partition_key,is_in_sorting_key,is_in_primary_key,is_in_sampling_key"
-				getColumnsSql = fmt.Sprintf(
-					"select %s from `system`.columns c where `table` = '%s'",
-					columns, table,
-				)
-			)
-			result, err = d.DoSelect(ctx, link, getColumnsSql)
-			if err != nil {
-				return nil
-			}
-			fields = make(map[string]*gdb.TableField)
-			for _, m := range result {
-				var (
-					isNull    = false
-					fieldType = m["type"].String()
-				)
-				// in clickhouse , filed type like is Nullable(int)
-				fieldsResult, _ := gregex.MatchString(`^Nullable\((.*?)\)`, fieldType)
-				if len(fieldsResult) == 2 {
-					isNull = true
-					fieldType = fieldsResult[1]
-				}
-				fields[m["name"].String()] = &gdb.TableField{
-					Index:   m["position"].Int(),
-					Name:    m["name"].String(),
-					Default: m["default_expression"].Val(),
-					Comment: m["comment"].String(),
-					//Key:     m["Key"].String(),
-					Type: fieldType,
-					Null: isNull,
-				}
-			}
-			return fields
-		},
+	var (
+		result gdb.Result
+		link   gdb.Link
 	)
-	if v != nil {
-		fields = v.(map[string]*gdb.TableField)
+	if link, err = d.SlaveLink(useSchema); err != nil {
+		return nil, err
 	}
-	return
+	var (
+		columns       = "name,position,default_expression,comment,type,is_in_partition_key,is_in_sorting_key,is_in_primary_key,is_in_sampling_key"
+		getColumnsSql = fmt.Sprintf(
+			"select %s from `system`.columns c where `table` = '%s'",
+			columns, table,
+		)
+	)
+	result, err = d.DoSelect(ctx, link, getColumnsSql)
+	if err != nil {
+		return nil, err
+	}
+	fields = make(map[string]*gdb.TableField)
+	for _, m := range result {
+		var (
+			isNull    = false
+			fieldType = m["type"].String()
+		)
+		// in clickhouse , filed type like is Nullable(int)
+		fieldsResult, _ := gregex.MatchString(`^Nullable\((.*?)\)`, fieldType)
+		if len(fieldsResult) == 2 {
+			isNull = true
+			fieldType = fieldsResult[1]
+		}
+		fields[m["name"].String()] = &gdb.TableField{
+			Index:   m["position"].Int(),
+			Name:    m["name"].String(),
+			Default: m["default_expression"].Val(),
+			Comment: m["comment"].String(),
+			// Key:     m["Key"].String(),
+			Type: fieldType,
+			Null: isNull,
+		}
+	}
+	return fields, nil
 }
 
 // FilteredLink retrieves and returns filtered `linkInfo` that can be using for
@@ -240,7 +229,7 @@ func (d *Driver) PingSlave() error {
 func (d *Driver) ping(conn *sql.DB) error {
 	err := conn.Ping()
 	if exception, ok := err.(*clickhouse.Exception); ok {
-		return errors.New(fmt.Sprintf("[%d]%s", exception.Code, exception.Message))
+		return fmt.Errorf("[%d]%s", exception.Code, exception.Message)
 	}
 	return err
 }
@@ -400,6 +389,15 @@ func (d *Driver) ConvertDataForRecord(ctx context.Context, value interface{}) (m
 			// which will insert/update the value to database as "null".
 			if itemValue == nil || itemValue.IsZero() {
 				m[k] = nil
+			}
+
+		case decimal.Decimal:
+			m[k] = itemValue
+
+		case *decimal.Decimal:
+			m[k] = nil
+			if itemValue != nil {
+				m[k] = *itemValue
 			}
 
 		default:

@@ -17,7 +17,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gogf/gf/v2/container/gmap"
+	_ "github.com/lib/pq"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -25,18 +26,12 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
-	_ "github.com/lib/pq"
 )
 
 // Driver is the driver for postgresql database.
 type Driver struct {
 	*gdb.Core
 }
-
-var (
-	// tableFieldsMap caches the table information retrieved from database.
-	tableFieldsMap = gmap.New(true)
-)
 
 const (
 	internalPrimaryKeyInCtx gctx.StrKey = "primary_key"
@@ -297,13 +292,11 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	}
-	v := tableFieldsMap.GetOrSetFuncLock(
-		fmt.Sprintf(`pgsql_table_fields_%s_%s@group:%s`, table, useSchema, d.GetGroup()),
-		func() interface{} {
-			var (
-				result       gdb.Result
-				link         gdb.Link
-				structureSql = fmt.Sprintf(`
+
+	var (
+		result       gdb.Result
+		link         gdb.Link
+		structureSql = fmt.Sprintf(`
 SELECT a.attname AS field, t.typname AS type,a.attnotnull as null,
     (case when d.contype is not null then 'pri' else '' end)  as key
       ,ic.column_default as default_value,b.description as comment
@@ -317,36 +310,30 @@ FROM pg_attribute a
          left join information_schema.columns ic on ic.column_name = a.attname and ic.table_name = c.relname
 WHERE c.relname = '%s' and a.attisdropped is false and a.attnum > 0
 ORDER BY a.attnum`,
-					table,
-				)
-			)
-			if link, err = d.SlaveLink(useSchema); err != nil {
-				return nil
-			}
-			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
-			result, err = d.DoSelect(ctx, link, structureSql)
-			if err != nil {
-				return nil
-			}
-			fields = make(map[string]*gdb.TableField)
-			for i, m := range result {
-				fields[m["field"].String()] = &gdb.TableField{
-					Index:   i,
-					Name:    m["field"].String(),
-					Type:    m["type"].String(),
-					Null:    !m["null"].Bool(),
-					Key:     m["key"].String(),
-					Default: m["default_value"].Val(),
-					Comment: m["comment"].String(),
-				}
-			}
-			return fields
-		},
+			table,
+		)
 	)
-	if v != nil {
-		fields = v.(map[string]*gdb.TableField)
+	if link, err = d.SlaveLink(useSchema); err != nil {
+		return nil, err
 	}
-	return
+	structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
+	result, err = d.DoSelect(ctx, link, structureSql)
+	if err != nil {
+		return nil, err
+	}
+	fields = make(map[string]*gdb.TableField)
+	for i, m := range result {
+		fields[m["field"].String()] = &gdb.TableField{
+			Index:   i,
+			Name:    m["field"].String(),
+			Type:    m["type"].String(),
+			Null:    !m["null"].Bool(),
+			Key:     m["key"].String(),
+			Default: m["default_value"].Val(),
+			Comment: m["comment"].String(),
+		}
+	}
+	return fields, nil
 }
 
 // DoInsert is not supported in pgsql.

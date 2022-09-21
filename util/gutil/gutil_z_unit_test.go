@@ -8,9 +8,10 @@ package gutil_test
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"reflect"
 	"testing"
+
+	"github.com/gogf/gf/v2/errors/gerror"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -194,5 +195,21 @@ func TestListToMapByKey(t *testing.T) {
 			{"key3": 3, "key4": 4},
 		}
 		t.Assert(gutil.ListToMapByKey(listMap, "key1"), "{\"1\":{\"key1\":1,\"key2\":2}}")
+	})
+}
+
+func Test_GetOrDefaultStr(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gutil.GetOrDefaultStr("a", "b"), "b")
+		t.Assert(gutil.GetOrDefaultStr("a", "b", "c"), "b")
+		t.Assert(gutil.GetOrDefaultStr("a"), "a")
+	})
+}
+
+func Test_GetOrDefaultAny(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gutil.GetOrDefaultAny("a", "b"), "b")
+		t.Assert(gutil.GetOrDefaultAny("a", "b", "c"), "b")
+		t.Assert(gutil.GetOrDefaultAny("a"), "a")
 	})
 }

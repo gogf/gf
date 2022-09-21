@@ -18,10 +18,9 @@ import (
 	"strings"
 
 	_ "github.com/glebarez/go-sqlite"
-	"github.com/gogf/gf/v2/encoding/gurl"
 
-	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/encoding/gurl"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -35,9 +34,7 @@ type Driver struct {
 }
 
 var (
-	// tableFieldsMap caches the table information retrieved from database.
-	tableFieldsMap = gmap.New(true)
-	ErrorSave      = gerror.NewCode(gcode.CodeNotSupported, `Save operation is not supported by sqlite driver`)
+	ErrorSave = gerror.NewCode(gcode.CodeNotSupported, `Save operation is not supported by sqlite driver`)
 )
 
 func init() {
@@ -160,42 +157,33 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	}
-	v := tableFieldsMap.GetOrSetFuncLock(
-		fmt.Sprintf(`sqlite_table_fields_%s_%s@group:%s`, table, useSchema, d.GetGroup()),
-		func() interface{} {
-			var (
-				result gdb.Result
-				link   gdb.Link
-			)
-			if link, err = d.SlaveLink(useSchema); err != nil {
-				return nil
-			}
-			result, err = d.DoSelect(ctx, link, fmt.Sprintf(`PRAGMA TABLE_INFO(%s)`, table))
-			if err != nil {
-				return nil
-			}
-			fields = make(map[string]*gdb.TableField)
-			for i, m := range result {
-				mKey := ""
-				if m["pk"].Bool() {
-					mKey = "pri"
-				}
-				fields[strings.ToLower(m["name"].String())] = &gdb.TableField{
-					Index:   i,
-					Name:    strings.ToLower(m["name"].String()),
-					Type:    strings.ToLower(m["type"].String()),
-					Key:     mKey,
-					Default: m["dflt_value"].Val(),
-					Null:    !m["notnull"].Bool(),
-				}
-			}
-			return fields
-		},
+	var (
+		result gdb.Result
+		link   gdb.Link
 	)
-	if v != nil {
-		fields = v.(map[string]*gdb.TableField)
+	if link, err = d.SlaveLink(useSchema); err != nil {
+		return nil, err
 	}
-	return
+	result, err = d.DoSelect(ctx, link, fmt.Sprintf(`PRAGMA TABLE_INFO(%s)`, table))
+	if err != nil {
+		return nil, err
+	}
+	fields = make(map[string]*gdb.TableField)
+	for i, m := range result {
+		mKey := ""
+		if m["pk"].Bool() {
+			mKey = "pri"
+		}
+		fields[strings.ToLower(m["name"].String())] = &gdb.TableField{
+			Index:   i,
+			Name:    strings.ToLower(m["name"].String()),
+			Type:    strings.ToLower(m["type"].String()),
+			Key:     mKey,
+			Default: m["dflt_value"].Val(),
+			Null:    !m["notnull"].Bool(),
+		}
+	}
+	return fields, nil
 }
 
 // DoInsert is not supported in sqlite.
