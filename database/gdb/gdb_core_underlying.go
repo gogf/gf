@@ -10,7 +10,7 @@ package gdb
 import (
 	"context"
 	"database/sql"
-	
+
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 
