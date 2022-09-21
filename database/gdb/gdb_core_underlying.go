@@ -11,9 +11,6 @@ import (
 	"context"
 	"database/sql"
 
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/trace"
-
 	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -21,6 +18,8 @@ import (
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/util/guid"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Query commits one query SQL to underlying driver and returns the execution result.
@@ -57,6 +56,17 @@ func (c *Core) DoQuery(ctx context.Context, link Link, sql string, args ...inter
 	sql, args, err = c.db.DoFilter(ctx, link, sql, args)
 	if err != nil {
 		return nil, err
+	}
+	// SQL format and retrieve.
+	if v := ctx.Value(ctxKeyCatchSQL); v != nil {
+		var (
+			manager      = v.(*CatchSQLManager)
+			formattedSql = FormatSqlWithArgs(sql, args)
+		)
+		manager.SQLArray.Append(formattedSql)
+		if !manager.DoCommit && ctx.Value(ctxKeyInternalProducedSQL) == nil {
+			return nil, nil
+		}
 	}
 	// Link execution.
 	var out DoCommitOutput
@@ -102,11 +112,22 @@ func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interf
 		defer cancelFunc()
 	}
 
-	// Sql filtering.
+	// SQL filtering.
 	sql, args = formatSql(sql, args)
 	sql, args, err = c.db.DoFilter(ctx, link, sql, args)
 	if err != nil {
 		return nil, err
+	}
+	// SQL format and retrieve.
+	if v := ctx.Value(ctxKeyCatchSQL); v != nil {
+		var (
+			manager      = v.(*CatchSQLManager)
+			formattedSql = FormatSqlWithArgs(sql, args)
+		)
+		manager.SQLArray.Append(formattedSql)
+		if !manager.DoCommit && ctx.Value(ctxKeyInternalProducedSQL) == nil {
+			return new(SqlResult), nil
+		}
 	}
 	// Link execution.
 	var out DoCommitOutput

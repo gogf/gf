@@ -12,6 +12,7 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/container/gvar"
@@ -171,8 +172,8 @@ type DB interface {
 	GetCtx() context.Context                                                                                 // See Core.GetCtx.
 	GetCore() *Core                                                                                          // See Core.GetCore
 	GetChars() (charLeft string, charRight string)                                                           // See Core.GetChars.
-	Tables(ctx context.Context, schema ...string) (tables []string, err error)                               // See Core.Tables.
-	TableFields(ctx context.Context, table string, schema ...string) (map[string]*TableField, error)         // See Core.TableFields.
+	Tables(ctx context.Context, schema ...string) (tables []string, err error)                               // See Core.Tables. The driver must implement this function.
+	TableFields(ctx context.Context, table string, schema ...string) (map[string]*TableField, error)         // See Core.TableFields. The driver must implement this function.
 	ConvertDataForRecord(ctx context.Context, data interface{}) (map[string]interface{}, error)              // See Core.ConvertDataForRecord
 	ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) // See Core.ConvertValueForLocal
 	CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (string, error)    // See Core.CheckLocalTypeForField
@@ -278,6 +279,11 @@ type (
 	List   = []Map                  // List is type of map array.
 )
 
+type CatchSQLManager struct {
+	SQLArray *garray.StrArray
+	DoCommit bool
+}
+
 const (
 	defaultModelSafe        = false
 	defaultCharset          = `utf8`
@@ -292,12 +298,14 @@ const (
 	ctxTimeoutTypeExec      = iota
 	ctxTimeoutTypeQuery
 	ctxTimeoutTypePrepare
-	cachePrefixTableFields             = `TableFields:`
-	cachePrefixSelectCache             = `SelectCache:`
-	commandEnvKeyForDryRun             = "gf.gdb.dryrun"
-	modelForDaoSuffix                  = `ForDao`
-	dbRoleSlave                        = `slave`
-	contextKeyForDB        gctx.StrKey = `DBInContext`
+	cachePrefixTableFields                = `TableFields:`
+	cachePrefixSelectCache                = `SelectCache:`
+	commandEnvKeyForDryRun                = "gf.gdb.dryrun"
+	modelForDaoSuffix                     = `ForDao`
+	dbRoleSlave                           = `slave`
+	ctxKeyForDB               gctx.StrKey = `CtxKeyForDB`
+	ctxKeyCatchSQL            gctx.StrKey = `CtxKeyCatchSQL`
+	ctxKeyInternalProducedSQL gctx.StrKey = `CtxKeyInternalProducedSQL`
 )
 
 const (
