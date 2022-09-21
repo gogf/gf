@@ -28,6 +28,7 @@ type Validator struct {
 	ruleFuncMap                       map[string]RuleFunc // ruleFuncMap stores custom rule functions for current Validator.
 	useAssocInsteadOfObjectAttributes bool                // Using `assoc` as its validation source instead of attribute values from `Object`.
 	bail                              bool                // Stop validation after the first validation error.
+	foreach                           bool                // It tells the next validation using current value as an array and validates each of its element.
 	caseInsensitive                   bool                // Case-Insensitive configuration for those rules that need value comparison.
 }
 
@@ -104,6 +105,14 @@ func (v *Validator) I18n(i18nManager *gi18n.Manager) *Validator {
 func (v *Validator) Bail() *Validator {
 	newValidator := v.Clone()
 	newValidator.bail = true
+	return newValidator
+}
+
+// Foreach tells the next validation using current value as an array and validates each of its element.
+// Note that this decorating rule takes effect just once for next validation rule, specially for single value validation.
+func (v *Validator) Foreach() *Validator {
+	newValidator := v.Clone()
+	newValidator.foreach = true
 	return newValidator
 }
 

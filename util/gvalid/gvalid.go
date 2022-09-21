@@ -45,6 +45,7 @@ const (
 	noValidationTagName       = "nv"                  // no validation tag name for struct attribute.
 	ruleNameRegex             = "regex"               // the name for rule "regex"
 	ruleNameNotRegex          = "not-regex"           // the name for rule "not-regex"
+	ruleNameForeach           = "foreach"             // the name for rule "foreach"
 	ruleNameBail              = "bail"                // the name for rule "bail"
 	ruleNameCi                = "ci"                  // the name for rule "ci"
 	emptyJsonArrayStr         = "[]"                  // Empty json string for array type.
@@ -75,8 +76,9 @@ var (
 	// decorativeRuleMap defines all rules that are just marked rules which have neither functional meaning
 	// nor error messages.
 	decorativeRuleMap = map[string]bool{
-		ruleNameBail: true,
-		ruleNameCi:   true,
+		ruleNameForeach: true,
+		ruleNameBail:    true,
+		ruleNameCi:      true,
 	}
 )
 
