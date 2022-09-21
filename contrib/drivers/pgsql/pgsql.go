@@ -17,6 +17,8 @@ import (
 	"fmt"
 	"strings"
 
+	_ "github.com/lib/pq"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -24,7 +26,6 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
-	_ "github.com/lib/pq"
 )
 
 // Driver is the driver for postgresql database.

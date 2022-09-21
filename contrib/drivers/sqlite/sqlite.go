@@ -18,9 +18,9 @@ import (
 	"strings"
 
 	_ "github.com/glebarez/go-sqlite"
-	"github.com/gogf/gf/v2/encoding/gurl"
 
 	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/encoding/gurl"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gfile"

@@ -13,13 +13,13 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
-	"github.com/shopspring/decimal"
 	"net/url"
 	"strings"
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -184,7 +184,7 @@ func (d *Driver) TableFields(
 			Name:    m["name"].String(),
 			Default: m["default_expression"].Val(),
 			Comment: m["comment"].String(),
-			//Key:     m["Key"].String(),
+			// Key:     m["Key"].String(),
 			Type: fieldType,
 			Null: isNull,
 		}
@@ -229,7 +229,7 @@ func (d *Driver) PingSlave() error {
 func (d *Driver) ping(conn *sql.DB) error {
 	err := conn.Ping()
 	if exception, ok := err.(*clickhouse.Exception); ok {
-		return errors.New(fmt.Sprintf("[%d]%s", exception.Code, exception.Message))
+		return fmt.Errorf("[%d]%s", exception.Code, exception.Message)
 	}
 	return err
 }
