@@ -681,7 +681,7 @@ func (c *Core) HasTable(name string) (bool, error) {
 		cacheKey = fmt.Sprintf(`HasTable: %s`, name)
 	)
 	result, err := c.GetCache().GetOrSetFuncLock(ctx, cacheKey, func(ctx context.Context) (interface{}, error) {
-		tableList, err := c.db.Tables(ctx)
+		tableList, err := c.Tables(ctx)
 		if err != nil {
 			return false, err
 		}

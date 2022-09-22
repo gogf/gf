@@ -20,31 +20,6 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-// WithDB injects given db object into context and returns a new context.
-func WithDB(ctx context.Context, db DB) context.Context {
-	if db == nil {
-		return ctx
-	}
-	dbCtx := db.GetCtx()
-	if ctxDb := DBFromCtx(dbCtx); ctxDb != nil {
-		return dbCtx
-	}
-	ctx = context.WithValue(ctx, contextKeyForDB, db)
-	return ctx
-}
-
-// DBFromCtx retrieves and returns DB object from context.
-func DBFromCtx(ctx context.Context) DB {
-	if ctx == nil {
-		return nil
-	}
-	v := ctx.Value(contextKeyForDB)
-	if v != nil {
-		return v.(DB)
-	}
-	return nil
-}
-
 // GetLink creates and returns the underlying database link object with transaction checks.
 // The parameter `master` specifies whether using the master node if master-slave configured.
 func (c *Core) GetLink(ctx context.Context, master bool, schema string) (Link, error) {
@@ -140,7 +115,8 @@ func (c *Core) GetChars() (charLeft string, charRight string) {
 // Tables retrieves and returns the tables of current schema.
 // It's mainly used in cli tool chain for automatically generating the models.
 func (c *Core) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
-	return
+	ctx = context.WithValue(ctx, ctxKeyInternalProducedSQL, struct{}{})
+	return c.db.Tables(ctx, schema...)
 }
 
 // TableFields retrieves and returns the fields' information of specified table of current
@@ -165,6 +141,7 @@ func (c *Core) TableFields(ctx context.Context, table string, schema ...string) 
 			table,
 		)
 		value = tableFieldsMap.GetOrSetFuncLock(cacheKey, func() interface{} {
+			ctx = context.WithValue(ctx, ctxKeyInternalProducedSQL, struct{}{})
 			fields, err = c.db.TableFields(ctx, table, schema...)
 			if err != nil {
 				return nil
