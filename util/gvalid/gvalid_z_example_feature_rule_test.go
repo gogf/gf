@@ -1367,3 +1367,23 @@ func Example_Rule_LTE() {
 	// Output:
 	// The Value3 value `2` must be lesser than or equal to field Value1 value `1`
 }
+
+func Example_Rule_Foreach() {
+	type BizReq struct {
+		Value1 []int `v:"foreach|in:1,2,3"`
+		Value2 []int `v:"foreach|in:1,2,3"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Value1: []int{1, 2, 3},
+			Value2: []int{3, 4, 5},
+		}
+	)
+	if err := g.Validator().Bail().Data(req).Run(ctx); err != nil {
+		fmt.Println(err.String())
+	}
+
+	// Output:
+	// The Value2 value `4` is not in acceptable range: 1,2,3
+}

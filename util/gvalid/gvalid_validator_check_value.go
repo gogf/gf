@@ -97,6 +97,7 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 	}
 	var (
 		hasBailRule        = v.bail
+		hasForeachRule     = v.foreach
 		hasCaseInsensitive = v.caseInsensitive
 	)
 	for index := 0; index < len(ruleItems); {
@@ -109,6 +110,9 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 
 		if !hasBailRule && ruleKey == ruleNameBail {
 			hasBailRule = true
+		}
+		if !hasForeachRule && ruleKey == ruleNameForeach {
+			hasForeachRule = true
 		}
 		if !hasCaseInsensitive && ruleKey == ruleNameCi {
 			hasCaseInsensitive = true
@@ -128,73 +132,83 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 			message        = v.getErrorMessageByRule(ctx, ruleKey, customMsgMap)
 			customRuleFunc = v.getCustomRuleFunc(ruleKey)
 			builtinRule    = builtin.GetRule(ruleKey)
+			foreachValues  = []interface{}{in.Value}
 		)
-
-		switch {
-		// Custom validation rules.
-		case customRuleFunc != nil:
-			if err = customRuleFunc(ctx, RuleFuncInput{
-				Rule:    ruleItems[index],
-				Message: message,
-				Value:   gvar.New(in.Value),
-				Data:    gvar.New(in.DataRaw),
-			}); err != nil {
-				// The error should have stack info to indicate the error position.
-				if !gerror.HasStack(err) {
-					err = gerror.NewCodeSkip(gcode.CodeValidationFailed, 1, err.Error())
-				}
-			}
-
-		// Builtin validation rules.
-		case customRuleFunc == nil && builtinRule != nil:
-			err = builtinRule.Run(builtin.RunInput{
-				RuleKey:     ruleKey,
-				RulePattern: rulePattern,
-				Field:       in.Name,
-				Value:       gvar.New(in.Value),
-				Data:        gvar.New(in.DataRaw),
-				Message:     message,
-				Option: builtin.RunOption{
-					CaseInsensitive: hasCaseInsensitive,
-				},
-			})
-
-		default:
-			// It never comes across here.
+		if hasForeachRule {
+			// As it marks `foreach`, so it converts the value to slice.
+			foreachValues = gconv.Interfaces(in.Value)
+			// Reset `foreach` rule as it only takes effect just once for next rule.
+			hasForeachRule = false
 		}
 
-		// Error handling.
-		if err != nil {
-			// The error should have error code that is `gcode.CodeValidationFailed`.
-			if gerror.Code(err) == gcode.CodeNil {
-				if e, ok := err.(*gerror.Error); ok {
-					e.SetCode(gcode.CodeValidationFailed)
+		for _, value := range foreachValues {
+			switch {
+			// Custom validation rules.
+			case customRuleFunc != nil:
+				if err = customRuleFunc(ctx, RuleFuncInput{
+					Rule:    ruleItems[index],
+					Message: message,
+					Value:   gvar.New(value),
+					Data:    gvar.New(in.DataRaw),
+				}); err != nil {
+					// The error should have stack info to indicate the error position.
+					if !gerror.HasStack(err) {
+						err = gerror.NewCodeSkip(gcode.CodeValidationFailed, 1, err.Error())
+					}
 				}
-			}
 
-			// Error variable replacement for error message.
-			if !gerror.HasStack(err) {
-				var s string
-				s = gstr.ReplaceByMap(err.Error(), map[string]string{
-					"{field}":     in.Name,                // Field name of the `value`.
-					"{value}":     gconv.String(in.Value), // Current validating value.
-					"{pattern}":   rulePattern,            // The variable part of the rule.
-					"{attribute}": in.Name,                // The same as `{field}`. It is deprecated.
+			// Builtin validation rules.
+			case customRuleFunc == nil && builtinRule != nil:
+				err = builtinRule.Run(builtin.RunInput{
+					RuleKey:     ruleKey,
+					RulePattern: rulePattern,
+					Field:       in.Name,
+					Value:       gvar.New(value),
+					Data:        gvar.New(in.DataRaw),
+					Message:     message,
+					Option: builtin.RunOption{
+						CaseInsensitive: hasCaseInsensitive,
+					},
 				})
-				s, _ = gregex.ReplaceString(`\s{2,}`, ` `, s)
-				err = errors.New(s)
-			}
-			ruleErrorMap[ruleKey] = err
 
-			// If it is with error and there's bail rule,
-			// it then does not continue validating for left rules.
-			if hasBailRule {
-				break
+			default:
+				// It never comes across here.
+			}
+
+			// Error handling.
+			if err != nil {
+				// The error should have error code that is `gcode.CodeValidationFailed`.
+				if gerror.Code(err) == gcode.CodeNil {
+					if e, ok := err.(*gerror.Error); ok {
+						e.SetCode(gcode.CodeValidationFailed)
+					}
+				}
+
+				// Error variable replacement for error message.
+				if !gerror.HasStack(err) {
+					var s string
+					s = gstr.ReplaceByMap(err.Error(), map[string]string{
+						"{field}":     in.Name,             // Field name of the `value`.
+						"{value}":     gconv.String(value), // Current validating value.
+						"{pattern}":   rulePattern,         // The variable part of the rule.
+						"{attribute}": in.Name,             // The same as `{field}`. It is deprecated.
+					})
+					s, _ = gregex.ReplaceString(`\s{2,}`, ` `, s)
+					err = errors.New(s)
+				}
+				ruleErrorMap[ruleKey] = err
+
+				// If it is with error and there's bail rule,
+				// it then does not continue validating for left rules.
+				if hasBailRule {
+					goto CheckDone
+				}
 			}
 		}
-
 		index++
 	}
+
+CheckDone:
 	if len(ruleErrorMap) > 0 {
 		return newValidationError(
 			gcode.CodeValidationFailed,
