@@ -17,7 +17,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gogf/gf/v2/util/gutil"
 	_ "github.com/lib/pq"
 
 	"github.com/gogf/gf/v2/database/gdb"
@@ -27,6 +26,7 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // Driver is the driver for postgresql database.
@@ -277,7 +277,7 @@ FROM pg_attribute a
          left join pg_class c on a.attrelid = c.oid
          left join pg_constraint d on d.conrelid = c.oid and a.attnum = d.conkey[1]
          left join pg_description b ON a.attrelid=b.objoid AND a.attnum = b.objsubid
-         left join  pg_type t ON  a.atttypid = t.oid
+         left join pg_type t ON a.atttypid = t.oid
          left join information_schema.columns ic on ic.column_name = a.attname and ic.table_name = c.relname
 WHERE c.relname = '%s' and a.attisdropped is false and a.attnum > 0
 ORDER BY a.attnum`,
@@ -304,6 +304,7 @@ ORDER BY a.attnum`,
 			Comment: m["comment"].String(),
 		}
 	}
+	gutil.Dump(fields)
 	return fields, nil
 }
 
@@ -367,8 +368,11 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 	} else {
 		isUseCoreDoExec = true
 	}
-
-	// check if it is a insert operation.
+	gutil.Dump(ctx.Value(internalPrimaryKeyInCtx))
+	gutil.Dump(sql)
+	gutil.Dump(pkField)
+	gutil.Dump(isUseCoreDoExec)
+	// check if it is an insert operation.
 	if !isUseCoreDoExec && pkField.Name != "" && strings.Contains(sql, "INSERT INTO") {
 		primaryKey = pkField.Name
 		sql += " RETURNING " + primaryKey
