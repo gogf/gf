@@ -329,7 +329,7 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 		)
 
 	case gdb.InsertOptionDefault:
-		tableFields, err := d.TableFields(ctx, table)
+		tableFields, err := d.Core.TableFields(ctx, table)
 		if err == nil {
 			for _, field := range tableFields {
 				if field.Key == "pri" {
@@ -368,10 +368,7 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 	} else {
 		isUseCoreDoExec = true
 	}
-	gutil.Dump(ctx.Value(internalPrimaryKeyInCtx))
-	gutil.Dump(sql)
-	gutil.Dump(pkField)
-	gutil.Dump(isUseCoreDoExec)
+
 	// check if it is an insert operation.
 	if !isUseCoreDoExec && pkField.Name != "" && strings.Contains(sql, "INSERT INTO") {
 		primaryKey = pkField.Name

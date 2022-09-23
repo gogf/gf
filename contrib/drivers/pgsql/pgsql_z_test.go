@@ -16,7 +16,6 @@ import (
 )
 
 func Test_LastInsertId(t *testing.T) {
-
 	// err not nil
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Model("notexist").Insert(g.List{

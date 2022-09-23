@@ -58,6 +58,7 @@ jobs:
           - 3306:3306
 
       # PostgreSQL backend server.
+      # docker run -d --name postgres -p 5432:5432 -e POSTGRES_PASSWORD=12345678 -e POSTGRES_USER=postgres -e POSTGRES_DB=test -v postgres:/Users/john/Temp/postgresql/data loads/postgres:13
       postgres:
         image: loads/postgres:13
         env:
