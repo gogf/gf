@@ -132,14 +132,14 @@ func (c *Core) Tables(ctx context.Context, schema ...string) (tables []string, e
 // It's using cache feature to enhance the performance, which is never expired util the
 // process restarts.
 func (c *Core) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {
-	charL, charR := c.db.GetChars()
-	table = gstr.Trim(table, charL+charR)
-	if gstr.Contains(table, " ") {
-		return nil, gerror.NewCode(
-			gcode.CodeInvalidParameter,
-			"function TableFields supports only single table operations",
-		)
-	}
+	//charL, charR := c.db.GetChars()
+	//table = gstr.Trim(table, charL+charR)
+	//if gstr.Contains(table, " ") {
+	//	return nil, gerror.NewCode(
+	//		gcode.CodeInvalidParameter,
+	//		"function TableFields supports only single table operations",
+	//	)
+	//}
 	var (
 		cacheKey = fmt.Sprintf(
 			`%s%s@%s#%s`,

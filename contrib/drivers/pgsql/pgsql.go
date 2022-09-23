@@ -304,7 +304,6 @@ ORDER BY a.attnum`,
 			Comment: m["comment"].String(),
 		}
 	}
-	gutil.Dump(fields)
 	return fields, nil
 }
 
@@ -336,6 +335,7 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 				if field.Key == "pri" {
 					pkField := *field
 					ctx = context.WithValue(ctx, internalPrimaryKeyInCtx, pkField)
+					break
 				}
 			}
 		}
