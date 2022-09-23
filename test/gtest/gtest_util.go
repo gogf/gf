@@ -289,7 +289,10 @@ func Error(message ...interface{}) {
 
 // Fatal prints `message` to stderr and exit the process.
 func Fatal(message ...interface{}) {
-	fmt.Fprintf(os.Stderr, "[FATAL] %s\n%s", fmt.Sprint(message...), gdebug.StackWithFilter([]string{pathFilterKey}))
+	_, _ = fmt.Fprintf(
+		os.Stderr, "[FATAL] %s\n%s", fmt.Sprint(message...),
+		gdebug.StackWithFilter([]string{pathFilterKey}),
+	)
 	os.Exit(1)
 }
 

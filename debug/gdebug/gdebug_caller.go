@@ -121,7 +121,11 @@ func filterFileByFilters(file string, filters []string) (filtered bool) {
 	}
 	// GOROOT filter.
 	if goRootForFilter != "" && len(file) >= len(goRootForFilter) && file[0:len(goRootForFilter)] == goRootForFilter {
-		return true
+		// https://github.com/gogf/gf/issues/2047
+		fileSeparator := file[len(goRootForFilter)]
+		if fileSeparator == filepath.Separator || fileSeparator == '\\' || fileSeparator == '/' {
+			return true
+		}
 	}
 	return false
 }

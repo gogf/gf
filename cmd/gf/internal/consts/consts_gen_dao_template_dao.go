@@ -57,7 +57,7 @@ type {TplTableNameCamelCase}Columns struct {
 	{TplColumnDefine}
 }
 
-//  {TplTableNameCamelLowerCase}Columns holds the columns for table {TplTableName}.
+// {TplTableNameCamelLowerCase}Columns holds the columns for table {TplTableName}.
 var {TplTableNameCamelLowerCase}Columns = {TplTableNameCamelCase}Columns{
 	{TplColumnNames}
 }

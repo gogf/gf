@@ -7,29 +7,32 @@ import (
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
-	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func generateEntity(ctx context.Context, db gdb.DB, tableNames, newTableNames []string, in CGenDaoInternalInput) {
-	var entityDirPath = gfile.Join(in.Path, in.EntityPath)
+func generateEntity(ctx context.Context, in CGenDaoInternalInput) {
+	var dirPathEntity = gfile.Join(in.Path, in.EntityPath)
+	if in.Clear {
+		doClear(ctx, dirPathEntity)
+	}
 	// Model content.
-	for i, tableName := range tableNames {
-		fieldMap, err := db.TableFields(ctx, tableName)
+	for i, tableName := range in.TableNames {
+		fieldMap, err := in.DB.TableFields(ctx, tableName)
 		if err != nil {
-			mlog.Fatalf("fetching tables fields failed for table '%s':\n%v", in.TableName, err)
+			mlog.Fatalf("fetching tables fields failed for table '%s':\n%v", tableName, err)
 		}
 		var (
-			newTableName   = newTableNames[i]
-			entityFilePath = gfile.Join(entityDirPath, gstr.CaseSnake(newTableName)+".go")
+			newTableName   = in.NewTableNames[i]
+			entityFilePath = gfile.Join(dirPathEntity, gstr.CaseSnake(newTableName)+".go")
 			entityContent  = generateEntityContent(
 				in,
 				newTableName,
 				gstr.CaseCamel(newTableName),
 				generateStructDefinition(ctx, generateStructDefinitionInput{
 					CGenDaoInternalInput: in,
+					TableName:            tableName,
 					StructName:           gstr.CaseCamel(newTableName),
 					FieldMap:             fieldMap,
 					IsDo:                 false,
@@ -48,7 +51,7 @@ func generateEntity(ctx context.Context, db gdb.DB, tableNames, newTableNames []
 
 func generateEntityContent(in CGenDaoInternalInput, tableName, tableNameCamelCase, structDefine string) string {
 	entityContent := gstr.ReplaceByMap(
-		getTemplateFromPathOrDefault(in.TplDaoEntitylPath, consts.TemplateGenDaoEntityContent),
+		getTemplateFromPathOrDefault(in.TplDaoEntityPath, consts.TemplateGenDaoEntityContent),
 		g.MapStrStr{
 			tplVarTableName:          tableName,
 			tplVarPackageImports:     getImportPartContent(structDefine, false),
