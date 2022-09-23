@@ -4,22 +4,24 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gredis
+// Package redis provides gredis.Adapter implements using go-redis.
+package redis
 
 import (
 	"context"
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/gogf/gf/v2/database/gredis"
 
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-// AdapterGoRedis is an implement of Adapter using go-redis.
-type AdapterGoRedis struct {
+// Redis is an implement of Adapter using go-redis.
+type Redis struct {
 	client redis.UniversalClient
-	config *Config
+	config *gredis.Config
 }
 
 const (
@@ -31,8 +33,14 @@ const (
 	defaultMaxRetries      = -1
 )
 
-// NewAdapterGoRedis creates and returns a redis adapter using go-redis.
-func NewAdapterGoRedis(config *Config) *AdapterGoRedis {
+func init() {
+	gredis.RegisterAdapterFunc(func(config *gredis.Config) gredis.Adapter {
+		return New(config)
+	})
+}
+
+// New creates and returns a redis adapter using go-redis.
+func New(config *gredis.Config) *Redis {
 	fillWithDefaultConfiguration(config)
 	opts := &redis.UniversalOptions{
 		Addrs:        gstr.SplitAndTrim(config.Address, ","),
@@ -62,7 +70,7 @@ func NewAdapterGoRedis(config *Config) *AdapterGoRedis {
 		client = redis.NewClient(opts.Simple())
 	}
 
-	return &AdapterGoRedis{
+	return &Redis{
 		client: client,
 		config: config,
 	}
@@ -70,7 +78,7 @@ func NewAdapterGoRedis(config *Config) *AdapterGoRedis {
 
 // Close closes the redis connection pool, which will release all connections reserved by this pool.
 // It is commonly not necessary to call Close manually.
-func (r *AdapterGoRedis) Close(ctx context.Context) (err error) {
+func (r *Redis) Close(ctx context.Context) (err error) {
 	if err = r.client.Close(); err != nil {
 		err = gerror.Wrap(err, `Redis Client Close failed`)
 	}
@@ -79,13 +87,13 @@ func (r *AdapterGoRedis) Close(ctx context.Context) (err error) {
 
 // Conn retrieves and returns a connection object for continuous operations.
 // Note that you should call Close function manually if you do not use this connection any further.
-func (r *AdapterGoRedis) Conn(ctx context.Context) (Conn, error) {
+func (r *Redis) Conn(ctx context.Context) (gredis.Conn, error) {
 	return &localAdapterGoRedisConn{
 		redis: r,
 	}, nil
 }
 
-func fillWithDefaultConfiguration(config *Config) {
+func fillWithDefaultConfiguration(config *gredis.Config) {
 	// The MaxIdle is the most important attribute of the connection pool.
 	// Only if this attribute is set, the created connections from client
 	// can not exceed the limit of the server.

@@ -8,14 +8,18 @@ package gredis
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 
 	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/reflection"
+	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/os/gtime"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -24,6 +28,24 @@ type RedisConn struct {
 	conn  Conn
 	redis *Redis
 }
+
+// traceItem holds the information for redis trace.
+type traceItem struct {
+	err       error
+	command   string
+	args      []interface{}
+	costMilli int64
+}
+
+const (
+	traceInstrumentName               = "github.com/gogf/gf/v2/database/gredis"
+	traceAttrRedisAddress             = "redis.address"
+	traceAttrRedisDb                  = "redis.db"
+	traceEventRedisExecution          = "redis.execution"
+	traceEventRedisExecutionCommand   = "redis.execution.command"
+	traceEventRedisExecutionCost      = "redis.execution.cost"
+	traceEventRedisExecutionArguments = "redis.execution.arguments"
+)
 
 // Do send a command to the server and returns the received reply.
 // It uses json.Marshal for struct/slice/map type values before committing them to redis.
@@ -77,4 +99,31 @@ func (c *RedisConn) Receive(ctx context.Context) (*gvar.Var, error) {
 // Close puts the connection back to connection pool.
 func (c *RedisConn) Close(ctx context.Context) error {
 	return c.conn.Close(ctx)
+}
+
+// traceSpanEnd checks and adds redis trace information to OpenTelemetry.
+func (c *RedisConn) traceSpanEnd(ctx context.Context, span trace.Span, item *traceItem) {
+	if gtrace.IsUsingDefaultProvider() || !gtrace.IsTracingInternal() {
+		return
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if item.err != nil {
+		span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, item.err))
+	}
+
+	span.SetAttributes(gtrace.CommonLabels()...)
+
+	span.SetAttributes(
+		attribute.String(traceAttrRedisAddress, c.redis.config.Address),
+		attribute.Int(traceAttrRedisDb, c.redis.config.Db),
+	)
+
+	jsonBytes, _ := json.Marshal(item.args)
+	span.AddEvent(traceEventRedisExecution, trace.WithAttributes(
+		attribute.String(traceEventRedisExecutionCommand, item.command),
+		attribute.String(traceEventRedisExecutionCost, fmt.Sprintf(`%d ms`, item.costMilli)),
+		attribute.String(traceEventRedisExecutionArguments, string(jsonBytes)),
+	))
 }

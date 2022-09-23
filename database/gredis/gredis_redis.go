@@ -17,11 +17,20 @@ import (
 
 // Redis client.
 type Redis struct {
-	adapter Adapter
+	adapter Adapter0
+	config  *Config
+}
+
+type TTLOption struct {
+	EX   int64
+	PX   int64
+	EXAT int64
+	PXAT int64
 }
 
 const (
-	errorNilRedis = `the Redis object is nil`
+	errorNilRedis   = `the Redis object is nil`
+	errorNilAdapter = `redis adapter not initialized, missing configuration or adapter register?`
 )
 
 // SetAdapter sets custom adapter for current redis client.
@@ -47,10 +56,7 @@ func (r *Redis) Conn(ctx context.Context) (*RedisConn, error) {
 		return nil, gerror.NewCode(gcode.CodeInvalidParameter, errorNilRedis)
 	}
 	if r.adapter == nil {
-		return nil, gerror.NewCodef(
-			gcode.CodeMissingConfiguration,
-			`redis adapter not initialized, missing configuration or adapter register?`,
-		)
+		return nil, gerror.NewCodef(gcode.CodeMissingConfiguration, errorNilAdapter)
 	}
 	conn, err := r.adapter.Conn(ctx)
 	if err != nil {
@@ -67,6 +73,9 @@ func (r *Redis) Conn(ctx context.Context) (*RedisConn, error) {
 func (r *Redis) Do(ctx context.Context, command string, args ...interface{}) (*gvar.Var, error) {
 	if r == nil {
 		return nil, gerror.NewCode(gcode.CodeInvalidParameter, errorNilRedis)
+	}
+	if r.adapter == nil {
+		return nil, gerror.NewCodef(gcode.CodeMissingConfiguration, errorNilAdapter)
 	}
 	conn, err := r.Conn(ctx)
 	if err != nil {
@@ -100,8 +109,8 @@ func (r *Redis) MustDo(ctx context.Context, command string, args ...interface{})
 
 // Close closes current redis client, closes its connection pool and releases all its related resources.
 func (r *Redis) Close(ctx context.Context) error {
-	if r == nil {
-		return gerror.NewCode(gcode.CodeInvalidParameter, errorNilRedis)
+	if r == nil || r.adapter == nil {
+		return nil
 	}
 	return r.adapter.Close(ctx)
 }

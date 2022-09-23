@@ -13,16 +13,34 @@
 // Redis Chinese Documentation: http://redisdoc.com/
 package gredis
 
+// AdapterFunc is the function creating redis adapter.
+type AdapterFunc func(config *Config) Adapter
+
+var (
+	// defaultAdapterFunc is the default adapter function creating redis adapter.
+	defaultAdapterFunc AdapterFunc = func(config *Config) Adapter {
+		return nil
+	}
+)
+
 // New creates and returns a redis client.
 // It creates a default redis adapter of go-redis.
 func New(config ...*Config) (*Redis, error) {
 	if len(config) > 0 && config[0] != nil {
 		// Redis client with go redis implements adapter from given configuration.
-		return &Redis{adapter: NewAdapterGoRedis(config[0])}, nil
+		redis := &Redis{
+			adapter: defaultAdapterFunc(config[0]),
+			config:  config[0],
+		}
+		return redis, nil
 	}
 	// Redis client with go redis implements adapter from package configuration.
 	if configFromGlobal, ok := GetConfig(); ok {
-		return &Redis{adapter: NewAdapterGoRedis(configFromGlobal)}, nil
+		redis := &Redis{
+			adapter: defaultAdapterFunc(configFromGlobal),
+			config:  configFromGlobal,
+		}
+		return redis, nil
 	}
 	// Redis client with empty adapter.
 	return &Redis{}, nil
@@ -31,4 +49,9 @@ func New(config ...*Config) (*Redis, error) {
 // NewWithAdapter creates and returns a redis client with given adapter.
 func NewWithAdapter(adapter Adapter) *Redis {
 	return &Redis{adapter: adapter}
+}
+
+// RegisterAdapterFunc registers default function creating redis adapter.
+func RegisterAdapterFunc(adapterFunc AdapterFunc) {
+	defaultAdapterFunc = adapterFunc
 }

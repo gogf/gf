@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gredis
+package redis
 
 import (
 	"context"
@@ -19,7 +19,7 @@ import (
 
 type localAdapterGoRedisConn struct {
 	ps    *redis.PubSub
-	redis *AdapterGoRedis
+	redis *Redis
 }
 
 // Do send a command to the server and returns the received reply.

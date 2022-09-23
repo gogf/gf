@@ -4,12 +4,13 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gredis_test
+package redis_test
 
 import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/contrib/nosql/redis/v2"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gredis"
 	"github.com/gogf/gf/v2/frame/g"
@@ -123,43 +124,43 @@ func Test_Error(t *testing.T) {
 			Db:          1,
 			DialTimeout: time.Second,
 		}
-		redis, err := gredis.New(config1)
+		r, err := gredis.New(config1)
 		t.AssertNil(err)
-		t.AssertNE(redis, nil)
-		defer redis.Close(ctx)
+		t.AssertNE(r, nil)
+		defer r.Close(ctx)
 
-		_, err = redis.Do(ctx, "info")
+		_, err = r.Do(ctx, "info")
 		t.AssertNE(err, nil)
 
 		config1 = &gredis.Config{
 			Address: "127.0.0.1:6379",
 			Db:      100,
 		}
-		redis, err = gredis.New(config1)
+		r, err = gredis.New(config1)
 		t.AssertNil(err)
-		t.AssertNE(redis, nil)
-		defer redis.Close(ctx)
+		t.AssertNE(r, nil)
+		defer r.Close(ctx)
 
-		_, err = redis.Do(ctx, "info")
+		_, err = r.Do(ctx, "info")
 		t.AssertNE(err, nil)
 
-		redis = gredis.Instance("gf")
-		t.Assert(redis == nil, true)
+		r = gredis.Instance("gf")
+		t.Assert(r == nil, true)
 		gredis.ClearConfig()
 
-		redis, err = gredis.New(config)
+		r, err = gredis.New(config)
 		t.AssertNil(err)
-		t.AssertNE(redis, nil)
-		defer redis.Close(ctx)
+		t.AssertNE(r, nil)
+		defer r.Close(ctx)
 
-		_, err = redis.Do(ctx, "SET", "k", "v")
+		_, err = r.Do(ctx, "SET", "k", "v")
 		t.AssertNil(err)
 
-		v, err := redis.Do(ctx, "GET", "k")
+		v, err := r.Do(ctx, "GET", "k")
 		t.AssertNil(err)
 		t.Assert(v.String(), "v")
 
-		conn, err := redis.Conn(ctx)
+		conn, err := r.Conn(ctx)
 		t.AssertNil(err)
 		defer conn.Close(ctx)
 		_, err = conn.Do(ctx, "SET", "k", "v")
@@ -170,19 +171,19 @@ func Test_Error(t *testing.T) {
 
 		time.Sleep(time.Second)
 
-		_, err = redis.Do(ctx, "PUBLISH", "gf", "test")
+		_, err = r.Do(ctx, "PUBLISH", "gf", "test")
 		t.AssertNil(err)
 
 		time.Sleep(time.Second)
 
 		v, err = conn.Receive(ctx)
 		t.AssertNil(err)
-		t.Assert(v.Val().(*gredis.Subscription).Channel, "gf")
+		t.Assert(v.Val().(*redis.Subscription).Channel, "gf")
 
 		v, err = conn.Receive(ctx)
 		t.AssertNil(err)
-		t.Assert(v.Val().(*gredis.Message).Channel, "gf")
-		t.Assert(v.Val().(*gredis.Message).Payload, "test")
+		t.Assert(v.Val().(*redis.Message).Channel, "gf")
+		t.Assert(v.Val().(*redis.Message).Payload, "test")
 
 		time.Sleep(time.Second)
 	})
