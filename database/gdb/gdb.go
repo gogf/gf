@@ -10,6 +10,7 @@ package gdb
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
@@ -27,6 +28,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/grand"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // DB defines the interfaces for ORM operations.
@@ -177,7 +179,6 @@ type DB interface {
 	ConvertDataForRecord(ctx context.Context, data interface{}) (map[string]interface{}, error)              // See Core.ConvertDataForRecord
 	ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) // See Core.ConvertValueForLocal
 	CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (string, error)    // See Core.CheckLocalTypeForField
-	FilteredLink() string                                                                                    // FilteredLink is used for filtering sensitive information in `Link` configuration before output it to tracing server.
 }
 
 // Core is the base struct for database management.
@@ -622,10 +623,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		node.Charset = defaultCharset
 	}
 	// Changes the schema.
-	nodeSchema := c.schema
-	if len(schema) > 0 && schema[0] != "" {
-		nodeSchema = schema[0]
-	}
+	nodeSchema := gutil.GetOrDefaultStr(c.schema, schema...)
 	if nodeSchema != "" {
 		// Value copy.
 		n := *node
@@ -633,7 +631,11 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		node = &n
 	}
 	// Cache the underlying connection pool object by node.
-	v := c.links.GetOrSetFuncLock(node.String(), func() interface{} {
+	instanceNameByNode := fmt.Sprintf(
+		`%s@%s(%s:%s)/%s`,
+		node.User, node.Protocol, node.Host, node.Port, node.Name,
+	)
+	v := c.links.GetOrSetFuncLock(instanceNameByNode, func() interface{} {
 		intlog.Printf(ctx, `open new connection, master:%#v, config:%#v, node:%#v`, master, c.config, node)
 		defer func() {
 			if err != nil {

@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gogf/gf/v2/util/gutil"
 	_ "github.com/lib/pq"
 
 	"github.com/gogf/gf/v2/database/gdb"
@@ -108,21 +109,6 @@ func (d *Driver) Open(config gdb.ConfigNode) (db *sql.DB, err error) {
 		return nil, err
 	}
 	return
-}
-
-// FilteredLink retrieves and returns filtered `linkInfo` that can be using for
-// logging or tracing purpose.
-func (d *Driver) FilteredLink() string {
-	linkInfo := d.GetConfig().Link
-	if linkInfo == "" {
-		return ""
-	}
-	s, _ := gregex.ReplaceString(
-		`(.+?)\s*password=(.+)\s*host=(.+)`,
-		`$1 password=xxx host=$3`,
-		linkInfo,
-	)
-	return s
 }
 
 // GetChars returns the security char for this type of database.
@@ -279,23 +265,10 @@ ORDER BY
 //
 // Also see DriverMysql.TableFields.
 func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
-	charL, charR := d.GetChars()
-	table = gstr.Trim(table, charL+charR)
-	if gstr.Contains(table, " ") {
-		return nil, gerror.NewCode(
-			gcode.CodeInvalidParameter,
-			"function TableFields supports only single table operations",
-		)
-	}
-	table, _ = gregex.ReplaceString("\"", "", table)
-	useSchema := d.GetSchema()
-	if len(schema) > 0 && schema[0] != "" {
-		useSchema = schema[0]
-	}
-
 	var (
 		result       gdb.Result
 		link         gdb.Link
+		useSchema    = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
 		structureSql = fmt.Sprintf(`
 SELECT a.attname AS field, t.typname AS type,a.attnotnull as null,
     (case when d.contype is not null then 'pri' else '' end)  as key

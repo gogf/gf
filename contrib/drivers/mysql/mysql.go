@@ -15,12 +15,12 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/util/gutil"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gregex"
-	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // Driver is the driver for mysql database.
@@ -73,8 +73,8 @@ func (d *Driver) Open(config gdb.ConfigNode) (db *sql.DB, err error) {
 		}
 	} else {
 		source = fmt.Sprintf(
-			"%s:%s@tcp(%s:%s)/%s?charset=%s",
-			config.User, config.Pass, config.Host, config.Port, config.Name, config.Charset,
+			"%s:%s@%s(%s:%s)/%s?charset=%s",
+			config.User, config.Pass, config.Protocol, config.Host, config.Port, config.Name, config.Charset,
 		)
 		if config.Timezone != "" {
 			source = fmt.Sprintf("%s&loc=%s", source, url.QueryEscape(config.Timezone))
@@ -91,21 +91,6 @@ func (d *Driver) Open(config gdb.ConfigNode) (db *sql.DB, err error) {
 		return nil, err
 	}
 	return
-}
-
-// FilteredLink retrieves and returns filtered `linkInfo` that can be using for
-// logging or tracing purpose.
-func (d *Driver) FilteredLink() string {
-	linkInfo := d.GetConfig().Link
-	if linkInfo == "" {
-		return ""
-	}
-	s, _ := gregex.ReplaceString(
-		`(.+?):(.+)@tcp(.+)`,
-		`$1:xxx@tcp$3`,
-		linkInfo,
-	)
-	return s
 }
 
 // GetChars returns the security char for this type of database.
@@ -153,22 +138,10 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 func (d *Driver) TableFields(
 	ctx context.Context, table string, schema ...string,
 ) (fields map[string]*gdb.TableField, err error) {
-	charL, charR := d.GetChars()
-	table = gstr.Trim(table, charL+charR)
-	if gstr.Contains(table, " ") {
-		return nil, gerror.NewCode(
-			gcode.CodeInvalidParameter,
-			"function TableFields supports only single table operations",
-		)
-	}
-	useSchema := d.GetSchema()
-	if len(schema) > 0 && schema[0] != "" {
-		useSchema = schema[0]
-	}
-
 	var (
-		result gdb.Result
-		link   gdb.Link
+		result    gdb.Result
+		link      gdb.Link
+		useSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
 	)
 	if link, err = d.SlaveLink(useSchema); err != nil {
 		return nil, err
