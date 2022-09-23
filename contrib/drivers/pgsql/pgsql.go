@@ -222,17 +222,10 @@ func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args [
 // Tables retrieves and returns the tables of current schema.
 // It's mainly used in cli tool chain for automatically generating the models.
 func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
-	var result gdb.Result
-	link, err := d.SlaveLink(schema...)
-	if err != nil {
-		return nil, err
-	}
-	querySchema := "public"
-	if len(schema) > 0 && schema[0] != "" {
-		querySchema = schema[0]
-	}
-	// list table names exclude partitions
-	query := fmt.Sprintf(`
+	var (
+		result      gdb.Result
+		querySchema = gutil.GetOrDefaultStr("public", schema...)
+		query       = fmt.Sprintf(`
 SELECT
 	c.relname
 FROM
@@ -246,8 +239,13 @@ WHERE
 	AND PG_TABLE_IS_VISIBLE(c.oid)
 ORDER BY
 	c.relname`,
-		querySchema,
+			querySchema,
+		)
 	)
+	link, err := d.SlaveLink(schema...)
+	if err != nil {
+		return nil, err
+	}
 	query, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(query))
 	result, err = d.DoSelect(ctx, link, query)
 	if err != nil {
