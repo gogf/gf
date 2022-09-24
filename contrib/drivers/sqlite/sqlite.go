@@ -3,12 +3,12 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
+
+// Package sqlite implements gdb.Driver, which supports operations for SQLite.
 //
 // Note:
 // 1. It needs manually import: _ "github.com/glebarez/go-sqlite"
 // 2. It does not support Save/Replace features.
-
-// Package sqlite implements gdb.Driver, which supports operations for SQLite.
 package sqlite
 
 import (
@@ -47,7 +47,7 @@ func New() gdb.Driver {
 
 // New creates and returns a database object for sqlite.
 // It implements the interface of gdb.Driver for extra database driver installation.
-func (d *Driver) New(core *gdb.Core, node gdb.ConfigNode) (gdb.DB, error) {
+func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 	return &Driver{
 		Core: core,
 	}, nil
@@ -55,7 +55,7 @@ func (d *Driver) New(core *gdb.Core, node gdb.ConfigNode) (gdb.DB, error) {
 
 // Open creates and returns a underlying sql.DB object for sqlite.
 // https://github.com/glebarez/go-sqlite
-func (d *Driver) Open(config gdb.ConfigNode) (db *sql.DB, err error) {
+func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	var (
 		source               string
 		underlyingDriverName = "sqlite"

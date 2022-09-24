@@ -3,12 +3,12 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
+
+// Package pgsql implements gdb.Driver, which supports operations for PostgreSql.
 //
 // Note:
 // 1. It needs manually import: _ "github.com/lib/pq"
 // 2. It does not support Save/Replace features.
-
-// Package pgsql implements gdb.Driver, which supports operations for PostgreSql.
 package pgsql
 
 import (
@@ -51,7 +51,7 @@ func New() gdb.Driver {
 
 // New creates and returns a database object for postgresql.
 // It implements the interface of gdb.Driver for extra database driver installation.
-func (d *Driver) New(core *gdb.Core, node gdb.ConfigNode) (gdb.DB, error) {
+func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 	return &Driver{
 		Core: core,
 	}, nil
@@ -59,7 +59,7 @@ func (d *Driver) New(core *gdb.Core, node gdb.ConfigNode) (gdb.DB, error) {
 
 // Open creates and returns an underlying sql.DB object for pgsql.
 // https://pkg.go.dev/github.com/lib/pq
-func (d *Driver) Open(config gdb.ConfigNode) (db *sql.DB, err error) {
+func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	var (
 		source               string
 		underlyingDriverName = "postgres"
@@ -329,7 +329,7 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 		)
 
 	case gdb.InsertOptionDefault:
-		tableFields, err := d.Core.TableFields(ctx, table)
+		tableFields, err := d.GetCore().GetDB().TableFields(ctx, table)
 		if err == nil {
 			for _, field := range tableFields {
 				if field.Key == "pri" {

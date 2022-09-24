@@ -20,6 +20,11 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
+// GetDB returns the underlying DB.
+func (c *Core) GetDB() DB {
+	return c.db
+}
+
 // GetLink creates and returns the underlying database link object with transaction checks.
 // The parameter `master` specifies whether using the master node if master-slave configured.
 func (c *Core) GetLink(ctx context.Context, master bool, schema string) (Link, error) {
@@ -115,8 +120,7 @@ func (c *Core) GetChars() (charLeft string, charRight string) {
 // Tables retrieves and returns the tables of current schema.
 // It's mainly used in cli tool chain for automatically generating the models.
 func (c *Core) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
-	ctx = context.WithValue(ctx, ctxKeyInternalProducedSQL, struct{}{})
-	return c.db.Tables(ctx, schema...)
+	return
 }
 
 // TableFields retrieves and returns the fields' information of specified table of current
@@ -132,34 +136,6 @@ func (c *Core) Tables(ctx context.Context, schema ...string) (tables []string, e
 // It's using cache feature to enhance the performance, which is never expired util the
 // process restarts.
 func (c *Core) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {
-	charL, charR := c.db.GetChars()
-	table = gstr.Trim(table, charL+charR)
-	if gstr.Contains(table, " ") {
-		return nil, gerror.NewCode(
-			gcode.CodeInvalidParameter,
-			"function TableFields supports only single table operations",
-		)
-	}
-	var (
-		cacheKey = fmt.Sprintf(
-			`%s%s@%s#%s`,
-			cachePrefixTableFields,
-			c.db.GetGroup(),
-			gutil.GetOrDefaultStr(c.db.GetSchema(), schema...),
-			table,
-		)
-		value = tableFieldsMap.GetOrSetFuncLock(cacheKey, func() interface{} {
-			ctx = context.WithValue(ctx, ctxKeyInternalProducedSQL, struct{}{})
-			fields, err = c.db.TableFields(ctx, table, schema...)
-			if err != nil {
-				return nil
-			}
-			return fields
-		})
-	)
-	if value != nil {
-		fields = value.(map[string]*TableField)
-	}
 	return
 }
 
@@ -219,7 +195,7 @@ func (c *Core) makeSelectCacheKey(name, schema, table, sql string, args ...inter
 // HasField determine whether the field exists in the table.
 func (c *Core) HasField(ctx context.Context, table, field string, schema ...string) (bool, error) {
 	table = c.guessPrimaryTableName(table)
-	tableFields, err := c.TableFields(ctx, table, schema...)
+	tableFields, err := c.db.TableFields(ctx, table, schema...)
 	if err != nil {
 		return false, err
 	}

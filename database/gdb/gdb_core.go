@@ -46,7 +46,7 @@ func (c *Core) Ctx(ctx context.Context) DB {
 	)
 	*newCore = *c
 	// It creates a new DB object, which is commonly a wrapper for object `Core`.
-	newCore.db, err = driverMap[configNode.Type].New(newCore, *configNode)
+	newCore.db, err = driverMap[configNode.Type].New(newCore, configNode)
 	if err != nil {
 		// It is really a serious error here.
 		// Do not let it continue.
@@ -684,7 +684,7 @@ func (c *Core) HasTable(name string) (bool, error) {
 		cacheKey = fmt.Sprintf(`HasTable: %s`, name)
 	)
 	result, err := c.GetCache().GetOrSetFuncLock(ctx, cacheKey, func(ctx context.Context) (interface{}, error) {
-		tableList, err := c.Tables(ctx)
+		tableList, err := c.db.Tables(ctx)
 		if err != nil {
 			return false, err
 		}

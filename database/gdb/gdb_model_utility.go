@@ -38,7 +38,7 @@ func (m *Model) TableFields(tableStr string, schema ...string) (fields map[strin
 	if len(schema) > 0 && schema[0] != "" {
 		usedSchema = schema[0]
 	}
-	return m.db.GetCore().TableFields(m.GetCtx(), table, usedSchema)
+	return m.db.TableFields(m.GetCtx(), table, usedSchema)
 }
 
 // getModel creates and returns a cloned model of current model if `safe` is true, or else it returns

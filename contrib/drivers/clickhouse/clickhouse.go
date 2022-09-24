@@ -18,6 +18,8 @@ import (
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/util/gutil"
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
@@ -65,14 +67,14 @@ func New() gdb.Driver {
 
 // New creates and returns a database object for clickhouse.
 // It implements the interface of gdb.Driver for extra database driver installation.
-func (d *Driver) New(core *gdb.Core, node gdb.ConfigNode) (gdb.DB, error) {
+func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 	return &Driver{
 		Core: core,
 	}, nil
 }
 
 // Open creates and returns an underlying sql.DB object for clickhouse.
-func (d *Driver) Open(config gdb.ConfigNode) (*sql.DB, error) {
+func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	source := config.Link
 	// clickhouse://username:password@host1:9000,host2:9000/database?dial_timeout=200ms&max_execution_time=60
 	if config.Link != "" {
@@ -106,12 +108,14 @@ func (d *Driver) Open(config gdb.ConfigNode) (*sql.DB, error) {
 			source = fmt.Sprintf("%s&%s", source, config.Extra)
 		}
 	}
-	db, err := sql.Open(driverName, source)
-	if err != nil {
+	if db, err = sql.Open(driverName, source); err != nil {
+		err = gerror.WrapCodef(
+			gcode.CodeDbOperationError, err,
+			`sql.Open failed for driver "%s" by source "%s"`, driverName, source,
+		)
 		return nil, err
 	}
-
-	return db, nil
+	return
 }
 
 // Tables retrieves and returns the tables of current schema.

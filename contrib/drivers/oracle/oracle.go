@@ -3,13 +3,13 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
+
+// Package oracle implements gdb.Driver, which supports operations for Oracle.
 //
 // Note:
 // 1. It needs manually import: _ "github.com/sijms/go-ora/v2"
 // 2. It does not support Save/Replace features.
 // 3. It does not support LastInsertId.
-
-// Package oracle implements gdb.Driver, which supports operations for Oracle.
 package oracle
 
 import (
@@ -48,14 +48,14 @@ func New() gdb.Driver {
 
 // New creates and returns a database object for oracle.
 // It implements the interface of gdb.Driver for extra database driver installation.
-func (d *Driver) New(core *gdb.Core, node gdb.ConfigNode) (gdb.DB, error) {
+func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 	return &Driver{
 		Core: core,
 	}, nil
 }
 
 // Open creates and returns an underlying sql.DB object for oracle.
-func (d *Driver) Open(config gdb.ConfigNode) (db *sql.DB, err error) {
+func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	var (
 		source               string
 		underlyingDriverName = "oracle"

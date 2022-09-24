@@ -20,7 +20,7 @@ var (
 
 func Test_parseConfigNodeLink_WithType(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		node := ConfigNode{
+		node := &ConfigNode{
 			Link: `mysql:root:CxzhD*624:27jh@tcp(9.135.69.119:3306)/khaos_oss?loc=Local&parseTime=true&charset=latin`,
 		}
 		newNode := parseConfigNodeLink(node)
@@ -35,7 +35,7 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 		t.Assert(newNode.Protocol, `tcp`)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		node := ConfigNode{
+		node := &ConfigNode{
 			Link: `mysql:root:CxzhD*624:27jh@tcp(9.135.69.119:3306)/khaos_oss?`,
 		}
 		newNode := parseConfigNodeLink(node)
@@ -50,7 +50,7 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 		t.Assert(newNode.Protocol, `tcp`)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		node := ConfigNode{
+		node := &ConfigNode{
 			Link: `mysql:root:CxzhD*624:27jh@tcp(9.135.69.119:3306)/khaos_oss`,
 		}
 		newNode := parseConfigNodeLink(node)
@@ -66,7 +66,7 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 	})
 	// empty database preselect.
 	gtest.C(t, func(t *gtest.T) {
-		node := ConfigNode{
+		node := &ConfigNode{
 			Link: `mysql:root:CxzhD*624:27jh@tcp(9.135.69.119:3306)/?loc=Local&parseTime=true&charset=latin`,
 		}
 		newNode := parseConfigNodeLink(node)
@@ -81,7 +81,7 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 		t.Assert(newNode.Protocol, `tcp`)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		node := ConfigNode{
+		node := &ConfigNode{
 			Link: `mysql:root:CxzhD*624:27jh@tcp(9.135.69.119:3306)?loc=Local&parseTime=true&charset=latin`,
 		}
 		newNode := parseConfigNodeLink(node)
@@ -96,7 +96,7 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 		t.Assert(newNode.Protocol, `tcp`)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		node := ConfigNode{
+		node := &ConfigNode{
 			Link: `mysql:root:CxzhD*624:27jh@tcp(9.135.69.119:3306)/`,
 		}
 		newNode := parseConfigNodeLink(node)
@@ -111,7 +111,7 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 		t.Assert(newNode.Protocol, `tcp`)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		node := ConfigNode{
+		node := &ConfigNode{
 			Link: `mysql:root:CxzhD*624:27jh@tcp(9.135.69.119:3306)`,
 		}
 		newNode := parseConfigNodeLink(node)
@@ -127,7 +127,7 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 	})
 	// udp.
 	gtest.C(t, func(t *gtest.T) {
-		node := ConfigNode{
+		node := &ConfigNode{
 			Link: `mysql:root:CxzhD*624:27jh@udp(9.135.69.119:3306)`,
 		}
 		newNode := parseConfigNodeLink(node)
@@ -145,7 +145,7 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 
 func Test_parseConfigNodeLink_WithoutType(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		node := ConfigNode{
+		node := &ConfigNode{
 			Link: `root:CxzhD*624:27jh@tcp(9.135.69.119:3306)/khaos_oss?loc=Local&parseTime=true&charset=latin`,
 		}
 		newNode := parseConfigNodeLink(node)
@@ -160,7 +160,7 @@ func Test_parseConfigNodeLink_WithoutType(t *testing.T) {
 		t.Assert(newNode.Protocol, `tcp`)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		node := ConfigNode{
+		node := &ConfigNode{
 			Link: `root:CxzhD*624:27jh@tcp(9.135.69.119:3306)/khaos_oss?`,
 		}
 		newNode := parseConfigNodeLink(node)
@@ -175,7 +175,7 @@ func Test_parseConfigNodeLink_WithoutType(t *testing.T) {
 		t.Assert(newNode.Protocol, `tcp`)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		node := ConfigNode{
+		node := &ConfigNode{
 			Link: `root:CxzhD*624:27jh@tcp(9.135.69.119:3306)/khaos_oss`,
 		}
 		newNode := parseConfigNodeLink(node)
@@ -191,7 +191,7 @@ func Test_parseConfigNodeLink_WithoutType(t *testing.T) {
 	})
 	// empty database preselect.
 	gtest.C(t, func(t *gtest.T) {
-		node := ConfigNode{
+		node := &ConfigNode{
 			Link: `root:CxzhD*624:27jh@tcp(9.135.69.119:3306)/?loc=Local&parseTime=true&charset=latin`,
 		}
 		newNode := parseConfigNodeLink(node)
@@ -205,7 +205,7 @@ func Test_parseConfigNodeLink_WithoutType(t *testing.T) {
 		t.Assert(newNode.Protocol, `tcp`)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		node := ConfigNode{
+		node := &ConfigNode{
 			Link: `root:CxzhD*624:27jh@tcp(9.135.69.119:3306)?loc=Local&parseTime=true&charset=latin`,
 		}
 		newNode := parseConfigNodeLink(node)
@@ -219,7 +219,7 @@ func Test_parseConfigNodeLink_WithoutType(t *testing.T) {
 		t.Assert(newNode.Protocol, `tcp`)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		node := ConfigNode{
+		node := &ConfigNode{
 			Link: `root:CxzhD*624:27jh@tcp(9.135.69.119:3306)/`,
 		}
 		newNode := parseConfigNodeLink(node)
@@ -233,7 +233,7 @@ func Test_parseConfigNodeLink_WithoutType(t *testing.T) {
 		t.Assert(newNode.Protocol, `tcp`)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		node := ConfigNode{
+		node := &ConfigNode{
 			Link: `root:CxzhD*624:27jh@tcp(9.135.69.119:3306)`,
 		}
 		newNode := parseConfigNodeLink(node)
@@ -248,7 +248,7 @@ func Test_parseConfigNodeLink_WithoutType(t *testing.T) {
 	})
 	// protocol.
 	gtest.C(t, func(t *gtest.T) {
-		node := ConfigNode{
+		node := &ConfigNode{
 			Link: `root:CxzhD*624:27jh@udp(9.135.69.119:3306)`,
 		}
 		newNode := parseConfigNodeLink(node)

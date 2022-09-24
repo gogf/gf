@@ -3,13 +3,13 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
+
+// Package mssql implements gdb.Driver, which supports operations for MSSql.
 //
 // Note:
 // 1. It needs manually import: _ "github.com/denisenkom/go-mssqldb"
 // 2. It does not support Save/Replace features.
 // 3. It does not support LastInsertId.
-
-// Package mssql implements gdb.Driver, which supports operations for MSSql.
 package mssql
 
 import (
@@ -47,14 +47,14 @@ func New() gdb.Driver {
 
 // New creates and returns a database object for SQL server.
 // It implements the interface of gdb.Driver for extra database driver installation.
-func (d *Driver) New(core *gdb.Core, node gdb.ConfigNode) (gdb.DB, error) {
+func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 	return &Driver{
 		Core: core,
 	}, nil
 }
 
 // Open creates and returns an underlying sql.DB object for mssql.
-func (d *Driver) Open(config gdb.ConfigNode) (db *sql.DB, err error) {
+func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	var (
 		source               string
 		underlyingDriverName = "sqlserver"
