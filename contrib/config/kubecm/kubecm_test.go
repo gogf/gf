@@ -25,7 +25,7 @@ const (
 	configmap          = "test-configmap"
 	dataItem           = "config.yaml"
 	configmapFileName  = "configmap.yaml"
-	kubeConfigFilePath = `/Users/john/.kube/config`
+	kubeConfigFilePath = `~/.kube/config`
 )
 
 var (

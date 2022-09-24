@@ -139,6 +139,17 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v2
 
+    - name: Start Minikube
+      uses: medyagh/setup-minikube@master
+
+    - name: Minikube Environment
+      run: |
+        pwd
+        cat ~/.kube/config
+        kubectl get ns
+        kubectl get pods -A
+
+
     - name: Setup Golang ${{ matrix.go-version }}
       uses: actions/setup-go@v2
       with:
