@@ -141,14 +141,6 @@ jobs:
     - name: Start Minikube
       uses: medyagh/setup-minikube@master
 
-    - name: Minikube Environment
-      run: |
-        pwd
-        cat ~/.kube/config
-        kubectl get ns
-        kubectl get pods -A
-
-
     - name: Setup Golang ${{ matrix.go-version }}
       uses: actions/setup-go@v2
       with:
@@ -187,8 +179,16 @@ jobs:
         for file in `find . -name go.mod`; do
             dirpath=$(dirname $file)
 
+            # package oracle needs golang >= v1.17
             if [ "oracle" = $(basename $dirpath) ]; then
                 if ! go version|grep -q "1.17"; then
+                  continue 1
+                fi
+            fi
+
+            # package kubecm needs golang >= v1.18
+            if [ "kubecm" = $(basename $dirpath) ]; then
+                if ! go version|grep -q "1.18"; then
                   continue 1
                 fi
             fi
