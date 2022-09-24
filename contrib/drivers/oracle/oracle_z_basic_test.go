@@ -8,11 +8,12 @@ package oracle_test
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
-	"strings"
-	"testing"
 )
 
 func TestTables(t *testing.T) {
@@ -102,13 +103,6 @@ func TestTableFields(t *testing.T) {
 	})
 }
 
-func TestFilteredLink(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		s := dblink.FilteredLink()
-		gtest.AssertEQ(s, "oracle:xxx@127.0.0.1:1521/XE")
-	})
-
-}
 func TestDoInsert(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		createTable("t_user")

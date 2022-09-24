@@ -3,12 +3,12 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
+
+// Package sqlite implements gdb.Driver, which supports operations for SQLite.
 //
 // Note:
 // 1. It needs manually import: _ "github.com/glebarez/go-sqlite"
 // 2. It does not support Save/Replace features.
-
-// Package sqlite implements gdb.Driver, which supports operations for SQLite.
 package sqlite
 
 import (
@@ -18,6 +18,7 @@ import (
 	"strings"
 
 	_ "github.com/glebarez/go-sqlite"
+	"github.com/gogf/gf/v2/util/gutil"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/encoding/gurl"
@@ -33,10 +34,6 @@ type Driver struct {
 	*gdb.Core
 }
 
-var (
-	ErrorSave = gerror.NewCode(gcode.CodeNotSupported, `Save operation is not supported by sqlite driver`)
-)
-
 func init() {
 	if err := gdb.Register(`sqlite`, New()); err != nil {
 		panic(err)
@@ -50,7 +47,7 @@ func New() gdb.Driver {
 
 // New creates and returns a database object for sqlite.
 // It implements the interface of gdb.Driver for extra database driver installation.
-func (d *Driver) New(core *gdb.Core, node gdb.ConfigNode) (gdb.DB, error) {
+func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 	return &Driver{
 		Core: core,
 	}, nil
@@ -58,7 +55,7 @@ func (d *Driver) New(core *gdb.Core, node gdb.ConfigNode) (gdb.DB, error) {
 
 // Open creates and returns a underlying sql.DB object for sqlite.
 // https://github.com/glebarez/go-sqlite
-func (d *Driver) Open(config gdb.ConfigNode) (db *sql.DB, err error) {
+func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	var (
 		source               string
 		underlyingDriverName = "sqlite"
@@ -107,12 +104,6 @@ func (d *Driver) Open(config gdb.ConfigNode) (db *sql.DB, err error) {
 	return
 }
 
-// FilteredLink retrieves and returns filtered `linkInfo` that can be using for
-// logging or tracing purpose.
-func (d *Driver) FilteredLink() string {
-	return d.GetConfig().Link
-}
-
 // GetChars returns the security char for this type of database.
 func (d *Driver) GetChars() (charLeft string, charRight string) {
 	return "`", "`"
@@ -147,19 +138,13 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 // TableFields retrieves and returns the fields' information of specified table of current schema.
 //
 // Also see DriverMysql.TableFields.
-func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
-	charL, charR := d.GetChars()
-	table = gstr.Trim(table, charL+charR)
-	if gstr.Contains(table, " ") {
-		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "function TableFields supports only single table operations")
-	}
-	useSchema := d.GetSchema()
-	if len(schema) > 0 && schema[0] != "" {
-		useSchema = schema[0]
-	}
+func (d *Driver) TableFields(
+	ctx context.Context, table string, schema ...string,
+) (fields map[string]*gdb.TableField, err error) {
 	var (
-		result gdb.Result
-		link   gdb.Link
+		result    gdb.Result
+		link      gdb.Link
+		useSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
 	)
 	if link, err = d.SlaveLink(useSchema); err != nil {
 		return nil, err
@@ -174,10 +159,10 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 		if m["pk"].Bool() {
 			mKey = "pri"
 		}
-		fields[strings.ToLower(m["name"].String())] = &gdb.TableField{
+		fields[m["name"].String()] = &gdb.TableField{
 			Index:   i,
-			Name:    strings.ToLower(m["name"].String()),
-			Type:    strings.ToLower(m["type"].String()),
+			Name:    m["name"].String(),
+			Type:    m["type"].String(),
 			Key:     mKey,
 			Default: m["dflt_value"].Val(),
 			Null:    !m["notnull"].Bool(),
@@ -187,10 +172,13 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 }
 
 // DoInsert is not supported in sqlite.
-func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
+func (d *Driver) DoInsert(
+	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
+) (result sql.Result, err error) {
 	switch option.InsertOption {
 	case gdb.InsertOptionSave:
-		return nil, ErrorSave
+		return nil, gerror.NewCode(gcode.CodeNotSupported, `Save operation is not supported by sqlite driver`)
+
 	case gdb.InsertOptionIgnore, gdb.InsertOptionReplace:
 		var (
 			keys           []string      // Field names.
@@ -257,6 +245,7 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 			}
 		}
 		return batchResult, nil
+
 	default:
 		return d.Core.DoInsert(ctx, link, table, list, option)
 	}

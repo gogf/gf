@@ -18,16 +18,16 @@ import (
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/util/gutil"
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 
 	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gregex"
-	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -67,14 +67,14 @@ func New() gdb.Driver {
 
 // New creates and returns a database object for clickhouse.
 // It implements the interface of gdb.Driver for extra database driver installation.
-func (d *Driver) New(core *gdb.Core, node gdb.ConfigNode) (gdb.DB, error) {
+func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 	return &Driver{
 		Core: core,
 	}, nil
 }
 
 // Open creates and returns an underlying sql.DB object for clickhouse.
-func (d *Driver) Open(config gdb.ConfigNode) (*sql.DB, error) {
+func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	source := config.Link
 	// clickhouse://username:password@host1:9000,host2:9000/database?dial_timeout=200ms&max_execution_time=60
 	if config.Link != "" {
@@ -108,12 +108,14 @@ func (d *Driver) Open(config gdb.ConfigNode) (*sql.DB, error) {
 			source = fmt.Sprintf("%s&%s", source, config.Extra)
 		}
 	}
-	db, err := sql.Open(driverName, source)
-	if err != nil {
+	if db, err = sql.Open(driverName, source); err != nil {
+		err = gerror.WrapCodef(
+			gcode.CodeDbOperationError, err,
+			`sql.Open failed for driver "%s" by source "%s"`, driverName, source,
+		)
 		return nil, err
 	}
-
-	return db, nil
+	return
 }
 
 // Tables retrieves and returns the tables of current schema.
@@ -140,18 +142,10 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 func (d *Driver) TableFields(
 	ctx context.Context, table string, schema ...string,
 ) (fields map[string]*gdb.TableField, err error) {
-	charL, charR := d.GetChars()
-	table = gstr.Trim(table, charL+charR)
-	if gstr.Contains(table, " ") {
-		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "function TableFields supports only single table operations")
-	}
-	useSchema := d.GetSchema()
-	if len(schema) > 0 && schema[0] != "" {
-		useSchema = schema[0]
-	}
 	var (
-		result gdb.Result
-		link   gdb.Link
+		result    gdb.Result
+		link      gdb.Link
+		useSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
 	)
 	if link, err = d.SlaveLink(useSchema); err != nil {
 		return nil, err
@@ -190,21 +184,6 @@ func (d *Driver) TableFields(
 		}
 	}
 	return fields, nil
-}
-
-// FilteredLink retrieves and returns filtered `linkInfo` that can be using for
-// logging or tracing purpose.
-func (d *Driver) FilteredLink() string {
-	linkInfo := d.GetConfig().Link
-	if linkInfo == "" {
-		return ""
-	}
-	s, _ := gregex.ReplaceString(
-		`(.+?):(.+)@tcp(.+)`,
-		`$1:xxx@tcp$3`,
-		linkInfo,
-	)
-	return s
 }
 
 // PingMaster pings the master node to check authentication or keeps the connection alive.

@@ -7,7 +7,6 @@
 package gdb
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
@@ -200,19 +199,6 @@ func (c *Core) SetMaxOpenConnCount(n int) {
 // If d <= 0, connections are not closed due to a connection's age.
 func (c *Core) SetMaxConnLifeTime(d time.Duration) {
 	c.config.MaxConnLifeTime = d
-}
-
-// String returns the node as string.
-func (node *ConfigNode) String() string {
-	return fmt.Sprintf(
-		`%s@%s:%s,%s,%s,%s,%s,%v,%d-%d-%d#%s`,
-		node.User, node.Host, node.Port,
-		node.Name, node.Type, node.Role, node.Charset, node.Debug,
-		node.MaxIdleConnCount,
-		node.MaxOpenConnCount,
-		node.MaxConnLifeTime,
-		node.Link,
-	)
 }
 
 // GetConfig returns the current used node configuration.

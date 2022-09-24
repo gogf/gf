@@ -1608,7 +1608,7 @@ func Test_Core_ClearTableFields(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		fields, err := db.GetCore().TableFields(ctx, table)
+		fields, err := db.TableFields(ctx, table)
 		t.AssertNil(err)
 		t.Assert(len(fields), 5)
 	})

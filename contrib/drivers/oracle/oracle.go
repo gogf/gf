@@ -3,13 +3,13 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
+
+// Package oracle implements gdb.Driver, which supports operations for Oracle.
 //
 // Note:
 // 1. It needs manually import: _ "github.com/sijms/go-ora/v2"
 // 2. It does not support Save/Replace features.
 // 3. It does not support LastInsertId.
-
-// Package oracle implements gdb.Driver, which supports operations for Oracle.
 package oracle
 
 import (
@@ -19,6 +19,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gogf/gf/v2/util/gutil"
 	gora "github.com/sijms/go-ora/v2"
 
 	"github.com/gogf/gf/v2/database/gdb"
@@ -47,14 +48,14 @@ func New() gdb.Driver {
 
 // New creates and returns a database object for oracle.
 // It implements the interface of gdb.Driver for extra database driver installation.
-func (d *Driver) New(core *gdb.Core, node gdb.ConfigNode) (gdb.DB, error) {
+func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 	return &Driver{
 		Core: core,
 	}, nil
 }
 
 // Open creates and returns an underlying sql.DB object for oracle.
-func (d *Driver) Open(config gdb.ConfigNode) (db *sql.DB, err error) {
+func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	var (
 		source               string
 		underlyingDriverName = "oracle"
@@ -101,21 +102,6 @@ func (d *Driver) Open(config gdb.ConfigNode) (db *sql.DB, err error) {
 		return nil, err
 	}
 	return
-}
-
-// FilteredLink retrieves and returns filtered `linkInfo` that can be using for
-// logging or tracing purpose.
-func (d *Driver) FilteredLink() string {
-	linkInfo := d.GetConfig().Link
-	if linkInfo == "" {
-		return ""
-	}
-	s, _ := gregex.ReplaceString(
-		`(.+?)\s*:\s*(.+)\s*@\s*(.+)\s*:\s*(\d+)\s*/\s*(.+)`,
-		`$1:xxx@$3:$4/$5`,
-		linkInfo,
-	)
-	return s
 }
 
 // GetChars returns the security char for this type of database.
@@ -228,22 +214,10 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 func (d *Driver) TableFields(
 	ctx context.Context, table string, schema ...string,
 ) (fields map[string]*gdb.TableField, err error) {
-	charL, charR := d.GetChars()
-	table = gstr.Trim(table, charL+charR)
-	if gstr.Contains(table, " ") {
-		return nil, gerror.NewCode(
-			gcode.CodeInvalidParameter,
-			"function TableFields supports only single table operations",
-		)
-	}
-	useSchema := d.GetSchema()
-	if len(schema) > 0 && schema[0] != "" {
-		useSchema = schema[0]
-	}
-
 	var (
 		result       gdb.Result
 		link         gdb.Link
+		useSchema    = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
 		structureSql = fmt.Sprintf(`
 SELECT 
 	COLUMN_NAME AS FIELD, 
