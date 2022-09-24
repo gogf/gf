@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package oracle implements gdb.Driver, which supports operations for Oracle.
+// Package oracle implements gdb.Driver, which supports operations for database Oracle.
 //
 // Note:
 // 1. It needs manually import: _ "github.com/sijms/go-ora/v2"

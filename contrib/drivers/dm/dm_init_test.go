@@ -30,9 +30,9 @@ var (
 const (
 	TableSize = 10
 
-// TableName       = "inf_group"
-// TableNamePrefix = "t_"
-// TestSchema = "SYSDBADP"
+	// TableName       = "inf_group"
+	// TableNamePrefix = "t_"
+	// TestSchema = "SYSDBADP"
 )
 
 const (
@@ -60,15 +60,13 @@ func init() {
 		MaxOpenConnCount: 10,
 		CreatedAt:        "created_time",
 		UpdatedAt:        "updated_time",
-		// DeletedAt should casused .One() .All() error which 'where' with DeletedAt is NULL
-		// DeletedAt:        "created_time",
 	}
 
 	nodeLink := gdb.ConfigNode{
 		Type: TestDbType,
 		Name: TestDbName,
 		Link: fmt.Sprintf(
-			"dm://%s:%s@%s:%s/%s?charset=%s",
+			"dm:%s:%s@tcp(%s:%s)/%s?charset=%s",
 			TestDbUser, TestDbPass, TestDbIP, TestDbPort, TestDbName, TestCharset,
 		),
 	}
@@ -171,7 +169,10 @@ func createInitTable(table ...string) (name string) {
 }
 
 func dropTable(table string) {
-	count, err := db.GetCount(ctx, "SELECT COUNT(*) FROM USER_TABLES WHERE TABLE_NAME = ?", strings.ToUpper(table))
+	count, err := db.GetCount(
+		ctx,
+		"SELECT COUNT(*) FROM USER_TABLES WHERE TABLE_NAME = ?", strings.ToUpper(table),
+	)
 	if err != nil {
 		gtest.Fatal(err)
 	}
