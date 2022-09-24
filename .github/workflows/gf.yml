@@ -118,6 +118,12 @@ jobs:
         ports:
           - 1521:1521
 
+      # dm8 server
+      # docker pull zhonghuaxungm/dm:v8.1.2.128_ent_x86_64_ctm_pack4
+      dm-server:
+        image: zhonghuaxungm/dm:v8.1.2.128_ent_x86_64_ctm_pack4
+        ports:
+          - 5236:5236
 
     strategy:
       matrix:
