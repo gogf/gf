@@ -102,12 +102,12 @@ jobs:
           - 9001:9001
 
       polaris:
-        image: polarismesh/polaris-server-standalone:latest
+        image: loads/polaris-server-standalone:latest
         ports:
           - 8090:8090
           - 8091:8091
 
-      #oracle 11g server
+      # oracle 11g server
       oracle-server:
         image: loads/oracle-xe-11g-r2:latest
         env:
@@ -119,9 +119,8 @@ jobs:
           - 1521:1521
 
       # dm8 server
-      # docker pull zhonghuaxungm/dm:v8.1.2.128_ent_x86_64_ctm_pack4
       dm-server:
-        image: zhonghuaxungm/dm:v8.1.2.128_ent_x86_64_ctm_pack4
+        image: loads/dm:v8.1.2.128_ent_x86_64_ctm_pack4
         ports:
           - 5236:5236
 

@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package sqlite implements gdb.Driver, which supports operations for SQLite.
+// Package sqlite implements gdb.Driver, which supports operations for database SQLite.
 //
 // Note:
 // 1. It needs manually import: _ "github.com/glebarez/go-sqlite"

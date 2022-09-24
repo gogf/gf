@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package pgsql implements gdb.Driver, which supports operations for PostgreSql.
+// Package pgsql implements gdb.Driver, which supports operations for database PostgreSQL.
 //
 // Note:
 // 1. It needs manually import: _ "github.com/lib/pq"
