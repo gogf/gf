@@ -38,9 +38,9 @@ const (
 const (
 	TestDbIP    = "127.0.0.1"
 	TestDbPort  = "5236"
-	TestDbUser  = "SYSDBADP"
-	TestDbPass  = "SYSDBADP"
-	TestDbName  = "SYSDBADP"
+	TestDbUser  = "SYSDBA"
+	TestDbPass  = "SYSDBA001"
+	TestDbName  = "SYSDBA"
 	TestDbType  = "dm"
 	TestCharset = "utf8"
 )
@@ -60,7 +60,8 @@ func init() {
 		MaxOpenConnCount: 10,
 		CreatedAt:        "created_time",
 		UpdatedAt:        "updated_time",
-		DeletedAt:        "updated_time",
+		// DeletedAt should casused .One() .All() error which 'where' with DeletedAt is NULL
+		// DeletedAt:        "created_time",
 	}
 
 	nodeLink := gdb.ConfigNode{
@@ -160,8 +161,7 @@ func createInitTable(table ...string) (name string) {
 			"create_time":  gtime.Now().String(),
 		})
 	}
-	// TODO fix bugs
-	result, err := db.Insert(context.Background(), name, array.Slice())
+	result, err := db.Schema(TestDbName).Insert(context.Background(), name, array.Slice())
 	gtest.Assert(err, nil)
 
 	n, e := result.RowsAffected()
