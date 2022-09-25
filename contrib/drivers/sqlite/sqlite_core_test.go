@@ -1520,11 +1520,11 @@ func Test_TableFields(t *testing.T) {
 		defer dropTable(tableName)
 		var expect = map[string][]interface{}{
 			// fields		type	null	key	default	extra	comment
-			"id":          {"integer", false, "pri", nil, "", ""},
-			"passport":    {"varchar(45)", false, "", "passport", "", ""},
-			"password":    {"varchar(128)", false, "", "password", "", ""},
-			"nickname":    {"varchar(45)", true, "", nil, "", ""},
-			"create_time": {"datetime", true, "", nil, "", ""},
+			"id":          {"INTEGER", false, "pri", nil, "", ""},
+			"passport":    {"VARCHAR(45)", false, "", "passport", "", ""},
+			"password":    {"VARCHAR(128)", false, "", "password", "", ""},
+			"nickname":    {"VARCHAR(45)", true, "", nil, "", ""},
+			"create_time": {"DATETIME", true, "", nil, "", ""},
 		}
 
 		res, err := db.TableFields(context.Background(), tableName)

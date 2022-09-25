@@ -10,6 +10,7 @@ package gdb
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
@@ -23,10 +24,8 @@ import (
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/glog"
-	"github.com/gogf/gf/v2/text/gregex"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/grand"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // DB defines the interfaces for ORM operations.
@@ -60,7 +59,7 @@ type DB interface {
 	// Open creates a raw connection object for database with given node configuration.
 	// Note that it is not recommended using the function manually.
 	// Also see DriverMysql.Open.
-	Open(config ConfigNode) (*sql.DB, error)
+	Open(config *ConfigNode) (*sql.DB, error)
 
 	// Ctx is a chaining function, which creates and returns a new DB that is a shallow copy
 	// of current DB object and with given context in it.
@@ -177,7 +176,6 @@ type DB interface {
 	ConvertDataForRecord(ctx context.Context, data interface{}) (map[string]interface{}, error)              // See Core.ConvertDataForRecord
 	ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) // See Core.ConvertValueForLocal
 	CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (string, error)    // See Core.CheckLocalTypeForField
-	FilteredLink() string                                                                                    // FilteredLink is used for filtering sensitive information in `Link` configuration before output it to tracing server.
 }
 
 // Core is the base struct for database management.
@@ -217,7 +215,7 @@ type DoCommitOutput struct {
 // Driver is the interface for integrating sql drivers into package gdb.
 type Driver interface {
 	// New creates and returns a database object for specified database server.
-	New(core *Core, node ConfigNode) (DB, error)
+	New(core *Core, node *ConfigNode) (DB, error)
 }
 
 // Link is a common database function wrapper interface.
@@ -387,13 +385,13 @@ func init() {
 
 // Register registers custom database driver to gdb.
 func Register(name string, driver Driver) error {
-	driverMap[name] = driver
+	driverMap[name] = newDriverWrapper(driver)
 	return nil
 }
 
 // New creates and returns an ORM object with given configuration node.
 func New(node ConfigNode) (db DB, err error) {
-	return doNewByNode(node, "")
+	return newDBByConfigNode(&node, "")
 }
 
 // NewByGroup creates and returns an ORM object with global configurations.
@@ -416,7 +414,7 @@ func NewByGroup(group ...string) (db DB, err error) {
 	if _, ok := configs.config[groupName]; ok {
 		var node *ConfigNode
 		if node, err = getConfigNodeByGroup(groupName, true); err == nil {
-			return doNewByNode(*node, groupName)
+			return newDBByConfigNode(node, groupName)
 		}
 		return nil, err
 	}
@@ -427,65 +425,15 @@ func NewByGroup(group ...string) (db DB, err error) {
 	)
 }
 
-func parseConfigNodeLink(node ConfigNode) ConfigNode {
-	var match []string
-	// It firstly parses `link` using with type pattern.
-	match, _ = gregex.MatchString(linkPatternWithType, node.Link)
-	if len(match) > 6 {
-		node.Type = match[1]
-		node.User = match[2]
-		node.Pass = match[3]
-		node.Protocol = match[4]
-		node.Host = match[5]
-		node.Port = match[6]
-		node.Name = match[7]
-		if len(match) > 7 {
-			node.Extra = match[8]
-		}
-		node.Link = ""
-	} else {
-		// Else it parses `link` using without type pattern.
-		match, _ = gregex.MatchString(linkPatternWithoutType, node.Link)
-		if len(match) > 6 {
-			node.User = match[1]
-			node.Pass = match[2]
-			node.Protocol = match[3]
-			node.Host = match[4]
-			node.Port = match[5]
-			node.Name = match[6]
-			if len(match) > 7 {
-				node.Extra = match[7]
-			}
-			node.Link = ""
-		}
-	}
-	if node.Extra != "" {
-		if m, _ := gstr.Parse(node.Extra); len(m) > 0 {
-			_ = gconv.Struct(m, &node)
-		}
-	}
-	// Default value checks.
-	if node.Charset == "" {
-		node.Charset = defaultCharset
-	}
-	if node.Protocol == "" {
-		node.Protocol = defaultProtocol
-	}
-	return node
-}
-
-// doNewByNode creates and returns an ORM object with given configuration node and group name.
-func doNewByNode(node ConfigNode, group string) (db DB, err error) {
-	if node.Link != "" {
-		node = parseConfigNodeLink(node)
-	}
+// newDBByConfigNode creates and returns an ORM object with given configuration node and group name.
+func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
 	c := &Core{
 		group:  group,
 		debug:  gtype.NewBool(),
 		cache:  gcache.New(),
 		links:  gmap.NewStrAnyMap(true),
 		logger: glog.New(),
-		config: &node,
+		config: node,
 	}
 	if v, ok := driverMap[node.Type]; ok {
 		if c.db, err = v.New(c, node); err != nil {
@@ -622,10 +570,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		node.Charset = defaultCharset
 	}
 	// Changes the schema.
-	nodeSchema := c.schema
-	if len(schema) > 0 && schema[0] != "" {
-		nodeSchema = schema[0]
-	}
+	nodeSchema := gutil.GetOrDefaultStr(c.schema, schema...)
 	if nodeSchema != "" {
 		// Value copy.
 		n := *node
@@ -633,7 +578,11 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		node = &n
 	}
 	// Cache the underlying connection pool object by node.
-	v := c.links.GetOrSetFuncLock(node.String(), func() interface{} {
+	instanceNameByNode := fmt.Sprintf(
+		`%s@%s(%s:%s)/%s`,
+		node.User, node.Protocol, node.Host, node.Port, node.Name,
+	)
+	v := c.links.GetOrSetFuncLock(instanceNameByNode, func() interface{} {
 		intlog.Printf(ctx, `open new connection, master:%#v, config:%#v, node:%#v`, master, c.config, node)
 		defer func() {
 			if err != nil {
@@ -642,7 +591,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 				intlog.Printf(ctx, `open new connection success, master:%#v, config:%#v, node:%#v`, master, c.config, node)
 			}
 		}()
-		if sqlDb, err = c.db.Open(*node); err != nil {
+		if sqlDb, err = c.db.Open(node); err != nil {
 			return nil
 		}
 		if sqlDb == nil {

@@ -3,13 +3,13 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
+
+// Package mssql implements gdb.Driver, which supports operations for database MSSql.
 //
 // Note:
 // 1. It needs manually import: _ "github.com/denisenkom/go-mssqldb"
 // 2. It does not support Save/Replace features.
 // 3. It does not support LastInsertId.
-
-// Package mssql implements gdb.Driver, which supports operations for MSSql.
 package mssql
 
 import (
@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	_ "github.com/denisenkom/go-mssqldb"
+	"github.com/gogf/gf/v2/util/gutil"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -46,14 +47,14 @@ func New() gdb.Driver {
 
 // New creates and returns a database object for SQL server.
 // It implements the interface of gdb.Driver for extra database driver installation.
-func (d *Driver) New(core *gdb.Core, node gdb.ConfigNode) (gdb.DB, error) {
+func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 	return &Driver{
 		Core: core,
 	}, nil
 }
 
 // Open creates and returns an underlying sql.DB object for mssql.
-func (d *Driver) Open(config gdb.ConfigNode) (db *sql.DB, err error) {
+func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	var (
 		source               string
 		underlyingDriverName = "sqlserver"
@@ -91,21 +92,6 @@ func (d *Driver) Open(config gdb.ConfigNode) (db *sql.DB, err error) {
 		return nil, err
 	}
 	return
-}
-
-// FilteredLink retrieves and returns filtered `linkInfo` that can be using for
-// logging or tracing purpose.
-func (d *Driver) FilteredLink() string {
-	linkInfo := d.GetConfig().Link
-	if linkInfo == "" {
-		return ""
-	}
-	s, _ := gregex.ReplaceString(
-		`(.+);\s*password=(.+);\s*server=(.+)`,
-		`$1;password=xxx;server=$3`,
-		d.GetConfig().Link,
-	)
-	return s
 }
 
 // GetChars returns the security char for this type of database.
@@ -251,21 +237,10 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 //
 // Also see DriverMysql.TableFields.
 func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
-	charL, charR := d.GetChars()
-	table = gstr.Trim(table, charL+charR)
-	if gstr.Contains(table, " ") {
-		return nil, gerror.NewCode(
-			gcode.CodeInvalidParameter, "function TableFields supports only single table operations",
-		)
-	}
-	useSchema := d.GetSchema()
-	if len(schema) > 0 && schema[0] != "" {
-		useSchema = schema[0]
-	}
-
 	var (
-		result gdb.Result
-		link   gdb.Link
+		result    gdb.Result
+		link      gdb.Link
+		useSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
 	)
 	if link, err = d.SlaveLink(useSchema); err != nil {
 		return nil, err

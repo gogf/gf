@@ -10,37 +10,37 @@ import (
 	"database/sql"
 )
 
-// DriverTest is the driver for mysql database.
-type DriverTest struct {
+// DriverDefault is the default driver for mysql database, which does nothing.
+type DriverDefault struct {
 	*Core
 }
 
 func init() {
-	if err := Register("test", &DriverTest{}); err != nil {
+	if err := Register("default", &DriverDefault{}); err != nil {
 		panic(err)
 	}
 }
 
 // New creates and returns a database object for mysql.
 // It implements the interface of gdb.Driver for extra database driver installation.
-func (d *DriverTest) New(core *Core, node ConfigNode) (DB, error) {
-	return &DriverTest{
+func (d *DriverDefault) New(core *Core, node *ConfigNode) (DB, error) {
+	return &DriverDefault{
 		Core: core,
 	}, nil
 }
 
 // Open creates and returns an underlying sql.DB object for mysql.
 // Note that it converts time.Time argument to local timezone in default.
-func (d *DriverTest) Open(config ConfigNode) (db *sql.DB, err error) {
+func (d *DriverDefault) Open(config *ConfigNode) (db *sql.DB, err error) {
 	return
 }
 
 // PingMaster pings the master node to check authentication or keeps the connection alive.
-func (d *DriverTest) PingMaster() error {
+func (d *DriverDefault) PingMaster() error {
 	return nil
 }
 
 // PingSlave pings the slave node to check authentication or keeps the connection alive.
-func (d *DriverTest) PingSlave() error {
+func (d *DriverDefault) PingSlave() error {
 	return nil
 }

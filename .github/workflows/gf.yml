@@ -58,6 +58,7 @@ jobs:
           - 3306:3306
 
       # PostgreSQL backend server.
+      # docker run -d --name postgres -p 5432:5432 -e POSTGRES_PASSWORD=12345678 -e POSTGRES_USER=postgres -e POSTGRES_DB=test -v postgres:/Users/john/Temp/postgresql/data loads/postgres:13
       postgres:
         image: loads/postgres:13
         env:
@@ -101,12 +102,12 @@ jobs:
           - 9001:9001
 
       polaris:
-        image: polarismesh/polaris-server-standalone:latest
+        image: loads/polaris-server-standalone:latest
         ports:
           - 8090:8090
           - 8091:8091
 
-      #oracle 11g server
+      # oracle 11g server
       oracle-server:
         image: loads/oracle-xe-11g-r2:latest
         env:
@@ -117,6 +118,11 @@ jobs:
         ports:
           - 1521:1521
 
+      # dm8 server
+      dm-server:
+        image: loads/dm:v8.1.2.128_ent_x86_64_ctm_pack4
+        ports:
+          - 5236:5236
 
     strategy:
       matrix:
