@@ -126,7 +126,7 @@ jobs:
 
     strategy:
       matrix:
-        go-version: [ "1.15", "1.16", "1.17", "1.18" ]
+        go-version: [ "1.15", "1.16", "1.17", "1.18", "1.19" ]
         goarch: [ "386", "amd64" ]
 
     steps:
@@ -178,17 +178,11 @@ jobs:
         GOARCH=${{ matrix.goarch }}
         for file in `find . -name go.mod`; do
             dirpath=$(dirname $file)
+            echo $dirpath
 
             # package oracle needs golang >= v1.17
             if [ "oracle" = $(basename $dirpath) ]; then
                 if ! go version|grep -q "1.17"; then
-                  continue 1
-                fi
-            fi
-
-            # package kubecm needs golang >= v1.18
-            if [ "kubecm" = $(basename $dirpath) ]; then
-                if ! go version|grep -q "1.18"; then
                   continue 1
                 fi
             fi
