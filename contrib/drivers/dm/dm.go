@@ -1,3 +1,10 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+// Package dm implements gdb.Driver, which supports operations for database DM.
 package dm
 
 import (
@@ -10,22 +17,18 @@ import (
 	"strings"
 
 	_ "gitee.com/chunanyong/dm"
-	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
-type DriverDM struct {
+type Driver struct {
 	*gdb.Core
 }
-
-var (
-	tableFieldsMap = gmap.New(true)
-)
 
 func init() {
 	var (
@@ -41,39 +44,40 @@ func init() {
 }
 
 func New() gdb.Driver {
-	return &DriverDM{}
+	return &Driver{}
 }
 
-func (d *DriverDM) New(core *gdb.Core, node gdb.ConfigNode) (gdb.DB, error) {
-	return &DriverDM{
+func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
+	return &Driver{
 		Core: core,
 	}, nil
 }
 
-func (d *DriverDM) Open(config gdb.ConfigNode) (db *sql.DB, err error) {
+func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	var (
 		source               string
 		underlyingDriverName = "dm"
 	)
+	if config.Name == "" {
+		return nil, fmt.Errorf(
+			`dm.Open failed for driver "%s" without DB Name`, underlyingDriverName,
+		)
+	}
 	// Data Source Name of DM8:
 	// dm://userName:password@ip:port/dbname
-	if config.Link != "" {
-		source = config.Link
-		// Custom changing the schema in runtime.
-		if config.Name != "" {
-			source, _ = gregex.ReplaceString(`/([\w\.\-]+)+`, "/"+config.Name, source)
-		}
-	} else {
-		source = fmt.Sprintf(
-			"dm://%s:%s@%s:%s/%s?charset=%s",
-			config.User, config.Pass, config.Host, config.Port, config.Name, config.Charset,
-		)
-		// Demo of timezong setting:
-		// &loc=Asia/Shanghai
-		if config.Timezone != "" {
-			source = fmt.Sprintf("%s&loc%s", source, url.QueryEscape(config.Timezone))
-		}
+	source = fmt.Sprintf(
+		"dm://%s:%s@%s:%s/%s?charset=%s",
+		config.User, config.Pass, config.Host, config.Port, config.Name, config.Charset,
+	)
+	// Demo of timezone setting:
+	// &loc=Asia/Shanghai
+	if config.Timezone != "" {
+		source = fmt.Sprintf("%s&loc%s", source, url.QueryEscape(config.Timezone))
 	}
+	if config.Extra != "" {
+		source = fmt.Sprintf("%s&%s", source, config.Extra)
+	}
+
 	if db, err = sql.Open(underlyingDriverName, source); err != nil {
 		err = gerror.WrapCodef(
 			gcode.CodeDbOperationError, err,
@@ -84,21 +88,21 @@ func (d *DriverDM) Open(config gdb.ConfigNode) (db *sql.DB, err error) {
 	return
 }
 
-func (d *DriverDM) GetChars() (charLeft string, charRight string) {
+func (d *Driver) GetChars() (charLeft string, charRight string) {
 	return `"`, `"`
 }
 
-func (d *DriverDM) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
+func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
 	var result gdb.Result
+	// When schema is empty, return the default link
 	link, err := d.SlaveLink(schema...)
 	if err != nil {
 		return nil, err
 	}
-	// TODO support multiple schema
-	if len(schema) == 0 {
-		return nil, gerror.NewCode(gcode.CodeNotSupported, `Schema is empty`)
-	}
-	result, err = d.DoSelect(ctx, link, fmt.Sprintf(`SELECT * FROM ALL_TABLES WHERE OWNER IN ('%s')`, schema[0]))
+	// The link has been distinguished and no longer needs to judge the owner
+	result, err = d.DoSelect(
+		ctx, link, `SELECT * FROM ALL_TABLES`,
+	)
 	if err != nil {
 		return
 	}
@@ -110,99 +114,83 @@ func (d *DriverDM) Tables(ctx context.Context, schema ...string) (tables []strin
 	return
 }
 
-func (d *DriverDM) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
-	// Format dm table
-	charL, charR := d.GetChars()
-	table = gstr.Trim(table, charL+charR)
-	if gstr.Contains(table, " ") {
-		return nil, gerror.NewCode(
-			gcode.CodeInvalidParameter,
-			"function TableFields supports only single table operations",
-		)
-	}
-
-	// SET schema
-	useSchema := d.GetSchema()
-	if len(schema) > 0 && schema[0] != "" {
-		useSchema = schema[0]
-	}
-
-	v := tableFieldsMap.GetOrSetFuncLock(
-		fmt.Sprintf(`dm_table_fields_%s_%s@group:%s`, table, useSchema, d.GetGroup()),
-		func() interface{} {
-			var (
-				result gdb.Result
-				link   gdb.Link
-			)
-			if link, err = d.SlaveLink(useSchema); err != nil {
-				return nil
-			}
-			result, err = d.DoSelect(
-				ctx, link,
-				fmt.Sprintf(`SELECT * FROM ALL_TAB_COLUMNS WHERE OWNER='%s' AND Table_Name= '%s'`, useSchema, strings.ToUpper(table)),
-			)
-			if err != nil {
-				return nil
-			}
-			fields = make(map[string]*gdb.TableField)
-			for _, m := range result {
-				// m[NULLABLE] returns "N" "Y"
-				// "N" means not null
-				// "Y" means could be null
-				var nullable bool
-				if m["NULLABLE"].String() != "N" {
-					nullable = true
-				}
-				fields[m["COLUMN_NAME"].String()] = &gdb.TableField{
-					Index:   m["COLUMN_ID"].Int(),
-					Name:    m["COLUMN_NAME"].String(),
-					Type:    m["DATA_TYPE"].String(),
-					Null:    nullable,
-					Default: m["DATA_DEFAULT"].Val(),
-					// Key:     m["Key"].String(),
-					// Extra:   m["Extra"].String(),
-					// Comment: m["Comment"].String(),
-				}
-			}
-			return fields
-		},
+func (d *Driver) TableFields(
+	ctx context.Context, table string, schema ...string,
+) (fields map[string]*gdb.TableField, err error) {
+	var (
+		result gdb.Result
+		link   gdb.Link
+		// When no schema is specified, the configuration item is returned by default
+		usedSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
 	)
-	if v != nil {
-		fields = v.(map[string]*gdb.TableField)
+	// When usedSchema is empty, return the default link
+	if link, err = d.SlaveLink(usedSchema); err != nil {
+		return nil, err
 	}
-	return
+	// The link has been distinguished and no longer needs to judge the owner
+	result, err = d.DoSelect(
+		ctx, link,
+		fmt.Sprintf(
+			`SELECT * FROM ALL_TAB_COLUMNS WHERE Table_Name= '%s'`,
+			strings.ToUpper(table),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+	fields = make(map[string]*gdb.TableField)
+	for _, m := range result {
+		// m[NULLABLE] returns "N" "Y"
+		// "N" means not null
+		// "Y" means could be null
+		var nullable bool
+		if m["NULLABLE"].String() != "N" {
+			nullable = true
+		}
+		fields[m["COLUMN_NAME"].String()] = &gdb.TableField{
+			Index:   m["COLUMN_ID"].Int(),
+			Name:    m["COLUMN_NAME"].String(),
+			Type:    m["DATA_TYPE"].String(),
+			Null:    nullable,
+			Default: m["DATA_DEFAULT"].Val(),
+			// Key:     m["Key"].String(),
+			// Extra:   m["Extra"].String(),
+			// Comment: m["Comment"].String(),
+		}
+	}
+	return fields, nil
 }
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
-func (d *DriverDM) DoFilter(ctx context.Context, link gdb.Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
 	defer func() {
 		newSql, newArgs, err = d.Core.DoFilter(ctx, link, newSql, newArgs)
 	}()
-	str, _ := gregex.ReplaceString("\"", "", sql)
-	str, _ = gregex.ReplaceString("\n", "", str)
-	str, _ = gregex.ReplaceString("\t", "", str)
 	// There should be no need to capitalize, because it has been done from field processing before
-	newSql = str
-	// g.Dump("DriverDM.DoFilter()::newSql", newSql)
+	newSql, _ = gregex.ReplaceString(`["\n\t]`, "", sql)
+	// g.Dump("Driver.DoFilter()::newSql", newSql)
 	newArgs = args
-	// g.Dump("DriverDM.DoFilter()::newArgs", newArgs)
-
+	// g.Dump("Driver.DoFilter()::newArgs", newArgs)
 	return
 }
 
-func (d *DriverDM) DoInsert(
+func (d *Driver) DoInsert(
 	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
 ) (result sql.Result, err error) {
 	switch option.InsertOption {
 	case gdb.InsertOptionReplace:
-		// TODO
-		// TO BE Supported
-		return nil, gerror.NewCode(gcode.CodeNotSupported, `Replace operation is not supported by dm driver`)
+		// TODO:: Should be Supported
+		return nil, gerror.NewCode(
+			gcode.CodeNotSupported, `Replace operation is not supported by dm driver`,
+		)
+
 	case gdb.InsertOptionSave:
-		// This syntax currently only supports design tables whose primary key is ID
+		// This syntax currently only supports design tables whose primary key is ID.
 		listLength := len(list)
 		if listLength == 0 {
-			return nil, gerror.NewCode(gcode.CodeInvalidRequest, `Save operation list is empty by dm driver`)
+			return nil, gerror.NewCode(
+				gcode.CodeInvalidRequest, `Save operation list is empty by dm driver`,
+			)
 		}
 		var (
 			keysSort     []string
@@ -215,27 +203,26 @@ func (d *DriverDM) DoInsert(
 		var char = struct {
 			charL        string
 			charR        string
-			valuecharL   string
-			valuecharR   string
+			valueCharL   string
+			valueCharR   string
 			duplicateKey string
 			keys         []string
 		}{
 			charL:      charL,
 			charR:      charR,
-			valuecharL: "'",
-			valuecharR: "'",
-			// TODO
-			// Need to dynamically set the primary key of the table
+			valueCharL: "'",
+			valueCharR: "'",
+			// TODO:: Need to dynamically set the primary key of the table
 			duplicateKey: "ID",
 			keys:         keysSort,
 		}
 
-		// insertKeys: Handle valid keys that need to be inserted and updated
-		// insertValues: Handle values ​​that need to be inserted
-		// updateValues: Handle values ​​that need to be updated
-		// queryValues: Handle only one insert with column name
+		// insertKeys:   Handle valid keys that need to be inserted and updated
+		// insertValues: Handle values that need to be inserted
+		// updateValues: Handle values that need to be updated
+		// queryValues:  Handle only one insert with column name
 		insertKeys, insertValues, updateValues, queryValues := parseValue(list[0], char)
-		// unionValues: Handling values ​​that need to be inserted and updated
+		// unionValues: Handling values that need to be inserted and updated
 		unionValues := parseUnion(list[1:], char)
 
 		batchResult := new(gdb.SqlResult)
@@ -248,7 +235,9 @@ func (d *DriverDM) DoInsert(
 		// INSERT {{insertKeys}} VALUES {{insertValues}}
 		// WHEN MATCHED THEN
 		// UPDATE SET {{updateValues}}
-		sqlStr := parseSql(insertKeys, insertValues, updateValues, queryValues, unionValues, table, char.duplicateKey)
+		sqlStr := parseSql(
+			insertKeys, insertValues, updateValues, queryValues, unionValues, table, char.duplicateKey,
+		)
 		r, err := d.DoExec(ctx, link, sqlStr)
 		if err != nil {
 			return r, err
@@ -267,8 +256,8 @@ func (d *DriverDM) DoInsert(
 func parseValue(listOne gdb.Map, char struct {
 	charL        string
 	charR        string
-	valuecharL   string
-	valuecharR   string
+	valueCharL   string
+	valueCharR   string
 	duplicateKey string
 	keys         []string
 }) (insertKeys []string, insertValues []string, updateValues []string, queryValues []string) {
@@ -280,7 +269,10 @@ func parseValue(listOne gdb.Map, char struct {
 		insertKeys = append(insertKeys, char.charL+column+char.charR)
 		insertValues = append(insertValues, "T2."+char.charL+column+char.charR)
 		if column != char.duplicateKey {
-			updateValues = append(updateValues, fmt.Sprintf(`T1.%s = T2.%s`, char.charL+column+char.charR, char.charL+column+char.charR))
+			updateValues = append(
+				updateValues,
+				fmt.Sprintf(`T1.%s = T2.%s`, char.charL+column+char.charR, char.charL+column+char.charR),
+			)
 		}
 
 		va := reflect.ValueOf(listOne[column])
@@ -289,14 +281,24 @@ func parseValue(listOne gdb.Map, char struct {
 		switch ty.Kind() {
 		case reflect.String:
 			saveValue = va.String()
+
 		case reflect.Int:
 			saveValue = strconv.FormatInt(va.Int(), 10)
+
 		case reflect.Int64:
 			saveValue = strconv.FormatInt(va.Int(), 10)
+
 		default:
-			g.Dump(fmt.Sprintf("column: %v, kind:%v", column, ty.Kind()))
+			// The fish has no chance getting here.
+			// Nothing to do.
 		}
-		queryValues = append(queryValues, fmt.Sprintf(char.valuecharL+"%s"+char.valuecharR+" AS "+char.charL+"%s"+char.charR, saveValue, column))
+		queryValues = append(
+			queryValues,
+			fmt.Sprintf(
+				char.valueCharL+"%s"+char.valueCharR+" AS "+char.charL+"%s"+char.charR,
+				saveValue, column,
+			),
+		)
 	}
 	return
 }
@@ -304,8 +306,8 @@ func parseValue(listOne gdb.Map, char struct {
 func parseUnion(list gdb.List, char struct {
 	charL        string
 	charR        string
-	valuecharL   string
-	valuecharR   string
+	valueCharL   string
+	valueCharR   string
 	duplicateKey string
 	keys         []string
 }) (unionValues []string) {
@@ -319,26 +321,51 @@ func parseUnion(list gdb.List, char struct {
 			ty := reflect.TypeOf(mapper[column])
 			switch ty.Kind() {
 			case reflect.String:
-				saveValue = append(saveValue, char.valuecharL+va.String()+char.valuecharR)
+				saveValue = append(saveValue, char.valueCharL+va.String()+char.valueCharR)
+
 			case reflect.Int:
 				saveValue = append(saveValue, strconv.FormatInt(va.Int(), 10))
+
 			case reflect.Int64:
 				saveValue = append(saveValue, strconv.FormatInt(va.Int(), 10))
+
 			default:
-				g.Dump(fmt.Sprintf("column: %v, kind:%v", column, ty.Kind()))
+				// The fish has no chance getting here.
+				// Nothing to do.
 			}
 		}
-		unionValues = append(unionValues, fmt.Sprintf(`UNION ALL SELECT %s FROM DUAL`, strings.Join(saveValue, ",")))
+		unionValues = append(
+			unionValues,
+			fmt.Sprintf(`UNION ALL SELECT %s FROM DUAL`, strings.Join(saveValue, ",")),
+		)
 	}
 	return
 }
 
-func parseSql(insertKeys, insertValues, updateValues, queryValues, unionValues []string, table, duplicateKey string) (sqlStr string) {
-	queryValueStr := strings.Join(queryValues, ",")
-	unionValueStr := strings.Join(unionValues, " ")
-	insertKeyStr := strings.Join(insertKeys, ",")
-	insertValueStr := strings.Join(insertValues, ",")
-	updateValueStr := strings.Join(updateValues, ",")
-	return fmt.Sprintf(`MERGE INTO %s T1 USING (SELECT %s FROM DUAL %s) T2 ON %s WHEN NOT MATCHED THEN INSERT(%s) VALUES (%s) WHEN MATCHED THEN UPDATE SET %s; 
-	COMMIT;`, table, queryValueStr, unionValueStr, fmt.Sprintf("(T1.%s = T2.%s)", duplicateKey, duplicateKey), insertKeyStr, insertValueStr, updateValueStr)
+func parseSql(
+	insertKeys, insertValues, updateValues, queryValues, unionValues []string, table, duplicateKey string,
+) (sqlStr string) {
+	var (
+		queryValueStr  = strings.Join(queryValues, ",")
+		unionValueStr  = strings.Join(unionValues, " ")
+		insertKeyStr   = strings.Join(insertKeys, ",")
+		insertValueStr = strings.Join(insertValues, ",")
+		updateValueStr = strings.Join(updateValues, ",")
+		pattern        = gstr.Trim(`
+MERGE INTO %s T1 USING (SELECT %s FROM DUAL %s) T2 ON %s 
+WHEN NOT MATCHED 
+THEN 
+INSERT(%s) VALUES (%s) 
+WHEN MATCHED 
+THEN 
+UPDATE SET %s; 
+COMMIT;
+`)
+	)
+	return fmt.Sprintf(
+		pattern,
+		table, queryValueStr, unionValueStr,
+		fmt.Sprintf("(T1.%s = T2.%s)", duplicateKey, duplicateKey),
+		insertKeyStr, insertValueStr, updateValueStr,
+	)
 }
