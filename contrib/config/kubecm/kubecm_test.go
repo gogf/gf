@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
 	v1 "k8s.io/api/core/v1"
@@ -21,16 +22,23 @@ import (
 )
 
 const (
-	namespace          = "default"
-	configmap          = "test-configmap"
-	dataItem           = "config.yaml"
-	configmapFileName  = "configmap.yaml"
-	kubeConfigFilePath = `/home/runner/.kube/config`
+	namespace         = "default"
+	configmap         = "test-configmap"
+	dataItem          = "config.yaml"
+	configmapFileName = "configmap.yaml"
 )
 
 var (
-	ctx = gctx.New()
+	ctx                    = gctx.New()
+	kubeConfigFilePath     = `/home/runner/.kube/config`
+	kubeConfigFilePathJohn = `/Users/john/.kube/config`
 )
+
+func init() {
+	if !gfile.Exists(kubeConfigFilePath) {
+		kubeConfigFilePath = kubeConfigFilePathJohn
+	}
+}
 
 func TestAvailable(t *testing.T) {
 	var (
@@ -83,4 +91,20 @@ func TestAvailable(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(v.String(), ":8888")
 	})
+}
+
+func TestNewKubeClientFromConfig(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		config, _ := kubecm.NewKubeConfigFromPath(ctx, kubeConfigFilePath)
+		_, err := kubecm.NewKubeClientFromConfig(ctx, config)
+		t.AssertNil(err)
+	})
+}
+
+// These functions should be called in pod environment, but it has no environment in CI UT testing.
+// It so just calls them ,but does nothing.
+func TestDefaultBehaviorFunctions(t *testing.T) {
+	kubecm.Namespace()
+	kubecm.NewDefaultKubeClient(ctx)
+	kubecm.NewDefaultKubeConfig(ctx)
 }

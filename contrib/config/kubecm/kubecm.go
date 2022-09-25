@@ -23,8 +23,8 @@ import (
 
 // Client implements gcfg.Adapter.
 type Client struct {
-	Config
-	value *g.Var
+	Config        // Config object when created.
+	value  *g.Var // Configmap content cached. It is `*gjson.Json` value internally.
 }
 
 // Config for Client.
