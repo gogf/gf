@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // Redis client.
@@ -30,8 +31,14 @@ type TTLOption struct {
 }
 
 const (
-	errorNilRedis   = `the Redis object is nil`
-	errorNilAdapter = `redis adapter not initialized, missing configuration or adapter register?`
+	errorNilRedis = `the Redis object is nil`
+)
+
+var (
+	errorNilAdapter = gstr.Trim(`
+redis adapter is not set, missing configuration or adapter register? 
+possible reference: https://github.com/gogf/gf/tree/master/contrib/nosql/redis
+`)
 )
 
 // SetAdapter sets custom adapter for current redis client.
