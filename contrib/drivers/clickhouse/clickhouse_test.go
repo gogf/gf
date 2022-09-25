@@ -127,6 +127,16 @@ func clickhouseConfigDB() gdb.DB {
 	return connect
 }
 
+func clickhouseLink() gdb.DB {
+	connect, err := gdb.New(gdb.ConfigNode{
+		Link: "clickhouse://default@127.0.0.1:9000,127.0.0.1:9000/default?dial_timeout=200ms&max_execution_time=60",
+		Type: "clickhouse",
+	})
+	gtest.AssertNil(err)
+	gtest.AssertNE(connect, nil)
+	return connect
+}
+
 func createClickhouseTableVisits(connect gdb.DB) error {
 	_, err := connect.Exec(context.Background(), sqlVisitsDDL)
 	return err
@@ -204,7 +214,7 @@ func TestDriverClickhouse_TableFields_Use_Config(t *testing.T) {
 }
 
 func TestDriverClickhouse_TableFields_Use_Link(t *testing.T) {
-	connect := clickhouseConfigDB()
+	connect := clickhouseLink()
 	gtest.AssertNil(createClickhouseTableVisits(connect))
 	defer dropClickhouseTableVisits(connect)
 	field, err := connect.TableFields(context.Background(), "visits")

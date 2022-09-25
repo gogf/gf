@@ -23,8 +23,8 @@ type (
 )
 
 var (
-	processCtx context.Context // processCtx is the context initialized from process environment.
-	initCtx    context.Context // initCtx is the context for init function of packages.
+	// initCtx is the context initialized from process environment.
+	initCtx context.Context
 )
 
 func init() {
@@ -33,20 +33,21 @@ func init() {
 	i := 0
 	for _, s := range os.Environ() {
 		i = strings.IndexByte(s, '=')
+		if i == -1 {
+			continue
+		}
 		m[s[0:i]] = s[i+1:]
 	}
 	// OpenTelemetry from environments.
-	processCtx = otel.GetTextMapPropagator().Extract(
+	initCtx = otel.GetTextMapPropagator().Extract(
 		context.Background(),
 		propagation.MapCarrier(m),
 	)
-	// Initialize initialization context.
-	initCtx = New()
 }
 
 // New creates and returns a context which contains context id.
 func New() context.Context {
-	return WithCtx(processCtx)
+	return WithCtx(context.Background())
 }
 
 // WithCtx creates and returns a context containing context id upon given parent context `ctx`.
@@ -74,6 +75,7 @@ func SetInitCtx(ctx context.Context) {
 }
 
 // GetInitCtx returns the initialization context.
+// Initialization context is used in `main` or `init` functions.
 func GetInitCtx() context.Context {
 	return initCtx
 }

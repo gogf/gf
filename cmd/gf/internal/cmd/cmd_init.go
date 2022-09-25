@@ -94,11 +94,20 @@ func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err 
 	// Update the GoFrame version.
 	if in.Update {
 		mlog.Print("update goframe...")
+		// go get -u github.com/gogf/gf/v2@latest
 		updateCommand := `go get -u github.com/gogf/gf/v2@latest`
 		if in.Name != "." {
 			updateCommand = fmt.Sprintf(`cd %s && %s`, in.Name, updateCommand)
 		}
 		if err = gproc.ShellRun(ctx, updateCommand); err != nil {
+			mlog.Fatal(err)
+		}
+		// go mod tidy
+		gomModTidyCommand := `go mod tidy`
+		if in.Name != "." {
+			gomModTidyCommand = fmt.Sprintf(`cd %s && %s`, in.Name, gomModTidyCommand)
+		}
+		if err = gproc.ShellRun(ctx, gomModTidyCommand); err != nil {
 			mlog.Fatal(err)
 		}
 	}

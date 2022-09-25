@@ -20,6 +20,11 @@ on:
     - enhance/**
     - fix/**
 
+# This allows a subsequently queued workflow run to interrupt previous runs
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
 env:
   TZ: "Asia/Shanghai"
 
@@ -115,7 +120,7 @@ jobs:
 
     strategy:
       matrix:
-        go-version: [ "1.15", "1.16", "1.17" ]
+        go-version: [ "1.15", "1.16", "1.17", "1.18" ]
         goarch: [ "386", "amd64" ]
 
     steps:

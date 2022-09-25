@@ -7,6 +7,7 @@
 package gconv_test
 
 import (
+	"math"
 	"testing"
 	"time"
 
@@ -199,6 +200,7 @@ func Test_Int_All(t *testing.T) {
 		t.AssertEQ(gconv.Int(123.456), 123)
 		t.AssertEQ(gconv.Int(boolStruct{}), 0)
 		t.AssertEQ(gconv.Int(&boolStruct{}), 0)
+		t.AssertEQ(gconv.Int("NaN"), 0)
 	})
 }
 
@@ -233,6 +235,8 @@ func Test_Int8_All(t *testing.T) {
 		t.AssertEQ(gconv.Int8(123.456), int8(123))
 		t.AssertEQ(gconv.Int8(boolStruct{}), int8(0))
 		t.AssertEQ(gconv.Int8(&boolStruct{}), int8(0))
+		t.AssertEQ(gconv.Int8("NaN"), int8(0))
+
 	})
 }
 
@@ -267,6 +271,7 @@ func Test_Int16_All(t *testing.T) {
 		t.AssertEQ(gconv.Int16(123.456), int16(123))
 		t.AssertEQ(gconv.Int16(boolStruct{}), int16(0))
 		t.AssertEQ(gconv.Int16(&boolStruct{}), int16(0))
+		t.AssertEQ(gconv.Int16("NaN"), int16(0))
 	})
 }
 
@@ -301,6 +306,7 @@ func Test_Int32_All(t *testing.T) {
 		t.AssertEQ(gconv.Int32(123.456), int32(123))
 		t.AssertEQ(gconv.Int32(boolStruct{}), int32(0))
 		t.AssertEQ(gconv.Int32(&boolStruct{}), int32(0))
+		t.AssertEQ(gconv.Int32("NaN"), int32(0))
 	})
 }
 
@@ -355,6 +361,7 @@ func Test_Int64_All(t *testing.T) {
 		t.AssertEQ(gconv.Int64(123.456), int64(123))
 		t.AssertEQ(gconv.Int64(boolStruct{}), int64(0))
 		t.AssertEQ(gconv.Int64(&boolStruct{}), int64(0))
+		t.AssertEQ(gconv.Int64("NaN"), int64(0))
 	})
 }
 
@@ -390,6 +397,7 @@ func Test_Uint_All(t *testing.T) {
 		t.AssertEQ(gconv.Uint(123.456), uint(123))
 		t.AssertEQ(gconv.Uint(boolStruct{}), uint(0))
 		t.AssertEQ(gconv.Uint(&boolStruct{}), uint(0))
+		t.AssertEQ(gconv.Uint("NaN"), uint(0))
 	})
 }
 
@@ -425,6 +433,7 @@ func Test_Uint8_All(t *testing.T) {
 		t.AssertEQ(gconv.Uint8(123.456), uint8(123))
 		t.AssertEQ(gconv.Uint8(boolStruct{}), uint8(0))
 		t.AssertEQ(gconv.Uint8(&boolStruct{}), uint8(0))
+		t.AssertEQ(gconv.Uint8("NaN"), uint8(0))
 	})
 }
 
@@ -460,6 +469,7 @@ func Test_Uint16_All(t *testing.T) {
 		t.AssertEQ(gconv.Uint16(123.456), uint16(123))
 		t.AssertEQ(gconv.Uint16(boolStruct{}), uint16(0))
 		t.AssertEQ(gconv.Uint16(&boolStruct{}), uint16(0))
+		t.AssertEQ(gconv.Uint16("NaN"), uint16(0))
 	})
 }
 
@@ -495,6 +505,7 @@ func Test_Uint32_All(t *testing.T) {
 		t.AssertEQ(gconv.Uint32(123.456), uint32(123))
 		t.AssertEQ(gconv.Uint32(boolStruct{}), uint32(0))
 		t.AssertEQ(gconv.Uint32(&boolStruct{}), uint32(0))
+		t.AssertEQ(gconv.Uint32("NaN"), uint32(0))
 	})
 }
 
@@ -549,6 +560,7 @@ func Test_Uint64_All(t *testing.T) {
 		t.AssertEQ(gconv.Uint64(123.456), uint64(123))
 		t.AssertEQ(gconv.Uint64(boolStruct{}), uint64(0))
 		t.AssertEQ(gconv.Uint64(&boolStruct{}), uint64(0))
+		t.AssertEQ(gconv.Uint64("NaN"), uint64(0))
 	})
 }
 
@@ -583,6 +595,7 @@ func Test_Float32_All(t *testing.T) {
 		t.AssertEQ(gconv.Float32(123.456), float32(123.456))
 		t.AssertEQ(gconv.Float32(boolStruct{}), float32(0))
 		t.AssertEQ(gconv.Float32(&boolStruct{}), float32(0))
+		t.AssertEQ(gconv.Float32("NaN"), float32(math.NaN()))
 	})
 }
 
@@ -617,6 +630,7 @@ func Test_Float64_All(t *testing.T) {
 		t.AssertEQ(gconv.Float64(123.456), float64(123.456))
 		t.AssertEQ(gconv.Float64(boolStruct{}), float64(0))
 		t.AssertEQ(gconv.Float64(&boolStruct{}), float64(0))
+		t.AssertEQ(gconv.Float64("NaN"), float64(math.NaN()))
 	})
 }
 
