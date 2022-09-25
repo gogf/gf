@@ -9,6 +9,10 @@ package kubecm_test
 import (
 	"testing"
 
+	v1 "k8s.io/api/core/v1"
+	kubeMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+
 	"github.com/gogf/gf/contrib/config/kubecm/v2"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
@@ -16,9 +20,6 @@ import (
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
-	v1 "k8s.io/api/core/v1"
-	kubeMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 )
 
 const (
