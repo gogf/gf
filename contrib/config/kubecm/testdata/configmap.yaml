@@ -4,13 +4,12 @@ metadata:
   name: test-configmap
 data:
   config.yaml: |
-    # OSS service.
+    # HTTP service.
     server:
-      address:     ":8888"
-      openapiPath: "/api.json"
-      swaggerPath: "/swagger"
-      errorLogEnabled:  false
-      accessLogEnabled: false
+      address:          ":8888"
+      openapiPath:      "/api.json"
+      swaggerPath:      "/swagger"
+      accessLogEnabled: true
 
     # Database configuration.
     database:

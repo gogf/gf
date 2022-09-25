@@ -8,6 +8,25 @@ go get -u github.com/gogf/gf/contrib/config/kubecm/v2
 
 # Example
 
+## Example configmap
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-configmap
+data:
+  config.yaml: |
+    # HTTP service.
+    server:
+      address:          ":8888"
+      openapiPath:      "/api.json"
+      swaggerPath:      "/swagger"
+      accessLogEnabled: true
+```
+
+Note the configmap name `test-configmap`, and its item name in data `config.yaml`.
+
+
 ## Create a custom boot package
 
 It is strongly recommended creating a boot package, 
