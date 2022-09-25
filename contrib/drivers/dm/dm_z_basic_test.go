@@ -175,8 +175,7 @@ func TestModelSave(t *testing.T) {
 		_, err = db.Schema(TestDbName).Model("A_tables").Save(&data4)
 		gtest.Assert(err, nil)
 
-		// TODO
-		// TO BE Supported
+		// TODO:: Should be Supported 'Replace' Operation
 		// _, err = db.Schema(TestDbName).Replace(ctx, "DoInsert", data, 10)
 		// gtest.Assert(err, nil)
 	})
@@ -287,8 +286,8 @@ func Test_DB_Insert(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(ones[0]["ID"].Int(), 4000)
 		t.Assert(ones[0]["ACCOUNT_NAME"].String(), "struct_4")
-		// TODO
-		// DM bug
+		// TODO Question2
+		// this is DM bug.
 		// t.Assert(one["CREATED_TIME"].GTime().String(), timeStr)
 
 		// *struct

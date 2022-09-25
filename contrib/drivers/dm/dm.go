@@ -94,7 +94,7 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 		return nil, err
 	}
 
-	// TODO support multiple schema
+	// TODO:: Need to support multiple schema
 	if len(schema) == 0 {
 		return nil, gerror.NewCode(gcode.CodeNotSupported, `Schema is empty`)
 	}
@@ -174,8 +174,7 @@ func (d *Driver) DoInsert(
 ) (result sql.Result, err error) {
 	switch option.InsertOption {
 	case gdb.InsertOptionReplace:
-		// TODO
-		// TO BE Supported
+		// TODO:: Should be Supported
 		return nil, gerror.NewCode(
 			gcode.CodeNotSupported, `Replace operation is not supported by dm driver`,
 		)
@@ -208,8 +207,7 @@ func (d *Driver) DoInsert(
 			charR:      charR,
 			valueCharL: "'",
 			valueCharR: "'",
-			// TODO
-			// Need to dynamically set the primary key of the table
+			// TODO:: Need to dynamically set the primary key of the table
 			duplicateKey: "ID",
 			keys:         keysSort,
 		}
