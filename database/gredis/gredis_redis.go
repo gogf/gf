@@ -17,15 +17,16 @@ import (
 
 // Redis client.
 type Redis struct {
-	adapter Adapter0
+	adapter Adapter
 	config  *Config
 }
 
+// TTLOption provides extra option for TTL related functions.
 type TTLOption struct {
-	EX   int64
-	PX   int64
-	EXAT int64
-	PXAT int64
+	EX   int64 // EX seconds -- Set the specified expire time, in seconds.
+	PX   int64 // PX milliseconds -- Set the specified expire time, in milliseconds.
+	EXAT int64 // EXAT timestamp-seconds -- Set the specified Unix time at which the key will expire, in seconds.
+	PXAT int64 // PXAT timestamp-milliseconds -- Set the specified Unix time at which the key will expire, in milliseconds.
 }
 
 const (
