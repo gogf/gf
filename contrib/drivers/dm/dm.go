@@ -58,6 +58,11 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 		source               string
 		underlyingDriverName = "dm"
 	)
+	if config.Name == "" {
+		return nil, fmt.Errorf(
+			`dm.Open failed for driver "%s" without DB Name`, underlyingDriverName,
+		)
+	}
 	// Data Source Name of DM8:
 	// dm://userName:password@ip:port/dbname
 	source = fmt.Sprintf(
@@ -89,17 +94,14 @@ func (d *Driver) GetChars() (charLeft string, charRight string) {
 
 func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
 	var result gdb.Result
+	// When schema is empty, return the default link
 	link, err := d.SlaveLink(schema...)
 	if err != nil {
 		return nil, err
 	}
-
-	// TODO:: Need to support multiple schema
-	if len(schema) == 0 {
-		return nil, gerror.NewCode(gcode.CodeNotSupported, `Schema is empty`)
-	}
+	// The link has been distinguished and no longer needs to judge the owner
 	result, err = d.DoSelect(
-		ctx, link, fmt.Sprintf(`SELECT * FROM ALL_TABLES WHERE OWNER IN ('%s')`, schema[0]),
+		ctx, link, `SELECT * FROM ALL_TABLES`,
 	)
 	if err != nil {
 		return
@@ -116,22 +118,25 @@ func (d *Driver) TableFields(
 	ctx context.Context, table string, schema ...string,
 ) (fields map[string]*gdb.TableField, err error) {
 	var (
-		result     gdb.Result
-		link       gdb.Link
+		result gdb.Result
+		link   gdb.Link
+		// When no schema is specified, the configuration item is returned by default
 		usedSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
 	)
+	// When usedSchema is empty, return the default link
 	if link, err = d.SlaveLink(usedSchema); err != nil {
 		return nil, err
 	}
+	// The link has been distinguished and no longer needs to judge the owner
 	result, err = d.DoSelect(
 		ctx, link,
 		fmt.Sprintf(
-			`SELECT * FROM ALL_TAB_COLUMNS WHERE OWNER='%s' AND Table_Name= '%s'`,
-			usedSchema, strings.ToUpper(table),
+			`SELECT * FROM ALL_TAB_COLUMNS WHERE Table_Name= '%s'`,
+			strings.ToUpper(table),
 		),
 	)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 	fields = make(map[string]*gdb.TableField)
 	for _, m := range result {
