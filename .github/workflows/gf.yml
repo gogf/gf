@@ -178,13 +178,15 @@ jobs:
             # package oracle needs golang >= v1.17
             if [ "oracle" = $(basename $dirpath) ]; then
                 if ! go version|grep -q "1.17"; then
+                  echo "ignore oracle as go version: $(go version)"
                   continue 1
                 fi
             fi
 
             # package kuhecm needs golang >= v1.18
-            if [ "oracle" = $(basename $dirpath) ]; then
+            if [ "kubecm" = $(basename $dirpath) ]; then
                 if ! go version|grep -q "1.18"; then
+                  echo "ignore kubecm as go version: $(go version)"
                   continue 1
                 fi
             fi
@@ -192,6 +194,7 @@ jobs:
             # package example needs golang >= v1.18
             if [ "example" = $(basename $dirpath) ]; then
                 if ! go version|grep -q "1.18"; then
+                  echo "ignore example as go version: $(go version)"
                   continue 1
                 fi
             fi
