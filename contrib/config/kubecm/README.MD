@@ -1,6 +1,12 @@
 # kubecm
 GoFrame `gcfg.Adapter` implements using kubernetes configmap.
 
+# Limit
+
+```go
+glang version >= v.18
+```
+
 # Installation
 ```
 go get -u github.com/gogf/gf/contrib/config/kubecm/v2
