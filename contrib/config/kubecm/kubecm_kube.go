@@ -9,10 +9,11 @@ package kubecm
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/os/gfile"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+
+	"github.com/gogf/gf/v2/os/gfile"
 )
 
 const (
