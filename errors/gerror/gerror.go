@@ -70,9 +70,7 @@ var (
 
 func init() {
 	value := command.GetOptWithEnv(commandEnvKeyForBrief)
-	if value == "" || value == "0" || value == "false" {
-		isUsingBriefStack = false
-	} else {
+	if value == "1" || value == "true" {
 		isUsingBriefStack = true
 	}
 }
