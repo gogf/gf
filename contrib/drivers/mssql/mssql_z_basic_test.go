@@ -9,13 +9,14 @@ package mssql_test
 import (
 	"context"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/encoding/gxml"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
-	"testing"
-	"time"
 )
 
 func TestTables(t *testing.T) {
@@ -108,25 +109,6 @@ func TestTableFields(t *testing.T) {
 	})
 }
 
-func TestFilteredLink(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		s := db.FilteredLink()
-		gtest.AssertEQ(s, "")
-	})
-
-	gtest.C(t, func(t *gtest.T) {
-		_, err := dblink.Query(ctx, "select 1")
-		gtest.Assert(err, nil)
-
-		s := dblink.FilteredLink()
-		gtest.AssertNE(s, nil)
-	})
-
-	gtest.C(t, func(t *gtest.T) {
-		_, err := dbErr.Query(ctx, "select 1")
-		gtest.AssertNE(err, nil)
-	})
-}
 func TestDoInsert(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		createTable("t_user")
