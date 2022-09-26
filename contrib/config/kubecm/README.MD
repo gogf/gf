@@ -1,5 +1,5 @@
 # kubecm
-GoFrame `gcfg.Adapter` implements using kubernetes configmap.
+Package `kubecm` implements GoFrame `gcfg.Adapter` using kubernetes configmap.
 
 # Limit
 
@@ -122,6 +122,8 @@ func init() {
 ## Import boot package in top of main
 
 It is strongly recommended import your boot package in top of your `main.go`.
+
+Note the top `import`: `_ "github.com/gogf/gf/example/config/kubecm/boot_in_pod"` .
 
 ```go
 package main
