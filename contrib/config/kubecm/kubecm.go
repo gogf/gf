@@ -18,7 +18,6 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcfg"
-	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
@@ -35,7 +34,6 @@ type Config struct {
 	Namespace  string                // (Optional) Specify the namespace for configmap.
 	RestConfig *rest.Config          // (Optional) Custom rest config for kube client.
 	KubeClient *kubernetes.Clientset // (Optional) Custom kube client.
-	Logger     glog.ILogger          // (Optional) Custom logger.
 }
 
 // New creates and returns gcfg.Adapter implementing using kubernetes configmap.
@@ -58,10 +56,6 @@ func New(ctx context.Context, config Config) (adapter gcfg.Adapter, err error) {
 			return nil, gerror.Wrapf(err, `create kube client failed`)
 		}
 	}
-	// Default logger.
-	if config.Logger == nil {
-		config.Logger = g.Log()
-	}
 	adapter = &Client{
 		Config: config,
 		value:  g.NewVar(nil, true),
@@ -76,9 +70,6 @@ func New(ctx context.Context, config Config) (adapter gcfg.Adapter, err error) {
 // backend configuration service.
 func (c *Client) Available(ctx context.Context, configMap ...string) (ok bool) {
 	err := c.init(ctx, configMap...)
-	if err != nil {
-		c.Logger.Warningf(ctx, `%+v`, err)
-	}
 	return err == nil
 }
 
