@@ -7,7 +7,6 @@
 package gdb
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
@@ -31,13 +30,15 @@ type ConfigNode struct {
 	Pass                 string        `json:"pass"`                 // Authentication password.
 	Name                 string        `json:"name"`                 // Default used database name.
 	Type                 string        `json:"type"`                 // Database type: mysql, sqlite, mssql, pgsql, oracle.
-	Link                 string        `json:"link"`                 // (Optional) Custom link information, when it is used, configuration Host/Port/User/Pass/Name are ignored.
+	Link                 string        `json:"link"`                 // (Optional) Custom link information for all configuration in one single string.
+	Extra                string        `json:"extra"`                // (Optional) Extra configuration according the registered third-party database driver.
 	Role                 string        `json:"role"`                 // (Optional, "master" in default) Node role, used for master-slave mode: master, slave.
 	Debug                bool          `json:"debug"`                // (Optional) Debug mode enables debug information logging and output.
 	Prefix               string        `json:"prefix"`               // (Optional) Table prefix.
 	DryRun               bool          `json:"dryRun"`               // (Optional) Dry run, which does SELECT but no INSERT/UPDATE/DELETE statements.
 	Weight               int           `json:"weight"`               // (Optional) Weight for load balance calculating, it's useless if there's just one node.
 	Charset              string        `json:"charset"`              // (Optional, "utf8mb4" in default) Custom charset when operating on database.
+	Protocol             string        `json:"protocol"`             // (Optional, "tcp" in default) See net.Dial for more information which networks are available.
 	Timezone             string        `json:"timezone"`             // (Optional) Sets the time zone for displaying and interpreting time stamps.
 	MaxIdleConnCount     int           `json:"maxIdle"`              // (Optional) Max idle connection configuration for underlying connection pool.
 	MaxOpenConnCount     int           `json:"maxOpen"`              // (Optional) Max open connection configuration for underlying connection pool.
@@ -56,7 +57,7 @@ const (
 	DefaultGroupName = "default" // Default group name.
 )
 
-// configs is internal used configuration object.
+// configs specifies internal used configuration object.
 var configs struct {
 	sync.RWMutex
 	config Config // All configurations.
@@ -198,19 +199,6 @@ func (c *Core) SetMaxOpenConnCount(n int) {
 // If d <= 0, connections are not closed due to a connection's age.
 func (c *Core) SetMaxConnLifeTime(d time.Duration) {
 	c.config.MaxConnLifeTime = d
-}
-
-// String returns the node as string.
-func (node *ConfigNode) String() string {
-	return fmt.Sprintf(
-		`%s@%s:%s,%s,%s,%s,%s,%v,%d-%d-%d#%s`,
-		node.User, node.Host, node.Port,
-		node.Name, node.Type, node.Role, node.Charset, node.Debug,
-		node.MaxIdleConnCount,
-		node.MaxOpenConnCount,
-		node.MaxConnLifeTime,
-		node.Link,
-	)
 }
 
 // GetConfig returns the current used node configuration.

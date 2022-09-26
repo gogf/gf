@@ -59,7 +59,7 @@ func Database(name ...string) gdb.DB {
 			if fileConfig, ok := Config().GetAdapter().(*gcfg.AdapterFile); ok {
 				if _, err = fileConfig.GetFilePath(); err != nil {
 					panic(gerror.WrapCode(gcode.CodeMissingConfiguration, err,
-						`configuration not found, did you miss the configuration file or the misspell the configuration file name`,
+						`configuration not found, did you miss the configuration file or misspell the configuration file name`,
 					))
 				}
 			}

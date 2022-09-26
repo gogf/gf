@@ -4,14 +4,40 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gvalid
+package builtin
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 
 	"github.com/gogf/gf/v2/text/gregex"
 )
+
+// RuleResidentId implements `resident-id` rule:
+// Resident id number.
+//
+// Format: resident-id
+type RuleResidentId struct{}
+
+func init() {
+	Register(RuleResidentId{})
+}
+
+func (r RuleResidentId) Name() string {
+	return "resident-id"
+}
+
+func (r RuleResidentId) Message() string {
+	return "The {field} value `{value}` is not a valid resident id number"
+}
+
+func (r RuleResidentId) Run(in RunInput) error {
+	if r.checkResidentId(in.Value.String()) {
+		return nil
+	}
+	return errors.New(in.Message)
+}
 
 // checkResidentId checks whether given id a china resident id number.
 //
@@ -33,7 +59,7 @@ import (
 //
 // 总：
 // (^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$)|(^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}$)
-func (v *Validator) checkResidentId(id string) bool {
+func (r RuleResidentId) checkResidentId(id string) bool {
 	id = strings.ToUpper(strings.TrimSpace(id))
 	if len(id) != 18 {
 		return false
@@ -55,5 +81,8 @@ func (v *Validator) checkResidentId(id string) bool {
 		return false
 	}
 
-	return gregex.IsMatchString(`(^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$)|(^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}$)`, id)
+	return gregex.IsMatchString(
+		`(^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$)|(^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}$)`,
+		id,
+	)
 }

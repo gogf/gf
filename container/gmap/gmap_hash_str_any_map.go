@@ -16,6 +16,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// StrAnyMap implements map[string]interface{} with RWMutex that has switch.
 type StrAnyMap struct {
 	mu   rwmutex.RWMutex
 	data map[string]interface{}

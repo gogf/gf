@@ -10,8 +10,10 @@ package gdb
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
+	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/container/gvar"
@@ -23,6 +25,7 @@ import (
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/util/grand"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // DB defines the interfaces for ORM operations.
@@ -168,12 +171,11 @@ type DB interface {
 	GetCtx() context.Context                                                                                 // See Core.GetCtx.
 	GetCore() *Core                                                                                          // See Core.GetCore
 	GetChars() (charLeft string, charRight string)                                                           // See Core.GetChars.
-	Tables(ctx context.Context, schema ...string) (tables []string, err error)                               // See Core.Tables.
-	TableFields(ctx context.Context, table string, schema ...string) (map[string]*TableField, error)         // See Core.TableFields.
+	Tables(ctx context.Context, schema ...string) (tables []string, err error)                               // See Core.Tables. The driver must implement this function.
+	TableFields(ctx context.Context, table string, schema ...string) (map[string]*TableField, error)         // See Core.TableFields. The driver must implement this function.
 	ConvertDataForRecord(ctx context.Context, data interface{}) (map[string]interface{}, error)              // See Core.ConvertDataForRecord
 	ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) // See Core.ConvertValueForLocal
 	CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (string, error)    // See Core.CheckLocalTypeForField
-	FilteredLink() string                                                                                    // FilteredLink is used for filtering sensitive information in `Link` configuration before output it to tracing server.
 }
 
 // Core is the base struct for database management.
@@ -275,9 +277,15 @@ type (
 	List   = []Map                  // List is type of map array.
 )
 
+type CatchSQLManager struct {
+	SQLArray *garray.StrArray
+	DoCommit bool
+}
+
 const (
 	defaultModelSafe        = false
 	defaultCharset          = `utf8`
+	defaultProtocol         = `tcp`
 	queryTypeNormal         = 0
 	queryTypeCount          = 1
 	unionTypeNormal         = 0
@@ -288,10 +296,14 @@ const (
 	ctxTimeoutTypeExec      = iota
 	ctxTimeoutTypeQuery
 	ctxTimeoutTypePrepare
-	commandEnvKeyForDryRun             = "gf.gdb.dryrun"
-	modelForDaoSuffix                  = `ForDao`
-	dbRoleSlave                        = `slave`
-	contextKeyForDB        gctx.StrKey = `DBInContext`
+	cachePrefixTableFields                = `TableFields:`
+	cachePrefixSelectCache                = `SelectCache:`
+	commandEnvKeyForDryRun                = "gf.gdb.dryrun"
+	modelForDaoSuffix                     = `ForDao`
+	dbRoleSlave                           = `slave`
+	ctxKeyForDB               gctx.StrKey = `CtxKeyForDB`
+	ctxKeyCatchSQL            gctx.StrKey = `CtxKeyCatchSQL`
+	ctxKeyInternalProducedSQL gctx.StrKey = `CtxKeyInternalProducedSQL`
 )
 
 const (
@@ -357,6 +369,13 @@ var (
 	// allDryRun sets dry-run feature for all database connections.
 	// It is commonly used for command options for convenience.
 	allDryRun = false
+
+	// tableFieldsMap caches the table information retrieved from database.
+	tableFieldsMap = gmap.NewStrAnyMap(true)
+
+	// [username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
+	linkPatternWithType    = `(\w+):([\w\-]+):(.+?)@(.+?)\((.+?):(\d+)\)/{0,1}([\w\-]*)\?{0,1}(.*)`
+	linkPatternWithoutType = `([\w\-]+):(.+?)@(.+?)\((.+?):(\d+)\)/{0,1}([\w\-]*)\?{0,1}(.*)`
 )
 
 func init() {
@@ -366,13 +385,13 @@ func init() {
 
 // Register registers custom database driver to gdb.
 func Register(name string, driver Driver) error {
-	driverMap[name] = driver
+	driverMap[name] = newDriverWrapper(driver)
 	return nil
 }
 
 // New creates and returns an ORM object with given configuration node.
 func New(node ConfigNode) (db DB, err error) {
-	return doNewByNode(node, "")
+	return newDBByConfigNode(&node, "")
 }
 
 // NewByGroup creates and returns an ORM object with global configurations.
@@ -395,7 +414,7 @@ func NewByGroup(group ...string) (db DB, err error) {
 	if _, ok := configs.config[groupName]; ok {
 		var node *ConfigNode
 		if node, err = getConfigNodeByGroup(groupName, true); err == nil {
-			return doNewByNode(*node, groupName)
+			return newDBByConfigNode(node, groupName)
 		}
 		return nil, err
 	}
@@ -406,18 +425,18 @@ func NewByGroup(group ...string) (db DB, err error) {
 	)
 }
 
-// doNewByNode creates and returns an ORM object with given configuration node and group name.
-func doNewByNode(node ConfigNode, group string) (db DB, err error) {
+// newDBByConfigNode creates and returns an ORM object with given configuration node and group name.
+func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
 	c := &Core{
 		group:  group,
 		debug:  gtype.NewBool(),
 		cache:  gcache.New(),
 		links:  gmap.NewStrAnyMap(true),
 		logger: glog.New(),
-		config: &node,
+		config: node,
 	}
 	if v, ok := driverMap[node.Type]; ok {
-		if c.db, err = v.New(c, &node); err != nil {
+		if c.db, err = v.New(c, node); err != nil {
 			return nil, err
 		}
 		return c.db, nil
@@ -547,15 +566,11 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 	} else {
 		node = c.config
 	}
-	// Default value checks.
 	if node.Charset == "" {
 		node.Charset = defaultCharset
 	}
 	// Changes the schema.
-	nodeSchema := c.schema
-	if len(schema) > 0 && schema[0] != "" {
-		nodeSchema = schema[0]
-	}
+	nodeSchema := gutil.GetOrDefaultStr(c.schema, schema...)
 	if nodeSchema != "" {
 		// Value copy.
 		n := *node
@@ -563,7 +578,11 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		node = &n
 	}
 	// Cache the underlying connection pool object by node.
-	v := c.links.GetOrSetFuncLock(node.String(), func() interface{} {
+	instanceNameByNode := fmt.Sprintf(
+		`%s@%s(%s:%s)/%s`,
+		node.User, node.Protocol, node.Host, node.Port, node.Name,
+	)
+	v := c.links.GetOrSetFuncLock(instanceNameByNode, func() interface{} {
 		intlog.Printf(ctx, `open new connection, master:%#v, config:%#v, node:%#v`, master, c.config, node)
 		defer func() {
 			if err != nil {

@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/i18n/gi18n"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -27,6 +28,7 @@ type Validator struct {
 	ruleFuncMap                       map[string]RuleFunc // ruleFuncMap stores custom rule functions for current Validator.
 	useAssocInsteadOfObjectAttributes bool                // Using `assoc` as its validation source instead of attribute values from `Object`.
 	bail                              bool                // Stop validation after the first validation error.
+	foreach                           bool                // It tells the next validation using current value as an array and validates each of its element.
 	caseInsensitive                   bool                // Case-Insensitive configuration for those rules that need value comparison.
 }
 
@@ -106,6 +108,14 @@ func (v *Validator) Bail() *Validator {
 	return newValidator
 }
 
+// Foreach tells the next validation using current value as an array and validates each of its element.
+// Note that this decorating rule takes effect just once for next validation rule, specially for single value validation.
+func (v *Validator) Foreach() *Validator {
+	newValidator := v.Clone()
+	newValidator.foreach = true
+	return newValidator
+}
+
 // Ci sets the mark for Case-Insensitive for those rules that need value comparison.
 func (v *Validator) Ci() *Validator {
 	newValidator := v.Clone()
@@ -177,11 +187,24 @@ func (v *Validator) RuleFuncMap(m map[string]RuleFunc) *Validator {
 	return newValidator
 }
 
-// getRuleFunc retrieves and returns the custom rule function for specified rule.
-func (v *Validator) getRuleFunc(rule string) RuleFunc {
+// getCustomRuleFunc retrieves and returns the custom rule function for specified rule.
+func (v *Validator) getCustomRuleFunc(rule string) RuleFunc {
 	ruleFunc := v.ruleFuncMap[rule]
 	if ruleFunc == nil {
 		ruleFunc = customRuleFuncMap[rule]
 	}
 	return ruleFunc
+}
+
+// checkRuleRequired checks and returns whether the given `rule` is required even it is nil or empty.
+func (v *Validator) checkRuleRequired(rule string) bool {
+	// Default required rules.
+	if gstr.HasPrefix(rule, requiredRulesPrefix) {
+		return true
+	}
+	// All custom validation rules are required rules.
+	if _, ok := customRuleFuncMap[rule]; ok {
+		return true
+	}
+	return false
 }

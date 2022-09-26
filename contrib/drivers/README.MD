@@ -77,6 +77,13 @@ Note:
 - It does not support `Transaction` feature.
 - It does not support `RowsAffected` feature.
 
+## DM
+```
+import _ "github.com/gogf/gf/contrib/drivers/dm/v2"
+```
+Note:
+- It does not support `Replace` features.
+- 
 # Custom Drivers
 
 It's quick and easy, please refer to current driver source. 

@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/internal/utils"
@@ -63,6 +64,54 @@ var (
 	// Priority tags for struct converting for orm field mapping.
 	structTagPriority = append([]string{OrmTagForStruct}, gconv.StructTagPriority...)
 )
+
+// WithDB injects given db object into context and returns a new context.
+func WithDB(ctx context.Context, db DB) context.Context {
+	if db == nil {
+		return ctx
+	}
+	dbCtx := db.GetCtx()
+	if ctxDb := DBFromCtx(dbCtx); ctxDb != nil {
+		return dbCtx
+	}
+	ctx = context.WithValue(ctx, ctxKeyForDB, db)
+	return ctx
+}
+
+// DBFromCtx retrieves and returns DB object from context.
+func DBFromCtx(ctx context.Context) DB {
+	if ctx == nil {
+		return nil
+	}
+	v := ctx.Value(ctxKeyForDB)
+	if v != nil {
+		return v.(DB)
+	}
+	return nil
+}
+
+// ToSQL formats and returns the last one of sql statements in given closure function.
+func ToSQL(ctx context.Context, f func(ctx context.Context) error) (sql string, err error) {
+	var manager = &CatchSQLManager{
+		SQLArray: garray.NewStrArray(),
+		DoCommit: false,
+	}
+	ctx = context.WithValue(ctx, ctxKeyCatchSQL, manager)
+	err = f(ctx)
+	sql, _ = manager.SQLArray.PopRight()
+	return
+}
+
+// CatchSQL catches and returns all sql statements that are executed in given closure function.
+func CatchSQL(ctx context.Context, f func(ctx context.Context) error) (sqlArray []string, err error) {
+	var manager = &CatchSQLManager{
+		SQLArray: garray.NewStrArray(),
+		DoCommit: true,
+	}
+	ctx = context.WithValue(ctx, ctxKeyCatchSQL, manager)
+	err = f(ctx)
+	return manager.SQLArray.Slice(), err
+}
 
 // isDoStruct checks and returns whether given type is a DO struct.
 func isDoStruct(object interface{}) bool {

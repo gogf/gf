@@ -20,6 +20,7 @@ import (
 	"github.com/gogf/gf/v2/os/gfsnotify"
 	"github.com/gogf/gf/v2/os/gres"
 	"github.com/gogf/gf/v2/util/gmode"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 type AdapterFile struct {
@@ -197,16 +198,14 @@ func (c *AdapterFile) Dump() {
 }
 
 // Available checks and returns whether configuration of given `file` is available.
-func (c *AdapterFile) Available(ctx context.Context, fileName string) bool {
-	if fileName == "" {
-		fileName = c.defaultName
-	}
+func (c *AdapterFile) Available(ctx context.Context, fileName ...string) bool {
+	checkFileName := gutil.GetOrDefaultStr(c.defaultName, fileName...)
 	// Custom configuration content exists.
-	if c.GetContent(fileName) != "" {
+	if c.GetContent(checkFileName) != "" {
 		return true
 	}
 	// Configuration file exists in system path.
-	if path, _ := c.GetFilePath(fileName); path != "" {
+	if path, _ := c.GetFilePath(checkFileName); path != "" {
 		return true
 	}
 	return false
@@ -260,7 +259,7 @@ func (c *AdapterFile) getJson(fileName ...string) (configJson *gjson.Json, err e
 			}
 		}
 		// Note that the underlying configuration json object operations are concurrent safe.
-		dataType := gfile.ExtName(filePath)
+		dataType := gjson.ContentType(gfile.ExtName(filePath))
 		if gjson.IsValidDataType(dataType) && !isFromConfigContent {
 			configJson, err = gjson.LoadContentType(dataType, content, true)
 		} else {

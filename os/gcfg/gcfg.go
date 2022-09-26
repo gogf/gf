@@ -85,11 +85,7 @@ func (c *Config) GetAdapter() Adapter {
 // It returns true if configuration file is present in default AdapterFile, or else false.
 // Note that this function does not return error as it just does simply check for backend configuration service.
 func (c *Config) Available(ctx context.Context, resource ...string) (ok bool) {
-	var usedResource string
-	if len(resource) > 0 {
-		usedResource = resource[0]
-	}
-	return c.adapter.Available(ctx, usedResource)
+	return c.adapter.Available(ctx, resource...)
 }
 
 // Get retrieves and returns value by specified `pattern`.

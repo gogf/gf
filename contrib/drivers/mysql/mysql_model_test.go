@@ -984,7 +984,10 @@ func Test_Model_StructsWithOrmTag(t *testing.T) {
 		dbInvalid.Model(table).Order("id asc").Scan(&users)
 		//fmt.Println(buffer.String())
 		t.Assert(
-			gstr.Contains(buffer.String(), "SELECT `id`,`Passport`,`password`,`nick_name`,`create_time` FROM `user"),
+			gstr.Contains(
+				buffer.String(),
+				"SELECT `id`,`Passport`,`password`,`nick_name`,`create_time` FROM `user",
+			),
 			true,
 		)
 	})
