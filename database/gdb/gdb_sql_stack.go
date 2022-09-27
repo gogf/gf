@@ -8,7 +8,7 @@ package gdb
 
 import "github.com/gogf/gf/v2/container/garray"
 
-// SqlStack is a stack object.
+// SqlStack is a sql stack object.
 type SqlStack struct {
 	Stacks  *garray.StrArray
 	MaxRows int
@@ -64,4 +64,7 @@ func (s *SqlStack) Last() string {
 func (s *SqlStack) First() string {
 	idx := 0
 	return s.GetByIndex(idx)
+}
+func (s *SqlStack) All() *garray.StrArray {
+	return s.Stacks
 }
