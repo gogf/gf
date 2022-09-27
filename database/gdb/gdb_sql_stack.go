@@ -8,6 +8,10 @@ package gdb
 
 import "github.com/gogf/gf/v2/container/garray"
 
+const (
+	FirstSqlStackIndex = 0 // the first sql index
+)
+
 // SqlStack is a sql stack object.
 type SqlStack struct {
 	Stacks  *garray.StrArray
@@ -62,8 +66,7 @@ func (s *SqlStack) Last() string {
 
 // First returns the first sql .
 func (s *SqlStack) First() string {
-	idx := 0
-	return s.GetByIndex(idx)
+	return s.GetByIndex(FirstSqlStackIndex)
 }
 func (s *SqlStack) All() *garray.StrArray {
 	return s.Stacks
