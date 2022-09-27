@@ -15,7 +15,7 @@ type stack []uintptr
 
 const (
 	// maxStackDepth marks the max stack depth for error back traces.
-	maxStackDepth = 32
+	maxStackDepth = 64
 )
 
 // Cause returns the root cause error of `err`.

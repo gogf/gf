@@ -12,8 +12,8 @@ import (
 	"reflect"
 
 	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/internal/consts"
 	"github.com/gogf/gf/v2/internal/reflection"
-	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -263,7 +263,7 @@ func (g *RouterGroup) Middleware(handlers ...HandlerFunc) *RouterGroup {
 
 // preBindToLocalArray adds the route registering parameters to an internal variable array for lazily registering feature.
 func (g *RouterGroup) preBindToLocalArray(bindType string, pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	_, file, line := gdebug.CallerWithFilter([]string{utils.StackFilterKeyForGoFrame})
+	_, file, line := gdebug.CallerWithFilter([]string{consts.StackFilterKeyForGoFrame})
 	preBindItems = append(preBindItems, &preBindItem{
 		group:    g,
 		bindType: bindType,
