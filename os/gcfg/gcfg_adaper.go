@@ -15,7 +15,7 @@ type Adapter interface {
 	//
 	// Note that this function does not return error as it just does simply check for
 	// backend configuration service.
-	Available(ctx context.Context, resource string) (ok bool)
+	Available(ctx context.Context, resource ...string) (ok bool)
 
 	// Get retrieves and returns value by specified `pattern` in current resource.
 	// Pattern like:
