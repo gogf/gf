@@ -3,13 +3,13 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
+
+// Package mssql implements gdb.Driver, which supports operations for database MSSql.
 //
 // Note:
 // 1. It needs manually import: _ "github.com/denisenkom/go-mssqldb"
 // 2. It does not support Save/Replace features.
 // 3. It does not support LastInsertId.
-
-// Package mssql implements gdb.Driver, which supports operations for MSSql.
 package mssql
 
 import (
@@ -20,8 +20,8 @@ import (
 	"strings"
 
 	_ "github.com/denisenkom/go-mssqldb"
+	"github.com/gogf/gf/v2/util/gutil"
 
-	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -33,11 +33,6 @@ import (
 type Driver struct {
 	*gdb.Core
 }
-
-var (
-	// tableFieldsMap caches the table information retrieved from database.
-	tableFieldsMap = gmap.New(true)
-)
 
 func init() {
 	if err := gdb.Register(`mssql`, New()); err != nil {
@@ -65,6 +60,9 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 		underlyingDriverName = "sqlserver"
 	)
 	if config.Link != "" {
+		// ============================================================================
+		// Deprecated from v2.2.0.
+		// ============================================================================
 		source = config.Link
 		// Custom changing the schema in runtime.
 		if config.Name != "" {
@@ -75,6 +73,15 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 			"user id=%s;password=%s;server=%s;port=%s;database=%s;encrypt=disable",
 			config.User, config.Pass, config.Host, config.Port, config.Name,
 		)
+		if config.Extra != "" {
+			var extraMap map[string]interface{}
+			if extraMap, err = gstr.Parse(config.Extra); err != nil {
+				return nil, err
+			}
+			for k, v := range extraMap {
+				source += fmt.Sprintf(`;%s=%s`, k, v)
+			}
+		}
 	}
 
 	if db, err = sql.Open(underlyingDriverName, source); err != nil {
@@ -85,21 +92,6 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 		return nil, err
 	}
 	return
-}
-
-// FilteredLink retrieves and returns filtered `linkInfo` that can be using for
-// logging or tracing purpose.
-func (d *Driver) FilteredLink() string {
-	linkInfo := d.GetConfig().Link
-	if linkInfo == "" {
-		return ""
-	}
-	s, _ := gregex.ReplaceString(
-		`(.+);\s*password=(.+);\s*server=(.+)`,
-		`$1;password=xxx;server=$3`,
-		d.GetConfig().Link,
-	)
-	return s
 }
 
 // GetChars returns the security char for this type of database.
@@ -227,7 +219,9 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 		return nil, err
 	}
 
-	result, err = d.DoSelect(ctx, link, `SELECT NAME FROM SYSOBJECTS WHERE XTYPE='U' AND STATUS >= 0 ORDER BY NAME`)
+	result, err = d.DoSelect(
+		ctx, link, `SELECT NAME FROM SYSOBJECTS WHERE XTYPE='U' AND STATUS >= 0 ORDER BY NAME`,
+	)
 	if err != nil {
 		return
 	}
@@ -243,26 +237,15 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 //
 // Also see DriverMysql.TableFields.
 func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
-	charL, charR := d.GetChars()
-	table = gstr.Trim(table, charL+charR)
-	if gstr.Contains(table, " ") {
-		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "function TableFields supports only single table operations")
+	var (
+		result    gdb.Result
+		link      gdb.Link
+		useSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+	)
+	if link, err = d.SlaveLink(useSchema); err != nil {
+		return nil, err
 	}
-	useSchema := d.GetSchema()
-	if len(schema) > 0 && schema[0] != "" {
-		useSchema = schema[0]
-	}
-	v := tableFieldsMap.GetOrSetFuncLock(
-		fmt.Sprintf(`mssql_table_fields_%s_%s@group:%s`, table, useSchema, d.GetGroup()),
-		func() interface{} {
-			var (
-				result gdb.Result
-				link   gdb.Link
-			)
-			if link, err = d.SlaveLink(useSchema); err != nil {
-				return nil
-			}
-			structureSql := fmt.Sprintf(`
+	structureSql := fmt.Sprintf(`
 SELECT 
 	a.name Field,
 	CASE b.name 
@@ -290,34 +273,28 @@ LEFT JOIN sys.extended_properties g ON a.id=g.major_id AND a.colid=g.minor_id
 LEFT JOIN sys.extended_properties f ON d.id=f.major_id AND f.minor_id =0
 WHERE d.name='%s'
 ORDER BY a.id,a.colorder`,
-				table,
-			)
-			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
-			result, err = d.DoSelect(ctx, link, structureSql)
-			if err != nil {
-				return nil
-			}
-			fields = make(map[string]*gdb.TableField)
-			for i, m := range result {
-
-				fields[m["Field"].String()] = &gdb.TableField{
-					Index:   i,
-					Name:    m["Field"].String(),
-					Type:    m["Type"].String(),
-					Null:    m["Null"].Bool(),
-					Key:     m["Key"].String(),
-					Default: m["Default"].Val(),
-					Extra:   m["Extra"].String(),
-					Comment: m["Comment"].String(),
-				}
-			}
-			return fields
-		},
+		table,
 	)
-	if v != nil {
-		fields = v.(map[string]*gdb.TableField)
+	structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
+	result, err = d.DoSelect(ctx, link, structureSql)
+	if err != nil {
+		return nil, err
 	}
-	return
+	fields = make(map[string]*gdb.TableField)
+	for i, m := range result {
+
+		fields[m["Field"].String()] = &gdb.TableField{
+			Index:   i,
+			Name:    m["Field"].String(),
+			Type:    m["Type"].String(),
+			Null:    m["Null"].Bool(),
+			Key:     m["Key"].String(),
+			Default: m["Default"].Val(),
+			Extra:   m["Extra"].String(),
+			Comment: m["Comment"].String(),
+		}
+	}
+	return fields, nil
 }
 
 // DoInsert is not supported in mssql.

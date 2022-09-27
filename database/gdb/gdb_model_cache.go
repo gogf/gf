@@ -8,13 +8,10 @@ package gdb
 
 import (
 	"context"
-	"fmt"
 	"time"
 
-	"github.com/gogf/gf/v2/crypto/gmd5"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/util/gconv"
 )
 
 type CacheOption struct {
@@ -57,7 +54,8 @@ func (m *Model) Cache(option CacheOption) *Model {
 // cache feature is enabled.
 func (m *Model) checkAndRemoveSelectCache(ctx context.Context) {
 	if m.cacheEnabled && m.cacheOption.Duration < 0 && len(m.cacheOption.Name) > 0 {
-		if _, err := m.db.GetCache().Remove(ctx, m.cacheOption.Name); err != nil {
+		var cacheKey = m.makeSelectCacheKey("")
+		if _, err := m.db.GetCache().Remove(ctx, cacheKey); err != nil {
 			intlog.Errorf(ctx, `%+v`, err)
 		}
 	}
@@ -128,13 +126,11 @@ func (m *Model) saveSelectResultToCache(ctx context.Context, result Result, sql 
 }
 
 func (m *Model) makeSelectCacheKey(sql string, args ...interface{}) string {
-	var cacheKey = m.cacheOption.Name
-	if len(cacheKey) == 0 {
-		cacheKey = fmt.Sprintf(
-			`GCache@Schema(%s):%s`,
-			m.db.GetSchema(),
-			gmd5.MustEncryptString(sql+", @PARAMS:"+gconv.String(args)),
-		)
-	}
-	return cacheKey
+	return m.db.GetCore().makeSelectCacheKey(
+		m.cacheOption.Name,
+		m.db.GetSchema(),
+		m.db.GetCore().guessPrimaryTableName(m.tables),
+		sql,
+		args...,
+	)
 }

@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package clickhouse implements gdb.Driver, which supports operations for ClickHouse.
+// Package clickhouse implements gdb.Driver, which supports operations for database ClickHouse.
 package clickhouse
 
 import (
@@ -18,16 +18,17 @@ import (
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
-	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/util/gutil"
+	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
+
+	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gregex"
-	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/google/uuid"
 )
 
 // Driver is the driver for postgresql database.
@@ -36,9 +37,6 @@ type Driver struct {
 }
 
 var (
-	// tableFieldsMap caches the table information retrieved from database.
-	tableFieldsMap = gmap.New(true)
-
 	errUnsupportedInsertIgnore = errors.New("unsupported method:InsertIgnore")
 	errUnsupportedInsertGetId  = errors.New("unsupported method:InsertGetId")
 	errUnsupportedReplace      = errors.New("unsupported method:Replace")
@@ -76,12 +74,16 @@ func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 }
 
 // Open creates and returns an underlying sql.DB object for clickhouse.
-func (d *Driver) Open(config *gdb.ConfigNode) (*sql.DB, error) {
+func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
+	source := config.Link
 	// clickhouse://username:password@host1:9000,host2:9000/database?dial_timeout=200ms&max_execution_time=60
 	if config.Link != "" {
+		// ============================================================================
+		// Deprecated from v2.2.0.
+		// ============================================================================
 		// Custom changing the schema in runtime.
 		if config.Name != "" {
-			config.Link, _ = gregex.ReplaceString(replaceSchemaPattern, "@$1/"+config.Name, config.Link)
+			source, _ = gregex.ReplaceString(replaceSchemaPattern, "@$1/"+config.Name, config.Link)
 		} else {
 			// If no schema, the link is matched for replacement
 			dbName, _ := gregex.MatchString(replaceSchemaPattern, config.Link)
@@ -89,21 +91,31 @@ func (d *Driver) Open(config *gdb.ConfigNode) (*sql.DB, error) {
 				config.Name = dbName[len(dbName)-1]
 			}
 		}
-	} else if config.Pass != "" {
-		config.Link = fmt.Sprintf(
-			"clickhouse://%s:%s@%s:%s/%s?charset=%s&debug=%t",
-			config.User, url.PathEscape(config.Pass), config.Host, config.Port, config.Name, config.Charset, config.Debug)
 	} else {
-		config.Link = fmt.Sprintf(
-			"clickhouse://%s@%s:%s/%s?charset=%s&debug=%t",
-			config.User, config.Host, config.Port, config.Name, config.Charset, config.Debug)
+		if config.Pass != "" {
+			source = fmt.Sprintf(
+				"clickhouse://%s:%s@%s:%s/%s?charset=%s&debug=%t",
+				config.User, url.PathEscape(config.Pass),
+				config.Host, config.Port, config.Name, config.Charset, config.Debug,
+			)
+		} else {
+			source = fmt.Sprintf(
+				"clickhouse://%s@%s:%s/%s?charset=%s&debug=%t",
+				config.User, config.Host, config.Port, config.Name, config.Charset, config.Debug,
+			)
+		}
+		if config.Extra != "" {
+			source = fmt.Sprintf("%s&%s", source, config.Extra)
+		}
 	}
-	db, err := sql.Open(driverName, config.Link)
-	if err != nil {
+	if db, err = sql.Open(driverName, source); err != nil {
+		err = gerror.WrapCodef(
+			gcode.CodeDbOperationError, err,
+			`sql.Open failed for driver "%s" by source "%s"`, driverName, source,
+		)
 		return nil, err
 	}
-
-	return db, nil
+	return
 }
 
 // Tables retrieves and returns the tables of current schema.
@@ -130,80 +142,48 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 func (d *Driver) TableFields(
 	ctx context.Context, table string, schema ...string,
 ) (fields map[string]*gdb.TableField, err error) {
-	charL, charR := d.GetChars()
-	table = gstr.Trim(table, charL+charR)
-	if gstr.Contains(table, " ") {
-		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "function TableFields supports only single table operations")
-	}
-	useSchema := d.GetSchema()
-	if len(schema) > 0 && schema[0] != "" {
-		useSchema = schema[0]
-	}
-	v := tableFieldsMap.GetOrSetFuncLock(
-		fmt.Sprintf(`clickhouse_table_fields_%s_%s@group:%s`, table, useSchema, d.GetGroup()),
-		func() interface{} {
-			var (
-				result gdb.Result
-				link   gdb.Link
-			)
-			if link, err = d.SlaveLink(useSchema); err != nil {
-				return nil
-			}
-			var (
-				columns       = "name,position,default_expression,comment,type,is_in_partition_key,is_in_sorting_key,is_in_primary_key,is_in_sampling_key"
-				getColumnsSql = fmt.Sprintf(
-					"select %s from `system`.columns c where `table` = '%s'",
-					columns, table,
-				)
-			)
-			result, err = d.DoSelect(ctx, link, getColumnsSql)
-			if err != nil {
-				return nil
-			}
-			fields = make(map[string]*gdb.TableField)
-			for _, m := range result {
-				var (
-					isNull    = false
-					fieldType = m["type"].String()
-				)
-				// in clickhouse , filed type like is Nullable(int)
-				fieldsResult, _ := gregex.MatchString(`^Nullable\((.*?)\)`, fieldType)
-				if len(fieldsResult) == 2 {
-					isNull = true
-					fieldType = fieldsResult[1]
-				}
-				fields[m["name"].String()] = &gdb.TableField{
-					Index:   m["position"].Int(),
-					Name:    m["name"].String(),
-					Default: m["default_expression"].Val(),
-					Comment: m["comment"].String(),
-					//Key:     m["Key"].String(),
-					Type: fieldType,
-					Null: isNull,
-				}
-			}
-			return fields
-		},
+	var (
+		result    gdb.Result
+		link      gdb.Link
+		useSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
 	)
-	if v != nil {
-		fields = v.(map[string]*gdb.TableField)
+	if link, err = d.SlaveLink(useSchema); err != nil {
+		return nil, err
 	}
-	return
-}
-
-// FilteredLink retrieves and returns filtered `linkInfo` that can be using for
-// logging or tracing purpose.
-func (d *Driver) FilteredLink() string {
-	linkInfo := d.GetConfig().Link
-	if linkInfo == "" {
-		return ""
-	}
-	s, _ := gregex.ReplaceString(
-		`(.+?):(.+)@tcp(.+)`,
-		`$1:xxx@tcp$3`,
-		linkInfo,
+	var (
+		columns       = "name,position,default_expression,comment,type,is_in_partition_key,is_in_sorting_key,is_in_primary_key,is_in_sampling_key"
+		getColumnsSql = fmt.Sprintf(
+			"select %s from `system`.columns c where `table` = '%s'",
+			columns, table,
+		)
 	)
-	return s
+	result, err = d.DoSelect(ctx, link, getColumnsSql)
+	if err != nil {
+		return nil, err
+	}
+	fields = make(map[string]*gdb.TableField)
+	for _, m := range result {
+		var (
+			isNull    = false
+			fieldType = m["type"].String()
+		)
+		// in clickhouse , filed type like is Nullable(int)
+		fieldsResult, _ := gregex.MatchString(`^Nullable\((.*?)\)`, fieldType)
+		if len(fieldsResult) == 2 {
+			isNull = true
+			fieldType = fieldsResult[1]
+		}
+		fields[m["name"].String()] = &gdb.TableField{
+			Index:   m["position"].Int(),
+			Name:    m["name"].String(),
+			Default: m["default_expression"].Val(),
+			Comment: m["comment"].String(),
+			// Key:     m["Key"].String(),
+			Type: fieldType,
+			Null: isNull,
+		}
+	}
+	return fields, nil
 }
 
 // PingMaster pings the master node to check authentication or keeps the connection alive.
@@ -228,7 +208,7 @@ func (d *Driver) PingSlave() error {
 func (d *Driver) ping(conn *sql.DB) error {
 	err := conn.Ping()
 	if exception, ok := err.(*clickhouse.Exception); ok {
-		return errors.New(fmt.Sprintf("[%d]%s", exception.Code, exception.Message))
+		return fmt.Errorf("[%d]%s", exception.Code, exception.Message)
 	}
 	return err
 }
@@ -388,6 +368,15 @@ func (d *Driver) ConvertDataForRecord(ctx context.Context, value interface{}) (m
 			// which will insert/update the value to database as "null".
 			if itemValue == nil || itemValue.IsZero() {
 				m[k] = nil
+			}
+
+		case decimal.Decimal:
+			m[k] = itemValue
+
+		case *decimal.Decimal:
+			m[k] = nil
+			if itemValue != nil {
+				m[k] = *itemValue
 			}
 
 		default:
