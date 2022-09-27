@@ -168,6 +168,7 @@ type DB interface {
 	// Utility methods.
 	// ===========================================================================
 
+	GetSqlStack() *SqlStack                                                                                  // See Core.GetLastSql.
 	GetCtx() context.Context                                                                                 // See Core.GetCtx.
 	GetCore() *Core                                                                                          // See Core.GetCore
 	GetChars() (charLeft string, charRight string)                                                           // See Core.GetChars.
@@ -180,15 +181,16 @@ type DB interface {
 
 // Core is the base struct for database management.
 type Core struct {
-	db     DB              // DB interface object.
-	ctx    context.Context // Context for chaining operation only. Do not set a default value in Core initialization.
-	group  string          // Configuration group name.
-	schema string          // Custom schema for this object.
-	debug  *gtype.Bool     // Enable debug mode for the database, which can be changed in runtime.
-	cache  *gcache.Cache   // Cache manager, SQL result cache only.
-	links  *gmap.StrAnyMap // links caches all created links by node.
-	logger glog.ILogger    // Logger for logging functionality.
-	config *ConfigNode     // Current config node.
+	db       DB              // DB interface object.
+	ctx      context.Context // Context for chaining operation only. Do not set a default value in Core initialization.
+	group    string          // Configuration group name.
+	schema   string          // Custom schema for this object.
+	debug    *gtype.Bool     // Enable debug mode for the database, which can be changed in runtime.
+	cache    *gcache.Cache   // Cache manager, SQL result cache only.
+	links    *gmap.StrAnyMap // links caches all created links by node.
+	logger   glog.ILogger    // Logger for logging functionality.
+	config   *ConfigNode     // Current config node.
+	sqlStack *SqlStack       // The executed sql stacks
 }
 
 // DoCommitInput is the input parameters for function DoCommit.
@@ -428,12 +430,13 @@ func NewByGroup(group ...string) (db DB, err error) {
 // newDBByConfigNode creates and returns an ORM object with given configuration node and group name.
 func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
 	c := &Core{
-		group:  group,
-		debug:  gtype.NewBool(),
-		cache:  gcache.New(),
-		links:  gmap.NewStrAnyMap(true),
-		logger: glog.New(),
-		config: node,
+		group:    group,
+		debug:    gtype.NewBool(),
+		cache:    gcache.New(),
+		links:    gmap.NewStrAnyMap(true),
+		logger:   glog.New(),
+		config:   node,
+		sqlStack: NewSqlStack(node.MaxSqlStackRow),
 	}
 	if v, ok := driverMap[node.Type]; ok {
 		if c.db, err = v.New(c, node); err != nil {

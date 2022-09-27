@@ -25,6 +25,11 @@ func (c *Core) GetDB() DB {
 	return c.db
 }
 
+// GetSqlStack get the executed sql stacks
+func (c *Core) GetSqlStack() *SqlStack {
+	return c.sqlStack
+}
+
 // GetLink creates and returns the underlying database link object with transaction checks.
 // The parameter `master` specifies whether using the master node if master-slave configured.
 func (c *Core) GetLink(ctx context.Context, master bool, schema string) (Link, error) {

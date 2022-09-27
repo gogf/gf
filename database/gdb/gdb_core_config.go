@@ -51,10 +51,12 @@ type ConfigNode struct {
 	UpdatedAt            string        `json:"updatedAt"`            // (Optional) The filed name of table for automatic-filled updated datetime.
 	DeletedAt            string        `json:"deletedAt"`            // (Optional) The filed name of table for automatic-filled updated datetime.
 	TimeMaintainDisabled bool          `json:"timeMaintainDisabled"` // (Optional) Disable the automatic time maintaining feature.
+	MaxSqlStackRow       int           `json:"maxSqlStackRow"`       // (Optional) The Max number of rows in the sql stack, which is automatically cleared, starting from 0, 0 is no limit.
 }
 
 const (
-	DefaultGroupName = "default" // Default group name.
+	DefaultGroupName      = "default" // Default group name.
+	DefaultMaxSqlStackRow = 100       // Default Max number of rows in the sql stack.
 )
 
 // configs specifies internal used configuration object.

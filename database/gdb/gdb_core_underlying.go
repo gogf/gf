@@ -10,7 +10,6 @@ package gdb
 import (
 	"context"
 	"database/sql"
-
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 
@@ -271,7 +270,7 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 
 	// Tracing.
 	c.traceSpanEnd(ctx, span, sqlObj)
-
+	c.sqlStack.Append(sqlObj.Format)
 	// Logging.
 	if c.db.GetDebug() {
 		c.writeSqlToLogger(ctx, sqlObj)
