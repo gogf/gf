@@ -86,32 +86,31 @@ func (d *DriverWrapperDB) TableFields(ctx context.Context, table string, schema 
 
 func parseConfigNodeLink(node *ConfigNode) *ConfigNode {
 	var match []string
-	// It firstly parses `link` using with type pattern.
-	match, _ = gregex.MatchString(linkPatternWithType, node.Link)
-	if len(match) > 6 {
-		node.Type = match[1]
-		node.User = match[2]
-		node.Pass = match[3]
-		node.Protocol = match[4]
-		node.Host = match[5]
-		node.Port = match[6]
-		node.Name = match[7]
-		if len(match) > 7 {
-			node.Extra = match[8]
-		}
-		node.Link = ""
-	} else {
-		// Else it parses `link` using without type pattern.
-		match, _ = gregex.MatchString(linkPatternWithoutType, node.Link)
+	// Link with type.
+	if node.Link != "" {
+		match, _ = gregex.MatchString(linkPatternWithType, node.Link)
 		if len(match) > 6 {
-			node.User = match[1]
-			node.Pass = match[2]
-			node.Protocol = match[3]
-			node.Host = match[4]
-			node.Port = match[5]
-			node.Name = match[6]
+			node.Type = match[1]
+			node.User = match[2]
+			node.Pass = match[3]
+			node.Protocol = match[4]
+			node.Host = match[5]
+			node.Port = match[6]
+			node.Name = match[7]
 			if len(match) > 7 {
-				node.Extra = match[7]
+				node.Extra = match[8]
+			}
+			node.Link = ""
+		}
+	}
+	// LocalDB.
+	if node.Link != "" {
+		match, _ = gregex.MatchString(linkPatternLocalDB, node.Link)
+		if len(match) > 2 {
+			node.Type = match[1]
+			node.Name = match[2]
+			if len(match) > 3 {
+				node.Extra = match[3]
 			}
 			node.Link = ""
 		}

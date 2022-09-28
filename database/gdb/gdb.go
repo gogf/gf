@@ -373,9 +373,9 @@ var (
 	// tableFieldsMap caches the table information retrieved from database.
 	tableFieldsMap = gmap.NewStrAnyMap(true)
 
-	// [username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
-	linkPatternWithType    = `(\w+):([\w\-]+):(.+?)@(.+?)\((.+?):(\d+)\)/{0,1}([\w\-]*)\?{0,1}(.*)`
-	linkPatternWithoutType = `([\w\-]+):(.+?)@(.+?)\((.+?):(\d+)\)/{0,1}([\w\-]*)\?{0,1}(.*)`
+	// type:[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
+	linkPatternWithType = `(\w+):([\w\-]+):(.+?)@(.+?)\((.+?):(\d+)\)/{0,1}([\w\-]*)\?{0,1}(.*)`
+	linkPatternLocalDB  = `(\w+):(.+?)\?{0,1}(.*)`
 )
 
 func init() {
