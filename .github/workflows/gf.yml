@@ -173,6 +173,9 @@ jobs:
     - name: Stop containers
       run:  docker-compose -f ".github/workflows/docker/docker-compose.yml" down
 
+    - name: Stop apollo containers
+      run:  docker-compose -f ".github/workflows/apollo/docker-compose.yml" down
+
     - name: Report Coverage
       uses: codecov/codecov-action@v2
       with:
