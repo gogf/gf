@@ -86,31 +86,23 @@ func (d *DriverWrapperDB) TableFields(ctx context.Context, table string, schema 
 
 func parseConfigNodeLink(node *ConfigNode) *ConfigNode {
 	var match []string
-	// Link with type.
 	if node.Link != "" {
-		match, _ = gregex.MatchString(linkPatternWithType, node.Link)
-		if len(match) > 6 {
+		match, _ = gregex.MatchString(linkPattern, node.Link)
+		if len(match) > 5 {
 			node.Type = match[1]
 			node.User = match[2]
 			node.Pass = match[3]
 			node.Protocol = match[4]
-			node.Host = match[5]
-			node.Port = match[6]
-			node.Name = match[7]
-			if len(match) > 7 {
-				node.Extra = match[8]
+			array := gstr.Split(match[5], ":")
+			if len(array) == 2 {
+				node.Host = array[0]
+				node.Port = array[1]
+				node.Name = match[6]
+			} else {
+				node.Name = match[5]
 			}
-			node.Link = ""
-		}
-	}
-	// LocalDB.
-	if node.Link != "" {
-		match, _ = gregex.MatchString(linkPatternLocalDB, node.Link)
-		if len(match) > 2 {
-			node.Type = match[1]
-			node.Name = match[2]
-			if len(match) > 3 {
-				node.Extra = match[3]
+			if len(match) > 6 {
+				node.Extra = match[7]
 			}
 			node.Link = ""
 		}
