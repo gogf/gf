@@ -139,7 +139,7 @@ func (d *Driver) TableFields(
 		return nil, err
 	}
 	fields = make(map[string]*gdb.TableField)
-	for _, m := range result {
+	for i, m := range result {
 		// m[NULLABLE] returns "N" "Y"
 		// "N" means not null
 		// "Y" means could be null
@@ -148,7 +148,7 @@ func (d *Driver) TableFields(
 			nullable = true
 		}
 		fields[m["COLUMN_NAME"].String()] = &gdb.TableField{
-			Index:   m["COLUMN_ID"].Int(),
+			Index:   i,
 			Name:    m["COLUMN_NAME"].String(),
 			Type:    m["DATA_TYPE"].String(),
 			Null:    nullable,
@@ -167,7 +167,8 @@ func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args [
 		newSql, newArgs, err = d.Core.DoFilter(ctx, link, newSql, newArgs)
 	}()
 	// There should be no need to capitalize, because it has been done from field processing before
-	newSql, _ = gregex.ReplaceString(`["\n\t]`, "", sql)
+	newSql, err = gregex.ReplaceString(`["\n\t]`, "", sql)
+	newSql = gstr.ReplaceI(newSql, "GROUP_CONCAT", "WM_CONCAT")
 	// g.Dump("Driver.DoFilter()::newSql", newSql)
 	newArgs = args
 	// g.Dump("Driver.DoFilter()::newArgs", newArgs)

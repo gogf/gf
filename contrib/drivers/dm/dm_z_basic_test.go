@@ -582,3 +582,125 @@ func Test_Empty_Slice_Argument(t *testing.T) {
 		t.Assert(len(result), 0)
 	})
 }
+
+// func Test_GROUP_CONCAT(t *testing.T) {
+// 	gtest.C(t, func(t *gtest.T) {
+// 		type GroupIdAndUserIDsInfo struct {
+// 			GroupID int64
+// 			UserIDs string
+// 		}
+// 		result := make([]GroupIdAndUserIDsInfo, 0)
+
+// 		model := db.Model("t_inf_group", "groupinfo").Fields("groupinfo.id as group_id", "GROUP_CONCAT(userinfo.id) as user_ids")
+// 		model.InnerJoin("t_lin_user_group", "lin", "groupinfo.id = lin.group_id")
+// 		model.InnerJoin("t_inf_user", "userinfo", "lin.user_id = userinfo.id")
+// 		model.Where("groupinfo.enabled", 1).Where("groupinfo.deleted", 0)
+// 		model.Where("userinfo.enabled", 1).Where("userinfo.deleted", 0)
+// 		model.Group("groupinfo.id")
+
+// 		err := model.Scan(&result)
+// 		gtest.Assert(err, nil)
+// 		g.Dump(result)
+// 	})
+// }
+
+// func TestGroup(t *testing.T) {
+// 	gtest.C(t, func(t *gtest.T) {
+// 		type GroupListResult struct {
+// 			ID           int64    `json:"group_id"`
+// 			GroupName    string   `json:"group_name"`
+// 			CategoryName string   `json:"category_name"`
+// 			Description  string   `json:"description"`
+// 			RoleName     string   `json:"role_name"`
+// 			UserIDs      []string `json:"user_ids"`
+// 			Enabled      int64    `json:"enabled"`
+// 			CreatedTime  string   `json:"created_time"`
+// 			UpdateTime   string   `json:"updated_time"`
+// 		}
+// 		result := make([]GroupListResult, 0)
+
+// 		model := db.Model("t_inf_group", "groupinfo")
+// 		model.LeftJoin("t_inf_group_category", "category", "groupinfo.category_id=category.id and (category.enabled = 1) and (category.deleted = 0)").
+// 			Where("groupinfo.deleted", 0).
+// 			Where("groupinfo.enabled", 1)
+
+// 		total, err := model.Count()
+// 		gtest.Assert(err, nil)
+// 		model.Fields("distinct groupinfo.id, groupinfo.group_name, groupinfo.enabled, ifnull(category.category_name,'') as category_name", "groupinfo.created_time", "groupinfo.updated_time", "groupinfo.description")
+// 		err = model.Order("groupinfo.updated_time desc").Page(1, 100).Scan(&result)
+// 		gtest.Assert(err, nil)
+// 		g.Dump(result)
+// 		g.Dump(total)
+// 	})
+
+// 	gtest.C(t, func(t *gtest.T) {
+// 		type GroupListByUserIdResult struct {
+// 			ID           int64  `json:"group_id"`
+// 			GroupName    string `json:"group_name"`
+// 			CategoryName string `json:"category_name"`
+// 			RoleName     string `json:"role_name"`
+// 		}
+// 		result := make([]*GroupListByUserIdResult, 0)
+
+// 		model := db.Model("t_inf_group", "groupinfo").Fields("distinct groupinfo.id, groupinfo.group_name, groupinfo.enabled, category.category_name,groupinfo.updated_time")
+
+// 		model.LeftJoin("t_inf_group_category", "category", "groupinfo.category_id=category.id and (category.enabled = 1) and (category.deleted = 0)")
+
+// 		// if userId != 0 {
+// 		// 	model.InnerJoin(grouptype.TLINUSERGROUP, "ug", "groupinfo.id=ug.group_id")
+// 		// 	model.InnerJoin(grouptype.TINFUSER, "u", "u.id=ug.user_id")
+// 		// 	model.Where("u.id = ?", userId).Where("u.deleted", consts.DataDeletedFalse)
+// 		// }
+
+// 		model.Where("groupinfo.enabled", 1).Where("groupinfo.deleted", 0)
+
+// 		err := model.Order("groupinfo.updated_time desc").Scan(&result)
+// 		//
+// 		gtest.Assert(err, nil)
+// 		g.Dump(result)
+// 	})
+// 	gtest.C(t, func(t *gtest.T) {
+
+// 		model := db.Model("t_inf_role", "role").Fields("role.role_name", "role.id")
+// 		model.RightJoin("t_lin_group_role", "link", "link.role_id=role.id")
+// 		// model.Where("link.group_id", gid)
+// 		model.Where("role.deleted", 0)
+
+// 		record, err := model.One()
+// 		gtest.Assert(err, nil)
+// 		g.Dump(record)
+
+// 	})
+// 	gtest.C(t, func(t *gtest.T) {
+// 		type GroupInfos struct {
+// 			RoleName string `orm:"role_name"`
+// 			RoleID   int64  `orm:"id"`
+// 			GroupID  int64  `orm:"group_id"`
+// 		}
+// 		result := make([]GroupInfos, 0)
+
+// 		model := db.Model("t_inf_role", "role").Fields("role.id", "role.role_name", "link.group_id")
+// 		model.RightJoin("t_lin_group_role", "link", "link.role_id=role.id")
+// 		model.Where("role.enabled", 1).Where("role.deleted", 0)
+// 		err := model.Scan(&result)
+// 		gtest.Assert(err, nil)
+// 		g.Dump(result)
+// 	})
+// 	gtest.C(t, func(t *gtest.T) {
+// 		type GroupIdAndRoleNameInfo struct {
+// 			GroupID  int64
+// 			RoleID   int64
+// 			RoleName string
+// 		}
+// 		result := make([]GroupIdAndRoleNameInfo, 0)
+// 		model := db.Model("t_inf_group", "groupinfo").Fields("groupinfo.id as group_id", "lin.role_id", "role.role_name")
+// 		model.InnerJoin("t_lin_group_role", "lin", "groupinfo.id = lin.group_id")
+// 		model.InnerJoin("t_inf_role", "role", "lin.role_id = role.id")
+// 		model.Where("groupinfo.enabled", 1).Where("groupinfo.deleted", 0)
+// 		model.Where("role.enabled", 1).Where("role.deleted", 0)
+
+// 		err2 := model.Scan(&result)
+// 		gtest.Assert(err2, nil)
+// 		g.Dump(result)
+// 	})
+// }
