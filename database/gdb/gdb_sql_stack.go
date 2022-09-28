@@ -20,16 +20,14 @@ type SqlStack struct {
 
 // NewSqlStack  creates and returns a SqlStack.
 func NewSqlStack(maxRows ...int) *SqlStack {
-	var maxRow int
-	if len(maxRows) > 0 {
-		maxRow = maxRows[0]
-	} else {
-		maxRow = DefaultMaxSqlStackRow
-	}
-	return &SqlStack{
+	stack := &SqlStack{
 		Stacks:  garray.NewStrArray(true),
-		MaxRows: maxRow,
+		MaxRows: DefaultMaxSqlStackRow,
 	}
+	if len(maxRows) > 0 {
+		stack.MaxRows = maxRows[0]
+	}
+	return stack
 }
 func (s *SqlStack) SetMaxRows(rows int) {
 	s.MaxRows = rows
