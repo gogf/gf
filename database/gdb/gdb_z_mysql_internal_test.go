@@ -141,6 +141,51 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 		t.Assert(newNode.Charset, defaultCharset)
 		t.Assert(newNode.Protocol, `udp`)
 	})
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Link: `sqlite:root:CxzhD*624:27jh@file(/var/data/db.sqlite3)?local=Local&parseTime=true`,
+		}
+		newNode := parseConfigNodeLink(node)
+		t.Assert(newNode.Type, `sqlite`)
+		t.Assert(newNode.User, `root`)
+		t.Assert(newNode.Pass, `CxzhD*624:27jh`)
+		t.Assert(newNode.Host, ``)
+		t.Assert(newNode.Port, ``)
+		t.Assert(newNode.Name, `/var/data/db.sqlite3`)
+		t.Assert(newNode.Extra, `local=Local&parseTime=true`)
+		t.Assert(newNode.Charset, defaultCharset)
+		t.Assert(newNode.Protocol, `file`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Link: `sqlite::CxzhD*624:2@7jh@file(/var/data/db.sqlite3)`,
+		}
+		newNode := parseConfigNodeLink(node)
+		t.Assert(newNode.Type, `sqlite`)
+		t.Assert(newNode.User, ``)
+		t.Assert(newNode.Pass, `CxzhD*624:2@7jh`)
+		t.Assert(newNode.Host, ``)
+		t.Assert(newNode.Port, ``)
+		t.Assert(newNode.Name, `/var/data/db.sqlite3`)
+		t.Assert(newNode.Extra, ``)
+		t.Assert(newNode.Charset, defaultCharset)
+		t.Assert(newNode.Protocol, `file`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Link: `sqlite::@file(/var/data/db.sqlite3)`,
+		}
+		newNode := parseConfigNodeLink(node)
+		t.Assert(newNode.Type, `sqlite`)
+		t.Assert(newNode.User, ``)
+		t.Assert(newNode.Pass, ``)
+		t.Assert(newNode.Host, ``)
+		t.Assert(newNode.Port, ``)
+		t.Assert(newNode.Name, `/var/data/db.sqlite3`)
+		t.Assert(newNode.Extra, ``)
+		t.Assert(newNode.Charset, defaultCharset)
+		t.Assert(newNode.Protocol, `file`)
+	})
 }
 
 func Test_Func_doQuoteWord(t *testing.T) {
