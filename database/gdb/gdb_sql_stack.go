@@ -35,10 +35,8 @@ func (s *SqlStack) SetMaxRows(rows int) {
 
 // Append  add a sql and returns a garray.StrArray.
 func (s *SqlStack) Append(sql string) *garray.StrArray {
-	if s.MaxRows > 0 {
-		if s.Stacks.Len() > s.MaxRows {
-			s.Stacks.Clear()
-		}
+	if s.MaxRows > 0 && s.Stacks.Len() > s.MaxRows {
+		s.Stacks.Clear()
 	}
 	return s.Stacks.Append(sql)
 }
