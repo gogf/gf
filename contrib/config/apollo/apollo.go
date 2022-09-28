@@ -11,12 +11,13 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/spf13/viper"
+	"strings"
 )
 
 var (
-	appId   = "op-observability-alarm"
-	cluster = "dev"
-	ip      = "http://configserver.xxx.cloud"
+	appId   = "SampleApp"
+	cluster = "default"
+	ip      = "http://localhost:8080"
 )
 
 func init() {
@@ -89,12 +90,16 @@ type AdapterApollo struct {
 	client agollo.Client
 }
 
-func (adapterApollo AdapterApollo) Available(ctx context.Context, resource string) (ok bool) {
+func (adapterApollo AdapterApollo) Available(ctx context.Context, resource ...string) (ok bool) {
 	return adapterApollo.client != nil
 }
 
 func (adapterApollo AdapterApollo) Get(ctx context.Context, pattern string) (value interface{}, err error) {
-	return viper.AllSettings()[pattern], nil
+	if strings.Contains(pattern, ".") {
+		return viper.GetString(pattern), nil
+	} else {
+		return viper.AllSettings()[pattern], nil
+	}
 }
 
 func (adapterApollo AdapterApollo) Data(ctx context.Context) (data map[string]interface{}, err error) {

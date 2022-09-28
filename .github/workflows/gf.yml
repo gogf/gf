@@ -161,6 +161,9 @@ jobs:
     - name: Start containers
       run:  docker-compose -f ".github/workflows/docker/docker-compose.yml" up -d --build
 
+    - name: Start apollo containers
+      run:  docker-compose -f ".github/workflows/apollo/docker-compose.yml" up -d --build
+
     - name: Before Script
       run:  bash .github/workflows/before_script.sh
 
