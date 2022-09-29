@@ -10,8 +10,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // RedisGroupList is the redis group list object.
@@ -120,10 +120,10 @@ func (r *RedisGroupList) LPop(ctx context.Context, key string, count int) (*gvar
 // depending on the list's length.
 //
 // It returns:
-// - When called without the count argument:
-//   the value of the last element, or nil when key does not exist.
-// - When called with the count argument:
-//   list of popped elements, or nil when key does not exist.
+//   - When called without the count argument:
+//     the value of the last element, or nil when key does not exist.
+//   - When called with the count argument:
+//     list of popped elements, or nil when key does not exist.
 //
 // https://redis.io/commands/rpop
 func (r *RedisGroupList) RPop(ctx context.Context, key string, count ...int64) (*gvar.Var, error) {
@@ -178,11 +178,14 @@ func (r *RedisGroupList) LIndex(ctx context.Context, key string, index int64) (*
 	return r.redis.Do(ctx, "LINDEX", key, index)
 }
 
+// LInsertOperation is the operation for LInsert.
 type LInsertOperation string
 
 const (
+	// LInsertOperationBefore is the operation for LInsert.
 	LInsertOperationBefore LInsertOperation = "BEFORE"
-	LInsertOperationAfter  LInsertOperation = "AFTER"
+	// LInsertOperationAfter is the operation for LInsert.
+	LInsertOperationAfter LInsertOperation = "AFTER"
 )
 
 // LInsert inserts element in the list stored at key either before or after the reference value pivot.
@@ -230,7 +233,6 @@ func (r *RedisGroupList) LRange(ctx context.Context, key string, start, stop int
 // Out of range indexes will not produce an error: if start is larger than the end of the list, or
 // start > end, the result will be an empty list (which causes key to be removed). If end is larger
 // than the end of the list, Redis will treat it like the last element of the list.
-//
 //
 // https://redis.io/commands/ltrim/
 func (r *RedisGroupList) LTrim(ctx context.Context, key string, start, stop int64) error {
