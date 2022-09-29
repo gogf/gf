@@ -84,7 +84,7 @@ func (s *Server) mergeBuildInNameToPattern(pattern string, structName, methodNam
 	structName = s.nameToUri(structName)
 	methodName = s.nameToUri(methodName)
 	pattern = strings.Replace(pattern, "{.struct}", structName, -1)
-	if strings.Index(pattern, "{.method}") != -1 {
+	if strings.Contains(pattern, "{.method}") {
 		return strings.Replace(pattern, "{.method}", methodName, -1)
 	}
 	if !allowAppend {

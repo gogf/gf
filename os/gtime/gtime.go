@@ -457,7 +457,7 @@ func ParseDuration(s string) (duration time.Duration, err error) {
 func FuncCost(f func()) time.Duration {
 	t := time.Now()
 	f()
-	return time.Now().Sub(t)
+	return time.Since(t)
 }
 
 // isTimestampStr checks and returns whether given string a timestamp string.

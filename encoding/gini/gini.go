@@ -72,7 +72,7 @@ func Decode(data []byte) (res map[string]interface{}, err error) {
 		}
 	}
 
-	if haveSection == false {
+	if !haveSection {
 		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "failed to parse INI file, section not found")
 	}
 	return res, nil

@@ -104,7 +104,7 @@ func BeDecodeToString(b []byte) string {
 }
 
 func BeEncodeBool(b bool) []byte {
-	if b == true {
+	if b {
 		return []byte{1}
 	} else {
 		return []byte{0}

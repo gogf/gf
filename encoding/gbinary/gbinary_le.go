@@ -104,7 +104,7 @@ func LeDecodeToString(b []byte) string {
 }
 
 func LeEncodeBool(b bool) []byte {
-	if b == true {
+	if b {
 		return []byte{1}
 	} else {
 		return []byte{0}
