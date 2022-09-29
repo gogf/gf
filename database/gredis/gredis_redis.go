@@ -35,10 +35,10 @@ const (
 )
 
 var (
-	errorNilAdapter = gstr.Trim(`
-redis adapter is not set, missing configuration or adapter register?
+	errorNilAdapter = gstr.Trim(gstr.Replace(`
+redis adapter is not set, missing configuration or adapter register? 
 possible reference: https://github.com/gogf/gf/tree/master/contrib/nosql/redis
-`)
+`, "\n", ""))
 )
 
 // SetAdapter sets custom adapter for current redis client.

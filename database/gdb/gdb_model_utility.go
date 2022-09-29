@@ -33,11 +33,8 @@ func (m *Model) QuoteWord(s string) string {
 func (m *Model) TableFields(tableStr string, schema ...string) (fields map[string]*TableField, err error) {
 	var (
 		table      = m.db.GetCore().guessPrimaryTableName(tableStr)
-		usedSchema = m.schema
+		usedSchema = gutil.GetOrDefaultStr(m.schema, schema...)
 	)
-	if len(schema) > 0 && schema[0] != "" {
-		usedSchema = schema[0]
-	}
 	return m.db.TableFields(m.GetCtx(), table, usedSchema)
 }
 
