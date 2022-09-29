@@ -117,7 +117,6 @@ func (w *Watcher) eventLoop() {
 							intlog.Printf(context.TODO(), "file creation event, watcher adds monitor for: %s", event.Path)
 						}
 					}
-
 				}
 				// Calling the callbacks in order.
 				for _, callback := range callbacks {

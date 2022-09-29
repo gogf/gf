@@ -93,7 +93,6 @@ func doZipPathWriter(path string, exclude string, zipWriter *zip.Writer, prefix 
 		} else {
 			headerPrefix = gfile.Basename(path)
 		}
-
 	}
 	headerPrefix = strings.Replace(headerPrefix, "//", "/", -1)
 	for _, file := range files {

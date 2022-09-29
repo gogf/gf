@@ -7,9 +7,10 @@
 package goai
 
 import (
+	"reflect"
+
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/os/gstructs"
-	"reflect"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -311,7 +312,6 @@ func (oai *OpenApiV3) removeOperationDuplicatedProperties(operation Operation) {
 	}
 
 	for _, requestBodyContent := range operation.RequestBody.Value.Content {
-
 		// Check request body schema
 		if requestBodyContent.Schema == nil {
 			continue

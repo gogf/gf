@@ -181,9 +181,7 @@ func (l *Logger) rotateChecksTimely(ctx context.Context) {
 					if err := l.doRotateFile(ctx, file); err != nil {
 						intlog.Errorf(ctx, `%+v`, err)
 					}
-
 				}()
-
 			}
 		}
 		if expireRotated {
