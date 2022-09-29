@@ -38,7 +38,8 @@ type SetOption struct {
 	GET bool
 }
 
-// Set key to hold the string value. If key already holds a value, it is overwritten, regardless of its type.
+// Set key to hold the string value. If key already holds a value, it is overwritten,
+// regardless of its type.
 // Any previous time to live associated with the key is discarded on successful SET operation.
 //
 // https://redis.io/commands/set/
@@ -52,8 +53,10 @@ func (r *RedisGroupString) Set(ctx context.Context, key string, value interface{
 	)...)
 }
 
-// SetNX sets key to hold string value if key does not exist. In that case, it is equal to SET.
-// When key already holds a value, no operation is performed. SetNX is short for "SET if Not exists".
+// SetNX sets key to hold string value if key does not exist.
+// In that case, it is equal to SET.
+// When key already holds a value, no operation is performed.
+// SetNX is short for "SET if Not exists".
 //
 // It returns:
 // true:  if the all the keys were set.
