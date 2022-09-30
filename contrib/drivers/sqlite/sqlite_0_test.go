@@ -53,9 +53,10 @@ func init() {
 
 	fmt.Println("init sqlite db dir: ", dbDir)
 
+	dbFilePath := gfile.Join(dbDir, "test.db")
 	configNode = gdb.ConfigNode{
 		Type:    "sqlite",
-		Link:    gfile.Join(dbDir, "test.db"),
+		Link:    fmt.Sprintf(`sqlite::@file(%s)`, dbFilePath),
 		Charset: "utf8",
 	}
 	nodePrefix := configNode

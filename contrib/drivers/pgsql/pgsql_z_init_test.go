@@ -23,8 +23,6 @@ const (
 	TableSize   = 10
 	TablePrefix = "t_"
 	SchemaName  = "test"
-	TestDbUser  = "postgres"
-	TestDbPass  = "12345678"
 	CreateTime  = "2018-10-24 10:00:00"
 )
 
@@ -36,18 +34,7 @@ var (
 
 func init() {
 	configNode = gdb.ConfigNode{
-		Host:             "127.0.0.1",
-		Port:             "5432",
-		User:             TestDbUser,
-		Pass:             TestDbPass,
-		Timezone:         "Asia/Shanghai", // For calculating UT cases of datetime zones in convenience.
-		Type:             "pgsql",
-		Role:             "master",
-		Charset:          "utf8",
-		Weight:           1,
-		MaxIdleConnCount: 10,
-		MaxOpenConnCount: 10,
-		MaxConnLifeTime:  600,
+		Link: `pgsql:postgres:12345678@tcp(127.0.0.1:5432)`,
 	}
 
 	//pgsql only permit to connect to the designation database.

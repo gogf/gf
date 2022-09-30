@@ -94,6 +94,7 @@ jobs:
           --health-retries 10
 
       # ClickHouse backend server.
+      # docker run -d --name clickhouse -p 9000:9000 -p 8123:8123 -p 9001:9001 loads/clickhouse-server:latest
       clickhouse-server:
         image: loads/clickhouse-server:latest
         ports:
@@ -101,13 +102,14 @@ jobs:
           - 8123:8123
           - 9001:9001
 
+      # Polaris backend server.
       polaris:
         image: loads/polaris-server-standalone:latest
         ports:
           - 8090:8090
           - 8091:8091
 
-      # oracle 11g server
+      # Oracle 11g server
       oracle-server:
         image: loads/oracle-xe-11g-r2:latest
         env:
