@@ -1,3 +1,9 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package clickhouse
 
 import (
@@ -123,7 +129,7 @@ func clickhouseConfigDB() gdb.DB {
 		User:  "default",
 		Name:  "default",
 		Type:  "clickhouse",
-		Debug: true,
+		Debug: false,
 	})
 	gtest.AssertNil(err)
 	gtest.AssertNE(connect, nil)
@@ -132,9 +138,7 @@ func clickhouseConfigDB() gdb.DB {
 
 func clickhouseLink() gdb.DB {
 	connect, err := gdb.New(gdb.ConfigNode{
-		Link: "clickhouse://default@127.0.0.1:9000,127.0.0.1:9000/default?dial_timeout=200ms&max_execution_time=60",
-		Type: "clickhouse",
-		Name: "default",
+		Link: "clickhouse:default:@tcp(127.0.0.1:9000)/default?dial_timeout=200ms&max_execution_time=60",
 	})
 	gtest.AssertNil(err)
 	gtest.AssertNE(connect, nil)
