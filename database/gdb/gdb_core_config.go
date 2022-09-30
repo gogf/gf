@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Config is the configuration management object.
@@ -105,6 +106,9 @@ func AddConfigNode(group string, node ConfigNode) {
 
 // parseConfigNode parses `Link` configuration syntax.
 func parseConfigNode(node ConfigNode) ConfigNode {
+	if node.Link != "" {
+		node = *parseConfigNodeLink(&node)
+	}
 	if node.Link != "" && node.Type == "" {
 		match, _ := gregex.MatchString(`([a-z]+):(.+)`, node.Link)
 		if len(match) == 3 {
@@ -244,4 +248,42 @@ func (c *Core) GetPrefix() string {
 // GetSchema returns the schema configured.
 func (c *Core) GetSchema() string {
 	return c.schema
+}
+
+func parseConfigNodeLink(node *ConfigNode) *ConfigNode {
+	var match []string
+	if node.Link != "" {
+		match, _ = gregex.MatchString(linkPattern, node.Link)
+		if len(match) > 5 {
+			node.Type = match[1]
+			node.User = match[2]
+			node.Pass = match[3]
+			node.Protocol = match[4]
+			array := gstr.Split(match[5], ":")
+			if len(array) == 2 {
+				node.Host = array[0]
+				node.Port = array[1]
+				node.Name = match[6]
+			} else {
+				node.Name = match[5]
+			}
+			if len(match) > 6 {
+				node.Extra = match[7]
+			}
+			node.Link = ""
+		}
+	}
+	if node.Extra != "" {
+		if m, _ := gstr.Parse(node.Extra); len(m) > 0 {
+			_ = gconv.Struct(m, &node)
+		}
+	}
+	// Default value checks.
+	if node.Charset == "" {
+		node.Charset = defaultCharset
+	}
+	if node.Protocol == "" {
+		node.Protocol = defaultProtocol
+	}
+	return node
 }
