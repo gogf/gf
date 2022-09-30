@@ -26,6 +26,14 @@ func (r *Redis) String() *RedisGroupString {
 	}
 }
 
+// TTLOption provides extra option for TTL related functions.
+type TTLOption struct {
+	EX   int64 // EX seconds -- Set the specified expire time, in seconds.
+	PX   int64 // PX milliseconds -- Set the specified expire time, in milliseconds.
+	EXAT int64 // EXAT timestamp-seconds -- Set the specified Unix time at which the key will expire, in seconds.
+	PXAT int64 // PXAT timestamp-milliseconds -- Set the specified Unix time at which the key will expire, in milliseconds.
+}
+
 // SetOption provides extra option for Set function.
 type SetOption struct {
 	TTLOption
@@ -71,8 +79,8 @@ func (r *RedisGroupString) SetNX(ctx context.Context, key string, value interfac
 // SetEX sets key to hold the string value and set key to timeout after a given number of seconds.
 // This command is equivalent to executing the following commands:
 //
-//     SET mykey value
-//     EXPIRE mykey seconds
+//     SET myKey value
+//     EXPIRE myKey seconds
 //
 // SetEX is atomic, and can be reproduced by using the previous two commands inside an MULTI / EXEC block.
 // It is provided as a faster alternative to the given sequence of operations, because this operation is very
