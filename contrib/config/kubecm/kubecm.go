@@ -9,8 +9,10 @@ package kubecm
 
 import (
 	"context"
+	"fmt"
 
 	kubeMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
@@ -34,6 +36,7 @@ type Config struct {
 	Namespace  string                // (Optional) Specify the namespace for configmap.
 	RestConfig *rest.Config          // (Optional) Custom rest config for kube client.
 	KubeClient *kubernetes.Clientset // (Optional) Custom kube client.
+	Watch      bool                  // (Optional) Watch updates, which updates configuration when configmap changes.
 }
 
 // New creates and returns gcfg.Adapter implementing using kubernetes configmap.
@@ -90,7 +93,7 @@ func (c *Client) Available(ctx context.Context, configMap ...string) (ok bool) {
 // "x.0.y" for slice item.
 func (c *Client) Get(ctx context.Context, pattern string) (value interface{}, err error) {
 	if c.value.IsNil() {
-		if err = c.updateLocalValue(ctx); err != nil {
+		if err = c.updateLocalValueAndWatch(ctx); err != nil {
 			return nil, err
 		}
 	}
@@ -102,7 +105,7 @@ func (c *Client) Get(ctx context.Context, pattern string) (value interface{}, er
 // you can implement this function if necessary.
 func (c *Client) Data(ctx context.Context) (data map[string]interface{}, err error) {
 	if c.value.IsNil() {
-		if err = c.updateLocalValue(ctx); err != nil {
+		if err = c.updateLocalValueAndWatch(ctx); err != nil {
 			return nil, err
 		}
 	}
@@ -110,8 +113,20 @@ func (c *Client) Data(ctx context.Context) (data map[string]interface{}, err err
 }
 
 // init retrieves and caches the configmap content.
-func (c *Client) updateLocalValue(ctx context.Context) (err error) {
+func (c *Client) updateLocalValueAndWatch(ctx context.Context) (err error) {
 	var namespace = gutil.GetOrDefaultStr(Namespace(), c.Namespace)
+	err = c.doUpdate(ctx, namespace)
+	if err != nil {
+		return err
+	}
+	err = c.doWatch(ctx, namespace)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Client) doUpdate(ctx context.Context, namespace string) (err error) {
 	cm, err := c.KubeClient.CoreV1().ConfigMaps(namespace).Get(ctx, c.ConfigMap, kubeMetaV1.GetOptions{})
 	if err != nil {
 		return gerror.Wrapf(
@@ -121,13 +136,40 @@ func (c *Client) updateLocalValue(ctx context.Context) (err error) {
 		)
 	}
 	var j *gjson.Json
-	j, err = gjson.LoadContent(cm.Data[c.DataItem])
-	if err != nil {
+	if j, err = gjson.LoadContent(cm.Data[c.DataItem]); err != nil {
 		return gerror.Wrapf(
 			err,
 			`parse config map item from %s[%s] failed`, c.ConfigMap, c.DataItem,
 		)
 	}
 	c.value.Set(j)
+	return nil
+}
+
+func (c *Client) doWatch(ctx context.Context, namespace string) (err error) {
+	if !c.Watch {
+		return nil
+	}
+	var watchHandler watch.Interface
+	watchHandler, err = c.KubeClient.CoreV1().ConfigMaps(namespace).Watch(ctx, kubeMetaV1.ListOptions{
+		FieldSelector: fmt.Sprintf(`metadata.name=%s`, c.ConfigMap),
+		Watch:         true,
+	})
+	if err != nil {
+		return gerror.Wrapf(
+			err,
+			`watch configmap "%s" from namespace "%s" failed`,
+			c.ConfigMap, namespace,
+		)
+	}
+	go func() {
+		for {
+			event := <-watchHandler.ResultChan()
+			switch event.Type {
+			case watch.Modified:
+				_ = c.doUpdate(ctx, namespace)
+			}
+		}
+	}()
 	return nil
 }
