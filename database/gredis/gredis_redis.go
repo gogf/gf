@@ -22,14 +22,6 @@ type Redis struct {
 	config  *Config
 }
 
-// TTLOption provides extra option for TTL related functions.
-type TTLOption struct {
-	EX   int64 // EX seconds -- Set the specified expire time, in seconds.
-	PX   int64 // PX milliseconds -- Set the specified expire time, in milliseconds.
-	EXAT int64 // EXAT timestamp-seconds -- Set the specified Unix time at which the key will expire, in seconds.
-	PXAT int64 // PXAT timestamp-milliseconds -- Set the specified Unix time at which the key will expire, in milliseconds.
-}
-
 const (
 	errorNilRedis = `the Redis object is nil`
 )

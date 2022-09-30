@@ -15,12 +15,12 @@ import (
 	"github.com/gogf/gf/v2/container/gvar"
 )
 
-// RedisGroupList is the redis group list object.
+// RedisGroupList provides list functions for redis.
 type RedisGroupList struct {
 	redis *Redis
 }
 
-// List is the redis list object.
+// List creates and returns RedisGroupList.
 func (r *Redis) List() *RedisGroupList {
 	return &RedisGroupList{
 		redis: r,
@@ -179,11 +179,12 @@ func (r *RedisGroupList) LIndex(ctx context.Context, key string, index int64) (*
 	return r.redis.Do(ctx, "LINDEX", key, index)
 }
 
+// LInsertOperation defines the operation name for function LInsert.
 type LInsertOperation string
 
 const (
-	LInsertOperationBefore LInsertOperation = "BEFORE"
-	LInsertOperationAfter  LInsertOperation = "AFTER"
+	LInsertBefore LInsertOperation = "BEFORE"
+	LInsertAfter  LInsertOperation = "AFTER"
 )
 
 // LInsert inserts element in the list stored at key either before or after the reference value pivot.
@@ -194,7 +195,7 @@ const (
 //
 // https://redis.io/commands/linsert/
 func (r *RedisGroupList) LInsert(ctx context.Context, key string, op LInsertOperation, pivot, value string) (int64, error) {
-	v, err := r.redis.Do(ctx, "LINSERT", key, string(op), pivot, value)
+	v, err := r.redis.Do(ctx, "LINSERT", key, op, pivot, value)
 	return v.Int64(), err
 }
 

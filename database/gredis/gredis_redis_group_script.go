@@ -13,10 +13,12 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// RedisGroupScript provides script functions for redis.
 type RedisGroupScript struct {
 	redis *Redis
 }
 
+// Script creates and returns RedisGroupScript.
 func (r *Redis) Script() *RedisGroupScript {
 	return &RedisGroupScript{
 		redis: r,
@@ -95,12 +97,11 @@ func (r *RedisGroupScript) ScriptExists(ctx context.Context, sha1 string, sha1s 
 	return v, err
 }
 
-type ScriptFlushOperation string
-
-const (
-	ScriptFlushOperationSync  ScriptFlushOperation = "SYNC"  // SYNC  flushes the cache synchronously.
-	ScriptFlushOperationAsync ScriptFlushOperation = "ASYNC" // ASYNC flushes the cache asynchronously.
-)
+// ScriptFlushOption provides options for function ScriptFlush.
+type ScriptFlushOption struct {
+	SYNC  bool // SYNC  flushes the cache synchronously.
+	ASYNC bool // ASYNC flushes the cache asynchronously.
+}
 
 // ScriptFlush flush the Lua scripts cache.
 //
@@ -109,8 +110,14 @@ const (
 // asynchronous.
 //
 // https://redis.io/commands/script-flush/
-func (r *RedisGroupScript) ScriptFlush(ctx context.Context, op ScriptFlushOperation) error {
-	_, err := r.redis.Do(ctx, "SCRIPT FLUSH", op)
+func (r *RedisGroupScript) ScriptFlush(ctx context.Context, option ...ScriptFlushOption) error {
+	var usedOption interface{}
+	if len(option) > 0 {
+		usedOption = option[0]
+	}
+	_, err := r.redis.Do(ctx, "SCRIPT FLUSH", mustMergeOptionToArgs(
+		[]interface{}{}, usedOption,
+	)...)
 	return err
 }
 
@@ -122,7 +129,7 @@ func (r *RedisGroupScript) ScriptFlush(ctx context.Context, op ScriptFlushOperat
 // currently blocked into EVAL will see the command returning with an error.
 //
 // If the script has already performed write operations, it can not be killed in this way because it
-// would violate Lua's script atomicity contract. In such a case, only SHUTDOWN NOSAVE can kill the
+// would violate Lua script atomicity contract. In such a case, only SHUTDOWN NOSAVE can kill the
 // script, killing the Redis process in a hard way and preventing it from persisting with
 // half-written information.
 //

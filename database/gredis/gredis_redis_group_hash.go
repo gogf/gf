@@ -13,10 +13,12 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// RedisGroupHash provides hash function for redis.
 type RedisGroupHash struct {
 	redis *Redis
 }
 
+// Hash creates and returns RedisGroupHash.
 func (r *Redis) Hash() *RedisGroupHash {
 	return &RedisGroupHash{
 		redis: r,

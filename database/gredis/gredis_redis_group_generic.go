@@ -15,16 +15,19 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// RedisGroupGeneric provides generic functions of redis.
 type RedisGroupGeneric struct {
 	redis *Redis
 }
 
+// Generic creates and returns RedisGroupGeneric.
 func (r *Redis) Generic() *RedisGroupGeneric {
 	return &RedisGroupGeneric{
 		redis: r,
 	}
 }
 
+// CopyOption provides options for function Copy.
 type CopyOption struct {
 	DB      int  // DB option allows specifying an alternative logical database index for the destination key.
 	REPLACE bool // REPLACE option removes the destination key before copying the value to it.
@@ -205,6 +208,7 @@ func (r *RedisGroupGeneric) FlushAll(ctx context.Context, options string) error 
 	return err
 }
 
+// ExpireOption provides options for function Expire.
 type ExpireOption struct {
 	NX bool // NX -- Set expiry only when the key has no expiry
 	XX bool // XX -- Set expiry only when the key has an existing expiry

@@ -13,10 +13,12 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// RedisGroupSet provides set functions for redis.
 type RedisGroupSet struct {
 	redis *Redis
 }
 
+// Set creates and returns RedisGroupSet.
 func (r *Redis) Set() *RedisGroupSet {
 	return &RedisGroupSet{
 		redis: r,
