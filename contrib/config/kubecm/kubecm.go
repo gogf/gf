@@ -25,18 +25,19 @@ import (
 
 // Client implements gcfg.Adapter.
 type Client struct {
-	Config        // Config object when created.
-	value  *g.Var // Configmap content cached. It is `*gjson.Json` value internally.
+	config Config                // Config object when created.
+	client *kubernetes.Clientset // Kubernetes client.
+	value  *g.Var                // Configmap content cached. It is `*gjson.Json` value internally.
 }
 
 // Config for Client.
 type Config struct {
 	ConfigMap  string                `v:"required"` // ConfigMap name.
 	DataItem   string                `v:"required"` // DataItem is the key item in Configmap data.
-	Namespace  string                // (Optional) Specify the namespace for configmap.
-	RestConfig *rest.Config          // (Optional) Custom rest config for kube client.
-	KubeClient *kubernetes.Clientset // (Optional) Custom kube client.
-	Watch      bool                  // (Optional) Watch updates, which updates configuration when configmap changes.
+	Namespace  string                // Specify the namespace for configmap.
+	RestConfig *rest.Config          // Custom rest config for kube client.
+	KubeClient *kubernetes.Clientset // Custom kube client.
+	Watch      bool                  // Watch updates, which updates configuration when configmap changes.
 }
 
 // New creates and returns gcfg.Adapter implementing using kubernetes configmap.
@@ -60,7 +61,8 @@ func New(ctx context.Context, config Config) (adapter gcfg.Adapter, err error) {
 		}
 	}
 	adapter = &Client{
-		Config: config,
+		config: config,
+		client: config.KubeClient,
 		value:  g.NewVar(nil, true),
 	}
 	return
@@ -77,10 +79,10 @@ func (c *Client) Available(ctx context.Context, configMap ...string) (ok bool) {
 	}
 
 	var (
-		namespace     = gutil.GetOrDefaultStr(Namespace(), c.Namespace)
-		configMapName = gutil.GetOrDefaultStr(c.ConfigMap, configMap...)
+		namespace     = gutil.GetOrDefaultStr(Namespace(), c.config.Namespace)
+		configMapName = gutil.GetOrDefaultStr(c.config.ConfigMap, configMap...)
 	)
-	_, err := c.KubeClient.CoreV1().ConfigMaps(namespace).Get(ctx, configMapName, kubeMetaV1.GetOptions{})
+	_, err := c.config.KubeClient.CoreV1().ConfigMaps(namespace).Get(ctx, configMapName, kubeMetaV1.GetOptions{})
 	if err != nil {
 		return false
 	}
@@ -114,7 +116,7 @@ func (c *Client) Data(ctx context.Context) (data map[string]interface{}, err err
 
 // init retrieves and caches the configmap content.
 func (c *Client) updateLocalValueAndWatch(ctx context.Context) (err error) {
-	var namespace = gutil.GetOrDefaultStr(Namespace(), c.Namespace)
+	var namespace = gutil.GetOrDefaultStr(Namespace(), c.config.Namespace)
 	err = c.doUpdate(ctx, namespace)
 	if err != nil {
 		return err
@@ -127,19 +129,19 @@ func (c *Client) updateLocalValueAndWatch(ctx context.Context) (err error) {
 }
 
 func (c *Client) doUpdate(ctx context.Context, namespace string) (err error) {
-	cm, err := c.KubeClient.CoreV1().ConfigMaps(namespace).Get(ctx, c.ConfigMap, kubeMetaV1.GetOptions{})
+	cm, err := c.client.CoreV1().ConfigMaps(namespace).Get(ctx, c.config.ConfigMap, kubeMetaV1.GetOptions{})
 	if err != nil {
 		return gerror.Wrapf(
 			err,
 			`retrieve configmap "%s" from namespace "%s" failed`,
-			c.ConfigMap, namespace,
+			c.config.ConfigMap, namespace,
 		)
 	}
 	var j *gjson.Json
-	if j, err = gjson.LoadContent(cm.Data[c.DataItem]); err != nil {
+	if j, err = gjson.LoadContent(cm.Data[c.config.DataItem]); err != nil {
 		return gerror.Wrapf(
 			err,
-			`parse config map item from %s[%s] failed`, c.ConfigMap, c.DataItem,
+			`parse config map item from %s[%s] failed`, c.config.ConfigMap, c.config.DataItem,
 		)
 	}
 	c.value.Set(j)
@@ -147,19 +149,19 @@ func (c *Client) doUpdate(ctx context.Context, namespace string) (err error) {
 }
 
 func (c *Client) doWatch(ctx context.Context, namespace string) (err error) {
-	if !c.Watch {
+	if !c.config.Watch {
 		return nil
 	}
 	var watchHandler watch.Interface
-	watchHandler, err = c.KubeClient.CoreV1().ConfigMaps(namespace).Watch(ctx, kubeMetaV1.ListOptions{
-		FieldSelector: fmt.Sprintf(`metadata.name=%s`, c.ConfigMap),
+	watchHandler, err = c.client.CoreV1().ConfigMaps(namespace).Watch(ctx, kubeMetaV1.ListOptions{
+		FieldSelector: fmt.Sprintf(`metadata.name=%s`, c.config.ConfigMap),
 		Watch:         true,
 	})
 	if err != nil {
 		return gerror.Wrapf(
 			err,
 			`watch configmap "%s" from namespace "%s" failed`,
-			c.ConfigMap, namespace,
+			c.config.ConfigMap, namespace,
 		)
 	}
 	go func() {
