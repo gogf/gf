@@ -160,8 +160,8 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-${{ matrix.go-version }}-
 
-    - name: Start containers
-      run:  docker-compose -f ".github/workflows/docker/docker-compose.yml" up -d --build
+    - name: Start redis cluster containers
+      run:  docker-compose -f ".github/workflows/redis/docker-compose.yml" up -d --build
 
     - name: Start apollo containers
       run:  docker-compose -f ".github/workflows/apollo/docker-compose.yml" up -d --build
@@ -172,8 +172,8 @@ jobs:
     - name: Build & Test
       run:  bash .github/workflows/build_and_test.sh
 
-    - name: Stop containers
-      run:  docker-compose -f ".github/workflows/docker/docker-compose.yml" down
+    - name: Stop redis cluster containers
+      run:  docker-compose -f ".github/workflows/redis/docker-compose.yml" down
 
     - name: Stop apollo containers
       run:  docker-compose -f ".github/workflows/apollo/docker-compose.yml" down

@@ -2,7 +2,7 @@ version: '2'
 
 services:
   apollo-quick-start:
-    image: nobodyiam/apollo-quick-start
+    image: "loads/apollo-quick-start:latest"
     container_name: apollo-quick-start
     depends_on:
       - apollo-db
@@ -20,7 +20,7 @@ services:
       #APOLLO_PORTAL_DB_PASSWORD: 'apollo'
 
   apollo-db:
-    image: mysql:5.7
+    image: "loads/mysql:5.7"
     container_name: apollo-db
     environment:
       TZ: Asia/Shanghai
@@ -36,7 +36,7 @@ services:
       - apollo-dbdata
 
   apollo-dbdata:
-    image: alpine:latest
+    image: "loads/alpine:3.8"
     container_name: apollo-dbdata
     volumes:
       - /var/lib/mysql
