@@ -1,32 +1,48 @@
-package apollo
+// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+package apollo_test
 
 import (
+	"testing"
+
+	"github.com/gogf/gf/contrib/config/apollo/v2"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/test/gtest"
-	"testing"
+	"github.com/gogf/gf/v2/util/guid"
+)
+
+var (
+	ctx     = gctx.GetInitCtx()
+	appId   = "SampleApp"
+	cluster = "default"
+	ip      = "http://localhost:8080"
 )
 
 func TestApollo(t *testing.T) {
-	ctx := gctx.New()
+	gtest.C(t, func(t *gtest.T) {
+		adapter, err := apollo.New(ctx, apollo.Config{
+			AppID:   appId,
+			IP:      ip,
+			Cluster: cluster,
+		})
+		t.AssertNil(err)
+		config := g.Cfg(guid.S())
+		config.SetAdapter(adapter)
 
-	//g.Dump(g.Cfg().Data(ctx))
+		t.Assert(config.Available(ctx), true)
+		t.Assert(config.Available(ctx, "non-exist"), false)
 
-	// 测试1
-	timeoutVar, err := g.Cfg().Get(ctx, "timeout")
-	gtest.AssertNil(err)
-	gtest.AssertEQ(timeoutVar.Int(), 100)
+		v, err := config.Get(ctx, `server.address`)
+		t.AssertNil(err)
+		t.Assert(v.String(), ":8000")
 
-	// 测试2，中间有点
-	serverAddressVar, err := g.Cfg().Get(ctx, "server.address")
-	gtest.AssertNil(err)
-	gtest.AssertEQ(serverAddressVar.String(), ":8000")
-
-	// 启动服务
-	//s := g.Server()
-	//s.Group("/", func(group *ghttp.RouterGroup) {
-	//	group.Middleware(ghttp.MiddlewareHandlerResponse)
-	//	group.Bind()
-	//})
-	//s.Run()
+		m, err := config.Data(ctx)
+		t.AssertNil(err)
+		t.AssertGT(len(m), 0)
+	})
 }
