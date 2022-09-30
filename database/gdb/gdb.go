@@ -304,6 +304,9 @@ const (
 	ctxKeyForDB               gctx.StrKey = `CtxKeyForDB`
 	ctxKeyCatchSQL            gctx.StrKey = `CtxKeyCatchSQL`
 	ctxKeyInternalProducedSQL gctx.StrKey = `CtxKeyInternalProducedSQL`
+
+	// type:[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
+	linkPattern = `(\w+):([\w\-]*):(.*?)@(\w+?)\((.+?)\)/{0,1}([\w\-]*)\?{0,1}(.*)`
 )
 
 const (
@@ -372,9 +375,6 @@ var (
 
 	// tableFieldsMap caches the table information retrieved from database.
 	tableFieldsMap = gmap.NewStrAnyMap(true)
-
-	// type:[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
-	linkPattern = `(\w+):([\w\-]*):(.*?)@(\w+?)\((.+?)\)/{0,1}([\w\-]*)\?{0,1}(.*)`
 )
 
 func init() {
