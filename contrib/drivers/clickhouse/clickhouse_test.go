@@ -132,7 +132,7 @@ func clickhouseConfigDB() gdb.DB {
 
 func clickhouseLink() gdb.DB {
 	connect, err := gdb.New(gdb.ConfigNode{
-		Link: "clickhouse://default@127.0.0.1:9000,127.0.0.1:9000/default?dial_timeout=200ms&max_execution_time=60",
+		Link: "clickhouse:default:default@tcp(127.0.0.1:9000)/default?dial_timeout=200ms&max_execution_time=60",
 		Type: "clickhouse",
 		Name: "default",
 	})

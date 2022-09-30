@@ -426,6 +426,9 @@ func NewByGroup(group ...string) (db DB, err error) {
 
 // newDBByConfigNode creates and returns an ORM object with given configuration node and group name.
 func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
+	if node.Link != "" {
+		node = parseConfigNodeLink(node)
+	}
 	c := &Core{
 		group:  group,
 		debug:  gtype.NewBool(),
