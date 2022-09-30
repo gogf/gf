@@ -225,14 +225,6 @@ func (r *RedisGroupList) LRange(ctx context.Context, key string, start, stop int
 // LTrim trims an existing list so that it will contain only the specified range of elements
 // specified. Both start and stop are zero-based indexes, where 0 is the first element of the list
 // (the head), 1 the next element and so on.
-// For example: LTRIM foobar 0 2 will modify the list stored at foobar so that only the first three
-// elements of the list will remain.
-// start and end can also be negative numbers indicating offsets from the end of the list, where -1
-// is the last element of the list, -2 the penultimate element and so on.
-// Out of range indexes will not produce an error: if start is larger than the end of the list, or
-// start > end, the result will be an empty list (which causes key to be removed). If end is larger
-// than the end of the list, Redis will treat it like the last element of the list.
-//
 //
 // https://redis.io/commands/ltrim/
 func (r *RedisGroupList) LTrim(ctx context.Context, key string, start, stop int64) error {
