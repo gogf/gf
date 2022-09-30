@@ -69,8 +69,19 @@ func New(ctx context.Context, config Config) (adapter gcfg.Adapter, err error) {
 // Note that this function does not return error as it just does simply check for
 // backend configuration service.
 func (c *Client) Available(ctx context.Context, configMap ...string) (ok bool) {
-	err := c.init(ctx, configMap...)
-	return err == nil
+	if len(configMap) == 0 && !c.value.IsNil() {
+		return true
+	}
+
+	var (
+		namespace     = gutil.GetOrDefaultStr(Namespace(), c.Namespace)
+		configMapName = gutil.GetOrDefaultStr(c.ConfigMap, configMap...)
+	)
+	_, err := c.KubeClient.CoreV1().ConfigMaps(namespace).Get(ctx, configMapName, kubeMetaV1.GetOptions{})
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 // Get retrieves and returns value by specified `pattern` in current resource.
@@ -79,7 +90,7 @@ func (c *Client) Available(ctx context.Context, configMap ...string) (ok bool) {
 // "x.0.y" for slice item.
 func (c *Client) Get(ctx context.Context, pattern string) (value interface{}, err error) {
 	if c.value.IsNil() {
-		if err = c.init(ctx); err != nil {
+		if err = c.updateLocalValue(ctx); err != nil {
 			return nil, err
 		}
 	}
@@ -91,7 +102,7 @@ func (c *Client) Get(ctx context.Context, pattern string) (value interface{}, er
 // you can implement this function if necessary.
 func (c *Client) Data(ctx context.Context) (data map[string]interface{}, err error) {
 	if c.value.IsNil() {
-		if err = c.init(ctx); err != nil {
+		if err = c.updateLocalValue(ctx); err != nil {
 			return nil, err
 		}
 	}
@@ -99,34 +110,24 @@ func (c *Client) Data(ctx context.Context) (data map[string]interface{}, err err
 }
 
 // init retrieves and caches the configmap content.
-func (c *Client) init(ctx context.Context, configMap ...string) (err error) {
-	var (
-		namespace     = gutil.GetOrDefaultStr(Namespace(), c.Namespace)
-		configMapName = gutil.GetOrDefaultStr(c.ConfigMap, configMap...)
-	)
-	cm, err := c.KubeClient.CoreV1().ConfigMaps(namespace).Get(ctx, configMapName, kubeMetaV1.GetOptions{})
+func (c *Client) updateLocalValue(ctx context.Context) (err error) {
+	var namespace = gutil.GetOrDefaultStr(Namespace(), c.Namespace)
+	cm, err := c.KubeClient.CoreV1().ConfigMaps(namespace).Get(ctx, c.ConfigMap, kubeMetaV1.GetOptions{})
 	if err != nil {
 		return gerror.Wrapf(
 			err,
 			`retrieve configmap "%s" from namespace "%s" failed`,
-			configMapName, namespace,
+			c.ConfigMap, namespace,
 		)
 	}
-	if c.value.IsNil() {
-		var j *gjson.Json
-		if c.DataItem != "" {
-			j, err = gjson.LoadContent(cm.Data[c.DataItem])
-			if err != nil {
-				return gerror.Wrapf(
-					err,
-					`parse config map item from %s[%s] failed`, configMapName, c.DataItem,
-				)
-			}
-			c.value.Set(j)
-		} else {
-			j = gjson.New(cm.Data)
-			c.value.Set(j)
-		}
+	var j *gjson.Json
+	j, err = gjson.LoadContent(cm.Data[c.DataItem])
+	if err != nil {
+		return gerror.Wrapf(
+			err,
+			`parse config map item from %s[%s] failed`, c.ConfigMap, c.DataItem,
+		)
 	}
+	c.value.Set(j)
 	return nil
 }
