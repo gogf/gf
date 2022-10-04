@@ -88,11 +88,6 @@ func TestCron_Remove(t *testing.T) {
 }
 
 func TestCron_Add_FixedPattern(t *testing.T) {
-	//debug := utils.IsDebugEnabled()
-	//utils.SetDebugEnabled(true)
-	//defer func() {
-	//	utils.SetDebugEnabled(debug)
-	//}()
 	for i := 0; i < 5; i++ {
 		doTestCronAddFixedPattern(t)
 	}

@@ -45,7 +45,7 @@ func (c *Core) Ctx(ctx context.Context) DB {
 		configNode = c.db.GetConfig()
 	)
 	*newCore = *c
-	// It creates a new DB object, which is commonly a wrapper for object `Core`.
+	// It creates a new DB object(NOT NEW CONNECTION), which is commonly a wrapper for object `Core`.
 	newCore.db, err = driverMap[configNode.Type].New(newCore, configNode)
 	if err != nil {
 		// It is really a serious error here.
@@ -177,9 +177,9 @@ func (c *Core) GetArray(ctx context.Context, sql string, args ...interface{}) ([
 	return all.Array(), nil
 }
 
-// GetStruct queries one record from database and converts it to given struct.
+// doGetStruct queries one record from database and converts it to given struct.
 // The parameter `pointer` should be a pointer to struct.
-func (c *Core) GetStruct(ctx context.Context, pointer interface{}, sql string, args ...interface{}) error {
+func (c *Core) doGetStruct(ctx context.Context, pointer interface{}, sql string, args ...interface{}) error {
 	one, err := c.db.GetOne(ctx, sql, args...)
 	if err != nil {
 		return err
@@ -187,9 +187,9 @@ func (c *Core) GetStruct(ctx context.Context, pointer interface{}, sql string, a
 	return one.Struct(pointer)
 }
 
-// GetStructs queries records from database and converts them to given struct.
+// doGetStructs queries records from database and converts them to given struct.
 // The parameter `pointer` should be type of struct slice: []struct/[]*struct.
-func (c *Core) GetStructs(ctx context.Context, pointer interface{}, sql string, args ...interface{}) error {
+func (c *Core) doGetStructs(ctx context.Context, pointer interface{}, sql string, args ...interface{}) error {
 	all, err := c.db.GetAll(ctx, sql, args...)
 	if err != nil {
 		return err
@@ -214,10 +214,10 @@ func (c *Core) GetScan(ctx context.Context, pointer interface{}, sql string, arg
 	}
 	switch reflectInfo.OriginKind {
 	case reflect.Array, reflect.Slice:
-		return c.db.GetCore().GetStructs(ctx, pointer, sql, args...)
+		return c.db.GetCore().doGetStructs(ctx, pointer, sql, args...)
 
 	case reflect.Struct:
-		return c.db.GetCore().GetStruct(ctx, pointer, sql, args...)
+		return c.db.GetCore().doGetStruct(ctx, pointer, sql, args...)
 	}
 	return gerror.NewCodef(
 		gcode.CodeInvalidParameter,
@@ -641,7 +641,10 @@ func (c *Core) DoDelete(ctx context.Context, link Link, table string, condition 
 // FilteredLink retrieves and returns filtered `linkInfo` that can be using for
 // logging or tracing purpose.
 func (c *Core) FilteredLink() string {
-	return c.config.Link
+	return fmt.Sprintf(
+		`%s@%s(%s:%s)/%s`,
+		c.config.User, c.config.Protocol, c.config.Host, c.config.Port, c.config.Name,
+	)
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.

@@ -7,7 +7,6 @@
 package gdb
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Config is the configuration management object.
@@ -31,13 +31,15 @@ type ConfigNode struct {
 	Pass                 string        `json:"pass"`                 // Authentication password.
 	Name                 string        `json:"name"`                 // Default used database name.
 	Type                 string        `json:"type"`                 // Database type: mysql, sqlite, mssql, pgsql, oracle.
-	Link                 string        `json:"link"`                 // (Optional) Custom link information, when it is used, configuration Host/Port/User/Pass/Name are ignored.
+	Link                 string        `json:"link"`                 // (Optional) Custom link information for all configuration in one single string.
+	Extra                string        `json:"extra"`                // (Optional) Extra configuration according the registered third-party database driver.
 	Role                 string        `json:"role"`                 // (Optional, "master" in default) Node role, used for master-slave mode: master, slave.
 	Debug                bool          `json:"debug"`                // (Optional) Debug mode enables debug information logging and output.
 	Prefix               string        `json:"prefix"`               // (Optional) Table prefix.
 	DryRun               bool          `json:"dryRun"`               // (Optional) Dry run, which does SELECT but no INSERT/UPDATE/DELETE statements.
 	Weight               int           `json:"weight"`               // (Optional) Weight for load balance calculating, it's useless if there's just one node.
 	Charset              string        `json:"charset"`              // (Optional, "utf8mb4" in default) Custom charset when operating on database.
+	Protocol             string        `json:"protocol"`             // (Optional, "tcp" in default) See net.Dial for more information which networks are available.
 	Timezone             string        `json:"timezone"`             // (Optional) Sets the time zone for displaying and interpreting time stamps.
 	MaxIdleConnCount     int           `json:"maxIdle"`              // (Optional) Max idle connection configuration for underlying connection pool.
 	MaxOpenConnCount     int           `json:"maxOpen"`              // (Optional) Max open connection configuration for underlying connection pool.
@@ -56,7 +58,7 @@ const (
 	DefaultGroupName = "default" // Default group name.
 )
 
-// configs is internal used configuration object.
+// configs specifies internal used configuration object.
 var configs struct {
 	sync.RWMutex
 	config Config // All configurations.
@@ -104,6 +106,9 @@ func AddConfigNode(group string, node ConfigNode) {
 
 // parseConfigNode parses `Link` configuration syntax.
 func parseConfigNode(node ConfigNode) ConfigNode {
+	if node.Link != "" {
+		node = *parseConfigNodeLink(&node)
+	}
 	if node.Link != "" && node.Type == "" {
 		match, _ := gregex.MatchString(`([a-z]+):(.+)`, node.Link)
 		if len(match) == 3 {
@@ -200,19 +205,6 @@ func (c *Core) SetMaxConnLifeTime(d time.Duration) {
 	c.config.MaxConnLifeTime = d
 }
 
-// String returns the node as string.
-func (node *ConfigNode) String() string {
-	return fmt.Sprintf(
-		`%s@%s:%s,%s,%s,%s,%s,%v,%d-%d-%d#%s`,
-		node.User, node.Host, node.Port,
-		node.Name, node.Type, node.Role, node.Charset, node.Debug,
-		node.MaxIdleConnCount,
-		node.MaxOpenConnCount,
-		node.MaxConnLifeTime,
-		node.Link,
-	)
-}
-
 // GetConfig returns the current used node configuration.
 func (c *Core) GetConfig() *ConfigNode {
 	return c.config
@@ -256,4 +248,42 @@ func (c *Core) GetPrefix() string {
 // GetSchema returns the schema configured.
 func (c *Core) GetSchema() string {
 	return c.schema
+}
+
+func parseConfigNodeLink(node *ConfigNode) *ConfigNode {
+	var match []string
+	if node.Link != "" {
+		match, _ = gregex.MatchString(linkPattern, node.Link)
+		if len(match) > 5 {
+			node.Type = match[1]
+			node.User = match[2]
+			node.Pass = match[3]
+			node.Protocol = match[4]
+			array := gstr.Split(match[5], ":")
+			if len(array) == 2 {
+				node.Host = array[0]
+				node.Port = array[1]
+				node.Name = match[6]
+			} else {
+				node.Name = match[5]
+			}
+			if len(match) > 6 {
+				node.Extra = match[7]
+			}
+			node.Link = ""
+		}
+	}
+	if node.Extra != "" {
+		if m, _ := gstr.Parse(node.Extra); len(m) > 0 {
+			_ = gconv.Struct(m, &node)
+		}
+	}
+	// Default value checks.
+	if node.Charset == "" {
+		node.Charset = defaultCharset
+	}
+	if node.Protocol == "" {
+		node.Protocol = defaultProtocol
+	}
+	return node
 }

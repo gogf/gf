@@ -9,6 +9,7 @@ package mssql_test
 import (
 	"context"
 	"fmt"
+
 	_ "github.com/denisenkom/go-mssqldb"
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -53,8 +54,10 @@ func init() {
 	nodeLink := gdb.ConfigNode{
 		Type: "mssql",
 		Name: "test",
-		Link: fmt.Sprintf("user id=%s;password=%s;server=%s;port=%s;database=%s;encrypt=disable",
-			node.User, node.Pass, node.Host, node.Port, node.Name),
+		Link: fmt.Sprintf(
+			"mssql:%s:%s@tcp(%s:%s)/%s?encrypt=disable",
+			node.User, node.Pass, node.Host, node.Port, node.Name,
+		),
 	}
 
 	nodeErr := gdb.ConfigNode{

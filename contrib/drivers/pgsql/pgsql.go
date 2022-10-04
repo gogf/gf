@@ -3,12 +3,12 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
+
+// Package pgsql implements gdb.Driver, which supports operations for database PostgreSQL.
 //
 // Note:
 // 1. It needs manually import: _ "github.com/lib/pq"
 // 2. It does not support Save/Replace features.
-
-// Package pgsql implements gdb.Driver, which supports operations for PostgreSql.
 package pgsql
 
 import (
@@ -17,7 +17,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gogf/gf/v2/container/gmap"
+	_ "github.com/lib/pq"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -25,18 +26,13 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
-	_ "github.com/lib/pq"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // Driver is the driver for postgresql database.
 type Driver struct {
 	*gdb.Core
 }
-
-var (
-	// tableFieldsMap caches the table information retrieved from database.
-	tableFieldsMap = gmap.New(true)
-)
 
 const (
 	internalPrimaryKeyInCtx gctx.StrKey = "primary_key"
@@ -62,12 +58,16 @@ func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 }
 
 // Open creates and returns an underlying sql.DB object for pgsql.
+// https://pkg.go.dev/github.com/lib/pq
 func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	var (
 		source               string
 		underlyingDriverName = "postgres"
 	)
 	if config.Link != "" {
+		// ============================================================================
+		// Deprecated from v2.2.0.
+		// ============================================================================
 		source = config.Link
 		// Custom changing the schema in runtime.
 		if config.Name != "" {
@@ -89,6 +89,16 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 		if config.Timezone != "" {
 			source = fmt.Sprintf("%s timezone=%s", source, config.Timezone)
 		}
+
+		if config.Extra != "" {
+			var extraMap map[string]interface{}
+			if extraMap, err = gstr.Parse(config.Extra); err != nil {
+				return nil, err
+			}
+			for k, v := range extraMap {
+				source += fmt.Sprintf(` %s=%s`, k, v)
+			}
+		}
 	}
 
 	if db, err = sql.Open(underlyingDriverName, source); err != nil {
@@ -99,21 +109,6 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 		return nil, err
 	}
 	return
-}
-
-// FilteredLink retrieves and returns filtered `linkInfo` that can be using for
-// logging or tracing purpose.
-func (d *Driver) FilteredLink() string {
-	linkInfo := d.GetConfig().Link
-	if linkInfo == "" {
-		return ""
-	}
-	s, _ := gregex.ReplaceString(
-		`(.+?)\s*password=(.+)\s*host=(.+)`,
-		`$1 password=xxx host=$3`,
-		linkInfo,
-	)
-	return s
 }
 
 // GetChars returns the security char for this type of database.
@@ -227,17 +222,10 @@ func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args [
 // Tables retrieves and returns the tables of current schema.
 // It's mainly used in cli tool chain for automatically generating the models.
 func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
-	var result gdb.Result
-	link, err := d.SlaveLink(schema...)
-	if err != nil {
-		return nil, err
-	}
-	querySchema := "public"
-	if len(schema) > 0 && schema[0] != "" {
-		querySchema = schema[0]
-	}
-	// list table names exclude partitions
-	query := fmt.Sprintf(`
+	var (
+		result      gdb.Result
+		querySchema = gutil.GetOrDefaultStr("public", schema...)
+		query       = fmt.Sprintf(`
 SELECT
 	c.relname
 FROM
@@ -251,8 +239,13 @@ WHERE
 	AND PG_TABLE_IS_VISIBLE(c.oid)
 ORDER BY
 	c.relname`,
-		querySchema,
+			querySchema,
+		)
 	)
+	link, err := d.SlaveLink(schema...)
+	if err != nil {
+		return nil, err
+	}
 	query, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(query))
 	result, err = d.DoSelect(ctx, link, query)
 	if err != nil {
@@ -270,26 +263,11 @@ ORDER BY
 //
 // Also see DriverMysql.TableFields.
 func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
-	charL, charR := d.GetChars()
-	table = gstr.Trim(table, charL+charR)
-	if gstr.Contains(table, " ") {
-		return nil, gerror.NewCode(
-			gcode.CodeInvalidParameter,
-			"function TableFields supports only single table operations",
-		)
-	}
-	table, _ = gregex.ReplaceString("\"", "", table)
-	useSchema := d.GetSchema()
-	if len(schema) > 0 && schema[0] != "" {
-		useSchema = schema[0]
-	}
-	v := tableFieldsMap.GetOrSetFuncLock(
-		fmt.Sprintf(`pgsql_table_fields_%s_%s@group:%s`, table, useSchema, d.GetGroup()),
-		func() interface{} {
-			var (
-				result       gdb.Result
-				link         gdb.Link
-				structureSql = fmt.Sprintf(`
+	var (
+		result       gdb.Result
+		link         gdb.Link
+		useSchema    = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+		structureSql = fmt.Sprintf(`
 SELECT a.attname AS field, t.typname AS type,a.attnotnull as null,
     (case when d.contype is not null then 'pri' else '' end)  as key
       ,ic.column_default as default_value,b.description as comment
@@ -299,40 +277,34 @@ FROM pg_attribute a
          left join pg_class c on a.attrelid = c.oid
          left join pg_constraint d on d.conrelid = c.oid and a.attnum = d.conkey[1]
          left join pg_description b ON a.attrelid=b.objoid AND a.attnum = b.objsubid
-         left join  pg_type t ON  a.atttypid = t.oid
+         left join pg_type t ON a.atttypid = t.oid
          left join information_schema.columns ic on ic.column_name = a.attname and ic.table_name = c.relname
 WHERE c.relname = '%s' and a.attisdropped is false and a.attnum > 0
 ORDER BY a.attnum`,
-					table,
-				)
-			)
-			if link, err = d.SlaveLink(useSchema); err != nil {
-				return nil
-			}
-			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
-			result, err = d.DoSelect(ctx, link, structureSql)
-			if err != nil {
-				return nil
-			}
-			fields = make(map[string]*gdb.TableField)
-			for i, m := range result {
-				fields[m["field"].String()] = &gdb.TableField{
-					Index:   i,
-					Name:    m["field"].String(),
-					Type:    m["type"].String(),
-					Null:    !m["null"].Bool(),
-					Key:     m["key"].String(),
-					Default: m["default_value"].Val(),
-					Comment: m["comment"].String(),
-				}
-			}
-			return fields
-		},
+			table,
+		)
 	)
-	if v != nil {
-		fields = v.(map[string]*gdb.TableField)
+	if link, err = d.SlaveLink(useSchema); err != nil {
+		return nil, err
 	}
-	return
+	structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
+	result, err = d.DoSelect(ctx, link, structureSql)
+	if err != nil {
+		return nil, err
+	}
+	fields = make(map[string]*gdb.TableField)
+	for i, m := range result {
+		fields[m["field"].String()] = &gdb.TableField{
+			Index:   i,
+			Name:    m["field"].String(),
+			Type:    m["type"].String(),
+			Null:    !m["null"].Bool(),
+			Key:     m["key"].String(),
+			Default: m["default_value"].Val(),
+			Comment: m["comment"].String(),
+		}
+	}
+	return fields, nil
 }
 
 // DoInsert is not supported in pgsql.
@@ -357,12 +329,13 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 		)
 
 	case gdb.InsertOptionDefault:
-		tableFields, err := d.TableFields(ctx, table)
+		tableFields, err := d.GetCore().GetDB().TableFields(ctx, table)
 		if err == nil {
 			for _, field := range tableFields {
 				if field.Key == "pri" {
 					pkField := *field
 					ctx = context.WithValue(ctx, internalPrimaryKeyInCtx, pkField)
+					break
 				}
 			}
 		}
@@ -378,12 +351,12 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 	)
 
 	// Transaction checks.
-	if link == nil {
+	if link != nil && link.IsTransaction() {
+		isUseCoreDoExec = true
+	} else {
 		if tx := gdb.TXFromCtx(ctx, d.GetGroup()); tx != nil {
 			isUseCoreDoExec = true
 		}
-	} else if link.IsTransaction() {
-		isUseCoreDoExec = true
 	}
 
 	if value := ctx.Value(internalPrimaryKeyInCtx); value != nil {
@@ -396,7 +369,7 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 		isUseCoreDoExec = true
 	}
 
-	// check if it is a insert operation.
+	// check if it is an insert operation.
 	if !isUseCoreDoExec && pkField.Name != "" && strings.Contains(sql, "INSERT INTO") {
 		primaryKey = pkField.Name
 		sql += " RETURNING " + primaryKey

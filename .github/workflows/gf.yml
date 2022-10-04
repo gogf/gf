@@ -58,6 +58,7 @@ jobs:
           - 3306:3306
 
       # PostgreSQL backend server.
+      # docker run -d --name postgres -p 5432:5432 -e POSTGRES_PASSWORD=12345678 -e POSTGRES_USER=postgres -e POSTGRES_DB=test -v postgres:/Users/john/Temp/postgresql/data loads/postgres:13
       postgres:
         image: loads/postgres:13
         env:
@@ -93,6 +94,7 @@ jobs:
           --health-retries 10
 
       # ClickHouse backend server.
+      # docker run -d --name clickhouse -p 9000:9000 -p 8123:8123 -p 9001:9001 loads/clickhouse-server:latest
       clickhouse-server:
         image: loads/clickhouse-server:latest
         ports:
@@ -100,13 +102,14 @@ jobs:
           - 8123:8123
           - 9001:9001
 
+      # Polaris backend server.
       polaris:
-        image: polarismesh/polaris-server-standalone:latest
+        image: loads/polaris-server-standalone:latest
         ports:
           - 8090:8090
           - 8091:8091
 
-      #oracle 11g server
+      # Oracle 11g server
       oracle-server:
         image: loads/oracle-xe-11g-r2:latest
         env:
@@ -117,6 +120,11 @@ jobs:
         ports:
           - 1521:1521
 
+      # dm8 server
+      dm-server:
+        image: loads/dm:v8.1.2.128_ent_x86_64_ctm_pack4
+        ports:
+          - 5236:5236
 
     strategy:
       matrix:
@@ -132,6 +140,9 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v2
 
+    - name: Start Minikube
+      uses: medyagh/setup-minikube@master
+
     - name: Setup Golang ${{ matrix.go-version }}
       uses: actions/setup-go@v2
       with:
@@ -140,11 +151,6 @@ jobs:
     - name: Setup Golang caches
       uses: actions/cache@v3
       with:
-        # In order:
-        # * Module download cache
-        # * Build cache (Linux)
-        # * Build cache (Mac)
-        # * Build cache (Windows)
         path: |
           ~/go/pkg/mod
           ~/.cache/go-build
@@ -154,40 +160,23 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-${{ matrix.go-version }}-
 
-    - name: Start containers
-      run: docker-compose -f ".github/workflows/docker/docker-compose.yml" up -d --build
+    - name: Start redis cluster containers
+      run:  docker-compose -f ".github/workflows/redis/docker-compose.yml" up -d --build
+
+    - name: Start apollo containers
+      run:  docker-compose -f ".github/workflows/apollo/docker-compose.yml" up -d --build
 
     - name: Before Script
-      run: |
-        find . -name "*.go" | xargs gofmt -w
-        git diff --name-only --exit-code || if [ $? != 0 ]; then echo "Notice: gofmt check failed,please gofmt before pr." && exit 1; fi
-        echo "gofmt check pass."
-        sudo echo "127.0.0.1   local" | sudo tee -a /etc/hosts
+      run:  bash .github/workflows/before_script.sh
 
     - name: Build & Test
-      run: |
-        GOARCH=${{ matrix.goarch }}
-        for file in `find . -name go.mod`; do
-            dirpath=$(dirname $file)
+      run:  bash .github/workflows/build_and_test.sh
 
-            if [ "oracle" = $(basename $dirpath) ]; then
-                if ! go version|grep -q "1.17"; then
-                  continue 1
-                fi
-            fi
+    - name: Stop redis cluster containers
+      run:  docker-compose -f ".github/workflows/redis/docker-compose.yml" down
 
-            cd $dirpath
-            go mod tidy
-            go build ./...
-            go test ./... -race -coverprofile=coverage.out -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
-            if grep -q "/gogf/gf/.*/v2" go.mod; then
-                sed -i "s/gogf\/gf\(\/.*\)\/v2/gogf\/gf\/v2\1/g" coverage.out
-            fi
-            cd -
-        done
-
-    - name: Stop containers
-      run: docker-compose -f ".github/workflows/docker/docker-compose.yml" down
+    - name: Stop apollo containers
+      run:  docker-compose -f ".github/workflows/apollo/docker-compose.yml" down
 
     - name: Report Coverage
       uses: codecov/codecov-action@v2
