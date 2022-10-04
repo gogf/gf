@@ -1,20 +1,27 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package clickhouse
 
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/util/guid"
-	"github.com/google/uuid"
-	"strings"
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/grand"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 const (
@@ -107,6 +114,8 @@ values  (607970943242866688, 607973669943119880, 607972403489804288, 2022, 3, 20
 			, Col8 DateTime COMMENT '列8'
 			, Col9 UUID COMMENT '列9'
 			, Col10 DateTime COMMENT '列10'
+		    , Col11 Decimal(9, 2) COMMENT '列11'
+		    , Col12 Decimal(9, 2) COMMENT '列12'
 		) ENGINE = MergeTree()
 		PRIMARY KEY Col4
 		ORDER BY Col4
@@ -120,7 +129,7 @@ func clickhouseConfigDB() gdb.DB {
 		User:  "default",
 		Name:  "default",
 		Type:  "clickhouse",
-		Debug: true,
+		Debug: false,
 	})
 	gtest.AssertNil(err)
 	gtest.AssertNE(connect, nil)
@@ -129,8 +138,7 @@ func clickhouseConfigDB() gdb.DB {
 
 func clickhouseLink() gdb.DB {
 	connect, err := gdb.New(gdb.ConfigNode{
-		Link: "clickhouse://default@127.0.0.1:9000,127.0.0.1:9000/default?dial_timeout=200ms&max_execution_time=60",
-		Type: "clickhouse",
+		Link: "clickhouse:default:@tcp(127.0.0.1:9000)/default?dial_timeout=200ms&max_execution_time=60",
 	})
 	gtest.AssertNil(err)
 	gtest.AssertNE(connect, nil)
@@ -435,8 +443,12 @@ func TestDriverClickhouse_NilTime(t *testing.T) {
 		Col8  *time.Time
 		Col9  uuid.UUID
 		Col10 *gtime.Time
+		Col11 decimal.Decimal
+		Col12 *decimal.Decimal
 	}
 	insertData := []*testNilTime{}
+	money := decimal.NewFromFloat(1.12)
+	strMoney, _ := decimal.NewFromString("99999.999")
 	for i := 0; i < 10000; i++ {
 		insertData = append(insertData, &testNilTime{
 			Col4: "Inc.",
@@ -447,6 +459,8 @@ func TestDriverClickhouse_NilTime(t *testing.T) {
 					map[string]string{"key": "value"},
 					map[string]string{"key": "value"},
 				}},
+			Col11: money,
+			Col12: &strMoney,
 		})
 	}
 	_, err := connect.Model("data_type").Data(insertData).Insert()
@@ -454,6 +468,13 @@ func TestDriverClickhouse_NilTime(t *testing.T) {
 	count, err := connect.Model("data_type").Where("Col4", "Inc.").Count()
 	gtest.AssertNil(err)
 	gtest.AssertEQ(count, 10000)
+
+	data, err := connect.Model("data_type").Where("Col4", "Inc.").One()
+	gtest.AssertNil(err)
+	gtest.AssertNE(data, nil)
+	g.Dump(data)
+	gtest.AssertEQ(data["Col11"].String(), "1.12")
+	gtest.AssertEQ(data["Col12"].String(), "99999.99")
 }
 
 func TestDriverClickhouse_BatchInsert(t *testing.T) {
@@ -503,21 +524,6 @@ func TestDriverClickhouse_Open(t *testing.T) {
 	gtest.AssertNil(db.PingMaster())
 }
 
-func TestDriverClickhouse_ReplaceConfig(t *testing.T) {
-	db := &Driver{}
-	// parse link's name set to config
-	c1 := &gdb.ConfigNode{}
-	c1.Link = "clickhouse://default@127.0.0.1:9000,127.0.0.1:9000/default?dial_timeout=200ms&max_execution_time=60"
-	_, _ = db.Open(c1)
-	gtest.AssertEQ(c1.Name, "default")
-	// replace link's name from config
-	c2 := &gdb.ConfigNode{}
-	c2.Name = "clickhouseJohn"
-	c2.Link = "clickhouse://default@127.0.0.1:9000,127.0.0.1:9000/default?dial_timeout=200ms&max_execution_time=60"
-	_, _ = db.Open(c2)
-	gtest.AssertEQ(strings.Contains(c2.Link, "clickhouseJohn"), true)
-}
-
 func TestDriverClickhouse_TableFields(t *testing.T) {
 	connect := clickhouseConfigDB()
 	gtest.AssertNil(createClickhouseExampleTable(connect))
@@ -537,6 +543,8 @@ func TestDriverClickhouse_TableFields(t *testing.T) {
 		"Col8":  {8, "Col8", "DateTime", false, "", "", "", "列8"},
 		"Col9":  {9, "Col9", "UUID", false, "", "", "", "列9"},
 		"Col10": {10, "Col10", "DateTime", false, "", "", "", "列10"},
+		"Col11": {11, "Col11", "Decimal(9, 2)", false, "", "", "", "列11"},
+		"Col12": {12, "Col12", "Decimal(9, 2)", false, "", "", "", "列12"},
 	}
 	for k, v := range result {
 		_, ok := dataTypeTable[k]

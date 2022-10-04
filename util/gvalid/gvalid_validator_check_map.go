@@ -145,9 +145,7 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 				required := false
 				// rule => error
 				for ruleKey := range errorItem {
-					// Default required rules.
-					if _, ok := mustCheckRulesEvenValueEmpty[ruleKey]; ok {
-						required = true
+					if required = v.checkRuleRequired(ruleKey); required {
 						break
 					}
 				}
