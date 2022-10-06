@@ -24,6 +24,7 @@ import (
 // Client is the HTTP client for HTTP request management.
 type Client struct {
 	http.Client                         // Underlying HTTP Client.
+	builder           gsel.Builder      // Builder for request balance.
 	header            map[string]string // Custom header map.
 	cookies           map[string]string // Custom cookie map.
 	prefix            string            // Prefix for request.
@@ -32,7 +33,6 @@ type Client struct {
 	retryCount        int               // Retry count when request fails.
 	retryInterval     time.Duration     // Retry interval when request fails.
 	middlewareHandler []HandlerFunc     // Interceptor handlers
-	selectorBuilder   gsel.Builder      // Builder for request balance.
 }
 
 const (
@@ -66,6 +66,7 @@ func New() *Client {
 				DisableKeepAlives: true,
 			},
 		},
+		builder: gsel.GetBuilder(),
 		header:  make(map[string]string),
 		cookies: make(map[string]string),
 	}

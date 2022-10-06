@@ -6,15 +6,17 @@ require (
 	github.com/gogf/gf/contrib/config/apollo/v2 v2.0.0
 	github.com/gogf/gf/contrib/config/kubecm/v2 v2.0.0
 	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.0.0
-	github.com/gogf/gf/contrib/registry/etcd/v2 v2.1.0-rc3.0.20220523034830-510fa3faf03f
+	github.com/gogf/gf/contrib/registry/etcd/v2 v2.1.4
 	github.com/gogf/gf/contrib/registry/polaris/v2 v2.0.0
+	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.0.0
 	github.com/gogf/gf/contrib/trace/jaeger/v2 v2.0.0
 	github.com/gogf/gf/v2 v2.1.4
-	github.com/gogf/katyusha v0.4.1-0.20220620125113-f55d6f739773
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/protobuf v1.5.2
 	github.com/polarismesh/polaris-go v1.2.0-beta.0.0.20220517041223-596a6a63b00f
-	google.golang.org/grpc v1.46.2
+	golang.org/x/net v0.0.0-20220919232410-f2f64ebce3c1
+	google.golang.org/grpc v1.49.0
+	google.golang.org/protobuf v1.28.1
 	k8s.io/client-go v0.25.2
 )
 
@@ -24,6 +26,7 @@ replace (
 	github.com/gogf/gf/contrib/drivers/mysql/v2 => ../contrib/drivers/mysql/
 	github.com/gogf/gf/contrib/registry/etcd/v2 => ../contrib/registry/etcd/
 	github.com/gogf/gf/contrib/registry/polaris/v2 => ../contrib/registry/polaris/
+	github.com/gogf/gf/contrib/rpc/grpcx/v2 => ../contrib/rpc/grpcx/
 	github.com/gogf/gf/contrib/trace/jaeger/v2 => ../contrib/trace/jaeger/
 	github.com/gogf/gf/v2 => ../
 )

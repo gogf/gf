@@ -124,7 +124,7 @@ func WithHeartbeat(heartbeat bool) Option {
 }
 
 // New create a new registry.
-func New(provider polaris.ProviderAPI, consumer polaris.ConsumerAPI, opts ...Option) (r *Registry) {
+func New(provider polaris.ProviderAPI, consumer polaris.ConsumerAPI, opts ...Option) gsvc.Registry {
 	op := options{
 		Namespace:    "default",
 		ServiceToken: "",
@@ -150,7 +150,7 @@ func New(provider polaris.ProviderAPI, consumer polaris.ConsumerAPI, opts ...Opt
 }
 
 // NewWithConfig new a registry with config.
-func NewWithConfig(conf config.Configuration, opts ...Option) (r *Registry) {
+func NewWithConfig(conf config.Configuration, opts ...Option) gsvc.Registry {
 	provider, err := polaris.NewProviderAPIByConfig(conf)
 	if err != nil {
 		panic(err)

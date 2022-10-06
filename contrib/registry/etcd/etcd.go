@@ -46,7 +46,7 @@ const (
 )
 
 // New creates and returns a new etcd registry.
-func New(address string, option ...Option) *Registry {
+func New(address string, option ...Option) gsvc.Registry {
 	endpoints := gstr.SplitAndTrim(address, ",")
 	if len(endpoints) == 0 {
 		panic(gerror.NewCodef(gcode.CodeInvalidParameter, `invalid etcd address "%s"`, address))
