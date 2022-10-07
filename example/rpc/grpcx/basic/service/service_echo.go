@@ -9,11 +9,11 @@ package service
 import (
 	"fmt"
 
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gcmd"
 	"golang.org/x/net/context"
 
 	"github.com/gogf/gf/example/rpc/grpcx/basic/protobuf"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gcmd"
 )
 
 // Echo is the service for echo.

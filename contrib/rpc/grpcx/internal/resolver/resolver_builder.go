@@ -9,10 +9,11 @@ package resolver
 import (
 	"context"
 
+	"google.golang.org/grpc/resolver"
+
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gsvc"
-	"google.golang.org/grpc/resolver"
 )
 
 // Builder is the builder for the etcd discovery resolver.

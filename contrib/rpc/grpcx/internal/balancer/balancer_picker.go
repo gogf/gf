@@ -7,8 +7,9 @@
 package balancer
 
 import (
-	"github.com/gogf/gf/v2/net/gsel"
 	"google.golang.org/grpc/balancer"
+
+	"github.com/gogf/gf/v2/net/gsel"
 )
 
 // Picker implements grpc balancer.Picker,
@@ -30,16 +31,16 @@ type Picker struct {
 //
 // If an error is returned:
 //
-// - If the error is ErrNoSubConnAvailable, gRPC will block until a new
-//   Picker is provided by the balancer (using ClientConn.UpdateState).
+//   - If the error is ErrNoSubConnAvailable, gRPC will block until a new
+//     Picker is provided by the balancer (using ClientConn.UpdateState).
 //
-// - If the error is a status error (implemented by the grpc/status
-//   package), gRPC will terminate the RPC with the code and message
-//   provided.
+//   - If the error is a status error (implemented by the grpc/status
+//     package), gRPC will terminate the RPC with the code and message
+//     provided.
 //
-// - For all other errors, wait for ready RPCs will wait, but non-wait for
-//   ready RPCs will be terminated with this error's Error() string and
-//   status code Unavailable.
+//   - For all other errors, wait for ready RPCs will wait, but non-wait for
+//     ready RPCs will be terminated with this error's Error() string and
+//     status code Unavailable.
 func (p *Picker) Pick(info balancer.PickInfo) (balancer.PickResult, error) {
 	node, done, err := p.selector.Pick(info.Ctx)
 	if err != nil {

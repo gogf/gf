@@ -11,10 +11,11 @@ import (
 	"errors"
 	"time"
 
-	"github.com/gogf/gf/v2/net/gsvc"
-	"github.com/gogf/gf/v2/os/glog"
 	"google.golang.org/grpc/attributes"
 	"google.golang.org/grpc/resolver"
+
+	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v2/os/glog"
 )
 
 // Resolver implements grpc resolver.Resolver,

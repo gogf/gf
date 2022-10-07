@@ -1,8 +1,9 @@
 package user
 
 import (
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 	"google.golang.org/grpc"
+
+	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 )
 
 const (

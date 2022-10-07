@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"net"
 
+	"google.golang.org/grpc"
+
 	"github.com/gogf/gf/contrib/registry/etcd/v2"
+	pb "github.com/gogf/gf/example/rpc/grpcx/rawgrpc/helloworld"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gipv4"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/os/gctx"
-	"google.golang.org/grpc"
-
-	pb "github.com/gogf/gf/example/rpc/grpcx/rawgrpc/helloworld"
 )
 
 type server struct {

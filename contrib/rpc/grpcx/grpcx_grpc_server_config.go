@@ -9,10 +9,11 @@ package grpcx
 import (
 	"context"
 
+	"google.golang.org/grpc"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/util/gconv"
-	"google.golang.org/grpc"
 )
 
 // GrpcServerConfig is the configuration for server.

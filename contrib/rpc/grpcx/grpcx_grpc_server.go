@@ -16,6 +16,8 @@ import (
 	"syscall"
 	"time"
 
+	"google.golang.org/grpc"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gipv4"
 	"github.com/gogf/gf/v2/net/gsvc"
@@ -23,7 +25,6 @@ import (
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/text/gstr"
-	"google.golang.org/grpc"
 )
 
 // GrpcServer is the server for GRPC protocol.
@@ -34,6 +35,7 @@ type GrpcServer struct {
 	waitGroup sync.WaitGroup
 }
 
+// Service implements gsvc.Service interface.
 type Service struct {
 	gsvc.Service
 	Endpoints gsvc.Endpoints

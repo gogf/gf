@@ -8,9 +8,10 @@
 package resolver
 
 import (
+	"google.golang.org/grpc/resolver"
+
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gsvc"
-	"google.golang.org/grpc/resolver"
 )
 
 const (

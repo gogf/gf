@@ -10,10 +10,11 @@ package balancer
 import (
 	"fmt"
 
-	"github.com/gogf/gf/v2/net/gsel"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/balancer"
 	"google.golang.org/grpc/balancer/base"
+
+	"github.com/gogf/gf/v2/net/gsel"
 )
 
 const (

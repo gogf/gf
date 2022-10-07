@@ -9,11 +9,11 @@ package service
 import (
 	"fmt"
 
-	"github.com/gogf/gf/v2/os/gcmd"
-	"github.com/gogf/gf/v2/os/gtime"
 	"golang.org/x/net/context"
 
 	"github.com/gogf/gf/example/rpc/grpcx/basic/protobuf"
+	"github.com/gogf/gf/v2/os/gcmd"
+	"github.com/gogf/gf/v2/os/gtime"
 )
 
 // Time is the service for time.
