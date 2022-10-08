@@ -10,13 +10,15 @@ package grpcx
 import (
 	"time"
 
+	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/balancer"
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/grpcctx"
 )
 
 type (
-	modCtx    = grpcctx.Ctx
-	modClient struct{}
-	modServer struct{}
+	modCtx      = grpcctx.Ctx
+	modBalancer = balancer.Balancer
+	modClient   struct{}
+	modServer   struct{}
 )
 
 const (
@@ -27,7 +29,8 @@ const (
 )
 
 var (
-	Ctx    = modCtx{}    // Ctx is instance of module Context, which manages the context feature.
-	Client = modClient{} // Client is instance of module Client, which manages the client features.
-	Server = modServer{} // Server is instance of module Server, which manages the server feature.
+	Ctx      = modCtx{}      // Ctx is instance of module Context, which manages the context feature.
+	Balancer = modBalancer{} // Balancer is instance of module Balancer, which manages the load balancer features.
+	Client   = modClient{}   // Client is instance of module Client, which manages the client features.
+	Server   = modServer{}   // Server is instance of module Server, which manages the server feature.
 )

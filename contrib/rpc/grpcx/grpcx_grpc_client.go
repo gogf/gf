@@ -12,7 +12,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/balancer"
 	"github.com/gogf/gf/v2/net/gsel"
 	"github.com/gogf/gf/v2/net/gsvc"
 )
@@ -20,7 +19,7 @@ import (
 // DefaultGrpcDialOptions returns the default options for creating grpc client connection.
 func (c modClient) DefaultGrpcDialOptions() []grpc.DialOption {
 	return []grpc.DialOption{
-		balancer.WithName(gsel.GetBuilder().Name()),
+		Balancer.WithName(gsel.GetBuilder().Name()),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
 }

@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/gogf/gf/contrib/registry/etcd/v2"
 	pb "github.com/gogf/gf/example/rpc/grpcx/rawgrpc/helloworld"
 	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/gsel"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gctx"
 )
@@ -25,10 +25,7 @@ func main() {
 	// Set up a connection to the server.
 	conn, err := grpc.Dial(
 		fmt.Sprintf(`%s`, service.GetKey()),
-		grpc.WithDefaultServiceConfig(fmt.Sprintf(
-			`{"loadBalancingPolicy": "%s"}`,
-			gsel.NewBuilderRandom().Name(),
-		)),
+		grpcx.Balancer.WithRandom(),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
