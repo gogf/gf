@@ -47,7 +47,12 @@ func (d *DriverWrapperDB) Tables(ctx context.Context, schema ...string) (tables 
 //
 // It's using cache feature to enhance the performance, which is never expired util the
 // process restarts.
-func (d *DriverWrapperDB) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {
+func (d *DriverWrapperDB) TableFields(
+	ctx context.Context, table string, schema ...string,
+) (fields map[string]*TableField, err error) {
+	if table == "" {
+		return nil, nil
+	}
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
