@@ -35,7 +35,7 @@ type Config struct {
 	// The name of the configuration.
 	FileName string `v:"required"`
 	// The path of the polaris configuration file.
-	ConfigPath string `v:"required"`
+	Path string `v:"required"`
 	// The log directory for polaris.
 	LogDir string
 	// Watch watches remote configuration updates, which updates local configuration in memory immediately when remote configuration changes.
@@ -65,7 +65,7 @@ func New(ctx context.Context, config Config) (adapter gcfg.Adapter, err error) {
 		configAPI polaris.ConfigAPI
 	)
 
-	if configAPI, err = polaris.NewConfigAPIByFile(config.ConfigPath); err != nil {
+	if configAPI, err = polaris.NewConfigAPIByFile(config.Path); err != nil {
 		err = gerror.Wrapf(err, "Polaris configuration initialization failed  with config: %+v", config)
 		return
 	}

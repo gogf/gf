@@ -8,21 +8,21 @@ import (
 
 func init() {
 	var (
-		ctx        = gctx.GetInitCtx()
-		namespace  = "default"
-		fileGroup  = "goframe"
-		fileName   = "config.yaml"
-		configPath = "testdata/polaris.yaml"
-		logDir     = "/tmp/polaris/log"
+		ctx       = gctx.GetInitCtx()
+		namespace = "default"
+		fileGroup = "goframe"
+		fileName  = "config.yaml"
+		path      = "testdata/polaris.yaml"
+		logDir    = "/tmp/polaris/log"
 	)
 	// Create polaris Client that implements gcfg.Adapter.
 	adapter, err := polaris.New(ctx, polaris.Config{
-		Namespace:  namespace,
-		FileGroup:  fileGroup,
-		FileName:   fileName,
-		ConfigPath: configPath,
-		LogDir:     logDir,
-		Watch:      true,
+		Namespace: namespace,
+		FileGroup: fileGroup,
+		FileName:  fileName,
+		Path:      path,
+		LogDir:    logDir,
+		Watch:     true,
 	})
 	if err != nil {
 		g.Log().Fatalf(ctx, `%+v`, err)
