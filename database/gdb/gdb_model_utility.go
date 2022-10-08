@@ -35,6 +35,11 @@ func (m *Model) TableFields(tableStr string, schema ...string) (fields map[strin
 		table      = m.db.GetCore().guessPrimaryTableName(tableStr)
 		usedSchema = gutil.GetOrDefaultStr(m.schema, schema...)
 	)
+
+	if table == "" {
+		return nil, nil
+	}
+
 	return m.db.TableFields(m.GetCtx(), table, usedSchema)
 }
 
