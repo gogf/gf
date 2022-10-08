@@ -106,6 +106,11 @@ type (
 )
 
 const (
+	// FreePortAddress marks the server listens using random free port.
+	FreePortAddress = ":0"
+)
+
+const (
 	HeaderXUrlPath        = "x-url-path"         // Used for custom route handler, which does not change URL.Path.
 	HookBeforeServe       = "HOOK_BEFORE_SERVE"  // Hook handler before route handler/file serving.
 	HookAfterServe        = "HOOK_AFTER_SERVE"   // Hook handler after route handler/file serving.
@@ -163,9 +168,9 @@ var (
 			return true
 		},
 	}
-	// allDoneChan is the event for all servers have done its serving and exit.
+	// allShutdownChan is the event for all servers have done its serving and exit.
 	// It is used for process blocking purpose.
-	allDoneChan = make(chan struct{}, 1000)
+	allShutdownChan = make(chan struct{}, 1000)
 
 	// serverProcessInitialized is used for lazy initialization for server.
 	// The process can only be initialized once.
