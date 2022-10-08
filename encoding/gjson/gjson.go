@@ -40,7 +40,7 @@ const (
 
 // Json is the customized JSON struct.
 type Json struct {
-	mu *rwmutex.RWMutex
+	mu rwmutex.RWMutex
 	p  *interface{} // Pointer for hierarchical data access, it's the root of data in default.
 	c  byte         // Char separator('.' in default).
 	vc bool         // Violence Check(false in default), which is used to access data when the hierarchical data key contains separator char.
@@ -358,6 +358,9 @@ func (j *Json) setPointerWithValue(pointer *interface{}, key string, value inter
 
 // getPointerByPattern returns a pointer to the value by specified `pattern`.
 func (j *Json) getPointerByPattern(pattern string) *interface{} {
+	if j.p == nil {
+		return nil
+	}
 	if j.vc {
 		return j.getPointerByPatternWithViolenceCheck(pattern)
 	} else {
