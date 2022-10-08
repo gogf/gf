@@ -71,6 +71,15 @@ func SendRecv(address string, data []byte, receive int, retry ...Retry) ([]byte,
 	return conn.SendRecv(data, receive, retry...)
 }
 
+// MustGetFreePort performs as GetFreePort, but it panics if any error occurs.
+func MustGetFreePort() (port int) {
+	port, err := GetFreePort()
+	if err != nil {
+		panic(err)
+	}
+	return port
+}
+
 // GetFreePort retrieves and returns a port that is free.
 func GetFreePort() (port int, err error) {
 	var (
