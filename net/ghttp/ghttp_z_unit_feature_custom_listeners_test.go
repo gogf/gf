@@ -8,29 +8,32 @@ package ghttp_test
 
 import (
 	"fmt"
+	"net"
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/guid"
-	"net"
-	"testing"
-	"time"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 )
 
 func Test_SetSingleCustomListener(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	ln, _ := net.Listen("tcp", fmt.Sprintf(":%d", p))
-	s := g.Server(guid.S())
+	var (
+		p, _  = gtcp.GetFreePort()
+		ln, _ = net.Listen("tcp", fmt.Sprintf(":%d", p))
+		s     = g.Server(guid.S())
+	)
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.GET("/test", func(r *ghttp.Request) {
 			r.Response.Write("test")
 		})
 	})
-
-	s.SetListener(ln)
+	err := s.SetListener(ln)
+	gtest.AssertNil(err)
 
 	s.Start()
 	defer s.Shutdown()
@@ -62,7 +65,8 @@ func Test_SetMultipleCustomListeners(t *testing.T) {
 		})
 	})
 
-	s.SetListener(ln1, ln2)
+	err := s.SetListener(ln1, ln2)
+	gtest.AssertNil(err)
 
 	s.Start()
 	defer s.Shutdown()

@@ -13,8 +13,8 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 func Test_Client_DoRequestObj(t *testing.T) {
@@ -34,8 +34,7 @@ func Test_Client_DoRequestObj(t *testing.T) {
 		Id   int
 		Name string
 	}
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.Group("/user", func(group *ghttp.RouterGroup) {
 		group.GET("/{id}", func(r *ghttp.Request) {
 			r.Response.WriteJson(g.Map{"id": r.Get("id").Int(), "name": "john"})
@@ -44,14 +43,13 @@ func Test_Client_DoRequestObj(t *testing.T) {
 			r.Response.WriteJson(g.Map{"id": r.Get("Id")})
 		})
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		url := fmt.Sprintf("http://127.0.0.1:%d", p)
+		url := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
 		client := g.Client().SetPrefix(url).ContentJson()
 		var (
 			createRes *UserCreateRes
@@ -65,7 +63,7 @@ func Test_Client_DoRequestObj(t *testing.T) {
 		t.Assert(createRes.Id, 1)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		url := fmt.Sprintf("http://127.0.0.1:%d", p)
+		url := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
 		client := g.Client().SetPrefix(url).ContentJson()
 		var (
 			queryRes *UserQueryRes

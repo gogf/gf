@@ -16,9 +16,9 @@ import (
 
 	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/net/gclient"
-	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/util/guid"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
@@ -616,14 +616,11 @@ func ExampleClient_Proxy() {
 }
 
 func ExampleClient_Prefix() {
-	p := gtcp.MustGetFreePort()
-
 	var (
-		ctx    = gctx.New()
-		prefix = fmt.Sprintf("http://127.0.0.1:%d/api/v1/", p)
+		ctx = gctx.New()
 	)
 
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	// HTTP method handlers.
 	s.Group("/api", func(group *ghttp.RouterGroup) {
 		group.GET("/v1/prefix", func(r *ghttp.Request) {
@@ -635,12 +632,13 @@ func ExampleClient_Prefix() {
 	})
 	s.SetAccessLogEnabled(false)
 	s.SetDumpRouterMap(false)
-	s.SetPort(p)
 	s.Start()
 	time.Sleep(time.Millisecond * 100)
 
 	// Add Client URI Prefix
-	client := g.Client().Prefix(prefix)
+	client := g.Client().Prefix(fmt.Sprintf(
+		"http://127.0.0.1:%d/api/v1/", s.GetListenedPort(),
+	))
 
 	fmt.Println(string(client.GetBytes(ctx, "prefix")))
 	fmt.Println(string(client.GetBytes(ctx, "hello")))

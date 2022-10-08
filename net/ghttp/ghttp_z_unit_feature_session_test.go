@@ -13,7 +13,6 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
 )
@@ -154,8 +153,7 @@ func Test_Session_Custom_Id(t *testing.T) {
 		sessionId = "1234567890"
 		key       = "key"
 		value     = "value"
-		p, _      = gtcp.GetFreePort()
-		s         = g.Server(p)
+		s         = g.Server(guid.S())
 	)
 	s.BindHandler("/id", func(r *ghttp.Request) {
 		if err := r.Session.SetId(sessionId); err != nil {
