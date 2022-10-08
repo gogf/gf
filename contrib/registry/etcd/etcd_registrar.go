@@ -34,7 +34,7 @@ func (r *Registry) Register(ctx context.Context, service gsvc.Service) (gsvc.Ser
 			key, value, grant.ID,
 		)
 	}
-	r.logger.Infof(
+	r.logger.Debugf(
 		ctx,
 		`etcd put success with key "%s", value "%s", lease "%d"`,
 		key, value, grant.ID,

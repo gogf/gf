@@ -31,6 +31,7 @@ import (
 type GrpcServer struct {
 	Server    *grpc.Server
 	config    *GrpcServerConfig
+	listener  net.Listener
 	services  []gsvc.Service
 	waitGroup sync.WaitGroup
 }
@@ -121,62 +122,31 @@ func (s *GrpcServer) Service(services ...gsvc.Service) {
 func (s *GrpcServer) Run() {
 	autoLoadAndRegisterEtcdRegistry()
 
-	var ctx = context.TODO()
+	var (
+		err error
+		ctx = context.TODO()
+	)
 	// Initialize services configured.
-	listener, err := net.Listen("tcp", s.config.Address)
+	s.listener, err = net.Listen("tcp", s.config.Address)
 	if err != nil {
 		s.config.Logger.Fatalf(ctx, `%+v`, err)
 	}
 
 	// Start listening.
 	go func() {
-		if err = s.Server.Serve(listener); err != nil {
+		if err = s.Server.Serve(s.listener); err != nil {
 			s.config.Logger.Fatalf(ctx, `%+v`, err)
 		}
 	}()
 
-	if len(s.services) == 0 {
-		s.services = []gsvc.Service{s.newDefaultService()}
-	}
-
-	// Register service list after server starts.
-	for i, service := range s.services {
-		s.config.Logger.Debugf(ctx, `service register: %+v`, service)
-		if service, err = gsvc.Register(ctx, service); err != nil {
-			s.config.Logger.Fatalf(ctx, `%+v`, err)
-		}
-		s.services[i] = service
-	}
-
-	s.config.Logger.Printf(
+	// Service register.
+	s.doServiceRegister()
+	s.config.Logger.Infof(
 		ctx,
-		"grpc server start listening on: %s, pid: %d",
-		s.config.Address, gproc.Pid(),
+		"pid[%d]: grpc server started listening on [%s]",
+		gproc.Pid(), s.GetListenedAddress(),
 	)
 	s.doSignalListen()
-}
-
-func (s *GrpcServer) newDefaultService() gsvc.Service {
-	var (
-		protocol = `grpc`
-		address  = s.config.Address
-	)
-	var (
-		array = gstr.Split(address, ":")
-		ip    = array[0]
-		port  = array[1]
-	)
-	if ip == "" {
-		ip = gipv4.MustGetIntranetIp()
-	}
-	metadata := gsvc.Metadata{
-		gsvc.MDProtocol: protocol,
-	}
-	return &gsvc.LocalService{
-		Name:      s.config.Name,
-		Endpoints: gsvc.NewEndpoints(fmt.Sprintf(`%s:%s`, ip, port)),
-		Metadata:  metadata,
-	}
 }
 
 // doSignalListen does signal listening and handling for gracefully shutdown.
@@ -203,15 +173,65 @@ func (s *GrpcServer) doSignalListen() {
 			syscall.SIGTERM,
 			syscall.SIGABRT:
 			s.config.Logger.Infof(ctx, "signal received: %s, gracefully shutting down", sig.String())
-			for _, service := range s.services {
-				s.config.Logger.Debugf(ctx, `service deregister: %+v`, service)
-				if err := gsvc.Deregister(ctx, service); err != nil {
-					s.config.Logger.Errorf(ctx, `%+v`, err)
-				}
-			}
+			s.doServiceDeregister()
 			time.Sleep(time.Second)
 			s.Stop()
 			return
+		}
+	}
+}
+
+// doServiceRegister registers current service to Registry.
+func (s *GrpcServer) doServiceRegister() {
+	if gsvc.GetRegistry() == nil {
+		return
+	}
+	if len(s.services) == 0 {
+		s.services = []gsvc.Service{&gsvc.LocalService{
+			Name:     s.config.Name,
+			Metadata: gsvc.Metadata{},
+		}}
+	}
+	var (
+		err      error
+		ctx      = context.Background()
+		protocol = `grpc`
+		address  = s.GetListenedAddress()
+		array    = gstr.Split(address, ":")
+		ip       = array[0]
+		port     = array[1]
+	)
+	if ip == "" {
+		ip = gipv4.MustGetIntranetIp()
+	}
+	// Register service list after server starts.
+	for i, service := range s.services {
+		service = &gsvc.LocalService{
+			Name:      service.GetName(),
+			Endpoints: gsvc.NewEndpoints(fmt.Sprintf(`%s:%s`, ip, port)),
+			Metadata:  service.GetMetadata(),
+		}
+		service.GetMetadata().Sets(gsvc.Metadata{
+			gsvc.MDProtocol: protocol,
+		})
+		s.config.Logger.Debugf(ctx, `service register: %+v`, service)
+		if service, err = gsvc.Register(ctx, service); err != nil {
+			s.config.Logger.Fatalf(ctx, `%+v`, err)
+		}
+		s.services[i] = service
+	}
+}
+
+// doServiceDeregister de-registers current service from Registry.
+func (s *GrpcServer) doServiceDeregister() {
+	if gsvc.GetRegistry() == nil {
+		return
+	}
+	var ctx = context.Background()
+	for _, service := range s.services {
+		s.config.Logger.Debugf(ctx, `service deregister: %+v`, service)
+		if err := gsvc.Deregister(ctx, service); err != nil {
+			s.config.Logger.Errorf(ctx, `%+v`, err)
 		}
 	}
 }
@@ -233,4 +253,25 @@ func (s *GrpcServer) Wait() {
 // Stop gracefully stops the server.
 func (s *GrpcServer) Stop() {
 	s.Server.GracefulStop()
+}
+
+// GetListenedAddress retrieves and returns the address string which are listened by current server.
+func (s *GrpcServer) GetListenedAddress() string {
+	if !gstr.Contains(s.config.Address, FreePortAddress) {
+		return s.config.Address
+	}
+	var (
+		address      = s.config.Address
+		listenedPort = s.GetListenedPort()
+	)
+	address = gstr.Replace(address, FreePortAddress, fmt.Sprintf(`:%d`, listenedPort))
+	return address
+}
+
+// GetListenedPort retrieves and returns one port which is listened to by current server.
+func (s *GrpcServer) GetListenedPort() int {
+	if ln := s.listener; ln != nil {
+		return ln.Addr().(*net.TCPAddr).Port
+	}
+	return -1
 }

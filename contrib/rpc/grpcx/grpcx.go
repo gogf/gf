@@ -22,6 +22,11 @@ type (
 )
 
 const (
+	// FreePortAddress marks the server listens using random free port.
+	FreePortAddress = ":0"
+)
+
+const (
 	defaultServerName        = `default`
 	defaultTimeout           = 5 * time.Second
 	configNodeNameRegistry   = `registry`
