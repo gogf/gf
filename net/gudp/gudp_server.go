@@ -7,17 +7,20 @@
 package gudp
 
 import (
+	"fmt"
 	"net"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/text/gstr"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
 const (
-	defaultServer = "default"
+	defaultServer   = "default"
+	freePortAddress = ":0"
 )
 
 // Server is the UDP server.
@@ -99,4 +102,25 @@ func (s *Server) Run() error {
 	s.conn = NewConnByNetConn(conn)
 	s.handler(s.conn)
 	return nil
+}
+
+// GetListenedAddress retrieves and returns the address string which are listened by current server.
+func (s *Server) GetListenedAddress() string {
+	if !gstr.Contains(s.address, freePortAddress) {
+		return s.address
+	}
+	var (
+		address      = s.address
+		listenedPort = s.GetListenedPort()
+	)
+	address = gstr.Replace(address, freePortAddress, fmt.Sprintf(`:%d`, listenedPort))
+	return address
+}
+
+// GetListenedPort retrieves and returns one port which is listened to by current server.
+func (s *Server) GetListenedPort() int {
+	if ln := s.conn; ln != nil {
+		return ln.LocalAddr().(*net.UDPAddr).Port
+	}
+	return -1
 }

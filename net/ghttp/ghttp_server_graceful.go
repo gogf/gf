@@ -189,7 +189,7 @@ func (s *gracefulServer) GetListenedPort() int {
 	if ln := s.getRawListener(); ln != nil {
 		return ln.Addr().(*net.TCPAddr).Port
 	}
-	return 0
+	return -1
 }
 
 // getProto retrieves and returns the proto string of current server.
