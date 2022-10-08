@@ -7,13 +7,21 @@
 package gudp
 
 import (
+	"fmt"
 	"net"
+	"sync"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/text/gstr"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/util/gconv"
+)
+
+const (
+	// FreePortAddress marks the server listens using random free port.
+	FreePortAddress = ":0"
 )
 
 const (
@@ -22,6 +30,7 @@ const (
 
 // Server is the UDP server.
 type Server struct {
+	mu      sync.Mutex  // Used for Server.listen concurrent safety. -- The golang test with data race checks this.
 	conn    *Conn       // UDP server connection object.
 	address string      // UDP server listening address.
 	handler func(*Conn) // Handler for UDP connection.
@@ -73,6 +82,8 @@ func (s *Server) SetHandler(handler func(*Conn)) {
 // Close closes the connection.
 // It will make server shutdowns immediately.
 func (s *Server) Close() (err error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	err = s.conn.Close()
 	if err != nil {
 		err = gerror.Wrap(err, "connection failed")
@@ -96,7 +107,32 @@ func (s *Server) Run() error {
 		err = gerror.Wrapf(err, `net.ListenUDP failed for address "%s"`, s.address)
 		return err
 	}
+	s.mu.Lock()
 	s.conn = NewConnByNetConn(conn)
+	s.mu.Unlock()
 	s.handler(s.conn)
 	return nil
+}
+
+// GetListenedAddress retrieves and returns the address string which are listened by current server.
+func (s *Server) GetListenedAddress() string {
+	if !gstr.Contains(s.address, FreePortAddress) {
+		return s.address
+	}
+	var (
+		address      = s.address
+		listenedPort = s.GetListenedPort()
+	)
+	address = gstr.Replace(address, FreePortAddress, fmt.Sprintf(`:%d`, listenedPort))
+	return address
+}
+
+// GetListenedPort retrieves and returns one port which is listened to by current server.
+func (s *Server) GetListenedPort() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if ln := s.conn; ln != nil {
+		return ln.LocalAddr().(*net.UDPAddr).Port
+	}
+	return -1
 }
