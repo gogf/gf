@@ -173,14 +173,14 @@ func (s *gracefulServer) Serve(ctx context.Context) error {
 
 // GetListenedAddress retrieves and returns the address string which are listened by current server.
 func (s *gracefulServer) GetListenedAddress() string {
-	if !gstr.Contains(s.address, freePortAddress) {
+	if !gstr.Contains(s.address, FreePortAddress) {
 		return s.address
 	}
 	var (
 		address      = s.address
 		listenedPort = s.GetListenedPort()
 	)
-	address = gstr.Replace(address, freePortAddress, fmt.Sprintf(`:%d`, listenedPort))
+	address = gstr.Replace(address, FreePortAddress, fmt.Sprintf(`:%d`, listenedPort))
 	return address
 }
 

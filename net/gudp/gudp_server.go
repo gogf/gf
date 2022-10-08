@@ -19,8 +19,12 @@ import (
 )
 
 const (
-	defaultServer   = "default"
-	freePortAddress = ":0"
+	// FreePortAddress marks the server listens using random free port.
+	FreePortAddress = ":0"
+)
+
+const (
+	defaultServer = "default"
 )
 
 // Server is the UDP server.
@@ -106,14 +110,14 @@ func (s *Server) Run() error {
 
 // GetListenedAddress retrieves and returns the address string which are listened by current server.
 func (s *Server) GetListenedAddress() string {
-	if !gstr.Contains(s.address, freePortAddress) {
+	if !gstr.Contains(s.address, FreePortAddress) {
 		return s.address
 	}
 	var (
 		address      = s.address
 		listenedPort = s.GetListenedPort()
 	)
-	address = gstr.Replace(address, freePortAddress, fmt.Sprintf(`:%d`, listenedPort))
+	address = gstr.Replace(address, FreePortAddress, fmt.Sprintf(`:%d`, listenedPort))
 	return address
 }
 

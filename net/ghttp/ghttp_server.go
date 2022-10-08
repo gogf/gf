@@ -625,7 +625,7 @@ func (s *Server) GetListenedPorts() []int {
 
 // GetListenedAddress retrieves and returns the address string which are listened by current server.
 func (s *Server) GetListenedAddress() string {
-	if !gstr.Contains(s.config.Address, freePortAddress) {
+	if !gstr.Contains(s.config.Address, FreePortAddress) {
 		return s.config.Address
 	}
 	var (
@@ -633,7 +633,7 @@ func (s *Server) GetListenedAddress() string {
 		listenedPorts = s.GetListenedPorts()
 	)
 	for _, listenedPort := range listenedPorts {
-		address = gstr.Replace(address, freePortAddress, fmt.Sprintf(`:%d`, listenedPort), 1)
+		address = gstr.Replace(address, FreePortAddress, fmt.Sprintf(`:%d`, listenedPort), 1)
 	}
 	return address
 }

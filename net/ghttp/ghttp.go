@@ -106,6 +106,11 @@ type (
 )
 
 const (
+	// FreePortAddress marks the server listens using random free port.
+	FreePortAddress = ":0"
+)
+
+const (
 	HeaderXUrlPath        = "x-url-path"         // Used for custom route handler, which does not change URL.Path.
 	HookBeforeServe       = "HOOK_BEFORE_SERVE"  // Hook handler before route handler/file serving.
 	HookAfterServe        = "HOOK_AFTER_SERVE"   // Hook handler after route handler/file serving.
@@ -135,7 +140,6 @@ const (
 	specialMethodNameShut   = "Shut"
 	specialMethodNameIndex  = "Index"
 	gracefulShutdownTimeout = 5 * time.Second
-	freePortAddress         = ":0"
 )
 
 const (
