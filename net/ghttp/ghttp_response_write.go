@@ -10,6 +10,7 @@ package ghttp
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -144,6 +145,10 @@ func (r *Response) WriteJsonP(content interface{}) {
 	} else {
 		// r.Header().Set("Content-Type", "application/json")
 		if callback := r.Request.Get("callback").String(); callback != "" {
+			// Fixed the XSS injection attach
+			re, _ := regexp.Compile(`[^a-zA-Z_\-\d]+`)
+			callback = re.ReplaceAllString(callback, "")
+
 			buffer := []byte(callback)
 			buffer = append(buffer, byte('('))
 			buffer = append(buffer, b...)
