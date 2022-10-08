@@ -74,3 +74,44 @@ func Test_XUrlPath(t *testing.T) {
 		t.Assert(c.GetContent(ctx, "/test1"), "test2")
 	})
 }
+
+func Test_GetListenedAddress(t *testing.T) {
+	s := g.Server(guid.S())
+	s.BindHandler("/", func(r *ghttp.Request) {
+		r.Response.Write(`test`)
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		t.Assert(c.GetContent(ctx, "/"), "test")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(fmt.Sprintf(`:%d`, s.GetListenedPort()), s.GetListenedAddress())
+	})
+}
+
+func Test_GetListenedAddressWithHost(t *testing.T) {
+	s := g.Server(guid.S())
+	s.BindHandler("/", func(r *ghttp.Request) {
+		r.Response.Write(`test`)
+	})
+	s.SetAddr("127.0.0.1:0")
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		t.Assert(c.GetContent(ctx, "/"), "test")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(fmt.Sprintf(`127.0.0.1:%d`, s.GetListenedPort()), s.GetListenedAddress())
+	})
+}
