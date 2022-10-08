@@ -9,7 +9,6 @@ package polaris
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/polarismesh/polaris-go"
 	"github.com/polarismesh/polaris-go/api"
@@ -30,16 +29,16 @@ func LogDir(dir string) error {
 // Config is the configuration for polaris.
 type Config struct {
 	// The namespace of the configuration.
-	Namespace string `v:"required#namespace is required"`
+	Namespace string `v:"required"`
 	// The group of the configuration.
-	FileGroup string `v:"required#file group is required"`
+	FileGroup string `v:"required"`
 	// The name of the configuration.
-	FileName string `v:"required#file name is required"`
+	FileName string `v:"required"`
 	// The path of the polaris configuration file.
-	ConfigPath string `v:"required#config path is required"`
+	ConfigPath string `v:"required"`
 	// The log directory for polaris.
 	LogDir string
-	// Whether to watch the configuration.
+	// Watch watches remote configuration updates, which updates local configuration in memory immediately when remote configuration changes.
 	Watch bool
 }
 
@@ -145,7 +144,6 @@ func (c *Client) updateLocalValueAndWatch(ctx context.Context) (err error) {
 
 func (c *Client) doUpdate(ctx context.Context) (err error) {
 	if !c.client.HasContent() {
-		g.Log().Debug(ctx, "config file is empty")
 		return gerror.New("config file is empty")
 	}
 	var j *gjson.Json
@@ -165,9 +163,7 @@ func (c *Client) doWatch(ctx context.Context) (err error) {
 	go func() {
 		for {
 			select {
-			case event := <-changeChan:
-				fmt.Println(fmt.Sprintf("received change event by channel. %+v", event))
-				g.Log().Debugf(ctx, "received change event by channel. %+v", event)
+			case <-changeChan:
 				_ = c.doUpdate(ctx)
 			}
 		}
