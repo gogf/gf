@@ -95,7 +95,7 @@ func NewWithOptions(data interface{}, options Options) *Json {
 			vc: false,
 		}
 	}
-	j.mu = rwmutex.New(options.Safe)
+	j.mu = rwmutex.Create(options.Safe)
 	return j
 }
 
