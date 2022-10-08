@@ -14,6 +14,7 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/text/gstr"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
@@ -144,6 +145,11 @@ func GetBaggageMap(ctx context.Context) *gmap.StrAnyMap {
 // GetBaggageVar retrieves value and returns a *gvar.Var for specified key from baggage.
 func GetBaggageVar(ctx context.Context, key string) *gvar.Var {
 	return NewBaggage(ctx).GetVar(key)
+}
+
+// WithUUID injects custom trace id with UUID into context to propagate.
+func WithUUID(ctx context.Context, uuid string) (context.Context, error) {
+	return WithTraceID(ctx, gstr.Replace(uuid, "-", ""))
 }
 
 // WithTraceID injects custom trace id into context to propagate.
