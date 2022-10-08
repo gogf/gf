@@ -198,13 +198,13 @@ func (s *gracefulServer) getNetListener() (net.Listener, error) {
 		f := os.NewFile(s.fd, "")
 		ln, err = net.FileListener(f)
 		if err != nil {
-			err = gerror.Wrapf(err, "%d: net.FileListener failed", gproc.Pid())
+			err = gerror.Wrap(err, "net.FileListener failed")
 			return nil, err
 		}
 	} else {
 		ln, err = net.Listen("tcp", s.httpServer.Addr)
 		if err != nil {
-			err = gerror.Wrapf(err, "%d: net.Listen failed", gproc.Pid())
+			err = gerror.Wrapf(err, `net.Listen address "%s" failed`, s.httpServer.Addr)
 		}
 	}
 	return ln, err
