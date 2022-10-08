@@ -135,6 +135,7 @@ const (
 	specialMethodNameShut   = "Shut"
 	specialMethodNameIndex  = "Index"
 	gracefulShutdownTimeout = 5 * time.Second
+	freePortAddress         = ":0"
 )
 
 const (
@@ -163,9 +164,9 @@ var (
 			return true
 		},
 	}
-	// allDoneChan is the event for all servers have done its serving and exit.
+	// allShutdownChan is the event for all servers have done its serving and exit.
 	// It is used for process blocking purpose.
-	allDoneChan = make(chan struct{}, 1000)
+	allShutdownChan = make(chan struct{}, 1000)
 
 	// serverProcessInitialized is used for lazy initialization for server.
 	// The process can only be initialized once.

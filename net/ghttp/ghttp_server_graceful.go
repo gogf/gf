@@ -9,6 +9,7 @@ package ghttp
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -16,6 +17,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/os/gres"
@@ -80,17 +82,6 @@ func (s *Server) newHttpServer(address string) *http.Server {
 	return server
 }
 
-// ListenAndServe starts listening on configured address.
-func (s *gracefulServer) ListenAndServe() error {
-	ln, err := s.getNetListener()
-	if err != nil {
-		return err
-	}
-	s.listener = ln
-	s.setRawListener(ln)
-	return s.doServe(context.TODO())
-}
-
 // Fd retrieves and returns the file descriptor of the current server.
 // It is available ony in *nix like operating systems like linux, unix, darwin.
 func (s *gracefulServer) Fd() uintptr {
@@ -108,14 +99,22 @@ func (s *gracefulServer) setFd(fd int) {
 	s.fd = uintptr(fd)
 }
 
-// ListenAndServeTLS starts listening on configured address with HTTPS.
+// CreateListener creates listener on configured address.
+func (s *gracefulServer) CreateListener() error {
+	ln, err := s.getNetListener()
+	if err != nil {
+		return err
+	}
+	s.listener = ln
+	s.setRawListener(ln)
+	return nil
+}
+
+// CreateListenerTLS creates listener on configured address with HTTPS.
 // The parameter `certFile` and `keyFile` specify the necessary certification and key files for HTTPS.
 // The optional parameter `tlsConfig` specifies the custom TLS configuration.
-func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig ...*tls.Config) error {
-	var (
-		ctx    = context.TODO()
-		config *tls.Config
-	)
+func (s *gracefulServer) CreateListenerTLS(certFile, keyFile string, tlsConfig ...*tls.Config) error {
+	var config *tls.Config
 	if len(tlsConfig) > 0 && tlsConfig[0] != nil {
 		config = tlsConfig[0]
 	} else if s.httpServer.TLSConfig != nil {
@@ -148,7 +147,41 @@ func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig .
 
 	s.listener = tls.NewListener(ln, config)
 	s.setRawListener(ln)
-	return s.doServe(ctx)
+	return nil
+}
+
+// Serve starts the serving with blocking way.
+func (s *gracefulServer) Serve(ctx context.Context) error {
+	if s.rawListener == nil {
+		return gerror.NewCode(gcode.CodeInvalidOperation, `call CreateListener/CreateListenerTLS before Serve`)
+	}
+
+	action := "started"
+	if s.fd != 0 {
+		action = "reloaded"
+	}
+	s.server.Logger().Infof(
+		ctx,
+		`pid[%d]: %s server %s listening on [%s]`,
+		gproc.Pid(), s.getProto(), action, s.GetListenedAddress(),
+	)
+	s.status = ServerStatusRunning
+	err := s.httpServer.Serve(s.listener)
+	s.status = ServerStatusStopped
+	return err
+}
+
+// GetListenedAddress retrieves and returns the address string which are listened by current server.
+func (s *gracefulServer) GetListenedAddress() string {
+	if !gstr.Contains(s.address, freePortAddress) {
+		return s.address
+	}
+	var (
+		address      = s.address
+		listenedPort = s.GetListenedPort()
+	)
+	address = gstr.Replace(address, freePortAddress, fmt.Sprintf(`:%d`, listenedPort))
+	return address
 }
 
 // GetListenedPort retrieves and returns one port which is listened to by current server.
@@ -166,23 +199,6 @@ func (s *gracefulServer) getProto() string {
 		proto = "https"
 	}
 	return proto
-}
-
-// doServe starts the serving.
-func (s *gracefulServer) doServe(ctx context.Context) error {
-	action := "started"
-	if s.fd != 0 {
-		action = "reloaded"
-	}
-	s.server.Logger().Infof(
-		ctx,
-		`pid[%d]: %s server %s listening on [%s]`,
-		gproc.Pid(), s.getProto(), action, s.address,
-	)
-	s.status = ServerStatusRunning
-	err := s.httpServer.Serve(s.listener)
-	s.status = ServerStatusStopped
-	return err
 }
 
 // getNetListener retrieves and returns the wrapped net.Listener.
