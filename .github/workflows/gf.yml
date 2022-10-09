@@ -137,6 +137,7 @@ jobs:
         ports:
           - 8090:8090
           - 8091:8091
+          - 8093:8093
 
       # Oracle 11g server
       oracle-server:
