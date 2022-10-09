@@ -47,25 +47,25 @@ func Gzip(data []byte, level ...int) ([]byte, error) {
 }
 
 // GzipFile compresses the file `src` to `dst` using gzip algorithm.
-func GzipFile(src, dst string, level ...int) (err error) {
-	dstFile, err := gfile.Create(dst)
+func GzipFile(srcFilePath, dstFilePath string, level ...int) (err error) {
+	dstFile, err := gfile.Create(dstFilePath)
 	if err != nil {
 		return err
 	}
 	defer dstFile.Close()
 
-	return GzipPathWriter(src, dstFile)
+	return GzipPathWriter(srcFilePath, dstFile, level...)
 }
 
-// GzipPathWriter compresses `path` to `writer` using gzip compressing algorithm.
+// GzipPathWriter compresses `filePath` to `writer` using gzip compressing algorithm.
 //
 // Note that the parameter `path` can be either a directory or a file.
-func GzipPathWriter(path string, writer io.Writer, level ...int) error {
+func GzipPathWriter(filePath string, writer io.Writer, level ...int) error {
 	var (
 		gzipWriter *gzip.Writer
 		err        error
 	)
-	srcFile, err := gfile.Open(path)
+	srcFile, err := gfile.Open(filePath)
 	if err != nil {
 		return err
 	}
@@ -74,8 +74,7 @@ func GzipPathWriter(path string, writer io.Writer, level ...int) error {
 	if len(level) > 0 {
 		gzipWriter, err = gzip.NewWriterLevel(writer, level[0])
 		if err != nil {
-			err = gerror.Wrap(err, `gzip.NewWriterLevel failed`)
-			return err
+			return gerror.Wrap(err, `gzip.NewWriterLevel failed`)
 		}
 	} else {
 		gzipWriter = gzip.NewWriter(writer)
@@ -108,14 +107,14 @@ func UnGzip(data []byte) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// UnGzipFile decompresses file `src` to `dst` using gzip algorithm.
-func UnGzipFile(src, dst string) error {
-	srcFile, err := gfile.Open(src)
+// UnGzipFile decompresses srcFilePath `src` to `dst` using gzip algorithm.
+func UnGzipFile(srcFilePath, dstFilePath string) error {
+	srcFile, err := gfile.Open(srcFilePath)
 	if err != nil {
 		return err
 	}
 	defer srcFile.Close()
-	dstFile, err := gfile.Create(dst)
+	dstFile, err := gfile.Create(dstFilePath)
 	if err != nil {
 		return err
 	}
