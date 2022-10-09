@@ -4,6 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// Package httputil provides HTTP functions for internal usage only.
 package httputil
 
 import (
