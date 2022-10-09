@@ -53,7 +53,7 @@ golang version >= 1.15
 # Documentation
 
 * Chinese Official Site(中文官网): [https://goframe.org](https://goframe.org/display/gf)
-* GoDoc API: [https://pkg.go.dev/github.com/gogf/gf](https://pkg.go.dev/github.com/gogf/gf)
+* GoDoc API: [https://pkg.go.dev/github.com/gogf/gf/v2](https://pkg.go.dev/github.com/gogf/gf/v2)
 
 
 # License
