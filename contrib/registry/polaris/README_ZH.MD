@@ -4,27 +4,30 @@
 
 使用`PolarisMesh`作为服务注册、发现管理和心跳上报。
 
+## 安装
 
-## Installation
 ```
 go get -u -v github.com/gogf/gf/contrib/registry/polaris/v2
 ```
+
 suggested using `go.mod`:
+
 ```
 require github.com/gogf/gf/contrib/registry/polaris/v2 latest
 ```
 
-## Limitation
+## Golang版本限制
+
 ```
 golang version >= 1.15
 ```
-
 
 ## 示例
 
 ### 引用示例
 
 [服务端](example/registry/polaris/server/main.go)
+
 ```go
 package main
 
@@ -54,6 +57,7 @@ func main() {
 ```
 
 [客户端](example/registry/polaris/client/main.go)
+
 ```go
 package main
 
