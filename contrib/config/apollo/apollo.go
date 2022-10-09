@@ -13,6 +13,7 @@ import (
 	"github.com/apolloconfig/agollo/v4"
 	apolloConfig "github.com/apolloconfig/agollo/v4/env/config"
 	"github.com/apolloconfig/agollo/v4/storage"
+
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
@@ -32,7 +33,7 @@ type Config struct {
 	Secret            string // See apolloConfig.Config.
 	SyncServerTimeout int    // See apolloConfig.Config.
 	MustStart         bool   // See apolloConfig.Config.
-	Watch             bool   // Watch updates, which updates configuration when configmap changes.
+	Watch             bool   // Watch watches remote configuration updates, which updates local configuration in memory immediately when remote configuration changes.
 }
 
 // Client implements gcfg.Adapter implementing using apollo service.
