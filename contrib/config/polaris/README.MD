@@ -34,7 +34,7 @@ func init() {
         path      = "testdata/polaris.yaml"
         logDir    = "/tmp/polaris/log"
     )
-    // Create apollo Client that implements gcfg.Adapter.
+    // Create polaris Client that implements gcfg.Adapter.
     adapter, err := polaris.New(ctx, polaris.Config{
         Namespace: namespace,
         FileGroup: fileGroup,
