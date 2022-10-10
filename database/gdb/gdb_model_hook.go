@@ -160,3 +160,17 @@ func (m *Model) Hook(hook HookHandler) *Model {
 	model.hookHandler = hook
 	return model
 }
+
+// Hook sets the transaction hook functions for current model.
+func (m *Model) TransactionHook(hook TransactionHookHandler) *Model {
+	model := m.getModel()
+	if model.tx == nil {
+		if ctx := model.GetCtx(); ctx != nil {
+			model.tx = TXFromCtx(ctx, model.db.GetGroup())
+		}
+	}
+	if model.tx != nil {
+		model.tx.Hook(hook)
+	}
+	return model
+}

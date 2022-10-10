@@ -9,6 +9,7 @@ package mysql_test
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -132,5 +133,311 @@ func Test_Model_Hook_Delete(t *testing.T) {
 		for _, item := range all {
 			t.Assert(item["nickname"].String(), `deleted`)
 		}
+	})
+}
+
+func Test_Model_Hook_Commit(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	errRollback := errors.New("rollback")
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			ctx             = context.Background()
+			beforeHookTimes int
+			afterHookTimes  int
+		)
+
+		// transaction count 1
+		err1 := db.Model(table).Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+			db.Model(table).Ctx(ctx).TransactionHook(gdb.TransactionHookHandler{
+				Commit: func(ctx context.Context, in *gdb.TransactionHookCommitInput) (bool, error) {
+					beforeHookTimes++
+					err := in.Next(ctx)
+					afterHookTimes++
+					return true, err
+				},
+			}).One()
+
+			// transaction count 2
+			err2 := db.Model(table).Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+				db.Model(table).Ctx(ctx).TransactionHook(gdb.TransactionHookHandler{
+					Commit: func(ctx context.Context, in *gdb.TransactionHookCommitInput) (bool, error) {
+						beforeHookTimes++
+						err := in.Next(ctx)
+						afterHookTimes++
+						return true, err
+					},
+				}).One()
+
+				return nil
+			})
+
+			t.AssertNil(err2)
+			t.Assert(beforeHookTimes, 1)
+			t.Assert(afterHookTimes, 1)
+
+			if err2 != nil {
+				return err2
+			}
+
+			// transaction count 3
+			err3 := db.Model(table).Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+				db.Model(table).Ctx(ctx).TransactionHook(gdb.TransactionHookHandler{
+					Commit: func(ctx context.Context, in *gdb.TransactionHookCommitInput) (bool, error) {
+						if in.TransactionCount == 0 {
+							beforeHookTimes++
+							err := in.Next(ctx)
+							afterHookTimes++
+							return true, err
+						}
+						return false, in.Next(ctx)
+					},
+				}).One()
+
+				return nil
+			})
+
+			t.AssertNil(err3)
+			t.Assert(beforeHookTimes, 1)
+			t.Assert(afterHookTimes, 1)
+
+			if err3 != nil {
+				return err3
+			}
+
+			return nil
+		})
+
+		t.AssertNil(err1)
+		t.Assert(beforeHookTimes, 3)
+		t.Assert(afterHookTimes, 3)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			ctx             = context.Background()
+			beforeHookTimes int
+			afterHookTimes  int
+		)
+
+		// transaction count 1
+		err1 := db.Model(table).Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+			db.Model(table).Ctx(ctx).TransactionHook(gdb.TransactionHookHandler{
+				Commit: func(ctx context.Context, in *gdb.TransactionHookCommitInput) (bool, error) {
+					beforeHookTimes++
+					err := in.Next(ctx)
+					afterHookTimes++
+					return true, err
+				},
+			}).One()
+
+			// transaction count 2
+			err2 := db.Model(table).Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+				db.Model(table).Ctx(ctx).TransactionHook(gdb.TransactionHookHandler{
+					Commit: func(ctx context.Context, in *gdb.TransactionHookCommitInput) (bool, error) {
+						beforeHookTimes++
+						err := in.Next(ctx)
+						afterHookTimes++
+						return true, err
+					},
+				}).One()
+
+				return nil
+			})
+
+			t.AssertNil(err2)
+			t.Assert(beforeHookTimes, 1)
+			t.Assert(afterHookTimes, 1)
+
+			if err2 != nil {
+				return err2
+			}
+
+			// transaction count 3
+			err3 := db.Model(table).Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+				db.Model(table).Ctx(ctx).TransactionHook(gdb.TransactionHookHandler{
+					Commit: func(ctx context.Context, in *gdb.TransactionHookCommitInput) (bool, error) {
+						if in.TransactionCount == 0 {
+							beforeHookTimes++
+							err := in.Next(ctx)
+							afterHookTimes++
+							return true, err
+						}
+						return false, in.Next(ctx)
+					},
+				}).One()
+
+				return nil
+			})
+
+			t.AssertNil(err3)
+			t.Assert(beforeHookTimes, 1)
+			t.Assert(afterHookTimes, 1)
+
+			if err3 != nil {
+				return err3
+			}
+
+			return errRollback
+		})
+
+		t.Assert(err1, errRollback)
+		t.Assert(beforeHookTimes, 1)
+		t.Assert(afterHookTimes, 1)
+	})
+}
+
+func Test_Model_Hook_Rollback(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	errRollback := errors.New("rollback")
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			ctx             = context.Background()
+			beforeHookTimes int
+			afterHookTimes  int
+		)
+
+		// transaction count 1
+		err1 := db.Model(table).Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+			db.Model(table).Ctx(ctx).TransactionHook(gdb.TransactionHookHandler{
+				Rollback: func(ctx context.Context, in *gdb.TransactionHookRollbackInput) (bool, error) {
+					beforeHookTimes++
+					err := in.Next(ctx)
+					afterHookTimes++
+					return true, err
+				},
+			}).One()
+
+			// transaction count 2
+			err2 := db.Model(table).Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+				db.Model(table).Ctx(ctx).TransactionHook(gdb.TransactionHookHandler{
+					Rollback: func(ctx context.Context, in *gdb.TransactionHookRollbackInput) (bool, error) {
+						beforeHookTimes++
+						err := in.Next(ctx)
+						afterHookTimes++
+						return true, err
+					},
+				}).One()
+
+				return nil
+			})
+
+			t.AssertNil(err2)
+			t.Assert(beforeHookTimes, 0)
+			t.Assert(afterHookTimes, 0)
+
+			if err2 != nil {
+				return err2
+			}
+
+			// transaction count 3
+			err3 := db.Model(table).Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+				db.Model(table).Ctx(ctx).TransactionHook(gdb.TransactionHookHandler{
+					Rollback: func(ctx context.Context, in *gdb.TransactionHookRollbackInput) (bool, error) {
+						if in.TransactionCount == 0 {
+							beforeHookTimes++
+							err := in.Next(ctx)
+							afterHookTimes++
+							return true, err
+						}
+						return false, in.Next(ctx)
+					},
+				}).One()
+
+				return nil
+			})
+
+			t.AssertNil(err3)
+			t.Assert(beforeHookTimes, 0)
+			t.Assert(afterHookTimes, 0)
+
+			if err3 != nil {
+				return err3
+			}
+
+			return errRollback
+		})
+
+		t.Assert(err1, errRollback)
+		t.Assert(beforeHookTimes, 1)
+		t.Assert(afterHookTimes, 1)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			ctx             = context.Background()
+			beforeHookTimes int
+			afterHookTimes  int
+		)
+
+		// transaction count 1
+		err1 := db.Model(table).Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+			db.Model(table).Ctx(ctx).TransactionHook(gdb.TransactionHookHandler{
+				Rollback: func(ctx context.Context, in *gdb.TransactionHookRollbackInput) (bool, error) {
+					beforeHookTimes++
+					err := in.Next(ctx)
+					afterHookTimes++
+					return true, err
+				},
+			}).One()
+
+			// transaction count 2
+			err2 := db.Model(table).Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+				db.Model(table).Ctx(ctx).TransactionHook(gdb.TransactionHookHandler{
+					Rollback: func(ctx context.Context, in *gdb.TransactionHookRollbackInput) (bool, error) {
+						beforeHookTimes++
+						err := in.Next(ctx)
+						afterHookTimes++
+						return true, err
+					},
+				}).One()
+
+				return errRollback
+			})
+
+			t.AssertNil(err2)
+			t.Assert(beforeHookTimes, 1)
+			t.Assert(afterHookTimes, 1)
+
+			if err2 != nil {
+				return err2
+			}
+
+			// transaction count 3
+			err3 := db.Model(table).Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+				db.Model(table).Ctx(ctx).TransactionHook(gdb.TransactionHookHandler{
+					Rollback: func(ctx context.Context, in *gdb.TransactionHookRollbackInput) (bool, error) {
+						if in.TransactionCount == 0 {
+							beforeHookTimes++
+							err := in.Next(ctx)
+							afterHookTimes++
+							return true, err
+						}
+						return false, in.Next(ctx)
+					},
+				}).One()
+
+				return nil
+			})
+
+			t.AssertNil(err3)
+			t.Assert(beforeHookTimes, 1)
+			t.Assert(afterHookTimes, 1)
+
+			if err3 != nil {
+				return err3
+			}
+
+			return nil
+		})
+
+		t.Assert(err1, errRollback)
+		t.Assert(beforeHookTimes, 2)
+		t.Assert(afterHookTimes, 2)
 	})
 }
