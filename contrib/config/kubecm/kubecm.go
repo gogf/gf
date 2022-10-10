@@ -37,7 +37,7 @@ type Config struct {
 	Namespace  string                // Specify the namespace for configmap.
 	RestConfig *rest.Config          // Custom rest config for kube client.
 	KubeClient *kubernetes.Clientset // Custom kube client.
-	Watch      bool                  // Watch updates, which updates configuration when configmap changes.
+	Watch      bool                  // Watch watches remote configuration updates, which updates local configuration in memory immediately when remote configuration changes.
 }
 
 // New creates and returns gcfg.Adapter implementing using kubernetes configmap.
