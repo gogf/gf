@@ -1,4 +1,4 @@
-# polaris
+# Polaris
 
 Package `polaris` implements GoFrame `gcfg.Adapter` using polaris service.
 
@@ -34,7 +34,7 @@ func init() {
         path      = "testdata/polaris.yaml"
         logDir    = "/tmp/polaris/log"
     )
-    // Create apollo Client that implements gcfg.Adapter.
+    // Create polaris Client that implements gcfg.Adapter.
     adapter, err := polaris.New(ctx, polaris.Config{
         Namespace: namespace,
         FileGroup: fileGroup,
@@ -81,3 +81,6 @@ func main() {
 }
 ```
 
+## License
+
+`GoFrame Polaris` is licensed under the [MIT License](../../../LICENSE), 100% free and open-source, forever.
