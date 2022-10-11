@@ -1483,7 +1483,6 @@ func Test_Struct_Time_All(t *testing.T) {
 }
 
 func Test_Issue1946(t *testing.T) {
-
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
 			init *gtype.Bool
