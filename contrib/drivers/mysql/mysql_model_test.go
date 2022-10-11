@@ -4665,3 +4665,14 @@ func TestResult_Structs1(t *testing.T) {
 		t.Assert(array[1].Name, "smith")
 	})
 }
+
+func Test_Issue1934(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Model(table).Where(" id ", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["id"], 1)
+	})
+}
