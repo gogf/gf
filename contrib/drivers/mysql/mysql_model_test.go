@@ -4666,6 +4666,29 @@ func TestResult_Structs1(t *testing.T) {
 	})
 }
 
+func Test_Builder_OmitEmptyWhere(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", 1).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", 0).OmitEmptyWhere().Count()
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		builder := db.Model(table).OmitEmptyWhere().Builder()
+		count, err := db.Model(table).Where(
+			builder.Where("id", 0),
+		).Count()
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
+	})
+}
+
 func Test_Issue1934(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
