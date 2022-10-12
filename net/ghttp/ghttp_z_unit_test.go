@@ -7,6 +7,7 @@
 package ghttp_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"net/http"
@@ -16,7 +17,9 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/genv"
+	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/guid"
 )
 
@@ -113,5 +116,48 @@ func Test_GetListenedAddressWithHost(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(fmt.Sprintf(`127.0.0.1:%d`, s.GetListenedPort()), s.GetListenedAddress())
+	})
+}
+
+func Test_ListenedInfo(t *testing.T) {
+	buffer := bytes.NewBuffer(nil)
+	s := g.Server(guid.S())
+	s.BindHandler("/", func(r *ghttp.Request) {
+		r.Response.Write(`test`)
+	})
+	s.SetSwaggerPath("/swagger")
+	s.SetOpenApiPath("/api")
+	s.SetLogger(glog.NewWithWriter(buffer))
+	s.SetAddr("0.0.0.0:0")
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		outputs := buffer.String()
+		fmt.Println(outputs)
+		t.Assert(
+			gstr.Contains(
+				outputs,
+				fmt.Sprintf(`0.0.0.0:%d`, s.GetListenedPort()),
+			),
+			true,
+		)
+		t.Assert(
+			gstr.Contains(
+				outputs,
+				fmt.Sprintf(`http://127.0.0.1:%d/swagger/`, s.GetListenedPort()),
+			),
+			true,
+		)
+		t.Assert(
+			gstr.Contains(
+				outputs,
+				fmt.Sprintf(`http://127.0.0.1:%d/api`, s.GetListenedPort()),
+			),
+			true,
+		)
 	})
 }
