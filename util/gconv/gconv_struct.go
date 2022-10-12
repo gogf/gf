@@ -534,14 +534,20 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 		structFieldValue.Set(reflectArray)
 
 	case reflect.Ptr:
-		item := reflect.New(structFieldValue.Type().Elem())
-		if err, ok = bindVarToReflectValueWithInterfaceCheck(item, value); ok {
-			structFieldValue.Set(item)
-			return err
-		}
-		elem := item.Elem()
-		if err = bindVarToReflectValue(elem, value, mapping); err == nil {
-			structFieldValue.Set(elem.Addr())
+		if structFieldValue.IsNil() || structFieldValue.IsZero() {
+			// Nil or empty pointer, it creates a new one.
+			item := reflect.New(structFieldValue.Type().Elem())
+			if err, ok = bindVarToReflectValueWithInterfaceCheck(item, value); ok {
+				structFieldValue.Set(item)
+				return err
+			}
+			elem := item.Elem()
+			if err = bindVarToReflectValue(elem, value, mapping); err == nil {
+				structFieldValue.Set(elem.Addr())
+			}
+		} else {
+			// Not empty pointer, it assigns values to it.
+			return bindVarToReflectValue(structFieldValue.Elem(), value, mapping)
 		}
 
 	// It mainly and specially handles the interface of nil value.
