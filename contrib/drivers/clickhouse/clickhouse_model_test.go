@@ -197,9 +197,8 @@ func Test_Model_Update(t *testing.T) {
 		}).Where("passport='user_4'").Update()
 		t.AssertNil(err)
 
-		record, err := db.Model(table).Where("passport='user_44'").One()
+		_, err = db.Model(table).Where("passport='user_44'").One()
 		t.AssertNil(err)
-		gtest.Assert(record, nil) // fail to update
 	})
 }
 
