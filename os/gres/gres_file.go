@@ -16,10 +16,11 @@ import (
 	"github.com/gogf/gf/v2/internal/json"
 )
 
+// File is the memory file in resource manager.
 type File struct {
-	file     *zip.File
-	reader   *bytes.Reader
-	resource *Resource
+	file     *zip.File     // Underlying file pointer in zip.File.
+	reader   *bytes.Reader // Internal cached reader.
+	resource *Resource     // Parent resource manager.
 }
 
 // Name returns the name of the file.
