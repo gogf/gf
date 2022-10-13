@@ -17,7 +17,6 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/genv"
-	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/guid"
@@ -127,13 +126,13 @@ func Test_ListenedInfo(t *testing.T) {
 	})
 	s.SetSwaggerPath("/swagger")
 	s.SetOpenApiPath("/api")
-	s.SetLogger(glog.NewWithWriter(buffer))
+	s.Logger().SetWriter(buffer)
 	s.SetAddr("0.0.0.0:0")
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 
 	gtest.C(t, func(t *gtest.T) {
 		outputs := buffer.String()
