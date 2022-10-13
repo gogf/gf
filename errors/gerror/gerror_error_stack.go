@@ -77,6 +77,9 @@ func filterLinesOfStackInfos(infos []*stackInfo) {
 	)
 	for i := len(infos) - 1; i >= 0; i-- {
 		info = infos[i]
+		if info.Lines == nil {
+			continue
+		}
 		for n, e := 0, info.Lines.Front(); n < info.Lines.Len(); n, e = n+1, e.Next() {
 			line = e.Value.(*stackLine)
 			if _, ok = set[line.FileLine]; ok {
@@ -99,7 +102,7 @@ func formatStackInfos(infos []*stackInfo) string {
 	var buffer = bytes.NewBuffer(nil)
 	for i, info := range infos {
 		buffer.WriteString(fmt.Sprintf("%d. %s\n", i+1, info.Message))
-		if info.Lines.Len() > 0 {
+		if info.Lines != nil && info.Lines.Len() > 0 {
 			formatStackLines(buffer, info.Lines)
 		}
 	}
