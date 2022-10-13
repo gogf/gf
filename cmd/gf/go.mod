@@ -3,6 +3,7 @@ module github.com/gogf/gf/cmd/gf/v2
 go 1.15
 
 require (
+	github.com/gogf/gf/contrib/drivers/clickhouse/v2 v2.1.0
 	github.com/gogf/gf/contrib/drivers/mssql/v2 v2.1.0
 	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.1.0
 	github.com/gogf/gf/contrib/drivers/pgsql/v2 v2.1.0
@@ -13,6 +14,8 @@ require (
 )
 
 replace (
+	github.com/gogf/gf/contrib/drivers/clickhouse/v2 => ../../contrib/drivers/clickhouse/
+	github.com/gogf/gf/contrib/drivers/dm/v2 => ../../contrib/drivers/dm/
 	github.com/gogf/gf/contrib/drivers/mssql/v2 => ../../contrib/drivers/mssql/
 	github.com/gogf/gf/contrib/drivers/mysql/v2 => ../../contrib/drivers/mysql/
 	github.com/gogf/gf/contrib/drivers/pgsql/v2 => ../../contrib/drivers/pgsql/
