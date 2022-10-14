@@ -204,7 +204,9 @@ func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, e
 				mlog.Printf(`remove the automatically generated resource go file: %s`, in.PackDst)
 			}()
 		}
-		packCmd := fmt.Sprintf(`gf pack %s %s`, in.PackSrc, in.PackDst)
+		// remove black space in separator.
+		in.PackSrc, _ = gregex.ReplaceString(`,\s+`, `,`, in.PackSrc)
+		packCmd := fmt.Sprintf(`gf pack %s %s --keepPath=true`, in.PackSrc, in.PackDst)
 		mlog.Print(packCmd)
 		gproc.MustShellRun(ctx, packCmd)
 	}
