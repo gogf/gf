@@ -17,3 +17,4 @@ cbuild
 cmd/gf/main
 cmd/gf/gf
 go.work
+temp/

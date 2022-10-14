@@ -277,7 +277,7 @@ func (r *Resource) Dump() {
 	r.tree.Iterator(func(key, value interface{}) bool {
 		info = value.(*File).FileInfo()
 		fmt.Printf(
-			"%v %7s %s\n",
+			"%v %8s %s\n",
 			gtime.New(info.ModTime()).ISO8601(),
 			gfile.FormatSize(info.Size()),
 			key,
