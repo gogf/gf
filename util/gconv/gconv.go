@@ -15,7 +15,6 @@ import (
 	"math"
 	"reflect"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gogf/gf/v2/encoding/gbinary"
@@ -26,15 +25,6 @@ import (
 )
 
 var (
-	// Empty strings.
-	emptyStringMap = map[string]struct{}{
-		"":      {},
-		"0":     {},
-		"no":    {},
-		"off":   {},
-		"false": {},
-	}
-
 	// StructTagPriority defines the default priority tags for Map*/Struct* functions.
 	// Note, the `gconv/param/params` tags are used by old version of package.
 	// It is strongly recommended using short tag `c/p` instead in the future.
@@ -189,7 +179,8 @@ func String(any interface{}) string {
 			kind = rv.Kind()
 		)
 		switch kind {
-		case reflect.Chan,
+		case
+			reflect.Chan,
 			reflect.Map,
 			reflect.Slice,
 			reflect.Func,
@@ -224,15 +215,11 @@ func Bool(any interface{}) bool {
 	case bool:
 		return value
 	case []byte:
-		if _, ok := emptyStringMap[strings.ToLower(string(value))]; ok {
-			return false
-		}
-		return true
+		b, _ := strconv.ParseBool(string(value))
+		return b
 	case string:
-		if _, ok := emptyStringMap[strings.ToLower(value)]; ok {
-			return false
-		}
-		return true
+		b, _ := strconv.ParseBool(value)
+		return b
 	default:
 		if f, ok := value.(iBool); ok {
 			return f.Bool()
@@ -250,11 +237,8 @@ func Bool(any interface{}) bool {
 		case reflect.Struct:
 			return true
 		default:
-			s := strings.ToLower(String(any))
-			if _, ok := emptyStringMap[s]; ok {
-				return false
-			}
-			return true
+			b, _ := strconv.ParseBool(String(any))
+			return b
 		}
 	}
 }
