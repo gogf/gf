@@ -14,6 +14,7 @@
 "gf.gvalid.rule.telephone"            = "{field}字段值`{value}`电话号码格式不正确"
 "gf.gvalid.rule.passport"             = "{field}字段值`{value}`账号格式不合法，必需以字母开头，只能包含字母、数字和下划线，长度在6~18之间"
 "gf.gvalid.rule.password"             = "{field}字段值`{value}`密码格式不合法，密码格式为任意6-18位的可见字符"
+"gf.gvalid.rule.password1"            = "{field}字段值`{value}`密码格式不合法，密码格式为任意6-18位的可见字符，必须包含字母和数字"
 "gf.gvalid.rule.password2"            = "{field}字段值`{value}`密码格式不合法，密码格式为任意6-18位的可见字符，必须包含大小写字母和数字"
 "gf.gvalid.rule.password3"            = "{field}字段值`{value}`密码格式不合法，密码格式为任意6-18位的可见字符，必须包含大小写字母、数字和特殊字符"
 "gf.gvalid.rule.postcode"             = "{field}字段值`{value}`邮政编码不正确"

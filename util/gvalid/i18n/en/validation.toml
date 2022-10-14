@@ -14,6 +14,7 @@
 "gf.gvalid.rule.telephone" =             "The {field} value `{value}` is not a valid telephone number"
 "gf.gvalid.rule.passport" =              "The {field} value `{value}` is not a valid passport format"
 "gf.gvalid.rule.password" =              "The {field} value `{value}` is not a valid password format"
+"gf.gvalid.rule.password1" =             "The {field} value `{value}` is not a valid password format"
 "gf.gvalid.rule.password2" =             "The {field} value `{value}` is not a valid password format"
 "gf.gvalid.rule.password3" =             "The {field} value `{value}` is not a valid password format"
 "gf.gvalid.rule.postcode" =              "The {field} value `{value}` is not a valid postcode format"

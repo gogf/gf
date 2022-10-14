@@ -458,6 +458,32 @@ func Example_Rule_Password() {
 	// The Password2 value `gofra` is not a valid password format
 }
 
+func Example_Rule_Password1() {
+	type BizReq struct {
+		Password1 string `v:"password1"`
+		Password2 string `v:"password1"`
+		Password3 string `v:"password1"`
+		Password4 string `v:"password1"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Password1: "Goframe123@",
+			Password2: "gofra",   // error length between 6 and 18
+			Password3: "Goframe", // error must contain lower and upper letters and numbers.
+			Password4: "goframe123",
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
+	}
+
+	// Output:
+	// The Password2 value `gofra` is not a valid password format
+	// The Password3 value `Goframe` is not a valid password format
+}
+
 func Example_Rule_Password2() {
 	type BizReq struct {
 		Password1 string `v:"password2"`
