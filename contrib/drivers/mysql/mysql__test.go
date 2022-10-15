@@ -32,7 +32,6 @@ const (
 var (
 	db         gdb.DB
 	dbPrefix   gdb.DB
-	dbInvalid  gdb.DB
 	configNode gdb.ConfigNode
 	ctx        = context.TODO()
 )
@@ -99,12 +98,9 @@ func init() {
 	dbPrefix = dbPrefix.Schema(TestSchema1)
 
 	// Invalid db.
-	if r, err := gdb.NewByGroup("nodeinvalid"); err != nil {
-		gtest.Error(err)
-	} else {
-		dbInvalid = r
-	}
-	dbInvalid = dbInvalid.Schema(TestSchema1)
+	_, err = gdb.NewByGroup("nodeinvalid")
+	gtest.AssertNE(err, nil)
+
 }
 
 func createTable(table ...string) string {
