@@ -743,6 +743,31 @@ func Test_Model_Count(t *testing.T) {
 	// })
 }
 
+// Test doStructWithJsonCheck
+// Parse database empty json field to empty object
+// func Test_Model_Json(t *testing.T) {
+// 	type JsonItem struct {
+// 		Name  string `json:"name,omitempty"`
+// 		Value string `json:"value,omitempty"`
+// 	}
+// 	type Test struct {
+// 		Id   string      `json:"id,omitempty"`
+// 		Json []*JsonItem `json:"json,omitempty"`
+// 	}
+
+// 	gtest.C(t, func(t *gtest.T) {
+// 		var list []*Test
+// 		err := db.Model("test").Scan(&list)
+// 		t.AssertNil(err)
+// 		g.Dump(list[0])
+// 		fmt.Println(list[0].Json)
+// 		fmt.Println(len(list[0].Json))
+// 		g.Dump(list[1])
+// 		fmt.Println(list[1].Json)
+// 		fmt.Println(len(list[1].Json))
+// 	})
+// }
+
 func Test_Model_Select(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)

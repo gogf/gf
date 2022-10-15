@@ -75,6 +75,8 @@ func doStructWithJsonCheck(params interface{}, pointer interface{}) (err error, 
 				return json.UnmarshalUseNumber(paramsBytes, pointer), true
 			}
 		}
+	case nil:
+		return nil, true
 	default:
 		// The `params` might be struct that implements interface function Interface, eg: gvar.Var.
 		if v, ok := params.(iInterface); ok {
