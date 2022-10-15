@@ -22,7 +22,6 @@ import (
 var (
 	db     gdb.DB
 	dblink gdb.DB
-	dbErr  gdb.DB
 	ctx    context.Context
 )
 
@@ -94,11 +93,8 @@ func init() {
 	}
 
 	gdb.AddConfigNode("dbErr", nodeErr)
-	if r, err := gdb.New(nodeErr); err != nil {
-		gtest.Fatal(err)
-	} else {
-		dbErr = r
-	}
+	_, err := gdb.New(nodeErr)
+	gtest.AssertNE(err, nil)
 
 	ctx = context.Background()
 }

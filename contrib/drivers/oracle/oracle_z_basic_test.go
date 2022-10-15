@@ -69,9 +69,6 @@ func TestTableFields(t *testing.T) {
 			"CREATE_TIME": {"VARCHAR2(45)", true},
 		}
 
-		_, err := dbErr.TableFields(ctx, "t_user")
-		gtest.AssertNE(err, nil)
-
 		res, err := db.TableFields(ctx, "t_user")
 		gtest.Assert(err, nil)
 

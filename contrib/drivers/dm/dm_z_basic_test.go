@@ -74,9 +74,6 @@ func TestTableFields(t *testing.T) {
 			"CREATED_TIME": {"TIMESTAMP", false},
 		}
 
-		_, err := dbErr.TableFields(ctx, "Fields")
-		gtest.AssertNE(err, nil)
-
 		res, err := db.TableFields(ctx, tables)
 		gtest.Assert(err, nil)
 
