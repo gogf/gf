@@ -11,6 +11,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -21,6 +22,7 @@ import (
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -962,7 +964,9 @@ func Test_Model_Structs(t *testing.T) {
 func Test_Model_StructsWithOrmTag(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
-
+	dbInvalid := db
+	dbInvalid.SetDebug(true)
+	defer dbInvalid.SetDebug(false)
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Uid      int `orm:"id"`
@@ -972,9 +976,12 @@ func Test_Model_StructsWithOrmTag(t *testing.T) {
 			Time     gtime.Time `orm:"create_time"`
 		}
 		var (
+			users  []User
 			buffer = bytes.NewBuffer(nil)
 		)
-
+		dbInvalid.GetLogger().(*glog.Logger).SetWriter(buffer)
+		defer dbInvalid.GetLogger().(*glog.Logger).SetWriter(os.Stdout)
+		dbInvalid.Model(table).Order("id asc").Scan(&users)
 		//fmt.Println(buffer.String())
 		t.Assert(
 			gstr.Contains(
