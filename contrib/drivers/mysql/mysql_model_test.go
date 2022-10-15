@@ -986,7 +986,7 @@ func Test_Model_StructsWithOrmTag(t *testing.T) {
 		t.Assert(
 			gstr.Contains(
 				buffer.String(),
-				"SELECT `id`,`Passport`,`password`,`nick_name`,`create_time` FROM `user",
+				"SELECT `id`,`passport`,`password`,`nick_name`,`create_time` FROM `user",
 			),
 			true,
 		)
