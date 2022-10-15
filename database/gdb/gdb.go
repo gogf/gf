@@ -437,16 +437,20 @@ func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
 		logger: glog.New(),
 		config: node,
 	}
-	if v, ok := driverMap[node.Type]; ok {
-		if c.db, err = v.New(c, node); err != nil {
-			return nil, err
-		}
-		return c.db, nil
+	d, ok := driverMap[node.Type]
+	if !ok {
+		errorMsg := `cannot find database driver for specified database type "%s"`
+		errorMsg += `, did you misspell type name "%s" or forget importing the database driver? `
+		errorMsg += `possible reference: https://github.com/gogf/gf/tree/master/contrib/drivers`
+		return nil, gerror.NewCodef(gcode.CodeInvalidConfiguration, errorMsg, node.Type, node.Type)
 	}
-	errorMsg := `cannot find database driver for specified database type "%s"`
-	errorMsg += `, did you misspell type name "%s" or forget importing the database driver? `
-	errorMsg += `possible reference: https://github.com/gogf/gf/tree/master/contrib/drivers`
-	return nil, gerror.NewCodef(gcode.CodeInvalidConfiguration, errorMsg, node.Type, node.Type)
+	if c.db, err = d.New(c, node); err != nil {
+		return nil, err
+	}
+	if err = c.db.PingMaster(); err != nil {
+		return nil, err
+	}
+	return c.db, nil
 }
 
 // Instance returns an instance for DB operations.
