@@ -10,7 +10,6 @@ package clickhouse
 import (
 	"context"
 	"database/sql"
-	"database/sql/driver"
 	"errors"
 	"fmt"
 	"net/url"
@@ -18,17 +17,15 @@ import (
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/util/gutil"
-	"github.com/google/uuid"
-	"github.com/shopspring/decimal"
 
 	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // Driver is the driver for postgresql database.
@@ -94,14 +91,14 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	} else {
 		if config.Pass != "" {
 			source = fmt.Sprintf(
-				"clickhouse://%s:%s@%s:%s/%s?charset=%s&debug=%t",
+				"clickhouse://%s:%s@%s:%s/%s?debug=%t",
 				config.User, url.PathEscape(config.Pass),
-				config.Host, config.Port, config.Name, config.Charset, config.Debug,
+				config.Host, config.Port, config.Name, config.Debug,
 			)
 		} else {
 			source = fmt.Sprintf(
-				"clickhouse://%s@%s:%s/%s?charset=%s&debug=%t",
-				config.User, config.Host, config.Port, config.Name, config.Charset, config.Debug,
+				"clickhouse://%s@%s:%s/%s?debug=%t",
+				config.User, config.Host, config.Port, config.Name, config.Debug,
 			)
 		}
 		if config.Extra != "" {
@@ -327,20 +324,10 @@ func (d *Driver) DoInsert(
 func (d *Driver) ConvertDataForRecord(ctx context.Context, value interface{}) (map[string]interface{}, error) {
 	m := gconv.Map(value, OrmTagForStruct)
 
-	// transforms a value of a particular type
+	// The underlying clickhouse layer is already reflective for partially compatible data structures
+	// So only some GF-specific data structures will be addressed here.
 	for k, v := range m {
 		switch itemValue := v.(type) {
-
-		case time.Time:
-			m[k] = itemValue
-			// If the time is zero, it then updates it to nil,
-			// which will insert/update the value to database as "null".
-			if itemValue.IsZero() {
-				m[k] = nil
-			}
-
-		case uuid.UUID:
-			m[k] = itemValue
 
 		case *time.Time:
 			m[k] = itemValue
@@ -370,29 +357,8 @@ func (d *Driver) ConvertDataForRecord(ctx context.Context, value interface{}) (m
 				m[k] = nil
 			}
 
-		case decimal.Decimal:
-			m[k] = itemValue
-
-		case *decimal.Decimal:
-			m[k] = nil
-			if itemValue != nil {
-				m[k] = *itemValue
-			}
-
 		default:
-			// if the other type implements valuer for the driver package
-			// the converted result is used
-			// otherwise the interface data is committed
-			valuer, ok := itemValue.(driver.Valuer)
-			if !ok {
-				m[k] = itemValue
-				continue
-			}
-			convertedValue, err := valuer.Value()
-			if err != nil {
-				return nil, err
-			}
-			m[k] = convertedValue
+			m[k] = itemValue
 		}
 	}
 	return m, nil

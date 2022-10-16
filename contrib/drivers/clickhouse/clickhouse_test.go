@@ -472,7 +472,6 @@ func TestDriverClickhouse_NilTime(t *testing.T) {
 	data, err := connect.Model("data_type").Where("Col4", "Inc.").One()
 	gtest.AssertNil(err)
 	gtest.AssertNE(data, nil)
-	g.Dump(data)
 	gtest.AssertEQ(data["Col11"].String(), "1.12")
 	gtest.AssertEQ(data["Col12"].String(), "99999.99")
 }

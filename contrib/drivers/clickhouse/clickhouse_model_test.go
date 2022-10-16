@@ -289,7 +289,7 @@ func Test_Model_Where(t *testing.T) {
 	})
 }
 
-func Test_Model_Sav(t *testing.T) {
+func Test_Model_Save(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
