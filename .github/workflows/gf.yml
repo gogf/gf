@@ -129,7 +129,7 @@ jobs:
 
     strategy:
       matrix:
-        go-version: [ "1.15", "1.16", "1.17", "1.18" ]
+        go-version: [ "1.15", "1.16", "1.17", "1.18", "1.19" ]
         goarch: [ "386", "amd64" ]
 
     steps:

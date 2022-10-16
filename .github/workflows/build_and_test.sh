@@ -21,6 +21,14 @@ for file in `find . -name go.mod`; do
         fi
     fi
 
+    # package clickhouse needs golang >= 1.18
+    if [ "clickhouse" = $(basename $dirpath) ]; then
+      if go version | grep -E "1\.1[0-7]"; then
+        echo "ignore clickhouse testing as go version: $(go version)"
+        continue 1
+        fi
+    fi
+
     # package example needs golang >= v1.18
     if [ "example" = $(basename $dirpath) ]; then
         if ! go version|grep -q "1.18"; then
