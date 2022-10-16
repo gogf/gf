@@ -347,6 +347,7 @@ const (
 	LocalTypeBool        = "bool"
 	LocalTypeJson        = "json"
 	LocalTypeJsonb       = "jsonb"
+	LocalTypeBigInt      = "big-int"
 )
 
 var (

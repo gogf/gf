@@ -9,6 +9,7 @@ package gdb
 import (
 	"context"
 	"database/sql/driver"
+	"math/big"
 	"reflect"
 	"strings"
 	"time"
@@ -218,6 +219,13 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 		"jsonb":
 		return LocalTypeJsonb, nil
 
+	case
+		"uint128",
+		"uint256",
+		"int128",
+		"int256":
+		return LocalTypeBigInt, nil
+
 	default:
 		// Auto-detect field type, using key match.
 		switch {
@@ -320,6 +328,17 @@ func (c *Core) ConvertValueForLocal(ctx context.Context, fieldType string, field
 		}
 		t, _ := gtime.StrToTime(gconv.String(fieldValue))
 		return t, nil
+
+	case LocalTypeBigInt:
+		u, ok := fieldValue.(big.Int)
+		if ok {
+			return u, nil
+		}
+		uPtr, ok := fieldValue.(*big.Int)
+		if ok {
+			return uPtr, nil
+		}
+		return nil, nil
 
 	default:
 		return gconv.String(fieldValue), nil

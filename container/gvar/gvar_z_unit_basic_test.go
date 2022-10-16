@@ -9,6 +9,7 @@ package gvar_test
 import (
 	"bytes"
 	"encoding/binary"
+	"math/big"
 	"testing"
 	"time"
 
@@ -348,5 +349,33 @@ func Test_DeepCopy(t *testing.T) {
 
 		srcVar = nil
 		t.AssertNil(srcVar.DeepCopy())
+	})
+}
+
+func Test_BigInt(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			bigUint128 = big.NewInt(0)
+			bigUint256 = big.NewInt(0)
+			bigInt128  = big.NewInt(0)
+			bigInt256  = big.NewInt(0)
+		)
+
+		bigUint128.SetString("340282366920938463463374607431768211455", 10)
+		bigUint256.SetString("115792089237316195423570985008687907853269984665640564039457584007913129639935", 10)
+		bigInt128.SetString("170141183460469231731687303715884105727", 10)
+		bigInt256.SetString("57896044618658097711785492504343953926634992332820282019728792003956564819967", 10)
+
+		var (
+			varUint128 = gvar.New(bigUint128)
+			varUint256 = gvar.New(bigUint256)
+			varInt128  = gvar.New(bigInt128)
+			varInt256  = gvar.New(bigInt256)
+		)
+
+		t.AssertEQ(varUint128.IsNil(), false)
+		t.AssertEQ(varUint256.IsNil(), false)
+		t.AssertEQ(varInt128.IsNil(), false)
+		t.AssertEQ(varInt256.IsNil(), false)
 	})
 }

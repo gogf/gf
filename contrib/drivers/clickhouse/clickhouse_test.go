@@ -9,6 +9,7 @@ package clickhouse
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"testing"
 	"time"
 
@@ -116,6 +117,10 @@ values  (607970943242866688, 607973669943119880, 607972403489804288, 2022, 3, 20
 			, Col10 DateTime COMMENT '列10'
 		    , Col11 Decimal(9, 2) COMMENT '列11'
 		    , Col12 Decimal(9, 2) COMMENT '列12'
+		    , Col13 UInt128 COMMENT '列13'
+		    , Col14 UInt256 COMMENT '列14'
+		    , Col15 Int128 COMMENT '列15'
+		    , Col16 Int256 COMMENT '列16'
 		) ENGINE = MergeTree()
 		PRIMARY KEY Col4
 		ORDER BY Col4
@@ -445,10 +450,22 @@ func TestDriverClickhouse_NilTime(t *testing.T) {
 		Col10 *gtime.Time
 		Col11 decimal.Decimal
 		Col12 *decimal.Decimal
+		Col13 big.Int
+		Col14 big.Int
+		Col15 big.Int
+		Col16 big.Int
 	}
 	insertData := []*testNilTime{}
 	money := decimal.NewFromFloat(1.12)
 	strMoney, _ := decimal.NewFromString("99999.999")
+	bigUint128 := big.NewInt(0)
+	bigUint128.SetString("340282366920938463463374607431768211455", 10)
+	bigUint256 := big.NewInt(0)
+	bigUint256.SetString("115792089237316195423570985008687907853269984665640564039457584007913129639935", 10)
+	bigInt128 := big.NewInt(0)
+	bigInt128.SetString("170141183460469231731687303715884105727", 10)
+	bigInt256 := big.NewInt(0)
+	bigInt256.SetString("57896044618658097711785492504343953926634992332820282019728792003956564819967", 10)
 	for i := 0; i < 10000; i++ {
 		insertData = append(insertData, &testNilTime{
 			Col4: "Inc.",
@@ -461,6 +478,10 @@ func TestDriverClickhouse_NilTime(t *testing.T) {
 				}},
 			Col11: money,
 			Col12: &strMoney,
+			Col13: *bigUint128,
+			Col14: *bigUint256,
+			Col15: *bigInt128,
+			Col16: *bigInt256,
 		})
 	}
 	_, err := connect.Model("data_type").Data(insertData).Insert()
@@ -474,6 +495,22 @@ func TestDriverClickhouse_NilTime(t *testing.T) {
 	gtest.AssertNE(data, nil)
 	gtest.AssertEQ(data["Col11"].String(), "1.12")
 	gtest.AssertEQ(data["Col12"].String(), "99999.99")
+
+	col13, ok := data["Col13"].Interface().(big.Int)
+	gtest.AssertEQ(ok, true)
+	gtest.AssertEQ(col13, insertData[0].Col13)
+
+	col14, ok := data["Col14"].Interface().(big.Int)
+	gtest.AssertEQ(ok, true)
+	gtest.AssertEQ(col14, insertData[0].Col14)
+
+	col15, ok := data["Col15"].Interface().(big.Int)
+	gtest.AssertEQ(ok, true)
+	gtest.AssertEQ(col15, insertData[0].Col15)
+
+	col16, ok := data["Col16"].Interface().(big.Int)
+	gtest.AssertEQ(ok, true)
+	gtest.AssertEQ(col16, insertData[0].Col16)
 }
 
 func TestDriverClickhouse_BatchInsert(t *testing.T) {
