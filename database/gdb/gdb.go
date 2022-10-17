@@ -19,7 +19,6 @@ import (
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/gctx"
@@ -553,10 +552,7 @@ func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 // The parameter `master` specifies whether retrieves master node connection if
 // master-slave nodes are configured.
 func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error) {
-	var (
-		ctx  = c.db.GetCtx()
-		node *ConfigNode
-	)
+	var node *ConfigNode
 	// Load balance.
 	if c.group != "" {
 		configs.RLock()
@@ -585,14 +581,6 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		node.User, node.Protocol, node.Host, node.Port, node.Name,
 	)
 	v := c.links.GetOrSetFuncLock(instanceNameByNode, func() interface{} {
-		intlog.Printf(ctx, `open new connection, master:%#v, config:%#v, node:%#v`, master, c.config, node)
-		defer func() {
-			if err != nil {
-				intlog.Printf(ctx, `open new connection failed: %v, %#v`, err, node)
-			} else {
-				intlog.Printf(ctx, `open new connection success, master:%#v, config:%#v, node:%#v`, master, c.config, node)
-			}
-		}()
 		if sqlDb, err = c.db.Open(node); err != nil {
 			return nil
 		}
