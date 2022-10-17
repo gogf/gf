@@ -75,8 +75,6 @@ func doStructWithJsonCheck(params interface{}, pointer interface{}) (err error, 
 				return json.UnmarshalUseNumber(paramsBytes, pointer), true
 			}
 		}
-	case nil:
-		return nil, true
 	default:
 		// The `params` might be struct that implements interface function Interface, eg: gvar.Var.
 		if v, ok := params.(iInterface); ok {
@@ -184,6 +182,11 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 			`convert params from "%#v" to "map[string]interface{}" failed`,
 			params,
 		)
+	}
+
+	// Nothing to be done as the parameters are empty.
+	if len(paramsMap) == 0 {
+		return nil
 	}
 
 	// It only performs one converting to the same attribute.
