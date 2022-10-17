@@ -429,7 +429,6 @@ github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/polarismesh/polaris-go v1.2.0-beta.0.0.20220517041223-596a6a63b00f/go.mod h1:xXTl4b5ybYkwvXZA+nc1HNyLK/bsHUg08R4ewTa9axc=
 github.com/polarismesh/polaris-go v1.2.0-beta.3 h1:sqN50VGign37xVFp9nrN1RoLXacsB0QfRYUtuCWMJGI=
 github.com/polarismesh/polaris-go v1.2.0-beta.3/go.mod h1:HsN0ierETIujHpmnnYJ3qkwQw4QGAECuHvBZTDaw1tI=
 github.com/posener/complete v1.1.1/go.mod h1:em0nMJCgc9GFtwrmVmEMR/ZL6WyhyjMBndrE9hABlRI=

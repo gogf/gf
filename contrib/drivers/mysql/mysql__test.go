@@ -13,7 +13,6 @@ import (
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 )
@@ -30,44 +29,30 @@ const (
 )
 
 var (
-	db         gdb.DB
-	dbPrefix   gdb.DB
-	dbInvalid  gdb.DB
-	configNode gdb.ConfigNode
-	ctx        = context.TODO()
+	db        gdb.DB
+	dbPrefix  gdb.DB
+	dbInvalid gdb.DB
+	ctx       = context.TODO()
 )
 
 func init() {
-	parser, err := gcmd.Parse(g.MapStrBool{
-		"name": true,
-		"type": true,
-	})
-	gtest.AssertNil(err)
-	configNode = gdb.ConfigNode{
-		Host:             "127.0.0.1",
-		Port:             "3306",
-		User:             TestDbUser,
-		Pass:             TestDbPass,
-		Timezone:         "Asia/Shanghai", // For calculating UT cases of datetime zones in convenience.
-		Name:             parser.GetOpt("name", "").String(),
-		Type:             parser.GetOpt("type", "mysql").String(),
-		Role:             "master",
-		Charset:          "utf8",
-		Weight:           1,
-		MaxIdleConnCount: 10,
-		MaxOpenConnCount: 10,
-		MaxConnLifeTime:  600,
+	nodeDefault := gdb.ConfigNode{
+		Link: "mysql:root:12345678@tcp(127.0.0.1:3306)/?loc=Local&parseTime=true",
 	}
-	nodePrefix := configNode
+
+	nodePrefix := gdb.ConfigNode{
+		Link: "mysql:root:12345678@tcp(127.0.0.1:3306)/?loc=Local&parseTime=true",
+	}
 	nodePrefix.Prefix = TableNamePrefix1
 
-	nodeInvalid := configNode
-	nodeInvalid.Port = "3307"
+	nodeInvalid := gdb.ConfigNode{
+		Link: "mysql:root:12345678@tcp(127.0.0.1:3307)/?loc=Local&parseTime=true",
+	}
 
-	gdb.AddConfigNode("test", configNode)
+	gdb.AddConfigNode("test", nodeDefault)
 	gdb.AddConfigNode("prefix", nodePrefix)
 	gdb.AddConfigNode("nodeinvalid", nodeInvalid)
-	gdb.AddConfigNode(gdb.DefaultGroupName, configNode)
+	gdb.AddConfigNode(gdb.DefaultGroupName, nodeDefault)
 
 	// Default db.
 	if r, err := gdb.NewByGroup(); err != nil {
@@ -126,63 +111,7 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 		name = fmt.Sprintf(`%s_%d`, TableName, gtime.TimestampNano())
 	}
 	dropTableWithDb(db, name)
-
-	switch configNode.Type {
-	case "sqlite":
-		if _, err := db.Exec(ctx, fmt.Sprintf(`
-		CREATE TABLE %s (
-		   id bigint unsigned NOT NULL AUTO_INCREMENT,
-		   passport varchar(45),
-		   password char(32) NOT NULL,
-		   nickname varchar(45) NOT NULL,
-		   create_time timestamp NOT NULL,
-		   PRIMARY KEY (id)
-		) ;`, name,
-		)); err != nil {
-			gtest.Fatal(err)
-		}
-	case "pgsql":
-		if _, err := db.Exec(ctx, fmt.Sprintf(`
-		CREATE TABLE %s (
-		   id bigint  NOT NULL,
-		   passport varchar(45),
-		   password char(32) NOT NULL,
-		   nickname varchar(45) NOT NULL,
-		   create_time timestamp NOT NULL,
-		   PRIMARY KEY (id)
-		) ;`, name,
-		)); err != nil {
-			gtest.Fatal(err)
-		}
-	case "mssql":
-		if _, err := db.Exec(ctx, fmt.Sprintf(`
-		IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='%s' and xtype='U')
-		CREATE TABLE %s (
-		ID numeric(10,0) NOT NULL,
-		PASSPORT VARCHAR(45) NOT NULL,
-		PASSWORD CHAR(32) NOT NULL,
-		NICKNAME VARCHAR(45) NOT NULL,
-		CREATE_TIME datetime NOT NULL,
-		PRIMARY KEY (ID))`,
-			name, name,
-		)); err != nil {
-			gtest.Fatal(err)
-		}
-	case "oracle":
-		if _, err := db.Exec(ctx, fmt.Sprintf(`
-		CREATE TABLE %s (
-		ID NUMBER(10) NOT NULL,
-		PASSPORT VARCHAR(45) NOT NULL,
-		PASSWORD CHAR(32) NOT NULL,
-		NICKNAME VARCHAR(45) NOT NULL,
-		CREATE_TIME varchar(45) NOT NULL,
-		PRIMARY KEY (ID))
-		`, name,
-		)); err != nil {
-			gtest.Fatal(err)
-		}
-	case "mysql":
-		if _, err := db.Exec(ctx, fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 	    CREATE TABLE %s (
 	        id          int(10) unsigned NOT NULL AUTO_INCREMENT,
 	        passport    varchar(45) NULL,
@@ -192,12 +121,10 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 	        PRIMARY KEY (id)
 	    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 	    `, name,
-		)); err != nil {
-			gtest.Fatal(err)
-		}
+	)); err != nil {
+		gtest.Fatal(err)
 	}
-
-	return
+	return name
 }
 
 func createInitTableWithDb(db gdb.DB, table ...string) (name string) {
