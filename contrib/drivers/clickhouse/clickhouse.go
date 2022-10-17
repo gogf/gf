@@ -12,9 +12,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"math/big"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
 
@@ -49,6 +49,7 @@ const (
 	needParsedSqlInCtx   gctx.StrKey = "NeedParsedSql"
 	OrmTagForStruct                  = "orm"
 	driverName                       = "clickhouse"
+	matchBigIntPattern               = "[u]?int(128|256)"
 )
 
 func init() {
@@ -329,14 +330,6 @@ func (d *Driver) ConvertDataForRecord(ctx context.Context, value interface{}) (m
 	for k, v := range m {
 		switch itemValue := v.(type) {
 
-		case *time.Time:
-			m[k] = itemValue
-			// If the time is zero, it then updates it to nil,
-			// which will insert/update the value to database as "null".
-			if itemValue == nil || itemValue.IsZero() {
-				m[k] = nil
-			}
-
 		case gtime.Time:
 			// for gtime type, needs to get time.Time
 			m[k] = itemValue.Time
@@ -395,6 +388,27 @@ func (d *Driver) Begin(ctx context.Context) (tx *gdb.TX, err error) {
 
 func (d *Driver) Transaction(ctx context.Context, f func(ctx context.Context, tx *gdb.TX) error) error {
 	return errUnsupportedTransaction
+}
+
+func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) {
+	// If there's no type retrieved, it returns the `fieldValue` directly
+	// to use its original data type, as `fieldValue` is type of interface{}.
+	if fieldType == "" {
+		return fieldValue, nil
+	}
+	if !gregex.IsMatchString(matchBigIntPattern, fieldType) {
+		return d.Core.ConvertValueForLocal(ctx, fieldType, fieldValue)
+	}
+	// Currently only [u]int128/256 type conversions require additional processing
+	u, ok := fieldValue.(big.Int)
+	if ok {
+		return u, nil
+	}
+	uPtr, ok := fieldValue.(*big.Int)
+	if ok {
+		return uPtr, nil
+	}
+	return nil, nil
 }
 
 func (d *Driver) injectNeedParsedSql(ctx context.Context) context.Context {
