@@ -15,6 +15,7 @@ import (
 	"math"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gogf/gf/v2/encoding/gbinary"
@@ -25,6 +26,15 @@ import (
 )
 
 var (
+	// Empty strings.
+	emptyStringMap = map[string]struct{}{
+		"":      {},
+		"0":     {},
+		"no":    {},
+		"off":   {},
+		"false": {},
+	}
+
 	// StructTagPriority defines the default priority tags for Map*/Struct* functions.
 	// Note, the `gconv/param/params` tags are used by old version of package.
 	// It is strongly recommended using short tag `c/p` instead in the future.
@@ -69,7 +79,7 @@ func Bytes(any interface{}) []byte {
 				ok    = true
 				bytes = make([]byte, originValueAndKind.OriginValue.Len())
 			)
-			for i := range bytes {
+			for i, _ := range bytes {
 				int32Value := Int32(originValueAndKind.OriginValue.Index(i).Interface())
 				if int32Value < 0 || int32Value > math.MaxUint8 {
 					ok = false
@@ -102,7 +112,7 @@ func Runes(any interface{}) []rune {
 }
 
 // String converts `any` to string.
-// It's most commonly used converting function
+// It's most commonly used converting function.
 func String(any interface{}) string {
 	if any == nil {
 		return ""
@@ -179,8 +189,7 @@ func String(any interface{}) string {
 			kind = rv.Kind()
 		)
 		switch kind {
-		case
-			reflect.Chan,
+		case reflect.Chan,
 			reflect.Map,
 			reflect.Slice,
 			reflect.Func,
@@ -215,11 +224,15 @@ func Bool(any interface{}) bool {
 	case bool:
 		return value
 	case []byte:
-		b, _ := strconv.ParseBool(string(value))
-		return b
+		if _, ok := emptyStringMap[strings.ToLower(string(value))]; ok {
+			return false
+		}
+		return true
 	case string:
-		b, _ := strconv.ParseBool(value)
-		return b
+		if _, ok := emptyStringMap[strings.ToLower(value)]; ok {
+			return false
+		}
+		return true
 	default:
 		if f, ok := value.(iBool); ok {
 			return f.Bool()
@@ -237,8 +250,11 @@ func Bool(any interface{}) bool {
 		case reflect.Struct:
 			return true
 		default:
-			b, _ := strconv.ParseBool(String(any))
-			return b
+			s := strings.ToLower(String(any))
+			if _, ok := emptyStringMap[s]; ok {
+				return false
+			}
+			return true
 		}
 	}
 }
