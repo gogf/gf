@@ -1,6 +1,6 @@
 module github.com/gogf/gf/cmd/gf/v2
 
-go 1.15
+go 1.16
 
 require (
 	github.com/gogf/gf/contrib/drivers/mssql/v2 v2.1.0
