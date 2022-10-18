@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func Test_CheckStruct(t *testing.T) {
@@ -465,5 +466,49 @@ func TestValidator_CheckStructWithData(t *testing.T) {
 			EndTime:   nil,
 		}
 		t.AssertNE(g.Validator().Data(data).Assoc(g.Map{"start_time": gtime.Now()}).Run(context.TODO()), nil)
+	})
+}
+
+func Test_CheckStruct_PointerAttribute(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Req struct {
+			Name string
+			Age  *uint `v:"min:18"`
+		}
+		req := &Req{
+			Name: "john",
+			Age:  gconv.PtrUint(0),
+		}
+		err := g.Validator().Data(req).Run(context.TODO())
+		t.Assert(err.String(), "The Age value `0` must be equal or greater than 18")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Req struct {
+			Name string `v:"min-length:3"`
+			Age  *uint  `v:"min:18"`
+		}
+		req := &Req{
+			Name: "j",
+			Age:  gconv.PtrUint(19),
+		}
+		err := g.Validator().Data(req).Run(context.TODO())
+		t.Assert(err.String(), "The Name value `j` length must be equal or greater than 3")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			Age *uint `v:"min:18"`
+		}
+		type Req struct {
+			Name   string
+			Params *Params
+		}
+		req := &Req{
+			Name: "john",
+			Params: &Params{
+				Age: gconv.PtrUint(0),
+			},
+		}
+		err := g.Validator().Data(req).Run(context.TODO())
+		t.Assert(err.String(), "The Age value `0` must be equal or greater than 18")
 	})
 }
