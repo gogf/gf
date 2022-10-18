@@ -396,7 +396,7 @@ func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fie
 	if fieldType == "" {
 		return fieldValue, nil
 	}
-	if !gregex.IsMatchString(matchBigIntPattern, fieldType) {
+	if !gregex.IsMatchString(matchBigIntPattern, strings.ToLower(fieldType)) {
 		return d.Core.ConvertValueForLocal(ctx, fieldType, fieldValue)
 	}
 	// Currently only [u]int128/256 type conversions require additional processing
