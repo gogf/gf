@@ -79,7 +79,7 @@ func Bytes(any interface{}) []byte {
 				ok    = true
 				bytes = make([]byte, originValueAndKind.OriginValue.Len())
 			)
-			for i := range bytes {
+			for i, _ := range bytes {
 				int32Value := Int32(originValueAndKind.OriginValue.Index(i).Interface())
 				if int32Value < 0 || int32Value > math.MaxUint8 {
 					ok = false
@@ -112,7 +112,7 @@ func Runes(any interface{}) []rune {
 }
 
 // String converts `any` to string.
-// It's most commonly used converting function
+// It's most commonly used converting function.
 func String(any interface{}) string {
 	if any == nil {
 		return ""
