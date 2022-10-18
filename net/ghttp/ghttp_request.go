@@ -277,6 +277,7 @@ func (r *Request) GetHandlerResponse() interface{} {
 	return r.handlerResponse
 }
 
+// GetServeHandler retrieves and returns the user defined handler used to serve this request.
 func (r *Request) GetServeHandler() *HandlerParsedItem {
 	return r.serveHandler
 }
