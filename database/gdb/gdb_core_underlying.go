@@ -11,16 +11,8 @@ import (
 	"context"
 	"database/sql"
 
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/trace"
-
-	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/util/guid"
 )
 
 // Query commits one query SQL to underlying driver and returns the execution result.
@@ -155,136 +147,15 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 	// Inject internal data into ctx, especially for transaction creating.
 	ctx = c.InjectInternalCtxData(ctx)
 
-	var (
-		sqlTx                *sql.Tx
-		sqlStmt              *sql.Stmt
-		sqlRows              *sql.Rows
-		sqlResult            sql.Result
-		stmtSqlRows          *sql.Rows
-		stmtSqlRow           *sql.Row
-		rowsAffected         int64
-		cancelFuncForTimeout context.CancelFunc
-		formattedSql         = FormatSqlWithArgs(in.Sql, in.Args)
-		timestampMilli1      = gtime.TimestampMilli()
-	)
-
-	// Trace span start.
-	tr := otel.GetTracerProvider().Tracer(traceInstrumentName, trace.WithInstrumentationVersion(gf.VERSION))
-	ctx, span := tr.Start(ctx, in.Type, trace.WithSpanKind(trace.SpanKindInternal))
-	defer span.End()
-
-	// Execution cased by type.
-	switch in.Type {
-	case SqlTypeBegin:
-		if sqlTx, err = in.Db.Begin(); err == nil {
-			out.Tx = &TX{
-				db:            c.db,
-				tx:            sqlTx,
-				ctx:           context.WithValue(ctx, transactionIdForLoggerCtx, transactionIdGenerator.Add(1)),
-				master:        in.Db,
-				transactionId: guid.S(),
-			}
-			ctx = out.Tx.ctx
-		}
-		out.RawResult = sqlTx
-
-	case SqlTypeTXCommit:
-		err = in.Tx.Commit()
-
-	case SqlTypeTXRollback:
-		err = in.Tx.Rollback()
-
-	case SqlTypeExecContext:
-		if c.db.GetDryRun() {
-			sqlResult = new(SqlResult)
-		} else {
-			sqlResult, err = in.Link.ExecContext(ctx, in.Sql, in.Args...)
-		}
-		out.RawResult = sqlResult
-
-	case SqlTypeQueryContext:
-		sqlRows, err = in.Link.QueryContext(ctx, in.Sql, in.Args...)
-		out.RawResult = sqlRows
-
-	case SqlTypePrepareContext:
-		sqlStmt, err = in.Link.PrepareContext(ctx, in.Sql)
-		out.RawResult = sqlStmt
-
-	case SqlTypeStmtExecContext:
-		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctx, ctxTimeoutTypeExec)
-		defer cancelFuncForTimeout()
-		if c.db.GetDryRun() {
-			sqlResult = new(SqlResult)
-		} else {
-			sqlResult, err = in.Stmt.ExecContext(ctx, in.Args...)
-		}
-		out.RawResult = sqlResult
-
-	case SqlTypeStmtQueryContext:
-		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctx, ctxTimeoutTypeQuery)
-		defer cancelFuncForTimeout()
-		stmtSqlRows, err = in.Stmt.QueryContext(ctx, in.Args...)
-		out.RawResult = stmtSqlRows
-
-	case SqlTypeStmtQueryRowContext:
-		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctx, ctxTimeoutTypeQuery)
-		defer cancelFuncForTimeout()
-		stmtSqlRow = in.Stmt.QueryRowContext(ctx, in.Args...)
-		out.RawResult = stmtSqlRow
-
-	default:
-		panic(gerror.NewCodef(gcode.CodeInvalidParameter, `invalid SqlType "%s"`, in.Type))
+	hookInput := &HookCommitInput{
+		DoCommitInput: in,
+		core:          c,
+		cursor:        c.handlers.Front(),
 	}
-	// Result handling.
-	switch {
-	case sqlResult != nil && !c.GetIgnoreResultFromCtx(ctx):
-		rowsAffected, err = sqlResult.RowsAffected()
-		out.Result = sqlResult
 
-	case sqlRows != nil:
-		out.Records, err = c.RowsToResult(ctx, sqlRows)
-		rowsAffected = int64(len(out.Records))
+	_, out, err = hookInput.Next(ctx)
 
-	case sqlStmt != nil:
-		out.Stmt = &Stmt{
-			Stmt: sqlStmt,
-			core: c,
-			link: in.Link,
-			sql:  in.Sql,
-		}
-	}
-	var (
-		timestampMilli2 = gtime.TimestampMilli()
-		sqlObj          = &Sql{
-			Sql:           in.Sql,
-			Type:          in.Type,
-			Args:          in.Args,
-			Format:        formattedSql,
-			Error:         err,
-			Start:         timestampMilli1,
-			End:           timestampMilli2,
-			Group:         c.db.GetGroup(),
-			RowsAffected:  rowsAffected,
-			IsTransaction: in.IsTransaction,
-		}
-	)
-
-	// Tracing.
-	c.traceSpanEnd(ctx, span, sqlObj)
-
-	// Logging.
-	if c.db.GetDebug() {
-		c.writeSqlToLogger(ctx, sqlObj)
-	}
-	if err != nil && err != sql.ErrNoRows {
-		err = gerror.NewCodef(
-			gcode.CodeDbOperationError,
-			"%s, %s",
-			err.Error(),
-			FormatSqlWithArgs(in.Sql, in.Args),
-		)
-	}
-	return out, err
+	return
 }
 
 // Prepare creates a prepared statement for later queries or executions.

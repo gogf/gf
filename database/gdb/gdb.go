@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/container/glist"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/container/gvar"
@@ -179,15 +180,16 @@ type DB interface {
 
 // Core is the base struct for database management.
 type Core struct {
-	db     DB              // DB interface object.
-	ctx    context.Context // Context for chaining operation only. Do not set a default value in Core initialization.
-	group  string          // Configuration group name.
-	schema string          // Custom schema for this object.
-	debug  *gtype.Bool     // Enable debug mode for the database, which can be changed in runtime.
-	cache  *gcache.Cache   // Cache manager, SQL result cache only.
-	links  *gmap.StrAnyMap // links caches all created links by node.
-	logger glog.ILogger    // Logger for logging functionality.
-	config *ConfigNode     // Current config node.
+	db       DB              // DB interface object.
+	ctx      context.Context // Context for chaining operation only. Do not set a default value in Core initialization.
+	group    string          // Configuration group name.
+	schema   string          // Custom schema for this object.
+	debug    *gtype.Bool     // Enable debug mode for the database, which can be changed in runtime.
+	cache    *gcache.Cache   // Cache manager, SQL result cache only.
+	links    *gmap.StrAnyMap // links caches all created links by node.
+	logger   glog.ILogger    // Logger for logging functionality.
+	config   *ConfigNode     // Current config node.
+	handlers *glist.List     // HookFuncCommit list.
 }
 
 // DoCommitInput is the input parameters for function DoCommit.
@@ -429,12 +431,13 @@ func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
 		node = parseConfigNodeLink(node)
 	}
 	c := &Core{
-		group:  group,
-		debug:  gtype.NewBool(),
-		cache:  gcache.New(),
-		links:  gmap.NewStrAnyMap(true),
-		logger: glog.New(),
-		config: node,
+		group:    group,
+		debug:    gtype.NewBool(),
+		cache:    gcache.New(),
+		links:    gmap.NewStrAnyMap(true),
+		logger:   glog.New(),
+		config:   node,
+		handlers: glist.New(),
 	}
 	if v, ok := driverMap[node.Type]; ok {
 		if c.db, err = v.New(c, node); err != nil {

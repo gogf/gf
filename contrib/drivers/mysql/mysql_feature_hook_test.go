@@ -9,6 +9,7 @@ package mysql_test
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -132,5 +133,235 @@ func Test_Model_Hook_Delete(t *testing.T) {
 		for _, item := range all {
 			t.Assert(item["nickname"].String(), `deleted`)
 		}
+	})
+}
+
+func Test_Model_Hook_Commit(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	errRollback := errors.New("rollback")
+
+	gtest.C(t, func(t *gtest.T) {
+		var commited bool
+
+		err := db.Transaction(context.Background(), func(ctx context.Context, tx *gdb.TX) error {
+			err := db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+				_, err := tx.Model(table).Hook(gdb.HookHandler{
+					Commit: func(ctx context.Context, in *gdb.HookCommitInput) (done bool, out gdb.DoCommitOutput, err error) {
+						_, out, err = in.Next(ctx)
+						if in.Type == gdb.SqlTypeTXCommit {
+							done = true
+							commited = true
+						}
+						return
+					},
+				}).One()
+				if err != nil {
+					return err
+				}
+
+				t.AssertNil(err)
+				t.AssertEQ(commited, false)
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+
+			t.AssertNil(err)
+			t.AssertEQ(commited, false)
+			return nil
+		})
+
+		t.AssertNil(err)
+		t.AssertEQ(commited, true)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		var commited bool
+
+		err := db.Transaction(context.Background(), func(ctx context.Context, tx *gdb.TX) error {
+			err := db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+				_, err := tx.Model(table).Hook(gdb.HookHandler{
+					Commit: func(ctx context.Context, in *gdb.HookCommitInput) (done bool, out gdb.DoCommitOutput, err error) {
+						_, out, err = in.Next(ctx)
+						if in.Type == gdb.SqlTypeTXCommit {
+							done = true
+							commited = true
+						}
+						return
+					},
+				}).One()
+				if err != nil {
+					return err
+				}
+
+				t.AssertNil(err)
+				t.AssertEQ(commited, false)
+				return errRollback
+			})
+			if err != nil {
+				return err
+			}
+
+			t.AssertEQ(err, errRollback)
+			t.AssertEQ(commited, false)
+			return nil
+		})
+
+		t.AssertEQ(err, errRollback)
+		t.AssertEQ(commited, false)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		var commited bool
+
+		err := db.Transaction(context.Background(), func(ctx context.Context, tx *gdb.TX) error {
+			err := db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+				_, err := tx.Model(table).Hook(gdb.HookHandler{
+					Commit: func(ctx context.Context, in *gdb.HookCommitInput) (done bool, out gdb.DoCommitOutput, err error) {
+						_, out, err = in.Next(ctx)
+						if in.Type == gdb.SqlTypeTXCommit {
+							done = true
+							commited = true
+						}
+						return
+					},
+				}).One()
+				if err != nil {
+					return err
+				}
+
+				t.AssertNil(err)
+				t.AssertEQ(commited, false)
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+
+			t.AssertNil(err)
+			t.AssertEQ(commited, false)
+			return errRollback
+		})
+
+		t.AssertEQ(err, errRollback)
+		t.AssertEQ(commited, false)
+	})
+}
+
+func Test_Model_Hook_Rollback(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	errRollback := errors.New("rollback")
+
+	gtest.C(t, func(t *gtest.T) {
+		var rollbacked bool
+
+		err := db.Transaction(context.Background(), func(ctx context.Context, tx *gdb.TX) error {
+			err := db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+				_, err := tx.Model(table).Hook(gdb.HookHandler{
+					Commit: func(ctx context.Context, in *gdb.HookCommitInput) (done bool, out gdb.DoCommitOutput, err error) {
+						_, out, err = in.Next(ctx)
+						if in.Type == gdb.SqlTypeTXRollback {
+							done = true
+							rollbacked = true
+						}
+						return
+					},
+				}).One()
+				if err != nil {
+					return err
+				}
+
+				t.AssertNil(err)
+				t.AssertEQ(rollbacked, false)
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+
+			t.AssertNil(err)
+			t.AssertEQ(rollbacked, false)
+			return errRollback
+		})
+
+		t.AssertEQ(err, errRollback)
+		t.AssertEQ(rollbacked, true)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		var rollbacked bool
+
+		err := db.Transaction(context.Background(), func(ctx context.Context, tx *gdb.TX) error {
+			err := db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+				_, err := tx.Model(table).Hook(gdb.HookHandler{
+					Commit: func(ctx context.Context, in *gdb.HookCommitInput) (done bool, out gdb.DoCommitOutput, err error) {
+						_, out, err = in.Next(ctx)
+						if in.Type == gdb.SqlTypeTXRollback {
+							done = true
+							rollbacked = true
+						}
+						return
+					},
+				}).One()
+				if err != nil {
+					return err
+				}
+
+				t.AssertNil(err)
+				t.AssertEQ(rollbacked, false)
+				return errRollback
+			})
+			if err != nil {
+				return err
+			}
+
+			t.AssertEQ(err, errRollback)
+			t.AssertEQ(rollbacked, false)
+			return nil
+		})
+
+		t.AssertEQ(err, errRollback)
+		t.AssertEQ(rollbacked, true)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		var rollbacked bool
+
+		err := db.Transaction(context.Background(), func(ctx context.Context, tx *gdb.TX) error {
+			err := db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+				_, err := tx.Model(table).Hook(gdb.HookHandler{
+					Commit: func(ctx context.Context, in *gdb.HookCommitInput) (done bool, out gdb.DoCommitOutput, err error) {
+						_, out, err = in.Next(ctx)
+						if in.Type == gdb.SqlTypeTXRollback {
+							done = true
+							rollbacked = true
+						}
+						return
+					},
+				}).One()
+				if err != nil {
+					return err
+				}
+
+				t.AssertNil(err)
+				t.AssertEQ(rollbacked, false)
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+
+			t.AssertNil(err)
+			t.AssertEQ(rollbacked, false)
+			return nil
+		})
+
+		t.AssertNil(err)
+		t.AssertEQ(rollbacked, false)
 	})
 }

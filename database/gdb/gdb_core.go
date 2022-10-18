@@ -14,6 +14,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/gogf/gf/v2/container/glist"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -54,6 +55,12 @@ func (c *Core) Ctx(ctx context.Context) DB {
 	}
 	newCore.ctx = WithDB(ctx, newCore.db)
 	newCore.ctx = c.InjectInternalCtxData(newCore.ctx)
+	if tx := TXFromCtx(ctx, newCore.GetGroup()); tx != nil {
+		newCore.handlers = tx.db.GetCore().handlers
+	} else {
+		newCore.handlers = glist.New()
+	}
+
 	return newCore.db
 }
 
