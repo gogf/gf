@@ -184,6 +184,11 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 		)
 	}
 
+	// Nothing to be done as the parameters are empty.
+	if len(paramsMap) == 0 {
+		return nil
+	}
+
 	// It only performs one converting to the same attribute.
 	// doneMap is used to check repeated converting, its key is the real attribute name
 	// of the struct.
