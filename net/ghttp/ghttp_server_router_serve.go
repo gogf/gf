@@ -21,7 +21,8 @@ import (
 
 // handlerCacheItem is an item just for internal router searching cache.
 type handlerCacheItem struct {
-	parsedItems []*handlerParsedItem
+	parsedItems []*HandlerParsedItem
+	serveItem   *HandlerParsedItem
 	hasHook     bool
 	hasServe    bool
 }
@@ -38,7 +39,7 @@ func (s *Server) serveHandlerKey(method, path, domain string) string {
 }
 
 // getHandlersWithCache searches the router item with cache feature for a given request.
-func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedItem, hasHook, hasServe bool) {
+func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*HandlerParsedItem, serveItem *HandlerParsedItem, hasHook, hasServe bool) {
 	var (
 		ctx    = r.Context()
 		method = r.Method
@@ -58,9 +59,9 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedI
 	}
 	var handlerCacheKey = s.serveHandlerKey(method, path, host)
 	value, err := s.serveCache.GetOrSetFunc(ctx, handlerCacheKey, func(ctx context.Context) (interface{}, error) {
-		parsedItems, hasHook, hasServe = s.searchHandlers(method, path, host)
+		parsedItems, serveItem, hasHook, hasServe = s.searchHandlers(method, path, host)
 		if parsedItems != nil {
-			return &handlerCacheItem{parsedItems, hasHook, hasServe}, nil
+			return &handlerCacheItem{parsedItems, serveItem, hasHook, hasServe}, nil
 		}
 		return nil, nil
 	}, routeCacheDuration)
@@ -69,16 +70,16 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedI
 	}
 	if value != nil {
 		item := value.Val().(*handlerCacheItem)
-		return item.parsedItems, item.hasHook, item.hasServe
+		return item.parsedItems, item.serveItem, item.hasHook, item.hasServe
 	}
 	return
 }
 
 // searchHandlers retrieve and returns the routers with given parameters.
 // Note that the returned routers contain serving handler, middleware handlers and hook handlers.
-func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*handlerParsedItem, hasHook, hasServe bool) {
+func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*HandlerParsedItem, serveItem *HandlerParsedItem, hasHook, hasServe bool) {
 	if len(path) == 0 {
-		return nil, false, false
+		return nil, nil, false, false
 	}
 	// In case of double '/' URI, for example:
 	// /user//index, //user/index, //user//index//
@@ -170,7 +171,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 				if item.Router.Method == defaultMethod || item.Router.Method == method {
 					// Note the rule having no fuzzy rules: len(match) == 1
 					if match, err := gregex.MatchString(item.Router.RegRule, path); err == nil && len(match) > 0 {
-						parsedItem := &handlerParsedItem{item, nil}
+						parsedItem := &HandlerParsedItem{item, nil}
 						// If the rule contains fuzzy names,
 						// it needs paring the URL to retrieve the values for the names.
 						if len(item.Router.RegNames) > 0 {
@@ -186,6 +187,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 						// The serving handler can be added just once.
 						case HandlerTypeHandler, HandlerTypeObject:
 							hasServe = true
+							serveItem = parsedItem
 							parsedItemList.PushBack(parsedItem)
 
 						// The middleware is inserted before the serving handler.
@@ -213,9 +215,9 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 	}
 	if parsedItemList.Len() > 0 {
 		var index = 0
-		parsedItems = make([]*handlerParsedItem, parsedItemList.Len())
+		parsedItems = make([]*HandlerParsedItem, parsedItemList.Len())
 		for e := parsedItemList.Front(); e != nil; e = e.Next() {
-			parsedItems[index] = e.Value.(*handlerParsedItem)
+			parsedItems[index] = e.Value.(*HandlerParsedItem)
 			index++
 		}
 	}
@@ -257,6 +259,6 @@ func (item HandlerItem) MarshalJSON() ([]byte, error) {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (item handlerParsedItem) MarshalJSON() ([]byte, error) {
+func (item HandlerParsedItem) MarshalJSON() ([]byte, error) {
 	return json.Marshal(item.Handler)
 }
