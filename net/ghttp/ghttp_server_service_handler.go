@@ -164,7 +164,7 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 			return
 		}
 
-		if reflectType.In(0).String() != "context.Context" {
+		if !reflectType.In(0).Implements(reflect.TypeOf((*context.Context)(nil)).Elem()) {
 			err = gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`invalid handler: defined as "%s", but the first input parameter should be type of "context.Context"`,
@@ -173,7 +173,7 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 			return
 		}
 
-		if reflectType.Out(1).String() != "error" {
+		if !reflectType.Out(1).Implements(reflect.TypeOf((*error)(nil)).Elem()) {
 			err = gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`invalid handler: defined as "%s", but the last output parameter should be type of "error"`,
