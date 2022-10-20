@@ -187,7 +187,7 @@ func newCommandFromMethod(
 		}
 		return
 	}
-	if methodType.In(0).String() != "context.Context" {
+	if !methodType.In(0).Implements(reflect.TypeOf((*context.Context)(nil)).Elem()) {
 		err = gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			`invalid command: defined as "%s", but the first input parameter should be type of "context.Context"`,
@@ -195,7 +195,7 @@ func newCommandFromMethod(
 		)
 		return
 	}
-	if methodType.Out(1).String() != "error" {
+	if !methodType.Out(1).Implements(reflect.TypeOf((*error)(nil)).Elem()) {
 		err = gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			`invalid command: defined as "%s", but the last output parameter should be type of "error"`,
