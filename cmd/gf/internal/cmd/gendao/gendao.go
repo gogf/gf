@@ -320,6 +320,31 @@ func getImportPartContent(source string, isDo bool) string {
 		packageImportsArray.Append(`"github.com/gogf/gf/v2/encoding/gjson"`)
 	}
 
+	// garray
+	if strings.Contains(source, "garray.Array") {
+		packageImportsArray.Append(`"github.com/gogf/gf/v2/container/garray"`)
+	}
+
+	// gmap
+	if strings.Contains(source, "g.Map") {
+		packageImportsArray.Append(`"github.com/gogf/gf/v2/frame/g"`)
+	}
+
+	// uuid
+	if strings.Contains(source, "uuid.UUID") {
+		packageImportsArray.Append(`"github.com/google/uuid"`)
+	}
+
+	// big int
+	if strings.Contains(source, "big.Int") {
+		packageImportsArray.Append(`"math/big"`)
+	}
+
+	// decimal
+	if strings.Contains(source, "decimal.Decimal") {
+		packageImportsArray.Append(`"github.com/shopspring/decimal"`)
+	}
+
 	// Generate and write content to golang file.
 	packageImportsStr := ""
 	if packageImportsArray.Len() > 0 {
