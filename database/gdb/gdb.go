@@ -346,6 +346,12 @@ const (
 	LocalTypeBool        = "bool"
 	LocalTypeJson        = "json"
 	LocalTypeJsonb       = "jsonb"
+	LocalTypeBigInt      = "big-int"
+	LocalTypeDecimal     = "decimal"
+	LocalTypeArray       = "array"
+	LocalTypeUUID        = "uuid"
+	LocalTypeInterface   = "interface"
+	LocalTypeMap         = "map"
 )
 
 var (

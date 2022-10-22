@@ -84,6 +84,34 @@ func generateStructFieldDefinition(
 		} else {
 			typeName = "string"
 		}
+
+	case gdb.LocalTypeMap:
+		typeName = "g.Map"
+
+	case gdb.LocalTypeArray:
+		typeName = "garray.Array"
+
+	case gdb.LocalTypeUUID:
+		typeName = "uuid.UUID"
+		if field.Null {
+			typeName = "*" + typeName
+		}
+
+	case gdb.LocalTypeDecimal:
+		typeName = "decimal.Decimal"
+		if field.Null {
+			typeName = "*" + typeName
+		}
+
+	case gdb.LocalTypeBigInt:
+		typeName = "big.Int"
+		if field.Null {
+			typeName = "*" + typeName
+		}
+
+	case gdb.LocalTypeInterface:
+		typeName = "interface{}"
+
 	}
 
 	var (

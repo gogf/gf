@@ -10,8 +10,8 @@ package clickhouse
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
+	"github.com/shopspring/decimal"
 	"math/big"
 	"net/url"
 	"strings"
@@ -21,7 +21,6 @@ import (
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -32,25 +31,6 @@ import (
 type Driver struct {
 	*gdb.Core
 }
-
-var (
-	errUnsupportedInsertIgnore = errors.New("unsupported method:InsertIgnore")
-	errUnsupportedInsertGetId  = errors.New("unsupported method:InsertGetId")
-	errUnsupportedReplace      = errors.New("unsupported method:Replace")
-	errUnsupportedBegin        = errors.New("unsupported method:Begin")
-	errUnsupportedTransaction  = errors.New("unsupported method:Transaction")
-)
-
-const (
-	updateFilterPattern              = `(?i)UPDATE[\s]+?(\w+[\.]?\w+)[\s]+?SET`
-	deleteFilterPattern              = `(?i)DELETE[\s]+?FROM[\s]+?(\w+[\.]?\w+)`
-	filterTypePattern                = `(?i)^UPDATE|DELETE`
-	replaceSchemaPattern             = `@(.+?)/([\w\.\-]+)+`
-	needParsedSqlInCtx   gctx.StrKey = "NeedParsedSql"
-	OrmTagForStruct                  = "orm"
-	driverName                       = "clickhouse"
-	matchBigIntPattern               = "[u]?int(128|256)"
-)
 
 func init() {
 	if err := gdb.Register(`clickhouse`, New()); err != nil {
@@ -390,25 +370,80 @@ func (d *Driver) Transaction(ctx context.Context, f func(ctx context.Context, tx
 	return errUnsupportedTransaction
 }
 
+// CheckLocalTypeForField checks and returns corresponding type for given db type.
+func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (string, error) {
+	fieldType = strings.ToLower(fieldType)
+	baseType, ok := matchBaseTypeMap[fieldType]
+	if ok {
+		return baseType, nil
+	}
+	for pattern, dataType := range matchFieldPatternType {
+		if !gregex.IsMatchString(pattern, fieldType) {
+			continue
+		}
+		return dataType, nil
+	}
+	// Some complex types have to be returned using interface.
+	return gdb.LocalTypeInterface, nil
+}
+
+// ConvertValueForLocal converts value to local Golang type of value according field type name from database.
+// The parameter `fieldType` is in lower case, like:
+// `float(5,2)`, `unsigned double(5,2)`, `decimal(10,2)`, `char(45)`, `varchar(100)`, etc.
 func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) {
 	// If there's no type retrieved, it returns the `fieldValue` directly
 	// to use its original data type, as `fieldValue` is type of interface{}.
 	if fieldType == "" {
 		return fieldValue, nil
 	}
-	if !gregex.IsMatchString(matchBigIntPattern, strings.ToLower(fieldType)) {
-		return d.Core.ConvertValueForLocal(ctx, fieldType, fieldValue)
+	typeName, err := d.CheckLocalTypeForField(ctx, fieldType, fieldValue)
+	if err != nil {
+		return nil, err
 	}
-	// Currently only [u]int128/256 type conversions require additional processing
-	u, ok := fieldValue.(big.Int)
-	if ok {
-		return u, nil
+	switch typeName {
+	case LocalTypeInt8:
+		return gconv.Int8(fieldValue), nil
+	case LocalTypeInt16:
+		return gconv.Int16(fieldValue), nil
+	case LocalTypeInt32:
+		return gconv.Int32(fieldValue), nil
+	case gdb.LocalTypeInt64:
+		return gconv.Int64(fieldValue), nil
+	case LocalTypeUInt8:
+		return gconv.Uint8(fieldValue), nil
+	case LocalTypeUInt16:
+		return gconv.Uint16(fieldValue), nil
+	case LocalTypeUInt32:
+		return gconv.Uint32(fieldValue), nil
+	case gdb.LocalTypeUint64:
+		return gconv.Uint64(fieldValue), nil
+	case gdb.LocalTypeBigInt:
+		switch bitInt := fieldValue.(type) {
+		case big.Int:
+			return bitInt, nil
+		case *big.Int:
+			return bitInt, nil
+		default:
+			return fieldValue, nil
+		}
+	case gdb.LocalTypeFloat32:
+		return gconv.Float32(fieldValue), nil
+	case gdb.LocalTypeFloat64:
+		return gconv.Float64(fieldValue), nil
+	case gdb.LocalTypeDecimal:
+		switch decimalType := fieldValue.(type) {
+		case decimal.Decimal:
+			return decimalType, nil
+		case *decimal.Decimal:
+			return decimalType, nil
+		default:
+			return fieldValue, nil
+		}
+	case gdb.LocalTypeString:
+		return gconv.String(fieldValue), nil
+	default:
+		return fieldValue, nil
 	}
-	uPtr, ok := fieldValue.(*big.Int)
-	if ok {
-		return uPtr, nil
-	}
-	return nil, nil
 }
 
 func (d *Driver) injectNeedParsedSql(ctx context.Context) context.Context {
