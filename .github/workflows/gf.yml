@@ -167,6 +167,9 @@ jobs:
     - name: Start apollo containers
       run:  docker-compose -f ".github/workflows/apollo/docker-compose.yml" up -d --build
 
+    - name: Start nacos containers
+      run:  docker-compose -f ".github/workflows/nacos/docker-compose.yml" up -d --build
+
     - name: Before Script
       run:  bash .github/workflows/before_script.sh
 
@@ -178,6 +181,9 @@ jobs:
 
     - name: Stop apollo containers
       run:  docker-compose -f ".github/workflows/apollo/docker-compose.yml" down
+
+    - name: Stop nacos containers
+      run:  docker-compose -f ".github/workflows/nacos/docker-compose.yml" down
 
     - name: Report Coverage
       uses: codecov/codecov-action@v2
