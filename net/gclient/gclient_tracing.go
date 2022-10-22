@@ -60,7 +60,7 @@ func internalMiddlewareTracing(c *Client, r *http.Request) (response *Response, 
 		tracingInstrumentName,
 		trace.WithInstrumentationVersion(gf.VERSION),
 	)
-	ctx, span := tr.Start(r.Context(), r.URL.String(), trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := tr.Start(ctx, r.URL.String(), trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(gtrace.CommonLabels()...)
