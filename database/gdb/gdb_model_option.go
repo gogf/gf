@@ -30,7 +30,7 @@ func (m *Model) OmitEmpty() *Model {
 //
 // Eg:
 // Where("id", []int{}).All()             -> SELECT xxx FROM xxx WHERE 0=1
-// Where("name", "").All()                -> SELECT xxx FROM xxx WHERE `name`=''
+// Where("name", "").All()                -> SELECT xxx FROM xxx WHERE `name`=”
 // OmitEmpty().Where("id", []int{}).All() -> SELECT xxx FROM xxx
 // OmitEmpty().("name", "").All()         -> SELECT xxx FROM xxx.
 func (m *Model) OmitEmptyWhere() *Model {

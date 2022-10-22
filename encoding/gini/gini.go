@@ -61,7 +61,7 @@ func Decode(data []byte) (res map[string]interface{}, err error) {
 				fieldMap = make(map[string]interface{})
 			}
 			haveSection = true
-		} else if haveSection == false {
+		} else if !haveSection {
 			continue
 		}
 

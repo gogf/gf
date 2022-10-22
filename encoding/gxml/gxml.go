@@ -77,9 +77,9 @@ func ToJson(content []byte) ([]byte, error) {
 	}
 	mv, err := mxj.NewMapXml(res)
 	if err == nil {
-		err = gerror.Wrapf(err, `mxj.NewMapXml failed`)
 		return mv.Json()
 	}
+	err = gerror.Wrap(err, `mxj.NewMapXml failed`)
 	return nil, err
 }
 

@@ -392,7 +392,7 @@ func (c *AdapterMemory) makeExpireKey(expire int64) int64 {
 
 // syncEventAndClearExpired does the asynchronous task loop:
 // 1. Asynchronously process the data in the event list,
-//    and synchronize the results to the `expireTimes` and `expireSets` properties.
+// and synchronize the results to the `expireTimes` and `expireSets` properties.
 // 2. Clean up the expired key-value pair data.
 func (c *AdapterMemory) syncEventAndClearExpired(ctx context.Context) {
 	if c.closed.Val() {

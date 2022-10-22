@@ -221,7 +221,7 @@ func LeDecodeToBool(b []byte) bool {
 	if len(b) == 0 {
 		return false
 	}
-	if bytes.Compare(b, make([]byte, len(b))) == 0 {
+	if bytes.Equal(b, make([]byte, len(b))) {
 		return false
 	}
 	return true

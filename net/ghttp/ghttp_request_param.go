@@ -349,7 +349,7 @@ func (r *Request) GetMultipartFiles(name string) []*multipart.FileHeader {
 	}
 	// Support "name[0]","name[1]","name[2]", etc. as array parameter.
 	var (
-		key   = ""
+		key   string
 		files = make([]*multipart.FileHeader, 0)
 	)
 	for i := 0; ; i++ {

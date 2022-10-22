@@ -245,7 +245,7 @@ func StrToTime(str string, format ...string) (*Time, error) {
 	} else if match = timeRegex2.FindStringSubmatch(str); len(match) > 0 && match[1] != "" {
 		year, month, day = parseDateStr(match[1])
 	} else if match = timeRegex3.FindStringSubmatch(str); len(match) > 0 && match[1] != "" {
-		s := strings.Replace(match[2], ":", "", -1)
+		s := strings.ReplaceAll(match[2], ":", "")
 		if len(s) < 6 {
 			s += strings.Repeat("0", 6-len(s))
 		}
@@ -263,7 +263,7 @@ func StrToTime(str string, format ...string) (*Time, error) {
 
 	// Time
 	if len(match[2]) > 0 {
-		s := strings.Replace(match[2], ":", "", -1)
+		s := strings.ReplaceAll(match[2], ":", "")
 		if len(s) < 6 {
 			s += strings.Repeat("0", 6-len(s))
 		}
@@ -285,7 +285,7 @@ func StrToTime(str string, format ...string) (*Time, error) {
 	}
 	// If there's offset in the string, it then firstly processes the offset.
 	if match[6] != "" {
-		zone := strings.Replace(match[6], ":", "", -1)
+		zone := strings.ReplaceAll(match[6], ":", "")
 		zone = strings.TrimLeft(zone, "+-")
 		if len(zone) <= 6 {
 			zone += strings.Repeat("0", 6-len(zone))

@@ -211,7 +211,7 @@ func (oai *OpenApiV3) golangTypeToOAIFormat(t reflect.Type) string {
 
 func (oai *OpenApiV3) golangTypeToSchemaName(t reflect.Type) string {
 	var (
-		pkgPath    = ""
+		pkgPath    string
 		schemaName = gstr.TrimLeft(t.String(), "*")
 	)
 	// Pointer type has no PkgPath.

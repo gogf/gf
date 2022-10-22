@@ -22,25 +22,30 @@ import (
 // Note that the parameter `structSlicePointer` should be type of *[]struct/*[]*struct.
 //
 // Usage example 1: Normal attribute struct relation:
-// type EntityUser struct {
-// 	   Uid  int
-// 	   Name string
-// }
-// type EntityUserDetail struct {
-// 	   Uid     int
-// 	   Address string
-// }
-// type EntityUserScores struct {
-// 	   Id     int
-// 	   Uid    int
-// 	   Score  int
-// 	   Course string
-// }
-// type Entity struct {
-//     User       *EntityUser
-// 	   UserDetail *EntityUserDetail
-// 	   UserScores []*EntityUserScores
-// }
+//
+//	type EntityUser struct {
+//		   Uid  int
+//		   Name string
+//	}
+//
+//	type EntityUserDetail struct {
+//		   Uid     int
+//		   Address string
+//	}
+//
+//	type EntityUserScores struct {
+//		   Id     int
+//		   Uid    int
+//		   Score  int
+//		   Course string
+//	}
+//
+//	type Entity struct {
+//	    User       *EntityUser
+//		   UserDetail *EntityUserDetail
+//		   UserScores []*EntityUserScores
+//	}
+//
 // var users []*Entity
 // ScanList(&users, "User")
 // ScanList(&users, "User", "uid")
@@ -48,32 +53,34 @@ import (
 // ScanList(&users, "UserScores", "User", "uid:Uid")
 // ScanList(&users, "UserScores", "User", "uid")
 //
-//
 // Usage example 2: Embedded attribute struct relation:
-// type EntityUser struct {
-// 	   Uid  int
-// 	   Name string
-// }
-// type EntityUserDetail struct {
-// 	   Uid     int
-// 	   Address string
-// }
-// type EntityUserScores struct {
-// 	   Id    int
-// 	   Uid   int
-// 	   Score int
-// }
-// type Entity struct {
-// 	   EntityUser
-// 	   UserDetail EntityUserDetail
-// 	   UserScores []EntityUserScores
-// }
+//
+//	type EntityUser struct {
+//		   Uid  int
+//		   Name string
+//	}
+//
+//	type EntityUserDetail struct {
+//		   Uid     int
+//		   Address string
+//	}
+//
+//	type EntityUserScores struct {
+//		   Id    int
+//		   Uid   int
+//		   Score int
+//	}
+//
+//	type Entity struct {
+//		   EntityUser
+//		   UserDetail EntityUserDetail
+//		   UserScores []EntityUserScores
+//	}
 //
 // var users []*Entity
 // ScanList(&users)
 // ScanList(&users, "UserDetail", "uid")
 // ScanList(&users, "UserScores", "uid")
-//
 //
 // The parameters "User/UserDetail/UserScores" in the example codes specify the target attribute struct
 // that current result will be bound to.

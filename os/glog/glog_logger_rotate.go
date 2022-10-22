@@ -235,7 +235,7 @@ func (l *Logger) rotateChecksTimely(ctx context.Context) {
 	// =============================================================
 	var (
 		backupFilesMap          = make(map[string]*garray.SortedArray)
-		originalLoggingFilePath = ""
+		originalLoggingFilePath string
 	)
 	if l.config.RotateBackupLimit > 0 || l.config.RotateBackupExpire > 0 {
 		for _, file := range files {

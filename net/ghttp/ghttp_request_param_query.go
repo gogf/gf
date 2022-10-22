@@ -95,7 +95,9 @@ func (r *Request) GetQueryMap(kvMap ...map[string]interface{}) map[string]interf
 }
 
 // GetQueryMapStrStr retrieves and returns all parameters passed from the client using the HTTP GET method as a
-//  map[string]string. The parameter `kvMap` specifies the keys
+//
+//	map[string]string. The parameter `kvMap` specifies the keys
+//
 // retrieving from client parameters, the associated values are the default values if the client
 // does not pass.
 func (r *Request) GetQueryMapStrStr(kvMap ...map[string]interface{}) map[string]string {

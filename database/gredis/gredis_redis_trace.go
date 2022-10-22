@@ -41,9 +41,9 @@ func (c *RedisConn) traceSpanEnd(ctx context.Context, span trace.Span, item *tra
 	if gtrace.IsUsingDefaultProvider() || !gtrace.IsTracingInternal() {
 		return
 	}
-	if ctx == nil {
-		ctx = context.Background()
-	}
+	// if ctx == nil {
+	// 	ctx = context.Background()
+	// }
 	if item.err != nil {
 		span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, item.err))
 	}

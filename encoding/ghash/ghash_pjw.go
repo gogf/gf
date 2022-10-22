@@ -13,8 +13,8 @@ func PJW(str []byte) uint32 {
 		ThreeQuarters     uint32 = (BitsInUnsignedInt * 3) / 4
 		OneEighth         uint32 = BitsInUnsignedInt / 8
 		HighBits          uint32 = (0xFFFFFFFF) << (BitsInUnsignedInt - OneEighth)
-		hash              uint32 = 0
-		test              uint32 = 0
+		hash              uint32
+		test              uint32
 	)
 	for i := 0; i < len(str); i++ {
 		hash = (hash << OneEighth) + uint32(str[i])
@@ -32,8 +32,8 @@ func PJW64(str []byte) uint64 {
 		ThreeQuarters     uint64 = (BitsInUnsignedInt * 3) / 4
 		OneEighth         uint64 = BitsInUnsignedInt / 8
 		HighBits          uint64 = (0xFFFFFFFFFFFFFFFF) << (BitsInUnsignedInt - OneEighth)
-		hash              uint64 = 0
-		test              uint64 = 0
+		hash              uint64
+		test              uint64
 	)
 	for i := 0; i < len(str); i++ {
 		hash = (hash << OneEighth) + uint64(str[i])

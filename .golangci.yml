@@ -20,7 +20,7 @@ linters:
   disable-all: true
   # Specifically enable linters we want to use.
   enable:
-    - bodyclose
+#    - bodyclose
     - depguard
     - dogsled
 #    - errcheck
@@ -33,14 +33,14 @@ linters:
     - gosimple
     - govet
     - godot
-    - ineffassign
+#    - ineffassign # 有问题
     - misspell
     - nolintlint
     - revive
     - staticcheck
     - typecheck
-    - unused
-    - unparam
+#    - unused
+#    - unparam
     - whitespace
 
 
@@ -98,12 +98,14 @@ linters-settings:
       - name: atomic
       - name: line-length-limit
         severity: error
-        arguments: [ 180 ]
+        arguments: [ 380 ]
       - name: unhandled-error
+        severity: warning
+        disabled: true
         arguments: [ "fmt.Printf", "myFunction" ]
       - name: var-naming
         severity: warning
-        disabled: false
+        disabled: true
         arguments:
           - [ "ID","URL","IP","HTTP","JSON","API","UID","Id","Api","Uid","Http","Json","Ip","Url" ] # AllowList
           - [ "VM" ] # DenyList
@@ -128,12 +130,150 @@ linters-settings:
     # Checks the number of lines in a function.
     # If lower than 0, disable the check.
     # Default: 60
-    lines: 160
+    lines: 320
     # Checks the number of statements in a function.
     # If lower than 0, disable the check.
     # Default: 40
-    statements: 160
+    statements: -1
   goconst:
+    # Minimal length of string constant.
+    # Default: 3
+    min-len: 2
+    # Minimum occurrences of constant string count to trigger issue.
+    # Default: 3
+    # For subsequent optimization, the value is reduced.
+    min-occurrences: 30
     # Ignore test files.
     # Default: false
     ignore-tests: true
+    # Look for existing constants matching the values.
+    # Default: true
+    match-constant: false
+    # Search also for duplicated numbers.
+    # Default: false
+    numbers: true
+    # Minimum value, only works with goconst.numbers
+    # Default: 3
+    min: 5
+    # Maximum value, only works with goconst.numbers
+    # Default: 3
+    max: 20
+    # Ignore when constant is not used as function argument.
+    # Default: true
+    ignore-calls: false
+  gocritic:
+    disabled-checks:
+      - ifElseChain
+      - assignOp
+      - appendAssign
+      - singleCaseSwitch
+      - regexpMust
+      - typeSwitchVar
+      - elseif
+  gocyclo:
+    # Minimal code complexity to report.
+    # Default: 30 (but we recommend 10-20)
+    min-complexity: 60
+  gosimple:
+    # Select the Go version to target.
+    # Default: 1.13
+    # Deprecated: use the global `run.go` instead.
+    go: "1.17"
+    # Sxxxx checks in https://staticcheck.io/docs/configuration/options/#checks
+    # Default: ["*"]
+    checks: ["all","-S1001","-S1000","-S1025","-S1023","-S1009","-S1040","-S1029","-S1034"]
+  dogsled:
+    # Checks assignments with too many blank identifiers.
+    # Default: 2
+    max-blank-identifiers: 4
+  unparam:
+    # Inspect exported functions.
+    #
+    # Set to true if no external program/library imports your code.
+    # XXX: if you enable this setting, unparam will report a lot of false-positives in text editors:
+    # if it's called for subdir of a project it can't find external interfaces. All text editor integrations
+    # with golangci-lint call it on a directory with the changed file.
+    #
+    # Default: false
+    check-exported: true
+  govet:
+    # Report about shadowed variables.
+    # Default: false
+    check-shadowing: true
+    # Settings per analyzer.
+    settings:
+      # Analyzer name, run `go tool vet help` to see all analyzers.
+      printf:
+        # Comma-separated list of print function names to check (in addition to default, see `go tool vet help printf`).
+        # Default: []
+        funcs:
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
+      # shadow:
+        # Whether to be strict about shadowing; can be noisy.
+        # Default: false
+        # strict: false
+      unusedresult:
+        # Comma-separated list of functions whose results must be used
+        # (in addition to defaults context.WithCancel,context.WithDeadline,context.WithTimeout,context.WithValue,
+        # errors.New,fmt.Errorf,fmt.Sprint,fmt.Sprintf,sort.Reverse)
+        # Default []
+        funcs:
+          - pkg.MyFunc
+          - context.WithCancel
+        # Comma-separated list of names of methods of type func() string whose results must be used
+        # (in addition to default Error,String)
+        # Default []
+        stringmethods:
+          - MyMethod
+    # Enable all analyzers.
+    # Default: false
+    enable-all: true
+    # Disable analyzers by name.
+    # Run `go tool vet help` to see all analyzers.
+    # Default: []
+    disable:
+      - asmdecl
+      - assign
+      - atomic
+      - atomicalign
+      - bools
+      - buildtag
+      - cgocall
+      - composites
+      - copylocks
+      - deepequalerrors
+      - errorsas
+      - fieldalignment
+      - findcall
+      - framepointer
+      - httpresponse
+      - ifaceassert
+      - loopclosure
+      - lostcancel
+      - nilfunc
+      - nilness
+      - reflectvaluecompare
+      - shift
+      - shadow
+      - sigchanyzer
+      - sortslice
+      - stdmethods
+      - stringintconv
+      - structtag
+      - testinggoroutine
+      - tests
+      - unmarshal
+      - unreachable
+      - unsafeptr
+      - unusedwrite
+  staticcheck:
+    # Select the Go version to target.
+    # Default: "1.13"
+    # Deprecated: use the global `run.go` instead.
+    go: "1.15"
+    # SAxxxx checks in https://staticcheck.io/docs/configuration/options/#checks
+    # Default: ["*"]
+    checks: ["all","-SA1019","-SA4015","-SA1029","-SA1016","-SA9003","-SA4006","-SA6003"]

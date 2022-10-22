@@ -68,10 +68,10 @@ func (sp *SPath) addToCache(filePath, rootPath string) {
 	sp.cache.SetIfNotExist(
 		sp.nameFromPath(filePath, rootPath), sp.makeCacheValue(filePath, idDir),
 	)
-	// If it's a directory, it adds its all sub files/directories recursively.
+	// If it's a directory, it adds it's all sub files/directories recursively.
 	if idDir {
 		if files, err := gfile.ScanDir(filePath, "*", true); err == nil {
-			//fmt.Println("gspath add to cache:", filePath, files)
+			// fmt.Println("gspath add to cache:", filePath, files)
 			for _, path := range files {
 				sp.cache.SetIfNotExist(sp.nameFromPath(path, rootPath), sp.makeCacheValue(path, gfile.IsDir(path)))
 			}
@@ -89,7 +89,7 @@ func (sp *SPath) addMonitorByPath(path string) {
 		return
 	}
 	_, _ = gfsnotify.Add(path, func(event *gfsnotify.Event) {
-		//glog.Debug(event.String())
+		// glog.Debug(event.String())
 		switch {
 		case event.IsRemove():
 			sp.cache.Remove(sp.nameFromPath(event.Path, path))
