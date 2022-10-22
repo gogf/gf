@@ -1,8 +1,8 @@
 package gf
 
 const (
-	// VERSION  is the current goframe version.
+	// VERSION  is the current GoFrame version.
 	VERSION = "v2.2.1"
-	// AUTHORS is the authors of goframe.
+	// AUTHORS is the authors of GoFrame.
 	AUTHORS = "john<john@goframe.org>"
 )
