@@ -119,7 +119,6 @@ func doZipPathWriter(srcPath string, zipWriter *zip.Writer, option ...Option) er
 // The parameter `prefix` indicates the path prefix for zip file.
 func zipFile(path string, prefix string, zw *zip.Writer) error {
 	prefix = strings.ReplaceAll(prefix, `//`, `/`)
-
 	file, err := os.Open(path)
 	if err != nil {
 		err = gerror.Wrapf(err, `os.Open failed for path "%s"`, path)
