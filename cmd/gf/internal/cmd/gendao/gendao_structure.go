@@ -93,12 +93,21 @@ func generateStructFieldDefinition(
 
 	case gdb.LocalTypeUUID:
 		typeName = "uuid.UUID"
+		if field.Null {
+			typeName = "*" + typeName
+		}
 
 	case gdb.LocalTypeDecimal:
 		typeName = "decimal.Decimal"
+		if field.Null {
+			typeName = "*" + typeName
+		}
 
 	case gdb.LocalTypeBigInt:
-		typeName = "*big.Int"
+		typeName = "big.Int"
+		if field.Null {
+			typeName = "*" + typeName
+		}
 
 	case gdb.LocalTypeInterface:
 		typeName = "interface{}"
