@@ -20,9 +20,6 @@ var (
 		matchDecimalPattern:     gdb.LocalTypeDecimal,
 		matchFixedStringPattern: gdb.LocalTypeString,
 		matchArrayPattern:       gdb.LocalTypeArray,
-		matchNestedPattern:      gdb.LocalTypeInterface,
-		matchTuplePattern:       gdb.LocalTypeInterface,
-		matchMapPattern:         gdb.LocalTypeMap,
 	}
 	// match base type map
 	matchBaseTypeMap = map[string]string{
@@ -59,9 +56,6 @@ const (
 	matchDecimalPattern                 = "^decimal"
 	matchFixedStringPattern             = "^fixedstring"
 	matchArrayPattern                   = "^array"
-	matchNestedPattern                  = "^nested"
-	matchTuplePattern                   = "^tuple"
-	matchMapPattern                     = "^map"
 )
 
 const (

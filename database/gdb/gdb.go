@@ -351,7 +351,6 @@ const (
 	LocalTypeArray       = "array"
 	LocalTypeUUID        = "uuid"
 	LocalTypeInterface   = "interface"
-	LocalTypeMap         = "map"
 )
 
 var (

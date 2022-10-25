@@ -5,11 +5,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/olekukonko/tablewriter"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/olekukonko/tablewriter"
 )
 
 type generateStructDefinitionInput struct {
@@ -85,29 +86,17 @@ func generateStructFieldDefinition(
 			typeName = "string"
 		}
 
-	case gdb.LocalTypeMap:
-		typeName = "g.Map"
-
 	case gdb.LocalTypeArray:
-		typeName = "garray.Array"
+		typeName = "*garray.Array"
 
 	case gdb.LocalTypeUUID:
 		typeName = "uuid.UUID"
-		if field.Null {
-			typeName = "*" + typeName
-		}
 
 	case gdb.LocalTypeDecimal:
 		typeName = "decimal.Decimal"
-		if field.Null {
-			typeName = "*" + typeName
-		}
 
 	case gdb.LocalTypeBigInt:
-		typeName = "big.Int"
-		if field.Null {
-			typeName = "*" + typeName
-		}
+		typeName = "*big.Int"
 
 	case gdb.LocalTypeInterface:
 		typeName = "interface{}"

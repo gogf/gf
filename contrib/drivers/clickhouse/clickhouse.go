@@ -330,6 +330,9 @@ func (d *Driver) ConvertDataForRecord(ctx context.Context, value interface{}) (m
 				m[k] = nil
 			}
 
+		case iInterfaces:
+			m[k] = itemValue.Interfaces()
+
 		default:
 			m[k] = itemValue
 		}
@@ -372,6 +375,7 @@ func (d *Driver) Transaction(ctx context.Context, f func(ctx context.Context, tx
 
 // CheckLocalTypeForField checks and returns corresponding type for given db type.
 func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (string, error) {
+	// gen go type name by clickhouse type
 	fieldType = strings.ToLower(fieldType)
 	baseType, ok := matchBaseTypeMap[fieldType]
 	if ok {
@@ -384,7 +388,34 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 		return dataType, nil
 	}
 	// Some complex types have to be returned using interface.
-	return gdb.LocalTypeInterface, nil
+	var chTypeToGo func(a string) string
+	chTypeToGo = func(a string) string {
+		a = strings.TrimSpace(a)
+		// 从左边开始匹配第一个括号
+		left, right := strings.Index(a, "("), strings.LastIndex(a, ")")
+		if left < 0 || right < 0 {
+			return a
+		}
+		switch a[:left] {
+		case "array":
+			return "[]" + chTypeToGo(a[left+1:right])
+		case "map":
+			maps := strings.Split(a[left+1:right], ",")
+			if len(maps) < 2 {
+				return a
+			}
+			mapValue := strings.Join(maps[1:], ",")
+			return "map[" + chTypeToGo(maps[0]) + "]" + chTypeToGo(mapValue)
+		case "tuple":
+			return "[]interface{}"
+		case "lowCardinality":
+			// 直接返回括号中的内容
+			return a[left+1 : right]
+		default:
+			return a
+		}
+	}
+	return strings.ToLower(chTypeToGo(fieldType)), nil
 }
 
 // ConvertValueForLocal converts value to local Golang type of value according field type name from database.
@@ -458,4 +489,8 @@ func (d *Driver) getNeedParsedSqlFromCtx(ctx context.Context) bool {
 		return true
 	}
 	return false
+}
+
+type iInterfaces interface {
+	Interfaces() []interface{}
 }

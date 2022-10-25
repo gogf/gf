@@ -10,12 +10,14 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"reflect"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 
+	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -121,6 +123,11 @@ values  (607970943242866688, 607973669943119880, 607972403489804288, 2022, 3, 20
 		    , Col14 UInt256 COMMENT '列14'
 		    , Col15 Int128 COMMENT '列15'
 		    , Col16 Int256 COMMENT '列16'
+		    , Col17 Array(Int) COMMENT '列17'
+		    , Col18 Array(Map(String, String))
+			, Col19 Map(LowCardinality(String), LowCardinality(UInt64))
+			, Col20 Map(String, Map(String,UInt64))
+		    , Col21 Map(LowCardinality(String), LowCardinality(UInt64))
 		) ENGINE = MergeTree()
 		PRIMARY KEY Col4
 		ORDER BY Col4
@@ -454,6 +461,10 @@ func TestDriverClickhouse_NilTime(t *testing.T) {
 		Col14 big.Int
 		Col15 big.Int
 		Col16 big.Int
+		Col17 *garray.Array
+		Col18 *garray.Array
+		Col19 map[string]uint64
+		Col20 map[string]map[string]uint64
 	}
 	insertData := []*testNilTime{}
 	money := decimal.NewFromFloat(1.12)
@@ -468,6 +479,7 @@ func TestDriverClickhouse_NilTime(t *testing.T) {
 	bigInt256.SetString("57896044618658097711785492504343953926634992332820282019728792003956564819967", 10)
 	for i := 0; i < 10000; i++ {
 		insertData = append(insertData, &testNilTime{
+			Col1: 99,
 			Col4: "Inc.",
 			Col9: uuid.New(),
 			Col7: []interface{}{ // Tuple(String, UInt8, Array(Map(String, String)))
@@ -482,6 +494,29 @@ func TestDriverClickhouse_NilTime(t *testing.T) {
 			Col14: *bigUint256,
 			Col15: *bigInt128,
 			Col16: *bigInt256,
+			Col17: garray.New().
+				Append(int32(1111)).
+				Append(int32(1111)),
+			Col18: garray.New().
+				Append(map[string]string{
+					"aaa": "aaa",
+				}).Append(map[string]string{
+				"bbb": "bbb",
+			}),
+			Col19: map[string]uint64{
+				"key_col_5_1": 100,
+				"key_col_5_2": 200,
+			},
+			Col20: map[string]map[string]uint64{
+				"key_col_6_1": {
+					"key_col_6_1_1": 100,
+					"key_col_6_1_2": 200,
+				},
+				"key_col_6_2": {
+					"key_col_6_2_1": 100,
+					"key_col_6_2_2": 200,
+				},
+			},
 		})
 	}
 	_, err := connect.Model("data_type").Data(insertData).Insert()
@@ -511,6 +546,11 @@ func TestDriverClickhouse_NilTime(t *testing.T) {
 	col16, ok := data["Col16"].Interface().(big.Int)
 	gtest.AssertEQ(ok, true)
 	gtest.AssertEQ(col16, insertData[0].Col16)
+
+	gtest.AssertEQ(reflect.TypeOf(data["Col17"].Interface()).String(), "[]int32")
+	gtest.AssertEQ(reflect.TypeOf(data["Col18"].Interface()).String(), "[]map[string]string")
+	gtest.AssertEQ(reflect.TypeOf(data["Col19"].Interface()).String(), "map[string]uint64")
+	gtest.AssertEQ(reflect.TypeOf(data["Col20"].Interface()).String(), "map[string]map[string]uint64")
 }
 
 func TestDriverClickhouse_BatchInsert(t *testing.T) {

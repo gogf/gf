@@ -11,6 +11,7 @@ package gconv
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 	"reflect"
@@ -168,20 +169,23 @@ func String(any interface{}) string {
 			return ""
 		}
 		return value.String()
+	case driver.Valuer:
+		// If the variable implements the driver.Valuer() interface,
+		// then use that interface to perform the conversion
+		v, _ := value.Value()
+		return String(v)
+	case iString:
+		// If the variable implements the String() interface,
+		// then use that interface to perform the conversion
+		return value.String()
+	case iError:
+		// If the variable implements the Error() interface,
+		// then use that interface to perform the conversion
+		return value.Error()
 	default:
 		// Empty checks.
 		if value == nil {
 			return ""
-		}
-		if f, ok := value.(iString); ok {
-			// If the variable implements the String() interface,
-			// then use that interface to perform the conversion
-			return f.String()
-		}
-		if f, ok := value.(iError); ok {
-			// If the variable implements the Error() interface,
-			// then use that interface to perform the conversion
-			return f.Error()
 		}
 		// Reflect checks.
 		var (
