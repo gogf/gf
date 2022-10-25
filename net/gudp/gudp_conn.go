@@ -136,11 +136,10 @@ func (c *Conn) Recv(buffer int, retry ...Retry) ([]byte, error) {
 
 // SendRecv writes data to connection and blocks reading response.
 func (c *Conn) SendRecv(data []byte, receive int, retry ...Retry) ([]byte, error) {
-	if err := c.Send(data, retry...); err == nil {
-		return c.Recv(receive, retry...)
-	} else {
+	if err := c.Send(data, retry...); err != nil {
 		return nil, err
 	}
+	return c.Recv(receive, retry...)
 }
 
 // RecvWithTimeout reads data from remote address with timeout.
@@ -165,13 +164,13 @@ func (c *Conn) SendWithTimeout(data []byte, timeout time.Duration, retry ...Retr
 
 // SendRecvWithTimeout writes data to connection and reads response with timeout.
 func (c *Conn) SendRecvWithTimeout(data []byte, receive int, timeout time.Duration, retry ...Retry) ([]byte, error) {
-	if err := c.Send(data, retry...); err == nil {
-		return c.RecvWithTimeout(receive, timeout, retry...)
-	} else {
+	if err := c.Send(data, retry...); err != nil {
 		return nil, err
 	}
+	return c.RecvWithTimeout(receive, timeout, retry...)
 }
 
+// SetDeadline sets the read and write deadlines associated with the connection.
 func (c *Conn) SetDeadline(t time.Time) (err error) {
 	if err = c.UDPConn.SetDeadline(t); err == nil {
 		c.receiveDeadline = t
@@ -182,6 +181,7 @@ func (c *Conn) SetDeadline(t time.Time) (err error) {
 	return err
 }
 
+// SetRecvDeadline sets the read deadline associated with the connection.
 func (c *Conn) SetRecvDeadline(t time.Time) (err error) {
 	if err = c.SetReadDeadline(t); err == nil {
 		c.receiveDeadline = t
@@ -209,6 +209,5 @@ func (c *Conn) SetRecvBufferWait(d time.Duration) {
 // RemoteAddr returns the remote address of current UDP connection.
 // Note that it cannot use c.conn.RemoteAddr() as it is nil.
 func (c *Conn) RemoteAddr() net.Addr {
-	// return c.conn.RemoteAddr()
 	return c.remoteAddr
 }

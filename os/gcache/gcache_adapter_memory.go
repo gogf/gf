@@ -205,9 +205,8 @@ func (c *AdapterMemory) GetOrSet(ctx context.Context, key interface{}, value int
 	}
 	if v == nil {
 		return c.doSetWithLockCheck(ctx, key, value, duration)
-	} else {
-		return v, nil
 	}
+	return v, nil
 }
 
 // GetOrSetFunc retrieves and returns the value of `key`, or sets `key` with result of
@@ -231,9 +230,8 @@ func (c *AdapterMemory) GetOrSetFunc(ctx context.Context, key interface{}, f Fun
 			return nil, nil
 		}
 		return c.doSetWithLockCheck(ctx, key, value, duration)
-	} else {
-		return v, nil
 	}
+	return v, nil
 }
 
 // GetOrSetFuncLock retrieves and returns the value of `key`, or sets `key` with result of
@@ -253,9 +251,8 @@ func (c *AdapterMemory) GetOrSetFuncLock(ctx context.Context, key interface{}, f
 	}
 	if v == nil {
 		return c.doSetWithLockCheck(ctx, key, f, duration)
-	} else {
-		return v, nil
 	}
+	return v, nil
 }
 
 // Contains checks and returns true if `key` exists in the cache, or else returns false.
@@ -380,9 +377,8 @@ func (c *AdapterMemory) doSetWithLockCheck(ctx context.Context, key interface{},
 func (c *AdapterMemory) getInternalExpire(duration time.Duration) int64 {
 	if duration == 0 {
 		return defaultMaxExpire
-	} else {
-		return gtime.TimestampMilli() + duration.Nanoseconds()/1000000
 	}
+	return gtime.TimestampMilli() + duration.Nanoseconds()/1000000
 }
 
 // makeExpireKey groups the `expire` in milliseconds to its according seconds.

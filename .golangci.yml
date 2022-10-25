@@ -2,14 +2,15 @@
 ## with their default values.
 
 # See https://github.com/golangci/golangci-lint#config-file
+# See https://golangci-lint.run/usage/configuration/
 run:
   issues-exit-code: 1 #Default
   tests: true #Default
-  skip-dirs: # 设置要忽略的目录
+  skip-dirs: # sets the directories to ignore
     - util
     - .*~
     - api/swagger/docs
-  skip-files: # 设置不需要检查的go源码文件，支持正则匹配
+  skip-files: # Set the go source files that do not need to be checked to support regular matching
     - ".*.my.go$"
     - ".*.pb.go$"
     - _test.go
@@ -20,28 +21,29 @@ linters:
   disable-all: true
   # Specifically enable linters we want to use.
   enable:
-#    - bodyclose
-    - depguard
-    - dogsled
-#    - errcheck
-    - funlen
-    - goconst
-    - gocritic
-    - gocyclo
-    - gofmt
-    - goimports
-    - gosimple
-    - govet
-    - godot
-#    - ineffassign # 有问题
-    - misspell
-    - nolintlint
-    - revive
-    - staticcheck
-    - typecheck
-#    - unused
-#    - unparam
-    - whitespace
+    # - deadcode # The owner seems to have abandoned the linter. Replaced by unused.
+    # - bodyclose # checks whether HTTP response body is closed successfully
+    - depguard # Go linter that checks if package imports are in a list of acceptable packages
+    - dogsled # Checks assignments with too many blank identifiers (e.g. x, , , _, := f())
+    # - errcheck # See https://golangci-lint.run/usage/linters/#errcheck
+    - funlen # Tool for detection of long functions
+    - goconst # Finds repeated strings that could be replaced by a constant
+    - gocritic # See https://golangci-lint.run/usage/linters/#gocritic
+    - gocyclo # Computes and checks the cyclomatic complexity of functions
+    - gofmt # Gofmt checks whether code was gofmt-ed. By default this tool runs with -s option to check for code simplification
+    - goimports # In addition to fixing imports, goimports also formats your code in the same style as gofmt.
+    - gosimple # Linter for Go source code that specializes in simplifying code
+    - govet # See https://golangci-lint.run/usage/linters/#govet
+    - godot # Check if comments end in a period
+    # - ineffassign # Detects when assignments to existing variables are not used
+    - misspell # Finds commonly misspelled English words in comments
+    - nolintlint # Reports ill-formed or insufficient nolint directives
+    - revive # Fast, configurable, extensible, flexible, and beautiful linter for Go. Drop-in replacement of golint.
+    - staticcheck # See https://golangci-lint.run/usage/linters/#staticcheck
+    - typecheck # Like the front-end of a Go compiler, parses and type-checks Go code
+    #- unused # Checks Go code for unused constants, variables, functions and types
+    #- unparam # Reports unused function parameters
+    - whitespace # Tool for detection of leading and trailing whitespace
 
 
 issues:
@@ -181,7 +183,7 @@ linters-settings:
     go: "1.17"
     # Sxxxx checks in https://staticcheck.io/docs/configuration/options/#checks
     # Default: ["*"]
-    checks: ["all","-S1001","-S1000","-S1025","-S1023","-S1009","-S1040","-S1029","-S1034"]
+    checks: [ "all","-S1001","-S1000","-S1025","-S1023","-S1009","-S1040","-S1029","-S1034" ]
   dogsled:
     # Checks assignments with too many blank identifiers.
     # Default: 2
@@ -211,7 +213,7 @@ linters-settings:
           - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
           - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
           - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
-      # shadow:
+        # shadow:
         # Whether to be strict about shadowing; can be noisy.
         # Default: false
         # strict: false
@@ -276,4 +278,4 @@ linters-settings:
     go: "1.15"
     # SAxxxx checks in https://staticcheck.io/docs/configuration/options/#checks
     # Default: ["*"]
-    checks: ["all","-SA1019","-SA4015","-SA1029","-SA1016","-SA9003","-SA4006","-SA6003"]
+    checks: [ "all","-SA1019","-SA4015","-SA1029","-SA1016","-SA9003","-SA4006","-SA6003" ]
