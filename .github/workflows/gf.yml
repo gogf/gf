@@ -145,7 +145,7 @@ jobs:
       run:  docker-compose -f ".github/workflows/apollo/docker-compose.yml" up -d --build
 
     - name: Start Redis Cluster Containers
-      run:  docker-compose -f ".github/workflows/redis/docker-comwpose.yml" up -d --build
+      run:  docker-compose -f ".github/workflows/redis/docker-compose.yml" up -d --build
 
     - name: Start Minikube
       uses: medyagh/setup-minikube@master
