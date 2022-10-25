@@ -26,7 +26,15 @@ for file in `find . -name go.mod`; do
       if go version | grep -E "1\.1[0-7]"; then
         echo "ignore clickhouse testing as go version: $(go version)"
         continue 1
-        fi
+      fi
+    fi
+
+    # gf cli needs golang >= 1.18
+    if [ "gf" = $(basename $dirpath) ]; then
+      if go version | grep -E "1\.1[0-7]"; then
+        echo "ignore gf cli testing as go version: $(go version)"
+        continue 1
+      fi
     fi
 
     # package example needs golang >= v1.18
