@@ -141,6 +141,12 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v2
 
+    - name: Start Apollo Containers
+      run:  docker-compose -f ".github/workflows/apollo/docker-compose.yml" up -d --build
+
+    - name: Start Redis Cluster Containers
+      run:  docker-compose -f ".github/workflows/redis/docker-comwpose.yml" up -d --build
+
     - name: Start Minikube
       uses: medyagh/setup-minikube@master
 
@@ -161,22 +167,16 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-${{ matrix.go-version }}-
 
-    - name: Start redis cluster containers
-      run:  docker-compose -f ".github/workflows/redis/docker-compose.yml" up -d --build
-
-    - name: Start apollo containers
-      run:  docker-compose -f ".github/workflows/apollo/docker-compose.yml" up -d --build
-
     - name: Before Script
       run:  bash .github/workflows/before_script.sh
 
     - name: Build & Test
       run:  bash .github/workflows/build_and_test.sh
 
-    - name: Stop redis cluster containers
+    - name: Stop Redis Cluster Containers
       run:  docker-compose -f ".github/workflows/redis/docker-compose.yml" down
 
-    - name: Stop apollo containers
+    - name: Stop Apollo Containers
       run:  docker-compose -f ".github/workflows/apollo/docker-compose.yml" down
 
     - name: Report Coverage
