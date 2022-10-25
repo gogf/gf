@@ -153,7 +153,7 @@ func Test_Model_One(t *testing.T) {
 		one, err := db.Model(table).WherePri(1).One() //model one
 		t.AssertNil(err)
 		t.Assert(one["passport"], data.Passport)
-		t.Assert(one["create_time"], data.CreateTime)
+		t.Assert(one["create_time"].Time().Format("2006-01-02 15:04:05"), data.CreateTime.String())
 		t.Assert(one["nickname"], data.Nickname)
 	})
 }

@@ -200,7 +200,7 @@ func Test_DB_GetOne(t *testing.T) {
 		one, err := db.GetOne(ctx, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 1)
 		t.AssertNil(err)
 		t.Assert(one["passport"], data.Passport)
-		t.Assert(one["create_time"], data.CreateTime)
+		t.Assert(one["create_time"].Time().Format("2006-01-02 15:04:05"), data.CreateTime)
 		t.Assert(one["nickname"], data.Nickname)
 	})
 }
