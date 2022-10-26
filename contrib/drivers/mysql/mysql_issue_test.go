@@ -456,3 +456,23 @@ func Test_Issue2105(t *testing.T) {
 		t.Assert(len(list[1].Json), 3)
 	})
 }
+
+// https://github.com/gogf/gf/issues/2231
+func Test_Issue2231(t *testing.T) {
+	linkPattern := `(\w+):([\w\-]*):(.*?)@(\w+?)\((.+?)\)/{0,1}([一-龥\w\+]*)\?{0,1}(.*)`
+	link := `mysql:root:12345678@tcp(127.0.0.1:3306)/a正bc式?loc=Local&parseTime=true`
+
+	gtest.C(t, func(t *gtest.T) {
+
+		match, _ = gregex.MatchString(linkPattern, link)
+		t.Assert(match[1], "mysql")
+		t.Assert(match[2], "root")
+		t.Assert(match[3], "12345678")
+		t.Assert(match[4], "tcp")
+		t.Assert(match[5], "127.0.0.1:3306")
+		t.Assert(match[6], "a正bc式")
+		t.Assert(match[7], "loc=Local&parseTime=true")
+		array := gstr.Split(match[5], ":")
+		array := gstr.Split(match[5], ":")
+	})
+}
