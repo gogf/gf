@@ -143,6 +143,9 @@ jobs:
 
     - name: Start Apollo Containers
       run:  docker-compose -f ".github/workflows/apollo/docker-compose.yml" up -d --build
+      
+    - name: Start Nacos Containers
+      run:  docker-compose -f ".github/workflows/nacos/docker-compose.yml" up -d --build
 
     - name: Start Redis Cluster Containers
       run:  docker-compose -f ".github/workflows/redis/docker-compose.yml" up -d --build
@@ -178,6 +181,9 @@ jobs:
 
     - name: Stop Apollo Containers
       run:  docker-compose -f ".github/workflows/apollo/docker-compose.yml" down
+
+    - name: Stop Nacos Containers
+      run:  docker-compose -f ".github/workflows/nacos/docker-compose.yml" down
 
     - name: Report Coverage
       uses: codecov/codecov-action@v2

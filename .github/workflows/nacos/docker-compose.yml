@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  nacos:
+    image: loads/nacos-server:v2.1.2
+    container_name: nacos
+    env_file:
+      - ./env/nacos.env
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+      - "9555:9555"
+    healthcheck:
+      test: [ "CMD", "curl" ,"http://localhost:8848/nacos" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  mysql:
+    build:
+      context: .
+      dockerfile: ./image/mysql/Dockerfile
+    container_name: mysql
+    env_file:
+      - ./env/mysql.env
+    healthcheck:
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  initializer:
+    image: loads/curl:latest
+    depends_on:
+      nacos:
+        condition: service_healthy
+    command: [ "sh", "-c", "curl -X POST 'http://nacos:8848/nacos/v1/cs/configs?dataId=config.toml&group=test&content=%5Bserver%5D%0A%09address%3D%22%3A8000%22'" ]
