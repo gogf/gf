@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -1478,5 +1479,78 @@ func Test_Struct_Time_All(t *testing.T) {
 			"create_time": now,
 		}, user)
 		t.Assert(user.CreateTime.Time.UTC().String(), now.UTC().String())
+	})
+}
+
+func Test_Issue1946(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type B struct {
+			init *gtype.Bool
+			Name string
+		}
+		type A struct {
+			B *B
+		}
+		a := &A{
+			B: &B{
+				init: gtype.NewBool(true),
+			},
+		}
+		err := gconv.Struct(g.Map{
+			"B": g.Map{
+				"Name": "init",
+			},
+		}, a)
+		t.AssertNil(err)
+		t.Assert(a.B.Name, "init")
+		t.Assert(a.B.init.Val(), true)
+	})
+	// It cannot change private attribute.
+	gtest.C(t, func(t *gtest.T) {
+		type B struct {
+			init *gtype.Bool
+			Name string
+		}
+		type A struct {
+			B *B
+		}
+		a := &A{
+			B: &B{
+				init: gtype.NewBool(true),
+			},
+		}
+		err := gconv.Struct(g.Map{
+			"B": g.Map{
+				"init": 0,
+				"Name": "init",
+			},
+		}, a)
+		t.AssertNil(err)
+		t.Assert(a.B.Name, "init")
+		t.Assert(a.B.init.Val(), true)
+	})
+	// It can change public attribute.
+	gtest.C(t, func(t *gtest.T) {
+		type B struct {
+			Init *gtype.Bool
+			Name string
+		}
+		type A struct {
+			B *B
+		}
+		a := &A{
+			B: &B{
+				Init: gtype.NewBool(),
+			},
+		}
+		err := gconv.Struct(g.Map{
+			"B": g.Map{
+				"Init": 1,
+				"Name": "init",
+			},
+		}, a)
+		t.AssertNil(err)
+		t.Assert(a.B.Name, "init")
+		t.Assert(a.B.Init.Val(), true)
 	})
 }

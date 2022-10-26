@@ -73,10 +73,10 @@ func serverProcessInit() {
 	// Process message handler.
 	// It enabled only a graceful feature is enabled.
 	if gracefulEnabled {
-		intlog.Printf(ctx, "%d: graceful reload feature is enabled", gproc.Pid())
+		intlog.Printf(ctx, "pid[%d]: graceful reload feature is enabled", gproc.Pid())
 		go handleProcessMessage()
 	} else {
-		intlog.Printf(ctx, "%d: graceful reload feature is disabled", gproc.Pid())
+		intlog.Printf(ctx, "pid[%d]: graceful reload feature is disabled", gproc.Pid())
 	}
 
 	// It's an ugly calling for better initializing the main package path
@@ -129,36 +129,13 @@ func (s *Server) Start() error {
 		swaggerui.Init()
 		s.AddStaticPath(s.config.SwaggerPath, swaggerUIPackedPath)
 		s.BindHookHandler(s.config.SwaggerPath+"/*", HookBeforeServe, s.swaggerUI)
-		s.Logger().Infof(
-			ctx,
-			`swagger ui is serving at address: %s%s/`,
-			s.getLocalListenedAddress(),
-			s.config.SwaggerPath,
-		)
 	}
 
 	// OpenApi specification json producing handler.
 	if s.config.OpenApiPath != "" {
 		s.BindHandler(s.config.OpenApiPath, s.openapiSpec)
-		s.Logger().Infof(
-			ctx,
-			`openapi specification is serving at address: %s%s`,
-			s.getLocalListenedAddress(),
-			s.config.OpenApiPath,
-		)
-	} else {
-		if s.config.SwaggerPath != "" {
-			s.Logger().Warning(
-				ctx,
-				`openapi specification is disabled but swagger ui is serving, which might make no sense`,
-			)
-		} else {
-			s.Logger().Info(
-				ctx,
-				`openapi specification is disabled`,
-			)
-		}
 	}
+
 	// Register group routes.
 	s.handlePreBindItems(ctx)
 
@@ -236,6 +213,37 @@ func (s *Server) Start() error {
 	}
 	if !reloaded {
 		s.startServer(nil)
+	}
+
+	// Swagger UI info.
+	if s.config.SwaggerPath != "" {
+		s.Logger().Infof(
+			ctx,
+			`swagger ui is serving at address: %s%s/`,
+			s.getLocalListenedAddress(),
+			s.config.SwaggerPath,
+		)
+	}
+	// OpenApi specification info.
+	if s.config.OpenApiPath != "" {
+		s.Logger().Infof(
+			ctx,
+			`openapi specification is serving at address: %s%s`,
+			s.getLocalListenedAddress(),
+			s.config.OpenApiPath,
+		)
+	} else {
+		if s.config.SwaggerPath != "" {
+			s.Logger().Warning(
+				ctx,
+				`openapi specification is disabled but swagger ui is serving, which might make no sense`,
+			)
+		} else {
+			s.Logger().Info(
+				ctx,
+				`openapi specification is disabled`,
+			)
+		}
 	}
 
 	// If this is a child process, it then notifies its parent exit.
