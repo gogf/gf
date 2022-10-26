@@ -171,6 +171,7 @@ func Test_Model_Insert(t *testing.T) {
 			"PASSPORT":    "t1",
 			"PASSWORD":    "25d55ad283aa400af464c76d713c07ad",
 			"NICKNAME":    "name_1",
+			"SALARY":      2675.11,
 			"CREATE_TIME": gtime.Now().String(),
 		}).Insert()
 		t.AssertNil(err)
@@ -181,6 +182,7 @@ func Test_Model_Insert(t *testing.T) {
 			"PASSPORT":    "t2",
 			"PASSWORD":    "25d55ad283aa400af464c76d713c07ad",
 			"NICKNAME":    "name_2",
+			"SALARY":      2675.12,
 			"CREATE_TIME": gtime.Now().String(),
 		}).Insert()
 		t.AssertNil(err)
@@ -191,6 +193,7 @@ func Test_Model_Insert(t *testing.T) {
 			Passport   string      `json:"PASSPORT"`
 			Password   string      `gconv:"PASSWORD"`
 			Nickname   string      `gconv:"NICKNAME"`
+			Salary     float64     `gconv:"SALARY"`
 			CreateTime *gtime.Time `json:"CREATE_TIME"`
 		}
 		// Model inserting.
@@ -200,6 +203,7 @@ func Test_Model_Insert(t *testing.T) {
 			Passport:   "t3",
 			Password:   "25d55ad283aa400af464c76d713c07ad",
 			Nickname:   "name_3",
+			Salary:     2675.13,
 			CreateTime: gtime.Now(),
 		}).Insert()
 		t.AssertNil(err)
@@ -214,6 +218,7 @@ func Test_Model_Insert(t *testing.T) {
 			Passport:   "t4",
 			Password:   "25d55ad283aa400af464c76d713c07ad",
 			Nickname:   "T4",
+			Salary:     2675.14,
 			CreateTime: gtime.Now(),
 		}).Insert()
 		t.AssertNil(err)
@@ -238,6 +243,7 @@ func Test_Model_Insert_Time(t *testing.T) {
 			"PASSPORT":    "t1",
 			"PASSWORD":    "p1",
 			"NICKNAME":    "n1",
+			"SALARY":      2675.11,
 			"CREATE_TIME": "2020-10-10 20:09:18",
 		}
 		_, err := db.Model(table).Data(data).Insert()
@@ -248,6 +254,7 @@ func Test_Model_Insert_Time(t *testing.T) {
 		t.Assert(one["PASSPORT"].String(), data["PASSPORT"])
 		t.Assert(one["CREATE_TIME"].String(), "2020-10-10 20:09:18")
 		t.Assert(one["NICKNAME"].String(), data["NICKNAME"])
+		t.Assert(one["SALARY"].Float64(), data["SALARY"])
 	})
 }
 
@@ -263,6 +270,7 @@ func Test_Model_Batch(t *testing.T) {
 				"PASSPORT":    "t2",
 				"PASSWORD":    "25d55ad283aa400af464c76d713c07ad",
 				"NICKNAME":    "name_2",
+				"SALARY":      2675.12,
 				"CREATE_TIME": gtime.Now().String(),
 			},
 			{
@@ -271,6 +279,7 @@ func Test_Model_Batch(t *testing.T) {
 				"PASSPORT":    "t3",
 				"PASSWORD":    "25d55ad283aa400af464c76d713c07ad",
 				"NICKNAME":    "name_3",
+				"SALARY":      2675.13,
 				"CREATE_TIME": gtime.Now().String(),
 			},
 		}).Batch(1).Insert()
@@ -439,6 +448,7 @@ func Test_Model_Select(t *testing.T) {
 		Passport   string
 		Password   string
 		NickName   string
+		Salary     float64
 		CreateTime gtime.Time
 	}
 	gtest.C(t, func(t *gtest.T) {
@@ -458,6 +468,7 @@ func Test_Model_Struct(t *testing.T) {
 			Passport   string
 			Password   string
 			NickName   string
+			Salary     float64
 			CreateTime gtime.Time
 		}
 		user := new(User)
@@ -471,6 +482,7 @@ func Test_Model_Struct(t *testing.T) {
 			Passport   string
 			Password   string
 			NickName   string
+			Salary     float64
 			CreateTime *gtime.Time
 		}
 		user := new(User)
@@ -485,6 +497,7 @@ func Test_Model_Struct(t *testing.T) {
 			Passport   string
 			Password   string
 			NickName   string
+			Salary     float64
 			CreateTime *gtime.Time
 		}
 		user := (*User)(nil)
@@ -499,6 +512,7 @@ func Test_Model_Struct(t *testing.T) {
 			Passport   string
 			Password   string
 			NickName   string
+			Salary     float64
 			CreateTime *gtime.Time
 		}
 		user := (*User)(nil)
@@ -515,6 +529,7 @@ func Test_Model_Struct(t *testing.T) {
 			Passport   string
 			Password   string
 			NickName   string
+			Salary     float64
 			CreateTime *gtime.Time
 		}
 		user := new(User)
@@ -527,6 +542,7 @@ func Test_Model_Struct(t *testing.T) {
 			Passport   string
 			Password   string
 			NickName   string
+			Salary     float64
 			CreateTime *gtime.Time
 		}
 		var user *User
@@ -545,6 +561,7 @@ func Test_Model_Scan(t *testing.T) {
 			Passport   string
 			Password   string
 			NickName   string
+			Salary     float64
 			CreateTime gtime.Time
 		}
 		user := new(User)
@@ -558,6 +575,7 @@ func Test_Model_Scan(t *testing.T) {
 			Passport   string
 			Password   string
 			NickName   string
+			Salary     float64
 			CreateTime *gtime.Time
 		}
 		user := new(User)
@@ -571,6 +589,7 @@ func Test_Model_Scan(t *testing.T) {
 			Passport   string
 			Password   string
 			NickName   string
+			Salary     float64
 			CreateTime gtime.Time
 		}
 		var users []User
@@ -590,6 +609,7 @@ func Test_Model_Scan(t *testing.T) {
 			Passport   string
 			Password   string
 			NickName   string
+			Salary     float64
 			CreateTime *gtime.Time
 		}
 		var users []*User
@@ -610,6 +630,7 @@ func Test_Model_Scan(t *testing.T) {
 			Passport   string
 			Password   string
 			NickName   string
+			Salary     float64
 			CreateTime *gtime.Time
 		}
 		var (

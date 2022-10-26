@@ -119,6 +119,7 @@ func createTable(table ...string) (name string) {
 		PASSWORD CHAR(32) NOT NULL,
 		NICKNAME VARCHAR(45) NOT NULL,
 		CREATE_TIME varchar(45),
+	    SALARY NUMBER(18,2),
 		PRIMARY KEY (ID))
 	`, name)); err != nil {
 		gtest.Fatal(err)
@@ -158,7 +159,7 @@ func dropTable(table string) {
 	if count == 0 {
 		return
 	}
-	if _, err := db.Exec(ctx, fmt.Sprintf("DROP TABLE %s", table)); err != nil {
+	if _, err = db.Exec(ctx, fmt.Sprintf("DROP TABLE %s", table)); err != nil {
 		gtest.Fatal(err)
 	}
 }
