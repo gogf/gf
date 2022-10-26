@@ -141,14 +141,13 @@ func (m *Model) Data(data ...interface{}) *Model {
 // Example:
 // OnDuplicate("nickname, age")
 // OnDuplicate("nickname", "age")
+// OnDuplicate(g.Map{
+//	  "nickname": gdb.Raw("CONCAT('name_', VALUES(`nickname`))"),
+// })
 //
-//	OnDuplicate(g.Map{
-//	    "nickname": gdb.Raw("CONCAT('name_', VALUES(`nickname`))"),
-//	})
-//
-//	OnDuplicate(g.Map{
-//	    "nickname": "passport",
-//	}).
+// OnDuplicate(g.Map{
+//	  "nickname": "passport",
+// }).
 func (m *Model) OnDuplicate(onDuplicate ...interface{}) *Model {
 	model := m.getModel()
 	if len(onDuplicate) > 1 {
@@ -166,10 +165,10 @@ func (m *Model) OnDuplicate(onDuplicate ...interface{}) *Model {
 // OnDuplicateEx("passport, password")
 // OnDuplicateEx("passport", "password")
 //
-//	OnDuplicateEx(g.Map{
-//	    "passport": "",
-//	    "password": "",
-//	}).
+// OnDuplicateEx(g.Map{
+//	  "passport": "",
+//	  "password": "",
+// }).
 func (m *Model) OnDuplicateEx(onDuplicateEx ...interface{}) *Model {
 	model := m.getModel()
 	if len(onDuplicateEx) > 1 {
