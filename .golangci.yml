@@ -87,7 +87,7 @@ linters-settings:
     # Default: false
     capital: false
   godox:
-    keywords: # 建议设置为BUG、FIXME、OPTIMIZE、HACK
+    keywords: # you are advised to set it to BUG、FIXME、OPTIMIZE、HACK
       - BUG
       - FIXME
       - OPTIMIZE
