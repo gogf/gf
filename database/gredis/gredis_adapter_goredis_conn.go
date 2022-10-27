@@ -10,7 +10,6 @@ import (
 	"context"
 
 	"github.com/go-redis/redis/v8"
-
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"

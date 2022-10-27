@@ -147,7 +147,9 @@ func (c *Conn) RecvWithTimeout(length int, timeout time.Duration, retry ...Retry
 	if err = c.SetRecvDeadline(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer c.SetRecvDeadline(time.Time{})
+	defer func() {
+		_ = c.SetRecvDeadline(time.Time{})
+	}()
 	data, err = c.Recv(length, retry...)
 	return
 }
@@ -157,7 +159,9 @@ func (c *Conn) SendWithTimeout(data []byte, timeout time.Duration, retry ...Retr
 	if err = c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
 		return err
 	}
-	defer c.SetSendDeadline(time.Time{})
+	defer func() {
+		_ = c.SetSendDeadline(time.Time{})
+	}()
 	err = c.Send(data, retry...)
 	return
 }

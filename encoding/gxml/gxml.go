@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/clbanning/mxj/v2"
-
 	"github.com/gogf/gf/v2/encoding/gcharset"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gregex"

@@ -58,7 +58,7 @@ func (w *Watcher) eventLoop() {
 				// If there's no any callback of this path, it removes it from monitor.
 				callbacks := w.getCallbacks(event.Path)
 				if len(callbacks) == 0 {
-					w.watcher.Remove(event.Path)
+					_ = w.watcher.Remove(event.Path)
 					continue
 				}
 				switch {

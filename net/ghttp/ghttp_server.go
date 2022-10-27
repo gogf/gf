@@ -17,8 +17,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/olekukonko/tablewriter"
-
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/debug/gdebug"
@@ -37,6 +35,7 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/olekukonko/tablewriter"
 )
 
 func init() {

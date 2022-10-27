@@ -10,11 +10,10 @@ import (
 	"reflect"
 
 	"github.com/gogf/gf/v2/container/garray"
-	"github.com/gogf/gf/v2/os/gstructs"
-
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gmeta"

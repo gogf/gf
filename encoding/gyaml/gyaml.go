@@ -11,11 +11,10 @@ import (
 	"bytes"
 	"strings"
 
-	"gopkg.in/yaml.v3"
-
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/util/gconv"
+	"gopkg.in/yaml.v3"
 )
 
 func Encode(value interface{}) (out []byte, err error) {

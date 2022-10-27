@@ -13,11 +13,10 @@ import (
 	"io"
 	"runtime"
 
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/propagation"
-
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gstr"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 )
 
 // Shell executes command `cmd` synchronously with given input pipe `in` and output pipe `out`.

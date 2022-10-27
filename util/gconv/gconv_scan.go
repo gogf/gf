@@ -198,7 +198,9 @@ func ScanList(structSlice interface{}, structSlicePointer interface{}, bindToAtt
 
 // doScanList converts `structSlice` to struct slice which contains other complex struct attributes recursively.
 // Note that the parameter `structSlicePointer` should be type of *[]struct/*[]*struct.
-func doScanList(structSlice interface{}, structSlicePointer interface{}, bindToAttrName, relationAttrName, relationFields string) (err error) {
+func doScanList(
+	structSlice interface{}, structSlicePointer interface{}, bindToAttrName, relationAttrName, relationFields string,
+) (err error) {
 	var (
 		maps = Maps(structSlice)
 	)
