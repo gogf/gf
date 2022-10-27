@@ -91,8 +91,8 @@ type (
 		Source     string          // Registering source file `path:line`.
 	}
 
-	// HandlerParsedItem is the item parsed from URL.Path.
-	HandlerParsedItem struct {
+	// HandlerItemParsed is the item parsed from URL.Path.
+	HandlerItemParsed struct {
 		Handler *HandlerItem      // Handler information.
 		Values  map[string]string // Router values parsed from URL.Path.
 	}

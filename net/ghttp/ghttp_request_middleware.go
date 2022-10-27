@@ -27,7 +27,7 @@ type middleware struct {
 // Next calls the next workflow handler.
 // It's an important function controlling the workflow of the server request execution.
 func (m *middleware) Next() {
-	var item *HandlerParsedItem
+	var item *HandlerItemParsed
 	var loop = true
 	for loop {
 		// Check whether the request is excited.

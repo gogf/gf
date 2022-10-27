@@ -96,8 +96,8 @@ func (s *Server) callHookHandler(hook string, r *Request) {
 }
 
 // getHookHandlers retrieves and returns the hook handlers of specified hook.
-func (r *Request) getHookHandlers(hook string) []*HandlerParsedItem {
-	parsedItems := make([]*HandlerParsedItem, 0, 4)
+func (r *Request) getHookHandlers(hook string) []*HandlerItemParsed {
+	parsedItems := make([]*HandlerItemParsed, 0, 4)
 	for _, v := range r.handlers {
 		if v.Handler.HookName != hook {
 			continue

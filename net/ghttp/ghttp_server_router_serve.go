@@ -21,8 +21,8 @@ import (
 
 // handlerCacheItem is an item just for internal router searching cache.
 type handlerCacheItem struct {
-	parsedItems []*HandlerParsedItem
-	serveItem   *HandlerParsedItem
+	parsedItems []*HandlerItemParsed
+	serveItem   *HandlerItemParsed
 	hasHook     bool
 	hasServe    bool
 }
@@ -39,7 +39,7 @@ func (s *Server) serveHandlerKey(method, path, domain string) string {
 }
 
 // getHandlersWithCache searches the router item with cache feature for a given request.
-func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*HandlerParsedItem, serveItem *HandlerParsedItem, hasHook, hasServe bool) {
+func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*HandlerItemParsed, serveItem *HandlerItemParsed, hasHook, hasServe bool) {
 	var (
 		ctx    = r.Context()
 		method = r.Method
@@ -77,7 +77,7 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*HandlerParsedI
 
 // searchHandlers retrieve and returns the routers with given parameters.
 // Note that the returned routers contain serving handler, middleware handlers and hook handlers.
-func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*HandlerParsedItem, serveItem *HandlerParsedItem, hasHook, hasServe bool) {
+func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*HandlerItemParsed, serveItem *HandlerItemParsed, hasHook, hasServe bool) {
 	if len(path) == 0 {
 		return nil, nil, false, false
 	}
@@ -171,7 +171,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*Han
 				if item.Router.Method == defaultMethod || item.Router.Method == method {
 					// Note the rule having no fuzzy rules: len(match) == 1
 					if match, err := gregex.MatchString(item.Router.RegRule, path); err == nil && len(match) > 0 {
-						parsedItem := &HandlerParsedItem{item, nil}
+						parsedItem := &HandlerItemParsed{item, nil}
 						// If the rule contains fuzzy names,
 						// it needs paring the URL to retrieve the values for the names.
 						if len(item.Router.RegNames) > 0 {
@@ -215,9 +215,9 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*Han
 	}
 	if parsedItemList.Len() > 0 {
 		var index = 0
-		parsedItems = make([]*HandlerParsedItem, parsedItemList.Len())
+		parsedItems = make([]*HandlerItemParsed, parsedItemList.Len())
 		for e := parsedItemList.Front(); e != nil; e = e.Next() {
-			parsedItems[index] = e.Value.(*HandlerParsedItem)
+			parsedItems[index] = e.Value.(*HandlerItemParsed)
 			index++
 		}
 	}
@@ -259,6 +259,6 @@ func (item HandlerItem) MarshalJSON() ([]byte, error) {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (item HandlerParsedItem) MarshalJSON() ([]byte, error) {
+func (item HandlerItemParsed) MarshalJSON() ([]byte, error) {
 	return json.Marshal(item.Handler)
 }

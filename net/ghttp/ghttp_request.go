@@ -41,8 +41,8 @@ type Request struct {
 	// =================================================================================================================
 
 	context         context.Context        // Custom context for internal usage purpose.
-	handlers        []*HandlerParsedItem   // All matched handlers containing handler, hook and middleware for this request.
-	serveHandler    *HandlerParsedItem     // Real handler serving for this request, not hook or middleware.
+	handlers        []*HandlerItemParsed   // All matched handlers containing handler, hook and middleware for this request.
+	serveHandler    *HandlerItemParsed     // Real handler serving for this request, not hook or middleware.
 	handlerResponse interface{}            // Handler response object for Request/Response handler.
 	hasHookHandler  bool                   // A bool marking whether there's hook handler in the handlers for performance purpose.
 	hasServeHandler bool                   // A bool marking whether there's serving handler in the handlers for performance purpose.
@@ -278,6 +278,6 @@ func (r *Request) GetHandlerResponse() interface{} {
 }
 
 // GetServeHandler retrieves and returns the user defined handler used to serve this request.
-func (r *Request) GetServeHandler() *HandlerParsedItem {
+func (r *Request) GetServeHandler() *HandlerItemParsed {
 	return r.serveHandler
 }
