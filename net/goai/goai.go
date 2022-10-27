@@ -245,5 +245,5 @@ func formatRefToBytes(ref string) []byte {
 }
 
 func isValidParameterName(key string) bool {
-	return key == "-"
+	return key != "-"
 }

@@ -117,7 +117,6 @@ func (r *Response) CORSAllowedOrigin(options CORSOptions) bool {
 	}
 	parsed, err := url.Parse(origin)
 	if err != nil {
-		// err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `url.Parse failed for URL "%s"`, origin)
 		return false
 	}
 	for _, v := range options.AllowDomain {
