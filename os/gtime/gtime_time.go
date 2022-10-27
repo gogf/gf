@@ -317,7 +317,16 @@ func (t *Time) Truncate(d time.Duration) *Time {
 // See the documentation on the Time type for the pitfalls of using == with
 // Time values; most code should use Equal instead.
 func (t *Time) Equal(u *Time) bool {
-	return t.Time.Equal(u.Time)
+	switch {
+	case t == nil && u != nil:
+		return false
+	case t == nil && u == nil:
+		return true
+	case t != nil && u == nil:
+		return false
+	default:
+		return t.Time.Equal(u.Time)
+	}
 }
 
 // Before reports whether the time instant t is before u.
@@ -327,7 +336,14 @@ func (t *Time) Before(u *Time) bool {
 
 // After reports whether the time instant t is after u.
 func (t *Time) After(u *Time) bool {
-	return t.Time.After(u.Time)
+	switch {
+	case t == nil:
+		return false
+	case t != nil && u == nil:
+		return true
+	default:
+		return t.Time.After(u.Time)
+	}
 }
 
 // Sub returns the duration t-u. If the result exceeds the maximum (or minimum)
@@ -335,6 +351,9 @@ func (t *Time) After(u *Time) bool {
 // will be returned.
 // To compute t-d for a duration d, use t.Add(-d).
 func (t *Time) Sub(u *Time) time.Duration {
+	if t == nil || u == nil {
+		return 0
+	}
 	return t.Time.Sub(u.Time)
 }
 
