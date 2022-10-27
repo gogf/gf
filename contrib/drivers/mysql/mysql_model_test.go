@@ -2985,80 +2985,6 @@ func Test_Model_HasField(t *testing.T) {
 	})
 }
 
-// Issue: https://github.com/gogf/gf/issues/1002
-func Test_Model_Issue1002(t *testing.T) {
-	table := createTable()
-	defer dropTable(table)
-
-	result, err := db.Model(table).Data(g.Map{
-		"id":          1,
-		"passport":    "port_1",
-		"password":    "pass_1",
-		"nickname":    "name_2",
-		"create_time": "2020-10-27 19:03:33",
-	}).Insert()
-	gtest.AssertNil(err)
-	n, _ := result.RowsAffected()
-	gtest.Assert(n, 1)
-
-	// where + string.
-	gtest.C(t, func(t *gtest.T) {
-		v, err := db.Model(table).Fields("id").Where("create_time>'2020-10-27 19:03:32' and create_time<'2020-10-27 19:03:34'").Value()
-		t.AssertNil(err)
-		t.Assert(v.Int(), 1)
-	})
-	gtest.C(t, func(t *gtest.T) {
-		v, err := db.Model(table).Fields("id").Where("create_time>'2020-10-27 19:03:32' and create_time<'2020-10-27 19:03:34'").Value()
-		t.AssertNil(err)
-		t.Assert(v.Int(), 1)
-	})
-	// where + string arguments.
-	gtest.C(t, func(t *gtest.T) {
-		v, err := db.Model(table).Fields("id").Where("create_time>? and create_time<?", "2020-10-27 19:03:32", "2020-10-27 19:03:34").Value()
-		t.AssertNil(err)
-		t.Assert(v.Int(), 1)
-	})
-	// where + gtime.Time arguments.
-	gtest.C(t, func(t *gtest.T) {
-		v, err := db.Model(table).Fields("id").Where("create_time>? and create_time<?", gtime.New("2020-10-27 19:03:32"), gtime.New("2020-10-27 19:03:34")).Value()
-		t.AssertNil(err)
-		t.Assert(v.Int(), 1)
-	})
-	// where + time.Time arguments, UTC.
-	gtest.C(t, func(t *gtest.T) {
-		t1, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 11:03:32")
-		t2, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 11:03:34")
-		{
-			v, err := db.Model(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).Value()
-			t.AssertNil(err)
-			t.Assert(v.Int(), 1)
-		}
-	})
-	// where + time.Time arguments, +8.
-	// gtest.C(t, func(t *gtest.T) {
-	//	// Change current timezone to +8 zone.
-	//	location, err := time.LoadLocation("Asia/Shanghai")
-	//	t.AssertNil(err)
-	//	t1, _ := time.ParseInLocation("2006-01-02 15:04:05", "2020-10-27 19:03:32", location)
-	//	t2, _ := time.ParseInLocation("2006-01-02 15:04:05", "2020-10-27 19:03:34", location)
-	//	{
-	//		v, err := db.Model(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).Value()
-	//		t.AssertNil(err)
-	//		t.Assert(v.Int(), 1)
-	//	}
-	//	{
-	//		v, err := db.Model(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).FindValue()
-	//		t.AssertNil(err)
-	//		t.Assert(v.Int(), 1)
-	//	}
-	//	{
-	//		v, err := db.Model(table).Where("create_time>? and create_time<?", t1, t2).FindValue("id")
-	//		t.AssertNil(err)
-	//		t.Assert(v.Int(), 1)
-	//	}
-	// })
-}
-
 func createTableForTimeZoneTest() string {
 	tableName := "user_" + gtime.Now().TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
@@ -4233,96 +4159,6 @@ func Test_Model_WherePrefixLike(t *testing.T) {
 	})
 }
 
-// https://github.com/gogf/gf/issues/1700
-func Test_Model_Issue1700(t *testing.T) {
-	table := "user_" + gtime.Now().TimestampNanoStr()
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-	    CREATE TABLE %s (
-	        id         int(10) unsigned NOT NULL AUTO_INCREMENT,
-	        user_id    int(10) unsigned NOT NULL,
-	        UserId    int(10) unsigned NOT NULL,
-	        PRIMARY KEY (id)
-	    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-	    `, table,
-	)); err != nil {
-		gtest.AssertNil(err)
-	}
-	defer dropTable(table)
-
-	gtest.C(t, func(t *gtest.T) {
-		type User struct {
-			Id     int `orm:"id"`
-			Userid int `orm:"user_id"`
-			UserId int `orm:"UserId"`
-		}
-		_, err := db.Model(table).Data(User{
-			Id:     1,
-			Userid: 2,
-			UserId: 3,
-		}).Insert()
-		t.AssertNil(err)
-
-		one, err := db.Model(table).One()
-		t.AssertNil(err)
-		t.Assert(one, g.Map{
-			"id":      1,
-			"user_id": 2,
-			"UserId":  3,
-		})
-
-		for i := 0; i < 1000; i++ {
-			var user *User
-			err = db.Model(table).Scan(&user)
-			t.AssertNil(err)
-			t.Assert(user.Id, 1)
-			t.Assert(user.Userid, 2)
-			t.Assert(user.UserId, 3)
-		}
-	})
-}
-
-// https://github.com/gogf/gf/issues/1701
-func Test_Model_Issue1701(t *testing.T) {
-	table := createInitTable()
-	defer dropTable(table)
-	gtest.C(t, func(t *gtest.T) {
-		value, err := db.Model(table).Fields(gdb.Raw("if(id=1,100,null)")).WherePri(1).Value()
-		t.AssertNil(err)
-		t.Assert(value.String(), 100)
-	})
-}
-
-// https://github.com/gogf/gf/issues/1733
-func Test_Model_Issue1733(t *testing.T) {
-	table := "user_" + guid.S()
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-	    CREATE TABLE %s (
-	        id int(8) unsigned zerofill NOT NULL AUTO_INCREMENT,
-	        PRIMARY KEY (id)
-	    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-	    `, table,
-	)); err != nil {
-		gtest.AssertNil(err)
-	}
-	defer dropTable(table)
-
-	gtest.C(t, func(t *gtest.T) {
-		for i := 1; i <= 10; i++ {
-			_, err := db.Model(table).Data(g.Map{
-				"id": i,
-			}).Insert()
-			t.AssertNil(err)
-		}
-
-		all, err := db.Model(table).OrderAsc("id").All()
-		t.AssertNil(err)
-		t.Assert(len(all), 10)
-		for i := 0; i < 10; i++ {
-			t.Assert(all[i]["id"].Int(), i+1)
-		}
-	})
-}
-
 // https://github.com/gogf/gf/issues/1159
 func Test_ScanList_NoRecreate_PtrAttribute(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
@@ -4663,5 +4499,28 @@ func TestResult_Structs1(t *testing.T) {
 		t.Assert(array[1].Id, 0)
 		t.Assert(array[0].Name, "john")
 		t.Assert(array[1].Name, "smith")
+	})
+}
+
+func Test_Builder_OmitEmptyWhere(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", 1).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", 0).OmitEmptyWhere().Count()
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		builder := db.Model(table).OmitEmptyWhere().Builder()
+		count, err := db.Model(table).Where(
+			builder.Where("id", 0),
+		).Count()
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
 	})
 }

@@ -83,6 +83,7 @@ func TestAvailable(t *testing.T) {
 		config.SetAdapter(adapter)
 
 		t.Assert(config.Available(ctx), true)
+		t.Assert(config.Available(ctx, "non-exist"), false)
 
 		m, err := config.Data(ctx)
 		t.AssertNil(err)

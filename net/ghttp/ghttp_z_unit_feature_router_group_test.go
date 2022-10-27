@@ -13,7 +13,6 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
 )
@@ -121,10 +120,8 @@ func Test_Router_Group_Methods(t *testing.T) {
 }
 
 func Test_Router_Group_MultiServer(t *testing.T) {
-	p1, _ := gtcp.GetFreePort()
-	p2, _ := gtcp.GetFreePort()
-	s1 := g.Server(p1)
-	s2 := g.Server(p2)
+	s1 := g.Server(guid.S())
+	s2 := g.Server(guid.S())
 	s1.Group("/", func(group *ghttp.RouterGroup) {
 		group.POST("/post", func(r *ghttp.Request) {
 			r.Response.Write("post1")
@@ -135,8 +132,6 @@ func Test_Router_Group_MultiServer(t *testing.T) {
 			r.Response.Write("post2")
 		})
 	})
-	s1.SetPort(p1)
-	s2.SetPort(p2)
 	s1.SetDumpRouterMap(false)
 	s2.SetDumpRouterMap(false)
 	gtest.Assert(s1.Start(), nil)
@@ -147,9 +142,9 @@ func Test_Router_Group_MultiServer(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		c1 := g.Client()
-		c1.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p1))
+		c1.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s1.GetListenedPort()))
 		c2 := g.Client()
-		c2.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p2))
+		c2.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s2.GetListenedPort()))
 		t.Assert(c1.PostContent(ctx, "/post"), "post1")
 		t.Assert(c2.PostContent(ctx, "/post"), "post2")
 	})

@@ -11,11 +11,11 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
@@ -26,11 +26,12 @@ type DriverWrapperDB struct {
 
 // Open creates and returns an underlying sql.DB object for pgsql.
 // https://pkg.go.dev/github.com/lib/pq
-func (d *DriverWrapperDB) Open(config *ConfigNode) (db *sql.DB, err error) {
-	if config.Link != "" {
-		config = parseConfigNodeLink(config)
-	}
-	return d.DB.Open(config)
+func (d *DriverWrapperDB) Open(node *ConfigNode) (db *sql.DB, err error) {
+	var ctx = d.GetCtx()
+	intlog.PrintFunc(ctx, func() string {
+		return fmt.Sprintf(`open new connection:%s`, gjson.MustEncode(node))
+	})
+	return d.DB.Open(node)
 }
 
 // Tables retrieves and returns the tables of current schema.
@@ -52,7 +53,12 @@ func (d *DriverWrapperDB) Tables(ctx context.Context, schema ...string) (tables 
 //
 // It's using cache feature to enhance the performance, which is never expired util the
 // process restarts.
-func (d *DriverWrapperDB) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {
+func (d *DriverWrapperDB) TableFields(
+	ctx context.Context, table string, schema ...string,
+) (fields map[string]*TableField, err error) {
+	if table == "" {
+		return nil, nil
+	}
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
@@ -82,42 +88,4 @@ func (d *DriverWrapperDB) TableFields(ctx context.Context, table string, schema 
 		fields = value.(map[string]*TableField)
 	}
 	return
-}
-
-func parseConfigNodeLink(node *ConfigNode) *ConfigNode {
-	var match []string
-	if node.Link != "" {
-		match, _ = gregex.MatchString(linkPattern, node.Link)
-		if len(match) > 5 {
-			node.Type = match[1]
-			node.User = match[2]
-			node.Pass = match[3]
-			node.Protocol = match[4]
-			array := gstr.Split(match[5], ":")
-			if len(array) == 2 {
-				node.Host = array[0]
-				node.Port = array[1]
-				node.Name = match[6]
-			} else {
-				node.Name = match[5]
-			}
-			if len(match) > 6 {
-				node.Extra = match[7]
-			}
-			node.Link = ""
-		}
-	}
-	if node.Extra != "" {
-		if m, _ := gstr.Parse(node.Extra); len(m) > 0 {
-			_ = gconv.Struct(m, &node)
-		}
-	}
-	// Default value checks.
-	if node.Charset == "" {
-		node.Charset = defaultCharset
-	}
-	if node.Protocol == "" {
-		node.Protocol = defaultProtocol
-	}
-	return node
 }

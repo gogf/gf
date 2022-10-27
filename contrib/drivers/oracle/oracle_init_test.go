@@ -9,13 +9,14 @@ package oracle_test
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	_ "github.com/sijms/go-ora/v2"
-	"strings"
 )
 
 var (
@@ -61,8 +62,9 @@ func init() {
 	nodeLink := gdb.ConfigNode{
 		Type: TestDbType,
 		Name: TestDbName,
-		Link: fmt.Sprintf("%s://%s:%s@%s:%s/%s",
-			TestDbType, TestDbUser, TestDbPass, TestDbIP, TestDbPort, TestDbName),
+		Link: fmt.Sprintf("%s:%s:%s@tcp(%s:%s)/%s",
+			TestDbType, TestDbUser, TestDbPass, TestDbIP, TestDbPort, TestDbName,
+		),
 	}
 
 	nodeErr := gdb.ConfigNode{
@@ -117,6 +119,7 @@ func createTable(table ...string) (name string) {
 		PASSWORD CHAR(32) NOT NULL,
 		NICKNAME VARCHAR(45) NOT NULL,
 		CREATE_TIME varchar(45),
+	    SALARY NUMBER(18,2),
 		PRIMARY KEY (ID))
 	`, name)); err != nil {
 		gtest.Fatal(err)
@@ -156,7 +159,7 @@ func dropTable(table string) {
 	if count == 0 {
 		return
 	}
-	if _, err := db.Exec(ctx, fmt.Sprintf("DROP TABLE %s", table)); err != nil {
+	if _, err = db.Exec(ctx, fmt.Sprintf("DROP TABLE %s", table)); err != nil {
 		gtest.Fatal(err)
 	}
 }

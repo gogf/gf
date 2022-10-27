@@ -19,7 +19,6 @@ import (
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/gctx"
@@ -304,6 +303,9 @@ const (
 	ctxKeyForDB               gctx.StrKey = `CtxKeyForDB`
 	ctxKeyCatchSQL            gctx.StrKey = `CtxKeyCatchSQL`
 	ctxKeyInternalProducedSQL gctx.StrKey = `CtxKeyInternalProducedSQL`
+
+	// type:[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
+	linkPattern = `(\w+):([\w\-]*):(.*?)@(\w+?)\((.+?)\)/{0,1}([\w\-]*)\?{0,1}(.*)`
 )
 
 const (
@@ -372,9 +374,6 @@ var (
 
 	// tableFieldsMap caches the table information retrieved from database.
 	tableFieldsMap = gmap.NewStrAnyMap(true)
-
-	// type:[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
-	linkPattern = `(\w+):([\w\-]*):(.*?)@(\w+?)\((.+?)\)/{0,1}([\w\-]*)\?{0,1}(.*)`
 )
 
 func init() {
@@ -426,6 +425,9 @@ func NewByGroup(group ...string) (db DB, err error) {
 
 // newDBByConfigNode creates and returns an ORM object with given configuration node and group name.
 func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
+	if node.Link != "" {
+		node = parseConfigNodeLink(node)
+	}
 	c := &Core{
 		group:  group,
 		debug:  gtype.NewBool(),
@@ -550,10 +552,7 @@ func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 // The parameter `master` specifies whether retrieves master node connection if
 // master-slave nodes are configured.
 func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error) {
-	var (
-		ctx  = c.db.GetCtx()
-		node *ConfigNode
-	)
+	var node *ConfigNode
 	// Load balance.
 	if c.group != "" {
 		configs.RLock()
@@ -582,14 +581,6 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		node.User, node.Protocol, node.Host, node.Port, node.Name,
 	)
 	v := c.links.GetOrSetFuncLock(instanceNameByNode, func() interface{} {
-		intlog.Printf(ctx, `open new connection, master:%#v, config:%#v, node:%#v`, master, c.config, node)
-		defer func() {
-			if err != nil {
-				intlog.Printf(ctx, `open new connection failed: %v, %#v`, err, node)
-			} else {
-				intlog.Printf(ctx, `open new connection success, master:%#v, config:%#v, node:%#v`, master, c.config, node)
-			}
-		}()
 		if sqlDb, err = c.db.Open(node); err != nil {
 			return nil
 		}

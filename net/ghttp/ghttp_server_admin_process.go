@@ -249,12 +249,12 @@ func shutdownWebServers(ctx context.Context, signal ...string) {
 	if len(signal) > 0 {
 		glog.Printf(ctx, "%d: server shutting down by signal: %s", gproc.Pid(), signal[0])
 		forceCloseWebServers(ctx)
-		allDoneChan <- struct{}{}
+		allShutdownChan <- struct{}{}
 	} else {
 		glog.Printf(ctx, "%d: server shutting down by api", gproc.Pid())
 		gtimer.SetTimeout(ctx, time.Second, func(ctx context.Context) {
 			forceCloseWebServers(ctx)
-			allDoneChan <- struct{}{}
+			allShutdownChan <- struct{}{}
 		})
 	}
 }
@@ -297,7 +297,7 @@ func handleProcessMessage() {
 			if bytes.EqualFold(msg.Data, []byte("exit")) {
 				intlog.Printf(ctx, "%d: process message: exit", gproc.Pid())
 				shutdownWebServersGracefully(ctx)
-				allDoneChan <- struct{}{}
+				allShutdownChan <- struct{}{}
 				intlog.Printf(ctx, "%d: process message: exit done", gproc.Pid())
 				return
 			}

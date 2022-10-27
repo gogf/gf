@@ -35,8 +35,9 @@ Note the configmap name `test-configmap`, and its item name in data `config.yaml
 
 ## Create a custom boot package
 
-It is strongly recommended creating a boot package, 
-which sets the Adapter of default configuration instance.
+If you wish using configuration from kubernetes configmap globally,
+it is strongly recommended creating a custom boot package in very top import, 
+which sets the Adapter of default configuration instance before any other package boots.
 
 ### Running in pod (common scenario)
 ```go
@@ -150,3 +151,6 @@ func main() {
 
 ```
 
+## License
+
+`GoFrame kubecm` is licensed under the [MIT License](../../../LICENSE), 100% free and open-source, forever.

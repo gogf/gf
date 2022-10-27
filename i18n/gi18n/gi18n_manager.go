@@ -39,8 +39,14 @@ type Options struct {
 }
 
 var (
-	defaultLanguage   = "en"                // defaultDelimiters defines the default language if user does not specified in options.
-	defaultDelimiters = []string{"{#", "}"} // defaultDelimiters defines the default key variable delimiters.
+	// defaultDelimiters defines the default language if user does not specify in options.
+	defaultLanguage = "en"
+
+	// defaultDelimiters defines the default key variable delimiters.
+	defaultDelimiters = []string{"{#", "}"}
+
+	// i18n files searching folders.
+	searchFolders = []string{"manifest/i18n", "manifest/config/i18n", "i18n"}
 )
 
 // New creates and returns a new i18n manager.
@@ -73,13 +79,15 @@ func New(options ...Options) *Manager {
 
 // DefaultOptions creates and returns a default options for i18n manager.
 func DefaultOptions() Options {
-	var (
-		path        = "i18n"
-		realPath, _ = gfile.Search(path)
-	)
-	if realPath != "" {
-		path = realPath
-		// To avoid of the source path of GF: github.com/gogf/i18n/gi18n
+	var path string
+	for _, folder := range searchFolders {
+		path, _ = gfile.Search(folder)
+		if path != "" {
+			break
+		}
+	}
+	if path != "" {
+		// To avoid of the source path of GoFrame: github.com/gogf/i18n/gi18n
 		if gfile.Exists(path + gfile.Separator + "gi18n") {
 			path = ""
 		}

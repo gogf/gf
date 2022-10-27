@@ -116,8 +116,8 @@ func (d *Driver) GetChars() (charLeft string, charRight string) {
 	return `"`, `"`
 }
 
-// CheckLocalTypeForValue checks and returns corresponding local golang type for given db type.
-func (d *Driver) CheckLocalTypeForValue(ctx context.Context, fieldType string, fieldValue interface{}) (string, error) {
+// CheckLocalTypeForField checks and returns corresponding local golang type for given db type.
+func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (string, error) {
 	var typeName string
 	match, _ := gregex.MatchString(`(.+?)\((.+)\)`, fieldType)
 	if len(match) == 3 {

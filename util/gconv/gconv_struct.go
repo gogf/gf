@@ -184,6 +184,11 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 		)
 	}
 
+	// Nothing to be done as the parameters are empty.
+	if len(paramsMap) == 0 {
+		return nil
+	}
+
 	// It only performs one converting to the same attribute.
 	// doneMap is used to check repeated converting, its key is the real attribute name
 	// of the struct.
@@ -534,14 +539,20 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 		structFieldValue.Set(reflectArray)
 
 	case reflect.Ptr:
-		item := reflect.New(structFieldValue.Type().Elem())
-		if err, ok = bindVarToReflectValueWithInterfaceCheck(item, value); ok {
-			structFieldValue.Set(item)
-			return err
-		}
-		elem := item.Elem()
-		if err = bindVarToReflectValue(elem, value, mapping); err == nil {
-			structFieldValue.Set(elem.Addr())
+		if structFieldValue.IsNil() || structFieldValue.IsZero() {
+			// Nil or empty pointer, it creates a new one.
+			item := reflect.New(structFieldValue.Type().Elem())
+			if err, ok = bindVarToReflectValueWithInterfaceCheck(item, value); ok {
+				structFieldValue.Set(item)
+				return err
+			}
+			elem := item.Elem()
+			if err = bindVarToReflectValue(elem, value, mapping); err == nil {
+				structFieldValue.Set(elem.Addr())
+			}
+		} else {
+			// Not empty pointer, it assigns values to it.
+			return bindVarToReflectValue(structFieldValue.Elem(), value, mapping)
 		}
 
 	// It mainly and specially handles the interface of nil value.

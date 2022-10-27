@@ -94,6 +94,7 @@ jobs:
           --health-retries 10
 
       # ClickHouse backend server.
+      # docker run -d --name clickhouse -p 9000:9000 -p 8123:8123 -p 9001:9001 loads/clickhouse-server:latest
       clickhouse-server:
         image: loads/clickhouse-server:latest
         ports:
@@ -101,13 +102,15 @@ jobs:
           - 8123:8123
           - 9001:9001
 
+      # Polaris backend server.
       polaris:
         image: loads/polaris-server-standalone:latest
         ports:
           - 8090:8090
           - 8091:8091
+          - 8093:8093
 
-      # oracle 11g server
+      # Oracle 11g server
       oracle-server:
         image: loads/oracle-xe-11g-r2:latest
         env:
@@ -138,6 +141,15 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v2
 
+    - name: Start Apollo Containers
+      run:  docker-compose -f ".github/workflows/apollo/docker-compose.yml" up -d --build
+      
+    - name: Start Nacos Containers
+      run:  docker-compose -f ".github/workflows/nacos/docker-compose.yml" up -d --build
+
+    - name: Start Redis Cluster Containers
+      run:  docker-compose -f ".github/workflows/redis/docker-compose.yml" up -d --build
+
     - name: Start Minikube
       uses: medyagh/setup-minikube@master
 
@@ -158,17 +170,20 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-${{ matrix.go-version }}-
 
-    - name: Start containers
-      run:  docker-compose -f ".github/workflows/docker/docker-compose.yml" up -d --build
-
     - name: Before Script
       run:  bash .github/workflows/before_script.sh
 
     - name: Build & Test
       run:  bash .github/workflows/build_and_test.sh
 
-    - name: Stop containers
-      run:  docker-compose -f ".github/workflows/docker/docker-compose.yml" down
+    - name: Stop Redis Cluster Containers
+      run:  docker-compose -f ".github/workflows/redis/docker-compose.yml" down
+
+    - name: Stop Apollo Containers
+      run:  docker-compose -f ".github/workflows/apollo/docker-compose.yml" down
+
+    - name: Stop Nacos Containers
+      run:  docker-compose -f ".github/workflows/nacos/docker-compose.yml" down
 
     - name: Report Coverage
       uses: codecov/codecov-action@v2

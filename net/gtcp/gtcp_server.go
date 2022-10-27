@@ -8,25 +8,30 @@ package gtcp
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net"
 	"sync"
 
+	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-
-	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
 const (
-	// defaultServer is the default TCP server name.
+	// FreePortAddress marks the server listens using random free port.
+	FreePortAddress = ":0"
+)
+
+const (
 	defaultServer = "default"
 )
 
 // Server is a TCP server.
 type Server struct {
-	mu        sync.Mutex   // Used for Server.listen concurrent safety.
-	listen    net.Listener // Listener.
+	mu        sync.Mutex   // Used for Server.listen concurrent safety. -- The golang test with data race checks this.
+	listen    net.Listener // TCP address listener.
 	address   string       // Server listening address.
 	handler   func(*Conn)  // Connection handler.
 	tlsConfig *tls.Config  // TLS configuration.
@@ -159,4 +164,27 @@ func (s *Server) Run() (err error) {
 			go s.handler(NewConnByNetConn(conn))
 		}
 	}
+}
+
+// GetListenedAddress retrieves and returns the address string which are listened by current server.
+func (s *Server) GetListenedAddress() string {
+	if !gstr.Contains(s.address, FreePortAddress) {
+		return s.address
+	}
+	var (
+		address      = s.address
+		listenedPort = s.GetListenedPort()
+	)
+	address = gstr.Replace(address, FreePortAddress, fmt.Sprintf(`:%d`, listenedPort))
+	return address
+}
+
+// GetListenedPort retrieves and returns one port which is listened to by current server.
+func (s *Server) GetListenedPort() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if ln := s.listen; ln != nil {
+		return ln.Addr().(*net.TCPAddr).Port
+	}
+	return -1
 }

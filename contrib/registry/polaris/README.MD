@@ -4,22 +4,24 @@ English | [简体中文](README_ZH.MD)
 
 Use `PolarisMesh` as service registration, discovery management and heartbeat reporting.
 
-
 ## Installation
+
 ```
 go get -u -v github.com/gogf/gf/contrib/registry/polaris/v2
 ```
+
 suggested using `go.mod`:
+
 ```
 require github.com/gogf/gf/contrib/registry/polaris/v2 latest
 ```
-
 
 ## Example
 
 ### Reference example
 
 [server](example/registry/polaris/server/main.go)
+
 ```go
 package main
 
@@ -48,6 +50,7 @@ func main() {
 ```
 
 [client](example/registry/polaris/client/main.go)
+
 ```go
 package main
 
