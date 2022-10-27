@@ -10,13 +10,13 @@ import (
 	"context"
 	"fmt"
 
-	_ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
-
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+
+	_ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
 )
 
 const (

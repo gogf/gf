@@ -1,10 +1,10 @@
 package main
 
 import (
-	_ "github.com/gogf/gf/example/config/apollo/boot"
-
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
+
+	_ "github.com/gogf/gf/example/config/apollo/boot"
 )
 
 func main() {

@@ -9,9 +9,8 @@ package etcd
 import (
 	"context"
 
-	etcd3 "go.etcd.io/etcd/client/v3"
-
 	"github.com/gogf/gf/v2/net/gsvc"
+	etcd3 "go.etcd.io/etcd/client/v3"
 )
 
 var (

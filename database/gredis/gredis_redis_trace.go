@@ -10,11 +10,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/net/gtrace"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/net/gtrace"
 )
 
 // traceItem holds the information for redis trace.

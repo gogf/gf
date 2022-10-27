@@ -6,7 +6,6 @@ import (
 	"time"
 
 	_ "github.com/gogf/gf/contrib/drivers/mysql/v2"
-
 	"github.com/gogf/gf/contrib/trace/jaeger/v2"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
@@ -46,6 +45,7 @@ func main() {
 type InsertReq struct {
 	Name string `v:"required#Please input user name."`
 }
+
 type InsertRes struct {
 	Id int64
 }
@@ -66,6 +66,7 @@ func (c *cTrace) Insert(ctx context.Context, req *InsertReq) (res *InsertRes, er
 type QueryReq struct {
 	Id int `v:"min:1#User id is required for querying"`
 }
+
 type QueryRes struct {
 	User gdb.Record
 }
@@ -90,6 +91,7 @@ func (c *cTrace) Query(ctx context.Context, req *QueryReq) (res *QueryRes, err e
 type DeleteReq struct {
 	Id int `v:"min:1#User id is required for deleting."`
 }
+
 type DeleteRes struct{}
 
 // Delete is a route handler for deleting specified user info.

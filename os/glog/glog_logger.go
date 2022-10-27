@@ -17,6 +17,8 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/internal/consts"
@@ -29,7 +31,6 @@ import (
 	"github.com/gogf/gf/v2/os/gtimer"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/util/gconv"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // Logger is the struct for logging management.
