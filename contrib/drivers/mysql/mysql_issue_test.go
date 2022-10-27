@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gmeta"
 	"github.com/gogf/gf/v2/util/guid"
@@ -464,7 +465,8 @@ func Test_Issue2231(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 
-		match, _ = gregex.MatchString(linkPattern, link)
+		match, err := gregex.MatchString(linkPattern, link)
+		t.AssertNil(err)
 		t.Assert(match[1], "mysql")
 		t.Assert(match[2], "root")
 		t.Assert(match[3], "12345678")
@@ -472,7 +474,5 @@ func Test_Issue2231(t *testing.T) {
 		t.Assert(match[5], "127.0.0.1:3306")
 		t.Assert(match[6], "a正bc式")
 		t.Assert(match[7], "loc=Local&parseTime=true")
-		array := gstr.Split(match[5], ":")
-		array := gstr.Split(match[5], ":")
 	})
 }
