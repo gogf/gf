@@ -174,20 +174,20 @@ func (r RedisGroupGeneric) Keys(ctx context.Context, pattern string) ([]string, 
 	return v.Strings(), err
 }
 
+type FlushOp string
+
+const (
+	FlushAsync FlushOp = "ASYNC" // ASYNC: flushes the databases asynchronously
+	FlushSync  FlushOp = "SYNC"  // SYNC: flushes the databases synchronously
+)
+
 // FlushDB delete all the keys of the currently selected DB. This command never fails.
 //
 // https://redis.io/commands/flushdb/
-func (r RedisGroupGeneric) FlushDB(ctx context.Context, options string) error {
-	_, err := r.redis.Do(ctx, "FlushDB", options)
+func (r RedisGroupGeneric) FlushDB(ctx context.Context, option ...FlushOp) error {
+	_, err := r.redis.Do(ctx, "FlushDB", gconv.Interfaces(option)...)
 	return err
 }
-
-type FlushAllOp string
-
-const (
-	FlushAllAsync FlushAllOp = "ASYNC" // ASYNC: flushes the databases asynchronously
-	FlushAllSync  FlushAllOp = "SYNC"  // SYNC: flushes the databases synchronously
-)
 
 // FlushAll delete all the keys of all the existing databases, not just the currently selected one.
 // This command never fails.
@@ -201,7 +201,7 @@ const (
 // Keys created during an asynchronous flush will be unaffected.
 //
 // https://redis.io/commands/flushall/
-func (r RedisGroupGeneric) FlushAll(ctx context.Context, option ...FlushAllOp) error {
+func (r RedisGroupGeneric) FlushAll(ctx context.Context, option ...FlushOp) error {
 	_, err := r.redis.Do(ctx, "FlushAll", gconv.Interfaces(option)...)
 	return err
 }

@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package redis_test
+package session_test
 
 import (
 	"context"
@@ -17,14 +17,16 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_StorageRedis(t *testing.T) {
+func Test_StorageRedisHashTable(t *testing.T) {
 	redis, err := gredis.New(&gredis.Config{
 		Address: "127.0.0.1:6379",
 		Db:      0,
 	})
-	gtest.AssertNil(err)
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertNil(err)
+	})
 
-	storage := gsession.NewStorageRedis(redis)
+	storage := gsession.NewStorageRedisHashTable(redis)
 	manager := gsession.New(time.Second, storage)
 	sessionId := ""
 	gtest.C(t, func(t *gtest.T) {
@@ -39,8 +41,6 @@ func Test_StorageRedis(t *testing.T) {
 		t.Assert(s.IsDirty(), true)
 		sessionId = s.MustId()
 	})
-
-	time.Sleep(500 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		s := manager.New(context.TODO(), sessionId)
 		t.Assert(s.MustGet("k1"), "v1")
@@ -70,9 +70,10 @@ func Test_StorageRedis(t *testing.T) {
 		t.Assert(s.MustSize(), 2)
 		t.Assert(s.MustContains("k5"), true)
 		t.Assert(s.MustContains("k6"), true)
+		s.Close()
 	})
 
-	time.Sleep(1000 * time.Millisecond)
+	time.Sleep(1500 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		s := manager.New(context.TODO(), sessionId)
 		t.Assert(s.MustSize(), 0)
@@ -81,15 +82,17 @@ func Test_StorageRedis(t *testing.T) {
 	})
 }
 
-func Test_StorageRedisPrefix(t *testing.T) {
+func Test_StorageRedisHashTablePrefix(t *testing.T) {
 	redis, err := gredis.New(&gredis.Config{
 		Address: "127.0.0.1:6379",
 		Db:      0,
 	})
-	gtest.AssertNil(err)
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertNil(err)
+	})
 
 	prefix := "s_"
-	storage := gsession.NewStorageRedis(redis, prefix)
+	storage := gsession.NewStorageRedisHashTable(redis, prefix)
 	manager := gsession.New(time.Second, storage)
 	sessionId := ""
 	gtest.C(t, func(t *gtest.T) {
@@ -104,8 +107,6 @@ func Test_StorageRedisPrefix(t *testing.T) {
 		t.Assert(s.IsDirty(), true)
 		sessionId = s.MustId()
 	})
-
-	time.Sleep(500 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		s := manager.New(context.TODO(), sessionId)
 		t.Assert(s.MustGet("k1"), "v1")
@@ -135,9 +136,10 @@ func Test_StorageRedisPrefix(t *testing.T) {
 		t.Assert(s.MustSize(), 2)
 		t.Assert(s.MustContains("k5"), true)
 		t.Assert(s.MustContains("k6"), true)
+		s.Close()
 	})
 
-	time.Sleep(1000 * time.Millisecond)
+	time.Sleep(1500 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		s := manager.New(context.TODO(), sessionId)
 		t.Assert(s.MustSize(), 0)
