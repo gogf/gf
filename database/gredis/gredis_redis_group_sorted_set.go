@@ -8,21 +8,40 @@ package gredis
 
 import (
 	"context"
+
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// RedisGroupSortedSet is the redis group object for sorted set operations.
 type RedisGroupSortedSet struct {
 	redis *Redis
 }
 
-func (r *Redis) SortedSet() *RedisGroupSortedSet {
-	return &RedisGroupSortedSet{
+// GroupSortedSet creates and returns a redis group object for sorted set operations.
+func (r *Redis) GroupSortedSet() RedisGroupSortedSet {
+	return RedisGroupSortedSet{
 		redis: r,
 	}
 }
 
+// ZAddOption is the option for function ZAdd.
+type ZAddOption struct {
+	NX   bool // Only update elements that already exist. Don't add new elements.
+	XX   bool // Only add new elements. Don't update already existing elements.
+	GT   bool // Only update existing elements if the new score is greater than the current score.
+	LT   bool // Only update existing elements if the new score is less than the current score.
+	CH   bool // Modify the return value from the number of new elements added, to the total number of elements changed.
+	INCR bool // When this option is specified ZAdd acts like ZIncrBy.
+}
+
+// ZAddItem contains the item for function ZAdd.
+type ZAddItem struct {
+	Score  float64
+	Member string
+}
+
 // ZAdd add all the specified members with the specified scores to the sorted set stored at key.
-// It is possible to specify multiple score / member pairs.
+// It is possible to specifyZAdd multiple score / member pairs.
 // If a specified member is already a member of the sorted set, the score is updated and the element reinserted
 // at the right position to ensure the correct ordering.
 //
@@ -33,9 +52,22 @@ func (r *Redis) SortedSet() *RedisGroupSortedSet {
 // -inf values are valid values as well.
 //
 // https://redis.io/commands/zadd/
-func (r *RedisGroupSortedSet) ZAdd(ctx context.Context, key string, members ...interface{}) (int64, error) {
-	//TODO implement
-	panic("implement me")
+func (r RedisGroupSortedSet) ZAdd(ctx context.Context, key string, items []ZAddItem, option ...ZAddOption) (int64, error) {
+	var (
+		usedOption interface{}
+		args       = make([]interface{}, 0)
+	)
+	if len(option) > 0 {
+		usedOption = option[0]
+	}
+	args = mustMergeOptionToArgs(
+		[]interface{}{key}, usedOption,
+	)
+	for _, item := range items {
+		args = append(args, item.Score, item.Member)
+	}
+	v, err := r.redis.Do(ctx, "ZRange", args...)
+	return v.Int64(), err
 }
 
 // ZScore Returns the score of member in the sorted set at key.
@@ -43,8 +75,8 @@ func (r *RedisGroupSortedSet) ZAdd(ctx context.Context, key string, members ...i
 // If member does not exist in the sorted set, or key does not exist, nil is returned.
 //
 // https://redis.io/commands/zscore/
-func (r *RedisGroupSortedSet) ZScore(ctx context.Context, key string, member string) (float64, error) {
-	v, err := r.redis.Do(ctx, "ZSCORE", key, member)
+func (r RedisGroupSortedSet) ZScore(ctx context.Context, key string, member string) (float64, error) {
+	v, err := r.redis.Do(ctx, "ZScore", key, member)
 	return v.Float64(), err
 }
 
@@ -58,74 +90,100 @@ func (r *RedisGroupSortedSet) ZScore(ctx context.Context, key string, member str
 // point numbers. It is possible to provide a negative value to decrement the score.
 //
 // https://redis.io/commands/zincrby/
-func (r *RedisGroupSortedSet) ZIncrBy(ctx context.Context, key string, value float64, member string) (float64, error) {
-	v, err := r.redis.Do(ctx, "ZINCRBY", key, value, member)
+func (r RedisGroupSortedSet) ZIncrBy(ctx context.Context, key string, value float64, member string) (float64, error) {
+	v, err := r.redis.Do(ctx, "ZIncrBy", key, value, member)
 	return v.Float64(), err
 }
 
 // ZCard return the sorted set cardinality (number of elements) of the sorted set stored at key.
 //
 // https://redis.io/commands/zcard/
-func (r *RedisGroupSortedSet) ZCard(ctx context.Context, key string) (int64, error) {
-	v, err := r.redis.Do(ctx, "ZCARD", key)
+func (r RedisGroupSortedSet) ZCard(ctx context.Context, key string) (int64, error) {
+	v, err := r.redis.Do(ctx, "ZCard", key)
 	return v.Int64(), err
 }
 
 // ZCount return the number of elements in the sorted set at key with a score between min and max.
 //
-// The min and max arguments have the same semantic as described for ZRANGEBYSCORE.
+// The min and max arguments have the same semantic as described for ZRangeByScore.
 //
-// Note: the command has a complexity of just O(log(N)) because it uses elements ranks (see ZRANK) to get an
+// Note: the command has a complexity of just O(log(N)) because it uses elements ranks (see ZRank) to get an
 // idea of the range. Because of this there is no need to do a work proportional to the size of the range.
 //
 // https://redis.io/commands/zcount/
-func (r *RedisGroupSortedSet) ZCount(ctx context.Context, key string, min, max string) (int64, error) {
-	v, err := r.redis.Do(ctx, "ZCOUNT", key, min, max)
+func (r RedisGroupSortedSet) ZCount(ctx context.Context, key string, min, max string) (int64, error) {
+	v, err := r.redis.Do(ctx, "ZCount", key, min, max)
 	return v.Int64(), err
+}
+
+// ZRangeOption provides extra option for ZRange function.
+type ZRangeOption struct {
+	ByScore bool
+	ByLex   bool
+	// The optional REV argument reverses the ordering, so elements are ordered from highest to lowest score,
+	// and score ties are resolved by reverse lexicographical ordering.
+	Rev   bool
+	Limit *ZRangeOptionLimit
+	// The optional WithScores argument supplements the command's reply with the scores of elements returned.
+	WithScores bool
+}
+
+// ZRangeOptionLimit provides LIMIT argument for ZRange function.
+// The optional LIMIT argument can be used to obtain a sub-range from the matching elements
+// (similar to SELECT LIMIT offset, count in SQL). A negative `Count` returns all elements from the `Offset`.
+type ZRangeOptionLimit struct {
+	Offset int
+	Count  int
 }
 
 // ZRange return the specified range of elements in the sorted set stored at <key>.
 //
-// ZRANGE can perform different types of range queries: by index (rank), by the score, or by lexicographical
+// ZRange can perform different types of range queries: by index (rank), by the score, or by lexicographical
 // order.
 //
 // https://redis.io/commands/zrange/
-func (r *RedisGroupSortedSet) ZRange(ctx context.Context, key string, start, stop int64) ([]string, error) {
-	//TODO implement
-	panic("implement me")
+func (r RedisGroupSortedSet) ZRange(ctx context.Context, key string, start, stop int64, option ...ZRangeOption) ([]string, error) {
+	var usedOption interface{}
+	if len(option) > 0 {
+		usedOption = option[0]
+	}
+	v, err := r.redis.Do(ctx, "ZRange", mustMergeOptionToArgs(
+		[]interface{}{key, start, stop}, usedOption,
+	)...)
+	return v.Strings(), err
 }
 
 // ZRevRange return the specified range of elements in the sorted set stored at key.
 // The elements are considered to be ordered from the highest to the lowest score.
 // Descending lexicographical order is used for elements with equal score.
 //
-// Apart from the reversed ordering, ZREVRANGE is similar to ZRANGE.
+// Apart from the reversed ordering, ZRevRange is similar to ZRange.
 //
 // https://redis.io/commands/zrevrange/
-func (r *RedisGroupSortedSet) ZRevRange(ctx context.Context, key string, start, stop int64) ([]string, error) {
-	v, err := r.redis.Do(ctx, "ZREVRANGE", key, start, stop)
+func (r RedisGroupSortedSet) ZRevRange(ctx context.Context, key string, start, stop int64) ([]string, error) {
+	v, err := r.redis.Do(ctx, "ZRevRange", key, start, stop)
 	return gconv.SliceStr(v), err
 }
 
 // ZRank return the rank of member in the sorted set stored at key, with the scores ordered from low to high.
 // The rank (or index) is 0-based, which means that the member with the lowest score has rank 0.
 //
-// Use ZREVRANK to get the rank of an element with the scores ordered from high to low.
+// Use ZRevRank to get the rank of an element with the scores ordered from high to low.
 //
 // https://redis.io/commands/zrank/
-func (r *RedisGroupSortedSet) ZRank(ctx context.Context, key, member string) (int64, error) {
-	v, err := r.redis.Do(ctx, "ZRANK", key, member)
+func (r RedisGroupSortedSet) ZRank(ctx context.Context, key, member string) (int64, error) {
+	v, err := r.redis.Do(ctx, "ZRank", key, member)
 	return v.Int64(), err
 }
 
 // ZRevRank return the rank of member in the sorted set stored at key, with the scores ordered from high to low.
 // The rank (or index) is 0-based, which means that the member with the highest score has rank 0.
 //
-// Use ZRANK to get the rank of an element with the scores ordered from low to high.
+// Use ZRank to get the rank of an element with the scores ordered from low to high.
 //
 // https://redis.io/commands/zrevrank/
-func (r *RedisGroupSortedSet) ZRevRank(ctx context.Context, key, member string) (int64, error) {
-	v, err := r.redis.Do(ctx, "ZREVRANK", key, member)
+func (r RedisGroupSortedSet) ZRevRank(ctx context.Context, key, member string) (int64, error) {
+	v, err := r.redis.Do(ctx, "ZRevRank", key, member)
 	return v.Int64(), err
 }
 
@@ -135,8 +193,8 @@ func (r *RedisGroupSortedSet) ZRevRank(ctx context.Context, key, member string) 
 // An error is returned when key exists and does not hold a sorted set.
 //
 // https://redis.io/commands/zrem/
-func (r *RedisGroupSortedSet) ZRem(ctx context.Context, key string, members ...interface{}) (int64, error) {
-	v, err := r.redis.Do(ctx, "ZREM", key, members)
+func (r RedisGroupSortedSet) ZRem(ctx context.Context, key string, members ...interface{}) (int64, error) {
+	v, err := r.redis.Do(ctx, "ZRem", key, members)
 	return v.Int64(), err
 }
 
@@ -147,8 +205,8 @@ func (r *RedisGroupSortedSet) ZRem(ctx context.Context, key string, members ...i
 // and so forth.
 //
 // https://redis.io/commands/zremrangebyrank/
-func (r *RedisGroupSortedSet) ZRemRangeByRank(ctx context.Context, key string, start, stop int64) (int64, error) {
-	v, err := r.redis.Do(ctx, "ZREMRANGEBYRANK", key, start, stop)
+func (r RedisGroupSortedSet) ZRemRangeByRank(ctx context.Context, key string, start, stop int64) (int64, error) {
+	v, err := r.redis.Do(ctx, "ZRemRangeByRank", key, start, stop)
 	return v.Int64(), err
 }
 
@@ -156,8 +214,8 @@ func (r *RedisGroupSortedSet) ZRemRangeByRank(ctx context.Context, key string, s
 // (inclusive).
 //
 // https://redis.io/commands/zremrangebyscore/
-func (r *RedisGroupSortedSet) ZRemRangeByScore(ctx context.Context, key string, min, max string) (int64, error) {
-	v, err := r.redis.Do(ctx, "ZREMRANGEBYSCORE", key, min, max)
+func (r RedisGroupSortedSet) ZRemRangeByScore(ctx context.Context, key string, min, max string) (int64, error) {
+	v, err := r.redis.Do(ctx, "ZRemRangeByScore", key, min, max)
 	return v.Int64(), err
 }
 
@@ -168,8 +226,8 @@ func (r *RedisGroupSortedSet) ZRemRangeByScore(ctx context.Context, key string, 
 // The meaning of min and max are the same of the ZRANGEBYLEX command.
 // Similarly, this command actually removes the same elements that ZRANGEBYLEX would return if called with the
 // same min and max arguments.
-func (r *RedisGroupSortedSet) ZRemRangeByLex(ctx context.Context, key string, min, max string) (int64, error) {
-	v, err := r.redis.Do(ctx, "ZREMRANGEBYLEX", key, min, max)
+func (r RedisGroupSortedSet) ZRemRangeByLex(ctx context.Context, key string, min, max string) (int64, error) {
+	v, err := r.redis.Do(ctx, "ZRemRangeByLex", key, min, max)
 	return v.Int64(), err
 }
 
@@ -183,7 +241,7 @@ func (r *RedisGroupSortedSet) ZRemRangeByLex(ctx context.Context, key string, mi
 // idea of the range. Because of this there is no need to do a work proportional to the size of the range.
 //
 // https://redis.io/commands/zlexcount/
-func (r *RedisGroupSortedSet) ZLexCount(ctx context.Context, key, min, max string) (int64, error) {
-	v, err := r.redis.Do(ctx, "ZLEXCOUNT", key, min, max)
+func (r RedisGroupSortedSet) ZLexCount(ctx context.Context, key, min, max string) (int64, error) {
+	v, err := r.redis.Do(ctx, "ZLexCount", key, min, max)
 	return v.Int64(), err
 }

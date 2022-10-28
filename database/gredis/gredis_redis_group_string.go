@@ -19,9 +19,9 @@ type RedisGroupString struct {
 	redis *Redis
 }
 
-// String returns the function group manager for string operations.
-func (r *Redis) String() *RedisGroupString {
-	return &RedisGroupString{
+// GroupString is the redis group object for string operations.
+func (r *Redis) GroupString() RedisGroupString {
+	return RedisGroupString{
 		redis: r,
 	}
 }
@@ -31,11 +31,11 @@ type SetOption struct {
 	TTLOption
 	NX      bool // Only set the key if it does not already exist.
 	XX      bool // Only set the key if it already exists.
-	KEEPTTL bool // Retain the time to live associated with the key.
+	KeepTTL bool // Retain the time to live associated with the key.
 
 	// Return the old string stored at key, or nil if key did not exist.
 	// An error is returned and SET aborted if the value stored at key is not a string.
-	GET bool
+	Get bool
 }
 
 // Set key to hold the string value. If key already holds a value, it is overwritten,
@@ -43,7 +43,7 @@ type SetOption struct {
 // Any previous time to live associated with the key is discarded on successful SET operation.
 //
 // https://redis.io/commands/set/
-func (r *RedisGroupString) Set(ctx context.Context, key string, value interface{}, option ...SetOption) (*gvar.Var, error) {
+func (r RedisGroupString) Set(ctx context.Context, key string, value interface{}, option ...SetOption) (*gvar.Var, error) {
 	var usedOption interface{}
 	if len(option) > 0 {
 		usedOption = option[0]
@@ -63,7 +63,7 @@ func (r *RedisGroupString) Set(ctx context.Context, key string, value interface{
 // false: if no key was set (at least one key already existed).
 //
 // https://redis.io/commands/setnx/
-func (r *RedisGroupString) SetNX(ctx context.Context, key string, value interface{}) (bool, error) {
+func (r RedisGroupString) SetNX(ctx context.Context, key string, value interface{}) (bool, error) {
 	v, err := r.redis.Do(ctx, "SETNX", key, value)
 	return v.Bool(), err
 }
@@ -81,7 +81,7 @@ func (r *RedisGroupString) SetNX(ctx context.Context, key string, value interfac
 // An error is returned when seconds invalid.
 //
 // https://redis.io/commands/setex/
-func (r *RedisGroupString) SetEX(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
+func (r RedisGroupString) SetEX(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
 	_, err := r.redis.Do(ctx, "SETEX", key, int64(ttl.Seconds()), value)
 	return err
 }
@@ -90,7 +90,7 @@ func (r *RedisGroupString) SetEX(ctx context.Context, key string, value interfac
 // An error is returned if the value stored at key is not a string, because GET only handles string values.
 //
 // https://redis.io/commands/get/
-func (r *RedisGroupString) Get(ctx context.Context, key string) (*gvar.Var, error) {
+func (r RedisGroupString) Get(ctx context.Context, key string) (*gvar.Var, error) {
 	return r.redis.Do(ctx, "GET", key)
 }
 
@@ -99,20 +99,20 @@ func (r *RedisGroupString) Get(ctx context.Context, key string) (*gvar.Var, erro
 // (if and only if the key's value type is a string).
 //
 // https://redis.io/commands/getdel/
-func (r *RedisGroupString) GetDel(ctx context.Context, key string) (*gvar.Var, error) {
+func (r RedisGroupString) GetDel(ctx context.Context, key string) (*gvar.Var, error) {
 	return r.redis.Do(ctx, "GETDEL", key)
 }
 
 // GetEXOption provides extra option for GetEx function.
 type GetEXOption struct {
 	TTLOption
-	PERSIST bool // PERSIST -- Remove the time to live associated with the key.
+	Persist bool // Persist -- Remove the time to live associated with the key.
 }
 
 // GetEX is similar to GET, but is a write command with additional options.
 //
 // https://redis.io/commands/getex/
-func (r *RedisGroupString) GetEX(ctx context.Context, key string, option ...GetEXOption) (*gvar.Var, error) {
+func (r RedisGroupString) GetEX(ctx context.Context, key string, option ...GetEXOption) (*gvar.Var, error) {
 	var usedOption interface{}
 	if len(option) > 0 {
 		usedOption = option[0]
@@ -127,7 +127,7 @@ func (r *RedisGroupString) GetEX(ctx context.Context, key string, option ...GetE
 // the key is discarded on successful SET operation.
 //
 // https://redis.io/commands/getset/
-func (r *RedisGroupString) GetSet(ctx context.Context, key string, value interface{}) (*gvar.Var, error) {
+func (r RedisGroupString) GetSet(ctx context.Context, key string, value interface{}) (*gvar.Var, error) {
 	return r.redis.Do(ctx, "GETSET", key, value)
 }
 
@@ -137,7 +137,7 @@ func (r *RedisGroupString) GetSet(ctx context.Context, key string, value interfa
 // It returns the length of the string at key, or 0 when key does not exist.
 //
 // https://redis.io/commands/strlen/
-func (r *RedisGroupString) StrLen(ctx context.Context, key string) (int64, error) {
+func (r RedisGroupString) StrLen(ctx context.Context, key string) (int64, error) {
 	v, err := r.redis.Do(ctx, "STRLEN", key)
 	return v.Int64(), err
 }
@@ -147,7 +147,7 @@ func (r *RedisGroupString) StrLen(ctx context.Context, key string) (int64, error
 // so APPEND will be similar to SET in this special case.
 //
 // https://redis.io/commands/append/
-func (r *RedisGroupString) Append(ctx context.Context, key string, value string) (int64, error) {
+func (r RedisGroupString) Append(ctx context.Context, key string, value string) (int64, error) {
 	v, err := r.redis.Do(ctx, "APPEND", key, value)
 	return v.Int64(), err
 }
@@ -163,7 +163,7 @@ func (r *RedisGroupString) Append(ctx context.Context, key string, value string)
 // It returns the length of the string after it was modified by the command.
 //
 // https://redis.io/commands/setrange/
-func (r *RedisGroupString) SetRange(ctx context.Context, key string, offset int64, value string) (int64, error) {
+func (r RedisGroupString) SetRange(ctx context.Context, key string, offset int64, value string) (int64, error) {
 	v, err := r.redis.Do(ctx, "SETRANGE", key, offset, value)
 	return v.Int64(), err
 }
@@ -175,7 +175,7 @@ func (r *RedisGroupString) SetRange(ctx context.Context, key string, offset int6
 // The function handles out of range requests by limiting the resulting range to the actual length of the string.
 //
 // https://redis.io/commands/getrange/
-func (r *RedisGroupString) GetRange(ctx context.Context, key string, start, end int64) (string, error) {
+func (r RedisGroupString) GetRange(ctx context.Context, key string, start, end int64) (string, error) {
 	v, err := r.redis.Do(ctx, "GETRANGE", key, start, end)
 	return v.String(), err
 }
@@ -192,7 +192,7 @@ func (r *RedisGroupString) GetRange(ctx context.Context, key string, start, end 
 // there is no overhead for storing the string representation of the integer.
 //
 // https://redis.io/commands/incr/
-func (r *RedisGroupString) Incr(ctx context.Context, key string) (int64, error) {
+func (r RedisGroupString) Incr(ctx context.Context, key string) (int64, error) {
 	v, err := r.redis.Do(ctx, "INCR", key)
 	return v.Int64(), err
 }
@@ -204,7 +204,7 @@ func (r *RedisGroupString) Incr(ctx context.Context, key string) (int64, error) 
 // See Incr for extra information on increment/decrement operations.
 //
 // https://redis.io/commands/incrby/
-func (r *RedisGroupString) IncrBy(ctx context.Context, key string, increment int64) (int64, error) {
+func (r RedisGroupString) IncrBy(ctx context.Context, key string, increment int64) (int64, error) {
 	v, err := r.redis.Do(ctx, "INCRBY", key, increment)
 	return v.Int64(), err
 }
@@ -228,7 +228,7 @@ func (r *RedisGroupString) IncrBy(ctx context.Context, key string, increment int
 // precision of the computation.
 //
 // https://redis.io/commands/incrbyfloat/
-func (r *RedisGroupString) IncrByFloat(ctx context.Context, key string, increment float64) (float64, error) {
+func (r RedisGroupString) IncrByFloat(ctx context.Context, key string, increment float64) (float64, error) {
 	v, err := r.redis.Do(ctx, "INCRBYFLOAT", key, increment)
 	return v.Float64(), err
 }
@@ -239,7 +239,7 @@ func (r *RedisGroupString) IncrByFloat(ctx context.Context, key string, incremen
 // that can not be represented as integer. This operation is limited to 64 bits signed integers.
 //
 // https://redis.io/commands/decr/
-func (r *RedisGroupString) Decr(ctx context.Context, key string) (int64, error) {
+func (r RedisGroupString) Decr(ctx context.Context, key string) (int64, error) {
 	v, err := r.redis.Do(ctx, "DECR", key)
 	return v.Int64(), err
 }
@@ -250,7 +250,7 @@ func (r *RedisGroupString) Decr(ctx context.Context, key string) (int64, error) 
 // that can not be represented as integer. This operation is limited to 64 bits signed integers.
 //
 // https://redis.io/commands/decrby/
-func (r *RedisGroupString) DecrBy(ctx context.Context, key string, decrement int64) (int64, error) {
+func (r RedisGroupString) DecrBy(ctx context.Context, key string, decrement int64) (int64, error) {
 	v, err := r.redis.Do(ctx, "DECRBY", key, decrement)
 	return v.Int64(), err
 }
@@ -263,7 +263,7 @@ func (r *RedisGroupString) DecrBy(ctx context.Context, key string, decrement int
 // were updated while others are unchanged.
 //
 // https://redis.io/commands/mset/
-func (r *RedisGroupString) MSet(ctx context.Context, keyValues ...interface{}) error {
+func (r RedisGroupString) MSet(ctx context.Context, keyValues ...interface{}) error {
 	_, err := r.redis.Do(ctx, "MSET", keyValues...)
 	return err
 }
@@ -280,7 +280,7 @@ func (r *RedisGroupString) MSet(ctx context.Context, keyValues ...interface{}) e
 // It returns:
 // true:  if the all the keys were set.
 // false: if no key was set (at least one key already existed).
-func (r *RedisGroupString) MSetNX(ctx context.Context, keyValues ...interface{}) (bool, error) {
+func (r RedisGroupString) MSetNX(ctx context.Context, keyValues ...interface{}) (bool, error) {
 	v, err := r.redis.Do(ctx, "MSETNX", keyValues...)
 	return v.Bool(), err
 }
@@ -289,7 +289,7 @@ func (r *RedisGroupString) MSetNX(ctx context.Context, keyValues ...interface{})
 // the special value nil is returned. Because of this, the operation never fails.
 //
 // https://redis.io/commands/mget/
-func (r *RedisGroupString) MGet(ctx context.Context, keys ...string) ([]*gvar.Var, error) {
+func (r RedisGroupString) MGet(ctx context.Context, keys ...string) ([]*gvar.Var, error) {
 	v, err := r.redis.Do(ctx, "MGET", gconv.Interfaces(keys)...)
 	return v.Vars(), err
 }

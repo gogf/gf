@@ -8,14 +8,18 @@ package gredis
 
 import (
 	"context"
+
+	"github.com/gogf/gf/v2/container/gvar"
 )
 
+// RedisGroupPubSub is the redis group object for pub/sub operations.
 type RedisGroupPubSub struct {
 	redis *Redis
 }
 
-func (r *Redis) PubSub() *RedisGroupPubSub {
-	return &RedisGroupPubSub{
+// GroupPubSub creates and returns a redis group object for pub/sub operations.
+func (r *Redis) GroupPubSub() RedisGroupPubSub {
+	return RedisGroupPubSub{
 		redis: r,
 	}
 }
@@ -27,27 +31,21 @@ func (r *Redis) PubSub() *RedisGroupPubSub {
 // of the nodes.
 //
 // https://redis.io/commands/publish/
-func (r *RedisGroupPubSub) Publish(ctx context.Context, channel string, message interface{}) (int64, error) {
-	v, err := r.redis.Do(ctx, "PUBLISH", channel, message)
+func (r RedisGroupPubSub) Publish(ctx context.Context, channel string, message interface{}) (int64, error) {
+	v, err := r.redis.Do(ctx, "Publish", channel, message)
 	return v.Int64(), err
 }
 
 // Subscribe the client to the specified channels.
 //
-// Once the client enters the subscribed state it is not supposed to issue any other commands, except
-// for additional SUBSCRIBE, SSUBSCRIBE, PSUBSCRIBE, UNSUBSCRIBE, SUNSUBSCRIBE, PUNSUBSCRIBE, PING,
-// RESET and QUIT commands.
-//
 // https://redis.io/commands/subscribe/
-func (r *RedisGroupPubSub) Subscribe(ctx context.Context, channels ...string) (interface{}, error) {
-	v, err := r.redis.Do(ctx, "SUBSCRIBE", channels)
-	return v.Interface(), err
+func (r RedisGroupPubSub) Subscribe(ctx context.Context, channels ...string) (*gvar.Var, error) {
+	return r.redis.Do(ctx, "Subscribe", channels)
 }
 
 // PSubscribe the client to the given patterns.
 //
 // https://redis.io/commands/psubscribe/
-func (r *RedisGroupPubSub) PSubscribe(ctx context.Context, channels ...string) (interface{}, error) {
-	v, err := r.redis.Do(ctx, "PSUBSCRIBE", channels)
-	return v.Interface(), err
+func (r RedisGroupPubSub) PSubscribe(ctx context.Context, channels ...string) (*gvar.Var, error) {
+	return r.redis.Do(ctx, "PSubscribe", channels)
 }

@@ -11,12 +11,14 @@ import (
 	"time"
 )
 
+// RedisGroupExpire is the redis group object for expiration operations.
 type RedisGroupExpire struct {
 	redis *Redis
 }
 
-func (r *Redis) Expire() *RedisGroupExpire {
-	return &RedisGroupExpire{
+// GroupExpire creates and returns a redis group object for expiration operations.
+func (r *Redis) GroupExpire() RedisGroupExpire {
+	return RedisGroupExpire{
 		redis: r,
 	}
 }
@@ -25,8 +27,8 @@ func (r *Redis) Expire() *RedisGroupExpire {
 // After the timeout has expired, the key will automatically be deleted.
 //
 // https://redis.io/commands/expire/
-func (r *RedisGroupExpire) Expire(ctx context.Context, key string, seconds time.Duration) (bool, error) {
-	v, err := r.redis.Do(ctx, "EXPIRE", key, seconds.Seconds())
+func (r RedisGroupExpire) Expire(ctx context.Context, key string, seconds time.Duration) (bool, error) {
+	v, err := r.redis.Do(ctx, "Expire", key, seconds.Seconds())
 	return v.Bool(), err
 }
 
@@ -36,8 +38,8 @@ func (r *RedisGroupExpire) Expire(ctx context.Context, key string, seconds time.
 // A timestamp in the past will delete the key immediately.
 //
 // https://redis.io/commands/expireat/
-func (r *RedisGroupExpire) ExpireAt(ctx context.Context, key string, time time.Time) (bool, error) {
-	v, err := r.redis.Do(ctx, "EXPIREAT", key, time)
+func (r RedisGroupExpire) ExpireAt(ctx context.Context, key string, time time.Time) (bool, error) {
+	v, err := r.redis.Do(ctx, "ExpireAt", key, time)
 	return v.Bool(), err
 }
 
@@ -53,17 +55,17 @@ func (r *RedisGroupExpire) ExpireAt(ctx context.Context, key string, time time.T
 // available in Redis 2.6 or greater).
 //
 // https://redis.io/commands/ttl/
-func (r *RedisGroupExpire) TTL(ctx context.Context, key string) (int64, error) {
+func (r RedisGroupExpire) TTL(ctx context.Context, key string) (int64, error) {
 	v, err := r.redis.Do(ctx, "TTL", key)
 	return v.Int64(), err
 }
 
-// PErsist remove the existing timeout on key, turning the key from volatile (a key with an expire set)
+// Persist remove the existing timeout on key, turning the key from volatile (a key with an expire set)
 // to persistent (a key that will never expire as no timeout is associated).
 //
 // https://redis.io/commands/persist/
-func (r *RedisGroupExpire) PErsist(ctx context.Context, key string) (bool, error) {
-	v, err := r.redis.Do(ctx, "PERSIST", key)
+func (r RedisGroupExpire) Persist(ctx context.Context, key string) (bool, error) {
+	v, err := r.redis.Do(ctx, "Persist", key)
 	return v.Bool(), err
 }
 
@@ -71,8 +73,8 @@ func (r *RedisGroupExpire) PErsist(ctx context.Context, key string) (bool, error
 // instead of seconds.
 //
 // https://redis.io/commands/pexpire/
-func (r *RedisGroupExpire) PExpire(ctx context.Context, key string, time time.Duration, options string) (bool, error) {
-	v, err := r.redis.Do(ctx, "PEXPIRE", key, time.Milliseconds(), options)
+func (r RedisGroupExpire) PExpire(ctx context.Context, key string, time time.Duration, options string) (bool, error) {
+	v, err := r.redis.Do(ctx, "PExpire", key, time.Milliseconds(), options)
 	return v.Bool(), err
 }
 
@@ -80,8 +82,8 @@ func (r *RedisGroupExpire) PExpire(ctx context.Context, key string, time time.Du
 // expire is specified in milliseconds instead of seconds.
 //
 // https://redis.io/commands/pexpireat/
-func (r *RedisGroupExpire) PExpireAt(ctx context.Context, key string, time time.Time) (bool, error) {
-	v, err := r.redis.Do(ctx, "PEXPIREAT", key, time)
+func (r RedisGroupExpire) PExpireAt(ctx context.Context, key string, time time.Time) (bool, error) {
+	v, err := r.redis.Do(ctx, "PExpireAt", key, time)
 	return v.Bool(), err
 }
 
@@ -93,7 +95,7 @@ func (r *RedisGroupExpire) PExpireAt(ctx context.Context, key string, time time.
 // no associated expire.
 //
 //  https://redis.io/commands/pttl/
-func (r *RedisGroupExpire) PTTL(ctx context.Context, key string) (int64, error) {
+func (r RedisGroupExpire) PTTL(ctx context.Context, key string) (int64, error) {
 	v, err := r.redis.Do(ctx, "PTTL", key)
 	return v.Int64(), err
 }

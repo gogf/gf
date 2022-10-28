@@ -32,7 +32,7 @@ func New(config ...*Config) (*Redis, error) {
 			adapter: defaultAdapterFunc(config[0]),
 			config:  config[0],
 		}
-		return redis, nil
+		return redis.initGroup(), nil
 	}
 	// Redis client with go redis implements adapter from package configuration.
 	if configFromGlobal, ok := GetConfig(); ok {
@@ -40,15 +40,17 @@ func New(config ...*Config) (*Redis, error) {
 			adapter: defaultAdapterFunc(configFromGlobal),
 			config:  configFromGlobal,
 		}
-		return redis, nil
+		return redis.initGroup(), nil
 	}
 	// Redis client with empty adapter.
-	return &Redis{}, nil
+	redis := &Redis{}
+	return redis.initGroup(), nil
 }
 
 // NewWithAdapter creates and returns a redis client with given adapter.
 func NewWithAdapter(adapter Adapter) *Redis {
-	return &Redis{adapter: adapter}
+	redis := &Redis{adapter: adapter}
+	return redis.initGroup()
 }
 
 // RegisterAdapterFunc registers default function creating redis adapter.

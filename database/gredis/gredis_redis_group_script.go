@@ -8,39 +8,27 @@ package gredis
 
 import (
 	"context"
+
+	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-type RedisGroupLua struct {
+// RedisGroupScript is the redis group object for script operations.
+type RedisGroupScript struct {
 	redis *Redis
 }
 
-func (r *Redis) Lua() *RedisGroupLua {
-	return &RedisGroupLua{
+// GroupScript creates and returns a group object for script operations.
+func (r *Redis) GroupScript() RedisGroupScript {
+	return RedisGroupScript{
 		redis: r,
 	}
 }
 
 // Eval invoke the execution of a server-side Lua script.
 //
-// The first argument is the script's source code. Scripts are written in Lua and executed by the
-// embedded Lua 5.1 interpreter in Redis.
-//
-// The second argument is the number of input key name arguments, followed by all the keys accessed by
-// the script. These names of input keys are available to the script as the KEYS global runtime
-// variable Any additional input arguments should not represent names of keys.
-//
-// Important: to ensure the correct execution of scripts,
-// both in standalone and clustered deployments, all names of keys that a script accesses must be
-// explicitly provided as input key arguments. The script should only access keys whose names are
-// given as input arguments. Scripts should never access keys with programmatically-generated names or
-// based on the contents of data structures stored in the database.
-//
-// Please refer to the Redis Programmability and Introduction to Eval Scripts for more information
-// about Lua scripts.
-//
 // https://redis.io/commands/eval/
-func (r *RedisGroupLua) Eval(ctx context.Context, script string, keys []string, args ...interface{}) (interface{}, error) {
+func (r RedisGroupScript) Eval(ctx context.Context, script string, keys []string, args ...interface{}) (*gvar.Var error) {
 	v, err := r.redis.Do(ctx, "EVAL", script, keys, args)
 	return v.Interface(), err
 }
@@ -54,7 +42,7 @@ func (r *RedisGroupLua) Eval(ctx context.Context, script string, keys []string, 
 // about Lua scripts.
 //
 // https://redis.io/commands/evalsha/
-func (r *RedisGroupLua) EvalSha(ctx context.Context, sha1 string, keys []string, args ...interface{}) (interface{}, error) {
+func (r RedisGroupScript) EvalSha(ctx context.Context, sha1 string, keys []string, args ...interface{}) (interface{}, error) {
 	v, err := r.redis.Do(ctx, "EVALSHA", sha1, keys, args)
 	return v.Interface(), err
 }
@@ -66,7 +54,7 @@ func (r *RedisGroupLua) EvalSha(ctx context.Context, sha1 string, keys []string,
 // The command works in the same way even if the script was already present in the script cache.
 //
 // https://redis.io/commands/script-load/
-func (r *RedisGroupLua) ScriptLoad(ctx context.Context, script string) (string, error) {
+func (r RedisGroupScript) ScriptLoad(ctx context.Context, script string) (string, error) {
 	v, err := r.redis.Do(ctx, "SCRIPT LOAD", script)
 	return v.String(), err
 }
@@ -80,7 +68,7 @@ func (r *RedisGroupLua) ScriptLoad(ctx context.Context, script string) (string, 
 // save bandwidth.
 //
 // https://redis.io/commands/script-exists/
-func (r *RedisGroupLua) ScriptExists(ctx context.Context, sha1s ...string) ([]interface{}, error) {
+func (r RedisGroupScript) ScriptExists(ctx context.Context, sha1s ...string) ([]interface{}, error) {
 	v, err := r.redis.Do(ctx, "SCRIPT EXISTS", sha1s)
 	return gconv.SliceAny(v), err
 }
@@ -92,7 +80,7 @@ func (r *RedisGroupLua) ScriptExists(ctx context.Context, sha1s ...string) ([]in
 // asynchronous.
 //
 // https://redis.io/commands/script-flush/
-func (r *RedisGroupLua) ScriptFlush(ctx context.Context, options string) (string, error) {
+func (r RedisGroupScript) ScriptFlush(ctx context.Context, options string) (string, error) {
 	v, err := r.redis.Do(ctx, "SCRIPT FLUSH", options)
 	return v.String(), err
 }
@@ -110,7 +98,7 @@ func (r *RedisGroupLua) ScriptFlush(ctx context.Context, options string) (string
 // half-written information.
 //
 // https://redis.io/commands/script-kill/
-func (r *RedisGroupLua) ScriptKill(ctx context.Context) (string, error) {
+func (r RedisGroupScript) ScriptKill(ctx context.Context) (string, error) {
 	v, err := r.redis.Do(ctx, "SCRIPT KILL")
 	return v.String(), err
 }

@@ -10,6 +10,7 @@ import (
 	"reflect"
 
 	"github.com/gogf/gf/v2/os/gstructs"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 func mustMergeOptionToArgs(args []interface{}, option interface{}) []interface{} {
@@ -39,9 +40,17 @@ func convertOptionToArgs(option interface{}) ([]interface{}, error) {
 		return nil, err
 	}
 	for _, field := range fields {
-		switch field.Type().Kind() {
+		switch field.OriginalKind() {
+		// See SetOption
 		case reflect.Bool:
 			args = append(args, field.Name())
+
+		// See ZRangeOption
+		case reflect.Struct:
+			args = append(args, field.Name())
+			args = append(args, gutil.Values(field.Value.Interface())...)
+
+		// See TTLOption
 		default:
 			args = append(args, field.Name(), field.Value.Interface())
 		}

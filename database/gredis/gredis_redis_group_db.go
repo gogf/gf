@@ -8,27 +8,30 @@ package gredis
 
 import (
 	"context"
+
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// RedisGroupDB is the redis group object for db operations.
 type RedisGroupDB struct {
 	redis *Redis
 }
 
-func (r *Redis) DB() *RedisGroupDB {
-	return &RedisGroupDB{
+// GroupDB creates and returns a redis group object for db operations.
+func (r *Redis) GroupDB() RedisGroupDB {
+	return RedisGroupDB{
 		redis: r,
 	}
 }
 
-// Exists return if key exists.
+// Exists return if `key` exists.
 // The user should be aware that if the same existing key is mentioned in the arguments multiple times,
 // it will be counted multiple times.
-// So if somekey exists, EXISTS somekey somekey will return 2.
+// So if `key` exists, EXISTS `key` will return 2.
 //
 // https://redis.io/commands/exists/
-func (r *RedisGroupDB) Exists(ctx context.Context, keys ...string) (int64, error) {
-	v, err := r.redis.Do(ctx, "EXISTS", keys)
+func (r RedisGroupDB) Exists(ctx context.Context, keys ...string) (int64, error) {
+	v, err := r.redis.Do(ctx, "Exists", gconv.Interfaces(keys)...)
 	return v.Int64(), err
 }
 
@@ -36,8 +39,8 @@ func (r *RedisGroupDB) Exists(ctx context.Context, keys ...string) (int64, error
 // The different types that can be returned are: string, list, set, zset, hash and stream.
 //
 // https://redis.io/commands/type/
-func (r *RedisGroupDB) Type(ctx context.Context, key string) (string, error) {
-	v, err := r.redis.Do(ctx, "TYPE", key)
+func (r RedisGroupDB) Type(ctx context.Context, key string) (string, error) {
+	v, err := r.redis.Do(ctx, "Type", key)
 	return v.String(), err
 }
 
@@ -49,8 +52,8 @@ func (r *RedisGroupDB) Type(ctx context.Context, key string) (string, error) {
 // meaning that in practice only keys that have the same hash tag can be reliably renamed in cluster.
 //
 // https://redis.io/commands/rename/
-func (r *RedisGroupDB) Rename(ctx context.Context, key, newKey string) (string, error) {
-	v, err := r.redis.Do(ctx, "RENAME", key, newKey)
+func (r RedisGroupDB) Rename(ctx context.Context, key, newKey string) (string, error) {
+	v, err := r.redis.Do(ctx, "Rename", key, newKey)
 	return v.String(), err
 }
 
@@ -60,8 +63,8 @@ func (r *RedisGroupDB) Rename(ctx context.Context, key, newKey string) (string, 
 // meaning that in practice only keys that have the same hash tag can be reliably renamed in cluster.
 //
 // https://redis.io/commands/renamenx/
-func (r *RedisGroupDB) RenameNX(ctx context.Context, key, newKey string) (bool, error) {
-	v, err := r.redis.Do(ctx, "RENAME", key, newKey)
+func (r RedisGroupDB) RenameNX(ctx context.Context, key, newKey string) (bool, error) {
+	v, err := r.redis.Do(ctx, "RenameNX", key, newKey)
 	return v.Bool(), err
 }
 
@@ -71,8 +74,8 @@ func (r *RedisGroupDB) RenameNX(ctx context.Context, key, newKey string) (bool, 
 // It is possible to use MOVE as a locking primitive because of this.
 //
 // https://redis.io/commands/move/
-func (r *RedisGroupDB) Move(ctx context.Context, key, db string) (bool, error) {
-	v, err := r.redis.Do(ctx, "MOVE", key, db)
+func (r RedisGroupDB) Move(ctx context.Context, key, db string) (bool, error) {
+	v, err := r.redis.Do(ctx, "Move", key, db)
 	return v.Bool(), err
 }
 
@@ -80,24 +83,24 @@ func (r *RedisGroupDB) Move(ctx context.Context, key, db string) (bool, error) {
 // a key is ignored if it does not exist.
 //
 // https://redis.io/commands/del/
-func (r *RedisGroupDB) Del(ctx context.Context, keys ...string) (int64, error) {
-	v, err := r.redis.Do(ctx, "DEL", keys)
+func (r RedisGroupDB) Del(ctx context.Context, keys ...string) (int64, error) {
+	v, err := r.redis.Do(ctx, "Del", keys)
 	return v.Int64(), err
 }
 
 // RandomKey return a random key from the currently selected database.
 //
 // https://redis.io/commands/randomkey/
-func (r *RedisGroupDB) RandomKey(ctx context.Context) (string, error) {
-	v, err := r.redis.Do(ctx, "RANDOMKEY")
+func (r RedisGroupDB) RandomKey(ctx context.Context) (string, error) {
+	v, err := r.redis.Do(ctx, "RandomKey")
 	return v.String(), err
 }
 
 // DBSize return the number of keys in the currently-selected database.
 //
 // https://redis.io/commands/dbsize/
-func (r *RedisGroupDB) DBSize(ctx context.Context) (int64, error) {
-	v, err := r.redis.Do(ctx, "DBSIZE")
+func (r RedisGroupDB) DBSize(ctx context.Context) (int64, error) {
+	v, err := r.redis.Do(ctx, "DBSize")
 	return v.Int64(), err
 }
 
@@ -111,8 +114,8 @@ func (r *RedisGroupDB) DBSize(ctx context.Context) (int64, error) {
 // If you're looking for a way to find keys in a subset of your keyspace, consider using SCAN or sets.
 //
 // https://redis.io/commands/keys/
-func (r *RedisGroupDB) Keys(ctx context.Context, pattern string) ([]string, error) {
-	v, err := r.redis.Do(ctx, "KEYS", pattern)
+func (r RedisGroupDB) Keys(ctx context.Context, pattern string) ([]string, error) {
+	v, err := r.redis.Do(ctx, "Keys", pattern)
 	return gconv.SliceStr(v), err
 }
 
@@ -128,8 +131,8 @@ func (r *RedisGroupDB) Keys(ctx context.Context, pattern string) ([]string, erro
 // Keys created during an asynchronous flush will be unaffected.
 //
 // https://redis.io/commands/flushdb/
-func (r *RedisGroupDB) FlushDB(ctx context.Context, options string) error {
-	_, err := r.redis.Do(ctx, "FLUSHDB", options)
+func (r RedisGroupDB) FlushDB(ctx context.Context, options string) error {
+	_, err := r.redis.Do(ctx, "FlushDB", options)
 	return err
 }
 
@@ -145,7 +148,7 @@ func (r *RedisGroupDB) FlushDB(ctx context.Context, options string) error {
 // Keys created during an asynchronous flush will be unaffected.
 //
 // https://redis.io/commands/flushall/
-func (r *RedisGroupDB) FlushAll(ctx context.Context, options string) error {
-	_, err := r.redis.Do(ctx, "FLUSHALL", options)
+func (r RedisGroupDB) FlushAll(ctx context.Context, options string) error {
+	_, err := r.redis.Do(ctx, "FlushAll", options)
 	return err
 }

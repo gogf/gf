@@ -8,15 +8,18 @@ package gredis
 
 import (
 	"context"
+
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// RedisGroupSet is the redis group object for set operations.
 type RedisGroupSet struct {
 	redis *Redis
 }
 
-func (r *Redis) Set() *RedisGroupSet {
-	return &RedisGroupSet{
+// GroupSet creates and returns a redis group object for set operations.
+func (r *Redis) GroupSet() RedisGroupSet {
+	return RedisGroupSet{
 		redis: r,
 	}
 }
@@ -28,7 +31,7 @@ func (r *Redis) Set() *RedisGroupSet {
 // An error is returned when the value stored at key is not a set.
 //
 // https://redis.io/commands/sadd/
-func (r *RedisGroupSet) SAdd(ctx context.Context, key string, members ...interface{}) (int64, error) {
+func (r RedisGroupSet) SAdd(ctx context.Context, key string, members ...interface{}) (int64, error) {
 	v, err := r.redis.Do(ctx, "SADD", key, members)
 	return v.Int64(), err
 }
@@ -36,7 +39,7 @@ func (r *RedisGroupSet) SAdd(ctx context.Context, key string, members ...interfa
 // SIsMember return if member is a member of the set stored at key.
 //
 // https://redis.io/commands/sismember/
-func (r *RedisGroupSet) SIsMember(ctx context.Context, key string, member string) (bool, error) {
+func (r RedisGroupSet) SIsMember(ctx context.Context, key string, member string) (bool, error) {
 	v, err := r.redis.Do(ctx, "SISMEMBER", key, member)
 	return v.Bool(), err
 }
@@ -49,7 +52,7 @@ func (r *RedisGroupSet) SIsMember(ctx context.Context, key string, member string
 // argument, the reply will consist of up to count members, depending on the set's cardinality.
 //
 // https://redis.io/commands/spop/
-func (r *RedisGroupSet) SPop(ctx context.Context, key string) (string, error) {
+func (r RedisGroupSet) SPop(ctx context.Context, key string) (string, error) {
 	v, err := r.redis.Do(ctx, "SPOP", key)
 	return v.String(), err
 }
@@ -63,7 +66,7 @@ func (r *RedisGroupSet) SPop(ctx context.Context, key string) (string, error) {
 // of the specified count.
 //
 // https://redis.io/commands/srandmember/
-func (r *RedisGroupSet) SRandMember(ctx context.Context, key string, count int) (string, error) {
+func (r RedisGroupSet) SRandMember(ctx context.Context, key string, count int) (string, error) {
 	v, err := r.redis.Do(ctx, "SRANDMEMBER", key, count)
 	return v.String(), err
 }
@@ -75,7 +78,7 @@ func (r *RedisGroupSet) SRandMember(ctx context.Context, key string, count int) 
 // An error is returned when the value stored at key is not a set.
 //
 // https://redis.io/commands/srem/
-func (r *RedisGroupSet) SRem(ctx context.Context, key string, members ...interface{}) (int64, error) {
+func (r RedisGroupSet) SRem(ctx context.Context, key string, members ...interface{}) (int64, error) {
 	v, err := r.redis.Do(ctx, "SREM", key, members)
 	return v.Int64(), err
 }
@@ -90,7 +93,7 @@ func (r *RedisGroupSet) SRem(ctx context.Context, key string, members ...interfa
 // An error is returned if source or destination does not hold a set value.
 //
 // https://redis.io/commands/smove/
-func (r *RedisGroupSet) SMove(ctx context.Context, source, destination, member string) (bool, error) {
+func (r RedisGroupSet) SMove(ctx context.Context, source, destination, member string) (bool, error) {
 	v, err := r.redis.Do(ctx, "SMOVE", source, destination, member)
 	return v.Bool(), err
 }
@@ -98,7 +101,7 @@ func (r *RedisGroupSet) SMove(ctx context.Context, source, destination, member s
 // SCard return the set cardinality (number of elements) of the set stored at key.
 //
 // https://redis.io/commands/scard/
-func (r *RedisGroupSet) SCard(ctx context.Context, key string) (int64, error) {
+func (r RedisGroupSet) SCard(ctx context.Context, key string) (int64, error) {
 	v, err := r.redis.Do(ctx, "SCARD", key)
 	return v.Int64(), err
 }
@@ -107,7 +110,7 @@ func (r *RedisGroupSet) SCard(ctx context.Context, key string) (int64, error) {
 // This has the same effect as running SINTER with one argument key.
 //
 // https://redis.io/commands/smembers/
-func (r *RedisGroupSet) SMembers(ctx context.Context, key string) ([]string, error) {
+func (r RedisGroupSet) SMembers(ctx context.Context, key string) ([]string, error) {
 	v, err := r.redis.Do(ctx, "SMEMBERS", key)
 	return gconv.SliceStr(v), err
 }
@@ -115,7 +118,7 @@ func (r *RedisGroupSet) SMembers(ctx context.Context, key string) ([]string, err
 // SInter return the members of the set resulting from the intersection of all the given sets.
 //
 // https://redis.io/commands/sinter/
-func (r *RedisGroupSet) SInter(ctx context.Context, keys ...string) ([]string, error) {
+func (r RedisGroupSet) SInter(ctx context.Context, keys ...string) ([]string, error) {
 	v, err := r.redis.Do(ctx, "SINTER", keys)
 	return gconv.SliceStr(v), err
 }
@@ -126,7 +129,7 @@ func (r *RedisGroupSet) SInter(ctx context.Context, keys ...string) ([]string, e
 // If destination already exists, it is overwritten.
 //
 // https://redis.io/commands/sinterstore/
-func (r *RedisGroupSet) SInterStore(ctx context.Context, destination string, keys ...string) (int64, error) {
+func (r RedisGroupSet) SInterStore(ctx context.Context, destination string, keys ...string) (int64, error) {
 	v, err := r.redis.Do(ctx, "SINTERSTORE", destination, keys)
 	return v.Int64(), err
 }
@@ -134,7 +137,7 @@ func (r *RedisGroupSet) SInterStore(ctx context.Context, destination string, key
 // SUnion return the members of the set resulting from the union of all the given sets.
 //
 // https://redis.io/commands/sunion/
-func (r *RedisGroupSet) SUnion(ctx context.Context, keys ...string) ([]string, error) {
+func (r RedisGroupSet) SUnion(ctx context.Context, keys ...string) ([]string, error) {
 	v, err := r.redis.Do(ctx, "SUNION", keys)
 	return gconv.SliceStr(v), err
 }
@@ -144,7 +147,7 @@ func (r *RedisGroupSet) SUnion(ctx context.Context, keys ...string) ([]string, e
 //  If destination already exists, it is overwritten.
 //
 // https://redis.io/commands/sunionstore/
-func (r *RedisGroupSet) SUnionStore(ctx context.Context, destination string, keys ...string) (int64, error) {
+func (r RedisGroupSet) SUnionStore(ctx context.Context, destination string, keys ...string) (int64, error) {
 	v, err := r.redis.Do(ctx, "SUNIONSTORE", destination, keys)
 	return v.Int64(), err
 }
@@ -153,7 +156,7 @@ func (r *RedisGroupSet) SUnionStore(ctx context.Context, destination string, key
 // successive sets.
 //
 // https://redis.io/commands/sdiff/
-func (r *RedisGroupSet) SDiff(ctx context.Context, keys ...string) ([]string, error) {
+func (r RedisGroupSet) SDiff(ctx context.Context, keys ...string) ([]string, error) {
 	v, err := r.redis.Do(ctx, "SDIFF", keys)
 	return gconv.SliceStr(v), err
 }
@@ -163,7 +166,7 @@ func (r *RedisGroupSet) SDiff(ctx context.Context, keys ...string) ([]string, er
 // If destination already exists, it is overwritten.
 //
 // https://redis.io/commands/sdiffstore/
-func (r *RedisGroupSet) SDiffStore(ctx context.Context, destination string, keys ...string) (int64, error) {
+func (r RedisGroupSet) SDiffStore(ctx context.Context, destination string, keys ...string) (int64, error) {
 	v, err := r.redis.Do(ctx, "SDIFFSTORE", destination, keys)
 	return v.Int64(), err
 }

@@ -8,15 +8,18 @@ package gredis
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/util/gconv"
+
+	"github.com/gogf/gf/v2/container/gvar"
 )
 
+// RedisGroupHash is the redis group object for hash operations.
 type RedisGroupHash struct {
 	redis *Redis
 }
 
-func (r *Redis) Hash() *RedisGroupHash {
-	return &RedisGroupHash{
+// GroupHash creates and returns a redis group object for hash operations.
+func (r *Redis) GroupHash() RedisGroupHash {
+	return RedisGroupHash{
 		redis: r,
 	}
 }
@@ -26,8 +29,8 @@ func (r *Redis) Hash() *RedisGroupHash {
 // If field already exists in the hash, it is overwritten.
 //
 // https://redis.io/commands/hset/
-func (r *RedisGroupHash) HSet(ctx context.Context, key, field, value string) (int64, error) {
-	v, err := r.redis.Do(ctx, "HSET", key, field, value)
+func (r RedisGroupHash) HSet(ctx context.Context, key, field, value string) (int64, error) {
+	v, err := r.redis.Do(ctx, "HSet", key, field, value)
 	return v.Int64(), err
 }
 
@@ -36,24 +39,24 @@ func (r *RedisGroupHash) HSet(ctx context.Context, key, field, value string) (in
 // If field already exists, this operation has no effect.
 //
 // https://redis.io/commands/hsetnx/
-func (r *RedisGroupHash) HSetNX(ctx context.Context, key, field, value string) (bool, error) {
-	v, err := r.redis.Do(ctx, "HSETNX", key, field, value)
+func (r RedisGroupHash) HSetNX(ctx context.Context, key, field, value string) (bool, error) {
+	v, err := r.redis.Do(ctx, "HSetNX", key, field, value)
 	return v.Bool(), err
 }
 
 // HGet return the value associated with field in the hash stored at key.
 //
 // https://redis.io/commands/hget/
-func (r *RedisGroupHash) HGet(ctx context.Context, key, field string) (string, error) {
-	v, err := r.redis.Do(ctx, "HGET", key, field)
-	return v.String(), err
+func (r RedisGroupHash) HGet(ctx context.Context, key, field string) (*gvar.Var, error) {
+	v, err := r.redis.Do(ctx, "HGet", key, field)
+	return v, err
 }
 
 // HExists return if field is an existing field in the hash stored at key.
 //
 // https://redis.io/commands/hexists/
-func (r *RedisGroupHash) HExists(ctx context.Context, key, field string) (bool, error) {
-	v, err := r.redis.Do(ctx, "HEXISTS", key, field)
+func (r RedisGroupHash) HExists(ctx context.Context, key, field string) (bool, error) {
+	v, err := r.redis.Do(ctx, "HExists", key, field)
 	return v.Bool(), err
 }
 
@@ -62,16 +65,16 @@ func (r *RedisGroupHash) HExists(ctx context.Context, key, field string) (bool, 
 // If key does not exist, it is treated as an empty hash and this command returns 0.
 //
 // https://redis.io/commands/hdel/
-func (r *RedisGroupHash) HDel(ctx context.Context, key string, fields ...string) (int64, error) {
-	v, err := r.redis.Do(ctx, "HDEL", key, fields)
+func (r RedisGroupHash) HDel(ctx context.Context, key string, fields ...string) (int64, error) {
+	v, err := r.redis.Do(ctx, "HDel", key, fields)
 	return v.Int64(), err
 }
 
 // HLen return the number of fields contained in the hash stored at key.
 //
 // https://redis.io/commands/hlen/
-func (r *RedisGroupHash) HLen(ctx context.Context, key string) (int64, error) {
-	v, err := r.redis.Do(ctx, "HLEN", key)
+func (r RedisGroupHash) HLen(ctx context.Context, key string) (int64, error) {
+	v, err := r.redis.Do(ctx, "HLen", key)
 	return v.Int64(), err
 }
 
@@ -79,11 +82,11 @@ func (r *RedisGroupHash) HLen(ctx context.Context, key string) (int64, error) {
 // If key does not exist, a new key holding a hash is created.
 // If field does not exist the value is set to 0 before the operation is performed.
 //
-// The range of values supported by HINCRBY is limited to 64 bit signed integers.
+// The range of values supported by HIncrBy is limited to 64-bit signed integers.
 //
 // https://redis.io/commands/hincrby/
-func (r *RedisGroupHash) HIncrBy(ctx context.Context, key, field string, value int64) (int64, error) {
-	v, err := r.redis.Do(ctx, "HINCRBY", key, field, value)
+func (r RedisGroupHash) HIncrBy(ctx context.Context, key, field string, value int64) (int64, error) {
+	v, err := r.redis.Do(ctx, "HIncrBy", key, field, value)
 	return v.Int64(), err
 }
 
@@ -96,12 +99,12 @@ func (r *RedisGroupHash) HIncrBy(ctx context.Context, key, field string, value i
 // The field contains a value of the wrong type (not a string).
 // The current field content or the specified increment are not parsable as a double precision
 // floating point number.
-// The exact behavior of this command is identical to the one of the INCRBYFLOAT command,
-// please refer to the documentation of INCRBYFLOAT for further information.
+// The exact behavior of this command is identical to the one of the HIncrByFloat command,
+// please refer to the documentation of HIncrByFloat for further information.
 //
 // https://redis.io/commands/hincrbyfloat/
-func (r *RedisGroupHash) HIncrByFloat(ctx context.Context, key, field string, value float64) (float64, error) {
-	v, err := r.redis.Do(ctx, "HINCRBYFLOAT", key, field, value)
+func (r RedisGroupHash) HIncrByFloat(ctx context.Context, key, field string, value float64) (float64, error) {
+	v, err := r.redis.Do(ctx, "HIncrByFloat", key, field, value)
 	return v.Float64(), err
 }
 
@@ -110,36 +113,36 @@ func (r *RedisGroupHash) HIncrByFloat(ctx context.Context, key, field string, va
 // If key does not exist, a new key holding a hash is created.
 //
 // https://redis.io/commands/hmset/
-func (r *RedisGroupHash) HMSet(ctx context.Context, key string, fields map[string]interface{}) (bool, error) {
-	v, err := r.redis.Do(ctx, "HMSET", key, fields)
+func (r RedisGroupHash) HMSet(ctx context.Context, key string, fields map[string]interface{}) (bool, error) {
+	v, err := r.redis.Do(ctx, "HMSet", key, fields)
 	return v.Bool(), err
 }
 
 // HMGet return  the values associated with the specified fields in the hash stored at key.
 // For every field that does not exist in the hash, a nil value is returned.
-// Because non-existing keys are treated as empty hashes, running HMGET against a non-existing key
+// Because non-existing keys are treated as empty hashes, running HMGet against a non-existing key
 // will return a list of nil values.
 //
 // https://redis.io/commands/hmget/
-func (r *RedisGroupHash) HMGet(ctx context.Context, key string, fields ...string) ([]interface{}, error) {
-	v, err := r.redis.Do(ctx, "HMGET", key, fields)
-	return gconv.SliceAny(v), err
+func (r RedisGroupHash) HMGet(ctx context.Context, key string, fields ...string) ([]*gvar.Var, error) {
+	v, err := r.redis.Do(ctx, "HMGet", key, fields)
+	return v.Vars(), err
 }
 
 // HKeys return all field names in the hash stored at key.
 //
 // https://redis.io/commands/hkeys/
-func (r *RedisGroupHash) HKeys(ctx context.Context, key string) ([]string, error) {
-	v, err := r.redis.Do(ctx, "HKEYS", key)
-	return gconv.SliceStr(v), err
+func (r RedisGroupHash) HKeys(ctx context.Context, key string) ([]string, error) {
+	v, err := r.redis.Do(ctx, "HKeys", key)
+	return v.Strings(), err
 }
 
 // HVals return all values in the hash stored at key.
 //
 // https://redis.io/commands/hvals/
-func (r *RedisGroupHash) HVals(ctx context.Context, key string) ([]string, error) {
-	v, err := r.redis.Do(ctx, "HVALS", key)
-	return gconv.SliceStr(v), err
+func (r RedisGroupHash) HVals(ctx context.Context, key string) ([]*gvar.Var, error) {
+	v, err := r.redis.Do(ctx, "HVals", key)
+	return v.Vars(), err
 }
 
 // HGetAll return all fields and values of the hash stored at key.
@@ -147,7 +150,7 @@ func (r *RedisGroupHash) HVals(ctx context.Context, key string) ([]string, error
 // so the length of the reply is twice the size of the hash.
 //
 // https://redis.io/commands/hgetall/
-func (r *RedisGroupHash) HGetAll(ctx context.Context, key string) (map[string]interface{}, error) {
-	v, err := r.redis.Do(ctx, "HGETALL", key)
-	return v.MapStrAny(), err
+func (r RedisGroupHash) HGetAll(ctx context.Context, key string) (map[string]*gvar.Var, error) {
+	v, err := r.redis.Do(ctx, "HGetAll", key)
+	return v.MapStrVar(), err
 }

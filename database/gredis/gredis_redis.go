@@ -20,7 +20,28 @@ import (
 type Redis struct {
 	adapter Adapter
 	config  *Config
+	localRedisGroupDB
+	localRedisGroupExpire
+	localRedisGroupHash
+	localRedisGroupList
+	localRedisGroupPubSub
+	localRedisGroupScript
+	localRedisGroupSet
+	localRedisGroupSortedSet
+	localRedisGroupString
 }
+
+type (
+	localRedisGroupDB        = RedisGroupDB
+	localRedisGroupExpire    = RedisGroupExpire
+	localRedisGroupHash      = RedisGroupHash
+	localRedisGroupList      = RedisGroupList
+	localRedisGroupPubSub    = RedisGroupPubSub
+	localRedisGroupScript    = RedisGroupScript
+	localRedisGroupSet       = RedisGroupSet
+	localRedisGroupSortedSet = RedisGroupSortedSet
+	localRedisGroupString    = RedisGroupString
+)
 
 // TTLOption provides extra option for TTL related functions.
 type TTLOption struct {
@@ -40,6 +61,20 @@ redis adapter is not set, missing configuration or adapter register?
 possible reference: https://github.com/gogf/gf/tree/master/contrib/nosql/redis
 `, "\n", ""))
 )
+
+// initGroup initializes the group object of redis.
+func (r *Redis) initGroup() *Redis {
+	r.localRedisGroupDB = r.DB()
+	r.localRedisGroupExpire = r.Expire()
+	r.localRedisGroupHash = r.Hash()
+	r.localRedisGroupList = r.List()
+	r.localRedisGroupScript = r.Script()
+	r.localRedisGroupPubSub = r.PubSub()
+	r.localRedisGroupSet = r.Set()
+	r.localRedisGroupSortedSet = r.SortedSet()
+	r.localRedisGroupString = r.String()
+	return r
+}
 
 // SetAdapter sets custom adapter for current redis client.
 func (r *Redis) SetAdapter(adapter Adapter) {
