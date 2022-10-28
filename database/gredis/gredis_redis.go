@@ -20,11 +20,9 @@ import (
 type Redis struct {
 	adapter Adapter
 	config  *Config
-	localRedisGroupDB
-	localRedisGroupExpire
+	localRedisGroupGeneric
 	localRedisGroupHash
 	localRedisGroupList
-	localRedisGroupPubSub
 	localRedisGroupScript
 	localRedisGroupSet
 	localRedisGroupSortedSet
@@ -32,24 +30,14 @@ type Redis struct {
 }
 
 type (
-	localRedisGroupDB        = RedisGroupDB
-	localRedisGroupExpire    = RedisGroupExpire
+	localRedisGroupGeneric   = RedisGroupGeneric
 	localRedisGroupHash      = RedisGroupHash
 	localRedisGroupList      = RedisGroupList
-	localRedisGroupPubSub    = RedisGroupPubSub
 	localRedisGroupScript    = RedisGroupScript
 	localRedisGroupSet       = RedisGroupSet
 	localRedisGroupSortedSet = RedisGroupSortedSet
 	localRedisGroupString    = RedisGroupString
 )
-
-// TTLOption provides extra option for TTL related functions.
-type TTLOption struct {
-	EX   int64 // EX seconds -- Set the specified expire time, in seconds.
-	PX   int64 // PX milliseconds -- Set the specified expire time, in milliseconds.
-	EXAT int64 // EXAT timestamp-seconds -- Set the specified Unix time at which the key will expire, in seconds.
-	PXAT int64 // PXAT timestamp-milliseconds -- Set the specified Unix time at which the key will expire, in milliseconds.
-}
 
 const (
 	errorNilRedis = `the Redis object is nil`
@@ -64,15 +52,13 @@ possible reference: https://github.com/gogf/gf/tree/master/contrib/nosql/redis
 
 // initGroup initializes the group object of redis.
 func (r *Redis) initGroup() *Redis {
-	r.localRedisGroupDB = r.DB()
-	r.localRedisGroupExpire = r.Expire()
-	r.localRedisGroupHash = r.Hash()
-	r.localRedisGroupList = r.List()
-	r.localRedisGroupScript = r.Script()
-	r.localRedisGroupPubSub = r.PubSub()
-	r.localRedisGroupSet = r.Set()
-	r.localRedisGroupSortedSet = r.SortedSet()
-	r.localRedisGroupString = r.String()
+	r.localRedisGroupGeneric = r.GroupGeneric()
+	r.localRedisGroupHash = r.GroupHash()
+	r.localRedisGroupList = r.GroupList()
+	r.localRedisGroupScript = r.GroupScript()
+	r.localRedisGroupSet = r.GroupSet()
+	r.localRedisGroupSortedSet = r.GroupSortedSet()
+	r.localRedisGroupString = r.GroupString()
 	return r
 }
 

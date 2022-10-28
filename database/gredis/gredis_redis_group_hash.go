@@ -10,6 +10,7 @@ import (
 	"context"
 
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // RedisGroupHash is the redis group object for hash operations.
@@ -28,9 +29,15 @@ func (r *Redis) GroupHash() RedisGroupHash {
 // If key does not exist, a new key holding a hash is created.
 // If field already exists in the hash, it is overwritten.
 //
+// It returns the number of fields that were added.
+//
 // https://redis.io/commands/hset/
-func (r RedisGroupHash) HSet(ctx context.Context, key, field, value string) (int64, error) {
-	v, err := r.redis.Do(ctx, "HSet", key, field, value)
+func (r RedisGroupHash) HSet(ctx context.Context, key string, fields map[string]interface{}) (int64, error) {
+	var s = []interface{}{key}
+	for k, v := range fields {
+		s = append(s, k, v)
+	}
+	v, err := r.redis.Do(ctx, "HSet", s...)
 	return v.Int64(), err
 }
 
@@ -38,13 +45,19 @@ func (r RedisGroupHash) HSet(ctx context.Context, key, field, value string) (int
 // If key does not exist, a new key holding a hash is created.
 // If field already exists, this operation has no effect.
 //
+// It returns:
+// - 1 if field is a new field in the hash and value was set.
+// - 0 if field already exists in the hash and no operation was performed.
+//
 // https://redis.io/commands/hsetnx/
-func (r RedisGroupHash) HSetNX(ctx context.Context, key, field, value string) (bool, error) {
+func (r RedisGroupHash) HSetNX(ctx context.Context, key, field string, value interface{}) (int64, error) {
 	v, err := r.redis.Do(ctx, "HSetNX", key, field, value)
-	return v.Bool(), err
+	return v.Int64(), err
 }
 
-// HGet return the value associated with field in the hash stored at key.
+// HGet returns the value associated with field in the hash stored at key.
+//
+// It returns the value associated with field, or nil when field is not present in the hash or key does not exist.
 //
 // https://redis.io/commands/hget/
 func (r RedisGroupHash) HGet(ctx context.Context, key, field string) (*gvar.Var, error) {
@@ -52,25 +65,43 @@ func (r RedisGroupHash) HGet(ctx context.Context, key, field string) (*gvar.Var,
 	return v, err
 }
 
-// HExists return if field is an existing field in the hash stored at key.
+// HStrLen Returns the string length of the value associated with field in the hash stored at key.
+// If the key or the field do not exist, 0 is returned.
 //
-// https://redis.io/commands/hexists/
-func (r RedisGroupHash) HExists(ctx context.Context, key, field string) (bool, error) {
-	v, err := r.redis.Do(ctx, "HExists", key, field)
-	return v.Bool(), err
-}
-
-// HDel remove the specified fields from the hash stored at key.
-// Specified fields that do not exist within this hash are ignored.
-// If key does not exist, it is treated as an empty hash and this command returns 0.
+// It returns the string length of the value associated with field,
+// or zero when field is not present in the hash or key does not exist at all.
 //
-// https://redis.io/commands/hdel/
-func (r RedisGroupHash) HDel(ctx context.Context, key string, fields ...string) (int64, error) {
-	v, err := r.redis.Do(ctx, "HDel", key, fields)
+// https://redis.io/commands/hstrlen/
+func (r RedisGroupHash) HStrLen(ctx context.Context, key, field string) (int64, error) {
+	v, err := r.redis.Do(ctx, "HSTRLEN", key, field)
 	return v.Int64(), err
 }
 
-// HLen return the number of fields contained in the hash stored at key.
+// HExists returns if field is an existing field in the hash stored at key.
+//
+// It returns:
+// - 1 if the hash contains field.
+// - 0 if the hash does not contain field, or key does not exist.
+//
+// https://redis.io/commands/hexists/
+func (r RedisGroupHash) HExists(ctx context.Context, key, field string) (int64, error) {
+	v, err := r.redis.Do(ctx, "HExists", key, field)
+	return v.Int64(), err
+}
+
+// HDel removes the specified fields from the hash stored at key.
+// Specified fields that do not exist within this hash are ignored.
+// If key does not exist, it is treated as an empty hash and this command returns 0.
+//
+// It returns the number of fields that were removed from the hash, not including specified but non-existing fields.
+//
+// https://redis.io/commands/hdel/
+func (r RedisGroupHash) HDel(ctx context.Context, key string, fields ...string) (int64, error) {
+	v, err := r.redis.Do(ctx, "HDel", append([]interface{}{key}, gconv.Interfaces(fields)...)...)
+	return v.Int64(), err
+}
+
+// HLen returns the number of fields contained in the hash stored at key.
 //
 // https://redis.io/commands/hlen/
 func (r RedisGroupHash) HLen(ctx context.Context, key string) (int64, error) {
@@ -85,12 +116,12 @@ func (r RedisGroupHash) HLen(ctx context.Context, key string) (int64, error) {
 // The range of values supported by HIncrBy is limited to 64-bit signed integers.
 //
 // https://redis.io/commands/hincrby/
-func (r RedisGroupHash) HIncrBy(ctx context.Context, key, field string, value int64) (int64, error) {
-	v, err := r.redis.Do(ctx, "HIncrBy", key, field, value)
+func (r RedisGroupHash) HIncrBy(ctx context.Context, key, field string, increment int64) (int64, error) {
+	v, err := r.redis.Do(ctx, "HIncrBy", key, field, increment)
 	return v.Int64(), err
 }
 
-// HIncrByFloat increment the specified field of a hash stored at key, and representing a floating
+// HIncrByFloat increments the specified field of a hash stored at key, and representing a floating
 // point number, by the specified increment. If the increment value is negative, the result is to
 // have the hash field value decremented instead of incremented. If the field does not exist, it is
 // set to 0 before performing the operation.
@@ -102,20 +133,26 @@ func (r RedisGroupHash) HIncrBy(ctx context.Context, key, field string, value in
 // The exact behavior of this command is identical to the one of the HIncrByFloat command,
 // please refer to the documentation of HIncrByFloat for further information.
 //
+// It returns the value of field after the increment.
+//
 // https://redis.io/commands/hincrbyfloat/
-func (r RedisGroupHash) HIncrByFloat(ctx context.Context, key, field string, value float64) (float64, error) {
-	v, err := r.redis.Do(ctx, "HIncrByFloat", key, field, value)
+func (r RedisGroupHash) HIncrByFloat(ctx context.Context, key, field string, increment float64) (float64, error) {
+	v, err := r.redis.Do(ctx, "HIncrByFloat", key, field, increment)
 	return v.Float64(), err
 }
 
-// HMSet set the specified fields to their respective values in the hash stored at key.
+// HMSet sets the specified fields to their respective values in the hash stored at key.
 // This command overwrites any specified fields already existing in the hash.
 // If key does not exist, a new key holding a hash is created.
 //
 // https://redis.io/commands/hmset/
-func (r RedisGroupHash) HMSet(ctx context.Context, key string, fields map[string]interface{}) (bool, error) {
-	v, err := r.redis.Do(ctx, "HMSet", key, fields)
-	return v.Bool(), err
+func (r RedisGroupHash) HMSet(ctx context.Context, key string, fields map[string]interface{}) error {
+	var s = []interface{}{key}
+	for k, v := range fields {
+		s = append(s, k, v)
+	}
+	_, err := r.redis.Do(ctx, "HMSet", s...)
+	return err
 }
 
 // HMGet return  the values associated with the specified fields in the hash stored at key.
@@ -125,11 +162,11 @@ func (r RedisGroupHash) HMSet(ctx context.Context, key string, fields map[string
 //
 // https://redis.io/commands/hmget/
 func (r RedisGroupHash) HMGet(ctx context.Context, key string, fields ...string) ([]*gvar.Var, error) {
-	v, err := r.redis.Do(ctx, "HMGet", key, fields)
+	v, err := r.redis.Do(ctx, "HMGet", append([]interface{}{key}, gconv.Interfaces(fields)...)...)
 	return v.Vars(), err
 }
 
-// HKeys return all field names in the hash stored at key.
+// HKeys returns all field names in the hash stored at key.
 //
 // https://redis.io/commands/hkeys/
 func (r RedisGroupHash) HKeys(ctx context.Context, key string) ([]string, error) {
@@ -145,7 +182,7 @@ func (r RedisGroupHash) HVals(ctx context.Context, key string) ([]*gvar.Var, err
 	return v.Vars(), err
 }
 
-// HGetAll return all fields and values of the hash stored at key.
+// HGetAll returns all fields and values of the hash stored at key.
 // In the returned value, every field name is followed by its value,
 // so the length of the reply is twice the size of the hash.
 //

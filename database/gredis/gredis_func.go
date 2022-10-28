@@ -10,10 +10,12 @@ import (
 	"reflect"
 
 	"github.com/gogf/gf/v2/os/gstructs"
-	"github.com/gogf/gf/v2/util/gutil"
 )
 
 func mustMergeOptionToArgs(args []interface{}, option interface{}) []interface{} {
+	if option == nil {
+		return args
+	}
 	var (
 		err        error
 		optionArgs []interface{}
@@ -30,12 +32,15 @@ func convertOptionToArgs(option interface{}) ([]interface{}, error) {
 		return nil, nil
 	}
 	var (
-		args        = make([]interface{}, 0)
-		fields, err = gstructs.Fields(gstructs.FieldsInput{
-			Pointer:         option,
-			RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
-		})
+		err       error
+		args      = make([]interface{}, 0)
+		fields    []gstructs.Field
+		subFields []gstructs.Field
 	)
+	fields, err = gstructs.Fields(gstructs.FieldsInput{
+		Pointer:         option,
+		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +53,16 @@ func convertOptionToArgs(option interface{}) ([]interface{}, error) {
 		// See ZRangeOption
 		case reflect.Struct:
 			args = append(args, field.Name())
-			args = append(args, gutil.Values(field.Value.Interface())...)
+			subFields, err = gstructs.Fields(gstructs.FieldsInput{
+				Pointer:         option,
+				RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
+			})
+			if err != nil {
+				return nil, err
+			}
+			for _, subField := range subFields {
+				args = append(args, subField.Value.Interface())
+			}
 
 		// See TTLOption
 		default:

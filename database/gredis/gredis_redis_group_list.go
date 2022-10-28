@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/container/gvar"
 )
 
-// RedisGroupList is the redis group object for list operations.
+// RedisGroupList is the redis group list object.
 type RedisGroupList struct {
 	redis *Redis
 }
@@ -27,16 +27,12 @@ func (r *Redis) GroupList() RedisGroupList {
 	}
 }
 
-// LPush insert all the specified values at the head of the list stored at key
+// LPush inserts all the specified values at the head of the list stored at key
 // Insert all the specified values at the head of the list stored at key.
 // If key does not exist, it is created as empty list before performing the push operations.
 // When key holds a value that is not a list, an error is returned.
 //
-// It is possible to push multiple elements using a single command call just specifying multiple arguments at
-// the end of the command. Elements are inserted one after the other to the head of the list,
-// from the leftmost element to the rightmost element.
-// So for instance the command `LPush mylist a b c` will result into a list containing c as first element,
-// b as second element and an as third element
+// It returns the length of the list after the push operations.
 //
 // https://redis.io/commands/lpush/
 func (r RedisGroupList) LPush(ctx context.Context, key string, values ...interface{}) (int64, error) {
@@ -49,15 +45,18 @@ func (r RedisGroupList) LPush(ctx context.Context, key string, values ...interfa
 // In contrary to LPush, no operation will be performed when key does not yet exist.
 // Return Integer reply: the length of the list after the push operation.
 //
+// It returns the length of the list after the push operations.
+//
 // https://redis.io/commands/lpushx
-func (r RedisGroupList) LPushX(ctx context.Context, key string, value string) (int64, error) {
-	v, err := r.redis.Do(ctx, "LPushX", key, value)
+func (r RedisGroupList) LPushX(ctx context.Context, key string, element interface{}, elements ...interface{}) (int64, error) {
+	v, err := r.redis.Do(ctx, "LPushX", append([]interface{}{key, element}, elements...)...)
 	return v.Int64(), err
 }
 
-// RPush insert all the specified values at the tail of the list stored at key.
+// RPush inserts all the specified values at the tail of the list stored at key.
 // Insert all the specified values at the tail of the list stored at key.
 // If key does not exist, it is created as empty list before performing the push operation.
+//
 // When key holds a value that is not a list, an error is returned.
 // It is possible to push multiple elements using a single command call just specifying multiple
 // arguments at  the end of the command. Elements are inserted one after the other to the tail of the
@@ -65,18 +64,21 @@ func (r RedisGroupList) LPushX(ctx context.Context, key string, value string) (i
 // So for instance the command RPush mylist a b c will result into a list containing a as first element,
 // b as second element and c as third element.
 //
+// It returns the length of the list after the push operation.
+//
 // https://redis.io/commands/rpush
 func (r RedisGroupList) RPush(ctx context.Context, key string, values ...interface{}) (int64, error) {
 	v, err := r.redis.Do(ctx, "RPush", append([]interface{}{key}, values...)...)
 	return v.Int64(), err
 }
 
-// RPushX insert value at the tail of the list stored at key, only if key exists and holds a list.
+// RPushX inserts value at the tail of the list stored at key, only if key exists and holds a list.
 // Inserts specified values at the tail of the list stored at key, only if key already exists and
 // holds a list.
-// In contrary to RPUSH, no operation will be performed when key does not yet exist.
 //
-// Return Integer reply: the length of the list after the push operation.
+// In contrary to RPush, no operation will be performed when key does not yet exist.
+//
+// It returns the length of the list after the push operation.
 //
 // https://redis.io/commands/rpushx
 func (r RedisGroupList) RPushX(ctx context.Context, key string, value interface{}) (int64, error) {
@@ -110,10 +112,12 @@ func (r RedisGroupList) LPop(ctx context.Context, key string, count ...int) (*gv
 // By default, the command pops a single element from the end of the list.
 // When provided with the optional count argument, the reply will consist of up to count elements,
 // depending on the list's length.
-// Return When called without the count argument:
-// Bulk string reply: the value of the last element, or nil when key does not exist.
-// When called with the count argument:
-// Array reply: list of popped elements, or nil when key does not exist.
+//
+// It returns:
+// - When called without the count argument:
+//   the value of the last element, or nil when key does not exist.
+// - When called with the count argument:
+//   list of popped elements, or nil when key does not exist.
 //
 // https://redis.io/commands/rpop
 func (r RedisGroupList) RPop(ctx context.Context, key string, count ...int) (*gvar.Var, error) {
@@ -123,7 +127,9 @@ func (r RedisGroupList) RPop(ctx context.Context, key string, count ...int) (*gv
 	return r.redis.Do(ctx, "RPop", key)
 }
 
-// LRem remove the first count occurrences of elements equal to value from the list stored at key.
+// LRem removes the first count occurrences of elements equal to value from the list stored at key.
+//
+// It returns the number of removed elements.
 //
 // https://redis.io/commands/lrem/
 func (r RedisGroupList) LRem(ctx context.Context, key string, count int64, value interface{}) (int64, error) {
@@ -131,13 +137,10 @@ func (r RedisGroupList) LRem(ctx context.Context, key string, count int64, value
 	return v.Int64(), err
 }
 
-// LLen return the length of the list stored at key.
+// LLen returns the length of the list stored at key.
 // Returns the length of the list stored at key.
 // If key does not exist, it is interpreted as an empty list and 0 is returned.
 // An error is returned when the value stored at key is not a list.
-//
-// Return
-// Integer reply: the length of the list at key.
 //
 // https://redis.io/commands/llen
 func (r RedisGroupList) LLen(ctx context.Context, key string) (int64, error) {
@@ -151,24 +154,27 @@ func (r RedisGroupList) LLen(ctx context.Context, key string) (int64, error) {
 // Negative indices can be used to designate elements starting at the tail of the list.
 // Here, -1 means the last element, -2 means the penultimate and so forth.
 // When the value at key is not a list, an error is returned.
-// Return
-// Bulk string reply: the requested element, or nil when index is out of range.
+//
+// It returns the requested element, or nil when index is out of range.
 //
 // https://redis.io/commands/lindex
 func (r RedisGroupList) LIndex(ctx context.Context, key string, index int64) (*gvar.Var, error) {
 	return r.redis.Do(ctx, "LIndex", key, index)
 }
 
+// LInsertOp defines the operation name for function LInsert.
 type LInsertOp string
 
 const (
-	LInsertOpBefore LInsertOp = "Before"
-	LInsertOpAfter  LInsertOp = "After"
+	LInsertBefore LInsertOp = "BEFORE"
+	LInsertAfter  LInsertOp = "AFTER"
 )
 
-// LInsert insert element in the list stored at key either before or after the reference value pivot.
+// LInsert inserts element in the list stored at key either before or after the reference value pivot.
 // When key does not exist, it is considered an empty list and no operation is performed.
 // An error is returned when key exists but does not hold a list value.
+//
+// It returns the length of the list after the insert operation, or -1 when the value pivot was not found.
 //
 // https://redis.io/commands/linsert/
 func (r RedisGroupList) LInsert(ctx context.Context, key string, op LInsertOp, pivot, value interface{}) (int64, error) {
@@ -176,7 +182,7 @@ func (r RedisGroupList) LInsert(ctx context.Context, key string, op LInsertOp, p
 	return v.Int64(), err
 }
 
-// LSet set the list element at index to element.
+// LSet sets the list element at index to element.
 // For more information on the index argument, see LIndex.
 // An error is returned for out of range indexes.
 //
@@ -185,7 +191,7 @@ func (r RedisGroupList) LSet(ctx context.Context, key string, index int64, value
 	return r.redis.Do(ctx, "LSet", key, index, value)
 }
 
-// LRange return the specified elements of the list stored at key.
+// LRange returns the specified elements of the list stored at key.
 // The offsets start and stop are zero-based indexes, with 0 being the first element of the list (the
 // head of the list), 1 being the next element and so on.
 //
@@ -198,7 +204,7 @@ func (r RedisGroupList) LRange(ctx context.Context, key string, start, stop int6
 	return v.Vars(), err
 }
 
-// LTrim trim an existing list so that it will contain only the specified range of elements
+// LTrim trims an existing list so that it will contain only the specified range of elements
 // specified. Both start and stop are zero-based indexes, where 0 is the first element of the list
 // (the head), 1 the next element and so on.
 //
@@ -245,6 +251,9 @@ func (r RedisGroupList) RPopLPush(ctx context.Context, source, destination strin
 // this command behaves exactly like RPopLPush. When source is empty, Redis will block the connection
 // until another // client pushes to it or until timeout is reached.
 // A timeout of zero can be used to block indefinitely.
+//
+// It returns the element being popped from source and pushed to destination.
+// If timeout is reached, a Null reply is returned.
 //
 // https://redis.io/commands/brpoplpush/
 func (r RedisGroupList) BRPopLPush(ctx context.Context, source, destination string, timeout time.Duration) (*gvar.Var, error) {

@@ -17,6 +17,7 @@ import (
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/util/gconv"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -89,6 +90,47 @@ func (c *RedisConn) Do(ctx context.Context, command string, args ...interface{})
 		costMilli: timestampMilli2 - timestampMilli1,
 	})
 	return
+}
+
+// Publish posts a message to the given channel.
+//
+// In a Redis Cluster clients can publish to every node. The cluster makes sure that published
+// messages are forwarded as needed, so clients can subscribe to any channel by connecting to any one
+// of the nodes.
+//
+// It returns the number of clients that received the message.
+// Note that in a Redis Cluster, only clients that are connected to the same node as the publishing client
+// are included in the count.
+//
+// https://redis.io/commands/publish/
+func (c *RedisConn) Publish(ctx context.Context, channel string, message interface{}) (int64, error) {
+	v, err := c.Do(ctx, "Publish", channel, message)
+	return v.Int64(), err
+}
+
+// Subscribe subscribes the client to the specified channels.
+//
+// https://redis.io/commands/subscribe/
+func (c *RedisConn) Subscribe(ctx context.Context, channels ...string) error {
+	_, err := c.Do(ctx, "Subscribe", gconv.Interfaces(channels)...)
+	return err
+}
+
+// PSubscribe subscribes the client to the given patterns.
+//
+// Supported glob-style patterns:
+// - h?llo subscribes to hello, hallo and hxllo
+// - h*llo subscribes to hllo and heeeello
+// - h[ae]llo subscribes to hello and hallo, but not hillo
+//
+// Use \ to escape special characters if you want to match them verbatim.
+//
+// https://redis.io/commands/psubscribe/
+func (c *RedisConn) PSubscribe(ctx context.Context, pattern string, patterns ...string) error {
+	var s = []interface{}{pattern}
+	s = append(s, gconv.Interfaces(patterns)...)
+	_, err := c.Do(ctx, "PSubscribe", s...)
+	return err
 }
 
 // Receive receives a single reply as gvar.Var from the Redis server.
