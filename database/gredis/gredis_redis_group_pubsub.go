@@ -8,11 +8,32 @@ package gredis
 
 import (
 	"context"
+	"fmt"
 )
 
 // RedisGroupPubSub provides pub/sub functions for redis.
 type RedisGroupPubSub struct {
 	redis *Redis
+}
+
+// Message received as result of a PUBLISH command issued by another client.
+type Message struct {
+	Channel      string
+	Pattern      string
+	Payload      string
+	PayloadSlice []string
+}
+
+// Subscription received after a successful subscription to channel.
+type Subscription struct {
+	Kind    string // Can be "subscribe", "unsubscribe", "psubscribe" or "punsubscribe".
+	Channel string // Channel name we have subscribed to.
+	Count   int    // Number of channels we are currently subscribed to.
+}
+
+// String converts current object to a readable string.
+func (m *Subscription) String() string {
+	return fmt.Sprintf("%s: %s", m.Kind, m.Channel)
 }
 
 // GroupPubSub creates and returns RedisGroupPubSub.
