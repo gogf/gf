@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package group_test
+package redis_test
 
 import (
 	"testing"
@@ -32,7 +32,7 @@ func Test_Set_Get(t *testing.T) {
 		t.Assert(r1.String(), v1)
 		r2, err := redis.GroupString().Get(ctx, k2)
 		t.AssertNil(err)
-		t.Assert(r2.String(), "v2")
+		t.Assert(r2.String(), v2)
 	})
 	// With Option.
 	gtest.C(t, func(t *gtest.T) {

@@ -92,28 +92,19 @@ func (c *RedisConn) Do(ctx context.Context, command string, args ...interface{})
 	return
 }
 
-// Publish posts a message to the given channel.
-//
-// In a Redis Cluster clients can publish to every node. The cluster makes sure that published
-// messages are forwarded as needed, so clients can subscribe to any channel by connecting to any one
-// of the nodes.
-//
-// It returns the number of clients that received the message.
-// Note that in a Redis Cluster, only clients that are connected to the same node as the publishing client
-// are included in the count.
-//
-// https://redis.io/commands/publish/
-func (c *RedisConn) Publish(ctx context.Context, channel string, message interface{}) (int64, error) {
-	v, err := c.Do(ctx, "Publish", channel, message)
-	return v.Int64(), err
-}
-
 // Subscribe subscribes the client to the specified channels.
 //
 // https://redis.io/commands/subscribe/
-func (c *RedisConn) Subscribe(ctx context.Context, channels ...string) error {
+func (c *RedisConn) Subscribe(ctx context.Context, channels ...string) (*Subscription, error) {
 	_, err := c.Do(ctx, "Subscribe", gconv.Interfaces(channels)...)
-	return err
+	if err != nil {
+		return nil, err
+	}
+	v, err := c.Receive(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return v.Val().(*Subscription), err
 }
 
 // PSubscribe subscribes the client to the given patterns.
@@ -126,11 +117,27 @@ func (c *RedisConn) Subscribe(ctx context.Context, channels ...string) error {
 // Use \ to escape special characters if you want to match them verbatim.
 //
 // https://redis.io/commands/psubscribe/
-func (c *RedisConn) PSubscribe(ctx context.Context, pattern string, patterns ...string) error {
+func (c *RedisConn) PSubscribe(ctx context.Context, pattern string, patterns ...string) (*Subscription, error) {
 	var s = []interface{}{pattern}
 	s = append(s, gconv.Interfaces(patterns)...)
 	_, err := c.Do(ctx, "PSubscribe", s...)
-	return err
+	if err != nil {
+		return nil, err
+	}
+	v, err := c.Receive(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return v.Val().(*Subscription), err
+}
+
+// ReceiveMessage receives a single message of subscription from the Redis server.
+func (c *RedisConn) ReceiveMessage(ctx context.Context) (*Message, error) {
+	v, err := c.conn.Receive(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return v.Val().(*Message), nil
 }
 
 // Receive receives a single reply as gvar.Var from the Redis server.

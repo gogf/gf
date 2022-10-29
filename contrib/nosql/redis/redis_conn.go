@@ -10,6 +10,7 @@ import (
 	"context"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/gogf/gf/v2/database/gredis"
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -75,7 +76,7 @@ func (c *localAdapterGoRedisConn) resultToVar(result interface{}, err error) (*g
 			return gvar.New(gconv.Strings(v)), err
 
 		case *redis.Message:
-			result = &Message{
+			result = &gredis.Message{
 				Channel:      v.Channel,
 				Pattern:      v.Pattern,
 				Payload:      v.Payload,
@@ -83,7 +84,7 @@ func (c *localAdapterGoRedisConn) resultToVar(result interface{}, err error) (*g
 			}
 
 		case *redis.Subscription:
-			result = &Subscription{
+			result = &gredis.Subscription{
 				Kind:    v.Kind,
 				Channel: v.Channel,
 				Count:   v.Count,

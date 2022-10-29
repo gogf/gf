@@ -4,4 +4,12 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package group_test
+package gredis
+
+// Message received as result of a PUBLISH command issued by another client.
+type Message struct {
+	Channel      string
+	Pattern      string
+	Payload      string
+	PayloadSlice []string
+}

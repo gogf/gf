@@ -4,13 +4,12 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package basic_test
+package redis_test
 
 import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/contrib/nosql/redis/v2"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gredis"
 	"github.com/gogf/gf/v2/frame/g"
@@ -19,13 +18,6 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/guid"
 	"github.com/gogf/gf/v2/util/gutil"
-)
-
-var (
-	config = &gredis.Config{
-		Address: `:6379`,
-		Db:      1,
-	}
 )
 
 func Test_NewClose(t *testing.T) {
@@ -41,12 +33,7 @@ func Test_NewClose(t *testing.T) {
 
 func Test_Do(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		redis, err := gredis.New(config)
-		t.AssertNil(err)
-		t.AssertNE(redis, nil)
-		defer redis.Close(ctx)
-
-		_, err = redis.Do(ctx, "SET", "k", "v")
+		_, err := redis.Do(ctx, "SET", "k", "v")
 		t.AssertNil(err)
 
 		r, err := redis.Do(ctx, "GET", "k")
@@ -63,11 +50,6 @@ func Test_Do(t *testing.T) {
 
 func Test_Conn(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		redis, err := gredis.New(config)
-		t.AssertNil(err)
-		t.AssertNE(redis, nil)
-		defer redis.Close(ctx)
-
 		conn, err := redis.Conn(ctx)
 		t.AssertNil(err)
 		defer conn.Close(ctx)
@@ -165,43 +147,17 @@ func Test_Error(t *testing.T) {
 		defer conn.Close(ctx)
 		_, err = conn.Do(ctx, "SET", "k", "v")
 		t.AssertNil(err)
-
-		_, err = conn.Do(ctx, "Subscribe", "gf")
-		t.AssertNil(err)
-
-		time.Sleep(time.Second)
-
-		_, err = r.Do(ctx, "PUBLISH", "gf", "test")
-		t.AssertNil(err)
-
-		time.Sleep(time.Second)
-
-		v, err = conn.Receive(ctx)
-		t.AssertNil(err)
-		t.Assert(v.Val().(*redis.Subscription).Channel, "gf")
-
-		v, err = conn.Receive(ctx)
-		t.AssertNil(err)
-		t.Assert(v.Val().(*redis.Message).Channel, "gf")
-		t.Assert(v.Val().(*redis.Message).Payload, "test")
-
-		time.Sleep(time.Second)
 	})
 }
 
 func Test_Bool(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		redis, err := gredis.New(config)
-		t.AssertNil(err)
-		t.AssertNE(redis, nil)
-		defer redis.Close(ctx)
-
 		defer func() {
 			redis.Do(ctx, "DEL", "key-true")
 			redis.Do(ctx, "DEL", "key-false")
 		}()
 
-		_, err = redis.Do(ctx, "SET", "key-true", true)
+		_, err := redis.Do(ctx, "SET", "key-true", true)
 		t.AssertNil(err)
 
 		_, err = redis.Do(ctx, "SET", "key-false", false)

@@ -20,19 +20,24 @@ import (
 type Redis struct {
 	adapter Adapter
 	config  *Config
-	localRedisGroupGeneric
-	localRedisGroupHash
-	localRedisGroupList
-	localRedisGroupScript
-	localRedisGroupSet
-	localRedisGroupSortedSet
-	localRedisGroupString
+	localRedisGroup
 }
 
 type (
+	localRedisGroup struct {
+		localRedisGroupGeneric
+		localRedisGroupHash
+		localRedisGroupList
+		localRedisGroupPubSub
+		localRedisGroupScript
+		localRedisGroupSet
+		localRedisGroupSortedSet
+		localRedisGroupString
+	}
 	localRedisGroupGeneric   = RedisGroupGeneric
 	localRedisGroupHash      = RedisGroupHash
 	localRedisGroupList      = RedisGroupList
+	localRedisGroupPubSub    = RedisGroupPubSub
 	localRedisGroupScript    = RedisGroupScript
 	localRedisGroupSet       = RedisGroupSet
 	localRedisGroupSortedSet = RedisGroupSortedSet
@@ -52,13 +57,16 @@ possible reference: https://github.com/gogf/gf/tree/master/contrib/nosql/redis
 
 // initGroup initializes the group object of redis.
 func (r *Redis) initGroup() *Redis {
-	r.localRedisGroupGeneric = r.GroupGeneric()
-	r.localRedisGroupHash = r.GroupHash()
-	r.localRedisGroupList = r.GroupList()
-	r.localRedisGroupScript = r.GroupScript()
-	r.localRedisGroupSet = r.GroupSet()
-	r.localRedisGroupSortedSet = r.GroupSortedSet()
-	r.localRedisGroupString = r.GroupString()
+	r.localRedisGroup = localRedisGroup{
+		localRedisGroupGeneric:   r.GroupGeneric(),
+		localRedisGroupHash:      r.GroupHash(),
+		localRedisGroupList:      r.GroupList(),
+		localRedisGroupPubSub:    r.GroupPubSub(),
+		localRedisGroupScript:    r.GroupScript(),
+		localRedisGroupSet:       r.GroupSet(),
+		localRedisGroupSortedSet: r.GroupSortedSet(),
+		localRedisGroupString:    r.GroupString(),
+	}
 	return r
 }
 
