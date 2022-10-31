@@ -32,7 +32,7 @@ import (
 // The parameter `safe` specifies whether using this Json object in concurrent-safe context,
 // which is false in default.
 func New(data interface{}, safe ...bool) *Json {
-	return NewWithTag(data, ContentTypeJson, safe...)
+	return NewWithTag(data, string(ContentTypeJson), safe...)
 }
 
 // NewWithTag creates a Json object with any variable type of `data`, but `data` should be a map
@@ -95,7 +95,7 @@ func NewWithOptions(data interface{}, options Options) *Json {
 			vc: false,
 		}
 	}
-	j.mu = rwmutex.New(options.Safe)
+	j.mu = rwmutex.Create(options.Safe)
 	return j
 }
 
@@ -107,7 +107,7 @@ func Load(path string, safe ...bool) (*Json, error) {
 		path = p
 	}
 	options := Options{
-		Type: gfile.Ext(path),
+		Type: ContentType(gfile.Ext(path)),
 	}
 	if len(safe) > 0 && safe[0] {
 		options.Safe = true
@@ -200,7 +200,7 @@ func LoadContent(data interface{}, safe ...bool) (*Json, error) {
 // LoadContentType creates a Json object from given type and content,
 // supporting data content type as follows:
 // JSON, XML, INI, YAML and TOML.
-func LoadContentType(dataType string, data interface{}, safe ...bool) (*Json, error) {
+func LoadContentType(dataType ContentType, data interface{}, safe ...bool) (*Json, error) {
 	content := gconv.Bytes(data)
 	if len(content) == 0 {
 		return New(nil, safe...), nil
@@ -220,7 +220,7 @@ func LoadContentType(dataType string, data interface{}, safe ...bool) (*Json, er
 }
 
 // IsValidDataType checks and returns whether given `dataType` a valid data type for loading.
-func IsValidDataType(dataType string) bool {
+func IsValidDataType(dataType ContentType) bool {
 	if dataType == "" {
 		return false
 	}
@@ -279,7 +279,9 @@ func doLoadContentWithOptions(data []byte, options Options) (*Json, error) {
 	if options.Type == "" {
 		options.Type = checkDataType(data)
 	}
-	options.Type = gstr.TrimLeft(options.Type, ".")
+	options.Type = ContentType(gstr.TrimLeft(
+		string(options.Type), "."),
+	)
 	switch options.Type {
 	case ContentTypeJson, ContentTypeJs:
 
@@ -334,7 +336,7 @@ func doLoadContentWithOptions(data []byte, options Options) (*Json, error) {
 // checkDataType automatically checks and returns the data type for `content`.
 // Note that it uses regular expression for loose checking, you can use LoadXXX/LoadContentType
 // functions to load the content for certain content type.
-func checkDataType(content []byte) string {
+func checkDataType(content []byte) ContentType {
 	if json.Valid(content) {
 		return ContentTypeJson
 	} else if gregex.IsMatch(`^<.+>[\S\s]+<.+>\s*$`, content) {

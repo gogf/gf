@@ -36,7 +36,7 @@ type FieldsInput struct {
 
 	// RecursiveOption specifies the way retrieving the fields recursively if the attribute
 	// is an embedded struct. It is RecursiveOptionNone in default.
-	RecursiveOption int
+	RecursiveOption RecursiveOption
 }
 
 // FieldMapInput is the input parameter struct type for function FieldMap.
@@ -50,11 +50,13 @@ type FieldMapInput struct {
 
 	// RecursiveOption specifies the way retrieving the fields recursively if the attribute
 	// is an embedded struct. It is RecursiveOptionNone in default.
-	RecursiveOption int
+	RecursiveOption RecursiveOption
 }
 
+type RecursiveOption int
+
 const (
-	RecursiveOptionNone          = 0 // No recursively retrieving fields as map if the field is an embedded struct.
-	RecursiveOptionEmbedded      = 1 // Recursively retrieving fields as map if the field is an embedded struct.
-	RecursiveOptionEmbeddedNoTag = 2 // Recursively retrieving fields as map if the field is an embedded struct and the field has no tag.
+	RecursiveOptionNone          RecursiveOption = 0 // No recursively retrieving fields as map if the field is an embedded struct.
+	RecursiveOptionEmbedded      RecursiveOption = 1 // Recursively retrieving fields as map if the field is an embedded struct.
+	RecursiveOptionEmbeddedNoTag RecursiveOption = 2 // Recursively retrieving fields as map if the field is an embedded struct and the field has no tag.
 )

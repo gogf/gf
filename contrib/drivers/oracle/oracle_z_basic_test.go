@@ -8,11 +8,13 @@ package oracle_test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/v2/util/gconv"
+	"strings"
+	"testing"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
-	"strings"
-	"testing"
 )
 
 func TestTables(t *testing.T) {
@@ -61,10 +63,11 @@ func TestTableFields(t *testing.T) {
 		createTable("t_user")
 		defer dropTable("t_user")
 		var expect = map[string][]interface{}{
-			"ID":          {"NUMBER(10,0)", false},
+			"ID":          {"INT(10,0)", false},
 			"PASSPORT":    {"VARCHAR2(45)", false},
 			"PASSWORD":    {"CHAR(32)", false},
 			"NICKNAME":    {"VARCHAR2(45)", false},
+			"SALARY":      {"FLOAT(18,2)", true},
 			"CREATE_TIME": {"VARCHAR2(45)", true},
 		}
 
@@ -102,13 +105,6 @@ func TestTableFields(t *testing.T) {
 	})
 }
 
-func TestFilteredLink(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		s := dblink.FilteredLink()
-		gtest.AssertEQ(s, "oracle:xxx@127.0.0.1:1521/XE")
-	})
-
-}
 func TestDoInsert(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		createTable("t_user")
@@ -120,6 +116,7 @@ func TestDoInsert(t *testing.T) {
 			"PASSPORT":    fmt.Sprintf(`t%d`, i),
 			"PASSWORD":    fmt.Sprintf(`p%d`, i),
 			"NICKNAME":    fmt.Sprintf(`T%d`, i),
+			"SALARY":      gconv.Float64(i * 500),
 			"CREATE_TIME": gtime.Now().String(),
 		}
 		_, err := db.Insert(ctx, "t_user", data)
@@ -137,6 +134,7 @@ func TestDoInsert(t *testing.T) {
 			"PASSPORT":    fmt.Sprintf(`t%d`, i),
 			"PASSWORD":    fmt.Sprintf(`p%d`, i),
 			"NICKNAME":    fmt.Sprintf(`T%d`, i),
+			"SALARY":      gconv.Float64(i * 450),
 			"CREATE_TIME": gtime.Now().String(),
 		}
 		_, err := db.Save(ctx, "t_user", data, 10)
@@ -192,6 +190,7 @@ func Test_DB_Insert(t *testing.T) {
 			"PASSPORT":    "t1",
 			"PASSWORD":    "25d55ad283aa400af464c76d713c07ad",
 			"NICKNAME":    "T1",
+			"SALARY":      2551.15,
 			"CREATE_TIME": gtime.Now().String(),
 		})
 		t.AssertNil(err)
@@ -202,6 +201,7 @@ func Test_DB_Insert(t *testing.T) {
 			"PASSPORT":    "t2",
 			"PASSWORD":    "25d55ad283aa400af464c76d713c07ad",
 			"NICKNAME":    "name_2",
+			"SALARY":      "2552.25",
 			"CREATE_TIME": gtime.Now().String(),
 		})
 		t.AssertNil(err)
@@ -210,11 +210,12 @@ func Test_DB_Insert(t *testing.T) {
 
 		// struct
 		type User struct {
-			Id         int    `gconv:"ID"`
-			Passport   string `json:"PASSPORT"`
-			Password   string `gconv:"PASSWORD"`
-			Nickname   string `gconv:"NICKNAME"`
-			CreateTime string `json:"CREATE_TIME"`
+			Id         int     `gconv:"ID"`
+			Passport   string  `json:"PASSPORT"`
+			Password   string  `gconv:"PASSWORD"`
+			Nickname   string  `gconv:"NICKNAME"`
+			Salary     float64 `gconv:"SALARY"`
+			CreateTime string  `json:"CREATE_TIME"`
 		}
 		timeStr := gtime.Now().String()
 		result, err = db.Insert(ctx, table, User{
@@ -222,6 +223,7 @@ func Test_DB_Insert(t *testing.T) {
 			Passport:   "user_3",
 			Password:   "25d55ad283aa400af464c76d713c07ad",
 			Nickname:   "name_3",
+			Salary:     2553.35,
 			CreateTime: timeStr,
 		})
 		t.AssertNil(err)
@@ -235,6 +237,7 @@ func Test_DB_Insert(t *testing.T) {
 		t.Assert(one["PASSPORT"].String(), "user_3")
 		t.Assert(one["PASSWORD"].String(), "25d55ad283aa400af464c76d713c07ad")
 		t.Assert(one["NICKNAME"].String(), "name_3")
+		t.Assert(one["SALARY"].Float64(), 2553.35)
 		t.Assert(one["CREATE_TIME"].GTime().String(), timeStr)
 
 		// *struct
@@ -244,6 +247,7 @@ func Test_DB_Insert(t *testing.T) {
 			Passport:   "t4",
 			Password:   "25d55ad283aa400af464c76d713c07ad",
 			Nickname:   "name_4",
+			Salary:     2554.35,
 			CreateTime: timeStr,
 		})
 		t.AssertNil(err)
@@ -256,6 +260,7 @@ func Test_DB_Insert(t *testing.T) {
 		t.Assert(one["PASSPORT"].String(), "t4")
 		t.Assert(one["PASSWORD"].String(), "25d55ad283aa400af464c76d713c07ad")
 		t.Assert(one["NICKNAME"].String(), "name_4")
+		t.Assert(one["SALARY"].Float64(), 2554.35)
 		t.Assert(one["CREATE_TIME"].GTime().String(), timeStr)
 
 		// batch with Insert
@@ -266,6 +271,7 @@ func Test_DB_Insert(t *testing.T) {
 				"PASSPORT":    "t200",
 				"PASSWORD":    "25d55ad283aa400af464c76d71qw07ad",
 				"NICKNAME":    "T200",
+				"SALARY":      2556.35,
 				"CREATE_TIME": timeStr,
 			},
 			g.Map{
@@ -273,6 +279,7 @@ func Test_DB_Insert(t *testing.T) {
 				"PASSPORT":    "t300",
 				"PASSWORD":    "25d55ad283aa400af464c76d713c07ad",
 				"NICKNAME":    "T300",
+				"SALARY":      2557.35,
 				"CREATE_TIME": timeStr,
 			},
 		})
@@ -286,6 +293,7 @@ func Test_DB_Insert(t *testing.T) {
 		t.Assert(one["PASSPORT"].String(), "t200")
 		t.Assert(one["PASSWORD"].String(), "25d55ad283aa400af464c76d71qw07ad")
 		t.Assert(one["NICKNAME"].String(), "T200")
+		t.Assert(one["SALARY"].Float64(), 2556.35)
 		t.Assert(one["CREATE_TIME"].GTime().String(), timeStr)
 	})
 }
@@ -300,6 +308,7 @@ func Test_DB_BatchInsert(t *testing.T) {
 				"PASSPORT":    "t2",
 				"PASSWORD":    "25d55ad283aa400af464c76d713c07ad",
 				"NICKNAME":    "name_2",
+				"SALARY":      2652.35,
 				"CREATE_TIME": gtime.Now().String(),
 			},
 			{
@@ -307,6 +316,7 @@ func Test_DB_BatchInsert(t *testing.T) {
 				"PASSPORT":    "user_3",
 				"PASSWORD":    "25d55ad283aa400af464c76d713c07ad",
 				"NICKNAME":    "name_3",
+				"SALARY":      2653.35,
 				"CREATE_TIME": gtime.Now().String(),
 			},
 		}, 1)
@@ -326,6 +336,7 @@ func Test_DB_BatchInsert(t *testing.T) {
 				"PASSPORT":    "t2",
 				"PASSWORD":    "25d55ad283aa400af464c76d713c07ad",
 				"NICKNAME":    "name_2",
+				"SALARY":      2652.35,
 				"CREATE_TIME": gtime.Now().String(),
 			},
 			g.Map{
@@ -333,6 +344,7 @@ func Test_DB_BatchInsert(t *testing.T) {
 				"PASSPORT":    "user_3",
 				"PASSWORD":    "25d55ad283aa400af464c76d713c07ad",
 				"NICKNAME":    "name_3",
+				"SALARY":      2653.35,
 				"CREATE_TIME": gtime.Now().String(),
 			},
 		}, 1)
@@ -350,6 +362,7 @@ func Test_DB_BatchInsert(t *testing.T) {
 			"PASSPORT":    "t1",
 			"PASSWORD":    "p1",
 			"NICKNAME":    "T1",
+			"SALARY":      2765.35,
 			"CREATE_TIME": gtime.Now().String(),
 		})
 		t.AssertNil(err)
@@ -369,6 +382,7 @@ func Test_DB_BatchInsert_Struct(t *testing.T) {
 			Passport   string      `c:"PASSPORT"`
 			Password   string      `c:"PASSWORD"`
 			NickName   string      `c:"NICKNAME"`
+			Salary     float64     `c:"SALARY"`
 			CreateTime *gtime.Time `c:"CREATE_TIME"`
 		}
 		user := &User{
@@ -376,6 +390,7 @@ func Test_DB_BatchInsert_Struct(t *testing.T) {
 			Passport:   "t1",
 			Password:   "p1",
 			NickName:   "T1",
+			Salary:     2761.35,
 			CreateTime: gtime.Now(),
 		}
 		result, err := db.Insert(ctx, table, user)
@@ -392,6 +407,9 @@ func Test_DB_Update(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Update(ctx, table, "password='987654321'", "id=3")
 		t.AssertNil(err)
+
+		result, err = db.Update(ctx, table, "salary=2675.13", "id=3")
+		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
 
@@ -401,6 +419,7 @@ func Test_DB_Update(t *testing.T) {
 		t.Assert(one["PASSPORT"].String(), "user_3")
 		t.Assert(strings.TrimSpace(one["PASSWORD"].String()), "987654321")
 		t.Assert(one["NICKNAME"].String(), "name_3")
+		t.Assert(one["SALARY"].String(), "2675.13")
 	})
 }
 
@@ -493,6 +512,7 @@ func Test_DB_GetStruct(t *testing.T) {
 			Passport   string
 			Password   string
 			NickName   string
+			Salary     float64
 			CreateTime gtime.Time
 		}
 		user := new(User)
@@ -506,6 +526,7 @@ func Test_DB_GetStruct(t *testing.T) {
 			Passport   string
 			Password   string
 			NickName   string
+			Salary     float64
 			CreateTime *gtime.Time
 		}
 		user := new(User)
@@ -524,6 +545,7 @@ func Test_DB_GetStructs(t *testing.T) {
 			Passport   string
 			Password   string
 			NickName   string
+			Salary     float64
 			CreateTime gtime.Time
 		}
 		var users []User
@@ -544,6 +566,7 @@ func Test_DB_GetStructs(t *testing.T) {
 			Passport   string
 			Password   string
 			NickName   string
+			Salary     float64
 			CreateTime *gtime.Time
 		}
 		var users []User
@@ -568,6 +591,7 @@ func Test_DB_GetScan(t *testing.T) {
 			Passport   string
 			Password   string
 			NickName   string
+			Salary     float64
 			CreateTime gtime.Time
 		}
 		user := new(User)
@@ -581,6 +605,7 @@ func Test_DB_GetScan(t *testing.T) {
 			Passport   string
 			Password   string
 			NickName   string
+			Salary     float64
 			CreateTime gtime.Time
 		}
 		var user *User
@@ -594,6 +619,7 @@ func Test_DB_GetScan(t *testing.T) {
 			Passport   string
 			Password   string
 			NickName   string
+			Salary     float64
 			CreateTime *gtime.Time
 		}
 		user := new(User)
@@ -608,6 +634,7 @@ func Test_DB_GetScan(t *testing.T) {
 			Passport   string
 			Password   string
 			NickName   string
+			Salary     float64
 			CreateTime gtime.Time
 		}
 		var users []User
@@ -628,6 +655,7 @@ func Test_DB_GetScan(t *testing.T) {
 			Passport   string
 			Password   string
 			NickName   string
+			Salary     float64
 			CreateTime *gtime.Time
 		}
 		var users []User

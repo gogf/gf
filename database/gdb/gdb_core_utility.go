@@ -9,36 +9,20 @@ package gdb
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/gogf/gf/v2/crypto/gmd5"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
-// WithDB injects given db object into context and returns a new context.
-func WithDB(ctx context.Context, db DB) context.Context {
-	if db == nil {
-		return ctx
-	}
-	dbCtx := db.GetCtx()
-	if ctxDb := DBFromCtx(dbCtx); ctxDb != nil {
-		return dbCtx
-	}
-	ctx = context.WithValue(ctx, contextKeyForDB, db)
-	return ctx
-}
-
-// DBFromCtx retrieves and returns DB object from context.
-func DBFromCtx(ctx context.Context) DB {
-	if ctx == nil {
-		return nil
-	}
-	v := ctx.Value(contextKeyForDB)
-	if v != nil {
-		return v.(DB)
-	}
-	return nil
+// GetDB returns the underlying DB.
+func (c *Core) GetDB() DB {
+	return c.db
 }
 
 // GetLink creates and returns the underlying database link object with transaction checks.
@@ -153,6 +137,59 @@ func (c *Core) Tables(ctx context.Context, schema ...string) (tables []string, e
 // process restarts.
 func (c *Core) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {
 	return
+}
+
+// ClearTableFields removes certain cached table fields of current configuration group.
+func (c *Core) ClearTableFields(ctx context.Context, table string, schema ...string) (err error) {
+	tableFieldsMap.Remove(fmt.Sprintf(
+		`%s%s@%s#%s`,
+		cachePrefixTableFields,
+		c.db.GetGroup(),
+		gutil.GetOrDefaultStr(c.db.GetSchema(), schema...),
+		table,
+	))
+	return
+}
+
+// ClearTableFieldsAll removes all cached table fields of current configuration group.
+func (c *Core) ClearTableFieldsAll(ctx context.Context) (err error) {
+	var (
+		keys        = tableFieldsMap.Keys()
+		cachePrefix = fmt.Sprintf(`%s@%s`, cachePrefixTableFields, c.db.GetGroup())
+		removedKeys = make([]string, 0)
+	)
+	for _, key := range keys {
+		if gstr.HasPrefix(key, cachePrefix) {
+			removedKeys = append(removedKeys, key)
+		}
+	}
+	if len(removedKeys) > 0 {
+		tableFieldsMap.Removes(removedKeys)
+	}
+	return
+}
+
+// ClearCache removes cached sql result of certain table.
+func (c *Core) ClearCache(ctx context.Context, table string) (err error) {
+	return c.db.GetCache().Clear(ctx)
+}
+
+// ClearCacheAll removes all cached sql result from cache
+func (c *Core) ClearCacheAll(ctx context.Context) (err error) {
+	return c.db.GetCache().Clear(ctx)
+}
+
+func (c *Core) makeSelectCacheKey(name, schema, table, sql string, args ...interface{}) string {
+	if name == "" {
+		name = fmt.Sprintf(
+			`%s@%s#%s:%s`,
+			c.db.GetGroup(),
+			schema,
+			table,
+			gmd5.MustEncryptString(sql+", @PARAMS:"+gconv.String(args)),
+		)
+	}
+	return fmt.Sprintf(`%s%s`, cachePrefixSelectCache, name)
 }
 
 // HasField determine whether the field exists in the table.

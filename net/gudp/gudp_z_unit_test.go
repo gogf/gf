@@ -21,10 +21,9 @@ import (
 var (
 	simpleTimeout = time.Millisecond * 100
 	sendData      = []byte("hello")
-	invalidAddr   = "127.0.0.1:99999"
 )
 
-func startUDPServer(addr string) {
+func startUDPServer(addr string) *gudp.Server {
 	s := gudp.NewServer(addr, func(conn *gudp.Conn) {
 		defer conn.Close()
 		for {
@@ -37,14 +36,12 @@ func startUDPServer(addr string) {
 	})
 	go s.Run()
 	time.Sleep(simpleTimeout)
+	return s
 }
 
 func Test_Basic(t *testing.T) {
-	var (
-		ctx = context.TODO()
-	)
-	p, _ := gudp.GetFreePort()
-	s := gudp.NewServer(fmt.Sprintf("127.0.0.1:%d", p), func(conn *gudp.Conn) {
+	var ctx = context.TODO()
+	s := gudp.NewServer(gudp.FreePortAddress, func(conn *gudp.Conn) {
 		defer conn.Close()
 		for {
 			data, err := conn.Recv(-1)
@@ -64,7 +61,7 @@ func Test_Basic(t *testing.T) {
 	// gudp.Conn.Send
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
-			conn, err := gudp.NewConn(fmt.Sprintf("127.0.0.1:%d", p))
+			conn, err := gudp.NewConn(s.GetListenedAddress())
 			t.AssertNil(err)
 			t.Assert(conn.Send([]byte(gconv.String(i))), nil)
 			t.AssertNil(conn.RemoteAddr())
@@ -78,7 +75,7 @@ func Test_Basic(t *testing.T) {
 	// gudp.Conn.SendRecv
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
-			conn, err := gudp.NewConn(fmt.Sprintf("127.0.0.1:%d", p))
+			conn, err := gudp.NewConn(s.GetListenedAddress())
 			t.AssertNil(err)
 			_, err = conn.SendRecv([]byte(gconv.String(i)), -1)
 			t.AssertNil(err)
@@ -89,7 +86,7 @@ func Test_Basic(t *testing.T) {
 	// gudp.Conn.SendWithTimeout
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
-			conn, err := gudp.NewConn(fmt.Sprintf("127.0.0.1:%d", p))
+			conn, err := gudp.NewConn(s.GetListenedAddress())
 			t.AssertNil(err)
 			err = conn.SendWithTimeout([]byte(gconv.String(i)), time.Second)
 			t.AssertNil(err)
@@ -99,7 +96,7 @@ func Test_Basic(t *testing.T) {
 	// gudp.Conn.RecvWithTimeout
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
-			conn, err := gudp.NewConn(fmt.Sprintf("127.0.0.1:%d", p))
+			conn, err := gudp.NewConn(s.GetListenedAddress())
 			t.AssertNil(err)
 			err = conn.Send([]byte(gconv.String(i)))
 			t.AssertNil(err)
@@ -113,7 +110,7 @@ func Test_Basic(t *testing.T) {
 	// gudp.Conn.SendRecvWithTimeout
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
-			conn, err := gudp.NewConn(fmt.Sprintf("127.0.0.1:%d", p))
+			conn, err := gudp.NewConn(s.GetListenedAddress())
 			t.AssertNil(err)
 			result, err := conn.SendRecvWithTimeout([]byte(gconv.String(i)), -1, time.Second)
 			t.AssertNil(err)
@@ -124,14 +121,14 @@ func Test_Basic(t *testing.T) {
 	// gudp.Send
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
-			err := gudp.Send(fmt.Sprintf("127.0.0.1:%d", p), []byte(gconv.String(i)))
+			err := gudp.Send(s.GetListenedAddress(), []byte(gconv.String(i)))
 			t.AssertNil(err)
 		}
 	})
 	// gudp.SendRecv
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
-			result, err := gudp.SendRecv(fmt.Sprintf("127.0.0.1:%d", p), []byte(gconv.String(i)), -1)
+			result, err := gudp.SendRecv(s.GetListenedAddress(), []byte(gconv.String(i)), -1)
 			t.AssertNil(err)
 			t.Assert(string(result), fmt.Sprintf(`> %d`, i))
 		}
@@ -141,11 +138,8 @@ func Test_Basic(t *testing.T) {
 // If the read buffer size is less than the sent package size,
 // the rest data would be dropped.
 func Test_Buffer(t *testing.T) {
-	var (
-		ctx = context.TODO()
-	)
-	p, _ := gudp.GetFreePort()
-	s := gudp.NewServer(fmt.Sprintf("127.0.0.1:%d", p), func(conn *gudp.Conn) {
+	var ctx = context.TODO()
+	s := gudp.NewServer(gudp.FreePortAddress, func(conn *gudp.Conn) {
 		defer conn.Close()
 		for {
 			data, err := conn.Recv(1)
@@ -163,26 +157,22 @@ func Test_Buffer(t *testing.T) {
 	defer s.Close()
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		result, err := gudp.SendRecv(fmt.Sprintf("127.0.0.1:%d", p), []byte("123"), -1)
+		result, err := gudp.SendRecv(s.GetListenedAddress(), []byte("123"), -1)
 		t.AssertNil(err)
 		t.Assert(string(result), "1")
 	})
 	gtest.C(t, func(t *gtest.T) {
-		result, err := gudp.SendRecv(fmt.Sprintf("127.0.0.1:%d", p), []byte("456"), -1)
+		result, err := gudp.SendRecv(s.GetListenedAddress(), []byte("456"), -1)
 		t.AssertNil(err)
 		t.Assert(string(result), "4")
 	})
 }
 
 func Test_NewConn(t *testing.T) {
-	var (
-		port, _ = gudp.GetFreePort()
-	)
-
-	startUDPServer(fmt.Sprintf("127.0.0.1:%d", port))
+	s := startUDPServer(gudp.FreePortAddress)
 
 	gtest.C(t, func(t *gtest.T) {
-		conn, err := gudp.NewConn(fmt.Sprintf("127.0.0.1:%d", port), fmt.Sprintf("127.0.0.1:%d", port+1))
+		conn, err := gudp.NewConn(s.GetListenedAddress(), fmt.Sprintf("127.0.0.1:%d", gudp.MustGetFreePort()))
 		t.AssertNil(err)
 		conn.SetDeadline(time.Now().Add(time.Second))
 		t.Assert(conn.Send(sendData), nil)
@@ -190,7 +180,7 @@ func Test_NewConn(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		conn, err := gudp.NewConn(fmt.Sprintf("127.0.0.1:%d", port), fmt.Sprintf("127.0.0.1:%d", 99999))
+		conn, err := gudp.NewConn(s.GetListenedAddress(), fmt.Sprintf("127.0.0.1:%d", 99999))
 		t.AssertNil(conn)
 		t.AssertNE(err, nil)
 	})
@@ -211,8 +201,7 @@ func Test_GetFreePorts(t *testing.T) {
 }
 
 func Test_Server(t *testing.T) {
-	p, _ := gudp.GetFreePort()
-	gudp.NewServer(fmt.Sprintf("127.0.0.1:%d", p), func(conn *gudp.Conn) {
+	gudp.NewServer(gudp.FreePortAddress, func(conn *gudp.Conn) {
 		defer conn.Close()
 		for {
 			data, err := conn.Recv(1)

@@ -32,13 +32,10 @@ func (m *Model) QuoteWord(s string) string {
 // Also see DriverMysql.TableFields.
 func (m *Model) TableFields(tableStr string, schema ...string) (fields map[string]*TableField, err error) {
 	var (
-		table     = m.db.GetCore().guessPrimaryTableName(tableStr)
-		useSchema = m.schema
+		table      = m.db.GetCore().guessPrimaryTableName(tableStr)
+		usedSchema = gutil.GetOrDefaultStr(m.schema, schema...)
 	)
-	if len(schema) > 0 && schema[0] != "" {
-		useSchema = schema[0]
-	}
-	return m.db.TableFields(m.GetCtx(), table, useSchema)
+	return m.db.TableFields(m.GetCtx(), table, usedSchema)
 }
 
 // getModel creates and returns a cloned model of current model if `safe` is true, or else it returns

@@ -16,8 +16,8 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/tracing"
 	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 	"go.opentelemetry.io/otel"
 	sdkTrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
@@ -55,13 +55,11 @@ func TestClient_CustomProvider(t *testing.T) {
 
 	otel.SetTracerProvider(NewCustomProvider())
 
-	p, _ := gtcp.GetFreePort()
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	s.BindHandler("/hello", func(r *ghttp.Request) {
 		r.Response.WriteHeader(200)
 		r.Response.WriteJson(g.Map{"field": "test_for_response_body"})
 	})
-	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -69,7 +67,7 @@ func TestClient_CustomProvider(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
-		url := fmt.Sprintf("127.0.0.1:%d/hello", p)
+		url := fmt.Sprintf("127.0.0.1:%d/hello", s.GetListenedPort())
 		resp, err := c.DoRequest(ctx, http.MethodGet, url)
 		t.AssertNil(err)
 		t.AssertNE(resp, nil)

@@ -3,41 +3,37 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
+
+// Package oracle implements gdb.Driver, which supports operations for database Oracle.
 //
 // Note:
 // 1. It needs manually import: _ "github.com/sijms/go-ora/v2"
 // 2. It does not support Save/Replace features.
 // 3. It does not support LastInsertId.
-
-// Package oracle implements gdb.Driver, which supports operations for Oracle.
 package oracle
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strconv"
+	"strings"
+
+	"github.com/gogf/gf/v2/util/gutil"
 	gora "github.com/sijms/go-ora/v2"
 
-	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
-	"strconv"
-	"strings"
 )
 
 // Driver is the driver for oracle database.
 type Driver struct {
 	*gdb.Core
 }
-
-var (
-	// tableFieldsMap caches the table information retrieved from database.
-	tableFieldsMap = gmap.New(true)
-)
 
 func init() {
 	if err := gdb.Register(`oracle`, New()); err != nil {
@@ -75,13 +71,27 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	}
 	// [username:[password]@]host[:port][/service_name][?param1=value1&...&paramN=valueN]
 	if config.Link != "" {
+		// ============================================================================
+		// Deprecated from v2.2.0.
+		// ============================================================================
 		source = config.Link
 		// Custom changing the schema in runtime.
 		if config.Name != "" {
 			source, _ = gregex.ReplaceString(`@(.+?)/([\w\.\-]+)+`, "@$1/"+config.Name, source)
 		}
 	} else {
-		source = gora.BuildUrl(config.Host, gconv.Int(config.Port), config.Name, config.User, config.Pass, options)
+		if config.Extra != "" {
+			var extraMap map[string]interface{}
+			if extraMap, err = gstr.Parse(config.Extra); err != nil {
+				return nil, err
+			}
+			for k, v := range extraMap {
+				options[k] = gconv.String(v)
+			}
+		}
+		source = gora.BuildUrl(
+			config.Host, gconv.Int(config.Port), config.Name, config.User, config.Pass, options,
+		)
 	}
 
 	if db, err = sql.Open(underlyingDriverName, source); err != nil {
@@ -92,21 +102,6 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 		return nil, err
 	}
 	return
-}
-
-// FilteredLink retrieves and returns filtered `linkInfo` that can be using for
-// logging or tracing purpose.
-func (d *Driver) FilteredLink() string {
-	linkInfo := d.GetConfig().Link
-	if linkInfo == "" {
-		return ""
-	}
-	s, _ := gregex.ReplaceString(
-		`(.+?)\s*:\s*(.+)\s*@\s*(.+)\s*:\s*(\d+)\s*/\s*(.+)`,
-		`$1:xxx@$3:$4/$5`,
-		linkInfo,
-	)
-	return s
 }
 
 // GetChars returns the security char for this type of database.
@@ -219,64 +214,45 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 func (d *Driver) TableFields(
 	ctx context.Context, table string, schema ...string,
 ) (fields map[string]*gdb.TableField, err error) {
-	charL, charR := d.GetChars()
-	table = gstr.Trim(table, charL+charR)
-	if gstr.Contains(table, " ") {
-		return nil, gerror.NewCode(
-			gcode.CodeInvalidParameter,
-			"function TableFields supports only single table operations",
-		)
-	}
-	useSchema := d.GetSchema()
-	if len(schema) > 0 && schema[0] != "" {
-		useSchema = schema[0]
-	}
-	v := tableFieldsMap.GetOrSetFuncLock(
-		fmt.Sprintf(`oracle_table_fields_%s_%s@group:%s`, table, useSchema, d.GetGroup()),
-		func() interface{} {
-			var (
-				result       gdb.Result
-				link         gdb.Link
-				structureSql = fmt.Sprintf(`
+	var (
+		result       gdb.Result
+		link         gdb.Link
+		useSchema    = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+		structureSql = fmt.Sprintf(`
 SELECT 
-	COLUMN_NAME AS FIELD, 
-	CASE DATA_TYPE  
-	WHEN 'NUMBER' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
-	WHEN 'FLOAT' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
-	ELSE DATA_TYPE||'('||DATA_LENGTH||')' END AS TYPE,NULLABLE  
+    COLUMN_NAME AS FIELD, 
+    CASE   
+    WHEN (DATA_TYPE='NUMBER' AND NVL(DATA_SCALE,0)=0) THEN 'INT'||'('||DATA_PRECISION||','||DATA_SCALE||')'
+    WHEN (DATA_TYPE='NUMBER' AND NVL(DATA_SCALE,0)>0) THEN 'FLOAT'||'('||DATA_PRECISION||','||DATA_SCALE||')'
+    WHEN DATA_TYPE='FLOAT' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
+    ELSE DATA_TYPE||'('||DATA_LENGTH||')' END AS TYPE,NULLABLE
 FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`,
-					strings.ToUpper(table),
-				)
-			)
-			if link, err = d.SlaveLink(useSchema); err != nil {
-				return nil
-			}
-			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
-			result, err = d.DoSelect(ctx, link, structureSql)
-			if err != nil {
-				return nil
-			}
-			fields = make(map[string]*gdb.TableField)
-			for i, m := range result {
-				isNull := false
-				if m["NULLABLE"].String() == "Y" {
-					isNull = true
-				}
-
-				fields[m["FIELD"].String()] = &gdb.TableField{
-					Index: i,
-					Name:  m["FIELD"].String(),
-					Type:  m["TYPE"].String(),
-					Null:  isNull,
-				}
-			}
-			return fields
-		},
+			strings.ToUpper(table),
+		)
 	)
-	if v != nil {
-		fields = v.(map[string]*gdb.TableField)
+	if link, err = d.SlaveLink(useSchema); err != nil {
+		return nil, err
 	}
-	return
+	structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
+	result, err = d.DoSelect(ctx, link, structureSql)
+	if err != nil {
+		return nil, err
+	}
+	fields = make(map[string]*gdb.TableField)
+	for i, m := range result {
+		isNull := false
+		if m["NULLABLE"].String() == "Y" {
+			isNull = true
+		}
+
+		fields[m["FIELD"].String()] = &gdb.TableField{
+			Index: i,
+			Name:  m["FIELD"].String(),
+			Type:  m["TYPE"].String(),
+			Null:  isNull,
+		}
+	}
+	return fields, nil
 }
 
 // DoInsert inserts or updates data for given table.

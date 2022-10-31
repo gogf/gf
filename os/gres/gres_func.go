@@ -33,20 +33,33 @@ func init() {
 `
 )
 
+// Option contains the extra options for Pack functions.
+type Option struct {
+	Prefix   string // The file path prefix for each file item in resource manager.
+	KeepPath bool   // Keep the passed path when packing, usually for relative path.
+}
+
 // Pack packs the path specified by `srcPaths` into bytes.
 // The unnecessary parameter `keyPrefix` indicates the prefix for each file
 // packed into the result bytes.
 //
 // Note that parameter `srcPaths` supports multiple paths join with ','.
+//
+// Deprecated, use PackWithOption instead.
 func Pack(srcPaths string, keyPrefix ...string) ([]byte, error) {
-	var (
-		buffer       = bytes.NewBuffer(nil)
-		headerPrefix = ""
-	)
+	option := Option{}
 	if len(keyPrefix) > 0 && keyPrefix[0] != "" {
-		headerPrefix = keyPrefix[0]
+		option.Prefix = keyPrefix[0]
 	}
-	err := zipPathWriter(srcPaths, buffer, headerPrefix)
+	return PackWithOption(srcPaths, option)
+}
+
+// PackWithOption packs the path specified by `srcPaths` into bytes.
+//
+// Note that parameter `srcPaths` supports multiple paths join with ','.
+func PackWithOption(srcPaths string, option Option) ([]byte, error) {
+	var buffer = bytes.NewBuffer(nil)
+	err := zipPathWriter(srcPaths, buffer, option)
 	if err != nil {
 		return nil, err
 	}
@@ -59,8 +72,21 @@ func Pack(srcPaths string, keyPrefix ...string) ([]byte, error) {
 // packed into the result bytes.
 //
 // Note that parameter `srcPaths` supports multiple paths join with ','.
+//
+// Deprecated, use PackToFileWithOption instead.
 func PackToFile(srcPaths, dstPath string, keyPrefix ...string) error {
 	data, err := Pack(srcPaths, keyPrefix...)
+	if err != nil {
+		return err
+	}
+	return gfile.PutBytes(dstPath, data)
+}
+
+// PackToFileWithOption packs the path specified by `srcPaths` to target file `dstPath`.
+//
+// Note that parameter `srcPaths` supports multiple paths join with ','.
+func PackToFileWithOption(srcPaths, dstPath string, option Option) error {
+	data, err := PackWithOption(srcPaths, option)
 	if err != nil {
 		return err
 	}
@@ -74,8 +100,25 @@ func PackToFile(srcPaths, dstPath string, keyPrefix ...string) error {
 // packed into the result bytes.
 //
 // Note that parameter `srcPaths` supports multiple paths join with ','.
+//
+// Deprecated, use PackToGoFileWithOption instead.
 func PackToGoFile(srcPath, goFilePath, pkgName string, keyPrefix ...string) error {
 	data, err := Pack(srcPath, keyPrefix...)
+	if err != nil {
+		return err
+	}
+	return gfile.PutContents(
+		goFilePath,
+		fmt.Sprintf(gstr.TrimLeft(packedGoSourceTemplate), pkgName, gbase64.EncodeToString(data)),
+	)
+}
+
+// PackToGoFileWithOption packs the path specified by `srcPaths` to target go file `goFilePath`
+// with given package name `pkgName`.
+//
+// Note that parameter `srcPaths` supports multiple paths join with ','.
+func PackToGoFileWithOption(srcPath, goFilePath, pkgName string, option Option) error {
+	data, err := PackWithOption(srcPath, option)
 	if err != nil {
 		return err
 	}
