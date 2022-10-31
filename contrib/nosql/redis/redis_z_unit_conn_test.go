@@ -36,7 +36,7 @@ func TestConn_ReceiveVarWithTimeout(t *testing.T) {
 
 		sub, err := conn.Subscribe(ctx, "gf")
 		t.AssertNil(err)
-		t.Assert(sub.Channel, "gf")
+		t.Assert(sub[0].Channel, "gf")
 
 		_, err = redis.Publish(ctx, "gf", "test")
 		t.AssertNil(err)

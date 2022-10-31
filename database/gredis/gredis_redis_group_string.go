@@ -28,18 +28,18 @@ func (r *Redis) GroupString() RedisGroupString {
 
 // TTLOption provides extra option for TTL related functions.
 type TTLOption struct {
-	EX   int64 // EX seconds -- Set the specified expire time, in seconds.
-	PX   int64 // PX milliseconds -- Set the specified expire time, in milliseconds.
-	EXAT int64 // EXAT timestamp-seconds -- Set the specified Unix time at which the key will expire, in seconds.
-	PXAT int64 // PXAT timestamp-milliseconds -- Set the specified Unix time at which the key will expire, in milliseconds.
+	EX      *int64 // EX seconds -- Set the specified expire time, in seconds.
+	PX      *int64 // PX milliseconds -- Set the specified expire time, in milliseconds.
+	EXAT    *int64 // EXAT timestamp-seconds -- Set the specified Unix time at which the key will expire, in seconds.
+	PXAT    *int64 // PXAT timestamp-milliseconds -- Set the specified Unix time at which the key will expire, in milliseconds.
+	KeepTTL bool   // Retain the time to live associated with the key.
 }
 
 // SetOption provides extra option for Set function.
 type SetOption struct {
 	TTLOption
-	NX      bool // Only set the key if it does not already exist.
-	XX      bool // Only set the key if it already exists.
-	KeepTTL bool // Retain the time to live associated with the key.
+	NX bool // Only set the key if it does not already exist.
+	XX bool // Only set the key if it already exists.
 
 	// Return the old string stored at key, or nil if key did not exist.
 	// An error is returned and SET aborted if the value stored at key is not a string.

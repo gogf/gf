@@ -154,8 +154,8 @@ type ZRangeOption struct {
 // The optional LIMIT argument can be used to obtain a sub-range from the matching elements
 // (similar to SELECT LIMIT offset, count in SQL). A negative `Count` returns all elements from the `Offset`.
 type ZRangeOptionLimit struct {
-	Offset int
-	Count  int
+	Offset *int
+	Count  *int
 }
 
 // ZRange return the specified range of elements in the sorted set stored at <key>.

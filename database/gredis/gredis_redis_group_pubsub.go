@@ -62,16 +62,16 @@ func (r RedisGroupPubSub) Publish(ctx context.Context, channel string, message i
 // Subscribe subscribes the client to the specified channels.
 //
 // https://redis.io/commands/subscribe/
-func (r RedisGroupPubSub) Subscribe(ctx context.Context, channels ...string) (Conn, *Subscription, error) {
+func (r RedisGroupPubSub) Subscribe(ctx context.Context, channel string, channels ...string) (*RedisConn, []*Subscription, error) {
 	conn, err := r.redis.Conn(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
-	sub, err := conn.Subscribe(ctx, channels...)
+	subs, err := conn.Subscribe(ctx, channel, channels...)
 	if err != nil {
 		return conn, nil, err
 	}
-	return conn, sub, nil
+	return conn, subs, nil
 }
 
 // PSubscribe subscribes the client to the given patterns.
@@ -84,14 +84,14 @@ func (r RedisGroupPubSub) Subscribe(ctx context.Context, channels ...string) (Co
 // Use \ to escape special characters if you want to match them verbatim.
 //
 // https://redis.io/commands/psubscribe/
-func (r RedisGroupPubSub) PSubscribe(ctx context.Context, pattern string, patterns ...string) (Conn, *Subscription, error) {
+func (r RedisGroupPubSub) PSubscribe(ctx context.Context, pattern string, patterns ...string) (*RedisConn, []*Subscription, error) {
 	conn, err := r.redis.Conn(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
-	sub, err := conn.PSubscribe(ctx, pattern, patterns...)
+	subs, err := conn.PSubscribe(ctx, pattern, patterns...)
 	if err != nil {
 		return conn, nil, err
 	}
-	return conn, sub, nil
+	return conn, subs, nil
 }

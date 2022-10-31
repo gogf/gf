@@ -9,13 +9,15 @@ package redis_test
 import (
 	"testing"
 
+	"github.com/gogf/gf/v2/database/gredis"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_Set_Get(t *testing.T) {
-	defer redis.FlushDB(ctx)
+func Test_GroupString_Set_Get(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
 		var (
 			k1 = guid.S()
 			v1 = guid.S()
@@ -36,6 +38,37 @@ func Test_Set_Get(t *testing.T) {
 	})
 	// With Option.
 	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+		var (
+			k1 = "k1"
+			v1 = "v1"
+			v2 = "v2"
+		)
+		_, err := redis.GroupString().Set(ctx, k1, v1)
+		t.AssertNil(err)
 
+		_, err = redis.GroupString().Set(ctx, k1, v2, gredis.SetOption{
+			NX: true,
+			TTLOption: gredis.TTLOption{
+				EX: gconv.PtrInt64(60),
+			},
+		})
+		t.AssertNil(err)
+
+		r1, err := redis.GroupString().Get(ctx, k1)
+		t.AssertNil(err)
+		t.Assert(r1.String(), v1)
+
+		_, err = redis.GroupString().Set(ctx, k1, v2, gredis.SetOption{
+			XX: true,
+			TTLOption: gredis.TTLOption{
+				EX: gconv.PtrInt64(60),
+			},
+		})
+		t.AssertNil(err)
+
+		r2, err := redis.GroupString().Get(ctx, k1)
+		t.AssertNil(err)
+		t.Assert(r2.String(), v2)
 	})
 }

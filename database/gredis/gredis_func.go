@@ -48,11 +48,18 @@ func convertOptionToArgs(option interface{}) ([]interface{}, error) {
 		switch field.OriginalKind() {
 		// See SetOption
 		case reflect.Bool:
-			args = append(args, field.Name())
+			if field.Value.Bool() {
+				args = append(args, field.Name())
+			}
 
 		// See ZRangeOption
 		case reflect.Struct:
-			args = append(args, field.Name())
+			if field.Value.IsNil() {
+				continue
+			}
+			if !field.IsEmbedded() {
+				args = append(args, field.Name())
+			}
 			subFields, err = gstructs.Fields(gstructs.FieldsInput{
 				Pointer:         option,
 				RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
@@ -66,7 +73,14 @@ func convertOptionToArgs(option interface{}) ([]interface{}, error) {
 
 		// See TTLOption
 		default:
-			args = append(args, field.Name(), field.Value.Interface())
+			fieldValue := field.Value.Interface()
+			if field.Value.Kind() == reflect.Ptr {
+				if field.Value.IsNil() {
+					continue
+				}
+				fieldValue = field.Value.Elem().Interface()
+			}
+			args = append(args, field.Name(), fieldValue)
 		}
 	}
 	return args, nil

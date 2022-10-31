@@ -95,16 +95,21 @@ func (c *RedisConn) Do(ctx context.Context, command string, args ...interface{})
 // Subscribe subscribes the client to the specified channels.
 //
 // https://redis.io/commands/subscribe/
-func (c *RedisConn) Subscribe(ctx context.Context, channels ...string) (*Subscription, error) {
-	_, err := c.Do(ctx, "Subscribe", gconv.Interfaces(channels)...)
+func (c *RedisConn) Subscribe(ctx context.Context, channel string, channels ...string) ([]*Subscription, error) {
+	args := append([]interface{}{channel}, gconv.Interfaces(channels)...)
+	_, err := c.Do(ctx, "Subscribe", args...)
 	if err != nil {
 		return nil, err
 	}
-	v, err := c.Receive(ctx)
-	if err != nil {
-		return nil, err
+	subs := make([]*Subscription, len(args))
+	for i := 0; i < len(subs); i++ {
+		v, err := c.Receive(ctx)
+		if err != nil {
+			return nil, err
+		}
+		subs[i] = v.Val().(*Subscription)
 	}
-	return v.Val().(*Subscription), err
+	return subs, err
 }
 
 // PSubscribe subscribes the client to the given patterns.
@@ -117,18 +122,21 @@ func (c *RedisConn) Subscribe(ctx context.Context, channels ...string) (*Subscri
 // Use \ to escape special characters if you want to match them verbatim.
 //
 // https://redis.io/commands/psubscribe/
-func (c *RedisConn) PSubscribe(ctx context.Context, pattern string, patterns ...string) (*Subscription, error) {
-	var s = []interface{}{pattern}
-	s = append(s, gconv.Interfaces(patterns)...)
-	_, err := c.Do(ctx, "PSubscribe", s...)
+func (c *RedisConn) PSubscribe(ctx context.Context, pattern string, patterns ...string) ([]*Subscription, error) {
+	args := append([]interface{}{pattern}, gconv.Interfaces(patterns)...)
+	_, err := c.Do(ctx, "PSubscribe", args...)
 	if err != nil {
 		return nil, err
 	}
-	v, err := c.Receive(ctx)
-	if err != nil {
-		return nil, err
+	subs := make([]*Subscription, len(args))
+	for i := 0; i < len(subs); i++ {
+		v, err := c.Receive(ctx)
+		if err != nil {
+			return nil, err
+		}
+		subs[i] = v.Val().(*Subscription)
 	}
-	return v.Val().(*Subscription), err
+	return subs, err
 }
 
 // ReceiveMessage receives a single message of subscription from the Redis server.
