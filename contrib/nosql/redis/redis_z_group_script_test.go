@@ -5,3 +5,9 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 package redis_test
+
+import "testing"
+
+func Test_GroupScript_Eval(t *testing.T) {
+
+}
