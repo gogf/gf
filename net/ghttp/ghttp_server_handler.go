@@ -100,7 +100,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Search the dynamic service handler.
-	request.handlers, request.hasHookHandler, request.hasServeHandler = s.getHandlersWithCache(request)
+	request.handlers, request.serveHandler, request.hasHookHandler, request.hasServeHandler = s.getHandlersWithCache(request)
 
 	// Check the service type static or dynamic for current request.
 	if request.StaticFile != nil && request.StaticFile.IsDir && request.hasServeHandler {
