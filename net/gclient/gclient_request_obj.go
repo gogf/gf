@@ -23,16 +23,20 @@ import (
 
 // DoRequestObj does HTTP request using standard request/response object.
 // The request object `req` is defined like:
-// type UseCreateReq struct {
-//     g.Meta `path:"/user" method:"put"`
-//     // other fields....
-// }
+//
+//	type UseCreateReq struct {
+//	    g.Meta `path:"/user" method:"put"`
+//	    // other fields....
+//	}
+//
 // The response object `res` should be a pointer type. It automatically converts result
 // to given object `res` is success.
 // Eg:
 // var (
-//     req = UseCreateReq{}
-//     res *UseCreateRes
+//
+//	req = UseCreateReq{}
+//	res *UseCreateRes
+//
 // )
 // DoRequestObj(ctx, req, &res)
 func (c *Client) DoRequestObj(ctx context.Context, req, res interface{}) error {

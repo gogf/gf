@@ -9,6 +9,7 @@ import (
 type Req struct {
 	g.Meta `path:"/user" method:"get"`
 }
+
 type Res []Item
 
 type Item struct {

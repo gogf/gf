@@ -12,12 +12,12 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gorilla/websocket"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gcache"

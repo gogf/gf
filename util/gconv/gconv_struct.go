@@ -23,14 +23,14 @@ import (
 // custom key name and the attribute name(case-sensitive).
 //
 // Note:
-// 1. The `params` can be any type of map/struct, usually a map.
-// 2. The `pointer` should be type of *struct/**struct, which is a pointer to struct object
-//    or struct pointer.
-// 3. Only the public attributes of struct object can be mapped.
-// 4. If `params` is a map, the key of the map `params` can be lowercase.
-//    It will automatically convert the first letter of the key to uppercase
-//    in mapping procedure to do the matching.
-//    It ignores the map key, if it does not match.
+//  1. The `params` can be any type of map/struct, usually a map.
+//  2. The `pointer` should be type of *struct/**struct, which is a pointer to struct object
+//     or struct pointer.
+//  3. Only the public attributes of struct object can be mapped.
+//  4. If `params` is a map, the key of the map `params` can be lowercase.
+//     It will automatically convert the first letter of the key to uppercase
+//     in mapping procedure to do the matching.
+//     It ignores the map key, if it does not match.
 func Struct(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
 	return Scan(params, pointer, mapping...)
 }
