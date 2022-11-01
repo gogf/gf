@@ -17,14 +17,20 @@ name: GolangCI-Lint
 on:
   push:
     branches:
-      - main
-      - release*
-      - feature/**
+    - master
+    - develop
+    - personal/**
+    - feature/**
+    - enhance/**
+    - fix/**
   pull_request:
     branches:
-      - main
-      - release*
-      - feature/**
+    - master
+    - develop
+    - personal/**
+    - feature/**
+    - enhance/**
+    - fix/**
 
 jobs:
   golangci:
