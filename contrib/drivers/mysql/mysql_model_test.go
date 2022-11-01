@@ -2637,7 +2637,7 @@ func Test_Model_Cache(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(n, 1)
 
-		err = db.Transaction(context.TODO(), func(ctx context.Context, tx *gdb.TX) error {
+		err = db.Transaction(context.TODO(), func(ctx context.Context, tx gdb.TX) error {
 			one, err := tx.Model(table).Cache(gdb.CacheOption{
 				Duration: time.Second,
 				Name:     "test3",
@@ -2677,7 +2677,7 @@ func Test_Model_Cache(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(n, 1)
 
-		err = db.Transaction(context.TODO(), func(ctx context.Context, tx *gdb.TX) error {
+		err = db.Transaction(context.TODO(), func(ctx context.Context, tx gdb.TX) error {
 			// Cache feature disabled.
 			one, err := tx.Model(table).Cache(gdb.CacheOption{
 				Duration: time.Second,

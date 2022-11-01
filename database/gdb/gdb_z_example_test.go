@@ -14,7 +14,7 @@ import (
 )
 
 func Example_transaction() {
-	g.DB().Transaction(context.TODO(), func(ctx context.Context, tx *gdb.TX) error {
+	g.DB().Transaction(context.TODO(), func(ctx context.Context, tx gdb.TX) error {
 		// user
 		result, err := tx.Insert("user", g.Map{
 			"passport": "john",

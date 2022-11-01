@@ -233,7 +233,7 @@ func TestDriverClickhouse_TableFields_Use_Link(t *testing.T) {
 func TestDriverClickhouse_Transaction(t *testing.T) {
 	connect := clickhouseConfigDB()
 	defer dropClickhouseTableVisits(connect)
-	gtest.AssertNE(connect.Transaction(context.Background(), func(ctx context.Context, tx *gdb.TX) error {
+	gtest.AssertNE(connect.Transaction(context.Background(), func(ctx context.Context, tx gdb.TX) error {
 		return nil
 	}), nil)
 }

@@ -426,7 +426,7 @@ func (d *Driver) Begin(ctx context.Context) (tx *gdb.TX, err error) {
 	return nil, errUnsupportedBegin
 }
 
-func (d *Driver) Transaction(ctx context.Context, f func(ctx context.Context, tx *gdb.TX) error) error {
+func (d *Driver) Transaction(ctx context.Context, f func(ctx context.Context, tx gdb.TX) error) error {
 	return errUnsupportedTransaction
 }
 

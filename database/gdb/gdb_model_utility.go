@@ -194,7 +194,7 @@ func (m *Model) doMappingAndFilterForInsertOrUpdateDataMap(data Map, allowOmitEm
 // The parameter `master` specifies whether using the master node if master-slave configured.
 func (m *Model) getLink(master bool) Link {
 	if m.tx != nil {
-		return &txLink{m.tx.tx}
+		return &txLink{m.tx.GetTX()}
 	}
 	linkType := m.linkType
 	if linkType == 0 {
