@@ -56,6 +56,7 @@ func Test_AVLTree_Basic(t *testing.T) {
 		t.Assert(m2.Map(), map[interface{}]interface{}{1: 1, "key1": "val1"})
 	})
 }
+
 func Test_AVLTree_Set_Fun(t *testing.T) {
 	//GetOrSetFunc lock or unlock
 	gtest.C(t, func(t *gtest.T) {

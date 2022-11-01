@@ -69,7 +69,7 @@ func IsEmpty(value interface{}) bool {
 	case float64:
 		return result == 0
 	case bool:
-		return result == false
+		return !result
 	case string:
 		return result == ""
 	case []byte:

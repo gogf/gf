@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/allyes"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/os/gres"
 	"github.com/gogf/gf/v2/util/gtag"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/allyes"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 var (
@@ -52,6 +53,7 @@ type cInitInput struct {
 	Mono   bool   `name:"mono"   short:"m" brief:"initialize a mono-repo instead a single-repo" orphan:"true"`
 	Update bool   `name:"update" short:"u" brief:"update to the latest goframe version" orphan:"true"`
 }
+
 type cInitOutput struct{}
 
 func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err error) {

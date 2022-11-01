@@ -302,9 +302,6 @@ func compareMap(value, expect interface{}) error {
 		rvValue  = reflect.ValueOf(value)
 		rvExpect = reflect.ValueOf(expect)
 	)
-	if empty.IsNil(value) {
-		value = nil
-	}
 	if rvExpect.Kind() == reflect.Map {
 		if rvValue.Kind() == reflect.Map {
 			if rvExpect.Len() == rvValue.Len() {

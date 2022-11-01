@@ -21,6 +21,7 @@ import (
 type iString interface {
 	String() string
 }
+
 type S struct {
 }
 
@@ -31,6 +32,7 @@ func (s S) String() string {
 type iError interface {
 	Error() string
 }
+
 type S1 struct {
 }
 

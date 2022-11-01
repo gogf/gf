@@ -26,12 +26,14 @@ type TestCmdObject struct {
 type TestCmdObjectEnvInput struct {
 	g.Meta `name:"env" usage:"root env" brief:"root env command" dc:"root env command description" ad:"root env command ad"`
 }
+
 type TestCmdObjectEnvOutput struct{}
 
 type TestCmdObjectTestInput struct {
 	g.Meta `name:"test" usage:"root test" brief:"root test command" dc:"root test command description" ad:"root test command ad"`
 	Name   string `v:"required" short:"n" orphan:"false" brief:"name for test command"`
 }
+
 type TestCmdObjectTestOutput struct {
 	Content string
 }
@@ -119,12 +121,14 @@ type TestObjectForRootTag struct {
 type TestObjectForRootTagEnvInput struct {
 	g.Meta `name:"env" usage:"root env" brief:"root env command" dc:"root env command description" ad:"root env command ad"`
 }
+
 type TestObjectForRootTagEnvOutput struct{}
 
 type TestObjectForRootTagTestInput struct {
 	g.Meta `name:"root"`
 	Name   string `v:"required" short:"n" orphan:"false" brief:"name for test command"`
 }
+
 type TestObjectForRootTagTestOutput struct {
 	Content string
 }
@@ -175,6 +179,7 @@ type TestObjectForNeedArgs struct {
 type TestObjectForNeedArgsEnvInput struct {
 	g.Meta `name:"env" usage:"root env" brief:"root env command" dc:"root env command description" ad:"root env command ad"`
 }
+
 type TestObjectForNeedArgsEnvOutput struct{}
 
 type TestObjectForNeedArgsTestInput struct {
@@ -183,6 +188,7 @@ type TestObjectForNeedArgsTestInput struct {
 	Arg2   string `arg:"true" brief:"arg2 for test command"`
 	Name   string `v:"required" short:"n" orphan:"false" brief:"name for test command"`
 }
+
 type TestObjectForNeedArgsTestOutput struct {
 	Args []string
 }
@@ -224,12 +230,14 @@ type TestObjectPointerTag struct {
 type TestObjectPointerTagEnvInput struct {
 	g.Meta `name:"env" usage:"root env" brief:"root env command" dc:"root env command description" ad:"root env command ad"`
 }
+
 type TestObjectPointerTagEnvOutput struct{}
 
 type TestObjectPointerTagTestInput struct {
 	g.Meta `name:"root"`
 	Name   string `v:"required" short:"n" orphan:"false" brief:"name for test command"`
 }
+
 type TestObjectPointerTagTestOutput struct {
 	Content string
 }
@@ -283,6 +291,7 @@ type TestCommandOrphanIndexInput struct {
 	Orphan2 bool `short:"n2" orphan:"true"`
 	Orphan3 bool `short:"n3" orphan:"true"`
 }
+
 type TestCommandOrphanIndexOutput struct {
 	Orphan1 bool
 	Orphan2 bool
@@ -297,6 +306,7 @@ func (c *TestCommandOrphan) Index(ctx context.Context, in TestCommandOrphanIndex
 	}
 	return
 }
+
 func Test_Command_Orphan_Parameter(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var ctx = gctx.New()
