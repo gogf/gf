@@ -82,6 +82,7 @@ linters-settings:
       - cancelled
 
   # https://golangci-lint.run/usage/linters/#revive
+  # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md
   revive:
     ignore-generated-header: true
     severity: error
@@ -93,13 +94,15 @@ linters-settings:
       - name: unhandled-error
         severity: warning
         disabled: true
-        arguments: [ "fmt.Printf", "myFunction" ]
+        arguments: []
       - name: var-naming
         severity: warning
         disabled: true
         arguments:
-          - [ "ID","URL","IP","HTTP","JSON","API","UID","Id","Api","Uid","Http","Json","Ip","Url" ] # AllowList
-          - [ "VM" ] # DenyList
+          # AllowList
+          - [ "ID","URL","IP","HTTP","JSON","API","UID","Id","Api","Uid","Http","Json","Ip","Url" ]
+          # DenyList
+          - [ "VM" ]
       - name: string-format
         severity: warning
         disabled: false

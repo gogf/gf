@@ -7,6 +7,8 @@
 package gi18n_test
 
 import (
+	_ "github.com/gogf/gf/v2/os/gres/testdata/data"
+
 	"context"
 	"testing"
 
@@ -15,7 +17,6 @@ import (
 	"github.com/gogf/gf/v2/i18n/gi18n"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gres"
-	_ "github.com/gogf/gf/v2/os/gres/testdata/data"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"

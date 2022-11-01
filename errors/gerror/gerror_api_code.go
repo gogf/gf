@@ -11,14 +11,13 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/internal/consts"
 )
 
 // NewCode creates and returns an error that has error code and given text.
 func NewCode(code gcode.Code, text ...string) error {
 	return &Error{
 		stack: callers(),
-		text:  strings.Join(text, consts.CommaSpaceSeparator),
+		text:  strings.Join(text, commaSeparatorSpace),
 		code:  code,
 	}
 }
@@ -37,7 +36,7 @@ func NewCodef(code gcode.Code, format string, args ...interface{}) error {
 func NewCodeSkip(code gcode.Code, skip int, text ...string) error {
 	return &Error{
 		stack: callers(skip),
-		text:  strings.Join(text, consts.CommaSpaceSeparator),
+		text:  strings.Join(text, commaSeparatorSpace),
 		code:  code,
 	}
 }
@@ -61,7 +60,7 @@ func WrapCode(code gcode.Code, err error, text ...string) error {
 	return &Error{
 		error: err,
 		stack: callers(),
-		text:  strings.Join(text, consts.CommaSpaceSeparator),
+		text:  strings.Join(text, commaSeparatorSpace),
 		code:  code,
 	}
 }
@@ -90,7 +89,7 @@ func WrapCodeSkip(code gcode.Code, skip int, err error, text ...string) error {
 	return &Error{
 		error: err,
 		stack: callers(skip),
-		text:  strings.Join(text, consts.CommaSpaceSeparator),
+		text:  strings.Join(text, commaSeparatorSpace),
 		code:  code,
 	}
 }

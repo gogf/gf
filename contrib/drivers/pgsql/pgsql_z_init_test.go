@@ -7,6 +7,8 @@
 package pgsql_test
 
 import (
+	_ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
+
 	"context"
 	"fmt"
 
@@ -15,8 +17,6 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
-
-	_ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
 )
 
 const (
