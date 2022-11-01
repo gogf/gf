@@ -10,9 +10,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/gogf/gf/v2/util/gconv"
-
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // RedisGroupList is the redis group list object.

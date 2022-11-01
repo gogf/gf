@@ -56,7 +56,7 @@ func (r RedisGroupScript) EvalSha(ctx context.Context, sha1 string, numKeys int6
 //
 // https://redis.io/commands/script-load/
 func (r RedisGroupScript) ScriptLoad(ctx context.Context, script string) (string, error) {
-	v, err := r.redis.Do(ctx, "Script Load", script)
+	v, err := r.redis.Do(ctx, "Script", "Load", script)
 	return v.String(), err
 }
 
@@ -67,11 +67,22 @@ func (r RedisGroupScript) ScriptLoad(ctx context.Context, script string) (string
 // a 1 is returned, otherwise 0 is returned.
 //
 // https://redis.io/commands/script-exists/
-func (r RedisGroupScript) ScriptExists(ctx context.Context, sha1 string, sha1s ...string) (*gvar.Var, error) {
-	var s = []interface{}{sha1}
-	s = append(s, gconv.Interfaces(sha1s)...)
-	v, err := r.redis.Do(ctx, "Script Exists", s...)
-	return v, err
+func (r RedisGroupScript) ScriptExists(ctx context.Context, sha1 string, sha1s ...string) (map[string]bool, error) {
+	var (
+		s         []interface{}
+		sha1Array = append([]interface{}{sha1}, gconv.Interfaces(sha1s)...)
+	)
+	s = append(s, "Exists")
+	s = append(s, sha1Array...)
+	result, err := r.redis.Do(ctx, "Script", s...)
+	var (
+		m           = make(map[string]bool)
+		resultArray = result.Vars()
+	)
+	for i := 0; i < len(sha1Array); i++ {
+		m[gconv.String(sha1Array[i])] = resultArray[i].Bool()
+	}
+	return m, err
 }
 
 // ScriptFlushOption provides options for function ScriptFlush.
@@ -88,9 +99,12 @@ func (r RedisGroupScript) ScriptFlush(ctx context.Context, option ...ScriptFlush
 	if len(option) > 0 {
 		usedOption = option[0]
 	}
-	_, err := r.redis.Do(ctx, "Script Flush", mustMergeOptionToArgs(
+	var s []interface{}
+	s = append(s, "Flush")
+	s = append(s, mustMergeOptionToArgs(
 		[]interface{}{}, usedOption,
 	)...)
+	_, err := r.redis.Do(ctx, "Script", s...)
 	return err
 }
 
@@ -99,6 +113,6 @@ func (r RedisGroupScript) ScriptFlush(ctx context.Context, option ...ScriptFlush
 //
 // https://redis.io/commands/script-kill/
 func (r RedisGroupScript) ScriptKill(ctx context.Context) error {
-	_, err := r.redis.Do(ctx, "Script Kill")
+	_, err := r.redis.Do(ctx, "Script", "Kill")
 	return err
 }
