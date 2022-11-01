@@ -155,7 +155,7 @@ func SetHandlers(handlers ...Handler) {
 	defaultLogger.SetHandlers(handlers...)
 }
 
-//SetWriterColorEnable sets the file logging with color
+// SetWriterColorEnable sets the file logging with color
 func SetWriterColorEnable(enabled bool) {
 	defaultLogger.SetWriterColorEnable(enabled)
 }

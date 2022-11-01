@@ -137,18 +137,18 @@ func (entry *Entry) Close() {
 func (entry *Entry) checkAndRun(ctx context.Context) {
 	currentTime := time.Now()
 	if !entry.schedule.checkMeetAndUpdateLastSeconds(ctx, currentTime) {
-		//intlog.Printf(
+		// intlog.Printf(
 		//	ctx,
 		//	`timely check, current time does not meet cron job "%s"`,
 		//	entry.getJobNameWithPattern(),
-		//)
+		// )
 		return
 	}
-	//intlog.Printf(
+	// intlog.Printf(
 	//	ctx,
 	//	`timely check, current time meets cron job "%s"`,
 	//	entry.getJobNameWithPattern(),
-	//)
+	// )
 	switch entry.cron.status.Val() {
 	case StatusStopped:
 		return

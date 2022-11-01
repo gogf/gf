@@ -29,6 +29,7 @@ func (t *testWrapStdHTTPStruct) ServeHTTP(w http.ResponseWriter, req *http.Reque
 	w.WriteHeader(http.StatusInternalServerError)
 	fmt.Fprint(w, t.text)
 }
+
 func Test_Server_Wrap_Handler(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())

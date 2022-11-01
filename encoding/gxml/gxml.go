@@ -11,9 +11,9 @@ import (
 	"strings"
 
 	"github.com/clbanning/mxj/v2"
-	"github.com/gogf/gf/v2/errors/gerror"
 
 	"github.com/gogf/gf/v2/encoding/gcharset"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gregex"
 )
 
@@ -77,9 +77,9 @@ func ToJson(content []byte) ([]byte, error) {
 	}
 	mv, err := mxj.NewMapXml(res)
 	if err == nil {
-		err = gerror.Wrapf(err, `mxj.NewMapXml failed`)
 		return mv.Json()
 	}
+	err = gerror.Wrap(err, `mxj.NewMapXml failed`)
 	return nil, err
 }
 

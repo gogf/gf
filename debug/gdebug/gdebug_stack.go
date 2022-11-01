@@ -44,7 +44,7 @@ func StackWithFilters(filters []string, skip ...int) string {
 		number = skip[0]
 	}
 	var (
-		name                  = ""
+		name                  string
 		space                 = "  "
 		index                 = 1
 		buffer                = bytes.NewBuffer(nil)

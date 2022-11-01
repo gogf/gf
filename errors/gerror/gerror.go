@@ -61,6 +61,9 @@ type IUnwrap interface {
 const (
 	// commandEnvKeyForBrief is the command environment name for switch key for brief error stack.
 	commandEnvKeyForBrief = "gf.gerror.brief"
+
+	// commaSeparatorSpace is the comma separator with space.
+	commaSeparatorSpace = ", "
 )
 
 var (

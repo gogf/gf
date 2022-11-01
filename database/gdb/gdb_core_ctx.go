@@ -59,8 +59,5 @@ func (c *Core) InjectIgnoreResult(ctx context.Context) context.Context {
 }
 
 func (c *Core) GetIgnoreResultFromCtx(ctx context.Context) bool {
-	if ctx.Value(ignoreResultKeyInCtx) != nil {
-		return true
-	}
-	return false
+	return ctx.Value(ignoreResultKeyInCtx) != nil
 }

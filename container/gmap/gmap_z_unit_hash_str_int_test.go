@@ -117,6 +117,7 @@ func Test_StrIntMap_Batch(t *testing.T) {
 		t.Assert(m.Map(), map[string]int{"c": 3})
 	})
 }
+
 func Test_StrIntMap_Iterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[string]int{"a": 1, "b": 2}
@@ -170,6 +171,7 @@ func Test_StrIntMap_Clone(t *testing.T) {
 		t.AssertIN("b", m.Keys())
 	})
 }
+
 func Test_StrIntMap_Merge(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.NewStrIntMap()

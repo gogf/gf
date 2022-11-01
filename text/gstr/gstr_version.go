@@ -60,7 +60,7 @@ func CompareVersion(a, b string) int {
 	var (
 		array1 = strings.Split(a, ".")
 		array2 = strings.Split(b, ".")
-		diff   = 0
+		diff   int
 	)
 	diff = len(array2) - len(array1)
 	for i := 0; i < diff; i++ {
@@ -131,7 +131,7 @@ func CompareVersionGo(a, b string) int {
 	var (
 		array1 = strings.Split(a, ".")
 		array2 = strings.Split(b, ".")
-		diff   = 0
+		diff   int
 	)
 	// Specially in Golang:
 	// "v1.12.2-0.20200413154443-b17e3a6804fa" < "v1.12.2"

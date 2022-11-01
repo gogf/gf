@@ -17,11 +17,11 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/gogf/gf/v2/internal/consts"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/internal/consts"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -362,7 +362,6 @@ func (l *Logger) getFilePointer(ctx context.Context, path string) *gfpool.File {
 
 // getFilePointer retrieves and returns a file pointer from file pool.
 func (l *Logger) getOpenedFilePointer(ctx context.Context, path string) *gfpool.File {
-
 	file := gfpool.Get(
 		path,
 		defaultFileFlags,

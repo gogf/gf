@@ -150,8 +150,8 @@ func (m *Model) getConditionForSoftDeleting() string {
 // getConditionOfTableStringForSoftDeleting does something as its name describes.
 func (m *Model) getConditionOfTableStringForSoftDeleting(s string) string {
 	var (
-		field  = ""
-		table  = ""
+		field  string
+		table  string
 		array1 = gstr.SplitAndTrim(s, " ")
 		array2 = gstr.SplitAndTrim(array1[0], ".")
 	)

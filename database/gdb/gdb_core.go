@@ -546,7 +546,7 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 	}
 	var (
 		params  []interface{}
-		updates = ""
+		updates string
 	)
 	switch kind {
 	case reflect.Map, reflect.Struct:

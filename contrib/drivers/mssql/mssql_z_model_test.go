@@ -9,6 +9,9 @@ package mssql_test
 import (
 	"database/sql"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -17,8 +20,6 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
 	"github.com/gogf/gf/v2/util/gutil"
-	"testing"
-	"time"
 )
 
 func TestPage(t *testing.T) {

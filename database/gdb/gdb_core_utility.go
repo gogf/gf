@@ -225,7 +225,7 @@ func (c *Core) guessPrimaryTableName(tableStr string) string {
 		return ""
 	}
 	var (
-		guessedTableName = ""
+		guessedTableName string
 		array1           = gstr.SplitAndTrim(tableStr, ",")
 		array2           = gstr.SplitAndTrim(array1[0], " ")
 		array3           = gstr.SplitAndTrim(array2[0], ".")

@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gtag"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 var (
@@ -77,6 +78,7 @@ type cDockerInput struct {
 	Push        bool     `name:"push"        short:"p"  brief:"{cDockerPushBrief}" orphan:"true"`
 	Extra       string   `name:"extra"       short:"e"  brief:"{cDockerExtraBrief}"`
 }
+
 type cDockerOutput struct{}
 
 func (c cDocker) Index(ctx context.Context, in cDockerInput) (out *cDockerOutput, err error) {

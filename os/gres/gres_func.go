@@ -45,7 +45,7 @@ type Option struct {
 //
 // Note that parameter `srcPaths` supports multiple paths join with ','.
 //
-// Deprecated, use PackWithOption instead.
+// Deprecated: use PackWithOption instead.
 func Pack(srcPaths string, keyPrefix ...string) ([]byte, error) {
 	option := Option{}
 	if len(keyPrefix) > 0 && keyPrefix[0] != "" {
@@ -73,7 +73,7 @@ func PackWithOption(srcPaths string, option Option) ([]byte, error) {
 //
 // Note that parameter `srcPaths` supports multiple paths join with ','.
 //
-// Deprecated, use PackToFileWithOption instead.
+// Deprecated: use PackToFileWithOption instead.
 func PackToFile(srcPaths, dstPath string, keyPrefix ...string) error {
 	data, err := Pack(srcPaths, keyPrefix...)
 	if err != nil {
@@ -101,7 +101,7 @@ func PackToFileWithOption(srcPaths, dstPath string, option Option) error {
 //
 // Note that parameter `srcPaths` supports multiple paths join with ','.
 //
-// Deprecated, use PackToGoFileWithOption instead.
+// Deprecated: use PackToGoFileWithOption instead.
 func PackToGoFile(srcPath, goFilePath, pkgName string, keyPrefix ...string) error {
 	data, err := Pack(srcPath, keyPrefix...)
 	if err != nil {

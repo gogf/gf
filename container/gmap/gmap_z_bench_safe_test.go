@@ -16,11 +16,17 @@ import (
 )
 
 var anyAnyMap = gmap.NewAnyAnyMap(true)
+
 var intIntMap = gmap.NewIntIntMap(true)
+
 var intAnyMap = gmap.NewIntAnyMap(true)
+
 var intStrMap = gmap.NewIntStrMap(true)
+
 var strIntMap = gmap.NewStrIntMap(true)
+
 var strAnyMap = gmap.NewStrAnyMap(true)
+
 var strStrMap = gmap.NewStrStrMap(true)
 
 func Benchmark_IntIntMap_Set(b *testing.B) {

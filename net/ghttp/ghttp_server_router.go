@@ -25,10 +25,6 @@ import (
 	"github.com/gogf/gf/v2/util/gmeta"
 )
 
-const (
-	stackFilterKey = "/net/ghttp/ghttp"
-)
-
 var (
 	// handlerIdGenerator is handler item id generator.
 	handlerIdGenerator = gtype.NewInt()

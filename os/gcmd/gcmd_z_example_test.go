@@ -9,11 +9,11 @@ package gcmd_test
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/os/gctx"
 	"os"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcmd"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/genv"
 )
 
@@ -139,10 +139,10 @@ func ExampleCommand_AddCommand() {
 	commandRoot.Print()
 
 	// Output:
-	//USAGE
+	// USAGE
 	//     gf COMMAND [OPTION]
 	//
-	//COMMAND
+	// COMMAND
 	//     start
 }
 
@@ -176,10 +176,10 @@ func ExampleCommand_AddObject() {
 	command.Print()
 
 	// Output:
-	//USAGE
+	// USAGE
 	//     start COMMAND [OPTION]
 	//
-	//COMMAND
+	// COMMAND
 	//     root    root env command
 }
 
@@ -209,10 +209,10 @@ func ExampleCommand_Print() {
 	commandRoot.Print()
 
 	// Output:
-	//USAGE
+	// USAGE
 	//     gf COMMAND [OPTION]
 	//
-	//COMMAND
+	// COMMAND
 	//     start
 }
 

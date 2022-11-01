@@ -8,13 +8,14 @@ package gconv_test
 
 import (
 	"encoding/json"
-	"github.com/gogf/gf/v2/util/gutil"
-	"gopkg.in/yaml.v3"
 	"testing"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 func Test_Map_Basic(t *testing.T) {

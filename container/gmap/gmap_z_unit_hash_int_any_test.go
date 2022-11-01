@@ -117,6 +117,7 @@ func Test_IntAnyMap_Batch(t *testing.T) {
 		t.Assert(m.Map(), map[int]interface{}{3: 3})
 	})
 }
+
 func Test_IntAnyMap_Iterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[int]interface{}{1: 1, 2: "2"}
@@ -154,6 +155,7 @@ func Test_IntAnyMap_Lock(t *testing.T) {
 		})
 	})
 }
+
 func Test_IntAnyMap_Clone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// clone 方法是深克隆
@@ -169,6 +171,7 @@ func Test_IntAnyMap_Clone(t *testing.T) {
 		t.AssertIN(2, m.Keys())
 	})
 }
+
 func Test_IntAnyMap_Merge(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.NewIntAnyMap()

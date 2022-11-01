@@ -30,7 +30,7 @@ var (
 
 func init() {
 	if goRootForFilter != "" {
-		goRootForFilter = strings.Replace(goRootForFilter, "\\", "/", -1)
+		goRootForFilter = strings.ReplaceAll(goRootForFilter, "\\", "/")
 	}
 	// Initialize internal package variable: selfPath.
 	selfPath, _ = exec.LookPath(os.Args[0])

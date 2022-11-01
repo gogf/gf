@@ -55,6 +55,7 @@ func Test_Val(t *testing.T) {
 		t.Assert(objOne.Val(), nil)
 	})
 }
+
 func Test_Interface(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		objOne := gvar.New(1, true)
@@ -66,6 +67,7 @@ func Test_Interface(t *testing.T) {
 		t.Assert(objTwoOld, 1)
 	})
 }
+
 func Test_IsNil(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		objOne := gvar.New(nil, true)
@@ -102,6 +104,7 @@ func Test_String(t *testing.T) {
 
 	})
 }
+
 func Test_Bool(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var ok bool = true
@@ -204,6 +207,7 @@ func Test_Uint64(t *testing.T) {
 
 	})
 }
+
 func Test_Float32(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var num float32 = 1.1

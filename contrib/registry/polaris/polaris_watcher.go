@@ -9,10 +9,9 @@ package polaris
 import (
 	"context"
 
+	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/polarismesh/polaris-go"
 	"github.com/polarismesh/polaris-go/pkg/model"
-
-	"github.com/gogf/gf/v2/net/gsvc"
 )
 
 // Watcher is a service watcher.

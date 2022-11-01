@@ -2,6 +2,7 @@ package nacos
 
 import (
 	_ "github.com/gogf/gf/example/config/nacos/boot"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
 )

@@ -7,10 +7,10 @@
 package gi18n_test
 
 import (
+	_ "github.com/gogf/gf/v2/os/gres/testdata/data"
+
 	"context"
 	"testing"
-
-	_ "github.com/gogf/gf/v2/os/gres/testdata/data"
 
 	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/g"

@@ -15,6 +15,7 @@ import (
 )
 
 var length = 10000
+
 var ringObject = gring.New(length, true)
 
 func BenchmarkRing_Put(b *testing.B) {

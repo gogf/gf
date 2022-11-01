@@ -25,6 +25,7 @@ type TestParamsCaseRootInput struct {
 	g.Meta `name:"root"`
 	Name   string
 }
+
 type TestParamsCaseRootOutput struct {
 	Content string
 }

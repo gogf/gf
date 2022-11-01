@@ -33,14 +33,14 @@ func Decode(str string) (string, error) {
 // URL-encode according to RFC 3986.
 // See http://php.net/manual/en/function.rawurlencode.php.
 func RawEncode(str string) string {
-	return strings.Replace(url.QueryEscape(str), "+", "%20", -1)
+	return strings.ReplaceAll(url.QueryEscape(str), "+", "%20")
 }
 
 // RawDecode does decode the given string
 // Decode URL-encoded strings.
 // See http://php.net/manual/en/function.rawurldecode.php.
 func RawDecode(str string) (string, error) {
-	return url.QueryUnescape(strings.Replace(str, "%20", "+", -1))
+	return url.QueryUnescape(strings.ReplaceAll(str, "%20", "+"))
 }
 
 // BuildQuery Generate URL-encoded query string.

@@ -57,7 +57,7 @@ func (c *AdapterRedis) SetMap(ctx context.Context, data map[interface{}]interfac
 			index = 0
 			keys  = make([]interface{}, len(data))
 		)
-		for k, _ := range data {
+		for k := range data {
 			keys[index] = k
 			index += 1
 		}

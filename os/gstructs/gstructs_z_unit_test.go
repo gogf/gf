@@ -9,10 +9,8 @@ package gstructs_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/v2/os/gstructs"
-
 	"github.com/gogf/gf/v2/frame/g"
-
+	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 

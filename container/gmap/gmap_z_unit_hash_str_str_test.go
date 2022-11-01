@@ -116,6 +116,7 @@ func Test_StrStrMap_Batch(t *testing.T) {
 		t.Assert(m.Map(), map[string]string{"c": "c"})
 	})
 }
+
 func Test_StrStrMap_Iterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[string]string{"a": "a", "b": "b"}
@@ -153,6 +154,7 @@ func Test_StrStrMap_Lock(t *testing.T) {
 		})
 	})
 }
+
 func Test_StrStrMap_Clone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// clone 方法是深克隆
@@ -168,6 +170,7 @@ func Test_StrStrMap_Clone(t *testing.T) {
 		t.AssertIN("b", m.Keys())
 	})
 }
+
 func Test_StrStrMap_Merge(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.NewStrStrMap()

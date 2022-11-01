@@ -152,7 +152,7 @@ func (m *StrAnyMap) Search(key string) (value interface{}, found bool) {
 func (m *StrAnyMap) Get(key string) (value interface{}) {
 	m.mu.RLock()
 	if m.data != nil {
-		value, _ = m.data[key]
+		value = m.data[key]
 	}
 	m.mu.RUnlock()
 	return

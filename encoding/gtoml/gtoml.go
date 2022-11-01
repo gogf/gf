@@ -11,8 +11,8 @@ import (
 	"bytes"
 
 	"github.com/BurntSushi/toml"
-	"github.com/gogf/gf/v2/errors/gerror"
 
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
 )
 

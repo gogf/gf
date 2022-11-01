@@ -101,6 +101,7 @@ func Test_Map_Basic(t *testing.T) {
 		t.Assert(m2.Map(), map[interface{}]interface{}{1: 1, "key1": "val1"})
 	})
 }
+
 func Test_Map_Set_Fun(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.New()
@@ -123,6 +124,7 @@ func Test_Map_Batch(t *testing.T) {
 		t.Assert(m.Map(), map[interface{}]interface{}{"key2": "val2", "key3": "val3"})
 	})
 }
+
 func Test_Map_Iterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[interface{}]interface{}{1: 1, "key1": "val1"}
@@ -175,6 +177,7 @@ func Test_Map_Clone(t *testing.T) {
 		t.AssertIN("key1", m.Keys())
 	})
 }
+
 func Test_Map_Basic_Merge(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.New()

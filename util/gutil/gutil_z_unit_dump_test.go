@@ -8,9 +8,9 @@ package gutil_test
 
 import (
 	"bytes"
-	"github.com/gogf/gf/v2/container/gtype"
 	"testing"
 
+	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gtime"

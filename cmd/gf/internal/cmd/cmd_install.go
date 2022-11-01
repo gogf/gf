@@ -3,8 +3,9 @@ package cmd
 import (
 	"context"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/service"
 	"github.com/gogf/gf/v2/frame/g"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/service"
 )
 
 var (
@@ -18,6 +19,7 @@ type cInstall struct {
 type cInstallInput struct {
 	g.Meta `name:"install"`
 }
+
 type cInstallOutput struct{}
 
 func (c cInstall) Index(ctx context.Context, in cInstallInput) (out *cInstallOutput, err error) {

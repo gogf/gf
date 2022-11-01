@@ -98,7 +98,7 @@ func (r Result) Array(field ...string) []Value {
 // Note that the item value may be type of slice.
 func (r Result) MapKeyValue(key string) map[string]Value {
 	var (
-		s              = ""
+		s              string
 		m              = make(map[string]Value)
 		tempMap        = make(map[string][]interface{})
 		hasMultiValues bool

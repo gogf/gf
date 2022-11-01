@@ -11,8 +11,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -119,7 +117,6 @@ func (r *Response) CORSAllowedOrigin(options CORSOptions) bool {
 	}
 	parsed, err := url.Parse(origin)
 	if err != nil {
-		err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `url.Parse failed for URL "%s"`, origin)
 		return false
 	}
 	for _, v := range options.AllowDomain {

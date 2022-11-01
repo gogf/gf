@@ -7,13 +7,14 @@
 package ghttp_test
 
 import (
+	_ "github.com/gogf/gf/v2/net/ghttp/testdata/https/packed"
+
 	"fmt"
 	"testing"
 	"time"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
-	_ "github.com/gogf/gf/v2/net/ghttp/testdata/https/packed"
 	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"

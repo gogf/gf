@@ -146,6 +146,7 @@ func Test_StrAnyMap_Lock(t *testing.T) {
 		})
 	})
 }
+
 func Test_StrAnyMap_Clone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// clone 方法是深克隆
@@ -161,6 +162,7 @@ func Test_StrAnyMap_Clone(t *testing.T) {
 		t.AssertIN("b", m.Keys())
 	})
 }
+
 func Test_StrAnyMap_Merge(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.NewStrAnyMap()

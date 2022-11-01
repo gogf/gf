@@ -100,12 +100,12 @@ func (c *Conn) Send(data []byte, retry ...Retry) error {
 // Recv receives and returns data from the connection.
 //
 // Note that,
-// 1. If length = 0, which means it receives the data from current buffer and returns immediately.
-// 2. If length < 0, which means it receives all data from connection and returns it until no data
-//    from connection. Developers should notice the package parsing yourself if you decide receiving
-//    all data from buffer.
-// 3. If length > 0, which means it blocks reading data from connection until length size was received.
-//    It is the most commonly used length value for data receiving.
+//  1. If length = 0, which means it receives the data from current buffer and returns immediately.
+//  2. If length < 0, which means it receives all data from connection and returns it until no data
+//     from connection. Developers should notice the package parsing yourself if you decide receiving
+//     all data from buffer.
+//  3. If length > 0, which means it blocks reading data from connection until length size was received.
+//     It is the most commonly used length value for data receiving.
 func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
 	var (
 		err        error  // Reading error.
@@ -243,7 +243,9 @@ func (c *Conn) RecvWithTimeout(length int, timeout time.Duration, retry ...Retry
 	if err = c.SetReceiveDeadline(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer c.SetReceiveDeadline(time.Time{})
+	defer func() {
+		_ = c.SetReceiveDeadline(time.Time{})
+	}()
 	data, err = c.Recv(length, retry...)
 	return
 }
@@ -253,7 +255,9 @@ func (c *Conn) SendWithTimeout(data []byte, timeout time.Duration, retry ...Retr
 	if err = c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
 		return err
 	}
-	defer c.SetSendDeadline(time.Time{})
+	defer func() {
+		_ = c.SetSendDeadline(time.Time{})
+	}()
 	err = c.Send(data, retry...)
 	return
 }

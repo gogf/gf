@@ -1,4 +1,8 @@
 package gf
 
-const VERSION = "v2.2.1"
-const AUTHORS = "john<john@goframe.org>"
+const (
+	// VERSION  is the current GoFrame version.
+	VERSION = "v2.2.1"
+	// AUTHORS is the authors of GoFrame.
+	AUTHORS = "john<john@goframe.org>"
+)

@@ -153,7 +153,7 @@ func doScanDir(depth int, path string, pattern string, recursive bool, handler f
 		return nil, err
 	}
 	var (
-		filePath = ""
+		filePath string
 		patterns = gstr.SplitAndTrim(pattern, ",")
 	)
 	for _, name := range names {

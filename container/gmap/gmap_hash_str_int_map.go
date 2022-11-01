@@ -144,7 +144,7 @@ func (m *StrIntMap) Search(key string) (value int, found bool) {
 func (m *StrIntMap) Get(key string) (value int) {
 	m.mu.RLock()
 	if m.data != nil {
-		value, _ = m.data[key]
+		value = m.data[key]
 	}
 	m.mu.RUnlock()
 	return

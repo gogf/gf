@@ -9,12 +9,12 @@ package ghash
 // PJW implements the classic PJW hash algorithm for 32 bits.
 func PJW(str []byte) uint32 {
 	var (
-		BitsInUnsignedInt uint32 = 4 * 8
-		ThreeQuarters     uint32 = (BitsInUnsignedInt * 3) / 4
-		OneEighth         uint32 = BitsInUnsignedInt / 8
+		BitsInUnsignedInt uint32 = 32 // 4 * 8
+		ThreeQuarters            = (BitsInUnsignedInt * 3) / 4
+		OneEighth                = BitsInUnsignedInt / 8
 		HighBits          uint32 = (0xFFFFFFFF) << (BitsInUnsignedInt - OneEighth)
-		hash              uint32 = 0
-		test              uint32 = 0
+		hash              uint32
+		test              uint32
 	)
 	for i := 0; i < len(str); i++ {
 		hash = (hash << OneEighth) + uint32(str[i])
@@ -28,12 +28,12 @@ func PJW(str []byte) uint32 {
 // PJW64 implements the classic PJW hash algorithm for 64 bits.
 func PJW64(str []byte) uint64 {
 	var (
-		BitsInUnsignedInt uint64 = 4 * 8
-		ThreeQuarters     uint64 = (BitsInUnsignedInt * 3) / 4
-		OneEighth         uint64 = BitsInUnsignedInt / 8
+		BitsInUnsignedInt uint64 = 32 // 4 * 8
+		ThreeQuarters            = (BitsInUnsignedInt * 3) / 4
+		OneEighth                = BitsInUnsignedInt / 8
 		HighBits          uint64 = (0xFFFFFFFFFFFFFFFF) << (BitsInUnsignedInt - OneEighth)
-		hash              uint64 = 0
-		test              uint64 = 0
+		hash              uint64
+		test              uint64
 	)
 	for i := 0; i < len(str); i++ {
 		hash = (hash << OneEighth) + uint64(str[i])
