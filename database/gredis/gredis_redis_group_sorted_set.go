@@ -68,8 +68,8 @@ type ZAddMember struct {
 // - If the CH option is specified, the number of elements that were changed (added or updated).
 //
 // If the INCR option is specified, the return value will be Bulk string reply:
-// - The new score of member (a double precision floating point number) represented as string, or nil if the operation
-//   was aborted (when called with either the XX or the NX option).
+//   - The new score of member (a double precision floating point number) represented as string, or nil if the operation
+//     was aborted (when called with either the XX or the NX option).
 //
 // https://redis.io/commands/zadd/
 func (r RedisGroupSortedSet) ZAdd(ctx context.Context, key string, option *ZAddOption, member ZAddMember, members ...ZAddMember) (*gvar.Var, error) {

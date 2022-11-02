@@ -353,7 +353,7 @@ func (r RedisGroupGeneric) PExpireTime(ctx context.Context, key string) (*gvar.V
 //
 // It returns TTL in milliseconds, or a negative value in order to signal an error (see the description above).
 //
-//  https://redis.io/commands/pttl/
+//	https://redis.io/commands/pttl/
 func (r RedisGroupGeneric) PTTL(ctx context.Context, key string) (int64, error) {
 	v, err := r.redis.Do(ctx, "PTTL", key)
 	return v.Int64(), err
