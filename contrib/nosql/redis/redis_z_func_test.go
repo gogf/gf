@@ -4,11 +4,12 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gredis
+package redis
 
 import (
 	"testing"
 
+	"github.com/gogf/gf/v2/database/gredis"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -16,7 +17,7 @@ import (
 func Test_mustMergeOptionToArgs(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var args []interface{}
-		newArgs := mustMergeOptionToArgs(args, SetOption{
+		newArgs := mustMergeOptionToArgs(args, gredis.SetOption{
 			NX:  true,
 			Get: true,
 		})
@@ -24,10 +25,10 @@ func Test_mustMergeOptionToArgs(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var args []interface{}
-		newArgs := mustMergeOptionToArgs(args, SetOption{
+		newArgs := mustMergeOptionToArgs(args, gredis.SetOption{
 			NX:  true,
 			Get: true,
-			TTLOption: TTLOption{
+			TTLOption: gredis.TTLOption{
 				EX: gconv.PtrInt64(60),
 			},
 		})
