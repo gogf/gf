@@ -576,10 +576,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		node = &n
 	}
 	// Cache the underlying connection pool object by node.
-	instanceNameByNode := fmt.Sprintf(
-		`%s@%s(%s:%s)/%s`,
-		node.User, node.Protocol, node.Host, node.Port, node.Name,
-	)
+	instanceNameByNode := fmt.Sprintf(`%+v`, node)
 	v := c.links.GetOrSetFuncLock(instanceNameByNode, func() interface{} {
 		if sqlDb, err = c.db.Open(node); err != nil {
 			return nil
