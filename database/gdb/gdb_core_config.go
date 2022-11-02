@@ -41,13 +41,14 @@ type ConfigNode struct {
 	Charset              string        `json:"charset"`              // (Optional, "utf8mb4" in default) Custom charset when operating on database.
 	Protocol             string        `json:"protocol"`             // (Optional, "tcp" in default) See net.Dial for more information which networks are available.
 	Timezone             string        `json:"timezone"`             // (Optional) Sets the time zone for displaying and interpreting time stamps.
+	Namespace            string        `json:"namespace"`            // Namespace for some databases. Eg, in pgsql, the `Name` acts as the `catalog`, the `NameSpace` acts as the `schema`.
 	MaxIdleConnCount     int           `json:"maxIdle"`              // (Optional) Max idle connection configuration for underlying connection pool.
 	MaxOpenConnCount     int           `json:"maxOpen"`              // (Optional) Max open connection configuration for underlying connection pool.
 	MaxConnLifeTime      time.Duration `json:"maxLifeTime"`          // (Optional) Max amount of time a connection may be idle before being closed.
 	QueryTimeout         time.Duration `json:"queryTimeout"`         // (Optional) Max query time for per dql.
 	ExecTimeout          time.Duration `json:"execTimeout"`          // (Optional) Max exec time for dml.
-	TranTimeout          time.Duration `json:"tranTimeout"`          // (Optional) Max exec time time for a transaction.
-	PrepareTimeout       time.Duration `json:"prepareTimeout"`       // (Optional) Max exec time time for prepare operation.
+	TranTimeout          time.Duration `json:"tranTimeout"`          // (Optional) Max exec time for a transaction.
+	PrepareTimeout       time.Duration `json:"prepareTimeout"`       // (Optional) Max exec time for prepare operation.
 	CreatedAt            string        `json:"createdAt"`            // (Optional) The filed name of table for automatic-filled created datetime.
 	UpdatedAt            string        `json:"updatedAt"`            // (Optional) The filed name of table for automatic-filled updated datetime.
 	DeletedAt            string        `json:"deletedAt"`            // (Optional) The filed name of table for automatic-filled updated datetime.

@@ -35,6 +35,7 @@ type Driver struct {
 
 const (
 	internalPrimaryKeyInCtx gctx.StrKey = "primary_key"
+	defaultSchema                       = "public"
 )
 
 func init() {
@@ -223,13 +224,13 @@ func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args [
 func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
 	var (
 		result     gdb.Result
-		usedSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+		usedSchema = gutil.GetOrDefaultStr(d.GetConfig().Namespace, schema...)
 	)
 	if usedSchema == "" {
-		// "public" is the default schema of pgsql.
-		usedSchema = "public"
+		usedSchema = defaultSchema
 	}
-	link, err := d.SlaveLink(usedSchema)
+	// DO NOT use `usedSchema` as parameter for function `SlaveLink`.
+	link, err := d.SlaveLink(schema...)
 	if err != nil {
 		return nil, err
 	}
@@ -249,6 +250,7 @@ ORDER BY
 	c.relname`,
 		usedSchema,
 	)
+
 	query, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(query))
 	result, err = d.DoSelect(ctx, link, query)
 	if err != nil {
