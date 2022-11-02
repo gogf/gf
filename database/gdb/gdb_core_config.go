@@ -247,7 +247,11 @@ func (c *Core) GetPrefix() string {
 
 // GetSchema returns the schema configured.
 func (c *Core) GetSchema() string {
-	return c.schema
+	schema := c.schema
+	if schema == "" {
+		schema = c.GetConfig().Name
+	}
+	return schema
 }
 
 func parseConfigNodeLink(node *ConfigNode) *ConfigNode {
