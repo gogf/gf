@@ -575,6 +575,9 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		n.Name = nodeSchema
 		node = &n
 	}
+	if c.schema == "" {
+		c.schema = nodeSchema
+	}
 	// Cache the underlying connection pool object by node.
 	instanceNameByNode := fmt.Sprintf(
 		`%s@%s(%s:%s)/%s`,
