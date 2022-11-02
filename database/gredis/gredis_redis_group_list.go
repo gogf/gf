@@ -8,7 +8,6 @@ package gredis
 
 import (
 	"context"
-	"time"
 
 	"github.com/gogf/gf/v2/container/gvar"
 )
@@ -28,10 +27,10 @@ type IGroupList interface {
 	LSet(ctx context.Context, key string, index int64, value interface{}) (*gvar.Var, error)
 	LRange(ctx context.Context, key string, start, stop int64) ([]*gvar.Var, error)
 	LTrim(ctx context.Context, key string, start, stop int64) error
-	BLPop(ctx context.Context, timeout time.Duration, keys ...string) ([]*gvar.Var, error)
-	BRPop(ctx context.Context, timeout time.Duration, keys ...string) ([]*gvar.Var, error)
+	BLPop(ctx context.Context, timeout int64, keys ...string) ([]*gvar.Var, error)
+	BRPop(ctx context.Context, timeout int64, keys ...string) ([]*gvar.Var, error)
 	RPopLPush(ctx context.Context, source, destination string) (*gvar.Var, error)
-	BRPopLPush(ctx context.Context, source, destination string, timeout time.Duration) (*gvar.Var, error)
+	BRPopLPush(ctx context.Context, source, destination string, timeout int64) (*gvar.Var, error)
 }
 
 // LInsertOp defines the operation name for function LInsert.
