@@ -8,7 +8,6 @@ package gredis
 
 import (
 	"context"
-	"time"
 
 	"github.com/gogf/gf/v2/container/gvar"
 )
@@ -17,7 +16,7 @@ import (
 type IGroupString interface {
 	Set(ctx context.Context, key string, value interface{}, option ...SetOption) (*gvar.Var, error)
 	SetNX(ctx context.Context, key string, value interface{}) (bool, error)
-	SetEX(ctx context.Context, key string, value interface{}, ttl time.Duration) error
+	SetEX(ctx context.Context, key string, value interface{}, ttlInSeconds int64) error
 	Get(ctx context.Context, key string) (*gvar.Var, error)
 	GetDel(ctx context.Context, key string) (*gvar.Var, error)
 	GetEX(ctx context.Context, key string, option ...GetEXOption) (*gvar.Var, error)

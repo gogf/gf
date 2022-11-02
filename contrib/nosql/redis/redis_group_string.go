@@ -8,7 +8,6 @@ package redis
 
 import (
 	"context"
-	"time"
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gredis"
@@ -70,8 +69,8 @@ func (r GroupString) SetNX(ctx context.Context, key string, value interface{}) (
 // An error is returned when seconds invalid.
 //
 // https://redis.io/commands/setex/
-func (r GroupString) SetEX(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
-	_, err := r.redis.Do(ctx, "SetEX", key, int64(ttl.Seconds()), value)
+func (r GroupString) SetEX(ctx context.Context, key string, value interface{}, ttlInSeconds int64) error {
+	_, err := r.redis.Do(ctx, "SetEX", key, ttlInSeconds, value)
 	return err
 }
 

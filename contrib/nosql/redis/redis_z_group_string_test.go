@@ -101,7 +101,7 @@ func Test_GroupString_SetEX(t *testing.T) {
 			k1 = "k1"
 			v1 = "v1"
 		)
-		err := redis.GroupString().SetEX(ctx, k1, v1, time.Second)
+		err := redis.GroupString().SetEX(ctx, k1, v1, 1)
 		t.AssertNil(err)
 
 		r1, err := redis.GroupString().Get(ctx, k1)
@@ -143,7 +143,7 @@ func Test_GroupString_GetEX(t *testing.T) {
 			k1 = "k1"
 			v1 = "v1"
 		)
-		err := redis.GroupString().SetEX(ctx, k1, v1, time.Second)
+		err := redis.GroupString().SetEX(ctx, k1, v1, 1)
 		t.AssertNil(err)
 
 		r1, err := redis.GroupString().GetEX(ctx, k1, gredis.GetEXOption{

@@ -202,13 +202,13 @@ func (r GroupGeneric) FlushAll(ctx context.Context, option ...gredis.FlushOp) er
 // - 0 if the timeout was not set. e.g. key doesn't exist, or operation skipped due to the provided arguments.
 //
 // https://redis.io/commands/expire/
-func (r GroupGeneric) Expire(ctx context.Context, key string, seconds time.Duration, option ...gredis.ExpireOption) (int64, error) {
+func (r GroupGeneric) Expire(ctx context.Context, key string, seconds int64, option ...gredis.ExpireOption) (int64, error) {
 	var usedOption interface{}
 	if len(option) > 0 {
 		usedOption = option[0]
 	}
 	v, err := r.redis.Do(ctx, "Expire", mustMergeOptionToArgs(
-		[]interface{}{key, seconds.Seconds()}, usedOption,
+		[]interface{}{key, seconds}, usedOption,
 	)...)
 	return v.Int64(), err
 }
@@ -261,9 +261,9 @@ func (r GroupGeneric) ExpireTime(ctx context.Context, key string) (*gvar.Var, er
 // It returns TTL in seconds, or a negative value in order to signal an error (see the description above).
 //
 // https://redis.io/commands/ttl/
-func (r GroupGeneric) TTL(ctx context.Context, key string) (time.Duration, error) {
+func (r GroupGeneric) TTL(ctx context.Context, key string) (int64, error) {
 	v, err := r.redis.Do(ctx, "TTL", key)
-	return v.Duration(), err
+	return v.Int64(), err
 }
 
 // Persist removes the existing timeout on key, turning the key from volatile (a key with an expire set)
@@ -287,13 +287,13 @@ func (r GroupGeneric) Persist(ctx context.Context, key string) (int64, error) {
 // - 0 if the timeout was not set. e.g. key doesn't exist, or operation skipped due to the provided arguments.
 //
 // https://redis.io/commands/pexpire/
-func (r GroupGeneric) PExpire(ctx context.Context, key string, milliseconds time.Duration, option ...gredis.ExpireOption) (int64, error) {
+func (r GroupGeneric) PExpire(ctx context.Context, key string, milliseconds int64, option ...gredis.ExpireOption) (int64, error) {
 	var usedOption interface{}
 	if len(option) > 0 {
 		usedOption = option[0]
 	}
 	v, err := r.redis.Do(ctx, "PExpire", mustMergeOptionToArgs(
-		[]interface{}{key, milliseconds.Milliseconds()}, usedOption,
+		[]interface{}{key, milliseconds}, usedOption,
 	)...)
 	return v.Int64(), err
 }

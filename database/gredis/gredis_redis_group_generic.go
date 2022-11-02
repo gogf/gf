@@ -28,12 +28,12 @@ type IGroupGeneric interface {
 	Keys(ctx context.Context, pattern string) ([]string, error)
 	FlushDB(ctx context.Context, option ...FlushOp) error
 	FlushAll(ctx context.Context, option ...FlushOp) error
-	Expire(ctx context.Context, key string, seconds time.Duration, option ...ExpireOption) (int64, error)
+	Expire(ctx context.Context, key string, seconds int64, option ...ExpireOption) (int64, error)
 	ExpireAt(ctx context.Context, key string, time time.Time, option ...ExpireOption) (int64, error)
 	ExpireTime(ctx context.Context, key string) (*gvar.Var, error)
-	TTL(ctx context.Context, key string) (time.Duration, error)
+	TTL(ctx context.Context, key string) (int64, error)
 	Persist(ctx context.Context, key string) (int64, error)
-	PExpire(ctx context.Context, key string, milliseconds time.Duration, option ...ExpireOption) (int64, error)
+	PExpire(ctx context.Context, key string, milliseconds int64, option ...ExpireOption) (int64, error)
 	PExpireAt(ctx context.Context, key string, time time.Time, option ...ExpireOption) (int64, error)
 	PExpireTime(ctx context.Context, key string) (*gvar.Var, error)
 	PTTL(ctx context.Context, key string) (int64, error)

@@ -8,7 +8,6 @@ package redis
 
 import (
 	"context"
-	"time"
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gredis"
@@ -89,6 +88,8 @@ func (r GroupList) RPushX(ctx context.Context, key string, value interface{}) (i
 // LPop remove and returns the first element of the list stored at key.
 // Removes and returns the first elements of the list stored at key.
 //
+// Starting with Redis version 6.2.0: Added the count argument.
+//
 // By default, the command pops a single element from the beginning of the list.
 // When provided with the optional count argument, the reply will consist of up to count elements,
 // depending on the list's length.
@@ -109,6 +110,9 @@ func (r GroupList) LPop(ctx context.Context, key string, count ...int) (*gvar.Va
 
 // RPop remove and returns the last element of the list stored at key.
 // Removes and returns the last elements of the list stored at key.
+//
+// Starting with Redis version 6.2.0: Added the count argument.
+//
 // By default, the command pops a single element from the end of the list.
 // When provided with the optional count argument, the reply will consist of up to count elements,
 // depending on the list's length.
@@ -170,7 +174,7 @@ func (r GroupList) LIndex(ctx context.Context, key string, index int64) (*gvar.V
 //
 // https://redis.io/commands/linsert/
 func (r GroupList) LInsert(ctx context.Context, key string, op gredis.LInsertOp, pivot, value interface{}) (int64, error) {
-	v, err := r.redis.Do(ctx, "LInsert", key, op, pivot, value)
+	v, err := r.redis.Do(ctx, "LInsert", key, string(op), pivot, value)
 	return v.Int64(), err
 }
 
@@ -212,9 +216,12 @@ func (r GroupList) LTrim(ctx context.Context, key string, start, stop int64) err
 // An element is popped from the head of the first list that is non-empty, with the given keys being
 // checked in the order that they are given.
 //
+// The timeout argument is interpreted as a double value specifying the maximum number of seconds to
+// block. A timeout of zero can be used to block indefinitely.
+//
 // https://redis.io/commands/blpop/
-func (r GroupList) BLPop(ctx context.Context, timeout time.Duration, keys ...string) ([]*gvar.Var, error) {
-	v, err := r.redis.Do(ctx, "BLPop", append(gconv.Interfaces(keys), timeout.Seconds())...)
+func (r GroupList) BLPop(ctx context.Context, timeout int64, keys ...string) ([]*gvar.Var, error) {
+	v, err := r.redis.Do(ctx, "BLPop", append(gconv.Interfaces(keys), timeout)...)
 	return v.Vars(), err
 }
 
@@ -223,9 +230,12 @@ func (r GroupList) BLPop(ctx context.Context, timeout time.Duration, keys ...str
 // pop from any of the given lists. An element is popped from the tail of the first list that is
 // non-empty, with the given keys being checked in the order that they are given.
 //
+// The timeout argument is interpreted as a double value specifying the maximum number of seconds to
+// block. A timeout of zero can be used to block indefinitely.
+//
 // https://redis.io/commands/brpop/
-func (r GroupList) BRPop(ctx context.Context, timeout time.Duration, keys ...string) ([]*gvar.Var, error) {
-	v, err := r.redis.Do(ctx, "BRPop", keys, timeout.Seconds())
+func (r GroupList) BRPop(ctx context.Context, timeout int64, keys ...string) ([]*gvar.Var, error) {
+	v, err := r.redis.Do(ctx, "BRPop", append(gconv.Interfaces(keys), timeout)...)
 	return v.Vars(), err
 }
 
@@ -248,6 +258,6 @@ func (r GroupList) RPopLPush(ctx context.Context, source, destination string) (*
 // If timeout is reached, a Null reply is returned.
 //
 // https://redis.io/commands/brpoplpush/
-func (r GroupList) BRPopLPush(ctx context.Context, source, destination string, timeout time.Duration) (*gvar.Var, error) {
-	return r.redis.Do(ctx, "RRPopLPush", source, destination, timeout.Seconds())
+func (r GroupList) BRPopLPush(ctx context.Context, source, destination string, timeout int64) (*gvar.Var, error) {
+	return r.redis.Do(ctx, "BRPopLPush", source, destination, timeout)
 }
