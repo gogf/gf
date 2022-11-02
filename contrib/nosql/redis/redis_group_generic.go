@@ -136,7 +136,7 @@ func (r GroupGeneric) Move(ctx context.Context, key string, db int) (int64, erro
 //
 // https://redis.io/commands/del/
 func (r GroupGeneric) Del(ctx context.Context, keys ...string) (int64, error) {
-	v, err := r.redis.Do(ctx, "Del", keys)
+	v, err := r.redis.Do(ctx, "Del", gconv.Interfaces(keys)...)
 	return v.Int64(), err
 }
 
@@ -333,7 +333,7 @@ func (r GroupGeneric) PExpireTime(ctx context.Context, key string) (*gvar.Var, e
 //
 // It returns TTL in milliseconds, or a negative value in order to signal an error (see the description above).
 //
-//  https://redis.io/commands/pttl/
+//	https://redis.io/commands/pttl/
 func (r GroupGeneric) PTTL(ctx context.Context, key string) (int64, error) {
 	v, err := r.redis.Do(ctx, "PTTL", key)
 	return v.Int64(), err
