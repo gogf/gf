@@ -12,36 +12,36 @@ import (
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // Redis client.
 type Redis struct {
-	adapter Adapter
-	config  *Config
-	localRedisGroup
+	config *Config
+	localAdapter
+	localGroup
 }
 
 type (
-	localRedisGroup struct {
-		localRedisGroupGeneric
-		localRedisGroupHash
-		localRedisGroupList
-		localRedisGroupPubSub
-		localRedisGroupScript
-		localRedisGroupSet
-		localRedisGroupSortedSet
-		localRedisGroupString
+	localGroup struct {
+		localGroupGeneric
+		localGroupHash
+		localGroupList
+		localGroupPubSub
+		localGroupScript
+		localGroupSet
+		localGroupSortedSet
+		localGroupString
 	}
-	localRedisGroupGeneric   = RedisGroupGeneric
-	localRedisGroupHash      = RedisGroupHash
-	localRedisGroupList      = RedisGroupList
-	localRedisGroupPubSub    = RedisGroupPubSub
-	localRedisGroupScript    = RedisGroupScript
-	localRedisGroupSet       = RedisGroupSet
-	localRedisGroupSortedSet = RedisGroupSortedSet
-	localRedisGroupString    = RedisGroupString
+	localAdapter        = Adapter
+	localGroupGeneric   = IGroupGeneric
+	localGroupHash      = IGroupHash
+	localGroupList      = IGroupList
+	localGroupPubSub    = IGroupPubSub
+	localGroupScript    = IGroupScript
+	localGroupSet       = IGroupSet
+	localGroupSortedSet = IGroupSortedSet
+	localGroupString    = IGroupString
 )
 
 const (
@@ -57,25 +57,25 @@ possible reference: https://github.com/gogf/gf/tree/master/contrib/nosql/redis
 
 // initGroup initializes the group object of redis.
 func (r *Redis) initGroup() *Redis {
-	r.localRedisGroup = localRedisGroup{
-		localRedisGroupGeneric:   r.GroupGeneric(),
-		localRedisGroupHash:      r.GroupHash(),
-		localRedisGroupList:      r.GroupList(),
-		localRedisGroupPubSub:    r.GroupPubSub(),
-		localRedisGroupScript:    r.GroupScript(),
-		localRedisGroupSet:       r.GroupSet(),
-		localRedisGroupSortedSet: r.GroupSortedSet(),
-		localRedisGroupString:    r.GroupString(),
+	r.localGroup = localGroup{
+		localGroupGeneric:   r.localAdapter.GroupGeneric(),
+		localGroupHash:      r.localAdapter.GroupHash(),
+		localGroupList:      r.localAdapter.GroupList(),
+		localGroupPubSub:    r.localAdapter.GroupPubSub(),
+		localGroupScript:    r.localAdapter.GroupScript(),
+		localGroupSet:       r.localAdapter.GroupSet(),
+		localGroupSortedSet: r.localAdapter.GroupSortedSet(),
+		localGroupString:    r.localAdapter.GroupString(),
 	}
 	return r
 }
 
-// SetAdapter sets custom adapter for current redis client.
+// SetAdapter changes the underlying adapter with custom adapter for current redis client.
 func (r *Redis) SetAdapter(adapter Adapter) {
 	if r == nil {
-		return
+		panic(gerror.NewCode(gcode.CodeInvalidParameter, errorNilRedis))
 	}
-	r.adapter = adapter
+	r.localAdapter = adapter
 }
 
 // GetAdapter returns the adapter that is set in current redis client.
@@ -83,26 +83,19 @@ func (r *Redis) GetAdapter() Adapter {
 	if r == nil {
 		return nil
 	}
-	return r.adapter
+	return r.localAdapter
 }
 
 // Conn retrieves and returns a connection object for continuous operations.
 // Note that you should call Close function manually if you do not use this connection any further.
-func (r *Redis) Conn(ctx context.Context) (*RedisConn, error) {
+func (r *Redis) Conn(ctx context.Context) (Conn, error) {
 	if r == nil {
 		return nil, gerror.NewCode(gcode.CodeInvalidParameter, errorNilRedis)
 	}
-	if r.adapter == nil {
-		return nil, gerror.NewCodef(gcode.CodeMissingConfiguration, errorNilAdapter)
+	if r.localAdapter == nil {
+		return nil, gerror.NewCode(gcode.CodeNecessaryPackageNotImport, errorNilAdapter)
 	}
-	conn, err := r.adapter.Conn(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return &RedisConn{
-		conn:  conn,
-		redis: r,
-	}, nil
+	return r.localAdapter.Conn(ctx)
 }
 
 // Do send a command to the server and returns the received reply.
@@ -111,23 +104,14 @@ func (r *Redis) Do(ctx context.Context, command string, args ...interface{}) (*g
 	if r == nil {
 		return nil, gerror.NewCode(gcode.CodeInvalidParameter, errorNilRedis)
 	}
-	if r.adapter == nil {
+	if r.localAdapter == nil {
 		return nil, gerror.NewCodef(gcode.CodeMissingConfiguration, errorNilAdapter)
 	}
-	conn, err := r.Conn(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if closeErr := conn.Close(ctx); closeErr != nil {
-			intlog.Errorf(ctx, `%+v`, closeErr)
-		}
-	}()
-	return conn.Do(ctx, command, args...)
+	return r.localAdapter.Do(ctx, command, args...)
 }
 
 // MustConn performs as function Conn, but it panics if any error occurs internally.
-func (r *Redis) MustConn(ctx context.Context) *RedisConn {
+func (r *Redis) MustConn(ctx context.Context) Conn {
 	c, err := r.Conn(ctx)
 	if err != nil {
 		panic(err)
@@ -146,8 +130,8 @@ func (r *Redis) MustDo(ctx context.Context, command string, args ...interface{})
 
 // Close closes current redis client, closes its connection pool and releases all its related resources.
 func (r *Redis) Close(ctx context.Context) error {
-	if r == nil || r.adapter == nil {
+	if r == nil || r.localAdapter == nil {
 		return nil
 	}
-	return r.adapter.Close(ctx)
+	return r.localAdapter.Close(ctx)
 }
