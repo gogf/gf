@@ -11,6 +11,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
 	"testing"
+	"time"
 )
 
 func Test_GroupGeneric_Copy(t *testing.T) {
@@ -163,7 +164,7 @@ func Test_GroupGeneric_RenameNX(t *testing.T) {
 
 func Test_GroupGeneric_Move(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		defer redis.FlushDB(ctx)
+		defer redis.FlushAll(ctx)
 		_, err := redis.GroupString().Set(ctx, "k1", "v1")
 		t.AssertNil(err)
 		result, err := redis.GroupGeneric().Move(ctx, "k1", 0)
@@ -174,7 +175,7 @@ func Test_GroupGeneric_Move(t *testing.T) {
 
 func Test_GroupGeneric_Del(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		//defer redis.FlushDB(ctx)
+		defer redis.FlushDB(ctx)
 		_, err := redis.GroupString().Set(ctx, "k1", "v1")
 		t.AssertNil(err)
 		_, err = redis.GroupString().Set(ctx, "k2", "v2")
@@ -188,5 +189,184 @@ func Test_GroupGeneric_Del(t *testing.T) {
 		v2, err := redis.GroupString().Get(ctx, "k2")
 		t.AssertNil(err)
 		t.AssertEQ(v2.String(), "")
+	})
+}
+
+func Test_GroupGeneric_RandomKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+		key, err := redis.GroupGeneric().RandomKey(ctx)
+		t.AssertNil(err)
+		t.AssertEQ(key, "")
+
+		_, err = redis.GroupString().Set(ctx, "k1", "v1")
+		t.AssertNil(err)
+		_, err = redis.GroupString().Set(ctx, "k2", "v2")
+		t.AssertNil(err)
+
+		key, err = redis.GroupGeneric().RandomKey(ctx)
+		t.AssertNil(err)
+		t.AssertIN(key, []string{"k1", "k2"})
+	})
+}
+
+func Test_GroupGeneric_DBSize(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+		dbSize, err := redis.GroupGeneric().DBSize(ctx)
+		t.AssertNil(err)
+		t.AssertEQ(dbSize, int64(0))
+
+		_, err = redis.GroupString().Set(ctx, "k1", "v1")
+		t.AssertNil(err)
+		_, err = redis.GroupString().Set(ctx, "k2", "v2")
+		t.AssertNil(err)
+
+		dbSize, err = redis.GroupGeneric().DBSize(ctx)
+		t.AssertNil(err)
+		t.AssertEQ(dbSize, int64(2))
+	})
+}
+
+func Test_GroupGeneric_Keys(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		err := redis.GroupString().MSet(ctx, map[string]interface{}{
+			"firstname": "Jack",
+			"lastname":  "Stuntman",
+			"age":       35,
+		})
+		t.AssertNil(err)
+		keys, err := redis.GroupGeneric().Keys(ctx, "*name*")
+		t.AssertNil(err)
+		t.AssertIN(keys, []string{"lastname", "firstname"})
+		keys, err = redis.GroupGeneric().Keys(ctx, "a??")
+		t.AssertNil(err)
+		t.AssertEQ(keys, []string{"age"})
+		keys, err = redis.GroupGeneric().Keys(ctx, "*")
+		t.AssertNil(err)
+		t.AssertIN(keys, []string{"lastname", "firstname", "age"})
+	})
+}
+
+func Test_GroupGeneric_FlushDB(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		_, err := redis.GroupString().Set(ctx, "k1", "v1")
+		t.AssertNil(err)
+		_, err = redis.GroupString().Set(ctx, "k2", "v2")
+		t.AssertNil(err)
+
+		dbSize, err := redis.GroupGeneric().DBSize(ctx)
+		t.AssertNil(err)
+		t.AssertEQ(dbSize, int64(2))
+
+		err = redis.GroupGeneric().FlushDB(ctx)
+		t.AssertNil(err)
+
+		dbSize, err = redis.GroupGeneric().DBSize(ctx)
+		t.AssertNil(err)
+		t.AssertEQ(dbSize, int64(0))
+	})
+}
+
+func Test_GroupGeneric_FlushAll(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		_, err := redis.GroupString().Set(ctx, "k1", "v1")
+		t.AssertNil(err)
+		_, err = redis.GroupString().Set(ctx, "k2", "v2")
+		t.AssertNil(err)
+
+		dbSize, err := redis.GroupGeneric().DBSize(ctx)
+		t.AssertNil(err)
+		t.AssertEQ(dbSize, int64(2))
+
+		err = redis.GroupGeneric().FlushAll(ctx)
+		t.AssertNil(err)
+
+		dbSize, err = redis.GroupGeneric().DBSize(ctx)
+		t.AssertNil(err)
+		t.AssertEQ(dbSize, int64(0))
+	})
+}
+
+func Test_GroupGeneric_Expire(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		_, err := redis.GroupString().Set(ctx, "mykey", "Hello")
+		t.AssertNil(err)
+		result, err := redis.GroupGeneric().Expire(ctx, "mykey", 1)
+		t.AssertNil(err)
+		t.AssertEQ(result, int64(1))
+		ttl, err := redis.GroupGeneric().TTL(ctx, "mykey")
+		t.AssertNil(err)
+		t.AssertEQ(ttl, int64(1))
+	})
+	// With Option.
+	// Starting with Redis version 7.0.0: Added options: NX, XX, GT and LT.
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		_, err := redis.GroupString().Set(ctx, "mykey", "Hello")
+		t.AssertNil(err)
+		ttl, err := redis.GroupGeneric().TTL(ctx, "mykey")
+		t.AssertNil(err)
+		t.AssertEQ(ttl, int64(-1))
+		result, err := redis.GroupGeneric().Expire(ctx, "mykey", 1, gredis.ExpireOption{XX: true})
+		t.AssertNil(err)
+		t.AssertEQ(result, int64(0))
+		ttl, err = redis.GroupGeneric().TTL(ctx, "mykey")
+		t.AssertNil(err)
+		t.AssertEQ(ttl, int64(-1))
+		result, err = redis.GroupGeneric().Expire(ctx, "mykey", 1, gredis.ExpireOption{NX: true})
+		t.AssertNil(err)
+		t.AssertEQ(result, int64(1))
+		ttl, err = redis.GroupGeneric().TTL(ctx, "mykey")
+		t.AssertNil(err)
+		t.AssertEQ(ttl, int64(1))
+	})
+}
+
+func Test_GroupGeneric_ExpireAt(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		_, err := redis.GroupString().Set(ctx, "mykey", "Hello")
+		t.AssertNil(err)
+		result, err := redis.GroupGeneric().Exists(ctx, "mykey")
+		t.AssertNil(err)
+		t.AssertEQ(result, int64(1))
+		result, err = redis.GroupGeneric().ExpireAt(ctx, "mykey", time.Now().Add(time.Millisecond*100))
+		t.AssertNil(err)
+		t.AssertEQ(result, int64(1))
+		time.Sleep(time.Millisecond * 100)
+		result, err = redis.GroupGeneric().Exists(ctx, "mykey")
+		t.AssertNil(err)
+		t.AssertEQ(result, int64(0))
+	})
+	// With Option.
+	// Starting with Redis version 7.0.0: Added options: NX, XX, GT and LT.
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		_, err := redis.GroupString().Set(ctx, "mykey", "Hello")
+		t.AssertNil(err)
+		ttl, err := redis.GroupGeneric().TTL(ctx, "mykey")
+		t.AssertNil(err)
+		t.AssertEQ(ttl, int64(-1))
+		result, err := redis.GroupGeneric().ExpireAt(ctx, "mykey", time.Now().Add(time.Millisecond*100), gredis.ExpireOption{XX: true})
+		t.AssertNil(err)
+		t.AssertEQ(result, int64(0))
+		result, err = redis.GroupGeneric().ExpireAt(ctx, "mykey", time.Now().Add(time.Minute), gredis.ExpireOption{NX: true})
+		t.AssertNil(err)
+		t.AssertEQ(result, int64(1))
+		ttl, err = redis.GroupGeneric().TTL(ctx, "mykey")
+		t.AssertNil(err)
+		t.AssertGT(ttl, int64(0))
 	})
 }
