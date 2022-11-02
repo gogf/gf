@@ -665,9 +665,15 @@ func (c *Core) writeSqlToLogger(ctx context.Context, sql *Sql) {
 			transactionIdStr = fmt.Sprintf(`[txid:%d] `, v.(uint64))
 		}
 	}
+	// Runtime schema.
+	schemaName := c.GetSchema()
+	if schemaName == "" {
+		// The original schema in configuration.
+		schemaName = c.config.Name
+	}
 	s := fmt.Sprintf(
-		"[%3d ms] [%s] [rows:%-3d] %s%s",
-		sql.End-sql.Start, sql.Group, sql.RowsAffected, transactionIdStr, sql.Format,
+		"[%3d ms] [%s] [%s] [rows:%-3d] %s%s",
+		sql.End-sql.Start, sql.Group, schemaName, sql.RowsAffected, transactionIdStr, sql.Format,
 	)
 	if sql.Error != nil {
 		s += "\nError: " + sql.Error.Error()
