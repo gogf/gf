@@ -245,7 +245,6 @@ WHERE
 	n.nspname = '%s'
 	AND c.relkind IN ('r', 'p')
 	AND c.relpartbound IS NULL
-	AND PG_TABLE_IS_VISIBLE(c.oid)
 ORDER BY
 	c.relname`,
 		usedSchema,
