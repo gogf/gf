@@ -264,6 +264,7 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 			Start:         timestampMilli1,
 			End:           timestampMilli2,
 			Group:         c.db.GetGroup(),
+			Schema:        c.db.GetSchema(),
 			RowsAffected:  rowsAffected,
 			IsTransaction: in.IsTransaction,
 		}

@@ -237,6 +237,7 @@ type Sql struct {
 	Start         int64         // Start execution timestamp in milliseconds.
 	End           int64         // End execution timestamp in milliseconds.
 	Group         string        // Group is the group name of the configuration that the sql is executed from.
+	Schema        string        // Schema is the schema name of the configuration that the sql is executed from.
 	IsTransaction bool          // IsTransaction marks whether this sql is executed in transaction.
 	RowsAffected  int64         // RowsAffected marks retrieved or affected number with current sql statement.
 }
