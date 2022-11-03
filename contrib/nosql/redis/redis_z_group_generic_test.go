@@ -461,7 +461,7 @@ func Test_GroupGeneric_PExpire(t *testing.T) {
 		t.AssertNil(err)
 		result, err := redis.GroupGeneric().PExpire(ctx, TestKey, 2500, gredis.ExpireOption{XX: true})
 		t.AssertNil(err)
-		t.AssertEQ(result, int64(0))
+		t.AssertEQ(result, int64(1))
 		result, err = redis.GroupGeneric().PTTL(ctx, TestKey)
 		t.AssertNil(err)
 		t.AssertLE(result, int64(2500))
