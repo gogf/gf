@@ -448,12 +448,9 @@ func Test_GroupGeneric_PExpire(t *testing.T) {
 		result, err := redis.GroupGeneric().PExpire(ctx, TestKey, 2500)
 		t.AssertNil(err)
 		t.AssertEQ(result, int64(1))
-		result, err = redis.GroupGeneric().TTL(ctx, TestKey)
-		t.AssertNil(err)
-		t.AssertEQ(result, int64(2))
 		result, err = redis.GroupGeneric().PTTL(ctx, TestKey)
 		t.AssertNil(err)
-		t.AssertLT(result, int64(2500))
+		t.AssertLE(result, int64(2500))
 	})
 	// With Option.
 	// Starting with Redis version 7.0.0: Added options: NX, XX, GT and LT.
@@ -463,15 +460,15 @@ func Test_GroupGeneric_PExpire(t *testing.T) {
 		result, err := redis.GroupGeneric().PExpire(ctx, TestKey, 2500, gredis.ExpireOption{XX: true})
 		t.AssertNil(err)
 		t.AssertEQ(result, int64(1))
-		result, err = redis.GroupGeneric().TTL(ctx, TestKey)
+		result, err = redis.GroupGeneric().PTTL(ctx, TestKey)
 		t.AssertNil(err)
-		t.AssertEQ(result, int64(2))
+		t.AssertLE(result, int64(2500))
 		result, err = redis.GroupGeneric().PExpire(ctx, TestKey, 2500, gredis.ExpireOption{NX: true})
 		t.AssertNil(err)
 		t.AssertEQ(result, int64(0))
-		result, err = redis.GroupGeneric().TTL(ctx, TestKey)
+		result, err = redis.GroupGeneric().PTTL(ctx, TestKey)
 		t.AssertNil(err)
-		t.AssertEQ(result, int64(2))
+		t.AssertLE(result, int64(2500))
 	})
 }
 
@@ -521,6 +518,6 @@ func Test_GroupGeneric_PTTL(t *testing.T) {
 		t.AssertEQ(result, int64(1))
 		result, err = redis.GroupGeneric().PTTL(ctx, TestKey)
 		t.AssertNil(err)
-		t.AssertLT(result, int64(1000))
+		t.AssertLE(result, int64(1000))
 	})
 }
