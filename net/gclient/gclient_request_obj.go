@@ -13,11 +13,11 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gmeta"
+	"github.com/gogf/gf/v2/util/gtag"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
@@ -41,21 +41,21 @@ import (
 // DoRequestObj(ctx, req, &res)
 func (c *Client) DoRequestObj(ctx context.Context, req, res interface{}) error {
 	var (
-		method = gmeta.Get(req, goai.TagNameMethod).String()
-		path   = gmeta.Get(req, goai.TagNamePath).String()
+		method = gmeta.Get(req, gtag.RouteMethod).String()
+		path   = gmeta.Get(req, gtag.RoutePath).String()
 	)
 	if method == "" {
 		return gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			`no "%s" tag found in request object: %s`,
-			goai.TagNameMethod, reflect.TypeOf(req).String(),
+			gtag.RouteMethod, reflect.TypeOf(req).String(),
 		)
 	}
 	if path == "" {
 		return gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			`no "%s" tag found in request object: %s`,
-			goai.TagNamePath, reflect.TypeOf(req).String(),
+			gtag.RoutePath, reflect.TypeOf(req).String(),
 		)
 	}
 	path = c.handlePathForObjRequest(path, req)

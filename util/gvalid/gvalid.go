@@ -15,6 +15,7 @@ import (
 
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/util/gtag"
 )
 
 // CustomMsg is the custom error message type,
@@ -60,8 +61,11 @@ var (
 		internalDefaultRuleName: "The {field} value `{value}` is invalid",
 	}
 
-	structTagPriority    = []string{"gvalid", "valid", "v"} // structTagPriority specifies the validation tag priority array.
-	aliasNameTagPriority = []string{"param", "params", "p"} // aliasNameTagPriority specifies the alias tag priority array.
+	// structTagPriority specifies the validation tag priority array.
+	structTagPriority = []string{gtag.Valid, gtag.ValidShort}
+
+	// aliasNameTagPriority specifies the alias tag priority array.
+	aliasNameTagPriority = []string{gtag.Param, gtag.ParamShort}
 
 	// all internal error keys.
 	internalErrKeyMap = map[string]string{

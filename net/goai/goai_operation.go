@@ -30,7 +30,7 @@ type Operation struct {
 }
 
 func (oai *OpenApiV3) tagMapToOperation(tagMap map[string]string, operation *Operation) error {
-	var mergedTagMap = oai.fileMapWithShortTags(tagMap)
+	var mergedTagMap = oai.fillMapWithShortTags(tagMap)
 	if err := gconv.Struct(mergedTagMap, operation); err != nil {
 		return gerror.Wrap(err, `mapping struct tags to Operation failed`)
 	}
