@@ -276,7 +276,12 @@ func Test_EndOfMinute(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2020-12-12 18:24:06")
 		timeTemp1 := timeTemp.EndOfMinute()
-		t.Assert(timeTemp1.Format("Y-m-d H:i:s"), "2020-12-12 18:24:59")
+		t.Assert(timeTemp1.Format("Y-m-d H:i:s.u"), "2020-12-12 18:24:59.000")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		timeTemp := gtime.NewFromStr("2020-12-12 18:24:06")
+		timeTemp1 := timeTemp.EndOfMinute(true)
+		t.Assert(timeTemp1.Format("Y-m-d H:i:s.u"), "2020-12-12 18:24:59.999")
 	})
 }
 
@@ -292,7 +297,12 @@ func Test_EndOfHour(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2020-12-12 18:24:06")
 		timeTemp1 := timeTemp.EndOfHour()
-		t.Assert(timeTemp1.Format("Y-m-d H:i:s"), "2020-12-12 18:59:59")
+		t.Assert(timeTemp1.Format("Y-m-d H:i:s.u"), "2020-12-12 18:59:59.000")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		timeTemp := gtime.NewFromStr("2020-12-12 18:24:06")
+		timeTemp1 := timeTemp.EndOfHour(true)
+		t.Assert(timeTemp1.Format("Y-m-d H:i:s.u"), "2020-12-12 18:59:59.999")
 	})
 }
 
@@ -308,7 +318,12 @@ func Test_EndOfDay(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2020-12-12 18:24:06")
 		timeTemp1 := timeTemp.EndOfDay()
-		t.Assert(timeTemp1.Format("Y-m-d H:i:s"), "2020-12-12 23:59:59")
+		t.Assert(timeTemp1.Format("Y-m-d H:i:s.u"), "2020-12-12 23:59:59.000")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		timeTemp := gtime.NewFromStr("2020-12-12 18:24:06")
+		timeTemp1 := timeTemp.EndOfDay(true)
+		t.Assert(timeTemp1.Format("Y-m-d H:i:s.u"), "2020-12-12 23:59:59.999")
 	})
 }
 
@@ -324,7 +339,12 @@ func Test_EndOfWeek(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2020-12-12 18:24:06")
 		timeTemp1 := timeTemp.EndOfWeek()
-		t.Assert(timeTemp1.Format("Y-m-d H:i:s"), "2020-12-12 23:59:59")
+		t.Assert(timeTemp1.Format("Y-m-d H:i:s.u"), "2020-12-12 23:59:59.000")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		timeTemp := gtime.NewFromStr("2020-12-12 18:24:06")
+		timeTemp1 := timeTemp.EndOfWeek(true)
+		t.Assert(timeTemp1.Format("Y-m-d H:i:s.u"), "2020-12-12 23:59:59.999")
 	})
 }
 
@@ -340,7 +360,12 @@ func Test_EndOfMonth(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2020-12-12 18:24:06")
 		timeTemp1 := timeTemp.EndOfMonth()
-		t.Assert(timeTemp1.Format("Y-m-d H:i:s"), "2020-12-31 23:59:59")
+		t.Assert(timeTemp1.Format("Y-m-d H:i:s.u"), "2020-12-31 23:59:59.000")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		timeTemp := gtime.NewFromStr("2020-12-12 18:24:06")
+		timeTemp1 := timeTemp.EndOfMonth(true)
+		t.Assert(timeTemp1.Format("Y-m-d H:i:s.u"), "2020-12-31 23:59:59.999")
 	})
 }
 
@@ -356,7 +381,12 @@ func Test_EndOfQuarter(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2020-12-06 18:24:06")
 		timeTemp1 := timeTemp.EndOfQuarter()
-		t.Assert(timeTemp1.Format("Y-m-d H:i:s"), "2020-12-31 23:59:59")
+		t.Assert(timeTemp1.Format("Y-m-d H:i:s.u"), "2020-12-31 23:59:59.000")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		timeTemp := gtime.NewFromStr("2020-12-06 18:24:06")
+		timeTemp1 := timeTemp.EndOfQuarter(true)
+		t.Assert(timeTemp1.Format("Y-m-d H:i:s.u"), "2020-12-31 23:59:59.999")
 	})
 }
 
@@ -372,7 +402,12 @@ func Test_EndOfHalf(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2020-12-06 18:24:06")
 		timeTemp1 := timeTemp.EndOfHalf()
-		t.Assert(timeTemp1.Format("Y-m-d H:i:s"), "2020-12-31 23:59:59")
+		t.Assert(timeTemp1.Format("Y-m-d H:i:s.u"), "2020-12-31 23:59:59.000")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		timeTemp := gtime.NewFromStr("2020-12-06 18:24:06")
+		timeTemp1 := timeTemp.EndOfHalf(true)
+		t.Assert(timeTemp1.Format("Y-m-d H:i:s.u"), "2020-12-31 23:59:59.999")
 	})
 }
 
@@ -388,7 +423,12 @@ func Test_EndOfYear(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2020-12-06 18:24:06")
 		timeTemp1 := timeTemp.EndOfYear()
-		t.Assert(timeTemp1.Format("Y-m-d H:i:s"), "2020-12-31 23:59:59")
+		t.Assert(timeTemp1.Format("Y-m-d H:i:s.u"), "2020-12-31 23:59:59.000")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		timeTemp := gtime.NewFromStr("2020-12-06 18:24:06")
+		timeTemp1 := timeTemp.EndOfYear(true)
+		t.Assert(timeTemp1.Format("Y-m-d H:i:s.u"), "2020-12-31 23:59:59.999")
 	})
 }
 
