@@ -43,7 +43,7 @@ const (
 	internalErrorMapKey       = "__InternalError__"   // error map key for internal errors.
 	internalDefaultRuleName   = "__default__"         // default rule name for i18n error message format if no i18n message found for specified error rule.
 	ruleMessagePrefixForI18n  = "gf.gvalid.rule."     // prefix string for each rule configuration in i18n content.
-	noValidationTagName       = "nv"                  // no validation tag name for struct attribute.
+	noValidationTagName       = gtag.NoValidation     // no validation tag name for struct attribute.
 	ruleNameRegex             = "regex"               // the name for rule "regex"
 	ruleNameNotRegex          = "not-regex"           // the name for rule "not-regex"
 	ruleNameForeach           = "foreach"             // the name for rule "foreach"

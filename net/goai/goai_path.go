@@ -99,7 +99,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	)
 	// Path check.
 	if in.Path == "" {
-		in.Path = gmeta.Get(inputObject.Interface(), gtag.RoutePath).String()
+		in.Path = gmeta.Get(inputObject.Interface(), gtag.Path).String()
 		if in.Prefix != "" {
 			in.Path = gstr.TrimRight(in.Prefix, "/") + "/" + gstr.TrimLeft(in.Path, "/")
 		}
@@ -108,7 +108,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		return gerror.NewCodef(
 			gcode.CodeMissingParameter,
 			`missing necessary path parameter "%s" for input struct "%s", missing tag in attribute Meta?`,
-			gtag.RoutePath, inputStructTypeName,
+			gtag.Path, inputStructTypeName,
 		)
 	}
 
@@ -118,13 +118,13 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 
 	// Method check.
 	if in.Method == "" {
-		in.Method = gmeta.Get(inputObject.Interface(), gtag.RouteMethod).String()
+		in.Method = gmeta.Get(inputObject.Interface(), gtag.Method).String()
 	}
 	if in.Method == "" {
 		return gerror.NewCodef(
 			gcode.CodeMissingParameter,
 			`missing necessary method parameter "%s" for input struct "%s", missing tag in attribute Meta?`,
-			gtag.RouteMethod, inputStructTypeName,
+			gtag.Method, inputStructTypeName,
 		)
 	}
 

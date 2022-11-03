@@ -41,21 +41,21 @@ import (
 // DoRequestObj(ctx, req, &res)
 func (c *Client) DoRequestObj(ctx context.Context, req, res interface{}) error {
 	var (
-		method = gmeta.Get(req, gtag.RouteMethod).String()
-		path   = gmeta.Get(req, gtag.RoutePath).String()
+		method = gmeta.Get(req, gtag.Method).String()
+		path   = gmeta.Get(req, gtag.Path).String()
 	)
 	if method == "" {
 		return gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			`no "%s" tag found in request object: %s`,
-			gtag.RouteMethod, reflect.TypeOf(req).String(),
+			gtag.Method, reflect.TypeOf(req).String(),
 		)
 	}
 	if path == "" {
 		return gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			`no "%s" tag found in request object: %s`,
-			gtag.RoutePath, reflect.TypeOf(req).String(),
+			gtag.Path, reflect.TypeOf(req).String(),
 		)
 	}
 	path = c.handlePathForObjRequest(path, req)
