@@ -8,6 +8,7 @@ package redis_test
 
 import (
 	"github.com/gogf/gf/v2/database/gredis"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
 	"testing"
@@ -505,7 +506,7 @@ func Test_GroupGeneric_PExpireTime(t *testing.T) {
 		t.AssertEQ(result, int64(1))
 		resultTime, err := redis.GroupGeneric().PExpireTime(ctx, TestKey)
 		t.AssertNil(err)
-		t.AssertEQ(resultTime.Int64(), expireTime.UnixMilli())
+		t.AssertEQ(resultTime.Int64(), gtime.NewFromTime(expireTime).TimestampMilli())
 	})
 }
 
