@@ -182,7 +182,7 @@ func (c *Core) GetLogger() glog.ILogger {
 // The default max idle connections is currently 2. This may change in
 // a future release.
 func (c *Core) SetMaxIdleConnCount(n int) {
-	c.config.MaxIdleConnCount = n
+	c.dynamicConfig.MaxIdleConnCount = n
 }
 
 // SetMaxOpenConnCount sets the maximum number of open connections to the database.
@@ -194,7 +194,7 @@ func (c *Core) SetMaxIdleConnCount(n int) {
 // If n <= 0, then there is no limit on the number of open connections.
 // The default is 0 (unlimited).
 func (c *Core) SetMaxOpenConnCount(n int) {
-	c.config.MaxOpenConnCount = n
+	c.dynamicConfig.MaxOpenConnCount = n
 }
 
 // SetMaxConnLifeTime sets the maximum amount of time a connection may be reused.
@@ -203,11 +203,15 @@ func (c *Core) SetMaxOpenConnCount(n int) {
 //
 // If d <= 0, connections are not closed due to a connection's age.
 func (c *Core) SetMaxConnLifeTime(d time.Duration) {
-	c.config.MaxConnLifeTime = d
+	c.dynamicConfig.MaxConnLifeTime = d
 }
 
 // GetConfig returns the current used node configuration.
 func (c *Core) GetConfig() *ConfigNode {
+	internalData := c.GetInternalCtxDataFromCtx(c.db.GetCtx())
+	if internalData != nil && internalData.ConfigNode != nil {
+		return internalData.ConfigNode
+	}
 	return c.config
 }
 
@@ -250,7 +254,7 @@ func (c *Core) GetPrefix() string {
 func (c *Core) GetSchema() string {
 	schema := c.schema
 	if schema == "" {
-		schema = c.GetConfig().Name
+		schema = c.db.GetConfig().Name
 	}
 	return schema
 }

@@ -179,15 +179,22 @@ type DB interface {
 
 // Core is the base struct for database management.
 type Core struct {
-	db     DB              // DB interface object.
-	ctx    context.Context // Context for chaining operation only. Do not set a default value in Core initialization.
-	group  string          // Configuration group name.
-	schema string          // Custom schema for this object.
-	debug  *gtype.Bool     // Enable debug mode for the database, which can be changed in runtime.
-	cache  *gcache.Cache   // Cache manager, SQL result cache only.
-	links  *gmap.StrAnyMap // links caches all created links by node.
-	logger glog.ILogger    // Logger for logging functionality.
-	config *ConfigNode     // Current config node.
+	db            DB              // DB interface object.
+	ctx           context.Context // Context for chaining operation only. Do not set a default value in Core initialization.
+	group         string          // Configuration group name.
+	schema        string          // Custom schema for this object.
+	debug         *gtype.Bool     // Enable debug mode for the database, which can be changed in runtime.
+	cache         *gcache.Cache   // Cache manager, SQL result cache only.
+	links         *gmap.StrAnyMap // links caches all created links by node.
+	logger        glog.ILogger    // Logger for logging functionality.
+	config        *ConfigNode     // Current config node.
+	dynamicConfig dynamicConfig   // Dynamic configurations, which can be changed in runtime.
+}
+
+type dynamicConfig struct {
+	MaxIdleConnCount int
+	MaxOpenConnCount int
+	MaxConnLifeTime  time.Duration
 }
 
 // DoCommitInput is the input parameters for function DoCommit.
@@ -425,6 +432,10 @@ func NewByGroup(group ...string) (db DB, err error) {
 }
 
 // newDBByConfigNode creates and returns an ORM object with given configuration node and group name.
+//
+// Very Note:
+// The parameter `node` is used for DB creation, not for underlying connection creation.
+// So all db type configurations in the same group should be the same.
 func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
 	if node.Link != "" {
 		node = parseConfigNodeLink(node)
@@ -436,6 +447,11 @@ func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
 		links:  gmap.NewStrAnyMap(true),
 		logger: glog.New(),
 		config: node,
+		dynamicConfig: dynamicConfig{
+			MaxIdleConnCount: node.MaxIdleConnCount,
+			MaxOpenConnCount: node.MaxOpenConnCount,
+			MaxConnLifeTime:  node.MaxConnLifeTime,
+		},
 	}
 	if v, ok := driverMap[node.Type]; ok {
 		if c.db, err = v.New(c, node); err != nil {
@@ -539,7 +555,9 @@ func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 	for i := 0; i < len(cg); i++ {
 		max = min + cg[i].Weight*100
 		if random >= min && random < max {
-			// Return a copy of the ConfigNode.
+			// ====================================================
+			// Return a COPY of the ConfigNode.
+			// ====================================================
 			node := ConfigNode{}
 			node = cg[i]
 			return &node
@@ -553,17 +571,23 @@ func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 // The parameter `master` specifies whether retrieves master node connection if
 // master-slave nodes are configured.
 func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error) {
-	var node *ConfigNode
-	// Load balance.
+	var (
+		node *ConfigNode
+		ctx  = c.db.GetCtx()
+	)
 	if c.group != "" {
+		// Load balance.
 		configs.RLock()
 		defer configs.RUnlock()
+		// Value COPY for node.
 		node, err = getConfigNodeByGroup(c.group, master)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		node = c.config
+		// Value COPY for node.
+		n := *c.db.GetConfig()
+		node = &n
 	}
 	if node.Charset == "" {
 		node.Charset = defaultCharset
@@ -571,39 +595,42 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 	// Changes the schema.
 	nodeSchema := gutil.GetOrDefaultStr(c.schema, schema...)
 	if nodeSchema != "" {
-		// Value copy.
-		n := *node
-		n.Name = nodeSchema
-		node = &n
+		node.Name = nodeSchema
+	}
+	// Update the configuration object in internal data.
+	internalData := c.GetInternalCtxDataFromCtx(ctx)
+	if internalData != nil {
+		internalData.ConfigNode = node
 	}
 	// Cache the underlying connection pool object by node.
 	instanceNameByNode := fmt.Sprintf(`%+v`, node)
-	v := c.links.GetOrSetFuncLock(instanceNameByNode, func() interface{} {
+	instanceValue := c.links.GetOrSetFuncLock(instanceNameByNode, func() interface{} {
 		if sqlDb, err = c.db.Open(node); err != nil {
 			return nil
 		}
 		if sqlDb == nil {
 			return nil
 		}
-		if c.config.MaxIdleConnCount > 0 {
-			sqlDb.SetMaxIdleConns(c.config.MaxIdleConnCount)
+		if c.dynamicConfig.MaxIdleConnCount > 0 {
+			sqlDb.SetMaxIdleConns(c.dynamicConfig.MaxIdleConnCount)
 		} else {
 			sqlDb.SetMaxIdleConns(defaultMaxIdleConnCount)
 		}
-		if c.config.MaxOpenConnCount > 0 {
-			sqlDb.SetMaxOpenConns(c.config.MaxOpenConnCount)
+		if c.dynamicConfig.MaxOpenConnCount > 0 {
+			sqlDb.SetMaxOpenConns(c.dynamicConfig.MaxOpenConnCount)
 		} else {
 			sqlDb.SetMaxOpenConns(defaultMaxOpenConnCount)
 		}
-		if c.config.MaxConnLifeTime > 0 {
-			sqlDb.SetConnMaxLifetime(c.config.MaxConnLifeTime)
+		if c.dynamicConfig.MaxConnLifeTime > 0 {
+			sqlDb.SetConnMaxLifetime(c.dynamicConfig.MaxConnLifeTime)
 		} else {
 			sqlDb.SetConnMaxLifetime(defaultMaxConnLifeTime)
 		}
 		return sqlDb
 	})
-	if v != nil && sqlDb == nil {
-		sqlDb = v.(*sql.DB)
+	if instanceValue != nil && sqlDb == nil {
+		// It reads from instance map.
+		sqlDb = instanceValue.(*sql.DB)
 	}
 	if node.Debug {
 		c.db.SetDebug(node.Debug)
