@@ -422,7 +422,7 @@ func (d *Driver) Replace(ctx context.Context, table string, data interface{}, ba
 	return nil, errUnsupportedReplace
 }
 
-func (d *Driver) Begin(ctx context.Context) (tx *gdb.TX, err error) {
+func (d *Driver) Begin(ctx context.Context) (tx gdb.TX, err error) {
 	return nil, errUnsupportedBegin
 }
 
