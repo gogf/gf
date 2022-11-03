@@ -14,8 +14,9 @@ import (
 var (
 	ctx    = gctx.GetInitCtx()
 	config = &gredis.Config{
-		Address: `:6379`,
+		Address: `175.24.234.57:6379`,
 		Db:      1,
+		Pass:    "hqlx611622",
 	}
 	redis, _ = gredis.New(config)
 )
