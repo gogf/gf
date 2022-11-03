@@ -455,6 +455,8 @@ func Test_GroupGeneric_PExpire(t *testing.T) {
 	// With Option.
 	// Starting with Redis version 7.0.0: Added options: NX, XX, GT and LT.
 	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
 		_, err := redis.GroupString().Set(ctx, TestKey, TestValue)
 		t.AssertNil(err)
 		result, err := redis.GroupGeneric().PExpire(ctx, TestKey, 2500, gredis.ExpireOption{XX: true})
