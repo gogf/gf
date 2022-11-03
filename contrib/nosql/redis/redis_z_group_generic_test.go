@@ -480,7 +480,7 @@ func Test_GroupGeneric_PExpireAt(t *testing.T) {
 
 		_, err := redis.GroupString().Set(ctx, TestKey, TestValue)
 		t.AssertNil(err)
-		result, err := redis.GroupGeneric().PExpireAt(ctx, TestKey, time.UnixMilli(1555555555005))
+		result, err := redis.GroupGeneric().PExpireAt(ctx, TestKey, time.Now().Add(-time.Hour))
 		t.AssertNil(err)
 		t.AssertEQ(result, int64(1))
 		result, err = redis.GroupGeneric().TTL(ctx, TestKey)
@@ -496,7 +496,7 @@ func Test_GroupGeneric_PExpireTime(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
-		expireTime := time.UnixMilli(33177117420000)
+		expireTime := time.Now().Add(time.Hour)
 
 		_, err := redis.GroupString().Set(ctx, TestKey, TestValue)
 		t.AssertNil(err)
