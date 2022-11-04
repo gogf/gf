@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/v2/container/glist"
+	"github.com/gogf/gf/v2/encoding/gurl"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/json"
@@ -179,7 +180,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*Han
 								parsedItem.Values = make(map[string]string)
 								// It there repeated names, it just overwrites the same one.
 								for i, name := range item.Router.RegNames {
-									parsedItem.Values[name] = match[i+1]
+									parsedItem.Values[name], _ = gurl.Decode(match[i+1])
 								}
 							}
 						}

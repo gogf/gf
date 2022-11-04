@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/encoding/gurl"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/genv"
@@ -113,5 +114,28 @@ func Test_GetListenedAddressWithHost(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(fmt.Sprintf(`127.0.0.1:%d`, s.GetListenedPort()), s.GetListenedAddress())
+	})
+}
+
+func Test_RoutePathParams(t *testing.T) {
+	s := g.Server(guid.S())
+	s.BindHandler("/:param", func(r *ghttp.Request) {
+		r.Response.Write(r.Get("param"), ",", r.Get("c"))
+	})
+	s.SetAddr("127.0.0.1:0")
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		param := "net/http/get"
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		t.Assert(c.GetContent(
+			ctx,
+			"/"+gurl.Encode(param)+"?a=1&b=2&c="+gurl.Encode(param)),
+			"net/http/get,net/http/get",
+		)
 	})
 }
