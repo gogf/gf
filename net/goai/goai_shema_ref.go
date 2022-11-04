@@ -21,18 +21,17 @@ type SchemaRef struct {
 }
 
 // isEmbeddedStructDefine checks and returns whether given golang type is embedded struct definition, like:
-// struct A struct{
-//     B struct{
-//         // ...
-//     }
-// }
+//
+//	struct A struct{
+//	    B struct{
+//	        // ...
+//	    }
+//	}
+//
 // The `B` in `A` is called `embedded struct definition`.
 func (oai *OpenApiV3) isEmbeddedStructDefinition(golangType reflect.Type) bool {
 	s := golangType.String()
-	if gstr.Contains(s, `struct {`) {
-		return true
-	}
-	return false
+	return gstr.Contains(s, `struct {`)
 }
 
 // newSchemaRefWithGolangType creates a new Schema and returns its SchemaRef.

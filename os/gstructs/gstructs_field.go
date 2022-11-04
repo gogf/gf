@@ -191,7 +191,7 @@ func FieldMap(in FieldMapInput) (map[string]Field, error) {
 		return nil, err
 	}
 	var (
-		tagValue = ""
+		tagValue string
 		mapField = make(map[string]Field)
 	)
 	for _, field := range fields {

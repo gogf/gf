@@ -421,47 +421,57 @@ func (t *Time) StartOfYear() *Time {
 	return newTime
 }
 
+// getPrecisionDelta returns the precision parameter for time calculation depending on `withNanoPrecision` option.
+func getPrecisionDelta(withNanoPrecision ...bool) time.Duration {
+	if len(withNanoPrecision) > 0 && withNanoPrecision[0] {
+		return time.Nanosecond
+	}
+	return time.Second
+}
+
 // EndOfMinute clones and returns a new time of which the seconds is set to 59.
-func (t *Time) EndOfMinute() *Time {
-	return t.StartOfMinute().Add(time.Minute - time.Nanosecond)
+func (t *Time) EndOfMinute(withNanoPrecision ...bool) *Time {
+	return t.StartOfMinute().Add(time.Minute - getPrecisionDelta(withNanoPrecision...))
 }
 
 // EndOfHour clones and returns a new time of which the minutes and seconds are both set to 59.
-func (t *Time) EndOfHour() *Time {
-	return t.StartOfHour().Add(time.Hour - time.Nanosecond)
+func (t *Time) EndOfHour(withNanoPrecision ...bool) *Time {
+	return t.StartOfHour().Add(time.Hour - getPrecisionDelta(withNanoPrecision...))
 }
 
 // EndOfDay clones and returns a new time which is the end of day the and its time is set to 23:59:59.
-func (t *Time) EndOfDay() *Time {
+func (t *Time) EndOfDay(withNanoPrecision ...bool) *Time {
 	y, m, d := t.Date()
 	newTime := t.Clone()
-	newTime.Time = time.Date(y, m, d, 23, 59, 59, int(time.Second-time.Nanosecond), newTime.Time.Location())
+	newTime.Time = time.Date(
+		y, m, d, 23, 59, 59, int(time.Second-getPrecisionDelta(withNanoPrecision...)), newTime.Time.Location(),
+	)
 	return newTime
 }
 
 // EndOfWeek clones and returns a new time which is the end of week and its time is set to 23:59:59.
-func (t *Time) EndOfWeek() *Time {
-	return t.StartOfWeek().AddDate(0, 0, 7).Add(-time.Nanosecond)
+func (t *Time) EndOfWeek(withNanoPrecision ...bool) *Time {
+	return t.StartOfWeek().AddDate(0, 0, 7).Add(-getPrecisionDelta(withNanoPrecision...))
 }
 
 // EndOfMonth clones and returns a new time which is the end of the month and its time is set to 23:59:59.
-func (t *Time) EndOfMonth() *Time {
-	return t.StartOfMonth().AddDate(0, 1, 0).Add(-time.Nanosecond)
+func (t *Time) EndOfMonth(withNanoPrecision ...bool) *Time {
+	return t.StartOfMonth().AddDate(0, 1, 0).Add(-getPrecisionDelta(withNanoPrecision...))
 }
 
 // EndOfQuarter clones and returns a new time which is end of the quarter and its time is set to 23:59:59.
-func (t *Time) EndOfQuarter() *Time {
-	return t.StartOfQuarter().AddDate(0, 3, 0).Add(-time.Nanosecond)
+func (t *Time) EndOfQuarter(withNanoPrecision ...bool) *Time {
+	return t.StartOfQuarter().AddDate(0, 3, 0).Add(-getPrecisionDelta(withNanoPrecision...))
 }
 
 // EndOfHalf clones and returns a new time which is the end of the half year and its time is set to 23:59:59.
-func (t *Time) EndOfHalf() *Time {
-	return t.StartOfHalf().AddDate(0, 6, 0).Add(-time.Nanosecond)
+func (t *Time) EndOfHalf(withNanoPrecision ...bool) *Time {
+	return t.StartOfHalf().AddDate(0, 6, 0).Add(-getPrecisionDelta(withNanoPrecision...))
 }
 
 // EndOfYear clones and returns a new time which is the end of the year and its time is set to 23:59:59.
-func (t *Time) EndOfYear() *Time {
-	return t.StartOfYear().AddDate(1, 0, 0).Add(-time.Nanosecond)
+func (t *Time) EndOfYear(withNanoPrecision ...bool) *Time {
+	return t.StartOfYear().AddDate(1, 0, 0).Add(-getPrecisionDelta(withNanoPrecision...))
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.

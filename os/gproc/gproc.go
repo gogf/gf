@@ -76,7 +76,7 @@ func StartTime() time.Time {
 
 // Uptime returns the duration which current process has been running
 func Uptime() time.Duration {
-	return time.Now().Sub(processStartTime)
+	return time.Since(processStartTime)
 }
 
 // SearchBinary searches the binary `file` in current working folder and PATH environment.

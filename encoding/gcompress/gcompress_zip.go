@@ -112,7 +112,7 @@ func doZipPathWriter(fileOrFolderPath string, exclude string, zipWriter *zip.Wri
 			headerPrefix = gfile.Basename(fileOrFolderPath)
 		}
 	}
-	headerPrefix = strings.Replace(headerPrefix, "//", "/", -1)
+	headerPrefix = strings.ReplaceAll(headerPrefix, "//", "/")
 	for _, file := range files {
 		if exclude == file {
 			intlog.Printf(context.TODO(), `exclude file path: %s`, file)
@@ -229,7 +229,7 @@ func zipFile(filePath string, prefix string, zw *zip.Writer) error {
 	file, err := os.Open(filePath)
 	if err != nil {
 		err = gerror.Wrapf(err, `os.Open failed for name "%s"`, filePath)
-		return nil
+		return err
 	}
 	defer file.Close()
 
@@ -272,7 +272,7 @@ func createFileHeader(info os.FileInfo, prefix string) (*zip.FileHeader, error) 
 	}
 
 	if len(prefix) > 0 {
-		prefix = strings.Replace(prefix, `\`, `/`, -1)
+		prefix = strings.ReplaceAll(prefix, `\`, `/`)
 		prefix = strings.TrimRight(prefix, `/`)
 		header.Name = prefix + `/` + header.Name
 	}

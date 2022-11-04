@@ -546,7 +546,7 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 	}
 	var (
 		params  []interface{}
-		updates = ""
+		updates string
 	)
 	switch kind {
 	case reflect.Map, reflect.Struct:
@@ -666,8 +666,8 @@ func (c *Core) writeSqlToLogger(ctx context.Context, sql *Sql) {
 		}
 	}
 	s := fmt.Sprintf(
-		"[%3d ms] [%s] [rows:%-3d] %s%s",
-		sql.End-sql.Start, sql.Group, sql.RowsAffected, transactionIdStr, sql.Format,
+		"[%3d ms] [%s] [%s] [rows:%-3d] %s%s",
+		sql.End-sql.Start, sql.Group, sql.Schema, sql.RowsAffected, transactionIdStr, sql.Format,
 	)
 	if sql.Error != nil {
 		s += "\nError: " + sql.Error.Error()

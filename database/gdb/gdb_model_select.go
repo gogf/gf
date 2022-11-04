@@ -117,7 +117,7 @@ func (m *Model) Chunk(size int, handler ChunkHandler) {
 		if len(data) == 0 {
 			break
 		}
-		if handler(data, err) == false {
+		if !handler(data, err) {
 			break
 		}
 		if len(data) < size {
