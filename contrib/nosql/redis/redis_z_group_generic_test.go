@@ -7,12 +7,13 @@
 package redis_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/v2/database/gredis"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
-	"testing"
-	"time"
 )
 
 var (
@@ -448,6 +449,28 @@ func Test_GroupGeneric_PExpire(t *testing.T) {
 		result, err := redis.GroupGeneric().PExpire(ctx, TestKey, 2500)
 		t.AssertNil(err)
 		t.AssertEQ(result, int64(1))
+		result, err = redis.GroupGeneric().PTTL(ctx, TestKey)
+		t.AssertNil(err)
+		t.AssertLE(result, int64(2500))
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		_, err := redis.GroupString().Set(ctx, TestKey, TestValue)
+		t.AssertNil(err)
+		result, err := redis.GroupGeneric().PExpire(ctx, TestKey, 2500, gredis.ExpireOption{
+			NX: true,
+		})
+		t.AssertNil(err)
+		t.AssertEQ(result, int64(1))
+
+		result, err = redis.GroupGeneric().PExpire(ctx, TestKey, 2500, gredis.ExpireOption{
+			NX: true,
+		})
+		t.AssertNil(err)
+		t.AssertEQ(result, int64(0))
+
 		result, err = redis.GroupGeneric().PTTL(ctx, TestKey)
 		t.AssertNil(err)
 		t.AssertLE(result, int64(2500))
