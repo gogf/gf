@@ -8,10 +8,16 @@ package redis_test
 
 import (
 	"github.com/gogf/gf/v2/database/gredis"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
 	"testing"
 	"time"
+)
+
+var (
+	TestKey   = "mykey"
+	TestValue = "hello"
 )
 
 func Test_GroupGeneric_Copy(t *testing.T) {
@@ -298,12 +304,12 @@ func Test_GroupGeneric_Expire(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
-		_, err := redis.GroupString().Set(ctx, "mykey", "Hello")
+		_, err := redis.GroupString().Set(ctx, TestKey, TestValue)
 		t.AssertNil(err)
-		result, err := redis.GroupGeneric().Expire(ctx, "mykey", 1)
+		result, err := redis.GroupGeneric().Expire(ctx, TestKey, 1)
 		t.AssertNil(err)
 		t.AssertEQ(result, int64(1))
-		ttl, err := redis.GroupGeneric().TTL(ctx, "mykey")
+		ttl, err := redis.GroupGeneric().TTL(ctx, TestKey)
 		t.AssertNil(err)
 		t.AssertEQ(ttl, int64(1))
 	})
@@ -312,21 +318,21 @@ func Test_GroupGeneric_Expire(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
-		_, err := redis.GroupString().Set(ctx, "mykey", "Hello")
+		_, err := redis.GroupString().Set(ctx, TestKey, TestValue)
 		t.AssertNil(err)
-		ttl, err := redis.GroupGeneric().TTL(ctx, "mykey")
+		ttl, err := redis.GroupGeneric().TTL(ctx, TestKey)
 		t.AssertNil(err)
 		t.AssertEQ(ttl, int64(-1))
-		result, err := redis.GroupGeneric().Expire(ctx, "mykey", 1, gredis.ExpireOption{XX: true})
+		result, err := redis.GroupGeneric().Expire(ctx, TestKey, 1, gredis.ExpireOption{XX: true})
 		t.AssertNil(err)
 		t.AssertEQ(result, int64(0))
-		ttl, err = redis.GroupGeneric().TTL(ctx, "mykey")
+		ttl, err = redis.GroupGeneric().TTL(ctx, TestKey)
 		t.AssertNil(err)
 		t.AssertEQ(ttl, int64(-1))
-		result, err = redis.GroupGeneric().Expire(ctx, "mykey", 1, gredis.ExpireOption{NX: true})
+		result, err = redis.GroupGeneric().Expire(ctx, TestKey, 1, gredis.ExpireOption{NX: true})
 		t.AssertNil(err)
 		t.AssertEQ(result, int64(1))
-		ttl, err = redis.GroupGeneric().TTL(ctx, "mykey")
+		ttl, err = redis.GroupGeneric().TTL(ctx, TestKey)
 		t.AssertNil(err)
 		t.AssertEQ(ttl, int64(1))
 	})
@@ -336,16 +342,16 @@ func Test_GroupGeneric_ExpireAt(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
-		_, err := redis.GroupString().Set(ctx, "mykey", "Hello")
+		_, err := redis.GroupString().Set(ctx, TestKey, TestValue)
 		t.AssertNil(err)
-		result, err := redis.GroupGeneric().Exists(ctx, "mykey")
+		result, err := redis.GroupGeneric().Exists(ctx, TestKey)
 		t.AssertNil(err)
 		t.AssertEQ(result, int64(1))
-		result, err = redis.GroupGeneric().ExpireAt(ctx, "mykey", time.Now().Add(time.Millisecond*100))
+		result, err = redis.GroupGeneric().ExpireAt(ctx, TestKey, time.Now().Add(time.Millisecond*100))
 		t.AssertNil(err)
 		t.AssertEQ(result, int64(1))
 		time.Sleep(time.Millisecond * 100)
-		result, err = redis.GroupGeneric().Exists(ctx, "mykey")
+		result, err = redis.GroupGeneric().Exists(ctx, TestKey)
 		t.AssertNil(err)
 		t.AssertEQ(result, int64(0))
 	})
@@ -354,19 +360,146 @@ func Test_GroupGeneric_ExpireAt(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
-		_, err := redis.GroupString().Set(ctx, "mykey", "Hello")
+		_, err := redis.GroupString().Set(ctx, TestKey, TestValue)
 		t.AssertNil(err)
-		ttl, err := redis.GroupGeneric().TTL(ctx, "mykey")
+		ttl, err := redis.GroupGeneric().TTL(ctx, TestKey)
 		t.AssertNil(err)
 		t.AssertEQ(ttl, int64(-1))
-		result, err := redis.GroupGeneric().ExpireAt(ctx, "mykey", time.Now().Add(time.Millisecond*100), gredis.ExpireOption{XX: true})
+		result, err := redis.GroupGeneric().ExpireAt(ctx, TestKey, time.Now().Add(time.Millisecond*100), gredis.ExpireOption{XX: true})
 		t.AssertNil(err)
 		t.AssertEQ(result, int64(0))
-		result, err = redis.GroupGeneric().ExpireAt(ctx, "mykey", time.Now().Add(time.Minute), gredis.ExpireOption{NX: true})
+		result, err = redis.GroupGeneric().ExpireAt(ctx, TestKey, time.Now().Add(time.Minute), gredis.ExpireOption{NX: true})
 		t.AssertNil(err)
 		t.AssertEQ(result, int64(1))
-		ttl, err = redis.GroupGeneric().TTL(ctx, "mykey")
+		ttl, err = redis.GroupGeneric().TTL(ctx, TestKey)
 		t.AssertNil(err)
 		t.AssertGT(ttl, int64(0))
+	})
+}
+
+func Test_GroupGeneric_ExpireTime(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		_, err := redis.GroupString().Set(ctx, TestKey, TestValue)
+		t.AssertNil(err)
+		expireTime := time.Now().Add(time.Minute)
+		result, err := redis.GroupGeneric().ExpireAt(ctx, TestKey, expireTime)
+		t.AssertNil(err)
+		t.AssertEQ(result, int64(1))
+		resultTime, err := redis.GroupGeneric().ExpireTime(ctx, TestKey)
+		t.AssertNil(err)
+		t.AssertEQ(resultTime.Int64(), expireTime.Unix())
+
+		_, err = redis.GroupString().Set(ctx, "noExpireKey", TestValue)
+		t.AssertNil(err)
+		resultTime, err = redis.GroupGeneric().ExpireTime(ctx, "noExpireKey")
+		t.AssertNil(err)
+		t.AssertEQ(resultTime.Int64(), int64(-1))
+
+		resultTime, err = redis.GroupGeneric().ExpireTime(ctx, "noExistKey")
+		t.AssertNil(err)
+		t.AssertEQ(resultTime.Int64(), int64(-2))
+	})
+}
+
+func Test_GroupGeneric_TTL(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		_, err := redis.GroupString().Set(ctx, TestKey, TestValue)
+		t.AssertNil(err)
+		result, err := redis.GroupGeneric().Expire(ctx, TestKey, 10)
+		t.AssertNil(err)
+		t.AssertEQ(result, int64(1))
+		result, err = redis.GroupGeneric().TTL(ctx, TestKey)
+		t.AssertNil(err)
+		t.AssertEQ(result, int64(10))
+	})
+}
+
+func Test_GroupGeneric_Persist(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		_, err := redis.GroupString().Set(ctx, TestKey, TestValue)
+		t.AssertNil(err)
+		result, err := redis.GroupGeneric().Expire(ctx, TestKey, 10)
+		t.AssertNil(err)
+		t.AssertEQ(result, int64(1))
+		result, err = redis.GroupGeneric().TTL(ctx, TestKey)
+		t.AssertNil(err)
+		t.AssertEQ(result, int64(10))
+		result, err = redis.GroupGeneric().Persist(ctx, TestKey)
+		t.AssertNil(err)
+		t.AssertEQ(result, int64(1))
+		result, err = redis.GroupGeneric().TTL(ctx, TestKey)
+		t.AssertNil(err)
+		t.AssertEQ(result, int64(-1))
+	})
+}
+
+func Test_GroupGeneric_PExpire(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		_, err := redis.GroupString().Set(ctx, TestKey, TestValue)
+		t.AssertNil(err)
+		result, err := redis.GroupGeneric().PExpire(ctx, TestKey, 2500)
+		t.AssertNil(err)
+		t.AssertEQ(result, int64(1))
+		result, err = redis.GroupGeneric().PTTL(ctx, TestKey)
+		t.AssertNil(err)
+		t.AssertLE(result, int64(2500))
+	})
+}
+
+func Test_GroupGeneric_PExpireAt(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		_, err := redis.GroupString().Set(ctx, TestKey, TestValue)
+		t.AssertNil(err)
+		result, err := redis.GroupGeneric().PExpireAt(ctx, TestKey, time.Now().Add(-time.Hour))
+		t.AssertNil(err)
+		t.AssertEQ(result, int64(1))
+		result, err = redis.GroupGeneric().TTL(ctx, TestKey)
+		t.AssertNil(err)
+		t.AssertEQ(result, int64(-2))
+		result, err = redis.GroupGeneric().PTTL(ctx, TestKey)
+		t.AssertNil(err)
+		t.AssertEQ(result, int64(-2))
+	})
+}
+
+func Test_GroupGeneric_PExpireTime(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		expireTime := time.Now().Add(time.Hour)
+
+		_, err := redis.GroupString().Set(ctx, TestKey, TestValue)
+		t.AssertNil(err)
+		result, err := redis.GroupGeneric().PExpireAt(ctx, TestKey, expireTime)
+		t.AssertNil(err)
+		t.AssertEQ(result, int64(1))
+		resultTime, err := redis.GroupGeneric().PExpireTime(ctx, TestKey)
+		t.AssertNil(err)
+		t.AssertEQ(resultTime.Int64(), gtime.NewFromTime(expireTime).TimestampMilli())
+	})
+}
+
+func Test_GroupGeneric_PTTL(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		_, err := redis.GroupString().Set(ctx, TestKey, TestValue)
+		t.AssertNil(err)
+		result, err := redis.GroupGeneric().Expire(ctx, TestKey, 1)
+		t.AssertNil(err)
+		t.AssertEQ(result, int64(1))
+		result, err = redis.GroupGeneric().PTTL(ctx, TestKey)
+		t.AssertNil(err)
+		t.AssertLE(result, int64(1000))
 	})
 }
