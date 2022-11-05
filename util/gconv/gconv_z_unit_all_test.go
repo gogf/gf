@@ -584,6 +584,7 @@ func Test_Float32_All(t *testing.T) {
 		t.AssertEQ(gconv.Float32([2]int{1, 2}), float32(0))
 		t.AssertEQ(gconv.Float32([]interface{}{}), float32(0))
 		t.AssertEQ(gconv.Float32([]map[int]int{}), float32(0))
+		t.AssertEQ(gconv.Float32(gvar.New(float32(0))), float32(0))
 
 		var countryCapitalMap = make(map[string]string)
 		/* map插入key - value对,各个国家对应的首都 */
@@ -619,6 +620,7 @@ func Test_Float64_All(t *testing.T) {
 		t.AssertEQ(gconv.Float64([2]int{1, 2}), float64(0))
 		t.AssertEQ(gconv.Float64([]interface{}{}), float64(0))
 		t.AssertEQ(gconv.Float64([]map[int]int{}), float64(0))
+		t.AssertEQ(gconv.Float64(gvar.New(float64(0))), float64(0))
 
 		var countryCapitalMap = make(map[string]string)
 		/* map插入key - value对,各个国家对应的首都 */
