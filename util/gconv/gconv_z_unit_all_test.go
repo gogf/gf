@@ -7,6 +7,7 @@
 package gconv_test
 
 import (
+	"github.com/gogf/gf/v2/container/gvar"
 	"math"
 	"testing"
 	"time"
@@ -716,6 +717,7 @@ func Test_Bytes_All(t *testing.T) {
 		t.AssertEQ(gconv.Bytes(int32(0)), []uint8{0, 0, 0, 0})
 		t.AssertEQ(gconv.Bytes("s"), []uint8{115})
 		t.AssertEQ(gconv.Bytes([]byte("s")), []uint8{115})
+		t.AssertEQ(gconv.Bytes(gvar.New([]byte("s"))), []uint8{115})
 	})
 }
 
