@@ -174,6 +174,18 @@ func Test_MapToMaps(t *testing.T) {
 		t.Assert(len(s), 2)
 		t.Assert(s, params)
 	})
+	gtest.C(t, func(t *gtest.T) {
+		jsonStr := `[{"id":100, "name":"john"},{"id":200, "name":"smith"}]`
+
+		var m1 []g.Map
+		t.Assert(gconv.MapToMaps(jsonStr, &m1), nil)
+		t.Assert(m1[0]["id"], 100)
+		t.Assert(m1[1]["id"], 200)
+
+		t.Assert(gconv.MapToMaps([]byte(jsonStr), &m1), nil)
+		t.Assert(m1[0]["id"], 100)
+		t.Assert(m1[1]["id"], 200)
+	})
 }
 
 func Test_MapToMaps_StructParams(t *testing.T) {
