@@ -38,6 +38,16 @@ func Test_Map_Basic(t *testing.T) {
 		t.Assert(gconv.Map(m3), g.Map{
 			"1.22": "3.1",
 		})
+		t.Assert(gconv.Map(`{"name":"goframe"}`), g.Map{
+			"name": "goframe",
+		})
+		t.Assert(gconv.Map(`{"name":"goframe"`), nil)
+		t.Assert(gconv.Map(`{goframe}`), nil)
+		t.Assert(gconv.Map([]byte(`{"name":"goframe"}`)), g.Map{
+			"name": "goframe",
+		})
+		t.Assert(gconv.Map([]byte(`{"name":"goframe"`)), nil)
+		t.Assert(gconv.Map([]byte(`{goframe}`)), nil)
 	})
 }
 
@@ -475,5 +485,20 @@ field3:
 		t.AssertNil(err)
 
 		t.Assert(string(jsonData), `{"field3":{"123":"integer_key"},"outer_struct":{"field1":{"inner1":123,"inner2":345},"field2":{"inner1":123,"inner2":345,"inner3":456,"inner4":789}}}`)
+	})
+}
+
+func TestMapStrStr(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gconv.MapStrStr(map[string]string{"k": "v"}), map[string]string{"k": "v"})
+		t.Assert(gconv.MapStrStr(`{}`), nil)
+	})
+}
+
+func TestMapStrStrDeep(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gconv.MapStrStrDeep(map[string]string{"k": "v"}), map[string]string{"k": "v"})
+		t.Assert(gconv.MapStrStrDeep(`{"k":"v"}`), map[string]string{"k": "v"})
+		t.Assert(gconv.MapStrStrDeep(`{}`), nil)
 	})
 }
