@@ -3,7 +3,7 @@ version: "2"
 services:
   redis-master:
     container_name: redis-master
-    image: "loads/redis:7.0"
+    image: "loads/redis:7.0-sentinel"
     environment:
       - REDIS_REPLICATION_MODE=master
       - REDIS_PASSWORD=111111
@@ -12,7 +12,7 @@ services:
 
   redis-slave1:
     container_name: redis-slave1
-    image: "loads/redis:7.0"
+    image: "loads/redis:7.0-sentinel"
     environment:
       - REDIS_REPLICATION_MODE=slave
       - REDIS_MASTER_HOST=redis-master
@@ -27,7 +27,7 @@ services:
 
   redis-slave2:
     container_name: redis-slave2
-    image: "loads/redis:7.0"
+    image: "loads/redis:7.0-sentinel"
     environment:
       - REDIS_REPLICATION_MODE=slave
       - REDIS_MASTER_HOST=redis-master
