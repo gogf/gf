@@ -35,9 +35,8 @@ func (r *Redis) GroupSet() RedisGroupSet {
 // not including all the elements already present in the set.
 //
 // https://redis.io/commands/sadd/
-func (r RedisGroupSet) SAdd(ctx context.Context, key string, member interface{}, members ...interface{}) (int64, error) {
+func (r RedisGroupSet) SAdd(ctx context.Context, key string, members ...interface{}) (int64, error) {
 	var s = []interface{}{key}
-	s = append(s, member)
 	s = append(s, members...)
 	v, err := r.redis.Do(ctx, "SAdd", s...)
 	return v.Int64(), err
@@ -69,11 +68,11 @@ func (r RedisGroupSet) SIsMember(ctx context.Context, key string, member interfa
 //   Array reply: the removed members, or an empty array when key does not exist.
 //
 // https://redis.io/commands/spop/
-func (r RedisGroupSet) SPop(ctx context.Context, key string, count ...int) (*gvar.Var, error) {
+func (r RedisGroupSet) SPop(ctx context.Context, key string, count int) ([]*gvar.Var, error) {
 	var s = []interface{}{key}
-	s = append(s, gconv.Interfaces(count)...)
+	s = append(s, count)
 	v, err := r.redis.Do(ctx, "SPop", s...)
-	return v, err
+	return v.Vars(), err
 }
 
 // SRandMember called with just the key argument, return a random element from the set value stored
@@ -156,7 +155,7 @@ func (r RedisGroupSet) SMembers(ctx context.Context, key string) ([]*gvar.Var, e
 }
 
 // SMIsMember returns whether each member is a member of the set stored at key.
-//
+// Available since: 6.2.0
 // For every member, 1 is returned if the value is a member of the set, or 0 if the element is not a member of
 // the set or if key does not exist.
 //
