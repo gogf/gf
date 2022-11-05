@@ -67,6 +67,18 @@ func Test_MapToMap1(t *testing.T) {
 		t.Assert(m2["k1"], m1["k1"])
 		t.Assert(m2["k2"], m1["k2"])
 	})
+	// string -> map[string]interface{}
+	gtest.C(t, func(t *gtest.T) {
+		jsonStr := `{"id":100, "name":"john"}`
+
+		m1 := g.MapStrAny{}
+		t.Assert(gconv.MapToMap(jsonStr, &m1), nil)
+		t.Assert(m1["id"], 100)
+
+		m2 := g.MapStrAny{}
+		t.Assert(gconv.MapToMap([]byte(jsonStr), &m2), nil)
+		t.Assert(m2["id"], 100)
+	})
 }
 
 func Test_MapToMap2(t *testing.T) {
