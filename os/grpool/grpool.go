@@ -133,12 +133,12 @@ func (p *Pool) checkAndFork() {
 			poolItem *localPoolItem
 		)
 		for !p.closed.Val() {
-			if listItem = p.list.PopBack(); listItem != nil {
-				poolItem = listItem.(*localPoolItem)
-				poolItem.Func(poolItem.Ctx)
-			} else {
+			listItem = p.list.PopBack()
+			if listItem == nil {
 				return
 			}
+			poolItem = listItem.(*localPoolItem)
+			poolItem.Func(poolItem.Ctx)
 		}
 	}()
 }
