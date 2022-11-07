@@ -17,6 +17,9 @@ type internalCtxData struct {
 	// Operation DB.
 	DB DB
 
+	// Used configuration node in current operation.
+	ConfigNode *ConfigNode
+
 	// The first column in result response from database server.
 	// This attribute is used for Value/Count selection statement purpose,
 	// which is to avoid HOOK handler that might modify the result columns
