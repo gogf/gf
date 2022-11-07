@@ -351,3 +351,403 @@ func Test_GroupSortedSet_ZRange(t *testing.T) {
 
 	})
 }
+
+func Test_GroupSortedSet_ZRevRange(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+	})
+}
+
+func Test_GroupSortedSet_ZRank(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		var (
+			k                         = guid.S()
+			option *gredis.ZAddOption = new(gredis.ZAddOption)
+		)
+
+		slice := []int64{1, 3, 5, 7, 9}
+		for i := 0; i < len(slice); i++ {
+			redis.ZAdd(ctx, k, option, gredis.ZAddMember{
+				Member: i,
+				Score:  float64(slice[i]),
+			})
+		}
+
+		rank, err := redis.ZRank(ctx, k, 0)
+		t.AssertNil(err)
+		t.AssertEQ(rank.Int(), 0)
+
+		rank, err = redis.ZRank(ctx, k, 3)
+		t.AssertNil(err)
+		t.AssertEQ(rank.Int(), 3)
+
+		rank, err = redis.ZRank(ctx, k, 6)
+		t.AssertNil(err)
+		t.AssertEQ(rank.Int(), 0)
+	})
+}
+
+func Test_GroupSortedSet_ZRevRank(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		var (
+			k                         = guid.S()
+			option *gredis.ZAddOption = new(gredis.ZAddOption)
+		)
+
+		slice := []int64{1, 3, 5, 7, 9}
+		for i := 0; i < len(slice); i++ {
+			redis.ZAdd(ctx, k, option, gredis.ZAddMember{
+				Member: i,
+				Score:  float64(slice[i]),
+			})
+		}
+
+		rank, err := redis.ZRevRank(ctx, k, 0)
+		t.AssertNil(err)
+		t.AssertEQ(rank, int64(4))
+
+		rank, err = redis.ZRevRank(ctx, k, 3)
+		t.AssertNil(err)
+		t.AssertEQ(rank, int64(1))
+
+		rank, err = redis.ZRevRank(ctx, k, 9)
+		t.AssertNil(err)
+		t.AssertEQ(rank, int64(0))
+
+		rank, err = redis.ZRevRank(ctx, k, 6)
+		t.AssertNil(err)
+		t.AssertEQ(rank, int64(0))
+	})
+}
+
+func Test_GroupSortedSet_ZRem(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		var (
+			k      = guid.S()
+			m      = guid.S()
+			option = new(gredis.ZAddOption)
+		)
+
+		cnt, err := redis.ZRem(ctx, k, m)
+		t.AssertNil(err)
+		t.AssertEQ(cnt, int64(0))
+
+		member := gredis.ZAddMember{
+			Member: m,
+			Score:  123,
+		}
+		redis.ZAdd(ctx, k, option, member)
+
+		cnt, err = redis.ZRem(ctx, k, m)
+		t.AssertNil(err)
+		t.AssertEQ(cnt, int64(1))
+
+		member2 := gredis.ZAddMember{
+			Member: guid.S(),
+			Score:  456,
+		}
+		_, err = redis.ZAdd(ctx, k, option, member, member2)
+		t.AssertNil(err)
+
+		cnt, err = redis.ZRem(ctx, k, m, "non_exists")
+		t.AssertNil(err)
+		t.AssertEQ(cnt, int64(1))
+
+		_, err = redis.ZAdd(ctx, k, option, member, member2)
+		t.AssertNil(err)
+
+		cnt, err = redis.ZRem(ctx, k, m, member2.Member)
+		t.AssertNil(err)
+		t.AssertEQ(cnt, int64(2))
+	})
+}
+
+func Test_GroupSortedSet_ZRemRangeByRank(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		var (
+			k                         = guid.S()
+			option *gredis.ZAddOption = new(gredis.ZAddOption)
+		)
+
+		slice := []int64{1, 3, 5, 7, 9}
+		for i := 0; i < len(slice); i++ {
+			redis.GroupSortedSet().ZAdd(ctx, k, option, gredis.ZAddMember{
+				Member: i,
+				Score:  float64(slice[i]),
+			})
+		}
+
+		rmd, err := redis.GroupSortedSet().ZRemRangeByRank(ctx, k, 0, 2)
+		t.AssertNil(err)
+		t.AssertEQ(rmd, int64(3))
+
+		score, err := redis.GroupSortedSet().ZScore(ctx, k, 0)
+		t.AssertNil(err)
+		t.AssertEQ(score, float64(0))
+
+		score, err = redis.GroupSortedSet().ZScore(ctx, k, 1)
+		t.AssertNil(err)
+		t.AssertEQ(score, float64(0))
+
+		score, err = redis.GroupSortedSet().ZScore(ctx, k, 2)
+		t.AssertNil(err)
+		t.AssertEQ(score, float64(0))
+
+		score, err = redis.GroupSortedSet().ZScore(ctx, k, 3)
+		t.AssertNil(err)
+		t.AssertEQ(score, float64(7))
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		var (
+			k                         = guid.S()
+			option *gredis.ZAddOption = new(gredis.ZAddOption)
+		)
+
+		slice := []int64{1, 3, 5, 7, 9}
+		for i := 0; i < len(slice); i++ {
+			redis.GroupSortedSet().ZAdd(ctx, k, option, gredis.ZAddMember{
+				Member: i,
+				Score:  float64(slice[i]),
+			})
+		}
+
+		rmd, err := redis.GroupSortedSet().ZRemRangeByRank(ctx, k, -3, -2)
+		t.AssertNil(err)
+		t.AssertEQ(rmd, int64(2))
+
+		score, err := redis.GroupSortedSet().ZScore(ctx, k, 2)
+		t.AssertNil(err)
+		t.AssertEQ(score, float64(0))
+
+		score, err = redis.GroupSortedSet().ZScore(ctx, k, 3)
+		t.AssertNil(err)
+		t.AssertEQ(score, float64(0))
+
+		score, err = redis.GroupSortedSet().ZScore(ctx, k, 4)
+		t.AssertNil(err)
+		t.AssertEQ(score, float64(9))
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		var (
+			k                         = guid.S()
+			option *gredis.ZAddOption = new(gredis.ZAddOption)
+		)
+
+		slice := []int64{1, 3, 5, 7, 9}
+		for i := 0; i < len(slice); i++ {
+			redis.GroupSortedSet().ZAdd(ctx, k, option, gredis.ZAddMember{
+				Member: i,
+				Score:  float64(slice[i]),
+			})
+		}
+
+		rmd, err := redis.GroupSortedSet().ZRemRangeByRank(ctx, k, 3, -1)
+		t.AssertNil(err)
+		t.AssertEQ(rmd, int64(2))
+
+		score, err := redis.GroupSortedSet().ZScore(ctx, k, 3)
+		t.AssertNil(err)
+		t.AssertEQ(score, float64(0))
+
+		score, err = redis.GroupSortedSet().ZScore(ctx, k, 4)
+		t.AssertNil(err)
+		t.AssertEQ(score, float64(0))
+
+		score, err = redis.GroupSortedSet().ZScore(ctx, k, 1)
+		t.AssertNil(err)
+		t.AssertEQ(score, float64(3))
+	})
+}
+func Test_GroupSortedSet_ZRemRangeByScore(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		var (
+			k                         = guid.S()
+			option *gredis.ZAddOption = new(gredis.ZAddOption)
+		)
+
+		slice := []int64{1, 3, 5, 7, 9}
+		for i := 0; i < len(slice); i++ {
+			redis.GroupSortedSet().ZAdd(ctx, k, option, gredis.ZAddMember{
+				Member: i,
+				Score:  float64(slice[i]),
+			})
+		}
+
+		rmd, err := redis.GroupSortedSet().ZRemRangeByScore(ctx, k, "(3", "9")
+		t.AssertNil(err)
+		t.AssertEQ(rmd, int64(3))
+
+		score, err := redis.GroupSortedSet().ZScore(ctx, k, 3)
+		t.AssertNil(err)
+		t.AssertEQ(score, float64(0))
+
+		score, err = redis.GroupSortedSet().ZScore(ctx, k, 4)
+		t.AssertNil(err)
+		t.AssertEQ(score, float64(0))
+
+		score, err = redis.GroupSortedSet().ZScore(ctx, k, 5)
+		t.AssertNil(err)
+		t.AssertEQ(score, float64(0))
+
+		score, err = redis.GroupSortedSet().ZScore(ctx, k, 1)
+		t.AssertNil(err)
+		t.AssertEQ(score, float64(3))
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		var (
+			k                         = guid.S()
+			option *gredis.ZAddOption = new(gredis.ZAddOption)
+		)
+
+		slice := []int64{1, 3, 5, 7, 9}
+		for i := 0; i < len(slice); i++ {
+			redis.GroupSortedSet().ZAdd(ctx, k, option, gredis.ZAddMember{
+				Member: i,
+				Score:  float64(slice[i]),
+			})
+		}
+
+		rmd, err := redis.GroupSortedSet().ZRemRangeByScore(ctx, k, "3", "(9")
+		t.AssertNil(err)
+		t.AssertEQ(rmd, int64(3))
+
+		score, err := redis.GroupSortedSet().ZScore(ctx, k, 1)
+		t.AssertNil(err)
+		t.AssertEQ(score, float64(0))
+
+		score, err = redis.GroupSortedSet().ZScore(ctx, k, 2)
+		t.AssertNil(err)
+		t.AssertEQ(score, float64(0))
+
+		score, err = redis.GroupSortedSet().ZScore(ctx, k, 3)
+		t.AssertNil(err)
+		t.AssertEQ(score, float64(0))
+
+		score, err = redis.GroupSortedSet().ZScore(ctx, k, 4)
+		t.AssertNil(err)
+		t.AssertEQ(score, float64(9))
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		var (
+			k                         = guid.S()
+			option *gredis.ZAddOption = new(gredis.ZAddOption)
+		)
+
+		slice := []int64{1, 3, 5, 7, 9}
+		for i := 0; i < len(slice); i++ {
+			redis.GroupSortedSet().ZAdd(ctx, k, option, gredis.ZAddMember{
+				Member: i,
+				Score:  float64(slice[i]),
+			})
+		}
+
+		rmd, err := redis.GroupSortedSet().ZRemRangeByScore(ctx, k, "-inf", "9")
+		t.AssertNil(err)
+		t.AssertEQ(rmd, int64(5))
+
+		cnt, err := redis.GroupSortedSet().ZCard(ctx, k)
+		t.AssertNil(err)
+		t.AssertEQ(cnt, int64(0))
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		var (
+			k                         = guid.S()
+			option *gredis.ZAddOption = new(gredis.ZAddOption)
+		)
+
+		slice := []int64{1, 3, 5, 7, 9}
+		for i := 0; i < len(slice); i++ {
+			redis.GroupSortedSet().ZAdd(ctx, k, option, gredis.ZAddMember{
+				Member: i,
+				Score:  float64(slice[i]),
+			})
+		}
+
+		rmd, err := redis.GroupSortedSet().ZRemRangeByScore(ctx, k, "-inf", "+inf")
+		t.AssertNil(err)
+		t.AssertEQ(rmd, int64(5))
+
+		cnt, err := redis.GroupSortedSet().ZCard(ctx, k)
+		t.AssertNil(err)
+		t.AssertEQ(cnt, int64(0))
+	})
+}
+func Test_GroupSortedSet_ZRemRangeByLex(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		var (
+			k                         = guid.S()
+			option *gredis.ZAddOption = new(gredis.ZAddOption)
+		)
+
+		slice := []string{"aaaa", "b", "c", "d", "e", "foo", "zap", "zip", "ALPHA", "alpha"}
+		for i := 0; i < len(slice); i++ {
+			redis.GroupSortedSet().ZAdd(ctx, k, option, gredis.ZAddMember{
+				Member: slice[i],
+				Score:  float64(0),
+			})
+		}
+
+		cnt, err := redis.GroupSortedSet().ZRemRangeByLex(ctx, k, "[alpha", "[omega")
+		t.AssertNil(err)
+		t.AssertEQ(cnt, int64(6))
+
+		cnt, err = redis.GroupSortedSet().ZCard(ctx, k)
+		t.AssertNil(err)
+		t.AssertEQ(cnt, int64(4))
+	})
+}
+func Test_GroupSortedSet_ZLexCount(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		var (
+			k                         = guid.S()
+			option *gredis.ZAddOption = new(gredis.ZAddOption)
+		)
+
+		slice := []string{"a", "b", "c", "d", "e", "f", "g"}
+		for i := 0; i < len(slice); i++ {
+			redis.GroupSortedSet().ZAdd(ctx, k, option, gredis.ZAddMember{
+				Member: slice[i],
+				Score:  float64(0),
+			})
+		}
+
+		cnt, err := redis.GroupSortedSet().ZLexCount(ctx, k, "-", "+")
+		t.AssertNil(err)
+		t.AssertEQ(cnt, int64(7))
+
+		cnt, err = redis.GroupSortedSet().ZLexCount(ctx, k, "[b", "[f")
+		t.AssertNil(err)
+		t.AssertEQ(cnt, int64(5))
+
+	})
+}
