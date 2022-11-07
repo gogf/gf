@@ -38,6 +38,16 @@ func Test_Map_Basic(t *testing.T) {
 		t.Assert(gconv.Map(m3), g.Map{
 			"1.22": "3.1",
 		})
+		t.Assert(gconv.Map(`{"name":"goframe"}`), g.Map{
+			"name": "goframe",
+		})
+		t.Assert(gconv.Map(`{"name":"goframe"`), nil)
+		t.Assert(gconv.Map(`{goframe}`), nil)
+		t.Assert(gconv.Map([]byte(`{"name":"goframe"}`)), g.Map{
+			"name": "goframe",
+		})
+		t.Assert(gconv.Map([]byte(`{"name":"goframe"`)), nil)
+		t.Assert(gconv.Map([]byte(`{goframe}`)), nil)
 	})
 }
 
@@ -69,6 +79,44 @@ func Test_Maps_Basic(t *testing.T) {
 		t.Assert(list[0]["id"], 100)
 		t.Assert(list[1]["id"], 200)
 	})
+	gtest.C(t, func(t *gtest.T) {
+		list := gconv.SliceMap(params)
+		t.Assert(len(list), 2)
+		t.Assert(list[0]["id"], 100)
+		t.Assert(list[1]["id"], 200)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		list := gconv.SliceMapDeep(params)
+		t.Assert(len(list), 2)
+		t.Assert(list[0]["id"], 100)
+		t.Assert(list[1]["id"], 200)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Base struct {
+			Age int
+		}
+		type User struct {
+			Id   int
+			Name string
+			Base
+		}
+
+		users := make([]User, 0)
+		params := []g.Map{
+			{"id": 1, "name": "john", "age": 18},
+			{"id": 2, "name": "smith", "age": 20},
+		}
+		err := gconv.SliceStruct(params, &users)
+		t.AssertNil(err)
+		t.Assert(len(users), 2)
+		t.Assert(users[0].Id, params[0]["id"])
+		t.Assert(users[0].Name, params[0]["name"])
+		t.Assert(users[0].Age, 18)
+
+		t.Assert(users[1].Id, params[1]["id"])
+		t.Assert(users[1].Name, params[1]["name"])
+		t.Assert(users[1].Age, 20)
+	})
 }
 
 func Test_Maps_JsonStr(t *testing.T) {
@@ -78,6 +126,18 @@ func Test_Maps_JsonStr(t *testing.T) {
 		t.Assert(len(list), 2)
 		t.Assert(list[0]["id"], 100)
 		t.Assert(list[1]["id"], 200)
+
+		list = gconv.Maps([]byte(jsonStr))
+		t.Assert(len(list), 2)
+		t.Assert(list[0]["id"], 100)
+		t.Assert(list[1]["id"], 200)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gconv.Maps(`[id]`), nil)
+		t.Assert(gconv.Maps(`test`), nil)
+		t.Assert(gconv.Maps([]byte(`[id]`)), nil)
+		t.Assert(gconv.Maps([]byte(`test`)), nil)
 	})
 }
 
@@ -475,5 +535,74 @@ field3:
 		t.AssertNil(err)
 
 		t.Assert(string(jsonData), `{"field3":{"123":"integer_key"},"outer_struct":{"field1":{"inner1":123,"inner2":345},"field2":{"inner1":123,"inner2":345,"inner3":456,"inner4":789}}}`)
+	})
+}
+
+func TestMapStrStr(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gconv.MapStrStr(map[string]string{"k": "v"}), map[string]string{"k": "v"})
+		t.Assert(gconv.MapStrStr(`{}`), nil)
+	})
+}
+
+func TestMapStrStrDeep(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gconv.MapStrStrDeep(map[string]string{"k": "v"}), map[string]string{"k": "v"})
+		t.Assert(gconv.MapStrStrDeep(`{"k":"v"}`), map[string]string{"k": "v"})
+		t.Assert(gconv.MapStrStrDeep(`{}`), nil)
+	})
+}
+
+func TestMapsDeep(t *testing.T) {
+	jsonStr := `[{"id":100, "name":"john"},{"id":200, "name":"smith"}]`
+	params := g.Slice{
+		g.Map{"id": 100, "name": "john"},
+		g.Map{"id": 200, "name": "smith"},
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gconv.MapsDeep(nil), nil)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		list := gconv.MapsDeep(params)
+		t.Assert(len(list), 2)
+		t.Assert(list[0]["id"], 100)
+		t.Assert(list[1]["id"], 200)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		list := gconv.MapsDeep(jsonStr)
+		t.Assert(len(list), 2)
+		t.Assert(list[0]["id"], 100)
+		t.Assert(list[1]["id"], 200)
+
+		list = gconv.MapsDeep([]byte(jsonStr))
+		t.Assert(len(list), 2)
+		t.Assert(list[0]["id"], 100)
+		t.Assert(list[1]["id"], 200)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gconv.MapsDeep(`[id]`), nil)
+		t.Assert(gconv.MapsDeep(`test`), nil)
+		t.Assert(gconv.MapsDeep([]byte(`[id]`)), nil)
+		t.Assert(gconv.MapsDeep([]byte(`test`)), nil)
+		t.Assert(gconv.MapsDeep([]string{}), nil)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		string_interface_map_list := []map[string]interface{}{}
+		string_interface_map_list = append(string_interface_map_list, map[string]interface{}{"id": 100})
+		string_interface_map_list = append(string_interface_map_list, map[string]interface{}{"id": 200})
+		list := gconv.MapsDeep(string_interface_map_list)
+		t.Assert(len(list), 2)
+		t.Assert(list[0]["id"], 100)
+		t.Assert(list[1]["id"], 200)
+
+		list = gconv.MapsDeep([]byte(jsonStr))
+		t.Assert(len(list), 2)
+		t.Assert(list[0]["id"], 100)
+		t.Assert(list[1]["id"], 200)
 	})
 }
