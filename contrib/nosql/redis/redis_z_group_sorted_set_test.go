@@ -349,6 +349,40 @@ func Test_GroupSortedSet_ZRange(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
+		var (
+			k                         = guid.S()
+			option *gredis.ZAddOption = new(gredis.ZAddOption)
+		)
+
+		slice := []string{"one", "two", "three"}
+		for i := 0; i < len(slice); i++ {
+			redis.ZAdd(ctx, k, option, gredis.ZAddMember{
+				Member: slice[i],
+				Score:  float64(i + 1),
+			})
+		}
+
+		ret, err := redis.GroupSortedSet().ZRange(ctx, k, 0, -1)
+		t.AssertNil(err)
+		expected := []string{"one", "two", "three"}
+		for i := 0; i < len(ret); i++ {
+			t.AssertEQ(ret[i].String(), expected[i])
+		}
+
+		ret, err = redis.GroupSortedSet().ZRange(ctx, k, 2, 3)
+		t.AssertNil(err)
+		expected = []string{"three"}
+		for i := 0; i < len(ret); i++ {
+			t.AssertEQ(ret[i].String(), expected[i])
+		}
+
+		// ret, err = redis.GroupSortedSet().ZRange(ctx, k, 0, -1,
+		// 	gredis.ZRangeOption{WithScores: true})
+		// t.AssertNil(err)
+		// expectedScore := []interface{}{1, "one", 2, "two", 3, "three"}
+		// for i := 0; i < len(ret); i++ {
+		// 	t.AssertEQ(ret[i].String(), expectedScore[i])
+		// }
 	})
 }
 
@@ -356,6 +390,28 @@ func Test_GroupSortedSet_ZRevRange(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
+		var (
+			k                         = guid.S()
+			option *gredis.ZAddOption = new(gredis.ZAddOption)
+		)
+
+		slice := []string{"one", "two", "three"}
+		for i := 0; i < len(slice); i++ {
+			redis.ZAdd(ctx, k, option, gredis.ZAddMember{
+				Member: slice[i],
+				Score:  float64(i + 1),
+			})
+		}
+
+		ret, err := redis.GroupSortedSet().ZRevRange(ctx, k, 0, -1)
+		t.AssertNil(err)
+		expected := []interface{}{"three", "two", "one"}
+		t.AssertEQ(ret.Slice(), expected)
+
+		ret, err = redis.GroupSortedSet().ZRevRange(ctx, k, 0, 1)
+		t.AssertNil(err)
+		expected = []interface{}{"three", "two"}
+		t.AssertEQ(ret.Slice(), expected)
 	})
 }
 
