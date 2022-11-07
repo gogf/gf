@@ -7,6 +7,7 @@
 package goai
 
 import (
+	"net/http"
 	"reflect"
 
 	"github.com/gogf/gf/v2/container/garray"
@@ -17,6 +18,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gmeta"
+	"github.com/gogf/gf/v2/util/gtag"
 )
 
 type Path struct {
@@ -97,7 +99,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	)
 	// Path check.
 	if in.Path == "" {
-		in.Path = gmeta.Get(inputObject.Interface(), TagNamePath).String()
+		in.Path = gmeta.Get(inputObject.Interface(), gtag.Path).String()
 		if in.Prefix != "" {
 			in.Path = gstr.TrimRight(in.Prefix, "/") + "/" + gstr.TrimLeft(in.Path, "/")
 		}
@@ -106,7 +108,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		return gerror.NewCodef(
 			gcode.CodeMissingParameter,
 			`missing necessary path parameter "%s" for input struct "%s", missing tag in attribute Meta?`,
-			TagNamePath, inputStructTypeName,
+			gtag.Path, inputStructTypeName,
 		)
 	}
 
@@ -116,13 +118,13 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 
 	// Method check.
 	if in.Method == "" {
-		in.Method = gmeta.Get(inputObject.Interface(), TagNameMethod).String()
+		in.Method = gmeta.Get(inputObject.Interface(), gtag.Method).String()
 	}
 	if in.Method == "" {
 		return gerror.NewCodef(
 			gcode.CodeMissingParameter,
 			`missing necessary method parameter "%s" for input struct "%s", missing tag in attribute Meta?`,
-			TagNameMethod, inputStructTypeName,
+			gtag.Method, inputStructTypeName,
 		)
 	}
 
@@ -138,8 +140,8 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			return err
 		}
 		// Allowed request mime.
-		if mime = inputMetaMap[TagNameMime]; mime == "" {
-			mime = inputMetaMap[TagNameConsumes]
+		if mime = inputMetaMap[gtag.Mime]; mime == "" {
+			mime = inputMetaMap[gtag.Consumes]
 		}
 	}
 
@@ -179,7 +181,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		// Supported mime types of request.
 		var (
 			contentTypes = oai.Config.ReadContentTypes
-			tagMimeValue = gmeta.Get(inputObject.Interface(), TagNameMime).String()
+			tagMimeValue = gmeta.Get(inputObject.Interface(), gtag.Mime).String()
 		)
 		if tagMimeValue != "" {
 			contentTypes = gstr.SplitAndTrim(tagMimeValue, ",")
@@ -224,7 +226,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		// Supported mime types of response.
 		var (
 			contentTypes = oai.Config.ReadContentTypes
-			tagMimeValue = gmeta.Get(outputObject.Interface(), TagNameMime).String()
+			tagMimeValue = gmeta.Get(outputObject.Interface(), gtag.Mime).String()
 			refInput     = getResponseSchemaRefInput{
 				BusinessStructName:      outputStructTypeName,
 				CommonResponseObject:    oai.Config.CommonResponse,
@@ -256,35 +258,35 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 
 	// Assign to certain operation attribute.
 	switch gstr.ToUpper(in.Method) {
-	case HttpMethodGet:
+	case http.MethodGet:
 		// GET operations cannot have a requestBody.
 		operation.RequestBody = nil
 		path.Get = &operation
 
-	case HttpMethodPut:
+	case http.MethodPut:
 		path.Put = &operation
 
-	case HttpMethodPost:
+	case http.MethodPost:
 		path.Post = &operation
 
-	case HttpMethodDelete:
+	case http.MethodDelete:
 		// DELETE operations cannot have a requestBody.
 		operation.RequestBody = nil
 		path.Delete = &operation
 
-	case HttpMethodConnect:
+	case http.MethodConnect:
 		// Nothing to do for Connect.
 
-	case HttpMethodHead:
+	case http.MethodHead:
 		path.Head = &operation
 
-	case HttpMethodOptions:
+	case http.MethodOptions:
 		path.Options = &operation
 
-	case HttpMethodPatch:
+	case http.MethodPatch:
 		path.Patch = &operation
 
-	case HttpMethodTrace:
+	case http.MethodTrace:
 		path.Trace = &operation
 
 	default:
@@ -354,7 +356,7 @@ func (oai *OpenApiV3) doesStructHasNoFields(s interface{}) bool {
 }
 
 func (oai *OpenApiV3) tagMapToPath(tagMap map[string]string, path *Path) error {
-	var mergedTagMap = oai.fileMapWithShortTags(tagMap)
+	var mergedTagMap = oai.fillMapWithShortTags(tagMap)
 	if err := gconv.Struct(mergedTagMap, path); err != nil {
 		return gerror.Wrap(err, `mapping struct tags to Path failed`)
 	}

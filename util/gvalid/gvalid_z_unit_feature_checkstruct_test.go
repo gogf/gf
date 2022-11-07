@@ -116,8 +116,8 @@ func Test_CheckStruct(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		type LoginRequest struct {
-			Username string `json:"username" gvalid:"username@required#用户名不能为空"`
-			Password string `json:"password" gvalid:"password@required#登录密码不能为空"`
+			Username string `json:"username" valid:"username@required#用户名不能为空"`
+			Password string `json:"password" valid:"password@required#登录密码不能为空"`
 		}
 		var login LoginRequest
 		err := g.Validator().Data(login).Run(context.TODO())
@@ -129,8 +129,8 @@ func Test_CheckStruct(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		type LoginRequest struct {
-			Username string `json:"username" gvalid:"@required#用户名不能为空"`
-			Password string `json:"password" gvalid:"@required#登录密码不能为空"`
+			Username string `json:"username" valid:"@required#用户名不能为空"`
+			Password string `json:"password" valid:"@required#登录密码不能为空"`
 		}
 		var login LoginRequest
 		err := g.Validator().Data(login).Run(context.TODO())
@@ -139,8 +139,8 @@ func Test_CheckStruct(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		type LoginRequest struct {
-			username string `json:"username" gvalid:"username@required#用户名不能为空"`
-			Password string `json:"password" gvalid:"password@required#登录密码不能为空"`
+			username string `json:"username" valid:"username@required#用户名不能为空"`
+			Password string `json:"password" valid:"password@required#登录密码不能为空"`
 		}
 		var login LoginRequest
 		err := g.Validator().Data(login).Run(context.TODO())
@@ -151,10 +151,10 @@ func Test_CheckStruct(t *testing.T) {
 	// gvalid tag
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
-			Id       int    `gvalid:"uid@required|min:10#|ID不能为空"`
-			Age      int    `gvalid:"age@required#年龄不能为空"`
-			Username string `json:"username" gvalid:"username@required#用户名不能为空"`
-			Password string `json:"password" gvalid:"password@required#登录密码不能为空"`
+			Id       int    `valid:"uid@required|min:10#|ID不能为空"`
+			Age      int    `valid:"age@required#年龄不能为空"`
+			Username string `json:"username" valid:"username@required#用户名不能为空"`
+			Password string `json:"password" valid:"password@required#登录密码不能为空"`
 		}
 		user := &User{
 			Id:       1,
@@ -169,10 +169,10 @@ func Test_CheckStruct(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
-			Id       int    `gvalid:"uid@required|min:10#|ID不能为空"`
-			Age      int    `gvalid:"age@required#年龄不能为空"`
-			Username string `json:"username" gvalid:"username@required#用户名不能为空"`
-			Password string `json:"password" gvalid:"password@required#登录密码不能为空"`
+			Id       int    `valid:"uid@required|min:10#|ID不能为空"`
+			Age      int    `valid:"age@required#年龄不能为空"`
+			Username string `json:"username" valid:"username@required#用户名不能为空"`
+			Password string `json:"password" valid:"password@required#登录密码不能为空"`
 		}
 		user := &User{
 			Id:       1,
@@ -192,10 +192,10 @@ func Test_CheckStruct(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
-			Id       int    `gvalid:"uid@required|min:10#ID不能为空"`
-			Age      int    `gvalid:"age@required#年龄不能为空"`
-			Username string `json:"username" gvalid:"username@required#用户名不能为空"`
-			Password string `json:"password" gvalid:"password@required#登录密码不能为空"`
+			Id       int    `valid:"uid@required|min:10#ID不能为空"`
+			Age      int    `valid:"age@required#年龄不能为空"`
+			Username string `json:"username" valid:"username@required#用户名不能为空"`
+			Password string `json:"password" valid:"password@required#登录密码不能为空"`
 		}
 		user := &User{
 			Id:       1,
@@ -212,8 +212,8 @@ func Test_CheckStruct(t *testing.T) {
 		type User struct {
 			Id       int    `valid:"uid@required|min:10#|ID不能为空"`
 			Age      int    `valid:"age@required#年龄不能为空"`
-			Username string `json:"username" gvalid:"username@required#用户名不能为空"`
-			Password string `json:"password" gvalid:"password@required#登录密码不能为空"`
+			Username string `json:"username" valid:"username@required#用户名不能为空"`
+			Password string `json:"password" valid:"password@required#登录密码不能为空"`
 		}
 		user := &User{
 			Id:       1,

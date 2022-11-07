@@ -32,7 +32,7 @@ type Parameter struct {
 }
 
 func (oai *OpenApiV3) tagMapToParameter(tagMap map[string]string, parameter *Parameter) error {
-	var mergedTagMap = oai.fileMapWithShortTags(tagMap)
+	var mergedTagMap = oai.fillMapWithShortTags(tagMap)
 	if err := gconv.Struct(mergedTagMap, parameter); err != nil {
 		return gerror.Wrap(err, `mapping struct tags to Parameter failed`)
 	}

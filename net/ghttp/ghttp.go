@@ -12,6 +12,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/gogf/gf/v2/util/gtag"
 	"github.com/gorilla/websocket"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -180,7 +181,7 @@ var (
 	gracefulEnabled = false
 
 	// defaultValueTags are the struct tag names for default value storing.
-	defaultValueTags = []string{"d", "default"}
+	defaultValueTags = []string{gtag.DefaultShort, gtag.Default}
 )
 
 var (

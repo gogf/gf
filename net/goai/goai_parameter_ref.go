@@ -8,6 +8,7 @@ package goai
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -48,7 +49,7 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path
 		} else {
 			// Default the parameter input to "query" if method is "GET/DELETE".
 			switch gstr.ToUpper(method) {
-			case HttpMethodGet, HttpMethodDelete:
+			case http.MethodGet, http.MethodDelete:
 				parameter.In = ParameterInQuery
 
 			default:

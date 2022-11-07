@@ -25,6 +25,7 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gtag"
 	"github.com/gogf/gf/v2/util/gutil"
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
@@ -49,7 +50,7 @@ const (
 	filterTypePattern                = `(?i)^UPDATE|DELETE`
 	replaceSchemaPattern             = `@(.+?)/([\w\.\-]+)+`
 	needParsedSqlInCtx   gctx.StrKey = "NeedParsedSql"
-	OrmTagForStruct                  = "orm"
+	OrmTagForStruct                  = gtag.ORM
 	driverName                       = "clickhouse"
 )
 

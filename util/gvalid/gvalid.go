@@ -15,6 +15,7 @@ import (
 
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/util/gtag"
 )
 
 // CustomMsg is the custom error message type,
@@ -42,7 +43,7 @@ const (
 	internalErrorMapKey       = "__InternalError__"   // error map key for internal errors.
 	internalDefaultRuleName   = "__default__"         // default rule name for i18n error message format if no i18n message found for specified error rule.
 	ruleMessagePrefixForI18n  = "gf.gvalid.rule."     // prefix string for each rule configuration in i18n content.
-	noValidationTagName       = "nv"                  // no validation tag name for struct attribute.
+	noValidationTagName       = gtag.NoValidation     // no validation tag name for struct attribute.
 	ruleNameRegex             = "regex"               // the name for rule "regex"
 	ruleNameNotRegex          = "not-regex"           // the name for rule "not-regex"
 	ruleNameForeach           = "foreach"             // the name for rule "foreach"
@@ -60,8 +61,11 @@ var (
 		internalDefaultRuleName: "The {field} value `{value}` is invalid",
 	}
 
-	structTagPriority    = []string{"gvalid", "valid", "v"} // structTagPriority specifies the validation tag priority array.
-	aliasNameTagPriority = []string{"param", "params", "p"} // aliasNameTagPriority specifies the alias tag priority array.
+	// structTagPriority specifies the validation tag priority array.
+	structTagPriority = []string{gtag.Valid, gtag.ValidShort}
+
+	// aliasNameTagPriority specifies the alias tag priority array.
+	aliasNameTagPriority = []string{gtag.Param, gtag.ParamShort}
 
 	// all internal error keys.
 	internalErrKeyMap = map[string]string{

@@ -10,60 +10,35 @@
 // which means you cannot call them in runtime but in boot procedure.
 package gtag
 
-import (
-	"regexp"
-
-	"github.com/gogf/gf/v2/errors/gerror"
+const (
+	Default           = "default"      // Default value tag of struct field for receiving parameters from HTTP request.
+	DefaultShort      = "d"            // Short name of Default.
+	Param             = "param"        // Parameter name for converting certain parameter to specified struct field.
+	ParamShort        = "p"            // Short name of Param.
+	Valid             = "valid"        // Validation rule tag for struct of field.
+	ValidShort        = "v"            // Short name of Valid.
+	NoValidation      = "nv"           // No validation for specified struct/field.
+	ORM               = "orm"          // ORM tag for ORM feature, which performs different features according scenarios.
+	Arg               = "arg"          // Arg tag for struct, usually for command argument option.
+	Brief             = "brief"        // Brief tag for struct, usually be considered as summary.
+	Root              = "root"         // Root tag for struct, usually for nested commands management.
+	Additional        = "additional"   // Additional tag for struct, usually for additional description of command.
+	AdditionalShort   = "ad"           // Short name of Additional.
+	Path              = `path`         // Route path for HTTP request.
+	Method            = `method`       // Route method for HTTP request.
+	Domain            = `domain`       // Route domain for HTTP request.
+	Mime              = `mime`         // MIME type for HTTP request/response.
+	Consumes          = `consumes`     // MIME type for HTTP request.
+	Summary           = `summary`      // Summary for struct, usually for OpenAPI in request struct.
+	SummaryShort      = `sm`           // Short name of Summary.
+	SummaryShort2     = `sum`          // Short name of Summary.
+	Description       = `description`  // Description for struct, usually for OpenAPI in request struct.
+	DescriptionShort  = `dc`           // Short name of Description.
+	DescriptionShort2 = `des`          // Short name of Description.
+	Example           = `example`      // Example for struct, usually for OpenAPI in request struct.
+	ExampleShort      = `eg`           // Short name of Example.
+	Examples          = `examples`     // Examples for struct, usually for OpenAPI in request struct.
+	ExamplesShort     = `egs`          // Short name of Examples.
+	ExternalDocs      = `externalDocs` // External docs for struct, always for OpenAPI in request struct.
+	ExternalDocsShort = `ed`           // Short name of ExternalDocs.
 )
-
-var (
-	data  = make(map[string]string)
-	regex = regexp.MustCompile(`\{(.+?)\}`)
-)
-
-// Set sets tag content for specified name.
-// Note that it panics if `name` already exists.
-func Set(name, value string) {
-	if _, ok := data[name]; ok {
-		panic(gerror.Newf(`value for tag name "%s" already exists`, name))
-	}
-	data[name] = value
-}
-
-// SetOver performs as Set, but it overwrites the old value if `name` already exists.
-func SetOver(name, value string) {
-	data[name] = value
-}
-
-// Sets sets multiple tag content by map.
-func Sets(m map[string]string) {
-	for k, v := range m {
-		Set(k, v)
-	}
-}
-
-// SetsOver performs as Sets, but it overwrites the old value if `name` already exists.
-func SetsOver(m map[string]string) {
-	for k, v := range m {
-		SetOver(k, v)
-	}
-}
-
-// Get retrieves and returns the stored tag content for specified name.
-func Get(name string) string {
-	return data[name]
-}
-
-// Parse parses and returns the content by replacing all tag name variable to
-// its content for given `content`.
-// Eg:
-// gtag.Set("demo", "content")
-// Parse(`This is {demo}`) -> `This is content`.
-func Parse(content string) string {
-	return regex.ReplaceAllStringFunc(content, func(s string) string {
-		if v, ok := data[s[1:len(s)-1]]; ok {
-			return v
-		}
-		return s
-	})
-}
