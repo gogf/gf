@@ -44,7 +44,7 @@ func NewConn(remoteAddress string, localAddress ...string) (*Conn, error) {
 	}
 }
 
-// NewConnByNetConn creates a UDP connection object with given *net.UDPConn object.
+// NewConnByNetConn creates an UDP connection object with given *net.UDPConn object.
 func NewConnByNetConn(udp *net.UDPConn) *Conn {
 	return &Conn{
 		UDPConn:           udp,

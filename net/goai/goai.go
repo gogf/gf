@@ -81,7 +81,7 @@ var (
 	}
 )
 
-// New creates and returns a OpenApiV3 implements object.
+// New creates and returns an OpenApiV3 implements object.
 func New() *OpenApiV3 {
 	oai := &OpenApiV3{}
 	oai.fillWithDefaultValue()

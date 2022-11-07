@@ -184,7 +184,7 @@ func (set *Set) Clear() {
 	set.mu.Unlock()
 }
 
-// Slice returns the a of items of the set as slice.
+// Slice returns the an of items of the set as slice.
 func (set *Set) Slice() []interface{} {
 	set.mu.RLock()
 	var (

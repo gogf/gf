@@ -53,7 +53,7 @@ func NewArraySize(size int, cap int, safe ...bool) *Array {
 	}
 }
 
-// NewArrayRange creates and returns a array by a range from `start` to `end`
+// NewArrayRange creates and returns an array by a range from `start` to `end`
 // with step value `step`.
 func NewArrayRange(start, end, step int, safe ...bool) *Array {
 	if step == 0 {

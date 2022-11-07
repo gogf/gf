@@ -15,7 +15,7 @@ import (
 )
 
 // Encode escapes the string so it can be safely placed
-// inside a URL query.
+// inside an URL query.
 func Encode(str string) string {
 	return url.QueryEscape(str)
 }
@@ -49,7 +49,7 @@ func BuildQuery(queryData url.Values) string {
 	return queryData.Encode()
 }
 
-// ParseURL Parse a URL and return its components.
+// ParseURL Parse an URL and return its components.
 // -1: all; 1: scheme; 2: host; 4: port; 8: user; 16: pass; 32: path; 64: query; 128: fragment.
 // See http://php.net/manual/en/function.parse-url.php.
 func ParseURL(str string, component int) (map[string]string, error) {

@@ -344,7 +344,7 @@ func Test_CheckStruct_Recursively_MapAttribute(t *testing.T) {
 
 // https://github.com/gogf/gf/issues/1983
 func Test_Issue1983(t *testing.T) {
-	// Error as the attribute Student in Teacher is a initialized struct, which has default value.
+	// Error as the attribute Student in Teacher is an initialized struct, which has default value.
 	gtest.C(t, func(t *gtest.T) {
 		type Student struct {
 			Name string `v:"required"`

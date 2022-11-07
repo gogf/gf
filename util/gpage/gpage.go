@@ -204,7 +204,7 @@ func (p *Page) GetContent(mode int) string {
 }
 
 // GetUrl parses the UrlTemplate with given page number and returns the URL string.
-// Note that the UrlTemplate attribute can be either an URL or a URI string with "{.page}"
+// Note that the UrlTemplate attribute can be either an URL or an URI string with "{.page}"
 // place holder specifying the page number position.
 func (p *Page) GetUrl(page int) string {
 	return gstr.Replace(p.UrlTemplate, DefaultPagePlaceHolder, gconv.String(page))
