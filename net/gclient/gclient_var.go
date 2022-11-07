@@ -55,7 +55,7 @@ func (c *Client) ConnectVar(ctx context.Context, url string, data ...interface{}
 	return c.RequestVar(ctx, http.MethodConnect, url, data...)
 }
 
-// OptionsVar sends a OPTIONS request, retrieves and converts the result content to specified pointer.
+// OptionsVar sends an OPTIONS request, retrieves and converts the result content to specified pointer.
 // The parameter `pointer` can be type of: struct/*struct/**struct/[]struct/[]*struct/*[]struct, etc.
 func (c *Client) OptionsVar(ctx context.Context, url string, data ...interface{}) *gvar.Var {
 	return c.RequestVar(ctx, http.MethodOptions, url, data...)
