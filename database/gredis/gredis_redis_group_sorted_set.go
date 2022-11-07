@@ -13,6 +13,7 @@ import (
 )
 
 // IGroupSortedSet manages redis sorted set operations.
+// Implements see redis.GroupSortedSet.
 type IGroupSortedSet interface {
 	ZAdd(ctx context.Context, key string, option *ZAddOption, member ZAddMember, members ...ZAddMember) (*gvar.Var, error)
 	ZScore(ctx context.Context, key string, member interface{}) (float64, error)

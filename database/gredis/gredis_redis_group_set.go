@@ -13,6 +13,7 @@ import (
 )
 
 // IGroupSet manages redis set operations.
+// Implements see redis.GroupSet.
 type IGroupSet interface {
 	SAdd(ctx context.Context, key string, member interface{}, members ...interface{}) (int64, error)
 	SIsMember(ctx context.Context, key string, member interface{}) (int64, error)

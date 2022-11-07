@@ -13,6 +13,7 @@ import (
 )
 
 // IGroupString manages redis string operations.
+// Implements see redis.GroupString.
 type IGroupString interface {
 	Set(ctx context.Context, key string, value interface{}, option ...SetOption) (*gvar.Var, error)
 	SetNX(ctx context.Context, key string, value interface{}) (bool, error)

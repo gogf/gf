@@ -13,6 +13,7 @@ import (
 )
 
 // IGroupHash manages redis hash operations.
+// Implements see redis.GroupHash.
 type IGroupHash interface {
 	HSet(ctx context.Context, key string, fields map[string]interface{}) (int64, error)
 	HSetNX(ctx context.Context, key, field string, value interface{}) (int64, error)

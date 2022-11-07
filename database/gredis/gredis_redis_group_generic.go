@@ -14,6 +14,7 @@ import (
 )
 
 // IGroupGeneric manages generic redis operations.
+// Implements see redis.GroupGeneric.
 type IGroupGeneric interface {
 	Copy(ctx context.Context, source, destination string, option ...CopyOption) (int64, error)
 	Exists(ctx context.Context, keys ...string) (int64, error)

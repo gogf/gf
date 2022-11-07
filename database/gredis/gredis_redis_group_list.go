@@ -13,6 +13,7 @@ import (
 )
 
 // IGroupList manages redis list operations.
+// Implements see redis.GroupList.
 type IGroupList interface {
 	LPush(ctx context.Context, key string, values ...interface{}) (int64, error)
 	LPushX(ctx context.Context, key string, element interface{}, elements ...interface{}) (int64, error)

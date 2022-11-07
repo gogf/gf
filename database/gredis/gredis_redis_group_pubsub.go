@@ -12,6 +12,7 @@ import (
 )
 
 // IGroupPubSub manages redis pub/sub operations.
+// Implements see redis.GroupPubSub.
 type IGroupPubSub interface {
 	Publish(ctx context.Context, channel string, message interface{}) (int64, error)
 	Subscribe(ctx context.Context, channel string, channels ...string) (Conn, []*Subscription, error)

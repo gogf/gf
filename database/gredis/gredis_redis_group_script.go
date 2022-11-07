@@ -13,6 +13,7 @@ import (
 )
 
 // IGroupScript manages redis script operations.
+// Implements see redis.GroupScript.
 type IGroupScript interface {
 	Eval(ctx context.Context, script string, numKeys int64, keys []string, args []interface{}) (*gvar.Var, error)
 	EvalSha(ctx context.Context, sha1 string, numKeys int64, keys []string, args []interface{}) (*gvar.Var, error)
