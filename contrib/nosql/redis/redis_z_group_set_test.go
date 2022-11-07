@@ -22,7 +22,7 @@ func Test_GroupSet_SAdd(t *testing.T) {
 				"v3",
 			}
 		)
-		num, err := redis.GroupSet().SAdd(ctx, k1, "v1", members)
+		num, err := redis.GroupSet().SAdd(ctx, k1, "v1", members...)
 		t.Assert(num, 3)
 		t.AssertNil(err)
 	})
