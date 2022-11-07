@@ -378,15 +378,15 @@ func Test_GroupSortedSet_ZRank(t *testing.T) {
 
 		rank, err := redis.ZRank(ctx, k, 0)
 		t.AssertNil(err)
-		t.AssertEQ(rank.Int(), 0)
+		t.AssertEQ(rank, int64(0))
 
 		rank, err = redis.ZRank(ctx, k, 3)
 		t.AssertNil(err)
-		t.AssertEQ(rank.Int(), 3)
+		t.AssertEQ(rank, int64(3))
 
 		rank, err = redis.ZRank(ctx, k, 6)
 		t.AssertNil(err)
-		t.AssertEQ(rank.Int(), 0)
+		t.AssertEQ(rank, int64(0))
 	})
 }
 
