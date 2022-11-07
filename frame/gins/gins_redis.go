@@ -11,6 +11,8 @@ import (
 	"fmt"
 
 	"github.com/gogf/gf/v2/database/gredis"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/consts"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -66,6 +68,10 @@ func Redis(name ...string) *gredis.Redis {
 			}
 			return redisClient
 		}
+		panic(gerror.NewCode(
+			gcode.CodeMissingConfiguration,
+			`no configuration found for creating redis client`,
+		))
 		return nil
 	})
 	if result != nil {

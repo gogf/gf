@@ -54,7 +54,8 @@ func (r GroupGeneric) Copy(ctx context.Context, source, destination string, opti
 // Exists returns if key exists.
 // The user should be aware that if the same existing key is mentioned in the arguments multiple times,
 // it will be counted multiple times.
-// So if some key exists, EXISTS some key will return 2.
+//
+// It returns the number of keys that exist from those specified as arguments.
 //
 // https://redis.io/commands/exists/
 func (r GroupGeneric) Exists(ctx context.Context, keys ...string) (int64, error) {
