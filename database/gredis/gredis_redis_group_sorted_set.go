@@ -21,7 +21,7 @@ type IGroupSortedSet interface {
 	ZCount(ctx context.Context, key string, min, max string) (int64, error)
 	ZRange(ctx context.Context, key string, start, stop int64, option ...ZRangeOption) ([]*gvar.Var, error)
 	ZRevRange(ctx context.Context, key string, start, stop int64, option ...ZRevRangeOption) (*gvar.Var, error)
-	ZRank(ctx context.Context, key string, member interface{}) (*gvar.Var, error)
+	ZRank(ctx context.Context, key string, member interface{}) (int64, error)
 	ZRevRank(ctx context.Context, key string, member interface{}) (int64, error)
 	ZRem(ctx context.Context, key string, member interface{}, members ...interface{}) (int64, error)
 	ZRemRangeByRank(ctx context.Context, key string, start, stop int64) (int64, error)

@@ -41,8 +41,8 @@ func (r *Redis) GroupSortedSet() gredis.IGroupSortedSet {
 // - If the CH option is specified, the number of elements that were changed (added or updated).
 //
 // If the INCR option is specified, the return value will be Bulk string reply:
-// - The new score of member (a double precision floating point number) represented as string, or nil if the operation
-//   was aborted (when called with either the XX or the NX option).
+//   - The new score of member (a double precision floating point number) represented as string, or nil if the operation
+//     was aborted (when called with either the XX or the NX option).
 //
 // https://redis.io/commands/zadd/
 func (r GroupSortedSet) ZAdd(
@@ -159,9 +159,9 @@ func (r GroupSortedSet) ZRevRange(ctx context.Context, key string, start, stop i
 // - If member does not exist in the sorted set or key does not exist, Bulk string reply: nil.
 //
 // https://redis.io/commands/zrank/
-func (r GroupSortedSet) ZRank(ctx context.Context, key string, member interface{}) (*gvar.Var, error) {
+func (r GroupSortedSet) ZRank(ctx context.Context, key string, member interface{}) (int64, error) {
 	v, err := r.redis.Do(ctx, "ZRank", key, member)
-	return v, err
+	return v.Int64(), err
 }
 
 // ZRevRank returns the rank of member in the sorted set stored at key, with the scores ordered from high to low.
