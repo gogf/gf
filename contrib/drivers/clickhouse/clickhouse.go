@@ -292,7 +292,7 @@ func (d *Driver) DoInsert(
 		charL, charR = d.Core.GetChars()
 		keysStr      = charL + strings.Join(keys, charR+","+charL) + charR
 		holderStr    = strings.Join(valueHolder, ",")
-		tx           = &gdb.TX{}
+		tx           gdb.TX
 		stdSqlResult sql.Result
 		stmt         *gdb.Stmt
 	)
