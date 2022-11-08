@@ -21,8 +21,8 @@ type cUp struct {
 }
 
 const (
-	gfPackagePrefix = `github.com/gogf/gf/`
-	cUpEg           = `
+	gfPackage = `github.com/gogf/gf/v2`
+	cUpEg     = `
 gf up
 gf up -a
 gf up -c
@@ -81,7 +81,7 @@ func (c cUp) doUpgradeVersion(ctx context.Context) (err error) {
 			var packages []string
 			err = gfile.ReadLines(path, func(line string) error {
 				line = gstr.Trim(line)
-				if gstr.HasPrefix(line, gfPackagePrefix) {
+				if gstr.HasPrefix(line, gfPackage) {
 					pkg := gstr.Explode(" ", line)[0]
 					packages = append(packages, pkg)
 				}
@@ -116,6 +116,6 @@ func (c cUp) doUpgradeCLI(ctx context.Context) (err error) {
 
 func (c cUp) doAutoFixing(ctx context.Context) (err error) {
 	mlog.Print(`start auto fixing...`)
-	err = cFix{}.doFix(ctx)
+	err = cFix{}.doFix()
 	return
 }
