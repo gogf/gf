@@ -176,7 +176,7 @@ func (tx *TXCore) GetDB() DB {
 }
 
 // GetTX returns the underlying transaction object for current transaction.
-func (tx *TXCore) GetTX() *sql.Tx {
+func (tx *TXCore) GetSqlTX() *sql.Tx {
 	return tx.tx
 }
 

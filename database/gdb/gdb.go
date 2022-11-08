@@ -231,7 +231,7 @@ type TX interface {
 
 	GetCtx() context.Context
 	GetDB() DB
-	GetTX() *sql.Tx
+	GetSqlTX() *sql.Tx
 	IsClosed() bool
 
 	// ===========================================================================
