@@ -118,7 +118,7 @@ type DB interface {
 	GetOne(ctx context.Context, sql string, args ...interface{}) (Record, error)                // See Core.GetOne.
 	GetValue(ctx context.Context, sql string, args ...interface{}) (Value, error)               // See Core.GetValue.
 	GetArray(ctx context.Context, sql string, args ...interface{}) ([]Value, error)             // See Core.GetArray.
-	GetCount(ctx context.Context, sql string, args ...interface{}) (int, error)                 // See Core.GetCount.
+	GetCount(ctx context.Context, sql string, args ...interface{}) (int64, error)               // See Core.GetCount.
 	GetScan(ctx context.Context, objPointer interface{}, sql string, args ...interface{}) error // See Core.GetScan.
 	Union(unions ...*Model) *Model                                                              // See Core.Union.
 	UnionAll(unions ...*Model) *Model                                                           // See Core.UnionAll.
@@ -211,7 +211,7 @@ type TX interface {
 	GetStructs(objPointerSlice interface{}, sql string, args ...interface{}) error
 	GetScan(pointer interface{}, sql string, args ...interface{}) error
 	GetValue(sql string, args ...interface{}) (Value, error)
-	GetCount(sql string, args ...interface{}) (int, error)
+	GetCount(sql string, args ...interface{}) (int64, error)
 
 	// ===========================================================================
 	// CURD.

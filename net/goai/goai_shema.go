@@ -211,7 +211,7 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 }
 
 func (oai *OpenApiV3) tagMapToSchema(tagMap map[string]string, schema *Schema) error {
-	var mergedTagMap = oai.fileMapWithShortTags(tagMap)
+	var mergedTagMap = oai.fillMapWithShortTags(tagMap)
 	if err := gconv.Struct(mergedTagMap, schema); err != nil {
 		return gerror.Wrap(err, `mapping struct tags to Schema failed`)
 	}

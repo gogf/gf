@@ -397,7 +397,7 @@ func (tx *TXCore) GetValue(sql string, args ...interface{}) (Value, error) {
 }
 
 // GetCount queries and returns the count from database.
-func (tx *TXCore) GetCount(sql string, args ...interface{}) (int, error) {
+func (tx *TXCore) GetCount(sql string, args ...interface{}) (int64, error) {
 	if !gregex.IsMatchString(`(?i)SELECT\s+COUNT\(.+\)\s+FROM`, sql) {
 		sql, _ = gregex.ReplaceString(`(?i)(SELECT)\s+(.+)\s+(FROM)`, `$1 COUNT($2) $3`, sql)
 	}
@@ -405,7 +405,7 @@ func (tx *TXCore) GetCount(sql string, args ...interface{}) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	return value.Int(), nil
+	return value.Int64(), nil
 }
 
 // Insert does "INSERT INTO ..." statement for the table.
