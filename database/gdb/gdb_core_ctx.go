@@ -43,7 +43,8 @@ func (c *Core) InjectInternalCtxData(ctx context.Context) context.Context {
 		return ctx
 	}
 	return context.WithValue(ctx, internalCtxDataKeyInCtx, &internalCtxData{
-		DB: c.db,
+		DB:         c.db,
+		ConfigNode: c.config,
 	})
 }
 
