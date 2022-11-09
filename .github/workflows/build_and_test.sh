@@ -29,6 +29,14 @@ for file in `find . -name go.mod`; do
         fi
     fi
 
+    # package cmd/gf needs golang >= v1.18
+    if [ "gf" = $(basename $dirpath) ]; then
+        if ! go version|grep -q "1.18"; then
+          echo "ignore example as go version: $(go version)"
+          continue 1
+        fi
+    fi
+
     cd $dirpath
     go mod tidy
     go build ./...
