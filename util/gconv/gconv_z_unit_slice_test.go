@@ -22,6 +22,7 @@ func Test_Slice(t *testing.T) {
 		t.AssertEQ(gconv.Bytes([]interface{}{1}), []byte{1})
 		t.AssertEQ(gconv.Bytes([]interface{}{300}), []byte("[300]"))
 		t.AssertEQ(gconv.Strings(value), []string{"123.456"})
+		t.AssertEQ(gconv.SliceStr(value), []string{"123.456"})
 		t.AssertEQ(gconv.SliceInt(value), []int{123})
 		t.AssertEQ(gconv.SliceInt32(value), []int32{123})
 		t.AssertEQ(gconv.SliceInt64(value), []int64{123})
@@ -130,6 +131,12 @@ func Test_Slice_Float32s(t *testing.T) {
 		t.AssertEQ(gconv.Float32s([]bool{true, false}), []float32{0, 0})
 		t.AssertEQ(gconv.Float32s([]float32{123}), []float32{123})
 		t.AssertEQ(gconv.Float32s([]float64{123}), []float32{123})
+
+		s := []*gvar.Var{
+			gvar.New(1.1),
+			gvar.New(2.1),
+		}
+		t.AssertEQ(gconv.SliceFloat32(s), []float32{1.1, 2.1})
 	})
 }
 
@@ -194,6 +201,10 @@ func Test_Slice_Empty(t *testing.T) {
 		t.AssertEQ(gconv.Float64s(""), []float64{})
 		t.Assert(gconv.Float64s(nil), nil)
 	})
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gconv.Strings(""), []string{})
+		t.Assert(gconv.Strings(nil), nil)
+	})
 }
 
 func Test_Strings(t *testing.T) {
@@ -204,6 +215,9 @@ func Test_Strings(t *testing.T) {
 			g.NewVar(3),
 		}
 		t.AssertEQ(gconv.Strings(array), []string{"1", "2", "3"})
+
+		t.AssertEQ(gconv.Strings([]uint8(`["1","2"]`)), []string{"1", "2"})
+		t.AssertEQ(gconv.Strings([][]byte{{byte(0)}, {byte(1)}}), []string{"\u0000", "\u0001"})
 	})
 	// https://github.com/gogf/gf/issues/1750
 	gtest.C(t, func(t *gtest.T) {
