@@ -72,6 +72,12 @@ func Test_Slice_Int32s(t *testing.T) {
 		t.AssertEQ(gconv.Int32s([]float32{1, 2}), []int32{1, 2})
 		t.AssertEQ(gconv.Int32s([]float64{1, 2}), []int32{1, 2})
 		t.AssertEQ(gconv.Int32s([][]byte{[]byte{byte(1)}, []byte{byte(2)}}), []int32{1, 2})
+
+		s := []*gvar.Var{
+			gvar.New(1),
+			gvar.New(2),
+		}
+		t.AssertEQ(gconv.SliceInt32(s), []int32{1, 2})
 	})
 }
 
