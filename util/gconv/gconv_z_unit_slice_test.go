@@ -23,7 +23,10 @@ func Test_Slice(t *testing.T) {
 		t.AssertEQ(gconv.Bytes([]interface{}{300}), []byte("[300]"))
 		t.AssertEQ(gconv.Strings(value), []string{"123.456"})
 		t.AssertEQ(gconv.Ints(value), []int{123})
+		t.AssertEQ(gconv.SliceFloat(value), []float64{123.456})
 		t.AssertEQ(gconv.Floats(value), []float64{123.456})
+		t.AssertEQ(gconv.SliceFloat32(value), []float32{123.456})
+		t.AssertEQ(gconv.SliceFloat64(value), []float64{123.456})
 		t.AssertEQ(gconv.Interfaces(value), []interface{}{123.456})
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -48,6 +51,48 @@ func Test_Slice_Uint64s(t *testing.T) {
 		t.AssertEQ(gconv.Uint64s(nil), nil)
 		t.AssertEQ(gconv.Uint64s("[26, 27]"), []uint64{26, 27})
 		t.AssertEQ(gconv.Uint64s(" [26, 27] "), []uint64{26, 27})
+	})
+}
+
+func Test_Slice_Float32s(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gconv.Float32s("123.4"), []float32{123.4})
+		t.AssertEQ(gconv.Float32s([]string{"123.4", "123.5"}), []float32{123.4, 123.5})
+		t.AssertEQ(gconv.Float32s([]int{123}), []float32{123})
+		t.AssertEQ(gconv.Float32s([]int8{123}), []float32{123})
+		t.AssertEQ(gconv.Float32s([]int16{123}), []float32{123})
+		t.AssertEQ(gconv.Float32s([]int32{123}), []float32{123})
+		t.AssertEQ(gconv.Float32s([]int64{123}), []float32{123})
+		t.AssertEQ(gconv.Float32s([]uint{123}), []float32{123})
+		t.AssertEQ(gconv.Float32s([]uint8{123}), []float32{123})
+		t.AssertEQ(gconv.Float32s([]uint8(`[{"id": 1, "name":"john"},{"id": 2, "name":"huang"}]`)), []float32{0, 0})
+		t.AssertEQ(gconv.Float32s([]uint16{123}), []float32{123})
+		t.AssertEQ(gconv.Float32s([]uint32{123}), []float32{123})
+		t.AssertEQ(gconv.Float32s([]uint64{123}), []float32{123})
+		t.AssertEQ(gconv.Float32s([]bool{true, false}), []float32{0, 0})
+		t.AssertEQ(gconv.Float32s([]float32{123}), []float32{123})
+		t.AssertEQ(gconv.Float32s([]float64{123}), []float32{123})
+	})
+}
+
+func Test_Slice_Float64s(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gconv.Float64s("123.4"), []float64{123.4})
+		t.AssertEQ(gconv.Float64s([]string{"123.4", "123.5"}), []float64{123.4, 123.5})
+		t.AssertEQ(gconv.Float64s([]int{123}), []float64{123})
+		t.AssertEQ(gconv.Float64s([]int8{123}), []float64{123})
+		t.AssertEQ(gconv.Float64s([]int16{123}), []float64{123})
+		t.AssertEQ(gconv.Float64s([]int32{123}), []float64{123})
+		t.AssertEQ(gconv.Float64s([]int64{123}), []float64{123})
+		t.AssertEQ(gconv.Float64s([]uint{123}), []float64{123})
+		t.AssertEQ(gconv.Float64s([]uint8{123}), []float64{123})
+		t.AssertEQ(gconv.Float64s([]uint8(`[{"id": 1, "name":"john"},{"id": 2, "name":"huang"}]`)), []float64{0, 0})
+		t.AssertEQ(gconv.Float64s([]uint16{123}), []float64{123})
+		t.AssertEQ(gconv.Float64s([]uint32{123}), []float64{123})
+		t.AssertEQ(gconv.Float64s([]uint64{123}), []float64{123})
+		t.AssertEQ(gconv.Float64s([]bool{true, false}), []float64{0, 0})
+		t.AssertEQ(gconv.Float64s([]float32{123}), []float64{123})
+		t.AssertEQ(gconv.Float64s([]float64{123}), []float64{123})
 	})
 }
 
