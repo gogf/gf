@@ -972,7 +972,7 @@ func Test_Model_StructsWithOrmTag(t *testing.T) {
 			Uid      int `orm:"id"`
 			Passport string
 			Password string     `orm:"password"`
-			Name     string     `orm:"nick_name"`
+			Name     string     `orm:"nickname"`
 			Time     gtime.Time `orm:"create_time"`
 		}
 		var (
@@ -986,7 +986,7 @@ func Test_Model_StructsWithOrmTag(t *testing.T) {
 		t.Assert(
 			gstr.Contains(
 				buffer.String(),
-				"SELECT `id`,`Passport`,`password`,`nick_name`,`create_time` FROM `user",
+				"SELECT `id`,`passport`,`password`,`nickname`,`create_time` FROM `user",
 			),
 			true,
 		)
@@ -2780,7 +2780,7 @@ func Test_Model_Fields_AutoMapping(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		value, err := db.Model(table).Fields("NICK_NAME").Where("id", 2).Value()
+		value, err := db.Model(table).Fields("NICKNAME").Where("id", 2).Value()
 		t.AssertNil(err)
 		t.Assert(value.String(), "name_2")
 	})
@@ -2788,7 +2788,7 @@ func Test_Model_Fields_AutoMapping(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		one, err := db.Model(table).Fields(g.Map{
 			"ID":        1,
-			"NICK_NAME": 1,
+			"NICKNAME": 1,
 		}).Where("id", 2).One()
 		t.AssertNil(err)
 		t.Assert(len(one), 2)
