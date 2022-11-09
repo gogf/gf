@@ -109,6 +109,12 @@ func Test_Strings(t *testing.T) {
 }
 
 func Test_Slice_Interfaces(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := gconv.Interfaces([]uint8(`[{"id": 1, "name":"john"},{"id": 2, "name":"huang"}]`))
+		t.Assert(len(array), 2)
+		t.Assert(array[0].(g.Map)["id"], 1)
+		t.Assert(array[0].(g.Map)["name"], "john")
+	})
 	// map
 	gtest.C(t, func(t *gtest.T) {
 		array := gconv.Interfaces(g.Map{
