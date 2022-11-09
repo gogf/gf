@@ -395,4 +395,22 @@ func Test_Slice_Structs(t *testing.T) {
 		t.Assert(users[1].Name, params[1]["name"])
 		t.Assert(users[1].Age, 20)
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		users := make([]User, 0)
+		params := []g.Map{
+			{"id": 1, "name": "john", "age": 18},
+			{"id": 2, "name": "smith", "age": 20},
+		}
+		err := gconv.StructsTag(params, &users, "")
+		t.AssertNil(err)
+		t.Assert(len(users), 2)
+		t.Assert(users[0].Id, params[0]["id"])
+		t.Assert(users[0].Name, params[0]["name"])
+		t.Assert(users[0].Age, 18)
+
+		t.Assert(users[1].Id, params[1]["id"])
+		t.Assert(users[1].Name, params[1]["name"])
+		t.Assert(users[1].Age, 20)
+	})
 }
