@@ -12,6 +12,7 @@ import (
 	"io"
 	"io/ioutil"
 	"mime/multipart"
+	"net/http"
 	"reflect"
 	"strings"
 
@@ -318,7 +319,7 @@ func (r *Request) parseForm() {
 	}
 	// It parses the request body without checking the Content-Type.
 	if r.formMap == nil {
-		if r.Method != "GET" {
+		if r.Method != http.MethodGet {
 			r.parseBody()
 		}
 		if len(r.bodyMap) > 0 {
@@ -349,7 +350,7 @@ func (r *Request) GetMultipartFiles(name string) []*multipart.FileHeader {
 	}
 	// Support "name[0]","name[1]","name[2]", etc. as array parameter.
 	var (
-		key   = ""
+		key   string
 		files = make([]*multipart.FileHeader, 0)
 	)
 	for i := 0; ; i++ {

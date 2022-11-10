@@ -74,8 +74,8 @@ func (r *Resource) Get(path string) *File {
 	if path == "" {
 		return nil
 	}
-	path = strings.Replace(path, "\\", "/", -1)
-	path = strings.Replace(path, "//", "/", -1)
+	path = strings.ReplaceAll(path, "\\", "/")
+	path = strings.ReplaceAll(path, "//", "/")
 	if path != "/" {
 		for path[len(path)-1] == '/' {
 			path = path[:len(path)-1]
@@ -94,8 +94,8 @@ func (r *Resource) Get(path string) *File {
 // GetWithIndex is usually used for http static file service.
 func (r *Resource) GetWithIndex(path string, indexFiles []string) *File {
 	// Necessary for double char '/' replacement in prefix.
-	path = strings.Replace(path, "\\", "/", -1)
-	path = strings.Replace(path, "//", "/", -1)
+	path = strings.ReplaceAll(path, "\\", "/")
+	path = strings.ReplaceAll(path, "//", "/")
 	if path != "/" {
 		for path[len(path)-1] == '/' {
 			path = path[:len(path)-1]
@@ -170,8 +170,8 @@ func (r *Resource) ScanDirFile(path string, pattern string, recursive ...bool) [
 //
 // It scans directory recursively if given parameter `recursive` is true.
 func (r *Resource) doScanDir(path string, pattern string, recursive bool, onlyFile bool) []*File {
-	path = strings.Replace(path, "\\", "/", -1)
-	path = strings.Replace(path, "//", "/", -1)
+	path = strings.ReplaceAll(path, "\\", "/")
+	path = strings.ReplaceAll(path, "//", "/")
 	if path != "/" {
 		for path[len(path)-1] == '/' {
 			path = path[:len(path)-1]

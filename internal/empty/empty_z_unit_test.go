@@ -22,6 +22,7 @@ type TestString string
 type TestPerson interface {
 	Say() string
 }
+
 type TestWoman struct {
 }
 

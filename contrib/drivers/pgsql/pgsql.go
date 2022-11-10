@@ -17,8 +17,6 @@ import (
 	"fmt"
 	"strings"
 
-	_ "github.com/lib/pq"
-
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -27,6 +25,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
+	_ "github.com/lib/pq"
 )
 
 // Driver is the driver for postgresql database.
@@ -36,6 +35,7 @@ type Driver struct {
 
 const (
 	internalPrimaryKeyInCtx gctx.StrKey = "primary_key"
+	defaultSchema                       = "public"
 )
 
 func init() {
@@ -223,9 +223,18 @@ func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args [
 // It's mainly used in cli tool chain for automatically generating the models.
 func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
 	var (
-		result      gdb.Result
-		querySchema = gutil.GetOrDefaultStr("public", schema...)
-		query       = fmt.Sprintf(`
+		result     gdb.Result
+		usedSchema = gutil.GetOrDefaultStr(d.GetConfig().Namespace, schema...)
+	)
+	if usedSchema == "" {
+		usedSchema = defaultSchema
+	}
+	// DO NOT use `usedSchema` as parameter for function `SlaveLink`.
+	link, err := d.SlaveLink(schema...)
+	if err != nil {
+		return nil, err
+	}
+	var query = fmt.Sprintf(`
 SELECT
 	c.relname
 FROM
@@ -236,16 +245,11 @@ WHERE
 	n.nspname = '%s'
 	AND c.relkind IN ('r', 'p')
 	AND c.relpartbound IS NULL
-	AND PG_TABLE_IS_VISIBLE(c.oid)
 ORDER BY
 	c.relname`,
-			querySchema,
-		)
+		usedSchema,
 	)
-	link, err := d.SlaveLink(schema...)
-	if err != nil {
-		return nil, err
-	}
+
 	query, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(query))
 	result, err = d.DoSelect(ctx, link, query)
 	if err != nil {

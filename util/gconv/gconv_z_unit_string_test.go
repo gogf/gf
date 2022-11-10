@@ -7,10 +7,11 @@
 package gconv_test
 
 import (
-	"testing"
-
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
+	"testing"
+	"time"
 )
 
 type stringStruct1 struct {
@@ -61,5 +62,10 @@ func Test_String(t *testing.T) {
 
 		t.AssertEQ(gconv.String(stringStruct2{"john"}), `{"Name":"john"}`)
 		t.AssertEQ(gconv.String(&stringStruct2{"john"}), `{"Name":"john"}`)
+
+		var nilTime *time.Time = nil
+		t.AssertEQ(gconv.String(nilTime), "")
+		var nilGTime *gtime.Time = nil
+		t.AssertEQ(gconv.String(nilGTime), "")
 	})
 }
