@@ -2787,7 +2787,7 @@ func Test_Model_Fields_AutoMapping(t *testing.T) {
 	// Map
 	gtest.C(t, func(t *gtest.T) {
 		one, err := db.Model(table).Fields(g.Map{
-			"ID":        1,
+			"ID":       1,
 			"NICKNAME": 1,
 		}).Where("id", 2).One()
 		t.AssertNil(err)
