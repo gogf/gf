@@ -460,7 +460,7 @@ func Test_Issue2105(t *testing.T) {
 
 // https://github.com/gogf/gf/issues/2231
 func Test_Issue2231(t *testing.T) {
-	linkPattern := `(\w+):([\w\-]*):(.*?)@(\w+?)\((.+?)\)/{0,1}([一-龥\w\+]*)\?{0,1}(.*)`
+	linkPattern := `(\w+):([\w\-]*):(.*?)@(\w+?)\((.+?)\)/{0,1}([^\?]*)\?{0,1}(.*)`
 	link := `mysql:root:12345678@tcp(127.0.0.1:3306)/a正bc式?loc=Local&parseTime=true`
 
 	gtest.C(t, func(t *gtest.T) {
