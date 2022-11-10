@@ -127,6 +127,11 @@ jobs:
         ports:
           - 5236:5236
 
+      zookeeper:
+        image: zookeeper
+        ports:
+          - 2181:2181
+
     strategy:
       matrix:
         go-version: [ "1.15", "1.16", "1.17", "1.18" ]
