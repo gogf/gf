@@ -4,11 +4,12 @@ import (
 	"context"
 	"strings"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/service"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/util/gtag"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/service"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 var (
@@ -38,6 +39,7 @@ type cGFInput struct {
 	Version bool `short:"v" name:"version" brief:"show version information of current binary"   orphan:"true"`
 	Debug   bool `short:"d" name:"debug"   brief:"show internal detailed debugging information" orphan:"true"`
 }
+
 type cGFOutput struct{}
 
 func (c cGF) Index(ctx context.Context, in cGFInput) (out *cGFOutput, err error) {

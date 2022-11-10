@@ -16,7 +16,7 @@ import (
 // %v, %s   : Print all the error string;
 // %-v, %-s : Print current level error string;
 // %+s      : Print full stack error list;
-// %+v      : Print the error string and full stack error list;
+// %+v      : Print the error string and full stack error list
 func (err *Error) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's', 'v':

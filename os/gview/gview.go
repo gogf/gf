@@ -7,7 +7,7 @@
 // Package gview implements a template engine based on text/template.
 //
 // Reserved template variable names:
-//     I18nLanguage: Assign this variable to define i18n language for each page.
+// I18nLanguage: Assign this variable to define i18n language for each page.
 package gview
 
 import (

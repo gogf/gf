@@ -98,7 +98,7 @@ func (c *Client) Trace(ctx context.Context, url string, data ...interface{}) (*R
 //
 // To make a request with a specified context.Context, use NewRequestWithContext
 // and Client.Do.
-// Deprecated, use Post instead.
+// Deprecated: use Post instead.
 func (c *Client) PostForm(url string, data url.Values) (resp *Response, err error) {
 	return nil, gerror.NewCode(
 		gcode.CodeNotSupported,

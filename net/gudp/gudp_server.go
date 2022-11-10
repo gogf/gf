@@ -11,11 +11,10 @@ import (
 	"net"
 	"sync"
 
+	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"
-
-	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -41,7 +40,7 @@ var (
 	serverMapping = gmap.NewStrAnyMap(true)
 )
 
-// GetServer creates and returns a UDP server instance with given name.
+// GetServer creates and returns an UDP server instance with given name.
 func GetServer(name ...interface{}) *Server {
 	serverName := defaultServer
 	if len(name) > 0 && name[0] != "" {
@@ -55,7 +54,7 @@ func GetServer(name ...interface{}) *Server {
 	return s
 }
 
-// NewServer creates and returns a UDP server.
+// NewServer creates and returns an UDP server.
 // The optional parameter `name` is used to specify its name, which can be used for
 // GetServer function to retrieve its instance.
 func NewServer(address string, handler func(*Conn), name ...string) *Server {

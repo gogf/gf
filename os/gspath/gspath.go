@@ -59,7 +59,7 @@ func New(path string, cache bool) *SPath {
 	return sp
 }
 
-// Get creates and returns a instance of searching manager for given path.
+// Get creates and returns an instance of searching manager for given path.
 // The parameter `cache` specifies whether using cache feature for this manager.
 // If cache feature is enabled, it asynchronously and recursively scans the path
 // and updates all sub files/folders to the cache using package gfsnotify.
@@ -73,7 +73,7 @@ func Get(root string, cache bool) *SPath {
 }
 
 // Search searches file `name` under path `root`.
-// The parameter `root` should be a absolute path. It will not automatically
+// The parameter `root` should be an absolute path. It will not automatically
 // convert `root` to absolute path for performance reason.
 // The optional parameter `indexFiles` specifies the searching index files when the result is a directory.
 // For example, if the result `filePath` is a directory, and `indexFiles` is [index.html, main.html], it will also
@@ -84,7 +84,7 @@ func Search(root string, name string, indexFiles ...string) (filePath string, is
 }
 
 // SearchWithCache searches file `name` under path `root` with cache feature enabled.
-// The parameter `root` should be a absolute path. It will not automatically
+// The parameter `root` should be an absolute path. It will not automatically
 // convert `root` to absolute path for performance reason.
 // The optional parameter `indexFiles` specifies the searching index files when the result is a directory.
 // For example, if the result `filePath` is a directory, and `indexFiles` is [index.html, main.html], it will also
@@ -215,7 +215,7 @@ func (sp *SPath) Search(name string, indexFiles ...string) (filePath string, isD
 }
 
 // Remove deletes the `path` from cache files of the manager.
-// The parameter `path` can be either a absolute path or just a relative file name.
+// The parameter `path` can be either an absolute path or just a relative file name.
 func (sp *SPath) Remove(path string) {
 	if sp.cache == nil {
 		return

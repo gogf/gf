@@ -23,19 +23,26 @@ import (
 // It can be called multiple times to add one or more objects to model and enable
 // their mode association operations feature.
 // For example, if given struct definition:
-// type User struct {
-//	 gmeta.Meta `orm:"table:user"`
-// 	 Id         int           `json:"id"`
-//	 Name       string        `json:"name"`
-//	 UserDetail *UserDetail   `orm:"with:uid=id"`
-//	 UserScores []*UserScores `orm:"with:uid=id"`
-// }
+//
+//	type User struct {
+//		 gmeta.Meta `orm:"table:user"`
+//		 Id         int           `json:"id"`
+//		 Name       string        `json:"name"`
+//		 UserDetail *UserDetail   `orm:"with:uid=id"`
+//		 UserScores []*UserScores `orm:"with:uid=id"`
+//	}
+//
 // We can enable model association operations on attribute `UserDetail` and `UserScores` by:
-//     db.With(User{}.UserDetail).With(User{}.UserDetail).Scan(xxx)
+//
+//	db.With(User{}.UserDetail).With(User{}.UserDetail).Scan(xxx)
+//
 // Or:
-//     db.With(UserDetail{}).With(UserDetail{}).Scan(xxx)
+//
+//	db.With(UserDetail{}).With(UserDetail{}).Scan(xxx)
+//
 // Or:
-//     db.With(UserDetail{}, UserDetail{}).Scan(xxx)
+//
+//	db.With(UserDetail{}, UserDetail{}).Scan(xxx)
 func (m *Model) With(objects ...interface{}) *Model {
 	model := m.getModel()
 	for _, object := range objects {

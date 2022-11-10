@@ -21,6 +21,7 @@ var nf gpool.NewFunc = func() (i interface{}, e error) {
 }
 
 var assertIndex int = 0
+
 var ef gpool.ExpireFunc = func(i interface{}) {
 	assertIndex++
 	gtest.Assert(i, assertIndex)

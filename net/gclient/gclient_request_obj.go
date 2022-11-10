@@ -13,45 +13,49 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gmeta"
+	"github.com/gogf/gf/v2/util/gtag"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // DoRequestObj does HTTP request using standard request/response object.
 // The request object `req` is defined like:
-// type UseCreateReq struct {
-//     g.Meta `path:"/user" method:"put"`
-//     // other fields....
-// }
+//
+//	type UseCreateReq struct {
+//	    g.Meta `path:"/user" method:"put"`
+//	    // other fields....
+//	}
+//
 // The response object `res` should be a pointer type. It automatically converts result
 // to given object `res` is success.
 // Eg:
 // var (
-//     req = UseCreateReq{}
-//     res *UseCreateRes
+//
+//	req = UseCreateReq{}
+//	res *UseCreateRes
+//
 // )
 // DoRequestObj(ctx, req, &res)
 func (c *Client) DoRequestObj(ctx context.Context, req, res interface{}) error {
 	var (
-		method = gmeta.Get(req, goai.TagNameMethod).String()
-		path   = gmeta.Get(req, goai.TagNamePath).String()
+		method = gmeta.Get(req, gtag.Method).String()
+		path   = gmeta.Get(req, gtag.Path).String()
 	)
 	if method == "" {
 		return gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			`no "%s" tag found in request object: %s`,
-			goai.TagNameMethod, reflect.TypeOf(req).String(),
+			gtag.Method, reflect.TypeOf(req).String(),
 		)
 	}
 	if path == "" {
 		return gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			`no "%s" tag found in request object: %s`,
-			goai.TagNamePath, reflect.TypeOf(req).String(),
+			gtag.Path, reflect.TypeOf(req).String(),
 		)
 	}
 	path = c.handlePathForObjRequest(path, req)

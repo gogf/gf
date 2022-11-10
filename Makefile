@@ -11,3 +11,6 @@ tidy:
 		cd -; \
 	done
 
+.PHONY: lint
+lint:
+	golangci-lint run

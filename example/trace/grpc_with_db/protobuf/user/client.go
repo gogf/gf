@@ -1,9 +1,8 @@
 package user
 
 import (
-	"google.golang.org/grpc"
-
 	"github.com/gogf/katyusha/krpc"
+	"google.golang.org/grpc"
 )
 
 const (

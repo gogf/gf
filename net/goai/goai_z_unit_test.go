@@ -9,6 +9,7 @@ package goai_test
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"testing"
 
 	"github.com/gogf/gf/v2/frame/g"
@@ -96,14 +97,14 @@ func TestOpenApiV3_Add(t *testing.T) {
 		)
 		err = oai.Add(goai.AddInput{
 			Path:   "/test1/{appId}",
-			Method: goai.HttpMethodPut,
+			Method: http.MethodPut,
 			Object: f,
 		})
 		t.AssertNil(err)
 
 		err = oai.Add(goai.AddInput{
 			Path:   "/test1/{appId}",
-			Method: goai.HttpMethodPost,
+			Method: http.MethodPost,
 			Object: f,
 		})
 		t.AssertNil(err)
@@ -216,7 +217,7 @@ func TestOpenApiV3_Add_AutoDetectIn(t *testing.T) {
 		)
 		err = oai.Add(goai.AddInput{
 			Path:   path,
-			Method: goai.HttpMethodGet,
+			Method: http.MethodGet,
 			Object: f,
 		})
 		t.AssertNil(err)
@@ -654,27 +655,27 @@ func TestOpenApiV3_CommonResponse_SubDataField(t *testing.T) {
 
 func TestOpenApiV3_ShortTags(t *testing.T) {
 	type CommonReq struct {
-		AppId      int64  `json:"appId" v:"required" in:"path" des:"应用Id" sum:"应用Id Summary"`
-		ResourceId string `json:"resourceId" in:"query" des:"资源Id" sum:"资源Id Summary"`
+		AppId      int64  `json:"appId" v:"required" in:"path" dc:"应用Id" sm:"应用Id Summary"`
+		ResourceId string `json:"resourceId" in:"query" dc:"资源Id" sm:"资源Id Summary"`
 	}
 	type SetSpecInfo struct {
-		StorageType string   `v:"required|in:CLOUD_PREMIUM,CLOUD_SSD,CLOUD_HSSD" des:"StorageType"`
-		Shards      int32    `des:"shards 分片数" sum:"Shards Summary"`
-		Params      []string `des:"默认参数(json 串-ClickHouseParams)" sum:"Params Summary"`
+		StorageType string   `v:"required|in:CLOUD_PREMIUM,CLOUD_SSD,CLOUD_HSSD" dc:"StorageType"`
+		Shards      int32    `dc:"shards 分片数" sm:"Shards Summary"`
+		Params      []string `dc:"默认参数(json 串-ClickHouseParams)" sm:"Params Summary"`
 	}
 	type CreateResourceReq struct {
 		CommonReq
-		gmeta.Meta `path:"/CreateResourceReq" method:"POST" tags:"default" sum:"CreateResourceReq sum"`
-		Name       string                  `des:"实例名称"`
-		Product    string                  `des:"业务类型"`
-		Region     string                  `v:"required" des:"区域"`
-		SetMap     map[string]*SetSpecInfo `v:"required" des:"配置Map"`
-		SetSlice   []SetSpecInfo           `v:"required" des:"配置Slice"`
+		gmeta.Meta `path:"/CreateResourceReq" method:"POST" tags:"default" sm:"CreateResourceReq sum"`
+		Name       string                  `dc:"实例名称"`
+		Product    string                  `dc:"业务类型"`
+		Region     string                  `v:"required" dc:"区域"`
+		SetMap     map[string]*SetSpecInfo `v:"required" dc:"配置Map"`
+		SetSlice   []SetSpecInfo           `v:"required" dc:"配置Slice"`
 	}
 
 	type CreateResourceRes struct {
-		gmeta.Meta `des:"Demo Response Struct"`
-		FlowId     int64 `des:"创建实例流程id"`
+		gmeta.Meta `dc:"Demo Response Struct"`
+		FlowId     int64 `dc:"创建实例流程id"`
 	}
 
 	f := func(ctx context.Context, req *CreateResourceReq) (res *CreateResourceRes, err error) {
@@ -688,14 +689,14 @@ func TestOpenApiV3_ShortTags(t *testing.T) {
 		)
 		err = oai.Add(goai.AddInput{
 			Path:   "/test1/{appId}",
-			Method: goai.HttpMethodPut,
+			Method: http.MethodPut,
 			Object: f,
 		})
 		t.AssertNil(err)
 
 		err = oai.Add(goai.AddInput{
 			Path:   "/test1/{appId}",
-			Method: goai.HttpMethodPost,
+			Method: http.MethodPost,
 			Object: f,
 		})
 		t.AssertNil(err)
@@ -728,7 +729,7 @@ func TestOpenApiV3_HtmlResponse(t *testing.T) {
 		)
 		err = oai.Add(goai.AddInput{
 			Path:   "/test",
-			Method: goai.HttpMethodGet,
+			Method: http.MethodGet,
 			Object: f,
 		})
 		t.AssertNil(err)
@@ -775,7 +776,7 @@ func TestOpenApiV3_HtmlResponseWithCommonResponse(t *testing.T) {
 
 		err = oai.Add(goai.AddInput{
 			Path:   "/test",
-			Method: goai.HttpMethodGet,
+			Method: http.MethodGet,
 			Object: f,
 		})
 		t.AssertNil(err)

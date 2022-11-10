@@ -17,6 +17,9 @@ type internalCtxData struct {
 	// Operation DB.
 	DB DB
 
+	// Used configuration node in current operation.
+	ConfigNode *ConfigNode
+
 	// The first column in result response from database server.
 	// This attribute is used for Value/Count selection statement purpose,
 	// which is to avoid HOOK handler that might modify the result columns
@@ -40,7 +43,8 @@ func (c *Core) InjectInternalCtxData(ctx context.Context) context.Context {
 		return ctx
 	}
 	return context.WithValue(ctx, internalCtxDataKeyInCtx, &internalCtxData{
-		DB: c.db,
+		DB:         c.db,
+		ConfigNode: c.config,
 	})
 }
 
@@ -59,8 +63,5 @@ func (c *Core) InjectIgnoreResult(ctx context.Context) context.Context {
 }
 
 func (c *Core) GetIgnoreResultFromCtx(ctx context.Context) bool {
-	if ctx.Value(ignoreResultKeyInCtx) != nil {
-		return true
-	}
-	return false
+	return ctx.Value(ignoreResultKeyInCtx) != nil
 }

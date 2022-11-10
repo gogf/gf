@@ -9,7 +9,6 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/encoding/gbase64"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcmd"
@@ -20,6 +19,8 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gtag"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 var (
@@ -124,6 +125,7 @@ type cBuildInput struct {
 	PackDst       string `short:"pd" name:"packDst" brief:"temporary go file path for pack, this go file will be automatically removed after built" d:"internal/packed/build_pack_data.go"`
 	ExitWhenError bool   `short:"ew" name:"exitWhenError" brief:"exit building when any error occurs, default is false" orphan:"true"`
 }
+
 type cBuildOutput struct{}
 
 func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, err error) {
