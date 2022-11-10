@@ -123,8 +123,9 @@ func newSchedule(pattern string) (*cronSchedule, error) {
 				pattern:         pattern,
 				lastTimestamp:   gtype.NewInt64(currentTimestamp),
 			}, nil
+		} else {
+			return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid pattern: "%s"`, pattern)
 		}
-		return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid pattern: "%s"`, pattern)
 	}
 	// Handle the common cron pattern, like:
 	// 0 0 0 1 1 2
