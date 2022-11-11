@@ -53,7 +53,9 @@ func main() {
 		panic(err)
 	}
 	err = command.AddObject(
+		cmd.Up,
 		cmd.Env,
+		cmd.Fix,
 		cmd.Run,
 		cmd.Gen,
 		cmd.Tpl,
