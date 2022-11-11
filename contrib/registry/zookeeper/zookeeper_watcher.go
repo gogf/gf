@@ -101,7 +101,7 @@ func (w *watcher) watch(ctx context.Context) {
 	for {
 
 		if w.conn.State() == zk.StateConnected || w.conn.State() == zk.StateHasSession {
-			// 每次 watch 只有一次有效期 所以循环 watch
+			// each watch action is only valid once
 			_, _, ch, err := w.conn.ChildrenW(serviceNamePath)
 			if err != nil {
 				w.event <- zk.Event{Err: err}
