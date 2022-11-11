@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"github.com/go-zookeeper/zk"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"golang.org/x/sync/singleflight"
 	"path"
@@ -48,7 +49,10 @@ func (w *watcher) Proceed() ([]gsvc.Service, error) {
 		return nil, w.ctx.Err()
 	case e := <-w.event:
 		if e.State == zk.StateDisconnected {
-			return nil, ErrWatcherStopped
+			return nil, gerror.Wrapf(
+				ErrWatcherStopped,
+				"watcher stopped",
+			)
 		}
 		if e.Err != nil {
 			return nil, e.Err
@@ -63,29 +67,46 @@ func (w *watcher) getServicesByPrefix() ([]gsvc.Service, error) {
 	instances, err, _ := w.group.Do(serviceNamePath, func() (interface{}, error) {
 		servicesID, _, err := w.conn.Children(serviceNamePath)
 		if err != nil {
-			return nil, err
+			return nil, gerror.Wrapf(
+				err,
+				"Error with search the children node under %s",
+				serviceNamePath,
+			)
 		}
 		items := make([]gsvc.Service, 0, len(servicesID))
 		for _, service := range servicesID {
 			servicePath := path.Join(serviceNamePath, service)
 			byteData, _, err := w.conn.Get(servicePath)
 			if err != nil {
-				return nil, err
+				return nil, gerror.Wrapf(
+					err,
+					"Error with node data which name is %s",
+					servicePath,
+				)
 			}
 			item, err := unmarshal(byteData)
 			if err != nil {
-				return nil, err
+				return nil, gerror.Wrapf(
+					err,
+					"Error with unmarshal node data to Content",
+				)
 			}
 			svc, err := gsvc.NewServiceWithKV(item.Key, item.Value)
 			if err != nil {
-				return nil, err
+				return nil, gerror.Wrapf(
+					err,
+					"Error with new service with KV in Content",
+				)
 			}
 			items = append(items, svc)
 		}
 		return items, nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, gerror.Wrapf(
+			err,
+			"Error with group do",
+		)
 	}
 	return instances.([]gsvc.Service), nil
 }

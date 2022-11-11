@@ -9,6 +9,7 @@ package zookeeper
 import (
 	"context"
 	"github.com/go-zookeeper/zk"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"path"
 	"strings"
 	"time"
@@ -24,23 +25,38 @@ func (r *Registry) Register(_ context.Context, service gsvc.Service) (gsvc.Servi
 		err  error
 	)
 	if err = r.ensureName(r.opts.namespace, []byte(""), 0); err != nil {
-		return service, err
+		return service, gerror.Wrapf(
+			err,
+			"Error Creat node which name is %s",
+			r.opts.namespace,
+		)
 	}
 	prefix := strings.TrimPrefix(strings.ReplaceAll(service.GetPrefix(), "/", "-"), "-")
 	servicePrefixPath := path.Join(r.opts.namespace, prefix)
 	if err = r.ensureName(servicePrefixPath, []byte(""), 0); err != nil {
-		return service, err
+		return service, gerror.Wrapf(
+			err,
+			"Error Creat node which name is %s",
+			servicePrefixPath,
+		)
 	}
 
 	if data, err = marshal(&Content{
 		Key:   service.GetKey(),
 		Value: service.GetValue(),
 	}); err != nil {
-		return service, err
+		return service, gerror.Wrapf(
+			err,
+			"Error with marshal Content to Json string",
+		)
 	}
 	servicePath := path.Join(servicePrefixPath, service.GetName())
 	if err = r.ensureName(servicePath, data, zk.FlagEphemeral); err != nil {
-		return service, err
+		return service, gerror.Wrapf(
+			err,
+			"Error Creat node which name is %s",
+			servicePath,
+		)
 	}
 	go r.reRegister(servicePath, data)
 	return service, nil
