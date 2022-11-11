@@ -12,7 +12,6 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/gogf/gf/v2/util/gtag"
 	"github.com/gorilla/websocket"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -23,6 +22,7 @@ import (
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gsession"
+	"github.com/gogf/gf/v2/util/gtag"
 )
 
 type (

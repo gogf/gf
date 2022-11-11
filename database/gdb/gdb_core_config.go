@@ -210,7 +210,14 @@ func (c *Core) SetMaxConnLifeTime(d time.Duration) {
 func (c *Core) GetConfig() *ConfigNode {
 	internalData := c.GetInternalCtxDataFromCtx(c.db.GetCtx())
 	if internalData != nil && internalData.ConfigNode != nil {
-		return internalData.ConfigNode
+		// Note:
+		// It so here checks and returns the config from current DB,
+		// if different schemas between current DB and config.Name from context,
+		// for example, in nested transaction scenario, the context is passed all through the logic procedure,
+		// but the config.Name from context may be still the original one from the first transaction object.
+		if c.config.Name == internalData.ConfigNode.Name {
+			return internalData.ConfigNode
+		}
 	}
 	return c.config
 }
