@@ -11,31 +11,37 @@ import (
 	g "github.com/gogf/gf/v2/frame/g"
 )
 
-var _ = context.Background()
 var _ = g.Meta{}
+var _ = gerr.Error{}
+var _ = context.Background()
 var notImplErrorCode = gcode.New(-1, "", nil)
+var _ = notImplErrorCode
 `
 
 const templateSvcStruct = `
+// Unimplemented{{.svc_name}}Server
 type Unimplemented{{.svc_name}}Server struct {
 	impl {{.svc_name}}Impl
 }
 
+// New{{.svc_name}}Api is an entry that must be implemented.
 func New{{.svc_name}}Api(impl {{.svc_name}}Impl) Unimplemented{{.svc_name}}Server {
 	return Unimplemented{{.svc_name}}Server{impl: impl}
 }`
 
 const templateRouterFunc = `
+// {{.method_name}} {{.method_comment}}
 func ({{.svc_name}} Unimplemented{{.svc_name}}Server) {{.method_name}}(ctx context.Context, req *{{.in_name}}) (*{{.out_name}}, error) {
 	return nil,gerr.NewCode(notImplErrorCode,"Method {{.method_name}} not implemented.")
 }
 `
 
 const templateImplStruct = `
+// {{.svc_name}}Impl is the server API for {{.svc_name}} service.
 type {{.svc_name}}Impl interface {
-	{{range .svc_list}}
+	{{- range .svc_list}}
 	{{.method_name}} (ctx context.Context, req *{{.in_name}}) (*{{.out_name}}, error)
-	{{end}}
+	{{- end}}
 }
 `
 
@@ -47,10 +53,10 @@ const versionComment = `
 // source: {{.source_path}}`
 
 const methodMessageStruct = `
-// {{.method_name}} {{.method_comment}}
+// {{.message_name}} {{.method_comment}}
 type {{.message_name}} struct {
-	{{range .fields}}
-	{{.}}
-	{{end}}
+	{{- range .fields}}
+		{{.}}
+	{{- end}}
 }
 `

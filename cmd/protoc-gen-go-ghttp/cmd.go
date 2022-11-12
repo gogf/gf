@@ -12,7 +12,6 @@ import (
 )
 
 var (
-	//messageExistMap = make(map[string]bool)
 	// 现在的Import是先直接写死，到时候需要根据这些来进行写入
 	contextPackage           = protogen.GoImportPath("context")
 	goframePackage           = protogen.GoImportPath("github.com/gogf/gf/v2/frame/g")
@@ -57,7 +56,10 @@ func processContent(gen *protogen.GeneratedFile, file *protogen.File) {
 			if method == nil || method.Desc.IsStreamingServer() || method.Desc.IsStreamingClient() {
 				continue
 			}
-			serviceHttpInterfaces = append(serviceHttpInterfaces, processMethod(gen, method, svc))
+			methodItem := processMethod(gen, method, svc)
+			if len(methodItem) != 0 {
+				serviceHttpInterfaces = append(serviceHttpInterfaces, methodItem)
+			}
 		}
 		processSvcInterface(gen, serviceHttpInterfaces, string(svc.Desc.Name()))
 	}
@@ -89,16 +91,20 @@ func processSvcInterface(gen *protogen.GeneratedFile, data []map[string]interfac
 }
 
 func processMethod(g *protogen.GeneratedFile, method *protogen.Method, svc *protogen.Service) map[string]interface{} {
+	rule, ok := proto.GetExtension(method.Desc.Options(), annotations.E_Http).(*annotations.HttpRule)
+	if rule == nil || !ok {
+		return nil
+	}
 	// 生成 input / output
-	processMessage(g, method, method.Input, true)
-	processMessage(g, method, method.Output, false)
+	processMessage(g, method, rule)
 	// 生成路由注册方法
 	svcStructBuffer := bytes.NewBuffer(nil)
 	err := unimplementedTpl.Execute(svcStructBuffer, map[string]interface{}{
-		"svc_name":    string(svc.Desc.Name()),
-		"method_name": string(method.Desc.Name()),
-		"in_name":     string(method.Input.Desc.Name()),
-		"out_name":    string(method.Output.Desc.Name()),
+		"svc_name":       string(svc.Desc.Name()),
+		"method_name":    string(method.Desc.Name()),
+		"in_name":        string(method.Input.Desc.Name()),
+		"out_name":       string(method.Output.Desc.Name()),
+		"method_comment": scanMethodComment(method),
 	})
 	if err != nil {
 		info("gf-gen-go-http: Execute template error: %s\n", err.Error())
@@ -113,25 +119,24 @@ func processMethod(g *protogen.GeneratedFile, method *protogen.Method, svc *prot
 	}
 }
 
-func processMessage(g *protogen.GeneratedFile, method *protogen.Method, message *protogen.Message, needGenGMeta bool) {
-	rule, ok := proto.GetExtension(method.Desc.Options(), annotations.E_Http).(*annotations.HttpRule)
-	if rule == nil || !ok {
-		return
+func processMessage(g *protogen.GeneratedFile, method *protogen.Method, rule *annotations.HttpRule) {
+	processMessageFunc := func(message *protogen.Message, needGenGMeta bool) {
+		methodMessageTplBuffer := bytes.NewBuffer(nil)
+		err := methodMessageTpl.Execute(methodMessageTplBuffer, map[string]interface{}{
+			"method_comment": scanMessageComment(message),
+			"method_name":    string(method.Desc.Name()),
+			"message_name":   string(message.Desc.Name()),
+			"fields":         processField(message, rule, needGenGMeta),
+		})
+		if err != nil {
+			info("gf-gen-go-http: Execute template error: %s\n", err.Error())
+			panic(err.Error())
+		}
+		g.P(methodMessageTplBuffer.String())
+		g.P()
 	}
-	methodMessageTplBuffer := bytes.NewBuffer(nil)
-	err := methodMessageTpl.Execute(methodMessageTplBuffer, map[string]interface{}{
-		"method_comment": scanMessageComment(message),
-		"method_name":    string(method.Desc.Name()),
-		"message_name":   string(message.Desc.Name()),
-		"fields":         processField(message, rule, needGenGMeta),
-	})
-	if err != nil {
-		info("gf-gen-go-http: Execute template error: %s\n", err.Error())
-		panic(err.Error())
-	}
-	g.P(methodMessageTplBuffer.String())
-	g.P()
-
+	processMessageFunc(method.Input, true)
+	processMessageFunc(method.Output, false)
 }
 
 func processField(message *protogen.Message, rule *annotations.HttpRule, needGenGMeta bool) []string {
@@ -151,10 +156,10 @@ func processField(message *protogen.Message, rule *annotations.HttpRule, needGen
 				goType = fmt.Sprintf("map[%s]*%s", item.Desc.MapKey().Kind().String(), string(item.Desc.MapValue().Message().Name()))
 			}
 		}
-		field := fmt.Sprintf("   %s  %s ", item.GoName, goType)
+		field := fmt.Sprintf("%s %s", item.GoName, goType)
 		goComment := processFieldComment(item)
 		if goComment != "" {
-			field += goComment
+			field += " " + goComment
 		}
 		result = append(result, field)
 	}

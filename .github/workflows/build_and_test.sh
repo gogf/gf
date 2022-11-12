@@ -29,6 +29,14 @@ for file in `find . -name go.mod`; do
         fi
     fi
 
+    # protoc-gen-go-ghttp cli needs golang >= 1.18
+    if [ "protoc-gen-go-ghttp" = $(basename $dirpath) ]; then
+      if go version | grep -E "1\.1[0-7]"; then
+        echo "ignore gf cli testing as go version: $(go version)"
+        continue 1
+      fi
+    fi
+
     cd $dirpath
     go mod tidy
     go build ./...
