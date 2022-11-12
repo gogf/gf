@@ -179,6 +179,6 @@ func ExamplePool_Close() {
 	// wait for pool close
 	time.Sleep(time.Second * 1)
 
-	// Output:
+	// May Output:
 	// Close The Pool
 }

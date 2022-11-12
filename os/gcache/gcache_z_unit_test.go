@@ -172,6 +172,7 @@ func TestCache_LRU(t *testing.T) {
 		v, _ := cache.Get(ctx, 6)
 		t.Assert(v, 6)
 		time.Sleep(4 * time.Second)
+		g.Log().Debugf(ctx, `items after lru: %+v`, cache.MustData(ctx))
 		n, _ = cache.Size(ctx)
 		t.Assert(n, 2)
 		v, _ = cache.Get(ctx, 6)
