@@ -142,7 +142,7 @@ func processMessage(g *protogen.GeneratedFile, method *protogen.Method, rule *an
 func processField(message *protogen.Message, rule *annotations.HttpRule, needGenGMeta bool) []string {
 	result := []string{}
 	if needGenGMeta {
-		apiMethod, uri := getOptionMethodUri(rule)
+		uri, apiMethod := getOptionMethodUri(rule)
 		result = append(result, fmt.Sprintf("g.Meta     `path:\"%s\" method:\"%s\"`", uri, apiMethod))
 	}
 	for _, item := range message.Fields {
