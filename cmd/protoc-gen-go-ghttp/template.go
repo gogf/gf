@@ -5,17 +5,11 @@ const httpGenVersion = "v0.0.1"
 const templateImport = `
 import (
 	context "context"
-
-	gcode "github.com/gogf/gf/v2/errors/gcode"
-	gerr "github.com/gogf/gf/v2/errors/gerror"
 	g "github.com/gogf/gf/v2/frame/g"
 )
 
 var _ = g.Meta{}
-var _ = gerr.Error{}
 var _ = context.Background()
-var notImplErrorCode = gcode.New(-1, "", nil)
-var _ = notImplErrorCode
 `
 
 const templateSvcStruct = `
@@ -24,15 +18,19 @@ type Unimplemented{{.svc_name}}Server struct {
 	impl {{.svc_name}}Impl
 }
 
-// New{{.svc_name}}Api is an entry that must be implemented.
-func New{{.svc_name}}Api(impl {{.svc_name}}Impl) Unimplemented{{.svc_name}}Server {
+// Register{{.svc_name}}Server is an entry that must be implemented.
+func Register{{.svc_name}}Server(impl {{.svc_name}}Impl) Unimplemented{{.svc_name}}Server {
 	return Unimplemented{{.svc_name}}Server{impl: impl}
 }`
 
 const templateRouterFunc = `
 // {{.method_name}} {{.method_comment}}
 func ({{.svc_name}} Unimplemented{{.svc_name}}Server) {{.method_name}}(ctx context.Context, req *{{.in_name}}) (*{{.out_name}}, error) {
-	return nil,gerr.NewCode(notImplErrorCode,"Method {{.method_name}} not implemented.")
+	// 这个ctx key需要放到gf的常量中去
+	ctx = context.WithValue(ctx, "ctx_http_pattern", "{{.http_pattern}}")
+	ctx = context.WithValue(ctx, "ctx_http_method","{{.http_method}}")
+	ctx = context.WithValue(ctx, "ctx_grpc_pattern", "/{{.svr_name}}/{{.original_name}}")
+	return {{.svc_name}}.impl.{{.method_name}}(ctx, req)
 }
 `
 

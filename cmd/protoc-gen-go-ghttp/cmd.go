@@ -98,6 +98,8 @@ func processMethod(g *protogen.GeneratedFile, method *protogen.Method, svc *prot
 	// 生成 input / output
 	processMessage(g, method, rule)
 	// 生成路由注册方法
+	// 获取路由和方法类型
+	uri, apiMethod := getOptionMethodUri(rule)
 	svcStructBuffer := bytes.NewBuffer(nil)
 	err := unimplementedTpl.Execute(svcStructBuffer, map[string]interface{}{
 		"svc_name":       string(svc.Desc.Name()),
@@ -105,6 +107,10 @@ func processMethod(g *protogen.GeneratedFile, method *protogen.Method, svc *prot
 		"in_name":        string(method.Input.Desc.Name()),
 		"out_name":       string(method.Output.Desc.Name()),
 		"method_comment": scanMethodComment(method),
+		"http_pattern":   uri,
+		"http_method":    apiMethod,
+		"original_name":  method.Desc.Name(),
+		"svr_name":       svc.Desc.FullName(),
 	})
 	if err != nil {
 		info("gf-gen-go-http: Execute template error: %s\n", err.Error())
