@@ -135,7 +135,7 @@ jobs:
     steps:
     # TODO: szenius/set-timezone update to node16
     - name: Setup Timezone
-      uses: szenius/set-timezone@v1.0
+      uses: szenius/set-timezone@v1.1
       with:
         timezoneLinux: "Asia/Shanghai"
 
