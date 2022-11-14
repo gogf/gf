@@ -15,6 +15,7 @@ const (
 	UpStream      = "http://127.0.0.1:8198"
 )
 
+// StartServer1 starts Server1: A simple http server for demo.
 func StartServer1() {
 	s := g.Server(1)
 	s.BindHandler("/", func(r *ghttp.Request) {
@@ -27,6 +28,8 @@ func StartServer1() {
 	s.Run()
 }
 
+// StartServer2 starts Server2:
+// All requests to Server2 are directly redirected to Server1.
 func StartServer2() {
 	s := g.Server(2)
 	u, _ := url.Parse(UpStream)

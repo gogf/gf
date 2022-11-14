@@ -24,8 +24,8 @@ func Test_Params_Basic(t *testing.T) {
 	type User struct {
 		Id    int
 		Name  string
-		Pass1 string `params:"password1"`
-		Pass2 string `params:"password2"`
+		Pass1 string `p:"password1"`
+		Pass2 string `p:"password2"`
 	}
 	s := g.Server(guid.S())
 	// GET
@@ -236,8 +236,8 @@ func Test_Params_Basic(t *testing.T) {
 	})
 	s.BindHandler("/struct-with-base", func(r *ghttp.Request) {
 		type Base struct {
-			Pass1 string `params:"password1"`
-			Pass2 string `params:"password2"`
+			Pass1 string `p:"password1"`
+			Pass2 string `p:"password2"`
 		}
 		type UserWithBase1 struct {
 			Id   int
