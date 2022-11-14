@@ -12,6 +12,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -19,8 +22,6 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/grand"
 	"github.com/gogf/gf/v2/util/guid"
-	"github.com/google/uuid"
-	"github.com/shopspring/decimal"
 )
 
 const (
@@ -282,9 +283,9 @@ func TestDriverClickhouse_Insert(t *testing.T) {
 		Created  time.Time `orm:"created"`
 	}
 	var (
-		insertUrl = "https://goframe.org"
-		total     = 0
-		item      = insertItem{
+		insertUrl       = "https://goframe.org"
+		total     int64 = 0
+		item            = insertItem{
 			Duration: 1,
 			Url:      insertUrl,
 			Created:  time.Now(),
