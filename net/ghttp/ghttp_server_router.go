@@ -142,7 +142,6 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 						pattern, handler.Source, duplicatedHandler.Source,
 					)
 				}
-				return
 			}
 		}
 	}
@@ -245,14 +244,8 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 		s.routesMap[routerKey] = make([]*HandlerItem, 0)
 	}
 
-	switch handler.Type {
-	case HandlerTypeHandler, HandlerTypeObject:
-		// Overwrite the route.
-		s.routesMap[routerKey] = []*HandlerItem{handler}
-	default:
-		// Append the route.
-		s.routesMap[routerKey] = append(s.routesMap[routerKey], handler)
-	}
+	// Append the route.
+	s.routesMap[routerKey] = append(s.routesMap[routerKey], handler)
 }
 
 // compareRouterPriority compares the priority between `newItem` and `oldItem`. It returns true

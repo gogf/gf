@@ -41,4 +41,7 @@ const (
 	ExamplesShort     = `egs`          // Short name of Examples.
 	ExternalDocs      = `externalDocs` // External docs for struct, always for OpenAPI in request struct.
 	ExternalDocsShort = `ed`           // Short name of ExternalDocs.
+	GConv             = "gconv"        // GConv defines the converting target name for specified struct field.
+	GConvShort        = "c"            // GConv defines the converting target name for specified struct field.
+	Json              = "json"         // Json tag is supported by stdlib.
 )

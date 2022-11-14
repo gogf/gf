@@ -128,19 +128,20 @@ const (
 )
 
 const (
-	supportedHttpMethods    = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
-	defaultMethod           = "ALL"
-	routeCacheDuration      = time.Hour
-	ctxKeyForRequest        = "gHttpRequestObject"
-	contentTypeXml          = "text/xml"
-	contentTypeHtml         = "text/html"
-	contentTypeJson         = "application/json"
-	swaggerUIPackedPath     = "/goframe/swaggerui"
-	responseTraceIDHeader   = "Trace-ID"
-	specialMethodNameInit   = "Init"
-	specialMethodNameShut   = "Shut"
-	specialMethodNameIndex  = "Index"
-	gracefulShutdownTimeout = 5 * time.Second
+	supportedHttpMethods        = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
+	defaultMethod               = "ALL"
+	routeCacheDuration          = time.Hour
+	ctxKeyForRequest            = "gHttpRequestObject"
+	contentTypeXml              = "text/xml"
+	contentTypeHtml             = "text/html"
+	contentTypeJson             = "application/json"
+	swaggerUIPackedPath         = "/goframe/swaggerui"
+	responseHeaderTraceID       = "Trace-ID"
+	responseHeaderContentLength = "Content-Length"
+	specialMethodNameInit       = "Init"
+	specialMethodNameShut       = "Shut"
+	specialMethodNameIndex      = "Index"
+	gracefulShutdownTimeout     = 5 * time.Second
 )
 
 const (

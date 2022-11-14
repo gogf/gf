@@ -144,7 +144,7 @@ func (r *Response) ClearBuffer() {
 
 // Flush outputs the buffer content to the client and clears the buffer.
 func (r *Response) Flush() {
-	r.Header().Set(responseTraceIDHeader, gtrace.GetTraceID(r.Request.Context()))
+	r.Header().Set(responseHeaderTraceID, gtrace.GetTraceID(r.Request.Context()))
 	if r.Server.config.ServerAgent != "" {
 		r.Header().Set("Server", r.Server.config.ServerAgent)
 	}

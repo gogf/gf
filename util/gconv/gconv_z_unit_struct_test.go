@@ -541,8 +541,8 @@ func Test_StructEmbedded4(t *testing.T) {
 func Test_StructEmbedded5(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Base struct {
-			Pass1 string `params:"password1"`
-			Pass2 string `params:"password2"`
+			Pass1 string `param:"password1"`
+			Pass2 string `param:"password2"`
 		}
 		type UserWithBase1 struct {
 			Id   int
