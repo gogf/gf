@@ -378,7 +378,7 @@ func (m *Model) ScanList(structSlicePointer interface{}, bindToAttrName string, 
 // Count does "SELECT COUNT(x) FROM ..." statement for the model.
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
-func (m *Model) Count(where ...interface{}) (int, error) {
+func (m *Model) Count(where ...interface{}) (int64, error) {
 	var ctx = m.GetCtx()
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).Count()
@@ -394,7 +394,7 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 		if internalData := m.db.GetCore().GetInternalCtxDataFromCtx(ctx); internalData != nil {
 			record := all[0]
 			if v, ok := record[internalData.FirstResultColumn]; ok {
-				return v.Int(), nil
+				return v.Int64(), nil
 			}
 		}
 		return 0, gerror.NewCode(
@@ -406,7 +406,7 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 }
 
 // CountColumn does "SELECT COUNT(x) FROM ..." statement for the model.
-func (m *Model) CountColumn(column string) (int, error) {
+func (m *Model) CountColumn(column string) (int64, error) {
 	if len(column) == 0 {
 		return 0, nil
 	}
