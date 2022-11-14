@@ -1001,3 +1001,48 @@ func Test_EmbeddedStructAttribute(t *testing.T) {
 		t.Assert(b, `{"openapi":"3.0.0","components":{"schemas":{"github.com.gogf.gf.v2.net.goai_test.CreateResourceReq":{"properties":{"Name":{"description":"This is name.","format":"string","properties":{},"type":"string"},"Embedded":{"properties":{"Age":{"description":"This is embedded age.","format":"uint","properties":{},"type":"integer"}},"type":"object"}},"type":"object"}}},"info":{"title":"","version":""},"paths":null}`)
 	})
 }
+
+func Test_NameFromJsonTag(t *testing.T) {
+	// POST
+	gtest.C(t, func(t *gtest.T) {
+		type CreateReq struct {
+			gmeta.Meta `path:"/CreateReq" method:"POST"`
+			Name       string `json:"nick_name, omitempty"`
+		}
+
+		var (
+			err error
+			oai = goai.New()
+			req = new(CreateReq)
+		)
+		err = oai.Add(goai.AddInput{
+			Object: req,
+		})
+		t.AssertNil(err)
+
+		b, err := json.Marshal(oai)
+		t.AssertNil(err)
+		t.Assert(b, `{"openapi":"3.0.0","components":{"schemas":{"github.com.gogf.gf.v2.net.goai_test.CreateReq":{"properties":{"nick_name":{"format":"string","properties":{},"type":"string"}},"type":"object"}}},"info":{"title":"","version":""},"paths":null}`)
+	})
+	// GET
+	gtest.C(t, func(t *gtest.T) {
+		type CreateReq struct {
+			gmeta.Meta `path:"/CreateReq" method:"GET"`
+			Name       string `json:"nick_name, omitempty" in:"header"`
+		}
+		var (
+			err error
+			oai = goai.New()
+			req = new(CreateReq)
+		)
+		err = oai.Add(goai.AddInput{
+			Object: req,
+		})
+		t.AssertNil(err)
+
+		b, err := json.Marshal(oai)
+		t.AssertNil(err)
+		fmt.Println(string(b))
+		t.Assert(b, `{"openapi":"3.0.0","components":{"schemas":{"github.com.gogf.gf.v2.net.goai_test.CreateReq":{"properties":{"nick_name":{"format":"string","properties":{},"type":"string"}},"type":"object"}}},"info":{"title":"","version":""},"paths":null}`)
+	})
+}
