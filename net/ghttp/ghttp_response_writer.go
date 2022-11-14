@@ -64,7 +64,7 @@ func (w *ResponseWriter) Flush() {
 		w.buffer.WriteString(http.StatusText(w.Status))
 	}
 	if w.buffer.Len() > 0 {
-		w.writer.Write(w.buffer.Bytes())
+		_, _ = w.writer.Write(w.buffer.Bytes())
 		w.buffer.Reset()
 	}
 }

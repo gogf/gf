@@ -46,7 +46,9 @@ func (c *PoolConn) RecvPkgWithTimeout(timeout time.Duration, option ...PkgOption
 	if err := c.SetReceiveDeadline(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer c.SetReceiveDeadline(time.Time{})
+	defer func() {
+		_ = c.SetReceiveDeadline(time.Time{})
+	}()
 	data, err = c.RecvPkg(option...)
 	return
 }
@@ -56,7 +58,9 @@ func (c *PoolConn) SendPkgWithTimeout(data []byte, timeout time.Duration, option
 	if err := c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
 		return err
 	}
-	defer c.SetSendDeadline(time.Time{})
+	defer func() {
+		_ = c.SetSendDeadline(time.Time{})
+	}()
 	err = c.SendPkg(data, option...)
 	return
 }

@@ -73,6 +73,15 @@ func TestNext(t *testing.T) {
 
 		// Leap year
 		{"Mon Jul 9 23:35 2012", "0 0 0 29 Feb ?", "Mon Feb 29 00:00 2016"},
+
+		// Predefined pattern map.
+		{"Mon Jul 9 23:35 2012", "@yearly", "Sun Jan 1 00:00:00 2013"},
+		{"Mon Jul 9 23:35 2012", "@annually", "Sun Jan 1 00:00:00 2013"},
+		{"Mon Jul 9 23:35 2012", "@monthly", "Mon Aug 1 00:00:00 2012"},
+		{"Mon Jul 9 23:35 2012", "@weekly", "Sun Jul 15 00:00:00 2012"},
+		{"Mon Jul 9 23:35 2012", "@daily", "Tue Jul 10 00:00:00 2012"},
+		{"Mon Jul 9 23:35 2012", "@midnight", "Tue Jul 10 00:00:00 2012"},
+		{"Mon Jul 9 23:35 2012", "@hourly", "Tue Jul 10 00:00:00 2012"},
 	}
 
 	for _, c := range runs {
@@ -89,6 +98,7 @@ func TestNext(t *testing.T) {
 		}
 	}
 }
+
 func getTime(value string) time.Time {
 	if value == "" {
 		return time.Time{}

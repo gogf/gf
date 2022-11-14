@@ -4,13 +4,14 @@ import (
 	"context"
 	"strings"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/allyes"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gres"
 	"github.com/gogf/gf/v2/util/gtag"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/allyes"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 var (
@@ -37,29 +38,33 @@ gf pack /var/www/public packed/data.go -n=packed
 destination file path for packed file. if extension of the filename is ".go" and "-n" option is given, 
 it enables packing SRC to go file, or else it packs SRC into a binary file.
 `
-	cPackNameBrief   = `package name for output go file, it's set as its directory name if no name passed`
-	cPackPrefixBrief = `prefix for each file packed into the resource file`
+	cPackNameBrief     = `package name for output go file, it's set as its directory name if no name passed`
+	cPackPrefixBrief   = `prefix for each file packed into the resource file`
+	cPackKeepPathBrief = `keep the source path from system to resource file, usually for relative path`
 )
 
 func init() {
 	gtag.Sets(g.MapStrStr{
-		`cPackUsage`:       cPackUsage,
-		`cPackBrief`:       cPackBrief,
-		`cPackEg`:          cPackEg,
-		`cPackSrcBrief`:    cPackSrcBrief,
-		`cPackDstBrief`:    cPackDstBrief,
-		`cPackNameBrief`:   cPackNameBrief,
-		`cPackPrefixBrief`: cPackPrefixBrief,
+		`cPackUsage`:         cPackUsage,
+		`cPackBrief`:         cPackBrief,
+		`cPackEg`:            cPackEg,
+		`cPackSrcBrief`:      cPackSrcBrief,
+		`cPackDstBrief`:      cPackDstBrief,
+		`cPackNameBrief`:     cPackNameBrief,
+		`cPackPrefixBrief`:   cPackPrefixBrief,
+		`cPackKeepPathBrief`: cPackKeepPathBrief,
 	})
 }
 
 type cPackInput struct {
-	g.Meta `name:"pack"`
-	Src    string `name:"SRC" arg:"true" v:"required" brief:"{cPackSrcBrief}"`
-	Dst    string `name:"DST" arg:"true" v:"required" brief:"{cPackDstBrief}"`
-	Name   string `name:"name"   short:"n" brief:"{cPackNameBrief}"`
-	Prefix string `name:"prefix" short:"p" brief:"{cPackPrefixBrief}"`
+	g.Meta   `name:"pack"`
+	Src      string `name:"SRC" arg:"true" v:"required" brief:"{cPackSrcBrief}"`
+	Dst      string `name:"DST" arg:"true" v:"required" brief:"{cPackDstBrief}"`
+	Name     string `name:"name"     short:"n" brief:"{cPackNameBrief}"`
+	Prefix   string `name:"prefix"   short:"p" brief:"{cPackPrefixBrief}"`
+	KeepPath bool   `name:"keepPath" short:"k" brief:"{cPackKeepPathBrief}" orphan:"true"`
 }
+
 type cPackOutput struct{}
 
 func (c cPack) Index(ctx context.Context, in cPackInput) (out *cPackOutput, err error) {
@@ -75,12 +80,16 @@ func (c cPack) Index(ctx context.Context, in cPackInput) (out *cPackOutput, err 
 	if in.Name == "" && gfile.ExtName(in.Dst) == "go" {
 		in.Name = gfile.Basename(gfile.Dir(in.Dst))
 	}
+	var option = gres.Option{
+		Prefix:   in.Prefix,
+		KeepPath: in.KeepPath,
+	}
 	if in.Name != "" {
-		if err = gres.PackToGoFile(in.Src, in.Dst, in.Name, in.Prefix); err != nil {
+		if err = gres.PackToGoFileWithOption(in.Src, in.Dst, in.Name, option); err != nil {
 			mlog.Fatalf("pack failed: %v", err)
 		}
 	} else {
-		if err = gres.PackToFile(in.Src, in.Dst, in.Prefix); err != nil {
+		if err = gres.PackToFileWithOption(in.Src, in.Dst, option); err != nil {
 			mlog.Fatalf("pack failed: %v", err)
 		}
 	}

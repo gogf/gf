@@ -43,6 +43,7 @@ func TestRing_Val(t *testing.T) {
 		r.Set(&Student{3, "jack", true})
 	})
 }
+
 func TestRing_CapLen(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		r := gring.New(10)

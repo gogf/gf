@@ -23,14 +23,14 @@ import (
 // custom key name and the attribute name(case-sensitive).
 //
 // Note:
-// 1. The `params` can be any type of map/struct, usually a map.
-// 2. The `pointer` should be type of *struct/**struct, which is a pointer to struct object
-//    or struct pointer.
-// 3. Only the public attributes of struct object can be mapped.
-// 4. If `params` is a map, the key of the map `params` can be lowercase.
-//    It will automatically convert the first letter of the key to uppercase
-//    in mapping procedure to do the matching.
-//    It ignores the map key, if it does not match.
+//  1. The `params` can be any type of map/struct, usually a map.
+//  2. The `pointer` should be type of *struct/**struct, which is a pointer to struct object
+//     or struct pointer.
+//  3. Only the public attributes of struct object can be mapped.
+//  4. If `params` is a map, the key of the map `params` can be lowercase.
+//     It will automatically convert the first letter of the key to uppercase
+//     in mapping procedure to do the matching.
+//     It ignores the map key, if it does not match.
 func Struct(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
 	return Scan(params, pointer, mapping...)
 }
@@ -182,6 +182,11 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 			`convert params from "%#v" to "map[string]interface{}" failed`,
 			params,
 		)
+	}
+
+	// Nothing to be done as the parameters are empty.
+	if len(paramsMap) == 0 {
+		return nil
 	}
 
 	// It only performs one converting to the same attribute.
@@ -534,14 +539,20 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 		structFieldValue.Set(reflectArray)
 
 	case reflect.Ptr:
-		item := reflect.New(structFieldValue.Type().Elem())
-		if err, ok = bindVarToReflectValueWithInterfaceCheck(item, value); ok {
-			structFieldValue.Set(item)
-			return err
-		}
-		elem := item.Elem()
-		if err = bindVarToReflectValue(elem, value, mapping); err == nil {
-			structFieldValue.Set(elem.Addr())
+		if structFieldValue.IsNil() || structFieldValue.IsZero() {
+			// Nil or empty pointer, it creates a new one.
+			item := reflect.New(structFieldValue.Type().Elem())
+			if err, ok = bindVarToReflectValueWithInterfaceCheck(item, value); ok {
+				structFieldValue.Set(item)
+				return err
+			}
+			elem := item.Elem()
+			if err = bindVarToReflectValue(elem, value, mapping); err == nil {
+				structFieldValue.Set(elem.Addr())
+			}
+		} else {
+			// Not empty pointer, it assigns values to it.
+			return bindVarToReflectValue(structFieldValue.Elem(), value, mapping)
 		}
 
 	// It mainly and specially handles the interface of nil value.

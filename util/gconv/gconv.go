@@ -112,7 +112,7 @@ func Runes(any interface{}) []rune {
 }
 
 // String converts `any` to string.
-// It's most commonly used converting function
+// It's most commonly used converting function.
 func String(any interface{}) string {
 	if any == nil {
 		return ""

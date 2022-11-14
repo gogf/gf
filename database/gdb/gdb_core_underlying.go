@@ -48,8 +48,8 @@ func (c *Core) DoQuery(ctx context.Context, link Link, sql string, args ...inter
 		}
 	}
 
-	if c.GetConfig().QueryTimeout > 0 {
-		ctx, _ = context.WithTimeout(ctx, c.GetConfig().QueryTimeout)
+	if c.db.GetConfig().QueryTimeout > 0 {
+		ctx, _ = context.WithTimeout(ctx, c.db.GetConfig().QueryTimeout)
 	}
 
 	// Sql filtering.
@@ -107,9 +107,9 @@ func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interf
 		}
 	}
 
-	if c.GetConfig().ExecTimeout > 0 {
+	if c.db.GetConfig().ExecTimeout > 0 {
 		var cancelFunc context.CancelFunc
-		ctx, cancelFunc = context.WithTimeout(ctx, c.GetConfig().ExecTimeout)
+		ctx, cancelFunc = context.WithTimeout(ctx, c.db.GetConfig().ExecTimeout)
 		defer cancelFunc()
 	}
 
@@ -264,6 +264,7 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 			Start:         timestampMilli1,
 			End:           timestampMilli2,
 			Group:         c.db.GetGroup(),
+			Schema:        c.db.GetSchema(),
 			RowsAffected:  rowsAffected,
 			IsTransaction: in.IsTransaction,
 		}
@@ -333,9 +334,9 @@ func (c *Core) DoPrepare(ctx context.Context, link Link, sql string) (stmt *Stmt
 		}
 	}
 
-	if c.GetConfig().PrepareTimeout > 0 {
+	if c.db.GetConfig().PrepareTimeout > 0 {
 		// DO NOT USE cancel function in prepare statement.
-		ctx, _ = context.WithTimeout(ctx, c.GetConfig().PrepareTimeout)
+		ctx, _ = context.WithTimeout(ctx, c.db.GetConfig().PrepareTimeout)
 	}
 
 	// Link execution.
@@ -396,7 +397,9 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 		record := Record{}
 		for i, value := range values {
 			if value == nil {
-				record[columnNames[i]] = gvar.New(nil)
+				// Do not use `gvar.New(nil)` here as it creates an initialized object
+				// which will cause struct converting issue.
+				record[columnNames[i]] = nil
 			} else {
 				var convertedValue interface{}
 				if convertedValue, err = c.db.ConvertValueForLocal(ctx, columnTypes[i], value); err != nil {
