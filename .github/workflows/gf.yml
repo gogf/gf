@@ -128,7 +128,7 @@ jobs:
           - 5236:5236
 
       zookeeper:
-        image: zookeeper
+        image: loads/zookeeper:3.8
         ports:
           - 2181:2181
 
