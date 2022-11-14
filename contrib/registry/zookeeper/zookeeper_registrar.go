@@ -77,21 +77,30 @@ func (r *Registry) Deregister(ctx context.Context, service gsvc.Service) error {
 		err = ctx.Err()
 	case err = <-ch:
 	}
-	return err
+	return gerror.Wrapf(err,
+		"Error with deregister service:%s",
+		service.GetName(),
+	)
 }
 
 // ensureName ensure node exists, if not exist, create and set data
 func (r *Registry) ensureName(path string, data []byte, flags int32) error {
 	exists, stat, err := r.conn.Exists(path)
 	if err != nil {
-		return err
+		return gerror.Wrapf(err,
+			"Error with check node exist which name is %s",
+			path,
+		)
 	}
 	// ephemeral nodes handling after restart
 	// fixes a race condition if the server crashes without using CreateProtectedEphemeralSequential()
 	if flags&zk.FlagEphemeral == zk.FlagEphemeral {
 		err = r.conn.Delete(path, stat.Version)
 		if err != nil && err != zk.ErrNoNode {
-			return err
+			return gerror.Wrapf(err,
+				"Error with delete node which name is %s",
+				path,
+			)
 		}
 		exists = false
 	}
@@ -102,7 +111,10 @@ func (r *Registry) ensureName(path string, data []byte, flags int32) error {
 			_, err = r.conn.Create(path, data, flags, zk.WorldACL(zk.PermAll))
 		}
 		if err != nil {
-			return err
+			return gerror.Wrapf(err,
+				"Error with create node which name is %s",
+				path,
+			)
 		}
 	}
 	return nil
