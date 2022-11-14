@@ -55,24 +55,37 @@ func StrTillEx(haystack string, needle string) string {
 // The parameter `length` is optional, it uses the length of `str` in default.
 func SubStr(str string, start int, length ...int) (substr string) {
 	strLength := len(str)
-	// Simple border checks.
 	if start < 0 {
-		start = 0
-	}
-	if start >= strLength {
-		start = strLength
-	}
-	end := strLength
-	if len(length) > 0 {
-		end = start + length[0]
-		if end < start {
-			end = strLength
+		if -start > strLength {
+			start = 0
+		} else {
+			start = strLength + start
 		}
+	} else if start > strLength {
+		return ""
 	}
-	if end > strLength {
-		end = strLength
+	realLength := 0
+	if len(length) > 0 {
+		realLength = length[0]
+		if realLength < 0 {
+			if -realLength > strLength-start {
+				realLength = 0
+			} else {
+				realLength = strLength - start + realLength
+			}
+		} else if realLength > strLength-start {
+			realLength = strLength - start
+		}
+	} else {
+		realLength = strLength - start
 	}
-	return str[start:end]
+
+	if realLength == strLength {
+		return str
+	} else {
+		end := start + realLength
+		return str[start:end]
+	}
 }
 
 // SubStrRune returns a portion of string `str` specified by the `start` and `length` parameters.
