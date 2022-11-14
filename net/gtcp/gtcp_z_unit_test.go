@@ -320,7 +320,7 @@ func TestConn_SetReceiveBufferWait(t *testing.T) {
 		conn, err := gtcp.NewConn(s.GetListenedAddress())
 		t.AssertNil(err)
 		t.AssertNE(conn, nil)
-		conn.SetReceiveBufferWait(time.Millisecond * 100)
+		conn.SetBufferWaitRecv(time.Millisecond * 100)
 		err = conn.Send(sendData, gtcp.Retry{Count: 1})
 		t.AssertNil(err)
 		result, err := conn.Recv(-1)
