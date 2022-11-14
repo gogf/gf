@@ -196,7 +196,7 @@ func MustGetOrSet(ctx context.Context, key interface{}, value interface{}, durat
 
 // MustGetOrSetFunc acts like GetOrSetFunc, but it panics if any error occurs.
 func MustGetOrSetFunc(ctx context.Context, key interface{}, f Func, duration time.Duration) *gvar.Var {
-	return defaultCache.MustGetOrSet(ctx, key, f, duration)
+	return defaultCache.MustGetOrSetFunc(ctx, key, f, duration)
 }
 
 // MustGetOrSetFuncLock acts like GetOrSetFuncLock, but it panics if any error occurs.

@@ -72,15 +72,15 @@ const (
 
 // Model creates and returns a new ORM model from given schema.
 // The parameter `tableNameQueryOrStruct` can be more than one table names, and also alias name, like:
-// 1. Model names:
-//    db.Model("user")
-//    db.Model("user u")
-//    db.Model("user, user_detail")
-//    db.Model("user u, user_detail ud")
-// 2. Model name with alias:
-//    db.Model("user", "u")
-// 3. Model name with sub-query:
-//    db.Model("? AS a, ? AS b", subQuery1, subQuery2)
+//  1. Model names:
+//     db.Model("user")
+//     db.Model("user u")
+//     db.Model("user, user_detail")
+//     db.Model("user u, user_detail ud")
+//  2. Model name with alias:
+//     db.Model("user", "u")
+//  3. Model name with sub-query:
+//     db.Model("? AS a, ? AS b", subQuery1, subQuery2)
 func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 	var (
 		ctx       = c.db.GetCtx()
@@ -143,7 +143,8 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 
 // Raw creates and returns a model based on a raw sql not a table.
 // Example:
-//     db.Raw("SELECT * FROM `user` WHERE `name` = ?", "john").Scan(&result)
+//
+//	db.Raw("SELECT * FROM `user` WHERE `name` = ?", "john").Scan(&result)
 func (c *Core) Raw(rawSql string, args ...interface{}) *Model {
 	model := c.Model()
 	model.rawSql = rawSql
@@ -153,7 +154,9 @@ func (c *Core) Raw(rawSql string, args ...interface{}) *Model {
 
 // Raw sets current model as a raw sql model.
 // Example:
-//     db.Raw("SELECT * FROM `user` WHERE `name` = ?", "john").Scan(&result)
+//
+//	db.Raw("SELECT * FROM `user` WHERE `name` = ?", "john").Scan(&result)
+//
 // See Core.Raw.
 func (m *Model) Raw(rawSql string, args ...interface{}) *Model {
 	model := m.db.Raw(rawSql, args...)

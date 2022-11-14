@@ -10,12 +10,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/polarismesh/polaris-go"
-	"github.com/polarismesh/polaris-go/pkg/model"
-
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/polarismesh/polaris-go"
+	"github.com/polarismesh/polaris-go/pkg/model"
 )
 
 // Register the registration.

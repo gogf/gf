@@ -19,14 +19,10 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/consts"
-	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gmeta"
-)
-
-const (
-	stackFilterKey = "/net/ghttp/ghttp"
+	"github.com/gogf/gf/v2/util/gtag"
 )
 
 var (
@@ -100,13 +96,13 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 	// Change the registered route according to meta info from its request structure.
 	if handler.Info.Type != nil && handler.Info.Type.NumIn() == 2 {
 		var objectReq = reflect.New(handler.Info.Type.In(1))
-		if v := gmeta.Get(objectReq, goai.TagNamePath); !v.IsEmpty() {
+		if v := gmeta.Get(objectReq, gtag.Path); !v.IsEmpty() {
 			uri = v.String()
 		}
-		if v := gmeta.Get(objectReq, goai.TagNameMethod); !v.IsEmpty() {
+		if v := gmeta.Get(objectReq, gtag.Method); !v.IsEmpty() {
 			method = v.String()
 		}
-		if v := gmeta.Get(objectReq, goai.TagNameDomain); !v.IsEmpty() {
+		if v := gmeta.Get(objectReq, gtag.Domain); !v.IsEmpty() {
 			domain = v.String()
 		}
 	}

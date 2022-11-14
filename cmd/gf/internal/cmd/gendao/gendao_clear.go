@@ -3,9 +3,10 @@ package gendao
 import (
 	"context"
 
+	"github.com/gogf/gf/v2/os/gfile"
+
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
-	"github.com/gogf/gf/v2/os/gfile"
 )
 
 func doClear(ctx context.Context, dirPath string) {

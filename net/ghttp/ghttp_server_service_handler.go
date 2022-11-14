@@ -83,9 +83,9 @@ func (s *Server) bindHandlerByMap(ctx context.Context, prefix string, m map[stri
 func (s *Server) mergeBuildInNameToPattern(pattern string, structName, methodName string, allowAppend bool) string {
 	structName = s.nameToUri(structName)
 	methodName = s.nameToUri(methodName)
-	pattern = strings.Replace(pattern, "{.struct}", structName, -1)
-	if strings.Index(pattern, "{.method}") != -1 {
-		return strings.Replace(pattern, "{.method}", methodName, -1)
+	pattern = strings.ReplaceAll(pattern, "{.struct}", structName)
+	if strings.Contains(pattern, "{.method}") {
+		return strings.ReplaceAll(pattern, "{.method}", methodName)
 	}
 	if !allowAppend {
 		return pattern

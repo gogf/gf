@@ -9,8 +9,9 @@ package gpool_test
 import (
 	"database/sql"
 	"fmt"
-	"github.com/gogf/gf/v2/container/gpool"
 	"time"
+
+	"github.com/gogf/gf/v2/container/gpool"
 )
 
 func ExampleNew() {
@@ -178,6 +179,6 @@ func ExamplePool_Close() {
 	// wait for pool close
 	time.Sleep(time.Second * 1)
 
-	// Output:
+	// May Output:
 	// Close The Pool
 }

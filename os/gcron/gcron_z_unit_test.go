@@ -67,6 +67,22 @@ func TestCron_Basic(t *testing.T) {
 		t.AssertNE(entry1, nil)
 		t.Assert(entry2, nil)
 	})
+
+	// test @ error
+	gtest.C(t, func(t *gtest.T) {
+		cron := gcron.New()
+		defer cron.Close()
+		_, err := cron.Add(ctx, "@aaa", func(ctx context.Context) {}, "add")
+		t.AssertNE(err, nil)
+	})
+
+	// test @every error
+	gtest.C(t, func(t *gtest.T) {
+		cron := gcron.New()
+		defer cron.Close()
+		_, err := cron.Add(ctx, "@every xxx", func(ctx context.Context) {}, "add")
+		t.AssertNE(err, nil)
+	})
 }
 
 func TestCron_Remove(t *testing.T) {

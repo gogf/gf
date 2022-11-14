@@ -56,7 +56,7 @@ func NewSortedIntArraySize(cap int, safe ...bool) *SortedIntArray {
 	}
 }
 
-// NewSortedIntArrayRange creates and returns a array by a range from `start` to `end`
+// NewSortedIntArrayRange creates and returns an array by a range from `start` to `end`
 // with step value `step`.
 func NewSortedIntArrayRange(start, end, step int, safe ...bool) *SortedIntArray {
 	if step == 0 {
