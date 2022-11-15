@@ -381,3 +381,149 @@ func TestType_TagMap(t *testing.T) {
 		t.Assert(r[1].TagMap()["description"], `应用Id`)
 	})
 }
+
+func TestType_TagJsonName(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type A struct {
+			Name string `json:"name,omitempty"`
+		}
+		r, err := gstructs.Fields(gstructs.FieldsInput{
+			Pointer:         new(A),
+			RecursiveOption: 0,
+		})
+		t.AssertNil(err)
+
+		t.Assert(len(r), 1)
+		t.Assert(r[0].TagJsonName(), `name`)
+	})
+}
+
+func TestType_TagDefault(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type A struct {
+			Name  string `default:"john"`
+			Name2 string `d:"john"`
+		}
+		r, err := gstructs.Fields(gstructs.FieldsInput{
+			Pointer:         new(A),
+			RecursiveOption: 0,
+		})
+		t.AssertNil(err)
+
+		t.Assert(len(r), 2)
+		t.Assert(r[0].TagDefault(), `john`)
+		t.Assert(r[1].TagDefault(), `john`)
+	})
+}
+
+func TestType_TagParam(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type A struct {
+			Name  string `param:"name"`
+			Name2 string `p:"name"`
+		}
+		r, err := gstructs.Fields(gstructs.FieldsInput{
+			Pointer:         new(A),
+			RecursiveOption: 0,
+		})
+		t.AssertNil(err)
+
+		t.Assert(len(r), 2)
+		t.Assert(r[0].TagParam(), `name`)
+		t.Assert(r[1].TagParam(), `name`)
+	})
+}
+
+func TestType_TagValid(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type A struct {
+			Name  string `valid:"required"`
+			Name2 string `v:"required"`
+		}
+		r, err := gstructs.Fields(gstructs.FieldsInput{
+			Pointer:         new(A),
+			RecursiveOption: 0,
+		})
+		t.AssertNil(err)
+
+		t.Assert(len(r), 2)
+		t.Assert(r[0].TagValid(), `required`)
+		t.Assert(r[1].TagValid(), `required`)
+	})
+}
+
+func TestType_TagDescription(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type A struct {
+			Name  string `description:"my name"`
+			Name2 string `des:"my name"`
+			Name3 string `dc:"my name"`
+		}
+		r, err := gstructs.Fields(gstructs.FieldsInput{
+			Pointer:         new(A),
+			RecursiveOption: 0,
+		})
+		t.AssertNil(err)
+
+		t.Assert(len(r), 3)
+		t.Assert(r[0].TagDescription(), `my name`)
+		t.Assert(r[1].TagDescription(), `my name`)
+		t.Assert(r[2].TagDescription(), `my name`)
+	})
+}
+
+func TestType_TagSummary(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type A struct {
+			Name  string `summary:"my name"`
+			Name2 string `sum:"my name"`
+			Name3 string `sm:"my name"`
+		}
+		r, err := gstructs.Fields(gstructs.FieldsInput{
+			Pointer:         new(A),
+			RecursiveOption: 0,
+		})
+		t.AssertNil(err)
+
+		t.Assert(len(r), 3)
+		t.Assert(r[0].TagSummary(), `my name`)
+		t.Assert(r[1].TagSummary(), `my name`)
+		t.Assert(r[2].TagSummary(), `my name`)
+	})
+}
+
+func TestType_TagAdditional(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type A struct {
+			Name  string `additional:"my name"`
+			Name2 string `ad:"my name"`
+		}
+		r, err := gstructs.Fields(gstructs.FieldsInput{
+			Pointer:         new(A),
+			RecursiveOption: 0,
+		})
+		t.AssertNil(err)
+
+		t.Assert(len(r), 2)
+		t.Assert(r[0].TagAdditional(), `my name`)
+		t.Assert(r[1].TagAdditional(), `my name`)
+	})
+}
+
+func TestType_TagExample(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type A struct {
+			Name  string `example:"john"`
+			Name2 string `eg:"john"`
+		}
+		r, err := gstructs.Fields(gstructs.FieldsInput{
+			Pointer:         new(A),
+			RecursiveOption: 0,
+		})
+		t.AssertNil(err)
+
+		t.Assert(len(r), 2)
+		t.Assert(r[0].TagExample(), `john`)
+		t.Assert(r[1].TagExample(), `john`)
+	})
+}
