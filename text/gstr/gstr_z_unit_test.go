@@ -94,7 +94,7 @@ func Test_SubStr(t *testing.T) {
 		t.Assert(gstr.SubStr("abcdef", 0, -1), "abcde")
 		t.Assert(gstr.SubStr("abcdef", 2, -1), "cde")
 		t.Assert(gstr.SubStr("abcdef", 4, -4), "")
-		t.Assert(gstr.SubStr("abcdef", -1, -1), "de")
+		t.Assert(gstr.SubStr("abcdef", -3, -1), "de")
 	})
 }
 
