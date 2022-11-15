@@ -103,8 +103,16 @@ func Test_SubStrRune(t *testing.T) {
 		t.Assert(gstr.SubStrRune("我爱GoFrame", 0), "我爱GoFrame")
 		t.Assert(gstr.SubStrRune("我爱GoFrame", 2), "GoFrame")
 		t.Assert(gstr.SubStrRune("我爱GoFrame", 2, 2), "Go")
-		t.Assert(gstr.SubStrRune("我爱GoFrame", -1, 30), "我爱GoFrame")
+		t.Assert(gstr.SubStrRune("我爱GoFrame", -1, 30), "e")
 		t.Assert(gstr.SubStrRune("我爱GoFrame", 30, 30), "")
+		t.Assert(gstr.SubStr("abcdef", 0, -1), "abcde")
+		t.Assert(gstr.SubStr("abcdef", 2, -1), "cde")
+		t.Assert(gstr.SubStr("abcdef", 4, -4), "")
+		t.Assert(gstr.SubStr("abcdef", -3, -1), "de")
+		t.Assert(gstr.SubStr("我爱GoFrame呵呵", -3, 100), "e呵呵")
+		t.Assert(gstr.SubStr("abcdef哈哈", -3, -1), "f哈")
+		t.Assert(gstr.SubStr("ab我爱GoFramecdef哈哈", -3, -1), "f哈")
+		t.Assert(gstr.SubStr("我爱GoFrame", 0, 3), "我爱G")
 	})
 }
 
