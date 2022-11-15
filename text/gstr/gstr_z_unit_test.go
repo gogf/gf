@@ -89,8 +89,12 @@ func Test_SubStr(t *testing.T) {
 		t.Assert(gstr.SubStr("我爱GoFrame", 0), "我爱GoFrame")
 		t.Assert(gstr.SubStr("我爱GoFrame", 6), "GoFrame")
 		t.Assert(gstr.SubStr("我爱GoFrame", 6, 2), "Go")
-		t.Assert(gstr.SubStr("我爱GoFrame", -1, 30), "我爱GoFrame")
+		t.Assert(gstr.SubStr("我爱GoFrame", -1, 30), "e")
 		t.Assert(gstr.SubStr("我爱GoFrame", 30, 30), "")
+		t.Assert(gstr.SubStr("abcdef", 0, -1), "abcde")
+		t.Assert(gstr.SubStr("abcdef", 2, -1), "cde")
+		t.Assert(gstr.SubStr("abcdef", 4, -4), "")
+		t.Assert(gstr.SubStr("abcdef", -1, -1), "de")
 	})
 }
 
