@@ -799,6 +799,58 @@ func Test_Model_Count_WithCache(t *testing.T) {
 	})
 }
 
+func Test_Model_Count_All_WithCache(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Cache(gdb.CacheOption{
+			Duration: time.Second * 10,
+			Force:    false,
+		}).Count()
+		t.AssertNil(err)
+		t.Assert(count, 0)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Data(g.MapStrAny{
+			"id":       1,
+			"passport": fmt.Sprintf(`passport_%d`, 1),
+			"password": fmt.Sprintf(`password_%d`, 1),
+			"nickname": fmt.Sprintf(`nickname_%d`, 1),
+		}).Insert()
+		t.AssertNil(err)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Cache(gdb.CacheOption{
+			Duration: time.Second * 10,
+			Force:    false,
+		}).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Data(g.MapStrAny{
+			"id":       2,
+			"passport": fmt.Sprintf(`passport_%d`, 2),
+			"password": fmt.Sprintf(`password_%d`, 2),
+			"nickname": fmt.Sprintf(`nickname_%d`, 2),
+		}).Insert()
+		t.AssertNil(err)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Cache(gdb.CacheOption{
+			Duration: time.Second * 10,
+			Force:    false,
+		}).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
+	})
+}
+
 func Test_Model_CountColumn_WithCache(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
