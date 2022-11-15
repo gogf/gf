@@ -98,20 +98,32 @@ func SubStrRune(str string, start int, length ...int) (substr string) {
 		runesLength = len(runes)
 	)
 
-	// Simple border checks.
+	strLength := runesLength
 	if start < 0 {
-		start = 0
-	}
-	if start >= runesLength {
-		start = runesLength
-	}
-	end := runesLength
-	if len(length) > 0 {
-		end = start + length[0]
-		if end < start {
-			end = runesLength
+		if -start > strLength {
+			start = 0
+		} else {
+			start = strLength + start
 		}
+	} else if start > strLength {
+		return ""
 	}
+	realLength := 0
+	if len(length) > 0 {
+		realLength = length[0]
+		if realLength < 0 {
+			if -realLength > strLength-start {
+				realLength = 0
+			} else {
+				realLength = strLength - start + realLength
+			}
+		} else if realLength > strLength-start {
+			realLength = strLength - start
+		}
+	} else {
+		realLength = strLength - start
+	}
+	end := start + realLength
 	if end > runesLength {
 		end = runesLength
 	}
