@@ -97,7 +97,6 @@ func (p *Pool) Clear() {
 	} else {
 		p.list.RemoveAll()
 	}
-
 }
 
 // Get picks and returns an item from pool. If the pool is empty and NewFunc is defined,

@@ -7,10 +7,10 @@
 package pgsql_test
 
 import (
+	_ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
+
 	"context"
 	"fmt"
-
-	_ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/database/gdb"

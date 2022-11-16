@@ -18,8 +18,6 @@ import (
 	"strings"
 
 	_ "github.com/glebarez/go-sqlite"
-	"github.com/gogf/gf/v2/util/gutil"
-
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/encoding/gurl"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -27,6 +25,7 @@ import (
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // Driver is the driver for sqlite database.
@@ -53,7 +52,7 @@ func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 	}, nil
 }
 
-// Open creates and returns a underlying sql.DB object for sqlite.
+// Open creates and returns an underlying sql.DB object for sqlite.
 // https://github.com/glebarez/go-sqlite
 func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	var (

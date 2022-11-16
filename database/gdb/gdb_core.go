@@ -23,6 +23,7 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // GetCore returns the underlying *Core object.
@@ -124,25 +125,13 @@ func (c *Core) Close(ctx context.Context) (err error) {
 // Master creates and returns a connection from master node if master-slave configured.
 // It returns the default connection if master-slave not configured.
 func (c *Core) Master(schema ...string) (*sql.DB, error) {
-	useSchema := ""
-	if len(schema) > 0 && schema[0] != "" {
-		useSchema = schema[0]
-	} else {
-		useSchema = c.schema
-	}
-	return c.getSqlDb(true, useSchema)
+	return c.getSqlDb(true, gutil.GetOrDefaultStr(c.schema, schema...))
 }
 
 // Slave creates and returns a connection from slave node if master-slave configured.
 // It returns the default connection if master-slave not configured.
 func (c *Core) Slave(schema ...string) (*sql.DB, error) {
-	useSchema := ""
-	if len(schema) > 0 && schema[0] != "" {
-		useSchema = schema[0]
-	} else {
-		useSchema = c.schema
-	}
-	return c.getSqlDb(false, useSchema)
+	return c.getSqlDb(false, gutil.GetOrDefaultStr(c.schema, schema...))
 }
 
 // GetAll queries and returns data records from database.
@@ -241,7 +230,7 @@ func (c *Core) GetValue(ctx context.Context, sql string, args ...interface{}) (V
 }
 
 // GetCount queries and returns the count from database.
-func (c *Core) GetCount(ctx context.Context, sql string, args ...interface{}) (int, error) {
+func (c *Core) GetCount(ctx context.Context, sql string, args ...interface{}) (int64, error) {
 	// If the query fields do not contain function "COUNT",
 	// it replaces the sql string and adds the "COUNT" function to the fields.
 	if !gregex.IsMatchString(`(?i)SELECT\s+COUNT\(.+\)\s+FROM`, sql) {
@@ -251,7 +240,7 @@ func (c *Core) GetCount(ctx context.Context, sql string, args ...interface{}) (i
 	if err != nil {
 		return 0, err
 	}
-	return value.Int(), nil
+	return value.Int64(), nil
 }
 
 // Union does "(SELECT xxx FROM xxx) UNION (SELECT xxx FROM xxx) ..." statement.
@@ -546,7 +535,7 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 	}
 	var (
 		params  []interface{}
-		updates = ""
+		updates string
 	)
 	switch kind {
 	case reflect.Map, reflect.Struct:
@@ -666,8 +655,8 @@ func (c *Core) writeSqlToLogger(ctx context.Context, sql *Sql) {
 		}
 	}
 	s := fmt.Sprintf(
-		"[%3d ms] [%s] [rows:%-3d] %s%s",
-		sql.End-sql.Start, sql.Group, sql.RowsAffected, transactionIdStr, sql.Format,
+		"[%3d ms] [%s] [%s] [rows:%-3d] %s%s",
+		sql.End-sql.Start, sql.Group, sql.Schema, sql.RowsAffected, transactionIdStr, sql.Format,
 	)
 	if sql.Error != nil {
 		s += "\nError: " + sql.Error.Error()

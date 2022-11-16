@@ -774,6 +774,7 @@ func Test_DB_Time(t *testing.T) {
 		t.Assert(n, 2)
 	})
 }
+
 func Test_DB_ToJson(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)

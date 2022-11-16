@@ -113,8 +113,8 @@ type SearchInput struct {
 }
 
 const (
-	Schema                    = `services`
-	DefaultHead               = `services`
+	Schema                    = `service`
+	DefaultHead               = `service`
 	DefaultDeployment         = `default`
 	DefaultNamespace          = `default`
 	DefaultVersion            = `latest`

@@ -55,7 +55,7 @@ func NewSortedArraySize(cap int, comparator func(a, b interface{}) int, safe ...
 	}
 }
 
-// NewSortedArrayRange creates and returns a array by a range from `start` to `end`
+// NewSortedArrayRange creates and returns an array by a range from `start` to `end`
 // with step value `step`.
 func NewSortedArrayRange(start, end, step int, comparator func(a, b interface{}) int, safe ...bool) *SortedArray {
 	if step == 0 {
