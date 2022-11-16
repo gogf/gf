@@ -731,16 +731,157 @@ func Test_Model_Count(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(count, int64(TableSize))
 	})
-	// gtest.C(t, func(t *gtest.T) {
-	//	count, err := db.Model(table).Fields("id myid").Where("id>8").Count()
-	//	t.AssertNil(err)
-	//	t.Assert(count, int64(2))
-	// })
-	// gtest.C(t, func(t *gtest.T) {
-	//	count, err := db.Model(table).As("u1").LeftJoin(table, "u2", "u2.id=u1.id").Fields("u2.id u2id").Where("u1.id>8").Count()
-	//	t.AssertNil(err)
-	//	t.Assert(count, int64(2))
-	// })
+}
+
+func Test_Model_Value_WithCache(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		value, err := db.Model(table).Where("id", 1).Cache(gdb.CacheOption{
+			Duration: time.Second * 10,
+			Force:    false,
+		}).Value()
+		t.AssertNil(err)
+		t.Assert(value.Int(), 0)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Data(g.MapStrAny{
+			"id":       1,
+			"passport": fmt.Sprintf(`passport_%d`, 1),
+			"password": fmt.Sprintf(`password_%d`, 1),
+			"nickname": fmt.Sprintf(`nickname_%d`, 1),
+		}).Insert()
+		t.AssertNil(err)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		value, err := db.Model(table).Where("id", 1).Cache(gdb.CacheOption{
+			Duration: time.Second * 10,
+			Force:    false,
+		}).Value()
+		t.AssertNil(err)
+		t.Assert(value.Int(), 1)
+	})
+}
+
+func Test_Model_Count_WithCache(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", 1).Cache(gdb.CacheOption{
+			Duration: time.Second * 10,
+			Force:    false,
+		}).Count()
+		t.AssertNil(err)
+		t.Assert(count, 0)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Data(g.MapStrAny{
+			"id":       1,
+			"passport": fmt.Sprintf(`passport_%d`, 1),
+			"password": fmt.Sprintf(`password_%d`, 1),
+			"nickname": fmt.Sprintf(`nickname_%d`, 1),
+		}).Insert()
+		t.AssertNil(err)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", 1).Cache(gdb.CacheOption{
+			Duration: time.Second * 10,
+			Force:    false,
+		}).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
+	})
+}
+
+func Test_Model_Count_All_WithCache(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Cache(gdb.CacheOption{
+			Duration: time.Second * 10,
+			Force:    false,
+		}).Count()
+		t.AssertNil(err)
+		t.Assert(count, 0)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Data(g.MapStrAny{
+			"id":       1,
+			"passport": fmt.Sprintf(`passport_%d`, 1),
+			"password": fmt.Sprintf(`password_%d`, 1),
+			"nickname": fmt.Sprintf(`nickname_%d`, 1),
+		}).Insert()
+		t.AssertNil(err)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Cache(gdb.CacheOption{
+			Duration: time.Second * 10,
+			Force:    false,
+		}).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Data(g.MapStrAny{
+			"id":       2,
+			"passport": fmt.Sprintf(`passport_%d`, 2),
+			"password": fmt.Sprintf(`password_%d`, 2),
+			"nickname": fmt.Sprintf(`nickname_%d`, 2),
+		}).Insert()
+		t.AssertNil(err)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Cache(gdb.CacheOption{
+			Duration: time.Second * 10,
+			Force:    false,
+		}).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
+	})
+}
+
+func Test_Model_CountColumn_WithCache(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", 1).Cache(gdb.CacheOption{
+			Duration: time.Second * 10,
+			Force:    false,
+		}).CountColumn("id")
+		t.AssertNil(err)
+		t.Assert(count, 0)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Data(g.MapStrAny{
+			"id":       1,
+			"passport": fmt.Sprintf(`passport_%d`, 1),
+			"password": fmt.Sprintf(`password_%d`, 1),
+			"nickname": fmt.Sprintf(`nickname_%d`, 1),
+		}).Insert()
+		t.AssertNil(err)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", 1).Cache(gdb.CacheOption{
+			Duration: time.Second * 10,
+			Force:    false,
+		}).CountColumn("id")
+		t.AssertNil(err)
+		t.Assert(count, 1)
+	})
 }
 
 func Test_Model_Select(t *testing.T) {
