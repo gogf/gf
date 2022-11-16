@@ -141,7 +141,7 @@ func Test_Func(t *testing.T) {
 		str = `{{"我是中国人" | substr 2 -1}};{{"我是中国人" | substr 2  2}}`
 		result, err = gview.ParseContent(context.TODO(), str, nil)
 		t.Assert(err != nil, false)
-		t.Assert(result, `中国人;中国`)
+		t.Assert(result, `中国;中国`)
 
 		str = `{{"我是中国人" | strlimit 2  "..."}}`
 		result, err = gview.ParseContent(context.TODO(), str, nil)

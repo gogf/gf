@@ -22,7 +22,7 @@ func Test_View(t *testing.T) {
 		t.AssertNE(View(), nil)
 		b, e := View().ParseContent(context.TODO(), `{{"我是中国人" | substr 2 -1}}`, nil)
 		t.Assert(e, nil)
-		t.Assert(b, "中国人")
+		t.Assert(b, "中国")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		tpl := "t.tpl"
@@ -32,7 +32,7 @@ func Test_View(t *testing.T) {
 
 		b, e := View().Parse(context.TODO(), "t.tpl", nil)
 		t.Assert(e, nil)
-		t.Assert(b, "中国人")
+		t.Assert(b, "中国")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		path := fmt.Sprintf(`%s/%d`, gfile.Temp(), gtime.TimestampNano())
@@ -45,7 +45,7 @@ func Test_View(t *testing.T) {
 
 		b, e := View().Parse(context.TODO(), "t.tpl", nil)
 		t.Assert(e, nil)
-		t.Assert(b, "中国人")
+		t.Assert(b, "中国")
 	})
 }
 
