@@ -48,6 +48,14 @@ func Test_New(t *testing.T) {
 		timeTemp := gtime.New("2021-2-9 08:01:21")
 		t.Assert(timeTemp.Format("Y-m-d H:i:s"), "2021-02-09 08:01:21")
 		t.Assert(timeTemp.Time.Format("2006-01-02 15:04:05"), "2021-02-09 08:01:21")
+		timeTemp = gtime.New("2021-02-09 08:01:21", []byte("Y-m-d H:i:s"))
+		t.Assert(timeTemp.Format("Y-m-d H:i:s"), "2021-02-09 08:01:21")
+		t.Assert(timeTemp.Time.Format("2006-01-02 15:04:05"), "2021-02-09 08:01:21")
+	})
+	//
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gtime.New(gtime.Time{}), nil)
+		t.Assert(gtime.New(&gtime.Time{}), nil)
 	})
 }
 
