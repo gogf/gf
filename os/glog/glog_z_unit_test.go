@@ -88,7 +88,7 @@ func TestConfig(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		glog.SetFile("test.log")
 		glog.SetLevel(glog.LEVEL_ALL)
-		glog.SetAsync(true)
+		glog.SetAsync(false)
 		glog.SetStdoutPrint(false)
 		glog.SetHeaderPrint(false)
 		glog.SetPrefix("log_prefix")
