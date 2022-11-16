@@ -159,6 +159,10 @@ func newCommandFromObjectMeta(object interface{}, name string) (command *Command
 	if command.Description == "" {
 		command.Description = metaData[gtag.DescriptionShort]
 	}
+	if command.Brief == "" && command.Description != "" {
+		command.Brief = command.Description
+		command.Description = ""
+	}
 	if command.Examples == "" {
 		command.Examples = metaData[gtag.ExampleShort]
 	}
