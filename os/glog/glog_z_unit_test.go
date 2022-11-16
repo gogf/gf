@@ -9,6 +9,7 @@ package glog_test
 import (
 	"bytes"
 	"context"
+	"os"
 	"sync"
 	"testing"
 
@@ -19,6 +20,105 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
 )
+
+func TestCase(t *testing.T) {
+	defaultLog := glog.DefaultLogger().Clone()
+	defer glog.SetDefaultLogger(defaultLog)
+
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertNE(glog.Instance(), nil)
+	})
+}
+
+func TestDefaultLogger(t *testing.T) {
+	defaultLog := glog.DefaultLogger().Clone()
+	defer glog.SetDefaultLogger(defaultLog)
+
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertNE(defaultLog, nil)
+		log := glog.New()
+		glog.SetDefaultLogger(log)
+		t.AssertEQ(glog.DefaultLogger(), defaultLog)
+		t.AssertEQ(glog.Expose(), defaultLog)
+	})
+}
+
+func TestAPI(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		glog.Print(ctx, "Print")
+		glog.Printf(ctx, "%s", "Printf")
+		glog.Info(ctx, "Info")
+		glog.Infof(ctx, "%s", "Infof")
+		glog.Debug(ctx, "Debug")
+		glog.Debugf(ctx, "%s", "Debugf")
+		glog.Notice(ctx, "Notice")
+		glog.Noticef(ctx, "%s", "Noticef")
+		glog.Warning(ctx, "Warning")
+		glog.Warningf(ctx, "%s", "Warningf")
+		glog.Error(ctx, "Error")
+		glog.Errorf(ctx, "%s", "Errorf")
+		glog.Critical(ctx, "Critical")
+		glog.Criticalf(ctx, "%s", "Criticalf")
+	})
+}
+
+func TestChaining(t *testing.T) {
+	defaultLog := glog.DefaultLogger().Clone()
+	defer glog.SetDefaultLogger(defaultLog)
+
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertNE(glog.Cat("module"), nil)
+		t.AssertNE(glog.File("test.log"), nil)
+		t.AssertNE(glog.Level(glog.LEVEL_ALL), nil)
+		t.AssertNE(glog.LevelStr("all"), nil)
+		t.AssertNE(glog.Skip(1), nil)
+		t.AssertNE(glog.Stack(false), nil)
+		t.AssertNE(glog.StackWithFilter("none"), nil)
+		t.AssertNE(glog.Stdout(false), nil)
+		t.AssertNE(glog.Header(false), nil)
+		t.AssertNE(glog.Line(false), nil)
+		t.AssertNE(glog.Async(false), nil)
+	})
+}
+
+func TestConfig(t *testing.T) {
+	defaultLog := glog.DefaultLogger().Clone()
+	defer glog.SetDefaultLogger(defaultLog)
+
+	gtest.C(t, func(t *gtest.T) {
+		glog.SetFile("test.log")
+		glog.SetLevel(glog.LEVEL_ALL)
+		glog.SetAsync(true)
+		glog.SetStdoutPrint(false)
+		glog.SetHeaderPrint(false)
+		glog.SetPrefix("log_prefix")
+		t.Assert(glog.SetConfigWithMap(map[string]interface{}{
+			"level": "all",
+		}), nil)
+		t.Assert(glog.SetPath("/var/log"), nil)
+		t.Assert(glog.GetPath(), "/var/log")
+		t.Assert(glog.GetLevel(), glog.LEVEL_ALL)
+		glog.SetWriter(os.Stdout)
+		t.Assert(glog.GetWriter(), os.Stdout)
+		glog.SetFlags(glog.F_ASYNC)
+		t.Assert(glog.GetFlags(), glog.F_ASYNC)
+		glog.SetCtxKeys("SpanId", "TraceId")
+		t.Assert(glog.GetCtxKeys(), []string{"SpanId", "TraceId"})
+		glog.PrintStack(ctx, 1)
+		t.Assert(glog.GetStack(1), "")
+		glog.SetStack(true)
+		t.Assert(glog.SetLevelStr("all"), nil)
+		glog.SetLevelPrefix(glog.LEVEL_ALL, "LevelPrefix")
+		t.Assert(glog.GetLevelPrefix(glog.LEVEL_ALL), "LevelPrefix")
+		glog.SetLevelPrefixes(map[int]string{
+			glog.LEVEL_ALL: "ALL_Prefix",
+		})
+		glog.SetHandlers(func(ctx context.Context, in *glog.HandlerInput) {
+		})
+		glog.SetWriterColorEnable(true)
+		t.Assert(glog.SetConfig(glog.Config{}), nil)
+	})
+}
 
 func Test_Ctx(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
