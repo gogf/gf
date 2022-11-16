@@ -94,7 +94,7 @@ func Test_SetLevel(t *testing.T) {
 	defer glog.SetDefaultLogger(defaultLog)
 	gtest.C(t, func(t *gtest.T) {
 		glog.SetLevel(glog.LEVEL_ALL)
-		t.Assert(glog.GetLevel(), glog.LEVEL_ALL)
+		t.Assert(glog.GetLevel()&glog.LEVEL_ALL, glog.LEVEL_ALL)
 	})
 }
 
