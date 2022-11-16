@@ -116,7 +116,6 @@ func TestConfig(t *testing.T) {
 		glog.SetHandlers(func(ctx context.Context, in *glog.HandlerInput) {
 		})
 		glog.SetWriterColorEnable(true)
-		t.Assert(glog.SetConfig(glog.Config{}), nil)
 	})
 }
 
