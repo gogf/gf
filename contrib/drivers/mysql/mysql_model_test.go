@@ -776,7 +776,7 @@ func Test_Model_Count_WithCache(t *testing.T) {
 			Force:    false,
 		}).Count()
 		t.AssertNil(err)
-		t.Assert(count, 0)
+		t.Assert(count, int64(0))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Model(table).Data(g.MapStrAny{
@@ -795,7 +795,7 @@ func Test_Model_Count_WithCache(t *testing.T) {
 			Force:    false,
 		}).Count()
 		t.AssertNil(err)
-		t.Assert(count, 1)
+		t.Assert(count, int64(1))
 	})
 }
 
@@ -809,7 +809,7 @@ func Test_Model_Count_All_WithCache(t *testing.T) {
 			Force:    false,
 		}).Count()
 		t.AssertNil(err)
-		t.Assert(count, 0)
+		t.Assert(count, int64(0))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Model(table).Data(g.MapStrAny{
@@ -828,7 +828,7 @@ func Test_Model_Count_All_WithCache(t *testing.T) {
 			Force:    false,
 		}).Count()
 		t.AssertNil(err)
-		t.Assert(count, 1)
+		t.Assert(count, int64(1))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Model(table).Data(g.MapStrAny{
@@ -847,7 +847,7 @@ func Test_Model_Count_All_WithCache(t *testing.T) {
 			Force:    false,
 		}).Count()
 		t.AssertNil(err)
-		t.Assert(count, 1)
+		t.Assert(count, int64(1))
 	})
 }
 
@@ -861,7 +861,7 @@ func Test_Model_CountColumn_WithCache(t *testing.T) {
 			Force:    false,
 		}).CountColumn("id")
 		t.AssertNil(err)
-		t.Assert(count, 0)
+		t.Assert(count, int64(0))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Model(table).Data(g.MapStrAny{
@@ -880,7 +880,7 @@ func Test_Model_CountColumn_WithCache(t *testing.T) {
 			Force:    false,
 		}).CountColumn("id")
 		t.AssertNil(err)
-		t.Assert(count, 1)
+		t.Assert(count, int64(1))
 	})
 }
 
