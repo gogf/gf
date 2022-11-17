@@ -70,11 +70,13 @@ type (
 	// HandlerFunc is request handler function.
 	HandlerFunc = func(r *Request)
 
-	// handlerFuncInfo contains the HandlerFunc address and its reflection type.
+	// handlerFuncInfo contains the possible g.Meta information, HandlerFunc address and its reflection type.
 	handlerFuncInfo struct {
-		Func  HandlerFunc   // Handler function address.
-		Type  reflect.Type  // Reflect type information for current handler, which is used for extensions of the handler feature.
-		Value reflect.Value // Reflect value information for current handler, which is used for extensions of the handler feature.
+		Func    HandlerFunc       // Handler function address.
+		Type    reflect.Type      // Reflect type information for current handler, which is used for extensions of the handler feature.
+		Value   reflect.Value     // Reflect value information for current handler, which is used for extensions of the handler feature.
+		ReqMeta map[string]string // g.Meta defined in "XxxReq" struct, which would be nil if there is no "XxxReq" struct in the handler function or no g.Meta in "XxxReq" struct.
+		ResMeta map[string]string // g.Meta defined in "XxxRes" struct, which would be nil if there is no "XxxRes" struct in the handler function or no g.Meta in "XxxRes" struct.
 	}
 
 	// HandlerItem is the registered handler for route handling,

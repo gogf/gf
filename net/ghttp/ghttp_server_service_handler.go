@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gmeta"
 )
 
 // BindHandler registers a handler function to server with a given pattern.
@@ -145,6 +146,10 @@ func (s *Server) nameToUri(name string) string {
 
 func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, methodName string) (info handlerFuncInfo, err error) {
 	handlerFunc, ok := f.(HandlerFunc)
+	var (
+		reqMeta map[string]string
+		resMeta map[string]string
+	)
 	if !ok {
 		reflectType := reflect.TypeOf(f)
 		if reflectType.NumIn() != 2 || reflectType.NumOut() != 2 {
@@ -182,6 +187,20 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 			return
 		}
 
+		retrieveMetaData := func(t reflect.Type) (data map[string]string) {
+			var value reflect.Value
+			if t.Kind() == reflect.Ptr {
+				value = reflect.New(t.Elem()).Elem()
+			} else {
+				value = reflect.New(t).Elem()
+			}
+			data = gmeta.Data(value.Interface())
+			if len(data) == 0 {
+				return nil
+			}
+			return
+		}
+
 		// The request struct should be named as `xxxReq`.
 		if !gstr.HasSuffix(reflectType.In(1).String(), `Req`) {
 			err = gerror.NewCodef(
@@ -190,6 +209,9 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 				reflectType.In(1).String(),
 			)
 			return
+		} else {
+			// Retrieve metadata from "XxxReq" struct.
+			reqMeta = retrieveMetaData(reflectType.In(1))
 		}
 
 		// The response struct should be named as `xxxRes`.
@@ -200,10 +222,15 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 				reflectType.Out(0).String(),
 			)
 			return
+		} else {
+			// Retrieve metadata from "XxxRes" struct.
+			resMeta = retrieveMetaData(reflectType.Out(0))
 		}
 	}
 	info.Func = handlerFunc
 	info.Type = reflect.TypeOf(f)
 	info.Value = reflect.ValueOf(f)
+	info.ReqMeta = reqMeta
+	info.ResMeta = resMeta
 	return
 }
