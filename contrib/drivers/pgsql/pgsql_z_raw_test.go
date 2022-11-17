@@ -94,6 +94,6 @@ func Test_Raw_Update(t *testing.T) {
 		user := db.Model(table)
 		n, err := user.Where("id", 101).Count()
 		t.AssertNil(err)
-		t.Assert(n, 1)
+		t.Assert(n, int64(1))
 	})
 }

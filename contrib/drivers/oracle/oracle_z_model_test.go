@@ -9,6 +9,10 @@ package oracle_test
 import (
 	"database/sql"
 	"fmt"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
@@ -16,9 +20,6 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
 	"github.com/gogf/gf/v2/util/gutil"
-	"strings"
-	"testing"
-	"time"
 )
 
 func Test_Model_InnerJoin(t *testing.T) {
@@ -162,7 +163,7 @@ func TestPage(t *testing.T) {
 func Test_Model_Insert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
-	//db.SetDebug(true)
+	// db.SetDebug(true)
 	gtest.C(t, func(t *gtest.T) {
 		user := db.Model(table)
 		result, err := user.Data(g.Map{
@@ -406,7 +407,7 @@ func Test_Model_Count(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Count()
 		t.AssertNil(err)
-		t.Assert(count, TableSize)
+		t.Assert(count, int64(TableSize))
 	})
 	// Count with cache, check internal ctx data feature.
 	gtest.C(t, func(t *gtest.T) {
@@ -417,24 +418,24 @@ func Test_Model_Count(t *testing.T) {
 				Force:    false,
 			}).Count()
 			t.AssertNil(err)
-			t.Assert(count, TableSize)
+			t.Assert(count, int64(TableSize))
 		}
 	})
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).FieldsEx("ID").Where("id>8").Count()
 		t.AssertNil(err)
-		t.Assert(count, 2)
+		t.Assert(count, int64(2))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Fields("distinct id").Where("id>8").Count()
 		t.AssertNil(err)
-		t.Assert(count, 2)
+		t.Assert(count, int64(2))
 	})
 	// COUNT...LIMIT...
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Page(1, 2).Count()
 		t.AssertNil(err)
-		t.Assert(count, TableSize)
+		t.Assert(count, int64(TableSize))
 	})
 
 }
@@ -922,11 +923,11 @@ func Test_Model_Distinct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Where("id > 1").Distinct().Count()
 		t.AssertNil(err)
-		t.Assert(count, 9)
+		t.Assert(count, int64(9))
 	})
 }
 
-//not support
+// not support
 /*
 func Test_Model_Min_Max(t *testing.T) {
 	table := createInitTable()
@@ -947,7 +948,7 @@ func Test_Model_Min_Max(t *testing.T) {
 func Test_Model_HasTable(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
-	//db.SetDebug(true)
+	// db.SetDebug(true)
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.GetCore().HasTable(strings.ToUpper(table))
 		t.Assert(result, true)
