@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/gogf/gf/contrib/drivers/mssql/v2 v2.1.0
 	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.1.0
+	github.com/gogf/gf/contrib/drivers/oracle/v2 v2.1.0
 	github.com/gogf/gf/contrib/drivers/pgsql/v2 v2.1.0
 	github.com/gogf/gf/contrib/drivers/sqlite/v2 v2.1.0
 	github.com/gogf/gf/v2 v2.2.2
@@ -35,6 +36,7 @@ require (
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
+	github.com/sijms/go-ora/v2 v2.4.20 // indirect
 	go.opentelemetry.io/otel v1.7.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.7.0 // indirect
 	go.opentelemetry.io/otel/trace v1.7.0 // indirect
@@ -53,6 +55,7 @@ require (
 replace (
 	github.com/gogf/gf/contrib/drivers/mssql/v2 => ../../contrib/drivers/mssql/
 	github.com/gogf/gf/contrib/drivers/mysql/v2 => ../../contrib/drivers/mysql/
+	github.com/gogf/gf/contrib/drivers/oracle/v2 => ../../contrib/drivers/oracle/
 	github.com/gogf/gf/contrib/drivers/pgsql/v2 => ../../contrib/drivers/pgsql/
 	github.com/gogf/gf/contrib/drivers/sqlite/v2 => ../../contrib/drivers/sqlite/
 	github.com/gogf/gf/v2 => ../../
