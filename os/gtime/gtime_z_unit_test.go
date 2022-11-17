@@ -18,7 +18,16 @@ import (
 func Test_SetTimeZone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gtime.SetTimeZone("Asia/Shanghai"), nil)
+		t.AssertNE(gtime.SetTimeZone("testzone"), nil)
 		// t.Assert(time.Local.String(), "Asia/Shanghai")
+	})
+}
+
+func Test_TimestampStr(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertGT(len(gtime.TimestampMilliStr()), 0)
+		t.AssertGT(len(gtime.TimestampMicroStr()), 0)
+		t.AssertGT(len(gtime.TimestampNanoStr()), 0)
 	})
 }
 
@@ -68,6 +77,14 @@ func Test_Datetime(t *testing.T) {
 			t.Error("test fail")
 		}
 		t.Assert(datetime, timeTemp.Time.Format("2006-01-02 15:04:05"))
+	})
+	gtest.C(t, func(t *gtest.T) {
+		timeTemp, err := gtime.StrToTime("")
+		t.Assert(err, nil)
+		t.AssertLT(timeTemp.Unix(), 0)
+		timeTemp, err = gtime.StrToTime("2006-01")
+		t.AssertNE(err, nil)
+		t.Assert(timeTemp, nil)
 	})
 }
 
