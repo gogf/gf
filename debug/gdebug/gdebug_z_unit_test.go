@@ -27,7 +27,7 @@ func Test_CallerFilePath(t *testing.T) {
 
 func Test_CallerDirectory(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gstr.Contains(gdebug.CallerDirectory(), "test\\gtest"), true)
+		t.Assert(gstr.Contains(gdebug.CallerDirectory(), "gtest"), true)
 	})
 }
 
