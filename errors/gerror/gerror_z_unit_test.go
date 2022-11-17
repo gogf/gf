@@ -179,6 +179,11 @@ func Test_Cause(t *testing.T) {
 		err := errors.New("1")
 		t.Assert(gerror.Stack(err), err)
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		var e *gerror.Error = nil
+		t.Assert(e.Cause(), nil)
+	})
 }
 
 func Test_Format(t *testing.T) {
@@ -248,6 +253,10 @@ func Test_Current(t *testing.T) {
 		t.Assert(err.Error(), "3: 2: 1")
 		t.Assert(gerror.Current(err).Error(), "3")
 	})
+	gtest.C(t, func(t *gtest.T) {
+		var e *gerror.Error = nil
+		t.Assert(e.Current(), nil)
+	})
 }
 
 func Test_Unwrap(t *testing.T) {
@@ -266,6 +275,10 @@ func Test_Unwrap(t *testing.T) {
 
 		err = gerror.Unwrap(err)
 		t.AssertNil(err)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var e *gerror.Error = nil
+		t.Assert(e.Unwrap(), nil)
 	})
 }
 
@@ -336,34 +349,6 @@ func TestError_Error(t *testing.T) {
 	})
 }
 
-func TestError_Cause(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		var e *gerror.Error = nil
-		t.Assert(e.Cause(), nil)
-	})
-}
-
-func TestError_Current(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		var e *gerror.Error = nil
-		t.Assert(e.Current(), nil)
-	})
-}
-
-func TestError_Unwrap(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		var e *gerror.Error = nil
-		t.Assert(e.Unwrap(), nil)
-	})
-}
-
-func TestError_Equal(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		err := errors.New("1")
-		t.Assert(err.(gerror.Error).Equal(err), nil)
-	})
-}
-
 func TestError_Code(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var e *gerror.Error = nil
@@ -380,6 +365,10 @@ func Test_SetCode(t *testing.T) {
 		err.(*gerror.Error).SetCode(gcode.CodeValidationFailed)
 		t.Assert(gerror.Code(err), gcode.CodeValidationFailed)
 		t.Assert(err.Error(), "123")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var err *gerror.Error = nil
+		err.SetCode(gcode.CodeValidationFailed)
 	})
 }
 
@@ -412,6 +401,10 @@ func Test_Equal(t *testing.T) {
 		t.Assert(gerror.Equal(err2, err3), true)
 		t.Assert(gerror.Equal(err3, err4), false)
 		t.Assert(gerror.Equal(err1, err4), false)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var e = new(gerror.Error)
+		t.Assert(e.Equal(e), true)
 	})
 }
 
