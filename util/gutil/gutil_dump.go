@@ -110,9 +110,12 @@ func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDum
 	}
 	var (
 		reflectKind     = reflectValue.Kind()
-		reflectTypeName = reflectValue.Type().String()
+		reflectTypeName = "invalid"
 		newIndent       = indent + dumpIndent
 	)
+	if reflectValue.IsValid() {
+		reflectTypeName = reflectValue.Type().String()
+	}
 	reflectTypeName = strings.ReplaceAll(reflectTypeName, `[]uint8`, `[]byte`)
 	if !option.WithType {
 		reflectTypeName = ""
