@@ -159,6 +159,10 @@ func newCommandFromObjectMeta(object interface{}, name string) (command *Command
 	if command.Description == "" {
 		command.Description = metaData[gtag.DescriptionShort]
 	}
+	if command.Brief == "" && command.Description != "" {
+		command.Brief = command.Description
+		command.Description = ""
+	}
 	if command.Examples == "" {
 		command.Examples = metaData[gtag.ExampleShort]
 	}
@@ -354,6 +358,9 @@ func newArgumentsFromInput(object interface{}) (args []Argument, err error) {
 				`short argument name "%s" defined in "%s.%s" is already token by built-in arguments`,
 				arg.Short, reflect.TypeOf(object).String(), field.Name(),
 			)
+		}
+		if arg.Brief == "" {
+			arg.Brief = field.TagDescription()
 		}
 		if v, ok := metaData[gtag.Arg]; ok {
 			arg.IsArg = gconv.Bool(v)
