@@ -8,7 +8,6 @@ package zookeeper
 
 import (
 	"context"
-	"github.com/go-zookeeper/zk"
 	"testing"
 	"time"
 
@@ -19,12 +18,7 @@ import (
 
 // TestRegistry TestRegistryManyService
 func TestRegistry(t *testing.T) {
-	conn, _, err := zk.Connect([]string{"127.0.0.1:2181"}, time.Second*120)
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
-	r := New(conn, WithRootPath("/gogf"))
+	r := New([]string{"127.0.0.1:2181"}, WithRootPath("/gogf"))
 	ctx := context.Background()
 
 	svc := &gsvc.LocalService{
@@ -47,12 +41,7 @@ func TestRegistry(t *testing.T) {
 
 // TestRegistryMany TestRegistryManyService
 func TestRegistryMany(t *testing.T) {
-	conn, _, err := zk.Connect([]string{"127.0.0.1:2181"}, time.Second*120)
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
-	r := New(conn, WithRootPath("/gogf"))
+	r := New([]string{"127.0.0.1:2181"}, WithRootPath("/gogf"))
 
 	svc := &gsvc.LocalService{
 		Name:      "goframe-provider-1-tcp",
@@ -106,12 +95,7 @@ func TestRegistryMany(t *testing.T) {
 
 // TestGetService Test GetService
 func TestGetService(t *testing.T) {
-	conn, _, err := zk.Connect([]string{"127.0.0.1:2181"}, time.Second*120)
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
-	r := New(conn, WithRootPath("/gogf"))
+	r := New([]string{"127.0.0.1:2181"}, WithRootPath("/gogf"))
 	ctx := context.Background()
 
 	svc := &gsvc.LocalService{
@@ -147,12 +131,7 @@ func TestGetService(t *testing.T) {
 
 // TestWatch Test Watch
 func TestWatch(t *testing.T) {
-	conn, _, err := zk.Connect([]string{"127.0.0.1:2181"}, time.Second*3)
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
-	r := New(conn, WithRootPath("/gogf"))
+	r := New([]string{"127.0.0.1:2181"}, WithRootPath("/gogf"))
 
 	ctx := gctx.New()
 

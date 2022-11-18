@@ -11,6 +11,7 @@ import (
 	"github.com/go-zookeeper/zk"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"golang.org/x/sync/singleflight"
+	"time"
 )
 
 var _ gsvc.Registry = &Registry{}
@@ -49,7 +50,11 @@ type Registry struct {
 	group singleflight.Group
 }
 
-func New(conn *zk.Conn, opts ...Option) *Registry {
+func New(address []string, opts ...Option) *Registry {
+	conn, _, err := zk.Connect(address, time.Second*120)
+	if err != nil {
+		panic(err)
+	}
 	options := &options{
 		namespace: "/microservices",
 	}
