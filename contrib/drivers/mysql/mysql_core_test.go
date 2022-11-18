@@ -581,7 +581,7 @@ func Test_DB_GetCount(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.GetCount(ctx, fmt.Sprintf("SELECT * FROM %s", table))
 		t.AssertNil(err)
-		t.Assert(count, TableSize)
+		t.Assert(count, int64(TableSize))
 	})
 }
 
