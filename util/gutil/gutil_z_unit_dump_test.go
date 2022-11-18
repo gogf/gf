@@ -273,3 +273,22 @@ func Test_Dump_Issue1661(t *testing.T) {
 ]`)
 	})
 }
+
+func Test_Dump_Pull2305(t *testing.T) {
+	type AB interface {
+		print()
+	}
+
+	type ABC struct {
+		a int
+		b AB
+	}
+
+	abc := ABC{a: 2}
+	gtest.C(t, func(t *gtest.T) {
+		g.Dump(abc)
+	})
+	// output
+	// reflect: call of reflect.Value.Type on zero Value
+
+}
