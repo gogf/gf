@@ -9,6 +9,7 @@ package zookeeper
 
 import (
 	"github.com/go-zookeeper/zk"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"golang.org/x/sync/singleflight"
 	"time"
@@ -53,7 +54,9 @@ type Registry struct {
 func New(address []string, opts ...Option) *Registry {
 	conn, _, err := zk.Connect(address, time.Second*120)
 	if err != nil {
-		panic(err)
+		panic(gerror.Wrapf(err,
+			"Error with connect to zookeeper"),
+		)
 	}
 	options := &options{
 		namespace: "/microservices",
