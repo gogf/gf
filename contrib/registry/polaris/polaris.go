@@ -10,12 +10,11 @@ package polaris
 import (
 	"time"
 
-	"github.com/polarismesh/polaris-go"
-	"github.com/polarismesh/polaris-go/pkg/config"
-
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/glog"
+	"github.com/polarismesh/polaris-go"
+	"github.com/polarismesh/polaris-go/pkg/config"
 )
 
 var (
@@ -134,7 +133,7 @@ func WithLogger(logger glog.ILogger) Option {
 }
 
 // New create a new registry.
-func New(provider polaris.ProviderAPI, consumer polaris.ConsumerAPI, opts ...Option) (r *Registry) {
+func New(provider polaris.ProviderAPI, consumer polaris.ConsumerAPI, opts ...Option) gsvc.Registry {
 	op := options{
 		Namespace:    "default",
 		ServiceToken: "",
@@ -161,7 +160,7 @@ func New(provider polaris.ProviderAPI, consumer polaris.ConsumerAPI, opts ...Opt
 }
 
 // NewWithConfig new a registry with config.
-func NewWithConfig(conf config.Configuration, opts ...Option) (r *Registry) {
+func NewWithConfig(conf config.Configuration, opts ...Option) gsvc.Registry {
 	provider, err := polaris.NewProviderAPIByConfig(conf)
 	if err != nil {
 		panic(err)

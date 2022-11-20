@@ -2,10 +2,11 @@ package main
 
 import (
 	"github.com/gogf/gf/contrib/trace/jaeger/v2"
-	"github.com/gogf/gf/example/trace/grpc_with_db/protobuf/user"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/os/gctx"
+
+	"github.com/gogf/gf/example/trace/grpc_with_db/protobuf/user"
 )
 
 const (

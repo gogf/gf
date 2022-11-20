@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/internal/json"
 )
 
+// CacheOption is options for model cache control in query.
 type CacheOption struct {
 	// Duration is the TTL for the cache.
 	// If the parameter `Duration` < 0, which means it clear the cache with given `Name`.

@@ -2,6 +2,7 @@ package gjson_test
 
 import (
 	"fmt"
+
 	"github.com/gogf/gf/v2/encoding/gjson"
 )
 
@@ -104,10 +105,10 @@ func ExampleJson_ToJsonIndent() {
 	fmt.Println(string(jsonBytes))
 
 	// Output:
-	//{
+	// {
 	//	"Age": 18,
 	//	"Name": "John"
-	//}
+	// }
 }
 
 func ExampleJson_ToJsonIndentString() {
@@ -126,10 +127,10 @@ func ExampleJson_ToJsonIndentString() {
 	fmt.Println(jsonStr)
 
 	// Output:
-	//{
+	// {
 	//	"Age": 18,
 	//	"Name": "John"
-	//}
+	// }
 }
 
 func ExampleJson_MustToJson() {
@@ -186,10 +187,10 @@ func ExampleJson_MustToJsonIndent() {
 	fmt.Println(string(jsonBytes))
 
 	// Output:
-	//{
+	// {
 	//	"Age": 18,
 	//	"Name": "John"
-	//}
+	// }
 }
 
 func ExampleJson_MustToJsonIndentString() {
@@ -208,10 +209,10 @@ func ExampleJson_MustToJsonIndentString() {
 	fmt.Println(jsonStr)
 
 	// Output:
-	//{
+	// {
 	//	"Age": 18,
 	//	"Name": "John"
-	//}
+	// }
 }
 
 // ========================================================================
@@ -271,10 +272,10 @@ func ExampleJson_ToXmlIndent() {
 	fmt.Println(string(xmlBytes))
 
 	// Output:
-	//<doc>
+	// <doc>
 	//	<Age>18</Age>
 	//	<Name>John</Name>
-	//</doc>
+	// </doc>
 }
 
 func ExampleJson_ToXmlIndentString() {
@@ -293,10 +294,10 @@ func ExampleJson_ToXmlIndentString() {
 	fmt.Println(string(xmlStr))
 
 	// Output:
-	//<doc>
+	// <doc>
 	//	<Age>18</Age>
 	//	<Name>John</Name>
-	//</doc>
+	// </doc>
 }
 
 func ExampleJson_MustToXml() {
@@ -353,10 +354,10 @@ func ExampleJson_MustToXmlIndent() {
 	fmt.Println(string(xmlBytes))
 
 	// Output:
-	//<doc>
+	// <doc>
 	//	<Age>18</Age>
 	//	<Name>John</Name>
-	//</doc>
+	// </doc>
 }
 
 func ExampleJson_MustToXmlIndentString() {
@@ -375,10 +376,10 @@ func ExampleJson_MustToXmlIndentString() {
 	fmt.Println(string(xmlStr))
 
 	// Output:
-	//<doc>
+	// <doc>
 	//	<Age>18</Age>
 	//	<Name>John</Name>
-	//</doc>
+	// </doc>
 }
 
 // ========================================================================
@@ -400,8 +401,8 @@ func ExampleJson_ToYaml() {
 	fmt.Println(string(YamlBytes))
 
 	// Output:
-	//Age: 18
-	//Name: John
+	// Age: 18
+	// Name: John
 }
 
 func ExampleJson_ToYamlString() {
@@ -420,8 +421,8 @@ func ExampleJson_ToYamlString() {
 	fmt.Println(string(YamlStr))
 
 	// Output:
-	//Age: 18
-	//Name: John
+	// Age: 18
+	// Name: John
 }
 
 func ExampleJson_ToYamlIndent() {
@@ -440,8 +441,8 @@ func ExampleJson_ToYamlIndent() {
 	fmt.Println(string(YamlBytes))
 
 	// Output:
-	//Age: 18
-	//Name: John
+	// Age: 18
+	// Name: John
 }
 
 func ExampleJson_MustToYaml() {
@@ -460,8 +461,8 @@ func ExampleJson_MustToYaml() {
 	fmt.Println(string(YamlBytes))
 
 	// Output:
-	//Age: 18
-	//Name: John
+	// Age: 18
+	// Name: John
 }
 
 func ExampleJson_MustToYamlString() {
@@ -480,8 +481,8 @@ func ExampleJson_MustToYamlString() {
 	fmt.Println(string(YamlStr))
 
 	// Output:
-	//Age: 18
-	//Name: John
+	// Age: 18
+	// Name: John
 }
 
 // ========================================================================
@@ -503,8 +504,8 @@ func ExampleJson_ToToml() {
 	fmt.Println(string(TomlBytes))
 
 	// Output:
-	//Age = 18
-	//Name = "John"
+	// Age = 18
+	// Name = "John"
 }
 
 func ExampleJson_ToTomlString() {
@@ -523,8 +524,8 @@ func ExampleJson_ToTomlString() {
 	fmt.Println(string(TomlStr))
 
 	// Output:
-	//Age = 18
-	//Name = "John"
+	// Age = 18
+	// Name = "John"
 }
 
 func ExampleJson_MustToToml() {
@@ -543,8 +544,8 @@ func ExampleJson_MustToToml() {
 	fmt.Println(string(TomlBytes))
 
 	// Output:
-	//Age = 18
-	//Name = "John"
+	// Age = 18
+	// Name = "John"
 }
 
 func ExampleJson_MustToTomlString() {
@@ -563,8 +564,8 @@ func ExampleJson_MustToTomlString() {
 	fmt.Println(string(TomlStr))
 
 	// Output:
-	//Age = 18
-	//Name = "John"
+	// Age = 18
+	// Name = "John"
 }
 
 // ========================================================================
@@ -586,8 +587,8 @@ func ExampleJson_ToIni() {
 	fmt.Println(string(IniBytes))
 
 	// May Output:
-	//Name=John
-	//Age=18
+	// Name=John
+	// Age=18
 }
 
 func ExampleJson_ToIniString() {
@@ -604,7 +605,7 @@ func ExampleJson_ToIniString() {
 	fmt.Println(string(IniStr))
 
 	// Output:
-	//Name=John
+	// Name=John
 }
 
 func ExampleJson_MustToIni() {
@@ -621,7 +622,7 @@ func ExampleJson_MustToIni() {
 	fmt.Println(string(IniBytes))
 
 	// Output:
-	//Name=John
+	// Name=John
 }
 
 func ExampleJson_MustToIniString() {
@@ -638,7 +639,7 @@ func ExampleJson_MustToIniString() {
 	fmt.Println(string(IniStr))
 
 	// Output:
-	//Name=John
+	// Name=John
 }
 
 // ========================================================================
@@ -1180,8 +1181,8 @@ func ExampleJson_Dump() {
 	j.Dump()
 
 	// May Output:
-	//{
+	// {
 	//	"name": "john",
 	//	"age":  "18",
-	//}
+	// }
 }
