@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"net/http"
+	"strings"
 	"text/template"
 )
 
@@ -20,6 +21,7 @@ var (
 	templateImplStructTpl, _ = template.New("templateImplStruct").Parse(templateImplStruct)
 	versionCommentTpl, _     = template.New("versionComment").Parse(versionComment)
 	methodMessageTpl, _      = template.New("methodMessageStruct").Parse(methodMessageStruct)
+	goModPath                = getGoModImportName()
 )
 
 func process(genFile *protogen.Plugin, file *protogen.File) {
@@ -42,7 +44,8 @@ func processCopyrightAndVersion(gen *protogen.GeneratedFile, file *protogen.File
 	gen.P()
 	gen.P("package ", file.GoPackageName)
 	gen.P()
-	gen.P(templateImport)
+	gen.P("var _ = ", contextPackage.Ident("Background"), "()")
+	gen.P("var _ = ", goframePackage.Ident("Meta"), "{}")
 	gen.P()
 
 	processContent(gen, file)
@@ -132,7 +135,7 @@ func processMessage(g *protogen.GeneratedFile, method *protogen.Method, rule *an
 			"method_comment": scanMessageComment(message),
 			"method_name":    string(method.Desc.Name()),
 			"message_name":   string(message.Desc.Name()),
-			"fields":         processField(message, rule, needGenGMeta),
+			"fields":         processField(message, rule, needGenGMeta, g),
 		})
 		if err != nil {
 			info("gf-gen-go-http: Execute template error: %s\n", err.Error())
@@ -145,24 +148,14 @@ func processMessage(g *protogen.GeneratedFile, method *protogen.Method, rule *an
 	processMessageFunc(method.Output, false)
 }
 
-func processField(message *protogen.Message, rule *annotations.HttpRule, needGenGMeta bool) []string {
+func processField(message *protogen.Message, rule *annotations.HttpRule, needGenGMeta bool, gen *protogen.GeneratedFile) []string {
 	result := []string{}
 	if needGenGMeta {
 		uri, apiMethod := getOptionMethodUri(rule)
 		result = append(result, fmt.Sprintf("g.Meta     `path:\"%s\" method:\"%s\"`", uri, apiMethod))
 	}
 	for _, item := range message.Fields {
-		goType := item.Desc.Kind().String()
-		if item.Desc.Kind() == protoreflect.MessageKind {
-			goType = "*" + string(item.Message.Desc.Name())
-			if item.Desc.IsList() {
-				goType = "[]" + goType
-			}
-			if item.Desc.IsMap() {
-				goType = fmt.Sprintf("map[%s]*%s", item.Desc.MapKey().Kind().String(), string(item.Desc.MapValue().Message().Name()))
-			}
-		}
-		field := fmt.Sprintf("%s %s", item.GoName, goType)
+		field := fmt.Sprintf("%s %s", item.GoName, processFieldType(item, gen))
 		goComment := processFieldComment(item)
 		if goComment != "" {
 			field += " " + goComment
@@ -170,6 +163,41 @@ func processField(message *protogen.Message, rule *annotations.HttpRule, needGen
 		result = append(result, field)
 	}
 	return result
+}
+
+func processFieldType(field *protogen.Field, gen *protogen.GeneratedFile) string {
+	if field.Desc.IsWeak() {
+		return "struct{}"
+	}
+	goType := field.Desc.Kind().String()
+	if field.Desc.Kind() == protoreflect.MessageKind {
+		goType = field.Message.GoIdent.GoName
+		if field.GoIdent.GoImportPath != field.Message.GoIdent.GoImportPath {
+			goType = gen.QualifiedGoIdent(getFullImportPath(field.Message.GoIdent.GoImportPath).Ident(field.Message.GoIdent.GoName))
+		}
+		goType = "*" + goType
+	} else if field.Desc.Kind() == protoreflect.EnumKind {
+		goType = gen.QualifiedGoIdent(field.Enum.GoIdent)
+	} else if field.Desc.HasPresence() && field.Desc.Kind() != protoreflect.MessageKind && field.Desc.Kind() != protoreflect.BytesKind {
+		goType = "*" + goType
+	}
+	if field.Desc.IsList() {
+		return "[]" + goType
+	}
+	if field.Desc.IsMap() {
+		keyType := processFieldType(field.Message.Fields[0], gen)
+		valType := processFieldType(field.Message.Fields[1], gen)
+		return fmt.Sprintf("map[%v]%v", keyType, valType)
+	}
+	return goType
+}
+
+func getFullImportPath(path protogen.GoImportPath) protogen.GoImportPath {
+	if fullImportPath == nil || !*fullImportPath {
+		return path
+	}
+	pathStr := strings.Trim(path.String(), "\"")
+	return protogen.GoImportPath(goModPath + "/api/generated/http" + pathStr)
 }
 
 func getOptionMethodUri(rule *annotations.HttpRule) (string, string) {

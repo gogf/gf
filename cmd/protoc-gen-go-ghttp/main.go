@@ -8,6 +8,10 @@ import (
 	"os"
 )
 
+var (
+	fullImportPath = flag.Bool("full_import_path", false, "use full import path (Experimental function)")
+)
+
 func main() {
 	flag.Parse()
 	protogen.Options{

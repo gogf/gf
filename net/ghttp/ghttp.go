@@ -12,9 +12,10 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/gorilla/websocket"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gorilla/websocket"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gtype"
@@ -188,4 +189,10 @@ var (
 		Text: "the request body content should be JSON format",
 		Code: gcode.CodeInvalidRequest,
 	})
+)
+
+const (
+	GenCtxHttpPatternKey = "ctx_http_pattern"
+	GenCtxHttpMethodKey  = "ctx_http_method"
+	GenCtxGrpcPattern    = "ctx_grpc_pattern"
 )

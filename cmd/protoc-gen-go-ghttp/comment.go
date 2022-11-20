@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"google.golang.org/protobuf/compiler/protogen"
+	"os"
 	"strings"
 )
 
@@ -116,4 +117,16 @@ func processFieldComment(message *protogen.Field) string {
 		}
 		return strings.TrimSpace(gfComment)
 	}
+}
+
+func getGoModImportName() string {
+	path, _ := os.Getwd()
+	path += "/go.mod"
+	modBytes, err := os.ReadFile(path)
+	if err != nil {
+		panic("get go mod module fail: " + err.Error())
+	}
+	line := strings.Split(string(modBytes), "\n")
+	mod := strings.TrimPrefix(line[0], "module ")
+	return mod
 }
