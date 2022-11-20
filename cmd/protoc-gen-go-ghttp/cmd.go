@@ -193,11 +193,14 @@ func processFieldType(field *protogen.Field, gen *protogen.GeneratedFile) string
 }
 
 func getFullImportPath(path protogen.GoImportPath) protogen.GoImportPath {
-	if fullImportPath == nil || !*fullImportPath {
+	if fullImportPath == nil || !*fullImportPath || filePath == nil || *filePath == "*" {
 		return path
 	}
 	pathStr := strings.Trim(path.String(), "\"")
-	return protogen.GoImportPath(goModPath + "/api/generated/http" + pathStr)
+	filePathStr := *filePath
+	filePathStr = strings.TrimLeft(filePathStr, ".")
+	filePathStr = strings.TrimRight(filePathStr, "/")
+	return protogen.GoImportPath(goModPath + filePathStr + pathStr)
 }
 
 func getOptionMethodUri(rule *annotations.HttpRule) (string, string) {

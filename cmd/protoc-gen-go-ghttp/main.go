@@ -10,6 +10,7 @@ import (
 
 var (
 	fullImportPath = flag.Bool("full_import_path", false, "use full import path (Experimental function)")
+	filePath       = flag.String("file_path", "", "generate File directory")
 )
 
 func main() {
