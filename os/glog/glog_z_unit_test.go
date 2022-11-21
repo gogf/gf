@@ -199,6 +199,10 @@ func Test_SetLevelStr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(glog.SetLevelStr("all"), nil)
 	})
+	gtest.C(t, func(t *gtest.T) {
+		l := glog.New()
+		t.AssertNE(l.SetLevelStr("test"), nil)
+	})
 }
 
 func Test_SetLevelPrefix(t *testing.T) {
@@ -237,6 +241,166 @@ func Test_SetWriterColorEnable(t *testing.T) {
 	})
 }
 
+func Test_Instance(t *testing.T) {
+	defaultLog := glog.DefaultLogger().Clone()
+	defer glog.SetDefaultLogger(defaultLog)
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertNE(glog.Instance("gf"), nil)
+	})
+}
+
+func Test_GetConfig(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		config := glog.DefaultLogger().GetConfig()
+		t.Assert(config.Path, "")
+		t.Assert(config.StdoutPrint, true)
+	})
+}
+
+func Test_Write(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := glog.New()
+		len, err := l.Write([]byte("GoFrame"))
+		t.AssertNil(err)
+		t.Assert(len, 7)
+	})
+}
+
+func Test_Chaining_To(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := glog.DefaultLogger().Clone()
+		logTo := l.To(os.Stdout)
+		t.AssertNE(logTo, nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		l := glog.New()
+		logTo := l.To(os.Stdout)
+		t.AssertNE(logTo, nil)
+	})
+}
+
+func Test_Chaining_Path(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := glog.DefaultLogger().Clone()
+		logPath := l.Path("./")
+		t.AssertNE(logPath, nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		l := glog.New()
+		logPath := l.Path("./")
+		t.AssertNE(logPath, nil)
+	})
+}
+
+func Test_Chaining_Cat(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := glog.New()
+		logCat := l.Cat(".gf")
+		t.AssertNE(logCat, nil)
+	})
+}
+
+func Test_Chaining_Level(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := glog.New()
+		logLevel := l.Level(glog.LEVEL_ALL)
+		t.AssertNE(logLevel, nil)
+	})
+}
+
+func Test_Chaining_LevelStr(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := glog.New()
+		logLevelStr := l.LevelStr("all")
+		t.AssertNE(logLevelStr, nil)
+	})
+}
+
+func Test_Chaining_Skip(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := glog.New()
+		logSkip := l.Skip(1)
+		t.AssertNE(logSkip, nil)
+	})
+}
+
+func Test_Chaining_Stack(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := glog.New()
+		logStack := l.Stack(true)
+		t.AssertNE(logStack, nil)
+	})
+}
+
+func Test_Chaining_StackWithFilter(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := glog.New()
+		logStackWithFilter := l.StackWithFilter("gtest")
+		t.AssertNE(logStackWithFilter, nil)
+	})
+}
+
+func Test_Chaining_Stdout(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := glog.New()
+		logStdout := l.Stdout(true)
+		t.AssertNE(logStdout, nil)
+	})
+}
+
+func Test_Chaining_Header(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := glog.New()
+		logHeader := l.Header(true)
+		t.AssertNE(logHeader, nil)
+	})
+}
+
+func Test_Chaining_Line(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := glog.New()
+		logLine := l.Line(true)
+		t.AssertNE(logLine, nil)
+	})
+}
+
+func Test_Chaining_Async(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := glog.New()
+		logAsync := l.Async(true)
+		t.AssertNE(logAsync, nil)
+	})
+}
+
+func Test_Config_SetDebug(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := glog.New()
+		l.SetDebug(false)
+	})
+}
+
+func Test_Config_AppendCtxKeys(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := glog.New()
+		l.AppendCtxKeys("Trace-Id", "Span-Id", "Test")
+		l.AppendCtxKeys("Trace-Id-New", "Span-Id-New", "Test")
+	})
+}
+
+func Test_Config_SetPath(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := glog.New()
+		t.AssertNE(l.SetPath(""), nil)
+	})
+}
+
+func Test_Config_SetStdoutColorDisabled(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := glog.New()
+		l.SetStdoutColorDisabled(false)
+	})
+}
+
 func Test_Ctx(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		w := bytes.NewBuffer(nil)
@@ -259,8 +423,13 @@ func Test_Ctx_Config(t *testing.T) {
 		m := map[string]interface{}{
 			"CtxKeys": g.SliceStr{"Trace-Id", "Span-Id", "Test"},
 		}
+		var nilMap map[string]interface{}
+
 		err := l.SetConfigWithMap(m)
 		t.AssertNil(err)
+		err = l.SetConfigWithMap(nilMap)
+		t.AssertNE(err, nil)
+
 		ctx := context.WithValue(context.Background(), "Trace-Id", "1234567890")
 		ctx = context.WithValue(ctx, "Span-Id", "abcdefg")
 
