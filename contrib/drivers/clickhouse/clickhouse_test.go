@@ -12,6 +12,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -19,8 +22,6 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/grand"
 	"github.com/gogf/gf/v2/util/guid"
-	"github.com/google/uuid"
-	"github.com/shopspring/decimal"
 )
 
 const (
@@ -282,9 +283,9 @@ func TestDriverClickhouse_Insert(t *testing.T) {
 		Created  time.Time `orm:"created"`
 	}
 	var (
-		insertUrl = "https://goframe.org"
-		total     = 0
-		item      = insertItem{
+		insertUrl       = "https://goframe.org"
+		total     int64 = 0
+		item            = insertItem{
 			Duration: 1,
 			Url:      insertUrl,
 			Created:  time.Now(),
@@ -296,7 +297,7 @@ func TestDriverClickhouse_Insert(t *testing.T) {
 	gtest.AssertNil(err)
 	total, err = connect.Model("visits").Count()
 	gtest.AssertNil(err)
-	gtest.AssertEQ(total, 2)
+	gtest.AssertEQ(total, int64(2))
 	var list []*insertItem
 	for i := 0; i < 50; i++ {
 		list = append(list, &insertItem{
@@ -311,7 +312,7 @@ func TestDriverClickhouse_Insert(t *testing.T) {
 	gtest.AssertNil(err)
 	total, err = connect.Model("visits").Count()
 	gtest.AssertNil(err)
-	gtest.AssertEQ(total, 102)
+	gtest.AssertEQ(total, int64(102))
 }
 
 func TestDriverClickhouse_Insert_Use_Exec(t *testing.T) {
@@ -466,7 +467,7 @@ func TestDriverClickhouse_NilTime(t *testing.T) {
 	gtest.AssertNil(err)
 	count, err := connect.Model("data_type").Where("Col4", "Inc.").Count()
 	gtest.AssertNil(err)
-	gtest.AssertEQ(count, 10000)
+	gtest.AssertEQ(count, int64(10000))
 
 	data, err := connect.Model("data_type").Where("Col4", "Inc.").One()
 	gtest.AssertNil(err)
@@ -507,7 +508,7 @@ func TestDriverClickhouse_BatchInsert(t *testing.T) {
 	gtest.AssertNil(err)
 	count, err := connect.Model("data_type").Where("Col2", "ClickHouse").Where("Col3", "Inc").Count()
 	gtest.AssertNil(err)
-	gtest.AssertEQ(count, 10000)
+	gtest.AssertEQ(count, int64(10000))
 }
 
 func TestDriverClickhouse_Open(t *testing.T) {
