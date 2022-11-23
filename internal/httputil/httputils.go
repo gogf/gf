@@ -59,8 +59,12 @@ func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr strin
 			encodedParamStr += "&"
 		}
 		s = gconv.String(v)
-		if urlEncode && (len(s) <= 6 || strings.Compare(s[0:6], fileUploadingKey) != 0) {
-			s = gurl.Encode(s)
+		if urlEncode {
+			if strings.HasPrefix(s, fileUploadingKey) && len(s) > len(fileUploadingKey) {
+				// No url encoding if uploading file.
+			} else {
+				s = gurl.Encode(s)
+			}
 		}
 		encodedParamStr += k + "=" + s
 	}
