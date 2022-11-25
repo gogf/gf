@@ -50,34 +50,35 @@ func CopyFile(src, dst string) (err error) {
 	if src == dst {
 		return nil
 	}
-	in, err := Open(src)
+	var inFile *os.File
+	inFile, err = Open(src)
 	if err != nil {
 		return
 	}
 	defer func() {
-		if e := in.Close(); e != nil {
+		if e := inFile.Close(); e != nil {
 			err = gerror.Wrapf(e, `file close failed for "%s"`, src)
 		}
 	}()
-	out, err := Create(dst)
+	var outFile *os.File
+	outFile, err = Create(dst)
 	if err != nil {
 		return
 	}
 	defer func() {
-		if e := out.Close(); e != nil {
+		if e := outFile.Close(); e != nil {
 			err = gerror.Wrapf(e, `file close failed for "%s"`, dst)
 		}
 	}()
-	if _, err = io.Copy(out, in); err != nil {
+	if _, err = io.Copy(outFile, inFile); err != nil {
 		err = gerror.Wrapf(err, `io.Copy failed from "%s" to "%s"`, src, dst)
 		return
 	}
-	if err = out.Sync(); err != nil {
+	if err = outFile.Sync(); err != nil {
 		err = gerror.Wrapf(err, `file sync failed for file "%s"`, dst)
 		return
 	}
-	err = Chmod(dst, DefaultPermCopy)
-	if err != nil {
+	if err = Chmod(dst, DefaultPermCopy); err != nil {
 		return
 	}
 	return
