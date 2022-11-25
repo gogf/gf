@@ -427,14 +427,17 @@ func (c *AdapterMemory) syncEventAndClearExpired(ctx context.Context) {
 		}
 	}
 	// Processing expired keys from LRU.
-	if c.cap > 0 && c.lruGetList.Len() > 0 {
-		for {
-			if v := c.lruGetList.PopFront(); v != nil {
-				c.lru.Push(v)
-			} else {
-				break
+	if c.cap > 0 {
+		if c.lruGetList.Len() > 0 {
+			for {
+				if v := c.lruGetList.PopFront(); v != nil {
+					c.lru.Push(v)
+				} else {
+					break
+				}
 			}
 		}
+		c.lru.SyncAndClear(ctx)
 	}
 	// ========================
 	// Data Cleaning up.
