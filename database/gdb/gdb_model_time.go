@@ -86,7 +86,7 @@ func (m *Model) getSoftFieldNameDeleted(table ...string) (field string) {
 		tableName = m.tablesInit
 	}
 	config := m.db.GetConfig()
-	if config.UpdatedAt != "" {
+	if config.DeletedAt != "" {
 		return m.getSoftFieldName(tableName, []string{config.DeletedAt})
 	}
 	return m.getSoftFieldName(tableName, deletedFiledNames)

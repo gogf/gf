@@ -127,6 +127,11 @@ jobs:
         ports:
           - 5236:5236
 
+      zookeeper:
+        image: loads/zookeeper:3.8
+        ports:
+          - 2181:2181
+
     strategy:
       matrix:
         go-version: [ "1.15", "1.16", "1.17", "1.18" ]
@@ -135,7 +140,7 @@ jobs:
     steps:
     # TODO: szenius/set-timezone update to node16
     - name: Setup Timezone
-      uses: szenius/set-timezone@v1.0
+      uses: szenius/set-timezone@v1.1
       with:
         timezoneLinux: "Asia/Shanghai"
 
