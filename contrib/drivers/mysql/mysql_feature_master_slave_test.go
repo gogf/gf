@@ -81,20 +81,20 @@ func Test_Master_Slave(t *testing.T) {
 		_, err = masterSlaveDB.Model(table).Data(array).Insert()
 		t.AssertNil(err)
 
-		var count int
+		var count int64
 		// Auto slave.
 		count, err = masterSlaveDB.Model(table).Count()
 		t.AssertNil(err)
-		t.Assert(count, 0)
+		t.Assert(count, int64(0))
 
 		// slave.
 		count, err = masterSlaveDB.Model(table).Slave().Count()
 		t.AssertNil(err)
-		t.Assert(count, 0)
+		t.Assert(count, int64(0))
 
 		// master.
 		count, err = masterSlaveDB.Model(table).Master().Count()
 		t.AssertNil(err)
-		t.Assert(count, TableSize)
+		t.Assert(count, int64(TableSize))
 	})
 }

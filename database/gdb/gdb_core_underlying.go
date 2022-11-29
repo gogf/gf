@@ -397,7 +397,7 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 		record := Record{}
 		for i, value := range values {
 			if value == nil {
-				// Do not use `gvar.New(nil)` here as it creates an initialized object
+				// DO NOT use `gvar.New(nil)` here as it creates an initialized object
 				// which will cause struct converting issue.
 				record[columnNames[i]] = nil
 			} else {

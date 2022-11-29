@@ -16,7 +16,7 @@ import (
 
 // IsEmpty checks and returns whether `r` is empty.
 func (r Result) IsEmpty() bool {
-	return r.Len() == 0
+	return r == nil || r.Len() == 0
 }
 
 // Len returns the length of result list.

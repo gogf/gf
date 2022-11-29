@@ -354,20 +354,23 @@ type CatchSQLManager struct {
 	DoCommit bool
 }
 
+type queryType int
+
 const (
-	defaultModelSafe        = false
-	defaultCharset          = `utf8`
-	defaultProtocol         = `tcp`
-	queryTypeNormal         = 0
-	queryTypeCount          = 1
-	unionTypeNormal         = 0
-	unionTypeAll            = 1
-	defaultMaxIdleConnCount = 10               // Max idle connection count in pool.
-	defaultMaxOpenConnCount = 0                // Max open connection count in pool. Default is no limit.
-	defaultMaxConnLifeTime  = 30 * time.Second // Max lifetime for per connection in pool in seconds.
-	ctxTimeoutTypeExec      = iota
-	ctxTimeoutTypeQuery
-	ctxTimeoutTypePrepare
+	defaultModelSafe                      = false
+	defaultCharset                        = `utf8`
+	defaultProtocol                       = `tcp`
+	queryTypeNormal           queryType   = 0
+	queryTypeCount            queryType   = 1
+	queryTypeValue            queryType   = 2
+	unionTypeNormal                       = 0
+	unionTypeAll                          = 1
+	defaultMaxIdleConnCount               = 10               // Max idle connection count in pool.
+	defaultMaxOpenConnCount               = 0                // Max open connection count in pool. Default is no limit.
+	defaultMaxConnLifeTime                = 30 * time.Second // Max lifetime for per connection in pool in seconds.
+	ctxTimeoutTypeExec                    = 0
+	ctxTimeoutTypeQuery                   = 1
+	ctxTimeoutTypePrepare                 = 2
 	cachePrefixTableFields                = `TableFields:`
 	cachePrefixSelectCache                = `SelectCache:`
 	commandEnvKeyForDryRun                = "gf.gdb.dryrun"

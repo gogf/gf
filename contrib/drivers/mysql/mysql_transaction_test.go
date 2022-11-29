@@ -138,7 +138,7 @@ func Test_TX_Insert(t *testing.T) {
 		if n, err := tx.Model(table).Count(); err != nil {
 			gtest.Error(err)
 		} else {
-			t.Assert(n, 2)
+			t.Assert(n, int64(2))
 		}
 
 		if err := tx.Commit(); err != nil {
@@ -180,7 +180,7 @@ func Test_TX_BatchInsert(t *testing.T) {
 		if n, err := db.Model(table).Count(); err != nil {
 			gtest.Error(err)
 		} else {
-			t.Assert(n, 2)
+			t.Assert(n, int64(2))
 		}
 	})
 }
@@ -218,7 +218,7 @@ func Test_TX_BatchReplace(t *testing.T) {
 		if n, err := db.Model(table).Count(); err != nil {
 			gtest.Error(err)
 		} else {
-			t.Assert(n, TableSize)
+			t.Assert(n, int64(TableSize))
 		}
 		if value, err := db.Model(table).Fields("password").Where("id", 2).Value(); err != nil {
 			gtest.Error(err)
@@ -255,7 +255,7 @@ func Test_TX_BatchSave(t *testing.T) {
 		if n, err := db.Model(table).Count(); err != nil {
 			gtest.Error(err)
 		} else {
-			t.Assert(n, TableSize)
+			t.Assert(n, int64(TableSize))
 		}
 
 		if value, err := db.Model(table).Fields("password").Where("id", 4).Value(); err != nil {
@@ -428,7 +428,7 @@ func Test_TX_GetCount(t *testing.T) {
 		if count, err := tx.GetCount("SELECT * FROM " + table); err != nil {
 			gtest.Error(err)
 		} else {
-			t.Assert(count, TableSize)
+			t.Assert(count, int64(TableSize))
 		}
 		if err := tx.Commit(); err != nil {
 			gtest.Error(err)
@@ -674,7 +674,7 @@ func Test_TX_Delete(t *testing.T) {
 		if n, err := db.Model(table).Count(); err != nil {
 			gtest.Error(err)
 		} else {
-			t.Assert(n, 0)
+			t.Assert(n, int64(0))
 		}
 
 		t.Assert(tx.IsClosed(), true)
@@ -693,7 +693,7 @@ func Test_TX_Delete(t *testing.T) {
 		if n, err := tx.Model(table).Count(); err != nil {
 			gtest.Error(err)
 		} else {
-			t.Assert(n, 0)
+			t.Assert(n, int64(0))
 		}
 		if err := tx.Rollback(); err != nil {
 			gtest.Error(err)
@@ -701,8 +701,8 @@ func Test_TX_Delete(t *testing.T) {
 		if n, err := db.Model(table).Count(); err != nil {
 			gtest.Error(err)
 		} else {
-			t.Assert(n, TableSize)
-			t.AssertNE(n, 0)
+			t.Assert(n, int64(TableSize))
+			t.AssertNE(n, int64(0))
 		}
 
 		t.Assert(tx.IsClosed(), true)
@@ -1136,6 +1136,6 @@ func Test_Transaction_Method(t *testing.T) {
 
 		count, err := db.Model(table).Count()
 		t.AssertNil(err)
-		t.Assert(count, 0)
+		t.Assert(count, int64(0))
 	})
 }
