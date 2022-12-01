@@ -43,6 +43,60 @@ var pairs = []testPair{
 	{"sure.", "c3VyZS4="},
 }
 
+var urlPairs = []testPair{
+	// RFC 3548 examples
+	{"\x14\xfb\x9c\x03\xd9\x7e", "FPucA9l-"},
+	{"\x14\xfb\x9c\x03\xd9", "FPucA9k"},
+	{"\x14\xfb\x9c\x03", "FPucAw"},
+
+	// RFC 4648 examples
+	{"", ""},
+	{"f", "Zg"},
+	{"fo", "Zm8"},
+	{"foo", "Zm9v"},
+	{"foob", "Zm9vYg"},
+	{"fooba", "Zm9vYmE"},
+	{"foobar", "Zm9vYmFy"},
+
+	// Wikipedia examples
+	{"sure.", "c3VyZS4"},
+	{"sure", "c3VyZQ"},
+	{"sur", "c3Vy"},
+	{"su", "c3U"},
+	{"leasure.", "bGVhc3VyZS4"},
+	{"easure.", "ZWFzdXJlLg"},
+	{"asure.", "YXN1cmUu"},
+	{"sure.", "c3VyZS4"},
+}
+var urlPairsHasEqualSign = []testPair{
+	// RFC 3548 examples
+	{"\x14\xfb\x9c\x03\xd9\x7e", "FPucA9l-"},
+	{"\x14\xfb\x9c\x03\xd9", "FPucA9k="},
+	{"\x14\xfb\x9c\x03", "FPucAw=="},
+
+	{"\x14\xfb\x9c\x03\xd9", "FPucA9k="},
+	{"\x14\xfb\x9c\x03", "FPucAw=="},
+
+	// RFC 4648 examples
+	{"", ""},
+	{"f", "Zg=="},
+	{"fo", "Zm8="},
+	{"foo", "Zm9v"},
+	{"foob", "Zm9vYg=="},
+	{"fooba", "Zm9vYmE="},
+	{"foobar", "Zm9vYmFy"},
+
+	// Wikipedia examples
+	{"sure.", "c3VyZS4="},
+	{"sure", "c3VyZQ=="},
+	{"sur", "c3Vy"},
+	{"su", "c3U="},
+	{"leasure.", "bGVhc3VyZS4="},
+	{"easure.", "ZWFzdXJlLg=="},
+	{"asure.", "YXN1cmUu"},
+	{"sure.", "c3VyZS4="},
+}
+
 func Test_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for k := range pairs {
@@ -64,6 +118,46 @@ func Test_Basic(t *testing.T) {
 	})
 }
 
+func Test_URL_Basic(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		for k := range urlPairs {
+			// Encode
+			t.Assert(gbase64.UrlEncode([]byte(urlPairs[k].decoded)), []byte(urlPairs[k].encoded))
+			t.Assert(gbase64.UrlEncodeToString([]byte(urlPairs[k].decoded)), urlPairs[k].encoded)
+			t.Assert(gbase64.UrlEncodeString(urlPairs[k].decoded), urlPairs[k].encoded)
+
+			// Decode
+			r1, _ := gbase64.UrlDecode([]byte(urlPairs[k].encoded))
+			t.Assert(r1, []byte(urlPairs[k].decoded))
+
+			r2, _ := gbase64.UrlDecodeString(urlPairs[k].encoded)
+			t.Assert(r2, []byte(urlPairs[k].decoded))
+
+			r3, _ := gbase64.UrlDecodeToString(urlPairs[k].encoded)
+			t.Assert(r3, urlPairs[k].decoded)
+		}
+	})
+}
+func Test_URL_Basic_has_equal_sign(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		for k := range urlPairsHasEqualSign {
+			// Encode
+			t.Assert(gbase64.UrlEncode([]byte(urlPairsHasEqualSign[k].decoded), false), []byte(urlPairsHasEqualSign[k].encoded))
+			t.Assert(gbase64.UrlEncodeToString([]byte(urlPairsHasEqualSign[k].decoded), false), urlPairsHasEqualSign[k].encoded)
+			t.Assert(gbase64.UrlEncodeString(urlPairsHasEqualSign[k].decoded, false), urlPairsHasEqualSign[k].encoded)
+
+			// Decode
+			r1, _ := gbase64.UrlDecode([]byte(urlPairsHasEqualSign[k].encoded), false)
+			t.Assert(r1, []byte(urlPairsHasEqualSign[k].decoded))
+
+			r2, _ := gbase64.UrlDecodeString(urlPairsHasEqualSign[k].encoded, false)
+			t.Assert(r2, []byte(urlPairsHasEqualSign[k].decoded))
+
+			r3, _ := gbase64.UrlDecodeToString(urlPairsHasEqualSign[k].encoded, false)
+			t.Assert(r3, urlPairsHasEqualSign[k].decoded)
+		}
+	})
+}
 func Test_File(t *testing.T) {
 	path := gtest.DataPath("test")
 	expect := "dGVzdA=="
