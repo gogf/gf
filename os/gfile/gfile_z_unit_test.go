@@ -72,6 +72,14 @@ func Test_Create(t *testing.T) {
 			t.AssertNil(err)
 		}
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		fileobj, err := gfile.Create("./testdata/test/testfile_cc1.txt")
+		defer gfile.Remove("./testdata/test")
+		t.AssertNE(fileobj, nil)
+		t.AssertNil(err)
+		fileobj.Close()
+	})
 }
 
 func Test_Open(t *testing.T) {
@@ -103,6 +111,12 @@ func Test_Open(t *testing.T) {
 			}
 
 		}
+
+	})
+}
+
+func Test_Chdir(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
 
 	})
 }

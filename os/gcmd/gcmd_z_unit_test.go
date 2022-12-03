@@ -58,6 +58,14 @@ func Test_BuildOptions(t *testing.T) {
 		}, "-test")
 		t.Assert(s, "-testn=john")
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		s := gcmd.BuildOptions(g.MapStrStr{
+			"n1": "john",
+			"n2": "huang",
+		})
+		t.Assert(s, "-n1=john -n2=huang")
+	})
 }
 
 func Test_GetWithEnv(t *testing.T) {
