@@ -602,6 +602,9 @@ func TestCache_Basic_Must(t *testing.T) {
 		n := gcache.MustSize(ctx)
 		t.Assert(n, 4)
 
+		data := gcache.MustData(ctx)
+		t.Assert(len(data), 4)
+
 		keys := gcache.MustKeys(ctx)
 		t.Assert(len(keys), 4)
 
@@ -610,5 +613,12 @@ func TestCache_Basic_Must(t *testing.T) {
 
 		values := gcache.MustValues(ctx)
 		t.Assert(len(values), 4)
+	})
+}
+
+func TestCache_NewWithAdapter(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		cache := gcache.NewWithAdapter(gcache.NewAdapterMemory())
+		t.AssertNE(cache, nil)
 	})
 }
