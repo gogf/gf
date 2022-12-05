@@ -174,7 +174,7 @@ func (d *Driver) TableFields(
 			fieldType = fieldsResult[1]
 		}
 		fields[m["name"].String()] = &gdb.TableField{
-			Index:   m["position"].Int(),
+			Index:   m["position"].Int() - 1,
 			Name:    m["name"].String(),
 			Default: m["default_expression"].Val(),
 			Comment: m["comment"].String(),
