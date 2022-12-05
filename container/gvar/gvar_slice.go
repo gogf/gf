@@ -6,7 +6,10 @@
 
 package gvar
 
-import "github.com/gogf/gf/v2/util/gconv"
+import (
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/shopspring/decimal"
+)
 
 // Ints converts and returns `v` as []int.
 func (v *Var) Ints() []int {
@@ -46,6 +49,11 @@ func (v *Var) Float64s() []float64 {
 // Strings converts and returns `v` as []string.
 func (v *Var) Strings() []string {
 	return gconv.Strings(v.Val())
+}
+
+// Decimals converts and returns `v` as []string.
+func (v *Var) Decimals() []decimal.Decimal {
+	return gconv.Decimals(v.Val())
 }
 
 // Interfaces converts and returns `v` as []interfaces{}.

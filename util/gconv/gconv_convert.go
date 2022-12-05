@@ -7,6 +7,7 @@
 package gconv
 
 import (
+	"github.com/shopspring/decimal"
 	"reflect"
 	"time"
 
@@ -144,6 +145,15 @@ func doConvert(in doConvertInput) (convertedValue interface{}) {
 			return in.FromValue
 		}
 		v := Float64(in.FromValue)
+		return &v
+
+	case "decimal.Decimal":
+		return Decimal(in.FromValue)
+	case "*decimal.Decimal":
+		if _, ok := in.FromValue.(*decimal.Decimal); ok {
+			return in.FromValue
+		}
+		v := Decimal(in.FromValue)
 		return &v
 
 	case "bool":

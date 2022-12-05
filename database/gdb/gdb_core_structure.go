@@ -174,12 +174,15 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 	case
 		"float",
 		"double",
-		"decimal",
 		"money",
 		"numeric",
 		"smallmoney":
 		return LocalTypeFloat64, nil
 
+	case
+		"decimal":
+		return LocalTypeDecimal, nil
+	
 	case
 		"bit":
 		// It is suggested using bit(1) as boolean.
@@ -226,6 +229,9 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 
 		case strings.Contains(typeName, "float") || strings.Contains(typeName, "double") || strings.Contains(typeName, "numeric"):
 			return LocalTypeFloat64, nil
+
+		case strings.Contains(typeName, "decimal"):
+			return LocalTypeDecimal, nil
 
 		case strings.Contains(typeName, "bool"):
 			return LocalTypeBool, nil
@@ -294,6 +300,9 @@ func (c *Core) ConvertValueForLocal(ctx context.Context, fieldType string, field
 
 	case LocalTypeFloat64:
 		return gconv.Float64(gconv.String(fieldValue)), nil
+
+	case LocalTypeDecimal:
+		return gconv.Decimal(gconv.String(fieldValue)), nil
 
 	case LocalTypeBool:
 		s := gconv.String(fieldValue)

@@ -6,7 +6,10 @@
 
 package gconv
 
-import "github.com/gogf/gf/v2/os/gtime"
+import (
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/shopspring/decimal"
+)
 
 // iString is used for type assert api for String().
 type iString interface {
@@ -61,6 +64,11 @@ type iInterfaces interface {
 // iFloats is used for type assert api for Floats().
 type iFloats interface {
 	Floats() []float64
+}
+
+// iDecimals is used for type assert api for Decimals().
+type iDecimals interface {
+	Decimals() []decimal.Decimal
 }
 
 // iInts is used for type assert api for Ints().

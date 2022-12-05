@@ -7,6 +7,7 @@
 package gconv_test
 
 import (
+	"github.com/shopspring/decimal"
 	"testing"
 
 	"github.com/gogf/gf/v2/container/gvar"
@@ -250,6 +251,27 @@ func Test_Slice_Float64s(t *testing.T) {
 		t.AssertEQ(gconv.Float64s([]bool{true, false}), []float64{0, 0})
 		t.AssertEQ(gconv.Float64s([]float32{123}), []float64{123})
 		t.AssertEQ(gconv.Float64s([]float64{123}), []float64{123})
+	})
+}
+
+func Test_Slice_Decimals(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gconv.Decimals("123.4"), []decimal.Decimal{decimal.NewFromFloat(123.4)})
+		t.AssertEQ(gconv.Decimals([]string{"123.4", "123.5"}), []decimal.Decimal{decimal.NewFromFloat(123.4), decimal.NewFromFloat(123.5)})
+		t.AssertEQ(gconv.Decimals([]int{123}), []decimal.Decimal{decimal.NewFromInt(123)})
+		t.AssertEQ(gconv.Decimals([]int8{123}), []decimal.Decimal{decimal.NewFromInt(123)})
+		t.AssertEQ(gconv.Decimals([]int16{123}), []decimal.Decimal{decimal.NewFromInt(123)})
+		t.AssertEQ(gconv.Decimals([]int32{123}), []decimal.Decimal{decimal.NewFromInt(123)})
+		t.AssertEQ(gconv.Decimals([]int64{123}), []decimal.Decimal{decimal.NewFromInt(123)})
+		t.AssertEQ(gconv.Decimals([]uint{123}), []decimal.Decimal{decimal.NewFromInt(123)})
+		t.AssertEQ(gconv.Decimals([]uint8{123}), []decimal.Decimal{decimal.NewFromInt(123)})
+		t.AssertEQ(gconv.Decimals([]uint8(`[{"id": 1, "name":"john"},{"id": 2, "name":"huang"}]`)), []decimal.Decimal{decimal.Zero, decimal.Zero})
+		t.AssertEQ(gconv.Decimals([]uint16{123}), []decimal.Decimal{decimal.NewFromInt(123)})
+		t.AssertEQ(gconv.Decimals([]uint32{123}), []decimal.Decimal{decimal.NewFromInt(123)})
+		t.AssertEQ(gconv.Decimals([]uint64{123}), []decimal.Decimal{decimal.NewFromInt(123)})
+		t.AssertEQ(gconv.Decimals([]bool{true, false}), []decimal.Decimal{decimal.Zero, decimal.Zero})
+		t.AssertEQ(gconv.Decimals([]float32{123}), []decimal.Decimal{decimal.NewFromInt(123)})
+		t.AssertEQ(gconv.Decimals([]float64{123}), []decimal.Decimal{decimal.NewFromInt(123)})
 	})
 }
 
