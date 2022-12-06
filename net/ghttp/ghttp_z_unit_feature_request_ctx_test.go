@@ -9,6 +9,8 @@ package ghttp_test
 import (
 	"context"
 	"fmt"
+	"github.com/gogf/gf/v2/encoding/gbase64"
+	"net/http"
 	"testing"
 	"time"
 
@@ -145,6 +147,68 @@ func Test_Request_GetServeHandler(t *testing.T) {
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(c.GetContent(ctx, "/"), true)
+	})
+}
+
+func Test_Request_BasicAuth(t *testing.T) {
+	const (
+		user      = "root"
+		pass      = "123456"
+		wrongPass = "12345"
+	)
+
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.ALL("/auth1", func(r *ghttp.Request) {
+			r.BasicAuth(user, pass, "tips")
+		})
+		group.ALL("/auth2", func(r *ghttp.Request) {
+			r.BasicAuth(user, pass)
+		})
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		rsp, err := c.Get(ctx, "/auth1")
+		t.AssertNil(err)
+		t.Assert(rsp.Header.Get("WWW-Authenticate"), "Basic realm=\"tips\"")
+		t.Assert(rsp.StatusCode, http.StatusUnauthorized)
+
+		rsp, err = c.SetHeader("Authorization", user+pass).Get(ctx, "/auth1")
+		t.AssertNil(err)
+		t.Assert(rsp.StatusCode, http.StatusForbidden)
+
+		rsp, err = c.SetHeader("Authorization", "Test "+user+pass).Get(ctx, "/auth1")
+		t.AssertNil(err)
+		t.Assert(rsp.StatusCode, http.StatusForbidden)
+
+		rsp, err = c.SetHeader("Authorization", "Basic "+user+pass).Get(ctx, "/auth1")
+		t.AssertNil(err)
+		t.Assert(rsp.StatusCode, http.StatusForbidden)
+
+		rsp, err = c.SetHeader("Authorization", "Basic "+gbase64.EncodeString(user+pass)).Get(ctx, "/auth1")
+		t.AssertNil(err)
+		t.Assert(rsp.StatusCode, http.StatusForbidden)
+
+		rsp, err = c.SetHeader("Authorization", "Basic "+gbase64.EncodeString(user+":"+wrongPass)).Get(ctx, "/auth1")
+		t.AssertNil(err)
+		t.Assert(rsp.StatusCode, http.StatusUnauthorized)
+
+		rsp, err = c.BasicAuth(user, pass).Get(ctx, "/auth1")
+		t.AssertNil(err)
+		t.Assert(rsp.StatusCode, http.StatusOK)
+
+		rsp, err = c.Get(ctx, "/auth2")
+		t.AssertNil(err)
+		t.Assert(rsp.Header.Get("WWW-Authenticate"), "Basic realm=\"Need Login\"")
+		t.Assert(rsp.StatusCode, http.StatusUnauthorized)
 	})
 }
 
