@@ -22,6 +22,7 @@ import (
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gsession"
+	"github.com/gogf/gf/v2/util/gtag"
 )
 
 type (
@@ -127,19 +128,20 @@ const (
 )
 
 const (
-	supportedHttpMethods    = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
-	defaultMethod           = "ALL"
-	routeCacheDuration      = time.Hour
-	ctxKeyForRequest        = "gHttpRequestObject"
-	contentTypeXml          = "text/xml"
-	contentTypeHtml         = "text/html"
-	contentTypeJson         = "application/json"
-	swaggerUIPackedPath     = "/goframe/swaggerui"
-	responseTraceIDHeader   = "Trace-ID"
-	specialMethodNameInit   = "Init"
-	specialMethodNameShut   = "Shut"
-	specialMethodNameIndex  = "Index"
-	gracefulShutdownTimeout = 5 * time.Second
+	supportedHttpMethods        = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
+	defaultMethod               = "ALL"
+	routeCacheDuration          = time.Hour
+	ctxKeyForRequest            = "gHttpRequestObject"
+	contentTypeXml              = "text/xml"
+	contentTypeHtml             = "text/html"
+	contentTypeJson             = "application/json"
+	swaggerUIPackedPath         = "/goframe/swaggerui"
+	responseHeaderTraceID       = "Trace-ID"
+	responseHeaderContentLength = "Content-Length"
+	specialMethodNameInit       = "Init"
+	specialMethodNameShut       = "Shut"
+	specialMethodNameIndex      = "Index"
+	gracefulShutdownTimeout     = 5 * time.Second
 )
 
 const (
@@ -180,7 +182,7 @@ var (
 	gracefulEnabled = false
 
 	// defaultValueTags are the struct tag names for default value storing.
-	defaultValueTags = []string{"d", "default"}
+	defaultValueTags = []string{gtag.DefaultShort, gtag.Default}
 )
 
 var (

@@ -23,6 +23,7 @@ import (
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/util/gtag"
 )
 
 var (
@@ -36,9 +37,11 @@ var (
 	}
 
 	// StructTagPriority defines the default priority tags for Map*/Struct* functions.
-	// Note, the `gconv/param/params` tags are used by old version of package.
+	// Note that, the `gconv/param` tags are used by old version of package.
 	// It is strongly recommended using short tag `c/p` instead in the future.
-	StructTagPriority = []string{"gconv", "param", "params", "c", "p", "json"}
+	StructTagPriority = []string{
+		gtag.GConv, gtag.Param, gtag.GConvShort, gtag.ParamShort, gtag.Json,
+	}
 )
 
 // Byte converts `any` to byte.

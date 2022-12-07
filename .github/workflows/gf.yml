@@ -127,19 +127,25 @@ jobs:
         ports:
           - 5236:5236
 
+      zookeeper:
+        image: loads/zookeeper:3.8
+        ports:
+          - 2181:2181
+
     strategy:
       matrix:
         go-version: [ "1.15", "1.16", "1.17", "1.18" ]
         goarch: [ "386", "amd64" ]
 
     steps:
+    # TODO: szenius/set-timezone update to node16
     - name: Setup Timezone
-      uses: szenius/set-timezone@v1.0
+      uses: szenius/set-timezone@v1.1
       with:
         timezoneLinux: "Asia/Shanghai"
 
     - name: Checkout Repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Start Apollo Containers
       run:  docker-compose -f ".github/workflows/apollo/docker-compose.yml" up -d --build
@@ -154,7 +160,7 @@ jobs:
       uses: medyagh/setup-minikube@master
 
     - name: Setup Golang ${{ matrix.go-version }}
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v3
       with:
         go-version: ${{ matrix.go-version }}
 
@@ -186,7 +192,7 @@ jobs:
       run:  docker-compose -f ".github/workflows/nacos/docker-compose.yml" down
 
     - name: Report Coverage
-      uses: codecov/codecov-action@v2
+      uses: codecov/codecov-action@v3
       with:
         flags: go-${{ matrix.go-version }}-${{ matrix.goarch }}
 

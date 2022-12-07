@@ -19,10 +19,10 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/consts"
-	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gmeta"
+	"github.com/gogf/gf/v2/util/gtag"
 )
 
 var (
@@ -96,13 +96,13 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 	// Change the registered route according to meta info from its request structure.
 	if handler.Info.Type != nil && handler.Info.Type.NumIn() == 2 {
 		var objectReq = reflect.New(handler.Info.Type.In(1))
-		if v := gmeta.Get(objectReq, goai.TagNamePath); !v.IsEmpty() {
+		if v := gmeta.Get(objectReq, gtag.Path); !v.IsEmpty() {
 			uri = v.String()
 		}
-		if v := gmeta.Get(objectReq, goai.TagNameMethod); !v.IsEmpty() {
+		if v := gmeta.Get(objectReq, gtag.Method); !v.IsEmpty() {
 			method = v.String()
 		}
-		if v := gmeta.Get(objectReq, goai.TagNameDomain); !v.IsEmpty() {
+		if v := gmeta.Get(objectReq, gtag.Domain); !v.IsEmpty() {
 			domain = v.String()
 		}
 	}
@@ -142,7 +142,6 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 						pattern, handler.Source, duplicatedHandler.Source,
 					)
 				}
-				return
 			}
 		}
 	}
@@ -245,14 +244,8 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 		s.routesMap[routerKey] = make([]*HandlerItem, 0)
 	}
 
-	switch handler.Type {
-	case HandlerTypeHandler, HandlerTypeObject:
-		// Overwrite the route.
-		s.routesMap[routerKey] = []*HandlerItem{handler}
-	default:
-		// Append the route.
-		s.routesMap[routerKey] = append(s.routesMap[routerKey], handler)
-	}
+	// Append the route.
+	s.routesMap[routerKey] = append(s.routesMap[routerKey], handler)
 }
 
 // compareRouterPriority compares the priority between `newItem` and `oldItem`. It returns true
