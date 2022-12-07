@@ -236,3 +236,51 @@ func Test_Request_SetCtx(t *testing.T) {
 		t.Assert(c.GetContent(ctx, "/"), "1")
 	})
 }
+
+func Test_Request_GetCtx(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(func(r *ghttp.Request) {
+			ctx := context.WithValue(r.GetCtx(), "test", 1)
+			r.SetCtx(ctx)
+			r.Middleware.Next()
+		})
+		group.ALL("/", func(r *ghttp.Request) {
+			r.Response.Write(r.Context().Value("test"))
+		})
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		t.Assert(c.GetContent(ctx, "/"), "1")
+	})
+}
+
+func Test_Request_GetCtxVar(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(func(r *ghttp.Request) {
+			r.Middleware.Next()
+		})
+		group.GET("/", func(r *ghttp.Request) {
+			r.Response.Write(r.GetCtxVar("key", "val"))
+		})
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		t.Assert(client.GetContent(ctx, "/"), "val")
+	})
+}
