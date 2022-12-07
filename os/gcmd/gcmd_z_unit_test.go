@@ -12,6 +12,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -64,7 +65,8 @@ func Test_BuildOptions(t *testing.T) {
 			"n1": "john",
 			"n2": "huang",
 		})
-		t.Assert(s, "-n1=john -n2=huang")
+		t.Assert(strings.Contains(s, "-n1=john"), true)
+		t.Assert(strings.Contains(s, "-n2=huang"), true)
 	})
 }
 
