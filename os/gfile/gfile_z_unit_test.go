@@ -115,12 +115,6 @@ func Test_Open(t *testing.T) {
 	})
 }
 
-func Test_Chdir(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-
-	})
-}
-
 func Test_OpenFile(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
