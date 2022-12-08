@@ -533,18 +533,18 @@ func TestDriverClickhouse_TableFields(t *testing.T) {
 	gtest.AssertNE(dataTypeTable, nil)
 
 	var result = map[string][]interface{}{
-		"Col1":  {0, "Col1", "UInt8", false, "", "", "", "列0"},
-		"Col2":  {1, "Col2", "String", true, "", "", "", "列1"},
-		"Col3":  {2, "Col3", "FixedString(3)", false, "", "", "", "列2"},
-		"Col4":  {3, "Col4", "String", false, "", "", "", "列3"},
-		"Col5":  {4, "Col5", "Map(String, UInt8)", false, "", "", "", "列4"},
-		"Col6":  {5, "Col6", "Array(String)", false, "", "", "", "列5"},
-		"Col7":  {6, "Col7", "Tuple(String, UInt8, Array(Map(String, String)))", false, "", "", "", "列6"},
-		"Col8":  {7, "Col8", "DateTime", false, "", "", "", "列7"},
-		"Col9":  {8, "Col9", "UUID", false, "", "", "", "列8"},
-		"Col10": {9, "Col10", "DateTime", false, "", "", "", "列9"},
-		"Col11": {10, "Col11", "Decimal(9, 2)", false, "", "", "", "列10"},
-		"Col12": {11, "Col12", "Decimal(9, 2)", false, "", "", "", "列11"},
+		"Col1":  {0, "Col1", "UInt8", false, "", "", "", "列1"},
+		"Col2":  {1, "Col2", "String", true, "", "", "", "列2"},
+		"Col3":  {2, "Col3", "FixedString(3)", false, "", "", "", "列3"},
+		"Col4":  {3, "Col4", "String", false, "", "", "", "列4"},
+		"Col5":  {4, "Col5", "Map(String, UInt8)", false, "", "", "", "列5"},
+		"Col6":  {5, "Col6", "Array(String)", false, "", "", "", "列6"},
+		"Col7":  {6, "Col7", "Tuple(String, UInt8, Array(Map(String, String)))", false, "", "", "", "列7"},
+		"Col8":  {7, "Col8", "DateTime", false, "", "", "", "列8"},
+		"Col9":  {8, "Col9", "UUID", false, "", "", "", "列9"},
+		"Col10": {9, "Col10", "DateTime", false, "", "", "", "列10"},
+		"Col11": {10, "Col11", "Decimal(9, 2)", false, "", "", "", "列11"},
+		"Col12": {11, "Col12", "Decimal(9, 2)", false, "", "", "", "列12"},
 	}
 	for k, v := range result {
 		_, ok := dataTypeTable[k]
