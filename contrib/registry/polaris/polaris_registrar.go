@@ -10,13 +10,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/polarismesh/polaris-go"
-	"github.com/polarismesh/polaris-go/pkg/model"
-
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/polarismesh/polaris-go"
+	"github.com/polarismesh/polaris-go/pkg/model"
 )
 
 // Register the registration.
@@ -134,12 +132,12 @@ func (r *Registry) doHeartBeat(ctx context.Context, instanceID string, service g
 					},
 				})
 				if err != nil {
-					g.Log().Error(ctx, err.Error())
+					r.opt.Logger.Error(ctx, err.Error())
 					continue
 				}
-				g.Log().Debug(ctx, "heartbeat success")
+				r.opt.Logger.Debug(ctx, "heartbeat success")
 			case <-r.c:
-				g.Log().Debug(ctx, "stop heartbeat")
+				r.opt.Logger.Debug(ctx, "stop heartbeat")
 				return
 			}
 		}

@@ -10,10 +10,11 @@ package polaris
 import (
 	"time"
 
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v2/os/glog"
 	"github.com/polarismesh/polaris-go"
 	"github.com/polarismesh/polaris-go/pkg/config"
-
-	"github.com/gogf/gf/v2/net/gsvc"
 )
 
 var (
@@ -60,6 +61,9 @@ type options struct {
 
 	// optional, retry count. Default value is global config
 	RetryCount int
+
+	// optional, logger for polaris
+	Logger glog.ILogger
 }
 
 // Option The option is a polaris option.
@@ -123,6 +127,11 @@ func WithHeartbeat(heartbeat bool) Option {
 	return func(o *options) { o.Heartbeat = heartbeat }
 }
 
+// WithLogger with the Logger option.
+func WithLogger(logger glog.ILogger) Option {
+	return func(o *options) { o.Logger = logger }
+}
+
 // New create a new registry.
 func New(provider polaris.ProviderAPI, consumer polaris.ConsumerAPI, opts ...Option) (r *Registry) {
 	op := options{
@@ -137,6 +146,7 @@ func New(provider polaris.ProviderAPI, consumer polaris.ConsumerAPI, opts ...Opt
 		TTL:          0,
 		Timeout:      0,
 		RetryCount:   0,
+		Logger:       g.Log(),
 	}
 	for _, option := range opts {
 		option(&op)

@@ -12,7 +12,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 )
 
@@ -136,7 +135,6 @@ func IsIntranet(ip string) bool {
 	if array[0] == "172" {
 		second, err := strconv.ParseInt(array[1], 10, 64)
 		if err != nil {
-			err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `strconv.ParseInt failed for string "%s"`, array[1])
 			return false
 		}
 		if second >= 16 && second <= 31 {

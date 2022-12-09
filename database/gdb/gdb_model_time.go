@@ -86,7 +86,7 @@ func (m *Model) getSoftFieldNameDeleted(table ...string) (field string) {
 		tableName = m.tablesInit
 	}
 	config := m.db.GetConfig()
-	if config.UpdatedAt != "" {
+	if config.DeletedAt != "" {
 		return m.getSoftFieldName(tableName, []string{config.DeletedAt})
 	}
 	return m.getSoftFieldName(tableName, deletedFiledNames)
@@ -150,8 +150,8 @@ func (m *Model) getConditionForSoftDeleting() string {
 // getConditionOfTableStringForSoftDeleting does something as its name describes.
 func (m *Model) getConditionOfTableStringForSoftDeleting(s string) string {
 	var (
-		field  = ""
-		table  = ""
+		field  string
+		table  string
 		array1 = gstr.SplitAndTrim(s, " ")
 		array2 = gstr.SplitAndTrim(array1[0], ".")
 	)

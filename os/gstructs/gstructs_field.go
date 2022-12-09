@@ -8,14 +8,9 @@ package gstructs
 
 import (
 	"reflect"
-	"strings"
 
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/util/gtag"
-)
-
-const (
-	jsonTagName = `json`
 )
 
 // Tag returns the value associated with key in the tag string. If there is no
@@ -26,14 +21,6 @@ func (f *Field) Tag(key string) string {
 		s = gtag.Parse(s)
 	}
 	return s
-}
-
-// TagJsonName returns the `json` tag name string of the field.
-func (f *Field) TagJsonName() string {
-	if jsonTag := f.Tag(jsonTagName); jsonTag != "" {
-		return strings.Split(jsonTag, ",")[0]
-	}
-	return ""
 }
 
 // TagLookup returns the value associated with key in the tag string.
@@ -191,7 +178,7 @@ func FieldMap(in FieldMapInput) (map[string]Field, error) {
 		return nil, err
 	}
 	var (
-		tagValue = ""
+		tagValue string
 		mapField = make(map[string]Field)
 	)
 	for _, field := range fields {

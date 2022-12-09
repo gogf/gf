@@ -21,38 +21,38 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-// ZipPath compresses `paths` to `dest` using zip compressing algorithm.
-// The unnecessary parameter `prefix` indicates the path prefix for zip file.
+// ZipPath compresses `fileOrFolderPaths` to `dstFilePath` using zip compressing algorithm.
 //
-// Note that the parameter `paths` can be either a directory or a file, which
+// The parameter `paths` can be either a directory or a file, which
 // supports multiple paths join with ','.
-func ZipPath(paths, dest string, prefix ...string) error {
-	writer, err := os.Create(dest)
+// The unnecessary parameter `prefix` indicates the path prefix for zip file.
+func ZipPath(fileOrFolderPaths, dstFilePath string, prefix ...string) error {
+	writer, err := os.Create(dstFilePath)
 	if err != nil {
-		err = gerror.Wrapf(err, `os.Create failed for name "%s"`, dest)
+		err = gerror.Wrapf(err, `os.Create failed for name "%s"`, dstFilePath)
 		return err
 	}
 	defer writer.Close()
 	zipWriter := zip.NewWriter(writer)
 	defer zipWriter.Close()
-	for _, path := range strings.Split(paths, ",") {
+	for _, path := range strings.Split(fileOrFolderPaths, ",") {
 		path = strings.TrimSpace(path)
-		if err = doZipPathWriter(path, gfile.RealPath(dest), zipWriter, prefix...); err != nil {
+		if err = doZipPathWriter(path, gfile.RealPath(dstFilePath), zipWriter, prefix...); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// ZipPathWriter compresses `paths` to `writer` using zip compressing algorithm.
-// The unnecessary parameter `prefix` indicates the path prefix for zip file.
+// ZipPathWriter compresses `fileOrFolderPaths` to `writer` using zip compressing algorithm.
 //
-// Note that the parameter `paths` can be either a directory or a file, which
+// Note that the parameter `fileOrFolderPaths` can be either a directory or a file, which
 // supports multiple paths join with ','.
-func ZipPathWriter(paths string, writer io.Writer, prefix ...string) error {
+// The unnecessary parameter `prefix` indicates the path prefix for zip file.
+func ZipPathWriter(fileOrFolderPaths string, writer io.Writer, prefix ...string) error {
 	zipWriter := zip.NewWriter(writer)
 	defer zipWriter.Close()
-	for _, path := range strings.Split(paths, ",") {
+	for _, path := range strings.Split(fileOrFolderPaths, ",") {
 		path = strings.TrimSpace(path)
 		if err := doZipPathWriter(path, "", zipWriter, prefix...); err != nil {
 			return err
@@ -61,47 +61,64 @@ func ZipPathWriter(paths string, writer io.Writer, prefix ...string) error {
 	return nil
 }
 
-// doZipPathWriter compresses the file of given `path` and writes the content to `zipWriter`.
+// ZipPathContent compresses `fileOrFolderPaths` to []byte using zip compressing algorithm.
+//
+// Note that the parameter `fileOrFolderPaths` can be either a directory or a file, which
+// supports multiple paths join with ','.
+// The unnecessary parameter `prefix` indicates the path prefix for zip file.
+func ZipPathContent(fileOrFolderPaths string, prefix ...string) ([]byte, error) {
+	var (
+		err    error
+		buffer = bytes.NewBuffer(nil)
+	)
+	if err = ZipPathWriter(fileOrFolderPaths, buffer, prefix...); err != nil {
+		return nil, err
+	}
+	return buffer.Bytes(), nil
+}
+
+// doZipPathWriter compresses given `fileOrFolderPaths` and writes the content to `zipWriter`.
+//
+// The parameter `fileOrFolderPath` can be either a single file or folder path.
 // The parameter `exclude` specifies the exclusive file path that is not compressed to `zipWriter`,
 // commonly the destination zip file path.
 // The unnecessary parameter `prefix` indicates the path prefix for zip file.
-func doZipPathWriter(path string, exclude string, zipWriter *zip.Writer, prefix ...string) error {
+func doZipPathWriter(fileOrFolderPath string, exclude string, zipWriter *zip.Writer, prefix ...string) error {
 	var (
 		err   error
 		files []string
 	)
-	path, err = gfile.Search(path)
+	fileOrFolderPath, err = gfile.Search(fileOrFolderPath)
 	if err != nil {
 		return err
 	}
-	if gfile.IsDir(path) {
-		files, err = gfile.ScanDir(path, "*", true)
+	if gfile.IsDir(fileOrFolderPath) {
+		files, err = gfile.ScanDir(fileOrFolderPath, "*", true)
 		if err != nil {
 			return err
 		}
 	} else {
-		files = []string{path}
+		files = []string{fileOrFolderPath}
 	}
 	headerPrefix := ""
 	if len(prefix) > 0 && prefix[0] != "" {
 		headerPrefix = prefix[0]
 	}
 	headerPrefix = strings.TrimRight(headerPrefix, "\\/")
-	if gfile.IsDir(path) {
+	if gfile.IsDir(fileOrFolderPath) {
 		if len(headerPrefix) > 0 {
 			headerPrefix += "/"
 		} else {
-			headerPrefix = gfile.Basename(path)
+			headerPrefix = gfile.Basename(fileOrFolderPath)
 		}
-
 	}
-	headerPrefix = strings.Replace(headerPrefix, "//", "/", -1)
+	headerPrefix = strings.ReplaceAll(headerPrefix, "//", "/")
 	for _, file := range files {
 		if exclude == file {
 			intlog.Printf(context.TODO(), `exclude file path: %s`, file)
 			continue
 		}
-		dir := gfile.Dir(file[len(path):])
+		dir := gfile.Dir(file[len(fileOrFolderPath):])
 		if dir == "." {
 			dir = ""
 		}
@@ -112,41 +129,41 @@ func doZipPathWriter(path string, exclude string, zipWriter *zip.Writer, prefix 
 	return nil
 }
 
-// UnZipFile decompresses `archive` to `dest` using zip compressing algorithm.
-// The optional parameter `path` specifies the unzipped path of `archive`,
-// which can be used to specify part of the archive file to unzip.
+// UnZipFile decompresses `archive` to `dstFolderPath` using zip compressing algorithm.
 //
-// Note that the parameter `dest` should be a directory.
-func UnZipFile(archive, dest string, path ...string) error {
-	readerCloser, err := zip.OpenReader(archive)
+// The parameter `dstFolderPath` should be a directory.
+// The optional parameter `zippedPrefix` specifies the unzipped path of `zippedFilePath`,
+// which can be used to specify part of the archive file to unzip.
+func UnZipFile(zippedFilePath, dstFolderPath string, zippedPrefix ...string) error {
+	readerCloser, err := zip.OpenReader(zippedFilePath)
 	if err != nil {
-		err = gerror.Wrapf(err, `zip.OpenReader failed for name "%s"`, dest)
+		err = gerror.Wrapf(err, `zip.OpenReader failed for name "%s"`, dstFolderPath)
 		return err
 	}
 	defer readerCloser.Close()
-	return unZipFileWithReader(&readerCloser.Reader, dest, path...)
+	return unZipFileWithReader(&readerCloser.Reader, dstFolderPath, zippedPrefix...)
 }
 
-// UnZipContent decompresses `data` to `dest` using zip compressing algorithm.
-// The parameter `path` specifies the unzipped path of `archive`,
-// which can be used to specify part of the archive file to unzip.
+// UnZipContent decompresses `zippedContent` to `dstFolderPath` using zip compressing algorithm.
 //
-// Note that the parameter `dest` should be a directory.
-func UnZipContent(data []byte, dest string, path ...string) error {
-	reader, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
+// The parameter `dstFolderPath` should be a directory.
+// The parameter `zippedPrefix` specifies the unzipped path of `zippedContent`,
+// which can be used to specify part of the archive file to unzip.
+func UnZipContent(zippedContent []byte, dstFolderPath string, zippedPrefix ...string) error {
+	reader, err := zip.NewReader(bytes.NewReader(zippedContent), int64(len(zippedContent)))
 	if err != nil {
 		err = gerror.Wrapf(err, `zip.NewReader failed`)
 		return err
 	}
-	return unZipFileWithReader(reader, dest, path...)
+	return unZipFileWithReader(reader, dstFolderPath, zippedPrefix...)
 }
 
-func unZipFileWithReader(reader *zip.Reader, dest string, path ...string) error {
+func unZipFileWithReader(reader *zip.Reader, dstFolderPath string, zippedPrefix ...string) error {
 	prefix := ""
-	if len(path) > 0 {
-		prefix = gstr.Replace(path[0], `\`, `/`)
+	if len(zippedPrefix) > 0 {
+		prefix = gstr.Replace(zippedPrefix[0], `\`, `/`)
 	}
-	if err := os.MkdirAll(dest, 0755); err != nil {
+	if err := os.MkdirAll(dstFolderPath, 0755); err != nil {
 		return err
 	}
 	var (
@@ -163,7 +180,7 @@ func unZipFileWithReader(reader *zip.Reader, dest string, path ...string) error 
 			}
 			name = name[len(prefix):]
 		}
-		dstPath = filepath.Join(dest, name)
+		dstPath = filepath.Join(dstFolderPath, name)
 		if file.FileInfo().IsDir() {
 			_ = os.MkdirAll(dstPath, file.Mode())
 			continue
@@ -206,19 +223,19 @@ func doCopyForUnZipFileWithReader(file *zip.File, fileReader io.ReadCloser, dstP
 	return nil
 }
 
-// zipFile compresses the file of given `path` and writes the content to `zw`.
+// zipFile compresses the file of given `filePath` and writes the content to `zw`.
 // The parameter `prefix` indicates the path prefix for zip file.
-func zipFile(path string, prefix string, zw *zip.Writer) error {
-	file, err := os.Open(path)
+func zipFile(filePath string, prefix string, zw *zip.Writer) error {
+	file, err := os.Open(filePath)
 	if err != nil {
-		err = gerror.Wrapf(err, `os.Open failed for name "%s"`, path)
-		return nil
+		err = gerror.Wrapf(err, `os.Open failed for name "%s"`, filePath)
+		return err
 	}
 	defer file.Close()
 
 	info, err := file.Stat()
 	if err != nil {
-		err = gerror.Wrapf(err, `file.Stat failed for name "%s"`, path)
+		err = gerror.Wrapf(err, `file.Stat failed for name "%s"`, filePath)
 		return err
 	}
 
@@ -240,7 +257,7 @@ func zipFile(path string, prefix string, zw *zip.Writer) error {
 	}
 	if !info.IsDir() {
 		if _, err = io.Copy(writer, file); err != nil {
-			err = gerror.Wrapf(err, `io.Copy failed from "%s" to "%s"`, path, header.Name)
+			err = gerror.Wrapf(err, `io.Copy failed from "%s" to "%s"`, filePath, header.Name)
 			return err
 		}
 	}
@@ -255,7 +272,7 @@ func createFileHeader(info os.FileInfo, prefix string) (*zip.FileHeader, error) 
 	}
 
 	if len(prefix) > 0 {
-		prefix = strings.Replace(prefix, `\`, `/`, -1)
+		prefix = strings.ReplaceAll(prefix, `\`, `/`)
 		prefix = strings.TrimRight(prefix, `/`)
 		header.Name = prefix + `/` + header.Name
 	}

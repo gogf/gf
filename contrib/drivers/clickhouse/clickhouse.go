@@ -18,17 +18,17 @@ import (
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
+	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/util/gutil"
-	"github.com/google/uuid"
-	"github.com/shopspring/decimal"
-
-	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gtag"
+	"github.com/gogf/gf/v2/util/gutil"
+	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
 )
 
 // Driver is the driver for postgresql database.
@@ -50,7 +50,7 @@ const (
 	filterTypePattern                = `(?i)^UPDATE|DELETE`
 	replaceSchemaPattern             = `@(.+?)/([\w\.\-]+)+`
 	needParsedSqlInCtx   gctx.StrKey = "NeedParsedSql"
-	OrmTagForStruct                  = "orm"
+	OrmTagForStruct                  = gtag.ORM
 	driverName                       = "clickhouse"
 )
 

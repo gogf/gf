@@ -233,7 +233,7 @@ func DataToMapDeep(value interface{}) map[string]interface{} {
 // nothing to the table name, or else adds the prefix to the table name and returns new table name with prefix.
 func doQuoteTableName(table, prefix, charLeft, charRight string) string {
 	var (
-		index  = 0
+		index  int
 		chars  = charLeft + charRight
 		array1 = gstr.SplitAndTrim(table, ",")
 	)
@@ -528,7 +528,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 			return
 		}
 		// Usually a string.
-		whereStr := gconv.String(in.Where)
+		whereStr := gstr.Trim(gconv.String(in.Where))
 		// Is `whereStr` a field name which composed as a key-value condition?
 		// Eg:
 		// Where("id", 1)

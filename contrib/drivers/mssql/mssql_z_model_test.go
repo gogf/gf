@@ -9,6 +9,9 @@ package mssql_test
 import (
 	"database/sql"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -17,8 +20,6 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
 	"github.com/gogf/gf/v2/util/gutil"
-	"testing"
-	"time"
 )
 
 func TestPage(t *testing.T) {
@@ -306,7 +307,7 @@ func Test_Model_Clone(t *testing.T) {
 		result, err := md.Safe(true).Order("id ASC").All()
 		t.AssertNil(err)
 
-		t.Assert(count, 2)
+		t.Assert(count, int64(2))
 		t.Assert(record["ID"].Int(), 3)
 		t.Assert(len(result), 2)
 		t.Assert(result[0]["ID"].Int(), 1)
@@ -322,42 +323,42 @@ func Test_Model_Safe(t *testing.T) {
 		md := db.Model(table).Safe(false).Where("id IN(?)", g.Slice{1, 3})
 		count, err := md.Count()
 		t.AssertNil(err)
-		t.Assert(count, 2)
+		t.Assert(count, int64(2))
 
 		md.Where("id = ?", 1)
 		count, err = md.Count()
 		t.AssertNil(err)
-		t.Assert(count, 1)
+		t.Assert(count, int64(1))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		md := db.Model(table).Safe(true).Where("id IN(?)", g.Slice{1, 3})
 		count, err := md.Count()
 		t.AssertNil(err)
-		t.Assert(count, 2)
+		t.Assert(count, int64(2))
 
 		md.Where("id = ?", 1)
 		count, err = md.Count()
 		t.AssertNil(err)
-		t.Assert(count, 2)
+		t.Assert(count, int64(2))
 	})
 
 	gtest.C(t, func(t *gtest.T) {
 		md := db.Model(table).Safe().Where("id IN(?)", g.Slice{1, 3})
 		count, err := md.Count()
 		t.AssertNil(err)
-		t.Assert(count, 2)
+		t.Assert(count, int64(2))
 
 		md.Where("id = ?", 1)
 		count, err = md.Count()
 		t.AssertNil(err)
-		t.Assert(count, 2)
+		t.Assert(count, int64(2))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		md1 := db.Model(table).Safe()
 		md2 := md1.Where("id in (?)", g.Slice{1, 3})
 		count, err := md2.Count()
 		t.AssertNil(err)
-		t.Assert(count, 2)
+		t.Assert(count, int64(2))
 
 		all, err := md2.All()
 		t.AssertNil(err)
@@ -379,7 +380,7 @@ func Test_Model_Safe(t *testing.T) {
 		// 1,3
 		count, err := md2.Count()
 		t.AssertNil(err)
-		t.Assert(count, 2)
+		t.Assert(count, int64(2))
 
 		all, err := md2.Order("id asc").All()
 		t.AssertNil(err)
@@ -394,7 +395,7 @@ func Test_Model_Safe(t *testing.T) {
 		// 4,5,6
 		count, err = md3.Count()
 		t.AssertNil(err)
-		t.Assert(count, 3)
+		t.Assert(count, int64(3))
 
 		all, err = md3.Order("id asc").All()
 		t.AssertNil(err)
@@ -486,7 +487,7 @@ func Test_Model_Count(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Count()
 		t.AssertNil(err)
-		t.Assert(count, TableSize)
+		t.Assert(count, int64(TableSize))
 	})
 	// Count with cache, check internal ctx data feature.
 	gtest.C(t, func(t *gtest.T) {
@@ -497,24 +498,24 @@ func Test_Model_Count(t *testing.T) {
 				Force:    false,
 			}).Count()
 			t.AssertNil(err)
-			t.Assert(count, TableSize)
+			t.Assert(count, int64(TableSize))
 		}
 	})
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).FieldsEx("id").Where("id>8").Count()
 		t.AssertNil(err)
-		t.Assert(count, 2)
+		t.Assert(count, int64(2))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Fields("distinct id").Where("id>8").Count()
 		t.AssertNil(err)
-		t.Assert(count, 2)
+		t.Assert(count, int64(2))
 	})
 	// COUNT...LIMIT...
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Page(1, 2).Count()
 		t.AssertNil(err)
-		t.Assert(count, TableSize)
+		t.Assert(count, int64(TableSize))
 	})
 
 }
@@ -1808,7 +1809,7 @@ func Test_Model_Distinct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Where("id > 1").Distinct().Count()
 		t.AssertNil(err)
-		t.Assert(count, 9)
+		t.Assert(count, int64(9))
 	})
 }
 
@@ -2309,7 +2310,7 @@ func Test_Model_Raw(t *testing.T) {
 			OrderDesc("id").
 			Count()
 		t.AssertNil(err)
-		t.Assert(count, 6)
+		t.Assert(count, int64(6))
 	})
 }
 
@@ -2397,38 +2398,38 @@ func Test_Model_OmitEmptyWhere(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Where("id", 0).Count()
 		t.AssertNil(err)
-		t.Assert(count, 0)
+		t.Assert(count, int64(0))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).OmitEmptyWhere().Where("id", 0).Count()
 		t.AssertNil(err)
-		t.Assert(count, TableSize)
+		t.Assert(count, int64(TableSize))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).OmitEmptyWhere().Where("id", 0).Where("nickname", "").Count()
 		t.AssertNil(err)
-		t.Assert(count, TableSize)
+		t.Assert(count, int64(TableSize))
 	})
 	// Slice where.
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Where("id", g.Slice{1, 2, 3}).Count()
 		t.AssertNil(err)
-		t.Assert(count, 3)
+		t.Assert(count, int64(3))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Where("id", g.Slice{}).Count()
 		t.AssertNil(err)
-		t.Assert(count, 0)
+		t.Assert(count, int64(0))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).OmitEmptyWhere().Where("id", g.Slice{}).Count()
 		t.AssertNil(err)
-		t.Assert(count, TableSize)
+		t.Assert(count, int64(TableSize))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Where("id", g.Slice{}).OmitEmptyWhere().Count()
 		t.AssertNil(err)
-		t.Assert(count, TableSize)
+		t.Assert(count, int64(TableSize))
 	})
 	// Struct Where.
 	gtest.C(t, func(t *gtest.T) {
@@ -2438,7 +2439,7 @@ func Test_Model_OmitEmptyWhere(t *testing.T) {
 		}
 		count, err := db.Model(table).Where(Input{}).Count()
 		t.AssertNil(err)
-		t.Assert(count, 0)
+		t.Assert(count, int64(0))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type Input struct {
@@ -2447,7 +2448,7 @@ func Test_Model_OmitEmptyWhere(t *testing.T) {
 		}
 		count, err := db.Model(table).Where(Input{}).OmitEmptyWhere().Count()
 		t.AssertNil(err)
-		t.Assert(count, TableSize)
+		t.Assert(count, int64(TableSize))
 	})
 	// Map Where.
 	gtest.C(t, func(t *gtest.T) {
@@ -2456,7 +2457,7 @@ func Test_Model_OmitEmptyWhere(t *testing.T) {
 			"nickname": []string{},
 		}).Count()
 		t.AssertNil(err)
-		t.Assert(count, 0)
+		t.Assert(count, int64(0))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type Input struct {
@@ -2466,7 +2467,7 @@ func Test_Model_OmitEmptyWhere(t *testing.T) {
 			"id": []int{},
 		}).OmitEmptyWhere().Count()
 		t.AssertNil(err)
-		t.Assert(count, TableSize)
+		t.Assert(count, int64(TableSize))
 	})
 }
 

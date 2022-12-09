@@ -1,0 +1,9 @@
+gfcli:
+  build:
+    name:     "pack"
+    arch:     "amd64"
+    system:   "darwin"
+    packSrc:  "resource/public,manifest/i18n"
+    packDst:  "packed/build_packed_data.go"
+    mod:      ""
+    cgo:      0

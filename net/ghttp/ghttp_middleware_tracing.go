@@ -107,5 +107,4 @@ func internalMiddlewareServerTracing(r *Request) {
 		attribute.String(tracingEventHttpResponseHeaders, gconv.String(httputil.HeaderToMap(r.Response.Header()))),
 		attribute.String(tracingEventHttpResponseBody, resBodyContent),
 	))
-	return
 }

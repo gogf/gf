@@ -83,9 +83,9 @@ func (s *Server) bindHandlerByMap(ctx context.Context, prefix string, m map[stri
 func (s *Server) mergeBuildInNameToPattern(pattern string, structName, methodName string, allowAppend bool) string {
 	structName = s.nameToUri(structName)
 	methodName = s.nameToUri(methodName)
-	pattern = strings.Replace(pattern, "{.struct}", structName, -1)
-	if strings.Index(pattern, "{.method}") != -1 {
-		return strings.Replace(pattern, "{.method}", methodName, -1)
+	pattern = strings.ReplaceAll(pattern, "{.struct}", structName)
+	if strings.Contains(pattern, "{.method}") {
+		return strings.ReplaceAll(pattern, "{.method}", methodName)
 	}
 	if !allowAppend {
 		return pattern
@@ -164,7 +164,7 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 			return
 		}
 
-		if reflectType.In(0).String() != "context.Context" {
+		if !reflectType.In(0).Implements(reflect.TypeOf((*context.Context)(nil)).Elem()) {
 			err = gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`invalid handler: defined as "%s", but the first input parameter should be type of "context.Context"`,
@@ -173,7 +173,7 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 			return
 		}
 
-		if reflectType.Out(1).String() != "error" {
+		if !reflectType.Out(1).Implements(reflect.TypeOf((*error)(nil)).Elem()) {
 			err = gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`invalid handler: defined as "%s", but the last output parameter should be type of "error"`,

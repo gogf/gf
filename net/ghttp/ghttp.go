@@ -12,16 +12,17 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gorilla/websocket"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gsession"
+	"github.com/gogf/gf/v2/util/gtag"
 )
 
 type (
@@ -91,8 +92,8 @@ type (
 		Source     string          // Registering source file `path:line`.
 	}
 
-	// handlerParsedItem is the item parsed from URL.Path.
-	handlerParsedItem struct {
+	// HandlerItemParsed is the item parsed from URL.Path.
+	HandlerItemParsed struct {
 		Handler *HandlerItem      // Handler information.
 		Values  map[string]string // Router values parsed from URL.Path.
 	}
@@ -127,19 +128,20 @@ const (
 )
 
 const (
-	supportedHttpMethods    = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
-	defaultMethod           = "ALL"
-	routeCacheDuration      = time.Hour
-	ctxKeyForRequest        = "gHttpRequestObject"
-	contentTypeXml          = "text/xml"
-	contentTypeHtml         = "text/html"
-	contentTypeJson         = "application/json"
-	swaggerUIPackedPath     = "/goframe/swaggerui"
-	responseTraceIDHeader   = "Trace-ID"
-	specialMethodNameInit   = "Init"
-	specialMethodNameShut   = "Shut"
-	specialMethodNameIndex  = "Index"
-	gracefulShutdownTimeout = 5 * time.Second
+	supportedHttpMethods        = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
+	defaultMethod               = "ALL"
+	routeCacheDuration          = time.Hour
+	ctxKeyForRequest            = "gHttpRequestObject"
+	contentTypeXml              = "text/xml"
+	contentTypeHtml             = "text/html"
+	contentTypeJson             = "application/json"
+	swaggerUIPackedPath         = "/goframe/swaggerui"
+	responseHeaderTraceID       = "Trace-ID"
+	responseHeaderContentLength = "Content-Length"
+	specialMethodNameInit       = "Init"
+	specialMethodNameShut       = "Shut"
+	specialMethodNameIndex      = "Index"
+	gracefulShutdownTimeout     = 5 * time.Second
 )
 
 const (
@@ -180,7 +182,7 @@ var (
 	gracefulEnabled = false
 
 	// defaultValueTags are the struct tag names for default value storing.
-	defaultValueTags = []string{"d", "default"}
+	defaultValueTags = []string{gtag.DefaultShort, gtag.Default}
 )
 
 var (

@@ -176,7 +176,7 @@ func GetBytesByTwoOffsetsByPath(path string, start int64, end int64) []byte {
 //
 // Note that the parameter passed to callback function might be an empty value, and the last non-empty line
 // will be passed to callback function `callback` even if it has no newline marker.
-func ReadLines(file string, callback func(text string) error) error {
+func ReadLines(file string, callback func(line string) error) error {
 	f, err := Open(file)
 	if err != nil {
 		return err

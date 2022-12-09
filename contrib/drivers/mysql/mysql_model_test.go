@@ -462,7 +462,7 @@ func Test_Model_Clone(t *testing.T) {
 		result, err := md.Safe(true).Order("id ASC").All()
 		t.AssertNil(err)
 
-		t.Assert(count, 2)
+		t.Assert(count, int64(2))
 		t.Assert(record["id"].Int(), 3)
 		t.Assert(len(result), 2)
 		t.Assert(result[0]["id"].Int(), 1)
@@ -478,42 +478,42 @@ func Test_Model_Safe(t *testing.T) {
 		md := db.Model(table).Safe(false).Where("id IN(?)", g.Slice{1, 3})
 		count, err := md.Count()
 		t.AssertNil(err)
-		t.Assert(count, 2)
+		t.Assert(count, int64(2))
 
 		md.Where("id = ?", 1)
 		count, err = md.Count()
 		t.AssertNil(err)
-		t.Assert(count, 1)
+		t.Assert(count, int64(1))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		md := db.Model(table).Safe(true).Where("id IN(?)", g.Slice{1, 3})
 		count, err := md.Count()
 		t.AssertNil(err)
-		t.Assert(count, 2)
+		t.Assert(count, int64(2))
 
 		md.Where("id = ?", 1)
 		count, err = md.Count()
 		t.AssertNil(err)
-		t.Assert(count, 2)
+		t.Assert(count, int64(2))
 	})
 
 	gtest.C(t, func(t *gtest.T) {
 		md := db.Model(table).Safe().Where("id IN(?)", g.Slice{1, 3})
 		count, err := md.Count()
 		t.AssertNil(err)
-		t.Assert(count, 2)
+		t.Assert(count, int64(2))
 
 		md.Where("id = ?", 1)
 		count, err = md.Count()
 		t.AssertNil(err)
-		t.Assert(count, 2)
+		t.Assert(count, int64(2))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		md1 := db.Model(table).Safe()
 		md2 := md1.Where("id in (?)", g.Slice{1, 3})
 		count, err := md2.Count()
 		t.AssertNil(err)
-		t.Assert(count, 2)
+		t.Assert(count, int64(2))
 
 		all, err := md2.All()
 		t.AssertNil(err)
@@ -535,7 +535,7 @@ func Test_Model_Safe(t *testing.T) {
 		// 1,3
 		count, err := md2.Count()
 		t.AssertNil(err)
-		t.Assert(count, 2)
+		t.Assert(count, int64(2))
 
 		all, err := md2.Order("id asc").All()
 		t.AssertNil(err)
@@ -550,7 +550,7 @@ func Test_Model_Safe(t *testing.T) {
 		// 4,5,6
 		count, err = md3.Count()
 		t.AssertNil(err)
-		t.Assert(count, 3)
+		t.Assert(count, int64(3))
 
 		all, err = md3.Order("id asc").All()
 		t.AssertNil(err)
@@ -701,7 +701,7 @@ func Test_Model_Count(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Count()
 		t.AssertNil(err)
-		t.Assert(count, TableSize)
+		t.Assert(count, int64(TableSize))
 	})
 	// Count with cache, check internal ctx data feature.
 	gtest.C(t, func(t *gtest.T) {
@@ -712,35 +712,176 @@ func Test_Model_Count(t *testing.T) {
 				Force:    false,
 			}).Count()
 			t.AssertNil(err)
-			t.Assert(count, TableSize)
+			t.Assert(count, int64(TableSize))
 		}
 	})
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).FieldsEx("id").Where("id>8").Count()
 		t.AssertNil(err)
-		t.Assert(count, 2)
+		t.Assert(count, int64(2))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Fields("distinct id,nickname").Where("id>8").Count()
 		t.AssertNil(err)
-		t.Assert(count, 2)
+		t.Assert(count, int64(2))
 	})
 	// COUNT...LIMIT...
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Page(1, 2).Count()
 		t.AssertNil(err)
-		t.Assert(count, TableSize)
+		t.Assert(count, int64(TableSize))
 	})
-	// gtest.C(t, func(t *gtest.T) {
-	//	count, err := db.Model(table).Fields("id myid").Where("id>8").Count()
-	//	t.AssertNil(err)
-	//	t.Assert(count, 2)
-	// })
-	// gtest.C(t, func(t *gtest.T) {
-	//	count, err := db.Model(table).As("u1").LeftJoin(table, "u2", "u2.id=u1.id").Fields("u2.id u2id").Where("u1.id>8").Count()
-	//	t.AssertNil(err)
-	//	t.Assert(count, 2)
-	// })
+}
+
+func Test_Model_Value_WithCache(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		value, err := db.Model(table).Where("id", 1).Cache(gdb.CacheOption{
+			Duration: time.Second * 10,
+			Force:    false,
+		}).Value()
+		t.AssertNil(err)
+		t.Assert(value.Int(), 0)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Data(g.MapStrAny{
+			"id":       1,
+			"passport": fmt.Sprintf(`passport_%d`, 1),
+			"password": fmt.Sprintf(`password_%d`, 1),
+			"nickname": fmt.Sprintf(`nickname_%d`, 1),
+		}).Insert()
+		t.AssertNil(err)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		value, err := db.Model(table).Where("id", 1).Cache(gdb.CacheOption{
+			Duration: time.Second * 10,
+			Force:    false,
+		}).Value()
+		t.AssertNil(err)
+		t.Assert(value.Int(), 1)
+	})
+}
+
+func Test_Model_Count_WithCache(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", 1).Cache(gdb.CacheOption{
+			Duration: time.Second * 10,
+			Force:    false,
+		}).Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(0))
+	})
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Data(g.MapStrAny{
+			"id":       1,
+			"passport": fmt.Sprintf(`passport_%d`, 1),
+			"password": fmt.Sprintf(`password_%d`, 1),
+			"nickname": fmt.Sprintf(`nickname_%d`, 1),
+		}).Insert()
+		t.AssertNil(err)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", 1).Cache(gdb.CacheOption{
+			Duration: time.Second * 10,
+			Force:    false,
+		}).Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(1))
+	})
+}
+
+func Test_Model_Count_All_WithCache(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Cache(gdb.CacheOption{
+			Duration: time.Second * 10,
+			Force:    false,
+		}).Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(0))
+	})
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Data(g.MapStrAny{
+			"id":       1,
+			"passport": fmt.Sprintf(`passport_%d`, 1),
+			"password": fmt.Sprintf(`password_%d`, 1),
+			"nickname": fmt.Sprintf(`nickname_%d`, 1),
+		}).Insert()
+		t.AssertNil(err)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Cache(gdb.CacheOption{
+			Duration: time.Second * 10,
+			Force:    false,
+		}).Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(1))
+	})
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Data(g.MapStrAny{
+			"id":       2,
+			"passport": fmt.Sprintf(`passport_%d`, 2),
+			"password": fmt.Sprintf(`password_%d`, 2),
+			"nickname": fmt.Sprintf(`nickname_%d`, 2),
+		}).Insert()
+		t.AssertNil(err)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Cache(gdb.CacheOption{
+			Duration: time.Second * 10,
+			Force:    false,
+		}).Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(1))
+	})
+}
+
+func Test_Model_CountColumn_WithCache(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", 1).Cache(gdb.CacheOption{
+			Duration: time.Second * 10,
+			Force:    false,
+		}).CountColumn("id")
+		t.AssertNil(err)
+		t.Assert(count, int64(0))
+	})
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Data(g.MapStrAny{
+			"id":       1,
+			"passport": fmt.Sprintf(`passport_%d`, 1),
+			"password": fmt.Sprintf(`password_%d`, 1),
+			"nickname": fmt.Sprintf(`nickname_%d`, 1),
+		}).Insert()
+		t.AssertNil(err)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", 1).Cache(gdb.CacheOption{
+			Duration: time.Second * 10,
+			Force:    false,
+		}).CountColumn("id")
+		t.AssertNil(err)
+		t.Assert(count, int64(1))
+	})
 }
 
 func Test_Model_Select(t *testing.T) {
@@ -982,7 +1123,7 @@ func Test_Model_StructsWithOrmTag(t *testing.T) {
 		dbInvalid.GetLogger().(*glog.Logger).SetWriter(buffer)
 		defer dbInvalid.GetLogger().(*glog.Logger).SetWriter(os.Stdout)
 		dbInvalid.Model(table).Order("id asc").Scan(&users)
-		//fmt.Println(buffer.String())
+		// fmt.Println(buffer.String())
 		t.Assert(
 			gstr.Contains(
 				buffer.String(),
@@ -1845,7 +1986,7 @@ func Test_Model_Page(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(all), 3)
 		t.Assert(all[0]["id"], "7")
-		t.Assert(count, TableSize)
+		t.Assert(count, int64(TableSize))
 	})
 }
 
@@ -2749,7 +2890,7 @@ func Test_Model_Distinct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Where("id > 1").Distinct().Count()
 		t.AssertNil(err)
-		t.Assert(count, 9)
+		t.Assert(count, int64(9))
 	})
 }
 
@@ -2983,80 +3124,6 @@ func Test_Model_HasField(t *testing.T) {
 		t.Assert(result, false)
 		t.AssertNil(err)
 	})
-}
-
-// Issue: https://github.com/gogf/gf/issues/1002
-func Test_Model_Issue1002(t *testing.T) {
-	table := createTable()
-	defer dropTable(table)
-
-	result, err := db.Model(table).Data(g.Map{
-		"id":          1,
-		"passport":    "port_1",
-		"password":    "pass_1",
-		"nickname":    "name_2",
-		"create_time": "2020-10-27 19:03:33",
-	}).Insert()
-	gtest.AssertNil(err)
-	n, _ := result.RowsAffected()
-	gtest.Assert(n, 1)
-
-	// where + string.
-	gtest.C(t, func(t *gtest.T) {
-		v, err := db.Model(table).Fields("id").Where("create_time>'2020-10-27 19:03:32' and create_time<'2020-10-27 19:03:34'").Value()
-		t.AssertNil(err)
-		t.Assert(v.Int(), 1)
-	})
-	gtest.C(t, func(t *gtest.T) {
-		v, err := db.Model(table).Fields("id").Where("create_time>'2020-10-27 19:03:32' and create_time<'2020-10-27 19:03:34'").Value()
-		t.AssertNil(err)
-		t.Assert(v.Int(), 1)
-	})
-	// where + string arguments.
-	gtest.C(t, func(t *gtest.T) {
-		v, err := db.Model(table).Fields("id").Where("create_time>? and create_time<?", "2020-10-27 19:03:32", "2020-10-27 19:03:34").Value()
-		t.AssertNil(err)
-		t.Assert(v.Int(), 1)
-	})
-	// where + gtime.Time arguments.
-	gtest.C(t, func(t *gtest.T) {
-		v, err := db.Model(table).Fields("id").Where("create_time>? and create_time<?", gtime.New("2020-10-27 19:03:32"), gtime.New("2020-10-27 19:03:34")).Value()
-		t.AssertNil(err)
-		t.Assert(v.Int(), 1)
-	})
-	// where + time.Time arguments, UTC.
-	gtest.C(t, func(t *gtest.T) {
-		t1, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 11:03:32")
-		t2, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 11:03:34")
-		{
-			v, err := db.Model(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).Value()
-			t.AssertNil(err)
-			t.Assert(v.Int(), 1)
-		}
-	})
-	// where + time.Time arguments, +8.
-	// gtest.C(t, func(t *gtest.T) {
-	//	// Change current timezone to +8 zone.
-	//	location, err := time.LoadLocation("Asia/Shanghai")
-	//	t.AssertNil(err)
-	//	t1, _ := time.ParseInLocation("2006-01-02 15:04:05", "2020-10-27 19:03:32", location)
-	//	t2, _ := time.ParseInLocation("2006-01-02 15:04:05", "2020-10-27 19:03:34", location)
-	//	{
-	//		v, err := db.Model(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).Value()
-	//		t.AssertNil(err)
-	//		t.Assert(v.Int(), 1)
-	//	}
-	//	{
-	//		v, err := db.Model(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).FindValue()
-	//		t.AssertNil(err)
-	//		t.Assert(v.Int(), 1)
-	//	}
-	//	{
-	//		v, err := db.Model(table).Where("create_time>? and create_time<?", t1, t2).FindValue("id")
-	//		t.AssertNil(err)
-	//		t.Assert(v.Int(), 1)
-	//	}
-	// })
 }
 
 func createTableForTimeZoneTest() string {
@@ -3569,7 +3636,7 @@ func Test_Model_Increment_Decrement(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Where("id", 91).Count()
 		t.AssertNil(err)
-		t.Assert(count, 1)
+		t.Assert(count, int64(1))
 	})
 }
 
@@ -3745,7 +3812,7 @@ func Test_Model_Raw(t *testing.T) {
 			Limit(2).
 			Count()
 		t.AssertNil(err)
-		t.Assert(count, 6)
+		t.Assert(count, int64(6))
 	})
 }
 
@@ -3833,38 +3900,38 @@ func Test_Model_OmitEmptyWhere(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Where("id", 0).Count()
 		t.AssertNil(err)
-		t.Assert(count, 0)
+		t.Assert(count, int64(0))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).OmitEmptyWhere().Where("id", 0).Count()
 		t.AssertNil(err)
-		t.Assert(count, TableSize)
+		t.Assert(count, int64(TableSize))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).OmitEmptyWhere().Where("id", 0).Where("nickname", "").Count()
 		t.AssertNil(err)
-		t.Assert(count, TableSize)
+		t.Assert(count, int64(TableSize))
 	})
 	// Slice where.
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Where("id", g.Slice{1, 2, 3}).Count()
 		t.AssertNil(err)
-		t.Assert(count, 3)
+		t.Assert(count, int64(3))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Where("id", g.Slice{}).Count()
 		t.AssertNil(err)
-		t.Assert(count, 0)
+		t.Assert(count, int64(0))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).OmitEmptyWhere().Where("id", g.Slice{}).Count()
 		t.AssertNil(err)
-		t.Assert(count, TableSize)
+		t.Assert(count, int64(TableSize))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Where("id", g.Slice{}).OmitEmptyWhere().Count()
 		t.AssertNil(err)
-		t.Assert(count, TableSize)
+		t.Assert(count, int64(TableSize))
 	})
 	// Struct Where.
 	gtest.C(t, func(t *gtest.T) {
@@ -3874,7 +3941,7 @@ func Test_Model_OmitEmptyWhere(t *testing.T) {
 		}
 		count, err := db.Model(table).Where(Input{}).Count()
 		t.AssertNil(err)
-		t.Assert(count, 0)
+		t.Assert(count, int64(0))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type Input struct {
@@ -3883,7 +3950,7 @@ func Test_Model_OmitEmptyWhere(t *testing.T) {
 		}
 		count, err := db.Model(table).Where(Input{}).OmitEmptyWhere().Count()
 		t.AssertNil(err)
-		t.Assert(count, TableSize)
+		t.Assert(count, int64(TableSize))
 	})
 	// Map Where.
 	gtest.C(t, func(t *gtest.T) {
@@ -3892,7 +3959,7 @@ func Test_Model_OmitEmptyWhere(t *testing.T) {
 			"nickname": []string{},
 		}).Count()
 		t.AssertNil(err)
-		t.Assert(count, 0)
+		t.Assert(count, int64(0))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type Input struct {
@@ -3902,7 +3969,7 @@ func Test_Model_OmitEmptyWhere(t *testing.T) {
 			"id": []int{},
 		}).OmitEmptyWhere().Count()
 		t.AssertNil(err)
-		t.Assert(count, TableSize)
+		t.Assert(count, int64(TableSize))
 	})
 }
 
@@ -4230,96 +4297,6 @@ func Test_Model_WherePrefixLike(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(r), 1)
 		t.Assert(r[0]["id"], "3")
-	})
-}
-
-// https://github.com/gogf/gf/issues/1700
-func Test_Model_Issue1700(t *testing.T) {
-	table := "user_" + gtime.Now().TimestampNanoStr()
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-	    CREATE TABLE %s (
-	        id         int(10) unsigned NOT NULL AUTO_INCREMENT,
-	        user_id    int(10) unsigned NOT NULL,
-	        UserId    int(10) unsigned NOT NULL,
-	        PRIMARY KEY (id)
-	    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-	    `, table,
-	)); err != nil {
-		gtest.AssertNil(err)
-	}
-	defer dropTable(table)
-
-	gtest.C(t, func(t *gtest.T) {
-		type User struct {
-			Id     int `orm:"id"`
-			Userid int `orm:"user_id"`
-			UserId int `orm:"UserId"`
-		}
-		_, err := db.Model(table).Data(User{
-			Id:     1,
-			Userid: 2,
-			UserId: 3,
-		}).Insert()
-		t.AssertNil(err)
-
-		one, err := db.Model(table).One()
-		t.AssertNil(err)
-		t.Assert(one, g.Map{
-			"id":      1,
-			"user_id": 2,
-			"UserId":  3,
-		})
-
-		for i := 0; i < 1000; i++ {
-			var user *User
-			err = db.Model(table).Scan(&user)
-			t.AssertNil(err)
-			t.Assert(user.Id, 1)
-			t.Assert(user.Userid, 2)
-			t.Assert(user.UserId, 3)
-		}
-	})
-}
-
-// https://github.com/gogf/gf/issues/1701
-func Test_Model_Issue1701(t *testing.T) {
-	table := createInitTable()
-	defer dropTable(table)
-	gtest.C(t, func(t *gtest.T) {
-		value, err := db.Model(table).Fields(gdb.Raw("if(id=1,100,null)")).WherePri(1).Value()
-		t.AssertNil(err)
-		t.Assert(value.String(), 100)
-	})
-}
-
-// https://github.com/gogf/gf/issues/1733
-func Test_Model_Issue1733(t *testing.T) {
-	table := "user_" + guid.S()
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-	    CREATE TABLE %s (
-	        id int(8) unsigned zerofill NOT NULL AUTO_INCREMENT,
-	        PRIMARY KEY (id)
-	    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-	    `, table,
-	)); err != nil {
-		gtest.AssertNil(err)
-	}
-	defer dropTable(table)
-
-	gtest.C(t, func(t *gtest.T) {
-		for i := 1; i <= 10; i++ {
-			_, err := db.Model(table).Data(g.Map{
-				"id": i,
-			}).Insert()
-			t.AssertNil(err)
-		}
-
-		all, err := db.Model(table).OrderAsc("id").All()
-		t.AssertNil(err)
-		t.Assert(len(all), 10)
-		for i := 0; i < 10; i++ {
-			t.Assert(all[i]["id"].Int(), i+1)
-		}
 	})
 }
 
@@ -4663,5 +4640,28 @@ func TestResult_Structs1(t *testing.T) {
 		t.Assert(array[1].Id, 0)
 		t.Assert(array[0].Name, "john")
 		t.Assert(array[1].Name, "smith")
+	})
+}
+
+func Test_Builder_OmitEmptyWhere(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", 1).Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(1))
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", 0).OmitEmptyWhere().Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(TableSize))
+	})
+	gtest.C(t, func(t *gtest.T) {
+		builder := db.Model(table).OmitEmptyWhere().Builder()
+		count, err := db.Model(table).Where(
+			builder.Where("id", 0),
+		).Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(TableSize))
 	})
 }
