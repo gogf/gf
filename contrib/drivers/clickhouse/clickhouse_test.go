@@ -558,3 +558,13 @@ func TestDriverClickhouse_TableFields(t *testing.T) {
 		gtest.AssertEQ(dataTypeTable[k].Comment, v[7])
 	}
 }
+
+func TestDriverClickhouse_TableFields_HasField(t *testing.T) {
+	connect := clickhouseConfigDB()
+	gtest.AssertNil(createClickhouseExampleTable(connect))
+	defer dropClickhouseExampleTable(connect)
+	// 未修复前：panic: runtime error: index out of range [12] with length 12
+	b, err := connect.GetCore().HasField(context.Background(), "data_type", "Col1")
+	gtest.AssertNil(err)
+	gtest.AssertEQ(b, true)
+}
