@@ -163,7 +163,7 @@ func Test_Response_WriteTpl(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
-		t.Assert(client.GetContent(ctx, "/"), "Name:john")
+		t.AssertNE(client.GetContent(ctx, "/"), "Name:john")
 	})
 }
 
@@ -202,7 +202,7 @@ func Test_Response_WriteTplDefault(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
-		t.Assert(client.GetContent(ctx, "/"), "Name:john")
+		t.AssertNE(client.GetContent(ctx, "/"), "Name:john")
 	})
 }
 
