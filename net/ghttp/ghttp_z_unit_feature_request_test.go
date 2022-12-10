@@ -636,3 +636,141 @@ func Test_Params_Parse_EmbeddedWithAliasName2(t *testing.T) {
 		t.Assert(client.GetContent(ctx, "/parse?cate=1&page=2&size=10"), `{"Type":"","CategoryId":1,"Page":2,"Size":10,"Sort":0,"UserId":0}`)
 	})
 }
+
+func Test_Params_GetParam(t *testing.T) {
+	s := g.Server(guid.S())
+	s.BindHandler("/", func(r *ghttp.Request) {
+		r.Response.Write(r.GetParam("key", "val"))
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
+		client := g.Client()
+		client.SetPrefix(prefix)
+
+		t.Assert(client.PostContent(ctx, "/"), "val")
+	})
+}
+
+func Test_Params_SetQuery(t *testing.T) {
+	s := g.Server(guid.S())
+	s.BindHandler("/SetQuery", func(r *ghttp.Request) {
+		r.SetQuery("a", 100)
+		r.Response.Write(r.GetQuery("a"))
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
+		client := g.Client()
+		client.SetPrefix(prefix)
+
+		t.Assert(client.GetContent(ctx, "/SetQuery"), "100")
+		t.Assert(client.GetContent(ctx, "/SetQuery?a=1"), "100")
+	})
+}
+
+func Test_Params_GetQuery(t *testing.T) {
+	s := g.Server(guid.S())
+	s.BindHandler("/GetQuery", func(r *ghttp.Request) {
+		r.Response.Write(r.GetQuery("a", 200))
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
+		client := g.Client()
+		client.SetPrefix(prefix)
+
+		t.Assert(client.GetContent(ctx, "/GetQuery"), 200)
+		t.Assert(client.SetContentType("application/json").GetContent(ctx, "/GetQuery", "a=100"), 100)
+	})
+}
+
+func Test_Params_GetQueryMap(t *testing.T) {
+	s := g.Server(guid.S())
+	s.BindHandler("/GetQueryMap", func(r *ghttp.Request) {
+		if m := r.GetQueryMap(); len(m) > 0 {
+			r.Response.Write(m["name"])
+		}
+	})
+	s.BindHandler("/GetQueryMapWithKVMap", func(r *ghttp.Request) {
+		if m := r.GetQueryMap(map[string]interface{}{"id": 1}); len(m) > 0 {
+			r.Response.Write(m["id"])
+		}
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
+		client := g.Client()
+		client.SetPrefix(prefix)
+		client.SetContentType("application/json")
+		t.Assert(client.GetContent(ctx, "/GetQueryMap", "id=1&name=john"), `john`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
+		client := g.Client()
+		client.SetPrefix(prefix)
+		t.Assert(client.GetContent(ctx, "/GetQueryMapWithKVMap"), 1)
+		t.Assert(client.GetContent(ctx, "/GetQueryMapWithKVMap", "name=john"), 1)
+		t.Assert(client.GetContent(ctx, "/GetQueryMapWithKVMap", "id=2&name=john"), 2)
+		client.SetContentType("application/json")
+		t.Assert(client.GetContent(ctx, "/GetQueryMapWithKVMap", "name=john"), 1)
+		t.Assert(client.GetContent(ctx, "/GetQueryMapWithKVMap", "id=2&name=john"), 2)
+	})
+}
+
+func Test_Params_GetQueryMapStrStr(t *testing.T) {
+	s := g.Server(guid.S())
+	s.BindHandler("/GetQueryMapStrStr", func(r *ghttp.Request) {
+		r.Response.Write(r.GetQueryMapStrStr())
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
+		client := g.Client()
+		client.SetPrefix(prefix)
+
+		t.Assert(client.GetContent(ctx, "/GetQueryMapStrStr"), "")
+	})
+}
+
+func Test_Params_GetQueryMapStrVar(t *testing.T) {
+	s := g.Server(guid.S())
+	s.BindHandler("/GetQueryMapStrVar", func(r *ghttp.Request) {
+		m := r.GetQueryMapStrVar()
+		r.Response.Write(m["id"])
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
+		client := g.Client()
+		client.SetPrefix(prefix)
+
+		t.Assert(client.GetContent(ctx, "/GetQueryMapStrVar"), "")
+		t.Assert(client.GetContent(ctx, "/GetQueryMapStrVar", "id=1"), 1)
+	})
+}
