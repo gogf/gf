@@ -8,6 +8,9 @@ package ghttp_test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/v2/encoding/gxml"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/os/gview"
 	"net/http"
 	"strings"
 	"testing"
@@ -139,5 +142,168 @@ func Test_Response_Buffer(t *testing.T) {
 
 		t.Assert(client.GetContent(ctx, "/Buffer", "name=john"), []byte("john"))
 		t.Assert(client.GetContent(ctx, "/BufferString", "name=john"), "john")
+	})
+}
+
+func Test_Response_WriteTpl(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New(gtest.DataPath("template", "basic"))
+		s := g.Server(guid.S())
+		s.SetView(v)
+		s.BindHandler("/", func(r *ghttp.Request) {
+			err := r.Response.WriteTpl("noexist.html", g.Map{
+				"name": "john",
+			})
+			t.AssertNE(err, nil)
+		})
+		s.SetDumpRouterMap(false)
+		s.Start()
+		defer s.Shutdown()
+		time.Sleep(100 * time.Millisecond)
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		t.Assert(client.GetContent(ctx, "/"), "Name:john")
+	})
+}
+
+func Test_Response_WriteTplDefault(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		v.SetDefaultFile(gtest.DataPath("template", "basic", "index.html"))
+		s := g.Server(guid.S())
+		s.SetView(v)
+		s.BindHandler("/", func(r *ghttp.Request) {
+			err := r.Response.WriteTplDefault(g.Map{"name": "john"})
+			t.AssertNil(err)
+		})
+		s.SetDumpRouterMap(false)
+		s.Start()
+		defer s.Shutdown()
+		time.Sleep(100 * time.Millisecond)
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		t.Assert(client.GetContent(ctx, "/"), "Name:john")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		v.SetDefaultFile(gtest.DataPath("template", "basic", "noexit.html"))
+		s := g.Server(guid.S())
+		s.SetView(v)
+		s.BindHandler("/", func(r *ghttp.Request) {
+			err := r.Response.WriteTplDefault(g.Map{"name": "john"})
+			t.AssertNil(err)
+		})
+		s.SetDumpRouterMap(false)
+		s.Start()
+		defer s.Shutdown()
+		time.Sleep(100 * time.Millisecond)
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		t.Assert(client.GetContent(ctx, "/"), "Name:john")
+	})
+}
+
+func Test_Response_ParseTplDefault(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		v.SetDefaultFile(gtest.DataPath("template", "basic", "index.html"))
+		s := g.Server(guid.S())
+		s.SetView(v)
+		s.BindHandler("/", func(r *ghttp.Request) {
+			res, err := r.Response.ParseTplDefault(g.Map{"name": "john"})
+			t.AssertNil(err)
+			r.Response.Write(res)
+		})
+		s.SetDumpRouterMap(false)
+		s.Start()
+		defer s.Shutdown()
+		time.Sleep(100 * time.Millisecond)
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		t.Assert(client.GetContent(ctx, "/"), "Name:john")
+	})
+}
+
+func Test_Response_Write(t *testing.T) {
+	type User struct {
+		Name string `json:"name"`
+	}
+	s := g.Server(guid.S())
+	s.BindHandler("/", func(r *ghttp.Request) {
+		r.Response.Write()
+	})
+	s.BindHandler("/WriteOverExit", func(r *ghttp.Request) {
+		r.Response.Write("WriteOverExit")
+		r.Response.WriteOverExit("")
+	})
+	s.BindHandler("/WritefExit", func(r *ghttp.Request) {
+		r.Response.WritefExit("%s", "WritefExit")
+	})
+	s.BindHandler("/Writeln", func(r *ghttp.Request) {
+		name := r.GetQuery("name")
+		r.Response.Writeln(name)
+	})
+	s.BindHandler("/WritelnNil", func(r *ghttp.Request) {
+		r.Response.Writeln()
+	})
+	s.BindHandler("/Writefln", func(r *ghttp.Request) {
+		name := r.GetQuery("name")
+		r.Response.Writefln("%s", name)
+	})
+	s.BindHandler("/WriteJson", func(r *ghttp.Request) {
+		m := map[string]string{"name": "john"}
+		if bytes, err := json.Marshal(m); err == nil {
+			r.Response.WriteJson(bytes)
+		}
+	})
+	s.BindHandler("/WriteJsonP", func(r *ghttp.Request) {
+		m := map[string]string{"name": "john"}
+		if bytes, err := json.Marshal(m); err == nil {
+			r.Response.WriteJsonP(bytes)
+		}
+	})
+	s.BindHandler("/WriteJsonPWithStruct", func(r *ghttp.Request) {
+		user := User{"john"}
+		r.Response.WriteJsonP(user)
+	})
+	s.BindHandler("/WriteXml", func(r *ghttp.Request) {
+		m := map[string]interface{}{"name": "john"}
+		if bytes, err := gxml.Encode(m); err == nil {
+			r.Response.WriteXml(bytes)
+		}
+	})
+	s.BindHandler("/WriteXmlWithStruct", func(r *ghttp.Request) {
+		user := User{"john"}
+		r.Response.WriteXml(user)
+	})
+
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		t.Assert(client.GetContent(ctx, "/"), "")
+		t.Assert(client.GetContent(ctx, "/WriteOverExit"), "")
+		t.Assert(client.GetContent(ctx, "/WritefExit"), "WritefExit")
+		t.Assert(client.GetContent(ctx, "/Writeln"), "\n")
+		t.Assert(client.GetContent(ctx, "/WritelnNil"), "\n")
+		t.Assert(client.GetContent(ctx, "/Writeln", "name=john"), "john\n")
+		t.Assert(client.GetContent(ctx, "/Writefln", "name=john"), "john\n")
+		t.Assert(client.GetContent(ctx, "/WriteJson"), "{\"name\":\"john\"}")
+		t.Assert(client.GetContent(ctx, "/WriteJsonP"), "{\"name\":\"john\"}")
+		t.Assert(client.GetContent(ctx, "/WriteJsonPWithStruct"), "{\"name\":\"john\"}")
+		t.Assert(client.GetContent(ctx, "/WriteJsonPWithStruct", "callback=callback"),
+			"callback({\"name\":\"john\"})")
+		t.Assert(client.GetContent(ctx, "/WriteXml"), "<name>john</name>")
+		t.Assert(client.GetContent(ctx, "/WriteXmlWithStruct"), "<name>john</name>")
 	})
 }
