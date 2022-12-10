@@ -448,6 +448,10 @@ func Test_Params_GetRequestMap(t *testing.T) {
 		m := r.GetRequestMap(map[string]interface{}{"id": 2})
 		r.Response.Write(m["id"])
 	})
+	s.BindHandler("/{name}.map", func(r *ghttp.Request) {
+		m := r.GetRequestMap(map[string]interface{}{"id": 2})
+		r.Response.Write(m["id"])
+	})
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -465,6 +469,8 @@ func Test_Params_GetRequestMap(t *testing.T) {
 			),
 			`{"attach":"","returnmsg":"Success"}`,
 		)
+
+		t.Assert(client.PostContent(ctx, "/john.map", "name=john"), 2)
 
 		t.Assert(client.PostContent(ctx, "/withKVMap", "name=john"), 2)
 
