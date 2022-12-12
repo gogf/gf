@@ -264,3 +264,24 @@ func Test_Issue2172(t *testing.T) {
 		t.Assert(c.PostContent(ctx, "/demo", dataReq), `{"code":0,"message":"","data":{"Content":"{\"asd\":1}"}}`)
 	})
 }
+
+// https://github.com/gogf/gf/issues/2334
+func Test_Issue2334(t *testing.T) {
+	s := g.Server(guid.S())
+	s.SetServerRoot(gtest.DataPath("static1"))
+	s.SetPort(8888)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(1000 * time.Millisecond)
+	fmt.Println("开始")
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		t.Assert(c.GetContent(ctx, "/index.html"), "index")
+
+		c.SetHeader("If-Modified-Since", "Mon, 12 Dec 2022 05:53:35 GMT")
+		request, _ := c.Get(ctx, "/index.html")
+		t.Assert(request.StatusCode, 304)
+	})
+}
