@@ -9,6 +9,8 @@ package ghttp_test
 import (
 	"context"
 	"fmt"
+	"github.com/gogf/gf/v2/internal/json"
+	"strings"
 	"testing"
 	"time"
 
@@ -239,5 +241,36 @@ func Test_Params_File_Upload_Required(t *testing.T) {
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		content := client.PostContent(ctx, "/upload/required")
 		t.Assert(content, `{"code":51,"message":"upload file is required","data":null}`)
+	})
+}
+
+func Test_Params_File_MarshalJSON(t *testing.T) {
+	s := g.Server(guid.S())
+	s.BindHandler("/upload/single", func(r *ghttp.Request) {
+		file := r.GetUploadFile("file")
+		if file == nil {
+			r.Response.WriteExit("upload file cannot be empty")
+		}
+
+		if bytes, err := json.Marshal(file); err != nil {
+			r.Response.WriteExit(err)
+		} else {
+			r.Response.WriteExit(bytes)
+		}
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+	// normal name
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		srcPath := gtest.DataPath("upload", "file1.txt")
+		content := client.PostContent(ctx, "/upload/single", g.Map{
+			"file": "@file:" + srcPath,
+		})
+		t.Assert(strings.Contains(content, "file1.txt"), true)
 	})
 }
