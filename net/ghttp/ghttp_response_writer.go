@@ -54,7 +54,7 @@ func (w *ResponseWriter) Flush() {
 	if w.hijacked {
 		return
 	}
-	if w.Status != 0 && !w.isHeaderWritten() {
+	if w.Status != 0 && w.isHeaderWritten() {
 		w.writer.WriteHeader(w.Status)
 	}
 	// Default status text output.
