@@ -279,7 +279,7 @@ func Test_Issue2334(t *testing.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		t.Assert(c.GetContent(ctx, "/index.html"), "index")
-
+		c = g.Client()
 		c.SetHeader("If-Modified-Since", "Mon, 12 Dec 2022 05:53:35 GMT")
 		request, _ := c.Get(ctx, "/index.html")
 		t.Assert(request.StatusCode, 304)
