@@ -18,7 +18,7 @@ import (
 // Page is the pagination implementer.
 // All the attributes are public, you can change them when necessary.
 type Page struct {
-	TotalSize      int    // Total size.
+	TotalSize      int64  // Total size.
 	TotalPage      int    // Total page, which is automatically calculated.
 	CurrentPage    int    // Current page number >= 1.
 	UrlTemplate    string // Custom url template for page url producing.
@@ -45,7 +45,7 @@ const (
 // /user/list/{.page}, /user/list/{.page}.html, /user/list?page={.page}&type=1, etc.
 // The build-in variable in `urlTemplate` "{.page}" specifies the page number, which will be replaced by certain
 // page number when producing.
-func New(totalSize, pageSize, currentPage int, urlTemplate string) *Page {
+func New(totalSize int64, pageSize, currentPage int, urlTemplate string) *Page {
 	p := &Page{
 		LinkStyle:    "GPageLink",
 		SpanStyle:    "GPageSpan",
