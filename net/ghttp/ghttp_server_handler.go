@@ -276,8 +276,7 @@ func (s *Server) serveFile(r *Request, f *staticFile, allowIndex ...bool) {
 			}
 		} else {
 			info := f.File.FileInfo()
-			r.Response.wroteHeader = true
-			http.ServeContent(r.Response.Writer.RawWriter(), r.Request, info.Name(), info.ModTime(), f.File)
+			r.Response.ServeContent(info.Name(), info.ModTime(), f.File)
 		}
 		return
 	}
@@ -301,8 +300,7 @@ func (s *Server) serveFile(r *Request, f *staticFile, allowIndex ...bool) {
 			r.Response.WriteStatus(http.StatusForbidden)
 		}
 	} else {
-		r.Response.wroteHeader = true
-		http.ServeContent(r.Response.Writer.RawWriter(), r.Request, info.Name(), info.ModTime(), file)
+		r.Response.ServeContent(info.Name(), info.ModTime(), file)
 	}
 }
 

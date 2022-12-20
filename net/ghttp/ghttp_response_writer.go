@@ -56,8 +56,7 @@ func (w *ResponseWriter) Flush() {
 		return
 	}
 
-	if w.Status != 0 && !w.wroteHeader {
-		// if w.Status != 0 && !w.isHeaderWritten() {
+	if w.Status != 0 && !w.isHeaderWritten() {
 		w.wroteHeader = true
 		w.writer.WriteHeader(w.Status)
 	}
@@ -73,6 +72,9 @@ func (w *ResponseWriter) Flush() {
 
 // isHeaderWrote checks and returns whether the header is written.
 func (w *ResponseWriter) isHeaderWritten() bool {
+	if w.wroteHeader {
+		return true
+	}
 	if _, ok := w.writer.Header()[responseHeaderContentLength]; ok {
 		return true
 	}

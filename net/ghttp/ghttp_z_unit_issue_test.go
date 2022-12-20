@@ -131,7 +131,6 @@ func Test_Issue1653(t *testing.T) {
 	s.Group("/boot", func(grp *ghttp.RouterGroup) {
 		grp.Bind(Issue1653Foo)
 	})
-	s.SetPort(9527)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -207,7 +206,6 @@ func Test_Issue662(t *testing.T) {
 	s.Group("/boot", func(grp *ghttp.RouterGroup) {
 		grp.Bind(Foo1)
 	})
-	s.SetPort(8888)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -251,7 +249,6 @@ func Test_Issue2172(t *testing.T) {
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Bind(api)
 	})
-	s.SetPort(8888)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -269,19 +266,17 @@ func Test_Issue2172(t *testing.T) {
 func Test_Issue2334(t *testing.T) {
 	s := g.Server(guid.S())
 	s.SetServerRoot(gtest.DataPath("static1"))
-	s.SetPort(8888)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 	time.Sleep(1000 * time.Millisecond)
-	fmt.Println("开始")
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		t.Assert(c.GetContent(ctx, "/index.html"), "index")
-		c = g.Client()
+
 		c.SetHeader("If-Modified-Since", "Mon, 12 Dec 2022 05:53:35 GMT")
-		request, _ := c.Get(ctx, "/index.html")
-		t.Assert(request.StatusCode, 304)
+		res, _ := c.Get(ctx, "/index.html")
+		t.Assert(res.StatusCode, 304)
 	})
 }
