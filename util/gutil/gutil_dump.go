@@ -81,11 +81,16 @@ func DumpTo(writer io.Writer, value interface{}, option DumpOption) {
 }
 
 type doDumpOption struct {
-	WithType     bool
-	ExportedOnly bool
+	WithType      bool
+	ExportedOnly  bool
+	DumpedTypeSet map[string]struct{}
 }
 
 func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDumpOption) {
+	if option.DumpedTypeSet == nil {
+		option.DumpedTypeSet = map[string]struct{}{}
+	}
+
 	if value == nil {
 		buffer.WriteString(`<nil>`)
 		return
@@ -111,13 +116,12 @@ func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDum
 	var (
 		reflectKind     = reflectValue.Kind()
 		reflectTypeName = reflectValue.Type().String()
+		isPointer       bool
 		newIndent       = indent + dumpIndent
 	)
 	reflectTypeName = strings.ReplaceAll(reflectTypeName, `[]uint8`, `[]byte`)
-	if !option.WithType {
-		reflectTypeName = ""
-	}
 	for reflectKind == reflect.Ptr {
+		isPointer = true
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}
@@ -128,9 +132,11 @@ func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDum
 			NewIndent:       newIndent,
 			Buffer:          buffer,
 			Option:          option,
+			IsPointer:       isPointer,
 			ReflectValue:    reflectValue,
 			ReflectTypeName: reflectTypeName,
 			ExportedOnly:    option.ExportedOnly,
+			DumpedTypeSet:   option.DumpedTypeSet,
 		}
 	)
 	switch reflectKind {
@@ -192,7 +198,9 @@ type doDumpInternalInput struct {
 	Option          doDumpOption
 	ReflectValue    reflect.Value
 	ReflectTypeName string
+	IsPointer       bool
 	ExportedOnly    bool
+	DumpedTypeSet   map[string]struct{}
 }
 
 func doDumpSlice(in doDumpInternalInput) {
@@ -295,6 +303,14 @@ func doDumpMap(in doDumpInternalInput) {
 }
 
 func doDumpStruct(in doDumpInternalInput) {
+	if in.IsPointer {
+		if _, ok := in.DumpedTypeSet[in.ReflectTypeName]; ok {
+			in.Buffer.WriteString(fmt.Sprintf(`<cycle dump %s>`, in.ReflectTypeName))
+			return
+		}
+	}
+	in.DumpedTypeSet[in.ReflectTypeName] = struct{}{}
+
 	structFields, _ := gstructs.Fields(gstructs.FieldsInput{
 		Pointer:         in.Value,
 		RecursiveOption: gstructs.RecursiveOptionEmbedded,

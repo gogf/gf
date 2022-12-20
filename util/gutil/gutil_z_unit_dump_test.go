@@ -273,3 +273,23 @@ func Test_Dump_Issue1661(t *testing.T) {
 ]`)
 	})
 }
+
+func Test_Dump_Cycle_Attribute(t *testing.T) {
+	type Abc struct {
+		ab int
+		cd *Abc
+	}
+	abc := Abc{ab: 3}
+	abc.cd = &abc
+	gtest.C(t, func(t *gtest.T) {
+		buffer := bytes.NewBuffer(nil)
+		g.DumpTo(buffer, abc, gutil.DumpOption{})
+		t.Assert(buffer.String(), `{
+    ab: 3,
+    cd: {
+        ab: 3,
+        cd: <cycle dump *gutil_test.Abc>,
+    },
+}`)
+	})
+}
