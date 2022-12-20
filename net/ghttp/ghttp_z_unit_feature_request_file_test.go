@@ -9,10 +9,11 @@ package ghttp_test
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/internal/json"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/gogf/gf/v2/internal/json"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
@@ -173,7 +174,7 @@ func Test_Params_File_Batch(t *testing.T) {
 	})
 }
 
-func Test_Params_Strict_Route_File_Single(t *testing.T) {
+func Test_Params_Strict_Route_File_Single_Ptr_Attrr(t *testing.T) {
 	type Req struct {
 		gmeta.Meta `method:"post" mime:"multipart/form-data"`
 		File       *ghttp.UploadFile `type:"file"`
@@ -213,6 +214,48 @@ func Test_Params_Strict_Route_File_Single(t *testing.T) {
 		})
 		t.AssertNE(content, "")
 		t.AssertNE(content, "upload file cannot be empty")
+		t.AssertNE(content, "upload failed")
+		t.Assert(content, "file1.txt")
+		t.Assert(gfile.GetContents(dstPath), gfile.GetContents(srcPath))
+	})
+}
+
+func Test_Params_Strict_Route_File_Single_Struct_Attr(t *testing.T) {
+	type Req struct {
+		gmeta.Meta `method:"post" mime:"multipart/form-data"`
+		File       ghttp.UploadFile `type:"file"`
+	}
+	type Res struct{}
+
+	dstDirPath := gfile.Temp(gtime.TimestampNanoStr())
+	s := g.Server(guid.S())
+	s.BindHandler("/upload/single", func(ctx context.Context, req *Req) (res *Res, err error) {
+		var (
+			r    = g.RequestFromCtx(ctx)
+			file = req.File
+		)
+		name, err := file.Save(dstDirPath)
+		if err != nil {
+			r.Response.WriteExit(err)
+		}
+		r.Response.WriteExit(name)
+		return
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+	// normal name
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		srcPath := gtest.DataPath("upload", "file1.txt")
+		dstPath := gfile.Join(dstDirPath, "file1.txt")
+		content := client.PostContent(ctx, "/upload/single", g.Map{
+			"file": "@file:" + srcPath,
+		})
+		t.AssertNE(content, "")
 		t.AssertNE(content, "upload failed")
 		t.Assert(content, "file1.txt")
 		t.Assert(gfile.GetContents(dstPath), gfile.GetContents(srcPath))

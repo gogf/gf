@@ -114,7 +114,7 @@ func (r *Request) GetRequestMap(kvMap ...map[string]interface{}) map[string]inte
 	if r.MultipartForm != nil {
 		for name := range r.MultipartForm.File {
 			if uploadFiles := r.GetUploadFiles(name); len(uploadFiles) == 1 {
-				m[name] = *uploadFiles[0]
+				m[name] = uploadFiles[0]
 			} else {
 				m[name] = uploadFiles
 			}
