@@ -16,10 +16,11 @@ import (
 
 // ResponseWriter is the custom writer for http response.
 type ResponseWriter struct {
-	Status   int                 // HTTP status.
-	writer   http.ResponseWriter // The underlying ResponseWriter.
-	buffer   *bytes.Buffer       // The output buffer.
-	hijacked bool                // Mark this request is hijacked or not.
+	Status      int                 // HTTP status.
+	writer      http.ResponseWriter // The underlying ResponseWriter.
+	buffer      *bytes.Buffer       // The output buffer.
+	hijacked    bool                // Mark this request is hijacked or not.
+	wroteHeader bool                // Is header wrote or not, avoiding error: superfluous/multiple response.WriteHeader call.
 }
 
 // RawWriter returns the underlying ResponseWriter.
@@ -54,7 +55,10 @@ func (w *ResponseWriter) Flush() {
 	if w.hijacked {
 		return
 	}
-	if w.Status != 0 && !w.isHeaderWritten() {
+
+	if w.Status != 0 && !w.wroteHeader {
+		// if w.Status != 0 && !w.isHeaderWritten() {
+		w.wroteHeader = true
 		w.writer.WriteHeader(w.Status)
 	}
 	// Default status text output.
