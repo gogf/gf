@@ -20,8 +20,6 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-var ctx = context.TODO()
-
 // https://github.com/gogf/gf/issues/1609
 func Test_Issue1609(t *testing.T) {
 	s := g.Server(guid.S())
@@ -284,7 +282,11 @@ func Test_Issue2334(t *testing.T) {
 
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
-		client.SetHeader("If-Modified-Since", request.Header["Last-Modified"][0])
+		lastModified := ""
+		if _, ok := request.Header["Last-Modified"]; ok {
+			lastModified = request.Header["Last-Modified"][0]
+		}
+		client.SetHeader("If-Modified-Since", lastModified)
 		r, _ := client.Get(ctx, "/index.html")
 		t.Assert(r.StatusCode, 304)
 	})
