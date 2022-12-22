@@ -32,6 +32,11 @@ func Test_Params_Parse(t *testing.T) {
 		}
 		r.Response.WriteExit(user.Map["id"], user.Map["score"])
 	})
+	s.BindHandler("/parseErr", func(r *ghttp.Request) {
+		var user User
+		err := r.Parse(user)
+		r.Response.WriteExit(err != nil)
+	})
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -41,6 +46,7 @@ func Test_Params_Parse(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		t.Assert(client.PostContent(ctx, "/parse", `{"id":1,"name":"john","map":{"id":1,"score":100}}`), `1100`)
+		t.Assert(client.PostContent(ctx, "/parseErr", `{"id":1,"name":"john","map":{"id":1,"score":100}}`), true)
 	})
 }
 

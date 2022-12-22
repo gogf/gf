@@ -590,6 +590,17 @@ func Test_Middleware_CORSAndAuth(t *testing.T) {
 		t.Assert(resp.Header["Access-Control-Max-Age"][0], "3628800")
 		resp.Close()
 	})
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		t.Assert(client.SetHeader("Access-Control-Request-Headers", "GF,GoFrame").GetContent(ctx, "/"), "Not Found")
+		t.Assert(client.SetHeader("Origin", "GoFrame").GetContent(ctx, "/"), "Not Found")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		t.Assert(client.SetHeader("Referer", "Referer").PostContent(ctx, "/"), "Not Found")
+	})
 }
 
 func MiddlewareScope1(r *ghttp.Request) {
@@ -695,5 +706,33 @@ func Test_Middleware_JsonBody(t *testing.T) {
 		t.Assert(client.PutContent(ctx, "/"), "hello")
 		t.Assert(client.PutContent(ctx, "/", `{"name":"john"}`), "hello")
 		t.Assert(client.PutContent(ctx, "/", `{"name":}`), "the request body content should be JSON format")
+	})
+}
+
+func Test_MiddlewareHandlerResponse(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(ghttp.MiddlewareHandlerResponse)
+		group.GET("/403", func(r *ghttp.Request) {
+			r.Response.WriteStatus(http.StatusForbidden, "")
+		})
+		group.GET("/default", func(r *ghttp.Request) {
+			r.Response.WriteStatus(http.StatusInternalServerError, "")
+		})
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		rsp, err := client.Get(ctx, "/403")
+		t.AssertNil(err)
+		t.Assert(rsp.StatusCode, http.StatusForbidden)
+		rsp, err = client.Get(ctx, "/default")
+		t.AssertNil(err)
+		t.Assert(rsp.StatusCode, http.StatusInternalServerError)
 	})
 }
