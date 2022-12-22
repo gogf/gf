@@ -145,9 +145,29 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 
 	// If `params` and `pointer` are the same type, the do directly assignment.
 	// For performance enhancement purpose.
-	if pointerElemReflectValue.IsValid() && pointerElemReflectValue.Type() == paramsReflectValue.Type() {
-		pointerElemReflectValue.Set(paramsReflectValue)
-		return nil
+	if pointerElemReflectValue.IsValid() {
+		switch {
+		// Eg:
+		// UploadFile  => UploadFile
+		// *UploadFile => *UploadFile
+		case pointerElemReflectValue.Type() == paramsReflectValue.Type():
+			pointerElemReflectValue.Set(paramsReflectValue)
+			return nil
+
+		// Eg:
+		// UploadFile  => *UploadFile
+		case pointerElemReflectValue.Kind() == reflect.Ptr && pointerElemReflectValue.Elem().IsValid() &&
+			pointerElemReflectValue.Elem().Type() == paramsReflectValue.Type():
+			pointerElemReflectValue.Elem().Set(paramsReflectValue)
+			return nil
+
+		// Eg:
+		// *UploadFile  => UploadFile
+		case paramsReflectValue.Kind() == reflect.Ptr && paramsReflectValue.Elem().IsValid() &&
+			pointerElemReflectValue.Type() == paramsReflectValue.Elem().Type():
+			pointerElemReflectValue.Set(paramsReflectValue.Elem())
+			return nil
+		}
 	}
 
 	// Normal unmarshalling interfaces checks.
