@@ -85,18 +85,19 @@ func (m *Model) getSelectResultFromCache(ctx context.Context, sql string, args .
 		if cacheItem, ok = v.Val().(*selectCacheItem); ok {
 			// In-memory cache.
 			return cacheItem.Result, nil
-		} else {
-			// Other cache, it needs conversion.
-			if err = json.UnmarshalUseNumber(v.Bytes(), &cacheItem); err != nil {
-				return nil, err
-			}
-			return cacheItem.Result, nil
 		}
+		// Other cache, it needs conversion.
+		if err = json.UnmarshalUseNumber(v.Bytes(), &cacheItem); err != nil {
+			return nil, err
+		}
+		return cacheItem.Result, nil
 	}
 	return
 }
 
-func (m *Model) saveSelectResultToCache(ctx context.Context, result Result, sql string, args ...interface{}) (err error) {
+func (m *Model) saveSelectResultToCache(
+	ctx context.Context, queryType queryType, result Result, sql string, args ...interface{},
+) (err error) {
 	if !m.cacheEnabled || m.tx != nil {
 		return
 	}
@@ -108,22 +109,38 @@ func (m *Model) saveSelectResultToCache(ctx context.Context, result Result, sql 
 		if _, errCache := cacheObj.Remove(ctx, cacheKey); errCache != nil {
 			intlog.Errorf(ctx, `%+v`, errCache)
 		}
-	} else {
-		// In case of Cache Penetration.
-		if result.IsEmpty() && m.cacheOption.Force {
-			result = Result{}
-		}
-		var cacheItem = &selectCacheItem{
-			Result: result,
-		}
-		if internalData := m.db.GetCore().GetInternalCtxDataFromCtx(ctx); internalData != nil {
-			cacheItem.FirstResultColumn = internalData.FirstResultColumn
-		}
-		if errCache := cacheObj.Set(ctx, cacheKey, cacheItem, m.cacheOption.Duration); errCache != nil {
-			intlog.Errorf(ctx, `%+v`, errCache)
+		return
+	}
+	// Special handler for Value/Count operations result.
+	if len(result) > 0 {
+		switch queryType {
+		case queryTypeValue, queryTypeCount:
+			if internalData := m.db.GetCore().GetInternalCtxDataFromCtx(ctx); internalData != nil {
+				if result[0][internalData.FirstResultColumn].IsEmpty() {
+					result = nil
+				}
+			}
 		}
 	}
-	return nil
+
+	// In case of Cache Penetration.
+	if result.IsEmpty() {
+		if m.cacheOption.Force {
+			result = Result{}
+		} else {
+			result = nil
+		}
+	}
+	var cacheItem = &selectCacheItem{
+		Result: result,
+	}
+	if internalData := m.db.GetCore().GetInternalCtxDataFromCtx(ctx); internalData != nil {
+		cacheItem.FirstResultColumn = internalData.FirstResultColumn
+	}
+	if errCache := cacheObj.Set(ctx, cacheKey, cacheItem, m.cacheOption.Duration); errCache != nil {
+		intlog.Errorf(ctx, `%+v`, errCache)
+	}
+	return
 }
 
 func (m *Model) makeSelectCacheKey(sql string, args ...interface{}) string {

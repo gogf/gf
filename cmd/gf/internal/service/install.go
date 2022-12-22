@@ -119,20 +119,13 @@ func (s serviceInstall) Run(ctx context.Context) (err error) {
 	dstPath := paths[selectedID]
 
 	// Install the new binary.
+	mlog.Debugf(`copy file from "%s" to "%s"`, gfile.SelfPath(), dstPath.filePath)
 	err = gfile.CopyFile(gfile.SelfPath(), dstPath.filePath)
 	if err != nil {
 		mlog.Printf("install gf binary to '%s' failed: %v", dstPath.dirPath, err)
 		mlog.Printf("you can manually install gf by copying the binary to folder: %s", dstPath.dirPath)
 	} else {
-		mlog.Printf("gf binary is successfully installed to: %s", dstPath.dirPath)
-	}
-
-	// Uninstall the old binary.
-	for _, path := range paths {
-		// Do not delete myself.
-		if path.filePath != "" && path.filePath != dstPath.filePath && gfile.SelfPath() != path.filePath {
-			_ = gfile.Remove(path.filePath)
-		}
+		mlog.Printf("gf binary is successfully installed to: %s", dstPath.filePath)
 	}
 	return
 }

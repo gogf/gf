@@ -42,7 +42,7 @@ func Test_Model_Raw(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Raw(fmt.Sprintf("select id from %s ", table)).Count()
-		t.Assert(count, 10)
+		t.Assert(count, int64(10))
 		t.AssertNil(err)
 	})
 
@@ -104,7 +104,7 @@ func Test_Model_Insert(t *testing.T) {
 		}).Insert()
 		t.AssertNil(err)
 
-		value, err := db.Model(table).Fields("passport").Where("id=3").Value() //model value
+		value, err := db.Model(table).Fields("passport").Where("id=3").Value() // model value
 		t.AssertNil(err)
 		t.Assert(value.String(), "t3")
 
@@ -122,7 +122,7 @@ func Test_Model_Insert(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(value.String(), "t4")
 
-		_, err = db.Model(table).Where("id>?", 1).Delete() //model delete
+		_, err = db.Model(table).Where("id>?", 1).Delete() // model delete
 		t.AssertNil(err)
 
 	})
@@ -150,7 +150,7 @@ func Test_Model_One(t *testing.T) {
 		_, err := db.Model(table).Data(data).Insert()
 		t.AssertNil(err)
 
-		one, err := db.Model(table).WherePri(1).One() //model one
+		one, err := db.Model(table).WherePri(1).One() // model one
 		t.AssertNil(err)
 		t.Assert(one["passport"], data.Passport)
 		t.Assert(one["create_time"], data.CreateTime)
@@ -249,12 +249,12 @@ func Test_Model_Count(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Count()
 		t.AssertNil(err)
-		t.Assert(count, TableSize)
+		t.Assert(count, int64(TableSize))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).FieldsEx("id").Where("id>8").Count()
 		t.AssertNil(err)
-		t.Assert(count, 2)
+		t.Assert(count, int64(2))
 	})
 }
 

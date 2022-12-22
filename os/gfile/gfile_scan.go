@@ -97,7 +97,7 @@ func ScanDirFile(path string, pattern string, recursive ...bool) ([]string, erro
 // symbol to separate multiple patterns.
 //
 // The parameter `recursive` specifies whether scanning the `path` recursively, which
-// means it scans its sub-files and appends the files path to result array if the sub-file
+// means it scans its sub-files and appends the file paths to result array if the sub-file
 // is also a folder. It is false in default.
 //
 // The parameter `handler` specifies the callback function handling each sub-file path of

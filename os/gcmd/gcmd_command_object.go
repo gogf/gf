@@ -159,6 +159,10 @@ func newCommandFromObjectMeta(object interface{}, name string) (command *Command
 	if command.Description == "" {
 		command.Description = metaData[gtag.DescriptionShort]
 	}
+	if command.Brief == "" && command.Description != "" {
+		command.Brief = command.Description
+		command.Description = ""
+	}
 	if command.Examples == "" {
 		command.Examples = metaData[gtag.ExampleShort]
 	}
@@ -177,13 +181,13 @@ func newCommandFromMethod(
 			err = gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`invalid command: %s.%s.%s defined as "%s", but "func(context.Context, Input)(Output, error)" is required`,
-				methodType.PkgPath(), reflect.TypeOf(object).Name(), methodType.Name(), methodType.String(),
+				methodType.PkgPath(), reflect.TypeOf(object).Name(), method.Name, methodType.String(),
 			)
 		} else {
 			err = gerror.NewCodef(
 				gcode.CodeInvalidParameter,
-				`invalid command: defined as "%s", but "func(context.Context, Input)(Output, error)" is required`,
-				methodType.String(),
+				`invalid command: %s.%s defined as "%s", but "func(context.Context, Input)(Output, error)" is required`,
+				reflect.TypeOf(object).Name(), method.Name, methodType.String(),
 			)
 		}
 		return
@@ -191,16 +195,16 @@ func newCommandFromMethod(
 	if !methodType.In(0).Implements(reflect.TypeOf((*context.Context)(nil)).Elem()) {
 		err = gerror.NewCodef(
 			gcode.CodeInvalidParameter,
-			`invalid command: defined as "%s", but the first input parameter should be type of "context.Context"`,
-			methodType.String(),
+			`invalid command: %s.%s defined as "%s", but the first input parameter should be type of "context.Context"`,
+			reflect.TypeOf(object).Name(), method.Name, methodType.String(),
 		)
 		return
 	}
 	if !methodType.Out(1).Implements(reflect.TypeOf((*error)(nil)).Elem()) {
 		err = gerror.NewCodef(
 			gcode.CodeInvalidParameter,
-			`invalid command: defined as "%s", but the last output parameter should be type of "error"`,
-			methodType.String(),
+			`invalid command: %s.%s defined as "%s", but the last output parameter should be type of "error"`,
+			reflect.TypeOf(object).Name(), method.Name, methodType.String(),
 		)
 		return
 	}
@@ -354,6 +358,9 @@ func newArgumentsFromInput(object interface{}) (args []Argument, err error) {
 				`short argument name "%s" defined in "%s.%s" is already token by built-in arguments`,
 				arg.Short, reflect.TypeOf(object).String(), field.Name(),
 			)
+		}
+		if arg.Brief == "" {
+			arg.Brief = field.TagDescription()
 		}
 		if v, ok := metaData[gtag.Arg]; ok {
 			arg.IsArg = gconv.Bool(v)
