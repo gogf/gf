@@ -27,6 +27,7 @@ import (
 // Queue is a concurrent-safe queue built on doubly linked list and channel.
 type Queue struct {
 	limit  int              // Limit for queue size.
+	length *gtype.Int64     // Queue length.
 	list   *glist.List      // Underlying list structure for data maintaining.
 	closed *gtype.Bool      // Whether queue is closed.
 	events chan struct{}    // Events for data writing.
@@ -44,6 +45,7 @@ const (
 func New(limit ...int) *Queue {
 	q := &Queue{
 		closed: gtype.NewBool(),
+		length: gtype.NewInt64(),
 	}
 	if len(limit) > 0 && limit[0] > 0 {
 		q.limit = limit[0]
@@ -55,6 +57,57 @@ func New(limit ...int) *Queue {
 		go q.asyncLoopFromListToChannel()
 	}
 	return q
+}
+
+// Push pushes the data `v` into the queue.
+// Note that it would panic if Push is called after the queue is closed.
+func (q *Queue) Push(v interface{}) {
+	q.length.Add(1)
+	if q.limit > 0 {
+		q.C <- v
+	} else {
+		q.list.PushBack(v)
+		if len(q.events) < defaultQueueSize {
+			q.events <- struct{}{}
+		}
+	}
+}
+
+// Pop pops an item from the queue in FIFO way.
+// Note that it would return nil immediately if Pop is called after the queue is closed.
+func (q *Queue) Pop() interface{} {
+	item := <-q.C
+	q.length.Add(-1)
+	return item
+}
+
+// Close closes the queue.
+// Notice: It would notify all goroutines return immediately,
+// which are being blocked reading using Pop method.
+func (q *Queue) Close() {
+	q.closed.Set(true)
+	if q.events != nil {
+		close(q.events)
+	}
+	if q.limit > 0 {
+		close(q.C)
+	} else {
+		for i := 0; i < defaultBatchSize; i++ {
+			q.Pop()
+		}
+	}
+}
+
+// Len returns the length of the queue.
+// Note that the result might not be accurate as there's an
+// asynchronous channel reading the list constantly.
+func (q *Queue) Len() (length int64) {
+	return q.length.Val()
+}
+
+// Size is alias of Len.
+func (q *Queue) Size() int64 {
+	return q.Len()
 }
 
 // asyncLoopFromListToChannel starts an asynchronous goroutine,
@@ -89,56 +142,4 @@ func (q *Queue) asyncLoopFromListToChannel() {
 	// It should be here to close `q.C` if `q` is unlimited size.
 	// It's the sender's responsibility to close channel when it should be closed.
 	close(q.C)
-}
-
-// Push pushes the data `v` into the queue.
-// Note that it would panic if Push is called after the queue is closed.
-func (q *Queue) Push(v interface{}) {
-	if q.limit > 0 {
-		q.C <- v
-	} else {
-		q.list.PushBack(v)
-		if len(q.events) < defaultQueueSize {
-			q.events <- struct{}{}
-		}
-	}
-}
-
-// Pop pops an item from the queue in FIFO way.
-// Note that it would return nil immediately if Pop is called after the queue is closed.
-func (q *Queue) Pop() interface{} {
-	return <-q.C
-}
-
-// Close closes the queue.
-// Notice: It would notify all goroutines return immediately,
-// which are being blocked reading using Pop method.
-func (q *Queue) Close() {
-	q.closed.Set(true)
-	if q.events != nil {
-		close(q.events)
-	}
-	if q.limit > 0 {
-		close(q.C)
-	} else {
-		for i := 0; i < defaultBatchSize; i++ {
-			q.Pop()
-		}
-	}
-}
-
-// Len returns the length of the queue.
-// Note that the result might not be accurate as there's an
-// asynchronous channel reading the list constantly.
-func (q *Queue) Len() (length int) {
-	if q.list != nil {
-		length += q.list.Len()
-	}
-	length += len(q.C)
-	return
-}
-
-// Size is alias of Len.
-func (q *Queue) Size() int {
-	return q.Len()
 }
