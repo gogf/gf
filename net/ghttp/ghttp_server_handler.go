@@ -211,19 +211,19 @@ func (s *Server) searchStaticFile(uri string) *staticFile {
 	// Firstly search the StaticPaths mapping.
 	if len(s.config.StaticPaths) > 0 {
 		for _, item := range s.config.StaticPaths {
-			if len(uri) >= len(item.prefix) && strings.EqualFold(item.prefix, uri[0:len(item.prefix)]) {
+			if len(uri) >= len(item.Prefix) && strings.EqualFold(item.Prefix, uri[0:len(item.Prefix)]) {
 				// To avoid case like: /static/style -> /static/style.css
-				if len(uri) > len(item.prefix) && uri[len(item.prefix)] != '/' {
+				if len(uri) > len(item.Prefix) && uri[len(item.Prefix)] != '/' {
 					continue
 				}
-				file = gres.GetWithIndex(item.path+uri[len(item.prefix):], s.config.IndexFiles)
+				file = gres.GetWithIndex(item.Path+uri[len(item.Prefix):], s.config.IndexFiles)
 				if file != nil {
 					return &staticFile{
 						File:  file,
 						IsDir: file.FileInfo().IsDir(),
 					}
 				}
-				path, dir = gspath.Search(item.path, uri[len(item.prefix):], s.config.IndexFiles...)
+				path, dir = gspath.Search(item.Path, uri[len(item.Prefix):], s.config.IndexFiles...)
 				if path != "" {
 					return &staticFile{
 						Path:  path,
