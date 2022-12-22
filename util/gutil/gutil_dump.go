@@ -81,14 +81,14 @@ func DumpTo(writer io.Writer, value interface{}, option DumpOption) {
 }
 
 type doDumpOption struct {
-	WithType      bool
-	ExportedOnly  bool
-	DumpedTypeSet map[string]struct{}
+	WithType         bool
+	ExportedOnly     bool
+	DumpedPointerSet map[string]struct{}
 }
 
 func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDumpOption) {
-	if option.DumpedTypeSet == nil {
-		option.DumpedTypeSet = map[string]struct{}{}
+	if option.DumpedPointerSet == nil {
+		option.DumpedPointerSet = map[string]struct{}{}
 	}
 
 	if value == nil {
@@ -116,27 +116,29 @@ func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDum
 	var (
 		reflectKind     = reflectValue.Kind()
 		reflectTypeName = reflectValue.Type().String()
-		isPointer       bool
+		ptrAddress      string
 		newIndent       = indent + dumpIndent
 	)
 	reflectTypeName = strings.ReplaceAll(reflectTypeName, `[]uint8`, `[]byte`)
 	for reflectKind == reflect.Ptr {
-		isPointer = true
+		if ptrAddress == "" {
+			ptrAddress = fmt.Sprintf(`0x%x`, reflectValue.Pointer())
+		}
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}
 	var (
 		exportInternalInput = doDumpInternalInput{
-			Value:           value,
-			Indent:          indent,
-			NewIndent:       newIndent,
-			Buffer:          buffer,
-			Option:          option,
-			IsPointer:       isPointer,
-			ReflectValue:    reflectValue,
-			ReflectTypeName: reflectTypeName,
-			ExportedOnly:    option.ExportedOnly,
-			DumpedTypeSet:   option.DumpedTypeSet,
+			Value:            value,
+			Indent:           indent,
+			NewIndent:        newIndent,
+			Buffer:           buffer,
+			Option:           option,
+			PtrAddress:       ptrAddress,
+			ReflectValue:     reflectValue,
+			ReflectTypeName:  reflectTypeName,
+			ExportedOnly:     option.ExportedOnly,
+			DumpedPointerSet: option.DumpedPointerSet,
 		}
 	)
 	switch reflectKind {
@@ -191,16 +193,16 @@ func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDum
 }
 
 type doDumpInternalInput struct {
-	Value           interface{}
-	Indent          string
-	NewIndent       string
-	Buffer          *bytes.Buffer
-	Option          doDumpOption
-	ReflectValue    reflect.Value
-	ReflectTypeName string
-	IsPointer       bool
-	ExportedOnly    bool
-	DumpedTypeSet   map[string]struct{}
+	Value            interface{}
+	Indent           string
+	NewIndent        string
+	Buffer           *bytes.Buffer
+	Option           doDumpOption
+	ReflectValue     reflect.Value
+	ReflectTypeName  string
+	PtrAddress       string
+	ExportedOnly     bool
+	DumpedPointerSet map[string]struct{}
 }
 
 func doDumpSlice(in doDumpInternalInput) {
@@ -303,13 +305,13 @@ func doDumpMap(in doDumpInternalInput) {
 }
 
 func doDumpStruct(in doDumpInternalInput) {
-	if in.IsPointer {
-		if _, ok := in.DumpedTypeSet[in.ReflectTypeName]; ok {
-			in.Buffer.WriteString(fmt.Sprintf(`<cycle dump %s>`, in.ReflectTypeName))
+	if in.PtrAddress != "" {
+		if _, ok := in.DumpedPointerSet[in.PtrAddress]; ok {
+			in.Buffer.WriteString(fmt.Sprintf(`<cycle dump %s>`, in.PtrAddress))
 			return
 		}
 	}
-	in.DumpedTypeSet[in.ReflectTypeName] = struct{}{}
+	in.DumpedPointerSet[in.PtrAddress] = struct{}{}
 
 	structFields, _ := gstructs.Fields(gstructs.FieldsInput{
 		Pointer:         in.Value,
