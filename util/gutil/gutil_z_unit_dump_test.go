@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gmeta"
 	"github.com/gogf/gf/v2/util/gutil"
 )
@@ -271,5 +272,19 @@ func Test_Dump_Issue1661(t *testing.T) {
         ],
     },
 ]`)
+	})
+}
+
+func Test_Dump_Cycle_Attribute(t *testing.T) {
+	type Abc struct {
+		ab int
+		cd *Abc
+	}
+	abc := Abc{ab: 3}
+	abc.cd = &abc
+	gtest.C(t, func(t *gtest.T) {
+		buffer := bytes.NewBuffer(nil)
+		g.DumpTo(buffer, abc, gutil.DumpOption{})
+		t.Assert(gstr.Contains(buffer.String(), "cycle"), true)
 	})
 }
