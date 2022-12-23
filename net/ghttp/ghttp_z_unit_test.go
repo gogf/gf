@@ -10,11 +10,13 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"testing"
 	"time"
 
 	"github.com/gogf/gf/v2/encoding/gurl"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/internal/httputil"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/genv"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -137,5 +139,32 @@ func Test_RoutePathParams(t *testing.T) {
 			"/"+gurl.Encode(param)+"?a=1&b=2&c="+gurl.Encode(param)),
 			"net/http/get,net/http/get",
 		)
+	})
+}
+
+func Test_BuildParams(t *testing.T) {
+	// normal && special cases
+	params := map[string]string{
+		"val":   "12345678",
+		"code1": "x&a=1", // for fix
+		"code2": "x&a=111",
+		"id":    "1+- ", // for fix
+		"f":     "1#a=+- ",
+		"v":     "",
+		"n":     "null",
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		res1 := httputil.BuildParams(params)
+		vs, _ := url.ParseQuery(res1)
+		t.Assert(len(params), len(vs))
+		for k := range vs {
+			vv := vs.Get(k)
+			_, ok := params[k]
+			// check no additional param
+			t.Assert(ok, true)
+			// check equal
+			t.AssertEQ(params[k], vv)
+		}
 	})
 }
