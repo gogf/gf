@@ -51,10 +51,10 @@ func NewIntArrayRange(start, end, step int, safe ...bool) *IntArray {
 	if step == 0 {
 		panic(fmt.Sprintf(`invalid step value: %d`, step))
 	}
-	slice := make([]int, (end-start+1)/step)
+	slice := make([]int, 0)
 	index := 0
 	for i := start; i <= end; i += step {
-		slice[index] = i
+		slice = append(slice, i)
 		index++
 	}
 	return NewIntArrayFrom(slice, safe...)
