@@ -94,14 +94,14 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	} else {
 		if config.Pass != "" {
 			source = fmt.Sprintf(
-				"clickhouse://%s:%s@%s:%s/%s?charset=%s&debug=%t",
+				"clickhouse://%s:%s@%s:%s/%s?debug=%t",
 				config.User, url.PathEscape(config.Pass),
-				config.Host, config.Port, config.Name, config.Charset, config.Debug,
+				config.Host, config.Port, config.Name, config.Debug,
 			)
 		} else {
 			source = fmt.Sprintf(
-				"clickhouse://%s@%s:%s/%s?charset=%s&debug=%t",
-				config.User, config.Host, config.Port, config.Name, config.Charset, config.Debug,
+				"clickhouse://%s@%s:%s/%s?debug=%t",
+				config.User, config.Host, config.Port, config.Name, config.Debug,
 			)
 		}
 		if config.Extra != "" {
