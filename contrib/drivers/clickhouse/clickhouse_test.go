@@ -283,9 +283,9 @@ func TestDriverClickhouse_Insert(t *testing.T) {
 		Created  time.Time `orm:"created"`
 	}
 	var (
-		insertUrl       = "https://goframe.org"
-		total     int64 = 0
-		item            = insertItem{
+		insertUrl = "https://goframe.org"
+		total     = 0
+		item      = insertItem{
 			Duration: 1,
 			Url:      insertUrl,
 			Created:  time.Now(),
