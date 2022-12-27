@@ -44,4 +44,5 @@ const (
 	GConv             = "gconv"        // GConv defines the converting target name for specified struct field.
 	GConvShort        = "c"            // GConv defines the converting target name for specified struct field.
 	Json              = "json"         // Json tag is supported by stdlib.
+	Security          = "security"     // security schema.
 )
