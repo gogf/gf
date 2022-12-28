@@ -1046,3 +1046,57 @@ func Test_NameFromJsonTag(t *testing.T) {
 		t.Assert(b, `{"openapi":"3.0.0","components":{"schemas":{"github.com.gogf.gf.v2.net.goai_test.CreateReq":{"properties":{"nick_name":{"format":"string","properties":{},"type":"string"}},"type":"object"}}},"info":{"title":"","version":""},"paths":null}`)
 	})
 }
+
+
+func TestOpenApiV3_PathSecurity(t *testing.T) {
+	type CommonResponse struct {
+		Code    int         `json:"code"    description:"Error code"`
+		Message string      `json:"message" description:"Error message"`
+		Data    interface{} `json:"data"    description:"Result data for certain request according API definition"`
+	}
+
+	type Req struct {
+		gmeta.Meta `method:"PUT" security:"apiKey"`  // 这里的apiKey要和openApi定义的key一致
+		Product    string `json:"product" v:"required" description:"Unique product key"`
+		Name       string `json:"name"    v:"required" description:"Instance name"`
+	}
+	type Res struct{}
+
+	f := func(ctx context.Context, req *Req) (res *Res, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+		)
+
+		oai.Config.CommonResponse = CommonResponse{}
+		oai.Components = goai.Components{
+			SecuritySchemes: goai.SecuritySchemes{
+				"apiKey": goai.SecuritySchemeRef{
+					Ref: "",
+					Value: &goai.SecurityScheme{
+						// 此处type是openApi的规定，详见 https://swagger.io/docs/specification/authentication/api-keys/
+						Type:   "apiKey",
+						In:     "header",
+						Name:   "X-API-KEY",
+					},
+				},
+			},
+		}
+		err = oai.Add(goai.AddInput{
+			Path:   "/index",
+			Object: f,
+		})
+		t.AssertNil(err)
+		// Schema asserts.
+		fmt.Println(oai.String())
+		t.Assert(len(oai.Components.Schemas.Map()), 3)
+		t.Assert(len(oai.Components.SecuritySchemes), 1)
+		t.Assert(oai.Components.SecuritySchemes["apiKey"].Value.Type, "apiKey")
+		t.Assert(len(oai.Paths), 1)
+		t.Assert(len(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Map()), 8)
+	})
+}
