@@ -1047,7 +1047,6 @@ func Test_NameFromJsonTag(t *testing.T) {
 	})
 }
 
-
 func TestOpenApiV3_PathSecurity(t *testing.T) {
 	type CommonResponse struct {
 		Code    int         `json:"code"    description:"Error code"`
@@ -1056,9 +1055,9 @@ func TestOpenApiV3_PathSecurity(t *testing.T) {
 	}
 
 	type Req struct {
-		gmeta.Meta `method:"PUT" security:"apiKey"`  // 这里的apiKey要和openApi定义的key一致
-		Product    string `json:"product" v:"required" description:"Unique product key"`
-		Name       string `json:"name"    v:"required" description:"Instance name"`
+		gmeta.Meta `method:"PUT" security:"apiKey"` // 这里的apiKey要和openApi定义的key一致
+		Product    string                           `json:"product" v:"required" description:"Unique product key"`
+		Name       string                           `json:"name"    v:"required" description:"Instance name"`
 	}
 	type Res struct{}
 
@@ -1079,9 +1078,9 @@ func TestOpenApiV3_PathSecurity(t *testing.T) {
 					Ref: "",
 					Value: &goai.SecurityScheme{
 						// 此处type是openApi的规定，详见 https://swagger.io/docs/specification/authentication/api-keys/
-						Type:   "apiKey",
-						In:     "header",
-						Name:   "X-API-KEY",
+						Type: "apiKey",
+						In:   "header",
+						Name: "X-API-KEY",
 					},
 				},
 			},
