@@ -1096,6 +1096,6 @@ func TestOpenApiV3_PathSecurity(t *testing.T) {
 		t.Assert(len(oai.Components.SecuritySchemes), 1)
 		t.Assert(oai.Components.SecuritySchemes["apiKey"].Value.Type, "apiKey")
 		t.Assert(len(oai.Paths), 1)
-		t.Assert(len(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Map()), 8)
+		t.Assert(len(oai.Paths["/index"].Put.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Map()), 3)
 	})
 }
