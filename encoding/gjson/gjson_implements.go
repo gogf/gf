@@ -53,7 +53,7 @@ func (j *Json) Interfaces() []interface{} {
 
 // String returns current Json object as string.
 func (j *Json) String() string {
-	if j == nil {
+	if j.IsNil() {
 		return ""
 	}
 	return j.MustToJsonString()
