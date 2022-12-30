@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-GOARCH=${{ matrix.goarch }}
 for file in `find . -name go.mod`; do
     dirpath=$(dirname $file)
     echo $dirpath
