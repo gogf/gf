@@ -230,7 +230,7 @@ func (c *Core) GetValue(ctx context.Context, sql string, args ...interface{}) (V
 }
 
 // GetCount queries and returns the count from database.
-func (c *Core) GetCount(ctx context.Context, sql string, args ...interface{}) (int64, error) {
+func (c *Core) GetCount(ctx context.Context, sql string, args ...interface{}) (int, error) {
 	// If the query fields do not contain function "COUNT",
 	// it replaces the sql string and adds the "COUNT" function to the fields.
 	if !gregex.IsMatchString(`(?i)SELECT\s+COUNT\(.+\)\s+FROM`, sql) {
@@ -240,7 +240,7 @@ func (c *Core) GetCount(ctx context.Context, sql string, args ...interface{}) (i
 	if err != nil {
 		return 0, err
 	}
-	return value.Int64(), nil
+	return value.Int(), nil
 }
 
 // Union does "(SELECT xxx FROM xxx) UNION (SELECT xxx FROM xxx) ..." statement.
