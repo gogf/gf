@@ -22,6 +22,9 @@ func (j *Json) Interface() interface{} {
 	}
 	j.mu.RLock()
 	defer j.mu.RUnlock()
+	if j.p == nil {
+		return nil
+	}
 	return *(j.p)
 }
 
