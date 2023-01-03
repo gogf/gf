@@ -42,7 +42,7 @@ func Test_Model_Raw(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Raw(fmt.Sprintf("select id from %s ", table)).Count()
-		t.Assert(count, int64(10))
+		t.Assert(count, 10)
 		t.AssertNil(err)
 	})
 
@@ -249,12 +249,12 @@ func Test_Model_Count(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Count()
 		t.AssertNil(err)
-		t.Assert(count, int64(TableSize))
+		t.Assert(count, TableSize)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).FieldsEx("id").Where("id>8").Count()
 		t.AssertNil(err)
-		t.Assert(count, int64(2))
+		t.Assert(count, 2)
 	})
 }
 

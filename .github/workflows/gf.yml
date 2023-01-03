@@ -180,9 +180,7 @@ jobs:
       run:  bash .github/workflows/before_script.sh
 
     - name: Build & Test
-      run: |
-      GOARCH=${{ matrix.goarch }}
-      bash .github/workflows/build_and_test.sh
+      run:  bash .github/workflows/build_and_test.sh
 
     - name: Stop Redis Cluster Containers
       run:  docker-compose -f ".github/workflows/redis/docker-compose.yml" down
