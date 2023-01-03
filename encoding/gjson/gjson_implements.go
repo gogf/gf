@@ -50,3 +50,11 @@ func (j *Json) Interfaces() []interface{} {
 	}
 	return j.Array()
 }
+
+// String returns current Json object as string.
+func (j *Json) String() string {
+	if j.IsNil() {
+		return ""
+	}
+	return j.MustToJsonString()
+}

@@ -7,12 +7,12 @@
 package gconv_test
 
 import (
-	"github.com/gogf/gf/v2/container/gvar"
 	"math"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/container/gvar"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -39,103 +39,6 @@ type S1 struct {
 
 func (s1 S1) Error() string {
 	return "22222"
-}
-
-// https://github.com/gogf/gf/issues/1227
-func Test_Issue1227(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		type StructFromIssue1227 struct {
-			Name string `json:"n1"`
-		}
-		tests := []struct {
-			name   string
-			origin interface{}
-			want   string
-		}{
-			{
-				name:   "Case1",
-				origin: `{"n1":"n1"}`,
-				want:   "n1",
-			},
-			{
-				name:   "Case2",
-				origin: `{"name":"name"}`,
-				want:   "",
-			},
-			{
-				name:   "Case3",
-				origin: `{"NaMe":"NaMe"}`,
-				want:   "",
-			},
-			{
-				name:   "Case4",
-				origin: g.Map{"n1": "n1"},
-				want:   "n1",
-			},
-			{
-				name:   "Case5",
-				origin: g.Map{"NaMe": "n1"},
-				want:   "n1",
-			},
-		}
-		for _, tt := range tests {
-			p := StructFromIssue1227{}
-			if err := gconv.Struct(tt.origin, &p); err != nil {
-				t.Error(err)
-			}
-			t.Assert(p.Name, tt.want)
-		}
-	})
-
-	// Chinese key.
-	gtest.C(t, func(t *gtest.T) {
-		type StructFromIssue1227 struct {
-			Name string `json:"中文Key"`
-		}
-		tests := []struct {
-			name   string
-			origin interface{}
-			want   string
-		}{
-			{
-				name:   "Case1",
-				origin: `{"中文Key":"n1"}`,
-				want:   "n1",
-			},
-			{
-				name:   "Case2",
-				origin: `{"Key":"name"}`,
-				want:   "",
-			},
-			{
-				name:   "Case3",
-				origin: `{"NaMe":"NaMe"}`,
-				want:   "",
-			},
-			{
-				name:   "Case4",
-				origin: g.Map{"中文Key": "n1"},
-				want:   "n1",
-			},
-			{
-				name:   "Case5",
-				origin: g.Map{"中文KEY": "n1"},
-				want:   "n1",
-			},
-			{
-				name:   "Case5",
-				origin: g.Map{"KEY": "n1"},
-				want:   "",
-			},
-		}
-		for _, tt := range tests {
-			p := StructFromIssue1227{}
-			if err := gconv.Struct(tt.origin, &p); err != nil {
-				t.Error(err)
-			}
-			t.Assert(p.Name, tt.want)
-		}
-	})
 }
 
 func Test_Bool_All(t *testing.T) {
@@ -1543,78 +1446,5 @@ func Test_Struct_Time_All(t *testing.T) {
 			"create_time": now,
 		}, user)
 		t.Assert(user.CreateTime.Time.UTC().String(), now.UTC().String())
-	})
-}
-
-func Test_Issue1946(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		type B struct {
-			init *gtype.Bool
-			Name string
-		}
-		type A struct {
-			B *B
-		}
-		a := &A{
-			B: &B{
-				init: gtype.NewBool(true),
-			},
-		}
-		err := gconv.Struct(g.Map{
-			"B": g.Map{
-				"Name": "init",
-			},
-		}, a)
-		t.AssertNil(err)
-		t.Assert(a.B.Name, "init")
-		t.Assert(a.B.init.Val(), true)
-	})
-	// It cannot change private attribute.
-	gtest.C(t, func(t *gtest.T) {
-		type B struct {
-			init *gtype.Bool
-			Name string
-		}
-		type A struct {
-			B *B
-		}
-		a := &A{
-			B: &B{
-				init: gtype.NewBool(true),
-			},
-		}
-		err := gconv.Struct(g.Map{
-			"B": g.Map{
-				"init": 0,
-				"Name": "init",
-			},
-		}, a)
-		t.AssertNil(err)
-		t.Assert(a.B.Name, "init")
-		t.Assert(a.B.init.Val(), true)
-	})
-	// It can change public attribute.
-	gtest.C(t, func(t *gtest.T) {
-		type B struct {
-			Init *gtype.Bool
-			Name string
-		}
-		type A struct {
-			B *B
-		}
-		a := &A{
-			B: &B{
-				Init: gtype.NewBool(),
-			},
-		}
-		err := gconv.Struct(g.Map{
-			"B": g.Map{
-				"Init": 1,
-				"Name": "init",
-			},
-		}, a)
-		t.AssertNil(err)
-		t.Assert(a.B.Name, "init")
-		t.Assert(a.B.Init.Val(), true)
 	})
 }
