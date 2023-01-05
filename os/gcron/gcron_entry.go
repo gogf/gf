@@ -16,6 +16,7 @@ import (
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/os/gtimer"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -199,7 +200,9 @@ func (entry *Entry) logDebugf(ctx context.Context, format string, v ...interface
 }
 
 func (entry *Entry) logErrorf(ctx context.Context, format string, v ...interface{}) {
-	if logger := entry.cron.GetLogger(); logger != nil {
-		logger.Errorf(ctx, format, v...)
+	logger := entry.cron.GetLogger()
+	if logger == nil {
+		logger = glog.DefaultLogger()
 	}
+	logger.Errorf(ctx, format, v...)
 }
