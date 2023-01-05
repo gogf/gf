@@ -266,6 +266,10 @@ func (s *Server) getLocalListenedAddress() string {
 
 // doRouterMapDump checks and dumps the router map to the log.
 func (s *Server) doRouterMapDump() {
+	if !s.config.DumpRouterMap {
+		return
+	}
+
 	var (
 		ctx                          = context.TODO()
 		routes                       = s.GetRoutes()
@@ -283,7 +287,7 @@ func (s *Server) doRouterMapDump() {
 	if isJustDefaultServerAndDomain {
 		headers = []string{"ADDRESS", "METHOD", "ROUTE", "HANDLER", "MIDDLEWARE"}
 	}
-	if s.config.DumpRouterMap && len(routes) > 0 {
+	if len(routes) > 0 {
 		buffer := bytes.NewBuffer(nil)
 		table := tablewriter.NewWriter(buffer)
 		table.SetHeader(headers)
