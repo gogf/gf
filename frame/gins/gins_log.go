@@ -11,12 +11,9 @@ import (
 	"fmt"
 
 	"github.com/gogf/gf/v2/internal/consts"
+	"github.com/gogf/gf/v2/internal/instance"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/util/gutil"
-)
-
-const (
-	frameCoreComponentNameLogger = "gf.core.component.logger"
 )
 
 // Log returns an instance of glog.Logger.
@@ -31,7 +28,7 @@ func Log(name ...string) *glog.Logger {
 		instanceName = name[0]
 	}
 	instanceKey := fmt.Sprintf("%s.%s", frameCoreComponentNameLogger, instanceName)
-	return localInstances.GetOrSetFuncLock(instanceKey, func() interface{} {
+	return instance.GetOrSetFuncLock(instanceKey, func() interface{} {
 		logger := glog.Instance(instanceName)
 		// To avoid file no found error while it's not necessary.
 		var (
