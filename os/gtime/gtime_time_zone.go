@@ -8,12 +8,12 @@ package gtime
 
 import (
 	"os"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/text/gstr"
 )
 
 var (
@@ -34,7 +34,7 @@ var (
 func SetTimeZone(zone string) (err error) {
 	setTimeZoneMu.Lock()
 	defer setTimeZoneMu.Unlock()
-	if setTimeZoneName != "" && !gstr.Equal(zone, setTimeZoneName) {
+	if setTimeZoneName != "" && !strings.EqualFold(zone, setTimeZoneName) {
 		return gerror.NewCodef(
 			gcode.CodeInvalidOperation,
 			`process timezone already set using "%s"`,
