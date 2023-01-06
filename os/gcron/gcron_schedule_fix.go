@@ -13,31 +13,25 @@ import (
 	"github.com/gogf/gf/v2/internal/intlog"
 )
 
-// getFixedSecond checks, fixes and returns the seconds that have delay fix in some seconds.
-// Reference: https://github.com/golang/go/issues/14410
-func (s *cronSchedule) getFixedSecond(ctx context.Context, t time.Time) int {
-	return (t.Second() + s.getFixedTimestampDelta(ctx, t)) % 60
-}
-
-// getFixedTimestampDelta checks, fixes and returns the timestamp delta that have delay fix in some seconds.
-// The tolerated timestamp delay is `3` seconds in default.
-func (s *cronSchedule) getFixedTimestampDelta(ctx context.Context, t time.Time) int {
+// getAndUpdateLastTimestamp checks fixes and updates the last timestamp that have delay fix in some seconds.
+func (s *cronSchedule) getAndUpdateLastTimestamp(ctx context.Context, t time.Time) {
 	var (
 		currentTimestamp = t.Unix()
 		lastTimestamp    = s.lastTimestamp.Val()
-		delta            int
 	)
 	switch {
+	case
+		lastTimestamp == currentTimestamp:
+		lastTimestamp += 1
+
 	case
 		lastTimestamp == currentTimestamp-1:
 		lastTimestamp = currentTimestamp
 
 	case
 		lastTimestamp == currentTimestamp-2,
-		lastTimestamp == currentTimestamp-3,
-		lastTimestamp == currentTimestamp:
+		lastTimestamp == currentTimestamp-3:
 		lastTimestamp += 1
-		delta = 1
 
 	default:
 		// Too much delay, let's update the last timestamp to current one.
@@ -49,5 +43,4 @@ func (s *cronSchedule) getFixedTimestampDelta(ctx context.Context, t time.Time) 
 		lastTimestamp = currentTimestamp
 	}
 	s.lastTimestamp.Set(lastTimestamp)
-	return delta
 }

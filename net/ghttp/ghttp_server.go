@@ -188,7 +188,7 @@ func (s *Server) Start() error {
 			s.Logger().Fatalf(ctx, `%+v`, err)
 		}
 	}
-	// Check the group routes again.
+	// Check the group routes again for internally registered routes.
 	s.handlePreBindItems(ctx)
 
 	// If there's no route registered and no static service enabled,

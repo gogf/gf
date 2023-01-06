@@ -133,23 +133,11 @@ func (entry *Entry) Close() {
 }
 
 // checkAndRun is the core timing task check logic.
-// The running times limits feature is implemented by gcron.Entry and cannot be implemented by gtimer.Entry.
-// gcron.Entry relies on gtimer to implement a scheduled task check for gcron.Entry per second.
 func (entry *Entry) checkAndRun(ctx context.Context) {
 	currentTime := time.Now()
 	if !entry.schedule.checkMeetAndUpdateLastSeconds(ctx, currentTime) {
-		// intlog.Printf(
-		//	ctx,
-		//	`timely check, current time does not meet cron job "%s"`,
-		//	entry.getJobNameWithPattern(),
-		// )
 		return
 	}
-	// intlog.Printf(
-	//	ctx,
-	//	`timely check, current time meets cron job "%s"`,
-	//	entry.getJobNameWithPattern(),
-	// )
 	switch entry.cron.status.Val() {
 	case StatusStopped:
 		return
@@ -161,6 +149,7 @@ func (entry *Entry) checkAndRun(ctx context.Context) {
 	case StatusReady, StatusRunning:
 		defer func() {
 			if exception := recover(); exception != nil {
+				// Exception caught, it logs the error content to logger in default behavior.
 				entry.logErrorf(ctx,
 					`cron job "%s(%s)" end with error: %+v`,
 					entry.jobName, entry.schedule.pattern, exception,
@@ -168,7 +157,6 @@ func (entry *Entry) checkAndRun(ctx context.Context) {
 			} else {
 				entry.logDebugf(ctx, `cron job "%s" ends`, entry.getJobNameWithPattern())
 			}
-
 			if entry.timerEntry.Status() == StatusClosed {
 				entry.Close()
 			}
@@ -184,7 +172,6 @@ func (entry *Entry) checkAndRun(ctx context.Context) {
 			}
 		}
 		entry.logDebugf(ctx, `cron job "%s" starts`, entry.getJobNameWithPattern())
-
 		entry.Job(ctx)
 	}
 }
