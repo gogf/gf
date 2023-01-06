@@ -13,8 +13,8 @@ import (
 	"github.com/gogf/gf/v2/internal/intlog"
 )
 
-// getAndUpdateLastTimestamp checks fixes and updates the last timestamp that have delay fix in some seconds.
-func (s *cronSchedule) getAndUpdateLastTimestamp(ctx context.Context, t time.Time) {
+// getAndUpdateLastTimestamp checks fixes and returns the last timestamp that have delay fix in some seconds.
+func (s *cronSchedule) getAndUpdateLastTimestamp(ctx context.Context, t time.Time) int64 {
 	var (
 		currentTimestamp = t.Unix()
 		lastTimestamp    = s.lastTimestamp.Val()
@@ -43,4 +43,5 @@ func (s *cronSchedule) getAndUpdateLastTimestamp(ctx context.Context, t time.Tim
 		lastTimestamp = currentTimestamp
 	}
 	s.lastTimestamp.Set(lastTimestamp)
+	return lastTimestamp
 }

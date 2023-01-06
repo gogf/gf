@@ -271,9 +271,10 @@ func parsePatternItemValue(value string, itemType int) (int, error) {
 
 // checkMeetAndUpdateLastSeconds checks if the given time `t` meets the runnable point for the job.
 func (s *cronSchedule) checkMeetAndUpdateLastSeconds(ctx context.Context, t time.Time) bool {
-	s.getAndUpdateLastTimestamp(ctx, t)
-
-	lastTime := gtime.NewFromTimeStamp(s.lastTimestamp.Val())
+	var (
+		lastTimestamp = s.getAndUpdateLastTimestamp(ctx, t)
+		lastTime      = gtime.NewFromTimeStamp(lastTimestamp)
+	)
 
 	if s.everySeconds != 0 {
 		// It checks using interval.
