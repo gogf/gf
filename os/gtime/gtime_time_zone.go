@@ -11,7 +11,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 var (
@@ -32,8 +34,12 @@ var (
 func SetTimeZone(zone string) (err error) {
 	setTimeZoneMu.Lock()
 	defer setTimeZoneMu.Unlock()
-	if setTimeZoneName != "" {
-		return gerror.Newf(`process timezone already set using "%s"`, setTimeZoneName)
+	if setTimeZoneName != "" && !gstr.Equal(zone, setTimeZoneName) {
+		return gerror.NewCodef(
+			gcode.CodeInvalidOperation,
+			`process timezone already set using "%s"`,
+			setTimeZoneName,
+		)
 	}
 	defer func() {
 		if err == nil {
@@ -44,7 +50,7 @@ func SetTimeZone(zone string) (err error) {
 	// Load zone info from specified name.
 	location, err := time.LoadLocation(zone)
 	if err != nil {
-		err = gerror.Wrapf(err, `time.LoadLocation failed for zone "%s"`, zone)
+		err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `time.LoadLocation failed for zone "%s"`, zone)
 		return err
 	}
 
@@ -57,7 +63,12 @@ func SetTimeZone(zone string) (err error) {
 		envValue = location.String()
 	)
 	if err = os.Setenv(envKey, envValue); err != nil {
-		err = gerror.Wrapf(err, `set environment failed with key "%s", value "%s"`, envKey, envValue)
+		err = gerror.WrapCodef(
+			gcode.CodeUnknown,
+			err,
+			`set environment failed with key "%s", value "%s"`,
+			envKey, envValue,
+		)
 	}
 	return
 }
