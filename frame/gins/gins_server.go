@@ -11,15 +11,11 @@ import (
 	"fmt"
 
 	"github.com/gogf/gf/v2/internal/consts"
+	"github.com/gogf/gf/v2/internal/instance"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
-)
-
-const (
-	frameCoreComponentNameServer = "gf.core.component.server" // Prefix for HTTP server instance.
-
 )
 
 // Server returns an instance of http server with specified name.
@@ -34,7 +30,7 @@ func Server(name ...interface{}) *ghttp.Server {
 	if len(name) > 0 && name[0] != "" {
 		instanceName = gconv.String(name[0])
 	}
-	return localInstances.GetOrSetFuncLock(instanceKey, func() interface{} {
+	return instance.GetOrSetFuncLock(instanceKey, func() interface{} {
 		server := ghttp.GetServer(instanceName)
 		if Config().Available(ctx) {
 			// Server initialization from configuration.

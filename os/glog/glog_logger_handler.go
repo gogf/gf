@@ -18,7 +18,7 @@ type Handler func(ctx context.Context, in *HandlerInput)
 // HandlerInput is the input parameter struct for logging Handler.
 type HandlerInput struct {
 	internalHandlerInfo
-	Logger      *Logger       // Logger.
+	Logger      *Logger       // Current Logger object.
 	Buffer      *bytes.Buffer // Buffer for logging content outputs.
 	Time        time.Time     // Logging time, which is the time that logging triggers.
 	TimeFormat  string        // Formatted time string, like "2016-01-09 12:00:00".
@@ -28,7 +28,7 @@ type HandlerInput struct {
 	CallerFunc  string        // The source function name that calls logging, only available if F_CALLER_FN set.
 	CallerPath  string        // The source file path and its line number that calls logging, only available if F_FILE_SHORT or F_FILE_LONG set.
 	CtxStr      string        // The retrieved context value string from context, only available if Config.CtxKeys configured.
-	TraceId     string        // Trace id, only available if tracing is enabled.
+	TraceId     string        // Trace id, only available if OpenTelemetry is enabled.
 	Prefix      string        // Custom prefix string for logging content.
 	Content     string        // Content is the main logging content without error stack string produced by logger.
 	Stack       string        // Stack string produced by logger, only available if Config.StStatus configured.
@@ -85,7 +85,7 @@ func (in *HandlerInput) getDefaultBuffer(withColor bool) *bytes.Buffer {
 		if in.TimeFormat != "" {
 			buffer.WriteString(in.TimeFormat)
 		}
-		if in.LevelFormat != "" {
+		if in.Logger.config.LevelPrint && in.LevelFormat != "" {
 			var levelStr = "[" + in.LevelFormat + "]"
 			if withColor {
 				in.addStringToBuffer(buffer, in.Logger.getColoredStr(

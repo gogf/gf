@@ -129,6 +129,9 @@ type cBuildInput struct {
 type cBuildOutput struct{}
 
 func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, err error) {
+	// print used go env
+	_, _ = Env.Index(ctx, cEnvInput{})
+
 	mlog.SetHeaderPrint(true)
 
 	mlog.Debugf(`build input: %+v`, in)

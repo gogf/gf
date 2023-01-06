@@ -12,13 +12,10 @@ import (
 
 	"github.com/gogf/gf/v2/database/gredis"
 	"github.com/gogf/gf/v2/internal/consts"
+	"github.com/gogf/gf/v2/internal/instance"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
-)
-
-const (
-	frameCoreComponentNameRedis = "gf.core.component.redis"
 )
 
 // Redis returns an instance of redis client with specified configuration group name.
@@ -33,7 +30,7 @@ func Redis(name ...string) *gredis.Redis {
 		group = name[0]
 	}
 	instanceKey := fmt.Sprintf("%s.%s", frameCoreComponentNameRedis, group)
-	result := localInstances.GetOrSetFuncLock(instanceKey, func() interface{} {
+	result := instance.GetOrSetFuncLock(instanceKey, func() interface{} {
 		// If already configured, it returns the redis instance.
 		if _, ok := gredis.GetConfig(group); ok {
 			return gredis.Instance(group)

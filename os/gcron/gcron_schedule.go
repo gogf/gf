@@ -271,10 +271,14 @@ func parsePatternItemValue(value string, itemType int) (int, error) {
 
 // checkMeetAndUpdateLastSeconds checks if the given time `t` meets the runnable point for the job.
 func (s *cronSchedule) checkMeetAndUpdateLastSeconds(ctx context.Context, t time.Time) bool {
+	var (
+		lastTimestamp = s.getAndUpdateLastTimestamp(ctx, t)
+		lastTime      = gtime.NewFromTimeStamp(lastTimestamp)
+	)
+
 	if s.everySeconds != 0 {
 		// It checks using interval.
-		secondsAfterCreated := t.Unix() - s.createTimestamp
-		secondsAfterCreated += int64(s.getFixedTimestampDelta(ctx, t))
+		secondsAfterCreated := lastTime.Timestamp() - s.createTimestamp
 		if secondsAfterCreated > 0 {
 			return secondsAfterCreated%s.everySeconds == 0
 		}
@@ -282,22 +286,22 @@ func (s *cronSchedule) checkMeetAndUpdateLastSeconds(ctx context.Context, t time
 	}
 
 	// It checks using normal cron pattern.
-	if _, ok := s.secondMap[s.getFixedSecond(ctx, t)]; !ok {
+	if _, ok := s.secondMap[lastTime.Second()]; !ok {
 		return false
 	}
-	if _, ok := s.minuteMap[t.Minute()]; !ok {
+	if _, ok := s.minuteMap[lastTime.Minute()]; !ok {
 		return false
 	}
-	if _, ok := s.hourMap[t.Hour()]; !ok {
+	if _, ok := s.hourMap[lastTime.Hour()]; !ok {
 		return false
 	}
-	if _, ok := s.dayMap[t.Day()]; !ok {
+	if _, ok := s.dayMap[lastTime.Day()]; !ok {
 		return false
 	}
-	if _, ok := s.monthMap[int(t.Month())]; !ok {
+	if _, ok := s.monthMap[lastTime.Month()]; !ok {
 		return false
 	}
-	if _, ok := s.weekMap[int(t.Weekday())]; !ok {
+	if _, ok := s.weekMap[int(lastTime.Weekday())]; !ok {
 		return false
 	}
 	return true
