@@ -17,12 +17,8 @@ import (
 func ExampleSetTimeZone() {
 	gtime.SetTimeZone("Asia/Shanghai")
 	fmt.Println(gtime.Datetime())
-
-	gtime.SetTimeZone("Asia/Tokyo")
-	fmt.Println(gtime.Datetime())
 	// May Output:
 	// 2018-08-08 08:08:08
-	// 2018-08-08 09:08:08
 }
 
 func ExampleTimestamp() {
