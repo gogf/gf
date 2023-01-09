@@ -123,11 +123,11 @@ func (c *PoolConn) RecvTill(til []byte, retry ...Retry) ([]byte, error) {
 
 // RecvWithTimeout reads data from the connection with timeout.
 func (c *PoolConn) RecvWithTimeout(length int, timeout time.Duration, retry ...Retry) (data []byte, err error) {
-	if err := c.SetReceiveDeadline(time.Now().Add(timeout)); err != nil {
+	if err := c.SetDeadlineRecv(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
 	defer func() {
-		_ = c.SetReceiveDeadline(time.Time{})
+		_ = c.SetDeadlineRecv(time.Time{})
 	}()
 	data, err = c.Recv(length, retry...)
 	return
@@ -135,11 +135,11 @@ func (c *PoolConn) RecvWithTimeout(length int, timeout time.Duration, retry ...R
 
 // SendWithTimeout writes data to the connection with timeout.
 func (c *PoolConn) SendWithTimeout(data []byte, timeout time.Duration, retry ...Retry) (err error) {
-	if err := c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
+	if err := c.SetDeadlineSend(time.Now().Add(timeout)); err != nil {
 		return err
 	}
 	defer func() {
-		_ = c.SetSendDeadline(time.Time{})
+		_ = c.SetDeadlineSend(time.Time{})
 	}()
 	err = c.Send(data, retry...)
 	return
