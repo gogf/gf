@@ -4,27 +4,16 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gredis_test
+package redis_test
 
 import (
-	"context"
 	"testing"
 
-	"github.com/gogf/gf/v2/database/gredis"
 	"github.com/gogf/gf/v2/test/gtest"
-)
-
-var (
-	ctx = context.TODO()
 )
 
 func TestConn_DoWithTimeout(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		redis, err := gredis.New(config)
-		t.AssertNil(err)
-		t.AssertNE(redis, nil)
-		defer redis.Close(ctx)
-
 		conn, err := redis.Conn(ctx)
 		t.AssertNil(err)
 		defer conn.Close(ctx)
@@ -41,28 +30,20 @@ func TestConn_DoWithTimeout(t *testing.T) {
 
 func TestConn_ReceiveVarWithTimeout(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		redis, err := gredis.New(config)
-		t.AssertNil(err)
-		t.AssertNE(redis, nil)
-		defer redis.Close(ctx)
-
 		conn, err := redis.Conn(ctx)
 		t.AssertNil(err)
 		defer conn.Close(ctx)
 
-		_, err = conn.Do(ctx, "Subscribe", "gf")
+		sub, err := conn.Subscribe(ctx, "gf")
+		t.AssertNil(err)
+		t.Assert(sub[0].Channel, "gf")
+
+		_, err = redis.Publish(ctx, "gf", "test")
 		t.AssertNil(err)
 
-		v, err := redis.Do(ctx, "PUBLISH", "gf", "test")
-
-		v, err = conn.Receive(ctx)
+		msg, err := conn.ReceiveMessage(ctx)
 		t.AssertNil(err)
-		t.Assert(v.Val().(*gredis.Subscription).Channel, "gf")
-
-		v, err = conn.Receive(ctx)
-		t.AssertNil(err)
-		t.Assert(v.Val().(*gredis.Message).Channel, "gf")
-		t.Assert(v.Val().(*gredis.Message).Payload, "test")
-
+		t.Assert(msg.Channel, "gf")
+		t.Assert(msg.Payload, "test")
 	})
 }
