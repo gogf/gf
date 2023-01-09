@@ -68,7 +68,16 @@ func (c cFix) doFix() (err error) {
 // doFixV23 fixes code when upgrading to GoFrame v2.3.
 func (c cFix) doFixV23(version string) error {
 	replaceFunc := func(path, content string) string {
+		// gdb.TX from struct to interface.
 		content = gstr.Replace(content, "*gdb.TX", "gdb.TX")
+		// function name changes for package gtcp/gudp.
+		if gstr.Contains(content, "/gf/v2/net/gtcp") || gstr.Contains(content, "/gf/v2/net/gudp") {
+			content = gstr.ReplaceByMap(content, g.MapStrStr{
+				".SetSendDeadline":      ".SetDeadlineSend",
+				".SetReceiveDeadline":   ".SetDeadlineRecv",
+				".SetReceiveBufferWait": ".SetBufferWaitRecv",
+			})
+		}
 		return content
 	}
 	return gfile.ReplaceDirFunc(replaceFunc, ".", "*.go", true)

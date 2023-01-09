@@ -68,7 +68,7 @@ func NewStorageRedis(redis *gredis.Redis, prefix ...string) *StorageRedis {
 
 // RemoveAll deletes all key-value pairs from storage.
 func (s *StorageRedis) RemoveAll(ctx context.Context, sessionId string) error {
-	_, err := s.redis.Do(ctx, "DEL", s.sessionIdToRedisKey(sessionId))
+	_, err := s.redis.Del(ctx, s.sessionIdToRedisKey(sessionId))
 	return err
 }
 
@@ -81,7 +81,7 @@ func (s *StorageRedis) RemoveAll(ctx context.Context, sessionId string) error {
 // This function is called ever when session starts.
 func (s *StorageRedis) GetSession(ctx context.Context, sessionId string, ttl time.Duration) (*gmap.StrAnyMap, error) {
 	intlog.Printf(ctx, "StorageRedis.GetSession: %s, %v", sessionId, ttl)
-	r, err := s.redis.Do(ctx, "GET", s.sessionIdToRedisKey(sessionId))
+	r, err := s.redis.Get(ctx, s.sessionIdToRedisKey(sessionId))
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +108,7 @@ func (s *StorageRedis) SetSession(ctx context.Context, sessionId string, session
 	if err != nil {
 		return err
 	}
-	_, err = s.redis.Do(ctx, "SETEX", s.sessionIdToRedisKey(sessionId), int64(ttl.Seconds()), content)
+	err = s.redis.SetEX(ctx, s.sessionIdToRedisKey(sessionId), content, int64(ttl.Seconds()))
 	return err
 }
 
@@ -126,7 +126,7 @@ func (s *StorageRedis) UpdateTTL(ctx context.Context, sessionId string, ttl time
 // doUpdateTTL updates the TTL for session id.
 func (s *StorageRedis) doUpdateExpireForSession(ctx context.Context, sessionId string, ttlSeconds int) error {
 	intlog.Printf(ctx, "StorageRedis.doUpdateTTL: %s, %d", sessionId, ttlSeconds)
-	_, err := s.redis.Do(ctx, "EXPIRE", s.sessionIdToRedisKey(sessionId), ttlSeconds)
+	_, err := s.redis.Expire(ctx, s.sessionIdToRedisKey(sessionId), int64(ttlSeconds))
 	return err
 }
 

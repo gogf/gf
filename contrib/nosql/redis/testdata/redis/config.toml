@@ -1,0 +1,43 @@
+# 模板引擎目录
+viewpath = "/home/www/templates/"
+test = "v=3"
+# MySQL数据库配置
+[database]
+    [[database.default]]
+        host     = "127.0.0.1"
+        port     = "3306"
+        user     = "root"
+        pass     = ""
+        # pass     = "12345678"
+        name     = "test"
+        type     = "mysql"
+        role     = "master"
+        charset  = "utf8"
+        priority = "1"
+    [[database.test]]
+        host     = "127.0.0.1"
+        port     = "3306"
+        user     = "root"
+        pass     = ""
+        # pass     = "12345678"
+        name     = "test"
+        type     = "mysql"
+        role     = "master"
+        charset  = "utf8"
+        priority = "1"
+# Redis数据库配置
+[redis]
+    [redis.default]
+        address = "127.0.0.1:6379"
+        db      = 7
+    [redis.cache]
+        address = "127.0.0.1:6379"
+        db      = 8
+    [redis.disk]
+        address         = "127.0.0.1:6379"
+        db              = 9
+        maxIdle         = 1
+        maxActive       = 10
+        idleTimeout     = "10s"
+        maxConnLifetime = "10s"
+

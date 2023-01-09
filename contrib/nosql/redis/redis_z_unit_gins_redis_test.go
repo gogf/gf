@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gins_test
+package redis_test
 
 import (
 	"testing"
@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Redis(t *testing.T) {
+func Test_GINS_Redis(t *testing.T) {
 	redisContent := gfile.GetContents(
 		gtest.DataPath("redis", "config.toml"),
 	)

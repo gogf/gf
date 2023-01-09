@@ -61,7 +61,7 @@ func ExamplePool_Put() {
 	// conn.(*DBConn).Conn.QueryContext(context.Background(), "select * from user")
 
 	// put back conn
-	dbConnPool.Put(conn)
+	dbConnPool.MustPut(conn)
 
 	fmt.Println(conn.(*DBConn).Limit)
 
@@ -88,8 +88,8 @@ func ExamplePool_Clear() {
 		})
 
 	conn, _ := dbConnPool.Get()
-	dbConnPool.Put(conn)
-	dbConnPool.Put(conn)
+	dbConnPool.MustPut(conn)
+	dbConnPool.MustPut(conn)
 	fmt.Println(dbConnPool.Size())
 	dbConnPool.Clear()
 	fmt.Println(dbConnPool.Size())
@@ -144,8 +144,8 @@ func ExamplePool_Size() {
 
 	conn, _ := dbConnPool.Get()
 	fmt.Println(dbConnPool.Size())
-	dbConnPool.Put(conn)
-	dbConnPool.Put(conn)
+	dbConnPool.MustPut(conn)
+	dbConnPool.MustPut(conn)
 	fmt.Println(dbConnPool.Size())
 
 	// Output:
@@ -158,21 +158,22 @@ func ExamplePool_Close() {
 		Conn  *sql.Conn
 		Limit int
 	}
-
-	dbConnPool := gpool.New(time.Hour,
-		func() (interface{}, error) {
+	var (
+		newFunc = func() (interface{}, error) {
 			dbConn := new(DBConn)
 			dbConn.Limit = 10
 			return dbConn, nil
-		},
-		func(i interface{}) {
+		}
+		closeFunc = func(i interface{}) {
 			fmt.Println("Close The Pool")
 			// sample : close db conn
 			// i.(DBConn).Conn.Close()
-		})
+		}
+	)
+	dbConnPool := gpool.New(time.Hour, newFunc, closeFunc)
 
 	conn, _ := dbConnPool.Get()
-	dbConnPool.Put(conn)
+	dbConnPool.MustPut(conn)
 
 	dbConnPool.Close()
 

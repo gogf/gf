@@ -17,7 +17,7 @@ import (
 //
 // Note that, you should not Commit or Rollback the transaction in function `f`
 // as it is automatically handled by this function.
-func (m *Model) Transaction(ctx context.Context, f func(ctx context.Context, tx *TX) error) (err error) {
+func (m *Model) Transaction(ctx context.Context, f func(ctx context.Context, tx TX) error) (err error) {
 	if ctx == nil {
 		ctx = m.GetCtx()
 	}

@@ -14,6 +14,7 @@ import (
 )
 
 var (
+	// localInstances for instance management of redis client.
 	localInstances = gmap.NewStrAnyMap(true)
 )
 
