@@ -18,8 +18,8 @@ package gins
 //
 //		time.Sleep(time.Second)
 //
-//		localInstances.Clear()
-//		defer localInstances.Clear()
+//		instance.Clear()
+//		defer instance.Clear()
 //
 //		s := Server("tempByInstanceName")
 //		s.BindHandler("/", func(r *ghttp.Request) {

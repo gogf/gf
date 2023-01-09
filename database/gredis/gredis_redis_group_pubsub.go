@@ -6,7 +6,26 @@
 
 package gredis
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+)
+
+// IGroupPubSub manages redis pub/sub operations.
+// Implements see redis.GroupPubSub.
+type IGroupPubSub interface {
+	Publish(ctx context.Context, channel string, message interface{}) (int64, error)
+	Subscribe(ctx context.Context, channel string, channels ...string) (Conn, []*Subscription, error)
+	PSubscribe(ctx context.Context, pattern string, patterns ...string) (Conn, []*Subscription, error)
+}
+
+// Message received as result of a PUBLISH command issued by another client.
+type Message struct {
+	Channel      string
+	Pattern      string
+	Payload      string
+	PayloadSlice []string
+}
 
 // Subscription received after a successful subscription to channel.
 type Subscription struct {

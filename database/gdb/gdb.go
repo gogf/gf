@@ -118,7 +118,7 @@ type DB interface {
 	GetOne(ctx context.Context, sql string, args ...interface{}) (Record, error)                // See Core.GetOne.
 	GetValue(ctx context.Context, sql string, args ...interface{}) (Value, error)               // See Core.GetValue.
 	GetArray(ctx context.Context, sql string, args ...interface{}) ([]Value, error)             // See Core.GetArray.
-	GetCount(ctx context.Context, sql string, args ...interface{}) (int64, error)               // See Core.GetCount.
+	GetCount(ctx context.Context, sql string, args ...interface{}) (int, error)                 // See Core.GetCount.
 	GetScan(ctx context.Context, objPointer interface{}, sql string, args ...interface{}) error // See Core.GetScan.
 	Union(unions ...*Model) *Model                                                              // See Core.Union.
 	UnionAll(unions ...*Model) *Model                                                           // See Core.UnionAll.
@@ -141,8 +141,8 @@ type DB interface {
 	// Transaction.
 	// ===========================================================================
 
-	Begin(ctx context.Context) (*TX, error)                                           // See Core.Begin.
-	Transaction(ctx context.Context, f func(ctx context.Context, tx *TX) error) error // See Core.Transaction.
+	Begin(ctx context.Context) (TX, error)                                           // See Core.Begin.
+	Transaction(ctx context.Context, f func(ctx context.Context, tx TX) error) error // See Core.Transaction.
 
 	// ===========================================================================
 	// Configuration methods.
@@ -175,6 +175,71 @@ type DB interface {
 	ConvertDataForRecord(ctx context.Context, data interface{}) (map[string]interface{}, error)              // See Core.ConvertDataForRecord
 	ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) // See Core.ConvertValueForLocal
 	CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (string, error)    // See Core.CheckLocalTypeForField
+}
+
+// TX defines the interfaces for ORM transaction operations.
+type TX interface {
+	Ctx(ctx context.Context) TX
+	Raw(rawSql string, args ...interface{}) *Model
+	Model(tableNameQueryOrStruct ...interface{}) *Model
+	With(object interface{}) *Model
+
+	// ===========================================================================
+	// Nested transaction if necessary.
+	// ===========================================================================
+
+	Begin() error
+	Commit() error
+	Rollback() error
+	Transaction(ctx context.Context, f func(ctx context.Context, tx TX) error) (err error)
+
+	// ===========================================================================
+	// Core method.
+	// ===========================================================================
+
+	Query(sql string, args ...interface{}) (result Result, err error)
+	Exec(sql string, args ...interface{}) (sql.Result, error)
+	Prepare(sql string) (*Stmt, error)
+
+	// ===========================================================================
+	// Query.
+	// ===========================================================================
+
+	GetAll(sql string, args ...interface{}) (Result, error)
+	GetOne(sql string, args ...interface{}) (Record, error)
+	GetStruct(obj interface{}, sql string, args ...interface{}) error
+	GetStructs(objPointerSlice interface{}, sql string, args ...interface{}) error
+	GetScan(pointer interface{}, sql string, args ...interface{}) error
+	GetValue(sql string, args ...interface{}) (Value, error)
+	GetCount(sql string, args ...interface{}) (int64, error)
+
+	// ===========================================================================
+	// CURD.
+	// ===========================================================================
+
+	Insert(table string, data interface{}, batch ...int) (sql.Result, error)
+	InsertIgnore(table string, data interface{}, batch ...int) (sql.Result, error)
+	InsertAndGetId(table string, data interface{}, batch ...int) (int64, error)
+	Replace(table string, data interface{}, batch ...int) (sql.Result, error)
+	Save(table string, data interface{}, batch ...int) (sql.Result, error)
+	Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error)
+	Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error)
+
+	// ===========================================================================
+	// Utility methods.
+	// ===========================================================================
+
+	GetCtx() context.Context
+	GetDB() DB
+	GetSqlTX() *sql.Tx
+	IsClosed() bool
+
+	// ===========================================================================
+	// Save point feature.
+	// ===========================================================================
+
+	SavePoint(point string) error
+	RollbackTo(point string) error
 }
 
 // Core is the base struct for database management.
@@ -214,7 +279,7 @@ type DoCommitOutput struct {
 	Result    sql.Result  // Result is the result of exec statement.
 	Records   []Record    // Records is the result of query statement.
 	Stmt      *Stmt       // Stmt is the Statement object result for Prepare.
-	Tx        *TX         // Tx is the transaction object result for Begin.
+	Tx        TX          // Tx is the transaction object result for Begin.
 	RawResult interface{} // RawResult is the underlying result, which might be sql.Result/*sql.Rows/*sql.Row.
 }
 

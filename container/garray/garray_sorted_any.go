@@ -61,10 +61,10 @@ func NewSortedArrayRange(start, end, step int, comparator func(a, b interface{})
 	if step == 0 {
 		panic(fmt.Sprintf(`invalid step value: %d`, step))
 	}
-	slice := make([]interface{}, (end-start+1)/step)
+	slice := make([]interface{}, 0)
 	index := 0
 	for i := start; i <= end; i += step {
-		slice[index] = i
+		slice = append(slice, i)
 		index++
 	}
 	return NewSortedArrayFrom(slice, comparator, safe...)
