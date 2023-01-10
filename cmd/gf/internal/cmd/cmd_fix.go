@@ -20,6 +20,7 @@ type cFix struct {
 
 type cFixInput struct {
 	g.Meta `name:"fix"`
+	Path   string `name:"path" brief:"directory path, it uses current working directory in default"`
 }
 
 type cFixOutput struct{}
@@ -32,12 +33,15 @@ type cFixItem struct {
 func (c cFix) Index(ctx context.Context, in cFixInput) (out *cFixOutput, err error) {
 	mlog.Print(`start auto fixing...`)
 	defer mlog.Print(`done!`)
-	err = c.doFix()
+	if in.Path == "" {
+		in.Path = gfile.Pwd()
+	}
+	err = c.doFix(in)
 	return
 }
 
-func (c cFix) doFix() (err error) {
-	version, err := c.getVersion()
+func (c cFix) doFix(in cFixInput) (err error) {
+	version, err := c.getVersion(in)
 	if err != nil {
 		mlog.Fatal(err)
 	}
@@ -83,10 +87,10 @@ func (c cFix) doFixV23(version string) error {
 	return gfile.ReplaceDirFunc(replaceFunc, ".", "*.go", true)
 }
 
-func (c cFix) getVersion() (string, error) {
+func (c cFix) getVersion(in cFixInput) (string, error) {
 	var (
 		err     error
-		path    = "go.mod"
+		path    = gfile.Join(in.Path, "go.mod")
 		version string
 	)
 	if !gfile.Exists(path) {
@@ -95,7 +99,7 @@ func (c cFix) getVersion() (string, error) {
 	err = gfile.ReadLines(path, func(line string) error {
 		array := gstr.SplitAndTrim(line, " ")
 		if len(array) > 0 {
-			if array[0] == gfPackage {
+			if gstr.HasPrefix(array[0], gfPackage) {
 				version = array[1]
 			}
 		}

@@ -47,6 +47,11 @@ func SetTimeZone(zone string) (err error) {
 		}
 	}()
 
+	// It is already set to time.Local.
+	if strings.EqualFold(zone, time.Local.String()) {
+		return
+	}
+
 	// Load zone info from specified name.
 	location, err := time.LoadLocation(zone)
 	if err != nil {
