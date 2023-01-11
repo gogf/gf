@@ -119,7 +119,7 @@ func (r GroupSortedSet) ZCount(ctx context.Context, key string, min, max string)
 // order.
 //
 // https://redis.io/commands/zrange/
-func (r GroupSortedSet) ZRange(ctx context.Context, key string, start, stop int64, option ...gredis.ZRangeOption) ([]*gvar.Var, error) {
+func (r GroupSortedSet) ZRange(ctx context.Context, key string, start, stop int64, option ...gredis.ZRangeOption) (gvar.Vars, error) {
 	var usedOption interface{}
 	if len(option) > 0 {
 		usedOption = option[0]

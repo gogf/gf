@@ -195,7 +195,7 @@ func (r GroupList) LSet(ctx context.Context, key string, index int64, value inte
 // For example, -1 is the last element of the list, -2 the penultimate, and so on.
 //
 // https://redis.io/commands/lrange/
-func (r GroupList) LRange(ctx context.Context, key string, start, stop int64) ([]*gvar.Var, error) {
+func (r GroupList) LRange(ctx context.Context, key string, start, stop int64) (gvar.Vars, error) {
 	v, err := r.redis.Do(ctx, "LRange", key, start, stop)
 	return v.Vars(), err
 }
@@ -220,7 +220,7 @@ func (r GroupList) LTrim(ctx context.Context, key string, start, stop int64) err
 // block. A timeout of zero can be used to block indefinitely.
 //
 // https://redis.io/commands/blpop/
-func (r GroupList) BLPop(ctx context.Context, timeout int64, keys ...string) ([]*gvar.Var, error) {
+func (r GroupList) BLPop(ctx context.Context, timeout int64, keys ...string) (gvar.Vars, error) {
 	v, err := r.redis.Do(ctx, "BLPop", append(gconv.Interfaces(keys), timeout)...)
 	return v.Vars(), err
 }
@@ -234,7 +234,7 @@ func (r GroupList) BLPop(ctx context.Context, timeout int64, keys ...string) ([]
 // block. A timeout of zero can be used to block indefinitely.
 //
 // https://redis.io/commands/brpop/
-func (r GroupList) BRPop(ctx context.Context, timeout int64, keys ...string) ([]*gvar.Var, error) {
+func (r GroupList) BRPop(ctx context.Context, timeout int64, keys ...string) (gvar.Vars, error) {
 	v, err := r.redis.Do(ctx, "BRPop", append(gconv.Interfaces(keys), timeout)...)
 	return v.Vars(), err
 }

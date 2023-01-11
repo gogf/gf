@@ -26,10 +26,10 @@ type IGroupList interface {
 	LIndex(ctx context.Context, key string, index int64) (*gvar.Var, error)
 	LInsert(ctx context.Context, key string, op LInsertOp, pivot, value interface{}) (int64, error)
 	LSet(ctx context.Context, key string, index int64, value interface{}) (*gvar.Var, error)
-	LRange(ctx context.Context, key string, start, stop int64) ([]*gvar.Var, error)
+	LRange(ctx context.Context, key string, start, stop int64) (gvar.Vars, error)
 	LTrim(ctx context.Context, key string, start, stop int64) error
-	BLPop(ctx context.Context, timeout int64, keys ...string) ([]*gvar.Var, error)
-	BRPop(ctx context.Context, timeout int64, keys ...string) ([]*gvar.Var, error)
+	BLPop(ctx context.Context, timeout int64, keys ...string) (gvar.Vars, error)
+	BRPop(ctx context.Context, timeout int64, keys ...string) (gvar.Vars, error)
 	RPopLPush(ctx context.Context, source, destination string) (*gvar.Var, error)
 	BRPopLPush(ctx context.Context, source, destination string, timeout int64) (*gvar.Var, error)
 }

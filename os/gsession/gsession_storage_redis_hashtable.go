@@ -56,11 +56,7 @@ func (s *StorageRedisHashTable) Data(ctx context.Context, sessionId string) (dat
 	if err != nil {
 		return nil, err
 	}
-	data = make(map[string]interface{})
-	for k, v := range m {
-		data[k] = v.Val()
-	}
-	return
+	return m.Map(), nil
 }
 
 // GetSize retrieves the size of key-value pairs from storage.

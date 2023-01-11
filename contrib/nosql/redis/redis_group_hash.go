@@ -162,7 +162,7 @@ func (r GroupHash) HMSet(ctx context.Context, key string, fields map[string]inte
 // will return a list of nil values.
 //
 // https://redis.io/commands/hmget/
-func (r GroupHash) HMGet(ctx context.Context, key string, fields ...string) ([]*gvar.Var, error) {
+func (r GroupHash) HMGet(ctx context.Context, key string, fields ...string) (gvar.Vars, error) {
 	v, err := r.redis.Do(ctx, "HMGet", append([]interface{}{key}, gconv.Interfaces(fields)...)...)
 	return v.Vars(), err
 }
@@ -178,7 +178,7 @@ func (r GroupHash) HKeys(ctx context.Context, key string) ([]string, error) {
 // HVals return all values in the hash stored at key.
 //
 // https://redis.io/commands/hvals/
-func (r GroupHash) HVals(ctx context.Context, key string) ([]*gvar.Var, error) {
+func (r GroupHash) HVals(ctx context.Context, key string) (gvar.Vars, error) {
 	v, err := r.redis.Do(ctx, "HVals", key)
 	return v.Vars(), err
 }
@@ -188,7 +188,7 @@ func (r GroupHash) HVals(ctx context.Context, key string) ([]*gvar.Var, error) {
 // so the length of the reply is twice the size of the hash.
 //
 // https://redis.io/commands/hgetall/
-func (r GroupHash) HGetAll(ctx context.Context, key string) (map[string]*gvar.Var, error) {
+func (r GroupHash) HGetAll(ctx context.Context, key string) (*gvar.Var, error) {
 	v, err := r.redis.Do(ctx, "HGetAll", key)
-	return v.MapStrVar(), err
+	return v, err
 }
