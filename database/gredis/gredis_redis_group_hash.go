@@ -25,8 +25,8 @@ type IGroupHash interface {
 	HIncrBy(ctx context.Context, key, field string, increment int64) (int64, error)
 	HIncrByFloat(ctx context.Context, key, field string, increment float64) (float64, error)
 	HMSet(ctx context.Context, key string, fields map[string]interface{}) error
-	HMGet(ctx context.Context, key string, fields ...string) ([]*gvar.Var, error)
+	HMGet(ctx context.Context, key string, fields ...string) (gvar.Vars, error)
 	HKeys(ctx context.Context, key string) ([]string, error)
-	HVals(ctx context.Context, key string) ([]*gvar.Var, error)
-	HGetAll(ctx context.Context, key string) (map[string]*gvar.Var, error)
+	HVals(ctx context.Context, key string) (gvar.Vars, error)
+	HGetAll(ctx context.Context, key string) (*gvar.Var, error)
 }
