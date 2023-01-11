@@ -171,7 +171,7 @@ func Fields(in FieldsInput) ([]Field, error) {
 // The parameter `recursive` specifies the whether retrieving the fields recursively if the attribute
 // is an embedded struct.
 //
-// Note that it only retrieves the exported attributes with first letter up-case from struct.
+// Note that it only retrieves the exported attributes with first letter upper-case from struct.
 func FieldMap(in FieldMapInput) (map[string]Field, error) {
 	fields, err := getFieldValues(in.Pointer)
 	if err != nil {

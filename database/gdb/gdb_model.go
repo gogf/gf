@@ -18,7 +18,7 @@ import (
 // Model is core struct implementing the DAO for ORM.
 type Model struct {
 	db            DB            // Underlying DB interface.
-	tx            *TX           // Underlying TX interface.
+	tx            TX            // Underlying TX interface.
 	rawSql        string        // rawSql is the raw SQL string which marks a raw SQL based Model not a table based Model.
 	schema        string        // Custom database schema.
 	linkType      int           // Mark for operation on master or slave.
@@ -165,7 +165,7 @@ func (m *Model) Raw(rawSql string, args ...interface{}) *Model {
 	return model
 }
 
-func (tx *TX) Raw(rawSql string, args ...interface{}) *Model {
+func (tx *TXCore) Raw(rawSql string, args ...interface{}) *Model {
 	return tx.Model().Raw(rawSql, args...)
 }
 
@@ -176,7 +176,7 @@ func (c *Core) With(objects ...interface{}) *Model {
 
 // Model acts like Core.Model except it operates on transaction.
 // See Core.Model.
-func (tx *TX) Model(tableNameQueryOrStruct ...interface{}) *Model {
+func (tx *TXCore) Model(tableNameQueryOrStruct ...interface{}) *Model {
 	model := tx.db.Model(tableNameQueryOrStruct...)
 	model.db = tx.db
 	model.tx = tx
@@ -185,7 +185,7 @@ func (tx *TX) Model(tableNameQueryOrStruct ...interface{}) *Model {
 
 // With acts like Core.With except it operates on transaction.
 // See Core.With.
-func (tx *TX) With(object interface{}) *Model {
+func (tx *TXCore) With(object interface{}) *Model {
 	return tx.Model().With(object)
 }
 
@@ -205,8 +205,8 @@ func (m *Model) Ctx(ctx context.Context) *Model {
 // GetCtx returns the context for current Model.
 // It returns `context.Background()` is there's no context previously set.
 func (m *Model) GetCtx() context.Context {
-	if m.tx != nil && m.tx.ctx != nil {
-		return m.tx.ctx
+	if m.tx != nil && m.tx.GetCtx() != nil {
+		return m.tx.GetCtx()
 	}
 	return m.db.GetCtx()
 }
@@ -238,9 +238,9 @@ func (m *Model) DB(db DB) *Model {
 }
 
 // TX sets/changes the transaction for current operation.
-func (m *Model) TX(tx *TX) *Model {
+func (m *Model) TX(tx TX) *Model {
 	model := m.getModel()
-	model.db = tx.db
+	model.db = tx.GetDB()
 	model.tx = tx
 	return model
 }

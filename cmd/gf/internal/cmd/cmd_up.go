@@ -21,7 +21,7 @@ type cUp struct {
 }
 
 const (
-	gfPackage = `github.com/gogf/gf/v2`
+	gfPackage = `github.com/gogf/gf/`
 	cUpEg     = `
 gf up
 gf up -a
@@ -46,19 +46,18 @@ type cUpInput struct {
 type cUpOutput struct{}
 
 func (c cUp) Index(ctx context.Context, in cUpInput) (out *cUpOutput, err error) {
-	defer mlog.Print(`done!`)
+	defer func() {
+		if err == nil {
+			mlog.Print(`done!`)
+		}
+	}()
 
 	if in.All {
 		in.Cli = true
 		in.Fix = true
 	}
-	if err = c.doUpgradeVersion(ctx); err != nil {
+	if err = c.doUpgradeVersion(ctx, in); err != nil {
 		return nil, err
-	}
-	if in.Fix {
-		if err = c.doAutoFixing(ctx); err != nil {
-			return nil, err
-		}
 	}
 	//if in.Cli {
 	//	if err = c.doUpgradeCLI(ctx); err != nil {
@@ -68,8 +67,13 @@ func (c cUp) Index(ctx context.Context, in cUpInput) (out *cUpOutput, err error)
 	return
 }
 
-func (c cUp) doUpgradeVersion(ctx context.Context) (err error) {
+func (c cUp) doUpgradeVersion(ctx context.Context, in cUpInput) (err error) {
 	mlog.Print(`start upgrading version...`)
+
+	type Package struct {
+		Name    string
+		Version string
+	}
 
 	var (
 		dir  = gfile.Pwd()
@@ -78,12 +82,15 @@ func (c cUp) doUpgradeVersion(ctx context.Context) (err error) {
 	)
 	for {
 		if gfile.Exists(path) {
-			var packages []string
+			var packages []Package
 			err = gfile.ReadLines(path, func(line string) error {
 				line = gstr.Trim(line)
 				if gstr.HasPrefix(line, gfPackage) {
-					pkg := gstr.Explode(" ", line)[0]
-					packages = append(packages, pkg)
+					array := gstr.SplitAndTrim(line, " ")
+					packages = append(packages, Package{
+						Name:    array[0],
+						Version: array[1],
+					})
 				}
 				return nil
 			})
@@ -91,11 +98,18 @@ func (c cUp) doUpgradeVersion(ctx context.Context) (err error) {
 				return
 			}
 			for _, pkg := range packages {
-				mlog.Printf(`upgrading %s`, pkg)
-				command := fmt.Sprintf(`go get -u %s@latest`, pkg)
+				mlog.Printf(`upgrading "%s" from "%s" to "latest"`, pkg.Name, pkg.Version)
+				command := fmt.Sprintf(`go get -u %s@latest`, pkg.Name)
 				if err = gproc.ShellRun(ctx, command); err != nil {
 					return
 				}
+				mlog.Print()
+			}
+			if in.Fix {
+				if err = c.doAutoFixing(ctx, dir); err != nil {
+					return err
+				}
+				mlog.Print()
 			}
 			return
 		}
@@ -110,12 +124,13 @@ func (c cUp) doUpgradeVersion(ctx context.Context) (err error) {
 
 func (c cUp) doUpgradeCLI(ctx context.Context) (err error) {
 	mlog.Print(`start upgrading cli...`)
-
 	return
 }
 
-func (c cUp) doAutoFixing(ctx context.Context) (err error) {
-	mlog.Print(`start auto fixing...`)
-	err = cFix{}.doFix()
+func (c cUp) doAutoFixing(ctx context.Context, dirPath string) (err error) {
+	mlog.Printf(`auto fixing path "%s"...`, dirPath)
+	err = cFix{}.doFix(cFixInput{
+		Path: dirPath,
+	})
 	return
 }
