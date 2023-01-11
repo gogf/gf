@@ -7,8 +7,9 @@
 package redis_test
 
 import (
-	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
+
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_GroupHash_HSet(t *testing.T) {
@@ -329,6 +330,6 @@ func Test_GroupHash_HGetAll(t *testing.T) {
 		t.AssertNil(err)
 
 		r1, err := redis.HGetAll(ctx, key)
-		t.Assert(r1, fields)
+		t.Assert(r1.Map(), fields)
 	})
 }

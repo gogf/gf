@@ -5,10 +5,11 @@ go 1.15
 require (
 	github.com/gogf/gf/contrib/config/apollo/v2 v2.0.0
 	github.com/gogf/gf/contrib/config/kubecm/v2 v2.0.0
-	github.com/gogf/gf/contrib/config/nacos/v2 v2.0.0-00010101000000-000000000000
+	github.com/gogf/gf/contrib/config/nacos/v2 v2.2.6
 	github.com/gogf/gf/contrib/config/polaris/v2 v2.0.0
 	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.2.1
-	github.com/gogf/gf/contrib/registry/etcd/v2 v2.1.0-rc3.0.20220523034830-510fa3faf03f
+	github.com/gogf/gf/contrib/nosql/redis/v2 v2.2.6
+	github.com/gogf/gf/contrib/registry/etcd/v2 v2.2.6
 	github.com/gogf/gf/contrib/registry/polaris/v2 v2.0.0
 	github.com/gogf/gf/contrib/trace/jaeger/v2 v2.0.0
 	github.com/gogf/gf/v2 v2.2.1
@@ -27,6 +28,7 @@ replace (
 	github.com/gogf/gf/contrib/config/nacos/v2 => ../contrib/config/nacos/
 	github.com/gogf/gf/contrib/config/polaris/v2 => ../contrib/config/polaris/
 	github.com/gogf/gf/contrib/drivers/mysql/v2 => ../contrib/drivers/mysql/
+	github.com/gogf/gf/contrib/nosql/redis/v2 => ../contrib/nosql/redis/
 	github.com/gogf/gf/contrib/registry/etcd/v2 => ../contrib/registry/etcd/
 	github.com/gogf/gf/contrib/registry/polaris/v2 => ../contrib/registry/polaris/
 	github.com/gogf/gf/contrib/trace/jaeger/v2 => ../contrib/trace/jaeger/

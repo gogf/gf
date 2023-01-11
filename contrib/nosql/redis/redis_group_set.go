@@ -151,7 +151,7 @@ func (r GroupSet) SCard(ctx context.Context, key string) (int64, error) {
 // It returns all elements of the set.
 //
 // https://redis.io/commands/smembers/
-func (r GroupSet) SMembers(ctx context.Context, key string) ([]*gvar.Var, error) {
+func (r GroupSet) SMembers(ctx context.Context, key string) (gvar.Vars, error) {
 	v, err := r.redis.Do(ctx, "SMembers", key)
 	return v.Vars(), err
 }
@@ -176,7 +176,7 @@ func (r GroupSet) SMIsMember(ctx context.Context, key, member interface{}, membe
 // It returns list with members of the resulting set.
 //
 // https://redis.io/commands/sinter/
-func (r GroupSet) SInter(ctx context.Context, key string, keys ...string) ([]*gvar.Var, error) {
+func (r GroupSet) SInter(ctx context.Context, key string, keys ...string) (gvar.Vars, error) {
 	var s = []interface{}{key}
 	s = append(s, gconv.Interfaces(keys)...)
 	v, err := r.redis.Do(ctx, "SInter", s...)
@@ -203,7 +203,7 @@ func (r GroupSet) SInterStore(ctx context.Context, destination string, key strin
 // It returns list with members of the resulting set.
 //
 // https://redis.io/commands/sunion/
-func (r GroupSet) SUnion(ctx context.Context, key string, keys ...string) ([]*gvar.Var, error) {
+func (r GroupSet) SUnion(ctx context.Context, key string, keys ...string) (gvar.Vars, error) {
 	var s = []interface{}{key}
 	s = append(s, gconv.Interfaces(keys)...)
 	v, err := r.redis.Do(ctx, "SUnion", s...)
@@ -230,7 +230,7 @@ func (r GroupSet) SUnionStore(ctx context.Context, destination, key string, keys
 // It returns list with members of the resulting set.
 //
 // https://redis.io/commands/sdiff/
-func (r GroupSet) SDiff(ctx context.Context, key string, keys ...string) ([]*gvar.Var, error) {
+func (r GroupSet) SDiff(ctx context.Context, key string, keys ...string) (gvar.Vars, error) {
 	var s = []interface{}{key}
 	s = append(s, gconv.Interfaces(keys)...)
 	v, err := r.redis.Do(ctx, "SDiff", s...)
