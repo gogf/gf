@@ -298,7 +298,7 @@ func Test_Slice_Empty(t *testing.T) {
 		t.Assert(gconv.Strings(nil), nil)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		t.AssertEQ(gconv.SliceAny(""), []interface{}{})
+		t.AssertEQ(gconv.SliceAny(""), []interface{}{""})
 		t.Assert(gconv.SliceAny(nil), nil)
 	})
 }

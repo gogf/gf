@@ -125,9 +125,6 @@ func Interfaces(any interface{}) []interface{} {
 		return slice
 
 	default:
-		if originValueAndKind.OriginValue.IsZero() {
-			return []interface{}{}
-		}
 		return []interface{}{any}
 	}
 }
