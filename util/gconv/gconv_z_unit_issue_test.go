@@ -223,3 +223,55 @@ func Test_Issue2381(t *testing.T) {
 		t.Assert(a1.Flag.String(), a2.Flag.String())
 	})
 }
+
+// https://github.com/gogf/gf/issues/2391
+func Test_Issue2391(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Inherit struct {
+			Ids   []int
+			Ids2  []int64
+			Flag  *gjson.Json
+			Title string
+		}
+
+		type Test1 struct {
+			Inherit
+		}
+		type Test2 struct {
+			Inherit
+		}
+
+		var (
+			a1 Test1
+			a2 Test2
+		)
+
+		a1 = Test1{
+			Inherit{
+				Ids:   []int{1, 2, 3},
+				Ids2:  []int64{4, 5, 6},
+				Flag:  gjson.New("[\"1\", \"2\"]"),
+				Title: "测试",
+			},
+		}
+
+		err := gconv.Scan(a1, &a2)
+		t.AssertNil(err)
+		t.Assert(a1.Ids, a2.Ids)
+		t.Assert(a1.Ids2, a2.Ids2)
+		t.Assert(a1.Title, a2.Title)
+		t.Assert(a1.Flag.String(), a2.Flag.String())
+	})
+}
+
+// https://github.com/gogf/gf/issues/2395
+func Test_Issue2395(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Test struct {
+			Num int
+		}
+		var ()
+		obj := Test{Num: 0}
+		t.Assert(gconv.Interfaces(obj), []interface{}{obj})
+	})
+}

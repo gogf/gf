@@ -407,7 +407,7 @@ func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) in
 						array[arrayIndex] = doMapConvertForMapOrStructValue(
 							doMapConvertForMapOrStructValueInput{
 								IsRoot:          false,
-								Value:           rvAttrField.Index(arrayIndex),
+								Value:           rvAttrField.Index(arrayIndex).Interface(),
 								RecursiveType:   in.RecursiveType,
 								RecursiveOption: in.RecursiveType == recursiveTypeTrue,
 								Tags:            in.Tags,
@@ -463,7 +463,7 @@ func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) in
 		for i := 0; i < length; i++ {
 			array[i] = doMapConvertForMapOrStructValue(doMapConvertForMapOrStructValueInput{
 				IsRoot:          false,
-				Value:           reflectValue.Index(i),
+				Value:           reflectValue.Index(i).Interface(),
 				RecursiveType:   in.RecursiveType,
 				RecursiveOption: in.RecursiveType == recursiveTypeTrue,
 				Tags:            in.Tags,
