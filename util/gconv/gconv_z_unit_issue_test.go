@@ -263,3 +263,15 @@ func Test_Issue2391(t *testing.T) {
 		t.Assert(a1.Flag.String(), a2.Flag.String())
 	})
 }
+
+// https://github.com/gogf/gf/issues/2395
+func Test_Issue2395(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Test struct {
+			Num int
+		}
+		var ()
+		obj := Test{Num: 0}
+		t.Assert(gconv.Interfaces(obj), []interface{}{obj})
+	})
+}
