@@ -281,7 +281,6 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 		err = gerror.WrapCodef(
 			gcode.CodeDbOperationError,
 			err,
-			"%s",
 			FormatSqlWithArgs(in.Sql, in.Args),
 		)
 	}
