@@ -108,14 +108,15 @@ func (c cUp) doUpgradeVersion(ctx context.Context, in cUpInput) (out *doUpgradeV
 	}
 
 	var (
-		dir  = gfile.Pwd()
-		temp string
-		path = gfile.Join(dir, "go.mod")
+		temp      string
+		dirPath   = gfile.Pwd()
+		goModPath = gfile.Join(dirPath, "go.mod")
 	)
+	// It recursively upgrades the go.mod from sub folder to its parent folders.
 	for {
-		if gfile.Exists(path) {
+		if gfile.Exists(goModPath) {
 			var packages []Package
-			err = gfile.ReadLines(path, func(line string) error {
+			err = gfile.ReadLines(goModPath, func(line string) error {
 				line = gstr.Trim(line)
 				if gstr.HasPrefix(line, gfPackage) {
 					array := gstr.SplitAndTrim(line, " ")
@@ -131,23 +132,28 @@ func (c cUp) doUpgradeVersion(ctx context.Context, in cUpInput) (out *doUpgradeV
 			}
 			for _, pkg := range packages {
 				mlog.Printf(`upgrading "%s" from "%s" to "latest"`, pkg.Name, pkg.Version)
-				command := fmt.Sprintf(`go get -u %s@latest`, pkg.Name)
+				// go get -u
+				command := fmt.Sprintf(`cd %s && go get -u %s@latest`, dirPath, pkg.Name)
 				if err = gproc.ShellRun(ctx, command); err != nil {
 					return
 				}
+				// go mod tidy
+				if err = utils.GoModTidy(ctx, dirPath); err != nil {
+					return nil, err
+				}
 				out.Items = append(out.Items, doUpgradeVersionOutputItem{
-					DirPath: dir,
+					DirPath: dirPath,
 					Version: pkg.Version,
 				})
 			}
 			return
 		}
-		temp = gfile.Dir(dir)
-		if temp == "" || temp == dir {
+		temp = gfile.Dir(dirPath)
+		if temp == "" || temp == dirPath {
 			return
 		}
-		dir = temp
-		path = gfile.Join(dir, "go.mod")
+		dirPath = temp
+		goModPath = gfile.Join(dirPath, "go.mod")
 	}
 }
 
