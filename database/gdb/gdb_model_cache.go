@@ -64,8 +64,8 @@ func (m *Model) checkAndRemoveSelectCache(ctx context.Context) {
 			intlog.Errorf(ctx, `%+v`, err)
 		}
 	} else if m.cacheEnabled && m.cacheOption.Duration < 0 && len(m.cacheOption.Group) > 0 {
-		keyGroup, _ := m.db.GetCache().Get(ctx, m.cacheOption.Group)
-		if keyGroup != nil {
+		keyGroup, errCache := m.db.GetCache().Get(ctx, m.cacheOption.Group)
+		if errCache == nil {
 			keys := keyGroup.Strings()
 			//Delete all keys from the group
 			for _, key := range keys {
@@ -129,7 +129,7 @@ func (m *Model) saveSelectResultToCache(
 		}
 		if len(m.cacheOption.Group) > 0 {
 			keyGroup, errCache := m.db.GetCache().Get(ctx, m.cacheOption.Group)
-			if keyGroup != nil && errCache == nil {
+			if errCache == nil {
 				keys := keyGroup.Strings()
 				for _, key := range keys {
 					if _, err = m.db.GetCache().Remove(ctx, key); err != nil {
@@ -174,8 +174,8 @@ func (m *Model) saveSelectResultToCache(
 	}
 
 	if m.cacheEnabled && len(m.cacheOption.Group) > 0 {
-		keyGroup, errCache := m.db.GetCache().Get(ctx, m.cacheOption.Group)
-		if keyGroup != nil && errCache == nil {
+		keyGroup, errCache := cacheObj.Get(ctx, m.cacheOption.Group)
+		if errCache == nil {
 			keys := append(keyGroup.Strings(), cacheKey)
 			if errCache = cacheObj.Set(ctx, m.cacheOption.Group, keys, m.cacheOption.Duration); errCache != nil {
 				intlog.Errorf(ctx, `%+v`, errCache)
