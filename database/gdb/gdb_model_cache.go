@@ -27,6 +27,10 @@ type CacheOption struct {
 	// like changing the `duration` or clearing the cache with specified Name.
 	Name string
 
+	// Group is an optional unique name for the cache.
+	// Name or Group Choose one or the other, Name has a higher priority than Group
+	Group string
+
 	// Force caches the query result whatever the result is nil or not.
 	// It is used to avoid Cache Penetration.
 	Force bool
@@ -58,6 +62,20 @@ func (m *Model) checkAndRemoveSelectCache(ctx context.Context) {
 		var cacheKey = m.makeSelectCacheKey("")
 		if _, err := m.db.GetCache().Remove(ctx, cacheKey); err != nil {
 			intlog.Errorf(ctx, `%+v`, err)
+		}
+	} else if m.cacheEnabled && m.cacheOption.Duration < 0 && len(m.cacheOption.Group) > 0 {
+		keyGroup, _ := m.db.GetCache().Get(ctx, m.cacheOption.Group)
+		if keyGroup != nil {
+			keys := keyGroup.Strings()
+			//Delete all keys from the group
+			for _, key := range keys {
+				if _, err := m.db.GetCache().Remove(ctx, key); err != nil {
+					intlog.Errorf(ctx, `%+v`, err)
+				}
+			}
+			if _, err := m.db.GetCache().Remove(ctx, m.cacheOption.Group); err != nil {
+				intlog.Errorf(ctx, `%+v`, err)
+			}
 		}
 	}
 }
@@ -109,6 +127,20 @@ func (m *Model) saveSelectResultToCache(
 		if _, errCache := cacheObj.Remove(ctx, cacheKey); errCache != nil {
 			intlog.Errorf(ctx, `%+v`, errCache)
 		}
+		if len(m.cacheOption.Group) > 0 {
+			keyGroup, errCache := m.db.GetCache().Get(ctx, m.cacheOption.Group)
+			if keyGroup != nil && errCache == nil {
+				keys := keyGroup.Strings()
+				for _, key := range keys {
+					if _, err = m.db.GetCache().Remove(ctx, key); err != nil {
+						intlog.Errorf(ctx, `%+v`, err)
+					}
+				}
+				if _, err = m.db.GetCache().Remove(ctx, m.cacheOption.Group); err != nil {
+					intlog.Errorf(ctx, `%+v`, err)
+				}
+			}
+		}
 		return
 	}
 	// Special handler for Value/Count operations result.
@@ -139,6 +171,16 @@ func (m *Model) saveSelectResultToCache(
 	}
 	if errCache := cacheObj.Set(ctx, cacheKey, cacheItem, m.cacheOption.Duration); errCache != nil {
 		intlog.Errorf(ctx, `%+v`, errCache)
+	}
+
+	if m.cacheEnabled && len(m.cacheOption.Group) > 0 {
+		keyGroup, errCache := m.db.GetCache().Get(ctx, m.cacheOption.Group)
+		if keyGroup != nil && errCache == nil {
+			keys := append(keyGroup.Strings(), cacheKey)
+			if errCache = cacheObj.Set(ctx, m.cacheOption.Group, keys, m.cacheOption.Duration); errCache != nil {
+				intlog.Errorf(ctx, `%+v`, errCache)
+			}
+		}
 	}
 	return
 }
