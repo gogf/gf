@@ -173,7 +173,7 @@ func (m *Model) saveSelectResultToCache(
 		intlog.Errorf(ctx, `%+v`, errCache)
 	}
 
-	if m.cacheEnabled && len(m.cacheOption.Group) > 0 {
+	if m.cacheEnabled && len(m.cacheOption.Group) > 0 && result != nil{
 		keyGroup, errCache := m.db.GetCache().Get(ctx, m.cacheOption.Group)
 		if keyGroup != nil && errCache == nil {
 			keys := append(keyGroup.Strings(), cacheKey)
