@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"github.com/gogf/gf/v2/os/gproc"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -19,8 +20,9 @@ type cFix struct {
 }
 
 type cFixInput struct {
-	g.Meta `name:"fix"`
-	Path   string `name:"path" brief:"directory path, it uses current working directory in default"`
+	g.Meta  `name:"fix"`
+	Path    string `name:"path"    short:"p" brief:"directory path, it uses current working directory in default"`
+	Version string `name:"version" short:"v" brief:"custom specified version to fix, leave it empty to auto detect"`
 }
 
 type cFixOutput struct{}
@@ -31,38 +33,45 @@ type cFixItem struct {
 }
 
 func (c cFix) Index(ctx context.Context, in cFixInput) (out *cFixOutput, err error) {
-	mlog.Print(`start auto fixing...`)
-	defer mlog.Print(`done!`)
+
 	if in.Path == "" {
 		in.Path = gfile.Pwd()
 	}
+	if in.Version == "" {
+		in.Version, err = c.autoDetectVersion(in)
+		if err != nil {
+			mlog.Fatal(err)
+		}
+		if in.Version == "" {
+			mlog.Print(`no GoFrame usage found, exit fixing`)
+			return
+		}
+		mlog.Debugf(`current GoFrame version auto detect "%s"`, in.Version)
+	}
+
+	if !gproc.IsChild() {
+		mlog.Printf(`start auto fixing directory path "%s"...`, in.Path)
+		defer mlog.Print(`done!`)
+	}
+
 	err = c.doFix(in)
 	return
 }
 
 func (c cFix) doFix(in cFixInput) (err error) {
-	version, err := c.getVersion(in)
-	if err != nil {
-		mlog.Fatal(err)
-	}
-	if version == "" {
-		mlog.Print(`no GoFrame usage found, exit fixing`)
-		return
-	}
-	mlog.Debugf(`current GoFrame version found "%s"`, version)
 
 	var items = []cFixItem{
 		{Version: "v2.3", Func: c.doFixV23},
 	}
 	for _, item := range items {
-		if gstr.CompareVersionGo(version, item.Version) < 0 {
+		if gstr.CompareVersionGo(in.Version, item.Version) < 0 {
 			mlog.Debugf(
-				`current GoFrame version "%s" is lesser than "%s", nothing to do`,
-				version, item.Version,
+				`current GoFrame or contrib package version "%s" is lesser than "%s", nothing to do`,
+				in.Version, item.Version,
 			)
 			continue
 		}
-		if err = item.Func(version); err != nil {
+		if err = item.Func(in.Version); err != nil {
 			return
 		}
 	}
@@ -87,7 +96,7 @@ func (c cFix) doFixV23(version string) error {
 	return gfile.ReplaceDirFunc(replaceFunc, ".", "*.go", true)
 }
 
-func (c cFix) getVersion(in cFixInput) (string, error) {
+func (c cFix) autoDetectVersion(in cFixInput) (string, error) {
 	var (
 		err     error
 		path    = gfile.Join(in.Path, "go.mod")

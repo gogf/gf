@@ -1,12 +1,14 @@
 package utils
 
 import (
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/text/gstr"
-	"golang.org/x/tools/imports"
-
+	"context"
+	"fmt"
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gproc"
+	"github.com/gogf/gf/v2/text/gstr"
+	"golang.org/x/tools/imports"
 )
 
 // GoFmt formats the source file and adds or removes import statements as necessary.
@@ -34,6 +36,13 @@ func GoFmt(path string) {
 	if err != nil {
 		mlog.Printf(`error format "%s" go files: %v`, path, err)
 	}
+}
+
+// GoModTidy executes `go mod tidy` at specified directory `dirPath`.
+func GoModTidy(ctx context.Context, dirPath string) error {
+	command := fmt.Sprintf(`cd %s && go mod tidy`, dirPath)
+	err := gproc.ShellRun(ctx, command)
+	return err
 }
 
 // IsFileDoNotEdit checks and returns whether file contains `do not edit` key.
