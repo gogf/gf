@@ -67,6 +67,7 @@ func (m *Model) checkAndRemoveSelectCache(ctx context.Context) {
 		keyGroup, _ := m.db.GetCache().Get(ctx, m.cacheOption.Group)
 		if keyGroup != nil {
 			keys := keyGroup.Strings()
+			//Delete all keys from the group
 			for _, key := range keys {
 				if _, err := m.db.GetCache().Remove(ctx, key); err != nil {
 					intlog.Errorf(ctx, `%+v`, err)
