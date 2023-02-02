@@ -8,6 +8,7 @@ package goai
 
 import (
 	"reflect"
+	"strconv"
 
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -54,13 +55,32 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 	}
 	schemaRef.Value = schema
 	switch oaiType {
-	case
-		TypeInteger,
-		TypeNumber,
-		TypeString,
-		TypeBoolean:
-		// Nothing to do.
-
+	case TypeString:
+	// Nothing to do.
+	case TypeInteger:
+		if schemaRef.Value.Default != nil {
+			if temp, err := strconv.ParseInt(schemaRef.Value.Default.(string), 10, 64); err == nil {
+				schemaRef.Value.Default = temp
+			} else {
+				schemaRef.Value.Default = 0
+			}
+		}
+	case TypeNumber:
+		if schemaRef.Value.Default != nil {
+			if temp, err := strconv.ParseFloat(schemaRef.Value.Default.(string), 64); err == nil {
+				schemaRef.Value.Default = temp
+			} else {
+				schemaRef.Value.Default = float64(0)
+			}
+		}
+	case TypeBoolean:
+		if schemaRef.Value.Default != nil {
+			if temp, err := strconv.ParseBool(schemaRef.Value.Default.(string)); err == nil {
+				schemaRef.Value.Default = temp
+			} else {
+				schemaRef.Value.Default = false
+			}
+		}
 	case
 		TypeArray:
 		subSchemaRef, err := oai.newSchemaRefWithGolangType(golangType.Elem(), nil)
