@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"runtime"
+	"strings"
 
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/frame/g"
@@ -154,7 +155,7 @@ func (app *cRunApp) Run(ctx context.Context) {
 	if runtime.GOOS == "windows" {
 		// Special handling for windows platform.
 		// DO NOT USE "cmd /c" command.
-		process = gproc.NewProcess(runCommand, nil)
+		process = gproc.NewProcess(outputPath, strings.Fields(app.Args))
 	} else {
 		process = gproc.NewProcessCmd(runCommand, nil)
 	}
