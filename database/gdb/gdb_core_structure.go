@@ -253,7 +253,7 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 
 // ConvertValueForLocal converts value to local Golang type of value according field type name from database.
 // The parameter `fieldType` is in lower case, like:
-// `float`, `unsigned double`, `decimal`, `char`, `varchar`, etc.
+// `float(5,2)`, `unsigned double(5,2)`, `decimal(10,2)`, `char(45)`, `varchar(100)`, etc.
 func (c *Core) ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) {
 	// If there's no type retrieved, it returns the `fieldValue` directly
 	// to use its original data type, as `fieldValue` is type of interface{}.
