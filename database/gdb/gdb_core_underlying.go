@@ -410,20 +410,21 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 }
 
 func (c *Core) columnValueToLocalValue(ctx context.Context, value interface{}, columnType *sql.ColumnType) (interface{}, error) {
-	switch columnType.ScanType().Kind() {
-	case
+	var scanType = columnType.ScanType()
+	if scanType != nil {
 		// Common basic builtin types.
-		reflect.Bool,
-		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
-		reflect.Float32, reflect.Float64:
-		return gconv.Convert(
-			gconv.String(value),
-			columnType.ScanType().String(),
-		), nil
-
-	default:
-		// Other complex types, especially custom types.
-		return c.db.ConvertValueForLocal(ctx, columnType.DatabaseTypeName(), value)
+		switch scanType.Kind() {
+		case
+			reflect.Bool,
+			reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+			reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+			reflect.Float32, reflect.Float64:
+			return gconv.Convert(
+				gconv.String(value),
+				columnType.ScanType().String(),
+			), nil
+		}
 	}
+	// Other complex types, especially custom types.
+	return c.db.ConvertValueForLocal(ctx, columnType.DatabaseTypeName(), value)
 }
