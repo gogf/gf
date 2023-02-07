@@ -10,9 +10,10 @@ package gdb
 import (
 	"context"
 	"database/sql"
-
+	"github.com/gogf/gf/v2/util/gconv"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
+	"reflect"
 
 	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/container/gvar"
@@ -364,26 +365,18 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 		return nil, nil
 	}
 	// Column names and types.
-	columns, err := rows.ColumnTypes()
+	columnTypes, err := rows.ColumnTypes()
 	if err != nil {
 		return nil, err
 	}
 
-	var (
-		columnTypes = make([]string, len(columns))
-		columnNames = make([]string, len(columns))
-	)
-	for k, v := range columns {
-		columnTypes[k] = v.DatabaseTypeName()
-		columnNames[k] = v.Name()
-	}
-	if len(columnNames) > 0 {
+	if len(columnTypes) > 0 {
 		if internalData := c.GetInternalCtxDataFromCtx(ctx); internalData != nil {
-			internalData.FirstResultColumn = columnNames[0]
+			internalData.FirstResultColumn = columnTypes[0].Name()
 		}
 	}
 	var (
-		values   = make([]interface{}, len(columnNames))
+		values   = make([]interface{}, len(columnTypes))
 		result   = make(Result, 0)
 		scanArgs = make([]interface{}, len(values))
 	)
@@ -399,13 +392,13 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 			if value == nil {
 				// DO NOT use `gvar.New(nil)` here as it creates an initialized object
 				// which will cause struct converting issue.
-				record[columnNames[i]] = nil
+				record[columnTypes[i].Name()] = nil
 			} else {
 				var convertedValue interface{}
-				if convertedValue, err = c.db.ConvertValueForLocal(ctx, columnTypes[i], value); err != nil {
+				if convertedValue, err = c.columnValueToLocalValue(ctx, value, columnTypes[i]); err != nil {
 					return nil, err
 				}
-				record[columnNames[i]] = gvar.New(convertedValue)
+				record[columnTypes[i].Name()] = gvar.New(convertedValue)
 			}
 		}
 		result = append(result, record)
@@ -414,4 +407,23 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 		}
 	}
 	return result, nil
+}
+
+func (c *Core) columnValueToLocalValue(ctx context.Context, value interface{}, columnType *sql.ColumnType) (interface{}, error) {
+	switch columnType.ScanType().Kind() {
+	case
+		// Common basic builtin types.
+		reflect.Bool,
+		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Float32, reflect.Float64:
+		return gconv.Convert(
+			gconv.String(value),
+			columnType.ScanType().String(),
+		), nil
+
+	default:
+		// Other complex types, especially custom types.
+		return c.db.ConvertValueForLocal(ctx, columnType.DatabaseTypeName(), value)
+	}
 }
