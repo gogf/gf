@@ -84,14 +84,14 @@ func (f *Field) Kind() reflect.Kind {
 // OriginalKind retrieves and returns the original reflect.Kind for Value of Field `f`.
 func (f *Field) OriginalKind() reflect.Kind {
 	var (
-		kind  = f.Value.Kind()
-		value = f.Value
+		reflectType = f.Value.Type()
+		reflectKind = reflectType.Kind()
 	)
-	for kind == reflect.Ptr {
-		value = value.Elem()
-		kind = value.Kind()
+	for reflectKind == reflect.Ptr {
+		reflectType = reflectType.Elem()
+		reflectKind = reflectType.Kind()
 	}
-	return kind
+	return reflectKind
 }
 
 // Fields retrieves and returns the fields of `pointer` as slice.

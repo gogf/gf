@@ -421,3 +421,26 @@ func Test_Issue1921(t *testing.T) {
 		t.Assert(err, "The Size value `10000` must be equal or lesser than 100")
 	})
 }
+
+// https://github.com/gogf/gf/issues/2011
+func Test_Issue2011(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Student struct {
+			Name string `v:"required|min-length:6"`
+			Age  int
+		}
+		type Teacher struct {
+			Student *Student
+		}
+		var (
+			teacher = Teacher{}
+			data    = g.Map{
+				"student": g.Map{
+					"name": "john",
+				},
+			}
+		)
+		err := g.Validator().Assoc(data).Data(teacher).Run(ctx)
+		t.Assert(err, "The Name value `john` length must be equal or greater than 6")
+	})
+}
