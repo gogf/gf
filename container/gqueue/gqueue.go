@@ -85,7 +85,9 @@ func (q *Queue) Pop() interface{} {
 // Notice: It would notify all goroutines return immediately,
 // which are being blocked reading using Pop method.
 func (q *Queue) Close() {
-	q.closed.Set(true)
+	if !q.closed.Cas(false, true) {
+		return
+	}
 	if q.events != nil {
 		close(q.events)
 	}
