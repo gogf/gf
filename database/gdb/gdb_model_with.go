@@ -34,15 +34,15 @@ import (
 //
 // We can enable model association operations on attribute `UserDetail` and `UserScores` by:
 //
-//	db.With(User{}.UserDetail).With(User{}.UserDetail).Scan(xxx)
+//	db.With(User{}.UserDetail).With(User{}.UserScores).Scan(xxx)
 //
 // Or:
 //
-//	db.With(UserDetail{}).With(UserDetail{}).Scan(xxx)
+//	db.With(UserDetail{}).With(UserScores{}).Scan(xxx)
 //
 // Or:
 //
-//	db.With(UserDetail{}, UserDetail{}).Scan(xxx)
+//	db.With(UserDetail{}, UserScores{}).Scan(xxx)
 func (m *Model) With(objects ...interface{}) *Model {
 	model := m.getModel()
 	for _, object := range objects {
