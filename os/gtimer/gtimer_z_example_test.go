@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/os/gtimer"
 )
 
-func Example_add() {
+func ExampleAdd() {
 	var (
 		ctx      = context.Background()
 		now      = time.Now()

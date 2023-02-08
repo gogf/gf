@@ -12,7 +12,7 @@ import (
 	"github.com/gogf/gf/v2/encoding/gjson"
 )
 
-func Example_conversionNormalFormats() {
+func ExampleConversionNormalFormats() {
 	data :=
 		`{
         "users" : {

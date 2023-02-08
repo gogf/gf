@@ -155,28 +155,28 @@ func (a *StrArray) SortFunc(less func(v1, v2 string) bool) *StrArray {
 	return a
 }
 
-// InsertBefore inserts the `value` to the front of `index`.
-func (a *StrArray) InsertBefore(index int, value string) error {
+// InsertBefore inserts the `values` to the front of `index`.
+func (a *StrArray) InsertBefore(index int, values ...string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if index < 0 || index >= len(a.array) {
 		return gerror.NewCodef(gcode.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
 	}
 	rear := append([]string{}, a.array[index:]...)
-	a.array = append(a.array[0:index], value)
+	a.array = append(a.array[0:index], values...)
 	a.array = append(a.array, rear...)
 	return nil
 }
 
-// InsertAfter inserts the `value` to the back of `index`.
-func (a *StrArray) InsertAfter(index int, value string) error {
+// InsertAfter inserts the `values` to the back of `index`.
+func (a *StrArray) InsertAfter(index int, values ...string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if index < 0 || index >= len(a.array) {
 		return gerror.NewCodef(gcode.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
 	}
 	rear := append([]string{}, a.array[index+1:]...)
-	a.array = append(a.array[0:index+1], value)
+	a.array = append(a.array[0:index+1], values...)
 	a.array = append(a.array, rear...)
 	return nil
 }
