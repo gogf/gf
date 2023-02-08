@@ -497,7 +497,9 @@ func (m *Model) doGetAllBySql(ctx context.Context, queryType queryType, sql stri
 	return
 }
 
-func (m *Model) getFormattedSqlAndArgs(ctx context.Context, queryType queryType, limit1 bool) (sqlWithHolder string, holderArgs []interface{}) {
+func (m *Model) getFormattedSqlAndArgs(
+	ctx context.Context, queryType queryType, limit1 bool,
+) (sqlWithHolder string, holderArgs []interface{}) {
 	switch queryType {
 	case queryTypeCount:
 		queryFields := "COUNT(1)"
@@ -537,6 +539,14 @@ func (m *Model) getFormattedSqlAndArgs(ctx context.Context, queryType queryType,
 		)
 		return sqlWithHolder, conditionArgs
 	}
+}
+
+func (m *Model) getHolderAndArgsAsSubModel(ctx context.Context) (holder string, args []interface{}) {
+	holder, args = m.getFormattedSqlAndArgs(
+		ctx, queryTypeNormal, false,
+	)
+	args = m.mergeArguments(args)
+	return
 }
 
 func (m *Model) getAutoPrefix() string {
