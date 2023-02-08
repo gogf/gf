@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/v2/container/gtype"
 )
 
+// New creates and returns a Timer.
 func New(options ...TimerOptions) *Timer {
 	t := &Timer{
 		queue:  newPriorityQueue(),
@@ -98,7 +99,7 @@ func (t *Timer) AddTimes(ctx context.Context, interval time.Duration, times int,
 	})
 }
 
-// DelayAdd adds a timing job after delay of `interval` duration.
+// DelayAdd adds a timing job after delay of `delay` duration.
 // Also see Add.
 func (t *Timer) DelayAdd(ctx context.Context, delay time.Duration, interval time.Duration, job JobFunc) {
 	t.AddOnce(ctx, delay, func(ctx context.Context) {
@@ -106,7 +107,7 @@ func (t *Timer) DelayAdd(ctx context.Context, delay time.Duration, interval time
 	})
 }
 
-// DelayAddEntry adds a timing job after delay of `interval` duration.
+// DelayAddEntry adds a timing job after delay of `delay` duration.
 // Also see AddEntry.
 func (t *Timer) DelayAddEntry(ctx context.Context, delay time.Duration, interval time.Duration, job JobFunc, isSingleton bool, times int, status int) {
 	t.AddOnce(ctx, delay, func(ctx context.Context) {
@@ -114,7 +115,7 @@ func (t *Timer) DelayAddEntry(ctx context.Context, delay time.Duration, interval
 	})
 }
 
-// DelayAddSingleton adds a timing job after delay of `interval` duration.
+// DelayAddSingleton adds a timing job after delay of `delay` duration.
 // Also see AddSingleton.
 func (t *Timer) DelayAddSingleton(ctx context.Context, delay time.Duration, interval time.Duration, job JobFunc) {
 	t.AddOnce(ctx, delay, func(ctx context.Context) {
@@ -122,7 +123,7 @@ func (t *Timer) DelayAddSingleton(ctx context.Context, delay time.Duration, inte
 	})
 }
 
-// DelayAddOnce adds a timing job after delay of `interval` duration.
+// DelayAddOnce adds a timing job after delay of `delay` duration.
 // Also see AddOnce.
 func (t *Timer) DelayAddOnce(ctx context.Context, delay time.Duration, interval time.Duration, job JobFunc) {
 	t.AddOnce(ctx, delay, func(ctx context.Context) {
@@ -130,7 +131,7 @@ func (t *Timer) DelayAddOnce(ctx context.Context, delay time.Duration, interval 
 	})
 }
 
-// DelayAddTimes adds a timing job after delay of `interval` duration.
+// DelayAddTimes adds a timing job after delay of `delay` duration.
 // Also see AddTimes.
 func (t *Timer) DelayAddTimes(ctx context.Context, delay time.Duration, interval time.Duration, times int, job JobFunc) {
 	t.AddOnce(ctx, delay, func(ctx context.Context) {
