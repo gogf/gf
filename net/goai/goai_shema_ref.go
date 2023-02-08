@@ -8,10 +8,10 @@ package goai
 
 import (
 	"reflect"
-	"strconv"
 
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 type SchemaRefs []SchemaRef
@@ -59,28 +59,19 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 	// Nothing to do.
 	case TypeInteger:
 		if schemaRef.Value.Default != nil {
-			if temp, err := strconv.ParseInt(schemaRef.Value.Default.(string), 10, 64); err == nil {
-				schemaRef.Value.Default = temp
-			} else {
-				schemaRef.Value.Default = 0
-			}
+			schemaRef.Value.Default = gconv.Int64(schemaRef.Value.Default)
 		}
+		// keep the default value as nil.
 	case TypeNumber:
 		if schemaRef.Value.Default != nil {
-			if temp, err := strconv.ParseFloat(schemaRef.Value.Default.(string), 64); err == nil {
-				schemaRef.Value.Default = temp
-			} else {
-				schemaRef.Value.Default = float64(0)
-			}
+			schemaRef.Value.Default = gconv.Float64(schemaRef.Value.Default)
 		}
+		// keep the default value as nil.
 	case TypeBoolean:
 		if schemaRef.Value.Default != nil {
-			if temp, err := strconv.ParseBool(schemaRef.Value.Default.(string)); err == nil {
-				schemaRef.Value.Default = temp
-			} else {
-				schemaRef.Value.Default = false
-			}
+			schemaRef.Value.Default = gconv.Bool(schemaRef.Value.Default)
 		}
+		// keep the default value as nil.
 	case
 		TypeArray:
 		subSchemaRef, err := oai.newSchemaRefWithGolangType(golangType.Elem(), nil)
