@@ -497,3 +497,28 @@ func Test_Issue2339(t *testing.T) {
 		t.Assert(all3[0]["id"], 8)
 	})
 }
+
+// https://github.com/gogf/gf/issues/2356
+func Test_Issue2356(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := "demo_" + guid.S()
+		if _, err := db.Exec(ctx, fmt.Sprintf(`
+	    CREATE TABLE %s (
+	        id BIGINT(20) UNSIGNED NOT NULL DEFAULT '0',
+	        PRIMARY KEY (id)
+	    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	    `, table,
+		)); err != nil {
+			t.AssertNil(err)
+		}
+		defer dropTable(table)
+
+		if _, err := db.Exec(ctx, fmt.Sprintf(`INSERT INTO %s (id) VALUES (18446744073709551615);`, table)); err != nil {
+			t.AssertNil(err)
+		}
+
+		one, err := db.Model(table).One()
+		t.AssertNil(err)
+		t.AssertEQ(one["id"].Val(), uint64(18446744073709551615))
+	})
+}
