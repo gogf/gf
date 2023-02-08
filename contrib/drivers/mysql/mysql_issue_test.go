@@ -464,7 +464,6 @@ func Test_Issue2231(t *testing.T) {
 	link := `mysql:root:12345678@tcp(127.0.0.1:3306)/a正bc式?loc=Local&parseTime=true`
 
 	gtest.C(t, func(t *gtest.T) {
-
 		match, err := gregex.MatchString(linkPattern, link)
 		t.AssertNil(err)
 		t.Assert(match[1], "mysql")
@@ -474,5 +473,30 @@ func Test_Issue2231(t *testing.T) {
 		t.Assert(match[5], "127.0.0.1:3306")
 		t.Assert(match[6], "a正bc式")
 		t.Assert(match[7], "loc=Local&parseTime=true")
+	})
+}
+
+// https://github.com/gogf/gf/issues/2356
+func Test_Issue2356(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := "demo_" + guid.S()
+		if _, err := db.Exec(ctx, fmt.Sprintf(`
+	    CREATE TABLE %s (
+	        id BIGINT(20) UNSIGNED NOT NULL DEFAULT '0',
+	        PRIMARY KEY (id)
+	    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	    `, table,
+		)); err != nil {
+			t.AssertNil(err)
+		}
+		defer dropTable(table)
+
+		if _, err := db.Exec(ctx, fmt.Sprintf(`INSERT INTO %s (id) VALUES (18446744073709551615);`, table)); err != nil {
+			t.AssertNil(err)
+		}
+
+		one, err := db.Model(table).One()
+		t.AssertNil(err)
+		t.AssertEQ(one["id"].Val(), uint64(18446744073709551615))
 	})
 }
