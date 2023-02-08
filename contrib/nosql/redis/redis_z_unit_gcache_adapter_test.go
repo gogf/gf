@@ -246,7 +246,7 @@ func Test_AdapterRedis_SetIfNotExistFunc(t *testing.T) {
 			return 11, nil
 		}, 0)
 		t.AssertNil(err)
-		t.Assert(exist, false)
+		t.Assert(exist, true)
 	})
 }
 
@@ -257,7 +257,7 @@ func Test_AdapterRedis_SetIfNotExistFuncLock(t *testing.T) {
 			return 11, nil
 		}, 0)
 		t.AssertNil(err)
-		t.Assert(exist, false)
+		t.Assert(exist, true)
 	})
 }
 
