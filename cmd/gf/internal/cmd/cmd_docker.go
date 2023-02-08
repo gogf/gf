@@ -33,6 +33,7 @@ gf docker main.go
 gf docker main.go -t hub.docker.com/john/image:tag
 gf docker main.go -t hub.docker.com/john/image:tag
 gf docker main.go -p -t hub.docker.com/john/image:tag
+gf docker main.go -p -tp ["hub.docker.com/john","hub.docker.com/smith"] -tn image:tag
 `
 	cDockerDc = `
 The "docker" command builds the GF project to a docker images.
@@ -45,6 +46,7 @@ You should have docker installed, and there must be a Dockerfile in the root of 
 	cDockerFileBrief        = `file path of the Dockerfile. it's "manifest/docker/Dockerfile" in default`
 	cDockerShellBrief       = `path of the shell file which is executed before docker build`
 	cDockerPushBrief        = `auto push the docker image to docker registry if "-t" option passed`
+	cDockerTagBrief         = `full tag for this docker, pattern like "xxx.xxx.xxx/image:tag"`
 	cDockerTagNameBrief     = `tag name for this docker, pattern like "image:tag". this option is required with TagPrefixes`
 	cDockerTagPrefixesBrief = `tag prefixes for this docker, which are used for docker push. this option is required with TagName`
 	cDockerExtraBrief       = `extra build options passed to "docker image"`
@@ -61,6 +63,7 @@ func init() {
 		`cDockerShellBrief`:       cDockerShellBrief,
 		`cDockerBuildBrief`:       cDockerBuildBrief,
 		`cDockerPushBrief`:        cDockerPushBrief,
+		`cDockerTagBrief`:         cDockerTagBrief,
 		`cDockerTagNameBrief`:     cDockerTagNameBrief,
 		`cDockerTagPrefixesBrief`: cDockerTagPrefixesBrief,
 		`cDockerExtraBrief`:       cDockerExtraBrief,
@@ -73,6 +76,7 @@ type cDockerInput struct {
 	File        string   `name:"file"        short:"f"  brief:"{cDockerFileBrief}"  d:"manifest/docker/Dockerfile"`
 	Shell       string   `name:"shell"       short:"s"  brief:"{cDockerShellBrief}" d:"manifest/docker/docker.sh"`
 	Build       string   `name:"build"       short:"b"  brief:"{cDockerBuildBrief}" d:"-a amd64 -s linux"`
+	Tag         string   `name:"tag"         short:"t"  brief:"{cDockerTagBrief}"`
 	TagName     string   `name:"tagName"     short:"tn" brief:"{cDockerTagNameBrief}"     v:"required-with:TagPrefixes"`
 	TagPrefixes []string `name:"tagPrefixes" short:"tp" brief:"{cDockerTagPrefixesBrief}" v:"required-with:TagName"`
 	Push        bool     `name:"push"        short:"p"  brief:"{cDockerPushBrief}" orphan:"true"`
@@ -114,7 +118,7 @@ func (c cDocker) Index(ctx context.Context, in cDockerInput) (out *cDockerOutput
 		}
 	}
 	if len(dockerTags) == 0 {
-		dockerTags = []string{""}
+		dockerTags = []string{in.Tag}
 	}
 	for i, dockerTag := range dockerTags {
 		if i > 0 {
