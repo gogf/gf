@@ -366,15 +366,29 @@ func bindVarToStructAttr(structReflectValue reflect.Value, attrName string, valu
 	if empty.IsNil(value) {
 		structFieldValue.Set(reflect.Zero(structFieldValue.Type()))
 	} else {
+		// Special handling for certain types:
+		// - Overwrite the default type converting logic of stdlib for time.Time/*time.Time.
+		var structFieldTypeName = structFieldValue.Type().String()
+		switch structFieldTypeName {
+		case "time.Time", "*time.Time":
+			doConvertWithReflectValueSet(structFieldValue, doConvertInput{
+				FromValue:  value,
+				ToTypeName: structFieldTypeName,
+				ReferValue: structFieldValue,
+			})
+			return
+		}
+
 		// Common interface check.
 		var ok bool
 		if err, ok = bindVarToReflectValueWithInterfaceCheck(structFieldValue, value); ok {
 			return err
 		}
+
 		// Default converting.
 		doConvertWithReflectValueSet(structFieldValue, doConvertInput{
 			FromValue:  value,
-			ToTypeName: structFieldValue.Type().String(),
+			ToTypeName: structFieldTypeName,
 			ReferValue: structFieldValue,
 		})
 	}
