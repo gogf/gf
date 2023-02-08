@@ -72,7 +72,10 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	// Demo of timezone setting:
 	// &loc=Asia/Shanghai
 	if config.Timezone != "" {
-		source = fmt.Sprintf("%s&loc%s", source, url.QueryEscape(config.Timezone))
+		if strings.Contains(config.Timezone, "/") {
+			config.Timezone = url.QueryEscape(config.Timezone)
+		}
+		source = fmt.Sprintf("%s&loc%s", source, config.Timezone)
 	}
 	if config.Extra != "" {
 		source = fmt.Sprintf("%s&%s", source, config.Extra)
