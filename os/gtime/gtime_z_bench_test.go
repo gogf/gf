@@ -78,9 +78,3 @@ func Benchmark_Datetime(b *testing.B) {
 		gtime.Datetime()
 	}
 }
-
-func Benchmark_SetTimeZone(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		gtime.SetTimeZone("Asia/Shanghai")
-	}
-}

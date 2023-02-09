@@ -15,11 +15,13 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gmeta"
 	"github.com/gogf/gf/v2/util/guid"
 )
 
+// https://github.com/gogf/gf/issues/1934
 func Test_Issue1934(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
@@ -454,5 +456,69 @@ func Test_Issue2105(t *testing.T) {
 		t.Assert(len(list), 2)
 		t.Assert(len(list[0].Json), 0)
 		t.Assert(len(list[1].Json), 3)
+	})
+}
+
+// https://github.com/gogf/gf/issues/2231
+func Test_Issue2231(t *testing.T) {
+	var (
+		pattern = `(\w+):([\w\-]*):(.*?)@(\w+?)\((.+?)\)/{0,1}([^\?]*)\?{0,1}(.*)`
+		link    = `mysql:root:12345678@tcp(127.0.0.1:3306)/a正bc式?loc=Local&parseTime=true`
+	)
+	gtest.C(t, func(t *gtest.T) {
+		match, err := gregex.MatchString(pattern, link)
+		t.AssertNil(err)
+		t.Assert(match[1], "mysql")
+		t.Assert(match[2], "root")
+		t.Assert(match[3], "12345678")
+		t.Assert(match[4], "tcp")
+		t.Assert(match[5], "127.0.0.1:3306")
+		t.Assert(match[6], "a正bc式")
+		t.Assert(match[7], "loc=Local&parseTime=true")
+	})
+}
+
+// https://github.com/gogf/gf/issues/2339
+func Test_Issue2339(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		model1 := db.Model(table, "u1").Where("id between ? and ?", 1, 9)
+		model2 := db.Model("? as u2", model1)
+		model3 := db.Model("? as u3", model2)
+		all2, err := model2.WhereGT("id", 6).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(all2), 3)
+		t.Assert(all2[0]["id"], 7)
+
+		all3, err := model3.WhereGT("id", 7).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(all3), 2)
+		t.Assert(all3[0]["id"], 8)
+	})
+}
+
+// https://github.com/gogf/gf/issues/2356
+func Test_Issue2356(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := "demo_" + guid.S()
+		if _, err := db.Exec(ctx, fmt.Sprintf(`
+	    CREATE TABLE %s (
+	        id BIGINT(20) UNSIGNED NOT NULL DEFAULT '0',
+	        PRIMARY KEY (id)
+	    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	    `, table,
+		)); err != nil {
+			t.AssertNil(err)
+		}
+		defer dropTable(table)
+
+		if _, err := db.Exec(ctx, fmt.Sprintf(`INSERT INTO %s (id) VALUES (18446744073709551615);`, table)); err != nil {
+			t.AssertNil(err)
+		}
+
+		one, err := db.Model(table).One()
+		t.AssertNil(err)
+		t.AssertEQ(one["id"].Val(), uint64(18446744073709551615))
 	})
 }

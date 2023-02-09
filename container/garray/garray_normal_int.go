@@ -51,10 +51,10 @@ func NewIntArrayRange(start, end, step int, safe ...bool) *IntArray {
 	if step == 0 {
 		panic(fmt.Sprintf(`invalid step value: %d`, step))
 	}
-	slice := make([]int, (end-start+1)/step)
+	slice := make([]int, 0)
 	index := 0
 	for i := start; i <= end; i += step {
-		slice[index] = i
+		slice = append(slice, i)
 		index++
 	}
 	return NewIntArrayFrom(slice, safe...)
@@ -168,28 +168,28 @@ func (a *IntArray) SortFunc(less func(v1, v2 int) bool) *IntArray {
 	return a
 }
 
-// InsertBefore inserts the `value` to the front of `index`.
-func (a *IntArray) InsertBefore(index int, value int) error {
+// InsertBefore inserts the `values` to the front of `index`.
+func (a *IntArray) InsertBefore(index int, values ...int) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if index < 0 || index >= len(a.array) {
 		return gerror.NewCodef(gcode.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
 	}
 	rear := append([]int{}, a.array[index:]...)
-	a.array = append(a.array[0:index], value)
+	a.array = append(a.array[0:index], values...)
 	a.array = append(a.array, rear...)
 	return nil
 }
 
 // InsertAfter inserts the `value` to the back of `index`.
-func (a *IntArray) InsertAfter(index int, value int) error {
+func (a *IntArray) InsertAfter(index int, values ...int) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if index < 0 || index >= len(a.array) {
 		return gerror.NewCodef(gcode.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
 	}
 	rear := append([]int{}, a.array[index+1:]...)
-	a.array = append(a.array[0:index+1], value)
+	a.array = append(a.array[0:index+1], values...)
 	a.array = append(a.array, rear...)
 	return nil
 }

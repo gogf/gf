@@ -145,9 +145,29 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 
 	// If `params` and `pointer` are the same type, the do directly assignment.
 	// For performance enhancement purpose.
-	if pointerElemReflectValue.IsValid() && pointerElemReflectValue.Type() == paramsReflectValue.Type() {
-		pointerElemReflectValue.Set(paramsReflectValue)
-		return nil
+	if pointerElemReflectValue.IsValid() {
+		switch {
+		// Eg:
+		// UploadFile  => UploadFile
+		// *UploadFile => *UploadFile
+		case pointerElemReflectValue.Type() == paramsReflectValue.Type():
+			pointerElemReflectValue.Set(paramsReflectValue)
+			return nil
+
+		// Eg:
+		// UploadFile  => *UploadFile
+		case pointerElemReflectValue.Kind() == reflect.Ptr && pointerElemReflectValue.Elem().IsValid() &&
+			pointerElemReflectValue.Elem().Type() == paramsReflectValue.Type():
+			pointerElemReflectValue.Elem().Set(paramsReflectValue)
+			return nil
+
+		// Eg:
+		// *UploadFile  => UploadFile
+		case paramsReflectValue.Kind() == reflect.Ptr && paramsReflectValue.Elem().IsValid() &&
+			pointerElemReflectValue.Type() == paramsReflectValue.Elem().Type():
+			pointerElemReflectValue.Set(paramsReflectValue.Elem())
+			return nil
+		}
 	}
 
 	// Normal unmarshalling interfaces checks.
@@ -346,15 +366,29 @@ func bindVarToStructAttr(structReflectValue reflect.Value, attrName string, valu
 	if empty.IsNil(value) {
 		structFieldValue.Set(reflect.Zero(structFieldValue.Type()))
 	} else {
+		// Special handling for certain types:
+		// - Overwrite the default type converting logic of stdlib for time.Time/*time.Time.
+		var structFieldTypeName = structFieldValue.Type().String()
+		switch structFieldTypeName {
+		case "time.Time", "*time.Time":
+			doConvertWithReflectValueSet(structFieldValue, doConvertInput{
+				FromValue:  value,
+				ToTypeName: structFieldTypeName,
+				ReferValue: structFieldValue,
+			})
+			return
+		}
+
 		// Common interface check.
 		var ok bool
 		if err, ok = bindVarToReflectValueWithInterfaceCheck(structFieldValue, value); ok {
 			return err
 		}
+
 		// Default converting.
 		doConvertWithReflectValueSet(structFieldValue, doConvertInput{
 			FromValue:  value,
-			ToTypeName: structFieldValue.Type().String(),
+			ToTypeName: structFieldTypeName,
 			ReferValue: structFieldValue,
 		})
 	}
@@ -362,7 +396,7 @@ func bindVarToStructAttr(structReflectValue reflect.Value, attrName string, valu
 }
 
 // bindVarToReflectValueWithInterfaceCheck does bind using common interfaces checks.
-func bindVarToReflectValueWithInterfaceCheck(reflectValue reflect.Value, value interface{}) (err error, ok bool) {
+func bindVarToReflectValueWithInterfaceCheck(reflectValue reflect.Value, value interface{}) (error, bool) {
 	var pointer interface{}
 	if reflectValue.Kind() != reflect.Ptr && reflectValue.CanAddr() {
 		reflectValueAddr := reflectValue.Addr()
