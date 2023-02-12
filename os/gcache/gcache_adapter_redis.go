@@ -121,17 +121,17 @@ func (c *AdapterRedis) SetIfNotExist(ctx context.Context, key interface{}, value
 	}
 	ok, err = c.redis.SetNX(ctx, redisKey, value)
 	if err != nil {
-		return false, err
+		return ok, err
 	}
 	if ok && duration > 0 {
 		// Set the expiration.
 		_, err = c.redis.Expire(ctx, redisKey, int64(duration.Seconds()))
 		if err != nil {
-			return false, err
+			return ok, err
 		}
-		return true, err
+		return ok, err
 	}
-	return false, err
+	return ok, err
 }
 
 // SetIfNotExistFunc sets `key` with result of function `f` and returns true

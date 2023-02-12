@@ -173,28 +173,28 @@ func (a *Array) SortFunc(less func(v1, v2 interface{}) bool) *Array {
 	return a
 }
 
-// InsertBefore inserts the `value` to the front of `index`.
-func (a *Array) InsertBefore(index int, value interface{}) error {
+// InsertBefore inserts the `values` to the front of `index`.
+func (a *Array) InsertBefore(index int, values ...interface{}) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if index < 0 || index >= len(a.array) {
 		return gerror.NewCodef(gcode.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
 	}
 	rear := append([]interface{}{}, a.array[index:]...)
-	a.array = append(a.array[0:index], value)
+	a.array = append(a.array[0:index], values...)
 	a.array = append(a.array, rear...)
 	return nil
 }
 
-// InsertAfter inserts the `value` to the back of `index`.
-func (a *Array) InsertAfter(index int, value interface{}) error {
+// InsertAfter inserts the `values` to the back of `index`.
+func (a *Array) InsertAfter(index int, values ...interface{}) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if index < 0 || index >= len(a.array) {
 		return gerror.NewCodef(gcode.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
 	}
 	rear := append([]interface{}{}, a.array[index+1:]...)
-	a.array = append(a.array[0:index+1], value)
+	a.array = append(a.array[0:index+1], values...)
 	a.array = append(a.array, rear...)
 	return nil
 }
