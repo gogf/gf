@@ -48,7 +48,12 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		reflectInfo                                   = reflection.OriginTypeAndKind(updateData)
 		fieldNameUpdate                               = m.getSoftFieldNameUpdated()
 		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(ctx, false, false)
+		conditionStr                                  = conditionWhere + conditionExtra
 	)
+	if m.unscoped {
+		fieldNameUpdate = ""
+	}
+
 	switch reflectInfo.OriginKind {
 	case reflect.Map, reflect.Struct:
 		var dataMap map[string]interface{}
@@ -57,7 +62,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 			return nil, err
 		}
 		// Automatically update the record updating time.
-		if !m.unscoped && fieldNameUpdate != "" {
+		if fieldNameUpdate != "" {
 			dataMap[fieldNameUpdate] = gtime.Now().String()
 		}
 		updateData = dataMap
@@ -65,7 +70,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	default:
 		updates := gconv.String(m.data)
 		// Automatically update the record updating time.
-		if !m.unscoped && fieldNameUpdate != "" {
+		if fieldNameUpdate != "" {
 			if fieldNameUpdate != "" && !gstr.Contains(updates, fieldNameUpdate) {
 				updates += fmt.Sprintf(`,%s='%s'`, fieldNameUpdate, gtime.Now().String())
 			}
@@ -76,9 +81,12 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	if err != nil {
 		return nil, err
 	}
-	conditionStr := conditionWhere + conditionExtra
-	if !gstr.ContainsI(conditionStr, " WHERE ") {
-		return nil, gerror.NewCode(gcode.CodeMissingParameter, "there should be WHERE condition statement for UPDATE operation")
+
+	if !gstr.ContainsI(conditionStr, " WHERE ") || (fieldNameUpdate != "" && !gstr.ContainsI(conditionStr, " AND ")) {
+		return nil, gerror.NewCode(
+			gcode.CodeMissingParameter,
+			"there should be WHERE condition statement for UPDATE operation",
+		)
 	}
 
 	in := &HookUpdateInput{
