@@ -38,6 +38,27 @@ func Test_New(t *testing.T) {
 	})
 }
 
+func Test_New_Path_With_Colon(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+
+		dbFilePathWithColon := gfile.Join(dbDir, "test:1")
+		if err := gfile.Mkdir(dbFilePathWithColon); err != nil {
+			gtest.Error(err)
+		}
+		node := gdb.ConfigNode{
+			Type:    "sqlite",
+			Link:    fmt.Sprintf(`sqlite::@file(%s)`, gfile.Join(dbFilePathWithColon, "test.db")),
+			Charset: "utf8",
+		}
+		newDb, err := gdb.New(node)
+		t.AssertNil(err)
+		value, err := newDb.GetValue(ctx, `select 1`)
+		t.AssertNil(err)
+		t.Assert(value, `1`)
+		t.AssertNil(newDb.Close(ctx))
+	})
+}
+
 func Test_DB_Ping(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err1 := db.PingMaster()
