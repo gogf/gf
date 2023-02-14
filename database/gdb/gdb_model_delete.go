@@ -30,7 +30,7 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 		}
 	}()
 	var (
-		fieldNameDelete                               = m.getSoftFieldNameDeleted()
+		fieldNameDelete                               = m.getSoftFieldNameDeleted("", m.tablesInit)
 		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(ctx, false, false)
 		conditionStr                                  = conditionWhere + conditionExtra
 	)
