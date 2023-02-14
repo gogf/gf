@@ -84,7 +84,11 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	}
 
 	if !gstr.ContainsI(conditionStr, " WHERE ") || (fieldNameUpdate != "" && !gstr.ContainsI(conditionStr, " AND ")) {
-		intlog.Printf(ctx, `sql condition string has no WHERE for UPDATE operation: %s`, conditionStr)
+		intlog.Printf(
+			ctx,
+			`sql condition string "%s" has no WHERE for UPDATE operation, fieldNameUpdate: %s`,
+			conditionStr, fieldNameUpdate,
+		)
 		return nil, gerror.NewCode(
 			gcode.CodeMissingParameter,
 			"there should be WHERE condition statement for UPDATE operation",

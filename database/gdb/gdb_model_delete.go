@@ -39,7 +39,11 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 		fieldNameDelete = ""
 	}
 	if !gstr.ContainsI(conditionStr, " WHERE ") || (fieldNameDelete != "" && !gstr.ContainsI(conditionStr, " AND ")) {
-		intlog.Printf(ctx, `sql condition string has no WHERE for DELETE operation: %s`, conditionStr)
+		intlog.Printf(
+			ctx,
+			`sql condition string "%s" has no WHERE for DELETE operation, fieldNameDelete: %s`,
+			conditionStr, fieldNameDelete,
+		)
 		return nil, gerror.NewCode(
 			gcode.CodeMissingParameter,
 			"there should be WHERE condition statement for DELETE operation",
