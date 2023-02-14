@@ -10,6 +10,7 @@ import (
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/os/gstructs"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
 )
@@ -181,7 +182,10 @@ func (r *Request) doGetRequestStruct(pointer interface{}, mapping ...map[string]
 	if err = r.mergeDefaultStructValue(data, pointer); err != nil {
 		return data, nil
 	}
-
+	// `in` Tag Struct values.
+	if err = r.mergeInTagStructValue(data, pointer); err != nil {
+		return data, nil
+	}
 	return data, gconv.Struct(data, pointer, mapping...)
 }
 
@@ -203,6 +207,59 @@ func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer i
 			} else {
 				if empty.IsEmpty(foundValue) {
 					data[foundKey] = field.TagValue
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// mergeInTagStructValue merges the request parameters with header or cookie values from struct `in` tag definition.
+func (r *Request) mergeInTagStructValue(data map[string]interface{}, pointer interface{}) error {
+	tagFields, err := gstructs.TagFields(pointer, []string{"in"})
+	if err != nil {
+		return err
+	}
+	if len(tagFields) > 0 {
+		var (
+			fieldKey   string
+			foundKey   string
+			foundValue interface{}
+		)
+		for _, field := range tagFields {
+			switch field.TagValue {
+			case "header":
+				fieldKey = field.Name()
+				if v := r.GetHeader(fieldKey); v != "" {
+					foundKey, foundValue = gutil.MapPossibleItemByKey(data, fieldKey)
+					if foundKey == "" {
+						data[field.Name()] = v
+					} else {
+						if empty.IsEmpty(foundValue) {
+							data[foundKey] = v
+						}
+					}
+				} else if v := r.GetHeader(gstr.CaseKebab(fieldKey)); v != "" {
+					foundKey, foundValue = gutil.MapPossibleItemByKey(data, gstr.CaseKebab(fieldKey))
+					if foundKey == "" {
+						data[field.Name()] = v
+					} else {
+						if empty.IsEmpty(foundValue) {
+							data[foundKey] = v
+						}
+					}
+				}
+			case "cookie":
+				fieldKey = gstr.ToLower(field.Name())
+				if v := r.Cookie.Get(fieldKey); !v.IsEmpty() {
+					foundKey, foundValue = gutil.MapPossibleItemByKey(data, fieldKey)
+					if foundKey == "" {
+						data[fieldKey] = v.Interface()
+					} else {
+						if empty.IsEmpty(foundValue) {
+							data[foundKey] = v.Interface()
+						}
+					}
 				}
 			}
 		}
