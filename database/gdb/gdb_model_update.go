@@ -9,6 +9,7 @@ package gdb
 import (
 	"database/sql"
 	"fmt"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"reflect"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -83,6 +84,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	}
 
 	if !gstr.ContainsI(conditionStr, " WHERE ") || (fieldNameUpdate != "" && !gstr.ContainsI(conditionStr, " AND ")) {
+		intlog.Printf(ctx, `sql condition string has no WHERE for UPDATE operation: %s`, conditionStr)
 		return nil, gerror.NewCode(
 			gcode.CodeMissingParameter,
 			"there should be WHERE condition statement for UPDATE operation",

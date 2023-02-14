@@ -8,6 +8,7 @@ package dm_test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/v2/os/genv"
 	"strings"
 	"testing"
 	"time"
@@ -390,6 +391,11 @@ func Test_DB_BatchInsert_Struct(t *testing.T) {
 }
 
 func Test_DB_Update(t *testing.T) {
+	debugKey := "GF_DEBUG"
+	oldValue := genv.Get(debugKey).String()
+	_ = genv.Set(debugKey, "1")
+	defer genv.Set(debugKey, oldValue)
+
 	table := "A_tables"
 	// table := createInitTable()
 

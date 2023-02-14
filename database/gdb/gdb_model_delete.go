@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/text/gstr"
 
 	"github.com/gogf/gf/v2/os/gtime"
@@ -38,6 +39,7 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 		fieldNameDelete = ""
 	}
 	if !gstr.ContainsI(conditionStr, " WHERE ") || (fieldNameDelete != "" && !gstr.ContainsI(conditionStr, " AND ")) {
+		intlog.Printf(ctx, `sql condition string has no WHERE for DELETE operation: %s`, conditionStr)
 		return nil, gerror.NewCode(
 			gcode.CodeMissingParameter,
 			"there should be WHERE condition statement for DELETE operation",
