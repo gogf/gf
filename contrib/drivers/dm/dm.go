@@ -30,6 +30,10 @@ type Driver struct {
 	*gdb.Core
 }
 
+const (
+	quoteChar = `"`
+)
+
 func init() {
 	var (
 		err         error
@@ -92,7 +96,7 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 }
 
 func (d *Driver) GetChars() (charLeft string, charRight string) {
-	return `"`, `"`
+	return quoteChar, quoteChar
 }
 
 func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string, err error) {

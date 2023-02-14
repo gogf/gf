@@ -33,6 +33,10 @@ type Driver struct {
 	*gdb.Core
 }
 
+const (
+	quoteChar = "`"
+)
+
 func init() {
 	if err := gdb.Register(`sqlite`, New()); err != nil {
 		panic(err)
@@ -105,7 +109,7 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 
 // GetChars returns the security char for this type of database.
 func (d *Driver) GetChars() (charLeft string, charRight string) {
-	return "`", "`"
+	return quoteChar, quoteChar
 }
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
@@ -141,11 +145,11 @@ func (d *Driver) TableFields(
 	ctx context.Context, table string, schema ...string,
 ) (fields map[string]*gdb.TableField, err error) {
 	var (
-		result    gdb.Result
-		link      gdb.Link
-		useSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+		result     gdb.Result
+		link       gdb.Link
+		usedSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
 	)
-	if link, err = d.SlaveLink(useSchema); err != nil {
+	if link, err = d.SlaveLink(usedSchema); err != nil {
 		return nil, err
 	}
 	result, err = d.DoSelect(ctx, link, fmt.Sprintf(`PRAGMA TABLE_INFO(%s)`, table))

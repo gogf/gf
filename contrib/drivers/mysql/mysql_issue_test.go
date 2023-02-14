@@ -522,3 +522,114 @@ func Test_Issue2356(t *testing.T) {
 		t.AssertEQ(one["id"].Val(), uint64(18446744073709551615))
 	})
 }
+
+// https://github.com/gogf/gf/issues/2338
+func Test_Issue2338(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table1 := "demo_" + guid.S()
+		table2 := "demo_" + guid.S()
+		if _, err := db.Schema(TestSchema1).Exec(ctx, fmt.Sprintf(`
+CREATE TABLE %s (
+    id        int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'User ID',
+    nickname  varchar(45) DEFAULT NULL COMMENT 'User Nickname',
+    create_at datetime DEFAULT NULL COMMENT 'Created Time',
+    update_at datetime DEFAULT NULL COMMENT 'Updated Time',
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	    `, table1,
+		)); err != nil {
+			t.AssertNil(err)
+		}
+		if _, err := db.Schema(TestSchema2).Exec(ctx, fmt.Sprintf(`
+CREATE TABLE %s (
+    id        int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'User ID',
+    nickname  varchar(45) DEFAULT NULL COMMENT 'User Nickname',
+    create_at datetime DEFAULT NULL COMMENT 'Created Time',
+    update_at datetime DEFAULT NULL COMMENT 'Updated Time',
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	    `, table2,
+		)); err != nil {
+			t.AssertNil(err)
+		}
+		defer dropTableWithDb(db.Schema(TestSchema1), table1)
+		defer dropTableWithDb(db.Schema(TestSchema2), table2)
+
+		var err error
+		_, err = db.Schema(TestSchema1).Model(table1).Insert(g.Map{
+			"id":       1,
+			"nickname": "name_1",
+		})
+		t.AssertNil(err)
+
+		_, err = db.Schema(TestSchema2).Model(table2).Insert(g.Map{
+			"id":       1,
+			"nickname": "name_2",
+		})
+		t.AssertNil(err)
+
+		tableName1 := fmt.Sprintf(`%s.%s`, TestSchema1, table1)
+		tableName2 := fmt.Sprintf(`%s.%s`, TestSchema2, table2)
+		all, err := db.Model(tableName1).As(`a`).
+			LeftJoin(tableName2+" b", `a.id=b.id`).
+			Fields(`a.id`, `b.nickname`).All()
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["nickname"], "name_2")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		table1 := "demo_" + guid.S()
+		table2 := "demo_" + guid.S()
+		if _, err := db.Schema(TestSchema1).Exec(ctx, fmt.Sprintf(`
+CREATE TABLE %s (
+    id        int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'User ID',
+    nickname  varchar(45) DEFAULT NULL COMMENT 'User Nickname',
+    create_at datetime DEFAULT NULL COMMENT 'Created Time',
+    update_at datetime DEFAULT NULL COMMENT 'Updated Time',
+    deleted_at datetime DEFAULT NULL COMMENT 'Deleted Time',
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	    `, table1,
+		)); err != nil {
+			t.AssertNil(err)
+		}
+		if _, err := db.Schema(TestSchema2).Exec(ctx, fmt.Sprintf(`
+CREATE TABLE %s (
+    id        int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'User ID',
+    nickname  varchar(45) DEFAULT NULL COMMENT 'User Nickname',
+    create_at datetime DEFAULT NULL COMMENT 'Created Time',
+    update_at datetime DEFAULT NULL COMMENT 'Updated Time',
+    deleted_at datetime DEFAULT NULL COMMENT 'Deleted Time',
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	    `, table2,
+		)); err != nil {
+			t.AssertNil(err)
+		}
+		defer dropTableWithDb(db.Schema(TestSchema1), table1)
+		defer dropTableWithDb(db.Schema(TestSchema2), table2)
+
+		var err error
+		_, err = db.Schema(TestSchema1).Model(table1).Insert(g.Map{
+			"id":       1,
+			"nickname": "name_1",
+		})
+		t.AssertNil(err)
+
+		_, err = db.Schema(TestSchema2).Model(table2).Insert(g.Map{
+			"id":       1,
+			"nickname": "name_2",
+		})
+		t.AssertNil(err)
+
+		tableName1 := fmt.Sprintf(`%s.%s`, TestSchema1, table1)
+		tableName2 := fmt.Sprintf(`%s.%s`, TestSchema2, table2)
+		all, err := db.Model(tableName1).As(`a`).
+			LeftJoin(tableName2+" b", `a.id=b.id`).
+			Fields(`a.id`, `b.nickname`).All()
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["nickname"], "name_2")
+	})
+}
