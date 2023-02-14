@@ -27,7 +27,6 @@ concurrency:
 
 env:
   TZ: "Asia/Shanghai"
-  GF_DEBUG: "1"
 
 
 jobs:
