@@ -19,7 +19,7 @@ import (
 
 // Write writes `content` to the response buffer.
 func (r *Response) Write(content ...interface{}) {
-	if r.hijacked || len(content) == 0 {
+	if r.writer.IsHijacked() || len(content) == 0 {
 		return
 	}
 	if r.Status == 0 {
