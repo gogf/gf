@@ -10,12 +10,12 @@ package ghttp
 import (
 	"bytes"
 	"fmt"
-	"github.com/gogf/gf/v2/net/ghttp/internal/response"
 	"io"
 	"net/http"
 	"net/url"
 	"time"
 
+	"github.com/gogf/gf/v2/net/ghttp/internal/response"
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gres"
