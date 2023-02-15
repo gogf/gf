@@ -646,7 +646,7 @@ CREATE TABLE %s (
 		t.Assert(one["name"], "name_1")
 
 		// Soft deleting.
-		r, err = db.Model(table1).Delete()
+		r, err = db.Model(table1).Where(1).Delete()
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
