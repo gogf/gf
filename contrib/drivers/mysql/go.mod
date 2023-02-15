@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/gogf/gf/v2 v2.0.0
+	github.com/gogf/gf/v2 v2.3.2
 )
 
 replace github.com/gogf/gf/v2 => ../../../
