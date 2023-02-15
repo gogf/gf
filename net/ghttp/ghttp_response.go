@@ -15,6 +15,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/gogf/gf/v2/net/ghttp/internal/response"
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gres"
@@ -34,7 +35,7 @@ func newResponse(s *Server, w http.ResponseWriter) *Response {
 	r := &Response{
 		Server: s,
 		ResponseWriter: &ResponseWriter{
-			writer: w,
+			writer: response.NewWriter(w),
 			buffer: bytes.NewBuffer(nil),
 		},
 	}
@@ -152,7 +153,6 @@ func (r *Response) ClearBuffer() {
 //
 // See http.ServeContent
 func (r *Response) ServeContent(name string, modTime time.Time, content io.ReadSeeker) {
-	r.wroteHeader = true
 	http.ServeContent(r.Writer.RawWriter(), r.Request.Request, name, modTime, content)
 }
 

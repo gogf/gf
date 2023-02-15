@@ -12,15 +12,15 @@ import (
 	"bytes"
 	"net"
 	"net/http"
+
+	"github.com/gogf/gf/v2/net/ghttp/internal/response"
 )
 
 // ResponseWriter is the custom writer for http response.
 type ResponseWriter struct {
-	Status      int                 // HTTP status.
-	writer      http.ResponseWriter // The underlying ResponseWriter.
-	buffer      *bytes.Buffer       // The output buffer.
-	hijacked    bool                // Mark this request is hijacked or not.
-	wroteHeader bool                // Is header wrote or not, avoiding error: superfluous/multiple response.WriteHeader call.
+	Status int              // HTTP status.
+	writer *response.Writer // The underlying ResponseWriter.
+	buffer *bytes.Buffer    // The output buffer.
 }
 
 // RawWriter returns the underlying ResponseWriter.
@@ -46,18 +46,16 @@ func (w *ResponseWriter) WriteHeader(status int) {
 
 // Hijack implements the interface function of http.Hijacker.Hijack.
 func (w *ResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
-	w.hijacked = true
-	return w.writer.(http.Hijacker).Hijack()
+	return w.writer.Hijack()
 }
 
 // Flush outputs the buffer to clients and clears the buffer.
 func (w *ResponseWriter) Flush() {
-	if w.hijacked {
+	if w.writer.IsHijacked() {
 		return
 	}
 
-	if w.Status != 0 && !w.isHeaderWritten() {
-		w.wroteHeader = true
+	if w.Status != 0 && !w.writer.IsHeaderWrote() {
 		w.writer.WriteHeader(w.Status)
 	}
 	// Default status text output.
@@ -68,15 +66,4 @@ func (w *ResponseWriter) Flush() {
 		_, _ = w.writer.Write(w.buffer.Bytes())
 		w.buffer.Reset()
 	}
-}
-
-// isHeaderWrote checks and returns whether the header is written.
-func (w *ResponseWriter) isHeaderWritten() bool {
-	if w.wroteHeader {
-		return true
-	}
-	if _, ok := w.writer.Header()[responseHeaderContentLength]; ok {
-		return true
-	}
-	return false
 }
