@@ -125,13 +125,21 @@ func (c *Core) Close(ctx context.Context) (err error) {
 // Master creates and returns a connection from master node if master-slave configured.
 // It returns the default connection if master-slave not configured.
 func (c *Core) Master(schema ...string) (*sql.DB, error) {
-	return c.getSqlDb(true, gutil.GetOrDefaultStr(c.schema, schema...))
+	var (
+		usedSchema   = gutil.GetOrDefaultStr(c.schema, schema...)
+		charL, charR = c.db.GetChars()
+	)
+	return c.getSqlDb(true, gstr.Trim(usedSchema, charL+charR))
 }
 
 // Slave creates and returns a connection from slave node if master-slave configured.
 // It returns the default connection if master-slave not configured.
 func (c *Core) Slave(schema ...string) (*sql.DB, error) {
-	return c.getSqlDb(false, gutil.GetOrDefaultStr(c.schema, schema...))
+	var (
+		usedSchema   = gutil.GetOrDefaultStr(c.schema, schema...)
+		charL, charR = c.db.GetChars()
+	)
+	return c.getSqlDb(false, gstr.Trim(usedSchema, charL+charR))
 }
 
 // GetAll queries and returns data records from database.

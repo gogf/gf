@@ -497,7 +497,9 @@ func (m *Model) doGetAllBySql(ctx context.Context, queryType queryType, sql stri
 	return
 }
 
-func (m *Model) getFormattedSqlAndArgs(ctx context.Context, queryType queryType, limit1 bool) (sqlWithHolder string, holderArgs []interface{}) {
+func (m *Model) getFormattedSqlAndArgs(
+	ctx context.Context, queryType queryType, limit1 bool,
+) (sqlWithHolder string, holderArgs []interface{}) {
 	switch queryType {
 	case queryTypeCount:
 		queryFields := "COUNT(1)"
@@ -537,6 +539,14 @@ func (m *Model) getFormattedSqlAndArgs(ctx context.Context, queryType queryType,
 		)
 		return sqlWithHolder, conditionArgs
 	}
+}
+
+func (m *Model) getHolderAndArgsAsSubModel(ctx context.Context) (holder string, args []interface{}) {
+	holder, args = m.getFormattedSqlAndArgs(
+		ctx, queryTypeNormal, false,
+	)
+	args = m.mergeArguments(args)
+	return
 }
 
 func (m *Model) getAutoPrefix() string {
@@ -607,7 +617,9 @@ func (m *Model) getFieldsFiltered() string {
 // Note that this function does not change any attribute value of the `m`.
 //
 // The parameter `limit1` specifies whether limits querying only one record if m.limit is not set.
-func (m *Model) formatCondition(ctx context.Context, limit1 bool, isCountStatement bool) (conditionWhere string, conditionExtra string, conditionArgs []interface{}) {
+func (m *Model) formatCondition(
+	ctx context.Context, limit1 bool, isCountStatement bool,
+) (conditionWhere string, conditionExtra string, conditionArgs []interface{}) {
 	var autoPrefix = m.getAutoPrefix()
 	// GROUP BY.
 	if m.groupBy != "" {

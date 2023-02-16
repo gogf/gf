@@ -255,8 +255,8 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption int) (resul
 	var (
 		list            List
 		nowString       = gtime.Now().String()
-		fieldNameCreate = m.getSoftFieldNameCreated()
-		fieldNameUpdate = m.getSoftFieldNameUpdated()
+		fieldNameCreate = m.getSoftFieldNameCreated("", m.tablesInit)
+		fieldNameUpdate = m.getSoftFieldNameUpdated("", m.tablesInit)
 	)
 	newData, err := m.filterDataForInsertOrUpdate(m.data)
 	if err != nil {

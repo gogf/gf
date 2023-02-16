@@ -279,10 +279,9 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 		c.writeSqlToLogger(ctx, sqlObj)
 	}
 	if err != nil && err != sql.ErrNoRows {
-		err = gerror.NewCodef(
+		err = gerror.WrapCode(
 			gcode.CodeDbOperationError,
-			"%s, %s",
-			err.Error(),
+			err,
 			FormatSqlWithArgs(in.Sql, in.Args),
 		)
 	}

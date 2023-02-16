@@ -30,6 +30,10 @@ type Driver struct {
 	*gdb.Core
 }
 
+const (
+	quoteChar = `"`
+)
+
 func init() {
 	var (
 		err         error
@@ -92,7 +96,7 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 }
 
 func (d *Driver) GetChars() (charLeft string, charRight string) {
-	return `"`, `"`
+	return quoteChar, quoteChar
 }
 
 func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
@@ -172,9 +176,9 @@ func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args [
 	// There should be no need to capitalize, because it has been done from field processing before
 	newSql, err = gregex.ReplaceString(`["\n\t]`, "", sql)
 	newSql = gstr.ReplaceI(newSql, "GROUP_CONCAT", "WM_CONCAT")
-	// g.Dump("Driver.DoFilter()::newSql", newSql)
+	// gutil.Dump("Driver.DoFilter()::newSql", newSql)
 	newArgs = args
-	// g.Dump("Driver.DoFilter()::newArgs", newArgs)
+	// gutil.Dump("Driver.DoFilter()::newArgs", newArgs)
 	return
 }
 
