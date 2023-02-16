@@ -94,14 +94,14 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	} else {
 		if config.Pass != "" {
 			source = fmt.Sprintf(
-				"clickhouse://%s:%s@%s:%s/%s?charset=%s&debug=%t",
+				"clickhouse://%s:%s@%s:%s/%s?debug=%t",
 				config.User, url.PathEscape(config.Pass),
-				config.Host, config.Port, config.Name, config.Charset, config.Debug,
+				config.Host, config.Port, config.Name, config.Debug,
 			)
 		} else {
 			source = fmt.Sprintf(
-				"clickhouse://%s@%s:%s/%s?charset=%s&debug=%t",
-				config.User, config.Host, config.Port, config.Name, config.Charset, config.Debug,
+				"clickhouse://%s@%s:%s/%s?debug=%t",
+				config.User, config.Host, config.Port, config.Name, config.Debug,
 			)
 		}
 		if config.Extra != "" {
@@ -143,11 +143,11 @@ func (d *Driver) TableFields(
 	ctx context.Context, table string, schema ...string,
 ) (fields map[string]*gdb.TableField, err error) {
 	var (
-		result    gdb.Result
-		link      gdb.Link
-		useSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+		result     gdb.Result
+		link       gdb.Link
+		usedSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
 	)
-	if link, err = d.SlaveLink(useSchema); err != nil {
+	if link, err = d.SlaveLink(usedSchema); err != nil {
 		return nil, err
 	}
 	var (
@@ -173,8 +173,12 @@ func (d *Driver) TableFields(
 			isNull = true
 			fieldType = fieldsResult[1]
 		}
+		position := m["position"].Int()
+		if result[0]["position"].Int() != 0 {
+			position -= 1
+		}
 		fields[m["name"].String()] = &gdb.TableField{
-			Index:   m["position"].Int(),
+			Index:   position,
 			Name:    m["name"].String(),
 			Default: m["default_expression"].Val(),
 			Comment: m["comment"].String(),
@@ -293,7 +297,7 @@ func (d *Driver) DoInsert(
 		charL, charR = d.Core.GetChars()
 		keysStr      = charL + strings.Join(keys, charR+","+charL) + charR
 		holderStr    = strings.Join(valueHolder, ",")
-		tx           = &gdb.TX{}
+		tx           gdb.TX
 		stdSqlResult sql.Result
 		stmt         *gdb.Stmt
 	)
@@ -423,11 +427,11 @@ func (d *Driver) Replace(ctx context.Context, table string, data interface{}, ba
 	return nil, errUnsupportedReplace
 }
 
-func (d *Driver) Begin(ctx context.Context) (tx *gdb.TX, err error) {
+func (d *Driver) Begin(ctx context.Context) (tx gdb.TX, err error) {
 	return nil, errUnsupportedBegin
 }
 
-func (d *Driver) Transaction(ctx context.Context, f func(ctx context.Context, tx *gdb.TX) error) error {
+func (d *Driver) Transaction(ctx context.Context, f func(ctx context.Context, tx gdb.TX) error) error {
 	return errUnsupportedTransaction
 }
 

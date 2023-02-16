@@ -37,7 +37,7 @@ jobs:
     services:
       # Redis backend server.
       redis:
-        image  : loads/redis:latest
+        image  : loads/redis:7.0
         options: >-
           --health-cmd      "redis-cli ping"
           --health-interval 10s
@@ -77,7 +77,7 @@ jobs:
 
       # MSSQL backend server.
       mssql:
-        image: loads/mssqldocker:latest
+        image: loads/mssqldocker:14.0.3391.2
         env:
           ACCEPT_EULA:    Y
           SA_PASSWORD:    LoremIpsum86
@@ -94,9 +94,9 @@ jobs:
           --health-retries 10
 
       # ClickHouse backend server.
-      # docker run -d --name clickhouse -p 9000:9000 -p 8123:8123 -p 9001:9001 loads/clickhouse-server:latest
+      # docker run -d --name clickhouse -p 9000:9000 -p 8123:8123 -p 9001:9001 loads/clickhouse-server:22.1.3.7
       clickhouse-server:
-        image: loads/clickhouse-server:latest
+        image: loads/clickhouse-server:22.1.3.7
         ports:
           - 9000:9000
           - 8123:8123
@@ -104,7 +104,7 @@ jobs:
 
       # Polaris backend server.
       polaris:
-        image: loads/polaris-server-standalone:latest
+        image: loads/polaris-server-standalone:1.11.2
         ports:
           - 8090:8090
           - 8091:8091
@@ -112,7 +112,7 @@ jobs:
 
       # Oracle 11g server
       oracle-server:
-        image: loads/oracle-xe-11g-r2:latest
+        image: loads/oracle-xe-11g-r2:11.2.0
         env:
           ORACLE_ALLOW_REMOTE: true
           ORACLE_SID: XE
@@ -122,10 +122,16 @@ jobs:
           - 1521:1521
 
       # dm8 server
+      # docker run -d --name dm -p 5236:5236 loads/dm:v8.1.2.128_ent_x86_64_ctm_pack4
       dm-server:
         image: loads/dm:v8.1.2.128_ent_x86_64_ctm_pack4
         ports:
           - 5236:5236
+
+      zookeeper:
+        image: loads/zookeeper:3.8
+        ports:
+          - 2181:2181
 
     strategy:
       matrix:

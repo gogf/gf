@@ -14,15 +14,12 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/consts"
+	"github.com/gogf/gf/v2/internal/instance"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
-)
-
-const (
-	frameCoreComponentNameDatabase = "gf.core.component.database"
 )
 
 // Database returns an instance of database ORM object with specified configuration group name.
@@ -37,7 +34,7 @@ func Database(name ...string) gdb.DB {
 		group = name[0]
 	}
 	instanceKey := fmt.Sprintf("%s.%s", frameCoreComponentNameDatabase, group)
-	db := localInstances.GetOrSetFuncLock(instanceKey, func() interface{} {
+	db := instance.GetOrSetFuncLock(instanceKey, func() interface{} {
 		// It ignores returned error to avoid file no found error while it's not necessary.
 		var (
 			configMap     map[string]interface{}
