@@ -9,9 +9,10 @@ package ghttp
 import (
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/os/gstructs"
-	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gtag"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
@@ -191,6 +192,7 @@ func (r *Request) doGetRequestStruct(pointer interface{}, mapping ...map[string]
 
 // mergeDefaultStructValue merges the request parameters with default values from struct tag definition.
 func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer interface{}) error {
+	// TODO: https://github.com/gogf/gf/pull/2450
 	tagFields, err := gstructs.TagFields(pointer, defaultValueTags)
 	if err != nil {
 		return err
@@ -216,48 +218,52 @@ func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer i
 
 // mergeInTagStructValue merges the request parameters with header or cookie values from struct `in` tag definition.
 func (r *Request) mergeInTagStructValue(data map[string]interface{}, pointer interface{}) error {
-	tagFields, err := gstructs.TagFields(pointer, []string{"in"})
+	// TODO: https://github.com/gogf/gf/pull/2450
+	tagFields, err := gstructs.TagFields(pointer, []string{gtag.In})
 	if err != nil {
 		return err
 	}
 	if len(tagFields) > 0 {
 		var (
-			fieldKey   string
 			foundKey   string
 			foundValue interface{}
+			headerMap  = make(map[string]interface{})
+			cookieMap  = make(map[string]interface{})
 		)
+
+		for k, v := range r.Header {
+			if v != nil && len(v) > 0 {
+				headerMap[k] = v[0]
+			}
+		}
+
+		for _, cookie := range r.Cookies() {
+			cookieMap[cookie.Name] = cookie.Value
+		}
+
 		for _, field := range tagFields {
 			switch field.TagValue {
-			case "header":
-				fieldKey = field.Name()
-				if v := r.GetHeader(fieldKey); v != "" {
-					foundKey, foundValue = gutil.MapPossibleItemByKey(data, fieldKey)
+			case goai.ParameterInHeader:
+				foundHeaderKey, foundHeaderValue := gutil.MapPossibleItemByKey(headerMap, field.Name())
+				if foundHeaderKey != "" {
+					foundKey, foundValue = gutil.MapPossibleItemByKey(data, foundHeaderKey)
 					if foundKey == "" {
-						data[field.Name()] = v
+						data[field.Name()] = foundHeaderValue
 					} else {
 						if empty.IsEmpty(foundValue) {
-							data[foundKey] = v
-						}
-					}
-				} else if v := r.GetHeader(gstr.CaseKebab(fieldKey)); v != "" {
-					foundKey, foundValue = gutil.MapPossibleItemByKey(data, gstr.CaseKebab(fieldKey))
-					if foundKey == "" {
-						data[field.Name()] = v
-					} else {
-						if empty.IsEmpty(foundValue) {
-							data[foundKey] = v
+							data[foundKey] = foundHeaderValue
 						}
 					}
 				}
-			case "cookie":
-				fieldKey = gstr.ToLower(field.Name())
-				if v := r.Cookie.Get(fieldKey); !v.IsEmpty() {
-					foundKey, foundValue = gutil.MapPossibleItemByKey(data, fieldKey)
+			case goai.ParameterInCookie:
+				foundCookieKey, foundCookieValue := gutil.MapPossibleItemByKey(cookieMap, field.Name())
+				if foundCookieKey != "" {
+					foundKey, foundValue = gutil.MapPossibleItemByKey(data, foundCookieKey)
 					if foundKey == "" {
-						data[fieldKey] = v.Interface()
+						data[field.Name()] = foundCookieValue
 					} else {
 						if empty.IsEmpty(foundValue) {
-							data[foundKey] = v.Interface()
+							data[foundKey] = foundCookieValue
 						}
 					}
 				}
