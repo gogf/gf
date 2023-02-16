@@ -163,6 +163,7 @@ func (r *Request) GetBody() []byte {
 		}
 		r.Body = utils.NewReadCloser(r.bodyContent, true)
 	}
+	r.parsedBody = true
 	return r.bodyContent
 }
 
@@ -220,7 +221,6 @@ func (r *Request) parseBody() {
 	if r.parsedBody {
 		return
 	}
-	r.parsedBody = true
 	// There's no data posted.
 	if r.ContentLength == 0 {
 		return
