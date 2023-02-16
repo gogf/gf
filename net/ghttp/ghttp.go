@@ -41,6 +41,7 @@ type (
 		sessionManager   *gsession.Manager         // Session manager.
 		openapi          *goai.OpenApiV3           // The OpenApi specification management object.
 		service          gsvc.Service              // The service for Registry.
+		registrar        gsvc.Registrar            // Registrar for service register.
 	}
 
 	// Router object.

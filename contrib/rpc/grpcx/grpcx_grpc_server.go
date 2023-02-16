@@ -22,6 +22,7 @@ import (
 	"github.com/gogf/gf/v2/net/gipv4"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/net/gtcp"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -34,6 +35,7 @@ type GrpcServer struct {
 	listener  net.Listener
 	services  []gsvc.Service
 	waitGroup sync.WaitGroup
+	registrar gsvc.Registrar
 }
 
 // Service implements gsvc.Service interface.
@@ -45,7 +47,7 @@ type Service struct {
 // NewGrpcServer creates and returns a grpc server.
 func (s modServer) NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
 	var (
-		ctx    = context.TODO()
+		ctx    = gctx.GetInitCtx()
 		config *GrpcServerConfig
 	)
 	if len(conf) > 0 {
@@ -67,7 +69,8 @@ func (s modServer) NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
 		config.Logger = glog.New()
 	}
 	grpcServer := &GrpcServer{
-		config: config,
+		config:    config,
+		registrar: gsvc.GetRegistry(),
 	}
 	grpcServer.config.Options = append([]grpc.ServerOption{
 		s.ChainUnary(
@@ -87,34 +90,6 @@ func (s modServer) NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
 // Service binds service list to current server.
 // Server will automatically register the service list after it starts.
 func (s *GrpcServer) Service(services ...gsvc.Service) {
-	var (
-		serviceAddress string
-		ctx            = context.TODO()
-		array          = gstr.Split(s.config.Address, ":")
-	)
-	if array[0] == "0.0.0.0" || array[0] == "" {
-		intraIP, err := gipv4.GetIntranetIp()
-		if err != nil {
-			s.config.Logger.Fatalf(
-				ctx,
-				"retrieving intranet ip failed, please check your net card or manually assign the service address: %+v",
-				err,
-			)
-		}
-		serviceAddress = fmt.Sprintf(`%s:%s`, intraIP, array[1])
-	} else {
-		serviceAddress = s.config.Address
-	}
-	for i, service := range services {
-		if len(service.GetEndpoints()) == 0 {
-			newService := &Service{
-				Service:   service,
-				Endpoints: make(gsvc.Endpoints, 0),
-			}
-			newService.Endpoints = gsvc.NewEndpoints(serviceAddress)
-			services[i] = newService
-		}
-	}
 	s.services = append(s.services, services...)
 }
 
@@ -124,7 +99,7 @@ func (s *GrpcServer) Run() {
 
 	var (
 		err error
-		ctx = context.TODO()
+		ctx = gctx.GetInitCtx()
 	)
 	// Initialize services configured.
 	s.listener, err = net.Listen("tcp", s.config.Address)
@@ -183,7 +158,7 @@ func (s *GrpcServer) doSignalListen() {
 
 // doServiceRegister registers current service to Registry.
 func (s *GrpcServer) doServiceRegister() {
-	if gsvc.GetRegistry() == nil {
+	if s.registrar == nil {
 		return
 	}
 	if len(s.services) == 0 {
@@ -194,28 +169,21 @@ func (s *GrpcServer) doServiceRegister() {
 	}
 	var (
 		err      error
-		ctx      = context.Background()
+		ctx      = gctx.GetInitCtx()
 		protocol = `grpc`
-		address  = s.GetListenedAddress()
-		array    = gstr.Split(address, ":")
-		ip       = array[0]
-		port     = array[1]
 	)
-	if ip == "" {
-		ip = gipv4.MustGetIntranetIp()
-	}
 	// Register service list after server starts.
 	for i, service := range s.services {
 		service = &gsvc.LocalService{
 			Name:      service.GetName(),
-			Endpoints: gsvc.NewEndpoints(fmt.Sprintf(`%s:%s`, ip, port)),
+			Endpoints: s.calculateListenedEndpoints(),
 			Metadata:  service.GetMetadata(),
 		}
 		service.GetMetadata().Sets(gsvc.Metadata{
 			gsvc.MDProtocol: protocol,
 		})
 		s.config.Logger.Debugf(ctx, `service register: %+v`, service)
-		if service, err = gsvc.Register(ctx, service); err != nil {
+		if service, err = s.registrar.Register(ctx, service); err != nil {
 			s.config.Logger.Fatalf(ctx, `%+v`, err)
 		}
 		s.services[i] = service
@@ -224,13 +192,13 @@ func (s *GrpcServer) doServiceRegister() {
 
 // doServiceDeregister de-registers current service from Registry.
 func (s *GrpcServer) doServiceDeregister() {
-	if gsvc.GetRegistry() == nil {
+	if s.registrar == nil {
 		return
 	}
-	var ctx = context.Background()
+	var ctx = gctx.GetInitCtx()
 	for _, service := range s.services {
 		s.config.Logger.Debugf(ctx, `service deregister: %+v`, service)
-		if err := gsvc.Deregister(ctx, service); err != nil {
+		if err := s.registrar.Deregister(ctx, service); err != nil {
 			s.config.Logger.Errorf(ctx, `%+v`, err)
 		}
 	}
@@ -274,4 +242,24 @@ func (s *GrpcServer) GetListenedPort() int {
 		return ln.Addr().(*net.TCPAddr).Port
 	}
 	return -1
+}
+
+func (s *GrpcServer) calculateListenedEndpoints() gsvc.Endpoints {
+	var (
+		address      = s.config.Address
+		endpoints    = make(gsvc.Endpoints, 0)
+		listenedPort = s.GetListenedPort()
+		listenedIps  []string
+	)
+	var addrArray = gstr.Split(address, ":")
+	switch addrArray[0] {
+	case "0.0.0.0", "":
+		listenedIps, _ = gipv4.GetIntranetIpArray()
+	default:
+		listenedIps = []string{addrArray[0]}
+	}
+	for _, ip := range listenedIps {
+		endpoints = append(endpoints, gsvc.NewEndpoint(fmt.Sprintf(`%s:%d`, ip, listenedPort)))
+	}
+	return endpoints
 }

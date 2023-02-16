@@ -19,8 +19,10 @@ const (
 )
 
 func init() {
+	// It registers default resolver here.
 	// It uses default builder handling the DNS for grpc service requests.
-	resolver.Register(&Builder{})
+	// Use `grpc.WithResolver` to custom resolver for client.
+	resolver.Register(NewBuilder(gsvc.GetRegistry()))
 }
 
 // SetRegistry sets the default Registry implements as your own implemented interface.

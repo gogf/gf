@@ -7,37 +7,26 @@
 package ghttp
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/gogf/gf/v2/net/gipv4"
 	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // doServiceRegister registers current service to Registry.
 func (s *Server) doServiceRegister() {
-	if gsvc.GetRegistry() == nil {
+	if s.registrar == nil {
 		return
 	}
 	var (
-		ctx      = context.Background()
+		ctx      = gctx.GetInitCtx()
 		protocol = gsvc.DefaultProtocol
 		insecure = true
-		address  = s.config.Address
 		err      error
 	)
-	if address == "" {
-		address = s.config.HTTPSAddr
-	}
-	var (
-		array = gstr.Split(address, ":")
-		ip    = array[0]
-		port  = array[1]
-	)
-	if ip == "" {
-		ip = gipv4.MustGetIntranetIp()
-	}
 	if s.config.TLSConfig != nil {
 		protocol = `https`
 		insecure = false
@@ -48,23 +37,54 @@ func (s *Server) doServiceRegister() {
 	}
 	s.service = &gsvc.LocalService{
 		Name:      s.GetName(),
-		Endpoints: gsvc.NewEndpoints(fmt.Sprintf(`%s:%s`, ip, port)),
+		Endpoints: s.calculateListenedEndpoints(),
 		Metadata:  metadata,
 	}
 	s.Logger().Debugf(ctx, `service register: %+v`, s.service)
-	if s.service, err = gsvc.Register(ctx, s.service); err != nil {
+	if s.service, err = s.registrar.Register(ctx, s.service); err != nil {
 		s.Logger().Fatalf(ctx, `%+v`, err)
 	}
 }
 
 // doServiceDeregister de-registers current service from Registry.
 func (s *Server) doServiceDeregister() {
-	if gsvc.GetRegistry() == nil {
+	if s.registrar == nil {
 		return
 	}
-	var ctx = context.Background()
+	var ctx = gctx.GetInitCtx()
 	s.Logger().Debugf(ctx, `service deregister: %+v`, s.service)
-	if err := gsvc.Deregister(ctx, s.service); err != nil {
+	if err := s.registrar.Deregister(ctx, s.service); err != nil {
 		s.Logger().Errorf(ctx, `%+v`, err)
 	}
+}
+
+func (s *Server) calculateListenedEndpoints() gsvc.Endpoints {
+	var (
+		address       = s.config.Address
+		endpoints     = make(gsvc.Endpoints, 0)
+		listenedIps   []string
+		listenedPorts []int
+	)
+	if address == "" {
+		address = s.config.HTTPSAddr
+	}
+	var addrArray = gstr.Split(address, ":")
+	switch addrArray[0] {
+	case "0.0.0.0", "":
+		listenedIps, _ = gipv4.GetIntranetIpArray()
+	default:
+		listenedIps = []string{addrArray[0]}
+	}
+	switch addrArray[1] {
+	case "0":
+		listenedPorts = s.GetListenedPorts()
+	default:
+		listenedPorts = []int{gconv.Int(addrArray[1])}
+	}
+	for _, ip := range listenedIps {
+		for _, port := range listenedPorts {
+			endpoints = append(endpoints, gsvc.NewEndpoint(fmt.Sprintf(`%s:%d`, ip, port)))
+		}
+	}
+	return endpoints
 }

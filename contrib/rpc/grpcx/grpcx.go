@@ -12,11 +12,13 @@ import (
 
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/balancer"
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/grpcctx"
+	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/resolver"
 )
 
 type (
 	modCtx      = grpcctx.Ctx
 	modBalancer = balancer.Balancer
+	modResolver = resolver.Manager
 	modClient   struct{}
 	modServer   struct{}
 )
@@ -36,6 +38,7 @@ const (
 var (
 	Ctx      = modCtx{}      // Ctx is instance of module Context, which manages the context feature.
 	Balancer = modBalancer{} // Balancer is instance of module Balancer, which manages the load balancer features.
+	Resolver = modResolver{} // Resolver is instance of module Resolver, which manages the DNS resolving for client.
 	Client   = modClient{}   // Client is instance of module Client, which manages the client features.
 	Server   = modServer{}   // Server is instance of module Server, which manages the server feature.
 )

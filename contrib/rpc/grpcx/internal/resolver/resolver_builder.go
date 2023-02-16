@@ -14,10 +14,20 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v2/os/gctx"
 )
 
 // Builder is the builder for the etcd discovery resolver.
-type Builder struct{}
+type Builder struct {
+	discovery gsvc.Discovery
+}
+
+// NewBuilder creates and returns a Builder.
+func NewBuilder(discovery gsvc.Discovery) *Builder {
+	return &Builder{
+		discovery: discovery,
+	}
+}
 
 // Build creates a new etcd discovery resolver.
 func (b *Builder) Build(
@@ -26,10 +36,10 @@ func (b *Builder) Build(
 	var (
 		err         error
 		watcher     gsvc.Watcher
-		ctx, cancel = context.WithCancel(context.Background())
+		ctx, cancel = context.WithCancel(gctx.GetInitCtx())
 	)
 	g.Log().Debugf(ctx, `etcd Watch key "%s"`, target.URL.Path)
-	if watcher, err = gsvc.Watch(ctx, target.URL.Path); err != nil {
+	if watcher, err = b.discovery.Watch(ctx, target.URL.Path); err != nil {
 		cancel()
 		return nil, gerror.Wrap(err, `registry.Watch failed`)
 	}

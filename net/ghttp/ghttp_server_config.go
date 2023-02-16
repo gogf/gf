@@ -19,6 +19,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/os/gres"
@@ -528,4 +529,14 @@ func (s *Server) GetHandler() func(w http.ResponseWriter, r *http.Request) {
 		return s.ServeHTTP
 	}
 	return s.config.Handler
+}
+
+// SetRegistrar sets the Registrar for server.
+func (s *Server) SetRegistrar(registrar gsvc.Registrar) {
+	s.registrar = registrar
+}
+
+// GetRegistrar returns the Registrar of server.
+func (s *Server) GetRegistrar() gsvc.Registrar {
+	return s.registrar
 }

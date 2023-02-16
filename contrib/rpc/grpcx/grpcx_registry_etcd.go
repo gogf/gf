@@ -23,9 +23,11 @@ type etcdRegistryConfig struct {
 // autoLoadAndRegisterEtcdRegistry checks and registers ETCD service as default service registry
 // if no registry is registered previously.
 func autoLoadAndRegisterEtcdRegistry() {
+	// It ignores etcd registry if any registry already registered.
 	if gsvc.GetRegistry() != nil {
 		return
 	}
+
 	var (
 		config      *etcdRegistryConfig
 		ctx, cancel = context.WithTimeout(context.Background(), defaultTimeout)

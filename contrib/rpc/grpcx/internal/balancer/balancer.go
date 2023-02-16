@@ -38,11 +38,13 @@ func init() {
 // Register registers the given balancer builder with the given name.
 func (Balancer) Register(builders ...gsel.Builder) {
 	for _, builder := range builders {
-		balancer.Register(base.NewBalancerBuilder(
-			builder.Name(),
-			&Builder{builder: builder},
-			base.Config{HealthCheck: true},
-		))
+		balancer.Register(
+			base.NewBalancerBuilder(
+				builder.Name(),
+				&Builder{builder: builder},
+				base.Config{HealthCheck: true},
+			),
+		)
 	}
 }
 
