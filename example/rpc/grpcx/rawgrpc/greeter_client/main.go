@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 
 	"github.com/gogf/gf/contrib/registry/etcd/v2"
 	pb "github.com/gogf/gf/example/rpc/grpcx/rawgrpc/helloworld"
@@ -33,6 +34,7 @@ func main() {
 	}
 	defer conn.Close()
 
+	// Send requests.
 	client := pb.NewGreeterClient(conn)
 	for i := 0; i < 10; i++ {
 		res, err := client.SayHello(ctx, &pb.HelloRequest{Name: `GoFrame`})

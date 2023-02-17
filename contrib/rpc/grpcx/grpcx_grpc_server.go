@@ -43,8 +43,8 @@ type Service struct {
 	Endpoints gsvc.Endpoints
 }
 
-// NewGrpcServer creates and returns a grpc server.
-func (s modServer) NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
+// New creates and returns a grpc server.
+func (s modServer) New(conf ...*GrpcServerConfig) *GrpcServer {
 	autoLoadAndRegisterFileRegistry()
 
 	var (

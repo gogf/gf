@@ -13,8 +13,7 @@ import (
 )
 
 func main() {
-	s := grpcx.Server.NewGrpcServer()
+	s := grpcx.Server.New()
 	protobuf.RegisterEchoServer(s.Server, new(service.Echo))
-	protobuf.RegisterTimeServer(s.Server, new(service.Time))
 	s.Run()
 }

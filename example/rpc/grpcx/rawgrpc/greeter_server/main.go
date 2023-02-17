@@ -16,12 +16,12 @@ import (
 	"github.com/gogf/gf/v2/os/gctx"
 )
 
-type server struct {
+type GreetingServer struct {
 	pb.UnimplementedGreeterServer
 }
 
 // SayHello implements helloworld.GreeterServer
-func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
+func (s *GreetingServer) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
 	g.Log().Printf(ctx, "Received: %v", in.GetName())
 	return &pb.HelloReply{Message: "Hello " + in.GetName()}, nil
 }
@@ -39,6 +39,7 @@ func main() {
 		}
 	)
 
+	// Service registry.
 	_, err = gsvc.Register(ctx, service)
 	if err != nil {
 		panic(err)
@@ -47,14 +48,16 @@ func main() {
 		_ = gsvc.Deregister(ctx, service)
 	}()
 
-	lis, err := net.Listen("tcp", address)
+	// Server listening.
+	listen, err := net.Listen("tcp", address)
 	if err != nil {
 		g.Log().Fatalf(ctx, "failed to listen: %v", err)
 	}
+
 	s := grpc.NewServer()
-	pb.RegisterGreeterServer(s, &server{})
-	g.Log().Printf(ctx, "server listening at %v", lis.Addr())
-	if err = s.Serve(lis); err != nil {
+	pb.RegisterGreeterServer(s, &GreetingServer{})
+	g.Log().Printf(ctx, "server listening at %v", listen.Addr())
+	if err = s.Serve(listen); err != nil {
 		g.Log().Fatalf(ctx, "failed to serve: %v", err)
 	}
 }

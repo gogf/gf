@@ -1,8 +1,9 @@
 package protobuf
 
 import (
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 	"google.golang.org/grpc"
+
+	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 )
 
 const (
@@ -27,9 +28,4 @@ func NewClient(options ...grpc.DialOption) (*Client, error) {
 // Echo is the client for protobuf.Echo.
 func (c *Client) Echo() EchoClient {
 	return NewEchoClient(c.conn)
-}
-
-// Time is the client for protobuf.Time.
-func (c *Client) Time() TimeClient {
-	return NewTimeClient(c.conn)
 }
