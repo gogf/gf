@@ -11,8 +11,10 @@ import (
 	"path"
 	"strings"
 
+	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // Search searches and returns services with specified condition.
@@ -63,7 +65,29 @@ func (r *Registry) Search(_ context.Context, in gsvc.SearchInput) ([]gsvc.Servic
 			"Error with group do",
 		)
 	}
-	return instances.([]gsvc.Service), nil
+	// Service filter.
+	filteredServices := make([]gsvc.Service, 0)
+	for _, service := range instances.([]gsvc.Service) {
+		if in.Prefix != "" && !gstr.HasPrefix(service.GetKey(), in.Prefix) {
+			continue
+		}
+		if in.Name != "" && service.GetName() != in.Name {
+			continue
+		}
+		if in.Version != "" && service.GetVersion() != in.Version {
+			continue
+		}
+		if len(in.Metadata) != 0 {
+			m1 := gmap.NewStrAnyMapFrom(in.Metadata)
+			m2 := gmap.NewStrAnyMapFrom(service.GetMetadata())
+			if !m1.IsSubOf(m2) {
+				continue
+			}
+		}
+		resultItem := service
+		filteredServices = append(filteredServices, resultItem)
+	}
+	return filteredServices, nil
 }
 
 // Watch watches specified condition changes.

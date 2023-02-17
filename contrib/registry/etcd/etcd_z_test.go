@@ -21,7 +21,6 @@ func TestRegistry(t *testing.T) {
 		ctx      = gctx.GetInitCtx()
 		registry = etcd.New(`127.0.0.1:2379`)
 	)
-
 	svc := &gsvc.LocalService{
 		Name:      guid.S(),
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:8888"),
