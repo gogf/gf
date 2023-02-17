@@ -31,10 +31,10 @@ type GrpcServerConfig struct {
 	Options          []grpc.ServerOption // (optional) GRPC Server options.
 }
 
-// NewGrpcServerConfig creates and returns a ServerConfig object with default configurations.
+// NewConfig creates and returns a ServerConfig object with default configurations.
 // Note that, do not define this default configuration to local package variable, as there are
 // some pointer attributes that may be shared in different servers.
-func (s modServer) NewGrpcServerConfig() *GrpcServerConfig {
+func (s modServer) NewConfig() *GrpcServerConfig {
 	var (
 		err    error
 		ctx    = context.TODO()

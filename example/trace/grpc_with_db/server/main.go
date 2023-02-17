@@ -33,7 +33,7 @@ func main() {
 	// Set ORM cache adapter with redis.
 	g.DB().GetCache().SetAdapter(gcache.NewAdapterRedis(g.Redis()))
 
-	s := grpcx.Server.NewGrpcServer()
+	s := grpcx.Server.New()
 	user.RegisterUserServer(s.Server, &server{})
 	s.Run()
 }

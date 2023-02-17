@@ -54,7 +54,7 @@ func (s modServer) New(conf ...*GrpcServerConfig) *GrpcServer {
 	if len(conf) > 0 {
 		config = conf[0]
 	} else {
-		config = s.NewGrpcServerConfig()
+		config = s.NewConfig()
 	}
 	if config.Address == "" {
 		randomPort, err := gtcp.GetFreePort()
