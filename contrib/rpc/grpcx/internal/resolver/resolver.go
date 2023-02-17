@@ -20,7 +20,7 @@ const (
 
 func init() {
 	// It registers default resolver here.
-	// It uses default builder handling the DNS for grpc service requests.
+	// It uses default builder handling the name resolving for grpc service requests.
 	// Use `grpc.WithResolver` to custom resolver for client.
 	resolver.Register(NewBuilder(gsvc.GetRegistry()))
 }

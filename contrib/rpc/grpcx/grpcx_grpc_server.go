@@ -7,7 +7,6 @@
 package grpcx
 
 import (
-	"context"
 	"fmt"
 	"net"
 	"os"
@@ -101,7 +100,7 @@ func (s *GrpcServer) Run() {
 		err error
 		ctx = gctx.GetInitCtx()
 	)
-	// Initialize services configured.
+	// Create listener to bind listening ip and port.
 	s.listener, err = net.Listen("tcp", s.config.Address)
 	if err != nil {
 		s.config.Logger.Fatalf(ctx, `%+v`, err)
@@ -127,7 +126,7 @@ func (s *GrpcServer) Run() {
 // doSignalListen does signal listening and handling for gracefully shutdown.
 func (s *GrpcServer) doSignalListen() {
 	var (
-		ctx     = context.Background()
+		ctx     = gctx.GetInitCtx()
 		sigChan = make(chan os.Signal, 1)
 	)
 	signal.Notify(

@@ -4,8 +4,9 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// opentelemetry-go-contrib/instrumentation/google.golang.org/grpc/otelgrpc/interceptor.go
-
+// Package tracing provide tracing feature for GRPC.
+//
+// Refer to: opentelemetry-go-contrib/instrumentation/google.golang.org/grpc/otelgrpc/interceptor.go
 package tracing
 
 import (
