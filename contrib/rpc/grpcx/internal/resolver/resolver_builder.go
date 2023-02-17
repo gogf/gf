@@ -36,19 +36,22 @@ func (b *Builder) Build(
 	var (
 		err         error
 		watcher     gsvc.Watcher
+		watchKey    = target.URL.Path
 		ctx, cancel = context.WithCancel(gctx.GetInitCtx())
 	)
-	g.Log().Debugf(ctx, `etcd Watch key "%s"`, target.URL.Path)
-	if watcher, err = b.discovery.Watch(ctx, target.URL.Path); err != nil {
+	g.Log().Debugf(ctx, `Watch key "%s"`, watchKey)
+	if watcher, err = b.discovery.Watch(ctx, watchKey); err != nil {
 		cancel()
 		return nil, gerror.Wrap(err, `registry.Watch failed`)
 	}
 	r := &Resolver{
-		watcher: watcher,
-		cc:      cc,
-		ctx:     ctx,
-		cancel:  cancel,
-		logger:  g.Log(),
+		discovery: b.discovery,
+		watcher:   watcher,
+		watchKey:  watchKey,
+		cc:        cc,
+		ctx:       ctx,
+		cancel:    cancel,
+		logger:    g.Log(),
 	}
 	go r.watch()
 	return r, nil

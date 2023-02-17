@@ -71,7 +71,7 @@ func (s *Server) calculateListenedEndpoints() gsvc.Endpoints {
 	var addrArray = gstr.Split(address, ":")
 	switch addrArray[0] {
 	case "0.0.0.0", "":
-		listenedIps, _ = gipv4.GetIntranetIpArray()
+		listenedIps = []string{gipv4.MustGetIntranetIp()}
 	default:
 		listenedIps = []string{addrArray[0]}
 	}

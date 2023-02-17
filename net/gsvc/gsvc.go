@@ -24,7 +24,7 @@ type Registry interface {
 type Registrar interface {
 	// Register registers `service` to Registry.
 	// Note that it returns a new Service if it changes the input Service with custom one.
-	Register(ctx context.Context, service Service) (Service, error)
+	Register(ctx context.Context, service Service) (registered Service, err error)
 
 	// Deregister off-lines and removes `service` from the Registry.
 	Deregister(ctx context.Context, service Service) error
@@ -33,17 +33,18 @@ type Registrar interface {
 // Discovery interface for service discovery.
 type Discovery interface {
 	// Search searches and returns services with specified condition.
-	Search(ctx context.Context, in SearchInput) ([]Service, error)
+	Search(ctx context.Context, in SearchInput) (result []Service, err error)
 
 	// Watch watches specified condition changes.
-	Watch(ctx context.Context, key string) (Watcher, error)
+	// The `key` is the prefix of service key.
+	Watch(ctx context.Context, key string) (watcher Watcher, err error)
 }
 
 // Watcher interface for service.
 type Watcher interface {
 	// Proceed proceeds watch in blocking way.
 	// It returns all complete services that watched by `key` if any change.
-	Proceed() ([]Service, error)
+	Proceed() (services []Service, err error)
 
 	// Close closes the watcher.
 	Close() error

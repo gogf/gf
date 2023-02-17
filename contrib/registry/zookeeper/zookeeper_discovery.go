@@ -8,13 +8,14 @@ package zookeeper
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/net/gsvc"
 	"path"
 	"strings"
+
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/net/gsvc"
 )
 
-// Search is the etcd discovery search function.
+// Search searches and returns services with specified condition.
 func (r *Registry) Search(_ context.Context, in gsvc.SearchInput) ([]gsvc.Service, error) {
 	prefix := strings.TrimPrefix(strings.ReplaceAll(in.Prefix, "/", "-"), "-")
 	instances, err, _ := r.group.Do(prefix, func() (interface{}, error) {
@@ -65,7 +66,8 @@ func (r *Registry) Search(_ context.Context, in gsvc.SearchInput) ([]gsvc.Servic
 	return instances.([]gsvc.Service), nil
 }
 
-// Watch is the etcd discovery watch function.
+// Watch watches specified condition changes.
+// The `key` is the prefix of service key.
 func (r *Registry) Watch(ctx context.Context, key string) (gsvc.Watcher, error) {
 	return newWatcher(ctx, r.opts.namespace, key, r.conn)
 }

@@ -45,6 +45,8 @@ type Service struct {
 
 // NewGrpcServer creates and returns a grpc server.
 func (s modServer) NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
+	autoLoadAndRegisterFileRegistry()
+
 	var (
 		ctx    = gctx.GetInitCtx()
 		config *GrpcServerConfig
@@ -94,8 +96,6 @@ func (s *GrpcServer) Service(services ...gsvc.Service) {
 
 // Run starts the server in blocking way.
 func (s *GrpcServer) Run() {
-	autoLoadAndRegisterEtcdRegistry()
-
 	var (
 		err error
 		ctx = gctx.GetInitCtx()
@@ -253,7 +253,7 @@ func (s *GrpcServer) calculateListenedEndpoints() gsvc.Endpoints {
 	var addrArray = gstr.Split(address, ":")
 	switch addrArray[0] {
 	case "0.0.0.0", "":
-		listenedIps, _ = gipv4.GetIntranetIpArray()
+		listenedIps = []string{gipv4.MustGetIntranetIp()}
 	default:
 		listenedIps = []string{addrArray[0]}
 	}

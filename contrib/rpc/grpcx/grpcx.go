@@ -8,8 +8,6 @@
 package grpcx
 
 import (
-	"time"
-
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/balancer"
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/grpcctx"
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/resolver"
@@ -30,9 +28,7 @@ const (
 
 const (
 	defaultServerName        = `default`
-	defaultTimeout           = 5 * time.Second
-	configNodeNameRegistry   = `registry`
-	configNodeNameGrpcServer = `grpcserver`
+	configNodeNameGrpcServer = `grpc`
 )
 
 var (

@@ -31,4 +31,5 @@ func SetRegistry(registry gsvc.Registry) {
 		panic(gerror.New(`invalid Registry value "nil" given`))
 	}
 	gsvc.SetRegistry(registry)
+	resolver.Register(NewBuilder(registry))
 }

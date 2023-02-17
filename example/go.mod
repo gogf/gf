@@ -10,6 +10,7 @@ require (
 	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.0.0
 	github.com/gogf/gf/contrib/nosql/redis/v2 v2.2.6
 	github.com/gogf/gf/contrib/registry/etcd/v2 v2.2.6
+	github.com/gogf/gf/contrib/registry/file/v2 v2.2.6
 	github.com/gogf/gf/contrib/registry/polaris/v2 v2.0.0
 	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.0.0
 	github.com/gogf/gf/contrib/trace/jaeger/v2 v2.0.0
@@ -31,6 +32,7 @@ replace (
 	github.com/gogf/gf/contrib/drivers/mysql/v2 => ../contrib/drivers/mysql/
 	github.com/gogf/gf/contrib/nosql/redis/v2 => ../contrib/nosql/redis/
 	github.com/gogf/gf/contrib/registry/etcd/v2 => ../contrib/registry/etcd/
+	github.com/gogf/gf/contrib/registry/file/v2 => ../contrib/registry/file/
 	github.com/gogf/gf/contrib/registry/polaris/v2 => ../contrib/registry/polaris/
 	github.com/gogf/gf/contrib/rpc/grpcx/v2 => ../contrib/rpc/grpcx/
 	github.com/gogf/gf/contrib/trace/jaeger/v2 => ../contrib/trace/jaeger/

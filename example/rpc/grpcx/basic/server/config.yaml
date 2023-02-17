@@ -1,7 +1,4 @@
-registry:
-  endpoints: ["127.0.0.1:2379"]
-
-grpcserver:
+grpc:
   name:            "demo"
   logPath:          "./log"
   logStdout:        true

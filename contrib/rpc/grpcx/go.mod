@@ -3,7 +3,7 @@ module github.com/gogf/gf/contrib/rpc/grpcx/v2
 go 1.15
 
 require (
-	github.com/gogf/gf/contrib/registry/etcd/v2 v2.1.4
+	github.com/gogf/gf/contrib/registry/file/v2 v2.1.4
 	github.com/gogf/gf/v2 v2.1.4
 	go.opentelemetry.io/otel v1.10.0
 	go.opentelemetry.io/otel/trace v1.10.0
@@ -13,6 +13,6 @@ require (
 )
 
 replace (
-	github.com/gogf/gf/contrib/registry/etcd/v2 => ../../registry/etcd/
+	github.com/gogf/gf/contrib/registry/file/v2 => ../../registry/file/
 	github.com/gogf/gf/v2 => ../../../
 )

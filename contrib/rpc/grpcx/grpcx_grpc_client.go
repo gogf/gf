@@ -26,7 +26,7 @@ func (c modClient) DefaultGrpcDialOptions() []grpc.DialOption {
 
 // NewGrpcClientConn NewGrpcConn creates and returns a client connection for given service `appId`.
 func (c modClient) NewGrpcClientConn(name string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
-	autoLoadAndRegisterEtcdRegistry()
+	autoLoadAndRegisterFileRegistry()
 
 	var (
 		service           = gsvc.NewServiceWithName(name)
