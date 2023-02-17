@@ -20,17 +20,18 @@ You can also install `gf` tool using pre-built binaries: <https://github.com/gog
    Manually download, execute in command line it and then follow the instruction.
 
 3. Database support
-| DB | support | remarks |
-| :------: | :------: | :------: |
-| mysql | yes | - |
-| mariadb | yes | - |
-| tidb | yes | - |
-| mssql | yes | - |
-| oracle | yes | - |
-| pgsql | yes | - |
-| sqlite | yes | - |
-| clickhouse | no | manually make some changes to the source codes and do the building. |
-| dm | no | manually make some changes to the source codes and do the building. |
+
+   | DB | support | remarks |
+   | :------: | :------: | :------: |
+   | mysql | yes | - |
+   | mariadb | yes | - |
+   | tidb | yes | - |
+   | mssql | yes | - |
+   | oracle | yes | - |
+   | pgsql | yes | - |
+   | sqlite | yes | - |
+   | clickhouse | no | manually make some changes to the source codes and do the building. |
+   | dm | no | manually make some changes to the source codes and do the building. |
 
 ## 2) Manually Install
 
