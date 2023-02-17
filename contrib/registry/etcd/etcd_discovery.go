@@ -11,7 +11,9 @@ import (
 
 	etcd3 "go.etcd.io/etcd/client/v3"
 
+	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // Search searches and returns services with specified condition.
@@ -30,15 +32,25 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]gsvc.Serv
 	}
 	// Service filter.
 	filteredServices := make([]gsvc.Service, 0)
-	for _, v := range services {
-		if in.Name != "" && in.Name != v.GetName() {
+	for _, service := range services {
+		if in.Prefix != "" && !gstr.HasPrefix(service.GetKey(), in.Prefix) {
 			continue
 		}
-		if in.Version != "" && in.Version != v.GetVersion() {
+		if in.Name != "" && service.GetName() != in.Name {
 			continue
 		}
-		service := v
-		filteredServices = append(filteredServices, service)
+		if in.Version != "" && service.GetVersion() != in.Version {
+			continue
+		}
+		if len(in.Metadata) != 0 {
+			m1 := gmap.NewStrAnyMapFrom(in.Metadata)
+			m2 := gmap.NewStrAnyMapFrom(service.GetMetadata())
+			if !m1.IsSubOf(m2) {
+				continue
+			}
+		}
+		resultItem := service
+		filteredServices = append(filteredServices, resultItem)
 	}
 	return filteredServices, nil
 }

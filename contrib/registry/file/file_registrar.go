@@ -19,6 +19,7 @@ import (
 // Register registers `service` to Registry.
 // Note that it returns a new Service if it changes the input Service with custom one.
 func (r *Registry) Register(ctx context.Context, service gsvc.Service) (registered gsvc.Service, err error) {
+	service = NewService(service)
 	service.GetMetadata().Set(updateAtKey, gtime.Now())
 	var (
 		filePath    = r.getServiceFilePath(service)

@@ -44,6 +44,7 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) (result []gs
 		resultItem := service
 		result = append(result, resultItem)
 	}
+	result = r.mergeServices(result)
 	return
 }
 
@@ -51,14 +52,15 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) (result []gs
 // The `key` is the prefix of service key.
 func (r *Registry) Watch(ctx context.Context, key string) (watcher gsvc.Watcher, err error) {
 	fileWatcher := &Watcher{
-		prefix: r.getServiceKeyForFile(key),
-		ch:     make(chan gsvc.Service, 100),
+		prefix:    key,
+		discovery: r,
+		ch:        make(chan gsvc.Service, 100),
 	}
 	_, err = gfsnotify.Add(r.path, func(event *gfsnotify.Event) {
 		if event.IsChmod() {
 			return
 		}
-		if !gstr.HasPrefix(gfile.Basename(event.Path), fileWatcher.prefix) {
+		if !gstr.HasPrefix(gfile.Basename(event.Path), r.getServiceKeyForFile(key)) {
 			return
 		}
 		service, err := r.getServiceByFilePath(event.Path)
@@ -96,6 +98,7 @@ func (r *Registry) getServices(ctx context.Context) (services []gsvc.Service, er
 		}
 		services = append(services, s)
 	}
+	services = r.mergeServices(services)
 	return
 }
 
@@ -107,4 +110,25 @@ func (r *Registry) getServiceByFilePath(filePath string) (gsvc.Service, error) {
 	)
 	serviceKey = gsvc.DefaultSeparator + serviceKey
 	return gsvc.NewServiceWithKV(serviceKey, fileContent)
+}
+
+func (r *Registry) mergeServices(services []gsvc.Service) []gsvc.Service {
+	if len(services) == 0 {
+		return services
+	}
+
+	var (
+		servicePrefixMap = make(map[string]*Service)
+		mergeServices    = make([]gsvc.Service, 0)
+	)
+	for _, service := range services {
+		if v, ok := servicePrefixMap[service.GetPrefix()]; ok {
+			v.Endpoints = append(v.Endpoints, service.GetEndpoints()...)
+		} else {
+			s := NewService(service)
+			servicePrefixMap[s.GetPrefix()] = s
+			mergeServices = append(mergeServices, s)
+		}
+	}
+	return mergeServices
 }

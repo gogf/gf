@@ -18,6 +18,7 @@ import (
 // Register registers `service` to Registry.
 // Note that it returns a new Service if it changes the input Service with custom one.
 func (r *Registry) Register(ctx context.Context, service gsvc.Service) (gsvc.Service, error) {
+	service = NewService(service)
 	r.lease = etcd3.NewLease(r.client)
 	grant, err := r.lease.Grant(ctx, int64(r.keepaliveTTL.Seconds()))
 	if err != nil {
