@@ -2,32 +2,44 @@
 
 `gf` is a powerful CLI tool for building [GoFrame](https://goframe.org) application with convenience.
 
-
 ## 1. Install
 
 ## 1) PreCompiled Binary
-You can also install `gf` tool using pre-built binaries: https://github.com/gogf/gf/releases
+
+You can also install `gf` tool using pre-built binaries: <https://github.com/gogf/gf/releases>
 
 1. `Mac` & `Linux`
-    ```shell
+
+   ```shell
     wget -O gf https://github.com/gogf/gf/releases/latest/download/gf_$(go env GOOS)_$(go env GOARCH) && chmod +x gf && ./gf install -y && rm ./gf
-    ```
+   ```
+
    > If you're using `zsh`, you might need rename your alias by command `alias gf=gf` to resolve the conflicts between `gf` and `git fetch`.
 
 2. `Windows`
+   Manually download, execute in command line it and then follow the instruction.
 
-   Manually download, execute it and then follow the instruction.
-
-3. Database `sqlite` and `oracle` are not support in `gf gen` command in default as it needs `cgo` and `gcc`, you can manually make some changes to the source codes and do the building.
+3. Database support
+| DB | support | remarks |
+| :------: | :------: | :------: |
+| mysql | yes | - |
+| mariadb | yes | - |
+| tidb | yes | - |
+| mssql | yes | - |
+| oracle | yes | - |
+| pgsql | yes | - |
+| sqlite | yes | - |
+| clickhouse | no | manually make some changes to the source codes and do the building. |
+| dm | no | manually make some changes to the source codes and do the building. |
 
 ## 2) Manually Install
 
- ```shell
+```shell
 git clone https://github.com/gogf/gf && cd gf/cmd/gf && go install
- ```
-
+```
 
 ## 2. Commands
+
 ```html
 $ gf
 USAGE
@@ -60,10 +72,3 @@ ADDITIONAL
 ### 1). Command `gf run` returns `pipe: too many open files`
 
 Please use `ulimit -n 65535` to enlarge your system configuration for max open files for current terminal shell session, and then `gf run`.
-
-
-
-
-
-
-
