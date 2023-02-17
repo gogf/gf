@@ -30,8 +30,8 @@ You can also install `gf` tool using pre-built binaries: <https://github.com/gog
    | oracle | yes | - |
    | pgsql | yes | - |
    | sqlite | yes | - |
-   | clickhouse | no | manually make some changes to the source codes and do the building. |
-   | dm | no | manually make some changes to the source codes and do the building. |
+   | clickhouse | no | manually make some changes to the [source codes](./internal/cmd/cmd_gen_dao.go) and do the building. |
+   | dm | no | manually make some changes to the [source codes](./internal/cmd/cmd_gen_dao.go) and do the building. |
 
 ## 2) Manually Install
 
@@ -47,22 +47,22 @@ USAGE
     gf COMMAND [OPTION]
 
 COMMAND
-   env        show current Golang environment variables
-   run        running go codes with hot-compiled-like feature
-   gen        automatically generate go files for dao/do/entity/pb/pbentity
-   tpl        template parsing and building commands
-   init       create and initialize an empty GoFrame project
-   pack       packing any file/directory to a resource file, or a go file
-   build      cross-building go project for lots of platforms
-   docker     build docker image for current GoFrame project
-   install    install gf binary to system (might need root/admin permission)
-   version    show version information of current binary
+    env        show current Golang environment variables
+    run        running go codes with hot-compiled-like feature
+    gen        automatically generate go files for dao/do/entity/pb/pbentity
+    tpl        template parsing and building commands
+    init       create and initialize an empty GoFrame project
+    pack       packing any file/directory to a resource file, or a go file
+    build      cross-building go project for lots of platforms
+    docker     build docker image for current GoFrame project
+    install    install gf binary to system (might need root/admin permission)
+    version    show version information of current binary
 
 OPTION
-   -y, --yes       all yes for all command without prompt ask
-   -v, --version   show version information of current binary
-   -d, --debug     show internal detailed debugging information
-   -h, --help      more information about this command
+    -y, --yes       all yes for all command without prompt ask
+    -v, --version   show version information of current binary
+    -d, --debug     show internal detailed debugging information
+    -h, --help      more information about this command
 
 ADDITIONAL
     Use "gf COMMAND -h" for details about a command.
