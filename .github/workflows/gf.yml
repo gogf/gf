@@ -173,9 +173,9 @@ jobs:
           ~/.cache/go-build
           ~/Library/Caches/go-build
           ~\AppData\Local\go-build
-        key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
-          ${{ runner.os }}-go-${{ matrix.go-version }}-
+          ${{ runner.os }}-go-
 
     - name: Before Script
       run:  bash .github/workflows/before_script.sh
