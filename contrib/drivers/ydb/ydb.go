@@ -61,14 +61,10 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	// Data Source Name of YDB:
 	// grpcs://userName:password@ip:port/dbname
 	source = fmt.Sprintf(
-		"grpcs://%s:%s@%s:%s/%s",
-		config.User, config.Pass, config.Host, config.Port, config.Name,
+		"grpc://%s:%s/%s",
+		config.Host, config.Port, config.Name,
 	)
-	if config.Timezone != "" {
-		if strings.Contains(config.Timezone, "/") {
-			config.Timezone = url.QueryEscape(config.Timezone)
-		}
-	}
+
 	if db, err = sql.Open(underlyingDriverName, source); err != nil {
 		err = gerror.WrapCodef(
 			gcode.CodeDbOperationError, err,
