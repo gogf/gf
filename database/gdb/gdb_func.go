@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/internal/utils"
@@ -210,7 +211,7 @@ func DataToMapDeep(value interface{}) map[string]interface{} {
 	m := gconv.Map(value, structTagPriority...)
 	for k, v := range m {
 		switch v.(type) {
-		case time.Time, *time.Time, gtime.Time, *gtime.Time:
+		case time.Time, *time.Time, gtime.Time, *gtime.Time, gjson.Json, *gjson.Json:
 			m[k] = v
 
 		default:
@@ -562,16 +563,16 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 			if i >= len(in.Args) {
 				break
 			}
+			// ===============================================================
 			// Sub query, which is always used along with a string condition.
-			if model, ok := in.Args[i].(*Model); ok {
+			// ===============================================================
+			if subModel, ok := in.Args[i].(*Model); ok {
 				index := -1
 				whereStr, _ = gregex.ReplaceStringFunc(`(\?)`, whereStr, func(s string) string {
 					index++
 					if i+len(newArgs) == index {
-						sqlWithHolder, holderArgs := model.getFormattedSqlAndArgs(
-							ctx, queryTypeNormal, false,
-						)
-						newArgs = append(newArgs, holderArgs...)
+						sqlWithHolder, holderArgs := subModel.getHolderAndArgsAsSubModel(ctx)
+						in.Args = gutil.SliceInsertAfter(in.Args, i, holderArgs...)
 						// Automatically adding the brackets.
 						return "(" + sqlWithHolder + ")"
 					}

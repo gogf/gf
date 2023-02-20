@@ -12,6 +12,7 @@ import (
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gredis"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // AdapterRedis is the gcache adapter implements using Redis server.
@@ -31,13 +32,14 @@ func NewAdapterRedis(redis *gredis.Redis) Adapter {
 // It does not expire if `duration` == 0.
 // It deletes the keys of `data` if `duration` < 0 or given `value` is nil.
 func (c *AdapterRedis) Set(ctx context.Context, key interface{}, value interface{}, duration time.Duration) (err error) {
+	redisKey := gconv.String(key)
 	if value == nil || duration < 0 {
-		_, err = c.redis.Do(ctx, "DEL", key)
+		_, err = c.redis.Del(ctx, redisKey)
 	} else {
 		if duration == 0 {
-			_, err = c.redis.Do(ctx, "SET", key, value)
+			_, err = c.redis.Set(ctx, redisKey, value)
 		} else {
-			_, err = c.redis.Do(ctx, "SETEX", key, uint64(duration.Seconds()), value)
+			err = c.redis.SetEX(ctx, redisKey, value, int64(duration.Seconds()))
 		}
 	}
 	return err
@@ -55,28 +57,19 @@ func (c *AdapterRedis) SetMap(ctx context.Context, data map[interface{}]interfac
 	if duration < 0 {
 		var (
 			index = 0
-			keys  = make([]interface{}, len(data))
+			keys  = make([]string, len(data))
 		)
 		for k := range data {
-			keys[index] = k
+			keys[index] = gconv.String(k)
 			index += 1
 		}
-		_, err := c.redis.Do(ctx, "DEL", keys...)
+		_, err := c.redis.Del(ctx, keys...)
 		if err != nil {
 			return err
 		}
 	}
 	if duration == 0 {
-		var (
-			index     = 0
-			keyValues = make([]interface{}, len(data)*2)
-		)
-		for k, v := range data {
-			keyValues[index] = k
-			keyValues[index+1] = v
-			index += 2
-		}
-		_, err := c.redis.Do(ctx, "MSET", keyValues...)
+		err := c.redis.MSet(ctx, gconv.Map(data))
 		if err != nil {
 			return err
 		}
@@ -100,8 +93,8 @@ func (c *AdapterRedis) SetMap(ctx context.Context, data map[interface{}]interfac
 // It deletes the `key` if `duration` < 0 or given `value` is nil.
 func (c *AdapterRedis) SetIfNotExist(ctx context.Context, key interface{}, value interface{}, duration time.Duration) (bool, error) {
 	var (
-		v   *gvar.Var
-		err error
+		err      error
+		redisKey = gconv.String(key)
 	)
 	// Execute the function and retrieve the result.
 	f, ok := value.(Func)
@@ -116,27 +109,29 @@ func (c *AdapterRedis) SetIfNotExist(ctx context.Context, key interface{}, value
 	}
 	// DEL.
 	if duration < 0 || value == nil {
-		if v, err = c.redis.Do(ctx, "DEL", key, value); err != nil {
-			return false, err
-		}
-		if v.Int() == 1 {
-			return true, err
-		} else {
-			return false, err
-		}
-	}
-	if v, err = c.redis.Do(ctx, "SETNX", key, value); err != nil {
-		return false, err
-	}
-	if v.Int() > 0 && duration > 0 {
-		// Set the expiration.
-		_, err = c.redis.Do(ctx, "EXPIRE", key, uint64(duration.Seconds()))
+		var delResult int64
+		delResult, err = c.redis.Del(ctx, redisKey)
 		if err != nil {
 			return false, err
 		}
-		return true, err
+		if delResult == 1 {
+			return true, err
+		}
+		return false, err
 	}
-	return false, err
+	ok, err = c.redis.SetNX(ctx, redisKey, value)
+	if err != nil {
+		return ok, err
+	}
+	if ok && duration > 0 {
+		// Set the expiration.
+		_, err = c.redis.Expire(ctx, redisKey, int64(duration.Seconds()))
+		if err != nil {
+			return ok, err
+		}
+		return ok, err
+	}
+	return ok, err
 }
 
 // SetIfNotExistFunc sets `key` with result of function `f` and returns true
@@ -174,7 +169,7 @@ func (c *AdapterRedis) SetIfNotExistFuncLock(ctx context.Context, key interface{
 // Get retrieves and returns the associated value of given <key>.
 // It returns nil if it does not exist or its value is nil.
 func (c *AdapterRedis) Get(ctx context.Context, key interface{}) (*gvar.Var, error) {
-	return c.redis.Do(ctx, "GET", key)
+	return c.redis.Get(ctx, gconv.String(key))
 }
 
 // GetOrSet retrieves and returns the value of `key`, or sets `key`-`value` pair and
@@ -237,20 +232,20 @@ func (c *AdapterRedis) GetOrSetFuncLock(ctx context.Context, key interface{}, f 
 
 // Contains checks and returns true if `key` exists in the cache, or else returns false.
 func (c *AdapterRedis) Contains(ctx context.Context, key interface{}) (bool, error) {
-	v, err := c.redis.Do(ctx, "EXISTS", key)
+	n, err := c.redis.Exists(ctx, gconv.String(key))
 	if err != nil {
 		return false, err
 	}
-	return v.Bool(), nil
+	return n > 0, nil
 }
 
 // Size returns the number of items in the cache.
 func (c *AdapterRedis) Size(ctx context.Context) (size int, err error) {
-	v, err := c.redis.Do(ctx, "DBSIZE")
+	n, err := c.redis.DBSize(ctx)
 	if err != nil {
 		return 0, err
 	}
-	return v.Int(), nil
+	return int(n), nil
 }
 
 // Data returns a copy of all key-value pairs in the cache as map type.
@@ -258,48 +253,54 @@ func (c *AdapterRedis) Size(ctx context.Context) (size int, err error) {
 // if necessary.
 func (c *AdapterRedis) Data(ctx context.Context) (map[interface{}]interface{}, error) {
 	// Keys.
-	v, err := c.redis.Do(ctx, "KEYS", "*")
+	keys, err := c.redis.Keys(ctx, "*")
 	if err != nil {
 		return nil, err
 	}
-	keys := v.Slice()
-	// Values.
-	v, err = c.redis.Do(ctx, "MGET", keys...)
+	// Key-Value pairs.
+	var m map[string]*gvar.Var
+	m, err = c.redis.MGet(ctx, keys...)
 	if err != nil {
 		return nil, err
 	}
-	values := v.Slice()
-	// Compose keys and values.
+	// Type converting.
 	data := make(map[interface{}]interface{})
-	for i := 0; i < len(keys); i++ {
-		data[keys[i]] = values[i]
+	for k, v := range m {
+		data[k] = v.Val()
 	}
 	return data, nil
 }
 
 // Keys returns all keys in the cache as slice.
 func (c *AdapterRedis) Keys(ctx context.Context) ([]interface{}, error) {
-	v, err := c.redis.Do(ctx, "KEYS", "*")
+	keys, err := c.redis.Keys(ctx, "*")
 	if err != nil {
 		return nil, err
 	}
-	return v.Slice(), nil
+	return gconv.Interfaces(keys), nil
 }
 
 // Values returns all values in the cache as slice.
 func (c *AdapterRedis) Values(ctx context.Context) ([]interface{}, error) {
 	// Keys.
-	v, err := c.redis.Do(ctx, "KEYS", "*")
+	keys, err := c.redis.Keys(ctx, "*")
 	if err != nil {
 		return nil, err
 	}
-	keys := v.Slice()
+	// Key-Value pairs.
+	var m map[string]*gvar.Var
+	m, err = c.redis.MGet(ctx, keys...)
+	if err != nil {
+		return nil, err
+	}
 	// Values.
-	v, err = c.redis.Do(ctx, "MGET", keys...)
-	if err != nil {
-		return nil, err
+	var values []interface{}
+	for _, key := range keys {
+		if v := m[key]; !v.IsNil() {
+			values = append(values, v.Val())
+		}
 	}
-	return v.Slice(), nil
+	return values, nil
 }
 
 // Update updates the value of `key` without changing its expiration and returns the old value.
@@ -309,39 +310,38 @@ func (c *AdapterRedis) Values(ctx context.Context) ([]interface{}, error) {
 // It does nothing if `key` does not exist in the cache.
 func (c *AdapterRedis) Update(ctx context.Context, key interface{}, value interface{}) (oldValue *gvar.Var, exist bool, err error) {
 	var (
-		v           *gvar.Var
-		oldDuration time.Duration
+		v        *gvar.Var
+		oldTTL   int64
+		redisKey = gconv.String(key)
 	)
 	// TTL.
-	v, err = c.redis.Do(ctx, "TTL", key)
+	oldTTL, err = c.redis.TTL(ctx, redisKey)
 	if err != nil {
 		return
 	}
-	oldDuration = v.Duration()
-	if oldDuration == -2 {
+	if oldTTL == -2 {
 		// It does not exist.
 		return
 	}
 	// Check existence.
-	v, err = c.redis.Do(ctx, "GET", key)
+	v, err = c.redis.Get(ctx, redisKey)
 	if err != nil {
 		return
 	}
 	oldValue = v
 	// DEL.
 	if value == nil {
-		_, err = c.redis.Do(ctx, "DEL", key)
+		_, err = c.redis.Del(ctx, redisKey)
 		if err != nil {
 			return
 		}
 		return
 	}
 	// Update the value.
-	if oldDuration == -1 {
-		_, err = c.redis.Do(ctx, "SET", key, value)
+	if oldTTL == -1 {
+		_, err = c.redis.Set(ctx, redisKey, value)
 	} else {
-		oldDuration *= time.Second
-		_, err = c.redis.Do(ctx, "SETEX", key, uint64(oldDuration.Seconds()), value)
+		err = c.redis.SetEX(ctx, redisKey, value, oldTTL)
 	}
 	return oldValue, true, err
 }
@@ -352,36 +352,37 @@ func (c *AdapterRedis) Update(ctx context.Context, key interface{}, value interf
 // It deletes the `key` if `duration` < 0.
 func (c *AdapterRedis) UpdateExpire(ctx context.Context, key interface{}, duration time.Duration) (oldDuration time.Duration, err error) {
 	var (
-		v *gvar.Var
+		v        *gvar.Var
+		oldTTL   int64
+		redisKey = gconv.String(key)
 	)
 	// TTL.
-	v, err = c.redis.Do(ctx, "TTL", key)
+	oldTTL, err = c.redis.TTL(ctx, redisKey)
 	if err != nil {
 		return
 	}
-	oldDuration = v.Duration()
-	if oldDuration == -2 {
+	if oldTTL == -2 {
 		// It does not exist.
-		oldDuration = -1
+		oldTTL = -1
 		return
 	}
-	oldDuration *= time.Second
+	oldDuration = time.Duration(oldTTL) * time.Second
 	// DEL.
 	if duration < 0 {
-		_, err = c.redis.Do(ctx, "DEL", key)
+		_, err = c.redis.Del(ctx, redisKey)
 		return
 	}
-	// Update the expire.
+	// Update the expiration.
 	if duration > 0 {
-		_, err = c.redis.Do(ctx, "EXPIRE", key, uint64(duration.Seconds()))
+		_, err = c.redis.Expire(ctx, redisKey, int64(duration.Seconds()))
 	}
 	// No expire.
 	if duration == 0 {
-		v, err = c.redis.Do(ctx, "GET", key)
+		v, err = c.redis.Get(ctx, redisKey)
 		if err != nil {
 			return
 		}
-		_, err = c.redis.Do(ctx, "SET", key, v.Val())
+		_, err = c.redis.Set(ctx, redisKey, v.Val())
 	}
 	return
 }
@@ -392,17 +393,17 @@ func (c *AdapterRedis) UpdateExpire(ctx context.Context, key interface{}, durati
 // It returns 0 if the `key` does not expire.
 // It returns -1 if the `key` does not exist in the cache.
 func (c *AdapterRedis) GetExpire(ctx context.Context, key interface{}) (time.Duration, error) {
-	v, err := c.redis.Do(ctx, "TTL", key)
+	ttl, err := c.redis.TTL(ctx, gconv.String(key))
 	if err != nil {
 		return 0, err
 	}
-	switch v.Int() {
+	switch ttl {
 	case -1:
 		return 0, nil
 	case -2:
 		return -1, nil
 	default:
-		return v.Duration() * time.Second, nil
+		return time.Duration(ttl) * time.Second, nil
 	}
 }
 
@@ -413,11 +414,11 @@ func (c *AdapterRedis) Remove(ctx context.Context, keys ...interface{}) (lastVal
 		return nil, nil
 	}
 	// Retrieves the last key value.
-	if lastValue, err = c.redis.Do(ctx, "GET", keys[len(keys)-1]); err != nil {
+	if lastValue, err = c.redis.Get(ctx, gconv.String(keys[len(keys)-1])); err != nil {
 		return nil, err
 	}
 	// Deletes all given keys.
-	_, err = c.redis.Do(ctx, "DEL", keys...)
+	_, err = c.redis.Del(ctx, gconv.Strings(keys)...)
 	return
 }
 
@@ -426,7 +427,7 @@ func (c *AdapterRedis) Remove(ctx context.Context, keys ...interface{}) (lastVal
 // It uses `FLUSHDB` command in redis server, which might be disabled in server.
 func (c *AdapterRedis) Clear(ctx context.Context) (err error) {
 	// The "FLUSHDB" may not be available.
-	_, err = c.redis.Do(ctx, "FLUSHDB")
+	err = c.redis.FlushDB(ctx)
 	return
 }
 

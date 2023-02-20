@@ -92,7 +92,7 @@ func IsEmpty(value interface{}) bool {
 		// Common interfaces checks.
 		// =========================
 		if f, ok := value.(iTime); ok {
-			if f == nil {
+			if f == (*time.Time)(nil) {
 				return true
 			}
 			return f.IsZero()

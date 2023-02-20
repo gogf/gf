@@ -59,7 +59,7 @@ func ExampleNewIntArrayRange() {
 	fmt.Println(s.Slice(), s.Len(), cap(s.Slice()))
 
 	// Output:
-	// [1 2 3 4 5] 5 5
+	// [1 2 3 4 5] 5 8
 }
 
 func ExampleNewIntArrayFrom() {

@@ -308,7 +308,7 @@ func (m *Model) Value(fieldsAndWhere ...interface{}) (Value, error) {
 // Count does "SELECT COUNT(x) FROM ..." statement for the model.
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
-func (m *Model) Count(where ...interface{}) (int64, error) {
+func (m *Model) Count(where ...interface{}) (int, error) {
 	var ctx = m.GetCtx()
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).Count()
@@ -324,7 +324,7 @@ func (m *Model) Count(where ...interface{}) (int64, error) {
 		if internalData := m.db.GetCore().GetInternalCtxDataFromCtx(ctx); internalData != nil {
 			record := all[0]
 			if v, ok := record[internalData.FirstResultColumn]; ok {
-				return v.Int64(), nil
+				return v.Int(), nil
 			}
 		}
 		return 0, gerror.NewCode(
@@ -336,7 +336,7 @@ func (m *Model) Count(where ...interface{}) (int64, error) {
 }
 
 // CountColumn does "SELECT COUNT(x) FROM ..." statement for the model.
-func (m *Model) CountColumn(column string) (int64, error) {
+func (m *Model) CountColumn(column string) (int, error) {
 	if len(column) == 0 {
 		return 0, nil
 	}
@@ -497,7 +497,9 @@ func (m *Model) doGetAllBySql(ctx context.Context, queryType queryType, sql stri
 	return
 }
 
-func (m *Model) getFormattedSqlAndArgs(ctx context.Context, queryType queryType, limit1 bool) (sqlWithHolder string, holderArgs []interface{}) {
+func (m *Model) getFormattedSqlAndArgs(
+	ctx context.Context, queryType queryType, limit1 bool,
+) (sqlWithHolder string, holderArgs []interface{}) {
 	switch queryType {
 	case queryTypeCount:
 		queryFields := "COUNT(1)"
@@ -537,6 +539,14 @@ func (m *Model) getFormattedSqlAndArgs(ctx context.Context, queryType queryType,
 		)
 		return sqlWithHolder, conditionArgs
 	}
+}
+
+func (m *Model) getHolderAndArgsAsSubModel(ctx context.Context) (holder string, args []interface{}) {
+	holder, args = m.getFormattedSqlAndArgs(
+		ctx, queryTypeNormal, false,
+	)
+	args = m.mergeArguments(args)
+	return
 }
 
 func (m *Model) getAutoPrefix() string {
@@ -607,7 +617,9 @@ func (m *Model) getFieldsFiltered() string {
 // Note that this function does not change any attribute value of the `m`.
 //
 // The parameter `limit1` specifies whether limits querying only one record if m.limit is not set.
-func (m *Model) formatCondition(ctx context.Context, limit1 bool, isCountStatement bool) (conditionWhere string, conditionExtra string, conditionArgs []interface{}) {
+func (m *Model) formatCondition(
+	ctx context.Context, limit1 bool, isCountStatement bool,
+) (conditionWhere string, conditionExtra string, conditionArgs []interface{}) {
 	var autoPrefix = m.getAutoPrefix()
 	// GROUP BY.
 	if m.groupBy != "" {

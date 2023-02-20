@@ -41,7 +41,7 @@ type ConfigNode struct {
 	Charset              string        `json:"charset"`              // (Optional, "utf8mb4" in default) Custom charset when operating on database.
 	Protocol             string        `json:"protocol"`             // (Optional, "tcp" in default) See net.Dial for more information which networks are available.
 	Timezone             string        `json:"timezone"`             // (Optional) Sets the time zone for displaying and interpreting time stamps.
-	Namespace            string        `json:"namespace"`            // Namespace for some databases. Eg, in pgsql, the `Name` acts as the `catalog`, the `NameSpace` acts as the `schema`.
+	Namespace            string        `json:"namespace"`            // (Optional) Namespace for some databases. Eg, in pgsql, the `Name` acts as the `catalog`, the `NameSpace` acts as the `schema`.
 	MaxIdleConnCount     int           `json:"maxIdle"`              // (Optional) Max idle connection configuration for underlying connection pool.
 	MaxOpenConnCount     int           `json:"maxOpen"`              // (Optional) Max open connection configuration for underlying connection pool.
 	MaxConnLifeTime      time.Duration `json:"maxLifeTime"`          // (Optional) Max amount of time a connection may be idle before being closed.
@@ -276,7 +276,7 @@ func parseConfigNodeLink(node *ConfigNode) *ConfigNode {
 			node.Pass = match[3]
 			node.Protocol = match[4]
 			array := gstr.Split(match[5], ":")
-			if len(array) == 2 {
+			if len(array) == 2 && node.Protocol != "file" {
 				node.Host = array[0]
 				node.Port = array[1]
 				node.Name = match[6]
