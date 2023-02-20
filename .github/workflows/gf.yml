@@ -164,18 +164,20 @@ jobs:
       uses: actions/setup-go@v3
       with:
         go-version: ${{ matrix.go-version }}
+        cache: true
 
-    - name: Setup Golang caches
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/go/pkg/mod
-          ~/.cache/go-build
-          ~/Library/Caches/go-build
-          ~\AppData\Local\go-build
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
+
+    # - name: Setup Golang caches
+    #   uses: actions/cache@v3
+    #   with:
+    #     path: |
+    #       ~/go/pkg/mod
+    #       ~/.cache/go-build
+    #       ~/Library/Caches/go-build
+    #       ~\AppData\Local\go-build
+    #     key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+    #     restore-keys: |
+    #       ${{ runner.os }}-go-
 
     - name: Before Script
       run:  bash .github/workflows/before_script.sh
