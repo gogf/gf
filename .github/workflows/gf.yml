@@ -177,7 +177,6 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-
 
-
     - name: Before Script
       run:  bash .github/workflows/before_script.sh
 
