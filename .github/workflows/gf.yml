@@ -165,7 +165,7 @@ jobs:
       with:
         go-version: ${{ matrix.go-version }}
         cache: true
-        cache-dependency-path: **/go.sum
+        cache-dependency-path: '**/go.sum'
 
 
     # - name: Setup Golang caches
