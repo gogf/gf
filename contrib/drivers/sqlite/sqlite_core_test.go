@@ -1571,3 +1571,39 @@ func Test_TableFields(t *testing.T) {
 		gtest.AssertNE(err, nil)
 	})
 }
+
+func Test_TableNameIsKeyword(t *testing.T) {
+	table := createInitTable(TableNameWhichIsKeyword)
+	defer dropTable(table)
+	_, err := db.Update(ctx, table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
+	gtest.AssertNil(err)
+
+	gtest.C(t, func(t *gtest.T) {
+		id := 1
+		result, err := db.Model(table).Fields("*").Where("id = ?", id).All()
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		type t_user struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime string
+		}
+
+		t_users := make([]t_user, 0)
+		err = result.Structs(&t_users)
+		if err != nil {
+			gtest.Fatal(err)
+		}
+
+		resultIntMap := result.MapKeyInt("id")
+		t.Assert(t_users[0].Id, resultIntMap[id]["id"])
+		t.Assert(t_users[0].Passport, resultIntMap[id]["passport"])
+		t.Assert(t_users[0].Password, resultIntMap[id]["password"])
+		t.Assert(t_users[0].NickName, resultIntMap[id]["nickname"])
+		t.Assert(t_users[0].CreateTime, resultIntMap[id]["create_time"])
+	})
+}
