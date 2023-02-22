@@ -18,6 +18,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gres"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/os/gview"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -611,5 +612,26 @@ func Test_Issue1416(t *testing.T) {
 		})
 		t.AssertNil(err)
 		t.Assert(r, `test.tpl content, vars: world`)
+	})
+}
+
+// template/gview_test.html
+// name:{{.name}}
+func init() {
+	if err := gres.Add("H4sIAAAAAAAC/wrwZmYRYeBg4GBIFA0LY0ACEgycDCWpuQU5iSWp+ullmanl8SWpxSV6GSW5OaEhrAyM5o1fk095n/HdumrdNeaLW7c2MDAw/P8f4M3OoZ+9QESIgYGBj4GBAWYBA0MTmgUcSBaADSxt/JoM0o6sKMCbkUmEGeFCZKNBLoSBbY0gkqB7EcZhdw8ECDD8d0xEMg7JdaxsIAVMDEwMfQwMDAvAygEBAAD//0d6jptEAQAA"); err != nil {
+		panic("add binary content to resource manager failed: " + err.Error())
+	}
+}
+
+func Test_GviewInGres(t *testing.T) {
+	gres.Dump()
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		v.SetPath("template")
+		result, err := v.Parse(context.TODO(), "gview_test.html", g.Map{
+			"name": "john",
+		})
+		t.AssertNil(err)
+		t.Assert(result, "name:john")
 	})
 }

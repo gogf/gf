@@ -12,11 +12,14 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/i18n/gi18n"
+	"github.com/gogf/gf/v2/internal/command"
 	"github.com/gogf/gf/v2/os/gview"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Config(t *testing.T) {
+	// show error print
+	command.Init("-gf.gview.errorprint=true")
 	gtest.C(t, func(t *gtest.T) {
 		config := gview.Config{
 			Paths: []string{gtest.DataPath("config")},
