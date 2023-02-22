@@ -8,6 +8,7 @@ package gtest_test
 
 import (
 	"errors"
+	"path/filepath"
 	"strconv"
 	"testing"
 
@@ -380,7 +381,7 @@ func TestAssertError(t *testing.T) {
 
 func TestDataPath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gtest.DataPath("testdata.txt"), `.\testdata\testdata.txt`)
+		t.Assert(filepath.ToSlash(gtest.DataPath("testdata.txt")), `./testdata/testdata.txt`)
 	})
 }
 
