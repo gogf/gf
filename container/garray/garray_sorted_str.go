@@ -179,9 +179,11 @@ func (a *SortedStrArray) doRemoveWithoutLock(index int) (value string, found boo
 // RemoveValue removes an item by value.
 // It returns true if value is found in the array, or else false if not found.
 func (a *SortedStrArray) RemoveValue(value string) bool {
-	if i := a.Search(value); i != -1 {
-		a.Remove(i)
-		return true
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if i, r := a.binSearch(value, false); r == 0 {
+		_, res := a.doRemoveWithoutLock(i)
+		return res
 	}
 	return false
 }
