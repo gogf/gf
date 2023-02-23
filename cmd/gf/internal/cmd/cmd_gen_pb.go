@@ -55,6 +55,7 @@ func (c cGenPb) Pb(ctx context.Context, in cGenPbInput) (out *cGenPbOutput, err 
 		command.Args = append(command.Args, "--go_out=paths=source_relative:"+outputPath)
 		command.Args = append(command.Args, "--go-grpc_out=paths=source_relative:"+outputPath)
 		command.Args = append(command.Args, file)
+		mlog.Print(command.String())
 		if err = command.Run(ctx); err != nil {
 			mlog.Fatal(err)
 		}
