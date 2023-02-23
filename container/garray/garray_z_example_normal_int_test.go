@@ -8,6 +8,7 @@ package garray_test
 
 import (
 	"fmt"
+
 	"github.com/gogf/gf/v2/internal/empty"
 
 	"github.com/gogf/gf/v2/container/garray"
@@ -699,6 +700,7 @@ func ExampleIntArray_UnmarshalValue() {
 	// Output:
 	// &{john [96,98,97]}
 }
+
 func ExampleIntArray_Filter() {
 	array1 := garray.NewIntArrayFrom(g.SliceInt{10, 40, 50, 0, 0, 0, 60})
 	array2 := garray.NewIntArrayFrom(g.SliceInt{10, 4, 51, 5, 45, 50, 56})
@@ -717,6 +719,7 @@ func ExampleIntArray_Filter() {
 	// [51,5,45]
 	// [10,4,50,56]
 }
+
 func ExampleIntArray_FilterEmpty() {
 	s := garray.NewIntArrayFrom(g.SliceInt{10, 40, 50, 0, 0, 0, 60})
 	fmt.Println(s)

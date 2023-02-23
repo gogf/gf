@@ -8,6 +8,7 @@ package garray_test
 
 import (
 	"fmt"
+
 	"github.com/gogf/gf/v2/internal/empty"
 
 	"github.com/gogf/gf/v2/container/garray"
@@ -552,6 +553,7 @@ func ExampleSortedStrArray_UnmarshalValue() {
 	// &{john ["Math","English","Sport"]}
 	// &{john ["Math","English","Sport"]}
 }
+
 func ExampleSortedStrArray_Filter() {
 	s := garray.NewSortedStrArrayFrom(g.SliceStr{"b", "a", "", "c", "", "", "d"})
 	fmt.Println(s)
