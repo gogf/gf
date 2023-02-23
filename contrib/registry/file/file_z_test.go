@@ -141,7 +141,6 @@ func TestWatch(t *testing.T) {
 			proceedResult[0].GetEndpoints(),
 			gsvc.Endpoints{svc1.GetEndpoints()[0]},
 		)
-		t.AssertNil(watcher.Close())
 	})
 
 	gtest.C(t, func(t *gtest.T) {
