@@ -2,11 +2,12 @@ package g_test
 
 import (
 	"context"
+	"os"
+	"testing"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gutil"
-	"os"
-	"testing"
 )
 
 var (
@@ -58,6 +59,13 @@ func Test_TryCatch(t *testing.T) {
 			g.Dump("GoFrame")
 		}, func(ctx context.Context, exception error) {
 			g.Dump(exception)
+		})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		g.TryCatch(ctx, func(ctx context.Context) {
+			g.Throw("GoFrame")
+		}, func(ctx context.Context, exception error) {
+			t.Assert(exception.Error(), "GoFrame")
 		})
 	})
 }
