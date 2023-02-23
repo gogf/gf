@@ -2,12 +2,9 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
-	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/genv"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gproc"
 )
@@ -16,64 +13,52 @@ type (
 	cGenPb      struct{}
 	cGenPbInput struct {
 		g.Meta `name:"pb" brief:"parse proto files and generate protobuf go files"`
+		Path   string `name:"path"   short:"p" dc:"protobuf file folder path" d:"manifest/protobuf"`
+		Output string `name:"output" short:"o" dc:"output folder path storing generated go files" d:"api"`
 	}
 	cGenPbOutput struct{}
 )
 
 func (c cGenPb) Pb(ctx context.Context, in cGenPbInput) (out *cGenPbOutput, err error) {
 	// Necessary check.
-	if gproc.SearchBinary("protoc") == "" {
+	protoc := gproc.SearchBinary("protoc")
+	if protoc == "" {
 		mlog.Fatalf(`command "protoc" not found in your environment, please install protoc first to proceed this command`)
 	}
 
 	// protocol fold checks.
-	protoFolder := "protocol"
-	if !gfile.Exists(protoFolder) {
-		mlog.Fatalf(`proto files folder "%s" does not exist`, protoFolder)
+	protoPath := gfile.RealPath(in.Path)
+	if protoPath == "" {
+		mlog.Fatalf(`proto files folder "%s" does not exist`, in.Path)
 	}
+	// output path checks.
+	outputPath := gfile.RealPath(in.Output)
+	if outputPath == "" {
+		mlog.Fatalf(`output folder "%s" does not exist`, in.Output)
+	}
+
 	// folder scanning.
-	files, err := gfile.ScanDirFile(protoFolder, "*.proto", true)
+	files, err := gfile.ScanDirFile(protoPath, "*.proto", true)
 	if err != nil {
 		mlog.Fatal(err)
 	}
 	if len(files) == 0 {
-		mlog.Fatalf(`no proto files found in folder "%s"`, protoFolder)
+		mlog.Fatalf(`no proto files found in folder "%s"`, in.Path)
 	}
-	dirSet := gset.NewStrSet()
+
+	if err = gfile.Chdir(protoPath); err != nil {
+		mlog.Fatal(err)
+	}
 	for _, file := range files {
-		dirSet.Add(gfile.Dir(file))
-	}
-	var (
-		servicePath = gfile.RealPath(".")
-		goPathSrc   = gfile.RealPath(gfile.Join(genv.Get("GOPATH").String(), "src"))
-	)
-	dirSet.Iterator(func(protoDirPath string) bool {
-		parsingCommand := fmt.Sprintf(
-			"protoc --gofast_out=plugins=grpc:. %s/*.proto -I%s",
-			protoDirPath,
-			servicePath,
-		)
-		if goPathSrc != "" {
-			parsingCommand += " -I" + goPathSrc
-		}
-		mlog.Print(parsingCommand)
-		if output, err := gproc.ShellExec(ctx, parsingCommand); err != nil {
-			mlog.Print(output)
+		var command = gproc.NewProcess(protoc, nil)
+		command.Args = append(command.Args, "--proto_path="+gfile.Pwd())
+		command.Args = append(command.Args, "--go_out=paths=source_relative:"+outputPath)
+		command.Args = append(command.Args, "--go-grpc_out=paths=source_relative:"+outputPath)
+		command.Args = append(command.Args, file)
+		if err = command.Run(ctx); err != nil {
 			mlog.Fatal(err)
 		}
-		return true
-	})
-	// Custom replacement.
-	//pbFolder := "protobuf"
-	//_, _ = gfile.ScanDirFileFunc(pbFolder, "*.go", true, func(path string) string {
-	//	content := gfile.GetContents(path)
-	//	content = gstr.ReplaceByArray(content, g.SliceStr{
-	//		`gtime "gtime"`, `gtime "github.com/gogf/gf/v2/os/gtime"`,
-	//	})
-	//	_ = gfile.PutContents(path, content)
-	//	utils.GoFmt(path)
-	//	return path
-	//})
+	}
 	mlog.Print("done!")
 	return
 }
