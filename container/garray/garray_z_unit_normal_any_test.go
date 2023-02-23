@@ -9,6 +9,7 @@
 package garray_test
 
 import (
+	"github.com/gogf/gf/v2/internal/empty"
 	"testing"
 	"time"
 
@@ -788,6 +789,36 @@ func TestArray_FilterNil(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewArrayFromCopy(g.Slice{nil, 1, 2, 3, 4, nil})
 		t.Assert(array.FilterNil(), g.Slice{1, 2, 3, 4})
+	})
+}
+
+func TestArray_Filter(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		values := g.Slice{0, 1, 2, 3, 4, "", g.Slice{}}
+		array := garray.NewArrayFromCopy(values)
+		t.Assert(array.Filter(func(value interface{}, index int) bool {
+			return empty.IsNil(value)
+		}).Slice(), values)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewArrayFromCopy(g.Slice{nil, 1, 2, 3, 4, nil})
+		t.Assert(array.Filter(func(value interface{}, index int) bool {
+			return empty.IsNil(value)
+		}), g.Slice{1, 2, 3, 4})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewArrayFrom(g.Slice{0, 1, 2, 3, 4, "", g.Slice{}})
+
+		t.Assert(array.Filter(func(value interface{}, index int) bool {
+			return empty.IsEmpty(value)
+		}), g.Slice{1, 2, 3, 4})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewArrayFrom(g.Slice{1, 2, 3, 4})
+
+		t.Assert(array.Filter(func(value interface{}, index int) bool {
+			return empty.IsEmpty(value)
+		}), g.Slice{1, 2, 3, 4})
 	})
 }
 

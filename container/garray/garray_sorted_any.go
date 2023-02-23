@@ -748,6 +748,23 @@ func (a *SortedArray) FilterNil() *SortedArray {
 	return a
 }
 
+// Filter `filter func(value interface{}, index int) bool` filter array, value
+// means the value of the current element, the index of the current original
+// color of value, when the custom function returns True, the element will be
+// filtered, otherwise it will not be filtered, `Filter` function returns a new
+// array, will not modify the original array.
+func (a *SortedArray) Filter(filter func(value interface{}, index int) bool) (arr *SortedArray) {
+	arr = a.Clone()
+	for i := 0; i < len(arr.array); {
+		if filter(arr.array[i], i) {
+			arr.array = append(arr.array[:i], arr.array[i+1:]...)
+		} else {
+			i++
+		}
+	}
+	return
+}
+
 // FilterEmpty removes all empty value of the array.
 // Values like: 0, nil, false, "", len(slice/map/chan) == 0 are considered empty.
 func (a *SortedArray) FilterEmpty() *SortedArray {

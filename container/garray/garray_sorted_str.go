@@ -709,6 +709,23 @@ func (a *SortedStrArray) UnmarshalValue(value interface{}) (err error) {
 	return err
 }
 
+// Filter `filter func(value string, index int) bool` filter array, value
+// means the value of the current element, the index of the current original
+// color of value, when the custom function returns True, the element will be
+// filtered, otherwise it will not be filtered, `Filter` function returns a new
+// array, will not modify the original array.
+func (a *SortedStrArray) Filter(filter func(value string, index int) bool) (arr *SortedStrArray) {
+	arr = a.Clone()
+	for i := 0; i < len(arr.array); {
+		if filter(arr.array[i], i) {
+			arr.array = append(arr.array[:i], arr.array[i+1:]...)
+		} else {
+			i++
+		}
+	}
+	return
+}
+
 // FilterEmpty removes all empty string value of the array.
 func (a *SortedStrArray) FilterEmpty() *SortedStrArray {
 	a.mu.Lock()
