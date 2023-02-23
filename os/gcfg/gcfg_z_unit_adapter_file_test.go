@@ -16,12 +16,50 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
+func TestAdapterFile_Dump(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		c, err := gcfg.NewAdapterFile("config.yml")
+		t.AssertNil(err)
+
+		t.Assert(c.GetFileName(), "config.yml")
+
+		c.Dump()
+		c.Data(ctx)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		c, err := gcfg.NewAdapterFile("testdata/default/config.toml")
+		t.AssertNil(err)
+
+		c.Dump()
+		c.Data(ctx)
+		c.GetPaths()
+	})
+
+}
+func TestAdapterFile_Available(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		c, err := gcfg.NewAdapterFile("testdata/default/config.toml")
+		t.AssertNil(err)
+		c.Available(ctx)
+	})
+}
+
 func TestAdapterFile_SetPath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c, err := gcfg.NewAdapterFile("config.yml")
 		t.AssertNil(err)
 
 		err = c.SetPath("/tmp")
+		t.AssertNil(err)
+
+		err = c.SetPath("notexist")
+		t.AssertNE(err, nil)
+
+		err = c.SetPath("testdata/c1.toml")
+		t.AssertNE(err, nil)
+
+		err = c.SetPath("")
 		t.AssertNil(err)
 
 		err = c.SetPath("gcfg.go")
@@ -39,6 +77,15 @@ func TestAdapterFile_AddPath(t *testing.T) {
 		t.AssertNil(err)
 
 		err = c.AddPath("/tmp")
+		t.AssertNil(err)
+
+		err = c.AddPath("notexist")
+		t.AssertNE(err, nil)
+
+		err = c.SetPath("testdata/c1.toml")
+		t.AssertNE(err, nil)
+
+		err = c.SetPath("")
 		t.AssertNil(err)
 
 		err = c.AddPath("gcfg.go")

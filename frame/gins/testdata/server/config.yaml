@@ -1,4 +1,4 @@
 server:
   address: ":8000"
   tempByInstanceName:
-    address: ":8003"
+    accessLogEnabled: false
