@@ -24,12 +24,12 @@ func (c modClient) DefaultGrpcDialOptions() []grpc.DialOption {
 	}
 }
 
-// NewGrpcClientConn NewGrpcConn creates and returns a client connection for given service `appId`.
-func (c modClient) NewGrpcClientConn(name string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
+// NewGrpcClientConn creates and returns a client connection for given service `appId`.
+func (c modClient) NewGrpcClientConn(serviceName string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	autoLoadAndRegisterFileRegistry()
 
 	var (
-		service           = gsvc.NewServiceWithName(name)
+		service           = gsvc.NewServiceWithName(serviceName)
 		grpcClientOptions = make([]grpc.DialOption, 0)
 	)
 	grpcClientOptions = append(grpcClientOptions, c.DefaultGrpcDialOptions()...)
@@ -48,6 +48,16 @@ func (c modClient) NewGrpcClientConn(name string, opts ...grpc.DialOption) (*grp
 		return nil, err
 	}
 	return conn, nil
+}
+
+// MustNewGrpcClientConn creates and returns a client connection for given service `appId`.
+// It panics if any error occurs.
+func (c modClient) MustNewGrpcClientConn(serviceName string, opts ...grpc.DialOption) *grpc.ClientConn {
+	conn, err := c.NewGrpcClientConn(serviceName, opts...)
+	if err != nil {
+		panic(err)
+	}
+	return conn
 }
 
 // ChainUnary creates a single interceptor out of a chain of many interceptors.

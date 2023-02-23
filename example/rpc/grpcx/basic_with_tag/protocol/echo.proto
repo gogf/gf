@@ -4,8 +4,6 @@ syntax = "proto3";
 
 package proto;
 
-option go_package = "/proto";
-
 service Echo{
     rpc Say(SayReq) returns (SayRes) {}
 }

@@ -9,7 +9,6 @@ package main
 import (
 	"time"
 
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 	"github.com/gogf/gf/example/rpc/grpcx/basic/protobuf"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
@@ -17,11 +16,14 @@ import (
 
 func main() {
 	var (
-		ctx    = gctx.GetInitCtx()
-		client = protobuf.NewEchoClient(grpcx.Client.MustNewGrpcClientConn("demo"))
+		ctx         = gctx.GetInitCtx()
+		client, err = protobuf.NewClient()
 	)
+	if err != nil {
+		g.Log().Fatalf(ctx, `%+v`, err)
+	}
 	for i := 0; i < 100; i++ {
-		res, err := client.Say(ctx, &protobuf.SayReq{Content: "Hello"})
+		res, err := client.Echo().Say(ctx, &protobuf.SayReq{Content: "Hello"})
 		if err != nil {
 			g.Log().Error(ctx, err)
 			return
