@@ -784,7 +784,6 @@ func (a *Array) UnmarshalValue(value interface{}) error {
 // filtered, otherwise it will not be filtered, `Filter` function returns a new
 // array, will not modify the original array.
 func (a *Array) Filter(filter func(value interface{}, index int) bool) (arr *Array) {
-
 	arr = a.Clone()
 	for i := 0; i < len(arr.array); {
 		if filter(arr.array[i], i) {
