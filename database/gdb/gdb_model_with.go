@@ -12,6 +12,7 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -71,6 +72,9 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 		err                 error
 		allowedTypeStrArray = make([]string, 0)
 	)
+	if empty.IsNil(pointer, true) {
+		return nil
+	}
 	currentStructFieldMap, err := gstructs.FieldMap(gstructs.FieldMapInput{
 		Pointer:          pointer,
 		PriorityTagArray: nil,
