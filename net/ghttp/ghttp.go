@@ -141,7 +141,6 @@ const (
 	specialMethodNameInit       = "Init"
 	specialMethodNameShut       = "Shut"
 	specialMethodNameIndex      = "Index"
-	gracefulShutdownTimeout     = 5 * time.Second
 )
 
 const (

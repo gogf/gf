@@ -251,6 +251,9 @@ type ServerConfig struct {
 
 	// GracefulTimeout set the maximum survival time (seconds) of the parent process.
 	GracefulTimeout uint8 `json:"gracefulTimeout"`
+
+	// GracefulShutdownTimeout set the maximum survival time (seconds) before stopping the server.
+	GracefulShutdownTimeout uint8 `json:"gracefulShutdownTimeout"`
 }
 
 // NewConfig creates and returns a ServerConfig object with default configurations.
@@ -258,44 +261,45 @@ type ServerConfig struct {
 // some pointer attributes that may be shared in different servers.
 func NewConfig() ServerConfig {
 	return ServerConfig{
-		Name:                DefaultServerName,
-		Address:             ":0",
-		HTTPSAddr:           "",
-		Listeners:           nil,
-		Handler:             nil,
-		ReadTimeout:         60 * time.Second,
-		WriteTimeout:        0, // No timeout.
-		IdleTimeout:         60 * time.Second,
-		MaxHeaderBytes:      10240, // 10KB
-		KeepAlive:           true,
-		IndexFiles:          []string{"index.html", "index.htm"},
-		IndexFolder:         false,
-		ServerAgent:         "GoFrame HTTP Server",
-		ServerRoot:          "",
-		StaticPaths:         make([]staticPathItem, 0),
-		FileServerEnabled:   false,
-		CookieMaxAge:        time.Hour * 24 * 365,
-		CookiePath:          "/",
-		CookieDomain:        "",
-		SessionIdName:       "gfsessionid",
-		SessionPath:         gsession.DefaultStorageFilePath,
-		SessionMaxAge:       time.Hour * 24,
-		SessionCookieOutput: true,
-		SessionCookieMaxAge: time.Hour * 24,
-		Logger:              glog.New(),
-		LogLevel:            "all",
-		LogStdout:           true,
-		ErrorStack:          true,
-		ErrorLogEnabled:     true,
-		ErrorLogPattern:     "error-{Ymd}.log",
-		AccessLogEnabled:    false,
-		AccessLogPattern:    "access-{Ymd}.log",
-		DumpRouterMap:       true,
-		ClientMaxBodySize:   8 * 1024 * 1024, // 8MB
-		FormParsingMemory:   1024 * 1024,     // 1MB
-		Rewrites:            make(map[string]string),
-		Graceful:            false,
-		GracefulTimeout:     2, // seconds
+		Name:                    DefaultServerName,
+		Address:                 ":0",
+		HTTPSAddr:               "",
+		Listeners:               nil,
+		Handler:                 nil,
+		ReadTimeout:             60 * time.Second,
+		WriteTimeout:            0, // No timeout.
+		IdleTimeout:             60 * time.Second,
+		MaxHeaderBytes:          10240, // 10KB
+		KeepAlive:               true,
+		IndexFiles:              []string{"index.html", "index.htm"},
+		IndexFolder:             false,
+		ServerAgent:             "GoFrame HTTP Server",
+		ServerRoot:              "",
+		StaticPaths:             make([]staticPathItem, 0),
+		FileServerEnabled:       false,
+		CookieMaxAge:            time.Hour * 24 * 365,
+		CookiePath:              "/",
+		CookieDomain:            "",
+		SessionIdName:           "gfsessionid",
+		SessionPath:             gsession.DefaultStorageFilePath,
+		SessionMaxAge:           time.Hour * 24,
+		SessionCookieOutput:     true,
+		SessionCookieMaxAge:     time.Hour * 24,
+		Logger:                  glog.New(),
+		LogLevel:                "all",
+		LogStdout:               true,
+		ErrorStack:              true,
+		ErrorLogEnabled:         true,
+		ErrorLogPattern:         "error-{Ymd}.log",
+		AccessLogEnabled:        false,
+		AccessLogPattern:        "access-{Ymd}.log",
+		DumpRouterMap:           true,
+		ClientMaxBodySize:       8 * 1024 * 1024, // 8MB
+		FormParsingMemory:       1024 * 1024,     // 1MB
+		Rewrites:                make(map[string]string),
+		Graceful:                false,
+		GracefulTimeout:         2, // seconds
+		GracefulShutdownTimeout: 5, // seconds
 	}
 }
 

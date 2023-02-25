@@ -67,9 +67,6 @@ func serverProcessInit() {
 		}
 	}
 
-	// Signal handler.
-	go handleProcessSignal()
-
 	// Process message handler.
 	// It enabled only a graceful feature is enabled.
 	if gracefulEnabled {
@@ -257,6 +254,10 @@ func (s *Server) Start() error {
 	s.initOpenApi()
 	s.doServiceRegister()
 	s.doRouterMapDump()
+
+	// Signal handler.
+	handleProcessSignal()
+
 	return nil
 }
 
