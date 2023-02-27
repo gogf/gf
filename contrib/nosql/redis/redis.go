@@ -47,6 +47,7 @@ func New(config *gredis.Config) *Redis {
 		Password:     config.Pass,
 		DB:           config.Db,
 		MaxRetries:   defaultMaxRetries,
+		PoolSize:     config.MaxActive,
 		MinIdleConns: config.MinIdle,
 		MaxConnAge:   config.MaxConnLifetime,
 		IdleTimeout:  config.IdleTimeout,
