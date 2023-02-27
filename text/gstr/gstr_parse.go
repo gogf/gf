@@ -40,9 +40,16 @@ func Parse(s string) (result map[string]interface{}, err error) {
 			err = gerror.Wrapf(err, `url.QueryUnescape failed for string "%s"`, part[:pos])
 			return nil, err
 		}
+
 		for key[0] == ' ' {
-			key = key[1:]
+			if len(key) > 1 {
+				key = key[1:]
+			} else {
+				key = ""
+				break
+			}
 		}
+
 		if key == "" || key[0] == '[' {
 			continue
 		}
@@ -129,7 +136,6 @@ func build(result map[string]interface{}, keys []string, value interface{}) erro
 		result[key] = append(children, value)
 		return nil
 	}
-
 	// The end is slice + map. like v[][a]
 	if keys[1] == "" && length > 2 && keys[2] != "" {
 		val, ok := result[key]
