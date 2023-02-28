@@ -31,15 +31,12 @@ func Test_Parse(t *testing.T) {
 		// special key
 		m, err = gstr.Parse(" =1& b=2&   c =3")
 		t.AssertNil(err)
-		t.Log(m)
 		t.Assert(m, map[string]interface{}{"b": "2", "c_": "3"})
 		m, err = gstr.Parse("c[=3")
 		t.AssertNil(err)
-		t.Log(m)
 		t.Assert(m, map[string]interface{}{"c_": "3"})
 		m, err = gstr.Parse("v[a][a]a=m")
 		t.AssertNil(err)
-		t.Log(m)
 		t.Assert(m, g.Map{
 			"v": g.Map{
 				"a": g.Map{
@@ -50,7 +47,6 @@ func Test_Parse(t *testing.T) {
 		// v[][a]=m&v[][b]=b => map["v"]:[{"a":"m","b":"b"}]
 		m, err = gstr.Parse("v[][a]=m&v[][b]=b")
 		t.AssertNil(err)
-		t.Log(m)
 		t.Assert(m, g.Map{
 			"v": g.Slice{
 				g.Map{
@@ -62,7 +58,6 @@ func Test_Parse(t *testing.T) {
 		// v[][a]=m&v[][a]=b => map["v"]:[{"a":"m"},{"a":"b"}]
 		m, err = gstr.Parse("v[][a]=m&v[][a]=b")
 		t.AssertNil(err)
-		t.Log(m)
 		t.Assert(m, g.Map{
 			"v": g.Slice{
 				g.Map{
