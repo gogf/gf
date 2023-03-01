@@ -283,7 +283,7 @@ func parseConfigNodeLink(node *ConfigNode) *ConfigNode {
 			} else {
 				node.Name = match[5]
 			}
-			if len(match) > 6 {
+			if len(match) > 6 && match[7] != "" {
 				node.Extra = match[7]
 			}
 			node.Link = ""
