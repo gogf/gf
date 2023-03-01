@@ -152,7 +152,7 @@ func (d *Driver) TableFields(
 	if link, err = d.SlaveLink(usedSchema); err != nil {
 		return nil, err
 	}
-	result, err = d.DoSelect(ctx, link, fmt.Sprintf(`PRAGMA TABLE_INFO(%s)`, table))
+	result, err = d.DoSelect(ctx, link, fmt.Sprintf(`PRAGMA TABLE_INFO(%s)`, d.QuoteWord(table)))
 	if err != nil {
 		return nil, err
 	}

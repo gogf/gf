@@ -241,7 +241,7 @@ func (r *Request) parseBody() {
 			r.bodyMap, _ = gxml.DecodeWithoutRoot(body)
 		}
 		// Default parameters decoding.
-		if r.bodyMap == nil {
+		if contentType := r.Header.Get("Content-Type"); (contentType == "" || !gstr.Contains(contentType, "multipart/")) && r.bodyMap == nil {
 			r.bodyMap, _ = gstr.Parse(r.GetBodyString())
 		}
 	}

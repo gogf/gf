@@ -122,6 +122,7 @@ jobs:
           - 1521:1521
 
       # dm8 server
+      # docker run -d --name dm -p 5236:5236 loads/dm:v8.1.2.128_ent_x86_64_ctm_pack4
       dm-server:
         image: loads/dm:v8.1.2.128_ent_x86_64_ctm_pack4
         ports:
@@ -163,18 +164,8 @@ jobs:
       uses: actions/setup-go@v3
       with:
         go-version: ${{ matrix.go-version }}
-
-    - name: Setup Golang caches
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/go/pkg/mod
-          ~/.cache/go-build
-          ~/Library/Caches/go-build
-          ~\AppData\Local\go-build
-        key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-${{ matrix.go-version }}-
+        cache: true
+        cache-dependency-path: '**/go.sum'
 
     - name: Before Script
       run:  bash .github/workflows/before_script.sh

@@ -633,3 +633,34 @@ CREATE TABLE %s (
 		t.Assert(all[0]["nickname"], "name_2")
 	})
 }
+
+// https://github.com/gogf/gf/issues/2427
+func Test_Issue2427(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := "demo_" + guid.S()
+		if _, err := db.Exec(ctx, fmt.Sprintf(`
+CREATE TABLE %s (
+    id        int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'User ID',
+    passport  varchar(45) NOT NULL COMMENT 'User Passport',
+    password  varchar(45) NOT NULL COMMENT 'User Password',
+    nickname  varchar(45) NOT NULL COMMENT 'User Nickname',
+    create_at datetime DEFAULT NULL COMMENT 'Created Time',
+    update_at datetime DEFAULT NULL COMMENT 'Updated Time',
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	    `, table,
+		)); err != nil {
+			t.AssertNil(err)
+		}
+		defer dropTable(table)
+
+		_, err1 := db.Model(table).Delete()
+		t.Assert(err1, `there should be WHERE condition statement for DELETE operation`)
+
+		_, err2 := db.Model(table).Where(g.Map{}).Delete()
+		t.Assert(err2, `there should be WHERE condition statement for DELETE operation`)
+
+		_, err3 := db.Model(table).Where(1).Delete()
+		t.AssertNil(err3)
+	})
+}

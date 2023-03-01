@@ -39,9 +39,13 @@ func IsGNUVersion(version string) bool {
 }
 
 // CompareVersion compares `a` and `b` as standard GNU version.
+//
 // It returns  1 if `a` > `b`.
+//
 // It returns -1 if `a` < `b`.
+//
 // It returns  0 if `a` = `b`.
+//
 // GNU standard version is like:
 // v1.0
 // 1
@@ -86,17 +90,24 @@ func CompareVersion(a, b string) int {
 }
 
 // CompareVersionGo compares `a` and `b` as standard Golang version.
+//
 // It returns  1 if `a` > `b`.
+//
 // It returns -1 if `a` < `b`.
+//
 // It returns  0 if `a` = `b`.
+//
 // Golang standard version is like:
 // 1.0.0
 // v1.0.1
 // v2.10.8
 // 10.2.0
 // v0.0.0-20190626092158-b2ccc519800e
+// v1.12.2-0.20200413154443-b17e3a6804fa
 // v4.20.0+incompatible
 // etc.
+//
+// Docs: https://go.dev/doc/modules/version-numbers
 func CompareVersionGo(a, b string) int {
 	a = Trim(a)
 	b = Trim(b)
@@ -131,30 +142,31 @@ func CompareVersionGo(a, b string) int {
 	var (
 		array1 = strings.Split(a, ".")
 		array2 = strings.Split(b, ".")
-		diff   int
+		diff   = len(array1) - len(array2)
 	)
-	// Specially in Golang:
-	// "v1.12.2-0.20200413154443-b17e3a6804fa" < "v1.12.2"
-	if len(array1) > 3 && len(array2) <= 3 {
-		return -1
-	}
-	if len(array1) <= 3 && len(array2) > 3 {
-		return 1
-	}
 
-	diff = len(array2) - len(array1)
-	for i := 0; i < diff; i++ {
+	for i := diff; i < 0; i++ {
 		array1 = append(array1, "0")
 	}
-	diff = len(array1) - len(array2)
 	for i := 0; i < diff; i++ {
 		array2 = append(array2, "0")
 	}
-	v1 := 0
-	v2 := 0
+
+	// check Major.Minor.Patch first
+	v1, v2 := 0, 0
 	for i := 0; i < len(array1); i++ {
-		v1 = gconv.Int(array1[i])
-		v2 = gconv.Int(array2[i])
+		v1, v2 = gconv.Int(array1[i]), gconv.Int(array2[i])
+		// Specially in Golang:
+		// "v1.12.2-0.20200413154443-b17e3a6804fa" < "v1.12.2"
+		// "v1.12.3-0.20200413154443-b17e3a6804fa" > "v1.12.2"
+		if i == 4 && v1 != v2 && (v1 == 0 || v2 == 0) {
+			if v1 > v2 {
+				return -1
+			} else {
+				return 1
+			}
+		}
+
 		if v1 > v2 {
 			return 1
 		}
@@ -162,13 +174,16 @@ func CompareVersionGo(a, b string) int {
 			return -1
 		}
 	}
+
 	// Specially in Golang:
 	// "v4.20.1+incompatible" < "v4.20.1"
-	if Contains(rawA, "incompatible") {
+	inA, inB := Contains(rawA, "+incompatible"), Contains(rawB, "+incompatible")
+	if inA && !inB {
 		return -1
 	}
-	if Contains(rawB, "incompatible") {
+	if !inA && inB {
 		return 1
 	}
+
 	return 0
 }
