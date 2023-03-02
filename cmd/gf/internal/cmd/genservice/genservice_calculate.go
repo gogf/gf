@@ -39,15 +39,7 @@ func (c CGenService) calculateInterfaceFunctions(
 		srcPkgInterfaceFuncArray *garray.StrArray
 	)
 	// calculate struct name and its functions according function definitions.
-	fileContent2 := ""
-	fileContentLines := gstr.Split(fileContent, "\n")
-	for _, line := range fileContentLines {
-		if gstr.HasPrefix(line, "//") {
-			continue
-		}
-		fileContent2 += line + "\n"
-	}
-	matches, err := gregex.MatchAllString(`func \((.+?)\) ([\s\S]+?) {`, fileContent2)
+	matches, err := gregex.MatchAllString(`func \((.+?)\) ([\s\S]+?) {`, fileContent)
 	if err != nil {
 		return err
 	}
