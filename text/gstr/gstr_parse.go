@@ -41,13 +41,8 @@ func Parse(s string) (result map[string]interface{}, err error) {
 			return nil, err
 		}
 
-		for key[0] == ' ' {
-			if len(key) > 1 {
-				key = key[1:]
-			} else {
-				key = ""
-				break
-			}
+		for len(key) > 0 && key[0] == ' ' {
+			key = key[1:]
 		}
 
 		if key == "" || key[0] == '[' {
