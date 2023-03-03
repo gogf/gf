@@ -9,7 +9,7 @@ package service
 import (
 	"fmt"
 
-	"golang.org/x/net/context"
+	"context"
 
 	"github.com/gogf/gf/example/rpc/grpcx/basic/protobuf"
 	"github.com/gogf/gf/v2/frame/g"
