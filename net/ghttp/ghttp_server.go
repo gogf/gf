@@ -255,9 +255,6 @@ func (s *Server) Start() error {
 	s.doServiceRegister()
 	s.doRouterMapDump()
 
-	// Signal handler.
-	handleProcessSignal()
-
 	return nil
 }
 
@@ -425,7 +422,11 @@ func (s *Server) Run() {
 	if err := s.Start(); err != nil {
 		s.Logger().Fatalf(ctx, `%+v`, err)
 	}
-	// Blocking using channel.
+
+	// Signal handler.
+	handleProcessSignal()
+
+	// Blocking using channel for graceful restart.
 	<-s.closeChan
 	// Remove plugins.
 	if len(s.plugins) > 0 {
