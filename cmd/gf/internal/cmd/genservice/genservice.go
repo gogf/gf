@@ -189,7 +189,7 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		generatedDstFilePathSet.Add(dstFilePath)
 		for _, file := range files {
 			fileContent = gfile.GetContents(file)
-			fileContent, err := gregex.ReplaceString("/(.*)\n", "", fileContent)
+			fileContent, err := gregex.ReplaceString(`/[/|\*](.+)`, "", fileContent)
 			if err != nil {
 				return nil, err
 			}
