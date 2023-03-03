@@ -87,6 +87,10 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 			)
 		}
 
+		if config.Namespace != "" {
+			source = fmt.Sprintf("%s search_path=%s", source, config.Namespace)
+		}
+
 		if config.Timezone != "" {
 			source = fmt.Sprintf("%s timezone=%s", source, config.Timezone)
 		}
