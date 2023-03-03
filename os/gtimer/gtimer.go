@@ -42,6 +42,7 @@ type Timer struct {
 // TimerOptions is the configuration object for Timer.
 type TimerOptions struct {
 	Interval time.Duration // Interval is the interval escaped of the timer.
+	Quick    bool          // Quick is used for quick timer, which means the timer will not wait for the first interval to be elapsed.
 }
 
 // internalPanic is the custom panic for internal usage.

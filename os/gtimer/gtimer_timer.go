@@ -179,6 +179,11 @@ func (t *Timer) createEntry(in createEntryInput) *Entry {
 		// then sets it to one tick, which means it will be run in one interval.
 		intervalTicksOfJob = 1
 	}
+	if t.options.Quick {
+		// If the quick mode is enabled, which means it will be run right now.
+		// Don't need to wait for the first interval.
+		intervalTicksOfJob = 0
+	}
 	var (
 		nextTicks = t.ticks.Val() + intervalTicksOfJob
 		entry     = &Entry{
