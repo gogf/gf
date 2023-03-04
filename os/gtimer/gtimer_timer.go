@@ -166,7 +166,8 @@ type createEntryInput struct {
 // createEntry creates and adds a timing job to the timer.
 func (t *Timer) createEntry(in createEntryInput) *Entry {
 	var (
-		infinite = false
+		infinite  = false
+		nextTicks int64
 	)
 	if in.Times <= 0 {
 		infinite = true
@@ -182,11 +183,12 @@ func (t *Timer) createEntry(in createEntryInput) *Entry {
 	if t.options.Quick {
 		// If the quick mode is enabled, which means it will be run right now.
 		// Don't need to wait for the first interval.
-		intervalTicksOfJob = 0
+		nextTicks = t.ticks.Val()
+	} else {
+		nextTicks = t.ticks.Val() + intervalTicksOfJob
 	}
 	var (
-		nextTicks = t.ticks.Val() + intervalTicksOfJob
-		entry     = &Entry{
+		entry = &Entry{
 			job:         in.Job,
 			ctx:         in.Ctx,
 			timer:       t,
