@@ -14,7 +14,8 @@ require (
 	go.opentelemetry.io/otel v1.7.0
 	go.opentelemetry.io/otel/sdk v1.7.0
 	go.opentelemetry.io/otel/trace v1.7.0
-	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2
-	golang.org/x/text v0.3.8-0.20211105212822-18b340fc7af2
+	golang.org/x/net v0.7.0
+	golang.org/x/text v0.7.0
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )
