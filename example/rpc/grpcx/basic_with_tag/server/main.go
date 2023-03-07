@@ -8,12 +8,12 @@ package main
 
 import (
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
-	"github.com/gogf/gf/example/rpc/grpcx/basic/protobuf"
-	"github.com/gogf/gf/example/rpc/grpcx/basic/service"
+	"github.com/gogf/gf/example/rpc/grpcx/basic_with_tag/protocol"
+	"github.com/gogf/gf/example/rpc/grpcx/basic_with_tag/service"
 )
 
 func main() {
 	s := grpcx.Server.New()
-	protobuf.RegisterEchoServer(s.Server, new(service.Echo))
+	protocol.RegisterEchoServer(s.Server, new(service.Echo))
 	s.Run()
 }

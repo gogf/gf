@@ -9,7 +9,7 @@ package main
 import (
 	"time"
 
-	"github.com/gogf/gf/example/rpc/grpcx/basic/protobuf"
+	"github.com/gogf/gf/example/rpc/grpcx/basic_with_tag/protocol"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
 )
@@ -17,13 +17,13 @@ import (
 func main() {
 	var (
 		ctx         = gctx.GetInitCtx()
-		client, err = protobuf.NewClient()
+		client, err = protocol.NewClient()
 	)
 	if err != nil {
 		g.Log().Fatalf(ctx, `%+v`, err)
 	}
 	for i := 0; i < 100; i++ {
-		res, err := client.Echo().Say(ctx, &protobuf.SayReq{Content: "Hello"})
+		res, err := client.Echo().Say(ctx, &protocol.SayReq{Content: "Hello"})
 		if err != nil {
 			g.Log().Error(ctx, err)
 			return

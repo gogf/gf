@@ -1,4 +1,4 @@
-package protobuf
+package protocol
 
 import (
 	"google.golang.org/grpc"

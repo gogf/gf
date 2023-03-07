@@ -11,7 +11,7 @@ import (
 
 	"context"
 
-	"github.com/gogf/gf/example/rpc/grpcx/basic/protobuf"
+	"github.com/gogf/gf/example/rpc/grpcx/basic/protocol"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcmd"
 )
@@ -20,8 +20,8 @@ import (
 type Echo struct{}
 
 // Say implements the protobuf.EchoServer interface.
-func (s *Echo) Say(ctx context.Context, r *protobuf.SayReq) (*protobuf.SayRes, error) {
+func (s *Echo) Say(ctx context.Context, r *protocol.SayReq) (*protocol.SayRes, error) {
 	g.Log().Print(ctx, "Received:", r.Content)
 	text := fmt.Sprintf(`%s: > %s`, gcmd.GetOpt("node", "default"), r.Content)
-	return &protobuf.SayRes{Content: text}, nil
+	return &protocol.SayRes{Content: text}, nil
 }
