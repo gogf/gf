@@ -18,7 +18,7 @@ import (
 func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 	var dirPathDo = gfile.Join(in.Path, in.DoPath)
 	if in.Clear {
-		doClear(ctx, dirPathDo)
+		doClear(ctx, dirPathDo, false)
 	}
 	in.NoJsonTag = true
 	in.DescriptionTag = false
