@@ -18,6 +18,74 @@ import (
 )
 
 func Test_Parse(t *testing.T) {
+	// cover test
+	gtest.C(t, func(t *gtest.T) {
+		// empty
+		m, err := gstr.Parse("")
+		t.AssertNil(err)
+		t.Assert(m, nil)
+		// invalid
+		m, err = gstr.Parse("a&b")
+		t.AssertNil(err)
+		t.Assert(m, make(map[string]interface{}))
+		// special key
+		m, err = gstr.Parse(" =1& b=2&   c =3")
+		t.AssertNil(err)
+		t.Assert(m, map[string]interface{}{"b": "2", "c_": "3"})
+		m, err = gstr.Parse("c[=3")
+		t.AssertNil(err)
+		t.Assert(m, map[string]interface{}{"c_": "3"})
+		m, err = gstr.Parse("v[a][a]a=m")
+		t.AssertNil(err)
+		t.Assert(m, g.Map{
+			"v": g.Map{
+				"a": g.Map{
+					"a": "m",
+				},
+			},
+		})
+		// v[][a]=m&v[][b]=b => map["v"]:[{"a":"m","b":"b"}]
+		m, err = gstr.Parse("v[][a]=m&v[][b]=b")
+		t.AssertNil(err)
+		t.Assert(m, g.Map{
+			"v": g.Slice{
+				g.Map{
+					"a": "m",
+					"b": "b",
+				},
+			},
+		})
+		// v[][a]=m&v[][a]=b => map["v"]:[{"a":"m"},{"a":"b"}]
+		m, err = gstr.Parse("v[][a]=m&v[][a]=b")
+		t.AssertNil(err)
+		t.Assert(m, g.Map{
+			"v": g.Slice{
+				g.Map{
+					"a": "m",
+				},
+				g.Map{
+					"a": "b",
+				},
+			},
+		})
+		// error
+		m, err = gstr.Parse("v=111&v[]=m&v[]=a&v[]=b")
+		t.Log(err)
+		t.AssertNE(err, nil)
+		m, err = gstr.Parse("v=111&v[a]=m&v[a]=a")
+		t.Log(err)
+		t.AssertNE(err, nil)
+		_, err = gstr.Parse("%Q=%Q&b")
+		t.Log(err)
+		t.AssertNE(err, nil)
+		_, err = gstr.Parse("a=%Q&b")
+		t.Log(err)
+		t.AssertNE(err, nil)
+		_, err = gstr.Parse("v[a][a]=m&v[][a]=b")
+		t.Log(err)
+		t.AssertNE(err, nil)
+	})
+
 	// url
 	gtest.C(t, func(t *gtest.T) {
 		s := "goframe.org/index?name=john&score=100"
