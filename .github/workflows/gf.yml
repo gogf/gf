@@ -36,8 +36,11 @@ jobs:
     # Service containers to run with `code-test`
     services:
       # Etcd service.
+      # docker run -d --name etcd -p 2379:2379 -e ALLOW_NONE_AUTHENTICATION=yes loads/etcd:3.4.24
       etcd:
         image: loads/etcd:3.4.24
+        env:
+          ALLOW_NONE_AUTHENTICATION: yes
         ports:
           - 2379:2379
 
