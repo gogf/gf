@@ -3,7 +3,7 @@ module github.com/gogf/gf/contrib/rpc/grpcx/v2
 go 1.15
 
 require (
-	github.com/gogf/gf/contrib/registry/file/v2 v2.1.4
+	github.com/gogf/gf/contrib/registry/file/v2 v2.0.0-20230223141509-94b2eae1bec0
 	github.com/gogf/gf/v2 v2.1.4
 	go.opentelemetry.io/otel v1.10.0
 	go.opentelemetry.io/otel/trace v1.10.0
