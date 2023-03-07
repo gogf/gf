@@ -35,6 +35,12 @@ jobs:
 
     # Service containers to run with `code-test`
     services:
+      # Etcd service.
+      etcd:
+        image: loads/etcd:3.4.24
+        ports:
+          - 2379:2379
+
       # Redis backend server.
       redis:
         image  : loads/redis:7.0
@@ -54,7 +60,6 @@ jobs:
           MYSQL_DATABASE     : test
           MYSQL_ROOT_PASSWORD: 12345678
         ports:
-          # Maps tcp port 3306 on service container to the host
           - 3306:3306
 
       # PostgreSQL backend server.
