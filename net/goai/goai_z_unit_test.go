@@ -1099,3 +1099,27 @@ func TestOpenApiV3_PathSecurity(t *testing.T) {
 		t.Assert(len(oai.Paths["/index"].Put.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Map()), 3)
 	})
 }
+
+func Test_EmptyJsonNameWithOmitEmpty(t *testing.T) {
+	type CreateResourceReq struct {
+		gmeta.Meta `path:"/CreateResourceReq" method:"POST" tags:"default"`
+		Name       string `description:"实例名称" json:",omitempty"`
+		Product    string `description:"业务类型" json:",omitempty"`
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+			req = new(CreateResourceReq)
+		)
+		err = oai.Add(goai.AddInput{
+			Object: req,
+		})
+		t.AssertNil(err)
+		var reqKey = "github.com.gogf.gf.v2.net.goai_test.CreateResourceReq"
+		t.AssertNE(oai.Components.Schemas.Get(reqKey).Value.Properties.Get("Name"), nil)
+		t.AssertNE(oai.Components.Schemas.Get(reqKey).Value.Properties.Get("Product"), nil)
+		t.Assert(oai.Components.Schemas.Get(reqKey).Value.Properties.Get("None"), nil)
+	})
+}

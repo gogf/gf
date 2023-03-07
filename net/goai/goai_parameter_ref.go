@@ -38,7 +38,10 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path
 			break
 		}
 	}
-	fieldName = gstr.SplitAndTrim(fieldName, ",")[0]
+	fieldName = gstr.Split(gstr.Trim(fieldName), ",")[0]
+	if fieldName == "" {
+		fieldName = field.Name()
+	}
 	var parameter = &Parameter{
 		Name:        fieldName,
 		XExtensions: make(XExtensions),

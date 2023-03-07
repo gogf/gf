@@ -180,7 +180,10 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 				break
 			}
 		}
-		fieldName = gstr.SplitAndTrim(fieldName, ",")[0]
+		fieldName = gstr.Split(gstr.Trim(fieldName), ",")[0]
+		if fieldName == "" {
+			fieldName = structField.Name()
+		}
 		schemaRef, err := oai.newSchemaRefWithGolangType(
 			structField.Type().Type,
 			structField.TagMap(),
