@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// StrIntMap implements map[string]int with RWMutex that has switch.
 type StrIntMap struct {
 	mu   rwmutex.RWMutex
 	data map[string]int
@@ -487,4 +488,25 @@ func (m *StrIntMap) DeepCopy() interface{} {
 		data[k] = v
 	}
 	return NewStrIntMapFrom(data, m.mu.IsSafe())
+}
+
+// IsSubOf checks whether the current map is a sub-map of `other`.
+func (m *StrIntMap) IsSubOf(other *StrIntMap) bool {
+	if m == other {
+		return true
+	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	other.mu.RLock()
+	defer other.mu.RUnlock()
+	for key, value := range m.data {
+		otherValue, ok := other.data[key]
+		if !ok {
+			return false
+		}
+		if otherValue != value {
+			return false
+		}
+	}
+	return true
 }

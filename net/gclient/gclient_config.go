@@ -20,6 +20,8 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/net/gsel"
+	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 )
@@ -196,4 +198,14 @@ func (c *Client) SetTLSConfig(tlsConfig *tls.Config) error {
 		return nil
 	}
 	return gerror.New(`cannot set TLSClientConfig for custom Transport of the client`)
+}
+
+// SetBuilder sets the load balance builder for client.
+func (c *Client) SetBuilder(builder gsel.Builder) {
+	c.builder = builder
+}
+
+// SetDiscovery sets the load balance builder for client.
+func (c *Client) SetDiscovery(discovery gsvc.Discovery) {
+	c.discovery = discovery
 }

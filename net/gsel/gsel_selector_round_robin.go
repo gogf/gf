@@ -13,8 +13,6 @@ import (
 	"github.com/gogf/gf/v2/internal/intlog"
 )
 
-const SelectorRoundRobin = "BalancerRoundRobin"
-
 type selectorRoundRobin struct {
 	mu    sync.RWMutex
 	nodes Nodes

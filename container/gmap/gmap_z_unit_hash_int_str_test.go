@@ -447,3 +447,18 @@ func Test_IntStrMap_DeepCopy(t *testing.T) {
 		t.AssertNE(m.Get(1), n.Get(1))
 	})
 }
+
+func Test_IntStrMap_IsSubOf(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m1 := gmap.NewIntStrMapFrom(g.MapIntStr{
+			1: "v1",
+			2: "v2",
+		})
+		m2 := gmap.NewIntStrMapFrom(g.MapIntStr{
+			2: "v2",
+		})
+		t.Assert(m1.IsSubOf(m2), false)
+		t.Assert(m2.IsSubOf(m1), true)
+		t.Assert(m2.IsSubOf(m2), true)
+	})
+}

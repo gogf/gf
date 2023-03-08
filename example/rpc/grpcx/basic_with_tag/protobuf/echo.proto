@@ -1,0 +1,19 @@
+// protoc --go_out=plugins=grpc:. *.proto
+
+syntax = "proto3";
+
+package proto;
+
+service Echo{
+    rpc Say(SayReq) returns (SayRes) {}
+}
+
+message SayReq {
+    string content = 1;
+}
+
+message SayRes {
+    string content = 1;
+}
+
+

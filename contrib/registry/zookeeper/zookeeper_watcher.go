@@ -10,15 +10,17 @@ import (
 	"context"
 	"errors"
 	"github.com/go-zookeeper/zk"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/net/gsvc"
 	"golang.org/x/sync/singleflight"
 	"path"
 	"strings"
+
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/net/gsvc"
 )
 
 var _ gsvc.Watcher = (*watcher)(nil)
 
+// ErrWatcherStopped is the certain error for watcher closed.
 var ErrWatcherStopped = errors.New("watcher stopped")
 
 type watcher struct {
@@ -43,6 +45,8 @@ func newWatcher(ctx context.Context, nameSpace, prefix string, conn *zk.Conn) (*
 	return w, nil
 }
 
+// Proceed proceeds watch in blocking way.
+// It returns all complete services that watched by `key` if any change.
 func (w *watcher) Proceed() ([]gsvc.Service, error) {
 	select {
 	case <-w.ctx.Done():
@@ -111,6 +115,7 @@ func (w *watcher) getServicesByPrefix() ([]gsvc.Service, error) {
 	return instances.([]gsvc.Service), nil
 }
 
+// Close closes the watcher.
 func (w *watcher) Close() error {
 	w.cancel()
 	return nil

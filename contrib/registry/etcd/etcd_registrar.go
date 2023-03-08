@@ -9,13 +9,16 @@ package etcd
 import (
 	"context"
 
+	etcd3 "go.etcd.io/etcd/client/v3"
+
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gsvc"
-	etcd3 "go.etcd.io/etcd/client/v3"
 )
 
-// Register implements the gsvc.Register interface.
+// Register registers `service` to Registry.
+// Note that it returns a new Service if it changes the input Service with custom one.
 func (r *Registry) Register(ctx context.Context, service gsvc.Service) (gsvc.Service, error) {
+	service = NewService(service)
 	r.lease = etcd3.NewLease(r.client)
 	grant, err := r.lease.Grant(ctx, int64(r.keepaliveTTL.Seconds()))
 	if err != nil {
@@ -33,7 +36,7 @@ func (r *Registry) Register(ctx context.Context, service gsvc.Service) (gsvc.Ser
 			key, value, grant.ID,
 		)
 	}
-	r.logger.Infof(
+	r.logger.Debugf(
 		ctx,
 		`etcd put success with key "%s", value "%s", lease "%d"`,
 		key, value, grant.ID,
@@ -46,7 +49,7 @@ func (r *Registry) Register(ctx context.Context, service gsvc.Service) (gsvc.Ser
 	return service, nil
 }
 
-// Deregister implements the gsvc.Deregister interface.
+// Deregister off-lines and removes `service` from the Registry.
 func (r *Registry) Deregister(ctx context.Context, service gsvc.Service) error {
 	_, err := r.client.Delete(ctx, service.GetKey())
 	if r.lease != nil {

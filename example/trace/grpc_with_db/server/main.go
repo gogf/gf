@@ -1,20 +1,18 @@
 package main
 
 import (
-	_ "github.com/gogf/gf/contrib/drivers/mysql/v2"
-
 	"context"
 	"fmt"
 	"time"
 
+	_ "github.com/gogf/gf/contrib/drivers/mysql/v2"
+	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 	"github.com/gogf/gf/contrib/trace/jaeger/v2"
+	"github.com/gogf/gf/example/trace/grpc_with_db/protobuf/user"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/katyusha/krpc"
-
-	"github.com/gogf/gf/example/trace/grpc_with_db/protobuf/user"
 )
 
 type server struct{}
@@ -35,7 +33,7 @@ func main() {
 	// Set ORM cache adapter with redis.
 	g.DB().GetCache().SetAdapter(gcache.NewAdapterRedis(g.Redis()))
 
-	s := krpc.Server.NewGrpcServer()
+	s := grpcx.Server.New()
 	user.RegisterUserServer(s.Server, &server{})
 	s.Run()
 }

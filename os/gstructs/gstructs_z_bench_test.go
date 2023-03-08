@@ -7,6 +7,7 @@
 package gstructs_test
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/gogf/gf/v2/os/gstructs"
@@ -22,6 +23,12 @@ var (
 	user           = new(User)
 	userNilPointer *User
 )
+
+func Benchmark_ReflectTypeOf(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		reflect.TypeOf(user).String()
+	}
+}
 
 func Benchmark_TagFields(b *testing.B) {
 	for i := 0; i < b.N; i++ {

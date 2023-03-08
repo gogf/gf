@@ -1,4 +1,6 @@
-// protoc --gofast_out=plugins=grpc:. protocol/user/*.proto -I/Users/john/Workspace/Go/GOPATH/src -I/Users/john/Workspace/Go/GOPATH/src/gitee.com/johng/katyusha/.examples/tracing
+// protoc --gofast_out=plugins=grpc:. \
+// protocol/user/*.proto \
+// -I/Users/john/Workspace/Go/GOPATH/src
 syntax = "proto3";
 
 package user;

@@ -15,8 +15,6 @@ import (
 	"github.com/gogf/gf/v2/util/grand"
 )
 
-const SelectorWeight = "BalancerWeight"
-
 type selectorWeight struct {
 	mu    sync.RWMutex
 	nodes Nodes

@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// IntIntMap implements map[int]int with RWMutex that has switch.
 type IntIntMap struct {
 	mu   rwmutex.RWMutex
 	data map[int]int
@@ -483,4 +484,25 @@ func (m *IntIntMap) DeepCopy() interface{} {
 		data[k] = v
 	}
 	return NewIntIntMapFrom(data, m.mu.IsSafe())
+}
+
+// IsSubOf checks whether the current map is a sub-map of `other`.
+func (m *IntIntMap) IsSubOf(other *IntIntMap) bool {
+	if m == other {
+		return true
+	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	other.mu.RLock()
+	defer other.mu.RUnlock()
+	for key, value := range m.data {
+		otherValue, ok := other.data[key]
+		if !ok {
+			return false
+		}
+		if otherValue != value {
+			return false
+		}
+	}
+	return true
 }

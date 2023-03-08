@@ -1,8 +1,9 @@
 package user
 
 import (
-	"github.com/gogf/katyusha/krpc"
 	"google.golang.org/grpc"
+
+	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 )
 
 const (
@@ -14,7 +15,7 @@ type Client struct {
 }
 
 func NewClient(options ...grpc.DialOption) (*Client, error) {
-	conn, err := krpc.Client.NewGrpcClientConn(ServiceName, options...)
+	conn, err := grpcx.Client.NewGrpcClientConn(ServiceName, options...)
 	if err != nil {
 		return nil, err
 	}
