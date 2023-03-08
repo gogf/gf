@@ -9,11 +9,11 @@ package gclient
 import (
 	"bytes"
 	"context"
+	"github.com/gogf/gf/v2/frame/g"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -84,26 +84,36 @@ func (c *Client) Trace(ctx context.Context, url string, data ...interface{}) (*R
 	return c.DoRequest(ctx, http.MethodTrace, url, data...)
 }
 
-// PostForm issues a POST to the specified URL,
-// with data's keys and values URL-encoded as the request body.
+// PostForm is different from net/http.PostForm.
+// It's a wrapper of Post method, which sets the Content-Type as "multipart/form-data;".
+// and It will automatically set boundary characters for the request body and Content-Type.
 //
-// The Content-Type header is set to application/x-www-form-urlencoded.
-// To set other headers, use NewRequest and Client.Do.
+// It's Seem like the following case:
 //
-// When err is nil, resp always contains a non-nil resp.Body.
-// Caller should close resp.Body when done reading from it.
+// Content-Type: multipart/form-data; boundary=----Boundarye4Ghaog6giyQ9ncN
 //
-// See the Client.Do method documentation for details on how redirects
-// are handled.
+// And form data is like:
+// ------Boundarye4Ghaog6giyQ9ncN
+// Content-Disposition: form-data; name="checkType"
 //
-// To make a request with a specified context.Context, use NewRequestWithContext
-// and Client.Do.
-// Deprecated: use Post instead.
-func (c *Client) PostForm(url string, data url.Values) (resp *Response, err error) {
-	return nil, gerror.NewCode(
-		gcode.CodeNotSupported,
-		`PostForm is not supported, please use Post instead`,
-	)
+// none
+//
+// It's used for sending form data.
+// Note that the response object MUST be closed if it'll never be used.
+func (c *Client) PostForm(ctx context.Context, url string, data g.MapStrStr) (resp *Response, err error) {
+	body := new(bytes.Buffer)
+	w := multipart.NewWriter(body)
+	for k, v := range data {
+		err := w.WriteField(k, v)
+		if err != nil {
+			return nil, err
+		}
+	}
+	err = w.Close()
+	if err != nil {
+		return nil, err
+	}
+	return c.ContentType(w.FormDataContentType()).Post(ctx, url, body)
 }
 
 // DoRequest sends request with given HTTP method and data and returns the response object.
