@@ -22,6 +22,9 @@ func New(options ...TimerOptions) *Timer {
 	}
 	if len(options) > 0 {
 		t.options = options[0]
+		if t.options.Interval == 0 {
+			t.options.Interval = defaultInterval
+		}
 	} else {
 		t.options = DefaultOptions()
 	}
