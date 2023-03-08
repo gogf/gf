@@ -20,7 +20,6 @@ import (
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/httputil"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/utils"
@@ -100,7 +99,7 @@ func (c *Client) Trace(ctx context.Context, url string, data ...interface{}) (*R
 //
 // It's used for sending form data.
 // Note that the response object MUST be closed if it'll never be used.
-func (c *Client) PostForm(ctx context.Context, url string, data g.MapStrStr) (resp *Response, err error) {
+func (c *Client) PostForm(ctx context.Context, url string, data map[string]string) (resp *Response, err error) {
 	body := new(bytes.Buffer)
 	w := multipart.NewWriter(body)
 	for k, v := range data {
