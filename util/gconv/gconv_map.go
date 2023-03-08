@@ -332,6 +332,9 @@ func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) in
 						mapKey = strings.TrimSpace(array[0])
 					}
 				}
+				if mapKey == "" {
+					mapKey = fieldName
+				}
 			}
 			if in.RecursiveOption || rtField.Anonymous {
 				// Do map converting recursively.
