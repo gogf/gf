@@ -9,7 +9,6 @@ package gclient
 import (
 	"bytes"
 	"context"
-	"github.com/gogf/gf/v2/frame/g"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -21,6 +20,7 @@ import (
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/httputil"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/utils"
