@@ -9,6 +9,7 @@ package gvalid
 import (
 	"context"
 	"errors"
+	"github.com/gogf/gf/v2/text/gregex"
 	"reflect"
 	"strings"
 
@@ -16,7 +17,6 @@ import (
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gvalid/internal/builtin"
@@ -154,7 +154,7 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 				}); err != nil {
 					// The error should have stack info to indicate the error position.
 					if !gerror.HasStack(err) {
-						err = gerror.NewCodeSkip(gcode.CodeValidationFailed, 1, err.Error())
+						err = gerror.New(err.Error())
 					}
 				}
 
@@ -186,17 +186,15 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 				}
 
 				// Error variable replacement for error message.
-				if !gerror.HasStack(err) {
-					var s string
-					s = gstr.ReplaceByMap(err.Error(), map[string]string{
-						"{field}":     in.Name,             // Field name of the `value`.
-						"{value}":     gconv.String(value), // Current validating value.
-						"{pattern}":   rulePattern,         // The variable part of the rule.
-						"{attribute}": in.Name,             // The same as `{field}`. It is deprecated.
-					})
-					s, _ = gregex.ReplaceString(`\s{2,}`, ` `, s)
-					err = errors.New(s)
-				}
+				s := gstr.ReplaceByMap(err.Error(), map[string]string{
+					"{field}":     in.Name,             // Field name of the `value`.
+					"{value}":     gconv.String(value), // Current validating value.
+					"{pattern}":   rulePattern,         // The variable part of the rule.
+					"{attribute}": in.Name,             // The same as `{field}`. It is deprecated.
+				})
+				s, _ = gregex.ReplaceString(`\s{2,}`, ` `, s)
+				err = gerror.New(s)
+
 				ruleErrorMap[ruleKey] = err
 
 				// If it is with error and there's bail rule,
