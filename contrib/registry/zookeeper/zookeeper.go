@@ -9,14 +9,16 @@ package zookeeper
 
 import (
 	"github.com/go-zookeeper/zk"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/net/gsvc"
 	"golang.org/x/sync/singleflight"
 	"time"
+
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/net/gsvc"
 )
 
 var _ gsvc.Registry = &Registry{}
 
+// Content for custom service Marshal/Unmarshal.
 type Content struct {
 	Key   string
 	Value string
