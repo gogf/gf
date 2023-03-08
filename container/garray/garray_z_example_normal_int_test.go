@@ -704,20 +704,20 @@ func ExampleIntArray_UnmarshalValue() {
 func ExampleIntArray_Filter() {
 	array1 := garray.NewIntArrayFrom(g.SliceInt{10, 40, 50, 0, 0, 0, 60})
 	array2 := garray.NewIntArrayFrom(g.SliceInt{10, 4, 51, 5, 45, 50, 56})
-	fmt.Println(array1.Filter(func(value int, index int) bool {
+	fmt.Println(array1.Filter(func(index int, value int) bool {
 		return empty.IsEmpty(value)
 	}))
-	fmt.Println(array2.Filter(func(value int, index int) bool {
+	fmt.Println(array2.Filter(func(index int, value int) bool {
 		return value%2 == 0
 	}))
-	fmt.Println(array2.Filter(func(value int, index int) bool {
+	fmt.Println(array2.Filter(func(index int, value int) bool {
 		return value%2 == 1
 	}))
 
 	// Output:
 	// [10,40,50,60]
 	// [51,5,45]
-	// [10,4,50,56]
+	// []
 }
 
 func ExampleIntArray_FilterEmpty() {

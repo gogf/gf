@@ -9,10 +9,11 @@
 package garray_test
 
 import (
-	"github.com/gogf/gf/v2/internal/empty"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/gogf/gf/v2/internal/empty"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/frame/g"
@@ -808,13 +809,13 @@ func TestStrArray_UnmarshalValue(t *testing.T) {
 func TestStrArray_Filter(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewStrArrayFrom(g.SliceStr{"", "1", "2", "0"})
-		t.Assert(array.Filter(func(value string, index int) bool {
+		t.Assert(array.Filter(func(index int, value string) bool {
 			return empty.IsEmpty(value)
 		}), g.SliceStr{"1", "2", "0"})
 	})
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewStrArrayFrom(g.SliceStr{"1", "2"})
-		t.Assert(array.Filter(func(value string, index int) bool {
+		t.Assert(array.Filter(func(index int, value string) bool {
 			return empty.IsEmpty(value)
 		}), g.SliceStr{"1", "2"})
 	})

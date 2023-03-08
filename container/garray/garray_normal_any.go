@@ -783,16 +783,17 @@ func (a *Array) UnmarshalValue(value interface{}) error {
 // color of value, when the custom function returns True, the element will be
 // filtered, otherwise it will not be filtered, `Filter` function returns a new
 // array, will not modify the original array.
-func (a *Array) Filter(filter func(value interface{}, index int) bool) (arr *Array) {
-	arr = a.Clone()
-	for i := 0; i < len(arr.array); {
-		if filter(arr.array[i], i) {
-			arr.array = append(arr.array[:i], arr.array[i+1:]...)
+func (a *Array) Filter(filter func(index int, value interface{}) bool) *Array {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if filter(i, a.array[i]) {
+			a.array = append(a.array[:i], a.array[i+1:]...)
 		} else {
 			i++
 		}
 	}
-	return
+	return a
 }
 
 // FilterNil removes all nil value of the array.
