@@ -8,6 +8,7 @@ package garray_test
 
 import (
 	"fmt"
+
 	"github.com/gogf/gf/v2/internal/empty"
 
 	"github.com/gogf/gf/v2/container/garray"
@@ -265,10 +266,10 @@ func ExampleArray_Merge() {
 func ExampleArray_Filter() {
 	array1 := garray.NewFrom(g.Slice{0, 1, 2, nil, "", g.Slice{}, "john"})
 	array2 := garray.NewFrom(g.Slice{0, 1, 2, nil, "", g.Slice{}, "john"})
-	fmt.Printf("%#v\n", array1.Filter(func(value interface{}, index int) bool {
+	fmt.Printf("%#v\n", array1.Filter(func(index int, value interface{}) bool {
 		return empty.IsNil(value)
 	}).Slice())
-	fmt.Printf("%#v\n", array2.Filter(func(value interface{}, index int) bool {
+	fmt.Printf("%#v\n", array2.Filter(func(index int, value interface{}) bool {
 		return empty.IsEmpty(value)
 	}).Slice())
 

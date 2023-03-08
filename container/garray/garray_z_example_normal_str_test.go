@@ -628,11 +628,11 @@ func ExampleStrArray_UnmarshalValue() {
 func ExampleStrArray_Filter() {
 	s := garray.NewStrArrayFrom(g.SliceStr{"Math", "English", "Sport"})
 	s1 := garray.NewStrArrayFrom(g.SliceStr{"a", "b", "", "c", "", "", "d"})
-	fmt.Println(s1.Filter(func(value string, index int) bool {
+	fmt.Println(s1.Filter(func(index int, value string) bool {
 		return empty.IsEmpty(value)
 	}))
 
-	fmt.Println(s.Filter(func(value string, index int) bool {
+	fmt.Println(s.Filter(func(index int, value string) bool {
 		return strings.Contains(value, "h")
 	}))
 

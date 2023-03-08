@@ -755,16 +755,17 @@ func (a *SortedArray) FilterNil() *SortedArray {
 // color of value, when the custom function returns True, the element will be
 // filtered, otherwise it will not be filtered, `Filter` function returns a new
 // array, will not modify the original array.
-func (a *SortedArray) Filter(filter func(value interface{}, index int) bool) (arr *SortedArray) {
-	arr = a.Clone()
-	for i := 0; i < len(arr.array); {
-		if filter(arr.array[i], i) {
-			arr.array = append(arr.array[:i], arr.array[i+1:]...)
+func (a *SortedArray) Filter(filter func(index int, value interface{}) bool) *SortedArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if filter(i, a.array[i]) {
+			a.array = append(a.array[:i], a.array[i+1:]...)
 		} else {
 			i++
 		}
 	}
-	return
+	return a
 }
 
 // FilterEmpty removes all empty value of the array.

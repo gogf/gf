@@ -557,7 +557,7 @@ func ExampleSortedStrArray_UnmarshalValue() {
 func ExampleSortedStrArray_Filter() {
 	s := garray.NewSortedStrArrayFrom(g.SliceStr{"b", "a", "", "c", "", "", "d"})
 	fmt.Println(s)
-	fmt.Println(s.Filter(func(value string, index int) bool {
+	fmt.Println(s.Filter(func(index int, value string) bool {
 		return empty.IsEmpty(value)
 	}))
 
