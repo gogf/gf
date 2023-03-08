@@ -78,7 +78,7 @@ func (s modServer) New(conf ...*GrpcServerConfig) *GrpcServer {
 			s.UnaryRecover,
 			s.UnaryTracing,
 			s.UnaryError,
-			grpcServer.UnaryLogger,
+			grpcServer.internalUnaryLogger,
 		),
 		s.ChainStream(
 			s.StreamTracing,
