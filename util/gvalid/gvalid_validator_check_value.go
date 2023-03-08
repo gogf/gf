@@ -148,6 +148,7 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 				if err = customRuleFunc(ctx, RuleFuncInput{
 					Rule:    ruleItems[index],
 					Message: message,
+					Field:   in.Name,
 					Value:   gvar.New(value),
 					Data:    gvar.New(in.DataRaw),
 				}); err != nil {
