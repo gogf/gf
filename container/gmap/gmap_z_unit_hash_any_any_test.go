@@ -391,3 +391,18 @@ func Test_AnyAnyMap_DeepCopy(t *testing.T) {
 		t.AssertNE(m.Get("k1"), n.Get("k1"))
 	})
 }
+
+func Test_AnyAnyMap_IsSubOf(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m1 := gmap.NewAnyAnyMapFrom(g.MapAnyAny{
+			"k1": "v1",
+			"k2": "v2",
+		})
+		m2 := gmap.NewAnyAnyMapFrom(g.MapAnyAny{
+			"k2": "v2",
+		})
+		t.Assert(m1.IsSubOf(m2), false)
+		t.Assert(m2.IsSubOf(m1), true)
+		t.Assert(m2.IsSubOf(m2), true)
+	})
+}
