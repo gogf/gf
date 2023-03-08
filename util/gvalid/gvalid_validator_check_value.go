@@ -145,18 +145,13 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 			switch {
 			// Custom validation rules.
 			case customRuleFunc != nil:
-				if err = customRuleFunc(ctx, RuleFuncInput{
+				err = customRuleFunc(ctx, RuleFuncInput{
 					Rule:    ruleItems[index],
 					Message: message,
 					Field:   in.Name,
 					Value:   gvar.New(value),
 					Data:    gvar.New(in.DataRaw),
-				}); err != nil {
-					// The error should have stack info to indicate the error position.
-					if !gerror.HasStack(err) {
-						err = gerror.New(err.Error())
-					}
-				}
+				})
 
 			// Builtin validation rules.
 			case customRuleFunc == nil && builtinRule != nil:
