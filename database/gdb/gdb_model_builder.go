@@ -37,6 +37,9 @@ func (m *Model) Builder() *WhereBuilder {
 // getBuilder creates and returns a cloned WhereBuilder of current WhereBuilder if `safe` is true,
 // or else it returns the current WhereBuilder.
 func (b *WhereBuilder) getBuilder() *WhereBuilder {
+	if !b.model.safe {
+		return b
+	}
 	return b.Clone()
 }
 
