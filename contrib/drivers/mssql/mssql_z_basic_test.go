@@ -120,7 +120,7 @@ func TestDoInsert(t *testing.T) {
 			"passport":    fmt.Sprintf(`t%d`, i),
 			"password":    fmt.Sprintf(`p%d`, i),
 			"nickname":    fmt.Sprintf(`T%d`, i),
-			"create_time": gtime.Now().String(),
+			"create_time": gtime.Now(),
 		}
 		_, err := db.Insert(context.Background(), "t_user", data)
 		gtest.Assert(err, nil)
@@ -137,7 +137,7 @@ func TestDoInsert(t *testing.T) {
 			"passport":    fmt.Sprintf(`t%d`, i),
 			"password":    fmt.Sprintf(`p%d`, i),
 			"nickname":    fmt.Sprintf(`T%d`, i),
-			"create_time": gtime.Now().String(),
+			"create_time": gtime.Now(),
 		}
 		_, err := db.Save(context.Background(), "t_user", data, 10)
 		gtest.AssertNE(err, nil)
@@ -192,7 +192,7 @@ func Test_DB_Insert(t *testing.T) {
 			"passport":    "t1",
 			"password":    "25d55ad283aa400af464c76d713c07ad",
 			"nickname":    "T1",
-			"create_time": gtime.Now().String(),
+			"create_time": gtime.Now(),
 		})
 		t.AssertNil(err)
 
@@ -202,7 +202,7 @@ func Test_DB_Insert(t *testing.T) {
 			"passport":    "t2",
 			"password":    "25d55ad283aa400af464c76d713c07ad",
 			"nickname":    "name_2",
-			"create_time": gtime.Now().String(),
+			"create_time": gtime.Now(),
 		})
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
@@ -216,7 +216,7 @@ func Test_DB_Insert(t *testing.T) {
 			Nickname   string `gconv:"nickname"`
 			CreateTime string `json:"create_time"`
 		}
-		timeStr := gtime.Now().String()
+		timeStr := gtime.Now().Local().Time.Format("2006-01-02 15:04:05.123")
 		result, err = db.Insert(ctx, table, User{
 			Id:         3,
 			Passport:   "user_3",
@@ -235,10 +235,10 @@ func Test_DB_Insert(t *testing.T) {
 		t.Assert(one["PASSPORT"].String(), "user_3")
 		t.Assert(one["PASSWORD"].String(), "25d55ad283aa400af464c76d713c07ad")
 		t.Assert(one["NICKNAME"].String(), "name_3")
-		t.Assert(one["CREATE_TIME"].GTime().String(), timeStr)
+		t.Assert(one["CREATE_TIME"].GTime().Time.Format("2006-01-02 15:04:05.123"), timeStr)
 
 		// *struct
-		timeStr = gtime.Now().String()
+		timeStr = gtime.Now().Local().Time.Format("2006-01-02 15:04:05.123")
 		result, err = db.Insert(ctx, table, &User{
 			Id:         4,
 			Passport:   "t4",
@@ -256,10 +256,10 @@ func Test_DB_Insert(t *testing.T) {
 		t.Assert(one["PASSPORT"].String(), "t4")
 		t.Assert(one["PASSWORD"].String(), "25d55ad283aa400af464c76d713c07ad")
 		t.Assert(one["NICKNAME"].String(), "name_4")
-		t.Assert(one["CREATE_TIME"].GTime().String(), timeStr)
+		t.Assert(one["CREATE_TIME"].GTime().Time.Format("2006-01-02 15:04:05.123"), timeStr)
 
 		// batch with Insert
-		timeStr = gtime.Now().String()
+		timeStr = gtime.Now().Local().Time.Format("2006-01-02 15:04:05.123")
 		r, err := db.Insert(ctx, table, g.Slice{
 			g.Map{
 				"id":          200,
@@ -286,7 +286,7 @@ func Test_DB_Insert(t *testing.T) {
 		t.Assert(one["PASSPORT"].String(), "t200")
 		t.Assert(one["PASSWORD"].String(), "25d55ad283aa400af464c76d71qw07ad")
 		t.Assert(one["NICKNAME"].String(), "T200")
-		t.Assert(one["CREATE_TIME"].GTime().String(), timeStr)
+		t.Assert(one["CREATE_TIME"].GTime().Time.Format("2006-01-02 15:04:05.123"), timeStr)
 	})
 }
 
@@ -360,14 +360,14 @@ func Test_DB_BatchInsert(t *testing.T) {
 				"passport":    "t2",
 				"password":    "25d55ad283aa400af464c76d713c07ad",
 				"nickname":    "name_2",
-				"create_time": gtime.Now().String(),
+				"create_time": gtime.Now(),
 			},
 			{
 				"id":          3,
 				"passport":    "user_3",
 				"password":    "25d55ad283aa400af464c76d713c07ad",
 				"nickname":    "name_3",
-				"create_time": gtime.Now().String(),
+				"create_time": gtime.Now(),
 			},
 		}, 1)
 		t.AssertNil(err)
@@ -386,14 +386,14 @@ func Test_DB_BatchInsert(t *testing.T) {
 				"passport":    "t2",
 				"password":    "25d55ad283aa400af464c76d713c07ad",
 				"nickname":    "name_2",
-				"create_time": gtime.Now().String(),
+				"create_time": gtime.Now(),
 			},
 			g.Map{
 				"id":          3,
 				"passport":    "user_3",
 				"password":    "25d55ad283aa400af464c76d713c07ad",
 				"nickname":    "name_3",
-				"create_time": gtime.Now().String(),
+				"create_time": gtime.Now(),
 			},
 		}, 1)
 		t.AssertNil(err)
@@ -410,7 +410,7 @@ func Test_DB_BatchInsert(t *testing.T) {
 			"passport":    "t1",
 			"password":    "p1",
 			"nickname":    "T1",
-			"create_time": gtime.Now().String(),
+			"create_time": gtime.Now(),
 		})
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
