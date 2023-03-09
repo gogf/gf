@@ -80,6 +80,7 @@ func (s modServer) New(conf ...*GrpcServerConfig) *GrpcServer {
 			s.UnaryRecover,
 			s.UnaryAllowNilRes,
 			s.UnaryError,
+			s.UnaryValidate,
 		),
 		s.ChainStream(
 			s.StreamTracing,
