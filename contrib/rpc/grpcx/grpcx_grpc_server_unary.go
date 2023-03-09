@@ -19,8 +19,8 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-// internalUnaryLogger is the default unary interceptor for logging purpose.
-func (s *GrpcServer) internalUnaryLogger(
+// UnaryLogger is the default unary interceptor for logging purpose.
+func (s *GrpcServer) UnaryLogger(
 	ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
 ) (interface{}, error) {
 	var (
