@@ -23,9 +23,9 @@ func Test_SoftCreateUpdateDeleteTime(t *testing.T) {
 CREATE TABLE %s (
   id        int(11) NOT NULL,
   name      varchar(45) DEFAULT NULL,
-  create_at datetime DEFAULT NULL,
-  update_at datetime DEFAULT NULL,
-  delete_at datetime DEFAULT NULL,
+  create_at datetime(6) DEFAULT NULL,
+  update_at datetime(6) DEFAULT NULL,
+  delete_at datetime(6) DEFAULT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     `, table)); err != nil {
@@ -157,9 +157,9 @@ func Test_SoftCreatedUpdatedDeletedTime_Map(t *testing.T) {
 CREATE TABLE %s (
   id        int(11) NOT NULL,
   name      varchar(45) DEFAULT NULL,
-  created_at datetime DEFAULT NULL,
-  updated_at datetime DEFAULT NULL,
-  deleted_at datetime DEFAULT NULL,
+  created_at datetime(6) DEFAULT NULL,
+  updated_at datetime(6) DEFAULT NULL,
+  deleted_at datetime(6) DEFAULT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     `, table)); err != nil {
@@ -291,9 +291,9 @@ func Test_SoftCreatedUpdatedDeletedTime_Struct(t *testing.T) {
 CREATE TABLE %s (
   id        int(11) NOT NULL,
   name      varchar(45) DEFAULT NULL,
-  created_at datetime DEFAULT NULL,
-  updated_at datetime DEFAULT NULL,
-  deleted_at datetime DEFAULT NULL,
+  created_at datetime(6) DEFAULT NULL,
+  updated_at datetime(6) DEFAULT NULL,
+  deleted_at datetime(6) DEFAULT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     `, table)); err != nil {
@@ -431,9 +431,9 @@ func Test_SoftUpdateTime(t *testing.T) {
 CREATE TABLE %s (
   id        int(11) NOT NULL,
   num       int(11) DEFAULT NULL,
-  create_at datetime DEFAULT NULL,
-  update_at datetime DEFAULT NULL,
-  delete_at datetime DEFAULT NULL,
+  create_at datetime(6) DEFAULT NULL,
+  update_at datetime(6) DEFAULT NULL,
+  delete_at datetime(6) DEFAULT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     `, table)); err != nil {
@@ -471,9 +471,9 @@ func Test_SoftUpdateTime_WithDO(t *testing.T) {
 CREATE TABLE %s (
   id        int(11) NOT NULL,
   num       int(11) DEFAULT NULL,
-  created_at datetime DEFAULT NULL,
-  updated_at datetime DEFAULT NULL,
-  deleted_at datetime DEFAULT NULL,
+  created_at datetime(6) DEFAULT NULL,
+  updated_at datetime(6) DEFAULT NULL,
+  deleted_at datetime(6) DEFAULT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     `, table)); err != nil {
@@ -528,9 +528,9 @@ func Test_SoftDelete(t *testing.T) {
 CREATE TABLE %s (
   id        int(11) NOT NULL,
   name      varchar(45) DEFAULT NULL,
-  create_at datetime DEFAULT NULL,
-  update_at datetime DEFAULT NULL,
-  delete_at datetime DEFAULT NULL,
+  create_at datetime(6) DEFAULT NULL,
+  update_at datetime(6) DEFAULT NULL,
+  delete_at datetime(6) DEFAULT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     `, table)); err != nil {
@@ -596,9 +596,9 @@ func Test_SoftDelete_Join(t *testing.T) {
 CREATE TABLE %s (
   id        int(11) NOT NULL,
   name      varchar(45) DEFAULT NULL,
-  create_at datetime DEFAULT NULL,
-  update_at datetime DEFAULT NULL,
-  delete_at datetime DEFAULT NULL,
+  create_at datetime(6) DEFAULT NULL,
+  update_at datetime(6) DEFAULT NULL,
+  delete_at datetime(6) DEFAULT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     `, table1)); err != nil {
@@ -611,9 +611,9 @@ CREATE TABLE %s (
 CREATE TABLE %s (
   id        int(11) NOT NULL,
   name      varchar(45) DEFAULT NULL,
-  createat datetime DEFAULT NULL,
-  updateat datetime DEFAULT NULL,
-  deleteat datetime DEFAULT NULL,
+  createat datetime(6) DEFAULT NULL,
+  updateat datetime(6) DEFAULT NULL,
+  deleteat datetime(6) DEFAULT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     `, table2)); err != nil {
@@ -667,9 +667,9 @@ func Test_SoftDelete_WhereAndOr(t *testing.T) {
 CREATE TABLE %s (
   id        int(11) NOT NULL,
   name      varchar(45) DEFAULT NULL,
-  create_at datetime DEFAULT NULL,
-  update_at datetime DEFAULT NULL,
-  delete_at datetime DEFAULT NULL,
+  create_at datetime(6) DEFAULT NULL,
+  update_at datetime(6) DEFAULT NULL,
+  delete_at datetime(6) DEFAULT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     `, table)); err != nil {
@@ -709,9 +709,9 @@ func Test_CreateUpdateTime_Struct(t *testing.T) {
 CREATE TABLE %s (
   id        int(11) NOT NULL,
   name      varchar(45) DEFAULT NULL,
-  create_at datetime DEFAULT NULL,
-  update_at datetime DEFAULT NULL,
-  delete_at datetime DEFAULT NULL,
+  create_at datetime(6) DEFAULT NULL,
+  update_at datetime(6) DEFAULT NULL,
+  delete_at datetime(6) DEFAULT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     `, table)); err != nil {
