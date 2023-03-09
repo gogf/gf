@@ -223,6 +223,11 @@ func (s *GrpcServer) Stop() {
 	s.Server.GracefulStop()
 }
 
+// GetConfig returns the configuration of current Server.
+func (s *GrpcServer) GetConfig() *GrpcServerConfig {
+	return s.config
+}
+
 // GetListenedAddress retrieves and returns the address string which are listened by current server.
 func (s *GrpcServer) GetListenedAddress() string {
 	if !gstr.Contains(s.config.Address, FreePortAddress) {
