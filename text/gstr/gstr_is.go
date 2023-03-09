@@ -6,9 +6,50 @@
 
 package gstr
 
-import "github.com/gogf/gf/v2/internal/utils"
+import (
+	"strings"
+
+	"github.com/gogf/gf/v2/internal/utils"
+)
 
 // IsNumeric tests whether the given string s is numeric.
 func IsNumeric(s string) bool {
 	return utils.IsNumeric(s)
+}
+
+// StartsWith Determine if `haystack` starts with `needle`.
+func StartsWith(haystack, needle string) bool {
+	length := len(needle)
+	if len(haystack) < length {
+		return false
+	}
+	return haystack[:length] == needle
+}
+
+// StartsWithI Determine if `haystack` starts with `needle`.
+func StartsWithI(haystack, needle string) bool {
+	length := len(needle)
+	if len(haystack) < length {
+		return false
+	}
+
+	return strings.ToLower(haystack[:length]) == strings.ToLower(needle)
+}
+
+// EndsWith Determine if `haystack` ends with `needle`.
+func EndsWith(haystack, needle string) bool {
+	length := len(needle)
+	if len(haystack) < length {
+		return false
+	}
+	return haystack[len(haystack)-length:] == needle
+}
+
+// EndsWithI Determine if `haystack` ends with `needle`.
+func EndsWithI(haystack, needle string) bool {
+	length := len(needle)
+	if len(haystack) < length {
+		return false
+	}
+	return strings.ToLower(haystack[len(haystack)-length:]) == strings.ToLower(needle)
 }

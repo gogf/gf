@@ -10,7 +10,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gogf/gf/v2/crypto/gaes"
+	"github.com/gogf/gf/v2/encoding/gbase64"
 	"github.com/gogf/gf/v2/os/gcache"
+	"github.com/gogf/gf/v2/os/gcfg"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -273,7 +277,7 @@ func parseConfigNodeLink(node *ConfigNode) *ConfigNode {
 		if len(match) > 5 {
 			node.Type = match[1]
 			node.User = match[2]
-			node.Pass = match[3]
+			node.Pass = decryptPassword(match[3])
 			node.Protocol = match[4]
 			array := gstr.Split(match[5], ":")
 			if len(array) == 2 && node.Protocol != "file" {
@@ -302,4 +306,28 @@ func parseConfigNodeLink(node *ConfigNode) *ConfigNode {
 		node.Protocol = defaultProtocol
 	}
 	return node
+}
+
+// decryptPassword Get and parse passwords
+func decryptPassword(origin string) string {
+	// Determine if the database password starts with `AES:`
+	if gstr.StartsWith(origin, "AES:") {
+		// Get `key` from configuration or command line
+		key, err := gcfg.Instance().GetWithCmd(gctx.New(), "key", "")
+		// Removing the `AES:` prefix
+		encryptedBase64Password := gstr.TrimLeftStr(origin, "AES:")
+		// Decompress the Base64 string to []byte
+		originEncryptedPassword, err := gbase64.DecodeString(encryptedBase64Password)
+		if err != nil {
+			panic(err)
+		}
+		// Decode Base64 decoded []byte with Base64 via Key
+		originKey, err := gaes.Decrypt(originEncryptedPassword, key.Bytes())
+		if err != nil {
+			panic(err)
+		}
+		return string(originKey)
+	} else {
+		return origin
+	}
 }

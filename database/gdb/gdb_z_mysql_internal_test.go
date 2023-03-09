@@ -10,6 +10,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
@@ -186,6 +187,25 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 		t.Assert(newNode.Charset, defaultCharset)
 		t.Assert(newNode.Protocol, `file`)
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		file := gcfg.Instance().GetAdapter().(*gcfg.AdapterFile)
+		file.Set("key", "0123456789123456")
+		node := &ConfigNode{
+			Link: `mysql:root:AES:p9p3+Z98p+h1idcseM+UeA==@tcp(9.135.69.119:3306)/khaos_oss?loc=Local&parseTime=true&charset=latin`,
+		}
+		newNode := parseConfigNodeLink(node)
+		t.Assert(newNode.Type, `mysql`)
+		t.Assert(newNode.User, `root`)
+		t.Assert(newNode.Pass, `CxzhD*624:27jh`)
+		t.Assert(newNode.Host, `9.135.69.119`)
+		t.Assert(newNode.Port, `3306`)
+		t.Assert(newNode.Name, `khaos_oss`)
+		t.Assert(newNode.Extra, `loc=Local&parseTime=true&charset=latin`)
+		t.Assert(newNode.Charset, `latin`)
+		t.Assert(newNode.Protocol, `tcp`)
+	})
+
 }
 
 func Test_Func_doQuoteWord(t *testing.T) {
