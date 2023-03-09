@@ -11,11 +11,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"net/url"
-	"reflect"
-	"strconv"
-	"strings"
-
 	_ "gitee.com/chunanyong/dm"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -23,7 +18,12 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
+	"net/url"
+	"reflect"
+	"strconv"
+	"strings"
 )
 
 type Driver struct {
@@ -283,23 +283,7 @@ func parseValue(listOne gdb.Map, char struct {
 			)
 		}
 
-		va := reflect.ValueOf(listOne[column])
-		ty := reflect.TypeOf(listOne[column])
-		saveValue := ""
-		switch ty.Kind() {
-		case reflect.String:
-			saveValue = va.String()
-
-		case reflect.Int:
-			saveValue = strconv.FormatInt(va.Int(), 10)
-
-		case reflect.Int64:
-			saveValue = strconv.FormatInt(va.Int(), 10)
-
-		default:
-			// The fish has no chance getting here.
-			// Nothing to do.
-		}
+		saveValue := gconv.String(listOne[column])
 		queryValues = append(
 			queryValues,
 			fmt.Sprintf(
