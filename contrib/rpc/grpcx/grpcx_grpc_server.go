@@ -75,11 +75,11 @@ func (s modServer) New(conf ...*GrpcServerConfig) *GrpcServer {
 	}
 	grpcServer.config.Options = append([]grpc.ServerOption{
 		s.ChainUnary(
-			grpcServer.internalUnaryLogger,
-			s.UnaryRecover,
 			s.UnaryTracing,
+			s.UnaryRecover,
 			s.UnaryValidate,
 			s.UnaryAllowNilRes,
+			grpcServer.internalUnaryLogger,
 			s.UnaryError,
 		),
 		s.ChainStream(
