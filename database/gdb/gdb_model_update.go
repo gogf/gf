@@ -73,7 +73,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		// Automatically update the record updating time.
 		if fieldNameUpdate != "" {
 			if fieldNameUpdate != "" && !gstr.Contains(updates, fieldNameUpdate) {
-				updates += fmt.Sprintf(`,%s='%s'`, fieldNameUpdate, gtime.Now().Format("2006-01-02 15:04:05.123456"))
+				updates += fmt.Sprintf(`,%s='%s'`, fieldNameUpdate, gtime.Now().Local().Time.Format("2006-01-02 15:04:05.123456"))
 			}
 		}
 		updateData = updates
