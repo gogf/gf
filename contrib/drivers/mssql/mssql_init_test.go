@@ -107,8 +107,8 @@ func createTable(table ...string) (name string) {
 		PASSWORD VARCHAR(32)  NULL,
 		NICKNAME VARCHAR(45)  NULL,
 		CREATE_TIME datetime NULL,
-		CREATED_AT datetime NULL,
-		UPDATED_AT datetime NULL,
+		CREATED_AT datetimeoffset NULL,
+		UPDATED_AT datetimeoffset NULL,
 		PRIMARY KEY (ID))
 	`, name, name)); err != nil {
 		gtest.Fatal(err)
