@@ -107,6 +107,8 @@ func createTable(table ...string) (name string) {
 		PASSWORD VARCHAR(32)  NULL,
 		NICKNAME VARCHAR(45)  NULL,
 		CREATE_TIME datetime NULL,
+		CREATED_AT datetime NULL,
+		UPDATED_AT datetime NULL,
 		PRIMARY KEY (ID))
 	`, name, name)); err != nil {
 		gtest.Fatal(err)
@@ -125,7 +127,7 @@ func createInitTable(table ...string) (name string) {
 			"passport":    fmt.Sprintf(`user_%d`, i),
 			"password":    fmt.Sprintf(`pass_%d`, i),
 			"nickname":    fmt.Sprintf(`name_%d`, i),
-			"create_time": gtime.Now().String(),
+			"create_time": gtime.Now(),
 		})
 	}
 	result, err := db.Insert(context.Background(), name, array.Slice())

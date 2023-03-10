@@ -210,19 +210,19 @@ func Test_DB_Insert(t *testing.T) {
 
 		// struct
 		type User struct {
-			Id         int    `gconv:"id"`
-			Passport   string `json:"passport"`
-			Password   string `gconv:"password"`
-			Nickname   string `gconv:"nickname"`
-			CreateTime string `json:"create_time"`
+			Id         int         `gconv:"id"`
+			Passport   string      `json:"passport"`
+			Password   string      `gconv:"password"`
+			Nickname   string      `gconv:"nickname"`
+			CreateTime *gtime.Time `json:"create_time"`
 		}
-		timeStr := gtime.Now().Time.Format("2006-01-02 15:04:05.999")
+		timeNow := gtime.Now()
 		result, err = db.Insert(ctx, table, User{
 			Id:         3,
 			Passport:   "user_3",
 			Password:   "25d55ad283aa400af464c76d713c07ad",
 			Nickname:   "name_3",
-			CreateTime: timeStr,
+			CreateTime: timeNow,
 		})
 		t.AssertNil(err)
 		n, _ = result.RowsAffected()
@@ -235,16 +235,16 @@ func Test_DB_Insert(t *testing.T) {
 		t.Assert(one["PASSPORT"].String(), "user_3")
 		t.Assert(one["PASSWORD"].String(), "25d55ad283aa400af464c76d713c07ad")
 		t.Assert(one["NICKNAME"].String(), "name_3")
-		t.Assert(one["CREATE_TIME"].GTime().Time.Format("2006-01-02 15:04:05.999"), timeStr)
+		t.Assert(one["CREATE_TIME"].GTime(), timeNow)
 
 		// *struct
-		timeStr = gtime.Now().Local().Time.Format("2006-01-02 15:04:05.999")
+		timeNow = gtime.Now()
 		result, err = db.Insert(ctx, table, &User{
 			Id:         4,
 			Passport:   "t4",
 			Password:   "25d55ad283aa400af464c76d713c07ad",
 			Nickname:   "name_4",
-			CreateTime: timeStr,
+			CreateTime: timeNow,
 		})
 		t.AssertNil(err)
 		n, _ = result.RowsAffected()
@@ -256,24 +256,24 @@ func Test_DB_Insert(t *testing.T) {
 		t.Assert(one["PASSPORT"].String(), "t4")
 		t.Assert(one["PASSWORD"].String(), "25d55ad283aa400af464c76d713c07ad")
 		t.Assert(one["NICKNAME"].String(), "name_4")
-		t.Assert(one["CREATE_TIME"].GTime().Time.Format("2006-01-02 15:04:05.999"), timeStr)
+		t.Assert(one["CREATE_TIME"].GTime(), timeNow)
 
 		// batch with Insert
-		timeStr = gtime.Now().Local().Time.Format("2006-01-02 15:04:05.999")
+		timeNow = gtime.Now()
 		r, err := db.Insert(ctx, table, g.Slice{
 			g.Map{
 				"id":          200,
 				"passport":    "t200",
 				"password":    "25d55ad283aa400af464c76d71qw07ad",
 				"nickname":    "T200",
-				"create_time": timeStr,
+				"create_time": timeNow,
 			},
 			g.Map{
 				"id":          300,
 				"passport":    "t300",
 				"password":    "25d55ad283aa400af464c76d713c07ad",
 				"nickname":    "T300",
-				"create_time": timeStr,
+				"create_time": timeNow,
 			},
 		})
 		t.AssertNil(err)
@@ -286,7 +286,7 @@ func Test_DB_Insert(t *testing.T) {
 		t.Assert(one["PASSPORT"].String(), "t200")
 		t.Assert(one["PASSWORD"].String(), "25d55ad283aa400af464c76d71qw07ad")
 		t.Assert(one["NICKNAME"].String(), "T200")
-		t.Assert(one["CREATE_TIME"].GTime().Time.Format("2006-01-02 15:04:05.999"), timeStr)
+		t.Assert(one["CREATE_TIME"].GTime(), timeNow)
 	})
 }
 
