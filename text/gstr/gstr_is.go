@@ -7,8 +7,6 @@
 package gstr
 
 import (
-	"strings"
-
 	"github.com/gogf/gf/v2/internal/utils"
 )
 
@@ -23,7 +21,7 @@ func StartsWith(haystack, needle string) bool {
 	if len(haystack) < length {
 		return false
 	}
-	return haystack[:length] == needle
+	return Compare(haystack[:length], needle) == 0
 }
 
 // StartsWithI Determine if `haystack` starts with `needle`.
@@ -33,7 +31,7 @@ func StartsWithI(haystack, needle string) bool {
 		return false
 	}
 
-	return strings.ToLower(haystack[:length]) == strings.ToLower(needle)
+	return Equal(haystack[:length], needle)
 }
 
 // EndsWith Determine if `haystack` ends with `needle`.
@@ -42,7 +40,7 @@ func EndsWith(haystack, needle string) bool {
 	if len(haystack) < length {
 		return false
 	}
-	return haystack[len(haystack)-length:] == needle
+	return Compare(haystack[len(haystack)-length:], needle) == 0
 }
 
 // EndsWithI Determine if `haystack` ends with `needle`.
@@ -51,5 +49,5 @@ func EndsWithI(haystack, needle string) bool {
 	if len(haystack) < length {
 		return false
 	}
-	return strings.ToLower(haystack[len(haystack)-length:]) == strings.ToLower(needle)
+	return Equal(haystack[len(haystack)-length:], needle)
 }
