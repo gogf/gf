@@ -12,6 +12,8 @@ import (
 
 	"github.com/gogf/gf/v2/crypto/gaes"
 	"github.com/gogf/gf/v2/encoding/gbase64"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gctx"
@@ -313,18 +315,25 @@ func decryptPassword(origin string) string {
 	// Determine if the database password starts with `AES:`
 	if gstr.StartsWith(origin, "AES:") {
 		// Get `key` from configuration or command line
-		key, err := gcfg.Instance().GetWithCmd(gctx.New(), "key", "")
+		key, err := gcfg.Instance().GetWithCmd(gctx.New(), "database.key", "")
+		if err != nil {
+			panic(gerror.NewCode(gcode.CodeInternalError))
+		}
+		if key.String() == "" {
+			panic(gerror.NewCode(gcode.CodeInvalidParameter, "Please pass the `database.key` through the configuration file or via the command line."))
+		}
+
 		// Removing the `AES:` prefix
 		encryptedBase64Password := gstr.TrimLeftStr(origin, "AES:")
 		// Decompress the Base64 string to []byte
 		originEncryptedPassword, err := gbase64.DecodeString(encryptedBase64Password)
 		if err != nil {
-			panic(err)
+			panic(gerror.NewCode(gcode.CodeInvalidParameter, "Please use base64 to convert the encrypted []byte to a string."))
 		}
 		// Decode Base64 decoded []byte with Base64 via Key
 		originKey, err := gaes.Decrypt(originEncryptedPassword, key.Bytes())
 		if err != nil {
-			panic(err)
+			panic(gerror.NewCode(gcode.CodeInvalidParameter, "The key may be wrong."))
 		}
 		return string(originKey)
 	} else {
