@@ -58,6 +58,7 @@ Note:
 - It does not support `Save/Replace` features.
 - It does not support `LastInsertId`.
 - It supports server version >= `SQL Server2005`
+- It ONLY supports datetime2 and datetimeoffset type for auto handling created_at/updated_at/deleted_at columns, because datetime type does not support microseconds precision when column value is passed as string. 
 
 ## Oracle
 ```
