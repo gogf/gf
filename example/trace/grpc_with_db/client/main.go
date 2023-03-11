@@ -29,7 +29,7 @@ func StartRequests() {
 	ctx, span := gtrace.NewSpan(gctx.New(), "StartRequests")
 	defer span.End()
 
-	client := user.NewUserClient(grpcx.Client.MustNewGrpcClientConn("default"))
+	client := user.NewUserClient(grpcx.Client.MustNewGrpcClientConn("demo"))
 
 	// Baggage.
 	ctx = gtrace.SetBaggageValue(ctx, "uid", 100)
