@@ -69,9 +69,6 @@ func serverProcessInit() {
 		}
 	}
 
-	// Signal handler.
-	go handleProcessSignal()
-
 	// Process message handler.
 	// It enabled only a graceful feature is enabled.
 	if gracefulEnabled {
@@ -258,6 +255,7 @@ func (s *Server) Start() error {
 	s.initOpenApi()
 	s.doServiceRegister()
 	s.doRouterMapDump()
+
 	return nil
 }
 
@@ -425,7 +423,11 @@ func (s *Server) Run() {
 	if err := s.Start(); err != nil {
 		s.Logger().Fatalf(ctx, `%+v`, err)
 	}
-	// Blocking using channel.
+
+	// Signal handler.
+	handleProcessSignal()
+
+	// Blocking using channel for graceful restart.
 	<-s.closeChan
 	// Remove plugins.
 	if len(s.plugins) > 0 {
