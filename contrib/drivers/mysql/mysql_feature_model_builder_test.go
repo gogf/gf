@@ -34,7 +34,7 @@ func Test_Model_Builder(t *testing.T) {
 	// Where And
 	gtest.C(t, func(t *gtest.T) {
 		m := db.Model(table)
-		b := m.Builder()
+		b := m.Safe().Builder()
 
 		all, err := m.Where(
 			b.Where("id", g.Slice{1, 2, 3}).WhereOr("id", g.Slice{4, 5, 6}),
@@ -50,7 +50,7 @@ func Test_Model_Builder(t *testing.T) {
 	// Where Or
 	gtest.C(t, func(t *gtest.T) {
 		m := db.Model(table)
-		b := m.Builder()
+		b := m.Safe().Builder()
 
 		all, err := m.WhereOr(
 			b.Where("id", g.Slice{1, 2, 3}).WhereOr("id", g.Slice{4, 5, 6}),
