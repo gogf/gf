@@ -75,10 +75,11 @@ func (s modServer) New(conf ...*GrpcServerConfig) *GrpcServer {
 	}
 	grpcServer.config.Options = append([]grpc.ServerOption{
 		s.ChainUnary(
-			s.UnaryRecover,
 			s.UnaryTracing,
-			s.UnaryError,
 			grpcServer.UnaryLogger,
+			s.UnaryRecover,
+			s.UnaryAllowNilRes,
+			s.UnaryError,
 		),
 		s.ChainStream(
 			s.StreamTracing,
@@ -220,6 +221,11 @@ func (s *GrpcServer) Wait() {
 // Stop gracefully stops the server.
 func (s *GrpcServer) Stop() {
 	s.Server.GracefulStop()
+}
+
+// GetConfig returns the configuration of current Server.
+func (s *GrpcServer) GetConfig() *GrpcServerConfig {
+	return s.config
 }
 
 // GetListenedAddress retrieves and returns the address string which are listened by current server.

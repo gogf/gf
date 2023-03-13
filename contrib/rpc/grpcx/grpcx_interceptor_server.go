@@ -8,6 +8,7 @@ package grpcx
 
 import (
 	"context"
+	"google.golang.org/protobuf/proto"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -74,6 +75,16 @@ func (s modServer) UnaryValidate(
 		)
 	}
 	return handler(ctx, req)
+}
+
+func (s modServer) UnaryAllowNilRes(
+	ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
+) (interface{}, error) {
+	res, err := handler(ctx, req)
+	if g.IsNil(res) {
+		res = proto.Message(nil)
+	}
+	return res, err
 }
 
 // UnaryTracing is a unary interceptor for adding tracing feature for gRPC server using OpenTelemetry.
