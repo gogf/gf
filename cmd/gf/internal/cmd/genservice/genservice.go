@@ -189,6 +189,10 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		generatedDstFilePathSet.Add(dstFilePath)
 		for _, file := range files {
 			fileContent = gfile.GetContents(file)
+			fileContent, err := gregex.ReplaceString(`/[/|\*](.+)`, "", fileContent)
+			if err != nil {
+				return nil, err
+			}
 			// Calculate imported packages of source go files.
 			err = c.calculateImportedPackages(fileContent, srcImportedPackages)
 			if err != nil {

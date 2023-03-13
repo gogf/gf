@@ -16,6 +16,7 @@ import (
 	"os"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -231,7 +232,10 @@ func (s *gracefulServer) shutdown(ctx context.Context) {
 	if s.status == ServerStatusStopped {
 		return
 	}
-	timeoutCtx, cancelFunc := context.WithTimeout(ctx, gracefulShutdownTimeout)
+	timeoutCtx, cancelFunc := context.WithTimeout(
+		ctx,
+		time.Duration(s.server.config.GracefulShutdownTimeout)*time.Second,
+	)
 	defer cancelFunc()
 	if err := s.httpServer.Shutdown(timeoutCtx); err != nil {
 		s.server.Logger().Errorf(

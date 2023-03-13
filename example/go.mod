@@ -10,7 +10,7 @@ require (
 	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.0.0
 	github.com/gogf/gf/contrib/nosql/redis/v2 v2.2.6
 	github.com/gogf/gf/contrib/registry/etcd/v2 v2.2.6
-	github.com/gogf/gf/contrib/registry/file/v2 v2.2.6
+	github.com/gogf/gf/contrib/registry/file/v2 v2.3.3
 	github.com/gogf/gf/contrib/registry/polaris/v2 v2.0.0
 	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.0.0
 	github.com/gogf/gf/contrib/trace/jaeger/v2 v2.0.0
