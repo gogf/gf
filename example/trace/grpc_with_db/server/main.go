@@ -1,14 +1,16 @@
 package main
 
 import (
+	_ "github.com/gogf/gf/contrib/drivers/mysql/v2"
+	_ "github.com/gogf/gf/contrib/nosql/redis/v2"
+
 	"context"
 	"fmt"
 	"time"
 
-	_ "github.com/gogf/gf/contrib/drivers/mysql/v2"
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 	"github.com/gogf/gf/contrib/trace/jaeger/v2"
-	"github.com/gogf/gf/example/trace/grpc_with_db/protobuf/user"
+	"github.com/gogf/gf/example/trace/grpc_with_db/protocol/user"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcache"
