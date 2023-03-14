@@ -12,9 +12,10 @@ import (
 type (
 	CGenPb      struct{}
 	CGenPbInput struct {
-		g.Meta `name:"pb" brief:"parse proto files and generate protobuf go files"`
-		Path   string `name:"path"   short:"p" dc:"protobuf file folder path" d:"manifest/protobuf"`
-		Output string `name:"output" short:"o" dc:"output folder path storing generated go files" d:"api"`
+		g.Meta     `name:"pb" brief:"parse proto files and generate protobuf go files"`
+		Path       string `name:"path"       short:"p"  dc:"protobuf file folder path" d:"manifest/protobuf"`
+		OutputApi  string `name:"outputApi"  short:"oa" dc:"output folder path storing generated go files of api" d:"api"`
+		OutputCtrl string `name:"outputCtrl" short:"oc" dc:"output folder path storing generated go files of controller" d:"internal/controller"`
 	}
 	CGenPbOutput struct{}
 )
@@ -32,9 +33,13 @@ func (c CGenPb) Pb(ctx context.Context, in CGenPbInput) (out *CGenPbOutput, err 
 		mlog.Fatalf(`proto files folder "%s" does not exist`, in.Path)
 	}
 	// output path checks.
-	outputPath := gfile.RealPath(in.Output)
-	if outputPath == "" {
-		mlog.Fatalf(`output folder "%s" does not exist`, in.Output)
+	outputApiPath := gfile.RealPath(in.OutputApi)
+	if outputApiPath == "" {
+		mlog.Fatalf(`output api folder "%s" does not exist`, in.OutputApi)
+	}
+	outputCtrlPath := gfile.RealPath(in.OutputCtrl)
+	if outputCtrlPath == "" {
+		mlog.Fatalf(`output controller folder "%s" does not exist`, in.OutputCtrl)
 	}
 
 	// folder scanning.
@@ -52,8 +57,8 @@ func (c CGenPb) Pb(ctx context.Context, in CGenPbInput) (out *CGenPbOutput, err 
 	for _, file := range files {
 		var command = gproc.NewProcess(protoc, nil)
 		command.Args = append(command.Args, "--proto_path="+gfile.Pwd())
-		command.Args = append(command.Args, "--go_out=paths=source_relative:"+outputPath)
-		command.Args = append(command.Args, "--go-grpc_out=paths=source_relative:"+outputPath)
+		command.Args = append(command.Args, "--go_out=paths=source_relative:"+outputApiPath)
+		command.Args = append(command.Args, "--go-grpc_out=paths=source_relative:"+outputApiPath)
 		command.Args = append(command.Args, file)
 		mlog.Print(command.String())
 		if err = command.Run(ctx); err != nil {
@@ -61,7 +66,15 @@ func (c CGenPb) Pb(ctx context.Context, in CGenPbInput) (out *CGenPbOutput, err 
 		}
 	}
 	// Generate struct tag according comment rules.
-	err = c.generateStructTag(ctx, generateStructTagInput{PbPath: outputPath})
+	err = c.generateStructTag(ctx, generateStructTagInput{OutputApiPath: outputApiPath})
+	if err != nil {
+		return
+	}
+	// Generate controllers according comment rules.
+	err = c.generateController(ctx, generateControllerInput{
+		OutputApiPath:  outputApiPath,
+		OutputCtrlPath: outputCtrlPath,
+	})
 	if err != nil {
 		return
 	}

@@ -3,12 +3,13 @@ package utils
 import (
 	"context"
 	"fmt"
+	"golang.org/x/tools/imports"
+
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/text/gstr"
-	"golang.org/x/tools/imports"
 )
 
 // GoFmt formats the source file and adds or removes import statements as necessary.
@@ -51,4 +52,17 @@ func IsFileDoNotEdit(filePath string) bool {
 		return true
 	}
 	return gstr.Contains(gfile.GetContents(filePath), consts.DoNotEditKey)
+}
+
+// ReplaceGeneratedContentGFV2 replaces generated go content from goframe v1 to v2.
+func ReplaceGeneratedContentGFV2(folderPath string) (err error) {
+	return gfile.ReplaceDirFunc(func(path, content string) string {
+		if gstr.Contains(content, `"github.com/gogf/gf`) && !gstr.Contains(content, `"github.com/gogf/gf/v2`) {
+			content = gstr.Replace(content, `"github.com/gogf/gf"`, `"github.com/gogf/gf/v2"`)
+			content = gstr.Replace(content, `"github.com/gogf/gf/`, `"github.com/gogf/gf/v2/`)
+			content = gstr.Replace(content, `"github.com/gogf/gf/v2/contrib/`, `"github.com/gogf/gf/contrib/`)
+			return content
+		}
+		return content
+	}, folderPath, "*.go", true)
 }
