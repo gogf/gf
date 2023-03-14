@@ -13,11 +13,11 @@ import (
 )
 
 type generateStructTagInput struct {
-	PbPath string
+	OutputApiPath string
 }
 
 func (c CGenPb) generateStructTag(ctx context.Context, in generateStructTagInput) (err error) {
-	files, err := gfile.ScanDirFile(in.PbPath, "*.pb.go", true)
+	files, err := gfile.ScanDirFile(in.OutputApiPath, "*.pb.go", true)
 	if err != nil {
 		return err
 	}
