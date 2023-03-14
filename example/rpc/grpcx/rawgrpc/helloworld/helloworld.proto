@@ -1,6 +1,12 @@
+// protoc --go_out=paths=source_relative:. --go-grpc_out=paths=source_relative:. *.proto
+
 syntax = "proto3";
 
+
 package helloworld;
+
+option go_package = "github.com/gogf/gf/grpc/example/helloworld";
+
 
 // The greeting service definition.
 service Greeter {

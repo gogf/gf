@@ -12,7 +12,7 @@ import (
 type (
 	CGenPb      struct{}
 	CGenPbInput struct {
-		g.Meta     `name:"pb" brief:"parse proto files and generate protobuf go files"`
+		g.Meta     `name:"pb" config:"gfcli.gen.pb" brief:"parse proto files and generate protobuf go files"`
 		Path       string `name:"path"       short:"p"  dc:"protobuf file folder path" d:"manifest/protobuf"`
 		OutputApi  string `name:"outputApi"  short:"oa" dc:"output folder path storing generated go files of api" d:"api"`
 		OutputCtrl string `name:"outputCtrl" short:"oc" dc:"output folder path storing generated go files of controller" d:"internal/controller"`
