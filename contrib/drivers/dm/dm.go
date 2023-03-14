@@ -11,6 +11,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/url"
+	"reflect"
+	"strconv"
+	"strings"
+
 	_ "gitee.com/chunanyong/dm"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -20,10 +25,6 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
-	"net/url"
-	"reflect"
-	"strconv"
-	"strings"
 )
 
 type Driver struct {
