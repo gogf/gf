@@ -63,7 +63,7 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 			Table:     m.tables,
 			Data:      fmt.Sprintf(`%s=?`, m.db.GetCore().QuoteString(fieldNameDelete)),
 			Condition: conditionStr,
-			Args:      append([]interface{}{gtime.Now().Local().Time.Format("2006-01-02 15:04:05.999999")}, conditionArgs...),
+			Args:      append([]interface{}{gtime.Now()}, conditionArgs...),
 		}
 		return in.Next(ctx)
 	}
