@@ -15,6 +15,12 @@ import (
 // Manager for Builder creating.
 type Manager struct{}
 
+// New creates and returns a Builder.
 func (m Manager) New(discovery gsvc.Discovery) resolver.Builder {
 	return NewBuilder(discovery)
+}
+
+// Registry sets the default Registry implements as your own implemented interface.
+func (m Manager) Registry(registry gsvc.Registry) {
+	Registry(registry)
 }

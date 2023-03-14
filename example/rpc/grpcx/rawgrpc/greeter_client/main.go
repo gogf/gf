@@ -7,9 +7,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"github.com/gogf/gf/contrib/registry/file/v2"
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
+	"github.com/gogf/gf/v2/os/gfile"
 
-	"github.com/gogf/gf/contrib/registry/etcd/v2"
 	pb "github.com/gogf/gf/example/rpc/grpcx/rawgrpc/helloworld"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gsvc"
@@ -17,7 +18,7 @@ import (
 )
 
 func main() {
-	gsvc.SetRegistry(etcd.New("127.0.0.1:2379"))
+	grpcx.Resolver.Registry(file.New(gfile.Temp("gsvc")))
 
 	var (
 		ctx     = gctx.GetInitCtx()
@@ -25,7 +26,7 @@ func main() {
 	)
 	// Set up a connection to the server.
 	conn, err := grpc.Dial(
-		fmt.Sprintf(`%s`, service.GetKey()),
+		fmt.Sprintf(`%s://%s`, gsvc.Schema, service.GetKey()),
 		grpcx.Balancer.WithRandom(),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)

@@ -7,27 +7,27 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/gogf/gf/contrib/registry/etcd/v2"
-	pb "github.com/gogf/gf/example/rpc/grpcx/rawgrpc/helloworld"
+	"github.com/gogf/gf/contrib/registry/file/v2"
+	"github.com/gogf/gf/example/rpc/grpcx/rawgrpc/helloworld"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gipv4"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/os/gfile"
 )
 
 type GreetingServer struct {
-	pb.UnimplementedGreeterServer
+	helloworld.UnimplementedGreeterServer
 }
 
 // SayHello implements helloworld.GreeterServer
-func (s *GreetingServer) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
-	g.Log().Printf(ctx, "Received: %v", in.GetName())
-	return &pb.HelloReply{Message: "Hello " + in.GetName()}, nil
+func (s *GreetingServer) SayHello(ctx context.Context, in *helloworld.HelloRequest) (*helloworld.HelloReply, error) {
+	return &helloworld.HelloReply{Message: "Hello " + in.GetName()}, nil
 }
 
 func main() {
-	gsvc.SetRegistry(etcd.New("127.0.0.1:2379"))
+	gsvc.SetRegistry(file.New(gfile.Temp("gsvc")))
 
 	var (
 		err     error
@@ -55,7 +55,7 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	pb.RegisterGreeterServer(s, &GreetingServer{})
+	helloworld.RegisterGreeterServer(s, &GreetingServer{})
 	g.Log().Printf(ctx, "server listening at %v", listen.Addr())
 	if err = s.Serve(listen); err != nil {
 		g.Log().Fatalf(ctx, "failed to serve: %v", err)

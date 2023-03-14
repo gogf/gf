@@ -30,5 +30,5 @@ func autoLoadAndRegisterFileRegistry() {
 	)
 
 	g.Log().Debug(ctx, `set default registry using file registry as no custom registry set`)
-	resolver.SetRegistry(fileRegistry)
+	resolver.Registry(fileRegistry)
 }

@@ -25,8 +25,8 @@ func init() {
 	resolver.Register(NewBuilder(gsvc.GetRegistry()))
 }
 
-// SetRegistry sets the default Registry implements as your own implemented interface.
-func SetRegistry(registry gsvc.Registry) {
+// Registry sets the default Registry implements as your own implemented interface.
+func Registry(registry gsvc.Registry) {
 	if registry == nil {
 		panic(gerror.New(`invalid Registry value "nil" given`))
 	}

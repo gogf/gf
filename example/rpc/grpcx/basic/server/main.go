@@ -8,12 +8,11 @@ package main
 
 import (
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
-	"github.com/gogf/gf/example/rpc/grpcx/basic/protocol"
-	"github.com/gogf/gf/example/rpc/grpcx/basic/service"
+	"github.com/gogf/gf/example/rpc/grpcx/basic/controller"
 )
 
 func main() {
 	s := grpcx.Server.New()
-	protocol.RegisterEchoServer(s.Server, new(service.Echo))
+	controller.Register(s)
 	s.Run()
 }
