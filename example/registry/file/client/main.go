@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/gogf/gf/contrib/registry/file/v2"
@@ -15,12 +14,13 @@ func main() {
 	gsvc.SetRegistry(file.New(gfile.Temp("gsvc")))
 
 	client := g.Client()
-	for i := 0; i < 100; i++ {
-		res, err := client.Get(gctx.New(), `http://hello.svc/`)
+	for i := 0; i < 10; i++ {
+		ctx := gctx.New()
+		res, err := client.Get(ctx, `http://hello.svc/`)
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println(res.ReadAllString())
+		g.Log().Debug(ctx, res.ReadAllString())
 		res.Close()
 		time.Sleep(time.Second)
 	}

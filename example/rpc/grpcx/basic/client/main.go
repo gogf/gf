@@ -16,17 +16,15 @@ import (
 )
 
 func main() {
-	var (
-		ctx    = gctx.GetInitCtx()
-		client = protobuf.NewGreeterClient(grpcx.Client.MustNewGrpcClientConn("demo"))
-	)
-	for i := 0; i < 100; i++ {
+	var client = protobuf.NewGreeterClient(grpcx.Client.MustNewGrpcClientConn("demo"))
+	for i := 0; i < 10; i++ {
+		ctx := gctx.New()
 		res, err := client.SayHello(ctx, &protobuf.HelloRequest{Name: "gfer"})
 		if err != nil {
 			g.Log().Error(ctx, err)
 			return
 		}
-		g.Log().Print(ctx, "Response:", res.Message)
+		g.Log().Debug(ctx, "Response:", res.Message)
 		time.Sleep(time.Second)
 	}
 }
