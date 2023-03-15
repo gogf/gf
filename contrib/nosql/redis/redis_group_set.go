@@ -64,10 +64,10 @@ func (r GroupSet) SIsMember(ctx context.Context, key string, member interface{})
 // argument, the reply will consist of up to count members, depending on the set's cardinality.
 //
 // It returns:
-// - When called without the count argument:
-//   Bulk string reply: the removed member, or nil when key does not exist.
-// - When called with the count argument:
-//   Array reply: the removed members, or an empty array when key does not exist.
+//   - When called without the count argument:
+//     Bulk string reply: the removed member, or nil when key does not exist.
+//   - When called with the count argument:
+//     Array reply: the removed members, or an empty array when key does not exist.
 //
 // https://redis.io/commands/spop/
 func (r GroupSet) SPop(ctx context.Context, key string, count ...int) (*gvar.Var, error) {
@@ -86,10 +86,10 @@ func (r GroupSet) SPop(ctx context.Context, key string, count ...int) (*gvar.Var
 // of the specified count.
 //
 // It returns:
-// - Bulk string reply: without the additional count argument, the command returns a Bulk Reply with the
-//   randomly selected element, or nil when key does not exist.
-// - Array reply: when the additional count argument is passed, the command returns an array of elements,
-//   or an empty array when key does not exist.
+//   - Bulk string reply: without the additional count argument, the command returns a Bulk Reply with the
+//     randomly selected element, or nil when key does not exist.
+//   - Array reply: when the additional count argument is passed, the command returns an array of elements,
+//     or an empty array when key does not exist.
 //
 // https://redis.io/commands/srandmember/
 func (r GroupSet) SRandMember(ctx context.Context, key string, count ...int) (*gvar.Var, error) {
@@ -212,7 +212,7 @@ func (r GroupSet) SUnion(ctx context.Context, key string, keys ...string) (gvar.
 
 // SUnionStore is equal to SUnion, but instead of returning the resulting set, it is stored in destination.
 //
-//  If destination already exists, it is overwritten.
+//	If destination already exists, it is overwritten.
 //
 // It returns the number of elements in the resulting set.
 //
