@@ -7,24 +7,27 @@
 package main
 
 import (
-	"time"
+	"context"
 
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
-	"github.com/gogf/gf/example/rpc/grpcx/basic/protobuf"
+	"github.com/gogf/gf/example/rpc/grpcx/balancer/protobuf"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
 )
 
 func main() {
-	var client = protobuf.NewGreeterClient(grpcx.Client.MustNewGrpcClientConn("demo"))
+	var (
+		ctx    context.Context
+		conn   = grpcx.Client.MustNewGrpcClientConn("demo", grpcx.Balancer.WithRandom())
+		client = protobuf.NewGreeterClient(conn)
+	)
 	for i := 0; i < 10; i++ {
-		ctx := gctx.New()
-		res, err := client.SayHello(ctx, &protobuf.HelloRequest{Name: "gfer"})
+		ctx = gctx.New()
+		res, err := client.SayHello(ctx, &protobuf.HelloRequest{Name: "World"})
 		if err != nil {
 			g.Log().Error(ctx, err)
 			return
 		}
 		g.Log().Debug(ctx, "Response:", res.Message)
-		time.Sleep(time.Second)
 	}
 }
