@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	grpcx.Resolver.Registry(etcd.New("127.0.0.1:2379"))
+	grpcx.Resolver.Register(etcd.New("127.0.0.1:2379"))
 
 	s := grpcx.Server.New()
 	controller.Register(s)

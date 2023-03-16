@@ -20,7 +20,7 @@ func (m Manager) New(discovery gsvc.Discovery) resolver.Builder {
 	return NewBuilder(discovery)
 }
 
-// Registry sets the default Registry implements as your own implemented interface.
-func (m Manager) Registry(registry gsvc.Registry) {
-	Registry(registry)
+// Register sets the default Registry implements as your own implemented interface.
+func (m Manager) Register(registry gsvc.Registry) {
+	Register(registry)
 }

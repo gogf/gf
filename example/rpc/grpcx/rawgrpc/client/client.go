@@ -18,7 +18,7 @@ import (
 )
 
 func main() {
-	grpcx.Resolver.Registry(file.New(gfile.Temp("gsvc")))
+	grpcx.Resolver.Register(file.New(gfile.Temp("gsvc")))
 
 	var (
 		ctx     = gctx.GetInitCtx()
