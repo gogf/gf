@@ -18,7 +18,9 @@ import (
 	"github.com/gogf/gf/v2/os/gctx"
 )
 
-type server struct{}
+type Controller struct {
+	user.UnimplementedUserServer
+}
 
 const (
 	ServiceName       = "grpc-server-with-db"
@@ -39,12 +41,12 @@ func main() {
 	g.DB().GetCache().SetAdapter(gcache.NewAdapterRedis(g.Redis()))
 
 	s := grpcx.Server.New()
-	user.RegisterUserServer(s.Server, &server{})
+	user.RegisterUserServer(s.Server, &Controller{})
 	s.Run()
 }
 
 // Insert is a route handler for inserting user info into database.
-func (s *server) Insert(ctx context.Context, req *user.InsertReq) (res *user.InsertRes, err error) {
+func (s *Controller) Insert(ctx context.Context, req *user.InsertReq) (res *user.InsertRes, err error) {
 	result, err := g.Model("user").Ctx(ctx).Insert(g.Map{
 		"name": req.Name,
 	})
@@ -60,7 +62,7 @@ func (s *server) Insert(ctx context.Context, req *user.InsertReq) (res *user.Ins
 
 // Query is a route handler for querying user info. It firstly retrieves the info from redis,
 // if there's nothing in the redis, it then does db select.
-func (s *server) Query(ctx context.Context, req *user.QueryReq) (res *user.QueryRes, err error) {
+func (s *Controller) Query(ctx context.Context, req *user.QueryReq) (res *user.QueryRes, err error) {
 	err = g.Model("user").Ctx(ctx).Cache(gdb.CacheOption{
 		Duration: 5 * time.Second,
 		Name:     s.userCacheKey(req.Id),
@@ -73,7 +75,7 @@ func (s *server) Query(ctx context.Context, req *user.QueryReq) (res *user.Query
 }
 
 // Delete is a route handler for deleting specified user info.
-func (s *server) Delete(ctx context.Context, req *user.DeleteReq) (res *user.DeleteRes, err error) {
+func (s *Controller) Delete(ctx context.Context, req *user.DeleteReq) (res *user.DeleteRes, err error) {
 	err = g.Model("user").Ctx(ctx).Cache(gdb.CacheOption{
 		Duration: -1,
 		Name:     s.userCacheKey(req.Id),
@@ -82,6 +84,6 @@ func (s *server) Delete(ctx context.Context, req *user.DeleteReq) (res *user.Del
 	return
 }
 
-func (s *server) userCacheKey(id int32) string {
+func (s *Controller) userCacheKey(id int32) string {
 	return fmt.Sprintf(`userInfo:%d`, id)
 }
