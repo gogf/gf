@@ -1,9 +1,10 @@
 package main
 
 import (
+	"github.com/gogf/gf/contrib/registry/etcd/v2"
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 	"github.com/gogf/gf/contrib/trace/jaeger/v2"
-	"github.com/gogf/gf/example/trace/grpc_with_db/protocol/user"
+	"github.com/gogf/gf/example/trace/grpc_with_db/protobuf/user"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/os/gctx"
@@ -15,6 +16,8 @@ const (
 )
 
 func main() {
+	grpcx.Resolver.Register(etcd.New("127.0.0.1:2379"))
+
 	var ctx = gctx.New()
 	tp, err := jaeger.Init(ServiceName, JaegerUdpEndpoint)
 	if err != nil {
