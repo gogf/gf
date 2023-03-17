@@ -56,7 +56,7 @@ func (c CGenService) generateServiceFile(in generateServiceFilesInput) (ok bool,
 		generatingInterfaceCheck string
 	)
 	// Variable definitions.
-	for structName, _ := range in.SrcStructFunctions {
+	for structName := range in.SrcStructFunctions {
 		generatingInterfaceCheck = fmt.Sprintf(`[^\w\d]+%s.I%s[^\w\d]`, in.DstPackageName, structName)
 		if gregex.IsMatchString(generatingInterfaceCheck, generatedContent) {
 			continue
@@ -75,7 +75,7 @@ func (c CGenService) generateServiceFile(in generateServiceFilesInput) (ok bool,
 		generatedContent += "\n"
 	}
 	// Variable register function definitions.
-	for structName, _ := range in.SrcStructFunctions {
+	for structName := range in.SrcStructFunctions {
 		generatingInterfaceCheck = fmt.Sprintf(`[^\w\d]+%s.I%s[^\w\d]`, in.DstPackageName, structName)
 		if gregex.IsMatchString(generatingInterfaceCheck, generatedContent) {
 			continue
