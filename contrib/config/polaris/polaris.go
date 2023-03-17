@@ -61,7 +61,7 @@ func New(ctx context.Context, config Config) (adapter gcfg.Adapter, err error) {
 	)
 
 	if configAPI, err = polaris.NewConfigAPIByFile(config.Path); err != nil {
-		err = gerror.Wrapf(err, "Polaris configuration initialization failed  with config: %+v", config)
+		err = gerror.Wrapf(err, "Polaris configuration initialization failed with config: %+v", config)
 		return
 	}
 	// set log dir
