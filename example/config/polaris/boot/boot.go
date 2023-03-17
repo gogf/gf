@@ -10,9 +10,9 @@ func init() {
 	var (
 		ctx       = gctx.GetInitCtx()
 		namespace = "default"
-		fileGroup = "goframe"
+		fileGroup = "TestGroup"
 		fileName  = "config.yaml"
-		path      = "testdata/polaris.yaml"
+		path      = "manifest/config/polaris.yaml"
 		logDir    = "/tmp/polaris/log"
 	)
 	// Create polaris Client that implements gcfg.Adapter.
