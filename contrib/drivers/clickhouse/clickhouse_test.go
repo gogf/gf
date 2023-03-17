@@ -455,9 +455,9 @@ func TestDriverClickhouse_NilTime(t *testing.T) {
 			Col9: uuid.New(),
 			Col7: []interface{}{ // Tuple(String, UInt8, Array(Map(String, String)))
 				"String Value", uint8(5), []map[string]string{
-					map[string]string{"key": "value"},
-					map[string]string{"key": "value"},
-					map[string]string{"key": "value"},
+					{"key": "value"},
+					{"key": "value"},
+					{"key": "value"},
 				}},
 			Col11: money,
 			Col12: &strMoney,
@@ -494,9 +494,9 @@ func TestDriverClickhouse_BatchInsert(t *testing.T) {
 			"Col6": []string{"Q", "W", "E", "R", "T", "Y"}, // Array(String)
 			"Col7": []interface{}{ // Tuple(String, UInt8, Array(Map(String, String)))
 				"String Value", uint8(5), []map[string]string{
-					map[string]string{"key": "value"},
-					map[string]string{"key": "value"},
-					map[string]string{"key": "value"},
+					{"key": "value"},
+					{"key": "value"},
+					{"key": "value"},
 				},
 			},
 			"Col8":  gtime.Now(),
