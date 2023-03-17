@@ -10,14 +10,15 @@ package polaris
 import (
 	"context"
 
+	"github.com/polarismesh/polaris-go"
+	"github.com/polarismesh/polaris-go/api"
+	"github.com/polarismesh/polaris-go/pkg/model"
+
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/polarismesh/polaris-go"
-	"github.com/polarismesh/polaris-go/api"
-	"github.com/polarismesh/polaris-go/pkg/model"
 )
 
 // LogDir sets the log directory for polaris.
@@ -65,7 +66,7 @@ func New(ctx context.Context, config Config) (adapter gcfg.Adapter, err error) {
 	)
 
 	if configAPI, err = polaris.NewConfigAPIByFile(config.Path); err != nil {
-		err = gerror.Wrapf(err, "Polaris configuration initialization failed  with config: %+v", config)
+		err = gerror.Wrapf(err, "Polaris configuration initialization failed with config: %+v", config)
 		return
 	}
 	// set log dir

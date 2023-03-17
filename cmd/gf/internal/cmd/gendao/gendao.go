@@ -216,6 +216,7 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 	}
 	removePrefixArray := gstr.SplitAndTrim(in.RemovePrefix, ",")
 	if in.ImportPrefix == "" {
+		mlog.Debug(`import prefix is empty, trying calculating the import package path using go.mod`)
 		if !gfile.Exists("go.mod") {
 			mlog.Fatal("go.mod does not exist in current working directory")
 		}

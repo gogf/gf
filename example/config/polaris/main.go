@@ -1,4 +1,4 @@
-package polaris
+package main
 
 import (
 	_ "github.com/gogf/gf/example/config/polaris/boot"

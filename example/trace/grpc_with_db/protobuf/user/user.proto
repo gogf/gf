@@ -7,8 +7,6 @@ package user;
 
 option go_package = "protobuf/user";
 
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
-
 // User service for tracing demo.
 service User {
   rpc Insert(InsertReq) returns (InsertRes) {}
@@ -17,24 +15,21 @@ service User {
 }
 
 message InsertReq {
-  string Name = 1 [(gogoproto.moretags) = 'v:"required#Please input user name."'];
+  string Name = 1; // v: required#Please input user name.
 }
-
 message InsertRes {
   int32 Id = 1;
 }
 
 message QueryReq {
-  int32 Id = 1 [(gogoproto.moretags) = 'v:"min:1#User id is required for querying."'];
+  int32 Id = 1; // v: min:1#User id is required for querying.
 }
-
 message QueryRes {
   int32  Id = 1;
   string Name = 2;
 }
 
 message DeleteReq {
-  int32 Id = 1 [(gogoproto.moretags) = 'v:"min:1#User id is required for deleting."'];
+  int32 Id = 1; // v:min:1#User id is required for deleting.
 }
-
 message DeleteRes {}

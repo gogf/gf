@@ -11,6 +11,7 @@ import (
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gregex"
@@ -23,7 +24,7 @@ type (
 	CGenPbEntity      struct{}
 	CGenPbEntityInput struct {
 		g.Meta       `name:"pbentity" config:"{CGenPbEntityConfig}" brief:"{CGenPbEntityBrief}" eg:"{CGenPbEntityEg}" ad:"{CGenPbEntityAd}"`
-		Path         string `name:"path"         short:"p" brief:"{CGenPbEntityBriefPath}"`
+		Path         string `name:"path"         short:"p" brief:"{CGenPbEntityBriefPath}" d:"manifest/protobuf/pbentity"`
 		Package      string `name:"package"      short:"k" brief:"{CGenPbEntityBriefPackage}"`
 		Link         string `name:"link"         short:"l" brief:"{CGenPbEntityBriefLink}"`
 		Tables       string `name:"tables"       short:"t" brief:"{CGenPbEntityBriefTables}"`
@@ -37,18 +38,21 @@ type (
 
 	CGenPbEntityInternalInput struct {
 		CGenPbEntityInput
+		DB           gdb.DB
 		TableName    string // TableName specifies the table name of the table.
 		NewTableName string // NewTableName specifies the prefix-stripped name of the table.
 	}
 )
 
 const (
-	CGenPbEntityConfig = `gfcli.gen.pbentity`
-	CGenPbEntityBrief  = `generate entity message files in protobuf3 format`
-	CGenPbEntityEg     = `
+	defaultPackageSuffix = `api/pbentity`
+	CGenPbEntityConfig   = `gfcli.gen.pbentity`
+	CGenPbEntityBrief    = `generate entity message files in protobuf3 format`
+	CGenPbEntityEg       = `
 gf gen pbentity
 gf gen pbentity -l "mysql:root:12345678@tcp(127.0.0.1:3306)/test"
 gf gen pbentity -p ./protocol/demos/entity -t user,user_detail,user_login
+gf gen pbentity -r user_ -k github.com/gogf/gf/example/protobuf
 gf gen pbentity -r user_
 `
 
@@ -75,8 +79,8 @@ CONFIGURATION SUPPORT
 			  option java_package  = "protobuf/demos";
 			  option php_namespace = "protobuf/demos";
 `
-	CGenPbEntityBriefPath         = `directory path for generated files`
-	CGenPbEntityBriefPackage      = `package name for all entity proto files`
+	CGenPbEntityBriefPath         = `directory path for generated files storing`
+	CGenPbEntityBriefPackage      = `package path for all entity proto files`
 	CGenPbEntityBriefLink         = `database configuration, the same as the ORM configuration of GoFrame`
 	CGenPbEntityBriefTables       = `generate models only for given tables, multiple table names separated with ','`
 	CGenPbEntityBriefPrefix       = `add specified prefix for all entity names and entity proto files`
@@ -160,7 +164,21 @@ func doGenPbEntityForArray(ctx context.Context, index int, in CGenPbEntityInput)
 		}
 	}
 	if in.Package == "" {
-		mlog.Fatal("package name should not be empty")
+		mlog.Debug(`package parameter is empty, trying calculating the package path using go.mod`)
+		if !gfile.Exists("go.mod") {
+			mlog.Fatal("go.mod does not exist in current working directory")
+		}
+		var (
+			modName      string
+			goModContent = gfile.GetContents("go.mod")
+			match, _     = gregex.MatchString(`^module\s+(.+)\s*`, goModContent)
+		)
+		if len(match) > 1 {
+			modName = gstr.Trim(match[1])
+			in.Package = modName + "/" + defaultPackageSuffix
+		} else {
+			mlog.Fatal("module name does not found in go.mod")
+		}
 	}
 	removePrefixArray := gstr.SplitAndTrim(in.RemovePrefix, ",")
 	// It uses user passed database configuration.
@@ -198,8 +216,9 @@ func doGenPbEntityForArray(ctx context.Context, index int, in CGenPbEntityInput)
 		for _, v := range removePrefixArray {
 			newTableName = gstr.TrimLeftStr(newTableName, v, 1)
 		}
-		generatePbEntityContentFile(ctx, db, CGenPbEntityInternalInput{
+		generatePbEntityContentFile(ctx, CGenPbEntityInternalInput{
 			CGenPbEntityInput: in,
+			DB:                db,
 			TableName:         tableName,
 			NewTableName:      newTableName,
 		})
@@ -207,22 +226,28 @@ func doGenPbEntityForArray(ctx context.Context, index int, in CGenPbEntityInput)
 }
 
 // generatePbEntityContentFile generates the protobuf files for given table.
-func generatePbEntityContentFile(ctx context.Context, db gdb.DB, in CGenPbEntityInternalInput) {
-	fieldMap, err := db.TableFields(ctx, in.TableName)
+func generatePbEntityContentFile(ctx context.Context, in CGenPbEntityInternalInput) {
+	fieldMap, err := in.DB.TableFields(ctx, in.TableName)
 	if err != nil {
 		mlog.Fatalf("fetching tables fields failed for table '%s':\n%v", in.TableName, err)
 	}
 	// Change the `newTableName` if `Prefix` is given.
-	newTableName := "Entity_" + in.Prefix + in.NewTableName
+	newTableName := in.Prefix + in.NewTableName
 	var (
+		imports             string
 		tableNameCamelCase  = gstr.CaseCamel(newTableName)
 		tableNameSnakeCase  = gstr.CaseSnake(newTableName)
 		entityMessageDefine = generateEntityMessageDefinition(tableNameCamelCase, fieldMap, in)
 		fileName            = gstr.Trim(tableNameSnakeCase, "-_.")
 		path                = gfile.Join(in.Path, fileName+".proto")
 	)
+	if gstr.Contains(entityMessageDefine, "google.protobuf.Timestamp") {
+		imports = `import "google/protobuf/timestamp.proto";`
+	}
 	entityContent := gstr.ReplaceByMap(getTplPbEntityContent(""), g.MapStrStr{
-		"{PackageName}":   in.Package,
+		"{Imports}":       imports,
+		"{PackageName}":   gfile.Basename(in.Package),
+		"{GoPackage}":     in.Package,
 		"{OptionContent}": in.Option,
 		"{EntityMessage}": entityMessageDefine,
 	})
@@ -266,59 +291,38 @@ func generateMessageFieldForPbEntity(index int, field *gdb.TableField, in CGenPb
 		typeName   string
 		comment    string
 		jsonTagStr string
+		err        error
+		ctx        = gctx.GetInitCtx()
 	)
-	t, _ := gregex.ReplaceString(`\(.+\)`, "", field.Type)
-	t = gstr.Split(gstr.Trim(t), " ")[0]
-	t = gstr.ToLower(t)
-	switch t {
-	case "binary", "varbinary", "blob", "tinyblob", "mediumblob", "longblob":
-		typeName = "bytes"
-
-	case "bit", "int", "tinyint", "small_int", "smallint", "medium_int", "mediumint", "serial":
-		if gstr.ContainsI(field.Type, "unsigned") {
-			typeName = "uint32"
-		} else {
-			typeName = "int32"
-		}
-
-	case "int8", "big_int", "bigint", "bigserial":
-		if gstr.ContainsI(field.Type, "unsigned") {
-			typeName = "uint64"
-		} else {
-			typeName = "int64"
-		}
-
-	case "real":
-		typeName = "float"
-
-	case "float", "double", "decimal", "smallmoney":
-		typeName = "double"
-
-	case "bool":
-		typeName = "bool"
-
-	case "datetime", "timestamp", "date", "time":
-		typeName = "int64"
-
-	default:
-		// Auto detecting type.
-		switch {
-		case strings.Contains(t, "int"):
-			typeName = "int"
-		case strings.Contains(t, "text") || strings.Contains(t, "char"):
-			typeName = "string"
-		case strings.Contains(t, "float") || strings.Contains(t, "double"):
-			typeName = "double"
-		case strings.Contains(t, "bool"):
-			typeName = "bool"
-		case strings.Contains(t, "binary") || strings.Contains(t, "blob"):
-			typeName = "bytes"
-		case strings.Contains(t, "date") || strings.Contains(t, "time"):
-			typeName = "int64"
-		default:
-			typeName = "string"
-		}
+	typeName, err = in.DB.CheckLocalTypeForField(ctx, field.Type, nil)
+	if err != nil {
+		panic(err)
 	}
+	var typeMapping = map[string]string{
+		gdb.LocalTypeString:      "string",
+		gdb.LocalTypeDate:        "google.protobuf.Timestamp",
+		gdb.LocalTypeDatetime:    "google.protobuf.Timestamp",
+		gdb.LocalTypeInt:         "int32",
+		gdb.LocalTypeUint:        "uint32",
+		gdb.LocalTypeInt64:       "int64",
+		gdb.LocalTypeUint64:      "uint64",
+		gdb.LocalTypeIntSlice:    "repeated int32",
+		gdb.LocalTypeInt64Slice:  "repeated int64",
+		gdb.LocalTypeUint64Slice: "repeated uint64",
+		gdb.LocalTypeInt64Bytes:  "repeated int64",
+		gdb.LocalTypeUint64Bytes: "repeated uint64",
+		gdb.LocalTypeFloat32:     "float32",
+		gdb.LocalTypeFloat64:     "float64",
+		gdb.LocalTypeBytes:       "[]byte",
+		gdb.LocalTypeBool:        "bool",
+		gdb.LocalTypeJson:        "string",
+		gdb.LocalTypeJsonb:       "string",
+	}
+	typeName = typeMapping[typeName]
+	if typeName == "" {
+		typeName = "string"
+	}
+
 	comment = gstr.ReplaceByArray(field.Comment, g.SliceStr{
 		"\n", " ",
 		"\r", " ",
@@ -327,7 +331,6 @@ func generateMessageFieldForPbEntity(index int, field *gdb.TableField, in CGenPb
 	comment = gstr.Replace(comment, `\n`, " ")
 	comment, _ = gregex.ReplaceString(`\s{2,}`, ` `, comment)
 	if jsonTagName := formatCase(field.Name, in.JsonCase); jsonTagName != "" {
-		jsonTagStr = fmt.Sprintf(`[(gogoproto.jsontag) = "%s"]`, jsonTagName)
 		// beautiful indent.
 		if index < 10 {
 			// 3 spaces

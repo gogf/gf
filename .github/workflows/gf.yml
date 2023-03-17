@@ -111,6 +111,7 @@ jobs:
           - 9001:9001
 
       # Polaris backend server.
+      # docker run -d --name polaris -p 8090:8090 -p 8091:8091 -p 8093:8093 loads/polaris-server-standalone:1.11.2
       polaris:
         image: loads/polaris-server-standalone:1.11.2
         ports:
