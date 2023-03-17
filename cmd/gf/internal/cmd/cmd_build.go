@@ -242,7 +242,7 @@ func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, e
 		if len(customSystems) > 0 && customSystems[0] != "all" && !gstr.InArray(customSystems, system) {
 			continue
 		}
-		for arch, _ := range item {
+		for arch := range item {
 			if len(customArches) > 0 && customArches[0] != "all" && !gstr.InArray(customArches, arch) {
 				continue
 			}

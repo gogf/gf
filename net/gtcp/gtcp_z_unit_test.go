@@ -63,7 +63,7 @@ func startTCPTLSServer(addr string) *gtcp.Server {
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: true,
 		Certificates: []tls.Certificate{
-			tls.Certificate{},
+			{},
 		},
 	}
 	s := gtcp.NewServerTLS(addr, tlsConfig, func(conn *gtcp.Conn) {
@@ -171,7 +171,7 @@ func TestNewConnTLS(t *testing.T) {
 		conn, err := gtcp.NewConnTLS(s.GetListenedAddress(), &tls.Config{
 			InsecureSkipVerify: true,
 			Certificates: []tls.Certificate{
-				tls.Certificate{},
+				{},
 			},
 		})
 		t.AssertNil(conn)

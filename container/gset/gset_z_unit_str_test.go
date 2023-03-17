@@ -105,8 +105,8 @@ func TestStrSet_LockFunc(t *testing.T) {
 		t.Assert(s.Size(), 2)
 		s.RLockFunc(func(m map[string]struct{}) {
 			t.Assert(m, map[string]struct{}{
-				"3": struct{}{},
-				"2": struct{}{},
+				"3": {},
+				"2": {},
 			})
 		})
 	})

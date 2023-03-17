@@ -118,10 +118,10 @@ func (r GroupList) LPop(ctx context.Context, key string, count ...int) (*gvar.Va
 // depending on the list's length.
 //
 // It returns:
-// - When called without the count argument:
-//   the value of the last element, or nil when key does not exist.
-// - When called with the count argument:
-//   list of popped elements, or nil when key does not exist.
+//   - When called without the count argument:
+//     the value of the last element, or nil when key does not exist.
+//   - When called with the count argument:
+//     list of popped elements, or nil when key does not exist.
 //
 // https://redis.io/commands/rpop
 func (r GroupList) RPop(ctx context.Context, key string, count ...int) (*gvar.Var, error) {

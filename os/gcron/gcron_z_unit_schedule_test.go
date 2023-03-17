@@ -19,8 +19,8 @@ func TestSlash(t *testing.T) {
 		spec     string
 		expected map[int]struct{}
 	}{
-		{"0 0 0 * Feb Mon/2", map[int]struct{}{1: struct{}{}, 3: struct{}{}, 5: struct{}{}}},
-		{"0 0 0 * Feb *", map[int]struct{}{1: struct{}{}, 2: struct{}{}, 3: struct{}{}, 4: struct{}{}, 5: struct{}{}, 6: struct{}{}, 0: struct{}{}}},
+		{"0 0 0 * Feb Mon/2", map[int]struct{}{1: {}, 3: {}, 5: {}}},
+		{"0 0 0 * Feb *", map[int]struct{}{1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {}, 0: {}}},
 	}
 	gtest.C(t, func(t *gtest.T) {
 		for _, c := range runs {

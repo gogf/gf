@@ -189,7 +189,7 @@ func Test_Dump_Issue1661(t *testing.T) {
 			x := []string{"11", "22"}
 			for _, iv2 := range x {
 				ls := q1v
-				for i, _ := range ls.cc {
+				for i := range ls.cc {
 					sj := iv2
 					ls.cc[i].bb = sj
 				}
