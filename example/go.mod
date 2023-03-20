@@ -18,7 +18,7 @@ require (
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/protobuf v1.5.2
 	github.com/nacos-group/nacos-sdk-go v1.1.2
-	github.com/polarismesh/polaris-go v1.2.0-beta.3
+	github.com/polarismesh/polaris-go v1.3.0
 	google.golang.org/grpc v1.49.0
 	google.golang.org/protobuf v1.28.1
 	k8s.io/client-go v0.25.2

@@ -10,16 +10,17 @@ import (
 	"context"
 	"time"
 
+	"github.com/polarismesh/polaris-go"
+	"github.com/polarismesh/polaris-go/pkg/model"
+
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/polarismesh/polaris-go"
-	"github.com/polarismesh/polaris-go/pkg/model"
 )
 
 // Register the registration.
 func (r *Registry) Register(ctx context.Context, service gsvc.Service) (gsvc.Service, error) {
-	// Replace input service to custom service type.
+	// Replace input service to custom service types.
 	service = &Service{
 		Service: service,
 	}
@@ -47,8 +48,9 @@ func (r *Registry) Register(ctx context.Context, service gsvc.Service) (gsvc.Ser
 				rmd[k] = v
 			}
 		}
-		// Register
-		registeredService, err := r.provider.Register(
+		// Register RegisterInstance Service registration is performed synchronously,
+		// and heartbeat reporting is automatically performed
+		registeredService, err := r.provider.RegisterInstance(
 			&polaris.InstanceRegisterRequest{
 				InstanceRegisterRequest: model.InstanceRegisterRequest{
 					Service:      service.GetPrefix(),
@@ -72,7 +74,7 @@ func (r *Registry) Register(ctx context.Context, service gsvc.Service) (gsvc.Ser
 			return nil, err
 		}
 		if r.opt.Heartbeat {
-			r.doHeartBeat(ctx, registeredService.InstanceID, service, endpoint)
+			// r.doHeartBeat(ctx, registeredService.InstanceID, service, endpoint)
 		}
 		ids = append(ids, registeredService.InstanceID)
 	}
@@ -83,7 +85,7 @@ func (r *Registry) Register(ctx context.Context, service gsvc.Service) (gsvc.Ser
 
 // Deregister the registration.
 func (r *Registry) Deregister(ctx context.Context, service gsvc.Service) error {
-	r.c <- struct{}{}
+	// r.c <- struct{}{}
 	var (
 		err   error
 		split = gstr.Split(service.(*Service).ID, instanceIDSeparator)
@@ -111,6 +113,7 @@ func (r *Registry) Deregister(ctx context.Context, service gsvc.Service) error {
 	return nil
 }
 
+// Deprecated .
 func (r *Registry) doHeartBeat(ctx context.Context, instanceID string, service gsvc.Service, endpoint gsvc.Endpoint) {
 	go func() {
 		ticker := time.NewTicker(time.Second * time.Duration(r.opt.TTL))
