@@ -21,11 +21,6 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-// LogDir sets the log directory for polaris.
-func LogDir(dir string) error {
-	return api.SetLoggersDir(dir)
-}
-
 // Config is the configuration for polaris.
 type Config struct {
 	// The namespace of the configuration.
@@ -73,7 +68,7 @@ func New(ctx context.Context, config Config) (adapter gcfg.Adapter, err error) {
 	if gstr.Trim(config.LogDir) == "" {
 		config.LogDir = defaultLogDir
 	}
-	if err = LogDir(config.LogDir); err != nil {
+	if err = client.LogDir(config.LogDir); err != nil {
 		err = gerror.Wrap(err, "set polaris log dir failed")
 		return
 	}
@@ -84,6 +79,11 @@ func New(ctx context.Context, config Config) (adapter gcfg.Adapter, err error) {
 	}
 
 	return client, nil
+}
+
+// LogDir sets the log directory for polaris.
+func (c *Client) LogDir(dir string) error {
+	return api.SetLoggersDir(dir)
 }
 
 // Available checks and returns the backend configuration service is available.
@@ -104,7 +104,7 @@ func (c *Client) Available(ctx context.Context, resource ...string) (ok bool) {
 	return c.client.GetNamespace() == namespace
 }
 
-// Get retrieves and returns value by specified `pattern` in current resource.
+// Get retrieves and return value by specified `pattern` in current resource.
 // Pattern like:
 // "x.y.z" for map item.
 // "x.0.y" for slice item.
@@ -118,7 +118,7 @@ func (c *Client) Get(ctx context.Context, pattern string) (value interface{}, er
 }
 
 // Data retrieves and returns all configuration data in current resource as map.
-// Note that this function may lead lots of memory usage if configuration data is too large,
+// Note that this function may lead to lots of memory usage if configuration data are too large,
 // you can implement this function if necessary.
 func (c *Client) Data(ctx context.Context) (data map[string]interface{}, err error) {
 	if c.value.IsNil() {
