@@ -151,13 +151,13 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 			if pkgPath != "" {
 				err = gerror.NewCodef(
 					gcode.CodeInvalidParameter,
-					`invalid handler: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" or "func(context.Context, *BizRequest)(*BizResponse, error)" is required`,
+					`invalid handler: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" or "func(context.Context, *BizReq)(*BizRes, error)" is required`,
 					pkgPath, structName, methodName, reflect.TypeOf(f).String(),
 				)
 			} else {
 				err = gerror.NewCodef(
 					gcode.CodeInvalidParameter,
-					`invalid handler: defined as "%s", but "func(*ghttp.Request)" or "func(context.Context, *BizRequest)(*BizResponse, error)" is required`,
+					`invalid handler: defined as "%s", but "func(*ghttp.Request)" or "func(context.Context, *BizReq)(*BizRes, error)" is required`,
 					reflect.TypeOf(f).String(),
 				)
 			}
