@@ -532,8 +532,8 @@ func Test_Issue2338(t *testing.T) {
 CREATE TABLE %s (
     id        int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'User ID',
     nickname  varchar(45) DEFAULT NULL COMMENT 'User Nickname',
-    create_at datetime DEFAULT NULL COMMENT 'Created Time',
-    update_at datetime DEFAULT NULL COMMENT 'Updated Time',
+    create_at datetime(6) DEFAULT NULL COMMENT 'Created Time',
+    update_at datetime(6) DEFAULT NULL COMMENT 'Updated Time',
     PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 	    `, table1,
@@ -544,8 +544,8 @@ CREATE TABLE %s (
 CREATE TABLE %s (
     id        int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'User ID',
     nickname  varchar(45) DEFAULT NULL COMMENT 'User Nickname',
-    create_at datetime DEFAULT NULL COMMENT 'Created Time',
-    update_at datetime DEFAULT NULL COMMENT 'Updated Time',
+    create_at datetime(6) DEFAULT NULL COMMENT 'Created Time',
+    update_at datetime(6) DEFAULT NULL COMMENT 'Updated Time',
     PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 	    `, table2,
@@ -585,9 +585,9 @@ CREATE TABLE %s (
 CREATE TABLE %s (
     id        int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'User ID',
     nickname  varchar(45) DEFAULT NULL COMMENT 'User Nickname',
-    create_at datetime DEFAULT NULL COMMENT 'Created Time',
-    update_at datetime DEFAULT NULL COMMENT 'Updated Time',
-    deleted_at datetime DEFAULT NULL COMMENT 'Deleted Time',
+    create_at datetime(6) DEFAULT NULL COMMENT 'Created Time',
+    update_at datetime(6) DEFAULT NULL COMMENT 'Updated Time',
+    deleted_at datetime(6) DEFAULT NULL COMMENT 'Deleted Time',
     PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 	    `, table1,
@@ -598,9 +598,9 @@ CREATE TABLE %s (
 CREATE TABLE %s (
     id        int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'User ID',
     nickname  varchar(45) DEFAULT NULL COMMENT 'User Nickname',
-    create_at datetime DEFAULT NULL COMMENT 'Created Time',
-    update_at datetime DEFAULT NULL COMMENT 'Updated Time',
-    deleted_at datetime DEFAULT NULL COMMENT 'Deleted Time',
+    create_at datetime(6) DEFAULT NULL COMMENT 'Created Time',
+    update_at datetime(6) DEFAULT NULL COMMENT 'Updated Time',
+    deleted_at datetime(6) DEFAULT NULL COMMENT 'Deleted Time',
     PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 	    `, table2,
@@ -644,8 +644,8 @@ CREATE TABLE %s (
     passport  varchar(45) NOT NULL COMMENT 'User Passport',
     password  varchar(45) NOT NULL COMMENT 'User Password',
     nickname  varchar(45) NOT NULL COMMENT 'User Nickname',
-    create_at datetime DEFAULT NULL COMMENT 'Created Time',
-    update_at datetime DEFAULT NULL COMMENT 'Updated Time',
+    create_at datetime(6) DEFAULT NULL COMMENT 'Created Time',
+    update_at datetime(6) DEFAULT NULL COMMENT 'Updated Time',
     PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 	    `, table,

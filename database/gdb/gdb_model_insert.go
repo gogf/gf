@@ -254,7 +254,7 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption int) (resul
 	}
 	var (
 		list            List
-		nowString       = gtime.Now().String()
+		now             = gtime.Now()
 		fieldNameCreate = m.getSoftFieldNameCreated("", m.tablesInit)
 		fieldNameUpdate = m.getSoftFieldNameUpdated("", m.tablesInit)
 	)
@@ -338,10 +338,10 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption int) (resul
 	if !m.unscoped && (fieldNameCreate != "" || fieldNameUpdate != "") {
 		for k, v := range list {
 			if fieldNameCreate != "" {
-				v[fieldNameCreate] = nowString
+				v[fieldNameCreate] = now
 			}
 			if fieldNameUpdate != "" {
-				v[fieldNameUpdate] = nowString
+				v[fieldNameUpdate] = now
 			}
 			list[k] = v
 		}
