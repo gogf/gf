@@ -34,7 +34,7 @@ func Test_Model_Builder(t *testing.T) {
 	// Where And
 	gtest.C(t, func(t *gtest.T) {
 		m := db.Model(table)
-		b := m.Safe().Builder()
+		b := m.Builder()
 
 		all, err := m.Where(
 			b.Where("id", g.Slice{1, 2, 3}).WhereOr("id", g.Slice{4, 5, 6}),
@@ -50,7 +50,7 @@ func Test_Model_Builder(t *testing.T) {
 	// Where Or
 	gtest.C(t, func(t *gtest.T) {
 		m := db.Model(table)
-		b := m.Safe().Builder()
+		b := m.Builder()
 
 		all, err := m.WhereOr(
 			b.Where("id", g.Slice{1, 2, 3}).WhereOr("id", g.Slice{4, 5, 6}),
@@ -127,16 +127,9 @@ func Test_Model_Builder(t *testing.T) {
 }
 
 func Test_Safe_Builder(t *testing.T) {
-	// test whether m.Builder is not chain safe
+	// test whether m.Builder() is chain safe
 	gtest.C(t, func(t *gtest.T) {
 		b := db.Model().Builder()
-		b.Where("id", 1)
-		_, args := b.Build()
-		t.Assert(args, g.Slice{1})
-	})
-	// test whether m.Safe().Builder() is chain safe
-	gtest.C(t, func(t *gtest.T) {
-		b := db.Model().Safe().Builder()
 		b.Where("id", 1)
 		_, args := b.Build()
 		t.AssertNil(args)

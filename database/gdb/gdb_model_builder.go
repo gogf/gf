@@ -25,7 +25,7 @@ type WhereHolder struct {
 	Prefix   string        // Field prefix, eg: "user.", "order.".
 }
 
-// Builder creates and returns a WhereBuilder.
+// Builder creates and returns a WhereBuilder. Please note that the builder is chain-safe.
 func (m *Model) Builder() *WhereBuilder {
 	b := &WhereBuilder{
 		model:       m,
@@ -34,12 +34,8 @@ func (m *Model) Builder() *WhereBuilder {
 	return b
 }
 
-// getBuilder creates and returns a cloned WhereBuilder of current WhereBuilder if `safe` is true,
-// or else it returns the current WhereBuilder.
+// getBuilder creates and returns a cloned WhereBuilder of current WhereBuilder
 func (b *WhereBuilder) getBuilder() *WhereBuilder {
-	if !b.model.safe {
-		return b
-	}
 	return b.Clone()
 }
 
