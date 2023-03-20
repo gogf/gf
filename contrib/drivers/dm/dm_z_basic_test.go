@@ -233,7 +233,7 @@ func Test_DB_Insert(t *testing.T) {
 		_, err := db.Insert(ctx, "A_tables", g.Map{
 			"ID":           1000,
 			"ACCOUNT_NAME": "map1",
-			"CREATED_TIME": gtime.Now().String(),
+			"CREATED_TIME": gtime.Now(),
 		})
 		t.AssertNil(err)
 
@@ -249,7 +249,7 @@ func Test_DB_Insert(t *testing.T) {
 		result, err = db.Insert(ctx, "A_tables", g.Map{
 			"ID":           3000,
 			"ACCOUNT_NAME": "map3",
-			// "CREATED_TIME": gtime.Now().String(),
+			// "CREATED_TIME": gtime.Now(),
 		})
 		t.AssertNil(err)
 		n, _ = result.RowsAffected()
@@ -320,12 +320,12 @@ func Test_DB_BatchInsert(t *testing.T) {
 			{
 				"ID":           400,
 				"ACCOUNT_NAME": "list_400",
-				// "CREATE_TIME":  gtime.Now().String(),
+				// "CREATE_TIME":  gtime.Now(),
 			},
 			{
 				"ID":           401,
 				"ACCOUNT_NAME": "list_401",
-				"CREATE_TIME":  gtime.Now().String(),
+				"CREATE_TIME":  gtime.Now(),
 			},
 		}, 1)
 		t.AssertNil(err)
@@ -342,12 +342,12 @@ func Test_DB_BatchInsert(t *testing.T) {
 			g.Map{
 				"ID":           500,
 				"ACCOUNT_NAME": "500_batch_500",
-				"CREATE_TIME":  gtime.Now().String(),
+				"CREATE_TIME":  gtime.Now(),
 			},
 			g.Map{
 				"ID":           501,
 				"ACCOUNT_NAME": "501_batch_501",
-				// "CREATE_TIME":  gtime.Now().String(),
+				// "CREATE_TIME":  gtime.Now(),
 			},
 		}, 1)
 		t.AssertNil(err)
@@ -363,7 +363,7 @@ func Test_DB_BatchInsert(t *testing.T) {
 		result, err := db.Insert(ctx, table, g.Map{
 			"ID":           600,
 			"ACCOUNT_NAME": "600_batch_600",
-			"CREATE_TIME":  gtime.Now().String(),
+			"CREATE_TIME":  gtime.Now(),
 		})
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()

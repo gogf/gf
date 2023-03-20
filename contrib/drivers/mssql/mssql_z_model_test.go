@@ -1556,15 +1556,15 @@ func Test_Model_Option_Map(t *testing.T) {
 		t.Assert(n, 1)
 
 		_, err = db.Model(table).OmitEmptyData().Data(g.Map{"nickname": ""}).Where("id", 2).Update()
-		t.AssertNE(err, nil)
+		t.AssertNil(err)
 
 		r, err = db.Model(table).OmitEmpty().Data(g.Map{"nickname": "", "password": "123"}).Where("id", 3).Update()
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
 
-		_, err = db.Model(table).OmitEmpty().Fields("nickname").Data(g.Map{"nickname": "", "password": "123"}).Where("id", 4).Update()
-		t.AssertNE(err, nil)
+		_, err = db.Model(table).OmitEmpty().Fields("nickname", "password").Data(g.Map{"nickname": "", "password": "123", "passport": "123"}).Where("id", 4).Update()
+		t.AssertNil(err)
 
 		r, err = db.Model(table).OmitEmpty().
 			Fields("password").Data(g.Map{
@@ -1639,7 +1639,7 @@ func Test_Model_FieldsEx(t *testing.T) {
 	defer dropTable(table)
 	// Select.
 	gtest.C(t, func(t *gtest.T) {
-		r, err := db.Model(table).FieldsEx("create_time, id").Where("id in (?)", g.Slice{1, 2}).Order("id asc").All()
+		r, err := db.Model(table).FieldsEx("create_time, created_at, updated_at, id").Where("id in (?)", g.Slice{1, 2}).Order("id asc").All()
 		t.AssertNil(err)
 		t.Assert(len(r), 2)
 		t.Assert(len(r[0]), 3)
