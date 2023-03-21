@@ -16,6 +16,7 @@ import (
 	"syscall"
 
 	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/glog"
 )
 
 // procSignalChan is the channel for listening to the signal.
@@ -54,6 +55,13 @@ func handleProcessSignal() {
 
 		// Restart the servers.
 		case syscall.SIGUSR1:
+			// If the graceful restart feature is not enabled,
+			// it does nothing except printing a warning log.
+			if !gracefulEnabled {
+				glog.Warning(ctx, "graceful reload feature is disabled")
+				continue
+			}
+
 			if err := restartWebServers(ctx, sig.String()); err != nil {
 				intlog.Errorf(ctx, `%+v`, err)
 			}
