@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.0.15
-	github.com/gogf/gf/v2 v2.3.2
+	github.com/gogf/gf/v2 v2.3.3
 	github.com/google/uuid v1.3.0
 	github.com/shopspring/decimal v1.3.1
 )
