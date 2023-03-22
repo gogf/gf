@@ -5,6 +5,6 @@ go 1.15
 replace github.com/gogf/gf/v2 => ../../../
 
 require (
-	gitee.com/chunanyong/dm v1.8.11
-	github.com/gogf/gf/v2 v2.3.2
+	gitee.com/chunanyong/dm v1.8.10
+	github.com/gogf/gf/v2 v2.0.0
 )

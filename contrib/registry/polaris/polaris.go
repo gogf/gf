@@ -10,11 +10,12 @@ package polaris
 import (
 	"time"
 
+	"github.com/polarismesh/polaris-go"
+	"github.com/polarismesh/polaris-go/pkg/config"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/glog"
-	"github.com/polarismesh/polaris-go"
-	"github.com/polarismesh/polaris-go/pkg/config"
 )
 
 var (
@@ -46,16 +47,19 @@ type options struct {
 	// To show service is healthy or not. Default value is True.
 	Healthy bool
 
-	// Heartbeat enable .Not in polaris . Default value is True.
+	// Deprecated: Use RegisterInstance instead.
+	// Service registration is performed synchronously,
+	// and heartbeat reporting is automatically performed
+	// Heartbeat enable .Not in polaris. Default value is True.
 	Heartbeat bool
 
 	// To show service is isolate or not. Default value is False.
 	Isolate bool
 
-	// TTL timeout. if node needs to use heartbeat to report,required. If not set,server will throw ErrorCode-400141
+	// TTL timeout. if the node needs to use a heartbeat to report, required. If not set,server will throw ErrorCode-400141
 	TTL int
 
-	// optional, Timeout for single query. Default value is global config
+	// Timeout for the single query. Default value is global config
 	// Total is (1+RetryCount) * Timeout
 	Timeout time.Duration
 
@@ -123,6 +127,7 @@ func WithRetryCount(retryCount int) Option {
 }
 
 // WithHeartbeat with the Heartbeat option.
+// Deprecated remove in v2.4.0
 func WithHeartbeat(heartbeat bool) Option {
 	return func(o *options) { o.Heartbeat = heartbeat }
 }
@@ -133,7 +138,7 @@ func WithLogger(logger glog.ILogger) Option {
 }
 
 // New create a new registry.
-func New(provider polaris.ProviderAPI, consumer polaris.ConsumerAPI, opts ...Option) (r *Registry) {
+func New(provider polaris.ProviderAPI, consumer polaris.ConsumerAPI, opts ...Option) gsvc.Registry {
 	op := options{
 		Namespace:    "default",
 		ServiceToken: "",
@@ -160,7 +165,7 @@ func New(provider polaris.ProviderAPI, consumer polaris.ConsumerAPI, opts ...Opt
 }
 
 // NewWithConfig new a registry with config.
-func NewWithConfig(conf config.Configuration, opts ...Option) (r *Registry) {
+func NewWithConfig(conf config.Configuration, opts ...Option) gsvc.Registry {
 	provider, err := polaris.NewProviderAPIByConfig(conf)
 	if err != nil {
 		panic(err)

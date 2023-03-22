@@ -7,6 +7,7 @@
 package gi18n_test
 
 import (
+	"github.com/gogf/gf/v2/os/gctx"
 	_ "github.com/gogf/gf/v2/os/gres/testdata/data"
 
 	"context"
@@ -154,4 +155,27 @@ func Test_Resource(t *testing.T) {
 		m.SetLanguage("zh-CN")
 		t.Assert(m.T(context.Background(), "{#hello}{#world}"), "你好世界")
 	})
+}
+
+func Test_SetCtxLanguage(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		ctx := gctx.New()
+		t.Assert(gi18n.LanguageFromCtx(ctx), "")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gi18n.LanguageFromCtx(nil), "")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		ctx := gctx.New()
+		ctx = gi18n.WithLanguage(ctx, "zh-CN")
+		t.Assert(gi18n.LanguageFromCtx(ctx), "zh-CN")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		ctx := gi18n.WithLanguage(nil, "zh-CN")
+		t.Assert(gi18n.LanguageFromCtx(ctx), "zh-CN")
+	})
+
 }

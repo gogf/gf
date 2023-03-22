@@ -16,7 +16,7 @@ import (
 func generateEntity(ctx context.Context, in CGenDaoInternalInput) {
 	var dirPathEntity = gfile.Join(in.Path, in.EntityPath)
 	if in.Clear {
-		doClear(ctx, dirPathEntity)
+		doClear(ctx, dirPathEntity, false)
 	}
 	// Model content.
 	for i, tableName := range in.TableNames {

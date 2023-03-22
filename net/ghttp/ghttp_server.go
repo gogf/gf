@@ -27,7 +27,9 @@ import (
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/net/ghttp/internal/swaggerui"
 	"github.com/gogf/gf/v2/net/goai"
+	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gcache"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/genv"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/glog"
@@ -67,9 +69,6 @@ func serverProcessInit() {
 		}
 	}
 
-	// Signal handler.
-	go handleProcessSignal()
-
 	// Process message handler.
 	// It enabled only a graceful feature is enabled.
 	if gracefulEnabled {
@@ -93,36 +92,35 @@ func GetServer(name ...interface{}) *Server {
 	if len(name) > 0 && name[0] != "" {
 		serverName = gconv.String(name[0])
 	}
-	if s := serverMapping.Get(serverName); s != nil {
-		return s.(*Server)
-	}
-	s := &Server{
-		instance:         serverName,
-		plugins:          make([]Plugin, 0),
-		servers:          make([]*gracefulServer, 0),
-		closeChan:        make(chan struct{}, 10000),
-		serverCount:      gtype.NewInt(),
-		statusHandlerMap: make(map[string][]HandlerFunc),
-		serveTree:        make(map[string]interface{}),
-		serveCache:       gcache.New(),
-		routesMap:        make(map[string][]*HandlerItem),
-		openapi:          goai.New(),
-	}
-	// Initialize the server using default configurations.
-	if err := s.SetConfig(NewConfig()); err != nil {
-		panic(gerror.WrapCode(gcode.CodeInvalidConfiguration, err, ""))
-	}
-	// Record the server to internal server mapping by name.
-	serverMapping.Set(serverName, s)
-	// It enables OpenTelemetry for server in default.
-	s.Use(internalMiddlewareServerTracing)
-	return s
+	v := serverMapping.GetOrSetFuncLock(serverName, func() interface{} {
+		s := &Server{
+			instance:         serverName,
+			plugins:          make([]Plugin, 0),
+			servers:          make([]*gracefulServer, 0),
+			closeChan:        make(chan struct{}, 10000),
+			serverCount:      gtype.NewInt(),
+			statusHandlerMap: make(map[string][]HandlerFunc),
+			serveTree:        make(map[string]interface{}),
+			serveCache:       gcache.New(),
+			routesMap:        make(map[string][]*HandlerItem),
+			openapi:          goai.New(),
+			registrar:        gsvc.GetRegistry(),
+		}
+		// Initialize the server using default configurations.
+		if err := s.SetConfig(NewConfig()); err != nil {
+			panic(gerror.WrapCode(gcode.CodeInvalidConfiguration, err, ""))
+		}
+		// It enables OpenTelemetry for server in default.
+		s.Use(internalMiddlewareServerTracing)
+		return s
+	})
+	return v.(*Server)
 }
 
 // Start starts listening on configured port.
 // This function does not block the process, you can use function Wait blocking the process.
 func (s *Server) Start() error {
-	var ctx = context.TODO()
+	var ctx = gctx.GetInitCtx()
 
 	// Swagger UI.
 	if s.config.SwaggerPath != "" {
@@ -257,6 +255,7 @@ func (s *Server) Start() error {
 	s.initOpenApi()
 	s.doServiceRegister()
 	s.doRouterMapDump()
+
 	return nil
 }
 
@@ -424,7 +423,11 @@ func (s *Server) Run() {
 	if err := s.Start(); err != nil {
 		s.Logger().Fatalf(ctx, `%+v`, err)
 	}
-	// Blocking using channel.
+
+	// Signal handler.
+	handleProcessSignal()
+
+	// Blocking using channel for graceful restart.
 	<-s.closeChan
 	// Remove plugins.
 	if len(s.plugins) > 0 {
