@@ -1,11 +1,11 @@
 global:
   serverConnector:
     addresses:
-      - 183.47.111.80:8091
+      - 127.0.0.1:8091
 config:
   configConnector:
     addresses:
-      - 183.47.111.80:8093
+      - 127.0.0.1:8093
 consumer:
   localCache:
     persistDir: "/tmp/polaris/backup"

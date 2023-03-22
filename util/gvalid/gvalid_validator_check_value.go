@@ -145,17 +145,13 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 			switch {
 			// Custom validation rules.
 			case customRuleFunc != nil:
-				if err = customRuleFunc(ctx, RuleFuncInput{
+				err = customRuleFunc(ctx, RuleFuncInput{
 					Rule:    ruleItems[index],
 					Message: message,
+					Field:   in.Name,
 					Value:   gvar.New(value),
 					Data:    gvar.New(in.DataRaw),
-				}); err != nil {
-					// The error should have stack info to indicate the error position.
-					if !gerror.HasStack(err) {
-						err = gerror.NewCodeSkip(gcode.CodeValidationFailed, 1, err.Error())
-					}
-				}
+				})
 
 			// Builtin validation rules.
 			case customRuleFunc == nil && builtinRule != nil:
@@ -177,24 +173,26 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 
 			// Error handling.
 			if err != nil {
-				// The error should have error code that is `gcode.CodeValidationFailed`.
-				if gerror.Code(err) == gcode.CodeNil {
-					if e, ok := err.(*gerror.Error); ok {
-						e.SetCode(gcode.CodeValidationFailed)
-					}
-				}
-
 				// Error variable replacement for error message.
-				if !gerror.HasStack(err) {
-					var s string
-					s = gstr.ReplaceByMap(err.Error(), map[string]string{
+				if errMsg := err.Error(); gstr.Contains(errMsg, "{") {
+					errMsg = gstr.ReplaceByMap(errMsg, map[string]string{
 						"{field}":     in.Name,             // Field name of the `value`.
 						"{value}":     gconv.String(value), // Current validating value.
 						"{pattern}":   rulePattern,         // The variable part of the rule.
 						"{attribute}": in.Name,             // The same as `{field}`. It is deprecated.
 					})
-					s, _ = gregex.ReplaceString(`\s{2,}`, ` `, s)
-					err = errors.New(s)
+					errMsg, _ = gregex.ReplaceString(`\s{2,}`, ` `, errMsg)
+					err = errors.New(errMsg)
+				}
+				// The error should have stack info to indicate the error position.
+				if !gerror.HasStack(err) {
+					err = gerror.NewCode(gcode.CodeValidationFailed, err.Error())
+				}
+				// The error should have error code that is `gcode.CodeValidationFailed`.
+				if gerror.Code(err) == gcode.CodeNil {
+					if e, ok := err.(*gerror.Error); ok {
+						e.SetCode(gcode.CodeValidationFailed)
+					}
 				}
 				ruleErrorMap[ruleKey] = err
 
