@@ -18,6 +18,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/gogf/gf/v2"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/httputil"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/net/gtrace"
@@ -80,7 +81,12 @@ func internalMiddlewareServerTracing(r *Request) {
 	}
 
 	// Request content logging.
-	reqBodyContentBytes, _ := ioutil.ReadAll(r.Body)
+	reqBodyContentBytes, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		r.SetError(gerror.Wrap(err, `read request body failed`))
+		span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, err))
+		return
+	}
 	r.Body = utils.NewReadCloser(reqBodyContentBytes, false)
 
 	span.AddEvent(tracingEventHttpRequest, trace.WithAttributes(
@@ -97,7 +103,7 @@ func internalMiddlewareServerTracing(r *Request) {
 	r.Middleware.Next()
 
 	// Error logging.
-	if err := r.GetError(); err != nil {
+	if err = r.GetError(); err != nil {
 		span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, err))
 	}
 	// Response content logging.
