@@ -24,10 +24,7 @@ gftidy:
 		if [[ $$goModPath =~ ".git" || $$goModPath == "." ]] ; then \
 			echo "Skip path"; \
 		elif [[ $$goModPath =~ "./cmd/gf" || $$goModPath =~ "./example" ]] ; then \
-			cd $$goModPath; \
-			go get -u -v ./...; \
-			go mod tidy; \
-			cd -; \
+			echo "Skip path"; \
 		else \
 			cd $$goModPath; \
 			go get -u -v github.com/gogf/gf/v2; \
