@@ -84,48 +84,6 @@ func Test_IsNumeric(t *testing.T) {
 	})
 }
 
-func Test_StartsWith(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gstr.StartsWith("1a我", "1"), true)
-		t.Assert(gstr.StartsWith("0123", "012"), true)
-		t.Assert(gstr.StartsWith("我是中国人", "我是"), true)
-		t.Assert(gstr.StartsWith("1.2.3.4", "00"), false)
-		t.Assert(gstr.StartsWith("abcdef", "abdeff"), false)
-		t.Assert(gstr.StartsWith("abcdef", "AB"), false)
-	})
-}
-func Test_StartsWithI(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gstr.StartsWithI("1a我", "1"), true)
-		t.Assert(gstr.StartsWithI("0123", "012"), true)
-		t.Assert(gstr.StartsWithI("我是中国人", "我是"), true)
-		t.Assert(gstr.StartsWithI("1.2.3.4", "00"), false)
-		t.Assert(gstr.StartsWithI("abcdef", "abdeff"), false)
-		t.Assert(gstr.StartsWithI("abcdef", "AB"), true)
-	})
-}
-
-func Test_EndsWith(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gstr.EndsWith("1a我", "我"), true)
-		t.Assert(gstr.EndsWith("0123", "3"), true)
-		t.Assert(gstr.EndsWith("我是中国人", "中国人"), true)
-		t.Assert(gstr.EndsWith("1.2.3.4", "012345"), false)
-		t.Assert(gstr.EndsWith("abcdef", "eff"), false)
-		t.Assert(gstr.EndsWith("abcdef", "EF"), false)
-	})
-}
-func Test_EndsWithI(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gstr.EndsWithI("1a我", "我"), true)
-		t.Assert(gstr.EndsWithI("0123", "3"), true)
-		t.Assert(gstr.EndsWithI("我是中国人", "中国人"), true)
-		t.Assert(gstr.EndsWithI("1.2.3.4", "012345"), false)
-		t.Assert(gstr.EndsWithI("abcdef", "eff"), false)
-		t.Assert(gstr.EndsWithI("abcdef", "EF"), true)
-	})
-}
-
 func Test_SubStr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.SubStr("我爱GoFrame", 0), "我爱GoFrame")

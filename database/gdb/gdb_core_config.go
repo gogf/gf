@@ -313,7 +313,7 @@ func parseConfigNodeLink(node *ConfigNode) *ConfigNode {
 // decryptPassword Get and parse passwords
 func decryptPassword(origin string) string {
 	// Determine if the database password starts with `AES:`
-	if gstr.StartsWith(origin, "AES:") {
+	if gstr.HasPrefix(origin, "AES:") {
 		// Get `key` from configuration or command line
 		key, err := gcfg.Instance().GetWithCmd(gctx.New(), "database.key", "")
 		if err != nil {
