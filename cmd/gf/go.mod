@@ -3,18 +3,18 @@ module github.com/gogf/gf/cmd/gf/v2
 go 1.18
 
 require (
-	github.com/gogf/gf/contrib/drivers/mssql/v2 v2.1.0
-	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.1.0
-	github.com/gogf/gf/contrib/drivers/oracle/v2 v2.1.0
-	github.com/gogf/gf/contrib/drivers/pgsql/v2 v2.1.0
-	github.com/gogf/gf/contrib/drivers/sqlite/v2 v2.1.0
-	github.com/gogf/gf/v2 v2.2.2
+	github.com/gogf/gf/contrib/drivers/mssql/v2 v2.3.3
+	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.3.3
+	github.com/gogf/gf/contrib/drivers/oracle/v2 v2.3.3
+	github.com/gogf/gf/contrib/drivers/pgsql/v2 v2.3.3
+	github.com/gogf/gf/contrib/drivers/sqlite/v2 v2.3.3
+	github.com/gogf/gf/v2 v2.3.3
 	github.com/olekukonko/tablewriter v0.0.5
-	golang.org/x/tools v0.2.0
+	golang.org/x/tools v0.7.0
 )
 
 require (
-	github.com/BurntSushi/toml v1.2.1 // indirect
+	github.com/BurntSushi/toml v1.1.0 // indirect
 	github.com/clbanning/mxj/v2 v2.5.5 // indirect
 	github.com/denisenkom/go-mssqldb v0.11.0 // indirect
 	github.com/fatih/color v1.13.0 // indirect
@@ -38,11 +38,11 @@ require (
 	go.opentelemetry.io/otel/sdk v1.7.0 // indirect
 	go.opentelemetry.io/otel/trace v1.7.0 // indirect
 	golang.org/x/crypto v0.1.0 // indirect
-	golang.org/x/mod v0.6.0 // indirect
-	golang.org/x/net v0.7.0 // indirect
-	golang.org/x/sys v0.5.0 // indirect
-	golang.org/x/text v0.7.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
+	golang.org/x/mod v0.9.0 // indirect
+	golang.org/x/net v0.8.0 // indirect
+	golang.org/x/sys v0.6.0 // indirect
+	golang.org/x/text v0.8.0 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	modernc.org/libc v1.16.8 // indirect
 	modernc.org/mathutil v1.4.1 // indirect
 	modernc.org/memory v1.1.1 // indirect
