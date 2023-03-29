@@ -1,4 +1,4 @@
-
+SHELL := /bin/bash
 
 .PHONY: tidy
 tidy:
@@ -18,16 +18,18 @@ lint:
 gftidy:
 	$(eval files=$(shell find . -name go.mod))
 	@set -e; \
+	if [[ $$GITHUB_REF_NAME =~ "v" ]]; then \
+		latestTag="@$$GITHUB_REF_NAME"; \
+	else \
+		latestTag="@latest"; \
+	fi; \
 	for file in ${files}; do \
 		goModPath=$$(dirname $$file); \
-		echo "Processing dir: $$goModPath"; \
-		if [[ $$goModPath =~ ".git" || $$goModPath == "." ]] ; then \
-			echo "Skip path"; \
-		elif [[ $$goModPath =~ "./cmd/gf" || $$goModPath =~ "./example" ]] ; then \
-			echo "Skip path"; \
-		else \
+		if [[ $$goModPath =~ "./contrib" ]]; then \
+			echo ""; \
+			echo "processing dir: $$goModPath"; \
 			cd $$goModPath; \
-			go get -u -v github.com/gogf/gf/v2; \
+			go get -v github.com/gogf/gf/v2$$latestTag; \
 			go mod tidy; \
 			cd -; \
 		fi \
