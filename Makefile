@@ -18,18 +18,22 @@ lint:
 gftidy:
 	$(eval files=$(shell find . -name go.mod))
 	@set -e; \
+	# GITHUB_REF_NAME=v2.4.0; \
 	if [[ $$GITHUB_REF_NAME =~ "v" ]]; then \
-		goGetCMD="go get -v github.com/gogf/gf/v2@$$GITHUB_REF_NAME"; \
+		latestVersion=$$GITHUB_REF_NAME; \
 	else \
-		goGetCMD="go get -u -v github.com/gogf/gf/v2"; \
+		latestVersion=latest; \
 	fi; \
 	for file in ${files}; do \
 		goModPath=$$(dirname $$file); \
-		if [[ $$goModPath =~ "./contrib" ]]; then \
+		if [[ $$goModPath =~ "./contrib" || $$goModPath =~ "./cmd/gf" || $$goModPath =~ "./example" ]]; then \
 			echo ""; \
 			echo "processing dir: $$goModPath"; \
+			# Do not modify the order of any of the following sentences \
 			cd $$goModPath; \
-			$$goGetCMD; \
+			go mod tidy; \
+			go list -f "{{if and (not .Indirect) (not .Main)}}{{.Path}}@$$latestVersion{{end}}" -m all | grep "^github.com/gogf/gf/contrib" | xargs -L1 go get -v; \
+			go get -v github.com/gogf/gf/v2@$$latestVersion; \
 			go mod tidy; \
 			cd -; \
 		fi \
