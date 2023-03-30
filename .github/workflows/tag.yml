@@ -26,7 +26,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           author_name: TagRobot
           author_email: tagrobot@goframe.org
-          message: "update gf to ${{ github.ref_name }}"
+          message: "update version to ${{ github.ref_name }}"
       - name: Auto Creating Tags
         run: |
           git config --global user.email "tagrobot@goframe.org"
