@@ -58,7 +58,7 @@ jobs:
       
       - name: Upload Release Asset
         id:   upload-release-asset
-        uses: alexellis/upload-assets@0.4.4
+        uses: alexellis/upload-assets@0.4.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
