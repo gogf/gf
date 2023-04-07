@@ -173,7 +173,7 @@ func (d *DriverMysql) ExpandFields(ctx context.Context, bizTable, bizType string
 	if len(bizType) > 0 {
 		exceSql = fmt.Sprintf(`select * from %s where biz_code='%s' and biz_type='%s' `, d.Core.GetConfig().ExtendTabe, bizTable, bizType)
 	} else {
-		exceSql = fmt.Sprintf(`select * from %s where biz_code='%s' `, bizTable)
+		exceSql = fmt.Sprintf(`select * from %s where biz_code='%s' `, d.Core.GetConfig().ExtendTabe, bizTable)
 	}
 
 	result, err := d.DoGetAll(ctx, link, exceSql)

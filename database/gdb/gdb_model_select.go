@@ -618,6 +618,20 @@ func (m *Model) getFormattedSqlAndArgs(queryType int, limit1 bool) (sqlWithHolde
 			)
 			return sqlWithHolder, conditionArgs
 		}
+
+		//如果有扩展属性 @chengjian
+		if len(m.expands) > 0 {
+			sqlWithHolder = fmt.Sprintf(
+				"SELECT %s%s%s FROM %s%s",
+				m.distinct,
+				m.getFieldsFiltered(),
+				m.getExpandFiltered(),
+				m.tables,
+				conditionWhere+conditionExtra,
+			)
+			return sqlWithHolder, conditionArgs
+		}
+
 		// DO NOT quote the m.fields where, in case of fields like:
 		// DISTINCT t.user_id uid
 		sqlWithHolder = fmt.Sprintf(
