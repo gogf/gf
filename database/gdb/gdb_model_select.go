@@ -11,6 +11,7 @@ import (
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"reflect"
+	"strings"
 
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/container/gvar"
@@ -100,6 +101,26 @@ func (m *Model) getFieldsFiltered() string {
 		newFields += m.db.GetCore().QuoteWord(k)
 	}
 	return newFields
+}
+
+// getExpandFiltered @chengjian
+func (m *Model) getExpandFiltered() string {
+	newExpands := ""
+	var table, alias string
+	for _, expand := range m.expands {
+		list := strings.Split(m.tables, "AS")
+		if len(list) > 1 {
+			table = strings.Trim(list[0], " ")
+			alias = strings.Trim(list[1], " ")
+		} else {
+			table = m.tables
+			alias = m.tables
+		}
+		newExpands += ","
+		newExpands += fmt.Sprintf(`(select filed_value from %s where row_key = %s.id  and filed_code = '%s' )as %s`,
+			table, alias, expand.FieldCode, expand.FieldCode)
+	}
+	return newExpands
 }
 
 // Chunk iterates the query result with given `size` and `handler` function.

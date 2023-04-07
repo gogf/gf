@@ -200,3 +200,8 @@ func (d *DriverPgsql) DoInsert(ctx context.Context, link Link, table string, lis
 		return d.Core.DoInsert(ctx, link, table, list, option)
 	}
 }
+
+//ExpandFields 获取扩展列信息
+func (d *DriverPgsql) ExpandFields(ctx context.Context, table, bizType string, params ...string) (columns []*ExpandField, err error) {
+	return nil, nil
+}

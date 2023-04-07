@@ -305,3 +305,8 @@ func (d *DriverOracle) DoInsert(ctx context.Context, link Link, table string, li
 	}
 	return batchResult, nil
 }
+
+//ExpandFields 获取扩展列信息
+func (d *DriverOracle) ExpandFields(ctx context.Context, table, bizType string, params ...string) (columns []*ExpandField, err error) {
+	return nil, nil
+}

@@ -172,12 +172,13 @@ type DB interface {
 	// Utility methods.
 	// ===========================================================================
 
-	GetCtx() context.Context                                                                         // See Core.GetCtx.
-	GetCore() *Core                                                                                  // See Core.GetCore
-	GetChars() (charLeft string, charRight string)                                                   // See Core.GetChars.
-	Tables(ctx context.Context, schema ...string) (tables []string, err error)                       // See Core.Tables.
-	TableFields(ctx context.Context, table string, schema ...string) (map[string]*TableField, error) // See Core.TableFields.
-	FilteredLink() string                                                                            // FilteredLink is used for filtering sensitive information in `Link` configuration before output it to tracing server.
+	GetCtx() context.Context                                                                                       // See Core.GetCtx.
+	GetCore() *Core                                                                                                // See Core.GetCore
+	GetChars() (charLeft string, charRight string)                                                                 // See Core.GetChars.
+	Tables(ctx context.Context, schema ...string) (tables []string, err error)                                     // See Core.Tables.
+	TableFields(ctx context.Context, table string, schema ...string) (map[string]*TableField, error)               // See Core.TableFields.
+	ExpandFields(ctx context.Context, table, bizType string, params ...string) (columns []*ExpandField, err error) // See Core.ExpandFields.
+	FilteredLink() string                                                                                          // FilteredLink is used for filtering sensitive information in `Link` configuration before output it to tracing server.
 }
 
 // Core is the base struct for database management.
@@ -247,6 +248,12 @@ type TableField struct {
 	Default interface{} // Default value for the field.
 	Extra   string      // Extra information.
 	Comment string      // Comment.
+}
+
+// ExpandField 动态属性定义 @chengjian
+type ExpandField struct {
+	FieldCode string // 属性编码.
+	FieldType string // 属性类型.
 }
 
 // Counter  is the type for update count.

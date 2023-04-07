@@ -49,6 +49,7 @@ type ConfigNode struct {
 	DeletedAt            string        `json:"deletedAt"`            // (Optional) The filed name of table for automatic-filled updated datetime.
 	TimeMaintainDisabled bool          `json:"timeMaintainDisabled"` // (Optional) Disable the automatic time maintaining feature.
 	CtxStrict            bool          `json:"ctxStrict"`            // (Optional) Strictly require context input for all database operations.
+	ExtendTabe           string        `json:"extendTabe"`           //
 }
 
 const (

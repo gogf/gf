@@ -10,6 +10,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
@@ -161,5 +162,43 @@ func (d *DriverMysql) TableFields(ctx context.Context, table string, schema ...s
 	if v != nil {
 		fields = v.(map[string]*TableField)
 	}
+	return
+}
+
+//ExpandFields 获取扩展列信息
+func (d *DriverMysql) ExpandFields(ctx context.Context, bizTable, bizType string, params ...string) (columns []*ExpandField, err error) {
+	useSchema := d.schema.Val()
+	link, err := d.SlaveLink(useSchema)
+	var exceSql string
+	if len(bizType) > 0 {
+		exceSql = fmt.Sprintf(`select * from %s where biz_code='%s' and biz_type='%s' `, d.Core.GetConfig().ExtendTabe, bizTable, bizType)
+	} else {
+		exceSql = fmt.Sprintf(`select * from %s where biz_code='%s' `, bizTable)
+	}
+
+	result, err := d.DoGetAll(ctx, link, exceSql)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, m := range result {
+		array := garray.NewStrArrayFrom(params)
+		if array.Len() > 0 {
+			if array.Contains(m["attr_code"].String()) {
+				column := &ExpandField{
+					FieldCode: m["attr_code"].String(),
+					FieldType: m["attr_type"].String(),
+				}
+				columns = append(columns, column)
+			}
+		} else {
+			column := &ExpandField{
+				FieldCode: m["attr_code"].String(),
+				FieldType: m["attr_type"].String(),
+			}
+			columns = append(columns, column)
+		}
+	}
+
 	return
 }
