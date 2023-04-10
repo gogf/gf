@@ -1,14 +1,27 @@
 package gdb
 
-func (m *Model) ExpandsType(table, bizType string, params ...string) *Model {
-	if len(table) <= 0 {
-		table = m.guessPrimaryTableName(m.tablesInit)
+import "fmt"
+
+func (m *Model) ExpandsAttribute(expTable, bizCode, bizType string, params ...string) *Model {
+	tableName := m.guessPrimaryTableName(m.tablesInit)
+	if len(bizCode) <= 0 {
+		bizCode = tableName
 	}
-	columns, _ := m.db.ExpandFields(m.GetCtx(), table, bizType, params...)
+	columns, _ := m.db.ExpandFields(m.GetCtx(), bizCode, bizType, params...)
 	m.expands = columns
+	if len(expTable) <= 0 {
+		m.expandsTable = fmt.Sprintf("%s_expand", tableName) //s3 = expTable
+	} else {
+		m.expandsTable = expTable
+	}
+
 	return m
 }
 
+func (m *Model) ExpandsTable(expTable string, params ...string) *Model {
+	return m.ExpandsAttribute(expTable, "", "", params...)
+}
+
 func (m *Model) Expands(params ...string) *Model {
-	return m.ExpandsType("", "", params...)
+	return m.ExpandsAttribute("", "", "", params...)
 }

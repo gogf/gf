@@ -153,6 +153,6 @@ func (d *DriverSqlite) DoInsert(ctx context.Context, link Link, table string, li
 }
 
 //ExpandFields 获取扩展列信息
-func (d *DriverSqlite) ExpandFields(ctx context.Context, table, bizType string, params ...string) (columns []*ExpandField, err error) {
+func (d *DriverSqlite) ExpandFields(ctx context.Context, bizCode, bizType string, params ...string) (columns []*ExpandField, err error) {
 	return nil, nil
 }

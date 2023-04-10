@@ -166,14 +166,14 @@ func (d *DriverMysql) TableFields(ctx context.Context, table string, schema ...s
 }
 
 //ExpandFields 获取扩展列信息
-func (d *DriverMysql) ExpandFields(ctx context.Context, bizTable, bizType string, params ...string) (columns []*ExpandField, err error) {
+func (d *DriverMysql) ExpandFields(ctx context.Context, bizCode, bizType string, params ...string) (columns []*ExpandField, err error) {
 	useSchema := d.schema.Val()
 	link, err := d.SlaveLink(useSchema)
 	var exceSql string
 	if len(bizType) > 0 {
-		exceSql = fmt.Sprintf(`select * from %s where biz_code='%s' and biz_type='%s' `, d.Core.GetConfig().ExtendTabe, bizTable, bizType)
+		exceSql = fmt.Sprintf(`select * from %s where biz_code='%s' and biz_type='%s' `, d.Core.GetConfig().ExtendTabe, bizCode, bizType)
 	} else {
-		exceSql = fmt.Sprintf(`select * from %s where biz_code='%s' `, d.Core.GetConfig().ExtendTabe, bizTable)
+		exceSql = fmt.Sprintf(`select * from %s where biz_code='%s' `, d.Core.GetConfig().ExtendTabe, bizCode)
 	}
 
 	result, err := d.DoGetAll(ctx, link, exceSql)

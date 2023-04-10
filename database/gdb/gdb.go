@@ -172,13 +172,13 @@ type DB interface {
 	// Utility methods.
 	// ===========================================================================
 
-	GetCtx() context.Context                                                                                       // See Core.GetCtx.
-	GetCore() *Core                                                                                                // See Core.GetCore
-	GetChars() (charLeft string, charRight string)                                                                 // See Core.GetChars.
-	Tables(ctx context.Context, schema ...string) (tables []string, err error)                                     // See Core.Tables.
-	TableFields(ctx context.Context, table string, schema ...string) (map[string]*TableField, error)               // See Core.TableFields.
-	ExpandFields(ctx context.Context, table, bizType string, params ...string) (columns []*ExpandField, err error) // See Core.ExpandFields.
-	FilteredLink() string                                                                                          // FilteredLink is used for filtering sensitive information in `Link` configuration before output it to tracing server.
+	GetCtx() context.Context                                                                                         // See Core.GetCtx.
+	GetCore() *Core                                                                                                  // See Core.GetCore
+	GetChars() (charLeft string, charRight string)                                                                   // See Core.GetChars.
+	Tables(ctx context.Context, schema ...string) (tables []string, err error)                                       // See Core.Tables.
+	TableFields(ctx context.Context, table string, schema ...string) (map[string]*TableField, error)                 // See Core.TableFields.
+	ExpandFields(ctx context.Context, bizCode, bizType string, params ...string) (columns []*ExpandField, err error) // See Core.ExpandFields.
+	FilteredLink() string                                                                                            // FilteredLink is used for filtering sensitive information in `Link` configuration before output it to tracing server.
 }
 
 // Core is the base struct for database management.
