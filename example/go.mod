@@ -25,6 +25,7 @@ require (
 replace (
 	github.com/gogf/gf/contrib/config/apollo/v2 => ../contrib/config/apollo/
 	github.com/gogf/gf/contrib/config/kubecm/v2 => ../contrib/config/kubecm/
+	github.com/gogf/gf/contrib/config/nacos/v2 => ../contrib/config/nacos/
 	github.com/gogf/gf/contrib/config/polaris/v2 => ../contrib/config/polaris/
 	github.com/gogf/gf/contrib/drivers/mysql/v2 => ../contrib/drivers/mysql/
 	github.com/gogf/gf/contrib/nosql/redis/v2 => ../contrib/nosql/redis/

@@ -1,4 +1,4 @@
-
+SHELL := /bin/bash
 
 .PHONY: tidy
 tidy:
@@ -18,16 +18,22 @@ lint:
 gftidy:
 	$(eval files=$(shell find . -name go.mod))
 	@set -e; \
+	# GITHUB_REF_NAME=v2.4.0; \
+	if [[ $$GITHUB_REF_NAME =~ "v" ]]; then \
+		latestVersion=$$GITHUB_REF_NAME; \
+	else \
+		latestVersion=latest; \
+	fi; \
 	for file in ${files}; do \
 		goModPath=$$(dirname $$file); \
-		echo "Processing dir: $$goModPath"; \
-		if [[ $$goModPath =~ ".git" || $$goModPath == "." ]] ; then \
-			echo "Skip path"; \
-		elif [[ $$goModPath =~ "./cmd/gf" || $$goModPath =~ "./example" ]] ; then \
-			echo "Skip path"; \
-		else \
+		if [[ $$goModPath =~ "./contrib" || $$goModPath =~ "./cmd/gf" || $$goModPath =~ "./example" ]]; then \
+			echo ""; \
+			echo "processing dir: $$goModPath"; \
+			# Do not modify the order of any of the following sentences \
 			cd $$goModPath; \
-			go get -u -v github.com/gogf/gf/v2; \
+			go mod tidy; \
+			go list -f "{{if and (not .Indirect) (not .Main)}}{{.Path}}@$$latestVersion{{end}}" -m all | grep "^github.com/gogf/gf/contrib" | xargs -L1 go get -v; \
+			go get -v github.com/gogf/gf/v2@$$latestVersion; \
 			go mod tidy; \
 			cd -; \
 		fi \
