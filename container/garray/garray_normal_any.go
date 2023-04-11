@@ -233,11 +233,24 @@ func (a *Array) doRemoveWithoutLock(index int) (value interface{}, found bool) {
 // RemoveValue removes an item by value.
 // It returns true if value is found in the array, or else false if not found.
 func (a *Array) RemoveValue(value interface{}) bool {
-	if i := a.Search(value); i != -1 {
-		a.Remove(i)
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if i := a.doSearchWithoutLock(value); i != -1 {
+		a.doRemoveWithoutLock(i)
 		return true
 	}
 	return false
+}
+
+// RemoveValues removes multiple items by `values`.
+func (a *Array) RemoveValues(values ...interface{}) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for _, value := range values {
+		if i := a.doSearchWithoutLock(value); i != -1 {
+			a.doRemoveWithoutLock(i)
+		}
+	}
 }
 
 // PushLeft pushes one or multiple items to the beginning of array.
@@ -487,6 +500,10 @@ func (a *Array) Contains(value interface{}) bool {
 func (a *Array) Search(value interface{}) int {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
+	return a.doSearchWithoutLock(value)
+}
+
+func (a *Array) doSearchWithoutLock(value interface{}) int {
 	if len(a.array) == 0 {
 		return -1
 	}
