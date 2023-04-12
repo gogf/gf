@@ -108,13 +108,13 @@ func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDum
 	} else {
 		reflectValue = reflect.ValueOf(value)
 	}
+	var reflectKind = reflectValue.Kind()
 	// Double check nil value.
-	if value == nil {
+	if value == nil || reflectKind == reflect.Invalid {
 		buffer.WriteString(`<nil>`)
 		return
 	}
 	var (
-		reflectKind     = reflectValue.Kind()
 		reflectTypeName = reflectValue.Type().String()
 		ptrAddress      string
 		newIndent       = indent + dumpIndent
