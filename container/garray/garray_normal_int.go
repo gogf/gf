@@ -228,11 +228,24 @@ func (a *IntArray) doRemoveWithoutLock(index int) (value int, found bool) {
 // RemoveValue removes an item by value.
 // It returns true if value is found in the array, or else false if not found.
 func (a *IntArray) RemoveValue(value int) bool {
-	if i := a.Search(value); i != -1 {
-		_, found := a.Remove(i)
-		return found
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if i := a.doSearchWithoutLock(value); i != -1 {
+		a.doRemoveWithoutLock(i)
+		return true
 	}
 	return false
+}
+
+// RemoveValues removes multiple items by `values`.
+func (a *IntArray) RemoveValues(values ...int) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for _, value := range values {
+		if i := a.doSearchWithoutLock(value); i != -1 {
+			a.doRemoveWithoutLock(i)
+		}
+	}
 }
 
 // PushLeft pushes one or multiple items to the beginning of array.
@@ -497,6 +510,10 @@ func (a *IntArray) Contains(value int) bool {
 func (a *IntArray) Search(value int) int {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
+	return a.doSearchWithoutLock(value)
+}
+
+func (a *IntArray) doSearchWithoutLock(value int) int {
 	if len(a.array) == 0 {
 		return -1
 	}

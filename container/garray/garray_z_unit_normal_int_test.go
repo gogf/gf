@@ -765,6 +765,15 @@ func TestIntArray_RemoveValue(t *testing.T) {
 	})
 }
 
+func TestIntArray_RemoveValues(t *testing.T) {
+	slice := g.SliceInt{10, 20, 30, 40}
+	array := garray.NewIntArrayFrom(slice)
+	gtest.C(t, func(t *gtest.T) {
+		array.RemoveValues(10, 20, 40)
+		t.Assert(array.Slice(), g.SliceInt{30})
+	})
+}
+
 func TestIntArray_UnmarshalValue(t *testing.T) {
 	type V struct {
 		Name  string

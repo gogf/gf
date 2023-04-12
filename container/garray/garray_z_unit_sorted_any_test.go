@@ -869,6 +869,15 @@ func TestSortedArray_RemoveValue(t *testing.T) {
 	})
 }
 
+func TestSortedArray_RemoveValues(t *testing.T) {
+	slice := g.Slice{"a", "b", "d", "c"}
+	array := garray.NewSortedArrayFrom(slice, gutil.ComparatorString)
+	gtest.C(t, func(t *gtest.T) {
+		array.RemoveValues("a", "b", "c")
+		t.Assert(array.Slice(), g.SliceStr{"d"})
+	})
+}
+
 func TestSortedArray_UnmarshalValue(t *testing.T) {
 	type V struct {
 		Name  string

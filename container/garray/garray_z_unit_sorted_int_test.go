@@ -737,6 +737,15 @@ func TestSortedIntArray_RemoveValue(t *testing.T) {
 	})
 }
 
+func TestSortedIntArray_RemoveValues(t *testing.T) {
+	slice := g.SliceInt{10, 20, 30, 40}
+	array := garray.NewSortedIntArrayFrom(slice)
+	gtest.C(t, func(t *gtest.T) {
+		array.RemoveValues(10, 40, 20)
+		t.Assert(array.Slice(), g.SliceInt{30})
+	})
+}
+
 func TestSortedIntArray_UnmarshalValue(t *testing.T) {
 	type V struct {
 		Name  string

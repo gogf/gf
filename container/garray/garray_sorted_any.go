@@ -216,6 +216,17 @@ func (a *SortedArray) RemoveValue(value interface{}) bool {
 	return false
 }
 
+// RemoveValues removes an item by `values`.
+func (a *SortedArray) RemoveValues(values ...interface{}) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for _, value := range values {
+		if i, r := a.binSearch(value, false); r == 0 {
+			a.doRemoveWithoutLock(i)
+		}
+	}
+}
+
 // PopLeft pops and returns an item from the beginning of array.
 // Note that if the array is empty, the `found` is false.
 func (a *SortedArray) PopLeft() (value interface{}, found bool) {
@@ -470,7 +481,7 @@ func (a *SortedArray) binSearch(value interface{}, lock bool) (index int, result
 
 // SetUnique sets unique mark to the array,
 // which means it does not contain any repeated items.
-// It also do unique check, remove all repeated items.
+// It also does unique check, remove all repeated items.
 func (a *SortedArray) SetUnique(unique bool) *SortedArray {
 	oldUnique := a.unique
 	a.unique = unique
