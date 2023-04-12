@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	ctx := gctx.New()
+	ctx := gctx.GetInitCtx()
 	g.Log().Debug(ctx, `this is main process`)
 	if err := gproc.ShellRun(ctx, `go run sub/sub.go`); err != nil {
 		panic(err)

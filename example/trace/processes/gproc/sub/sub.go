@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-	ctx := gctx.New()
+	ctx := gctx.GetInitCtx()
 	g.Log().Debug(ctx, `this is sub process`)
 }
