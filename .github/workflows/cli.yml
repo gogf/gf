@@ -34,7 +34,7 @@ jobs:
       - name: Build CLI Binary For All Platform
         run: |
           cd cmd/gf
-          gf build main.go -n gf -a amd64,386 -s windows,linux,darwin
+          gf build main.go -n gf -a all -s all
 
       - name: Move Files Before Release
         run: |
