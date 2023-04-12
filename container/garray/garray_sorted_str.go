@@ -188,6 +188,17 @@ func (a *SortedStrArray) RemoveValue(value string) bool {
 	return false
 }
 
+// RemoveValues removes an item by `values`.
+func (a *SortedStrArray) RemoveValues(values ...string) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for _, value := range values {
+		if i, r := a.binSearch(value, false); r == 0 {
+			a.doRemoveWithoutLock(i)
+		}
+	}
+}
+
 // PopLeft pops and returns an item from the beginning of array.
 // Note that if the array is empty, the `found` is false.
 func (a *SortedStrArray) PopLeft() (value string, found bool) {
