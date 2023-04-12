@@ -709,6 +709,24 @@ func (a *SortedIntArray) UnmarshalValue(value interface{}) (err error) {
 	return err
 }
 
+// Filter `filter func(value int, index int) bool` filter array, value
+// means the value of the current element, the index of the current original
+// color of value, when the custom function returns True, the element will be
+// filtered, otherwise it will not be filtered, `Filter` function returns a new
+// array, will not modify the original array.
+func (a *SortedIntArray) Filter(filter func(index int, value int) bool) *SortedIntArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if filter(i, a.array[i]) {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			i++
+		}
+	}
+	return a
+}
+
 // FilterEmpty removes all zero value of the array.
 func (a *SortedIntArray) FilterEmpty() *SortedIntArray {
 	a.mu.Lock()
