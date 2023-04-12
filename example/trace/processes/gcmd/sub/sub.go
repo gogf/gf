@@ -20,5 +20,5 @@ var (
 )
 
 func main() {
-	Sub.Run(gctx.New())
+	Sub.Run(gctx.GetInitCtx())
 }
