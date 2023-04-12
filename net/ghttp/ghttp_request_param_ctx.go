@@ -26,10 +26,7 @@ func RequestFromCtx(ctx context.Context) *Request {
 // See GetCtx.
 func (r *Request) Context() context.Context {
 	if r.context == nil {
-		// DO NOT use the http context as it will be canceled after request done,
-		// which makes the asynchronous goroutine encounter "context canceled" error.
-		// r.context = r.Request.Context()
-		r.context = gctx.New()
+		r.context = gctx.WithCtx(r.Request.Context())
 	}
 	// Inject Request object into context.
 	if RequestFromCtx(r.context) == nil {

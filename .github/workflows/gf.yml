@@ -66,7 +66,9 @@ jobs:
           - 3306:3306
 
       # PostgreSQL backend server.
-      # docker run -d --name postgres -p 5432:5432 -e POSTGRES_PASSWORD=12345678 -e POSTGRES_USER=postgres -e POSTGRES_DB=test -v postgres:/Users/john/Temp/postgresql/data loads/postgres:13
+      # docker run -d --name postgres -p 5432:5432 \
+      # -e POSTGRES_PASSWORD=12345678 -e POSTGRES_USER=postgres -e POSTGRES_DB=test \
+      # -v postgres:/Users/john/Temp/postgresql/data loads/postgres:13
       postgres:
         image: loads/postgres:13
         env:
@@ -84,6 +86,13 @@ jobs:
           --health-retries 5
 
       # MSSQL backend server.
+      # docker run -d --name mssql -p 1433:1433 \
+      # -e ACCEPT_EULA=Y \
+      # -e SA_PASSWORD=LoremIpsum86 \
+      # -e MSSQL_DB=test \
+      # -e MSSQL_USER=root \
+      # -e MSSQL_PASSWORD=LoremIpsum86 \
+      # loads/mssqldocker:14.0.3391.2
       mssql:
         image: loads/mssqldocker:14.0.3391.2
         env:
