@@ -18,16 +18,19 @@ jobs:
     steps:
       - name: Checkout Github Code
         uses: actions/checkout@v3
-      - name: update dependencies
+
+      - name: Update Dependencies
         run: make gftidy
-      - name: Commit & Push changes
+
+      - name: Commit & Push Changes
         uses: actions-js/push@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          author_name: TagRobot
+          author_name:  TagRobot
           author_email: tagrobot@goframe.org
-          message: "update version to ${{ github.ref_name }}"
-      - name: Auto Creating Tags
+          message: "auto update version to ${{ github.ref_name }}"
+
+      - name: Auto Creating Tags For Contrib Packages
         run: |
           git config --global user.email "tagrobot@goframe.org"
           git config --global user.name  "TagRobot"
