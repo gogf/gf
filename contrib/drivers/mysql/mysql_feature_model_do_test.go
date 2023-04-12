@@ -11,6 +11,7 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func Test_Model_Insert_Data_DO(t *testing.T) {
@@ -46,7 +47,7 @@ func Test_Model_Insert_Data_DO(t *testing.T) {
 	})
 }
 
-func Test_Model_Insert_Data_LIst_DO(t *testing.T) {
+func Test_Model_Insert_Data_List_DO(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -124,6 +125,50 @@ func Test_Model_Update_Data_DO(t *testing.T) {
 	})
 }
 
+func Test_Model_Update_Pointer_Data_DO(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	db.SetDebug(true)
+	gtest.C(t, func(t *gtest.T) {
+		type NN string
+		type Req struct {
+			Id       int
+			Passport *string
+			Password *string
+			Nickname *NN
+		}
+		type UserDo struct {
+			g.Meta     `orm:"do:true"`
+			Id         interface{}
+			Passport   interface{}
+			Password   interface{}
+			Nickname   interface{}
+			CreateTime interface{}
+		}
+		var (
+			nickname = NN("nickname_111")
+			req      = Req{
+				Password: gconv.PtrString("12345678"),
+				Nickname: &nickname,
+			}
+			data = UserDo{
+				Passport: req.Passport,
+				Password: req.Password,
+				Nickname: req.Nickname,
+			}
+		)
+
+		_, err := db.Model(table).Data(data).WherePri(1).Update()
+		t.AssertNil(err)
+
+		one, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one[`id`], `1`)
+		t.Assert(one[`password`], `12345678`)
+		t.Assert(one[`nickname`], `nickname_111`)
+	})
+}
+
 func Test_Model_Where_DO(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
@@ -183,7 +228,7 @@ func Test_Model_Insert_Data_ForDao(t *testing.T) {
 	})
 }
 
-func Test_Model_Insert_Data_LIst_ForDao(t *testing.T) {
+func Test_Model_Insert_Data_List_ForDao(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
