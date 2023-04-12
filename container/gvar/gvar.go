@@ -28,7 +28,7 @@ type Var struct {
 // The optional parameter `safe` specifies whether Var is used in concurrent-safety,
 // which is false in default.
 func New(value interface{}, safe ...bool) *Var {
-	if len(safe) > 0 && !safe[0] {
+	if len(safe) > 0 && safe[0] {
 		return &Var{
 			value: gtype.NewInterface(value),
 			safe:  true,
