@@ -222,6 +222,17 @@ func (a *StrArray) RemoveValue(value string) bool {
 	return false
 }
 
+// RemoveValues removes multiple items by `values`.
+func (a *StrArray) RemoveValues(values ...string) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for _, value := range values {
+		if i := a.doSearchWithoutLock(value); i != -1 {
+			a.doRemoveWithoutLock(i)
+		}
+	}
+}
+
 // PushLeft pushes one or multiple items to the beginning of array.
 func (a *StrArray) PushLeft(value ...string) *StrArray {
 	a.mu.Lock()
@@ -499,6 +510,10 @@ func (a *StrArray) ContainsI(value string) bool {
 func (a *StrArray) Search(value string) int {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
+	return a.doSearchWithoutLock(value)
+}
+
+func (a *StrArray) doSearchWithoutLock(value string) int {
 	if len(a.array) == 0 {
 		return -1
 	}
