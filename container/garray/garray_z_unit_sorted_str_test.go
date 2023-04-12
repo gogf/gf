@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/internal/empty"
+
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/json"
@@ -784,6 +786,20 @@ func TestSortedStrArray_UnmarshalValue(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Array.Slice(), g.SliceStr{"1", "2", "3"})
+	})
+}
+func TestSortedStrArray_Filter(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedStrArrayFrom(g.SliceStr{"", "1", "2", "0"})
+		t.Assert(array.Filter(func(index int, value string) bool {
+			return empty.IsEmpty(value)
+		}), g.SliceStr{"0", "1", "2"})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedStrArrayFrom(g.SliceStr{"1", "2"})
+		t.Assert(array.Filter(func(index int, value string) bool {
+			return empty.IsEmpty(value)
+		}), g.SliceStr{"1", "2"})
 	})
 }
 

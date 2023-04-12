@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/internal/empty"
+
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/json"
@@ -904,6 +906,33 @@ func TestSortedArray_UnmarshalValue(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Array.Slice(), g.Slice{1, 2, 3})
+	})
+}
+func TestSortedArray_Filter(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		values := g.Slice{0, 1, 2, 3, 4, "", g.Slice{}}
+		array := garray.NewSortedArrayFromCopy(values, gutil.ComparatorInt)
+		t.Assert(array.Filter(func(index int, value interface{}) bool {
+			return empty.IsNil(value)
+		}).Slice(), g.Slice{0, "", g.Slice{}, 1, 2, 3, 4})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedArrayFromCopy(g.Slice{nil, 1, 2, 3, 4, nil}, gutil.ComparatorInt)
+		t.Assert(array.Filter(func(index int, value interface{}) bool {
+			return empty.IsNil(value)
+		}), g.Slice{1, 2, 3, 4})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedArrayFrom(g.Slice{0, 1, 2, 3, 4, "", g.Slice{}}, gutil.ComparatorInt)
+		t.Assert(array.Filter(func(index int, value interface{}) bool {
+			return empty.IsEmpty(value)
+		}), g.Slice{1, 2, 3, 4})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedArrayFrom(g.Slice{1, 2, 3, 4}, gutil.ComparatorInt)
+		t.Assert(array.Filter(func(index int, value interface{}) bool {
+			return empty.IsEmpty(value)
+		}), g.Slice{1, 2, 3, 4})
 	})
 }
 

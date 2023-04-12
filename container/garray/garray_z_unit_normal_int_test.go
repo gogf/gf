@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/internal/empty"
+
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/json"
@@ -801,6 +803,34 @@ func TestIntArray_UnmarshalValue(t *testing.T) {
 	//	t.Assert(v.Name, "john")
 	//	t.Assert(v.Array.Slice(), g.Slice{1, 2, 3})
 	// })
+}
+
+func TestIntArray_Filter(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewIntArrayFrom(g.SliceInt{0, 1, 2, 3, 4, 0})
+		t.Assert(array.Filter(func(index int, value int) bool {
+			return empty.IsEmpty(value)
+		}), g.SliceInt{1, 2, 3, 4})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewIntArrayFrom(g.SliceInt{1, 2, 3, 4})
+		t.Assert(array.Filter(func(index int, value int) bool {
+			return empty.IsEmpty(value)
+
+		}), g.SliceInt{1, 2, 3, 4})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewIntArrayFrom(g.SliceInt{1, 2, 3, 4})
+		t.Assert(array.Filter(func(index int, value int) bool {
+			return value%2 == 0
+		}), g.SliceInt{1, 3})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewIntArrayFrom(g.SliceInt{1, 2, 3, 4})
+		t.Assert(array.Filter(func(index int, value int) bool {
+			return value%2 == 1
+		}), g.SliceInt{2, 4})
+	})
 }
 
 func TestIntArray_FilterEmpty(t *testing.T) {

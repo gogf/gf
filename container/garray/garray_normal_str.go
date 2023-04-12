@@ -799,6 +799,24 @@ func (a *StrArray) UnmarshalValue(value interface{}) error {
 	return nil
 }
 
+// Filter `filter func(value string, index int) bool` filter array, value
+// means the value of the current element, the index of the current original
+// color of value, when the custom function returns True, the element will be
+// filtered, otherwise it will not be filtered, `Filter` function returns a new
+// array, will not modify the original array.
+func (a *StrArray) Filter(filter func(index int, value string) bool) *StrArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if filter(i, a.array[i]) {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			i++
+		}
+	}
+	return a
+}
+
 // FilterEmpty removes all empty string value of the array.
 func (a *StrArray) FilterEmpty() *StrArray {
 	a.mu.Lock()
