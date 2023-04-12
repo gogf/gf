@@ -106,19 +106,17 @@ func (m *Model) getFieldsFiltered() string {
 // getExpandFiltered @chengjian
 func (m *Model) getExpandFiltered() string {
 	newExpands := ""
-	var table, alias string
+	var alias string
 	for _, expand := range m.expands {
 		list := strings.Split(m.tables, "AS")
 		if len(list) > 1 {
-			table = strings.Trim(list[0], " ")
 			alias = strings.Trim(list[1], " ")
 		} else {
-			table = m.tables
 			alias = m.tables
 		}
 		newExpands += ","
-		newExpands += fmt.Sprintf(`(select filed_value from %s where row_key = %s.id  and filed_code = '%s' )as %s`,
-			table, alias, expand.FieldCode, expand.FieldCode)
+		newExpands += fmt.Sprintf(`(select filed_value from %s where row_key = %s.id  and filed_code = '%s' and deleted_time is null )as %s`,
+			m.expandsTable, alias, expand.FieldCode, expand.FieldCode)
 	}
 	return newExpands
 }

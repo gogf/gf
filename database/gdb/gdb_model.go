@@ -146,6 +146,12 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 	}
 }
 
+func (c *Core) ModelEx(exTableName string, tableNameQueryOrStruct ...interface{}) *Model {
+	model := c.db.Model(tableNameQueryOrStruct...)
+	model.expandsTable = exTableName
+	return model
+}
+
 // Raw creates and returns a model based on a raw sql not a table.
 // Example:
 //     db.Raw("SELECT * FROM `user` WHERE `name` = ?", "john").Scan(&result)

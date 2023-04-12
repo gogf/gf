@@ -10,7 +10,6 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/gogf/gf/errors/gcode"
-
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gstr"
@@ -48,4 +47,36 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 		return nil, gerror.NewCode(gcode.CodeMissingParameter, "there should be WHERE condition statement for DELETE operation")
 	}
 	return m.db.DoDelete(m.GetCtx(), m.getLink(true), m.tables, conditionStr, conditionArgs...)
+}
+
+func (m *Model) DeleteExtend(where ...interface{}) (result sql.Result, err error) {
+	//判断是否存在扩展数据表
+	if len(m.expandsTable) > 0 {
+		var (
+			fieldNameDelete                               = m.getSoftFieldNameDeleted()
+			conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false, false)
+		)
+		conditionStr := conditionWhere + conditionExtra
+		querySql := fmt.Sprintf("select id from %s %s", m.tables, conditionStr)
+		rows, _ := m.db.DoQuery(m.GetCtx(), m.getLink(true), querySql, conditionArgs)
+		defer rows.Close()
+		for rows.Next() {
+			var id int64
+			rows.Scan(&id)
+			if !m.unscoped && fieldNameDelete != "" {
+				m.db.DoUpdate(
+					m.GetCtx(),
+					m.getLink(true),
+					m.expandsTable,
+					fmt.Sprintf(`%s=?`, m.db.GetCore().QuoteString(fieldNameDelete)),
+					fmt.Sprintf(" WHERE row_key = ?"),
+					append([]interface{}{gtime.Now().String()}, id),
+				)
+			} else {
+				m.db.DoDelete(m.GetCtx(), m.getLink(true), m.expandsTable, fmt.Sprintf(" WHERE row_key = ?"), id)
+			}
+		}
+
+	}
+	return m.Delete(where)
 }

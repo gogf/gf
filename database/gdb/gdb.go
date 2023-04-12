@@ -52,6 +52,8 @@ type DB interface {
 	// Also see Core.Model.
 	Model(tableNameOrStruct ...interface{}) *Model
 
+	ModelEx(exTableName string, tableNameOrStruct ...interface{}) *Model
+
 	// Raw creates and returns a model based on a raw sql not a table.
 	Raw(rawSql string, args ...interface{}) *Model
 

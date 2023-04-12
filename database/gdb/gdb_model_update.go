@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"github.com/gogf/gf/errors/gcode"
 	"reflect"
@@ -87,6 +88,42 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		conditionStr,
 		m.mergeArguments(conditionArgs)...,
 	)
+}
+
+func (m *Model) UpdateExtend(dataAndWhere ...interface{}) (result sql.Result, err error) {
+	//判断是否存在扩展数据表
+	exMap := map[string]interface{}{}
+	if len(m.expandsTable) > 0 {
+		tdata := m.data.(map[string]interface{})
+		json.Unmarshal(gconv.Bytes(tdata["ExtData"]), &exMap)
+	}
+
+	if len(exMap) > 0 {
+		tdata := m.data.(map[string]interface{})
+		var conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false, false)
+		conditionStr := conditionWhere + conditionExtra
+		querySql := fmt.Sprintf("select id from %s %s", m.tables, conditionStr)
+		rows, _ := m.db.DoQuery(m.GetCtx(), m.getLink(true), querySql, conditionArgs)
+		defer rows.Close()
+		for rows.Next() {
+			var id int64
+			rows.Scan(&id)
+			for key, value := range exMap {
+				dataMap := map[string]interface{}{
+					"filed_value":  value,
+					"updated_by":   tdata["updated_by"],
+					"updated_name": tdata["updated_name"],
+					"updated_time": tdata["updated_time"],
+				}
+				var whereArgs = []interface{}{id, key}
+
+				updateSql := fmt.Sprintf(" WHERE row_key = ? and filed_code=?")
+				m.db.DoUpdate(m.GetCtx(), m.getLink(true), m.expandsTable, dataMap, updateSql, m.mergeArguments(whereArgs)...)
+			}
+		}
+
+	}
+	return m.Update(dataAndWhere...)
 }
 
 // Increment increments a column's value by a given amount.

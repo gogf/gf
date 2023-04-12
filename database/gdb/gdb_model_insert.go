@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"database/sql"
+	"encoding/json"
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/errors/gcode"
 	"reflect"
@@ -169,6 +170,46 @@ func (m *Model) InsertAndGetId(data ...interface{}) (lastInsertId int64, err err
 	result, err := m.doInsertWithOption(insertOptionDefault)
 	if err != nil {
 		return 0, err
+	}
+	return result.LastInsertId()
+}
+
+// InsertExtendAndGetId performs action Insert and returns the last insert id that automatically generated.
+func (m *Model) InsertExtendAndGetId(data ...interface{}) (lastInsertId int64, err error) {
+	if len(data) > 0 {
+		return m.Data(data...).InsertExtendAndGetId()
+	}
+	//判断是否存在扩展数据表
+	exMap := map[string]interface{}{}
+	if len(m.expandsTable) > 0 {
+		tdata := m.data.(map[string]interface{})
+		json.Unmarshal(gconv.Bytes(tdata["ExtData"]), &exMap)
+	}
+
+	result, err := m.doInsertWithOption(insertOptionDefault)
+	if err != nil {
+		return 0, err
+	}
+	if len(exMap) > 0 {
+		var list List
+		lastId, _ := result.LastInsertId()
+		tdata := m.data.(map[string]interface{})
+		for key, value := range exMap {
+			list = append(list, map[string]interface{}{
+				"row_key":      lastId,
+				"filed_code":   key,
+				"filed_value":  value,
+				"created_by":   tdata["created_by"],
+				"created_name": tdata["created_name"],
+				"created_time": tdata["created_time"],
+			})
+		}
+		columnNames := make([]string, 0, len(list[0]))
+		for k, _ := range list[0] {
+			columnNames = append(columnNames, k)
+		}
+		doInsertOption, _ := m.formatDoInsertOption(insertOptionDefault, columnNames)
+		m.db.DoInsert(m.GetCtx(), m.getLink(true), m.expandsTable, list, doInsertOption)
 	}
 	return result.LastInsertId()
 }
