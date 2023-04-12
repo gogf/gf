@@ -14,10 +14,10 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcfg"
-	"github.com/nacos-group/nacos-sdk-go/clients"
-	"github.com/nacos-group/nacos-sdk-go/clients/config_client"
-	"github.com/nacos-group/nacos-sdk-go/common/constant"
-	"github.com/nacos-group/nacos-sdk-go/vo"
+	"github.com/nacos-group/nacos-sdk-go/v2/clients"
+	"github.com/nacos-group/nacos-sdk-go/v2/clients/config_client"
+	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
+	"github.com/nacos-group/nacos-sdk-go/v2/vo"
 )
 
 // Config is the configuration object for nacos client.
@@ -69,7 +69,7 @@ func New(ctx context.Context, config Config) (adapter gcfg.Adapter, err error) {
 //
 // Note that this function does not return error as it just does simply check for
 // backend configuration service.
-func (c *Client) Available(ctx context.Context, resource ...string) (ok bool) {
+func (c *Client) Available(_ context.Context, resource ...string) (ok bool) {
 	if len(resource) == 0 && !c.value.IsNil() {
 		return true
 	}
@@ -81,7 +81,7 @@ func (c *Client) Available(ctx context.Context, resource ...string) (ok bool) {
 // Pattern like:
 // "x.y.z" for map item.
 // "x.0.y" for slice item.
-func (c *Client) Get(ctx context.Context, pattern string) (value interface{}, err error) {
+func (c *Client) Get(_ context.Context, pattern string) (value interface{}, err error) {
 	if c.value.IsNil() {
 		if err = c.updateLocalValue(); err != nil {
 			return nil, err
@@ -93,7 +93,7 @@ func (c *Client) Get(ctx context.Context, pattern string) (value interface{}, er
 // Data retrieves and returns all configuration data in current resource as map.
 // Note that this function may lead lots of memory usage if configuration data is too large,
 // you can implement this function if necessary.
-func (c *Client) Data(ctx context.Context) (data map[string]interface{}, err error) {
+func (c *Client) Data(_ context.Context) (data map[string]interface{}, err error) {
 	if c.value.IsNil() {
 		if err = c.updateLocalValue(); err != nil {
 			return nil, err
@@ -126,7 +126,7 @@ func (c *Client) addWatcher() error {
 	}
 
 	c.config.ConfigParam.OnChange = func(namespace, group, dataId, data string) {
-		c.doUpdate(data)
+		_ = c.doUpdate(data)
 	}
 
 	if err := c.client.ListenConfig(c.config.ConfigParam); err != nil {
