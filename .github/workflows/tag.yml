@@ -26,6 +26,7 @@ jobs:
         uses: actions-js/push@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: master
           author_name:  TagRobot
           author_email: tagrobot@goframe.org
           message: "auto update version to ${{ github.ref_name }}"
