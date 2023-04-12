@@ -216,6 +216,17 @@ func (a *SortedArray) RemoveValue(value interface{}) bool {
 	return false
 }
 
+// RemoveValues removes an item by `values`.
+func (a *SortedArray) RemoveValues(values ...interface{}) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for _, value := range values {
+		if i, r := a.binSearch(value, false); r == 0 {
+			a.doRemoveWithoutLock(i)
+		}
+	}
+}
+
 // PopLeft pops and returns an item from the beginning of array.
 // Note that if the array is empty, the `found` is false.
 func (a *SortedArray) PopLeft() (value interface{}, found bool) {
@@ -470,7 +481,7 @@ func (a *SortedArray) binSearch(value interface{}, lock bool) (index int, result
 
 // SetUnique sets unique mark to the array,
 // which means it does not contain any repeated items.
-// It also do unique check, remove all repeated items.
+// It also does unique check, remove all repeated items.
 func (a *SortedArray) SetUnique(unique bool) *SortedArray {
 	oldUnique := a.unique
 	a.unique = unique
@@ -745,6 +756,24 @@ func (a *SortedArray) FilterNil() *SortedArray {
 			a.array = append(a.array[:i], a.array[i+1:]...)
 		} else {
 			break
+		}
+	}
+	return a
+}
+
+// Filter `filter func(value interface{}, index int) bool` filter array, value
+// means the value of the current element, the index of the current original
+// color of value, when the custom function returns True, the element will be
+// filtered, otherwise it will not be filtered, `Filter` function returns a new
+// array, will not modify the original array.
+func (a *SortedArray) Filter(filter func(index int, value interface{}) bool) *SortedArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if filter(i, a.array[i]) {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			i++
 		}
 	}
 	return a

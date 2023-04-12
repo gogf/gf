@@ -188,6 +188,17 @@ func (a *SortedStrArray) RemoveValue(value string) bool {
 	return false
 }
 
+// RemoveValues removes an item by `values`.
+func (a *SortedStrArray) RemoveValues(values ...string) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for _, value := range values {
+		if i, r := a.binSearch(value, false); r == 0 {
+			a.doRemoveWithoutLock(i)
+		}
+	}
+}
+
 // PopLeft pops and returns an item from the beginning of array.
 // Note that if the array is empty, the `found` is false.
 func (a *SortedStrArray) PopLeft() (value string, found bool) {
@@ -709,6 +720,24 @@ func (a *SortedStrArray) UnmarshalValue(value interface{}) (err error) {
 		sort.Strings(a.array)
 	}
 	return err
+}
+
+// Filter `filter func(value string, index int) bool` filter array, value
+// means the value of the current element, the index of the current original
+// color of value, when the custom function returns True, the element will be
+// filtered, otherwise it will not be filtered, `Filter` function returns a new
+// array, will not modify the original array.
+func (a *SortedStrArray) Filter(filter func(index int, value string) bool) *SortedStrArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if filter(i, a.array[i]) {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			i++
+		}
+	}
+	return a
 }
 
 // FilterEmpty removes all empty string value of the array.
