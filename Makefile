@@ -21,14 +21,14 @@ version:
 	@set -e; \
 	newVersion=$(to); \
 	echo "The version will be set to $$newVersion"; \
-	echo "package gf" > version.go; \
-	echo "" >> version.go; \
-	echo "const (" >> version.go; \
-	echo -e "\t// VERSION is the current GoFrame version." >> version.go; \
-	echo -e "\tVERSION = \"$$newVersion\"" >> version.go; \
-	echo ")" >> version.go; \
 	if [[ $$newVersion =~ "v" ]]; then \
 		latestVersion=$$newVersion; \
+		echo "package gf" > version.go; \
+		echo "" >> version.go; \
+		echo "const (" >> version.go; \
+		echo -e "\t// VERSION is the current GoFrame version." >> version.go; \
+		echo -e "\tVERSION = \"$$latestVersion\"" >> version.go; \
+		echo ")" >> version.go; \
 	else \
 		latestVersion=latest; \
 	fi; \
