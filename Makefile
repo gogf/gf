@@ -15,12 +15,20 @@ tidy:
 lint:
 	golangci-lint run
 
-gftidy:
+# make version to=v2.4.0
+version:
 	$(eval files=$(shell find . -name go.mod))
 	@set -e; \
-	# GITHUB_REF_NAME=v2.4.0; \
-	if [[ $$GITHUB_REF_NAME =~ "v" ]]; then \
-		latestVersion=$$GITHUB_REF_NAME; \
+	newVersion=$(to); \
+	echo "The version will be set to $$newVersion"; \
+	echo "package gf" > version.go; \
+	echo "" >> version.go; \
+	echo "const (" >> version.go; \
+	echo -e "\t// VERSION is the current GoFrame version." >> version.go; \
+	echo -e "\tVERSION = \"$$newVersion\"" >> version.go; \
+	echo ")" >> version.go; \
+	if [[ $$newVersion =~ "v" ]]; then \
+		latestVersion=$$newVersion; \
 	else \
 		latestVersion=latest; \
 	fi; \
