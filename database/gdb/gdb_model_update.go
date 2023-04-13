@@ -113,7 +113,7 @@ func (m *Model) UpdateExtend(dataAndWhere ...interface{}) (result sql.Result, er
 					"filed_value":  value,
 					"updated_by":   tdata["updated_by"],
 					"updated_name": tdata["updated_name"],
-					"updated_time": tdata["updated_time"],
+					"updated_time": gtime.Now().String(),
 				}
 				var whereArgs = []interface{}{id, key}
 
