@@ -21,21 +21,21 @@ import (
 )
 
 type Config struct {
-	Endpoints []string `v:"required"` // See etcd Config.
+	Endpoints   []string `v:"required"` // See etcd Config.
 	DialTimeout time.Duration
-	Username string
-	Password string
-	TLS *tls.Config
+	Username    string
+	Password    string
+	TLS         *tls.Config
 	DialOptions []grpc.DialOption
-	Watch          bool   // Watch watches remote configuration updates
-	ConfigKey     string `v:"required"`
+	Watch       bool   // Watch watches remote configuration updates
+	ConfigKey   string `v:"required"`
 }
 
 // Client implements gcfg.Adapter implementing using apollo service.
 type Client struct {
-	config Config        // Config object when created.
+	config Config           // Config object when created.
 	client *clientv3.Client // Etcd client.
-	value  *g.Var        // Configmap content cached. It is `*gjson.Json` value internally.
+	value  *g.Var           // Configmap content cached. It is `*gjson.Json` value internally.
 }
 
 // New creates and returns gcfg.Adapter implementing using etcd service.
@@ -53,11 +53,11 @@ func New(ctx context.Context, config Config) (adapter gcfg.Adapter, err error) {
 	client.client, err = clientv3.New(clientv3.Config{
 		Endpoints:   config.Endpoints,
 		DialTimeout: config.DialTimeout,
-		Username: config.Username,
-		Password: config.Password,
-		TLS: config.TLS,
+		Username:    config.Username,
+		Password:    config.Password,
+		TLS:         config.TLS,
 		DialOptions: config.DialOptions,
-		Context : ctx,
+		Context:     ctx,
 	})
 	if err != nil {
 		return nil, err

@@ -16,18 +16,18 @@ import (
 )
 
 var (
-	ctx     = gctx.GetInitCtx()
-	Endpoints   = []string{"localhost:2379"}
+	ctx       = gctx.GetInitCtx()
+	Endpoints = []string{"localhost:2379"}
 	ConfigKey = "/configs/config.yaml"
-	Watch = false
+	Watch     = false
 )
 
 func TestEtcd(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		adapter, err := etcd.New(ctx, etcd.Config{
-			Endpoints:   Endpoints,
+			Endpoints: Endpoints,
 			ConfigKey: ConfigKey,
-			Watch: Watch,
+			Watch:     Watch,
 		})
 		t.AssertNil(err)
 
