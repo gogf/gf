@@ -23,16 +23,9 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gmeta"
+	"github.com/gogf/gf/v2/util/gtag"
 	"github.com/gogf/gf/v2/util/gutil"
 	"github.com/gogf/gf/v2/util/gvalid"
-)
-
-const (
-	tagNameDc   = `dc` // description.
-	tagNameAd   = `ad` // additional
-	tagNameEg   = `eg` // examples.
-	tagNameArg  = `arg`
-	tagNameRoot = `root`
 )
 
 var (
@@ -68,7 +61,7 @@ func NewFromObject(object interface{}) (rootCmd *Command, err error) {
 	// Sub command creating.
 	var (
 		nameSet         = gset.NewStrSet()
-		rootCommandName = gmeta.Get(object, tagNameRoot).String()
+		rootCommandName = gmeta.Get(object, gtag.Root).String()
 		subCommands     []*Command
 	)
 	if rootCommandName == "" {
@@ -155,14 +148,26 @@ func newCommandFromObjectMeta(object interface{}, name string) (command *Command
 		}
 		command.Name = name
 	}
+	if command.Brief == "" {
+		for _, tag := range []string{gtag.Summary, gtag.SummaryShort, gtag.SummaryShort2} {
+			command.Brief = metaData[tag]
+			if command.Brief != "" {
+				break
+			}
+		}
+	}
 	if command.Description == "" {
-		command.Description = metaData[tagNameDc]
+		command.Description = metaData[gtag.DescriptionShort]
+	}
+	if command.Brief == "" && command.Description != "" {
+		command.Brief = command.Description
+		command.Description = ""
 	}
 	if command.Examples == "" {
-		command.Examples = metaData[tagNameEg]
+		command.Examples = metaData[gtag.ExampleShort]
 	}
 	if command.Additional == "" {
-		command.Additional = metaData[tagNameAd]
+		command.Additional = metaData[gtag.AdditionalShort]
 	}
 	return
 }
@@ -176,13 +181,13 @@ func newCommandFromMethod(
 			err = gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`invalid command: %s.%s.%s defined as "%s", but "func(context.Context, Input)(Output, error)" is required`,
-				methodType.PkgPath(), reflect.TypeOf(object).Name(), methodType.Name(), methodType.String(),
+				methodType.PkgPath(), reflect.TypeOf(object).Name(), method.Name, methodType.String(),
 			)
 		} else {
 			err = gerror.NewCodef(
 				gcode.CodeInvalidParameter,
-				`invalid command: defined as "%s", but "func(context.Context, Input)(Output, error)" is required`,
-				methodType.String(),
+				`invalid command: %s.%s defined as "%s", but "func(context.Context, Input)(Output, error)" is required`,
+				reflect.TypeOf(object).Name(), method.Name, methodType.String(),
 			)
 		}
 		return
@@ -190,16 +195,16 @@ func newCommandFromMethod(
 	if !methodType.In(0).Implements(reflect.TypeOf((*context.Context)(nil)).Elem()) {
 		err = gerror.NewCodef(
 			gcode.CodeInvalidParameter,
-			`invalid command: defined as "%s", but the first input parameter should be type of "context.Context"`,
-			methodType.String(),
+			`invalid command: %s.%s defined as "%s", but the first input parameter should be type of "context.Context"`,
+			reflect.TypeOf(object).Name(), method.Name, methodType.String(),
 		)
 		return
 	}
 	if !methodType.Out(1).Implements(reflect.TypeOf((*error)(nil)).Elem()) {
 		err = gerror.NewCodef(
 			gcode.CodeInvalidParameter,
-			`invalid command: defined as "%s", but the last output parameter should be type of "error"`,
-			methodType.String(),
+			`invalid command: %s.%s defined as "%s", but the last output parameter should be type of "error"`,
+			reflect.TypeOf(object).Name(), method.Name, methodType.String(),
 		)
 		return
 	}
@@ -354,7 +359,10 @@ func newArgumentsFromInput(object interface{}) (args []Argument, err error) {
 				arg.Short, reflect.TypeOf(object).String(), field.Name(),
 			)
 		}
-		if v, ok := metaData[tagNameArg]; ok {
+		if arg.Brief == "" {
+			arg.Brief = field.TagDescription()
+		}
+		if v, ok := metaData[gtag.Arg]; ok {
 			arg.IsArg = gconv.Bool(v)
 		}
 		if nameSet.Contains(arg.Name) {

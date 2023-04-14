@@ -33,15 +33,16 @@ var (
 )
 
 const (
-	TableSize       = 10
-	TableName       = "user"
-	TestSchema1     = "test1"
-	TestSchema2     = "test2"
-	TableNamePrefix = "gf_"
-	CreateTime      = "2018-10-24 10:00:00"
-	DBGroupTest     = "test"
-	DBGroupPrefix   = "prefix"
-	DBGroupInvalid  = "invalid"
+	TableSize               = 10
+	TableName               = "user"
+	TableNameWhichIsKeyword = "group"
+	TestSchema1             = "test1"
+	TestSchema2             = "test2"
+	TableNamePrefix         = "gf_"
+	CreateTime              = "2018-10-24 10:00:00"
+	DBGroupTest             = "test"
+	DBGroupPrefix           = "prefix"
+	DBGroupInvalid          = "invalid"
 )
 
 func init() {
@@ -125,7 +126,7 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 		nickname    VARCHAR(45),
 		create_time DATETIME
 	);
-	`, name,
+	`, db.GetCore().QuoteWord(name),
 	)); err != nil {
 		gtest.Fatal(err)
 	}

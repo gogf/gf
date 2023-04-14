@@ -41,7 +41,7 @@ type ConfigNode struct {
 	Charset              string        `json:"charset"`              // (Optional, "utf8mb4" in default) Custom charset when operating on database.
 	Protocol             string        `json:"protocol"`             // (Optional, "tcp" in default) See net.Dial for more information which networks are available.
 	Timezone             string        `json:"timezone"`             // (Optional) Sets the time zone for displaying and interpreting time stamps.
-	Namespace            string        `json:"namespace"`            // Namespace for some databases. Eg, in pgsql, the `Name` acts as the `catalog`, the `NameSpace` acts as the `schema`.
+	Namespace            string        `json:"namespace"`            // (Optional) Namespace for some databases. Eg, in pgsql, the `Name` acts as the `catalog`, the `NameSpace` acts as the `schema`.
 	MaxIdleConnCount     int           `json:"maxIdle"`              // (Optional) Max idle connection configuration for underlying connection pool.
 	MaxOpenConnCount     int           `json:"maxOpen"`              // (Optional) Max open connection configuration for underlying connection pool.
 	MaxConnLifeTime      time.Duration `json:"maxLifeTime"`          // (Optional) Max amount of time a connection may be idle before being closed.
@@ -210,7 +210,14 @@ func (c *Core) SetMaxConnLifeTime(d time.Duration) {
 func (c *Core) GetConfig() *ConfigNode {
 	internalData := c.GetInternalCtxDataFromCtx(c.db.GetCtx())
 	if internalData != nil && internalData.ConfigNode != nil {
-		return internalData.ConfigNode
+		// Note:
+		// It so here checks and returns the config from current DB,
+		// if different schemas between current DB and config.Name from context,
+		// for example, in nested transaction scenario, the context is passed all through the logic procedure,
+		// but the config.Name from context may be still the original one from the first transaction object.
+		if c.config.Name == internalData.ConfigNode.Name {
+			return internalData.ConfigNode
+		}
 	}
 	return c.config
 }
@@ -269,14 +276,14 @@ func parseConfigNodeLink(node *ConfigNode) *ConfigNode {
 			node.Pass = match[3]
 			node.Protocol = match[4]
 			array := gstr.Split(match[5], ":")
-			if len(array) == 2 {
+			if len(array) == 2 && node.Protocol != "file" {
 				node.Host = array[0]
 				node.Port = array[1]
 				node.Name = match[6]
 			} else {
 				node.Name = match[5]
 			}
-			if len(match) > 6 {
+			if len(match) > 6 && match[7] != "" {
 				node.Extra = match[7]
 			}
 			node.Link = ""

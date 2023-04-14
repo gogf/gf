@@ -17,15 +17,149 @@ import (
 )
 
 // CreateAt/UpdateAt/DeleteAt.
-func Test_SoftCreateUpdateDeleteTime(t *testing.T) {
+func Test_SoftCreateUpdateDeleteTimeMicroSecond(t *testing.T) {
 	table := "time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   id        int(11) NOT NULL,
   name      varchar(45) DEFAULT NULL,
-  create_at datetime DEFAULT NULL,
-  update_at datetime DEFAULT NULL,
-  delete_at datetime DEFAULT NULL,
+  create_at datetime(6) DEFAULT NULL,
+  update_at datetime(6) DEFAULT NULL,
+  delete_at datetime(6) DEFAULT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    `, table)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		// Insert
+		dataInsert := g.Map{
+			"id":   1,
+			"name": "name_1",
+		}
+		r, err := db.Model(table).Data(dataInsert).Insert()
+		t.AssertNil(err)
+		n, _ := r.RowsAffected()
+		t.Assert(n, 1)
+
+		oneInsert, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(oneInsert["id"].Int(), 1)
+		t.Assert(oneInsert["name"].String(), "name_1")
+		t.Assert(oneInsert["delete_at"].String(), "")
+		t.AssertGE(oneInsert["create_at"].GTime().Timestamp(), gtime.Timestamp()-2)
+		t.AssertGE(oneInsert["update_at"].GTime().Timestamp(), gtime.Timestamp()-2)
+
+		// For time asserting purpose.
+		time.Sleep(2 * time.Second)
+
+		// Save
+		dataSave := g.Map{
+			"id":   1,
+			"name": "name_10",
+		}
+		r, err = db.Model(table).Data(dataSave).Save()
+		t.AssertNil(err)
+		n, _ = r.RowsAffected()
+		t.Assert(n, 2)
+
+		oneSave, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(oneSave["id"].Int(), 1)
+		t.Assert(oneSave["name"].String(), "name_10")
+		t.Assert(oneSave["delete_at"].String(), "")
+		t.Assert(oneSave["create_at"].GTime().Timestamp(), oneInsert["create_at"].GTime().Timestamp())
+		t.AssertNE(oneSave["update_at"].GTime().Timestamp(), oneInsert["update_at"].GTime().Timestamp())
+		t.AssertGE(oneSave["update_at"].GTime().Timestamp(), gtime.Timestamp()-2)
+
+		// For time asserting purpose.
+		time.Sleep(2 * time.Second)
+
+		// Update
+		dataUpdate := g.Map{
+			"name": "name_1000",
+		}
+		r, err = db.Model(table).Data(dataUpdate).WherePri(1).Update()
+		t.AssertNil(err)
+		n, _ = r.RowsAffected()
+		t.Assert(n, 1)
+
+		oneUpdate, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(oneUpdate["id"].Int(), 1)
+		t.Assert(oneUpdate["name"].String(), "name_1000")
+		t.Assert(oneUpdate["delete_at"].String(), "")
+		t.Assert(oneUpdate["create_at"].GTime().Timestamp(), oneInsert["create_at"].GTime().Timestamp())
+		t.AssertGE(oneUpdate["update_at"].GTime().Timestamp(), gtime.Timestamp()-2)
+
+		// Replace
+		dataReplace := g.Map{
+			"id":   1,
+			"name": "name_100",
+		}
+		r, err = db.Model(table).Data(dataReplace).Replace()
+		t.AssertNil(err)
+		n, _ = r.RowsAffected()
+		t.Assert(n, 2)
+
+		oneReplace, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(oneReplace["id"].Int(), 1)
+		t.Assert(oneReplace["name"].String(), "name_100")
+		t.Assert(oneReplace["delete_at"].String(), "")
+		t.AssertGE(oneReplace["create_at"].GTime().Timestamp(), oneInsert["create_at"].GTime().Timestamp())
+		t.AssertGE(oneReplace["update_at"].GTime().Timestamp(), oneInsert["update_at"].GTime().Timestamp())
+
+		// For time asserting purpose.
+		time.Sleep(2 * time.Second)
+
+		// Delete
+		r, err = db.Model(table).Delete("id", 1)
+		t.AssertNil(err)
+		n, _ = r.RowsAffected()
+		t.Assert(n, 1)
+		// Delete Select
+		one4, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(len(one4), 0)
+		one5, err := db.Model(table).Unscoped().WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one5["id"].Int(), 1)
+		t.AssertGE(one5["delete_at"].GTime().Timestamp(), gtime.Timestamp()-2)
+		// Delete Count
+		i, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(i, 0)
+		i, err = db.Model(table).Unscoped().Count()
+		t.AssertNil(err)
+		t.Assert(i, 1)
+
+		// Delete Unscoped
+		r, err = db.Model(table).Unscoped().Delete("id", 1)
+		t.AssertNil(err)
+		n, _ = r.RowsAffected()
+		t.Assert(n, 1)
+		one6, err := db.Model(table).Unscoped().WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(len(one6), 0)
+		i, err = db.Model(table).Unscoped().Count()
+		t.AssertNil(err)
+		t.Assert(i, 0)
+	})
+}
+
+// CreateAt/UpdateAt/DeleteAt.
+func Test_SoftCreateUpdateDeleteTimeSecond(t *testing.T) {
+	table := "time_test_table_" + gtime.TimestampNanoStr()
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+CREATE TABLE %s (
+  id        int(11) NOT NULL,
+  name      varchar(45) DEFAULT NULL,
+  create_at datetime(0) DEFAULT NULL,
+  update_at datetime(0) DEFAULT NULL,
+  delete_at datetime(0) DEFAULT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     `, table)); err != nil {
@@ -157,9 +291,9 @@ func Test_SoftCreatedUpdatedDeletedTime_Map(t *testing.T) {
 CREATE TABLE %s (
   id        int(11) NOT NULL,
   name      varchar(45) DEFAULT NULL,
-  created_at datetime DEFAULT NULL,
-  updated_at datetime DEFAULT NULL,
-  deleted_at datetime DEFAULT NULL,
+  created_at datetime(6) DEFAULT NULL,
+  updated_at datetime(6) DEFAULT NULL,
+  deleted_at datetime(6) DEFAULT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     `, table)); err != nil {
@@ -291,9 +425,9 @@ func Test_SoftCreatedUpdatedDeletedTime_Struct(t *testing.T) {
 CREATE TABLE %s (
   id        int(11) NOT NULL,
   name      varchar(45) DEFAULT NULL,
-  created_at datetime DEFAULT NULL,
-  updated_at datetime DEFAULT NULL,
-  deleted_at datetime DEFAULT NULL,
+  created_at datetime(6) DEFAULT NULL,
+  updated_at datetime(6) DEFAULT NULL,
+  deleted_at datetime(6) DEFAULT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     `, table)); err != nil {
@@ -431,9 +565,9 @@ func Test_SoftUpdateTime(t *testing.T) {
 CREATE TABLE %s (
   id        int(11) NOT NULL,
   num       int(11) DEFAULT NULL,
-  create_at datetime DEFAULT NULL,
-  update_at datetime DEFAULT NULL,
-  delete_at datetime DEFAULT NULL,
+  create_at datetime(6) DEFAULT NULL,
+  update_at datetime(6) DEFAULT NULL,
+  delete_at datetime(6) DEFAULT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     `, table)); err != nil {
@@ -471,9 +605,9 @@ func Test_SoftUpdateTime_WithDO(t *testing.T) {
 CREATE TABLE %s (
   id        int(11) NOT NULL,
   num       int(11) DEFAULT NULL,
-  created_at datetime DEFAULT NULL,
-  updated_at datetime DEFAULT NULL,
-  deleted_at datetime DEFAULT NULL,
+  created_at datetime(6) DEFAULT NULL,
+  updated_at datetime(6) DEFAULT NULL,
+  deleted_at datetime(6) DEFAULT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     `, table)); err != nil {
@@ -528,9 +662,9 @@ func Test_SoftDelete(t *testing.T) {
 CREATE TABLE %s (
   id        int(11) NOT NULL,
   name      varchar(45) DEFAULT NULL,
-  create_at datetime DEFAULT NULL,
-  update_at datetime DEFAULT NULL,
-  delete_at datetime DEFAULT NULL,
+  create_at datetime(6) DEFAULT NULL,
+  update_at datetime(6) DEFAULT NULL,
+  delete_at datetime(6) DEFAULT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     `, table)); err != nil {
@@ -596,9 +730,9 @@ func Test_SoftDelete_Join(t *testing.T) {
 CREATE TABLE %s (
   id        int(11) NOT NULL,
   name      varchar(45) DEFAULT NULL,
-  create_at datetime DEFAULT NULL,
-  update_at datetime DEFAULT NULL,
-  delete_at datetime DEFAULT NULL,
+  create_at datetime(6) DEFAULT NULL,
+  update_at datetime(6) DEFAULT NULL,
+  delete_at datetime(6) DEFAULT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     `, table1)); err != nil {
@@ -611,9 +745,9 @@ CREATE TABLE %s (
 CREATE TABLE %s (
   id        int(11) NOT NULL,
   name      varchar(45) DEFAULT NULL,
-  createat datetime DEFAULT NULL,
-  updateat datetime DEFAULT NULL,
-  deleteat datetime DEFAULT NULL,
+  createat datetime(6) DEFAULT NULL,
+  updateat datetime(6) DEFAULT NULL,
+  deleteat datetime(6) DEFAULT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     `, table2)); err != nil {
@@ -646,7 +780,7 @@ CREATE TABLE %s (
 		t.Assert(one["name"], "name_1")
 
 		// Soft deleting.
-		r, err = db.Model(table1).Delete()
+		r, err = db.Model(table1).Where(1).Delete()
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
@@ -667,9 +801,9 @@ func Test_SoftDelete_WhereAndOr(t *testing.T) {
 CREATE TABLE %s (
   id        int(11) NOT NULL,
   name      varchar(45) DEFAULT NULL,
-  create_at datetime DEFAULT NULL,
-  update_at datetime DEFAULT NULL,
-  delete_at datetime DEFAULT NULL,
+  create_at datetime(6) DEFAULT NULL,
+  update_at datetime(6) DEFAULT NULL,
+  delete_at datetime(6) DEFAULT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     `, table)); err != nil {
@@ -709,9 +843,9 @@ func Test_CreateUpdateTime_Struct(t *testing.T) {
 CREATE TABLE %s (
   id        int(11) NOT NULL,
   name      varchar(45) DEFAULT NULL,
-  create_at datetime DEFAULT NULL,
-  update_at datetime DEFAULT NULL,
-  delete_at datetime DEFAULT NULL,
+  create_at datetime(6) DEFAULT NULL,
+  update_at datetime(6) DEFAULT NULL,
+  delete_at datetime(6) DEFAULT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     `, table)); err != nil {

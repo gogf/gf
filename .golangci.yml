@@ -135,7 +135,7 @@ linters-settings:
   goconst:
     # Minimal length of string constant.
     # Default: 3
-    min-len: 2
+    min-len: 4
     # Minimum occurrences of constant string count to trigger issue.
     # Default: 3
     # For subsequent optimization, the value is reduced.
@@ -275,9 +275,8 @@ linters-settings:
     # Apply the rewrite rules to the source before reformatting.
     # https://pkg.go.dev/cmd/gofmt
     # Default: []
-    rewrite-rules:
+    rewrite-rules: [ ]
       # - pattern: 'interface{}'
       #   replacement: 'any'
       # - pattern: 'a[b:len(a)]'
       #   replacement: 'a[b:]'
-

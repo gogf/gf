@@ -15,6 +15,13 @@ import (
 	"github.com/gogf/gf/v2/internal/utils"
 )
 
+type recursiveType string
+
+const (
+	recursiveTypeAuto recursiveType = "auto"
+	recursiveTypeTrue recursiveType = "true"
+)
+
 // Map converts any variable `value` to map[string]interface{}. If the parameter `value` is not a
 // map/struct/*struct type, then the conversion will fail and returns nil.
 //
@@ -22,7 +29,7 @@ import (
 // tags that will be detected, otherwise it detects the tags in order of:
 // gconv, json, field name.
 func Map(value interface{}, tags ...string) map[string]interface{} {
-	return doMapConvert(value, false, tags...)
+	return doMapConvert(value, recursiveTypeAuto, tags...)
 }
 
 // MapDeep does Map function recursively, which means if the attribute of `value`
@@ -30,14 +37,14 @@ func Map(value interface{}, tags ...string) map[string]interface{} {
 // a map[string]interface{} type variable.
 // Also see Map.
 func MapDeep(value interface{}, tags ...string) map[string]interface{} {
-	return doMapConvert(value, true, tags...)
+	return doMapConvert(value, recursiveTypeTrue, tags...)
 }
 
 // doMapConvert implements the map converting.
 // It automatically checks and converts json string to map if `value` is string/[]byte.
 //
 // TODO completely implement the recursive converting for all types, especially the map.
-func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]interface{} {
+func doMapConvert(value interface{}, recursive recursiveType, tags ...string) map[string]interface{} {
 	if value == nil {
 		return nil
 	}
@@ -73,7 +80,15 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 		}
 	case map[interface{}]interface{}:
 		for k, v := range r {
-			dataMap[String(k)] = doMapConvertForMapOrStructValue(false, v, recursive, newTags...)
+			dataMap[String(k)] = doMapConvertForMapOrStructValue(
+				doMapConvertForMapOrStructValueInput{
+					IsRoot:          false,
+					Value:           v,
+					RecursiveType:   recursive,
+					RecursiveOption: recursive == recursiveTypeTrue,
+					Tags:            newTags,
+				},
+			)
 		}
 	case map[interface{}]string:
 		for k, v := range r {
@@ -120,10 +135,18 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 			dataMap[k] = v
 		}
 	case map[string]interface{}:
-		if recursive {
+		if recursive == recursiveTypeTrue {
 			// A copy of current map.
 			for k, v := range r {
-				dataMap[k] = doMapConvertForMapOrStructValue(false, v, recursive, newTags...)
+				dataMap[k] = doMapConvertForMapOrStructValue(
+					doMapConvertForMapOrStructValueInput{
+						IsRoot:          false,
+						Value:           v,
+						RecursiveType:   recursive,
+						RecursiveOption: recursive == recursiveTypeTrue,
+						Tags:            newTags,
+					},
+				)
 			}
 		} else {
 			// It returns the map directly without any changing.
@@ -131,7 +154,15 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 		}
 	case map[int]interface{}:
 		for k, v := range r {
-			dataMap[String(k)] = doMapConvertForMapOrStructValue(false, v, recursive, newTags...)
+			dataMap[String(k)] = doMapConvertForMapOrStructValue(
+				doMapConvertForMapOrStructValueInput{
+					IsRoot:          false,
+					Value:           v,
+					RecursiveType:   recursive,
+					RecursiveOption: recursive == recursiveTypeTrue,
+					Tags:            newTags,
+				},
+			)
 		}
 	case map[int]string:
 		for k, v := range r {
@@ -171,7 +202,15 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 				}
 			}
 		case reflect.Map, reflect.Struct, reflect.Interface:
-			convertedValue := doMapConvertForMapOrStructValue(true, value, recursive, newTags...)
+			convertedValue := doMapConvertForMapOrStructValue(
+				doMapConvertForMapOrStructValueInput{
+					IsRoot:          true,
+					Value:           value,
+					RecursiveType:   recursive,
+					RecursiveOption: recursive == recursiveTypeTrue,
+					Tags:            newTags,
+				},
+			)
 			if m, ok := convertedValue.(map[string]interface{}); ok {
 				return m
 			}
@@ -183,16 +222,25 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 	return dataMap
 }
 
-func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive bool, tags ...string) interface{} {
-	if isRoot == false && recursive == false {
-		return value
+type doMapConvertForMapOrStructValueInput struct {
+	IsRoot          bool          // It returns directly if it is not root and with no recursive converting.
+	Value           interface{}   // Current operation value.
+	RecursiveType   recursiveType // The type from top function entry.
+	RecursiveOption bool          // Whether convert recursively for `current` operation.
+	Tags            []string      // Map key mapping.
+}
+
+func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) interface{} {
+	if in.IsRoot == false && in.RecursiveOption == false {
+		return in.Value
 	}
+
 	var reflectValue reflect.Value
-	if v, ok := value.(reflect.Value); ok {
+	if v, ok := in.Value.(reflect.Value); ok {
 		reflectValue = v
-		value = v.Interface()
+		in.Value = v.Interface()
 	} else {
-		reflectValue = reflect.ValueOf(value)
+		reflectValue = reflect.ValueOf(in.Value)
 	}
 	reflectKind := reflectValue.Kind()
 	// If it is a pointer, we should find its real data type.
@@ -208,10 +256,13 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 		)
 		for _, k := range mapKeys {
 			dataMap[String(k.Interface())] = doMapConvertForMapOrStructValue(
-				false,
-				reflectValue.MapIndex(k).Interface(),
-				recursive,
-				tags...,
+				doMapConvertForMapOrStructValueInput{
+					IsRoot:          false,
+					Value:           reflectValue.MapIndex(k).Interface(),
+					RecursiveType:   in.RecursiveType,
+					RecursiveOption: in.RecursiveType == recursiveTypeTrue,
+					Tags:            in.Tags,
+				},
 			)
 		}
 		return dataMap
@@ -219,11 +270,19 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 	case reflect.Struct:
 		var dataMap = make(map[string]interface{})
 		// Map converting interface check.
-		if v, ok := value.(iMapStrAny); ok {
+		if v, ok := in.Value.(iMapStrAny); ok {
 			// Value copy, in case of concurrent safety.
 			for mapK, mapV := range v.MapStrAny() {
-				if recursive {
-					dataMap[mapK] = doMapConvertForMapOrStructValue(false, mapV, recursive, tags...)
+				if in.RecursiveOption {
+					dataMap[mapK] = doMapConvertForMapOrStructValue(
+						doMapConvertForMapOrStructValueInput{
+							IsRoot:          false,
+							Value:           mapV,
+							RecursiveType:   in.RecursiveType,
+							RecursiveOption: in.RecursiveType == recursiveTypeTrue,
+							Tags:            in.Tags,
+						},
+					)
 				} else {
 					dataMap[mapK] = mapV
 				}
@@ -247,7 +306,7 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 			}
 			mapKey = ""
 			fieldTag := rtField.Tag
-			for _, tag := range tags {
+			for _, tag := range in.Tags {
 				if mapKey = fieldTag.Get(tag); mapKey != "" {
 					break
 				}
@@ -273,8 +332,11 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 						mapKey = strings.TrimSpace(array[0])
 					}
 				}
+				if mapKey == "" {
+					mapKey = fieldName
+				}
 			}
-			if recursive || rtField.Anonymous {
+			if in.RecursiveOption || rtField.Anonymous {
 				// Do map converting recursively.
 				var (
 					rvAttrField = rvField
@@ -292,25 +354,48 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 						continue
 					}
 					var (
-						hasNoTag        = mapKey == fieldName
-						rvAttrInterface = rvAttrField.Interface()
+						hasNoTag = mapKey == fieldName
+						// DO NOT use rvAttrField.Interface() here,
+						// as it might be changed from pointer to struct.
+						rvInterface = rvField.Interface()
 					)
-					if hasNoTag && rtField.Anonymous {
+					switch {
+					case hasNoTag && rtField.Anonymous:
 						// It means this attribute field has no tag.
 						// Overwrite the attribute with sub-struct attribute fields.
-						anonymousValue := doMapConvertForMapOrStructValue(false, rvAttrInterface, true, tags...)
+						anonymousValue := doMapConvertForMapOrStructValue(doMapConvertForMapOrStructValueInput{
+							IsRoot:          false,
+							Value:           rvInterface,
+							RecursiveType:   in.RecursiveType,
+							RecursiveOption: true,
+							Tags:            in.Tags,
+						})
 						if m, ok := anonymousValue.(map[string]interface{}); ok {
 							for k, v := range m {
 								dataMap[k] = v
 							}
 						} else {
-							dataMap[mapKey] = rvAttrInterface
+							dataMap[mapKey] = rvInterface
 						}
-					} else if !hasNoTag && rtField.Anonymous {
-						// It means this attribute field has desired tag.
-						dataMap[mapKey] = doMapConvertForMapOrStructValue(false, rvAttrInterface, true, tags...)
-					} else {
-						dataMap[mapKey] = doMapConvertForMapOrStructValue(false, rvAttrInterface, recursive, tags...)
+
+					// It means this attribute field has desired tag.
+					case !hasNoTag && rtField.Anonymous:
+						dataMap[mapKey] = doMapConvertForMapOrStructValue(doMapConvertForMapOrStructValueInput{
+							IsRoot:          false,
+							Value:           rvInterface,
+							RecursiveType:   in.RecursiveType,
+							RecursiveOption: true,
+							Tags:            in.Tags,
+						})
+
+					default:
+						dataMap[mapKey] = doMapConvertForMapOrStructValue(doMapConvertForMapOrStructValueInput{
+							IsRoot:          false,
+							Value:           rvInterface,
+							RecursiveType:   in.RecursiveType,
+							RecursiveOption: in.RecursiveType == recursiveTypeTrue,
+							Tags:            in.Tags,
+						})
 					}
 
 				// The struct attribute is type of slice.
@@ -323,7 +408,13 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 					array := make([]interface{}, length)
 					for arrayIndex := 0; arrayIndex < length; arrayIndex++ {
 						array[arrayIndex] = doMapConvertForMapOrStructValue(
-							false, rvAttrField.Index(arrayIndex), recursive, tags...,
+							doMapConvertForMapOrStructValueInput{
+								IsRoot:          false,
+								Value:           rvAttrField.Index(arrayIndex).Interface(),
+								RecursiveType:   in.RecursiveType,
+								RecursiveOption: in.RecursiveType == recursiveTypeTrue,
+								Tags:            in.Tags,
+							},
 						)
 					}
 					dataMap[mapKey] = array
@@ -334,10 +425,13 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 					)
 					for _, k := range mapKeys {
 						nestedMap[String(k.Interface())] = doMapConvertForMapOrStructValue(
-							false,
-							rvAttrField.MapIndex(k).Interface(),
-							recursive,
-							tags...,
+							doMapConvertForMapOrStructValueInput{
+								IsRoot:          false,
+								Value:           rvAttrField.MapIndex(k).Interface(),
+								RecursiveType:   in.RecursiveType,
+								RecursiveOption: in.RecursiveType == recursiveTypeTrue,
+								Tags:            in.Tags,
+							},
 						)
 					}
 					dataMap[mapKey] = nestedMap
@@ -358,7 +452,7 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 			}
 		}
 		if len(dataMap) == 0 {
-			return value
+			return in.Value
 		}
 		return dataMap
 
@@ -370,11 +464,17 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 		}
 		array := make([]interface{}, reflectValue.Len())
 		for i := 0; i < length; i++ {
-			array[i] = doMapConvertForMapOrStructValue(false, reflectValue.Index(i), recursive, tags...)
+			array[i] = doMapConvertForMapOrStructValue(doMapConvertForMapOrStructValueInput{
+				IsRoot:          false,
+				Value:           reflectValue.Index(i).Interface(),
+				RecursiveType:   in.RecursiveType,
+				RecursiveOption: in.RecursiveType == recursiveTypeTrue,
+				Tags:            in.Tags,
+			})
 		}
 		return array
 	}
-	return value
+	return in.Value
 }
 
 // MapStrStr converts `value` to map[string]string.

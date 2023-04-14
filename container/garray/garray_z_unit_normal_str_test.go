@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/internal/empty"
+
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/json"
@@ -776,6 +778,15 @@ func TestStrArray_RemoveValue(t *testing.T) {
 	})
 }
 
+func TestStrArray_RemoveValues(t *testing.T) {
+	slice := g.SliceStr{"a", "b", "d", "c"}
+	array := garray.NewStrArrayFrom(slice)
+	gtest.C(t, func(t *gtest.T) {
+		array.RemoveValues("a", "b", "c")
+		t.Assert(array.Slice(), g.SliceStr{"d"})
+	})
+}
+
 func TestStrArray_UnmarshalValue(t *testing.T) {
 	type V struct {
 		Name  string
@@ -802,6 +813,20 @@ func TestStrArray_UnmarshalValue(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Array.Slice(), g.SliceStr{"1", "2", "3"})
+	})
+}
+func TestStrArray_Filter(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewStrArrayFrom(g.SliceStr{"", "1", "2", "0"})
+		t.Assert(array.Filter(func(index int, value string) bool {
+			return empty.IsEmpty(value)
+		}), g.SliceStr{"1", "2", "0"})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewStrArrayFrom(g.SliceStr{"1", "2"})
+		t.Assert(array.Filter(func(index int, value string) bool {
+			return empty.IsEmpty(value)
+		}), g.SliceStr{"1", "2"})
 	})
 }
 

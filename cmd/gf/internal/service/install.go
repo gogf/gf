@@ -29,6 +29,7 @@ type serviceInstallAvailablePath struct {
 	filePath  string
 	writable  bool
 	installed bool
+	IsSelf    bool
 }
 
 func (s serviceInstall) Run(ctx context.Context) (err error) {
@@ -119,33 +120,26 @@ func (s serviceInstall) Run(ctx context.Context) (err error) {
 	dstPath := paths[selectedID]
 
 	// Install the new binary.
+	mlog.Debugf(`copy file from "%s" to "%s"`, gfile.SelfPath(), dstPath.filePath)
 	err = gfile.CopyFile(gfile.SelfPath(), dstPath.filePath)
 	if err != nil {
 		mlog.Printf("install gf binary to '%s' failed: %v", dstPath.dirPath, err)
 		mlog.Printf("you can manually install gf by copying the binary to folder: %s", dstPath.dirPath)
 	} else {
-		mlog.Printf("gf binary is successfully installed to: %s", dstPath.dirPath)
-	}
-
-	// Uninstall the old binary.
-	for _, path := range paths {
-		// Do not delete myself.
-		if path.filePath != "" && path.filePath != dstPath.filePath && gfile.SelfPath() != path.filePath {
-			_ = gfile.Remove(path.filePath)
-		}
+		mlog.Printf("gf binary is successfully installed to: %s", dstPath.filePath)
 	}
 	return
 }
 
 // IsInstalled checks and returns whether the binary is installed.
-func (s serviceInstall) IsInstalled() bool {
+func (s serviceInstall) IsInstalled() (*serviceInstallAvailablePath, bool) {
 	paths := s.getAvailablePaths()
 	for _, aPath := range paths {
 		if aPath.installed {
-			return true
+			return &aPath, true
 		}
 	}
-	return false
+	return nil, false
 }
 
 // getGoPathBinFilePath retrieves ad returns the GOPATH/bin path for binary.
@@ -221,6 +215,7 @@ func (s serviceInstall) checkAndAppendToAvailablePath(folderPaths []serviceInsta
 		filePath  = gfile.Join(dirPath, binaryFileName)
 		writable  = gfile.IsWritable(dirPath)
 		installed = gfile.Exists(filePath)
+		self      = gfile.SelfPath() == filePath
 	)
 	if !writable && !installed {
 		return folderPaths
@@ -232,5 +227,6 @@ func (s serviceInstall) checkAndAppendToAvailablePath(folderPaths []serviceInsta
 			writable:  writable,
 			filePath:  filePath,
 			installed: installed,
+			IsSelf:    self,
 		})
 }

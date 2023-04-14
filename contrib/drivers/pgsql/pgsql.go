@@ -36,6 +36,7 @@ type Driver struct {
 const (
 	internalPrimaryKeyInCtx gctx.StrKey = "primary_key"
 	defaultSchema                       = "public"
+	quoteChar                           = `"`
 )
 
 func init() {
@@ -86,6 +87,10 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 			)
 		}
 
+		if config.Namespace != "" {
+			source = fmt.Sprintf("%s search_path=%s", source, config.Namespace)
+		}
+
 		if config.Timezone != "" {
 			source = fmt.Sprintf("%s timezone=%s", source, config.Timezone)
 		}
@@ -113,7 +118,7 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 
 // GetChars returns the security char for this type of database.
 func (d *Driver) GetChars() (charLeft string, charRight string) {
-	return `"`, `"`
+	return quoteChar, quoteChar
 }
 
 // CheckLocalTypeForField checks and returns corresponding local golang type for given db type.
@@ -270,7 +275,7 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 	var (
 		result       gdb.Result
 		link         gdb.Link
-		useSchema    = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+		usedSchema   = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
 		structureSql = fmt.Sprintf(`
 SELECT a.attname AS field, t.typname AS type,a.attnotnull as null,
     (case when d.contype is not null then 'pri' else '' end)  as key
@@ -288,7 +293,7 @@ ORDER BY a.attnum`,
 			table,
 		)
 	)
-	if link, err = d.SlaveLink(useSchema); err != nil {
+	if link, err = d.SlaveLink(usedSchema); err != nil {
 		return nil, err
 	}
 	structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))

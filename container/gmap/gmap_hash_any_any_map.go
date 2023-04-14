@@ -514,3 +514,24 @@ func (m *AnyAnyMap) DeepCopy() interface{} {
 	}
 	return NewFrom(data, m.mu.IsSafe())
 }
+
+// IsSubOf checks whether the current map is a sub-map of `other`.
+func (m *AnyAnyMap) IsSubOf(other *AnyAnyMap) bool {
+	if m == other {
+		return true
+	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	other.mu.RLock()
+	defer other.mu.RUnlock()
+	for key, value := range m.data {
+		otherValue, ok := other.data[key]
+		if !ok {
+			return false
+		}
+		if otherValue != value {
+			return false
+		}
+	}
+	return true
+}

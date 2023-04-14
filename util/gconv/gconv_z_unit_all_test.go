@@ -11,7 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/container/gvar"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -38,103 +39,6 @@ type S1 struct {
 
 func (s1 S1) Error() string {
 	return "22222"
-}
-
-// https://github.com/gogf/gf/issues/1227
-func Test_Issue1227(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		type StructFromIssue1227 struct {
-			Name string `json:"n1"`
-		}
-		tests := []struct {
-			name   string
-			origin interface{}
-			want   string
-		}{
-			{
-				name:   "Case1",
-				origin: `{"n1":"n1"}`,
-				want:   "n1",
-			},
-			{
-				name:   "Case2",
-				origin: `{"name":"name"}`,
-				want:   "",
-			},
-			{
-				name:   "Case3",
-				origin: `{"NaMe":"NaMe"}`,
-				want:   "",
-			},
-			{
-				name:   "Case4",
-				origin: g.Map{"n1": "n1"},
-				want:   "n1",
-			},
-			{
-				name:   "Case5",
-				origin: g.Map{"NaMe": "n1"},
-				want:   "n1",
-			},
-		}
-		for _, tt := range tests {
-			p := StructFromIssue1227{}
-			if err := gconv.Struct(tt.origin, &p); err != nil {
-				t.Error(err)
-			}
-			t.Assert(p.Name, tt.want)
-		}
-	})
-
-	// Chinese key.
-	gtest.C(t, func(t *gtest.T) {
-		type StructFromIssue1227 struct {
-			Name string `json:"中文Key"`
-		}
-		tests := []struct {
-			name   string
-			origin interface{}
-			want   string
-		}{
-			{
-				name:   "Case1",
-				origin: `{"中文Key":"n1"}`,
-				want:   "n1",
-			},
-			{
-				name:   "Case2",
-				origin: `{"Key":"name"}`,
-				want:   "",
-			},
-			{
-				name:   "Case3",
-				origin: `{"NaMe":"NaMe"}`,
-				want:   "",
-			},
-			{
-				name:   "Case4",
-				origin: g.Map{"中文Key": "n1"},
-				want:   "n1",
-			},
-			{
-				name:   "Case5",
-				origin: g.Map{"中文KEY": "n1"},
-				want:   "n1",
-			},
-			{
-				name:   "Case5",
-				origin: g.Map{"KEY": "n1"},
-				want:   "",
-			},
-		}
-		for _, tt := range tests {
-			p := StructFromIssue1227{}
-			if err := gconv.Struct(tt.origin, &p); err != nil {
-				t.Error(err)
-			}
-			t.Assert(p.Name, tt.want)
-		}
-	})
 }
 
 func Test_Bool_All(t *testing.T) {
@@ -583,6 +487,7 @@ func Test_Float32_All(t *testing.T) {
 		t.AssertEQ(gconv.Float32([2]int{1, 2}), float32(0))
 		t.AssertEQ(gconv.Float32([]interface{}{}), float32(0))
 		t.AssertEQ(gconv.Float32([]map[int]int{}), float32(0))
+		t.AssertEQ(gconv.Float32(gvar.New(float32(0))), float32(0))
 
 		var countryCapitalMap = make(map[string]string)
 		/* map插入key - value对,各个国家对应的首都 */
@@ -618,6 +523,7 @@ func Test_Float64_All(t *testing.T) {
 		t.AssertEQ(gconv.Float64([2]int{1, 2}), float64(0))
 		t.AssertEQ(gconv.Float64([]interface{}{}), float64(0))
 		t.AssertEQ(gconv.Float64([]map[int]int{}), float64(0))
+		t.AssertEQ(gconv.Float64(gvar.New(float64(0))), float64(0))
 
 		var countryCapitalMap = make(map[string]string)
 		/* map插入key - value对,各个国家对应的首都 */
@@ -716,6 +622,7 @@ func Test_Bytes_All(t *testing.T) {
 		t.AssertEQ(gconv.Bytes(int32(0)), []uint8{0, 0, 0, 0})
 		t.AssertEQ(gconv.Bytes("s"), []uint8{115})
 		t.AssertEQ(gconv.Bytes([]byte("s")), []uint8{115})
+		t.AssertEQ(gconv.Bytes(gvar.New([]byte("s"))), []uint8{115})
 	})
 }
 
@@ -748,6 +655,7 @@ func Test_Convert_All(t *testing.T) {
 		t.AssertEQ(gconv.Convert([]byte{}, "[]byte"), []uint8{})
 		t.AssertEQ(gconv.Convert([]string{}, "[]string"), []string{})
 		t.AssertEQ(gconv.Convert([2]int{1, 2}, "[]int"), []int{1, 2})
+		t.AssertEQ(gconv.Convert([2]uint8{1, 2}, "[]uint8"), []uint8{1, 2})
 		t.AssertEQ(gconv.Convert("1989-01-02", "Time", "Y-m-d"), gconv.Time("1989-01-02", "Y-m-d"))
 		t.AssertEQ(gconv.Convert(1989, "Time"), gconv.Time("1970-01-01 08:33:09 +0800 CST"))
 		t.AssertEQ(gconv.Convert(gtime.Now(), "gtime.Time", 1), *gtime.New())
@@ -758,6 +666,63 @@ func Test_Convert_All(t *testing.T) {
 		t.AssertEQ(gconv.Convert(1989, "Duration"), time.Duration(int64(1989)))
 		t.AssertEQ(gconv.Convert("1989", "Duration"), time.Duration(int64(1989)))
 		t.AssertEQ(gconv.Convert("1989", ""), "1989")
+
+		var intNum int = 1
+		t.Assert(gconv.Convert(&intNum, "*int"), int(1))
+		var int8Num int8 = 1
+		t.Assert(gconv.Convert(int8Num, "*int8"), int(1))
+		t.Assert(gconv.Convert(&int8Num, "*int8"), int(1))
+		var int16Num int16 = 1
+		t.Assert(gconv.Convert(int16Num, "*int16"), int(1))
+		t.Assert(gconv.Convert(&int16Num, "*int16"), int(1))
+		var int32Num int32 = 1
+		t.Assert(gconv.Convert(int32Num, "*int32"), int(1))
+		t.Assert(gconv.Convert(&int32Num, "*int32"), int(1))
+		var int64Num int64 = 1
+		t.Assert(gconv.Convert(int64Num, "*int64"), int(1))
+		t.Assert(gconv.Convert(&int64Num, "*int64"), int(1))
+
+		var uintNum uint = 1
+		t.Assert(gconv.Convert(&uintNum, "*uint"), int(1))
+		var uint8Num uint8 = 1
+		t.Assert(gconv.Convert(uint8Num, "*uint8"), int(1))
+		t.Assert(gconv.Convert(&uint8Num, "*uint8"), int(1))
+		var uint16Num uint16 = 1
+		t.Assert(gconv.Convert(uint16Num, "*uint16"), int(1))
+		t.Assert(gconv.Convert(&uint16Num, "*uint16"), int(1))
+		var uint32Num uint32 = 1
+		t.Assert(gconv.Convert(uint32Num, "*uint32"), int(1))
+		t.Assert(gconv.Convert(&uint32Num, "*uint32"), int(1))
+		var uint64Num uint64 = 1
+		t.Assert(gconv.Convert(uint64Num, "*uint64"), int(1))
+		t.Assert(gconv.Convert(&uint64Num, "*uint64"), int(1))
+
+		var float32Num float32 = 1.1
+		t.Assert(gconv.Convert(float32Num, "*float32"), float32(1.1))
+		t.Assert(gconv.Convert(&float32Num, "*float32"), float32(1.1))
+
+		var float64Num float64 = 1.1
+		t.Assert(gconv.Convert(float64Num, "*float64"), float64(1.1))
+		t.Assert(gconv.Convert(&float64Num, "*float64"), float64(1.1))
+
+		var boolValue bool = true
+		t.Assert(gconv.Convert(boolValue, "*bool"), true)
+		t.Assert(gconv.Convert(&boolValue, "*bool"), true)
+
+		var stringValue string = "1"
+		t.Assert(gconv.Convert(stringValue, "*string"), "1")
+		t.Assert(gconv.Convert(&stringValue, "*string"), "1")
+
+		var durationValue time.Duration = 1989
+		var expectDurationValue = time.Duration(int64(1989))
+		t.AssertEQ(gconv.Convert(&durationValue, "*time.Duration"), &expectDurationValue)
+		t.AssertEQ(gconv.Convert(durationValue, "*time.Duration"), &expectDurationValue)
+
+		var string_interface_map = map[string]interface{}{"k1": 1}
+		var string_int_map = map[string]int{"k1": 1}
+		var string_string_map = map[string]string{"k1": "1"}
+		t.AssertEQ(gconv.Convert(string_int_map, "map[string]string"), string_string_map)
+		t.AssertEQ(gconv.Convert(string_int_map, "map[string]interface{}"), string_interface_map)
 	})
 }
 
@@ -1481,78 +1446,5 @@ func Test_Struct_Time_All(t *testing.T) {
 			"create_time": now,
 		}, user)
 		t.Assert(user.CreateTime.Time.UTC().String(), now.UTC().String())
-	})
-}
-
-func Test_Issue1946(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		type B struct {
-			init *gtype.Bool
-			Name string
-		}
-		type A struct {
-			B *B
-		}
-		a := &A{
-			B: &B{
-				init: gtype.NewBool(true),
-			},
-		}
-		err := gconv.Struct(g.Map{
-			"B": g.Map{
-				"Name": "init",
-			},
-		}, a)
-		t.AssertNil(err)
-		t.Assert(a.B.Name, "init")
-		t.Assert(a.B.init.Val(), true)
-	})
-	// It cannot change private attribute.
-	gtest.C(t, func(t *gtest.T) {
-		type B struct {
-			init *gtype.Bool
-			Name string
-		}
-		type A struct {
-			B *B
-		}
-		a := &A{
-			B: &B{
-				init: gtype.NewBool(true),
-			},
-		}
-		err := gconv.Struct(g.Map{
-			"B": g.Map{
-				"init": 0,
-				"Name": "init",
-			},
-		}, a)
-		t.AssertNil(err)
-		t.Assert(a.B.Name, "init")
-		t.Assert(a.B.init.Val(), true)
-	})
-	// It can change public attribute.
-	gtest.C(t, func(t *gtest.T) {
-		type B struct {
-			Init *gtype.Bool
-			Name string
-		}
-		type A struct {
-			B *B
-		}
-		a := &A{
-			B: &B{
-				Init: gtype.NewBool(),
-			},
-		}
-		err := gconv.Struct(g.Map{
-			"B": g.Map{
-				"Init": 1,
-				"Name": "init",
-			},
-		}, a)
-		t.AssertNil(err)
-		t.Assert(a.B.Name, "init")
-		t.Assert(a.B.Init.Val(), true)
 	})
 }

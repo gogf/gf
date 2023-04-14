@@ -56,16 +56,16 @@ func NewSortedIntArraySize(cap int, safe ...bool) *SortedIntArray {
 	}
 }
 
-// NewSortedIntArrayRange creates and returns a array by a range from `start` to `end`
+// NewSortedIntArrayRange creates and returns an array by a range from `start` to `end`
 // with step value `step`.
 func NewSortedIntArrayRange(start, end, step int, safe ...bool) *SortedIntArray {
 	if step == 0 {
 		panic(fmt.Sprintf(`invalid step value: %d`, step))
 	}
-	slice := make([]int, (end-start+1)/step)
+	slice := make([]int, 0)
 	index := 0
 	for i := start; i <= end; i += step {
-		slice[index] = i
+		slice = append(slice, i)
 		index++
 	}
 	return NewSortedIntArrayFrom(slice, safe...)
@@ -193,11 +193,24 @@ func (a *SortedIntArray) doRemoveWithoutLock(index int) (value int, found bool) 
 // RemoveValue removes an item by value.
 // It returns true if value is found in the array, or else false if not found.
 func (a *SortedIntArray) RemoveValue(value int) bool {
-	if i := a.Search(value); i != -1 {
-		_, found := a.Remove(i)
-		return found
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if i, r := a.binSearch(value, false); r == 0 {
+		_, res := a.doRemoveWithoutLock(i)
+		return res
 	}
 	return false
+}
+
+// RemoveValues removes an item by `values`.
+func (a *SortedIntArray) RemoveValues(values ...int) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for _, value := range values {
+		if i, r := a.binSearch(value, false); r == 0 {
+			a.doRemoveWithoutLock(i)
+		}
+	}
 }
 
 // PopLeft pops and returns an item from the beginning of array.
@@ -694,6 +707,24 @@ func (a *SortedIntArray) UnmarshalValue(value interface{}) (err error) {
 		sort.Ints(a.array)
 	}
 	return err
+}
+
+// Filter `filter func(value int, index int) bool` filter array, value
+// means the value of the current element, the index of the current original
+// color of value, when the custom function returns True, the element will be
+// filtered, otherwise it will not be filtered, `Filter` function returns a new
+// array, will not modify the original array.
+func (a *SortedIntArray) Filter(filter func(index int, value int) bool) *SortedIntArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if filter(i, a.array[i]) {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			i++
+		}
+	}
+	return a
 }
 
 // FilterEmpty removes all zero value of the array.

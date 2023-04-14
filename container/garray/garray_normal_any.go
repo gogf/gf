@@ -53,16 +53,16 @@ func NewArraySize(size int, cap int, safe ...bool) *Array {
 	}
 }
 
-// NewArrayRange creates and returns a array by a range from `start` to `end`
+// NewArrayRange creates and returns an array by a range from `start` to `end`
 // with step value `step`.
 func NewArrayRange(start, end, step int, safe ...bool) *Array {
 	if step == 0 {
 		panic(fmt.Sprintf(`invalid step value: %d`, step))
 	}
-	slice := make([]interface{}, (end-start+1)/step)
+	slice := make([]interface{}, 0)
 	index := 0
 	for i := start; i <= end; i += step {
-		slice[index] = i
+		slice = append(slice, i)
 		index++
 	}
 	return NewArrayFrom(slice, safe...)
@@ -173,28 +173,28 @@ func (a *Array) SortFunc(less func(v1, v2 interface{}) bool) *Array {
 	return a
 }
 
-// InsertBefore inserts the `value` to the front of `index`.
-func (a *Array) InsertBefore(index int, value interface{}) error {
+// InsertBefore inserts the `values` to the front of `index`.
+func (a *Array) InsertBefore(index int, values ...interface{}) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if index < 0 || index >= len(a.array) {
 		return gerror.NewCodef(gcode.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
 	}
 	rear := append([]interface{}{}, a.array[index:]...)
-	a.array = append(a.array[0:index], value)
+	a.array = append(a.array[0:index], values...)
 	a.array = append(a.array, rear...)
 	return nil
 }
 
-// InsertAfter inserts the `value` to the back of `index`.
-func (a *Array) InsertAfter(index int, value interface{}) error {
+// InsertAfter inserts the `values` to the back of `index`.
+func (a *Array) InsertAfter(index int, values ...interface{}) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if index < 0 || index >= len(a.array) {
 		return gerror.NewCodef(gcode.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
 	}
 	rear := append([]interface{}{}, a.array[index+1:]...)
-	a.array = append(a.array[0:index+1], value)
+	a.array = append(a.array[0:index+1], values...)
 	a.array = append(a.array, rear...)
 	return nil
 }
@@ -233,11 +233,24 @@ func (a *Array) doRemoveWithoutLock(index int) (value interface{}, found bool) {
 // RemoveValue removes an item by value.
 // It returns true if value is found in the array, or else false if not found.
 func (a *Array) RemoveValue(value interface{}) bool {
-	if i := a.Search(value); i != -1 {
-		a.Remove(i)
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if i := a.doSearchWithoutLock(value); i != -1 {
+		a.doRemoveWithoutLock(i)
 		return true
 	}
 	return false
+}
+
+// RemoveValues removes multiple items by `values`.
+func (a *Array) RemoveValues(values ...interface{}) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for _, value := range values {
+		if i := a.doSearchWithoutLock(value); i != -1 {
+			a.doRemoveWithoutLock(i)
+		}
+	}
 }
 
 // PushLeft pushes one or multiple items to the beginning of array.
@@ -487,6 +500,10 @@ func (a *Array) Contains(value interface{}) bool {
 func (a *Array) Search(value interface{}) int {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
+	return a.doSearchWithoutLock(value)
+}
+
+func (a *Array) doSearchWithoutLock(value interface{}) int {
 	if len(a.array) == 0 {
 		return -1
 	}
@@ -776,6 +793,24 @@ func (a *Array) UnmarshalValue(value interface{}) error {
 		a.array = gconv.SliceAny(value)
 	}
 	return nil
+}
+
+// Filter `filter func(value interface{}, index int) bool` filter array, value
+// means the value of the current element, the index of the current original
+// color of value, when the custom function returns True, the element will be
+// filtered, otherwise it will not be filtered, `Filter` function returns a new
+// array, will not modify the original array.
+func (a *Array) Filter(filter func(index int, value interface{}) bool) *Array {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if filter(i, a.array[i]) {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			i++
+		}
+	}
+	return a
 }
 
 // FilterNil removes all nil value of the array.

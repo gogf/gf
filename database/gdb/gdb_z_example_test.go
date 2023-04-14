@@ -13,8 +13,8 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 )
 
-func Example_transaction() {
-	g.DB().Transaction(context.TODO(), func(ctx context.Context, tx *gdb.TX) error {
+func ExampleTransaction() {
+	g.DB().Transaction(context.TODO(), func(ctx context.Context, tx gdb.TX) error {
 		// user
 		result, err := tx.Insert("user", g.Map{
 			"passport": "john",

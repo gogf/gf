@@ -53,7 +53,9 @@ func main() {
 		panic(err)
 	}
 	err = command.AddObject(
+		cmd.Up,
 		cmd.Env,
+		cmd.Fix,
 		cmd.Run,
 		cmd.Gen,
 		cmd.Tpl,
@@ -67,7 +69,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	command.Run(ctx)
+	err = command.RunWithError(ctx)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // zsh alias "git fetch" conflicts checks.

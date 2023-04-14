@@ -8,6 +8,7 @@ package goai
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -15,6 +16,7 @@ import (
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Parameters is specified by OpenAPI/Swagger 3.0 standard.
@@ -28,13 +30,21 @@ type ParameterRef struct {
 func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path, method string) (*ParameterRef, error) {
 	var (
 		tagMap    = field.TagMap()
-		parameter = &Parameter{
-			Name:        field.TagJsonName(),
-			XExtensions: make(XExtensions),
-		}
+		fieldName = field.Name()
 	)
-	if parameter.Name == "" {
-		parameter.Name = field.Name()
+	for _, tagName := range gconv.StructTagPriority {
+		if tagValue := field.Tag(tagName); tagValue != "" {
+			fieldName = tagValue
+			break
+		}
+	}
+	fieldName = gstr.Split(gstr.Trim(fieldName), ",")[0]
+	if fieldName == "" {
+		fieldName = field.Name()
+	}
+	var parameter = &Parameter{
+		Name:        fieldName,
+		XExtensions: make(XExtensions),
 	}
 	if len(tagMap) > 0 {
 		if err := oai.tagMapToParameter(tagMap, parameter); err != nil {
@@ -48,7 +58,7 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path
 		} else {
 			// Default the parameter input to "query" if method is "GET/DELETE".
 			switch gstr.ToUpper(method) {
-			case HttpMethodGet, HttpMethodDelete:
+			case http.MethodGet, http.MethodDelete:
 				parameter.In = ParameterInQuery
 
 			default:

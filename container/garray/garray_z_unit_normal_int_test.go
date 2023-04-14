@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/internal/empty"
+
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/json"
@@ -765,6 +767,15 @@ func TestIntArray_RemoveValue(t *testing.T) {
 	})
 }
 
+func TestIntArray_RemoveValues(t *testing.T) {
+	slice := g.SliceInt{10, 20, 30, 40}
+	array := garray.NewIntArrayFrom(slice)
+	gtest.C(t, func(t *gtest.T) {
+		array.RemoveValues(10, 20, 40)
+		t.Assert(array.Slice(), g.SliceInt{30})
+	})
+}
+
 func TestIntArray_UnmarshalValue(t *testing.T) {
 	type V struct {
 		Name  string
@@ -794,6 +805,34 @@ func TestIntArray_UnmarshalValue(t *testing.T) {
 	// })
 }
 
+func TestIntArray_Filter(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewIntArrayFrom(g.SliceInt{0, 1, 2, 3, 4, 0})
+		t.Assert(array.Filter(func(index int, value int) bool {
+			return empty.IsEmpty(value)
+		}), g.SliceInt{1, 2, 3, 4})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewIntArrayFrom(g.SliceInt{1, 2, 3, 4})
+		t.Assert(array.Filter(func(index int, value int) bool {
+			return empty.IsEmpty(value)
+
+		}), g.SliceInt{1, 2, 3, 4})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewIntArrayFrom(g.SliceInt{1, 2, 3, 4})
+		t.Assert(array.Filter(func(index int, value int) bool {
+			return value%2 == 0
+		}), g.SliceInt{1, 3})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewIntArrayFrom(g.SliceInt{1, 2, 3, 4})
+		t.Assert(array.Filter(func(index int, value int) bool {
+			return value%2 == 1
+		}), g.SliceInt{2, 4})
+	})
+}
+
 func TestIntArray_FilterEmpty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewIntArrayFrom(g.SliceInt{0, 1, 2, 3, 4, 0})
@@ -811,5 +850,16 @@ func TestIntArray_Walk(t *testing.T) {
 		t.Assert(array.Walk(func(value int) int {
 			return 10 + value
 		}), g.Slice{11, 12})
+	})
+}
+
+func TestIntArray_NewIntArrayRange(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewIntArrayRange(0, 128, 4)
+		t.Assert(array.String(), `[0,4,8,12,16,20,24,28,32,36,40,44,48,52,56,60,64,68,72,76,80,84,88,92,96,100,104,108,112,116,120,124,128]`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewIntArrayRange(1, 128, 4)
+		t.Assert(array.String(), `[1,5,9,13,17,21,25,29,33,37,41,45,49,53,57,61,65,69,73,77,81,85,89,93,97,101,105,109,113,117,121,125]`)
 	})
 }

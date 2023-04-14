@@ -7,50 +7,11 @@
 // Package gins provides instances and core components management.
 package gins
 
-import (
-	"github.com/gogf/gf/v2/container/gmap"
+const (
+	frameCoreComponentNameViewer     = "gf.core.component.viewer"
+	frameCoreComponentNameDatabase   = "gf.core.component.database"
+	frameCoreComponentNameHttpClient = "gf.core.component.httpclient"
+	frameCoreComponentNameLogger     = "gf.core.component.logger"
+	frameCoreComponentNameRedis      = "gf.core.component.redis"
+	frameCoreComponentNameServer     = "gf.core.component.server"
 )
-
-var (
-	// localInstances is the instance map for common used components.
-	localInstances = gmap.NewStrAnyMap(true)
-)
-
-// Get returns the instance by given name.
-func Get(name string) interface{} {
-	return localInstances.Get(name)
-}
-
-// Set sets an instance object to the instance manager with given name.
-func Set(name string, instance interface{}) {
-	localInstances.Set(name, instance)
-}
-
-// GetOrSet returns the instance by name,
-// or set instance to the instance manager if it does not exist and returns this instance.
-func GetOrSet(name string, instance interface{}) interface{} {
-	return localInstances.GetOrSet(name, instance)
-}
-
-// GetOrSetFunc returns the instance by name,
-// or sets instance with returned value of callback function `f` if it does not exist
-// and then returns this instance.
-func GetOrSetFunc(name string, f func() interface{}) interface{} {
-	return localInstances.GetOrSetFunc(name, f)
-}
-
-// GetOrSetFuncLock returns the instance by name,
-// or sets instance with returned value of callback function `f` if it does not exist
-// and then returns this instance.
-//
-// GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function `f`
-// with mutex.Lock of the hash map.
-func GetOrSetFuncLock(name string, f func() interface{}) interface{} {
-	return localInstances.GetOrSetFuncLock(name, f)
-}
-
-// SetIfNotExist sets `instance` to the map if the `name` does not exist, then returns true.
-// It returns false if `name` exists, and `instance` would be ignored.
-func SetIfNotExist(name string, instance interface{}) bool {
-	return localInstances.SetIfNotExist(name, instance)
-}

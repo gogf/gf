@@ -7,7 +7,6 @@ require (
 	github.com/clbanning/mxj/v2 v2.5.5
 	github.com/fatih/color v1.13.0
 	github.com/fsnotify/fsnotify v1.5.4
-	github.com/go-redis/redis/v8 v8.11.5
 	github.com/gorilla/websocket v1.5.0
 	github.com/grokify/html-strip-tags-go v0.0.1
 	github.com/kr/pretty v0.1.0 // indirect

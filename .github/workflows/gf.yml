@@ -35,9 +35,18 @@ jobs:
 
     # Service containers to run with `code-test`
     services:
+      # Etcd service.
+      # docker run -d --name etcd -p 2379:2379 -e ALLOW_NONE_AUTHENTICATION=yes loads/etcd:3.4.24
+      etcd:
+        image: loads/etcd:3.4.24
+        env:
+          ALLOW_NONE_AUTHENTICATION: yes
+        ports:
+          - 2379:2379
+
       # Redis backend server.
       redis:
-        image  : loads/redis:latest
+        image  : loads/redis:7.0
         options: >-
           --health-cmd      "redis-cli ping"
           --health-interval 10s
@@ -54,11 +63,12 @@ jobs:
           MYSQL_DATABASE     : test
           MYSQL_ROOT_PASSWORD: 12345678
         ports:
-          # Maps tcp port 3306 on service container to the host
           - 3306:3306
 
       # PostgreSQL backend server.
-      # docker run -d --name postgres -p 5432:5432 -e POSTGRES_PASSWORD=12345678 -e POSTGRES_USER=postgres -e POSTGRES_DB=test -v postgres:/Users/john/Temp/postgresql/data loads/postgres:13
+      # docker run -d --name postgres -p 5432:5432 \
+      # -e POSTGRES_PASSWORD=12345678 -e POSTGRES_USER=postgres -e POSTGRES_DB=test \
+      # -v postgres:/Users/john/Temp/postgresql/data loads/postgres:13
       postgres:
         image: loads/postgres:13
         env:
@@ -76,8 +86,15 @@ jobs:
           --health-retries 5
 
       # MSSQL backend server.
+      # docker run -d --name mssql -p 1433:1433 \
+      # -e ACCEPT_EULA=Y \
+      # -e SA_PASSWORD=LoremIpsum86 \
+      # -e MSSQL_DB=test \
+      # -e MSSQL_USER=root \
+      # -e MSSQL_PASSWORD=LoremIpsum86 \
+      # loads/mssqldocker:14.0.3391.2
       mssql:
-        image: loads/mssqldocker:latest
+        image: loads/mssqldocker:14.0.3391.2
         env:
           ACCEPT_EULA:    Y
           SA_PASSWORD:    LoremIpsum86
@@ -94,17 +111,18 @@ jobs:
           --health-retries 10
 
       # ClickHouse backend server.
-      # docker run -d --name clickhouse -p 9000:9000 -p 8123:8123 -p 9001:9001 loads/clickhouse-server:latest
+      # docker run -d --name clickhouse -p 9000:9000 -p 8123:8123 -p 9001:9001 loads/clickhouse-server:22.1.3.7
       clickhouse-server:
-        image: loads/clickhouse-server:latest
+        image: loads/clickhouse-server:22.1.3.7
         ports:
           - 9000:9000
           - 8123:8123
           - 9001:9001
 
       # Polaris backend server.
+      # docker run -d --name polaris -p 8090:8090 -p 8091:8091 -p 8093:8093 loads/polaris-server-standalone:1.11.2
       polaris:
-        image: loads/polaris-server-standalone:latest
+        image: loads/polaris-server-standalone:1.11.2
         ports:
           - 8090:8090
           - 8091:8091
@@ -112,7 +130,7 @@ jobs:
 
       # Oracle 11g server
       oracle-server:
-        image: loads/oracle-xe-11g-r2:latest
+        image: loads/oracle-xe-11g-r2:11.2.0
         env:
           ORACLE_ALLOW_REMOTE: true
           ORACLE_SID: XE
@@ -122,10 +140,16 @@ jobs:
           - 1521:1521
 
       # dm8 server
+      # docker run -d --name dm -p 5236:5236 loads/dm:v8.1.2.128_ent_x86_64_ctm_pack4
       dm-server:
         image: loads/dm:v8.1.2.128_ent_x86_64_ctm_pack4
         ports:
           - 5236:5236
+
+      zookeeper:
+        image: loads/zookeeper:3.8
+        ports:
+          - 2181:2181
 
     strategy:
       matrix:
@@ -133,13 +157,14 @@ jobs:
         goarch: [ "386", "amd64" ]
 
     steps:
+    # TODO: szenius/set-timezone update to node16
     - name: Setup Timezone
-      uses: szenius/set-timezone@v1.0
+      uses: szenius/set-timezone@v1.1
       with:
         timezoneLinux: "Asia/Shanghai"
 
     - name: Checkout Repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Start Apollo Containers
       run:  docker-compose -f ".github/workflows/apollo/docker-compose.yml" up -d --build
@@ -154,21 +179,11 @@ jobs:
       uses: medyagh/setup-minikube@master
 
     - name: Setup Golang ${{ matrix.go-version }}
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v3
       with:
         go-version: ${{ matrix.go-version }}
-
-    - name: Setup Golang caches
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/go/pkg/mod
-          ~/.cache/go-build
-          ~/Library/Caches/go-build
-          ~\AppData\Local\go-build
-        key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-${{ matrix.go-version }}-
+        cache: true
+        cache-dependency-path: '**/go.sum'
 
     - name: Before Script
       run:  bash .github/workflows/before_script.sh
@@ -186,7 +201,7 @@ jobs:
       run:  docker-compose -f ".github/workflows/nacos/docker-compose.yml" down
 
     - name: Report Coverage
-      uses: codecov/codecov-action@v2
+      uses: codecov/codecov-action@v3
       with:
         flags: go-${{ matrix.go-version }}-${{ matrix.goarch }}
 

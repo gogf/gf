@@ -85,7 +85,7 @@ CREATE TABLE %s (
 	// Initialize the data.
 	var err error
 	gtest.C(t, func(t *gtest.T) {
-		err = db.Transaction(context.TODO(), func(ctx context.Context, tx *gdb.TX) error {
+		err = db.Transaction(context.TODO(), func(ctx context.Context, tx gdb.TX) error {
 			r, err := tx.Model(tableUser).Save(EntityUser{
 				Name: "john",
 			})

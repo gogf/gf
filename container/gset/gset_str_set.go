@@ -178,7 +178,7 @@ func (set *StrSet) Clear() {
 	set.mu.Unlock()
 }
 
-// Slice returns the a of items of the set as slice.
+// Slice returns the an of items of the set as slice.
 func (set *StrSet) Slice() []string {
 	set.mu.RLock()
 	var (

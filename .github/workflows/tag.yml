@@ -17,9 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Github Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Auto Creating Tags
+      - name: Auto Creating Tags For Contrib Packages
         run: |
           git config --global user.email "tagrobot@goframe.org"
           git config --global user.name  "TagRobot"

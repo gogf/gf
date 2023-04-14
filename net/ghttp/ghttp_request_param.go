@@ -108,6 +108,7 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 				return err
 			}
 		}
+		// TODO: https://github.com/gogf/gf/pull/2450
 		// Validation.
 		if err = gvalid.New().
 			Bail().
@@ -240,7 +241,7 @@ func (r *Request) parseBody() {
 			r.bodyMap, _ = gxml.DecodeWithoutRoot(body)
 		}
 		// Default parameters decoding.
-		if r.bodyMap == nil {
+		if contentType := r.Header.Get("Content-Type"); (contentType == "" || !gstr.Contains(contentType, "multipart/")) && r.bodyMap == nil {
 			r.bodyMap, _ = gstr.Parse(r.GetBodyString())
 		}
 	}

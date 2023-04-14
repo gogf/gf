@@ -23,6 +23,7 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // GetCore returns the underlying *Core object.
@@ -124,25 +125,21 @@ func (c *Core) Close(ctx context.Context) (err error) {
 // Master creates and returns a connection from master node if master-slave configured.
 // It returns the default connection if master-slave not configured.
 func (c *Core) Master(schema ...string) (*sql.DB, error) {
-	useSchema := ""
-	if len(schema) > 0 && schema[0] != "" {
-		useSchema = schema[0]
-	} else {
-		useSchema = c.schema
-	}
-	return c.getSqlDb(true, useSchema)
+	var (
+		usedSchema   = gutil.GetOrDefaultStr(c.schema, schema...)
+		charL, charR = c.db.GetChars()
+	)
+	return c.getSqlDb(true, gstr.Trim(usedSchema, charL+charR))
 }
 
 // Slave creates and returns a connection from slave node if master-slave configured.
 // It returns the default connection if master-slave not configured.
 func (c *Core) Slave(schema ...string) (*sql.DB, error) {
-	useSchema := ""
-	if len(schema) > 0 && schema[0] != "" {
-		useSchema = schema[0]
-	} else {
-		useSchema = c.schema
-	}
-	return c.getSqlDb(false, useSchema)
+	var (
+		usedSchema   = gutil.GetOrDefaultStr(c.schema, schema...)
+		charL, charR = c.db.GetChars()
+	)
+	return c.getSqlDb(false, gstr.Trim(usedSchema, charL+charR))
 }
 
 // GetAll queries and returns data records from database.

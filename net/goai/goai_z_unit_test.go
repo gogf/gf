@@ -9,6 +9,7 @@ package goai_test
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"testing"
 
 	"github.com/gogf/gf/v2/frame/g"
@@ -96,14 +97,14 @@ func TestOpenApiV3_Add(t *testing.T) {
 		)
 		err = oai.Add(goai.AddInput{
 			Path:   "/test1/{appId}",
-			Method: goai.HttpMethodPut,
+			Method: http.MethodPut,
 			Object: f,
 		})
 		t.AssertNil(err)
 
 		err = oai.Add(goai.AddInput{
 			Path:   "/test1/{appId}",
-			Method: goai.HttpMethodPost,
+			Method: http.MethodPost,
 			Object: f,
 		})
 		t.AssertNil(err)
@@ -216,7 +217,7 @@ func TestOpenApiV3_Add_AutoDetectIn(t *testing.T) {
 		)
 		err = oai.Add(goai.AddInput{
 			Path:   path,
-			Method: goai.HttpMethodGet,
+			Method: http.MethodGet,
 			Object: f,
 		})
 		t.AssertNil(err)
@@ -654,27 +655,27 @@ func TestOpenApiV3_CommonResponse_SubDataField(t *testing.T) {
 
 func TestOpenApiV3_ShortTags(t *testing.T) {
 	type CommonReq struct {
-		AppId      int64  `json:"appId" v:"required" in:"path" des:"应用Id" sum:"应用Id Summary"`
-		ResourceId string `json:"resourceId" in:"query" des:"资源Id" sum:"资源Id Summary"`
+		AppId      int64  `json:"appId" v:"required" in:"path" dc:"应用Id" sm:"应用Id Summary"`
+		ResourceId string `json:"resourceId" in:"query" dc:"资源Id" sm:"资源Id Summary"`
 	}
 	type SetSpecInfo struct {
-		StorageType string   `v:"required|in:CLOUD_PREMIUM,CLOUD_SSD,CLOUD_HSSD" des:"StorageType"`
-		Shards      int32    `des:"shards 分片数" sum:"Shards Summary"`
-		Params      []string `des:"默认参数(json 串-ClickHouseParams)" sum:"Params Summary"`
+		StorageType string   `v:"required|in:CLOUD_PREMIUM,CLOUD_SSD,CLOUD_HSSD" dc:"StorageType"`
+		Shards      int32    `dc:"shards 分片数" sm:"Shards Summary"`
+		Params      []string `dc:"默认参数(json 串-ClickHouseParams)" sm:"Params Summary"`
 	}
 	type CreateResourceReq struct {
 		CommonReq
-		gmeta.Meta `path:"/CreateResourceReq" method:"POST" tags:"default" sum:"CreateResourceReq sum"`
-		Name       string                  `des:"实例名称"`
-		Product    string                  `des:"业务类型"`
-		Region     string                  `v:"required" des:"区域"`
-		SetMap     map[string]*SetSpecInfo `v:"required" des:"配置Map"`
-		SetSlice   []SetSpecInfo           `v:"required" des:"配置Slice"`
+		gmeta.Meta `path:"/CreateResourceReq" method:"POST" tags:"default" sm:"CreateResourceReq sum"`
+		Name       string                  `dc:"实例名称"`
+		Product    string                  `dc:"业务类型"`
+		Region     string                  `v:"required" dc:"区域"`
+		SetMap     map[string]*SetSpecInfo `v:"required" dc:"配置Map"`
+		SetSlice   []SetSpecInfo           `v:"required" dc:"配置Slice"`
 	}
 
 	type CreateResourceRes struct {
-		gmeta.Meta `des:"Demo Response Struct"`
-		FlowId     int64 `des:"创建实例流程id"`
+		gmeta.Meta `dc:"Demo Response Struct"`
+		FlowId     int64 `dc:"创建实例流程id"`
 	}
 
 	f := func(ctx context.Context, req *CreateResourceReq) (res *CreateResourceRes, err error) {
@@ -688,14 +689,14 @@ func TestOpenApiV3_ShortTags(t *testing.T) {
 		)
 		err = oai.Add(goai.AddInput{
 			Path:   "/test1/{appId}",
-			Method: goai.HttpMethodPut,
+			Method: http.MethodPut,
 			Object: f,
 		})
 		t.AssertNil(err)
 
 		err = oai.Add(goai.AddInput{
 			Path:   "/test1/{appId}",
-			Method: goai.HttpMethodPost,
+			Method: http.MethodPost,
 			Object: f,
 		})
 		t.AssertNil(err)
@@ -728,7 +729,7 @@ func TestOpenApiV3_HtmlResponse(t *testing.T) {
 		)
 		err = oai.Add(goai.AddInput{
 			Path:   "/test",
-			Method: goai.HttpMethodGet,
+			Method: http.MethodGet,
 			Object: f,
 		})
 		t.AssertNil(err)
@@ -775,7 +776,7 @@ func TestOpenApiV3_HtmlResponseWithCommonResponse(t *testing.T) {
 
 		err = oai.Add(goai.AddInput{
 			Path:   "/test",
-			Method: goai.HttpMethodGet,
+			Method: http.MethodGet,
 			Object: f,
 		})
 		t.AssertNil(err)
@@ -998,5 +999,127 @@ func Test_EmbeddedStructAttribute(t *testing.T) {
 		b, err := json.Marshal(oai)
 		t.AssertNil(err)
 		t.Assert(b, `{"openapi":"3.0.0","components":{"schemas":{"github.com.gogf.gf.v2.net.goai_test.CreateResourceReq":{"properties":{"Name":{"description":"This is name.","format":"string","properties":{},"type":"string"},"Embedded":{"properties":{"Age":{"description":"This is embedded age.","format":"uint","properties":{},"type":"integer"}},"type":"object"}},"type":"object"}}},"info":{"title":"","version":""},"paths":null}`)
+	})
+}
+
+func Test_NameFromJsonTag(t *testing.T) {
+	// POST
+	gtest.C(t, func(t *gtest.T) {
+		type CreateReq struct {
+			gmeta.Meta `path:"/CreateReq" method:"POST"`
+			Name       string `json:"nick_name, omitempty"`
+		}
+
+		var (
+			err error
+			oai = goai.New()
+			req = new(CreateReq)
+		)
+		err = oai.Add(goai.AddInput{
+			Object: req,
+		})
+		t.AssertNil(err)
+
+		b, err := json.Marshal(oai)
+		t.AssertNil(err)
+		t.Assert(b, `{"openapi":"3.0.0","components":{"schemas":{"github.com.gogf.gf.v2.net.goai_test.CreateReq":{"properties":{"nick_name":{"format":"string","properties":{},"type":"string"}},"type":"object"}}},"info":{"title":"","version":""},"paths":null}`)
+	})
+	// GET
+	gtest.C(t, func(t *gtest.T) {
+		type CreateReq struct {
+			gmeta.Meta `path:"/CreateReq" method:"GET"`
+			Name       string `json:"nick_name, omitempty" in:"header"`
+		}
+		var (
+			err error
+			oai = goai.New()
+			req = new(CreateReq)
+		)
+		err = oai.Add(goai.AddInput{
+			Object: req,
+		})
+		t.AssertNil(err)
+
+		b, err := json.Marshal(oai)
+		t.AssertNil(err)
+		fmt.Println(string(b))
+		t.Assert(b, `{"openapi":"3.0.0","components":{"schemas":{"github.com.gogf.gf.v2.net.goai_test.CreateReq":{"properties":{"nick_name":{"format":"string","properties":{},"type":"string"}},"type":"object"}}},"info":{"title":"","version":""},"paths":null}`)
+	})
+}
+
+func TestOpenApiV3_PathSecurity(t *testing.T) {
+	type CommonResponse struct {
+		Code    int         `json:"code"    description:"Error code"`
+		Message string      `json:"message" description:"Error message"`
+		Data    interface{} `json:"data"    description:"Result data for certain request according API definition"`
+	}
+
+	type Req struct {
+		gmeta.Meta `method:"PUT" security:"apiKey"` // 这里的apiKey要和openApi定义的key一致
+		Product    string                           `json:"product" v:"required" description:"Unique product key"`
+		Name       string                           `json:"name"    v:"required" description:"Instance name"`
+	}
+	type Res struct{}
+
+	f := func(ctx context.Context, req *Req) (res *Res, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+		)
+
+		oai.Config.CommonResponse = CommonResponse{}
+		oai.Components = goai.Components{
+			SecuritySchemes: goai.SecuritySchemes{
+				"apiKey": goai.SecuritySchemeRef{
+					Ref: "",
+					Value: &goai.SecurityScheme{
+						// 此处type是openApi的规定，详见 https://swagger.io/docs/specification/authentication/api-keys/
+						Type: "apiKey",
+						In:   "header",
+						Name: "X-API-KEY",
+					},
+				},
+			},
+		}
+		err = oai.Add(goai.AddInput{
+			Path:   "/index",
+			Object: f,
+		})
+		t.AssertNil(err)
+		// Schema asserts.
+		fmt.Println(oai.String())
+		t.Assert(len(oai.Components.Schemas.Map()), 3)
+		t.Assert(len(oai.Components.SecuritySchemes), 1)
+		t.Assert(oai.Components.SecuritySchemes["apiKey"].Value.Type, "apiKey")
+		t.Assert(len(oai.Paths), 1)
+		t.Assert(len(oai.Paths["/index"].Put.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Map()), 3)
+	})
+}
+
+func Test_EmptyJsonNameWithOmitEmpty(t *testing.T) {
+	type CreateResourceReq struct {
+		gmeta.Meta `path:"/CreateResourceReq" method:"POST" tags:"default"`
+		Name       string `description:"实例名称" json:",omitempty"`
+		Product    string `description:"业务类型" json:",omitempty"`
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+			req = new(CreateResourceReq)
+		)
+		err = oai.Add(goai.AddInput{
+			Object: req,
+		})
+		t.AssertNil(err)
+		var reqKey = "github.com.gogf.gf.v2.net.goai_test.CreateResourceReq"
+		t.AssertNE(oai.Components.Schemas.Get(reqKey).Value.Properties.Get("Name"), nil)
+		t.AssertNE(oai.Components.Schemas.Get(reqKey).Value.Properties.Get("Product"), nil)
+		t.Assert(oai.Components.Schemas.Get(reqKey).Value.Properties.Get("None"), nil)
 	})
 }

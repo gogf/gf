@@ -12,7 +12,6 @@ package gtime
 import (
 	"context"
 	"fmt"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -101,28 +100,6 @@ var (
 		"december":  12,
 	}
 )
-
-// SetTimeZone sets the time zone for current whole process.
-// The parameter `zone` is an area string specifying corresponding time zone,
-// eg: Asia/Shanghai.
-//
-// This should be called before package "time" import.
-// Please refer to issue: https://github.com/golang/go/issues/34814
-func SetTimeZone(zone string) (err error) {
-	location, err := time.LoadLocation(zone)
-	if err != nil {
-		err = gerror.Wrapf(err, `time.LoadLocation failed for zone "%s"`, zone)
-		return err
-	}
-	var (
-		envKey   = "TZ"
-		envValue = location.String()
-	)
-	if err = os.Setenv(envKey, envValue); err != nil {
-		err = gerror.Wrapf(err, `set environment failed with key "%s", value "%s"`, envKey, envValue)
-	}
-	return
-}
 
 // Timestamp retrieves and returns the timestamp in seconds.
 func Timestamp() int64 {
