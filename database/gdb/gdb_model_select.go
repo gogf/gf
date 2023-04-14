@@ -8,17 +8,15 @@ package gdb
 
 import (
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"reflect"
-	"strings"
-
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/container/gvar"
+	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
+	"reflect"
 )
 
 // Select is alias of Model.All.
@@ -105,20 +103,7 @@ func (m *Model) getFieldsFiltered() string {
 
 // getExpandFiltered @chengjian
 func (m *Model) getExpandFiltered() string {
-	newExpands := ""
-	var alias string
-	for _, expand := range m.expands {
-		list := strings.Split(m.tables, "AS")
-		if len(list) > 1 {
-			alias = strings.Trim(list[1], " ")
-		} else {
-			alias = m.tables
-		}
-		newExpands += ","
-		newExpands += fmt.Sprintf(`(select filed_value from %s where row_key = %s.id  and filed_code = '%s' and deleted_time is null )as %s`,
-			m.expandsTable, alias, expand.FieldCode, expand.FieldCode)
-	}
-	return newExpands
+	return fmt.Sprintf(" ,JSON_OBJECTAGG(%s.filed_code,%s.filed_value) ext_data", m.expands, m.expands)
 }
 
 // Chunk iterates the query result with given `size` and `handler` function.

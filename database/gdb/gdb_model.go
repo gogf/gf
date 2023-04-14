@@ -28,7 +28,7 @@ type Model struct {
 	tables        string             // Operation table names, which can be more than one table names and aliases, like: "user", "user u", "user u, user_detail ud".
 	fields        string             // Operation fields, multiple fields joined using char ','.
 	fieldsEx      string             // Excluded operation fields, multiple fields joined using char ','.
-	expands       []*ExpandField     // Extended Properties @chengjian
+	expands       string             // Extended Properties @chengjian
 	expandsTable  string             // Extended Properties @chengjian
 	withArray     []interface{}      // Arguments for With feature.
 	withAll       bool               // Enable model association operations on all objects that have "with" tag in the struct.
