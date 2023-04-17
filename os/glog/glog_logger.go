@@ -141,7 +141,7 @@ func (l *Logger) print(ctx context.Context, level int, stack string, values ...i
 	}
 	if l.config.Flags&F_TIME_MILLI > 0 {
 		if timeFormat != "" {
-			timeFormat += " "
+			timeFormat += "T"
 		}
 		timeFormat += "15:04:05.000Z07:00"
 	}
