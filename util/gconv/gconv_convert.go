@@ -254,22 +254,50 @@ func doConvert(in doConvertInput) (convertedValue interface{}) {
 
 	default:
 		if in.ReferValue != nil {
-			var referReflectValue reflect.Value
+			var (
+				referReflectValue reflect.Value
+			)
 			if v, ok := in.ReferValue.(reflect.Value); ok {
 				referReflectValue = v
 			} else {
 				referReflectValue = reflect.ValueOf(in.ReferValue)
 			}
+
 			defer func() {
 				if recover() != nil {
+					in.alreadySetToReferValue = false
 					if err := bindVarToReflectValue(referReflectValue, in.FromValue, nil); err == nil {
 						in.alreadySetToReferValue = true
 						convertedValue = referReflectValue.Interface()
 					}
 				}
 			}()
+			if referReflectValue.Kind() == reflect.Ptr {
+				// Type converting for custom type pointers.
+				// Eg:
+				// type PayMode int
+				// type Req struct{
+				//     Mode *PayMode
+				// }
+				//
+				// Struct(`{"Mode": 1000}`, &req)
+				originType := referReflectValue.Type().Elem()
+				switch originType.Kind() {
+				case reflect.Struct:
+					// Not support some kinds.
+				default:
+					in.ToTypeName = originType.Kind().String()
+					in.ReferValue = nil
+					refElementValue := reflect.ValueOf(doConvert(in))
+					originTypeValue := reflect.New(refElementValue.Type()).Elem()
+					originTypeValue.Set(refElementValue)
+					in.alreadySetToReferValue = true
+					return originTypeValue.Addr().Convert(referReflectValue.Type()).Interface()
+				}
+			}
 			in.ToTypeName = referReflectValue.Kind().String()
 			in.ReferValue = nil
+			in.alreadySetToReferValue = true
 			return reflect.ValueOf(doConvert(in)).Convert(referReflectValue.Type()).Interface()
 		}
 		return in.FromValue
