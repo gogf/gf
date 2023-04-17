@@ -135,15 +135,15 @@ func (l *Logger) print(ctx context.Context, level int, stack string, values ...i
 	}
 	if l.config.Flags&F_TIME_TIME > 0 {
 		if timeFormat != "" {
-			timeFormat += " "
+			timeFormat += "T"
 		}
-		timeFormat += "15:04:05"
+		timeFormat += "15:04:05Z07:00"
 	}
 	if l.config.Flags&F_TIME_MILLI > 0 {
 		if timeFormat != "" {
 			timeFormat += " "
 		}
-		timeFormat += "15:04:05.000"
+		timeFormat += "15:04:05.000Z07:00"
 	}
 	if len(timeFormat) > 0 {
 		input.TimeFormat = now.Format(timeFormat)
