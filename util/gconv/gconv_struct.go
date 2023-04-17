@@ -422,6 +422,8 @@ func bindVarToReflectValueWithInterfaceCheck(reflectValue reflect.Value, value i
 			valueBytes = b
 		} else if s, ok := value.(string); ok {
 			valueBytes = []byte(s)
+		} else if f, ok := value.(iString); ok {
+			valueBytes = []byte(f.String())
 		}
 		if len(valueBytes) > 0 {
 			return v.UnmarshalText(valueBytes), ok
@@ -434,6 +436,8 @@ func bindVarToReflectValueWithInterfaceCheck(reflectValue reflect.Value, value i
 			valueBytes = b
 		} else if s, ok := value.(string); ok {
 			valueBytes = []byte(s)
+		} else if f, ok := value.(iString); ok {
+			valueBytes = []byte(f.String())
 		}
 
 		if len(valueBytes) > 0 {
