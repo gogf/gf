@@ -38,7 +38,6 @@ func NewFromObject(object interface{}) (rootCmd *Command, err error) {
 	switch c := object.(type) {
 	case Command:
 		return &c, nil
-		
 	case *Command:
 		return c, nil
 	}
