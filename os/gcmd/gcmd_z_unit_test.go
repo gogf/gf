@@ -133,6 +133,11 @@ gf get golang.org/x/sys
 		}
 		err = commandRoot.AddCommand(
 			commandEnv,
+		)
+		if err != nil {
+			g.Log().Fatal(ctx, err)
+		}
+		err = commandRoot.AddObject(
 			commandTest,
 		)
 		if err != nil {
