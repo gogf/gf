@@ -34,7 +34,7 @@ func Test_Issue2584(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			p2    = TDecimal{}
-			data2 = g.Map{"f_1": gvar.New("2222.222")}
+			data2 = g.Map{"f1": gvar.New("2222.222")}
 			err   = gconv.Scan(data2, &p2)
 		)
 		t.AssertNil(err)
