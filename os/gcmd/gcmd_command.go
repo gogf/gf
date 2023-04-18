@@ -103,9 +103,7 @@ func (c *Command) doAddCommand(command *Command) error {
 
 // AddObject adds one or more sub-commands to current command using struct object.
 func (c *Command) AddObject(objects ...interface{}) error {
-	var (
-		commands []*Command
-	)
+	var commands []*Command
 	for _, object := range objects {
 		rootCommand, err := NewFromObject(object)
 		if err != nil {
