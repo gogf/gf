@@ -6,8 +6,10 @@
 
 package cmd
 
-import "github.com/gogf/gf/cmd/gf/v2/internal/cmd/genpb"
+import (
+	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/genenums"
+)
 
 type (
-	cGenPb = genpb.CGenPb
+	cGenEnums = genenums.CGenEnums
 )
