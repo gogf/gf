@@ -58,7 +58,6 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 			pkgPath = golangType.Elem().PkgPath()
 			typeName = golangType.Elem().Name()
 		}
-
 	}
 
 	// Type enums.
