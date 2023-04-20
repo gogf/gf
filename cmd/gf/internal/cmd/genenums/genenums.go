@@ -30,6 +30,7 @@ const (
 gf gen enums
 gf gen enums -p internal/boot/boot_enums.go
 gf gen enums -p internal/boot/boot_enums.go -s .
+gf gen enums -x github.com/gogf
 `
 )
 
