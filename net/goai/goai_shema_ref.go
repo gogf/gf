@@ -52,9 +52,13 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 			XExtensions: make(XExtensions),
 		}
 	)
-	if pkgPath == "" && golangType.Kind() == reflect.Ptr {
-		pkgPath = golangType.Elem().PkgPath()
-		typeName = golangType.Elem().Name()
+	if pkgPath == "" {
+		switch golangType.Kind() {
+		case reflect.Ptr, reflect.Array, reflect.Slice:
+			pkgPath = golangType.Elem().PkgPath()
+			typeName = golangType.Elem().Name()
+		}
+
 	}
 
 	// Type enums.

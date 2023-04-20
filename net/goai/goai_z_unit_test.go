@@ -1134,9 +1134,11 @@ func Test_Enums(t *testing.T) {
 	)
 	type Req struct {
 		gmeta.Meta `path:"/CreateResourceReq" method:"POST" tags:"default"`
-		Name       string  `dc:"实例名称" json:",omitempty"`
-		Status1    Status  `dc:"状态1" json:",omitempty"`
-		Status2    *Status `dc:"状态2" json:",omitempty"`
+		Name       string    `dc:"实例名称" json:",omitempty"`
+		Status1    Status    `dc:"状态1" json:",omitempty"`
+		Status2    *Status   `dc:"状态2" json:",omitempty"`
+		Status3    []Status  `dc:"状态2" json:",omitempty"`
+		Status4    []*Status `dc:"状态2" json:",omitempty"`
 	}
 
 	gtest.C(t, func(t *gtest.T) {
@@ -1158,5 +1160,7 @@ func Test_Enums(t *testing.T) {
 		t.AssertNE(oai.Components.Schemas.Get(reqKey).Value.Properties.Get("Name"), nil)
 		t.Assert(oai.Components.Schemas.Get(reqKey).Value.Properties.Get("Status1").Value.Enum, g.Slice{"a", "b"})
 		t.Assert(oai.Components.Schemas.Get(reqKey).Value.Properties.Get("Status2").Value.Enum, g.Slice{"a", "b"})
+		t.Assert(oai.Components.Schemas.Get(reqKey).Value.Properties.Get("Status3").Value.Items.Value.Enum, g.Slice{"a", "b"})
+		t.Assert(oai.Components.Schemas.Get(reqKey).Value.Properties.Get("Status4").Value.Items.Value.Enum, g.Slice{"a", "b"})
 	})
 }
