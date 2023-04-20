@@ -65,6 +65,7 @@ func (c CGenEnums) Enums(ctx context.Context, in CGenEnumsInput) (out *CGenEnums
 		"{PackageName}": gfile.Basename(gfile.Dir(in.Path)),
 		"{EnumsJson}":   "`" + p.Export() + "`",
 	})
+	enumsContent = gstr.Trim(enumsContent)
 	if err = gfile.PutContents(in.Path, enumsContent); err != nil {
 		return
 	}
