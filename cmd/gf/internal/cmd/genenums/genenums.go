@@ -16,8 +16,9 @@ type (
 	CGenEnums      struct{}
 	CGenEnumsInput struct {
 		g.Meta `name:"enums" config:"{CGenEnumsConfig}" brief:"{CGenEnumsBrief}" eg:"{CGenEnumsEg}"`
-		Src    string `name:"src"  short:"s"  dc:"source folder path to be parsed" d:"."`
-		Path   string `name:"path" short:"p"  dc:"output go file path storing enums content" d:"internal/boot/boot_enums.go"`
+		Src    string `name:"src"    short:"s"  dc:"source folder path to be parsed" d:"."`
+		Path   string `name:"path"   short:"p"  dc:"output go file path storing enums content" d:"internal/boot/boot_enums.go"`
+		Prefix string `name:"prefix" short:"x"  dc:"only exports packages that starts with specified prefix"`
 	}
 	CGenEnumsOutput struct{}
 )
@@ -59,7 +60,7 @@ func (c CGenEnums) Enums(ctx context.Context, in CGenEnumsInput) (out *CGenEnums
 	if err != nil {
 		mlog.Fatal(err)
 	}
-	p := NewEnumsParser()
+	p := NewEnumsParser(in.Prefix)
 	p.ParsePackages(pkgs)
 	var enumsContent = gstr.ReplaceByMap(consts.TemplateGenEnums, g.MapStrStr{
 		"{PackageName}": gfile.Basename(gfile.Dir(in.Path)),
