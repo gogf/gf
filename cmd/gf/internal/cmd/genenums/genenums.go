@@ -2,7 +2,6 @@ package genenums
 
 import (
 	"context"
-	"fmt"
 	"golang.org/x/tools/go/packages"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
@@ -42,25 +41,34 @@ func init() {
 }
 
 func (c CGenEnums) Enums(ctx context.Context, in CGenEnumsInput) (out *CGenEnumsOutput, err error) {
+	realPath := gfile.RealPath(in.Src)
+	if realPath == "" {
+		mlog.Fatalf(`source folder path "%s" does not exist`, in.Src)
+	}
+	err = gfile.Chdir(realPath)
+	if err != nil {
+		mlog.Fatal(err)
+	}
+	mlog.Printf(`scanning: %s`, realPath)
 	cfg := &packages.Config{
-		Dir:   in.Src,
+		Dir:   realPath,
 		Mode:  pkgLoadMode,
 		Tests: false,
 	}
 	pkgs, err := packages.Load(cfg)
 	if err != nil {
-		fmt.Println(err)
+		mlog.Fatal(err)
 	}
 	p := NewEnumsParser()
 	p.ParsePackages(pkgs)
 	var enumsContent = gstr.ReplaceByMap(consts.TemplateGenEnums, g.MapStrStr{
-		"PackageName": gfile.Basename(gfile.Dir(in.Path)),
-		"EnumsJson":   "`" + p.Export() + "`",
+		"{PackageName}": gfile.Basename(gfile.Dir(in.Path)),
+		"{EnumsJson}":   "`" + p.Export() + "`",
 	})
-	err = gfile.PutContents(in.Path, enumsContent)
-	if err != nil {
+	if err = gfile.PutContents(in.Path, enumsContent); err != nil {
 		return
 	}
+	mlog.Printf(`generated: %s`, in.Path)
 	mlog.Print("done!")
 	return
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-const pkgLoadMode = packages.NeedImports | packages.NeedTypes
+const pkgLoadMode = 0xffffff
 
 type EnumsParser struct {
 	enums     []EnumItem
