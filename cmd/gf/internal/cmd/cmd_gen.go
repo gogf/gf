@@ -12,6 +12,7 @@ var (
 type cGen struct {
 	g.Meta `name:"gen" brief:"{cGenBrief}" dc:"{cGenDc}"`
 	cGenDao
+	cGenEnums
 	cGenPb
 	cGenPbEntity
 	cGenService

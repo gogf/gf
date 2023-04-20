@@ -7,11 +7,13 @@
 package goai
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gtag"
 )
 
 type SchemaRefs []SchemaRef
@@ -41,6 +43,8 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 		err       error
 		oaiType   = oai.golangTypeToOAIType(golangType)
 		oaiFormat = oai.golangTypeToOAIFormat(golangType)
+		typeName  = golangType.Name()
+		pkgPath   = golangType.PkgPath()
 		schemaRef = &SchemaRef{}
 		schema    = &Schema{
 			Type:        oaiType,
@@ -48,6 +52,20 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 			XExtensions: make(XExtensions),
 		}
 	)
+	if pkgPath == "" && golangType.Kind() == reflect.Ptr {
+		pkgPath = golangType.Elem().PkgPath()
+		typeName = golangType.Elem().Name()
+	}
+
+	// Type enums.
+	var typeId = fmt.Sprintf(`%s.%s`, pkgPath, typeName)
+	if enums := gtag.GetEnumsByType(typeId); enums != "" {
+		schema.Enum = make([]interface{}, 0)
+		if err = json.Unmarshal([]byte(enums), &schema.Enum); err != nil {
+			return nil, err
+		}
+	}
+
 	if len(tagMap) > 0 {
 		if err := oai.tagMapToSchema(tagMap, schema); err != nil {
 			return nil, err
