@@ -186,6 +186,7 @@ func (s *gracefulServer) GetListenedAddress() string {
 }
 
 // GetListenedPort retrieves and returns one port which is listened to by current server.
+// Note that this method is only available if the server is listening on one port.
 func (s *gracefulServer) GetListenedPort() int {
 	if ln := s.getRawListener(); ln != nil {
 		return ln.Addr().(*net.TCPAddr).Port
