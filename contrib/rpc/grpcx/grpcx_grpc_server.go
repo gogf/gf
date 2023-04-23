@@ -26,6 +26,7 @@ import (
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // GrpcServer is the server for GRPC protocol.
@@ -261,43 +262,57 @@ func (s *GrpcServer) GetListenedPort() int {
 
 func (s *GrpcServer) calculateListenedEndpoints(ctx context.Context) gsvc.Endpoints {
 	var (
-		address      = s.config.Address
-		endpoints    = make(gsvc.Endpoints, 0)
-		listenedPort = s.GetListenedPort()
-		listenedIps  []string
+		configAddr = s.config.Address
+		endpoints  = make(gsvc.Endpoints, 0)
 	)
-	var addrArray = gstr.Split(address, ":")
-	switch addrArray[0] {
-	case "127.0.0.1":
-		// Nothing to do.
-	case "0.0.0.0", "":
-		intranetIps, err := gipv4.GetIntranetIpArray()
-		if err != nil {
-			s.Logger().Errorf(ctx, `error retrieving intranet ip: %+v`, err)
-			return nil
-		}
-		// If no intranet ips found, it uses all ips that can be retrieved,
-		// it may include internet ip.
-		if len(intranetIps) == 0 {
-			allIps, err := gipv4.GetIpArray()
+	for _, address := range gstr.SplitAndTrim(configAddr, ",") {
+		var (
+			addrArray     = gstr.Split(address, ":")
+			listenedIps   []string
+			listenedPorts []int
+		)
+		// IPs.
+		switch addrArray[0] {
+		case "127.0.0.1":
+			// Nothing to do.
+		case "0.0.0.0", "":
+			intranetIps, err := gipv4.GetIntranetIpArray()
 			if err != nil {
-				s.Logger().Errorf(ctx, `error retrieving ip from current node: %+v`, err)
+				s.Logger().Errorf(ctx, `error retrieving intranet ip: %+v`, err)
 				return nil
 			}
-			s.Logger().Noticef(
-				ctx,
-				`no intranet ip found, using all ip to register service: %v`,
-				allIps,
-			)
-			listenedIps = allIps
-			break
+			// If no intranet ips found, it uses all ips that can be retrieved,
+			// it may include internet ip.
+			if len(intranetIps) == 0 {
+				allIps, err := gipv4.GetIpArray()
+				if err != nil {
+					s.Logger().Errorf(ctx, `error retrieving ip from current node: %+v`, err)
+					return nil
+				}
+				s.Logger().Noticef(
+					ctx,
+					`no intranet ip found, using internet ip to register service: %v`,
+					allIps,
+				)
+				listenedIps = allIps
+				break
+			}
+			listenedIps = intranetIps
+		default:
+			listenedIps = []string{addrArray[0]}
 		}
-		listenedIps = intranetIps
-	default:
-		listenedIps = []string{addrArray[0]}
-	}
-	for _, ip := range listenedIps {
-		endpoints = append(endpoints, gsvc.NewEndpoint(fmt.Sprintf(`%s:%d`, ip, listenedPort)))
+		// Ports.
+		switch addrArray[1] {
+		case "0":
+			listenedPorts = []int{s.GetListenedPort()}
+		default:
+			listenedPorts = []int{gconv.Int(addrArray[1])}
+		}
+		for _, ip := range listenedIps {
+			for _, port := range listenedPorts {
+				endpoints = append(endpoints, gsvc.NewEndpoint(fmt.Sprintf(`%s:%d`, ip, port)))
+			}
+		}
 	}
 	return endpoints
 }
