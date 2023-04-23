@@ -16,6 +16,7 @@ lint:
 	golangci-lint run
 
 # make version to=v2.4.0
+.PHONY: version
 version:
 	$(eval files=$(shell find . -name go.mod))
 	@set -e; \
