@@ -761,11 +761,9 @@ func (a *SortedArray) FilterNil() *SortedArray {
 	return a
 }
 
-// Filter `filter func(value interface{}, index int) bool` filter array, value
-// means the value of the current element, the index of the current original
-// color of value, when the custom function returns True, the element will be
-// filtered, otherwise it will not be filtered, `Filter` function returns a new
-// array, will not modify the original array.
+// Filter iterates array and filters elements using custom callback function.
+// It removes the element from array if callback function `filter` returns true,
+// it or else does nothing and continues iterating.
 func (a *SortedArray) Filter(filter func(index int, value interface{}) bool) *SortedArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
