@@ -18,7 +18,7 @@ lint:
 # make version to=v2.4.0
 .PHONY: version
 version:
-	$(eval files=$(shell find . -name go.mod))
+	$(eval files=$(shell find . -name go.mod)) 
 	@set -e; \
 	newVersion=$(to); \
 	echo "The version will be set to $$newVersion"; \
@@ -36,9 +36,8 @@ version:
 	for file in ${files}; do \
 		goModPath=$$(dirname $$file); \
 		if [[ $$goModPath =~ "./contrib" || $$goModPath =~ "./cmd/gf" || $$goModPath =~ "./example" ]]; then \
-			echo ""; \
+			echo "" ; \
 			echo "processing dir: $$goModPath"; \
-			# Do not modify the order of any of the following sentences \
 			cd $$goModPath; \
 			go mod tidy; \
 			go list -f "{{if and (not .Indirect) (not .Main)}}{{.Path}}@$$latestVersion{{end}}" -m all | grep "^github.com/gogf/gf/contrib" | xargs -L1 go get -v; \
