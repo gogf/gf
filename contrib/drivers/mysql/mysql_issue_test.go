@@ -664,3 +664,65 @@ CREATE TABLE %s (
 		t.AssertNil(err3)
 	})
 }
+
+// https://github.com/gogf/gf/issues/2561
+func Test_Issue2561(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			g.Meta     `orm:"do:true"`
+			Id         interface{}
+			Passport   interface{}
+			Password   interface{}
+			Nickname   interface{}
+			CreateTime interface{}
+		}
+		data := g.Slice{
+			User{
+				Id:       1,
+				Passport: "user_1",
+			},
+			User{
+				Id:       2,
+				Password: "pass_2",
+			},
+			User{
+				Id:       3,
+				Password: "pass_3",
+			},
+		}
+		result, err := db.Model(table).Data(data).Insert()
+		t.AssertNil(err)
+		m, _ := result.LastInsertId()
+		t.Assert(m, 3)
+
+		n, _ := result.LastInsertId()
+		t.Assert(n, 3)
+
+		one, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one[`id`], `1`)
+		t.Assert(one[`passport`], `user_1`)
+		t.Assert(one[`password`], ``)
+		t.Assert(one[`nickname`], ``)
+		t.Assert(one[`create_time`], ``)
+
+		one, err = db.Model(table).WherePri(2).One()
+		t.AssertNil(err)
+		t.Assert(one[`id`], `2`)
+		t.Assert(one[`passport`], ``)
+		t.Assert(one[`password`], `pass_2`)
+		t.Assert(one[`nickname`], ``)
+		t.Assert(one[`create_time`], ``)
+
+		one, err = db.Model(table).WherePri(3).One()
+		t.AssertNil(err)
+		t.Assert(one[`id`], `3`)
+		t.Assert(one[`passport`], ``)
+		t.Assert(one[`password`], `pass_3`)
+		t.Assert(one[`nickname`], ``)
+		t.Assert(one[`create_time`], ``)
+	})
+}

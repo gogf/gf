@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	_ "github.com/denisenkom/go-mssqldb"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -285,7 +286,6 @@ ORDER BY a.id,a.colorder`,
 	}
 	fields = make(map[string]*gdb.TableField)
 	for i, m := range result {
-
 		fields[m["Field"].String()] = &gdb.TableField{
 			Index:   i,
 			Name:    m["Field"].String(),
