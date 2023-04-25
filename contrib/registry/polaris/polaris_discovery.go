@@ -28,6 +28,7 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]gsvc.Serv
 		}
 		in.Prefix = service.GetPrefix()
 	}
+	in.Prefix = trimAndReplace(in.Prefix)
 	// get all instances
 	instancesResponse, err := r.consumer.GetAllInstances(&polaris.GetAllInstancesRequest{
 		GetAllInstancesRequest: model.GetAllInstancesRequest{
@@ -44,7 +45,7 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]gsvc.Serv
 	// Service filter.
 	filteredServices := make([]gsvc.Service, 0)
 	for _, service := range serviceInstances {
-		if in.Prefix != "" && !gstr.HasPrefix(service.GetKey(), in.Prefix) {
+		if in.Prefix != "" && !gstr.HasPrefix(trimAndReplace(service.GetKey()), in.Prefix) {
 			continue
 		}
 		if in.Name != "" && service.GetName() != in.Name {
@@ -68,7 +69,7 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]gsvc.Serv
 
 // Watch creates a watcher according to the service name.
 func (r *Registry) Watch(ctx context.Context, key string) (gsvc.Watcher, error) {
-	return newWatcher(ctx, r.opt.Namespace, key, r.consumer)
+	return newWatcher(ctx, r.opt.Namespace, trimAndReplace(key), r.consumer)
 }
 
 func instancesToServiceInstances(instances []model.Instance) []gsvc.Service {
@@ -110,4 +111,11 @@ func instanceToServiceInstance(instance model.Instance) gsvc.Service {
 	return &Service{
 		Service: s,
 	}
+}
+
+// trimAndReplace trims the prefix and suffix separator and replaces the separator in the middle.
+func trimAndReplace(key string) string {
+	key = gstr.Trim(key, gsvc.DefaultSeparator)
+	key = gstr.Replace(key, gsvc.DefaultSeparator, instanceIDSeparator)
+	return key
 }

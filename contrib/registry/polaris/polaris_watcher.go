@@ -13,7 +13,6 @@ import (
 	"github.com/polarismesh/polaris-go/pkg/model"
 
 	"github.com/gogf/gf/v2/net/gsvc"
-	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // Watcher is a service watcher.
@@ -27,8 +26,6 @@ type Watcher struct {
 }
 
 func newWatcher(ctx context.Context, namespace string, key string, consumer polaris.ConsumerAPI) (*Watcher, error) {
-	key = gstr.Trim(key, gsvc.DefaultSeparator)
-	key = gstr.Replace(key, gsvc.DefaultSeparator, instanceIDSeparator)
 	watchServiceResponse, err := consumer.WatchService(&polaris.WatchServiceRequest{
 		WatchServiceRequest: model.WatchServiceRequest{
 			Key: model.ServiceKey{
