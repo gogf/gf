@@ -67,8 +67,8 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]gsvc.Serv
 }
 
 // Watch creates a watcher according to the service name.
-func (r *Registry) Watch(ctx context.Context, serviceName string) (gsvc.Watcher, error) {
-	return newWatcher(ctx, r.opt.Namespace, serviceName, r.consumer)
+func (r *Registry) Watch(ctx context.Context, key string) (gsvc.Watcher, error) {
+	return newWatcher(ctx, r.opt.Namespace, key, r.consumer)
 }
 
 func instancesToServiceInstances(instances []model.Instance) []gsvc.Service {
