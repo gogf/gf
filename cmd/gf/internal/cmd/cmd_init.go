@@ -9,6 +9,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/gogf/gf/v2/frame/g"
@@ -16,6 +17,7 @@ import (
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/os/gres"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gtag"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/allyes"
@@ -43,6 +45,10 @@ gf init my-mono-repo -m
 name for the project. It will create a folder with NAME in current directory.
 The NAME will also be the module name for the project.
 `
+	// cInitGitDir the git directory
+	cInitGitDir = ".git"
+	// cInitGitignore the gitignore file
+	cInitGitignore = ".gitignore"
 )
 
 func init() {
@@ -63,17 +69,22 @@ type cInitInput struct {
 type cInitOutput struct{}
 
 func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err error) {
+	var (
+		overwrote = false
+	)
 	if !gfile.IsEmpty(in.Name) && !allyes.Check() {
 		s := gcmd.Scanf(`the folder "%s" is not empty, files might be overwrote, continue? [y/n]: `, in.Name)
 		if strings.EqualFold(s, "n") {
 			return
 		}
+		overwrote = true
 	}
 	mlog.Print("initializing...")
 
 	// Create project folder and files.
 	var (
 		templateRepoName string
+		gitignoreFile    = in.Name + "/" + cInitGitignore
 	)
 	if in.Mono {
 		templateRepoName = cInitMonoRepo
@@ -87,14 +98,35 @@ func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err 
 		return
 	}
 
+	// build ignoreFiles from the .gitignore file
+	ignoreFiles := make([]string, 0, 10)
+	ignoreFiles = append(ignoreFiles, cInitGitDir)
+	if overwrote {
+		err = gfile.ReadLines(gitignoreFile, func(line string) error {
+			// Add only hidden files or directories
+			// If other directories are added, it may cause the entire directory to be ignored
+			// such as 'main' in the .gitignore file, but the path is 'D:\main\my-project'
+			if line != "" && strings.HasPrefix(line, ".") {
+				ignoreFiles = append(ignoreFiles, line)
+			}
+			return nil
+		})
+
+		// if not found the .gitignore file will skip os.ErrNotExist error
+		if err != nil && !os.IsNotExist(err) {
+			return
+		}
+	}
+
 	// Replace template name to project name.
-	err = gfile.ReplaceDir(
-		cInitRepoPrefix+templateRepoName,
-		gfile.Basename(gfile.RealPath(in.Name)),
-		in.Name,
-		"*",
-		true,
-	)
+	err = gfile.ReplaceDirFunc(func(path, content string) string {
+		for _, ignoreFile := range ignoreFiles {
+			if strings.Contains(path, ignoreFile) {
+				return content
+			}
+		}
+		return gstr.Replace(gfile.GetContents(path), cInitRepoPrefix+templateRepoName, gfile.Basename(gfile.RealPath(in.Name)))
+	}, in.Name, "*", true)
 	if err != nil {
 		return
 	}
