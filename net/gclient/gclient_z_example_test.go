@@ -529,7 +529,7 @@ func ExampleClient_GetVar() {
 // http proxy server listening on `127.0.0.1:1081`
 // socks5 proxy server listening on `127.0.0.1:1080`
 func ExampleClient_SetProxy() {
-	// connect to a http proxy server
+	// connect to an http proxy server
 	client := g.Client()
 	client.SetProxy("http://127.0.0.1:1081")
 	client.SetTimeout(5 * time.Second) // it's suggested to set http client timeout
@@ -541,7 +541,7 @@ func ExampleClient_SetProxy() {
 	fmt.Println(err != nil)
 	resp.Close()
 
-	// connect to a http proxy server which needs auth
+	// connect to an http proxy server which needs auth
 	client.SetProxy("http://user:password:127.0.0.1:1081")
 	client.SetTimeout(5 * time.Second) // it's suggested to set http client timeout
 	resp, err = client.Get(ctx, "http://127.0.0.1:8999")

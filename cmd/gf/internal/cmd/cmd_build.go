@@ -304,7 +304,7 @@ buildDone:
 	return
 }
 
-// getBuildInVarMapJson retrieves and returns the custom build-in variables in configuration
+// getBuildInVarStr retrieves and returns the custom build-in variables in configuration
 // file as json.
 func (c cBuild) getBuildInVarStr(ctx context.Context, in cBuildInput) string {
 	buildInVarMap := in.VarMap
