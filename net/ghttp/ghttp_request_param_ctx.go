@@ -13,6 +13,16 @@ import (
 	"github.com/gogf/gf/v2/os/gctx"
 )
 
+// neverDoneCtx never done.
+type neverDoneCtx struct {
+	context.Context
+}
+
+// Done forbids the context done.
+func (*neverDoneCtx) Done() <-chan struct{} {
+	return nil
+}
+
 // RequestFromCtx retrieves and returns the Request object from context.
 func RequestFromCtx(ctx context.Context) *Request {
 	if v := ctx.Value(ctxKeyForRequest); v != nil {
@@ -26,7 +36,12 @@ func RequestFromCtx(ctx context.Context) *Request {
 // See GetCtx.
 func (r *Request) Context() context.Context {
 	if r.context == nil {
-		r.context = gctx.WithCtx(r.Request.Context())
+		// It forbids the context manually done,
+		// to make the context can be propagated to asynchronous goroutines.
+		r.context = &neverDoneCtx{
+			r.Request.Context(),
+		}
+		r.context = gctx.WithCtx(r.context)
 	}
 	// Inject Request object into context.
 	if RequestFromCtx(r.context) == nil {
