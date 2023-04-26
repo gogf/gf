@@ -12,6 +12,7 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/grokify/html-strip-tags-go v0.0.1
 	github.com/olekukonko/tablewriter v0.0.5
+	github.com/sijms/go-ora/v2 v2.6.17 // indirect
 	go.opentelemetry.io/otel v1.0.0
 	go.opentelemetry.io/otel/trace v1.0.0
 	golang.org/x/net v0.0.0-20210520170846-37e1c6afe023
