@@ -48,14 +48,16 @@ const (
 )
 
 const (
-	F_ASYNC      = 1 << iota // Print logging content asynchronously。
-	F_FILE_LONG              // Print full file name and line number: /a/b/c/d.go:23.
-	F_FILE_SHORT             // Print final file name element and line number: d.go:23. overrides F_FILE_LONG.
-	F_TIME_DATE              // Print the date in the local time zone: 2009-01-23.
-	F_TIME_TIME              // Print the time in the local time zone: 01:23:23.
-	F_TIME_MILLI             // Print the time with milliseconds in the local time zone: 01:23:23.675.
-	F_CALLER_FN              // Print Caller function name and package: main.main
-	F_TIME_STD   = F_TIME_DATE | F_TIME_MILLI
+	F_ASYNC             = 1 << iota // Print logging content asynchronously。
+	F_FILE_LONG                     // Print full file name and line number: /a/b/c/d.go:23.
+	F_FILE_SHORT                    // Print final file name element and line number: d.go:23. overrides F_FILE_LONG.
+	F_TIME_DATE                     // Print the date in the local time zone: 2009-01-23.
+	F_TIME_TIME                     // Print the time in the local time zone: 01:23:23.
+	F_TIME_MILLI                    // Print the time with milliseconds in the local time zone: 01:23:23.675.
+	F_CALLER_FN                     // Print Caller function name and package: main.main
+	F_TIME_STD          = F_TIME_DATE | F_TIME_MILLI
+	F_TIME_RFC3339      = 128
+	F_TIME_RFC3339Milli = F_TIME_RFC3339 | F_TIME_MILLI
 )
 
 // New creates and returns a custom logger.
@@ -135,15 +137,22 @@ func (l *Logger) print(ctx context.Context, level int, stack string, values ...i
 	}
 	if l.config.Flags&F_TIME_TIME > 0 {
 		if timeFormat != "" {
-			timeFormat += "T"
+			timeFormat += " "
 		}
 		timeFormat += "15:04:05Z07:00"
 	}
 	if l.config.Flags&F_TIME_MILLI > 0 {
 		if timeFormat != "" {
-			timeFormat += "T"
+			timeFormat += " "
 		}
-		timeFormat += "15:04:05.000Z07:00"
+		timeFormat += "15:04:05.000"
+	}
+	if l.config.Flags&F_TIME_RFC3339 > 0 {
+		timeFormat = "2006-01-02T15:04:05"
+		if l.config.Flags&F_TIME_MILLI > 0 {
+			timeFormat += ".000"
+		}
+		timeFormat += "Z07:00"
 	}
 	if len(timeFormat) > 0 {
 		input.TimeFormat = now.Format(timeFormat)
