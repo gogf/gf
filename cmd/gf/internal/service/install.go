@@ -148,7 +148,7 @@ func (s serviceInstall) IsInstalled() (*serviceInstallAvailablePath, bool) {
 	return nil, false
 }
 
-// getGoPathBinFilePath retrieves ad returns the GOPATH/bin path for binary.
+// getGoPathBin retrieves ad returns the GOPATH/bin path for binary.
 func (s serviceInstall) getGoPathBin() string {
 	if goPath := genv.Get(`GOPATH`).String(); goPath != "" {
 		return gfile.Join(goPath, "bin")

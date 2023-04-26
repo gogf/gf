@@ -352,7 +352,7 @@ func (l *Logger) getFilePointer(ctx context.Context, path string) *gfpool.File {
 	return file
 }
 
-// getFilePointer retrieves and returns a file pointer from file pool.
+// getOpenedFilePointer retrieves and returns a file pointer from file pool.
 func (l *Logger) getOpenedFilePointer(ctx context.Context, path string) *gfpool.File {
 	file := gfpool.Get(
 		path,

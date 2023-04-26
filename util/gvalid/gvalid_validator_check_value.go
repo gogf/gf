@@ -31,7 +31,7 @@ type doCheckValueInput struct {
 	DataMap  map[string]interface{} // DataMap specifies the map that is converted from `dataRaw`. It is usually used internally
 }
 
-// doCheckSingleValue does the really rules validation for single key-value.
+// doCheckValue does the really rules validation for single key-value.
 func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Error {
 	// If there's no validation rules, it does nothing and returns quickly.
 	if in.Rule == "" {
