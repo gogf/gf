@@ -8,6 +8,7 @@ package ghttp
 
 import (
 	"context"
+	"time"
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/os/gctx"
@@ -18,9 +19,14 @@ type neverDoneCtx struct {
 	context.Context
 }
 
-// Done forbids the context done.
+// Done forbids the context done from parent context.
 func (*neverDoneCtx) Done() <-chan struct{} {
 	return nil
+}
+
+// Deadline forbids the context deadline from parent context.
+func (*neverDoneCtx) Deadline() (deadline time.Time, ok bool) {
+	return time.Time{}, false
 }
 
 // RequestFromCtx retrieves and returns the Request object from context.
