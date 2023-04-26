@@ -12,11 +12,13 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gmeta"
+	"github.com/gogf/gf/v2/util/gtag"
 )
 
 func Test_Basic(t *testing.T) {
@@ -1121,5 +1123,44 @@ func Test_EmptyJsonNameWithOmitEmpty(t *testing.T) {
 		t.AssertNE(oai.Components.Schemas.Get(reqKey).Value.Properties.Get("Name"), nil)
 		t.AssertNE(oai.Components.Schemas.Get(reqKey).Value.Properties.Get("Product"), nil)
 		t.Assert(oai.Components.Schemas.Get(reqKey).Value.Properties.Get("None"), nil)
+	})
+}
+
+func Test_Enums(t *testing.T) {
+	type Status string
+	const (
+		StatusA Status = "a"
+		StatusB Status = "b"
+	)
+	type Req struct {
+		gmeta.Meta `path:"/CreateResourceReq" method:"POST" tags:"default"`
+		Name       string    `dc:"实例名称" json:",omitempty"`
+		Status1    Status    `dc:"状态1" json:",omitempty"`
+		Status2    *Status   `dc:"状态2" json:",omitempty"`
+		Status3    []Status  `dc:"状态2" json:",omitempty"`
+		Status4    []*Status `dc:"状态2" json:",omitempty"`
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+			req = new(Req)
+		)
+		err = gtag.SetGlobalEnums(gjson.MustEncodeString(g.Map{
+			"github.com/gogf/gf/v2/net/goai_test.Status": []interface{}{StatusA, StatusB},
+		}))
+		t.AssertNil(err)
+
+		err = oai.Add(goai.AddInput{
+			Object: req,
+		})
+		t.AssertNil(err)
+		var reqKey = "github.com.gogf.gf.v2.net.goai_test.Req"
+		t.AssertNE(oai.Components.Schemas.Get(reqKey).Value.Properties.Get("Name"), nil)
+		t.Assert(oai.Components.Schemas.Get(reqKey).Value.Properties.Get("Status1").Value.Enum, g.Slice{"a", "b"})
+		t.Assert(oai.Components.Schemas.Get(reqKey).Value.Properties.Get("Status2").Value.Enum, g.Slice{"a", "b"})
+		t.Assert(oai.Components.Schemas.Get(reqKey).Value.Properties.Get("Status3").Value.Items.Value.Enum, g.Slice{"a", "b"})
+		t.Assert(oai.Components.Schemas.Get(reqKey).Value.Properties.Get("Status4").Value.Items.Value.Enum, g.Slice{"a", "b"})
 	})
 }

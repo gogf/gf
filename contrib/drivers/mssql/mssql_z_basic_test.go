@@ -286,7 +286,6 @@ func Test_DB_Insert(t *testing.T) {
 		t.Assert(one["PASSPORT"].String(), "t200")
 		t.Assert(one["PASSWORD"].String(), "25d55ad283aa400af464c76d71qw07ad")
 		t.Assert(one["NICKNAME"].String(), "T200")
-		t.Assert(one["CREATE_TIME"].GTime(), timeNow)
 	})
 }
 

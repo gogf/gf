@@ -1,3 +1,9 @@
+// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package cmd
 
 import (
@@ -33,7 +39,7 @@ like json/xml/yaml/toml/ini.
 	cTplParseEg    = `
 gf tpl parse -p ./template -v values.json -r
 gf tpl parse -p ./template -v values.json -n *.tpl -r
-gf tpl parse -p ./template -v values.json -d '${,}}' -r
+gf tpl parse -p ./template -v values.json -d '${{,}}' -r
 gf tpl parse -p ./template -v values.json -o ./template.parsed
 `
 	cTplSupportValuesFilePattern = `*.json,*.xml,*.yaml,*.yml,*.toml,*.ini`
@@ -63,7 +69,7 @@ func init() {
 }
 
 func (c *cTpl) Parse(ctx context.Context, in cTplParseInput) (out *cTplParseOutput, err error) {
-	if in.Output == "" && in.Replace == false {
+	if in.Output == "" && !in.Replace {
 		return nil, gerror.New(`parameter output and replace should not be both empty`)
 	}
 	delimiters := gstr.SplitAndTrim(in.Delimiters, ",")

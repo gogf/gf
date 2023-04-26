@@ -518,9 +518,9 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 	}
 	var array []string
 	if v, ok := fdMap["http"]; ok && len(v) > 0 {
-		array = strings.Split(v, ",")
+		array = gstr.SplitAndTrim(v, ",")
 	} else {
-		array = strings.Split(s.config.Address, ",")
+		array = gstr.SplitAndTrim(s.config.Address, ",")
 	}
 	for _, v := range array {
 		if len(v) == 0 {
@@ -555,7 +555,9 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 			var err error
 			// Create listener.
 			if server.isHttps {
-				err = server.CreateListenerTLS(s.config.HTTPSCertPath, s.config.HTTPSKeyPath, s.config.TLSConfig)
+				err = server.CreateListenerTLS(
+					s.config.HTTPSCertPath, s.config.HTTPSKeyPath, s.config.TLSConfig,
+				)
 			} else {
 				err = server.CreateListener()
 			}
