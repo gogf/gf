@@ -24,17 +24,18 @@ func (r *Registry) Register(ctx context.Context, service gsvc.Service) (gsvc.Ser
 		Service: service,
 	}
 	// Register logic.
-	var (
-		ids            = make([]string, 0, len(service.GetEndpoints()))
-		serviceVersion = service.GetVersion()
-	)
+	var ids = make([]string, 0, len(service.GetEndpoints()))
 	for _, endpoint := range service.GetEndpoints() {
 		// medata
-		var rmd map[string]interface{}
+		var (
+			rmd            map[string]interface{}
+			serviceName    = service.GetPrefix()
+			serviceVersion = service.GetVersion()
+		)
 		if service.GetMetadata().IsEmpty() {
 			rmd = map[string]interface{}{
 				metadataKeyKind:    gsvc.DefaultProtocol,
-				metadataKeyVersion: service.GetVersion(),
+				metadataKeyVersion: serviceVersion,
 			}
 		} else {
 			rmd = make(map[string]interface{}, len(service.GetMetadata())+2)
@@ -52,7 +53,7 @@ func (r *Registry) Register(ctx context.Context, service gsvc.Service) (gsvc.Ser
 		registeredService, err := r.provider.RegisterInstance(
 			&polaris.InstanceRegisterRequest{
 				InstanceRegisterRequest: model.InstanceRegisterRequest{
-					Service:      service.GetPrefix(),
+					Service:      serviceName,
 					ServiceToken: r.opt.ServiceToken,
 					Namespace:    r.opt.Namespace,
 					Host:         endpoint.Host(),

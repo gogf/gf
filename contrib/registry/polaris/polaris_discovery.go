@@ -7,6 +7,7 @@
 package polaris
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"strings"
@@ -90,11 +91,18 @@ func instanceToServiceInstance(instance model.Instance) gsvc.Service {
 		endpoints = gsvc.NewEndpoints(fmt.Sprintf("%s:%d", instance.GetHost(), instance.GetPort()))
 	)
 	if names != nil && len(names) > 4 {
+		var name bytes.Buffer
+		for i := 3; i < len(names)-1; i++ {
+			name.WriteString(names[i])
+			if i < len(names)-2 {
+				name.WriteString(instanceIDSeparator)
+			}
+		}
 		s = &gsvc.LocalService{
 			Head:       names[0],
 			Deployment: names[1],
 			Namespace:  names[2],
-			Name:       names[3],
+			Name:       name.String(),
 			Version:    metadata[metadataKeyVersion],
 			Metadata:   gconv.Map(metadata),
 			Endpoints:  endpoints,
