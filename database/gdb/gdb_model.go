@@ -191,6 +191,16 @@ func (tx *TX) Model(tableNameQueryOrStruct ...interface{}) *Model {
 	return model
 }
 
+// ModelEx acts like Core.Model except it operates on transaction.
+// See Core.Model.
+func (tx *TX) ModelEx(exTableName string, tableNameQueryOrStruct ...interface{}) *Model {
+	model := tx.db.Model(tableNameQueryOrStruct...)
+	model.db = tx.db
+	model.tx = tx
+	model.expandsTable = exTableName
+	return model
+}
+
 // With acts like Core.With except it operates on transaction.
 // See Core.With.
 func (tx *TX) With(object interface{}) *Model {
