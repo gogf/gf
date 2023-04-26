@@ -23,7 +23,7 @@ type SchemaRef struct {
 	Value *Schema
 }
 
-// isEmbeddedStructDefine checks and returns whether given golang type is embedded struct definition, like:
+// isEmbeddedStructDefinition checks and returns whether given golang type is embedded struct definition, like:
 //
 //	struct A struct{
 //	    B struct{
