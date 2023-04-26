@@ -7,6 +7,7 @@
 package polaris
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"strings"
@@ -28,6 +29,7 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]gsvc.Serv
 		}
 		in.Prefix = service.GetPrefix()
 	}
+	in.Prefix = trimAndReplace(in.Prefix)
 	// get all instances
 	instancesResponse, err := r.consumer.GetAllInstances(&polaris.GetAllInstancesRequest{
 		GetAllInstancesRequest: model.GetAllInstancesRequest{
@@ -44,7 +46,7 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]gsvc.Serv
 	// Service filter.
 	filteredServices := make([]gsvc.Service, 0)
 	for _, service := range serviceInstances {
-		if in.Prefix != "" && !gstr.HasPrefix(service.GetKey(), in.Prefix) {
+		if in.Prefix != "" && !gstr.HasPrefix(trimAndReplace(service.GetKey()), in.Prefix) {
 			continue
 		}
 		if in.Name != "" && service.GetName() != in.Name {
@@ -67,8 +69,8 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]gsvc.Serv
 }
 
 // Watch creates a watcher according to the service name.
-func (r *Registry) Watch(ctx context.Context, serviceName string) (gsvc.Watcher, error) {
-	return newWatcher(ctx, r.opt.Namespace, serviceName, r.consumer)
+func (r *Registry) Watch(ctx context.Context, key string) (gsvc.Watcher, error) {
+	return newWatcher(ctx, r.opt.Namespace, trimAndReplace(key), r.consumer)
 }
 
 func instancesToServiceInstances(instances []model.Instance) []gsvc.Service {
@@ -89,11 +91,18 @@ func instanceToServiceInstance(instance model.Instance) gsvc.Service {
 		endpoints = gsvc.NewEndpoints(fmt.Sprintf("%s:%d", instance.GetHost(), instance.GetPort()))
 	)
 	if names != nil && len(names) > 4 {
+		var name bytes.Buffer
+		for i := 3; i < len(names)-1; i++ {
+			name.WriteString(names[i])
+			if i < len(names)-2 {
+				name.WriteString(instanceIDSeparator)
+			}
+		}
 		s = &gsvc.LocalService{
 			Head:       names[0],
 			Deployment: names[1],
 			Namespace:  names[2],
-			Name:       names[3],
+			Name:       name.String(),
 			Version:    metadata[metadataKeyVersion],
 			Metadata:   gconv.Map(metadata),
 			Endpoints:  endpoints,
@@ -110,4 +119,11 @@ func instanceToServiceInstance(instance model.Instance) gsvc.Service {
 	return &Service{
 		Service: s,
 	}
+}
+
+// trimAndReplace trims the prefix and suffix separator and replaces the separator in the middle.
+func trimAndReplace(key string) string {
+	key = gstr.Trim(key, gsvc.DefaultSeparator)
+	key = gstr.Replace(key, gsvc.DefaultSeparator, instanceIDSeparator)
+	return key
 }

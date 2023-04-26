@@ -8,7 +8,6 @@ package polaris
 
 import (
 	"context"
-	"time"
 
 	"github.com/polarismesh/polaris-go"
 	"github.com/polarismesh/polaris-go/pkg/model"
@@ -25,17 +24,18 @@ func (r *Registry) Register(ctx context.Context, service gsvc.Service) (gsvc.Ser
 		Service: service,
 	}
 	// Register logic.
-	var (
-		ids            = make([]string, 0, len(service.GetEndpoints()))
-		serviceVersion = service.GetVersion()
-	)
+	var ids = make([]string, 0, len(service.GetEndpoints()))
 	for _, endpoint := range service.GetEndpoints() {
 		// medata
-		var rmd map[string]interface{}
+		var (
+			rmd            map[string]interface{}
+			serviceName    = service.GetPrefix()
+			serviceVersion = service.GetVersion()
+		)
 		if service.GetMetadata().IsEmpty() {
 			rmd = map[string]interface{}{
 				metadataKeyKind:    gsvc.DefaultProtocol,
-				metadataKeyVersion: service.GetVersion(),
+				metadataKeyVersion: serviceVersion,
 			}
 		} else {
 			rmd = make(map[string]interface{}, len(service.GetMetadata())+2)
@@ -53,7 +53,7 @@ func (r *Registry) Register(ctx context.Context, service gsvc.Service) (gsvc.Ser
 		registeredService, err := r.provider.RegisterInstance(
 			&polaris.InstanceRegisterRequest{
 				InstanceRegisterRequest: model.InstanceRegisterRequest{
-					Service:      service.GetPrefix(),
+					Service:      serviceName,
 					ServiceToken: r.opt.ServiceToken,
 					Namespace:    r.opt.Namespace,
 					Host:         endpoint.Host(),
@@ -73,9 +73,6 @@ func (r *Registry) Register(ctx context.Context, service gsvc.Service) (gsvc.Ser
 		if err != nil {
 			return nil, err
 		}
-		if r.opt.Heartbeat {
-			// r.doHeartBeat(ctx, registeredService.InstanceID, service, endpoint)
-		}
 		ids = append(ids, registeredService.InstanceID)
 	}
 	// need to set InstanceID for Deregister
@@ -85,7 +82,6 @@ func (r *Registry) Register(ctx context.Context, service gsvc.Service) (gsvc.Ser
 
 // Deregister the registration.
 func (r *Registry) Deregister(ctx context.Context, service gsvc.Service) error {
-	// r.c <- struct{}{}
 	var (
 		err   error
 		split = gstr.Split(service.(*Service).ID, instanceIDSeparator)
@@ -111,38 +107,4 @@ func (r *Registry) Deregister(ctx context.Context, service gsvc.Service) error {
 		}
 	}
 	return nil
-}
-
-// Deprecated .
-func (r *Registry) doHeartBeat(ctx context.Context, instanceID string, service gsvc.Service, endpoint gsvc.Endpoint) {
-	go func() {
-		ticker := time.NewTicker(time.Second * time.Duration(r.opt.TTL))
-		defer ticker.Stop()
-
-		for {
-			select {
-			case <-ticker.C:
-				err := r.provider.Heartbeat(&polaris.InstanceHeartbeatRequest{
-					InstanceHeartbeatRequest: model.InstanceHeartbeatRequest{
-						Service:      service.GetPrefix(),
-						Namespace:    r.opt.Namespace,
-						Host:         endpoint.Host(),
-						Port:         endpoint.Port(),
-						ServiceToken: r.opt.ServiceToken,
-						InstanceID:   instanceID,
-						Timeout:      &r.opt.Timeout,
-						RetryCount:   &r.opt.RetryCount,
-					},
-				})
-				if err != nil {
-					r.opt.Logger.Error(ctx, err.Error())
-					continue
-				}
-				r.opt.Logger.Debug(ctx, "heartbeat success")
-			case <-r.c:
-				r.opt.Logger.Debug(ctx, "stop heartbeat")
-				return
-			}
-		}
-	}()
 }

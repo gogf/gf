@@ -47,12 +47,6 @@ type options struct {
 	// To show service is healthy or not. Default value is True.
 	Healthy bool
 
-	// Deprecated: Use RegisterInstance instead.
-	// Service registration is performed synchronously,
-	// and heartbeat reporting is automatically performed
-	// Heartbeat enable .Not in polaris. Default value is True.
-	Heartbeat bool
-
 	// To show service is isolate or not. Default value is False.
 	Isolate bool
 
@@ -78,7 +72,6 @@ type Registry struct {
 	opt      options
 	provider polaris.ProviderAPI
 	consumer polaris.ConsumerAPI
-	c        chan struct{}
 }
 
 // WithNamespace with the Namespace option.
@@ -126,12 +119,6 @@ func WithRetryCount(retryCount int) Option {
 	return func(o *options) { o.RetryCount = retryCount }
 }
 
-// WithHeartbeat with the Heartbeat option.
-// Deprecated remove in v2.4.0
-func WithHeartbeat(heartbeat bool) Option {
-	return func(o *options) { o.Heartbeat = heartbeat }
-}
-
 // WithLogger with the Logger option.
 func WithLogger(logger glog.ILogger) Option {
 	return func(o *options) { o.Logger = logger }
@@ -146,7 +133,6 @@ func New(provider polaris.ProviderAPI, consumer polaris.ConsumerAPI, opts ...Opt
 		Weight:       0,
 		Priority:     0,
 		Healthy:      true,
-		Heartbeat:    true,
 		Isolate:      false,
 		TTL:          0,
 		Timeout:      0,
@@ -160,7 +146,6 @@ func New(provider polaris.ProviderAPI, consumer polaris.ConsumerAPI, opts ...Opt
 		opt:      op,
 		provider: provider,
 		consumer: consumer,
-		c:        make(chan struct{}),
 	}
 }
 

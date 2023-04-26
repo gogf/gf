@@ -3,16 +3,17 @@ package main
 import (
 	"context"
 
+	"github.com/polarismesh/polaris-go/api"
+	"github.com/polarismesh/polaris-go/pkg/config"
+
 	"github.com/gogf/gf/contrib/registry/polaris/v2"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/net/gsvc"
-	"github.com/polarismesh/polaris-go/api"
-	"github.com/polarismesh/polaris-go/pkg/config"
 )
 
 func main() {
-	conf := config.NewDefaultConfiguration([]string{"192.168.100.222:8091"})
+	conf := config.NewDefaultConfiguration([]string{"183.47.111.80:8091"})
 	conf.Consumer.LocalCache.SetPersistDir("/tmp/polaris/backup")
 	if err := api.SetLoggersDir("/tmp/polaris/log"); err != nil {
 		g.Log().Fatal(context.Background(), err)
