@@ -29,6 +29,11 @@ func (*neverDoneCtx) Deadline() (deadline time.Time, ok bool) {
 	return time.Time{}, false
 }
 
+// Err forbids the context done from parent context.
+func (c *neverDoneCtx) Err() error {
+	return nil
+}
+
 // RequestFromCtx retrieves and returns the Request object from context.
 func RequestFromCtx(ctx context.Context) *Request {
 	if v := ctx.Value(ctxKeyForRequest); v != nil {
