@@ -698,7 +698,7 @@ func Test_Issue2561(t *testing.T) {
 		m, _ := result.LastInsertId()
 		t.Assert(m, 3)
 
-		n, _ := result.LastInsertId()
+		n, _ := result.RowsAffected()
 		t.Assert(n, 3)
 
 		one, err := db.Model(table).WherePri(1).One()

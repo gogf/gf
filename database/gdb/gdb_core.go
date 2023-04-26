@@ -14,6 +14,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -432,9 +433,9 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 		params         []interface{} // Values that will be committed to underlying database driver.
 		onDuplicateStr string        // onDuplicateStr is used in "ON DUPLICATE KEY UPDATE" statement.
 	)
-	// Group the list by fields.
-	// Different fields to different list.
-	var keyListMap = make(map[string]List)
+	// Group the list by fields. Different fields to different list.
+	// It here uses ListMap to keep sequence for data inserting.
+	var keyListMap = gmap.NewListMap()
 	for _, item := range list {
 		var (
 			tmpKeys              = make([]string, 0)
@@ -448,29 +449,33 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 			return nil, err
 		}
 		tmpKeysInSequenceStr = gstr.Join(keys, ",")
-		if keyListMap[tmpKeysInSequenceStr] == nil {
-			keyListMap[tmpKeysInSequenceStr] = make(List, 0)
+
+		if !keyListMap.Contains(tmpKeysInSequenceStr) {
+			keyListMap.Set(tmpKeysInSequenceStr, make(List, 0))
 		}
-		keyListMap[tmpKeysInSequenceStr] = append(keyListMap[tmpKeysInSequenceStr], item)
+		tmpKeysInSequenceList := keyListMap.Get(tmpKeysInSequenceStr).(List)
+		tmpKeysInSequenceList = append(tmpKeysInSequenceList, item)
+		keyListMap.Set(tmpKeysInSequenceStr, tmpKeysInSequenceList)
 	}
-	if len(keyListMap) > 1 {
+	if keyListMap.Size() > 1 {
 		var (
 			tmpResult    sql.Result
 			sqlResult    SqlResult
 			rowsAffected int64
 		)
-		for _, v := range keyListMap {
-			tmpResult, err = c.DoInsert(ctx, link, table, v, option)
+		keyListMap.Iterator(func(key, value interface{}) bool {
+			tmpResult, err = c.DoInsert(ctx, link, table, value.(List), option)
 			if err != nil {
-				return nil, err
+				return false
 			}
 			rowsAffected, err = tmpResult.RowsAffected()
 			if err != nil {
-				return nil, err
+				return false
 			}
 			sqlResult.Result = tmpResult
 			sqlResult.Affected += rowsAffected
-		}
+			return true
+		})
 		return &sqlResult, nil
 	}
 	// Prepare the batch result pointer.
