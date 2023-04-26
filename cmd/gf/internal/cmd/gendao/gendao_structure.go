@@ -57,7 +57,7 @@ func generateStructDefinition(ctx context.Context, in generateStructDefinitionIn
 	return buffer.String()
 }
 
-// generateStructFieldForModel generates and returns the attribute definition for specified field.
+// generateStructFieldDefinition generates and returns the attribute definition for specified field.
 func generateStructFieldDefinition(
 	ctx context.Context, field *gdb.TableField, in generateStructDefinitionInput,
 ) []string {

@@ -123,7 +123,7 @@ func (s *StorageRedis) UpdateTTL(ctx context.Context, sessionId string, ttl time
 	return nil
 }
 
-// doUpdateTTL updates the TTL for session id.
+// doUpdateExpireForSession updates the TTL for session id.
 func (s *StorageRedis) doUpdateExpireForSession(ctx context.Context, sessionId string, ttlSeconds int) error {
 	intlog.Printf(ctx, "StorageRedis.doUpdateTTL: %s, %d", sessionId, ttlSeconds)
 	_, err := s.redis.Expire(ctx, s.sessionIdToRedisKey(sessionId), int64(ttlSeconds))
