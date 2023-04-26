@@ -89,6 +89,14 @@ func Test_SetFile(t *testing.T) {
 	})
 }
 
+func Test_SetTimeFormat(t *testing.T) {
+	defaultLog := glog.DefaultLogger().Clone()
+	defer glog.SetDefaultLogger(defaultLog)
+	gtest.C(t, func(t *gtest.T) {
+		glog.SetTimeFormat("2006-01-02T15:04:05Z07:00")
+	})
+}
+
 func Test_SetLevel(t *testing.T) {
 	defaultLog := glog.DefaultLogger().Clone()
 	defer glog.SetDefaultLogger(defaultLog)
