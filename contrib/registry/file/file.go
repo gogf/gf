@@ -19,10 +19,11 @@ var (
 )
 
 const (
-	updateAtKey           = "UpdateAt"
-	serviceTTL            = 20 * time.Second
-	serviceUpdateInterval = 10 * time.Second
-	defaultSeparator      = "#"
+	updateAtKey                      = "UpdateAt"
+	serviceTTL                       = 20 * time.Second
+	serviceUpdateInterval            = 10 * time.Second
+	defaultSeparator                 = "#"
+	defaultEndpointHostPortDelimiter = "-"
 )
 
 // Registry implements interface Registry using file.

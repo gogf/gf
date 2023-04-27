@@ -108,6 +108,8 @@ func (r *Registry) getServiceByFilePath(filePath string) (gsvc.Service, error) {
 		fileContent = gfile.GetContents(filePath)
 		serviceKey  = gstr.Replace(fileName, defaultSeparator, gsvc.DefaultSeparator)
 	)
+
+	serviceKey = gstr.Replace(serviceKey, defaultEndpointHostPortDelimiter, gsvc.EndpointHostPortDelimiter)
 	serviceKey = gsvc.DefaultSeparator + serviceKey
 	return gsvc.NewServiceWithKV(serviceKey, fileContent)
 }

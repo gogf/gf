@@ -129,8 +129,8 @@ const (
 	MDWeight                  = `weight`
 	DefaultProtocol           = `http`
 	DefaultSeparator          = "/"
+	EndpointHostPortDelimiter = ":"
 	defaultTimeout            = 5 * time.Second
-	endpointHostPortDelimiter = ":"
 	endpointsDelimiter        = ","
 )
 
