@@ -414,3 +414,46 @@ func Test_Slice_Structs(t *testing.T) {
 		t.Assert(users[1].Age, 20)
 	})
 }
+
+func Test_EmptyString_To_CustomType(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Status string
+		type Req struct {
+			Name     string
+			Statuses []Status
+			Types    []string
+		}
+		var (
+			req  *Req
+			data = g.Map{
+				"Name":     "john",
+				"Statuses": "",
+				"Types":    "",
+			}
+		)
+		err := gconv.Scan(data, &req)
+		t.AssertNil(err)
+		t.Assert(len(req.Statuses), 0)
+		t.Assert(len(req.Types), 0)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Status string
+		type Req struct {
+			Name     string
+			Statuses []*Status
+			Types    []string
+		}
+		var (
+			req  *Req
+			data = g.Map{
+				"Name":     "john",
+				"Statuses": "",
+				"Types":    "",
+			}
+		)
+		err := gconv.Scan(data, &req)
+		t.AssertNil(err)
+		t.Assert(len(req.Statuses), 0)
+		t.Assert(len(req.Types), 0)
+	})
+}
