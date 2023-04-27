@@ -58,5 +58,6 @@ func (r *Registry) getServiceFileName(service gsvc.Service) string {
 func (r *Registry) getServiceKeyForFile(key string) string {
 	key = gstr.Replace(key, gsvc.DefaultSeparator, defaultSeparator)
 	key = gstr.Trim(key, defaultSeparator)
+	key = gstr.Replace(key, gsvc.EndpointHostPortDelimiter, defaultEndpointHostPortDelimiter)
 	return key
 }
