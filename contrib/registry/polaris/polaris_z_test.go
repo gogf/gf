@@ -8,18 +8,25 @@ package polaris
 
 import (
 	"context"
+	"os"
 	"testing"
 	"time"
+
+	"github.com/polarismesh/polaris-go/api"
+	"github.com/polarismesh/polaris-go/pkg/config"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/polarismesh/polaris-go/pkg/config"
 )
 
 // TestRegistry TestRegistryManyService
 func TestRegistry(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
+	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris/backup")
+	if err := api.SetLoggersDir(os.TempDir() + "/polaris/log"); err != nil {
+		g.Log().Fatal(context.Background(), err)
+	}
 
 	r := NewWithConfig(
 		conf,
@@ -50,6 +57,10 @@ func TestRegistry(t *testing.T) {
 // TestRegistryMany TestRegistryManyService
 func TestRegistryMany(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
+	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris/backup")
+	if err := api.SetLoggersDir(os.TempDir() + "/polaris/log"); err != nil {
+		g.Log().Fatal(context.Background(), err)
+	}
 
 	r := NewWithConfig(
 		conf,
@@ -110,6 +121,10 @@ func TestRegistryMany(t *testing.T) {
 // TestGetService Test GetService
 func TestGetService(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
+	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris/backup")
+	if err := api.SetLoggersDir(os.TempDir() + "/polaris/log"); err != nil {
+		g.Log().Fatal(context.Background(), err)
+	}
 
 	r := NewWithConfig(
 		conf,
@@ -153,7 +168,10 @@ func TestGetService(t *testing.T) {
 // TestWatch Test Watch
 func TestWatch(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
-
+	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris/backup")
+	if err := api.SetLoggersDir(os.TempDir() + "/polaris/log"); err != nil {
+		g.Log().Fatal(context.Background(), err)
+	}
 	r := NewWithConfig(
 		conf,
 		WithTimeout(time.Second*10),
