@@ -57,7 +57,7 @@ const (
 	F_CALLER_FN                     // Print Caller function name and package: main.main
 	F_TIME_STD          = F_TIME_DATE | F_TIME_MILLI
 	F_TIME_RFC3339      = 128
-	F_TIME_RFC3339Milli = F_TIME_RFC3339 | F_TIME_MILLI
+	F_TIME_RFC3339MILLI = F_TIME_RFC3339 | F_TIME_MILLI
 )
 
 // New creates and returns a custom logger.
