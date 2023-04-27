@@ -10,10 +10,11 @@ package gdb
 import (
 	"context"
 	"database/sql"
-	"github.com/gogf/gf/v2/util/gconv"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 	"reflect"
+
+	"github.com/gogf/gf/v2/util/gconv"
 
 	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/container/gvar"

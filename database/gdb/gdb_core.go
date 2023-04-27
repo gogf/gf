@@ -14,6 +14,8 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -389,6 +391,29 @@ func (c *Core) Save(ctx context.Context, table string, data interface{}, batch .
 	return c.Model(table).Ctx(ctx).Data(data).Save()
 }
 
+func (c *Core) fieldsToSequence(ctx context.Context, table string, fields []string) ([]string, error) {
+	var (
+		fieldSet               = gset.NewStrSetFrom(fields)
+		fieldsResultInSequence = make([]string, 0)
+		tableFields, err       = c.db.TableFields(ctx, table)
+	)
+	if err != nil {
+		return nil, err
+	}
+	// Sort the fields in order.
+	var fieldsOfTableInSequence = make([]string, len(tableFields))
+	for _, field := range tableFields {
+		fieldsOfTableInSequence[field.Index] = field.Name
+	}
+	// Sort the input fields.
+	for _, fieldName := range fieldsOfTableInSequence {
+		if fieldSet.Contains(fieldName) {
+			fieldsResultInSequence = append(fieldsResultInSequence, fieldName)
+		}
+	}
+	return fieldsResultInSequence, nil
+}
+
 // DoInsert inserts or updates data forF given table.
 // This function is usually used for custom interface definition, you do not need call it manually.
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
@@ -408,9 +433,50 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 		params         []interface{} // Values that will be committed to underlying database driver.
 		onDuplicateStr string        // onDuplicateStr is used in "ON DUPLICATE KEY UPDATE" statement.
 	)
-	// Handle the field names and placeholders.
-	for k := range list[0] {
-		keys = append(keys, k)
+	// Group the list by fields. Different fields to different list.
+	// It here uses ListMap to keep sequence for data inserting.
+	var keyListMap = gmap.NewListMap()
+	for _, item := range list {
+		var (
+			tmpKeys              = make([]string, 0)
+			tmpKeysInSequenceStr string
+		)
+		for k := range item {
+			tmpKeys = append(tmpKeys, k)
+		}
+		keys, err = c.fieldsToSequence(ctx, table, tmpKeys)
+		if err != nil {
+			return nil, err
+		}
+		tmpKeysInSequenceStr = gstr.Join(keys, ",")
+
+		if !keyListMap.Contains(tmpKeysInSequenceStr) {
+			keyListMap.Set(tmpKeysInSequenceStr, make(List, 0))
+		}
+		tmpKeysInSequenceList := keyListMap.Get(tmpKeysInSequenceStr).(List)
+		tmpKeysInSequenceList = append(tmpKeysInSequenceList, item)
+		keyListMap.Set(tmpKeysInSequenceStr, tmpKeysInSequenceList)
+	}
+	if keyListMap.Size() > 1 {
+		var (
+			tmpResult    sql.Result
+			sqlResult    SqlResult
+			rowsAffected int64
+		)
+		keyListMap.Iterator(func(key, value interface{}) bool {
+			tmpResult, err = c.DoInsert(ctx, link, table, value.(List), option)
+			if err != nil {
+				return false
+			}
+			rowsAffected, err = tmpResult.RowsAffected()
+			if err != nil {
+				return false
+			}
+			sqlResult.Result = tmpResult
+			sqlResult.Affected += rowsAffected
+			return true
+		})
+		return &sqlResult, nil
 	}
 	// Prepare the batch result pointer.
 	var (
@@ -571,7 +637,20 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 		if err != nil {
 			return nil, err
 		}
-		for k, v := range dataMap {
+		// Sort the data keys in sequence of table fields.
+		var (
+			dataKeys       = make([]string, 0)
+			keysInSequence = make([]string, 0)
+		)
+		for k := range dataMap {
+			dataKeys = append(dataKeys, k)
+		}
+		keysInSequence, err = c.fieldsToSequence(ctx, table, dataKeys)
+		if err != nil {
+			return nil, err
+		}
+		for _, k := range keysInSequence {
+			v := dataMap[k]
 			switch value := v.(type) {
 			case *Counter:
 				counterHandler(k, *value)
