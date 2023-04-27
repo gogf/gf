@@ -128,7 +128,7 @@ func Test_Model_Update_Data_DO(t *testing.T) {
 func Test_Model_Update_Pointer_Data_DO(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
-	db.SetDebug(true)
+
 	gtest.C(t, func(t *gtest.T) {
 		type NN string
 		type Req struct {

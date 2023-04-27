@@ -35,10 +35,10 @@ import (
 )
 
 func main() {
-    conf := config.NewDefaultConfiguration([]string{"192.168.100.222:8091"})
+    conf := config.NewDefaultConfiguration([]string{"183.47.111.80:8091"})
     
     // TTL egt 2*time.Second
-    gsvc.SetRegistry(polaris.NewRegistryWithConfig(conf, polaris.WithTTL(100)))
+    gsvc.SetRegistry(polaris.NewRegistryWithConfig(conf, polaris.WithTTL(10)))
     
     s := g.Server(`hello.svc`)
     s.BindHandler("/", func(r *ghttp.Request) {
@@ -68,9 +68,9 @@ import (
 )
 
 func main() {
-    conf := config.NewDefaultConfiguration([]string{"192.168.100.222:8091"})
+    conf := config.NewDefaultConfiguration([]string{"183.47.111.80:8091"})
     
-    gsvc.SetRegistry(polaris.NewRegistryWithConfig(conf, polaris.WithTTL(100)))
+    gsvc.SetRegistry(polaris.NewRegistryWithConfig(conf, polaris.WithTTL(10)))
     
     for i := 0; i < 100; i++ {
         res, err := g.Client().Get(gctx.New(), `http://hello.svc/`)
