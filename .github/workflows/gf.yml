@@ -122,7 +122,7 @@ jobs:
       # Polaris backend server.
       # docker run -d --name polaris -p 8090:8090 -p 8091:8091 -p 8093:8093  -p 9090:9090 -p 9091:9091 loads/polaris-server-standalone:1.11.2
       polaris:
-        image: polarismesh/polaris-standalone:v1.16.3
+        image: loads/polaris-standalone:v1.16.3
         ports:
           - 8090:8090
           - 8091:8091
