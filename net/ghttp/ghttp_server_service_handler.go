@@ -182,8 +182,13 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 			return
 		}
 
+		req := reflectType.In(1).String()
+		// if the request struct is generic will cut
+		if index := strings.Index(req, "["); index != -1 {
+			req = req[:index]
+		}
 		// The request struct should be named as `xxxReq`.
-		if !gstr.HasSuffix(reflectType.In(1).String(), `Req`) {
+		if !gstr.HasSuffix(req, `Req`) {
 			err = gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`invalid struct naming for request: defined as "%s", but it should be named with "Req" suffix like "XxxReq"`,
@@ -192,8 +197,13 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 			return
 		}
 
+		res := reflectType.Out(0).String()
+		// if the response struct is generic will cut
+		if index := strings.Index(res, "["); index != -1 {
+			res = res[:index]
+		}
 		// The response struct should be named as `xxxRes`.
-		if !gstr.HasSuffix(reflectType.Out(0).String(), `Res`) {
+		if !gstr.HasSuffix(res, `Res`) {
 			err = gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`invalid struct naming for response: defined as "%s", but it should be named with "Res" suffix like "XxxRes"`,
