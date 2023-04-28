@@ -181,7 +181,7 @@ func TestWatch(t *testing.T) {
 	ctx := gctx.New()
 
 	svc := &gsvc.LocalService{
-		Name:      "goframe-provider-4-tcp",
+		Name:      "goframe-provider-5-tcp",
 		Version:   "test",
 		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
@@ -213,8 +213,7 @@ func TestWatch(t *testing.T) {
 		g.Log().Info(ctx, "Register Proceed service: ", instance)
 	}
 
-	err = r.Deregister(context.Background(), s1)
-	if err != nil {
+	if err = r.Deregister(context.Background(), s1); err != nil {
 		t.Fatal(err)
 	}
 
@@ -228,12 +227,10 @@ func TestWatch(t *testing.T) {
 		g.Log().Info(ctx, "Deregister Proceed service: ", instance)
 	}
 
-	err = watch.Close()
-	if err != nil {
+	if err = watch.Close(); err != nil {
 		t.Fatal(err)
 	}
-	_, err = watch.Proceed()
-	if err == nil {
+	if _, err = watch.Proceed(); err == nil {
 		// if nil, stop failed
 		t.Fatal()
 	}
