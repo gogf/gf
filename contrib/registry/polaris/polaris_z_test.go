@@ -23,8 +23,8 @@ import (
 // TestRegistry TestRegistryManyService
 func TestRegistry(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
-	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris/backup")
-	if err := api.SetLoggersDir(os.TempDir() + "/polaris/log"); err != nil {
+	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-registry/backup")
+	if err := api.SetLoggersDir(os.TempDir() + "/polaris-registry/log"); err != nil {
 		g.Log().Fatal(context.Background(), err)
 	}
 
@@ -57,8 +57,8 @@ func TestRegistry(t *testing.T) {
 // TestRegistryMany TestRegistryManyService
 func TestRegistryMany(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
-	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris/backup")
-	if err := api.SetLoggersDir(os.TempDir() + "/polaris/log"); err != nil {
+	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-registry-many/backup")
+	if err := api.SetLoggersDir(os.TempDir() + "/polaris-registry-many/log"); err != nil {
 		g.Log().Fatal(context.Background(), err)
 	}
 
@@ -121,8 +121,8 @@ func TestRegistryMany(t *testing.T) {
 // TestGetService Test GetService
 func TestGetService(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
-	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris/backup")
-	if err := api.SetLoggersDir(os.TempDir() + "/polaris/log"); err != nil {
+	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-get-service/backup")
+	if err := api.SetLoggersDir(os.TempDir() + "/polaris-get-service/log"); err != nil {
 		g.Log().Fatal(context.Background(), err)
 	}
 
@@ -168,8 +168,8 @@ func TestGetService(t *testing.T) {
 // TestWatch Test Watch
 func TestWatch(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
-	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris/backup")
-	if err := api.SetLoggersDir(os.TempDir() + "/polaris/log"); err != nil {
+	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-watch/backup")
+	if err := api.SetLoggersDir(os.TempDir() + "/polaris-watch/log"); err != nil {
 		g.Log().Fatal(context.Background(), err)
 	}
 	r := NewWithConfig(
