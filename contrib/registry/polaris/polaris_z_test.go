@@ -22,7 +22,7 @@ import (
 // TestRegistry TestRegistryManyService
 func TestRegistry(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
-	conf.GetGlobal().GetStatReporter().SetEnable(true)
+	conf.GetGlobal().GetStatReporter().SetEnable(false)
 	conf.GetGlobal().GetStatReporter().SetChain([]string{"prometheus"})
 	conf.GetGlobal().GetStatReporter().SetPluginConfig("prometheus", &prometheus.Config{
 		PortStr: "0",
@@ -58,7 +58,7 @@ func TestRegistry(t *testing.T) {
 // TestRegistryMany TestRegistryManyService
 func TestRegistryMany(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
-	conf.GetGlobal().GetStatReporter().SetEnable(true)
+	conf.GetGlobal().GetStatReporter().SetEnable(false)
 	conf.GetGlobal().GetStatReporter().SetChain([]string{"prometheus"})
 	conf.GetGlobal().GetStatReporter().SetPluginConfig("prometheus", &prometheus.Config{
 		PortStr: "0",
@@ -124,7 +124,7 @@ func TestRegistryMany(t *testing.T) {
 // TestGetService Test GetService
 func TestGetService(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
-	conf.GetGlobal().GetStatReporter().SetEnable(true)
+	conf.GetGlobal().GetStatReporter().SetEnable(false)
 	conf.GetGlobal().GetStatReporter().SetChain([]string{"prometheus"})
 	conf.GetGlobal().GetStatReporter().SetPluginConfig("prometheus", &prometheus.Config{
 		PortStr: "0",
@@ -173,7 +173,7 @@ func TestGetService(t *testing.T) {
 // TestWatch Test Watch
 func TestWatch(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
-	conf.GetGlobal().GetStatReporter().SetEnable(true)
+	conf.GetGlobal().GetStatReporter().SetEnable(false)
 	conf.GetGlobal().GetStatReporter().SetChain([]string{"prometheus"})
 	conf.GetGlobal().GetStatReporter().SetPluginConfig("prometheus", &prometheus.Config{
 		PortStr: "0",
