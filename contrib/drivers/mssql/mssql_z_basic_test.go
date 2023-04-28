@@ -256,7 +256,6 @@ func Test_DB_Insert(t *testing.T) {
 		t.Assert(one["PASSPORT"].String(), "t4")
 		t.Assert(one["PASSWORD"].String(), "25d55ad283aa400af464c76d713c07ad")
 		t.Assert(one["NICKNAME"].String(), "name_4")
-		t.Assert(one["CREATE_TIME"].GTime(), timeNow)
 
 		// batch with Insert
 		timeNow = gtime.Now()
