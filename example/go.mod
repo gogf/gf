@@ -16,7 +16,7 @@ require (
 	github.com/gogf/gf/contrib/trace/jaeger/v2 v2.4.0
 	github.com/gogf/gf/v2 v2.4.0
 	github.com/nacos-group/nacos-sdk-go v1.1.2
-	github.com/polarismesh/polaris-go v1.3.0
+	github.com/polarismesh/polaris-go v1.4.1
 	google.golang.org/grpc v1.49.0
 	google.golang.org/protobuf v1.28.1
 	k8s.io/client-go v0.25.2

@@ -97,7 +97,18 @@ func (m *Model) Array(fieldsAndWhere ...interface{}) ([]Value, error) {
 	if err != nil {
 		return nil, err
 	}
-	return all.Array(), nil
+	var field string
+	if len(all) > 0 {
+		if internalData := m.db.GetCore().GetInternalCtxDataFromCtx(m.GetCtx()); internalData != nil {
+			field = internalData.FirstResultColumn
+		} else {
+			return nil, gerror.NewCode(
+				gcode.CodeInternalError,
+				`query array error: the internal context data is missing. there's internal issue should be fixed`,
+			)
+		}
+	}
+	return all.Array(field), nil
 }
 
 // Struct retrieves one record from table and converts it into given struct.
@@ -292,15 +303,15 @@ func (m *Model) Value(fieldsAndWhere ...interface{}) (Value, error) {
 	}
 	if len(all) > 0 {
 		if internalData := m.db.GetCore().GetInternalCtxDataFromCtx(ctx); internalData != nil {
-			record := all[0]
-			if v, ok := record[internalData.FirstResultColumn]; ok {
+			if v, ok := all[0][internalData.FirstResultColumn]; ok {
 				return v, nil
 			}
+		} else {
+			return nil, gerror.NewCode(
+				gcode.CodeInternalError,
+				`query value error: the internal context data is missing. there's internal issue should be fixed`,
+			)
 		}
-		return nil, gerror.NewCode(
-			gcode.CodeInternalError,
-			`query value error: the internal context data is missing. there's internal issue should be fixed`,
-		)
 	}
 	return nil, nil
 }
@@ -322,15 +333,15 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 	}
 	if len(all) > 0 {
 		if internalData := m.db.GetCore().GetInternalCtxDataFromCtx(ctx); internalData != nil {
-			record := all[0]
-			if v, ok := record[internalData.FirstResultColumn]; ok {
+			if v, ok := all[0][internalData.FirstResultColumn]; ok {
 				return v.Int(), nil
 			}
+		} else {
+			return 0, gerror.NewCode(
+				gcode.CodeInternalError,
+				`query count error: the internal context data is missing. there's internal issue should be fixed`,
+			)
 		}
-		return 0, gerror.NewCode(
-			gcode.CodeInternalError,
-			`query count error: the internal context data is missing. there's internal issue should be fixed`,
-		)
 	}
 	return 0, nil
 }
