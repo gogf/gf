@@ -15,9 +15,7 @@ import (
 	"github.com/polarismesh/polaris-go/api"
 	"github.com/polarismesh/polaris-go/pkg/config"
 
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gsvc"
-	"github.com/gogf/gf/v2/os/gctx"
 )
 
 // TestRegistry TestRegistryManyService
@@ -25,7 +23,7 @@ func TestRegistry(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
 	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-registry/backup")
 	if err := api.SetLoggersDir(os.TempDir() + "/polaris-registry/log"); err != nil {
-		g.Log().Fatal(context.Background(), err)
+		t.Fatal(err)
 	}
 
 	r := NewWithConfig(
@@ -34,8 +32,6 @@ func TestRegistry(t *testing.T) {
 		WithTTL(100),
 	)
 
-	ctx := context.Background()
-
 	svc := &gsvc.LocalService{
 		Name:      "goframe-provider-0-tcp",
 		Version:   "test",
@@ -43,13 +39,12 @@ func TestRegistry(t *testing.T) {
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
 	}
 
-	s, err := r.Register(ctx, svc)
+	s, err := r.Register(context.Background(), svc)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = r.Deregister(ctx, s)
-	if err != nil {
+	if err = r.Deregister(context.Background(), s); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -59,7 +54,7 @@ func TestRegistryMany(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
 	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-registry-many/backup")
 	if err := api.SetLoggersDir(os.TempDir() + "/polaris-registry-many/log"); err != nil {
-		g.Log().Fatal(context.Background(), err)
+		t.Fatal(err)
 	}
 
 	r := NewWithConfig(
@@ -102,18 +97,15 @@ func TestRegistryMany(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = r.Deregister(context.Background(), s0)
-	if err != nil {
+	if err = r.Deregister(context.Background(), s0); err != nil {
 		t.Fatal(err)
 	}
 
-	err = r.Deregister(context.Background(), s1)
-	if err != nil {
+	if err = r.Deregister(context.Background(), s1); err != nil {
 		t.Fatal(err)
 	}
 
-	err = r.Deregister(context.Background(), s2)
-	if err != nil {
+	if err = r.Deregister(context.Background(), s2); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -123,7 +115,7 @@ func TestGetService(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
 	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-get-service/backup")
 	if err := api.SetLoggersDir(os.TempDir() + "/polaris-get-service/log"); err != nil {
-		g.Log().Fatal(context.Background(), err)
+		t.Fatal(err)
 	}
 
 	r := NewWithConfig(
@@ -132,8 +124,6 @@ func TestGetService(t *testing.T) {
 		WithTTL(100),
 	)
 
-	ctx := context.Background()
-
 	svc := &gsvc.LocalService{
 		Name:      "goframe-provider-4-tcp",
 		Version:   "test",
@@ -141,12 +131,12 @@ func TestGetService(t *testing.T) {
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
 	}
 
-	s, err := r.Register(ctx, svc)
+	s, err := r.Register(context.Background(), svc)
 	if err != nil {
 		t.Fatal(err)
 	}
 	time.Sleep(time.Second * 1)
-	serviceInstances, err := r.Search(ctx, gsvc.SearchInput{
+	serviceInstances, err := r.Search(context.Background(), gsvc.SearchInput{
 		Prefix:   s.GetPrefix(),
 		Name:     svc.Name,
 		Version:  svc.Version,
@@ -156,11 +146,10 @@ func TestGetService(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, instance := range serviceInstances {
-		g.Log().Info(ctx, instance)
+		t.Log(instance)
 	}
 
-	err = r.Deregister(ctx, s)
-	if err != nil {
+	if err = r.Deregister(context.Background(), s); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -170,15 +159,13 @@ func TestWatch(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
 	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-watch/backup")
 	if err := api.SetLoggersDir(os.TempDir() + "/polaris-watch/log"); err != nil {
-		g.Log().Fatal(context.Background(), err)
+		t.Fatal(err)
 	}
 	r := NewWithConfig(
 		conf,
 		WithTimeout(time.Second*10),
 		WithTTL(100),
 	)
-
-	ctx := gctx.New()
 
 	svc := &gsvc.LocalService{
 		Name:      "goframe-provider-5-tcp",
@@ -210,7 +197,7 @@ func TestWatch(t *testing.T) {
 	}
 	for _, instance := range next {
 		// it will output one instance
-		g.Log().Info(ctx, "Register Proceed service: ", instance)
+		t.Log("Register Proceed service: ", instance)
 	}
 
 	if err = r.Deregister(context.Background(), s1); err != nil {
@@ -224,7 +211,7 @@ func TestWatch(t *testing.T) {
 	}
 	for _, instance := range next {
 		// it will output nothing
-		g.Log().Info(ctx, "Deregister Proceed service: ", instance)
+		t.Log("Deregister Proceed service: ", instance)
 	}
 
 	if err = watch.Close(); err != nil {
