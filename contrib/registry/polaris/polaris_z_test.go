@@ -243,3 +243,41 @@ func TestWatch(t *testing.T) {
 		t.Fatal()
 	}
 }
+
+// BenchmarkRegister
+func BenchmarkRegister(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
+		conf.GetGlobal().GetStatReporter().SetEnable(false)
+		conf.GetGlobal().GetStatReporter().SetChain([]string{"prometheus"})
+		conf.GetGlobal().GetStatReporter().SetPluginConfig("prometheus", &prometheus.Config{
+			PortStr: "0",
+		})
+		conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-registry/backup")
+		if err := api.SetLoggersDir(os.TempDir() + "/polaris-registry/log"); err != nil {
+			b.Fatal(err)
+		}
+
+		r := NewWithConfig(
+			conf,
+			WithTimeout(time.Second*10),
+			WithTTL(100),
+		)
+
+		svc := &gsvc.LocalService{
+			Name:      "goframe-provider-0-tcp",
+			Version:   "test",
+			Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+			Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
+		}
+
+		s, err := r.Register(context.Background(), svc)
+		if err != nil {
+			b.Fatal(err)
+		}
+
+		if err = r.Deregister(context.Background(), s); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
