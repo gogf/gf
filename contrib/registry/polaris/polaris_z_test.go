@@ -14,7 +14,6 @@ import (
 
 	"github.com/polarismesh/polaris-go/api"
 	"github.com/polarismesh/polaris-go/pkg/config"
-	"github.com/polarismesh/polaris-go/plugin/metrics/prometheus"
 
 	"github.com/gogf/gf/v2/net/gsvc"
 )
@@ -22,11 +21,7 @@ import (
 // TestRegistry TestRegistryManyService
 func TestRegistry(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
-	conf.GetGlobal().GetStatReporter().SetEnable(true)
-	conf.GetGlobal().GetStatReporter().SetChain([]string{"prometheus"})
-	conf.GetGlobal().GetStatReporter().SetPluginConfig("prometheus", &prometheus.Config{
-		PortStr: "28080",
-	})
+	conf.GetGlobal().GetStatReporter().SetEnable(false)
 	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-registry/backup")
 	if err := api.SetLoggersDir(os.TempDir() + "/polaris-registry/log"); err != nil {
 		t.Fatal(err)
@@ -58,11 +53,7 @@ func TestRegistry(t *testing.T) {
 // TestRegistryMany TestRegistryManyService
 func TestRegistryMany(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
-	conf.GetGlobal().GetStatReporter().SetEnable(true)
-	conf.GetGlobal().GetStatReporter().SetChain([]string{"prometheus"})
-	conf.GetGlobal().GetStatReporter().SetPluginConfig("prometheus", &prometheus.Config{
-		PortStr: "28080",
-	})
+	conf.GetGlobal().GetStatReporter().SetEnable(false)
 	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-registry-many/backup")
 	if err := api.SetLoggersDir(os.TempDir() + "/polaris-registry-many/log"); err != nil {
 		t.Fatal(err)
@@ -124,11 +115,7 @@ func TestRegistryMany(t *testing.T) {
 // TestGetService Test GetService
 func TestGetService(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
-	conf.GetGlobal().GetStatReporter().SetEnable(true)
-	conf.GetGlobal().GetStatReporter().SetChain([]string{"prometheus"})
-	conf.GetGlobal().GetStatReporter().SetPluginConfig("prometheus", &prometheus.Config{
-		PortStr: "28080",
-	})
+	conf.GetGlobal().GetStatReporter().SetEnable(false)
 	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-get-service/backup")
 	if err := api.SetLoggersDir(os.TempDir() + "/polaris-get-service/log"); err != nil {
 		t.Fatal(err)
@@ -173,11 +160,7 @@ func TestGetService(t *testing.T) {
 // TestWatch Test Watch
 func TestWatch(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
-	conf.GetGlobal().GetStatReporter().SetEnable(true)
-	conf.GetGlobal().GetStatReporter().SetChain([]string{"prometheus"})
-	conf.GetGlobal().GetStatReporter().SetPluginConfig("prometheus", &prometheus.Config{
-		PortStr: "28080",
-	})
+	conf.GetGlobal().GetStatReporter().SetEnable(false)
 	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-watch/backup")
 	if err := api.SetLoggersDir(os.TempDir() + "/polaris-watch/log"); err != nil {
 		t.Fatal(err)
@@ -248,11 +231,7 @@ func TestWatch(t *testing.T) {
 func BenchmarkRegister(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
-		conf.GetGlobal().GetStatReporter().SetEnable(true)
-		conf.GetGlobal().GetStatReporter().SetChain([]string{"prometheus"})
-		conf.GetGlobal().GetStatReporter().SetPluginConfig("prometheus", &prometheus.Config{
-			PortStr: "28080",
-		})
+		conf.GetGlobal().GetStatReporter().SetEnable(false)
 		conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-registry/backup")
 		if err := api.SetLoggersDir(os.TempDir() + "/polaris-registry/log"); err != nil {
 			b.Fatal(err)
