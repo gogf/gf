@@ -308,7 +308,7 @@ func getFieldsFromStructOrMap(structOrMap interface{}) (fields []string) {
 	if utils.IsStruct(structOrMap) {
 		structFields, _ := gstructs.Fields(gstructs.FieldsInput{
 			Pointer:         structOrMap,
-			RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
+			RecursiveOption: gstructs.RecursiveOptionEmbedded,
 		})
 		for _, structField := range structFields {
 			if tag := structField.Tag(OrmTagForStruct); tag != "" && gregex.IsMatchString(regularFieldNameRegPattern, tag) {

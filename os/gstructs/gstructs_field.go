@@ -127,6 +127,9 @@ func Fields(in FieldsInput) ([]Field, error) {
 					fallthrough
 
 				case RecursiveOptionEmbedded:
+					if field.Tag("orm") == "-" {
+						break
+					}
 					structFields, err := Fields(FieldsInput{
 						Pointer:         field.Value,
 						RecursiveOption: in.RecursiveOption,
