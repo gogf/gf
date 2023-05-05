@@ -18,33 +18,17 @@ lint:
 # make version to=v2.4.0
 .PHONY: version
 version:
-	$(eval files=$(shell find . -name go.mod)) 
-	@set -e; \
 	newVersion=$(to); \
-	echo "The version will be set to $$newVersion"; \
-	if [[ $$newVersion =~ "v" ]]; then \
-		latestVersion=$$newVersion; \
-		echo "package gf" > version.go; \
-		echo "" >> version.go; \
-		echo "const (" >> version.go; \
-		echo -e "\t// VERSION is the current GoFrame version." >> version.go; \
-		echo -e "\tVERSION = \"$$latestVersion\"" >> version.go; \
-		echo ")" >> version.go; \
-	else \
-		latestVersion=latest; \
-	fi; \
-	for file in ${files}; do \
-		goModPath=$$(dirname $$file); \
-		if [[ $$goModPath =~ "./contrib" || $$goModPath =~ "./cmd/gf" || $$goModPath =~ "./example" ]]; then \
-			echo "" ; \
-			echo "processing dir: $$goModPath"; \
-			cd $$goModPath; \
-			go mod tidy; \
-			go list -f "{{if and (not .Indirect) (not .Main)}}{{.Path}}@$$latestVersion{{end}}" -m all | grep "^github.com/gogf/gf/contrib" | xargs -L1 go get -v; \
-			go get -v github.com/gogf/gf/v2@$$latestVersion; \
-			go mod tidy; \
-			cd -; \
-		fi \
-	done
+	.github/workflows/version.sh ./contrib $$newVersion; \
+	.github/workflows/version.sh ./example $$newVersion; \
+	echo done
+
+# make cliversion to=v2.4.0
+.PHONY: cliversion
+cliversion:
+	newVersion=$(to); \
+	ls -l .github/workflows; \
+	.github/workflows/version.sh ./cmd/gfly $$newVersion; \ 
+	echo done
 
 
