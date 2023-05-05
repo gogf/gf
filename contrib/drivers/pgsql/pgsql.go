@@ -274,9 +274,10 @@ ORDER BY
 // Also see DriverMysql.TableFields.
 func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
 	var (
-		result       gdb.Result
-		link         gdb.Link
-		usedSchema   = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+		result     gdb.Result
+		link       gdb.Link
+		usedSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+		// TODO duplicated `id` result?
 		structureSql = fmt.Sprintf(`
 SELECT a.attname AS field, t.typname AS type,a.attnotnull as null,
     (case when d.contype is not null then 'pri' else '' end)  as key
