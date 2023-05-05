@@ -17,6 +17,8 @@ import (
 	"fmt"
 	"strings"
 
+	_ "github.com/lib/pq"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -25,7 +27,6 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
-	_ "github.com/lib/pq"
 )
 
 // Driver is the driver for postgresql database.
@@ -302,16 +303,27 @@ ORDER BY a.attnum`,
 		return nil, err
 	}
 	fields = make(map[string]*gdb.TableField)
-	for i, m := range result {
-		fields[m["field"].String()] = &gdb.TableField{
-			Index:   i,
-			Name:    m["field"].String(),
+	var (
+		index = 0
+		name  string
+		ok    bool
+	)
+	for _, m := range result {
+		name = m["field"].String()
+		// Filter duplicated fields.
+		if _, ok = fields[name]; ok {
+			continue
+		}
+		fields[name] = &gdb.TableField{
+			Index:   index,
+			Name:    name,
 			Type:    m["type"].String(),
 			Null:    !m["null"].Bool(),
 			Key:     m["key"].String(),
 			Default: m["default_value"].Val(),
 			Comment: m["comment"].String(),
 		}
+		index++
 	}
 	return fields, nil
 }
