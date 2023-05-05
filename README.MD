@@ -41,7 +41,9 @@ go get -u -v github.com/gogf/gf/v2
 ## cli tool
 
 ```bash
-go install github.com/gogf/gf/cmd/gf/v2
+go install github.com/gogf/gf/cmd/gf/v2@latest
+# with version(v2.4.2+)
+go install github.com/gogf/gf/cmd/gf/v2@v2.4.2
 ```
 
 # Limitation
