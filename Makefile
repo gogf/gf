@@ -18,6 +18,7 @@ lint:
 # make version to=v2.4.0
 .PHONY: version
 version:
+	@set -e; \
 	newVersion=$(to); \
 	.github/workflows/version.sh ./contrib $$newVersion; \
 	.github/workflows/version.sh ./example $$newVersion; \
@@ -26,9 +27,9 @@ version:
 # make cliversion to=v2.4.0
 .PHONY: cliversion
 cliversion:
+	@set -e; \
 	newVersion=$(to); \
-	ls -l .github/workflows; \
-	.github/workflows/version.sh ./cmd/gfly $$newVersion; \ 
+	.github/workflows/version.sh ./cmd/gf $$newVersion; \
 	echo done
 
 

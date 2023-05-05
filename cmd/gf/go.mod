@@ -53,13 +53,3 @@ require (
 	modernc.org/memory v1.1.1 // indirect
 	modernc.org/sqlite v1.17.3 // indirect
 )
-
-replace (
-	github.com/gogf/gf/contrib/drivers/clickhouse/v2 => ../../contrib/drivers/clickhouse/
-	github.com/gogf/gf/contrib/drivers/mssql/v2 => ../../contrib/drivers/mssql/
-	github.com/gogf/gf/contrib/drivers/mysql/v2 => ../../contrib/drivers/mysql/
-	github.com/gogf/gf/contrib/drivers/oracle/v2 => ../../contrib/drivers/oracle/
-	github.com/gogf/gf/contrib/drivers/pgsql/v2 => ../../contrib/drivers/pgsql/
-	github.com/gogf/gf/contrib/drivers/sqlite/v2 => ../../contrib/drivers/sqlite/
-	github.com/gogf/gf/v2 => ../../
-)

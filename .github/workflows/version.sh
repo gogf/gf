@@ -24,7 +24,7 @@ newVersion=$2
 echo "准备将${workdir}目录下的所有go.mod文件中的版本号替换为${newVersion}"
 
 if [[ ${workdir} == ./contrib ]]; then
-    echo "package gotest" > version.go
+    echo "package gf" > version.go
     echo "" >> version.go
     echo "const (" >> version.go
     echo -e "\t// VERSION is the current GoFrame version." >> version.go
