@@ -1,10 +1,11 @@
 name: GoFrame CLI Build Release
 
 on:
-  push:
-    # Sequence of patterns matched against refs/tags
-    tags:
-    - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+  pull_request:
+    branches:
+      - master
+    types:
+      - closed
 
 env:
   TZ: Asia/Shanghai
@@ -14,6 +15,7 @@ jobs:
   build:
     name: Build And Release
     runs-on: ubuntu-latest
+    if: ${{ startsWith(github.head_ref, 'cli/') && github.event.pull_request.merged == true }}
     steps:
       - name: Checkout Github Code
         uses: actions/checkout@v3
@@ -22,7 +24,12 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: 1.20.3
-      
+
+      - name: Set TAG ENV
+        run: |
+          echo "RELEASE_TAG=${GITHUB_HEAD_REF#*/}" >> "$GITHUB_ENV"
+          echo "${{ env.RELEASE_TAG }}"
+
       - name: Build CLI Binary
         run: |
           echo "Building linux amd64 binary..."
@@ -46,20 +53,11 @@ jobs:
           fi;done;done
 
       - name: Create Github Release
-        id: create_release
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: termux/upload-release-action@v4.0.2
         with:
-          tag_name:     ${{ github.ref }}
-          name: GoFrame Release ${{ github.ref }}
-          draft:        false
-          prerelease:   false
-      
-      - name: Upload Release Asset
-        id:   upload-release-asset
-        uses: alexellis/upload-assets@0.4.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          asset_paths: '["cmd/gf/temp/gf_*"]'
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ env.RELEASE_TAG }}
+          release_name: GoFrame Release ${{ env.RELEASE_TAG }}
+          file: cmd/gf/temp/gf_*
+          file_glob: true
+

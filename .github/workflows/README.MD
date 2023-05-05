@@ -1,6 +1,6 @@
 # 流水线说明
 
-## 打Tag以及发布
+## 打Tag以及发布release
 
 1. 在要打Tag前，执行`make version to=[version]`命令将主库版本文件和子模块依赖预升级
 2. 提交变更并合并到主分支

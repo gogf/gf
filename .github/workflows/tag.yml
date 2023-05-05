@@ -28,3 +28,33 @@ jobs:
               git tag $tag
               git push origin $tag
           done
+
+      - name: update dependencies
+        run: |
+          go env -w GOPRIVATE=github.com/gogf/gf
+          make cliversion to=${{ github.ref_name }}
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          commit-message: 'update gf to ${{ github.ref_name }}'
+          title: 主库打tag后工具链自动升级
+          base: master
+          branch: cli/${{ github.ref_name }}
+          delete-branch: true
+      - name: Commit & Push changes
+        uses: actions-js/push@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: cli/${{ github.ref_name }}
+          author_name: TagRobot
+          author_email: tagrobot@goframe.org
+          message: 'update gfcli to ${{ github.ref_name }}'
+      - name: Auto Creating Tags
+        run: |
+          git config --global user.email "tagrobot@goframe.org"
+          git config --global user.name  "TagRobot"
+          for file in `find cmd -name go.mod`; do
+              tag=$(dirname $file)/${{ github.ref_name }}
+              git tag $tag
+              git push origin $tag
+          done
