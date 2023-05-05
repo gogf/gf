@@ -127,7 +127,7 @@ func WithLogger(logger glog.ILogger) Option {
 // New create a new registry.
 func New(provider polaris.ProviderAPI, consumer polaris.ConsumerAPI, opts ...Option) gsvc.Registry {
 	op := options{
-		Namespace:    "default",
+		Namespace:    gsvc.DefaultNamespace,
 		ServiceToken: "",
 		Protocol:     nil,
 		Weight:       0,

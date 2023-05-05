@@ -1,3 +1,9 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package main
 
 import (
@@ -24,7 +30,7 @@ func main() {
 	gsvc.SetRegistry(polaris.NewWithConfig(conf, polaris.WithTTL(10)))
 
 	for i := 0; i < 100; i++ {
-		res, err := g.Client().Get(gctx.New(), `http://hello.svc/`)
+		res, err := g.Client().Get(gctx.New(), `http://hello-world.svc/`)
 		if err != nil {
 			panic(err)
 		}
