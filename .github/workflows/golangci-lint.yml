@@ -18,6 +18,7 @@ on:
   push:
     branches:
     - master
+    - coverage
     - develop
     - personal/**
     - feature/**
