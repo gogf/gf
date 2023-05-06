@@ -265,6 +265,9 @@ func (s *GrpcServer) calculateListenedEndpoints(ctx context.Context) gsvc.Endpoi
 		configAddr = s.config.Address
 		endpoints  = make(gsvc.Endpoints, 0)
 	)
+	if s.config.Endpoint != nil {
+		configAddr = *s.config.Endpoint
+	}
 	for _, address := range gstr.SplitAndTrim(configAddr, ",") {
 		var (
 			addrArray     = gstr.Split(address, ":")
