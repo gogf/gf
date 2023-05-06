@@ -1,24 +1,24 @@
 name: GoFrame Main CI
 
-
 on:
   push:
     branches:
-    - master
-    - develop
-    - personal/**
-    - feature/**
-    - enhance/**
-    - fix/**
+      - master
+      - coverage
+      - develop
+      - personal/**
+      - feature/**
+      - enhance/**
+      - fix/**
 
   pull_request:
     branches:
-    - master
-    - develop
-    - personal/**
-    - feature/**
-    - enhance/**
-    - fix/**
+      - master
+      - develop
+      - personal/**
+      - feature/**
+      - enhance/**
+      - fix/**
 
 # This allows a subsequently queued workflow run to interrupt previous runs
 concurrency:
@@ -26,8 +26,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  TZ: "Asia/Shanghai"
-
+  TZ: 'Asia/Shanghai'
 
 jobs:
   code-test:
@@ -46,7 +45,7 @@ jobs:
 
       # Redis backend server.
       redis:
-        image  : loads/redis:7.0
+        image: loads/redis:7.0
         options: >-
           --health-cmd      "redis-cli ping"
           --health-interval 10s
@@ -60,7 +59,7 @@ jobs:
       mysql:
         image: loads/mysql:5.7
         env:
-          MYSQL_DATABASE     : test
+          MYSQL_DATABASE: test
           MYSQL_ROOT_PASSWORD: 12345678
         ports:
           - 3306:3306
@@ -73,9 +72,9 @@ jobs:
         image: loads/postgres:13
         env:
           POSTGRES_PASSWORD: 12345678
-          POSTGRES_USER:     postgres
-          POSTGRES_DB:       test
-          TZ:                Asia/Shanghai
+          POSTGRES_USER: postgres
+          POSTGRES_DB: test
+          TZ: Asia/Shanghai
         ports:
           - 5432:5432
         # Set health checks to wait until postgres has started
@@ -96,10 +95,10 @@ jobs:
       mssql:
         image: loads/mssqldocker:14.0.3391.2
         env:
-          ACCEPT_EULA:    Y
-          SA_PASSWORD:    LoremIpsum86
-          MSSQL_DB:       test
-          MSSQL_USER:     root
+          ACCEPT_EULA: Y
+          SA_PASSWORD: LoremIpsum86
+          MSSQL_DB: test
+          MSSQL_USER: root
           MSSQL_PASSWORD: LoremIpsum86
         ports:
           - 1433:1433
@@ -156,55 +155,59 @@ jobs:
 
     strategy:
       matrix:
-        go-version: [ "1.15", "1.16", "1.17", "1.18" ]
-        goarch: [ "386", "amd64" ]
+        go-version: ['1.15', '1.16', '1.17', '1.18']
+        goarch: ['386', 'amd64']
 
     steps:
-    # TODO: szenius/set-timezone update to node16
-    - name: Setup Timezone
-      uses: szenius/set-timezone@v1.1
-      with:
-        timezoneLinux: "Asia/Shanghai"
+      # TODO: szenius/set-timezone update to node16
+      - name: Setup Timezone
+        uses: szenius/set-timezone@v1.1
+        with:
+          timezoneLinux: 'Asia/Shanghai'
 
-    - name: Checkout Repository
-      uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-    - name: Start Apollo Containers
-      run:  docker-compose -f ".github/workflows/apollo/docker-compose.yml" up -d --build
-      
-    - name: Start Nacos Containers
-      run:  docker-compose -f ".github/workflows/nacos/docker-compose.yml" up -d --build
+      - name: Start Apollo Containers
+        run: docker-compose -f ".github/workflows/apollo/docker-compose.yml" up -d --build
 
-    - name: Start Redis Cluster Containers
-      run:  docker-compose -f ".github/workflows/redis/docker-compose.yml" up -d --build
+      - name: Start Nacos Containers
+        run: docker-compose -f ".github/workflows/nacos/docker-compose.yml" up -d --build
 
-    - name: Start Minikube
-      uses: medyagh/setup-minikube@master
+      - name: Start Redis Cluster Containers
+        run: docker-compose -f ".github/workflows/redis/docker-compose.yml" up -d --build
 
-    - name: Setup Golang ${{ matrix.go-version }}
-      uses: actions/setup-go@v3
-      with:
-        go-version: ${{ matrix.go-version }}
-        cache: true
-        cache-dependency-path: '**/go.sum'
+      - name: Start Minikube
+        uses: medyagh/setup-minikube@master
 
-    - name: Before Script
-      run:  bash .github/workflows/before_script.sh
+      - name: Setup Golang ${{ matrix.go-version }}
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go-version }}
+          cache: true
 
-    - name: Build & Test
-      run:  bash .github/workflows/build_and_test.sh
+      - name: Before Script
+        run: bash .github/workflows/before_script.sh
 
-    - name: Stop Redis Cluster Containers
-      run:  docker-compose -f ".github/workflows/redis/docker-compose.yml" down
+      - name: Build & Test
+        if: ${{ github.ref != 'refs/heads/coverage' }}
+        run: bash .github/workflows/build_and_test.sh
 
-    - name: Stop Apollo Containers
-      run:  docker-compose -f ".github/workflows/apollo/docker-compose.yml" down
+      - name: Build & Test & Coverage
+        if: ${{ github.ref == 'refs/heads/coverage' }}
+        run: bash .github/workflows/build_and_test.sh coverage
 
-    - name: Stop Nacos Containers
-      run:  docker-compose -f ".github/workflows/nacos/docker-compose.yml" down
+      - name: Stop Redis Cluster Containers
+        run: docker-compose -f ".github/workflows/redis/docker-compose.yml" down
 
-    - name: Report Coverage
-      uses: codecov/codecov-action@v3
-      with:
-        flags: go-${{ matrix.go-version }}-${{ matrix.goarch }}
+      - name: Stop Apollo Containers
+        run: docker-compose -f ".github/workflows/apollo/docker-compose.yml" down
 
+      - name: Stop Nacos Containers
+        run: docker-compose -f ".github/workflows/nacos/docker-compose.yml" down
+
+      - name: Report Coverage
+        if: ${{ github.ref == 'refs/heads/coverage' }}
+        uses: codecov/codecov-action@v3
+        with:
+          flags: go-${{ matrix.go-version }}-${{ matrix.goarch }}
