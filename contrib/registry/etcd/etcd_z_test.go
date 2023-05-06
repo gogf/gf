@@ -24,6 +24,7 @@ func TestRegistry(t *testing.T) {
 	svc := &gsvc.LocalService{
 		Name:      guid.S(),
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:8888"),
+		Version:   "test",
 		Metadata: map[string]interface{}{
 			"protocol": "https",
 		},
@@ -37,7 +38,8 @@ func TestRegistry(t *testing.T) {
 	// Search by name.
 	gtest.C(t, func(t *gtest.T) {
 		result, err := registry.Search(ctx, gsvc.SearchInput{
-			Name: svc.Name,
+			Name:    svc.Name,
+			Version: "test",
 		})
 		t.AssertNil(err)
 		t.Assert(len(result), 1)
@@ -57,7 +59,8 @@ func TestRegistry(t *testing.T) {
 	// Search by metadata.
 	gtest.C(t, func(t *gtest.T) {
 		result, err := registry.Search(ctx, gsvc.SearchInput{
-			Name: svc.GetName(),
+			Name:    svc.GetName(),
+			Version: "test",
 			Metadata: map[string]interface{}{
 				"protocol": "https",
 			},

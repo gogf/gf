@@ -22,6 +22,9 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]gsvc.Serv
 		in.Prefix = gsvc.NewServiceWithName(in.Name).GetPrefix()
 	}
 
+	if in.Version != "" {
+		in.Prefix = gstr.Replace(in.Prefix, "latest", in.Version, -1)
+	}
 	res, err := r.kv.Get(ctx, in.Prefix, etcd3.WithPrefix())
 	if err != nil {
 		return nil, err
