@@ -174,6 +174,11 @@ func (c cUp) doUpgradeCLI(ctx context.Context) (err error) {
 		)
 		localSaveFilePath = gfile.SelfPath() + "~"
 	)
+
+	if runtime.GOOS == "windows" {
+		downloadUrl += ".exe"
+	}
+
 	mlog.Printf(`start downloading "%s" to "%s", it may take some time`, downloadUrl, localSaveFilePath)
 	err = utils.HTTPDownloadFileWithPercent(downloadUrl, localSaveFilePath)
 	if err != nil {
