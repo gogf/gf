@@ -22,7 +22,7 @@ func TestRegistry(t *testing.T) {
 		registry = etcd.New(`127.0.0.1:2379`)
 	)
 	svc := &gsvc.LocalService{
-		Name:      guid.S(),
+		Name:      guid.S() + "latest",
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:8888"),
 		Version:   "test",
 		Metadata: map[string]interface{}{
