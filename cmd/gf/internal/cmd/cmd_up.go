@@ -167,10 +167,14 @@ func (c cUp) doUpgradeVersion(ctx context.Context, in cUpInput) (out *doUpgradeV
 // doUpgradeCLI downloads the new version binary with process.
 func (c cUp) doUpgradeCLI(ctx context.Context) (err error) {
 	mlog.Print(`start upgrading cli...`)
+	var exeFlag string
+	if runtime.GOOS == "windows" {
+		exeFlag = ".exe"
+	}
 	var (
 		downloadUrl = fmt.Sprintf(
-			`https://github.com/gogf/gf/releases/latest/download/gf_%s_%s`,
-			runtime.GOOS, runtime.GOARCH,
+			`https://github.com/gogf/gf/releases/latest/download/gf_%s_%s%s`,
+			runtime.GOOS, runtime.GOARCH, exeFlag,
 		)
 		localSaveFilePath = gfile.SelfPath() + "~"
 	)
