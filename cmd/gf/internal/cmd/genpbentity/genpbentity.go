@@ -10,9 +10,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/olekukonko/tablewriter"
 	"strings"
-
+	"github.com/olekukonko/tablewriter"
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -319,7 +318,7 @@ func generateMessageFieldForPbEntity(index int, field *gdb.TableField, in CGenPb
 		gdb.LocalTypeUint64Bytes: "repeated uint64",
 		gdb.LocalTypeFloat32:     "float32",
 		gdb.LocalTypeFloat64:     "float64",
-		gdb.LocalTypeBytes:       "[]byte",
+		gdb.LocalTypeBytes:       "bytes",
 		gdb.LocalTypeBool:        "bool",
 		gdb.LocalTypeJson:        "string",
 		gdb.LocalTypeJsonb:       "string",
