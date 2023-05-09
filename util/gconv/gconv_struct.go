@@ -541,13 +541,28 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 				}
 			}
 		} else {
-			reflectArray = reflect.MakeSlice(structFieldValue.Type(), 1, 1)
 			var (
 				elem         reflect.Value
-				elemType     = reflectArray.Index(0).Type()
+				elemType     = structFieldValue.Type().Elem()
 				elemTypeName = elemType.Name()
 				converted    bool
 			)
+			switch reflectValue.Kind() {
+			case reflect.String:
+				// Value is empty string.
+				if reflectValue.IsZero() {
+					var elemKind = elemType.Kind()
+					// Try to find the original type kind of the slice element.
+					if elemKind == reflect.Ptr {
+						elemKind = elemType.Elem().Kind()
+					}
+					switch elemKind {
+					case reflect.String:
+						// Empty string cannot be assigned to string slice.
+						return nil
+					}
+				}
+			}
 			if elemTypeName == "" {
 				elemTypeName = elemType.String()
 			}
@@ -572,6 +587,7 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 				// Before it sets the `elem` to array, do pointer converting if necessary.
 				elem = elem.Addr()
 			}
+			reflectArray = reflect.MakeSlice(structFieldValue.Type(), 1, 1)
 			reflectArray.Index(0).Set(elem)
 		}
 		structFieldValue.Set(reflectArray)

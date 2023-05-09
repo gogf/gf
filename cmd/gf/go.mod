@@ -3,18 +3,20 @@ module github.com/gogf/gf/cmd/gf/v2
 go 1.18
 
 require (
-	github.com/gogf/gf/contrib/drivers/clickhouse/v2 v2.4.0
-	github.com/gogf/gf/contrib/drivers/mssql/v2 v2.4.0
-	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.4.0
-	github.com/gogf/gf/contrib/drivers/oracle/v2 v2.4.0
-	github.com/gogf/gf/contrib/drivers/pgsql/v2 v2.4.0
-	github.com/gogf/gf/contrib/drivers/sqlite/v2 v2.4.0
-	github.com/gogf/gf/v2 v2.4.0
+	github.com/gogf/gf/contrib/drivers/clickhouse/v2 v2.4.1
+	github.com/gogf/gf/contrib/drivers/mssql/v2 v2.4.1
+	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.4.1
+	github.com/gogf/gf/contrib/drivers/oracle/v2 v2.4.1
+	github.com/gogf/gf/contrib/drivers/pgsql/v2 v2.4.1
+	github.com/gogf/gf/contrib/drivers/sqlite/v2 v2.4.1
+	github.com/gogf/gf/v2 v2.4.1
+	github.com/minio/selfupdate v0.6.0
 	github.com/olekukonko/tablewriter v0.0.5
 	golang.org/x/tools v0.7.0
 )
 
 require (
+	aead.dev/minisign v0.2.0 // indirect
 	github.com/BurntSushi/toml v1.1.0 // indirect
 	github.com/ClickHouse/clickhouse-go/v2 v2.0.15 // indirect
 	github.com/clbanning/mxj/v2 v2.5.5 // indirect
