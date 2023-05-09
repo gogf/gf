@@ -13,6 +13,7 @@ import (
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 	"github.com/gogf/gf/v2/container/gset"
+	"github.com/minio/selfupdate"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/frame/g"
@@ -174,6 +175,11 @@ func (c cUp) doUpgradeCLI(ctx context.Context) (err error) {
 		)
 		localSaveFilePath = gfile.SelfPath() + "~"
 	)
+
+	if runtime.GOOS == "windows" {
+		downloadUrl += ".exe"
+	}
+
 	mlog.Printf(`start downloading "%s" to "%s", it may take some time`, downloadUrl, localSaveFilePath)
 	err = utils.HTTPDownloadFileWithPercent(downloadUrl, localSaveFilePath)
 	if err != nil {
@@ -191,17 +197,14 @@ func (c cUp) doUpgradeCLI(ctx context.Context) (err error) {
 		mlog.Fatalf(`download "%s" to "%s" failed`, downloadUrl, localSaveFilePath)
 	}
 
-	// It replaces self binary with new version cli binary.
-	switch runtime.GOOS {
-	case "windows":
-		if err := gfile.Rename(localSaveFilePath, gfile.SelfPath()); err != nil {
-			mlog.Fatalf(`install failed: %s`, err.Error())
-		}
-
-	default:
-		if err := gfile.PutBytes(gfile.SelfPath(), gfile.GetBytes(localSaveFilePath)); err != nil {
-			mlog.Fatalf(`install failed: %s`, err.Error())
-		}
+	newFile, err := gfile.Open(localSaveFilePath)
+	if err != nil {
+		return err
+	}
+	// selfupdate
+	err = selfupdate.Apply(newFile, selfupdate.Options{})
+	if err != nil {
+		return err
 	}
 	return
 }
