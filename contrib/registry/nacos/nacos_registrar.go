@@ -1,8 +1,15 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package nacos
 
 import (
 	"context"
 	"fmt"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/nacos-group/nacos-sdk-go/v2/vo"
@@ -16,11 +23,10 @@ func (r Registry) Register(ctx context.Context, service gsvc.Service) (registere
 	if service.GetVersion() == "" {
 		version = gsvc.DefaultVersion
 	} else {
-		version = service.GetVersion()
+		version = gstr.Join(gstr.Split(service.GetVersion(), "/"), "-")
 	}
-	name := gstr.Join(gstr.Split(service.GetName(), "/"), "")
 	s := &gsvc.LocalService{
-		Name:       name,
+		Name:       service.GetName(),
 		Version:    version,
 		Head:       r.opts.clusterName,
 		Deployment: r.opts.groupName,
@@ -28,7 +34,7 @@ func (r Registry) Register(ctx context.Context, service gsvc.Service) (registere
 		Metadata:   service.GetMetadata(),
 		Endpoints:  service.GetEndpoints(),
 	}
-	if err = r.registerByType(s.GetPrefix(), service); err != nil {
+	if err = r.registerByType(service.GetPrefix(), service); err != nil {
 		return nil, err
 	}
 	return s, nil
@@ -36,9 +42,8 @@ func (r Registry) Register(ctx context.Context, service gsvc.Service) (registere
 
 // Deregister off-lines and removes `service` from the Registry.
 func (r Registry) Deregister(ctx context.Context, service gsvc.Service) error {
-	client := r.namingClient
 	for i := range service.GetEndpoints() {
-		ok, err := client.DeregisterInstance(vo.DeregisterInstanceParam{
+		ok, err := r.namingClient.DeregisterInstance(vo.DeregisterInstanceParam{
 			Ip:          service.GetEndpoints()[i].Host(),
 			Port:        uint64(service.GetEndpoints()[i].Port()),
 			ServiceName: service.GetPrefix(),
@@ -50,15 +55,18 @@ func (r Registry) Deregister(ctx context.Context, service gsvc.Service) error {
 			return err
 		}
 		if !ok {
-			return fmt.Errorf("deregister instance failed")
+			return gerror.Wrapf(err, `deregister service failed: %s`, service.GetPrefix())
 		}
 	}
 	return nil
 }
 
+// registerByType registers service by type.
 func (r Registry) registerByType(name string, service gsvc.Service) error {
-	client := r.namingClient
-	endpoints := service.GetEndpoints()
+	var (
+		client    = r.namingClient
+		endpoints = service.GetEndpoints()
+	)
 	for i := range endpoints {
 		metadata := make(map[string]string)
 		for k, v := range service.GetMetadata() {

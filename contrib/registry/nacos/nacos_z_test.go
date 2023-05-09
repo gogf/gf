@@ -1,89 +1,97 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package nacos
 
 import (
-	"context"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
 	"time"
 )
 
+// TestRegister TestRegisterService
 func TestRegister(t *testing.T) {
-	registry := New([]string{"127.0.0.1:8848"},
-		//you can create a namespace in nacos, then copy the namespaceId to here
-		//TODO when testing,please replace the namespace id with yours
-		WithNameSpaceId("bc32382f-ada0-484b-87bb-3d5bfa0bc3ce"),
-		WithContextPath("/nacos"))
-	ctx := context.Background()
+	var (
+		registry = New([]string{"127.0.0.1:8848"},
+			//you can create a namespace in nacos, then copy the namespaceId to here, "" is public namespace
+			WithNameSpaceId(""),
+			WithClusterName("goframe"),
+			WithGroupName("goframe/nacos"),
+			WithContextPath("/nacos"))
+		ctx = gctx.GetInitCtx()
+	)
+
 	svc := &gsvc.LocalService{
 		Name:      "goframe-provider-0-tcp",
 		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:8080,127.0.0.1:8088"),
+		Version:   "test",
 	}
-	s, err := registry.Register(ctx, svc)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(s.GetEndpoints())
-	t.Log(s.GetName())
-	t.Log(s.GetVersion())
-	t.Log(s.GetMetadata())
-	t.Log(s.GetKey())
-	t.Log(s.GetValue())
-	// if success, you can see a name of goframe-provider-0-tcp in nacos web page
-	err = registry.Deregister(ctx, s)
-	if err != nil {
-		t.Fatal(err)
-	}
+
+	gtest.C(t, func(t *gtest.T) {
+		registered, err := registry.Register(ctx, svc)
+		t.AssertNil(err)
+		t.Assert(registered.GetName(), svc.GetName())
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		err := registry.Deregister(ctx, svc)
+		t.AssertNil(err)
+	})
 }
 
+// TestSearch TestSearchService
 func TestSearch(t *testing.T) {
-	registry := New([]string{"127.0.0.1:8848"})
-	ctx := context.Background()
+	var (
+		registry = New([]string{"127.0.0.1:8848"})
+		ctx      = gctx.GetInitCtx()
+	)
+
 	svc := &gsvc.LocalService{
-		Name:      "goframe-provider-0-tcp",
+		Name:      "goframe/provider/0/tcp",
 		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:8080"),
+		Version:   "test",
 	}
-	s, err := registry.Register(ctx, svc)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(s.GetEndpoints())
-	t.Log(s.GetName())
-	t.Log(s.GetVersion())
-	t.Log(s.GetMetadata())
-	t.Log(s.GetKey())
-	t.Log(s.GetValue())
-	time.Sleep(time.Second * 1)
-	result, err := registry.Search(ctx, gsvc.SearchInput{
-		Prefix: s.GetPrefix(),
+
+	gtest.C(t, func(t *gtest.T) {
+		registered, err := registry.Register(ctx, svc)
+		t.AssertNil(err)
+		t.Assert(registered.GetName(), svc.GetName())
 	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(len(result))
-	t.Log(s.GetEndpoints())
-	t.Log(s.GetName())
-	t.Log(s.GetVersion())
-	t.Log(s.GetMetadata())
-	t.Log(s.GetKey())
-	t.Log(s.GetValue())
+
+	time.Sleep(time.Second * 1)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := registry.Search(ctx, gsvc.SearchInput{
+			Prefix: svc.GetPrefix(),
+		})
+		t.AssertNil(err)
+		t.Assert(len(result), 1)
+		t.Assert(result[0].GetName(), svc.GetName())
+	})
 }
 
+// TestWatch TestWatchService
 func TestWatch(t *testing.T) {
-	r := New([]string{"127.0.0.1:8848"})
-
-	ctx := gctx.New()
+	var (
+		r   = New([]string{"127.0.0.1:8848"})
+		ctx = gctx.New()
+	)
 
 	svc := &gsvc.LocalService{
-		Name:      "goframe-provider-4-tcp",
+		Name:      "goframe-provider-0-tcp",
 		Version:   "test",
 		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
 	}
-	t.Log("watch")
+
 	watch, err := r.Watch(ctx, svc.GetPrefix())
 	if err != nil {
 		t.Fatal(err)

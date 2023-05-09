@@ -1,3 +1,10 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+// Package nacos implements service Registry and Discovery using nacos.
 package nacos
 
 import (
@@ -15,45 +22,52 @@ import (
 
 var _ gsvc.Registry = &Registry{}
 
+const (
+	DefaultNamespaceId = ""
+	DefaultTimeoutMs   = 5 * 1000
+	DefaultWeight      = 1
+	DefaultContextPath = "/goframe"
+)
+
+// Registry is nacos registry.
 type Registry struct {
 	namingClient naming_client.INamingClient
 	opts         *options
 }
 
+// Option is nacos registry option.
 type Option func(o *options)
 
 type options struct {
-	namespaceId         string
-	timeoutMs           uint64
-	notLoadCacheAtStart bool
-	logDir              string
-	cacheDir            string
-	logLevel            string
-	contextPath         string
-	weight              float64
-	clusterName         string
-	groupName           string
+	namespaceId string
+	timeoutMs   uint64
+	weight      float64
+	clusterName string
+	groupName   string
+	contextPath string
 }
 
+//New create nacos registry.
 func New(address []string, opts ...Option) *Registry {
 	// default options
 	options := &options{
-		namespaceId:         "",
-		timeoutMs:           5000,
-		notLoadCacheAtStart: true,
-		logDir:              "/tmp/nacos/log",
-		cacheDir:            "/tmp/nacos/cache",
-		logLevel:            "debug",
-		contextPath:         "/gogf",
-		weight:              1,
-		clusterName:         "service",
-		groupName:           "default",
+		namespaceId: DefaultNamespaceId,
+		timeoutMs:   DefaultTimeoutMs,
+		weight:      DefaultWeight,
+		clusterName: gsvc.DefaultHead,
+		groupName:   gsvc.DefaultDeployment,
+		contextPath: DefaultContextPath,
 	}
+
 	// apply options
 	for _, o := range opts {
 		o(options)
 	}
-	//create ServerConfig
+
+	// check options
+	options.groupName = gstr.Join(gstr.Split(options.groupName, "/"), "-")
+
+	// create ServerConfig
 	sc := make([]constant.ServerConfig, 0)
 	for i := range address {
 		host, portStr, err := net.SplitHostPort(address[i])
@@ -69,13 +83,8 @@ func New(address []string, opts ...Option) *Registry {
 
 	//create ClientConfig
 	cc := constant.ClientConfig{
-		NamespaceId:         options.namespaceId,
-		TimeoutMs:           options.timeoutMs,
-		NotLoadCacheAtStart: options.notLoadCacheAtStart,
-		LogDir:              options.logDir,
-		CacheDir:            options.cacheDir,
-		LogLevel:            options.logLevel,
-		ContextPath:         options.contextPath,
+		NamespaceId: options.namespaceId,
+		TimeoutMs:   options.timeoutMs,
 	}
 
 	// create naming client
@@ -95,9 +104,11 @@ func New(address []string, opts ...Option) *Registry {
 }
 
 func getServiceFromInstances(key string, opts *options, client naming_client.INamingClient) ([]gsvc.Service, error) {
-	name := gstr.Split(key, "/")[4]
-	split := gstr.Split(key, "/")
-	version := split[len(split)-1]
+	var (
+		name    = gstr.Join(gstr.Split(key, gsvc.DefaultSeparator)[4:len(gstr.Split(key, gsvc.DefaultSeparator))-1], "/")
+		split   = gstr.Split(key, gsvc.DefaultSeparator)
+		version = split[len(split)-1]
+	)
 	instances, err := client.SelectInstances(vo.SelectInstancesParam{
 		ServiceName: key,
 		GroupName:   opts.groupName,
@@ -130,62 +141,44 @@ func getServiceFromInstances(key string, opts *options, client naming_client.INa
 	return result, nil
 }
 
+// WithNameSpaceId set namespaceId
 func WithNameSpaceId(namespace string) Option {
 	return func(o *options) {
 		o.namespaceId = namespace
 	}
 }
 
+// WithTimeoutMs set timeoutMs
 func WithTimeoutMs(timeoutMs uint64) Option {
 	return func(o *options) {
 		o.timeoutMs = timeoutMs
 	}
 }
 
-func WithNotLoadCacheAtStart(notLoadCacheAtStart bool) Option {
-	return func(o *options) {
-		o.notLoadCacheAtStart = notLoadCacheAtStart
-	}
-}
-
-func WithLogDir(logDir string) Option {
-	return func(o *options) {
-		o.logDir = logDir
-	}
-}
-
-func WithCacheDir(cacheDir string) Option {
-	return func(o *options) {
-		o.cacheDir = cacheDir
-	}
-}
-
-func WithLogLevel(logLevel string) Option {
-	return func(o *options) {
-		o.logLevel = logLevel
-	}
-}
-
-func WithContextPath(contextPath string) Option {
-	return func(o *options) {
-		o.contextPath = contextPath
-	}
-}
-
+// WithWeight set weight
 func WithWeight(weight float64) Option {
 	return func(o *options) {
 		o.weight = weight
 	}
 }
 
+// WithClusterName set clusterName
 func WithClusterName(clusterName string) Option {
 	return func(o *options) {
 		o.clusterName = clusterName
 	}
 }
 
+// WithGroupName set groupName
 func WithGroupName(groupName string) Option {
 	return func(o *options) {
 		o.groupName = groupName
+	}
+}
+
+// WithContextPath set contextPath
+func WithContextPath(contextPath string) Option {
+	return func(o *options) {
+		o.contextPath = contextPath
 	}
 }

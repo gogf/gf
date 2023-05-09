@@ -1,3 +1,9 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package nacos
 
 import (
@@ -10,6 +16,7 @@ import (
 
 var _ gsvc.Watcher = &watcher{}
 
+// watcher is nacos watcher.
 type watcher struct {
 	key       string
 	ctx       context.Context
@@ -31,7 +38,7 @@ func newWatcher(key string, client naming_client.INamingClient, ops *options) (*
 	return w, nil
 }
 
-// Close is used to close the watcher.
+// watch is used to watch the key.
 func (w watcher) watch(key string) {
 	for {
 		//subscribe the key
@@ -66,6 +73,7 @@ func (w watcher) Proceed() (services []gsvc.Service, err error) {
 	}
 }
 
+// Close is used to close the watcher.
 func (w watcher) Close() error {
 	w.cancel()
 	return nil
