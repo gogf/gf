@@ -1,3 +1,9 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package main
 
 import (
@@ -22,7 +28,7 @@ func main() {
 	// TTL egt 2*time.Second
 	gsvc.SetRegistry(polaris.NewWithConfig(conf, polaris.WithTTL(10)))
 
-	s := g.Server(`hello.svc`)
+	s := g.Server(`hello-world.svc`)
 	s.BindHandler("/", func(r *ghttp.Request) {
 		g.Log().Info(r.Context(), `request received`)
 		r.Response.Write(`Hello world`)
