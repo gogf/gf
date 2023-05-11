@@ -1,3 +1,10 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+// Package jaeger provides OpenTelemetry provider using jaeger.
 package jaeger
 
 import (
@@ -49,6 +56,7 @@ func Init(serviceName, endpoint string) (*trace.TracerProvider, error) {
 			jaeger.WithAgentHost(host), jaeger.WithAgentPort(port),
 		)
 	}
+	// Try retrieving host ip for tracing info.
 	var hostIp string
 	intranetIpArray, err := gipv4.GetIntranetIpArray()
 	if err != nil {
@@ -64,6 +72,9 @@ func Init(serviceName, endpoint string) (*trace.TracerProvider, error) {
 		}
 	} else {
 		hostIp = intranetIpArray[0]
+	}
+	if hostIp == "" {
+		hostIp = "NoHostIpFound"
 	}
 
 	exp, err := jaeger.New(endpointOption)
