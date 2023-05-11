@@ -74,7 +74,7 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 	currentStructFieldMap, err := gstructs.FieldMap(gstructs.FieldMapInput{
 		Pointer:          pointer,
 		PriorityTagArray: nil,
-		RecursiveOption:  gstructs.RecursiveOptionEmbeddedNoTag,
+		RecursiveOption:  gstructs.RecursiveOptionEmbedded,
 	})
 	if err != nil {
 		return err
@@ -191,7 +191,7 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 	currentStructFieldMap, err := gstructs.FieldMap(gstructs.FieldMapInput{
 		Pointer:          pointer,
 		PriorityTagArray: nil,
-		RecursiveOption:  gstructs.RecursiveOptionEmbeddedNoTag,
+		RecursiveOption:  gstructs.RecursiveOptionEmbedded,
 	})
 	if err != nil {
 		return err

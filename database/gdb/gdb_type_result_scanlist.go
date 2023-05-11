@@ -365,7 +365,7 @@ func doScanList(in doScanListInput) (err error) {
 			if !relationFromAttrField.IsValid() {
 				filedMap, _ := gstructs.FieldMap(gstructs.FieldMapInput{
 					Pointer:         relationFromAttrValue,
-					RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
+					RecursiveOption: gstructs.RecursiveOptionEmbedded,
 				})
 				if key, _ := gutil.MapPossibleItemByKey(gconv.Map(filedMap), relationBindToFieldName); key == "" {
 					return gerror.NewCodef(
