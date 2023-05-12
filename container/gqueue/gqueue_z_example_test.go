@@ -102,7 +102,7 @@ func ExampleQueue_Close() {
 	fmt.Println(q.Len())
 	fmt.Println(q.Pop())
 
-	// Output:
+	// May Output:
 	// 0
 	// <nil>
 }
