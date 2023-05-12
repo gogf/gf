@@ -28,8 +28,9 @@ func NewSelectorRoundRobin() Selector {
 func (s *selectorRoundRobin) Update(ctx context.Context, nodes Nodes) error {
 	intlog.Printf(ctx, `Update nodes: %s`, nodes.String())
 	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.nodes = nodes
-	s.mu.Unlock()
+	s.next = 0
 	return nil
 }
 
