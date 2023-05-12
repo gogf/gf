@@ -57,24 +57,20 @@ func Init(serviceName, endpoint string) (*trace.TracerProvider, error) {
 		)
 	}
 	// Try retrieving host ip for tracing info.
-	var hostIp string
-	intranetIpArray, err := gipv4.GetIntranetIpArray()
+	var (
+		hostIp               = "NoHostIpFound"
+		intranetIPArray, err = gipv4.GetIntranetIpArray()
+	)
 	if err != nil {
 		return nil, err
 	}
-	if len(intranetIpArray) == 0 {
-		var ipArray []string
-		if ipArray, err = gipv4.GetIpArray(); err != nil {
+	if len(intranetIPArray) == 0 {
+		if intranetIPArray, err = gipv4.GetIpArray(); err != nil {
 			return nil, err
 		}
-		if len(ipArray) > 0 {
-			hostIp = ipArray[0]
-		}
-	} else {
-		hostIp = intranetIpArray[0]
 	}
-	if hostIp == "" {
-		hostIp = "NoHostIpFound"
+	if len(intranetIPArray) > 0 {
+		hostIp = intranetIPArray[0]
 	}
 
 	exp, err := jaeger.New(endpointOption)
