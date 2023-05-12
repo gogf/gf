@@ -11,7 +11,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"github.com/olekukonko/tablewriter"
+
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -23,6 +23,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gtag"
+	"github.com/olekukonko/tablewriter"
 )
 
 type (
