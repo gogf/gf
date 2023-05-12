@@ -14,7 +14,7 @@ import (
 )
 
 type selectorRoundRobin struct {
-	mu    sync.RWMutex
+	mu    sync.Mutex
 	nodes Nodes
 	next  int
 }
@@ -35,8 +35,8 @@ func (s *selectorRoundRobin) Update(ctx context.Context, nodes Nodes) error {
 }
 
 func (s *selectorRoundRobin) Pick(ctx context.Context) (node Node, done DoneFunc, err error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	node = s.nodes[s.next]
 	s.next = (s.next + 1) % len(s.nodes)
 	intlog.Printf(ctx, `Picked node: %s`, node.Address())
