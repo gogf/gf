@@ -18,7 +18,6 @@ import (
 // Register registers `service` to Registry.
 // Note that it returns a new Service if it changes the input Service with custom one.
 func (r Registry) Register(ctx context.Context, service gsvc.Service) (registered gsvc.Service, err error) {
-	_ = service.GetKey()
 	var version string
 	if service.GetVersion() == "" {
 		version = gsvc.DefaultVersion
@@ -34,7 +33,7 @@ func (r Registry) Register(ctx context.Context, service gsvc.Service) (registere
 		Metadata:   service.GetMetadata(),
 		Endpoints:  service.GetEndpoints(),
 	}
-	if err = r.registerByType(service.GetPrefix(), service); err != nil {
+	if err = r.registerByType(s.GetPrefix(), service); err != nil {
 		return nil, err
 	}
 	return s, nil

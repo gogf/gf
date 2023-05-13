@@ -47,7 +47,7 @@ type options struct {
 	contextPath string
 }
 
-//New create nacos registry.
+// New create nacos registry.
 func New(address []string, opts ...Option) *Registry {
 	// default options
 	options := &options{
