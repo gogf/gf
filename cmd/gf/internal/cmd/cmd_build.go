@@ -143,7 +143,7 @@ func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, e
 
 	mlog.SetHeaderPrint(true)
 
-	mlog.Debugf(`build input: %+v`, in)
+	mlog.Debugf(`build command input: %+v`, in)
 	// Necessary check.
 	if gproc.SearchBinary("go") == "" {
 		mlog.Fatalf(`command "go" not found in your environment, please install golang first to proceed this command`)
