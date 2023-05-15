@@ -70,6 +70,7 @@ func main() {
 		cmd.Build,
 		cmd.Docker,
 		cmd.Install,
+		cmd.Update,
 		cmd.Version,
 	)
 	if err != nil {
