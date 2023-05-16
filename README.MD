@@ -1,7 +1,7 @@
 # GoFrame
 
 <div align=center>
-<img src="https://goframe.org/statics/image/logo2.png" width="300"/>
+<img src="https://goframe.org/statics/image/logo2.png?v=1" width="300"/>
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/gogf/gf/v2.svg)](https://pkg.go.dev/github.com/gogf/gf/v2)
 [![GoFrame CI](https://github.com/gogf/gf/actions/workflows/gf.yml/badge.svg)](https://github.com/gogf/gf/actions/workflows/gf.yml)
