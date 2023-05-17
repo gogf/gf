@@ -95,7 +95,11 @@ func (m *Model) UpdateExtend(dataAndWhere ...interface{}) (result sql.Result, er
 	exMap := map[string]interface{}{}
 	if len(m.expandsTable) > 0 {
 		tdata := m.data.(map[string]interface{})
-		json.Unmarshal(gconv.Bytes(tdata["ExtData"]), &exMap)
+		extData := gconv.Bytes(tdata["ExtData"])
+		if len(extData) == 0 {
+			extData = gconv.Bytes(tdata["extData"])
+		}
+		json.Unmarshal(extData, &exMap)
 	}
 
 	if len(exMap) > 0 {

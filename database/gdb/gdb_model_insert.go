@@ -183,7 +183,11 @@ func (m *Model) InsertExtendAndGetId(data ...interface{}) (lastInsertId int64, e
 	exMap := map[string]interface{}{}
 	if len(m.expandsTable) > 0 {
 		tdata := m.data.(map[string]interface{})
-		json.Unmarshal(gconv.Bytes(tdata["ExtData"]), &exMap)
+		extData := gconv.Bytes(tdata["ExtData"])
+		if len(extData) == 0 {
+			extData = gconv.Bytes(tdata["extData"])
+		}
+		json.Unmarshal(extData, &exMap)
 	}
 
 	result, err := m.doInsertWithOption(insertOptionDefault)
