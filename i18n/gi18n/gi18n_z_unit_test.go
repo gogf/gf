@@ -39,6 +39,7 @@ func Test_Basic(t *testing.T) {
 		i18n.SetDelimiters("{$", "}")
 		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "{#hello}{#world}")
 		t.Assert(i18n.T(context.Background(), "{$hello}{$world}"), "你好世界")
+		t.Assert(i18n.T(context.Background(), "{$你好} {$世界}"), "hello world")
 	})
 
 	gtest.C(t, func(t *gtest.T) {

@@ -47,6 +47,8 @@ var (
 
 	// i18n files searching folders.
 	searchFolders = []string{"manifest/i18n", "manifest/config/i18n", "i18n"}
+	// default pattern  matches all characters, including Chinese.
+	defaultPattern = "(.*?)"
 )
 
 // New creates and returns a new i18n manager.
@@ -68,11 +70,13 @@ func New(options ...Options) *Manager {
 	m := &Manager{
 		options: opts,
 		pattern: fmt.Sprintf(
-			`%s(\w+)%s`,
+			`%s%s%s`,
 			gregex.Quote(opts.Delimiters[0]),
+			defaultPattern,
 			gregex.Quote(opts.Delimiters[1]),
 		),
 	}
+	fmt.Println(m.pattern)
 	intlog.Printf(context.TODO(), `New: %#v`, m)
 	return m
 }
@@ -122,7 +126,7 @@ func (m *Manager) SetLanguage(language string) {
 
 // SetDelimiters sets the delimiters for translator.
 func (m *Manager) SetDelimiters(left, right string) {
-	m.pattern = fmt.Sprintf(`%s(\w+)%s`, gregex.Quote(left), gregex.Quote(right))
+	m.pattern = fmt.Sprintf(`%s%s%s`, gregex.Quote(left),defaultPattern, gregex.Quote(right))
 	intlog.Printf(context.TODO(), `SetDelimiters: %v`, m.pattern)
 }
 
@@ -166,7 +170,9 @@ func (m *Manager) Translate(ctx context.Context, content string) string {
 			if v, ok := data[match[1]]; ok {
 				return v
 			}
-			return match[0]
+			// return match[0] => return match[1]
+			// returns the content between delimiters
+			return match[1]
 		})
 	intlog.Printf(ctx, `Translate for language: %s`, transLang)
 	return result
