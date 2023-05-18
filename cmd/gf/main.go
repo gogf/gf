@@ -77,7 +77,9 @@ func main() {
 	}
 	err = command.RunWithError(ctx)
 	if err != nil {
-		panic(err)
+		// Exit with error message and exit code 1.
+		// It is very important to exit the command process with code 1.
+		mlog.Fatalf(`%+v`, err)
 	}
 }
 
