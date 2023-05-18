@@ -42,6 +42,20 @@ func Test_Func_ConvertDataForRecord(t *testing.T) {
 		t.Assert(len(m), 1)
 		t.Assert(m["reset_password_token_at"], nil)
 	})
+
+	// Fix issue: https://github.com/gogf/gf/issues/2650
+	type TestDecimal struct {
+		Price string `orm:"price"`
+	}
+	gtest.C(t, func(t *gtest.T) {
+		c := &gdb.Core{}
+		m, err := c.ConvertDataForRecord(nil, &TestDecimal{
+			Price: "1.999999999999999999",
+		})
+		t.AssertNil(err)
+		t.Assert(len(m), 1)
+		t.Assert(m["price"], "1.999999999999999999")
+	})
 }
 
 func Test_Func_FormatSqlWithArgs(t *testing.T) {
