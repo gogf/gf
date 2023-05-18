@@ -39,11 +39,6 @@ func SetFile(pattern string) {
 	defaultLogger.SetFile(pattern)
 }
 
-// SetTimeFormat sets the time format for the logging time.
-func SetTimeFormat(timeFormat string) {
-	defaultLogger.SetTimeFormat(timeFormat)
-}
-
 // SetLevel sets the default logging level.
 func SetLevel(level int) {
 	defaultLogger.SetLevel(level)
