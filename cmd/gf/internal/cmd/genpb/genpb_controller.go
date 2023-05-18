@@ -9,6 +9,7 @@ package genpb
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 	"github.com/gogf/gf/v2/frame/g"
@@ -85,7 +86,7 @@ func (c CGenPb) parseControllers(filePath string) ([]generateCtrl, error) {
 		func(match []string) string {
 			ctrl := generateCtrl{
 				Name:    match[1],
-				Package: gfile.Basename(gfile.Dir(gfile.Dir(filePath))),
+				Package: strings.ReplaceAll(gfile.Basename(gfile.Dir(gfile.Dir(filePath))), "-", "_"),
 				Version: gfile.Basename(gfile.Dir(filePath)),
 				Methods: make([]generateCtrlMethod, 0),
 			}
