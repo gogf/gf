@@ -126,7 +126,7 @@ func (m *Manager) SetLanguage(language string) {
 
 // SetDelimiters sets the delimiters for translator.
 func (m *Manager) SetDelimiters(left, right string) {
-	m.pattern = fmt.Sprintf(`%s%s%s`, gregex.Quote(left),defaultPattern, gregex.Quote(right))
+	m.pattern = fmt.Sprintf(`%s%s%s`, gregex.Quote(left), defaultPattern, gregex.Quote(right))
 	intlog.Printf(context.TODO(), `SetDelimiters: %v`, m.pattern)
 }
 
