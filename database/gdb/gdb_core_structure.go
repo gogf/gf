@@ -181,7 +181,11 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 
 	case
 		"decimal":
-		//Avoid unexpected errors caused by decimal points larger than 15
+		describe := gstr.Split(typePattern, ",")
+		if len(describe) == 2 && gconv.Int(describe[0]) <= 53 && gconv.Int(describe[1]) <= 15 {
+			//Satisfy the range of floating-point numbers
+			return LocalTypeFloat64, nil
+		}
 		return LocalTypeString, nil
 
 	case

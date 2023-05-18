@@ -55,6 +55,39 @@ func Test_Func_ConvertDataForRecord(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(m), 1)
 		t.Assert(m["price"], "1.999999999999999999")
+
+		m, err = c.ConvertDataForRecord(nil, &TestDecimal{
+			Price: "1.999999999999999",
+		})
+		t.AssertNil(err)
+		t.Assert(len(m), 1)
+		t.Assert(m["price"], "1.999999999999999")
+	})
+}
+
+// Fix issue: https://github.com/gogf/gf/issues/2650
+func Test_Func_CheckLocalTypeForField(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		c := &gdb.Core{}
+		m, err := c.CheckLocalTypeForField(nil, "decimal(40,18)", "1.999999999999999999")
+		t.AssertNil(err)
+		t.Assert(m, gdb.LocalTypeString)
+
+		m, err = c.CheckLocalTypeForField(nil, "decimal(53,18)", "1.999999999999999999")
+		t.AssertNil(err)
+		t.Assert(m, gdb.LocalTypeString)
+
+		m, err = c.CheckLocalTypeForField(nil, "decimal(40,15)", "1.999999999999999999")
+		t.AssertNil(err)
+		t.Assert(m, gdb.LocalTypeFloat64)
+
+		m, err = c.CheckLocalTypeForField(nil, "decimal(53,10)", "1.999999999999999999")
+		t.AssertNil(err)
+		t.Assert(m, gdb.LocalTypeFloat64)
+
+		m1, err1 := c.CheckLocalTypeForField(nil, "decimal(54,15)", "1.999999999999999999")
+		t.AssertNil(err1)
+		t.Assert(m1, gdb.LocalTypeString)
 	})
 }
 
