@@ -167,7 +167,7 @@ func (m *Manager) Translate(ctx context.Context, content string) string {
 				return v
 			}
 			// return match[0] => return match[1]
-			// returns the content between delimiters
+			// return the content between delimiters
 			return match[1]
 		})
 	intlog.Printf(ctx, `Translate for language: %s`, transLang)
