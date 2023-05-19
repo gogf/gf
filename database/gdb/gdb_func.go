@@ -58,12 +58,62 @@ const (
 	OrmTagForDo        = "do"
 )
 
+const (
+	FieldLocalTypeBinary     = "binary"
+	FieldLocalTypeVarbinary  = "varbinary"
+	FieldLocalTypeBlob       = "blob"
+	FieldLocalTypeTinyblob   = "tinyblob"
+	FieldLocalTypeMediumblob = "mediumblob"
+	FieldLocalTypeLongblob   = "longblob"
+
+	FieldLocalTypeInt       = "int"
+	FieldLocalTypeTinyint   = "tinyint"
+	FieldLocalTypeSmallInt  = "small_int"
+	FieldLocalTypeSmallint  = "smallint"
+	FieldLocalTypeMediumInt = "medium_int"
+	FieldLocalTypeMediumint = "mediumint"
+	FieldLocalTypeSerial    = "serial"
+
+	FieldLocalTypeBigInt    = "big_int"
+	FieldLocalTypeBigint    = "bigint"
+	FieldLocalTypeBigserial = "bigserial"
+
+	FieldLocalTypeReal = "real"
+
+	FieldLocalTypeFloat      = "float"
+	FieldLocalTypeDouble     = "double"
+	FieldLocalTypeDecimal    = "decimal"
+	FieldLocalTypeMoney      = "money"
+	FieldLocalTypeNumeric    = "numeric"
+	FieldLocalTypeSmallmoney = "smallmoney"
+
+	FieldLocalTypeBool = "bool"
+
+	FieldLocalTypeBit = "bit"
+
+	FieldLocalTypeDate = "date"
+
+	FieldLocalTypeDatetime   = "datetime"
+	FieldLocalTypeTimestamp  = "timestamp"
+	FieldLocalTypeTimestampz = "timestamptz"
+
+	FieldLocalTypeJson = "json"
+
+	FieldLocalTypeJsonb = "jsonb"
+)
+
+// checkLocalTypeForFieldFunc custom type conversion func
+type checkLocalTypeForFieldFunc func(ctx context.Context, typeName, typePattern, fieldType string, fieldValue interface{}) (string, error)
+
 var (
 	// quoteWordReg is the regular expression object for a word check.
 	quoteWordReg = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
 
 	// Priority tags for struct converting for orm field mapping.
 	structTagPriority = append([]string{OrmTagForStruct}, gconv.StructTagPriority...)
+
+	//checkLocalTypeForFieldKeyFuncMap custom type conversion.
+	checkLocalTypeForFieldKeyFuncMap = map[string]checkLocalTypeForFieldFunc{}
 )
 
 // WithDB injects given db object into context and returns a new context.
@@ -880,4 +930,9 @@ func FormatSqlWithArgs(sql string, args []interface{}) string {
 			return s
 		})
 	return newQuery
+}
+
+// RegistCheckLocalTypeForField User defined conversion rules
+func RegistCheckLocalTypeForField(key string, f checkLocalTypeForFieldFunc) {
+	checkLocalTypeForFieldKeyFuncMap[key] = f
 }

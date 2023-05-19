@@ -135,53 +135,58 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 		typeName = gstr.Split(fieldType, " ")[0]
 	}
 	typeName = strings.ToLower(typeName)
+
+	if f, ok := checkLocalTypeForFieldKeyFuncMap[typeName]; ok {
+		return f(ctx, typeName, typePattern, fieldType, fieldValue)
+	}
+
 	switch typeName {
 	case
-		"binary",
-		"varbinary",
-		"blob",
-		"tinyblob",
-		"mediumblob",
-		"longblob":
+		FieldLocalTypeBinary,
+		FieldLocalTypeVarbinary,
+		FieldLocalTypeBlob,
+		FieldLocalTypeTinyblob,
+		FieldLocalTypeMediumblob,
+		FieldLocalTypeLongblob:
 		return LocalTypeBytes, nil
 
 	case
-		"int",
-		"tinyint",
-		"small_int",
-		"smallint",
-		"medium_int",
-		"mediumint",
-		"serial":
+		FieldLocalTypeInt,
+		FieldLocalTypeTinyint,
+		FieldLocalTypeSmallInt,
+		FieldLocalTypeSmallint,
+		FieldLocalTypeMediumInt,
+		FieldLocalTypeMediumint,
+		FieldLocalTypeSerial:
 		if gstr.ContainsI(fieldType, "unsigned") {
 			return LocalTypeUint, nil
 		}
 		return LocalTypeInt, nil
 
 	case
-		"big_int",
-		"bigint",
-		"bigserial":
+		FieldLocalTypeBigInt,
+		FieldLocalTypeBigint,
+		FieldLocalTypeBigserial:
 		if gstr.ContainsI(fieldType, "unsigned") {
 			return LocalTypeUint64, nil
 		}
 		return LocalTypeInt64, nil
 
 	case
-		"real":
+		FieldLocalTypeReal:
 		return LocalTypeFloat32, nil
 
 	case
-		"float",
-		"double",
-		"decimal",
-		"money",
-		"numeric",
-		"smallmoney":
+		FieldLocalTypeFloat,
+		FieldLocalTypeDouble,
+		FieldLocalTypeDecimal,
+		FieldLocalTypeMoney,
+		FieldLocalTypeNumeric,
+		FieldLocalTypeSmallmoney:
 		return LocalTypeFloat64, nil
 
 	case
-		"bit":
+		FieldLocalTypeBit:
 		// It is suggested using bit(1) as boolean.
 		if typePattern == "1" {
 			return LocalTypeBool, nil
@@ -197,25 +202,25 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 		return LocalTypeInt64Bytes, nil
 
 	case
-		"bool":
+		FieldLocalTypeBool:
 		return LocalTypeBool, nil
 
 	case
-		"date":
+		FieldLocalTypeDate:
 		return LocalTypeDate, nil
 
 	case
-		"datetime",
-		"timestamp",
-		"timestamptz":
+		FieldLocalTypeDatetime,
+		FieldLocalTypeTimestamp,
+		FieldLocalTypeTimestampz:
 		return LocalTypeDatetime, nil
 
 	case
-		"json":
+		FieldLocalTypeJson:
 		return LocalTypeJson, nil
 
 	case
-		"jsonb":
+		FieldLocalTypeJsonb:
 		return LocalTypeJsonb, nil
 
 	default:
