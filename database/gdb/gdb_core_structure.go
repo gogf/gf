@@ -136,57 +136,57 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 	}
 	typeName = strings.ToLower(typeName)
 
-	if f, ok := checkLocalTypeForFieldKeyFuncMap[typeName]; ok {
-		return f(ctx, typeName, typePattern, fieldType, fieldValue)
+	if checkLocalTypeForFieldKeyFuncMap.Contains(typeName) {
+		return checkLocalTypeForFieldKeyFuncMap.Get(typeName).(checkLocalTypeForFieldFunc)(ctx, typeName, typePattern, fieldType, fieldValue)
 	}
 
 	switch typeName {
 	case
-		FieldLocalTypeBinary,
-		FieldLocalTypeVarbinary,
-		FieldLocalTypeBlob,
-		FieldLocalTypeTinyblob,
-		FieldLocalTypeMediumblob,
-		FieldLocalTypeLongblob:
+		FieldTypeBinary,
+		FieldTypeVarbinary,
+		FieldTypeBlob,
+		FieldTypeTinyblob,
+		FieldTypeMediumblob,
+		FieldTypeLongblob:
 		return LocalTypeBytes, nil
 
 	case
-		FieldLocalTypeInt,
-		FieldLocalTypeTinyint,
-		FieldLocalTypeSmallInt,
-		FieldLocalTypeSmallint,
-		FieldLocalTypeMediumInt,
-		FieldLocalTypeMediumint,
-		FieldLocalTypeSerial:
+		FieldTypeInt,
+		FieldTypeTinyint,
+		FieldTypeSmallInt,
+		FieldTypeSmallint,
+		FieldTypeMediumInt,
+		FieldTypeMediumint,
+		FieldTypeSerial:
 		if gstr.ContainsI(fieldType, "unsigned") {
 			return LocalTypeUint, nil
 		}
 		return LocalTypeInt, nil
 
 	case
-		FieldLocalTypeBigInt,
-		FieldLocalTypeBigint,
-		FieldLocalTypeBigserial:
+		FieldTypeBigInt,
+		FieldTypeBigint,
+		FieldTypeBigserial:
 		if gstr.ContainsI(fieldType, "unsigned") {
 			return LocalTypeUint64, nil
 		}
 		return LocalTypeInt64, nil
 
 	case
-		FieldLocalTypeReal:
+		FieldTypeReal:
 		return LocalTypeFloat32, nil
 
 	case
-		FieldLocalTypeFloat,
-		FieldLocalTypeDouble,
-		FieldLocalTypeDecimal,
-		FieldLocalTypeMoney,
-		FieldLocalTypeNumeric,
-		FieldLocalTypeSmallmoney:
+		FieldTypeFloat,
+		FieldTypeDouble,
+		FieldTypeDecimal,
+		FieldTypeMoney,
+		FieldTypeNumeric,
+		FieldTypeSmallmoney:
 		return LocalTypeFloat64, nil
 
 	case
-		FieldLocalTypeBit:
+		FieldTypeBit:
 		// It is suggested using bit(1) as boolean.
 		if typePattern == "1" {
 			return LocalTypeBool, nil
@@ -202,25 +202,25 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 		return LocalTypeInt64Bytes, nil
 
 	case
-		FieldLocalTypeBool:
+		FieldTypeBool:
 		return LocalTypeBool, nil
 
 	case
-		FieldLocalTypeDate:
+		FieldTypeDate:
 		return LocalTypeDate, nil
 
 	case
-		FieldLocalTypeDatetime,
-		FieldLocalTypeTimestamp,
-		FieldLocalTypeTimestampz:
+		FieldTypeDatetime,
+		FieldTypeTimestamp,
+		FieldTypeTimestampz:
 		return LocalTypeDatetime, nil
 
 	case
-		FieldLocalTypeJson:
+		FieldTypeJson:
 		return LocalTypeJson, nil
 
 	case
-		FieldLocalTypeJsonb:
+		FieldTypeJsonb:
 		return LocalTypeJsonb, nil
 
 	default:

@@ -424,6 +424,50 @@ const (
 	LocalTypeJsonb       = "jsonb"
 )
 
+const (
+	FieldTypeBinary     = "binary"
+	FieldTypeVarbinary  = "varbinary"
+	FieldTypeBlob       = "blob"
+	FieldTypeTinyblob   = "tinyblob"
+	FieldTypeMediumblob = "mediumblob"
+	FieldTypeLongblob   = "longblob"
+
+	FieldTypeInt       = "int"
+	FieldTypeTinyint   = "tinyint"
+	FieldTypeSmallInt  = "small_int"
+	FieldTypeSmallint  = "smallint"
+	FieldTypeMediumInt = "medium_int"
+	FieldTypeMediumint = "mediumint"
+	FieldTypeSerial    = "serial"
+
+	FieldTypeBigInt    = "big_int"
+	FieldTypeBigint    = "bigint"
+	FieldTypeBigserial = "bigserial"
+
+	FieldTypeReal = "real"
+
+	FieldTypeFloat      = "float"
+	FieldTypeDouble     = "double"
+	FieldTypeDecimal    = "decimal"
+	FieldTypeMoney      = "money"
+	FieldTypeNumeric    = "numeric"
+	FieldTypeSmallmoney = "smallmoney"
+
+	FieldTypeBool = "bool"
+
+	FieldTypeBit = "bit"
+
+	FieldTypeDate = "date"
+
+	FieldTypeDatetime   = "datetime"
+	FieldTypeTimestamp  = "timestamp"
+	FieldTypeTimestampz = "timestamptz"
+
+	FieldTypeJson = "json"
+
+	FieldTypeJsonb = "jsonb"
+)
+
 var (
 	// instances is the management map for instances.
 	instances = gmap.NewStrAnyMap(true)

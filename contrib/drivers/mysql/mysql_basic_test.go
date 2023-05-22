@@ -53,12 +53,17 @@ func Test_Func_CheckLocalTypeForField(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(m, gdb.LocalTypeFloat64)
 
-		gdb.RegistCheckLocalTypeForField(gdb.FieldLocalTypeDecimal, func(ctx context.Context, typeName, typePattern, fieldType string, fieldValue interface{}) (string, error) {
+		gdb.RegistCheckLocalTypeForField(gdb.FieldTypeDecimal, func(ctx context.Context, typeName, typePattern, fieldType string, fieldValue interface{}) (string, error) {
+			//if xxx{
+			//	return gdb.LocalTypeFloat64
+			//}
 			return gdb.LocalTypeString, nil
 		})
-		m, err = c.CheckLocalTypeForField(nil, "decimal(40,18)", testData)
+		m, err = c.CheckLocalTypeForField(nil, "decimal", testData)
 		t.AssertNil(err)
 		t.Assert(m, gdb.LocalTypeString)
+
+		gdb.RemoveCheckLocalTypeForField(gdb.FieldTypeDecimal)
 	})
 }
 

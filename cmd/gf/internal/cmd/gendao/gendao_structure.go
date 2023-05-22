@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/olekukonko/tablewriter"
 
@@ -66,30 +67,51 @@ func generateStructFieldDefinition(
 		typeName string
 		jsonTag  = getJsonTagFromCase(field.Name, in.JsonCase)
 	)
-	typeName, err = in.DB.CheckLocalTypeForField(ctx, field.Type, nil)
-	if err != nil {
-		panic(err)
-	}
-	switch typeName {
-	case gdb.LocalTypeDate, gdb.LocalTypeDatetime:
-		if in.StdTime {
-			typeName = "time.Time"
+
+	if in.TypeMapping != nil && len(in.TypeMapping) > 0 {
+		var (
+			tryTypeName string
+		)
+		tryTypeMatch, _ := gregex.MatchString(`(.+?)\((.+)\)`, field.Type)
+		if len(tryTypeMatch) == 3 {
+			tryTypeName = gstr.Trim(tryTypeMatch[1])
 		} else {
-			typeName = "*gtime.Time"
+			tryTypeName = gstr.Split(field.Type, " ")[0]
+		}
+		if tryTypeName != "" {
+			if typeMappingName, ok := in.TypeMapping[strings.ToLower(tryTypeName)]; ok {
+				typeName = typeMappingName
+			}
+		}
+	}
+
+	if typeName == "" {
+		typeName, err = in.DB.CheckLocalTypeForField(ctx, field.Type, nil)
+		if err != nil {
+			panic(err)
 		}
 
-	case gdb.LocalTypeInt64Bytes:
-		typeName = "int64"
+		switch typeName {
+		case gdb.LocalTypeDate, gdb.LocalTypeDatetime:
+			if in.StdTime {
+				typeName = "time.Time"
+			} else {
+				typeName = "*gtime.Time"
+			}
 
-	case gdb.LocalTypeUint64Bytes:
-		typeName = "uint64"
+		case gdb.LocalTypeInt64Bytes:
+			typeName = "int64"
 
-	// Special type handle.
-	case gdb.LocalTypeJson, gdb.LocalTypeJsonb:
-		if in.GJsonSupport {
-			typeName = "*gjson.Json"
-		} else {
-			typeName = "string"
+		case gdb.LocalTypeUint64Bytes:
+			typeName = "uint64"
+
+		// Special type handle.
+		case gdb.LocalTypeJson, gdb.LocalTypeJsonb:
+			if in.GJsonSupport {
+				typeName = "*gjson.Json"
+			} else {
+				typeName = "string"
+			}
 		}
 	}
 

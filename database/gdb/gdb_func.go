@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/gogf/gf/v2/container/gmap"
 	"reflect"
 	"regexp"
 	"strings"
@@ -58,50 +59,6 @@ const (
 	OrmTagForDo        = "do"
 )
 
-const (
-	FieldLocalTypeBinary     = "binary"
-	FieldLocalTypeVarbinary  = "varbinary"
-	FieldLocalTypeBlob       = "blob"
-	FieldLocalTypeTinyblob   = "tinyblob"
-	FieldLocalTypeMediumblob = "mediumblob"
-	FieldLocalTypeLongblob   = "longblob"
-
-	FieldLocalTypeInt       = "int"
-	FieldLocalTypeTinyint   = "tinyint"
-	FieldLocalTypeSmallInt  = "small_int"
-	FieldLocalTypeSmallint  = "smallint"
-	FieldLocalTypeMediumInt = "medium_int"
-	FieldLocalTypeMediumint = "mediumint"
-	FieldLocalTypeSerial    = "serial"
-
-	FieldLocalTypeBigInt    = "big_int"
-	FieldLocalTypeBigint    = "bigint"
-	FieldLocalTypeBigserial = "bigserial"
-
-	FieldLocalTypeReal = "real"
-
-	FieldLocalTypeFloat      = "float"
-	FieldLocalTypeDouble     = "double"
-	FieldLocalTypeDecimal    = "decimal"
-	FieldLocalTypeMoney      = "money"
-	FieldLocalTypeNumeric    = "numeric"
-	FieldLocalTypeSmallmoney = "smallmoney"
-
-	FieldLocalTypeBool = "bool"
-
-	FieldLocalTypeBit = "bit"
-
-	FieldLocalTypeDate = "date"
-
-	FieldLocalTypeDatetime   = "datetime"
-	FieldLocalTypeTimestamp  = "timestamp"
-	FieldLocalTypeTimestampz = "timestamptz"
-
-	FieldLocalTypeJson = "json"
-
-	FieldLocalTypeJsonb = "jsonb"
-)
-
 // checkLocalTypeForFieldFunc custom type conversion func
 type checkLocalTypeForFieldFunc func(ctx context.Context, typeName, typePattern, fieldType string, fieldValue interface{}) (string, error)
 
@@ -113,7 +70,7 @@ var (
 	structTagPriority = append([]string{OrmTagForStruct}, gconv.StructTagPriority...)
 
 	//checkLocalTypeForFieldKeyFuncMap custom type conversion.
-	checkLocalTypeForFieldKeyFuncMap = map[string]checkLocalTypeForFieldFunc{}
+	checkLocalTypeForFieldKeyFuncMap = gmap.NewStrAnyMap(true)
 )
 
 // WithDB injects given db object into context and returns a new context.
@@ -932,7 +889,12 @@ func FormatSqlWithArgs(sql string, args []interface{}) string {
 	return newQuery
 }
 
-// RegistCheckLocalTypeForField User defined conversion rules
+// RegistCheckLocalTypeForField add user defined conversion rules
 func RegistCheckLocalTypeForField(key string, f checkLocalTypeForFieldFunc) {
-	checkLocalTypeForFieldKeyFuncMap[key] = f
+	checkLocalTypeForFieldKeyFuncMap.Set(key, f)
+}
+
+// RemoveCheckLocalTypeForField remove user defined conversion rules
+func RemoveCheckLocalTypeForField(key string) {
+	checkLocalTypeForFieldKeyFuncMap.Remove(key)
 }
