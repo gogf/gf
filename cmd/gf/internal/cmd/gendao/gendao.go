@@ -284,6 +284,17 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 		newTableName = in.Prefix + newTableName
 		newTableNames[i] = newTableName
 	}
+
+	//Add config defined conversion rules
+	if len(in.TypeMapping) > 0 {
+		for key, val := range in.TypeMapping {
+			v := val
+			gdb.RegistCheckLocalTypeForField(strings.ToLower(key), func(ctx context.Context, typeName, typePattern, fieldType string, fieldValue interface{}) (string, error) {
+				return v, nil
+			})
+		}
+	}
+
 	// Dao: index and internal.
 	generateDao(ctx, CGenDaoInternalInput{
 		CGenDaoInput:  in,
