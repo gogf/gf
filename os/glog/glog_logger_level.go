@@ -20,14 +20,14 @@ const (
 	LEVEL_DEV  = LEVEL_ALL
 	LEVEL_PROD = LEVEL_WARN | LEVEL_ERRO | LEVEL_CRIT
 	LEVEL_NONE = 0
-	LEVEL_DEBU = 1 << iota // 8
-	LEVEL_INFO             // 16
-	LEVEL_NOTI             // 32
-	LEVEL_WARN             // 64
-	LEVEL_ERRO             // 128
-	LEVEL_CRIT             // 256
-	LEVEL_PANI             // 512
-	LEVEL_FATA             // 1024
+	LEVEL_DEBU = 1 << iota // 16
+	LEVEL_INFO             // 32
+	LEVEL_NOTI             // 64
+	LEVEL_WARN             // 128
+	LEVEL_ERRO             // 256
+	LEVEL_CRIT             // 512
+	LEVEL_PANI             // 1024
+	LEVEL_FATA             // 2048
 )
 
 // defaultLevelPrefixes defines the default level and its mapping prefix string.
