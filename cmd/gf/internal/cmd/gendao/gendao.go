@@ -49,6 +49,8 @@ CONFIGURATION SUPPORT
 		  path:   "./my-app"
 		  prefix: "primary_"
 		  tables: "user, userDetail"
+		  typeMapping: 
+		  	decimal: "string"
 `
 	CGenDaoBriefPath            = `directory path for generated files`
 	CGenDaoBriefLink            = `database configuration, the same as the ORM configuration of GoFrame`
