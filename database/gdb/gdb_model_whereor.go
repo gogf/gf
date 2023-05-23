@@ -72,10 +72,16 @@ func (m *Model) WhereOrNotBetween(column string, min, max interface{}) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereOrNotBetween(column, min, max))
 }
 
-// WhereOrNotLike builds `column NOT LIKE like` statement in `OR` conditions.
+// WhereOrNotLike builds `column NOT LIKE 'like'` statement in `OR` conditions.
 // See WhereBuilder.WhereOrNotLike.
 func (m *Model) WhereOrNotLike(column string, like interface{}) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereOrNotLike(column, like))
+}
+
+// WhereOrNot builds `column != value` statement.
+// See WhereBuilder.WhereOrNot.
+func (m *Model) WhereOrNot(column string, value interface{}) *Model {
+	return m.callWhereBuilder(m.whereBuilder.WhereOrNot(column, value))
 }
 
 // WhereOrNotIn builds `column NOT IN (in)` statement.

@@ -83,3 +83,9 @@ func (m *Model) WhereOrPrefixNotIn(prefix string, column string, in interface{})
 func (m *Model) WhereOrPrefixNotNull(prefix string, columns ...string) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereOrPrefixNotNull(prefix, columns...))
 }
+
+// WhereOrPrefixNot builds `prefix.column != value` statement in `OR` conditions.
+// See WhereBuilder.WhereOrPrefixNot.
+func (m *Model) WhereOrPrefixNot(prefix string, column string, value interface{}) *Model {
+	return m.callWhereBuilder(m.whereBuilder.WhereOrPrefixNot(prefix, column, value))
+}
