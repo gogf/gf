@@ -289,10 +289,10 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 
 	// Add config defined conversion rules
 	if len(in.TypeMapping) > 0 {
-		for key := range in.TypeMapping {
-			val := in.TypeMapping[key]
-			gdb.RegistCheckLocalTypeForField(strings.ToLower(key), func(ctx context.Context, typeName, typePattern, fieldType string, fieldValue interface{}) (string, error) {
-				return val, nil
+		for typeName := range in.TypeMapping {
+			localType := in.TypeMapping[typeName]
+			gdb.RegistCheckLocalTypeForField(typeName, func(ctx context.Context, typeName, typePattern, fieldType string, fieldValue interface{}) (string, error) {
+				return localType, nil
 			})
 		}
 	}

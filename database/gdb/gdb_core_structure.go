@@ -134,11 +134,12 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 	} else {
 		typeName = gstr.Split(fieldType, " ")[0]
 	}
-	typeName = strings.ToLower(typeName)
 
 	if checkLocalTypeForFieldKeyFuncMap.Contains(typeName) {
 		return checkLocalTypeForFieldKeyFuncMap.Get(typeName).(checkLocalTypeForFieldFunc)(ctx, typeName, typePattern, fieldType, fieldValue)
 	}
+
+	typeName = strings.ToLower(typeName)
 
 	switch typeName {
 	case

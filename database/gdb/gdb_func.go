@@ -890,11 +890,11 @@ func FormatSqlWithArgs(sql string, args []interface{}) string {
 }
 
 // RegistCheckLocalTypeForField add user defined conversion rules
-func RegistCheckLocalTypeForField(key string, f checkLocalTypeForFieldFunc) {
-	checkLocalTypeForFieldKeyFuncMap.Set(key, f)
+func RegistCheckLocalTypeForField(typeName string, checkFunc checkLocalTypeForFieldFunc) {
+	checkLocalTypeForFieldKeyFuncMap.Set(typeName, checkFunc)
 }
 
 // RemoveCheckLocalTypeForField remove user defined conversion rules
-func RemoveCheckLocalTypeForField(key string) {
-	checkLocalTypeForFieldKeyFuncMap.Remove(key)
+func RemoveCheckLocalTypeForField(typeName string) {
+	checkLocalTypeForFieldKeyFuncMap.Remove(typeName)
 }
