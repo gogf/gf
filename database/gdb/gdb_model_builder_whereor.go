@@ -51,22 +51,27 @@ func (b *WhereBuilder) WhereOrf(format string, args ...interface{}) *WhereBuilde
 	return b.doWhereOrfType(``, format, args...)
 }
 
-// WhereOrLT builds `column < value` statement in `OR` conditions..
+// WhereOrNot builds `column != value` statement in `OR` conditions.
+func (b *WhereBuilder) WhereOrNot(column string, value interface{}) *WhereBuilder {
+	return b.WhereOrf(`%s != ?`, column, value)
+}
+
+// WhereOrLT builds `column < value` statement in `OR` conditions.
 func (b *WhereBuilder) WhereOrLT(column string, value interface{}) *WhereBuilder {
 	return b.WhereOrf(`%s < ?`, column, value)
 }
 
-// WhereOrLTE builds `column <= value` statement in `OR` conditions..
+// WhereOrLTE builds `column <= value` statement in `OR` conditions.
 func (b *WhereBuilder) WhereOrLTE(column string, value interface{}) *WhereBuilder {
 	return b.WhereOrf(`%s <= ?`, column, value)
 }
 
-// WhereOrGT builds `column > value` statement in `OR` conditions..
+// WhereOrGT builds `column > value` statement in `OR` conditions.
 func (b *WhereBuilder) WhereOrGT(column string, value interface{}) *WhereBuilder {
 	return b.WhereOrf(`%s > ?`, column, value)
 }
 
-// WhereOrGTE builds `column >= value` statement in `OR` conditions..
+// WhereOrGTE builds `column >= value` statement in `OR` conditions.
 func (b *WhereBuilder) WhereOrGTE(column string, value interface{}) *WhereBuilder {
 	return b.WhereOrf(`%s >= ?`, column, value)
 }
@@ -76,7 +81,7 @@ func (b *WhereBuilder) WhereOrBetween(column string, min, max interface{}) *Wher
 	return b.WhereOrf(`%s BETWEEN ? AND ?`, b.model.QuoteWord(column), min, max)
 }
 
-// WhereOrLike builds `column LIKE like` statement in `OR` conditions.
+// WhereOrLike builds `column LIKE 'like'` statement in `OR` conditions.
 func (b *WhereBuilder) WhereOrLike(column string, like interface{}) *WhereBuilder {
 	return b.WhereOrf(`%s LIKE ?`, b.model.QuoteWord(column), like)
 }
