@@ -15,7 +15,7 @@ import (
 
 const (
 	serviceName = "otlp-http-client"
-	endpoint    = "localhost:6831"
+	endpoint    = "tracing-analysis-dc-hz.aliyuncs.com"
 	path        = "adapt_******_******/api/otlp/traces"
 )
 

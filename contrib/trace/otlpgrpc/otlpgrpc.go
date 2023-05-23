@@ -18,7 +18,7 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.18.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.20.0"
 	"google.golang.org/grpc"
 )
 
@@ -26,7 +26,7 @@ const (
 	tracerHostnameTagKey = "hostname"
 )
 
-// Init initializes and registers otlp grpc to global TracerProvider.
+// Init initializes and registers `otlpgrpc` to global TracerProvider.
 //
 // The output parameter `Shutdown` is used for waiting exported trace spans to be uploaded,
 // which is useful if your program is ending, and you do not want to lose recent spans.
@@ -52,7 +52,7 @@ func Init(serviceName, endpoint, traceToken string) (*sdktrace.TracerProvider, e
 
 	traceClient := otlptracegrpc.NewClient(
 		otlptracegrpc.WithInsecure(),
-		otlptracegrpc.WithEndpoint(endpoint), // 将otelAgentAddr替换为前提条件中获取的接入点。
+		otlptracegrpc.WithEndpoint(endpoint), // Replace the otel Agent Addr with the access point obtained in the prerequisite。
 		otlptracegrpc.WithHeaders(map[string]string{"Authentication": traceToken}),
 		otlptracegrpc.WithDialOption(grpc.WithBlock()))
 	ctx := context.Background()
@@ -66,7 +66,7 @@ func Init(serviceName, endpoint, traceToken string) (*sdktrace.TracerProvider, e
 		resource.WithTelemetrySDK(),
 		resource.WithHost(),
 		resource.WithAttributes(
-			// 在链路追踪后端显示的服务名称。
+			// The name of the service displayed on the traceback end。
 			semconv.ServiceNameKey.String(serviceName),
 			semconv.HostNameKey.String(hostIP),
 			attribute.String(tracerHostnameTagKey, hostIP),
@@ -83,7 +83,7 @@ func Init(serviceName, endpoint, traceToken string) (*sdktrace.TracerProvider, e
 		sdktrace.WithSpanProcessor(bsp),
 	)
 
-	// 设置全局propagator为tracecontext（默认不设置）。
+	// Set the global propagator to traceContext (not set by default).
 	otel.SetTextMapPropagator(propagation.TraceContext{})
 	otel.SetTracerProvider(tracerProvider)
 
