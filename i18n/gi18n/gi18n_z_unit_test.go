@@ -37,9 +37,8 @@ func Test_Basic(t *testing.T) {
 		i18n.SetLanguage("zh-CN")
 		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "你好世界")
 		i18n.SetDelimiters("{$", "}")
-		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "{#hello}{#world}")
-		t.Assert(i18n.T(context.Background(), "{$hello}{$world}"), "你好世界")
 		t.Assert(i18n.T(context.Background(), "{$你好} {$世界}"), "hello world")
+		t.Assert(i18n.T(context.Background(), "{$你好1}{$世界1}"), "你好1世界1")
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -54,6 +53,7 @@ func Test_Basic(t *testing.T) {
 
 		i18n.SetLanguage("zh-CN")
 		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "你好世界")
+		t.Assert(i18n.T(context.Background(), "{#你好} {#世界}"), "hello world")
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -122,7 +122,7 @@ func Test_Instance(t *testing.T) {
 		err := m.SetPath("i18n-dir")
 		t.AssertNil(err)
 		m.SetLanguage("zh-CN")
-		t.Assert(m.T(context.Background(), "{#hello}{#world}"), "你好世界")
+		t.Assert(m.T(context.Background(), "{#你好} {#世界}"), "hello world")
 	})
 
 	gtest.C(t, func(t *gtest.T) {
