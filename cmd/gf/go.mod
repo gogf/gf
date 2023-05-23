@@ -3,6 +3,7 @@ module github.com/gogf/gf/cmd/gf/v2
 go 1.18
 
 require (
+	github.com/cheggaaa/pb/v3 v3.1.2
 	github.com/gogf/gf/contrib/drivers/clickhouse/v2 v2.4.1
 	github.com/gogf/gf/contrib/drivers/mssql/v2 v2.4.1
 	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.4.1
@@ -19,9 +20,10 @@ require (
 	aead.dev/minisign v0.2.0 // indirect
 	github.com/BurntSushi/toml v1.1.0 // indirect
 	github.com/ClickHouse/clickhouse-go/v2 v2.0.15 // indirect
+	github.com/VividCortex/ewma v1.2.0 // indirect
 	github.com/clbanning/mxj/v2 v2.5.5 // indirect
 	github.com/denisenkom/go-mssqldb v0.11.0 // indirect
-	github.com/fatih/color v1.13.0 // indirect
+	github.com/fatih/color v1.14.1 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/glebarez/go-sqlite v1.17.3 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
@@ -33,12 +35,13 @@ require (
 	github.com/grokify/html-strip-tags-go v0.0.1 // indirect
 	github.com/lib/pq v1.10.4 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
-	github.com/mattn/go-colorable v0.1.9 // indirect
-	github.com/mattn/go-isatty v0.0.14 // indirect
-	github.com/mattn/go-runewidth v0.0.9 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.17 // indirect
+	github.com/mattn/go-runewidth v0.0.12 // indirect
 	github.com/paulmach/orb v0.7.1 // indirect
 	github.com/pierrec/lz4/v4 v4.1.14 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
+	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/sijms/go-ora/v2 v2.4.20 // indirect
 	go.opentelemetry.io/otel v1.7.0 // indirect
