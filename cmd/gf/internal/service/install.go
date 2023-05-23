@@ -111,6 +111,8 @@ func (s serviceInstall) Run(ctx context.Context) (err error) {
 			)
 			if input != "" {
 				inputID = gconv.Int(input)
+			} else {
+				break
 			}
 			// Check if out of range.
 			if inputID >= len(paths) || inputID < 0 {
