@@ -18,25 +18,25 @@ func (m *Model) WhereOrf(format string, args ...interface{}) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereOrf(format, args...))
 }
 
-// WhereOrLT builds `column < value` statement in `OR` conditions..
+// WhereOrLT builds `column < value` statement in `OR` conditions.
 // See WhereBuilder.WhereOrLT.
 func (m *Model) WhereOrLT(column string, value interface{}) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereOrLT(column, value))
 }
 
-// WhereOrLTE builds `column <= value` statement in `OR` conditions..
+// WhereOrLTE builds `column <= value` statement in `OR` conditions.
 // See WhereBuilder.WhereOrLTE.
 func (m *Model) WhereOrLTE(column string, value interface{}) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereOrLTE(column, value))
 }
 
-// WhereOrGT builds `column > value` statement in `OR` conditions..
+// WhereOrGT builds `column > value` statement in `OR` conditions.
 // See WhereBuilder.WhereOrGT.
 func (m *Model) WhereOrGT(column string, value interface{}) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereOrGT(column, value))
 }
 
-// WhereOrGTE builds `column >= value` statement in `OR` conditions..
+// WhereOrGTE builds `column >= value` statement in `OR` conditions.
 // See WhereBuilder.WhereOrGTE.
 func (m *Model) WhereOrGTE(column string, value interface{}) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereOrGTE(column, value))

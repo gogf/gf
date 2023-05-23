@@ -12,25 +12,25 @@ func (m *Model) WhereOrPrefix(prefix string, where interface{}, args ...interfac
 	return m.callWhereBuilder(m.whereBuilder.WhereOrPrefix(prefix, where, args...))
 }
 
-// WhereOrPrefixLT builds `prefix.column < value` statement in `OR` conditions..
+// WhereOrPrefixLT builds `prefix.column < value` statement in `OR` conditions.
 // See WhereBuilder.WhereOrPrefixLT.
 func (m *Model) WhereOrPrefixLT(prefix string, column string, value interface{}) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereOrPrefixLT(prefix, column, value))
 }
 
-// WhereOrPrefixLTE builds `prefix.column <= value` statement in `OR` conditions..
+// WhereOrPrefixLTE builds `prefix.column <= value` statement in `OR` conditions.
 // See WhereBuilder.WhereOrPrefixLTE.
 func (m *Model) WhereOrPrefixLTE(prefix string, column string, value interface{}) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereOrPrefixLTE(prefix, column, value))
 }
 
-// WhereOrPrefixGT builds `prefix.column > value` statement in `OR` conditions..
+// WhereOrPrefixGT builds `prefix.column > value` statement in `OR` conditions.
 // See WhereBuilder.WhereOrPrefixGT.
 func (m *Model) WhereOrPrefixGT(prefix string, column string, value interface{}) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereOrPrefixGT(prefix, column, value))
 }
 
-// WhereOrPrefixGTE builds `prefix.column >= value` statement in `OR` conditions..
+// WhereOrPrefixGTE builds `prefix.column >= value` statement in `OR` conditions.
 // See WhereBuilder.WhereOrPrefixGTE.
 func (m *Model) WhereOrPrefixGTE(prefix string, column string, value interface{}) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereOrPrefixGTE(prefix, column, value))
