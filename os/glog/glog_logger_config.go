@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
@@ -35,6 +36,7 @@ type Config struct {
 	CtxKeys              []interface{}  `json:"ctxKeys"`              // Context keys for logging, which is used for value retrieving from context.
 	HeaderPrint          bool           `json:"header"`               // Print header or not(true in default).
 	StdoutPrint          bool           `json:"stdout"`               // Output to stdout or not(true in default).
+	LevelPrint           bool           `json:"levelPrint"`           // Print level format string or not(true in default).
 	LevelPrefixes        map[int]string `json:"levelPrefixes"`        // Logging level to its prefix string mapping.
 	RotateSize           int64          `json:"rotateSize"`           // Rotate the logging file if its size > 0 in bytes.
 	RotateExpire         time.Duration  `json:"rotateExpire"`         // Rotate the logging file if its mtime exceeds this duration.
@@ -44,6 +46,11 @@ type Config struct {
 	RotateCheckInterval  time.Duration  `json:"rotateCheckInterval"`  // Asynchronously checks the backups and expiration at intervals. It's 1 hour in default.
 	StdoutColorDisabled  bool           `json:"stdoutColorDisabled"`  // Logging level prefix with color to writer or not (false in default).
 	WriterColorEnable    bool           `json:"writerColorEnable"`    // Logging level prefix with color to writer or not (false in default).
+	internalConfig
+}
+
+type internalConfig struct {
+	rotatedHandlerInitialized *gtype.Bool // Whether the rotation feature initialized.
 }
 
 // DefaultConfig returns the default configuration for logger.
@@ -56,8 +63,12 @@ func DefaultConfig() Config {
 		StStatus:            1,
 		HeaderPrint:         true,
 		StdoutPrint:         true,
+		LevelPrint:          true,
 		LevelPrefixes:       make(map[int]string, len(defaultLevelPrefixes)),
 		RotateCheckInterval: time.Hour,
+		internalConfig: internalConfig{
+			rotatedHandlerInitialized: gtype.NewBool(),
+		},
 	}
 	for k, v := range defaultLevelPrefixes {
 		c.LevelPrefixes[k] = v
@@ -66,6 +77,11 @@ func DefaultConfig() Config {
 		c.Level = c.Level & ^LEVEL_DEBU
 	}
 	return c
+}
+
+// GetConfig returns the configuration of current Logger.
+func (l *Logger) GetConfig() Config {
+	return l.config
 }
 
 // SetConfig set configurations for the logger.
@@ -241,6 +257,11 @@ func (l *Logger) SetStdoutPrint(enabled bool) {
 // SetHeaderPrint sets whether output header of the logging contents, which is true in default.
 func (l *Logger) SetHeaderPrint(enabled bool) {
 	l.config.HeaderPrint = enabled
+}
+
+// SetLevelPrint sets whether output level string of the logging contents, which is true in default.
+func (l *Logger) SetLevelPrint(enabled bool) {
+	l.config.LevelPrint = enabled
 }
 
 // SetPrefix sets prefix string for every logging content.

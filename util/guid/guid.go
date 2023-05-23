@@ -68,9 +68,9 @@ func init() {
 // 2. CustomData: DataHash(7/14) + TimestampNano(12) + Sequence(3) + RandomString(3/10)
 //
 // Note that：
-// 1. The returned length is fixed to 32 bytes for performance purpose.
-// 2. The custom parameter `data` composed should have unique attribute in your
-//    business scenario.
+//  1. The returned length is fixed to 32 bytes for performance purpose.
+//  2. The custom parameter `data` composed should have unique attribute in your
+//     business scenario.
 func S(data ...[]byte) string {
 	var (
 		b       = make([]byte, 32)

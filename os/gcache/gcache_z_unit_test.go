@@ -172,6 +172,7 @@ func TestCache_LRU(t *testing.T) {
 		v, _ := cache.Get(ctx, 6)
 		t.Assert(v, 6)
 		time.Sleep(4 * time.Second)
+		g.Log().Debugf(ctx, `items after lru: %+v`, cache.MustData(ctx))
 		n, _ = cache.Size(ctx)
 		t.Assert(n, 2)
 		v, _ = cache.Get(ctx, 6)
@@ -566,5 +567,58 @@ func TestCache_Removes(t *testing.T) {
 		ok, err = gcache.Contains(ctx, 2)
 		t.AssertNil(err)
 		t.Assert(ok, false)
+	})
+}
+
+func TestCache_Basic_Must(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer gcache.Remove(ctx, g.Slice{1, 2, 3, 4}...)
+
+		t.AssertNil(gcache.Set(ctx, 1, 11, 0))
+		v := gcache.MustGet(ctx, 1)
+		t.Assert(v, 11)
+		gcache.MustGetOrSet(ctx, 2, 22, 0)
+		v = gcache.MustGet(ctx, 2)
+		t.Assert(v, 22)
+
+		gcache.MustGetOrSetFunc(ctx, 3, func(ctx context.Context) (value interface{}, err error) {
+			return 33, nil
+		}, 0)
+		v = gcache.MustGet(ctx, 3)
+		t.Assert(v, 33)
+
+		gcache.GetOrSetFuncLock(ctx, 4, func(ctx context.Context) (value interface{}, err error) {
+			return 44, nil
+		}, 0)
+		v = gcache.MustGet(ctx, 4)
+		t.Assert(v, 44)
+
+		t.Assert(gcache.MustContains(ctx, 1), true)
+
+		t.AssertNil(gcache.Set(ctx, 1, 11, 3*time.Second))
+		expire := gcache.MustGetExpire(ctx, 1)
+		t.AssertGE(expire, 0)
+
+		n := gcache.MustSize(ctx)
+		t.Assert(n, 4)
+
+		data := gcache.MustData(ctx)
+		t.Assert(len(data), 4)
+
+		keys := gcache.MustKeys(ctx)
+		t.Assert(len(keys), 4)
+
+		keyStrings := gcache.MustKeyStrings(ctx)
+		t.Assert(len(keyStrings), 4)
+
+		values := gcache.MustValues(ctx)
+		t.Assert(len(values), 4)
+	})
+}
+
+func TestCache_NewWithAdapter(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		cache := gcache.NewWithAdapter(gcache.NewAdapterMemory())
+		t.AssertNE(cache, nil)
 	})
 }

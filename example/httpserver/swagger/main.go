@@ -12,6 +12,7 @@ type HelloReq struct {
 	g.Meta `path:"/hello" method:"get" sort:"1"`
 	Name   string `v:"required" dc:"Your name"`
 }
+
 type HelloRes struct {
 	Reply string `dc:"Reply content"`
 }

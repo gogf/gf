@@ -407,7 +407,6 @@ func (l *List) Removes(es []*Element) {
 	for _, e := range es {
 		l.list.Remove(e)
 	}
-	return
 }
 
 // RemoveAll removes all elements from list `l`.

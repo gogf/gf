@@ -103,6 +103,44 @@ func TestTimer_AddSingleton(t *testing.T) {
 	})
 }
 
+func TestTimer_AddSingletonWithQuick(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		timer := gtimer.New(gtimer.TimerOptions{
+			Interval: 100 * time.Millisecond,
+			Quick:    true,
+		})
+		array := garray.New(true)
+		timer.AddSingleton(ctx, 5*time.Second, func(ctx context.Context) {
+			array.Append(1)
+			time.Sleep(10 * time.Second)
+		})
+		time.Sleep(250 * time.Millisecond)
+		t.Assert(array.Len(), 1)
+
+		time.Sleep(500 * time.Millisecond)
+		t.Assert(array.Len(), 1)
+	})
+}
+
+func TestTimer_AddSingletonWithoutQuick(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		timer := gtimer.New(gtimer.TimerOptions{
+			Interval: 100 * time.Millisecond,
+			Quick:    false,
+		})
+		array := garray.New(true)
+		timer.AddSingleton(ctx, 5*time.Second, func(ctx context.Context) {
+			array.Append(1)
+			time.Sleep(10 * time.Second)
+		})
+		time.Sleep(250 * time.Millisecond)
+		t.Assert(array.Len(), 0)
+
+		time.Sleep(500 * time.Millisecond)
+		t.Assert(array.Len(), 0)
+	})
+}
+
 func TestTimer_AddOnce(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timer := gtimer.New()

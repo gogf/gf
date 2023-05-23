@@ -8,7 +8,6 @@ package gcache
 
 import (
 	"context"
-	"time"
 
 	"github.com/gogf/gf/v2/container/glist"
 	"github.com/gogf/gf/v2/container/gmap"
@@ -35,7 +34,6 @@ func newMemCacheLru(cache *AdapterMemory) *adapterMemoryLru {
 		rawList: glist.New(true),
 		closed:  gtype.NewBool(),
 	}
-	gtimer.AddSingleton(context.Background(), time.Second, lru.SyncAndClear)
 	return lru
 }
 

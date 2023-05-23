@@ -19,7 +19,6 @@ import (
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/gctx"
@@ -142,8 +141,8 @@ type DB interface {
 	// Transaction.
 	// ===========================================================================
 
-	Begin(ctx context.Context) (*TX, error)                                           // See Core.Begin.
-	Transaction(ctx context.Context, f func(ctx context.Context, tx *TX) error) error // See Core.Transaction.
+	Begin(ctx context.Context) (TX, error)                                           // See Core.Begin.
+	Transaction(ctx context.Context, f func(ctx context.Context, tx TX) error) error // See Core.Transaction.
 
 	// ===========================================================================
 	// Configuration methods.
@@ -178,17 +177,89 @@ type DB interface {
 	CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (string, error)    // See Core.CheckLocalTypeForField
 }
 
+// TX defines the interfaces for ORM transaction operations.
+type TX interface {
+	Ctx(ctx context.Context) TX
+	Raw(rawSql string, args ...interface{}) *Model
+	Model(tableNameQueryOrStruct ...interface{}) *Model
+	With(object interface{}) *Model
+
+	// ===========================================================================
+	// Nested transaction if necessary.
+	// ===========================================================================
+
+	Begin() error
+	Commit() error
+	Rollback() error
+	Transaction(ctx context.Context, f func(ctx context.Context, tx TX) error) (err error)
+
+	// ===========================================================================
+	// Core method.
+	// ===========================================================================
+
+	Query(sql string, args ...interface{}) (result Result, err error)
+	Exec(sql string, args ...interface{}) (sql.Result, error)
+	Prepare(sql string) (*Stmt, error)
+
+	// ===========================================================================
+	// Query.
+	// ===========================================================================
+
+	GetAll(sql string, args ...interface{}) (Result, error)
+	GetOne(sql string, args ...interface{}) (Record, error)
+	GetStruct(obj interface{}, sql string, args ...interface{}) error
+	GetStructs(objPointerSlice interface{}, sql string, args ...interface{}) error
+	GetScan(pointer interface{}, sql string, args ...interface{}) error
+	GetValue(sql string, args ...interface{}) (Value, error)
+	GetCount(sql string, args ...interface{}) (int64, error)
+
+	// ===========================================================================
+	// CURD.
+	// ===========================================================================
+
+	Insert(table string, data interface{}, batch ...int) (sql.Result, error)
+	InsertIgnore(table string, data interface{}, batch ...int) (sql.Result, error)
+	InsertAndGetId(table string, data interface{}, batch ...int) (int64, error)
+	Replace(table string, data interface{}, batch ...int) (sql.Result, error)
+	Save(table string, data interface{}, batch ...int) (sql.Result, error)
+	Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error)
+	Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error)
+
+	// ===========================================================================
+	// Utility methods.
+	// ===========================================================================
+
+	GetCtx() context.Context
+	GetDB() DB
+	GetSqlTX() *sql.Tx
+	IsClosed() bool
+
+	// ===========================================================================
+	// Save point feature.
+	// ===========================================================================
+
+	SavePoint(point string) error
+	RollbackTo(point string) error
+}
+
 // Core is the base struct for database management.
 type Core struct {
-	db     DB              // DB interface object.
-	ctx    context.Context // Context for chaining operation only. Do not set a default value in Core initialization.
-	group  string          // Configuration group name.
-	schema string          // Custom schema for this object.
-	debug  *gtype.Bool     // Enable debug mode for the database, which can be changed in runtime.
-	cache  *gcache.Cache   // Cache manager, SQL result cache only.
-	links  *gmap.StrAnyMap // links caches all created links by node.
-	logger glog.ILogger    // Logger for logging functionality.
-	config *ConfigNode     // Current config node.
+	db            DB              // DB interface object.
+	ctx           context.Context // Context for chaining operation only. Do not set a default value in Core initialization.
+	group         string          // Configuration group name.
+	schema        string          // Custom schema for this object.
+	debug         *gtype.Bool     // Enable debug mode for the database, which can be changed in runtime.
+	cache         *gcache.Cache   // Cache manager, SQL result cache only.
+	links         *gmap.StrAnyMap // links caches all created links by node.
+	logger        glog.ILogger    // Logger for logging functionality.
+	config        *ConfigNode     // Current config node.
+	dynamicConfig dynamicConfig   // Dynamic configurations, which can be changed in runtime.
+}
+
+type dynamicConfig struct {
+	MaxIdleConnCount int
+	MaxOpenConnCount int
+	MaxConnLifeTime  time.Duration
 }
 
 // DoCommitInput is the input parameters for function DoCommit.
@@ -208,7 +279,7 @@ type DoCommitOutput struct {
 	Result    sql.Result  // Result is the result of exec statement.
 	Records   []Record    // Records is the result of query statement.
 	Stmt      *Stmt       // Stmt is the Statement object result for Prepare.
-	Tx        *TX         // Tx is the transaction object result for Begin.
+	Tx        TX          // Tx is the transaction object result for Begin.
 	RawResult interface{} // RawResult is the underlying result, which might be sql.Result/*sql.Rows/*sql.Row.
 }
 
@@ -238,6 +309,7 @@ type Sql struct {
 	Start         int64         // Start execution timestamp in milliseconds.
 	End           int64         // End execution timestamp in milliseconds.
 	Group         string        // Group is the group name of the configuration that the sql is executed from.
+	Schema        string        // Schema is the schema name of the configuration that the sql is executed from.
 	IsTransaction bool          // IsTransaction marks whether this sql is executed in transaction.
 	RowsAffected  int64         // RowsAffected marks retrieved or affected number with current sql statement.
 }
@@ -282,20 +354,23 @@ type CatchSQLManager struct {
 	DoCommit bool
 }
 
+type queryType int
+
 const (
-	defaultModelSafe        = false
-	defaultCharset          = `utf8`
-	defaultProtocol         = `tcp`
-	queryTypeNormal         = 0
-	queryTypeCount          = 1
-	unionTypeNormal         = 0
-	unionTypeAll            = 1
-	defaultMaxIdleConnCount = 10               // Max idle connection count in pool.
-	defaultMaxOpenConnCount = 0                // Max open connection count in pool. Default is no limit.
-	defaultMaxConnLifeTime  = 30 * time.Second // Max lifetime for per connection in pool in seconds.
-	ctxTimeoutTypeExec      = iota
-	ctxTimeoutTypeQuery
-	ctxTimeoutTypePrepare
+	defaultModelSafe                      = false
+	defaultCharset                        = `utf8`
+	defaultProtocol                       = `tcp`
+	queryTypeNormal           queryType   = 0
+	queryTypeCount            queryType   = 1
+	queryTypeValue            queryType   = 2
+	unionTypeNormal                       = 0
+	unionTypeAll                          = 1
+	defaultMaxIdleConnCount               = 10               // Max idle connection count in pool.
+	defaultMaxOpenConnCount               = 0                // Max open connection count in pool. Default is no limit.
+	defaultMaxConnLifeTime                = 30 * time.Second // Max lifetime for per connection in pool in seconds.
+	ctxTimeoutTypeExec                    = 0
+	ctxTimeoutTypeQuery                   = 1
+	ctxTimeoutTypePrepare                 = 2
 	cachePrefixTableFields                = `TableFields:`
 	cachePrefixSelectCache                = `SelectCache:`
 	commandEnvKeyForDryRun                = "gf.gdb.dryrun"
@@ -306,7 +381,7 @@ const (
 	ctxKeyInternalProducedSQL gctx.StrKey = `CtxKeyInternalProducedSQL`
 
 	// type:[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
-	linkPattern = `(\w+):([\w\-]*):(.*?)@(\w+?)\((.+?)\)/{0,1}([\w\-]*)\?{0,1}(.*)`
+	linkPattern = `(\w+):([\w\-]*):(.*?)@(\w+?)\((.+?)\)/{0,1}([^\?]*)\?{0,1}(.*)`
 )
 
 const (
@@ -425,6 +500,10 @@ func NewByGroup(group ...string) (db DB, err error) {
 }
 
 // newDBByConfigNode creates and returns an ORM object with given configuration node and group name.
+//
+// Very Note:
+// The parameter `node` is used for DB creation, not for underlying connection creation.
+// So all db type configurations in the same group should be the same.
 func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
 	if node.Link != "" {
 		node = parseConfigNodeLink(node)
@@ -436,6 +515,11 @@ func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
 		links:  gmap.NewStrAnyMap(true),
 		logger: glog.New(),
 		config: node,
+		dynamicConfig: dynamicConfig{
+			MaxIdleConnCount: node.MaxIdleConnCount,
+			MaxOpenConnCount: node.MaxOpenConnCount,
+			MaxConnLifeTime:  node.MaxConnLifeTime,
+		},
 	}
 	if v, ok := driverMap[node.Type]; ok {
 		if c.db, err = v.New(c, node); err != nil {
@@ -539,7 +623,9 @@ func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 	for i := 0; i < len(cg); i++ {
 		max = min + cg[i].Weight*100
 		if random >= min && random < max {
-			// Return a copy of the ConfigNode.
+			// ====================================================
+			// Return a COPY of the ConfigNode.
+			// ====================================================
 			node := ConfigNode{}
 			node = cg[i]
 			return &node
@@ -554,19 +640,22 @@ func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 // master-slave nodes are configured.
 func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error) {
 	var (
-		ctx  = c.db.GetCtx()
 		node *ConfigNode
+		ctx  = c.db.GetCtx()
 	)
-	// Load balance.
 	if c.group != "" {
+		// Load balance.
 		configs.RLock()
 		defer configs.RUnlock()
+		// Value COPY for node.
 		node, err = getConfigNodeByGroup(c.group, master)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		node = c.config
+		// Value COPY for node.
+		n := *c.db.GetConfig()
+		node = &n
 	}
 	if node.Charset == "" {
 		node.Charset = defaultCharset
@@ -574,50 +663,42 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 	// Changes the schema.
 	nodeSchema := gutil.GetOrDefaultStr(c.schema, schema...)
 	if nodeSchema != "" {
-		// Value copy.
-		n := *node
-		n.Name = nodeSchema
-		node = &n
+		node.Name = nodeSchema
+	}
+	// Update the configuration object in internal data.
+	internalData := c.GetInternalCtxDataFromCtx(ctx)
+	if internalData != nil {
+		internalData.ConfigNode = node
 	}
 	// Cache the underlying connection pool object by node.
-	instanceNameByNode := fmt.Sprintf(
-		`%s@%s(%s:%s)/%s`,
-		node.User, node.Protocol, node.Host, node.Port, node.Name,
-	)
-	v := c.links.GetOrSetFuncLock(instanceNameByNode, func() interface{} {
-		intlog.Printf(ctx, `open new connection, master:%#v, config:%#v, node:%#v`, master, c.config, node)
-		defer func() {
-			if err != nil {
-				intlog.Printf(ctx, `open new connection failed: %v, %#v`, err, node)
-			} else {
-				intlog.Printf(ctx, `open new connection success, master:%#v, config:%#v, node:%#v`, master, c.config, node)
-			}
-		}()
+	instanceNameByNode := fmt.Sprintf(`%+v`, node)
+	instanceValue := c.links.GetOrSetFuncLock(instanceNameByNode, func() interface{} {
 		if sqlDb, err = c.db.Open(node); err != nil {
 			return nil
 		}
 		if sqlDb == nil {
 			return nil
 		}
-		if c.config.MaxIdleConnCount > 0 {
-			sqlDb.SetMaxIdleConns(c.config.MaxIdleConnCount)
+		if c.dynamicConfig.MaxIdleConnCount > 0 {
+			sqlDb.SetMaxIdleConns(c.dynamicConfig.MaxIdleConnCount)
 		} else {
 			sqlDb.SetMaxIdleConns(defaultMaxIdleConnCount)
 		}
-		if c.config.MaxOpenConnCount > 0 {
-			sqlDb.SetMaxOpenConns(c.config.MaxOpenConnCount)
+		if c.dynamicConfig.MaxOpenConnCount > 0 {
+			sqlDb.SetMaxOpenConns(c.dynamicConfig.MaxOpenConnCount)
 		} else {
 			sqlDb.SetMaxOpenConns(defaultMaxOpenConnCount)
 		}
-		if c.config.MaxConnLifeTime > 0 {
-			sqlDb.SetConnMaxLifetime(c.config.MaxConnLifeTime)
+		if c.dynamicConfig.MaxConnLifeTime > 0 {
+			sqlDb.SetConnMaxLifetime(c.dynamicConfig.MaxConnLifeTime)
 		} else {
 			sqlDb.SetConnMaxLifetime(defaultMaxConnLifeTime)
 		}
 		return sqlDb
 	})
-	if v != nil && sqlDb == nil {
-		sqlDb = v.(*sql.DB)
+	if instanceValue != nil && sqlDb == nil {
+		// It reads from instance map.
+		sqlDb = instanceValue.(*sql.DB)
 	}
 	if node.Debug {
 		c.db.SetDebug(node.Debug)

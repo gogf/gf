@@ -66,10 +66,12 @@ func (c *Conn) SendPkg(data []byte, option ...PkgOption) error {
 
 // SendPkgWithTimeout writes data to connection with timeout using simple package protocol.
 func (c *Conn) SendPkgWithTimeout(data []byte, timeout time.Duration, option ...PkgOption) (err error) {
-	if err := c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
+	if err := c.SetDeadlineSend(time.Now().Add(timeout)); err != nil {
 		return err
 	}
-	defer c.SetSendDeadline(time.Time{})
+	defer func() {
+		_ = c.SetDeadlineSend(time.Time{})
+	}()
 	err = c.SendPkg(data, option...)
 	return
 }
@@ -133,10 +135,12 @@ func (c *Conn) RecvPkg(option ...PkgOption) (result []byte, err error) {
 
 // RecvPkgWithTimeout reads data from connection with timeout using simple package protocol.
 func (c *Conn) RecvPkgWithTimeout(timeout time.Duration, option ...PkgOption) (data []byte, err error) {
-	if err := c.SetReceiveDeadline(time.Now().Add(timeout)); err != nil {
+	if err = c.SetDeadlineRecv(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer c.SetReceiveDeadline(time.Time{})
+	defer func() {
+		_ = c.SetDeadlineRecv(time.Time{})
+	}()
 	data, err = c.RecvPkg(option...)
 	return
 }

@@ -106,8 +106,8 @@ func (s *Stmt) Query(args ...interface{}) (*sql.Rows, error) {
 //
 // Example usage:
 //
-//  var name string
-//  err := nameByUseridStmt.QueryRow(id).Scan(&name)
+//	var name string
+//	err := nameByUseridStmt.QueryRow(id).Scan(&name)
 func (s *Stmt) QueryRow(args ...interface{}) *sql.Row {
 	return s.QueryRowContext(context.Background(), args...)
 }

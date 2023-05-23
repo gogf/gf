@@ -27,7 +27,7 @@ func (r *Response) initCookie() {
 	if r.cookies == nil {
 		r.cookies = make(map[string]string)
 		// Response might be nil.
-		if r != nil && r.Response != nil {
+		if r.Response != nil {
 			for _, v := range r.Cookies() {
 				r.cookies[v.Name] = v.Value
 			}

@@ -10,9 +10,12 @@ package ghttp
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
+	"time"
 
+	"github.com/gogf/gf/v2/net/ghttp/internal/response"
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gres"
@@ -32,7 +35,7 @@ func newResponse(s *Server, w http.ResponseWriter) *Response {
 	r := &Response{
 		Server: s,
 		ResponseWriter: &ResponseWriter{
-			writer: w,
+			writer: response.NewWriter(w),
 			buffer: bytes.NewBuffer(nil),
 		},
 	}
@@ -142,9 +145,20 @@ func (r *Response) ClearBuffer() {
 	r.buffer.Reset()
 }
 
+// ServeContent replies to the request using the content in the
+// provided ReadSeeker. The main benefit of ServeContent over io.Copy
+// is that it handles Range requests properly, sets the MIME type, and
+// handles If-Match, If-Unmodified-Since, If-None-Match, If-Modified-Since,
+// and If-Range requests.
+//
+// See http.ServeContent
+func (r *Response) ServeContent(name string, modTime time.Time, content io.ReadSeeker) {
+	http.ServeContent(r.Writer.RawWriter(), r.Request.Request, name, modTime, content)
+}
+
 // Flush outputs the buffer content to the client and clears the buffer.
 func (r *Response) Flush() {
-	r.Header().Set(responseTraceIDHeader, gtrace.GetTraceID(r.Request.Context()))
+	r.Header().Set(responseHeaderTraceID, gtrace.GetTraceID(r.Request.Context()))
 	if r.Server.config.ServerAgent != "" {
 		r.Header().Set("Server", r.Server.config.ServerAgent)
 	}

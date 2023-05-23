@@ -1,11 +1,15 @@
+// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package genservice
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/frame/g"
@@ -16,6 +20,9 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gtag"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 )
 
 const (
@@ -188,6 +195,10 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		generatedDstFilePathSet.Add(dstFilePath)
 		for _, file := range files {
 			fileContent = gfile.GetContents(file)
+			fileContent, err := gregex.ReplaceString(`/[/|\*](.+)`, "", fileContent)
+			if err != nil {
+				return nil, err
+			}
 			// Calculate imported packages of source go files.
 			err = c.calculateImportedPackages(fileContent, srcImportedPackages)
 			if err != nil {
@@ -253,7 +264,7 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		}
 
 		// Replace v1 to v2 for GoFrame.
-		if err = c.replaceGeneratedServiceContentGFV2(in); err != nil {
+		if err = utils.ReplaceGeneratedContentGFV2(in.DstFolder); err != nil {
 			return nil, err
 		}
 		mlog.Printf(`gofmt go files in "%s"`, in.DstFolder)
@@ -262,15 +273,4 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 
 	mlog.Print(`done!`)
 	return
-}
-
-func (c CGenService) replaceGeneratedServiceContentGFV2(in CGenServiceInput) (err error) {
-	return gfile.ReplaceDirFunc(func(path, content string) string {
-		if gstr.Contains(content, `"github.com/gogf/gf`) && !gstr.Contains(content, `"github.com/gogf/gf/v2`) {
-			content = gstr.Replace(content, `"github.com/gogf/gf"`, `"github.com/gogf/gf/v2"`)
-			content = gstr.Replace(content, `"github.com/gogf/gf/`, `"github.com/gogf/gf/v2/`)
-			return content
-		}
-		return content
-	}, in.DstFolder, "*.go", false)
 }

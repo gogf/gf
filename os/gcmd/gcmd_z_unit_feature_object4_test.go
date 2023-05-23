@@ -24,6 +24,7 @@ type TestNoNameTagCase struct {
 type TestNoNameTagCaseRootInput struct {
 	Name string
 }
+
 type TestNoNameTagCaseRootOutput struct {
 	Content string
 }

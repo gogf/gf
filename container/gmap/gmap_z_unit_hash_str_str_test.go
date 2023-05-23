@@ -116,6 +116,7 @@ func Test_StrStrMap_Batch(t *testing.T) {
 		t.Assert(m.Map(), map[string]string{"c": "c"})
 	})
 }
+
 func Test_StrStrMap_Iterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[string]string{"a": "a", "b": "b"}
@@ -153,6 +154,7 @@ func Test_StrStrMap_Lock(t *testing.T) {
 		})
 	})
 }
+
 func Test_StrStrMap_Clone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// clone 方法是深克隆
@@ -168,6 +170,7 @@ func Test_StrStrMap_Clone(t *testing.T) {
 		t.AssertIN("b", m.Keys())
 	})
 }
+
 func Test_StrStrMap_Merge(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.NewStrStrMap()
@@ -383,5 +386,20 @@ func Test_StrStrMap_DeepCopy(t *testing.T) {
 		n := m.DeepCopy().(*gmap.StrStrMap)
 		n.Set("key1", "v1")
 		t.AssertNE(m.Get("key1"), n.Get("key1"))
+	})
+}
+
+func Test_StrStrMap_IsSubOf(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m1 := gmap.NewStrStrMapFrom(g.MapStrStr{
+			"k1": "v1",
+			"k2": "v2",
+		})
+		m2 := gmap.NewStrStrMapFrom(g.MapStrStr{
+			"k2": "v2",
+		})
+		t.Assert(m1.IsSubOf(m2), false)
+		t.Assert(m2.IsSubOf(m1), true)
+		t.Assert(m2.IsSubOf(m2), true)
 	})
 }

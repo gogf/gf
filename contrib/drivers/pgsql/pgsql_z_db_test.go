@@ -277,14 +277,11 @@ func Test_DB_Delete(t *testing.T) {
 func Test_DB_Tables(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		tables := []string{"t_user1", "pop", "haha"}
-
 		for _, v := range tables {
 			createTable(v)
 		}
-
 		result, err := db.Tables(ctx)
 		gtest.Assert(err, nil)
-
 		for i := 0; i < len(tables); i++ {
 			find := false
 			for j := 0; j < len(result); j++ {

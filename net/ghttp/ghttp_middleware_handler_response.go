@@ -40,19 +40,25 @@ func MiddlewareHandlerResponse(r *Request) {
 			code = gcode.CodeInternalError
 		}
 		msg = err.Error()
-	} else if r.Response.Status > 0 && r.Response.Status != http.StatusOK {
-		msg = http.StatusText(r.Response.Status)
-		switch r.Response.Status {
-		case http.StatusNotFound:
-			code = gcode.CodeNotFound
-		case http.StatusForbidden:
-			code = gcode.CodeNotAuthorized
-		default:
-			code = gcode.CodeUnknown
-		}
 	} else {
-		code = gcode.CodeOK
+		if r.Response.Status > 0 && r.Response.Status != http.StatusOK {
+			msg = http.StatusText(r.Response.Status)
+			switch r.Response.Status {
+			case http.StatusNotFound:
+				code = gcode.CodeNotFound
+			case http.StatusForbidden:
+				code = gcode.CodeNotAuthorized
+			default:
+				code = gcode.CodeUnknown
+			}
+			// It creates error as it can be retrieved by other middlewares.
+			err = gerror.NewCode(code, msg)
+			r.SetError(err)
+		} else {
+			code = gcode.CodeOK
+		}
 	}
+
 	r.Response.WriteJson(DefaultHandlerResponse{
 		Code:    code.Code(),
 		Message: msg,

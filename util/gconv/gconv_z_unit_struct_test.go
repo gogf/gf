@@ -541,8 +541,8 @@ func Test_StructEmbedded4(t *testing.T) {
 func Test_StructEmbedded5(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Base struct {
-			Pass1 string `params:"password1"`
-			Pass2 string `params:"password2"`
+			Pass1 string `param:"password1"`
+			Pass2 string `param:"password2"`
 		}
 		type UserWithBase1 struct {
 			Id   int
@@ -1320,4 +1320,32 @@ func Test_Scan_WithDoubleSliceAttribute(t *testing.T) {
 		t.Assert(data.Data, inputData)
 	})
 
+}
+
+func Test_Struct_WithCustomType(t *testing.T) {
+	type PayMode int
+
+	type Req1 struct {
+		PayMode PayMode
+	}
+	type Req2 struct {
+		PayMode *PayMode
+	}
+	var (
+		params = gconv.Map(`{"PayMode": 1000}`)
+		req1   *Req1
+		req2   *Req2
+		err1   error
+		err2   error
+	)
+	err1 = gconv.Struct(params, &req1)
+	err2 = gconv.Struct(params, &req2)
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertNil(err1)
+		t.Assert(req1.PayMode, 1000)
+
+		t.AssertNil(err2)
+		t.AssertNE(req2.PayMode, nil)
+		t.Assert(*req2.PayMode, 1000)
+	})
 }

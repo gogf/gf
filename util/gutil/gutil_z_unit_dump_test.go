@@ -8,13 +8,14 @@ package gutil_test
 
 import (
 	"bytes"
-	"github.com/gogf/gf/v2/container/gtype"
 	"testing"
 
+	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gmeta"
 	"github.com/gogf/gf/v2/util/gutil"
 )
@@ -188,7 +189,7 @@ func Test_Dump_Issue1661(t *testing.T) {
 			x := []string{"11", "22"}
 			for _, iv2 := range x {
 				ls := q1v
-				for i, _ := range ls.cc {
+				for i := range ls.cc {
 					sj := iv2
 					ls.cc[i].bb = sj
 				}
@@ -271,5 +272,19 @@ func Test_Dump_Issue1661(t *testing.T) {
         ],
     },
 ]`)
+	})
+}
+
+func Test_Dump_Cycle_Attribute(t *testing.T) {
+	type Abc struct {
+		ab int
+		cd *Abc
+	}
+	abc := Abc{ab: 3}
+	abc.cd = &abc
+	gtest.C(t, func(t *gtest.T) {
+		buffer := bytes.NewBuffer(nil)
+		g.DumpTo(buffer, abc, gutil.DumpOption{})
+		t.Assert(gstr.Contains(buffer.String(), "cycle"), true)
 	})
 }

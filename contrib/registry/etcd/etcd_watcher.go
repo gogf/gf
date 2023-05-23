@@ -47,6 +47,7 @@ func (w *watcher) Proceed() ([]gsvc.Service, error) {
 	case <-w.ctx.Done():
 		return nil, w.ctx.Err()
 	case <-w.watchChan:
+		// It retrieves, merges and returns all services by prefix if any changes.
 		return w.getServicesByPrefix()
 	}
 }

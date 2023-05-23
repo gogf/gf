@@ -197,14 +197,14 @@ func WordWrap(str string, width int, br string) string {
 					current = 0
 				} else {
 					current += spaceBuf.Len()
-					spaceBuf.WriteTo(buf)
+					_, _ = spaceBuf.WriteTo(buf)
 				}
 				spaceBuf.Reset()
 			} else {
 				current += spaceBuf.Len() + wordBuf.Len()
-				spaceBuf.WriteTo(buf)
+				_, _ = spaceBuf.WriteTo(buf)
 				spaceBuf.Reset()
-				wordBuf.WriteTo(buf)
+				_, _ = wordBuf.WriteTo(buf)
 				wordBuf.Reset()
 			}
 			buf.WriteRune(char)
@@ -213,9 +213,9 @@ func WordWrap(str string, width int, br string) string {
 		case unicode.IsSpace(char):
 			if spaceBuf.Len() == 0 || wordBuf.Len() > 0 {
 				current += spaceBuf.Len() + wordBuf.Len()
-				spaceBuf.WriteTo(buf)
+				_, _ = spaceBuf.WriteTo(buf)
 				spaceBuf.Reset()
-				wordBuf.WriteTo(buf)
+				_, _ = wordBuf.WriteTo(buf)
 				wordBuf.Reset()
 			}
 			spaceBuf.WriteRune(char)
@@ -224,9 +224,9 @@ func WordWrap(str string, width int, br string) string {
 			wordBuf.WriteRune(char)
 			if spaceBuf.Len() == 0 || wordBuf.Len() > 0 {
 				current += spaceBuf.Len() + wordBuf.Len()
-				spaceBuf.WriteTo(buf)
+				_, _ = spaceBuf.WriteTo(buf)
 				spaceBuf.Reset()
-				wordBuf.WriteTo(buf)
+				_, _ = wordBuf.WriteTo(buf)
 				wordBuf.Reset()
 			}
 
@@ -242,11 +242,11 @@ func WordWrap(str string, width int, br string) string {
 
 	if wordBuf.Len() == 0 {
 		if current+spaceBuf.Len() <= width {
-			spaceBuf.WriteTo(buf)
+			_, _ = spaceBuf.WriteTo(buf)
 		}
 	} else {
-		spaceBuf.WriteTo(buf)
-		wordBuf.WriteTo(buf)
+		_, _ = spaceBuf.WriteTo(buf)
+		_, _ = wordBuf.WriteTo(buf)
 	}
 	return buf.String()
 }

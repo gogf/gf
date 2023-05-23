@@ -12,10 +12,11 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/magiconair/properties"
+
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/magiconair/properties"
 )
 
 // Decode converts properties format to map.

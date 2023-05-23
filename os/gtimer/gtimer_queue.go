@@ -24,7 +24,7 @@ type priorityQueue struct {
 	nextPriority *gtype.Int64       // nextPriority stores the next priority value of the heap, which is used to check if necessary to call the Pop of heap by Timer.
 }
 
-// priorityQueueHeap is a heap manager, of which the underlying `array` is a array implementing a heap structure.
+// priorityQueueHeap is a heap manager, of which the underlying `array` is an array implementing a heap structure.
 type priorityQueueHeap struct {
 	array []priorityQueueItem
 }

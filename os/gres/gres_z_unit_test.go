@@ -7,10 +7,10 @@
 package gres_test
 
 import (
+	_ "github.com/gogf/gf/v2/os/gres/testdata/data"
+
 	"strings"
 	"testing"
-
-	_ "github.com/gogf/gf/v2/os/gres/testdata/data"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"

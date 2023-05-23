@@ -1,3 +1,9 @@
+// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package gendao
 
 import (
@@ -5,7 +11,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
@@ -14,6 +19,8 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gtag"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 const (
@@ -215,6 +222,7 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 	}
 	removePrefixArray := gstr.SplitAndTrim(in.RemovePrefix, ",")
 	if in.ImportPrefix == "" {
+		mlog.Debug(`import prefix is empty, trying calculating the import package path using go.mod`)
 		if !gfile.Exists("go.mod") {
 			mlog.Fatal("go.mod does not exist in current working directory")
 		}

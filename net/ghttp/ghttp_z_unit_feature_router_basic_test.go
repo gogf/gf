@@ -72,6 +72,12 @@ func Test_Router_Basic2(t *testing.T) {
 
 func Test_Router_Value(t *testing.T) {
 	s := g.Server(guid.S())
+	s.BindHandler("/", func(r *ghttp.Request) {
+		r.Response.Write(r.GetRouterMap()["hash"])
+	})
+	s.BindHandler("/GetRouter", func(r *ghttp.Request) {
+		r.Response.Write(r.GetRouter("name", "john").String())
+	})
 	s.BindHandler("/{hash}", func(r *ghttp.Request) {
 		r.Response.Write(r.GetRouter("hash").String())
 	})
@@ -89,6 +95,8 @@ func Test_Router_Value(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		t.Assert(client.GetContent(ctx, "/"), "")
+		t.Assert(client.GetContent(ctx, "/GetRouter"), "john")
 		t.Assert(client.GetContent(ctx, "/data"), "data")
 		t.Assert(client.GetContent(ctx, "/data.json"), "json")
 		t.Assert(client.GetContent(ctx, "/data.json.map"), "json")

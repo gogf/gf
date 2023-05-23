@@ -85,10 +85,7 @@ func (m *Mutex) Unlock() {
 // It returns true immediately if success, or if there's a write/reading lock on the mutex,
 // it returns false immediately.
 func (m *Mutex) TryLock() bool {
-	if m.state.Cas(0, -1) {
-		return true
-	}
-	return false
+	return m.state.Cas(0, -1)
 }
 
 // RLock locks mutex for reading purpose.

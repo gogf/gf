@@ -16,8 +16,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gorilla/websocket"
 
+	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gclient"
@@ -26,7 +27,6 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/guid"
-	"github.com/gorilla/websocket"
 )
 
 var (
@@ -37,6 +37,9 @@ func Test_Client_Basic(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/hello", func(r *ghttp.Request) {
 		r.Response.Write("hello")
+	})
+	s.BindHandler("/postForm", func(r *ghttp.Request) {
+		r.Response.Write(r.Get("key1"))
 	})
 	s.SetDumpRouterMap(false)
 	s.Start()
@@ -54,8 +57,12 @@ func Test_Client_Basic(t *testing.T) {
 		_, err := g.Client().Post(ctx, "")
 		t.AssertNE(err, nil)
 
-		_, err = g.Client().PostForm("", nil)
+		_, err = g.Client().PostForm(ctx, "/postForm", nil)
 		t.AssertNE(err, nil)
+		data, _ := g.Client().PostForm(ctx, url+"/postForm", map[string]string{
+			"key1": "value1",
+		})
+		t.Assert(data.ReadAllString(), "value1")
 	})
 }
 
@@ -503,7 +510,7 @@ func Test_WebSocketClient(t *testing.T) {
 	s.SetDumpRouterMap(false)
 	s.Start()
 	// No closing in case of DATA RACE due to keep alive connection of WebSocket.
-	//defer s.Shutdown()
+	// defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {

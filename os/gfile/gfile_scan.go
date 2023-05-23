@@ -97,7 +97,7 @@ func ScanDirFile(path string, pattern string, recursive ...bool) ([]string, erro
 // symbol to separate multiple patterns.
 //
 // The parameter `recursive` specifies whether scanning the `path` recursively, which
-// means it scans its sub-files and appends the files path to result array if the sub-file
+// means it scans its sub-files and appends the file paths to result array if the sub-file
 // is also a folder. It is false in default.
 //
 // The parameter `handler` specifies the callback function handling each sub-file path of
@@ -153,7 +153,7 @@ func doScanDir(depth int, path string, pattern string, recursive bool, handler f
 		return nil, err
 	}
 	var (
-		filePath = ""
+		filePath string
 		patterns = gstr.SplitAndTrim(pattern, ",")
 	)
 	for _, name := range names {

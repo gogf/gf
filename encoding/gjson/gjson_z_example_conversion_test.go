@@ -8,10 +8,11 @@ package gjson_test
 
 import (
 	"fmt"
+
 	"github.com/gogf/gf/v2/encoding/gjson"
 )
 
-func Example_conversionNormalFormats() {
+func ExampleConversionNormalFormats() {
 	data :=
 		`{
         "users" : {

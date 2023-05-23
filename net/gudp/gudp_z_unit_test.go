@@ -100,7 +100,7 @@ func Test_Basic(t *testing.T) {
 			t.AssertNil(err)
 			err = conn.Send([]byte(gconv.String(i)))
 			t.AssertNil(err)
-			conn.SetRecvBufferWait(time.Millisecond * 100)
+			conn.SetBufferWaitRecv(time.Millisecond * 100)
 			result, err := conn.RecvWithTimeout(-1, time.Second)
 			t.AssertNil(err)
 			t.Assert(string(result), fmt.Sprintf(`> %d`, i))

@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/internal/empty"
+
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/json"
@@ -750,6 +752,15 @@ func TestArray_RemoveValue(t *testing.T) {
 	})
 }
 
+func TestArray_RemoveValues(t *testing.T) {
+	slice := g.Slice{"a", "b", "d", "c"}
+	array := garray.NewArrayFrom(slice)
+	gtest.C(t, func(t *gtest.T) {
+		array.RemoveValues("a", "b", "c")
+		t.Assert(array.Slice(), g.Slice{"d"})
+	})
+}
+
 func TestArray_UnmarshalValue(t *testing.T) {
 	type V struct {
 		Name  string
@@ -788,6 +799,36 @@ func TestArray_FilterNil(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewArrayFromCopy(g.Slice{nil, 1, 2, 3, 4, nil})
 		t.Assert(array.FilterNil(), g.Slice{1, 2, 3, 4})
+	})
+}
+
+func TestArray_Filter(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		values := g.Slice{0, 1, 2, 3, 4, "", g.Slice{}}
+		array := garray.NewArrayFromCopy(values)
+		t.Assert(array.Filter(func(index int, value interface{}) bool {
+			return empty.IsNil(value)
+		}).Slice(), values)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewArrayFromCopy(g.Slice{nil, 1, 2, 3, 4, nil})
+		t.Assert(array.Filter(func(index int, value interface{}) bool {
+			return empty.IsNil(value)
+		}), g.Slice{1, 2, 3, 4})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewArrayFrom(g.Slice{0, 1, 2, 3, 4, "", g.Slice{}})
+
+		t.Assert(array.Filter(func(index int, value interface{}) bool {
+			return empty.IsEmpty(value)
+		}), g.Slice{1, 2, 3, 4})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewArrayFrom(g.Slice{1, 2, 3, 4})
+
+		t.Assert(array.Filter(func(index int, value interface{}) bool {
+			return empty.IsEmpty(value)
+		}), g.Slice{1, 2, 3, 4})
 	})
 }
 

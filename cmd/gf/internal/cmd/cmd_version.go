@@ -1,10 +1,15 @@
+// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package cmd
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
@@ -12,6 +17,8 @@ import (
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 var (
@@ -25,6 +32,7 @@ type cVersion struct {
 type cVersionInput struct {
 	g.Meta `name:"version"`
 }
+
 type cVersionOutput struct{}
 
 func (c cVersion) Index(ctx context.Context, in cVersionInput) (*cVersionOutput, error) {

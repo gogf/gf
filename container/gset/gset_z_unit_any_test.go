@@ -114,8 +114,8 @@ func TestSet_LockFunc(t *testing.T) {
 		t.Assert(s.Size(), 2)
 		s.RLockFunc(func(m map[interface{}]struct{}) {
 			t.Assert(m, map[interface{}]struct{}{
-				3: struct{}{},
-				2: struct{}{},
+				3: {},
+				2: {},
 			})
 		})
 	})

@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/internal/utils"
@@ -210,7 +211,7 @@ func DataToMapDeep(value interface{}) map[string]interface{} {
 	m := gconv.Map(value, structTagPriority...)
 	for k, v := range m {
 		switch v.(type) {
-		case time.Time, *time.Time, gtime.Time, *gtime.Time:
+		case time.Time, *time.Time, gtime.Time, *gtime.Time, gjson.Json, *gjson.Json:
 			m[k] = v
 
 		default:
@@ -225,7 +226,7 @@ func DataToMapDeep(value interface{}) map[string]interface{} {
 	return m
 }
 
-// doHandleTableName adds prefix string and quote chars for table name. It handles table string like:
+// doQuoteTableName adds prefix string and quote chars for table name. It handles table string like:
 // "user", "user u", "user,user_detail", "user u, user_detail ut", "user as u, user_detail as ut",
 // "user.user u", "`user`.`user` u".
 //
@@ -233,7 +234,7 @@ func DataToMapDeep(value interface{}) map[string]interface{} {
 // nothing to the table name, or else adds the prefix to the table name and returns new table name with prefix.
 func doQuoteTableName(table, prefix, charLeft, charRight string) string {
 	var (
-		index  = 0
+		index  int
 		chars  = charLeft + charRight
 		array1 = gstr.SplitAndTrim(table, ",")
 	)
@@ -528,7 +529,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 			return
 		}
 		// Usually a string.
-		whereStr := gconv.String(in.Where)
+		whereStr := gstr.Trim(gconv.String(in.Where))
 		// Is `whereStr` a field name which composed as a key-value condition?
 		// Eg:
 		// Where("id", 1)
@@ -562,16 +563,16 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 			if i >= len(in.Args) {
 				break
 			}
+			// ===============================================================
 			// Sub query, which is always used along with a string condition.
-			if model, ok := in.Args[i].(*Model); ok {
+			// ===============================================================
+			if subModel, ok := in.Args[i].(*Model); ok {
 				index := -1
 				whereStr, _ = gregex.ReplaceStringFunc(`(\?)`, whereStr, func(s string) string {
 					index++
 					if i+len(newArgs) == index {
-						sqlWithHolder, holderArgs := model.getFormattedSqlAndArgs(
-							ctx, queryTypeNormal, false,
-						)
-						newArgs = append(newArgs, holderArgs...)
+						sqlWithHolder, holderArgs := subModel.getHolderAndArgsAsSubModel(ctx)
+						in.Args = gutil.SliceInsertAfter(in.Args, i, holderArgs...)
 						// Automatically adding the brackets.
 						return "(" + sqlWithHolder + ")"
 					}

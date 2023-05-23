@@ -69,7 +69,7 @@ func IsEmpty(value interface{}) bool {
 	case float64:
 		return result == 0
 	case bool:
-		return result == false
+		return !result
 	case string:
 		return result == ""
 	case []byte:
@@ -92,7 +92,7 @@ func IsEmpty(value interface{}) bool {
 		// Common interfaces checks.
 		// =========================
 		if f, ok := value.(iTime); ok {
-			if f == nil {
+			if f == (*time.Time)(nil) {
 				return true
 			}
 			return f.IsZero()

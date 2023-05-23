@@ -64,6 +64,7 @@ type TestForHandlerWithObjectAndMeta1Req struct {
 	Age    int
 	Name   string
 }
+
 type TestForHandlerWithObjectAndMeta1Res struct {
 	Id  int
 	Age int
@@ -74,6 +75,7 @@ type TestForHandlerWithObjectAndMeta2Req struct {
 	Age    int
 	Name   string
 }
+
 type TestForHandlerWithObjectAndMeta2Res struct {
 	Id   int
 	Name string
@@ -100,6 +102,7 @@ type TestForHandlerWithObjectAndMeta3Req struct {
 	Age    int
 	Name   string
 }
+
 type TestForHandlerWithObjectAndMeta3Res struct {
 	Id  int
 	Age int
@@ -110,6 +113,7 @@ type TestForHandlerWithObjectAndMeta4Req struct {
 	Age    int
 	Name   string
 }
+
 type TestForHandlerWithObjectAndMeta4Res struct {
 	Id   int
 	Name string
@@ -130,6 +134,7 @@ func (ControllerForHandlerWithObjectAndMeta2) Test4(ctx context.Context, req *Te
 		Name: req.Name,
 	}, nil
 }
+
 func Test_Router_Handler_Strict_WithObjectAndMeta(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Use(ghttp.MiddlewareHandlerResponse)

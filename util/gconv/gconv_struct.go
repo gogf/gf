@@ -23,14 +23,14 @@ import (
 // custom key name and the attribute name(case-sensitive).
 //
 // Note:
-// 1. The `params` can be any type of map/struct, usually a map.
-// 2. The `pointer` should be type of *struct/**struct, which is a pointer to struct object
-//    or struct pointer.
-// 3. Only the public attributes of struct object can be mapped.
-// 4. If `params` is a map, the key of the map `params` can be lowercase.
-//    It will automatically convert the first letter of the key to uppercase
-//    in mapping procedure to do the matching.
-//    It ignores the map key, if it does not match.
+//  1. The `params` can be any type of map/struct, usually a map.
+//  2. The `pointer` should be type of *struct/**struct, which is a pointer to struct object
+//     or struct pointer.
+//  3. Only the public attributes of struct object can be mapped.
+//  4. If `params` is a map, the key of the map `params` can be lowercase.
+//     It will automatically convert the first letter of the key to uppercase
+//     in mapping procedure to do the matching.
+//     It ignores the map key, if it does not match.
 func Struct(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
 	return Scan(params, pointer, mapping...)
 }
@@ -145,9 +145,29 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 
 	// If `params` and `pointer` are the same type, the do directly assignment.
 	// For performance enhancement purpose.
-	if pointerElemReflectValue.IsValid() && pointerElemReflectValue.Type() == paramsReflectValue.Type() {
-		pointerElemReflectValue.Set(paramsReflectValue)
-		return nil
+	if pointerElemReflectValue.IsValid() {
+		switch {
+		// Eg:
+		// UploadFile  => UploadFile
+		// *UploadFile => *UploadFile
+		case pointerElemReflectValue.Type() == paramsReflectValue.Type():
+			pointerElemReflectValue.Set(paramsReflectValue)
+			return nil
+
+		// Eg:
+		// UploadFile  => *UploadFile
+		case pointerElemReflectValue.Kind() == reflect.Ptr && pointerElemReflectValue.Elem().IsValid() &&
+			pointerElemReflectValue.Elem().Type() == paramsReflectValue.Type():
+			pointerElemReflectValue.Elem().Set(paramsReflectValue)
+			return nil
+
+		// Eg:
+		// *UploadFile  => UploadFile
+		case paramsReflectValue.Kind() == reflect.Ptr && paramsReflectValue.Elem().IsValid() &&
+			pointerElemReflectValue.Type() == paramsReflectValue.Elem().Type():
+			pointerElemReflectValue.Set(paramsReflectValue.Elem())
+			return nil
+		}
 	}
 
 	// Normal unmarshalling interfaces checks.
@@ -182,6 +202,11 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 			`convert params from "%#v" to "map[string]interface{}" failed`,
 			params,
 		)
+	}
+
+	// Nothing to be done as the parameters are empty.
+	if len(paramsMap) == 0 {
+		return nil
 	}
 
 	// It only performs one converting to the same attribute.
@@ -341,15 +366,29 @@ func bindVarToStructAttr(structReflectValue reflect.Value, attrName string, valu
 	if empty.IsNil(value) {
 		structFieldValue.Set(reflect.Zero(structFieldValue.Type()))
 	} else {
+		// Special handling for certain types:
+		// - Overwrite the default type converting logic of stdlib for time.Time/*time.Time.
+		var structFieldTypeName = structFieldValue.Type().String()
+		switch structFieldTypeName {
+		case "time.Time", "*time.Time":
+			doConvertWithReflectValueSet(structFieldValue, doConvertInput{
+				FromValue:  value,
+				ToTypeName: structFieldTypeName,
+				ReferValue: structFieldValue,
+			})
+			return
+		}
+
 		// Common interface check.
 		var ok bool
 		if err, ok = bindVarToReflectValueWithInterfaceCheck(structFieldValue, value); ok {
 			return err
 		}
+
 		// Default converting.
 		doConvertWithReflectValueSet(structFieldValue, doConvertInput{
 			FromValue:  value,
-			ToTypeName: structFieldValue.Type().String(),
+			ToTypeName: structFieldTypeName,
 			ReferValue: structFieldValue,
 		})
 	}
@@ -357,7 +396,7 @@ func bindVarToStructAttr(structReflectValue reflect.Value, attrName string, valu
 }
 
 // bindVarToReflectValueWithInterfaceCheck does bind using common interfaces checks.
-func bindVarToReflectValueWithInterfaceCheck(reflectValue reflect.Value, value interface{}) (err error, ok bool) {
+func bindVarToReflectValueWithInterfaceCheck(reflectValue reflect.Value, value interface{}) (error, bool) {
 	var pointer interface{}
 	if reflectValue.Kind() != reflect.Ptr && reflectValue.CanAddr() {
 		reflectValueAddr := reflectValue.Addr()
@@ -383,6 +422,8 @@ func bindVarToReflectValueWithInterfaceCheck(reflectValue reflect.Value, value i
 			valueBytes = b
 		} else if s, ok := value.(string); ok {
 			valueBytes = []byte(s)
+		} else if f, ok := value.(iString); ok {
+			valueBytes = []byte(f.String())
 		}
 		if len(valueBytes) > 0 {
 			return v.UnmarshalText(valueBytes), ok
@@ -395,6 +436,8 @@ func bindVarToReflectValueWithInterfaceCheck(reflectValue reflect.Value, value i
 			valueBytes = b
 		} else if s, ok := value.(string); ok {
 			valueBytes = []byte(s)
+		} else if f, ok := value.(iString); ok {
+			valueBytes = []byte(f.String())
 		}
 
 		if len(valueBytes) > 0 {
@@ -498,13 +541,28 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 				}
 			}
 		} else {
-			reflectArray = reflect.MakeSlice(structFieldValue.Type(), 1, 1)
 			var (
 				elem         reflect.Value
-				elemType     = reflectArray.Index(0).Type()
+				elemType     = structFieldValue.Type().Elem()
 				elemTypeName = elemType.Name()
 				converted    bool
 			)
+			switch reflectValue.Kind() {
+			case reflect.String:
+				// Value is empty string.
+				if reflectValue.IsZero() {
+					var elemKind = elemType.Kind()
+					// Try to find the original type kind of the slice element.
+					if elemKind == reflect.Ptr {
+						elemKind = elemType.Elem().Kind()
+					}
+					switch elemKind {
+					case reflect.String:
+						// Empty string cannot be assigned to string slice.
+						return nil
+					}
+				}
+			}
 			if elemTypeName == "" {
 				elemTypeName = elemType.String()
 			}
@@ -529,6 +587,7 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 				// Before it sets the `elem` to array, do pointer converting if necessary.
 				elem = elem.Addr()
 			}
+			reflectArray = reflect.MakeSlice(structFieldValue.Type(), 1, 1)
 			reflectArray.Index(0).Set(elem)
 		}
 		structFieldValue.Set(reflectArray)

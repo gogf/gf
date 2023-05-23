@@ -18,8 +18,6 @@ import (
 	"strings"
 
 	_ "github.com/glebarez/go-sqlite"
-	"github.com/gogf/gf/v2/util/gutil"
-
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/encoding/gurl"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -27,12 +25,17 @@ import (
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // Driver is the driver for sqlite database.
 type Driver struct {
 	*gdb.Core
 }
+
+const (
+	quoteChar = "`"
+)
 
 func init() {
 	if err := gdb.Register(`sqlite`, New()); err != nil {
@@ -53,7 +56,7 @@ func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 	}, nil
 }
 
-// Open creates and returns a underlying sql.DB object for sqlite.
+// Open creates and returns an underlying sql.DB object for sqlite.
 // https://github.com/glebarez/go-sqlite
 func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	var (
@@ -106,7 +109,7 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 
 // GetChars returns the security char for this type of database.
 func (d *Driver) GetChars() (charLeft string, charRight string) {
-	return "`", "`"
+	return quoteChar, quoteChar
 }
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
@@ -142,14 +145,14 @@ func (d *Driver) TableFields(
 	ctx context.Context, table string, schema ...string,
 ) (fields map[string]*gdb.TableField, err error) {
 	var (
-		result    gdb.Result
-		link      gdb.Link
-		useSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+		result     gdb.Result
+		link       gdb.Link
+		usedSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
 	)
-	if link, err = d.SlaveLink(useSchema); err != nil {
+	if link, err = d.SlaveLink(usedSchema); err != nil {
 		return nil, err
 	}
-	result, err = d.DoSelect(ctx, link, fmt.Sprintf(`PRAGMA TABLE_INFO(%s)`, table))
+	result, err = d.DoSelect(ctx, link, fmt.Sprintf(`PRAGMA TABLE_INFO(%s)`, d.QuoteWord(table)))
 	if err != nil {
 		return nil, err
 	}

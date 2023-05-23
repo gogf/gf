@@ -1,3 +1,9 @@
+// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package consts
 
 const TemplateGenDaoIndexContent = `
@@ -102,7 +108,7 @@ func (dao *{TplTableNameCamelCase}Dao) Ctx(ctx context.Context) *gdb.Model {
 //
 // Note that, you should not Commit or Rollback the transaction in function f
 // as it is automatically handled by this function.
-func (dao *{TplTableNameCamelCase}Dao) Transaction(ctx context.Context, f func(ctx context.Context, tx *gdb.TX) error) (err error) {
+func (dao *{TplTableNameCamelCase}Dao) Transaction(ctx context.Context, f func(ctx context.Context, tx gdb.TX) error) (err error) {
 	return dao.Ctx(ctx).Transaction(ctx, f)
 }
 `

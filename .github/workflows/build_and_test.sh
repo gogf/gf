@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-GOARCH=${{ matrix.goarch }}
 for file in `find . -name go.mod`; do
     dirpath=$(dirname $file)
     echo $dirpath
@@ -29,12 +28,22 @@ for file in `find . -name go.mod`; do
         fi
     fi
 
+    # package cmd/gf needs golang >= v1.18
+    if [ "gf" = $(basename $dirpath) ]; then
+        if ! go version|grep -q "1.18"; then
+          echo "ignore example as go version: $(go version)"
+          continue 1
+        fi
+    fi
+
     cd $dirpath
     go mod tidy
     go build ./...
     go test ./... -race -coverprofile=coverage.out -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
+
     if grep -q "/gogf/gf/.*/v2" go.mod; then
         sed -i "s/gogf\/gf\(\/.*\)\/v2/gogf\/gf\/v2\1/g" coverage.out
     fi
+
     cd -
 done

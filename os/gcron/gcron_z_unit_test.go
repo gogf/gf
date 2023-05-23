@@ -67,6 +67,22 @@ func TestCron_Basic(t *testing.T) {
 		t.AssertNE(entry1, nil)
 		t.Assert(entry2, nil)
 	})
+
+	// test @ error
+	gtest.C(t, func(t *gtest.T) {
+		cron := gcron.New()
+		defer cron.Close()
+		_, err := cron.Add(ctx, "@aaa", func(ctx context.Context) {}, "add")
+		t.AssertNE(err, nil)
+	})
+
+	// test @every error
+	gtest.C(t, func(t *gtest.T) {
+		cron := gcron.New()
+		defer cron.Close()
+		_, err := cron.Add(ctx, "@every xxx", func(ctx context.Context) {}, "add")
+		t.AssertNE(err, nil)
+	})
 }
 
 func TestCron_Remove(t *testing.T) {
@@ -96,21 +112,16 @@ func TestCron_Add_FixedPattern(t *testing.T) {
 func doTestCronAddFixedPattern(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			now     = time.Now()
-			cron    = gcron.New()
-			array   = garray.New(true)
-			minutes = now.Minute()
-			seconds = now.Second() + 2
+			now    = time.Now()
+			cron   = gcron.New()
+			array  = garray.New(true)
+			expect = now.Add(time.Second * 2)
 		)
 		defer cron.Close()
 
-		if seconds >= 60 {
-			seconds %= 60
-			minutes++
-		}
 		var pattern = fmt.Sprintf(
 			`%d %d %d %d %d %s`,
-			seconds, minutes, now.Hour(), now.Day(), now.Month(), now.Weekday().String(),
+			expect.Second(), expect.Minute(), expect.Hour(), expect.Day(), expect.Month(), expect.Weekday().String(),
 		)
 		cron.SetLogger(g.Log())
 		g.Log().Debugf(ctx, `pattern: %s`, pattern)

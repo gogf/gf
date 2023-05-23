@@ -208,5 +208,8 @@ func (j *Json) Dump() {
 	}
 	j.mu.RLock()
 	defer j.mu.RUnlock()
+	if j.p == nil {
+		return
+	}
 	gutil.Dump(*j.p)
 }

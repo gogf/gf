@@ -15,13 +15,12 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gclient"
+	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/util/guid"
-
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/ghttp"
 )
 
 var (
@@ -525,12 +524,12 @@ func ExampleClient_GetVar() {
 	// &{1 john}
 }
 
-// ExampleClient_SetProxy a example for `gclient.Client.SetProxy` method.
+// ExampleClient_SetProxy an example for `gclient.Client.SetProxy` method.
 // please prepare two proxy server before running this example.
 // http proxy server listening on `127.0.0.1:1081`
 // socks5 proxy server listening on `127.0.0.1:1080`
 func ExampleClient_SetProxy() {
-	// connect to a http proxy server
+	// connect to an http proxy server
 	client := g.Client()
 	client.SetProxy("http://127.0.0.1:1081")
 	client.SetTimeout(5 * time.Second) // it's suggested to set http client timeout
@@ -542,7 +541,7 @@ func ExampleClient_SetProxy() {
 	fmt.Println(err != nil)
 	resp.Close()
 
-	// connect to a http proxy server which needs auth
+	// connect to an http proxy server which needs auth
 	client.SetProxy("http://user:password:127.0.0.1:1081")
 	client.SetTimeout(5 * time.Second) // it's suggested to set http client timeout
 	resp, err = client.Get(ctx, "http://127.0.0.1:8999")

@@ -8,12 +8,12 @@
 //
 // This package is designed for management for millions of timing jobs. The differences
 // between gtimer and gcron are as follows:
-// 1. package gcron is implemented based on package gtimer.
-// 2. gtimer is designed for high performance and for millions of timing jobs.
-// 3. gcron supports configuration pattern grammar like linux crontab, which is more manually
-//    readable.
-// 4. gtimer's benchmark OP is measured in nanoseconds, and gcron's benchmark OP is measured
-//    in microseconds.
+//  1. package gcron is implemented based on package gtimer.
+//  2. gtimer is designed for high performance and for millions of timing jobs.
+//  3. gcron supports configuration pattern grammar like linux crontab, which is more manually
+//     readable.
+//  4. gtimer's benchmark OP is measured in nanoseconds, and gcron's benchmark OP is measured
+//     in microseconds.
 //
 // ALSO VERY NOTE the common delay of the timer: https://github.com/golang/go/issues/14410
 package gtimer
@@ -42,19 +42,21 @@ type Timer struct {
 // TimerOptions is the configuration object for Timer.
 type TimerOptions struct {
 	Interval time.Duration // Interval is the interval escaped of the timer.
+	Quick    bool          // Quick is used for quick timer, which means the timer will not wait for the first interval to be elapsed.
 }
 
 // internalPanic is the custom panic for internal usage.
 type internalPanic string
 
 const (
-	StatusReady                            = 0                    // Job or Timer is ready for running.
-	StatusRunning                          = 1                    // Job or Timer is already running.
-	StatusStopped                          = 2                    // Job or Timer is stopped.
-	StatusClosed                           = -1                   // Job or Timer is closed and waiting to be deleted.
-	panicExit                internalPanic = "exit"               // panicExit is used for custom job exit with panic.
-	defaultTimerInterval                   = "100"                // defaultTimerInterval is the default timer interval in milliseconds.
-	commandEnvKeyForInterval               = "gf.gtimer.interval" // commandEnvKeyForInterval is the key for command argument or environment configuring default interval duration for timer.
+	StatusReady                        = 0      // Job or Timer is ready for running.
+	StatusRunning                      = 1      // Job or Timer is already running.
+	StatusStopped                      = 2      // Job or Timer is stopped.
+	StatusClosed                       = -1     // Job or Timer is closed and waiting to be deleted.
+	panicExit            internalPanic = "exit" // panicExit is used for custom job exit with panic.
+	defaultTimerInterval               = "100"  // defaultTimerInterval is the default timer interval in milliseconds.
+	// commandEnvKeyForInterval is the key for command argument or environment configuring default interval duration for timer.
+	commandEnvKeyForInterval = "gf.gtimer.interval"
 )
 
 var (

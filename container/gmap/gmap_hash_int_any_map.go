@@ -16,6 +16,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// IntAnyMap implements map[int]interface{} with RWMutex that has switch.
 type IntAnyMap struct {
 	mu   rwmutex.RWMutex
 	data map[int]interface{}
@@ -157,7 +158,7 @@ func (m *IntAnyMap) Search(key int) (value interface{}, found bool) {
 func (m *IntAnyMap) Get(key int) (value interface{}) {
 	m.mu.RLock()
 	if m.data != nil {
-		value, _ = m.data[key]
+		value = m.data[key]
 	}
 	m.mu.RUnlock()
 	return
@@ -513,4 +514,25 @@ func (m *IntAnyMap) DeepCopy() interface{} {
 		data[k] = deepcopy.Copy(v)
 	}
 	return NewIntAnyMapFrom(data, m.mu.IsSafe())
+}
+
+// IsSubOf checks whether the current map is a sub-map of `other`.
+func (m *IntAnyMap) IsSubOf(other *IntAnyMap) bool {
+	if m == other {
+		return true
+	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	other.mu.RLock()
+	defer other.mu.RUnlock()
+	for key, value := range m.data {
+		otherValue, ok := other.data[key]
+		if !ok {
+			return false
+		}
+		if otherValue != value {
+			return false
+		}
+	}
+	return true
 }

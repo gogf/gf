@@ -205,9 +205,8 @@ func (c *AdapterMemory) GetOrSet(ctx context.Context, key interface{}, value int
 	}
 	if v == nil {
 		return c.doSetWithLockCheck(ctx, key, value, duration)
-	} else {
-		return v, nil
 	}
+	return v, nil
 }
 
 // GetOrSetFunc retrieves and returns the value of `key`, or sets `key` with result of
@@ -231,9 +230,8 @@ func (c *AdapterMemory) GetOrSetFunc(ctx context.Context, key interface{}, f Fun
 			return nil, nil
 		}
 		return c.doSetWithLockCheck(ctx, key, value, duration)
-	} else {
-		return v, nil
 	}
+	return v, nil
 }
 
 // GetOrSetFuncLock retrieves and returns the value of `key`, or sets `key` with result of
@@ -253,9 +251,8 @@ func (c *AdapterMemory) GetOrSetFuncLock(ctx context.Context, key interface{}, f
 	}
 	if v == nil {
 		return c.doSetWithLockCheck(ctx, key, f, duration)
-	} else {
-		return v, nil
 	}
+	return v, nil
 }
 
 // Contains checks and returns true if `key` exists in the cache, or else returns false.
@@ -380,9 +377,8 @@ func (c *AdapterMemory) doSetWithLockCheck(ctx context.Context, key interface{},
 func (c *AdapterMemory) getInternalExpire(duration time.Duration) int64 {
 	if duration == 0 {
 		return defaultMaxExpire
-	} else {
-		return gtime.TimestampMilli() + duration.Nanoseconds()/1000000
 	}
+	return gtime.TimestampMilli() + duration.Nanoseconds()/1000000
 }
 
 // makeExpireKey groups the `expire` in milliseconds to its according seconds.
@@ -392,7 +388,7 @@ func (c *AdapterMemory) makeExpireKey(expire int64) int64 {
 
 // syncEventAndClearExpired does the asynchronous task loop:
 // 1. Asynchronously process the data in the event list,
-//    and synchronize the results to the `expireTimes` and `expireSets` properties.
+// and synchronize the results to the `expireTimes` and `expireSets` properties.
 // 2. Clean up the expired key-value pair data.
 func (c *AdapterMemory) syncEventAndClearExpired(ctx context.Context) {
 	if c.closed.Val() {
@@ -431,14 +427,17 @@ func (c *AdapterMemory) syncEventAndClearExpired(ctx context.Context) {
 		}
 	}
 	// Processing expired keys from LRU.
-	if c.cap > 0 && c.lruGetList.Len() > 0 {
-		for {
-			if v := c.lruGetList.PopFront(); v != nil {
-				c.lru.Push(v)
-			} else {
-				break
+	if c.cap > 0 {
+		if c.lruGetList.Len() > 0 {
+			for {
+				if v := c.lruGetList.PopFront(); v != nil {
+					c.lru.Push(v)
+				} else {
+					break
+				}
 			}
 		}
+		c.lru.SyncAndClear(ctx)
 	}
 	// ========================
 	// Data Cleaning up.

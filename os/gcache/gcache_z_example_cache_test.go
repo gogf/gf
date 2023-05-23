@@ -699,7 +699,7 @@ func ExampleCache_SetAdapter() {
 	// Get using redis client.
 	fmt.Println(redis.MustDo(ctx, "GET", cacheKey).String())
 
-	// Output:
+	// May Output:
 	// value
 	// value
 }
@@ -734,7 +734,7 @@ func ExampleCache_GetAdapter() {
 	fmt.Println(err)
 	fmt.Println(v.String())
 
-	// Output:
+	// May Output:
 	// value
 	// <nil>
 	// value

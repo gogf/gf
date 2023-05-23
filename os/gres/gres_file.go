@@ -12,7 +12,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
 )
 
@@ -37,13 +36,11 @@ func (f *File) Open() (io.ReadCloser, error) {
 func (f *File) Content() []byte {
 	reader, err := f.Open()
 	if err != nil {
-		err = gerror.Wrapf(err, `open file failed for name "%s"`, f.Name())
 		return nil
 	}
 	defer reader.Close()
 	buffer := bytes.NewBuffer(nil)
 	if _, err = io.Copy(buffer, reader); err != nil {
-		err = gerror.Wrapf(err, `read file content failed for name "%s"`, f.Name())
 		return nil
 	}
 	return buffer.Bytes()

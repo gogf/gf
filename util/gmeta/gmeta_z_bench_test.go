@@ -7,8 +7,9 @@
 package gmeta_test
 
 import (
-	"github.com/gogf/gf/v2/util/gmeta"
 	"testing"
+
+	"github.com/gogf/gf/v2/util/gmeta"
 )
 
 type A struct {

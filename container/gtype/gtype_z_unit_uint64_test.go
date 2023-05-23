@@ -58,6 +58,7 @@ func Test_Uint64(t *testing.T) {
 		t.AssertNil(copyVal)
 	})
 }
+
 func Test_Uint64_JSON(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		i := gtype.NewUint64(math.MaxUint64)

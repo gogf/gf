@@ -12,7 +12,6 @@ package gtime
 import (
 	"context"
 	"fmt"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -101,28 +100,6 @@ var (
 		"december":  12,
 	}
 )
-
-// SetTimeZone sets the time zone for current whole process.
-// The parameter `zone` is an area string specifying corresponding time zone,
-// eg: Asia/Shanghai.
-//
-// This should be called before package "time" import.
-// Please refer to issue: https://github.com/golang/go/issues/34814
-func SetTimeZone(zone string) (err error) {
-	location, err := time.LoadLocation(zone)
-	if err != nil {
-		err = gerror.Wrapf(err, `time.LoadLocation failed for zone "%s"`, zone)
-		return err
-	}
-	var (
-		envKey   = "TZ"
-		envValue = location.String()
-	)
-	if err = os.Setenv(envKey, envValue); err != nil {
-		err = gerror.Wrapf(err, `set environment failed with key "%s", value "%s"`, envKey, envValue)
-	}
-	return
-}
 
 // Timestamp retrieves and returns the timestamp in seconds.
 func Timestamp() int64 {
@@ -245,7 +222,7 @@ func StrToTime(str string, format ...string) (*Time, error) {
 	} else if match = timeRegex2.FindStringSubmatch(str); len(match) > 0 && match[1] != "" {
 		year, month, day = parseDateStr(match[1])
 	} else if match = timeRegex3.FindStringSubmatch(str); len(match) > 0 && match[1] != "" {
-		s := strings.Replace(match[2], ":", "", -1)
+		s := strings.ReplaceAll(match[2], ":", "")
 		if len(s) < 6 {
 			s += strings.Repeat("0", 6-len(s))
 		}
@@ -263,7 +240,7 @@ func StrToTime(str string, format ...string) (*Time, error) {
 
 	// Time
 	if len(match[2]) > 0 {
-		s := strings.Replace(match[2], ":", "", -1)
+		s := strings.ReplaceAll(match[2], ":", "")
 		if len(s) < 6 {
 			s += strings.Repeat("0", 6-len(s))
 		}
@@ -285,7 +262,7 @@ func StrToTime(str string, format ...string) (*Time, error) {
 	}
 	// If there's offset in the string, it then firstly processes the offset.
 	if match[6] != "" {
-		zone := strings.Replace(match[6], ":", "", -1)
+		zone := strings.ReplaceAll(match[6], ":", "")
 		zone = strings.TrimLeft(zone, "+-")
 		if len(zone) <= 6 {
 			zone += strings.Repeat("0", 6-len(zone))
@@ -457,7 +434,7 @@ func ParseDuration(s string) (duration time.Duration, err error) {
 func FuncCost(f func()) time.Duration {
 	t := time.Now()
 	f()
-	return time.Now().Sub(t)
+	return time.Since(t)
 }
 
 // isTimestampStr checks and returns whether given string a timestamp string.

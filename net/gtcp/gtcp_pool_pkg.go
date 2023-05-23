@@ -43,20 +43,24 @@ func (c *PoolConn) RecvPkg(option ...PkgOption) ([]byte, error) {
 
 // RecvPkgWithTimeout reads data from connection with timeout using simple package protocol.
 func (c *PoolConn) RecvPkgWithTimeout(timeout time.Duration, option ...PkgOption) (data []byte, err error) {
-	if err := c.SetReceiveDeadline(time.Now().Add(timeout)); err != nil {
+	if err := c.SetDeadlineRecv(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer c.SetReceiveDeadline(time.Time{})
+	defer func() {
+		_ = c.SetDeadlineRecv(time.Time{})
+	}()
 	data, err = c.RecvPkg(option...)
 	return
 }
 
 // SendPkgWithTimeout writes data to connection with timeout using simple package protocol.
 func (c *PoolConn) SendPkgWithTimeout(data []byte, timeout time.Duration, option ...PkgOption) (err error) {
-	if err := c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
+	if err := c.SetDeadlineSend(time.Now().Add(timeout)); err != nil {
 		return err
 	}
-	defer c.SetSendDeadline(time.Time{})
+	defer func() {
+		_ = c.SetDeadlineSend(time.Time{})
+	}()
 	err = c.SendPkg(data, option...)
 	return
 }

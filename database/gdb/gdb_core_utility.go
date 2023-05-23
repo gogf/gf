@@ -30,7 +30,7 @@ func (c *Core) GetDB() DB {
 func (c *Core) GetLink(ctx context.Context, master bool, schema string) (Link, error) {
 	tx := TXFromCtx(ctx, c.db.GetGroup())
 	if tx != nil {
-		return &txLink{tx.tx}, nil
+		return &txLink{tx.GetSqlTX()}, nil
 	}
 	if master {
 		link, err := c.db.GetCore().MasterLink(schema)
@@ -225,7 +225,7 @@ func (c *Core) guessPrimaryTableName(tableStr string) string {
 		return ""
 	}
 	var (
-		guessedTableName = ""
+		guessedTableName string
 		array1           = gstr.SplitAndTrim(tableStr, ",")
 		array2           = gstr.SplitAndTrim(array1[0], " ")
 		array3           = gstr.SplitAndTrim(array2[0], ".")

@@ -19,11 +19,11 @@ import (
 
 // Conn is the TCP connection object.
 type Conn struct {
-	net.Conn                        // Underlying TCP connection object.
-	reader            *bufio.Reader // Buffer reader for connection.
-	receiveDeadline   time.Time     // Timeout point for reading.
-	sendDeadline      time.Time     // Timeout point for writing.
-	receiveBufferWait time.Duration // Interval duration for reading buffer.
+	net.Conn                     // Underlying TCP connection object.
+	reader         *bufio.Reader // Buffer reader for connection.
+	deadlineRecv   time.Time     // Timeout point for reading.
+	deadlineSend   time.Time     // Timeout point for writing.
+	bufferWaitRecv time.Duration // Interval duration for reading buffer.
 }
 
 const (
@@ -63,11 +63,11 @@ func NewConnKeyCrt(addr, crtFile, keyFile string) (*Conn, error) {
 // NewConnByNetConn creates and returns a TCP connection object with given net.Conn object.
 func NewConnByNetConn(conn net.Conn) *Conn {
 	return &Conn{
-		Conn:              conn,
-		reader:            bufio.NewReader(conn),
-		receiveDeadline:   time.Time{},
-		sendDeadline:      time.Time{},
-		receiveBufferWait: receiveAllWaitTimeout,
+		Conn:           conn,
+		reader:         bufio.NewReader(conn),
+		deadlineRecv:   time.Time{},
+		deadlineSend:   time.Time{},
+		bufferWaitRecv: receiveAllWaitTimeout,
 	}
 }
 
@@ -100,12 +100,12 @@ func (c *Conn) Send(data []byte, retry ...Retry) error {
 // Recv receives and returns data from the connection.
 //
 // Note that,
-// 1. If length = 0, which means it receives the data from current buffer and returns immediately.
-// 2. If length < 0, which means it receives all data from connection and returns it until no data
-//    from connection. Developers should notice the package parsing yourself if you decide receiving
-//    all data from buffer.
-// 3. If length > 0, which means it blocks reading data from connection until length size was received.
-//    It is the most commonly used length value for data receiving.
+//  1. If length = 0, which means it receives the data from current buffer and returns immediately.
+//  2. If length < 0, which means it receives all data from connection and returns it until no data
+//     from connection. Developers should notice the package parsing yourself if you decide receiving
+//     all data from buffer.
+//  3. If length > 0, which means it blocks reading data from connection until length size was received.
+//     It is the most commonly used length value for data receiving.
 func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
 	var (
 		err        error  // Reading error.
@@ -123,7 +123,7 @@ func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
 	for {
 		if length < 0 && index > 0 {
 			bufferWait = true
-			if err = c.SetReadDeadline(time.Now().Add(c.receiveBufferWait)); err != nil {
+			if err = c.SetReadDeadline(time.Now().Add(c.bufferWaitRecv)); err != nil {
 				err = gerror.Wrap(err, `SetReadDeadline for connection failed`)
 				return nil, err
 			}
@@ -155,7 +155,7 @@ func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
 			}
 			// Re-set the timeout when reading data.
 			if bufferWait && isTimeout(err) {
-				if err = c.SetReadDeadline(c.receiveDeadline); err != nil {
+				if err = c.SetReadDeadline(c.deadlineRecv); err != nil {
 					err = gerror.Wrap(err, `SetReadDeadline for connection failed`)
 					return nil, err
 				}
@@ -240,20 +240,24 @@ func (c *Conn) RecvTill(til []byte, retry ...Retry) ([]byte, error) {
 
 // RecvWithTimeout reads data from the connection with timeout.
 func (c *Conn) RecvWithTimeout(length int, timeout time.Duration, retry ...Retry) (data []byte, err error) {
-	if err = c.SetReceiveDeadline(time.Now().Add(timeout)); err != nil {
+	if err = c.SetDeadlineRecv(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer c.SetReceiveDeadline(time.Time{})
+	defer func() {
+		_ = c.SetDeadlineRecv(time.Time{})
+	}()
 	data, err = c.Recv(length, retry...)
 	return
 }
 
 // SendWithTimeout writes data to the connection with timeout.
 func (c *Conn) SendWithTimeout(data []byte, timeout time.Duration, retry ...Retry) (err error) {
-	if err = c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
+	if err = c.SetDeadlineSend(time.Now().Add(timeout)); err != nil {
 		return err
 	}
-	defer c.SetSendDeadline(time.Time{})
+	defer func() {
+		_ = c.SetDeadlineSend(time.Time{})
+	}()
 	err = c.Send(data, retry...)
 	return
 }
@@ -276,10 +280,11 @@ func (c *Conn) SendRecvWithTimeout(data []byte, length int, timeout time.Duratio
 	}
 }
 
+// SetDeadline sets the deadline for current connection.
 func (c *Conn) SetDeadline(t time.Time) (err error) {
 	if err = c.Conn.SetDeadline(t); err == nil {
-		c.receiveDeadline = t
-		c.sendDeadline = t
+		c.deadlineRecv = t
+		c.deadlineSend = t
 	}
 	if err != nil {
 		err = gerror.Wrapf(err, `SetDeadline for connection failed with "%s"`, t)
@@ -287,28 +292,30 @@ func (c *Conn) SetDeadline(t time.Time) (err error) {
 	return err
 }
 
-func (c *Conn) SetReceiveDeadline(t time.Time) (err error) {
+// SetDeadlineRecv sets the deadline of receiving for current connection.
+func (c *Conn) SetDeadlineRecv(t time.Time) (err error) {
 	if err = c.SetReadDeadline(t); err == nil {
-		c.receiveDeadline = t
+		c.deadlineRecv = t
 	}
 	if err != nil {
-		err = gerror.Wrapf(err, `SetReadDeadline for connection failed with "%s"`, t)
+		err = gerror.Wrapf(err, `SetDeadlineRecv for connection failed with "%s"`, t)
 	}
 	return err
 }
 
-func (c *Conn) SetSendDeadline(t time.Time) (err error) {
+// SetDeadlineSend sets the deadline of sending for current connection.
+func (c *Conn) SetDeadlineSend(t time.Time) (err error) {
 	if err = c.SetWriteDeadline(t); err == nil {
-		c.sendDeadline = t
+		c.deadlineSend = t
 	}
 	if err != nil {
-		err = gerror.Wrapf(err, `SetWriteDeadline for connection failed with "%s"`, t)
+		err = gerror.Wrapf(err, `SetDeadlineSend for connection failed with "%s"`, t)
 	}
 	return err
 }
 
-// SetReceiveBufferWait sets the buffer waiting timeout when reading all data from connection.
+// SetBufferWaitRecv sets the buffer waiting timeout when reading all data from connection.
 // The waiting duration cannot be too long which might delay receiving data from remote address.
-func (c *Conn) SetReceiveBufferWait(bufferWaitDuration time.Duration) {
-	c.receiveBufferWait = bufferWaitDuration
+func (c *Conn) SetBufferWaitRecv(bufferWaitDuration time.Duration) {
+	c.bufferWaitRecv = bufferWaitDuration
 }

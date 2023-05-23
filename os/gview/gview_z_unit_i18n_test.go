@@ -12,7 +12,10 @@ import (
 
 	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/i18n/gi18n"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gview"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
@@ -75,4 +78,38 @@ func Test_I18n(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(result3, expect3)
 	})
+	// gi18n manager is nil
+	gtest.C(t, func(t *gtest.T) {
+		content := `{{.name}} says "{#hello}{#world}!"`
+		expect1 := `john says "{#hello}{#world}!"`
+
+		g.I18n().SetPath(gdebug.CallerDirectory() + gfile.Separator + "testdata" + gfile.Separator + "i18n")
+
+		view := gview.New()
+		view.SetI18n(nil)
+		result1, err := view.ParseContent(context.TODO(), content, g.Map{
+			"name":         "john",
+			"I18nLanguage": "zh-CN",
+		})
+		t.AssertNil(err)
+		t.Assert(result1, expect1)
+	})
+	// SetLanguage in context
+	gtest.C(t, func(t *gtest.T) {
+		content := `{{.name}} says "{#hello}{#world}!"`
+		expect1 := `john says "你好世界!"`
+		ctx := gctx.New()
+		g.I18n().SetPath(gdebug.CallerDirectory() + gfile.Separator + "testdata" + gfile.Separator + "i18n")
+		ctx = gi18n.WithLanguage(ctx, "zh-CN")
+		t.Log(gi18n.LanguageFromCtx(ctx))
+
+		view := gview.New()
+
+		result1, err := view.ParseContent(ctx, content, g.Map{
+			"name": "john",
+		})
+		t.AssertNil(err)
+		t.Assert(result1, expect1)
+	})
+
 }

@@ -12,21 +12,25 @@ import (
 	"database/sql"
 	"fmt"
 	"net/url"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/util/gutil"
-
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // Driver is the driver for mysql database.
 type Driver struct {
 	*gdb.Core
 }
+
+const (
+	quoteChar = "`"
+)
 
 func init() {
 	var (
@@ -77,7 +81,10 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 			config.User, config.Pass, config.Protocol, config.Host, config.Port, config.Name, config.Charset,
 		)
 		if config.Timezone != "" {
-			source = fmt.Sprintf("%s&loc=%s", source, url.QueryEscape(config.Timezone))
+			if strings.Contains(config.Timezone, "/") {
+				config.Timezone = url.QueryEscape(config.Timezone)
+			}
+			source = fmt.Sprintf("%s&loc=%s", source, config.Timezone)
 		}
 		if config.Extra != "" {
 			source = fmt.Sprintf("%s&%s", source, config.Extra)
@@ -95,7 +102,7 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 
 // GetChars returns the security char for this type of database.
 func (d *Driver) GetChars() (charLeft string, charRight string) {
-	return "`", "`"
+	return quoteChar, quoteChar
 }
 
 // DoFilter handles the sql before posts it to database.
@@ -139,11 +146,11 @@ func (d *Driver) TableFields(
 	ctx context.Context, table string, schema ...string,
 ) (fields map[string]*gdb.TableField, err error) {
 	var (
-		result    gdb.Result
-		link      gdb.Link
-		useSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+		result     gdb.Result
+		link       gdb.Link
+		usedSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
 	)
-	if link, err = d.SlaveLink(useSchema); err != nil {
+	if link, err = d.SlaveLink(usedSchema); err != nil {
 		return nil, err
 	}
 	result, err = d.DoSelect(

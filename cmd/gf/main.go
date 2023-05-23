@@ -1,17 +1,24 @@
+// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package main
 
 import (
 	_ "github.com/gogf/gf/cmd/gf/v2/internal/packed"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcfg"
-
-	"github.com/gogf/gf/cmd/gf/v2/internal/cmd"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/allyes"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gstr"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/cmd"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/allyes"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 const (
@@ -52,7 +59,9 @@ func main() {
 		panic(err)
 	}
 	err = command.AddObject(
+		cmd.Up,
 		cmd.Env,
+		cmd.Fix,
 		cmd.Run,
 		cmd.Gen,
 		cmd.Tpl,
@@ -66,7 +75,12 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	command.Run(ctx)
+	err = command.RunWithError(ctx)
+	if err != nil {
+		// Exit with error message and exit code 1.
+		// It is very important to exit the command process with code 1.
+		mlog.Fatalf(`%+v`, err)
+	}
 }
 
 // zsh alias "git fetch" conflicts checks.

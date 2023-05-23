@@ -48,7 +48,7 @@ func (c *Client) ConnectBytes(ctx context.Context, url string, data ...interface
 	return c.RequestBytes(ctx, http.MethodConnect, url, data...)
 }
 
-// OptionsBytes sends a OPTIONS request, retrieves and returns the result content as bytes.
+// OptionsBytes sends an OPTIONS request, retrieves and returns the result content as bytes.
 func (c *Client) OptionsBytes(ctx context.Context, url string, data ...interface{}) []byte {
 	return c.RequestBytes(ctx, http.MethodOptions, url, data...)
 }

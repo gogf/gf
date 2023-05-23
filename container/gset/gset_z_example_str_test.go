@@ -325,7 +325,7 @@ func ExampleStrSet_Size() {
 	// 4
 }
 
-// Slice returns the a of items of the set as slice.
+// Slice returns the an of items of the set as slice.
 func ExampleStrSet_Slice() {
 	s1 := gset.NewStrSet(true)
 	s1.Add([]string{"a", "b", "c", "d"}...)

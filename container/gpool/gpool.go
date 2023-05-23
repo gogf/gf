@@ -84,6 +84,13 @@ func (p *Pool) Put(value interface{}) error {
 	return nil
 }
 
+// MustPut puts an item to pool, it panics if any error occurs.
+func (p *Pool) MustPut(value interface{}) {
+	if err := p.Put(value); err != nil {
+		panic(err)
+	}
+}
+
 // Clear clears pool, which means it will remove all items from pool.
 func (p *Pool) Clear() {
 	if p.ExpireFunc != nil {
@@ -97,7 +104,6 @@ func (p *Pool) Clear() {
 	} else {
 		p.list.RemoveAll()
 	}
-
 }
 
 // Get picks and returns an item from pool. If the pool is empty and NewFunc is defined,

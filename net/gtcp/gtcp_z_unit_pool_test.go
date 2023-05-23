@@ -11,10 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/text/gstr"
-
 	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 func Test_Pool_Basic1(t *testing.T) {

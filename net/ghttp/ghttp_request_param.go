@@ -12,6 +12,7 @@ import (
 	"io"
 	"io/ioutil"
 	"mime/multipart"
+	"net/http"
 	"reflect"
 	"strings"
 
@@ -107,6 +108,7 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 				return err
 			}
 		}
+		// TODO: https://github.com/gogf/gf/pull/2450
 		// Validation.
 		if err = gvalid.New().
 			Bail().
@@ -239,7 +241,7 @@ func (r *Request) parseBody() {
 			r.bodyMap, _ = gxml.DecodeWithoutRoot(body)
 		}
 		// Default parameters decoding.
-		if r.bodyMap == nil {
+		if contentType := r.Header.Get("Content-Type"); (contentType == "" || !gstr.Contains(contentType, "multipart/")) && r.bodyMap == nil {
 			r.bodyMap, _ = gstr.Parse(r.GetBodyString())
 		}
 	}
@@ -318,7 +320,7 @@ func (r *Request) parseForm() {
 	}
 	// It parses the request body without checking the Content-Type.
 	if r.formMap == nil {
-		if r.Method != "GET" {
+		if r.Method != http.MethodGet {
 			r.parseBody()
 		}
 		if len(r.bodyMap) > 0 {
@@ -349,7 +351,7 @@ func (r *Request) GetMultipartFiles(name string) []*multipart.FileHeader {
 	}
 	// Support "name[0]","name[1]","name[2]", etc. as array parameter.
 	var (
-		key   = ""
+		key   string
 		files = make([]*multipart.FileHeader, 0)
 	)
 	for i := 0; ; i++ {

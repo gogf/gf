@@ -155,28 +155,28 @@ func (a *StrArray) SortFunc(less func(v1, v2 string) bool) *StrArray {
 	return a
 }
 
-// InsertBefore inserts the `value` to the front of `index`.
-func (a *StrArray) InsertBefore(index int, value string) error {
+// InsertBefore inserts the `values` to the front of `index`.
+func (a *StrArray) InsertBefore(index int, values ...string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if index < 0 || index >= len(a.array) {
 		return gerror.NewCodef(gcode.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
 	}
 	rear := append([]string{}, a.array[index:]...)
-	a.array = append(a.array[0:index], value)
+	a.array = append(a.array[0:index], values...)
 	a.array = append(a.array, rear...)
 	return nil
 }
 
-// InsertAfter inserts the `value` to the back of `index`.
-func (a *StrArray) InsertAfter(index int, value string) error {
+// InsertAfter inserts the `values` to the back of `index`.
+func (a *StrArray) InsertAfter(index int, values ...string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if index < 0 || index >= len(a.array) {
 		return gerror.NewCodef(gcode.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
 	}
 	rear := append([]string{}, a.array[index+1:]...)
-	a.array = append(a.array[0:index+1], value)
+	a.array = append(a.array[0:index+1], values...)
 	a.array = append(a.array, rear...)
 	return nil
 }
@@ -220,6 +220,17 @@ func (a *StrArray) RemoveValue(value string) bool {
 		return found
 	}
 	return false
+}
+
+// RemoveValues removes multiple items by `values`.
+func (a *StrArray) RemoveValues(values ...string) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for _, value := range values {
+		if i := a.doSearchWithoutLock(value); i != -1 {
+			a.doRemoveWithoutLock(i)
+		}
+	}
 }
 
 // PushLeft pushes one or multiple items to the beginning of array.
@@ -499,6 +510,10 @@ func (a *StrArray) ContainsI(value string) bool {
 func (a *StrArray) Search(value string) int {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
+	return a.doSearchWithoutLock(value)
+}
+
+func (a *StrArray) doSearchWithoutLock(value string) int {
 	if len(a.array) == 0 {
 		return -1
 	}
@@ -782,6 +797,22 @@ func (a *StrArray) UnmarshalValue(value interface{}) error {
 		a.array = gconv.SliceStr(value)
 	}
 	return nil
+}
+
+// Filter iterates array and filters elements using custom callback function.
+// It removes the element from array if callback function `filter` returns true,
+// it or else does nothing and continues iterating.
+func (a *StrArray) Filter(filter func(index int, value string) bool) *StrArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if filter(i, a.array[i]) {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			i++
+		}
+	}
+	return a
 }
 
 // FilterEmpty removes all empty string value of the array.

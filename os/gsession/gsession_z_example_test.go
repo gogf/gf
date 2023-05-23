@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/database/gredis"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gsession"
 )
@@ -232,136 +232,136 @@ func ExampleStorageFile_UpdateTTL() {
 }
 
 func ExampleStorageRedis_Get() {
-	storage := gsession.NewStorageRedis(&gredis.Redis{})
+	storage := gsession.NewStorageRedis(g.Redis())
 	val, _ := storage.Get(gctx.New(), "id", "key")
 	fmt.Println(val)
 
-	// Output:
+	// May Output:
 	// <nil>
 }
 
 func ExampleStorageRedis_Data() {
-	storage := gsession.NewStorageRedis(&gredis.Redis{})
+	storage := gsession.NewStorageRedis(g.Redis())
 	val, _ := storage.Data(gctx.New(), "id")
 	fmt.Println(val)
 
-	// Output:
+	// May Output:
 	// map[]
 }
 
 func ExampleStorageRedis_GetSize() {
-	storage := gsession.NewStorageRedis(&gredis.Redis{})
+	storage := gsession.NewStorageRedis(g.Redis())
 	val, _ := storage.GetSize(gctx.New(), "id")
 	fmt.Println(val)
 
-	// Output:
+	// May Output:
 	// 0
 }
 
 func ExampleStorageRedis_Remove() {
-	storage := gsession.NewStorageRedis(&gredis.Redis{})
+	storage := gsession.NewStorageRedis(g.Redis())
 	err := storage.Remove(gctx.New(), "id", "key")
 	fmt.Println(err != nil)
 
-	// Output:
+	// May Output:
 	// true
 }
 
 func ExampleStorageRedis_RemoveAll() {
-	storage := gsession.NewStorageRedis(&gredis.Redis{})
+	storage := gsession.NewStorageRedis(g.Redis())
 	err := storage.RemoveAll(gctx.New(), "id")
 	fmt.Println(err != nil)
 
-	// Output:
+	// May Output:
 	// true
 }
 
 func ExampleStorageRedis_UpdateTTL() {
-	storage := gsession.NewStorageRedis(&gredis.Redis{})
+	storage := gsession.NewStorageRedis(g.Redis())
 	err := storage.UpdateTTL(gctx.New(), "id", time.Second*15)
 	fmt.Println(err)
 
 	time.Sleep(time.Second * 11)
 
-	// Output:
+	// May Output:
 	// <nil>
 }
 
 func ExampleStorageRedisHashTable_Get() {
-	storage := gsession.NewStorageRedisHashTable(&gredis.Redis{})
+	storage := gsession.NewStorageRedisHashTable(g.Redis())
 
 	v, err := storage.Get(gctx.New(), "id", "key")
 
 	fmt.Println(v)
 	fmt.Println(err)
 
-	// Output:
+	// May Output:
 	// <nil>
-	// redis adapter not initialized, missing configuration or adapter register?
+	// redis adapter is not set, missing configuration or adapter register? possible reference: https://github.com/gogf/gf/tree/master/contrib/nosql/redis
 }
 
 func ExampleStorageRedisHashTable_Data() {
-	storage := gsession.NewStorageRedisHashTable(&gredis.Redis{})
+	storage := gsession.NewStorageRedisHashTable(g.Redis())
 
 	data, err := storage.Data(gctx.New(), "id")
 
 	fmt.Println(data)
 	fmt.Println(err)
 
-	// Output:
+	// May Output:
 	// map[]
-	// redis adapter not initialized, missing configuration or adapter register?
+	// redis adapter is not set, missing configuration or adapter register? possible reference: https://github.com/gogf/gf/tree/master/contrib/nosql/redis
 }
 
 func ExampleStorageRedisHashTable_GetSize() {
-	storage := gsession.NewStorageRedisHashTable(&gredis.Redis{})
+	storage := gsession.NewStorageRedisHashTable(g.Redis())
 
 	size, err := storage.GetSize(gctx.New(), "id")
 
 	fmt.Println(size)
 	fmt.Println(err)
 
-	// Output:
+	// May Output:
 	// 0
-	// redis adapter not initialized, missing configuration or adapter register?
+	// redis adapter is not set, missing configuration or adapter register? possible reference: https://github.com/gogf/gf/tree/master/contrib/nosql/redis
 }
 
 func ExampleStorageRedisHashTable_Remove() {
-	storage := gsession.NewStorageRedisHashTable(&gredis.Redis{})
+	storage := gsession.NewStorageRedisHashTable(g.Redis())
 
 	err := storage.Remove(gctx.New(), "id", "key")
 
 	fmt.Println(err)
 
-	// Output:
-	// redis adapter not initialized, missing configuration or adapter register?
+	// May Output:
+	// redis adapter is not set, missing configuration or adapter register? possible reference: https://github.com/gogf/gf/tree/master/contrib/nosql/redis
 }
 
 func ExampleStorageRedisHashTable_RemoveAll() {
-	storage := gsession.NewStorageRedisHashTable(&gredis.Redis{})
+	storage := gsession.NewStorageRedisHashTable(g.Redis())
 
 	err := storage.RemoveAll(gctx.New(), "id")
 
 	fmt.Println(err)
 
-	// Output:
-	// redis adapter not initialized, missing configuration or adapter register?
+	// May Output:
+	// redis adapter is not set, missing configuration or adapter register? possible reference: https://github.com/gogf/gf/tree/master/contrib/nosql/redis
 }
 
 func ExampleStorageRedisHashTable_GetSession() {
-	storage := gsession.NewStorageRedisHashTable(&gredis.Redis{})
+	storage := gsession.NewStorageRedisHashTable(g.Redis())
 	data, err := storage.GetSession(gctx.New(), "id", time.Second)
 
 	fmt.Println(data)
 	fmt.Println(err)
 
-	// Output:
+	// May Output:
 	//
-	// redis adapter not initialized, missing configuration or adapter register?
+	// redis adapter is not set, missing configuration or adapter register? possible reference: https://github.com/gogf/gf/tree/master/contrib/nosql/redis
 }
 
 func ExampleStorageRedisHashTable_SetSession() {
-	storage := gsession.NewStorageRedisHashTable(&gredis.Redis{})
+	storage := gsession.NewStorageRedisHashTable(g.Redis())
 
 	strAnyMap := gmap.StrAnyMap{}
 
@@ -369,17 +369,17 @@ func ExampleStorageRedisHashTable_SetSession() {
 
 	fmt.Println(err)
 
-	// Output:
-	// redis adapter not initialized, missing configuration or adapter register?
+	// May Output:
+	// redis adapter is not set, missing configuration or adapter register? possible reference: https://github.com/gogf/gf/tree/master/contrib/nosql/redis
 }
 
 func ExampleStorageRedisHashTable_UpdateTTL() {
-	storage := gsession.NewStorageRedisHashTable(&gredis.Redis{})
+	storage := gsession.NewStorageRedisHashTable(g.Redis())
 
 	err := storage.UpdateTTL(gctx.New(), "id", time.Second)
 
 	fmt.Println(err)
 
-	// Output:
-	// redis adapter not initialized, missing configuration or adapter register?
+	// May Output:
+	// redis adapter is not set, missing configuration or adapter register? possible reference: https://github.com/gogf/gf/tree/master/contrib/nosql/redis
 }

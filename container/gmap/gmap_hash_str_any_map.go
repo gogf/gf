@@ -152,7 +152,7 @@ func (m *StrAnyMap) Search(key string) (value interface{}, found bool) {
 func (m *StrAnyMap) Get(key string) (value interface{}) {
 	m.mu.RLock()
 	if m.data != nil {
-		value, _ = m.data[key]
+		value = m.data[key]
 	}
 	m.mu.RUnlock()
 	return
@@ -500,4 +500,25 @@ func (m *StrAnyMap) DeepCopy() interface{} {
 		data[k] = deepcopy.Copy(v)
 	}
 	return NewStrAnyMapFrom(data, m.mu.IsSafe())
+}
+
+// IsSubOf checks whether the current map is a sub-map of `other`.
+func (m *StrAnyMap) IsSubOf(other *StrAnyMap) bool {
+	if m == other {
+		return true
+	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	other.mu.RLock()
+	defer other.mu.RUnlock()
+	for key, value := range m.data {
+		otherValue, ok := other.data[key]
+		if !ok {
+			return false
+		}
+		if otherValue != value {
+			return false
+		}
+	}
+	return true
 }

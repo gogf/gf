@@ -25,4 +25,4 @@ jobs:
           inactive-label: 'inactive'
           inactive-day: 7
           issue-state: open
-          exclude-labels: 'bug,$exclude-empty'
+          exclude-labels: 'bug,planned,$exclude-empty'

@@ -12,7 +12,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 )
 
-func Example_context() {
+func ExampleContext() {
 	ctx := context.WithValue(context.Background(), "Trace-Id", "123456789")
 	g.Log().Error(ctx, "runtime error")
 

@@ -138,7 +138,7 @@ func Test_TX_Insert(t *testing.T) {
 		if n, err := tx.Model(table).Count(); err != nil {
 			gtest.Error(err)
 		} else {
-			t.Assert(n, 2)
+			t.Assert(n, int64(2))
 		}
 
 		if err := tx.Commit(); err != nil {
@@ -180,7 +180,7 @@ func Test_TX_BatchInsert(t *testing.T) {
 		if n, err := db.Model(table).Count(); err != nil {
 			gtest.Error(err)
 		} else {
-			t.Assert(n, 2)
+			t.Assert(n, int64(2))
 		}
 	})
 }
@@ -218,7 +218,7 @@ func Test_TX_BatchReplace(t *testing.T) {
 		if n, err := db.Model(table).Count(); err != nil {
 			gtest.Error(err)
 		} else {
-			t.Assert(n, TableSize)
+			t.Assert(n, int64(TableSize))
 		}
 		if value, err := db.Model(table).Fields("password").Where("id", 2).Value(); err != nil {
 			gtest.Error(err)
@@ -255,7 +255,7 @@ func Test_TX_BatchSave(t *testing.T) {
 		if n, err := db.Model(table).Count(); err != nil {
 			gtest.Error(err)
 		} else {
-			t.Assert(n, TableSize)
+			t.Assert(n, int64(TableSize))
 		}
 
 		if value, err := db.Model(table).Fields("password").Where("id", 4).Value(); err != nil {
@@ -428,7 +428,7 @@ func Test_TX_GetCount(t *testing.T) {
 		if count, err := tx.GetCount("SELECT * FROM " + table); err != nil {
 			gtest.Error(err)
 		} else {
-			t.Assert(count, TableSize)
+			t.Assert(count, int64(TableSize))
 		}
 		if err := tx.Commit(); err != nil {
 			gtest.Error(err)
@@ -674,7 +674,7 @@ func Test_TX_Delete(t *testing.T) {
 		if n, err := db.Model(table).Count(); err != nil {
 			gtest.Error(err)
 		} else {
-			t.Assert(n, 0)
+			t.Assert(n, int64(0))
 		}
 
 		t.Assert(tx.IsClosed(), true)
@@ -693,7 +693,7 @@ func Test_TX_Delete(t *testing.T) {
 		if n, err := tx.Model(table).Count(); err != nil {
 			gtest.Error(err)
 		} else {
-			t.Assert(n, 0)
+			t.Assert(n, int64(0))
 		}
 		if err := tx.Rollback(); err != nil {
 			gtest.Error(err)
@@ -701,8 +701,8 @@ func Test_TX_Delete(t *testing.T) {
 		if n, err := db.Model(table).Count(); err != nil {
 			gtest.Error(err)
 		} else {
-			t.Assert(n, TableSize)
-			t.AssertNE(n, 0)
+			t.Assert(n, int64(TableSize))
+			t.AssertNE(n, int64(0))
 		}
 
 		t.Assert(tx.IsClosed(), true)
@@ -715,7 +715,7 @@ func Test_Transaction(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		ctx := context.TODO()
-		err := db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+		err := db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 			if _, err := tx.Ctx(ctx).Replace(table, g.Map{
 				"id":          1,
 				"passport":    "USER_1",
@@ -739,7 +739,7 @@ func Test_Transaction(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		ctx := context.TODO()
-		err := db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+		err := db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 			if _, err := tx.Replace(table, g.Map{
 				"id":          1,
 				"passport":    "USER_1",
@@ -767,7 +767,7 @@ func Test_Transaction_Panic(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		ctx := context.TODO()
-		err := db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+		err := db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 			if _, err := tx.Replace(table, g.Map{
 				"id":          1,
 				"passport":    "USER_1",
@@ -838,13 +838,13 @@ func Test_Transaction_Nested_TX_Transaction_UseTX(t *testing.T) {
 			err error
 			ctx = context.TODO()
 		)
-		err = db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+		err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 			// commit
-			err = tx.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
-				err = tx.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
-					err = tx.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
-						err = tx.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
-							err = tx.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+			err = tx.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+				err = tx.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+					err = tx.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+						err = tx.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+							err = tx.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 								_, err = tx.Model(table).Data(g.Map{
 									"id":          1,
 									"passport":    "USER_1",
@@ -869,7 +869,7 @@ func Test_Transaction_Nested_TX_Transaction_UseTX(t *testing.T) {
 			})
 			t.AssertNil(err)
 			// rollback
-			err = tx.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+			err = tx.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 				_, err = tx.Model(table).Data(g.Map{
 					"id":          2,
 					"passport":    "USER_2",
@@ -892,13 +892,13 @@ func Test_Transaction_Nested_TX_Transaction_UseTX(t *testing.T) {
 		t.Assert(all[0]["id"], 1)
 
 		// another record.
-		err = db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+		err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 			// commit
-			err = tx.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
-				err = tx.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
-					err = tx.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
-						err = tx.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
-							err = tx.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+			err = tx.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+				err = tx.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+					err = tx.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+						err = tx.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+							err = tx.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 								_, err = tx.Model(table).Data(g.Map{
 									"id":          3,
 									"passport":    "USER_1",
@@ -923,7 +923,7 @@ func Test_Transaction_Nested_TX_Transaction_UseTX(t *testing.T) {
 			})
 			t.AssertNil(err)
 			// rollback
-			err = tx.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+			err = tx.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 				_, err = tx.Model(table).Data(g.Map{
 					"id":          4,
 					"passport":    "USER_2",
@@ -960,13 +960,13 @@ func Test_Transaction_Nested_TX_Transaction_UseDB(t *testing.T) {
 			err error
 			ctx = context.TODO()
 		)
-		err = db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+		err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 			// commit
-			err = db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
-				err = db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
-					err = db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
-						err = db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
-							err = db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+			err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+				err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+					err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+						err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+							err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 								_, err = db.Model(table).Ctx(ctx).Data(g.Map{
 									"id":          1,
 									"passport":    "USER_1",
@@ -992,7 +992,7 @@ func Test_Transaction_Nested_TX_Transaction_UseDB(t *testing.T) {
 			t.AssertNil(err)
 
 			// rollback
-			err = db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+			err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 				_, err = tx.Model(table).Ctx(ctx).Data(g.Map{
 					"id":          2,
 					"passport":    "USER_2",
@@ -1014,13 +1014,13 @@ func Test_Transaction_Nested_TX_Transaction_UseDB(t *testing.T) {
 		t.Assert(len(all), 1)
 		t.Assert(all[0]["id"], 1)
 
-		err = db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+		err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 			// commit
-			err = db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
-				err = db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
-					err = db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
-						err = db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
-							err = db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+			err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+				err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+					err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+						err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+							err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 								_, err = db.Model(table).Ctx(ctx).Data(g.Map{
 									"id":          3,
 									"passport":    "USER_1",
@@ -1046,7 +1046,7 @@ func Test_Transaction_Nested_TX_Transaction_UseDB(t *testing.T) {
 			t.AssertNil(err)
 
 			// rollback
-			err = db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+			err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 				_, err = tx.Model(table).Ctx(ctx).Data(g.Map{
 					"id":          4,
 					"passport":    "USER_2",
@@ -1115,7 +1115,7 @@ func Test_Transaction_Method(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		var err error
-		err = db.Transaction(gctx.New(), func(ctx context.Context, tx *gdb.TX) error {
+		err = db.Transaction(gctx.New(), func(ctx context.Context, tx gdb.TX) error {
 			_, err = db.Model(table).Ctx(ctx).Data(g.Map{
 				"id":          1,
 				"passport":    "t1",
@@ -1136,6 +1136,6 @@ func Test_Transaction_Method(t *testing.T) {
 
 		count, err := db.Model(table).Count()
 		t.AssertNil(err)
-		t.Assert(count, 0)
+		t.Assert(count, int64(0))
 	})
 }

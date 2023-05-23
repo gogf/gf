@@ -221,6 +221,7 @@ func AssertLE(value, expect interface{}) {
 // The `expect` should be a slice,
 // but the `value` can be a slice or a basic type variable.
 // TODO map support.
+// TODO: gconv.Strings(0) is not [0]
 func AssertIN(value, expect interface{}) {
 	var (
 		passed     = true
@@ -302,9 +303,6 @@ func compareMap(value, expect interface{}) error {
 		rvValue  = reflect.ValueOf(value)
 		rvExpect = reflect.ValueOf(expect)
 	)
-	if empty.IsNil(value) {
-		value = nil
-	}
 	if rvExpect.Kind() == reflect.Map {
 		if rvValue.Kind() == reflect.Map {
 			if rvExpect.Len() == rvValue.Len() {

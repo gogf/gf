@@ -152,6 +152,7 @@ func Test_IntStrMap_Batch(t *testing.T) {
 		t.Assert(m.Map(), map[int]interface{}{3: "c"})
 	})
 }
+
 func Test_IntStrMap_Iterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[int]string{1: "a", 2: "b"}
@@ -204,6 +205,7 @@ func Test_IntStrMap_Clone(t *testing.T) {
 		t.AssertIN(2, m.Keys())
 	})
 }
+
 func Test_IntStrMap_Merge(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.NewIntStrMap()
@@ -443,5 +445,20 @@ func Test_IntStrMap_DeepCopy(t *testing.T) {
 		n := m.DeepCopy().(*gmap.IntStrMap)
 		n.Set(1, "v1")
 		t.AssertNE(m.Get(1), n.Get(1))
+	})
+}
+
+func Test_IntStrMap_IsSubOf(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m1 := gmap.NewIntStrMapFrom(g.MapIntStr{
+			1: "v1",
+			2: "v2",
+		})
+		m2 := gmap.NewIntStrMapFrom(g.MapIntStr{
+			2: "v2",
+		})
+		t.Assert(m1.IsSubOf(m2), false)
+		t.Assert(m2.IsSubOf(m1), true)
+		t.Assert(m2.IsSubOf(m2), true)
 	})
 }

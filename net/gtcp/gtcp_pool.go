@@ -61,11 +61,9 @@ func NewPoolConn(addr string, timeout ...time.Duration) (*PoolConn, error) {
 func (c *PoolConn) Close() error {
 	if c.pool != nil && c.status == connStatusActive {
 		c.status = connStatusUnknown
-		c.pool.Put(c)
-	} else {
-		return c.Conn.Close()
+		return c.pool.Put(c)
 	}
-	return nil
+	return c.Conn.Close()
 }
 
 // Send writes data to the connection. It retrieves a new connection from its pool if it fails
@@ -125,20 +123,24 @@ func (c *PoolConn) RecvTill(til []byte, retry ...Retry) ([]byte, error) {
 
 // RecvWithTimeout reads data from the connection with timeout.
 func (c *PoolConn) RecvWithTimeout(length int, timeout time.Duration, retry ...Retry) (data []byte, err error) {
-	if err := c.SetReceiveDeadline(time.Now().Add(timeout)); err != nil {
+	if err := c.SetDeadlineRecv(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer c.SetReceiveDeadline(time.Time{})
+	defer func() {
+		_ = c.SetDeadlineRecv(time.Time{})
+	}()
 	data, err = c.Recv(length, retry...)
 	return
 }
 
 // SendWithTimeout writes data to the connection with timeout.
 func (c *PoolConn) SendWithTimeout(data []byte, timeout time.Duration, retry ...Retry) (err error) {
-	if err := c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
+	if err := c.SetDeadlineSend(time.Now().Add(timeout)); err != nil {
 		return err
 	}
-	defer c.SetSendDeadline(time.Time{})
+	defer func() {
+		_ = c.SetDeadlineSend(time.Time{})
+	}()
 	err = c.Send(data, retry...)
 	return
 }

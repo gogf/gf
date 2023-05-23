@@ -195,6 +195,7 @@ func Test_Config4(t *testing.T) {
 		t.Assert(gins.Config("test").MustGet(ctx, "redis.disk"), `{"address":"127.0.0.1:6379","db":1}`)
 	})
 }
+
 func Test_Basic2(t *testing.T) {
 	config := `log-path = "logs"`
 	gtest.C(t, func(t *gtest.T) {

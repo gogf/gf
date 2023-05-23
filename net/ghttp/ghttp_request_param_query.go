@@ -7,6 +7,8 @@
 package ghttp
 
 import (
+	"net/http"
+
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -33,7 +35,7 @@ func (r *Request) GetQuery(key string, def ...interface{}) *gvar.Var {
 			return gvar.New(value)
 		}
 	}
-	if r.Method == "GET" {
+	if r.Method == http.MethodGet {
 		r.parseBody()
 	}
 	if len(r.bodyMap) > 0 {
@@ -55,7 +57,7 @@ func (r *Request) GetQuery(key string, def ...interface{}) *gvar.Var {
 // in order of priority: query > body.
 func (r *Request) GetQueryMap(kvMap ...map[string]interface{}) map[string]interface{} {
 	r.parseQuery()
-	if r.Method == "GET" {
+	if r.Method == http.MethodGet {
 		r.parseBody()
 	}
 	var m map[string]interface{}
@@ -95,7 +97,9 @@ func (r *Request) GetQueryMap(kvMap ...map[string]interface{}) map[string]interf
 }
 
 // GetQueryMapStrStr retrieves and returns all parameters passed from the client using the HTTP GET method as a
-//  map[string]string. The parameter `kvMap` specifies the keys
+//
+//	map[string]string. The parameter `kvMap` specifies the keys
+//
 // retrieving from client parameters, the associated values are the default values if the client
 // does not pass.
 func (r *Request) GetQueryMapStrStr(kvMap ...map[string]interface{}) map[string]string {
