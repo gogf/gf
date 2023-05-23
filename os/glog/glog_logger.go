@@ -130,21 +130,26 @@ func (l *Logger) print(ctx context.Context, level int, stack string, values ...i
 
 	// Time.
 	timeFormat := ""
-	if l.config.Flags&F_TIME_DATE > 0 {
-		timeFormat += "2006-01-02"
-	}
-	if l.config.Flags&F_TIME_TIME > 0 {
-		if timeFormat != "" {
-			timeFormat += " "
+	if l.config.TimeFormat != "" {
+		timeFormat = l.config.TimeFormat
+	} else {
+		if l.config.Flags&F_TIME_DATE > 0 {
+			timeFormat += "2006-01-02"
 		}
-		timeFormat += "15:04:05"
-	}
-	if l.config.Flags&F_TIME_MILLI > 0 {
-		if timeFormat != "" {
-			timeFormat += " "
+		if l.config.Flags&F_TIME_TIME > 0 {
+			if timeFormat != "" {
+				timeFormat += " "
+			}
+			timeFormat += "15:04:05"
 		}
-		timeFormat += "15:04:05.000"
+		if l.config.Flags&F_TIME_MILLI > 0 {
+			if timeFormat != "" {
+				timeFormat += " "
+			}
+			timeFormat += "15:04:05.000"
+		}
 	}
+
 	if len(timeFormat) > 0 {
 		input.TimeFormat = now.Format(timeFormat)
 	}

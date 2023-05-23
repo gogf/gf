@@ -10,8 +10,10 @@ import (
 	"bytes"
 	"context"
 	"os"
+	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -86,6 +88,26 @@ func Test_SetFile(t *testing.T) {
 	defer glog.SetDefaultLogger(defaultLog)
 	gtest.C(t, func(t *gtest.T) {
 		glog.SetFile("test.log")
+	})
+}
+
+func Test_SetTimeFormat(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		w := bytes.NewBuffer(nil)
+		l := glog.NewWithWriter(w)
+
+		l.SetTimeFormat("2006-01-02T15:04:05.000Z07:00")
+		l.Debug(ctx, "test")
+
+		t.AssertGE(len(strings.Split(w.String(), "[DEBU]")), 1)
+		datetime := strings.Trim(strings.Split(w.String(), "[DEBU]")[0], " ")
+
+		_, err := time.Parse("2006-01-02T15:04:05.000Z07:00", datetime)
+		t.AssertNil(err)
+		_, err = time.Parse("2006-01-02 15:04:05.000", datetime)
+		t.AssertNE(err, nil)
+		_, err = time.Parse("Mon, 02 Jan 2006 15:04:05 -0700", datetime)
+		t.AssertNE(err, nil)
 	})
 }
 
