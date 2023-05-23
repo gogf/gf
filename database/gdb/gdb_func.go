@@ -66,10 +66,10 @@ var (
 	// quoteWordReg is the regular expression object for a word check.
 	quoteWordReg = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
 
-	// Priority tags for struct converting for orm field mapping.
+	// structTagPriority tags for struct converting for orm field mapping.
 	structTagPriority = append([]string{OrmTagForStruct}, gconv.StructTagPriority...)
 
-	//checkLocalTypeForFieldKeyFuncMap custom type conversion.
+	// checkLocalTypeForFieldKeyFuncMap custom type conversion.
 	checkLocalTypeForFieldKeyFuncMap = gmap.NewStrAnyMap(true)
 )
 
