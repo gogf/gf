@@ -129,7 +129,7 @@ type cBuildInput struct {
 	VarMap        g.Map  `short:"r"  name:"varMap"  brief:"custom built embedded variable into binary"`
 	PackSrc       string `short:"ps" name:"packSrc" brief:"pack one or more folders into one go file before building"`
 	PackDst       string `short:"pd" name:"packDst" brief:"temporary go file path for pack, this go file will be automatically removed after built" d:"internal/packed/build_pack_data.go"`
-	ExitWhenError bool   `short:"ew" name:"exitWhenError" brief:"exit building when any error occurs, default is false" orphan:"true"`
+	ExitWhenError bool   `short:"ew" name:"exitWhenError" brief:"exit building when any error occurs, specially for multiple arch and system buildings. default is false" orphan:"true"`
 	DumpENV       bool   `short:"de" name:"dumpEnv" brief:"dump current go build environment before building binary" orphan:"true"`
 }
 
@@ -143,7 +143,7 @@ func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, e
 
 	mlog.SetHeaderPrint(true)
 
-	mlog.Debugf(`build input: %+v`, in)
+	mlog.Debugf(`build command input: %+v`, in)
 	// Necessary check.
 	if gproc.SearchBinary("go") == "" {
 		mlog.Fatalf(`command "go" not found in your environment, please install golang first to proceed this command`)
