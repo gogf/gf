@@ -8,6 +8,7 @@ package gutil
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"reflect"
@@ -468,4 +469,16 @@ func addSlashesForString(s string) string {
 		"\t": `\t`,
 		"\n": `\n`,
 	})
+}
+
+// DumpJson pretty dumps json content to stdout.
+func DumpJson(jsonContent string) {
+	var (
+		buffer    = bytes.NewBuffer(nil)
+		jsonBytes = []byte(jsonContent)
+	)
+	if err := json.Indent(buffer, jsonBytes, "", "\t"); err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println(buffer.String())
 }

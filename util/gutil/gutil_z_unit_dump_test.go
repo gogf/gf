@@ -288,3 +288,10 @@ func Test_Dump_Cycle_Attribute(t *testing.T) {
 		t.Assert(gstr.Contains(buffer.String(), "cycle"), true)
 	})
 }
+
+func Test_DumpJson(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var jsonContent = `{"a":1,"b":2}`
+		gutil.DumpJson(jsonContent)
+	})
+}
