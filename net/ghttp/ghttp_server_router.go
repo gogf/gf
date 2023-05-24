@@ -82,7 +82,6 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 	if handler.Name == "" {
 		handler.Name = runtime.FuncForPC(handler.Info.Value.Pointer()).Name()
 	}
-	handler.Id = handlerIdGenerator.Add(1)
 	if handler.Source == "" {
 		_, file, line := gdebug.CallerWithFilter([]string{consts.StackFilterKeyForGoFrame})
 		handler.Source = fmt.Sprintf(`%s:%d`, file, line)
@@ -111,7 +110,9 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 		if gstr.Contains(method, ",") {
 			methods := gstr.SplitAndTrim(method, ",")
 			for _, v := range methods {
-				s.doSetHandler(ctx, handler, prefix, uri, pattern, v, domain)
+				// Each method has it own handler.
+				clonedHandler := *handler
+				s.doSetHandler(ctx, &clonedHandler, prefix, uri, pattern, v, domain)
 			}
 			return
 		}
@@ -171,6 +172,8 @@ func (s *Server) doSetHandler(
 			}
 		}
 	}
+	// Unique id for each handler.
+	handler.Id = handlerIdGenerator.Add(1)
 	// Create a new router by given parameter.
 	handler.Router = &Router{
 		Uri:      uri,

@@ -107,6 +107,22 @@ func Test_OpenApi_Multiple_Methods_Swagger(t *testing.T) {
 		t.AssertNE(openapi.Paths["/test"].Post, nil)
 		t.AssertNE(openapi.Paths["/test/error"].Get, nil)
 		t.AssertNE(openapi.Paths["/test/error"].Post, nil)
+
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		// Only works on GET & POST methods.
+		t.Assert(c.GetContent(ctx, "/test?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18,"Name":"john"}}`)
+		t.Assert(c.GetContent(ctx, "/test/error"), `{"code":50,"message":"error","data":{"Id":1,"Age":0,"Name":""}}`)
+		t.Assert(c.PostContent(ctx, "/test?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18,"Name":"john"}}`)
+		t.Assert(c.PostContent(ctx, "/test/error"), `{"code":50,"message":"error","data":{"Id":1,"Age":0,"Name":""}}`)
+
+		// Not works on other methods.
+		t.Assert(c.PutContent(ctx, "/test?age=18&name=john"), `{"code":65,"message":"Not Found","data":null}`)
+		t.Assert(c.PutContent(ctx, "/test/error"), `{"code":65,"message":"Not Found","data":null}`)
+
+		t.Assert(gstr.Contains(c.GetContent(ctx, "/swagger/"), `API Reference`), true)
+		t.Assert(gstr.Contains(c.GetContent(ctx, "/api.json"), `/test/error`), true)
 	})
 }
 
@@ -152,5 +168,16 @@ func Test_OpenApi_Method_All_Swagger(t *testing.T) {
 		t.AssertNE(openapi.Paths["/test/error"].Get, nil)
 		t.AssertNE(openapi.Paths["/test/error"].Post, nil)
 		t.AssertNE(openapi.Paths["/test/error"].Delete, nil)
+
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		t.Assert(c.GetContent(ctx, "/test?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18,"Name":"john"}}`)
+		t.Assert(c.GetContent(ctx, "/test/error"), `{"code":50,"message":"error","data":{"Id":1,"Age":0,"Name":""}}`)
+		t.Assert(c.PostContent(ctx, "/test?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18,"Name":"john"}}`)
+		t.Assert(c.PostContent(ctx, "/test/error"), `{"code":50,"message":"error","data":{"Id":1,"Age":0,"Name":""}}`)
+
+		t.Assert(gstr.Contains(c.GetContent(ctx, "/swagger/"), `API Reference`), true)
+		t.Assert(gstr.Contains(c.GetContent(ctx, "/api.json"), `/test/error`), true)
 	})
 }
