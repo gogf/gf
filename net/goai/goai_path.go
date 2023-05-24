@@ -310,6 +310,11 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 }
 
 func (oai *OpenApiV3) removeOperationDuplicatedProperties(operation Operation) {
+	if len(operation.Parameters) == 0 {
+		// Nothing to do.
+		return
+	}
+
 	var (
 		duplicatedParameterNames []interface{}
 		dataField                string

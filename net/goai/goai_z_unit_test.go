@@ -598,9 +598,7 @@ func TestOpenApiV3_CommonResponse_EmptyResponse(t *testing.T) {
 		// fmt.Println(oai.String())
 		t.Assert(len(oai.Components.Schemas.Map()), 3)
 		t.Assert(len(oai.Paths), 1)
-		t.Assert(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Ref, ``)
-		t.AssertNE(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value, ``)
-		t.Assert(len(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties.Map()), 2)
+		t.Assert(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Ref, `github.com.gogf.gf.v2.net.goai_test.Req`)
 		t.Assert(len(oai.Paths["/index"].Put.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Map()), 3)
 	})
 }
