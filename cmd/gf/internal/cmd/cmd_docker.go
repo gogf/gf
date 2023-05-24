@@ -92,15 +92,15 @@ type cDockerInput struct {
 type cDockerOutput struct{}
 
 func (c cDocker) Index(ctx context.Context, in cDockerInput) (out *cDockerOutput, err error) {
-	mlog.Debugf(`docker command input: %+v`, in)
-
 	// Necessary check.
 	if gproc.SearchBinary("docker") == "" {
 		mlog.Fatalf(`command "docker" not found in your environment, please install docker first to proceed this command`)
 	}
 
+	mlog.Debugf(`docker command input: %+v`, in)
+
 	// Binary build.
-	in.Build += " --exit"
+	in.Build += " --exitWhenError"
 	if in.Main != "" {
 		if err = gproc.ShellRun(ctx, fmt.Sprintf(`gf build %s %s`, in.Main, in.Build)); err != nil {
 			mlog.Debugf(`build binary failed with error: %+v`, err)
