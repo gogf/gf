@@ -66,3 +66,91 @@ func Test_OpenApi_Swagger(t *testing.T) {
 		t.Assert(gstr.Contains(c.GetContent(ctx, "/api.json"), `/test/error`), true)
 	})
 }
+
+func Test_OpenApi_Multiple_Methods_Swagger(t *testing.T) {
+	type TestReq struct {
+		gmeta.Meta `method:"get,post" summary:"Test summary" tags:"Test"`
+		Age        int
+		Name       string
+	}
+	type TestRes struct {
+		Id   int
+		Age  int
+		Name string
+	}
+	s := g.Server(guid.S())
+	s.SetSwaggerPath("/swagger")
+	s.SetOpenApiPath("/api.json")
+	s.Use(ghttp.MiddlewareHandlerResponse)
+	s.BindHandler("/test", func(ctx context.Context, req *TestReq) (res *TestRes, err error) {
+		return &TestRes{
+			Id:   1,
+			Age:  req.Age,
+			Name: req.Name,
+		}, nil
+	})
+	s.BindHandler("/test/error", func(ctx context.Context, req *TestReq) (res *TestRes, err error) {
+		return &TestRes{
+			Id:   1,
+			Age:  req.Age,
+			Name: req.Name,
+		}, gerror.New("error")
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		openapi := s.GetOpenApi()
+		t.AssertNE(openapi.Paths["/test"].Get, nil)
+		t.AssertNE(openapi.Paths["/test"].Post, nil)
+		t.AssertNE(openapi.Paths["/test/error"].Get, nil)
+		t.AssertNE(openapi.Paths["/test/error"].Post, nil)
+	})
+}
+
+func Test_OpenApi_Method_All_Swagger(t *testing.T) {
+	type TestReq struct {
+		gmeta.Meta `method:"all" summary:"Test summary" tags:"Test"`
+		Age        int
+		Name       string
+	}
+	type TestRes struct {
+		Id   int
+		Age  int
+		Name string
+	}
+	s := g.Server(guid.S())
+	s.SetSwaggerPath("/swagger")
+	s.SetOpenApiPath("/api.json")
+	s.Use(ghttp.MiddlewareHandlerResponse)
+	s.BindHandler("/test", func(ctx context.Context, req *TestReq) (res *TestRes, err error) {
+		return &TestRes{
+			Id:   1,
+			Age:  req.Age,
+			Name: req.Name,
+		}, nil
+	})
+	s.BindHandler("/test/error", func(ctx context.Context, req *TestReq) (res *TestRes, err error) {
+		return &TestRes{
+			Id:   1,
+			Age:  req.Age,
+			Name: req.Name,
+		}, gerror.New("error")
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		openapi := s.GetOpenApi()
+		t.AssertNE(openapi.Paths["/test"].Get, nil)
+		t.AssertNE(openapi.Paths["/test"].Post, nil)
+		t.AssertNE(openapi.Paths["/test"].Delete, nil)
+		t.AssertNE(openapi.Paths["/test/error"].Get, nil)
+		t.AssertNE(openapi.Paths["/test/error"].Post, nil)
+		t.AssertNE(openapi.Paths["/test/error"].Delete, nil)
+	})
+}
