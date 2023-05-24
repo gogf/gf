@@ -91,9 +91,10 @@ func (s *Server) mergeBuildInNameToPattern(pattern string, structName, methodNam
 		return pattern
 	}
 	// Check domain parameter.
-	array := strings.Split(pattern, "@")
-	uri := array[0]
-	uri = strings.TrimRight(uri, "/") + "/" + methodName
+	var (
+		array = strings.Split(pattern, "@")
+		uri   = strings.TrimRight(array[0], "/") + "/" + methodName
+	)
 	// Append the domain parameter to URI.
 	if len(array) > 1 {
 		return uri + "@" + array[1]

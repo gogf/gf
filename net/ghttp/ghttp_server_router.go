@@ -82,7 +82,6 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 	if handler.Name == "" {
 		handler.Name = runtime.FuncForPC(handler.Info.Value.Pointer()).Name()
 	}
-	handler.Id = handlerIdGenerator.Add(1)
 	if handler.Source == "" {
 		_, file, line := gdebug.CallerWithFilter([]string{consts.StackFilterKeyForGoFrame})
 		handler.Source = fmt.Sprintf(`%s:%d`, file, line)
@@ -92,21 +91,50 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 		s.Logger().Fatalf(ctx, `invalid pattern "%s", %+v`, pattern, err)
 		return
 	}
-
+	// ====================================================================================
 	// Change the registered route according to meta info from its request structure.
+	// It supports multiple methods that are joined using char `,`.
+	// ====================================================================================
 	if handler.Info.Type != nil && handler.Info.Type.NumIn() == 2 {
 		var objectReq = reflect.New(handler.Info.Type.In(1))
 		if v := gmeta.Get(objectReq, gtag.Path); !v.IsEmpty() {
 			uri = v.String()
 		}
-		if v := gmeta.Get(objectReq, gtag.Method); !v.IsEmpty() {
-			method = v.String()
-		}
 		if v := gmeta.Get(objectReq, gtag.Domain); !v.IsEmpty() {
 			domain = v.String()
 		}
+		if v := gmeta.Get(objectReq, gtag.Method); !v.IsEmpty() {
+			method = v.String()
+		}
+		// Multiple methods registering, which are joined using char `,`.
+		if gstr.Contains(method, ",") {
+			methods := gstr.SplitAndTrim(method, ",")
+			for _, v := range methods {
+				// Each method has it own handler.
+				clonedHandler := *handler
+				s.doSetHandler(ctx, &clonedHandler, prefix, uri, pattern, v, domain)
+			}
+			return
+		}
+		// Converts `all` to `ALL`.
+		if gstr.Equal(method, defaultMethod) {
+			method = defaultMethod
+		}
 	}
+	s.doSetHandler(ctx, handler, prefix, uri, pattern, method, domain)
+}
 
+func (s *Server) doSetHandler(
+	ctx context.Context, handler *HandlerItem,
+	prefix, uri, pattern, method, domain string,
+) {
+	if !s.isValidMethod(method) {
+		s.Logger().Fatalf(
+			ctx,
+			`invalid method value "%s", should be in "%s" or "%s"`,
+			method, supportedHttpMethods, defaultMethod,
+		)
+	}
 	// Prefix for URI feature.
 	if prefix != "" {
 		uri = prefix + "/" + strings.TrimLeft(uri, "/")
@@ -118,7 +146,6 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 
 	if len(uri) == 0 || uri[0] != '/' {
 		s.Logger().Fatalf(ctx, `invalid pattern "%s", URI should lead with '/'`, pattern)
-		return
 	}
 
 	// Repeated router checks, this feature can be disabled by server configuration.
@@ -145,6 +172,8 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 			}
 		}
 	}
+	// Unique id for each handler.
+	handler.Id = handlerIdGenerator.Add(1)
 	// Create a new router by given parameter.
 	handler.Router = &Router{
 		Uri:      uri,
@@ -246,6 +275,14 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 
 	// Append the route.
 	s.routesMap[routerKey] = append(s.routesMap[routerKey], handler)
+}
+
+func (s *Server) isValidMethod(method string) bool {
+	if gstr.Equal(method, defaultMethod) {
+		return true
+	}
+	_, ok := methodsMap[strings.ToUpper(method)]
+	return ok
 }
 
 // compareRouterPriority compares the priority between `newItem` and `oldItem`. It returns true

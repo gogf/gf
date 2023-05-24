@@ -88,7 +88,7 @@ func (s *Server) doBindObject(ctx context.Context, in doBindObjectInput) {
 		s.Logger().Fatalf(ctx, `%+v`, err)
 		return
 	}
-	if strings.EqualFold(method, defaultMethod) {
+	if gstr.Equal(method, defaultMethod) {
 		in.Pattern = s.serveHandlerKey("", path, domain)
 	}
 	var (
