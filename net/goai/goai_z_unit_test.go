@@ -114,7 +114,11 @@ func TestOpenApiV3_Add(t *testing.T) {
 		// Schema asserts.
 		t.Assert(len(oai.Components.Schemas.Map()), 3)
 		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.CreateResourceReq`).Value.Type, goai.TypeObject)
-		t.Assert(len(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.CreateResourceReq`).Value.Properties.Map()), 5)
+
+		t.Assert(len(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.CreateResourceReq`).Value.Properties.Map()), 7)
+		t.Assert(len(oai.Paths["/test1/{appId}"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties.Map()), 5)
+		t.Assert(len(oai.Paths["/test1/{appId}"].Post.RequestBody.Value.Content["application/json"].Schema.Value.Properties.Map()), 5)
+
 		t.Assert(oai.Paths["/test1/{appId}"].Post.Parameters[0].Value.Schema.Value.Type, goai.TypeInteger)
 		t.Assert(oai.Paths["/test1/{appId}"].Post.Parameters[1].Value.Schema.Value.Type, goai.TypeString)
 
@@ -594,7 +598,9 @@ func TestOpenApiV3_CommonResponse_EmptyResponse(t *testing.T) {
 		// fmt.Println(oai.String())
 		t.Assert(len(oai.Components.Schemas.Map()), 3)
 		t.Assert(len(oai.Paths), 1)
-		t.Assert(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Ref, `github.com.gogf.gf.v2.net.goai_test.Req`)
+		t.Assert(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Ref, ``)
+		t.AssertNE(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value, ``)
+		t.Assert(len(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties.Map()), 2)
 		t.Assert(len(oai.Paths["/index"].Put.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Map()), 3)
 	})
 }

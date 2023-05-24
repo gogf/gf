@@ -332,10 +332,15 @@ func (oai *OpenApiV3) removeOperationDuplicatedProperties(operation Operation) {
 		}
 
 		// Check request body schema ref.
-		if schema := oai.Components.Schemas.Get(requestBodyContent.Schema.Ref); schema != nil {
-			schema.Value.Required = oai.removeItemsFromArray(schema.Value.Required, duplicatedParameterNames)
-			schema.Value.Properties.Removes(duplicatedParameterNames)
-			continue
+		if requestBodyContent.Schema.Ref != "" {
+			if schema := oai.Components.Schemas.Get(requestBodyContent.Schema.Ref); schema != nil {
+				newSchema := schema.Value.Clone()
+				requestBodyContent.Schema.Ref = ""
+				requestBodyContent.Schema.Value = newSchema
+				newSchema.Required = oai.removeItemsFromArray(newSchema.Required, duplicatedParameterNames)
+				newSchema.Properties.Removes(duplicatedParameterNames)
+				continue
+			}
 		}
 
 		// Check the Value public field for the request body.
