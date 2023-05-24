@@ -114,7 +114,11 @@ func TestOpenApiV3_Add(t *testing.T) {
 		// Schema asserts.
 		t.Assert(len(oai.Components.Schemas.Map()), 3)
 		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.CreateResourceReq`).Value.Type, goai.TypeObject)
-		t.Assert(len(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.CreateResourceReq`).Value.Properties.Map()), 5)
+
+		t.Assert(len(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.CreateResourceReq`).Value.Properties.Map()), 7)
+		t.Assert(len(oai.Paths["/test1/{appId}"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties.Map()), 5)
+		t.Assert(len(oai.Paths["/test1/{appId}"].Post.RequestBody.Value.Content["application/json"].Schema.Value.Properties.Map()), 5)
+
 		t.Assert(oai.Paths["/test1/{appId}"].Post.Parameters[0].Value.Schema.Value.Type, goai.TypeInteger)
 		t.Assert(oai.Paths["/test1/{appId}"].Post.Parameters[1].Value.Schema.Value.Type, goai.TypeString)
 
