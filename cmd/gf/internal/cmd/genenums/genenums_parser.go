@@ -21,7 +21,7 @@ const pkgLoadMode = 0xffffff
 type EnumsParser struct {
 	enums     []EnumItem
 	parsedPkg map[string]struct{}
-	prefix    string
+	prefixes  []string
 }
 
 type EnumItem struct {
@@ -43,11 +43,11 @@ func init() {
 	}
 }
 
-func NewEnumsParser(prefix string) *EnumsParser {
+func NewEnumsParser(prefixes []string) *EnumsParser {
 	return &EnumsParser{
 		enums:     make([]EnumItem, 0),
 		parsedPkg: make(map[string]struct{}),
-		prefix:    prefix,
+		prefixes:  prefixes,
 	}
 }
 
@@ -67,9 +67,16 @@ func (p *EnumsParser) ParsePackage(pkg *packages.Package) {
 		return
 	}
 	p.parsedPkg[pkg.ID] = struct{}{}
-	// Only parse specified prefix.
-	if p.prefix != "" {
-		if !gstr.HasPrefix(pkg.ID, p.prefix) {
+
+	// Only parse specified prefixes.
+	if len(p.prefixes) > 0 {
+		var hasPrefix bool
+		for _, prefix := range p.prefixes {
+			if hasPrefix = gstr.HasPrefix(pkg.ID, prefix); hasPrefix {
+				break
+			}
+		}
+		if !hasPrefix {
 			return
 		}
 	}
@@ -108,7 +115,6 @@ func (p *EnumsParser) ParsePackage(pkg *packages.Package) {
 			Type:  enumType,
 			Kind:  enumKind,
 		})
-
 	}
 	for _, im := range pkg.Imports {
 		p.ParsePackage(im)
