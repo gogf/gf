@@ -45,6 +45,7 @@ type options struct {
 	clusterName string
 	groupName   string
 	contextPath string
+	version     string
 }
 
 // New create nacos registry.
@@ -57,6 +58,7 @@ func New(address []string, opts ...Option) *Registry {
 		clusterName: gsvc.DefaultHead,
 		groupName:   gsvc.DefaultDeployment,
 		contextPath: DefaultContextPath,
+		version:     gsvc.DefaultVersion,
 	}
 
 	// apply options
@@ -105,9 +107,9 @@ func New(address []string, opts ...Option) *Registry {
 
 func getServiceFromInstances(key string, opts *options, client naming_client.INamingClient) ([]gsvc.Service, error) {
 	var (
-		name    = gstr.Join(gstr.Split(key, gsvc.DefaultSeparator)[4:len(gstr.Split(key, gsvc.DefaultSeparator))-1], "/")
-		split   = gstr.Split(key, gsvc.DefaultSeparator)
-		version = split[len(split)-1]
+		versionLength = len(gstr.Split(opts.version, "/"))
+		name          = gstr.Join(gstr.Split(key, gsvc.DefaultSeparator)[4:len(gstr.Split(key, gsvc.DefaultSeparator))-versionLength], "/")
+		version       = opts.version
 	)
 	instances, err := client.SelectInstances(vo.SelectInstancesParam{
 		ServiceName: key,

@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gsvc"
-	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/nacos-group/nacos-sdk-go/v2/vo"
 )
 
@@ -22,8 +21,9 @@ func (r Registry) Register(ctx context.Context, service gsvc.Service) (registere
 	if service.GetVersion() == "" {
 		version = gsvc.DefaultVersion
 	} else {
-		version = gstr.Join(gstr.Split(service.GetVersion(), "/"), "-")
+		version = service.GetVersion()
 	}
+	r.opts.version = version
 	s := &gsvc.LocalService{
 		Name:       service.GetName(),
 		Version:    version,

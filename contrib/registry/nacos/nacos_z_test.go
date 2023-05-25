@@ -57,7 +57,7 @@ func TestSearch(t *testing.T) {
 		Name:      "goframe/provider/0/tcp",
 		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:8080"),
-		Version:   "test",
+		Version:   "test/gf",
 	}
 
 	gtest.C(t, func(t *gtest.T) {
