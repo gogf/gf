@@ -30,13 +30,13 @@ func NewReadCloser(content []byte, repeatable bool) io.ReadCloser {
 
 // Read implements the io.ReadCloser interface.
 func (b *ReadCloser) Read(p []byte) (n int, err error) {
-	// Make it repeatable reading.
-	if b.index >= len(b.content) && b.repeatable {
-		b.index = 0
-	}
 	n = copy(p, b.content[b.index:])
 	b.index += n
 	if b.index >= len(b.content) {
+		// Make it repeatable reading.
+		if b.repeatable {
+			b.index = 0
+		}
 		return n, io.EOF
 	}
 	return n, nil
