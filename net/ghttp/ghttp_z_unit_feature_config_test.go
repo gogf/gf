@@ -155,7 +155,7 @@ func Test_ClientMaxBodySize_File(t *testing.T) {
 		defer gfile.Remove(path)
 		t.Assert(
 			gstr.Trim(c.PostContent(ctx, "/", "name=john&file=@file:"+path)),
-			"r.ParseMultipartForm failed: http: request body too large",
+			"Read from request Body failed: http: request body too large",
 		)
 	})
 }
