@@ -154,13 +154,13 @@ jobs:
         ports:
           - 2181:2181
 
+
       nacos:
         image: loads/nacos-server:v2.2.2
         env:
-          PREFER_HOST_MODE: hostname
           MODE: standalone
         ports:
-          - 8848:8848
+          - 8850:8850
 
     strategy:
       matrix:
