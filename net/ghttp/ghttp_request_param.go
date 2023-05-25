@@ -154,6 +154,13 @@ func (r *Request) Get(key string, def ...interface{}) *gvar.Var {
 // It can be called multiple times retrieving the same body content.
 func (r *Request) GetBody() []byte {
 	if r.bodyContent == nil {
+		r.bodyContent = r.makeBodyRepeatableRead(true)
+	}
+	return r.bodyContent
+}
+
+func (r *Request) makeBodyRepeatableRead(repeatableRead bool) []byte {
+	if r.bodyContent == nil {
 		var err error
 		if r.bodyContent, err = ioutil.ReadAll(r.Body); err != nil {
 			errMsg := `Read from request Body failed`
@@ -162,8 +169,8 @@ func (r *Request) GetBody() []byte {
 			}
 			panic(gerror.WrapCode(gcode.CodeInternalError, err, errMsg))
 		}
-		r.Body = utils.NewReadCloser(r.bodyContent, true)
 	}
+	r.Body = utils.NewReadCloser(r.bodyContent, repeatableRead)
 	return r.bodyContent
 }
 
@@ -261,6 +268,8 @@ func (r *Request) parseForm() {
 		return
 	}
 	if contentType := r.Header.Get("Content-Type"); contentType != "" {
+		// Mark the request body content can be read just once next time.
+		r.makeBodyRepeatableRead(false)
 		var err error
 		if gstr.Contains(contentType, "multipart/") {
 			// multipart/form-data, multipart/mixed
@@ -274,7 +283,7 @@ func (r *Request) parseForm() {
 			}
 		}
 		if len(r.PostForm) > 0 {
-			// Re-parse the form data using united parsing way.
+			// Parse the form data using united parsing way.
 			params := ""
 			for name, values := range r.PostForm {
 				// Invalid parameter name.
