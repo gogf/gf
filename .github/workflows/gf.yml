@@ -155,7 +155,7 @@ jobs:
           - 2181:2181
 
       nacos:
-        image: loads/nacos-server:2.2.2
+        image: loads/nacos-server:v2.2.2
         ports:
           - 8848:8848
 
