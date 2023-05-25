@@ -654,6 +654,7 @@ func TestStrArray_Json(t *testing.T) {
 
 		a2 := garray.NewStrArray()
 		err1 = json.UnmarshalUseNumber(b2, &a2)
+		t.AssertNil(err1)
 		t.Assert(a2.Slice(), s1)
 
 		var a3 garray.StrArray
@@ -672,6 +673,7 @@ func TestStrArray_Json(t *testing.T) {
 
 		a2 := garray.NewStrArray()
 		err1 = json.UnmarshalUseNumber(b2, &a2)
+		t.AssertNil(err1)
 		t.Assert(a2.Slice(), s1)
 
 		var a3 garray.StrArray

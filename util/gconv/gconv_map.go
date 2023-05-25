@@ -231,7 +231,7 @@ type doMapConvertForMapOrStructValueInput struct {
 }
 
 func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) interface{} {
-	if in.IsRoot == false && in.RecursiveOption == false {
+	if !in.IsRoot && !in.RecursiveOption {
 		return in.Value
 	}
 

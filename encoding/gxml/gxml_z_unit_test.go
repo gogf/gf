@@ -73,7 +73,7 @@ func Test_XmlToJson(t *testing.T) {
 			t.Errorf("dstXml to json error. %s", dstXml)
 		}
 
-		if bytes.Compare(srcJson, dstJson) != 0 {
+		if !bytes.Equal(srcJson, dstJson) {
 			t.Errorf("convert to json error. srcJson:%s, dstJson:%s", string(srcJson), string(dstJson))
 		}
 

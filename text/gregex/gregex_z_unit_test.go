@@ -200,7 +200,7 @@ func Test_ReplaceFun(t *testing.T) {
 		wanted := "acbb[x" + wantSubs + "y]dd"
 		wanted = "acbb" + "3个a" + "dd"
 		replacedStr, err := gregex.ReplaceFunc(re, []byte(s), func(s []byte) []byte {
-			if strings.Index(string(s), "aaa") >= 0 {
+			if strings.Contains(string(s), "aaa") {
 				return []byte("3个a")
 			}
 			return []byte("[x" + string(s) + "y]")
@@ -258,7 +258,7 @@ func Test_ReplaceStringFunc(t *testing.T) {
 		wanted := "acbb[x" + wantSubs + "y]dd"
 		wanted = "acbb" + "3个a" + "dd"
 		replacedStr, err := gregex.ReplaceStringFunc(re, s, func(s string) string {
-			if strings.Index(s, "aaa") >= 0 {
+			if strings.Contains(s, "aaa") {
 				return "3个a"
 			}
 			return "[x" + s + "y]"

@@ -35,7 +35,7 @@ func TestIsEmpty(t *testing.T) {
 		tmpT1 := "0"
 		tmpT2 := func() {}
 		tmpT2 = nil
-		tmpT3 := make(chan int, 0)
+		tmpT3 := make(chan int)
 		var (
 			tmpT4 TestPerson  = nil
 			tmpT5 *TestPerson = nil

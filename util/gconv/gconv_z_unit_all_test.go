@@ -590,11 +590,9 @@ func Test_String_All(t *testing.T) {
 		t.AssertEQ(gconv.String(boolStruct{}), "{}")
 		t.AssertEQ(gconv.String(&boolStruct{}), "{}")
 
-		var info iString
-		info = new(S)
+		var info = new(S)
 		t.AssertEQ(gconv.String(info), "22222")
-		var errInfo iError
-		errInfo = new(S1)
+		var errInfo = new(S1)
 		t.AssertEQ(gconv.String(errInfo), "22222")
 	})
 }
