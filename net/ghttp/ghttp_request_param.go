@@ -154,12 +154,12 @@ func (r *Request) Get(key string, def ...interface{}) *gvar.Var {
 // It can be called multiple times retrieving the same body content.
 func (r *Request) GetBody() []byte {
 	if r.bodyContent == nil {
-		r.bodyContent = r.makeBodyRepeatableRead(true)
+		r.bodyContent = r.MakeBodyRepeatableRead(true)
 	}
 	return r.bodyContent
 }
 
-func (r *Request) makeBodyRepeatableRead(repeatableRead bool) []byte {
+func (r *Request) MakeBodyRepeatableRead(repeatableRead bool) []byte {
 	if r.bodyContent == nil {
 		var err error
 		if r.bodyContent, err = ioutil.ReadAll(r.Body); err != nil {
@@ -268,8 +268,8 @@ func (r *Request) parseForm() {
 		return
 	}
 	if contentType := r.Header.Get("Content-Type"); contentType != "" {
-		// Mark the request body content can be read just once next time.
-		r.makeBodyRepeatableRead(false)
+		r.MakeBodyRepeatableRead(true)
+
 		var err error
 		if gstr.Contains(contentType, "multipart/") {
 			// multipart/form-data, multipart/mixed
