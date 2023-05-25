@@ -75,7 +75,7 @@ func (view *View) SetConfig(config Config) error {
 
 // SetConfigWithMap set configurations with map for the view.
 func (view *View) SetConfigWithMap(m map[string]interface{}) error {
-	if m == nil || len(m) == 0 {
+	if len(m) == 0 {
 		return gerror.NewCode(gcode.CodeInvalidParameter, "configuration cannot be empty")
 	}
 	// The m now is a shallow copy of m.
