@@ -97,10 +97,13 @@ func (c cDocker) Index(ctx context.Context, in cDockerInput) (out *cDockerOutput
 		mlog.Fatalf(`command "docker" not found in your environment, please install docker first to proceed this command`)
 	}
 
+	mlog.Debugf(`docker command input: %+v`, in)
+
 	// Binary build.
-	in.Build += " --exit"
+	in.Build += " --exitWhenError"
 	if in.Main != "" {
 		if err = gproc.ShellRun(ctx, fmt.Sprintf(`gf build %s %s`, in.Main, in.Build)); err != nil {
+			mlog.Debugf(`build binary failed with error: %+v`, err)
 			return
 		}
 	}
@@ -108,6 +111,7 @@ func (c cDocker) Index(ctx context.Context, in cDockerInput) (out *cDockerOutput
 	// Shell executing.
 	if in.Shell != "" && gfile.Exists(in.Shell) {
 		if err = c.exeDockerShell(ctx, in.Shell); err != nil {
+			mlog.Debugf(`build docker failed with error: %+v`, err)
 			return
 		}
 	}
