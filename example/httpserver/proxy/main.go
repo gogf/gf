@@ -44,6 +44,7 @@ func StartServer2() {
 		)
 		r.Request.URL.Path = proxyToPath
 		g.Log().Infof(r.Context(), `server2:"%s" -> server1:"%s"`, originalPath, proxyToPath)
+		r.MakeBodyRepeatableRead(false)
 		proxy.ServeHTTP(r.Response.Writer.RawWriter(), r.Request)
 	})
 	s.SetPort(PortOfServer2)
