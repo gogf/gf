@@ -157,7 +157,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*Han
 				item := e.Value.(*HandlerItem)
 				// Filter repeated handler items, especially the middleware and hook handlers.
 				// It is necessary, do not remove this checks logic unless you really know how it is necessary.
-				if _, ok := repeatHandlerCheckMap[item.Id]; ok {
+				if _, isRepeatedHandler := repeatHandlerCheckMap[item.Id]; isRepeatedHandler {
 					continue
 				} else {
 					repeatHandlerCheckMap[item.Id] = struct{}{}

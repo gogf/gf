@@ -622,6 +622,7 @@ func TestSortedStrArray_Json(t *testing.T) {
 
 		a2 := garray.NewSortedStrArray()
 		err1 = json.UnmarshalUseNumber(b2, &a2)
+		t.AssertNil(err1)
 		t.Assert(a2.Slice(), s2)
 		t.Assert(a2.Interfaces(), s2)
 
@@ -643,6 +644,7 @@ func TestSortedStrArray_Json(t *testing.T) {
 
 		a2 := garray.NewSortedStrArray()
 		err1 = json.UnmarshalUseNumber(b2, &a2)
+		t.AssertNil(err1)
 		t.Assert(a2.Slice(), s2)
 		t.Assert(a2.Interfaces(), s2)
 
