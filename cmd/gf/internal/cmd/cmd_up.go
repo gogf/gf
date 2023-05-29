@@ -11,9 +11,10 @@ import (
 	"fmt"
 	"runtime"
 
+	"github.com/minio/selfupdate"
+
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 	"github.com/gogf/gf/v2/container/gset"
-	"github.com/minio/selfupdate"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/frame/g"
@@ -125,6 +126,8 @@ func (c cUp) doUpgradeVersion(ctx context.Context, in cUpInput) (out *doUpgradeV
 		if gfile.Exists(goModPath) {
 			var packages []Package
 			err = gfile.ReadLines(goModPath, func(line string) error {
+				line = gstr.Trim(line)
+				line = gstr.TrimLeftStr(line, "require ")
 				line = gstr.Trim(line)
 				if gstr.HasPrefix(line, gfPackage) {
 					array := gstr.SplitAndTrim(line, " ")
