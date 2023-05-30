@@ -726,3 +726,37 @@ func Test_Issue2561(t *testing.T) {
 		t.Assert(one[`create_time`], ``)
 	})
 }
+
+// https://github.com/gogf/gf/issues/2439
+func Test_Issue2439(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := gstr.SplitAndTrim(gtest.DataContent(`issue2439.sql`), ";")
+		for _, v := range array {
+			if _, err := db.Exec(ctx, v); err != nil {
+				gtest.Error(err)
+			}
+		}
+		defer dropTable("a")
+		defer dropTable("b")
+		defer dropTable("c")
+
+		orm := db.Model("a")
+		orm = orm.InnerJoin(
+			"c", "a.id=c.id",
+		)
+		orm = orm.InnerJoinOnField("b", "id")
+		whereFormat := fmt.Sprintf(
+			"(`%s`.`%s` LIKE ?) ",
+			"b", "name",
+		)
+		orm = orm.WhereOrf(
+			whereFormat,
+			"%a%",
+		)
+		r, err := orm.All()
+		t.AssertNil(err)
+		t.Assert(len(r), 1)
+		t.Assert(r[0]["id"], 2)
+		t.Assert(r[0]["name"], "a")
+	})
+}

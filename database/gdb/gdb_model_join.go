@@ -67,7 +67,7 @@ func (m *Model) InnerJoin(table ...string) *Model {
 func (m *Model) LeftJoinOnField(table, field string) *Model {
 	return m.doJoin("LEFT", table, fmt.Sprintf(
 		`%s.%s=%s.%s`,
-		m.tables,
+		m.tablesInit,
 		m.db.GetCore().QuoteWord(field),
 		m.db.GetCore().QuoteWord(table),
 		m.db.GetCore().QuoteWord(field),
@@ -82,7 +82,7 @@ func (m *Model) LeftJoinOnField(table, field string) *Model {
 func (m *Model) RightJoinOnField(table, field string) *Model {
 	return m.doJoin("RIGHT", table, fmt.Sprintf(
 		`%s.%s=%s.%s`,
-		m.tables,
+		m.tablesInit,
 		m.db.GetCore().QuoteWord(field),
 		m.db.GetCore().QuoteWord(table),
 		m.db.GetCore().QuoteWord(field),
@@ -97,7 +97,7 @@ func (m *Model) RightJoinOnField(table, field string) *Model {
 func (m *Model) InnerJoinOnField(table, field string) *Model {
 	return m.doJoin("INNER", table, fmt.Sprintf(
 		`%s.%s=%s.%s`,
-		m.tables,
+		m.tablesInit,
 		m.db.GetCore().QuoteWord(field),
 		m.db.GetCore().QuoteWord(table),
 		m.db.GetCore().QuoteWord(field),
