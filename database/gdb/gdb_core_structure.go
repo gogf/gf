@@ -176,12 +176,12 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 	case
 		fieldTypeDecimal,
 		fieldTypeMoney,
+		fieldTypeNumeric,
 		fieldTypeSmallmoney:
 		return LocalTypeString, nil
 	case
 		fieldTypeFloat,
-		fieldTypeDouble,
-		fieldTypeNumeric:
+		fieldTypeDouble:
 		return LocalTypeFloat64, nil
 
 	case
