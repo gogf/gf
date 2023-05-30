@@ -18,7 +18,7 @@ import (
 // TestRegister TestRegisterService
 func TestRegister(t *testing.T) {
 	var (
-		registry = New([]string{"127.0.0.1:8850"},
+		registry = New([]string{"127.0.0.1:8848"},
 			//you can create a namespace in nacos, then copy the namespaceId to here, "" is public namespace
 			WithNameSpaceId(""),
 			WithClusterName("goframe"),
@@ -49,7 +49,7 @@ func TestRegister(t *testing.T) {
 // TestSearch TestSearchService
 func TestSearch(t *testing.T) {
 	var (
-		registry = New([]string{"127.0.0.1:8850"})
+		registry = New([]string{"127.0.0.1:8848"})
 		ctx      = gctx.GetInitCtx()
 	)
 
@@ -81,7 +81,7 @@ func TestSearch(t *testing.T) {
 // TestWatch TestWatchService
 func TestWatch(t *testing.T) {
 	var (
-		r   = New([]string{"127.0.0.1:8850"})
+		r   = New([]string{"127.0.0.1:8848"})
 		ctx = gctx.New()
 	)
 
