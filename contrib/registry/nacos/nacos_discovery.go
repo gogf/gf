@@ -16,8 +16,7 @@ func (r Registry) Search(ctx context.Context, in gsvc.SearchInput) (result []gsv
 	return getServiceFromInstances(in.Prefix, r.opts, r.namingClient)
 }
 
-// Watch watches specified condition changes.
-// The `key` is the prefix of service key.
+// Watch watches specified condition changes. The `key` is the prefix of service key.
 func (r Registry) Watch(ctx context.Context, key string) (watcher gsvc.Watcher, err error) {
 	return newWatcher(key, r.namingClient, r.opts)
 }
