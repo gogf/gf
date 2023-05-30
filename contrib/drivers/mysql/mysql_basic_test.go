@@ -44,29 +44,6 @@ func Test_Func_ConvertDataForRecord(t *testing.T) {
 	})
 }
 
-func Test_Func_CheckLocalTypeForField(t *testing.T) {
-
-	testData := "1.999999999999999999"
-	gtest.C(t, func(t *gtest.T) {
-		c := &gdb.Core{}
-		m, err := c.CheckLocalTypeForField(nil, "decimal(40,18)", testData)
-		t.AssertNil(err)
-		t.Assert(m, gdb.LocalTypeFloat64)
-
-		gdb.RegistCheckLocalTypeForField(gdb.FieldTypeDecimal, func(ctx context.Context, typeName, typePattern, fieldType string, fieldValue interface{}) (string, error) {
-			//if xxx{
-			//	return gdb.LocalTypeFloat64
-			//}
-			return gdb.LocalTypeString, nil
-		})
-		m, err = c.CheckLocalTypeForField(nil, "decimal", testData)
-		t.AssertNil(err)
-		t.Assert(m, gdb.LocalTypeString)
-
-		gdb.RemoveCheckLocalTypeForField(gdb.FieldTypeDecimal)
-	})
-}
-
 func Test_Func_FormatSqlWithArgs(t *testing.T) {
 	// mysql
 	gtest.C(t, func(t *gtest.T) {

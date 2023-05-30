@@ -135,59 +135,57 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 		typeName = gstr.Split(fieldType, " ")[0]
 	}
 
-	if checkLocalTypeForFieldKeyFuncMap.Contains(typeName) {
-		return checkLocalTypeForFieldKeyFuncMap.Get(typeName).(checkLocalTypeForFieldFunc)(ctx, typeName, typePattern, fieldType, fieldValue)
-	}
-
 	typeName = strings.ToLower(typeName)
 
 	switch typeName {
 	case
-		FieldTypeBinary,
-		FieldTypeVarbinary,
-		FieldTypeBlob,
-		FieldTypeTinyblob,
-		FieldTypeMediumblob,
-		FieldTypeLongblob:
+		fieldTypeBinary,
+		fieldTypeVarbinary,
+		fieldTypeBlob,
+		fieldTypeTinyblob,
+		fieldTypeMediumblob,
+		fieldTypeLongblob:
 		return LocalTypeBytes, nil
 
 	case
-		FieldTypeInt,
-		FieldTypeTinyint,
-		FieldTypeSmallInt,
-		FieldTypeSmallint,
-		FieldTypeMediumInt,
-		FieldTypeMediumint,
-		FieldTypeSerial:
+		fieldTypeInt,
+		fieldTypeTinyint,
+		fieldTypeSmallInt,
+		fieldTypeSmallint,
+		fieldTypeMediumInt,
+		fieldTypeMediumint,
+		fieldTypeSerial:
 		if gstr.ContainsI(fieldType, "unsigned") {
 			return LocalTypeUint, nil
 		}
 		return LocalTypeInt, nil
 
 	case
-		FieldTypeBigInt,
-		FieldTypeBigint,
-		FieldTypeBigserial:
+		fieldTypeBigInt,
+		fieldTypeBigint,
+		fieldTypeBigserial:
 		if gstr.ContainsI(fieldType, "unsigned") {
 			return LocalTypeUint64, nil
 		}
 		return LocalTypeInt64, nil
 
 	case
-		FieldTypeReal:
+		fieldTypeReal:
 		return LocalTypeFloat32, nil
 
 	case
-		FieldTypeFloat,
-		FieldTypeDouble,
-		FieldTypeDecimal,
-		FieldTypeMoney,
-		FieldTypeNumeric,
-		FieldTypeSmallmoney:
+		fieldTypeDecimal,
+		fieldTypeMoney,
+		fieldTypeSmallmoney:
+		return LocalTypeString, nil
+	case
+		fieldTypeFloat,
+		fieldTypeDouble,
+		fieldTypeNumeric:
 		return LocalTypeFloat64, nil
 
 	case
-		FieldTypeBit:
+		fieldTypeBit:
 		// It is suggested using bit(1) as boolean.
 		if typePattern == "1" {
 			return LocalTypeBool, nil
@@ -203,25 +201,25 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 		return LocalTypeInt64Bytes, nil
 
 	case
-		FieldTypeBool:
+		fieldTypeBool:
 		return LocalTypeBool, nil
 
 	case
-		FieldTypeDate:
+		fieldTypeDate:
 		return LocalTypeDate, nil
 
 	case
-		FieldTypeDatetime,
-		FieldTypeTimestamp,
-		FieldTypeTimestampz:
+		fieldTypeDatetime,
+		fieldTypeTimestamp,
+		fieldTypeTimestampz:
 		return LocalTypeDatetime, nil
 
 	case
-		FieldTypeJson:
+		fieldTypeJson:
 		return LocalTypeJson, nil
 
 	case
-		FieldTypeJsonb:
+		fieldTypeJsonb:
 		return LocalTypeJsonb, nil
 
 	default:

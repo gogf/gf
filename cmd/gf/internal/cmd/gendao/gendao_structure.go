@@ -11,6 +11,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/olekukonko/tablewriter"
+	"strings"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
@@ -66,11 +67,29 @@ func generateStructFieldDefinition(
 		jsonTag  = getJsonTagFromCase(field.Name, in.JsonCase)
 	)
 
-	typeName, err = in.DB.CheckLocalTypeForField(ctx, field.Type, nil)
-	if err != nil {
-		panic(err)
+	if in.TypeMapping != nil && len(in.TypeMapping) > 0 {
+		var (
+			tryTypeName string
+		)
+		tryTypeMatch, _ := gregex.MatchString(`(.+?)\((.+)\)`, field.Type)
+		if len(tryTypeMatch) == 3 {
+			tryTypeName = gstr.Trim(tryTypeMatch[1])
+		} else {
+			tryTypeName = gstr.Split(field.Type, " ")[0]
+		}
+		if tryTypeName != "" {
+			if typeMappingName, ok := in.TypeMapping[strings.ToLower(tryTypeName)]; ok {
+				typeName = typeMappingName
+			}
+		}
 	}
 
+	if typeName == "" {
+		typeName, err = in.DB.CheckLocalTypeForField(ctx, field.Type, nil)
+		if err != nil {
+			panic(err)
+		}
+	}
 	switch typeName {
 	case gdb.LocalTypeDate, gdb.LocalTypeDatetime:
 		if in.StdTime {

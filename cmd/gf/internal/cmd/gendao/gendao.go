@@ -72,7 +72,7 @@ CONFIGURATION SUPPORT
 	CGenDaoBriefNoJsonTag       = `no json tag will be added for each field`
 	CGenDaoBriefNoModelComment  = `no model comment will be added for each field`
 	CGenDaoBriefClear           = `delete all generated go files that do not exist in database`
-	CGenDaoBriefTypeMapping     = `field type converts the local type`
+	CGenDaoBriefTypeMapping     = `custom local type mapping for field type converting`
 	CGenDaoBriefGroup           = `
 specifying the configuration group name of database for generated ORM instance,
 it's not necessary and the default value is "default"
@@ -285,16 +285,6 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 		}
 		newTableName = in.Prefix + newTableName
 		newTableNames[i] = newTableName
-	}
-
-	// Add config defined conversion rules
-	if len(in.TypeMapping) > 0 {
-		for typeName := range in.TypeMapping {
-			localType := in.TypeMapping[typeName]
-			gdb.RegistCheckLocalTypeForField(typeName, func(ctx context.Context, typeName, typePattern, fieldType string, fieldValue interface{}) (string, error) {
-				return localType, nil
-			})
-		}
 	}
 
 	// Dao: index and internal.

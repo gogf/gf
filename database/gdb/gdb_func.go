@@ -10,7 +10,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/container/gmap"
 	"reflect"
 	"regexp"
 	"strings"
@@ -59,18 +58,12 @@ const (
 	OrmTagForDo        = "do"
 )
 
-// checkLocalTypeForFieldFunc custom type conversion func
-type checkLocalTypeForFieldFunc func(ctx context.Context, typeName, typePattern, fieldType string, fieldValue interface{}) (string, error)
-
 var (
 	// quoteWordReg is the regular expression object for a word check.
 	quoteWordReg = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
 
 	// structTagPriority tags for struct converting for orm field mapping.
 	structTagPriority = append([]string{OrmTagForStruct}, gconv.StructTagPriority...)
-
-	// checkLocalTypeForFieldKeyFuncMap custom type conversion.
-	checkLocalTypeForFieldKeyFuncMap = gmap.NewStrAnyMap(true)
 )
 
 // WithDB injects given db object into context and returns a new context.
@@ -887,14 +880,4 @@ func FormatSqlWithArgs(sql string, args []interface{}) string {
 			return s
 		})
 	return newQuery
-}
-
-// RegistCheckLocalTypeForField add user defined conversion rules
-func RegistCheckLocalTypeForField(typeName string, checkFunc checkLocalTypeForFieldFunc) {
-	checkLocalTypeForFieldKeyFuncMap.Set(typeName, checkFunc)
-}
-
-// RemoveCheckLocalTypeForField remove user defined conversion rules
-func RemoveCheckLocalTypeForField(typeName string) {
-	checkLocalTypeForFieldKeyFuncMap.Remove(typeName)
 }

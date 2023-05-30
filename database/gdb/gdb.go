@@ -425,47 +425,37 @@ const (
 )
 
 const (
-	FieldTypeBinary     = "binary"
-	FieldTypeVarbinary  = "varbinary"
-	FieldTypeBlob       = "blob"
-	FieldTypeTinyblob   = "tinyblob"
-	FieldTypeMediumblob = "mediumblob"
-	FieldTypeLongblob   = "longblob"
-
-	FieldTypeInt       = "int"
-	FieldTypeTinyint   = "tinyint"
-	FieldTypeSmallInt  = "small_int"
-	FieldTypeSmallint  = "smallint"
-	FieldTypeMediumInt = "medium_int"
-	FieldTypeMediumint = "mediumint"
-	FieldTypeSerial    = "serial"
-
-	FieldTypeBigInt    = "big_int"
-	FieldTypeBigint    = "bigint"
-	FieldTypeBigserial = "bigserial"
-
-	FieldTypeReal = "real"
-
-	FieldTypeFloat      = "float"
-	FieldTypeDouble     = "double"
-	FieldTypeDecimal    = "decimal"
-	FieldTypeMoney      = "money"
-	FieldTypeNumeric    = "numeric"
-	FieldTypeSmallmoney = "smallmoney"
-
-	FieldTypeBool = "bool"
-
-	FieldTypeBit = "bit"
-
-	FieldTypeDate = "date"
-
-	FieldTypeDatetime   = "datetime"
-	FieldTypeTimestamp  = "timestamp"
-	FieldTypeTimestampz = "timestamptz"
-
-	FieldTypeJson = "json"
-
-	FieldTypeJsonb = "jsonb"
+	fieldTypeBinary     = "binary"
+	fieldTypeVarbinary  = "varbinary"
+	fieldTypeBlob       = "blob"
+	fieldTypeTinyblob   = "tinyblob"
+	fieldTypeMediumblob = "mediumblob"
+	fieldTypeLongblob   = "longblob"
+	fieldTypeInt        = "int"
+	fieldTypeTinyint    = "tinyint"
+	fieldTypeSmallInt   = "small_int"
+	fieldTypeSmallint   = "smallint"
+	fieldTypeMediumInt  = "medium_int"
+	fieldTypeMediumint  = "mediumint"
+	fieldTypeSerial     = "serial"
+	fieldTypeBigInt     = "big_int"
+	fieldTypeBigint     = "bigint"
+	fieldTypeBigserial  = "bigserial"
+	fieldTypeReal       = "real"
+	fieldTypeFloat      = "float"
+	fieldTypeDouble     = "double"
+	fieldTypeDecimal    = "decimal"
+	fieldTypeMoney      = "money"
+	fieldTypeNumeric    = "numeric"
+	fieldTypeSmallmoney = "smallmoney"
+	fieldTypeBool       = "bool"
+	fieldTypeBit        = "bit"
+	fieldTypeDate       = "date"
+	fieldTypeDatetime   = "datetime"
+	fieldTypeTimestamp  = "timestamp"
+	fieldTypeTimestampz = "timestamptz"
+	fieldTypeJson       = "json"
+	fieldTypeJsonb      = "jsonb"
 )
 
 var (
