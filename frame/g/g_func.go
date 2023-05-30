@@ -56,6 +56,11 @@ func DumpWithOption(value interface{}, option gutil.DumpOption) {
 	gutil.DumpWithOption(value, option)
 }
 
+// DumpJson pretty dumps json content to stdout.
+func DumpJson(jsonContent string) {
+	gutil.DumpJson(jsonContent)
+}
+
 // Throw throws an exception, which can be caught by TryCatch function.
 func Throw(exception interface{}) {
 	gutil.Throw(exception)

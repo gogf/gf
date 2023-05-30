@@ -710,6 +710,7 @@ func TestSortedArray_Json(t *testing.T) {
 
 		a2 := garray.NewSortedArray(gutil.ComparatorString)
 		err1 = json.UnmarshalUseNumber(b2, &a2)
+		t.AssertNil(err1)
 		t.Assert(a2.Slice(), s2)
 
 		var a3 garray.SortedArray
@@ -730,6 +731,7 @@ func TestSortedArray_Json(t *testing.T) {
 
 		a2 := garray.NewSortedArray(gutil.ComparatorString)
 		err1 = json.UnmarshalUseNumber(b2, &a2)
+		t.AssertNil(err1)
 		t.Assert(a2.Slice(), s2)
 
 		var a3 garray.SortedArray
