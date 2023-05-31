@@ -154,13 +154,6 @@ jobs:
         ports:
           - 2181:2181
 
-      nacos:
-        image: loads/nacos-server:v2.2.2
-        env:
-          MODE: standalone
-        ports:
-          - 8850:8848
-
     strategy:
       matrix:
         go-version: [ "1.15", "1.16", "1.17", "1.18", "1.19", "1.20" ]
