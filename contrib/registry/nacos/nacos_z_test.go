@@ -101,7 +101,6 @@ func TestWatch(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	// watch svc
 	// svc register, AddEvent
 	next, err := watch.Proceed()

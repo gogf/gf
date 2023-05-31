@@ -11,7 +11,7 @@ import (
 	"github.com/gogf/gf/v2/net/gsvc"
 )
 
-//Search searches and returns services with specified condition.
+// Search searches and returns services with specified condition.
 func (r Registry) Search(ctx context.Context, in gsvc.SearchInput) (result []gsvc.Service, err error) {
 	return getServiceFromInstances(in.Prefix, r.opts, r.namingClient)
 }
