@@ -159,8 +159,8 @@ jobs:
         env:
           MODE: standalone
         ports:
-          - 9000:8848
-          - 10000:9848
+          - 8850:8848
+          - 9850:9848
 
     strategy:
       matrix:
