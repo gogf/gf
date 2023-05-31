@@ -96,7 +96,6 @@ func TestWatch(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	s1, err := r.Register(ctx, svc)
 	if err != nil {
 		t.Fatal(err)
