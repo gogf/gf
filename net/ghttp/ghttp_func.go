@@ -10,7 +10,13 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/httputil"
+	"github.com/gogf/gf/v2/text/gstr"
 )
+
+// SupportedMethods returns all supported HTTP methods.
+func SupportedMethods() []string {
+	return gstr.SplitAndTrim(supportedHttpMethods, ",")
+}
 
 // BuildParams builds the request string for the http client. The `params` can be type of:
 // string/[]byte/map/struct/*struct.

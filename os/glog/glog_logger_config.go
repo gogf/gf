@@ -26,6 +26,7 @@ type Config struct {
 	Handlers             []Handler      `json:"-"`                    // Logger handlers which implement feature similar as middleware.
 	Writer               io.Writer      `json:"-"`                    // Customized io.Writer.
 	Flags                int            `json:"flags"`                // Extra flags for logging output features.
+	TimeFormat           string         `json:"timeFormat"`           // Logging time format
 	Path                 string         `json:"path"`                 // Logging directory path.
 	File                 string         `json:"file"`                 // Format pattern for logging file.
 	Level                int            `json:"level"`                // Output level.
@@ -58,6 +59,7 @@ func DefaultConfig() Config {
 	c := Config{
 		File:                defaultFileFormat,
 		Flags:               F_TIME_STD,
+		TimeFormat:          "",
 		Level:               LEVEL_ALL,
 		CtxKeys:             []interface{}{},
 		StStatus:            1,
@@ -100,7 +102,7 @@ func (l *Logger) SetConfig(config Config) error {
 
 // SetConfigWithMap set configurations with map for the logger.
 func (l *Logger) SetConfigWithMap(m map[string]interface{}) error {
-	if m == nil || len(m) == 0 {
+	if len(m) == 0 {
 		return gerror.NewCode(gcode.CodeInvalidParameter, "configuration cannot be empty")
 	}
 	// The m now is a shallow copy of m.
@@ -247,6 +249,11 @@ func (l *Logger) GetPath() string {
 // The default file name pattern is: Y-m-d.log, eg: 2018-01-01.log
 func (l *Logger) SetFile(pattern string) {
 	l.config.File = pattern
+}
+
+// SetTimeFormat sets the time format for the logging time.
+func (l *Logger) SetTimeFormat(timeFormat string) {
+	l.config.TimeFormat = timeFormat
 }
 
 // SetStdoutPrint sets whether output the logging contents to stdout, which is true in default.

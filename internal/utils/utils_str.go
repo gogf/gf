@@ -73,10 +73,7 @@ func IsNumeric(s string) bool {
 			return false
 		}
 	}
-	if dotCount > 1 {
-		return false
-	}
-	return true
+	return dotCount <= 1
 }
 
 // UcFirst returns a copy of the string s with the first letter mapped to its upper case.
