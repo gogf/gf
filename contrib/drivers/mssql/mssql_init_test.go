@@ -38,7 +38,7 @@ const (
 
 func init() {
 	node := gdb.ConfigNode{
-		Host:             "192.168.1.12",
+		Host:             "127.0.0.1",
 		Port:             "1433",
 		User:             TestDbUser,
 		Pass:             TestDbPass,
