@@ -30,6 +30,48 @@ func (m *Model) All(where ...interface{}) (Result, error) {
 	return m.doGetAll(ctx, false, where...)
 }
 
+// AllAndCount retrieves all records and the total count of records from the model.
+// If useFieldForCount is true, it will use the fields specified in the model for counting;
+// otherwise, it will use a constant value of 1 for counting.
+// It returns the result as a slice of records, the total count of records, and an error if any.
+// The where parameter is an optional list of conditions to use when retrieving records.
+//
+// Example:
+//
+//	var model Model
+//	var result Result
+//	var count int
+//	where := []interface{}{"name = ?", "John"}
+//	result, count, err := model.AllAndCount(true)
+//	if err != nil {
+//	    // Handle error.
+//	}
+//	fmt.Println(result, count)
+func (m *Model) AllAndCount(useFieldForCount bool) (result Result, totalCount int, err error) {
+	// Clone the model for counting
+	countModel := m.Clone()
+
+	// If useFieldForCount is false, set the fields to a constant value of 1 for counting
+	if !useFieldForCount {
+		countModel.fields = "1"
+	}
+
+	// Get the total count of records
+	totalCount, err = countModel.Count()
+	if err != nil {
+		return
+	}
+
+	// If the total count is 0, there are no records to retrieve, so return early
+	if totalCount == 0 {
+		return
+	}
+
+	// Retrieve all records
+	result, err = m.doGetAll(m.GetCtx(), false)
+	return
+}
+
 // Chunk iterates the query result with given `size` and `handler` function.
 func (m *Model) Chunk(size int, handler ChunkHandler) {
 	page := m.start
@@ -233,6 +275,56 @@ func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 			`element of parameter "pointer" for function Scan should type of struct/*struct/[]struct/[]*struct`,
 		)
 	}
+}
+
+// ScanAndCount scans a single record or record array that matches the given conditions and counts the total number of records that match those conditions.
+// If useFieldForCount is true, it will use the fields specified in the model for counting;
+// The pointer parameter is a pointer to a struct that the scanned data will be stored in.
+// The pointerCount parameter is a pointer to an integer that will be set to the total number of records that match the given conditions.
+// The where parameter is an optional list of conditions to use when retrieving records.
+//
+// Example:
+//
+//	var count int
+//	user := new(User)
+//	err  := db.Model("user").Where("id", 1).ScanAndCount(user,&count,true)
+//	fmt.Println(user, count)
+//
+// Example Join:
+//
+//	type User struct {
+//		Id       int
+//		Passport string
+//		Name     string
+//		Age      int
+//	}
+//	var users []User
+//	var count int
+//	db.Model(table).As("u1").
+//		LeftJoin(tableName2, "u2", "u2.id=u1.id").
+//		Fields("u1.passport,u1.id,u2.name,u2.age").
+//		Where("u1.id<2").
+//		ScanAndCount(&users, &count, false)
+func (m *Model) ScanAndCount(pointer interface{}, totalCount *int, useFieldForCount bool) (err error) {
+	// support Fileds with *, example: .Fileds("a.*, b.name"). Count sql is select count(1) from xxx
+	countModel := m.Clone()
+	// If useFieldForCount is false, set the fields to a constant value of 1 for counting
+	if !useFieldForCount {
+		countModel.fields = "1"
+	}
+
+	// Get the total count of records
+	*totalCount, err = countModel.Count()
+	if err != nil {
+		return err
+	}
+
+	// If the total count is 0, there are no records to retrieve, so return early
+	if *totalCount == 0 {
+		return
+	}
+	err = m.Scan(pointer)
+	return
 }
 
 // ScanList converts `r` to struct slice which contains other complex struct attributes.
