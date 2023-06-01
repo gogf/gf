@@ -42,7 +42,7 @@ func (c *Command) Run(ctx context.Context) {
 		}
 	}()
 
-	// CLI configuration.
+	// CLI configuration, using the `hack/config.yaml` in priority.
 	if path, _ := gfile.Search(cliFolderName); path != "" {
 		if adapter, ok := g.Cfg().GetAdapter().(*gcfg.AdapterFile); ok {
 			if err := adapter.SetPath(path); err != nil {
