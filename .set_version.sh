@@ -2,7 +2,7 @@
 
 if [ $# -ne 2 ]; then
     echo "Parameter exception, please execute in the format of $0 [directory] [version number]"
-    echo "PS：$0 ./contrib v1.0.0"
+    echo "PS：$0 ./ v2.4.0"
     exit 1
 fi
 
@@ -20,7 +20,7 @@ workdir=$1
 newVersion=$2
 echo "Prepare to replace the GF library version numbers in all go.mod files in the ${workdir} directory with ${newVersion}"
 
-if [[ ${workdir} == ./contrib ]]; then
+if [[ true ]]; then
     echo "package gf" > version.go
     echo "" >> version.go
     echo "const (" >> version.go
@@ -39,7 +39,7 @@ for file in `find ${workdir} -name go.mod`; do
     echo ""
     echo "processing dir: $goModPath"
     cd $goModPath
-    go mod tidy
+    # go mod tidy
     # Upgrading only GF related libraries, sometimes even if a version number is specified, it may not be possible to successfully upgrade. Please confirm before submitting the code
     go list -f "{{if and (not .Indirect) (not .Main)}}{{.Path}}@${newVersion}{{end}}" -m all | grep "^github.com/gogf/gf"
     go list -f "{{if and (not .Indirect) (not .Main)}}{{.Path}}@${newVersion}{{end}}" -m all | grep "^github.com/gogf/gf" | xargs -L1 go get -v 
