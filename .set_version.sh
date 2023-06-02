@@ -39,7 +39,7 @@ for file in `find ${workdir} -name go.mod`; do
     echo ""
     echo "processing dir: $goModPath"
     cd $goModPath
-    # go mod tidy
+    go mod tidy
     # Upgrading only GF related libraries, sometimes even if a version number is specified, it may not be possible to successfully upgrade. Please confirm before submitting the code
     go list -f "{{if and (not .Indirect) (not .Main)}}{{.Path}}@${newVersion}{{end}}" -m all | grep "^github.com/gogf/gf"
     go list -f "{{if and (not .Indirect) (not .Main)}}{{.Path}}@${newVersion}{{end}}" -m all | grep "^github.com/gogf/gf" | xargs -L1 go get -v 
