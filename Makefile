@@ -20,7 +20,7 @@ lint:
 version:
 	@set -e; \
 	newVersion=$(to); \
-	.github/workflows/set_version.sh ./ $$newVersion; \
+	./.set_version.sh ./ $$newVersion; \
 	echo "make version to=$(to) done"
 
 
