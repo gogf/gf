@@ -71,6 +71,8 @@ func (c cVersion) getGFVersionOfCurrentProject() (string, error) {
 		lines := gstr.SplitAndTrim(gfile.GetContents(goModPath), "\n")
 		for _, line := range lines {
 			line = gstr.Trim(line)
+			line = gstr.TrimLeftStr(line, "require ")
+			line = gstr.Trim(line)
 			// Version 1.
 			match, err := gregex.MatchString(`^github\.com/gogf/gf\s+(.+)$`, line)
 			if err != nil {
