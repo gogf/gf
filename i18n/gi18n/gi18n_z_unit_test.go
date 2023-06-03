@@ -41,6 +41,7 @@ func Test_Basic(t *testing.T) {
 		t.Assert(i18n.T(context.Background(), "{$hello}{$world}"), "你好世界")
 		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "{#hello}{#world}")
 		t.Assert(i18n.T(context.Background(), "{$你好} {$世界}"), "hello world")
+		// undefined variables
 		t.Assert(i18n.T(context.Background(), "{$你好1}{$世界1}"), "{$你好1}{$世界1}")
 	})
 
