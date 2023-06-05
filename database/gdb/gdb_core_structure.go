@@ -174,12 +174,11 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 	case
 		"float",
 		"double",
-		"decimal",
 		"money",
-		"numeric",
 		"smallmoney":
 		return LocalTypeFloat64, nil
-
+	case "decimal", "numeric":
+		return LocalTypeString, nil
 	case
 		"bit":
 		// It is suggested using bit(1) as boolean.
