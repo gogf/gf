@@ -24,11 +24,10 @@ import (
 )
 
 const (
-	CGenDaoConfig  = `gfcli.gen.dao`
-	CGenDaoMapping = `gfcli.gen.mapping`
-	CGenDaoUsage   = `gf gen dao [OPTION]`
-	CGenDaoBrief   = `automatically generate go files for dao/do/entity`
-	CGenDaoEg      = `
+	CGenDaoConfig = `gfcli.gen.dao`
+	CGenDaoUsage  = `gf gen dao [OPTION]`
+	CGenDaoBrief  = `automatically generate go files for dao/do/entity`
+	CGenDaoEg     = `
 gf gen dao
 gf gen dao -l "mysql:root:12345678@tcp(127.0.0.1:3306)/test"
 gf gen dao -p ./model -g user-center -t user,user_detail,user_login
