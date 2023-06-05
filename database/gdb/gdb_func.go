@@ -494,9 +494,15 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 			data, _ = db.GetCore().mappingAndFilterData(ctx, in.Schema, in.Table, data, true)
 		}
 		// Put the struct attributes in sequence in Where statement.
+		var ormFieldName string
 		for i := 0; i < reflectType.NumField(); i++ {
 			structField = reflectType.Field(i)
-			foundKey, foundValue := gutil.MapPossibleItemByKey(data, structField.Name)
+			// Use tag value from `orm` as field name if specified.
+			ormFieldName = structField.Tag.Get(OrmTagForStruct)
+			if ormFieldName == "" {
+				ormFieldName = structField.Name
+			}
+			foundKey, foundValue := gutil.MapPossibleItemByKey(data, ormFieldName)
 			if foundKey != "" {
 				if in.OmitNil && empty.IsNil(foundValue) {
 					continue
