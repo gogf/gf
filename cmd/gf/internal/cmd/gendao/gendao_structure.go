@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/olekukonko/tablewriter"
 
@@ -56,6 +57,27 @@ func generateStructDefinition(ctx context.Context, in generateStructDefinitionIn
 	buffer.WriteString("}")
 	return buffer.String()
 }
+func generateStructFieldMapping(fieldType string, in generateStructDefinitionInput) *CGenMapping {
+	var (
+		typeName string
+		//typePattern string
+	)
+	match, _ := gregex.MatchString(`(.+?)\((.+)\)`, fieldType)
+	if len(match) == 3 {
+		typeName = gstr.Trim(match[1])
+		//typePattern = gstr.Trim(match[2])
+	} else {
+		typeName = gstr.Split(fieldType, " ")[0]
+	}
+	typeName = strings.ToLower(typeName)
+	//log.Println("typeName:", typeName)
+	for _, v := range in.Mapping {
+		if strings.ToLower(v.Type) == typeName {
+			return v
+		}
+	}
+	return nil
+}
 
 // generateStructFieldDefinition generates and returns the attribute definition for specified field.
 func generateStructFieldDefinition(
@@ -65,7 +87,9 @@ func generateStructFieldDefinition(
 		err      error
 		typeName string
 		jsonTag  = getJsonTagFromCase(field.Name, in.JsonCase)
+		mapping  = generateStructFieldMapping(field.Type, in)
 	)
+
 	typeName, err = in.DB.CheckLocalTypeForField(ctx, field.Type, nil)
 	if err != nil {
 		panic(err)
@@ -92,7 +116,9 @@ func generateStructFieldDefinition(
 			typeName = "string"
 		}
 	}
-
+	if mapping != nil {
+		typeName = mapping.Dest
+	}
 	var (
 		tagKey = "`"
 		result = []string{
@@ -105,6 +131,9 @@ func generateStructFieldDefinition(
 	result = append(result, " #"+fmt.Sprintf(tagKey+`json:"%s"`, jsonTag))
 	result = append(result, " #"+fmt.Sprintf(`description:"%s"`+tagKey, descriptionTag))
 	result = append(result, " #"+fmt.Sprintf(`// %s`, formatComment(field.Comment)))
+	if mapping != nil && mapping.Import != "" {
+		result = append(result, " #"+fmt.Sprintf(`// #import==%s#`, mapping.Import))
+	}
 
 	for k, v := range result {
 		if in.NoJsonTag {
