@@ -1,4 +1,6 @@
 {
-  "hello": "你好",
-  "world": "世界"
+    "你好": "hello",
+    "世界": "world",
+    "hello": "你好",
+    "world": "世界"
 }
