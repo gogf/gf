@@ -310,9 +310,12 @@ func getFieldsFromStructOrMap(structOrMap interface{}) (fields []string) {
 			Pointer:         structOrMap,
 			RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
 		})
+		var ormTagValue string
 		for _, structField := range structFields {
-			if tag := structField.Tag(OrmTagForStruct); tag != "" && gregex.IsMatchString(regularFieldNameRegPattern, tag) {
-				fields = append(fields, tag)
+			ormTagValue = structField.Tag(OrmTagForStruct)
+			ormTagValue = gstr.Split(gstr.Trim(ormTagValue), ",")[0]
+			if ormTagValue != "" && gregex.IsMatchString(regularFieldNameRegPattern, ormTagValue) {
+				fields = append(fields, ormTagValue)
 			} else {
 				fields = append(fields, structField.Name())
 			}
@@ -494,15 +497,16 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 			data, _ = db.GetCore().mappingAndFilterData(ctx, in.Schema, in.Table, data, true)
 		}
 		// Put the struct attributes in sequence in Where statement.
-		var ormFieldName string
+		var ormTagValue string
 		for i := 0; i < reflectType.NumField(); i++ {
 			structField = reflectType.Field(i)
 			// Use tag value from `orm` as field name if specified.
-			ormFieldName = structField.Tag.Get(OrmTagForStruct)
-			if ormFieldName == "" {
-				ormFieldName = structField.Name
+			ormTagValue = structField.Tag.Get(OrmTagForStruct)
+			ormTagValue = gstr.Split(gstr.Trim(ormTagValue), ",")[0]
+			if ormTagValue == "" {
+				ormTagValue = structField.Name
 			}
-			foundKey, foundValue := gutil.MapPossibleItemByKey(data, ormFieldName)
+			foundKey, foundValue := gutil.MapPossibleItemByKey(data, ormTagValue)
 			if foundKey != "" {
 				if in.OmitNil && empty.IsNil(foundValue) {
 					continue

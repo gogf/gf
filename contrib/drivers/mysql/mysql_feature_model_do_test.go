@@ -359,4 +359,32 @@ func Test_Model_Where_FieldPrefix(t *testing.T) {
 		t.Assert(instance.ID, 1)
 		t.Assert(instance.Name, "john")
 	})
+	// With omitempty.
+	gtest.C(t, func(t *gtest.T) {
+		array := gstr.SplitAndTrim(gtest.DataContent(`table_with_prefix.sql`), ";")
+		for _, v := range array {
+			if _, err := db.Exec(ctx, v); err != nil {
+				gtest.Error(err)
+			}
+		}
+		defer dropTable("instance")
+
+		type Instance struct {
+			ID   int `orm:"f_id,omitempty"`
+			Name string
+		}
+
+		type InstanceDo struct {
+			g.Meta `orm:"table:instance, do:true"`
+			ID     interface{} `orm:"f_id,omitempty"`
+		}
+		var instance *Instance
+		err := db.Model("instance").Where(InstanceDo{
+			ID: 1,
+		}).Scan(&instance)
+		t.AssertNil(err)
+		t.AssertNE(instance, nil)
+		t.Assert(instance.ID, 1)
+		t.Assert(instance.Name, "john")
+	})
 }
