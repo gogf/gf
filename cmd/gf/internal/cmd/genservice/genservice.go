@@ -9,7 +9,8 @@ package genservice
 import (
 	"context"
 	"fmt"
-
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/frame/g"
@@ -20,9 +21,6 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gtag"
-
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 )
 
 const (
@@ -48,42 +46,48 @@ destination file name storing automatically generated go files, cases are as fol
 | Kebab           | any-kind-of-string |
 | KebabScreaming  | ANY-KIND-OF-STRING |
 `
-	CGenServiceBriefWatchFile    = `used in file watcher, it re-generates all service go files only if given file is under srcFolder`
-	CGenServiceBriefStPattern    = `regular expression matching struct name for generating service. default: ^s([A-Z]\\\\w+)$`
-	CGenServiceBriefPackages     = `produce go files only for given source packages`
-	CGenServiceBriefImportPrefix = `custom import prefix to calculate import path for generated importing go file of logic`
-	CGenServiceBriefClear        = `delete all generated go files that are not used any further`
+	CGenServiceBriefWatchFile        = `used in file watcher, it re-generates all service go files only if given file is under srcFolder`
+	CGenServiceBriefStPattern        = `regular expression matching struct name for generating service. default: ^s([A-Z]\\\\w+)$`
+	CGenServiceBriefPackages         = `produce go files only for given source packages`
+	CGenServiceBriefImportPrefix     = `custom import prefix to calculate import path for generated importing go file of logic`
+	CGenServiceBriefImportInitPrefix = `custom import prefix to calculate import path for generated importing go file of service at init.gen.go`
+	CGenServiceBriefClear            = `delete all generated go files that are not used any further`
+	CGenServiceBriefAutoInit         = `automatically generate init.gen.go file for service logic register. default: true`
 )
 
 func init() {
 	gtag.Sets(g.MapStrStr{
-		`CGenServiceConfig`:            CGenServiceConfig,
-		`CGenServiceUsage`:             CGenServiceUsage,
-		`CGenServiceBrief`:             CGenServiceBrief,
-		`CGenServiceEg`:                CGenServiceEg,
-		`CGenServiceBriefSrcFolder`:    CGenServiceBriefSrcFolder,
-		`CGenServiceBriefDstFolder`:    CGenServiceBriefDstFolder,
-		`CGenServiceBriefFileNameCase`: CGenServiceBriefFileNameCase,
-		`CGenServiceBriefWatchFile`:    CGenServiceBriefWatchFile,
-		`CGenServiceBriefStPattern`:    CGenServiceBriefStPattern,
-		`CGenServiceBriefPackages`:     CGenServiceBriefPackages,
-		`CGenServiceBriefImportPrefix`: CGenServiceBriefImportPrefix,
-		`CGenServiceBriefClear`:        CGenServiceBriefClear,
+		`CGenServiceConfig`:                CGenServiceConfig,
+		`CGenServiceUsage`:                 CGenServiceUsage,
+		`CGenServiceBrief`:                 CGenServiceBrief,
+		`CGenServiceEg`:                    CGenServiceEg,
+		`CGenServiceBriefSrcFolder`:        CGenServiceBriefSrcFolder,
+		`CGenServiceBriefDstFolder`:        CGenServiceBriefDstFolder,
+		`CGenServiceBriefFileNameCase`:     CGenServiceBriefFileNameCase,
+		`CGenServiceBriefWatchFile`:        CGenServiceBriefWatchFile,
+		`CGenServiceBriefStPattern`:        CGenServiceBriefStPattern,
+		`CGenServiceBriefPackages`:         CGenServiceBriefPackages,
+		`CGenServiceBriefImportPrefix`:     CGenServiceBriefImportPrefix,
+		`CGenServiceBriefClear`:            CGenServiceBriefClear,
+		`CGenServiceBriefImportInitPrefix`: CGenServiceBriefImportInitPrefix,
+		`CGenServiceBriefAutoInit`:         CGenServiceBriefAutoInit,
 	})
 }
 
 type (
 	CGenService      struct{}
 	CGenServiceInput struct {
-		g.Meta          `name:"service" config:"{CGenServiceConfig}" usage:"{CGenServiceUsage}" brief:"{CGenServiceBrief}" eg:"{CGenServiceEg}"`
-		SrcFolder       string   `short:"s" name:"srcFolder" brief:"{CGenServiceBriefSrcFolder}" d:"internal/logic"`
-		DstFolder       string   `short:"d" name:"dstFolder" brief:"{CGenServiceBriefDstFolder}" d:"internal/service"`
-		DstFileNameCase string   `short:"f" name:"dstFileNameCase" brief:"{CGenServiceBriefFileNameCase}" d:"Snake"`
-		WatchFile       string   `short:"w" name:"watchFile" brief:"{CGenServiceBriefWatchFile}"`
-		StPattern       string   `short:"a" name:"stPattern" brief:"{CGenServiceBriefStPattern}" d:"^s([A-Z]\\w+)$"`
-		Packages        []string `short:"p" name:"packages" brief:"{CGenServiceBriefPackages}"`
-		ImportPrefix    string   `short:"i" name:"importPrefix" brief:"{CGenServiceBriefImportPrefix}"`
-		Clear           bool     `short:"l" name:"clear" brief:"{CGenServiceBriefClear}" orphan:"true"`
+		g.Meta           `name:"service" config:"{CGenServiceConfig}" usage:"{CGenServiceUsage}" brief:"{CGenServiceBrief}" eg:"{CGenServiceEg}"`
+		SrcFolder        string   `short:"s" name:"srcFolder" brief:"{CGenServiceBriefSrcFolder}" d:"internal/logic"`
+		DstFolder        string   `short:"d" name:"dstFolder" brief:"{CGenServiceBriefDstFolder}" d:"internal/service"`
+		DstFileNameCase  string   `short:"f" name:"dstFileNameCase" brief:"{CGenServiceBriefFileNameCase}" d:"Snake"`
+		WatchFile        string   `short:"w" name:"watchFile" brief:"{CGenServiceBriefWatchFile}"`
+		StPattern        string   `short:"a" name:"stPattern" brief:"{CGenServiceBriefStPattern}" d:"^s([A-Z]\\w+)$"`
+		Packages         []string `short:"p" name:"packages" brief:"{CGenServiceBriefPackages}"`
+		ImportPrefix     string   `short:"i" name:"importPrefix" brief:"{CGenServiceBriefImportPrefix}"`
+		ImportInitPrefix string   `short:"t" name:"ImportInitPrefix" brief:"{CGenServiceBriefImportInitPrefix}"`
+		AutoInit         bool     `short:"o" name:"autoInit" brief:"{CGenServiceBriefAutoInit}" d:"true"`
+		Clear            bool     `short:"l" name:"clear" brief:"{CGenServiceBriefClear}" orphan:"true"`
 	}
 	CGenServiceOutput struct{}
 )
@@ -143,20 +147,26 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 	if !gfile.Exists(in.SrcFolder) {
 		mlog.Fatalf(`source folder path "%s" does not exist`, in.SrcFolder)
 	}
-
-	if in.ImportPrefix == "" {
+	var (
+		goModContent string
+		packName     string
+	)
+	if in.ImportInitPrefix == "" || in.ImportPrefix == "" {
 		if !gfile.Exists("go.mod") {
 			mlog.Fatal("ImportPrefix is empty and go.mod does not exist in current working directory")
 		}
-		var (
-			goModContent = gfile.GetContents("go.mod")
-			match, _     = gregex.MatchString(`^module\s+(.+)\s*`, goModContent)
-		)
+		goModContent = gfile.GetContents("go.mod")
+		match, _ := gregex.MatchString(`^module\s+(.+)\s*`, goModContent)
 		if len(match) > 1 {
-			in.ImportPrefix = fmt.Sprintf(`%s/%s`, gstr.Trim(match[1]), gstr.Replace(in.SrcFolder, `\`, `/`))
+			packName = gstr.Trim(match[1])
 		}
 	}
-
+	if in.ImportPrefix == "" {
+		in.ImportPrefix = fmt.Sprintf(`%s/%s`, packName, gstr.Replace(in.SrcFolder, `\`, `/`))
+	}
+	if in.ImportInitPrefix == "" {
+		in.ImportInitPrefix = fmt.Sprintf(`%s/%s`, packName, gstr.Replace(in.DstFolder, `\`, `/`))
+	}
 	var (
 		isDirty                 bool                                         // Temp boolean.
 		files                   []string                                     // Temp file array.
@@ -184,7 +194,10 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		}
 		var (
 			// StructName => FunctionDefinitions
-			srcPkgInterfaceMap  = make(map[string]*garray.StrArray)
+			srcPkgInterfaceMap = make(map[string]*garray.StrArray)
+			// StructName => registerFunctionName
+			srcLogicInitMap     = make(map[string]string)
+			srcFileMap          = make(map[string]string)
 			srcImportedPackages = garray.NewSortedStrArray().SetUnique(true)
 			srcPackageName      = gfile.Basename(srcFolderPath)
 			ok                  bool
@@ -194,19 +207,43 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		)
 		generatedDstFilePathSet.Add(dstFilePath)
 		for _, file := range files {
+			if in.AutoInit && gstr.HasSuffix(file, "init.gen.go") {
+				_ = gfile.Remove(file)
+				continue
+			}
 			fileContent = gfile.GetContents(file)
 			fileContent, err := gregex.ReplaceString(`/[/|\*](.+)`, "", fileContent)
 			if err != nil {
 				return nil, err
 			}
+			srcFileMap[file] = fileContent
 			// Calculate imported packages of source go files.
 			err = c.calculateImportedPackages(fileContent, srcImportedPackages)
 			if err != nil {
 				return nil, err
 			}
 			// Calculate functions and interfaces for service generating.
-			err = c.calculateInterfaceFunctions(in, fileContent, srcPkgInterfaceMap, dstPackageName)
+			err = c.calculateInterfaceFunctions(in, fileContent, srcPkgInterfaceMap, srcLogicInitMap, dstPackageName)
 			if err != nil {
+				return nil, err
+			}
+		}
+		if in.AutoInit {
+			for _, file := range srcFileMap {
+				for k, _ := range srcLogicInitMap {
+					name := fmt.Sprintf("%v.Register%s", dstPackageName, k)
+					if gstr.Contains(file, name) {
+						srcLogicInitMap[k] = "" // Remove the function name from the map.
+					}
+				}
+			}
+			if err = c.generateInitFile(generateInitFilesInput{
+				CGenServiceInput: in,
+				SrcFolderPath:    srcFolderPath,
+				SrcLogicInitMap:  srcLogicInitMap,
+				SrcPackageName:   srcPackageName,
+				DstPackageName:   dstPackageName,
+			}); err != nil {
 				return nil, err
 			}
 		}

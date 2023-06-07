@@ -7,12 +7,11 @@
 package genservice
 
 import (
-	"go/parser"
-	"go/token"
-
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
+	"go/parser"
+	"go/token"
 )
 
 func (c CGenService) calculateImportedPackages(fileContent string, srcImportedPackages *garray.SortedStrArray) (err error) {
@@ -37,7 +36,7 @@ func (c CGenService) calculateImportedPackages(fileContent string, srcImportedPa
 }
 
 func (c CGenService) calculateInterfaceFunctions(
-	in CGenServiceInput, fileContent string, srcPkgInterfaceMap map[string]*garray.StrArray, dstPackageName string,
+	in CGenServiceInput, fileContent string, srcPkgInterfaceMap map[string]*garray.StrArray, srcLogicInitMap map[string]string, dstPackageName string,
 ) (err error) {
 	var (
 		ok                       bool
@@ -103,6 +102,7 @@ func (c CGenService) calculateInterfaceFunctions(
 			continue
 		}
 		structName = gstr.CaseCamel(structMatch[1])
+		srcLogicInitMap[structName] = match[1]
 		if srcPkgInterfaceFuncArray, ok = srcPkgInterfaceMap[structName]; !ok {
 			srcPkgInterfaceMap[structName] = garray.NewStrArray()
 		}
