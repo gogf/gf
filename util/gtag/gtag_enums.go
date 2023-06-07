@@ -21,6 +21,15 @@ func SetGlobalEnums(enumsJson string) error {
 	return json.Unmarshal([]byte(enumsJson), &enumsMap)
 }
 
+// GetGlobalEnums retrieves and returns the global enums.
+func GetGlobalEnums() (string, error) {
+	enumsByes, err := json.Marshal(enumsMap)
+	if err != nil {
+		return "", err
+	}
+	return string(enumsByes), nil
+}
+
 // GetEnumsByType retrieves and returns the stored enums json by type name.
 // The type name is like: github.com/gogf/gf/v2/encoding/gjson.ContentType
 func GetEnumsByType(typeName string) string {

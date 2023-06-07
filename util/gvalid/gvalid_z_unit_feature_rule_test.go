@@ -16,6 +16,7 @@ import (
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gtag"
 )
 
 var (
@@ -1548,5 +1549,38 @@ func Test_LTE(t *testing.T) {
 		}
 		err := g.Validator().Data(obj).Run(ctx)
 		t.AssertNil(err)
+	})
+}
+
+func Test_Enums(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type EnumsTest string
+		const (
+			EnumsTestA EnumsTest = "a"
+			EnumsTestB EnumsTest = "b"
+		)
+		type Params struct {
+			Id    int
+			Enums EnumsTest `v:"enums"`
+		}
+
+		oldEnumsJson, err := gtag.GetGlobalEnums()
+		t.AssertNil(err)
+		defer t.AssertNil(gtag.SetGlobalEnums(oldEnumsJson))
+
+		err = gtag.SetGlobalEnums(`{"github.com/gogf/gf/v2/util/gvalid_test.EnumsTest": ["a","b"]}`)
+		t.AssertNil(err)
+
+		err = g.Validator().Data(&Params{
+			Id:    1,
+			Enums: EnumsTestB,
+		}).Run(ctx)
+		t.AssertNil(err)
+
+		err = g.Validator().Data(&Params{
+			Id:    1,
+			Enums: "c",
+		}).Run(ctx)
+		t.Assert(err, "The Enums value `c` should be in enums of: [\"a\",\"b\"]")
 	})
 }
