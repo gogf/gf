@@ -9,6 +9,7 @@ package gendao
 import (
 	"context"
 	"fmt"
+	"golang.org/x/mod/modfile"
 	"strings"
 
 	"github.com/gogf/gf/v2/container/garray"
@@ -152,31 +153,31 @@ type (
 	CGenDao      struct{}
 	CGenDaoInput struct {
 		g.Meta             `name:"dao" config:"{CGenDaoConfig}" usage:"{CGenDaoUsage}" brief:"{CGenDaoBrief}" eg:"{CGenDaoEg}" ad:"{CGenDaoAd}"`
-		Path               string            `name:"path"                short:"p"  brief:"{CGenDaoBriefPath}" d:"internal"`
-		Link               string            `name:"link"                short:"l"  brief:"{CGenDaoBriefLink}"`
-		Tables             string            `name:"tables"              short:"t"  brief:"{CGenDaoBriefTables}"`
-		TablesEx           string            `name:"tablesEx"            short:"x"  brief:"{CGenDaoBriefTablesEx}"`
-		Group              string            `name:"group"               short:"g"  brief:"{CGenDaoBriefGroup}" d:"default"`
-		Prefix             string            `name:"prefix"              short:"f"  brief:"{CGenDaoBriefPrefix}"`
-		RemovePrefix       string            `name:"removePrefix"        short:"r"  brief:"{CGenDaoBriefRemovePrefix}"`
-		JsonCase           string            `name:"jsonCase"            short:"j"  brief:"{CGenDaoBriefJsonCase}" d:"CamelLower"`
-		ImportPrefix       string            `name:"importPrefix"        short:"i"  brief:"{CGenDaoBriefImportPrefix}"`
-		DaoPath            string            `name:"daoPath"             short:"d"  brief:"{CGenDaoBriefDaoPath}" d:"dao"`
-		DoPath             string            `name:"doPath"              short:"o"  brief:"{CGenDaoBriefDoPath}" d:"model/do"`
-		EntityPath         string            `name:"entityPath"          short:"e"  brief:"{CGenDaoBriefEntityPath}" d:"model/entity"`
-		TplDaoIndexPath    string            `name:"tplDaoIndexPath"     short:"t1" brief:"{CGenDaoBriefTplDaoIndexPath}"`
-		TplDaoInternalPath string            `name:"tplDaoInternalPath"  short:"t2" brief:"{CGenDaoBriefTplDaoInternalPath}"`
-		TplDaoDoPath       string            `name:"tplDaoDoPath"        short:"t3" brief:"{CGenDaoBriefTplDaoDoPathPath}"`
-		TplDaoEntityPath   string            `name:"tplDaoEntityPath"    short:"t4" brief:"{CGenDaoBriefTplDaoEntityPath}"`
-		StdTime            bool              `name:"stdTime"             short:"s"  brief:"{CGenDaoBriefStdTime}" orphan:"true"`
-		WithTime           bool              `name:"withTime"            short:"w"  brief:"{CGenDaoBriefWithTime}" orphan:"true"`
-		GJsonSupport       bool              `name:"gJsonSupport"        short:"n"  brief:"{CGenDaoBriefGJsonSupport}" orphan:"true"`
-		OverwriteDao       bool              `name:"overwriteDao"        short:"v"  brief:"{CGenDaoBriefOverwriteDao}" orphan:"true"`
-		DescriptionTag     bool              `name:"descriptionTag"      short:"c"  brief:"{CGenDaoBriefDescriptionTag}" orphan:"true"`
-		NoJsonTag          bool              `name:"noJsonTag"           short:"k"  brief:"{CGenDaoBriefNoJsonTag}" orphan:"true"`
-		NoModelComment     bool              `name:"noModelComment"      short:"m"  brief:"{CGenDaoBriefNoModelComment}" orphan:"true"`
-		Clear              bool              `name:"clear"               short:"a"  brief:"{CGenDaoBriefClear}" orphan:"true"`
-		TypeMapping        map[string]string `name:"typeMapping"         short:"tm"  brief:"{CGenDaoBriefTypeMapping}" orphan:"true"`
+		Path               string                                     `name:"path"                short:"p"  brief:"{CGenDaoBriefPath}" d:"internal"`
+		Link               string                                     `name:"link"                short:"l"  brief:"{CGenDaoBriefLink}"`
+		Tables             string                                     `name:"tables"              short:"t"  brief:"{CGenDaoBriefTables}"`
+		TablesEx           string                                     `name:"tablesEx"            short:"x"  brief:"{CGenDaoBriefTablesEx}"`
+		Group              string                                     `name:"group"               short:"g"  brief:"{CGenDaoBriefGroup}" d:"default"`
+		Prefix             string                                     `name:"prefix"              short:"f"  brief:"{CGenDaoBriefPrefix}"`
+		RemovePrefix       string                                     `name:"removePrefix"        short:"r"  brief:"{CGenDaoBriefRemovePrefix}"`
+		JsonCase           string                                     `name:"jsonCase"            short:"j"  brief:"{CGenDaoBriefJsonCase}" d:"CamelLower"`
+		ImportPrefix       string                                     `name:"importPrefix"        short:"i"  brief:"{CGenDaoBriefImportPrefix}"`
+		DaoPath            string                                     `name:"daoPath"             short:"d"  brief:"{CGenDaoBriefDaoPath}" d:"dao"`
+		DoPath             string                                     `name:"doPath"              short:"o"  brief:"{CGenDaoBriefDoPath}" d:"model/do"`
+		EntityPath         string                                     `name:"entityPath"          short:"e"  brief:"{CGenDaoBriefEntityPath}" d:"model/entity"`
+		TplDaoIndexPath    string                                     `name:"tplDaoIndexPath"     short:"t1" brief:"{CGenDaoBriefTplDaoIndexPath}"`
+		TplDaoInternalPath string                                     `name:"tplDaoInternalPath"  short:"t2" brief:"{CGenDaoBriefTplDaoInternalPath}"`
+		TplDaoDoPath       string                                     `name:"tplDaoDoPath"        short:"t3" brief:"{CGenDaoBriefTplDaoDoPathPath}"`
+		TplDaoEntityPath   string                                     `name:"tplDaoEntityPath"    short:"t4" brief:"{CGenDaoBriefTplDaoEntityPath}"`
+		StdTime            bool                                       `name:"stdTime"             short:"s"  brief:"{CGenDaoBriefStdTime}" orphan:"true"`
+		WithTime           bool                                       `name:"withTime"            short:"w"  brief:"{CGenDaoBriefWithTime}" orphan:"true"`
+		GJsonSupport       bool                                       `name:"gJsonSupport"        short:"n"  brief:"{CGenDaoBriefGJsonSupport}" orphan:"true"`
+		OverwriteDao       bool                                       `name:"overwriteDao"        short:"v"  brief:"{CGenDaoBriefOverwriteDao}" orphan:"true"`
+		DescriptionTag     bool                                       `name:"descriptionTag"      short:"c"  brief:"{CGenDaoBriefDescriptionTag}" orphan:"true"`
+		NoJsonTag          bool                                       `name:"noJsonTag"           short:"k"  brief:"{CGenDaoBriefNoJsonTag}" orphan:"true"`
+		NoModelComment     bool                                       `name:"noModelComment"      short:"m"  brief:"{CGenDaoBriefNoModelComment}" orphan:"true"`
+		Clear              bool                                       `name:"clear"               short:"a"  brief:"{CGenDaoBriefClear}" orphan:"true"`
+		TypeMapping        map[string]CGenDaoInternalTypeMappingInput `name:"typeMapping"         short:"tm"  brief:"{CGenDaoBriefTypeMapping}" orphan:"true"`
 	}
 	CGenDaoOutput struct{}
 
@@ -186,6 +187,11 @@ type (
 		TableNames    []string
 		NewTableNames []string
 		ModName       string // Module name of current golang project, which is used for import purpose.
+	}
+
+	CGenDaoInternalTypeMappingInput struct {
+		Local  string `name:"local"`
+		Import string `name:"import"`
 	}
 )
 
@@ -313,7 +319,7 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 	})
 }
 
-func getImportPartContent(source string, isDo bool) string {
+func getImportPartContent(source string, isDo bool, appendImports []string) string {
 	var (
 		packageImportsArray = garray.NewStrArray()
 	)
@@ -332,6 +338,31 @@ func getImportPartContent(source string, isDo bool) string {
 	// Json type.
 	if strings.Contains(source, "gjson.Json") {
 		packageImportsArray.Append(`"github.com/gogf/gf/v2/encoding/gjson"`)
+	}
+
+	if appendImports != nil && len(appendImports) > 0 {
+		if !gfile.Exists("go.mod") {
+			mlog.Fatal("go.mod cannot be empty")
+		}
+
+		mod, err := modfile.Parse("go.mod", gfile.GetBytes("go.mod"), nil)
+		if err != nil {
+			panic(err)
+		}
+
+		for _, appendImport := range appendImports {
+			found := false
+			for _, require := range mod.Require {
+				if gstr.Contains(appendImport, require.Mod.Path) {
+					found = true
+					break
+				}
+			}
+			if !found {
+				mlog.Fatalf("not found %s in the go.mod", appendImport)
+			}
+			packageImportsArray.Append(fmt.Sprintf(`"%s"`, appendImport))
+		}
 	}
 
 	// Generate and write content to golang file.

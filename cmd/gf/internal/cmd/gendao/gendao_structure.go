@@ -27,13 +27,18 @@ type generateStructDefinitionInput struct {
 	IsDo       bool                       // Is generating DTO struct.
 }
 
-func generateStructDefinition(ctx context.Context, in generateStructDefinitionInput) string {
+func generateStructDefinition(ctx context.Context, in generateStructDefinitionInput) (string, []string) {
+	var appendImports []string
 	buffer := bytes.NewBuffer(nil)
 	array := make([][]string, len(in.FieldMap))
 	names := sortFieldKeyForDao(in.FieldMap)
 	for index, name := range names {
+		var imports string
 		field := in.FieldMap[name]
-		array[index] = generateStructFieldDefinition(ctx, field, in)
+		array[index], imports = generateStructFieldDefinition(ctx, field, in)
+		if imports != "" {
+			appendImports = append(appendImports, imports)
+		}
 	}
 	tw := tablewriter.NewWriter(buffer)
 	tw.SetBorder(false)
@@ -54,17 +59,18 @@ func generateStructDefinition(ctx context.Context, in generateStructDefinitionIn
 	}
 	buffer.WriteString(stContent)
 	buffer.WriteString("}")
-	return buffer.String()
+	return buffer.String(), appendImports
 }
 
 // generateStructFieldDefinition generates and returns the attribute definition for specified field.
 func generateStructFieldDefinition(
 	ctx context.Context, field *gdb.TableField, in generateStructDefinitionInput,
-) []string {
+) ([]string, string) {
 	var (
-		err      error
-		typeName string
-		jsonTag  = getJsonTagFromCase(field.Name, in.JsonCase)
+		err           error
+		typeName      string
+		jsonTag       = getJsonTagFromCase(field.Name, in.JsonCase)
+		appendImports string
 	)
 
 	if in.TypeMapping != nil && len(in.TypeMapping) > 0 {
@@ -78,8 +84,9 @@ func generateStructFieldDefinition(
 			tryTypeName = gstr.Split(field.Type, " ")[0]
 		}
 		if tryTypeName != "" {
-			if typeMappingName, ok := in.TypeMapping[strings.ToLower(tryTypeName)]; ok {
-				typeName = typeMappingName
+			if typeMapping, ok := in.TypeMapping[strings.ToLower(tryTypeName)]; ok {
+				typeName = typeMapping.Local
+				appendImports = typeMapping.Import
 			}
 		}
 	}
@@ -138,7 +145,7 @@ func generateStructFieldDefinition(
 		}
 		result[k] = v
 	}
-	return result
+	return result, appendImports
 }
 
 // formatComment formats the comment string to fit the golang code without any lines.
