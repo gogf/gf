@@ -109,7 +109,21 @@ generated json tag case for model struct, cases are as follows:
 )
 
 var (
-	createdAt = gtime.Now()
+	createdAt                         = gtime.Now()
+	cGenDaoInternalDefaultTypeMapping = map[string]CGenDaoInternalTypeMappingInput{
+		"decimal": {
+			Local: "float64",
+		},
+		"money": {
+			Local: "float64",
+		},
+		"numeric": {
+			Local: "float64",
+		},
+		"smallmoney": {
+			Local: "float64",
+		},
+	}
 )
 
 func init() {
@@ -280,6 +294,17 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 			array.RemoveValue(v)
 		}
 		tableNames = array.Slice()
+	}
+
+	//merge default typeMapping to CGenDaoInput.typeMapping
+	if in.TypeMapping == nil {
+		in.TypeMapping = cGenDaoInternalDefaultTypeMapping
+	} else {
+		for key, typeMapping := range cGenDaoInternalDefaultTypeMapping {
+			if _, ok := in.TypeMapping[key]; !ok {
+				in.TypeMapping[key] = typeMapping
+			}
+		}
 	}
 
 	// Generating dao & model go files one by one according to given table name.
