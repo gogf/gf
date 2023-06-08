@@ -16,6 +16,8 @@ var (
 	config = &gredis.Config{
 		Address: `:6379`,
 		Db:      1,
+		User:    "",
+		Pass:    "",
 	}
 	redis, _ = gredis.New(config)
 )
