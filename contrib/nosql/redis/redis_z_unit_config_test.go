@@ -7,6 +7,7 @@
 package redis_test
 
 import (
+	"github.com/gogf/gf/v2/container/gvar"
 	"testing"
 	"time"
 
