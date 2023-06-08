@@ -33,6 +33,8 @@ test = "v=3"
     [redis.cache]
         address = "127.0.0.1:6379"
         db      = 8
+        user    = ""
+        pass    = "pass"
     [redis.disk]
         address         = "127.0.0.1:6379"
         db              = 9
