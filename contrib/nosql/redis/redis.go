@@ -44,7 +44,7 @@ func New(config *gredis.Config) *Redis {
 	fillWithDefaultConfiguration(config)
 	opts := &redis.UniversalOptions{
 		Addrs:        gstr.SplitAndTrim(config.Address, ","),
-		Username: 	  config.User,
+		Username:     config.User,
 		Password:     config.Pass,
 		DB:           config.Db,
 		MaxRetries:   defaultMaxRetries,
