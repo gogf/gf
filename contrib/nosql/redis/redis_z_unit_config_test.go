@@ -34,3 +34,29 @@ func Test_ConfigFromMap(t *testing.T) {
 		t.Assert(c.ReadTimeout, 10*time.Second)
 	})
 }
+
+func Test_ConfigAddUser(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			c    *gredis.Redis
+			conn gredis.Conn
+			res  *gvar.Var
+			err  error
+		)
+
+		c, err = gredis.New(&gredis.Config{
+			Address: `redis-cloud.aws-west-xx.ec2.redislabs.com:18311`,
+			Db:      1,
+			User:    "userNameOrEmpty",
+			Pass:    "passwordOrEmpty",
+		})
+		t.AssertNil(err)
+
+		conn, err = c.Conn(ctx)
+		t.AssertNil(err)
+
+		res, err = conn.Do(ctx, "ping")
+		t.AssertNil(err)
+		t.Assert(res.String(), "PONG")
+	})
+}
