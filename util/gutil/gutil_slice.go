@@ -116,3 +116,20 @@ func SliceToMapWithColumnAsKey(slice interface{}, key interface{}) map[interface
 	}
 	return data
 }
+
+// CreateIntSliceFrom create a slice with start and length specified.
+// Eg :
+// CreateIntSliceFrom(-5,4) 	[-5 -4 -3 -2]
+// CreateIntSliceFrom(5,5)		[5 6 7 8 9]
+func CreateIntSliceFrom(start int, length int) []int {
+	var step = 1
+	if length < 0 {
+		length = -length
+		step = -1
+	}
+	result := make([]int, length)
+	for i, j := 0, start; i < length; i, j = i+1, j+step {
+		result[i] = j
+	}
+	return result
+}

@@ -95,3 +95,24 @@ func Test_SliceToMapWithColumnAsKey(t *testing.T) {
 		})
 	})
 }
+
+func Test_CreateIntSliceFrom(t *testing.T) {
+	start0, length0, resSlice0 := 1, 3, g.Slice{1, 2, 3}
+	start1, length1, resSlice1 := 5, 5, g.Slice{5, 6, 7, 8, 9}
+	start2, length2, resSlice2 := -5, 4, g.Slice{-5, -4, -3, -2}
+
+	gtest.C(t, func(t *gtest.T) {
+		res := gutil.CreateIntSliceFrom(start0, length0)
+		t.Assert(res, resSlice0)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		res := gutil.CreateIntSliceFrom(start1, length1)
+		t.Assert(res, resSlice1)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		res := gutil.CreateIntSliceFrom(start2, length2)
+		t.Assert(res, resSlice2)
+	})
+}
