@@ -68,7 +68,7 @@ func New(options ...Options) *Manager {
 	m := &Manager{
 		options: opts,
 		pattern: fmt.Sprintf(
-			`%s(\w+)%s`,
+			`%s(.+?)%s`,
 			gregex.Quote(opts.Delimiters[0]),
 			gregex.Quote(opts.Delimiters[1]),
 		),
@@ -122,7 +122,7 @@ func (m *Manager) SetLanguage(language string) {
 
 // SetDelimiters sets the delimiters for translator.
 func (m *Manager) SetDelimiters(left, right string) {
-	m.pattern = fmt.Sprintf(`%s(\w+)%s`, gregex.Quote(left), gregex.Quote(right))
+	m.pattern = fmt.Sprintf(`%s(.+?)%s`, gregex.Quote(left), gregex.Quote(right))
 	intlog.Printf(context.TODO(), `SetDelimiters: %v`, m.pattern)
 }
 
@@ -166,6 +166,8 @@ func (m *Manager) Translate(ctx context.Context, content string) string {
 			if v, ok := data[match[1]]; ok {
 				return v
 			}
+			// return match[1] will return the content between delimiters
+			// return match[0] will return the original content
 			return match[0]
 		})
 	intlog.Printf(ctx, `Translate for language: %s`, transLang)
