@@ -8,13 +8,16 @@ package zookeeper
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/net/gsvc"
 	"path"
 	"strings"
+
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
-// Search is the etcd discovery search function.
+// Search searches and returns services with specified condition.
 func (r *Registry) Search(_ context.Context, in gsvc.SearchInput) ([]gsvc.Service, error) {
 	prefix := strings.TrimPrefix(strings.ReplaceAll(in.Prefix, "/", "-"), "-")
 	instances, err, _ := r.group.Do(prefix, func() (interface{}, error) {
@@ -62,10 +65,33 @@ func (r *Registry) Search(_ context.Context, in gsvc.SearchInput) ([]gsvc.Servic
 			"Error with group do",
 		)
 	}
-	return instances.([]gsvc.Service), nil
+	// Service filter.
+	filteredServices := make([]gsvc.Service, 0)
+	for _, service := range instances.([]gsvc.Service) {
+		if in.Prefix != "" && !gstr.HasPrefix(service.GetKey(), in.Prefix) {
+			continue
+		}
+		if in.Name != "" && service.GetName() != in.Name {
+			continue
+		}
+		if in.Version != "" && service.GetVersion() != in.Version {
+			continue
+		}
+		if len(in.Metadata) != 0 {
+			m1 := gmap.NewStrAnyMapFrom(in.Metadata)
+			m2 := gmap.NewStrAnyMapFrom(service.GetMetadata())
+			if !m1.IsSubOf(m2) {
+				continue
+			}
+		}
+		resultItem := service
+		filteredServices = append(filteredServices, resultItem)
+	}
+	return filteredServices, nil
 }
 
-// Watch is the etcd discovery watch function.
+// Watch watches specified condition changes.
+// The `key` is the prefix of service key.
 func (r *Registry) Watch(ctx context.Context, key string) (gsvc.Watcher, error) {
 	return newWatcher(ctx, r.opts.namespace, key, r.conn)
 }

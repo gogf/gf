@@ -9,6 +9,8 @@ package garray_test
 import (
 	"fmt"
 
+	"github.com/gogf/gf/v2/internal/empty"
+
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/json"
@@ -550,6 +552,18 @@ func ExampleSortedStrArray_UnmarshalValue() {
 	// Output:
 	// &{john ["Math","English","Sport"]}
 	// &{john ["Math","English","Sport"]}
+}
+
+func ExampleSortedStrArray_Filter() {
+	s := garray.NewSortedStrArrayFrom(g.SliceStr{"b", "a", "", "c", "", "", "d"})
+	fmt.Println(s)
+	fmt.Println(s.Filter(func(index int, value string) bool {
+		return empty.IsEmpty(value)
+	}))
+
+	// Output:
+	// ["","","","a","b","c","d"]
+	// ["a","b","c","d"]
 }
 
 func ExampleSortedStrArray_FilterEmpty() {

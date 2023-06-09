@@ -193,11 +193,24 @@ func (a *SortedIntArray) doRemoveWithoutLock(index int) (value int, found bool) 
 // RemoveValue removes an item by value.
 // It returns true if value is found in the array, or else false if not found.
 func (a *SortedIntArray) RemoveValue(value int) bool {
-	if i := a.Search(value); i != -1 {
-		_, found := a.Remove(i)
-		return found
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if i, r := a.binSearch(value, false); r == 0 {
+		_, res := a.doRemoveWithoutLock(i)
+		return res
 	}
 	return false
+}
+
+// RemoveValues removes an item by `values`.
+func (a *SortedIntArray) RemoveValues(values ...int) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for _, value := range values {
+		if i, r := a.binSearch(value, false); r == 0 {
+			a.doRemoveWithoutLock(i)
+		}
+	}
 }
 
 // PopLeft pops and returns an item from the beginning of array.
@@ -694,6 +707,22 @@ func (a *SortedIntArray) UnmarshalValue(value interface{}) (err error) {
 		sort.Ints(a.array)
 	}
 	return err
+}
+
+// Filter iterates array and filters elements using custom callback function.
+// It removes the element from array if callback function `filter` returns true,
+// it or else does nothing and continues iterating.
+func (a *SortedIntArray) Filter(filter func(index int, value int) bool) *SortedIntArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if filter(i, a.array[i]) {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			i++
+		}
+	}
+	return a
 }
 
 // FilterEmpty removes all zero value of the array.

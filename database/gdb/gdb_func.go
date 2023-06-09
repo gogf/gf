@@ -226,7 +226,7 @@ func DataToMapDeep(value interface{}) map[string]interface{} {
 	return m
 }
 
-// doHandleTableName adds prefix string and quote chars for table name. It handles table string like:
+// doQuoteTableName adds prefix string and quote chars for table name. It handles table string like:
 // "user", "user u", "user,user_detail", "user u, user_detail ut", "user as u, user_detail as ut",
 // "user.user u", "`user`.`user` u".
 //
@@ -310,9 +310,12 @@ func getFieldsFromStructOrMap(structOrMap interface{}) (fields []string) {
 			Pointer:         structOrMap,
 			RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
 		})
+		var ormTagValue string
 		for _, structField := range structFields {
-			if tag := structField.Tag(OrmTagForStruct); tag != "" && gregex.IsMatchString(regularFieldNameRegPattern, tag) {
-				fields = append(fields, tag)
+			ormTagValue = structField.Tag(OrmTagForStruct)
+			ormTagValue = gstr.Split(gstr.Trim(ormTagValue), ",")[0]
+			if ormTagValue != "" && gregex.IsMatchString(regularFieldNameRegPattern, ormTagValue) {
+				fields = append(fields, ormTagValue)
 			} else {
 				fields = append(fields, structField.Name())
 			}
@@ -494,9 +497,16 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 			data, _ = db.GetCore().mappingAndFilterData(ctx, in.Schema, in.Table, data, true)
 		}
 		// Put the struct attributes in sequence in Where statement.
+		var ormTagValue string
 		for i := 0; i < reflectType.NumField(); i++ {
 			structField = reflectType.Field(i)
-			foundKey, foundValue := gutil.MapPossibleItemByKey(data, structField.Name)
+			// Use tag value from `orm` as field name if specified.
+			ormTagValue = structField.Tag.Get(OrmTagForStruct)
+			ormTagValue = gstr.Split(gstr.Trim(ormTagValue), ",")[0]
+			if ormTagValue == "" {
+				ormTagValue = structField.Name
+			}
+			foundKey, foundValue := gutil.MapPossibleItemByKey(data, ormTagValue)
 			if foundKey != "" {
 				if in.OmitNil && empty.IsNil(foundValue) {
 					continue
@@ -563,16 +573,16 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 			if i >= len(in.Args) {
 				break
 			}
+			// ===============================================================
 			// Sub query, which is always used along with a string condition.
-			if model, ok := in.Args[i].(*Model); ok {
+			// ===============================================================
+			if subModel, ok := in.Args[i].(*Model); ok {
 				index := -1
 				whereStr, _ = gregex.ReplaceStringFunc(`(\?)`, whereStr, func(s string) string {
 					index++
 					if i+len(newArgs) == index {
-						sqlWithHolder, holderArgs := model.getFormattedSqlAndArgs(
-							ctx, queryTypeNormal, false,
-						)
-						newArgs = append(newArgs, holderArgs...)
+						sqlWithHolder, holderArgs := subModel.getHolderAndArgsAsSubModel(ctx)
+						in.Args = gutil.SliceInsertAfter(in.Args, i, holderArgs...)
 						// Automatically adding the brackets.
 						return "(" + sqlWithHolder + ")"
 					}

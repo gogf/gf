@@ -1,3 +1,9 @@
+// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package service
 
 import (
@@ -29,6 +35,7 @@ type serviceInstallAvailablePath struct {
 	filePath  string
 	writable  bool
 	installed bool
+	IsSelf    bool
 }
 
 func (s serviceInstall) Run(ctx context.Context) (err error) {
@@ -104,6 +111,8 @@ func (s serviceInstall) Run(ctx context.Context) (err error) {
 			)
 			if input != "" {
 				inputID = gconv.Int(input)
+			} else {
+				break
 			}
 			// Check if out of range.
 			if inputID >= len(paths) || inputID < 0 {
@@ -131,17 +140,17 @@ func (s serviceInstall) Run(ctx context.Context) (err error) {
 }
 
 // IsInstalled checks and returns whether the binary is installed.
-func (s serviceInstall) IsInstalled() bool {
+func (s serviceInstall) IsInstalled() (*serviceInstallAvailablePath, bool) {
 	paths := s.getAvailablePaths()
 	for _, aPath := range paths {
 		if aPath.installed {
-			return true
+			return &aPath, true
 		}
 	}
-	return false
+	return nil, false
 }
 
-// getGoPathBinFilePath retrieves ad returns the GOPATH/bin path for binary.
+// getGoPathBin retrieves ad returns the GOPATH/bin path for binary.
 func (s serviceInstall) getGoPathBin() string {
 	if goPath := genv.Get(`GOPATH`).String(); goPath != "" {
 		return gfile.Join(goPath, "bin")
@@ -214,6 +223,7 @@ func (s serviceInstall) checkAndAppendToAvailablePath(folderPaths []serviceInsta
 		filePath  = gfile.Join(dirPath, binaryFileName)
 		writable  = gfile.IsWritable(dirPath)
 		installed = gfile.Exists(filePath)
+		self      = gfile.SelfPath() == filePath
 	)
 	if !writable && !installed {
 		return folderPaths
@@ -225,5 +235,6 @@ func (s serviceInstall) checkAndAppendToAvailablePath(folderPaths []serviceInsta
 			writable:  writable,
 			filePath:  filePath,
 			installed: installed,
+			IsSelf:    self,
 		})
 }

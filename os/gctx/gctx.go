@@ -44,6 +44,7 @@ func init() {
 		context.Background(),
 		propagation.MapCarrier(m),
 	)
+	initCtx = WithCtx(initCtx)
 }
 
 // New creates and returns a context which contains context id.

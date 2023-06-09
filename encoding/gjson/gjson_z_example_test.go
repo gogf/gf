@@ -796,11 +796,11 @@ func ExampleJson_Interfaces() {
 	}
 
 	infoList := []BaseInfo{
-		BaseInfo{
+		{
 			Name: "John",
 			Age:  18,
 		},
-		BaseInfo{
+		{
 			Name: "Tom",
 			Age:  20,
 		},

@@ -59,8 +59,8 @@ func (r GroupString) SetNX(ctx context.Context, key string, value interface{}) (
 // SetEX sets key to hold the string value and set key to timeout after a given number of seconds.
 // This command is equivalent to executing the following commands:
 //
-//     SET myKey value
-//     EXPIRE myKey seconds
+//	SET myKey value
+//	EXPIRE myKey seconds
 //
 // SetEX is atomic, and can be reproduced by using the previous two commands inside an MULTI / EXEC block.
 // It is provided as a faster alternative to the given sequence of operations, because this operation is very

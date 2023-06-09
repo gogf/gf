@@ -26,6 +26,12 @@ func (s *Schemas) init() {
 	}
 }
 
+func (s *Schemas) Clone() Schemas {
+	newSchemas := createSchemas()
+	newSchemas.refs = s.refs.Clone()
+	return newSchemas
+}
+
 func (s *Schemas) Get(name string) *SchemaRef {
 	s.init()
 	value := s.refs.Get(name)

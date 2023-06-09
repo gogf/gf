@@ -231,7 +231,7 @@ type doMapConvertForMapOrStructValueInput struct {
 }
 
 func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) interface{} {
-	if in.IsRoot == false && in.RecursiveOption == false {
+	if !in.IsRoot && !in.RecursiveOption {
 		return in.Value
 	}
 
@@ -331,6 +331,9 @@ func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) in
 					default:
 						mapKey = strings.TrimSpace(array[0])
 					}
+				}
+				if mapKey == "" {
+					mapKey = fieldName
 				}
 			}
 			if in.RecursiveOption || rtField.Anonymous {

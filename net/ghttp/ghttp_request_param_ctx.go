@@ -8,10 +8,31 @@ package ghttp
 
 import (
 	"context"
+	"time"
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/os/gctx"
 )
+
+// neverDoneCtx never done.
+type neverDoneCtx struct {
+	context.Context
+}
+
+// Done forbids the context done from parent context.
+func (*neverDoneCtx) Done() <-chan struct{} {
+	return nil
+}
+
+// Deadline forbids the context deadline from parent context.
+func (*neverDoneCtx) Deadline() (deadline time.Time, ok bool) {
+	return time.Time{}, false
+}
+
+// Err forbids the context done from parent context.
+func (c *neverDoneCtx) Err() error {
+	return nil
+}
 
 // RequestFromCtx retrieves and returns the Request object from context.
 func RequestFromCtx(ctx context.Context) *Request {
@@ -26,10 +47,12 @@ func RequestFromCtx(ctx context.Context) *Request {
 // See GetCtx.
 func (r *Request) Context() context.Context {
 	if r.context == nil {
-		// DO NOT use the http context as it will be canceled after request done,
-		// which makes the asynchronous goroutine encounter "context canceled" error.
-		// r.context = r.Request.Context()
-		r.context = gctx.New()
+		// It forbids the context manually done,
+		// to make the context can be propagated to asynchronous goroutines.
+		r.context = &neverDoneCtx{
+			r.Request.Context(),
+		}
+		r.context = gctx.WithCtx(r.context)
 	}
 	// Inject Request object into context.
 	if RequestFromCtx(r.context) == nil {

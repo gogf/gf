@@ -91,9 +91,10 @@ func (s *Server) mergeBuildInNameToPattern(pattern string, structName, methodNam
 		return pattern
 	}
 	// Check domain parameter.
-	array := strings.Split(pattern, "@")
-	uri := array[0]
-	uri = strings.TrimRight(uri, "/") + "/" + methodName
+	var (
+		array = strings.Split(pattern, "@")
+		uri   = strings.TrimRight(array[0], "/") + "/" + methodName
+	)
 	// Append the domain parameter to URI.
 	if len(array) > 1 {
 		return uri + "@" + array[1]
@@ -151,13 +152,13 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 			if pkgPath != "" {
 				err = gerror.NewCodef(
 					gcode.CodeInvalidParameter,
-					`invalid handler: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" or "func(context.Context, *BizRequest)(*BizResponse, error)" is required`,
+					`invalid handler: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" or "func(context.Context, *BizReq)(*BizRes, error)" is required`,
 					pkgPath, structName, methodName, reflect.TypeOf(f).String(),
 				)
 			} else {
 				err = gerror.NewCodef(
 					gcode.CodeInvalidParameter,
-					`invalid handler: defined as "%s", but "func(*ghttp.Request)" or "func(context.Context, *BizRequest)(*BizResponse, error)" is required`,
+					`invalid handler: defined as "%s", but "func(*ghttp.Request)" or "func(context.Context, *BizReq)(*BizRes, error)" is required`,
 					reflect.TypeOf(f).String(),
 				)
 			}

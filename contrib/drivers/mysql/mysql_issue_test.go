@@ -21,6 +21,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
+// https://github.com/gogf/gf/issues/1934
 func Test_Issue1934(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
@@ -460,12 +461,12 @@ func Test_Issue2105(t *testing.T) {
 
 // https://github.com/gogf/gf/issues/2231
 func Test_Issue2231(t *testing.T) {
-	linkPattern := `(\w+):([\w\-]*):(.*?)@(\w+?)\((.+?)\)/{0,1}([^\?]*)\?{0,1}(.*)`
-	link := `mysql:root:12345678@tcp(127.0.0.1:3306)/a正bc式?loc=Local&parseTime=true`
-
+	var (
+		pattern = `(\w+):([\w\-]*):(.*?)@(\w+?)\((.+?)\)/{0,1}([^\?]*)\?{0,1}(.*)`
+		link    = `mysql:root:12345678@tcp(127.0.0.1:3306)/a正bc式?loc=Local&parseTime=true`
+	)
 	gtest.C(t, func(t *gtest.T) {
-
-		match, err := gregex.MatchString(linkPattern, link)
+		match, err := gregex.MatchString(pattern, link)
 		t.AssertNil(err)
 		t.Assert(match[1], "mysql")
 		t.Assert(match[2], "root")
@@ -474,5 +475,288 @@ func Test_Issue2231(t *testing.T) {
 		t.Assert(match[5], "127.0.0.1:3306")
 		t.Assert(match[6], "a正bc式")
 		t.Assert(match[7], "loc=Local&parseTime=true")
+	})
+}
+
+// https://github.com/gogf/gf/issues/2339
+func Test_Issue2339(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		model1 := db.Model(table, "u1").Where("id between ? and ?", 1, 9)
+		model2 := db.Model("? as u2", model1)
+		model3 := db.Model("? as u3", model2)
+		all2, err := model2.WhereGT("id", 6).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(all2), 3)
+		t.Assert(all2[0]["id"], 7)
+
+		all3, err := model3.WhereGT("id", 7).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(all3), 2)
+		t.Assert(all3[0]["id"], 8)
+	})
+}
+
+// https://github.com/gogf/gf/issues/2356
+func Test_Issue2356(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := "demo_" + guid.S()
+		if _, err := db.Exec(ctx, fmt.Sprintf(`
+	    CREATE TABLE %s (
+	        id BIGINT(20) UNSIGNED NOT NULL DEFAULT '0',
+	        PRIMARY KEY (id)
+	    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	    `, table,
+		)); err != nil {
+			t.AssertNil(err)
+		}
+		defer dropTable(table)
+
+		if _, err := db.Exec(ctx, fmt.Sprintf(`INSERT INTO %s (id) VALUES (18446744073709551615);`, table)); err != nil {
+			t.AssertNil(err)
+		}
+
+		one, err := db.Model(table).One()
+		t.AssertNil(err)
+		t.AssertEQ(one["id"].Val(), uint64(18446744073709551615))
+	})
+}
+
+// https://github.com/gogf/gf/issues/2338
+func Test_Issue2338(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table1 := "demo_" + guid.S()
+		table2 := "demo_" + guid.S()
+		if _, err := db.Schema(TestSchema1).Exec(ctx, fmt.Sprintf(`
+CREATE TABLE %s (
+    id        int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'User ID',
+    nickname  varchar(45) DEFAULT NULL COMMENT 'User Nickname',
+    create_at datetime(6) DEFAULT NULL COMMENT 'Created Time',
+    update_at datetime(6) DEFAULT NULL COMMENT 'Updated Time',
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	    `, table1,
+		)); err != nil {
+			t.AssertNil(err)
+		}
+		if _, err := db.Schema(TestSchema2).Exec(ctx, fmt.Sprintf(`
+CREATE TABLE %s (
+    id        int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'User ID',
+    nickname  varchar(45) DEFAULT NULL COMMENT 'User Nickname',
+    create_at datetime(6) DEFAULT NULL COMMENT 'Created Time',
+    update_at datetime(6) DEFAULT NULL COMMENT 'Updated Time',
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	    `, table2,
+		)); err != nil {
+			t.AssertNil(err)
+		}
+		defer dropTableWithDb(db.Schema(TestSchema1), table1)
+		defer dropTableWithDb(db.Schema(TestSchema2), table2)
+
+		var err error
+		_, err = db.Schema(TestSchema1).Model(table1).Insert(g.Map{
+			"id":       1,
+			"nickname": "name_1",
+		})
+		t.AssertNil(err)
+
+		_, err = db.Schema(TestSchema2).Model(table2).Insert(g.Map{
+			"id":       1,
+			"nickname": "name_2",
+		})
+		t.AssertNil(err)
+
+		tableName1 := fmt.Sprintf(`%s.%s`, TestSchema1, table1)
+		tableName2 := fmt.Sprintf(`%s.%s`, TestSchema2, table2)
+		all, err := db.Model(tableName1).As(`a`).
+			LeftJoin(tableName2+" b", `a.id=b.id`).
+			Fields(`a.id`, `b.nickname`).All()
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["nickname"], "name_2")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		table1 := "demo_" + guid.S()
+		table2 := "demo_" + guid.S()
+		if _, err := db.Schema(TestSchema1).Exec(ctx, fmt.Sprintf(`
+CREATE TABLE %s (
+    id        int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'User ID',
+    nickname  varchar(45) DEFAULT NULL COMMENT 'User Nickname',
+    create_at datetime(6) DEFAULT NULL COMMENT 'Created Time',
+    update_at datetime(6) DEFAULT NULL COMMENT 'Updated Time',
+    deleted_at datetime(6) DEFAULT NULL COMMENT 'Deleted Time',
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	    `, table1,
+		)); err != nil {
+			t.AssertNil(err)
+		}
+		if _, err := db.Schema(TestSchema2).Exec(ctx, fmt.Sprintf(`
+CREATE TABLE %s (
+    id        int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'User ID',
+    nickname  varchar(45) DEFAULT NULL COMMENT 'User Nickname',
+    create_at datetime(6) DEFAULT NULL COMMENT 'Created Time',
+    update_at datetime(6) DEFAULT NULL COMMENT 'Updated Time',
+    deleted_at datetime(6) DEFAULT NULL COMMENT 'Deleted Time',
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	    `, table2,
+		)); err != nil {
+			t.AssertNil(err)
+		}
+		defer dropTableWithDb(db.Schema(TestSchema1), table1)
+		defer dropTableWithDb(db.Schema(TestSchema2), table2)
+
+		var err error
+		_, err = db.Schema(TestSchema1).Model(table1).Insert(g.Map{
+			"id":       1,
+			"nickname": "name_1",
+		})
+		t.AssertNil(err)
+
+		_, err = db.Schema(TestSchema2).Model(table2).Insert(g.Map{
+			"id":       1,
+			"nickname": "name_2",
+		})
+		t.AssertNil(err)
+
+		tableName1 := fmt.Sprintf(`%s.%s`, TestSchema1, table1)
+		tableName2 := fmt.Sprintf(`%s.%s`, TestSchema2, table2)
+		all, err := db.Model(tableName1).As(`a`).
+			LeftJoin(tableName2+" b", `a.id=b.id`).
+			Fields(`a.id`, `b.nickname`).All()
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["nickname"], "name_2")
+	})
+}
+
+// https://github.com/gogf/gf/issues/2427
+func Test_Issue2427(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := "demo_" + guid.S()
+		if _, err := db.Exec(ctx, fmt.Sprintf(`
+CREATE TABLE %s (
+    id        int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'User ID',
+    passport  varchar(45) NOT NULL COMMENT 'User Passport',
+    password  varchar(45) NOT NULL COMMENT 'User Password',
+    nickname  varchar(45) NOT NULL COMMENT 'User Nickname',
+    create_at datetime(6) DEFAULT NULL COMMENT 'Created Time',
+    update_at datetime(6) DEFAULT NULL COMMENT 'Updated Time',
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	    `, table,
+		)); err != nil {
+			t.AssertNil(err)
+		}
+		defer dropTable(table)
+
+		_, err1 := db.Model(table).Delete()
+		t.Assert(err1, `there should be WHERE condition statement for DELETE operation`)
+
+		_, err2 := db.Model(table).Where(g.Map{}).Delete()
+		t.Assert(err2, `there should be WHERE condition statement for DELETE operation`)
+
+		_, err3 := db.Model(table).Where(1).Delete()
+		t.AssertNil(err3)
+	})
+}
+
+// https://github.com/gogf/gf/issues/2561
+func Test_Issue2561(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			g.Meta     `orm:"do:true"`
+			Id         interface{}
+			Passport   interface{}
+			Password   interface{}
+			Nickname   interface{}
+			CreateTime interface{}
+		}
+		data := g.Slice{
+			User{
+				Id:       1,
+				Passport: "user_1",
+			},
+			User{
+				Id:       2,
+				Password: "pass_2",
+			},
+			User{
+				Id:       3,
+				Password: "pass_3",
+			},
+		}
+		result, err := db.Model(table).Data(data).Insert()
+		t.AssertNil(err)
+		m, _ := result.LastInsertId()
+		t.Assert(m, 3)
+
+		n, _ := result.RowsAffected()
+		t.Assert(n, 3)
+
+		one, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one[`id`], `1`)
+		t.Assert(one[`passport`], `user_1`)
+		t.Assert(one[`password`], ``)
+		t.Assert(one[`nickname`], ``)
+		t.Assert(one[`create_time`], ``)
+
+		one, err = db.Model(table).WherePri(2).One()
+		t.AssertNil(err)
+		t.Assert(one[`id`], `2`)
+		t.Assert(one[`passport`], ``)
+		t.Assert(one[`password`], `pass_2`)
+		t.Assert(one[`nickname`], ``)
+		t.Assert(one[`create_time`], ``)
+
+		one, err = db.Model(table).WherePri(3).One()
+		t.AssertNil(err)
+		t.Assert(one[`id`], `3`)
+		t.Assert(one[`passport`], ``)
+		t.Assert(one[`password`], `pass_3`)
+		t.Assert(one[`nickname`], ``)
+		t.Assert(one[`create_time`], ``)
+	})
+}
+
+// https://github.com/gogf/gf/issues/2439
+func Test_Issue2439(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := gstr.SplitAndTrim(gtest.DataContent(`issue2439.sql`), ";")
+		for _, v := range array {
+			if _, err := db.Exec(ctx, v); err != nil {
+				gtest.Error(err)
+			}
+		}
+		defer dropTable("a")
+		defer dropTable("b")
+		defer dropTable("c")
+
+		orm := db.Model("a")
+		orm = orm.InnerJoin(
+			"c", "a.id=c.id",
+		)
+		orm = orm.InnerJoinOnField("b", "id")
+		whereFormat := fmt.Sprintf(
+			"(`%s`.`%s` LIKE ?) ",
+			"b", "name",
+		)
+		orm = orm.WhereOrf(
+			whereFormat,
+			"%a%",
+		)
+		r, err := orm.All()
+		t.AssertNil(err)
+		t.Assert(len(r), 1)
+		t.Assert(r[0]["id"], 2)
+		t.Assert(r[0]["name"], "a")
 	})
 }

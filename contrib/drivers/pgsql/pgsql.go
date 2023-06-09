@@ -17,6 +17,8 @@ import (
 	"fmt"
 	"strings"
 
+	_ "github.com/lib/pq"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -25,7 +27,6 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
-	_ "github.com/lib/pq"
 )
 
 // Driver is the driver for postgresql database.
@@ -36,6 +37,7 @@ type Driver struct {
 const (
 	internalPrimaryKeyInCtx gctx.StrKey = "primary_key"
 	defaultSchema                       = "public"
+	quoteChar                           = `"`
 )
 
 func init() {
@@ -86,6 +88,10 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 			)
 		}
 
+		if config.Namespace != "" {
+			source = fmt.Sprintf("%s search_path=%s", source, config.Namespace)
+		}
+
 		if config.Timezone != "" {
 			source = fmt.Sprintf("%s timezone=%s", source, config.Timezone)
 		}
@@ -113,7 +119,7 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 
 // GetChars returns the security char for this type of database.
 func (d *Driver) GetChars() (charLeft string, charRight string) {
-	return `"`, `"`
+	return quoteChar, quoteChar
 }
 
 // CheckLocalTypeForField checks and returns corresponding local golang type for given db type.
@@ -268,9 +274,10 @@ ORDER BY
 // Also see DriverMysql.TableFields.
 func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
 	var (
-		result       gdb.Result
-		link         gdb.Link
-		useSchema    = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+		result     gdb.Result
+		link       gdb.Link
+		usedSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+		// TODO duplicated `id` result?
 		structureSql = fmt.Sprintf(`
 SELECT a.attname AS field, t.typname AS type,a.attnotnull as null,
     (case when d.contype is not null then 'pri' else '' end)  as key
@@ -288,7 +295,7 @@ ORDER BY a.attnum`,
 			table,
 		)
 	)
-	if link, err = d.SlaveLink(useSchema); err != nil {
+	if link, err = d.SlaveLink(usedSchema); err != nil {
 		return nil, err
 	}
 	structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
@@ -297,16 +304,27 @@ ORDER BY a.attnum`,
 		return nil, err
 	}
 	fields = make(map[string]*gdb.TableField)
-	for i, m := range result {
-		fields[m["field"].String()] = &gdb.TableField{
-			Index:   i,
-			Name:    m["field"].String(),
+	var (
+		index = 0
+		name  string
+		ok    bool
+	)
+	for _, m := range result {
+		name = m["field"].String()
+		// Filter duplicated fields.
+		if _, ok = fields[name]; ok {
+			continue
+		}
+		fields[name] = &gdb.TableField{
+			Index:   index,
+			Name:    name,
 			Type:    m["type"].String(),
 			Null:    !m["null"].Bool(),
 			Key:     m["key"].String(),
 			Default: m["default_value"].Val(),
 			Comment: m["comment"].String(),
 		}
+		index++
 	}
 	return fields, nil
 }

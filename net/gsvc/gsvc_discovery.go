@@ -17,25 +17,43 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-// watchedServiceMap stores used service
-var watchedServiceMap = gmap.New(true)
+// watchedMap stores discovery object and its watched service mapping.
+var watchedMap = gmap.New(true)
 
 // ServiceWatch is used to watch the service status.
 type ServiceWatch func(service Service)
 
 // Get retrieves and returns the service by service name.
 func Get(ctx context.Context, name string) (service Service, err error) {
-	return GetAndWatch(ctx, name, nil)
+	return GetAndWatchWithDiscovery(ctx, defaultRegistry, name, nil)
+}
+
+// GetWithDiscovery retrieves and returns the service by service name in `discovery`.
+func GetWithDiscovery(ctx context.Context, discovery Discovery, name string) (service Service, err error) {
+	return GetAndWatchWithDiscovery(ctx, discovery, name, nil)
 }
 
 // GetAndWatch is used to getting the service with custom watch callback function.
 func GetAndWatch(ctx context.Context, name string, watch ServiceWatch) (service Service, err error) {
-	v := watchedServiceMap.GetOrSetFuncLock(name, func() interface{} {
+	return GetAndWatchWithDiscovery(ctx, defaultRegistry, name, watch)
+}
+
+// GetAndWatchWithDiscovery is used to getting the service with custom watch callback function in `discovery`.
+func GetAndWatchWithDiscovery(ctx context.Context, discovery Discovery, name string, watch ServiceWatch) (service Service, err error) {
+	if discovery == nil {
+		return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `discovery cannot be nil`)
+	}
+	// Retrieve service map by discovery object.
+	watchedServiceMap := watchedMap.GetOrSetFunc(discovery, func() interface{} {
+		return gmap.NewStrAnyMap(true)
+	}).(*gmap.StrAnyMap)
+	// Retrieve service by name.
+	storedService := watchedServiceMap.GetOrSetFuncLock(name, func() interface{} {
 		var (
 			services []Service
 			watcher  Watcher
 		)
-		services, err = Search(ctx, SearchInput{
+		services, err = discovery.Search(ctx, SearchInput{
 			Name: name,
 		})
 		if err != nil {
@@ -51,21 +69,21 @@ func GetAndWatch(ctx context.Context, name string, watch ServiceWatch) (service 
 
 		// Watch the service changes in goroutine.
 		if watch != nil {
-			if watcher, err = Watch(ctx, service.GetPrefix()); err != nil {
+			if watcher, err = discovery.Watch(ctx, service.GetPrefix()); err != nil {
 				return nil
 			}
-			go watchAndUpdateService(watcher, service, watch)
+			go watchAndUpdateService(watchedServiceMap, watcher, service, watch)
 		}
 		return service
 	})
-	if v != nil {
-		service = v.(Service)
+	if storedService != nil {
+		service = storedService.(Service)
 	}
 	return
 }
 
 // watchAndUpdateService watches and updates the service in memory if it is changed.
-func watchAndUpdateService(watcher Watcher, service Service, watchFunc ServiceWatch) {
+func watchAndUpdateService(watchedServiceMap *gmap.StrAnyMap, watcher Watcher, service Service, watchFunc ServiceWatch) {
 	var (
 		ctx      = context.Background()
 		err      error

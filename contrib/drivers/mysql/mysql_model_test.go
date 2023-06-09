@@ -3134,9 +3134,9 @@ func createTableForTimeZoneTest() string {
 	        passport    varchar(45) NULL,
 	        password    char(32) NULL,
 	        nickname    varchar(45) NULL,
-	        created_at timestamp NULL,
- 			updated_at timestamp NULL,
-			deleted_at timestamp NULL,
+	        created_at timestamp(6) NULL,
+ 			updated_at timestamp(6) NULL,
+			deleted_at timestamp(6) NULL,
 	        PRIMARY KEY (id)
 	    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 	    `, tableName,

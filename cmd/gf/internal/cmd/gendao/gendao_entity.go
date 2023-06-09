@@ -1,3 +1,9 @@
+// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package gendao
 
 import (
@@ -16,7 +22,7 @@ import (
 func generateEntity(ctx context.Context, in CGenDaoInternalInput) {
 	var dirPathEntity = gfile.Join(in.Path, in.EntityPath)
 	if in.Clear {
-		doClear(ctx, dirPathEntity)
+		doClear(ctx, dirPathEntity, false)
 	}
 	// Model content.
 	for i, tableName := range in.TableNames {

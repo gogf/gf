@@ -53,7 +53,7 @@ func Test_Slice_Ints(t *testing.T) {
 		t.AssertEQ(gconv.Ints(" [26, 27] "), []int{26, 27})
 		t.AssertEQ(gconv.Ints([]uint8(`[{"id": 1, "name":"john"},{"id": 2, "name":"huang"}]`)), []int{0, 0})
 		t.AssertEQ(gconv.Ints([]bool{true, false}), []int{1, 0})
-		t.AssertEQ(gconv.Ints([][]byte{[]byte{byte(1)}, []byte{byte(2)}}), []int{1, 2})
+		t.AssertEQ(gconv.Ints([][]byte{{byte(1)}, {byte(2)}}), []int{1, 2})
 	})
 }
 
@@ -76,7 +76,7 @@ func Test_Slice_Int32s(t *testing.T) {
 		t.AssertEQ(gconv.Int32s([]bool{true, false}), []int32{1, 0})
 		t.AssertEQ(gconv.Int32s([]float32{1, 2}), []int32{1, 2})
 		t.AssertEQ(gconv.Int32s([]float64{1, 2}), []int32{1, 2})
-		t.AssertEQ(gconv.Int32s([][]byte{[]byte{byte(1)}, []byte{byte(2)}}), []int32{1, 2})
+		t.AssertEQ(gconv.Int32s([][]byte{{byte(1)}, {byte(2)}}), []int32{1, 2})
 
 		s := gvar.Vars{
 			gvar.New(1),
@@ -105,7 +105,7 @@ func Test_Slice_Int64s(t *testing.T) {
 		t.AssertEQ(gconv.Int64s([]bool{true, false}), []int64{1, 0})
 		t.AssertEQ(gconv.Int64s([]float32{1, 2}), []int64{1, 2})
 		t.AssertEQ(gconv.Int64s([]float64{1, 2}), []int64{1, 2})
-		t.AssertEQ(gconv.Int64s([][]byte{[]byte{byte(1)}, []byte{byte(2)}}), []int64{1, 2})
+		t.AssertEQ(gconv.Int64s([][]byte{{byte(1)}, {byte(2)}}), []int64{1, 2})
 
 		s := gvar.Vars{
 			gvar.New(1),
@@ -135,7 +135,7 @@ func Test_Slice_Uints(t *testing.T) {
 		t.AssertEQ(gconv.Uints([]bool{true, false}), []uint{1, 0})
 		t.AssertEQ(gconv.Uints([]float32{1, 2}), []uint{1, 2})
 		t.AssertEQ(gconv.Uints([]float64{1, 2}), []uint{1, 2})
-		t.AssertEQ(gconv.Uints([][]byte{[]byte{byte(1)}, []byte{byte(2)}}), []uint{1, 2})
+		t.AssertEQ(gconv.Uints([][]byte{{byte(1)}, {byte(2)}}), []uint{1, 2})
 
 		s := gvar.Vars{
 			gvar.New(1),
@@ -165,7 +165,7 @@ func Test_Slice_Uint32s(t *testing.T) {
 		t.AssertEQ(gconv.Uint32s([]bool{true, false}), []uint32{1, 0})
 		t.AssertEQ(gconv.Uint32s([]float32{1, 2}), []uint32{1, 2})
 		t.AssertEQ(gconv.Uint32s([]float64{1, 2}), []uint32{1, 2})
-		t.AssertEQ(gconv.Uint32s([][]byte{[]byte{byte(1)}, []byte{byte(2)}}), []uint32{1, 2})
+		t.AssertEQ(gconv.Uint32s([][]byte{{byte(1)}, {byte(2)}}), []uint32{1, 2})
 
 		s := gvar.Vars{
 			gvar.New(1),
@@ -195,7 +195,7 @@ func Test_Slice_Uint64s(t *testing.T) {
 		t.AssertEQ(gconv.Uint64s([]bool{true, false}), []uint64{1, 0})
 		t.AssertEQ(gconv.Uint64s([]float32{1, 2}), []uint64{1, 2})
 		t.AssertEQ(gconv.Uint64s([]float64{1, 2}), []uint64{1, 2})
-		t.AssertEQ(gconv.Uint64s([][]byte{[]byte{byte(1)}, []byte{byte(2)}}), []uint64{1, 2})
+		t.AssertEQ(gconv.Uint64s([][]byte{{byte(1)}, {byte(2)}}), []uint64{1, 2})
 
 		s := gvar.Vars{
 			gvar.New(1),
@@ -412,5 +412,48 @@ func Test_Slice_Structs(t *testing.T) {
 		t.Assert(users[1].Id, params[1]["id"])
 		t.Assert(users[1].Name, params[1]["name"])
 		t.Assert(users[1].Age, 20)
+	})
+}
+
+func Test_EmptyString_To_CustomType(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Status string
+		type Req struct {
+			Name     string
+			Statuses []Status
+			Types    []string
+		}
+		var (
+			req  *Req
+			data = g.Map{
+				"Name":     "john",
+				"Statuses": "",
+				"Types":    "",
+			}
+		)
+		err := gconv.Scan(data, &req)
+		t.AssertNil(err)
+		t.Assert(len(req.Statuses), 0)
+		t.Assert(len(req.Types), 0)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Status string
+		type Req struct {
+			Name     string
+			Statuses []*Status
+			Types    []string
+		}
+		var (
+			req  *Req
+			data = g.Map{
+				"Name":     "john",
+				"Statuses": "",
+				"Types":    "",
+			}
+		)
+		err := gconv.Scan(data, &req)
+		t.AssertNil(err)
+		t.Assert(len(req.Statuses), 0)
+		t.Assert(len(req.Types), 0)
 	})
 }

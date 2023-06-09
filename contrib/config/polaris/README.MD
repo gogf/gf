@@ -51,7 +51,7 @@ func init() {
 }
 ```
 
-## Import boot package in top of main
+## Import boot package on top of main
 
 It is strongly recommended import your boot package in top of your `main.go`.
 

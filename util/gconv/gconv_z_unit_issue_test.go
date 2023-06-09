@@ -8,6 +8,7 @@ package gconv_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/encoding/gjson"
@@ -273,5 +274,21 @@ func Test_Issue2395(t *testing.T) {
 		var ()
 		obj := Test{Num: 0}
 		t.Assert(gconv.Interfaces(obj), []interface{}{obj})
+	})
+}
+
+// https://github.com/gogf/gf/issues/2371
+func Test_Issue2371(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			s = struct {
+				Time time.Time `json:"time"`
+			}{}
+			jsonMap = map[string]interface{}{"time": "2022-12-15 16:11:34"}
+		)
+
+		err := gconv.Struct(jsonMap, &s)
+		t.AssertNil(err)
+		t.Assert(s.Time.UTC(), `2022-12-15 08:11:34 +0000 UTC`)
 	})
 }

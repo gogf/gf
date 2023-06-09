@@ -35,6 +35,13 @@ var (
 
 // NewFromObject creates and returns a root command object using given object.
 func NewFromObject(object interface{}) (rootCmd *Command, err error) {
+	switch c := object.(type) {
+	case Command:
+		return &c, nil
+	case *Command:
+		return c, nil
+	}
+
 	originValueAndKind := reflection.OriginValueAndKind(object)
 	if originValueAndKind.OriginKind != reflect.Struct {
 		err = gerror.Newf(

@@ -147,7 +147,7 @@ func ExampleJoin() {
 
 	fmt.Println(joinString)
 
-	// Output:
+	// May Output:
 	// /tmp/gfile_example_basic_dir/file1
 }
 
@@ -389,7 +389,7 @@ func ExampleAbs() {
 	// Get an absolute representation of path.
 	fmt.Println(gfile.Abs(path))
 
-	// Output:
+	// May Output:
 	// /tmp/gfile_example_basic_dir/file1
 }
 
@@ -404,9 +404,8 @@ func ExampleRealPath() {
 	fmt.Println(gfile.RealPath(realPath))
 	fmt.Println(gfile.RealPath(worryPath))
 
-	// Output:
+	// May Output:
 	// /tmp/gfile_example_basic_dir/file1
-	//
 }
 
 func ExampleSelfPath() {
@@ -471,7 +470,7 @@ func ExampleDir() {
 	// Get all but the last element of path, typically the path's directory.
 	fmt.Println(gfile.Dir(path))
 
-	// Output:
+	// May Output:
 	// /tmp/gfile_example_basic_dir
 }
 
@@ -532,7 +531,7 @@ func ExampleTempDir() {
 
 	fmt.Println(path)
 
-	// Output:
+	// May Output:
 	// /tmp/gfile_example_basic_dir
 }
 

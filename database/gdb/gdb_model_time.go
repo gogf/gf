@@ -32,70 +32,70 @@ func (m *Model) Unscoped() *Model {
 // getSoftFieldNameCreate checks and returns the field name for record creating time.
 // If there's no field name for storing creating time, it returns an empty string.
 // It checks the key with or without cases or chars '-'/'_'/'.'/' '.
-func (m *Model) getSoftFieldNameCreated(table ...string) string {
+func (m *Model) getSoftFieldNameCreated(schema string, table string) string {
 	// It checks whether this feature disabled.
 	if m.db.GetConfig().TimeMaintainDisabled {
 		return ""
 	}
 	tableName := ""
-	if len(table) > 0 {
-		tableName = table[0]
+	if table != "" {
+		tableName = table
 	} else {
 		tableName = m.tablesInit
 	}
 	config := m.db.GetConfig()
 	if config.CreatedAt != "" {
-		return m.getSoftFieldName(tableName, []string{config.CreatedAt})
+		return m.getSoftFieldName(schema, tableName, []string{config.CreatedAt})
 	}
-	return m.getSoftFieldName(tableName, createdFiledNames)
+	return m.getSoftFieldName(schema, tableName, createdFiledNames)
 }
 
 // getSoftFieldNameUpdate checks and returns the field name for record updating time.
 // If there's no field name for storing updating time, it returns an empty string.
 // It checks the key with or without cases or chars '-'/'_'/'.'/' '.
-func (m *Model) getSoftFieldNameUpdated(table ...string) (field string) {
+func (m *Model) getSoftFieldNameUpdated(schema string, table string) (field string) {
 	// It checks whether this feature disabled.
 	if m.db.GetConfig().TimeMaintainDisabled {
 		return ""
 	}
 	tableName := ""
-	if len(table) > 0 {
-		tableName = table[0]
+	if table != "" {
+		tableName = table
 	} else {
 		tableName = m.tablesInit
 	}
 	config := m.db.GetConfig()
 	if config.UpdatedAt != "" {
-		return m.getSoftFieldName(tableName, []string{config.UpdatedAt})
+		return m.getSoftFieldName(schema, tableName, []string{config.UpdatedAt})
 	}
-	return m.getSoftFieldName(tableName, updatedFiledNames)
+	return m.getSoftFieldName(schema, tableName, updatedFiledNames)
 }
 
 // getSoftFieldNameDelete checks and returns the field name for record deleting time.
 // If there's no field name for storing deleting time, it returns an empty string.
 // It checks the key with or without cases or chars '-'/'_'/'.'/' '.
-func (m *Model) getSoftFieldNameDeleted(table ...string) (field string) {
+func (m *Model) getSoftFieldNameDeleted(schema string, table string) (field string) {
 	// It checks whether this feature disabled.
 	if m.db.GetConfig().TimeMaintainDisabled {
 		return ""
 	}
 	tableName := ""
-	if len(table) > 0 {
-		tableName = table[0]
+	if table != "" {
+		tableName = table
 	} else {
 		tableName = m.tablesInit
 	}
 	config := m.db.GetConfig()
 	if config.DeletedAt != "" {
-		return m.getSoftFieldName(tableName, []string{config.DeletedAt})
+		return m.getSoftFieldName(schema, tableName, []string{config.DeletedAt})
 	}
-	return m.getSoftFieldName(tableName, deletedFiledNames)
+	return m.getSoftFieldName(schema, tableName, deletedFiledNames)
 }
 
 // getSoftFieldName retrieves and returns the field name of the table for possible key.
-func (m *Model) getSoftFieldName(table string, keys []string) (field string) {
+func (m *Model) getSoftFieldName(schema string, table string, keys []string) (field string) {
 	// Ignore the error from TableFields.
-	fieldsMap, _ := m.TableFields(table)
+	fieldsMap, _ := m.TableFields(table, schema)
 	if len(fieldsMap) > 0 {
 		for _, key := range keys {
 			field, _ = gutil.MapPossibleItemByKey(
@@ -141,26 +141,33 @@ func (m *Model) getConditionForSoftDeleting() string {
 		return conditionArray.Join(" AND ")
 	}
 	// Only one table.
-	if fieldName := m.getSoftFieldNameDeleted(); fieldName != "" {
+	if fieldName := m.getSoftFieldNameDeleted("", m.tablesInit); fieldName != "" {
 		return fmt.Sprintf(`%s IS NULL`, m.db.GetCore().QuoteWord(fieldName))
 	}
 	return ""
 }
 
 // getConditionOfTableStringForSoftDeleting does something as its name describes.
+// Examples for `s`:
+// - `test`.`demo` as b
+// - `test`.`demo` b
+// - `demo`
+// - demo
 func (m *Model) getConditionOfTableStringForSoftDeleting(s string) string {
 	var (
 		field  string
 		table  string
+		schema string
 		array1 = gstr.SplitAndTrim(s, " ")
 		array2 = gstr.SplitAndTrim(array1[0], ".")
 	)
 	if len(array2) >= 2 {
 		table = array2[1]
+		schema = array2[0]
 	} else {
 		table = array2[0]
 	}
-	field = m.getSoftFieldNameDeleted(table)
+	field = m.getSoftFieldNameDeleted(schema, table)
 	if field == "" {
 		return ""
 	}

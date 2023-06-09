@@ -176,7 +176,7 @@ func (g *RouterGroup) Bind(handlerOrObject ...interface{}) *RouterGroup {
 	return group
 }
 
-// ALL register a http handler to give the route pattern and all http methods.
+// ALL register an http handler to give the route pattern and all http methods.
 func (g *RouterGroup) ALL(pattern string, object interface{}, params ...interface{}) *RouterGroup {
 	return g.Clone().preBindToLocalArray(
 		groupBindTypeHandler,
@@ -200,52 +200,52 @@ func (g *RouterGroup) Map(m map[string]interface{}) {
 	}
 }
 
-// GET registers a http handler to give the route pattern and the http method: GET.
+// GET registers an http handler to give the route pattern and the http method: GET.
 func (g *RouterGroup) GET(pattern string, object interface{}, params ...interface{}) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "GET:"+pattern, object, params...)
 }
 
-// PUT registers a http handler to give the route pattern and the http method: PUT.
+// PUT registers an http handler to give the route pattern and the http method: PUT.
 func (g *RouterGroup) PUT(pattern string, object interface{}, params ...interface{}) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "PUT:"+pattern, object, params...)
 }
 
-// POST registers a http handler to give the route pattern and the http method: POST.
+// POST registers an http handler to give the route pattern and the http method: POST.
 func (g *RouterGroup) POST(pattern string, object interface{}, params ...interface{}) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "POST:"+pattern, object, params...)
 }
 
-// DELETE registers a http handler to give the route pattern and the http method: DELETE.
+// DELETE registers an http handler to give the route pattern and the http method: DELETE.
 func (g *RouterGroup) DELETE(pattern string, object interface{}, params ...interface{}) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "DELETE:"+pattern, object, params...)
 }
 
-// PATCH registers a http handler to give the route pattern and the http method: PATCH.
+// PATCH registers an http handler to give the route pattern and the http method: PATCH.
 func (g *RouterGroup) PATCH(pattern string, object interface{}, params ...interface{}) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "PATCH:"+pattern, object, params...)
 }
 
-// HEAD registers a http handler to give the route pattern and the http method: HEAD.
+// HEAD registers an http handler to give the route pattern and the http method: HEAD.
 func (g *RouterGroup) HEAD(pattern string, object interface{}, params ...interface{}) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "HEAD:"+pattern, object, params...)
 }
 
-// CONNECT registers a http handler to give the route pattern and the http method: CONNECT.
+// CONNECT registers an http handler to give the route pattern and the http method: CONNECT.
 func (g *RouterGroup) CONNECT(pattern string, object interface{}, params ...interface{}) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "CONNECT:"+pattern, object, params...)
 }
 
-// OPTIONS register a http handler to give the route pattern and the http method: OPTIONS.
+// OPTIONS register an http handler to give the route pattern and the http method: OPTIONS.
 func (g *RouterGroup) OPTIONS(pattern string, object interface{}, params ...interface{}) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "OPTIONS:"+pattern, object, params...)
 }
 
-// TRACE registers a http handler to give the route pattern and the http method: TRACE.
+// TRACE registers an http handler to give the route pattern and the http method: TRACE.
 func (g *RouterGroup) TRACE(pattern string, object interface{}, params ...interface{}) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "TRACE:"+pattern, object, params...)
 }
 
-// REST registers a http handler to give the route pattern according to REST rule.
+// REST registers an http handler to give the route pattern according to REST rule.
 func (g *RouterGroup) REST(pattern string, object interface{}) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeRest, pattern, object)
 }

@@ -8,6 +8,7 @@ package gutil
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"reflect"
@@ -108,13 +109,13 @@ func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDum
 	} else {
 		reflectValue = reflect.ValueOf(value)
 	}
+	var reflectKind = reflectValue.Kind()
 	// Double check nil value.
-	if value == nil {
+	if value == nil || reflectKind == reflect.Invalid {
 		buffer.WriteString(`<nil>`)
 		return
 	}
 	var (
-		reflectKind     = reflectValue.Kind()
 		reflectTypeName = reflectValue.Type().String()
 		ptrAddress      string
 		newIndent       = indent + dumpIndent
@@ -468,4 +469,16 @@ func addSlashesForString(s string) string {
 		"\t": `\t`,
 		"\n": `\n`,
 	})
+}
+
+// DumpJson pretty dumps json content to stdout.
+func DumpJson(jsonContent string) {
+	var (
+		buffer    = bytes.NewBuffer(nil)
+		jsonBytes = []byte(jsonContent)
+	)
+	if err := json.Indent(buffer, jsonBytes, "", "\t"); err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println(buffer.String())
 }

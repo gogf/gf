@@ -9,9 +9,10 @@ package polaris
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/polarismesh/polaris-go"
 	"github.com/polarismesh/polaris-go/pkg/model"
+
+	"github.com/gogf/gf/v2/net/gsvc"
 )
 
 // Watcher is a service watcher.
@@ -24,12 +25,12 @@ type Watcher struct {
 	ServiceInstances []gsvc.Service
 }
 
-func newWatcher(ctx context.Context, namespace string, serviceName string, consumer polaris.ConsumerAPI) (*Watcher, error) {
+func newWatcher(ctx context.Context, namespace string, key string, consumer polaris.ConsumerAPI) (*Watcher, error) {
 	watchServiceResponse, err := consumer.WatchService(&polaris.WatchServiceRequest{
 		WatchServiceRequest: model.WatchServiceRequest{
 			Key: model.ServiceKey{
 				Namespace: namespace,
-				Service:   serviceName,
+				Service:   key,
 			},
 		},
 	})
@@ -39,7 +40,7 @@ func newWatcher(ctx context.Context, namespace string, serviceName string, consu
 
 	w := &Watcher{
 		Namespace:        namespace,
-		ServiceName:      serviceName,
+		ServiceName:      key,
 		Channel:          watchServiceResponse.EventChannel,
 		ServiceInstances: instancesToServiceInstances(watchServiceResponse.GetAllInstancesResp.GetInstances()),
 	}

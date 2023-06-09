@@ -1,4 +1,4 @@
-
+SHELL := /bin/bash
 
 .PHONY: tidy
 tidy:
@@ -14,3 +14,13 @@ tidy:
 .PHONY: lint
 lint:
 	golangci-lint run
+
+# make version to=v2.4.0
+.PHONY: version
+version:
+	@set -e; \
+	newVersion=$(to); \
+	./.set_version.sh ./ $$newVersion; \
+	echo "make version to=$(to) done"
+
+

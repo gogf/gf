@@ -75,7 +75,7 @@ func (view *View) SetConfig(config Config) error {
 
 // SetConfigWithMap set configurations with map for the view.
 func (view *View) SetConfigWithMap(m map[string]interface{}) error {
-	if m == nil || len(m) == 0 {
+	if len(m) == 0 {
 		return gerror.NewCode(gcode.CodeInvalidParameter, "configuration cannot be empty")
 	}
 	// The m now is a shallow copy of m.
@@ -86,7 +86,12 @@ func (view *View) SetConfigWithMap(m map[string]interface{}) error {
 	_, v1 := gutil.MapPossibleItemByKey(m, "paths")
 	_, v2 := gutil.MapPossibleItemByKey(m, "path")
 	if v1 == nil && v2 != nil {
-		m["paths"] = []interface{}{v2}
+		switch v2.(type) {
+		case string:
+			m["paths"] = []string{v2.(string)}
+		case []string:
+			m["paths"] = v2
+		}
 	}
 	err := gconv.Struct(m, &view.config)
 	if err != nil {

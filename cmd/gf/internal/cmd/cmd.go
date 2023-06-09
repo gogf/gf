@@ -1,9 +1,16 @@
+// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package cmd
 
 import (
 	"context"
 	"strings"
 
+	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/util/gtag"
@@ -48,17 +55,21 @@ func (c cGF) Index(ctx context.Context, in cGFInput) (out *cGFOutput, err error)
 		_, err = Version.Index(ctx, cVersionInput{})
 		return
 	}
+	answer := "n"
 	// No argument or option, do installation checks.
-	if !service.Install.IsInstalled() {
+	if data, isInstalled := service.Install.IsInstalled(); !isInstalled {
 		mlog.Print("hi, it seams it's the first time you installing gf cli.")
-		s := gcmd.Scanf("do you want to install gf binary to your system? [y/n]: ")
-		if strings.EqualFold(s, "y") {
-			if err = service.Install.Run(ctx); err != nil {
-				return
-			}
-			gcmd.Scan("press `Enter` to exit...")
+		answer = gcmd.Scanf("do you want to install gf(%s) binary to your system? [y/n]: ", gf.VERSION)
+	} else if !data.IsSelf {
+		mlog.Print("hi, you have installed gf cli.")
+		answer = gcmd.Scanf("do you want to install gf(%s) binary to your system? [y/n]: ", gf.VERSION)
+	}
+	if strings.EqualFold(answer, "y") {
+		if err = service.Install.Run(ctx); err != nil {
 			return
 		}
+		gcmd.Scan("press `Enter` to exit...")
+		return
 	}
 	// Print help content.
 	gcmd.CommandFromCtx(ctx).Print()

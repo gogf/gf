@@ -7,10 +7,13 @@
 package goai
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gtag"
 )
 
 type SchemaRefs []SchemaRef
@@ -20,7 +23,7 @@ type SchemaRef struct {
 	Value *Schema
 }
 
-// isEmbeddedStructDefine checks and returns whether given golang type is embedded struct definition, like:
+// isEmbeddedStructDefinition checks and returns whether given golang type is embedded struct definition, like:
 //
 //	struct A struct{
 //	    B struct{
@@ -40,6 +43,8 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 		err       error
 		oaiType   = oai.golangTypeToOAIType(golangType)
 		oaiFormat = oai.golangTypeToOAIFormat(golangType)
+		typeName  = golangType.Name()
+		pkgPath   = golangType.PkgPath()
 		schemaRef = &SchemaRef{}
 		schema    = &Schema{
 			Type:        oaiType,
@@ -47,6 +52,23 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 			XExtensions: make(XExtensions),
 		}
 	)
+	if pkgPath == "" {
+		switch golangType.Kind() {
+		case reflect.Ptr, reflect.Array, reflect.Slice:
+			pkgPath = golangType.Elem().PkgPath()
+			typeName = golangType.Elem().Name()
+		}
+	}
+
+	// Type enums.
+	var typeId = fmt.Sprintf(`%s.%s`, pkgPath, typeName)
+	if enums := gtag.GetEnumsByType(typeId); enums != "" {
+		schema.Enum = make([]interface{}, 0)
+		if err = json.Unmarshal([]byte(enums), &schema.Enum); err != nil {
+			return nil, err
+		}
+	}
+
 	if len(tagMap) > 0 {
 		if err := oai.tagMapToSchema(tagMap, schema); err != nil {
 			return nil, err
@@ -54,13 +76,23 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 	}
 	schemaRef.Value = schema
 	switch oaiType {
-	case
-		TypeInteger,
-		TypeNumber,
-		TypeString,
-		TypeBoolean:
-		// Nothing to do.
-
+	case TypeString:
+	// Nothing to do.
+	case TypeInteger:
+		if schemaRef.Value.Default != nil {
+			schemaRef.Value.Default = gconv.Int64(schemaRef.Value.Default)
+		}
+		// keep the default value as nil.
+	case TypeNumber:
+		if schemaRef.Value.Default != nil {
+			schemaRef.Value.Default = gconv.Float64(schemaRef.Value.Default)
+		}
+		// keep the default value as nil.
+	case TypeBoolean:
+		if schemaRef.Value.Default != nil {
+			schemaRef.Value.Default = gconv.Bool(schemaRef.Value.Default)
+		}
+		// keep the default value as nil.
 	case
 		TypeArray:
 		subSchemaRef, err := oai.newSchemaRefWithGolangType(golangType.Elem(), nil)

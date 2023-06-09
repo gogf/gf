@@ -168,28 +168,28 @@ func (a *IntArray) SortFunc(less func(v1, v2 int) bool) *IntArray {
 	return a
 }
 
-// InsertBefore inserts the `value` to the front of `index`.
-func (a *IntArray) InsertBefore(index int, value int) error {
+// InsertBefore inserts the `values` to the front of `index`.
+func (a *IntArray) InsertBefore(index int, values ...int) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if index < 0 || index >= len(a.array) {
 		return gerror.NewCodef(gcode.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
 	}
 	rear := append([]int{}, a.array[index:]...)
-	a.array = append(a.array[0:index], value)
+	a.array = append(a.array[0:index], values...)
 	a.array = append(a.array, rear...)
 	return nil
 }
 
 // InsertAfter inserts the `value` to the back of `index`.
-func (a *IntArray) InsertAfter(index int, value int) error {
+func (a *IntArray) InsertAfter(index int, values ...int) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if index < 0 || index >= len(a.array) {
 		return gerror.NewCodef(gcode.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
 	}
 	rear := append([]int{}, a.array[index+1:]...)
-	a.array = append(a.array[0:index+1], value)
+	a.array = append(a.array[0:index+1], values...)
 	a.array = append(a.array, rear...)
 	return nil
 }
@@ -228,11 +228,24 @@ func (a *IntArray) doRemoveWithoutLock(index int) (value int, found bool) {
 // RemoveValue removes an item by value.
 // It returns true if value is found in the array, or else false if not found.
 func (a *IntArray) RemoveValue(value int) bool {
-	if i := a.Search(value); i != -1 {
-		_, found := a.Remove(i)
-		return found
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if i := a.doSearchWithoutLock(value); i != -1 {
+		a.doRemoveWithoutLock(i)
+		return true
 	}
 	return false
+}
+
+// RemoveValues removes multiple items by `values`.
+func (a *IntArray) RemoveValues(values ...int) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for _, value := range values {
+		if i := a.doSearchWithoutLock(value); i != -1 {
+			a.doRemoveWithoutLock(i)
+		}
+	}
 }
 
 // PushLeft pushes one or multiple items to the beginning of array.
@@ -497,6 +510,10 @@ func (a *IntArray) Contains(value int) bool {
 func (a *IntArray) Search(value int) int {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
+	return a.doSearchWithoutLock(value)
+}
+
+func (a *IntArray) doSearchWithoutLock(value int) int {
 	if len(a.array) == 0 {
 		return -1
 	}
@@ -769,6 +786,22 @@ func (a *IntArray) UnmarshalValue(value interface{}) error {
 		a.array = gconv.SliceInt(value)
 	}
 	return nil
+}
+
+// Filter iterates array and filters elements using custom callback function.
+// It removes the element from array if callback function `filter` returns true,
+// it or else does nothing and continues iterating.
+func (a *IntArray) Filter(filter func(index int, value int) bool) *IntArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if filter(i, a.array[i]) {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			i++
+		}
+	}
+	return a
 }
 
 // FilterEmpty removes all zero value of the array.

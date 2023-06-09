@@ -63,6 +63,16 @@ type Schema struct {
 	ValidationRules      string         `json:"-"`
 }
 
+// Clone only clones necessary attributes.
+// TODO clone all attributes, or improve package deepcopy.
+func (s *Schema) Clone() *Schema {
+	newSchema := *s
+	newSchema.Required = make([]string, len(s.Required))
+	copy(newSchema.Required, s.Required)
+	newSchema.Properties = s.Properties.Clone()
+	return &newSchema
+}
+
 func (s Schema) MarshalJSON() ([]byte, error) {
 	var (
 		b   []byte
@@ -180,7 +190,10 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 				break
 			}
 		}
-		fieldName = gstr.SplitAndTrim(fieldName, ",")[0]
+		fieldName = gstr.Split(gstr.Trim(fieldName), ",")[0]
+		if fieldName == "" {
+			fieldName = structField.Name()
+		}
 		schemaRef, err := oai.newSchemaRefWithGolangType(
 			structField.Type().Type,
 			structField.TagMap(),

@@ -1,3 +1,9 @@
+// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package genservice
 
 import (
@@ -56,7 +62,7 @@ func (c CGenService) generateServiceFile(in generateServiceFilesInput) (ok bool,
 		generatingInterfaceCheck string
 	)
 	// Variable definitions.
-	for structName, _ := range in.SrcStructFunctions {
+	for structName := range in.SrcStructFunctions {
 		generatingInterfaceCheck = fmt.Sprintf(`[^\w\d]+%s.I%s[^\w\d]`, in.DstPackageName, structName)
 		if gregex.IsMatchString(generatingInterfaceCheck, generatedContent) {
 			continue
@@ -75,7 +81,7 @@ func (c CGenService) generateServiceFile(in generateServiceFilesInput) (ok bool,
 		generatedContent += "\n"
 	}
 	// Variable register function definitions.
-	for structName, _ := range in.SrcStructFunctions {
+	for structName := range in.SrcStructFunctions {
 		generatingInterfaceCheck = fmt.Sprintf(`[^\w\d]+%s.I%s[^\w\d]`, in.DstPackageName, structName)
 		if gregex.IsMatchString(generatingInterfaceCheck, generatedContent) {
 			continue

@@ -1,3 +1,9 @@
+// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package cmd
 
 import (
@@ -33,6 +39,7 @@ gf docker main.go
 gf docker main.go -t hub.docker.com/john/image:tag
 gf docker main.go -t hub.docker.com/john/image:tag
 gf docker main.go -p -t hub.docker.com/john/image:tag
+gf docker main.go -p -tp ["hub.docker.com/john","hub.docker.com/smith"] -tn image:tag
 `
 	cDockerDc = `
 The "docker" command builds the GF project to a docker images.
@@ -45,6 +52,7 @@ You should have docker installed, and there must be a Dockerfile in the root of 
 	cDockerFileBrief        = `file path of the Dockerfile. it's "manifest/docker/Dockerfile" in default`
 	cDockerShellBrief       = `path of the shell file which is executed before docker build`
 	cDockerPushBrief        = `auto push the docker image to docker registry if "-t" option passed`
+	cDockerTagBrief         = `full tag for this docker, pattern like "xxx.xxx.xxx/image:tag"`
 	cDockerTagNameBrief     = `tag name for this docker, pattern like "image:tag". this option is required with TagPrefixes`
 	cDockerTagPrefixesBrief = `tag prefixes for this docker, which are used for docker push. this option is required with TagName`
 	cDockerExtraBrief       = `extra build options passed to "docker image"`
@@ -61,6 +69,7 @@ func init() {
 		`cDockerShellBrief`:       cDockerShellBrief,
 		`cDockerBuildBrief`:       cDockerBuildBrief,
 		`cDockerPushBrief`:        cDockerPushBrief,
+		`cDockerTagBrief`:         cDockerTagBrief,
 		`cDockerTagNameBrief`:     cDockerTagNameBrief,
 		`cDockerTagPrefixesBrief`: cDockerTagPrefixesBrief,
 		`cDockerExtraBrief`:       cDockerExtraBrief,
@@ -69,10 +78,11 @@ func init() {
 
 type cDockerInput struct {
 	g.Meta      `name:"docker" config:"gfcli.docker"`
-	Main        string   `name:"MAIN" arg:"true" brief:"{cDockerMainBrief}"  d:"main.go"`
+	Main        string   `name:"MAIN" arg:"true" brief:"{cDockerMainBrief}" d:"main.go"`
 	File        string   `name:"file"        short:"f"  brief:"{cDockerFileBrief}"  d:"manifest/docker/Dockerfile"`
 	Shell       string   `name:"shell"       short:"s"  brief:"{cDockerShellBrief}" d:"manifest/docker/docker.sh"`
-	Build       string   `name:"build"       short:"b"  brief:"{cDockerBuildBrief}" d:"-a amd64 -s linux"`
+	Build       string   `name:"build"       short:"b"  brief:"{cDockerBuildBrief}"`
+	Tag         string   `name:"tag"         short:"t"  brief:"{cDockerTagBrief}"`
 	TagName     string   `name:"tagName"     short:"tn" brief:"{cDockerTagNameBrief}"     v:"required-with:TagPrefixes"`
 	TagPrefixes []string `name:"tagPrefixes" short:"tp" brief:"{cDockerTagPrefixesBrief}" v:"required-with:TagName"`
 	Push        bool     `name:"push"        short:"p"  brief:"{cDockerPushBrief}" orphan:"true"`
@@ -87,17 +97,23 @@ func (c cDocker) Index(ctx context.Context, in cDockerInput) (out *cDockerOutput
 		mlog.Fatalf(`command "docker" not found in your environment, please install docker first to proceed this command`)
 	}
 
+	mlog.Debugf(`docker command input: %+v`, in)
+
 	// Binary build.
-	in.Build += " --exit"
-	if in.Main != "" {
-		if err = gproc.ShellRun(ctx, fmt.Sprintf(`gf build %s %s`, in.Main, in.Build)); err != nil {
-			return
+	if in.Main != "" && in.Build != "" {
+		in.Build += " --exitWhenError"
+		if in.Main != "" {
+			if err = gproc.ShellRun(ctx, fmt.Sprintf(`gf build %s %s`, in.Main, in.Build)); err != nil {
+				mlog.Debugf(`build binary failed with error: %+v`, err)
+				return
+			}
 		}
 	}
 
 	// Shell executing.
 	if in.Shell != "" && gfile.Exists(in.Shell) {
 		if err = c.exeDockerShell(ctx, in.Shell); err != nil {
+			mlog.Debugf(`build docker failed with error: %+v`, err)
 			return
 		}
 	}
@@ -114,7 +130,7 @@ func (c cDocker) Index(ctx context.Context, in cDockerInput) (out *cDockerOutput
 		}
 	}
 	if len(dockerTags) == 0 {
-		dockerTags = []string{""}
+		dockerTags = []string{in.Tag}
 	}
 	for i, dockerTag := range dockerTags {
 		if i > 0 {

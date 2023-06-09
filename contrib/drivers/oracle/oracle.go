@@ -35,6 +35,10 @@ type Driver struct {
 	*gdb.Core
 }
 
+const (
+	quoteChar = `"`
+)
+
 func init() {
 	if err := gdb.Register(`oracle`, New()); err != nil {
 		panic(err)
@@ -106,7 +110,7 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 
 // GetChars returns the security char for this type of database.
 func (d *Driver) GetChars() (charLeft string, charRight string) {
-	return `"`, `"`
+	return quoteChar, quoteChar
 }
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
@@ -217,7 +221,7 @@ func (d *Driver) TableFields(
 	var (
 		result       gdb.Result
 		link         gdb.Link
-		useSchema    = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+		usedSchema   = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
 		structureSql = fmt.Sprintf(`
 SELECT 
     COLUMN_NAME AS FIELD, 
@@ -230,7 +234,7 @@ FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`,
 			strings.ToUpper(table),
 		)
 	)
-	if link, err = d.SlaveLink(useSchema); err != nil {
+	if link, err = d.SlaveLink(usedSchema); err != nil {
 		return nil, err
 	}
 	structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))

@@ -1,3 +1,9 @@
+// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package cmd
 
 import (
@@ -64,6 +70,8 @@ func (c cVersion) getGFVersionOfCurrentProject() (string, error) {
 	if gfile.Exists(goModPath) {
 		lines := gstr.SplitAndTrim(gfile.GetContents(goModPath), "\n")
 		for _, line := range lines {
+			line = gstr.Trim(line)
+			line = gstr.TrimLeftStr(line, "require ")
 			line = gstr.Trim(line)
 			// Version 1.
 			match, err := gregex.MatchString(`^github\.com/gogf/gf\s+(.+)$`, line)

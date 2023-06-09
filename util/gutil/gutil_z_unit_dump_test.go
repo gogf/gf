@@ -189,7 +189,7 @@ func Test_Dump_Issue1661(t *testing.T) {
 			x := []string{"11", "22"}
 			for _, iv2 := range x {
 				ls := q1v
-				for i, _ := range ls.cc {
+				for i := range ls.cc {
 					sj := iv2
 					ls.cc[i].bb = sj
 				}
@@ -286,5 +286,12 @@ func Test_Dump_Cycle_Attribute(t *testing.T) {
 		buffer := bytes.NewBuffer(nil)
 		g.DumpTo(buffer, abc, gutil.DumpOption{})
 		t.Assert(gstr.Contains(buffer.String(), "cycle"), true)
+	})
+}
+
+func Test_DumpJson(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var jsonContent = `{"a":1,"b":2}`
+		gutil.DumpJson(jsonContent)
 	})
 }

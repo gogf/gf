@@ -38,7 +38,7 @@ type ConfigNode struct {
 	Prefix               string        `json:"prefix"`               // (Optional) Table prefix.
 	DryRun               bool          `json:"dryRun"`               // (Optional) Dry run, which does SELECT but no INSERT/UPDATE/DELETE statements.
 	Weight               int           `json:"weight"`               // (Optional) Weight for load balance calculating, it's useless if there's just one node.
-	Charset              string        `json:"charset"`              // (Optional, "utf8mb4" in default) Custom charset when operating on database.
+	Charset              string        `json:"charset"`              // (Optional, "utf8" in default) Custom charset when operating on database.
 	Protocol             string        `json:"protocol"`             // (Optional, "tcp" in default) See net.Dial for more information which networks are available.
 	Timezone             string        `json:"timezone"`             // (Optional) Sets the time zone for displaying and interpreting time stamps.
 	Namespace            string        `json:"namespace"`            // (Optional) Namespace for some databases. Eg, in pgsql, the `Name` acts as the `catalog`, the `NameSpace` acts as the `schema`.
@@ -276,14 +276,14 @@ func parseConfigNodeLink(node *ConfigNode) *ConfigNode {
 			node.Pass = match[3]
 			node.Protocol = match[4]
 			array := gstr.Split(match[5], ":")
-			if len(array) == 2 {
+			if len(array) == 2 && node.Protocol != "file" {
 				node.Host = array[0]
 				node.Port = array[1]
 				node.Name = match[6]
 			} else {
 				node.Name = match[5]
 			}
-			if len(match) > 6 {
+			if len(match) > 6 && match[7] != "" {
 				node.Extra = match[7]
 			}
 			node.Link = ""

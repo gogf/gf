@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/internal/empty"
+
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/json"
@@ -620,6 +622,7 @@ func TestSortedStrArray_Json(t *testing.T) {
 
 		a2 := garray.NewSortedStrArray()
 		err1 = json.UnmarshalUseNumber(b2, &a2)
+		t.AssertNil(err1)
 		t.Assert(a2.Slice(), s2)
 		t.Assert(a2.Interfaces(), s2)
 
@@ -641,6 +644,7 @@ func TestSortedStrArray_Json(t *testing.T) {
 
 		a2 := garray.NewSortedStrArray()
 		err1 = json.UnmarshalUseNumber(b2, &a2)
+		t.AssertNil(err1)
 		t.Assert(a2.Slice(), s2)
 		t.Assert(a2.Interfaces(), s2)
 
@@ -749,6 +753,15 @@ func TestSortedStrArray_RemoveValue(t *testing.T) {
 	})
 }
 
+func TestSortedStrArray_RemoveValues(t *testing.T) {
+	slice := g.SliceStr{"a", "b", "d", "c"}
+	array := garray.NewSortedStrArrayFrom(slice)
+	gtest.C(t, func(t *gtest.T) {
+		array.RemoveValues("a", "b", "c")
+		t.Assert(array.Slice(), g.SliceStr{"d"})
+	})
+}
+
 func TestSortedStrArray_UnmarshalValue(t *testing.T) {
 	type V struct {
 		Name  string
@@ -775,6 +788,20 @@ func TestSortedStrArray_UnmarshalValue(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Array.Slice(), g.SliceStr{"1", "2", "3"})
+	})
+}
+func TestSortedStrArray_Filter(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedStrArrayFrom(g.SliceStr{"", "1", "2", "0"})
+		t.Assert(array.Filter(func(index int, value string) bool {
+			return empty.IsEmpty(value)
+		}), g.SliceStr{"0", "1", "2"})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedStrArrayFrom(g.SliceStr{"1", "2"})
+		t.Assert(array.Filter(func(index int, value string) bool {
+			return empty.IsEmpty(value)
+		}), g.SliceStr{"1", "2"})
 	})
 }
 

@@ -1,3 +1,9 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package boot
 
 import (
@@ -10,9 +16,9 @@ func init() {
 	var (
 		ctx       = gctx.GetInitCtx()
 		namespace = "default"
-		fileGroup = "goframe"
+		fileGroup = "TestGroup"
 		fileName  = "config.yaml"
-		path      = "testdata/polaris.yaml"
+		path      = "manifest/config/polaris.yaml"
 		logDir    = "/tmp/polaris/log"
 	)
 	// Create polaris Client that implements gcfg.Adapter.

@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	_ "github.com/denisenkom/go-mssqldb"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -32,6 +33,10 @@ import (
 type Driver struct {
 	*gdb.Core
 }
+
+const (
+	quoteChar = `"`
+)
 
 func init() {
 	if err := gdb.Register(`mssql`, New()); err != nil {
@@ -95,7 +100,7 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 
 // GetChars returns the security char for this type of database.
 func (d *Driver) GetChars() (charLeft string, charRight string) {
-	return `"`, `"`
+	return quoteChar, quoteChar
 }
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
@@ -237,11 +242,11 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 // Also see DriverMysql.TableFields.
 func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
 	var (
-		result    gdb.Result
-		link      gdb.Link
-		useSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+		result     gdb.Result
+		link       gdb.Link
+		usedSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
 	)
-	if link, err = d.SlaveLink(useSchema); err != nil {
+	if link, err = d.SlaveLink(usedSchema); err != nil {
 		return nil, err
 	}
 	structureSql := fmt.Sprintf(`
@@ -281,7 +286,6 @@ ORDER BY a.id,a.colorder`,
 	}
 	fields = make(map[string]*gdb.TableField)
 	for i, m := range result {
-
 		fields[m["Field"].String()] = &gdb.TableField{
 			Index:   i,
 			Name:    m["Field"].String(),

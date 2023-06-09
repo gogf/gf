@@ -11,7 +11,7 @@ import (
 )
 
 // Set sets key-value pair into metadata.
-func (m Metadata) Set(key string, value string) {
+func (m Metadata) Set(key string, value interface{}) {
 	m[key] = value
 }
 
