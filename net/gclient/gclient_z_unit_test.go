@@ -11,21 +11,20 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/net/gclient"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gorilla/websocket"
 	"io/ioutil"
 	"net/http"
 	"testing"
 	"time"
 
-	"github.com/gorilla/websocket"
-
-	"github.com/gogf/gf/v2/debug/gdebug"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/gclient"
 	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/guid"
 )
 
@@ -633,5 +632,34 @@ func TestClient_SetBodyContent(t *testing.T) {
 		t.Assert(res.ReadAllString(), "hello")
 		res.SetBodyContent([]byte("world"))
 		t.Assert(res.ReadAllString(), "world")
+	})
+}
+
+func Test_Client_Scan(t *testing.T) {
+	s := g.Server(guid.S())
+	s.BindHandler("/read/scan", func(r *ghttp.Request) {
+		r.Response.WriteHeader(200)
+		r.Response.WriteJson(g.Map{
+			"data":  "this is data",
+			"error": 0,
+		})
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		type ScanResult struct {
+			Data  string `json:"data"`
+			Error int    `json:"error"`
+		}
+		url := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
+		resp, _ := g.Client().Get(ctx, url+"/read/scan")
+		t.Assert(resp.ReadAllString(), "{\"data\":\"this is data\",\"error\":0}")
+		var result *ScanResult
+		err := resp.Scan(&result)
+		t.AssertNE(err, nil)
 	})
 }

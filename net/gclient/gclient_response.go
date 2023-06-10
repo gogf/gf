@@ -8,6 +8,8 @@ package gclient
 
 import (
 	"bytes"
+	"errors"
+	"github.com/gogf/gf/v2/util/gconv"
 	"io/ioutil"
 	"net/http"
 
@@ -68,6 +70,15 @@ func (r *Response) ReadAll() []byte {
 // ReadAllString retrieves and returns the response content as string.
 func (r *Response) ReadAllString() string {
 	return string(r.ReadAll())
+}
+
+// Scan converts retrieves and returns the response content into the pointer struct
+func (r *Response) Scan(pointer interface{}) (err error) {
+	ret := r.ReadAllString()
+	if ret == "" {
+		return errors.New("returns the response content is empty")
+	}
+	return gconv.Scan(ret, pointer)
 }
 
 // SetBodyContent overwrites response content with custom one.
