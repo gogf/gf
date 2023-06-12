@@ -7,13 +7,12 @@
 package genservice
 
 import (
+	"context"
 	"fmt"
-	"html/template"
-	"strings"
-
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gview"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 
@@ -175,17 +174,19 @@ func (c CGenService) generateInitFile(in generateInitFilesInput) (err error) {
 		return nil
 	}
 	var (
-		generatedCode strings.Builder
-		tmpl          *template.Template
+		generatedCode string
+		view          = gview.New()
+		params        = g.Map{
+			"Package": data.Package,
+			"Import":  data.Import,
+			"Logics":  data.Logics,
+		}
 	)
-	if tmpl, err = template.New("").Parse(InitTemplate); err != nil {
+	if generatedCode, err = view.ParseContent(context.TODO(), InitTemplate, params); err != nil {
 		return
 	}
-	if err = tmpl.Execute(&generatedCode, data); err != nil {
-		return err
-	}
-	mlog.Printf(`generating auto init go file: %s`, gstr.Replace(gfile.Join(in.SrcPackageName, "init.gen.go"), "\\", "/"))
-	return gfile.PutContents(gfile.Join(in.SrcFolderPath, "init.gen.go"), generatedCode.String())
+	mlog.Printf(`generating auto init go file: %s`, gstr.Replace(in.SrcPackageName+".init.go", "\\", "/"))
+	return gfile.PutContents(gfile.Join(in.SrcFolderPath, in.SrcPackageName+".init.go"), generatedCode)
 }
 
 // isToGenerateServiceGoFile checks and returns whether the service content dirty.

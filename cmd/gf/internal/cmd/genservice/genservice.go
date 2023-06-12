@@ -50,9 +50,9 @@ destination file name storing automatically generated go files, cases are as fol
 	CGenServiceBriefStPattern        = `regular expression matching struct name for generating service. default: ^s([A-Z]\\\\w+)$`
 	CGenServiceBriefPackages         = `produce go files only for given source packages`
 	CGenServiceBriefImportPrefix     = `custom import prefix to calculate import path for generated importing go file of logic`
-	CGenServiceBriefImportInitPrefix = `custom import prefix to calculate import path for generated importing go file of service at init.gen.go`
+	CGenServiceBriefImportInitPrefix = `custom import prefix to calculate import path for generated importing go file of service at [package_name].gen.go`
 	CGenServiceBriefClear            = `delete all generated go files that are not used any further`
-	CGenServiceBriefAutoInit         = `automatically generate init.gen.go file for service logic register. default: true`
+	CGenServiceBriefAutoInit         = `automatically generate [package_name].init.go file for service logic register. default: true`
 )
 
 func init() {
@@ -207,7 +207,7 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		)
 		generatedDstFilePathSet.Add(dstFilePath)
 		for _, file := range files {
-			if in.AutoInit && gstr.HasSuffix(file, "init.gen.go") {
+			if in.AutoInit && gstr.HasSuffix(file, ".init.go") {
 				_ = gfile.Remove(file)
 				continue
 			}
