@@ -44,7 +44,7 @@ type iInterfaces interface {
 	Interfaces() []interface{}
 }
 
-// iTableName is the interface for retrieving table name fro struct.
+// iTableName is the interface for retrieving table name for struct.
 type iTableName interface {
 	TableName() string
 }
