@@ -43,6 +43,36 @@ func Test_Basic(t *testing.T) {
 	})
 }
 
+func Test_Basic2(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			pool  = grpool.New()
+			err   error
+			wg    = sync.WaitGroup{}
+			array = garray.NewArray(true)
+			size  = 100
+		)
+		pool.Stop() // Stop it before adding jobs.
+		wg.Add(size)
+		for i := 0; i < size; i++ {
+			err = pool.Add(ctx, func(ctx context.Context) {
+				array.Append(1)
+				wg.Done()
+			})
+			t.AssertNil(err)
+		}
+		time.Sleep(100 * time.Millisecond)
+		t.Assert(pool.Jobs(), size)
+		t.Assert(pool.Size(), 0)
+		pool.Start()
+		wg.Wait()
+		time.Sleep(100 * time.Millisecond)
+		t.Assert(array.Len(), size)
+		t.Assert(pool.Jobs(), 0)
+		t.Assert(pool.Size(), 0)
+	})
+}
+
 func Test_Limit1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
