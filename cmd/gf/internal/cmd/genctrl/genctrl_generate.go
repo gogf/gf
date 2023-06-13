@@ -92,7 +92,7 @@ func (c CGenCtrl) doGenerateCtrlNewByModuleAndVersion(dstFolder, module, version
 			"{CtrlName}":    ctrlName,
 			"{NewFuncName}": newFuncName,
 		})
-		err = gfile.PutContentsAppend(moduleFilePathNew, gstr.Trim(content))
+		err = gfile.PutContentsAppend(moduleFilePathNew, gstr.TrimLeft(content))
 		if err != nil {
 			return err
 		}
