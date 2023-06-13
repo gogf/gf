@@ -124,6 +124,11 @@ func (c CGenCtrl) Ctrl(ctx context.Context, in CGenCtrlInput) (out *CGenCtrlOutp
 		return nil, err
 	}
 
+	// generate api interface.
+	if err = newApiInterfaceGenerator().Generate(in.SrcFolder, apiItemsInSrc); err != nil {
+		return
+	}
+
 	// api filtering for already implemented api controllers.
 	var (
 		alreadyImplementedCtrlSet = gset.NewStrSet()
@@ -138,9 +143,10 @@ func (c CGenCtrl) Ctrl(ctx context.Context, in CGenCtrlInput) (out *CGenCtrlOutp
 		}
 		toBeImplementedApiItems = append(toBeImplementedApiItems, item)
 	}
+
 	// generate go files.
 	if len(toBeImplementedApiItems) > 0 {
-		err = c.generateByItems(in.DstFolder, toBeImplementedApiItems)
+		err = newControllerGenerator().Generate(in.DstFolder, toBeImplementedApiItems)
 		if err != nil {
 			return
 		}

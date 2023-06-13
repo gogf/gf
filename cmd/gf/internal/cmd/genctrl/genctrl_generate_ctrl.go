@@ -17,7 +17,13 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func (c CGenCtrl) generateByItems(dstFolder string, items []apiItem) (err error) {
+type controllerGenerator struct{}
+
+func newControllerGenerator() *controllerGenerator {
+	return &controllerGenerator{}
+}
+
+func (c *controllerGenerator) Generate(dstFolder string, items []apiItem) (err error) {
 	var (
 		doneApiItemSet = gset.NewStrSet()
 	)
@@ -27,7 +33,9 @@ func (c CGenCtrl) generateByItems(dstFolder string, items []apiItem) (err error)
 		}
 		// retrieve all api items of the same module.
 		subItems := c.getSubItemsByModuleAndVersion(items, item.Module, item.Version)
-		if err = c.doGenerateCtrlNewByModuleAndVersion(dstFolder, item.Module, item.Version); err != nil {
+		if err = c.doGenerateCtrlNewByModuleAndVersion(
+			dstFolder, item.Module, item.Version, gfile.Dir(item.Import),
+		); err != nil {
 			return
 		}
 		for _, subItem := range subItems {
@@ -40,7 +48,7 @@ func (c CGenCtrl) generateByItems(dstFolder string, items []apiItem) (err error)
 	return
 }
 
-func (c CGenCtrl) getSubItemsByModuleAndVersion(items []apiItem, module, version string) (subItems []apiItem) {
+func (c *controllerGenerator) getSubItemsByModuleAndVersion(items []apiItem, module, version string) (subItems []apiItem) {
 	for _, item := range items {
 		if item.Module == module && item.Version == version {
 			subItems = append(subItems, item)
@@ -49,12 +57,13 @@ func (c CGenCtrl) getSubItemsByModuleAndVersion(items []apiItem, module, version
 	return
 }
 
-func (c CGenCtrl) doGenerateCtrlNewByModuleAndVersion(dstFolder, module, version string) (err error) {
+func (c *controllerGenerator) doGenerateCtrlNewByModuleAndVersion(dstFolder, module, version, importPath string) (err error) {
 	var (
 		modulePath            = gfile.Join(dstFolder, module)
 		moduleFilePath        = gfile.Join(modulePath, module+".go")
 		moduleFilePathNew     = gfile.Join(modulePath, module+"_new.go")
 		ctrlName              = fmt.Sprintf(`Controller%s`, gstr.UcFirst(version))
+		interfaceName         = fmt.Sprintf(`%s.I%s%s`, module, gstr.CaseCamel(module), gstr.UcFirst(version))
 		newFuncName           = fmt.Sprintf(`New%s`, gstr.UcFirst(version))
 		newFuncNameDefinition = fmt.Sprintf(`func %s()`, newFuncName)
 		alreadyCreated        bool
@@ -70,7 +79,8 @@ func (c CGenCtrl) doGenerateCtrlNewByModuleAndVersion(dstFolder, module, version
 	}
 	if !gfile.Exists(moduleFilePathNew) {
 		content := gstr.ReplaceByMap(consts.TemplateGenCtrlControllerNewEmpty, g.MapStrStr{
-			"{Module}": module,
+			"{Module}":     module,
+			"{ImportPath}": fmt.Sprintf(`"%s"`, importPath),
 		})
 		if err = gfile.PutContents(moduleFilePathNew, gstr.TrimLeft(content)); err != nil {
 			return err
@@ -89,8 +99,9 @@ func (c CGenCtrl) doGenerateCtrlNewByModuleAndVersion(dstFolder, module, version
 	}
 	if !alreadyCreated {
 		content := gstr.ReplaceByMap(consts.TemplateGenCtrlControllerNewFunc, g.MapStrStr{
-			"{CtrlName}":    ctrlName,
-			"{NewFuncName}": newFuncName,
+			"{CtrlName}":      ctrlName,
+			"{NewFuncName}":   newFuncName,
+			"{InterfaceName}": interfaceName,
 		})
 		err = gfile.PutContentsAppend(moduleFilePathNew, gstr.TrimLeft(content))
 		if err != nil {
@@ -100,7 +111,7 @@ func (c CGenCtrl) doGenerateCtrlNewByModuleAndVersion(dstFolder, module, version
 	return
 }
 
-func (c CGenCtrl) doGenerateCtrlItem(dstFolder string, item apiItem) (err error) {
+func (c *controllerGenerator) doGenerateCtrlItem(dstFolder string, item apiItem) (err error) {
 	var (
 		modulePath      = gfile.Join(dstFolder, item.Module)
 		methodNameSnake = gstr.CaseSnake(item.MethodName)
