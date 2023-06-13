@@ -17,34 +17,38 @@ name: GolangCI-Lint
 on:
   push:
     branches:
-    - master
-    - develop
-    - personal/**
-    - feature/**
-    - enhance/**
-    - fix/**
+      - master
+      - develop
+      - personal/**
+      - feature/**
+      - enhance/**
+      - fix/**
   pull_request:
     branches:
-    - master
-    - develop
-    - personal/**
-    - feature/**
-    - enhance/**
-    - fix/**
+      - master
+      - develop
+      - personal/**
+      - feature/**
+      - enhance/**
+      - fix/**
 
 jobs:
   golangci:
     strategy:
       matrix:
-        go-version: [1.15.x,1.16.x,1.17.x,1.18.x]
+        go-version: [ '1.15','1.16','1.17','1.18','1.19','1.20' ]
     name: golangci-lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-go@v3
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Golang ${{ matrix.go-version }}
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go-version }}
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3.3.0
+        uses: golangci/golangci-lint-action@v3
         with:
           # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
-          version: latest
+          version: v1.52.2
           args: --timeout 3m0s
