@@ -9,6 +9,8 @@ package gcron
 
 import (
 	"context"
+	"fmt"
+	"sync"
 	"time"
 
 	"github.com/gogf/gf/v2/os/glog"
@@ -50,6 +52,99 @@ func Add(ctx context.Context, pattern string, job JobFunc, name ...string) (*Ent
 // It returns and error if the `name` is already used.
 func AddSingleton(ctx context.Context, pattern string, job JobFunc, name ...string) (*Entry, error) {
 	return defaultCron.AddSingleton(ctx, pattern, job, name...)
+}
+
+// AddParallelSingleton adds a singleton timed task, to default cron object.
+// Multiple tasks will be executed parallel (async).
+// Simplifying form of the AddSingletons that have same pattern.
+func AddParallelSingleton(ctx context.Context, pattern string, jobs ...JobFunc) (*Entry, error) {
+	return AddParallelSingletonWithName(ctx, pattern, jobs)
+}
+
+// AddParallelSingletonWithName adds a singleton timed task, to default cron object.
+// Multiple tasks with name will be executed parallel (async).
+// Simplifying form of the AddSingletons that have same pattern.
+func AddParallelSingletonWithName(ctx context.Context, pattern string, jobs []JobFunc, name ...string) (*Entry, error) {
+	return defaultCron.AddSingleton(ctx, pattern, func(ctx context.Context) { waitAsync(ctx, jobs...) }, name...)
+}
+
+// AddSerialSingleton adds a singleton timed task, to default cron object.
+// Multiple tasks will be executed serially (sync).
+func AddSerialSingleton(ctx context.Context, pattern string, jobs ...JobFunc) (*Entry, error) {
+	return AddSerialSingletonWithName(ctx, pattern, jobs)
+}
+
+// AddSerialSingletonWithName adds a singleton timed task, to default cron object.
+// Multiple tasks with name will be executed serially (sync).
+func AddSerialSingletonWithName(ctx context.Context, pattern string, jobs []JobFunc, name ...string) (*Entry, error) {
+	return defaultCron.AddSingleton(ctx, pattern, func(ctx context.Context) {
+		var i int
+		defer func() {
+			if e := recover(); e != nil {
+				panic(fmt.Errorf("jobs[%v] error: \n%v", i, e))
+			}
+		}()
+		for i = range jobs {
+			jobs[i](ctx)
+		}
+	}, name...)
+}
+
+// AddSerialGroupSingleton adds a singleton timed task, to default cron object.
+// The groups will be executed serially (sync), and the tasks in a group will be executed parallel (async).
+func AddSerialGroupSingleton(ctx context.Context, pattern string, jobGroups ...[]JobFunc) (*Entry, error) {
+	return AddSerialGroupSingletonWithName(ctx, pattern, jobGroups)
+}
+
+// AddSerialGroupSingletonWithName adds a singleton timed task, to default cron object.
+// The groups will be executed serially (sync), and the tasks in a group will be executed parallel (async).
+func AddSerialGroupSingletonWithName(ctx context.Context, pattern string, jobGroups [][]JobFunc, name ...string) (*Entry, error) {
+	return defaultCron.AddSingleton(ctx, pattern, func(ctx context.Context) {
+		var i int
+		defer func() {
+			if e := recover(); e != nil {
+				panic(fmt.Errorf("waitGroupSync Groups[%v] error: \n%v", i, e))
+			}
+		}()
+		for i = range jobGroups {
+			waitAsync(ctx, jobGroups[i]...)
+		}
+	}, name...)
+}
+
+// waitAsync execute jobs (async), then wait util all jobs done.
+func waitAsync(ctx context.Context, jobs ...JobFunc) {
+	var (
+		err error
+		wg  = sync.WaitGroup{}
+		mu  = sync.Mutex{}
+	)
+	newErr := func(i int, e interface{}) {
+		mu.Lock()
+		if err != nil {
+			err = fmt.Errorf("%v\nwaitAsync Tasks[%v] error: %v ", err, i, e)
+		} else {
+			err = fmt.Errorf("waitAsync Tasks[%v] error: %v ", i, e)
+		}
+		mu.Unlock()
+	}
+	wg.Add(len(jobs))
+	for i := 0; i < len(jobs); i++ {
+		go func(i int) {
+			defer func() {
+				if e := recover(); e != nil {
+					newErr(i, e)
+					wg.Done()
+				}
+			}()
+			jobs[i](ctx)
+			wg.Done()
+		}(i)
+	}
+	wg.Wait()
+	if err != nil {
+		panic(err)
+	}
 }
 
 // AddOnce adds a timed task which can be run only once, to default cron object.
