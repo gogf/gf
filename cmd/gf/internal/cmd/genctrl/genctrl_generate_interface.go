@@ -25,7 +25,7 @@ func newApiInterfaceGenerator() *apiInterfaceGenerator {
 	return &apiInterfaceGenerator{}
 }
 
-func (c *apiInterfaceGenerator) Generate(srcFolder string, items []apiItem) (err error) {
+func (c *apiInterfaceGenerator) Generate(apiModuleFolderPath string, items []apiItem) (err error) {
 	var (
 		doneApiItemSet = gset.NewStrSet()
 	)
@@ -35,7 +35,7 @@ func (c *apiInterfaceGenerator) Generate(srcFolder string, items []apiItem) (err
 		}
 		// retrieve all api items of the same module.
 		subItems := c.getSubItemsByModule(items, item.Module)
-		if err = c.doGenerate(srcFolder, item.Module, subItems); err != nil {
+		if err = c.doGenerate(apiModuleFolderPath, item.Module, subItems); err != nil {
 			return
 		}
 		for _, subItem := range subItems {
@@ -45,10 +45,9 @@ func (c *apiInterfaceGenerator) Generate(srcFolder string, items []apiItem) (err
 	return
 }
 
-func (c *apiInterfaceGenerator) doGenerate(srcFolder string, module string, items []apiItem) (err error) {
+func (c *apiInterfaceGenerator) doGenerate(apiModuleFolderPath string, module string, items []apiItem) (err error) {
 	var (
-		modulePath     = gfile.Join(srcFolder, module)
-		moduleFilePath = gfile.Join(modulePath, fmt.Sprintf(`%s.go`, module))
+		moduleFilePath = gfile.Join(apiModuleFolderPath, fmt.Sprintf(`%s.go`, module))
 		importPathMap  = gmap.NewListMap()
 		importPaths    []string
 	)

@@ -13,53 +13,43 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func (c CGenCtrl) getApiItemsInSrc(srcFolder string) (items []apiItem, err error) {
+func (c CGenCtrl) getApiItemsInSrc(apiModuleFolderPath string) (items []apiItem, err error) {
 	var (
 		fileContent string
 		importPath  string
 	)
-	// The first level folders: api module names.
-	apiModuleFolderPaths, err := gfile.ScanDir(srcFolder, "*", false)
+	// The second level folders: versions.
+	apiVersionFolderPaths, err := gfile.ScanDir(apiModuleFolderPath, "*", false)
 	if err != nil {
 		return nil, err
 	}
-	for _, apiModuleFolderPath := range apiModuleFolderPaths {
-		if !gfile.IsDir(apiModuleFolderPath) {
+	for _, apiVersionFolderPath := range apiVersionFolderPaths {
+		if !gfile.IsDir(apiVersionFolderPath) {
 			continue
 		}
 		// The second level folders: versions.
-		apiVersionFolderPaths, err := gfile.ScanDir(apiModuleFolderPath, "*", false)
+		apiFileFolderPaths, err := gfile.ScanDir(apiVersionFolderPath, "*.go", false)
 		if err != nil {
 			return nil, err
 		}
-		for _, apiVersionFolderPath := range apiVersionFolderPaths {
-			if !gfile.IsDir(apiVersionFolderPath) {
+		importPath = utils.GetImportPath(apiVersionFolderPath)
+		for _, apiFileFolderPath := range apiFileFolderPaths {
+			if gfile.IsDir(apiFileFolderPath) {
 				continue
 			}
-			// The second level folders: versions.
-			apiFileFolderPaths, err := gfile.ScanDir(apiVersionFolderPath, "*.go", false)
+			fileContent = gfile.GetContents(apiFileFolderPath)
+			matches, err := gregex.MatchAllString(`type\s+(\w+)Req\s+struct\s+{`, fileContent)
 			if err != nil {
 				return nil, err
 			}
-			importPath = utils.GetImportPath(apiVersionFolderPath)
-			for _, apiFileFolderPath := range apiFileFolderPaths {
-				if gfile.IsDir(apiFileFolderPath) {
-					continue
+			for _, match := range matches {
+				item := apiItem{
+					Import:     gstr.Trim(importPath, `"`),
+					Module:     gfile.Basename(apiModuleFolderPath),
+					Version:    gfile.Basename(apiVersionFolderPath),
+					MethodName: match[1],
 				}
-				fileContent = gfile.GetContents(apiFileFolderPath)
-				matches, err := gregex.MatchAllString(`type\s+(\w+)Req\s+struct\s+{`, fileContent)
-				if err != nil {
-					return nil, err
-				}
-				for _, match := range matches {
-					item := apiItem{
-						Import:     gstr.Trim(importPath, `"`),
-						Module:     gfile.Basename(apiModuleFolderPath),
-						Version:    gfile.Basename(apiVersionFolderPath),
-						MethodName: match[1],
-					}
-					items = append(items, item)
-				}
+				items = append(items, item)
 			}
 		}
 	}
@@ -67,13 +57,14 @@ func (c CGenCtrl) getApiItemsInSrc(srcFolder string) (items []apiItem, err error
 }
 
 func (c CGenCtrl) getApiItemsInDst(dstFolder string) (items []apiItem, err error) {
+	if !gfile.Exists(dstFolder) {
+		return nil, nil
+	}
 	type importItem struct {
 		Path  string
 		Alias string
 	}
-	var (
-		fileContent string
-	)
+	var fileContent string
 	filePaths, err := gfile.ScanDir(dstFolder, "*.go", true)
 	if err != nil {
 		return nil, err
