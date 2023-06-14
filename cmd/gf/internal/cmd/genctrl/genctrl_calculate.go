@@ -38,7 +38,7 @@ func (c CGenCtrl) getApiItemsInSrc(apiModuleFolderPath string) (items []apiItem,
 				continue
 			}
 			fileContent = gfile.GetContents(apiFileFolderPath)
-			matches, err := gregex.MatchAllString(`type\s+(\w+)Req\s+struct\s+{`, fileContent)
+			matches, err := gregex.MatchAllString(PatternApiDefinition, fileContent)
 			if err != nil {
 				return nil, err
 			}
@@ -99,10 +99,7 @@ func (c CGenCtrl) getApiItemsInDst(dstFolder string) (items []apiItem, err error
 			}
 		}
 		// retrieve all api usages.
-		matches, err := gregex.MatchAllString(
-			`func\s+\(.+?\)\s+\w+\(.+?\*(\w+)\.(\w+)Req\)\s+\(.+?\*(\w+)\.(\w+)Res,\s+\w+\s+error\)\s+{`,
-			fileContent,
-		)
+		matches, err := gregex.MatchAllString(PatternCtrlDefinition, fileContent)
 		if err != nil {
 			return nil, err
 		}

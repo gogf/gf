@@ -12,6 +12,9 @@ import (
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gtag"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
@@ -27,6 +30,15 @@ gf gen ctrl
 	CGenCtrlBriefSrcFolder = `source folder path to be parsed. default: api`
 	CGenCtrlBriefDstFolder = `destination folder path storing automatically generated go files. default: internal/controller`
 	CGenCtrlBriefWatchFile = `used in file watcher, it re-generates go files only if given file is under srcFolder`
+)
+
+const (
+	PatternApiDefinition  = `type\s+(\w+)Req\s+struct\s+{`
+	PatternCtrlDefinition = `func\s+\(.+?\)\s+\w+\(.+?\*(\w+)\.(\w+)Req\)\s+\(.+?\*(\w+)\.(\w+)Res,\s+\w+\s+error\)\s+{`
+)
+
+const (
+	genCtrlFileLockSeconds = 10
 )
 
 func init() {
@@ -52,11 +64,12 @@ type (
 	CGenCtrlOutput struct{}
 )
 
-const (
-	genCtrlFileLockSeconds = 1
-)
-
 func (c CGenCtrl) Ctrl(ctx context.Context, in CGenCtrlInput) (out *CGenCtrlOutput, err error) {
+	in.WatchFile = `/Users/txqiangguo/Workspace/eros/app/khaos-shark/api/monitor_panel/v1/modify_monitor_panel.go`
+	if in.WatchFile != "" {
+		err = c.generateByWatchFile(in.WatchFile)
+		return
+	}
 	in.SrcFolder = "/Users/txqiangguo/Workspace/eros/app/khaos-shark/api"
 	in.DstFolder = "/Users/txqiangguo/Workspace/eros/app/khaos-shark/internal/controller"
 
@@ -77,7 +90,7 @@ func (c CGenCtrl) Ctrl(ctx context.Context, in CGenCtrlInput) (out *CGenCtrlOutp
 			module              = gfile.Basename(apiModuleFolderPath)
 			dstModuleFolderPath = gfile.Join(in.DstFolder, module)
 		)
-		err = c.generateByModule(ctx, apiModuleFolderPath, dstModuleFolderPath)
+		err = c.generateByModule(apiModuleFolderPath, dstModuleFolderPath)
 		if err != nil {
 			return nil, err
 		}
@@ -87,8 +100,46 @@ func (c CGenCtrl) Ctrl(ctx context.Context, in CGenCtrlInput) (out *CGenCtrlOutp
 	return
 }
 
+func (c CGenCtrl) generateByWatchFile(watchFile string) (err error) {
+	// File lock to avoid multiple processes.
+	var (
+		flockFilePath = gfile.Temp("gf.cli.gen.service.lock")
+		flockContent  = gfile.GetContents(flockFilePath)
+	)
+	if flockContent != "" {
+		if gtime.Timestamp()-gconv.Int64(flockContent) < genCtrlFileLockSeconds {
+			// If another generating process is running, it just exits.
+			mlog.Debug(`another "gen service" process is running, exit`)
+			return
+		}
+	}
+	defer gfile.Remove(flockFilePath)
+	_ = gfile.PutContents(flockFilePath, gtime.TimestampStr())
+
+	// check this updated file is an api file.
+	// watch file should be in standard goframe project structure.
+	var (
+		apiVersionPath      = gfile.Dir(watchFile)
+		apiModuleFolderPath = gfile.Dir(apiVersionPath)
+		shouldBeNameOfAPi   = gfile.Basename(gfile.Dir(apiModuleFolderPath))
+	)
+	if shouldBeNameOfAPi != "api" {
+		return nil
+	}
+	// watch file should have api definitions.
+	if !gregex.IsMatchString(PatternApiDefinition, gfile.GetContents(watchFile)) {
+		return nil
+	}
+	var (
+		projectRootPath     = gfile.Dir(apiModuleFolderPath)
+		module              = gfile.Basename(apiModuleFolderPath)
+		dstModuleFolderPath = gfile.Join(projectRootPath, "internal", "controller", module)
+	)
+	return c.generateByModule(apiModuleFolderPath, dstModuleFolderPath)
+}
+
 // parseApiModule parses certain api and generate associated go files by certain module, not all api modules.
-func (c CGenCtrl) generateByModule(ctx context.Context, apiModuleFolderPath, dstModuleFolderPath string) (err error) {
+func (c CGenCtrl) generateByModule(apiModuleFolderPath, dstModuleFolderPath string) (err error) {
 	// parse src and dst folder go files.
 	apiItemsInSrc, err := c.getApiItemsInSrc(apiModuleFolderPath)
 	if err != nil {
