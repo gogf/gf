@@ -145,16 +145,7 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 	}
 
 	if in.ImportPrefix == "" {
-		if !gfile.Exists("go.mod") {
-			mlog.Fatal("ImportPrefix is empty and go.mod does not exist in current working directory")
-		}
-		var (
-			goModContent = gfile.GetContents("go.mod")
-			match, _     = gregex.MatchString(`^module\s+(.+)\s*`, goModContent)
-		)
-		if len(match) > 1 {
-			in.ImportPrefix = fmt.Sprintf(`%s/%s`, gstr.Trim(match[1]), gstr.Replace(in.SrcFolder, `\`, `/`))
-		}
+		in.ImportPrefix = utils.GetImportPath(in.SrcFolder)
 	}
 
 	var (

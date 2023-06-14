@@ -25,22 +25,13 @@ func newApiInterfaceGenerator() *apiInterfaceGenerator {
 	return &apiInterfaceGenerator{}
 }
 
-func (c *apiInterfaceGenerator) Generate(apiModuleFolderPath string, items []apiItem) (err error) {
-	var (
-		doneApiItemSet = gset.NewStrSet()
-	)
-	for _, item := range items {
-		if doneApiItemSet.Contains(item.String()) {
-			continue
-		}
-		// retrieve all api items of the same module.
-		subItems := c.getSubItemsByModule(items, item.Module)
-		if err = c.doGenerate(apiModuleFolderPath, item.Module, subItems); err != nil {
-			return
-		}
-		for _, subItem := range subItems {
-			doneApiItemSet.Add(subItem.String())
-		}
+func (c *apiInterfaceGenerator) Generate(apiModuleFolderPath string, apiModuleApiItems []apiItem) (err error) {
+	if len(apiModuleApiItems) == 0 {
+		return nil
+	}
+	var firstApiItem = apiModuleApiItems[0]
+	if err = c.doGenerate(apiModuleFolderPath, firstApiItem.Module, apiModuleApiItems); err != nil {
+		return
 	}
 	return
 }

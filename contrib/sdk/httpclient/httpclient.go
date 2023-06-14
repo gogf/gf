@@ -1,4 +1,11 @@
-package api
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+// Package httpclient provides http client used for SDK.
+package httpclient
 
 import (
 	"context"
@@ -19,15 +26,15 @@ import (
 
 // Client is a http client for SDK.
 type Client struct {
+	*gclient.Client
 	config Config
-	Client *gclient.Client
 }
 
 // New creates and returns a http client for SDK.
 func New(config Config) *Client {
 	return &Client{
+		Client: config.Client,
 		config: config,
-		Client: config.Client.Prefix(config.URL),
 	}
 }
 
@@ -68,7 +75,7 @@ func (c *Client) Request(ctx context.Context, req, res interface{}) error {
 		return c.Get(ctx, path, req, res)
 
 	default:
-		result, err := c.Client.ContentJson().DoRequest(ctx, method, c.handlePath(path, req), req)
+		result, err := c.ContentJson().DoRequest(ctx, method, c.handlePath(path, req), req)
 		if err != nil {
 			return err
 		}
@@ -82,7 +89,7 @@ func (c *Client) Get(ctx context.Context, path string, in, out interface{}) erro
 	if urlParams != "" {
 		path += "?" + ghttp.BuildParams(in)
 	}
-	res, err := c.Client.ContentJson().Get(ctx, c.handlePath(path, in))
+	res, err := c.ContentJson().Get(ctx, c.handlePath(path, in))
 	if err != nil {
 		return gerror.Wrap(err, `http request failed`)
 	}

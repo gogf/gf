@@ -23,16 +23,16 @@ func newControllerGenerator() *controllerGenerator {
 	return &controllerGenerator{}
 }
 
-func (c *controllerGenerator) Generate(dstModuleFolderPath string, items []apiItem) (err error) {
+func (c *controllerGenerator) Generate(dstModuleFolderPath string, apiModuleApiItems []apiItem) (err error) {
 	var (
 		doneApiItemSet = gset.NewStrSet()
 	)
-	for _, item := range items {
+	for _, item := range apiModuleApiItems {
 		if doneApiItemSet.Contains(item.String()) {
 			continue
 		}
 		// retrieve all api items of the same module.
-		subItems := c.getSubItemsByModuleAndVersion(items, item.Module, item.Version)
+		subItems := c.getSubItemsByModuleAndVersion(apiModuleApiItems, item.Module, item.Version)
 		if err = c.doGenerateCtrlNewByModuleAndVersion(
 			dstModuleFolderPath, item.Module, item.Version, gfile.Dir(item.Import),
 		); err != nil {

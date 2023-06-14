@@ -30,6 +30,7 @@ gf gen ctrl
 	CGenCtrlBriefSrcFolder = `source folder path to be parsed. default: api`
 	CGenCtrlBriefDstFolder = `destination folder path storing automatically generated go files. default: internal/controller`
 	CGenCtrlBriefWatchFile = `used in file watcher, it re-generates go files only if given file is under srcFolder`
+	CGenCtrlBriefSdkPath   = `also generate SDK go files to specified directory`
 )
 
 const (
@@ -50,6 +51,7 @@ func init() {
 		`CGenCtrlBriefSrcFolder`: CGenCtrlBriefSrcFolder,
 		`CGenCtrlBriefDstFolder`: CGenCtrlBriefDstFolder,
 		`CGenCtrlBriefWatchFile`: CGenCtrlBriefWatchFile,
+		`CGenCtrlBriefSdkPath`:   CGenCtrlBriefSdkPath,
 	})
 }
 
@@ -60,18 +62,16 @@ type (
 		SrcFolder string `short:"s" name:"srcFolder" brief:"{CGenCtrlBriefSrcFolder}" d:"api"`
 		DstFolder string `short:"d" name:"dstFolder" brief:"{CGenCtrlBriefDstFolder}" d:"internal/controller"`
 		WatchFile string `short:"w" name:"watchFile" brief:"{CGenCtrlBriefWatchFile}"`
+		SdkPath   string `short:"k" name:"sdkPath"   brief:"{CGenCtrlBriefSdkPath}"`
 	}
 	CGenCtrlOutput struct{}
 )
 
 func (c CGenCtrl) Ctrl(ctx context.Context, in CGenCtrlInput) (out *CGenCtrlOutput, err error) {
-	in.WatchFile = `/Users/txqiangguo/Workspace/eros/app/khaos-shark/api/monitor_panel/v1/modify_monitor_panel.go`
 	if in.WatchFile != "" {
-		err = c.generateByWatchFile(in.WatchFile)
+		err = c.generateByWatchFile(in.WatchFile, in.SdkPath)
 		return
 	}
-	in.SrcFolder = "/Users/txqiangguo/Workspace/eros/app/khaos-shark/api"
-	in.DstFolder = "/Users/txqiangguo/Workspace/eros/app/khaos-shark/internal/controller"
 
 	if !gfile.Exists(in.SrcFolder) {
 		mlog.Fatalf(`source folder path "%s" does not exist`, in.SrcFolder)
@@ -90,7 +90,7 @@ func (c CGenCtrl) Ctrl(ctx context.Context, in CGenCtrlInput) (out *CGenCtrlOutp
 			module              = gfile.Basename(apiModuleFolderPath)
 			dstModuleFolderPath = gfile.Join(in.DstFolder, module)
 		)
-		err = c.generateByModule(apiModuleFolderPath, dstModuleFolderPath)
+		err = c.generateByModule(apiModuleFolderPath, dstModuleFolderPath, in.SdkPath)
 		if err != nil {
 			return nil, err
 		}
@@ -100,7 +100,7 @@ func (c CGenCtrl) Ctrl(ctx context.Context, in CGenCtrlInput) (out *CGenCtrlOutp
 	return
 }
 
-func (c CGenCtrl) generateByWatchFile(watchFile string) (err error) {
+func (c CGenCtrl) generateByWatchFile(watchFile, sdkPath string) (err error) {
 	// File lock to avoid multiple processes.
 	var (
 		flockFilePath = gfile.Temp("gf.cli.gen.service.lock")
@@ -131,15 +131,15 @@ func (c CGenCtrl) generateByWatchFile(watchFile string) (err error) {
 		return nil
 	}
 	var (
-		projectRootPath     = gfile.Dir(apiModuleFolderPath)
+		projectRootPath     = gfile.Dir(gfile.Dir(apiModuleFolderPath))
 		module              = gfile.Basename(apiModuleFolderPath)
 		dstModuleFolderPath = gfile.Join(projectRootPath, "internal", "controller", module)
 	)
-	return c.generateByModule(apiModuleFolderPath, dstModuleFolderPath)
+	return c.generateByModule(apiModuleFolderPath, dstModuleFolderPath, sdkPath)
 }
 
 // parseApiModule parses certain api and generate associated go files by certain module, not all api modules.
-func (c CGenCtrl) generateByModule(apiModuleFolderPath, dstModuleFolderPath string) (err error) {
+func (c CGenCtrl) generateByModule(apiModuleFolderPath, dstModuleFolderPath, sdkPath string) (err error) {
 	// parse src and dst folder go files.
 	apiItemsInSrc, err := c.getApiItemsInSrc(apiModuleFolderPath)
 	if err != nil {
@@ -174,6 +174,13 @@ func (c CGenCtrl) generateByModule(apiModuleFolderPath, dstModuleFolderPath stri
 	if len(toBeImplementedApiItems) > 0 {
 		err = newControllerGenerator().Generate(dstModuleFolderPath, toBeImplementedApiItems)
 		if err != nil {
+			return
+		}
+	}
+
+	// generate sdk go files.
+	if sdkPath != "" {
+		if err = newApiSdkGenerator().Generate(sdkPath, apiItemsInSrc); err != nil {
 			return
 		}
 	}
