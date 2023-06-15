@@ -63,8 +63,8 @@ package {PkgName}
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/contrib/sdk/httpclient/v2"
+	"github.com/gogf/gf/v2/text/gstr"
 
 {ImportPaths}
 )
