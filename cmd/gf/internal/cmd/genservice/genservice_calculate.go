@@ -37,7 +37,7 @@ func (c CGenService) calculateImportedPackages(fileContent string, srcImportedPa
 }
 
 func (c CGenService) calculateInterfaceFunctions(
-	in CGenServiceInput, fileContent string, srcPkgInterfaceMap map[string]*garray.StrArray, dstPackageName string,
+	in CGenServiceInput, fileContent string, srcPkgInterfaceMap map[string]*garray.StrArray,
 ) (err error) {
 	var (
 		ok                       bool

@@ -23,7 +23,7 @@ import (
 const (
 	CGenCtrlConfig = `gfcli.gen.ctrl`
 	CGenCtrlUsage  = `gf gen ctrl [OPTION]`
-	CGenCtrlBrief  = `parse api definitions to generate ctrl go file`
+	CGenCtrlBrief  = `parse api definitions to generate controller/sdk go files`
 	CGenCtrlEg     = `
 gf gen ctrl
 `

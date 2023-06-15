@@ -196,7 +196,7 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 				return nil, err
 			}
 			// Calculate functions and interfaces for service generating.
-			err = c.calculateInterfaceFunctions(in, fileContent, srcPkgInterfaceMap, dstPackageName)
+			err = c.calculateInterfaceFunctions(in, fileContent, srcPkgInterfaceMap)
 			if err != nil {
 				return nil, err
 			}

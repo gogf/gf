@@ -44,6 +44,9 @@ func (c *apiSdkGenerator) Generate(apiModuleApiItems []apiItem, sdkFolderPath st
 		); err != nil {
 			return
 		}
+		for _, subItem := range subItems {
+			doneApiItemSet.Add(subItem.String())
+		}
 	}
 	return
 }
@@ -71,6 +74,7 @@ func (c *apiSdkGenerator) doGenerateSdkIClient(
 	var (
 		fileContent             string
 		isDirty                 bool
+		isExist                 bool
 		pkgName                 = gfile.Basename(sdkFolderPath)
 		funcName                = gstr.CaseCamel(module) + gstr.UcFirst(version)
 		interfaceName           = fmt.Sprintf(`I%s`, funcName)
@@ -87,7 +91,7 @@ func (c *apiSdkGenerator) doGenerateSdkIClient(
 			gstr.CaseCamel(module), module, interfaceName,
 		)
 	}
-	if gfile.Exists(iClientFilePath) {
+	if isExist = gfile.Exists(iClientFilePath); isExist {
 		fileContent = gfile.GetContents(iClientFilePath)
 	} else {
 		fileContent = gstr.TrimLeft(gstr.ReplaceByMap(consts.TemplateGenCtrlSdkIClient, g.MapStrStr{
@@ -122,8 +126,12 @@ func (c *apiSdkGenerator) doGenerateSdkIClient(
 	}
 	if isDirty {
 		err = gfile.PutContents(iClientFilePath, fileContent)
+		if isExist {
+			mlog.Printf(`updated: %s`, iClientFilePath)
+		} else {
+			mlog.Printf(`generated: %s`, iClientFilePath)
+		}
 	}
-	mlog.Printf(`generated: %s`, iClientFilePath)
 	return
 }
 
