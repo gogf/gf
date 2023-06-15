@@ -24,7 +24,7 @@ func newApiSdkGenerator() *apiSdkGenerator {
 	return &apiSdkGenerator{}
 }
 
-func (c *apiSdkGenerator) Generate(sdkFolderPath string, apiModuleApiItems []apiItem) (err error) {
+func (c *apiSdkGenerator) Generate(apiModuleApiItems []apiItem, sdkFolderPath string, sdkStdVersion, sdkNoV1 bool) (err error) {
 	if err = c.doGenerateSdkPkgFile(sdkFolderPath); err != nil {
 		return
 	}
@@ -36,11 +36,11 @@ func (c *apiSdkGenerator) Generate(sdkFolderPath string, apiModuleApiItems []api
 		}
 		// retrieve all api items of the same module.
 		subItems := c.getSubItemsByModuleAndVersion(apiModuleApiItems, item.Module, item.Version)
-		if err = c.doGenerateSdkIClient(sdkFolderPath, item.Import, item.Module, item.Version); err != nil {
+		if err = c.doGenerateSdkIClient(sdkFolderPath, item.Import, item.Module, item.Version, sdkNoV1); err != nil {
 			return
 		}
 		if err = c.doGenerateSdkImplementer(
-			sdkFolderPath, item.Import, item.Module, item.Version, subItems,
+			subItems, sdkFolderPath, item.Import, item.Module, item.Version, sdkStdVersion, sdkNoV1,
 		); err != nil {
 			return
 		}
@@ -65,17 +65,28 @@ func (c *apiSdkGenerator) doGenerateSdkPkgFile(sdkFolderPath string) (err error)
 	return
 }
 
-func (c *apiSdkGenerator) doGenerateSdkIClient(sdkFolderPath string, versionImportPath, module, version string) (err error) {
+func (c *apiSdkGenerator) doGenerateSdkIClient(
+	sdkFolderPath, versionImportPath, module, version string, sdkNoV1 bool,
+) (err error) {
 	var (
+		fileContent             string
+		isDirty                 bool
 		pkgName                 = gfile.Basename(sdkFolderPath)
 		funcName                = gstr.CaseCamel(module) + gstr.UcFirst(version)
 		interfaceName           = fmt.Sprintf(`I%s`, funcName)
 		moduleImportPath        = fmt.Sprintf(`"%s"`, gfile.Dir(versionImportPath))
-		interfaceFuncDefinition = fmt.Sprintf(`%s() %s.%s`, funcName, module, interfaceName)
-		iClientFilePath         = gfile.Join(sdkFolderPath, fmt.Sprintf(`%s_iclient.go`, pkgName))
-		fileContent             string
-		isDirty                 bool
+		iClientFilePath         = gfile.Join(sdkFolderPath, fmt.Sprintf(`%s.iclient.go`, pkgName))
+		interfaceFuncDefinition = fmt.Sprintf(
+			`%s() %s.%s`,
+			gstr.CaseCamel(module)+gstr.UcFirst(version), module, interfaceName,
+		)
 	)
+	if sdkNoV1 && version == "v1" {
+		interfaceFuncDefinition = fmt.Sprintf(
+			`%s() %s.%s`,
+			gstr.CaseCamel(module), module, interfaceName,
+		)
+	}
 	if gfile.Exists(iClientFilePath) {
 		fileContent = gfile.GetContents(iClientFilePath)
 	} else {
@@ -116,17 +127,23 @@ func (c *apiSdkGenerator) doGenerateSdkIClient(sdkFolderPath string, versionImpo
 	return
 }
 
-func (c *apiSdkGenerator) doGenerateSdkImplementer(sdkFolderPath string, versionImportPath, module, version string, items []apiItem) (err error) {
+func (c *apiSdkGenerator) doGenerateSdkImplementer(
+	items []apiItem, sdkFolderPath, versionImportPath, module, version string, sdkStdVersion, sdkNoV1 bool,
+) (err error) {
 	var (
 		pkgName             = gfile.Basename(sdkFolderPath)
 		moduleNameCamel     = gstr.CaseCamel(module)
 		moduleNameSnake     = gstr.CaseSnake(module)
 		moduleImportPath    = gfile.Dir(versionImportPath)
+		versionPrefix       = ""
 		implementerName     = moduleNameCamel + gstr.UcFirst(version)
 		implementerFilePath = gfile.Join(sdkFolderPath, fmt.Sprintf(
-			`%s_%s_%s.go`, pkgName, version, moduleNameSnake,
+			`%s_%s_%s.go`, pkgName, moduleNameSnake, version,
 		))
 	)
+	if sdkNoV1 && version == "v1" {
+		implementerName = moduleNameCamel
+	}
 	// implementer file template.
 	var importPaths = make([]string, 0)
 	importPaths = append(importPaths, fmt.Sprintf("\t\"%s\"", moduleImportPath))
@@ -137,8 +154,12 @@ func (c *apiSdkGenerator) doGenerateSdkImplementer(sdkFolderPath string, version
 		"{ImplementerName}": implementerName,
 	}))
 	// implementer new function definition.
+	if sdkStdVersion {
+		versionPrefix = fmt.Sprintf(`/api/%s`, version)
+	}
 	implementerFileContent += gstr.TrimLeft(gstr.ReplaceByMap(consts.TemplateGenCtrlSdkImplementerNew, g.MapStrStr{
 		"{Module}":          module,
+		"{VersionPrefix}":   versionPrefix,
 		"{ImplementerName}": implementerName,
 	}))
 	// implementer functions definitions.

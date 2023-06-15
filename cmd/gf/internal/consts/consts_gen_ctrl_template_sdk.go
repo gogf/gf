@@ -76,7 +76,7 @@ const TemplateGenCtrlSdkImplementerNew = `
 func (i *implementer) {ImplementerName}() {Module}.I{ImplementerName} {
 	var (
 		client = httpclient.New(i.config)
-		prefix = gstr.TrimRight(i.config.URL, "/") + "/api/v1"
+		prefix = gstr.TrimRight(i.config.URL, "/") + "{VersionPrefix}"
 	)
 	client.Client = client.Prefix(prefix)
 	return &implementer{ImplementerName}{client}
