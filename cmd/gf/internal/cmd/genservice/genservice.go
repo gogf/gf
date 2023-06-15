@@ -14,7 +14,6 @@ import (
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -50,7 +49,7 @@ destination file name storing automatically generated go files, cases are as fol
 `
 	CGenServiceBriefWatchFile    = `used in file watcher, it re-generates all service go files only if given file is under srcFolder`
 	CGenServiceBriefStPattern    = `regular expression matching struct name for generating service. default: ^s([A-Z]\\\\w+)$`
-	CGenServiceBriefPackages     = `produce go files only for given source packages`
+	CGenServiceBriefPackages     = `produce go files only for given source packages(source folders)`
 	CGenServiceBriefImportPrefix = `custom import prefix to calculate import path for generated importing go file of logic`
 	CGenServiceBriefClear        = `delete all generated go files that are not used any further`
 )
@@ -93,21 +92,6 @@ const (
 )
 
 func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGenServiceOutput, err error) {
-	// File lock to avoid multiple processes.
-	var (
-		flockFilePath = gfile.Temp("gf.cli.gen.service.lock")
-		flockContent  = gfile.GetContents(flockFilePath)
-	)
-	if flockContent != "" {
-		if gtime.Timestamp()-gconv.Int64(flockContent) < genServiceFileLockSeconds {
-			// If another "gen service" process is running, it just exits.
-			mlog.Debug(`another "gen service" process is running, exit`)
-			return
-		}
-	}
-	defer gfile.Remove(flockFilePath)
-	_ = gfile.PutContents(flockFilePath, gtime.TimestampStr())
-
 	in.SrcFolder = gstr.TrimRight(in.SrcFolder, `\/`)
 	in.SrcFolder = gstr.Replace(in.SrcFolder, "\\", "/")
 	in.WatchFile = gstr.TrimRight(in.WatchFile, `\/`)
@@ -115,6 +99,21 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 
 	// Watch file handling.
 	if in.WatchFile != "" {
+		// File lock to avoid multiple processes.
+		var (
+			flockFilePath = gfile.Temp("gf.cli.gen.service.lock")
+			flockContent  = gfile.GetContents(flockFilePath)
+		)
+		if flockContent != "" {
+			if gtime.Timestamp()-gconv.Int64(flockContent) < genServiceFileLockSeconds {
+				// If another "gen service" process is running, it just exits.
+				mlog.Debug(`another "gen service" process is running, exit`)
+				return
+			}
+		}
+		defer gfile.Remove(flockFilePath)
+		_ = gfile.PutContents(flockFilePath, gtime.TimestampStr())
+
 		// It works only if given WatchFile is in SrcFolder.
 		var (
 			watchFileDir = gfile.Dir(in.WatchFile)
@@ -131,13 +130,10 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 			mlog.Fatalf(`%+v`, err)
 		}
 		mlog.Debug("Chdir:", newWorkingDir)
-		_ = gfile.Remove(flockFilePath)
-		var command = fmt.Sprintf(
-			`%s gen service -packages=%s`,
-			gfile.SelfName(), gfile.Basename(watchFileDir),
-		)
-		err = gproc.ShellRun(ctx, command)
-		return
+
+		in.WatchFile = ""
+		in.Packages = []string{gfile.Basename(watchFileDir)}
+		return c.Service(ctx, in)
 	}
 
 	if !gfile.Exists(in.SrcFolder) {
@@ -186,7 +182,7 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		generatedDstFilePathSet.Add(dstFilePath)
 		for _, file := range files {
 			fileContent = gfile.GetContents(file)
-			fileContent, err := gregex.ReplaceString(`/[/|\*](.+)`, "", fileContent)
+			fileContent, err = gregex.ReplaceString(`/[/|\*](.+)`, "", fileContent)
 			if err != nil {
 				return nil, err
 			}
@@ -262,6 +258,57 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		utils.GoFmt(in.DstFolder)
 	}
 
+	// auto update main.go.
+	if err = c.checkAndUpdateMain(in.SrcFolder); err != nil {
+		return nil, err
+	}
+
 	mlog.Print(`done!`)
+	return
+}
+
+func (c CGenService) checkAndUpdateMain(srcFolder string) (err error) {
+	var (
+		logicPackageName = gstr.ToLower(gfile.Basename(srcFolder))
+		logicFilePath    = gfile.Join(srcFolder, logicPackageName+".go")
+		importPath       = utils.GetImportPath(logicFilePath)
+		importStr        = fmt.Sprintf(`_ "%s"`, importPath)
+		mainFilePath     = gfile.Join(gfile.Dir(gfile.Dir(gfile.Dir(logicFilePath))), "main.go")
+		mainFileContent  = gfile.GetContents(mainFilePath)
+	)
+	if gstr.Contains(mainFileContent, importStr) {
+		return nil
+	}
+	match, err := gregex.MatchString(`import \(([\s\S]+?)\)`, mainFileContent)
+	if err != nil {
+		return err
+	}
+	lines := garray.NewStrArrayFrom(gstr.Split(match[1], "\n"))
+	for i, line := range lines.Slice() {
+		line = gstr.Trim(line)
+		if len(line) == 0 {
+			continue
+		}
+		if line[0] == '_' {
+			continue
+		}
+		// Insert the logic import into imports.
+		err = lines.InsertBefore(i, fmt.Sprintf("\t%s\n\n", importStr))
+		if err != nil {
+			return err
+		}
+		break
+	}
+	mainFileContent, err = gregex.ReplaceString(
+		`import \(([\s\S]+?)\)`,
+		fmt.Sprintf(`import (%s)`, lines.Join("\n")),
+		mainFileContent,
+	)
+	if err != nil {
+		return err
+	}
+	mlog.Print(`update main.go`)
+	err = gfile.PutContents(mainFilePath, mainFileContent)
+	utils.GoFmt(mainFilePath)
 	return
 }

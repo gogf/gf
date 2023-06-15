@@ -78,7 +78,7 @@ func ReplaceGeneratedContentGFV2(folderPath string) (err error) {
 // Note that it needs a `go.mod` in current working directory or parent directories to detect the path.
 func GetImportPath(filePath string) string {
 	var (
-		newDir     = gfile.Dir(filePath)
+		newDir     = gfile.Dir(gfile.RealPath(filePath))
 		oldDir     string
 		suffix     string
 		goModName  = "go.mod"
@@ -93,7 +93,9 @@ func GetImportPath(filePath string) string {
 		if gfile.Exists(goModPath) {
 			match, _ := gregex.MatchString(`^module\s+(.+)\s*`, gfile.GetContents(goModPath))
 			importPath = gstr.Trim(match[1]) + "/" + suffix
-			return gstr.Replace(importPath, `\`, `/`)
+			importPath = gstr.Replace(importPath, `\`, `/`)
+			importPath = gstr.TrimRight(importPath, `/`)
+			return importPath
 		}
 		oldDir = newDir
 		newDir = gfile.Dir(oldDir)
