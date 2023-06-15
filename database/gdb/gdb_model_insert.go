@@ -152,10 +152,8 @@ func (m *Model) Data(data ...interface{}) *Model {
 //	}).
 func (m *Model) OnDuplicate(onDuplicate ...interface{}) *Model {
 	model := m.getModel()
-	if len(onDuplicate) > 1 {
+	if len(onDuplicate) > 0 {
 		model.onDuplicate = onDuplicate
-	} else {
-		model.onDuplicate = onDuplicate[0]
 	}
 	return model
 }
@@ -174,10 +172,8 @@ func (m *Model) OnDuplicate(onDuplicate ...interface{}) *Model {
 //	}).
 func (m *Model) OnDuplicateEx(onDuplicateEx ...interface{}) *Model {
 	model := m.getModel()
-	if len(onDuplicateEx) > 1 {
+	if len(onDuplicateEx) > 0 {
 		model.onDuplicateEx = onDuplicateEx
-	} else {
-		model.onDuplicateEx = onDuplicateEx[0]
 	}
 	return model
 }
