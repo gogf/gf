@@ -85,8 +85,7 @@ func (c *Client) Request(ctx context.Context, req, res interface{}) error {
 
 // Get sends a request using GET method.
 func (c *Client) Get(ctx context.Context, path string, in, out interface{}) error {
-	urlParams := ghttp.BuildParams(in)
-	if urlParams != "" {
+	if urlParams := ghttp.BuildParams(in); urlParams != "" {
 		path += "?" + ghttp.BuildParams(in)
 	}
 	res, err := c.ContentJson().Get(ctx, c.handlePath(path, in))
