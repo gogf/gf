@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gproc"
+	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
@@ -71,4 +72,34 @@ func ReplaceGeneratedContentGFV2(folderPath string) (err error) {
 		}
 		return content
 	}, folderPath, "*.go", true)
+}
+
+// GetImportPath calculates and returns the golang import path for given `filePath`.
+// Note that it needs a `go.mod` in current working directory or parent directories to detect the path.
+func GetImportPath(filePath string) string {
+	var (
+		newDir     = gfile.Dir(filePath)
+		oldDir     string
+		suffix     string
+		goModName  = "go.mod"
+		goModPath  string
+		importPath string
+	)
+	if gfile.IsDir(filePath) {
+		suffix = gfile.Basename(filePath)
+	}
+	for {
+		goModPath = gfile.Join(newDir, goModName)
+		if gfile.Exists(goModPath) {
+			match, _ := gregex.MatchString(`^module\s+(.+)\s*`, gfile.GetContents(goModPath))
+			importPath = gstr.Trim(match[1]) + "/" + suffix
+			return gstr.Replace(importPath, `\`, `/`)
+		}
+		oldDir = newDir
+		newDir = gfile.Dir(oldDir)
+		if newDir == oldDir {
+			return ""
+		}
+		suffix = gfile.Basename(oldDir) + "/" + suffix
+	}
 }

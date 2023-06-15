@@ -151,6 +151,7 @@ func (c CGenService) isToGenerateServiceGoFile(dstPackageName, filePath string, 
 	return false
 }
 
+// generateInitializationFile generates `logic.go`.
 func (c CGenService) generateInitializationFile(in CGenServiceInput, importSrcPackages []string) (err error) {
 	var (
 		srcPackageName   = gstr.ToLower(gfile.Basename(in.SrcFolder))

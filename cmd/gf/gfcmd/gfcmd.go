@@ -26,6 +26,7 @@ const (
 )
 
 // Command manages the CLI command of `gf`.
+// This struct can be globally accessible and extended with custom struct.
 type Command struct {
 	*gcmd.Command
 }
