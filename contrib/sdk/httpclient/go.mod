@@ -1,4 +1,4 @@
-module github.com/gogf/gf/contrib/registry/file/v2
+module github.com/gogf/gf/contrib/sdk/httpclient/v2
 
 go 1.15
 
