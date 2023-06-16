@@ -84,7 +84,7 @@ func (c CGenService) calculateCodeCommented(in CGenServiceInput, fileContent str
 }
 
 func (c CGenService) calculateInterfaceFunctions(
-	in CGenServiceInput, fileContent string, srcPkgInterfaceMap map[string]*garray.StrArray, dstPackageName string,
+	in CGenServiceInput, fileContent string, srcPkgInterfaceMap map[string]*garray.StrArray,
 ) (err error) {
 	var (
 		ok                       bool
