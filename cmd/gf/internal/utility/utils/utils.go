@@ -77,14 +77,22 @@ func ReplaceGeneratedContentGFV2(folderPath string) (err error) {
 // GetImportPath calculates and returns the golang import path for given `filePath`.
 // Note that it needs a `go.mod` in current working directory or parent directories to detect the path.
 func GetImportPath(filePath string) string {
+	// If `filePath` does not exist, create it firstly to find the import path.
+	var realPath = gfile.RealPath(filePath)
+	if realPath == "" {
+		_ = gfile.Mkdir(filePath)
+		realPath = gfile.RealPath(filePath)
+	}
+
 	var (
-		newDir     = gfile.Dir(gfile.RealPath(filePath))
+		newDir     = gfile.Dir(realPath)
 		oldDir     string
 		suffix     string
 		goModName  = "go.mod"
 		goModPath  string
 		importPath string
 	)
+
 	if gfile.IsDir(filePath) {
 		suffix = gfile.Basename(filePath)
 	}
