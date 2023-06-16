@@ -11,6 +11,7 @@ import (
 	"fmt"
 
 	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -169,34 +170,74 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		if len(files) == 0 {
 			continue
 		}
+		// Parse single logic package folder.
 		var (
 			// StructName => FunctionDefinitions
-			srcPkgInterfaceMap  = make(map[string]*garray.StrArray)
-			srcImportedPackages = garray.NewSortedStrArray().SetUnique(true)
-			srcPackageName      = gfile.Basename(srcFolderPath)
-			ok                  bool
-			dstFilePath         = gfile.Join(in.DstFolder,
+			srcPkgInterfaceMap        = make(map[string]*garray.StrArray)
+			srcImportedPackages       = garray.NewSortedStrArray().SetUnique(true)
+			importPackageItemAliasMap = gmap.NewStrStrMap() // for conflict imports check. alias => path
+			srcPackageName            = gfile.Basename(srcFolderPath)
+			aliasIndex                = 0
+			ok                        bool
+			dstFilePath               = gfile.Join(in.DstFolder,
 				c.getDstFileNameCase(srcPackageName, in.DstFileNameCase)+".go",
 			)
 		)
 		generatedDstFilePathSet.Add(dstFilePath)
 		for _, file := range files {
+			var packageItems []packageItem
 			fileContent = gfile.GetContents(file)
+			// remove all comments.
 			fileContent, err = gregex.ReplaceString(`/[/|\*](.+)`, "", fileContent)
 			if err != nil {
 				return nil, err
 			}
 			// Calculate imported packages of source go files.
-			err = c.calculateImportedPackages(fileContent, srcImportedPackages)
+			packageItems, err = c.calculateImportedPackages(fileContent)
 			if err != nil {
 				return nil, err
+			}
+			// try finding the conflicts imports between files.
+			for _, item := range packageItems {
+				alias := item.Alias
+				if alias == "" {
+					alias = gfile.Basename(gstr.Trim(item.Path, `"`))
+				}
+				importPath := importPackageItemAliasMap.Get(alias)
+				if importPath == "" {
+					importPackageItemAliasMap.Set(alias, item.Path)
+					srcImportedPackages.Add(item.RawImport)
+					continue
+				}
+				if importPath != item.Path {
+					// update the conflicted alias with suffix.
+					item.Alias = fmt.Sprintf(`%s%d`, alias, aliasIndex)
+					aliasIndex++
+					importPackageItemAliasMap.Set(item.Alias, item.Path)
+					item.RawImport = fmt.Sprintf(`%s %s`, item.Alias, item.Path)
+
+					// update the file content with new alias import.
+					fileContent, err = gregex.ReplaceStringFuncMatch(
+						fmt.Sprintf(`([^\w])%s(\.\w+)`, alias), fileContent,
+						func(match []string) string {
+							return match[1] + item.Alias + match[2]
+						},
+					)
+					if err != nil {
+						return nil, err
+					}
+
+					srcImportedPackages.Add(item.RawImport)
+				}
 			}
 			// Calculate functions and interfaces for service generating.
 			err = c.calculateInterfaceFunctions(in, fileContent, srcPkgInterfaceMap)
 			if err != nil {
 				return nil, err
 			}
+
 		}
+
 		initImportSrcPackages = append(
 			initImportSrcPackages,
 			fmt.Sprintf(`%s/%s`, in.ImportPrefix, srcPackageName),
@@ -209,7 +250,7 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 			)
 			continue
 		}
-		// Generating service go file for logic.
+		// Generating service go file for single logic package.
 		if ok, err = c.generateServiceFile(generateServiceFilesInput{
 			CGenServiceInput:    in,
 			SrcStructFunctions:  srcPkgInterfaceMap,
