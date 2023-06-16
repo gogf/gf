@@ -191,10 +191,16 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 			dstFilePath         = gfile.Join(in.DstFolder,
 				c.getDstFileNameCase(srcPackageName, in.DstFileNameCase)+".go",
 			)
+			srcCodeCommentedMap = make(map[string]string)
 		)
 		generatedDstFilePathSet.Add(dstFilePath)
 		for _, file := range files {
 			fileContent = gfile.GetContents(file)
+			// Calculate code comments in source Go files.
+			err := c.calculateCodeCommented(in, fileContent, srcCodeCommentedMap)
+			if err != nil {
+				return nil, err
+			}
 			fileContent, err := gregex.ReplaceString(`/[/|\*](.+)`, "", fileContent)
 			if err != nil {
 				return nil, err
@@ -230,6 +236,7 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 			SrcPackageName:      srcPackageName,
 			DstPackageName:      dstPackageName,
 			DstFilePath:         dstFilePath,
+			SrcCodeCommentedMap: srcCodeCommentedMap,
 		}); err != nil {
 			return
 		}

@@ -27,6 +27,7 @@ type generateServiceFilesInput struct {
 	SrcImportedPackages []string
 	SrcPackageName      string
 	DstPackageName      string
+	SrcCodeCommentedMap map[string]string
 }
 
 func (c CGenService) generateServiceFile(in generateServiceFilesInput) (ok bool, err error) {
@@ -47,6 +48,13 @@ func (c CGenService) generateServiceFile(in generateServiceFilesInput) (ok bool,
 	generatedContent += "\n"
 	for structName, funcArray := range in.SrcStructFunctions {
 		allFuncArray.Append(funcArray.Slice()...)
+		// Add comments to a method.
+		for index, funcName := range funcArray.Slice() {
+			if commentedInfo, exist := in.SrcCodeCommentedMap[fmt.Sprintf("%s-%s", structName, funcName)]; exist {
+				funcName = commentedInfo + funcName
+				_ = funcArray.Set(index, funcName)
+			}
+		}
 		generatedContent += gstr.Trim(gstr.ReplaceByMap(consts.TemplateGenServiceContentInterface, g.MapStrStr{
 			"{InterfaceName}":  "I" + structName,
 			"{FuncDefinition}": funcArray.Join("\n\t"),

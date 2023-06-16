@@ -7,6 +7,7 @@
 package genservice
 
 import (
+	"fmt"
 	"go/parser"
 	"go/token"
 
@@ -31,6 +32,52 @@ func (c CGenService) calculateImportedPackages(fileContent string, srcImportedPa
 				// no alias
 				srcImportedPackages.Add(s.Path.Value)
 			}
+		}
+	}
+	return nil
+}
+
+func (c CGenService) calculateCodeCommented(in CGenServiceInput, fileContent string, srcCodeCommentedMap map[string]string) error {
+	matches, err := gregex.MatchAllString(`((((//.*)|(/\*[\s\S]*?\*/))\s)+)func \((.+?)\) ([\s\S]+?) {`, fileContent)
+	if err != nil {
+		return err
+	}
+	for _, match := range matches {
+		var (
+			structName    string
+			structMatch   []string
+			funcReceiver  = gstr.Trim(match[1+5])
+			receiverArray = gstr.SplitAndTrim(funcReceiver, " ")
+			functionHead  = gstr.Trim(gstr.Replace(match[2+5], "\n", ""))
+			commentedInfo = ""
+		)
+		if len(receiverArray) > 1 {
+			structName = receiverArray[1]
+		} else {
+			structName = receiverArray[0]
+		}
+		structName = gstr.Trim(structName, "*")
+
+		// Case of:
+		// Xxx(\n    ctx context.Context, req *v1.XxxReq,\n) -> Xxx(ctx context.Context, req *v1.XxxReq)
+		functionHead = gstr.Replace(functionHead, `,)`, `)`)
+		functionHead, _ = gregex.ReplaceString(`\(\s+`, `(`, functionHead)
+		functionHead, _ = gregex.ReplaceString(`\s{2,}`, ` `, functionHead)
+		if !gstr.IsLetterUpper(functionHead[0]) {
+			continue
+		}
+		// Match and pick the struct name from receiver.
+		if structMatch, err = gregex.MatchString(in.StPattern, structName); err != nil {
+			return err
+		}
+		if len(structMatch) < 1 {
+			continue
+		}
+		structName = gstr.CaseCamel(structMatch[1])
+
+		commentedInfo = match[1]
+		if len(commentedInfo) > 0 {
+			srcCodeCommentedMap[fmt.Sprintf("%s-%s", structName, functionHead)] = commentedInfo
 		}
 	}
 	return nil
