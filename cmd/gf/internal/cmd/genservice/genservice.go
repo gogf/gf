@@ -293,8 +293,7 @@ func (c CGenService) checkAndUpdateMain(srcFolder string) (err error) {
 			continue
 		}
 		// Insert the logic import into imports.
-		err = lines.InsertBefore(i, fmt.Sprintf("\t%s\n\n", importStr))
-		if err != nil {
+		if err = lines.InsertBefore(i, fmt.Sprintf("\t%s\n\n", importStr)); err != nil {
 			return err
 		}
 		break
