@@ -65,7 +65,7 @@ func generateDaoSingle(ctx context.Context, in generateDaoSingleInput) {
 		importPrefix            = in.ImportPrefix
 	)
 	if importPrefix == "" {
-		importPrefix = utils.GetImportPath(in.DaoPath)
+		importPrefix = utils.GetImportPath(gfile.Join(in.Path, in.DaoPath))
 	} else {
 		importPrefix = gstr.Join(g.SliceStr{importPrefix, in.DaoPath}, "/")
 	}
