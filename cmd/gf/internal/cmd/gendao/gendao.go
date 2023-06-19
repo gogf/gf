@@ -16,7 +16,6 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gtag"
 
@@ -180,7 +179,6 @@ type (
 		DB            gdb.DB
 		TableNames    []string
 		NewTableNames []string
-		ModName       string // Module name of current golang project, which is used for import purpose.
 	}
 )
 
@@ -204,9 +202,8 @@ func (c CGenDao) Dao(ctx context.Context, in CGenDaoInput) (out *CGenDaoOutput, 
 // doGenDaoForArray implements the "gen dao" command for configuration array.
 func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 	var (
-		err     error
-		db      gdb.DB
-		modName string // Go module name, eg: github.com/gogf/gf.
+		err error
+		db  gdb.DB
 	)
 	if index >= 0 {
 		err = g.Cfg().MustGet(
@@ -221,21 +218,6 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 		mlog.Fatalf(`path "%s" does not exist`, in.Path)
 	}
 	removePrefixArray := gstr.SplitAndTrim(in.RemovePrefix, ",")
-	if in.ImportPrefix == "" {
-		mlog.Debug(`import prefix is empty, trying calculating the import package path using go.mod`)
-		if !gfile.Exists("go.mod") {
-			mlog.Fatal("go.mod does not exist in current working directory")
-		}
-		var (
-			goModContent = gfile.GetContents("go.mod")
-			match, _     = gregex.MatchString(`^module\s+(.+)\s*`, goModContent)
-		)
-		if len(match) > 1 {
-			modName = gstr.Trim(match[1])
-		} else {
-			mlog.Fatal("module name does not found in go.mod")
-		}
-	}
 
 	// It uses user passed database configuration.
 	if in.Link != "" {
@@ -287,7 +269,6 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 		DB:            db,
 		TableNames:    tableNames,
 		NewTableNames: newTableNames,
-		ModName:       modName,
 	})
 	// Do.
 	generateDo(ctx, CGenDaoInternalInput{
@@ -295,7 +276,6 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 		DB:            db,
 		TableNames:    tableNames,
 		NewTableNames: newTableNames,
-		ModName:       modName,
 	})
 	// Entity.
 	generateEntity(ctx, CGenDaoInternalInput{
@@ -303,7 +283,6 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 		DB:            db,
 		TableNames:    tableNames,
 		NewTableNames: newTableNames,
-		ModName:       modName,
 	})
 }
 

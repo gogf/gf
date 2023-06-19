@@ -15,25 +15,40 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func (c CGenService) calculateImportedPackages(fileContent string, srcImportedPackages *garray.SortedStrArray) (err error) {
+type packageItem struct {
+	Alias     string
+	Path      string
+	RawImport string
+}
+
+func (c CGenService) calculateImportedPackages(fileContent string) (packages []packageItem, err error) {
 	f, err := parser.ParseFile(token.NewFileSet(), "", fileContent, parser.ImportsOnly)
 	if err != nil {
-		return err
+		return nil, err
 	}
+	packages = make([]packageItem, 0)
 	for _, s := range f.Imports {
 		if s.Path != nil {
 			if s.Name != nil {
 				// If it has alias, and it is not `_`.
 				if pkgAlias := s.Name.String(); pkgAlias != "_" {
-					srcImportedPackages.Add(pkgAlias + " " + s.Path.Value)
+					packages = append(packages, packageItem{
+						Alias:     pkgAlias,
+						Path:      s.Path.Value,
+						RawImport: pkgAlias + " " + s.Path.Value,
+					})
 				}
 			} else {
 				// no alias
-				srcImportedPackages.Add(s.Path.Value)
+				packages = append(packages, packageItem{
+					Alias:     "",
+					Path:      s.Path.Value,
+					RawImport: s.Path.Value,
+				})
 			}
 		}
 	}
-	return nil
+	return packages, nil
 }
 
 func (c CGenService) calculateInterfaceFunctions(
