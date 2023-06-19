@@ -84,8 +84,8 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 		Request:       r,
 		Response:      newResponse(s, w),
 		EnterTime:     gtime.TimestampMilli(),
-		context:       r.Context(),
 		originUrlPath: r.URL.Path,
+		context:       r.Context(),
 	}
 	request.Cookie = GetCookie(request)
 	request.Session = s.sessionManager.New(
