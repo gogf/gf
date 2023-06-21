@@ -69,6 +69,7 @@ func (r *Request) GetCtx() context.Context {
 // SetCtx custom context for current request.
 func (r *Request) SetCtx(ctx context.Context) {
 	r.context = ctx
+	*r.Request = *r.WithContext(ctx)
 }
 
 // GetCtxVar retrieves and returns a Var with a given key name.
