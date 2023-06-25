@@ -46,19 +46,22 @@ func RequestFromCtx(ctx context.Context) *Request {
 // This function overwrites the http.Request.Context function.
 // See GetCtx.
 func (r *Request) Context() context.Context {
-	if r.context == nil {
+	var ctx = r.Request.Context()
+	// Check and inject Request object into context.
+	if RequestFromCtx(ctx) == nil {
+		// Inject Request object into context.
+		ctx = context.WithValue(ctx, ctxKeyForRequest, r)
 		// It forbids the context manually done,
-		// to make the context can be propagated to asynchronous goroutines.
-		r.context = &neverDoneCtx{
-			r.Request.Context(),
-		}
-		r.context = gctx.WithCtx(r.context)
+		// to make the context can be propagated to asynchronous goroutines,
+		// which will not be affected by the HTTP request ends.
+		//
+		// This change is considered for common usage habits of developers for context propagation
+		// in multiple goroutines creation in one HTTP request.
+		ctx = &neverDoneCtx{ctx}
+		ctx = gctx.WithCtx(ctx)
+		r.Request = r.Request.WithContext(ctx)
 	}
-	// Inject Request object into context.
-	if RequestFromCtx(r.context) == nil {
-		r.context = context.WithValue(r.context, ctxKeyForRequest, r)
-	}
-	return r.context
+	return ctx
 }
 
 // GetCtx retrieves and returns the request's context.
@@ -68,7 +71,6 @@ func (r *Request) GetCtx() context.Context {
 
 // SetCtx custom context for current request.
 func (r *Request) SetCtx(ctx context.Context) {
-	r.context = ctx
 	*r.Request = *r.WithContext(ctx)
 }
 
@@ -85,5 +87,7 @@ func (r *Request) GetCtxVar(key interface{}, def ...interface{}) *gvar.Var {
 
 // SetCtxVar sets custom parameter to context with key-value pairs.
 func (r *Request) SetCtxVar(key interface{}, value interface{}) {
-	r.context = context.WithValue(r.Context(), key, value)
+	var ctx = r.Context()
+	ctx = context.WithValue(ctx, key, value)
+	r.Request = r.Request.WithContext(ctx)
 }
