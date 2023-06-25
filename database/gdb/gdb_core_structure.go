@@ -106,8 +106,13 @@ func (c *Core) ConvertDataForRecordValue(ctx context.Context, value interface{})
 			// Nothing to do.
 
 		default:
-			// Use string conversion in default.
-			if s, ok := value.(iString); ok {
+			// If `value` implements interface iNil,
+			// check its IsNil() function, if got ture,
+			// which will insert/update the value to database as "null".
+			if v, ok := value.(iNil); ok && v.IsNil() {
+				convertedValue = nil
+			} else if s, ok := value.(iString); ok {
+				// Use string conversion in default.
 				convertedValue = s.String()
 			} else {
 				// Convert the value to JSON.
