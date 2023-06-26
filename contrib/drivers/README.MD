@@ -50,6 +50,14 @@ Note:
 - It does not support `Save/Replace` features.
 - It does not support `LastInsertId`.
 
+## PostgreSQL - pgx
+```
+import _ "github.com/gogf/gf/contrib/drivers/pgsqlpgx/v2"
+```
+Note:
+- It does not support `Save/Replace` features.
+- It does not support `LastInsertId`.
+
 ## SQL Server
 ```
 import _ "github.com/gogf/gf/contrib/drivers/mssql/v2"
