@@ -36,9 +36,9 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 			mlog.Fatalf("fetching tables fields failed for table '%s':\n%v", tableName, err)
 		}
 		var (
-			newTableName     = in.NewTableNames[i]
-			doFilePath       = gfile.Join(dirPathDo, gstr.CaseSnake(newTableName)+".go")
-			structDefinition = generateStructDefinition(ctx, generateStructDefinitionInput{
+			newTableName        = in.NewTableNames[i]
+			doFilePath          = gfile.Join(dirPathDo, gstr.CaseSnake(newTableName)+".go")
+			structDefinition, _ = generateStructDefinition(ctx, generateStructDefinitionInput{
 				CGenDaoInternalInput: in,
 				TableName:            tableName,
 				StructName:           gstr.CaseCamel(newTableName),
@@ -79,7 +79,7 @@ func generateDoContent(in CGenDaoInternalInput, tableName, tableNameCamelCase, s
 		getTemplateFromPathOrDefault(in.TplDaoDoPath, consts.TemplateGenDaoDoContent),
 		g.MapStrStr{
 			tplVarTableName:          tableName,
-			tplVarPackageImports:     getImportPartContent(structDefine, true),
+			tplVarPackageImports:     getImportPartContent(structDefine, true, nil),
 			tplVarTableNameCamelCase: tableNameCamelCase,
 			tplVarStructDefine:       structDefine,
 		})
