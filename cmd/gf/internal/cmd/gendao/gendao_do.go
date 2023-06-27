@@ -59,6 +59,7 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 			},
 		)
 		modelContent := generateDoContent(
+			ctx,
 			in,
 			tableName,
 			gstr.CaseCamel(newTableName),
@@ -74,15 +75,18 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 	}
 }
 
-func generateDoContent(in CGenDaoInternalInput, tableName, tableNameCamelCase, structDefine string) string {
+func generateDoContent(
+	ctx context.Context, in CGenDaoInternalInput, tableName, tableNameCamelCase, structDefine string,
+) string {
 	doContent := gstr.ReplaceByMap(
 		getTemplateFromPathOrDefault(in.TplDaoDoPath, consts.TemplateGenDaoDoContent),
 		g.MapStrStr{
 			tplVarTableName:          tableName,
-			tplVarPackageImports:     getImportPartContent(structDefine, true, nil),
+			tplVarPackageImports:     getImportPartContent(ctx, structDefine, true, nil),
 			tplVarTableNameCamelCase: tableNameCamelCase,
 			tplVarStructDefine:       structDefine,
-		})
+		},
+	)
 	doContent = replaceDefaultVar(in, doContent)
 	return doContent
 }

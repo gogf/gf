@@ -65,12 +65,11 @@ func generateStructDefinition(ctx context.Context, in generateStructDefinitionIn
 // generateStructFieldDefinition generates and returns the attribute definition for specified field.
 func generateStructFieldDefinition(
 	ctx context.Context, field *gdb.TableField, in generateStructDefinitionInput,
-) ([]string, string) {
+) (attrLines []string, appendImport string) {
 	var (
-		err           error
-		typeName      string
-		jsonTag       = getJsonTagFromCase(field.Name, in.JsonCase)
-		appendImports string
+		err      error
+		typeName string
+		jsonTag  = getJsonTagFromCase(field.Name, in.JsonCase)
 	)
 
 	if in.TypeMapping != nil && len(in.TypeMapping) > 0 {
@@ -85,8 +84,8 @@ func generateStructFieldDefinition(
 		}
 		if tryTypeName != "" {
 			if typeMapping, ok := in.TypeMapping[strings.ToLower(tryTypeName)]; ok {
-				typeName = typeMapping.Local
-				appendImports = typeMapping.Import
+				typeName = typeMapping.Name
+				appendImport = typeMapping.Import
 			}
 		}
 	}
@@ -121,19 +120,18 @@ func generateStructFieldDefinition(
 	}
 
 	var (
-		tagKey = "`"
-		result = []string{
-			"    #" + gstr.CaseCamel(field.Name),
-			" #" + typeName,
-		}
+		tagKey         = "`"
 		descriptionTag = gstr.Replace(formatComment(field.Comment), `"`, `\"`)
 	)
+	attrLines = []string{
+		"    #" + gstr.CaseCamel(field.Name),
+		" #" + typeName,
+	}
+	attrLines = append(attrLines, " #"+fmt.Sprintf(tagKey+`json:"%s"`, jsonTag))
+	attrLines = append(attrLines, " #"+fmt.Sprintf(`description:"%s"`+tagKey, descriptionTag))
+	attrLines = append(attrLines, " #"+fmt.Sprintf(`// %s`, formatComment(field.Comment)))
 
-	result = append(result, " #"+fmt.Sprintf(tagKey+`json:"%s"`, jsonTag))
-	result = append(result, " #"+fmt.Sprintf(`description:"%s"`+tagKey, descriptionTag))
-	result = append(result, " #"+fmt.Sprintf(`// %s`, formatComment(field.Comment)))
-
-	for k, v := range result {
+	for k, v := range attrLines {
 		if in.NoJsonTag {
 			v, _ = gregex.ReplaceString(`json:".+"`, ``, v)
 		}
@@ -143,9 +141,9 @@ func generateStructFieldDefinition(
 		if in.NoModelComment {
 			v, _ = gregex.ReplaceString(`//.+`, ``, v)
 		}
-		result[k] = v
+		attrLines[k] = v
 	}
-	return result, appendImports
+	return attrLines, appendImport
 }
 
 // formatComment formats the comment string to fit the golang code without any lines.
