@@ -51,13 +51,7 @@ func (r *Request) Context() context.Context {
 	if RequestFromCtx(ctx) == nil {
 		// Inject Request object into context.
 		ctx = context.WithValue(ctx, ctxKeyForRequest, r)
-		// It forbids the context manually done,
-		// to make the context can be propagated to asynchronous goroutines,
-		// which will not be affected by the HTTP request ends.
-		//
-		// This change is considered for common usage habits of developers for context propagation
-		// in multiple goroutines creation in one HTTP request.
-		ctx = &neverDoneCtx{ctx}
+		// Add default tracing info if using default tracing provider.
 		ctx = gctx.WithCtx(ctx)
 		// Update the values of the original HTTP request.
 		*r.Request = *r.Request.WithContext(ctx)
@@ -66,8 +60,19 @@ func (r *Request) Context() context.Context {
 }
 
 // GetCtx retrieves and returns the request's context.
+// Its alias of function Context,to be relevant with function SetCtx.
 func (r *Request) GetCtx() context.Context {
 	return r.Context()
+}
+
+// GetNeverDoneCtx creates and returns a never done context object,
+// which forbids the context manually done, to make the context can be propagated to asynchronous goroutines,
+// which will not be affected by the HTTP request ends.
+//
+// This change is considered for common usage habits of developers for context propagation
+// in multiple goroutines creation in one HTTP request.
+func (r *Request) GetNeverDoneCtx() context.Context {
+	return &neverDoneCtx{r.Context()}
 }
 
 // SetCtx custom context for current request.
