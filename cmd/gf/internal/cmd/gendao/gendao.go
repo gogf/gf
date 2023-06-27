@@ -52,11 +52,11 @@ CONFIGURATION SUPPORT
 		  prefix: "primary_"
 		  tables: "user, userDetail"
 		  typeMapping:
-		  	decimal: 
-              name:   decimal.Decimal
-              import: github.com/shopspring/decimal
-            numeric:
-              name: string
+			decimal:
+			  name:   decimal.Decimal
+			  import: github.com/shopspring/decimal
+			numeric:
+			  name: string
 `
 	CGenDaoBriefPath            = `directory path for generated files`
 	CGenDaoBriefLink            = `database configuration, the same as the ORM configuration of GoFrame`
