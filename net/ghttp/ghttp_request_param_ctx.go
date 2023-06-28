@@ -46,29 +46,38 @@ func RequestFromCtx(ctx context.Context) *Request {
 // This function overwrites the http.Request.Context function.
 // See GetCtx.
 func (r *Request) Context() context.Context {
-	if r.context == nil {
-		// It forbids the context manually done,
-		// to make the context can be propagated to asynchronous goroutines.
-		r.context = &neverDoneCtx{
-			r.Request.Context(),
-		}
-		r.context = gctx.WithCtx(r.context)
+	var ctx = r.Request.Context()
+	// Check and inject Request object into context.
+	if RequestFromCtx(ctx) == nil {
+		// Inject Request object into context.
+		ctx = context.WithValue(ctx, ctxKeyForRequest, r)
+		// Add default tracing info if using default tracing provider.
+		ctx = gctx.WithCtx(ctx)
+		// Update the values of the original HTTP request.
+		*r.Request = *r.Request.WithContext(ctx)
 	}
-	// Inject Request object into context.
-	if RequestFromCtx(r.context) == nil {
-		r.context = context.WithValue(r.context, ctxKeyForRequest, r)
-	}
-	return r.context
+	return ctx
 }
 
 // GetCtx retrieves and returns the request's context.
+// Its alias of function Context,to be relevant with function SetCtx.
 func (r *Request) GetCtx() context.Context {
 	return r.Context()
 }
 
+// GetNeverDoneCtx creates and returns a never done context object,
+// which forbids the context manually done, to make the context can be propagated to asynchronous goroutines,
+// which will not be affected by the HTTP request ends.
+//
+// This change is considered for common usage habits of developers for context propagation
+// in multiple goroutines creation in one HTTP request.
+func (r *Request) GetNeverDoneCtx() context.Context {
+	return &neverDoneCtx{r.Context()}
+}
+
 // SetCtx custom context for current request.
 func (r *Request) SetCtx(ctx context.Context) {
-	r.context = ctx
+	*r.Request = *r.WithContext(ctx)
 }
 
 // GetCtxVar retrieves and returns a Var with a given key name.
@@ -84,5 +93,7 @@ func (r *Request) GetCtxVar(key interface{}, def ...interface{}) *gvar.Var {
 
 // SetCtxVar sets custom parameter to context with key-value pairs.
 func (r *Request) SetCtxVar(key interface{}, value interface{}) {
-	r.context = context.WithValue(r.Context(), key, value)
+	var ctx = r.Context()
+	ctx = context.WithValue(ctx, key, value)
+	*r.Request = *r.Request.WithContext(ctx)
 }
