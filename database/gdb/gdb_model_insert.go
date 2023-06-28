@@ -55,7 +55,7 @@ func (m *Model) Data(data ...interface{}) *Model {
 			}
 			model.data = m
 		}
-	} else {
+	} else if len(data) == 1 {
 		switch value := data[0].(type) {
 		case Result:
 			model.data = value.List()
@@ -154,7 +154,7 @@ func (m *Model) OnDuplicate(onDuplicate ...interface{}) *Model {
 	model := m.getModel()
 	if len(onDuplicate) > 1 {
 		model.onDuplicate = onDuplicate
-	} else {
+	} else if len(onDuplicate) == 1 {
 		model.onDuplicate = onDuplicate[0]
 	}
 	return model
@@ -176,7 +176,7 @@ func (m *Model) OnDuplicateEx(onDuplicateEx ...interface{}) *Model {
 	model := m.getModel()
 	if len(onDuplicateEx) > 1 {
 		model.onDuplicateEx = onDuplicateEx
-	} else {
+	} else if len(onDuplicateEx) == 1 {
 		model.onDuplicateEx = onDuplicateEx[0]
 	}
 	return model
