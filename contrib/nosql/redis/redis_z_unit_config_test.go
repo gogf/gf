@@ -38,8 +38,8 @@ func Test_ConfigFromMap(t *testing.T) {
 func Test_ConfigAddUser(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			c    *gredis.Redis
-			err  error
+			c   *gredis.Redis
+			err error
 		)
 
 		c, err = gredis.New(&gredis.Config{
@@ -52,6 +52,5 @@ func Test_ConfigAddUser(t *testing.T) {
 
 		_, err = c.Conn(ctx)
 		t.AssertNil(err)
-
 	})
 }
