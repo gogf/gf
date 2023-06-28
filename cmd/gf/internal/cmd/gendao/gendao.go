@@ -53,10 +53,10 @@ CONFIGURATION SUPPORT
 		  tables: "user, userDetail"
 		  typeMapping:
 			decimal:
-			  name:   decimal.Decimal
+			  type:   decimal.Decimal
 			  import: github.com/shopspring/decimal
 			numeric:
-			  name: string
+			  type: string
 `
 	CGenDaoBriefPath            = `directory path for generated files`
 	CGenDaoBriefLink            = `database configuration, the same as the ORM configuration of GoFrame`
@@ -117,16 +117,16 @@ var (
 	createdAt          = gtime.Now()
 	defaultTypeMapping = map[string]TypeMapping{
 		"decimal": {
-			Name: "float64",
+			Type: "float64",
 		},
 		"money": {
-			Name: "float64",
+			Type: "float64",
 		},
 		"numeric": {
-			Name: "float64",
+			Type: "float64",
 		},
 		"smallmoney": {
-			Name: "float64",
+			Type: "float64",
 		},
 	}
 )
@@ -208,8 +208,8 @@ type (
 	}
 
 	TypeMapping struct {
-		Name   string
-		Import string
+		Type   string `brief:"custom attribute type name"`
+		Import string `brief:"custom import for this type"`
 	}
 )
 
