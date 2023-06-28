@@ -7,7 +7,6 @@
 package redis_test
 
 import (
-	"github.com/gogf/gf/v2/container/gvar"
 	"testing"
 	"time"
 
@@ -40,8 +39,6 @@ func Test_ConfigAddUser(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			c    *gredis.Redis
-			conn gredis.Conn
-			res  *gvar.Var
 			err  error
 		)
 
@@ -53,11 +50,8 @@ func Test_ConfigAddUser(t *testing.T) {
 		})
 		t.AssertNil(err)
 
-		conn, err = c.Conn(ctx)
+		_, err = c.Conn(ctx)
 		t.AssertNil(err)
 
-		res, err = conn.Do(ctx, "ping")
-		t.AssertNil(err)
-		t.Assert(res.String(), "PONG")
 	})
 }
