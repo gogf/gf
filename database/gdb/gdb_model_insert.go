@@ -151,6 +151,9 @@ func (m *Model) Data(data ...interface{}) *Model {
 //		  "nickname": "passport",
 //	}).
 func (m *Model) OnDuplicate(onDuplicate ...interface{}) *Model {
+	if len(onDuplicate) == 0 {
+		return m
+	}
 	model := m.getModel()
 	if len(onDuplicate) > 1 {
 		model.onDuplicate = onDuplicate
@@ -173,6 +176,9 @@ func (m *Model) OnDuplicate(onDuplicate ...interface{}) *Model {
 //		  "password": "",
 //	}).
 func (m *Model) OnDuplicateEx(onDuplicateEx ...interface{}) *Model {
+	if len(onDuplicateEx) == 0 {
+		return m
+	}
 	model := m.getModel()
 	if len(onDuplicateEx) > 1 {
 		model.onDuplicateEx = onDuplicateEx
