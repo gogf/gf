@@ -9,6 +9,7 @@ package mssql_test
 import (
 	"database/sql"
 	"fmt"
+	"github.com/gogf/gf/v2/util/gconv"
 	"testing"
 	"time"
 
@@ -466,7 +467,7 @@ func Test_Model_Array(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		all, err := db.Model(table).Where("id", g.Slice{1, 2, 3}).All()
 		t.AssertNil(err)
-		t.Assert(all.Array("ID"), g.Slice{1, 2, 3})
+		t.Assert(gconv.Ints(all.Array("ID")), g.Slice{1, 2, 3})
 		t.Assert(all.Array("NICKNAME"), g.Slice{"name_1", "name_2", "name_3"})
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -2347,7 +2348,7 @@ func Test_Model_FieldCount(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(all), TableSize)
 		t.Assert(all[0]["ID"], 1)
-		t.Assert(all[0]["total"], 1)
+		t.Assert(all[0]["total"].Int(), 1)
 	})
 }
 
@@ -2360,7 +2361,7 @@ func Test_Model_FieldMax(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(all), TableSize)
 		t.Assert(all[0]["ID"], 1)
-		t.Assert(all[0]["total"], 1)
+		t.Assert(all[0]["total"].Int(), 1)
 	})
 }
 
@@ -2373,7 +2374,7 @@ func Test_Model_FieldMin(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(all), TableSize)
 		t.Assert(all[0]["ID"], 1)
-		t.Assert(all[0]["total"], 1)
+		t.Assert(all[0]["total"].Int(), 1)
 	})
 }
 
@@ -2386,7 +2387,7 @@ func Test_Model_FieldAvg(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(all), TableSize)
 		t.Assert(all[0]["ID"], 1)
-		t.Assert(all[0]["total"], 1)
+		t.Assert(all[0]["total"].Int(), 1)
 	})
 }
 
