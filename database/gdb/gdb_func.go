@@ -44,6 +44,11 @@ type iInterfaces interface {
 	Interfaces() []interface{}
 }
 
+// iNil if the type assert api for IsNil.
+type iNil interface {
+	IsNil() bool
+}
+
 // iTableName is the interface for retrieving table name for struct.
 type iTableName interface {
 	TableName() string
