@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/denisenkom/go-mssqldb v0.11.0
-	github.com/gogf/gf/v2 v2.4.2
+	github.com/gogf/gf/v2 v2.4.4
 )
 
 replace github.com/gogf/gf/v2 => ../../../
