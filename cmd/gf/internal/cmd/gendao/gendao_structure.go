@@ -84,7 +84,7 @@ func generateStructFieldDefinition(
 		}
 		if tryTypeName != "" {
 			if typeMapping, ok := in.TypeMapping[strings.ToLower(tryTypeName)]; ok {
-				typeName = typeMapping.Name
+				typeName = typeMapping.Type
 				appendImport = typeMapping.Import
 			}
 		}
