@@ -113,3 +113,25 @@ func GetImportPath(filePath string) string {
 		suffix = gfile.Basename(oldDir) + "/" + suffix
 	}
 }
+
+// GetModPath retrieves and returns the file path of go.mod for current project.
+func GetModPath() string {
+	var (
+		oldDir    = gfile.Pwd()
+		newDir    = gfile.Dir(oldDir)
+		goModName = "go.mod"
+		goModPath string
+	)
+	for {
+		goModPath = gfile.Join(newDir, goModName)
+		if gfile.Exists(goModPath) {
+			return goModPath
+		}
+		oldDir = newDir
+		newDir = gfile.Dir(oldDir)
+		if newDir == oldDir {
+			break
+		}
+	}
+	return ""
+}

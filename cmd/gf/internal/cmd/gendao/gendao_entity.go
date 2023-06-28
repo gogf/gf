@@ -30,22 +30,27 @@ func generateEntity(ctx context.Context, in CGenDaoInternalInput) {
 		if err != nil {
 			mlog.Fatalf("fetching tables fields failed for table '%s':\n%v", tableName, err)
 		}
+
 		var (
-			newTableName   = in.NewTableNames[i]
-			entityFilePath = gfile.Join(dirPathEntity, gstr.CaseSnake(newTableName)+".go")
-			entityContent  = generateEntityContent(
+			newTableName                    = in.NewTableNames[i]
+			entityFilePath                  = gfile.Join(dirPathEntity, gstr.CaseSnake(newTableName)+".go")
+			structDefinition, appendImports = generateStructDefinition(ctx, generateStructDefinitionInput{
+				CGenDaoInternalInput: in,
+				TableName:            tableName,
+				StructName:           gstr.CaseCamel(newTableName),
+				FieldMap:             fieldMap,
+				IsDo:                 false,
+			})
+			entityContent = generateEntityContent(
+				ctx,
 				in,
 				newTableName,
 				gstr.CaseCamel(newTableName),
-				generateStructDefinition(ctx, generateStructDefinitionInput{
-					CGenDaoInternalInput: in,
-					TableName:            tableName,
-					StructName:           gstr.CaseCamel(newTableName),
-					FieldMap:             fieldMap,
-					IsDo:                 false,
-				}),
+				structDefinition,
+				appendImports,
 			)
 		)
+
 		err = gfile.PutContents(entityFilePath, strings.TrimSpace(entityContent))
 		if err != nil {
 			mlog.Fatalf("writing content to '%s' failed: %v", entityFilePath, err)
@@ -56,15 +61,18 @@ func generateEntity(ctx context.Context, in CGenDaoInternalInput) {
 	}
 }
 
-func generateEntityContent(in CGenDaoInternalInput, tableName, tableNameCamelCase, structDefine string) string {
+func generateEntityContent(
+	ctx context.Context, in CGenDaoInternalInput, tableName, tableNameCamelCase, structDefine string, appendImports []string,
+) string {
 	entityContent := gstr.ReplaceByMap(
 		getTemplateFromPathOrDefault(in.TplDaoEntityPath, consts.TemplateGenDaoEntityContent),
 		g.MapStrStr{
 			tplVarTableName:          tableName,
-			tplVarPackageImports:     getImportPartContent(structDefine, false),
+			tplVarPackageImports:     getImportPartContent(ctx, structDefine, false, appendImports),
 			tplVarTableNameCamelCase: tableNameCamelCase,
 			tplVarStructDefine:       structDefine,
-		})
+		},
+	)
 	entityContent = replaceDefaultVar(in, entityContent)
 	return entityContent
 }

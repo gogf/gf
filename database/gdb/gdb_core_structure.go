@@ -134,54 +134,58 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 	} else {
 		typeName = gstr.Split(fieldType, " ")[0]
 	}
+
 	typeName = strings.ToLower(typeName)
+
 	switch typeName {
 	case
-		"binary",
-		"varbinary",
-		"blob",
-		"tinyblob",
-		"mediumblob",
-		"longblob":
+		fieldTypeBinary,
+		fieldTypeVarbinary,
+		fieldTypeBlob,
+		fieldTypeTinyblob,
+		fieldTypeMediumblob,
+		fieldTypeLongblob:
 		return LocalTypeBytes, nil
 
 	case
-		"int",
-		"tinyint",
-		"small_int",
-		"smallint",
-		"medium_int",
-		"mediumint",
-		"serial":
+		fieldTypeInt,
+		fieldTypeTinyint,
+		fieldTypeSmallInt,
+		fieldTypeSmallint,
+		fieldTypeMediumInt,
+		fieldTypeMediumint,
+		fieldTypeSerial:
 		if gstr.ContainsI(fieldType, "unsigned") {
 			return LocalTypeUint, nil
 		}
 		return LocalTypeInt, nil
 
 	case
-		"big_int",
-		"bigint",
-		"bigserial":
+		fieldTypeBigInt,
+		fieldTypeBigint,
+		fieldTypeBigserial:
 		if gstr.ContainsI(fieldType, "unsigned") {
 			return LocalTypeUint64, nil
 		}
 		return LocalTypeInt64, nil
 
 	case
-		"real":
+		fieldTypeReal:
 		return LocalTypeFloat32, nil
 
 	case
-		"float",
-		"double",
-		"decimal",
-		"money",
-		"numeric",
-		"smallmoney":
+		fieldTypeDecimal,
+		fieldTypeMoney,
+		fieldTypeNumeric,
+		fieldTypeSmallmoney:
+		return LocalTypeString, nil
+	case
+		fieldTypeFloat,
+		fieldTypeDouble:
 		return LocalTypeFloat64, nil
 
 	case
-		"bit":
+		fieldTypeBit:
 		// It is suggested using bit(1) as boolean.
 		if typePattern == "1" {
 			return LocalTypeBool, nil
@@ -197,25 +201,25 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 		return LocalTypeInt64Bytes, nil
 
 	case
-		"bool":
+		fieldTypeBool:
 		return LocalTypeBool, nil
 
 	case
-		"date":
+		fieldTypeDate:
 		return LocalTypeDate, nil
 
 	case
-		"datetime",
-		"timestamp",
-		"timestamptz":
+		fieldTypeDatetime,
+		fieldTypeTimestamp,
+		fieldTypeTimestampz:
 		return LocalTypeDatetime, nil
 
 	case
-		"json":
+		fieldTypeJson:
 		return LocalTypeJson, nil
 
 	case
-		"jsonb":
+		fieldTypeJsonb:
 		return LocalTypeJsonb, nil
 
 	default:
