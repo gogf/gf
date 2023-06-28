@@ -45,7 +45,8 @@ func (m *middleware) Next() {
 
 		// Router values switching.
 		m.request.routerMap = item.Values
-		ctx := m.request.context
+
+		var ctx = m.request.Context()
 		gutil.TryCatch(ctx, func(ctx context.Context) {
 			// Execute bound middleware array of the item if it's not empty.
 			if m.handlerMDIndex < len(item.Handler.Middleware) {

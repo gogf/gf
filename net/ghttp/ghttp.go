@@ -21,6 +21,7 @@ import (
 	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gcache"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gsession"
 	"github.com/gogf/gf/v2/util/gtag"
 )
@@ -129,19 +130,19 @@ const (
 )
 
 const (
-	supportedHttpMethods        = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
-	defaultMethod               = "ALL"
-	routeCacheDuration          = time.Hour
-	ctxKeyForRequest            = "gHttpRequestObject"
-	contentTypeXml              = "text/xml"
-	contentTypeHtml             = "text/html"
-	contentTypeJson             = "application/json"
-	swaggerUIPackedPath         = "/goframe/swaggerui"
-	responseHeaderTraceID       = "Trace-ID"
-	responseHeaderContentLength = "Content-Length"
-	specialMethodNameInit       = "Init"
-	specialMethodNameShut       = "Shut"
-	specialMethodNameIndex      = "Index"
+	supportedHttpMethods                    = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
+	defaultMethod                           = "ALL"
+	routeCacheDuration                      = time.Hour
+	ctxKeyForRequest            gctx.StrKey = "gHttpRequestObject"
+	contentTypeXml                          = "text/xml"
+	contentTypeHtml                         = "text/html"
+	contentTypeJson                         = "application/json"
+	swaggerUIPackedPath                     = "/goframe/swaggerui"
+	responseHeaderTraceID                   = "Trace-ID"
+	responseHeaderContentLength             = "Content-Length"
+	specialMethodNameInit                   = "Init"
+	specialMethodNameShut                   = "Shut"
+	specialMethodNameIndex                  = "Index"
 )
 
 const (
