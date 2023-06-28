@@ -33,6 +33,7 @@ gf gen ctrl
 	CGenCtrlBriefSdkPath       = `also generate SDK go files for api definitions to specified directory`
 	CGenCtrlBriefSdkStdVersion = `use standard version prefix for generated sdk request path`
 	CGenCtrlBriefSdkNoV1       = `do not add version suffix for interface module name if version is v1`
+	CGenCtrlBriefClear         = `auto delete generated and unimplemented controller go files if api definitions are missing`
 )
 
 const (
@@ -56,6 +57,7 @@ func init() {
 		`CGenCtrlBriefSdkPath`:       CGenCtrlBriefSdkPath,
 		`CGenCtrlBriefSdkStdVersion`: CGenCtrlBriefSdkStdVersion,
 		`CGenCtrlBriefSdkNoV1`:       CGenCtrlBriefSdkNoV1,
+		`CGenCtrlBriefClear`:         CGenCtrlBriefClear,
 	})
 }
 
@@ -69,13 +71,17 @@ type (
 		SdkPath       string `short:"k" name:"sdkPath"       brief:"{CGenCtrlBriefSdkPath}"`
 		SdkStdVersion bool   `short:"v" name:"sdkStdVersion" brief:"{CGenCtrlBriefSdkStdVersion}" orphan:"true"`
 		SdkNoV1       bool   `short:"n" name:"sdkNoV1"       brief:"{CGenCtrlBriefSdkNoV1}" orphan:"true"`
+		Clear         bool   `short:"c" name:"clear"         brief:"{CGenCtrlBriefClear}" orphan:"true"`
 	}
 	CGenCtrlOutput struct{}
 )
 
 func (c CGenCtrl) Ctrl(ctx context.Context, in CGenCtrlInput) (out *CGenCtrlOutput, err error) {
 	if in.WatchFile != "" {
-		err = c.generateByWatchFile(in.WatchFile, in.SdkPath, in.SdkStdVersion, in.SdkNoV1)
+		err = c.generateByWatchFile(
+			in.WatchFile, in.SdkPath, in.SdkStdVersion, in.SdkNoV1, in.Clear,
+		)
+		mlog.Print(`done!`)
 		return
 	}
 
@@ -96,7 +102,10 @@ func (c CGenCtrl) Ctrl(ctx context.Context, in CGenCtrlInput) (out *CGenCtrlOutp
 			module              = gfile.Basename(apiModuleFolderPath)
 			dstModuleFolderPath = gfile.Join(in.DstFolder, module)
 		)
-		err = c.generateByModule(apiModuleFolderPath, dstModuleFolderPath, in.SdkPath, in.SdkStdVersion, in.SdkNoV1)
+		err = c.generateByModule(
+			apiModuleFolderPath, dstModuleFolderPath, in.SdkPath,
+			in.SdkStdVersion, in.SdkNoV1, in.Clear,
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -106,7 +115,7 @@ func (c CGenCtrl) Ctrl(ctx context.Context, in CGenCtrlInput) (out *CGenCtrlOutp
 	return
 }
 
-func (c CGenCtrl) generateByWatchFile(watchFile, sdkPath string, sdkStdVersion, sdkNoV1 bool) (err error) {
+func (c CGenCtrl) generateByWatchFile(watchFile, sdkPath string, sdkStdVersion, sdkNoV1, clear bool) (err error) {
 	// File lock to avoid multiple processes.
 	var (
 		flockFilePath = gfile.Temp("gf.cli.gen.service.lock")
@@ -133,20 +142,26 @@ func (c CGenCtrl) generateByWatchFile(watchFile, sdkPath string, sdkStdVersion, 
 		return nil
 	}
 	// watch file should have api definitions.
-	if !gregex.IsMatchString(PatternApiDefinition, gfile.GetContents(watchFile)) {
-		return nil
+	if gfile.Exists(watchFile) {
+		if !gregex.IsMatchString(PatternApiDefinition, gfile.GetContents(watchFile)) {
+			return nil
+		}
 	}
+
 	var (
 		projectRootPath     = gfile.Dir(gfile.Dir(apiModuleFolderPath))
 		module              = gfile.Basename(apiModuleFolderPath)
 		dstModuleFolderPath = gfile.Join(projectRootPath, "internal", "controller", module)
 	)
-	return c.generateByModule(apiModuleFolderPath, dstModuleFolderPath, sdkPath, sdkStdVersion, sdkNoV1)
+	return c.generateByModule(
+		apiModuleFolderPath, dstModuleFolderPath, sdkPath, sdkStdVersion, sdkNoV1, clear,
+	)
 }
 
 // parseApiModule parses certain api and generate associated go files by certain module, not all api modules.
 func (c CGenCtrl) generateByModule(
-	apiModuleFolderPath, dstModuleFolderPath, sdkPath string, sdkStdVersion, sdkNoV1 bool,
+	apiModuleFolderPath, dstModuleFolderPath, sdkPath string,
+	sdkStdVersion, sdkNoV1, clear bool,
 ) (err error) {
 	// parse src and dst folder go files.
 	apiItemsInSrc, err := c.getApiItemsInSrc(apiModuleFolderPath)
@@ -158,6 +173,12 @@ func (c CGenCtrl) generateByModule(
 		return err
 	}
 
+	// generate api interface go files.
+	if err = newApiInterfaceGenerator().Generate(apiModuleFolderPath, apiItemsInSrc); err != nil {
+		return
+	}
+
+	// generate controller go files.
 	// api filtering for already implemented api controllers.
 	var (
 		alreadyImplementedCtrlSet = gset.NewStrSet()
@@ -172,17 +193,33 @@ func (c CGenCtrl) generateByModule(
 		}
 		toBeImplementedApiItems = append(toBeImplementedApiItems, item)
 	}
-
-	// generate api interface go files.
-	if err = newApiInterfaceGenerator().Generate(apiModuleFolderPath, apiItemsInSrc); err != nil {
-		return
-	}
-
-	// generate controller go files.
 	if len(toBeImplementedApiItems) > 0 {
 		err = newControllerGenerator().Generate(dstModuleFolderPath, toBeImplementedApiItems)
 		if err != nil {
 			return
+		}
+	}
+
+	// delete unimplemented controllers if api definitions are missing.
+	if clear {
+		var (
+			apiDefinitionSet    = gset.NewStrSet()
+			extraApiItemsInCtrl = make([]apiItem, 0)
+		)
+		for _, item := range apiItemsInSrc {
+			apiDefinitionSet.Add(item.String())
+		}
+		for _, item := range apiItemsInDst {
+			if apiDefinitionSet.Contains(item.String()) {
+				continue
+			}
+			extraApiItemsInCtrl = append(extraApiItemsInCtrl, item)
+		}
+		if len(extraApiItemsInCtrl) > 0 {
+			err = newControllerClearer().Clear(dstModuleFolderPath, extraApiItemsInCtrl)
+			if err != nil {
+				return
+			}
 		}
 	}
 
@@ -192,6 +229,5 @@ func (c CGenCtrl) generateByModule(
 			return
 		}
 	}
-
 	return
 }
