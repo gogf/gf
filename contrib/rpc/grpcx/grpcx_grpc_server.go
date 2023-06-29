@@ -12,6 +12,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -265,8 +266,8 @@ func (s *GrpcServer) calculateListenedEndpoints(ctx context.Context) gsvc.Endpoi
 		configAddr = s.config.Address
 		endpoints  = make(gsvc.Endpoints, 0)
 	)
-	if s.config.Endpoint != nil {
-		configAddr = *s.config.Endpoint
+	if len(s.config.Endpoints) != 0 {
+		configAddr = strings.Join(s.config.Endpoints, ",")
 	}
 	for _, address := range gstr.SplitAndTrim(configAddr, ",") {
 		var (
