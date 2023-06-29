@@ -27,6 +27,7 @@ type generateServiceFilesInput struct {
 	SrcImportedPackages []string
 	SrcPackageName      string
 	DstPackageName      string
+	SrcCodeCommentedMap map[string]string
 }
 
 func (c CGenService) generateServiceFile(in generateServiceFilesInput) (ok bool, err error) {
@@ -47,6 +48,13 @@ func (c CGenService) generateServiceFile(in generateServiceFilesInput) (ok bool,
 	generatedContent += "\n"
 	for structName, funcArray := range in.SrcStructFunctions {
 		allFuncArray.Append(funcArray.Slice()...)
+		// Add comments to a method.
+		for index, funcName := range funcArray.Slice() {
+			if commentedInfo, exist := in.SrcCodeCommentedMap[fmt.Sprintf("%s-%s", structName, funcName)]; exist {
+				funcName = commentedInfo + funcName
+				_ = funcArray.Set(index, funcName)
+			}
+		}
 		generatedContent += gstr.Trim(gstr.ReplaceByMap(consts.TemplateGenServiceContentInterface, g.MapStrStr{
 			"{InterfaceName}":  "I" + structName,
 			"{FuncDefinition}": funcArray.Join("\n\t"),
@@ -151,29 +159,30 @@ func (c CGenService) isToGenerateServiceGoFile(dstPackageName, filePath string, 
 	return false
 }
 
+// generateInitializationFile generates `logic.go`.
 func (c CGenService) generateInitializationFile(in CGenServiceInput, importSrcPackages []string) (err error) {
 	var (
-		srcPackageName   = gstr.ToLower(gfile.Basename(in.SrcFolder))
-		srcFilePath      = gfile.Join(in.SrcFolder, srcPackageName+".go")
-		srcImports       string
+		logicPackageName = gstr.ToLower(gfile.Basename(in.SrcFolder))
+		logicFilePath    = gfile.Join(in.SrcFolder, logicPackageName+".go")
+		logicImports     string
 		generatedContent string
 	)
-	if !utils.IsFileDoNotEdit(srcFilePath) {
-		mlog.Debugf(`ignore file as it is manually maintained: %s`, srcFilePath)
+	if !utils.IsFileDoNotEdit(logicFilePath) {
+		mlog.Debugf(`ignore file as it is manually maintained: %s`, logicFilePath)
 		return nil
 	}
 	for _, importSrcPackage := range importSrcPackages {
-		srcImports += fmt.Sprintf(`%s_ "%s"%s`, "\t", importSrcPackage, "\n")
+		logicImports += fmt.Sprintf(`%s_ "%s"%s`, "\t", importSrcPackage, "\n")
 	}
 	generatedContent = gstr.ReplaceByMap(consts.TemplateGenServiceLogicContent, g.MapStrStr{
-		"{PackageName}": srcPackageName,
-		"{Imports}":     srcImports,
+		"{PackageName}": logicPackageName,
+		"{Imports}":     logicImports,
 	})
-	mlog.Printf(`generating init go file: %s`, srcFilePath)
-	if err = gfile.PutContents(srcFilePath, generatedContent); err != nil {
+	mlog.Printf(`generating init go file: %s`, logicFilePath)
+	if err = gfile.PutContents(logicFilePath, generatedContent); err != nil {
 		return err
 	}
-	utils.GoFmt(srcFilePath)
+	utils.GoFmt(logicFilePath)
 	return nil
 }
 

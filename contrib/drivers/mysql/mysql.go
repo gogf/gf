@@ -76,6 +76,7 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 			source, _ = gregex.ReplaceString(`/([\w\.\-]+)+`, "/"+config.Name, source)
 		}
 	} else {
+		// TODO: Do not set charset when charset is not specified (in v2.5.0)
 		source = fmt.Sprintf(
 			"%s:%s@%s(%s:%s)/%s?charset=%s",
 			config.User, config.Pass, config.Protocol, config.Host, config.Port, config.Name, config.Charset,

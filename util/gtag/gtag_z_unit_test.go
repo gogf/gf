@@ -134,3 +134,23 @@ func Test_Parse(t *testing.T) {
 		t.Assert(gtag.Parse(content), expect)
 	})
 }
+
+func Test_SetGlobalEnums(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		oldEnumsJson, err := gtag.GetGlobalEnums()
+		t.AssertNil(err)
+
+		err = gtag.SetGlobalEnums(`{"k8s.io/apimachinery/pkg/api/resource.Format": [
+        "BinarySI",
+        "DecimalExponent",
+        "DecimalSI"
+    ]}`)
+		t.AssertNil(err)
+		t.Assert(gtag.GetEnumsByType("k8s.io/apimachinery/pkg/api/resource.Format"), `[
+        "BinarySI",
+        "DecimalExponent",
+        "DecimalSI"
+    ]`)
+		t.AssertNil(gtag.SetGlobalEnums(oldEnumsJson))
+	})
+}

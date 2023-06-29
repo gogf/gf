@@ -78,10 +78,10 @@ func init() {
 
 type cDockerInput struct {
 	g.Meta      `name:"docker" config:"gfcli.docker"`
-	Main        string   `name:"MAIN" arg:"true" brief:"{cDockerMainBrief}"  d:"main.go"`
+	Main        string   `name:"MAIN" arg:"true" brief:"{cDockerMainBrief}" d:"main.go"`
 	File        string   `name:"file"        short:"f"  brief:"{cDockerFileBrief}"  d:"manifest/docker/Dockerfile"`
 	Shell       string   `name:"shell"       short:"s"  brief:"{cDockerShellBrief}" d:"manifest/docker/docker.sh"`
-	Build       string   `name:"build"       short:"b"  brief:"{cDockerBuildBrief}" d:"-a amd64 -s linux"`
+	Build       string   `name:"build"       short:"b"  brief:"{cDockerBuildBrief}"`
 	Tag         string   `name:"tag"         short:"t"  brief:"{cDockerTagBrief}"`
 	TagName     string   `name:"tagName"     short:"tn" brief:"{cDockerTagNameBrief}"     v:"required-with:TagPrefixes"`
 	TagPrefixes []string `name:"tagPrefixes" short:"tp" brief:"{cDockerTagPrefixesBrief}" v:"required-with:TagName"`
@@ -97,17 +97,23 @@ func (c cDocker) Index(ctx context.Context, in cDockerInput) (out *cDockerOutput
 		mlog.Fatalf(`command "docker" not found in your environment, please install docker first to proceed this command`)
 	}
 
+	mlog.Debugf(`docker command input: %+v`, in)
+
 	// Binary build.
-	in.Build += " --exit"
-	if in.Main != "" {
-		if err = gproc.ShellRun(ctx, fmt.Sprintf(`gf build %s %s`, in.Main, in.Build)); err != nil {
-			return
+	if in.Main != "" && in.Build != "" {
+		in.Build += " --exitWhenError"
+		if in.Main != "" {
+			if err = gproc.ShellRun(ctx, fmt.Sprintf(`gf build %s %s`, in.Main, in.Build)); err != nil {
+				mlog.Debugf(`build binary failed with error: %+v`, err)
+				return
+			}
 		}
 	}
 
 	// Shell executing.
 	if in.Shell != "" && gfile.Exists(in.Shell) {
 		if err = c.exeDockerShell(ctx, in.Shell); err != nil {
+			mlog.Debugf(`build docker failed with error: %+v`, err)
 			return
 		}
 	}

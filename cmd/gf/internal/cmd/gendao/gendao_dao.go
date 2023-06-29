@@ -17,7 +17,6 @@ import (
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
@@ -60,23 +59,13 @@ func generateDaoSingle(ctx context.Context, in generateDaoSingleInput) {
 		mlog.Fatalf(`fetching tables fields failed for table "%s": %+v`, in.TableName, err)
 	}
 	var (
-		dirRealPath             = gfile.RealPath(in.Path)
 		tableNameCamelCase      = gstr.CaseCamel(in.NewTableName)
 		tableNameCamelLowerCase = gstr.CaseCamelLower(in.NewTableName)
 		tableNameSnakeCase      = gstr.CaseSnake(in.NewTableName)
 		importPrefix            = in.ImportPrefix
 	)
 	if importPrefix == "" {
-		if dirRealPath == "" {
-			dirRealPath = in.Path
-			importPrefix = dirRealPath
-			importPrefix = gstr.Trim(dirRealPath, "./")
-		} else {
-			importPrefix = gstr.Replace(dirRealPath, gfile.Pwd(), "")
-		}
-		importPrefix = gstr.Replace(importPrefix, gfile.Separator, "/")
-		importPrefix = gstr.Join(g.SliceStr{in.ModName, importPrefix, in.DaoPath}, "/")
-		importPrefix, _ = gregex.ReplaceString(`\/{2,}`, `/`, gstr.Trim(importPrefix, "/"))
+		importPrefix = utils.GetImportPath(gfile.Join(in.Path, in.DaoPath))
 	} else {
 		importPrefix = gstr.Join(g.SliceStr{importPrefix, in.DaoPath}, "/")
 	}

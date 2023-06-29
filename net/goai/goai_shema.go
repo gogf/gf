@@ -63,6 +63,16 @@ type Schema struct {
 	ValidationRules      string         `json:"-"`
 }
 
+// Clone only clones necessary attributes.
+// TODO clone all attributes, or improve package deepcopy.
+func (s *Schema) Clone() *Schema {
+	newSchema := *s
+	newSchema.Required = make([]string, len(s.Required))
+	copy(newSchema.Required, s.Required)
+	newSchema.Properties = s.Properties.Clone()
+	return &newSchema
+}
+
 func (s Schema) MarshalJSON() ([]byte, error) {
 	var (
 		b   []byte

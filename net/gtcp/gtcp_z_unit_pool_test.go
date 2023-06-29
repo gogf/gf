@@ -7,7 +7,6 @@
 package gtcp_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -42,7 +41,7 @@ func Test_Pool_Basic1(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		_, err := gtcp.NewPoolConn(fmt.Sprintf("127.0.0.1:80"))
+		_, err := gtcp.NewPoolConn("127.0.0.1:80")
 		t.AssertNE(err, nil)
 	})
 }

@@ -20,6 +20,8 @@ import (
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -571,6 +573,100 @@ func Test_Model_All(t *testing.T) {
 	})
 }
 
+func Test_Model_AllAndCount(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	tableName2 := "user_" + gtime.Now().TimestampNanoStr()
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+	CREATE TABLE %s (
+		id         INTEGER       PRIMARY KEY AUTOINCREMENT
+									UNIQUE
+									NOT NULL,
+		name       varchar(45) NULL,
+		age        int(10)
+	);
+	`, tableName2,
+	)); err != nil {
+		gtest.AssertNil(err)
+	}
+	defer dropTable(tableName2)
+	r, err := db.Insert(ctx, tableName2, g.Map{
+		"id":   1,
+		"name": "table2_1",
+		"age":  18,
+	})
+	gtest.AssertNil(err)
+	n, _ := r.RowsAffected()
+	gtest.Assert(n, 1)
+
+	// AllAndCount with all data
+	gtest.C(t, func(t *gtest.T) {
+		result, count, err := db.Model(table).AllAndCount(false)
+		t.AssertNil(err)
+		t.Assert(len(result), TableSize)
+		t.Assert(count, TableSize)
+	})
+	// AllAndCount with no data
+	gtest.C(t, func(t *gtest.T) {
+		result, count, err := db.Model(table).Where("id<0").AllAndCount(false)
+		t.Assert(result, nil)
+		t.AssertNil(err)
+		t.Assert(count, 0)
+	})
+	// AllAndCount with page
+	gtest.C(t, func(t *gtest.T) {
+		result, count, err := db.Model(table).Page(1, 5).AllAndCount(false)
+		t.AssertNil(err)
+		t.Assert(len(result), 5)
+		t.Assert(count, TableSize)
+	})
+	// AllAndCount with normal result
+	gtest.C(t, func(t *gtest.T) {
+		result, count, err := db.Model(table).Where("id=?", 1).AllAndCount(false)
+		t.AssertNil(err)
+		t.Assert(count, 1)
+		t.Assert(result[0]["id"], 1)
+		t.Assert(result[0]["nickname"], "name_1")
+		t.Assert(result[0]["passport"], "user_1")
+	})
+	// AllAndCount with distinct
+	gtest.C(t, func(t *gtest.T) {
+		result, count, err := db.Model(table).Fields("DISTINCT nickname").AllAndCount(true)
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
+		t.Assert(result[0]["nickname"], "name_1")
+		t.AssertNil(result[0]["id"])
+	})
+	// AllAndCount with Join
+	gtest.C(t, func(t *gtest.T) {
+		all, count, err := db.Model(table).As("u1").
+			LeftJoin(tableName2, "u2", "u2.id=u1.id").
+			Fields("u1.passport,u1.id,u2.name,u2.age").
+			Where("u1.id<2").
+			AllAndCount(false)
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(len(all[0]), 4)
+		t.Assert(all[0]["id"], 1)
+		t.Assert(all[0]["age"], 18)
+		t.Assert(all[0]["name"], "table2_1")
+		t.Assert(all[0]["passport"], "user_1")
+		t.Assert(count, 1)
+	})
+	// AllAndCount with Join return CodeDbOperationError
+	gtest.C(t, func(t *gtest.T) {
+		all, count, err := db.Model(table).As("u1").
+			LeftJoin(tableName2, "u2", "u2.id=u1.id").
+			Fields("u1.passport,u1.id,u2.name,u2.age").
+			Where("u1.id<2").
+			AllAndCount(true)
+		t.AssertNE(err, nil)
+		t.AssertEQ(gerror.Code(err), gcode.CodeDbOperationError)
+		t.Assert(count, 0)
+		t.Assert(all, nil)
+	})
+}
+
 func Test_Model_Fields(t *testing.T) {
 	tableName1 := createInitTable()
 	defer dropTable(tableName1)
@@ -1077,6 +1173,169 @@ func Test_Model_Scan(t *testing.T) {
 		err2 := db.Model(table).Where("id < 0").Scan(users)
 		t.Assert(err1, sql.ErrNoRows)
 		t.Assert(err2, nil)
+	})
+}
+
+func Test_Model_ScanAndCount(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	tableName2 := "user_" + gtime.Now().TimestampNanoStr()
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+	CREATE TABLE %s (
+		id         INTEGER       PRIMARY KEY AUTOINCREMENT
+									UNIQUE
+									NOT NULL,
+		name       varchar(45) NULL,
+		age        int(10)
+	);
+	`, tableName2,
+	)); err != nil {
+		gtest.AssertNil(err)
+	}
+	defer dropTable(tableName2)
+	r, err := db.Insert(ctx, tableName2, g.Map{
+		"id":   1,
+		"name": "table2_1",
+		"age":  18,
+	})
+	gtest.AssertNil(err)
+	n, _ := r.RowsAffected()
+	gtest.Assert(n, 1)
+
+	// ScanAndCount with normal struct result
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime *gtime.Time
+		}
+		user := new(User)
+		var count int
+		err := db.Model(table).Where("id=1").ScanAndCount(user, &count, true)
+		t.AssertNil(err)
+		t.Assert(user.NickName, "name_1")
+		t.Assert(user.CreateTime.String(), CreateTime)
+		t.Assert(count, 1)
+	})
+	// ScanAndCount with normal array result
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime gtime.Time
+		}
+		var users []User
+		var count int
+		err := db.Model(table).Order("id asc").ScanAndCount(&users, &count, true)
+		t.AssertNil(err)
+		t.Assert(len(users), TableSize)
+		t.Assert(users[0].Id, 1)
+		t.Assert(users[1].Id, 2)
+		t.Assert(users[2].Id, 3)
+		t.Assert(users[0].NickName, "name_1")
+		t.Assert(users[1].NickName, "name_2")
+		t.Assert(users[2].NickName, "name_3")
+		t.Assert(users[0].CreateTime.String(), CreateTime)
+		t.Assert(count, len(users))
+	})
+	// sql.ErrNoRows
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime *gtime.Time
+		}
+		var (
+			user  = new(User)
+			users = new([]*User)
+		)
+		var count1 int
+		var count2 int
+		err1 := db.Model(table).Where("id < 0").ScanAndCount(user, &count1, true)
+		err2 := db.Model(table).Where("id < 0").ScanAndCount(users, &count2, true)
+		t.Assert(count1, 0)
+		t.Assert(count2, 0)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
+	})
+	// ScanAndCount with page
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime gtime.Time
+		}
+		var users []User
+		var count int
+		err := db.Model(table).Order("id asc").Page(1, 3).ScanAndCount(&users, &count, true)
+		t.AssertNil(err)
+		t.Assert(len(users), 3)
+		t.Assert(count, TableSize)
+	})
+	// ScanAndCount with distinct
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime gtime.Time
+		}
+		var users []User
+		var count int
+		err = db.Model(table).Fields("distinct id").ScanAndCount(&users, &count, true)
+		t.AssertNil(err)
+		t.Assert(len(users), 10)
+		t.Assert(count, TableSize)
+		t.Assert(users[0].Id, 1)
+	})
+	// ScanAndCount with join
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id       int
+			Passport string
+			Name     string
+			Age      int
+		}
+		var users []User
+		var count int
+		err = db.Model(table).As("u1").
+			LeftJoin(tableName2, "u2", "u2.id=u1.id").
+			Fields("u1.passport,u1.id,u2.name,u2.age").
+			Where("u1.id<2").
+			ScanAndCount(&users, &count, false)
+		t.AssertNil(err)
+		t.Assert(len(users), 1)
+		t.Assert(count, 1)
+		t.AssertEQ(users[0].Name, "table2_1")
+	})
+	// ScanAndCount with join return CodeDbOperationError
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id       int
+			Passport string
+			Name     string
+			Age      int
+		}
+		var users []User
+		var count int
+		err = db.Model(table).As("u1").
+			LeftJoin(tableName2, "u2", "u2.id=u1.id").
+			Fields("u1.passport,u1.id,u2.name,u2.age").
+			Where("u1.id<2").
+			ScanAndCount(&users, &count, true)
+		t.AssertNE(err, nil)
+		t.Assert(gerror.Code(err), gcode.CodeDbOperationError)
+		t.Assert(count, 0)
+		t.AssertEQ(users, nil)
 	})
 }
 
@@ -3239,7 +3498,7 @@ func Test_Model_FieldCount(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(all), TableSize)
 		t.Assert(all[0]["id"], 1)
-		t.Assert(all[0]["total"], 1)
+		t.Assert(all[0]["total"].Int(), 1)
 	})
 }
 
@@ -3252,7 +3511,7 @@ func Test_Model_FieldMax(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(all), TableSize)
 		t.Assert(all[0]["id"], 1)
-		t.Assert(all[0]["total"], 1)
+		t.Assert(all[0]["total"].Int(), 1)
 	})
 }
 
@@ -3265,7 +3524,7 @@ func Test_Model_FieldMin(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(all), TableSize)
 		t.Assert(all[0]["id"], 1)
-		t.Assert(all[0]["total"], 1)
+		t.Assert(all[0]["total"].Int(), 1)
 	})
 }
 
@@ -3278,7 +3537,7 @@ func Test_Model_FieldAvg(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(all), TableSize)
 		t.Assert(all[0]["id"], 1)
-		t.Assert(all[0]["total"], 1)
+		t.Assert(all[0]["total"].Int(), 1)
 	})
 }
 
