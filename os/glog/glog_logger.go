@@ -27,7 +27,6 @@ import (
 	"github.com/gogf/gf/v2/os/gfpool"
 	"github.com/gogf/gf/v2/os/gmlock"
 	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/os/gtimer"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -100,7 +99,7 @@ func (l *Logger) print(ctx context.Context, level int, stack string, values ...i
 	// It just initializes once for each logger.
 	if l.config.RotateSize > 0 || l.config.RotateExpire > 0 {
 		if !l.config.rotatedHandlerInitialized.Val() && l.config.rotatedHandlerInitialized.Cas(false, true) {
-			gtimer.AddOnce(context.Background(), l.config.RotateCheckInterval, l.rotateChecksTimely)
+			l.rotateChecksTimely(ctx)
 			intlog.Printf(ctx, "logger rotation initialized: every %s", l.config.RotateCheckInterval.String())
 		}
 	}
