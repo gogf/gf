@@ -43,10 +43,10 @@ func Test_ConfigAddUser(t *testing.T) {
 		)
 
 		c, err = gredis.New(&gredis.Config{
-			Address: `redis-18311.c289.us-west-1-2.ec2.cloud.redislabs.com:18311`,
+			Address: `127.0.0.1`,
 			Db:      1,
-			User:    "gf",
-			Pass:    "isBest!1",
+			User:    "root",
+			Pass:    "",
 		})
 		t.AssertNil(err)
 
