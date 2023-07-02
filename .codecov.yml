@@ -1,0 +1,2 @@
+ignore:
+  - "cmd"  # ignore cmd folders and all its contents
