@@ -52,6 +52,15 @@ for file in `find . -name go.mod`; do
         fi
     fi
 
+    # package pgsqlpgx needs golang >= v1.18
+     if [ "pgsqlpgx" = $(basename $dirpath) ]; then
+            if ! go version|grep -q "1.18"; then
+              echo "ignore pgsqlpgx as go version: $(go version)"
+              continue 1
+            fi
+        fi
+
+
     cd $dirpath
     go mod tidy
     go build ./...

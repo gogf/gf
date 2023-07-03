@@ -413,25 +413,23 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 	// Sql filtering.
 	// TODO: internal function formatSql
 	// sql, args = formatSql(sql, args)
-	sql, args, err = d.DoFilter(ctx, link, sql, args)
-	if err != nil {
+	if sql, args, err = d.DoFilter(ctx, link, sql, args); err != nil {
 		return nil, err
 	}
 
 	// Link execution.
 	var out gdb.DoCommitOutput
-	out, err = d.DoCommit(ctx, gdb.DoCommitInput{
+	if out, err = d.DoCommit(ctx, gdb.DoCommitInput{
 		Link:          link,
 		Sql:           sql,
 		Args:          args,
 		Stmt:          nil,
 		Type:          gdb.SqlTypeQueryContext,
 		IsTransaction: link.IsTransaction(),
-	})
-
-	if err != nil {
+	}); err != nil {
 		return nil, err
 	}
+
 	affected := len(out.Records)
 	if affected > 0 {
 		if !strings.Contains(pkField.Type, "int") {
