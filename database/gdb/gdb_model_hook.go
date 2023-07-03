@@ -9,7 +9,9 @@ package gdb
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
+	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
@@ -31,9 +33,11 @@ type HookHandler struct {
 // internalParamHook manages all internal parameters for hook operations.
 // The `internal` obviously means you cannot access these parameters outside this package.
 type internalParamHook struct {
-	link          Link // Connection object from third party sql driver.
-	handlerCalled bool // Simple mark for custom handler called, in case of recursive calling.
-	removedWhere  bool // Removed mark for condition string that was removed `WHERE` prefix.
+	link               Link   // Connection object from third party sql driver.
+	handlerCalled      bool   // Simple mark for custom handler called, in case of recursive calling.
+	removedWhere       bool   // Removed mark for condition string that was removed `WHERE` prefix.
+	originalTableName  string // The original table name.
+	originalSchemaName string // The original schema name.
 }
 
 type internalParamHookSelect struct {
@@ -61,38 +65,38 @@ type internalParamHookDelete struct {
 // which is usually not be interesting for upper business hook handler.
 type HookSelectInput struct {
 	internalParamHookSelect
-	Model *Model
-	Table string
-	Sql   string
-	Args  []interface{}
+	Model *Model        // Current operation Model, which take no effect if updated.
+	Table string        // The table name that to be used. Update this attribute to change target table name.
+	Sql   string        // The sql string that to be committed.
+	Args  []interface{} // The arguments of sql.
 }
 
 // HookInsertInput holds the parameters for insert hook operation.
 type HookInsertInput struct {
 	internalParamHookInsert
-	Model  *Model
-	Table  string
-	Data   List
-	Option DoInsertOption
+	Model  *Model         // Current operation Model, which take no effect if updated.
+	Table  string         // The table name that to be used. Update this attribute to change target table name.
+	Data   List           // The data records list to be inserted/saved into table.
+	Option DoInsertOption // The extra option for data inserting.
 }
 
 // HookUpdateInput holds the parameters for update hook operation.
 type HookUpdateInput struct {
 	internalParamHookUpdate
-	Model     *Model
-	Table     string
-	Data      interface{} // Data can be type of: map[string]interface{}/string. You can use type assertion on `Data`.
-	Condition string
-	Args      []interface{}
+	Model     *Model        // Current operation Model, which take no effect if updated.
+	Table     string        // The table name that to be used. Update this attribute to change target table name.
+	Data      interface{}   // Data can be type of: map[string]interface{}/string. You can use type assertion on `Data`.
+	Condition string        // The where condition string for updating.
+	Args      []interface{} // The arguments for sql place-holders.
 }
 
 // HookDeleteInput holds the parameters for delete hook operation.
 type HookDeleteInput struct {
 	internalParamHookDelete
-	Model     *Model
-	Table     string
-	Condition string
-	Args      []interface{}
+	Model     *Model        // Current operation Model, which take no effect if updated.
+	Table     string        // The table name that to be used. Update this attribute to change target table name.
+	Condition string        // The where condition string for deleting.
+	Args      []interface{} // The arguments for sql place-holders.
 }
 
 const (
@@ -104,17 +108,71 @@ func (h *internalParamHook) IsTransaction() bool {
 	return h.link.IsTransaction()
 }
 
+func (h *internalParamHook) handlerSharding(ctx context.Context, table string, model *Model) (newTable string, err error) {
+	shardingInput := ShardingInput{
+		Table:  table,
+		Schema: model.db.GetSchema(),
+	}
+	newTable = shardingInput.Table
+	h.originalTableName = shardingInput.Table
+	h.originalSchemaName = shardingInput.Schema
+	if model.shardingFunc != nil {
+		var shardingOutput *ShardingOutput
+		shardingOutput, err = model.shardingFunc(ctx, shardingInput)
+		if err != nil {
+			return
+		}
+		if shardingOutput != nil {
+			newTable = shardingOutput.Table
+			// Schema sharding.
+			if shardingOutput.Schema != shardingInput.Schema {
+				h.link, err = model.db.GetCore().SlaveLink(shardingOutput.Schema)
+				if err != nil {
+					return
+				}
+			}
+		}
+	}
+	return
+}
+
 // Next calls the next hook handler.
 func (h *HookSelectInput) Next(ctx context.Context) (result Result, err error) {
+	// Sharding feature.
+	if h.originalTableName == "" {
+		if h.Table, err = h.handlerSharding(ctx, h.Table, h.Model); err != nil {
+			return
+		}
+	}
+
 	if h.handler != nil && !h.handlerCalled {
 		h.handlerCalled = true
 		return h.handler(ctx, h)
 	}
-	return h.Model.db.DoSelect(ctx, h.link, h.Sql, h.Args...)
+	var toBeCommittedSql = h.Sql
+	if h.Table != h.originalTableName {
+		// Replace table name the table name is changed by hook handler.
+		toBeCommittedSql, err = gregex.ReplaceStringFuncMatch(
+			`(?i) FROM ([\S]+)`,
+			toBeCommittedSql,
+			func(match []string) string {
+				charL, charR := h.Model.db.GetChars()
+				return fmt.Sprintf(` FROM %s%s%s`, charL, h.Table, charR)
+			},
+		)
+	}
+	return h.Model.db.DoSelect(ctx, h.link, toBeCommittedSql, h.Args...)
 }
 
 // Next calls the next hook handler.
 func (h *HookInsertInput) Next(ctx context.Context) (result sql.Result, err error) {
+	// Sharding feature.
+	if h.originalTableName == "" {
+		if h.Table, err = h.handlerSharding(ctx, h.Table, h.Model); err != nil {
+			return
+		}
+	}
+
 	if h.handler != nil && !h.handlerCalled {
 		h.handlerCalled = true
 		return h.handler(ctx, h)
@@ -124,6 +182,13 @@ func (h *HookInsertInput) Next(ctx context.Context) (result sql.Result, err erro
 
 // Next calls the next hook handler.
 func (h *HookUpdateInput) Next(ctx context.Context) (result sql.Result, err error) {
+	// Sharding feature.
+	if h.originalTableName == "" {
+		if h.Table, err = h.handlerSharding(ctx, h.Table, h.Model); err != nil {
+			return
+		}
+	}
+
 	if h.handler != nil && !h.handlerCalled {
 		h.handlerCalled = true
 		if gstr.HasPrefix(h.Condition, whereKeyInCondition) {
@@ -140,6 +205,13 @@ func (h *HookUpdateInput) Next(ctx context.Context) (result sql.Result, err erro
 
 // Next calls the next hook handler.
 func (h *HookDeleteInput) Next(ctx context.Context) (result sql.Result, err error) {
+	// Sharding feature.
+	if h.originalTableName == "" {
+		if h.Table, err = h.handlerSharding(ctx, h.Table, h.Model); err != nil {
+			return
+		}
+	}
+
 	if h.handler != nil && !h.handlerCalled {
 		h.handlerCalled = true
 		if gstr.HasPrefix(h.Condition, whereKeyInCondition) {
