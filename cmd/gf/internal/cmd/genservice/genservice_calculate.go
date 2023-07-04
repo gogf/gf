@@ -68,7 +68,7 @@ func (c CGenService) calculateCodeCommented(in CGenServiceInput, fileContent str
 		)
 		if len(receiverArray) > 1 {
 			structName = receiverArray[1]
-		} else {
+		} else if len(receiverArray) == 1 {
 			structName = receiverArray[0]
 		}
 		structName = gstr.Trim(structName, "*")
@@ -121,7 +121,7 @@ func (c CGenService) calculateInterfaceFunctions(
 		)
 		if len(receiverArray) > 1 {
 			structName = receiverArray[1]
-		} else {
+		} else if len(receiverArray) == 1 {
 			structName = receiverArray[0]
 		}
 		structName = gstr.Trim(structName, "*")

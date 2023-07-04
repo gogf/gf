@@ -219,7 +219,7 @@ func (m *Manager) init(ctx context.Context) {
 				array = strings.Split(path, "/")
 				if len(array) > 1 {
 					lang = array[0]
-				} else {
+				} else if len(array) == 1 {
 					lang = gfile.Name(array[0])
 				}
 				if m.data[lang] == nil {
@@ -250,7 +250,7 @@ func (m *Manager) init(ctx context.Context) {
 			array = strings.Split(path, gfile.Separator)
 			if len(array) > 1 {
 				lang = array[0]
-			} else {
+			} else if len(array) == 1 {
 				lang = gfile.Name(array[0])
 			}
 			if m.data[lang] == nil {
