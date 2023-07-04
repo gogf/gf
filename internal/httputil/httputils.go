@@ -82,7 +82,7 @@ func HeaderToMap(header http.Header) map[string]interface{} {
 	for k, v := range header {
 		if len(v) > 1 {
 			m[k] = v
-		} else {
+		} else if len(v) == 1 {
 			m[k] = v[0]
 		}
 	}
