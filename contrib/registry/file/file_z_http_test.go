@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/gogf/gf/contrib/registry/file/v2"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/net/gsvc"
@@ -46,5 +48,40 @@ func Test_HTTP_Registry(t *testing.T) {
 		client.SetPrefix(fmt.Sprintf("http://%s", svcName))
 		// GET
 		t.Assert(client.GetContent(ctx, "/http-registry"), svcName)
+	})
+}
+
+func Test_HTTP_Discovery_Disable(t *testing.T) {
+	var (
+		svcName = guid.S()
+		dirPath = gfile.Temp(svcName)
+	)
+	defer gfile.Remove(dirPath)
+	gsvc.SetRegistry(file.New(dirPath))
+
+	s := g.Server()
+	s.BindHandler("/http-registry", func(r *ghttp.Request) {
+		r.Response.Write(svcName)
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		result, err := client.Get(ctx, "/http-registry")
+		defer result.Close()
+		t.Assert(gerror.Code(err), gcode.CodeNotFound)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		result, err := client.Discovery(nil).Get(ctx, "/http-registry")
+		defer result.Close()
+		t.AssertNil(err)
+		t.Assert(result.ReadAllString(), svcName)
 	})
 }
