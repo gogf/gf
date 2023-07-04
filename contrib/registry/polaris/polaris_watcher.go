@@ -7,7 +7,9 @@
 package polaris
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 
 	"github.com/polarismesh/polaris-go"
 	"github.com/polarismesh/polaris-go/pkg/model"
@@ -81,9 +83,15 @@ func (w *Watcher) Proceed() ([]gsvc.Service, error) {
 			// handle UpdateEvent
 			if instanceEvent.UpdateEvent != nil {
 				for i, serviceInstance := range w.ServiceInstances {
+					var endpointStr bytes.Buffer
 					for _, update := range instanceEvent.UpdateEvent.UpdateList {
 						if serviceInstance.(*Service).ID == update.Before.GetId() {
-							w.ServiceInstances[i] = instanceToServiceInstance(update.After)
+							endpointStr.WriteString(fmt.Sprintf("%s:%d%s", update.After.GetHost(), update.After.GetPort(), gsvc.EndpointsDelimiter))
+						}
+					}
+					for _, update := range instanceEvent.UpdateEvent.UpdateList {
+						if serviceInstance.(*Service).ID == update.Before.GetId() {
+							w.ServiceInstances[i] = instanceToServiceInstance(update.After, endpointStr.String())
 						}
 					}
 				}

@@ -31,8 +31,8 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]gsvc.Serv
 	}
 	in.Prefix = trimAndReplace(in.Prefix)
 	// get all instances
-	instancesResponse, err := r.consumer.GetAllInstances(&polaris.GetAllInstancesRequest{
-		GetAllInstancesRequest: model.GetAllInstancesRequest{
+	instancesResponse, err := r.consumer.GetInstances(&polaris.GetInstancesRequest{
+		GetInstancesRequest: model.GetInstancesRequest{
 			Service:    in.Prefix,
 			Namespace:  r.opt.Namespace,
 			Timeout:    &r.opt.Timeout,
@@ -74,21 +74,30 @@ func (r *Registry) Watch(ctx context.Context, key string) (gsvc.Watcher, error) 
 }
 
 func instancesToServiceInstances(instances []model.Instance) []gsvc.Service {
-	serviceInstances := make([]gsvc.Service, 0, len(instances))
+	var (
+		serviceInstances = make([]gsvc.Service, 0, len(instances))
+		endpointStr      bytes.Buffer
+	)
 	for _, instance := range instances {
 		if instance.IsHealthy() {
-			serviceInstances = append(serviceInstances, instanceToServiceInstance(instance))
+			endpointStr.WriteString(fmt.Sprintf("%s:%d%s", instance.GetHost(), instance.GetPort(), gsvc.EndpointsDelimiter))
+		}
+	}
+	for _, instance := range instances {
+		if instance.IsHealthy() {
+			serviceInstances = append(serviceInstances, instanceToServiceInstance(instance, endpointStr.String()))
 		}
 	}
 	return serviceInstances
 }
 
-func instanceToServiceInstance(instance model.Instance) gsvc.Service {
+func instanceToServiceInstance(instance model.Instance, endpointStr string) gsvc.Service {
 	var (
-		s         *gsvc.LocalService
-		metadata  = instance.GetMetadata()
-		names     = strings.Split(instance.GetService(), instanceIDSeparator)
-		endpoints = gsvc.NewEndpoints(fmt.Sprintf("%s:%d", instance.GetHost(), instance.GetPort()))
+		s        *gsvc.LocalService
+		metadata = instance.GetMetadata()
+		names    = strings.Split(instance.GetService(), instanceIDSeparator)
+		// endpoints = gsvc.NewEndpoints(fmt.Sprintf("%s:%d", instance.GetHost(), instance.GetPort()))
+		endpoints = gsvc.NewEndpoints(endpointStr)
 	)
 	if names != nil && len(names) > 4 {
 		var name bytes.Buffer

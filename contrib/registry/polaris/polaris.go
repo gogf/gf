@@ -130,7 +130,7 @@ func New(provider polaris.ProviderAPI, consumer polaris.ConsumerAPI, opts ...Opt
 		Namespace:    gsvc.DefaultNamespace,
 		ServiceToken: "",
 		Protocol:     nil,
-		Weight:       0,
+		Weight:       100,
 		Priority:     0,
 		Healthy:      true,
 		Isolate:      false,
