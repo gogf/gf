@@ -20,10 +20,10 @@ type ShardingOutput struct {
 	Schema string // The target schema name.
 }
 
-// ShardingFunc is the custom function for records sharding by certain Model, which supports sharding on table or schema.
+// ShardingFunc is custom function for records sharding by certain Model, which supports sharding on table and schema.
 // It retrieves the original Table/Schema from ShardingInput, and returns the new Table/Schema by ShardingOutput.
 // If the Table/Schema in ShardingOutput is empty string, it then ignores the returned value and uses the default
-// Table/Schema to execute the sql statement.
+// Table/Schema of current Model to execute the sql statement.
 type ShardingFunc func(ctx context.Context, in ShardingInput) (out *ShardingOutput, err error)
 
 // Sharding sets custom sharding function for current model.
