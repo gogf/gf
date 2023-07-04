@@ -15,6 +15,7 @@ import (
 	"github.com/polarismesh/polaris-go/pkg/model"
 
 	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // Watcher is a service watcher.
@@ -91,7 +92,7 @@ func (w *Watcher) Proceed() ([]gsvc.Service, error) {
 					}
 					for _, update := range instanceEvent.UpdateEvent.UpdateList {
 						if serviceInstance.(*Service).ID == update.Before.GetId() {
-							w.ServiceInstances[i] = instanceToServiceInstance(update.After, endpointStr.String())
+							w.ServiceInstances[i] = instanceToServiceInstance(update.After, gstr.TrimRight(endpointStr.String(), gsvc.EndpointsDelimiter))
 						}
 					}
 				}

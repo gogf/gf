@@ -30,7 +30,7 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]gsvc.Serv
 		in.Prefix = service.GetPrefix()
 	}
 	in.Prefix = trimAndReplace(in.Prefix)
-	// get all instances
+	// get instances
 	instancesResponse, err := r.consumer.GetInstances(&polaris.GetInstancesRequest{
 		GetInstancesRequest: model.GetInstancesRequest{
 			Service:    in.Prefix,
@@ -83,9 +83,10 @@ func instancesToServiceInstances(instances []model.Instance) []gsvc.Service {
 			endpointStr.WriteString(fmt.Sprintf("%s:%d%s", instance.GetHost(), instance.GetPort(), gsvc.EndpointsDelimiter))
 		}
 	}
+
 	for _, instance := range instances {
 		if instance.IsHealthy() {
-			serviceInstances = append(serviceInstances, instanceToServiceInstance(instance, endpointStr.String()))
+			serviceInstances = append(serviceInstances, instanceToServiceInstance(instance, gstr.TrimRight(endpointStr.String(), gsvc.EndpointsDelimiter)))
 		}
 	}
 	return serviceInstances
