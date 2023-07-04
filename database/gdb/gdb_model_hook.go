@@ -65,7 +65,7 @@ type internalParamHookDelete struct {
 // which is usually not be interesting for upper business hook handler.
 type HookSelectInput struct {
 	internalParamHookSelect
-	Model *Model        // Current operation Model, which take no effect if updated.
+	Model *Model        // Current operation Model, which takes no effect if updated.
 	Table string        // The table name that to be used. Update this attribute to change target table name.
 	Sql   string        // The sql string that to be committed.
 	Args  []interface{} // The arguments of sql.
@@ -74,7 +74,7 @@ type HookSelectInput struct {
 // HookInsertInput holds the parameters for insert hook operation.
 type HookInsertInput struct {
 	internalParamHookInsert
-	Model  *Model         // Current operation Model, which take no effect if updated.
+	Model  *Model         // Current operation Model, which takes no effect if updated.
 	Table  string         // The table name that to be used. Update this attribute to change target table name.
 	Data   List           // The data records list to be inserted/saved into table.
 	Option DoInsertOption // The extra option for data inserting.
@@ -83,7 +83,7 @@ type HookInsertInput struct {
 // HookUpdateInput holds the parameters for update hook operation.
 type HookUpdateInput struct {
 	internalParamHookUpdate
-	Model     *Model        // Current operation Model, which take no effect if updated.
+	Model     *Model        // Current operation Model, which takes no effect if updated.
 	Table     string        // The table name that to be used. Update this attribute to change target table name.
 	Data      interface{}   // Data can be type of: map[string]interface{}/string. You can use type assertion on `Data`.
 	Condition string        // The where condition string for updating.
@@ -93,7 +93,7 @@ type HookUpdateInput struct {
 // HookDeleteInput holds the parameters for delete hook operation.
 type HookDeleteInput struct {
 	internalParamHookDelete
-	Model     *Model        // Current operation Model, which take no effect if updated.
+	Model     *Model        // Current operation Model, which takes no effect if updated.
 	Table     string        // The table name that to be used. Update this attribute to change target table name.
 	Condition string        // The where condition string for deleting.
 	Args      []interface{} // The arguments for sql place-holders.
@@ -108,7 +108,9 @@ func (h *internalParamHook) IsTransaction() bool {
 	return h.link.IsTransaction()
 }
 
-func (h *internalParamHook) handlerSharding(ctx context.Context, table string, model *Model) (newTable string, err error) {
+func (h *internalParamHook) handlerSharding(
+	ctx context.Context, table string, model *Model, isOnMaster bool,
+) (newTable string, err error) {
 	shardingInput := ShardingInput{
 		Table:  table,
 		Schema: model.db.GetSchema(),
@@ -118,15 +120,25 @@ func (h *internalParamHook) handlerSharding(ctx context.Context, table string, m
 	h.originalSchemaName = shardingInput.Schema
 	if model.shardingFunc != nil {
 		var shardingOutput *ShardingOutput
+		// Call custom sharding function.
 		shardingOutput, err = model.shardingFunc(ctx, shardingInput)
 		if err != nil {
 			return
 		}
 		if shardingOutput != nil {
-			newTable = shardingOutput.Table
+			// Table sharding.
+			if shardingOutput.Table != "" {
+				newTable = shardingOutput.Table
+			}
 			// Schema sharding.
-			if shardingOutput.Schema != shardingInput.Schema {
-				h.link, err = model.db.GetCore().SlaveLink(shardingOutput.Schema)
+			if shardingOutput.Schema != "" && shardingOutput.Schema != shardingInput.Schema {
+				if isOnMaster {
+					// Insert/Update/Delete statements on master node.
+					h.link, err = model.db.GetCore().MasterLink(shardingOutput.Schema)
+				} else {
+					// Select statement on slave node.
+					h.link, err = model.db.GetCore().SlaveLink(shardingOutput.Schema)
+				}
 				if err != nil {
 					return
 				}
@@ -140,7 +152,7 @@ func (h *internalParamHook) handlerSharding(ctx context.Context, table string, m
 func (h *HookSelectInput) Next(ctx context.Context) (result Result, err error) {
 	// Sharding feature.
 	if h.originalTableName == "" {
-		if h.Table, err = h.handlerSharding(ctx, h.Table, h.Model); err != nil {
+		if h.Table, err = h.handlerSharding(ctx, h.Table, h.Model, false); err != nil {
 			return
 		}
 	}
@@ -168,7 +180,7 @@ func (h *HookSelectInput) Next(ctx context.Context) (result Result, err error) {
 func (h *HookInsertInput) Next(ctx context.Context) (result sql.Result, err error) {
 	// Sharding feature.
 	if h.originalTableName == "" {
-		if h.Table, err = h.handlerSharding(ctx, h.Table, h.Model); err != nil {
+		if h.Table, err = h.handlerSharding(ctx, h.Table, h.Model, true); err != nil {
 			return
 		}
 	}
@@ -184,7 +196,7 @@ func (h *HookInsertInput) Next(ctx context.Context) (result sql.Result, err erro
 func (h *HookUpdateInput) Next(ctx context.Context) (result sql.Result, err error) {
 	// Sharding feature.
 	if h.originalTableName == "" {
-		if h.Table, err = h.handlerSharding(ctx, h.Table, h.Model); err != nil {
+		if h.Table, err = h.handlerSharding(ctx, h.Table, h.Model, true); err != nil {
 			return
 		}
 	}
@@ -207,7 +219,7 @@ func (h *HookUpdateInput) Next(ctx context.Context) (result sql.Result, err erro
 func (h *HookDeleteInput) Next(ctx context.Context) (result sql.Result, err error) {
 	// Sharding feature.
 	if h.originalTableName == "" {
-		if h.Table, err = h.handlerSharding(ctx, h.Table, h.Model); err != nil {
+		if h.Table, err = h.handlerSharding(ctx, h.Table, h.Model, true); err != nil {
 			return
 		}
 	}
