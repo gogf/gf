@@ -52,5 +52,19 @@ func Test_ConfigAddUser(t *testing.T) {
 
 		_, err = c.Conn(ctx)
 		t.AssertNil(err)
+		
+		_, err = redis.Do(ctx, "SET", "k", "v")
+		t.AssertNil(err)
+
+		r, err := redis.Do(ctx, "GET", "k")
+		t.AssertNil(err)
+		t.Assert(r, []byte("v"))
+
+		_, err = redis.Do(ctx, "DEL", "k")
+		t.AssertNil(err)
+
+		r, err = redis.Do(ctx, "GET", "k")
+		t.AssertNil(err)
+		t.Assert(r, nil)
 	})
 }
