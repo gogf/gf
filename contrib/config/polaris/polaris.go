@@ -158,8 +158,7 @@ func (c *Client) doWatch(ctx context.Context) (err error) {
 	if !c.config.Watch {
 		return nil
 	}
-	var changeChan = make(chan model.ConfigFileChangeEvent)
-	c.client.AddChangeListenerWithChannel(changeChan)
+	var changeChan = c.client.AddChangeListenerWithChannel()
 	go func() {
 		for {
 			select {
