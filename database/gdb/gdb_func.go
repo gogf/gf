@@ -196,7 +196,7 @@ func ListItemValuesUnique(list interface{}, key string, subKey ...interface{}) [
 }
 
 // GetInsertOperationByOption returns proper insert option with given parameter `option`.
-func GetInsertOperationByOption(option int) string {
+func GetInsertOperationByOption(option InsertOption) string {
 	var operator string
 	switch option {
 	case InsertOptionReplace:
