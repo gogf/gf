@@ -8,7 +8,10 @@ package genservice
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
@@ -321,41 +324,73 @@ func (c CGenService) checkAndUpdateMain(srcFolder string) (err error) {
 		logicFilePath    = gfile.Join(srcFolder, logicPackageName+".go")
 		importPath       = utils.GetImportPath(logicFilePath)
 		importStr        = fmt.Sprintf(`_ "%s"`, importPath)
-		mainFilePath     = gfile.Join(gfile.Dir(gfile.Dir(gfile.Dir(logicFilePath))), "main.go")
-		mainFileContent  = gfile.GetContents(mainFilePath)
+		rootDir          = gfile.Dir(gfile.Dir(gfile.Dir(logicFilePath)))
+		mainFilePath     = gfile.Join(rootDir, "main.go")
+		mainFilePaths    = []string{}
 	)
-	if gstr.Contains(mainFileContent, importStr) {
-		return nil
-	}
-	match, err := gregex.MatchString(`import \(([\s\S]+?)\)`, mainFileContent)
-	if err != nil {
-		return err
-	}
-	lines := garray.NewStrArrayFrom(gstr.Split(match[1], "\n"))
-	for i, line := range lines.Slice() {
-		line = gstr.Trim(line)
-		if len(line) == 0 {
-			continue
-		}
-		if line[0] == '_' {
-			continue
-		}
-		// Insert the logic import into imports.
-		if err = lines.InsertBefore(i, fmt.Sprintf("\t%s\n\n", importStr)); err != nil {
+
+	if gfile.IsFile(mainFilePath) {
+		// Check and update main file: `rootdir/main.go`.
+		mainFilePaths = append(mainFilePaths, mainFilePath)
+	} else {
+		// Check and udpate main files like: `rootdir/cmd/(cmd1|cmd2)/(cmd1|cmd2).go`.
+		cmdDir := gfile.Join(rootDir, "cmd")
+
+		if err := filepath.Walk(cmdDir, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if !info.IsDir() && gfile.Ext(path) == ".go" {
+				mainFilePaths = append(mainFilePaths, path)
+			}
+			return nil
+		}); err != nil {
 			return err
 		}
-		break
 	}
-	mainFileContent, err = gregex.ReplaceString(
-		`import \(([\s\S]+?)\)`,
-		fmt.Sprintf(`import (%s)`, lines.Join("\n")),
-		mainFileContent,
-	)
-	if err != nil {
-		return err
+
+	if len(mainFilePaths) == 0 {
+		return errors.New(`no main file found`)
 	}
-	mlog.Print(`update main.go`)
-	err = gfile.PutContents(mainFilePath, mainFileContent)
-	utils.GoFmt(mainFilePath)
+
+	for _, mainFilePath := range mainFilePaths {
+		mainFileContent := gfile.GetContents(mainFilePath)
+
+		if gstr.Contains(mainFileContent, importStr) {
+			continue
+		}
+
+		match, err := gregex.MatchString(`import \(([\s\S]+?)\)`, mainFileContent)
+		if err != nil {
+			return err
+		}
+		lines := garray.NewStrArrayFrom(gstr.Split(match[1], "\n"))
+		for i, line := range lines.Slice() {
+			line = gstr.Trim(line)
+			if len(line) == 0 {
+				continue
+			}
+			if line[0] == '_' {
+				continue
+			}
+			// Insert the logic import into imports.
+			if err = lines.InsertBefore(i, fmt.Sprintf("\t%s\n\n", importStr)); err != nil {
+				return err
+			}
+			break
+		}
+		mainFileContent, err = gregex.ReplaceString(
+			`import \(([\s\S]+?)\)`,
+			fmt.Sprintf(`import (%s)`, lines.Join("\n")),
+			mainFileContent,
+		)
+		if err != nil {
+			return err
+		}
+		mlog.Print(`update`, mainFilePath)
+		err = gfile.PutContents(mainFilePath, mainFileContent)
+		utils.GoFmt(mainFilePath)
+	}
+
 	return
 }
