@@ -28,7 +28,7 @@ type GrpcServerConfig struct {
 	ErrorLogPattern  string              // (optional) ErrorLogPattern specifies the error log file pattern like: error-{Ymd}.log
 	AccessLogEnabled bool                // (optional) AccessLogEnabled enables access logging content to file.
 	AccessLogPattern string              // (optional) AccessLogPattern specifies the error log file pattern like: access-{Ymd}.log
-	Endpoints        []string            // (optional) Address for server register if null use Address value.
+	Endpoints        []string            // (optional) Endpoints are custom endpoints for service register, it uses Address if empty.
 	Options          []grpc.ServerOption // (optional) GRPC Server options.
 }
 

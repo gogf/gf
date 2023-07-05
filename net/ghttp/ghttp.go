@@ -143,6 +143,7 @@ const (
 	specialMethodNameInit                   = "Init"
 	specialMethodNameShut                   = "Shut"
 	specialMethodNameIndex                  = "Index"
+	defaultEndpointPort                     = 80
 )
 
 const (

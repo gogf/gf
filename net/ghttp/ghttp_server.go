@@ -424,8 +424,8 @@ func (s *Server) Run() {
 		s.Logger().Fatalf(ctx, `%+v`, err)
 	}
 
-	// Signal handler.
-	handleProcessSignal()
+	// Signal handler in asynchronous way.
+	go handleProcessSignal()
 
 	// Blocking using channel for graceful restart.
 	<-s.closeChan
