@@ -262,10 +262,14 @@ func (s *GrpcServer) GetListenedPort() int {
 
 func (s *GrpcServer) calculateListenedEndpoints(ctx context.Context) gsvc.Endpoints {
 	var (
-		configAddr = s.config.Address
-		endpoints  = make(gsvc.Endpoints, 0)
+		configAddr  = s.config.Address
+		endpoints   = make(gsvc.Endpoints, 0)
+		configAddrs = s.config.Endpoints
 	)
-	for _, address := range gstr.SplitAndTrim(configAddr, ",") {
+	if len(configAddrs) == 0 {
+		configAddrs = gstr.SplitAndTrim(configAddr, ",")
+	}
+	for _, address := range configAddrs {
 		var (
 			addrArray     = gstr.Split(address, ":")
 			listenedIps   []string
