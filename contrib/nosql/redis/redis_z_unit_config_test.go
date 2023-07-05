@@ -40,6 +40,7 @@ func Test_ConfigAddUser(t *testing.T) {
 		var (
 			c   *gredis.Redis
 			err error
+			r   *gvar.Var
 		)
 
 		c, err = gredis.New(&gredis.Config{
@@ -52,11 +53,11 @@ func Test_ConfigAddUser(t *testing.T) {
 
 		_, err = c.Conn(ctx)
 		t.AssertNil(err)
-		
+
 		_, err = redis.Do(ctx, "SET", "k", "v")
 		t.AssertNil(err)
 
-		r, err := redis.Do(ctx, "GET", "k")
+		r, err = redis.Do(ctx, "GET", "k")
 		t.AssertNil(err)
 		t.Assert(r, []byte("v"))
 
