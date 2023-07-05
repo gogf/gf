@@ -324,12 +324,20 @@ func (c CGenService) checkAndUpdateMain(srcFolder string) (err error) {
 		mainFilePath     = gfile.Join(gfile.Dir(gfile.Dir(gfile.Dir(logicFilePath))), "main.go")
 		mainFileContent  = gfile.GetContents(mainFilePath)
 	)
+	// No main content found.
+	if mainFileContent == "" {
+		return nil
+	}
 	if gstr.Contains(mainFileContent, importStr) {
 		return nil
 	}
 	match, err := gregex.MatchString(`import \(([\s\S]+?)\)`, mainFileContent)
 	if err != nil {
 		return err
+	}
+	// No match.
+	if len(match) < 2 {
+		return nil
 	}
 	lines := garray.NewStrArrayFrom(gstr.Split(match[1], "\n"))
 	for i, line := range lines.Slice() {
