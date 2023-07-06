@@ -33,8 +33,8 @@ var (
 // routerMapKey creates and returns a unique router key for given parameters.
 // This key is used for Server.routerMap attribute, which is mainly for checks for
 // repeated router registering.
-func (s *Server) routerMapKey(hook, method, path, domain string) string {
-	return hook + "%" + s.serveHandlerKey(method, path, domain)
+func (s *Server) routerMapKey(hook HookName, method, path, domain string) string {
+	return string(hook) + "%" + s.serveHandlerKey(method, path, domain)
 }
 
 // parsePattern parses the given pattern to domain, method and path variable.

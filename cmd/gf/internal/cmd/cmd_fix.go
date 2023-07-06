@@ -10,6 +10,7 @@ import (
 	"context"
 
 	"github.com/gogf/gf/v2/os/gproc"
+	"github.com/gogf/gf/v2/text/gregex"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -69,6 +70,7 @@ func (c cFix) doFix(in cFixInput) (err error) {
 
 	var items = []cFixItem{
 		{Version: "v2.3", Func: c.doFixV23},
+		{Version: "v2.5", Func: c.doFixV25},
 	}
 	for _, item := range items {
 		if gstr.CompareVersionGo(in.Version, item.Version) < 0 {
@@ -101,6 +103,28 @@ func (c cFix) doFixV23(version string) error {
 		return content
 	}
 	return gfile.ReplaceDirFunc(replaceFunc, ".", "*.go", true)
+}
+
+// doFixV25 fixes code when upgrading to GoFrame v2.5.
+func (c cFix) doFixV25(version string) (err error) {
+	replaceFunc := func(path, content string) string {
+		content, err = c.doFixV25Content(content)
+		return content
+	}
+	return gfile.ReplaceDirFunc(replaceFunc, ".", "*.go", true)
+}
+
+func (c cFix) doFixV25Content(content string) (newContent string, err error) {
+	newContent = content
+	if gstr.Contains(content, `.BindHookHandlerByMap(`) {
+		var pattern = `\.BindHookHandlerByMap\((.+?), map\[string\]ghttp\.HandlerFunc`
+		newContent, err = gregex.ReplaceString(
+			pattern,
+			`.BindHookHandlerByMap($1, map[ghttp.HookName]ghttp.HandlerFunc`,
+			content,
+		)
+	}
+	return
 }
 
 func (c cFix) autoDetectVersion(in cFixInput) (string, error) {

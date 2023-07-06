@@ -22,7 +22,7 @@ import (
 // procSignalChan is the channel for listening to the signal.
 var procSignalChan = make(chan os.Signal)
 
-// handleProcessSignal handles all signals from system.
+// handleProcessSignal handles all signals from system in blocking way.
 func handleProcessSignal() {
 	var (
 		ctx = context.TODO()

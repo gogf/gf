@@ -58,6 +58,9 @@ type ServerConfig struct {
 	// Listeners specifies the custom listeners.
 	Listeners []net.Listener `json:"listeners"`
 
+	// Endpoints are custom endpoints for service register, it uses Address if empty.
+	Endpoints []string `json:"endpoints"`
+
 	// HTTPSCertPath specifies certification file path for HTTPS service.
 	HTTPSCertPath string `json:"httpsCertPath"`
 
@@ -92,7 +95,7 @@ type ServerConfig struct {
 	WriteTimeout time.Duration `json:"writeTimeout"`
 
 	// IdleTimeout is the maximum amount of time to wait for the
-	// next request when keep-alives are enabled. If IdleTimeout
+	// next request when keep-alive are enabled. If IdleTimeout
 	// is zero, the value of ReadTimeout is used. If both are
 	// zero, there is no timeout.
 	IdleTimeout time.Duration `json:"idleTimeout"`
@@ -520,6 +523,11 @@ func (s *Server) GetName() string {
 // SetName sets the name for the server.
 func (s *Server) SetName(name string) {
 	s.config.Name = name
+}
+
+// SetEndpoints sets the Endpoints for the server.
+func (s *Server) SetEndpoints(endpoints []string) {
+	s.config.Endpoints = endpoints
 }
 
 // SetHandler sets the request handler for server.
