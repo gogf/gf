@@ -128,12 +128,19 @@ func (c CGenService) generateServiceFile(in generateServiceFilesInput) (ok bool,
 // isToGenerateServiceGoFile checks and returns whether the service content dirty.
 func (c CGenService) isToGenerateServiceGoFile(dstPackageName, filePath string, funcArray *garray.StrArray) bool {
 	var (
+		err                error
 		fileContent        = gfile.GetContents(filePath)
 		generatedFuncArray = garray.NewSortedStrArrayFrom(funcArray.Slice())
 		contentFuncArray   = garray.NewSortedStrArray()
 	)
 	if fileContent == "" {
 		return true
+	}
+	// remove all comments.
+	fileContent, err = gregex.ReplaceString(`/[/|\*](.*)`, "", fileContent)
+	if err != nil {
+		panic(err)
+		return false
 	}
 	matches, _ := gregex.MatchAllString(`\s+interface\s+{([\s\S]+?)}`, fileContent)
 	for _, match := range matches {
