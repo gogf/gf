@@ -28,15 +28,15 @@ import (
 
 // gracefulServer wraps the net/http.Server with graceful reload/restart feature.
 type gracefulServer struct {
-	server      *Server          // Belonged server.
-	fd          uintptr          // File descriptor for passing to the child process when graceful reload.
-	address     string           // Listening address like:":80", ":8080".
-	httpServer  *http.Server     // Underlying http.Server.
-	rawListener net.Listener     // Underlying net.Listener.
-	rawLnMu     sync.RWMutex     // Concurrent safety mutex for `rawListener`.
-	listener    net.Listener     // Wrapped net.Listener.
-	isHttps     bool             // Is HTTPS.
-	status      *gtype.Interface // Status of current server. Using `gtype` to ensure concurrent safety.
+	server      *Server      // Belonged server.
+	fd          uintptr      // File descriptor for passing to the child process when graceful reload.
+	address     string       // Listening address like:":80", ":8080".
+	httpServer  *http.Server // Underlying http.Server.
+	rawListener net.Listener // Underlying net.Listener.
+	rawLnMu     sync.RWMutex // Concurrent safety mutex for `rawListener`.
+	listener    net.Listener // Wrapped net.Listener.
+	isHttps     bool         // Is HTTPS.
+	status      *gtype.Int   // Status of current server. Using `gtype` to ensure concurrent safety.
 }
 
 // newGracefulServer creates and returns a graceful http server with a given address.
@@ -50,7 +50,7 @@ func (s *Server) newGracefulServer(address string, fd ...int) *gracefulServer {
 		server:     s,
 		address:    address,
 		httpServer: s.newHttpServer(address),
-		status:     gtype.New(),
+		status:     gtype.NewInt(),
 	}
 	if len(fd) > 0 && fd[0] > 0 {
 		gs.fd = uintptr(fd[0])
@@ -232,7 +232,7 @@ func (s *gracefulServer) getNetListener() (net.Listener, error) {
 
 // shutdown shuts down the server gracefully.
 func (s *gracefulServer) shutdown(ctx context.Context) {
-	if s.status.Val().(ServerStatus) == ServerStatusStopped {
+	if s.status.Val() == ServerStatusStopped {
 		return
 	}
 	timeoutCtx, cancelFunc := context.WithTimeout(
@@ -265,7 +265,7 @@ func (s *gracefulServer) getRawListener() net.Listener {
 
 // close shuts down the server forcibly.
 func (s *gracefulServer) close(ctx context.Context) {
-	if s.status.Val().(ServerStatus) == ServerStatusStopped {
+	if s.status.Val() == ServerStatusStopped {
 		return
 	}
 	if err := s.httpServer.Close(); err != nil {

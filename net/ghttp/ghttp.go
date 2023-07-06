@@ -101,7 +101,7 @@ type (
 	}
 
 	// ServerStatus is the server status enum type.
-	ServerStatus int
+	ServerStatus = int
 
 	// HookName is the route hook name enum type.
 	HookName string
