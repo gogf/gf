@@ -16,6 +16,7 @@ import (
 	"github.com/polarismesh/polaris-go/pkg/config"
 
 	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // TestRegistry TestRegistryManyService
@@ -259,4 +260,100 @@ func BenchmarkRegister(b *testing.B) {
 			b.Fatal(err)
 		}
 	}
+}
+
+// TestRegistryManyForEndpoints TestRegistryManyForEndpointsService
+func TestRegistryManyForEndpoints(t *testing.T) {
+	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
+	conf.GetGlobal().GetStatReporter().SetEnable(false)
+	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-registry-many/backup")
+	if err := api.SetLoggersDir(os.TempDir() + "/polaris-registry-many/log"); err != nil {
+		t.Fatal(err)
+	}
+
+	r := NewWithConfig(
+		conf,
+		WithTimeout(time.Second*10),
+		WithTTL(100),
+	)
+
+	var (
+		serviceName   = "goframe-provider-tcp"
+		version       = "latest"
+		endpointOne   = "127.0.0.1:9000"
+		endpointTwo   = "127.0.0.1:9001"
+		endpointThree = "127.0.0.1:9002"
+	)
+
+	svc := &gsvc.LocalService{
+		Name:      serviceName,
+		Version:   version,
+		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Endpoints: gsvc.NewEndpoints(endpointOne),
+	}
+
+	svc1 := &gsvc.LocalService{
+		Name:      serviceName,
+		Version:   version,
+		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Endpoints: gsvc.NewEndpoints(endpointTwo),
+	}
+
+	svc2 := &gsvc.LocalService{
+		Name:      serviceName,
+		Version:   version,
+		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Endpoints: gsvc.NewEndpoints(endpointThree),
+	}
+
+	s0, err := r.Register(context.Background(), svc)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	s1, err := r.Register(context.Background(), svc1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	s2, err := r.Register(context.Background(), svc2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("Register service success sleep 1s")
+	time.Sleep(time.Second * 1)
+	// serviceName = "service-default-default-goframe-provider-tcp-latest"
+	result, err := r.Search(context.Background(), gsvc.SearchInput{
+		Name: serviceName,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("Search service success size:", len(result))
+	for i := 0; i < len(result); i++ {
+		t.Log("Endpoints:", result[i].GetEndpoints().String())
+		if !gstr.Contains(result[i].GetEndpoints().String(), endpointOne) {
+			t.Fatal("endpointOne not found")
+		}
+		if !gstr.Contains(result[i].GetEndpoints().String(), endpointTwo) {
+			t.Fatal("endpointTwo not found")
+		}
+		if !gstr.Contains(result[i].GetEndpoints().String(), endpointThree) {
+			t.Fatal("endpointThree not found")
+		}
+	}
+	t.Log("Search service success sleep 1s")
+	time.Sleep(time.Second * 1)
+	if err = r.Deregister(context.Background(), s0); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = r.Deregister(context.Background(), s1); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = r.Deregister(context.Background(), s2); err != nil {
+		t.Fatal(err)
+	}
+	t.Log("Deregister success")
 }

@@ -114,24 +114,24 @@ type SearchInput struct {
 }
 
 const (
-	Schema                    = `service`
-	DefaultHead               = `service`
-	DefaultDeployment         = `default`
-	DefaultNamespace          = `default`
-	DefaultVersion            = `latest`
-	EnvPrefix                 = `GF_GSVC_PREFIX`
-	EnvDeployment             = `GF_GSVC_DEPLOYMENT`
-	EnvNamespace              = `GF_GSVC_NAMESPACE`
-	EnvName                   = `GF_GSVC_Name`
-	EnvVersion                = `GF_GSVC_VERSION`
-	MDProtocol                = `protocol`
-	MDInsecure                = `insecure`
-	MDWeight                  = `weight`
-	DefaultProtocol           = `http`
-	DefaultSeparator          = "/"
-	EndpointHostPortDelimiter = ":"
-	defaultTimeout            = 5 * time.Second
-	endpointsDelimiter        = ","
+	Schema                    = `service`            // Schema is the schema of service.
+	DefaultHead               = `service`            // DefaultHead is the default head of service.
+	DefaultDeployment         = `default`            // DefaultDeployment is the default deployment of service.
+	DefaultNamespace          = `default`            // DefaultNamespace is the default namespace of service.
+	DefaultVersion            = `latest`             // DefaultVersion is the default version of service.
+	EnvPrefix                 = `GF_GSVC_PREFIX`     // EnvPrefix is the environment variable prefix.
+	EnvDeployment             = `GF_GSVC_DEPLOYMENT` // EnvDeployment is the environment variable deployment.
+	EnvNamespace              = `GF_GSVC_NAMESPACE`  // EnvNamespace is the environment variable namespace.
+	EnvName                   = `GF_GSVC_Name`       // EnvName is the environment variable name.
+	EnvVersion                = `GF_GSVC_VERSION`    // EnvVersion is the environment variable version.
+	MDProtocol                = `protocol`           // MDProtocol is the metadata key for protocol.
+	MDInsecure                = `insecure`           // MDInsecure is the metadata key for insecure.
+	MDWeight                  = `weight`             // MDWeight is the metadata key for weight.
+	DefaultProtocol           = `http`               // DefaultProtocol is the default protocol of service.
+	DefaultSeparator          = "/"                  // DefaultSeparator is the default separator of service.
+	EndpointHostPortDelimiter = ":"                  // EndpointHostPortDelimiter is the delimiter of host and port.
+	defaultTimeout            = 5 * time.Second      // defaultTimeout is the default timeout for service registry.
+	EndpointsDelimiter        = ","                  // EndpointsDelimiter is the delimiter of endpoints.
 )
 
 var defaultRegistry Registry

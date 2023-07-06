@@ -55,7 +55,7 @@ func (m *Model) Data(data ...interface{}) *Model {
 			}
 			model.data = m
 		}
-	} else {
+	} else if len(data) == 1 {
 		switch value := data[0].(type) {
 		case Result:
 			model.data = value.List()
@@ -151,10 +151,13 @@ func (m *Model) Data(data ...interface{}) *Model {
 //		  "nickname": "passport",
 //	}).
 func (m *Model) OnDuplicate(onDuplicate ...interface{}) *Model {
+	if len(onDuplicate) == 0 {
+		return m
+	}
 	model := m.getModel()
 	if len(onDuplicate) > 1 {
 		model.onDuplicate = onDuplicate
-	} else {
+	} else if len(onDuplicate) == 1 {
 		model.onDuplicate = onDuplicate[0]
 	}
 	return model
@@ -173,10 +176,13 @@ func (m *Model) OnDuplicate(onDuplicate ...interface{}) *Model {
 //		  "password": "",
 //	}).
 func (m *Model) OnDuplicateEx(onDuplicateEx ...interface{}) *Model {
+	if len(onDuplicateEx) == 0 {
+		return m
+	}
 	model := m.getModel()
 	if len(onDuplicateEx) > 1 {
 		model.onDuplicateEx = onDuplicateEx
-	} else {
+	} else if len(onDuplicateEx) == 1 {
 		model.onDuplicateEx = onDuplicateEx[0]
 	}
 	return model
@@ -243,7 +249,7 @@ func (m *Model) Save(data ...interface{}) (result sql.Result, err error) {
 }
 
 // doInsertWithOption inserts data with option parameter.
-func (m *Model) doInsertWithOption(ctx context.Context, insertOption int) (result sql.Result, err error) {
+func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOption) (result sql.Result, err error) {
 	defer func() {
 		if err == nil {
 			m.checkAndRemoveSelectCache(ctx)
@@ -371,7 +377,7 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption int) (resul
 	return in.Next(ctx)
 }
 
-func (m *Model) formatDoInsertOption(insertOption int, columnNames []string) (option DoInsertOption, err error) {
+func (m *Model) formatDoInsertOption(insertOption InsertOption, columnNames []string) (option DoInsertOption, err error) {
 	option = DoInsertOption{
 		InsertOption: insertOption,
 		BatchCount:   m.getBatch(),

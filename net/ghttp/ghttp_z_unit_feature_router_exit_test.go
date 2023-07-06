@@ -19,7 +19,7 @@ import (
 
 func Test_Router_Exit(t *testing.T) {
 	s := g.Server(guid.S())
-	s.BindHookHandlerByMap("/*", map[string]ghttp.HandlerFunc{
+	s.BindHookHandlerByMap("/*", map[ghttp.HookName]ghttp.HandlerFunc{
 		ghttp.HookBeforeServe:  func(r *ghttp.Request) { r.Response.Write("1") },
 		ghttp.HookAfterServe:   func(r *ghttp.Request) { r.Response.Write("2") },
 		ghttp.HookBeforeOutput: func(r *ghttp.Request) { r.Response.Write("3") },
@@ -50,17 +50,17 @@ func Test_Router_ExitHook(t *testing.T) {
 		r.Response.Write("show")
 	})
 
-	s.BindHookHandlerByMap("/priority/:name", map[string]ghttp.HandlerFunc{
+	s.BindHookHandlerByMap("/priority/:name", map[ghttp.HookName]ghttp.HandlerFunc{
 		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.Response.Write("1")
 		},
 	})
-	s.BindHookHandlerByMap("/priority/*any", map[string]ghttp.HandlerFunc{
+	s.BindHookHandlerByMap("/priority/*any", map[ghttp.HookName]ghttp.HandlerFunc{
 		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.Response.Write("2")
 		},
 	})
-	s.BindHookHandlerByMap("/priority/show", map[string]ghttp.HandlerFunc{
+	s.BindHookHandlerByMap("/priority/show", map[ghttp.HookName]ghttp.HandlerFunc{
 		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.Response.Write("3")
 			r.ExitHook()
@@ -86,17 +86,17 @@ func Test_Router_ExitAll(t *testing.T) {
 		r.Response.Write("show")
 	})
 
-	s.BindHookHandlerByMap("/priority/:name", map[string]ghttp.HandlerFunc{
+	s.BindHookHandlerByMap("/priority/:name", map[ghttp.HookName]ghttp.HandlerFunc{
 		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.Response.Write("1")
 		},
 	})
-	s.BindHookHandlerByMap("/priority/*any", map[string]ghttp.HandlerFunc{
+	s.BindHookHandlerByMap("/priority/*any", map[ghttp.HookName]ghttp.HandlerFunc{
 		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.Response.Write("2")
 		},
 	})
-	s.BindHookHandlerByMap("/priority/show", map[string]ghttp.HandlerFunc{
+	s.BindHookHandlerByMap("/priority/show", map[ghttp.HookName]ghttp.HandlerFunc{
 		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.Response.Write("3")
 			r.ExitAll()
