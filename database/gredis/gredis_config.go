@@ -23,6 +23,7 @@ type Config struct {
 	// Address It supports single and cluster redis server. Multiple addresses joined with char ','. Eg: 192.168.1.1:6379, 192.168.1.2:6379.
 	Address         string        `json:"address"`
 	Db              int           `json:"db"`              // Redis db.
+	User            string        `json:"user"`            // Username for AUTH.
 	Pass            string        `json:"pass"`            // Password for AUTH.
 	MinIdle         int           `json:"minIdle"`         // Minimum number of connections allowed to be idle (default is 0)
 	MaxIdle         int           `json:"maxIdle"`         // Maximum number of connections allowed to be idle (default is 10)

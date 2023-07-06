@@ -7,6 +7,7 @@
 package redis_test
 
 import (
+	"github.com/gogf/gf/v2/container/gvar"
 	"testing"
 	"time"
 
@@ -32,5 +33,40 @@ func Test_ConfigFromMap(t *testing.T) {
 		t.Assert(c.MinIdle, 10)
 		t.Assert(c.MaxIdle, 100)
 		t.Assert(c.ReadTimeout, 10*time.Second)
+	})
+}
+
+func Test_ConfigAddUser(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			c   *gredis.Redis
+			err error
+			r   *gvar.Var
+		)
+
+		c, err = gredis.New(&gredis.Config{
+			Address: `127.0.0.1`,
+			Db:      1,
+			User:    "root",
+			Pass:    "",
+		})
+		t.AssertNil(err)
+
+		_, err = c.Conn(ctx)
+		t.AssertNil(err)
+
+		_, err = redis.Do(ctx, "SET", "k", "v")
+		t.AssertNil(err)
+
+		r, err = redis.Do(ctx, "GET", "k")
+		t.AssertNil(err)
+		t.Assert(r, []byte("v"))
+
+		_, err = redis.Do(ctx, "DEL", "k")
+		t.AssertNil(err)
+
+		r, err = redis.Do(ctx, "GET", "k")
+		t.AssertNil(err)
+		t.Assert(r, nil)
 	})
 }
