@@ -585,13 +585,13 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 }
 
 // Status retrieves and returns the server status.
-func (s *Server) Status() int {
+func (s *Server) Status() ServerStatus {
 	if serverRunning.Val() == 0 {
 		return ServerStatusStopped
 	}
 	// If any underlying server is running, the server status is running.
 	for _, v := range s.servers {
-		if v.status == ServerStatusRunning {
+		if v.status.Val() == ServerStatusRunning {
 			return ServerStatusRunning
 		}
 	}

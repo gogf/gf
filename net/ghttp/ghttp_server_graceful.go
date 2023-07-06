@@ -18,6 +18,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gproc"
@@ -27,15 +28,15 @@ import (
 
 // gracefulServer wraps the net/http.Server with graceful reload/restart feature.
 type gracefulServer struct {
-	server      *Server      // Belonged server.
-	fd          uintptr      // File descriptor for passing to the child process when graceful reload.
-	address     string       // Listening address like:":80", ":8080".
-	httpServer  *http.Server // Underlying http.Server.
-	rawListener net.Listener // Underlying net.Listener.
-	rawLnMu     sync.RWMutex // Concurrent safety mutex for `rawListener`.
-	listener    net.Listener // Wrapped net.Listener.
-	isHttps     bool         // Is HTTPS.
-	status      int          // Status of current server.
+	server      *Server          // Belonged server.
+	fd          uintptr          // File descriptor for passing to the child process when graceful reload.
+	address     string           // Listening address like:":80", ":8080".
+	httpServer  *http.Server     // Underlying http.Server.
+	rawListener net.Listener     // Underlying net.Listener.
+	rawLnMu     sync.RWMutex     // Concurrent safety mutex for `rawListener`.
+	listener    net.Listener     // Wrapped net.Listener.
+	isHttps     bool             // Is HTTPS.
+	status      *gtype.Interface // Status of current server. Using `gtype` to ensure concurrent safety.
 }
 
 // newGracefulServer creates and returns a graceful http server with a given address.
@@ -49,6 +50,7 @@ func (s *Server) newGracefulServer(address string, fd ...int) *gracefulServer {
 		server:     s,
 		address:    address,
 		httpServer: s.newHttpServer(address),
+		status:     gtype.New(),
 	}
 	if len(fd) > 0 && fd[0] > 0 {
 		gs.fd = uintptr(fd[0])
@@ -166,9 +168,9 @@ func (s *gracefulServer) Serve(ctx context.Context) error {
 		`pid[%d]: %s server %s listening on [%s]`,
 		gproc.Pid(), s.getProto(), action, s.GetListenedAddress(),
 	)
-	s.status = ServerStatusRunning
+	s.status.Set(ServerStatusRunning)
 	err := s.httpServer.Serve(s.listener)
-	s.status = ServerStatusStopped
+	s.status.Set(ServerStatusStopped)
 	return err
 }
 
@@ -230,7 +232,7 @@ func (s *gracefulServer) getNetListener() (net.Listener, error) {
 
 // shutdown shuts down the server gracefully.
 func (s *gracefulServer) shutdown(ctx context.Context) {
-	if s.status == ServerStatusStopped {
+	if s.status.Val().(ServerStatus) == ServerStatusStopped {
 		return
 	}
 	timeoutCtx, cancelFunc := context.WithTimeout(
@@ -263,7 +265,7 @@ func (s *gracefulServer) getRawListener() net.Listener {
 
 // close shuts down the server forcibly.
 func (s *gracefulServer) close(ctx context.Context) {
-	if s.status == ServerStatusStopped {
+	if s.status.Val().(ServerStatus) == ServerStatusStopped {
 		return
 	}
 	if err := s.httpServer.Close(); err != nil {

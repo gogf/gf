@@ -109,7 +109,7 @@ func (d *Domain) doBindObjectRest(ctx context.Context, in doBindObjectInput) {
 }
 
 // BindHookHandler binds the hook handler for the specified pattern.
-func (d *Domain) BindHookHandler(pattern string, hook string, handler HandlerFunc) {
+func (d *Domain) BindHookHandler(pattern string, hook HookName, handler HandlerFunc) {
 	for domain := range d.domains {
 		d.server.BindHookHandler(pattern+"@"+domain, hook, handler)
 	}
@@ -128,7 +128,7 @@ func (d *Domain) doBindHookHandler(ctx context.Context, in doBindHookHandlerInpu
 }
 
 // BindHookHandlerByMap binds the hook handler for the specified pattern.
-func (d *Domain) BindHookHandlerByMap(pattern string, hookMap map[string]HandlerFunc) {
+func (d *Domain) BindHookHandlerByMap(pattern string, hookMap map[HookName]HandlerFunc) {
 	for domain := range d.domains {
 		d.server.BindHookHandlerByMap(pattern+"@"+domain, hookMap)
 	}

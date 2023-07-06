@@ -61,7 +61,7 @@ type (
 		Server           string       // Server name.
 		Address          string       // Listening address.
 		Domain           string       // Bound domain.
-		Type             string       // Router type.
+		Type             HandlerType  // Route handler type.
 		Middleware       string       // Bound middleware.
 		Method           string       // Handler method name.
 		Route            string       // Route URI.
@@ -84,12 +84,12 @@ type (
 	HandlerItem struct {
 		Id         int             // Unique handler item id mark.
 		Name       string          // Handler name, which is automatically retrieved from runtime stack when registered.
-		Type       string          // Handler type: object/handler/middleware/hook.
+		Type       HandlerType     // Handler type: object/handler/middleware/hook.
 		Info       handlerFuncInfo // Handler function information.
 		InitFunc   HandlerFunc     // Initialization function when request enters the object (only available for object register type).
 		ShutFunc   HandlerFunc     // Shutdown function when request leaves out the object (only available for object register type).
 		Middleware []HandlerFunc   // Bound middleware array.
-		HookName   string          // Hook type name, only available for the hook type.
+		HookName   HookName        // Hook type name, only available for the hook type.
 		Router     *Router         // Router object.
 		Source     string          // Registering source file `path:line`.
 	}
@@ -99,6 +99,15 @@ type (
 		Handler *HandlerItem      // Handler information.
 		Values  map[string]string // Router values parsed from URL.Path.
 	}
+
+	// ServerStatus is the server status enum type.
+	ServerStatus int
+
+	// HookName is the route hook name enum type.
+	HookName string
+
+	// HandlerType is the route handler enum type.
+	HandlerType string
 
 	// Listening file descriptor mapping.
 	// The key is either "http" or "https" and the value is its FD.
@@ -114,19 +123,19 @@ const (
 )
 
 const (
-	HeaderXUrlPath        = "x-url-path"         // Used for custom route handler, which does not change URL.Path.
-	HookBeforeServe       = "HOOK_BEFORE_SERVE"  // Hook handler before route handler/file serving.
-	HookAfterServe        = "HOOK_AFTER_SERVE"   // Hook handler after route handler/file serving.
-	HookBeforeOutput      = "HOOK_BEFORE_OUTPUT" // Hook handler before response output.
-	HookAfterOutput       = "HOOK_AFTER_OUTPUT"  // Hook handler after response output.
-	ServerStatusStopped   = 0
-	ServerStatusRunning   = 1
-	DefaultServerName     = "default"
-	DefaultDomainName     = "default"
-	HandlerTypeHandler    = "handler"
-	HandlerTypeObject     = "object"
-	HandlerTypeMiddleware = "middleware"
-	HandlerTypeHook       = "hook"
+	HeaderXUrlPath                     = "x-url-path"         // Used for custom route handler, which does not change URL.Path.
+	HookBeforeServe       HookName     = "HOOK_BEFORE_SERVE"  // Hook handler before route handler/file serving.
+	HookAfterServe        HookName     = "HOOK_AFTER_SERVE"   // Hook handler after route handler/file serving.
+	HookBeforeOutput      HookName     = "HOOK_BEFORE_OUTPUT" // Hook handler before response output.
+	HookAfterOutput       HookName     = "HOOK_AFTER_OUTPUT"  // Hook handler after response output.
+	ServerStatusStopped   ServerStatus = 0
+	ServerStatusRunning   ServerStatus = 1
+	DefaultServerName                  = "default"
+	DefaultDomainName                  = "default"
+	HandlerTypeHandler    HandlerType  = "handler"
+	HandlerTypeObject     HandlerType  = "object"
+	HandlerTypeMiddleware HandlerType  = "middleware"
+	HandlerTypeHook       HandlerType  = "hook"
 )
 
 const (
