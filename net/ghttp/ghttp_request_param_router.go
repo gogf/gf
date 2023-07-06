@@ -33,3 +33,13 @@ func (r *Request) GetRouter(key string, def ...interface{}) *gvar.Var {
 	}
 	return nil
 }
+
+// RemoveRouter remove query parameter with a given name `key` .
+func (r *Request) RemoveRouter(key string) {
+	if r.routerMap != nil && len(r.routerMap) > 0 {
+		if _, ok := r.routerMap[key]; ok {
+			delete(r.routerMap, key)
+		}
+	}
+	return
+}

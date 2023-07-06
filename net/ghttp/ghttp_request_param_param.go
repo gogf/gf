@@ -40,3 +40,13 @@ func (r *Request) GetParam(key string, def ...interface{}) *gvar.Var {
 	}
 	return nil
 }
+
+// RemoveParam remove custom parameter with a given name `key`.
+func (r *Request) RemoveParam(key string) {
+	if r.paramsMap != nil && len(r.paramsMap) > 0 {
+		if _, ok := r.paramsMap[key]; ok {
+			delete(r.paramsMap, key)
+		}
+	}
+	return
+}

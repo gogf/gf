@@ -107,3 +107,14 @@ func (r *Request) doGetFormStruct(pointer interface{}, mapping ...map[string]str
 	}
 	return data, gconv.Struct(data, pointer, mapping...)
 }
+
+// RemoveForm remove form parameter with a given name `key` .
+func (r *Request) RemoveForm(key string) {
+	r.parseForm()
+	if r.formMap != nil && len(r.formMap) > 0 {
+		if _, ok := r.formMap[key]; ok {
+			delete(r.formMap, key)
+		}
+	}
+	return
+}

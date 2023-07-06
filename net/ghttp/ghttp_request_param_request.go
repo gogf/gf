@@ -272,3 +272,18 @@ func (r *Request) mergeInTagStructValue(data map[string]interface{}, pointer int
 	}
 	return nil
 }
+
+// RemoveRequest remove all parameter with a given name `key` .
+func (r *Request) RemoveRequest(key string) {
+	r.parseBody()
+	if len(r.bodyMap) > 0 {
+		if _, ok := r.routerMap[key]; ok {
+			delete(r.routerMap, key)
+		}
+	}
+	r.RemoveForm(key)
+	r.RemoveParam(key)
+	r.RemoveQuery(key)
+	r.RemoveRouter(key)
+	return
+}

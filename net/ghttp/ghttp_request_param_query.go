@@ -150,3 +150,14 @@ func (r *Request) doGetQueryStruct(pointer interface{}, mapping ...map[string]st
 	}
 	return data, gconv.Struct(data, pointer, mapping...)
 }
+
+// RemoveQuery remove query parameter with a given name `key` .
+func (r *Request) RemoveQuery(key string) {
+	r.parseQuery()
+	if r.queryMap != nil && len(r.queryMap) > 0 {
+		if _, ok := r.queryMap[key]; ok {
+			delete(r.queryMap, key)
+		}
+	}
+	return
+}
