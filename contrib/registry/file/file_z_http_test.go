@@ -20,6 +20,7 @@ import (
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/guid"
 )
 
@@ -83,5 +84,32 @@ func Test_HTTP_Discovery_Disable(t *testing.T) {
 		defer result.Close()
 		t.AssertNil(err)
 		t.Assert(result.ReadAllString(), svcName)
+	})
+}
+
+func Test_HTTP_Server_Endpoints(t *testing.T) {
+	var (
+		svcName = guid.S()
+		dirPath = gfile.Temp(svcName)
+	)
+	defer gfile.Remove(dirPath)
+	gsvc.SetRegistry(file.New(dirPath))
+
+	endpoints := []string{"10.0.0.1:8000", "10.0.0.2:8000"}
+	s := g.Server(svcName)
+	s.SetEndpoints(endpoints)
+	s.BindHandler("/http-registry", func(r *ghttp.Request) {
+		r.Response.Write(svcName)
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		service, err := gsvc.Get(ctx, svcName)
+		t.AssertNil(err)
+		t.Assert(service.GetEndpoints(), gstr.Join(endpoints, ","))
 	})
 }
