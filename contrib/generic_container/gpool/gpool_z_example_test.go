@@ -1,0 +1,183 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with gm file,
+// You can obtain one at https://github.com/gogf/gf.
+
+package gpool
+
+import (
+	"database/sql"
+	"fmt"
+	"time"
+)
+
+func ExampleNew() {
+	type DBConn struct {
+		Conn *sql.Conn
+	}
+
+	dbConnPool := New[*DBConn](time.Hour,
+		func() (*DBConn, error) {
+			dbConn := new(DBConn)
+			return dbConn, nil
+		},
+		func(i *DBConn) {
+			// sample : close db conn
+			// i.(DBConn).Conn.Close()
+		})
+
+	fmt.Println(dbConnPool.TTL)
+
+	// Output:
+	// 1h0m0s
+}
+
+func ExamplePool_Put() {
+	type DBConn struct {
+		Conn  *sql.Conn
+		Limit int
+	}
+
+	dbConnPool := New[*DBConn](time.Hour,
+		func() (*DBConn, error) {
+			dbConn := new(DBConn)
+			dbConn.Limit = 10
+			return dbConn, nil
+		},
+		func(i *DBConn) {
+			// sample : close db conn
+			// i.(DBConn).Conn.Close()
+		})
+
+	// get db conn
+	conn, _ := dbConnPool.Get()
+	// modify this conn's limit
+	conn.Limit = 20
+
+	// example : do same db operation
+	// conn.(*DBConn).Conn.QueryContext(context.Background(), "select * from user")
+
+	// put back conn
+	dbConnPool.MustPut(conn)
+
+	fmt.Println(conn.Limit)
+
+	// Output:
+	// 20
+}
+
+func ExamplePool_Clear() {
+	type DBConn struct {
+		Conn  *sql.Conn
+		Limit int
+	}
+
+	dbConnPool := New[*DBConn](time.Hour,
+		func() (*DBConn, error) {
+			dbConn := new(DBConn)
+			dbConn.Limit = 10
+			return dbConn, nil
+		},
+		func(i *DBConn) {
+			i.Limit = 0
+			// sample : close db conn
+			// i.(DBConn).Conn.Close()
+		})
+
+	conn, _ := dbConnPool.Get()
+	dbConnPool.MustPut(conn)
+	dbConnPool.MustPut(conn)
+	fmt.Println(dbConnPool.Size())
+	dbConnPool.Clear()
+	fmt.Println(dbConnPool.Size())
+
+	// Output:
+	// 2
+	// 0
+}
+
+func ExamplePool_Get() {
+	type DBConn struct {
+		Conn  *sql.Conn
+		Limit int
+	}
+
+	dbConnPool := New[*DBConn](time.Hour,
+		func() (*DBConn, error) {
+			dbConn := new(DBConn)
+			dbConn.Limit = 10
+			return dbConn, nil
+		},
+		func(i *DBConn) {
+			// sample : close db conn
+			// i.(DBConn).Conn.Close()
+		})
+
+	conn, err := dbConnPool.Get()
+	if err == nil {
+		fmt.Println(conn.Limit)
+	}
+
+	// Output:
+	// 10
+}
+
+func ExamplePool_Size() {
+	type DBConn struct {
+		Conn  *sql.Conn
+		Limit int
+	}
+
+	dbConnPool := New[*DBConn](time.Hour,
+		func() (*DBConn, error) {
+			dbConn := new(DBConn)
+			dbConn.Limit = 10
+			return dbConn, nil
+		},
+		func(i *DBConn) {
+			// sample : close db conn
+			// i.(DBConn).Conn.Close()
+		})
+
+	conn, _ := dbConnPool.Get()
+	fmt.Println(dbConnPool.Size())
+	dbConnPool.MustPut(conn)
+	dbConnPool.MustPut(conn)
+	fmt.Println(dbConnPool.Size())
+
+	// Output:
+	// 0
+	// 2
+}
+
+func ExamplePool_Close() {
+	type DBConn struct {
+		Conn  *sql.Conn
+		Limit int
+	}
+	var (
+		newFunc = func() (*DBConn, error) {
+			dbConn := new(DBConn)
+			dbConn.Limit = 10
+			return dbConn, nil
+		}
+		closeFunc = func(i *DBConn) {
+			fmt.Println("Close The Pool")
+			// sample : close db conn
+			// i.(DBConn).Conn.Close()
+		}
+	)
+	dbConnPool := New[*DBConn](time.Hour, newFunc, closeFunc)
+
+	conn, _ := dbConnPool.Get()
+	dbConnPool.MustPut(conn)
+
+	dbConnPool.Close()
+
+	// wait for pool close
+	time.Sleep(time.Second * 1)
+
+	// May Output:
+	// Close The Pool
+}
