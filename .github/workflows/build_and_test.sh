@@ -52,6 +52,14 @@ for file in `find . -name go.mod`; do
         fi
     fi
 
+    # package sqlitecgo needs golang >= v1.17
+    if [ "sqlitecgo" = $(basename $dirpath) ]; then
+        if ! go version|grep -q "1.17"; then
+          echo "ignore sqlitecgo as go version: $(go version)"
+          continue 1
+        fi
+    fi
+
     cd $dirpath
     go mod tidy
     go build ./...
