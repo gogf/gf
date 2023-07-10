@@ -19,7 +19,7 @@ import (
 
 func Test_Router_Hook_Basic(t *testing.T) {
 	s := g.Server(guid.S())
-	s.BindHookHandlerByMap("/*", map[string]ghttp.HandlerFunc{
+	s.BindHookHandlerByMap("/*", map[ghttp.HookName]ghttp.HandlerFunc{
 		ghttp.HookBeforeServe:  func(r *ghttp.Request) { r.Response.Write("1") },
 		ghttp.HookAfterServe:   func(r *ghttp.Request) { r.Response.Write("2") },
 		ghttp.HookBeforeOutput: func(r *ghttp.Request) { r.Response.Write("3") },
@@ -46,7 +46,7 @@ func Test_Router_Hook_Fuzzy_Router(t *testing.T) {
 	s := g.Server(guid.S())
 	i := 1000
 	pattern1 := "/:name/info"
-	s.BindHookHandlerByMap(pattern1, map[string]ghttp.HandlerFunc{
+	s.BindHookHandlerByMap(pattern1, map[ghttp.HookName]ghttp.HandlerFunc{
 		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.SetParam("uid", i)
 			i++
@@ -57,7 +57,7 @@ func Test_Router_Hook_Fuzzy_Router(t *testing.T) {
 	})
 
 	pattern2 := "/{object}/list/{page}.java"
-	s.BindHookHandlerByMap(pattern2, map[string]ghttp.HandlerFunc{
+	s.BindHookHandlerByMap(pattern2, map[ghttp.HookName]ghttp.HandlerFunc{
 		ghttp.HookBeforeOutput: func(r *ghttp.Request) {
 			r.Response.SetBuffer([]byte(
 				fmt.Sprint(r.Get("object"), "&", r.Get("page"), "&", i),
@@ -90,17 +90,17 @@ func Test_Router_Hook_Priority(t *testing.T) {
 		r.Response.Write("show")
 	})
 
-	s.BindHookHandlerByMap("/priority/:name", map[string]ghttp.HandlerFunc{
+	s.BindHookHandlerByMap("/priority/:name", map[ghttp.HookName]ghttp.HandlerFunc{
 		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.Response.Write("1")
 		},
 	})
-	s.BindHookHandlerByMap("/priority/*any", map[string]ghttp.HandlerFunc{
+	s.BindHookHandlerByMap("/priority/*any", map[ghttp.HookName]ghttp.HandlerFunc{
 		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.Response.Write("2")
 		},
 	})
-	s.BindHookHandlerByMap("/priority/show", map[string]ghttp.HandlerFunc{
+	s.BindHookHandlerByMap("/priority/show", map[ghttp.HookName]ghttp.HandlerFunc{
 		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.Response.Write("3")
 		},
@@ -127,12 +127,12 @@ func Test_Router_Hook_Multi(t *testing.T) {
 		r.Response.Write("show")
 	})
 
-	s.BindHookHandlerByMap("/multi-hook", map[string]ghttp.HandlerFunc{
+	s.BindHookHandlerByMap("/multi-hook", map[ghttp.HookName]ghttp.HandlerFunc{
 		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.Response.Write("1")
 		},
 	})
-	s.BindHookHandlerByMap("/multi-hook", map[string]ghttp.HandlerFunc{
+	s.BindHookHandlerByMap("/multi-hook", map[ghttp.HookName]ghttp.HandlerFunc{
 		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.Response.Write("2")
 		},

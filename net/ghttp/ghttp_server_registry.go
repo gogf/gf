@@ -67,16 +67,23 @@ func (s *Server) calculateListenedEndpoints(ctx context.Context) gsvc.Endpoints 
 	var (
 		configAddr = s.config.Address
 		endpoints  = make(gsvc.Endpoints, 0)
+		addresses  = s.config.Endpoints
 	)
 	if configAddr == "" {
 		configAddr = s.config.HTTPSAddr
 	}
-	for _, address := range gstr.SplitAndTrim(configAddr, ",") {
+	if len(addresses) == 0 {
+		addresses = gstr.SplitAndTrim(configAddr, ",")
+	}
+	for _, address := range addresses {
 		var (
 			addrArray     = gstr.Split(address, ":")
 			listenedIps   []string
 			listenedPorts []int
 		)
+		if len(addrArray) == 1 {
+			addrArray = append(addrArray, gconv.String(defaultEndpointPort))
+		}
 		// IPs.
 		switch addrArray[0] {
 		case "127.0.0.1":
