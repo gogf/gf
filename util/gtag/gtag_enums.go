@@ -23,11 +23,11 @@ func SetGlobalEnums(enumsJson string) error {
 
 // GetGlobalEnums retrieves and returns the global enums.
 func GetGlobalEnums() (string, error) {
-	enumsByes, err := json.Marshal(enumsMap)
+	enumsBytes, err := json.Marshal(enumsMap)
 	if err != nil {
 		return "", err
 	}
-	return string(enumsByes), nil
+	return string(enumsBytes), nil
 }
 
 // GetEnumsByType retrieves and returns the stored enums json by type name.
