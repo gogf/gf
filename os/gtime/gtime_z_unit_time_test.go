@@ -72,7 +72,7 @@ func Test_New(t *testing.T) {
 		t.Assert(gtime.New(&gtime.Time{}), nil)
 	})
 
-	// 非常规的类型
+	// unconventional
 	gtest.C(t, func(t *gtest.T) {
 
 		var testUnconventionalDates = []string{
