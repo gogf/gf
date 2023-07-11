@@ -71,6 +71,22 @@ func Test_New(t *testing.T) {
 		t.Assert(gtime.New(gtime.Time{}), nil)
 		t.Assert(gtime.New(&gtime.Time{}), nil)
 	})
+
+	// 非常规的类型
+	gtest.C(t, func(t *gtest.T) {
+
+		var testUnconventionalDates = []string{
+			"2006-01.02",
+			"2006.01-02",
+		}
+
+		for _, item := range testUnconventionalDates {
+			timeTemp := gtime.New(item)
+			t.Assert(timeTemp.TimestampMilli(), 0)
+			t.Assert(timeTemp.TimestampMilliStr(), "")
+			t.Assert(timeTemp.String(), "")
+		}
+	})
 }
 
 func Test_Nil(t *testing.T) {
