@@ -255,10 +255,21 @@ func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) in
 			dataMap = make(map[string]interface{})
 		)
 		for _, k := range mapKeys {
+			var (
+				mapKeyValue = reflectValue.MapIndex(k)
+				mapValue    interface{}
+			)
+			if mapKeyValue.IsZero() {
+				// in case of:
+				// exception recovered: reflect: call of reflect.Value.Interface on zero Value
+				mapValue = reflect.New(mapKeyValue.Type()).Elem()
+			} else {
+				mapValue = mapKeyValue.Interface()
+			}
 			dataMap[String(k.Interface())] = doMapConvertForMapOrStructValue(
 				doMapConvertForMapOrStructValueInput{
 					IsRoot:          false,
-					Value:           reflectValue.MapIndex(k).Interface(),
+					Value:           mapValue,
 					RecursiveType:   in.RecursiveType,
 					RecursiveOption: in.RecursiveType == recursiveTypeTrue,
 					Tags:            in.Tags,
