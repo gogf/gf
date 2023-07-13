@@ -8,6 +8,7 @@ package mysql_test
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"testing"
 
@@ -27,15 +28,24 @@ func Test_Model_Sharding_Table(t *testing.T) {
 	createTable(table2)
 	defer dropTable(table2)
 
-	shardingModel := db.Model(table1).Sharding(
-		func(ctx context.Context, in gdb.ShardingInput) (out *gdb.ShardingOutput, err error) {
-			out = &gdb.ShardingOutput{
-				Table:  table2,
-				Schema: in.Schema,
-			}
-			return
+	shardingModel := db.Model(table1).Hook(gdb.HookHandler{
+		Select: func(ctx context.Context, in *gdb.HookSelectInput) (result gdb.Result, err error) {
+			in.Table = table2
+			return in.Next(ctx)
 		},
-	)
+		Insert: func(ctx context.Context, in *gdb.HookInsertInput) (result sql.Result, err error) {
+			in.Table = table2
+			return in.Next(ctx)
+		},
+		Update: func(ctx context.Context, in *gdb.HookUpdateInput) (result sql.Result, err error) {
+			in.Table = table2
+			return in.Next(ctx)
+		},
+		Delete: func(ctx context.Context, in *gdb.HookDeleteInput) (result sql.Result, err error) {
+			in.Table = table2
+			return in.Next(ctx)
+		},
+	})
 	gtest.C(t, func(t *gtest.T) {
 		r, err := shardingModel.Insert(g.Map{
 			"id":          1,
@@ -126,15 +136,28 @@ func Test_Model_Sharding_Schema(t *testing.T) {
 	createTableWithDb(db2, table)
 	defer dropTableWithDb(db2, table)
 
-	shardingModel := db.Model(table).Sharding(
-		func(ctx context.Context, in gdb.ShardingInput) (out *gdb.ShardingOutput, err error) {
-			out = &gdb.ShardingOutput{
-				Table:  table,
-				Schema: db2.GetSchema(),
-			}
-			return
+	shardingModel := db.Model(table).Hook(gdb.HookHandler{
+		Select: func(ctx context.Context, in *gdb.HookSelectInput) (result gdb.Result, err error) {
+			in.Table = table
+			in.Schema = db2.GetSchema()
+			return in.Next(ctx)
 		},
-	)
+		Insert: func(ctx context.Context, in *gdb.HookInsertInput) (result sql.Result, err error) {
+			in.Table = table
+			in.Schema = db2.GetSchema()
+			return in.Next(ctx)
+		},
+		Update: func(ctx context.Context, in *gdb.HookUpdateInput) (result sql.Result, err error) {
+			in.Table = table
+			in.Schema = db2.GetSchema()
+			return in.Next(ctx)
+		},
+		Delete: func(ctx context.Context, in *gdb.HookDeleteInput) (result sql.Result, err error) {
+			in.Table = table
+			in.Schema = db2.GetSchema()
+			return in.Next(ctx)
+		},
+	})
 	gtest.C(t, func(t *gtest.T) {
 		r, err := shardingModel.Insert(g.Map{
 			"id":          1,
