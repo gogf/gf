@@ -331,6 +331,34 @@ func ExampleRule_Email() {
 	// The MailAddr4 value `gf#goframe.org` is not a valid email address
 }
 
+func ExampleRule_Enums() {
+	type Status string
+	const (
+		StatusRunning Status = "Running"
+		StatusOffline Status = "Offline"
+	)
+	type BizReq struct {
+		Id     int    `v:"required"`
+		Name   string `v:"required"`
+		Status Status `v:"enums"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Id:     1,
+			Name:   "john",
+			Status: Status("Pending"),
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
+	}
+
+	// May Output:
+	// The Status value `Pending` should be in enums of: ["Running","Offline"]
+}
+
 func ExampleRule_Phone() {
 	type BizReq struct {
 		PhoneNumber1 string `v:"phone"`
