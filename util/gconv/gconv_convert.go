@@ -28,7 +28,7 @@ func Convert(fromValue interface{}, toTypeName string, extraParams ...interface{
 type doConvertInput struct {
 	FromValue  interface{}   // Value that is converted from.
 	ToTypeName string        // Target value type name in string.
-	ReferValue interface{}   // Referred value, a value in type `ToTypeName`.
+	ReferValue interface{}   // Referred value, a value in type `ToTypeName`. Note that its type might be reflect.Value.
 	Extra      []interface{} // Extra values for implementing the converting.
 	// Marks that the value is already converted and set to `ReferValue`. Caller can ignore the returned result.
 	// It is an attribute for internal usage purpose.
@@ -254,9 +254,7 @@ func doConvert(in doConvertInput) (convertedValue interface{}) {
 
 	default:
 		if in.ReferValue != nil {
-			var (
-				referReflectValue reflect.Value
-			)
+			var referReflectValue reflect.Value
 			if v, ok := in.ReferValue.(reflect.Value); ok {
 				referReflectValue = v
 			} else {
@@ -272,7 +270,8 @@ func doConvert(in doConvertInput) (convertedValue interface{}) {
 					}
 				}
 			}()
-			if referReflectValue.Kind() == reflect.Ptr {
+			switch referReflectValue.Kind() {
+			case reflect.Ptr:
 				// Type converting for custom type pointers.
 				// Eg:
 				// type PayMode int
@@ -294,11 +293,19 @@ func doConvert(in doConvertInput) (convertedValue interface{}) {
 					in.alreadySetToReferValue = true
 					return originTypeValue.Addr().Convert(referReflectValue.Type()).Interface()
 				}
+
+			case reflect.Map:
+				var targetValue = reflect.New(referReflectValue.Type()).Elem()
+				if err := doMapToMap(in.FromValue, targetValue); err == nil {
+					in.alreadySetToReferValue = true
+				}
+				return targetValue.Interface()
 			}
 			in.ToTypeName = referReflectValue.Kind().String()
 			in.ReferValue = nil
 			in.alreadySetToReferValue = true
-			return reflect.ValueOf(doConvert(in)).Convert(referReflectValue.Type()).Interface()
+			convertedValue = reflect.ValueOf(doConvert(in)).Convert(referReflectValue.Type()).Interface()
+			return convertedValue
 		}
 		return in.FromValue
 	}
