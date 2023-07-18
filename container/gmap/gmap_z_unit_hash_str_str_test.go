@@ -403,3 +403,24 @@ func Test_StrStrMap_IsSubOf(t *testing.T) {
 		t.Assert(m2.IsSubOf(m2), true)
 	})
 }
+
+func Test_StrStrMap_Diff(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m1 := gmap.NewStrStrMapFrom(g.MapStrStr{
+			"0": "0",
+			"1": "1",
+			"2": "2",
+			"3": "3",
+		})
+		m2 := gmap.NewStrStrMapFrom(g.MapStrStr{
+			"0": "0",
+			"2": "2",
+			"3": "31",
+			"4": "4",
+		})
+		addedKeys, removedKeys, modifiedKeys := m1.Diff(m2)
+		t.Assert(addedKeys, []string{"4"})
+		t.Assert(removedKeys, []string{"1"})
+		t.Assert(modifiedKeys, []string{"3"})
+	})
+}

@@ -506,3 +506,25 @@ func (m *IntIntMap) IsSubOf(other *IntIntMap) bool {
 	}
 	return true
 }
+
+// Diff compare different members
+func (m *IntIntMap) Diff(other *IntIntMap) (addedKeys, removedKeys, modifiedKeys []int) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	other.mu.RLock()
+	defer other.mu.RUnlock()
+
+	for key := range m.data {
+		if _, ok := other.data[key]; !ok {
+			removedKeys = append(removedKeys, key)
+		} else if m.data[key] != other.data[key] {
+			modifiedKeys = append(modifiedKeys, key)
+		}
+	}
+	for key := range other.data {
+		if _, ok := m.data[key]; !ok {
+			addedKeys = append(addedKeys, key)
+		}
+	}
+	return
+}

@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/rwmutex"
 	"github.com/gogf/gf/v2/util/gconv"
+	"reflect"
 )
 
 // AnyAnyMap wraps map type `map[interface{}]interface{}` and provides more map features.
@@ -534,4 +535,26 @@ func (m *AnyAnyMap) IsSubOf(other *AnyAnyMap) bool {
 		}
 	}
 	return true
+}
+
+// Diff compare different members
+func (m *AnyAnyMap) Diff(other *AnyAnyMap) (addedKeys, removedKeys, modifiedKeys []interface{}) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	other.mu.RLock()
+	defer other.mu.RUnlock()
+
+	for key := range m.data {
+		if _, ok := other.data[key]; !ok {
+			removedKeys = append(removedKeys, key)
+		} else if !reflect.DeepEqual(m.data[key], other.data[key]) {
+			modifiedKeys = append(modifiedKeys, key)
+		}
+	}
+	for key := range other.data {
+		if _, ok := m.data[key]; !ok {
+			addedKeys = append(addedKeys, key)
+		}
+	}
+	return
 }
