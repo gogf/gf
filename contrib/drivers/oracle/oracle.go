@@ -7,9 +7,8 @@
 // Package oracle implements gdb.Driver, which supports operations for database Oracle.
 //
 // Note:
-// 1. It needs manually import: _ "github.com/sijms/go-ora/v2"
-// 2. It does not support Save/Replace features.
-// 3. It does not support LastInsertId.
+// 1. It does not support Save/Replace features.
+// 2. It does not support LastInsertId.
 package oracle
 
 import (
@@ -19,8 +18,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gogf/gf/v2/util/gutil"
 	gora "github.com/sijms/go-ora/v2"
+
+	"github.com/gogf/gf/v2/util/gutil"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
