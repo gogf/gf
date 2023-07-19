@@ -447,6 +447,9 @@ func (s *Server) Run() {
 func Wait() {
 	var ctx = context.TODO()
 
+	// Signal handler in asynchronous way.
+	go handleProcessSignal()
+
 	<-allShutdownChan
 	// Remove plugins.
 	serverMapping.Iterator(func(k string, v interface{}) bool {
