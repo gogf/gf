@@ -69,6 +69,8 @@ func (c *controllerGenerator) doGenerateCtrlNewByModuleAndVersion(
 		newFuncNameDefinition = fmt.Sprintf(`func %s()`, newFuncName)
 		alreadyCreated        bool
 	)
+	// replace "\" to "/", fix import error
+	importPath = gstr.Replace(importPath, "\\", "/", -1)
 	if !gfile.Exists(moduleFilePath) {
 		content := gstr.ReplaceByMap(consts.TemplateGenCtrlControllerEmpty, g.MapStrStr{
 			"{Module}": module,
