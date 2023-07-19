@@ -8,6 +8,7 @@ package gcache
 
 import (
 	"context"
+	"github.com/gogf/gf/v2/text/gstr"
 	"time"
 
 	"github.com/gogf/gf/v2/container/gvar"
@@ -17,14 +18,19 @@ import (
 
 // AdapterRedis is the gcache adapter implements using Redis server.
 type AdapterRedis struct {
-	redis *gredis.Redis
+	redis  *gredis.Redis
+	prefix string
 }
 
-// NewAdapterRedis creates and returns a new memory cache object.
-func NewAdapterRedis(redis *gredis.Redis) Adapter {
-	return &AdapterRedis{
+// NewAdapterRedis creates and returns a new redis cache object.
+func NewAdapterRedis(redis *gredis.Redis, prefix ...string) Adapter {
+	c := &AdapterRedis{
 		redis: redis,
 	}
+	if len(prefix) > 0 && prefix[0] != "" {
+		c.prefix = prefix[0]
+	}
+	return c
 }
 
 // Set sets cache with `key`-`value` pair, which is expired after `duration`.
@@ -32,7 +38,7 @@ func NewAdapterRedis(redis *gredis.Redis) Adapter {
 // It does not expire if `duration` == 0.
 // It deletes the keys of `data` if `duration` < 0 or given `value` is nil.
 func (c *AdapterRedis) Set(ctx context.Context, key interface{}, value interface{}, duration time.Duration) (err error) {
-	redisKey := gconv.String(key)
+	redisKey := c.addPrefix(gconv.String(key))
 	if value == nil || duration < 0 {
 		_, err = c.redis.Del(ctx, redisKey)
 	} else {
@@ -60,7 +66,7 @@ func (c *AdapterRedis) SetMap(ctx context.Context, data map[interface{}]interfac
 			keys  = make([]string, len(data))
 		)
 		for k := range data {
-			keys[index] = gconv.String(k)
+			keys[index] = c.addPrefix(gconv.String(k))
 			index += 1
 		}
 		_, err := c.redis.Del(ctx, keys...)
@@ -69,7 +75,7 @@ func (c *AdapterRedis) SetMap(ctx context.Context, data map[interface{}]interfac
 		}
 	}
 	if duration == 0 {
-		err := c.redis.MSet(ctx, gconv.Map(data))
+		err := c.redis.MSet(ctx, c.addPrefixMap(gconv.Map(data)))
 		if err != nil {
 			return err
 		}
@@ -94,7 +100,7 @@ func (c *AdapterRedis) SetMap(ctx context.Context, data map[interface{}]interfac
 func (c *AdapterRedis) SetIfNotExist(ctx context.Context, key interface{}, value interface{}, duration time.Duration) (bool, error) {
 	var (
 		err      error
-		redisKey = gconv.String(key)
+		redisKey = c.addPrefix(gconv.String(key))
 	)
 	// Execute the function and retrieve the result.
 	f, ok := value.(Func)
@@ -169,7 +175,7 @@ func (c *AdapterRedis) SetIfNotExistFuncLock(ctx context.Context, key interface{
 // Get retrieves and returns the associated value of given <key>.
 // It returns nil if it does not exist or its value is nil.
 func (c *AdapterRedis) Get(ctx context.Context, key interface{}) (*gvar.Var, error) {
-	return c.redis.Get(ctx, gconv.String(key))
+	return c.redis.Get(ctx, c.addPrefix(gconv.String(key)))
 }
 
 // GetOrSet retrieves and returns the value of `key`, or sets `key`-`value` pair and
@@ -232,7 +238,7 @@ func (c *AdapterRedis) GetOrSetFuncLock(ctx context.Context, key interface{}, f 
 
 // Contains checks and returns true if `key` exists in the cache, or else returns false.
 func (c *AdapterRedis) Contains(ctx context.Context, key interface{}) (bool, error) {
-	n, err := c.redis.Exists(ctx, gconv.String(key))
+	n, err := c.redis.Exists(ctx, c.addPrefix(gconv.String(key)))
 	if err != nil {
 		return false, err
 	}
@@ -241,11 +247,20 @@ func (c *AdapterRedis) Contains(ctx context.Context, key interface{}) (bool, err
 
 // Size returns the number of items in the cache.
 func (c *AdapterRedis) Size(ctx context.Context) (size int, err error) {
-	n, err := c.redis.DBSize(ctx)
-	if err != nil {
-		return 0, err
+	if c.prefix == "" {
+		n, err := c.redis.DBSize(ctx)
+		if err != nil {
+			return 0, err
+		}
+		return int(n), nil
+	} else {
+		// slow but may no way
+		keys, err := c.redis.Keys(ctx, c.addPrefix("*"))
+		if err != nil {
+			return 0, err
+		}
+		return len(keys), nil
 	}
-	return int(n), nil
 }
 
 // Data returns a copy of all key-value pairs in the cache as map type.
@@ -253,7 +268,7 @@ func (c *AdapterRedis) Size(ctx context.Context) (size int, err error) {
 // if necessary.
 func (c *AdapterRedis) Data(ctx context.Context) (map[interface{}]interface{}, error) {
 	// Keys.
-	keys, err := c.redis.Keys(ctx, "*")
+	keys, err := c.redis.Keys(ctx, c.addPrefix("*"))
 	if err != nil {
 		return nil, err
 	}
@@ -266,24 +281,24 @@ func (c *AdapterRedis) Data(ctx context.Context) (map[interface{}]interface{}, e
 	// Type converting.
 	data := make(map[interface{}]interface{})
 	for k, v := range m {
-		data[k] = v.Val()
+		data[c.removePrefix(k)] = v.Val()
 	}
 	return data, nil
 }
 
 // Keys returns all keys in the cache as slice.
 func (c *AdapterRedis) Keys(ctx context.Context) ([]interface{}, error) {
-	keys, err := c.redis.Keys(ctx, "*")
+	keys, err := c.redis.Keys(ctx, c.addPrefix("*"))
 	if err != nil {
 		return nil, err
 	}
-	return gconv.Interfaces(keys), nil
+	return gconv.Interfaces(c.removePrefixAll(keys)), nil
 }
 
 // Values returns all values in the cache as slice.
 func (c *AdapterRedis) Values(ctx context.Context) ([]interface{}, error) {
 	// Keys.
-	keys, err := c.redis.Keys(ctx, "*")
+	keys, err := c.redis.Keys(ctx, c.addPrefix("*"))
 	if err != nil {
 		return nil, err
 	}
@@ -312,7 +327,7 @@ func (c *AdapterRedis) Update(ctx context.Context, key interface{}, value interf
 	var (
 		v        *gvar.Var
 		oldTTL   int64
-		redisKey = gconv.String(key)
+		redisKey = c.addPrefix(gconv.String(key))
 	)
 	// TTL.
 	oldTTL, err = c.redis.TTL(ctx, redisKey)
@@ -354,7 +369,7 @@ func (c *AdapterRedis) UpdateExpire(ctx context.Context, key interface{}, durati
 	var (
 		v        *gvar.Var
 		oldTTL   int64
-		redisKey = gconv.String(key)
+		redisKey = c.addPrefix(gconv.String(key))
 	)
 	// TTL.
 	oldTTL, err = c.redis.TTL(ctx, redisKey)
@@ -393,7 +408,7 @@ func (c *AdapterRedis) UpdateExpire(ctx context.Context, key interface{}, durati
 // It returns 0 if the `key` does not expire.
 // It returns -1 if the `key` does not exist in the cache.
 func (c *AdapterRedis) GetExpire(ctx context.Context, key interface{}) (time.Duration, error) {
-	ttl, err := c.redis.TTL(ctx, gconv.String(key))
+	ttl, err := c.redis.TTL(ctx, c.addPrefix(gconv.String(key)))
 	if err != nil {
 		return 0, err
 	}
@@ -414,11 +429,11 @@ func (c *AdapterRedis) Remove(ctx context.Context, keys ...interface{}) (lastVal
 		return nil, nil
 	}
 	// Retrieves the last key value.
-	if lastValue, err = c.redis.Get(ctx, gconv.String(keys[len(keys)-1])); err != nil {
+	if lastValue, err = c.redis.Get(ctx, c.addPrefix(gconv.String(keys[len(keys)-1]))); err != nil {
 		return nil, err
 	}
 	// Deletes all given keys.
-	_, err = c.redis.Del(ctx, gconv.Strings(keys)...)
+	_, err = c.redis.Del(ctx, c.addPrefixAll(gconv.Strings(keys))...)
 	return
 }
 
@@ -426,13 +441,76 @@ func (c *AdapterRedis) Remove(ctx context.Context, keys ...interface{}) (lastVal
 // Note that this function is sensitive and should be carefully used.
 // It uses `FLUSHDB` command in redis server, which might be disabled in server.
 func (c *AdapterRedis) Clear(ctx context.Context) (err error) {
-	// The "FLUSHDB" may not be available.
-	err = c.redis.FlushDB(ctx)
-	return
+	if c.prefix == "" {
+		// The "FLUSHDB" may not be available.
+		err = c.redis.FlushDB(ctx)
+		return
+	} else {
+		// slow but may no way
+		var keys []string
+		keys, err = c.redis.Keys(ctx, c.addPrefix("*"))
+		if err != nil {
+			return
+		}
+		_, err = c.redis.Del(ctx, keys...)
+		return
+	}
 }
 
 // Close closes the cache.
 func (c *AdapterRedis) Close(ctx context.Context) error {
 	// It does nothing.
 	return nil
+}
+
+// addPrefix process the user-facing key into the Redis key
+func (c *AdapterRedis) addPrefix(key string) string {
+	if c.prefix == "" {
+		return key
+	}
+	return c.prefix + key
+}
+
+// removePrefix process the Redis key into the user-facing key
+func (c *AdapterRedis) removePrefix(redisKey string) string {
+	if c.prefix == "" {
+		return redisKey
+	}
+	return gstr.TrimLeftStr(redisKey, c.prefix)
+}
+
+// addPrefixAll process all user-facing keys into Redis keys
+func (c *AdapterRedis) addPrefixAll(keys []string) []string {
+	if c.prefix == "" {
+		return keys
+	}
+	redisKeys := make([]string, len(keys))
+	for i := range keys {
+		redisKeys[i] = c.prefix + redisKeys[i]
+	}
+	return redisKeys
+}
+
+// addPrefixMap process all user-facing keys in map into Redis keys
+func (c *AdapterRedis) addPrefixMap(data map[string]interface{}) map[string]interface{} {
+	if c.prefix == "" {
+		return data
+	}
+	redisData := make(map[string]interface{}, len(data))
+	for k, v := range data {
+		redisData[c.prefix+k] = v
+	}
+	return redisData
+}
+
+// removePrefixAll process all Redis keys into user-facing keys
+func (c *AdapterRedis) removePrefixAll(redisKeys []string) []string {
+	if c.prefix == "" {
+		return redisKeys
+	}
+	keys := make([]string, len(redisKeys))
+	for i := range redisKeys {
+		keys[i] = gstr.TrimLeftStr(redisKeys[i], c.prefix)
+	}
+	return keys
 }

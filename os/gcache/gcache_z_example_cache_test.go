@@ -687,7 +687,7 @@ func ExampleCache_SetAdapter() {
 		panic(err)
 	}
 	// Create redis cache adapter and set it to cache object.
-	cache.SetAdapter(gcache.NewAdapterRedis(redis))
+	cache.SetAdapter(gcache.NewAdapterRedis(redis, "gcacheTest:"))
 
 	// Set and Get using cache object.
 	err = cache.Set(ctx, cacheKey, cacheValue, time.Second)
@@ -720,7 +720,7 @@ func ExampleCache_GetAdapter() {
 	if err != nil {
 		panic(err)
 	}
-	cache.SetAdapter(gcache.NewAdapterRedis(redis))
+	cache.SetAdapter(gcache.NewAdapterRedis(redis, "gcacheTest:"))
 
 	// Set and Get using cache object.
 	err = cache.Set(ctx, cacheKey, cacheValue, time.Second)
