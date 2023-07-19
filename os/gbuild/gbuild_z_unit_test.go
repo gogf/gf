@@ -22,6 +22,7 @@ func Test_Info(t *testing.T) {
 			"Golang":  "",
 			"Git":     "",
 			"Time":    "",
+			"Version": "",
 			"Data":    g.Map{},
 		})
 	})

@@ -24,14 +24,16 @@ type BuildInfo struct {
 	Golang  string                 // Built used Golang version.
 	Git     string                 // Built used git repo. commit id and datetime.
 	Time    string                 // Built datetime.
+	Version string                 // Built version.
 	Data    map[string]interface{} // All custom built data key-value pairs.
 }
 
 const (
-	gfVersion = `gfVersion`
-	goVersion = `goVersion`
-	builtGit  = `builtGit`
-	builtTime = `builtTime`
+	gfVersion    = `gfVersion`
+	goVersion    = `goVersion`
+	BuiltGit     = `builtGit`
+	BuiltTime    = `builtTime`
+	BuiltVersion = `builtVersion`
 )
 
 var (
@@ -61,8 +63,9 @@ func Info() BuildInfo {
 	return BuildInfo{
 		GoFrame: Get(gfVersion).String(),
 		Golang:  Get(goVersion).String(),
-		Git:     Get(builtGit).String(),
-		Time:    Get(builtTime).String(),
+		Git:     Get(BuiltGit).String(),
+		Time:    Get(BuiltTime).String(),
+		Version: Get(BuiltVersion).String(),
 		Data:    Data(),
 	}
 }
