@@ -419,9 +419,9 @@ func Test_StrIntMap_Diff(t *testing.T) {
 			"3": 31,
 			"4": 4,
 		})
-		addedKeys, removedKeys, modifiedKeys := m1.Diff(m2)
+		addedKeys, removedKeys, updatedKeys := m1.Diff(m2)
 		t.Assert(addedKeys, []string{"4"})
 		t.Assert(removedKeys, []string{"1"})
-		t.Assert(modifiedKeys, []string{"3"})
+		t.Assert(updatedKeys, []string{"3"})
 	})
 }

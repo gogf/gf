@@ -405,9 +405,9 @@ func Test_IntAnyMap_Diff(t *testing.T) {
 			3: "v3",
 			4: "v4",
 		})
-		addedKeys, removedKeys, modifiedKeys := m1.Diff(m2)
+		addedKeys, removedKeys, updatedKeys := m1.Diff(m2)
 		t.Assert(addedKeys, []int{4})
 		t.Assert(removedKeys, []int{1})
-		t.Assert(modifiedKeys, []int{3})
+		t.Assert(updatedKeys, []int{3})
 	})
 }

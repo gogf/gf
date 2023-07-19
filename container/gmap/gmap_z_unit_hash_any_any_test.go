@@ -421,9 +421,9 @@ func Test_AnyAnyMap_Diff(t *testing.T) {
 			3:   "v3",
 			4:   "v4",
 		})
-		addedKeys, removedKeys, modifiedKeys := m1.Diff(m2)
+		addedKeys, removedKeys, updatedKeys := m1.Diff(m2)
 		t.Assert(addedKeys, []interface{}{4})
 		t.Assert(removedKeys, []interface{}{"1"})
-		t.Assert(modifiedKeys, []interface{}{3})
+		t.Assert(updatedKeys, []interface{}{3})
 	})
 }

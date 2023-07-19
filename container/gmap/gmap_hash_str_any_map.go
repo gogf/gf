@@ -524,8 +524,11 @@ func (m *StrAnyMap) IsSubOf(other *StrAnyMap) bool {
 	return true
 }
 
-// Diff compare different members
-func (m *StrAnyMap) Diff(other *StrAnyMap) (addedKeys, removedKeys, modifiedKeys []string) {
+// Diff compares current map `m` with map `other` and returns their different keys.
+// The returned `addedKeys` are the keys that are in map `m` but not in map `other`.
+// The returned `removedKeys` are the keys that are in map `other` but not in map `m`.
+// The returned `updatedKeys` are the keys that are both in map `m` and `other` but their values and not equal (`!=`).
+func (m *StrAnyMap) Diff(other *StrAnyMap) (addedKeys, removedKeys, updatedKeys []string) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	other.mu.RLock()
@@ -535,7 +538,7 @@ func (m *StrAnyMap) Diff(other *StrAnyMap) (addedKeys, removedKeys, modifiedKeys
 		if _, ok := other.data[key]; !ok {
 			removedKeys = append(removedKeys, key)
 		} else if !reflect.DeepEqual(m.data[key], other.data[key]) {
-			modifiedKeys = append(modifiedKeys, key)
+			updatedKeys = append(updatedKeys, key)
 		}
 	}
 	for key := range other.data {
