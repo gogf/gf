@@ -165,9 +165,12 @@ func (w *Watcher) Proceed() ([]gsvc.Service, error) {
 				}
 				if endpointStr.Len() > 0 {
 					var (
-						allEndpointStr = w.ServiceInstances[0].(*Service).GetEndpoints().String()
+						allEndpointStr string
 						newEndpointStr bytes.Buffer
 					)
+					if len(w.ServiceInstances) > 0 {
+						allEndpointStr = w.ServiceInstances[0].(*Service).GetEndpoints().String()
+					}
 					for _, address := range gstr.SplitAndTrim(endpointStr.String(), gsvc.EndpointsDelimiter) {
 						// 变更实例中的健康实例，添加到新的实例中
 						if !gstr.Contains(allEndpointStr, address) {
