@@ -32,9 +32,12 @@ func (c *controllerGenerator) Generate(dstModuleFolderPath string, apiModuleApiI
 			continue
 		}
 		// retrieve all api items of the same module.
-		subItems := c.getSubItemsByModuleAndVersion(apiModuleApiItems, item.Module, item.Version)
+		var (
+			subItems   = c.getSubItemsByModuleAndVersion(apiModuleApiItems, item.Module, item.Version)
+			importPath = gstr.Replace(gfile.Dir(item.Import), "\\", "/", -1)
+		)
 		if err = c.doGenerateCtrlNewByModuleAndVersion(
-			dstModuleFolderPath, item.Module, item.Version, gfile.Dir(item.Import),
+			dstModuleFolderPath, item.Module, item.Version, importPath,
 		); err != nil {
 			return
 		}
@@ -69,8 +72,6 @@ func (c *controllerGenerator) doGenerateCtrlNewByModuleAndVersion(
 		newFuncNameDefinition = fmt.Sprintf(`func %s()`, newFuncName)
 		alreadyCreated        bool
 	)
-	// replace "\" to "/", fix import error
-	importPath = gstr.Replace(importPath, "\\", "/", -1)
 	if !gfile.Exists(moduleFilePath) {
 		content := gstr.ReplaceByMap(consts.TemplateGenCtrlControllerEmpty, g.MapStrStr{
 			"{Module}": module,
