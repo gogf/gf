@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/rwmutex"
 	"github.com/gogf/gf/v2/util/gconv"
+	"reflect"
 )
 
 // StrAnyMap implements map[string]interface{} with RWMutex that has switch.
@@ -521,4 +522,29 @@ func (m *StrAnyMap) IsSubOf(other *StrAnyMap) bool {
 		}
 	}
 	return true
+}
+
+// Diff compares current map `m` with map `other` and returns their different keys.
+// The returned `addedKeys` are the keys that are in map `m` but not in map `other`.
+// The returned `removedKeys` are the keys that are in map `other` but not in map `m`.
+// The returned `updatedKeys` are the keys that are both in map `m` and `other` but their values and not equal (`!=`).
+func (m *StrAnyMap) Diff(other *StrAnyMap) (addedKeys, removedKeys, updatedKeys []string) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	other.mu.RLock()
+	defer other.mu.RUnlock()
+
+	for key := range m.data {
+		if _, ok := other.data[key]; !ok {
+			removedKeys = append(removedKeys, key)
+		} else if !reflect.DeepEqual(m.data[key], other.data[key]) {
+			updatedKeys = append(updatedKeys, key)
+		}
+	}
+	for key := range other.data {
+		if _, ok := m.data[key]; !ok {
+			addedKeys = append(addedKeys, key)
+		}
+	}
+	return
 }

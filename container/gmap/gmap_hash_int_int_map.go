@@ -506,3 +506,28 @@ func (m *IntIntMap) IsSubOf(other *IntIntMap) bool {
 	}
 	return true
 }
+
+// Diff compares current map `m` with map `other` and returns their different keys.
+// The returned `addedKeys` are the keys that are in map `m` but not in map `other`.
+// The returned `removedKeys` are the keys that are in map `other` but not in map `m`.
+// The returned `updatedKeys` are the keys that are both in map `m` and `other` but their values and not equal (`!=`).
+func (m *IntIntMap) Diff(other *IntIntMap) (addedKeys, removedKeys, updatedKeys []int) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	other.mu.RLock()
+	defer other.mu.RUnlock()
+
+	for key := range m.data {
+		if _, ok := other.data[key]; !ok {
+			removedKeys = append(removedKeys, key)
+		} else if m.data[key] != other.data[key] {
+			updatedKeys = append(updatedKeys, key)
+		}
+	}
+	for key := range other.data {
+		if _, ok := m.data[key]; !ok {
+			addedKeys = append(addedKeys, key)
+		}
+	}
+	return
+}
