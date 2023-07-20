@@ -18,16 +18,15 @@ import (
 	"strconv"
 	"strings"
 
-	gora "github.com/sijms/go-ora/v2"
-
-	"github.com/gogf/gf/v2/util/gutil"
-
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
+
+	gora "github.com/sijms/go-ora/v2"
 )
 
 // Driver is the driver for oracle database.
