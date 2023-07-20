@@ -528,7 +528,7 @@ field3:
 		t.AssertNil(err)
 
 		_, err = json.Marshal(parsed)
-		t.Assert(err.Error(), "json: unsupported type: map[interface {}]interface {}")
+		t.AssertNil(err)
 
 		converted := gconv.MapDeep(parsed)
 		jsonData, err := json.Marshal(converted)
