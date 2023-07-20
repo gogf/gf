@@ -321,7 +321,7 @@ func TestRegistryManyForEndpoints(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log("Register service success sleep 1s")
-	time.Sleep(time.Second * 1)
+	time.Sleep(time.Second * 2)
 	// serviceName = "service-default-default-goframe-provider-tcp-latest"
 	result, err := r.Search(context.Background(), gsvc.SearchInput{
 		Name: serviceName,
