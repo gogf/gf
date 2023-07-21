@@ -73,15 +73,6 @@ func (w *Watcher) Proceed() ([]gsvc.Service, error) {
 					// Iterate through existing service instances, deleting them if they exist
 					for _, serviceInstance := range w.ServiceInstances {
 						if serviceInstance.(*Service).ID == instance.GetId() {
-							// remove equal
-							// If the number of service instances is less than or equal to 1, it is cleared
-							// if len(w.ServiceInstances) <= 1 {
-							// 	w.ServiceInstances = w.ServiceInstances[0:0]
-							// 	continue
-							// }
-							// // If the number of service instances is greater than 1, it is deleted
-							// w.ServiceInstances = append(w.ServiceInstances[:i], w.ServiceInstances[i+1:]...)
-							// record instances of lapses
 							endpointStr.WriteString(fmt.Sprintf("%s:%d%s", instance.GetHost(), instance.GetPort(), gsvc.EndpointsDelimiter))
 						}
 					}
@@ -114,13 +105,6 @@ func (w *Watcher) Proceed() ([]gsvc.Service, error) {
 						if serviceInstance.(*Service).ID == update.Before.GetId() {
 							// // update equal
 							if update.After.IsHealthy() {
-								// 	// remove equal
-								// 	if len(w.ServiceInstances) <= 1 {
-								// 		w.ServiceInstances = w.ServiceInstances[0:0]
-								// 		continue
-								// 	}
-								// 	w.ServiceInstances = append(w.ServiceInstances[:i], w.ServiceInstances[i+1:]...)
-								// } else {
 								healthyEndpointStr.WriteString(fmt.Sprintf("%s:%d%s", update.After.GetHost(), update.After.GetPort(), gsvc.EndpointsDelimiter))
 							}
 							endpointStr.WriteString(fmt.Sprintf("%s:%d%s", update.Before.GetHost(), update.Before.GetPort(), gsvc.EndpointsDelimiter))
