@@ -316,6 +316,10 @@ func (d *Driver) DoInsert(
 	for i := 0; i < len(list); i++ {
 		params := make([]interface{}, 0) // Values that will be committed to underlying database driver.
 		for _, k := range keys {
+			switch list[i][k].(type) {
+			case *gtime.Time:
+				list[i][k] = gconv.Uint32(list[i][k].(*gtime.Time).Unix())
+			}
 			params = append(params, list[i][k])
 		}
 		// Prepare is allowed to execute only once in a transaction opened by clickhouse
