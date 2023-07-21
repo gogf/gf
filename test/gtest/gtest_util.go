@@ -346,6 +346,17 @@ func AssertNil(value interface{}) {
 	Assert(value, nil)
 }
 
+// AssertNNil asserts `value` is not nil.
+func AssertNNil(value interface{}) {
+	if !empty.IsNil(value) {
+		return
+	}
+	if err, ok := value.(error); ok {
+		panic(fmt.Sprintf(`%+v`, err))
+	}
+	AssertNE(value, nil)
+}
+
 // DataPath retrieves and returns the testdata path of current package,
 // which is used for unit testing cases only.
 // The optional parameter `names` specifies the sub-folders/sub-files,

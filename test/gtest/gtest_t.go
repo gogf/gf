@@ -82,6 +82,11 @@ func (t *T) AssertNil(value interface{}) {
 	AssertNil(value)
 }
 
+// AssertNNil asserts `value` is not nil.
+func (t *T) AssertNNil(value interface{}) {
+	AssertNNil(value)
+}
+
 // Error panics with given `message`.
 func (t *T) Error(message ...interface{}) {
 	Error(message...)

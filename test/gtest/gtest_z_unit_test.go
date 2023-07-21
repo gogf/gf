@@ -368,6 +368,35 @@ func TestAssertNil(t *testing.T) {
 	})
 }
 
+func TestAssertNNil(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			nilChan chan struct{} = make(chan struct{}, 0)
+		)
+		t.AssertNNil(nilChan)
+		_, err := strconv.ParseInt("sss", 10, 64)
+		t.AssertNNil(err)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		defer func() {
+			if err := recover(); err != nil {
+				t.Assert(err, "[ASSERT] EXPECT  != ")
+			}
+		}()
+		t.AssertNNil(nil)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		defer func() {
+			if err := recover(); err != nil {
+				t.AssertNNil(err)
+			}
+		}()
+		t.AssertNNil(1)
+	})
+}
+
 func TestAssertError(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer func() {
