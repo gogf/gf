@@ -17,7 +17,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -427,11 +426,11 @@ func (d *Driver) Replace(ctx context.Context, table string, data interface{}, ba
 	return nil, errUnsupportedReplace
 }
 
-func (d *Driver) Begin(ctx context.Context) (tx gdb.TX, err error) {
+func (d *Driver) Begin(ctx context.Context, hook ...gdb.TxHookHandler) (tx gdb.TX, err error) {
 	return nil, errUnsupportedBegin
 }
 
-func (d *Driver) Transaction(ctx context.Context, f func(ctx context.Context, tx gdb.TX) error) error {
+func (d *Driver) Transaction(ctx context.Context, f func(ctx context.Context, tx gdb.TX) error, hook ...gdb.TxHookHandler) error {
 	return errUnsupportedTransaction
 }
 
