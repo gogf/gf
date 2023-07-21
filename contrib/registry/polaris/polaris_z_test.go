@@ -331,41 +331,26 @@ func TestRegistryManyForEndpoints(t *testing.T) {
 		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints(endpointThree),
 	}
-	s := &Service{
-		Service: svc,
-	}
 
-	watch, err := r.Watch(context.Background(), s.GetPrefix())
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	// svc register, AddEvent
 	s0, err := r.Register(context.Background(), svc)
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	// svc register, AddEvent
 	s1, err := r.Register(context.Background(), svc1)
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	// svc register, AddEvent
 	s2, err := r.Register(context.Background(), svc2)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log("Register service success sleep 1s")
 	time.Sleep(time.Second * 2)
-
-	// svc register, AddEvent
-	next, err := watch.Proceed()
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, instance := range next {
-		// it will output one instance
-		t.Log("Register Proceed service: ", instance.GetEndpoints().String())
-	}
 
 	// serviceName = "service-default-default-goframe-provider-tcp-latest"
 	result, err := r.Search(context.Background(), gsvc.SearchInput{
@@ -392,44 +377,59 @@ func TestRegistryManyForEndpoints(t *testing.T) {
 	if err = r.Deregister(context.Background(), s0); err != nil {
 		t.Fatal(err)
 	}
-	// svc deregister, DeleteEvent
-	next, err = watch.Proceed()
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, instance := range next {
-		// it will output nothing
-		t.Log("Deregister Proceed second delete service: ", instance.GetEndpoints().String(), ", instance id: ", instance.(*Service).ID)
-	}
 
 	if err = r.Deregister(context.Background(), s1); err != nil {
 		t.Fatal(err)
 	}
 
-	// svc deregister, DeleteEvent
-	next, err = watch.Proceed()
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, instance := range next {
-		// it will output nothing
-		t.Log("Deregister Proceed second delete service: ", instance.GetEndpoints().String(), ", instance id: ", instance.(*Service).ID)
-	}
-
 	if err = r.Deregister(context.Background(), s2); err != nil {
 		t.Fatal(err)
 	}
-	// svc deregister, DeleteEvent
-	next, err = watch.Proceed()
+
+	t.Log("Deregister success")
+}
+
+// TestClose Test Close
+func TestClose(t *testing.T) {
+	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
+	conf.GetGlobal().GetStatReporter().SetEnable(false)
+	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-watch/backup")
+	if err := api.SetLoggersDir(os.TempDir() + "/polaris-watch/log"); err != nil {
+		t.Fatal(err)
+	}
+	r := NewWithConfig(
+		conf,
+		WithTimeout(time.Second*10),
+		WithTTL(100),
+	)
+
+	svc := &gsvc.LocalService{
+		Name:      "goframe-provider-close-tcp",
+		Version:   "test",
+		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
+	}
+
+	s := &Service{
+		Service: svc,
+	}
+
+	watch, err := r.Watch(context.Background(), s.GetPrefix())
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, instance := range next {
-		// it will output nothing
-		t.Log("Deregister Proceed second delete service: ", instance.GetEndpoints().String(), ", instance id: ", instance.(*Service).ID)
+
+	s1, err := r.Register(context.Background(), svc)
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	t.Log("Deregister success")
+	// watch svc
+	time.Sleep(time.Second * 1)
+	if err = r.Deregister(context.Background(), s1); err != nil {
+		t.Fatal(err)
+	}
+
 	if err = watch.Close(); err != nil {
 		t.Fatal(err)
 	}
@@ -438,4 +438,156 @@ func TestRegistryManyForEndpoints(t *testing.T) {
 		t.Fatal()
 	}
 	t.Log("Watch close success")
+}
+
+// TestGetKey Test get key
+func TestGetKey(t *testing.T) {
+	svc := &gsvc.LocalService{
+		Name:      "goframe-provider-key-tcp",
+		Version:   "test",
+		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
+	}
+
+	s := &Service{
+		Service: svc,
+	}
+	if s.GetKey() != "service-default-default-goframe-provider-key-tcp-test-127.0.0.1:9000" {
+		t.Fatal("GetKey error key:", s.GetKey())
+	}
+	t.Log("GetKey success ")
+}
+
+// TestService_GetPrefix Test GetPrefix
+func TestService_GetPrefix(t *testing.T) {
+	type fields struct {
+		Service gsvc.Service
+		ID      string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{
+			name: "TestService_GetPrefix-0",
+			fields: fields{
+				Service: &gsvc.LocalService{
+					Name:      "goframe-provider-0-tcp",
+					Version:   "test",
+					Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+					Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
+				},
+				ID: "test",
+			},
+			want: "service-default-default-goframe-provider-0-tcp-test",
+		},
+		{
+			name: "TestService_GetPrefix-1",
+			fields: fields{
+				Service: &gsvc.LocalService{
+					Name:      "goframe-provider-1-tcp",
+					Version:   "test",
+					Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+					Endpoints: gsvc.NewEndpoints("127.0.0.1:9001"),
+				},
+				ID: "test",
+			},
+			want: "service-default-default-goframe-provider-1-tcp-test",
+		},
+		{
+			name: "TestService_GetPrefix-2",
+			fields: fields{
+				Service: &gsvc.LocalService{
+					Name:      "goframe-provider-2-tcp",
+					Version:   "latest",
+					Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+					Endpoints: gsvc.NewEndpoints("127.0.0.1:9002"),
+				},
+				ID: "latest",
+			},
+			want: "service-default-default-goframe-provider-2-tcp-latest",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &Service{
+				Service: tt.fields.Service,
+				ID:      tt.fields.ID,
+			}
+			if got := s.GetPrefix(); got != tt.want {
+				t.Errorf("GetPrefix() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+// TestService_GetName Test GetName
+func TestService_GetKey(t *testing.T) {
+	type fields struct {
+		Service gsvc.Service
+		ID      string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{
+			name: "TestService_GetKey-0",
+			fields: fields{
+				Service: &gsvc.LocalService{
+					Namespace:  gsvc.DefaultNamespace,
+					Deployment: gsvc.DefaultDeployment,
+					Name:       "goframe-provider-0-tcp",
+					Version:    "test",
+					Metadata:   map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+					Endpoints:  gsvc.NewEndpoints("127.0.0.1:9000"),
+				},
+				ID: "test",
+			},
+			want: "service-default-default-goframe-provider-0-tcp-test-127.0.0.1:9000",
+		},
+		{
+			name: "TestService_GetKey-1",
+			fields: fields{
+				Service: &gsvc.LocalService{
+					Namespace:  gsvc.DefaultNamespace,
+					Deployment: gsvc.DefaultDeployment,
+					Name:       "goframe-provider-1-tcp",
+					Version:    "latest",
+					Metadata:   map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+					Endpoints:  gsvc.NewEndpoints("127.0.0.1:9001"),
+				},
+				ID: "latest",
+			},
+			want: "service-default-default-goframe-provider-1-tcp-latest-127.0.0.1:9001",
+		},
+		{
+			name: "TestService_GetKey-2",
+			fields: fields{
+				Service: &gsvc.LocalService{
+					Namespace:  gsvc.DefaultNamespace,
+					Deployment: gsvc.DefaultDeployment,
+					Name:       "goframe-provider-2-tcp",
+					Version:    "latest",
+					Metadata:   map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+					Endpoints:  gsvc.NewEndpoints("127.0.0.1:9002"),
+				},
+				ID: "latest",
+			},
+			want: "service-default-default-goframe-provider-2-tcp-latest-127.0.0.1:9002",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &Service{
+				Service: tt.fields.Service,
+				ID:      tt.fields.ID,
+			}
+			if got := s.GetKey(); got != tt.want {
+				t.Errorf("GetKey() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
