@@ -56,6 +56,22 @@ func TryCatch(ctx context.Context, try func(ctx context.Context), catch ...func(
 	try(ctx)
 }
 
+// TryFunc implements try... logistics using internal panic...recover.
+// It returns error if any exception occurs or try anonymous function return error, or else it returns nil.
+func TryFunc(ctx context.Context, try func(ctx context.Context) error) (err error) {
+	defer func() {
+		if exception := recover(); exception != nil {
+			if v, ok := exception.(error); ok && gerror.HasStack(v) {
+				err = v
+			} else {
+				err = gerror.Newf(`%+v`, exception)
+			}
+		}
+	}()
+	err = try(ctx)
+	return
+}
+
 // IsEmpty checks given `value` empty or not.
 // It returns false if `value` is: integer(0), bool(false), slice/map(len=0), nil;
 // or else returns true.

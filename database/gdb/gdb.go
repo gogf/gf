@@ -141,8 +141,8 @@ type DB interface {
 	// Transaction.
 	// ===========================================================================
 
-	Begin(ctx context.Context) (TX, error)                                           // See Core.Begin.
-	Transaction(ctx context.Context, f func(ctx context.Context, tx TX) error) error // See Core.Transaction.
+	Begin(ctx context.Context, hook ...TxHookHandler) (TX, error)                                           // See Core.Begin.
+	Transaction(ctx context.Context, f func(ctx context.Context, tx TX) error, hook ...TxHookHandler) error // See Core.Transaction.
 
 	// ===========================================================================
 	// Configuration methods.
@@ -192,6 +192,10 @@ type TX interface {
 	Commit() error
 	Rollback() error
 	Transaction(ctx context.Context, f func(ctx context.Context, tx TX) error) (err error)
+
+	// Hook manages all supported hook functions for Transaction.
+	// Hook->Begin Begin(ctx,hook) or Transaction(ctx,f,hook) call takes effect
+	Hook(hook TxHookHandler)
 
 	// ===========================================================================
 	// Core method.

@@ -2,6 +2,7 @@ package g_test
 
 import (
 	"context"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"os"
 	"testing"
 
@@ -50,6 +51,28 @@ func Test_Try(t *testing.T) {
 		g.Try(ctx, func(ctx context.Context) {
 			g.Dump("GoFrame")
 		})
+	})
+}
+
+func Test_TryFunc(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err := g.TryFunc(ctx, func(ctx context.Context) error {
+			return nil
+		})
+		t.AssertNil(err)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := g.TryFunc(ctx, func(ctx context.Context) error {
+			return gerror.New("GoFrame")
+		})
+		t.Assert(err.Error(), "GoFrame")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := g.TryFunc(ctx, func(ctx context.Context) error {
+			g.Throw("GoFrame")
+			return nil
+		})
+		t.Assert(err.Error(), "GoFrame")
 	})
 }
 

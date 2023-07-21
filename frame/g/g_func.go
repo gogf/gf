@@ -78,6 +78,12 @@ func TryCatch(ctx context.Context, try func(ctx context.Context), catch ...func(
 	gutil.TryCatch(ctx, try, catch...)
 }
 
+// TryFunc implements try... logistics using internal panic...recover.
+// It returns error if any exception occurs or try anonymous function return error, or else it returns nil.
+func TryFunc(ctx context.Context, try func(ctx context.Context) error) (err error) {
+	return gutil.TryFunc(ctx, try)
+}
+
 // IsNil checks whether given `value` is nil.
 // Parameter `traceSource` is used for tracing to the source variable if given `value` is type
 // of pinter that also points to a pointer. It returns nil if the source is nil when `traceSource`
