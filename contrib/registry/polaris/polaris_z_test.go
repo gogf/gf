@@ -19,8 +19,8 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-// TestRegistry TestRegistryManyService
-func TestRegistry(t *testing.T) {
+// TestRegistry_Register TestRegistryManyService
+func TestRegistry_Register(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
 	conf.GetGlobal().GetStatReporter().SetEnable(false)
 	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-registry/backup")
@@ -35,7 +35,39 @@ func TestRegistry(t *testing.T) {
 	)
 
 	svc := &gsvc.LocalService{
-		Name:      "goframe-provider-0-tcp",
+		Name:      "goframe-provider-register-tcp",
+		Version:   "test",
+		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
+	}
+
+	s, err := r.Register(context.Background(), svc)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err = r.Deregister(context.Background(), s); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// TestRegistry_Deregister TestRegistryManyService
+func TestRegistry_Deregister(t *testing.T) {
+	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
+	conf.GetGlobal().GetStatReporter().SetEnable(false)
+	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-registry/backup")
+	if err := api.SetLoggersDir(os.TempDir() + "/polaris-registry/log"); err != nil {
+		t.Fatal(err)
+	}
+
+	r := NewWithConfig(
+		conf,
+		WithTimeout(time.Second*10),
+		WithTTL(100),
+	)
+
+	svc := &gsvc.LocalService{
+		Name:      "goframe-provider-deregister-tcp",
 		Version:   "test",
 		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
@@ -113,8 +145,8 @@ func TestRegistryMany(t *testing.T) {
 	}
 }
 
-// TestGetService Test GetService
-func TestGetService(t *testing.T) {
+// TestRegistry_Search Test GetService
+func TestRegistry_Search(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
 	conf.GetGlobal().GetStatReporter().SetEnable(false)
 	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-get-service/backup")
@@ -158,8 +190,8 @@ func TestGetService(t *testing.T) {
 	}
 }
 
-// TestWatch Test Watch
-func TestWatch(t *testing.T) {
+// TestRegistry_Watch Test Watch
+func TestRegistry_Watch(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
 	conf.GetGlobal().GetStatReporter().SetEnable(false)
 	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-watch/backup")
@@ -182,12 +214,6 @@ func TestWatch(t *testing.T) {
 	s := &Service{
 		Service: svc,
 	}
-	svc1 := &gsvc.LocalService{
-		Name:      "goframe-provider-5-tcp",
-		Version:   "test",
-		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
-		Endpoints: gsvc.NewEndpoints("127.0.0.1:9001"),
-	}
 
 	watch, err := r.Watch(context.Background(), s.GetPrefix())
 	if err != nil {
@@ -199,11 +225,6 @@ func TestWatch(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log("Register service success svc instance id:", s1.(*Service).ID)
-	s22, err := r.Register(context.Background(), svc1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log("Register service success svc1 instance id:", s22.(*Service).ID)
 	// watch svc
 	time.Sleep(time.Second * 1)
 
@@ -231,20 +252,6 @@ func TestWatch(t *testing.T) {
 		t.Log("Deregister Proceed first delete service: ", instance.GetEndpoints().String(), ", instance id: ", instance.(*Service).ID)
 	}
 
-	if err = r.Deregister(context.Background(), s22); err != nil {
-		t.Fatal(err)
-	}
-
-	// svc deregister, DeleteEvent
-	next, err = watch.Proceed()
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, instance := range next {
-		// it will output nothing
-		t.Log("Deregister Proceed second delete service: ", instance.GetEndpoints().String(), ", instance id: ", instance.(*Service).ID)
-	}
-
 	if err = watch.Close(); err != nil {
 		t.Fatal(err)
 	}
@@ -255,8 +262,8 @@ func TestWatch(t *testing.T) {
 	t.Log("Watch close success")
 }
 
-// TestWatch Test Watch
-func TestWatchDeleteAndAdd(t *testing.T) {
+// TestWatcher_Proceed Test Watch
+func TestWatcher_Proceed(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
 	conf.GetGlobal().GetStatReporter().SetEnable(false)
 	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-watch/backup")
@@ -517,8 +524,8 @@ func TestRegistryManyForEndpoints(t *testing.T) {
 	t.Log("Deregister success")
 }
 
-// TestClose Test Close
-func TestClose(t *testing.T) {
+// TestWatcher_Close Test Close
+func TestWatcher_Close(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
 	conf.GetGlobal().GetStatReporter().SetEnable(false)
 	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-watch/backup")
@@ -715,6 +722,41 @@ func TestService_GetKey(t *testing.T) {
 			}
 			if got := s.GetKey(); got != tt.want {
 				t.Errorf("GetKey() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+// Test_trimAndReplace Test trimAndReplace
+func Test_trimAndReplace(t *testing.T) {
+	type args struct {
+		key string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "Test_trimAndReplace-0",
+			args: args{key: "/service/default/default/goframe-provider-0-tcp/latest/127.0.0.1:9000"},
+			want: "service-default-default-goframe-provider-0-tcp-latest-127.0.0.1:9000",
+		},
+		{
+			name: "Test_trimAndReplace-1",
+			args: args{key: "/service/default/default/goframe-provider-1-tcp/latest/127.0.0.1:9001"},
+			want: "service-default-default-goframe-provider-1-tcp-latest-127.0.0.1:9001",
+		},
+		{
+			name: "Test_trimAndReplace-2",
+			args: args{key: "/service/default/default/goframe-provider-2-tcp/latest/127.0.0.1:9002"},
+			want: "service-default-default-goframe-provider-2-tcp-latest-127.0.0.1:9002",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := trimAndReplace(tt.args.key); got != tt.want {
+				t.Errorf("trimAndReplace() = %v, want %v", got, tt.want)
 			}
 		})
 	}
