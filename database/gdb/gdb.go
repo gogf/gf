@@ -193,8 +193,11 @@ type TX interface {
 	Rollback() error
 	Transaction(ctx context.Context, f func(ctx context.Context, tx TX) error) (err error)
 
-	// Hook manages all supported hook functions for Transaction.
-	// Hook->Begin Begin(ctx,hook) or Transaction(ctx,f,hook) call takes effect
+	// ===========================================================================
+	// manages all supported hook functions for Transaction.
+	// Begin Hook only takes effect when Begin(ctx,hook) or Transaction(ctx,f,hook)
+	// ===========================================================================
+
 	Hook(hook TxHookHandler)
 
 	// ===========================================================================
