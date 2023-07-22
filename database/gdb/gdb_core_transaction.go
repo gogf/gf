@@ -70,7 +70,7 @@ func (c *Core) doBeginCtx(ctx context.Context, hooks ...TxHookHandler) (TX, erro
 		if v := out.Tx.GetCtx().Value(transactionIdForLoggerCtx); v != nil {
 			txId = fmt.Sprintf("%d", v.(uint64))
 		}
-		//call begin hook
+		// call begin hook
 		in := &HookBeginInput{
 			internalTxParamHook: internalTxParamHook{
 				transactionId: txId,
@@ -79,7 +79,7 @@ func (c *Core) doBeginCtx(ctx context.Context, hooks ...TxHookHandler) (TX, erro
 			handler: hook.Begin,
 		}
 		e := in.Next(out.Tx.GetCtx())
-		//If Begin hook is not successful, rollback current transaction and return err
+		// If Begin hook is not successful, rollback current transaction and return err
 		if e != nil {
 			_ = out.Tx.Rollback()
 			return nil, e
