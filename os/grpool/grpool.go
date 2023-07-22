@@ -121,6 +121,10 @@ func (p *Pool) checkAndFork() {
 			// No need fork new goroutine.
 			return
 		}
+		if !p.running.Val() {
+			// Pool is not running, no need fork new goroutine.
+			return
+		}
 		if p.count.Cas(n, n+1) {
 			// Use CAS to guarantee atomicity.
 			break
@@ -129,9 +133,7 @@ func (p *Pool) checkAndFork() {
 	// Create job function in goroutine.
 	go func() {
 		defer p.count.Add(-1)
-		if !p.running.Val() {
-			return
-		}
+
 		var (
 			listItem interface{}
 			poolItem *localPoolItem
