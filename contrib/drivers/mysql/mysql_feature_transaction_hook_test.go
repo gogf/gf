@@ -14,7 +14,7 @@ func Test_Transaction_Hook_For_Begin(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
-		//test begin hook fail
+		// test begin hook fail
 		tx, err := db.Begin(ctx, gdb.TxHookHandler{
 			Begin: func(ctx context.Context, in *gdb.HookBeginInput) (err error) {
 				fmt.Println("First Begin() exec begin hook return err")
@@ -29,7 +29,7 @@ func Test_Transaction_Hook_For_Begin(t *testing.T) {
 		})
 		t.Assert(err.Error(), "begin hook fail")
 
-		//test begin hook success but commit hook fail
+		// test begin hook success but commit hook fail
 		tx, err = db.Begin(ctx, gdb.TxHookHandler{
 			Begin: func(ctx context.Context, in *gdb.HookBeginInput) (err error) {
 				fmt.Println("Second Begin() exec begin hook return nil")
@@ -46,7 +46,6 @@ func Test_Transaction_Hook_For_Begin(t *testing.T) {
 		t.Assert(err, nil)
 		if err = g.TryFunc(ctx, func(ctx context.Context) error {
 			_, err = tx.Model(table).Data(g.Map{
-				//"id":       1,
 				"passport": "user_tx2",
 				"password": "pass_tx2",
 				"nickname": "name_tx2",
@@ -61,7 +60,7 @@ func Test_Transaction_Hook_For_Begin(t *testing.T) {
 			err = tx.Commit()
 		}
 		t.Assert(err.Error(), "commit hook fail")
-		//test begin hook success but rollback hook fail
+		// test begin hook success but rollback hook fail
 		tx, err = db.Begin(ctx, gdb.TxHookHandler{
 			Begin: func(ctx context.Context, in *gdb.HookBeginInput) (err error) {
 				fmt.Println("Three Begin() exec begin hook return nil")
@@ -79,7 +78,7 @@ func Test_Transaction_Hook_For_Begin(t *testing.T) {
 		err = tx.Rollback()
 		t.Assert(err.Error(), "rollback hook fail")
 
-		//test all hook success
+		// test all hook success
 		tx, err = db.Begin(ctx, gdb.TxHookHandler{
 			Begin: func(ctx context.Context, in *gdb.HookBeginInput) (err error) {
 				fmt.Println("Four Begin() exec begin hook return nil")

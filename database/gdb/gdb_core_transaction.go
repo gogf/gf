@@ -234,7 +234,7 @@ func (tx *TXCore) Commit() error {
 	})
 	if err == nil {
 		tx.isClosed = true
-		//call commit hook
+		// call commit hook
 		in := &HookCommitInput{
 			internalTxParamHook: internalTxParamHook{
 				transactionId: txId,
@@ -265,7 +265,7 @@ func (tx *TXCore) Rollback() error {
 	})
 	if err == nil {
 		tx.isClosed = true
-		//call rollback hook
+		// call rollback hook
 		in := &HookRollbackInput{
 			internalTxParamHook: internalTxParamHook{
 				transactionId: txId,
