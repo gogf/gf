@@ -13,7 +13,7 @@ type (
 // internalTxParamHook manages all internal parameters for hook operations.
 // The `internal` obviously means you cannot access these parameters outside this package.
 type internalTxParamHook struct {
-	transactionId string // Current transaction id
+	TransactionId string // Current transaction id
 	handlerCalled bool   // Simple mark for custom handler called, in case of recursive calling.
 }
 

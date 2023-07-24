@@ -73,7 +73,7 @@ func (c *Core) doBeginCtx(ctx context.Context, hooks ...TxHookHandler) (TX, erro
 		// call begin hook
 		in := &HookBeginInput{
 			internalTxParamHook: internalTxParamHook{
-				transactionId: txId,
+				TransactionId: txId,
 				handlerCalled: false,
 			},
 			handler: hook.Begin,
@@ -237,7 +237,7 @@ func (tx *TXCore) Commit() error {
 		// call commit hook
 		in := &HookCommitInput{
 			internalTxParamHook: internalTxParamHook{
-				transactionId: txId,
+				TransactionId: txId,
 				handlerCalled: false,
 			},
 			handler: tx.txHookHandler.Commit,
@@ -268,7 +268,7 @@ func (tx *TXCore) Rollback() error {
 		// call rollback hook
 		in := &HookRollbackInput{
 			internalTxParamHook: internalTxParamHook{
-				transactionId: txId,
+				TransactionId: txId,
 				handlerCalled: false,
 			},
 			handler: tx.txHookHandler.Rollback,

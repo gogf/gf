@@ -17,7 +17,7 @@ func Test_Transaction_Hook_For_Begin(t *testing.T) {
 		// test begin hook fail
 		tx, err := db.Begin(ctx, gdb.TxHookHandler{
 			Begin: func(ctx context.Context, in *gdb.HookBeginInput) (err error) {
-				fmt.Println("First Begin() exec begin hook return err")
+				fmt.Println("First Begin() exec begin hook return err:,txId:" + in.TransactionId)
 				return gerror.New("begin hook fail")
 			},
 			Commit: func(ctx context.Context, in *gdb.HookCommitInput) (err error) {
@@ -32,11 +32,11 @@ func Test_Transaction_Hook_For_Begin(t *testing.T) {
 		// test begin hook success but commit hook fail
 		tx, err = db.Begin(ctx, gdb.TxHookHandler{
 			Begin: func(ctx context.Context, in *gdb.HookBeginInput) (err error) {
-				fmt.Println("Second Begin() exec begin hook return nil")
+				fmt.Println("Second Begin() exec begin hook return nil,txId:" + in.TransactionId)
 				return
 			},
 			Commit: func(ctx context.Context, in *gdb.HookCommitInput) (err error) {
-				fmt.Println("Second Begin() exec commit hook return err")
+				fmt.Println("Second Begin() exec commit hook return err,txId:" + in.TransactionId)
 				return gerror.New("commit hook fail")
 			},
 			Rollback: func(ctx context.Context, in *gdb.HookRollbackInput) (err error) {
@@ -63,14 +63,14 @@ func Test_Transaction_Hook_For_Begin(t *testing.T) {
 		// test begin hook success but rollback hook fail
 		tx, err = db.Begin(ctx, gdb.TxHookHandler{
 			Begin: func(ctx context.Context, in *gdb.HookBeginInput) (err error) {
-				fmt.Println("Three Begin() exec begin hook return nil")
+				fmt.Println("Three Begin() exec begin hook return nil,txId:" + in.TransactionId)
 				return
 			},
 			Commit: func(ctx context.Context, in *gdb.HookCommitInput) (err error) {
 				return
 			},
 			Rollback: func(ctx context.Context, in *gdb.HookRollbackInput) (err error) {
-				fmt.Println("Three Begin() exec rollback hook return err")
+				fmt.Println("Three Begin() exec rollback hook return err,txId:" + in.TransactionId)
 				return gerror.New("rollback hook fail")
 			},
 		})
@@ -81,11 +81,11 @@ func Test_Transaction_Hook_For_Begin(t *testing.T) {
 		// test all hook success
 		tx, err = db.Begin(ctx, gdb.TxHookHandler{
 			Begin: func(ctx context.Context, in *gdb.HookBeginInput) (err error) {
-				fmt.Println("Four Begin() exec begin hook return nil")
+				fmt.Println("Four Begin() exec begin hook return nil,txId:" + in.TransactionId)
 				return
 			},
 			Commit: func(ctx context.Context, in *gdb.HookCommitInput) (err error) {
-				fmt.Println("Four Begin() exec commit hook return nil")
+				fmt.Println("Four Begin() exec commit hook return nil,txId:" + in.TransactionId)
 				return
 			},
 			Rollback: func(ctx context.Context, in *gdb.HookRollbackInput) (err error) {
@@ -125,7 +125,7 @@ func Test_Transaction_Hook_For_Transaction(t *testing.T) {
 			return nil
 		}, gdb.TxHookHandler{
 			Begin: func(ctx context.Context, in *gdb.HookBeginInput) (err error) {
-				fmt.Println("First Transaction() exec begin hook return err")
+				fmt.Println("First Transaction() exec begin hook return err,txId:" + in.TransactionId)
 				return gerror.New("begin hook fail")
 			},
 			Commit: func(ctx context.Context, in *gdb.HookCommitInput) (err error) {
@@ -141,11 +141,11 @@ func Test_Transaction_Hook_For_Transaction(t *testing.T) {
 			return nil
 		}, gdb.TxHookHandler{
 			Begin: func(ctx context.Context, in *gdb.HookBeginInput) (err error) {
-				fmt.Println("Second Transaction() exec begin hook return nil")
+				fmt.Println("Second Transaction() exec begin hook return nil,txId:" + in.TransactionId)
 				return
 			},
 			Commit: func(ctx context.Context, in *gdb.HookCommitInput) (err error) {
-				fmt.Println("Second Transaction() exec commit hook return err")
+				fmt.Println("Second Transaction() exec commit hook return err,txId:" + in.TransactionId)
 				return gerror.New("after commit hook fail")
 			},
 			Rollback: func(ctx context.Context, in *gdb.HookRollbackInput) (err error) {
@@ -158,14 +158,14 @@ func Test_Transaction_Hook_For_Transaction(t *testing.T) {
 			return gerror.New("Rollback")
 		}, gdb.TxHookHandler{
 			Begin: func(ctx context.Context, in *gdb.HookBeginInput) (err error) {
-				fmt.Println("Three Transaction() exec begin hook return nil")
+				fmt.Println("Three Transaction() exec begin hook return nil,txId:" + in.TransactionId)
 				return
 			},
 			Commit: func(ctx context.Context, in *gdb.HookCommitInput) (err error) {
 				return gerror.New("after commit hook")
 			},
 			Rollback: func(ctx context.Context, in *gdb.HookRollbackInput) (err error) {
-				fmt.Println("Three Transaction() exec rollback hook return err")
+				fmt.Println("Three Transaction() exec rollback hook return err,txId:" + in.TransactionId)
 				return gerror.New("after rollback hook fail")
 			},
 		})
@@ -182,14 +182,14 @@ func Test_Transaction_Hook_For_Transaction(t *testing.T) {
 			return err
 		}, gdb.TxHookHandler{
 			Begin: func(ctx context.Context, in *gdb.HookBeginInput) (err error) {
-				fmt.Println("Four Transaction() exec begin hook return nil")
+				fmt.Println("Four Transaction() exec begin hook return nil,txId:" + in.TransactionId)
 				return
 			},
 			Commit: func(ctx context.Context, in *gdb.HookCommitInput) (err error) {
 				count, err = db.Model(table).Where("id", userId).Count()
 				t.Assert(err, nil)
 				t.Assert(count, 1)
-				fmt.Println("Four Transaction() exec commit hook return nil")
+				fmt.Println("Four Transaction() exec commit hook return nil,txId:" + in.TransactionId)
 				return nil
 			},
 			Rollback: func(ctx context.Context, in *gdb.HookRollbackInput) (err error) {
@@ -208,7 +208,7 @@ func Test_Transaction_Hook_For_Transaction_No_Begin(t *testing.T) {
 		err := db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 			tx.Hook(gdb.TxHookHandler{
 				Commit: func(ctx context.Context, in *gdb.HookCommitInput) (err error) {
-					fmt.Println("First tx Transaction() No Begin exec commit hook return err")
+					fmt.Println("First tx Transaction() No Begin exec commit hook return err,txId:" + in.TransactionId)
 					return gerror.New("after commit hook fail")
 				},
 				Rollback: func(ctx context.Context, in *gdb.HookRollbackInput) (err error) {
@@ -225,7 +225,7 @@ func Test_Transaction_Hook_For_Transaction_No_Begin(t *testing.T) {
 					return gerror.New("after commit hook")
 				},
 				Rollback: func(ctx context.Context, in *gdb.HookRollbackInput) (err error) {
-					fmt.Println("Second tx Transaction() No Begin exec rollback hook return err")
+					fmt.Println("Second tx Transaction() No Begin exec rollback hook return err,txId:" + in.TransactionId)
 					return gerror.New("after rollback hook fail")
 				},
 			})
@@ -241,7 +241,7 @@ func Test_Transaction_Hook_For_Transaction_No_Begin(t *testing.T) {
 					count, err = db.Model(table).Where("id", userId).Count()
 					t.Assert(err, nil)
 					t.Assert(count, 1)
-					fmt.Println("Three tx Transaction() No Begin exec commit hook return nil")
+					fmt.Println("Three tx Transaction() No Begin exec commit hook return nil,txId:" + in.TransactionId)
 					return nil
 				},
 				Rollback: func(ctx context.Context, in *gdb.HookRollbackInput) (err error) {
