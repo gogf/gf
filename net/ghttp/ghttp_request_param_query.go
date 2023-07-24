@@ -7,12 +7,13 @@
 package ghttp
 
 import (
-	"github.com/gogf/gf/container/gvar"
+	"net/http"
 
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
-// SetQuery sets custom query value with key-value pair.
+// SetQuery sets custom query value with key-value pairs.
 func (r *Request) SetQuery(key string, value interface{}) {
 	r.parseQuery()
 	if r.queryMap == nil {
@@ -21,106 +22,42 @@ func (r *Request) SetQuery(key string, value interface{}) {
 	r.queryMap[key] = value
 }
 
-// GetQuery retrieves and returns parameter with given name <key> from query string
-// and request body. It returns <def> if <key> does not exist in the query and <def> is given,
+// GetQuery retrieves and return parameter with the given name `key` from query string
+// and request body. It returns `def` if `key` does not exist in the query and `def` is given,
 // or else it returns nil.
 //
-// Note that if there're multiple parameters with the same name, the parameters are retrieved
+// Note that if there are multiple parameters with the same name, the parameters are retrieved
 // and overwrote in order of priority: query > body.
-func (r *Request) GetQuery(key string, def ...interface{}) interface{} {
+func (r *Request) GetQuery(key string, def ...interface{}) *gvar.Var {
 	r.parseQuery()
 	if len(r.queryMap) > 0 {
-		if v, ok := r.queryMap[key]; ok {
-			return v
+		if value, ok := r.queryMap[key]; ok {
+			return gvar.New(value)
 		}
 	}
-	if r.Method == "GET" {
+	if r.Method == http.MethodGet {
 		r.parseBody()
 	}
 	if len(r.bodyMap) > 0 {
 		if v, ok := r.bodyMap[key]; ok {
-			return v
+			return gvar.New(v)
 		}
 	}
 	if len(def) > 0 {
-		return def[0]
+		return gvar.New(def[0])
 	}
 	return nil
 }
 
-func (r *Request) GetQueryVar(key string, def ...interface{}) *gvar.Var {
-	return gvar.New(r.GetQuery(key, def...))
-}
-
-func (r *Request) GetQueryString(key string, def ...interface{}) string {
-	return r.GetQueryVar(key, def...).String()
-}
-
-func (r *Request) GetQueryBool(key string, def ...interface{}) bool {
-	return r.GetQueryVar(key, def...).Bool()
-}
-
-func (r *Request) GetQueryInt(key string, def ...interface{}) int {
-	return r.GetQueryVar(key, def...).Int()
-}
-
-func (r *Request) GetQueryInt32(key string, def ...interface{}) int32 {
-	return r.GetQueryVar(key, def...).Int32()
-}
-
-func (r *Request) GetQueryInt64(key string, def ...interface{}) int64 {
-	return r.GetQueryVar(key, def...).Int64()
-}
-
-func (r *Request) GetQueryInts(key string, def ...interface{}) []int {
-	return r.GetQueryVar(key, def...).Ints()
-}
-
-func (r *Request) GetQueryUint(key string, def ...interface{}) uint {
-	return r.GetQueryVar(key, def...).Uint()
-}
-
-func (r *Request) GetQueryUint32(key string, def ...interface{}) uint32 {
-	return r.GetQueryVar(key, def...).Uint32()
-}
-
-func (r *Request) GetQueryUint64(key string, def ...interface{}) uint64 {
-	return r.GetQueryVar(key, def...).Uint64()
-}
-
-func (r *Request) GetQueryFloat32(key string, def ...interface{}) float32 {
-	return r.GetQueryVar(key, def...).Float32()
-}
-
-func (r *Request) GetQueryFloat64(key string, def ...interface{}) float64 {
-	return r.GetQueryVar(key, def...).Float64()
-}
-
-func (r *Request) GetQueryFloats(key string, def ...interface{}) []float64 {
-	return r.GetQueryVar(key, def...).Floats()
-}
-
-func (r *Request) GetQueryArray(key string, def ...interface{}) []string {
-	return r.GetQueryVar(key, def...).Strings()
-}
-
-func (r *Request) GetQueryStrings(key string, def ...interface{}) []string {
-	return r.GetQueryVar(key, def...).Strings()
-}
-
-func (r *Request) GetQueryInterfaces(key string, def ...interface{}) []interface{} {
-	return r.GetQueryVar(key, def...).Interfaces()
-}
-
-// GetQueryMap retrieves and returns all parameters passed from client using HTTP GET method
-// as map. The parameter <kvMap> specifies the keys retrieving from client parameters,
+// GetQueryMap retrieves and returns all parameters passed from the client using HTTP GET method
+// as the map. The parameter `kvMap` specifies the keys retrieving from client parameters,
 // the associated values are the default values if the client does not pass.
 //
-// Note that if there're multiple parameters with the same name, the parameters are retrieved and overwrote
+// Note that if there are multiple parameters with the same name, the parameters are retrieved and overwrote
 // in order of priority: query > body.
 func (r *Request) GetQueryMap(kvMap ...map[string]interface{}) map[string]interface{} {
 	r.parseQuery()
-	if r.Method == "GET" {
+	if r.Method == http.MethodGet {
 		r.parseBody()
 	}
 	var m map[string]interface{}
@@ -159,8 +96,10 @@ func (r *Request) GetQueryMap(kvMap ...map[string]interface{}) map[string]interf
 	return m
 }
 
-// GetQueryMapStrStr retrieves and returns all parameters passed from client using HTTP GET method
-// as map[string]string. The parameter <kvMap> specifies the keys
+// GetQueryMapStrStr retrieves and returns all parameters passed from the client using the HTTP GET method as a
+//
+//	map[string]string. The parameter `kvMap` specifies the keys
+//
 // retrieving from client parameters, the associated values are the default values if the client
 // does not pass.
 func (r *Request) GetQueryMapStrStr(kvMap ...map[string]interface{}) map[string]string {
@@ -175,8 +114,8 @@ func (r *Request) GetQueryMapStrStr(kvMap ...map[string]interface{}) map[string]
 	return nil
 }
 
-// GetQueryMapStrVar retrieves and returns all parameters passed from client using HTTP GET method
-// as map[string]*gvar.Var. The parameter <kvMap> specifies the keys
+// GetQueryMapStrVar retrieves and returns all parameters passed from the client using the HTTP GET method
+// as map[string]*gvar.Var. The parameter `kvMap` specifies the keys
 // retrieving from client parameters, the associated values are the default values if the client
 // does not pass.
 func (r *Request) GetQueryMapStrVar(kvMap ...map[string]interface{}) map[string]*gvar.Var {
@@ -191,9 +130,9 @@ func (r *Request) GetQueryMapStrVar(kvMap ...map[string]interface{}) map[string]
 	return nil
 }
 
-// GetQueryStruct retrieves all parameters passed from client using HTTP GET method
-// and converts them to given struct object. Note that the parameter <pointer> is a pointer
-// to the struct object. The optional parameter <mapping> is used to specify the key to
+// GetQueryStruct retrieves all parameters passed from the client using the HTTP GET method
+// and converts them to a given struct object. Note that the parameter `pointer` is a pointer
+// to the struct object. The optional parameter `mapping` is used to specify the key to
 // attribute mapping.
 func (r *Request) GetQueryStruct(pointer interface{}, mapping ...map[string]string) error {
 	_, err := r.doGetQueryStruct(pointer, mapping...)
@@ -206,7 +145,7 @@ func (r *Request) doGetQueryStruct(pointer interface{}, mapping ...map[string]st
 	if data == nil {
 		data = map[string]interface{}{}
 	}
-	if err := r.mergeDefaultStructValue(data, pointer); err != nil {
+	if err = r.mergeDefaultStructValue(data, pointer); err != nil {
 		return data, nil
 	}
 	return data, gconv.Struct(data, pointer, mapping...)

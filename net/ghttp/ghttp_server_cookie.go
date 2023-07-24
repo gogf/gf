@@ -9,6 +9,8 @@ package ghttp
 import (
 	"net/http"
 	"time"
+
+	"github.com/gogf/gf/v2/container/gvar"
 )
 
 // Cookie for HTTP COOKIE management.
@@ -19,10 +21,17 @@ type Cookie struct {
 	response *Response              // Belonged HTTP response.
 }
 
+// CookieOptions provides security config for cookies
+type CookieOptions struct {
+	SameSite http.SameSite // cookie SameSite property
+	Secure   bool          // cookie Secure property
+	HttpOnly bool          // cookie HttpOnly property
+}
+
 // cookieItem is the item stored in Cookie.
 type cookieItem struct {
 	*http.Cookie      // Underlying cookie items.
-	FromClient   bool // Mark this cookie received from client.
+	FromClient   bool // Mark this cookie received from the client.
 }
 
 // GetCookie creates or retrieves a cookie object with given request.
@@ -38,7 +47,7 @@ func GetCookie(r *Request) *Cookie {
 	}
 }
 
-// init does lazy initialization for cookie object.
+// init does lazy initialization for the cookie object.
 func (c *Cookie) init() {
 	if c.data != nil {
 		return
@@ -46,9 +55,9 @@ func (c *Cookie) init() {
 	c.data = make(map[string]*cookieItem)
 	c.response = c.request.Response
 	// DO NOT ADD ANY DEFAULT COOKIE DOMAIN!
-	//if c.request.Server.GetCookieDomain() == "" {
+	// if c.request.Server.GetCookieDomain() == "" {
 	//	c.request.Server.GetCookieDomain() = c.request.GetHost()
-	//}
+	// }
 	for _, v := range c.request.Cookies() {
 		c.data[v.Name] = &cookieItem{
 			Cookie:     v,
@@ -67,7 +76,7 @@ func (c *Cookie) Map() map[string]string {
 	return m
 }
 
-// Contains checks if given key exists and not expired in cookie.
+// Contains checks if given key exists and not expire in cookie.
 func (c *Cookie) Contains(key string) bool {
 	c.init()
 	if r, ok := c.data[key]; ok {
@@ -86,24 +95,31 @@ func (c *Cookie) Set(key, value string) {
 		c.request.Server.GetCookieDomain(),
 		c.request.Server.GetCookiePath(),
 		c.request.Server.GetCookieMaxAge(),
+		CookieOptions{
+			SameSite: c.request.Server.GetCookieSameSite(),
+			Secure:   c.request.Server.GetCookieSecure(),
+			HttpOnly: c.request.Server.GetCookieHttpOnly(),
+		},
 	)
 }
 
-// SetCookie sets cookie item given given domain, path and expiration age.
-// The optional parameter <httpOnly> specifies if the cookie item is only available in HTTP,
+// SetCookie sets cookie item with given domain, path and expiration age.
+// The optional parameter `options` specifies extra security configurations,
 // which is usually empty.
-func (c *Cookie) SetCookie(key, value, domain, path string, maxAge time.Duration, httpOnly ...bool) {
+func (c *Cookie) SetCookie(key, value, domain, path string, maxAge time.Duration, options ...CookieOptions) {
 	c.init()
-	isHttpOnly := false
-	if len(httpOnly) > 0 {
-		isHttpOnly = httpOnly[0]
+	config := CookieOptions{}
+	if len(options) > 0 {
+		config = options[0]
 	}
 	httpCookie := &http.Cookie{
 		Name:     key,
 		Value:    value,
 		Path:     path,
 		Domain:   domain,
-		HttpOnly: isHttpOnly,
+		HttpOnly: config.HttpOnly,
+		SameSite: config.SameSite,
+		Secure:   config.Secure,
 	}
 	if maxAge != 0 {
 		httpCookie.Expires = time.Now().Add(maxAge)
@@ -123,7 +139,7 @@ func (c *Cookie) SetHttpCookie(httpCookie *http.Cookie) {
 
 // GetSessionId retrieves and returns the session id from cookie.
 func (c *Cookie) GetSessionId() string {
-	return c.Get(c.server.GetSessionIdName())
+	return c.Get(c.server.GetSessionIdName()).String()
 }
 
 // SetSessionId sets session id in the cookie.
@@ -134,22 +150,27 @@ func (c *Cookie) SetSessionId(id string) {
 		c.request.Server.GetCookieDomain(),
 		c.request.Server.GetCookiePath(),
 		c.server.GetSessionCookieMaxAge(),
+		CookieOptions{
+			SameSite: c.request.Server.GetCookieSameSite(),
+			Secure:   c.request.Server.GetCookieSecure(),
+			HttpOnly: c.request.Server.GetCookieHttpOnly(),
+		},
 	)
 }
 
 // Get retrieves and returns the value with specified key.
-// It returns <def> if specified key does not exist and <def> is given.
-func (c *Cookie) Get(key string, def ...string) string {
+// It returns `def` if specified key does not exist and `def` is given.
+func (c *Cookie) Get(key string, def ...string) *gvar.Var {
 	c.init()
 	if r, ok := c.data[key]; ok {
 		if r.Expires.IsZero() || r.Expires.After(time.Now()) {
-			return r.Value
+			return gvar.New(r.Value)
 		}
 	}
 	if len(def) > 0 {
-		return def[0]
+		return gvar.New(def[0])
 	}
-	return ""
+	return nil
 }
 
 // Remove deletes specified key and its value from cookie using default domain and path.
@@ -170,7 +191,7 @@ func (c *Cookie) RemoveCookie(key, domain, path string) {
 	c.SetCookie(key, "", domain, path, -24*time.Hour)
 }
 
-// Flush outputs the cookie items to client.
+// Flush outputs the cookie items to the client.
 func (c *Cookie) Flush() {
 	if len(c.data) == 0 {
 		return

@@ -12,32 +12,29 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/os/gctx"
-	"github.com/gogf/gf/os/gfpool"
-	"github.com/gogf/gf/os/gmlock"
-	"github.com/gogf/gf/os/gtimer"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/gogf/gf/debug/gdebug"
-
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/internal/consts"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gfpool"
+	"github.com/gogf/gf/v2/os/gmlock"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Logger is the struct for logging management.
 type Logger struct {
-	ctx    context.Context // Context for logging.
-	init   *gtype.Bool     // Initialized.
-	parent *Logger         // Parent logger, if it is not empty, it means the logger is used in chaining function.
-	config Config          // Logger configuration.
+	parent *Logger // Parent logger, if it is not empty, it means the logger is used in chaining function.
+	config Config  // Logger configuration.
 }
 
 const (
@@ -62,11 +59,9 @@ const (
 
 // New creates and returns a custom logger.
 func New() *Logger {
-	logger := &Logger{
-		init:   gtype.NewBool(),
+	return &Logger{
 		config: DefaultConfig(),
 	}
-	return logger
 }
 
 // NewWithWriter creates and returns a custom logger with io.Writer.
@@ -76,14 +71,13 @@ func NewWithWriter(writer io.Writer) *Logger {
 	return l
 }
 
-// Clone returns a new logger, which is the clone the current logger.
-// It's commonly used for chaining operations.
+// Clone returns a new logger, which a `shallow copy` of the current logger.
+// Note that the attribute `config` of the cloned one is the shallow copy of current one.
 func (l *Logger) Clone() *Logger {
-	newLogger := New()
-	newLogger.ctx = l.ctx
-	newLogger.config = l.config
-	newLogger.parent = l
-	return newLogger
+	return &Logger{
+		config: l.config,
+		parent: l,
+	}
 }
 
 // getFilePath returns the logging file path.
@@ -98,37 +92,46 @@ func (l *Logger) getFilePath(now time.Time) string {
 }
 
 // print prints `s` to defined writer, logging file or passed `std`.
-func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
+func (l *Logger) print(ctx context.Context, level int, stack string, values ...interface{}) {
 	// Lazy initialize for rotation feature.
 	// It uses atomic reading operation to enhance the performance checking.
 	// It here uses CAP for performance and concurrent safety.
-	p := l
-	if p.parent != nil {
-		p = p.parent
-	}
 	// It just initializes once for each logger.
-	if p.config.RotateSize > 0 || p.config.RotateExpire > 0 {
-		if !p.init.Val() && p.init.Cas(false, true) {
-			gtimer.AddOnce(p.config.RotateCheckInterval, p.rotateChecksTimely)
-			intlog.Printf(ctx, "logger rotation initialized: every %s", p.config.RotateCheckInterval.String())
+	if l.config.RotateSize > 0 || l.config.RotateExpire > 0 {
+		if !l.config.rotatedHandlerInitialized.Val() && l.config.rotatedHandlerInitialized.Cas(false, true) {
+			l.rotateChecksTimely(ctx)
+			intlog.Printf(ctx, "logger rotation initialized: every %s", l.config.RotateCheckInterval.String())
 		}
 	}
 
 	var (
 		now   = time.Now()
 		input = &HandlerInput{
-			Logger:       l,
-			Buffer:       bytes.NewBuffer(nil),
-			Ctx:          ctx,
-			Time:         now,
-			Color:        defaultLevelColor[level],
-			Level:        level,
-			handlerIndex: -1,
+			internalHandlerInfo: internalHandlerInfo{
+				index: -1,
+			},
+			Logger: l,
+			Buffer: bytes.NewBuffer(nil),
+			Time:   now,
+			Color:  defaultLevelColor[level],
+			Level:  level,
+			Stack:  stack,
 		}
 	)
-	if l.config.HeaderPrint {
-		// Time.
-		timeFormat := ""
+
+	// Logging handlers.
+	if len(l.config.Handlers) > 0 {
+		input.handlers = append(input.handlers, l.config.Handlers...)
+	} else if defaultHandler != nil {
+		input.handlers = []Handler{defaultHandler}
+	}
+	input.handlers = append(input.handlers, defaultPrintHandler)
+
+	// Time.
+	timeFormat := ""
+	if l.config.TimeFormat != "" {
+		timeFormat = l.config.TimeFormat
+	} else {
 		if l.config.Flags&F_TIME_DATE > 0 {
 			timeFormat += "2006-01-02"
 		}
@@ -144,41 +147,46 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 			}
 			timeFormat += "15:04:05.000"
 		}
-		if len(timeFormat) > 0 {
-			input.TimeFormat = now.Format(timeFormat)
-		}
+	}
 
-		// Level string.
-		input.LevelFormat = l.getLevelPrefixWithBrackets(level)
+	if len(timeFormat) > 0 {
+		input.TimeFormat = now.Format(timeFormat)
+	}
 
-		// Caller path and Fn name.
-		if l.config.Flags&(F_FILE_LONG|F_FILE_SHORT|F_CALLER_FN) > 0 {
-			callerFnName, path, line := gdebug.CallerWithFilter([]string{pathFilterKey}, l.config.StSkip)
-			if l.config.Flags&F_CALLER_FN > 0 {
-				if len(callerFnName) > 2 {
-					input.CallerFunc = fmt.Sprintf(`[%s]`, callerFnName)
-				}
-			}
-			if line >= 0 && len(path) > 1 {
-				if l.config.Flags&F_FILE_LONG > 0 {
-					input.CallerPath = fmt.Sprintf(`%s:%d:`, path, line)
-				}
-				if l.config.Flags&F_FILE_SHORT > 0 {
-					input.CallerPath = fmt.Sprintf(`%s:%d:`, gfile.Basename(path), line)
-				}
+	// Level string.
+	input.LevelFormat = l.GetLevelPrefix(level)
+
+	// Caller path and Fn name.
+	if l.config.Flags&(F_FILE_LONG|F_FILE_SHORT|F_CALLER_FN) > 0 {
+		callerFnName, path, line := gdebug.CallerWithFilter(
+			[]string{consts.StackFilterKeyForGoFrame},
+			l.config.StSkip,
+		)
+		if l.config.Flags&F_CALLER_FN > 0 {
+			if len(callerFnName) > 2 {
+				input.CallerFunc = fmt.Sprintf(`[%s]`, callerFnName)
 			}
 		}
-		// Prefix.
-		if len(l.config.Prefix) > 0 {
-			input.Prefix = l.config.Prefix
+		if line >= 0 && len(path) > 1 {
+			if l.config.Flags&F_FILE_LONG > 0 {
+				input.CallerPath = fmt.Sprintf(`%s:%d:`, path, line)
+			}
+			if l.config.Flags&F_FILE_SHORT > 0 {
+				input.CallerPath = fmt.Sprintf(`%s:%d:`, gfile.Basename(path), line)
+			}
 		}
 	}
+	// Prefix.
+	if len(l.config.Prefix) > 0 {
+		input.Prefix = l.config.Prefix
+	}
+
 	// Convert value to string.
 	if ctx != nil {
 		// Tracing values.
 		spanCtx := trace.SpanContextFromContext(ctx)
 		if traceId := spanCtx.TraceID(); traceId.IsValid() {
-			input.CtxStr = traceId.String()
+			input.TraceId = traceId.String()
 		}
 		// Context values.
 		if len(l.config.CtxKeys) > 0 {
@@ -195,9 +203,6 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 				}
 			}
 		}
-		if input.CtxStr != "" {
-			input.CtxStr = "{" + input.CtxStr + "}"
-		}
 	}
 	var tempStr string
 	for _, v := range values {
@@ -205,7 +210,7 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 		if len(input.Content) > 0 {
 			if input.Content[len(input.Content)-1] == '\n' {
 				// Remove one blank line(\n\n).
-				if tempStr[0] == '\n' {
+				if len(tempStr) > 0 && tempStr[0] == '\n' {
 					input.Content += tempStr[1:]
 				} else {
 					input.Content += tempStr
@@ -219,14 +224,14 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 	}
 	if l.config.Flags&F_ASYNC > 0 {
 		input.IsAsync = true
-		err := asyncPool.Add(func() {
-			input.Next()
+		err := asyncPool.Add(ctx, func(ctx context.Context) {
+			input.Next(ctx)
 		})
 		if err != nil {
-			intlog.Error(ctx, err)
+			intlog.Errorf(ctx, `%+v`, err)
 		}
 	} else {
-		input.Next()
+		input.Next(ctx)
 	}
 }
 
@@ -263,7 +268,7 @@ func (l *Logger) printToWriter(ctx context.Context, input *HandlerInput) *bytes.
 			buffer = input.getRealBuffer(l.config.WriterColorEnable)
 		)
 		if _, err := l.config.Writer.Write(buffer.Bytes()); err != nil {
-			intlog.Error(ctx, err)
+			intlog.Errorf(ctx, `%+v`, err)
 		}
 		return buffer
 	}
@@ -274,14 +279,15 @@ func (l *Logger) printToWriter(ctx context.Context, input *HandlerInput) *bytes.
 func (l *Logger) printToStdout(ctx context.Context, input *HandlerInput) *bytes.Buffer {
 	if l.config.StdoutPrint {
 		var (
-			buffer = input.getRealBuffer(true)
+			err    error
+			buffer = input.getRealBuffer(!l.config.StdoutColorDisabled)
 		)
 		// This will lose color in Windows os system.
 		// if _, err := os.Stdout.Write(input.getRealBuffer(true).Bytes()); err != nil {
 
 		// This will print color in Windows os system.
-		if _, err := fmt.Fprint(color.Output, buffer.String()); err != nil {
-			intlog.Error(ctx, err)
+		if _, err = fmt.Fprint(color.Output, buffer.String()); err != nil {
+			intlog.Errorf(ctx, `%+v`, err)
 		}
 		return buffer
 	}
@@ -299,20 +305,37 @@ func (l *Logger) printToFile(ctx context.Context, t time.Time, in *HandlerInput)
 	defer gmlock.Unlock(memoryLockKey)
 
 	// Rotation file size checks.
-	if l.config.RotateSize > 0 {
-		if gfile.Size(logFilePath) > l.config.RotateSize {
-			l.rotateFileBySize(t)
+	if l.config.RotateSize > 0 && gfile.Size(logFilePath) > l.config.RotateSize {
+		if runtime.GOOS == "windows" {
+			file := l.getFilePointer(ctx, logFilePath)
+			if file == nil {
+				intlog.Errorf(ctx, `got nil file pointer for: %s`, logFilePath)
+				return buffer
+			}
+
+			if _, err := file.Write(buffer.Bytes()); err != nil {
+				intlog.Errorf(ctx, `%+v`, err)
+			}
+
+			if err := file.Close(true); err != nil {
+				intlog.Errorf(ctx, `%+v`, err)
+			}
+			l.rotateFileBySize(ctx, t)
+
+			return buffer
 		}
+
+		l.rotateFileBySize(ctx, t)
 	}
 	// Logging content outputting to disk file.
 	if file := l.getFilePointer(ctx, logFilePath); file == nil {
 		intlog.Errorf(ctx, `got nil file pointer for: %s`, logFilePath)
 	} else {
 		if _, err := file.Write(buffer.Bytes()); err != nil {
-			intlog.Error(ctx, err)
+			intlog.Errorf(ctx, `%+v`, err)
 		}
 		if err := file.Close(); err != nil {
-			intlog.Error(ctx, err)
+			intlog.Errorf(ctx, `%+v`, err)
 		}
 	}
 	return buffer
@@ -328,34 +351,38 @@ func (l *Logger) getFilePointer(ctx context.Context, path string) *gfpool.File {
 	)
 	if err != nil {
 		// panic(err)
-		intlog.Error(ctx, err)
+		intlog.Errorf(ctx, `%+v`, err)
 	}
 	return file
 }
 
-// getCtx returns the context which is set through chaining operations.
-// It returns an empty context if no context set previously.
-func (l *Logger) getCtx() context.Context {
-	if l.ctx != nil {
-		return l.ctx
+// getOpenedFilePointer retrieves and returns a file pointer from file pool.
+func (l *Logger) getOpenedFilePointer(ctx context.Context, path string) *gfpool.File {
+	file := gfpool.Get(
+		path,
+		defaultFileFlags,
+		defaultFilePerm,
+		defaultFileExpire,
+	)
+	if file == nil {
+		intlog.Errorf(ctx, `can not find the file, path:%s`, path)
 	}
-	return context.TODO()
+	return file
 }
 
 // printStd prints content `s` without stack.
-func (l *Logger) printStd(level int, value ...interface{}) {
-	l.print(l.getCtx(), level, value...)
+func (l *Logger) printStd(ctx context.Context, level int, value ...interface{}) {
+	l.print(ctx, level, "", value...)
 }
 
 // printStd prints content `s` with stack check.
-func (l *Logger) printErr(level int, value ...interface{}) {
+func (l *Logger) printErr(ctx context.Context, level int, value ...interface{}) {
+	var stack string
 	if l.config.StStatus == 1 {
-		if s := l.GetStack(); s != "" {
-			value = append(value, "\nStack:\n"+s)
-		}
+		stack = l.GetStack()
 	}
 	// In matter of sequence, do not use stderr here, but use the same stdout.
-	l.print(l.getCtx(), level, value...)
+	l.print(ctx, level, stack, value...)
 }
 
 // format formats `values` using fmt.Sprintf.
@@ -365,11 +392,11 @@ func (l *Logger) format(format string, value ...interface{}) string {
 
 // PrintStack prints the caller stack,
 // the optional parameter `skip` specify the skipped stack offset from the end point.
-func (l *Logger) PrintStack(skip ...int) {
+func (l *Logger) PrintStack(ctx context.Context, skip ...int) {
 	if s := l.GetStack(skip...); s != "" {
-		l.Println("Stack:\n" + s)
+		l.Print(ctx, "Stack:\n"+s)
 	} else {
-		l.Println()
+		l.Print(ctx)
 	}
 }
 
@@ -385,9 +412,4 @@ func (l *Logger) GetStack(skip ...int) string {
 		filters = append(filters, l.config.StFilter)
 	}
 	return gdebug.StackWithFilters(filters, stackSkip)
-}
-
-// GetConfig returns the configuration of current Logger.
-func (l *Logger) GetConfig() Config {
-	return l.config
 }

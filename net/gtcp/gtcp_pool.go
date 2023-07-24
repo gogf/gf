@@ -9,8 +9,8 @@ package gtcp
 import (
 	"time"
 
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/container/gpool"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/container/gpool"
 )
 
 // PoolConn is a connection with pool feature for TCP.
@@ -46,26 +46,24 @@ func NewPoolConn(addr string, timeout ...time.Duration) (*PoolConn, error) {
 		})
 		return pool
 	})
-	if v, err := v.(*gpool.Pool).Get(); err == nil {
-		return v.(*PoolConn), nil
-	} else {
+	value, err := v.(*gpool.Pool).Get()
+	if err != nil {
 		return nil, err
 	}
+	return value.(*PoolConn), nil
 }
 
 // Close puts back the connection to the pool if it's active,
 // or closes the connection if it's not active.
 //
-// Note that, if <c> calls Close function closing itself, <c> can not
+// Note that, if `c` calls Close function closing itself, `c` can not
 // be used again.
 func (c *PoolConn) Close() error {
 	if c.pool != nil && c.status == connStatusActive {
 		c.status = connStatusUnknown
-		c.pool.Put(c)
-	} else {
-		return c.Conn.Close()
+		return c.pool.Put(c)
 	}
-	return nil
+	return c.Conn.Close()
 }
 
 // Send writes data to the connection. It retrieves a new connection from its pool if it fails
@@ -111,10 +109,10 @@ func (c *PoolConn) RecvLine(retry ...Retry) ([]byte, error) {
 	return data, err
 }
 
-// RecvTil reads data from the connection until reads bytes <til>.
-// Note that the returned result contains the last bytes <til>.
-func (c *PoolConn) RecvTil(til []byte, retry ...Retry) ([]byte, error) {
-	data, err := c.Conn.RecvTil(til, retry...)
+// RecvTill reads data from the connection until reads bytes `til`.
+// Note that the returned result contains the last bytes `til`.
+func (c *PoolConn) RecvTill(til []byte, retry ...Retry) ([]byte, error) {
+	data, err := c.Conn.RecvTill(til, retry...)
 	if err != nil {
 		c.status = connStatusError
 	} else {
@@ -125,20 +123,24 @@ func (c *PoolConn) RecvTil(til []byte, retry ...Retry) ([]byte, error) {
 
 // RecvWithTimeout reads data from the connection with timeout.
 func (c *PoolConn) RecvWithTimeout(length int, timeout time.Duration, retry ...Retry) (data []byte, err error) {
-	if err := c.SetreceiveDeadline(time.Now().Add(timeout)); err != nil {
+	if err := c.SetDeadlineRecv(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer c.SetreceiveDeadline(time.Time{})
+	defer func() {
+		_ = c.SetDeadlineRecv(time.Time{})
+	}()
 	data, err = c.Recv(length, retry...)
 	return
 }
 
 // SendWithTimeout writes data to the connection with timeout.
 func (c *PoolConn) SendWithTimeout(data []byte, timeout time.Duration, retry ...Retry) (err error) {
-	if err := c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
+	if err := c.SetDeadlineSend(time.Now().Add(timeout)); err != nil {
 		return err
 	}
-	defer c.SetSendDeadline(time.Time{})
+	defer func() {
+		_ = c.SetDeadlineSend(time.Time{})
+	}()
 	err = c.Send(data, retry...)
 	return
 }

@@ -8,17 +8,17 @@ package garray
 
 import (
 	"bytes"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/text/gstr"
 	"math"
 	"sort"
 	"strings"
 
-	"github.com/gogf/gf/internal/rwmutex"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/grand"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/internal/rwmutex"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/grand"
 )
 
 // StrArray is a golang string array with rich features.
@@ -155,28 +155,28 @@ func (a *StrArray) SortFunc(less func(v1, v2 string) bool) *StrArray {
 	return a
 }
 
-// InsertBefore inserts the `value` to the front of `index`.
-func (a *StrArray) InsertBefore(index int, value string) error {
+// InsertBefore inserts the `values` to the front of `index`.
+func (a *StrArray) InsertBefore(index int, values ...string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if index < 0 || index >= len(a.array) {
 		return gerror.NewCodef(gcode.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
 	}
 	rear := append([]string{}, a.array[index:]...)
-	a.array = append(a.array[0:index], value)
+	a.array = append(a.array[0:index], values...)
 	a.array = append(a.array, rear...)
 	return nil
 }
 
-// InsertAfter inserts the `value` to the back of `index`.
-func (a *StrArray) InsertAfter(index int, value string) error {
+// InsertAfter inserts the `values` to the back of `index`.
+func (a *StrArray) InsertAfter(index int, values ...string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if index < 0 || index >= len(a.array) {
 		return gerror.NewCodef(gcode.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
 	}
 	rear := append([]string{}, a.array[index+1:]...)
-	a.array = append(a.array[0:index+1], value)
+	a.array = append(a.array[0:index+1], values...)
 	a.array = append(a.array, rear...)
 	return nil
 }
@@ -220,6 +220,17 @@ func (a *StrArray) RemoveValue(value string) bool {
 		return found
 	}
 	return false
+}
+
+// RemoveValues removes multiple items by `values`.
+func (a *StrArray) RemoveValues(values ...string) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for _, value := range values {
+		if i := a.doSearchWithoutLock(value); i != -1 {
+			a.doRemoveWithoutLock(i)
+		}
+	}
 }
 
 // PushLeft pushes one or multiple items to the beginning of array.
@@ -407,9 +418,8 @@ func (a *StrArray) SubSlice(offset int, length ...int) []string {
 		s := make([]string, size)
 		copy(s, a.array[offset:])
 		return s
-	} else {
-		return a.array[offset:end]
 	}
+	return a.array[offset:end]
 }
 
 // Append is alias of PushRight,please See PushRight.
@@ -500,6 +510,10 @@ func (a *StrArray) ContainsI(value string) bool {
 func (a *StrArray) Search(value string) int {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
+	return a.doSearchWithoutLock(value)
+}
+
+func (a *StrArray) doSearchWithoutLock(value string) int {
 	if len(a.array) == 0 {
 		return -1
 	}
@@ -517,16 +531,25 @@ func (a *StrArray) Search(value string) int {
 // Example: [1,1,2,3,2] -> [1,2,3]
 func (a *StrArray) Unique() *StrArray {
 	a.mu.Lock()
-	for i := 0; i < len(a.array)-1; i++ {
-		for j := i + 1; j < len(a.array); {
-			if a.array[i] == a.array[j] {
-				a.array = append(a.array[:j], a.array[j+1:]...)
-			} else {
-				j++
-			}
-		}
+	defer a.mu.Unlock()
+	if len(a.array) == 0 {
+		return a
 	}
-	a.mu.Unlock()
+	var (
+		ok          bool
+		temp        string
+		uniqueSet   = make(map[string]struct{})
+		uniqueArray = make([]string, 0, len(a.array))
+	)
+	for i := 0; i < len(a.array); i++ {
+		temp = a.array[i]
+		if _, ok = uniqueSet[temp]; ok {
+			continue
+		}
+		uniqueSet[temp] = struct{}{}
+		uniqueArray = append(uniqueArray, temp)
+	}
+	a.array = uniqueArray
 	return a
 }
 
@@ -725,6 +748,9 @@ func (a *StrArray) IteratorDesc(f func(k int, v string) bool) {
 
 // String returns current array as a string, which implements like json.Marshal does.
 func (a *StrArray) String() string {
+	if a == nil {
+		return ""
+	}
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	buffer := bytes.NewBuffer(nil)
@@ -773,6 +799,22 @@ func (a *StrArray) UnmarshalValue(value interface{}) error {
 	return nil
 }
 
+// Filter iterates array and filters elements using custom callback function.
+// It removes the element from array if callback function `filter` returns true,
+// it or else does nothing and continues iterating.
+func (a *StrArray) Filter(filter func(index int, value string) bool) *StrArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if filter(i, a.array[i]) {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			i++
+		}
+	}
+	return a
+}
+
 // FilterEmpty removes all empty string value of the array.
 func (a *StrArray) FilterEmpty() *StrArray {
 	a.mu.Lock()
@@ -800,4 +842,16 @@ func (a *StrArray) Walk(f func(value string) string) *StrArray {
 // IsEmpty checks whether the array is empty.
 func (a *StrArray) IsEmpty() bool {
 	return a.Len() == 0
+}
+
+// DeepCopy implements interface for deep copy of current type.
+func (a *StrArray) DeepCopy() interface{} {
+	if a == nil {
+		return nil
+	}
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	newSlice := make([]string, len(a.array))
+	copy(newSlice, a.array)
+	return NewStrArrayFrom(newSlice, a.mu.IsSafe())
 }

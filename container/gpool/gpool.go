@@ -8,14 +8,15 @@
 package gpool
 
 import (
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
+	"context"
 	"time"
 
-	"github.com/gogf/gf/container/glist"
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/os/gtimer"
+	"github.com/gogf/gf/v2/container/glist"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/os/gtimer"
 )
 
 // Pool is an Object-Reusable Pool.
@@ -37,10 +38,10 @@ type poolItem struct {
 	expireAt int64       // Expire timestamp in milliseconds.
 }
 
-// Creation function for object.
+// NewFunc Creation function for object.
 type NewFunc func() (interface{}, error)
 
-// Destruction function for object.
+// ExpireFunc Destruction function for object.
 type ExpireFunc func(interface{})
 
 // New creates and returns a new object pool.
@@ -60,7 +61,7 @@ func New(ttl time.Duration, newFunc NewFunc, expireFunc ...ExpireFunc) *Pool {
 	if len(expireFunc) > 0 {
 		r.ExpireFunc = expireFunc[0]
 	}
-	gtimer.AddSingleton(time.Second, r.checkExpireItems)
+	gtimer.AddSingleton(context.Background(), time.Second, r.checkExpireItems)
 	return r
 }
 
@@ -83,6 +84,13 @@ func (p *Pool) Put(value interface{}) error {
 	return nil
 }
 
+// MustPut puts an item to pool, it panics if any error occurs.
+func (p *Pool) MustPut(value interface{}) {
+	if err := p.Put(value); err != nil {
+		panic(err)
+	}
+}
+
 // Clear clears pool, which means it will remove all items from pool.
 func (p *Pool) Clear() {
 	if p.ExpireFunc != nil {
@@ -96,7 +104,6 @@ func (p *Pool) Clear() {
 	} else {
 		p.list.RemoveAll()
 	}
-
 }
 
 // Get picks and returns an item from pool. If the pool is empty and NewFunc is defined,
@@ -108,7 +115,7 @@ func (p *Pool) Get() (interface{}, error) {
 			if f.expireAt == 0 || f.expireAt > gtime.TimestampMilli() {
 				return f.value, nil
 			} else if p.ExpireFunc != nil {
-				// TODO: move expire function calling asynchronously from `Get` operation.
+				// TODO: move expire function calling asynchronously out from `Get` operation.
 				p.ExpireFunc(f.value)
 			}
 		} else {
@@ -126,15 +133,15 @@ func (p *Pool) Size() int {
 	return p.list.Len()
 }
 
-// Close closes the pool. If <p> has ExpireFunc,
+// Close closes the pool. If `p` has ExpireFunc,
 // then it automatically closes all items using this function before it's closed.
-// Commonly you do not need call this function manually.
+// Commonly you do not need to call this function manually.
 func (p *Pool) Close() {
 	p.closed.Set(true)
 }
 
 // checkExpire removes expired items from pool in every second.
-func (p *Pool) checkExpireItems() {
+func (p *Pool) checkExpireItems(ctx context.Context) {
 	if p.closed.Val() {
 		// If p has ExpireFunc,
 		// then it must close all items using this function.
@@ -157,7 +164,7 @@ func (p *Pool) checkExpireItems() {
 	var latestExpire int64 = -1
 	// Retrieve the current timestamp in milliseconds, it expires the items
 	// by comparing with this timestamp. It is not accurate comparison for
-	// every items expired, but high performance.
+	// every item expired, but high performance.
 	var timestampMilli = gtime.TimestampMilli()
 	for {
 		if latestExpire > timestampMilli {

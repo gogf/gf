@@ -1,7 +1,0 @@
-"gf.gvalid.required" = "字段不能为空"
-
-
-"ReuiredUserName" = "Please input user name"
-"ReuiredUserType" = "Please select user type"
-"MustSize"        = "Size of :attribute must be :size"
-

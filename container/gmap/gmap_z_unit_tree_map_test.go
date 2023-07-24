@@ -7,14 +7,14 @@
 package gmap_test
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/util/gconv"
 	"testing"
 
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 func Test_TreeMap_Var(t *testing.T) {
@@ -107,6 +107,7 @@ func Test_TreeMap_Batch(t *testing.T) {
 		t.Assert(m.Map(), map[interface{}]interface{}{"key2": "val2", "key3": "val3"})
 	})
 }
+
 func Test_TreeMap_Iterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[interface{}]interface{}{1: 1, "key1": "val1"}
@@ -152,15 +153,15 @@ func Test_TreeMap_Iterator(t *testing.T) {
 
 func Test_TreeMap_Clone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		//clone 方法是深克隆
+		// clone 方法是深克隆
 		m := gmap.NewTreeMapFrom(gutil.ComparatorString, map[interface{}]interface{}{1: 1, "key1": "val1"})
 		m_clone := m.Clone()
 		m.Remove(1)
-		//修改原 map,clone 后的 map 不影响
+		// 修改原 map,clone 后的 map 不影响
 		t.AssertIN(1, m_clone.Keys())
 
 		m_clone.Remove("key1")
-		//修改clone map,原 map 不影响
+		// 修改clone map,原 map 不影响
 		t.AssertIN("key1", m.Keys())
 	})
 }
@@ -185,11 +186,11 @@ func Test_TreeMap_Json(t *testing.T) {
 			"k2": "v2",
 		}
 		b, err := json.Marshal(gconv.Map(data))
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		m := gmap.NewTreeMap(gutil.ComparatorString)
 		err = json.UnmarshalUseNumber(b, m)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(m.Get("k1"), data["k1"])
 		t.Assert(m.Get("k2"), data["k2"])
 	})
@@ -199,11 +200,11 @@ func Test_TreeMap_Json(t *testing.T) {
 			"k2": "v2",
 		}
 		b, err := json.Marshal(gconv.Map(data))
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		var m gmap.TreeMap
 		err = json.UnmarshalUseNumber(b, &m)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(m.Get("k1"), data["k1"])
 		t.Assert(m.Get("k2"), data["k2"])
 	})
@@ -221,7 +222,7 @@ func TestTreeMap_UnmarshalValue(t *testing.T) {
 			"name": "john",
 			"map":  []byte(`{"k1":"v1","k2":"v2"}`),
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Map.Size(), 2)
 		t.Assert(v.Map.Get("k1"), "v1")
@@ -237,7 +238,7 @@ func TestTreeMap_UnmarshalValue(t *testing.T) {
 				"k2": "v2",
 			},
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Map.Size(), 2)
 		t.Assert(v.Map.Get("k1"), "v1")

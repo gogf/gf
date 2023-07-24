@@ -1,0 +1,25 @@
+## 规则描述：当issue被标记为help wanted 时，增加评论
+
+name: Issue Labeled
+
+on:
+  issues:
+    types: [labeled]
+
+env: # 设置环境变量
+  TZ: Asia/Shanghai # 时区（设置时区可使页面中的`最近更新时间`使用时区时间）
+
+jobs:
+  reply-labeled:
+    runs-on: ubuntu-latest
+    steps:
+      - name: contribution welcome
+        if: github.event.label.name == 'help wanted'
+        uses: actions-cool/issues-helper@v3
+        with:
+          actions: "create-comment, remove-labels"
+#          token: ${{ secrets.GF_TOKEN }}
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            Hello @${{ github.event.issue.user.login }}. We like your proposal/feedback and would appreciate a contribution via a Pull Request by you or another community member. We thank you in advance for your contribution and are looking forward to reviewing it!
+            你好 @${{ github.event.issue.user.login }}。我们喜欢您的提案/反馈，并希望您或其他社区成员通过拉取请求做出贡献。我们提前感谢您的贡献，并期待对其进行审查。

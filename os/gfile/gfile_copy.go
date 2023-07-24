@@ -7,18 +7,18 @@
 package gfile
 
 import (
-	"fmt"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
-// Copy file/directory from <src> to <dst>.
+// Copy file/directory from `src` to `dst`.
 //
-// If <src> is file, it calls CopyFile to implements copy feature,
+// If `src` is file, it calls CopyFile to implements copy feature,
 // or else it calls CopyDir.
 func Copy(src string, dst string) error {
 	if src == "" {
@@ -33,8 +33,8 @@ func Copy(src string, dst string) error {
 	return CopyDir(src, dst)
 }
 
-// CopyFile copies the contents of the file named <src> to the file named
-// by <dst>. The file will be created if it does not exist. If the
+// CopyFile copies the contents of the file named `src` to the file named
+// by `dst`. The file will be created if it does not exist. If the
 // destination file exists, all it's contents will be replaced by the contents
 // of the source file. The file mode will be copied from the source and
 // the copied data is synced/flushed to stable storage.
@@ -50,34 +50,35 @@ func CopyFile(src, dst string) (err error) {
 	if src == dst {
 		return nil
 	}
-	in, err := os.Open(src)
+	var inFile *os.File
+	inFile, err = Open(src)
 	if err != nil {
 		return
 	}
 	defer func() {
-		if e := in.Close(); e != nil {
-			err = e
+		if e := inFile.Close(); e != nil {
+			err = gerror.Wrapf(e, `file close failed for "%s"`, src)
 		}
 	}()
-	out, err := os.Create(dst)
+	var outFile *os.File
+	outFile, err = Create(dst)
 	if err != nil {
 		return
 	}
 	defer func() {
-		if e := out.Close(); e != nil {
-			err = e
+		if e := outFile.Close(); e != nil {
+			err = gerror.Wrapf(e, `file close failed for "%s"`, dst)
 		}
 	}()
-	_, err = io.Copy(out, in)
-	if err != nil {
+	if _, err = io.Copy(outFile, inFile); err != nil {
+		err = gerror.Wrapf(err, `io.Copy failed from "%s" to "%s"`, src, dst)
 		return
 	}
-	err = out.Sync()
-	if err != nil {
+	if err = outFile.Sync(); err != nil {
+		err = gerror.Wrapf(err, `file sync failed for file "%s"`, dst)
 		return
 	}
-	err = os.Chmod(dst, DefaultPermCopy)
-	if err != nil {
+	if err = Chmod(dst, DefaultPermCopy); err != nil {
 		return
 	}
 	return
@@ -99,29 +100,29 @@ func CopyDir(src string, dst string) (err error) {
 	}
 	src = filepath.Clean(src)
 	dst = filepath.Clean(dst)
-	si, err := os.Stat(src)
+	si, err := Stat(src)
 	if err != nil {
 		return err
 	}
 	if !si.IsDir() {
-		return fmt.Errorf("source is not a directory")
+		return gerror.NewCode(gcode.CodeInvalidParameter, "source is not a directory")
 	}
 	if !Exists(dst) {
-		err = os.MkdirAll(dst, DefaultPermCopy)
-		if err != nil {
+		if err = os.MkdirAll(dst, DefaultPermCopy); err != nil {
+			err = gerror.Wrapf(err, `create directory failed for path "%s", perm "%s"`, dst, DefaultPermCopy)
 			return
 		}
 	}
 	entries, err := ioutil.ReadDir(src)
 	if err != nil {
+		err = gerror.Wrapf(err, `read directory failed for path "%s"`, src)
 		return
 	}
 	for _, entry := range entries {
 		srcPath := filepath.Join(src, entry.Name())
 		dstPath := filepath.Join(dst, entry.Name())
 		if entry.IsDir() {
-			err = CopyDir(srcPath, dstPath)
-			if err != nil {
+			if err = CopyDir(srcPath, dstPath); err != nil {
 				return
 			}
 		} else {
@@ -129,8 +130,7 @@ func CopyDir(src string, dst string) (err error) {
 			if entry.Mode()&os.ModeSymlink != 0 {
 				continue
 			}
-			err = CopyFile(srcPath, dstPath)
-			if err != nil {
+			if err = CopyFile(srcPath, dstPath); err != nil {
 				return
 			}
 		}

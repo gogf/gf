@@ -13,10 +13,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/container/gpool"
+	"github.com/gogf/gf/v2/container/gpool"
 )
 
 var pool = gpool.New(time.Hour, nil)
+
 var syncp = sync.Pool{}
 
 func BenchmarkGPoolPut(b *testing.B) {

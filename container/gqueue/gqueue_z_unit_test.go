@@ -12,20 +12,37 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/container/gqueue"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/container/gqueue"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func TestQueue_Len(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		max := 100
-		for n := 10; n < max; n++ {
-			q1 := gqueue.New(max)
-			for i := 0; i < max; i++ {
+		var (
+			maxNum   = 100
+			maxTries = 100
+		)
+		for n := 10; n < maxTries; n++ {
+			q1 := gqueue.New(maxNum)
+			for i := 0; i < maxNum; i++ {
 				q1.Push(i)
 			}
-			t.Assert(q1.Len(), max)
-			t.Assert(q1.Size(), max)
+			t.Assert(q1.Len(), maxNum)
+			t.Assert(q1.Size(), maxNum)
+		}
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			maxNum   = 100
+			maxTries = 100
+		)
+		for n := 10; n < maxTries; n++ {
+			q1 := gqueue.New()
+			for i := 0; i < maxNum; i++ {
+				q1.Push(i)
+			}
+			t.AssertLE(q1.Len(), maxNum)
+			t.AssertLE(q1.Size(), maxNum)
 		}
 	})
 }
@@ -61,5 +78,29 @@ func TestQueue_Close(t *testing.T) {
 		time.Sleep(time.Millisecond)
 		t.Assert(q1.Len(), 2)
 		q1.Close()
+	})
+	gtest.C(t, func(t *gtest.T) {
+		q1 := gqueue.New(2)
+		q1.Push(1)
+		q1.Push(2)
+		time.Sleep(time.Millisecond)
+		t.Assert(q1.Len(), 2)
+		q1.Close()
+	})
+}
+
+func Test_Issue2509(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		q := gqueue.New()
+		q.Push(1)
+		q.Push(2)
+		q.Push(3)
+		t.AssertLE(q.Len(), 3)
+		t.Assert(<-q.C, 1)
+		t.AssertLE(q.Len(), 2)
+		t.Assert(<-q.C, 2)
+		t.AssertLE(q.Len(), 1)
+		t.Assert(<-q.C, 3)
+		t.Assert(q.Len(), 0)
 	})
 }

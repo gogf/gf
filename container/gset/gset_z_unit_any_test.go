@@ -9,18 +9,17 @@
 package gset_test
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/util/gconv"
 	"strings"
 	"sync"
+	"testing"
 	"time"
 
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/container/gset"
-	"github.com/gogf/gf/test/gtest"
-
-	"testing"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func TestSet_Var(t *testing.T) {
@@ -115,8 +114,8 @@ func TestSet_LockFunc(t *testing.T) {
 		t.Assert(s.Size(), 2)
 		s.RLockFunc(func(m map[interface{}]struct{}) {
 			t.Assert(m, map[interface{}]struct{}{
-				3: struct{}{},
-				2: struct{}{},
+				3: {},
+				2: {},
 			})
 		})
 	})
@@ -127,11 +126,16 @@ func TestSet_Equal(t *testing.T) {
 		s1 := gset.NewSet()
 		s2 := gset.NewSet()
 		s3 := gset.NewSet()
+		s4 := gset.NewSet()
 		s1.Add(1, 2, 3)
 		s2.Add(1, 2, 3)
 		s3.Add(1, 2, 3, 4)
+		s4.Add(4, 5, 6)
 		t.Assert(s1.Equal(s2), true)
 		t.Assert(s1.Equal(s3), false)
+		t.Assert(s1.Equal(s4), false)
+		s5 := s1
+		t.Assert(s1.Equal(s5), true)
 	})
 }
 
@@ -148,6 +152,9 @@ func TestSet_IsSubsetOf(t *testing.T) {
 		t.Assert(s1.IsSubsetOf(s3), true)
 		t.Assert(s2.IsSubsetOf(s1), false)
 		t.Assert(s3.IsSubsetOf(s2), false)
+
+		s4 := s1
+		t.Assert(s1.IsSubsetOf(s4), true)
 	})
 }
 
@@ -176,6 +183,13 @@ func TestSet_Diff(t *testing.T) {
 		t.Assert(s3.Contains(2), true)
 		t.Assert(s3.Contains(3), false)
 		t.Assert(s3.Contains(4), false)
+
+		s4 := s1
+		s5 := s1.Diff(s2, s4)
+		t.Assert(s5.Contains(1), true)
+		t.Assert(s5.Contains(2), true)
+		t.Assert(s5.Contains(3), false)
+		t.Assert(s5.Contains(4), false)
 	})
 }
 
@@ -248,6 +262,10 @@ func TestSet_Join(t *testing.T) {
 		t.Assert(strings.Contains(str1, `\c`), true)
 		t.Assert(strings.Contains(str1, `a`), true)
 	})
+	gtest.C(t, func(t *gtest.T) {
+		s1 := gset.Set{}
+		t.Assert(s1.Join(","), "")
+	})
 }
 
 func TestSet_String(t *testing.T) {
@@ -258,6 +276,13 @@ func TestSet_String(t *testing.T) {
 		t.Assert(strings.Contains(str1, "["), true)
 		t.Assert(strings.Contains(str1, "]"), true)
 		t.Assert(strings.Contains(str1, "a2"), true)
+
+		s1 = nil
+		t.Assert(s1.String(), "")
+
+		s2 := gset.New()
+		s2.Add(1)
+		t.Assert(s2.String(), "[1]")
 	})
 }
 
@@ -286,6 +311,7 @@ func TestSet_Sum(t *testing.T) {
 func TestSet_Pop(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.New(true)
+		t.Assert(s.Pop(), nil)
 		s.Add(1, 2, 3, 4)
 		t.Assert(s.Size(), 4)
 		t.AssertIN(s.Pop(), []int{1, 2, 3, 4})
@@ -337,7 +363,7 @@ func TestSet_Json(t *testing.T) {
 
 		var a3 gset.Set
 		err := json.UnmarshalUseNumber(b2, &a3)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(a3.Contains("a"), true)
 		t.Assert(a3.Contains("b"), true)
 		t.Assert(a3.Contains("c"), true)
@@ -355,6 +381,7 @@ func TestSet_AddIfNotExist(t *testing.T) {
 		t.Assert(s.AddIfNotExist(2), true)
 		t.Assert(s.Contains(2), true)
 		t.Assert(s.AddIfNotExist(2), false)
+		t.Assert(s.AddIfNotExist(nil), false)
 		t.Assert(s.Contains(2), true)
 	})
 }
@@ -371,6 +398,7 @@ func TestSet_AddIfNotExistFunc(t *testing.T) {
 		t.Assert(s.Contains(2), true)
 		t.Assert(s.AddIfNotExistFunc(2, func() bool { return true }), false)
 		t.Assert(s.Contains(2), true)
+		t.Assert(s.AddIfNotExistFunc(nil, func() bool { return false }), false)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.New(true)
@@ -386,6 +414,10 @@ func TestSet_AddIfNotExistFunc(t *testing.T) {
 		}()
 		s.Add(1)
 		wg.Wait()
+	})
+	gtest.C(t, func(t *gtest.T) {
+		s := gset.Set{}
+		t.Assert(s.AddIfNotExistFunc(1, func() bool { return true }), true)
 	})
 }
 
@@ -425,6 +457,12 @@ func TestSet_AddIfNotExistFuncLock(t *testing.T) {
 		}()
 		wg.Wait()
 	})
+	gtest.C(t, func(t *gtest.T) {
+		s := gset.New(true)
+		t.Assert(s.AddIfNotExistFuncLock(nil, func() bool { return true }), false)
+		s1 := gset.Set{}
+		t.Assert(s1.AddIfNotExistFuncLock(1, func() bool { return true }), true)
+	})
 }
 
 func TestSet_UnmarshalValue(t *testing.T) {
@@ -439,7 +477,7 @@ func TestSet_UnmarshalValue(t *testing.T) {
 			"name": "john",
 			"set":  []byte(`["k1","k2","k3"]`),
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Set.Size(), 3)
 		t.Assert(v.Set.Contains("k1"), true)
@@ -454,12 +492,27 @@ func TestSet_UnmarshalValue(t *testing.T) {
 			"name": "john",
 			"set":  g.Slice{"k1", "k2", "k3"},
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Set.Size(), 3)
 		t.Assert(v.Set.Contains("k1"), true)
 		t.Assert(v.Set.Contains("k2"), true)
 		t.Assert(v.Set.Contains("k3"), true)
 		t.Assert(v.Set.Contains("k4"), false)
+	})
+}
+
+func TestSet_DeepCopy(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		set := gset.New()
+		set.Add(1, 2, 3)
+
+		copySet := set.DeepCopy().(*gset.Set)
+		copySet.Add(4)
+		t.AssertNE(set.Size(), copySet.Size())
+		t.AssertNE(set.String(), copySet.String())
+
+		set = nil
+		t.AssertNil(set.DeepCopy())
 	})
 }

@@ -9,7 +9,7 @@ package rwmutex_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/internal/rwmutex"
+	"github.com/gogf/gf/v2/internal/rwmutex"
 )
 
 var (

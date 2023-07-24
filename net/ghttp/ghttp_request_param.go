@@ -9,23 +9,25 @@ package ghttp
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"mime/multipart"
+	"net/http"
 	"reflect"
 	"strings"
 
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/encoding/gjson"
-	"github.com/gogf/gf/encoding/gurl"
-	"github.com/gogf/gf/encoding/gxml"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/internal/utils"
-	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gvalid"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/encoding/gurl"
+	"github.com/gogf/gf/v2/encoding/gxml"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gvalid"
 )
 
 const (
@@ -43,9 +45,9 @@ var (
 // slice. It also automatically validates the struct or every element of the struct slice according
 // to the validation tag of the struct.
 //
-// The parameter <pointer> can be type of: *struct/**struct/*[]struct/*[]*struct.
+// The parameter `pointer` can be type of: *struct/**struct/*[]struct/*[]*struct.
 //
-// It supports single and multiple struct convertion:
+// It supports single and multiple struct converting:
 // 1. Single struct, post content like: {"id":1, "name":"john"} or ?id=1&name=john
 // 2. Multiple struct, post content like: [{"id":1, "name":"john"}, {"id":, "name":"smith"}]
 //
@@ -71,8 +73,10 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 		reflectKind1 = reflectVal1.Kind()
 	)
 	if reflectKind1 != reflect.Ptr {
-		return fmt.Errorf(
-			"parameter should be type of *struct/**struct/*[]struct/*[]*struct, but got: %v",
+		return gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`invalid parameter type "%v", of which kind should be of *struct/**struct/*[]struct/*[]*struct, but got: "%v"`,
+			reflectVal1.Type(),
 			reflectKind1,
 		)
 	}
@@ -104,30 +108,34 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 				return err
 			}
 		}
+		// TODO: https://github.com/gogf/gf/pull/2450
 		// Validation.
-		if err := gvalid.CheckStructWithData(r.Context(), pointer, data, nil); err != nil {
+		if err = gvalid.New().
+			Bail().
+			Data(pointer).
+			Assoc(data).
+			Run(r.Context()); err != nil {
 			return err
 		}
 
 	// Multiple struct, it only supports JSON type post content like:
 	// [{"id":1, "name":"john"}, {"id":, "name":"smith"}]
 	case reflect.Array, reflect.Slice:
-		// If struct slice conversion, it might post JSON/XML content,
+		// If struct slice conversion, it might post JSON/XML/... content,
 		// so it uses `gjson` for the conversion.
 		j, err := gjson.LoadContent(r.GetBody())
 		if err != nil {
 			return err
 		}
-		if err := j.GetStructs(".", pointer); err != nil {
+		if err = j.Var().Scan(pointer); err != nil {
 			return err
 		}
 		for i := 0; i < reflectVal2.Len(); i++ {
-			if err := gvalid.CheckStructWithData(
-				r.Context(),
-				reflectVal2.Index(i),
-				j.GetMap(gconv.String(i)),
-				nil,
-			); err != nil {
+			if err = gvalid.New().
+				Bail().
+				Data(reflectVal2.Index(i)).
+				Assoc(j.Get(gconv.String(i)).Map()).
+				Run(r.Context()); err != nil {
 				return err
 			}
 		}
@@ -138,37 +146,31 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 // Get is alias of GetRequest, which is one of the most commonly used functions for
 // retrieving parameter.
 // See r.GetRequest.
-func (r *Request) Get(key string, def ...interface{}) interface{} {
+func (r *Request) Get(key string, def ...interface{}) *gvar.Var {
 	return r.GetRequest(key, def...)
-}
-
-// GetVar is alis of GetRequestVar.
-// See GetRequestVar.
-func (r *Request) GetVar(key string, def ...interface{}) *gvar.Var {
-	return r.GetRequestVar(key, def...)
-}
-
-// GetRaw is alias of GetBody.
-// See GetBody.
-// Deprecated, use GetBody instead.
-func (r *Request) GetRaw() []byte {
-	return r.GetBody()
-}
-
-// GetRawString is alias of GetBodyString.
-// See GetBodyString.
-// Deprecated, use GetBodyString instead.
-func (r *Request) GetRawString() string {
-	return r.GetBodyString()
 }
 
 // GetBody retrieves and returns request body content as bytes.
 // It can be called multiple times retrieving the same body content.
 func (r *Request) GetBody() []byte {
 	if r.bodyContent == nil {
-		r.bodyContent, _ = ioutil.ReadAll(r.Body)
-		r.Body = utils.NewReadCloser(r.bodyContent, true)
+		r.bodyContent = r.MakeBodyRepeatableRead(true)
 	}
+	return r.bodyContent
+}
+
+func (r *Request) MakeBodyRepeatableRead(repeatableRead bool) []byte {
+	if r.bodyContent == nil {
+		var err error
+		if r.bodyContent, err = ioutil.ReadAll(r.Body); err != nil {
+			errMsg := `Read from request Body failed`
+			if gerror.Is(err, io.EOF) {
+				errMsg += `, the Body might be closed or read manually from middleware/hook/other package previously`
+			}
+			panic(gerror.WrapCode(gcode.CodeInternalError, err, errMsg))
+		}
+	}
+	r.Body = utils.NewReadCloser(r.bodyContent, repeatableRead)
 	return r.bodyContent
 }
 
@@ -181,97 +183,10 @@ func (r *Request) GetBodyString() string {
 // GetJson parses current request content as JSON format, and returns the JSON object.
 // Note that the request content is read from request BODY, not from any field of FORM.
 func (r *Request) GetJson() (*gjson.Json, error) {
-	return gjson.LoadJson(r.GetBody())
-}
-
-// GetString is an alias and convenient function for GetRequestString.
-// See GetRequestString.
-func (r *Request) GetString(key string, def ...interface{}) string {
-	return r.GetRequestString(key, def...)
-}
-
-// GetBool is an alias and convenient function for GetRequestBool.
-// See GetRequestBool.
-func (r *Request) GetBool(key string, def ...interface{}) bool {
-	return r.GetRequestBool(key, def...)
-}
-
-// GetInt is an alias and convenient function for GetRequestInt.
-// See GetRequestInt.
-func (r *Request) GetInt(key string, def ...interface{}) int {
-	return r.GetRequestInt(key, def...)
-}
-
-// GetInt32 is an alias and convenient function for GetRequestInt32.
-// See GetRequestInt32.
-func (r *Request) GetInt32(key string, def ...interface{}) int32 {
-	return r.GetRequestInt32(key, def...)
-}
-
-// GetInt64 is an alias and convenient function for GetRequestInt64.
-// See GetRequestInt64.
-func (r *Request) GetInt64(key string, def ...interface{}) int64 {
-	return r.GetRequestInt64(key, def...)
-}
-
-// GetInts is an alias and convenient function for GetRequestInts.
-// See GetRequestInts.
-func (r *Request) GetInts(key string, def ...interface{}) []int {
-	return r.GetRequestInts(key, def...)
-}
-
-// GetUint is an alias and convenient function for GetRequestUint.
-// See GetRequestUint.
-func (r *Request) GetUint(key string, def ...interface{}) uint {
-	return r.GetRequestUint(key, def...)
-}
-
-// GetUint32 is an alias and convenient function for GetRequestUint32.
-// See GetRequestUint32.
-func (r *Request) GetUint32(key string, def ...interface{}) uint32 {
-	return r.GetRequestUint32(key, def...)
-}
-
-// GetUint64 is an alias and convenient function for GetRequestUint64.
-// See GetRequestUint64.
-func (r *Request) GetUint64(key string, def ...interface{}) uint64 {
-	return r.GetRequestUint64(key, def...)
-}
-
-// GetFloat32 is an alias and convenient function for GetRequestFloat32.
-// See GetRequestFloat32.
-func (r *Request) GetFloat32(key string, def ...interface{}) float32 {
-	return r.GetRequestFloat32(key, def...)
-}
-
-// GetFloat64 is an alias and convenient function for GetRequestFloat64.
-// See GetRequestFloat64.
-func (r *Request) GetFloat64(key string, def ...interface{}) float64 {
-	return r.GetRequestFloat64(key, def...)
-}
-
-// GetFloats is an alias and convenient function for GetRequestFloats.
-// See GetRequestFloats.
-func (r *Request) GetFloats(key string, def ...interface{}) []float64 {
-	return r.GetRequestFloats(key, def...)
-}
-
-// GetArray is an alias and convenient function for GetRequestArray.
-// See GetRequestArray.
-func (r *Request) GetArray(key string, def ...interface{}) []string {
-	return r.GetRequestArray(key, def...)
-}
-
-// GetStrings is an alias and convenient function for GetRequestStrings.
-// See GetRequestStrings.
-func (r *Request) GetStrings(key string, def ...interface{}) []string {
-	return r.GetRequestStrings(key, def...)
-}
-
-// GetInterfaces is an alias and convenient function for GetRequestInterfaces.
-// See GetRequestInterfaces.
-func (r *Request) GetInterfaces(key string, def ...interface{}) []interface{} {
-	return r.GetRequestInterfaces(key, def...)
+	return gjson.LoadWithOptions(r.GetBody(), gjson.Options{
+		Type:      gjson.ContentTypeJson,
+		StrNumber: true,
+	})
 }
 
 // GetMap is an alias and convenient function for GetRequestMap.
@@ -302,7 +217,7 @@ func (r *Request) parseQuery() {
 		var err error
 		r.queryMap, err = gstr.Parse(r.URL.RawQuery)
 		if err != nil {
-			panic(gerror.WrapCode(gcode.CodeInvalidParameter, err, ""))
+			panic(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse Query failed"))
 		}
 	}
 }
@@ -333,7 +248,7 @@ func (r *Request) parseBody() {
 			r.bodyMap, _ = gxml.DecodeWithoutRoot(body)
 		}
 		// Default parameters decoding.
-		if r.bodyMap == nil {
+		if contentType := r.Header.Get("Content-Type"); (contentType == "" || !gstr.Contains(contentType, "multipart/")) && r.bodyMap == nil {
 			r.bodyMap, _ = gstr.Parse(r.GetBodyString())
 		}
 	}
@@ -353,20 +268,22 @@ func (r *Request) parseForm() {
 		return
 	}
 	if contentType := r.Header.Get("Content-Type"); contentType != "" {
+		r.MakeBodyRepeatableRead(true)
+
 		var err error
 		if gstr.Contains(contentType, "multipart/") {
 			// multipart/form-data, multipart/mixed
 			if err = r.ParseMultipartForm(r.Server.config.FormParsingMemory); err != nil {
-				panic(gerror.WrapCode(gcode.CodeInvalidRequest, err, ""))
+				panic(gerror.WrapCode(gcode.CodeInvalidRequest, err, "r.ParseMultipartForm failed"))
 			}
 		} else if gstr.Contains(contentType, "form") {
 			// application/x-www-form-urlencoded
 			if err = r.Request.ParseForm(); err != nil {
-				panic(gerror.WrapCode(gcode.CodeInvalidRequest, err, ""))
+				panic(gerror.WrapCode(gcode.CodeInvalidRequest, err, "r.Request.ParseForm failed"))
 			}
 		}
 		if len(r.PostForm) > 0 {
-			// Re-parse the form data using united parsing way.
+			// Parse the form data using united parsing way.
 			params := ""
 			for name, values := range r.PostForm {
 				// Invalid parameter name.
@@ -405,14 +322,14 @@ func (r *Request) parseForm() {
 			}
 			if params != "" {
 				if r.formMap, err = gstr.Parse(params); err != nil {
-					panic(gerror.WrapCode(gcode.CodeInvalidParameter, err, ""))
+					panic(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse request parameters failed"))
 				}
 			}
 		}
 	}
 	// It parses the request body without checking the Content-Type.
 	if r.formMap == nil {
-		if r.Method != "GET" {
+		if r.Method != http.MethodGet {
 			r.parseBody()
 		}
 		if len(r.bodyMap) > 0 {
@@ -421,7 +338,7 @@ func (r *Request) parseForm() {
 	}
 }
 
-// GetMultipartForm parses and returns the form as multipart form.
+// GetMultipartForm parses and returns the form as multipart forms.
 func (r *Request) GetMultipartForm() *multipart.Form {
 	r.parseForm()
 	return r.MultipartForm
@@ -442,8 +359,10 @@ func (r *Request) GetMultipartFiles(name string) []*multipart.FileHeader {
 		return v
 	}
 	// Support "name[0]","name[1]","name[2]", etc. as array parameter.
-	key := ""
-	files := make([]*multipart.FileHeader, 0)
+	var (
+		key   string
+		files = make([]*multipart.FileHeader, 0)
+	)
 	for i := 0; ; i++ {
 		key = fmt.Sprintf(`%s[%d]`, name, i)
 		if v := form.File[key]; len(v) > 0 {

@@ -11,12 +11,14 @@ package gmap_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 var hashMap = gmap.New(true)
+
 var listMap = gmap.NewListMap(true)
+
 var treeMap = gmap.NewTreeMap(gutil.ComparatorInt, true)
 
 func Benchmark_HashMap_Set(b *testing.B) {

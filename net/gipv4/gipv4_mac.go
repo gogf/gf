@@ -9,6 +9,8 @@ package gipv4
 
 import (
 	"net"
+
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 // GetMac retrieves and returns the first mac address of current host.
@@ -27,6 +29,7 @@ func GetMac() (mac string, err error) {
 func GetMacArray() (macs []string, err error) {
 	netInterfaces, err := net.Interfaces()
 	if err != nil {
+		err = gerror.Wrap(err, `net.Interfaces failed`)
 		return nil, err
 	}
 	for _, netInterface := range netInterfaces {

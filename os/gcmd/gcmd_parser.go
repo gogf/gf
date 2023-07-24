@@ -8,52 +8,82 @@
 package gcmd
 
 import (
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/json"
+	"context"
 	"os"
 	"strings"
 
-	"github.com/gogf/gf/text/gstr"
-
-	"github.com/gogf/gf/container/gvar"
-
-	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/command"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
 )
+
+// ParserOption manages the parsing options.
+type ParserOption struct {
+	CaseSensitive bool // Marks options parsing in case-sensitive way.
+	Strict        bool // Whether stops parsing and returns error if invalid option passed.
+}
 
 // Parser for arguments.
 type Parser struct {
-	strict           bool              // Whether stops parsing and returns error if invalid option passed.
+	option           ParserOption      // Parse option.
 	parsedArgs       []string          // As name described.
 	parsedOptions    map[string]string // As name described.
-	passedOptions    map[string]bool   // User passed supported options.
-	supportedOptions map[string]bool   // Option [option name : need argument].
+	passedOptions    map[string]bool   // User passed supported options, like: map[string]bool{"name,n":true}
+	supportedOptions map[string]bool   // Option [OptionName:WhetherNeedArgument], like: map[string]bool{"name":true, "n":true}
 	commandFuncMap   map[string]func() // Command function map for function handler.
+}
+
+// ParserFromCtx retrieves and returns Parser from context.
+func ParserFromCtx(ctx context.Context) *Parser {
+	if v := ctx.Value(CtxKeyParser); v != nil {
+		if p, ok := v.(*Parser); ok {
+			return p
+		}
+	}
+	return nil
 }
 
 // Parse creates and returns a new Parser with os.Args and supported options.
 //
-// Note that the parameter <supportedOptions> is as [option name: need argument], which means
-// the value item of <supportedOptions> indicates whether corresponding option name needs argument or not.
+// Note that the parameter `supportedOptions` is as [option name: need argument], which means
+// the value item of `supportedOptions` indicates whether corresponding option name needs argument or not.
 //
-// The optional parameter <strict> specifies whether stops parsing and returns error if invalid option passed.
-func Parse(supportedOptions map[string]bool, strict ...bool) (*Parser, error) {
-	return ParseWithArgs(os.Args, supportedOptions, strict...)
+// The optional parameter `strict` specifies whether stops parsing and returns error if invalid option passed.
+func Parse(supportedOptions map[string]bool, option ...ParserOption) (*Parser, error) {
+	if supportedOptions == nil {
+		command.Init(os.Args...)
+		return &Parser{
+			parsedArgs:    GetArgAll(),
+			parsedOptions: GetOptAll(),
+		}, nil
+	}
+	return ParseArgs(os.Args, supportedOptions, option...)
 }
 
-// ParseWithArgs creates and returns a new Parser with given arguments and supported options.
+// ParseArgs creates and returns a new Parser with given arguments and supported options.
 //
-// Note that the parameter <supportedOptions> is as [option name: need argument], which means
-// the value item of <supportedOptions> indicates whether corresponding option name needs argument or not.
+// Note that the parameter `supportedOptions` is as [option name: need argument], which means
+// the value item of `supportedOptions` indicates whether corresponding option name needs argument or not.
 //
-// The optional parameter <strict> specifies whether stops parsing and returns error if invalid option passed.
-func ParseWithArgs(args []string, supportedOptions map[string]bool, strict ...bool) (*Parser, error) {
-	strictParsing := false
-	if len(strict) > 0 {
-		strictParsing = strict[0]
+// The optional parameter `strict` specifies whether stops parsing and returns error if invalid option passed.
+func ParseArgs(args []string, supportedOptions map[string]bool, option ...ParserOption) (*Parser, error) {
+	if supportedOptions == nil {
+		command.Init(args...)
+		return &Parser{
+			parsedArgs:    GetArgAll(),
+			parsedOptions: GetOptAll(),
+		}, nil
+	}
+	var parserOption ParserOption
+	if len(option) > 0 {
+		parserOption = option[0]
 	}
 	parser := &Parser{
-		strict:           strictParsing,
+		option:           parserOption,
 		parsedArgs:       make([]string, 0),
 		parsedOptions:    make(map[string]string),
 		passedOptions:    supportedOptions,
@@ -88,13 +118,13 @@ func ParseWithArgs(args []string, supportedOptions map[string]bool, strict ...bo
 					}
 				} else {
 					// Multiple options?
-					if array := parser.parseMultiOption(option); len(array) > 0 {
+					if array = parser.parseMultiOption(option); len(array) > 0 {
 						for _, v := range array {
 							parser.setOptionValue(v, "")
 						}
 						i++
 						continue
-					} else if parser.strict {
+					} else if parser.option.Strict {
 						return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid option '%s'`, args[i])
 					}
 				}
@@ -135,8 +165,18 @@ func (p *Parser) parseOption(argument string) string {
 }
 
 func (p *Parser) isOptionValid(name string) bool {
-	_, ok := p.supportedOptions[name]
-	return ok
+	// Case-Sensitive.
+	if p.option.CaseSensitive {
+		_, ok := p.supportedOptions[name]
+		return ok
+	}
+	// Case-InSensitive.
+	for optionName := range p.supportedOptions {
+		if gstr.Equal(optionName, name) {
+			return true
+		}
+	}
+	return false
 }
 
 func (p *Parser) isOptionNeedArgument(name string) bool {
@@ -145,7 +185,7 @@ func (p *Parser) isOptionNeedArgument(name string) bool {
 
 // setOptionValue sets the option value for name and according alias.
 func (p *Parser) setOptionValue(name, value string) {
-	for optionName, _ := range p.passedOptions {
+	for optionName := range p.passedOptions {
 		array := gstr.SplitAndTrim(optionName, ",")
 		for _, v := range array {
 			if strings.EqualFold(v, name) {
@@ -158,26 +198,15 @@ func (p *Parser) setOptionValue(name, value string) {
 	}
 }
 
-// GetOpt returns the option value named <name>.
-func (p *Parser) GetOpt(name string, def ...string) string {
+// GetOpt returns the option value named `name` as gvar.Var.
+func (p *Parser) GetOpt(name string, def ...interface{}) *gvar.Var {
 	if v, ok := p.parsedOptions[name]; ok {
-		return v
-	}
-	if len(def) > 0 {
-		return def[0]
-	}
-	return ""
-}
-
-// GetOptVar returns the option value named <name> as gvar.Var.
-func (p *Parser) GetOptVar(name string, def ...interface{}) *gvar.Var {
-	if p.ContainsOpt(name) {
-		return gvar.New(p.GetOpt(name))
+		return gvar.New(v)
 	}
 	if len(def) > 0 {
 		return gvar.New(def[0])
 	}
-	return gvar.New(nil)
+	return nil
 }
 
 // GetOptAll returns all parsed options.
@@ -185,26 +214,15 @@ func (p *Parser) GetOptAll() map[string]string {
 	return p.parsedOptions
 }
 
-// ContainsOpt checks whether option named <name> exist in the arguments.
-func (p *Parser) ContainsOpt(name string) bool {
-	_, ok := p.parsedOptions[name]
-	return ok
-}
-
-// GetArg returns the argument at <index>.
-func (p *Parser) GetArg(index int, def ...string) string {
-	if index < len(p.parsedArgs) {
-		return p.parsedArgs[index]
+// GetArg returns the argument at `index` as gvar.Var.
+func (p *Parser) GetArg(index int, def ...string) *gvar.Var {
+	if index >= 0 && index < len(p.parsedArgs) {
+		return gvar.New(p.parsedArgs[index])
 	}
 	if len(def) > 0 {
-		return def[0]
+		return gvar.New(def[0])
 	}
-	return ""
-}
-
-// GetArgVar returns the argument at <index> as gvar.Var.
-func (p *Parser) GetArgVar(index int, def ...string) *gvar.Var {
-	return gvar.New(p.GetArg(index, def...))
+	return nil
 }
 
 // GetArgAll returns all parsed arguments.
@@ -213,7 +231,7 @@ func (p *Parser) GetArgAll() []string {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (p *Parser) MarshalJSON() ([]byte, error) {
+func (p Parser) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"parsedArgs":       p.parsedArgs,
 		"parsedOptions":    p.parsedOptions,

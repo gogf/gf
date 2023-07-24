@@ -7,10 +7,11 @@
 package gconv
 
 import (
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/json"
 	"reflect"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/json"
 )
 
 // MapToMap converts any map type variable `params` to another map type variable `pointer`
@@ -23,10 +24,10 @@ func MapToMap(params interface{}, pointer interface{}, mapping ...map[string]str
 // doMapToMap converts any map type variable `params` to another map type variable `pointer`.
 //
 // The parameter `params` can be any type of map, like:
-// map[string]string, map[string]struct, map[string]*struct, etc.
+// map[string]string, map[string]struct, map[string]*struct, reflect.Value, etc.
 //
 // The parameter `pointer` should be type of *map, like:
-// map[int]string, map[string]struct, map[string]*struct, etc.
+// map[int]string, map[string]struct, map[string]*struct, reflect.Value, etc.
 //
 // The optional parameter `mapping` is used for struct attribute to map key mapping, which makes
 // sense only if the items of original map `params` is type struct.
@@ -94,12 +95,12 @@ func doMapToMap(params interface{}, pointer interface{}, mapping ...map[string]s
 		return gerror.NewCodef(gcode.CodeInvalidParameter, "pointer should be type of *map, but got:%s", pointerKind)
 	}
 	defer func() {
-		// Catch the panic, especially the reflect operation panics.
+		// Catch the panic, especially the reflection operation panics.
 		if exception := recover(); exception != nil {
-			if e, ok := exception.(errorStack); ok {
-				err = e
+			if v, ok := exception.(error); ok && gerror.HasStack(v) {
+				err = v
 			} else {
-				err = gerror.NewCodeSkipf(gcode.CodeInternalError, 1, "%v", exception)
+				err = gerror.NewCodeSkipf(gcode.CodeInternalError, 1, "%+v", exception)
 			}
 		}
 	}()
@@ -115,31 +116,33 @@ func doMapToMap(params interface{}, pointer interface{}, mapping ...map[string]s
 		pointerValueKind = pointerValueType.Elem().Kind()
 	}
 	for _, key := range paramsKeys {
-		e := reflect.New(pointerValueType).Elem()
+		mapValue := reflect.New(pointerValueType).Elem()
 		switch pointerValueKind {
 		case reflect.Map, reflect.Struct:
-			if err = doStruct(paramsRv.MapIndex(key).Interface(), e, keyToAttributeNameMapping, ""); err != nil {
+			if err = doStruct(paramsRv.MapIndex(key).Interface(), mapValue, keyToAttributeNameMapping, ""); err != nil {
 				return err
 			}
 		default:
-			e.Set(
+			mapValue.Set(
 				reflect.ValueOf(
-					Convert(
-						paramsRv.MapIndex(key).Interface(),
-						pointerValueType.String(),
-					),
+					doConvert(doConvertInput{
+						FromValue:  paramsRv.MapIndex(key).Interface(),
+						ToTypeName: pointerValueType.String(),
+						ReferValue: mapValue,
+						Extra:      nil,
+					}),
 				),
 			)
 		}
-		dataMap.SetMapIndex(
-			reflect.ValueOf(
-				Convert(
-					key.Interface(),
-					pointerKeyType.Name(),
-				),
-			),
-			e,
+		var mapKey = reflect.ValueOf(
+			doConvert(doConvertInput{
+				FromValue:  key.Interface(),
+				ToTypeName: pointerKeyType.Name(),
+				ReferValue: reflect.New(pointerKeyType).Elem().Interface(),
+				Extra:      nil,
+			}),
 		)
+		dataMap.SetMapIndex(mapKey, mapValue)
 	}
 	pointerRv.Set(dataMap)
 	return nil

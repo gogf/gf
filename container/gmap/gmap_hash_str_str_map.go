@@ -8,21 +8,20 @@
 package gmap
 
 import (
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/util/gconv"
-
-	"github.com/gogf/gf/internal/empty"
-
-	"github.com/gogf/gf/internal/rwmutex"
+	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/internal/rwmutex"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// StrStrMap implements map[string]string with RWMutex that has switch.
 type StrStrMap struct {
 	mu   rwmutex.RWMutex
 	data map[string]string
 }
 
 // NewStrStrMap returns an empty StrStrMap object.
-// The parameter <safe> is used to specify whether using map in concurrent-safety,
+// The parameter `safe` is used to specify whether using map in concurrent-safety,
 // which is false in default.
 func NewStrStrMap(safe ...bool) *StrStrMap {
 	return &StrStrMap{
@@ -31,8 +30,8 @@ func NewStrStrMap(safe ...bool) *StrStrMap {
 	}
 }
 
-// NewStrStrMapFrom creates and returns a hash map from given map <data>.
-// Note that, the param <data> map will be set as the underlying data map(no deep copy),
+// NewStrStrMapFrom creates and returns a hash map from given map `data`.
+// Note that, the param `data` map will be set as the underlying data map(no deep copy),
 // there might be some concurrent-safe issues when changing the map outside.
 func NewStrStrMapFrom(data map[string]string, safe ...bool) *StrStrMap {
 	return &StrStrMap{
@@ -41,8 +40,8 @@ func NewStrStrMapFrom(data map[string]string, safe ...bool) *StrStrMap {
 	}
 }
 
-// Iterator iterates the hash map readonly with custom callback function <f>.
-// If <f> returns true, then it continues iterating; or false to stop.
+// Iterator iterates the hash map readonly with custom callback function `f`.
+// If `f` returns true, then it continues iterating; or false to stop.
 func (m *StrStrMap) Iterator(f func(k string, v string) bool) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -131,8 +130,8 @@ func (m *StrStrMap) Sets(data map[string]string) {
 	m.mu.Unlock()
 }
 
-// Search searches the map with given <key>.
-// Second return parameter <found> is true if key was found, otherwise false.
+// Search searches the map with given `key`.
+// Second return parameter `found` is true if key was found, otherwise false.
 func (m *StrStrMap) Search(key string) (value string, found bool) {
 	m.mu.RLock()
 	if m.data != nil {
@@ -142,11 +141,11 @@ func (m *StrStrMap) Search(key string) (value string, found bool) {
 	return
 }
 
-// Get returns the value by given <key>.
+// Get returns the value by given `key`.
 func (m *StrStrMap) Get(key string) (value string) {
 	m.mu.RLock()
 	if m.data != nil {
-		value, _ = m.data[key]
+		value = m.data[key]
 	}
 	m.mu.RUnlock()
 	return
@@ -163,7 +162,7 @@ func (m *StrStrMap) Pop() (key, value string) {
 	return
 }
 
-// Pops retrieves and deletes <size> items from the map.
+// Pops retrieves and deletes `size` items from the map.
 // It returns all items if size == -1.
 func (m *StrStrMap) Pops(size int) map[string]string {
 	m.mu.Lock()
@@ -190,10 +189,10 @@ func (m *StrStrMap) Pops(size int) map[string]string {
 }
 
 // doSetWithLockCheck checks whether value of the key exists with mutex.Lock,
-// if not exists, set value to the map with given <key>,
+// if not exists, set value to the map with given `key`,
 // or else just return the existing value.
 //
-// It returns value with given <key>.
+// It returns value with given `key`.
 func (m *StrStrMap) doSetWithLockCheck(key string, value string) string {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -208,7 +207,7 @@ func (m *StrStrMap) doSetWithLockCheck(key string, value string) string {
 }
 
 // GetOrSet returns the value by key,
-// or sets value with given <value> if it does not exist and then returns this value.
+// or sets value with given `value` if it does not exist and then returns this value.
 func (m *StrStrMap) GetOrSet(key string, value string) string {
 	if v, ok := m.Search(key); !ok {
 		return m.doSetWithLockCheck(key, value)
@@ -218,7 +217,7 @@ func (m *StrStrMap) GetOrSet(key string, value string) string {
 }
 
 // GetOrSetFunc returns the value by key,
-// or sets value with returned value of callback function <f> if it does not exist
+// or sets value with returned value of callback function `f` if it does not exist
 // and then returns this value.
 func (m *StrStrMap) GetOrSetFunc(key string, f func() string) string {
 	if v, ok := m.Search(key); !ok {
@@ -229,10 +228,10 @@ func (m *StrStrMap) GetOrSetFunc(key string, f func() string) string {
 }
 
 // GetOrSetFuncLock returns the value by key,
-// or sets value with returned value of callback function <f> if it does not exist
+// or sets value with returned value of callback function `f` if it does not exist
 // and then returns this value.
 //
-// GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function <f>
+// GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function `f`
 // with mutex.Lock of the hash map.
 func (m *StrStrMap) GetOrSetFuncLock(key string, f func() string) string {
 	if v, ok := m.Search(key); !ok {
@@ -252,8 +251,8 @@ func (m *StrStrMap) GetOrSetFuncLock(key string, f func() string) string {
 	}
 }
 
-// SetIfNotExist sets <value> to the map if the <key> does not exist, and then returns true.
-// It returns false if <key> exists, and <value> would be ignored.
+// SetIfNotExist sets `value` to the map if the `key` does not exist, and then returns true.
+// It returns false if `key` exists, and `value` would be ignored.
 func (m *StrStrMap) SetIfNotExist(key string, value string) bool {
 	if !m.Contains(key) {
 		m.doSetWithLockCheck(key, value)
@@ -262,8 +261,8 @@ func (m *StrStrMap) SetIfNotExist(key string, value string) bool {
 	return false
 }
 
-// SetIfNotExistFunc sets value with return value of callback function <f>, and then returns true.
-// It returns false if <key> exists, and <value> would be ignored.
+// SetIfNotExistFunc sets value with return value of callback function `f`, and then returns true.
+// It returns false if `key` exists, and `value` would be ignored.
 func (m *StrStrMap) SetIfNotExistFunc(key string, f func() string) bool {
 	if !m.Contains(key) {
 		m.doSetWithLockCheck(key, f())
@@ -272,11 +271,11 @@ func (m *StrStrMap) SetIfNotExistFunc(key string, f func() string) bool {
 	return false
 }
 
-// SetIfNotExistFuncLock sets value with return value of callback function <f>, and then returns true.
-// It returns false if <key> exists, and <value> would be ignored.
+// SetIfNotExistFuncLock sets value with return value of callback function `f`, and then returns true.
+// It returns false if `key` exists, and `value` would be ignored.
 //
 // SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that
-// it executes function <f> with mutex.Lock of the hash map.
+// it executes function `f` with mutex.Lock of the hash map.
 func (m *StrStrMap) SetIfNotExistFuncLock(key string, f func() string) bool {
 	if !m.Contains(key) {
 		m.mu.Lock()
@@ -303,7 +302,7 @@ func (m *StrStrMap) Removes(keys []string) {
 	m.mu.Unlock()
 }
 
-// Remove deletes value from map by given <key>, and return this deleted value.
+// Remove deletes value from map by given `key`, and return this deleted value.
 func (m *StrStrMap) Remove(key string) (value string) {
 	m.mu.Lock()
 	if m.data != nil {
@@ -347,7 +346,7 @@ func (m *StrStrMap) Values() []string {
 }
 
 // Contains checks whether a key exists.
-// It returns true if the <key> exists, or else false.
+// It returns true if the `key` exists, or else false.
 func (m *StrStrMap) Contains(key string) bool {
 	var ok bool
 	m.mu.RLock()
@@ -379,21 +378,21 @@ func (m *StrStrMap) Clear() {
 	m.mu.Unlock()
 }
 
-// Replace the data of the map with given <data>.
+// Replace the data of the map with given `data`.
 func (m *StrStrMap) Replace(data map[string]string) {
 	m.mu.Lock()
 	m.data = data
 	m.mu.Unlock()
 }
 
-// LockFunc locks writing with given callback function <f> within RWMutex.Lock.
+// LockFunc locks writing with given callback function `f` within RWMutex.Lock.
 func (m *StrStrMap) LockFunc(f func(m map[string]string)) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	f(m.data)
 }
 
-// RLockFunc locks reading with given callback function <f> within RWMutex.RLock.
+// RLockFunc locks reading with given callback function `f` within RWMutex.RLock.
 func (m *StrStrMap) RLockFunc(f func(m map[string]string)) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -412,7 +411,7 @@ func (m *StrStrMap) Flip() {
 }
 
 // Merge merges two hash maps.
-// The <other> map will be merged into the map <m>.
+// The `other` map will be merged into the map `m`.
 func (m *StrStrMap) Merge(other *StrStrMap) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -431,12 +430,15 @@ func (m *StrStrMap) Merge(other *StrStrMap) {
 
 // String returns the map as a string.
 func (m *StrStrMap) String() string {
+	if m == nil {
+		return ""
+	}
 	b, _ := m.MarshalJSON()
 	return string(b)
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (m *StrStrMap) MarshalJSON() ([]byte, error) {
+func (m StrStrMap) MarshalJSON() ([]byte, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return json.Marshal(m.data)
@@ -460,5 +462,65 @@ func (m *StrStrMap) UnmarshalValue(value interface{}) (err error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.data = gconv.MapStrStr(value)
+	return
+}
+
+// DeepCopy implements interface for deep copy of current type.
+func (m *StrStrMap) DeepCopy() interface{} {
+	if m == nil {
+		return nil
+	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	data := make(map[string]string, len(m.data))
+	for k, v := range m.data {
+		data[k] = v
+	}
+	return NewStrStrMapFrom(data, m.mu.IsSafe())
+}
+
+// IsSubOf checks whether the current map is a sub-map of `other`.
+func (m *StrStrMap) IsSubOf(other *StrStrMap) bool {
+	if m == other {
+		return true
+	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	other.mu.RLock()
+	defer other.mu.RUnlock()
+	for key, value := range m.data {
+		otherValue, ok := other.data[key]
+		if !ok {
+			return false
+		}
+		if otherValue != value {
+			return false
+		}
+	}
+	return true
+}
+
+// Diff compares current map `m` with map `other` and returns their different keys.
+// The returned `addedKeys` are the keys that are in map `m` but not in map `other`.
+// The returned `removedKeys` are the keys that are in map `other` but not in map `m`.
+// The returned `updatedKeys` are the keys that are both in map `m` and `other` but their values and not equal (`!=`).
+func (m *StrStrMap) Diff(other *StrStrMap) (addedKeys, removedKeys, updatedKeys []string) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	other.mu.RLock()
+	defer other.mu.RUnlock()
+
+	for key := range m.data {
+		if _, ok := other.data[key]; !ok {
+			removedKeys = append(removedKeys, key)
+		} else if m.data[key] != other.data[key] {
+			updatedKeys = append(updatedKeys, key)
+		}
+	}
+	for key := range other.data {
+		if _, ok := m.data[key]; !ok {
+			addedKeys = append(addedKeys, key)
+		}
+	}
 	return
 }

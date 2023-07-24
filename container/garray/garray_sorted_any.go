@@ -9,16 +9,17 @@ package garray
 import (
 	"bytes"
 	"fmt"
-	"github.com/gogf/gf/internal/empty"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gutil"
 	"math"
 	"sort"
 
-	"github.com/gogf/gf/internal/rwmutex"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/grand"
+	"github.com/gogf/gf/v2/internal/deepcopy"
+	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/internal/rwmutex"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/grand"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // SortedArray is a golang sorted array with rich features.
@@ -36,9 +37,9 @@ type SortedArray struct {
 // NewSortedArray creates and returns an empty sorted array.
 // The parameter `safe` is used to specify whether using array in concurrent-safety, which is false in default.
 // The parameter `comparator` used to compare values to sort in array,
-// if it returns value < 0, means v1 < v2; the v1 will be inserted before v2;
-// if it returns value = 0, means v1 = v2; the v1 will be replaced by v2;
-// if it returns value > 0, means v1 > v2; the v1 will be inserted after v2;
+// if it returns value < 0, means `a` < `b`; the `a` will be inserted before `b`;
+// if it returns value = 0, means `a` = `b`; the `a` will be replaced by     `b`;
+// if it returns value > 0, means `a` > `b`; the `a` will be inserted after  `b`;
 func NewSortedArray(comparator func(a, b interface{}) int, safe ...bool) *SortedArray {
 	return NewSortedArraySize(0, comparator, safe...)
 }
@@ -54,16 +55,16 @@ func NewSortedArraySize(cap int, comparator func(a, b interface{}) int, safe ...
 	}
 }
 
-// NewSortedArrayRange creates and returns a array by a range from `start` to `end`
+// NewSortedArrayRange creates and returns an array by a range from `start` to `end`
 // with step value `step`.
 func NewSortedArrayRange(start, end, step int, comparator func(a, b interface{}) int, safe ...bool) *SortedArray {
 	if step == 0 {
 		panic(fmt.Sprintf(`invalid step value: %d`, step))
 	}
-	slice := make([]interface{}, (end-start+1)/step)
+	slice := make([]interface{}, 0)
 	index := 0
 	for i := start; i <= end; i += step {
-		slice[index] = i
+		slice = append(slice, i)
 		index++
 	}
 	return NewSortedArrayFrom(slice, comparator, safe...)
@@ -206,11 +207,24 @@ func (a *SortedArray) doRemoveWithoutLock(index int) (value interface{}, found b
 // RemoveValue removes an item by value.
 // It returns true if value is found in the array, or else false if not found.
 func (a *SortedArray) RemoveValue(value interface{}) bool {
-	if i := a.Search(value); i != -1 {
-		a.Remove(i)
-		return true
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if i, r := a.binSearch(value, false); r == 0 {
+		_, res := a.doRemoveWithoutLock(i)
+		return res
 	}
 	return false
+}
+
+// RemoveValues removes an item by `values`.
+func (a *SortedArray) RemoveValues(values ...interface{}) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for _, value := range values {
+		if i, r := a.binSearch(value, false); r == 0 {
+			a.doRemoveWithoutLock(i)
+		}
+	}
 }
 
 // PopLeft pops and returns an item from the beginning of array.
@@ -467,7 +481,7 @@ func (a *SortedArray) binSearch(value interface{}, lock bool) (index int, result
 
 // SetUnique sets unique mark to the array,
 // which means it does not contain any repeated items.
-// It also do unique check, remove all repeated items.
+// It also does unique check, remove all repeated items.
 func (a *SortedArray) SetUnique(unique bool) *SortedArray {
 	oldUnique := a.unique
 	a.unique = unique
@@ -653,6 +667,9 @@ func (a *SortedArray) IteratorDesc(f func(k int, v interface{}) bool) {
 
 // String returns current array as a string, which implements like json.Marshal does.
 func (a *SortedArray) String() string {
+	if a == nil {
+		return ""
+	}
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	buffer := bytes.NewBuffer(nil)
@@ -744,6 +761,22 @@ func (a *SortedArray) FilterNil() *SortedArray {
 	return a
 }
 
+// Filter iterates array and filters elements using custom callback function.
+// It removes the element from array if callback function `filter` returns true,
+// it or else does nothing and continues iterating.
+func (a *SortedArray) Filter(filter func(index int, value interface{}) bool) *SortedArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if filter(i, a.array[i]) {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			i++
+		}
+	}
+	return a
+}
+
 // FilterEmpty removes all empty value of the array.
 // Values like: 0, nil, false, "", len(slice/map/chan) == 0 are considered empty.
 func (a *SortedArray) FilterEmpty() *SortedArray {
@@ -792,4 +825,18 @@ func (a *SortedArray) getComparator() func(a, b interface{}) int {
 		panic("comparator is missing for sorted array")
 	}
 	return a.comparator
+}
+
+// DeepCopy implements interface for deep copy of current type.
+func (a *SortedArray) DeepCopy() interface{} {
+	if a == nil {
+		return nil
+	}
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	newSlice := make([]interface{}, len(a.array))
+	for i, v := range a.array {
+		newSlice[i] = deepcopy.Copy(v)
+	}
+	return NewSortedArrayFrom(newSlice, a.comparator, a.mu.IsSafe())
 }

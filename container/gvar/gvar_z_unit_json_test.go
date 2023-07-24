@@ -7,11 +7,12 @@
 package gvar_test
 
 import (
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/test/gtest"
 	"math"
 	"testing"
+
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func TestVar_Json(t *testing.T) {
@@ -39,10 +40,10 @@ func TestVar_Json(t *testing.T) {
 		s := "i love gf"
 		v := gvar.New(nil)
 		b, err := json.Marshal(s)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		err = json.UnmarshalUseNumber(b, v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.String(), s)
 	})
 
@@ -50,10 +51,10 @@ func TestVar_Json(t *testing.T) {
 		var v gvar.Var
 		s := "i love gf"
 		b, err := json.Marshal(s)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		err = json.UnmarshalUseNumber(b, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.String(), s)
 	})
 }

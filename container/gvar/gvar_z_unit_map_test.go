@@ -7,10 +7,11 @@
 package gvar_test
 
 import (
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/test/gtest"
 	"testing"
+
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func TestVar_Map(t *testing.T) {
@@ -77,5 +78,19 @@ func TestVar_MapToMap(t *testing.T) {
 		t.Assert(gvar.New(m1).MapToMap(&m2), nil)
 		t.Assert(m2["k1"], m1["k1"])
 		t.Assert(m2["k2"], m1["k2"])
+	})
+}
+
+func TestVar_MapStrVar(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := g.Map{
+			"k1": "v1",
+			"k2": "v2",
+		}
+		objOne := gvar.New(m, true)
+		t.Assert(objOne.MapStrVar(), "{\"k1\":\"v1\",\"k2\":\"v2\"}")
+
+		objEmpty := gvar.New(g.Map{})
+		t.Assert(objEmpty.MapStrVar(), "")
 	})
 }

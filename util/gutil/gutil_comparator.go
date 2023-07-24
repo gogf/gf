@@ -9,15 +9,16 @@ package gutil
 import (
 	"strings"
 
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Comparator is a function that compare a and b, and returns the result as int.
 //
 // Should return a number:
-//    negative , if a < b
-//    zero     , if a == b
-//    positive , if a > b
+//
+//	negative , if a < b
+//	zero     , if a == b
+//	positive , if a > b
 type Comparator func(a, b interface{}) int
 
 // ComparatorString provides a fast comparison on strings.

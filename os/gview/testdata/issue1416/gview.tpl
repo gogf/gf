@@ -1,0 +1,1 @@
+test.tpl content, vars: {{.hello}}

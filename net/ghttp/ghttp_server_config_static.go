@@ -9,20 +9,19 @@
 package ghttp
 
 import (
-	"fmt"
+	"context"
 	"strings"
 
-	"github.com/gogf/gf/os/gres"
-
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gres"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // staticPathItem is the item struct for static path configuration.
 type staticPathItem struct {
-	prefix string // The router URI.
-	path   string // The static path.
+	Prefix string // The router URI.
+	Path   string // The static path.
 }
 
 // SetIndexFiles sets the index files for server.
@@ -30,7 +29,7 @@ func (s *Server) SetIndexFiles(indexFiles []string) {
 	s.config.IndexFiles = indexFiles
 }
 
-// GetIndexFiles retrieves and returns the index files from server.
+// GetIndexFiles retrieves and returns the index files from the server.
 func (s *Server) GetIndexFiles() []string {
 	return s.config.IndexFiles
 }
@@ -50,25 +49,31 @@ func (s *Server) SetFileServerEnabled(enabled bool) {
 
 // SetServerRoot sets the document root for static service.
 func (s *Server) SetServerRoot(root string) {
-	realPath := root
+	var (
+		ctx      = context.TODO()
+		realPath = root
+	)
 	if !gres.Contains(realPath) {
 		if p, err := gfile.Search(root); err != nil {
-			s.Logger().Fatal(fmt.Sprintf(`SetServerRoot failed: %v`, err))
+			s.Logger().Fatalf(ctx, `SetServerRoot failed: %+v`, err)
 		} else {
 			realPath = p
 		}
 	}
-	s.Logger().Debug("SetServerRoot path:", realPath)
+	s.Logger().Debug(ctx, "SetServerRoot path:", realPath)
 	s.config.SearchPaths = []string{strings.TrimRight(realPath, gfile.Separator)}
 	s.config.FileServerEnabled = true
 }
 
 // AddSearchPath add searching directory path for static file service.
 func (s *Server) AddSearchPath(path string) {
-	realPath := path
+	var (
+		ctx      = context.TODO()
+		realPath = path
+	)
 	if !gres.Contains(realPath) {
 		if p, err := gfile.Search(path); err != nil {
-			s.Logger().Fatal(fmt.Sprintf(`AddSearchPath failed: %v`, err))
+			s.Logger().Fatalf(ctx, `AddSearchPath failed: %+v`, err)
 		} else {
 			realPath = p
 		}
@@ -79,17 +84,20 @@ func (s *Server) AddSearchPath(path string) {
 
 // AddStaticPath sets the uri to static directory path mapping for static file service.
 func (s *Server) AddStaticPath(prefix string, path string) {
-	realPath := path
+	var (
+		ctx      = context.TODO()
+		realPath = path
+	)
 	if !gres.Contains(realPath) {
 		if p, err := gfile.Search(path); err != nil {
-			s.Logger().Fatal(fmt.Sprintf(`AddStaticPath failed: %v`, err))
+			s.Logger().Fatalf(ctx, `AddStaticPath failed: %+v`, err)
 		} else {
 			realPath = p
 		}
 	}
 	addItem := staticPathItem{
-		prefix: prefix,
-		path:   realPath,
+		Prefix: prefix,
+		Path:   realPath,
 	}
 	if len(s.config.StaticPaths) > 0 {
 		s.config.StaticPaths = append(s.config.StaticPaths, addItem)
@@ -104,13 +112,13 @@ func (s *Server) AddStaticPath(prefix string, path string) {
 			return r
 		})
 		for _, v := range s.config.StaticPaths {
-			array.Add(v.prefix)
+			array.Add(v.Prefix)
 		}
 		// Add the items to paths by previous sorted slice.
 		paths := make([]staticPathItem, 0)
 		for _, v := range array.Slice() {
 			for _, item := range s.config.StaticPaths {
-				if strings.EqualFold(gconv.String(v), item.prefix) {
+				if strings.EqualFold(gconv.String(v), item.Prefix) {
 					paths = append(paths, item)
 					break
 				}

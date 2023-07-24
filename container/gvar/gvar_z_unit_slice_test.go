@@ -7,9 +7,10 @@
 package gvar_test
 
 import (
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/test/gtest"
 	"testing"
+
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func TestVar_Ints(t *testing.T) {
@@ -107,5 +108,8 @@ func TestVar_Vars(t *testing.T) {
 		t.Assert(len(objOne.Vars()), 5)
 		t.Assert(objOne.Vars()[0].Int(), 1)
 		t.Assert(objOne.Vars()[4].Int(), 5)
+
+		objEmpty := gvar.New([]int{})
+		t.Assert(objEmpty.Vars(), nil)
 	})
 }

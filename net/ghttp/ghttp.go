@@ -8,30 +8,41 @@
 package ghttp
 
 import (
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/os/gcache"
-	"github.com/gogf/gf/os/gsession"
-	"github.com/gorilla/websocket"
 	"net/http"
 	"reflect"
 	"time"
+
+	"github.com/gorilla/websocket"
+
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/net/goai"
+	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v2/os/gcache"
+	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/os/gsession"
+	"github.com/gogf/gf/v2/util/gtag"
 )
 
 type (
 	// Server wraps the http.Server and provides more rich features.
 	Server struct {
-		name             string                           // Unique name for instance management.
-		config           ServerConfig                     // Configuration.
-		plugins          []Plugin                         // Plugin array to extend server functionality.
-		servers          []*gracefulServer                // Underlying http.Server array.
-		serverCount      *gtype.Int                       // Underlying http.Server count.
-		closeChan        chan struct{}                    // Used for underlying server closing event notification.
-		serveTree        map[string]interface{}           // The route map tree.
-		serveCache       *gcache.Cache                    // Server caches for internal usage.
-		routesMap        map[string][]registeredRouteItem // Route map mainly for route dumps and repeated route checks.
-		statusHandlerMap map[string][]HandlerFunc         // Custom status handler map.
-		sessionManager   *gsession.Manager                // Session manager.
+		instance         string                    // Instance name of current HTTP server.
+		config           ServerConfig              // Server configuration.
+		plugins          []Plugin                  // Plugin array to extend server functionality.
+		servers          []*gracefulServer         // Underlying http.Server array.
+		serverCount      *gtype.Int                // Underlying http.Server number for internal usage.
+		closeChan        chan struct{}             // Used for underlying server closing event notification.
+		serveTree        map[string]interface{}    // The route maps tree.
+		serveCache       *gcache.Cache             // Server caches for internal usage.
+		routesMap        map[string][]*HandlerItem // Route map mainly for route dumps and repeated route checks.
+		statusHandlerMap map[string][]HandlerFunc  // Custom status handler map.
+		sessionManager   *gsession.Manager         // Session manager.
+		openapi          *goai.OpenApiV3           // The OpenApi specification management object.
+		service          gsvc.Service              // The service for Registry.
+		registrar        gsvc.Registrar            // Registrar for service register.
 	}
 
 	// Router object.
@@ -46,102 +57,120 @@ type (
 
 	// RouterItem is just for route dumps.
 	RouterItem struct {
+		Handler          *HandlerItem // The handler.
 		Server           string       // Server name.
 		Address          string       // Listening address.
 		Domain           string       // Bound domain.
-		Type             int          // Router type.
+		Type             HandlerType  // Route handler type.
 		Middleware       string       // Bound middleware.
 		Method           string       // Handler method name.
 		Route            string       // Route URI.
 		Priority         int          // Just for reference.
 		IsServiceHandler bool         // Is service handler.
-		handler          *handlerItem // The handler.
 	}
 
 	// HandlerFunc is request handler function.
 	HandlerFunc = func(r *Request)
 
-	// handlerFuncInfo contains the HandlerFunc address and its reflect type.
+	// handlerFuncInfo contains the HandlerFunc address and its reflection type.
 	handlerFuncInfo struct {
 		Func  HandlerFunc   // Handler function address.
-		Type  reflect.Type  // Reflect type information for current handler, which is used for extension of handler feature.
-		Value reflect.Value // Reflect value information for current handler, which is used for extension of handler feature.
+		Type  reflect.Type  // Reflect type information for current handler, which is used for extensions of the handler feature.
+		Value reflect.Value // Reflect value information for current handler, which is used for extensions of the handler feature.
 	}
 
-	// handlerItem is the registered handler for route handling,
+	// HandlerItem is the registered handler for route handling,
 	// including middleware and hook functions.
-	handlerItem struct {
+	HandlerItem struct {
 		Id         int             // Unique handler item id mark.
 		Name       string          // Handler name, which is automatically retrieved from runtime stack when registered.
-		Type       int             // Handler type: object/handler/controller/middleware/hook.
+		Type       HandlerType     // Handler type: object/handler/middleware/hook.
 		Info       handlerFuncInfo // Handler function information.
 		InitFunc   HandlerFunc     // Initialization function when request enters the object (only available for object register type).
 		ShutFunc   HandlerFunc     // Shutdown function when request leaves out the object (only available for object register type).
 		Middleware []HandlerFunc   // Bound middleware array.
-		HookName   string          // Hook type name, only available for hook type.
+		HookName   HookName        // Hook type name, only available for the hook type.
 		Router     *Router         // Router object.
 		Source     string          // Registering source file `path:line`.
 	}
 
-	// handlerParsedItem is the item parsed from URL.Path.
-	handlerParsedItem struct {
-		Handler *handlerItem      // Handler information.
+	// HandlerItemParsed is the item parsed from URL.Path.
+	HandlerItemParsed struct {
+		Handler *HandlerItem      // Handler information.
 		Values  map[string]string // Router values parsed from URL.Path.
 	}
 
-	// registeredRouteItem stores the information of the router and is used for route map.
-	registeredRouteItem struct {
-		Source  string       // Source file path and its line number.
-		Handler *handlerItem // Handler object.
-	}
+	// ServerStatus is the server status enum type.
+	ServerStatus = int
 
-	// errorStack is the interface for Stack feature.
-	errorStack interface {
-		Error() string
-		Stack() string
-	}
+	// HookName is the route hook name enum type.
+	HookName string
+
+	// HandlerType is the route handler enum type.
+	HandlerType string
 
 	// Listening file descriptor mapping.
 	// The key is either "http" or "https" and the value is its FD.
 	listenerFdMap = map[string]string
+
+	// internalPanic is the custom panic for internal usage.
+	internalPanic string
 )
 
 const (
-	HookBeforeServe       = "HOOK_BEFORE_SERVE"
-	HookAfterServe        = "HOOK_AFTER_SERVE"
-	HookBeforeOutput      = "HOOK_BEFORE_OUTPUT"
-	HookAfterOutput       = "HOOK_AFTER_OUTPUT"
-	ServerStatusStopped   = 0
-	ServerStatusRunning   = 1
-	supportedHttpMethods  = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
-	defaultServerName     = "default"
-	defaultDomainName     = "default"
-	defaultMethod         = "ALL"
-	handlerTypeHandler    = 1
-	handlerTypeObject     = 2
-	handlerTypeController = 3
-	handlerTypeMiddleware = 4
-	handlerTypeHook       = 5
-	exceptionExit         = "exit"
-	exceptionExitAll      = "exit_all"
-	exceptionExitHook     = "exit_hook"
-	routeCacheDuration    = time.Hour
-	methodNameInit        = "Init"
-	methodNameShut        = "Shut"
-	methodNameExit        = "Exit"
-	ctxKeyForRequest      = "gHttpRequestObject"
+	// FreePortAddress marks the server listens using random free port.
+	FreePortAddress = ":0"
+)
+
+const (
+	HeaderXUrlPath                     = "x-url-path"         // Used for custom route handler, which does not change URL.Path.
+	HookBeforeServe       HookName     = "HOOK_BEFORE_SERVE"  // Hook handler before route handler/file serving.
+	HookAfterServe        HookName     = "HOOK_AFTER_SERVE"   // Hook handler after route handler/file serving.
+	HookBeforeOutput      HookName     = "HOOK_BEFORE_OUTPUT" // Hook handler before response output.
+	HookAfterOutput       HookName     = "HOOK_AFTER_OUTPUT"  // Hook handler after response output.
+	ServerStatusStopped   ServerStatus = 0
+	ServerStatusRunning   ServerStatus = 1
+	DefaultServerName                  = "default"
+	DefaultDomainName                  = "default"
+	HandlerTypeHandler    HandlerType  = "handler"
+	HandlerTypeObject     HandlerType  = "object"
+	HandlerTypeMiddleware HandlerType  = "middleware"
+	HandlerTypeHook       HandlerType  = "hook"
+)
+
+const (
+	supportedHttpMethods                    = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
+	defaultMethod                           = "ALL"
+	routeCacheDuration                      = time.Hour
+	ctxKeyForRequest            gctx.StrKey = "gHttpRequestObject"
+	contentTypeXml                          = "text/xml"
+	contentTypeHtml                         = "text/html"
+	contentTypeJson                         = "application/json"
+	swaggerUIPackedPath                     = "/goframe/swaggerui"
+	responseHeaderTraceID                   = "Trace-ID"
+	responseHeaderContentLength             = "Content-Length"
+	specialMethodNameInit                   = "Init"
+	specialMethodNameShut                   = "Shut"
+	specialMethodNameIndex                  = "Index"
+	defaultEndpointPort                     = 80
+)
+
+const (
+	exceptionExit     internalPanic = "exit"
+	exceptionExitAll  internalPanic = "exit_all"
+	exceptionExitHook internalPanic = "exit_hook"
 )
 
 var (
-	// methodsMap stores all supported HTTP method,
-	// it is used for quick HTTP method searching using map.
+	// methodsMap stores all supported HTTP method.
+	// It is used for quick HTTP method searching using map.
 	methodsMap = make(map[string]struct{})
 
-	// serverMapping stores more than one server instances for current process.
+	// serverMapping stores more than one server instances for current processes.
 	// The key is the name of the server, and the value is its instance.
 	serverMapping = gmap.NewStrAnyMap(true)
 
-	// serverRunning marks the running server count.
+	// serverRunning marks the running server counts.
 	// If there is no successful server running or all servers' shutdown, this value is 0.
 	serverRunning = gtype.NewInt()
 
@@ -152,17 +181,24 @@ var (
 			return true
 		},
 	}
-	// allDoneChan is the event for all server have done its serving and exit.
+	// allShutdownChan is the event for all servers have done its serving and exit.
 	// It is used for process blocking purpose.
-	allDoneChan = make(chan struct{}, 1000)
+	allShutdownChan = make(chan struct{}, 1000)
 
 	// serverProcessInitialized is used for lazy initialization for server.
 	// The process can only be initialized once.
 	serverProcessInitialized = gtype.NewBool()
 
-	// gracefulEnabled is used for graceful reload feature, which is false in default.
+	// gracefulEnabled is used for a graceful reload feature, which is false in default.
 	gracefulEnabled = false
 
-	// defaultValueTags is the struct tag names for default value storing.
-	defaultValueTags = []string{"d", "default"}
+	// defaultValueTags are the struct tag names for default value storing.
+	defaultValueTags = []string{gtag.DefaultShort, gtag.Default}
+)
+
+var (
+	ErrNeedJsonBody = gerror.NewOption(gerror.Option{
+		Text: "the request body content should be JSON format",
+		Code: gcode.CodeInvalidRequest,
+	})
 )

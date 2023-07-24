@@ -9,19 +9,20 @@
 package gtimer_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/os/gtimer"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/os/gtimer"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func TestJob_Start_Stop_Close(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		timer := New()
+		timer := gtimer.New()
 		array := garray.New(true)
-		job := timer.Add(200*time.Millisecond, func() {
+		job := timer.Add(ctx, 200*time.Millisecond, func(ctx context.Context) {
 			array.Append(1)
 		})
 		time.Sleep(250 * time.Millisecond)
@@ -42,9 +43,30 @@ func TestJob_Start_Stop_Close(t *testing.T) {
 
 func TestJob_Singleton(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		timer := New()
+		timer := gtimer.New()
 		array := garray.New(true)
-		job := timer.Add(200*time.Millisecond, func() {
+		job := timer.Add(ctx, 200*time.Millisecond, func(ctx context.Context) {
+			array.Append(1)
+			time.Sleep(10 * time.Second)
+		})
+		t.Assert(job.IsSingleton(), false)
+		job.SetSingleton(true)
+		t.Assert(job.IsSingleton(), true)
+		time.Sleep(250 * time.Millisecond)
+		t.Assert(array.Len(), 1)
+
+		time.Sleep(250 * time.Millisecond)
+		t.Assert(array.Len(), 1)
+	})
+}
+
+func TestJob_SingletonQuick(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		timer := gtimer.New(gtimer.TimerOptions{
+			Quick: true,
+		})
+		array := garray.New(true)
+		job := timer.Add(ctx, 5*time.Second, func(ctx context.Context) {
 			array.Append(1)
 			time.Sleep(10 * time.Second)
 		})
@@ -61,9 +83,9 @@ func TestJob_Singleton(t *testing.T) {
 
 func TestJob_SetTimes(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		timer := New()
+		timer := gtimer.New()
 		array := garray.New(true)
-		job := timer.Add(200*time.Millisecond, func() {
+		job := timer.Add(ctx, 200*time.Millisecond, func(ctx context.Context) {
 			array.Append(1)
 		})
 		job.SetTimes(2)
@@ -75,12 +97,12 @@ func TestJob_SetTimes(t *testing.T) {
 
 func TestJob_Run(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		timer := New()
+		timer := gtimer.New()
 		array := garray.New(true)
-		job := timer.Add(1000*time.Millisecond, func() {
+		job := timer.Add(ctx, 1000*time.Millisecond, func(ctx context.Context) {
 			array.Append(1)
 		})
-		job.Job()()
+		job.Job()(ctx)
 		t.Assert(array.Len(), 1)
 	})
 }

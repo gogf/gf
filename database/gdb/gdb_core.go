@@ -11,18 +11,21 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/internal/intlog"
 	"reflect"
 	"strings"
 
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/utils"
-	"github.com/gogf/gf/text/gstr"
-
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/internal/reflection"
+	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // GetCore returns the underlying *Core object.
@@ -38,7 +41,6 @@ func (c *Core) Ctx(ctx context.Context) DB {
 	if ctx == nil {
 		return c.db
 	}
-	ctx = context.WithValue(ctx, ctxStrictKeyName, 1)
 	// It makes a shallow copy of current db and changes its context for next chaining operation.
 	var (
 		err        error
@@ -46,30 +48,32 @@ func (c *Core) Ctx(ctx context.Context) DB {
 		configNode = c.db.GetConfig()
 	)
 	*newCore = *c
-	newCore.ctx = ctx
-	// It creates a new DB object, which is commonly a wrapper for object `Core`.
+	// It creates a new DB object(NOT NEW CONNECTION), which is commonly a wrapper for object `Core`.
 	newCore.db, err = driverMap[configNode.Type].New(newCore, configNode)
 	if err != nil {
 		// It is really a serious error here.
 		// Do not let it continue.
 		panic(err)
 	}
+	newCore.ctx = WithDB(ctx, newCore.db)
+	newCore.ctx = c.InjectInternalCtxData(newCore.ctx)
 	return newCore.db
 }
 
 // GetCtx returns the context for current DB.
 // It returns `context.Background()` is there's no context previously set.
 func (c *Core) GetCtx() context.Context {
-	if c.ctx != nil {
-		return c.ctx
+	ctx := c.ctx
+	if ctx == nil {
+		ctx = context.TODO()
 	}
-	return context.TODO()
+	return c.InjectInternalCtxData(ctx)
 }
 
 // GetCtxTimeout returns the context and cancel function for specified timeout type.
-func (c *Core) GetCtxTimeout(timeoutType int, ctx context.Context) (context.Context, context.CancelFunc) {
+func (c *Core) GetCtxTimeout(ctx context.Context, timeoutType int) (context.Context, context.CancelFunc) {
 	if ctx == nil {
-		ctx = c.GetCtx()
+		ctx = c.db.GetCtx()
 	} else {
 		ctx = context.WithValue(ctx, "WrappedByGetCtxTimeout", nil)
 	}
@@ -99,10 +103,16 @@ func (c *Core) GetCtxTimeout(timeoutType int, ctx context.Context) (context.Cont
 // It is rare to Close a DB, as the DB handle is meant to be
 // long-lived and shared between many goroutines.
 func (c *Core) Close(ctx context.Context) (err error) {
+	if err = c.cache.Close(ctx); err != nil {
+		return err
+	}
 	c.links.LockFunc(func(m map[string]interface{}) {
 		for k, v := range m {
 			if db, ok := v.(*sql.DB); ok {
 				err = db.Close()
+				if err != nil {
+					err = gerror.WrapCode(gcode.CodeDbOperationError, err, `db.Close failed`)
+				}
 				intlog.Printf(ctx, `close link: %s, err: %v`, k, err)
 				if err != nil {
 					return
@@ -117,45 +127,36 @@ func (c *Core) Close(ctx context.Context) (err error) {
 // Master creates and returns a connection from master node if master-slave configured.
 // It returns the default connection if master-slave not configured.
 func (c *Core) Master(schema ...string) (*sql.DB, error) {
-	useSchema := ""
-	if len(schema) > 0 && schema[0] != "" {
-		useSchema = schema[0]
-	} else {
-		useSchema = c.schema.Val()
-	}
-	return c.getSqlDb(true, useSchema)
+	var (
+		usedSchema   = gutil.GetOrDefaultStr(c.schema, schema...)
+		charL, charR = c.db.GetChars()
+	)
+	return c.getSqlDb(true, gstr.Trim(usedSchema, charL+charR))
 }
 
 // Slave creates and returns a connection from slave node if master-slave configured.
 // It returns the default connection if master-slave not configured.
 func (c *Core) Slave(schema ...string) (*sql.DB, error) {
-	useSchema := ""
-	if len(schema) > 0 && schema[0] != "" {
-		useSchema = schema[0]
-	} else {
-		useSchema = c.schema.Val()
-	}
-	return c.getSqlDb(false, useSchema)
+	var (
+		usedSchema   = gutil.GetOrDefaultStr(c.schema, schema...)
+		charL, charR = c.db.GetChars()
+	)
+	return c.getSqlDb(false, gstr.Trim(usedSchema, charL+charR))
 }
 
 // GetAll queries and returns data records from database.
-func (c *Core) GetAll(sql string, args ...interface{}) (Result, error) {
-	return c.db.DoGetAll(c.GetCtx(), nil, sql, args...)
+func (c *Core) GetAll(ctx context.Context, sql string, args ...interface{}) (Result, error) {
+	return c.db.DoSelect(ctx, nil, sql, args...)
 }
 
-// DoGetAll queries and returns data records from database.
-func (c *Core) DoGetAll(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error) {
-	rows, err := c.db.DoQuery(ctx, link, sql, args...)
-	if err != nil || rows == nil {
-		return nil, err
-	}
-	defer rows.Close()
-	return c.convertRowsToResult(rows)
+// DoSelect queries and returns data records from database.
+func (c *Core) DoSelect(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error) {
+	return c.db.DoQuery(ctx, link, sql, args...)
 }
 
 // GetOne queries and returns one record from database.
-func (c *Core) GetOne(sql string, args ...interface{}) (Record, error) {
-	list, err := c.db.GetAll(sql, args...)
+func (c *Core) GetOne(ctx context.Context, sql string, args ...interface{}) (Record, error) {
+	list, err := c.db.GetAll(ctx, sql, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -167,28 +168,28 @@ func (c *Core) GetOne(sql string, args ...interface{}) (Record, error) {
 
 // GetArray queries and returns data values as slice from database.
 // Note that if there are multiple columns in the result, it returns just one column values randomly.
-func (c *Core) GetArray(sql string, args ...interface{}) ([]Value, error) {
-	all, err := c.db.DoGetAll(c.GetCtx(), nil, sql, args...)
+func (c *Core) GetArray(ctx context.Context, sql string, args ...interface{}) ([]Value, error) {
+	all, err := c.db.DoSelect(ctx, nil, sql, args...)
 	if err != nil {
 		return nil, err
 	}
 	return all.Array(), nil
 }
 
-// GetStruct queries one record from database and converts it to given struct.
+// doGetStruct queries one record from database and converts it to given struct.
 // The parameter `pointer` should be a pointer to struct.
-func (c *Core) GetStruct(pointer interface{}, sql string, args ...interface{}) error {
-	one, err := c.db.GetOne(sql, args...)
+func (c *Core) doGetStruct(ctx context.Context, pointer interface{}, sql string, args ...interface{}) error {
+	one, err := c.db.GetOne(ctx, sql, args...)
 	if err != nil {
 		return err
 	}
 	return one.Struct(pointer)
 }
 
-// GetStructs queries records from database and converts them to given struct.
+// doGetStructs queries records from database and converts them to given struct.
 // The parameter `pointer` should be type of struct slice: []struct/[]*struct.
-func (c *Core) GetStructs(pointer interface{}, sql string, args ...interface{}) error {
-	all, err := c.db.GetAll(sql, args...)
+func (c *Core) doGetStructs(ctx context.Context, pointer interface{}, sql string, args ...interface{}) error {
+	all, err := c.db.GetAll(ctx, sql, args...)
 	if err != nil {
 		return err
 	}
@@ -201,27 +202,34 @@ func (c *Core) GetStructs(pointer interface{}, sql string, args ...interface{}) 
 // If parameter `pointer` is type of struct pointer, it calls GetStruct internally for
 // the conversion. If parameter `pointer` is type of slice, it calls GetStructs internally
 // for conversion.
-func (c *Core) GetScan(pointer interface{}, sql string, args ...interface{}) error {
-	t := reflect.TypeOf(pointer)
-	k := t.Kind()
-	if k != reflect.Ptr {
-		return fmt.Errorf("params should be type of pointer, but got: %v", k)
+func (c *Core) GetScan(ctx context.Context, pointer interface{}, sql string, args ...interface{}) error {
+	reflectInfo := reflection.OriginTypeAndKind(pointer)
+	if reflectInfo.InputKind != reflect.Ptr {
+		return gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			"params should be type of pointer, but got: %v",
+			reflectInfo.InputKind,
+		)
 	}
-	k = t.Elem().Kind()
-	switch k {
+	switch reflectInfo.OriginKind {
 	case reflect.Array, reflect.Slice:
-		return c.db.GetCore().GetStructs(pointer, sql, args...)
+		return c.db.GetCore().doGetStructs(ctx, pointer, sql, args...)
+
 	case reflect.Struct:
-		return c.db.GetCore().GetStruct(pointer, sql, args...)
+		return c.db.GetCore().doGetStruct(ctx, pointer, sql, args...)
 	}
-	return fmt.Errorf("element type should be type of struct/slice, unsupported: %v", k)
+	return gerror.NewCodef(
+		gcode.CodeInvalidParameter,
+		`in valid parameter type "%v", of which element type should be type of struct/slice`,
+		reflectInfo.InputType,
+	)
 }
 
 // GetValue queries and returns the field value from database.
-// The sql should queries only one field from database, or else it returns only one
+// The sql should query only one field from database, or else it returns only one
 // field of the result.
-func (c *Core) GetValue(sql string, args ...interface{}) (Value, error) {
-	one, err := c.db.GetOne(sql, args...)
+func (c *Core) GetValue(ctx context.Context, sql string, args ...interface{}) (Value, error) {
+	one, err := c.db.GetOne(ctx, sql, args...)
 	if err != nil {
 		return gvar.New(nil), err
 	}
@@ -232,13 +240,13 @@ func (c *Core) GetValue(sql string, args ...interface{}) (Value, error) {
 }
 
 // GetCount queries and returns the count from database.
-func (c *Core) GetCount(sql string, args ...interface{}) (int, error) {
-	// If the query fields do not contains function "COUNT",
+func (c *Core) GetCount(ctx context.Context, sql string, args ...interface{}) (int, error) {
+	// If the query fields do not contain function "COUNT",
 	// it replaces the sql string and adds the "COUNT" function to the fields.
 	if !gregex.IsMatchString(`(?i)SELECT\s+COUNT\(.+\)\s+FROM`, sql) {
 		sql, _ = gregex.ReplaceString(`(?i)(SELECT)\s+(.+)\s+(FROM)`, `$1 COUNT($2) $3`, sql)
 	}
-	value, err := c.db.GetValue(sql, args...)
+	value, err := c.db.GetValue(ctx, sql, args...)
 	if err != nil {
 		return 0, err
 	}
@@ -247,15 +255,17 @@ func (c *Core) GetCount(sql string, args ...interface{}) (int, error) {
 
 // Union does "(SELECT xxx FROM xxx) UNION (SELECT xxx FROM xxx) ..." statement.
 func (c *Core) Union(unions ...*Model) *Model {
-	return c.doUnion(unionTypeNormal, unions...)
+	var ctx = c.db.GetCtx()
+	return c.doUnion(ctx, unionTypeNormal, unions...)
 }
 
 // UnionAll does "(SELECT xxx FROM xxx) UNION ALL (SELECT xxx FROM xxx) ..." statement.
 func (c *Core) UnionAll(unions ...*Model) *Model {
-	return c.doUnion(unionTypeAll, unions...)
+	var ctx = c.db.GetCtx()
+	return c.doUnion(ctx, unionTypeAll, unions...)
 }
 
-func (c *Core) doUnion(unionType int, unions ...*Model) *Model {
+func (c *Core) doUnion(ctx context.Context, unionType int, unions ...*Model) *Model {
 	var (
 		unionTypeStr   string
 		composedSqlStr string
@@ -267,7 +277,7 @@ func (c *Core) doUnion(unionType int, unions ...*Model) *Model {
 		unionTypeStr = "UNION"
 	}
 	for _, v := range unions {
-		sqlWithHolder, holderArgs := v.getFormattedSqlAndArgs(queryTypeNormal, false)
+		sqlWithHolder, holderArgs := v.getFormattedSqlAndArgs(ctx, queryTypeNormal, false)
 		if composedSqlStr == "" {
 			composedSqlStr += fmt.Sprintf(`(%s)`, sqlWithHolder)
 		} else {
@@ -280,19 +290,27 @@ func (c *Core) doUnion(unionType int, unions ...*Model) *Model {
 
 // PingMaster pings the master node to check authentication or keeps the connection alive.
 func (c *Core) PingMaster() error {
+	var ctx = c.db.GetCtx()
 	if master, err := c.db.Master(); err != nil {
 		return err
 	} else {
-		return master.Ping()
+		if err = master.PingContext(ctx); err != nil {
+			err = gerror.WrapCode(gcode.CodeDbOperationError, err, `master.Ping failed`)
+		}
+		return err
 	}
 }
 
 // PingSlave pings the slave node to check authentication or keeps the connection alive.
 func (c *Core) PingSlave() error {
+	var ctx = c.db.GetCtx()
 	if slave, err := c.db.Slave(); err != nil {
 		return err
 	} else {
-		return slave.Ping()
+		if err = slave.PingContext(ctx); err != nil {
+			err = gerror.WrapCode(gcode.CodeDbOperationError, err, `slave.Ping failed`)
+		}
+		return err
 	}
 }
 
@@ -305,11 +323,11 @@ func (c *Core) PingSlave() error {
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
 // The parameter `batch` specifies the batch operation count when given data is slice.
-func (c *Core) Insert(table string, data interface{}, batch ...int) (sql.Result, error) {
+func (c *Core) Insert(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
-		return c.Model(table).Data(data).Batch(batch[0]).Insert()
+		return c.Model(table).Ctx(ctx).Data(data).Batch(batch[0]).Insert()
 	}
-	return c.Model(table).Data(data).Insert()
+	return c.Model(table).Ctx(ctx).Data(data).Insert()
 }
 
 // InsertIgnore does "INSERT IGNORE INTO ..." statement for the table.
@@ -321,19 +339,19 @@ func (c *Core) Insert(table string, data interface{}, batch ...int) (sql.Result,
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
 // The parameter `batch` specifies the batch operation count when given data is slice.
-func (c *Core) InsertIgnore(table string, data interface{}, batch ...int) (sql.Result, error) {
+func (c *Core) InsertIgnore(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
-		return c.Model(table).Data(data).Batch(batch[0]).InsertIgnore()
+		return c.Model(table).Ctx(ctx).Data(data).Batch(batch[0]).InsertIgnore()
 	}
-	return c.Model(table).Data(data).InsertIgnore()
+	return c.Model(table).Ctx(ctx).Data(data).InsertIgnore()
 }
 
 // InsertAndGetId performs action Insert and returns the last insert id that automatically generated.
-func (c *Core) InsertAndGetId(table string, data interface{}, batch ...int) (int64, error) {
+func (c *Core) InsertAndGetId(ctx context.Context, table string, data interface{}, batch ...int) (int64, error) {
 	if len(batch) > 0 {
-		return c.Model(table).Data(data).Batch(batch[0]).InsertAndGetId()
+		return c.Model(table).Ctx(ctx).Data(data).Batch(batch[0]).InsertAndGetId()
 	}
-	return c.Model(table).Data(data).InsertAndGetId()
+	return c.Model(table).Ctx(ctx).Data(data).InsertAndGetId()
 }
 
 // Replace does "REPLACE INTO ..." statement for the table.
@@ -348,11 +366,11 @@ func (c *Core) InsertAndGetId(table string, data interface{}, batch ...int) (int
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
 // If given data is type of slice, it then does batch replacing, and the optional parameter
 // `batch` specifies the batch operation count.
-func (c *Core) Replace(table string, data interface{}, batch ...int) (sql.Result, error) {
+func (c *Core) Replace(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
-		return c.Model(table).Data(data).Batch(batch[0]).Replace()
+		return c.Model(table).Ctx(ctx).Data(data).Batch(batch[0]).Replace()
 	}
-	return c.Model(table).Data(data).Replace()
+	return c.Model(table).Ctx(ctx).Data(data).Replace()
 }
 
 // Save does "INSERT INTO ... ON DUPLICATE KEY UPDATE..." statement for the table.
@@ -366,11 +384,34 @@ func (c *Core) Replace(table string, data interface{}, batch ...int) (sql.Result
 //
 // If given data is type of slice, it then does batch saving, and the optional parameter
 // `batch` specifies the batch operation count.
-func (c *Core) Save(table string, data interface{}, batch ...int) (sql.Result, error) {
+func (c *Core) Save(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
-		return c.Model(table).Data(data).Batch(batch[0]).Save()
+		return c.Model(table).Ctx(ctx).Data(data).Batch(batch[0]).Save()
 	}
-	return c.Model(table).Data(data).Save()
+	return c.Model(table).Ctx(ctx).Data(data).Save()
+}
+
+func (c *Core) fieldsToSequence(ctx context.Context, table string, fields []string) ([]string, error) {
+	var (
+		fieldSet               = gset.NewStrSetFrom(fields)
+		fieldsResultInSequence = make([]string, 0)
+		tableFields, err       = c.db.TableFields(ctx, table)
+	)
+	if err != nil {
+		return nil, err
+	}
+	// Sort the fields in order.
+	var fieldsOfTableInSequence = make([]string, len(tableFields))
+	for _, field := range tableFields {
+		fieldsOfTableInSequence[field.Index] = field.Name
+	}
+	// Sort the input fields.
+	for _, fieldName := range fieldsOfTableInSequence {
+		if fieldSet.Contains(fieldName) {
+			fieldsResultInSequence = append(fieldsResultInSequence, fieldName)
+		}
+	}
+	return fieldsResultInSequence, nil
 }
 
 // DoInsert inserts or updates data forF given table.
@@ -392,9 +433,50 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 		params         []interface{} // Values that will be committed to underlying database driver.
 		onDuplicateStr string        // onDuplicateStr is used in "ON DUPLICATE KEY UPDATE" statement.
 	)
-	// Handle the field names and place holders.
-	for k, _ := range list[0] {
-		keys = append(keys, k)
+	// Group the list by fields. Different fields to different list.
+	// It here uses ListMap to keep sequence for data inserting.
+	var keyListMap = gmap.NewListMap()
+	for _, item := range list {
+		var (
+			tmpKeys              = make([]string, 0)
+			tmpKeysInSequenceStr string
+		)
+		for k := range item {
+			tmpKeys = append(tmpKeys, k)
+		}
+		keys, err = c.fieldsToSequence(ctx, table, tmpKeys)
+		if err != nil {
+			return nil, err
+		}
+		tmpKeysInSequenceStr = gstr.Join(keys, ",")
+
+		if !keyListMap.Contains(tmpKeysInSequenceStr) {
+			keyListMap.Set(tmpKeysInSequenceStr, make(List, 0))
+		}
+		tmpKeysInSequenceList := keyListMap.Get(tmpKeysInSequenceStr).(List)
+		tmpKeysInSequenceList = append(tmpKeysInSequenceList, item)
+		keyListMap.Set(tmpKeysInSequenceStr, tmpKeysInSequenceList)
+	}
+	if keyListMap.Size() > 1 {
+		var (
+			tmpResult    sql.Result
+			sqlResult    SqlResult
+			rowsAffected int64
+		)
+		keyListMap.Iterator(func(key, value interface{}) bool {
+			tmpResult, err = c.DoInsert(ctx, link, table, value.(List), option)
+			if err != nil {
+				return false
+			}
+			rowsAffected, err = tmpResult.RowsAffected()
+			if err != nil {
+				return false
+			}
+			sqlResult.Result = tmpResult
+			sqlResult.Affected += rowsAffected
+			return true
+		})
+		return &sqlResult, nil
 	}
 	// Prepare the batch result pointer.
 	var (
@@ -403,7 +485,7 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 		keysStr      = charL + strings.Join(keys, charR+","+charL) + charR
 		operation    = GetInsertOperationByOption(option.InsertOption)
 	)
-	if option.InsertOption == insertOptionSave {
+	if option.InsertOption == InsertOptionSave {
 		onDuplicateStr = c.formatOnDuplicate(keys, option)
 	}
 	var (
@@ -423,22 +505,27 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 			}
 		}
 		valueHolder = append(valueHolder, "("+gstr.Join(values, ",")+")")
-		// Batch package checks: It meets the batch number or it is the last element.
+		// Batch package checks: It meets the batch number, or it is the last element.
 		if len(valueHolder) == option.BatchCount || (i == listLength-1 && len(valueHolder) > 0) {
-			r, err := c.db.DoExec(ctx, link, fmt.Sprintf(
+			var (
+				stdSqlResult sql.Result
+				affectedRows int64
+			)
+			stdSqlResult, err = c.db.DoExec(ctx, link, fmt.Sprintf(
 				"%s INTO %s(%s) VALUES%s %s",
 				operation, c.QuotePrefixTableName(table), keysStr,
 				gstr.Join(valueHolder, ","),
 				onDuplicateStr,
 			), params...)
 			if err != nil {
-				return r, err
+				return stdSqlResult, err
 			}
-			if n, err := r.RowsAffected(); err != nil {
-				return r, err
+			if affectedRows, err = stdSqlResult.RowsAffected(); err != nil {
+				err = gerror.WrapCode(gcode.CodeDbOperationError, err, `sql.Result.RowsAffected failed`)
+				return stdSqlResult, err
 			} else {
-				batchResult.result = r
-				batchResult.affected += n
+				batchResult.Result = stdSqlResult
+				batchResult.Affected += affectedRows
 			}
 			params = params[:0]
 			valueHolder = valueHolder[:0]
@@ -448,9 +535,7 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 }
 
 func (c *Core) formatOnDuplicate(columns []string, option DoInsertOption) string {
-	var (
-		onDuplicateStr string
-	)
+	var onDuplicateStr string
 	if option.OnDuplicateStr != "" {
 		onDuplicateStr = option.OnDuplicateStr
 	} else if len(option.OnDuplicateMap) > 0 {
@@ -505,13 +590,13 @@ func (c *Core) formatOnDuplicate(columns []string, option DoInsertOption) string
 // "money>? AND name like ?", 99999, "vip_%"
 // "status IN (?)", g.Slice{1,2,3}
 // "age IN(?,?)", 18, 50
-// User{ Id : 1, UserName : "john"}
-func (c *Core) Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
-	return c.Model(table).Data(data).Where(condition, args...).Update()
+// User{ Id : 1, UserName : "john"}.
+func (c *Core) Update(ctx context.Context, table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
+	return c.Model(table).Ctx(ctx).Data(data).Where(condition, args...).Update()
 }
 
 // DoUpdate does "UPDATE ... " statement for the table.
-// This function is usually used for custom interface definition, you do not need call it manually.
+// This function is usually used for custom interface definition, you do not need to call it manually.
 func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
 	table = c.QuotePrefixTableName(table)
 	var (
@@ -524,17 +609,17 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 	}
 	var (
 		params  []interface{}
-		updates = ""
+		updates string
 	)
 	switch kind {
 	case reflect.Map, reflect.Struct:
 		var (
 			fields         []string
-			dataMap        = ConvertDataForTableRecord(data)
+			dataMap        map[string]interface{}
 			counterHandler = func(column string, counter Counter) {
 				if counter.Value != 0 {
+					column = c.QuoteWord(column)
 					var (
-						column    = c.QuoteWord(column)
 						columnRef = c.QuoteWord(counter.Field)
 						columnVal = counter.Value
 						operator  = "+"
@@ -548,8 +633,24 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 				}
 			}
 		)
-
-		for k, v := range dataMap {
+		dataMap, err = c.db.ConvertDataForRecord(ctx, data)
+		if err != nil {
+			return nil, err
+		}
+		// Sort the data keys in sequence of table fields.
+		var (
+			dataKeys       = make([]string, 0)
+			keysInSequence = make([]string, 0)
+		)
+		for k := range dataMap {
+			dataKeys = append(dataKeys, k)
+		}
+		keysInSequence, err = c.fieldsToSequence(ctx, table, dataKeys)
+		if err != nil {
+			return nil, err
+		}
+		for _, k := range keysInSequence {
+			v := dataMap[k]
 			switch value := v.(type) {
 			case *Counter:
 				counterHandler(k, *value)
@@ -596,9 +697,9 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 // "money>? AND name like ?", 99999, "vip_%"
 // "status IN (?)", g.Slice{1,2,3}
 // "age IN(?,?)", 18, 50
-// User{ Id : 1, UserName : "john"}
-func (c *Core) Delete(table string, condition interface{}, args ...interface{}) (result sql.Result, err error) {
-	return c.Model(table).Where(condition, args...).Delete()
+// User{ Id : 1, UserName : "john"}.
+func (c *Core) Delete(ctx context.Context, table string, condition interface{}, args ...interface{}) (result sql.Result, err error) {
+	return c.Model(table).Ctx(ctx).Where(condition, args...).Delete()
 }
 
 // DoDelete does "DELETE FROM ... " statement for the table.
@@ -613,48 +714,13 @@ func (c *Core) DoDelete(ctx context.Context, link Link, table string, condition 
 	return c.db.DoExec(ctx, link, fmt.Sprintf("DELETE FROM %s%s", table, condition), args...)
 }
 
-// convertRowsToResult converts underlying data record type sql.Rows to Result type.
-func (c *Core) convertRowsToResult(rows *sql.Rows) (Result, error) {
-	if !rows.Next() {
-		return nil, nil
-	}
-	// Column names and types.
-	columns, err := rows.ColumnTypes()
-	if err != nil {
-		return nil, err
-	}
-	columnTypes := make([]string, len(columns))
-	columnNames := make([]string, len(columns))
-	for k, v := range columns {
-		columnTypes[k] = v.DatabaseTypeName()
-		columnNames[k] = v.Name()
-	}
-	var (
-		values   = make([]interface{}, len(columnNames))
-		result   = make(Result, 0)
-		scanArgs = make([]interface{}, len(values))
+// FilteredLink retrieves and returns filtered `linkInfo` that can be using for
+// logging or tracing purpose.
+func (c *Core) FilteredLink() string {
+	return fmt.Sprintf(
+		`%s@%s(%s:%s)/%s`,
+		c.config.User, c.config.Protocol, c.config.Host, c.config.Port, c.config.Name,
 	)
-	for i := range values {
-		scanArgs[i] = &values[i]
-	}
-	for {
-		if err := rows.Scan(scanArgs...); err != nil {
-			return result, err
-		}
-		record := Record{}
-		for i, value := range values {
-			if value == nil {
-				record[columnNames[i]] = gvar.New(nil)
-			} else {
-				record[columnNames[i]] = gvar.New(c.convertFieldValueToLocalValue(value, columnTypes[i]))
-			}
-		}
-		result = append(result, record)
-		if !rows.Next() {
-			break
-		}
-	}
-	return result, nil
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
@@ -662,40 +728,54 @@ func (c *Core) convertRowsToResult(rows *sql.Rows) (Result, error) {
 //
 // Note that this interface implements mainly for workaround for a json infinite loop bug
 // of Golang version < v1.14.
-func (c *Core) MarshalJSON() ([]byte, error) {
+func (c Core) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf(`%+v`, c)), nil
 }
 
-// writeSqlToLogger outputs the sql object to logger.
+// writeSqlToLogger outputs the Sql object to logger.
 // It is enabled only if configuration "debug" is true.
 func (c *Core) writeSqlToLogger(ctx context.Context, sql *Sql) {
 	var transactionIdStr string
 	if sql.IsTransaction {
 		if v := ctx.Value(transactionIdForLoggerCtx); v != nil {
-			transactionIdStr = fmt.Sprintf(`[%d] `, v.(uint64))
+			transactionIdStr = fmt.Sprintf(`[txid:%d] `, v.(uint64))
 		}
 	}
-	s := fmt.Sprintf("[%3d ms] [%s] %s%s", sql.End-sql.Start, sql.Group, transactionIdStr, sql.Format)
+	s := fmt.Sprintf(
+		"[%3d ms] [%s] [%s] [rows:%-3d] %s%s",
+		sql.End-sql.Start, sql.Group, sql.Schema, sql.RowsAffected, transactionIdStr, sql.Format,
+	)
 	if sql.Error != nil {
 		s += "\nError: " + sql.Error.Error()
-		c.logger.Ctx(ctx).Error(s)
+		c.logger.Error(ctx, s)
 	} else {
-		c.logger.Ctx(ctx).Debug(s)
+		c.logger.Debug(ctx, s)
 	}
 }
 
 // HasTable determine whether the table name exists in the database.
 func (c *Core) HasTable(name string) (bool, error) {
-	tableList, err := c.db.Tables(c.GetCtx())
+	var (
+		ctx      = c.db.GetCtx()
+		cacheKey = fmt.Sprintf(`HasTable: %s`, name)
+	)
+	result, err := c.GetCache().GetOrSetFuncLock(ctx, cacheKey, func(ctx context.Context) (interface{}, error) {
+		tableList, err := c.db.Tables(ctx)
+		if err != nil {
+			return false, err
+		}
+		for _, table := range tableList {
+			if table == name {
+				return true, nil
+			}
+		}
+		return false, nil
+	}, 0,
+	)
 	if err != nil {
 		return false, err
 	}
-	for _, table := range tableList {
-		if table == name {
-			return true, nil
-		}
-	}
-	return false, nil
+	return result.Bool(), nil
 }
 
 // isSoftCreatedFieldName checks and returns whether given filed name is an automatic-filled created time.

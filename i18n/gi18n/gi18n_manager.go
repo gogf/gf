@@ -9,22 +9,18 @@ package gi18n
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/intlog"
 	"strings"
 	"sync"
 
-	"github.com/gogf/gf/os/gfsnotify"
-
-	"github.com/gogf/gf/text/gregex"
-
-	"github.com/gogf/gf/util/gconv"
-
-	"github.com/gogf/gf/encoding/gjson"
-
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gres"
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gfsnotify"
+	"github.com/gogf/gf/v2/os/gres"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Manager for i18n contents, it is concurrent safe, supporting hot reload.
@@ -43,12 +39,18 @@ type Options struct {
 }
 
 var (
-	defaultLanguage   = "en"                // defaultDelimiters defines the default language if user does not specified in options.
-	defaultDelimiters = []string{"{#", "}"} // defaultDelimiters defines the default key variable delimiters.
+	// defaultDelimiters defines the default language if user does not specify in options.
+	defaultLanguage = "en"
+
+	// defaultDelimiters defines the default key variable delimiters.
+	defaultDelimiters = []string{"{#", "}"}
+
+	// i18n files searching folders.
+	searchFolders = []string{"manifest/i18n", "manifest/config/i18n", "i18n"}
 )
 
 // New creates and returns a new i18n manager.
-// The optional parameter <option> specifies the custom options for i18n manager.
+// The optional parameter `option` specifies the custom options for i18n manager.
 // It uses a default one if it's not passed.
 func New(options ...Options) *Manager {
 	var opts Options
@@ -66,7 +68,7 @@ func New(options ...Options) *Manager {
 	m := &Manager{
 		options: opts,
 		pattern: fmt.Sprintf(
-			`%s(\w+)%s`,
+			`%s(.+?)%s`,
 			gregex.Quote(opts.Delimiters[0]),
 			gregex.Quote(opts.Delimiters[1]),
 		),
@@ -77,13 +79,15 @@ func New(options ...Options) *Manager {
 
 // DefaultOptions creates and returns a default options for i18n manager.
 func DefaultOptions() Options {
-	var (
-		path        = "i18n"
-		realPath, _ = gfile.Search(path)
-	)
-	if realPath != "" {
-		path = realPath
-		// To avoid of the source path of GF: github.com/gogf/i18n/gi18n
+	var path string
+	for _, folder := range searchFolders {
+		path, _ = gfile.Search(folder)
+		if path != "" {
+			break
+		}
+	}
+	if path != "" {
+		// To avoid of the source path of GoFrame: github.com/gogf/i18n/gi18n
 		if gfile.Exists(path + gfile.Separator + "gi18n") {
 			path = ""
 		}
@@ -118,7 +122,7 @@ func (m *Manager) SetLanguage(language string) {
 
 // SetDelimiters sets the delimiters for translator.
 func (m *Manager) SetDelimiters(left, right string) {
-	m.pattern = fmt.Sprintf(`%s(\w+)%s`, gregex.Quote(left), gregex.Quote(right))
+	m.pattern = fmt.Sprintf(`%s(.+?)%s`, gregex.Quote(left), gregex.Quote(right))
 	intlog.Printf(context.TODO(), `SetDelimiters: %v`, m.pattern)
 }
 
@@ -132,13 +136,13 @@ func (m *Manager) Tf(ctx context.Context, format string, values ...interface{}) 
 	return m.TranslateFormat(ctx, format, values...)
 }
 
-// TranslateFormat translates, formats and returns the <format> with configured language
-// and given <values>.
+// TranslateFormat translates, formats and returns the `format` with configured language
+// and given `values`.
 func (m *Manager) TranslateFormat(ctx context.Context, format string, values ...interface{}) string {
 	return fmt.Sprintf(m.Translate(ctx, format), values...)
 }
 
-// Translate translates <content> with configured language.
+// Translate translates `content` with configured language.
 func (m *Manager) Translate(ctx context.Context, content string) string {
 	m.init(ctx)
 	m.mu.RLock()
@@ -162,6 +166,8 @@ func (m *Manager) Translate(ctx context.Context, content string) string {
 			if v, ok := data[match[1]]; ok {
 				return v
 			}
+			// return match[1] will return the content between delimiters
+			// return match[0] will return the original content
 			return match[0]
 		})
 	intlog.Printf(ctx, `Translate for language: %s`, transLang)
@@ -213,18 +219,18 @@ func (m *Manager) init(ctx context.Context) {
 				array = strings.Split(path, "/")
 				if len(array) > 1 {
 					lang = array[0]
-				} else {
+				} else if len(array) == 1 {
 					lang = gfile.Name(array[0])
 				}
 				if m.data[lang] == nil {
 					m.data[lang] = make(map[string]string)
 				}
 				if j, err := gjson.LoadContent(file.Content()); err == nil {
-					for k, v := range j.Map() {
+					for k, v := range j.Var().Map() {
 						m.data[lang][k] = gconv.String(v)
 					}
 				} else {
-					intlog.Errorf(ctx, "load i18n file '%s' failed: %v", name, err)
+					intlog.Errorf(ctx, "load i18n file '%s' failed: %+v", name, err)
 				}
 			}
 		}
@@ -244,18 +250,18 @@ func (m *Manager) init(ctx context.Context) {
 			array = strings.Split(path, gfile.Separator)
 			if len(array) > 1 {
 				lang = array[0]
-			} else {
+			} else if len(array) == 1 {
 				lang = gfile.Name(array[0])
 			}
 			if m.data[lang] == nil {
 				m.data[lang] = make(map[string]string)
 			}
 			if j, err := gjson.LoadContent(gfile.GetBytes(file)); err == nil {
-				for k, v := range j.Map() {
+				for k, v := range j.Var().Map() {
 					m.data[lang][k] = gconv.String(v)
 				}
 			} else {
-				intlog.Errorf(ctx, "load i18n file '%s' failed: %v", file, err)
+				intlog.Errorf(ctx, "load i18n file '%s' failed: %+v", file, err)
 			}
 		}
 		// Monitor changes of i18n files for hot reload feature.

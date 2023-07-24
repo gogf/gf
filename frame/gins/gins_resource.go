@@ -7,11 +7,11 @@
 package gins
 
 import (
-	"github.com/gogf/gf/os/gres"
+	"github.com/gogf/gf/v2/os/gres"
 )
 
 // Resource returns an instance of Resource.
-// The parameter <name> is the name for the instance.
+// The parameter `name` is the name for the instance.
 func Resource(name ...string) *gres.Resource {
 	return gres.Instance(name...)
 }

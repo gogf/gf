@@ -8,10 +8,11 @@ package gtime
 
 import (
 	"bytes"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
 	"strconv"
 	"time"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 // Time is a wrapper for time.Time for additional features.
@@ -19,8 +20,8 @@ type Time struct {
 	wrapper
 }
 
-// apiUnixNano is an interface definition commonly for custom time.Time wrapper.
-type apiUnixNano interface {
+// iUnixNano is an interface definition commonly for custom time.Time wrapper.
+type iUnixNano interface {
 	UnixNano() int64
 }
 
@@ -69,7 +70,7 @@ func New(param ...interface{}) *Time {
 			return NewFromTimeStamp(r)
 
 		default:
-			if v, ok := r.(apiUnixNano); ok {
+			if v, ok := r.(iUnixNano); ok {
 				return NewFromTimeStamp(v.UnixNano())
 			}
 		}
@@ -146,86 +147,122 @@ func NewFromTimeStamp(timestamp int64) *Time {
 
 // Timestamp returns the timestamp in seconds.
 func (t *Time) Timestamp() int64 {
+	if t.IsZero() {
+		return 0
+	}
 	return t.UnixNano() / 1e9
 }
 
 // TimestampMilli returns the timestamp in milliseconds.
 func (t *Time) TimestampMilli() int64 {
+	if t.IsZero() {
+		return 0
+	}
 	return t.UnixNano() / 1e6
 }
 
 // TimestampMicro returns the timestamp in microseconds.
 func (t *Time) TimestampMicro() int64 {
+	if t.IsZero() {
+		return 0
+	}
 	return t.UnixNano() / 1e3
 }
 
 // TimestampNano returns the timestamp in nanoseconds.
 func (t *Time) TimestampNano() int64 {
+	if t.IsZero() {
+		return 0
+	}
 	return t.UnixNano()
 }
 
 // TimestampStr is a convenience method which retrieves and returns
 // the timestamp in seconds as string.
 func (t *Time) TimestampStr() string {
+	if t.IsZero() {
+		return ""
+	}
 	return strconv.FormatInt(t.Timestamp(), 10)
 }
 
 // TimestampMilliStr is a convenience method which retrieves and returns
 // the timestamp in milliseconds as string.
 func (t *Time) TimestampMilliStr() string {
+	if t.IsZero() {
+		return ""
+	}
 	return strconv.FormatInt(t.TimestampMilli(), 10)
 }
 
 // TimestampMicroStr is a convenience method which retrieves and returns
 // the timestamp in microseconds as string.
 func (t *Time) TimestampMicroStr() string {
+	if t.IsZero() {
+		return ""
+	}
 	return strconv.FormatInt(t.TimestampMicro(), 10)
 }
 
 // TimestampNanoStr is a convenience method which retrieves and returns
 // the timestamp in nanoseconds as string.
 func (t *Time) TimestampNanoStr() string {
+	if t.IsZero() {
+		return ""
+	}
 	return strconv.FormatInt(t.TimestampNano(), 10)
 }
 
 // Month returns the month of the year specified by t.
 func (t *Time) Month() int {
+	if t.IsZero() {
+		return 0
+	}
 	return int(t.Time.Month())
 }
 
 // Second returns the second offset within the minute specified by t,
 // in the range [0, 59].
 func (t *Time) Second() int {
+	if t.IsZero() {
+		return 0
+	}
 	return t.Time.Second()
 }
 
 // Millisecond returns the millisecond offset within the second specified by t,
 // in the range [0, 999].
 func (t *Time) Millisecond() int {
+	if t.IsZero() {
+		return 0
+	}
 	return t.Time.Nanosecond() / 1e6
 }
 
 // Microsecond returns the microsecond offset within the second specified by t,
 // in the range [0, 999999].
 func (t *Time) Microsecond() int {
+	if t.IsZero() {
+		return 0
+	}
 	return t.Time.Nanosecond() / 1e3
 }
 
 // Nanosecond returns the nanosecond offset within the second specified by t,
 // in the range [0, 999999999].
 func (t *Time) Nanosecond() int {
+	if t.IsZero() {
+		return 0
+	}
 	return t.Time.Nanosecond()
 }
 
 // String returns current time object as string.
 func (t *Time) String() string {
-	if t == nil {
-		return ""
-	}
 	if t.IsZero() {
 		return ""
 	}
-	return t.Format("Y-m-d H:i:s")
+	return t.wrapper.String()
 }
 
 // IsZero reports whether t represents the zero time instant,
@@ -252,6 +289,7 @@ func (t *Time) Add(d time.Duration) *Time {
 // AddStr parses the given duration as string and adds it to current time.
 func (t *Time) AddStr(duration string) (*Time, error) {
 	if d, err := time.ParseDuration(duration); err != nil {
+		err = gerror.Wrapf(err, `time.ParseDuration failed for string "%s"`, duration)
 		return nil, err
 	} else {
 		return t.Add(d), nil
@@ -315,7 +353,16 @@ func (t *Time) Truncate(d time.Duration) *Time {
 // See the documentation on the Time type for the pitfalls of using == with
 // Time values; most code should use Equal instead.
 func (t *Time) Equal(u *Time) bool {
-	return t.Time.Equal(u.Time)
+	switch {
+	case t == nil && u != nil:
+		return false
+	case t == nil && u == nil:
+		return true
+	case t != nil && u == nil:
+		return false
+	default:
+		return t.Time.Equal(u.Time)
+	}
 }
 
 // Before reports whether the time instant t is before u.
@@ -325,7 +372,14 @@ func (t *Time) Before(u *Time) bool {
 
 // After reports whether the time instant t is after u.
 func (t *Time) After(u *Time) bool {
-	return t.Time.After(u.Time)
+	switch {
+	case t == nil:
+		return false
+	case t != nil && u == nil:
+		return true
+	default:
+		return t.Time.After(u.Time)
+	}
 }
 
 // Sub returns the duration t-u. If the result exceeds the maximum (or minimum)
@@ -333,6 +387,9 @@ func (t *Time) After(u *Time) bool {
 // will be returned.
 // To compute t-d for a duration d, use t.Add(-d).
 func (t *Time) Sub(u *Time) time.Duration {
+	if t == nil || u == nil {
+		return 0
+	}
 	return t.Time.Sub(u.Time)
 }
 
@@ -400,51 +457,63 @@ func (t *Time) StartOfYear() *Time {
 	return newTime
 }
 
+// getPrecisionDelta returns the precision parameter for time calculation depending on `withNanoPrecision` option.
+func getPrecisionDelta(withNanoPrecision ...bool) time.Duration {
+	if len(withNanoPrecision) > 0 && withNanoPrecision[0] {
+		return time.Nanosecond
+	}
+	return time.Second
+}
+
 // EndOfMinute clones and returns a new time of which the seconds is set to 59.
-func (t *Time) EndOfMinute() *Time {
-	return t.StartOfMinute().Add(time.Minute - time.Nanosecond)
+func (t *Time) EndOfMinute(withNanoPrecision ...bool) *Time {
+	return t.StartOfMinute().Add(time.Minute - getPrecisionDelta(withNanoPrecision...))
 }
 
 // EndOfHour clones and returns a new time of which the minutes and seconds are both set to 59.
-func (t *Time) EndOfHour() *Time {
-	return t.StartOfHour().Add(time.Hour - time.Nanosecond)
+func (t *Time) EndOfHour(withNanoPrecision ...bool) *Time {
+	return t.StartOfHour().Add(time.Hour - getPrecisionDelta(withNanoPrecision...))
 }
 
 // EndOfDay clones and returns a new time which is the end of day the and its time is set to 23:59:59.
-func (t *Time) EndOfDay() *Time {
+func (t *Time) EndOfDay(withNanoPrecision ...bool) *Time {
 	y, m, d := t.Date()
 	newTime := t.Clone()
-	newTime.Time = time.Date(y, m, d, 23, 59, 59, int(time.Second-time.Nanosecond), newTime.Time.Location())
+	newTime.Time = time.Date(
+		y, m, d, 23, 59, 59, int(time.Second-getPrecisionDelta(withNanoPrecision...)), newTime.Time.Location(),
+	)
 	return newTime
 }
 
 // EndOfWeek clones and returns a new time which is the end of week and its time is set to 23:59:59.
-func (t *Time) EndOfWeek() *Time {
-	return t.StartOfWeek().AddDate(0, 0, 7).Add(-time.Nanosecond)
+func (t *Time) EndOfWeek(withNanoPrecision ...bool) *Time {
+	return t.StartOfWeek().AddDate(0, 0, 7).Add(-getPrecisionDelta(withNanoPrecision...))
 }
 
 // EndOfMonth clones and returns a new time which is the end of the month and its time is set to 23:59:59.
-func (t *Time) EndOfMonth() *Time {
-	return t.StartOfMonth().AddDate(0, 1, 0).Add(-time.Nanosecond)
+func (t *Time) EndOfMonth(withNanoPrecision ...bool) *Time {
+	return t.StartOfMonth().AddDate(0, 1, 0).Add(-getPrecisionDelta(withNanoPrecision...))
 }
 
 // EndOfQuarter clones and returns a new time which is end of the quarter and its time is set to 23:59:59.
-func (t *Time) EndOfQuarter() *Time {
-	return t.StartOfQuarter().AddDate(0, 3, 0).Add(-time.Nanosecond)
+func (t *Time) EndOfQuarter(withNanoPrecision ...bool) *Time {
+	return t.StartOfQuarter().AddDate(0, 3, 0).Add(-getPrecisionDelta(withNanoPrecision...))
 }
 
 // EndOfHalf clones and returns a new time which is the end of the half year and its time is set to 23:59:59.
-func (t *Time) EndOfHalf() *Time {
-	return t.StartOfHalf().AddDate(0, 6, 0).Add(-time.Nanosecond)
+func (t *Time) EndOfHalf(withNanoPrecision ...bool) *Time {
+	return t.StartOfHalf().AddDate(0, 6, 0).Add(-getPrecisionDelta(withNanoPrecision...))
 }
 
 // EndOfYear clones and returns a new time which is the end of the year and its time is set to 23:59:59.
-func (t *Time) EndOfYear() *Time {
-	return t.StartOfYear().AddDate(1, 0, 0).Add(-time.Nanosecond)
+func (t *Time) EndOfYear(withNanoPrecision ...bool) *Time {
+	return t.StartOfYear().AddDate(1, 0, 0).Add(-getPrecisionDelta(withNanoPrecision...))
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (t *Time) MarshalJSON() ([]byte, error) {
+// Note that, DO NOT use `(t *Time) MarshalJSON() ([]byte, error)` as it looses interface
+// implement of `MarshalJSON` for struct of Time.
+func (t Time) MarshalJSON() ([]byte, error) {
 	return []byte(`"` + t.String() + `"`), nil
 }
 
@@ -474,6 +543,12 @@ func (t *Time) UnmarshalText(data []byte) error {
 }
 
 // NoValidation marks this struct object will not be validated by package gvalid.
-func (t *Time) NoValidation() {
+func (t *Time) NoValidation() {}
 
+// DeepCopy implements interface for deep copy of current type.
+func (t *Time) DeepCopy() interface{} {
+	if t == nil {
+		return nil
+	}
+	return New(t.Time)
 }

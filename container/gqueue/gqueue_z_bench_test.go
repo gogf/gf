@@ -11,13 +11,17 @@ package gqueue_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/container/gqueue"
+	"github.com/gogf/gf/v2/container/gqueue"
 )
 
 var bn = 20000000
+
 var length = 1000000
+
 var qstatic = gqueue.New(length)
+
 var qdynamic = gqueue.New()
+
 var cany = make(chan interface{}, length)
 
 func Benchmark_Gqueue_StaticPushAndPop(b *testing.B) {

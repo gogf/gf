@@ -15,14 +15,13 @@
 // 3. Support dynamic queue size(unlimited queue size);
 //
 // 4. Blocking when reading data from queue;
-//
 package gqueue
 
 import (
 	"math"
 
-	"github.com/gogf/gf/container/glist"
-	"github.com/gogf/gf/container/gtype"
+	"github.com/gogf/gf/v2/container/glist"
+	"github.com/gogf/gf/v2/container/gtype"
 )
 
 // Queue is a concurrent-safe queue built on doubly linked list and channel.
@@ -40,8 +39,8 @@ const (
 )
 
 // New returns an empty queue object.
-// Optional parameter <limit> is used to limit the size of the queue, which is unlimited in default.
-// When <limit> is given, the queue will be static and high performance which is comparable with stdlib channel.
+// Optional parameter `limit` is used to limit the size of the queue, which is unlimited in default.
+// When `limit` is given, the queue will be static and high performance which is comparable with stdlib channel.
 func New(limit ...int) *Queue {
 	q := &Queue{
 		closed: gtype.NewBool(),
@@ -58,42 +57,8 @@ func New(limit ...int) *Queue {
 	return q
 }
 
-// asyncLoopFromListToChannel starts an asynchronous goroutine,
-// which handles the data synchronization from list <q.list> to channel <q.C>.
-func (q *Queue) asyncLoopFromListToChannel() {
-	defer func() {
-		if q.closed.Val() {
-			_ = recover()
-		}
-	}()
-	for !q.closed.Val() {
-		<-q.events
-		for !q.closed.Val() {
-			if length := q.list.Len(); length > 0 {
-				if length > defaultBatchSize {
-					length = defaultBatchSize
-				}
-				for _, v := range q.list.PopFronts(length) {
-					// When q.C is closed, it will panic here, especially q.C is being blocked for writing.
-					// If any error occurs here, it will be caught by recover and be ignored.
-					q.C <- v
-				}
-			} else {
-				break
-			}
-		}
-		// Clear q.events to remain just one event to do the next synchronization check.
-		for i := 0; i < len(q.events)-1; i++ {
-			<-q.events
-		}
-	}
-	// It should be here to close q.C if <q> is unlimited size.
-	// It's the sender's responsibility to close channel when it should be closed.
-	close(q.C)
-}
-
-// Push pushes the data <v> into the queue.
-// Note that it would panics if Push is called after the queue is closed.
+// Push pushes the data `v` into the queue.
+// Note that it would panic if Push is called after the queue is closed.
 func (q *Queue) Push(v interface{}) {
 	if q.limit > 0 {
 		q.C <- v
@@ -115,30 +80,65 @@ func (q *Queue) Pop() interface{} {
 // Notice: It would notify all goroutines return immediately,
 // which are being blocked reading using Pop method.
 func (q *Queue) Close() {
-	q.closed.Set(true)
+	if !q.closed.Cas(false, true) {
+		return
+	}
 	if q.events != nil {
 		close(q.events)
 	}
 	if q.limit > 0 {
 		close(q.C)
-	}
-	for i := 0; i < defaultBatchSize; i++ {
-		q.Pop()
+	} else {
+		for i := 0; i < defaultBatchSize; i++ {
+			q.Pop()
+		}
 	}
 }
 
 // Len returns the length of the queue.
-// Note that the result might not be accurate as there's a
+// Note that the result might not be accurate if using unlimited queue size as there's an
 // asynchronous channel reading the list constantly.
-func (q *Queue) Len() (length int) {
-	if q.list != nil {
-		length += q.list.Len()
+func (q *Queue) Len() (length int64) {
+	bufferedSize := int64(len(q.C))
+	if q.limit > 0 {
+		return bufferedSize
 	}
-	length += len(q.C)
-	return
+	return int64(q.list.Size()) + bufferedSize
 }
 
 // Size is alias of Len.
-func (q *Queue) Size() int {
+// Deprecated: use Len instead.
+func (q *Queue) Size() int64 {
 	return q.Len()
+}
+
+// asyncLoopFromListToChannel starts an asynchronous goroutine,
+// which handles the data synchronization from list `q.list` to channel `q.C`.
+func (q *Queue) asyncLoopFromListToChannel() {
+	defer func() {
+		if q.closed.Val() {
+			_ = recover()
+		}
+	}()
+	for !q.closed.Val() {
+		<-q.events
+		for !q.closed.Val() {
+			if bufferLength := q.list.Len(); bufferLength > 0 {
+				// When q.C is closed, it will panic here, especially q.C is being blocked for writing.
+				// If any error occurs here, it will be caught by recover and be ignored.
+				for i := 0; i < bufferLength; i++ {
+					q.C <- q.list.PopFront()
+				}
+			} else {
+				break
+			}
+		}
+		// Clear q.events to remain just one event to do the next synchronization check.
+		for i := 0; i < len(q.events)-1; i++ {
+			<-q.events
+		}
+	}
+	// It should be here to close `q.C` if `q` is unlimited size.
+	// It's the sender's responsibility to close channel when it should be closed.
+	close(q.C)
 }

@@ -7,12 +7,14 @@
 package gdb
 
 import (
-	"fmt"
-	"github.com/gogf/gf/os/glog"
 	"sync"
 	"time"
 
-	"github.com/gogf/gf/os/gcache"
+	"github.com/gogf/gf/v2/os/gcache"
+	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Config is the configuration management object.
@@ -29,34 +31,35 @@ type ConfigNode struct {
 	Pass                 string        `json:"pass"`                 // Authentication password.
 	Name                 string        `json:"name"`                 // Default used database name.
 	Type                 string        `json:"type"`                 // Database type: mysql, sqlite, mssql, pgsql, oracle.
-	Link                 string        `json:"link"`                 // (Optional) Custom link information, when it is used, configuration Host/Port/User/Pass/Name are ignored.
+	Link                 string        `json:"link"`                 // (Optional) Custom link information for all configuration in one single string.
+	Extra                string        `json:"extra"`                // (Optional) Extra configuration according the registered third-party database driver.
 	Role                 string        `json:"role"`                 // (Optional, "master" in default) Node role, used for master-slave mode: master, slave.
 	Debug                bool          `json:"debug"`                // (Optional) Debug mode enables debug information logging and output.
 	Prefix               string        `json:"prefix"`               // (Optional) Table prefix.
 	DryRun               bool          `json:"dryRun"`               // (Optional) Dry run, which does SELECT but no INSERT/UPDATE/DELETE statements.
 	Weight               int           `json:"weight"`               // (Optional) Weight for load balance calculating, it's useless if there's just one node.
-	Charset              string        `json:"charset"`              // (Optional, "utf8mb4" in default) Custom charset when operating on database.
+	Charset              string        `json:"charset"`              // (Optional, "utf8" in default) Custom charset when operating on database.
+	Protocol             string        `json:"protocol"`             // (Optional, "tcp" in default) See net.Dial for more information which networks are available.
 	Timezone             string        `json:"timezone"`             // (Optional) Sets the time zone for displaying and interpreting time stamps.
+	Namespace            string        `json:"namespace"`            // (Optional) Namespace for some databases. Eg, in pgsql, the `Name` acts as the `catalog`, the `NameSpace` acts as the `schema`.
 	MaxIdleConnCount     int           `json:"maxIdle"`              // (Optional) Max idle connection configuration for underlying connection pool.
 	MaxOpenConnCount     int           `json:"maxOpen"`              // (Optional) Max open connection configuration for underlying connection pool.
 	MaxConnLifeTime      time.Duration `json:"maxLifeTime"`          // (Optional) Max amount of time a connection may be idle before being closed.
 	QueryTimeout         time.Duration `json:"queryTimeout"`         // (Optional) Max query time for per dql.
 	ExecTimeout          time.Duration `json:"execTimeout"`          // (Optional) Max exec time for dml.
-	TranTimeout          time.Duration `json:"tranTimeout"`          // (Optional) Max exec time time for a transaction.
-	PrepareTimeout       time.Duration `json:"prepareTimeout"`       // (Optional) Max exec time time for prepare operation.
+	TranTimeout          time.Duration `json:"tranTimeout"`          // (Optional) Max exec time for a transaction.
+	PrepareTimeout       time.Duration `json:"prepareTimeout"`       // (Optional) Max exec time for prepare operation.
 	CreatedAt            string        `json:"createdAt"`            // (Optional) The filed name of table for automatic-filled created datetime.
 	UpdatedAt            string        `json:"updatedAt"`            // (Optional) The filed name of table for automatic-filled updated datetime.
 	DeletedAt            string        `json:"deletedAt"`            // (Optional) The filed name of table for automatic-filled updated datetime.
 	TimeMaintainDisabled bool          `json:"timeMaintainDisabled"` // (Optional) Disable the automatic time maintaining feature.
-	CtxStrict            bool          `json:"ctxStrict"`            // (Optional) Strictly require context input for all database operations.
-	ExtendTabe           string        `json:"extendTabe"`           //
 }
 
 const (
 	DefaultGroupName = "default" // Default group name.
 )
 
-// configs is internal used configuration object.
+// configs specifies internal used configuration object.
 var configs struct {
 	sync.RWMutex
 	config Config // All configurations.
@@ -74,6 +77,12 @@ func SetConfig(config Config) {
 	defer instances.Clear()
 	configs.Lock()
 	defer configs.Unlock()
+	for k, nodes := range config {
+		for i, node := range nodes {
+			nodes[i] = parseConfigNode(node)
+		}
+		config[k] = nodes
+	}
 	configs.config = config
 }
 
@@ -82,6 +91,9 @@ func SetConfigGroup(group string, nodes ConfigGroup) {
 	defer instances.Clear()
 	configs.Lock()
 	defer configs.Unlock()
+	for i, node := range nodes {
+		nodes[i] = parseConfigNode(node)
+	}
 	configs.config[group] = nodes
 }
 
@@ -90,7 +102,22 @@ func AddConfigNode(group string, node ConfigNode) {
 	defer instances.Clear()
 	configs.Lock()
 	defer configs.Unlock()
-	configs.config[group] = append(configs.config[group], node)
+	configs.config[group] = append(configs.config[group], parseConfigNode(node))
+}
+
+// parseConfigNode parses `Link` configuration syntax.
+func parseConfigNode(node ConfigNode) ConfigNode {
+	if node.Link != "" {
+		node = *parseConfigNodeLink(&node)
+	}
+	if node.Link != "" && node.Type == "" {
+		match, _ := gregex.MatchString(`([a-z]+):(.+)`, node.Link)
+		if len(match) == 3 {
+			node.Type = gstr.Trim(match[1])
+			node.Link = gstr.Trim(match[2])
+		}
+	}
+	return node
 }
 
 // AddDefaultConfigNode adds one node configuration to configuration of default group.
@@ -135,12 +162,12 @@ func IsConfigured() bool {
 }
 
 // SetLogger sets the logger for orm.
-func (c *Core) SetLogger(logger *glog.Logger) {
+func (c *Core) SetLogger(logger glog.ILogger) {
 	c.logger = logger
 }
 
 // GetLogger returns the (logger) of the orm.
-func (c *Core) GetLogger() *glog.Logger {
+func (c *Core) GetLogger() glog.ILogger {
 	return c.logger
 }
 
@@ -155,7 +182,7 @@ func (c *Core) GetLogger() *glog.Logger {
 // The default max idle connections is currently 2. This may change in
 // a future release.
 func (c *Core) SetMaxIdleConnCount(n int) {
-	c.config.MaxIdleConnCount = n
+	c.dynamicConfig.MaxIdleConnCount = n
 }
 
 // SetMaxOpenConnCount sets the maximum number of open connections to the database.
@@ -167,7 +194,7 @@ func (c *Core) SetMaxIdleConnCount(n int) {
 // If n <= 0, then there is no limit on the number of open connections.
 // The default is 0 (unlimited).
 func (c *Core) SetMaxOpenConnCount(n int) {
-	c.config.MaxOpenConnCount = n
+	c.dynamicConfig.MaxOpenConnCount = n
 }
 
 // SetMaxConnLifeTime sets the maximum amount of time a connection may be reused.
@@ -176,24 +203,22 @@ func (c *Core) SetMaxOpenConnCount(n int) {
 //
 // If d <= 0, connections are not closed due to a connection's age.
 func (c *Core) SetMaxConnLifeTime(d time.Duration) {
-	c.config.MaxConnLifeTime = d
-}
-
-// String returns the node as string.
-func (node *ConfigNode) String() string {
-	return fmt.Sprintf(
-		`%s@%s:%s,%s,%s,%s,%s,%v,%d-%d-%d#%s`,
-		node.User, node.Host, node.Port,
-		node.Name, node.Type, node.Role, node.Charset, node.Debug,
-		node.MaxIdleConnCount,
-		node.MaxOpenConnCount,
-		node.MaxConnLifeTime,
-		node.Link,
-	)
+	c.dynamicConfig.MaxConnLifeTime = d
 }
 
 // GetConfig returns the current used node configuration.
 func (c *Core) GetConfig() *ConfigNode {
+	internalData := c.GetInternalCtxDataFromCtx(c.db.GetCtx())
+	if internalData != nil && internalData.ConfigNode != nil {
+		// Note:
+		// It so here checks and returns the config from current DB,
+		// if different schemas between current DB and config.Name from context,
+		// for example, in nested transaction scenario, the context is passed all through the logic procedure,
+		// but the config.Name from context may be still the original one from the first transaction object.
+		if c.config.Name == internalData.ConfigNode.Name {
+			return internalData.ConfigNode
+		}
+	}
 	return c.config
 }
 
@@ -218,31 +243,63 @@ func (c *Core) GetGroup() string {
 }
 
 // SetDryRun enables/disables the DryRun feature.
-// Deprecated, use GetConfig instead.
 func (c *Core) SetDryRun(enabled bool) {
 	c.config.DryRun = enabled
 }
 
 // GetDryRun returns the DryRun value.
-// Deprecated, use GetConfig instead.
 func (c *Core) GetDryRun() bool {
 	return c.config.DryRun || allDryRun
 }
 
 // GetPrefix returns the table prefix string configured.
-// Deprecated, use GetConfig instead.
 func (c *Core) GetPrefix() string {
 	return c.config.Prefix
 }
 
-// SetSchema changes the schema for this database connection object.
-// Importantly note that when schema configuration changed for the database,
-// it affects all operations on the database object in the future.
-func (c *Core) SetSchema(schema string) {
-	c.schema.Set(schema)
-}
-
 // GetSchema returns the schema configured.
 func (c *Core) GetSchema() string {
-	return c.schema.Val()
+	schema := c.schema
+	if schema == "" {
+		schema = c.db.GetConfig().Name
+	}
+	return schema
+}
+
+func parseConfigNodeLink(node *ConfigNode) *ConfigNode {
+	var match []string
+	if node.Link != "" {
+		match, _ = gregex.MatchString(linkPattern, node.Link)
+		if len(match) > 5 {
+			node.Type = match[1]
+			node.User = match[2]
+			node.Pass = match[3]
+			node.Protocol = match[4]
+			array := gstr.Split(match[5], ":")
+			if len(array) == 2 && node.Protocol != "file" {
+				node.Host = array[0]
+				node.Port = array[1]
+				node.Name = match[6]
+			} else {
+				node.Name = match[5]
+			}
+			if len(match) > 6 && match[7] != "" {
+				node.Extra = match[7]
+			}
+			node.Link = ""
+		}
+	}
+	if node.Extra != "" {
+		if m, _ := gstr.Parse(node.Extra); len(m) > 0 {
+			_ = gconv.Struct(m, &node)
+		}
+	}
+	// Default value checks.
+	if node.Charset == "" {
+		node.Charset = defaultCharset
+	}
+	if node.Protocol == "" {
+		node.Protocol = defaultProtocol
+	}
+	return node
 }

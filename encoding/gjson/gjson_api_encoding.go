@@ -7,11 +7,12 @@
 package gjson
 
 import (
-	"github.com/gogf/gf/encoding/gini"
-	"github.com/gogf/gf/encoding/gtoml"
-	"github.com/gogf/gf/encoding/gxml"
-	"github.com/gogf/gf/encoding/gyaml"
-	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/v2/encoding/gini"
+	"github.com/gogf/gf/v2/encoding/gproperties"
+	"github.com/gogf/gf/v2/encoding/gtoml"
+	"github.com/gogf/gf/v2/encoding/gxml"
+	"github.com/gogf/gf/v2/encoding/gyaml"
+	"github.com/gogf/gf/v2/internal/json"
 )
 
 // ========================================================================
@@ -69,7 +70,7 @@ func (j *Json) MustToJsonIndentString() string {
 // ========================================================================
 
 func (j *Json) ToXml(rootTag ...string) ([]byte, error) {
-	return gxml.Encode(j.Map(), rootTag...)
+	return gxml.Encode(j.Var().Map(), rootTag...)
 }
 
 func (j *Json) ToXmlString(rootTag ...string) (string, error) {
@@ -78,7 +79,7 @@ func (j *Json) ToXmlString(rootTag ...string) (string, error) {
 }
 
 func (j *Json) ToXmlIndent(rootTag ...string) ([]byte, error) {
-	return gxml.EncodeWithIndent(j.Map(), rootTag...)
+	return gxml.EncodeWithIndent(j.Var().Map(), rootTag...)
 }
 
 func (j *Json) ToXmlIndentString(rootTag ...string) (string, error) {
@@ -118,6 +119,12 @@ func (j *Json) ToYaml() ([]byte, error) {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	return gyaml.Encode(*(j.p))
+}
+
+func (j *Json) ToYamlIndent(indent string) ([]byte, error) {
+	j.mu.RLock()
+	defer j.mu.RUnlock()
+	return gyaml.EncodeIndent(*(j.p), indent)
 }
 
 func (j *Json) ToYamlString() (string, error) {
@@ -168,14 +175,14 @@ func (j *Json) MustToTomlString() string {
 // INI
 // ========================================================================
 
+// ToIni json to ini
 func (j *Json) ToIni() ([]byte, error) {
-	j.mu.RLock()
-	defer j.mu.RUnlock()
-	return gini.Encode((*(j.p)).(map[string]interface{}))
+	return gini.Encode(j.Map())
 }
 
+// ToIniString ini to string
 func (j *Json) ToIniString() (string, error) {
-	b, e := j.ToToml()
+	b, e := j.ToIni()
 	return string(b), e
 }
 
@@ -187,6 +194,34 @@ func (j *Json) MustToIni() []byte {
 	return result
 }
 
+// MustToIniString .
 func (j *Json) MustToIniString() string {
 	return string(j.MustToIni())
+}
+
+// ========================================================================
+// properties
+// ========================================================================
+// Toproperties json to properties
+func (j *Json) ToProperties() ([]byte, error) {
+	return gproperties.Encode(j.Map())
+}
+
+// TopropertiesString properties to string
+func (j *Json) ToPropertiesString() (string, error) {
+	b, e := j.ToProperties()
+	return string(b), e
+}
+
+func (j *Json) MustToProperties() []byte {
+	result, err := j.ToProperties()
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+
+// MustTopropertiesString
+func (j *Json) MustToPropertiesString() string {
+	return string(j.MustToProperties())
 }

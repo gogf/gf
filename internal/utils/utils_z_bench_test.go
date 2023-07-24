@@ -7,9 +7,10 @@
 package utils_test
 
 import (
-	"github.com/gogf/gf/internal/utils"
 	"regexp"
 	"testing"
+
+	"github.com/gogf/gf/v2/internal/utils"
 )
 
 var (

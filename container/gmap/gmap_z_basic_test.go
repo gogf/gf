@@ -7,11 +7,11 @@
 package gmap_test
 
 import (
-	"github.com/gogf/gf/util/gutil"
 	"testing"
 
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 func getValue() interface{} {
@@ -101,6 +101,7 @@ func Test_Map_Basic(t *testing.T) {
 		t.Assert(m2.Map(), map[interface{}]interface{}{1: 1, "key1": "val1"})
 	})
 }
+
 func Test_Map_Set_Fun(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.New()
@@ -123,6 +124,7 @@ func Test_Map_Batch(t *testing.T) {
 		t.Assert(m.Map(), map[interface{}]interface{}{"key2": "val2", "key3": "val3"})
 	})
 }
+
 func Test_Map_Iterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[interface{}]interface{}{1: 1, "key1": "val1"}
@@ -163,18 +165,19 @@ func Test_Map_Lock(t *testing.T) {
 
 func Test_Map_Clone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		//clone 方法是深克隆
+		// clone 方法是深克隆
 		m := gmap.NewFrom(map[interface{}]interface{}{1: 1, "key1": "val1"})
 		m_clone := m.Clone()
 		m.Remove(1)
-		//修改原 map,clone 后的 map 不影响
+		// 修改原 map,clone 后的 map 不影响
 		t.AssertIN(1, m_clone.Keys())
 
 		m_clone.Remove("key1")
-		//修改clone map,原 map 不影响
+		// 修改clone map,原 map 不影响
 		t.AssertIN("key1", m.Keys())
 	})
 }
+
 func Test_Map_Basic_Merge(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.New()

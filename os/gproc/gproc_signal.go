@@ -8,11 +8,12 @@ package gproc
 
 import (
 	"context"
-	"github.com/gogf/gf/internal/intlog"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
+
+	"github.com/gogf/gf/v2/internal/intlog"
 )
 
 // SigHandler defines a function type for signal handling.
@@ -30,7 +31,7 @@ var (
 )
 
 func init() {
-	for sig, _ := range shutdownSignalMap {
+	for sig := range shutdownSignalMap {
 		signalHandlerMap[sig] = make([]SigHandler, 0)
 	}
 }
@@ -50,7 +51,7 @@ func AddSigHandler(handler SigHandler, signals ...os.Signal) {
 // syscall.SIGABRT.
 func AddSigHandlerShutdown(handler ...SigHandler) {
 	for _, h := range handler {
-		for sig, _ := range shutdownSignalMap {
+		for sig := range shutdownSignalMap {
 			signalHandlerMap[sig] = append(signalHandlerMap[sig], h)
 		}
 	}
@@ -59,7 +60,7 @@ func AddSigHandlerShutdown(handler ...SigHandler) {
 // Listen blocks and does signal listening and handling.
 func Listen() {
 	signals := make([]os.Signal, 0)
-	for sig, _ := range signalHandlerMap {
+	for sig := range signalHandlerMap {
 		signals = append(signals, sig)
 	}
 	sigChan := make(chan os.Signal, 1)

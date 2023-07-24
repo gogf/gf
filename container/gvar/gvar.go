@@ -8,12 +8,14 @@
 package gvar
 
 import (
-	"github.com/gogf/gf/internal/json"
 	"time"
 
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/internal/deepcopy"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // Var is an universal variable type implementer.
@@ -26,28 +28,20 @@ type Var struct {
 // The optional parameter `safe` specifies whether Var is used in concurrent-safety,
 // which is false in default.
 func New(value interface{}, safe ...bool) *Var {
-	v := Var{}
-	if len(safe) > 0 && !safe[0] {
-		v.safe = true
-		v.value = gtype.NewInterface(value)
-	} else {
-		v.value = value
+	if len(safe) > 0 && safe[0] {
+		return &Var{
+			value: gtype.NewInterface(value),
+			safe:  true,
+		}
 	}
-	return &v
+	return &Var{
+		value: value,
+	}
 }
 
-// Create creates and returns a new Var with given `value`.
-// The optional parameter `safe` specifies whether Var is used in concurrent-safety,
-// which is false in default.
-func Create(value interface{}, safe ...bool) Var {
-	v := Var{}
-	if len(safe) > 0 && !safe[0] {
-		v.safe = true
-		v.value = gtype.NewInterface(value)
-	} else {
-		v.value = value
-	}
-	return v
+// Copy does a deep copy of current Var and returns a pointer to this Var.
+func (v *Var) Copy() *Var {
+	return New(gutil.Copy(v.Val()), v.safe)
 }
 
 // Clone does a shallow copy of current Var and returns a pointer to this Var.
@@ -182,15 +176,14 @@ func (v *Var) GTime(format ...string) *gtime.Time {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (v *Var) MarshalJSON() ([]byte, error) {
+func (v Var) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.Val())
 }
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (v *Var) UnmarshalJSON(b []byte) error {
 	var i interface{}
-	err := json.UnmarshalUseNumber(b, &i)
-	if err != nil {
+	if err := json.UnmarshalUseNumber(b, &i); err != nil {
 		return err
 	}
 	v.Set(i)
@@ -201,4 +194,12 @@ func (v *Var) UnmarshalJSON(b []byte) error {
 func (v *Var) UnmarshalValue(value interface{}) error {
 	v.Set(value)
 	return nil
+}
+
+// DeepCopy implements interface for deep copy of current type.
+func (v *Var) DeepCopy() interface{} {
+	if v == nil {
+		return nil
+	}
+	return New(deepcopy.Copy(v.Val()), v.safe)
 }

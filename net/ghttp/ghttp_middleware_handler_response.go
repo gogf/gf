@@ -7,47 +7,61 @@
 package ghttp
 
 import (
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/intlog"
+	"net/http"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
+// DefaultHandlerResponse is the default implementation of HandlerResponse.
 type DefaultHandlerResponse struct {
-	Code    int         `json:"code"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
+	Code    int         `json:"code"    dc:"Error code"`
+	Message string      `json:"message" dc:"Error message"`
+	Data    interface{} `json:"data"    dc:"Result data for certain request according API definition"`
 }
 
 // MiddlewareHandlerResponse is the default middleware handling handler response object and its error.
 func MiddlewareHandlerResponse(r *Request) {
 	r.Middleware.Next()
+
+	// There's custom buffer content, it then exits current handler.
+	if r.Response.BufferLength() > 0 {
+		return
+	}
+
 	var (
-		err         error
-		res         interface{}
-		internalErr error
+		msg  string
+		err  = r.GetError()
+		res  = r.GetHandlerResponse()
+		code = gerror.Code(err)
 	)
-	res, err = r.GetHandlerResponse()
 	if err != nil {
-		code := gerror.Code(err)
 		if code == gcode.CodeNil {
 			code = gcode.CodeInternalError
 		}
-		internalErr = r.Response.WriteJson(DefaultHandlerResponse{
-			Code:    code.Code(),
-			Message: err.Error(),
-			Data:    nil,
-		})
-		if internalErr != nil {
-			intlog.Error(r.Context(), internalErr)
+		msg = err.Error()
+	} else {
+		if r.Response.Status > 0 && r.Response.Status != http.StatusOK {
+			msg = http.StatusText(r.Response.Status)
+			switch r.Response.Status {
+			case http.StatusNotFound:
+				code = gcode.CodeNotFound
+			case http.StatusForbidden:
+				code = gcode.CodeNotAuthorized
+			default:
+				code = gcode.CodeUnknown
+			}
+			// It creates error as it can be retrieved by other middlewares.
+			err = gerror.NewCode(code, msg)
+			r.SetError(err)
+		} else {
+			code = gcode.CodeOK
 		}
-		return
 	}
-	internalErr = r.Response.WriteJson(DefaultHandlerResponse{
-		Code:    gcode.CodeOK.Code(),
-		Message: "",
+
+	r.Response.WriteJson(DefaultHandlerResponse{
+		Code:    code.Code(),
+		Message: msg,
 		Data:    res,
 	})
-	if internalErr != nil {
-		intlog.Error(r.Context(), internalErr)
-	}
 }

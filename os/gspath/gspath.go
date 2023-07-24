@@ -13,17 +13,17 @@ package gspath
 
 import (
 	"context"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/intlog"
 	"os"
 	"sort"
 	"strings"
 
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // SPath manages the path searching feature.
@@ -53,13 +53,13 @@ func New(path string, cache bool) *SPath {
 	}
 	if len(path) > 0 {
 		if _, err := sp.Add(path); err != nil {
-			//intlog.Print(err)
+			// intlog.Print(err)
 		}
 	}
 	return sp
 }
 
-// Get creates and returns a instance of searching manager for given path.
+// Get creates and returns an instance of searching manager for given path.
 // The parameter `cache` specifies whether using cache feature for this manager.
 // If cache feature is enabled, it asynchronously and recursively scans the path
 // and updates all sub files/folders to the cache using package gfsnotify.
@@ -73,7 +73,7 @@ func Get(root string, cache bool) *SPath {
 }
 
 // Search searches file `name` under path `root`.
-// The parameter `root` should be a absolute path. It will not automatically
+// The parameter `root` should be an absolute path. It will not automatically
 // convert `root` to absolute path for performance reason.
 // The optional parameter `indexFiles` specifies the searching index files when the result is a directory.
 // For example, if the result `filePath` is a directory, and `indexFiles` is [index.html, main.html], it will also
@@ -84,7 +84,7 @@ func Search(root string, name string, indexFiles ...string) (filePath string, is
 }
 
 // SearchWithCache searches file `name` under path `root` with cache feature enabled.
-// The parameter `root` should be a absolute path. It will not automatically
+// The parameter `root` should be an absolute path. It will not automatically
 // convert `root` to absolute path for performance reason.
 // The optional parameter `indexFiles` specifies the searching index files when the result is a directory.
 // For example, if the result `filePath` is a directory, and `indexFiles` is [index.html, main.html], it will also
@@ -143,7 +143,7 @@ func (sp *SPath) Add(path string) (realPath string, err error) {
 	}
 	// The added path must be a directory.
 	if gfile.IsDir(realPath) {
-		//fmt.Println("gspath:", realPath, sp.paths.Search(realPath))
+		// fmt.Println("gspath:", realPath, sp.paths.Search(realPath))
 		// It will not add twice for the same directory.
 		if sp.paths.Search(realPath) < 0 {
 			realPath = strings.TrimRight(realPath, gfile.Separator)
@@ -205,7 +205,7 @@ func (sp *SPath) Search(name string, indexFiles ...string) (filePath string, isD
 				name = ""
 			}
 			for _, file := range indexFiles {
-				if v := sp.cache.Get(name + "/" + file); v != "" {
+				if v = sp.cache.Get(name + "/" + file); v != "" {
 					return sp.parseCacheValue(v)
 				}
 			}
@@ -215,7 +215,7 @@ func (sp *SPath) Search(name string, indexFiles ...string) (filePath string, isD
 }
 
 // Remove deletes the `path` from cache files of the manager.
-// The parameter `path` can be either a absolute path or just a relative file name.
+// The parameter `path` can be either an absolute path or just a relative file name.
 func (sp *SPath) Remove(path string) {
 	if sp.cache == nil {
 		return

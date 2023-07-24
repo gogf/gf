@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/v2/text/gregex"
 )
 
 var (
@@ -65,7 +65,7 @@ var (
 	dayOfMonth = []int{0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334}
 )
 
-// Format formats and returns the formatted result with custom <format>.
+// Format formats and returns the formatted result with custom `format`.
 func (t *Time) Format(format string) string {
 	if t == nil {
 		return ""
@@ -101,20 +101,20 @@ func (t *Time) Format(format string) string {
 				switch runes[i] {
 				case 'j':
 					for _, s := range []string{"=j=0", "=j="} {
-						result = strings.Replace(result, s, "", -1)
+						result = strings.ReplaceAll(result, s, "")
 					}
 					buffer.WriteString(result)
 				case 'G':
 					for _, s := range []string{"=G=0", "=G="} {
-						result = strings.Replace(result, s, "", -1)
+						result = strings.ReplaceAll(result, s, "")
 					}
 					buffer.WriteString(result)
 				case 'u':
-					buffer.WriteString(strings.Replace(result, "=u=.", "", -1))
+					buffer.WriteString(strings.ReplaceAll(result, "=u=.", ""))
 				case 'w':
 					buffer.WriteString(weekMap[result])
 				case 'N':
-					buffer.WriteString(strings.Replace(weekMap[result], "0", "7", -1))
+					buffer.WriteString(strings.ReplaceAll(weekMap[result], "0", "7"))
 				case 'S':
 					buffer.WriteString(formatMonthDaySuffixMap(result))
 				default:
@@ -129,7 +129,7 @@ func (t *Time) Format(format string) string {
 	return buffer.String()
 }
 
-// FormatNew formats and returns a new Time object with given custom <format>.
+// FormatNew formats and returns a new Time object with given custom `format`.
 func (t *Time) FormatNew(format string) *Time {
 	if t == nil {
 		return nil
@@ -137,7 +137,7 @@ func (t *Time) FormatNew(format string) *Time {
 	return NewFromStr(t.Format(format))
 }
 
-// FormatTo formats <t> with given custom <format>.
+// FormatTo formats `t` with given custom `format`.
 func (t *Time) FormatTo(format string) *Time {
 	if t == nil {
 		return nil
@@ -162,7 +162,7 @@ func (t *Time) LayoutNew(layout string) *Time {
 	return NewFromStr(t.Layout(layout))
 }
 
-// LayoutTo formats <t> with stdlib layout.
+// LayoutTo formats `t` with stdlib layout.
 func (t *Time) LayoutTo(layout string) *Time {
 	if t == nil {
 		return nil
@@ -182,8 +182,10 @@ func (t *Time) IsLeapYear() bool {
 
 // DayOfYear checks and returns the position of the day for the year.
 func (t *Time) DayOfYear() int {
-	day := t.Day()
-	month := int(t.Month())
+	var (
+		day   = t.Day()
+		month = t.Month()
+	)
 	if t.IsLeapYear() {
 		if month > 2 {
 			return dayOfMonth[month-1] + day

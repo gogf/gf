@@ -9,28 +9,47 @@ package gbuild
 
 import (
 	"context"
-	"github.com/gogf/gf"
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/encoding/gbase64"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/util/gconv"
 	"runtime"
+
+	"github.com/gogf/gf/v2"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/encoding/gbase64"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/internal/json"
+)
+
+// BuildInfo maintains the built info of current binary.
+type BuildInfo struct {
+	GoFrame string                 // Built used GoFrame version.
+	Golang  string                 // Built used Golang version.
+	Git     string                 // Built used git repo. commit id and datetime.
+	Time    string                 // Built datetime.
+	Version string                 // Built version.
+	Data    map[string]interface{} // All custom built data key-value pairs.
+}
+
+const (
+	gfVersion    = `gfVersion`
+	goVersion    = `goVersion`
+	BuiltGit     = `builtGit`
+	BuiltTime    = `builtTime`
+	BuiltVersion = `builtVersion`
 )
 
 var (
-	builtInVarStr = ""                       // Raw variable base64 string.
+	builtInVarStr = ""                       // Raw variable base64 string, which is injected by go build flags.
 	builtInVarMap = map[string]interface{}{} // Binary custom variable map decoded.
 )
 
 func init() {
+	// The `builtInVarStr` is injected by go build flags.
 	if builtInVarStr != "" {
 		err := json.UnmarshalUseNumber(gbase64.MustDecodeString(builtInVarStr), &builtInVarMap)
 		if err != nil {
-			intlog.Error(context.TODO(), err)
+			intlog.Errorf(context.TODO(), `%+v`, err)
 		}
-		builtInVarMap["gfVersion"] = gf.VERSION
-		builtInVarMap["goVersion"] = runtime.Version()
+		builtInVarMap[gfVersion] = gf.VERSION
+		builtInVarMap[goVersion] = runtime.Version()
 		intlog.Printf(context.TODO(), "build variables: %+v", builtInVarMap)
 	} else {
 		intlog.Print(context.TODO(), "no build variables")
@@ -39,38 +58,30 @@ func init() {
 
 // Info returns the basic built information of the binary as map.
 // Note that it should be used with gf-cli tool "gf build",
-// which injects necessary information into the binary.
-func Info() map[string]string {
-	return map[string]string{
-		"gf":   GetString("gfVersion"),
-		"go":   GetString("goVersion"),
-		"git":  GetString("builtGit"),
-		"time": GetString("builtTime"),
+// which automatically injects necessary information into the binary.
+func Info() BuildInfo {
+	return BuildInfo{
+		GoFrame: Get(gfVersion).String(),
+		Golang:  Get(goVersion).String(),
+		Git:     Get(BuiltGit).String(),
+		Time:    Get(BuiltTime).String(),
+		Version: Get(BuiltVersion).String(),
+		Data:    Data(),
 	}
 }
 
 // Get retrieves and returns the build-in binary variable with given name.
-func Get(name string, def ...interface{}) interface{} {
+func Get(name string, def ...interface{}) *gvar.Var {
 	if v, ok := builtInVarMap[name]; ok {
-		return v
+		return gvar.New(v)
 	}
 	if len(def) > 0 {
-		return def[0]
+		return gvar.New(def[0])
 	}
 	return nil
 }
 
-// GetVar retrieves and returns the build-in binary variable of given name as gvar.Var.
-func GetVar(name string, def ...interface{}) *gvar.Var {
-	return gvar.New(Get(name, def...))
-}
-
-// GetString retrieves and returns the build-in binary variable of given name as string.
-func GetString(name string, def ...interface{}) string {
-	return gconv.String(Get(name, def...))
-}
-
-// Map returns the custom build-in variable map.
-func Map() map[string]interface{} {
+// Data returns the custom build-in variables as map.
+func Data() map[string]interface{} {
 	return builtInVarMap
 }

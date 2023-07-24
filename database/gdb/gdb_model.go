@@ -9,95 +9,81 @@ package gdb
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/util/gconv"
-	"time"
 
-	"github.com/gogf/gf/text/gregex"
-
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Model is core struct implementing the DAO for ORM.
 type Model struct {
-	db            DB                 // Underlying DB interface.
-	tx            *TX                // Underlying TX interface.
-	rawSql        string             // rawSql is the raw SQL string which marks a raw SQL based Model not a table based Model.
-	schema        string             // Custom database schema.
-	linkType      int                // Mark for operation on master or slave.
-	tablesInit    string             // Table names when model initialization.
-	tables        string             // Operation table names, which can be more than one table names and aliases, like: "user", "user u", "user u, user_detail ud".
-	fields        string             // Operation fields, multiple fields joined using char ','.
-	fieldsEx      string             // Excluded operation fields, multiple fields joined using char ','.
-	expands       string             // Extended Properties @chengjian
-	expandsTable  string             // Extended Properties @chengjian
-	withArray     []interface{}      // Arguments for With feature.
-	withAll       bool               // Enable model association operations on all objects that have "with" tag in the struct.
-	extraArgs     []interface{}      // Extra custom arguments for sql, which are prepended to the arguments before sql committed to underlying driver.
-	whereHolder   []ModelWhereHolder // Condition strings for where operation.
-	groupBy       string             // Used for "group by" statement.
-	orderBy       string             // Used for "order by" statement.
-	having        []interface{}      // Used for "having..." statement.
-	start         int                // Used for "select ... start, limit ..." statement.
-	limit         int                // Used for "select ... start, limit ..." statement.
-	option        int                // Option for extra operation features.
-	offset        int                // Offset statement for some databases grammar.
-	data          interface{}        // Data for operation, which can be type of map/[]map/struct/*struct/string, etc.
-	batch         int                // Batch number for batch Insert/Replace/Save operations.
-	filter        bool               // Filter data and where key-value pairs according to the fields of the table.
-	distinct      string             // Force the query to only return distinct results.
-	lockInfo      string             // Lock for update or in shared lock.
-	cacheEnabled  bool               // Enable sql result cache feature.
-	cacheDuration time.Duration      // Cache TTL duration (< 1 for removing cache, >= 0 for saving cache).
-	cacheName     string             // Cache name for custom operation.
-	unscoped      bool               // Disables soft deleting features when select/delete operations.
-	safe          bool               // If true, it clones and returns a new model object whenever operation done; or else it changes the attribute of current model.
-	onDuplicate   interface{}        // onDuplicate is used for ON "DUPLICATE KEY UPDATE" statement.
-	onDuplicateEx interface{}        // onDuplicateEx is used for excluding some columns ON "DUPLICATE KEY UPDATE" statement.
+	db            DB            // Underlying DB interface.
+	tx            TX            // Underlying TX interface.
+	rawSql        string        // rawSql is the raw SQL string which marks a raw SQL based Model not a table based Model.
+	schema        string        // Custom database schema.
+	linkType      int           // Mark for operation on master or slave.
+	tablesInit    string        // Table names when model initialization.
+	tables        string        // Operation table names, which can be more than one table names and aliases, like: "user", "user u", "user u, user_detail ud".
+	fields        string        // Operation fields, multiple fields joined using char ','.
+	fieldsEx      string        // Excluded operation fields, multiple fields joined using char ','.
+	withArray     []interface{} // Arguments for With feature.
+	withAll       bool          // Enable model association operations on all objects that have "with" tag in the struct.
+	extraArgs     []interface{} // Extra custom arguments for sql, which are prepended to the arguments before sql committed to underlying driver.
+	whereBuilder  *WhereBuilder // Condition builder for where operation.
+	groupBy       string        // Used for "group by" statement.
+	orderBy       string        // Used for "order by" statement.
+	having        []interface{} // Used for "having..." statement.
+	start         int           // Used for "select ... start, limit ..." statement.
+	limit         int           // Used for "select ... start, limit ..." statement.
+	option        int           // Option for extra operation features.
+	offset        int           // Offset statement for some databases grammar.
+	data          interface{}   // Data for operation, which can be type of map/[]map/struct/*struct/string, etc.
+	batch         int           // Batch number for batch Insert/Replace/Save operations.
+	filter        bool          // Filter data and where key-value pairs according to the fields of the table.
+	distinct      string        // Force the query to only return distinct results.
+	lockInfo      string        // Lock for update or in shared lock.
+	cacheEnabled  bool          // Enable sql result cache feature, which is mainly for indicating cache duration(especially 0) usage.
+	cacheOption   CacheOption   // Cache option for query statement.
+	hookHandler   HookHandler   // Hook functions for model hook feature.
+	unscoped      bool          // Disables soft deleting features when select/delete operations.
+	safe          bool          // If true, it clones and returns a new model object whenever operation done; or else it changes the attribute of current model.
+	onDuplicate   interface{}   // onDuplicate is used for ON "DUPLICATE KEY UPDATE" statement.
+	onDuplicateEx interface{}   // onDuplicateEx is used for excluding some columns ON "DUPLICATE KEY UPDATE" statement.
 }
 
 // ModelHandler is a function that handles given Model and returns a new Model that is custom modified.
 type ModelHandler func(m *Model) *Model
 
 // ChunkHandler is a function that is used in function Chunk, which handles given Result and error.
-// It returns true if it wants continue chunking, or else it returns false to stop chunking.
+// It returns true if it wants to continue chunking, or else it returns false to stop chunking.
 type ChunkHandler func(result Result, err error) bool
-
-// ModelWhereHolder is the holder for where condition preparing.
-type ModelWhereHolder struct {
-	Operator int           // Operator for this holder.
-	Where    interface{}   // Where parameter, which can commonly be type of string/map/struct.
-	Args     []interface{} // Arguments for where parameter.
-}
 
 const (
 	linkTypeMaster           = 1
 	linkTypeSlave            = 2
+	defaultFields            = "*"
 	whereHolderOperatorWhere = 1
 	whereHolderOperatorAnd   = 2
 	whereHolderOperatorOr    = 3
-	defaultFields            = "*"
+	whereHolderTypeDefault   = "Default"
+	whereHolderTypeNoArgs    = "NoArgs"
+	whereHolderTypeIn        = "In"
 )
-
-// Table is alias of Core.Model.
-// See Core.Model.
-// Deprecated, use Model instead.
-func (c *Core) Table(tableNameQueryOrStruct ...interface{}) *Model {
-	return c.db.Model(tableNameQueryOrStruct...)
-}
 
 // Model creates and returns a new ORM model from given schema.
 // The parameter `tableNameQueryOrStruct` can be more than one table names, and also alias name, like:
-// 1. Model names:
-//    db.Model("user")
-//    db.Model("user u")
-//    db.Model("user, user_detail")
-//    db.Model("user u, user_detail ud")
-// 2. Model name with alias:
-//    db.Model("user", "u")
-// 3. Model name with sub-query:
-//    db.Model("? AS a, ? AS b", subQuery1, subQuery2)
+//  1. Model names:
+//     db.Model("user")
+//     db.Model("user u")
+//     db.Model("user, user_detail")
+//     db.Model("user u, user_detail ud")
+//  2. Model name with alias:
+//     db.Model("user", "u")
+//  3. Model name with sub-query:
+//     db.Model("? AS a, ? AS b", subQuery1, subQuery2)
 func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 	var (
+		ctx       = c.db.GetCtx()
 		tableStr  string
 		tableName string
 		extraArgs []interface{}
@@ -106,13 +92,16 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 	if len(tableNameQueryOrStruct) > 1 {
 		conditionStr := gconv.String(tableNameQueryOrStruct[0])
 		if gstr.Contains(conditionStr, "?") {
-			tableStr, extraArgs = formatWhere(c.db, formatWhereInput{
-				Where:     conditionStr,
-				Args:      tableNameQueryOrStruct[1:],
-				OmitNil:   false,
-				OmitEmpty: false,
-				Schema:    "",
-				Table:     "",
+			whereHolder := WhereHolder{
+				Where: conditionStr,
+				Args:  tableNameQueryOrStruct[1:],
+			}
+			tableStr, extraArgs = formatWhereHolder(ctx, c.db, formatWhereHolderInput{
+				WhereHolder: whereHolder,
+				OmitNil:     false,
+				OmitEmpty:   false,
+				Schema:      "",
+				Table:       "",
 			})
 		}
 	}
@@ -134,8 +123,9 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 			tableStr = c.QuotePrefixTableName(tableNames[0])
 		}
 	}
-	return &Model{
+	m := &Model{
 		db:         c.db,
+		schema:     c.schema,
 		tablesInit: tableStr,
 		tables:     tableStr,
 		fields:     defaultFields,
@@ -144,17 +134,17 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 		filter:     true,
 		extraArgs:  extraArgs,
 	}
-}
-
-func (c *Core) ModelEx(exTableName string, tableNameQueryOrStruct ...interface{}) *Model {
-	model := c.db.Model(tableNameQueryOrStruct...)
-	model.expandsTable = exTableName
-	return model
+	m.whereBuilder = m.Builder()
+	if defaultModelSafe {
+		m.safe = true
+	}
+	return m
 }
 
 // Raw creates and returns a model based on a raw sql not a table.
 // Example:
-//     db.Raw("SELECT * FROM `user` WHERE `name` = ?", "john").Scan(&result)
+//
+//	db.Raw("SELECT * FROM `user` WHERE `name` = ?", "john").Scan(&result)
 func (c *Core) Raw(rawSql string, args ...interface{}) *Model {
 	model := c.Model()
 	model.rawSql = rawSql
@@ -162,9 +152,11 @@ func (c *Core) Raw(rawSql string, args ...interface{}) *Model {
 	return model
 }
 
-// Raw creates and returns a model based on a raw sql not a table.
+// Raw sets current model as a raw sql model.
 // Example:
-//     db.Raw("SELECT * FROM `user` WHERE `name` = ?", "john").Scan(&result)
+//
+//	db.Raw("SELECT * FROM `user` WHERE `name` = ?", "john").Scan(&result)
+//
 // See Core.Raw.
 func (m *Model) Raw(rawSql string, args ...interface{}) *Model {
 	model := m.db.Raw(rawSql, args...)
@@ -173,37 +165,27 @@ func (m *Model) Raw(rawSql string, args ...interface{}) *Model {
 	return model
 }
 
-func (tx *TX) Raw(rawSql string, args ...interface{}) *Model {
+func (tx *TXCore) Raw(rawSql string, args ...interface{}) *Model {
 	return tx.Model().Raw(rawSql, args...)
 }
 
-// With creates and returns an ORM model based on meta data of given object.
+// With creates and returns an ORM model based on metadata of given object.
 func (c *Core) With(objects ...interface{}) *Model {
 	return c.db.Model().With(objects...)
 }
 
 // Model acts like Core.Model except it operates on transaction.
 // See Core.Model.
-func (tx *TX) Model(tableNameQueryOrStruct ...interface{}) *Model {
+func (tx *TXCore) Model(tableNameQueryOrStruct ...interface{}) *Model {
 	model := tx.db.Model(tableNameQueryOrStruct...)
 	model.db = tx.db
 	model.tx = tx
-	return model
-}
-
-// ModelEx acts like Core.Model except it operates on transaction.
-// See Core.Model.
-func (tx *TX) ModelEx(exTableName string, tableNameQueryOrStruct ...interface{}) *Model {
-	model := tx.db.Model(tableNameQueryOrStruct...)
-	model.db = tx.db
-	model.tx = tx
-	model.expandsTable = exTableName
 	return model
 }
 
 // With acts like Core.With except it operates on transaction.
 // See Core.With.
-func (tx *TX) With(object interface{}) *Model {
+func (tx *TXCore) With(object interface{}) *Model {
 	return tx.Model().With(object)
 }
 
@@ -223,8 +205,8 @@ func (m *Model) Ctx(ctx context.Context) *Model {
 // GetCtx returns the context for current Model.
 // It returns `context.Background()` is there's no context previously set.
 func (m *Model) GetCtx() context.Context {
-	if m.tx != nil && m.tx.ctx != nil {
-		return m.tx.ctx
+	if m.tx != nil && m.tx.GetCtx() != nil {
+		return m.tx.GetCtx()
 	}
 	return m.db.GetCtx()
 }
@@ -256,9 +238,9 @@ func (m *Model) DB(db DB) *Model {
 }
 
 // TX sets/changes the transaction for current operation.
-func (m *Model) TX(tx *TX) *Model {
+func (m *Model) TX(tx TX) *Model {
 	model := m.getModel()
-	model.db = tx.db
+	model.db = tx.GetDB()
 	model.tx = tx
 	return model
 }
@@ -270,8 +252,8 @@ func (m *Model) Schema(schema string) *Model {
 	return model
 }
 
-// Clone creates and returns a new model which is a clone of current model.
-// Note that it uses deep-copy for the clone.
+// Clone creates and returns a new model which is a Clone of current model.
+// Note that it uses deep-copy for the Clone.
 func (m *Model) Clone() *Model {
 	newModel := (*Model)(nil)
 	if m.tx != nil {
@@ -279,15 +261,15 @@ func (m *Model) Clone() *Model {
 	} else {
 		newModel = m.db.Model(m.tablesInit)
 	}
+	// Basic attributes copy.
 	*newModel = *m
+	// WhereBuilder copy, note the attribute pointer.
+	newModel.whereBuilder = m.whereBuilder.Clone()
+	newModel.whereBuilder.model = newModel
 	// Shallow copy slice attributes.
 	if n := len(m.extraArgs); n > 0 {
 		newModel.extraArgs = make([]interface{}, n)
 		copy(newModel.extraArgs, m.extraArgs)
-	}
-	if n := len(m.whereHolder); n > 0 {
-		newModel.whereHolder = make([]ModelWhereHolder, n)
-		copy(newModel.whereHolder, m.whereHolder)
 	}
 	if n := len(m.withArray); n > 0 {
 		newModel.withArray = make([]interface{}, n)

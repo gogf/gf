@@ -10,13 +10,15 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"reflect"
 
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/reflection"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Update does "UPDATE ... " statement for the model.
@@ -25,6 +27,7 @@ import (
 // and dataAndWhere[1:] is treated as where condition fields.
 // Also see Model.Data and Model.Where functions.
 func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err error) {
+	var ctx = m.GetCtx()
 	if len(dataAndWhere) > 0 {
 		if len(dataAndWhere) > 2 {
 			return m.Data(dataAndWhere[0]).Where(dataAndWhere[1], dataAndWhere[2:]...).Update()
@@ -36,7 +39,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	}
 	defer func() {
 		if err == nil {
-			m.checkAndRemoveCache()
+			m.checkAndRemoveSelectCache(ctx)
 		}
 	}()
 	if m.data == nil {
@@ -44,50 +47,79 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	}
 	var (
 		updateData                                    = m.data
-		fieldNameUpdate                               = m.getSoftFieldNameUpdated()
-		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false, false)
+		reflectInfo                                   = reflection.OriginTypeAndKind(updateData)
+		fieldNameUpdate                               = m.getSoftFieldNameUpdated("", m.tablesInit)
+		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(ctx, false, false)
+		conditionStr                                  = conditionWhere + conditionExtra
 	)
-	// Automatically update the record updating time.
-	if !m.unscoped && fieldNameUpdate != "" {
-		var (
-			refValue = reflect.ValueOf(m.data)
-			refKind  = refValue.Kind()
-		)
-		if refKind == reflect.Ptr {
-			refValue = refValue.Elem()
-			refKind = refValue.Kind()
+	if m.unscoped {
+		fieldNameUpdate = ""
+	}
+
+	switch reflectInfo.OriginKind {
+	case reflect.Map, reflect.Struct:
+		var dataMap map[string]interface{}
+		dataMap, err = m.db.ConvertDataForRecord(ctx, m.data)
+		if err != nil {
+			return nil, err
 		}
-		switch refKind {
-		case reflect.Map, reflect.Struct:
-			dataMap := ConvertDataForTableRecord(m.data)
-			if fieldNameUpdate != "" {
-				dataMap[fieldNameUpdate] = gtime.Now().String()
-			}
-			updateData = dataMap
-		default:
-			updates := gconv.String(m.data)
+		// Automatically update the record updating time.
+		if fieldNameUpdate != "" {
+			dataMap[fieldNameUpdate] = gtime.Now()
+		}
+		updateData = dataMap
+
+	default:
+		updates := gconv.String(m.data)
+		// Automatically update the record updating time.
+		if fieldNameUpdate != "" {
 			if fieldNameUpdate != "" && !gstr.Contains(updates, fieldNameUpdate) {
-				updates += fmt.Sprintf(`,%s='%s'`, fieldNameUpdate, gtime.Now().String())
+				updates += fmt.Sprintf(`,%s=?`, fieldNameUpdate)
+				conditionArgs = append([]interface{}{gtime.Now()}, conditionArgs...)
 			}
-			updateData = updates
 		}
+		updateData = updates
 	}
 	newData, err := m.filterDataForInsertOrUpdate(updateData)
 	if err != nil {
 		return nil, err
 	}
-	conditionStr := conditionWhere + conditionExtra
+
 	if !gstr.ContainsI(conditionStr, " WHERE ") {
-		return nil, gerror.NewCode(gcode.CodeMissingParameter, "there should be WHERE condition statement for UPDATE operation")
+		intlog.Printf(
+			ctx,
+			`sql condition string "%s" has no WHERE for UPDATE operation, fieldNameUpdate: %s`,
+			conditionStr, fieldNameUpdate,
+		)
+		return nil, gerror.NewCode(
+			gcode.CodeMissingParameter,
+			"there should be WHERE condition statement for UPDATE operation",
+		)
 	}
-	return m.db.DoUpdate(
-		m.GetCtx(),
-		m.getLink(true),
-		m.tables,
-		newData,
-		conditionStr,
-		m.mergeArguments(conditionArgs)...,
-	)
+
+	in := &HookUpdateInput{
+		internalParamHookUpdate: internalParamHookUpdate{
+			internalParamHook: internalParamHook{
+				link: m.getLink(true),
+			},
+			handler: m.hookHandler.Update,
+		},
+		Model:     m,
+		Table:     m.tables,
+		Data:      newData,
+		Condition: conditionStr,
+		Args:      m.mergeArguments(conditionArgs),
+	}
+	return in.Next(ctx)
+}
+
+// UpdateAndGetAffected performs update statement and returns the affected rows number.
+func (m *Model) UpdateAndGetAffected(dataAndWhere ...interface{}) (affected int64, err error) {
+	result, err := m.Update(dataAndWhere...)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 func (m *Model) UpdateExtend(dataAndWhere ...interface{}) (result sql.Result, err error) {

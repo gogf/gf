@@ -8,17 +8,17 @@ package gfile
 
 import (
 	"bytes"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
 	"os"
 	"os/exec"
 	"os/user"
 	"runtime"
 	"strings"
+
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 // Home returns absolute path of current user's home directory.
-// The optional parameter <names> specifies the its sub-folders/sub-files,
+// The optional parameter `names` specifies the sub-folders/sub-files,
 // which will be joined with current system separator and returned with the path.
 func Home(names ...string) (string, error) {
 	path, err := getHomePath()
@@ -37,7 +37,7 @@ func getHomePath() (string, error) {
 	if nil == err {
 		return u.HomeDir, nil
 	}
-	if "windows" == runtime.GOOS {
+	if runtime.GOOS == "windows" {
 		return homeWindows()
 	}
 	return homeUnix()
@@ -52,12 +52,13 @@ func homeUnix() (string, error) {
 	cmd := exec.Command("sh", "-c", "eval echo ~$USER")
 	cmd.Stdout = &stdout
 	if err := cmd.Run(); err != nil {
+		err = gerror.Wrapf(err, `retrieve home directory failed`)
 		return "", err
 	}
 
 	result := strings.TrimSpace(stdout.String())
 	if result == "" {
-		return "", gerror.NewCode(gcode.CodeInternalError, "blank output when reading home directory")
+		return "", gerror.New("blank output when reading home directory")
 	}
 
 	return result, nil
@@ -74,7 +75,7 @@ func homeWindows() (string, error) {
 		home = os.Getenv("USERPROFILE")
 	}
 	if home == "" {
-		return "", gerror.NewCode(gcode.CodeOperationFailed, "HOMEDRIVE, HOMEPATH, and USERPROFILE are blank")
+		return "", gerror.New("environment keys HOMEDRIVE, HOMEPATH and USERPROFILE are empty")
 	}
 
 	return home, nil

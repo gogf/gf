@@ -7,17 +7,18 @@
 package gdb
 
 import (
+	"context"
 	"database/sql"
-	"encoding/json"
-	"github.com/gogf/gf/container/gset"
-	"github.com/gogf/gf/errors/gcode"
 	"reflect"
 
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/reflection"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // Batch sets the batch operation number for the model.
@@ -36,9 +37,13 @@ func (m *Model) Batch(batch int) *Model {
 // Data("uid", 10000)
 // Data("uid=? AND name=?", 10000, "john")
 // Data(g.Map{"uid": 10000, "name":"john"})
-// Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
+// Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"}).
 func (m *Model) Data(data ...interface{}) *Model {
-	model := m.getModel()
+	var (
+		err   error
+		ctx   = m.GetCtx()
+		model = m.getModel()
+	)
 	if len(data) > 1 {
 		if s := gconv.String(data[0]); gstr.Contains(s, "?") {
 			model.data = s
@@ -50,56 +55,76 @@ func (m *Model) Data(data ...interface{}) *Model {
 			}
 			model.data = m
 		}
-	} else {
-		switch params := data[0].(type) {
+	} else if len(data) == 1 {
+		switch value := data[0].(type) {
 		case Result:
-			model.data = params.List()
+			model.data = value.List()
 
 		case Record:
-			model.data = params.Map()
+			model.data = value.Map()
 
 		case List:
-			list := make(List, len(params))
-			for k, v := range params {
+			list := make(List, len(value))
+			for k, v := range value {
 				list[k] = gutil.MapCopy(v)
 			}
 			model.data = list
 
 		case Map:
-			model.data = gutil.MapCopy(params)
+			model.data = gutil.MapCopy(value)
 
 		default:
-			var (
-				rv   = reflect.ValueOf(params)
-				kind = rv.Kind()
-			)
-			if kind == reflect.Ptr {
-				rv = rv.Elem()
-				kind = rv.Kind()
-			}
-			switch kind {
+			reflectInfo := reflection.OriginValueAndKind(value)
+			switch reflectInfo.OriginKind {
 			case reflect.Slice, reflect.Array:
-				list := make(List, rv.Len())
-				for i := 0; i < rv.Len(); i++ {
-					list[i] = ConvertDataForTableRecord(rv.Index(i).Interface())
+				if reflectInfo.OriginValue.Len() > 0 {
+					// If the `data` parameter is a DO struct,
+					// it then adds `OmitNilData` option for this condition,
+					// which will filter all nil parameters in `data`.
+					if isDoStruct(reflectInfo.OriginValue.Index(0).Interface()) {
+						model = model.OmitNilData()
+						model.option |= optionOmitNilDataInternal
+					}
+				}
+				list := make(List, reflectInfo.OriginValue.Len())
+				for i := 0; i < reflectInfo.OriginValue.Len(); i++ {
+					list[i], err = m.db.ConvertDataForRecord(ctx, reflectInfo.OriginValue.Index(i).Interface())
+					if err != nil {
+						panic(err)
+					}
 				}
 				model.data = list
 
-			case reflect.Map:
-				model.data = ConvertDataForTableRecord(data[0])
-
 			case reflect.Struct:
-				if v, ok := data[0].(apiInterfaces); ok {
+				// If the `data` parameter is a DO struct,
+				// it then adds `OmitNilData` option for this condition,
+				// which will filter all nil parameters in `data`.
+				if isDoStruct(value) {
+					model = model.OmitNilData()
+				}
+				if v, ok := data[0].(iInterfaces); ok {
 					var (
 						array = v.Interfaces()
 						list  = make(List, len(array))
 					)
 					for i := 0; i < len(array); i++ {
-						list[i] = ConvertDataForTableRecord(array[i])
+						list[i], err = m.db.ConvertDataForRecord(ctx, array[i])
+						if err != nil {
+							panic(err)
+						}
 					}
 					model.data = list
 				} else {
-					model.data = ConvertDataForTableRecord(data[0])
+					model.data, err = m.db.ConvertDataForRecord(ctx, data[0])
+					if err != nil {
+						panic(err)
+					}
+				}
+
+			case reflect.Map:
+				model.data, err = m.db.ConvertDataForRecord(ctx, data[0])
+				if err != nil {
+					panic(err)
 				}
 
 			default:
@@ -114,39 +139,50 @@ func (m *Model) Data(data ...interface{}) *Model {
 // In MySQL, this is used for "ON DUPLICATE KEY UPDATE" statement.
 // The parameter `onDuplicate` can be type of string/Raw/*Raw/map/slice.
 // Example:
+//
 // OnDuplicate("nickname, age")
 // OnDuplicate("nickname", "age")
-// OnDuplicate(g.Map{
-//     "nickname": gdb.Raw("CONCAT('name_', VALUES(`nickname`))"),
-// })
-// OnDuplicate(g.Map{
-//     "nickname": "passport",
-// })
+//
+//	OnDuplicate(g.Map{
+//		  "nickname": gdb.Raw("CONCAT('name_', VALUES(`nickname`))"),
+//	})
+//
+//	OnDuplicate(g.Map{
+//		  "nickname": "passport",
+//	}).
 func (m *Model) OnDuplicate(onDuplicate ...interface{}) *Model {
+	if len(onDuplicate) == 0 {
+		return m
+	}
 	model := m.getModel()
 	if len(onDuplicate) > 1 {
 		model.onDuplicate = onDuplicate
-	} else {
+	} else if len(onDuplicate) == 1 {
 		model.onDuplicate = onDuplicate[0]
 	}
 	return model
 }
 
-// OnDuplicateEx sets the excluding columns for operations when columns conflicts occurs.
+// OnDuplicateEx sets the excluding columns for operations when columns conflict occurs.
 // In MySQL, this is used for "ON DUPLICATE KEY UPDATE" statement.
 // The parameter `onDuplicateEx` can be type of string/map/slice.
 // Example:
+//
 // OnDuplicateEx("passport, password")
 // OnDuplicateEx("passport", "password")
-// OnDuplicateEx(g.Map{
-//     "passport": "",
-//     "password": "",
-// })
+//
+//	OnDuplicateEx(g.Map{
+//		  "passport": "",
+//		  "password": "",
+//	}).
 func (m *Model) OnDuplicateEx(onDuplicateEx ...interface{}) *Model {
+	if len(onDuplicateEx) == 0 {
+		return m
+	}
 	model := m.getModel()
 	if len(onDuplicateEx) > 1 {
 		model.onDuplicateEx = onDuplicateEx
-	} else {
+	} else if len(onDuplicateEx) == 1 {
 		model.onDuplicateEx = onDuplicateEx[0]
 	}
 	return model
@@ -156,67 +192,22 @@ func (m *Model) OnDuplicateEx(onDuplicateEx ...interface{}) *Model {
 // The optional parameter `data` is the same as the parameter of Model.Data function,
 // see Model.Data.
 func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
+	var ctx = m.GetCtx()
 	if len(data) > 0 {
 		return m.Data(data...).Insert()
 	}
-	return m.doInsertWithOption(insertOptionDefault)
+	return m.doInsertWithOption(ctx, InsertOptionDefault)
 }
 
 // InsertAndGetId performs action Insert and returns the last insert id that automatically generated.
 func (m *Model) InsertAndGetId(data ...interface{}) (lastInsertId int64, err error) {
+	var ctx = m.GetCtx()
 	if len(data) > 0 {
 		return m.Data(data...).InsertAndGetId()
 	}
-	result, err := m.doInsertWithOption(insertOptionDefault)
+	result, err := m.doInsertWithOption(ctx, InsertOptionDefault)
 	if err != nil {
 		return 0, err
-	}
-	return result.LastInsertId()
-}
-
-// InsertExtendAndGetId performs action Insert and returns the last insert id that automatically generated.
-func (m *Model) InsertExtendAndGetId(data ...interface{}) (lastInsertId int64, err error) {
-	if len(data) > 0 {
-		return m.Data(data...).InsertExtendAndGetId()
-	}
-	//判断是否存在扩展数据表
-	exMap := map[string]interface{}{}
-	if len(m.expandsTable) > 0 {
-		tdata := m.data.(map[string]interface{})
-		extData := gconv.Bytes(tdata["ExtData"])
-		if len(extData) == 0 {
-			extData = gconv.Bytes(tdata["extData"])
-		}
-		if len(extData) == 0 {
-			extData = gconv.Bytes(tdata["ext_data"])
-		}
-		json.Unmarshal(extData, &exMap)
-	}
-
-	result, err := m.doInsertWithOption(insertOptionDefault)
-	if err != nil {
-		return 0, err
-	}
-	if len(exMap) > 0 {
-		var list List
-		lastId, _ := result.LastInsertId()
-		tdata := m.data.(map[string]interface{})
-		for key, value := range exMap {
-			list = append(list, map[string]interface{}{
-				"row_key":      lastId,
-				"filed_code":   key,
-				"filed_value":  value,
-				"created_by":   tdata["created_by"],
-				"created_name": tdata["created_name"],
-				"created_time": tdata["created_time"],
-			})
-		}
-		columnNames := make([]string, 0, len(list[0]))
-		for k, _ := range list[0] {
-			columnNames = append(columnNames, k)
-		}
-		doInsertOption, _ := m.formatDoInsertOption(insertOptionDefault, columnNames)
-		m.db.DoInsert(m.GetCtx(), m.getLink(true), m.expandsTable, list, doInsertOption)
 	}
 	return result.LastInsertId()
 }
@@ -225,20 +216,22 @@ func (m *Model) InsertExtendAndGetId(data ...interface{}) (lastInsertId int64, e
 // The optional parameter `data` is the same as the parameter of Model.Data function,
 // see Model.Data.
 func (m *Model) InsertIgnore(data ...interface{}) (result sql.Result, err error) {
+	var ctx = m.GetCtx()
 	if len(data) > 0 {
 		return m.Data(data...).InsertIgnore()
 	}
-	return m.doInsertWithOption(insertOptionIgnore)
+	return m.doInsertWithOption(ctx, InsertOptionIgnore)
 }
 
 // Replace does "REPLACE INTO ..." statement for the model.
 // The optional parameter `data` is the same as the parameter of Model.Data function,
 // see Model.Data.
 func (m *Model) Replace(data ...interface{}) (result sql.Result, err error) {
+	var ctx = m.GetCtx()
 	if len(data) > 0 {
 		return m.Data(data...).Replace()
 	}
-	return m.doInsertWithOption(insertOptionReplace)
+	return m.doInsertWithOption(ctx, InsertOptionReplace)
 }
 
 // Save does "INSERT INTO ... ON DUPLICATE KEY UPDATE..." statement for the model.
@@ -248,17 +241,18 @@ func (m *Model) Replace(data ...interface{}) (result sql.Result, err error) {
 // It updates the record if there's primary or unique index in the saving data,
 // or else it inserts a new record into the table.
 func (m *Model) Save(data ...interface{}) (result sql.Result, err error) {
+	var ctx = m.GetCtx()
 	if len(data) > 0 {
 		return m.Data(data...).Save()
 	}
-	return m.doInsertWithOption(insertOptionSave)
+	return m.doInsertWithOption(ctx, InsertOptionSave)
 }
 
 // doInsertWithOption inserts data with option parameter.
-func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err error) {
+func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOption) (result sql.Result, err error) {
 	defer func() {
 		if err == nil {
-			m.checkAndRemoveCache()
+			m.checkAndRemoveSelectCache(ctx)
 		}
 	}()
 	if m.data == nil {
@@ -266,15 +260,14 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 	}
 	var (
 		list            List
-		nowString       = gtime.Now().String()
-		fieldNameCreate = m.getSoftFieldNameCreated()
-		fieldNameUpdate = m.getSoftFieldNameUpdated()
+		now             = gtime.Now()
+		fieldNameCreate = m.getSoftFieldNameCreated("", m.tablesInit)
+		fieldNameUpdate = m.getSoftFieldNameUpdated("", m.tablesInit)
 	)
 	newData, err := m.filterDataForInsertOrUpdate(m.data)
 	if err != nil {
 		return nil, err
 	}
-
 	// It converts any data to List type for inserting.
 	switch value := newData.(type) {
 	case Result:
@@ -286,47 +279,60 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 	case List:
 		list = value
 		for i, v := range list {
-			list[i] = ConvertDataForTableRecord(v)
+			list[i], err = m.db.ConvertDataForRecord(ctx, v)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 	case Map:
-		list = List{ConvertDataForTableRecord(value)}
+		var listItem map[string]interface{}
+		if listItem, err = m.db.ConvertDataForRecord(ctx, value); err != nil {
+			return nil, err
+		}
+		list = List{listItem}
 
 	default:
-		var (
-			rv   = reflect.ValueOf(newData)
-			kind = rv.Kind()
-		)
-		if kind == reflect.Ptr {
-			rv = rv.Elem()
-			kind = rv.Kind()
-		}
-		switch kind {
+		reflectInfo := reflection.OriginValueAndKind(newData)
+		switch reflectInfo.OriginKind {
 		// If it's slice type, it then converts it to List type.
 		case reflect.Slice, reflect.Array:
-			list = make(List, rv.Len())
-			for i := 0; i < rv.Len(); i++ {
-				list[i] = ConvertDataForTableRecord(rv.Index(i).Interface())
+			list = make(List, reflectInfo.OriginValue.Len())
+			for i := 0; i < reflectInfo.OriginValue.Len(); i++ {
+				list[i], err = m.db.ConvertDataForRecord(ctx, reflectInfo.OriginValue.Index(i).Interface())
 			}
 
 		case reflect.Map:
-			list = List{ConvertDataForTableRecord(value)}
+			var listItem map[string]interface{}
+			if listItem, err = m.db.ConvertDataForRecord(ctx, value); err != nil {
+				return nil, err
+			}
+			list = List{listItem}
 
 		case reflect.Struct:
-			if v, ok := value.(apiInterfaces); ok {
-				var (
-					array = v.Interfaces()
-				)
+			if v, ok := value.(iInterfaces); ok {
+				array := v.Interfaces()
 				list = make(List, len(array))
 				for i := 0; i < len(array); i++ {
-					list[i] = ConvertDataForTableRecord(array[i])
+					list[i], err = m.db.ConvertDataForRecord(ctx, array[i])
+					if err != nil {
+						return nil, err
+					}
 				}
 			} else {
-				list = List{ConvertDataForTableRecord(value)}
+				var listItem map[string]interface{}
+				if listItem, err = m.db.ConvertDataForRecord(ctx, value); err != nil {
+					return nil, err
+				}
+				list = List{listItem}
 			}
 
 		default:
-			return result, gerror.NewCodef(gcode.CodeInvalidParameter, "unsupported list type:%v", kind)
+			return result, gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				"unsupported data list type: %v",
+				reflectInfo.InputValue.Type(),
+			)
 		}
 	}
 
@@ -338,17 +344,17 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 	if !m.unscoped && (fieldNameCreate != "" || fieldNameUpdate != "") {
 		for k, v := range list {
 			if fieldNameCreate != "" {
-				v[fieldNameCreate] = nowString
+				v[fieldNameCreate] = now
 			}
 			if fieldNameUpdate != "" {
-				v[fieldNameUpdate] = nowString
+				v[fieldNameUpdate] = now
 			}
 			list[k] = v
 		}
 	}
 	// Format DoInsertOption, especially for "ON DUPLICATE KEY UPDATE" statement.
 	columnNames := make([]string, 0, len(list[0]))
-	for k, _ := range list[0] {
+	for k := range list[0] {
 		columnNames = append(columnNames, k)
 	}
 	doInsertOption, err := m.formatDoInsertOption(insertOption, columnNames)
@@ -356,40 +362,43 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 		return result, err
 	}
 
-	return m.db.DoInsert(m.GetCtx(), m.getLink(true), m.tables, list, doInsertOption)
+	in := &HookInsertInput{
+		internalParamHookInsert: internalParamHookInsert{
+			internalParamHook: internalParamHook{
+				link: m.getLink(true),
+			},
+			handler: m.hookHandler.Insert,
+		},
+		Model:  m,
+		Table:  m.tables,
+		Data:   list,
+		Option: doInsertOption,
+	}
+	return in.Next(ctx)
 }
 
-func (m *Model) formatDoInsertOption(insertOption int, columnNames []string) (option DoInsertOption, err error) {
+func (m *Model) formatDoInsertOption(insertOption InsertOption, columnNames []string) (option DoInsertOption, err error) {
 	option = DoInsertOption{
 		InsertOption: insertOption,
 		BatchCount:   m.getBatch(),
 	}
-	if insertOption == insertOptionSave {
+	if insertOption == InsertOptionSave {
 		onDuplicateExKeys, err := m.formatOnDuplicateExKeys(m.onDuplicateEx)
 		if err != nil {
 			return option, err
 		}
-		var (
-			onDuplicateExKeySet = gset.NewStrSetFrom(onDuplicateExKeys)
-		)
+		onDuplicateExKeySet := gset.NewStrSetFrom(onDuplicateExKeys)
 		if m.onDuplicate != nil {
 			switch m.onDuplicate.(type) {
 			case Raw, *Raw:
 				option.OnDuplicateStr = gconv.String(m.onDuplicate)
 
 			default:
-				var (
-					reflectValue = reflect.ValueOf(m.onDuplicate)
-					reflectKind  = reflectValue.Kind()
-				)
-				for reflectKind == reflect.Ptr {
-					reflectValue = reflectValue.Elem()
-					reflectKind = reflectValue.Kind()
-				}
-				switch reflectKind {
+				reflectInfo := reflection.OriginValueAndKind(m.onDuplicate)
+				switch reflectInfo.OriginKind {
 				case reflect.String:
 					option.OnDuplicateMap = make(map[string]interface{})
-					for _, v := range gstr.SplitAndTrim(reflectValue.String(), ",") {
+					for _, v := range gstr.SplitAndTrim(reflectInfo.OriginValue.String(), ",") {
 						if onDuplicateExKeySet.Contains(v) {
 							continue
 						}
@@ -440,17 +449,10 @@ func (m *Model) formatOnDuplicateExKeys(onDuplicateEx interface{}) ([]string, er
 		return nil, nil
 	}
 
-	var (
-		reflectValue = reflect.ValueOf(onDuplicateEx)
-		reflectKind  = reflectValue.Kind()
-	)
-	for reflectKind == reflect.Ptr {
-		reflectValue = reflectValue.Elem()
-		reflectKind = reflectValue.Kind()
-	}
-	switch reflectKind {
+	reflectInfo := reflection.OriginValueAndKind(onDuplicateEx)
+	switch reflectInfo.OriginKind {
 	case reflect.String:
-		return gstr.SplitAndTrim(reflectValue.String(), ","), nil
+		return gstr.SplitAndTrim(reflectInfo.OriginValue.String(), ","), nil
 
 	case reflect.Map:
 		return gutil.Keys(onDuplicateEx), nil
@@ -468,9 +470,5 @@ func (m *Model) formatOnDuplicateExKeys(onDuplicateEx interface{}) ([]string, er
 }
 
 func (m *Model) getBatch() int {
-	batch := defaultBatchNumber
-	if m.batch > 0 {
-		batch = m.batch
-	}
-	return batch
+	return m.batch
 }

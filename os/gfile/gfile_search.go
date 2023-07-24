@@ -9,17 +9,16 @@ package gfile
 import (
 	"bytes"
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
 
-	"github.com/gogf/gf/container/garray"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
-// Search searches file by name <name> in following paths with priority:
+// Search searches file by name `name` in following paths with priority:
 // prioritySearchPaths, Pwd()、SelfDir()、MainPkgPath().
-// It returns the absolute file path of <name> if found, or en empty string if not found.
+// It returns the absolute file path of `name` if found, or en empty string if not found.
 func Search(name string, prioritySearchPaths ...string) (realPath string, err error) {
-	// Check if it's a absolute path.
+	// Check if it's an absolute path.
 	realPath = RealPath(name)
 	if realPath != "" {
 		return
@@ -47,13 +46,13 @@ func Search(name string, prioritySearchPaths ...string) (realPath string, err er
 	// If it fails searching, it returns formatted error.
 	if realPath == "" {
 		buffer := bytes.NewBuffer(nil)
-		buffer.WriteString(fmt.Sprintf("cannot find file/folder \"%s\" in following paths:", name))
+		buffer.WriteString(fmt.Sprintf(`cannot find "%s" in following paths:`, name))
 		array.RLockFunc(func(array []string) {
 			for k, v := range array {
 				buffer.WriteString(fmt.Sprintf("\n%d. %s", k+1, v))
 			}
 		})
-		err = gerror.NewCode(gcode.CodeOperationFailed, buffer.String())
+		err = gerror.New(buffer.String())
 	}
 	return
 }

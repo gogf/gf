@@ -10,6 +10,8 @@ package gbase64
 import (
 	"encoding/base64"
 	"io/ioutil"
+
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 // Encode encodes bytes with BASE64 algorithm.
@@ -29,16 +31,17 @@ func EncodeToString(src []byte) string {
 	return string(Encode(src))
 }
 
-// EncryptFile encodes file content of <path> using BASE64 algorithms.
+// EncodeFile encodes file content of `path` using BASE64 algorithms.
 func EncodeFile(path string) ([]byte, error) {
 	content, err := ioutil.ReadFile(path)
 	if err != nil {
+		err = gerror.Wrapf(err, `ioutil.ReadFile failed for filename "%s"`, path)
 		return nil, err
 	}
 	return Encode(content), nil
 }
 
-// MustEncodeFile encodes file content of <path> using BASE64 algorithms.
+// MustEncodeFile encodes file content of `path` using BASE64 algorithms.
 // It panics if any error occurs.
 func MustEncodeFile(path string) []byte {
 	result, err := EncodeFile(path)
@@ -48,7 +51,7 @@ func MustEncodeFile(path string) []byte {
 	return result
 }
 
-// EncodeFileToString encodes file content of <path> to string using BASE64 algorithms.
+// EncodeFileToString encodes file content of `path` to string using BASE64 algorithms.
 func EncodeFileToString(path string) (string, error) {
 	content, err := EncodeFile(path)
 	if err != nil {
@@ -57,7 +60,7 @@ func EncodeFileToString(path string) (string, error) {
 	return string(content), nil
 }
 
-// MustEncodeFileToString encodes file content of <path> to string using BASE64 algorithms.
+// MustEncodeFileToString encodes file content of `path` to string using BASE64 algorithms.
 // It panics if any error occurs.
 func MustEncodeFileToString(path string) string {
 	result, err := EncodeFileToString(path)
@@ -69,8 +72,13 @@ func MustEncodeFileToString(path string) string {
 
 // Decode decodes bytes with BASE64 algorithm.
 func Decode(data []byte) ([]byte, error) {
-	src := make([]byte, base64.StdEncoding.DecodedLen(len(data)))
-	n, err := base64.StdEncoding.Decode(src, data)
+	var (
+		src    = make([]byte, base64.StdEncoding.DecodedLen(len(data)))
+		n, err = base64.StdEncoding.Decode(src, data)
+	)
+	if err != nil {
+		err = gerror.Wrap(err, `base64.StdEncoding.Decode failed`)
+	}
 	return src[:n], err
 }
 
@@ -99,7 +107,7 @@ func MustDecodeString(data string) []byte {
 	return result
 }
 
-// DecodeString decodes string with BASE64 algorithm.
+// DecodeToString decodes string with BASE64 algorithm.
 func DecodeToString(data string) (string, error) {
 	b, err := DecodeString(data)
 	return string(b), err

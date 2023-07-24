@@ -1,0 +1,29 @@
+# 规则描述：将需要提供更多细节且暂未关闭的issue，在issue作者评论后，移除 need more details 标签
+name: Issue Remove Need More Details
+
+on:
+  issues:
+    types: [edited]
+  issue_comment:
+    types: [created, edited]
+
+env: # 设置环境变量
+  TZ: Asia/Shanghai #时区（设置时区可使页面中的`最近更新时间`使用时区时间）
+
+permissions:
+  contents: read
+
+jobs:
+  issue-remove-need-more-details:
+    permissions:
+      issues: write  # for actions-cool/issues-helper to update issues
+     # pull-requests: write  # for actions-cool/issues-helper to update PRs
+    runs-on: ubuntu-latest
+    steps:
+      - name: remove need more details
+        if: github.event.issue.state == 'open' && github.actor == github.event.issue.user.login
+        uses: actions-cool/issues-helper@v3
+        with:
+          actions: 'remove-labels'
+          issue-number: ${{ github.event.issue.number }}
+          labels: 'need more details'

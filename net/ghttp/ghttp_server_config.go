@@ -10,41 +10,43 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/os/gres"
-	"github.com/gogf/gf/util/gutil"
+	"net"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
-	"github.com/gogf/gf/util/gconv"
-
-	"github.com/gogf/gf/os/gsession"
-
-	"github.com/gogf/gf/os/gview"
-
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/os/gres"
+	"github.com/gogf/gf/v2/os/gsession"
+	"github.com/gogf/gf/v2/os/gview"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 const (
-	defaultHttpAddr   = ":80"  // Default listening port for HTTP.
-	defaultHttpsAddr  = ":443" // Default listening port for HTTPS.
-	URI_TYPE_DEFAULT  = 0      // Deprecated, please use UriTypeDefault instead.
-	URI_TYPE_FULLNAME = 1      // Deprecated, please use UriTypeFullName instead.
-	URI_TYPE_ALLLOWER = 2      // Deprecated, please use UriTypeAllLower instead.
-	URI_TYPE_CAMEL    = 3      // Deprecated, please use UriTypeCamel instead.
-	UriTypeDefault    = 0      // Method name to URI converting type, which converts name to its lower case and joins the words using char '-'.
-	UriTypeFullName   = 1      // Method name to URI converting type, which does no converting to the method name.
-	UriTypeAllLower   = 2      // Method name to URI converting type, which converts name to its lower case.
-	UriTypeCamel      = 3      // Method name to URI converting type, which converts name to its camel case.
+	defaultHttpAddr  = ":80"  // Default listening port for HTTP.
+	defaultHttpsAddr = ":443" // Default listening port for HTTPS.
+	UriTypeDefault   = 0      // Method names to the URI converting type, which converts name to its lower case and joins the words using char '-'.
+	UriTypeFullName  = 1      // Method names to the URI converting type, which does not convert to the method name.
+	UriTypeAllLower  = 2      // Method names to the URI converting type, which converts name to its lower case.
+	UriTypeCamel     = 3      // Method names to the URI converting type, which converts name to its camel case.
 )
 
 // ServerConfig is the HTTP Server configuration manager.
 type ServerConfig struct {
-	// ==================================
+	// ======================================================================================================
 	// Basic.
-	// ==================================
+	// ======================================================================================================
+
+	// Service name, which is for service registry and discovery.
+	Name string `json:"name"`
 
 	// Address specifies the server listening address like "port" or ":port",
 	// multiple addresses joined using ','.
@@ -52,6 +54,12 @@ type ServerConfig struct {
 
 	// HTTPSAddr specifies the HTTPS addresses, multiple addresses joined using char ','.
 	HTTPSAddr string `json:"httpsAddr"`
+
+	// Listeners specifies the custom listeners.
+	Listeners []net.Listener `json:"listeners"`
+
+	// Endpoints are custom endpoints for service register, it uses Address if empty.
+	Endpoints []string `json:"endpoints"`
 
 	// HTTPSCertPath specifies certification file path for HTTPS service.
 	HTTPSCertPath string `json:"httpsCertPath"`
@@ -69,7 +77,7 @@ type ServerConfig struct {
 	TLSConfig *tls.Config `json:"tlsConfig"`
 
 	// Handler the handler for HTTP request.
-	Handler http.Handler `json:"-"`
+	Handler func(w http.ResponseWriter, r *http.Request) `json:"-"`
 
 	// ReadTimeout is the maximum duration for reading the entire
 	// request, including the body.
@@ -87,7 +95,7 @@ type ServerConfig struct {
 	WriteTimeout time.Duration `json:"writeTimeout"`
 
 	// IdleTimeout is the maximum amount of time to wait for the
-	// next request when keep-alives are enabled. If IdleTimeout
+	// next request when keep-alive are enabled. If IdleTimeout
 	// is zero, the value of ReadTimeout is used. If both are
 	// zero, there is no timeout.
 	IdleTimeout time.Duration `json:"idleTimeout"`
@@ -111,9 +119,9 @@ type ServerConfig struct {
 	// View specifies the default template view object for the server.
 	View *gview.View `json:"view"`
 
-	// ==================================
+	// ======================================================================================================
 	// Static.
-	// ==================================
+	// ======================================================================================================
 
 	// Rewrites specifies the URI rewrite rules map.
 	Rewrites map[string]string `json:"rewrites"`
@@ -138,9 +146,9 @@ type ServerConfig struct {
 	// It is automatically set enabled if any static path is set.
 	FileServerEnabled bool `json:"fileServerEnabled"`
 
-	// ==================================
+	// ======================================================================================================
 	// Cookie.
-	// ==================================
+	// ======================================================================================================
 
 	// CookieMaxAge specifies the max TTL for cookie items.
 	CookieMaxAge time.Duration `json:"cookieMaxAge"`
@@ -153,9 +161,21 @@ type ServerConfig struct {
 	// It also affects the default storage for session id.
 	CookieDomain string `json:"cookieDomain"`
 
-	// ==================================
+	// CookieSameSite specifies cookie SameSite property.
+	// It also affects the default storage for session id.
+	CookieSameSite string `json:"cookieSameSite"`
+
+	// CookieSameSite specifies cookie Secure property.
+	// It also affects the default storage for session id.
+	CookieSecure bool `json:"cookieSecure"`
+
+	// CookieSameSite specifies cookie HttpOnly property.
+	// It also affects the default storage for session id.
+	CookieHttpOnly bool `json:"cookieHttpOnly"`
+
+	// ======================================================================================================
 	// Session.
-	// ==================================
+	// ======================================================================================================
 
 	// SessionIdName specifies the session id name.
 	SessionIdName string `json:"sessionIdName"`
@@ -171,15 +191,16 @@ type ServerConfig struct {
 	SessionStorage gsession.Storage `json:"sessionStorage"`
 
 	// SessionCookieMaxAge specifies the cookie ttl for session id.
-	// It it is set 0, it means it expires along with browser session.
+	// If it is set 0, it means it expires along with browser session.
 	SessionCookieMaxAge time.Duration `json:"sessionCookieMaxAge"`
 
 	// SessionCookieOutput specifies whether automatic outputting session id to cookie.
 	SessionCookieOutput bool `json:"sessionCookieOutput"`
 
-	// ==================================
+	// ======================================================================================================
 	// Logging.
-	// ==================================
+	// ======================================================================================================
+
 	Logger           *glog.Logger `json:"logger"`           // Logger specifies the logger for server.
 	LogPath          string       `json:"logPath"`          // LogPath specifies the directory for storing logging files.
 	LogLevel         string       `json:"logLevel"`         // LogLevel specifies the logging level for logger.
@@ -190,19 +211,27 @@ type ServerConfig struct {
 	AccessLogEnabled bool         `json:"accessLogEnabled"` // AccessLogEnabled enables access logging content to files.
 	AccessLogPattern string       `json:"accessLogPattern"` // AccessLogPattern specifies the error log file pattern like: access-{Ymd}.log
 
-	// ==================================
+	// ======================================================================================================
 	// PProf.
-	// ==================================
+	// ======================================================================================================
+
 	PProfEnabled bool   `json:"pprofEnabled"` // PProfEnabled enables PProf feature.
 	PProfPattern string `json:"pprofPattern"` // PProfPattern specifies the PProf service pattern for router.
 
-	// ==================================
+	// ======================================================================================================
+	// API & Swagger.
+	// ======================================================================================================
+
+	OpenApiPath string `json:"openapiPath"` // OpenApiPath specifies the OpenApi specification file path.
+	SwaggerPath string `json:"swaggerPath"` // SwaggerPath specifies the swagger UI path for route registering.
+
+	// ======================================================================================================
 	// Other.
-	// ==================================
+	// ======================================================================================================
 
 	// ClientMaxBodySize specifies the max body size limit in bytes for client request.
 	// It can be configured in configuration file using string like: 1m, 10m, 500kb etc.
-	// It's 8MB in default.
+	// It's `8MB` in default.
 	ClientMaxBodySize int64 `json:"clientMaxBodySize"`
 
 	// FormParsingMemory specifies max memory buffer size in bytes which can be used for
@@ -215,7 +244,7 @@ type ServerConfig struct {
 	// registering routes.
 	NameToUriType int `json:"nameToUriType"`
 
-	// RouteOverWrite allows overwrite the route if duplicated.
+	// RouteOverWrite allows to overwrite the route if duplicated.
 	RouteOverWrite bool `json:"routeOverWrite"`
 
 	// DumpRouterMap specifies whether automatically dumps router map when server starts.
@@ -226,12 +255,9 @@ type ServerConfig struct {
 
 	// GracefulTimeout set the maximum survival time (seconds) of the parent process.
 	GracefulTimeout uint8 `json:"gracefulTimeout"`
-}
 
-// Config creates and returns a ServerConfig object with default configurations.
-// Deprecated. Use NewConfig instead.
-func Config() ServerConfig {
-	return NewConfig()
+	// GracefulShutdownTimeout set the maximum survival time (seconds) before stopping the server.
+	GracefulShutdownTimeout uint8 `json:"gracefulShutdownTimeout"`
 }
 
 // NewConfig creates and returns a ServerConfig object with default configurations.
@@ -239,42 +265,45 @@ func Config() ServerConfig {
 // some pointer attributes that may be shared in different servers.
 func NewConfig() ServerConfig {
 	return ServerConfig{
-		Address:             "",
-		HTTPSAddr:           "",
-		Handler:             nil,
-		ReadTimeout:         60 * time.Second,
-		WriteTimeout:        0, // No timeout.
-		IdleTimeout:         60 * time.Second,
-		MaxHeaderBytes:      10240, // 10KB
-		KeepAlive:           true,
-		IndexFiles:          []string{"index.html", "index.htm"},
-		IndexFolder:         false,
-		ServerAgent:         "GF HTTP Server",
-		ServerRoot:          "",
-		StaticPaths:         make([]staticPathItem, 0),
-		FileServerEnabled:   false,
-		CookieMaxAge:        time.Hour * 24 * 365,
-		CookiePath:          "/",
-		CookieDomain:        "",
-		SessionIdName:       "gfsessionid",
-		SessionPath:         gsession.DefaultStorageFilePath,
-		SessionMaxAge:       time.Hour * 24,
-		SessionCookieOutput: true,
-		SessionCookieMaxAge: time.Hour * 24,
-		Logger:              glog.New(),
-		LogLevel:            "all",
-		LogStdout:           true,
-		ErrorStack:          true,
-		ErrorLogEnabled:     true,
-		ErrorLogPattern:     "error-{Ymd}.log",
-		AccessLogEnabled:    false,
-		AccessLogPattern:    "access-{Ymd}.log",
-		DumpRouterMap:       true,
-		ClientMaxBodySize:   8 * 1024 * 1024, // 8MB
-		FormParsingMemory:   1024 * 1024,     // 1MB
-		Rewrites:            make(map[string]string),
-		Graceful:            false,
-		GracefulTimeout:     2, // seconds
+		Name:                    DefaultServerName,
+		Address:                 ":0",
+		HTTPSAddr:               "",
+		Listeners:               nil,
+		Handler:                 nil,
+		ReadTimeout:             60 * time.Second,
+		WriteTimeout:            0, // No timeout.
+		IdleTimeout:             60 * time.Second,
+		MaxHeaderBytes:          10240, // 10KB
+		KeepAlive:               true,
+		IndexFiles:              []string{"index.html", "index.htm"},
+		IndexFolder:             false,
+		ServerAgent:             "GoFrame HTTP Server",
+		ServerRoot:              "",
+		StaticPaths:             make([]staticPathItem, 0),
+		FileServerEnabled:       false,
+		CookieMaxAge:            time.Hour * 24 * 365,
+		CookiePath:              "/",
+		CookieDomain:            "",
+		SessionIdName:           "gfsessionid",
+		SessionPath:             gsession.DefaultStorageFilePath,
+		SessionMaxAge:           time.Hour * 24,
+		SessionCookieOutput:     true,
+		SessionCookieMaxAge:     time.Hour * 24,
+		Logger:                  glog.New(),
+		LogLevel:                "all",
+		LogStdout:               true,
+		ErrorStack:              true,
+		ErrorLogEnabled:         true,
+		ErrorLogPattern:         "error-{Ymd}.log",
+		AccessLogEnabled:        false,
+		AccessLogPattern:        "access-{Ymd}.log",
+		DumpRouterMap:           true,
+		ClientMaxBodySize:       8 * 1024 * 1024, // 8MB
+		FormParsingMemory:       1024 * 1024,     // 1MB
+		Rewrites:                make(map[string]string),
+		Graceful:                false,
+		GracefulTimeout:         2, // seconds
+		GracefulShutdownTimeout: 5, // seconds
 	}
 }
 
@@ -316,7 +345,11 @@ func (s *Server) SetConfigWithMap(m map[string]interface{}) error {
 // SetConfig sets the configuration for the server.
 func (s *Server) SetConfig(c ServerConfig) error {
 	s.config = c
-	// Static.
+	// Automatically add ':' prefix for address if it is missed.
+	if s.config.Address != "" && !gstr.Contains(s.config.Address, ":") {
+		s.config.Address = ":" + s.config.Address
+	}
+	// Static files root.
 	if c.ServerRoot != "" {
 		s.SetServerRoot(c.ServerRoot)
 	}
@@ -338,10 +371,9 @@ func (s *Server) SetConfig(c ServerConfig) error {
 		}
 	}
 	if err := s.config.Logger.SetLevelStr(s.config.LogLevel); err != nil {
-		intlog.Error(context.TODO(), err)
+		intlog.Errorf(context.TODO(), `%+v`, err)
 	}
-
-	SetGraceful(c.Graceful)
+	gracefulEnabled = c.Graceful
 	intlog.Printf(context.TODO(), "SetConfig: %+v", s.config)
 	return nil
 }
@@ -385,9 +417,29 @@ func (s *Server) SetHTTPSPort(port ...int) {
 	}
 }
 
+// SetListener set the custom listener for the server.
+func (s *Server) SetListener(listeners ...net.Listener) error {
+	if listeners == nil {
+		return gerror.NewCodef(gcode.CodeInvalidParameter, "SetListener failed: listener can not be nil")
+	}
+	if len(listeners) > 0 {
+		ports := make([]string, len(listeners))
+		for k, v := range listeners {
+			if v == nil {
+				return gerror.NewCodef(gcode.CodeInvalidParameter, "SetListener failed: listener can not be nil")
+			}
+			ports[k] = fmt.Sprintf(":%d", (v.Addr().(*net.TCPAddr)).Port)
+		}
+		s.config.Address = strings.Join(ports, ",")
+		s.config.Listeners = listeners
+	}
+	return nil
+}
+
 // EnableHTTPS enables HTTPS with given certification and key files for the server.
-// The optional parameter <tlsConfig> specifies custom TLS configuration.
+// The optional parameter `tlsConfig` specifies custom TLS configuration.
 func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...*tls.Config) {
+	var ctx = context.TODO()
 	certFileRealPath := gfile.RealPath(certFile)
 	if certFileRealPath == "" {
 		certFileRealPath = gfile.RealPath(gfile.Pwd() + gfile.Separator + certFile)
@@ -400,7 +452,7 @@ func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...*tls.Config)
 		certFileRealPath = certFile
 	}
 	if certFileRealPath == "" {
-		s.Logger().Fatal(fmt.Sprintf(`EnableHTTPS failed: certFile "%s" does not exist`, certFile))
+		s.Logger().Fatalf(ctx, `EnableHTTPS failed: certFile "%s" does not exist`, certFile)
 	}
 	keyFileRealPath := gfile.RealPath(keyFile)
 	if keyFileRealPath == "" {
@@ -414,7 +466,7 @@ func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...*tls.Config)
 		keyFileRealPath = keyFile
 	}
 	if keyFileRealPath == "" {
-		s.Logger().Fatal(fmt.Sprintf(`EnableHTTPS failed: keyFile "%s" does not exist`, keyFile))
+		s.Logger().Fatal(ctx, `EnableHTTPS failed: keyFile "%s" does not exist`, keyFile)
 	}
 	s.config.HTTPSCertPath = certFileRealPath
 	s.config.HTTPSKeyPath = keyFileRealPath
@@ -465,13 +517,38 @@ func (s *Server) SetView(view *gview.View) {
 
 // GetName returns the name of the server.
 func (s *Server) GetName() string {
-	return s.name
+	return s.config.Name
 }
 
-// Handler returns the request handler of the server.
-func (s *Server) Handler() http.Handler {
+// SetName sets the name for the server.
+func (s *Server) SetName(name string) {
+	s.config.Name = name
+}
+
+// SetEndpoints sets the Endpoints for the server.
+func (s *Server) SetEndpoints(endpoints []string) {
+	s.config.Endpoints = endpoints
+}
+
+// SetHandler sets the request handler for server.
+func (s *Server) SetHandler(h func(w http.ResponseWriter, r *http.Request)) {
+	s.config.Handler = h
+}
+
+// GetHandler returns the request handler of the server.
+func (s *Server) GetHandler() func(w http.ResponseWriter, r *http.Request) {
 	if s.config.Handler == nil {
-		return s
+		return s.ServeHTTP
 	}
 	return s.config.Handler
+}
+
+// SetRegistrar sets the Registrar for server.
+func (s *Server) SetRegistrar(registrar gsvc.Registrar) {
+	s.registrar = registrar
+}
+
+// GetRegistrar returns the Registrar of server.
+func (s *Server) GetRegistrar() gsvc.Registrar {
+	return s.registrar
 }

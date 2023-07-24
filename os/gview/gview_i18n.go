@@ -8,8 +8,9 @@ package gview
 
 import (
 	"context"
-	"github.com/gogf/gf/i18n/gi18n"
-	"github.com/gogf/gf/util/gconv"
+
+	"github.com/gogf/gf/v2/i18n/gi18n"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 const (
@@ -30,8 +31,8 @@ func (view *View) i18nTranslate(ctx context.Context, content string, variables P
 
 // setI18nLanguageFromCtx retrieves language name from context and sets it to template variables map.
 func (view *View) setI18nLanguageFromCtx(ctx context.Context, variables map[string]interface{}) {
-	if language, ok := variables[i18nLanguageVariableName]; !ok {
-		if language = gi18n.LanguageFromCtx(ctx); language != "" {
+	if _, ok := variables[i18nLanguageVariableName]; !ok {
+		if language := gi18n.LanguageFromCtx(ctx); language != "" {
 			variables[i18nLanguageVariableName] = language
 		}
 	}

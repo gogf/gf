@@ -8,25 +8,30 @@ package gtcp
 
 import (
 	"crypto/tls"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
+	"fmt"
 	"net"
 	"sync"
 
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 const (
-	// defaultServer is the default TCP server name.
+	// FreePortAddress marks the server listens using random free port.
+	FreePortAddress = ":0"
+)
+
+const (
 	defaultServer = "default"
 )
 
 // Server is a TCP server.
 type Server struct {
-	mu        sync.Mutex   // Used for Server.listen concurrent safety.
-	listen    net.Listener // Listener.
+	mu        sync.Mutex   // Used for Server.listen concurrent safety. -- The golang test with data race checks this.
+	listen    net.Listener // TCP address listener.
 	address   string       // Server listening address.
 	handler   func(*Conn)  // Connection handler.
 	tlsConfig *tls.Config  // TLS configuration.
@@ -35,9 +40,9 @@ type Server struct {
 // Map for name to server, for singleton purpose.
 var serverMapping = gmap.NewStrAnyMap(true)
 
-// GetServer returns the TCP server with specified <name>,
-// or it returns a new normal TCP server named <name> if it does not exist.
-// The parameter <name> is used to specify the TCP server
+// GetServer returns the TCP server with specified `name`,
+// or it returns a new normal TCP server named `name` if it does not exist.
+// The parameter `name` is used to specify the TCP server
 func GetServer(name ...interface{}) *Server {
 	serverName := defaultServer
 	if len(name) > 0 && name[0] != "" {
@@ -49,7 +54,7 @@ func GetServer(name ...interface{}) *Server {
 }
 
 // NewServer creates and returns a new normal TCP server.
-// The parameter <name> is optional, which is used to specify the instance name of the server.
+// The parameter `name` is optional, which is used to specify the instance name of the server.
 func NewServer(address string, handler func(*Conn), name ...string) *Server {
 	s := &Server{
 		address: address,
@@ -62,7 +67,7 @@ func NewServer(address string, handler func(*Conn), name ...string) *Server {
 }
 
 // NewServerTLS creates and returns a new TCP server with TLS support.
-// The parameter <name> is optional, which is used to specify the instance name of the server.
+// The parameter `name` is optional, which is used to specify the instance name of the server.
 func NewServerTLS(address string, tlsConfig *tls.Config, handler func(*Conn), name ...string) *Server {
 	s := NewServer(address, handler, name...)
 	s.SetTLSConfig(tlsConfig)
@@ -70,18 +75,23 @@ func NewServerTLS(address string, tlsConfig *tls.Config, handler func(*Conn), na
 }
 
 // NewServerKeyCrt creates and returns a new TCP server with TLS support.
-// The parameter <name> is optional, which is used to specify the instance name of the server.
-func NewServerKeyCrt(address, crtFile, keyFile string, handler func(*Conn), name ...string) *Server {
+// The parameter `name` is optional, which is used to specify the instance name of the server.
+func NewServerKeyCrt(address, crtFile, keyFile string, handler func(*Conn), name ...string) (*Server, error) {
 	s := NewServer(address, handler, name...)
 	if err := s.SetTLSKeyCrt(crtFile, keyFile); err != nil {
-		glog.Error(err)
+		return nil, err
 	}
-	return s
+	return s, nil
 }
 
 // SetAddress sets the listening address for server.
 func (s *Server) SetAddress(address string) {
 	s.address = address
+}
+
+// GetAddress get the listening address for server.
+func (s *Server) GetAddress() string {
+	return s.address
 }
 
 // SetHandler sets the connection handler for server.
@@ -118,7 +128,6 @@ func (s *Server) Close() error {
 func (s *Server) Run() (err error) {
 	if s.handler == nil {
 		err = gerror.NewCode(gcode.CodeMissingConfiguration, "start running failed: socket handler not defined")
-		glog.Error(err)
 		return
 	}
 	if s.tlsConfig != nil {
@@ -127,30 +136,55 @@ func (s *Server) Run() (err error) {
 		s.listen, err = tls.Listen("tcp", s.address, s.tlsConfig)
 		s.mu.Unlock()
 		if err != nil {
-			glog.Error(err)
+			err = gerror.Wrapf(err, `tls.Listen failed for address "%s"`, s.address)
 			return
 		}
 	} else {
 		// Normal Server
-		addr, err := net.ResolveTCPAddr("tcp", s.address)
-		if err != nil {
-			glog.Error(err)
+		var tcpAddr *net.TCPAddr
+		if tcpAddr, err = net.ResolveTCPAddr("tcp", s.address); err != nil {
+			err = gerror.Wrapf(err, `net.ResolveTCPAddr failed for address "%s"`, s.address)
 			return err
 		}
 		s.mu.Lock()
-		s.listen, err = net.ListenTCP("tcp", addr)
+		s.listen, err = net.ListenTCP("tcp", tcpAddr)
 		s.mu.Unlock()
 		if err != nil {
-			glog.Error(err)
+			err = gerror.Wrapf(err, `net.ListenTCP failed for address "%s"`, s.address)
 			return err
 		}
 	}
 	// Listening loop.
 	for {
-		if conn, err := s.listen.Accept(); err != nil {
+		var conn net.Conn
+		if conn, err = s.listen.Accept(); err != nil {
+			err = gerror.Wrapf(err, `Listener.Accept failed`)
 			return err
 		} else if conn != nil {
 			go s.handler(NewConnByNetConn(conn))
 		}
 	}
+}
+
+// GetListenedAddress retrieves and returns the address string which are listened by current server.
+func (s *Server) GetListenedAddress() string {
+	if !gstr.Contains(s.address, FreePortAddress) {
+		return s.address
+	}
+	var (
+		address      = s.address
+		listenedPort = s.GetListenedPort()
+	)
+	address = gstr.Replace(address, FreePortAddress, fmt.Sprintf(`:%d`, listenedPort))
+	return address
+}
+
+// GetListenedPort retrieves and returns one port which is listened to by current server.
+func (s *Server) GetListenedPort() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if ln := s.listen; ln != nil {
+		return ln.Addr().(*net.TCPAddr).Port
+	}
+	return -1
 }

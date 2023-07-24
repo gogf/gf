@@ -10,31 +10,37 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/os/gproc"
-	"github.com/gogf/gf/os/gres"
-	"github.com/gogf/gf/text/gstr"
 	"log"
 	"net"
 	"net/http"
 	"os"
+	"strconv"
+	"sync"
+	"time"
+
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/gproc"
+	"github.com/gogf/gf/v2/os/gres"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // gracefulServer wraps the net/http.Server with graceful reload/restart feature.
 type gracefulServer struct {
 	server      *Server      // Belonged server.
-	fd          uintptr      // File descriptor for passing to child process when graceful reload.
+	fd          uintptr      // File descriptor for passing to the child process when graceful reload.
 	address     string       // Listening address like:":80", ":8080".
 	httpServer  *http.Server // Underlying http.Server.
 	rawListener net.Listener // Underlying net.Listener.
+	rawLnMu     sync.RWMutex // Concurrent safety mutex for `rawListener`.
 	listener    net.Listener // Wrapped net.Listener.
 	isHttps     bool         // Is HTTPS.
-	status      int          // Status of current server.
+	status      *gtype.Int   // Status of current server. Using `gtype` to ensure concurrent safety.
 }
 
-// newGracefulServer creates and returns a graceful http server with given address.
-// The optional parameter <fd> specifies the file descriptor which is passed from parent server.
+// newGracefulServer creates and returns a graceful http server with a given address.
+// The optional parameter `fd` specifies the file descriptor which is passed from parent server.
 func (s *Server) newGracefulServer(address string, fd ...int) *gracefulServer {
 	// Change port to address like: 80 -> :80
 	if gstr.IsNumeric(address) {
@@ -44,18 +50,31 @@ func (s *Server) newGracefulServer(address string, fd ...int) *gracefulServer {
 		server:     s,
 		address:    address,
 		httpServer: s.newHttpServer(address),
+		status:     gtype.NewInt(),
 	}
 	if len(fd) > 0 && fd[0] > 0 {
 		gs.fd = uintptr(fd[0])
 	}
+	if s.config.Listeners != nil {
+		addrArray := gstr.SplitAndTrim(address, ":")
+		addrPort, err := strconv.Atoi(addrArray[len(addrArray)-1])
+		if err == nil {
+			for _, v := range s.config.Listeners {
+				if listenerPort := (v.Addr().(*net.TCPAddr)).Port; listenerPort == addrPort {
+					gs.rawListener = v
+					break
+				}
+			}
+		}
+	}
 	return gs
 }
 
-// newGracefulServer creates and returns a underlying http.Server with given address.
+// newHttpServer creates and returns an underlying http.Server with a given address.
 func (s *Server) newHttpServer(address string) *http.Server {
 	server := &http.Server{
 		Addr:           address,
-		Handler:        s.config.Handler,
+		Handler:        http.HandlerFunc(s.config.Handler),
 		ReadTimeout:    s.config.ReadTimeout,
 		WriteTimeout:   s.config.WriteTimeout,
 		IdleTimeout:    s.config.IdleTimeout,
@@ -66,22 +85,11 @@ func (s *Server) newHttpServer(address string) *http.Server {
 	return server
 }
 
-// ListenAndServe starts listening on configured address.
-func (s *gracefulServer) ListenAndServe() error {
-	ln, err := s.getNetListener()
-	if err != nil {
-		return err
-	}
-	s.listener = ln
-	s.rawListener = ln
-	return s.doServe()
-}
-
-// Fd retrieves and returns the file descriptor of current server.
-// It is available ony in *nix like operation systems like: linux, unix, darwin.
+// Fd retrieves and returns the file descriptor of the current server.
+// It is available ony in *nix like operating systems like linux, unix, darwin.
 func (s *gracefulServer) Fd() uintptr {
-	if s.rawListener != nil {
-		file, err := s.rawListener.(*net.TCPListener).File()
+	if ln := s.getRawListener(); ln != nil {
+		file, err := ln.(*net.TCPListener).File()
 		if err == nil {
 			return file.Fd()
 		}
@@ -94,10 +102,21 @@ func (s *gracefulServer) setFd(fd int) {
 	s.fd = uintptr(fd)
 }
 
-// ListenAndServeTLS starts listening on configured address with HTTPS.
-// The parameter <certFile> and <keyFile> specify the necessary certification and key files for HTTPS.
-// The optional parameter <tlsConfig> specifies the custom TLS configuration.
-func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig ...*tls.Config) error {
+// CreateListener creates listener on configured address.
+func (s *gracefulServer) CreateListener() error {
+	ln, err := s.getNetListener()
+	if err != nil {
+		return err
+	}
+	s.listener = ln
+	s.setRawListener(ln)
+	return nil
+}
+
+// CreateListenerTLS creates listener on configured address with HTTPS.
+// The parameter `certFile` and `keyFile` specify the necessary certification and key files for HTTPS.
+// The optional parameter `tlsConfig` specifies the custom TLS configuration.
+func (s *gracefulServer) CreateListenerTLS(certFile, keyFile string, tlsConfig ...*tls.Config) error {
 	var config *tls.Config
 	if len(tlsConfig) > 0 && tlsConfig[0] != nil {
 		config = tlsConfig[0]
@@ -109,7 +128,7 @@ func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig .
 	if config.NextProtos == nil {
 		config.NextProtos = []string{"http/1.1"}
 	}
-	err := error(nil)
+	var err error
 	if len(config.Certificates) == 0 {
 		config.Certificates = make([]tls.Certificate, 1)
 		if gres.Contains(certFile) {
@@ -120,10 +139,9 @@ func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig .
 		} else {
 			config.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
 		}
-
 	}
 	if err != nil {
-		return gerror.WrapCodef(gcode.CodeInternalError, err, `open cert file "%s","%s" failed`, certFile, keyFile)
+		return gerror.Wrapf(err, `open certFile "%s" and keyFile "%s" failed`, certFile, keyFile)
 	}
 	ln, err := s.getNetListener()
 	if err != nil {
@@ -131,8 +149,51 @@ func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig .
 	}
 
 	s.listener = tls.NewListener(ln, config)
-	s.rawListener = ln
-	return s.doServe()
+	s.setRawListener(ln)
+	return nil
+}
+
+// Serve starts the serving with blocking way.
+func (s *gracefulServer) Serve(ctx context.Context) error {
+	if s.rawListener == nil {
+		return gerror.NewCode(gcode.CodeInvalidOperation, `call CreateListener/CreateListenerTLS before Serve`)
+	}
+
+	action := "started"
+	if s.fd != 0 {
+		action = "reloaded"
+	}
+	s.server.Logger().Infof(
+		ctx,
+		`pid[%d]: %s server %s listening on [%s]`,
+		gproc.Pid(), s.getProto(), action, s.GetListenedAddress(),
+	)
+	s.status.Set(ServerStatusRunning)
+	err := s.httpServer.Serve(s.listener)
+	s.status.Set(ServerStatusStopped)
+	return err
+}
+
+// GetListenedAddress retrieves and returns the address string which are listened by current server.
+func (s *gracefulServer) GetListenedAddress() string {
+	if !gstr.Contains(s.address, FreePortAddress) {
+		return s.address
+	}
+	var (
+		address      = s.address
+		listenedPort = s.GetListenedPort()
+	)
+	address = gstr.Replace(address, FreePortAddress, fmt.Sprintf(`:%d`, listenedPort))
+	return address
+}
+
+// GetListenedPort retrieves and returns one port which is listened to by current server.
+// Note that this method is only available if the server is listening on one port.
+func (s *gracefulServer) GetListenedPort() int {
+	if ln := s.getRawListener(); ln != nil {
+		return ln.Addr().(*net.TCPAddr).Port
+	}
+	return -1
 }
 
 // getProto retrieves and returns the proto string of current server.
@@ -144,62 +205,72 @@ func (s *gracefulServer) getProto() string {
 	return proto
 }
 
-// doServe does staring the serving.
-func (s *gracefulServer) doServe() error {
-	action := "started"
-	if s.fd != 0 {
-		action = "reloaded"
-	}
-	s.server.Logger().Printf(
-		"%d: %s server %s listening on [%s]",
-		gproc.Pid(), s.getProto(), action, s.address,
-	)
-	s.status = ServerStatusRunning
-	err := s.httpServer.Serve(s.listener)
-	s.status = ServerStatusStopped
-	return err
-}
-
 // getNetListener retrieves and returns the wrapped net.Listener.
 func (s *gracefulServer) getNetListener() (net.Listener, error) {
-	var ln net.Listener
-	var err error
+	if s.rawListener != nil {
+		return s.rawListener, nil
+	}
+	var (
+		ln  net.Listener
+		err error
+	)
 	if s.fd > 0 {
 		f := os.NewFile(s.fd, "")
 		ln, err = net.FileListener(f)
 		if err != nil {
-			err = fmt.Errorf("%d: net.FileListener error: %v", gproc.Pid(), err)
+			err = gerror.Wrap(err, "net.FileListener failed")
 			return nil, err
 		}
 	} else {
 		ln, err = net.Listen("tcp", s.httpServer.Addr)
 		if err != nil {
-			err = fmt.Errorf("%d: net.Listen error: %v", gproc.Pid(), err)
+			err = gerror.Wrapf(err, `net.Listen address "%s" failed`, s.httpServer.Addr)
 		}
 	}
 	return ln, err
 }
 
 // shutdown shuts down the server gracefully.
-func (s *gracefulServer) shutdown() {
-	if s.status == ServerStatusStopped {
+func (s *gracefulServer) shutdown(ctx context.Context) {
+	if s.status.Val() == ServerStatusStopped {
 		return
 	}
-	if err := s.httpServer.Shutdown(context.Background()); err != nil {
+	timeoutCtx, cancelFunc := context.WithTimeout(
+		ctx,
+		time.Duration(s.server.config.GracefulShutdownTimeout)*time.Second,
+	)
+	defer cancelFunc()
+	if err := s.httpServer.Shutdown(timeoutCtx); err != nil {
 		s.server.Logger().Errorf(
+			ctx,
 			"%d: %s server [%s] shutdown error: %v",
 			gproc.Pid(), s.getProto(), s.address, err,
 		)
 	}
 }
 
+// setRawListener sets `rawListener` with given net.Listener.
+func (s *gracefulServer) setRawListener(ln net.Listener) {
+	s.rawLnMu.Lock()
+	defer s.rawLnMu.Unlock()
+	s.rawListener = ln
+}
+
+// setRawListener returns the `rawListener` of current server.
+func (s *gracefulServer) getRawListener() net.Listener {
+	s.rawLnMu.RLock()
+	defer s.rawLnMu.RUnlock()
+	return s.rawListener
+}
+
 // close shuts down the server forcibly.
-func (s *gracefulServer) close() {
-	if s.status == ServerStatusStopped {
+func (s *gracefulServer) close(ctx context.Context) {
+	if s.status.Val() == ServerStatusStopped {
 		return
 	}
 	if err := s.httpServer.Close(); err != nil {
 		s.server.Logger().Errorf(
+			ctx,
 			"%d: %s server [%s] closed error: %v",
 			gproc.Pid(), s.getProto(), s.address, err,
 		)

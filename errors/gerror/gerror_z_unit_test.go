@@ -9,12 +9,12 @@ package gerror_test
 import (
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/internal/json"
 	"testing"
 
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func nilError() error {
@@ -95,10 +95,14 @@ func Test_Wrapf(t *testing.T) {
 		t.AssertNE(err, nil)
 		t.Assert(err.Error(), "1")
 	})
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gerror.Wrapf(nil, ""), nil)
+	})
 }
 
 func Test_WrapSkip(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gerror.WrapSkip(1, nil, "2"), nil)
 		err := errors.New("1")
 		err = gerror.WrapSkip(1, err, "2")
 		err = gerror.WrapSkip(1, err, "3")
@@ -122,6 +126,7 @@ func Test_WrapSkip(t *testing.T) {
 
 func Test_WrapSkipf(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gerror.WrapSkipf(1, nil, "2"), nil)
 		err := errors.New("1")
 		err = gerror.WrapSkipf(1, err, "2")
 		err = gerror.WrapSkipf(1, err, "3")
@@ -145,6 +150,7 @@ func Test_WrapSkipf(t *testing.T) {
 
 func Test_Cause(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gerror.Cause(nil), nil)
 		err := errors.New("1")
 		t.Assert(gerror.Cause(err), err)
 	})
@@ -166,6 +172,17 @@ func Test_Cause(t *testing.T) {
 		err = gerror.Wrap(err, "2")
 		err = gerror.Wrap(err, "3")
 		t.Assert(gerror.Cause(err), "1")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gerror.Stack(nil), "")
+		err := errors.New("1")
+		t.Assert(gerror.Stack(err), err)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		var e *gerror.Error = nil
+		t.Assert(e.Cause(), nil)
 	})
 }
 
@@ -209,13 +226,13 @@ func Test_Stack(t *testing.T) {
 		err = gerror.Wrap(err, "2")
 		err = gerror.Wrap(err, "3")
 		t.AssertNE(err, nil)
-		//fmt.Printf("%+v", err)
+		// fmt.Printf("%+v", err)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
 		err := gerror.New("1")
 		t.AssertNE(fmt.Sprintf("%+v", err), "1")
-		//fmt.Printf("%+v", err)
+		// fmt.Printf("%+v", err)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -223,35 +240,45 @@ func Test_Stack(t *testing.T) {
 		err = gerror.Wrap(err, "2")
 		err = gerror.Wrap(err, "3")
 		t.AssertNE(err, nil)
-		//fmt.Printf("%+v", err)
+		// fmt.Printf("%+v", err)
 	})
 }
 
 func Test_Current(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gerror.Current(nil), nil)
 		err := errors.New("1")
 		err = gerror.Wrap(err, "2")
 		err = gerror.Wrap(err, "3")
 		t.Assert(err.Error(), "3: 2: 1")
 		t.Assert(gerror.Current(err).Error(), "3")
 	})
+	gtest.C(t, func(t *gtest.T) {
+		var e *gerror.Error = nil
+		t.Assert(e.Current(), nil)
+	})
 }
 
-func Test_Next(t *testing.T) {
+func Test_Unwrap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gerror.Unwrap(nil), nil)
 		err := errors.New("1")
 		err = gerror.Wrap(err, "2")
 		err = gerror.Wrap(err, "3")
 		t.Assert(err.Error(), "3: 2: 1")
 
-		err = gerror.Next(err)
+		err = gerror.Unwrap(err)
 		t.Assert(err.Error(), "2: 1")
 
-		err = gerror.Next(err)
+		err = gerror.Unwrap(err)
 		t.Assert(err.Error(), "1")
 
-		err = gerror.Next(err)
-		t.Assert(err, nil)
+		err = gerror.Unwrap(err)
+		t.AssertNil(err)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var e *gerror.Error = nil
+		t.Assert(e.Unwrap(), nil)
 	})
 }
 
@@ -282,6 +309,7 @@ func Test_Code(t *testing.T) {
 		t.Assert(err.Error(), "123")
 	})
 	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gerror.WrapCode(gcode.New(1, "", nil), nil, "3"), nil)
 		err := errors.New("1")
 		err = gerror.Wrap(err, "2")
 		err = gerror.WrapCode(gcode.New(1, "", nil), err, "3")
@@ -289,6 +317,7 @@ func Test_Code(t *testing.T) {
 		t.Assert(err.Error(), "3: 2: 1")
 	})
 	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gerror.WrapCodef(gcode.New(1, "", nil), nil, "%s", "3"), nil)
 		err := errors.New("1")
 		err = gerror.Wrap(err, "2")
 		err = gerror.WrapCodef(gcode.New(1, "", nil), err, "%s", "3")
@@ -296,6 +325,7 @@ func Test_Code(t *testing.T) {
 		t.Assert(err.Error(), "3: 2: 1")
 	})
 	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gerror.WrapCodeSkip(gcode.New(1, "", nil), 100, nil, "3"), nil)
 		err := errors.New("1")
 		err = gerror.Wrap(err, "2")
 		err = gerror.WrapCodeSkip(gcode.New(1, "", nil), 100, err, "3")
@@ -303,11 +333,42 @@ func Test_Code(t *testing.T) {
 		t.Assert(err.Error(), "3: 2: 1")
 	})
 	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gerror.WrapCodeSkipf(gcode.New(1, "", nil), 100, nil, "%s", "3"), nil)
 		err := errors.New("1")
 		err = gerror.Wrap(err, "2")
 		err = gerror.WrapCodeSkipf(gcode.New(1, "", nil), 100, err, "%s", "3")
 		t.Assert(gerror.Code(err).Code(), 1)
 		t.Assert(err.Error(), "3: 2: 1")
+	})
+}
+
+func TestError_Error(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var e *gerror.Error = nil
+		t.Assert(e.Error(), nil)
+	})
+}
+
+func TestError_Code(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var e *gerror.Error = nil
+		t.Assert(e.Code(), gcode.CodeNil)
+	})
+}
+
+func Test_SetCode(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.New("123")
+		t.Assert(gerror.Code(err), -1)
+		t.Assert(err.Error(), "123")
+
+		err.(*gerror.Error).SetCode(gcode.CodeValidationFailed)
+		t.Assert(gerror.Code(err), gcode.CodeValidationFailed)
+		t.Assert(err.Error(), "123")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var err *gerror.Error = nil
+		err.SetCode(gcode.CodeValidationFailed)
 	})
 }
 
@@ -317,5 +378,75 @@ func Test_Json(t *testing.T) {
 		b, e := json.Marshal(err)
 		t.Assert(e, nil)
 		t.Assert(string(b), `"2: 1"`)
+	})
+}
+
+func Test_HasStack(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err1 := errors.New("1")
+		err2 := gerror.New("1")
+		t.Assert(gerror.HasStack(err1), false)
+		t.Assert(gerror.HasStack(err2), true)
+	})
+}
+
+func Test_Equal(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err1 := errors.New("1")
+		err2 := errors.New("1")
+		err3 := gerror.New("1")
+		err4 := gerror.New("4")
+		t.Assert(gerror.Equal(err1, err2), false)
+		t.Assert(gerror.Equal(err1, err3), true)
+		t.Assert(gerror.Equal(err2, err3), true)
+		t.Assert(gerror.Equal(err3, err4), false)
+		t.Assert(gerror.Equal(err1, err4), false)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var e = new(gerror.Error)
+		t.Assert(e.Equal(e), true)
+	})
+}
+
+func Test_Is(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err1 := errors.New("1")
+		err2 := gerror.Wrap(err1, "2")
+		err2 = gerror.Wrap(err2, "3")
+		t.Assert(gerror.Is(err2, err1), true)
+	})
+}
+
+func Test_HashError(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err1 := errors.New("1")
+		err2 := gerror.Wrap(err1, "2")
+		err2 = gerror.Wrap(err2, "3")
+		t.Assert(gerror.HasError(err2, err1), true)
+	})
+}
+
+func Test_HashCode(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gerror.HasCode(nil, gcode.CodeNotAuthorized), false)
+		err1 := errors.New("1")
+		err2 := gerror.WrapCode(gcode.CodeNotAuthorized, err1, "2")
+		err3 := gerror.Wrap(err2, "3")
+		err4 := gerror.Wrap(err3, "4")
+		t.Assert(gerror.HasCode(err1, gcode.CodeNotAuthorized), false)
+		t.Assert(gerror.HasCode(err2, gcode.CodeNotAuthorized), true)
+		t.Assert(gerror.HasCode(err3, gcode.CodeNotAuthorized), true)
+		t.Assert(gerror.HasCode(err4, gcode.CodeNotAuthorized), true)
+	})
+}
+
+func Test_NewOption(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertNE(gerror.NewOption(gerror.Option{
+			Error: errors.New("NewOptionError"),
+			Stack: true,
+			Text:  "Text",
+			Code:  gcode.CodeNotAuthorized,
+		}), gerror.New("NewOptionError"))
 	})
 }

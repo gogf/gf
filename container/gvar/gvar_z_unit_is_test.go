@@ -7,9 +7,10 @@
 package gvar_test
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/test/gtest"
 	"testing"
+
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func TestVar_IsNil(t *testing.T) {

@@ -9,8 +9,8 @@ package gtime_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Format(t *testing.T) {
@@ -91,6 +91,15 @@ func Test_Format(t *testing.T) {
 			t.Assert(t1.Format(v["f"]), v["r"])
 		}
 
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var ti *gtime.Time = nil
+		t.Assert(ti.Format("Y-m-d h:i:s"), "")
+		t.Assert(ti.FormatNew("Y-m-d h:i:s"), nil)
+		t.Assert(ti.FormatTo("Y-m-d h:i:s"), nil)
+		t.Assert(ti.Layout("Y-m-d h:i:s"), "")
+		t.Assert(ti.LayoutNew("Y-m-d h:i:s"), nil)
+		t.Assert(ti.LayoutTo("Y-m-d h:i:s"), nil)
 	})
 }
 

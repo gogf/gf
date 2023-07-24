@@ -7,19 +7,19 @@
 package gtrace
 
 import (
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Carrier is the storage medium used by a TextMapPropagator.
 type Carrier map[string]interface{}
 
+// NewCarrier creates and returns a Carrier.
 func NewCarrier(data ...map[string]interface{}) Carrier {
 	if len(data) > 0 && data[0] != nil {
 		return data[0]
-	} else {
-		return make(map[string]interface{})
 	}
+	return make(map[string]interface{})
 }
 
 // Get returns the value associated with the passed key.
@@ -41,6 +41,7 @@ func (c Carrier) Keys() []string {
 	return keys
 }
 
+// MustMarshal .returns the JSON encoding of c
 func (c Carrier) MustMarshal() []byte {
 	b, err := json.Marshal(c)
 	if err != nil {
@@ -49,10 +50,12 @@ func (c Carrier) MustMarshal() []byte {
 	return b
 }
 
+// String converts and returns current Carrier as string.
 func (c Carrier) String() string {
 	return string(c.MustMarshal())
 }
 
+// UnmarshalJSON implements interface UnmarshalJSON for package json.
 func (c Carrier) UnmarshalJSON(b []byte) error {
 	carrier := NewCarrier(nil)
 	return json.UnmarshalUseNumber(b, carrier)

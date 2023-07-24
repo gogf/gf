@@ -7,13 +7,14 @@
 package utils
 
 import (
-	"github.com/gogf/gf/internal/empty"
 	"reflect"
+
+	"github.com/gogf/gf/v2/internal/empty"
 )
 
-// IsNil checks whether `value` is nil.
+// IsNil checks whether `value` is nil, especially for interface{} type value.
 func IsNil(value interface{}) bool {
-	return value == nil
+	return empty.IsNil(value)
 }
 
 // IsEmpty checks whether `value` is empty.
@@ -82,13 +83,14 @@ func IsMap(value interface{}) bool {
 
 // IsStruct checks whether `value` is type of struct.
 func IsStruct(value interface{}) bool {
-	var (
-		reflectValue = reflect.ValueOf(value)
-		reflectKind  = reflectValue.Kind()
-	)
+	var reflectType = reflect.TypeOf(value)
+	if reflectType == nil {
+		return false
+	}
+	var reflectKind = reflectType.Kind()
 	for reflectKind == reflect.Ptr {
-		reflectValue = reflectValue.Elem()
-		reflectKind = reflectValue.Kind()
+		reflectType = reflectType.Elem()
+		reflectKind = reflectType.Kind()
 	}
 	switch reflectKind {
 	case reflect.Struct:

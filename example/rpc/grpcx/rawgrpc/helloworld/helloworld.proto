@@ -1,0 +1,25 @@
+// protoc --go_out=paths=source_relative:. --go-grpc_out=paths=source_relative:. *.proto
+
+syntax = "proto3";
+
+
+package helloworld;
+
+option go_package = "github.com/gogf/gf/grpc/example/helloworld";
+
+
+// The greeting service definition.
+service Greeter {
+  // Sends a greeting
+  rpc SayHello (HelloRequest) returns (HelloReply) {}
+}
+
+// The request message containing the user's name.
+message HelloRequest {
+  string name = 1;
+}
+
+// The response message containing the greetings
+message HelloReply {
+  string message = 1;
+}

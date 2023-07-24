@@ -8,15 +8,15 @@ package garray
 
 import (
 	"bytes"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/text/gstr"
 	"math"
 	"sort"
 	"strings"
 
-	"github.com/gogf/gf/internal/rwmutex"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/grand"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/internal/rwmutex"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/grand"
 )
 
 // SortedStrArray is a golang sorted string array with rich features.
@@ -179,11 +179,24 @@ func (a *SortedStrArray) doRemoveWithoutLock(index int) (value string, found boo
 // RemoveValue removes an item by value.
 // It returns true if value is found in the array, or else false if not found.
 func (a *SortedStrArray) RemoveValue(value string) bool {
-	if i := a.Search(value); i != -1 {
-		a.Remove(i)
-		return true
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if i, r := a.binSearch(value, false); r == 0 {
+		_, res := a.doRemoveWithoutLock(i)
+		return res
 	}
 	return false
+}
+
+// RemoveValues removes an item by `values`.
+func (a *SortedStrArray) RemoveValues(values ...string) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for _, value := range values {
+		if i, r := a.binSearch(value, false); r == 0 {
+			a.doRemoveWithoutLock(i)
+		}
+	}
 }
 
 // PopLeft pops and returns an item from the beginning of array.
@@ -648,6 +661,9 @@ func (a *SortedStrArray) IteratorDesc(f func(k int, v string) bool) {
 
 // String returns current array as a string, which implements like json.Marshal does.
 func (a *SortedStrArray) String() string {
+	if a == nil {
+		return ""
+	}
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	buffer := bytes.NewBuffer(nil)
@@ -706,6 +722,22 @@ func (a *SortedStrArray) UnmarshalValue(value interface{}) (err error) {
 	return err
 }
 
+// Filter iterates array and filters elements using custom callback function.
+// It removes the element from array if callback function `filter` returns true,
+// it or else does nothing and continues iterating.
+func (a *SortedStrArray) Filter(filter func(index int, value string) bool) *SortedStrArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if filter(i, a.array[i]) {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			i++
+		}
+	}
+	return a
+}
+
 // FilterEmpty removes all empty string value of the array.
 func (a *SortedStrArray) FilterEmpty() *SortedStrArray {
 	a.mu.Lock()
@@ -753,4 +785,16 @@ func (a *SortedStrArray) getComparator() func(a, b string) int {
 		return defaultComparatorStr
 	}
 	return a.comparator
+}
+
+// DeepCopy implements interface for deep copy of current type.
+func (a *SortedStrArray) DeepCopy() interface{} {
+	if a == nil {
+		return nil
+	}
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	newSlice := make([]string, len(a.array))
+	copy(newSlice, a.array)
+	return NewSortedStrArrayFrom(newSlice, a.mu.IsSafe())
 }

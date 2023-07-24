@@ -7,11 +7,11 @@
 package gins
 
 import (
-	"github.com/gogf/gf/os/gcfg"
+	"github.com/gogf/gf/v2/os/gcfg"
 )
 
 // Config returns an instance of View with default settings.
-// The parameter <name> is the name for the instance.
+// The parameter `name` is the name for the instance.
 func Config(name ...string) *gcfg.Config {
 	return gcfg.Instance(name...)
 }

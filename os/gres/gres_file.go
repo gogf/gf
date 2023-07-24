@@ -9,9 +9,10 @@ package gres
 import (
 	"archive/zip"
 	"bytes"
-	"github.com/gogf/gf/internal/json"
 	"io"
 	"os"
+
+	"github.com/gogf/gf/v2/internal/json"
 )
 
 type File struct {
@@ -39,7 +40,7 @@ func (f *File) Content() []byte {
 	}
 	defer reader.Close()
 	buffer := bytes.NewBuffer(nil)
-	if _, err := io.Copy(buffer, reader); err != nil {
+	if _, err = io.Copy(buffer, reader); err != nil {
 		return nil
 	}
 	return buffer.Bytes()
@@ -50,8 +51,13 @@ func (f *File) FileInfo() os.FileInfo {
 	return f.file.FileInfo()
 }
 
+// Export exports and saves all its sub files to specified system path `dst` recursively.
+func (f *File) Export(dst string, option ...ExportOption) error {
+	return f.resource.Export(f.Name(), dst, option...)
+}
+
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (f *File) MarshalJSON() ([]byte, error) {
+func (f File) MarshalJSON() ([]byte, error) {
 	info := f.FileInfo()
 	return json.Marshal(map[string]interface{}{
 		"name": f.Name(),

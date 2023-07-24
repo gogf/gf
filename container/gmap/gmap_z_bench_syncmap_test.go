@@ -12,10 +12,11 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/v2/container/gmap"
 )
 
 var gm = gmap.NewIntIntMap(true)
+
 var sm = sync.Map{}
 
 func Benchmark_GMapSet(b *testing.B) {

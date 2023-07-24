@@ -7,15 +7,16 @@
 package gconv_test
 
 import (
-	"github.com/gogf/gf/crypto/gcrc32"
-	"github.com/gogf/gf/encoding/gbinary"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/util/gconv"
 	"testing"
 	"time"
+
+	"github.com/gogf/gf/v2/crypto/gcrc32"
+	"github.com/gogf/gf/v2/encoding/gbinary"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 type MyTime struct {
@@ -40,7 +41,7 @@ func Test_Struct_UnmarshalValue1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		st := &MyTimeSt{}
 		err := gconv.Struct(g.Map{"ServiceDate": "2020-10-10 12:00:01"}, st)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(st.ServiceDate.Time.Format("2006-01-02 15:04:05"), "2020-10-10 12:00:01")
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -103,7 +104,7 @@ func Test_Struct_UnmarshalValue2(t *testing.T) {
 		var p1, p2 *Pkg
 		p1 = NewPkg([]byte("123"))
 		err := gconv.Struct(p1.Marshal(), &p2)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(p1, p2)
 	})
 }

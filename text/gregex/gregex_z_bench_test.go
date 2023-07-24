@@ -12,10 +12,11 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/v2/text/gregex"
 )
 
 var pattern = `(\w+).+\-\-\s*(.+)`
+
 var src = `GF is best! -- John`
 
 func Benchmark_GF_IsMatchString(b *testing.B) {

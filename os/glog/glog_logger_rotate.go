@@ -7,16 +7,20 @@
 package glog
 
 import (
+	"context"
 	"fmt"
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/encoding/gcompress"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gmlock"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/os/gtimer"
-	"github.com/gogf/gf/text/gregex"
+	"runtime"
+	"strings"
 	"time"
+
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/encoding/gcompress"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gmlock"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/os/gtimer"
+	"github.com/gogf/gf/v2/text/gregex"
 )
 
 const (
@@ -25,28 +29,28 @@ const (
 
 // rotateFileBySize rotates the current logging file according to the
 // configured rotation size.
-func (l *Logger) rotateFileBySize(now time.Time) {
+func (l *Logger) rotateFileBySize(ctx context.Context, now time.Time) {
 	if l.config.RotateSize <= 0 {
 		return
 	}
-	if err := l.doRotateFile(l.getFilePath(now)); err != nil {
+	if err := l.doRotateFile(ctx, l.getFilePath(now)); err != nil {
 		// panic(err)
-		intlog.Error(l.ctx, err)
+		intlog.Errorf(ctx, `%+v`, err)
 	}
 }
 
 // doRotateFile rotates the given logging file.
-func (l *Logger) doRotateFile(filePath string) error {
+func (l *Logger) doRotateFile(ctx context.Context, filePath string) error {
 	memoryLockKey := "glog.doRotateFile:" + filePath
 	if !gmlock.TryLock(memoryLockKey) {
 		return nil
 	}
 	defer gmlock.Unlock(memoryLockKey)
 
-	intlog.PrintFunc(l.ctx, func() string {
+	intlog.PrintFunc(ctx, func() string {
 		return fmt.Sprintf(`start rotating file by size: %s, file: %s`, gfile.SizeFormat(filePath), filePath)
 	})
-	defer intlog.PrintFunc(l.ctx, func() string {
+	defer intlog.PrintFunc(ctx, func() string {
 		return fmt.Sprintf(`done rotating file by size: %s, size: %s`, gfile.SizeFormat(filePath), filePath)
 	})
 
@@ -56,7 +60,7 @@ func (l *Logger) doRotateFile(filePath string) error {
 			return err
 		}
 		intlog.Printf(
-			l.ctx,
+			ctx,
 			`%d size exceeds, no backups set, remove original logging file: %s`,
 			l.config.RotateSize, filePath,
 		)
@@ -94,10 +98,10 @@ func (l *Logger) doRotateFile(filePath string) error {
 		if !gfile.Exists(newFilePath) {
 			break
 		} else {
-			intlog.Printf(l.ctx, `rotation file exists, continue: %s`, newFilePath)
+			intlog.Printf(ctx, `rotation file exists, continue: %s`, newFilePath)
 		}
 	}
-	intlog.Printf(l.ctx, "rotating file by size from %s to %s", filePath, newFilePath)
+	intlog.Printf(ctx, "rotating file by size from %s to %s", filePath, newFilePath)
 	if err := gfile.Rename(filePath, newFilePath); err != nil {
 		return err
 	}
@@ -105,13 +109,13 @@ func (l *Logger) doRotateFile(filePath string) error {
 }
 
 // rotateChecksTimely timely checks the backups expiration and the compression.
-func (l *Logger) rotateChecksTimely() {
-	defer gtimer.AddOnce(l.config.RotateCheckInterval, l.rotateChecksTimely)
+func (l *Logger) rotateChecksTimely(ctx context.Context) {
+	defer gtimer.AddOnce(ctx, l.config.RotateCheckInterval, l.rotateChecksTimely)
 
 	// Checks whether file rotation not enabled.
 	if l.config.RotateSize <= 0 && l.config.RotateExpire == 0 {
 		intlog.Printf(
-			l.ctx,
+			ctx,
 			"logging rotation ignore checks: RotateSize: %d, RotateExpire: %s",
 			l.config.RotateSize, l.config.RotateExpire.String(),
 		)
@@ -131,9 +135,14 @@ func (l *Logger) rotateChecksTimely() {
 		files, err = gfile.ScanDirFile(l.config.Path, pattern, true)
 	)
 	if err != nil {
-		intlog.Error(l.ctx, err)
+		intlog.Errorf(ctx, `%+v`, err)
 	}
-	intlog.Printf(l.ctx, "logging rotation start checks: %+v", files)
+	intlog.Printf(ctx, "logging rotation start checks: %+v", files)
+	// get file name regex pattern
+	// access-{y-m-d}-test.log => access-$-test.log => access-\$-test\.log => access-(.+?)-test\.log
+	fileNameRegexPattern, _ := gregex.ReplaceString(`{.+?}`, "$", l.config.File)
+	fileNameRegexPattern = gregex.Quote(fileNameRegexPattern)
+	fileNameRegexPattern = strings.ReplaceAll(fileNameRegexPattern, "\\$", "(.+?)")
 	// =============================================================
 	// Rotation of expired file checks.
 	// =============================================================
@@ -144,28 +153,50 @@ func (l *Logger) rotateChecksTimely() {
 			expireRotated bool
 		)
 		for _, file := range files {
-			if gfile.ExtName(file) == "gz" {
+			// ignore backup file
+			if gregex.IsMatchString(`.+\.\d{20}\.log`, gfile.Basename(file)) {
+				continue
+			}
+			// ignore not matching file
+			if !gregex.IsMatchString(fileNameRegexPattern, file) {
 				continue
 			}
 			mtime = gfile.MTime(file)
 			subDuration = now.Sub(mtime)
 			if subDuration > l.config.RotateExpire {
-				expireRotated = true
-				intlog.Printf(
-					l.ctx,
-					`%v - %v = %v > %v, rotation expire logging file: %s`,
-					now, mtime, subDuration, l.config.RotateExpire, file,
-				)
-				if err := l.doRotateFile(file); err != nil {
-					intlog.Error(l.ctx, err)
-				}
+				func() {
+					memoryLockFileKey := memoryLockPrefixForPrintingToFile + file
+					if !gmlock.TryLock(memoryLockFileKey) {
+						return
+					}
+					defer gmlock.Unlock(memoryLockFileKey)
+					if runtime.GOOS == "windows" {
+						fp := l.getOpenedFilePointer(ctx, file)
+						if fp == nil {
+							intlog.Errorf(ctx, `got nil file pointer for: %s`, file)
+							return
+						}
+						if err := fp.Close(true); err != nil {
+							intlog.Errorf(ctx, `%+v`, err)
+						}
+					}
+					expireRotated = true
+					intlog.Printf(
+						ctx,
+						`%v - %v = %v > %v, rotation expire logging file: %s`,
+						now, mtime, subDuration, l.config.RotateExpire, file,
+					)
+					if err := l.doRotateFile(ctx, file); err != nil {
+						intlog.Errorf(ctx, `%+v`, err)
+					}
+				}()
 			}
 		}
 		if expireRotated {
 			// Update the files array.
 			files, err = gfile.ScanDirFile(l.config.Path, pattern, true)
 			if err != nil {
-				intlog.Error(l.ctx, err)
+				intlog.Errorf(ctx, `%+v`, err)
 			}
 		}
 	}
@@ -180,6 +211,11 @@ func (l *Logger) rotateChecksTimely() {
 			if gfile.ExtName(file) == "gz" {
 				continue
 			}
+			// ignore not matching file
+			originalLoggingFilePath, _ := gregex.ReplaceString(`\.\d{20}`, "", file)
+			if !gregex.IsMatchString(fileNameRegexPattern, originalLoggingFilePath) {
+				continue
+			}
 			// Eg:
 			// access.20200326101301899002.log
 			if gregex.IsMatchString(`.+\.\d{20}\.log`, gfile.Basename(file)) {
@@ -190,19 +226,19 @@ func (l *Logger) rotateChecksTimely() {
 			needCompressFileArray.Iterator(func(_ int, path string) bool {
 				err := gcompress.GzipFile(path, path+".gz")
 				if err == nil {
-					intlog.Printf(l.ctx, `compressed done, remove original logging file: %s`, path)
+					intlog.Printf(ctx, `compressed done, remove original logging file: %s`, path)
 					if err = gfile.Remove(path); err != nil {
-						intlog.Print(l.ctx, err)
+						intlog.Print(ctx, err)
 					}
 				} else {
-					intlog.Print(l.ctx, err)
+					intlog.Print(ctx, err)
 				}
 				return true
 			})
 			// Update the files array.
 			files, err = gfile.ScanDirFile(l.config.Path, pattern, true)
 			if err != nil {
-				intlog.Error(l.ctx, err)
+				intlog.Errorf(ctx, `%+v`, err)
 			}
 		}
 	}
@@ -210,42 +246,37 @@ func (l *Logger) rotateChecksTimely() {
 	// =============================================================
 	// Backups count limitation and expiration checks.
 	// =============================================================
-	var (
-		backupFilesMap          = make(map[string]*garray.SortedArray)
-		originalLoggingFilePath = ""
-	)
+	backupFiles := garray.NewSortedArray(func(a, b interface{}) int {
+		// Sorted by rotated/backup file mtime.
+		// The older rotated/backup file is put in the head of array.
+		var (
+			file1  = a.(string)
+			file2  = b.(string)
+			result = gfile.MTimestampMilli(file1) - gfile.MTimestampMilli(file2)
+		)
+		if result <= 0 {
+			return -1
+		}
+		return 1
+	})
 	if l.config.RotateBackupLimit > 0 || l.config.RotateBackupExpire > 0 {
 		for _, file := range files {
-			originalLoggingFilePath, _ = gregex.ReplaceString(`\.\d{20}`, "", file)
-			if backupFilesMap[originalLoggingFilePath] == nil {
-				backupFilesMap[originalLoggingFilePath] = garray.NewSortedArray(func(a, b interface{}) int {
-					// Sorted by rotated/backup file mtime.
-					// The older rotated/backup file is put in the head of array.
-					var (
-						file1  = a.(string)
-						file2  = b.(string)
-						result = gfile.MTimestampMilli(file1) - gfile.MTimestampMilli(file2)
-					)
-					if result <= 0 {
-						return -1
-					}
-					return 1
-				})
+			// ignore not matching file
+			originalLoggingFilePath, _ := gregex.ReplaceString(`\.\d{20}`, "", file)
+			if !gregex.IsMatchString(fileNameRegexPattern, originalLoggingFilePath) {
+				continue
 			}
-			// Check if this file a rotated/backup file.
 			if gregex.IsMatchString(`.+\.\d{20}\.log`, gfile.Basename(file)) {
-				backupFilesMap[originalLoggingFilePath].Add(file)
+				backupFiles.Add(file)
 			}
 		}
-		intlog.Printf(l.ctx, `calculated backup files map: %+v`, backupFilesMap)
-		for _, array := range backupFilesMap {
-			diff := array.Len() - l.config.RotateBackupLimit
-			for i := 0; i < diff; i++ {
-				path, _ := array.PopLeft()
-				intlog.Printf(l.ctx, `remove exceeded backup limit file: %s`, path)
-				if err := gfile.Remove(path.(string)); err != nil {
-					intlog.Error(l.ctx, err)
-				}
+		intlog.Printf(ctx, `calculated backup files array: %+v`, backupFiles)
+		diff := backupFiles.Len() - l.config.RotateBackupLimit
+		for i := 0; i < diff; i++ {
+			path, _ := backupFiles.PopLeft()
+			intlog.Printf(ctx, `remove exceeded backup limit file: %s`, path)
+			if err := gfile.Remove(path.(string)); err != nil {
+				intlog.Errorf(ctx, `%+v`, err)
 			}
 		}
 		// Backups expiration checking.
@@ -254,26 +285,24 @@ func (l *Logger) rotateChecksTimely() {
 				mtime       time.Time
 				subDuration time.Duration
 			)
-			for _, array := range backupFilesMap {
-				array.Iterator(func(_ int, v interface{}) bool {
-					path := v.(string)
-					mtime = gfile.MTime(path)
-					subDuration = now.Sub(mtime)
-					if subDuration > l.config.RotateBackupExpire {
-						intlog.Printf(
-							l.ctx,
-							`%v - %v = %v > %v, remove expired backup file: %s`,
-							now, mtime, subDuration, l.config.RotateBackupExpire, path,
-						)
-						if err := gfile.Remove(path); err != nil {
-							intlog.Error(l.ctx, err)
-						}
-						return true
-					} else {
-						return false
+			backupFiles.Iterator(func(_ int, v interface{}) bool {
+				path := v.(string)
+				mtime = gfile.MTime(path)
+				subDuration = now.Sub(mtime)
+				if subDuration > l.config.RotateBackupExpire {
+					intlog.Printf(
+						ctx,
+						`%v - %v = %v > %v, remove expired backup file: %s`,
+						now, mtime, subDuration, l.config.RotateBackupExpire, path,
+					)
+					if err := gfile.Remove(path); err != nil {
+						intlog.Errorf(ctx, `%+v`, err)
 					}
-				})
-			}
+					return true
+				} else {
+					return false
+				}
+			})
 		}
 	}
 }

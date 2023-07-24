@@ -9,17 +9,18 @@ package garray
 import (
 	"bytes"
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/empty"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/text/gstr"
 	"math"
 	"sort"
 
-	"github.com/gogf/gf/internal/rwmutex"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/grand"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/deepcopy"
+	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/internal/rwmutex"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/grand"
 )
 
 // Array is a golang array with rich features.
@@ -52,16 +53,16 @@ func NewArraySize(size int, cap int, safe ...bool) *Array {
 	}
 }
 
-// NewArrayRange creates and returns a array by a range from `start` to `end`
+// NewArrayRange creates and returns an array by a range from `start` to `end`
 // with step value `step`.
 func NewArrayRange(start, end, step int, safe ...bool) *Array {
 	if step == 0 {
 		panic(fmt.Sprintf(`invalid step value: %d`, step))
 	}
-	slice := make([]interface{}, (end-start+1)/step)
+	slice := make([]interface{}, 0)
 	index := 0
 	for i := start; i <= end; i += step {
-		slice[index] = i
+		slice = append(slice, i)
 		index++
 	}
 	return NewArrayFrom(slice, safe...)
@@ -172,28 +173,28 @@ func (a *Array) SortFunc(less func(v1, v2 interface{}) bool) *Array {
 	return a
 }
 
-// InsertBefore inserts the `value` to the front of `index`.
-func (a *Array) InsertBefore(index int, value interface{}) error {
+// InsertBefore inserts the `values` to the front of `index`.
+func (a *Array) InsertBefore(index int, values ...interface{}) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if index < 0 || index >= len(a.array) {
 		return gerror.NewCodef(gcode.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
 	}
 	rear := append([]interface{}{}, a.array[index:]...)
-	a.array = append(a.array[0:index], value)
+	a.array = append(a.array[0:index], values...)
 	a.array = append(a.array, rear...)
 	return nil
 }
 
-// InsertAfter inserts the `value` to the back of `index`.
-func (a *Array) InsertAfter(index int, value interface{}) error {
+// InsertAfter inserts the `values` to the back of `index`.
+func (a *Array) InsertAfter(index int, values ...interface{}) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if index < 0 || index >= len(a.array) {
 		return gerror.NewCodef(gcode.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
 	}
 	rear := append([]interface{}{}, a.array[index+1:]...)
-	a.array = append(a.array[0:index+1], value)
+	a.array = append(a.array[0:index+1], values...)
 	a.array = append(a.array, rear...)
 	return nil
 }
@@ -232,11 +233,24 @@ func (a *Array) doRemoveWithoutLock(index int) (value interface{}, found bool) {
 // RemoveValue removes an item by value.
 // It returns true if value is found in the array, or else false if not found.
 func (a *Array) RemoveValue(value interface{}) bool {
-	if i := a.Search(value); i != -1 {
-		a.Remove(i)
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if i := a.doSearchWithoutLock(value); i != -1 {
+		a.doRemoveWithoutLock(i)
 		return true
 	}
 	return false
+}
+
+// RemoveValues removes multiple items by `values`.
+func (a *Array) RemoveValues(values ...interface{}) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for _, value := range values {
+		if i := a.doSearchWithoutLock(value); i != -1 {
+			a.doRemoveWithoutLock(i)
+		}
+	}
 }
 
 // PushLeft pushes one or multiple items to the beginning of array.
@@ -486,6 +500,10 @@ func (a *Array) Contains(value interface{}) bool {
 func (a *Array) Search(value interface{}) int {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
+	return a.doSearchWithoutLock(value)
+}
+
+func (a *Array) doSearchWithoutLock(value interface{}) int {
 	if len(a.array) == 0 {
 		return -1
 	}
@@ -503,16 +521,25 @@ func (a *Array) Search(value interface{}) int {
 // Example: [1,1,2,3,2] -> [1,2,3]
 func (a *Array) Unique() *Array {
 	a.mu.Lock()
-	for i := 0; i < len(a.array)-1; i++ {
-		for j := i + 1; j < len(a.array); {
-			if a.array[i] == a.array[j] {
-				a.array = append(a.array[:j], a.array[j+1:]...)
-			} else {
-				j++
-			}
-		}
+	defer a.mu.Unlock()
+	if len(a.array) == 0 {
+		return a
 	}
-	a.mu.Unlock()
+	var (
+		ok          bool
+		temp        interface{}
+		uniqueSet   = make(map[interface{}]struct{})
+		uniqueArray = make([]interface{}, 0, len(a.array))
+	)
+	for i := 0; i < len(a.array); i++ {
+		temp = a.array[i]
+		if _, ok = uniqueSet[temp]; ok {
+			continue
+		}
+		uniqueSet[temp] = struct{}{}
+		uniqueArray = append(uniqueArray, temp)
+	}
+	a.array = uniqueArray
 	return a
 }
 
@@ -711,6 +738,9 @@ func (a *Array) IteratorDesc(f func(k int, v interface{}) bool) {
 
 // String returns current array as a string, which implements like json.Marshal does.
 func (a *Array) String() string {
+	if a == nil {
+		return ""
+	}
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	buffer := bytes.NewBuffer(nil)
@@ -765,6 +795,22 @@ func (a *Array) UnmarshalValue(value interface{}) error {
 	return nil
 }
 
+// Filter iterates array and filters elements using custom callback function.
+// It removes the element from array if callback function `filter` returns true,
+// it or else does nothing and continues iterating.
+func (a *Array) Filter(filter func(index int, value interface{}) bool) *Array {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if filter(i, a.array[i]) {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			i++
+		}
+	}
+	return a
+}
+
 // FilterNil removes all nil value of the array.
 func (a *Array) FilterNil() *Array {
 	a.mu.Lock()
@@ -807,4 +853,18 @@ func (a *Array) Walk(f func(value interface{}) interface{}) *Array {
 // IsEmpty checks whether the array is empty.
 func (a *Array) IsEmpty() bool {
 	return a.Len() == 0
+}
+
+// DeepCopy implements interface for deep copy of current type.
+func (a *Array) DeepCopy() interface{} {
+	if a == nil {
+		return nil
+	}
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	newSlice := make([]interface{}, len(a.array))
+	for i, v := range a.array {
+		newSlice[i] = deepcopy.Copy(v)
+	}
+	return NewArrayFrom(newSlice, a.mu.IsSafe())
 }

@@ -8,11 +8,11 @@ package glist
 
 import (
 	"container/list"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/util/gconv"
-
 	"testing"
+
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func checkListLen(t *gtest.T, l *List, len int) bool {
@@ -46,34 +46,34 @@ func TestVar(t *testing.T) {
 	if v := l.PopBack(); v != 1 {
 		t.Errorf("EXPECT %v, GOT %v", 1, v)
 	} else {
-		//fmt.Println(v)
+		// fmt.Println(v)
 	}
 	if v := l.PopBack(); v != 2 {
 		t.Errorf("EXPECT %v, GOT %v", 2, v)
 	} else {
-		//fmt.Println(v)
+		// fmt.Println(v)
 	}
 	if v := l.PopBack(); v != nil {
 		t.Errorf("EXPECT %v, GOT %v", nil, v)
 	} else {
-		//fmt.Println(v)
+		// fmt.Println(v)
 	}
 	l.PushBack(1)
 	l.PushBack(2)
 	if v := l.PopFront(); v != 1 {
 		t.Errorf("EXPECT %v, GOT %v", 1, v)
 	} else {
-		//fmt.Println(v)
+		// fmt.Println(v)
 	}
 	if v := l.PopFront(); v != 2 {
 		t.Errorf("EXPECT %v, GOT %v", 2, v)
 	} else {
-		//fmt.Println(v)
+		// fmt.Println(v)
 	}
 	if v := l.PopFront(); v != nil {
 		t.Errorf("EXPECT %v, GOT %v", nil, v)
 	} else {
-		//fmt.Println(v)
+		// fmt.Println(v)
 	}
 }
 
@@ -84,34 +84,34 @@ func TestBasic(t *testing.T) {
 	if v := l.PopBack(); v != 1 {
 		t.Errorf("EXPECT %v, GOT %v", 1, v)
 	} else {
-		//fmt.Println(v)
+		// fmt.Println(v)
 	}
 	if v := l.PopBack(); v != 2 {
 		t.Errorf("EXPECT %v, GOT %v", 2, v)
 	} else {
-		//fmt.Println(v)
+		// fmt.Println(v)
 	}
 	if v := l.PopBack(); v != nil {
 		t.Errorf("EXPECT %v, GOT %v", nil, v)
 	} else {
-		//fmt.Println(v)
+		// fmt.Println(v)
 	}
 	l.PushBack(1)
 	l.PushBack(2)
 	if v := l.PopFront(); v != 1 {
 		t.Errorf("EXPECT %v, GOT %v", 1, v)
 	} else {
-		//fmt.Println(v)
+		// fmt.Println(v)
 	}
 	if v := l.PopFront(); v != 2 {
 		t.Errorf("EXPECT %v, GOT %v", 2, v)
 	} else {
-		//fmt.Println(v)
+		// fmt.Println(v)
 	}
 	if v := l.PopFront(); v != nil {
 		t.Errorf("EXPECT %v, GOT %v", nil, v)
 	} else {
-		//fmt.Println(v)
+		// fmt.Println(v)
 	}
 }
 
@@ -221,13 +221,13 @@ func checkList(t *gtest.T, l *List, es []interface{}) {
 		i++
 	}
 
-	//for e := l.Front(); e != nil; e = e.Next() {
+	// for e := l.Front(); e != nil; e = e.Next() {
 	//	le := e.Value.(int)
 	//	if le != es[i] {
 	//		t.Errorf("elt[%d].Value() = %v, want %v", i, le, es[i])
 	//	}
 	//	i++
-	//}
+	// }
 }
 
 func TestExtending(t *testing.T) {
@@ -283,11 +283,11 @@ func TestRemove(t *testing.T) {
 		e1 := l.PushBack(1)
 		e2 := l.PushBack(2)
 		checkListPointers(t, l, []*Element{e1, e2})
-		//e := l.Front()
-		//l.Remove(e)
-		//checkListPointers(t, l, []*Element{e2})
-		//l.Remove(e)
-		//checkListPointers(t, l, []*Element{e2})
+		// e := l.Front()
+		// l.Remove(e)
+		// checkListPointers(t, l, []*Element{e2})
+		// l.Remove(e)
+		// checkListPointers(t, l, []*Element{e2})
 	})
 }
 
@@ -322,12 +322,12 @@ func TestIssue6349(t *testing.T) {
 	if e.Value != 1 {
 		t.Errorf("e.value = %d, want 1", e.Value)
 	}
-	//if e.Next() != nil {
+	// if e.Next() != nil {
 	//    t.Errorf("e.Next() != nil")
-	//}
-	//if e.Prev() != nil {
+	// }
+	// if e.Prev() != nil {
 	//    t.Errorf("e.Prev() != nil")
-	//}
+	// }
 }
 
 func TestMove(t *testing.T) {
@@ -474,7 +474,7 @@ func TestList_PopBacks(t *testing.T) {
 		i1 := l.PopBacks(2)
 		t.Assert(i1, []interface{}{1, 2})
 
-		l.PushBacks(a2) //4.3,a,c,b,e
+		l.PushBacks(a2) // 4.3,a,c,b,e
 		i1 = l.PopBacks(3)
 		t.Assert(i1, []interface{}{"e", "b", "c"})
 	})
@@ -631,10 +631,7 @@ func TestList_IteratorAsc(t *testing.T) {
 		l.PushFronts(a1)
 		e1 := l.Back()
 		fun1 := func(e *Element) bool {
-			if gconv.Int(e1.Value) > 2 {
-				return true
-			}
-			return false
+			return gconv.Int(e1.Value) > 2
 		}
 		checkList(t, l, []interface{}{4, 3, 6, 5, 2, 1})
 		l.IteratorAsc(fun1)
@@ -649,10 +646,7 @@ func TestList_IteratorDesc(t *testing.T) {
 		l.PushFronts(a1)
 		e1 := l.Back()
 		fun1 := func(e *Element) bool {
-			if gconv.Int(e1.Value) > 6 {
-				return true
-			}
-			return false
+			return gconv.Int(e1.Value) > 6
 		}
 		l.IteratorDesc(fun1)
 		t.Assert(l.Len(), 4)
@@ -667,10 +661,7 @@ func TestList_Iterator(t *testing.T) {
 		l.PushFronts(a1)
 		e1 := l.Back()
 		fun1 := func(e *Element) bool {
-			if gconv.String(e1.Value) > "c" {
-				return true
-			}
-			return false
+			return gconv.String(e1.Value) > "c"
 		}
 		checkList(t, l, []interface{}{"e", "d", "c", "b", "a"})
 		l.Iterator(fun1)
@@ -709,20 +700,20 @@ func TestList_Json(t *testing.T) {
 		a := []interface{}{"a", "b", "c"}
 		l := New()
 		b, err := json.Marshal(a)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		err = json.UnmarshalUseNumber(b, l)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(l.FrontAll(), a)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var l List
 		a := []interface{}{"a", "b", "c"}
 		b, err := json.Marshal(a)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		err = json.UnmarshalUseNumber(b, &l)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(l.FrontAll(), a)
 	})
 }
@@ -739,7 +730,7 @@ func TestList_UnmarshalValue(t *testing.T) {
 			"name": "john",
 			"list": []byte(`[1,2,3]`),
 		}, &tlist)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(tlist.Name, "john")
 		t.Assert(tlist.List.FrontAll(), []interface{}{1, 2, 3})
 	})
@@ -750,8 +741,18 @@ func TestList_UnmarshalValue(t *testing.T) {
 			"name": "john",
 			"list": []interface{}{1, 2, 3},
 		}, &tlist)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(tlist.Name, "john")
 		t.Assert(tlist.List.FrontAll(), []interface{}{1, 2, 3})
+	})
+}
+
+func TestList_DeepCopy(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := NewFrom([]interface{}{1, 2, "a", `"b"`, `\c`})
+		copyList := l.DeepCopy()
+		cl := copyList.(*List)
+		cl.PopBack()
+		t.AssertNE(l.Size(), cl.Size())
 	})
 }

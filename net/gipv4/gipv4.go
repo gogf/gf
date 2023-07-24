@@ -11,9 +11,10 @@ package gipv4
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/gogf/gf/text/gregex"
 	"net"
 	"strconv"
+
+	"github.com/gogf/gf/v2/text/gregex"
 )
 
 // Ip2long converts ip address to an uint32 integer.
@@ -32,12 +33,12 @@ func Long2ip(long uint32) string {
 	return net.IP(ipByte).String()
 }
 
-// Validate checks whether given <ip> a valid IPv4 address.
+// Validate checks whether given `ip` a valid IPv4 address.
 func Validate(ip string) bool {
 	return gregex.IsMatchString(`^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$`, ip)
 }
 
-// ParseAddress parses <address> to its ip and port.
+// ParseAddress parses `address` to its ip and port.
 // Eg: 192.168.1.1:80 -> 192.168.1.1, 80
 func ParseAddress(address string) (string, int) {
 	match, err := gregex.MatchString(`^(.+):(\d+)$`, address)
