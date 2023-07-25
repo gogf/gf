@@ -42,6 +42,7 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]gsvc.Serv
 	if err != nil {
 		return nil, err
 	}
+
 	serviceInstances := instancesToServiceInstances(instancesResponse.GetInstances())
 	// Service filter.
 	filteredServices := make([]gsvc.Service, 0)
@@ -78,26 +79,29 @@ func instancesToServiceInstances(instances []model.Instance) []gsvc.Service {
 		serviceInstances = make([]gsvc.Service, 0, len(instances))
 		endpointStr      bytes.Buffer
 	)
+
 	for _, instance := range instances {
 		if instance.IsHealthy() {
 			endpointStr.WriteString(fmt.Sprintf("%s:%d%s", instance.GetHost(), instance.GetPort(), gsvc.EndpointsDelimiter))
 		}
 	}
-
-	for _, instance := range instances {
-		if instance.IsHealthy() {
-			serviceInstances = append(serviceInstances, instanceToServiceInstance(instance, gstr.TrimRight(endpointStr.String(), gsvc.EndpointsDelimiter)))
+	if endpointStr.Len() > 0 {
+		for _, instance := range instances {
+			if instance.IsHealthy() {
+				serviceInstances = append(serviceInstances, instanceToServiceInstance(instance, gstr.TrimRight(endpointStr.String(), gsvc.EndpointsDelimiter), ""))
+			}
 		}
 	}
 	return serviceInstances
 }
 
-func instanceToServiceInstance(instance model.Instance, endpointStr string) gsvc.Service {
+// instanceToServiceInstance converts the instance to service instance.
+// instanceID Must be null when creating and adding, and non-null when updating and deleting
+func instanceToServiceInstance(instance model.Instance, endpointStr, instanceID string) gsvc.Service {
 	var (
-		s        *gsvc.LocalService
-		metadata = instance.GetMetadata()
-		names    = strings.Split(instance.GetService(), instanceIDSeparator)
-		// endpoints = gsvc.NewEndpoints(fmt.Sprintf("%s:%d", instance.GetHost(), instance.GetPort()))
+		s         *gsvc.LocalService
+		metadata  = instance.GetMetadata()
+		names     = strings.Split(instance.GetService(), instanceIDSeparator)
 		endpoints = gsvc.NewEndpoints(endpointStr)
 	)
 	if names != nil && len(names) > 4 {
@@ -126,9 +130,16 @@ func instanceToServiceInstance(instance model.Instance, endpointStr string) gsvc
 			Endpoints: endpoints,
 		}
 	}
-	return &Service{
+	service := &Service{
 		Service: s,
 	}
+	if instance.GetId() != "" {
+		service.ID = instance.GetId()
+	}
+	if gstr.Trim(instanceID) != "" {
+		service.ID = instanceID
+	}
+	return service
 }
 
 // trimAndReplace trims the prefix and suffix separator and replaces the separator in the middle.
