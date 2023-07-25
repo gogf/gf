@@ -280,3 +280,88 @@ func Test_Issue2334(t *testing.T) {
 		t.Assert(res.StatusCode, 304)
 	})
 }
+
+type CreateOrderReq struct {
+	g.Meta  `path:"/order" tags:"订单" method:"put" summary:"创建订单"`
+	Details []*OrderDetail `p:"detail" v:"required#请输入订单详情" dc:"订单详情"`
+}
+
+type OrderDetail struct {
+	Name   string  `p:"name" v:"required#请输入物料名称" dc:"物料名称"`
+	Sn     string  `p:"sn" v:"required#请输入客户编号" dc:"客户编号"`
+	Images string  `p:"images" dc:"图片"`
+	Desc   string  `p:"desc" dc:"备注"`
+	Number int     `p:"number" v:"required#请输入数量" dc:"数量"`
+	Price  float64 `p:"price" v:"required" dc:"单价"`
+}
+
+type CreateOrderRes struct{}
+type OrderController struct{}
+
+func (c *OrderController) CreateOrder(ctx context.Context, req *CreateOrderReq) (res *CreateOrderRes, err error) {
+	return
+}
+
+// https://github.com/gogf/gf/issues/2482
+func Test_Issue2482(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/api/v2", func(group *ghttp.RouterGroup) {
+		group.Middleware(ghttp.MiddlewareHandlerResponse)
+		group.Bind(OrderController{})
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(1000 * time.Millisecond)
+
+	c := g.Client()
+	c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+	gtest.C(t, func(t *gtest.T) {
+		content := `
+{
+    "detail": [
+      {
+        "images": "string",
+        "desc": "string",
+        "number": 0,
+        "price": 0
+      }
+    ]
+  }
+`
+		t.Assert(c.PutContent(ctx, "/api/v2/order", content), `{"code":51,"message":"请输入物料名称","data":null}`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		content := `
+{
+    "detail": [
+      {
+        "images": "string",
+        "desc": "string",
+        "number": 0,
+		"name": "string",
+        "price": 0
+      }
+    ]
+  }
+`
+		t.Assert(c.PutContent(ctx, "/api/v2/order", content), `{"code":51,"message":"请输入客户编号","data":null}`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		content := `
+{
+    "detail": [
+      {
+        "images": "string",
+        "desc": "string",
+        "number": 0,
+		"name": "string",
+		"sn": "string",
+        "price": 0
+      }
+    ]
+  }
+`
+		t.Assert(c.PutContent(ctx, "/api/v2/order", content), `{"code":0,"message":"","data":null}`)
+	})
+}
