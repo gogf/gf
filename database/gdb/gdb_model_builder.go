@@ -115,7 +115,7 @@ func (b *WhereBuilder) convertWhereBuilder(where interface{}, args []interface{}
 	}
 	if builder != nil {
 		conditionWhere, conditionArgs := builder.Build()
-		if conditionWhere != "" && len(b.whereHolder) == 0 {
+		if conditionWhere != "" && (len(b.whereHolder) == 0 || len(builder.whereHolder) > 1) {
 			conditionWhere = "(" + conditionWhere + ")"
 		}
 		return conditionWhere, conditionArgs
