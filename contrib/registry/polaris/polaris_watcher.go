@@ -68,10 +68,12 @@ func (w *Watcher) Proceed() ([]gsvc.Service, error) {
 			}
 			// handle DeleteEvent
 			if instanceEvent.DeleteEvent != nil {
+				var endpointStr bytes.Buffer
 				for _, instance := range instanceEvent.DeleteEvent.Instances {
+					// Iterate through existing service instances, deleting them if they exist
 					for i, serviceInstance := range w.ServiceInstances {
 						if serviceInstance.(*Service).ID == instance.GetId() {
-							// remove equal
+							endpointStr.WriteString(fmt.Sprintf("%s:%d%s", instance.GetHost(), instance.GetPort(), gsvc.EndpointsDelimiter))
 							if len(w.ServiceInstances) <= 1 {
 								w.ServiceInstances = w.ServiceInstances[0:0]
 								continue
@@ -80,32 +82,92 @@ func (w *Watcher) Proceed() ([]gsvc.Service, error) {
 						}
 					}
 				}
+				if endpointStr.Len() > 0 && len(w.ServiceInstances) > 0 {
+					var (
+						newEndpointStr     bytes.Buffer
+						serviceEndpointStr = w.ServiceInstances[0].(*Service).GetEndpoints().String()
+					)
+					for _, address := range gstr.SplitAndTrim(serviceEndpointStr, gsvc.EndpointsDelimiter) {
+						if !gstr.Contains(endpointStr.String(), address) {
+							newEndpointStr.WriteString(fmt.Sprintf("%s%s", address, gsvc.EndpointsDelimiter))
+						}
+					}
+
+					for i := 0; i < len(w.ServiceInstances); i++ {
+						w.ServiceInstances[i] = instanceToServiceInstance(instanceEvent.DeleteEvent.Instances[0], gstr.TrimRight(newEndpointStr.String(), gsvc.EndpointsDelimiter), w.ServiceInstances[i].(*Service).ID)
+					}
+				}
 			}
 			// handle UpdateEvent
 			if instanceEvent.UpdateEvent != nil {
-				for i, serviceInstance := range w.ServiceInstances {
-					var endpointStr bytes.Buffer
+				var (
+					updateEndpointStr bytes.Buffer
+					newEndpointStr    bytes.Buffer
+				)
+				for _, serviceInstance := range w.ServiceInstances {
+					// update the current department or all instances
 					for _, update := range instanceEvent.UpdateEvent.UpdateList {
 						if serviceInstance.(*Service).ID == update.Before.GetId() {
-							endpointStr.WriteString(fmt.Sprintf("%s:%d%s", update.After.GetHost(), update.After.GetPort(), gsvc.EndpointsDelimiter))
+							// update equal
+							if update.After.IsHealthy() {
+								newEndpointStr.WriteString(fmt.Sprintf("%s:%d%s", update.After.GetHost(), update.After.GetPort(), gsvc.EndpointsDelimiter))
+							}
+							updateEndpointStr.WriteString(fmt.Sprintf("%s:%d%s", update.Before.GetHost(), update.Before.GetPort(), gsvc.EndpointsDelimiter))
 						}
 					}
-					for _, update := range instanceEvent.UpdateEvent.UpdateList {
-						if serviceInstance.(*Service).ID == update.Before.GetId() {
-							w.ServiceInstances[i] = instanceToServiceInstance(update.After, gstr.TrimRight(endpointStr.String(), gsvc.EndpointsDelimiter))
+				}
+				if len(w.ServiceInstances) > 0 {
+					var serviceEndpointStr = w.ServiceInstances[0].(*Service).GetEndpoints().String()
+					// old instance addresses are culled
+					if updateEndpointStr.Len() > 0 {
+						for _, address := range gstr.SplitAndTrim(serviceEndpointStr, gsvc.EndpointsDelimiter) {
+							// If the historical instance is not in the change instance, it remains
+							if !gstr.Contains(updateEndpointStr.String(), address) {
+								newEndpointStr.WriteString(fmt.Sprintf("%s%s", address, gsvc.EndpointsDelimiter))
+							}
 						}
+					}
+					instance := instanceEvent.UpdateEvent.UpdateList[0].After
+					for i := 0; i < len(w.ServiceInstances); i++ {
+						w.ServiceInstances[i] = instanceToServiceInstance(instance, gstr.TrimRight(newEndpointStr.String(), gsvc.EndpointsDelimiter), w.ServiceInstances[i].(*Service).ID)
 					}
 				}
 			}
 			// handle AddEvent
 			if instanceEvent.AddEvent != nil {
-				w.ServiceInstances = append(
-					w.ServiceInstances,
-					instancesToServiceInstances(instanceEvent.AddEvent.Instances)...,
+				var (
+					newEndpointStr bytes.Buffer
+					allEndpointStr string
 				)
+				if len(w.ServiceInstances) > 0 {
+					allEndpointStr = w.ServiceInstances[0].(*Service).GetEndpoints().String()
+				}
+				for i := 0; i < len(instanceEvent.AddEvent.Instances); i++ {
+					instance := instanceEvent.AddEvent.Instances[i]
+					if instance.IsHealthy() {
+						address := fmt.Sprintf("%s:%d", instance.GetHost(), instance.GetPort())
+						if !gstr.Contains(allEndpointStr, address) {
+							newEndpointStr.WriteString(fmt.Sprintf("%s%s", address, gsvc.EndpointsDelimiter))
+						}
+					}
+				}
+				if newEndpointStr.Len() > 0 {
+					allEndpointStr = fmt.Sprintf("%s%s", newEndpointStr.String(), allEndpointStr)
+				}
+				for i := 0; i < len(w.ServiceInstances); i++ {
+					w.ServiceInstances[i] = instanceToServiceInstance(instanceEvent.AddEvent.Instances[0], gstr.TrimRight(allEndpointStr, gsvc.EndpointsDelimiter), w.ServiceInstances[i].(*Service).ID)
+				}
+
+				for i := 0; i < len(instanceEvent.AddEvent.Instances); i++ {
+					instance := instanceEvent.AddEvent.Instances[i]
+					if instance.IsHealthy() {
+						w.ServiceInstances = append(w.ServiceInstances, instanceToServiceInstance(instance, gstr.TrimRight(allEndpointStr, gsvc.EndpointsDelimiter), ""))
+					}
+				}
 			}
 		}
 	}
+
 	return w.ServiceInstances, nil
 }
 
