@@ -7,9 +7,8 @@
 // Package mssql implements gdb.Driver, which supports operations for database MSSql.
 //
 // Note:
-// 1. It needs manually import: _ "github.com/denisenkom/go-mssqldb"
-// 2. It does not support Save/Replace features.
-// 3. It does not support LastInsertId.
+// 1. It does not support Save/Replace features.
+// 2. It does not support LastInsertId.
 package mssql
 
 import (

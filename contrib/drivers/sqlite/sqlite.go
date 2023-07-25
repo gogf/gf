@@ -7,8 +7,7 @@
 // Package sqlite implements gdb.Driver, which supports operations for database SQLite.
 //
 // Note:
-// 1. It needs manually import: _ "github.com/glebarez/go-sqlite"
-// 2. It does not support Save/Replace features.
+// 1. It does not support Save/Replace features.
 package sqlite
 
 import (
@@ -18,6 +17,7 @@ import (
 	"strings"
 
 	_ "github.com/glebarez/go-sqlite"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/encoding/gurl"
 	"github.com/gogf/gf/v2/errors/gcode"

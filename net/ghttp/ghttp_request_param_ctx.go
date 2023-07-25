@@ -8,31 +8,10 @@ package ghttp
 
 import (
 	"context"
-	"time"
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/os/gctx"
 )
-
-// neverDoneCtx never done.
-type neverDoneCtx struct {
-	context.Context
-}
-
-// Done forbids the context done from parent context.
-func (*neverDoneCtx) Done() <-chan struct{} {
-	return nil
-}
-
-// Deadline forbids the context deadline from parent context.
-func (*neverDoneCtx) Deadline() (deadline time.Time, ok bool) {
-	return time.Time{}, false
-}
-
-// Err forbids the context done from parent context.
-func (c *neverDoneCtx) Err() error {
-	return nil
-}
 
 // RequestFromCtx retrieves and returns the Request object from context.
 func RequestFromCtx(ctx context.Context) *Request {
@@ -72,7 +51,7 @@ func (r *Request) GetCtx() context.Context {
 // This change is considered for common usage habits of developers for context propagation
 // in multiple goroutines creation in one HTTP request.
 func (r *Request) GetNeverDoneCtx() context.Context {
-	return &neverDoneCtx{r.Context()}
+	return gctx.NeverDone(r.Context())
 }
 
 // SetCtx custom context for current request.

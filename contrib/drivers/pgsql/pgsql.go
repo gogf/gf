@@ -7,8 +7,7 @@
 // Package pgsql implements gdb.Driver, which supports operations for database PostgreSQL.
 //
 // Note:
-// 1. It needs manually import: _ "github.com/lib/pq"
-// 2. It does not support Save/Replace features.
+// 1. It does not support Save/Replace features.
 package pgsql
 
 import (
