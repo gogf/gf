@@ -78,7 +78,7 @@ func (c *apiSdkGenerator) doGenerateSdkIClient(
 		pkgName                 = gfile.Basename(sdkFolderPath)
 		funcName                = gstr.CaseCamel(module) + gstr.UcFirst(version)
 		interfaceName           = fmt.Sprintf(`I%s`, funcName)
-		moduleImportPath        = fmt.Sprintf(`"%s"`, gfile.Dir(versionImportPath))
+		moduleImportPath        = gstr.Replace(fmt.Sprintf(`"%s"`, gfile.Dir(versionImportPath)), "\\", "/", -1)
 		iClientFilePath         = gfile.Join(sdkFolderPath, fmt.Sprintf(`%s.iclient.go`, pkgName))
 		interfaceFuncDefinition = fmt.Sprintf(
 			`%s() %s.%s`,
@@ -142,7 +142,7 @@ func (c *apiSdkGenerator) doGenerateSdkImplementer(
 		pkgName             = gfile.Basename(sdkFolderPath)
 		moduleNameCamel     = gstr.CaseCamel(module)
 		moduleNameSnake     = gstr.CaseSnake(module)
-		moduleImportPath    = gfile.Dir(versionImportPath)
+		moduleImportPath    = gstr.Replace(gfile.Dir(versionImportPath), "\\", "/", -1)
 		versionPrefix       = ""
 		implementerName     = moduleNameCamel + gstr.UcFirst(version)
 		implementerFilePath = gfile.Join(sdkFolderPath, fmt.Sprintf(
