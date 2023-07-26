@@ -159,7 +159,11 @@ func (t *Time) LayoutNew(layout string) *Time {
 	if t == nil {
 		return nil
 	}
-	return NewFromStr(t.Layout(layout))
+	newTime, err := StrToTimeLayout(t.Layout(layout), layout)
+	if err != nil {
+		panic(err)
+	}
+	return newTime
 }
 
 // LayoutTo formats `t` with stdlib layout.
@@ -167,7 +171,11 @@ func (t *Time) LayoutTo(layout string) *Time {
 	if t == nil {
 		return nil
 	}
-	t.Time = NewFromStr(t.Layout(layout)).Time
+	newTime, err := StrToTimeLayout(t.Layout(layout), layout)
+	if err != nil {
+		panic(err)
+	}
+	t.Time = newTime.Time
 	return t
 }
 
