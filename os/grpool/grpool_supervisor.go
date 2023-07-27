@@ -18,7 +18,7 @@ func (p *Pool) supervisor(ctx context.Context) {
 	if p.IsClosed() {
 		gtimer.Exit()
 	}
-	if !p.running.Val() {
+	if p.state.Val() != running {
 		return
 	}
 	if p.list.Size() > 0 && p.count.Val() == 0 {
