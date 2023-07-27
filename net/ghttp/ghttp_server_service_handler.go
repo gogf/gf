@@ -184,7 +184,7 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 		}
 
 		// The request struct should be named as `xxxReq`.
-		reqStructName := trimGeneric(reflectType.Out(1).String())
+		reqStructName := trimGeneric(reflectType.In(1).String())
 		if !gstr.HasSuffix(reqStructName, `Req`) {
 			err = gerror.NewCodef(
 				gcode.CodeInvalidParameter,
