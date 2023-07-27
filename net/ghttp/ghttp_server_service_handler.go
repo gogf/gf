@@ -184,21 +184,23 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 		}
 
 		// The request struct should be named as `xxxReq`.
-		if !gstr.HasSuffix(reflectType.In(1).String(), `Req`) {
+		reqStructName := trimGeneric(reflectType.Out(1).String())
+		if !gstr.HasSuffix(reqStructName, `Req`) {
 			err = gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`invalid struct naming for request: defined as "%s", but it should be named with "Req" suffix like "XxxReq"`,
-				reflectType.In(1).String(),
+				reqStructName,
 			)
 			return
 		}
 
 		// The response struct should be named as `xxxRes`.
-		if !gstr.HasSuffix(reflectType.Out(0).String(), `Res`) {
+		resStructName := trimGeneric(reflectType.Out(0).String())
+		if !gstr.HasSuffix(resStructName, `Res`) {
 			err = gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`invalid struct naming for response: defined as "%s", but it should be named with "Res" suffix like "XxxRes"`,
-				reflectType.Out(0).String(),
+				resStructName,
 			)
 			return
 		}
@@ -207,4 +209,11 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 	info.Type = reflect.TypeOf(f)
 	info.Value = reflect.ValueOf(f)
 	return
+}
+
+func trimGeneric(structName string) string {
+	if strings.Contains(structName, "[") && gstr.HasSuffix(structName, "]") {
+		return structName[:strings.Index(structName, "[")]
+	}
+	return structName
 }
