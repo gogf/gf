@@ -80,7 +80,7 @@ func (m *Model) mappingAndFilterToTableFields(fields []string, filter bool) []st
 				}
 			}
 		} else {
-			outputFieldsArray = append(outputFieldsArray, field)
+			outputFieldsArray = append(outputFieldsArray, m.db.GetCore().QuoteString(field))
 		}
 	}
 	return outputFieldsArray
