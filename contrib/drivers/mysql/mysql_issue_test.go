@@ -760,3 +760,40 @@ func Test_Issue2439(t *testing.T) {
 		t.Assert(r[0]["name"], "a")
 	})
 }
+
+// https://github.com/gogf/gf/issues/2782
+func Test_Issue2787(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		m := db.Model("user")
+
+		condWhere, _ := m.Builder().
+			Where("id", "").
+			Where(m.Builder().
+				Where("nickname", "foo").
+				WhereOr("password", "abc123")).
+			Where("passport", "pp").
+			Build()
+		t.Assert(condWhere, "(`id`=?) AND (((`nickname`=?) OR (`password`=?))) AND (`passport`=?)")
+
+		condWhere, _ = m.OmitEmpty().Builder().
+			Where("id", "").
+			Where(m.Builder().
+				Where("nickname", "foo").
+				WhereOr("password", "abc123")).
+			Where("passport", "pp").
+			Build()
+		t.Assert(condWhere, "((`nickname`=?) OR (`password`=?)) AND (`passport`=?)")
+
+		condWhere, _ = m.OmitEmpty().Builder().
+			Where(m.Builder().
+				Where("nickname", "foo").
+				WhereOr("password", "abc123")).
+			Where("id", "").
+			Where("passport", "pp").
+			Build()
+		t.Assert(condWhere, "((`nickname`=?) OR (`password`=?)) AND (`passport`=?)")
+	})
+}
