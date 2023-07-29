@@ -25,7 +25,7 @@ type implementer struct {
 	config httpclient.Config
 }
 
-func New(config httpclient.Config) iClient {
+func New(config httpclient.Config) IClient {
 	if !gstr.HasPrefix(config.URL, "http") {
 		config.URL = fmt.Sprintf("http://%s", config.URL)
 	}
@@ -49,7 +49,7 @@ package {PkgName}
 import (
 )
 
-type iClient interface {
+type IClient interface {
 }
 `
 

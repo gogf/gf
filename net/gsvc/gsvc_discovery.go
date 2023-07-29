@@ -91,8 +91,7 @@ func watchAndUpdateService(watchedServiceMap *gmap.StrAnyMap, watcher Watcher, s
 	)
 	for {
 		time.Sleep(time.Second)
-		services, err = watcher.Proceed()
-		if err != nil {
+		if services, err = watcher.Proceed(); err != nil {
 			intlog.Errorf(ctx, `%+v`, err)
 			continue
 		}

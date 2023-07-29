@@ -3,13 +3,13 @@ module github.com/gogf/gf/cmd/gf/v2
 go 1.18
 
 require (
-	github.com/gogf/gf/contrib/drivers/clickhouse/v2 v2.5.0
-	github.com/gogf/gf/contrib/drivers/mssql/v2 v2.5.0
-	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.5.0
-	github.com/gogf/gf/contrib/drivers/oracle/v2 v2.5.0
-	github.com/gogf/gf/contrib/drivers/pgsql/v2 v2.5.0
-	github.com/gogf/gf/contrib/drivers/sqlite/v2 v2.5.0
-	github.com/gogf/gf/v2 v2.5.0
+	github.com/gogf/gf/contrib/drivers/clickhouse/v2 v2.5.1
+	github.com/gogf/gf/contrib/drivers/mssql/v2 v2.5.1
+	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.5.1
+	github.com/gogf/gf/contrib/drivers/oracle/v2 v2.5.1
+	github.com/gogf/gf/contrib/drivers/pgsql/v2 v2.5.1
+	github.com/gogf/gf/contrib/drivers/sqlite/v2 v2.5.1
+	github.com/gogf/gf/v2 v2.5.1
 	github.com/minio/selfupdate v0.6.0
 	github.com/olekukonko/tablewriter v0.0.5
 	golang.org/x/mod v0.9.0

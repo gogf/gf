@@ -147,82 +147,118 @@ func NewFromTimeStamp(timestamp int64) *Time {
 
 // Timestamp returns the timestamp in seconds.
 func (t *Time) Timestamp() int64 {
+	if t.IsZero() {
+		return 0
+	}
 	return t.UnixNano() / 1e9
 }
 
 // TimestampMilli returns the timestamp in milliseconds.
 func (t *Time) TimestampMilli() int64 {
+	if t.IsZero() {
+		return 0
+	}
 	return t.UnixNano() / 1e6
 }
 
 // TimestampMicro returns the timestamp in microseconds.
 func (t *Time) TimestampMicro() int64 {
+	if t.IsZero() {
+		return 0
+	}
 	return t.UnixNano() / 1e3
 }
 
 // TimestampNano returns the timestamp in nanoseconds.
 func (t *Time) TimestampNano() int64 {
+	if t.IsZero() {
+		return 0
+	}
 	return t.UnixNano()
 }
 
 // TimestampStr is a convenience method which retrieves and returns
 // the timestamp in seconds as string.
 func (t *Time) TimestampStr() string {
+	if t.IsZero() {
+		return ""
+	}
 	return strconv.FormatInt(t.Timestamp(), 10)
 }
 
 // TimestampMilliStr is a convenience method which retrieves and returns
 // the timestamp in milliseconds as string.
 func (t *Time) TimestampMilliStr() string {
+	if t.IsZero() {
+		return ""
+	}
 	return strconv.FormatInt(t.TimestampMilli(), 10)
 }
 
 // TimestampMicroStr is a convenience method which retrieves and returns
 // the timestamp in microseconds as string.
 func (t *Time) TimestampMicroStr() string {
+	if t.IsZero() {
+		return ""
+	}
 	return strconv.FormatInt(t.TimestampMicro(), 10)
 }
 
 // TimestampNanoStr is a convenience method which retrieves and returns
 // the timestamp in nanoseconds as string.
 func (t *Time) TimestampNanoStr() string {
+	if t.IsZero() {
+		return ""
+	}
 	return strconv.FormatInt(t.TimestampNano(), 10)
 }
 
 // Month returns the month of the year specified by t.
 func (t *Time) Month() int {
+	if t.IsZero() {
+		return 0
+	}
 	return int(t.Time.Month())
 }
 
 // Second returns the second offset within the minute specified by t,
 // in the range [0, 59].
 func (t *Time) Second() int {
+	if t.IsZero() {
+		return 0
+	}
 	return t.Time.Second()
 }
 
 // Millisecond returns the millisecond offset within the second specified by t,
 // in the range [0, 999].
 func (t *Time) Millisecond() int {
+	if t.IsZero() {
+		return 0
+	}
 	return t.Time.Nanosecond() / 1e6
 }
 
 // Microsecond returns the microsecond offset within the second specified by t,
 // in the range [0, 999999].
 func (t *Time) Microsecond() int {
+	if t.IsZero() {
+		return 0
+	}
 	return t.Time.Nanosecond() / 1e3
 }
 
 // Nanosecond returns the nanosecond offset within the second specified by t,
 // in the range [0, 999999999].
 func (t *Time) Nanosecond() int {
+	if t.IsZero() {
+		return 0
+	}
 	return t.Time.Nanosecond()
 }
 
 // String returns current time object as string.
 func (t *Time) String() string {
-	if t == nil {
-		return ""
-	}
 	if t.IsZero() {
 		return ""
 	}

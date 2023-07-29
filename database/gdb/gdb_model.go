@@ -49,7 +49,6 @@ type Model struct {
 	safe          bool          // If true, it clones and returns a new model object whenever operation done; or else it changes the attribute of current model.
 	onDuplicate   interface{}   // onDuplicate is used for ON "DUPLICATE KEY UPDATE" statement.
 	onDuplicateEx interface{}   // onDuplicateEx is used for excluding some columns ON "DUPLICATE KEY UPDATE" statement.
-	shardingFunc  ShardingFunc  // shardingFunc is the custom function for records sharding.
 }
 
 // ModelHandler is a function that handles given Model and returns a new Model that is custom modified.
