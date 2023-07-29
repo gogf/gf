@@ -1,4 +1,4 @@
-module github.com/gogf/gf/contrib/drivers/sqlite/cgo
+module github.com/gogf/gf/contrib/drivers/sqlitecgo/v2
 
 go 1.17
 

@@ -4,11 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package sqlitecgo implements gdb.Driver, which supports operations for database SQLite.
-//
-// Note:
-// 1. It needs manually import: _ "https://github.com/mattn/go-sglite3"
-// 2. It does not support Save/Replace features.
+// It does not support Save/Replace features.
+
 package sqlitecgo
 
 import (
