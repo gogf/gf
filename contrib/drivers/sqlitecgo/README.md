@@ -5,5 +5,4 @@
 
 You need to set the environment variable CGO_ENABLED=1 and make sure that GCC is installed on your path.
 
-sqlitecgo: github.com/gogf/gf/contrib/drivers/sqlitecgo/v2
 windows gcc: https://jmeubank.github.io/tdm-gcc/
