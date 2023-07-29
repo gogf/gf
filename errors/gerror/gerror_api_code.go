@@ -31,6 +31,22 @@ func NewCodef(code gcode.Code, format string, args ...interface{}) error {
 	}
 }
 
+// NewCodeIgnoreStack creates and returns an error that has error code and given text. It can ignore stack.
+func NewCodeIgnoreStack(code gcode.Code, text ...string) error {
+	return &Error{
+		text: strings.Join(text, commaSeparatorSpace),
+		code: code,
+	}
+}
+
+// NewCodeIgnoreStackf returns an error that has error code and formats as the given format and args. It can ignore stack.
+func NewCodeIgnoreStackf(code gcode.Code, format string, args ...interface{}) error {
+	return &Error{
+		text: fmt.Sprintf(format, args...),
+		code: code,
+	}
+}
+
 // NewCodeSkip creates and returns an error which has error code and is formatted from given text.
 // The parameter `skip` specifies the stack callers skipped amount.
 func NewCodeSkip(code gcode.Code, skip int, text ...string) error {

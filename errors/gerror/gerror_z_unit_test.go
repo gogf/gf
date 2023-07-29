@@ -40,6 +40,16 @@ func Test_New(t *testing.T) {
 		t.Assert(err.Error(), "1")
 	})
 	gtest.C(t, func(t *gtest.T) {
+		err := gerror.NewIgnoreStack("1")
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "1")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.NewIgnoreStackf("%d", 1)
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "1")
+	})
+	gtest.C(t, func(t *gtest.T) {
 		err := gerror.NewSkip(1, "1")
 		t.AssertNE(err, nil)
 		t.Assert(err.Error(), "1")
@@ -295,6 +305,16 @@ func Test_Code(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		err := gerror.NewCodef(gcode.New(1, "", nil), "%s", "123")
+		t.Assert(gerror.Code(err).Code(), 1)
+		t.Assert(err.Error(), "123")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.NewCodeIgnoreStack(gcode.New(1, "", nil), "123")
+		t.Assert(gerror.Code(err).Code(), 1)
+		t.Assert(err.Error(), "123")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.NewCodeIgnoreStackf(gcode.New(1, "", nil), "%s", "123")
 		t.Assert(gerror.Code(err).Code(), 1)
 		t.Assert(err.Error(), "123")
 	})

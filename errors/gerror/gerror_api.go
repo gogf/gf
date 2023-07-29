@@ -30,6 +30,22 @@ func Newf(format string, args ...interface{}) error {
 	}
 }
 
+// NewIgnoreStack creates and returns an error which is formatted from given text. It can ignore stack.
+func NewIgnoreStack(text string) error {
+	return &Error{
+		text: text,
+		code: gcode.CodeNil,
+	}
+}
+
+// NewIgnoreStackf returns an error that formats as the given format and args. It can ignore stack.
+func NewIgnoreStackf(format string, args ...interface{}) error {
+	return &Error{
+		text: fmt.Sprintf(format, args...),
+		code: gcode.CodeNil,
+	}
+}
+
 // NewSkip creates and returns an error which is formatted from given text.
 // The parameter `skip` specifies the stack callers skipped amount.
 func NewSkip(skip int, text string) error {

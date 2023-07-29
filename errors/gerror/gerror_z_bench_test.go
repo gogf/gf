@@ -43,6 +43,18 @@ func Benchmark_Wrapf(b *testing.B) {
 	}
 }
 
+func Benchmark_NewIgnoreStack(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		gerror.NewIgnoreStack("test")
+	}
+}
+
+func Benchmark_NewIgnoreStackf(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		gerror.NewIgnoreStackf("%s", "test")
+	}
+}
+
 func Benchmark_NewSkip(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		gerror.NewSkip(1, "test")
@@ -64,6 +76,18 @@ func Benchmark_NewCode(b *testing.B) {
 func Benchmark_NewCodef(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		gerror.NewCodef(gcode.New(500, "", nil), "%s", "test")
+	}
+}
+
+func Benchmark_NewCodeIgnoreStack(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		gerror.NewCodeIgnoreStack(gcode.New(500, "", nil), "test")
+	}
+}
+
+func Benchmark_NewCodeIgnoreStackf(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		gerror.NewCodeIgnoreStackf(gcode.New(500, "", nil), "%s", "test")
 	}
 }
 
