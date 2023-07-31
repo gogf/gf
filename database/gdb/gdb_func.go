@@ -373,10 +373,10 @@ func GetPrimaryKeyCondition(primary string, where ...interface{}) (newWhereCondi
 	return where
 }
 
-// formatSql formats the sql string and its arguments before executing.
+// FormatSql formats the sql string and its arguments before executing.
 // The internal handleArguments function might be called twice during the SQL procedure,
 // but do not worry about it, it's safe and efficient.
-func formatSql(sql string, args []interface{}) (newSql string, newArgs []interface{}) {
+func FormatSql(sql string, args []interface{}) (newSql string, newArgs []interface{}) {
 	// DO NOT do this as there may be multiple lines and comments in the sql.
 	// sql = gstr.Trim(sql)
 	// sql = gstr.Replace(sql, "\n", " ")

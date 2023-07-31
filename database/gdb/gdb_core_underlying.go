@@ -10,9 +10,10 @@ package gdb
 import (
 	"context"
 	"database/sql"
+	"reflect"
+
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
-	"reflect"
 
 	"github.com/gogf/gf/v2/util/gconv"
 
@@ -38,7 +39,7 @@ func (c *Core) DoQuery(ctx context.Context, link Link, sql string, args ...inter
 	if link == nil {
 		if tx := TXFromCtx(ctx, c.db.GetGroup()); tx != nil {
 			// Firstly, check and retrieve transaction link from context.
-			link = &txLink{tx.GetSqlTX()}
+			link = &TxLink{tx.GetSqlTX()}
 		} else if link, err = c.SlaveLink(); err != nil {
 			// Or else it creates one from master node.
 			return nil, err
@@ -46,7 +47,7 @@ func (c *Core) DoQuery(ctx context.Context, link Link, sql string, args ...inter
 	} else if !link.IsTransaction() {
 		// If current link is not transaction link, it checks and retrieves transaction from context.
 		if tx := TXFromCtx(ctx, c.db.GetGroup()); tx != nil {
-			link = &txLink{tx.GetSqlTX()}
+			link = &TxLink{tx.GetSqlTX()}
 		}
 	}
 
@@ -55,7 +56,7 @@ func (c *Core) DoQuery(ctx context.Context, link Link, sql string, args ...inter
 	}
 
 	// Sql filtering.
-	sql, args = formatSql(sql, args)
+	sql, args = FormatSql(sql, args)
 	sql, args, err = c.db.DoFilter(ctx, link, sql, args)
 	if err != nil {
 		return nil, err
@@ -97,7 +98,7 @@ func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interf
 	if link == nil {
 		if tx := TXFromCtx(ctx, c.db.GetGroup()); tx != nil {
 			// Firstly, check and retrieve transaction link from context.
-			link = &txLink{tx.GetSqlTX()}
+			link = &TxLink{tx.GetSqlTX()}
 		} else if link, err = c.MasterLink(); err != nil {
 			// Or else it creates one from master node.
 			return nil, err
@@ -105,7 +106,7 @@ func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interf
 	} else if !link.IsTransaction() {
 		// If current link is not transaction link, it checks and retrieves transaction from context.
 		if tx := TXFromCtx(ctx, c.db.GetGroup()); tx != nil {
-			link = &txLink{tx.GetSqlTX()}
+			link = &TxLink{tx.GetSqlTX()}
 		}
 	}
 
@@ -116,7 +117,7 @@ func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interf
 	}
 
 	// SQL filtering.
-	sql, args = formatSql(sql, args)
+	sql, args = FormatSql(sql, args)
 	sql, args, err = c.db.DoFilter(ctx, link, sql, args)
 	if err != nil {
 		return nil, err
@@ -320,7 +321,7 @@ func (c *Core) DoPrepare(ctx context.Context, link Link, sql string) (stmt *Stmt
 	if link == nil {
 		if tx := TXFromCtx(ctx, c.db.GetGroup()); tx != nil {
 			// Firstly, check and retrieve transaction link from context.
-			link = &txLink{tx.GetSqlTX()}
+			link = &TxLink{tx.GetSqlTX()}
 		} else {
 			// Or else it creates one from master node.
 			var err error
@@ -331,7 +332,7 @@ func (c *Core) DoPrepare(ctx context.Context, link Link, sql string) (stmt *Stmt
 	} else if !link.IsTransaction() {
 		// If current link is not transaction link, it checks and retrieves transaction from context.
 		if tx := TXFromCtx(ctx, c.db.GetGroup()); tx != nil {
-			link = &txLink{tx.GetSqlTX()}
+			link = &TxLink{tx.GetSqlTX()}
 		}
 	}
 

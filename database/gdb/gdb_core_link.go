@@ -16,8 +16,8 @@ type dbLink struct {
 	isOnMaster bool // isOnMaster marks whether current link is operated on master node.
 }
 
-// txLink is used to implement interface Link for TX.
-type txLink struct {
+// TxLink is used to implement interface Link for TX.
+type TxLink struct {
 	*sql.Tx
 }
 
@@ -32,12 +32,12 @@ func (l *dbLink) IsOnMaster() bool {
 }
 
 // IsTransaction returns if current Link is a transaction.
-func (l *txLink) IsTransaction() bool {
+func (l *TxLink) IsTransaction() bool {
 	return true
 }
 
 // IsOnMaster checks and returns whether current link is operated on master node.
 // Note that, transaction operation is always operated on master node.
-func (l *txLink) IsOnMaster() bool {
+func (l *TxLink) IsOnMaster() bool {
 	return true
 }

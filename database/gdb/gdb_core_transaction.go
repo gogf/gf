@@ -298,13 +298,13 @@ func (tx *TXCore) Transaction(ctx context.Context, f func(ctx context.Context, t
 // Query does query operation on transaction.
 // See Core.Query.
 func (tx *TXCore) Query(sql string, args ...interface{}) (result Result, err error) {
-	return tx.db.DoQuery(tx.ctx, &txLink{tx.tx}, sql, args...)
+	return tx.db.DoQuery(tx.ctx, &TxLink{tx.tx}, sql, args...)
 }
 
 // Exec does none query operation on transaction.
 // See Core.Exec.
 func (tx *TXCore) Exec(sql string, args ...interface{}) (sql.Result, error) {
-	return tx.db.DoExec(tx.ctx, &txLink{tx.tx}, sql, args...)
+	return tx.db.DoExec(tx.ctx, &TxLink{tx.tx}, sql, args...)
 }
 
 // Prepare creates a prepared statement for later queries or executions.
@@ -313,7 +313,7 @@ func (tx *TXCore) Exec(sql string, args ...interface{}) (sql.Result, error) {
 // The caller must call the statement's Close method
 // when the statement is no longer needed.
 func (tx *TXCore) Prepare(sql string) (*Stmt, error) {
-	return tx.db.DoPrepare(tx.ctx, &txLink{tx.tx}, sql)
+	return tx.db.DoPrepare(tx.ctx, &TxLink{tx.tx}, sql)
 }
 
 // GetAll queries and returns data records from database.
