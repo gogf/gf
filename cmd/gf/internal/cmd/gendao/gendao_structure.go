@@ -73,17 +73,32 @@ func generateStructFieldDefinition(
 	)
 
 	if in.TypeMapping != nil && len(in.TypeMapping) > 0 {
-		var (
-			tryTypeName string
-		)
-		tryTypeMatch, _ := gregex.MatchString(`(.+?)\((.+)\)`, field.Type)
-		if len(tryTypeMatch) == 3 {
-			tryTypeName = gstr.Trim(tryTypeMatch[1])
+		/*
+			can match:
+			smallint(5) unsigned
+			smallint() unsigned
+			smallint unsigned
+			smallint(5)
+			smallint()
+			smallint
+		*/
+		tryTypeMatch, _ := gregex.MatchString(`^(.+?)(\(.*?\))?( .+?)?$`, strings.ToLower(field.Type))
+		if len(tryTypeMatch) == 4 {
+			if typeMapping, ok := in.TypeMapping[tryTypeMatch[1]+tryTypeMatch[2]+tryTypeMatch[3]]; ok { // smallint(5) unsigned
+				typeName = typeMapping.Type
+				appendImport = typeMapping.Import
+			} else if typeMapping, ok := in.TypeMapping[tryTypeMatch[1]+tryTypeMatch[3]]; ok { // smallint unsigned
+				typeName = typeMapping.Type
+				appendImport = typeMapping.Import
+			} else if typeMapping, ok := in.TypeMapping[tryTypeMatch[1]+tryTypeMatch[2]]; ok { // smallint(5)
+				typeName = typeMapping.Type
+				appendImport = typeMapping.Import
+			} else if typeMapping, ok := in.TypeMapping[tryTypeMatch[1]]; ok { // smallint
+				typeName = typeMapping.Type
+				appendImport = typeMapping.Import
+			}
 		} else {
-			tryTypeName = gstr.Split(field.Type, " ")[0]
-		}
-		if tryTypeName != "" {
-			if typeMapping, ok := in.TypeMapping[strings.ToLower(tryTypeName)]; ok {
+			if typeMapping, ok := in.TypeMapping[strings.ToLower(field.Type)]; ok { // smallint
 				typeName = typeMapping.Type
 				appendImport = typeMapping.Import
 			}
