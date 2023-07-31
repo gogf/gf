@@ -7,6 +7,7 @@
 package genservice
 
 import (
+	"fmt"
 	"go/parser"
 	"go/token"
 
@@ -15,29 +16,90 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func (c CGenService) calculateImportedPackages(fileContent string, srcImportedPackages *garray.SortedStrArray) (err error) {
+type packageItem struct {
+	Alias     string
+	Path      string
+	RawImport string
+}
+
+func (c CGenService) calculateImportedPackages(fileContent string) (packages []packageItem, err error) {
 	f, err := parser.ParseFile(token.NewFileSet(), "", fileContent, parser.ImportsOnly)
 	if err != nil {
-		return err
+		return nil, err
 	}
+	packages = make([]packageItem, 0)
 	for _, s := range f.Imports {
 		if s.Path != nil {
 			if s.Name != nil {
 				// If it has alias, and it is not `_`.
 				if pkgAlias := s.Name.String(); pkgAlias != "_" {
-					srcImportedPackages.Add(pkgAlias + " " + s.Path.Value)
+					packages = append(packages, packageItem{
+						Alias:     pkgAlias,
+						Path:      s.Path.Value,
+						RawImport: pkgAlias + " " + s.Path.Value,
+					})
 				}
 			} else {
 				// no alias
-				srcImportedPackages.Add(s.Path.Value)
+				packages = append(packages, packageItem{
+					Alias:     "",
+					Path:      s.Path.Value,
+					RawImport: s.Path.Value,
+				})
 			}
+		}
+	}
+	return packages, nil
+}
+
+func (c CGenService) calculateCodeCommented(in CGenServiceInput, fileContent string, srcCodeCommentedMap map[string]string) error {
+	matches, err := gregex.MatchAllString(`((((//.*)|(/\*[\s\S]*?\*/))\s)+)func \((.+?)\) ([\s\S]+?) {`, fileContent)
+	if err != nil {
+		return err
+	}
+	for _, match := range matches {
+		var (
+			structName    string
+			structMatch   []string
+			funcReceiver  = gstr.Trim(match[1+5])
+			receiverArray = gstr.SplitAndTrim(funcReceiver, " ")
+			functionHead  = gstr.Trim(gstr.Replace(match[2+5], "\n", ""))
+			commentedInfo = ""
+		)
+		if len(receiverArray) > 1 {
+			structName = receiverArray[1]
+		} else if len(receiverArray) == 1 {
+			structName = receiverArray[0]
+		}
+		structName = gstr.Trim(structName, "*")
+
+		// Case of:
+		// Xxx(\n    ctx context.Context, req *v1.XxxReq,\n) -> Xxx(ctx context.Context, req *v1.XxxReq)
+		functionHead = gstr.Replace(functionHead, `,)`, `)`)
+		functionHead, _ = gregex.ReplaceString(`\(\s+`, `(`, functionHead)
+		functionHead, _ = gregex.ReplaceString(`\s{2,}`, ` `, functionHead)
+		if !gstr.IsLetterUpper(functionHead[0]) {
+			continue
+		}
+		// Match and pick the struct name from receiver.
+		if structMatch, err = gregex.MatchString(in.StPattern, structName); err != nil {
+			return err
+		}
+		if len(structMatch) < 1 {
+			continue
+		}
+		structName = gstr.CaseCamel(structMatch[1])
+
+		commentedInfo = match[1]
+		if len(commentedInfo) > 0 {
+			srcCodeCommentedMap[fmt.Sprintf("%s-%s", structName, functionHead)] = commentedInfo
 		}
 	}
 	return nil
 }
 
 func (c CGenService) calculateInterfaceFunctions(
-	in CGenServiceInput, fileContent string, srcPkgInterfaceMap map[string]*garray.StrArray, dstPackageName string,
+	in CGenServiceInput, fileContent string, srcPkgInterfaceMap map[string]*garray.StrArray,
 ) (err error) {
 	var (
 		ok                       bool
@@ -59,7 +121,7 @@ func (c CGenService) calculateInterfaceFunctions(
 		)
 		if len(receiverArray) > 1 {
 			structName = receiverArray[1]
-		} else {
+		} else if len(receiverArray) == 1 {
 			structName = receiverArray[0]
 		}
 		structName = gstr.Trim(structName, "*")

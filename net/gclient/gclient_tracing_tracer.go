@@ -141,7 +141,7 @@ func (ct *clientTracer) tlsHandshakeDone(_ tls.ConnectionState, err error) {
 func (ct *clientTracer) wroteHeaderField(k string, v []string) {
 	if len(v) > 1 {
 		ct.headers[k] = v
-	} else {
+	} else if len(v) == 1 {
 		ct.headers[k] = v[0]
 	}
 }

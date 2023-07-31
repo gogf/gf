@@ -44,6 +44,11 @@ type iInterfaces interface {
 	Interfaces() []interface{}
 }
 
+// iNil if the type assert api for IsNil.
+type iNil interface {
+	IsNil() bool
+}
+
 // iTableName is the interface for retrieving table name for struct.
 type iTableName interface {
 	TableName() string
@@ -62,7 +67,7 @@ var (
 	// quoteWordReg is the regular expression object for a word check.
 	quoteWordReg = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
 
-	// Priority tags for struct converting for orm field mapping.
+	// structTagPriority tags for struct converting for orm field mapping.
 	structTagPriority = append([]string{OrmTagForStruct}, gconv.StructTagPriority...)
 )
 
@@ -191,7 +196,7 @@ func ListItemValuesUnique(list interface{}, key string, subKey ...interface{}) [
 }
 
 // GetInsertOperationByOption returns proper insert option with given parameter `option`.
-func GetInsertOperationByOption(option int) string {
+func GetInsertOperationByOption(option InsertOption) string {
 	var operator string
 	switch option {
 	case InsertOptionReplace:

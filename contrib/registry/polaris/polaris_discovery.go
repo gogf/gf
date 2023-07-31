@@ -30,9 +30,9 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]gsvc.Serv
 		in.Prefix = service.GetPrefix()
 	}
 	in.Prefix = trimAndReplace(in.Prefix)
-	// get all instances
-	instancesResponse, err := r.consumer.GetAllInstances(&polaris.GetAllInstancesRequest{
-		GetAllInstancesRequest: model.GetAllInstancesRequest{
+	// get instances
+	instancesResponse, err := r.consumer.GetInstances(&polaris.GetInstancesRequest{
+		GetInstancesRequest: model.GetInstancesRequest{
 			Service:    in.Prefix,
 			Namespace:  r.opt.Namespace,
 			Timeout:    &r.opt.Timeout,
@@ -42,6 +42,7 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]gsvc.Serv
 	if err != nil {
 		return nil, err
 	}
+
 	serviceInstances := instancesToServiceInstances(instancesResponse.GetInstances())
 	// Service filter.
 	filteredServices := make([]gsvc.Service, 0)
@@ -74,21 +75,34 @@ func (r *Registry) Watch(ctx context.Context, key string) (gsvc.Watcher, error) 
 }
 
 func instancesToServiceInstances(instances []model.Instance) []gsvc.Service {
-	serviceInstances := make([]gsvc.Service, 0, len(instances))
+	var (
+		serviceInstances = make([]gsvc.Service, 0, len(instances))
+		endpointStr      bytes.Buffer
+	)
+
 	for _, instance := range instances {
 		if instance.IsHealthy() {
-			serviceInstances = append(serviceInstances, instanceToServiceInstance(instance))
+			endpointStr.WriteString(fmt.Sprintf("%s:%d%s", instance.GetHost(), instance.GetPort(), gsvc.EndpointsDelimiter))
+		}
+	}
+	if endpointStr.Len() > 0 {
+		for _, instance := range instances {
+			if instance.IsHealthy() {
+				serviceInstances = append(serviceInstances, instanceToServiceInstance(instance, gstr.TrimRight(endpointStr.String(), gsvc.EndpointsDelimiter), ""))
+			}
 		}
 	}
 	return serviceInstances
 }
 
-func instanceToServiceInstance(instance model.Instance) gsvc.Service {
+// instanceToServiceInstance converts the instance to service instance.
+// instanceID Must be null when creating and adding, and non-null when updating and deleting
+func instanceToServiceInstance(instance model.Instance, endpointStr, instanceID string) gsvc.Service {
 	var (
 		s         *gsvc.LocalService
 		metadata  = instance.GetMetadata()
 		names     = strings.Split(instance.GetService(), instanceIDSeparator)
-		endpoints = gsvc.NewEndpoints(fmt.Sprintf("%s:%d", instance.GetHost(), instance.GetPort()))
+		endpoints = gsvc.NewEndpoints(endpointStr)
 	)
 	if names != nil && len(names) > 4 {
 		var name bytes.Buffer
@@ -116,9 +130,16 @@ func instanceToServiceInstance(instance model.Instance) gsvc.Service {
 			Endpoints: endpoints,
 		}
 	}
-	return &Service{
+	service := &Service{
 		Service: s,
 	}
+	if instance.GetId() != "" {
+		service.ID = instance.GetId()
+	}
+	if gstr.Trim(instanceID) != "" {
+		service.ID = instanceID
+	}
+	return service
 }
 
 // trimAndReplace trims the prefix and suffix separator and replaces the separator in the middle.

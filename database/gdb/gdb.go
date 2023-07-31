@@ -318,7 +318,7 @@ type Sql struct {
 type DoInsertOption struct {
 	OnDuplicateStr string                 // Custom string for `on duplicated` statement.
 	OnDuplicateMap map[string]interface{} // Custom key-value map from `OnDuplicateEx` function for `on duplicated` statement.
-	InsertOption   int                    // Insert operation in constant value.
+	InsertOption   InsertOption           // Insert operation in constant value.
 	BatchCount     int                    // Batch count for batch inserting.
 }
 
@@ -384,11 +384,13 @@ const (
 	linkPattern = `(\w+):([\w\-]*):(.*?)@(\w+?)\((.+?)\)/{0,1}([^\?]*)\?{0,1}(.*)`
 )
 
+type InsertOption int
+
 const (
-	InsertOptionDefault = 0
-	InsertOptionReplace = 1
-	InsertOptionSave    = 2
-	InsertOptionIgnore  = 3
+	InsertOptionDefault InsertOption = 0
+	InsertOptionReplace InsertOption = 1
+	InsertOptionSave    InsertOption = 2
+	InsertOptionIgnore  InsertOption = 3
 )
 
 const (
@@ -422,6 +424,40 @@ const (
 	LocalTypeBool        = "bool"
 	LocalTypeJson        = "json"
 	LocalTypeJsonb       = "jsonb"
+)
+
+const (
+	fieldTypeBinary     = "binary"
+	fieldTypeVarbinary  = "varbinary"
+	fieldTypeBlob       = "blob"
+	fieldTypeTinyblob   = "tinyblob"
+	fieldTypeMediumblob = "mediumblob"
+	fieldTypeLongblob   = "longblob"
+	fieldTypeInt        = "int"
+	fieldTypeTinyint    = "tinyint"
+	fieldTypeSmallInt   = "small_int"
+	fieldTypeSmallint   = "smallint"
+	fieldTypeMediumInt  = "medium_int"
+	fieldTypeMediumint  = "mediumint"
+	fieldTypeSerial     = "serial"
+	fieldTypeBigInt     = "big_int"
+	fieldTypeBigint     = "bigint"
+	fieldTypeBigserial  = "bigserial"
+	fieldTypeReal       = "real"
+	fieldTypeFloat      = "float"
+	fieldTypeDouble     = "double"
+	fieldTypeDecimal    = "decimal"
+	fieldTypeMoney      = "money"
+	fieldTypeNumeric    = "numeric"
+	fieldTypeSmallmoney = "smallmoney"
+	fieldTypeBool       = "bool"
+	fieldTypeBit        = "bit"
+	fieldTypeDate       = "date"
+	fieldTypeDatetime   = "datetime"
+	fieldTypeTimestamp  = "timestamp"
+	fieldTypeTimestampz = "timestamptz"
+	fieldTypeJson       = "json"
+	fieldTypeJsonb      = "jsonb"
 )
 
 var (

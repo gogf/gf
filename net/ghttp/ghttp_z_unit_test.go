@@ -168,3 +168,16 @@ func Test_BuildParams(t *testing.T) {
 		}
 	})
 }
+
+func Test_ServerSignal(t *testing.T) {
+	s := g.Server(guid.S())
+	s.BindHandler("/", func(r *ghttp.Request) {
+		r.Response.Write("hello world")
+	})
+	gtest.Assert(s.Start(), nil)
+	g.Wait()
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(s.Shutdown(), nil)
+	})
+}
