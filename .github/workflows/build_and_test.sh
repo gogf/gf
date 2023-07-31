@@ -5,20 +5,20 @@ for file in `find . -name go.mod`; do
     echo $dirpath
 
     # package oracle needs golang >= v1.17
-    if [ "oracle" = $(basename $dirpath) ]; then
-        if ! go version|grep -q "1.17"; then
-          echo "ignore oracle as go version: $(go version)"
-          continue 1
-        fi
-    fi
+#    if [ "oracle" = $(basename $dirpath) ]; then
+#        if ! go version|grep -q "1.17"; then
+#          echo "ignore oracle as go version: $(go version)"
+#          continue 1
+#        fi
+#    fi
 
     # package kuhecm needs golang >= v1.18
-    if [ "kubecm" = $(basename $dirpath) ]; then
-        if ! go version|grep -q "1.18"; then
-          echo "ignore kubecm as go version: $(go version)"
-          continue 1
-        fi
-    fi
+#    if [ "kubecm" = $(basename $dirpath) ]; then
+#        if ! go version|grep -q "1.18"; then
+#          echo "ignore kubecm as go version: $(go version)"
+#          continue 1
+#        fi
+#    fi
 
     # package example needs golang >= v1.19
     if [ "example" = $(basename $dirpath) ]; then
@@ -29,12 +29,12 @@ for file in `find . -name go.mod`; do
     fi
 
     # package cmd/gf needs golang >= v1.18
-    if [ "gf" = $(basename $dirpath) ]; then
-        if ! go version|grep -q "1.18"; then
-          echo "ignore cmd/gf as go version: $(go version)"
-          continue 1
-        fi
-    fi
+#    if [ "gf" = $(basename $dirpath) ]; then
+#        if ! go version|grep -q "1.18"; then
+#          echo "ignore cmd/gf as go version: $(go version)"
+#          continue 1
+#        fi
+#    fi
 
     # package otlpgrpc needs golang >= v1.20
     if [ "otlpgrpc" = $(basename $dirpath) ]; then

@@ -9,7 +9,7 @@ package ghttp
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -81,7 +81,7 @@ func internalMiddlewareServerTracing(r *Request) {
 	}
 
 	// Request content logging.
-	reqBodyContentBytes, err := ioutil.ReadAll(r.Body)
+	reqBodyContentBytes, err := io.ReadAll(r.Body)
 	if err != nil {
 		r.SetError(gerror.Wrap(err, `read request body failed`))
 		span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, err))
