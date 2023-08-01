@@ -212,8 +212,13 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 }
 
 func trimGeneric(structName string) string {
-	if strings.Contains(structName, "[") && gstr.HasSuffix(structName, "]") {
-		return structName[:strings.Index(structName, "[")]
+	leftBraceIndex := strings.Index(structName, "[")
+	if leftBraceIndex == -1 {
+		return structName
 	}
-	return structName
+	rightBraceIndex := strings.Index(structName, "]")
+	if rightBraceIndex == -1 {
+		return structName
+	}
+	return structName[:leftBraceIndex]
 }
