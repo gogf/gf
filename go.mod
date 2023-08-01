@@ -3,7 +3,7 @@ module github.com/gogf/gf/v2
 go 1.18
 
 require (
-	github.com/BurntSushi/toml v1.3.2
+	github.com/BurntSushi/toml v1.2.0
 	github.com/clbanning/mxj/v2 v2.7.0
 	github.com/fatih/color v1.15.0
 	github.com/fsnotify/fsnotify v1.6.0
