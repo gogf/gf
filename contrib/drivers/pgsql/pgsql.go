@@ -375,7 +375,7 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 	if link == nil {
 		if tx := gdb.TXFromCtx(ctx, d.GetGroup()); tx != nil {
 			// Firstly, check and retrieve transaction link from context.
-			link = &gdb.TxLink{Tx: tx.GetSqlTX()}
+			link = tx
 		} else if link, err = d.MasterLink(); err != nil {
 			// Or else it creates one from master node.
 			return nil, err
@@ -383,7 +383,7 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 	} else if !link.IsTransaction() {
 		// If current link is not transaction link, it checks and retrieves transaction from context.
 		if tx := gdb.TXFromCtx(ctx, d.GetGroup()); tx != nil {
-			link = &gdb.TxLink{Tx: tx.GetSqlTX()}
+			link = tx
 		}
 	}
 
@@ -416,7 +416,7 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 	}
 
 	// Sql filtering.
-	sql, args = gdb.FormatSql(sql, args)
+	sql, args = d.FormatSqlBeforeExecuting(sql, args)
 	sql, args, err = d.DoFilter(ctx, link, sql, args)
 	if err != nil {
 		return nil, err

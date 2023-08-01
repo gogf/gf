@@ -30,7 +30,7 @@ func (c *Core) GetDB() DB {
 func (c *Core) GetLink(ctx context.Context, master bool, schema string) (Link, error) {
 	tx := TXFromCtx(ctx, c.db.GetGroup())
 	if tx != nil {
-		return &TxLink{tx.GetSqlTX()}, nil
+		return &txLink{tx.GetSqlTX()}, nil
 	}
 	if master {
 		link, err := c.db.GetCore().MasterLink(schema)

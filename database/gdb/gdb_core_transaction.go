@@ -298,13 +298,13 @@ func (tx *TXCore) Transaction(ctx context.Context, f func(ctx context.Context, t
 // Query does query operation on transaction.
 // See Core.Query.
 func (tx *TXCore) Query(sql string, args ...interface{}) (result Result, err error) {
-	return tx.db.DoQuery(tx.ctx, &TxLink{tx.tx}, sql, args...)
+	return tx.db.DoQuery(tx.ctx, &txLink{tx.tx}, sql, args...)
 }
 
 // Exec does none query operation on transaction.
 // See Core.Exec.
 func (tx *TXCore) Exec(sql string, args ...interface{}) (sql.Result, error) {
-	return tx.db.DoExec(tx.ctx, &TxLink{tx.tx}, sql, args...)
+	return tx.db.DoExec(tx.ctx, &txLink{tx.tx}, sql, args...)
 }
 
 // Prepare creates a prepared statement for later queries or executions.
@@ -313,7 +313,7 @@ func (tx *TXCore) Exec(sql string, args ...interface{}) (sql.Result, error) {
 // The caller must call the statement's Close method
 // when the statement is no longer needed.
 func (tx *TXCore) Prepare(sql string) (*Stmt, error) {
-	return tx.db.DoPrepare(tx.ctx, &TxLink{tx.tx}, sql)
+	return tx.db.DoPrepare(tx.ctx, &txLink{tx.tx}, sql)
 }
 
 // GetAll queries and returns data records from database.
@@ -516,4 +516,32 @@ func (tx *TXCore) Update(table string, data interface{}, condition interface{}, 
 // User{ Id : 1, UserName : "john"}.
 func (tx *TXCore) Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error) {
 	return tx.Model(table).Ctx(tx.ctx).Where(condition, args...).Delete()
+}
+
+// QueryContext implements interface function Link.QueryContext.
+func (tx *TXCore) QueryContext(ctx context.Context, sql string, args ...interface{}) (*sql.Rows, error) {
+	link := &txLink{tx.tx}
+	return link.QueryContext(ctx, sql, args...)
+}
+
+// ExecContext implements interface function Link.ExecContext.
+func (tx *TXCore) ExecContext(ctx context.Context, sql string, args ...interface{}) (sql.Result, error) {
+	link := &txLink{tx.tx}
+	return link.ExecContext(ctx, sql, args...)
+}
+
+// PrepareContext implements interface function Link.PrepareContext.
+func (tx *TXCore) PrepareContext(ctx context.Context, sql string) (*sql.Stmt, error) {
+	link := &txLink{tx.tx}
+	return link.PrepareContext(ctx, sql)
+}
+
+// IsOnMaster implements interface function Link.IsOnMaster.
+func (tx *TXCore) IsOnMaster() bool {
+	return true
+}
+
+// IsTransaction implements interface function Link.IsTransaction.
+func (tx *TXCore) IsTransaction() bool {
+	return true
 }
