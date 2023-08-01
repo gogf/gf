@@ -9,7 +9,7 @@ package ghttp_test
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"testing"
 	"time"
 
@@ -491,7 +491,7 @@ func Test_Params_Modify(t *testing.T) {
 			r.Response.Write(err)
 			return
 		}
-		r.Request.Body = ioutil.NopCloser(bytes.NewReader(paramBytes))
+		r.Request.Body = io.NopCloser(bytes.NewReader(paramBytes))
 		r.ReloadParam()
 		r.Response.Write(r.GetMap())
 	})

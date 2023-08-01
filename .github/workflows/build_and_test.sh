@@ -4,18 +4,18 @@ for file in `find . -name go.mod`; do
     dirpath=$(dirname $file)
     echo $dirpath
 
-    # package oracle needs golang >= v1.17
-    if [ "oracle" = $(basename $dirpath) ]; then
-        if ! go version|grep -q "1.17"; then
-          echo "ignore oracle as go version: $(go version)"
+    # package kuhecm needs golang >= v1.18
+    if [ "kubecm" = $(basename $dirpath) ]; then
+        if ! go version|grep -q "1.19"; then
+          echo "ignore kubecm as go version: $(go version)"
           continue 1
         fi
     fi
 
-    # package kuhecm needs golang >= v1.18
-    if [ "kubecm" = $(basename $dirpath) ]; then
-        if ! go version|grep -q "1.18"; then
-          echo "ignore kubecm as go version: $(go version)"
+    # package etcd needs golang >= v1.19
+    if [ "etcd" = $(basename $dirpath) ]; then
+        if ! go version|grep -q "1.19"; then
+          echo "ignore etcd as go version: $(go version)"
           continue 1
         fi
     fi
@@ -24,14 +24,6 @@ for file in `find . -name go.mod`; do
     if [ "example" = $(basename $dirpath) ]; then
         if ! go version|grep -q "1.19"; then
           echo "ignore example as go version: $(go version)"
-          continue 1
-        fi
-    fi
-
-    # package cmd/gf needs golang >= v1.18
-    if [ "gf" = $(basename $dirpath) ]; then
-        if ! go version|grep -q "1.18"; then
-          echo "ignore cmd/gf as go version: $(go version)"
           continue 1
         fi
     fi

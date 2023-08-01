@@ -8,7 +8,7 @@ package gclient
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httputil"
 
@@ -29,7 +29,7 @@ func getResponseBody(res *http.Response) string {
 	if res.Body == nil {
 		return ""
 	}
-	bodyContent, _ := ioutil.ReadAll(res.Body)
+	bodyContent, _ := io.ReadAll(res.Body)
 	res.Body = utils.NewReadCloser(bodyContent, true)
 	return string(bodyContent)
 }

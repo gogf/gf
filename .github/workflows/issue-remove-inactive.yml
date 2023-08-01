@@ -1,4 +1,4 @@
-# 规则描述：在issue没有活跃且尚未被关闭期间，若issue作者更新或评论该ISSUE，则移除其inactive标签
+# 规则描述：在 issue 没有活跃且尚未被关闭期间，若 issue 作者更新或评论该 ISSUE，则移除其 inactive 标签
 name: Issue Remove Inactive
 
 on:
@@ -17,7 +17,7 @@ jobs:
   issue-remove-inactive:
     permissions:
       issues: write  # for actions-cool/issues-helper to update issues
-     # pull-requests: write  # for actions-cool/issues-helper to update PRs
+     # pull-requests: write # for actions-cool/issues-helper to update PRs
     runs-on: ubuntu-latest
     steps:
       - name: remove inactive

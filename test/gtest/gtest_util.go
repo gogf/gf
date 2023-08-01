@@ -8,7 +8,6 @@ package gtest
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -363,7 +362,7 @@ func DataPath(names ...string) string {
 func DataContent(names ...string) string {
 	path := DataPath(names...)
 	if path != "" {
-		data, err := ioutil.ReadFile(path)
+		data, err := os.ReadFile(path)
 		if err == nil {
 			return string(data)
 		}

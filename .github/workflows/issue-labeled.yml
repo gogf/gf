@@ -1,4 +1,4 @@
-## 规则描述：当issue被标记为help wanted 时，增加评论
+## 规则描述：当 issue 被标记为 help wanted 时，增加评论
 
 name: Issue Labeled
 

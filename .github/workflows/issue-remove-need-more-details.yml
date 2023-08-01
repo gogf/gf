@@ -1,4 +1,4 @@
-# 规则描述：将需要提供更多细节且暂未关闭的issue，在issue作者评论后，移除 need more details 标签
+# 规则描述：将需要提供更多细节且暂未关闭的 issue，在 issue 作者评论后，移除 need more details 标签
 name: Issue Remove Need More Details
 
 on:
@@ -16,8 +16,8 @@ permissions:
 jobs:
   issue-remove-need-more-details:
     permissions:
-      issues: write  # for actions-cool/issues-helper to update issues
-     # pull-requests: write  # for actions-cool/issues-helper to update PRs
+      issues: write # for actions-cool/issues-helper to update issues
+     # pull-requests: write # for actions-cool/issues-helper to update PRs
     runs-on: ubuntu-latest
     steps:
       - name: remove need more details

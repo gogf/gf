@@ -10,7 +10,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"reflect"
@@ -162,7 +161,7 @@ func (r *Request) GetBody() []byte {
 func (r *Request) MakeBodyRepeatableRead(repeatableRead bool) []byte {
 	if r.bodyContent == nil {
 		var err error
-		if r.bodyContent, err = ioutil.ReadAll(r.Body); err != nil {
+		if r.bodyContent, err = io.ReadAll(r.Body); err != nil {
 			errMsg := `Read from request Body failed`
 			if gerror.Is(err, io.EOF) {
 				errMsg += `, the Body might be closed or read manually from middleware/hook/other package previously`

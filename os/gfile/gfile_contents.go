@@ -9,7 +9,6 @@ package gfile
 import (
 	"bufio"
 	"io"
-	"io/ioutil"
 	"os"
 
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -29,7 +28,7 @@ func GetContents(path string) string {
 // GetBytes returns the file content of `path` as []byte.
 // It returns nil if it fails reading.
 func GetBytes(path string) []byte {
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil
 	}

@@ -9,7 +9,7 @@ package gclient
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptrace"
 
@@ -89,7 +89,7 @@ func internalMiddlewareTracing(c *Client, r *http.Request) (response *Response, 
 		return
 	}
 
-	reqBodyContentBytes, _ := ioutil.ReadAll(response.Body)
+	reqBodyContentBytes, _ := io.ReadAll(response.Body)
 	response.Body = utils.NewReadCloser(reqBodyContentBytes, false)
 
 	span.AddEvent(tracingEventHttpResponse, trace.WithAttributes(
