@@ -22,7 +22,7 @@ package gcharset
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
+	"io"
 
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/ianaindex"
@@ -59,7 +59,7 @@ func Convert(dstCharset string, srcCharset string, src string) (dst string, err 
 	// Converting `src` to UTF-8.
 	if srcCharset != "UTF-8" {
 		if e := getEncoding(srcCharset); e != nil {
-			tmp, err := ioutil.ReadAll(
+			tmp, err := io.ReadAll(
 				transform.NewReader(bytes.NewReader([]byte(src)), e.NewDecoder()),
 			)
 			if err != nil {
@@ -73,7 +73,7 @@ func Convert(dstCharset string, srcCharset string, src string) (dst string, err 
 	// Do the converting from UTF-8 to `dstCharset`.
 	if dstCharset != "UTF-8" {
 		if e := getEncoding(dstCharset); e != nil {
-			tmp, err := ioutil.ReadAll(
+			tmp, err := io.ReadAll(
 				transform.NewReader(bytes.NewReader([]byte(src)), e.NewEncoder()),
 			)
 			if err != nil {

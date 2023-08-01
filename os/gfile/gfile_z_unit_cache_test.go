@@ -7,7 +7,6 @@
 package gfile_test
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -24,7 +23,7 @@ func Test_GetContentsWithCache(t *testing.T) {
 		strTest := "123"
 
 		if !gfile.Exists(fileName) {
-			f, err = ioutil.TempFile("", fileName)
+			f, err = os.CreateTemp("", fileName)
 			if err != nil {
 				t.Error("create file fail")
 			}
@@ -57,7 +56,7 @@ func Test_GetContentsWithCache(t *testing.T) {
 		strTest := "123"
 
 		if !gfile.Exists(fileName) {
-			f, err = ioutil.TempFile("", fileName)
+			f, err = os.CreateTemp("", fileName)
 			if err != nil {
 				t.Error("create file fail")
 			}
