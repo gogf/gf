@@ -116,7 +116,7 @@ func (c *apiSdkGenerator) doGenerateSdkIClient(
 	if !gstr.Contains(fileContent, interfaceFuncDefinition) {
 		isDirty = true
 		fileContent, err = gregex.ReplaceString(
-			`(type iClient interface {[\s\S]*?)}`,
+			`(type IClient interface {[\s\S]*?)}`,
 			fmt.Sprintf("$1\t%s\n}", interfaceFuncDefinition),
 			fileContent,
 		)

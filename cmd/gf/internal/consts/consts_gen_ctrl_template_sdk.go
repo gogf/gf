@@ -84,6 +84,7 @@ func (i *implementer) {ImplementerName}() {Module}.I{ImplementerName} {
 	client.Client = client.Prefix(prefix)
 	return &implementer{ImplementerName}{client}
 }
+
 `
 
 const TemplateGenCtrlSdkImplementerFunc = `
