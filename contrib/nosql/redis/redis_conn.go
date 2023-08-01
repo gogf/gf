@@ -11,22 +11,22 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/go-redis/redis/v8"
-	"github.com/gogf/gf/v2"
-	"github.com/gogf/gf/v2/database/gredis"
-	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/net/gtrace"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/util/gutil"
+	"github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/database/gredis"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/net/gtrace"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // Conn manages the connection operations.
@@ -69,7 +69,7 @@ func (c *Conn) Do(ctx context.Context, command string, args ...interface{}) (rep
 			reflect.Map,
 			reflect.Slice,
 			reflect.Array:
-			// Ignore slice type of: []byte.
+			// Ignore slice types of: []byte.
 			if _, ok := v.([]byte); !ok {
 				if args[k], err = gjson.Marshal(v); err != nil {
 					return nil, err
