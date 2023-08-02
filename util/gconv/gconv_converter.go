@@ -13,7 +13,7 @@ func init() {
 	customConverters = make(map[reflect.Type]map[reflect.Type]reflect.Value)
 }
 
-// To register custom converter.
+// RegisterConverter to register custom converter.
 // It must be register before you use gconv. So suggest to do it in boot.
 // Note:
 //  1. The fn must be func(T1)(T2,error). It will convert T1 to T2.
@@ -48,7 +48,7 @@ func RegisterConverter(fn interface{}) (err error) {
 	return
 }
 
-// Call the custom converter. It will try some possible type.
+// callCustomConverter call the custom converter. It will try some possible type.
 func callCustomConverter(reflectValue reflect.Value, pointerReflectValue reflect.Value) (ok bool, err error) {
 	if reflectValue.Kind() != reflect.Pointer && reflectValue.CanAddr() {
 		reflectValue = reflectValue.Addr()
