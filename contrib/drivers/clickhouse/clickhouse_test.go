@@ -263,6 +263,27 @@ func TestDriverClickhouse_InsertOne(t *testing.T) {
 	gtest.AssertNil(err)
 }
 
+func TestDriverClickhouse_InsertOneAutoDateTimeWrite(t *testing.T) {
+	connect, err := gdb.New(gdb.ConfigNode{
+		Host:      "127.0.0.1",
+		Port:      "9000",
+		User:      "default",
+		Name:      "default",
+		Type:      "clickhouse",
+		Debug:     false,
+		CreatedAt: "created",
+	})
+	gtest.AssertNil(err)
+	gtest.AssertNE(connect, nil)
+	gtest.AssertEQ(createClickhouseTableVisits(connect), nil)
+	defer dropClickhouseTableVisits(connect)
+	_, err = connect.Model("visits").Data(g.Map{
+		"duration": float64(grand.Intn(999)),
+		"url":      gconv.String(grand.Intn(999)),
+	}).Insert()
+	gtest.AssertNil(err)
+}
+
 func TestDriverClickhouse_InsertMany(t *testing.T) {
 	connect := clickhouseConfigDB()
 	gtest.AssertEQ(createClickhouseTableVisits(connect), nil)
