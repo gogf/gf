@@ -32,8 +32,12 @@ type Client struct {
 
 // New creates and returns a http client for SDK.
 func New(config Config) *Client {
+	client := config.Client
+	if client == nil {
+		client = gclient.New()
+	}
 	return &Client{
-		Client: config.Client,
+		Client: client,
 		config: config,
 	}
 }
