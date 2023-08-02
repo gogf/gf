@@ -520,20 +520,17 @@ func (tx *TXCore) Delete(table string, condition interface{}, args ...interface{
 
 // QueryContext implements interface function Link.QueryContext.
 func (tx *TXCore) QueryContext(ctx context.Context, sql string, args ...interface{}) (*sql.Rows, error) {
-	link := &txLink{tx.tx}
-	return link.QueryContext(ctx, sql, args...)
+	return tx.tx.QueryContext(ctx, sql, args...)
 }
 
 // ExecContext implements interface function Link.ExecContext.
 func (tx *TXCore) ExecContext(ctx context.Context, sql string, args ...interface{}) (sql.Result, error) {
-	link := &txLink{tx.tx}
-	return link.ExecContext(ctx, sql, args...)
+	return tx.tx.ExecContext(ctx, sql, args...)
 }
 
 // PrepareContext implements interface function Link.PrepareContext.
 func (tx *TXCore) PrepareContext(ctx context.Context, sql string) (*sql.Stmt, error) {
-	link := &txLink{tx.tx}
-	return link.PrepareContext(ctx, sql)
+	return tx.tx.PrepareContext(ctx, sql)
 }
 
 // IsOnMaster implements interface function Link.IsOnMaster.
