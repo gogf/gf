@@ -671,7 +671,7 @@ func TestOpenApiV3_ShortTags(t *testing.T) {
 	}
 	type CreateResourceReq struct {
 		CommonReq
-		gmeta.Meta `path:"/CreateResourceReq" method:"POST" tags:"default" sm:"CreateResourceReq sum"`
+		gmeta.Meta `path:"/CreateResourceReq" method:"POST" tags:"default" sm:"CreateResourceReq sum" dc:"CreateResourceReq des"`
 		Name       string                  `dc:"实例名称"`
 		Product    string                  `dc:"业务类型"`
 		Region     string                  `v:"required" dc:"区域"`
@@ -709,7 +709,10 @@ func TestOpenApiV3_ShortTags(t *testing.T) {
 		// fmt.Println(oai.String())
 		// Schema asserts.
 		t.Assert(len(oai.Components.Schemas.Map()), 3)
-		t.Assert(oai.Paths[`/test1/{appId}`].Summary, `CreateResourceReq sum`)
+		t.Assert(oai.Paths[`/test1/{appId}`].Summary, ``)
+		t.Assert(oai.Paths[`/test1/{appId}`].Description, ``)
+		t.Assert(oai.Paths[`/test1/{appId}`].Put.Summary, `CreateResourceReq sum`)
+		t.Assert(oai.Paths[`/test1/{appId}`].Put.Description, `CreateResourceReq des`)
 		t.Assert(oai.Paths[`/test1/{appId}`].Put.Parameters[1].Value.Schema.Value.Description, `资源Id`)
 		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.CreateResourceReq`).Value.Properties.Get(`Name`).Value.Description, `实例名称`)
 	})

@@ -7,6 +7,7 @@
 package goai
 
 import (
+	"github.com/gogf/gf/v2/container/gmap"
 	"net/http"
 	"reflect"
 
@@ -134,9 +135,21 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	}
 
 	if len(inputMetaMap) > 0 {
-		if err := oai.tagMapToPath(inputMetaMap, &path); err != nil {
+		// Path and Operation are not the same thing, so it is necessary to copy a Meta for Path from Operation and edit it.
+		// And you know, we set the Summary and Description for Operation, not for Path, so we need to remove them.
+		inputMetaMapForPath := gmap.NewStrStrMapFrom(inputMetaMap).Clone()
+		inputMetaMapForPath.Removes([]string{
+			gtag.SummaryShort,
+			gtag.SummaryShort2,
+			gtag.Summary,
+			gtag.DescriptionShort,
+			gtag.DescriptionShort2,
+			gtag.Description,
+		})
+		if err := oai.tagMapToPath(inputMetaMapForPath.Map(), &path); err != nil {
 			return err
 		}
+
 		if err := oai.tagMapToOperation(inputMetaMap, &operation); err != nil {
 			return err
 		}
