@@ -26,13 +26,12 @@ type Redis struct {
 }
 
 const (
-	defaultPoolMaxIdle        = 10
-	defaultPoolMaxActive      = 100
-	defaultPoolIdleTimeout    = 10 * time.Second
-	defaultPoolWaitTimeout    = 10 * time.Second
-	defaultPoolMaxLifeTime    = 30 * time.Second
-	defaultIdleCheckFrequency = 10 * time.Second
-	defaultMaxRetries         = -1
+	defaultPoolMaxIdle     = 10
+	defaultPoolMaxActive   = 100
+	defaultPoolIdleTimeout = 10 * time.Second
+	defaultPoolWaitTimeout = 10 * time.Second
+	defaultPoolMaxLifeTime = 30 * time.Second
+	defaultMaxRetries      = -1
 )
 
 func init() {
