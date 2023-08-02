@@ -10,7 +10,6 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strconv"
 
@@ -22,7 +21,7 @@ import (
 // It uses ghash.BKDRHash+BASE36 algorithm to calculate the unique version of the binary.
 func BinVersion() string {
 	if binaryVersion == "" {
-		binaryContent, _ := ioutil.ReadFile(selfPath)
+		binaryContent, _ := os.ReadFile(selfPath)
 		binaryVersion = strconv.FormatInt(
 			int64(ghash.BKDR(binaryContent)),
 			36,

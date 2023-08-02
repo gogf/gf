@@ -10,7 +10,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptrace"
 	"net/textproto"
@@ -46,7 +46,7 @@ func newClientTrace(ctx context.Context, span trace.Span, request *http.Request)
 		headers: make(map[string]interface{}),
 	}
 
-	reqBodyContent, _ := ioutil.ReadAll(ct.request.Body)
+	reqBodyContent, _ := io.ReadAll(ct.request.Body)
 	ct.requestBody = reqBodyContent
 	ct.request.Body = utils.NewReadCloser(reqBodyContent, false)
 
