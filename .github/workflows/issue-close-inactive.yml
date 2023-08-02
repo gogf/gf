@@ -1,4 +1,4 @@
-# 规则描述：每天凌晨4点(GMT+8)执行一次，将最近30天没有活跃且非BUG的ISSUE关闭
+# 规则描述：每天凌晨 4 点 (GMT+8) 执行一次，将最近 30 天没有活跃且非 BUG 的 ISSUE 关闭
 name: Issue Close Inactive
 
 on:
