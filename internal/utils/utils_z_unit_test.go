@@ -7,7 +7,7 @@
 package utils_test
 
 import (
-	"io/ioutil"
+	"io"
 	"testing"
 
 	"github.com/gogf/gf/v2/internal/utils"
@@ -36,9 +36,9 @@ func Test_ReadCloser(t *testing.T) {
 			r    []byte
 			body = utils.NewReadCloser([]byte{1, 2, 3, 4}, false)
 		)
-		r, _ = ioutil.ReadAll(body)
+		r, _ = io.ReadAll(body)
 		t.Assert(r, []byte{1, 2, 3, 4})
-		r, _ = ioutil.ReadAll(body)
+		r, _ = io.ReadAll(body)
 		t.Assert(r, []byte{})
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -58,9 +58,9 @@ func Test_ReadCloser(t *testing.T) {
 		n, _ = body.Read(b)
 		t.Assert(b[:n], []byte{4})
 
-		r, _ = ioutil.ReadAll(body)
+		r, _ = io.ReadAll(body)
 		t.Assert(r, []byte{1, 2, 3, 4})
-		r, _ = ioutil.ReadAll(body)
+		r, _ = io.ReadAll(body)
 		t.Assert(r, []byte{1, 2, 3, 4})
 	})
 }
