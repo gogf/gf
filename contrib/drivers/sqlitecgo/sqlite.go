@@ -7,7 +7,7 @@
 // Package sqlitecgo implements gdb.Driver, which supports operations for database SQLite.
 //
 // Note:
-// 1. Using sqlite CGO is for building a 32-bit Windows operating system
+// 1. Using sqlitecgo is for building a 32-bit Windows operating system
 // 2. You need to set the environment variable CGO_ENABLED=1 and make sure that GCC is installed on your path. windows gcc: https://jmeubank.github.io/tdm-gcc/
 package sqlitecgo
 
