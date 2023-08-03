@@ -179,6 +179,8 @@ type DB interface {
 
 // TX defines the interfaces for ORM transaction operations.
 type TX interface {
+	Link
+
 	Ctx(ctx context.Context) TX
 	Raw(rawSql string, args ...interface{}) *Model
 	Model(tableNameQueryOrStruct ...interface{}) *Model
