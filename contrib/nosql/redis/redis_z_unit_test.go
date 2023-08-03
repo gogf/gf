@@ -207,7 +207,7 @@ func Test_HSet(t *testing.T) {
 
 		r, err := redis.Do(ctx, "HGETALL", key)
 		t.AssertNil(err)
-		t.Assert(r.Strings(), g.ArrayStr{"name", "john"})
+		t.Assert(r.MapStrStr(), g.MapStrStr{"name": "john"})
 	})
 }
 
