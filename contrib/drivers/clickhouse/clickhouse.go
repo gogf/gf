@@ -51,7 +51,6 @@ const (
 	filterTypePattern                = `(?i)^UPDATE|DELETE`
 	replaceSchemaPattern             = `@(.+?)/([\w\.\-]+)+`
 	needParsedSqlInCtx   gctx.StrKey = "NeedParsedSql"
-	OrmTagForStruct                  = gtag.ORM
 	driverName                       = "clickhouse"
 )
 
@@ -338,7 +337,7 @@ func (d *Driver) DoInsert(
 
 // ConvertDataForRecord converting for any data that will be inserted into table/collection as a record.
 func (d *Driver) ConvertDataForRecord(ctx context.Context, value interface{}) (map[string]interface{}, error) {
-	m := gconv.Map(value, OrmTagForStruct)
+	m := gconv.Map(value, gtag.ORM)
 
 	// transforms a value of a particular type
 	for k, v := range m {
