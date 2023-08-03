@@ -1,0 +1,256 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+// Package sqlitecgo implements gdb.Driver, which supports operations for database SQLite.
+//
+// Note:
+// 1. Using sqlitecgo is for building a 32-bit Windows operating system
+// 2. You need to set the environment variable CGO_ENABLED=1 and make sure that GCC is installed on your path. windows gcc: https://jmeubank.github.io/tdm-gcc/
+package sqlitecgo
+
+import (
+	"context"
+	"database/sql"
+	"fmt"
+	"strings"
+
+	_ "github.com/mattn/go-sqlite3"
+
+	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/encoding/gurl"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
+)
+
+// Driver is the driver for sqlite database.
+type Driver struct {
+	*gdb.Core
+}
+
+const (
+	quoteChar = "`"
+)
+
+func init() {
+	if err := gdb.Register(`sqlite`, New()); err != nil {
+		panic(err)
+	}
+}
+
+// New create and returns a driver that implements gdb.Driver, which supports operations for SQLite.
+func New() gdb.Driver {
+	return &Driver{}
+}
+
+// New creates and returns a database object for sqlite.
+// It implements the interface of gdb.Driver for extra database driver installation.
+func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
+	return &Driver{
+		Core: core,
+	}, nil
+}
+
+// Open creates and returns an underlying sql.DB object for sqlite.
+// https://github.com/mattn/go-sglite3
+func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
+	var (
+		source               string
+		underlyingDriverName = "sqlite3"
+	)
+	if config.Link != "" {
+		// ============================================================================
+		// Deprecated from v2.2.0.
+		// ============================================================================
+		source = config.Link
+	} else {
+		source = config.Name
+	}
+	// It searches the source file to locate its absolute path..
+	if absolutePath, _ := gfile.Search(source); absolutePath != "" {
+		source = absolutePath
+	}
+
+	// Multiple PRAGMAs can be specified, e.g.:
+	// path/to/some.db?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)
+	if config.Extra != "" {
+		var (
+			options  string
+			extraMap map[string]interface{}
+		)
+		if extraMap, err = gstr.Parse(config.Extra); err != nil {
+			return nil, err
+		}
+		for k, v := range extraMap {
+			if options != "" {
+				options += "&"
+			}
+			options += fmt.Sprintf(`_pragma=%s(%s)`, k, gurl.Encode(gconv.String(v)))
+		}
+		if len(options) > 1 {
+			source += "?" + options
+		}
+	}
+
+	if db, err = sql.Open(underlyingDriverName, source); err != nil {
+		err = gerror.WrapCodef(
+			gcode.CodeDbOperationError, err,
+			`sql.Open failed for driver "%s" by source "%s"`, underlyingDriverName, source,
+		)
+		return nil, err
+	}
+	return
+}
+
+// GetChars returns the security char for this type of database.
+func (d *Driver) GetChars() (charLeft string, charRight string) {
+	return quoteChar, quoteChar
+}
+
+// DoFilter deals with the sql string before commits it to underlying sql driver.
+func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+	return d.Core.DoFilter(ctx, link, sql, args)
+}
+
+// Tables retrieves and returns the tables of current schema.
+// It's mainly used in cli tool chain for automatically generating the models.
+func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
+	var result gdb.Result
+	link, err := d.SlaveLink(schema...)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err = d.DoSelect(ctx, link, `SELECT NAME FROM SQLITE_MASTER WHERE TYPE='table' ORDER BY NAME`)
+	if err != nil {
+		return
+	}
+	for _, m := range result {
+		for _, v := range m {
+			tables = append(tables, v.String())
+		}
+	}
+	return
+}
+
+// TableFields retrieves and returns the fields' information of specified table of current schema.
+//
+// Also see DriverMysql.TableFields.
+func (d *Driver) TableFields(
+	ctx context.Context, table string, schema ...string,
+) (fields map[string]*gdb.TableField, err error) {
+	var (
+		result     gdb.Result
+		link       gdb.Link
+		usedSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+	)
+	if link, err = d.SlaveLink(usedSchema); err != nil {
+		return nil, err
+	}
+	result, err = d.DoSelect(ctx, link, fmt.Sprintf(`PRAGMA TABLE_INFO(%s)`, d.QuoteWord(table)))
+	if err != nil {
+		return nil, err
+	}
+	fields = make(map[string]*gdb.TableField)
+	for i, m := range result {
+		mKey := ""
+		if m["pk"].Bool() {
+			mKey = "pri"
+		}
+		fields[m["name"].String()] = &gdb.TableField{
+			Index:   i,
+			Name:    m["name"].String(),
+			Type:    m["type"].String(),
+			Key:     mKey,
+			Default: m["dflt_value"].Val(),
+			Null:    !m["notnull"].Bool(),
+		}
+	}
+	return fields, nil
+}
+
+// DoInsert is not supported in sqlite.
+func (d *Driver) DoInsert(
+	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
+) (result sql.Result, err error) {
+	switch option.InsertOption {
+	case gdb.InsertOptionSave:
+		return nil, gerror.NewCode(gcode.CodeNotSupported, `Save operation is not supported by sqlite driver`)
+
+	case gdb.InsertOptionIgnore, gdb.InsertOptionReplace:
+		var (
+			keys           []string      // Field names.
+			values         []string      // Value holder string array, like: (?,?,?)
+			params         []interface{} // Values that will be committed to underlying database driver.
+			onDuplicateStr string        // onDuplicateStr is used in "ON DUPLICATE KEY UPDATE" statement.
+		)
+		// Handle the field names and placeholders.
+		for k := range list[0] {
+			keys = append(keys, k)
+		}
+		// Prepare the batch result pointer.
+		var (
+			charL, charR = d.GetChars()
+			batchResult  = new(gdb.SqlResult)
+			keysStr      = charL + strings.Join(keys, charR+","+charL) + charR
+			operation    = "INSERT OR IGNORE"
+		)
+
+		if option.InsertOption == gdb.InsertOptionReplace {
+			operation = "INSERT OR REPLACE"
+		}
+		var (
+			listLength  = len(list)
+			valueHolder = make([]string, 0)
+		)
+		for i := 0; i < listLength; i++ {
+			values = values[:0]
+			// Note that the map type is unordered,
+			// so it should use slice+key to retrieve the value.
+			for _, k := range keys {
+				if s, ok := list[i][k].(gdb.Raw); ok {
+					values = append(values, gconv.String(s))
+				} else {
+					values = append(values, "?")
+					params = append(params, list[i][k])
+				}
+			}
+			valueHolder = append(valueHolder, "("+gstr.Join(values, ",")+")")
+			// Batch package checks: It meets the batch number, or it is the last element.
+			if len(valueHolder) == option.BatchCount || (i == listLength-1 && len(valueHolder) > 0) {
+				var (
+					stdSqlResult sql.Result
+					affectedRows int64
+				)
+				stdSqlResult, err = d.DoExec(ctx, link, fmt.Sprintf(
+					"%s INTO %s(%s) VALUES%s %s",
+					operation, d.QuotePrefixTableName(table), keysStr,
+					gstr.Join(valueHolder, ","),
+					onDuplicateStr,
+				), params...)
+				if err != nil {
+					return stdSqlResult, err
+				}
+				if affectedRows, err = stdSqlResult.RowsAffected(); err != nil {
+					err = gerror.WrapCode(gcode.CodeDbOperationError, err, `sql.Result.RowsAffected failed`)
+					return stdSqlResult, err
+				} else {
+					batchResult.Result = stdSqlResult
+					batchResult.Affected += affectedRows
+				}
+				params = params[:0]
+				valueHolder = valueHolder[:0]
+			}
+		}
+		return batchResult, nil
+
+	default:
+		return d.Core.DoInsert(ctx, link, table, list, option)
+	}
+}
