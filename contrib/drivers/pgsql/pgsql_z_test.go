@@ -7,8 +7,10 @@
 package pgsql_test
 
 import (
+	"context"
 	"testing"
 
+	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -42,6 +44,43 @@ func Test_LastInsertId(t *testing.T) {
 		rowsAffected, err := res.RowsAffected()
 		t.Assert(err, nil)
 		t.Assert(rowsAffected, int64(3))
+	})
+}
+
+func Test_TxLastInsertId(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		tableName := createTable()
+		defer dropTable(tableName)
+		err := db.Transaction(context.TODO(), func(ctx context.Context, tx gdb.TX) error {
+			// user
+			res, err := tx.Model(tableName).Insert(g.List{
+				{"passport": "user1", "password": "pwd", "nickname": "nickname", "create_time": CreateTime},
+				{"passport": "user2", "password": "pwd", "nickname": "nickname", "create_time": CreateTime},
+				{"passport": "user3", "password": "pwd", "nickname": "nickname", "create_time": CreateTime},
+			})
+			t.Assert(err, nil)
+			lastInsertId, err := res.LastInsertId()
+			t.Assert(err, nil)
+			t.AssertEQ(lastInsertId, int64(3))
+			rowsAffected, err := res.RowsAffected()
+			t.Assert(err, nil)
+			t.AssertEQ(rowsAffected, int64(3))
+
+			res1, err := tx.Model(tableName).Insert(g.List{
+				{"passport": "user4", "password": "pwd", "nickname": "nickname", "create_time": CreateTime},
+				{"passport": "user5", "password": "pwd", "nickname": "nickname", "create_time": CreateTime},
+			})
+			t.Assert(err, nil)
+			lastInsertId1, err := res1.LastInsertId()
+			t.Assert(err, nil)
+			t.AssertEQ(lastInsertId1, int64(5))
+			rowsAffected1, err := res1.RowsAffected()
+			t.Assert(err, nil)
+			t.AssertEQ(rowsAffected1, int64(2))
+			return nil
+
+		})
+		t.Assert(err, nil)
 	})
 }
 

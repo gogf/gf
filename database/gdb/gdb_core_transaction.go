@@ -517,3 +517,28 @@ func (tx *TXCore) Update(table string, data interface{}, condition interface{}, 
 func (tx *TXCore) Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error) {
 	return tx.Model(table).Ctx(tx.ctx).Where(condition, args...).Delete()
 }
+
+// QueryContext implements interface function Link.QueryContext.
+func (tx *TXCore) QueryContext(ctx context.Context, sql string, args ...interface{}) (*sql.Rows, error) {
+	return tx.tx.QueryContext(ctx, sql, args...)
+}
+
+// ExecContext implements interface function Link.ExecContext.
+func (tx *TXCore) ExecContext(ctx context.Context, sql string, args ...interface{}) (sql.Result, error) {
+	return tx.tx.ExecContext(ctx, sql, args...)
+}
+
+// PrepareContext implements interface function Link.PrepareContext.
+func (tx *TXCore) PrepareContext(ctx context.Context, sql string) (*sql.Stmt, error) {
+	return tx.tx.PrepareContext(ctx, sql)
+}
+
+// IsOnMaster implements interface function Link.IsOnMaster.
+func (tx *TXCore) IsOnMaster() bool {
+	return true
+}
+
+// IsTransaction implements interface function Link.IsTransaction.
+func (tx *TXCore) IsTransaction() bool {
+	return true
+}
