@@ -47,7 +47,7 @@ go install github.com/gogf/gf/cmd/gf/v2
 # Limitation
 
 ```
-golang version >= 1.15
+golang version >= 1.18
 ```
 
 # Architecture
