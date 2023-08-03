@@ -11,7 +11,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
+
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gredis"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -25,13 +26,12 @@ type Redis struct {
 }
 
 const (
-	defaultPoolMaxIdle        = 10
-	defaultPoolMaxActive      = 100
-	defaultPoolIdleTimeout    = 10 * time.Second
-	defaultPoolWaitTimeout    = 10 * time.Second
-	defaultPoolMaxLifeTime    = 30 * time.Second
-	defaultIdleCheckFrequency = 10 * time.Second
-	defaultMaxRetries         = -1
+	defaultPoolMaxIdle     = 10
+	defaultPoolMaxActive   = 100
+	defaultPoolIdleTimeout = 10 * time.Second
+	defaultPoolWaitTimeout = 10 * time.Second
+	defaultPoolMaxLifeTime = 30 * time.Second
+	defaultMaxRetries      = -1
 )
 
 func init() {
@@ -44,29 +44,28 @@ func init() {
 func New(config *gredis.Config) *Redis {
 	fillWithDefaultConfiguration(config)
 	opts := &redis.UniversalOptions{
-		Addrs:              gstr.SplitAndTrim(config.Address, ","),
-		Username:           config.User,
-		Password:           config.Pass,
-		DB:                 config.Db,
-		MaxRetries:         defaultMaxRetries,
-		PoolSize:           config.MaxActive,
-		MinIdleConns:       config.MinIdle,
-		MaxConnAge:         config.MaxConnLifetime,
-		IdleTimeout:        config.IdleTimeout,
-		PoolTimeout:        config.WaitTimeout,
-		DialTimeout:        config.DialTimeout,
-		ReadTimeout:        config.ReadTimeout,
-		WriteTimeout:       config.WriteTimeout,
-		IdleCheckFrequency: defaultIdleCheckFrequency,
-		MasterName:         config.MasterName,
-		TLSConfig:          config.TLSConfig,
+		Addrs:           gstr.SplitAndTrim(config.Address, ","),
+		Username:        config.User,
+		Password:        config.Pass,
+		DB:              config.Db,
+		MaxRetries:      defaultMaxRetries,
+		PoolSize:        config.MaxActive,
+		MinIdleConns:    config.MinIdle,
+		MaxIdleConns:    config.MaxIdle,
+		ConnMaxLifetime: config.MaxConnLifetime,
+		ConnMaxIdleTime: config.IdleTimeout,
+		PoolTimeout:     config.WaitTimeout,
+		DialTimeout:     config.DialTimeout,
+		ReadTimeout:     config.ReadTimeout,
+		WriteTimeout:    config.WriteTimeout,
+		MasterName:      config.MasterName,
+		TLSConfig:       config.TLSConfig,
 	}
 
 	var client redis.UniversalClient
-
 	if opts.MasterName != "" {
 		redisSentinel := opts.Failover()
-		redisSentinel.SlaveOnly = config.SlaveOnly
+		redisSentinel.ReplicaOnly = config.SlaveOnly
 		client = redis.NewFailoverClient(redisSentinel)
 	} else if len(opts.Addrs) > 1 {
 		client = redis.NewClusterClient(opts.Cluster())

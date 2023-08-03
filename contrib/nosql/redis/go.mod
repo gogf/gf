@@ -3,15 +3,15 @@ module github.com/gogf/gf/contrib/nosql/redis/v2
 go 1.18
 
 require (
-	github.com/go-redis/redis/v8 v8.11.5
 	github.com/gogf/gf/v2 v2.5.1
+	github.com/redis/go-redis/v9 v9.0.5
 	go.opentelemetry.io/otel v1.14.0
 	go.opentelemetry.io/otel/trace v1.14.0
 )
 
 require (
 	github.com/BurntSushi/toml v1.2.0 // indirect
-	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/clbanning/mxj/v2 v2.7.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/fatih/color v1.15.0 // indirect
