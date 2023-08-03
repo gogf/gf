@@ -289,7 +289,7 @@ func TestDriverClickhouse_InsertOneAutoDateTimeWrite(t *testing.T) {
 	// Get the time value from the inserted data
 	createdTime := data["created"].Time()
 	// Assert the time field value is equal to or after the beforeInsertTime
-	gtest.AssertGE(createdTime, beforeInsertTime)
+	gtest.AssertGE(createdTime.Unix(), beforeInsertTime.Unix())
 }
 
 func TestDriverClickhouse_InsertMany(t *testing.T) {
