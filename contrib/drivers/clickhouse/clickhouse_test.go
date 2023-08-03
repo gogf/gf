@@ -277,11 +277,19 @@ func TestDriverClickhouse_InsertOneAutoDateTimeWrite(t *testing.T) {
 	gtest.AssertNE(connect, nil)
 	gtest.AssertEQ(createClickhouseTableVisits(connect), nil)
 	defer dropClickhouseTableVisits(connect)
+	beforeInsertTime := time.Now()
 	_, err = connect.Model("visits").Data(g.Map{
 		"duration": float64(grand.Intn(999)),
 		"url":      gconv.String(grand.Intn(999)),
 	}).Insert()
 	gtest.AssertNil(err)
+	// Query the inserted data to get the time field value
+	data, err := connect.Model("visits").One()
+	gtest.AssertNil(err)
+	// Get the time value from the inserted data
+	createdTime := data["created"].Time()
+	// Assert the time field value is equal to or after the beforeInsertTime
+	gtest.AssertGE(createdTime, beforeInsertTime)
 }
 
 func TestDriverClickhouse_InsertMany(t *testing.T) {
