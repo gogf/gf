@@ -84,7 +84,7 @@ func (m *Model) Data(data ...interface{}) *Model {
 				}
 				list := make(List, reflectInfo.OriginValue.Len())
 				for i := 0; i < reflectInfo.OriginValue.Len(); i++ {
-					list[i] = DataToMapDeep(reflectInfo.OriginValue.Index(i).Interface())
+					list[i] = anyValueToMapBeforeToRecord(reflectInfo.OriginValue.Index(i).Interface())
 				}
 				model.data = list
 
@@ -101,15 +101,15 @@ func (m *Model) Data(data ...interface{}) *Model {
 						list  = make(List, len(array))
 					)
 					for i := 0; i < len(array); i++ {
-						list[i] = DataToMapDeep(array[i])
+						list[i] = anyValueToMapBeforeToRecord(array[i])
 					}
 					model.data = list
 				} else {
-					model.data = DataToMapDeep(data[0])
+					model.data = anyValueToMapBeforeToRecord(data[0])
 				}
 
 			case reflect.Map:
-				model.data = DataToMapDeep(data[0])
+				model.data = anyValueToMapBeforeToRecord(data[0])
 
 			default:
 				model.data = data[0]
@@ -275,21 +275,21 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 		case reflect.Slice, reflect.Array:
 			list = make(List, reflectInfo.OriginValue.Len())
 			for i := 0; i < reflectInfo.OriginValue.Len(); i++ {
-				list[i] = DataToMapDeep(reflectInfo.OriginValue.Index(i).Interface())
+				list[i] = anyValueToMapBeforeToRecord(reflectInfo.OriginValue.Index(i).Interface())
 			}
 
 		case reflect.Map:
-			list = List{DataToMapDeep(value)}
+			list = List{anyValueToMapBeforeToRecord(value)}
 
 		case reflect.Struct:
 			if v, ok := value.(iInterfaces); ok {
 				array := v.Interfaces()
 				list = make(List, len(array))
 				for i := 0; i < len(array); i++ {
-					list[i] = DataToMapDeep(array[i])
+					list[i] = anyValueToMapBeforeToRecord(array[i])
 				}
 			} else {
-				list = List{DataToMapDeep(value)}
+				list = List{anyValueToMapBeforeToRecord(value)}
 			}
 
 		default:

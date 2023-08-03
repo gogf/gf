@@ -58,7 +58,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 
 	switch reflectInfo.OriginKind {
 	case reflect.Map, reflect.Struct:
-		var dataMap = DataToMapDeep(m.data)
+		var dataMap = anyValueToMapBeforeToRecord(m.data)
 		// Automatically update the record updating time.
 		if fieldNameUpdate != "" {
 			dataMap[fieldNameUpdate] = gtime.Now()
