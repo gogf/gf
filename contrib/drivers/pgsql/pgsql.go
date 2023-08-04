@@ -35,8 +35,8 @@ type Driver struct {
 
 const (
 	internalPrimaryKeyInCtx gctx.StrKey = "primary_key"
-	defaultSchema                       = "public"
-	quoteChar                           = `"`
+	defaultSchema           string      = "public"
+	quoteChar               string      = `"`
 )
 
 func init() {
@@ -372,14 +372,22 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 	)
 
 	// Transaction checks.
-	if link != nil && link.IsTransaction() {
-		isUseCoreDoExec = true
-	} else {
+	if link == nil {
 		if tx := gdb.TXFromCtx(ctx, d.GetGroup()); tx != nil {
-			isUseCoreDoExec = true
+			// Firstly, check and retrieve transaction link from context.
+			link = tx
+		} else if link, err = d.MasterLink(); err != nil {
+			// Or else it creates one from master node.
+			return nil, err
+		}
+	} else if !link.IsTransaction() {
+		// If current link is not transaction link, it checks and retrieves transaction from context.
+		if tx := gdb.TXFromCtx(ctx, d.GetGroup()); tx != nil {
+			link = tx
 		}
 	}
 
+	// Check if it is an insert operation with primary key.
 	if value := ctx.Value(internalPrimaryKeyInCtx); value != nil {
 		var ok bool
 		pkField, ok = value.(gdb.TableField)
@@ -408,8 +416,7 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 	}
 
 	// Sql filtering.
-	// TODO: internal function formatSql
-	// sql, args = formatSql(sql, args)
+	sql, args = d.FormatSqlBeforeExecuting(sql, args)
 	sql, args, err = d.DoFilter(ctx, link, sql, args)
 	if err != nil {
 		return nil, err
@@ -442,10 +449,10 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 		}
 
 		if out.Records[affected-1][primaryKey] != nil {
-			lastInsertId := out.Records[affected-1][primaryKey].Int()
+			lastInsertId := out.Records[affected-1][primaryKey].Int64()
 			return Result{
 				affected:     int64(affected),
-				lastInsertId: int64(lastInsertId),
+				lastInsertId: lastInsertId,
 			}, nil
 		}
 	}
