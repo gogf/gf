@@ -89,7 +89,6 @@ func (m *Manager) WaitAll() {
 // Pid along with the corresponding error message.
 func (m *Manager) KillAll() map[int]error {
 	terminationFailed := make(map[int]error)
-
 	for _, p := range m.Processes() {
 		if err := p.Kill(); err != nil {
 			terminationFailed[p.Pid()] = err
