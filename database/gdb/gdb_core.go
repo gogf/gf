@@ -684,7 +684,12 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 			return nil, err
 		}
 	}
-	return c.db.DoExec(ctx, link, fmt.Sprintf("UPDATE %s SET %s%s", table, updates, condition), args...)
+	return c.db.DoExec(ctx, link, fmt.Sprintf(
+		"UPDATE %s SET %s%s",
+		table, updates, condition,
+	),
+		args...,
+	)
 }
 
 // Delete does "DELETE FROM ... " statement for the table.

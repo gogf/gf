@@ -39,11 +39,7 @@ func (m *Model) Batch(batch int) *Model {
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"}).
 func (m *Model) Data(data ...interface{}) *Model {
-	var (
-		err   error
-		ctx   = m.GetCtx()
-		model = m.getModel()
-	)
+	var model = m.getModel()
 	if len(data) > 1 {
 		if s := gconv.String(data[0]); gstr.Contains(s, "?") {
 			model.data = s
@@ -88,10 +84,7 @@ func (m *Model) Data(data ...interface{}) *Model {
 				}
 				list := make(List, reflectInfo.OriginValue.Len())
 				for i := 0; i < reflectInfo.OriginValue.Len(); i++ {
-					list[i], err = m.db.ConvertDataForRecord(ctx, reflectInfo.OriginValue.Index(i).Interface())
-					if err != nil {
-						panic(err)
-					}
+					list[i] = anyValueToMapBeforeToRecord(reflectInfo.OriginValue.Index(i).Interface())
 				}
 				model.data = list
 
@@ -108,24 +101,15 @@ func (m *Model) Data(data ...interface{}) *Model {
 						list  = make(List, len(array))
 					)
 					for i := 0; i < len(array); i++ {
-						list[i], err = m.db.ConvertDataForRecord(ctx, array[i])
-						if err != nil {
-							panic(err)
-						}
+						list[i] = anyValueToMapBeforeToRecord(array[i])
 					}
 					model.data = list
 				} else {
-					model.data, err = m.db.ConvertDataForRecord(ctx, data[0])
-					if err != nil {
-						panic(err)
-					}
+					model.data = anyValueToMapBeforeToRecord(data[0])
 				}
 
 			case reflect.Map:
-				model.data, err = m.db.ConvertDataForRecord(ctx, data[0])
-				if err != nil {
-					panic(err)
-				}
+				model.data = anyValueToMapBeforeToRecord(data[0])
 
 			default:
 				model.data = data[0]
@@ -278,53 +262,34 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 
 	case List:
 		list = value
-		for i, v := range list {
-			list[i], err = m.db.ConvertDataForRecord(ctx, v)
-			if err != nil {
-				return nil, err
-			}
-		}
 
 	case Map:
-		var listItem map[string]interface{}
-		if listItem, err = m.db.ConvertDataForRecord(ctx, value); err != nil {
-			return nil, err
-		}
-		list = List{listItem}
+		list = List{value}
 
 	default:
+		// It uses gconv.Map here to simply fo the type converting from interface{} to map[string]interface{},
+		// as there's another DataToMapDeep in next logic to do the deep converting.
 		reflectInfo := reflection.OriginValueAndKind(newData)
 		switch reflectInfo.OriginKind {
 		// If it's slice type, it then converts it to List type.
 		case reflect.Slice, reflect.Array:
 			list = make(List, reflectInfo.OriginValue.Len())
 			for i := 0; i < reflectInfo.OriginValue.Len(); i++ {
-				list[i], err = m.db.ConvertDataForRecord(ctx, reflectInfo.OriginValue.Index(i).Interface())
+				list[i] = anyValueToMapBeforeToRecord(reflectInfo.OriginValue.Index(i).Interface())
 			}
 
 		case reflect.Map:
-			var listItem map[string]interface{}
-			if listItem, err = m.db.ConvertDataForRecord(ctx, value); err != nil {
-				return nil, err
-			}
-			list = List{listItem}
+			list = List{anyValueToMapBeforeToRecord(value)}
 
 		case reflect.Struct:
 			if v, ok := value.(iInterfaces); ok {
 				array := v.Interfaces()
 				list = make(List, len(array))
 				for i := 0; i < len(array); i++ {
-					list[i], err = m.db.ConvertDataForRecord(ctx, array[i])
-					if err != nil {
-						return nil, err
-					}
+					list[i] = anyValueToMapBeforeToRecord(array[i])
 				}
 			} else {
-				var listItem map[string]interface{}
-				if listItem, err = m.db.ConvertDataForRecord(ctx, value); err != nil {
-					return nil, err
-				}
-				list = List{listItem}
+				list = List{anyValueToMapBeforeToRecord(value)}
 			}
 
 		default:
