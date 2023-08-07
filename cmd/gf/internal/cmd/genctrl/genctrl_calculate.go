@@ -43,11 +43,19 @@ func (c CGenCtrl) getApiItemsInSrc(apiModuleFolderPath string) (items []apiItem,
 				return nil, err
 			}
 			for _, match := range matches {
+				var (
+					methodName = match[1]
+					structBody = match[2]
+				)
+				// ignore struct name that match a request, but has no g.Meta in its body.
+				if !gstr.Contains(structBody, `g.Meta`) {
+					continue
+				}
 				item := apiItem{
 					Import:     gstr.Trim(importPath, `"`),
 					Module:     gfile.Basename(apiModuleFolderPath),
 					Version:    gfile.Basename(apiVersionFolderPath),
-					MethodName: match[1],
+					MethodName: methodName,
 				}
 				items = append(items, item)
 			}
