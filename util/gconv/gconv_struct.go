@@ -143,6 +143,11 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 		pointerElemReflectValue = pointerReflectValue.Elem()
 	}
 
+	// custom convert try first
+	if ok, err := callCustomConverter(paramsReflectValue, pointerReflectValue); ok {
+		return err
+	}
+
 	// If `params` and `pointer` are the same type, the do directly assignment.
 	// For performance enhancement purpose.
 	if pointerElemReflectValue.IsValid() {
@@ -377,6 +382,11 @@ func bindVarToStructAttr(structReflectValue reflect.Value, attrName string, valu
 				ReferValue: structFieldValue,
 			})
 			return
+		}
+
+		// Try to call custom converter.
+		if ok, err := callCustomConverter(reflect.ValueOf(value), structFieldValue); ok {
+			return err
 		}
 
 		// Common interface check.
