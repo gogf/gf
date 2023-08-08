@@ -144,7 +144,7 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 	}
 
 	// custom convert try first
-	if ok, err := callCustomConverter(paramsReflectValue, pointerReflectValue); ok {
+	if ok, err = callCustomConverter(paramsReflectValue, pointerReflectValue); ok {
 		return err
 	}
 
