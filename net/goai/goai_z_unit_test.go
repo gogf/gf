@@ -846,6 +846,51 @@ func Test_Required_In_Schema(t *testing.T) {
 	})
 }
 
+func Test_Required_Out_Schema(t *testing.T) {
+	type CommonResponse struct {
+		Code    int         `json:"code"    description:"Error code"`
+		Message string      `json:"message" description:"Error message"`
+		Data    interface{} `json:"data"    description:"Result data for certain request according API definition"`
+	}
+
+	type TestRequiredOutReq struct {
+		gmeta.Meta `path:"/test_required_out_schema" method:"POST" tags:"default"`
+	}
+	type TestRequiredOutRes struct {
+		gmeta.Meta `dc:"Demo Response Struct"`
+		RequiredId int64   `dc:"required"` // not nullable
+		OptionalId *int64  `dc:"optional"` // nullable
+		Array      []int64 `dc:"slice"`    // nullable
+	}
+
+	f := func(ctx context.Context, req *TestRequiredOutReq) (res *TestRequiredOutRes, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+		)
+
+		oai.Config.CommonResponse = CommonResponse{}
+		oai.Config.CommonResponseDataField = `Data`
+
+		err = oai.Add(goai.AddInput{
+			Path:   "/test_required_out_schema",
+			Method: http.MethodPost,
+			Object: f,
+		})
+		t.AssertNil(err)
+		// fmt.Println(oai.String())
+		// Schema asserts.
+		t.Assert(len(oai.Components.Schemas.Map()), 3) // 1 req and 1 res and 1 commonRes
+		t.Assert(oai.Paths["/test_required_out_schema"].Post.Responses["200"].Value.Content["application/json"].Schema.Value.Properties.Map()["data"].Value.Required, g.Slice{
+			"RequiredId",
+		})
+	})
+}
+
 func Test_Properties_In_Sequence(t *testing.T) {
 	type ResourceCreateReq struct {
 		g.Meta           `path:"/resource" tags:"OSS Resource" method:"put" x-sort:"1" summary:"创建实例(发货)"`

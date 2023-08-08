@@ -129,7 +129,11 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		)
 	}
 
-	if err := oai.addSchema(inputObject.Interface(), outputObject.Interface()); err != nil {
+	if err := oai.addSchema(true, inputObject.Interface()); err != nil {
+		return err
+	}
+
+	if err := oai.addSchema(false, outputObject.Interface()); err != nil {
 		return err
 	}
 

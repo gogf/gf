@@ -38,7 +38,7 @@ func (oai *OpenApiV3) isEmbeddedStructDefinition(golangType reflect.Type) bool {
 }
 
 // newSchemaRefWithGolangType creates a new Schema and returns its SchemaRef.
-func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap map[string]string) (*SchemaRef, error) {
+func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap map[string]string, isReq bool) (*SchemaRef, error) {
 	var (
 		err       error
 		oaiType   = oai.golangTypeToOAIType(golangType)
@@ -95,7 +95,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 		// keep the default value as nil.
 	case
 		TypeArray:
-		subSchemaRef, err := oai.newSchemaRefWithGolangType(golangType.Elem(), nil)
+		subSchemaRef, err := oai.newSchemaRefWithGolangType(golangType.Elem(), nil, isReq)
 		if err != nil {
 			return nil, err
 		}
@@ -113,7 +113,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 		switch golangType.Kind() {
 		case reflect.Map:
 			// Specially for map type.
-			subSchemaRef, err := oai.newSchemaRefWithGolangType(golangType.Elem(), nil)
+			subSchemaRef, err := oai.newSchemaRefWithGolangType(golangType.Elem(), nil, isReq)
 			if err != nil {
 				return nil, err
 			}
@@ -126,7 +126,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 				structTypeName = oai.golangTypeToSchemaName(golangType)
 			)
 			if oai.Components.Schemas.Get(structTypeName) == nil {
-				if err := oai.addSchema(reflect.New(golangType).Interface()); err != nil {
+				if err := oai.addSchema(isReq, reflect.New(golangType).Interface()); err != nil {
 					return nil, err
 				}
 			}
@@ -136,7 +136,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 		default:
 			golangTypeInstance := reflect.New(golangType).Elem().Interface()
 			if oai.isEmbeddedStructDefinition(golangType) {
-				schema, err = oai.structToSchema(golangTypeInstance)
+				schema, err = oai.structToSchema(golangTypeInstance, isReq)
 				if err != nil {
 					return nil, err
 				}
@@ -145,7 +145,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 			} else {
 				var structTypeName = oai.golangTypeToSchemaName(golangType)
 				if oai.Components.Schemas.Get(structTypeName) == nil {
-					if err := oai.addSchema(golangTypeInstance); err != nil {
+					if err := oai.addSchema(isReq, golangTypeInstance); err != nil {
 						return nil, err
 					}
 				}

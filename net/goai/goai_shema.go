@@ -103,16 +103,16 @@ type Discriminator struct {
 
 // addSchema creates schemas with objects.
 // Note that the `object` can be array alias like: `type Res []Item`.
-func (oai *OpenApiV3) addSchema(object ...interface{}) error {
+func (oai *OpenApiV3) addSchema(isReq bool, object ...interface{}) error {
 	for _, v := range object {
-		if err := oai.doAddSchemaSingle(v); err != nil {
+		if err := oai.doAddSchemaSingle(v, isReq); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (oai *OpenApiV3) doAddSchemaSingle(object interface{}) error {
+func (oai *OpenApiV3) doAddSchemaSingle(object interface{}, isReq bool) error {
 	if oai.Components.Schemas.refs == nil {
 		oai.Components.Schemas.refs = gmap.NewListMap()
 	}
@@ -129,7 +129,7 @@ func (oai *OpenApiV3) doAddSchemaSingle(object interface{}) error {
 	// Take the holder first.
 	oai.Components.Schemas.Set(structTypeName, SchemaRef{})
 
-	schema, err := oai.structToSchema(object)
+	schema, err := oai.structToSchema(object, isReq)
 	if err != nil {
 		return err
 	}
@@ -142,7 +142,8 @@ func (oai *OpenApiV3) doAddSchemaSingle(object interface{}) error {
 }
 
 // structToSchema converts and returns given struct object as Schema.
-func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
+// isReq means the struct object is in Req, otherwise in Res.
+func (oai *OpenApiV3) structToSchema(object interface{}, isReq bool) (*Schema, error) {
 	var (
 		tagMap = gmeta.Data(object)
 		schema = &Schema{
@@ -162,7 +163,7 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 	// []struct.
 	if utils.IsArray(object) {
 		schema.Type = TypeArray
-		subSchemaRef, err := oai.newSchemaRefWithGolangType(reflect.TypeOf(object).Elem(), nil)
+		subSchemaRef, err := oai.newSchemaRefWithGolangType(reflect.TypeOf(object).Elem(), nil, isReq)
 		if err != nil {
 			return nil, err
 		}
@@ -197,6 +198,7 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 		schemaRef, err := oai.newSchemaRefWithGolangType(
 			structField.Type().Type,
 			structField.TagMap(),
+			isReq,
 		)
 		if err != nil {
 			return nil, err
@@ -205,10 +207,18 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 	}
 
 	schema.Properties.Iterator(func(key string, ref SchemaRef) bool {
-		if ref.Value != nil && ref.Value.ValidationRules != "" {
-			validationRuleSet := gset.NewStrSetFrom(gstr.Split(ref.Value.ValidationRules, "|"))
-			if validationRuleSet.Contains(validationRuleKeyForRequired) {
-				schema.Required = append(schema.Required, key)
+		if isReq {
+			if ref.Value != nil && ref.Value.ValidationRules != "" {
+				validationRuleSet := gset.NewStrSetFrom(gstr.Split(ref.Value.ValidationRules, "|"))
+				if validationRuleSet.Contains(validationRuleKeyForRequired) {
+					schema.Required = append(schema.Required, key)
+				}
+			}
+		} else {
+			if ref.Value != nil {
+				if ref.Value.Format[0:2] != "[]" && ref.Value.Format[0] != '*' {
+					schema.Required = append(schema.Required, key)
+				}
 			}
 		}
 		if !isValidParameterName(key) {

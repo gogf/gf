@@ -106,7 +106,7 @@ func (oai *OpenApiV3) Add(in AddInput) error {
 	}
 	switch reflectValue.Kind() {
 	case reflect.Struct:
-		return oai.addSchema(in.Object)
+		return oai.addSchema(true, in.Object)
 
 	case reflect.Func:
 		return oai.addPath(addPathInput{

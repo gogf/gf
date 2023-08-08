@@ -45,7 +45,7 @@ func (oai *OpenApiV3) getResponseSchemaRef(in getResponseSchemaRefInput) (*Schem
 	var (
 		dataFieldsPartsArray       = gstr.Split(in.CommonResponseDataField, ".")
 		bizResponseStructSchemaRef = oai.Components.Schemas.Get(in.BusinessStructName)
-		schema, err                = oai.structToSchema(in.CommonResponseObject)
+		schema, err                = oai.structToSchema(in.CommonResponseObject, false)
 	)
 	if err != nil {
 		return nil, err
