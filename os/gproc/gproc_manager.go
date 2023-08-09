@@ -84,25 +84,27 @@ func (m *Manager) WaitAll() {
 	}
 }
 
-// KillAll kills all processes in current manager.If killing
-// all processes succeeds, return nil; otherwise, return the
-// Pid along with the corresponding error message.
-func (m *Manager) KillAll() map[int]error {
-	terminationFailed := make(map[int]error)
+// KillAll kills all processes in current manager.
+func (m *Manager) KillAll() error {
 	for _, p := range m.Processes() {
+		if !ProcessExist(p.Pid()) {
+			m.RemoveProcess(p.Pid())
+			continue
+		}
 		if err := p.Kill(); err != nil {
-			terminationFailed[p.Pid()] = err
+			return err
 		}
 	}
-	if len(terminationFailed) == 0 {
-		return nil
-	}
-	return terminationFailed
+	return nil
 }
 
 // SignalAll sends a signal `sig` to all processes in current manager.
 func (m *Manager) SignalAll(sig os.Signal) error {
 	for _, p := range m.Processes() {
+		if !ProcessExist(p.Pid()) {
+			m.RemoveProcess(p.Pid())
+			continue
+		}
 		if err := p.Signal(sig); err != nil {
 			err = gerror.Wrapf(err, `send signal to process failed for pid "%d" with signal "%s"`, p.Process.Pid, sig)
 			return err

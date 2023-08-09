@@ -10,6 +10,7 @@ package gproc
 import (
 	"os"
 	"runtime"
+	"syscall"
 	"time"
 
 	"github.com/gogf/gf/v2/os/genv"
@@ -116,4 +117,14 @@ func SearchBinaryPath(file string) string {
 		}
 	}
 	return ""
+}
+
+// ProcessExist Determining the existence of a process using its PID.
+func ProcessExist(pid int) bool {
+	process, err := os.FindProcess(pid)
+	if err != nil {
+		return false
+	}
+	err = process.Signal(syscall.Signal(0))
+	return err == nil
 }
