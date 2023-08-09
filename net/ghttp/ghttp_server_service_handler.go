@@ -218,7 +218,7 @@ func trimGeneric(structName string) string {
 	)
 	if leftBraceIndex == -1 || rightBraceIndex == -1 { // not found '[' or ']'
 		return structName
-	} else if leftBraceIndex+1 == rightBraceIndex { // may be a slice, beacuse generic is '[X]', not '[]'
+	} else if leftBraceIndex+1 == rightBraceIndex { // may be a slice, because generic is '[X]', not '[]'
 		return structName
 	}
 	return structName[:leftBraceIndex]
