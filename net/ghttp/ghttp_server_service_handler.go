@@ -216,7 +216,9 @@ func trimGeneric(structName string) string {
 		leftBraceIndex  = strings.Index(structName, "[")
 		rightBraceIndex = strings.Index(structName, "]")
 	)
-	if leftBraceIndex == -1 || rightBraceIndex == -1 {
+	if leftBraceIndex == -1 || rightBraceIndex == -1 { // not found '[' or ']'
+		return structName
+	} else if leftBraceIndex+1 == rightBraceIndex { // may be a slice, beacuse generic is '[X]', not '[]'
 		return structName
 	}
 	return structName[:leftBraceIndex]
