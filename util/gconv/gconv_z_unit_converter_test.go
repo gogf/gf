@@ -13,7 +13,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func TestConverter(t *testing.T) {
+func TestConverter_Struct(t *testing.T) {
 	type tA struct {
 		Val int
 	}
@@ -174,4 +174,32 @@ func TestConverter(t *testing.T) {
 		t.Assert(dd.ValTa.Val1, 234)
 		t.Assert(dd.ValTa.Val2, "abc")
 	})
+}
+
+func TestConverter_CustomBasicType(t *testing.T) {
+	type CustomString string
+	type CustomStruct struct {
+		S string
+	}
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			a CustomString = "abc"
+			b *CustomStruct
+		)
+		err := gconv.Scan(a, &b)
+		t.AssertNE(err, nil)
+		t.AssertNE(b, nil)
+		t.Assert(b.S, "")
+	})
+
+	//gtest.C(t, func(t *gtest.T) {
+	//	err := gconv.RegisterConverter(func(a tA) (b tB, err error) {
+	//		b = tB{
+	//			Val1: int32(a.Val),
+	//			Val2: "abc",
+	//		}
+	//		return
+	//	})
+	//	t.AssertNil(err)
+	//})
 }
