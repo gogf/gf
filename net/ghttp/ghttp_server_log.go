@@ -42,7 +42,7 @@ func (s *Server) handleAccessLog(r *Request) {
 		l.SetLevelPrint(false)
 		return l
 	}).(*glog.Logger)
-	logger.Printf(r.Context(), content)
+	logger.Print(r.Context(), content)
 }
 
 // handleErrorLog handles the error logging for server.
