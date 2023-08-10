@@ -10,6 +10,8 @@ import (
 	"testing"
 
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -455,5 +457,20 @@ func Test_EmptyString_To_CustomType(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(req.Statuses), 0)
 		t.Assert(len(req.Types), 0)
+	})
+}
+
+func Test_SliceMap_WithNilMapValue(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			list1 = []gdb.Record{
+				{"name": nil},
+			}
+			list2 []map[string]any
+		)
+		list2 = gconv.SliceMap(list1)
+		t.Assert(len(list2), 1)
+		t.Assert(list1[0], list2[0])
+		t.Assert(gjson.MustEncodeString(list1), gjson.MustEncodeString(list2))
 	})
 }
