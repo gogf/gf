@@ -259,11 +259,17 @@ func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) in
 				mapKeyValue = reflectValue.MapIndex(k)
 				mapValue    interface{}
 			)
-			if mapKeyValue.IsZero() {
-				// in case of:
-				// exception recovered: reflect: call of reflect.Value.Interface on zero Value
-				mapValue = reflect.New(mapKeyValue.Type()).Elem()
-			} else {
+			switch {
+			case mapKeyValue.IsZero():
+				if mapKeyValue.IsNil() {
+					// quick check for nil value.
+					mapValue = nil
+				} else {
+					// in case of:
+					// exception recovered: reflect: call of reflect.Value.Interface on zero Value
+					mapValue = reflect.New(mapKeyValue.Type()).Elem().Interface()
+				}
+			default:
 				mapValue = mapKeyValue.Interface()
 			}
 			dataMap[String(k.Interface())] = doMapConvertForMapOrStructValue(
