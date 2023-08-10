@@ -20,15 +20,14 @@ import (
 	"github.com/gogf/gf/v2/os/gfsnotify"
 	"github.com/gogf/gf/v2/os/gres"
 	"github.com/gogf/gf/v2/text/gregex"
-	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Manager for i18n contents, it is concurrent safe, supporting hot reload.
 type Manager struct {
 	mu      sync.RWMutex
-	data    map[string]map[string]string // Translating map.
-	pattern string                       // Pattern for regex parsing.
-	options Options                      // configuration options.
+	data    map[string]*gjson.Json // Translating map.
+	pattern string                 // Pattern for regex parsing.
+	options Options                // configuration options.
 }
 
 // Options is used for i18n object configuration.
@@ -156,15 +155,15 @@ func (m *Manager) Translate(ctx context.Context, content string) string {
 		return content
 	}
 	// Parse content as name.
-	if v, ok := data[content]; ok {
-		return v
+	if v := data.Get(content); v != nil {
+		return v.String()
 	}
 	// Parse content as variables container.
 	result, _ := gregex.ReplaceStringFuncMatch(
 		m.pattern, content,
 		func(match []string) string {
-			if v, ok := data[match[1]]; ok {
-				return v
+			if v := data.Get(match[1]); v != nil {
+				return v.String()
 			}
 			// return match[1] will return the content between delimiters
 			// return match[0] will return the original content
@@ -185,7 +184,9 @@ func (m *Manager) GetContent(ctx context.Context, key string) string {
 		transLang = lang
 	}
 	if data, ok := m.data[transLang]; ok {
-		return data[key]
+		if v := data.Get(key); v != nil {
+			return v.String()
+		}
 	}
 	return ""
 }
@@ -212,7 +213,7 @@ func (m *Manager) init(ctx context.Context) {
 				lang  string
 				array []string
 			)
-			m.data = make(map[string]map[string]string)
+			m.data = make(map[string]*gjson.Json)
 			for _, file := range files {
 				name = file.Name()
 				path = name[len(m.options.Path)+1:]
@@ -222,12 +223,13 @@ func (m *Manager) init(ctx context.Context) {
 				} else if len(array) == 1 {
 					lang = gfile.Name(array[0])
 				}
-				if m.data[lang] == nil {
-					m.data[lang] = make(map[string]string)
-				}
 				if j, err := gjson.LoadContent(file.Content()); err == nil {
-					for k, v := range j.Var().Map() {
-						m.data[lang][k] = gconv.String(v)
+					if m.data[lang] == nil {
+						m.data[lang] = j
+					} else {
+						for k, v := range j.Map() {
+							m.data[lang].Set(k, v)
+						}
 					}
 				} else {
 					intlog.Errorf(ctx, "load i18n file '%s' failed: %+v", name, err)
@@ -244,7 +246,7 @@ func (m *Manager) init(ctx context.Context) {
 			lang  string
 			array []string
 		)
-		m.data = make(map[string]map[string]string)
+		m.data = make(map[string]*gjson.Json)
 		for _, file := range files {
 			path = file[len(m.options.Path)+1:]
 			array = strings.Split(path, gfile.Separator)
@@ -253,12 +255,14 @@ func (m *Manager) init(ctx context.Context) {
 			} else if len(array) == 1 {
 				lang = gfile.Name(array[0])
 			}
-			if m.data[lang] == nil {
-				m.data[lang] = make(map[string]string)
-			}
+
 			if j, err := gjson.LoadContent(gfile.GetBytes(file)); err == nil {
-				for k, v := range j.Var().Map() {
-					m.data[lang][k] = gconv.String(v)
+				if m.data[lang] == nil {
+					m.data[lang] = j
+				} else {
+					for k, v := range j.Map() {
+						m.data[lang].Set(k, v)
+					}
 				}
 			} else {
 				intlog.Errorf(ctx, "load i18n file '%s' failed: %+v", file, err)

@@ -28,6 +28,14 @@ func Test_Basic(t *testing.T) {
 		i18n := gi18n.New(gi18n.Options{
 			Path: gtest.DataPath("i18n"),
 		})
+		t.Assert(i18n.T(context.Background(), "{#user.name}"), "John")
+		t.Assert(i18n.T(context.Background(), "user.name"), "John")
+		t.Assert(i18n.T(context.Background(), "{#hosts.0}"), "alpha")
+		t.Assert(i18n.T(gi18n.WithLanguage(context.Background(), "en"), "{#hosts.0}"), "alpha")
+		t.Assert(i18n.GetContent(context.Background(), "hosts.0"), "alpha")
+		t.Assert(i18n.GetContent(gi18n.WithLanguage(context.Background(), "en"), "hosts.0"), "alpha")
+		t.Assert(i18n.GetContent(context.Background(), "none"), "")
+
 		i18n.SetLanguage("none")
 		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "{#hello}{#world}")
 
