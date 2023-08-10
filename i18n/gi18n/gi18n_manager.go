@@ -154,6 +154,7 @@ func (m *Manager) Translate(ctx context.Context, content string) string {
 	if data == nil {
 		return content
 	}
+	data.SetViolenceCheck(true)
 	// Parse content as name.
 	if v := data.Get(content); v != nil {
 		return v.String()
@@ -184,6 +185,7 @@ func (m *Manager) GetContent(ctx context.Context, key string) string {
 		transLang = lang
 	}
 	if data, ok := m.data[transLang]; ok {
+		data.SetViolenceCheck(true)
 		if v := data.Get(key); v != nil {
 			return v.String()
 		}

@@ -2,6 +2,8 @@
 hello = "Hello"
 world = "World"
 
+"www.goframe.org" = "goframe.org"
+
 hosts = [
   "alpha",
   "omega"

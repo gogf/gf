@@ -29,6 +29,7 @@ func Test_Basic(t *testing.T) {
 			Path: gtest.DataPath("i18n"),
 		})
 		t.Assert(i18n.T(context.Background(), "{#user.name}"), "John")
+		t.Assert(i18n.T(context.Background(), "{#www.goframe.org}"), "goframe.org")
 		t.Assert(i18n.T(context.Background(), "user.name"), "John")
 		t.Assert(i18n.T(context.Background(), "{#hosts.0}"), "alpha")
 		t.Assert(i18n.T(gi18n.WithLanguage(context.Background(), "en"), "{#hosts.0}"), "alpha")
