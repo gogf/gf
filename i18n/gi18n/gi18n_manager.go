@@ -228,7 +228,10 @@ func (m *Manager) init(ctx context.Context) {
 						m.data[lang] = j
 					} else {
 						for k, v := range j.Map() {
-							m.data[lang].Set(k, v)
+							err = m.data[lang].Set(k, v)
+							if err != nil {
+								intlog.Errorf(ctx, "load i18n file '%s' merge key '%s' failed: %+v", name, k, err)
+							}
 						}
 					}
 				} else {
@@ -261,7 +264,10 @@ func (m *Manager) init(ctx context.Context) {
 					m.data[lang] = j
 				} else {
 					for k, v := range j.Map() {
-						m.data[lang].Set(k, v)
+						err = m.data[lang].Set(k, v)
+						if err != nil {
+							intlog.Errorf(ctx, "load i18n file '%s' merge key '%s' failed: %+v", file, k, err)
+						}
 					}
 				}
 			} else {
