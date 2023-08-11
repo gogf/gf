@@ -44,6 +44,11 @@ type iInterfaces interface {
 	Interfaces() []interface{}
 }
 
+// iNil if the type assert api for IsNil.
+type iNil interface {
+	IsNil() bool
+}
+
 // iTableName is the interface for retrieving table name for struct.
 type iTableName interface {
 	TableName() string
@@ -62,7 +67,7 @@ var (
 	// quoteWordReg is the regular expression object for a word check.
 	quoteWordReg = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
 
-	// Priority tags for struct converting for orm field mapping.
+	// structTagPriority tags for struct converting for orm field mapping.
 	structTagPriority = append([]string{OrmTagForStruct}, gconv.StructTagPriority...)
 )
 
@@ -191,7 +196,7 @@ func ListItemValuesUnique(list interface{}, key string, subKey ...interface{}) [
 }
 
 // GetInsertOperationByOption returns proper insert option with given parameter `option`.
-func GetInsertOperationByOption(option int) string {
+func GetInsertOperationByOption(option InsertOption) string {
 	var operator string
 	switch option {
 	case InsertOptionReplace:
@@ -202,6 +207,10 @@ func GetInsertOperationByOption(option int) string {
 		operator = "INSERT"
 	}
 	return operator
+}
+
+func anyValueToMapBeforeToRecord(value interface{}) map[string]interface{} {
+	return gconv.Map(value, structTagPriority...)
 }
 
 // DataToMapDeep converts `value` to map type recursively(if attribute struct is embedded).
@@ -366,17 +375,6 @@ func GetPrimaryKeyCondition(primary string, where ...interface{}) (newWhereCondi
 		}
 	}
 	return where
-}
-
-// formatSql formats the sql string and its arguments before executing.
-// The internal handleArguments function might be called twice during the SQL procedure,
-// but do not worry about it, it's safe and efficient.
-func formatSql(sql string, args []interface{}) (newSql string, newArgs []interface{}) {
-	// DO NOT do this as there may be multiple lines and comments in the sql.
-	// sql = gstr.Trim(sql)
-	// sql = gstr.Replace(sql, "\n", " ")
-	// sql, _ = gregex.ReplaceString(`\s{2,}`, ` `, sql)
-	return handleArguments(sql, args)
 }
 
 type formatWhereHolderInput struct {

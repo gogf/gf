@@ -424,8 +424,8 @@ func (s *Server) Run() {
 		s.Logger().Fatalf(ctx, `%+v`, err)
 	}
 
-	// Signal handler.
-	handleProcessSignal()
+	// Signal handler in asynchronous way.
+	go handleProcessSignal()
 
 	// Blocking using channel for graceful restart.
 	<-s.closeChan
@@ -446,6 +446,9 @@ func (s *Server) Run() {
 // It's commonly used in multiple server situation.
 func Wait() {
 	var ctx = context.TODO()
+
+	// Signal handler in asynchronous way.
+	go handleProcessSignal()
 
 	<-allShutdownChan
 	// Remove plugins.
@@ -585,13 +588,13 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 }
 
 // Status retrieves and returns the server status.
-func (s *Server) Status() int {
+func (s *Server) Status() ServerStatus {
 	if serverRunning.Val() == 0 {
 		return ServerStatusStopped
 	}
 	// If any underlying server is running, the server status is running.
 	for _, v := range s.servers {
-		if v.status == ServerStatusRunning {
+		if v.status.Val() == ServerStatusRunning {
 			return ServerStatusRunning
 		}
 	}

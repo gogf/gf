@@ -684,7 +684,12 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 			return nil, err
 		}
 	}
-	return c.db.DoExec(ctx, link, fmt.Sprintf("UPDATE %s SET %s%s", table, updates, condition), args...)
+	return c.db.DoExec(ctx, link, fmt.Sprintf(
+		"UPDATE %s SET %s%s",
+		table, updates, condition,
+	),
+		args...,
+	)
 }
 
 // Delete does "DELETE FROM ... " statement for the table.
@@ -795,4 +800,15 @@ func (c *Core) isSoftCreatedFieldName(fieldName string) bool {
 		}
 	}
 	return false
+}
+
+// FormatSqlBeforeExecuting formats the sql string and its arguments before executing.
+// The internal handleArguments function might be called twice during the SQL procedure,
+// but do not worry about it, it's safe and efficient.
+func (c *Core) FormatSqlBeforeExecuting(sql string, args []interface{}) (newSql string, newArgs []interface{}) {
+	// DO NOT do this as there may be multiple lines and comments in the sql.
+	// sql = gstr.Trim(sql)
+	// sql = gstr.Replace(sql, "\n", " ")
+	// sql, _ = gregex.ReplaceString(`\s{2,}`, ` `, sql)
+	return handleArguments(sql, args)
 }

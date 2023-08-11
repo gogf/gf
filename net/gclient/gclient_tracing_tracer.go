@@ -10,7 +10,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptrace"
 	"net/textproto"
@@ -46,7 +46,7 @@ func newClientTrace(ctx context.Context, span trace.Span, request *http.Request)
 		headers: make(map[string]interface{}),
 	}
 
-	reqBodyContent, _ := ioutil.ReadAll(ct.request.Body)
+	reqBodyContent, _ := io.ReadAll(ct.request.Body)
 	ct.requestBody = reqBodyContent
 	ct.request.Body = utils.NewReadCloser(reqBodyContent, false)
 
@@ -141,7 +141,7 @@ func (ct *clientTracer) tlsHandshakeDone(_ tls.ConnectionState, err error) {
 func (ct *clientTracer) wroteHeaderField(k string, v []string) {
 	if len(v) > 1 {
 		ct.headers[k] = v
-	} else {
+	} else if len(v) == 1 {
 		ct.headers[k] = v[0]
 	}
 }

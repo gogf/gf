@@ -11,6 +11,7 @@ import (
 	"reflect"
 
 	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
@@ -21,6 +22,7 @@ import (
 	"github.com/gogf/gf/v2/util/gtag"
 )
 
+// Path is specified by OpenAPI/Swagger standard version 3.0.
 type Path struct {
 	Ref         string      `json:"$ref,omitempty"`
 	Summary     string      `json:"summary,omitempty"`
@@ -58,9 +60,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		oai.Paths = map[string]Path{}
 	}
 
-	var (
-		reflectType = reflect.TypeOf(in.Function)
-	)
+	var reflectType = reflect.TypeOf(in.Function)
 	if reflectType.NumIn() != 2 || reflectType.NumOut() != 2 {
 		return gerror.NewCodef(
 			gcode.CodeInvalidParameter,
@@ -134,9 +134,21 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	}
 
 	if len(inputMetaMap) > 0 {
-		if err := oai.tagMapToPath(inputMetaMap, &path); err != nil {
+		// Path and Operation are not the same thing, so it is necessary to copy a Meta for Path from Operation and edit it.
+		// And you know, we set the Summary and Description for Operation, not for Path, so we need to remove them.
+		inputMetaMapForPath := gmap.NewStrStrMapFrom(inputMetaMap).Clone()
+		inputMetaMapForPath.Removes([]string{
+			gtag.SummaryShort,
+			gtag.SummaryShort2,
+			gtag.Summary,
+			gtag.DescriptionShort,
+			gtag.DescriptionShort2,
+			gtag.Description,
+		})
+		if err := oai.tagMapToPath(inputMetaMapForPath.Map(), &path); err != nil {
 			return err
 		}
+
 		if err := oai.tagMapToOperation(inputMetaMap, &operation); err != nil {
 			return err
 		}
@@ -387,6 +399,7 @@ func (oai *OpenApiV3) tagMapToPath(tagMap map[string]string, path *Path) error {
 	return nil
 }
 
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (p Path) MarshalJSON() ([]byte, error) {
 	var (
 		b   []byte
