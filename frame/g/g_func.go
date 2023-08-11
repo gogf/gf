@@ -80,7 +80,7 @@ func TryCatch(ctx context.Context, try func(ctx context.Context), catch ...func(
 
 // IsNil checks whether given `value` is nil.
 // Parameter `traceSource` is used for tracing to the source variable if given `value` is type
-// of pinter that also points to a pointer. It returns nil if the source is nil when `traceSource`
+// of pointer that also points to a pointer. It returns nil if the source is nil when `traceSource`
 // is true.
 // Note that it might use reflect feature which affects performance a little.
 func IsNil(value interface{}, traceSource ...bool) bool {
@@ -91,7 +91,7 @@ func IsNil(value interface{}, traceSource ...bool) bool {
 // It returns true if `value` is in: 0, nil, false, "", len(slice/map/chan) == 0.
 // Or else it returns true.
 //
-// The parameter `traceSource` is used for tracing to the source variable if given `value` is type of pinter
+// The parameter `traceSource` is used for tracing to the source variable if given `value` is type of pointer
 // that also points to a pointer. It returns true if the source is empty when `traceSource` is true.
 // Note that it might use reflect feature which affects performance a little.
 func IsEmpty(value interface{}, traceSource ...bool) bool {

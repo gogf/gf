@@ -38,7 +38,7 @@ type iTime interface {
 // It returns true if `value` is in: 0, nil, false, "", len(slice/map/chan) == 0,
 // or else it returns false.
 //
-// The parameter `traceSource` is used for tracing to the source variable if given `value` is type of pinter
+// The parameter `traceSource` is used for tracing to the source variable if given `value` is type of pointer
 // that also points to a pointer. It returns true if the source is empty when `traceSource` is true.
 // Note that it might use reflect feature which affects performance a little.
 func IsEmpty(value interface{}, traceSource ...bool) bool {
@@ -194,7 +194,7 @@ func IsEmpty(value interface{}, traceSource ...bool) bool {
 }
 
 // IsNil checks whether given `value` is nil, especially for interface{} type value.
-// Parameter `traceSource` is used for tracing to the source variable if given `value` is type of pinter
+// Parameter `traceSource` is used for tracing to the source variable if given `value` is type of pointer
 // that also points to a pointer. It returns nil if the source is nil when `traceSource` is true.
 // Note that it might use reflect feature which affects performance a little.
 func IsNil(value interface{}, traceSource ...bool) bool {
