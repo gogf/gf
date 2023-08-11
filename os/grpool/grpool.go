@@ -155,7 +155,7 @@ func (p *Pool) AddWithRecover(ctx context.Context, userFunc Func, recoverFunc Re
 					if v, ok := exception.(error); ok && gerror.HasStack(v) {
 						recoverFunc(ctx, v)
 					} else {
-						recoverFunc(ctx, gerror.Newf(`%+v`, exception))
+						recoverFunc(ctx, gerror.NewCodef(gcode.CodeInternalPanic, "%+v", exception))
 					}
 				}
 			}

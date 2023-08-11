@@ -91,7 +91,7 @@ func (c *Core) Transaction(ctx context.Context, f func(ctx context.Context, tx T
 				if v, ok := exception.(error); ok && gerror.HasStack(v) {
 					err = v
 				} else {
-					err = gerror.Newf("%+v", exception)
+					err = gerror.NewCodef(gcode.CodeInternalPanic, "%+v", exception)
 				}
 			}
 		}
@@ -277,7 +277,7 @@ func (tx *TXCore) Transaction(ctx context.Context, f func(ctx context.Context, t
 				if v, ok := exception.(error); ok && gerror.HasStack(v) {
 					err = v
 				} else {
-					err = gerror.Newf("%+v", exception)
+					err = gerror.NewCodef(gcode.CodeInternalPanic, "%+v", exception)
 				}
 			}
 		}
