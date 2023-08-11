@@ -618,5 +618,8 @@ func TestMapWithJsonOmitEmpty(t *testing.T) {
 			Value: 1,
 		}
 		t.Assert(gconv.Map(s), g.Map{"Value": 1})
+
+		s.Value = 0
+		t.Assert(gconv.Map(s), g.Map{})
 	})
 }

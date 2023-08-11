@@ -209,6 +209,7 @@ func doMapConvert(value interface{}, recursive recursiveType, tags ...string) ma
 					RecursiveType:   recursive,
 					RecursiveOption: recursive == recursiveTypeTrue,
 					Tags:            newTags,
+					MustMapReturn:   true,
 				},
 			)
 			if m, ok := convertedValue.(map[string]interface{}); ok {
@@ -228,6 +229,7 @@ type doMapConvertForMapOrStructValueInput struct {
 	RecursiveType   recursiveType // The type from top function entry.
 	RecursiveOption bool          // Whether convert recursively for `current` operation.
 	Tags            []string      // Map key mapping.
+	MustMapReturn   bool          // Must return map intead of Value when empty
 }
 
 func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) interface{} {
@@ -468,7 +470,7 @@ func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) in
 				}
 			}
 		}
-		if len(dataMap) == 0 {
+		if !in.MustMapReturn && len(dataMap) == 0 {
 			return in.Value
 		}
 		return dataMap
