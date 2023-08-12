@@ -137,7 +137,7 @@ func (c CGenService) isToGenerateServiceGoFile(dstPackageName, filePath string, 
 		return true
 	}
 	// remove all comments.
-	fileContent, err = gregex.ReplaceString(`/[/|\*](.*)`, "", fileContent)
+	fileContent, err = gregex.ReplaceString(`(//.*)|((?s)/\*.*?\*/)`, "", fileContent)
 	if err != nil {
 		panic(err)
 		return false

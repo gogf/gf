@@ -18,6 +18,9 @@ import (
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
+	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -27,8 +30,6 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gtag"
 	"github.com/gogf/gf/v2/util/gutil"
-	"github.com/google/uuid"
-	"github.com/shopspring/decimal"
 )
 
 // Driver is the driver for postgresql database.
@@ -50,7 +51,6 @@ const (
 	filterTypePattern                = `(?i)^UPDATE|DELETE`
 	replaceSchemaPattern             = `@(.+?)/([\w\.\-]+)+`
 	needParsedSqlInCtx   gctx.StrKey = "NeedParsedSql"
-	OrmTagForStruct                  = gtag.ORM
 	driverName                       = "clickhouse"
 )
 
@@ -298,13 +298,20 @@ func (d *Driver) DoInsert(
 		keysStr      = charL + strings.Join(keys, charR+","+charL) + charR
 		holderStr    = strings.Join(valueHolder, ",")
 		tx           gdb.TX
-		stdSqlResult sql.Result
 		stmt         *gdb.Stmt
 	)
 	tx, err = d.Core.Begin(ctx)
 	if err != nil {
 		return
 	}
+	// It here uses defer to guarantee transaction be committed or roll-backed.
+	defer func() {
+		if err == nil {
+			_ = tx.Commit()
+		} else {
+			_ = tx.Rollback()
+		}
+	}()
 	stmt, err = tx.Prepare(fmt.Sprintf(
 		"INSERT INTO %s(%s) VALUES (%s)",
 		d.QuotePrefixTableName(table), keysStr,
@@ -314,22 +321,23 @@ func (d *Driver) DoInsert(
 		return
 	}
 	for i := 0; i < len(list); i++ {
-		params := make([]interface{}, 0) // Values that will be committed to underlying database driver.
+		// Values that will be committed to underlying database driver.
+		params := make([]interface{}, 0)
 		for _, k := range keys {
 			params = append(params, list[i][k])
 		}
 		// Prepare is allowed to execute only once in a transaction opened by clickhouse
-		stdSqlResult, err = stmt.ExecContext(ctx, params...)
+		result, err = stmt.ExecContext(ctx, params...)
 		if err != nil {
-			return stdSqlResult, err
+			return
 		}
 	}
-	return stdSqlResult, tx.Commit()
+	return
 }
 
 // ConvertDataForRecord converting for any data that will be inserted into table/collection as a record.
 func (d *Driver) ConvertDataForRecord(ctx context.Context, value interface{}) (map[string]interface{}, error) {
-	m := gconv.Map(value, OrmTagForStruct)
+	m := gconv.Map(value, gtag.ORM)
 
 	// transforms a value of a particular type
 	for k, v := range m {

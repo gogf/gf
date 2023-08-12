@@ -15,15 +15,19 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	_ "gitee.com/chunanyong/dm"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gtag"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
@@ -167,6 +171,35 @@ func (d *Driver) TableFields(
 		}
 	}
 	return fields, nil
+}
+
+// ConvertDataForRecord converting for any data that will be inserted into table/collection as a record.
+func (d *Driver) ConvertDataForRecord(ctx context.Context, value interface{}) (map[string]interface{}, error) {
+	m := gconv.Map(value, gtag.ORM)
+
+	// transforms a value of a particular type
+	for k, v := range m {
+		switch itemValue := v.(type) {
+		// dm does not support time.Time, it so here converts it to time string that it supports.
+		case time.Time:
+			m[k] = gtime.New(itemValue).String()
+			// If the time is zero, it then updates it to nil,
+			// which will insert/update the value to database as "null".
+			if itemValue.IsZero() {
+				m[k] = nil
+			}
+
+		// dm does not support time.Time, it so here converts it to time string that it supports.
+		case *time.Time:
+			m[k] = gtime.New(itemValue).String()
+			// If the time is zero, it then updates it to nil,
+			// which will insert/update the value to database as "null".
+			if itemValue == nil || itemValue.IsZero() {
+				m[k] = nil
+			}
+		}
+	}
+	return m, nil
 }
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.

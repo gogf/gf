@@ -209,6 +209,10 @@ func GetInsertOperationByOption(option InsertOption) string {
 	return operator
 }
 
+func anyValueToMapBeforeToRecord(value interface{}) map[string]interface{} {
+	return gconv.Map(value, structTagPriority...)
+}
+
 // DataToMapDeep converts `value` to map type recursively(if attribute struct is embedded).
 // The parameter `value` should be type of *map/map/*struct/struct.
 // It supports embedded struct definition for struct.

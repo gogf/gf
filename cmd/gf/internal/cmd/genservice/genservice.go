@@ -194,7 +194,7 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 				return nil, err
 			}
 			// remove all comments.
-			fileContent, err = gregex.ReplaceString(`/[/|\*](.*)`, "", fileContent)
+			fileContent, err = gregex.ReplaceString(`(//.*)|((?s)/\*.*?\*/)`, "", fileContent)
 			if err != nil {
 				return nil, err
 			}

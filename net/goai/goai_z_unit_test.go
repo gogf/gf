@@ -1171,3 +1171,23 @@ func Test_Enums(t *testing.T) {
 		t.Assert(oai.Components.Schemas.Get(reqKey).Value.Properties.Get("Status4").Value.Items.Value.Enum, g.Slice{"a", "b"})
 	})
 }
+
+func Test_XExtension(t *testing.T) {
+	type GetListReq struct {
+		g.Meta `path:"/user" tags:"User" method:"get" x-group:"User/Info" summary:"Get user list with basic info."`
+		Page   int `dc:"Page number" d:"1" x-sort:"1"`
+		Size   int `dc:"Size for per page." d:"10" x-sort:"2"`
+	}
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+			req = new(GetListReq)
+		)
+		err = oai.Add(goai.AddInput{
+			Object: req,
+		})
+		t.AssertNil(err)
+		t.Assert(oai.String(), `{"openapi":"3.0.0","components":{"schemas":{"github.com.gogf.gf.v2.net.goai_test.GetListReq":{"properties":{"Page":{"default":1,"description":"Page number","format":"int","properties":{},"type":"integer","x-sort":"1"},"Size":{"default":10,"description":"Size for per page.","format":"int","properties":{},"type":"integer","x-sort":"2"}},"type":"object","x-group":"User/Info"}}},"info":{"title":"","version":""},"paths":null}`)
+	})
+}
