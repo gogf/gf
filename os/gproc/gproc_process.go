@@ -9,6 +9,8 @@ package gproc
 import (
 	"context"
 	"fmt"
+	"github.com/gogf/gf/v2"
+	process2 "github.com/shirou/gopsutil/process"
 	"os"
 	"os/exec"
 	"runtime"
@@ -18,7 +20,6 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
@@ -30,8 +31,10 @@ import (
 // Process is the struct for a single process.
 type Process struct {
 	exec.Cmd
-	Manager *Manager
-	PPid    int
+	Manager    *Manager
+	PPid       int
+	CreateTime int64
+	Cmdline    string
 }
 
 // NewProcess creates and returns a new Process.
@@ -107,6 +110,13 @@ func (p *Process) Start(ctx context.Context) (int, error) {
 		if p.Manager != nil {
 			p.Manager.processes.Set(p.Process.Pid, p)
 		}
+		newProcess, err := process2.NewProcess(int32(p.Process.Pid))
+		if err != nil {
+			return 0, err
+		}
+		p.Cmdline, _ = newProcess.Cmdline()
+		p.CreateTime, _ = newProcess.CreateTime()
+
 		return p.Process.Pid, nil
 	} else {
 		return 0, err
@@ -132,6 +142,9 @@ func (p *Process) Pid() int {
 
 // Send sends custom data to the process.
 func (p *Process) Send(data []byte) error {
+	if !p.IsExist() {
+		return gerror.Newf(`Process with ID "%d" does not exist.`, p.Process.Pid)
+	}
 	if p.Process != nil {
 		return Send(p.Process.Pid, data)
 	}
@@ -142,11 +155,58 @@ func (p *Process) Send(data []byte) error {
 // rendering it unusable in the future.
 // Release only needs to be called if Wait is not.
 func (p *Process) Release() error {
+	if !p.IsExist() {
+		return gerror.Newf(`Process with ID "%d" does not exist.`, p.Process.Pid)
+	}
 	return p.Process.Release()
+}
+
+// IsExist Determine if the process exists.
+func (p *Process) IsExist() bool {
+	process := GetProcessByPid(p.Pid())
+	if process == nil {
+		if p.Manager != nil {
+			p.Manager.processes.Remove(p.Pid())
+		}
+		return false
+	}
+	if !p.IsSameProgress(process) {
+		return false
+	}
+	return true
+}
+
+// IsSameProgress Determine if the processes are the same.
+func (p *Process) IsSameProgress(process *os.Process) bool {
+	newProcess, err := process2.NewProcess(int32(process.Pid))
+	if err != nil {
+		return false
+	}
+	cmdline, err := newProcess.Cmdline()
+	if err != nil {
+		return false
+	}
+	if p.Cmdline != cmdline {
+		return false
+	}
+	createTime, err := newProcess.CreateTime()
+	if err != nil {
+		return false
+	}
+	if p.CreateTime != createTime {
+		return false
+	}
+	return true
 }
 
 // Kill causes the Process to exit immediately.
 func (p *Process) Kill() (err error) {
+	if !p.IsExist() {
+		if p.Manager != nil {
+			p.Manager.processes.Remove(p.Pid())
+		}
+		return nil
+	}
 	err = p.Process.Kill()
 	if err != nil {
 		err = gerror.Wrapf(err, `kill process failed for pid "%d"`, p.Process.Pid)
@@ -169,5 +229,8 @@ func (p *Process) Kill() (err error) {
 // Signal sends a signal to the Process.
 // Sending Interrupt on Windows is not implemented.
 func (p *Process) Signal(sig os.Signal) error {
+	if !p.IsExist() {
+		return gerror.Newf(`Process with ID "%d" does not exist.`, p.Process.Pid)
+	}
 	return p.Process.Signal(sig)
 }

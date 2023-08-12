@@ -119,12 +119,15 @@ func SearchBinaryPath(file string) string {
 	return ""
 }
 
-// ProcessExist Determining the existence of a process using its PID.
-func ProcessExist(pid int) bool {
+// GetProcessByPid Get process information based on PID, return nil when retrieval fails.
+func GetProcessByPid(pid int) *os.Process {
 	process, err := os.FindProcess(pid)
 	if err != nil {
-		return false
+		return nil
 	}
 	err = process.Signal(syscall.Signal(0))
-	return err == nil
+	if err != nil {
+		return nil
+	}
+	return process
 }

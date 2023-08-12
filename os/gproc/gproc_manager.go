@@ -86,39 +86,28 @@ func (m *Manager) WaitAll() {
 
 // KillAll kills all processes in current manager.
 func (m *Manager) KillAll() error {
-	processesToRemove := make([]int, 0)
+	var err error
 	for _, p := range m.Processes() {
-		if !ProcessExist(p.Pid()) {
-			processesToRemove = append(processesToRemove, p.Pid())
-			continue
-		}
-		if err := p.Kill(); err != nil {
-			return err
+		if errTemp := p.Kill(); errTemp != nil {
+			if err == nil {
+				err = errTemp
+			}
 		}
 	}
-	for _, pid := range processesToRemove {
-		m.RemoveProcess(pid)
-	}
-	return nil
+	return err
 }
 
 // SignalAll sends a signal `sig` to all processes in current manager.
 func (m *Manager) SignalAll(sig os.Signal) error {
-	processesToRemove := make([]int, 0)
+	var err error
 	for _, p := range m.Processes() {
-		if !ProcessExist(p.Pid()) {
-			processesToRemove = append(processesToRemove, p.Pid())
-			continue
-		}
-		if err := p.Signal(sig); err != nil {
-			err = gerror.Wrapf(err, `send signal to process failed for pid "%d" with signal "%s"`, p.Process.Pid, sig)
-			return err
+		if errTemp := p.Signal(sig); errTemp != nil {
+			if err != nil {
+				err = gerror.Wrapf(err, `send signal to process failed for pid "%d" with signal "%s"`, p.Process.Pid, sig)
+			}
 		}
 	}
-	for _, pid := range processesToRemove {
-		m.RemoveProcess(pid)
-	}
-	return nil
+	return err
 }
 
 // Send sends data bytes to all processes in current manager.
@@ -128,7 +117,7 @@ func (m *Manager) Send(data []byte) {
 	}
 }
 
-// SendTo sneds data bytes to specified processe in current manager.
+// SendTo sends data bytes to specified processes in current manager.
 func (m *Manager) SendTo(pid int, data []byte) error {
 	return Send(pid, data)
 }

@@ -26,5 +26,6 @@ require (
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
+	github.com/shirou/gopsutil v3.21.11+incompatible // indirect
 	golang.org/x/sys v0.10.0 // indirect
 )
