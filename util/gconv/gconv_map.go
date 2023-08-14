@@ -29,7 +29,7 @@ const (
 // tags that will be detected, otherwise it detects the tags in order of:
 // gconv, json, field name.
 func Map(value interface{}, tags ...string) map[string]interface{} {
-	return doMapConvert(value, recursiveTypeAuto, tags...)
+	return doMapConvert(value, recursiveTypeAuto, false, tags...)
 }
 
 // MapDeep does Map function recursively, which means if the attribute of `value`
@@ -37,14 +37,14 @@ func Map(value interface{}, tags ...string) map[string]interface{} {
 // a map[string]interface{} type variable.
 // Also see Map.
 func MapDeep(value interface{}, tags ...string) map[string]interface{} {
-	return doMapConvert(value, recursiveTypeTrue, tags...)
+	return doMapConvert(value, recursiveTypeTrue, false, tags...)
 }
 
 // doMapConvert implements the map converting.
 // It automatically checks and converts json string to map if `value` is string/[]byte.
 //
 // TODO completely implement the recursive converting for all types, especially the map.
-func doMapConvert(value interface{}, recursive recursiveType, tags ...string) map[string]interface{} {
+func doMapConvert(value interface{}, recursive recursiveType, mustMapReturn bool, tags ...string) map[string]interface{} {
 	if value == nil {
 		return nil
 	}
@@ -209,7 +209,7 @@ func doMapConvert(value interface{}, recursive recursiveType, tags ...string) ma
 					RecursiveType:   recursive,
 					RecursiveOption: recursive == recursiveTypeTrue,
 					Tags:            newTags,
-					MustMapReturn:   true,
+					MustMapReturn:   mustMapReturn,
 				},
 			)
 			if m, ok := convertedValue.(map[string]interface{}); ok {
