@@ -8,6 +8,8 @@ package gfcmd
 
 import (
 	_ "github.com/gogf/gf/cmd/gf/v2/internal/packed"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 
 	"context"
 
@@ -38,7 +40,7 @@ func (c *Command) Run(ctx context.Context) {
 			if err, ok := exception.(error); ok {
 				mlog.Print(err.Error())
 			} else {
-				panic(exception)
+				panic(gerror.NewCodef(gcode.CodeInternalPanic, "%+v", exception))
 			}
 		}
 	}()

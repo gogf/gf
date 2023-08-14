@@ -46,6 +46,7 @@ var (
 	CodeNotFound                  = localCode{65, "Not Found", nil}                    // Resource does not exist.
 	CodeInvalidRequest            = localCode{66, "Invalid Request", nil}              // Invalid request.
 	CodeNecessaryPackageNotImport = localCode{67, "Necessary Package Not Import", nil} // It needs necessary package import.
+	CodeInternalPanic             = localCode{68, "Internal Panic", nil}               // An panic occurred internally.
 	CodeBusinessValidationFailed  = localCode{300, "Business Validation Failed", nil}  // Business validation failed.
 )
 
