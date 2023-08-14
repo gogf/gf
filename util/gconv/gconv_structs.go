@@ -53,7 +53,7 @@ func doStructs(params interface{}, pointer interface{}, mapping map[string]strin
 			if v, ok := exception.(error); ok && gerror.HasStack(v) {
 				err = v
 			} else {
-				err = gerror.NewCodeSkipf(gcode.CodeInternalError, 1, "%+v", exception)
+				err = gerror.NewCodeSkipf(gcode.CodeInternalPanic, 1, "%+v", exception)
 			}
 		}
 	}()

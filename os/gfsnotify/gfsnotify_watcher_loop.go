@@ -8,6 +8,8 @@ package gfsnotify
 
 import (
 	"context"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 
 	"github.com/gogf/gf/v2/container/glist"
 	"github.com/gogf/gf/v2/internal/intlog"
@@ -127,6 +129,9 @@ func (w *Watcher) eventLoop() {
 								case callbackExitEventPanicStr:
 									w.RemoveCallback(callback.Id)
 								default:
+									if e, ok := err.(error); ok {
+										panic(gerror.WrapCode(gcode.CodeInternalPanic, e))
+									}
 									panic(err)
 								}
 							}

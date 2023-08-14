@@ -108,7 +108,7 @@ func (c *Command) doRun(ctx context.Context, parser *Parser) (value interface{},
 			if v, ok := exception.(error); ok && gerror.HasStack(v) {
 				err = v
 			} else {
-				err = gerror.Newf(`exception recovered: %+v`, exception)
+				err = gerror.NewCodef(gcode.CodeInternalPanic, "exception recovered: %+v", exception)
 			}
 		}
 	}()

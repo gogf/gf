@@ -8,6 +8,7 @@ package gtimer
 
 import (
 	"context"
+	"github.com/gogf/gf/v2/errors/gcode"
 
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -51,7 +52,7 @@ func (entry *Entry) Run() {
 					if v, ok := exception.(error); ok && gerror.HasStack(v) {
 						panic(v)
 					} else {
-						panic(gerror.Newf(`exception recovered: %+v`, exception))
+						panic(gerror.NewCodef(gcode.CodeInternalPanic, "exception recovered: %+v", exception))
 					}
 				} else {
 					entry.Close()
