@@ -9,6 +9,7 @@ package gutil
 
 import (
 	"context"
+	"github.com/gogf/gf/v2/errors/gcode"
 	"reflect"
 
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -33,7 +34,7 @@ func Try(ctx context.Context, try func(ctx context.Context)) (err error) {
 			if v, ok := exception.(error); ok && gerror.HasStack(v) {
 				err = v
 			} else {
-				err = gerror.Newf(`%+v`, exception)
+				err = gerror.NewCodef(gcode.CodeInternalPanic, "%+v", exception)
 			}
 		}
 	}()
@@ -49,7 +50,7 @@ func TryCatch(ctx context.Context, try func(ctx context.Context), catch ...func(
 			if v, ok := exception.(error); ok && gerror.HasStack(v) {
 				catch[0](ctx, v)
 			} else {
-				catch[0](ctx, gerror.Newf(`%+v`, exception))
+				catch[0](ctx, gerror.NewCodef(gcode.CodeInternalPanic, "%+v", exception))
 			}
 		}
 	}()
