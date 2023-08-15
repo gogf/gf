@@ -26,10 +26,13 @@ import (
 func Test_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		i18n := gi18n.New(gi18n.Options{
-			Path: gtest.DataPath("i18n"),
+			Path:                gtest.DataPath("i18n"),
+			IsDataViolenceCheck: false,
 		})
+
 		t.Assert(i18n.T(context.Background(), "{#user.name}"), "John")
-		t.Assert(i18n.T(context.Background(), "{#www.goframe.org}"), "goframe.org")
+		i18n.SetViolenceCheck(true)
+		t.Assert(i18n.T(context.Background(), "{#www.goframe.org}"), "goframe.org") // ViolenceCheck
 		t.Assert(i18n.T(context.Background(), "user.name"), "John")
 		t.Assert(i18n.T(context.Background(), "{#hosts.0}"), "alpha")
 		t.Assert(i18n.T(gi18n.WithLanguage(context.Background(), "en"), "{#hosts.0}"), "alpha")

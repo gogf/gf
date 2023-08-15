@@ -32,9 +32,10 @@ type Manager struct {
 
 // Options is used for i18n object configuration.
 type Options struct {
-	Path       string   // I18n files storage path.
-	Language   string   // Default local language.
-	Delimiters []string // Delimiters for variable parsing.
+	Path                string   // I18n files storage path.
+	Language            string   // Default local language.
+	Delimiters          []string // Delimiters for variable parsing.
+	IsDataViolenceCheck bool     // enables/disables violence check for data retrieving.
 }
 
 var (
@@ -125,6 +126,14 @@ func (m *Manager) SetDelimiters(left, right string) {
 	intlog.Printf(context.TODO(), `SetDelimiters: %v`, m.pattern)
 }
 
+// SetViolenceCheck enables/disables violence check for hierarchical data access.
+func (m *Manager) SetViolenceCheck(enabled bool) {
+	m.mu.Lock()
+	m.options.IsDataViolenceCheck = enabled
+	m.data = nil
+	m.mu.Unlock()
+}
+
 // T is alias of Translate for convenience.
 func (m *Manager) T(ctx context.Context, content string) string {
 	return m.Translate(ctx, content)
@@ -154,7 +163,6 @@ func (m *Manager) Translate(ctx context.Context, content string) string {
 	if data == nil {
 		return content
 	}
-	data.SetViolenceCheck(true)
 	// Parse content as name.
 	if v := data.Get(content); v != nil {
 		return v.String()
@@ -185,7 +193,6 @@ func (m *Manager) GetContent(ctx context.Context, key string) string {
 		transLang = lang
 	}
 	if data, ok := m.data[transLang]; ok {
-		data.SetViolenceCheck(true)
 		if v := data.Get(key); v != nil {
 			return v.String()
 		}
@@ -263,6 +270,7 @@ func (m *Manager) init(ctx context.Context) {
 
 			if j, err := gjson.LoadContent(gfile.GetBytes(file)); err == nil {
 				if m.data[lang] == nil {
+					j.SetViolenceCheck(m.options.IsDataViolenceCheck)
 					m.data[lang] = j
 				} else {
 					for k, v := range j.Map() {
