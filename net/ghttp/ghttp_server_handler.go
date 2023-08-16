@@ -67,10 +67,10 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					if code := gerror.Code(v); code != gcode.CodeNil {
 						s.handleErrorLog(v, request)
 					} else {
-						s.handleErrorLog(gerror.WrapCodeSkip(gcode.CodeInternalError, 1, v, ""), request)
+						s.handleErrorLog(gerror.WrapCodeSkip(gcode.CodeInternalPanic, 1, v, ""), request)
 					}
 				} else {
-					s.handleErrorLog(gerror.NewCodeSkipf(gcode.CodeInternalError, 1, "%+v", exception), request)
+					s.handleErrorLog(gerror.NewCodeSkipf(gcode.CodeInternalPanic, 1, "%+v", exception), request)
 				}
 			}
 		}

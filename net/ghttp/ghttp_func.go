@@ -47,12 +47,12 @@ func niceCallFunc(f func()) {
 						panic(v)
 					} else {
 						panic(gerror.WrapCodeSkip(
-							gcode.CodeInternalError, 1, v, "exception recovered",
+							gcode.CodeInternalPanic, 1, v, "exception recovered",
 						))
 					}
 				} else {
 					panic(gerror.NewCodeSkipf(
-						gcode.CodeInternalError, 1, "exception recovered: %+v", exception,
+						gcode.CodeInternalPanic, 1, "exception recovered: %+v", exception,
 					))
 				}
 			}
