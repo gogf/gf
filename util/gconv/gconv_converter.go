@@ -29,7 +29,7 @@ var customConverters = make(map[converterInType]map[converterOutType]converterFu
 // Note:
 //  1. The parameter `fn` must be defined as pattern `func(T1) (T2, error)`.
 //     It will convert type `T1` to type `T2`.
-//  2. The `T1`/`T2` cannot be pointer type. It automatically does the pointer converting internally.
+//  2. The `T1` should not be type of pointer, but the `T2` should be type of pointer.
 func RegisterConverter(fn interface{}) (err error) {
 	var (
 		fnReflectType = reflect.TypeOf(fn)
@@ -54,15 +54,15 @@ func RegisterConverter(fn interface{}) (err error) {
 	if inType.Kind() == reflect.Pointer {
 		err = gerror.NewCodef(
 			gcode.CodeInvalidParameter,
-			"input parameter type `%s` of converter function should not be type of pointer",
+			"invalid input parameter type `%s`: should not be type of pointer",
 			inType.String(),
 		)
 		return
 	}
-	if outType.Kind() == reflect.Pointer {
+	if outType.Kind() != reflect.Pointer {
 		err = gerror.NewCodef(
 			gcode.CodeInvalidParameter,
-			"output parameter type `%s` of converter function should not be type of pointer",
+			"invalid output parameter type `%s`: should be type of pointer",
 			outType.String(),
 		)
 		return
@@ -87,25 +87,33 @@ func RegisterConverter(fn interface{}) (err error) {
 
 // callCustomConverter call the custom converter. It will try some possible type.
 func callCustomConverter(srcReflectValue reflect.Value, dstReflectValue reflect.Value) (converted bool, err error) {
+	if len(customConverters) == 0 {
+		return false, nil
+	}
 	var (
 		ok      bool
 		srcType = srcReflectValue.Type()
-		dstType = dstReflectValue.Type()
 	)
 	for srcType.Kind() == reflect.Pointer {
 		srcType = srcType.Elem()
-	}
-	for dstType.Kind() == reflect.Pointer {
-		dstType = dstType.Elem()
 	}
 	var (
 		registeredOutTypeMap    map[converterOutType]converterFunc
 		registeredConverterFunc converterFunc
 	)
+	// firstly, it searches the map by input parameter type.
 	registeredOutTypeMap, ok = customConverters[srcType]
 	if !ok {
 		return false, nil
 	}
+	var dstType = dstReflectValue.Type()
+	if dstType.Kind() == reflect.Pointer && dstReflectValue.Elem().Kind() == reflect.Pointer {
+		dstType = dstReflectValue.Elem().Type()
+	} else if dstType.Kind() != reflect.Pointer && dstReflectValue.CanAddr() {
+		dstType = dstReflectValue.Addr().Type()
+	}
+	// secondly, it searches the input parameter type map
+	// and finds the result converter function by the output parameter type.
 	registeredConverterFunc, ok = registeredOutTypeMap[dstType]
 	if !ok {
 		return false, nil
@@ -115,29 +123,33 @@ func callCustomConverter(srcReflectValue reflect.Value, dstReflectValue reflect.
 		srcReflectValue = srcReflectValue.Elem()
 	}
 	result := registeredConverterFunc.Call([]reflect.Value{srcReflectValue})
-	// The `result[0]` must have a default value.
+	if !result[1].IsNil() {
+		return false, result[1].Interface().(error)
+	}
+	// The `result[0]` is a pointer.
+	if result[0].IsNil() {
+		return false, nil
+	}
 	var resultValue = result[0]
-	for resultValue.Type() != dstReflectValue.Type() {
-		if resultValue.CanAddr() {
-			resultValue = resultValue.Addr()
+	for {
+		if resultValue.Type() == dstReflectValue.Type() && dstReflectValue.CanSet() {
+			dstReflectValue.Set(resultValue)
+			converted = true
+		} else if dstReflectValue.Kind() == reflect.Pointer {
+			if resultValue.Type() == dstReflectValue.Elem().Type() && dstReflectValue.Elem().CanSet() {
+				dstReflectValue.Elem().Set(resultValue)
+				converted = true
+			}
+		}
+		if converted {
+			break
+		}
+		if resultValue.Kind() == reflect.Pointer {
+			resultValue = resultValue.Elem()
 		} else {
-			newReflectValue := reflect.New(resultValue.Type())
-			newReflectValue.Elem().Set(resultValue)
-			resultValue = newReflectValue
+			break
 		}
 	}
-	converted = true
-	if dstReflectValue.CanSet() {
-		dstReflectValue.Set(resultValue)
-	} else if dstReflectValue.Elem().CanSet() {
-		dstReflectValue.Elem().Set(resultValue.Elem())
-	} else {
-		converted = false
-	}
-	if result[1].IsNil() {
-		err = nil
-	} else {
-		err = result[1].Interface().(error)
-	}
-	return converted, err
+
+	return converted, nil
 }

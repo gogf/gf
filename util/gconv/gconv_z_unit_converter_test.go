@@ -56,8 +56,8 @@ func TestConverter_Struct(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		err := gconv.RegisterConverter(func(a tA) (b tB, err error) {
-			b = tB{
+		err := gconv.RegisterConverter(func(a tA) (b *tB, err error) {
+			b = &tB{
 				Val1: int32(a.Val),
 				Val2: "abc",
 			}
@@ -127,8 +127,8 @@ func TestConverter_Struct(t *testing.T) {
 		t.Assert(bb.ValTop, 123)
 		t.AssertNE(bb.ValTB.Val1, 234)
 
-		err = gconv.RegisterConverter(func(a tAA) (b tBB, err error) {
-			b = tBB{
+		err = gconv.RegisterConverter(func(a tAA) (b *tBB, err error) {
+			b = &tBB{
 				ValTop: int32(a.ValTop) + 2,
 			}
 			err = gconv.Scan(a.ValTA, &b.ValTB)
@@ -176,7 +176,7 @@ func TestConverter_Struct(t *testing.T) {
 	})
 }
 
-func TestConverter_CustomBasicType(t *testing.T) {
+func TestConverter_CustomBasicType_ToStruct(t *testing.T) {
 	type CustomString string
 	type CustomStruct struct {
 		S string
@@ -188,18 +188,36 @@ func TestConverter_CustomBasicType(t *testing.T) {
 		)
 		err := gconv.Scan(a, &b)
 		t.AssertNE(err, nil)
-		t.AssertNE(b, nil)
-		t.Assert(b.S, "")
+		t.Assert(b, nil)
 	})
 
-	//gtest.C(t, func(t *gtest.T) {
-	//	err := gconv.RegisterConverter(func(a tA) (b tB, err error) {
-	//		b = tB{
-	//			Val1: int32(a.Val),
-	//			Val2: "abc",
-	//		}
-	//		return
-	//	})
-	//	t.AssertNil(err)
-	//})
+	gtest.C(t, func(t *gtest.T) {
+		err := gconv.RegisterConverter(func(a CustomString) (b *CustomStruct, err error) {
+			b = &CustomStruct{
+				S: string(a),
+			}
+			return
+		})
+		t.AssertNil(err)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			a CustomString = "abc"
+			b *CustomStruct
+		)
+		err := gconv.Scan(a, &b)
+		t.AssertNil(err)
+		t.AssertNE(b, nil)
+		t.Assert(b.S, a)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			a CustomString = "abc"
+			b *CustomStruct
+		)
+		err := gconv.Scan(&a, &b)
+		t.AssertNil(err)
+		t.AssertNE(b, nil)
+		t.Assert(b.S, a)
+	})
 }

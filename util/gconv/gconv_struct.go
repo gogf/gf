@@ -184,8 +184,14 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 	// For example, if `pointer` is **User, then `elem` is *User, which is a pointer to User.
 	if pointerElemReflectValue.Kind() == reflect.Ptr {
 		if !pointerElemReflectValue.IsValid() || pointerElemReflectValue.IsNil() {
-			e := reflect.New(pointerElemReflectValue.Type().Elem()).Elem()
-			pointerElemReflectValue.Set(e.Addr())
+			e := reflect.New(pointerElemReflectValue.Type().Elem())
+			pointerElemReflectValue.Set(e)
+			defer func() {
+				if err != nil {
+					// If it is converted failed, it reset the `pointer` to nil.
+					pointerReflectValue.Elem().Set(reflect.Zero(pointerReflectValue.Type().Elem()))
+				}
+			}()
 		}
 		// if v, ok := pointerElemReflectValue.Interface().(iUnmarshalValue); ok {
 		//	return v.UnmarshalValue(params)
