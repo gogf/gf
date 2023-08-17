@@ -7,10 +7,12 @@
 package gdb
 
 import (
+	"database/sql"
 	"math"
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -191,5 +193,12 @@ func (r Result) RecordKeyUint(key string) map[uint]Record {
 // Structs converts `r` to struct slice.
 // Note that the parameter `pointer` should be type of *[]struct/*[]*struct.
 func (r Result) Structs(pointer interface{}) (err error) {
+	// If the result is empty and the target pointer is not empty, it returns error.
+	if r.IsEmpty() {
+		if !empty.IsEmpty(pointer, true) {
+			return sql.ErrNoRows
+		}
+		return nil
+	}
 	return gconv.StructsTag(r, pointer, OrmTagForStruct)
 }

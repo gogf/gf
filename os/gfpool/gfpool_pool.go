@@ -62,7 +62,7 @@ func newFilePool(p *Pool, path string, flag int, perm os.FileMode, ttl time.Dura
 // File retrieves file item from the file pointer pool and returns it. It creates one if
 // the file pointer pool is empty.
 // Note that it should be closed when it will never be used. When it's closed, it is not
-// really closed the underlying file pointer but put back to the file pinter pool.
+// really closed the underlying file pointer but put back to the file pointer pool.
 func (p *Pool) File() (*File, error) {
 	if v, err := p.pool.Get(); err != nil {
 		return nil, err

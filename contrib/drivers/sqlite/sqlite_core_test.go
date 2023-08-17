@@ -8,6 +8,7 @@ package sqlite_test
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"testing"
 	"time"
@@ -839,8 +840,7 @@ func Test_DB_ToJson(t *testing.T) {
 		t.Assert(users[0].CreateTime, resultJson.Get("0.create_time").String())
 
 		result = nil
-		err = result.Structs(&users)
-		t.AssertNil(err)
+		t.Assert(result.Structs(&users), sql.ErrNoRows)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
