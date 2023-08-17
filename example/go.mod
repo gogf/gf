@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/gogf/gf/contrib/config/apollo/v2 v2.5.2
-	github.com/gogf/gf/contrib/config/kubecm/v2 v2.0.0-00010101000000-000000000000
+	github.com/gogf/gf/contrib/config/kubecm/v2 v2.5.2
 	github.com/gogf/gf/contrib/config/nacos/v2 v2.5.2
 	github.com/gogf/gf/contrib/config/polaris/v2 v2.5.2
 	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.5.2
