@@ -6,7 +6,7 @@ replace github.com/gogf/gf/v2 => ../../../
 
 require (
 	gitee.com/chunanyong/dm v1.8.10
-	github.com/gogf/gf/v2 v2.5.1
+	github.com/gogf/gf/v2 v2.5.2
 )
 
 require (
