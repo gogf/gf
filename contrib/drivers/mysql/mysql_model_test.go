@@ -4665,3 +4665,44 @@ func Test_Builder_OmitEmptyWhere(t *testing.T) {
 		t.Assert(count, int64(TableSize))
 	})
 }
+
+func Test_Scan_Nil_Result_Error(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	type S struct {
+		Id    int
+		Name  string
+		Age   int
+		Score int
+	}
+	gtest.C(t, func(t *gtest.T) {
+		var s *S
+		err := db.Model(table).Where("id", 1).Scan(&s)
+		t.AssertNil(err)
+		t.Assert(s.Id, 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var s *S
+		err := db.Model(table).Where("id", 100).Scan(&s)
+		t.AssertNil(err)
+		t.Assert(s, nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var s S
+		err := db.Model(table).Where("id", 100).Scan(&s)
+		t.Assert(err, sql.ErrNoRows)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var ss []*S
+		err := db.Model(table).Scan(&ss)
+		t.AssertNil(err)
+		t.Assert(len(ss), TableSize)
+	})
+	// If the result is empty, it returns error.
+	gtest.C(t, func(t *gtest.T) {
+		var ss = make([]*S, 10)
+		err := db.Model(table).WhereGT("id", 100).Scan(&ss)
+		t.Assert(err, sql.ErrNoRows)
+	})
+}

@@ -37,7 +37,11 @@ type iTime interface {
 // IsEmpty checks whether given `value` empty.
 // It returns true if `value` is in: 0, nil, false, "", len(slice/map/chan) == 0,
 // or else it returns false.
-func IsEmpty(value interface{}) bool {
+//
+// The parameter `traceSource` is used for tracing to the source variable if given `value` is type of pointer
+// that also points to a pointer. It returns true if the source is empty when `traceSource` is true.
+// Note that it might use reflect feature which affects performance a little.
+func IsEmpty(value interface{}, traceSource ...bool) bool {
 	if value == nil {
 		return true
 	}
@@ -88,38 +92,39 @@ func IsEmpty(value interface{}) bool {
 		return len(result) == 0
 
 	default:
-		// =========================
-		// Common interfaces checks.
-		// =========================
-		if f, ok := value.(iTime); ok {
-			if f == (*time.Time)(nil) {
-				return true
-			}
-			return f.IsZero()
-		}
-		if f, ok := value.(iString); ok {
-			if f == nil {
-				return true
-			}
-			return f.String() == ""
-		}
-		if f, ok := value.(iInterfaces); ok {
-			if f == nil {
-				return true
-			}
-			return len(f.Interfaces()) == 0
-		}
-		if f, ok := value.(iMapStrAny); ok {
-			if f == nil {
-				return true
-			}
-			return len(f.MapStrAny()) == 0
-		}
 		// Finally, using reflect.
 		var rv reflect.Value
 		if v, ok := value.(reflect.Value); ok {
 			rv = v
 		} else {
+			// =========================
+			// Common interfaces checks.
+			// =========================
+			if f, ok := value.(iTime); ok {
+				if f == (*time.Time)(nil) {
+					return true
+				}
+				return f.IsZero()
+			}
+			if f, ok := value.(iString); ok {
+				if f == nil {
+					return true
+				}
+				return f.String() == ""
+			}
+			if f, ok := value.(iInterfaces); ok {
+				if f == nil {
+					return true
+				}
+				return len(f.Interfaces()) == 0
+			}
+			if f, ok := value.(iMapStrAny); ok {
+				if f == nil {
+					return true
+				}
+				return len(f.MapStrAny()) == 0
+			}
+
 			rv = reflect.ValueOf(value)
 		}
 
@@ -169,21 +174,27 @@ func IsEmpty(value interface{}) bool {
 			reflect.Array:
 			return rv.Len() == 0
 
+		case reflect.Ptr:
+			if len(traceSource) > 0 && traceSource[0] {
+				return IsEmpty(rv.Elem())
+			}
+			return rv.IsNil()
+
 		case
 			reflect.Func,
-			reflect.Ptr,
 			reflect.Interface,
 			reflect.UnsafePointer:
-			if rv.IsNil() {
-				return true
-			}
+			return rv.IsNil()
+
+		case reflect.Invalid:
+			return true
 		}
 	}
 	return false
 }
 
 // IsNil checks whether given `value` is nil, especially for interface{} type value.
-// Parameter `traceSource` is used for tracing to the source variable if given `value` is type of pinter
+// Parameter `traceSource` is used for tracing to the source variable if given `value` is type of pointer
 // that also points to a pointer. It returns nil if the source is nil when `traceSource` is true.
 // Note that it might use reflect feature which affects performance a little.
 func IsNil(value interface{}, traceSource ...bool) bool {

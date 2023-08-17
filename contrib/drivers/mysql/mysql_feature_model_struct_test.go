@@ -301,7 +301,7 @@ func Test_Structs_Empty(t *testing.T) {
 		all, err := db.Model(table).Where("id>100").All()
 		t.AssertNil(err)
 		users := make([]User, 10)
-		t.Assert(all.Structs(&users), nil)
+		t.Assert(all.Structs(&users), sql.ErrNoRows)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		all, err := db.Model(table).Where("id>100").All()
@@ -320,7 +320,7 @@ func Test_Structs_Empty(t *testing.T) {
 		all, err := db.Model(table).Where("id>100").All()
 		t.AssertNil(err)
 		users := make([]*User, 10)
-		t.Assert(all.Structs(&users), nil)
+		t.Assert(all.Structs(&users), sql.ErrNoRows)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		all, err := db.Model(table).Where("id>100").All()
