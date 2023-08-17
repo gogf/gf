@@ -14,8 +14,9 @@ import (
 )
 
 // Convert converts the variable `fromValue` to the type `toTypeName`, the type `toTypeName` is specified by string.
+//
 // The optional parameter `extraParams` is used for additional necessary parameter for this conversion.
-// It supports common types conversion as its conversion based on type name string.
+// It supports common basic types conversion as its conversion based on type name string.
 func Convert(fromValue interface{}, toTypeName string, extraParams ...interface{}) interface{} {
 	return doConvert(doConvertInput{
 		FromValue:  fromValue,
