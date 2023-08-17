@@ -206,7 +206,7 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 
 	// paramsMap is the map[string]interface{} type variable for params.
 	// DO NOT use MapDeep here.
-	paramsMap := Map(paramsInterface)
+	paramsMap := doMapConvert(paramsInterface, recursiveTypeAuto, true)
 	if paramsMap == nil {
 		return gerror.NewCodef(
 			gcode.CodeInvalidParameter,

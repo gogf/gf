@@ -1349,3 +1349,53 @@ func Test_Struct_WithCustomType(t *testing.T) {
 		t.Assert(*req2.PayMode, 1000)
 	})
 }
+
+func Test_Struct_EmptyStruct(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+
+		type StructA struct {
+		}
+
+		type StructB struct {
+		}
+
+		var s1 StructA
+		var s2 *StructB
+
+		err = gconv.Scan(s1, &s2)
+		t.AssertNil(err)
+
+		err = gconv.Scan(&s1, &s2)
+		t.AssertNil(err)
+
+		type StructC struct {
+			Val int `json:"val,omitempty"`
+		}
+
+		type StructD struct {
+			Val int
+		}
+
+		var s3 StructC
+		var s4 *StructD
+
+		err = gconv.Scan(s3, &s4)
+		t.AssertNil(err)
+		t.Assert(s4.Val, 0)
+
+		err = gconv.Scan(&s3, &s4)
+		t.AssertNil(err)
+		t.Assert(s4.Val, 0)
+
+		s3.Val = 123
+		err = gconv.Scan(s3, &s4)
+		t.AssertNil(err)
+		t.Assert(s4.Val, 123)
+
+		err = gconv.Scan(&s3, &s4)
+		t.AssertNil(err)
+		t.Assert(s4.Val, 123)
+
+	})
+}
