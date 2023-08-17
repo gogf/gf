@@ -229,7 +229,7 @@ type doMapConvertForMapOrStructValueInput struct {
 	RecursiveType   recursiveType // The type from top function entry.
 	RecursiveOption bool          // Whether convert recursively for `current` operation.
 	Tags            []string      // Map key mapping.
-	MustMapReturn   bool          // Must return map intead of Value when empty
+	MustMapReturn   bool          // Must return map instead of Value when empty.
 }
 
 func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) interface{} {
