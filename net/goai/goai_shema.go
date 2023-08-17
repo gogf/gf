@@ -219,6 +219,9 @@ func (oai *OpenApiV3) structToSchema(object interface{}, isReq bool) (*Schema, e
 				if ref.Value.Format[0:2] != "[]" && ref.Value.Format[0] != '*' {
 					schema.Required = append(schema.Required, key)
 				}
+			} else { // is struct or struct pointer
+				// todo if it is struct pointer, don't mark it as required
+				schema.Required = append(schema.Required, key)
 			}
 		}
 		if !isValidParameterName(key) {
