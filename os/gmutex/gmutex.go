@@ -15,7 +15,7 @@ import (
 // Mutex is a high level Mutex, which implements more rich features for mutex.
 type Mutex struct {
 	rwMutex sync.RWMutex
-	wLocked bool
+	wLocked int32
 	rLocked int64
 }
 
@@ -29,14 +29,13 @@ func New() *Mutex {
 // it blocks until the lock is available.
 func (m *Mutex) Lock() {
 	m.rwMutex.Lock()
-	m.wLocked = true
+	atomic.StoreInt32(&m.wLocked, 1)
 }
 
 // Unlock unlocks writing lock on the mutex.
 // It is safe to be called multiple times even there's no locks.
 func (m *Mutex) Unlock() {
-	if m.IsWLocked() {
-		m.wLocked = false
+	if atomic.CompareAndSwapInt32(&m.wLocked, 1, 0) {
 		m.rwMutex.Unlock()
 	}
 }
@@ -47,7 +46,7 @@ func (m *Mutex) Unlock() {
 func (m *Mutex) TryLock() bool {
 	locked := m.rwMutex.TryLock()
 	if locked {
-		m.wLocked = true
+		atomic.StoreInt32(&m.wLocked, 1)
 	}
 	return locked
 }
@@ -98,7 +97,7 @@ func (m *Mutex) IsLocked() bool {
 // Note that the result might be changed after it's called,
 // so it cannot be the criterion for atomic operations.
 func (m *Mutex) IsWLocked() bool {
-	return m.wLocked
+	return atomic.LoadInt32(&m.wLocked) > 0
 }
 
 // IsRLocked checks whether the mutex is locked by reading lock.
