@@ -14,7 +14,7 @@ import (
 
 // Mutex is a high level Mutex, which implements more rich features for mutex.
 type Mutex struct {
-	sync.RWMutex
+	rwMutex sync.RWMutex
 	wLocked int32
 	rLocked int64
 }
@@ -28,7 +28,7 @@ func New() *Mutex {
 // If the mutex is already locked by another goroutine for reading or writing,
 // it blocks until the lock is available.
 func (m *Mutex) Lock() {
-	m.RWMutex.Lock()
+	m.rwMutex.Lock()
 	atomic.StoreInt32(&m.wLocked, 1)
 }
 
@@ -37,7 +37,7 @@ func (m *Mutex) Lock() {
 func (m *Mutex) Unlock() {
 	if m.IsWLocked() {
 		atomic.StoreInt32(&m.wLocked, 0)
-		m.RWMutex.Unlock()
+		m.rwMutex.Unlock()
 	}
 }
 
@@ -45,7 +45,7 @@ func (m *Mutex) Unlock() {
 // It returns true immediately if success, or if there's a write/reading lock on the mutex,
 // it returns false immediately.
 func (m *Mutex) TryLock() bool {
-	locked := m.RWMutex.TryLock()
+	locked := m.rwMutex.TryLock()
 	if locked {
 		atomic.StoreInt32(&m.wLocked, 1)
 	}
@@ -56,7 +56,7 @@ func (m *Mutex) TryLock() bool {
 // If the mutex is already locked for writing,
 // it blocks until the lock is available.
 func (m *Mutex) RLock() {
-	m.RWMutex.RLock()
+	m.rwMutex.RLock()
 	atomic.AddInt64(&m.rLocked, 1)
 }
 
@@ -65,7 +65,7 @@ func (m *Mutex) RLock() {
 func (m *Mutex) RUnlock() {
 	if m.IsRLocked() {
 		atomic.AddInt64(&m.rLocked, -1)
-		m.RWMutex.RUnlock()
+		m.rwMutex.RUnlock()
 	}
 }
 
@@ -73,7 +73,7 @@ func (m *Mutex) RUnlock() {
 // It returns true immediately if success, or if there's a writing lock on the mutex,
 // it returns false immediately.
 func (m *Mutex) TryRLock() bool {
-	locked := m.RWMutex.TryRLock()
+	locked := m.rwMutex.TryRLock()
 	if locked {
 		atomic.AddInt64(&m.rLocked, 1)
 	}
