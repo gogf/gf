@@ -15,8 +15,8 @@ import (
 // Mutex is a high level Mutex, which implements more rich features for mutex.
 type Mutex struct {
 	sync.RWMutex
-	wLocked atomic.Bool
-	rLocked atomic.Int64
+	wLocked int32
+	rLocked int64
 }
 
 // New creates and returns a new mutex.
@@ -29,14 +29,14 @@ func New() *Mutex {
 // it blocks until the lock is available.
 func (m *Mutex) Lock() {
 	m.RWMutex.Lock()
-	m.wLocked.Store(true)
+	atomic.StoreInt32(&m.wLocked, 1)
 }
 
 // Unlock unlocks writing lock on the mutex.
 // It is safe to be called multiple times even there's no locks.
 func (m *Mutex) Unlock() {
 	if m.IsWLocked() {
-		m.wLocked.Store(false)
+		atomic.StoreInt32(&m.wLocked, 0)
 		m.RWMutex.Unlock()
 	}
 }
@@ -47,7 +47,7 @@ func (m *Mutex) Unlock() {
 func (m *Mutex) TryLock() bool {
 	locked := m.RWMutex.TryLock()
 	if locked {
-		m.wLocked.Store(true)
+		atomic.StoreInt32(&m.wLocked, 1)
 	}
 	return locked
 }
@@ -57,14 +57,14 @@ func (m *Mutex) TryLock() bool {
 // it blocks until the lock is available.
 func (m *Mutex) RLock() {
 	m.RWMutex.RLock()
-	m.rLocked.Add(1)
+	atomic.AddInt64(&m.rLocked, 1)
 }
 
 // RUnlock unlocks the reading lock on the mutex.
 // It is safe to be called multiple times even there's no locks.
 func (m *Mutex) RUnlock() {
 	if m.IsRLocked() {
-		m.rLocked.Add(-1)
+		atomic.AddInt64(&m.rLocked, -1)
 		m.RWMutex.RUnlock()
 	}
 }
@@ -75,7 +75,7 @@ func (m *Mutex) RUnlock() {
 func (m *Mutex) TryRLock() bool {
 	locked := m.RWMutex.TryRLock()
 	if locked {
-		m.rLocked.Add(1)
+		atomic.AddInt64(&m.rLocked, 1)
 	}
 	return locked
 }
@@ -91,14 +91,14 @@ func (m *Mutex) IsLocked() bool {
 // Note that the result might be changed after it's called,
 // so it cannot be the criterion for atomic operations.
 func (m *Mutex) IsWLocked() bool {
-	return m.wLocked.Load()
+	return atomic.LoadInt32(&m.wLocked) == 1
 }
 
 // IsRLocked checks whether the mutex is locked by reading lock.
 // Note that the result might be changed after it's called,
 // so it cannot be the criterion for atomic operations.
 func (m *Mutex) IsRLocked() bool {
-	return m.rLocked.Load() > 0
+	return atomic.LoadInt64(&m.rLocked) > 0
 }
 
 // LockFunc locks the mutex for writing with given callback function `f`.
