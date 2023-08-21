@@ -10,7 +10,7 @@
 package gmutex
 
 // New creates and returns a new mutex.
-// Deprecated, use Mutex or RWMutex instead.
+// Deprecated: use Mutex or RWMutex instead.
 func New() *RWMutex {
 	return &RWMutex{}
 }
