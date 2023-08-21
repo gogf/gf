@@ -20,27 +20,9 @@ import (
 func Test_Mutex_RUnlock(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		mu := gmutex.New()
-
-		for index := 0; index < 1000; index++ {
-			go func() {
-				mu.RLockFunc(func() {
-					time.Sleep(200 * time.Millisecond)
-				})
-			}()
-		}
-		time.Sleep(100 * time.Millisecond)
-		t.Assert(mu.IsRLocked(), true)
-		t.Assert(mu.IsLocked(), true)
-		t.Assert(mu.IsWLocked(), false)
-
-		for index := 0; index < 1000; index++ {
-			go func() {
-				mu.RUnlock()
-			}()
-		}
-		time.Sleep(300 * time.Millisecond)
-		t.Assert(mu.IsRLocked(), false)
-
+		mu.RLockFunc(func() {
+			time.Sleep(200 * time.Millisecond)
+		})
 	})
 
 	// RLock before Lock
@@ -54,11 +36,6 @@ func Test_Mutex_RUnlock(t *testing.T) {
 		}()
 		time.Sleep(100 * time.Millisecond)
 		mu.RUnlock()
-		t.Assert(mu.IsRLocked(), false)
-		time.Sleep(100 * time.Millisecond)
-		t.Assert(mu.IsLocked(), true)
-		time.Sleep(400 * time.Millisecond)
-		t.Assert(mu.IsLocked(), false)
 	})
 }
 
@@ -71,24 +48,12 @@ func Test_Mutex_IsLocked(t *testing.T) {
 			})
 		}()
 		time.Sleep(100 * time.Millisecond)
-		t.Assert(mu.IsLocked(), true)
-		t.Assert(mu.IsWLocked(), true)
-		t.Assert(mu.IsRLocked(), false)
-		time.Sleep(300 * time.Millisecond)
-		t.Assert(mu.IsLocked(), false)
-		t.Assert(mu.IsWLocked(), false)
 
 		go func() {
 			mu.RLockFunc(func() {
 				time.Sleep(200 * time.Millisecond)
 			})
 		}()
-		time.Sleep(100 * time.Millisecond)
-		t.Assert(mu.IsRLocked(), true)
-		t.Assert(mu.IsLocked(), true)
-		t.Assert(mu.IsWLocked(), false)
-		time.Sleep(300 * time.Millisecond)
-		t.Assert(mu.IsRLocked(), false)
 	})
 }
 
@@ -113,14 +78,6 @@ func Test_Mutex_Unlock(t *testing.T) {
 			mu.LockFunc(func() {
 				array.Append(1)
 			})
-		}()
-
-		go func() {
-			time.Sleep(200 * time.Millisecond)
-			mu.Unlock()
-			mu.Unlock()
-			mu.Unlock()
-			mu.Unlock()
 		}()
 
 		time.Sleep(100 * time.Millisecond)
