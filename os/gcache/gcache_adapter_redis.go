@@ -17,7 +17,8 @@ import (
 
 // AdapterRedis is the gcache adapter implements using Redis server.
 type AdapterRedis struct {
-	redis *gredis.Redis
+	redis          *gredis.Redis
+	onExpiredClear func(key interface{}, value *gvar.Var)
 }
 
 // NewAdapterRedis creates and returns a new memory cache object.
@@ -25,6 +26,12 @@ func NewAdapterRedis(redis *gredis.Redis) Adapter {
 	return &AdapterRedis{
 		redis: redis,
 	}
+}
+
+// SetOnExpiredClearCallBack set a callback function that used when clear the expired key and value.
+// This callback function will execute after clear the expired key and value
+func (c *AdapterRedis) SetOnExpiredClearCallBack(ctx context.Context, callback func(key interface{}, value *gvar.Var)) {
+	c.onExpiredClear = callback
 }
 
 // Set sets cache with `key`-`value` pair, which is expired after `duration`.

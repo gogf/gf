@@ -139,4 +139,8 @@ type Adapter interface {
 
 	// Close closes the cache if necessary.
 	Close(ctx context.Context) error
+
+	// SetOnExpiredClearCallBack set a callback function that used when clear the expired key and value.
+	// This callback function will execute after clear the expired key and value
+	SetOnExpiredClearCallBack(ctx context.Context, callback func(key interface{}, value *gvar.Var))
 }

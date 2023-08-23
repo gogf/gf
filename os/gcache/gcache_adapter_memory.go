@@ -8,7 +8,9 @@ package gcache
 
 import (
 	"context"
+	"fmt"
 	"math"
+	"os"
 	"time"
 
 	"github.com/gogf/gf/v2/container/glist"
@@ -25,14 +27,15 @@ type AdapterMemory struct {
 	// If the size of the cache exceeds the cap,
 	// the cache expiration process performs according to the LRU algorithm.
 	// It is 0 in default which means no limits.
-	cap         int
-	data        *adapterMemoryData        // data is the underlying cache data which is stored in a hash table.
-	expireTimes *adapterMemoryExpireTimes // expireTimes is the expiring key to its timestamp mapping, which is used for quick indexing and deleting.
-	expireSets  *adapterMemoryExpireSets  // expireSets is the expiring timestamp to its key set mapping, which is used for quick indexing and deleting.
-	lru         *adapterMemoryLru         // lru is the LRU manager, which is enabled when attribute cap > 0.
-	lruGetList  *glist.List               // lruGetList is the LRU history according to Get function.
-	eventList   *glist.List               // eventList is the asynchronous event list for internal data synchronization.
-	closed      *gtype.Bool               // closed controls the cache closed or not.
+	cap            int
+	data           *adapterMemoryData        // data is the underlying cache data which is stored in a hash table.
+	expireTimes    *adapterMemoryExpireTimes // expireTimes is the expiring key to its timestamp mapping, which is used for quick indexing and deleting.
+	expireSets     *adapterMemoryExpireSets  // expireSets is the expiring timestamp to its key set mapping, which is used for quick indexing and deleting.
+	lru            *adapterMemoryLru         // lru is the LRU manager, which is enabled when attribute cap > 0.
+	lruGetList     *glist.List               // lruGetList is the LRU history according to Get function.
+	eventList      *glist.List               // eventList is the asynchronous event list for internal data synchronization.
+	closed         *gtype.Bool               // closed controls the cache closed or not.
+	onExpiredClear func(key interface{}, value *gvar.Var)
 }
 
 // Internal cache item.
@@ -68,6 +71,12 @@ func NewAdapterMemory(lruCap ...int) Adapter {
 		c.lru = newMemCacheLru(c)
 	}
 	return c
+}
+
+// SetOnExpiredClearCallBack set a callback function that used when clear the expired key and value.
+// This callback function will execute after clear the expired key and value
+func (c *AdapterMemory) SetOnExpiredClearCallBack(ctx context.Context, callback func(key interface{}, value *gvar.Var)) {
+	c.onExpiredClear = callback
 }
 
 // Set sets cache with `key`-`value` pair, which is expired after `duration`.
@@ -463,6 +472,7 @@ func (c *AdapterMemory) syncEventAndClearExpired(ctx context.Context) {
 // clearByKey deletes the key-value pair with given `key`.
 // The parameter `force` specifies whether doing this deleting forcibly.
 func (c *AdapterMemory) clearByKey(key interface{}, force ...bool) {
+	item, existVal := c.data.Get(key)
 	// Doubly check before really deleting it from cache.
 	c.data.DeleteWithDoubleCheck(key, force...)
 
@@ -472,5 +482,17 @@ func (c *AdapterMemory) clearByKey(key interface{}, force ...bool) {
 	// Deleting it from LRU.
 	if c.cap > 0 {
 		c.lru.Remove(key)
+	}
+
+	// invoke callback function if set
+	if c.onExpiredClear != nil && existVal && item.IsExpired() {
+		go func() {
+			defer func() {
+				if x := recover(); x != nil {
+					fmt.Fprintf(os.Stderr, "panic when execute onExpiredClearCallback function for value of key %v: %v\n", key, x)
+				}
+			}()
+			c.onExpiredClear(key, gvar.New(item.v))
+		}()
 	}
 }

@@ -9,6 +9,8 @@ package gcache_test
 import (
 	"context"
 	"fmt"
+	"github.com/gogf/gf/v2/container/gvar"
+	"strconv"
 	"time"
 
 	"github.com/gogf/gf/v2/database/gredis"
@@ -738,4 +740,69 @@ func ExampleCache_GetAdapter() {
 	// value
 	// <nil>
 	// value
+}
+
+// define value type
+type ClosableValue struct {
+	No int
+}
+
+func (v *ClosableValue) Close() error {
+	return nil
+}
+
+func (v *ClosableValue) String() string {
+	return "closable item: " + strconv.Itoa(v.No)
+}
+
+func ExampleCache_SetOnExpiredClearCallBack() {
+	// Create a cache object,
+	// Of course, you can also easily use the gcache package method directly.
+	c := gcache.New()
+
+	// set expired clear callback function
+	c.SetOnExpiredClearCallBack(context.Background(), func(key interface{}, value *gvar.Var) {
+		// try to close
+		closableValue := value.Interface().(*ClosableValue)
+		closableValue.Close()
+		fmt.Printf("value of key %v is closed\n", key)
+	})
+
+	// Set cache with 2 seconds expiration
+	c.Set(ctx, "k1", &ClosableValue{No: 1}, time.Second*2)
+	c.Set(ctx, "k2", &ClosableValue{No: 2}, time.Second*2)
+
+	// Get cache
+	v, _ := c.Get(ctx, "k1")
+	fmt.Println(v)
+
+	// Get cache size
+	n, _ := c.Size(ctx)
+	fmt.Println(n)
+
+	// Does the specified key name exist in the cache
+	b, _ := c.Contains(ctx, "k1")
+	fmt.Println(b)
+
+	// Delete and return the deleted key value
+	fmt.Println(c.Remove(ctx, "k1"))
+
+	// Does the specified key name exist in the cache
+	k, _ := c.Contains(ctx, "k1")
+	fmt.Println(k)
+
+	// wait all keys expired
+	time.Sleep(time.Second * 5)
+
+	// Close the cache object and let the GC reclaim resources
+
+	c.Close(ctx)
+
+	// Output:
+	// closable item: 1
+	// 2
+	// true
+	// closable item: 1 <nil>
+	// false
+	// value of key k2 is closed
 }
