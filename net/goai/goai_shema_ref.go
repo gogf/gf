@@ -76,7 +76,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 	}
 	schemaRef.Value = schema
 	switch oaiType {
-	case TypeString:
+	case TypeString, TypeFile:
 	// Nothing to do.
 	case TypeInteger:
 		if schemaRef.Value.Default != nil {
