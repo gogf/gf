@@ -52,7 +52,7 @@ func (r RuleEnums) Run(in RunInput) error {
 				if tagEnums == "" {
 					return gerror.NewCodef(
 						gcode.CodeInvalidOperation,
-						`no enums found for type "%s"`,
+						`no enums found for type "%s", missing using command "gf gen enums"?`,
 						typeId,
 					)
 				}
