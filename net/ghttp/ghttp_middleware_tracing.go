@@ -10,7 +10,9 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
 
+	"github.com/gogf/gf/v2/internal/utils"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -20,7 +22,6 @@ import (
 	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/httputil"
-	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -87,7 +88,11 @@ func internalMiddlewareServerTracing(r *Request) {
 		span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, err))
 		return
 	}
-	r.Body = utils.NewReadCloser(reqBodyContentBytes, false)
+	r.Body = http.MaxBytesReader(
+		r.Response.Writer,
+		utils.NewReadCloser(reqBodyContentBytes, false),
+		r.Server.config.ClientMaxBodySize,
+	)
 
 	span.AddEvent(tracingEventHttpRequest, trace.WithAttributes(
 		attribute.String(tracingEventHttpRequestHeaders, gconv.String(httputil.HeaderToMap(r.Header))),
