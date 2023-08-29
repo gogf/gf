@@ -272,7 +272,7 @@ func Test_DB_Insert_KeyFieldNameMapping(t *testing.T) {
 	})
 }
 
-func Test_DB_Upadte_KeyFieldNameMapping(t *testing.T) {
+func Test_DB_Update_KeyFieldNameMapping(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 

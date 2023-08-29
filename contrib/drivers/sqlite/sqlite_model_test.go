@@ -2787,34 +2787,6 @@ func Test_Model_Fields_Struct(t *testing.T) {
 	})
 }
 
-// func Test_Model_NullField(t *testing.T) {
-// 	table := createTable()
-// 	defer dropTable(table)
-
-// 	gtest.C(t, func(t *gtest.T) {
-// 		type User struct {
-// 			Id       int
-// 			Passport *string
-// 		}
-// 		data := g.Map{
-// 			"id":       1,
-// 			"passport": nil,
-// 		}
-// 		result, err := db.Model(table).Data(data).Insert()
-// 		t.AssertNil(err)
-// 		n, _ := result.RowsAffected()
-// 		t.Assert(n, 1)
-// 		one, err := db.Model(table).WherePri(1).One()
-// 		t.AssertNil(err)
-
-// 		var user *User
-// 		err = one.Struct(&user)
-// 		t.AssertNil(err)
-// 		t.Assert(user.Id, data["id"])
-// 		t.Assert(user.Passport, data["passport"])
-// 	})
-// }
-
 func Test_Model_Empty_Slice_Argument(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
@@ -3221,17 +3193,6 @@ func Test_Model_WhereNotNull(t *testing.T) {
 		t.Assert(result[TableSize-1]["id"], TableSize)
 	})
 }
-
-// func Test_Model_WhereOrNull(t *testing.T) {
-// 	table := createInitTable()
-// 	defer dropTable(table)
-
-// 	gtest.C(t, func(t *gtest.T) {
-// 		result, err := db.Model(table).WhereOrNull("nickname").WhereOrNull("passport").OrderAsc("id").OrderRandom().All()
-// 		t.AssertNil(err)
-// 		t.Assert(len(result), 0)
-// 	})
-// }
 
 func Test_Model_WhereOrNotNull(t *testing.T) {
 	table := createInitTable()
@@ -3949,56 +3910,6 @@ func Test_Model_WherePrefixLike(t *testing.T) {
 		t.Assert(r[0]["id"], "3")
 	})
 }
-
-// TODO
-// https://github.com/gogf/gf/issues/1700
-// func Test_Model_Issue1700(t *testing.T) {
-// 	table := "user_" + gtime.Now().TimestampNanoStr()
-// 	if _, err := db.Exec(ctx, fmt.Sprintf(`
-// 	CREATE TABLE IF NOT EXISTS %s (
-// 		id INTEGER	PRIMARY KEY AUTOINCREMENT
-// 					UNIQUE
-// 					NOT NULL,
-// 		user_id	int(10) NOT NULL,
-// 		UserId	int(10) NOT NULL
-// 	);
-// 	`, table,
-// 	)); err != nil {
-// 		gtest.AssertNil(err)
-// 	}
-// 	defer dropTable(table)
-
-// 	gtest.C(t, func(t *gtest.T) {
-// 		type User struct {
-// 			Id     int `orm:"id"`
-// 			Userid int `orm:"user_id"`
-// 			UserId int `orm:"UserId"`
-// 		}
-// 		_, err := db.Model(table).Data(User{
-// 			Id:     1,
-// 			Userid: 2,
-// 			UserId: 3,
-// 		}).Insert()
-// 		t.AssertNil(err)
-
-// 		one, err := db.Model(table).One()
-// 		t.AssertNil(err)
-// 		t.Assert(one, g.Map{
-// 			"id":      1,
-// 			"user_id": 2,
-// 			"UserId":  3,
-// 		})
-
-// 		for i := 0; i < 1000; i++ {
-// 			var user *User
-// 			err = db.Model(table).Scan(&user)
-// 			t.AssertNil(err)
-// 			t.Assert(user.Id, 1)
-// 			t.Assert(user.Userid, 2)
-// 			t.Assert(user.UserId, 3)
-// 		}
-// 	})
-// }
 
 // https://github.com/gogf/gf/issues/1159
 func Test_ScanList_NoRecreate_PtrAttribute(t *testing.T) {

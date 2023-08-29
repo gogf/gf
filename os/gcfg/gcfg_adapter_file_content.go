@@ -14,7 +14,7 @@ import (
 
 // SetContent sets customized configuration content for specified `file`.
 // The `file` is unnecessary param, default is DefaultConfigFile.
-func (c *AdapterFile) SetContent(content string, file ...string) {
+func (a *AdapterFile) SetContent(content string, file ...string) {
 	name := DefaultConfigFileName
 	if len(file) > 0 {
 		name = file[0]
@@ -36,7 +36,7 @@ func (c *AdapterFile) SetContent(content string, file ...string) {
 
 // GetContent returns customized configuration content for specified `file`.
 // The `file` is unnecessary param, default is DefaultConfigFile.
-func (c *AdapterFile) GetContent(file ...string) string {
+func (a *AdapterFile) GetContent(file ...string) string {
 	name := DefaultConfigFileName
 	if len(file) > 0 {
 		name = file[0]
@@ -46,7 +46,7 @@ func (c *AdapterFile) GetContent(file ...string) string {
 
 // RemoveContent removes the global configuration with specified `file`.
 // If `name` is not passed, it removes configuration of the default group name.
-func (c *AdapterFile) RemoveContent(file ...string) {
+func (a *AdapterFile) RemoveContent(file ...string) {
 	name := DefaultConfigFileName
 	if len(file) > 0 {
 		name = file[0]
@@ -69,7 +69,7 @@ func (c *AdapterFile) RemoveContent(file ...string) {
 }
 
 // ClearContent removes all global configuration contents.
-func (c *AdapterFile) ClearContent() {
+func (a *AdapterFile) ClearContent() {
 	customConfigContentMap.Clear()
 	// Clear cache for all instances.
 	localInstances.LockFunc(func(m map[string]interface{}) {

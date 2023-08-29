@@ -43,6 +43,7 @@ const (
 	TypeBoolean    = `boolean`
 	TypeArray      = `array`
 	TypeString     = `string`
+	TypeFile       = `file`
 	TypeObject     = `object`
 	FormatInt32    = `int32`
 	FormatInt64    = `int64`
@@ -145,6 +146,8 @@ func (oai *OpenApiV3) golangTypeToOAIType(t reflect.Type) string {
 		switch t.String() {
 		case `time.Time`, `gtime.Time`:
 			return TypeString
+		case `ghttp.UploadFile`:
+			return TypeFile
 		}
 		return TypeObject
 
