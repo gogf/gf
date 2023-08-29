@@ -200,11 +200,11 @@ func GetInsertOperationByOption(option InsertOption) string {
 	var operator string
 	switch option {
 	case InsertOptionReplace:
-		operator = "REPLACE"
+		operator = InsertOperationReplace
 	case InsertOptionIgnore:
-		operator = "INSERT IGNORE"
+		operator = InsertOperationIgnore
 	default:
-		operator = "INSERT"
+		operator = InsertOperationInsert
 	}
 	return operator
 }

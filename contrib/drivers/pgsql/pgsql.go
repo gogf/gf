@@ -8,6 +8,7 @@
 //
 // Note:
 // 1. It does not support Save/Replace features.
+// 2. It does not support Insert Ignore features.
 package pgsql
 
 import (
@@ -122,7 +123,7 @@ func (d *Driver) GetChars() (charLeft string, charRight string) {
 }
 
 // CheckLocalTypeForField checks and returns corresponding local golang type for given db type.
-func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (string, error) {
+func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (gdb.LocalType, error) {
 	var typeName string
 	match, _ := gregex.MatchString(`(.+?)\((.+)\)`, fieldType)
 	if len(match) == 3 {
