@@ -222,14 +222,6 @@ func DataToMapDeep(value interface{}) map[string]interface{} {
 		switch v.(type) {
 		case time.Time, *time.Time, gtime.Time, *gtime.Time, gjson.Json, *gjson.Json:
 			m[k] = v
-
-		default:
-			// Use string conversion in default.
-			//if s, ok := v.(iString); ok {
-			//	m[k] = s.String()
-			//} else {
-			//	m[k] = v
-			//}
 		}
 	}
 	return m
