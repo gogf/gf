@@ -422,10 +422,10 @@ func (c *Core) fieldsToSequence(ctx context.Context, table string, fields []stri
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
 // The parameter `option` values are as follows:
-// 0: insert:  just insert, if there's unique/primary key in the data, it returns error;
-// 1: replace: if there's unique/primary key in the data, it deletes it from table and inserts a new one;
-// 2: save:    if there's unique/primary key in the data, it updates it or else inserts a new one;
-// 3: ignore:  if there's unique/primary key in the data, it ignores the inserting;
+// InsertOptionDefault: just insert, if there's unique/primary key in the data, it returns error;
+// InsertOptionReplace: if there's unique/primary key in the data, it deletes it from table and inserts a new one;
+// InsertOptionSave:    if there's unique/primary key in the data, it updates it or else inserts a new one;
+// InsertOptionIgnore:  if there's unique/primary key in the data, it ignores the inserting;
 func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List, option DoInsertOption) (result sql.Result, err error) {
 	var (
 		keys           []string      // Field names.

@@ -225,11 +225,11 @@ func DataToMapDeep(value interface{}) map[string]interface{} {
 
 		default:
 			// Use string conversion in default.
-			if s, ok := v.(iString); ok {
-				m[k] = s.String()
-			} else {
-				m[k] = v
-			}
+			//if s, ok := v.(iString); ok {
+			//	m[k] = s.String()
+			//} else {
+			//	m[k] = v
+			//}
 		}
 	}
 	return m

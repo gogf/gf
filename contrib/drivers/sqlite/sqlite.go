@@ -160,9 +160,7 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 // TableFields retrieves and returns the fields' information of specified table of current schema.
 //
 // Also see DriverMysql.TableFields.
-func (d *Driver) TableFields(
-	ctx context.Context, table string, schema ...string,
-) (fields map[string]*gdb.TableField, err error) {
+func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
 	var (
 		result     gdb.Result
 		link       gdb.Link

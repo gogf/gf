@@ -114,10 +114,6 @@ func (d *Driver) GetChars() (charLeft string, charRight string) {
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
 func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
-	defer func() {
-		newSql, newArgs, err = d.Core.DoFilter(ctx, link, newSql, newArgs)
-	}()
-
 	var index int
 	// Convert placeholder char '?' to string ":vx".
 	newSql, _ = gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
@@ -125,10 +121,7 @@ func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args [
 		return fmt.Sprintf(":v%d", index)
 	})
 	newSql, _ = gregex.ReplaceString("\"", "", newSql)
-
-	newSql = d.parseSql(newSql)
-	newArgs = args
-	return
+	return d.Core.DoFilter(ctx, link, d.parseSql(newSql), args)
 }
 
 // parseSql does some replacement of the sql before commits it to underlying driver,
@@ -214,9 +207,7 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 // TableFields retrieves and returns the fields' information of specified table of current schema.
 //
 // Also see DriverMysql.TableFields.
-func (d *Driver) TableFields(
-	ctx context.Context, table string, schema ...string,
-) (fields map[string]*gdb.TableField, err error) {
+func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
 	var (
 		result       gdb.Result
 		link         gdb.Link
@@ -259,17 +250,6 @@ FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`,
 }
 
 // DoInsert inserts or updates data for given table.
-// This function is usually used for custom interface definition, you do not need call it manually.
-// The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
-// Eg:
-// Data(g.Map{"uid": 10000, "name":"john"})
-// Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
-//
-// The parameter `option` values are as follows:
-// 0: insert:  just insert, if there's unique/primary key in the data, it returns error;
-// 1: replace: if there's unique/primary key in the data, it deletes it from table and inserts a new one;
-// 2: save:    if there's unique/primary key in the data, it updates it or else inserts a new one;
-// 3: ignore:  if there's unique/primary key in the data, it ignores the inserting;
 func (d *Driver) DoInsert(
 	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
 ) (result sql.Result, err error) {
