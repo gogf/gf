@@ -10,6 +10,7 @@ import (
 	"context"
 
 	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // HandlerOutputJson is the structure outputting logging content as single json.
@@ -38,6 +39,28 @@ func HandlerJson(ctx context.Context, in *HandlerInput) {
 		Content:    in.Content,
 		Stack:      in.Stack,
 	}
+	// Convert values string content.
+	var valueContent string
+	for _, v := range in.Values {
+		valueContent = gconv.String(v)
+		if len(valueContent) == 0 {
+			continue
+		}
+		if len(output.Content) > 0 {
+			if output.Content[len(output.Content)-1] == '\n' {
+				// Remove one blank line(\n\n).
+				if valueContent[0] == '\n' {
+					valueContent = valueContent[1:]
+				}
+				output.Content += valueContent
+			} else {
+				output.Content += " " + valueContent
+			}
+		} else {
+			output.Content += valueContent
+		}
+	}
+	// Output json content.
 	jsonBytes, err := json.Marshal(output)
 	if err != nil {
 		panic(err)

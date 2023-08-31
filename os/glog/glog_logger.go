@@ -93,7 +93,7 @@ func (l *Logger) getFilePath(now time.Time) string {
 }
 
 // print prints `s` to defined writer, logging file or passed `std`.
-func (l *Logger) print(ctx context.Context, level int, stack string, values ...interface{}) {
+func (l *Logger) print(ctx context.Context, level int, stack string, values ...any) {
 	// Lazy initialize for rotation feature.
 	// It uses atomic reading operation to enhance the performance checking.
 	// It here uses CAP for performance and concurrent safety.
@@ -117,6 +117,7 @@ func (l *Logger) print(ctx context.Context, level int, stack string, values ...i
 			Color:  defaultLevelColor[level],
 			Level:  level,
 			Stack:  stack,
+			Values: values,
 		}
 	)
 
@@ -203,24 +204,6 @@ func (l *Logger) print(ctx context.Context, level int, stack string, values ...i
 					input.CtxStr += gconv.String(ctxValue)
 				}
 			}
-		}
-	}
-	var tempStr string
-	for _, v := range values {
-		tempStr = gconv.String(v)
-		if len(input.Content) > 0 {
-			if input.Content[len(input.Content)-1] == '\n' {
-				// Remove one blank line(\n\n).
-				if len(tempStr) > 0 && tempStr[0] == '\n' {
-					input.Content += tempStr[1:]
-				} else {
-					input.Content += tempStr
-				}
-			} else {
-				input.Content += " " + tempStr
-			}
-		} else {
-			input.Content = tempStr
 		}
 	}
 	if l.config.Flags&F_ASYNC > 0 {
@@ -372,23 +355,23 @@ func (l *Logger) getOpenedFilePointer(ctx context.Context, path string) *gfpool.
 }
 
 // printStd prints content `s` without stack.
-func (l *Logger) printStd(ctx context.Context, level int, value ...interface{}) {
-	l.print(ctx, level, "", value...)
+func (l *Logger) printStd(ctx context.Context, level int, values ...interface{}) {
+	l.print(ctx, level, "", values...)
 }
 
 // printStd prints content `s` with stack check.
-func (l *Logger) printErr(ctx context.Context, level int, value ...interface{}) {
+func (l *Logger) printErr(ctx context.Context, level int, values ...interface{}) {
 	var stack string
 	if l.config.StStatus == 1 {
 		stack = l.GetStack()
 	}
 	// In matter of sequence, do not use stderr here, but use the same stdout.
-	l.print(ctx, level, stack, value...)
+	l.print(ctx, level, stack, values...)
 }
 
 // format formats `values` using fmt.Sprintf.
-func (l *Logger) format(format string, value ...interface{}) string {
-	return fmt.Sprintf(format, value...)
+func (l *Logger) format(format string, values ...interface{}) string {
+	return fmt.Sprintf(format, values...)
 }
 
 // PrintStack prints the caller stack,

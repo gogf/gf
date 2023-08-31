@@ -10,6 +10,8 @@ import (
 	"bytes"
 	"context"
 	"time"
+
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Handler is function handler for custom logging content outputs.
@@ -31,6 +33,7 @@ type HandlerInput struct {
 	TraceId     string        // Trace id, only available if OpenTelemetry is enabled.
 	Prefix      string        // Custom prefix string for logging content.
 	Content     string        // Content is the main logging content without error stack string produced by logger.
+	Values      []any         // The passed un-formatted values array to logger.
 	Stack       string        // Stack string produced by logger, only available if Config.StStatus configured.
 	IsAsync     bool          // IsAsync marks it is in asynchronous logging.
 }
@@ -113,12 +116,35 @@ func (in *HandlerInput) getDefaultBuffer(withColor bool) *bytes.Buffer {
 			in.addStringToBuffer(buffer, in.CallerPath)
 		}
 	}
+
 	if in.Content != "" {
-		if in.Stack != "" {
-			in.addStringToBuffer(buffer, in.Content+"\nStack:\n"+in.Stack)
-		} else {
-			in.addStringToBuffer(buffer, in.Content)
+		in.addStringToBuffer(buffer, in.Content)
+	}
+
+	// Convert values string content.
+	var valueContent string
+	for _, v := range in.Values {
+		valueContent = gconv.String(v)
+		if len(valueContent) == 0 {
+			continue
 		}
+		if buffer.Len() > 0 {
+			if buffer.Bytes()[buffer.Len()-1] == '\n' {
+				// Remove one blank line(\n\n).
+				if valueContent[0] == '\n' {
+					valueContent = valueContent[1:]
+				}
+				buffer.WriteString(valueContent)
+			} else {
+				buffer.WriteString(" " + valueContent)
+			}
+		} else {
+			buffer.WriteString(valueContent)
+		}
+	}
+
+	if in.Stack != "" {
+		in.addStringToBuffer(buffer, "\nStack:\n"+in.Stack)
 	}
 	// avoid a single space at the end of a line.
 	buffer.WriteString("\n")
