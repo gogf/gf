@@ -67,3 +67,23 @@ func quickSortStr(values []string, comparator func(a, b string) int) {
 	quickSortStr(values[:head], comparator)
 	quickSortStr(values[head+1:], comparator)
 }
+
+// ScanGArray Convert *garray.Array to a Slice of the specified type
+func ScanGArray[T any](arr *Array) []T {
+	dst := make([]T, 0)
+	arr.Iterator(func(k int, v interface{}) bool {
+		dst = append(dst, v.(T))
+		return true
+	})
+	return dst
+}
+
+// ScanGSortArray Convert *garray.SortedArray to a Slice of the specified type
+func ScanGSortArray[T any](arr *SortedArray) []T {
+	dst := make([]T, 0)
+	arr.IteratorAsc(func(k int, v interface{}) bool {
+		dst = append(dst, v.(T))
+		return true
+	})
+	return dst
+}
