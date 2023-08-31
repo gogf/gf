@@ -46,9 +46,9 @@ type internalHandlerInfo struct {
 // defaultHandler is the default handler for package.
 var defaultHandler Handler
 
-// defaultPrintHandler is a handler for logging content printing.
+// doFinalPrint is a handler for logging content printing.
 // This handler outputs logging content to file/stdout/write if any of them configured.
-func defaultPrintHandler(ctx context.Context, in *HandlerInput) {
+func doFinalPrint(ctx context.Context, in *HandlerInput) {
 	buffer := in.Logger.doDefaultPrint(ctx, in)
 	if in.Buffer.Len() == 0 {
 		in.Buffer = buffer

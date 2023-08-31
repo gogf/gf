@@ -127,7 +127,7 @@ func (l *Logger) print(ctx context.Context, level int, stack string, values ...a
 	} else if defaultHandler != nil {
 		input.handlers = []Handler{defaultHandler}
 	}
-	input.handlers = append(input.handlers, defaultPrintHandler)
+	input.handlers = append(input.handlers, doFinalPrint)
 
 	// Time.
 	timeFormat := ""
@@ -248,9 +248,7 @@ func (l *Logger) doDefaultPrint(ctx context.Context, input *HandlerInput) *bytes
 // printToWriter writes buffer to writer.
 func (l *Logger) printToWriter(ctx context.Context, input *HandlerInput) *bytes.Buffer {
 	if l.config.Writer != nil {
-		var (
-			buffer = input.getRealBuffer(l.config.WriterColorEnable)
-		)
+		var buffer = input.getRealBuffer(l.config.WriterColorEnable)
 		if _, err := l.config.Writer.Write(buffer.Bytes()); err != nil {
 			intlog.Errorf(ctx, `%+v`, err)
 		}
@@ -266,7 +264,7 @@ func (l *Logger) printToStdout(ctx context.Context, input *HandlerInput) *bytes.
 			err    error
 			buffer = input.getRealBuffer(!l.config.StdoutColorDisabled)
 		)
-		// This will lose color in Windows os system.
+		// This will lose color in Windows os system. DO NOT USE.
 		// if _, err := os.Stdout.Write(input.getRealBuffer(true).Bytes()); err != nil {
 
 		// This will print color in Windows os system.

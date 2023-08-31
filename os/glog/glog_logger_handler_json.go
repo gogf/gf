@@ -19,8 +19,8 @@ type HandlerOutputJson struct {
 	TraceId    string `json:",omitempty"` // Trace id, only available if tracing is enabled.
 	CtxStr     string `json:",omitempty"` // The retrieved context value string from context, only available if Config.CtxKeys configured.
 	Level      string `json:""`           // Formatted level string, like "DEBU", "ERRO", etc. Eg: ERRO
-	CallerFunc string `json:",omitempty"` // The source function name that calls logging, only available if F_CALLER_FN set.
 	CallerPath string `json:",omitempty"` // The source file path and its line number that calls logging, only available if F_FILE_SHORT or F_FILE_LONG set.
+	CallerFunc string `json:",omitempty"` // The source function name that calls logging, only available if F_CALLER_FN set.
 	Prefix     string `json:",omitempty"` // Custom prefix string for logging content.
 	Content    string `json:""`           // Content is the main logging content, containing error stack string produced by logger.
 	Stack      string `json:",omitempty"` // Stack string produced by logger, only available if Config.StStatus configured.
