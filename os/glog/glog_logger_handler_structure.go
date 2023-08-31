@@ -196,7 +196,7 @@ func (buf *structuredBuffer) Bytes() []byte {
 	}
 	contentBytes := buf.buffer.Bytes()
 	buf.buffer.Reset()
-	contentBytes = bytes.Replace(contentBytes, []byte{'\n'}, []byte{' '}, -1)
+	contentBytes = bytes.ReplaceAll(contentBytes, []byte{'\n'}, []byte{' '})
 	return contentBytes
 }
 
