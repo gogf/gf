@@ -47,7 +47,7 @@ const (
 	cBuildBrief = `cross-building go project for lots of platforms`
 	cBuildEg    = `
 gf build main.go
-gf build main.go --pack public,template
+gf build main.go --ps public,template
 gf build main.go --cgo
 gf build main.go -m none 
 gf build main.go -n my-app -a all -s all
