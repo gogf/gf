@@ -21,6 +21,7 @@ import (
 
 	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/internal/consts"
+	"github.com/gogf/gf/v2/internal/errors"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -410,6 +411,10 @@ func (l *Logger) GetStack(skip ...int) string {
 	filters := []string{pathFilterKey}
 	if l.config.StFilter != "" {
 		filters = append(filters, l.config.StFilter)
+	}
+	// Whether filter framework error stacks.
+	if errors.IsStackModeBrief() {
+		filters = append(filters, consts.StackFilterKeyForGoFrame)
 	}
 	return gdebug.StackWithFilters(filters, stackSkip)
 }
