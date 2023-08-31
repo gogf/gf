@@ -39,7 +39,7 @@ func (err *Error) Stack() string {
 		loop             = err
 		index            = 1
 		infos            []*stackInfo
-		isBriefStackMode = errors.IsStackModeBrief()
+		isStackModeBrief = errors.IsStackModeBrief()
 	)
 	for loop != nil {
 		info := &stackInfo{
@@ -48,7 +48,7 @@ func (err *Error) Stack() string {
 		}
 		index++
 		infos = append(infos, info)
-		loopLinesOfStackInfo(loop.stack, info, isBriefStackMode)
+		loopLinesOfStackInfo(loop.stack, info, isStackModeBrief)
 		if loop.error != nil {
 			if e, ok := loop.error.(*Error); ok {
 				loop = e
@@ -133,14 +133,14 @@ func formatStackLines(buffer *bytes.Buffer, lines *list.List) string {
 }
 
 // loopLinesOfStackInfo iterates the stack info lines and produces the stack line info.
-func loopLinesOfStackInfo(st stack, info *stackInfo, isBriefStackMode bool) {
+func loopLinesOfStackInfo(st stack, info *stackInfo, isStackModeBrief bool) {
 	if st == nil {
 		return
 	}
 	for _, p := range st {
 		if fn := runtime.FuncForPC(p - 1); fn != nil {
 			file, line := fn.FileLine(p - 1)
-			if isBriefStackMode {
+			if isStackModeBrief {
 				// filter whole GoFrame packages stack paths.
 				if strings.Contains(file, consts.StackFilterKeyForGoFrame) {
 					continue
