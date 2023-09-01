@@ -14,6 +14,7 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
@@ -208,6 +209,29 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 	info.Func = handlerFunc
 	info.Type = reflect.TypeOf(f)
 	info.Value = reflect.ValueOf(f)
+	var inputObject reflect.Value
+	var inputOneKind = info.Type.In(1).Kind()
+	if inputOneKind == reflect.Ptr {
+		inputObject = reflect.New(info.Type.In(1).Elem())
+		fields, err := gstructs.Fields(gstructs.FieldsInput{
+			Pointer:         inputObject.Interface(),
+			RecursiveOption: gstructs.RecursiveOptionEmbedded,
+		})
+		if err != nil {
+			return info, err
+		}
+		info.ReqFields = fields
+	} else if inputOneKind == reflect.Struct {
+		inputObject = reflect.New(info.Type.In(1)).Elem()
+		fields, err := gstructs.Fields(gstructs.FieldsInput{
+			Pointer:         inputObject.Addr().Interface(),
+			RecursiveOption: gstructs.RecursiveOptionEmbedded,
+		})
+		if err != nil {
+			return info, err
+		}
+		info.ReqFields = fields
+	}
 	return
 }
 
