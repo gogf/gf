@@ -10,6 +10,7 @@ import (
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/net/goai"
+	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
 )
@@ -204,6 +205,27 @@ func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer i
 				} else {
 					if empty.IsEmpty(foundValue) {
 						data[foundKey] = tagValue
+					}
+				}
+			}
+		}
+	} else {
+		tagFields, err := gstructs.TagFields(pointer, defaultValueTags)
+		if err != nil {
+			return err
+		}
+		if len(tagFields) > 0 {
+			var (
+				foundKey   string
+				foundValue interface{}
+			)
+			for _, field := range tagFields {
+				foundKey, foundValue = gutil.MapPossibleItemByKey(data, field.Name())
+				if foundKey == "" {
+					data[field.Name()] = field.TagValue
+				} else {
+					if empty.IsEmpty(foundValue) {
+						data[foundKey] = field.TagValue
 					}
 				}
 			}
