@@ -136,12 +136,15 @@ func (m *middleware) callHandlerFunc(funcInfo handlerFuncInfo) {
 			}
 			if funcInfo.Type.NumIn() == 2 {
 				var inputObject reflect.Value
-				if funcInfo.Type.In(1).Kind() == reflect.Ptr {
+				var inputOneKind = funcInfo.Type.In(1).Kind()
+				if inputOneKind == reflect.Ptr {
 					inputObject = reflect.New(funcInfo.Type.In(1).Elem())
 					m.request.error = m.request.Parse(inputObject.Interface())
-				} else {
-					inputObject = reflect.New(funcInfo.Type.In(1).Elem()).Elem()
+				} else if inputOneKind == reflect.Struct {
+					inputObject = reflect.New(funcInfo.Type.In(1)).Elem()
 					m.request.error = m.request.Parse(inputObject.Addr().Interface())
+				} else {
+					m.request.error = gerror.New("invalid request parameter type: " + funcInfo.Type.In(1).String())
 				}
 				if m.request.error != nil {
 					return
