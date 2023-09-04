@@ -104,6 +104,57 @@ func (m *Model) InnerJoinOnField(table, field string) *Model {
 	))
 }
 
+// LeftJoinOnFields performs as LeftJoin. It specifies different fields and comparison operator.
+//
+// Eg:
+// Model("user").LeftJoinOnFields("order", "id", "=", "user_id")
+// Model("user").LeftJoinOnFields("order", "id", ">", "user_id")
+// Model("user").LeftJoinOnFields("order", "id", "<", "user_id")
+func (m *Model) LeftJoinOnFields(table, firstField, operator, secondField string) *Model {
+	return m.doJoin("LEFT", table, fmt.Sprintf(
+		`%s.%s %s %s.%s`,
+		m.tablesInit,
+		m.db.GetCore().QuoteWord(firstField),
+		operator,
+		m.db.GetCore().QuoteWord(table),
+		m.db.GetCore().QuoteWord(secondField),
+	))
+}
+
+// RightJoinOnFields performs as RightJoin. It specifies different fields and comparison operator.
+//
+// Eg:
+// Model("user").RightJoinOnFields("order", "id", "=", "user_id")
+// Model("user").RightJoinOnFields("order", "id", ">", "user_id")
+// Model("user").RightJoinOnFields("order", "id", "<", "user_id")
+func (m *Model) RightJoinOnFields(table, firstField, operator, secondField string) *Model {
+	return m.doJoin("RIGHT", table, fmt.Sprintf(
+		`%s.%s %s %s.%s`,
+		m.tablesInit,
+		m.db.GetCore().QuoteWord(firstField),
+		operator,
+		m.db.GetCore().QuoteWord(table),
+		m.db.GetCore().QuoteWord(secondField),
+	))
+}
+
+// InnerJoinOnFields performs as InnerJoin. It specifies different fields and comparison operator.
+//
+// Eg:
+// Model("user").InnerJoinOnFields("order", "id", "=", "user_id")
+// Model("user").InnerJoinOnFields("order", "id", ">", "user_id")
+// Model("user").InnerJoinOnFields("order", "id", "<", "user_id")
+func (m *Model) InnerJoinOnFields(table, firstField, operator, secondField string) *Model {
+	return m.doJoin("INNER", table, fmt.Sprintf(
+		`%s.%s %s %s.%s`,
+		m.tablesInit,
+		m.db.GetCore().QuoteWord(firstField),
+		operator,
+		m.db.GetCore().QuoteWord(table),
+		m.db.GetCore().QuoteWord(secondField),
+	))
+}
+
 // doJoin does "LEFT/RIGHT/INNER JOIN ... ON ..." statement on the model.
 // The parameter `table` can be joined table and its joined condition,
 // and also with its alias name.
