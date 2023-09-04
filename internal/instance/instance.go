@@ -5,6 +5,8 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package instance provides instances management.
+//
+// Note that this package is not used for cache, as it has no cache expiration.
 package instance
 
 import (
