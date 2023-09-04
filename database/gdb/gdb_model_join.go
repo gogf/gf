@@ -30,9 +30,9 @@ func isSubQuery(s string) bool {
 // Eg:
 // Model("user").LeftJoin("user_detail", "user_detail.uid=user.uid")
 // Model("user", "u").LeftJoin("user_detail", "ud", "ud.uid=u.uid")
-// Model("user", "u").LeftJoin("SELECT xxx FROM xxx AS a", "a.uid=u.uid").
-func (m *Model) LeftJoin(table ...string) *Model {
-	return m.doJoin("LEFT", table...)
+// Model("user", "u").LeftJoin("SELECT xxx FROM xxx","a", "a.uid=u.uid").
+func (m *Model) LeftJoin(tableAliasOrSubquery ...string) *Model {
+	return m.doJoin("LEFT", tableAliasOrSubquery...)
 }
 
 // RightJoin does "RIGHT JOIN ... ON ..." statement on the model.
@@ -42,9 +42,9 @@ func (m *Model) LeftJoin(table ...string) *Model {
 // Eg:
 // Model("user").RightJoin("user_detail", "user_detail.uid=user.uid")
 // Model("user", "u").RightJoin("user_detail", "ud", "ud.uid=u.uid")
-// Model("user", "u").RightJoin("SELECT xxx FROM xxx AS a", "a.uid=u.uid").
-func (m *Model) RightJoin(table ...string) *Model {
-	return m.doJoin("RIGHT", table...)
+// Model("user", "u").RightJoin("SELECT xxx FROM xxx","a", "a.uid=u.uid").
+func (m *Model) RightJoin(tableAliasOrSubquery ...string) *Model {
+	return m.doJoin("RIGHT", tableAliasOrSubquery...)
 }
 
 // InnerJoin does "INNER JOIN ... ON ..." statement on the model.
@@ -54,9 +54,9 @@ func (m *Model) RightJoin(table ...string) *Model {
 // Eg:
 // Model("user").InnerJoin("user_detail", "user_detail.uid=user.uid")
 // Model("user", "u").InnerJoin("user_detail", "ud", "ud.uid=u.uid")
-// Model("user", "u").InnerJoin("SELECT xxx FROM xxx AS a", "a.uid=u.uid").
-func (m *Model) InnerJoin(table ...string) *Model {
-	return m.doJoin("INNER", table...)
+// Model("user", "u").InnerJoin("SELECT xxx FROM xxx","a", "a.uid=u.uid").
+func (m *Model) InnerJoin(tableAliasOrSubquery ...string) *Model {
+	return m.doJoin("INNER", tableAliasOrSubquery...)
 }
 
 // LeftJoinOnField performs as LeftJoin, but it joins both tables with the same field name.
@@ -111,7 +111,7 @@ func (m *Model) InnerJoinOnField(table, field string) *Model {
 // Eg:
 // Model("user").InnerJoin("user_detail", "user_detail.uid=user.uid")
 // Model("user", "u").InnerJoin("user_detail", "ud", "ud.uid=u.uid")
-// Model("user", "u").InnerJoin("SELECT xxx FROM xxx AS a", "a.uid=u.uid")
+// Model("user", "u").InnerJoin("SELECT xxx FROM xxx","a", "a.uid=u.uid")
 // Related issues:
 // https://github.com/gogf/gf/issues/1024
 func (m *Model) doJoin(operator string, table ...string) *Model {
