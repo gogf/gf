@@ -12,7 +12,7 @@ import (
 	"github.com/gogf/gf/v2/internal/utils"
 )
 
-// AddSlashes quotes chars('"\) with slashes.
+// AddSlashes quotes with slashes `\` for chars: '"\.
 func AddSlashes(str string) string {
 	var buf bytes.Buffer
 	for _, char := range str {
@@ -30,8 +30,8 @@ func StripSlashes(str string) string {
 	return utils.StripSlashes(str)
 }
 
-// QuoteMeta returns a version of str with a backslash character (\)
-// before every character that is among: .\+*?[^]($)
+// QuoteMeta returns a version of `str` with a backslash character (`\`).
+// If custom chars `chars` not given, it uses default chars: .\+*?[^]($)
 func QuoteMeta(str string, chars ...string) string {
 	var buf bytes.Buffer
 	for _, char := range str {
