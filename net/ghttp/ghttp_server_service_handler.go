@@ -146,21 +146,30 @@ func (s *Server) nameToUri(name string) string {
 }
 
 func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, methodName string) (info handlerFuncInfo, err error) {
-	handlerFunc, ok := f.(HandlerFunc)
-	if !ok {
-		reflectType := reflect.TypeOf(f)
+	info.Type = reflect.TypeOf(f)
+	info.Value = reflect.ValueOf(f)
+	if handlerFunc, ok := f.(HandlerFunc); ok {
+		info.Func = handlerFunc
+	} else {
+		var (
+			reflectType = info.Type
+
+			inputObject   reflect.Value
+			objectPointer interface{}
+			inputOneKind  reflect.Kind
+		)
 		if reflectType.NumIn() != 2 || reflectType.NumOut() != 2 {
 			if pkgPath != "" {
 				err = gerror.NewCodef(
 					gcode.CodeInvalidParameter,
 					`invalid handler: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" or "func(context.Context, *BizReq)(*BizRes, error)" is required`,
-					pkgPath, structName, methodName, reflect.TypeOf(f).String(),
+					pkgPath, structName, methodName, reflectType.String(),
 				)
 			} else {
 				err = gerror.NewCodef(
 					gcode.CodeInvalidParameter,
 					`invalid handler: defined as "%s", but "func(*ghttp.Request)" or "func(context.Context, *BizReq)(*BizRes, error)" is required`,
-					reflect.TypeOf(f).String(),
+					reflectType.String(),
 				)
 			}
 			return
@@ -170,7 +179,19 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 			err = gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`invalid handler: defined as "%s", but the first input parameter should be type of "context.Context"`,
-				reflect.TypeOf(f).String(),
+				reflectType.String(),
+			)
+			return
+		}
+
+		inputOneKind = reflectType.In(1).Kind()
+
+		if (inputOneKind == reflect.Ptr && reflectType.In(1).Elem().Kind() != reflect.Struct) &&
+			inputOneKind != reflect.Struct {
+			err = gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`invalid handler: defined as "%s", but the second input parameter should be type of struct or pointer to struct`,
+				reflectType.In(1).String(),
 			)
 			return
 		}
@@ -179,7 +200,7 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 			err = gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`invalid handler: defined as "%s", but the last output parameter should be type of "error"`,
-				reflect.TypeOf(f).String(),
+				reflectType.String(),
 			)
 			return
 		}
@@ -205,35 +226,71 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 			)
 			return
 		}
-	}
-	info.Func = handlerFunc
-	info.Type = reflect.TypeOf(f)
-	info.Value = reflect.ValueOf(f)
-	if info.Type.NumIn() == 2 {
-		var inputObject reflect.Value
-		var inputOneKind = info.Type.In(1).Kind()
+
 		if inputOneKind == reflect.Ptr {
 			inputObject = reflect.New(info.Type.In(1).Elem())
-			fields, err := gstructs.Fields(gstructs.FieldsInput{
-				Pointer:         inputObject.Interface(),
-				RecursiveOption: gstructs.RecursiveOptionEmbedded,
-			})
-			if err != nil {
-				return info, err
-			}
-			info.ReqFields = fields
+			objectPointer = inputObject.Interface()
 		} else if inputOneKind == reflect.Struct {
 			inputObject = reflect.New(info.Type.In(1)).Elem()
-			fields, err := gstructs.Fields(gstructs.FieldsInput{
-				Pointer:         inputObject.Addr().Interface(),
-				RecursiveOption: gstructs.RecursiveOptionEmbedded,
-			})
-			if err != nil {
-				return info, err
+			objectPointer = inputObject.Addr().Interface()
+		}
+
+		// It retrieves and returns the request struct fields.
+		fields, err := gstructs.Fields(gstructs.FieldsInput{
+			Pointer:         objectPointer,
+			RecursiveOption: gstructs.RecursiveOptionEmbedded,
+		})
+		if err != nil {
+			return info, err
+		}
+		info.ReqFields = fields
+
+		// Build handler for processing
+		info.Func = func(r *Request) {
+			var (
+				inputValues = []reflect.Value{
+					reflect.ValueOf(r.Context()),
+				}
+				inputObject   reflect.Value
+				objectPointer interface{}
+				inputOneKind  = inputOneKind
+			)
+			// Must new a new object for each request.
+			if inputOneKind == reflect.Ptr {
+				inputObject = reflect.New(reflectType.In(1).Elem())
+				objectPointer = inputObject.Interface()
+			} else if inputOneKind == reflect.Struct {
+				inputObject = reflect.New(reflectType.In(1)).Elem()
+				objectPointer = inputObject.Addr().Interface()
 			}
-			info.ReqFields = fields
+
+			r.error = r.Parse(objectPointer)
+			if r.error != nil {
+				return
+			}
+			inputValues = append(inputValues, inputObject)
+			// Call handler with dynamic created parameter values.
+			results := info.Value.Call(inputValues)
+			switch len(results) {
+			case 1:
+				// TODO: Is this useful?
+				if !results[0].IsNil() {
+					if err, ok := results[0].Interface().(error); ok {
+						r.error = err
+					}
+				}
+
+			case 2:
+				r.handlerResponse = results[0].Interface()
+				if !results[1].IsNil() {
+					if err, ok := results[1].Interface().(error); ok {
+						r.error = err
+					}
+				}
+			}
 		}
 	}
+
 	return
 }
 

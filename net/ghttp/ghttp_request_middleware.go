@@ -9,7 +9,6 @@ package ghttp
 import (
 	"context"
 	"net/http"
-	"reflect"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -131,45 +130,7 @@ func (m *middleware) callHandlerFunc(funcInfo handlerFuncInfo) {
 		if funcInfo.Func != nil {
 			funcInfo.Func(m.request)
 		} else {
-			var inputValues = []reflect.Value{
-				reflect.ValueOf(m.request.Context()),
-			}
-			if funcInfo.Type.NumIn() == 2 {
-				var inputObject reflect.Value
-				var inputOneKind = funcInfo.Type.In(1).Kind()
-				if inputOneKind == reflect.Ptr {
-					inputObject = reflect.New(funcInfo.Type.In(1).Elem())
-					m.request.error = m.request.Parse(inputObject.Interface())
-				} else if inputOneKind == reflect.Struct {
-					inputObject = reflect.New(funcInfo.Type.In(1)).Elem()
-					m.request.error = m.request.Parse(inputObject.Addr().Interface())
-				} else {
-					m.request.error = gerror.New("invalid request parameter type: " + funcInfo.Type.In(1).String())
-				}
-				if m.request.error != nil {
-					return
-				}
-				inputValues = append(inputValues, inputObject)
-			}
-
-			// Call handler with dynamic created parameter values.
-			results := funcInfo.Value.Call(inputValues)
-			switch len(results) {
-			case 1:
-				if !results[0].IsNil() {
-					if err, ok := results[0].Interface().(error); ok {
-						m.request.error = err
-					}
-				}
-
-			case 2:
-				m.request.handlerResponse = results[0].Interface()
-				if !results[1].IsNil() {
-					if err, ok := results[1].Interface().(error); ok {
-						m.request.error = err
-					}
-				}
-			}
+			m.request.error = gerror.New("Handler function not found.")
 		}
 	})
 }
