@@ -111,7 +111,9 @@ jobs:
           --health-retries 10
 
       # ClickHouse backend server.
-      # docker run -d --name clickhouse -p 9000:9000 -p 8123:8123 -p 9001:9001 loads/clickhouse-server:22.1.3.7
+      # docker run -d --name clickhouse \
+      # -p 9000:9000 -p 8123:8123 -p 9001:9001 \
+      # loads/clickhouse-server:22.1.3.7
       clickhouse-server:
         image: loads/clickhouse-server:22.1.3.7
         ports:

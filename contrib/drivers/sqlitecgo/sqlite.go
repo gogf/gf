@@ -7,15 +7,15 @@
 // Package sqlitecgo implements gdb.Driver, which supports operations for database SQLite.
 //
 // Note:
-// 1. Using sqlitecgo is for building a 32-bit Windows operating system
-// 2. You need to set the environment variable CGO_ENABLED=1 and make sure that GCC is installed on your path. windows gcc: https://jmeubank.github.io/tdm-gcc/
+//  1. Using sqlitecgo is for building a 32-bit Windows operating system
+//  2. You need to set the environment variable CGO_ENABLED=1 and make sure that GCC is installed
+//     on your path. windows gcc: https://jmeubank.github.io/tdm-gcc/
 package sqlitecgo
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
-	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 
@@ -115,6 +115,22 @@ func (d *Driver) GetChars() (charLeft string, charRight string) {
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
 func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+	// Special insert/ignore operation for sqlite.
+	switch {
+	case gstr.HasPrefix(sql, gdb.InsertOperationIgnore):
+		sql = "INSERT OR IGNORE" + sql[len(gdb.InsertOperationIgnore):]
+
+	case gstr.HasPrefix(sql, gdb.InsertOperationReplace):
+		sql = "INSERT OR REPLACE" + sql[len(gdb.InsertOperationReplace):]
+
+	default:
+		if gstr.Contains(sql, gdb.InsertOnDuplicateKeyUpdate) {
+			return sql, args, gerror.NewCode(
+				gcode.CodeNotSupported,
+				`Save operation is not supported by sqlite driver`,
+			)
+		}
+	}
 	return d.Core.DoFilter(ctx, link, sql, args)
 }
 
@@ -127,7 +143,11 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 		return nil, err
 	}
 
-	result, err = d.DoSelect(ctx, link, `SELECT NAME FROM SQLITE_MASTER WHERE TYPE='table' ORDER BY NAME`)
+	result, err = d.DoSelect(
+		ctx,
+		link,
+		`SELECT NAME FROM SQLITE_MASTER WHERE TYPE='table' ORDER BY NAME`,
+	)
 	if err != nil {
 		return
 	}
@@ -142,9 +162,7 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 // TableFields retrieves and returns the fields' information of specified table of current schema.
 //
 // Also see DriverMysql.TableFields.
-func (d *Driver) TableFields(
-	ctx context.Context, table string, schema ...string,
-) (fields map[string]*gdb.TableField, err error) {
+func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
 	var (
 		result     gdb.Result
 		link       gdb.Link
@@ -173,84 +191,4 @@ func (d *Driver) TableFields(
 		}
 	}
 	return fields, nil
-}
-
-// DoInsert is not supported in sqlite.
-func (d *Driver) DoInsert(
-	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
-) (result sql.Result, err error) {
-	switch option.InsertOption {
-	case gdb.InsertOptionSave:
-		return nil, gerror.NewCode(gcode.CodeNotSupported, `Save operation is not supported by sqlite driver`)
-
-	case gdb.InsertOptionIgnore, gdb.InsertOptionReplace:
-		var (
-			keys           []string      // Field names.
-			values         []string      // Value holder string array, like: (?,?,?)
-			params         []interface{} // Values that will be committed to underlying database driver.
-			onDuplicateStr string        // onDuplicateStr is used in "ON DUPLICATE KEY UPDATE" statement.
-		)
-		// Handle the field names and placeholders.
-		for k := range list[0] {
-			keys = append(keys, k)
-		}
-		// Prepare the batch result pointer.
-		var (
-			charL, charR = d.GetChars()
-			batchResult  = new(gdb.SqlResult)
-			keysStr      = charL + strings.Join(keys, charR+","+charL) + charR
-			operation    = "INSERT OR IGNORE"
-		)
-
-		if option.InsertOption == gdb.InsertOptionReplace {
-			operation = "INSERT OR REPLACE"
-		}
-		var (
-			listLength  = len(list)
-			valueHolder = make([]string, 0)
-		)
-		for i := 0; i < listLength; i++ {
-			values = values[:0]
-			// Note that the map type is unordered,
-			// so it should use slice+key to retrieve the value.
-			for _, k := range keys {
-				if s, ok := list[i][k].(gdb.Raw); ok {
-					values = append(values, gconv.String(s))
-				} else {
-					values = append(values, "?")
-					params = append(params, list[i][k])
-				}
-			}
-			valueHolder = append(valueHolder, "("+gstr.Join(values, ",")+")")
-			// Batch package checks: It meets the batch number, or it is the last element.
-			if len(valueHolder) == option.BatchCount || (i == listLength-1 && len(valueHolder) > 0) {
-				var (
-					stdSqlResult sql.Result
-					affectedRows int64
-				)
-				stdSqlResult, err = d.DoExec(ctx, link, fmt.Sprintf(
-					"%s INTO %s(%s) VALUES%s %s",
-					operation, d.QuotePrefixTableName(table), keysStr,
-					gstr.Join(valueHolder, ","),
-					onDuplicateStr,
-				), params...)
-				if err != nil {
-					return stdSqlResult, err
-				}
-				if affectedRows, err = stdSqlResult.RowsAffected(); err != nil {
-					err = gerror.WrapCode(gcode.CodeDbOperationError, err, `sql.Result.RowsAffected failed`)
-					return stdSqlResult, err
-				} else {
-					batchResult.Result = stdSqlResult
-					batchResult.Affected += affectedRows
-				}
-				params = params[:0]
-				valueHolder = valueHolder[:0]
-			}
-		}
-		return batchResult, nil
-
-	default:
-		return d.Core.DoInsert(ctx, link, table, list, option)
-	}
 }

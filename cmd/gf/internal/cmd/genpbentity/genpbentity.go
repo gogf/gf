@@ -12,6 +12,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/olekukonko/tablewriter"
+
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -23,7 +25,6 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gtag"
-	"github.com/olekukonko/tablewriter"
 )
 
 type (
@@ -294,17 +295,17 @@ func generateEntityMessageDefinition(entityName string, fieldMap map[string]*gdb
 // generateMessageFieldForPbEntity generates and returns the message definition for specified field.
 func generateMessageFieldForPbEntity(index int, field *gdb.TableField, in CGenPbEntityInternalInput) []string {
 	var (
-		typeName   string
-		comment    string
-		jsonTagStr string
-		err        error
-		ctx        = gctx.GetInitCtx()
+		localTypeName gdb.LocalType
+		comment       string
+		jsonTagStr    string
+		err           error
+		ctx           = gctx.GetInitCtx()
 	)
-	typeName, err = in.DB.CheckLocalTypeForField(ctx, field.Type, nil)
+	localTypeName, err = in.DB.CheckLocalTypeForField(ctx, field.Type, nil)
 	if err != nil {
 		panic(err)
 	}
-	var typeMapping = map[string]string{
+	var typeMapping = map[gdb.LocalType]string{
 		gdb.LocalTypeString:      "string",
 		gdb.LocalTypeDate:        "google.protobuf.Timestamp",
 		gdb.LocalTypeDatetime:    "google.protobuf.Timestamp",
@@ -324,9 +325,9 @@ func generateMessageFieldForPbEntity(index int, field *gdb.TableField, in CGenPb
 		gdb.LocalTypeJson:        "string",
 		gdb.LocalTypeJsonb:       "string",
 	}
-	typeName = typeMapping[typeName]
-	if typeName == "" {
-		typeName = "string"
+	localTypeNameStr := typeMapping[localTypeName]
+	if localTypeNameStr == "" {
+		localTypeNameStr = "string"
 	}
 
 	comment = gstr.ReplaceByArray(field.Comment, g.SliceStr{
@@ -350,7 +351,7 @@ func generateMessageFieldForPbEntity(index int, field *gdb.TableField, in CGenPb
 		}
 	}
 	return []string{
-		"    #" + typeName,
+		"    #" + localTypeNameStr,
 		" #" + formatCase(field.Name, in.NameCase),
 		" #= " + gconv.String(index) + jsonTagStr + ";",
 		" #" + fmt.Sprintf(`// %s`, comment),

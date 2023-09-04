@@ -8,6 +8,7 @@
 //
 // Note:
 // 1. It does not support Save/Replace features.
+// 2. It does not support Insert Ignore features.
 package pgsql
 
 import (
@@ -122,7 +123,7 @@ func (d *Driver) GetChars() (charLeft string, charRight string) {
 }
 
 // CheckLocalTypeForField checks and returns corresponding local golang type for given db type.
-func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (string, error) {
+func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (gdb.LocalType, error) {
 	var typeName string
 	match, _ := gregex.MatchString(`(.+?)\((.+)\)`, fieldType)
 	if len(match) == 3 {
@@ -204,24 +205,21 @@ func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fie
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
 func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
-	defer func() {
-		newSql, newArgs, err = d.Core.DoFilter(ctx, link, newSql, newArgs)
-	}()
 	var index int
 	// Convert placeholder char '?' to string "$x".
-	sql, _ = gregex.ReplaceStringFunc(`\?`, sql, func(s string) string {
+	newSql, _ = gregex.ReplaceStringFunc(`\?`, sql, func(s string) string {
 		index++
 		return fmt.Sprintf(`$%d`, index)
 	})
-	// Handle pgsql jsonb feature support, which contains place holder char '?'.
+	// Handle pgsql jsonb feature support, which contains place-holder char '?'.
 	// Refer:
 	// https://github.com/gogf/gf/issues/1537
 	// https://www.postgresql.org/docs/12/functions-json.html
-	sql, _ = gregex.ReplaceStringFuncMatch(`(::jsonb([^\w\d]*)\$\d)`, sql, func(match []string) string {
+	newSql, _ = gregex.ReplaceStringFuncMatch(`(::jsonb([^\w\d]*)\$\d)`, newSql, func(match []string) string {
 		return fmt.Sprintf(`::jsonb%s?`, match[2])
 	})
-	newSql, _ = gregex.ReplaceString(` LIMIT (\d+),\s*(\d+)`, ` LIMIT $2 OFFSET $1`, sql)
-	return newSql, args, nil
+	newSql, _ = gregex.ReplaceString(` LIMIT (\d+),\s*(\d+)`, ` LIMIT $2 OFFSET $1`, newSql)
+	return d.Core.DoFilter(ctx, link, newSql, args)
 }
 
 // Tables retrieves and returns the tables of current schema.
@@ -269,8 +267,6 @@ ORDER BY
 }
 
 // TableFields retrieves and returns the fields' information of specified table of current schema.
-//
-// Also see DriverMysql.TableFields.
 func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
 	var (
 		result     gdb.Result
@@ -328,7 +324,7 @@ ORDER BY a.attnum`,
 	return fields, nil
 }
 
-// DoInsert is not supported in pgsql.
+// DoInsert inserts or updates data forF given table.
 func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
 	switch option.InsertOption {
 	case gdb.InsertOptionSave:
@@ -364,6 +360,8 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 	return d.Core.DoInsert(ctx, link, table, list, option)
 }
 
+// DoExec commits the sql string and its arguments to underlying driver
+// through given link object and returns the execution result.
 func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...interface{}) (result sql.Result, err error) {
 	var (
 		isUseCoreDoExec bool   = false // Check whether the default method needs to be used

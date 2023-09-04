@@ -8,13 +8,14 @@
 package gmap
 
 import (
+	"reflect"
+
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/internal/deepcopy"
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/rwmutex"
 	"github.com/gogf/gf/v2/util/gconv"
-	"reflect"
 )
 
 // StrAnyMap implements map[string]interface{} with RWMutex that has switch.

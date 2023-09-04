@@ -68,9 +68,9 @@ const (
 var (
 	// It's more high performance using regular expression
 	// than time.ParseInLocation to parse the datetime string.
-	timeRegex1, _ = regexp.Compile(timeRegexPattern1)
-	timeRegex2, _ = regexp.Compile(timeRegexPattern2)
-	timeRegex3, _ = regexp.Compile(timeRegexPattern3)
+	timeRegex1 = regexp.MustCompile(timeRegexPattern1)
+	timeRegex2 = regexp.MustCompile(timeRegexPattern2)
+	timeRegex3 = regexp.MustCompile(timeRegexPattern3)
 
 	// Month words to arabic numerals mapping.
 	monthMap = map[string]int{
