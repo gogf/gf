@@ -194,7 +194,7 @@ func doConvert(in doConvertInput) (convertedValue interface{}) {
 		}
 		return Time(in.FromValue)
 	case "*time.Time":
-		var v interface{}
+		var v time.Time
 		if len(in.Extra) > 0 {
 			v = Time(in.FromValue, String(in.Extra[0]))
 		} else {
