@@ -59,12 +59,14 @@ func internalMiddlewareServerTracing(r *Request) {
 			trace.WithInstrumentationVersion(gf.VERSION),
 		)
 	)
+	carrierData := r.Header
+	carrierData.Add("url", r.URL.String())
 	ctx, span = tr.Start(
 		otel.GetTextMapPropagator().Extract(
 			ctx,
-			propagation.HeaderCarrier(r.Header),
+			propagation.HeaderCarrier(carrierData),
 		),
-		r.URL.String(),
+		r.URL.Path,
 		trace.WithSpanKind(trace.SpanKindServer),
 	)
 	defer span.End()
