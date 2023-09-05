@@ -140,7 +140,7 @@ func (m *middleware) callHandlerFunc(funcInfo handlerFuncInfo) {
 					inputObject = reflect.New(funcInfo.Type.In(1).Elem())
 					m.request.error = m.request.Parse(inputObject.Interface())
 				} else {
-					inputObject = reflect.New(funcInfo.Type.In(1).Elem()).Elem()
+					inputObject = reflect.New(funcInfo.Type.In(1)).Elem()
 					m.request.error = m.request.Parse(inputObject.Addr().Interface())
 				}
 				if m.request.error != nil {
