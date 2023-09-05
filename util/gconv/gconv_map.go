@@ -306,7 +306,9 @@ func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) in
 					dataMap[mapK] = mapV
 				}
 			}
-			return dataMap
+			if len(dataMap) > 0 {
+				return dataMap
+			}
 		}
 		// Using reflect for converting.
 		var (

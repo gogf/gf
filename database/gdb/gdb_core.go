@@ -422,10 +422,10 @@ func (c *Core) fieldsToSequence(ctx context.Context, table string, fields []stri
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
 // The parameter `option` values are as follows:
-// 0: insert:  just insert, if there's unique/primary key in the data, it returns error;
-// 1: replace: if there's unique/primary key in the data, it deletes it from table and inserts a new one;
-// 2: save:    if there's unique/primary key in the data, it updates it or else inserts a new one;
-// 3: ignore:  if there's unique/primary key in the data, it ignores the inserting;
+// InsertOptionDefault: just insert, if there's unique/primary key in the data, it returns error;
+// InsertOptionReplace: if there's unique/primary key in the data, it deletes it from table and inserts a new one;
+// InsertOptionSave:    if there's unique/primary key in the data, it updates it or else inserts a new one;
+// InsertOptionIgnore:  if there's unique/primary key in the data, it ignores the inserting;
 func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List, option DoInsertOption) (result sql.Result, err error) {
 	var (
 		keys           []string      // Field names.
@@ -433,8 +433,10 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 		params         []interface{} // Values that will be committed to underlying database driver.
 		onDuplicateStr string        // onDuplicateStr is used in "ON DUPLICATE KEY UPDATE" statement.
 	)
+	// ============================================================================================
 	// Group the list by fields. Different fields to different list.
 	// It here uses ListMap to keep sequence for data inserting.
+	// ============================================================================================
 	var keyListMap = gmap.NewListMap()
 	for _, item := range list {
 		var (
@@ -574,7 +576,7 @@ func (c *Core) formatOnDuplicate(columns []string, option DoInsertOption) string
 			)
 		}
 	}
-	return fmt.Sprintf("ON DUPLICATE KEY UPDATE %s", onDuplicateStr)
+	return InsertOnDuplicateKeyUpdate + " " + onDuplicateStr
 }
 
 // Update does "UPDATE ... " statement for the table.
@@ -633,7 +635,7 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 				}
 			}
 		)
-		dataMap, err = c.db.ConvertDataForRecord(ctx, data)
+		dataMap, err = c.ConvertDataForRecord(ctx, data, table)
 		if err != nil {
 			return nil, err
 		}

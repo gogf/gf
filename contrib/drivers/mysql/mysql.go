@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -143,9 +144,7 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 //
 // It's using cache feature to enhance the performance, which is never expired util the
 // process restarts.
-func (d *Driver) TableFields(
-	ctx context.Context, table string, schema ...string,
-) (fields map[string]*gdb.TableField, err error) {
+func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
 	var (
 		result     gdb.Result
 		link       gdb.Link

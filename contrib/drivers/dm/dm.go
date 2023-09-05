@@ -27,7 +27,6 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/gogf/gf/v2/util/gtag"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
@@ -52,16 +51,19 @@ func init() {
 	}
 }
 
+// New create and returns a driver that implements gdb.Driver, which supports operations for dm.
 func New() gdb.Driver {
 	return &Driver{}
 }
 
+// New creates and returns a database object for dm.
 func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 	return &Driver{
 		Core: core,
 	}, nil
 }
 
+// Open creates and returns an underlying sql.DB object for pgsql.
 func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	var (
 		source               string
@@ -100,10 +102,13 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	return
 }
 
+// GetChars returns the security char for this type of database.
 func (d *Driver) GetChars() (charLeft string, charRight string) {
 	return quoteChar, quoteChar
 }
 
+// Tables retrieves and returns the tables of current schema.
+// It's mainly used in cli tool chain for automatically generating the models.
 func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
 	var result gdb.Result
 	// When schema is empty, return the default link
@@ -126,9 +131,8 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 	return
 }
 
-func (d *Driver) TableFields(
-	ctx context.Context, table string, schema ...string,
-) (fields map[string]*gdb.TableField, err error) {
+// TableFields retrieves and returns the fields' information of specified table of current schema.
+func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
 	var (
 		result gdb.Result
 		link   gdb.Link
@@ -173,49 +177,44 @@ func (d *Driver) TableFields(
 	return fields, nil
 }
 
-// ConvertDataForRecord converting for any data that will be inserted into table/collection as a record.
-func (d *Driver) ConvertDataForRecord(ctx context.Context, value interface{}) (map[string]interface{}, error) {
-	m := gconv.Map(value, gtag.ORM)
-
-	// transforms a value of a particular type
-	for k, v := range m {
-		switch itemValue := v.(type) {
-		// dm does not support time.Time, it so here converts it to time string that it supports.
-		case time.Time:
-			m[k] = gtime.New(itemValue).String()
-			// If the time is zero, it then updates it to nil,
-			// which will insert/update the value to database as "null".
-			if itemValue.IsZero() {
-				m[k] = nil
-			}
-
-		// dm does not support time.Time, it so here converts it to time string that it supports.
-		case *time.Time:
-			m[k] = gtime.New(itemValue).String()
-			// If the time is zero, it then updates it to nil,
-			// which will insert/update the value to database as "null".
-			if itemValue == nil || itemValue.IsZero() {
-				m[k] = nil
-			}
+// ConvertValueForField converts value to the type of the record field.
+func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) {
+	switch itemValue := fieldValue.(type) {
+	// dm does not support time.Time, it so here converts it to time string that it supports.
+	case time.Time:
+		// If the time is zero, it then updates it to nil,
+		// which will insert/update the value to database as "null".
+		if itemValue.IsZero() {
+			return nil, nil
 		}
+		return gtime.New(itemValue).String(), nil
+
+	// dm does not support time.Time, it so here converts it to time string that it supports.
+	case *time.Time:
+		// If the time is zero, it then updates it to nil,
+		// which will insert/update the value to database as "null".
+		if itemValue == nil || itemValue.IsZero() {
+			return nil, nil
+		}
+		return gtime.New(itemValue).String(), nil
 	}
-	return m, nil
+
+	return fieldValue, nil
 }
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
 func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
-	defer func() {
-		newSql, newArgs, err = d.Core.DoFilter(ctx, link, newSql, newArgs)
-	}()
 	// There should be no need to capitalize, because it has been done from field processing before
-	newSql, err = gregex.ReplaceString(`["\n\t]`, "", sql)
-	newSql = gstr.ReplaceI(newSql, "GROUP_CONCAT", "WM_CONCAT")
-	// gutil.Dump("Driver.DoFilter()::newSql", newSql)
-	newArgs = args
-	// gutil.Dump("Driver.DoFilter()::newArgs", newArgs)
-	return
+	newSql, _ = gregex.ReplaceString(`["\n\t]`, "", sql)
+	return d.Core.DoFilter(
+		ctx,
+		link,
+		gstr.ReplaceI(newSql, "GROUP_CONCAT", "WM_CONCAT"),
+		args,
+	)
 }
 
+// DoInsert inserts or updates data forF given table.
 func (d *Driver) DoInsert(
 	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
 ) (result sql.Result, err error) {

@@ -9,8 +9,10 @@ package utils_test
 import (
 	"testing"
 
+	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
@@ -123,6 +125,9 @@ func TestVar_IsSlice(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(utils.IsSlice(int8(1)), false)
 		t.Assert(utils.IsSlice(uint8(1)), false)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(utils.IsSlice(gvar.New(gtime.Now()).IsSlice()), false)
 	})
 }
 

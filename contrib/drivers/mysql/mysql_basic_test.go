@@ -10,10 +10,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/go-sql-driver/mysql"
-	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
@@ -29,61 +26,6 @@ func Test_Instance(t *testing.T) {
 		err2 := db.PingSlave()
 		t.Assert(err1, nil)
 		t.Assert(err2, nil)
-	})
-}
-
-// Fix issue: https://github.com/gogf/gf/issues/819
-func Test_Func_ConvertDataForRecord(t *testing.T) {
-	type Test struct {
-		ResetPasswordTokenAt mysql.NullTime `orm:"reset_password_token_at"`
-	}
-	gtest.C(t, func(t *gtest.T) {
-		c := &gdb.Core{}
-		m, err := c.ConvertDataForRecord(nil, new(Test))
-		t.AssertNil(err)
-		t.Assert(len(m), 1)
-		t.Assert(m["reset_password_token_at"], nil)
-	})
-
-	type TestNil struct {
-		JsonEmptyString *gjson.Json `orm:"json_empty_string"`
-		JsonNil         *gjson.Json `orm:"json_nil"`
-		JsonNull        *gjson.Json `orm:"json_null"`
-		VarEmptyString  *gvar.Var   `orm:"var_empty_string"`
-		VarNil          *gvar.Var   `orm:"var_nil"`
-	}
-	gtest.C(t, func(t *gtest.T) {
-		c := &gdb.Core{}
-		m, err := c.ConvertDataForRecord(nil, TestNil{
-			JsonEmptyString: gjson.New(""),
-			JsonNil:         gjson.New(nil),
-			JsonNull:        gjson.New(struct{}{}),
-			VarEmptyString:  gvar.New(""),
-			VarNil:          gvar.New(nil),
-		})
-
-		t.AssertNil(err)
-		t.Assert(len(m), 5)
-
-		valueEmptyString, exist := m["json_empty_string"]
-		t.Assert(exist, true)
-		t.Assert(valueEmptyString, nil)
-
-		valueNil, exist := m["json_nil"]
-		t.Assert(exist, true)
-		t.Assert(valueNil, nil)
-
-		valueNull, exist := m["json_null"]
-		t.Assert(exist, true)
-		t.Assert(valueNull, "null")
-
-		valueEmptyString, exist = m["var_empty_string"]
-		t.Assert(exist, true)
-		t.Assert(valueEmptyString, "")
-
-		valueNil, exist = m["var_nil"]
-		t.Assert(exist, true)
-		t.Assert(valueNil, nil)
 	})
 }
 
