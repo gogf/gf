@@ -356,15 +356,10 @@ type CatchSQLManager struct {
 	DoCommit bool
 }
 
-type queryType int
-
 const (
 	defaultModelSafe                      = false
 	defaultCharset                        = `utf8`
 	defaultProtocol                       = `tcp`
-	queryTypeNormal           queryType   = 0
-	queryTypeCount            queryType   = 1
-	queryTypeValue            queryType   = 2
 	unionTypeNormal                       = 0
 	unionTypeAll                          = 1
 	defaultMaxIdleConnCount               = 10               // Max idle connection count in pool.
@@ -384,6 +379,22 @@ const (
 
 	// type:[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
 	linkPattern = `(\w+):([\w\-]*):(.*?)@(\w+?)\((.+?)\)/{0,1}([^\?]*)\?{0,1}(.*)`
+)
+
+type queryType int
+
+const (
+	queryTypeNormal queryType = 0
+	queryTypeCount  queryType = 1
+	queryTypeValue  queryType = 2
+)
+
+type joinOperator string
+
+const (
+	joinOperatorLeft  joinOperator = "LEFT"
+	joinOperatorRight joinOperator = "RIGHT"
+	joinOperatorInner joinOperator = "INNER"
 )
 
 type InsertOption int
