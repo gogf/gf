@@ -86,21 +86,33 @@ func Test_Router_DomainMethod(t *testing.T) {
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		resp1, err := client.Get(ctx, "/get")
+		if err != nil {
+			t.Fatal(err)
+		}
 		defer resp1.Close()
 		t.AssertNil(err)
 		t.Assert(resp1.StatusCode, 404)
 
 		resp2, err := client.Post(ctx, "/get")
+		if err != nil {
+			t.Fatal(err)
+		}
 		defer resp2.Close()
 		t.AssertNil(err)
 		t.Assert(resp2.StatusCode, 404)
 
 		resp3, err := client.Get(ctx, "/post")
+		if err != nil {
+			t.Fatal(err)
+		}
 		defer resp3.Close()
 		t.AssertNil(err)
 		t.Assert(resp3.StatusCode, 404)
 
 		resp4, err := client.Post(ctx, "/post")
+		if err != nil {
+			t.Fatal(err)
+		}
 		defer resp4.Close()
 		t.AssertNil(err)
 		t.Assert(resp4.StatusCode, 404)
@@ -111,21 +123,33 @@ func Test_Router_DomainMethod(t *testing.T) {
 		client.SetPrefix(fmt.Sprintf("http://localhost:%d", s.GetListenedPort()))
 
 		resp1, err := client.Get(ctx, "/get")
+		if err != nil {
+			t.Fatal(err)
+		}
 		defer resp1.Close()
 		t.AssertNil(err)
 		t.Assert(resp1.StatusCode, 200)
 
 		resp2, err := client.Post(ctx, "/get")
+		if err != nil {
+			t.Fatal(err)
+		}
 		defer resp2.Close()
 		t.AssertNil(err)
 		t.Assert(resp2.StatusCode, 404)
 
 		resp3, err := client.Get(ctx, "/post")
+		if err != nil {
+			t.Fatal(err)
+		}
 		defer resp3.Close()
 		t.AssertNil(err)
 		t.Assert(resp3.StatusCode, 404)
 
 		resp4, err := client.Post(ctx, "/post")
+		if err != nil {
+			t.Fatal(err)
+		}
 		defer resp4.Close()
 		t.AssertNil(err)
 		t.Assert(resp4.StatusCode, 200)
@@ -136,21 +160,33 @@ func Test_Router_DomainMethod(t *testing.T) {
 		client.SetPrefix(fmt.Sprintf("http://local:%d", s.GetListenedPort()))
 
 		resp1, err := client.Get(ctx, "/get")
+		if err != nil {
+			t.Fatal(err)
+		}
 		defer resp1.Close()
 		t.AssertNil(err)
 		t.Assert(resp1.StatusCode, 200)
 
 		resp2, err := client.Post(ctx, "/get")
+		if err != nil {
+			t.Fatal(err)
+		}
 		defer resp2.Close()
 		t.AssertNil(err)
 		t.Assert(resp2.StatusCode, 404)
 
 		resp3, err := client.Get(ctx, "/post")
+		if err != nil {
+			t.Fatal(err)
+		}
 		defer resp3.Close()
 		t.AssertNil(err)
 		t.Assert(resp3.StatusCode, 404)
 
 		resp4, err := client.Post(ctx, "/post")
+		if err != nil {
+			t.Fatal(err)
+		}
 		defer resp4.Close()
 		t.AssertNil(err)
 		t.Assert(resp4.StatusCode, 200)
@@ -182,21 +218,33 @@ func Test_Router_DomainStatus(t *testing.T) {
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		resp1, err := client.Get(ctx, "/200")
+		if err != nil {
+			t.Fatal(err)
+		}
 		defer resp1.Close()
 		t.AssertNil(err)
 		t.Assert(resp1.StatusCode, 404)
 
 		resp2, err := client.Get(ctx, "/300")
+		if err != nil {
+			t.Fatal(err)
+		}
 		defer resp2.Close()
 		t.AssertNil(err)
 		t.Assert(resp2.StatusCode, 404)
 
 		resp3, err := client.Get(ctx, "/400")
+		if err != nil {
+			t.Fatal(err)
+		}
 		defer resp3.Close()
 		t.AssertNil(err)
 		t.Assert(resp3.StatusCode, 404)
 
 		resp4, err := client.Get(ctx, "/500")
+		if err != nil {
+			t.Fatal(err)
+		}
 		defer resp4.Close()
 		t.AssertNil(err)
 		t.Assert(resp4.StatusCode, 404)
@@ -206,21 +254,33 @@ func Test_Router_DomainStatus(t *testing.T) {
 		client.SetPrefix(fmt.Sprintf("http://localhost:%d", s.GetListenedPort()))
 
 		resp1, err := client.Get(ctx, "/200")
+		if err != nil {
+			t.Fatal(err)
+		}
 		defer resp1.Close()
 		t.AssertNil(err)
 		t.Assert(resp1.StatusCode, 200)
 
 		resp2, err := client.Get(ctx, "/300")
+		if err != nil {
+			t.Fatal(err)
+		}
 		defer resp2.Close()
 		t.AssertNil(err)
 		t.Assert(resp2.StatusCode, 300)
 
 		resp3, err := client.Get(ctx, "/400")
+		if err != nil {
+			t.Fatal(err)
+		}
 		defer resp3.Close()
 		t.AssertNil(err)
 		t.Assert(resp3.StatusCode, 400)
 
 		resp4, err := client.Get(ctx, "/500")
+		if err != nil {
+			t.Fatal(err)
+		}
 		defer resp4.Close()
 		t.AssertNil(err)
 		t.Assert(resp4.StatusCode, 500)
@@ -230,21 +290,33 @@ func Test_Router_DomainStatus(t *testing.T) {
 		client.SetPrefix(fmt.Sprintf("http://local:%d", s.GetListenedPort()))
 
 		resp1, err := client.Get(ctx, "/200")
+		if err != nil {
+			t.Fatal(err)
+		}
 		defer resp1.Close()
 		t.AssertNil(err)
 		t.Assert(resp1.StatusCode, 200)
 
 		resp2, err := client.Get(ctx, "/300")
+		if err != nil {
+			t.Fatal(err)
+		}
 		defer resp2.Close()
 		t.AssertNil(err)
 		t.Assert(resp2.StatusCode, 300)
 
 		resp3, err := client.Get(ctx, "/400")
+		if err != nil {
+			t.Fatal(err)
+		}
 		defer resp3.Close()
 		t.AssertNil(err)
 		t.Assert(resp3.StatusCode, 400)
 
 		resp4, err := client.Get(ctx, "/500")
+		if err != nil {
+			t.Fatal(err)
+		}
 		defer resp4.Close()
 		t.AssertNil(err)
 		t.Assert(resp4.StatusCode, 500)

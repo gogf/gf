@@ -205,6 +205,9 @@ func Test_Middleware_Status(t *testing.T) {
 		t.Assert(client.GetContent(ctx, "/user/list"), "200")
 
 		resp, err := client.Get(ctx, "/")
+		if err != nil {
+			t.Fatal(err)
+		}
 		defer resp.Close()
 		t.AssertNil(err)
 		t.Assert(resp.StatusCode, 404)
@@ -664,7 +667,7 @@ func Test_Middleware_Panic(t *testing.T) {
 			group.Middleware(func(r *ghttp.Request) {
 				i++
 				panic("error")
-				r.Middleware.Next()
+				// r.Middleware.Next()
 			}, func(r *ghttp.Request) {
 				i++
 				r.Middleware.Next()
