@@ -9,6 +9,7 @@ package redis
 
 import (
 	"context"
+	"crypto/tls"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -67,7 +68,7 @@ func New(config *gredis.Config) *Redis {
 		redisSentinel := opts.Failover()
 		redisSentinel.ReplicaOnly = config.SlaveOnly
 		client = redis.NewFailoverClient(redisSentinel)
-	} else if len(opts.Addrs) > 1 {
+	} else if len(opts.Addrs) > 1 || config.Cluster {
 		client = redis.NewClusterClient(opts.Cluster())
 	} else {
 		client = redis.NewClient(opts.Simple())
@@ -134,5 +135,10 @@ func fillWithDefaultConfiguration(config *gredis.Config) {
 	}
 	if config.ReadTimeout == 0 {
 		config.ReadTimeout = -1
+	}
+	if config.TLSConfig == nil && config.TLS {
+		config.TLSConfig = &tls.Config{
+			InsecureSkipVerify: config.TLSSkipVerify,
+		}
 	}
 }
