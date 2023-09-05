@@ -72,8 +72,13 @@ func GTime(any interface{}, format ...string) *gtime.Time {
 	}
 	// Priority conversion using given format.
 	if len(format) > 0 {
-		t, _ := gtime.StrToTimeFormat(s, format[0])
-		return t
+		for _, item := range format {
+			t, err := gtime.StrToTimeFormat(s, item)
+			if t != nil && err == nil {
+				return t
+			}
+		}
+		return nil
 	}
 	if utils.IsNumeric(s) {
 		return gtime.NewFromTimeStamp(Int64(s))
