@@ -28,7 +28,7 @@ func (s *Server) initOpenApi() {
 		case HandlerTypeMiddleware, HandlerTypeHook:
 			continue
 		}
-		if item.Handler.Info.Func == nil {
+		if item.Handler.Info.IsOpenAPI {
 			methods = []string{item.Method}
 			if gstr.Equal(item.Method, defaultMethod) {
 				methods = SupportedMethods()

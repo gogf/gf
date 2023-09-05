@@ -227,6 +227,8 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 			return
 		}
 
+		info.IsOpenAPI = true
+
 		if inputOneKind == reflect.Ptr {
 			inputObject = reflect.New(info.Type.In(1).Elem())
 			objectPointer = inputObject.Interface()

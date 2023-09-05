@@ -78,6 +78,7 @@ type (
 		Func      HandlerFunc   // Handler function address.
 		Type      reflect.Type  // Reflect type information for current handler, which is used for extensions of the handler feature.
 		Value     reflect.Value // Reflect value information for current handler, which is used for extensions of the handler feature.
+		IsOpenAPI bool          // Is OpenAPI handler.
 		ReqFields []gstructs.Field
 	}
 
