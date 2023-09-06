@@ -156,7 +156,6 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 
 			inputObject   reflect.Value
 			objectPointer interface{}
-			inputOneKind  reflect.Kind
 		)
 		if reflectType.NumIn() != 2 || reflectType.NumOut() != 2 {
 			if pkgPath != "" {
@@ -184,14 +183,21 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 			return
 		}
 
-		inputOneKind = reflectType.In(1).Kind()
-
-		if (inputOneKind == reflect.Ptr && reflectType.In(1).Elem().Kind() != reflect.Struct) &&
-			inputOneKind != reflect.Struct {
+		if reflectType.In(1).Kind() != reflect.Ptr ||
+			(reflectType.In(1).Kind() == reflect.Ptr && reflectType.In(1).Elem().Kind() != reflect.Struct) {
 			err = gerror.NewCodef(
 				gcode.CodeInvalidParameter,
-				`invalid handler: defined as "%s", but the second input parameter should be type of struct or pointer to struct`,
-				reflectType.In(1).String(),
+				`invalid handler: defined as "%s", but the second input parameter should be type of pointer to struct(*BizReq)`,
+				reflectType.String(),
+			)
+			return
+		}
+
+		if reflectType.Out(0).Kind() != reflect.Ptr || (reflectType.Out(0).Kind() == reflect.Ptr && reflectType.Out(0).Elem().Kind() != reflect.Struct) {
+			err = gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`invalid handler: defined as "%s", but the first output parameter should be type of pointer to struct(*BizRes)`,
+				reflectType.String(),
 			)
 			return
 		}
@@ -229,13 +235,8 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 
 		info.IsOpenAPI = true
 
-		if inputOneKind == reflect.Ptr {
-			inputObject = reflect.New(info.Type.In(1).Elem())
-			objectPointer = inputObject.Interface()
-		} else if inputOneKind == reflect.Struct {
-			inputObject = reflect.New(info.Type.In(1)).Elem()
-			objectPointer = inputObject.Addr().Interface()
-		}
+		inputObject = reflect.New(info.Type.In(1).Elem())
+		objectPointer = inputObject.Interface()
 
 		// It retrieves and returns the request struct fields.
 		fields, err := gstructs.Fields(gstructs.FieldsInput{
@@ -255,16 +256,10 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 				}
 				inputObject   reflect.Value
 				objectPointer interface{}
-				inputOneKind  = inputOneKind
 			)
 			// Must new a new object for each request.
-			if inputOneKind == reflect.Ptr {
-				inputObject = reflect.New(reflectType.In(1).Elem())
-				objectPointer = inputObject.Interface()
-			} else if inputOneKind == reflect.Struct {
-				inputObject = reflect.New(reflectType.In(1)).Elem()
-				objectPointer = inputObject.Addr().Interface()
-			}
+			inputObject = reflect.New(reflectType.In(1).Elem())
+			objectPointer = inputObject.Interface()
 
 			r.error = r.Parse(objectPointer)
 			if r.error != nil {
