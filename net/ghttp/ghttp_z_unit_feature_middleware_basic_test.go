@@ -205,11 +205,8 @@ func Test_Middleware_Status(t *testing.T) {
 		t.Assert(client.GetContent(ctx, "/user/list"), "200")
 
 		resp, err := client.Get(ctx, "/")
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer resp.Close()
 		t.AssertNil(err)
+		defer resp.Close()
 		t.Assert(resp.StatusCode, 404)
 	})
 }
