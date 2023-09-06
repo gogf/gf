@@ -57,7 +57,9 @@ func WithCtx(ctx context.Context) context.Context {
 	if CtxId(ctx) != "" {
 		return ctx
 	}
-	ctx, _ = gtrace.NewSpan(ctx, "gctx.WithCtx")
+	var span *gtrace.Span
+	ctx, span = gtrace.NewSpan(ctx, "gctx.WithCtx")
+	defer span.End()
 	return ctx
 }
 
