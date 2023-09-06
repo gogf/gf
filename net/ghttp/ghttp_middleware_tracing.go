@@ -36,6 +36,7 @@ const (
 	tracingEventHttpResponse                    = "http.response"
 	tracingEventHttpResponseHeaders             = "http.response.headers"
 	tracingEventHttpResponseBody                = "http.response.body"
+	tracingEventHttpRequestUrl                  = "http.request.url"
 	tracingMiddlewareHandled        gctx.StrKey = `MiddlewareServerTracingHandled`
 )
 
@@ -59,12 +60,10 @@ func internalMiddlewareServerTracing(r *Request) {
 			trace.WithInstrumentationVersion(gf.VERSION),
 		)
 	)
-	carrierData := r.Header
-	carrierData.Add("url", r.URL.String())
 	ctx, span = tr.Start(
 		otel.GetTextMapPropagator().Extract(
 			ctx,
-			propagation.HeaderCarrier(carrierData),
+			propagation.HeaderCarrier(r.Header),
 		),
 		r.URL.Path,
 		trace.WithSpanKind(trace.SpanKindServer),
@@ -92,6 +91,7 @@ func internalMiddlewareServerTracing(r *Request) {
 	r.Body = utils.NewReadCloser(reqBodyContentBytes, false)
 
 	span.AddEvent(tracingEventHttpRequest, trace.WithAttributes(
+		attribute.String(tracingEventHttpRequestUrl, r.URL.String()),
 		attribute.String(tracingEventHttpRequestHeaders, gconv.String(httputil.HeaderToMap(r.Header))),
 		attribute.String(tracingEventHttpRequestBaggage, gtrace.GetBaggageMap(ctx).String()),
 		attribute.String(tracingEventHttpRequestBody, gstr.StrLimit(
