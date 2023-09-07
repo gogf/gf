@@ -70,13 +70,13 @@ func New(limit ...int) *Pool {
 	return pool
 }
 
-// Add pushes a new job to the defaultPool using default goroutine pool.
+// Add pushes a new job to the default goroutine pool.
 // The job will be executed asynchronously.
 func Add(ctx context.Context, f Func) error {
 	return defaultPool.Add(ctx, f)
 }
 
-// AddWithRecover pushes a new job to the defaultPool with specified recover function.
+// AddWithRecover pushes a new job to the default pool with specified recover function.
 //
 // The optional `recoverFunc` is called when any panic during executing of `userFunc`.
 // If `recoverFunc` is not passed or given nil, it ignores the panic from `userFunc`.
