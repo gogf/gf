@@ -17,6 +17,19 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
+type (
+	Func        = gutil.Func        // Func is the function which contains context parameter.
+	RecoverFunc = gutil.RecoverFunc // RecoverFunc is the panic recover function which contains context parameter.
+)
+
+// Go creates a new asynchronous goroutine function with specified recover function.
+//
+// The parameter `recoverFunc` is called when any panic during executing of `goroutineFunc`.
+// If `recoverFunc` is not given or given nil, it ignores the panic from `goroutineFunc`.
+func Go(ctx context.Context, goroutineFunc Func, recoverFunc RecoverFunc) {
+	gutil.Go(ctx, goroutineFunc, recoverFunc)
+}
+
 // NewVar returns a gvar.Var.
 func NewVar(i interface{}, safe ...bool) *Var {
 	return gvar.New(i, safe...)
