@@ -14,12 +14,16 @@ import (
 	"syscall"
 
 	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // SigHandler defines a function type for signal handling.
 type SigHandler func(sig os.Signal)
 
 var (
+	// Use internal variable to guarantee concurrent safety
+	// when multiple Listen happen.
+	signalChan        = make(chan os.Signal, 1)
 	signalHandlerMap  = make(map[os.Signal][]SigHandler)
 	shutdownSignalMap = map[os.Signal]struct{}{
 		syscall.SIGINT:  {},
@@ -59,30 +63,44 @@ func AddSigHandlerShutdown(handler ...SigHandler) {
 
 // Listen blocks and does signal listening and handling.
 func Listen() {
-	signals := make([]os.Signal, 0)
-	for sig := range signalHandlerMap {
-		signals = append(signals, sig)
+	var (
+		signals = make([]os.Signal, 0)
+		ctx     = context.Background()
+		wg      = sync.WaitGroup{}
+		sig     os.Signal
+	)
+	for s := range signalHandlerMap {
+		signals = append(signals, s)
 	}
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, signals...)
-	var sig os.Signal
+	signal.Notify(signalChan, signals...)
 	for {
-		wg := sync.WaitGroup{}
-		sig = <-sigChan
-		intlog.Printf(context.TODO(), `signal received: %s`, sig.String())
+		sig = <-signalChan
+		intlog.Printf(ctx, `signal received: %s`, sig.String())
 		if handlers, ok := signalHandlerMap[sig]; ok {
 			for _, handler := range handlers {
 				wg.Add(1)
-				go func(handler SigHandler, sig os.Signal) {
+				var (
+					currentHandler = handler
+					currentSig     = sig
+				)
+				gutil.TryCatch(ctx, func(ctx context.Context) {
 					defer wg.Done()
-					handler(sig)
-				}(handler, sig)
+					currentHandler(currentSig)
+				}, func(ctx context.Context, exception error) {
+					intlog.Error(ctx, `execute signal handler failed: %+v`, exception)
+				})
 			}
 		}
 		// If it is shutdown signal, it exits this signal listening.
 		if _, ok := shutdownSignalMap[sig]; ok {
+			intlog.Printf(
+				ctx,
+				`receive shutdown signal "%s", waiting all signal handler done`,
+				sig.String(),
+			)
 			// Wait until signal handlers done.
 			wg.Wait()
+			intlog.Print(ctx, `all signal handler done, exit process`)
 			return
 		}
 	}
