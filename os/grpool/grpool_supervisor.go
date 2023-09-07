@@ -13,7 +13,7 @@ import (
 )
 
 // supervisor checks the job list and fork new worker goroutine to handle the job
-// if there are jobs but no workers in defaultPool.
+// if there are jobs but no workers in pool.
 func (p *Pool) supervisor(_ context.Context) {
 	if p.IsClosed() {
 		gtimer.Exit()

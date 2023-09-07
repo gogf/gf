@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package grpool implements a goroutine reusable defaultPool.
+// Package grpool implements a goroutine reusable pool.
 package grpool
 
 import (
@@ -23,12 +23,12 @@ type Func func(ctx context.Context)
 // RecoverFunc is the pool runtime panic recover function which contains context parameter.
 type RecoverFunc func(ctx context.Context, exception error)
 
-// Pool manages the goroutines using defaultPool.
+// Pool manages the goroutines using pool.
 type Pool struct {
 	limit  int         // Max goroutine count limit.
 	count  *gtype.Int  // Current running goroutine count.
 	list   *glist.List // List for asynchronous job adding purpose.
-	closed *gtype.Bool // Is defaultPool closed or not.
+	closed *gtype.Bool // Is pool closed or not.
 }
 
 // localPoolItem is the job item storing in job list.
@@ -42,12 +42,12 @@ const (
 	maxSupervisorTimerDuration = 1500 * time.Millisecond
 )
 
-// Default goroutine defaultPool.
+// Default goroutine pool.
 var (
 	defaultPool = New()
 )
 
-// New creates and returns a new goroutine defaultPool object.
+// New creates and returns a new goroutine pool object.
 // The parameter `limit` is used to limit the max goroutine count,
 // which is not limited in default.
 func New(limit ...int) *Pool {
@@ -70,7 +70,7 @@ func New(limit ...int) *Pool {
 	return pool
 }
 
-// Add pushes a new job to the defaultPool using default goroutine defaultPool.
+// Add pushes a new job to the defaultPool using default goroutine pool.
 // The job will be executed asynchronously.
 func Add(ctx context.Context, f Func) error {
 	return defaultPool.Add(ctx, f)
@@ -85,12 +85,12 @@ func AddWithRecover(ctx context.Context, userFunc Func, recoverFunc RecoverFunc)
 	return defaultPool.AddWithRecover(ctx, userFunc, recoverFunc)
 }
 
-// Size returns current goroutine count of default goroutine defaultPool.
+// Size returns current goroutine count of default goroutine pool.
 func Size() int {
 	return defaultPool.Size()
 }
 
-// Jobs returns current job count of default goroutine defaultPool.
+// Jobs returns current job count of default goroutine pool.
 func Jobs() int {
 	return defaultPool.Jobs()
 }
