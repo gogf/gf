@@ -159,6 +159,8 @@ func (s *Server) doSetHandler(
 					switch item.Type {
 					case HandlerTypeHandler, HandlerTypeObject:
 						duplicatedHandler = items[i]
+					}
+					if duplicatedHandler != nil {
 						break
 					}
 				}

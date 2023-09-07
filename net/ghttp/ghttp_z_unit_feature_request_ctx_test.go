@@ -9,11 +9,11 @@ package ghttp_test
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/encoding/gbase64"
 	"net/http"
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/encoding/gbase64"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -213,15 +213,17 @@ func Test_Request_BasicAuth(t *testing.T) {
 }
 
 func Test_Request_SetCtx(t *testing.T) {
+	type ctxKey string
+	const testkey ctxKey = "test"
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(func(r *ghttp.Request) {
-			ctx := context.WithValue(r.Context(), "test", 1)
+			ctx := context.WithValue(r.Context(), testkey, 1)
 			r.SetCtx(ctx)
 			r.Middleware.Next()
 		})
 		group.ALL("/", func(r *ghttp.Request) {
-			r.Response.Write(r.Context().Value("test"))
+			r.Response.Write(r.Context().Value(testkey))
 		})
 	})
 	s.SetDumpRouterMap(false)
@@ -238,15 +240,17 @@ func Test_Request_SetCtx(t *testing.T) {
 }
 
 func Test_Request_GetCtx(t *testing.T) {
+	type ctxKey string
+	const testkey ctxKey = "test"
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(func(r *ghttp.Request) {
-			ctx := context.WithValue(r.GetCtx(), "test", 1)
+			ctx := context.WithValue(r.GetCtx(), testkey, 1)
 			r.SetCtx(ctx)
 			r.Middleware.Next()
 		})
 		group.ALL("/", func(r *ghttp.Request) {
-			r.Response.Write(r.Context().Value("test"))
+			r.Response.Write(r.Context().Value(testkey))
 		})
 	})
 	s.SetDumpRouterMap(false)
@@ -289,9 +293,6 @@ func Test_Request_Form(t *testing.T) {
 	type User struct {
 		Id   int
 		Name string
-	}
-	type Default struct {
-		D string
 	}
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {

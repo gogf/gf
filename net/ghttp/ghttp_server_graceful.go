@@ -97,11 +97,6 @@ func (s *gracefulServer) Fd() uintptr {
 	return 0
 }
 
-// setFd sets the file descriptor for current server.
-func (s *gracefulServer) setFd(fd int) {
-	s.fd = uintptr(fd)
-}
-
 // CreateListener creates listener on configured address.
 func (s *gracefulServer) CreateListener() error {
 	ln, err := s.getNetListener()

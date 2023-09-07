@@ -232,7 +232,7 @@ func (r *Request) mergeInTagStructValue(data map[string]interface{}, pointer int
 		)
 
 		for k, v := range r.Header {
-			if v != nil && len(v) > 0 {
+			if len(v) > 0 {
 				headerMap[k] = v[0]
 			}
 		}
