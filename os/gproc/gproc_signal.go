@@ -87,7 +87,7 @@ func Listen() {
 					defer wg.Done()
 					currentHandler(currentSig)
 				}, func(ctx context.Context, exception error) {
-					intlog.Error(ctx, `execute signal handler failed: %+v`, exception)
+					intlog.Errorf(ctx, `execute signal handler failed: %+v`, exception)
 				})
 			}
 		}
