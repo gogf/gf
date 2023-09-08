@@ -125,9 +125,10 @@ func Test_Go(t *testing.T) {
 		)
 		wg.Add(1)
 		g.Go(context.Background(), func(ctx context.Context) {
+			defer wg.Done()
 			array.Append(1)
 		}, nil)
-		wg.Done()
+		wg.Wait()
 		t.Assert(array.Len(), 1)
 	})
 }

@@ -27,16 +27,18 @@ func Go(ctx context.Context, goroutineFunc Func, recoverFunc RecoverFunc) {
 	if goroutineFunc == nil {
 		return
 	}
-	defer func() {
-		if exception := recover(); exception != nil {
-			if recoverFunc != nil {
-				if v, ok := exception.(error); ok && gerror.HasStack(v) {
-					recoverFunc(ctx, v)
-				} else {
-					recoverFunc(ctx, gerror.NewCodef(gcode.CodeInternalPanic, "%+v", exception))
+	go func() {
+		defer func() {
+			if exception := recover(); exception != nil {
+				if recoverFunc != nil {
+					if v, ok := exception.(error); ok && gerror.HasStack(v) {
+						recoverFunc(ctx, v)
+					} else {
+						recoverFunc(ctx, gerror.NewCodef(gcode.CodeInternalPanic, "%+v", exception))
+					}
 				}
 			}
-		}
+		}()
+		goroutineFunc(ctx)
 	}()
-	goroutineFunc(ctx)
 }

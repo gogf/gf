@@ -23,10 +23,11 @@ func Test_Go(t *testing.T) {
 			array = garray.NewArray(true)
 		)
 		wg.Add(1)
-		gutil.Go(context.Background(), func(ctx context.Context) {
+		gutil.Go(ctx, func(ctx context.Context) {
+			defer wg.Done()
 			array.Append(1)
 		}, nil)
-		wg.Done()
+		wg.Wait()
 		t.Assert(array.Len(), 1)
 	})
 	// recover
@@ -36,11 +37,12 @@ func Test_Go(t *testing.T) {
 			array = garray.NewArray(true)
 		)
 		wg.Add(1)
-		gutil.Go(context.Background(), func(ctx context.Context) {
+		gutil.Go(ctx, func(ctx context.Context) {
+			defer wg.Done()
 			panic("error")
 			array.Append(1)
 		}, nil)
-		wg.Done()
+		wg.Wait()
 		t.Assert(array.Len(), 0)
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -49,12 +51,13 @@ func Test_Go(t *testing.T) {
 			array = garray.NewArray(true)
 		)
 		wg.Add(1)
-		gutil.Go(context.Background(), func(ctx context.Context) {
+		gutil.Go(ctx, func(ctx context.Context) {
 			panic("error")
 		}, func(ctx context.Context, exception error) {
+			defer wg.Done()
 			array.Append(exception)
 		})
-		wg.Done()
+		wg.Wait()
 		t.Assert(array.Len(), 1)
 		t.Assert(array.At(0), "error")
 	})
