@@ -11,9 +11,7 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"os/signal"
 	"sync"
-	"syscall"
 	"time"
 
 	"google.golang.org/grpc"
@@ -130,34 +128,14 @@ func (s *GrpcServer) Run() {
 
 // doSignalListen does signal listening and handling for gracefully shutdown.
 func (s *GrpcServer) doSignalListen() {
-	var (
-		ctx     = gctx.GetInitCtx()
-		sigChan = make(chan os.Signal, 1)
-	)
-	signal.Notify(
-		sigChan,
-		syscall.SIGINT,
-		syscall.SIGQUIT,
-		syscall.SIGKILL,
-		syscall.SIGTERM,
-		syscall.SIGABRT,
-	)
-	for {
-		sig := <-sigChan
-		switch sig {
-		case
-			syscall.SIGINT,
-			syscall.SIGQUIT,
-			syscall.SIGKILL,
-			syscall.SIGTERM,
-			syscall.SIGABRT:
-			s.Logger().Infof(ctx, "signal received: %s, gracefully shutting down", sig.String())
-			s.doServiceDeregister()
-			time.Sleep(time.Second)
-			s.Stop()
-			return
-		}
-	}
+	var ctx = context.Background()
+	gproc.AddSigHandlerShutdown(func(sig os.Signal) {
+		s.Logger().Infof(ctx, "signal received: %s, gracefully shutting down", sig.String())
+		s.doServiceDeregister()
+		time.Sleep(time.Second)
+		s.Stop()
+	})
+	gproc.Listen()
 }
 
 // Logger is alias of GetLogger.
