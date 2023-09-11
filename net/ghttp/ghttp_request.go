@@ -63,11 +63,6 @@ type Request struct {
 	originUrlPath   string                 // Original URL path that passed from client.
 }
 
-type handlerResponse struct {
-	Object interface{}
-	Error  error
-}
-
 // staticFile is the file struct for static file service.
 type staticFile struct {
 	File  *gres.File // Resource file object.
