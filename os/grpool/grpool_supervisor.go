@@ -14,7 +14,7 @@ import (
 
 // supervisor checks the job list and fork new worker goroutine to handle the job
 // if there are jobs but no workers in pool.
-func (p *Pool) supervisor(ctx context.Context) {
+func (p *Pool) supervisor(_ context.Context) {
 	if p.IsClosed() {
 		gtimer.Exit()
 	}
@@ -24,7 +24,7 @@ func (p *Pool) supervisor(ctx context.Context) {
 			number = p.limit
 		}
 		for i := 0; i < number; i++ {
-			p.checkAndFork()
+			p.checkAndForkNewGoroutineWorker()
 		}
 	}
 }
