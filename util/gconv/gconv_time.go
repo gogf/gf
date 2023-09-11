@@ -45,6 +45,7 @@ func Duration(any interface{}) time.Duration {
 
 // GTime converts `any` to *gtime.Time.
 // The parameter `format` can be used to specify the format of `any`.
+// It returns the converted value that matched the first format of the formats slice
 // If no `format` given, it converts `any` using gtime.NewFromTimeStamp if `any` is numeric,
 // or using gtime.StrToTime if `any` is string.
 func GTime(any interface{}, format ...string) *gtime.Time {
