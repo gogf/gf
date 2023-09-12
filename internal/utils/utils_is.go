@@ -57,6 +57,7 @@ func IsSlice(value interface{}) bool {
 	)
 	for reflectKind == reflect.Ptr {
 		reflectValue = reflectValue.Elem()
+		reflectKind = reflectValue.Kind()
 	}
 	switch reflectKind {
 	case reflect.Slice, reflect.Array:

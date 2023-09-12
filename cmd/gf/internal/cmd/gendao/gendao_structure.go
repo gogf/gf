@@ -67,9 +67,10 @@ func generateStructFieldDefinition(
 	ctx context.Context, field *gdb.TableField, in generateStructDefinitionInput,
 ) (attrLines []string, appendImport string) {
 	var (
-		err      error
-		typeName string
-		jsonTag  = getJsonTagFromCase(field.Name, in.JsonCase)
+		err              error
+		localTypeName    gdb.LocalType
+		localTypeNameStr string
+		jsonTag          = getJsonTagFromCase(field.Name, in.JsonCase)
 	)
 
 	if in.TypeMapping != nil && len(in.TypeMapping) > 0 {
@@ -84,38 +85,39 @@ func generateStructFieldDefinition(
 		}
 		if tryTypeName != "" {
 			if typeMapping, ok := in.TypeMapping[strings.ToLower(tryTypeName)]; ok {
-				typeName = typeMapping.Type
+				localTypeNameStr = typeMapping.Type
 				appendImport = typeMapping.Import
 			}
 		}
 	}
 
-	if typeName == "" {
-		typeName, err = in.DB.CheckLocalTypeForField(ctx, field.Type, nil)
+	if localTypeNameStr == "" {
+		localTypeName, err = in.DB.CheckLocalTypeForField(ctx, field.Type, nil)
 		if err != nil {
 			panic(err)
 		}
-	}
-	switch typeName {
-	case gdb.LocalTypeDate, gdb.LocalTypeDatetime:
-		if in.StdTime {
-			typeName = "time.Time"
-		} else {
-			typeName = "*gtime.Time"
-		}
 
-	case gdb.LocalTypeInt64Bytes:
-		typeName = "int64"
+		switch localTypeName {
+		case gdb.LocalTypeDate, gdb.LocalTypeDatetime:
+			if in.StdTime {
+				localTypeNameStr = "time.Time"
+			} else {
+				localTypeNameStr = "*gtime.Time"
+			}
 
-	case gdb.LocalTypeUint64Bytes:
-		typeName = "uint64"
+		case gdb.LocalTypeInt64Bytes:
+			localTypeNameStr = "int64"
 
-	// Special type handle.
-	case gdb.LocalTypeJson, gdb.LocalTypeJsonb:
-		if in.GJsonSupport {
-			typeName = "*gjson.Json"
-		} else {
-			typeName = "string"
+		case gdb.LocalTypeUint64Bytes:
+			localTypeNameStr = "uint64"
+
+		// Special type handle.
+		case gdb.LocalTypeJson, gdb.LocalTypeJsonb:
+			if in.GJsonSupport {
+				localTypeNameStr = "*gjson.Json"
+			} else {
+				localTypeNameStr = "string"
+			}
 		}
 	}
 
@@ -125,7 +127,7 @@ func generateStructFieldDefinition(
 	)
 	attrLines = []string{
 		"    #" + gstr.CaseCamel(field.Name),
-		" #" + typeName,
+		" #" + localTypeNameStr,
 	}
 	attrLines = append(attrLines, " #"+fmt.Sprintf(tagKey+`json:"%s"`, jsonTag))
 	attrLines = append(attrLines, " #"+fmt.Sprintf(`description:"%s"`+tagKey, descriptionTag))

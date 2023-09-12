@@ -8,7 +8,9 @@ package gconv_test
 
 import (
 	"testing"
+	"time"
 
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -41,6 +43,12 @@ func TestConverter_Struct(t *testing.T) {
 	type tDD struct {
 		ValTop string
 		ValTa  tB
+	}
+
+	type tEE struct {
+		Val1 time.Time  `json:"val1"`
+		Val2 *time.Time `json:"val2"`
+		Val3 *time.Time `json:"val3"`
 	}
 
 	gtest.C(t, func(t *gtest.T) {
@@ -173,6 +181,23 @@ func TestConverter_Struct(t *testing.T) {
 		t.Assert(dd.ValTop, "123")
 		t.Assert(dd.ValTa.Val1, 234)
 		t.Assert(dd.ValTa.Val2, "abc")
+	})
+
+	// fix: https://github.com/gogf/gf/issues/2665
+	gtest.C(t, func(t *gtest.T) {
+		aa := &tEE{}
+
+		var tmp = map[string]any{
+			"val1": "2023-04-15 19:10:00 +0800 CST",
+			"val2": "2023-04-15 19:10:00 +0800 CST",
+			"val3": "2006-01-02T15:04:05Z07:00",
+		}
+		err := gconv.Struct(tmp, aa)
+		t.AssertNil(err)
+		t.AssertNE(aa, nil)
+		t.Assert(aa.Val1.Local(), gtime.New("2023-04-15 19:10:00 +0800 CST").Local().Time)
+		t.Assert(aa.Val2.Local(), gtime.New("2023-04-15 19:10:00 +0800 CST").Local().Time)
+		t.Assert(aa.Val3.Local(), gtime.New("2006-01-02T15:04:05Z07:00").Local().Time)
 	})
 }
 

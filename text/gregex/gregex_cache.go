@@ -15,6 +15,7 @@ import (
 
 var (
 	regexMu = sync.RWMutex{}
+
 	// Cache for regex object.
 	// Note that:
 	// 1. It uses sync.RWMutex ensuring the concurrent safety.

@@ -172,9 +172,9 @@ type DB interface {
 	GetChars() (charLeft string, charRight string)                                                           // See Core.GetChars.
 	Tables(ctx context.Context, schema ...string) (tables []string, err error)                               // See Core.Tables. The driver must implement this function.
 	TableFields(ctx context.Context, table string, schema ...string) (map[string]*TableField, error)         // See Core.TableFields. The driver must implement this function.
-	ConvertDataForRecord(ctx context.Context, data interface{}) (map[string]interface{}, error)              // See Core.ConvertDataForRecord
+	ConvertValueForField(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) // See Core.ConvertValueForField
 	ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) // See Core.ConvertValueForLocal
-	CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (string, error)    // See Core.CheckLocalTypeForField
+	CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (LocalType, error) // See Core.CheckLocalTypeForField
 }
 
 // TX defines the interfaces for ORM transaction operations.
@@ -328,11 +328,11 @@ type DoInsertOption struct {
 type TableField struct {
 	Index   int         // For ordering purpose as map is unordered.
 	Name    string      // Field name.
-	Type    string      // Field type.
+	Type    string      // Field type. Eg: 'int(10) unsigned', 'varchar(64)'.
 	Null    bool        // Field can be null or not.
-	Key     string      // The index information(empty if it's not an index).
+	Key     string      // The index information(empty if it's not an index). Eg: PRI, MUL.
 	Default interface{} // Default value for the field.
-	Extra   string      // Extra information.
+	Extra   string      // Extra information. Eg: auto_increment.
 	Comment string      // Field comment.
 }
 
@@ -356,15 +356,10 @@ type CatchSQLManager struct {
 	DoCommit bool
 }
 
-type queryType int
-
 const (
 	defaultModelSafe                      = false
 	defaultCharset                        = `utf8`
 	defaultProtocol                       = `tcp`
-	queryTypeNormal           queryType   = 0
-	queryTypeCount            queryType   = 1
-	queryTypeValue            queryType   = 2
 	unionTypeNormal                       = 0
 	unionTypeAll                          = 1
 	defaultMaxIdleConnCount               = 10               // Max idle connection count in pool.
@@ -386,13 +381,33 @@ const (
 	linkPattern = `(\w+):([\w\-]*):(.*?)@(\w+?)\((.+?)\)/{0,1}([^\?]*)\?{0,1}(.*)`
 )
 
+type queryType int
+
+const (
+	queryTypeNormal queryType = 0
+	queryTypeCount  queryType = 1
+	queryTypeValue  queryType = 2
+)
+
+type joinOperator string
+
+const (
+	joinOperatorLeft  joinOperator = "LEFT"
+	joinOperatorRight joinOperator = "RIGHT"
+	joinOperatorInner joinOperator = "INNER"
+)
+
 type InsertOption int
 
 const (
-	InsertOptionDefault InsertOption = 0
-	InsertOptionReplace InsertOption = 1
-	InsertOptionSave    InsertOption = 2
-	InsertOptionIgnore  InsertOption = 3
+	InsertOptionDefault        InsertOption = 0
+	InsertOptionReplace        InsertOption = 1
+	InsertOptionSave           InsertOption = 2
+	InsertOptionIgnore         InsertOption = 3
+	InsertOperationInsert                   = "INSERT"
+	InsertOperationReplace                  = "REPLACE"
+	InsertOperationIgnore                   = "INSERT IGNORE"
+	InsertOnDuplicateKeyUpdate              = "ON DUPLICATE KEY UPDATE"
 )
 
 const (
@@ -407,25 +422,27 @@ const (
 	SqlTypeStmtQueryRowContext = "DB.Statement.QueryRowContext"
 )
 
+type LocalType string
+
 const (
-	LocalTypeString      = "string"
-	LocalTypeDate        = "date"
-	LocalTypeDatetime    = "datetime"
-	LocalTypeInt         = "int"
-	LocalTypeUint        = "uint"
-	LocalTypeInt64       = "int64"
-	LocalTypeUint64      = "uint64"
-	LocalTypeIntSlice    = "[]int"
-	LocalTypeInt64Slice  = "[]int64"
-	LocalTypeUint64Slice = "[]uint64"
-	LocalTypeInt64Bytes  = "int64-bytes"
-	LocalTypeUint64Bytes = "uint64-bytes"
-	LocalTypeFloat32     = "float32"
-	LocalTypeFloat64     = "float64"
-	LocalTypeBytes       = "[]byte"
-	LocalTypeBool        = "bool"
-	LocalTypeJson        = "json"
-	LocalTypeJsonb       = "jsonb"
+	LocalTypeString      LocalType = "string"
+	LocalTypeDate        LocalType = "date"
+	LocalTypeDatetime    LocalType = "datetime"
+	LocalTypeInt         LocalType = "int"
+	LocalTypeUint        LocalType = "uint"
+	LocalTypeInt64       LocalType = "int64"
+	LocalTypeUint64      LocalType = "uint64"
+	LocalTypeIntSlice    LocalType = "[]int"
+	LocalTypeInt64Slice  LocalType = "[]int64"
+	LocalTypeUint64Slice LocalType = "[]uint64"
+	LocalTypeInt64Bytes  LocalType = "int64-bytes"
+	LocalTypeUint64Bytes LocalType = "uint64-bytes"
+	LocalTypeFloat32     LocalType = "float32"
+	LocalTypeFloat64     LocalType = "float64"
+	LocalTypeBytes       LocalType = "[]byte"
+	LocalTypeBool        LocalType = "bool"
+	LocalTypeJson        LocalType = "json"
+	LocalTypeJsonb       LocalType = "jsonb"
 )
 
 const (
