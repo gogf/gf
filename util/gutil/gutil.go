@@ -8,11 +8,8 @@
 package gutil
 
 import (
-	"context"
-	"github.com/gogf/gf/v2/errors/gcode"
 	"reflect"
 
-	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -20,42 +17,6 @@ import (
 const (
 	dumpIndent = `    `
 )
-
-// Throw throws out an exception, which can be caught be TryCatch or recover.
-func Throw(exception interface{}) {
-	panic(exception)
-}
-
-// Try implements try... logistics using internal panic...recover.
-// It returns error if any exception occurs, or else it returns nil.
-func Try(ctx context.Context, try func(ctx context.Context)) (err error) {
-	defer func() {
-		if exception := recover(); exception != nil {
-			if v, ok := exception.(error); ok && gerror.HasStack(v) {
-				err = v
-			} else {
-				err = gerror.NewCodef(gcode.CodeInternalPanic, "%+v", exception)
-			}
-		}
-	}()
-	try(ctx)
-	return
-}
-
-// TryCatch implements try...catch... logistics using internal panic...recover.
-// It automatically calls function `catch` if any exception occurs and passes the exception as an error.
-func TryCatch(ctx context.Context, try func(ctx context.Context), catch ...func(ctx context.Context, exception error)) {
-	defer func() {
-		if exception := recover(); exception != nil && len(catch) > 0 {
-			if v, ok := exception.(error); ok && gerror.HasStack(v) {
-				catch[0](ctx, v)
-			} else {
-				catch[0](ctx, gerror.NewCodef(gcode.CodeInternalPanic, "%+v", exception))
-			}
-		}
-	}()
-	try(ctx)
-}
 
 // IsEmpty checks given `value` empty or not.
 // It returns false if `value` is: integer(0), bool(false), slice/map(len=0), nil;
