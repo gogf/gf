@@ -18,7 +18,7 @@ require (
 	github.com/gogf/gf/contrib/trace/otlphttp/v2 v2.5.3
 	github.com/gogf/gf/v2 v2.5.3
 	github.com/nacos-group/nacos-sdk-go v1.1.4
-	github.com/polarismesh/polaris-go v1.5.1
+	github.com/polarismesh/polaris-go v1.5.3
 	google.golang.org/grpc v1.57.0
 	google.golang.org/protobuf v1.31.0
 	k8s.io/client-go v0.27.4
@@ -79,7 +79,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/pelletier/go-toml v1.2.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/polarismesh/specification v1.3.2-alpha.2 // indirect
+	github.com/polarismesh/specification v1.4.0 // indirect
 	github.com/prometheus/client_golang v1.12.2 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.32.1 // indirect
