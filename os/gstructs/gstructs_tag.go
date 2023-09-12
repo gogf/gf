@@ -120,16 +120,16 @@ func TagMapField(object interface{}, priority []string) (map[string]Field, error
 	return tagMap, nil
 }
 
-func getFieldValues(value interface{}) ([]Field, error) {
+func getFieldValues(structObject interface{}) ([]Field, error) {
 	var (
 		reflectValue reflect.Value
 		reflectKind  reflect.Kind
 	)
-	if v, ok := value.(reflect.Value); ok {
+	if v, ok := structObject.(reflect.Value); ok {
 		reflectValue = v
 		reflectKind = reflectValue.Kind()
 	} else {
-		reflectValue = reflect.ValueOf(value)
+		reflectValue = reflect.ValueOf(structObject)
 		reflectKind = reflectValue.Kind()
 	}
 	for {
