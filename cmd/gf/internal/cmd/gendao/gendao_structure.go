@@ -96,7 +96,7 @@ func generateStructFieldDefinition(
 		if err != nil {
 			panic(err)
 		}
-
+		localTypeNameStr = string(localTypeName)
 		switch localTypeName {
 		case gdb.LocalTypeDate, gdb.LocalTypeDatetime:
 			if in.StdTime {

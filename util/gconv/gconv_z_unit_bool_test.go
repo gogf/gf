@@ -13,8 +13,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-type boolStruct struct {
-}
+type boolStruct struct{}
 
 func Test_Bool(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {

@@ -22,16 +22,25 @@ import (
 
 func Test_SetSingleCustomListener(t *testing.T) {
 	var (
-		p, _  = gtcp.GetFreePort()
-		ln, _ = net.Listen("tcp", fmt.Sprintf(":%d", p))
-		s     = g.Server(guid.S())
+		p1  int
+		ln1 net.Listener
 	)
+	for i := 0; i < 1000; i++ {
+		p1, _ = gtcp.GetFreePort()
+		if ln1 == nil {
+			ln1, _ = net.Listen("tcp", fmt.Sprintf(":%d", p1))
+		}
+		if ln1 != nil {
+			break
+		}
+	}
+	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.GET("/test", func(r *ghttp.Request) {
 			r.Response.Write("test")
 		})
 	})
-	err := s.SetListener(ln)
+	err := s.SetListener(ln1)
 	gtest.AssertNil(err)
 
 	s.Start()
@@ -51,12 +60,25 @@ func Test_SetSingleCustomListener(t *testing.T) {
 }
 
 func Test_SetMultipleCustomListeners(t *testing.T) {
-	p1, _ := gtcp.GetFreePort()
-	p2, _ := gtcp.GetFreePort()
-
-	ln1, _ := net.Listen("tcp", fmt.Sprintf(":%d", p1))
-	ln2, _ := net.Listen("tcp", fmt.Sprintf(":%d", p2))
-
+	var (
+		p1  int
+		p2  int
+		ln1 net.Listener
+		ln2 net.Listener
+	)
+	for i := 0; i < 1000; i++ {
+		p1, _ = gtcp.GetFreePort()
+		p2, _ = gtcp.GetFreePort()
+		if ln1 == nil {
+			ln1, _ = net.Listen("tcp", fmt.Sprintf(":%d", p1))
+		}
+		if ln2 == nil {
+			ln2, _ = net.Listen("tcp", fmt.Sprintf(":%d", p2))
+		}
+		if ln1 != nil && ln2 != nil {
+			break
+		}
+	}
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.GET("/test", func(r *ghttp.Request) {

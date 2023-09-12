@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 
+# find all path that contains go.mod.
 for file in `find . -name go.mod`; do
     dirpath=$(dirname $file)
     echo $dirpath
+
+    if [[ $file =~ "/testdata/" ]]; then
+        echo "ignore testdata path $file"
+        continue 1
+    fi
 
     # package kuhecm needs golang >= v1.18
     if [ "kubecm" = $(basename $dirpath) ]; then
