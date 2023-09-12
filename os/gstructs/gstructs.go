@@ -73,8 +73,8 @@ func Fields(in FieldsInput) ([]Field, error) {
 		fieldFilterMap       = make(map[string]struct{})
 		retrievedFields      = make([]Field, 0)
 		currentLevelFieldMap = make(map[string]Field)
+		rangeFields, err     = getFieldValues(in.Pointer)
 	)
-	rangeFields, err := getFieldValues(in.Pointer)
 	if err != nil {
 		return nil, err
 	}
