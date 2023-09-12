@@ -125,7 +125,7 @@ jobs:
       # docker run -d --name polaris -p 8090:8090 -p 8091:8091 -p 8093:8093  -p 9090:9090 -p 9091:9091 loads/polaris-server-standalone:1.11.2
       # docker run -d --name polaris -p 8090:8090 -p 8091:8091 -p 8093:8093  -p 9090:9090 -p 9091:9091 loads/polaris-standalone:v1.16.3
       polaris:
-        image: loads/polaris-standalone:v1.16.4
+        image: loads/polaris-standalone:v1.17.2
         ports:
           - 8090:8090
           - 8091:8091
@@ -158,7 +158,7 @@ jobs:
 
     strategy:
       matrix:
-        go-version: [ "1.18", "1.19", "1.20" ]
+        go-version: [ "1.18", "1.19", "1.20", "1.21" ]
         goarch: [ "386", "amd64" ]
 
     steps:
@@ -169,7 +169,7 @@ jobs:
         timezoneLinux: "Asia/Shanghai"
 
     - name: Checkout Repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Start Apollo Containers
       run:  docker-compose -f ".github/workflows/apollo/docker-compose.yml" up -d --build
@@ -184,7 +184,7 @@ jobs:
       uses: medyagh/setup-minikube@master
 
     - name: Setup Golang ${{ matrix.go-version }}
-      uses: actions/setup-go@v3
+      uses: actions/setup-go@v4
       with:
         go-version: ${{ matrix.go-version }}
         cache: true
