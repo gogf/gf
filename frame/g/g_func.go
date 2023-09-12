@@ -17,17 +17,18 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-type (
-	Func        = gutil.Func        // Func is the function which contains context parameter.
-	RecoverFunc = gutil.RecoverFunc // RecoverFunc is the panic recover function which contains context parameter.
-)
-
 // Go creates a new asynchronous goroutine function with specified recover function.
 //
 // The parameter `recoverFunc` is called when any panic during executing of `goroutineFunc`.
 // If `recoverFunc` is given nil, it ignores the panic from `goroutineFunc` and no panic will
 // throw to parent goroutine.
-func Go(ctx context.Context, goroutineFunc Func, recoverFunc RecoverFunc) {
+//
+// But, note that, if `recoverFunc` also throws panic, such panic will be thrown to parent goroutine.
+func Go(
+	ctx context.Context,
+	goroutineFunc func(ctx context.Context),
+	recoverFunc func(ctx context.Context, exception error),
+) {
 	gutil.Go(ctx, goroutineFunc, recoverFunc)
 }
 
@@ -87,9 +88,11 @@ func Try(ctx context.Context, try func(ctx context.Context)) (err error) {
 }
 
 // TryCatch implements try...catch... logistics using internal panic...recover.
-// It automatically calls function `catch` if any exception occurs ans passes the exception as an error.
-func TryCatch(ctx context.Context, try func(ctx context.Context), catch ...func(ctx context.Context, exception error)) {
-	gutil.TryCatch(ctx, try, catch...)
+// It automatically calls function `catch` if any exception occurs and passes the exception as an error.
+//
+// But, note that, if function `catch` also throws panic, the current goroutine will panic.
+func TryCatch(ctx context.Context, try func(ctx context.Context), catch func(ctx context.Context, exception error)) {
+	gutil.TryCatch(ctx, try, catch)
 }
 
 // IsNil checks whether given `value` is nil.
