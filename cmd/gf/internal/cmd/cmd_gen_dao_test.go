@@ -91,7 +91,10 @@ func Test_Gen_Dao_Default(t *testing.T) {
 		t.AssertNil(err)
 
 		// for go mod import path auto retrieve.
-		err = gfile.Copy(gtest.DataPath("gendao", "go.mod"), path)
+		err = gfile.Copy(
+			gtest.DataPath("gendao", "go.mod.txt"),
+			gfile.Join(path, "go.mod"),
+		)
 		t.AssertNil(err)
 
 		_, err = gendao.CGenDao{}.Dao(ctx, in)
@@ -192,7 +195,10 @@ func Test_Gen_Dao_TypeMapping(t *testing.T) {
 		t.AssertNil(err)
 
 		// for go mod import path auto retrieve.
-		err = gfile.Copy(gtest.DataPath("gendao", "go.mod"), path)
+		err = gfile.Copy(
+			gtest.DataPath("gendao", "go.mod.txt"),
+			gfile.Join(path, "go.mod"),
+		)
 		t.AssertNil(err)
 
 		_, err = gendao.CGenDao{}.Dao(ctx, in)
