@@ -36,3 +36,20 @@ func Test_StructToSlice(t *testing.T) {
 		t.Assert(s, nil)
 	})
 }
+
+func Test_FillStructWithDefault(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type A struct {
+			V1 int     `d:"1.01"`
+			V2 string  `d:"1.01"`
+			V3 float32 `d:"1.01"`
+		}
+		a := A{}
+		err := gutil.FillStructWithDefault(&a)
+		t.AssertNil(err)
+
+		t.Assert(a.V1, `1`)
+		t.Assert(a.V2, `1.01`)
+		t.Assert(a.V3, `1.01`)
+	})
+}

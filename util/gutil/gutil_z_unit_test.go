@@ -40,7 +40,7 @@ func Test_TryCatch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		gutil.TryCatch(ctx, func(ctx context.Context) {
 			panic("gutil TryCatch test")
-		})
+		}, nil)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
