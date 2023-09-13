@@ -6,10 +6,10 @@
 
 package gstr
 
-// pads this string with another string (multiple times, if needed)
+// PadLeft this string with another string (multiple times, if needed)
 // until the resulting string reaches the given length. The padding
 // is applied from the start of this string.
-func PadStart(s, padStr string, targetLen int) string {
+func PadLeft(s, padStr string, targetLen int) string {
 	if len(s) < targetLen {
 		for i := len(s); i < targetLen; i++ {
 			s = padStr + s
@@ -18,10 +18,10 @@ func PadStart(s, padStr string, targetLen int) string {
 	return s
 }
 
-// pads this string with another string (multiple times, if needed)
+// PadRight this string with another string (multiple times, if needed)
 // until the resulting string reaches the given length. The padding
 // is applied from the end of this string.
-func PadEnd(s, padStr string, targetLen int) string {
+func PadRight(s, padStr string, targetLen int) string {
 	if len(s) < targetLen {
 		for i := len(s); i < targetLen; i++ {
 			s += padStr
