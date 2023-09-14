@@ -100,7 +100,7 @@ func Test_Gen_Dao_Default(t *testing.T) {
 
 		_, err = gendao.CGenDao{}.Dao(ctx, in)
 		t.AssertNil(err)
-		//defer gfile.Remove(path)
+		defer gfile.Remove(path)
 
 		// files
 		files, err := gfile.ScanDir(path, "*.go", true)
