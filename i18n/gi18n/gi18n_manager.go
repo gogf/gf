@@ -81,6 +81,12 @@ func New(options ...Options) *Manager {
 func DefaultOptions() Options {
 	var path string
 	for _, folder := range searchFolders {
+		if gres.Contains(folder) {
+			path = folder
+		}
+		if path != "" {
+			break
+		}
 		path, _ = gfile.Search(folder)
 		if path != "" {
 			break
