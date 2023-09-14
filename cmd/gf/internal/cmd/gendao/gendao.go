@@ -79,6 +79,7 @@ CONFIGURATION SUPPORT
 	CGenDaoBriefNoModelComment  = `no model comment will be added for each field`
 	CGenDaoBriefClear           = `delete all generated go files that do not exist in database`
 	CGenDaoBriefTypeMapping     = `custom local type mapping for generated struct attributes relevant to fields of table`
+	CGenDaoBriefSafe            = `Whether to use the Safe function based on the given parameters, defaulting to true`
 	CGenDaoBriefGroup           = `
 specifying the configuration group name of database for generated ORM instance,
 it's not necessary and the default value is "default"
@@ -111,6 +112,7 @@ generated json tag case for model struct, cases are as follows:
 	tplVarGroupName               = `{TplGroupName}`
 	tplVarDatetimeStr             = `{TplDatetimeStr}`
 	tplVarCreatedAtDatetimeStr    = `{TplCreatedAtDatetimeStr}`
+	tplVarSafe                    = `{TplSafe}`
 )
 
 var (
@@ -165,6 +167,7 @@ func init() {
 		`CGenDaoBriefTplDaoInternalPath`: CGenDaoBriefTplDaoInternalPath,
 		`CGenDaoBriefTplDaoDoPathPath`:   CGenDaoBriefTplDaoDoPathPath,
 		`CGenDaoBriefTplDaoEntityPath`:   CGenDaoBriefTplDaoEntityPath,
+		`CGenDaoBriefSafe`:               CGenDaoBriefSafe,
 	})
 }
 
@@ -196,6 +199,7 @@ type (
 		NoJsonTag          bool   `name:"noJsonTag"           short:"k"  brief:"{CGenDaoBriefNoJsonTag}" orphan:"true"`
 		NoModelComment     bool   `name:"noModelComment"      short:"m"  brief:"{CGenDaoBriefNoModelComment}" orphan:"true"`
 		Clear              bool   `name:"clear"               short:"a"  brief:"{CGenDaoBriefClear}" orphan:"true"`
+		Safe               bool   `name:"safe"                short:"sf" brief:"{CGenDaoBriefSafe}" orphan:"true" d:"true"`
 
 		TypeMapping map[DBFieldTypeName]CustomAttributeType `name:"typeMapping" short:"y" brief:"{CGenDaoBriefTypeMapping}" orphan:"true"`
 	}

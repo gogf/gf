@@ -108,6 +108,10 @@ type generateDaoIndexInput struct {
 func generateDaoIndex(in generateDaoIndexInput) {
 	path := gfile.Join(in.DirPathDao, in.FileName+".go")
 	if in.OverwriteDao || !gfile.Exists(path) {
+		safeStr := ".Safe()"
+		if !in.Safe {
+			safeStr = ""
+		}
 		indexContent := gstr.ReplaceByMap(
 			getTemplateFromPathOrDefault(in.TplDaoIndexPath, consts.TemplateGenDaoIndexContent),
 			g.MapStrStr{
@@ -115,6 +119,7 @@ func generateDaoIndex(in generateDaoIndexInput) {
 				tplVarTableName:               in.TableName,
 				tplVarTableNameCamelCase:      in.TableNameCamelCase,
 				tplVarTableNameCamelLowerCase: in.TableNameCamelLowerCase,
+				tplVarSafe:                    safeStr,
 			})
 		indexContent = replaceDefaultVar(in.CGenDaoInternalInput, indexContent)
 		if err := gfile.PutContents(path, strings.TrimSpace(indexContent)); err != nil {

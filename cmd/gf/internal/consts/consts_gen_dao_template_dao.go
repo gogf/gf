@@ -99,7 +99,7 @@ func (dao *{TplTableNameCamelCase}Dao) Group() string {
 
 // Ctx creates and returns the Model for current DAO, It automatically sets the context for current operation.
 func (dao *{TplTableNameCamelCase}Dao) Ctx(ctx context.Context) *gdb.Model {
-	return dao.DB().Model(dao.table).Safe().Ctx(ctx)
+	return dao.DB().Model(dao.table){TplSafe}.Ctx(ctx)
 }
 
 // Transaction wraps the transaction logic using function f.
