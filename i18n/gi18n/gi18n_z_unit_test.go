@@ -180,7 +180,7 @@ func Test_SetCtxLanguage(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		ctx := gi18n.WithLanguage(nil, "zh-CN")
+		ctx := gi18n.WithLanguage(context.Background(), "zh-CN")
 		t.Assert(gi18n.LanguageFromCtx(ctx), "zh-CN")
 	})
 

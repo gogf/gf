@@ -9,8 +9,11 @@ package gi18n
 
 import "context"
 
+// CtxLanguage is the context key for language name.
+type CtxLanguage string
+
 const (
-	ctxLanguage = "I18nLanguage"
+	ctxLanguage CtxLanguage = "I18nLanguage"
 )
 
 // WithLanguage append language setting to the context and returns a new context.
