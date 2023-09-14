@@ -100,11 +100,16 @@ func Test_Gen_Dao_Default(t *testing.T) {
 
 		_, err = gendao.CGenDao{}.Dao(ctx, in)
 		t.AssertNil(err)
-		defer gfile.Remove(path)
+		//defer gfile.Remove(path)
 
 		// files
 		files, err := gfile.ScanDir(path, "*.go", true)
 		t.AssertNil(err)
+
+		for i, file := range files {
+			files[i] = gstr.Replace(file, "\\", "/")
+		}
+		path = gstr.Replace(path, "\\", "/")
 		t.Assert(files, []string{
 			path + "/dao/internal/table_user.go",
 			path + "/dao/table_user.go",
@@ -112,7 +117,7 @@ func Test_Gen_Dao_Default(t *testing.T) {
 			path + "/model/entity/table_user.go",
 		})
 		// content
-		testPath := gtest.DataPath("gendao", "generated_user")
+		testPath := gstr.Replace(gtest.DataPath("gendao", "generated_user"), "\\", "/")
 		expectFiles := []string{
 			testPath + "/dao/internal/table_user.go",
 			testPath + "/dao/table_user.go",
@@ -120,7 +125,7 @@ func Test_Gen_Dao_Default(t *testing.T) {
 			testPath + "/model/entity/table_user.go",
 		}
 		for i, _ := range files {
-			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))
+			t.Assert(gstr.Trim(gfile.GetContents(files[i])), gstr.Trim(gfile.GetContents(expectFiles[i])))
 		}
 	})
 }
