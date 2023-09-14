@@ -82,6 +82,7 @@ func Test_Gen_Dao_Default(t *testing.T) {
 				NoModelComment:     false,
 				Clear:              false,
 				TypeMapping:        nil,
+				Safe:               true,
 			}
 		)
 		err = gutil.FillStructWithDefault(&in)
@@ -176,6 +177,7 @@ func Test_Gen_Dao_TypeMapping(t *testing.T) {
 				NoJsonTag:          false,
 				NoModelComment:     false,
 				Clear:              false,
+				Safe:               true,
 				TypeMapping: map[gendao.DBFieldTypeName]gendao.CustomAttributeType{
 					"int": {
 						Type:   "int64",
