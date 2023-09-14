@@ -185,3 +185,11 @@ func Test_SetCtxLanguage(t *testing.T) {
 	})
 
 }
+
+func Test_PathInGres(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := gi18n.New()
+		m.SetLanguage("zh-CN")
+		t.Assert(m.T(context.Background(), "{#hello}{#world}"), "你好世界")
+	})
+}
