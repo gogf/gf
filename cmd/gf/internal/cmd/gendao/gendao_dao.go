@@ -108,10 +108,6 @@ type generateDaoIndexInput struct {
 func generateDaoIndex(in generateDaoIndexInput) {
 	path := gfile.Join(in.DirPathDao, in.FileName+".go")
 	if in.OverwriteDao || !gfile.Exists(path) {
-		safeStr := ".Safe()"
-		if !in.Safe {
-			safeStr = ""
-		}
 		indexContent := gstr.ReplaceByMap(
 			getTemplateFromPathOrDefault(in.TplDaoIndexPath, consts.TemplateGenDaoIndexContent),
 			g.MapStrStr{
@@ -119,7 +115,6 @@ func generateDaoIndex(in generateDaoIndexInput) {
 				tplVarTableName:               in.TableName,
 				tplVarTableNameCamelCase:      in.TableNameCamelCase,
 				tplVarTableNameCamelLowerCase: in.TableNameCamelLowerCase,
-				tplVarSafe:                    safeStr,
 			})
 		indexContent = replaceDefaultVar(in.CGenDaoInternalInput, indexContent)
 		if err := gfile.PutContents(path, strings.TrimSpace(indexContent)); err != nil {
@@ -142,6 +137,10 @@ type generateDaoInternalInput struct {
 
 func generateDaoInternal(in generateDaoInternalInput) {
 	path := gfile.Join(in.DirPathDaoInternal, in.FileName+".go")
+	safeStr := ".Safe()"
+	if !in.Safe {
+		safeStr = ""
+	}
 	modelContent := gstr.ReplaceByMap(
 		getTemplateFromPathOrDefault(in.TplDaoInternalPath, consts.TemplateGenDaoInternalContent),
 		g.MapStrStr{
@@ -152,6 +151,7 @@ func generateDaoInternal(in generateDaoInternalInput) {
 			tplVarTableNameCamelLowerCase: in.TableNameCamelLowerCase,
 			tplVarColumnDefine:            gstr.Trim(generateColumnDefinitionForDao(in.FieldMap)),
 			tplVarColumnNames:             gstr.Trim(generateColumnNamesForDao(in.FieldMap)),
+			tplVarSafe:                    safeStr,
 		})
 	modelContent = replaceDefaultVar(in.CGenDaoInternalInput, modelContent)
 	if err := gfile.PutContents(path, strings.TrimSpace(modelContent)); err != nil {
