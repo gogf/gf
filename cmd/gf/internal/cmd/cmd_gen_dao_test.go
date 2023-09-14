@@ -30,7 +30,7 @@ func dropTableWithDb(db gdb.DB, table string) {
 }
 
 func Test_Gen_Dao_Default(t *testing.T) {
-	link := "mysql:root:root@tcp(127.0.0.1:3306)/test?loc=Local&parseTime=true"
+	link := "mysql:root:12345678@tcp(127.0.0.1:3306)/test?loc=Local&parseTime=true"
 	db, err := gdb.New(gdb.ConfigNode{
 		Link: link,
 	})
