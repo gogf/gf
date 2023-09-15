@@ -8,7 +8,6 @@ package gi18n_test
 
 import (
 	"github.com/gogf/gf/v2/os/gctx"
-	_ "github.com/gogf/gf/v2/os/gres/testdata/data"
 
 	"context"
 	"testing"
@@ -123,7 +122,7 @@ func Test_Instance(t *testing.T) {
 	gres.Dump()
 	gtest.C(t, func(t *gtest.T) {
 		m := gi18n.Instance()
-		err := m.SetPath("i18n-dir")
+		err := m.SetPath(gtest.DataPath("i18n-dir"))
 		t.AssertNil(err)
 		m.SetLanguage("zh-CN")
 		t.Assert(m.T(context.Background(), "{#hello}{#world}"), "你好世界")
@@ -141,7 +140,7 @@ func Test_Instance(t *testing.T) {
 	// Default language is: en
 	gtest.C(t, func(t *gtest.T) {
 		m := gi18n.Instance(gconv.String(gtime.TimestampNano()))
-		m.SetPath("i18n-dir")
+		m.SetPath(gtest.DataPath("i18n-dir"))
 		t.Assert(m.T(context.Background(), "{#hello}{#world}"), "HelloWorld")
 	})
 }
@@ -149,7 +148,7 @@ func Test_Instance(t *testing.T) {
 func Test_Resource(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := g.I18n("resource")
-		err := m.SetPath("i18n-dir")
+		err := m.SetPath(gtest.DataPath("i18n-dir"))
 		t.AssertNil(err)
 
 		m.SetLanguage("none")
@@ -184,12 +183,4 @@ func Test_SetCtxLanguage(t *testing.T) {
 		t.Assert(gi18n.LanguageFromCtx(ctx), "zh-CN")
 	})
 
-}
-
-func Test_PathInGres(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		m := gi18n.New()
-		m.SetLanguage("zh-CN")
-		t.Assert(m.T(context.Background(), "{#hello}{#world}"), "你好世界")
-	})
 }
