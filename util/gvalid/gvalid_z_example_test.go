@@ -15,13 +15,17 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/i18n/gi18n"
 	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gvalid"
 )
 
+var (
+	validatorWithI18n = g.Validator().I18n(gi18n.New(gi18n.Options{Path: gtest.DataPath("i18n")}))
+)
+
 func ExampleNew() {
-	validator := gvalid.New()
-	if err := validator.Data(16).Rules("min:18").Run(context.Background()); err != nil {
+	if err := validatorWithI18n.Data(16).Rules("min:18").Run(context.Background()); err != nil {
 		fmt.Println(err)
 	}
 
@@ -31,7 +35,7 @@ func ExampleNew() {
 
 func ExampleValidator_Run() {
 	// check value mode
-	if err := g.Validator().Data(16).Rules("min:18").Run(context.Background()); err != nil {
+	if err := validatorWithI18n.Data(16).Rules("min:18").Run(context.Background()); err != nil {
 		fmt.Println("check value err:", err)
 	}
 	// check map mode
@@ -45,7 +49,7 @@ func ExampleValidator_Run() {
 		"password":  "required|length:6,16|same:password2",
 		"password2": "required|length:6,16",
 	}
-	if err := g.Validator().Data(data).Rules(rules).Run(context.Background()); err != nil {
+	if err := validatorWithI18n.Data(data).Rules(rules).Run(context.Background()); err != nil {
 		fmt.Println("check map err:", err)
 	}
 	// check struct mode
@@ -63,7 +67,7 @@ func ExampleValidator_Run() {
 		Page: 0,
 		Size: 101,
 	}
-	if err := g.Validator().Data(obj).Run(context.Background()); err != nil {
+	if err := validatorWithI18n.Data(obj).Run(context.Background()); err != nil {
 		fmt.Println("check struct err:", err)
 	}
 
@@ -74,11 +78,11 @@ func ExampleValidator_Run() {
 }
 
 func ExampleValidator_Clone() {
-	if err := g.Validator().Data(16).Rules("min:18").Run(context.Background()); err != nil {
+	if err := validatorWithI18n.Data(16).Rules("min:18").Run(context.Background()); err != nil {
 		fmt.Println(err)
 	}
 
-	if err := g.Validator().Clone().Data(20).Run(context.Background()); err != nil {
+	if err := validatorWithI18n.Clone().Data(20).Run(context.Background()); err != nil {
 		fmt.Println(err)
 	} else {
 		fmt.Println("Check Success!")
@@ -91,7 +95,7 @@ func ExampleValidator_Clone() {
 
 func ExampleValidator_I18n() {
 	var (
-		i18nManager = gi18n.New()
+		i18nManager = gi18n.New(gi18n.Options{Path: gtest.DataPath("i18n")})
 		ctxCn       = gi18n.WithLanguage(context.Background(), "cn")
 		validator   = gvalid.New()
 	)
@@ -128,11 +132,11 @@ func ExampleValidator_Bail() {
 		}
 	)
 
-	if err := g.Validator().Bail().Data(req).Run(ctx); err != nil {
+	if err := validatorWithI18n.Bail().Data(req).Run(ctx); err != nil {
 		fmt.Println("Use Bail Error:", err)
 	}
 
-	if err := g.Validator().Data(req).Run(ctx); err != nil {
+	if err := validatorWithI18n.Data(req).Run(ctx); err != nil {
 		fmt.Println("Not Use Bail Error:", err)
 	}
 
@@ -156,11 +160,11 @@ func ExampleValidator_Ci() {
 		}
 	)
 
-	if err := g.Validator().Data(req).Run(ctx); err != nil {
+	if err := validatorWithI18n.Data(req).Run(ctx); err != nil {
 		fmt.Println("Not Use CI Error:", err)
 	}
 
-	if err := g.Validator().Ci().Data(req).Run(ctx); err == nil {
+	if err := validatorWithI18n.Ci().Data(req).Run(ctx); err == nil {
 		fmt.Println("Use CI Passed!")
 	}
 
@@ -182,7 +186,7 @@ func ExampleValidator_Data() {
 			Password2: "gofra", // error length between 6 and 18
 		}
 	)
-	if err := g.Validator().Data(req).Run(ctx); err != nil {
+	if err := validatorWithI18n.Data(req).Run(ctx); err != nil {
 		fmt.Print(err)
 	}
 
@@ -191,7 +195,7 @@ func ExampleValidator_Data() {
 }
 
 func ExampleValidator_Data_Value() {
-	err := g.Validator().Rules("min:18").
+	err := validatorWithI18n.Rules("min:18").
 		Messages("未成年人不允许注册哟").
 		Data(16).Run(gctx.New())
 	fmt.Println(err.String())
@@ -211,7 +215,7 @@ func ExampleValidator_Data_Map1() {
 		"password@required|length:6,16|same{password}2#密码不能为空|密码长度应当在{min}到{max}之间|两次密码输入不相等",
 		"password2@required|length:6,16#",
 	}
-	if e := g.Validator().Data(params).Rules(rules).Run(gctx.New()); e != nil {
+	if e := validatorWithI18n.Data(params).Rules(rules).Run(gctx.New()); e != nil {
 		fmt.Println(e.Map())
 		fmt.Println(e.FirstItem())
 		fmt.Println(e.FirstError())
@@ -233,7 +237,7 @@ func ExampleValidator_Data_Map2() {
 		"password@required|length:6,16|same:password2#密码不能为空|密码长度应当在{min}到{max}之间|两次密码输入不相等",
 		"password2@required|length:6,16#",
 	}
-	if e := g.Validator().Data(params).Rules(rules).Run(gctx.New()); e != nil {
+	if e := validatorWithI18n.Data(params).Rules(rules).Run(gctx.New()); e != nil {
 		fmt.Println(e.Map())
 		fmt.Println(e.FirstItem())
 		fmt.Println(e.FirstError())
@@ -262,7 +266,7 @@ func ExampleValidator_Data_Map3() {
 			"same":     "两次密码输入不相等",
 		},
 	}
-	err := g.Validator().
+	err := validatorWithI18n.
 		Messages(messages).
 		Rules(rules).
 		Data(params).Run(gctx.New())
@@ -293,7 +297,7 @@ func ExampleValidator_Data_Struct1() {
 		Page: 1,
 		Size: 10,
 	}
-	err := g.Validator().Data(obj).Run(gctx.New())
+	err := validatorWithI18n.Data(obj).Run(gctx.New())
 	fmt.Println(err == nil)
 	// Output:
 	// true
@@ -310,7 +314,7 @@ func ExampleValidator_Data_Struct2() {
 		Page: 1,
 		Size: 10,
 	}
-	err := g.Validator().Data(obj).Run(gctx.New())
+	err := validatorWithI18n.Data(obj).Run(gctx.New())
 	fmt.Println(err == nil)
 	// Output:
 	// true
@@ -327,7 +331,7 @@ func ExampleValidator_Data_Struct3() {
 		Page: 1,
 		Size: 10,
 	}
-	err := g.Validator().Data(obj).Run(gctx.New())
+	err := validatorWithI18n.Data(obj).Run(gctx.New())
 	fmt.Println(err)
 	// Output:
 	// project id must between 1, 10000
@@ -345,7 +349,7 @@ func ExampleValidator_Data_Struct4() {
 	if err := gconv.Scan(data, &user); err != nil {
 		panic(err)
 	}
-	err := g.Validator().Data(user).Assoc(data).Run(gctx.New())
+	err := validatorWithI18n.Data(user).Assoc(data).Run(gctx.New())
 	if err != nil {
 		fmt.Println(err.Items())
 	}
@@ -368,7 +372,7 @@ func ExampleValidator_Assoc() {
 		panic(err)
 	}
 
-	if err := g.Validator().Data(user).Assoc(data).Run(context.Background()); err != nil {
+	if err := validatorWithI18n.Data(user).Assoc(data).Run(context.Background()); err != nil {
 		fmt.Print(err)
 	}
 
@@ -377,7 +381,7 @@ func ExampleValidator_Assoc() {
 }
 
 func ExampleValidator_Rules() {
-	if err := g.Validator().Data(16).Rules("min:18").Run(context.Background()); err != nil {
+	if err := validatorWithI18n.Data(16).Rules("min:18").Run(context.Background()); err != nil {
 		fmt.Println(err)
 	}
 
@@ -386,7 +390,7 @@ func ExampleValidator_Rules() {
 }
 
 func ExampleValidator_Messages() {
-	if err := g.Validator().Data(16).Rules("min:18").Messages("Can not regist, Age is less then 18!").Run(context.Background()); err != nil {
+	if err := validatorWithI18n.Data(16).Rules("min:18").Messages("Can not regist, Age is less then 18!").Run(context.Background()); err != nil {
 		fmt.Println(err)
 	}
 
@@ -425,7 +429,7 @@ func ExampleValidator_RuleFunc() {
 		Data:  "123456",
 	}
 	// single error sample
-	if err := g.Validator().RuleFunc(lenErrRuleName, lenErrRuleFunc).Data(st).Run(ctx); err != nil {
+	if err := validatorWithI18n.RuleFunc(lenErrRuleName, lenErrRuleFunc).Data(st).Run(ctx); err != nil {
 		fmt.Println(err)
 	}
 
@@ -439,7 +443,7 @@ func ExampleValidator_RuleFunc() {
 		Data:  "123456",
 	}
 	// multi error sample
-	if err := g.Validator().RuleFunc(lenErrRuleName, lenErrRuleFunc).RuleFunc(passErrRuleName, passErrRuleFunc).Data(multi).Run(ctx); err != nil {
+	if err := validatorWithI18n.RuleFunc(lenErrRuleName, lenErrRuleFunc).RuleFunc(passErrRuleName, passErrRuleFunc).Data(multi).Run(ctx); err != nil {
 		fmt.Println(err)
 	}
 
@@ -483,7 +487,7 @@ func ExampleValidator_RuleFuncMap() {
 		Data:  "123456",
 	}
 
-	if err := g.Validator().RuleFuncMap(ruleMap).Data(multi).Run(ctx); err != nil {
+	if err := validatorWithI18n.RuleFuncMap(ruleMap).Data(multi).Run(ctx); err != nil {
 		fmt.Println(err)
 	}
 
@@ -518,7 +522,7 @@ func ExampleValidator_RegisterRule() {
 		}
 		return nil
 	})
-	err := g.Validator().Data(user).Run(gctx.New())
+	err := validatorWithI18n.Data(user).Run(gctx.New())
 	fmt.Println(err.Error())
 	// May Output:
 	// 用户名称已被占用
