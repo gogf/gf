@@ -38,7 +38,6 @@ type Manager struct {
 	data    map[string]map[string]string // Translating map.
 	pattern string                       // Pattern for regex parsing.
 	options Options                      // configuration options.
-
 }
 
 // Options is used for i18n object configuration.
