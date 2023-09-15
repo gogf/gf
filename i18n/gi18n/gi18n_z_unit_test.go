@@ -7,6 +7,7 @@
 package gi18n_test
 
 import (
+	"github.com/gogf/gf/v2/encoding/gbase64"
 	"github.com/gogf/gf/v2/os/gctx"
 
 	"context"
@@ -183,4 +184,38 @@ func Test_SetCtxLanguage(t *testing.T) {
 		t.Assert(gi18n.LanguageFromCtx(ctx), "zh-CN")
 	})
 
+}
+
+func Test_PathInResource(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		binContent, err := gres.Pack(gtest.DataPath("i18n"))
+		t.AssertNil(err)
+		err = gres.Add(gbase64.EncodeToString(binContent))
+		t.AssertNil(err)
+
+		m := gi18n.New()
+		m.SetLanguage("zh-CN")
+		t.Assert(m.T(context.Background(), "{#hello}{#world}"), "你好世界")
+
+		m.SetPath("i18n")
+		gi18n.SetLanguage("ja")
+		t.Assert(gi18n.T(context.Background(), "{#hello}{#world}"), "こんにちは世界")
+	})
+}
+
+func Test_PathInNormal(t *testing.T) {
+	// Copy i18n files to current directory.
+	gfile.CopyDir(gtest.DataPath("i18n"), gfile.Join(gdebug.CallerDirectory(), "manifest/i18n"))
+	// Remove copied files after testing.
+	defer gfile.Remove(gfile.Join(gdebug.CallerDirectory(), "manifest"))
+
+	gtest.C(t, func(t *gtest.T) {
+		m := gi18n.New()
+		m.SetLanguage("zh-CN")
+		t.Assert(m.T(context.Background(), "{#hello}{#world}"), "你好世界")
+
+		m.SetPath("i18n")
+		gi18n.SetLanguage("ja")
+		t.Assert(gi18n.T(context.Background(), "{#hello}{#world}"), "こんにちは世界")
+	})
 }

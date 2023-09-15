@@ -43,10 +43,11 @@ type Manager struct {
 
 // Options is used for i18n object configuration.
 type Options struct {
-	Path       string   // I18n files storage path.
-	Language   string   // Default local language.
-	Delimiters []string // Delimiters for variable parsing.
-	PathType   PathType // Path type for i18n files.
+	Path       string         // I18n files storage path.
+	Language   string         // Default local language.
+	Delimiters []string       // Delimiters for variable parsing.
+	pathType   PathType       // Path type for i18n files.
+	Resource   *gres.Resource // Resource for i18n files.
 }
 
 var (
@@ -76,6 +77,9 @@ func New(options ...Options) *Manager {
 	if len(opts.Delimiters) == 0 {
 		opts.Delimiters = defaultDelimiters
 	}
+	if opts.Resource == nil {
+		opts.Resource = gres.Instance()
+	}
 	m := &Manager{
 		options: opts,
 		pattern: fmt.Sprintf(
@@ -93,16 +97,17 @@ func DefaultOptions() Options {
 	opt := Options{
 		Language:   defaultLanguage,
 		Delimiters: defaultDelimiters,
+		Resource:   gres.Instance(),
 	}
 	for _, folder := range searchFolders {
-		if gres.Contains(folder) {
+		if opt.Resource.Contains(folder) {
 			opt.Path = folder
-			opt.PathType = PathTypeGres
+			opt.pathType = PathTypeGres
 			break
 		}
 		opt.Path, _ = gfile.Search(folder)
 		if opt.Path != "" {
-			opt.PathType = PathTypeNormal
+			opt.pathType = PathTypeNormal
 			break
 		}
 	}
@@ -117,18 +122,18 @@ func DefaultOptions() Options {
 
 // SetPath sets the directory path storing i18n files.
 func (m *Manager) SetPath(path string) error {
-	if gres.Contains(path) {
+	if m.options.Resource.Contains(path) {
 		m.options.Path = path
-		m.options.PathType = PathTypeGres
+		m.options.pathType = PathTypeGres
 	} else {
 		realPath, _ := gfile.Search(path)
 		if realPath == "" {
 			return gerror.NewCodef(gcode.CodeInvalidParameter, `%s does not exist`, path)
 		}
 		m.options.Path = realPath
-		m.options.PathType = PathTypeNormal
+		m.options.pathType = PathTypeNormal
 	}
-	intlog.Printf(context.TODO(), `SetPath[%s]: %s`, m.options.PathType, m.options.Path)
+	intlog.Printf(context.TODO(), `SetPath[%s]: %s`, m.options.pathType, m.options.Path)
 	m.mu.Lock()
 	m.data = nil
 	m.mu.Unlock()
@@ -230,8 +235,8 @@ func (m *Manager) init(ctx context.Context) {
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if gres.Contains(m.options.Path) {
-		files := gres.ScanDirFile(m.options.Path, "*.*", true)
+	if m.options.Resource.Contains(m.options.Path) {
+		files := m.options.Resource.ScanDirFile(m.options.Path, "*.*", true)
 		if len(files) > 0 {
 			var (
 				path  string
@@ -239,7 +244,7 @@ func (m *Manager) init(ctx context.Context) {
 				lang  string
 				array []string
 			)
-			m.options.PathType = PathTypeGres
+			m.options.pathType = PathTypeGres
 			m.data = make(map[string]map[string]string)
 			for _, file := range files {
 				name = file.Name()
@@ -272,7 +277,7 @@ func (m *Manager) init(ctx context.Context) {
 			lang  string
 			array []string
 		)
-		m.options.PathType = PathTypeNormal
+		m.options.pathType = PathTypeNormal
 		m.data = make(map[string]map[string]string)
 		for _, file := range files {
 			path = file[len(m.options.Path)+1:]
