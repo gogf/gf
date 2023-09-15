@@ -478,7 +478,7 @@ func ExampleRule_Password() {
 			Password2: "gofra", // error length between 6 and 18
 		}
 	)
-	if err := validatorWithI18n.Data(req).Run(ctx); err != nil {
+	if err := exampleValidatorWithI18n.Data(req).Run(ctx); err != nil {
 		fmt.Print(err)
 	}
 
@@ -503,7 +503,7 @@ func ExampleRule_Password2() {
 			Password4: "goframe123", // error must contain lower and upper letters and numbers.
 		}
 	)
-	if err := validatorWithI18n.Data(req).Run(ctx); err != nil {
+	if err := exampleValidatorWithI18n.Data(req).Run(ctx); err != nil {
 		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
@@ -528,7 +528,7 @@ func ExampleRule_Password3() {
 			Password3: "Goframe123", // error must contain lower and upper letters, numbers and special chars.
 		}
 	)
-	if err := validatorWithI18n.Data(req).Run(ctx); err != nil {
+	if err := exampleValidatorWithI18n.Data(req).Run(ctx); err != nil {
 		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
@@ -1035,7 +1035,7 @@ func ExampleRule_Same() {
 			Password2: "goframe.net",
 		}
 	)
-	if err := validatorWithI18n.Data(req).Run(ctx); err != nil {
+	if err := exampleValidatorWithI18n.Data(req).Run(ctx); err != nil {
 		fmt.Println(err)
 	}
 
@@ -1057,7 +1057,7 @@ func ExampleRule_Different() {
 			OtherMailAddr: "gf@goframe.org",
 		}
 	)
-	if err := validatorWithI18n.Data(req).Run(ctx); err != nil {
+	if err := exampleValidatorWithI18n.Data(req).Run(ctx); err != nil {
 		fmt.Println(err)
 	}
 
