@@ -214,7 +214,6 @@ func (m *Manager) GetContent(ctx context.Context, key string) string {
 // init initializes the manager for lazy initialization design.
 // The i18n manager is only initialized once.
 func (m *Manager) init(ctx context.Context) {
-
 	m.mu.RLock()
 	// If the data is not nil, means it's already initialized.
 	if m.data != nil {
