@@ -17,8 +17,9 @@ import (
 
 // CopyOption is the option for Copy* functions.
 type CopyOption struct {
-	Sync bool        // Auto call file sync after source file content copied to target file.
-	Mode os.FileMode // Destination created file mode. The default file mode is DefaultPermCopy.
+	Sync         bool        // Auto call file sync after source file content copied to target file.
+	PreserveMode bool        // Preserve the mode of the original file to the target file.
+	Mode         os.FileMode // Destination created file mode. The default file mode is DefaultPermCopy.
 }
 
 // Copy file/directory from `src` to `dst`.
@@ -162,6 +163,9 @@ func CopyFile(src, dst string, option ...CopyOption) (err error) {
 			return
 		}
 	}
+	if usedOption.PreserveMode {
+		usedOption.Mode = srcStat.Mode().Perm()
+	}
 	if err = Chmod(dst, usedOption.Mode); err != nil {
 		return
 	}
@@ -191,6 +195,9 @@ func CopyDir(src string, dst string, option ...CopyOption) (err error) {
 	}
 	if !si.IsDir() {
 		return gerror.NewCode(gcode.CodeInvalidParameter, "source is not a directory")
+	}
+	if usedOption.PreserveMode {
+		usedOption.Mode = si.Mode().Perm()
 	}
 	if !Exists(dst) {
 		if err = os.MkdirAll(dst, usedOption.Mode); err != nil {
