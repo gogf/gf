@@ -100,9 +100,9 @@ func (m *middleware) Next() {
 				loop = false
 			}
 		}, func(ctx context.Context, exception error) {
-			if v, ok := exception.(error); ok && gerror.HasStack(v) {
+			if gerror.HasStack(exception) {
 				// It's already an error that has stack info.
-				m.request.error = v
+				m.request.error = exception
 			} else {
 				// Create a new error with stack info.
 				// Note that there's a skip pointing the start stacktrace
