@@ -152,8 +152,7 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 		info.Func = handlerFunc
 	} else {
 		var (
-			reflectType = info.Type
-
+			reflectType   = info.Type
 			inputObject   reflect.Value
 			objectPointer interface{}
 		)
