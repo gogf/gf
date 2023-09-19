@@ -17,9 +17,16 @@ import (
 
 // CopyOption is the option for Copy* functions.
 type CopyOption struct {
-	Sync         bool        // Auto call file sync after source file content copied to target file.
-	PreserveMode bool        // Preserve the mode of the original file to the target file.
-	Mode         os.FileMode // Destination created file mode. The default file mode is DefaultPermCopy.
+	// Auto call file sync after source file content copied to target file.
+	Sync bool
+
+	// Preserve the mode of the original file to the target file.
+	// If true, the Mode attribute will make no sense.
+	PreserveMode bool
+
+	// Destination created file mode.
+	// The default file mode is DefaultPermCopy if PreserveMode is false.
+	Mode os.FileMode
 }
 
 // Copy file/directory from `src` to `dst`.
