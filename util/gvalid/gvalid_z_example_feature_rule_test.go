@@ -478,7 +478,7 @@ func ExampleRule_Password() {
 			Password2: "gofra", // error length between 6 and 18
 		}
 	)
-	if err := exampleValidatorWithI18n.Data(req).Run(ctx); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(err)
 	}
 
@@ -503,14 +503,14 @@ func ExampleRule_Password2() {
 			Password4: "goframe123", // error must contain lower and upper letters and numbers.
 		}
 	)
-	if err := exampleValidatorWithI18n.Data(req).Run(ctx); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
 	// Output:
-	// The Password2 value `gofra` is not a valid password format
-	// The Password3 value `Goframe` is not a valid password format
-	// The Password4 value `goframe123` is not a valid password format
+	// The Password2 value `gofra` is not a valid password2 format
+	// The Password3 value `Goframe` is not a valid password2 format
+	// The Password4 value `goframe123` is not a valid password2 format
 }
 
 func ExampleRule_Password3() {
@@ -528,13 +528,13 @@ func ExampleRule_Password3() {
 			Password3: "Goframe123", // error must contain lower and upper letters, numbers and special chars.
 		}
 	)
-	if err := exampleValidatorWithI18n.Data(req).Run(ctx); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
 	// Output:
-	// The Password2 value `gofra` is not a valid password format
-	// The Password3 value `Goframe123` is not a valid password format
+	// The Password2 value `gofra` is not a valid password3 format
+	// The Password3 value `Goframe123` is not a valid password3 format
 }
 
 func ExampleRule_Postcode() {
@@ -1035,12 +1035,12 @@ func ExampleRule_Same() {
 			Password2: "goframe.net",
 		}
 	)
-	if err := exampleValidatorWithI18n.Data(req).Run(ctx); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Println(err)
 	}
 
 	// Output:
-	// The Password value `goframe.org` must be the same as field Password2
+	// The Password value `goframe.org` must be the same as field Password2 value `goframe.net`
 }
 
 func ExampleRule_Different() {
@@ -1057,12 +1057,12 @@ func ExampleRule_Different() {
 			OtherMailAddr: "gf@goframe.org",
 		}
 	)
-	if err := exampleValidatorWithI18n.Data(req).Run(ctx); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Println(err)
 	}
 
 	// Output:
-	// The OtherMailAddr value `gf@goframe.org` must be different from field MailAddr
+	// The OtherMailAddr value `gf@goframe.org` must be different from field MailAddr value `gf@goframe.org`
 }
 
 func ExampleRule_In() {
