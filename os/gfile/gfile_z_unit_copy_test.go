@@ -7,6 +7,7 @@
 package gfile_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/gogf/gf/v2/os/gfile"
@@ -99,6 +100,41 @@ func Test_CopyFile(t *testing.T) {
 		t.Assert(gfile.CopyFile(src, dst), nil)
 		t.Assert(gfile.GetContents(src), srcContent)
 		t.Assert(gfile.GetContents(dst), srcContent)
+	})
+	// Set mode
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			src     = "/testfile_copyfile1.txt"
+			dst     = "/testfile_copyfile2.txt"
+			dstMode = os.FileMode(0600)
+		)
+		t.AssertNil(createTestFile(src, ""))
+		defer delTestFiles(src)
+
+		t.Assert(gfile.CopyFile(testpath()+src, testpath()+dst, gfile.CopyOption{Mode: dstMode}), nil)
+		defer delTestFiles(dst)
+
+		dstStat, err := gfile.Stat(testpath() + dst)
+		t.AssertNil(err)
+		t.Assert(dstStat.Mode().Perm(), dstMode)
+	})
+	// Preserve src file's mode
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			src = "/testfile_copyfile1.txt"
+			dst = "/testfile_copyfile2.txt"
+		)
+		t.AssertNil(createTestFile(src, ""))
+		defer delTestFiles(src)
+
+		t.Assert(gfile.CopyFile(testpath()+src, testpath()+dst, gfile.CopyOption{PreserveMode: true}), nil)
+		defer delTestFiles(dst)
+
+		srcStat, err := gfile.Stat(testpath() + src)
+		t.AssertNil(err)
+		dstStat, err := gfile.Stat(testpath() + dst)
+		t.AssertNil(err)
+		t.Assert(srcStat.Mode().Perm(), dstStat.Mode().Perm())
 	})
 }
 

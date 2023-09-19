@@ -377,7 +377,7 @@ func ExampleChmod() {
 
 	// Output:
 	// -rw-r--r--
-	// -rwxrwxrwx
+	// -rwxr-xr-x
 }
 
 func ExampleAbs() {
