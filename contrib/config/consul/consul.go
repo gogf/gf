@@ -15,24 +15,31 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcfg"
+	"github.com/gogf/gf/v2/os/glog"
 	"github.com/hashicorp/consul/api"
 	"github.com/hashicorp/consul/api/watch"
 )
 
-const LoggerName = "consul-adapter"
-
 // Config is the configuration object for consul client.
 type Config struct {
-	Params api.Config `v:"required"`
-	Path   string     `v:"required"`
-	Watch  bool
+	// api.Config in consul package
+	ConsulConfig api.Config `v:"required"`
+	// As configuration file path key
+	Path string `v:"required"`
+	// Watch watches remote configuration updates, which updates local configuration in memory immediately when remote configuration changes.
+	Watch bool
+	// Logging interface, customized by user, default: glog.New()
+	Logger glog.ILogger
 }
 
 // Client implements gcfg.Adapter implementing using consul service.
 type Client struct {
+	// Created config object
 	config Config
+	// Consul config client
 	client *api.Client
-	value  *g.Var
+	// Configmap content cached. It is `*gjson.Json` value internally.
+	value *g.Var
 }
 
 // New creates and returns gcfg.Adapter implementing using consul service.
@@ -42,18 +49,22 @@ func New(ctx context.Context, config Config) (adapter gcfg.Adapter, err error) {
 		return nil, err
 	}
 
+	if config.Logger == nil {
+		config.Logger = glog.New()
+	}
+
 	client := &Client{
 		config: config,
 		value:  g.NewVar(nil, true),
 	}
 
-	client.client, err = api.NewClient(&config.Params)
+	client.client, err = api.NewClient(&config.ConsulConfig)
 	if err != nil {
-		return nil, gerror.Wrapf(err, `create consul client failed with config: %+v`, config.Params)
+		return nil, gerror.Wrapf(err, `create consul client failed with config: %+v`, config.ConsulConfig)
 	}
 
 	if err = client.addWatcher(); err != nil {
-		return nil, gerror.Wrapf(err, `consul client add watcher failed with config: %+v`, config.Params)
+		return nil, gerror.Wrapf(err, `consul client add watcher failed with config: %+v`, config.ConsulConfig)
 	}
 
 	return client, nil
@@ -146,18 +157,18 @@ func (c *Client) addWatcher() (err error) {
 		}
 
 		if err := c.doUpdate(v.Value); err != nil {
-			g.Log(LoggerName).Errorf(context.Background(),
+			c.config.Logger.Errorf(context.Background(),
 				"watch config from consul path %+v update failed: %s",
 				c.config.Path, err)
 		}
 	}
 
-	plan.Datacenter = c.config.Params.Datacenter
-	plan.Token = c.config.Params.Token
+	plan.Datacenter = c.config.ConsulConfig.Datacenter
+	plan.Token = c.config.ConsulConfig.Token
 
 	go func() {
-		if err := plan.Run(c.config.Params.Address); err != nil {
-			g.Log(LoggerName).Errorf(context.Background(),
+		if err := plan.Run(c.config.ConsulConfig.Address); err != nil {
+			c.config.Logger.Errorf(context.Background(),
 				"watch config from consul path %+v plan start failed: %s",
 				c.config.Path, err)
 		}

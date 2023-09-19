@@ -1,9 +1,10 @@
 package consul_test
 
 import (
-	consul "github.com/gogf/gf/contrib/config/consul/v2"
 	"testing"
 	"time"
+
+	consul "github.com/gogf/gf/contrib/config/consul/v2"
 
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -18,7 +19,7 @@ func TestConsul(t *testing.T) {
 	ctx := gctx.GetInitCtx()
 	gtest.C(t, func(t *gtest.T) {
 		configuration := consul.Config{
-			Params: api.Config{
+			ConsulConfig: api.Config{
 				Address:    "127.0.0.1:8500",
 				Scheme:     "http",
 				Datacenter: "dc1",
@@ -35,7 +36,7 @@ func TestConsul(t *testing.T) {
   addr: 127.0.0.1:6379`
 
 		// Write test configuration
-		consulClient, err := api.NewClient(&configuration.Params)
+		consulClient, err := api.NewClient(&configuration.ConsulConfig)
 		t.AssertNil(err)
 		kv := consulClient.KV()
 		_, err = kv.Put(&api.KVPair{Key: configuration.Path, Value: []byte(configValue)}, nil)
