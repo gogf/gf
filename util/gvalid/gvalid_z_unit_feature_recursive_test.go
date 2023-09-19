@@ -34,8 +34,8 @@ func Test_CheckStruct_Recursive_Struct(t *testing.T) {
 		err := g.Validator().Data(user).Run(ctx)
 		t.AssertNE(err, nil)
 		t.Assert(err.Maps()["Name"], g.Map{"required": "The Name field is required"})
-		t.Assert(err.Maps()["Pass1"], g.Map{"same": "The Pass1 value `1` must be the same as field Pass2"})
-		t.Assert(err.Maps()["Pass2"], g.Map{"same": "The Pass2 value `2` must be the same as field Pass1"})
+		t.Assert(err.Maps()["Pass1"], g.Map{"same": "The Pass1 value `1` must be the same as field Pass2 value `2`"})
+		t.Assert(err.Maps()["Pass2"], g.Map{"same": "The Pass2 value `2` must be the same as field Pass1 value `1`"})
 	})
 }
 
@@ -61,8 +61,8 @@ func Test_CheckStruct_Recursive_Struct_WithData(t *testing.T) {
 		err := g.Validator().Data(user).Assoc(data).Run(ctx)
 		t.AssertNE(err, nil)
 		t.Assert(err.Maps()["Name"], nil)
-		t.Assert(err.Maps()["Pass1"], g.Map{"same": "The Pass1 value `100` must be the same as field Pass2"})
-		t.Assert(err.Maps()["Pass2"], g.Map{"same": "The Pass2 value `200` must be the same as field Pass1"})
+		t.Assert(err.Maps()["Pass1"], g.Map{"same": "The Pass1 value `100` must be the same as field Pass2 value `200`"})
+		t.Assert(err.Maps()["Pass2"], g.Map{"same": "The Pass2 value `200` must be the same as field Pass1 value `100`"})
 	})
 }
 
@@ -94,8 +94,8 @@ func Test_CheckStruct_Recursive_SliceStruct(t *testing.T) {
 		g.Dump(err.Items())
 		t.AssertNE(err, nil)
 		t.Assert(err.Maps()["Name"], g.Map{"required": "The Name field is required"})
-		t.Assert(err.Maps()["Pass1"], g.Map{"same": "The Pass1 value `3` must be the same as field Pass2"})
-		t.Assert(err.Maps()["Pass2"], g.Map{"same": "The Pass2 value `4` must be the same as field Pass1"})
+		t.Assert(err.Maps()["Pass1"], g.Map{"same": "The Pass1 value `3` must be the same as field Pass2 value `4`"})
+		t.Assert(err.Maps()["Pass2"], g.Map{"same": "The Pass2 value `4` must be the same as field Pass1 value `3`"})
 	})
 }
 
@@ -127,7 +127,7 @@ func Test_CheckStruct_Recursive_SliceStruct_Bail(t *testing.T) {
 		g.Dump(err.Items())
 		t.AssertNE(err, nil)
 		t.Assert(err.Maps()["Name"], nil)
-		t.Assert(err.Maps()["Pass1"], g.Map{"same": "The Pass1 value `1` must be the same as field Pass2"})
+		t.Assert(err.Maps()["Pass1"], g.Map{"same": "The Pass1 value `1` must be the same as field Pass2 value `2`"})
 		t.Assert(err.Maps()["Pass2"], nil)
 	})
 }
@@ -209,8 +209,8 @@ func Test_CheckMap_Recursive_SliceStruct(t *testing.T) {
 		g.Dump(err.Items())
 		t.AssertNE(err, nil)
 		t.Assert(err.Maps()["Name"], nil)
-		t.Assert(err.Maps()["Pass1"], g.Map{"same": "The Pass1 value `3` must be the same as field Pass2"})
-		t.Assert(err.Maps()["Pass2"], g.Map{"same": "The Pass2 value `4` must be the same as field Pass1"})
+		t.Assert(err.Maps()["Pass1"], g.Map{"same": "The Pass1 value `3` must be the same as field Pass2 value `4`"})
+		t.Assert(err.Maps()["Pass2"], g.Map{"same": "The Pass2 value `4` must be the same as field Pass1 value `3`"})
 	})
 }
 
