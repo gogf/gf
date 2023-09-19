@@ -30,7 +30,7 @@ const (
 	DefaultPermOpen = os.FileMode(0666)
 
 	// DefaultPermCopy is the default perm for file/folder copy.
-	DefaultPermCopy = os.FileMode(0777)
+	DefaultPermCopy = os.FileMode(0755)
 )
 
 var (
