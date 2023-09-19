@@ -7,6 +7,8 @@
 package gi18n_test
 
 import (
+	"time"
+
 	"github.com/gogf/gf/v2/encoding/gbase64"
 	"github.com/gogf/gf/v2/os/gctx"
 
@@ -120,7 +122,6 @@ func Test_DefaultManager(t *testing.T) {
 }
 
 func Test_Instance(t *testing.T) {
-	gres.Dump()
 	gtest.C(t, func(t *gtest.T) {
 		m := gi18n.Instance()
 		err := m.SetPath(gtest.DataPath("i18n-dir"))
@@ -186,6 +187,21 @@ func Test_SetCtxLanguage(t *testing.T) {
 
 }
 
+func Test_GetContent(t *testing.T) {
+	i18n := gi18n.New(gi18n.Options{
+		Path: gtest.DataPath("i18n-file"),
+	})
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(i18n.GetContent(context.Background(), "hello"), "Hello")
+
+		ctx := gi18n.WithLanguage(context.Background(), "zh-CN")
+		t.Assert(i18n.GetContent(ctx, "hello"), "你好")
+
+		ctx = gi18n.WithLanguage(context.Background(), "unknown")
+		t.Assert(i18n.GetContent(ctx, "hello"), "")
+	})
+}
+
 func Test_PathInResource(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		binContent, err := gres.Pack(gtest.DataPath("i18n"))
@@ -193,13 +209,14 @@ func Test_PathInResource(t *testing.T) {
 		err = gres.Add(gbase64.EncodeToString(binContent))
 		t.AssertNil(err)
 
-		m := gi18n.New()
-		m.SetLanguage("zh-CN")
-		t.Assert(m.T(context.Background(), "{#hello}{#world}"), "你好世界")
+		i18n := gi18n.New()
+		i18n.SetLanguage("zh-CN")
+		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "你好世界")
 
-		m.SetPath("i18n")
-		gi18n.SetLanguage("ja")
-		t.Assert(gi18n.T(context.Background(), "{#hello}{#world}"), "こんにちは世界")
+		err = i18n.SetPath("i18n")
+		t.Assert(err, nil)
+		i18n.SetLanguage("ja")
+		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "こんにちは世界")
 	})
 }
 
@@ -209,13 +226,36 @@ func Test_PathInNormal(t *testing.T) {
 	// Remove copied files after testing.
 	defer gfile.Remove(gfile.Join(gdebug.CallerDirectory(), "manifest"))
 
-	gtest.C(t, func(t *gtest.T) {
-		m := gi18n.New()
-		m.SetLanguage("zh-CN")
-		t.Assert(m.T(context.Background(), "{#hello}{#world}"), "你好世界")
+	i18n := gi18n.New()
 
-		m.SetPath("i18n")
-		gi18n.SetLanguage("ja")
-		t.Assert(gi18n.T(context.Background(), "{#hello}{#world}"), "こんにちは世界")
+	gtest.C(t, func(t *gtest.T) {
+		i18n.SetLanguage("zh-CN")
+		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "你好世界")
+		// Set not exist path.
+		err := i18n.SetPath("i18n-not-exist")
+		t.AssertNE(err, nil)
+		i18n.SetLanguage("ja")
+		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "こんにちは世界")
+	})
+
+	// Change language file content.
+	gtest.C(t, func(t *gtest.T) {
+		i18n.SetLanguage("en")
+		t.Assert(i18n.T(context.Background(), "{#hello}{#world}{#name}"), "HelloWorld{#name}")
+		err := gfile.PutContentsAppend(gfile.Join(gdebug.CallerDirectory(), "manifest/i18n/en.toml"), "\nname = \"GoFrame\"")
+		t.Assert(err, nil)
+		// Wait for the file modification time to change.
+		time.Sleep(10 * time.Millisecond)
+		t.Assert(i18n.T(context.Background(), "{#hello}{#world}{#name}"), "HelloWorldGoFrame")
+	})
+
+	// Add new language
+	gtest.C(t, func(t *gtest.T) {
+		err := gfile.PutContents(gfile.Join(gdebug.CallerDirectory(), "manifest/i18n/en-US.toml"), "lang = \"en-US\"")
+		t.Assert(err, nil)
+		// Wait for the file modification time to change.
+		time.Sleep(10 * time.Millisecond)
+		i18n.SetLanguage("en-US")
+		t.Assert(i18n.T(context.Background(), "{#lang}"), "en-US")
 	})
 }

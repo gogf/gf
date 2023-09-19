@@ -133,9 +133,8 @@ func (m *Manager) SetPath(path string) error {
 		m.options.pathType = PathTypeNormal
 	}
 	intlog.Printf(context.TODO(), `SetPath[%s]: %s`, m.options.pathType, m.options.Path)
-	m.mu.Lock()
-	m.data = nil
-	m.mu.Unlock()
+	// Reset the manager after path changed.
+	m.reset()
 	return nil
 }
 
@@ -213,6 +212,13 @@ func (m *Manager) GetContent(ctx context.Context, key string) string {
 		return data[key]
 	}
 	return ""
+}
+
+// reset reset data of the manager.
+func (m *Manager) reset() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.data = nil
 }
 
 // init initializes the manager for lazy initialization design.
@@ -297,12 +303,12 @@ func (m *Manager) init(ctx context.Context) {
 				intlog.Errorf(ctx, "load i18n file '%s' failed: %+v", file, err)
 			}
 		}
+		intlog.Printf(ctx, "i18n files loaded in path: %s", m.options.Path)
 		// Monitor changes of i18n files for hot reload feature.
-		_, _ = gfsnotify.Add(path, func(event *gfsnotify.Event) {
+		_, _ = gfsnotify.Add(m.options.Path, func(event *gfsnotify.Event) {
+			intlog.Printf(ctx, `i18n file changed: %s`, event.Path)
 			// Any changes of i18n files, clear the data.
-			m.mu.Lock()
-			m.data = nil
-			m.mu.Unlock()
+			m.reset()
 			gfsnotify.Exit()
 		})
 	}
