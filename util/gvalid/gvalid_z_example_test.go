@@ -15,13 +15,13 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/i18n/gi18n"
 	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gvalid"
 )
 
 func ExampleNew() {
-	validator := gvalid.New()
-	if err := validator.Data(16).Rules("min:18").Run(context.Background()); err != nil {
+	if err := g.Validator().Data(16).Rules("min:18").Run(context.Background()); err != nil {
 		fmt.Println(err)
 	}
 
@@ -91,7 +91,7 @@ func ExampleValidator_Clone() {
 
 func ExampleValidator_I18n() {
 	var (
-		i18nManager = gi18n.New()
+		i18nManager = gi18n.New(gi18n.Options{Path: gtest.DataPath("i18n")})
 		ctxCn       = gi18n.WithLanguage(context.Background(), "cn")
 		validator   = gvalid.New()
 	)
@@ -138,7 +138,7 @@ func ExampleValidator_Bail() {
 
 	// output:
 	// Use Bail Error: The Account value `gf` length must be between 6 and 16
-	// Not Use Bail Error: The Account value `gf` length must be between 6 and 16; The Account value `gf` must be the same as field QQ
+	// Not Use Bail Error: The Account value `gf` length must be between 6 and 16; The Account value `gf` must be the same as field QQ value `123456`
 }
 
 func ExampleValidator_Ci() {
@@ -165,7 +165,7 @@ func ExampleValidator_Ci() {
 	}
 
 	// output:
-	// Not Use CI Error: The Password value `Goframe.org` must be the same as field Password2
+	// Not Use CI Error: The Password value `Goframe.org` must be the same as field Password2 value `goframe.org`
 	// Use CI Passed!
 }
 

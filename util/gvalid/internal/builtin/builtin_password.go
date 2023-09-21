@@ -28,7 +28,7 @@ func (r RulePassword) Name() string {
 }
 
 func (r RulePassword) Message() string {
-	return "The {field} value `{value}` is not a valid passport format"
+	return "The {field} value `{value}` is not a valid password format"
 }
 
 func (r RulePassword) Run(in RunInput) error {
