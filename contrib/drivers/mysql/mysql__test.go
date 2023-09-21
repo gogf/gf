@@ -9,6 +9,7 @@ package mysql_test
 import (
 	"context"
 	"fmt"
+	"testing"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -153,6 +154,74 @@ func createInitTableWithDb(db gdb.DB, table ...string) (name string) {
 
 func dropTableWithDb(db gdb.DB, table string) {
 	if _, err := db.Exec(ctx, fmt.Sprintf("DROP TABLE IF EXISTS `%s`", table)); err != nil {
+		gtest.Error(err)
+	}
+}
+
+func Test_PartitionTable(t *testing.T) {
+	setConfig()
+	dropShopDBTable()
+	createShopDBTable()
+	insertShopDBData()
+	defer dropShopDBTable()
+	gtest.C(t, func(t *gtest.T) {
+		data, err := g.DB().Ctx(ctx).Model("dbx_order").Partition("p1").All()
+		t.AssertNil(err)
+		t.Assert(len(data), 1)
+	})
+}
+func setConfig() {
+	gdb.SetConfig(gdb.Config{
+		"default": gdb.ConfigGroup{
+			gdb.ConfigNode{
+				Host:                 "127.0.0.1",
+				Port:                 "3306",
+				User:                 "root",
+				Pass:                 "111111",
+				Name:                 "shop_db",
+				Type:                 "mysql",
+				Role:                 "master",
+				Weight:               100,
+				TimeMaintainDisabled: true,
+				Debug:                true,
+			},
+		},
+	})
+}
+func createShopDBTable() {
+	sql := `CREATE TABLE dbx_order (
+  id int(11) NOT NULL,
+  sales_date date DEFAULT NULL,
+  amount decimal(10,2) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+PARTITION BY RANGE (YEAR(sales_date))
+(PARTITION p1 VALUES LESS THAN (2020) ENGINE = InnoDB,
+ PARTITION p2 VALUES LESS THAN (2021) ENGINE = InnoDB,
+ PARTITION p3 VALUES LESS THAN (2022) ENGINE = InnoDB,
+ PARTITION p4 VALUES LESS THAN MAXVALUE ENGINE = InnoDB);`
+	_, err := g.DB().Exec(ctx, sql)
+	if err != nil {
+		gtest.Fatal(err.Error())
+	}
+}
+func insertShopDBData() {
+	data := g.Slice{}
+	year := 2020
+	for i := 1; i <= 5; i++ {
+		year++
+		data = append(data, g.Map{
+			"id":         i,
+			"sales_date": fmt.Sprintf("%d-09-21", year),
+			"amount":     fmt.Sprintf("1%d.21", i),
+		})
+	}
+	_, err := g.DB().Model("dbx_order").Ctx(ctx).Data(data).Insert()
+	if err != nil {
+		gtest.Error(err)
+	}
+}
+func dropShopDBTable() {
+	if _, err := g.DB().Exec(ctx, "DROP TABLE IF EXISTS `dbx_order`"); err != nil {
 		gtest.Error(err)
 	}
 }
