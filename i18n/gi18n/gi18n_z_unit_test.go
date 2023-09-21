@@ -234,6 +234,8 @@ func Test_PathInNormal(t *testing.T) {
 		// Set not exist path.
 		err := i18n.SetPath("i18n-not-exist")
 		t.AssertNE(err, nil)
+		err = i18n.SetPath("")
+		t.AssertNE(err, nil)
 		i18n.SetLanguage("ja")
 		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "こんにちは世界")
 	})
