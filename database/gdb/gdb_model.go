@@ -37,6 +37,7 @@ type Model struct {
 	limit         int           // Used for "select ... start, limit ..." statement.
 	option        int           // Option for extra operation features.
 	offset        int           // Offset statement for some databases grammar.
+	partition     string        // Partition table partition name.
 	data          interface{}   // Data for operation, which can be type of map/[]map/struct/*struct/string, etc.
 	batch         int           // Batch number for batch Insert/Replace/Save operations.
 	filter        bool          // Filter data and where key-value pairs according to the fields of the table.
@@ -187,6 +188,13 @@ func (tx *TXCore) Model(tableNameQueryOrStruct ...interface{}) *Model {
 // See Core.With.
 func (tx *TXCore) With(object interface{}) *Model {
 	return tx.Model().With(object)
+}
+
+// Partition set Partition name.
+func (m *Model) Partition(partition string) *Model {
+	model := m.getModel()
+	model.partition = partition
+	return model
 }
 
 // Ctx sets the context for current operation.

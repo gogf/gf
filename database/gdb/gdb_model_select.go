@@ -748,6 +748,10 @@ func (m *Model) formatCondition(
 			conditionWhere = " WHERE " + conditionWhere
 		}
 	}
+	// PARTITION
+	if m.partition != "" {
+		conditionExtra += fmt.Sprintf(" PARTITION (%s)", m.partition)
+	}
 	// HAVING.
 	if len(m.having) > 0 {
 		havingHolder := WhereHolder{
