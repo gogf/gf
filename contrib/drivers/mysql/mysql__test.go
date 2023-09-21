@@ -167,7 +167,8 @@ func Test_PartitionTable(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		data, err := g.DB().Ctx(ctx).Model("dbx_order").Partition("p1").All()
 		t.AssertNil(err)
-		t.Assert(len(data), 1)
+		dataLen := len(data)
+		t.Assert(dataLen, 1)
 	})
 }
 func setConfig() {
