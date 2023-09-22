@@ -25,13 +25,15 @@ const (
 	TestSchema2      = "test2"
 	TableNamePrefix1 = "gf_"
 	TestDbUser       = "root"
-	TestDbPass       = "12345678"
+	TestDbPass       = "111111"
+	TestPartitionDB  = "test3"
 	CreateTime       = "2018-10-24 10:00:00"
 )
 
 var (
 	db        gdb.DB
 	db2       gdb.DB
+	db3       gdb.DB
 	dbPrefix  gdb.DB
 	dbInvalid gdb.DB
 	ctx       = context.TODO()
@@ -39,21 +41,24 @@ var (
 
 func init() {
 	nodeDefault := gdb.ConfigNode{
-		Link: "mysql:root:12345678@tcp(127.0.0.1:3306)/?loc=Local&parseTime=true",
+		Link: fmt.Sprintf("mysql:root:%s@tcp(127.0.0.1:3306)/?loc=Local&parseTime=true", TestDbPass),
 	}
-
+	partitionDefault := gdb.ConfigNode{
+		Link: fmt.Sprintf("mysql:root:%s@tcp(127.0.0.1:3307)/?loc=Local&parseTime=true", TestDbPass),
+	}
 	nodePrefix := gdb.ConfigNode{
-		Link: "mysql:root:12345678@tcp(127.0.0.1:3306)/?loc=Local&parseTime=true",
+		Link: fmt.Sprintf("mysql:root:%s@tcp(127.0.0.1:3306)/?loc=Local&parseTime=true", TestDbPass),
 	}
 	nodePrefix.Prefix = TableNamePrefix1
 
 	nodeInvalid := gdb.ConfigNode{
-		Link: "mysql:root:12345678@tcp(127.0.0.1:3307)/?loc=Local&parseTime=true",
+		Link: fmt.Sprintf("mysql:root:%s@tcp(127.0.0.1:3307)/?loc=Local&parseTime=true", TestDbPass),
 	}
 
 	gdb.AddConfigNode("test", nodeDefault)
 	gdb.AddConfigNode("prefix", nodePrefix)
 	gdb.AddConfigNode("nodeinvalid", nodeInvalid)
+	gdb.AddConfigNode("partition", partitionDefault)
 	gdb.AddConfigNode(gdb.DefaultGroupName, nodeDefault)
 
 	// Default db.
@@ -69,9 +74,12 @@ func init() {
 	if _, err := db.Exec(ctx, fmt.Sprintf(schemaTemplate, TestSchema2)); err != nil {
 		gtest.Error(err)
 	}
+	if _, err := db.Exec(ctx, fmt.Sprintf(schemaTemplate, TestPartitionDB)); err != nil {
+		gtest.Error(err)
+	}
 	db = db.Schema(TestSchema1)
 	db2 = db.Schema(TestSchema2)
-
+	db3 = db.Schema(TestPartitionDB)
 	// Prefix db.
 	if r, err := gdb.NewByGroup("prefix"); err != nil {
 		gtest.Error(err)
@@ -159,34 +167,15 @@ func dropTableWithDb(db gdb.DB, table string) {
 }
 
 func Test_PartitionTable(t *testing.T) {
-	setConfig()
 	dropShopDBTable()
 	createShopDBTable()
 	insertShopDBData()
 	defer dropShopDBTable()
 	gtest.C(t, func(t *gtest.T) {
-		data, err := g.DB().Ctx(ctx).Model("dbx_order").Partition("p1").All()
+		data, err := db3.Ctx(ctx).Model("dbx_order").Partition("p3").All()
 		t.AssertNil(err)
 		dataLen := len(data)
 		t.Assert(dataLen, 1)
-	})
-}
-func setConfig() {
-	gdb.SetConfig(gdb.Config{
-		"default": gdb.ConfigGroup{
-			gdb.ConfigNode{
-				Host:                 "127.0.0.1",
-				Port:                 "3306",
-				User:                 "root",
-				Pass:                 "111111",
-				Name:                 "shop_db",
-				Type:                 "mysql",
-				Role:                 "master",
-				Weight:               100,
-				TimeMaintainDisabled: true,
-				Debug:                true,
-			},
-		},
 	})
 }
 func createShopDBTable() {
@@ -200,7 +189,7 @@ PARTITION BY RANGE (YEAR(sales_date))
  PARTITION p2 VALUES LESS THAN (2021) ENGINE = InnoDB,
  PARTITION p3 VALUES LESS THAN (2022) ENGINE = InnoDB,
  PARTITION p4 VALUES LESS THAN MAXVALUE ENGINE = InnoDB);`
-	_, err := g.DB().Exec(ctx, sql)
+	_, err := db3.Exec(ctx, sql)
 	if err != nil {
 		gtest.Fatal(err.Error())
 	}
@@ -216,13 +205,13 @@ func insertShopDBData() {
 			"amount":     fmt.Sprintf("1%d.21", i),
 		})
 	}
-	_, err := g.DB().Model("dbx_order").Ctx(ctx).Data(data).Insert()
+	_, err := db3.Model("dbx_order").Ctx(ctx).Data(data).Insert()
 	if err != nil {
 		gtest.Error(err)
 	}
 }
 func dropShopDBTable() {
-	if _, err := g.DB().Exec(ctx, "DROP TABLE IF EXISTS `dbx_order`"); err != nil {
+	if _, err := db3.Exec(ctx, "DROP TABLE IF EXISTS `dbx_order`"); err != nil {
 		gtest.Error(err)
 	}
 }
