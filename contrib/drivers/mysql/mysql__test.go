@@ -25,7 +25,7 @@ const (
 	TestSchema2      = "test2"
 	TableNamePrefix1 = "gf_"
 	TestDbUser       = "root"
-	TestDbPass       = "111111"
+	TestDbPass       = "12345678"
 	TestPartitionDB  = "test3"
 	CreateTime       = "2018-10-24 10:00:00"
 )
