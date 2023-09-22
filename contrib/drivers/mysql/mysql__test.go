@@ -23,10 +23,10 @@ const (
 	TableName        = "user"
 	TestSchema1      = "test1"
 	TestSchema2      = "test2"
+	TestPartitionDB  = "test3"
 	TableNamePrefix1 = "gf_"
 	TestDbUser       = "root"
 	TestDbPass       = "12345678"
-	TestPartitionDB  = "test3"
 	CreateTime       = "2018-10-24 10:00:00"
 )
 
