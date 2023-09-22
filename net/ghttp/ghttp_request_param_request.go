@@ -191,7 +191,7 @@ func (r *Request) doGetRequestStruct(pointer interface{}, mapping ...map[string]
 
 // mergeDefaultStructValue merges the request parameters with default values from struct tag definition.
 func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer interface{}) error {
-	fields := r.serveHandler.Handler.Info.ReqFields
+	fields := r.serveHandler.Handler.Info.ReqStructFields
 	if len(fields) > 0 {
 		var (
 			foundKey   string
@@ -209,34 +209,37 @@ func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer i
 				}
 			}
 		}
-	} else {
-		tagFields, err := gstructs.TagFields(pointer, defaultValueTags)
-		if err != nil {
-			return err
-		}
-		if len(tagFields) > 0 {
-			var (
-				foundKey   string
-				foundValue interface{}
-			)
-			for _, field := range tagFields {
-				foundKey, foundValue = gutil.MapPossibleItemByKey(data, field.Name())
-				if foundKey == "" {
-					data[field.Name()] = field.TagValue
-				} else {
-					if empty.IsEmpty(foundValue) {
-						data[foundKey] = field.TagValue
-					}
+		return nil
+	}
+
+	// provide non strict routing
+	tagFields, err := gstructs.TagFields(pointer, defaultValueTags)
+	if err != nil {
+		return err
+	}
+	if len(tagFields) > 0 {
+		var (
+			foundKey   string
+			foundValue interface{}
+		)
+		for _, field := range tagFields {
+			foundKey, foundValue = gutil.MapPossibleItemByKey(data, field.Name())
+			if foundKey == "" {
+				data[field.Name()] = field.TagValue
+			} else {
+				if empty.IsEmpty(foundValue) {
+					data[foundKey] = field.TagValue
 				}
 			}
 		}
 	}
+
 	return nil
 }
 
 // mergeInTagStructValue merges the request parameters with header or cookie values from struct `in` tag definition.
 func (r *Request) mergeInTagStructValue(data map[string]interface{}, pointer interface{}) error {
-	fields := r.serveHandler.Handler.Info.ReqFields
+	fields := r.serveHandler.Handler.Info.ReqStructFields
 	if len(fields) > 0 {
 		var (
 			foundKey   string

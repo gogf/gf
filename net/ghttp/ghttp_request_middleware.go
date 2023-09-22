@@ -127,10 +127,6 @@ func (m *middleware) Next() {
 
 func (m *middleware) callHandlerFunc(funcInfo handlerFuncInfo) {
 	niceCallFunc(func() {
-		if funcInfo.Func != nil {
-			funcInfo.Func(m.request)
-		} else {
-			m.request.error = gerror.New("Handler function not found.")
-		}
+		funcInfo.Func(m.request)
 	})
 }

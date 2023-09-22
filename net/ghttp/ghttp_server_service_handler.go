@@ -186,7 +186,7 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 			(reflectType.In(1).Kind() == reflect.Ptr && reflectType.In(1).Elem().Kind() != reflect.Struct) {
 			err = gerror.NewCodef(
 				gcode.CodeInvalidParameter,
-				`invalid handler: defined as "%s", but the second input parameter should be type of pointer to struct(*BizReq)`,
+				`invalid handler: defined as "%s", but the second input parameter should be type of pointer to struct like "*BizReq"`,
 				reflectType.String(),
 			)
 			return
@@ -195,7 +195,7 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 		if reflectType.Out(0).Kind() != reflect.Ptr || (reflectType.Out(0).Kind() == reflect.Ptr && reflectType.Out(0).Elem().Kind() != reflect.Struct) {
 			err = gerror.NewCodef(
 				gcode.CodeInvalidParameter,
-				`invalid handler: defined as "%s", but the first output parameter should be type of pointer to struct(*BizRes)`,
+				`invalid handler: defined as "%s", but the first output parameter should be type of pointer to struct like "*BizRes"`,
 				reflectType.String(),
 			)
 			return
@@ -232,7 +232,7 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 			return
 		}
 
-		info.IsOpenAPI = true
+		info.IsStrictRoute = true
 
 		inputObject = reflect.New(info.Type.In(1).Elem())
 		objectPointer = inputObject.Interface()
@@ -245,7 +245,7 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 		if err != nil {
 			return info, err
 		}
-		info.ReqFields = fields
+		info.ReqStructFields = fields
 
 		// Build handler for processing
 		info.Func = func(r *Request) {
