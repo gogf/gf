@@ -58,6 +58,16 @@ func (s modServer) New(conf ...*GrpcServerConfig) *GrpcServer {
 	} else {
 		config = s.NewConfig()
 	}
+	if config.Address != "" {
+		if !gstr.Contains(config.Address, ":") || gstr.Contains(config.Address, ":*") {
+			config.Address = gstr.Replace(config.Address, ":*", "")
+			randomPort, err := gtcp.GetFreePort()
+			if err != nil {
+				g.Log().Fatalf(ctx, `%+v`, err)
+			}
+			config.Address += fmt.Sprintf(`:%d`, randomPort)
+		}
+	}
 	if config.Address == "" {
 		randomPort, err := gtcp.GetFreePort()
 		if err != nil {
