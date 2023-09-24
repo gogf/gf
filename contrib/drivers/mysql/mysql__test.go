@@ -44,7 +44,8 @@ func init() {
 		Link: fmt.Sprintf("mysql:root:%s@tcp(127.0.0.1:3306)/?loc=Local&parseTime=true", TestDbPass),
 	}
 	partitionDefault := gdb.ConfigNode{
-		Link: fmt.Sprintf("mysql:root:%s@tcp(127.0.0.1:3307)/?loc=Local&parseTime=true", TestDbPass),
+		Link:  fmt.Sprintf("mysql:root:%s@tcp(127.0.0.1:3307)/?loc=Local&parseTime=true", TestDbPass),
+		Debug: true,
 	}
 	nodePrefix := gdb.ConfigNode{
 		Link: fmt.Sprintf("mysql:root:%s@tcp(127.0.0.1:3306)/?loc=Local&parseTime=true", TestDbPass),
@@ -173,9 +174,13 @@ func Test_PartitionTable(t *testing.T) {
 
 	defer dropShopDBTable()
 	gtest.C(t, func(t *gtest.T) {
-		data, err := db3.Ctx(ctx).Model("dbx_order").Partition("p3").All()
+		data, err := db3.Ctx(ctx).Model("dbx_order").Partition("p3", "p4").All()
 		t.AssertNil(err)
 		dataLen := len(data)
+		t.Assert(dataLen, 5)
+		data, err = db3.Ctx(ctx).Model("dbx_order").Partition("p3").All()
+		t.AssertNil(err)
+		dataLen = len(data)
 		t.Assert(dataLen, 1)
 	})
 }
