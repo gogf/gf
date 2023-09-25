@@ -77,9 +77,10 @@ func Benchmark_ParamTag(b *testing.B) {
 	client := g.Client()
 	client.SetPrefix(prefix)
 	client.SetCookie("name", "john")
+	client.SetHeader("age", "18")
 
 	b.StartTimer()
-	for i := 0; i < b.N; i++ {
-		client.PostContent(ctx, "/user", "key="+strconv.Itoa(i))
+	for i := 1; i < b.N; i++ {
+		client.PostContent(ctx, "/user", "id="+strconv.Itoa(i))
 	}
 }

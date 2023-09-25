@@ -88,3 +88,9 @@ func (f *Field) TagExample() string {
 	}
 	return v
 }
+
+// TagIn returns the most commonly used tag `in` value of the field.
+func (f *Field) TagIn() string {
+	v := f.Tag(gtag.In)
+	return v
+}

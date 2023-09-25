@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"runtime"
 	"testing"
 	"time"
 
@@ -170,6 +171,10 @@ func Test_BuildParams(t *testing.T) {
 }
 
 func Test_ServerSignal(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Log("skip windows")
+		return
+	}
 	s := g.Server(guid.S())
 	s.BindHandler("/", func(r *ghttp.Request) {
 		r.Response.Write("hello world")
