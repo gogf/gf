@@ -190,7 +190,7 @@ func (tx *TXCore) With(object interface{}) *Model {
 	return tx.Model().With(object)
 }
 
-// Partition set Partition name.
+// Partition sets Partition name.
 func (m *Model) Partition(partitions ...string) *Model {
 	model := m.getModel()
 	model.partition = gstr.Join(partitions, ",")
