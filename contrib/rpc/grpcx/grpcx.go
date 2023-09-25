@@ -22,8 +22,8 @@ type (
 )
 
 const (
-	// FreePortAddress marks the server listens using random free port.
-	FreePortAddress = ":0"
+	FreePortAddress      = ":0" // FreePortAddress marks the server listens using random free port.
+	defaultListenAddress = ":0" // Default listening address for grpc server if no address configured.
 )
 
 const (

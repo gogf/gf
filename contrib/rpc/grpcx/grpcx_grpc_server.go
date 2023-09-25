@@ -21,7 +21,6 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gipv4"
 	"github.com/gogf/gf/v2/net/gsvc"
-	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/os/gproc"
@@ -59,11 +58,7 @@ func (s modServer) New(conf ...*GrpcServerConfig) *GrpcServer {
 		config = s.NewConfig()
 	}
 	if config.Address == "" {
-		randomPort, err := gtcp.GetFreePort()
-		if err != nil {
-			g.Log().Fatalf(ctx, `%+v`, err)
-		}
-		config.Address = fmt.Sprintf(`:%d`, randomPort)
+		config.Address = defaultListenAddress
 	}
 	if !gstr.Contains(config.Address, ":") {
 		g.Log().Fatal(ctx, "invalid service address, should contain listening port")
@@ -257,19 +252,17 @@ func (s *GrpcServer) calculateListenedEndpoints(ctx context.Context) gsvc.Endpoi
 		)
 		if len(addrArray) == 1 {
 			configItemName := "address"
-			if len(addresses) != 0 {
+			if len(s.config.Endpoints) != 0 {
 				configItemName = "endpoint"
 			}
 			panic(gerror.NewCodef(
 				gcode.CodeInvalidConfiguration,
-				`invalid %s configuration "%s", missing port`,
+				`invalid "%s" configuration "%s", missing port`,
 				configItemName, address,
 			))
 		}
 		// IPs.
 		switch addrArray[0] {
-		case "127.0.0.1":
-			// Nothing to do.
 		case "0.0.0.0", "":
 			intranetIps, err := gipv4.GetIntranetIpArray()
 			if err != nil {
@@ -305,7 +298,10 @@ func (s *GrpcServer) calculateListenedEndpoints(ctx context.Context) gsvc.Endpoi
 		}
 		for _, ip := range listenedIps {
 			for _, port := range listenedPorts {
-				endpoints = append(endpoints, gsvc.NewEndpoint(fmt.Sprintf(`%s:%d`, ip, port)))
+				endpoints = append(
+					endpoints,
+					gsvc.NewEndpoint(fmt.Sprintf(`%s:%d`, ip, port)),
+				)
 			}
 		}
 	}
