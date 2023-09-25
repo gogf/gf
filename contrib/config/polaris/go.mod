@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/gogf/gf/v2 v2.5.4
-	github.com/polarismesh/polaris-go v1.5.3
+	github.com/polarismesh/polaris-go v1.5.4
 )
 
 require (
