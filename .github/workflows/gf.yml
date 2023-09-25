@@ -180,6 +180,9 @@ jobs:
     - name: Start Redis Cluster Containers
       run:  docker-compose -f ".github/workflows/redis/docker-compose.yml" up -d --build
 
+    - name: Start Consul Containers
+      run:  docker-compose -f ".github/workflows/consul/docker-compose.yml" up -d --build
+
     - name: Start Minikube
       uses: medyagh/setup-minikube@master
 
@@ -204,6 +207,9 @@ jobs:
 
     - name: Stop Nacos Containers
       run:  docker-compose -f ".github/workflows/nacos/docker-compose.yml" down
+
+    - name: Stop Consul Containers
+      run:  docker-compose -f ".github/workflows/consul/docker-compose.yml" down
 
     - name: Report Coverage
       uses: codecov/codecov-action@v3
