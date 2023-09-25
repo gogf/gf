@@ -189,6 +189,7 @@ jobs:
         go-version: ${{ matrix.go-version }}
         cache: true
         cache-dependency-path: '**/go.sum'
+        command: clean -modecache
 
     - name: Before Script
       run:  bash .github/workflows/before_script.sh
