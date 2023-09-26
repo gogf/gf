@@ -73,6 +73,46 @@ func (j *Json) Get(pattern string, def ...interface{}) *gvar.Var {
 	return nil
 }
 
+// GetString quick call to the Get(pattern string, def ...interface{}).String().
+func (j *Json) GetString(pattern string, def ...string) string {
+	return j.Get(pattern, def).String()
+}
+
+// GetInt quick call to the Get(pattern string, def ...interface{}).Int().
+func (j *Json) GetInt(pattern string, def ...int) int {
+	return j.Get(pattern, def).Int()
+}
+
+// GetMap quick call to the Get(pattern string, def ...interface{}).Map().
+func (j *Json) GetMap(pattern string) map[string]interface{} {
+	return j.Get(pattern, nil).Map()
+}
+
+// GetMaps quick call to the Get(pattern string, def ...interface{}).Bool().
+func (j *Json) GetMaps(pattern string) []map[string]interface{} {
+	return j.Get(pattern, nil).Maps()
+}
+
+// GetBool quick call to the Get(pattern string, def ...interface{}).Bool().
+func (j *Json) GetBool(pattern string, def ...bool) bool {
+	return j.Get(pattern, def).Bool()
+}
+
+// GetMapStrStr quick call to the Get(pattern string, def ...interface{}).MapStrStr().
+func (j *Json) GetMapStrStr(pattern string) map[string]string {
+	return j.Get(pattern).MapStrStr()
+}
+
+// GetInts quick call to the Get(pattern string, def ...interface{}).Ints().
+func (j *Json) GetInts(pattern string) []int {
+	return j.Get(pattern).Ints()
+}
+
+// GetStrings quick call to the Get(pattern string, def ...interface{}).Strings().
+func (j *Json) GetStrings(pattern string) []string {
+	return j.Get(pattern).Strings()
+}
+
 // GetJson gets the value by specified `pattern`,
 // and converts it to an un-concurrent-safe Json object.
 func (j *Json) GetJson(pattern string, def ...interface{}) *Json {
