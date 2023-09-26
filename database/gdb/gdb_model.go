@@ -191,6 +191,10 @@ func (tx *TXCore) With(object interface{}) *Model {
 }
 
 // Partition sets Partition name.
+// Example:
+//
+//	dao.User.Ctx(ctx).Partition("p1","p2").One()
+//
 func (m *Model) Partition(partitions ...string) *Model {
 	model := m.getModel()
 	model.partition = gstr.Join(partitions, ",")
