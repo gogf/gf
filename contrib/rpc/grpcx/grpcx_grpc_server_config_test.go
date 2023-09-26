@@ -20,6 +20,8 @@ func Test_Grpcx_Grpc_Server(t *testing.T) {
 		s.Start()
 		time.Sleep(time.Millisecond * 100)
 		defer s.Stop()
+		s.serviceMu.Lock()
+		defer s.serviceMu.Unlock()
 		t.Assert(len(s.services) != 0, true)
 	})
 }
@@ -32,6 +34,8 @@ func Test_Grpcx_Grpc_Server_Address(t *testing.T) {
 		s.Start()
 		time.Sleep(time.Millisecond * 100)
 		defer s.Stop()
+		s.serviceMu.Lock()
+		defer s.serviceMu.Unlock()
 		t.Assert(len(s.services) != 0, true)
 		t.Assert(gstr.Contains(s.services[0].GetEndpoints().String(), "127.0.0.1:"), true)
 	})

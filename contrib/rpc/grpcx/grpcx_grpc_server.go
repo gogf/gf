@@ -36,6 +36,7 @@ type GrpcServer struct {
 	services  []gsvc.Service
 	waitGroup sync.WaitGroup
 	registrar gsvc.Registrar
+	serviceMu sync.Mutex
 }
 
 // Service implements gsvc.Service interface.
@@ -89,6 +90,8 @@ func (s modServer) New(conf ...*GrpcServerConfig) *GrpcServer {
 // Service binds service list to current server.
 // Server will automatically register the service list after it starts.
 func (s *GrpcServer) Service(services ...gsvc.Service) {
+	s.serviceMu.Lock()
+	defer s.serviceMu.Unlock()
 	s.services = append(s.services, services...)
 }
 
@@ -143,6 +146,8 @@ func (s *GrpcServer) doServiceRegister() {
 	if s.registrar == nil {
 		return
 	}
+	s.serviceMu.Lock()
+	defer s.serviceMu.Unlock()
 	if len(s.services) == 0 {
 		s.services = []gsvc.Service{&gsvc.LocalService{
 			Name:     s.config.Name,
@@ -181,6 +186,8 @@ func (s *GrpcServer) doServiceDeregister() {
 	if s.registrar == nil {
 		return
 	}
+	s.serviceMu.Lock()
+	defer s.serviceMu.Unlock()
 	var ctx = gctx.GetInitCtx()
 	for _, service := range s.services {
 		s.Logger().Debugf(ctx, `service deregister: %+v`, service)
