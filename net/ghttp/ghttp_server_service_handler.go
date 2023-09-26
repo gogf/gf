@@ -145,149 +145,133 @@ func (s *Server) nameToUri(name string) string {
 	}
 }
 
-func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, methodName string) (info handlerFuncInfo, err error) {
-	info.Type = reflect.TypeOf(f)
-	info.Value = reflect.ValueOf(f)
+func (s *Server) checkAndCreateFuncInfo(
+	f interface{}, pkgPath, structName, methodName string,
+) (funcInfo handlerFuncInfo, err error) {
+	funcInfo = handlerFuncInfo{
+		Type:  reflect.TypeOf(f),
+		Value: reflect.ValueOf(f),
+	}
 	if handlerFunc, ok := f.(HandlerFunc); ok {
-		info.Func = handlerFunc
-	} else {
-		var (
-			reflectType   = info.Type
-			inputObject   reflect.Value
-			objectPointer interface{}
+		funcInfo.Func = handlerFunc
+		return
+	}
+
+	var (
+		reflectType    = funcInfo.Type
+		inputObject    reflect.Value
+		inputObjectPtr interface{}
+	)
+	if reflectType.NumIn() != 2 || reflectType.NumOut() != 2 {
+		if pkgPath != "" {
+			err = gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`invalid handler: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" or "func(context.Context, *BizReq)(*BizRes, error)" is required`,
+				pkgPath, structName, methodName, reflectType.String(),
+			)
+		} else {
+			err = gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`invalid handler: defined as "%s", but "func(*ghttp.Request)" or "func(context.Context, *BizReq)(*BizRes, error)" is required`,
+				reflectType.String(),
+			)
+		}
+		return
+	}
+
+	if !reflectType.In(0).Implements(reflect.TypeOf((*context.Context)(nil)).Elem()) {
+		err = gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`invalid handler: defined as "%s", but the first input parameter should be type of "context.Context"`,
+			reflectType.String(),
 		)
-		if reflectType.NumIn() != 2 || reflectType.NumOut() != 2 {
-			if pkgPath != "" {
-				err = gerror.NewCodef(
-					gcode.CodeInvalidParameter,
-					`invalid handler: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" or "func(context.Context, *BizReq)(*BizRes, error)" is required`,
-					pkgPath, structName, methodName, reflectType.String(),
-				)
-			} else {
-				err = gerror.NewCodef(
-					gcode.CodeInvalidParameter,
-					`invalid handler: defined as "%s", but "func(*ghttp.Request)" or "func(context.Context, *BizReq)(*BizRes, error)" is required`,
-					reflectType.String(),
-				)
+		return
+	}
+
+	if !reflectType.Out(1).Implements(reflect.TypeOf((*error)(nil)).Elem()) {
+		err = gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`invalid handler: defined as "%s", but the last output parameter should be type of "error"`,
+			reflectType.String(),
+		)
+		return
+	}
+
+	// The request struct should be named as `xxxReq`.
+	reqStructName := trimGeneric(reflectType.In(1).String())
+	if !gstr.HasSuffix(reqStructName, `Req`) {
+		err = gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`invalid struct naming for request: defined as "%s", but it should be named with "Req" suffix like "XxxReq"`,
+			reqStructName,
+		)
+		return
+	}
+
+	// The response struct should be named as `xxxRes`.
+	resStructName := trimGeneric(reflectType.Out(0).String())
+	if !gstr.HasSuffix(resStructName, `Res`) {
+		err = gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`invalid struct naming for response: defined as "%s", but it should be named with "Res" suffix like "XxxRes"`,
+			resStructName,
+		)
+		return
+	}
+
+	funcInfo.IsStrictRoute = true
+
+	inputObject = reflect.New(funcInfo.Type.In(1).Elem())
+	inputObjectPtr = inputObject.Interface()
+
+	// It retrieves and returns the request struct fields.
+	fields, err := gstructs.Fields(gstructs.FieldsInput{
+		Pointer:         inputObjectPtr,
+		RecursiveOption: gstructs.RecursiveOptionEmbedded,
+	})
+	if err != nil {
+		return funcInfo, err
+	}
+	funcInfo.ReqStructFields = fields
+	funcInfo.Func = createRouterFunc(funcInfo, inputObject, inputObjectPtr)
+	return
+}
+
+func createRouterFunc(
+	funcInfo handlerFuncInfo, inputObject reflect.Value, inputObjectPtr interface{},
+) func(r *Request) {
+	return func(r *Request) {
+		var (
+			ok          bool
+			err         error
+			inputValues = []reflect.Value{
+				reflect.ValueOf(r.Context()),
 			}
+		)
+		r.error = r.Parse(inputObjectPtr)
+		if r.error != nil {
 			return
 		}
-
-		if !reflectType.In(0).Implements(reflect.TypeOf((*context.Context)(nil)).Elem()) {
-			err = gerror.NewCodef(
-				gcode.CodeInvalidParameter,
-				`invalid handler: defined as "%s", but the first input parameter should be type of "context.Context"`,
-				reflectType.String(),
-			)
-			return
-		}
-
-		if reflectType.In(1).Kind() != reflect.Ptr ||
-			(reflectType.In(1).Kind() == reflect.Ptr && reflectType.In(1).Elem().Kind() != reflect.Struct) {
-			err = gerror.NewCodef(
-				gcode.CodeInvalidParameter,
-				`invalid handler: defined as "%s", but the second input parameter should be type of pointer to struct like "*BizReq"`,
-				reflectType.String(),
-			)
-			return
-		}
-
-		if reflectType.Out(0).Kind() != reflect.Ptr || (reflectType.Out(0).Kind() == reflect.Ptr && reflectType.Out(0).Elem().Kind() != reflect.Struct) {
-			err = gerror.NewCodef(
-				gcode.CodeInvalidParameter,
-				`invalid handler: defined as "%s", but the first output parameter should be type of pointer to struct like "*BizRes"`,
-				reflectType.String(),
-			)
-			return
-		}
-
-		if !reflectType.Out(1).Implements(reflect.TypeOf((*error)(nil)).Elem()) {
-			err = gerror.NewCodef(
-				gcode.CodeInvalidParameter,
-				`invalid handler: defined as "%s", but the last output parameter should be type of "error"`,
-				reflectType.String(),
-			)
-			return
-		}
-
-		// The request struct should be named as `xxxReq`.
-		reqStructName := trimGeneric(reflectType.In(1).String())
-		if !gstr.HasSuffix(reqStructName, `Req`) {
-			err = gerror.NewCodef(
-				gcode.CodeInvalidParameter,
-				`invalid struct naming for request: defined as "%s", but it should be named with "Req" suffix like "XxxReq"`,
-				reqStructName,
-			)
-			return
-		}
-
-		// The response struct should be named as `xxxRes`.
-		resStructName := trimGeneric(reflectType.Out(0).String())
-		if !gstr.HasSuffix(resStructName, `Res`) {
-			err = gerror.NewCodef(
-				gcode.CodeInvalidParameter,
-				`invalid struct naming for response: defined as "%s", but it should be named with "Res" suffix like "XxxRes"`,
-				resStructName,
-			)
-			return
-		}
-
-		info.IsStrictRoute = true
-
-		inputObject = reflect.New(info.Type.In(1).Elem())
-		objectPointer = inputObject.Interface()
-
-		// It retrieves and returns the request struct fields.
-		fields, err := gstructs.Fields(gstructs.FieldsInput{
-			Pointer:         objectPointer,
-			RecursiveOption: gstructs.RecursiveOptionEmbedded,
-		})
-		if err != nil {
-			return info, err
-		}
-		info.ReqStructFields = fields
-
-		// Build handler for processing
-		info.Func = func(r *Request) {
-			var (
-				inputValues = []reflect.Value{
-					reflect.ValueOf(r.Context()),
+		inputValues = append(inputValues, inputObject)
+		// Call handler with dynamic created parameter values.
+		results := funcInfo.Value.Call(inputValues)
+		switch len(results) {
+		case 1:
+			if !results[0].IsNil() {
+				if err, ok = results[0].Interface().(error); ok {
+					r.error = err
 				}
-				inputObject   reflect.Value
-				objectPointer interface{}
-			)
-			// Must new a new object for each request.
-			inputObject = reflect.New(reflectType.In(1).Elem())
-			objectPointer = inputObject.Interface()
-
-			r.error = r.Parse(objectPointer)
-			if r.error != nil {
-				return
 			}
-			inputValues = append(inputValues, inputObject)
-			// Call handler with dynamic created parameter values.
-			results := info.Value.Call(inputValues)
-			switch len(results) {
-			case 1:
-				// TODO: Is this useful?
-				if !results[0].IsNil() {
-					if err, ok := results[0].Interface().(error); ok {
-						r.error = err
-					}
-				}
 
-			case 2:
-				r.handlerResponse = results[0].Interface()
-				if !results[1].IsNil() {
-					if err, ok := results[1].Interface().(error); ok {
-						r.error = err
-					}
+		case 2:
+			r.handlerResponse = results[0].Interface()
+			if !results[1].IsNil() {
+				if err, ok = results[1].Interface().(error); ok {
+					r.error = err
 				}
 			}
 		}
 	}
-
-	return
 }
 
 // trimGeneric removes type definitions string from response type name if generic
