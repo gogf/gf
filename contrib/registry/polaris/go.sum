@@ -402,7 +402,6 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/polarismesh/polaris-go v1.5.4 h1:Y/FaZk7OpdjVeRh3b4ZHYXF6xtjTkP0oCmVNVdm/GoQ=
 github.com/polarismesh/polaris-go v1.5.4/go.mod h1:KVMjcp6P2R8MFPKfBPX3kzykyzH0iX8fHCiITcqKda8=
-github.com/polarismesh/specification v1.4.0 h1:fm7sUtFZC2g9+lLmRCtjGrUow47CY5JDFoZXwwCQGGY=
 github.com/polarismesh/specification v1.4.0/go.mod h1:rDvMMtl5qebPmqiBLNa5Ps0XtwkP31ZLirbH4kXA0YU=
 github.com/polarismesh/specification v1.4.1 h1:lTZqeyUhhWuKyr6NDKBwmUrNfcUDvKLxWT/uOq71T5A=
 github.com/polarismesh/specification v1.4.1/go.mod h1:rDvMMtl5qebPmqiBLNa5Ps0XtwkP31ZLirbH4kXA0YU=
