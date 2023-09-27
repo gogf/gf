@@ -220,4 +220,3 @@ jobs:
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
       with:
         flags: go-${{ matrix.go-version }}-${{ matrix.goarch }}
-
