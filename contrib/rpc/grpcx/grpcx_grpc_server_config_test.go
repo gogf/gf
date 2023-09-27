@@ -34,6 +34,7 @@ func Test_Grpcx_Grpc_Server_Address(t *testing.T) {
 		s.Start()
 		time.Sleep(time.Millisecond * 100)
 		defer s.Stop()
+
 		s.serviceMu.Lock()
 		defer s.serviceMu.Unlock()
 		t.Assert(len(s.services) != 0, true)
