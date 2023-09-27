@@ -220,3 +220,4 @@ jobs:
       if: ${{ github.ref == 'refs/heads/coverage' }}
       with:
         flags: go-${{ matrix.go-version }}-${{ matrix.goarch }}
+
