@@ -190,14 +190,18 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: ${{ matrix.go-version }}
-        cache: true
-        cache-dependency-path: '**/go.sum'
+        # cache-dependency-path: '**/go.sum'
 
     - name: Before Script
       run:  bash .github/workflows/before_script.sh
 
     - name: Build & Test
-      run:  bash .github/workflows/build_and_test.sh
+      if: ${{ github.ref != 'refs/heads/coverage' }}
+      run: bash .github/workflows/build_and_test.sh
+
+    - name: Build & Test & Coverage
+      if: ${{ github.ref == 'refs/heads/coverage' }}
+      run: bash .github/workflows/build_and_test.sh coverage
 
     - name: Stop Redis Cluster Containers
       run:  docker-compose -f ".github/workflows/redis/docker-compose.yml" down
@@ -213,6 +217,7 @@ jobs:
 
     - name: Report Coverage
       uses: codecov/codecov-action@v3
+      if: ${{ github.ref == 'refs/heads/coverage' }}
       with:
         flags: go-${{ matrix.go-version }}-${{ matrix.goarch }}
 
