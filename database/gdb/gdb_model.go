@@ -176,6 +176,9 @@ func (c *Core) With(objects ...interface{}) *Model {
 }
 
 // Partition sets Partition name.
+// Example:
+// dao.User.Ctx(ctx).Partition（“p1","p2").All()
+
 func (m *Model) Partition(partitions ...string) *Model {
 	model := m.getModel()
 	model.partition = gstr.Join(partitions, ",")
