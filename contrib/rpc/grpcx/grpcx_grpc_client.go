@@ -8,12 +8,14 @@ package grpcx
 
 import (
 	"fmt"
-
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gsel"
 	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // DefaultGrpcDialOptions returns the default options for creating grpc client connection.
@@ -25,13 +27,37 @@ func (c modClient) DefaultGrpcDialOptions() []grpc.DialOption {
 }
 
 // NewGrpcClientConn creates and returns a client connection for given service `appId`.
-func (c modClient) NewGrpcClientConn(serviceName string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
+func (c modClient) NewGrpcClientConn(serviceNameOrAddress string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	autoLoadAndRegisterFileRegistry()
 
 	var (
-		service           = gsvc.NewServiceWithName(serviceName)
+		dialAddress       = serviceNameOrAddress
 		grpcClientOptions = make([]grpc.DialOption, 0)
 	)
+	if isServiceName(serviceNameOrAddress) {
+		dialAddress = fmt.Sprintf(
+			`%s://%s`,
+			gsvc.Schema, gsvc.NewServiceWithName(serviceNameOrAddress).GetKey(),
+		)
+	} else {
+		addressParts := gstr.Split(serviceNameOrAddress, delimiterOfAddress)
+		switch len(addressParts) {
+		case 2:
+			if addressParts[0] == "" {
+				return nil, gerror.NewCodef(
+					gcode.CodeInvalidParameter,
+					`invalid address "%s" for client, missing host`,
+					serviceNameOrAddress,
+				)
+			}
+		default:
+			return nil, gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`invalid address "%s" for client`,
+				serviceNameOrAddress,
+			)
+		}
+	}
 	grpcClientOptions = append(grpcClientOptions, c.DefaultGrpcDialOptions()...)
 	if len(opts) > 0 {
 		grpcClientOptions = append(grpcClientOptions, opts...)
@@ -43,7 +69,7 @@ func (c modClient) NewGrpcClientConn(serviceName string, opts ...grpc.DialOption
 	grpcClientOptions = append(grpcClientOptions, c.ChainStream(
 		c.StreamTracing,
 	))
-	conn, err := grpc.Dial(fmt.Sprintf(`%s://%s`, gsvc.Schema, service.GetKey()), grpcClientOptions...)
+	conn, err := grpc.Dial(dialAddress, grpcClientOptions...)
 	if err != nil {
 		return nil, err
 	}
@@ -52,8 +78,8 @@ func (c modClient) NewGrpcClientConn(serviceName string, opts ...grpc.DialOption
 
 // MustNewGrpcClientConn creates and returns a client connection for given service `appId`.
 // It panics if any error occurs.
-func (c modClient) MustNewGrpcClientConn(serviceName string, opts ...grpc.DialOption) *grpc.ClientConn {
-	conn, err := c.NewGrpcClientConn(serviceName, opts...)
+func (c modClient) MustNewGrpcClientConn(serviceNameOrAddress string, opts ...grpc.DialOption) *grpc.ClientConn {
+	conn, err := c.NewGrpcClientConn(serviceNameOrAddress, opts...)
 	if err != nil {
 		panic(err)
 	}
@@ -74,4 +100,10 @@ func (c modClient) ChainUnary(interceptors ...grpc.UnaryClientInterceptor) grpc.
 // For example ChainStreamClient(one, two, three) will execute one before two before three.
 func (c modClient) ChainStream(interceptors ...grpc.StreamClientInterceptor) grpc.DialOption {
 	return grpc.WithChainStreamInterceptor(interceptors...)
+}
+
+// isServiceName checks and returns whether given input parameter is service name or not.
+// It checks by whether the parameter is address by containing port delimiter character ':'.
+func isServiceName(serviceNameOrAddress string) bool {
+	return !gstr.Contains(serviceNameOrAddress, delimiterOfAddress)
 }

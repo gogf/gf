@@ -451,6 +451,7 @@ func Wait() {
 	go handleProcessSignal()
 
 	<-allShutdownChan
+
 	// Remove plugins.
 	serverMapping.Iterator(func(k string, v interface{}) bool {
 		s := v.(*Server)

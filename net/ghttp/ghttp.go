@@ -10,6 +10,7 @@ package ghttp
 import (
 	"net/http"
 	"reflect"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -42,6 +43,7 @@ type (
 		statusHandlerMap map[string][]HandlerFunc  // Custom status handler map.
 		sessionManager   *gsession.Manager         // Session manager.
 		openapi          *goai.OpenApiV3           // The OpenApi specification management object.
+		serviceMu        sync.Mutex                // Concurrent safety for operations of attribute service.
 		service          gsvc.Service              // The service for Registry.
 		registrar        gsvc.Registrar            // Registrar for service register.
 	}

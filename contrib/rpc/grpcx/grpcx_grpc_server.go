@@ -129,11 +129,14 @@ func (s *GrpcServer) doSignalListen() {
 	var ctx = context.Background()
 	gproc.AddSigHandlerShutdown(func(sig os.Signal) {
 		s.Logger().Infof(ctx, "signal received: %s, gracefully shutting down", sig.String())
+		// Deregister services when shutdown signal triggers.
 		s.doServiceDeregister()
 		time.Sleep(time.Second)
 		s.Stop()
 	})
 	gproc.Listen()
+	// Deregister services when process ends.
+	s.doServiceDeregister()
 }
 
 // Logger is alias of GetLogger.
@@ -195,6 +198,7 @@ func (s *GrpcServer) doServiceDeregister() {
 			s.Logger().Errorf(ctx, `%+v`, err)
 		}
 	}
+	s.services = s.services[:0]
 }
 
 // Start starts the server in no-blocking way.
@@ -213,6 +217,7 @@ func (s *GrpcServer) Wait() {
 
 // Stop gracefully stops the server.
 func (s *GrpcServer) Stop() {
+	s.doServiceDeregister()
 	s.Server.GracefulStop()
 }
 
