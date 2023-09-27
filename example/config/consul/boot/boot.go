@@ -24,8 +24,8 @@ func init() {
 
 	adapter, err := consul.New(ctx, consul.Config{
 		ConsulConfig: consulConfig,
-		Path:   configPath,
-		Watch:  true,
+		Path:         configPath,
+		Watch:        true,
 	})
 	if err != nil {
 		g.Log().Fatalf(ctx, `New consul adapter error: %+v`, err)
