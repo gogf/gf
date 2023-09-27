@@ -27,9 +27,9 @@ import (
 type pathType string
 
 const (
-	PathTypeNone   pathType = "none"
-	PathTypeNormal pathType = "normal"
-	PathTypeGres   pathType = "gres"
+	pathTypeNone   pathType = "none"
+	pathTypeNormal pathType = "normal"
+	pathTypeGres   pathType = "gres"
 )
 
 // Manager for i18n contents, it is concurrent safe, supporting hot reload.
@@ -65,15 +65,15 @@ var (
 // It uses a default one if it's not passed.
 func New(options ...Options) *Manager {
 	var opts Options
-	var pathType = PathTypeNone
+	var pathType = pathTypeNone
 	if len(options) > 0 {
 		opts = options[0]
-		pathType = opts.CheckPath(opts.Path)
+		pathType = opts.checkPath(opts.Path)
 	} else {
 		opts = Options{}
 		for _, folder := range searchFolders {
-			pathType = opts.CheckPath(folder)
-			if pathType != PathTypeNone {
+			pathType = opts.checkPath(folder)
+			if pathType != pathTypeNone {
 				break
 			}
 		}
@@ -81,7 +81,7 @@ func New(options ...Options) *Manager {
 			// To avoid of the source path of GoFrame: github.com/gogf/i18n/gi18n
 			if gfile.Exists(opts.Path + gfile.Separator + "gi18n") {
 				opts.Path = ""
-				pathType = PathTypeNone
+				pathType = pathTypeNone
 			}
 		}
 	}
@@ -104,10 +104,10 @@ func New(options ...Options) *Manager {
 	return m
 }
 
-// CheckPath checks and returns the path type for given directory path.
-func (o *Options) CheckPath(dirPath string) pathType {
+// checkPath checks and returns the path type for given directory path.
+func (o *Options) checkPath(dirPath string) pathType {
 	if dirPath == "" {
-		return PathTypeNone
+		return pathTypeNone
 	}
 
 	if o.Resource == nil {
@@ -116,22 +116,22 @@ func (o *Options) CheckPath(dirPath string) pathType {
 
 	if o.Resource.Contains(dirPath) {
 		o.Path = dirPath
-		return PathTypeGres
+		return pathTypeGres
 	}
 
 	realPath, _ := gfile.Search(dirPath)
 	if realPath != "" {
 		o.Path = realPath
-		return PathTypeNormal
+		return pathTypeNormal
 	}
 
-	return PathTypeNone
+	return pathTypeNone
 }
 
 // SetPath sets the directory path storing i18n files.
 func (m *Manager) SetPath(path string) error {
-	pathType := m.options.CheckPath(path)
-	if pathType == PathTypeNone {
+	pathType := m.options.checkPath(path)
+	if pathType == pathTypeNone {
 		return gerror.NewCodef(gcode.CodeInvalidParameter, `%s does not exist`, path)
 	}
 
@@ -244,7 +244,7 @@ func (m *Manager) init(ctx context.Context) {
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if m.pathType == PathTypeGres {
+	if m.pathType == pathTypeGres {
 		files := m.options.Resource.ScanDirFile(m.options.Path, "*.*", true)
 		if len(files) > 0 {
 			var (
@@ -275,7 +275,7 @@ func (m *Manager) init(ctx context.Context) {
 				}
 			}
 		}
-	} else if m.pathType == PathTypeNormal {
+	} else if m.pathType == pathTypeNormal {
 		files, _ := gfile.ScanDirFile(m.options.Path, "*.*", true)
 		if len(files) == 0 {
 			return
