@@ -24,6 +24,7 @@ var (
 	// Use internal variable to guarantee concurrent safety
 	// when multiple Listen happen.
 	signalChan        = make(chan os.Signal, 1)
+	signalHandlerMu   sync.Mutex
 	signalHandlerMap  = make(map[os.Signal][]SigHandler)
 	shutdownSignalMap = map[os.Signal]struct{}{
 		syscall.SIGINT:  {},
@@ -42,6 +43,8 @@ func init() {
 
 // AddSigHandler adds custom signal handler for custom one or more signals.
 func AddSigHandler(handler SigHandler, signals ...os.Signal) {
+	signalHandlerMu.Lock()
+	defer signalHandlerMu.Unlock()
 	for _, sig := range signals {
 		signalHandlerMap[sig] = append(signalHandlerMap[sig], handler)
 	}
@@ -54,6 +57,8 @@ func AddSigHandler(handler SigHandler, signals ...os.Signal) {
 // syscall.SIGTERM,
 // syscall.SIGABRT.
 func AddSigHandlerShutdown(handler ...SigHandler) {
+	signalHandlerMu.Lock()
+	defer signalHandlerMu.Unlock()
 	for _, h := range handler {
 		for sig := range shutdownSignalMap {
 			signalHandlerMap[sig] = append(signalHandlerMap[sig], h)
@@ -64,19 +69,16 @@ func AddSigHandlerShutdown(handler ...SigHandler) {
 // Listen blocks and does signal listening and handling.
 func Listen() {
 	var (
-		signals = make([]os.Signal, 0)
+		signals = getHandlerSignals()
 		ctx     = context.Background()
 		wg      = sync.WaitGroup{}
 		sig     os.Signal
 	)
-	for s := range signalHandlerMap {
-		signals = append(signals, s)
-	}
 	signal.Notify(signalChan, signals...)
 	for {
 		sig = <-signalChan
 		intlog.Printf(ctx, `signal received: %s`, sig.String())
-		if handlers, ok := signalHandlerMap[sig]; ok {
+		if handlers := getHandlersBySignal(sig); len(handlers) > 0 {
 			for _, handler := range handlers {
 				wg.Add(1)
 				var (
@@ -104,4 +106,20 @@ func Listen() {
 			return
 		}
 	}
+}
+
+func getHandlerSignals() []os.Signal {
+	signalHandlerMu.Lock()
+	defer signalHandlerMu.Unlock()
+	var signals = make([]os.Signal, 0)
+	for s := range signalHandlerMap {
+		signals = append(signals, s)
+	}
+	return signals
+}
+
+func getHandlersBySignal(sig os.Signal) []SigHandler {
+	signalHandlerMu.Lock()
+	defer signalHandlerMu.Unlock()
+	return signalHandlerMap[sig]
 }

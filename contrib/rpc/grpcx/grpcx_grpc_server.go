@@ -21,7 +21,6 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gipv4"
 	"github.com/gogf/gf/v2/net/gsvc"
-	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/os/gproc"
@@ -37,6 +36,7 @@ type GrpcServer struct {
 	services  []gsvc.Service
 	waitGroup sync.WaitGroup
 	registrar gsvc.Registrar
+	serviceMu sync.Mutex
 }
 
 // Service implements gsvc.Service interface.
@@ -59,11 +59,7 @@ func (s modServer) New(conf ...*GrpcServerConfig) *GrpcServer {
 		config = s.NewConfig()
 	}
 	if config.Address == "" {
-		randomPort, err := gtcp.GetFreePort()
-		if err != nil {
-			g.Log().Fatalf(ctx, `%+v`, err)
-		}
-		config.Address = fmt.Sprintf(`:%d`, randomPort)
+		config.Address = defaultListenAddress
 	}
 	if !gstr.Contains(config.Address, ":") {
 		g.Log().Fatal(ctx, "invalid service address, should contain listening port")
@@ -94,6 +90,8 @@ func (s modServer) New(conf ...*GrpcServerConfig) *GrpcServer {
 // Service binds service list to current server.
 // Server will automatically register the service list after it starts.
 func (s *GrpcServer) Service(services ...gsvc.Service) {
+	s.serviceMu.Lock()
+	defer s.serviceMu.Unlock()
 	s.services = append(s.services, services...)
 }
 
@@ -148,6 +146,8 @@ func (s *GrpcServer) doServiceRegister() {
 	if s.registrar == nil {
 		return
 	}
+	s.serviceMu.Lock()
+	defer s.serviceMu.Unlock()
 	if len(s.services) == 0 {
 		s.services = []gsvc.Service{&gsvc.LocalService{
 			Name:     s.config.Name,
@@ -186,6 +186,8 @@ func (s *GrpcServer) doServiceDeregister() {
 	if s.registrar == nil {
 		return
 	}
+	s.serviceMu.Lock()
+	defer s.serviceMu.Unlock()
 	var ctx = gctx.GetInitCtx()
 	for _, service := range s.services {
 		s.Logger().Debugf(ctx, `service deregister: %+v`, service)
@@ -257,19 +259,17 @@ func (s *GrpcServer) calculateListenedEndpoints(ctx context.Context) gsvc.Endpoi
 		)
 		if len(addrArray) == 1 {
 			configItemName := "address"
-			if len(addresses) != 0 {
+			if len(s.config.Endpoints) != 0 {
 				configItemName = "endpoint"
 			}
 			panic(gerror.NewCodef(
 				gcode.CodeInvalidConfiguration,
-				`invalid %s configuration "%s", missing port`,
+				`invalid "%s" configuration "%s", missing port`,
 				configItemName, address,
 			))
 		}
 		// IPs.
 		switch addrArray[0] {
-		case "127.0.0.1":
-			// Nothing to do.
 		case "0.0.0.0", "":
 			intranetIps, err := gipv4.GetIntranetIpArray()
 			if err != nil {
@@ -305,7 +305,10 @@ func (s *GrpcServer) calculateListenedEndpoints(ctx context.Context) gsvc.Endpoi
 		}
 		for _, ip := range listenedIps {
 			for _, port := range listenedPorts {
-				endpoints = append(endpoints, gsvc.NewEndpoint(fmt.Sprintf(`%s:%d`, ip, port)))
+				endpoints = append(
+					endpoints,
+					gsvc.NewEndpoint(fmt.Sprintf(`%s:%d`, ip, port)),
+				)
 			}
 		}
 	}

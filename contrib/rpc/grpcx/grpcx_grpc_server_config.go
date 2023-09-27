@@ -18,7 +18,7 @@ import (
 
 // GrpcServerConfig is the configuration for server.
 type GrpcServerConfig struct {
-	Address          string              // (optional) Address for server listening.
+	Address          string              // (optional) Single address for server listening, use `:0` or `ip:0` to serve random port.
 	Name             string              // (optional) Name for current service.
 	Logger           *glog.Logger        // (optional) Logger for server.
 	LogPath          string              // (optional) LogPath specifies the directory for storing logging files.
