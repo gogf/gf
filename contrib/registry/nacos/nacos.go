@@ -28,7 +28,7 @@ type Registry struct {
 	groupName   string
 }
 
-func New(ctx context.Context, address, opts ...constant.ClientOption) gsvc.Registry {
+func New(ctx context.Context, address string, opts ...constant.ClientOption) gsvc.Registry {
 	endpoints := gstr.SplitAndTrim(address, ",")
 	if len(endpoints) == 0 {
 		panic(gerror.NewCodef(gcode.CodeInvalidParameter, `invalid nacos address "%s"`, address))
