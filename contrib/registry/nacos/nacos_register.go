@@ -55,7 +55,7 @@ func (reg *Registry) Deregister(ctx context.Context, service gsvc.Service) (err 
 			Port:        uint64(endpoint.Port()),
 			ServiceName: service.GetName(),
 			Ephemeral:   true,
-			Cluster:     reg.cluster,
+			Cluster:     reg.clusterName,
 			GroupName:   reg.groupName,
 		}); err != nil {
 			return

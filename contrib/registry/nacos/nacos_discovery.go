@@ -67,7 +67,7 @@ func (reg *Registry) Watch(ctx context.Context, key string) (watcher gsvc.Watche
 	param := &vo.SubscribeParam{
 		ServiceName:       serviceName,
 		GroupName:         reg.groupName,
-		Clusters:          []string{reg.ClusterName},
+		Clusters:          []string{reg.clusterName},
 		SubscribeCallback: fn,
 	}
 
