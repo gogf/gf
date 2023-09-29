@@ -7,13 +7,13 @@
 package nacos
 
 import (
-	"context"
 	"path/filepath"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/nacos-group/nacos-sdk-go/v2/clients"
@@ -28,12 +28,13 @@ type Registry struct {
 	groupName   string
 }
 
-func New(ctx context.Context, address string, opts ...constant.ClientOption) gsvc.Registry {
+func New(address string, opts ...constant.ClientOption) gsvc.Registry {
 	endpoints := gstr.SplitAndTrim(address, ",")
 	if len(endpoints) == 0 {
 		panic(gerror.NewCodef(gcode.CodeInvalidParameter, `invalid nacos address "%s"`, address))
 	}
 
+	ctx := gctx.New()
 	conf := g.Config()
 
 	clusterName := conf.MustGet(ctx, "nacos.cluster_name", "DEFAULT").String()
@@ -76,14 +77,14 @@ func New(ctx context.Context, address string, opts ...constant.ClientOption) gsv
 	if err != nil {
 		panic(gerror.Wrap(err, `create nacos client failed`))
 	}
-	r := NewWithClient(ctx, nameingClient)
+	r := NewWithClient(nameingClient)
 	r.clusterName = clusterName
 	r.groupName = groupName
 
 	return r
 }
 
-func NewWithClient(ctx context.Context, client naming_client.INamingClient) *Registry {
+func NewWithClient(client naming_client.INamingClient) *Registry {
 	r := &Registry{
 		client: client,
 	}
