@@ -12,7 +12,6 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -28,12 +27,11 @@ type Registry struct {
 	groupName   string
 }
 
-func New(address string, opts ...constant.ClientOption) gsvc.Registry {
-	endpoints := gstr.SplitAndTrim(address, ",")
-	if len(endpoints) == 0 {
-		panic(gerror.NewCodef(gcode.CodeInvalidParameter, `invalid nacos address "%s"`, address))
-	}
+type ClientOption = constant.ClientOption
+type ClientConfig = constant.ClientConfig
 
+// NewWithConfig new with the default config file.
+func NewWithConfig(addrees string, opts ...ClientOption) *Registry {
 	ctx := gctx.New()
 	conf := g.Config()
 
@@ -45,14 +43,27 @@ func New(address string, opts ...constant.ClientOption) gsvc.Registry {
 	cacheDir := conf.MustGet(ctx, "nacos.cache_dir").String()
 	cacheDir = filepath.Join(cacheDir, serviceName)
 
-	clientConfig := &constant.ClientConfig{
-		NamespaceId: conf.MustGet(ctx, "nacos.namespace_id", "").String(),
-		Endpoint:    conf.MustGet(ctx, "nacos.endpoint", "").String(),
-		AppName:     serviceName,
-		TimeoutMs:   conf.MustGet(ctx, "nacos.timeout_ms", 5000).Uint64(),
-		CacheDir:    cacheDir,
-		LogDir:      logDir,
-		LogLevel:    conf.MustGet(ctx, "nacos.log_level", "error").String(),
+	return New(addrees, func(c *ClientConfig) {
+		c.NamespaceId = conf.MustGet(ctx, "nacos.namespace_id", "").String()
+		c.Endpoint = conf.MustGet(ctx, "nacos.endpoint", "").String()
+		c.AppName = serviceName
+		c.TimeoutMs = conf.MustGet(ctx, "nacos.timeout_ms", 5000).Uint64()
+		c.CacheDir = cacheDir
+		c.LogDir = logDir
+		c.LogLevel = conf.MustGet(ctx, "nacos.log_level", "error").String()
+	}).SetClusterName(clusterName).SetGroupName(groupName)
+}
+
+// New new a registry with address and opts
+func New(address string, opts ...ClientOption) *Registry {
+	endpoints := gstr.SplitAndTrim(address, ",")
+	if len(endpoints) == 0 {
+		panic(gerror.NewCodef(gcode.CodeInvalidParameter, `invalid nacos address "%s"`, address))
+	}
+
+	clientConfig := &ClientConfig{
+		TimeoutMs: 5000,
+		LogLevel:  "error",
 	}
 
 	if len(opts) > 0 {
@@ -77,24 +88,27 @@ func New(address string, opts ...constant.ClientOption) gsvc.Registry {
 	if err != nil {
 		panic(gerror.Wrap(err, `create nacos client failed`))
 	}
-	r := NewWithClient(nameingClient)
-	r.clusterName = clusterName
-	r.groupName = groupName
-
-	return r
+	return NewWithClient(nameingClient)
 }
 
+// NewWithClient new the instance with INamingClient
 func NewWithClient(client naming_client.INamingClient) *Registry {
 	r := &Registry{
-		client: client,
+		client:      client,
+		clusterName: "DEFAULT",
+		groupName:   "DEFAULT_GROUP",
 	}
 	return r
 }
 
-func (reg *Registry) SetClusterName(clusterName string) {
+// SetClusterName can set the clusterName. The default is 'DEFAULT'
+func (reg *Registry) SetClusterName(clusterName string) *Registry {
 	reg.clusterName = clusterName
+	return reg
 }
 
-func (reg *Registry) SetGroupName(groupName string) {
+// SetGroupName can set the groupName. The default is 'DEFAULT_GROUP'
+func (reg *Registry) SetGroupName(groupName string) *Registry {
 	reg.groupName = groupName
+	return reg
 }
