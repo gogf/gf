@@ -8,12 +8,14 @@ package nacos_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/gogf/gf/v2/contrib/registry/nacos"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
+	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
 )
 
 func TestRegistry(t *testing.T) {
@@ -86,7 +88,12 @@ func TestRegistry(t *testing.T) {
 func TestWatch(t *testing.T) {
 	var (
 		ctx      = gctx.GetInitCtx()
-		registry = nacos.New(`127.0.0.1:8848`)
+		registry = nacos.New(`127.0.0.1:8848`, func(cc *constant.ClientConfig) {
+			//cc.NamespaceId = "test_nacos"
+		})
+		registry2 = nacos.New(`127.0.0.1:8848`, func(cc *constant.ClientConfig) {
+			//cc.NamespaceId = "test_nacos"
+		})
 	)
 
 	svc1 := &gsvc.LocalService{
@@ -109,15 +116,21 @@ func TestWatch(t *testing.T) {
 		// Register another service.
 		svc2 := &gsvc.LocalService{
 			Name:      svc1.Name,
-			Endpoints: gsvc.NewEndpoints("127.0.0.1:9999"),
+			Endpoints: gsvc.NewEndpoints("127.0.0.2:9999"),
+			Metadata: map[string]interface{}{
+				"protocol": "https",
+			},
 		}
-		registered, err := registry.Register(ctx, svc2)
+		registered, err := registry2.Register(ctx, svc2)
 		t.AssertNil(err)
 		t.Assert(registered.GetName(), svc2.GetName())
+
+		time.Sleep(time.Second * 1)
 
 		// Watch and retrieve the service changes:
 		// svc1 and svc2 is the same service name, which has 2 endpoints.
 		proceedResult, err := watcher.Proceed()
+
 		t.AssertNil(err)
 		t.Assert(len(proceedResult), 1)
 		t.Assert(
@@ -127,10 +140,13 @@ func TestWatch(t *testing.T) {
 
 		// Watch and retrieve the service changes:
 		// left only svc1, which means this service has only 1 endpoint.
-		err = registry.Deregister(ctx, svc2)
+		err = registry2.Deregister(ctx, svc2)
 		t.AssertNil(err)
+
+		time.Sleep(time.Second * 1)
 		proceedResult, err = watcher.Proceed()
 		t.AssertNil(err)
+		t.Assert(len(proceedResult), 1)
 		t.Assert(
 			proceedResult[0].GetEndpoints(),
 			gsvc.Endpoints{svc1.GetEndpoints()[0]},

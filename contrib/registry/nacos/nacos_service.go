@@ -15,8 +15,9 @@ import (
 
 // Service used to record and manage service information
 type Service struct {
-	Ip          string                 `json:"ip"`
-	Port        int                    `json:"port"`
+	// Ip          string                 `json:"ip"`
+	// Port        int                    `json:"port"`
+	Endpoints   gsvc.Endpoints         `json:"endpoints"`
 	ServiceName string                 `json:"serviceName"`
 	Metadata    map[string]interface{} `json:"metadata"`
 }
@@ -29,26 +30,42 @@ func NewService() gsvc.Service {
 }
 
 // NewServiceFromInstance new one service from instance
-func NewServiceFromInstance(instance *model.Instance) gsvc.Service {
-	serviceName := instance.ServiceName
+func NewServiceFromInstance(instance []model.Instance) gsvc.Service {
+	n := len(instance)
+	if n == 0 {
+		return nil
+	}
+	serviceName := instance[0].ServiceName
+	endpoints := make(gsvc.Endpoints, 0, n)
+	for i := 0; i < n; i++ {
+		if instance[0].ServiceName != serviceName {
+			return nil
+		}
+		endpoints = append(endpoints, NewEndpoint(instance[i].Ip, int(instance[i].Port)))
+	}
 	if gstr.Contains(serviceName, "@@") {
 		arr := gstr.SplitAndTrim(serviceName, "@@")
 		serviceName = arr[1]
 	}
 	return &Service{
-		Ip:          instance.Ip,
-		Port:        int(instance.Port),
+		Endpoints:   endpoints,
 		ServiceName: serviceName,
-		Metadata:    gmap.NewStrStrMapFrom(instance.Metadata).MapStrAny(),
+		Metadata:    gmap.NewStrStrMapFrom(instance[0].Metadata).MapStrAny(),
 	}
 }
 
 // NewServicesFromInstances new some services from some instances
 func NewServicesFromInstances(instances []model.Instance) []gsvc.Service {
-	services := make([]gsvc.Service, 0, len(instances))
+	serviceMap := map[string][]model.Instance{}
 	for _, inst := range instances {
-		services = append(services, NewServiceFromInstance(&inst))
+		serviceMap[inst.ServiceName] = append(serviceMap[inst.ServiceName], inst)
 	}
+
+	services := make([]gsvc.Service, 0, len(serviceMap))
+	for _, insts := range serviceMap {
+		services = append(services, NewServiceFromInstance(insts))
+	}
+
 	return services
 }
 
@@ -97,5 +114,15 @@ func (s *Service) GetMetadata() gsvc.Metadata {
 // GetEndpoints returns the Endpoints of service.
 // The Endpoints contain multiple host/port information of service.
 func (s *Service) GetEndpoints() gsvc.Endpoints {
-	return gsvc.Endpoints{NewEndpoint(s.Ip, s.Port)}
+	var endpoints gsvc.Endpoints
+	endpoints = append(endpoints, s.Endpoints...)
+	n := len(endpoints)
+	for i := 0; i < n; i++ {
+		for t := i; t < n; t++ {
+			if endpoints[i].String() > endpoints[t].String() {
+				endpoints[i], endpoints[t] = endpoints[t], endpoints[i]
+			}
+		}
+	}
+	return endpoints
 }

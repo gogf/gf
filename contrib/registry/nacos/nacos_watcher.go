@@ -38,12 +38,23 @@ func newWather(ctx context.Context) *Watcher {
 // Proceed proceeds watch in blocking way.
 // It returns all complete services that watched by `key` if any change.
 func (w *Watcher) Proceed() (services []gsvc.Service, err error) {
-	e := <-w.event
-	if e.Err != nil {
-		err = e.Err
-		return
+	n := len(w.event)
+	servicesMap := map[string]gsvc.Service{}
+	for i := 0; i < n; i++ {
+		e := <-w.event
+		if e.Err != nil {
+			err = e.Err
+			return
+		}
+		newServices := NewServicesFromInstances(e.Services)
+		for _, s := range newServices {
+			servicesMap[s.GetName()] = s
+		}
 	}
-	services = NewServicesFromInstances(e.Services)
+	services = make([]gsvc.Service, 0, len(servicesMap))
+	for _, s := range servicesMap {
+		services = append(services, s)
+	}
 	return
 }
 

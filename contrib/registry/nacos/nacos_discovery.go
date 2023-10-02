@@ -41,7 +41,7 @@ func (reg *Registry) Search(ctx context.Context, in gsvc.SearchInput) (result []
 		return
 	}
 
-	result = make([]gsvc.Service, 0, len(instances))
+	insts := make([]model.Instance, 0, len(instances))
 inst_loop:
 	for _, inst := range instances {
 		if len(in.Metadata) > 0 {
@@ -51,10 +51,10 @@ inst_loop:
 				}
 			}
 		}
-
-		result = append(result, NewServiceFromInstance(&inst))
+		insts = append(insts, inst)
 	}
 
+	result = NewServicesFromInstances(insts)
 	return
 }
 
