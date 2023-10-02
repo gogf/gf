@@ -134,7 +134,7 @@ func TestWatch(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(proceedResult), 1)
 		t.Assert(
-			proceedResult[0].GetEndpoints(),
+			sortEndpoints(proceedResult[0].GetEndpoints()),
 			gsvc.Endpoints{svc1.GetEndpoints()[0], svc2.GetEndpoints()[0]},
 		)
 
@@ -148,7 +148,7 @@ func TestWatch(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(proceedResult), 1)
 		t.Assert(
-			proceedResult[0].GetEndpoints(),
+			sortEndpoints(proceedResult[0].GetEndpoints()),
 			gsvc.Endpoints{svc1.GetEndpoints()[0]},
 		)
 		t.AssertNil(watcher.Close())
@@ -158,4 +158,18 @@ func TestWatch(t *testing.T) {
 		err := registry.Deregister(ctx, svc1)
 		t.AssertNil(err)
 	})
+}
+
+func sortEndpoints(in gsvc.Endpoints) gsvc.Endpoints {
+	var endpoints gsvc.Endpoints
+	endpoints = append(endpoints, in...)
+	n := len(endpoints)
+	for i := 0; i < n; i++ {
+		for t := i; t < n; t++ {
+			if endpoints[i].String() > endpoints[t].String() {
+				endpoints[i], endpoints[t] = endpoints[t], endpoints[i]
+			}
+		}
+	}
+	return endpoints
 }

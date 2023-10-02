@@ -114,15 +114,5 @@ func (s *Service) GetMetadata() gsvc.Metadata {
 // GetEndpoints returns the Endpoints of service.
 // The Endpoints contain multiple host/port information of service.
 func (s *Service) GetEndpoints() gsvc.Endpoints {
-	var endpoints gsvc.Endpoints
-	endpoints = append(endpoints, s.Endpoints...)
-	n := len(endpoints)
-	for i := 0; i < n; i++ {
-		for t := i; t < n; t++ {
-			if endpoints[i].String() > endpoints[t].String() {
-				endpoints[i], endpoints[t] = endpoints[t], endpoints[i]
-			}
-		}
-	}
-	return endpoints
+	return s.Endpoints
 }
