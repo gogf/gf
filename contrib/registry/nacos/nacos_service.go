@@ -9,6 +9,7 @@ package nacos
 import (
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/nacos-group/nacos-sdk-go/v2/model"
 )
 
@@ -29,10 +30,15 @@ func NewService() gsvc.Service {
 
 // NewServiceFromInstance new one service from instance
 func NewServiceFromInstance(instance *model.Instance) gsvc.Service {
+	serviceName := instance.ServiceName
+	if gstr.Contains(serviceName, "@@") {
+		arr := gstr.SplitAndTrim(serviceName, "@@")
+		serviceName = arr[1]
+	}
 	return &Service{
 		Ip:          instance.Ip,
 		Port:        int(instance.Port),
-		ServiceName: instance.ServiceName,
+		ServiceName: serviceName,
 		Metadata:    gmap.NewStrStrMapFrom(instance.Metadata).MapStrAny(),
 	}
 }

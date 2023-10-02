@@ -44,7 +44,7 @@ func NewWithConfig(addrees string, opts ...ClientOption) *Registry {
 	cacheDir = filepath.Join(cacheDir, serviceName)
 
 	return New(addrees, func(c *ClientConfig) {
-		c.NamespaceId = conf.MustGet(ctx, "nacos.namespace_id", "").String()
+		c.NamespaceId = conf.MustGet(ctx, "nacos.namespace_id", "public").String()
 		c.Endpoint = conf.MustGet(ctx, "nacos.endpoint", "").String()
 		c.AppName = serviceName
 		c.TimeoutMs = conf.MustGet(ctx, "nacos.timeout_ms", 5000).Uint64()
@@ -62,8 +62,9 @@ func New(address string, opts ...ClientOption) *Registry {
 	}
 
 	clientConfig := &ClientConfig{
-		TimeoutMs: 5000,
-		LogLevel:  "error",
+		TimeoutMs:   5000,
+		LogLevel:    "error",
+		NamespaceId: "public",
 	}
 
 	if len(opts) > 0 {
