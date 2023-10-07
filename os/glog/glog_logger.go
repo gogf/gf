@@ -222,21 +222,22 @@ func (l *Logger) print(ctx context.Context, level int, stack string, values ...a
 // doDefaultPrint outputs the logging content according configuration.
 func (l *Logger) doDefaultPrint(ctx context.Context, input *HandlerInput) *bytes.Buffer {
 	var buffer *bytes.Buffer
-	if l.config.Writer == nil {
-		// Allow output to stdout?
-		if l.config.StdoutPrint {
-			if buf := l.printToStdout(ctx, input); buf != nil {
-				buffer = buf
-			}
+	// Allow output to stdout?
+	if l.config.StdoutPrint {
+		if buf := l.printToStdout(ctx, input); buf != nil {
+			buffer = buf
 		}
+	}
 
-		// Output content to disk file.
-		if l.config.Path != "" {
-			if buf := l.printToFile(ctx, input.Time, input); buf != nil {
-				buffer = buf
-			}
+	// Output content to disk file.
+	if l.config.Path != "" {
+		if buf := l.printToFile(ctx, input.Time, input); buf != nil {
+			buffer = buf
 		}
-	} else {
+	}
+
+	// Used custom writer.
+	if l.config.Writer != nil {
 		// Output to custom writer.
 		if buf := l.printToWriter(ctx, input); buf != nil {
 			buffer = buf
