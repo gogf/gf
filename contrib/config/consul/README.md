@@ -42,7 +42,7 @@ func init() {
 	)
 
 	adapter, err := consul.New(ctx, consul.Config{
-		Params: consulConfig,
+		ConsulConfig: consulConfig,
 		Path:   configPath,
 		Watch:  true,
 	})
