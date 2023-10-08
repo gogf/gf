@@ -12,7 +12,7 @@ import (
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/nacos-group/nacos-sdk-go/v2/model"
+	"github.com/joy999/nacos-sdk-go/model"
 )
 
 // NewServiceFromInstance new one service from instance

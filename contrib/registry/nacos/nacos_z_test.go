@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
-	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
+	"github.com/joy999/nacos-sdk-go/common/constant"
 )
 
 func TestRegistry(t *testing.T) {

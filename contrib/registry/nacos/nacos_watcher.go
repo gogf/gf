@@ -10,7 +10,7 @@ import (
 	"context"
 
 	"github.com/gogf/gf/v2/net/gsvc"
-	"github.com/nacos-group/nacos-sdk-go/v2/model"
+	"github.com/joy999/nacos-sdk-go/model"
 )
 
 // Watcher used to mange service event such as update.
