@@ -29,7 +29,6 @@ const (
 const (
 	defaultServerName        = `default`
 	configNodeNameGrpcServer = `grpc`
-	delimiterOfAddress       = ":"
 )
 
 var (

@@ -40,7 +40,7 @@ func (c modClient) NewGrpcClientConn(serviceNameOrAddress string, opts ...grpc.D
 			gsvc.Schema, gsvc.NewServiceWithName(serviceNameOrAddress).GetKey(),
 		)
 	} else {
-		addressParts := gstr.Split(serviceNameOrAddress, delimiterOfAddress)
+		addressParts := gstr.Split(serviceNameOrAddress, gsvc.EndpointHostPortDelimiter)
 		switch len(addressParts) {
 		case 2:
 			if addressParts[0] == "" {
@@ -105,5 +105,5 @@ func (c modClient) ChainStream(interceptors ...grpc.StreamClientInterceptor) grp
 // isServiceName checks and returns whether given input parameter is service name or not.
 // It checks by whether the parameter is address by containing port delimiter character ':'.
 func isServiceName(serviceNameOrAddress string) bool {
-	return !gstr.Contains(serviceNameOrAddress, delimiterOfAddress)
+	return !gstr.Contains(serviceNameOrAddress, gsvc.EndpointHostPortDelimiter)
 }
