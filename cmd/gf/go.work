@@ -1,0 +1,12 @@
+go 1.18
+
+use (
+	./
+    ../../
+    ../../contrib/drivers/clickhouse/
+    ../../contrib/drivers/mssql/
+    ../../contrib/drivers/mysql/
+    ../../contrib/drivers/oracle/
+    ../../contrib/drivers/pgsql/
+    ../../contrib/drivers/sqlite/
+)

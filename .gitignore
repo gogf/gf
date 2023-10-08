@@ -13,6 +13,4 @@ bin/
 .test/
 cmd/gf/main
 cmd/gf/gf
-go.work
-go.work.sum
 temp/
