@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/contrib/registry/nacos"
+	"github.com/gogf/gf/contrib/registry/nacos/v2"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/test/gtest"

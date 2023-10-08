@@ -4,15 +4,12 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// Package nacos implements service Registry and Discovery using nacos.
 package nacos
 
 import (
-	"path/filepath"
-
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/nacos-group/nacos-sdk-go/v2/clients"
@@ -21,38 +18,18 @@ import (
 	"github.com/nacos-group/nacos-sdk-go/v2/vo"
 )
 
+// Registry is nacos registry.
 type Registry struct {
 	client      naming_client.INamingClient
 	clusterName string
 	groupName   string
 }
 
+// ClientOption is cname the constant.ClientOption
 type ClientOption = constant.ClientOption
+
+// ClientConfig is cname the constant.ClientConfig
 type ClientConfig = constant.ClientConfig
-
-// NewWithConfig new with the default config file.
-func NewWithConfig(addrees string, opts ...ClientOption) *Registry {
-	ctx := gctx.New()
-	conf := g.Config()
-
-	clusterName := conf.MustGet(ctx, "nacos.cluster_name", "DEFAULT").String()
-	groupName := conf.MustGet(ctx, "nacos.group_name", "DEFAULT_GROUP").String()
-	serviceName := conf.MustGet(ctx, "nacos.service_name").String()
-	logDir := conf.MustGet(ctx, "nacos.log_dir").String()
-	logDir = filepath.Join(logDir, serviceName)
-	cacheDir := conf.MustGet(ctx, "nacos.cache_dir").String()
-	cacheDir = filepath.Join(cacheDir, serviceName)
-
-	return New(addrees, func(c *ClientConfig) {
-		c.NamespaceId = conf.MustGet(ctx, "nacos.namespace_id", "public").String()
-		c.Endpoint = conf.MustGet(ctx, "nacos.endpoint", "").String()
-		c.AppName = serviceName
-		c.TimeoutMs = conf.MustGet(ctx, "nacos.timeout_ms", 5000).Uint64()
-		c.CacheDir = cacheDir
-		c.LogDir = logDir
-		c.LogLevel = conf.MustGet(ctx, "nacos.log_level", "error").String()
-	}).SetClusterName(clusterName).SetGroupName(groupName)
-}
 
 // New new a registry with address and opts
 func New(address string, opts ...ClientOption) *Registry {
