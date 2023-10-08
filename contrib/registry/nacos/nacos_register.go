@@ -19,12 +19,19 @@ import (
 func (reg *Registry) Register(ctx context.Context, service gsvc.Service) (registered gsvc.Service, err error) {
 	c := reg.client
 	metadata := map[string]string{}
+	endpoints := service.GetEndpoints()
+	p := vo.BatchRegisterInstanceParam{
+		ServiceName: service.GetName(),
+		GroupName:   reg.groupName,
+		Instances:   make([]vo.RegisterInstanceParam, 0, len(endpoints)),
+	}
+
 	for k, v := range service.GetMetadata() {
 		metadata[k] = gconv.String(v)
 	}
 
-	for _, endpoint := range service.GetEndpoints() {
-		if _, err = c.RegisterInstance(vo.RegisterInstanceParam{
+	for _, endpoint := range endpoints {
+		p.Instances = append(p.Instances, vo.RegisterInstanceParam{
 			Ip:          endpoint.Host(),
 			Port:        uint64(endpoint.Port()),
 			ServiceName: service.GetName(),
@@ -35,9 +42,11 @@ func (reg *Registry) Register(ctx context.Context, service gsvc.Service) (regist
 			Ephemeral:   true,
 			ClusterName: reg.clusterName,
 			GroupName:   reg.groupName,
-		}); err != nil {
-			return
-		}
+		})
+	}
+
+	if _, err = c.BatchRegisterInstance(p); err != nil {
+		return
 	}
 
 	registered = service
