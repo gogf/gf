@@ -155,8 +155,8 @@ github.com/hashicorp/golang-lru v0.5.1/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ
 github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
 github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af h1:pmfjZENx5imkbgOkpRUYLnmbU7UEFbjtDA2hxJ1ichM=
 github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af/go.mod h1:Nht3zPeWKUH0NzdCt2Blrr5ys8VGpn0CEB0cQHVjt7k=
-github.com/joy999/nacos-sdk-go v0.0.0-20231008085055-692208da2796 h1:lOfGAshTjXIJOHYSIYWXnMxgTfWC/e3nUBwMdp8zl6E=
-github.com/joy999/nacos-sdk-go v0.0.0-20231008085055-692208da2796/go.mod h1:vks3UUh7Hp+e5qbvDySGnvVCD0RYqjyDy/RpVMSf3xc=
+github.com/joy999/nacos-sdk-go v0.0.0-20231008093845-7f2f84bc6faa h1:FPzhsWW/aZQKw9tWOTvLc8lpKLGnPVBMaF0B+DIvKlc=
+github.com/joy999/nacos-sdk-go v0.0.0-20231008093845-7f2f84bc6faa/go.mod h1:vks3UUh7Hp+e5qbvDySGnvVCD0RYqjyDy/RpVMSf3xc=
 github.com/jpillora/backoff v1.0.0/go.mod h1:J/6gKK9jxlEcS3zixgDgUAsiuZ7yrSoa/FX5e0EB2j4=
 github.com/json-iterator/go v1.1.5/go.mod h1:+SdeFBvtyEkXs7REEP0seUULqWtbJapLOCVDaaPEHmU=
 github.com/json-iterator/go v1.1.6/go.mod h1:+SdeFBvtyEkXs7REEP0seUULqWtbJapLOCVDaaPEHmU=
