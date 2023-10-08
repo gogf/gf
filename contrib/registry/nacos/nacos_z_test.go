@@ -21,7 +21,10 @@ import (
 func TestRegistry(t *testing.T) {
 	var (
 		ctx      = gctx.GetInitCtx()
-		registry = nacos.New(`127.0.0.1:8848`)
+		registry = nacos.New(`localhost:8848`, func(cc *constant.ClientConfig) {
+			cc.CacheDir = "/tmp/nacos"
+			cc.LogDir = "/tmp/nacos"
+		})
 	)
 	svc := &gsvc.LocalService{
 		Name:      guid.S(),
