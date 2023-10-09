@@ -23,12 +23,13 @@ import (
 )
 
 type doCheckValueInput struct {
-	Name     string                 // Name specifies the name of parameter `value`.
-	Value    interface{}            // Value specifies the value for the rules to be validated.
-	Rule     string                 // Rule specifies the validation rules string, like "required", "required|between:1,100", etc.
-	Messages interface{}            // Messages specifies the custom error messages for this rule from parameters input, which is usually type of map/slice.
-	DataRaw  interface{}            // DataRaw specifies the `raw data` which is passed to the Validator. It might be type of map/struct or a nil value.
-	DataMap  map[string]interface{} // DataMap specifies the map that is converted from `dataRaw`. It is usually used internally
+	Name      string                 // Name specifies the name of parameter `value`.
+	Value     interface{}            // Value specifies the value for the rules to be validated.
+	ValueType reflect.Type           // ValueType specifies the type of the value, mainly used for value type id retrieving.
+	Rule      string                 // Rule specifies the validation rules string, like "required", "required|between:1,100", etc.
+	Messages  interface{}            // Messages specifies the custom error messages for this rule from parameters input, which is usually type of map/slice.
+	DataRaw   interface{}            // DataRaw specifies the `raw data` which is passed to the Validator. It might be type of map/struct or a nil value.
+	DataMap   map[string]interface{} // DataMap specifies the map that is converted from `dataRaw`. It is usually used internally
 }
 
 // doCheckValue does the really rules validation for single key-value.
@@ -146,11 +147,12 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 			// Custom validation rules.
 			case customRuleFunc != nil:
 				err = customRuleFunc(ctx, RuleFuncInput{
-					Rule:    ruleItems[index],
-					Message: message,
-					Field:   in.Name,
-					Value:   gvar.New(value),
-					Data:    gvar.New(in.DataRaw),
+					Rule:      ruleItems[index],
+					Message:   message,
+					Field:     in.Name,
+					ValueType: in.ValueType,
+					Value:     gvar.New(value),
+					Data:      gvar.New(in.DataRaw),
 				})
 
 			// Builtin validation rules.
@@ -159,6 +161,7 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 					RuleKey:     ruleKey,
 					RulePattern: rulePattern,
 					Field:       in.Name,
+					ValueType:   in.ValueType,
 					Value:       gvar.New(value),
 					Data:        gvar.New(in.DataRaw),
 					Message:     message,
