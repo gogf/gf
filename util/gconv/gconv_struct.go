@@ -392,7 +392,7 @@ func bindVarToStructAttr(structReflectValue reflect.Value, attrName string, valu
 		// Issue: https://github.com/gogf/gf/issues/2980
 		case "*gtime.Time", "gtime.Time":
 			doConvertWithReflectValueSet(structFieldValue, doConvertInput{
-				FromValue:  value.(interface{}),
+				FromValue:  value,
 				ToTypeName: structFieldTypeName,
 				ReferValue: structFieldValue,
 			})
