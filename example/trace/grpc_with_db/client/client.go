@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/gogf/gf/contrib/registry/etcd/v2"
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
-	"github.com/gogf/gf/contrib/trace/jaeger/v2"
+	"github.com/gogf/gf/contrib/trace/otlpgrpc/v2"
 	"github.com/gogf/gf/example/trace/grpc_with_db/protobuf/user"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gtrace"
@@ -11,15 +11,16 @@ import (
 )
 
 const (
-	ServiceName       = "grpc-client-with-db"
-	JaegerUdpEndpoint = "localhost:6831"
+	serviceName = "otlp-grpc-client"
+	endpoint    = "tracing-analysis-dc-bj.aliyuncs.com:8090"
+	traceToken  = "******_******"
 )
 
 func main() {
 	grpcx.Resolver.Register(etcd.New("127.0.0.1:2379"))
 
 	var ctx = gctx.New()
-	tp, err := jaeger.Init(ServiceName, JaegerUdpEndpoint)
+	tp, err := otlpgrpc.Init(serviceName, endpoint, traceToken)
 	if err != nil {
 		g.Log().Fatal(ctx, err)
 	}
@@ -28,6 +29,7 @@ func main() {
 	StartRequests()
 }
 
+// StartRequests is a demo for tracing.
 func StartRequests() {
 	ctx, span := gtrace.NewSpan(gctx.New(), "StartRequests")
 	defer span.End()
@@ -57,20 +59,18 @@ func StartRequests() {
 	g.Log().Info(ctx, "query result:", queryRes)
 
 	// Delete.
-	_, err = client.Delete(ctx, &user.DeleteReq{
+	if _, err = client.Delete(ctx, &user.DeleteReq{
 		Id: insertRes.Id,
-	})
-	if err != nil {
+	}); err != nil {
 		g.Log().Errorf(ctx, `%+v`, err)
 		return
 	}
 	g.Log().Info(ctx, "delete id:", insertRes.Id)
 
 	// Delete with error.
-	_, err = client.Delete(ctx, &user.DeleteReq{
+	if _, err = client.Delete(ctx, &user.DeleteReq{
 		Id: -1,
-	})
-	if err != nil {
+	}); err != nil {
 		g.Log().Errorf(ctx, `%+v`, err)
 		return
 	}
