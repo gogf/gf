@@ -68,11 +68,11 @@ func New(options ...Options) *Manager {
 	var pathType = pathTypeNone
 	if len(options) > 0 {
 		opts = options[0]
-		pathType = opts.checkPath(opts.Path)
+		pathType = opts.checkPathType(opts.Path)
 	} else {
 		opts = Options{}
 		for _, folder := range searchFolders {
-			pathType = opts.checkPath(folder)
+			pathType = opts.checkPathType(folder)
 			if pathType != pathTypeNone {
 				break
 			}
@@ -104,8 +104,8 @@ func New(options ...Options) *Manager {
 	return m
 }
 
-// checkPath checks and returns the path type for given directory path.
-func (o *Options) checkPath(dirPath string) pathType {
+// checkPathType checks and returns the path type for given directory path.
+func (o *Options) checkPathType(dirPath string) pathType {
 	if dirPath == "" {
 		return pathTypeNone
 	}
@@ -130,7 +130,7 @@ func (o *Options) checkPath(dirPath string) pathType {
 
 // SetPath sets the directory path storing i18n files.
 func (m *Manager) SetPath(path string) error {
-	pathType := m.options.checkPath(path)
+	pathType := m.options.checkPathType(path)
 	if pathType == pathTypeNone {
 		return gerror.NewCodef(gcode.CodeInvalidParameter, `%s does not exist`, path)
 	}
@@ -244,7 +244,8 @@ func (m *Manager) init(ctx context.Context) {
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if m.pathType == pathTypeGres {
+	switch m.pathType {
+	case pathTypeGres:
 		files := m.options.Resource.ScanDirFile(m.options.Path, "*.*", true)
 		if len(files) > 0 {
 			var (
@@ -275,7 +276,7 @@ func (m *Manager) init(ctx context.Context) {
 				}
 			}
 		}
-	} else if m.pathType == pathTypeNormal {
+	case pathTypeNormal:
 		files, _ := gfile.ScanDirFile(m.options.Path, "*.*", true)
 		if len(files) == 0 {
 			return
