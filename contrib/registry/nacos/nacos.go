@@ -8,8 +8,11 @@
 package nacos
 
 import (
+	"context"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/joy999/nacos-sdk-go/clients"
@@ -31,6 +34,12 @@ type ClientOption = constant.ClientOption
 // ClientConfig is cname the constant.ClientConfig
 type ClientConfig = constant.ClientConfig
 
+// Config is the configuration object for nacos client.
+type Config struct {
+	ServerConfigs []constant.ServerConfig `v:"required"` // See constant.ServerConfig
+	ClientConfig  constant.ClientConfig   `v:"required"` // See constant.ClientConfig
+}
+
 // New new a registry with address and opts
 func New(address string, opts ...ClientOption) *Registry {
 	endpoints := gstr.SplitAndTrim(address, ",")
@@ -38,16 +47,10 @@ func New(address string, opts ...ClientOption) *Registry {
 		panic(gerror.NewCodef(gcode.CodeInvalidParameter, `invalid nacos address "%s"`, address))
 	}
 
-	clientConfig := &ClientConfig{
-		TimeoutMs:   5000,
-		LogLevel:    "error",
-		NamespaceId: "public",
-	}
+	clientConfig := constant.NewClientConfig(opts...)
 
-	if len(opts) > 0 {
-		for _, opt := range opts {
-			opt(clientConfig)
-		}
+	if len(clientConfig.NamespaceId) == 0 {
+		clientConfig.NamespaceId = "public"
 	}
 
 	serverConfigs := make([]constant.ServerConfig, 0, len(endpoints))
@@ -55,7 +58,9 @@ func New(address string, opts ...ClientOption) *Registry {
 		tmp := gstr.Split(endpoint, ":")
 		ip := tmp[0]
 		port := gconv.Uint64(tmp[1])
-
+		if port == 0 {
+			port = 8848
+		}
 		serverConfigs = append(serverConfigs, *constant.NewServerConfig(ip, port))
 	}
 
@@ -67,6 +72,24 @@ func New(address string, opts ...ClientOption) *Registry {
 		panic(gerror.Wrap(err, `create nacos client failed`))
 	}
 	return NewWithClient(nameingClient)
+}
+
+// New creates and returns registry with Config.
+func NewWithConfig(ctx context.Context, config Config) (reg *Registry, err error) {
+	// Data validation.
+	err = g.Validator().Data(config).Run(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	nameingClient, err := clients.NewNamingClient(vo.NacosClientParam{
+		ClientConfig:  &config.ClientConfig,
+		ServerConfigs: config.ServerConfigs,
+	})
+	if err != nil {
+		return
+	}
+	return NewWithClient(nameingClient), nil
 }
 
 // NewWithClient new the instance with INamingClient

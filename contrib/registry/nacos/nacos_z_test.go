@@ -91,12 +91,8 @@ func TestRegistry(t *testing.T) {
 func TestWatch(t *testing.T) {
 	var (
 		ctx      = gctx.GetInitCtx()
-		registry = nacos.New(`127.0.0.1:8848`, func(cc *constant.ClientConfig) {
-			//cc.NamespaceId = "test_nacos"
-		})
-		registry2 = nacos.New(`127.0.0.1:8848`, func(cc *constant.ClientConfig) {
-			//cc.NamespaceId = "test_nacos"
-		})
+		registry = nacos.New(`localhost:8848`)
+		registry2 = nacos.New(`localhost:8848`)
 	)
 
 	svc1 := &gsvc.LocalService{
