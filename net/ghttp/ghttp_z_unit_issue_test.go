@@ -17,6 +17,7 @@ import (
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gtag"
 	"github.com/gogf/gf/v2/util/guid"
 )
 
@@ -363,5 +364,59 @@ func Test_Issue2482(t *testing.T) {
   }
 `
 		t.Assert(c.PutContent(ctx, "/api/v2/order", content), `{"code":0,"message":"","data":null}`)
+	})
+}
+
+type Issue2890Enum string
+
+const (
+	Issue2890EnumA Issue2890Enum = "a"
+	Issue2890EnumB Issue2890Enum = "b"
+)
+
+type Issue2890Req struct {
+	g.Meta `path:"/issue2890" method:"post"`
+	Id     int
+	Enums  Issue2890Enum `v:"required|enums"`
+}
+
+type Issue2890Res struct{}
+type Issue2890Controller struct{}
+
+func (c *Issue2890Controller) Post(ctx context.Context, req *Issue2890Req) (res *Issue2890Res, err error) {
+	g.RequestFromCtx(ctx).Response.Write(req.Enums)
+	return
+}
+
+// https://github.com/gogf/gf/issues/2890
+func Test_Issue2890(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+
+		oldEnumsJson, err := gtag.GetGlobalEnums()
+		t.AssertNil(err)
+		defer t.AssertNil(gtag.SetGlobalEnums(oldEnumsJson))
+
+		err = gtag.SetGlobalEnums(`{"github.com/gogf/gf/v2/net/ghttp_test.Issue2890Enum": ["a","b"]}`)
+		t.AssertNil(err)
+
+		s := g.Server(guid.S())
+		s.Group("/api/v2", func(group *ghttp.RouterGroup) {
+			group.Middleware(ghttp.MiddlewareHandlerResponse)
+			group.Bind(Issue2890Controller{})
+		})
+		s.SetDumpRouterMap(false)
+		s.Start()
+		defer s.Shutdown()
+		time.Sleep(1000 * time.Millisecond)
+
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		t.Assert(
+			c.PostContent(ctx, "/api/v2/issue2890", ``),
+			`{"code":51,"message":"The Enums field is required","data":null}`,
+		)
+		t.Assert(
+			c.PostContent(ctx, "/api/v2/issue2890", `{"Enums":"c"}`),
+			"{\"code\":51,\"message\":\"The Enums value `c` should be in enums of: [\\\"a\\\",\\\"b\\\"]\",\"data\":null}")
 	})
 }

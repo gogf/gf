@@ -9,12 +9,10 @@ package builtin
 import (
 	"errors"
 	"fmt"
-	"reflect"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gtag"
@@ -39,40 +37,42 @@ func (r RuleEnums) Message() string {
 }
 
 func (r RuleEnums) Run(in RunInput) error {
-	originTypeAndKind := reflection.OriginTypeAndKind(in.Data.Val())
-	switch originTypeAndKind.OriginKind {
-	case reflect.Struct:
-		for i := 0; i < originTypeAndKind.OriginType.NumField(); i++ {
-			field := originTypeAndKind.OriginType.Field(i)
-			if in.Field == field.Name {
-				var (
-					typeId   = fmt.Sprintf(`%s.%s`, field.Type.PkgPath(), field.Type.Name())
-					tagEnums = gtag.GetEnumsByType(typeId)
-				)
-				if tagEnums == "" {
-					return gerror.NewCodef(
-						gcode.CodeInvalidOperation,
-						`no enums found for type "%s", missing using command "gf gen enums"?`,
-						typeId,
-					)
-				}
-				var enumsValues = make([]interface{}, 0)
-				if err := json.Unmarshal([]byte(tagEnums), &enumsValues); err != nil {
-					return err
-				}
-				if !gstr.InArray(gconv.Strings(enumsValues), in.Value.String()) {
-					return errors.New(gstr.Replace(
-						in.Message, `{enums}`, tagEnums,
-					))
-				}
-			}
-		}
-
-	default:
+	if in.ValueType == nil {
 		return gerror.NewCode(
-			gcode.CodeInvalidOperation,
-			`"enums" validation rule can only be used in struct validation currently`,
+			gcode.CodeInvalidParameter,
+			`value type cannot be empty to use validation rule "enums"`,
 		)
+	}
+	var (
+		pkgPath  = in.ValueType.PkgPath()
+		typeName = in.ValueType.Name()
+	)
+	if pkgPath == "" {
+		return gerror.NewCodef(
+			gcode.CodeInvalidOperation,
+			`no pkg path found for type "%s"`,
+			in.ValueType.String(),
+		)
+	}
+	var (
+		typeId   = fmt.Sprintf(`%s.%s`, pkgPath, typeName)
+		tagEnums = gtag.GetEnumsByType(typeId)
+	)
+	if tagEnums == "" {
+		return gerror.NewCodef(
+			gcode.CodeInvalidOperation,
+			`no enums found for type "%s", missing using command "gf gen enums"?`,
+			typeId,
+		)
+	}
+	var enumsValues = make([]interface{}, 0)
+	if err := json.Unmarshal([]byte(tagEnums), &enumsValues); err != nil {
+		return err
+	}
+	if !gstr.InArray(gconv.Strings(enumsValues), in.Value.String()) {
+		return errors.New(gstr.Replace(
+			in.Message, `{enums}`, tagEnums,
+		))
 	}
 	return nil
 }

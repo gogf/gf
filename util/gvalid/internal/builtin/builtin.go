@@ -11,6 +11,8 @@
 package builtin
 
 import (
+	"reflect"
+
 	"github.com/gogf/gf/v2/container/gvar"
 )
 
@@ -26,13 +28,14 @@ type Rule interface {
 }
 
 type RunInput struct {
-	RuleKey     string    // RuleKey is like the "max" in rule "max: 6"
-	RulePattern string    // RulePattern is like "6" in rule:"max:6"
-	Field       string    // The field name of Value.
-	Value       *gvar.Var // Value specifies the value for this rule to validate.
-	Data        *gvar.Var // Data specifies the `data` which is passed to the Validator.
-	Message     string    // Message specifies the custom error message or configured i18n message for this rule.
-	Option      RunOption // Option provides extra configuration for validation rule.
+	RuleKey     string       // RuleKey is like the "max" in rule "max: 6"
+	RulePattern string       // RulePattern is like "6" in rule:"max:6"
+	Field       string       // The field name of Value.
+	ValueType   reflect.Type // ValueType specifies the type of the value, which might be nil.
+	Value       *gvar.Var    // Value specifies the value for this rule to validate.
+	Data        *gvar.Var    // Data specifies the `data` which is passed to the Validator.
+	Message     string       // Message specifies the custom error message or configured i18n message for this rule.
+	Option      RunOption    // Option provides extra configuration for validation rule.
 }
 
 type RunOption struct {
