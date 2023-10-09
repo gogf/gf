@@ -33,6 +33,13 @@ func (b *Builder) Build(info base.PickerBuildInfo) balancer.Picker {
 	)
 	for conn, subConnInfo := range info.ReadySCs {
 		svc, _ := subConnInfo.Address.Attributes.Value(rawSvcKeyInSubConnInfo).(gsvc.Service)
+		if svc == nil && subConnInfo.Address.Addr != "" {
+			// It might be a direct address without service name, it so creates a default service.
+			svc = &gsvc.LocalService{
+				Name:      subConnInfo.Address.ServerName,
+				Endpoints: gsvc.NewEndpoints(subConnInfo.Address.Addr),
+			}
+		}
 		if svc == nil {
 			g.Log().Noticef(ctx, `empty service read from: %+v`, subConnInfo.Address)
 			continue

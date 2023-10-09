@@ -94,6 +94,7 @@ func (r *Registry) getServices(ctx context.Context) (services []gsvc.Service, er
 				`service "%s" is expired, update at: %s, current: %s, sub duration: %s`,
 				s.GetKey(), updateAt.String(), nowTime.String(), subDuration.String(),
 			)
+			_ = gfile.Remove(filePath)
 			continue
 		}
 		services = append(services, s)

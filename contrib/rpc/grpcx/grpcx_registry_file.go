@@ -23,10 +23,15 @@ func autoLoadAndRegisterFileRegistry() {
 		return
 	}
 	var (
-		ctx          = gctx.GetInitCtx()
-		fileRegistry = file.New(gfile.Temp("gsvc"))
+		ctx           = gctx.GetInitCtx()
+		directoryPath = gfile.Temp("gsvc")
+		fileRegistry  = file.New(directoryPath)
 	)
 
-	g.Log().Debug(ctx, `set default registry using file registry as no custom registry set`)
+	g.Log().Debugf(
+		ctx,
+		`set default registry using file registry as no custom registry set, path: %s`,
+		directoryPath,
+	)
 	Resolver.Register(fileRegistry)
 }
