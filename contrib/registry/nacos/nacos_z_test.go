@@ -18,12 +18,18 @@ import (
 	"github.com/joy999/nacos-sdk-go/common/constant"
 )
 
+const (
+	NACOS_ADDRESS   = `localhost:8848`
+	NACOS_CACHE_DIR = `/tmp/nacos`
+	NACOS_LOG_DIR   = `/tmp/nacos`
+)
+
 func TestRegistry(t *testing.T) {
 	var (
 		ctx      = gctx.GetInitCtx()
-		registry = nacos.New(`localhost:8848`, func(cc *constant.ClientConfig) {
-			cc.CacheDir = "/tmp/nacos"
-			cc.LogDir = "/tmp/nacos"
+		registry = nacos.New(NACOS_ADDRESS, func(cc *constant.ClientConfig) {
+			cc.CacheDir = NACOS_CACHE_DIR
+			cc.LogDir = NACOS_LOG_DIR
 		})
 	)
 	svc := &gsvc.LocalService{
@@ -91,8 +97,14 @@ func TestRegistry(t *testing.T) {
 func TestWatch(t *testing.T) {
 	var (
 		ctx      = gctx.GetInitCtx()
-		registry = nacos.New(`localhost:8848`)
-		registry2 = nacos.New(`localhost:8848`)
+		registry = nacos.New(NACOS_ADDRESS, func(cc *constant.ClientConfig) {
+			cc.CacheDir = NACOS_CACHE_DIR
+			cc.LogDir = NACOS_LOG_DIR
+		})
+		registry2 = nacos.New(NACOS_ADDRESS, func(cc *constant.ClientConfig) {
+			cc.CacheDir = NACOS_CACHE_DIR
+			cc.LogDir = NACOS_LOG_DIR
+		})
 	)
 
 	svc1 := &gsvc.LocalService{
