@@ -4,13 +4,7 @@
 
 ### Setup Golang
 
-安装 Golang 环境。
-
-### Cache Go Modules
-
-还原缓存，命中同分支以及父分支和默认分支的同 key 缓存。
-
-restore-keys 可以部分匹配缓存（这是 Setup Golang 的缓存无法做到的，所以另外设置缓存配置）
+安装 Golang 环境，并根据 `**/go.mod` 的 hash 加载缓存。
 
 ### 单元测试
 
