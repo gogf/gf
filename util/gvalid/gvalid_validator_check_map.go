@@ -128,12 +128,13 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 		}
 		// It checks each rule and its value in loop.
 		if validatedError := v.doCheckValue(ctx, doCheckValueInput{
-			Name:     checkRuleItem.Name,
-			Value:    value,
-			Rule:     checkRuleItem.Rule,
-			Messages: customMessage[checkRuleItem.Name],
-			DataRaw:  params,
-			DataMap:  inputParamMap,
+			Name:      checkRuleItem.Name,
+			Value:     value,
+			ValueType: reflect.TypeOf(value),
+			Rule:      checkRuleItem.Rule,
+			Messages:  customMessage[checkRuleItem.Name],
+			DataRaw:   params,
+			DataMap:   inputParamMap,
 		}); validatedError != nil {
 			_, errorItem := validatedError.FirstItem()
 			// ===========================================================

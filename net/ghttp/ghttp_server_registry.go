@@ -22,6 +22,8 @@ func (s *Server) doServiceRegister() {
 	if s.registrar == nil {
 		return
 	}
+	s.serviceMu.Lock()
+	defer s.serviceMu.Unlock()
 	var (
 		ctx      = gctx.GetInitCtx()
 		protocol = gsvc.DefaultProtocol
@@ -56,11 +58,17 @@ func (s *Server) doServiceDeregister() {
 	if s.registrar == nil {
 		return
 	}
+	s.serviceMu.Lock()
+	defer s.serviceMu.Unlock()
+	if s.service == nil {
+		return
+	}
 	var ctx = gctx.GetInitCtx()
 	s.Logger().Debugf(ctx, `service deregister: %+v`, s.service)
 	if err := s.registrar.Deregister(ctx, s.service); err != nil {
 		s.Logger().Errorf(ctx, `%+v`, err)
 	}
+	s.service = nil
 }
 
 func (s *Server) calculateListenedEndpoints(ctx context.Context) gsvc.Endpoints {
