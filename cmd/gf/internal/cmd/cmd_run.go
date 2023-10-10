@@ -9,7 +9,7 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -20,7 +20,6 @@ import (
 	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/os/gtimer"
-	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gtag"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
@@ -58,7 +57,7 @@ which compiles and runs the go codes asynchronously when codes change.
 	cRunPathBrief       = `output directory path for built binary file. it's "manifest/output" in default`
 	cRunExtraBrief      = `the same options as "go run"/"go build" except some options as follows defined`
 	cRunArgsBrief       = `custom arguments for your process`
-	cRunWatchPathsBrief = `watch additional paths for live reload, separated by ",". i.e. "manifest/config/config.yaml"`
+	cRunWatchPathsBrief = `watch additional paths for live reload, separated by ",". i.e. "manifest/config/*.yaml"`
 )
 
 var (
@@ -181,11 +180,18 @@ func (app *cRunApp) Run(ctx context.Context) {
 }
 
 func matchWatchPaths(watchPaths []string, eventPath string) bool {
-	pathSeparator := string(os.PathSeparator)
 	for _, path := range watchPaths {
-		path = gstr.TrimLeftStr(path, pathSeparator)
-		path = gstr.TrimLeftStr(path, "."+pathSeparator)
-		if gstr.HasSuffix(eventPath, pathSeparator+path) {
+		absPath, err := filepath.Abs(path)
+		if err != nil {
+			mlog.Printf("match watchPath error: %s", err.Error())
+			continue
+		}
+		matched, err := filepath.Match(absPath, eventPath)
+		if err != nil {
+			mlog.Printf("match watchPaths error: %s", err.Error())
+			continue
+		}
+		if matched {
 			return true
 		}
 	}
