@@ -51,7 +51,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 		checkRules     = make([]fieldRule, 0)
 		nameToRuleMap  = make(map[string]string) // just for internally searching index purpose.
 		customMessage  = make(CustomMsg)         // Custom rule error message map.
-		checkValueData = v.assoc                 // Ready to be validated data, which can be type of .
+		checkValueData = v.assoc                 // Ready to be validated data.
 	)
 	if checkValueData == nil {
 		checkValueData = object
@@ -181,6 +181,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 					Rule:      rule,
 					IsMeta:    isMeta,
 					FieldKind: field.OriginalKind(),
+					FieldType: field.Type(),
 				})
 			}
 		} else {
@@ -302,12 +303,13 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 		}
 		// It checks each rule and its value in loop.
 		if validatedError := v.doCheckValue(ctx, doCheckValueInput{
-			Name:     checkRuleItem.Name,
-			Value:    value,
-			Rule:     checkRuleItem.Rule,
-			Messages: customMessage[checkRuleItem.Name],
-			DataRaw:  checkValueData,
-			DataMap:  inputParamMap,
+			Name:      checkRuleItem.Name,
+			Value:     value,
+			ValueType: checkRuleItem.FieldType,
+			Rule:      checkRuleItem.Rule,
+			Messages:  customMessage[checkRuleItem.Name],
+			DataRaw:   checkValueData,
+			DataMap:   inputParamMap,
 		}); validatedError != nil {
 			_, errorItem := validatedError.FirstItem()
 			// ============================================================

@@ -27,7 +27,8 @@ type fieldRule struct {
 	Name      string       // Alias name for the field.
 	Rule      string       // Rule string like: "max:6"
 	IsMeta    bool         // Is this rule is from gmeta.Meta, which marks it as whole struct rule.
-	FieldKind reflect.Kind // Kind of struct field, which is used for parameter type checks.
+	FieldKind reflect.Kind // Original kind of struct field, which is used for parameter type checks.
+	FieldType reflect.Type // Type of struct field, which is used for parameter type checks.
 }
 
 // iNoValidation is an interface that marks current struct not validated by package `gvalid`.
