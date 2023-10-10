@@ -37,6 +37,9 @@ func (s *selectorRoundRobin) Update(ctx context.Context, nodes Nodes) error {
 func (s *selectorRoundRobin) Pick(ctx context.Context) (node Node, done DoneFunc, err error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if len(s.nodes) == 0 {
+		return
+	}
 	node = s.nodes[s.next]
 	s.next = (s.next + 1) % len(s.nodes)
 	intlog.Printf(ctx, `Picked node: %s`, node.Address())
