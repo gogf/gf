@@ -17,7 +17,6 @@ import (
 // Register registers `service` to Registry.
 // Note that it returns a new Service if it changes the input Service with custom one.
 func (reg *Registry) Register(ctx context.Context, service gsvc.Service) (registered gsvc.Service, err error) {
-	c := reg.client
 	metadata := map[string]string{}
 	endpoints := service.GetEndpoints()
 	p := vo.BatchRegisterInstanceParam{
@@ -45,7 +44,7 @@ func (reg *Registry) Register(ctx context.Context, service gsvc.Service) (regist
 		})
 	}
 
-	if _, err = c.BatchRegisterInstance(p); err != nil {
+	if _, err = reg.client.BatchRegisterInstance(p); err != nil {
 		return
 	}
 

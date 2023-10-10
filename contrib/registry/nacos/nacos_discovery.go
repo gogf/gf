@@ -9,6 +9,8 @@ package nacos
 import (
 	"context"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/joy999/nacos-sdk-go/model"
@@ -25,7 +27,7 @@ func (reg *Registry) Search(ctx context.Context, in gsvc.SearchInput) (result []
 
 	serviceName := in.Name
 	if serviceName == "" {
-		info := gstr.SplitAndTrim(gstr.Trim(in.Prefix, "/"), "/")
+		info := gstr.SplitAndTrim(gstr.Trim(in.Prefix, gsvc.DefaultSeparator), gsvc.DefaultSeparator)
 		if len(info) >= 2 {
 			serviceName = info[len(info)-2]
 		}
@@ -69,8 +71,11 @@ func (reg *Registry) Watch(ctx context.Context, key string) (watcher gsvc.Watche
 		w.Push(services, err)
 	}
 
-	sArr := gstr.Split(key, "/")
-
+	sArr := gstr.Split(key, gsvc.DefaultSeparator)
+	if len(sArr) < 5 {
+		err = gerror.NewCode(gcode.CodeInvalidParameter, "The 'key' is invalid")
+		return
+	}
 	serviceName := sArr[4]
 
 	param := &vo.SubscribeParam{
@@ -84,8 +89,7 @@ func (reg *Registry) Watch(ctx context.Context, key string) (watcher gsvc.Watche
 		return c.Unsubscribe(param)
 	})
 
-	err = c.Subscribe(param)
-	if err != nil {
+	if err = c.Subscribe(param); err != nil {
 		return
 	}
 

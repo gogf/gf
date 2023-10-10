@@ -29,8 +29,8 @@ func NewServiceFromInstance(instance []model.Instance) gsvc.Service {
 		}
 		endpoints = append(endpoints, gsvc.NewEndpoint(fmt.Sprintf("%s%s%d", instance[i].Ip, gsvc.EndpointHostPortDelimiter, int(instance[i].Port))))
 	}
-	if gstr.Contains(serviceName, "@@") {
-		arr := gstr.SplitAndTrim(serviceName, "@@")
+	if gstr.Contains(serviceName, cstServiceSeparator) {
+		arr := gstr.SplitAndTrim(serviceName, cstServiceSeparator)
 		serviceName = arr[1]
 	}
 
@@ -38,7 +38,7 @@ func NewServiceFromInstance(instance []model.Instance) gsvc.Service {
 		Endpoints: endpoints,
 		Name:      serviceName,
 		Metadata:  gmap.NewStrStrMapFrom(instance[0].Metadata).MapStrAny(),
-		Version:   "latest",
+		Version:   gsvc.DefaultVersion,
 	}
 }
 

@@ -1,0 +1,5 @@
+package nacos
+
+const (
+	cstServiceSeparator = "@@"
+)
