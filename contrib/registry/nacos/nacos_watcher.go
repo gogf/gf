@@ -26,8 +26,8 @@ type watchEvent struct {
 	Err      error
 }
 
-// newWather new a Watcher's instance
-func newWather(ctx context.Context) *Watcher {
+// newWatcher new a Watcher's instance
+func newWatcher(ctx context.Context) *Watcher {
 	w := &Watcher{
 		ctx:   ctx,
 		event: make(chan *watchEvent, 10),

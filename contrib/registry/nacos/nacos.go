@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -20,6 +21,14 @@ import (
 	"github.com/joy999/nacos-sdk-go/clients/naming_client"
 	"github.com/joy999/nacos-sdk-go/common/constant"
 	"github.com/joy999/nacos-sdk-go/vo"
+)
+
+const (
+	cstServiceSeparator = "@@"
+)
+
+var (
+	_ gsvc.Registry = &Registry{}
 )
 
 // Registry is nacos registry.
@@ -32,7 +41,7 @@ type Registry struct {
 // Config is the configuration object for nacos client.
 type Config struct {
 	ServerConfigs []constant.ServerConfig `v:"required"` // See constant.ServerConfig
-	ClientConfig  constant.ClientConfig   `v:"required"` // See constant.ClientConfig
+	ClientConfig  *constant.ClientConfig  `v:"required"` // See constant.ClientConfig
 }
 
 // New new a registry with address and opts
@@ -61,13 +70,13 @@ func New(address string, opts ...constant.ClientOption) (reg *Registry) {
 	ctx := gctx.New()
 	reg, err := NewWithConfig(ctx, Config{
 		ServerConfigs: serverConfigs,
-		ClientConfig:  *clientConfig,
+		ClientConfig:  clientConfig,
 	})
-	
+
 	if err != nil {
 		panic(gerror.Wrap(err, `create nacos client failed`))
 	}
-	return 
+	return
 }
 
 // New creates and returns registry with Config.
@@ -79,7 +88,7 @@ func NewWithConfig(ctx context.Context, config Config) (reg *Registry, err error
 	}
 
 	nameingClient, err := clients.NewNamingClient(vo.NacosClientParam{
-		ClientConfig:  &config.ClientConfig,
+		ClientConfig:  config.ClientConfig,
 		ServerConfigs: config.ServerConfigs,
 	})
 	if err != nil {

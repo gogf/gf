@@ -65,7 +65,7 @@ inst_loop:
 func (reg *Registry) Watch(ctx context.Context, key string) (watcher gsvc.Watcher, err error) {
 	c := reg.client
 
-	w := newWather(ctx)
+	w := newWatcher(ctx)
 
 	fn := func(services []model.Instance, err error) {
 		w.Push(services, err)
