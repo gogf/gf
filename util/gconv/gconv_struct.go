@@ -388,6 +388,15 @@ func bindVarToStructAttr(structReflectValue reflect.Value, attrName string, valu
 				ReferValue: structFieldValue,
 			})
 			return
+		// Hold the time zone consistent in recursive
+		// Issue: https://github.com/gogf/gf/issues/2980
+		case "*gtime.Time", "gtime.Time":
+			doConvertWithReflectValueSet(structFieldValue, doConvertInput{
+				FromValue:  value,
+				ToTypeName: structFieldTypeName,
+				ReferValue: structFieldValue,
+			})
+			return
 		}
 
 		// Try to call custom converter.

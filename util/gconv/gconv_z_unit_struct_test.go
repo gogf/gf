@@ -1303,6 +1303,31 @@ func Test_Struct_Issue1597(t *testing.T) {
 	})
 }
 
+// https://github.com/gogf/gf/issues/2980
+func Test_Struct_Issue2980(t *testing.T) {
+	type Post struct {
+		CreatedAt *gtime.Time `json:"createdAt" `
+	}
+
+	type PostWithUser struct {
+		Post
+		UserName string `json:"UserName"`
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		date := gtime.New("2023-09-22 12:00:00").UTC()
+		params := g.Map{
+			"CreatedAt": gtime.New("2023-09-22 12:00:00").UTC(),
+			"UserName":  "Galileo",
+		}
+		postWithUser := new(PostWithUser)
+		err := gconv.Scan(params, postWithUser)
+		t.AssertNil(err)
+		t.Assert(date.Location(), postWithUser.CreatedAt.Location())
+		t.Assert(date.Unix(), postWithUser.CreatedAt.Unix())
+	})
+}
+
 func Test_Scan_WithDoubleSliceAttribute(t *testing.T) {
 	inputData := [][]string{
 		{"aa", "bb", "cc"},
