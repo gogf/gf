@@ -797,3 +797,28 @@ func Test_Issue2787(t *testing.T) {
 		t.Assert(condWhere, "((`nickname`=?) OR (`password`=?)) AND (`passport`=?)")
 	})
 }
+
+// https://github.com/gogf/gf/issues/2907
+func Test_Issue2907(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			orm = db.Model(table)
+			err error
+		)
+
+		orm = orm.WherePrefixNotIn(
+			table,
+			"id",
+			[]int{
+				1,
+				2,
+			},
+		)
+		all, err := orm.OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(all), TableSize-2)
+		t.Assert(all[0]["id"], 3)
+	})
+}
