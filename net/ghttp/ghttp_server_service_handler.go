@@ -197,6 +197,30 @@ func (s *Server) checkAndCreateFuncInfo(
 		return
 	}
 
+	if reflectType.In(1).Kind() != reflect.Ptr ||
+		(reflectType.In(1).Kind() == reflect.Ptr && reflectType.In(1).Elem().Kind() != reflect.Struct) {
+		err = gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`invalid handler: defined as "%s", but the second input parameter should be type of pointer to struct like "*BizReq"`,
+			reflectType.String(),
+		)
+		return
+	}
+
+	// Do not enable this logic, as many users are already using none struct pointer type
+	// as the first output parameter.
+	/*
+		if reflectType.Out(0).Kind() != reflect.Ptr ||
+			(reflectType.Out(0).Kind() == reflect.Ptr && reflectType.Out(0).Elem().Kind() != reflect.Struct) {
+			err = gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`invalid handler: defined as "%s", but the first output parameter should be type of pointer to struct like "*BizRes"`,
+				reflectType.String(),
+			)
+			return
+		}
+	*/
+
 	// The request struct should be named as `xxxReq`.
 	reqStructName := trimGeneric(reflectType.In(1).String())
 	if !gstr.HasSuffix(reqStructName, `Req`) {
