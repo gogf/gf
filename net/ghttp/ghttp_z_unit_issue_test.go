@@ -391,7 +391,6 @@ func (c *Issue2890Controller) Post(ctx context.Context, req *Issue2890Req) (res 
 // https://github.com/gogf/gf/issues/2890
 func Test_Issue2890(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-
 		oldEnumsJson, err := gtag.GetGlobalEnums()
 		t.AssertNil(err)
 		defer t.AssertNil(gtag.SetGlobalEnums(oldEnumsJson))
@@ -417,6 +416,7 @@ func Test_Issue2890(t *testing.T) {
 		)
 		t.Assert(
 			c.PostContent(ctx, "/api/v2/issue2890", `{"Enums":"c"}`),
-			"{\"code\":51,\"message\":\"The Enums value `c` should be in enums of: [\\\"a\\\",\\\"b\\\"]\",\"data\":null}")
+			"{\"code\":51,\"message\":\"The Enums value `c` should be in enums of: [\\\"a\\\",\\\"b\\\"]\",\"data\":null}",
+		)
 	})
 }
