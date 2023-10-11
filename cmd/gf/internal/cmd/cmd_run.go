@@ -1,4 +1,4 @@
-// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved.
+// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -48,6 +48,7 @@ const (
 gf run main.go
 gf run main.go --args "server -p 8080"
 gf run main.go -mod=vendor
+gf run main.go -w "manifest/config/*.yaml"
 `
 	cRunDc = `
 The "run" command is used for running go codes with hot-compiled-like feature,
@@ -117,7 +118,7 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 		// With some delay in case of multiple code changes in very short interval.
 		gtimer.SetTimeout(ctx, 1500*gtime.MS, func(ctx context.Context) {
 			defer dirty.Set(false)
-			mlog.Printf(`file changes: %s`, event.String())
+			mlog.Printf(`watched file changes: %s`, event.String())
 			app.Run(ctx)
 		})
 	})
@@ -183,12 +184,12 @@ func matchWatchPaths(watchPaths []string, eventPath string) bool {
 	for _, path := range watchPaths {
 		absPath, err := filepath.Abs(path)
 		if err != nil {
-			mlog.Printf("match watchPath error: %s", err.Error())
+			mlog.Printf("match watchPath '%s' error: %s", path, err.Error())
 			continue
 		}
 		matched, err := filepath.Match(absPath, eventPath)
 		if err != nil {
-			mlog.Printf("match watchPaths error: %s", err.Error())
+			mlog.Printf("match watchPath '%s' error: %s", path, err.Error())
 			continue
 		}
 		if matched {
