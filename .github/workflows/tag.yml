@@ -28,3 +28,8 @@ jobs:
               git tag $tag
               git push origin $tag
           done
+          for file in `find cmd -name go.mod`; do
+              tag=$(dirname $file)/$GITHUB_REF_NAME
+              git tag $tag
+              git push origin $tag
+          done
