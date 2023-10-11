@@ -269,7 +269,7 @@ func doConvert(in doConvertInput) (convertedValue interface{}) {
 	case "[]map[string]interface{}":
 		return Maps(in.FromValue)
 
-	case "json.RawMessage":
+	case "RawMessage", "json.RawMessage":
 		return Bytes(in.FromValue)
 
 	default:
