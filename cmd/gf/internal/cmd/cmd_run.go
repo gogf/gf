@@ -1,4 +1,4 @@
-// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved.
+// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -9,6 +9,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -33,10 +34,11 @@ type cRun struct {
 }
 
 type cRunApp struct {
-	File    string // Go run file name.
-	Path    string // Directory storing built binary.
-	Options string // Extra "go run" options.
-	Args    string // Custom arguments.
+	File       string   // Go run file name.
+	Path       string   // Directory storing built binary.
+	Options    string   // Extra "go run" options.
+	Args       string   // Custom arguments.
+	WatchPaths []string // Watch paths for live reload.
 }
 
 const (
@@ -46,15 +48,17 @@ const (
 gf run main.go
 gf run main.go --args "server -p 8080"
 gf run main.go -mod=vendor
+gf run main.go -w "manifest/config/*.yaml"
 `
 	cRunDc = `
 The "run" command is used for running go codes with hot-compiled-like feature,
 which compiles and runs the go codes asynchronously when codes change.
 `
-	cRunFileBrief  = `building file path.`
-	cRunPathBrief  = `output directory path for built binary file. it's "manifest/output" in default`
-	cRunExtraBrief = `the same options as "go run"/"go build" except some options as follows defined`
-	cRunArgsBrief  = `custom arguments for your process`
+	cRunFileBrief       = `building file path.`
+	cRunPathBrief       = `output directory path for built binary file. it's "manifest/output" in default`
+	cRunExtraBrief      = `the same options as "go run"/"go build" except some options as follows defined`
+	cRunArgsBrief       = `custom arguments for your process`
+	cRunWatchPathsBrief = `watch additional paths for live reload, separated by ",". i.e. "manifest/config/*.yaml"`
 )
 
 var (
@@ -63,24 +67,26 @@ var (
 
 func init() {
 	gtag.Sets(g.MapStrStr{
-		`cRunUsage`:      cRunUsage,
-		`cRunBrief`:      cRunBrief,
-		`cRunEg`:         cRunEg,
-		`cRunDc`:         cRunDc,
-		`cRunFileBrief`:  cRunFileBrief,
-		`cRunPathBrief`:  cRunPathBrief,
-		`cRunExtraBrief`: cRunExtraBrief,
-		`cRunArgsBrief`:  cRunArgsBrief,
+		`cRunUsage`:           cRunUsage,
+		`cRunBrief`:           cRunBrief,
+		`cRunEg`:              cRunEg,
+		`cRunDc`:              cRunDc,
+		`cRunFileBrief`:       cRunFileBrief,
+		`cRunPathBrief`:       cRunPathBrief,
+		`cRunExtraBrief`:      cRunExtraBrief,
+		`cRunArgsBrief`:       cRunArgsBrief,
+		`cRunWatchPathsBrief`: cRunWatchPathsBrief,
 	})
 }
 
 type (
 	cRunInput struct {
-		g.Meta `name:"run"`
-		File   string `name:"FILE"  arg:"true" brief:"{cRunFileBrief}" v:"required"`
-		Path   string `name:"path"  short:"p"  brief:"{cRunPathBrief}" d:"./"`
-		Extra  string `name:"extra" short:"e"  brief:"{cRunExtraBrief}"`
-		Args   string `name:"args"  short:"a"  brief:"{cRunArgsBrief}"`
+		g.Meta     `name:"run"`
+		File       string `name:"FILE"       arg:"true" brief:"{cRunFileBrief}" v:"required"`
+		Path       string `name:"path"       short:"p"  brief:"{cRunPathBrief}" d:"./"`
+		Extra      string `name:"extra"      short:"e"  brief:"{cRunExtraBrief}"`
+		Args       string `name:"args"       short:"a"  brief:"{cRunArgsBrief}"`
+		WatchPaths string `name:"watchPaths" short:"w"  brief:"{cRunWatchPathsBrief}"`
 	}
 	cRunOutput struct{}
 )
@@ -92,24 +98,27 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 	}
 
 	app := &cRunApp{
-		File:    in.File,
-		Path:    in.Path,
-		Options: in.Extra,
-		Args:    in.Args,
+		File:       in.File,
+		Path:       in.Path,
+		Options:    in.Extra,
+		Args:       in.Args,
+		WatchPaths: strings.Split(in.WatchPaths, ","),
 	}
 	dirty := gtype.NewBool()
 	_, err = gfsnotify.Add(gfile.RealPath("."), func(event *gfsnotify.Event) {
-		if gfile.ExtName(event.Path) != "go" {
+		if gfile.ExtName(event.Path) != "go" && !matchWatchPaths(app.WatchPaths, event.Path) {
 			return
 		}
+
 		// Variable `dirty` is used for running the changes only one in one second.
 		if !dirty.Cas(false, true) {
 			return
 		}
+
 		// With some delay in case of multiple code changes in very short interval.
 		gtimer.SetTimeout(ctx, 1500*gtime.MS, func(ctx context.Context) {
 			defer dirty.Set(false)
-			mlog.Printf(`go file changes: %s`, event.String())
+			mlog.Printf(`watched file changes: %s`, event.String())
 			app.Run(ctx)
 		})
 	})
@@ -152,7 +161,6 @@ func (app *cRunApp) Run(ctx context.Context) {
 	if process != nil {
 		if err := process.Kill(); err != nil {
 			mlog.Debugf("kill process error: %s", err.Error())
-			//return
 		}
 	}
 	// Run the binary file.
@@ -170,4 +178,23 @@ func (app *cRunApp) Run(ctx context.Context) {
 	} else {
 		mlog.Printf("build running pid: %d", pid)
 	}
+}
+
+func matchWatchPaths(watchPaths []string, eventPath string) bool {
+	for _, path := range watchPaths {
+		absPath, err := filepath.Abs(path)
+		if err != nil {
+			mlog.Printf("match watchPath '%s' error: %s", path, err.Error())
+			continue
+		}
+		matched, err := filepath.Match(absPath, eventPath)
+		if err != nil {
+			mlog.Printf("match watchPath '%s' error: %s", path, err.Error())
+			continue
+		}
+		if matched {
+			return true
+		}
+	}
+	return false
 }
