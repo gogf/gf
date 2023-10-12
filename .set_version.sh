@@ -16,7 +16,7 @@ if [[ "$2" != v* ]]; then
     exit 1
 fi
 
-workdir=$1
+workdir=.
 newVersion=$2
 echo "Prepare to replace the GF library version numbers in all go.mod files in the ${workdir} directory with ${newVersion}"
 
