@@ -180,21 +180,28 @@ jobs:
     - name: Start Redis Cluster Containers
       run:  docker-compose -f ".github/workflows/redis/docker-compose.yml" up -d --build
 
-    - name: Start Minikube
-      uses: medyagh/setup-minikube@master
+    - name: Start Consul Containers
+      run:  docker-compose -f ".github/workflows/consul/docker-compose.yml" up -d --build
+
+    # - name: Start Minikube
+    #   uses: medyagh/setup-minikube@master
 
     - name: Setup Golang ${{ matrix.go-version }}
       uses: actions/setup-go@v4
       with:
         go-version: ${{ matrix.go-version }}
-        cache: true
-        cache-dependency-path: '**/go.sum'
+        cache-dependency-path: '**/go.sum' 
 
     - name: Before Script
       run:  bash .github/workflows/before_script.sh
 
     - name: Build & Test
-      run:  bash .github/workflows/build_and_test.sh
+      if: ${{ (github.event_name == 'push' && github.ref != 'refs/heads/master') || github.event_name == 'pull_request' }}
+      run: bash .github/workflows/build_and_test.sh
+
+    - name: Build & Test & Coverage
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+      run: bash .github/workflows/build_and_test.sh coverage
 
     - name: Stop Redis Cluster Containers
       run:  docker-compose -f ".github/workflows/redis/docker-compose.yml" down
@@ -205,8 +212,11 @@ jobs:
     - name: Stop Nacos Containers
       run:  docker-compose -f ".github/workflows/nacos/docker-compose.yml" down
 
+    - name: Stop Consul Containers
+      run:  docker-compose -f ".github/workflows/consul/docker-compose.yml" down
+
     - name: Report Coverage
       uses: codecov/codecov-action@v3
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
       with:
         flags: go-${{ matrix.go-version }}-${{ matrix.goarch }}
-

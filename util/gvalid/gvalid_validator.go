@@ -75,12 +75,13 @@ func (v *Validator) Run(ctx context.Context) Error {
 	}
 
 	return v.doCheckValue(ctx, doCheckValueInput{
-		Name:     "",
-		Value:    v.data,
-		Rule:     gconv.String(v.rules),
-		Messages: v.messages,
-		DataRaw:  v.assoc,
-		DataMap:  gconv.Map(v.assoc),
+		Name:      "",
+		Value:     v.data,
+		ValueType: reflect.TypeOf(v.data),
+		Rule:      gconv.String(v.rules),
+		Messages:  v.messages,
+		DataRaw:   v.assoc,
+		DataMap:   gconv.Map(v.assoc),
 	})
 }
 

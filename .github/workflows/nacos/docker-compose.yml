@@ -15,22 +15,6 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
-    depends_on:
-      mysql:
-        condition: service_healthy
-
-  mysql:
-    build:
-      context: .
-      dockerfile: ./image/mysql/Dockerfile
-    container_name: mysql
-    env_file:
-      - ./env/mysql.env
-    healthcheck:
-      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
-      interval: 5s
-      timeout: 3s
-      retries: 10
 
   initializer:
     image: loads/curl:latest
