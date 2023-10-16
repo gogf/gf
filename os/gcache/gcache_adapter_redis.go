@@ -319,8 +319,8 @@ func (c *AdapterRedis) Update(ctx context.Context, key interface{}, value interf
 	if err != nil {
 		return
 	}
-	if oldTTL == -2 {
-		// It does not exist.
+	if oldTTL == -2 || oldTTL == 0 {
+		// It does not exist or redis return "0" erroneously.
 		return
 	}
 	// Check existence.
@@ -361,8 +361,8 @@ func (c *AdapterRedis) UpdateExpire(ctx context.Context, key interface{}, durati
 	if err != nil {
 		return
 	}
-	if oldTTL == -2 {
-		// It does not exist.
+	if oldTTL == -2 || oldTTL == 0 {
+		// It does not exist or redis return "0" erroneously.
 		oldTTL = -1
 		return
 	}
@@ -400,7 +400,7 @@ func (c *AdapterRedis) GetExpire(ctx context.Context, key interface{}) (time.Dur
 	switch ttl {
 	case -1:
 		return 0, nil
-	case -2:
+	case -2, 0: // It does not exist or redis return "0" erroneously.
 		return -1, nil
 	default:
 		return time.Duration(ttl) * time.Second, nil
