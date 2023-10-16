@@ -39,7 +39,7 @@ func (c *AdapterRedis) Set(ctx context.Context, key interface{}, value interface
 		if duration == 0 {
 			_, err = c.redis.Set(ctx, redisKey, value)
 		} else {
-			err = c.redis.SetEX(ctx, redisKey, value, int64(duration.Seconds()))
+			_, err = c.redis.Do(ctx, "SET", redisKey, value, "PX", duration.Milliseconds())
 		}
 	}
 	return err
@@ -125,7 +125,7 @@ func (c *AdapterRedis) SetIfNotExist(ctx context.Context, key interface{}, value
 	}
 	if ok && duration > 0 {
 		// Set the expiration.
-		_, err = c.redis.Expire(ctx, redisKey, int64(duration.Seconds()))
+		_, err = c.redis.PExpire(ctx, redisKey, duration.Milliseconds())
 		if err != nil {
 			return ok, err
 		}
@@ -341,7 +341,7 @@ func (c *AdapterRedis) Update(ctx context.Context, key interface{}, value interf
 	if oldPTTL == -1 {
 		_, err = c.redis.Set(ctx, redisKey, value)
 	} else {
-		// update SetEX -> SET PX (millisecond)
+		// update SetEX -> DO SET PX (millisecond)
 		// Starting with Redis version 2.6.12: Added the EX, PX, NX and XX options.
 		_, err = c.redis.Do(ctx, "SET", redisKey, value, "PX", oldPTTL)
 	}
