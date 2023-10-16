@@ -3,7 +3,7 @@ module github.com/gogf/gf/contrib/config/consul/v2
 go 1.19
 
 require (
-	github.com/gogf/gf/v2 v2.5.2
+	github.com/gogf/gf/v2 v2.5.4
 	github.com/hashicorp/consul/api v1.24.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
 )
@@ -35,8 +35,10 @@ require (
 	go.opentelemetry.io/otel/sdk v1.14.0 // indirect
 	go.opentelemetry.io/otel/trace v1.14.0 // indirect
 	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63 // indirect
-	golang.org/x/net v0.13.0 // indirect
-	golang.org/x/sys v0.12.0 // indirect
-	golang.org/x/text v0.11.0 // indirect
+	golang.org/x/net v0.17.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/text v0.13.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/gogf/gf/v2 => ../../../
