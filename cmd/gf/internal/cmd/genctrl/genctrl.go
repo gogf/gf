@@ -34,7 +34,7 @@ gf gen ctrl
 	CGenCtrlBriefSdkStdVersion = `use standard version prefix for generated sdk request path`
 	CGenCtrlBriefSdkNoV1       = `do not add version suffix for interface module name if version is v1`
 	CGenCtrlBriefClear         = `auto delete generated and unimplemented controller go files if api definitions are missing`
-	CGenCtrlControllerMerge    = `controller fragment file merges single file`
+	CGenCtrlControllerMerge    = `generate all controller files into one go file by name of api definition source go file`
 )
 
 const (
@@ -74,7 +74,7 @@ type (
 		SdkStdVersion bool   `short:"v" name:"sdkStdVersion" brief:"{CGenCtrlBriefSdkStdVersion}" orphan:"true"`
 		SdkNoV1       bool   `short:"n" name:"sdkNoV1"       brief:"{CGenCtrlBriefSdkNoV1}" orphan:"true"`
 		Clear         bool   `short:"c" name:"clear"         brief:"{CGenCtrlBriefClear}" orphan:"true"`
-		Merge         bool   `short:"mg" name:"merge"        brief:"{CGenCtrlControllerMerge}" orphan:"true"`
+		Merge         bool   `short:"m" name:"merge"        brief:"{CGenCtrlControllerMerge}" orphan:"true"`
 	}
 	CGenCtrlOutput struct{}
 )

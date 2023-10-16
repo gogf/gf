@@ -139,6 +139,10 @@ func (c *controllerGenerator) doGenerateCtrlItem(dstModuleFolderPath string, ite
 			"{Version}":    item.Version,
 			"{MethodName}": item.MethodName,
 		})
+
+		if gstr.Contains(gfile.GetContents(methodFilePath), fmt.Sprintf(`func (c *%v) %v`, ctrlName, item.MethodName)) {
+			return
+		}
 		if err = gfile.PutContentsAppend(methodFilePath, gstr.TrimLeft(content)); err != nil {
 			return err
 		}
