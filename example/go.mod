@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/gogf/gf/contrib/config/apollo/v2 v2.5.4
-	github.com/gogf/gf/contrib/config/consul/v2 v2.0.0-20231008014921-00e83fed3f9d
+	github.com/gogf/gf/contrib/config/consul/v2 v2.5.4
 	github.com/gogf/gf/contrib/config/kubecm/v2 v2.5.4
 	github.com/gogf/gf/contrib/config/nacos/v2 v2.5.4
 	github.com/gogf/gf/contrib/config/polaris/v2 v2.5.4
@@ -117,7 +117,7 @@ require (
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.21.0 // indirect
 	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63 // indirect
-	golang.org/x/net v0.16.0 // indirect
+	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/oauth2 v0.12.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
@@ -145,6 +145,7 @@ require (
 
 replace (
 	github.com/gogf/gf/contrib/config/apollo/v2 => ../contrib/config/apollo/
+	github.com/gogf/gf/contrib/config/consul/v2 => ../contrib/config/consul/
 	github.com/gogf/gf/contrib/config/kubecm/v2 => ../contrib/config/kubecm/
 	github.com/gogf/gf/contrib/config/nacos/v2 => ../contrib/config/nacos/
 	github.com/gogf/gf/contrib/config/polaris/v2 => ../contrib/config/polaris/
