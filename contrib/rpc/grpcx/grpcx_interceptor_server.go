@@ -58,7 +58,7 @@ func (s modServer) UnaryRecover(
 	gutil.TryCatch(ctx, func(ctx2 context.Context) {
 		res, err = handler(ctx, req)
 	}, func(ctx context.Context, exception error) {
-		err = gerror.WrapCode(gcode.New(int(codes.Internal), "", nil), err, "panic recovered")
+		err = gerror.WrapCode(gcode.New(int(codes.Internal), "", nil), exception, "panic recovered")
 	})
 	return
 }
