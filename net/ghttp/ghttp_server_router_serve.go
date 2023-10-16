@@ -112,6 +112,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*Han
 	)
 
 	// The default domain has the most priority when iteration.
+	// Please see doSetHandler if you want to get known about the structure of serveTree.
 	for _, domainItem := range []string{DefaultDomainName, domain} {
 		p, ok := s.serveTree[domainItem]
 		if !ok {
@@ -157,6 +158,17 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*Han
 				item := e.Value.(*HandlerItem)
 				// Filter repeated handler items, especially the middleware and hook handlers.
 				// It is necessary, do not remove this checks logic unless you really know how it is necessary.
+				//
+				// The `repeatHandlerCheckMap` is used for repeat handler filtering during handler searching.
+				// As there are fuzzy nodes, and the fuzzy nodes have both sub-nodes and sub-list nodes, there
+				// may be repeated handler items in both sub-nodes and sub-list nodes. It here uses handler item id to
+				// identify the same handler item that registered.
+				//
+				// The same handler item is the one that is registered in the same function doSetHandler.
+				// Note that, one handler function(middleware or hook function) may be registered multiple times as
+				// different handler items using function doSetHandler, and they have different handler item id.
+				//
+				// Note that twice, the handler function may be registered multiple times as different handler items.
 				if _, isRepeatedHandler := repeatHandlerCheckMap[item.Id]; isRepeatedHandler {
 					continue
 				} else {
