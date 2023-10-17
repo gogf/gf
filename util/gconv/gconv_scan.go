@@ -114,34 +114,37 @@ func Scan(params interface{}, pointer interface{}, mapping ...map[string]string)
 // Usage example 1: Normal attribute struct relation:
 //
 //	type EntityUser struct {
-//		   Uid  int
-//		   Name string
+//	    Uid  int
+//	    Name string
 //	}
 //
 //	type EntityUserDetail struct {
-//		   Uid     int
-//		   Address string
+//	    Uid     int
+//	    Address string
 //	}
 //
 //	type EntityUserScores struct {
-//		   Id     int
-//		   Uid    int
-//		   Score  int
-//		   Course string
+//	    Id     int
+//	    Uid    int
+//	    Score  int
+//	    Course string
 //	}
 //
 //	type Entity struct {
 //	    User       *EntityUser
-//		   UserDetail *EntityUserDetail
-//		   UserScores []*EntityUserScores
+//	    UserDetail *EntityUserDetail
+//	    UserScores []*EntityUserScores
 //	}
 //
 // var users []*Entity
-// ScanList(records, &users, "User")
-// ScanList(records, &users, "User", "uid")
-// ScanList(records, &users, "UserDetail", "User", "uid:Uid")
-// ScanList(records, &users, "UserScores", "User", "uid:Uid")
-// ScanList(records, &users, "UserScores", "User", "uid")
+// var userRecords   = EntityUser{Uid: 1, Name:"john"}
+// var detailRecords = EntityUser{Uid: 1, Address: "chengdu"}
+// var scoresRecords = EntityUser{Id: 1, Uid: 1, Score: 100, Course: "math"}
+// ScanList(userRecords, &users, "User")
+// ScanList(userRecords, &users, "User", "uid")
+// ScanList(detailRecords, &users, "UserDetail", "User", "uid:Uid")
+// ScanList(scoresRecords, &users, "UserScores", "User", "uid:Uid")
+// ScanList(scoresRecords, &users, "UserScores", "User", "uid")
 //
 // Usage example 2: Embedded attribute struct relation:
 //
@@ -167,10 +170,12 @@ func Scan(params interface{}, pointer interface{}, mapping ...map[string]string)
 //		   UserScores []EntityUserScores
 //	}
 //
-// var users []*Entity
-// ScanList(records, &users)
-// ScanList(records, &users, "UserDetail", "uid")
-// ScanList(records, &users, "UserScores", "uid")
+// var userRecords   = EntityUser{Uid: 1, Name:"john"}
+// var detailRecords = EntityUser{Uid: 1, Address: "chengdu"}
+// var scoresRecords = EntityUser{Id: 1, Uid: 1, Score: 100, Course: "math"}
+// ScanList(userRecords, &users)
+// ScanList(detailRecords, &users, "UserDetail", "uid")
+// ScanList(scoresRecords, &users, "UserScores", "uid")
 //
 // The parameters "User/UserDetail/UserScores" in the example codes specify the target attribute struct
 // that current result will be bound to.
