@@ -31,6 +31,7 @@ type Client struct {
 	authUser          string            // HTTP basic authentication: user.
 	authPass          string            // HTTP basic authentication: pass.
 	retryCount        int               // Retry count when request fails.
+	noUrlEncode       bool              // No url encoding for request parameters.
 	retryInterval     time.Duration     // Retry interval when request fails.
 	middlewareHandler []HandlerFunc     // Interceptor handlers
 	discovery         gsvc.Discovery    // Discovery for service.

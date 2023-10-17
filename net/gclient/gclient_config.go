@@ -125,6 +125,12 @@ func (c *Client) SetRedirectLimit(redirectLimit int) *Client {
 	return c
 }
 
+// SetNoUrlEncode sets the mark that do not encode the parameters before sending request.
+func (c *Client) SetNoUrlEncode(noUrlEncode bool) *Client {
+	c.noUrlEncode = noUrlEncode
+	return c
+}
+
 // SetProxy set proxy for the client.
 // This func will do nothing when the parameter `proxyURL` is empty or in wrong pattern.
 // The correct pattern is like `http://USER:PASSWORD@IP:PORT` or `socks5://USER:PASSWORD@IP:PORT`.
