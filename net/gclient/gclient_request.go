@@ -183,7 +183,7 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 				}
 			}
 		default:
-			params = httputil.BuildParams(data[0])
+			params = httputil.BuildParams(data[0], c.noUrlEncode)
 		}
 	}
 	if method == http.MethodGet {
