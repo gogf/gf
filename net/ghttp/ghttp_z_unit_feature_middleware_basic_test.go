@@ -7,8 +7,10 @@
 package ghttp_test
 
 import (
+	"compress/gzip"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -17,6 +19,8 @@ import (
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func Test_BindMiddleware_Basic1(t *testing.T) {
@@ -735,4 +739,44 @@ func Test_MiddlewareHandlerResponse(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(rsp.StatusCode, http.StatusInternalServerError)
 	})
+}
+
+func Test_MiddlewareHandlerGzipResponse(t *testing.T) {
+	tp := testTracerProvider{}
+	otel.SetTracerProvider(&tp)
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.GET("/default", func(r *ghttp.Request) {
+			var buffer strings.Builder
+			gzipWriter := gzip.NewWriter(&buffer)
+			defer gzipWriter.Close()
+			_, _ = gzipWriter.Write([]byte("hello"))
+			// 设置响应头，表明内容使用 gzip 压缩
+			r.Response.Header().Set("Content-Encoding", "gzip")
+			r.Response.Header().Set("Content-Encoding", "gzip")
+			r.Response.Header().Set("Content-Type", "text/plain")
+			r.Response.Header().Set("Content-Length", fmt.Sprint(buffer.Len()))
+			// 写入压缩后的内容
+			r.Response.Write(buffer.String())
+		})
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		rsp, err := client.Get(ctx, "/default")
+		t.AssertNil(err)
+		t.Assert(rsp.StatusCode, http.StatusOK)
+	})
+}
+
+type testTracerProvider struct{}
+
+var _ trace.TracerProvider = &testTracerProvider{}
+
+func (*testTracerProvider) Tracer(_ string, _ ...trace.TracerOption) trace.Tracer {
+	return trace.NewNoopTracerProvider().Tracer("")
 }
