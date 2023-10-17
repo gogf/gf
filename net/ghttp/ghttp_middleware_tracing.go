@@ -7,9 +7,12 @@
 package ghttp
 
 import (
+	"compress/gzip"
 	"context"
 	"fmt"
 	"io"
+	"net/http"
+	"strings"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -110,9 +113,34 @@ func internalMiddlewareServerTracing(r *Request) {
 	}
 	// Response content logging.
 	var resBodyContent = gstr.StrLimit(r.Response.BufferString(), gtrace.MaxContentLogSize(), "...")
+	if gzipAccepted(r.Response.Header()) {
+		reader, err := gzip.NewReader(strings.NewReader(r.Response.BufferString()))
+		if err != nil {
+			span.SetStatus(codes.Error, fmt.Sprintf(`read gzip response err:%+v`, err))
+		}
+		defer reader.Close()
+		uncompressed, err := io.ReadAll(reader)
+		if err != nil {
+			span.SetStatus(codes.Error, fmt.Sprintf(`get uncompress value err:%+v`, err))
+		}
+		resBodyContent = gstr.StrLimit(string(uncompressed), gtrace.MaxContentLogSize(), "...")
+	}
 
 	span.AddEvent(tracingEventHttpResponse, trace.WithAttributes(
 		attribute.String(tracingEventHttpResponseHeaders, gconv.String(httputil.HeaderToMap(r.Response.Header()))),
 		attribute.String(tracingEventHttpResponseBody, resBodyContent),
 	))
+}
+
+// gzipAccepted returns whether the client will accept gzip-encoded content.
+func gzipAccepted(header http.Header) bool {
+	a := header.Get("Content-Encoding")
+	parts := strings.Split(a, ",")
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "gzip" || strings.HasPrefix(part, "gzip;") {
+			return true
+		}
+	}
+	return false
 }
