@@ -53,6 +53,7 @@ func (c CGenCtrl) getApiItemsInSrc(apiModuleFolderPath string) (items []apiItem,
 				}
 				item := apiItem{
 					Import:     gstr.Trim(importPath, `"`),
+					FileName:   gfile.Name(apiFileFolderPath),
 					Module:     gfile.Basename(apiModuleFolderPath),
 					Version:    gfile.Basename(apiVersionFolderPath),
 					MethodName: methodName,
