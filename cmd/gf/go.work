@@ -4,6 +4,11 @@ use (
 	./
 )
 
+// =====================================================================================================
+// NOTE:
+// Please update associated commands in ../../.set_version.sh if any of the follows replacements change.
+// =====================================================================================================
+
 replace (
 	github.com/gogf/gf/contrib/drivers/clickhouse/v2 => ../../contrib/drivers/clickhouse
 	github.com/gogf/gf/contrib/drivers/mssql/v2 => ../../contrib/drivers/mssql
