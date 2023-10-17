@@ -39,7 +39,7 @@ func (c *AdapterRedis) Set(ctx context.Context, key interface{}, value interface
 		if duration == 0 {
 			_, err = c.redis.Set(ctx, redisKey, value)
 		} else {
-			_, err = c.redis.Do(ctx, "SET", redisKey, value, "PX", duration.Milliseconds())
+			_, err = c.redis.Set(ctx, redisKey, value, gredis.SetOption{TTLOption: gredis.TTLOption{PX: gconv.PtrInt64(duration.Milliseconds())}})
 		}
 	}
 	return err
@@ -341,9 +341,9 @@ func (c *AdapterRedis) Update(ctx context.Context, key interface{}, value interf
 	if oldPTTL == -1 {
 		_, err = c.redis.Set(ctx, redisKey, value)
 	} else {
-		// update SetEX -> DO SET PX (millisecond)
+		// update SetEX -> SET PX Option(millisecond)
 		// Starting with Redis version 2.6.12: Added the EX, PX, NX and XX options.
-		_, err = c.redis.Do(ctx, "SET", redisKey, value, "PX", oldPTTL)
+		_, err = c.redis.Set(ctx, redisKey, value, gredis.SetOption{TTLOption: gredis.TTLOption{PX: gconv.PtrInt64(oldPTTL)}})
 	}
 	return oldValue, true, err
 }
