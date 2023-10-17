@@ -54,6 +54,13 @@ func (c *{CtrlName}) {MethodName}(ctx context.Context, req *{Version}.{MethodNam
 }
 `
 
+const TemplateGenCtrlControllerMethodFuncMerge = `
+
+func (c *{CtrlName}) {MethodName}(ctx context.Context, req *{Version}.{MethodName}Req) (res *{Version}.{MethodName}Res, err error) {
+	return nil, gerror.NewCode(gcode.CodeNotImplemented)
+}
+`
+
 const TemplateGenCtrlApiInterface = `
 // =================================================================================
 // Code generated and maintained by GoFrame CLI tool. DO NOT EDIT. 
