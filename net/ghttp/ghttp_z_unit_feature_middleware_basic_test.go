@@ -753,7 +753,6 @@ func Test_MiddlewareHandlerGzipResponse(t *testing.T) {
 			_, _ = gzipWriter.Write([]byte("hello"))
 			// 设置响应头，表明内容使用 gzip 压缩
 			r.Response.Header().Set("Content-Encoding", "gzip")
-			r.Response.Header().Set("Content-Encoding", "gzip")
 			r.Response.Header().Set("Content-Type", "text/plain")
 			r.Response.Header().Set("Content-Length", fmt.Sprint(buffer.Len()))
 			// 写入压缩后的内容
