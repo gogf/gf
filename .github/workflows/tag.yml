@@ -23,7 +23,16 @@ jobs:
         run: |
           git config --global user.email "tagrobot@goframe.org"
           git config --global user.name  "TagRobot"
+          
+          # auto create tags for contrib packages.
           for file in `find contrib -name go.mod`; do
+              tag=$(dirname $file)/$GITHUB_REF_NAME
+              git tag $tag
+              git push origin $tag
+          done
+          
+          # auto create tag for cli tool
+          for file in `find cmd -name go.mod`; do
               tag=$(dirname $file)/$GITHUB_REF_NAME
               git tag $tag
               git push origin $tag

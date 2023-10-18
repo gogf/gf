@@ -13,6 +13,8 @@ bin/
 .test/
 cmd/gf/main
 cmd/gf/gf
+temp/
 go.work
 go.work.sum
-temp/
+!cmd/gf/go.work
+!cmd/gf/go.work.sum
