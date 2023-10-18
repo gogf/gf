@@ -83,7 +83,7 @@ func DecryptCBC(cipherText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 	blockModel.CryptBlocks(plainText, cipherText)
 	plainText, e := PKCS7UnPadding(plainText, blockSize)
 	if e != nil {
-		return nil, e
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, e.Error())
 	}
 	return plainText, nil
 }
