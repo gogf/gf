@@ -11,6 +11,7 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"errors"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -41,7 +42,7 @@ func EncryptCBC(plainText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 		return nil, err
 	}
 	blockSize := block.BlockSize()
-	plainText = PKCS5Padding(plainText, blockSize)
+	plainText = PKCS7Padding(plainText, blockSize)
 	ivValue := ([]byte)(nil)
 	if len(iv) > 0 {
 		ivValue = iv[0]
@@ -80,38 +81,38 @@ func DecryptCBC(cipherText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 	blockModel := cipher.NewCBCDecrypter(block, ivValue)
 	plainText := make([]byte, len(cipherText))
 	blockModel.CryptBlocks(plainText, cipherText)
-	plainText, e := PKCS5UnPadding(plainText, blockSize)
+	plainText, e := PKCS7UnPadding(plainText, blockSize)
 	if e != nil {
 		return nil, e
 	}
 	return plainText, nil
 }
 
-func PKCS5Padding(src []byte, blockSize int) []byte {
+func PKCS7Padding(src []byte, blockSize int) []byte {
 	padding := blockSize - len(src)%blockSize
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(src, padtext...)
 }
 
-func PKCS5UnPadding(src []byte, blockSize int) ([]byte, error) {
+func PKCS7UnPadding(src []byte, blockSize int) ([]byte, error) {
 	length := len(src)
 	if blockSize <= 0 {
-		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "invalid blocklen")
+		return nil, errors.New("invalid blocklen")
 	}
 
 	if length%blockSize != 0 || length == 0 {
-		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "invalid data len")
+		return nil, errors.New("invalid data len")
 	}
 
 	unpadding := int(src[length-1])
 	if unpadding > blockSize || unpadding == 0 {
-		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "invalid padding")
+		return nil, errors.New("invalid padding")
 	}
 
 	padding := src[length-unpadding:]
 	for i := 0; i < unpadding; i++ {
 		if padding[i] != byte(unpadding) {
-			return nil, gerror.NewCode(gcode.CodeInvalidParameter, "invalid padding")
+			return nil, errors.New("invalid padding")
 		}
 	}
 

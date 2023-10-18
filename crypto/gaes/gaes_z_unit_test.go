@@ -110,22 +110,22 @@ func TestDecryptErr(t *testing.T) {
 	})
 }
 
-func TestPKCS5UnPaddingErr(t *testing.T) {
+func TestPKCS7UnPaddingErr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		// PKCS5UnPadding blockSize zero
-		_, err := gaes.PKCS5UnPadding(content, 0)
+		// PKCS7UnPadding blockSize zero
+		_, err := gaes.PKCS7UnPadding(content, 0)
 		t.AssertNE(err, nil)
 
-		// PKCS5UnPadding src len zero
-		_, err = gaes.PKCS5UnPadding([]byte(""), 16)
+		// PKCS7UnPadding src len zero
+		_, err = gaes.PKCS7UnPadding([]byte(""), 16)
 		t.AssertNE(err, nil)
 
-		// PKCS5UnPadding src len > blockSize
-		_, err = gaes.PKCS5UnPadding(key_17, 16)
+		// PKCS7UnPadding src len > blockSize
+		_, err = gaes.PKCS7UnPadding(key_17, 16)
 		t.AssertNE(err, nil)
 
-		// PKCS5UnPadding src len > blockSize
-		_, err = gaes.PKCS5UnPadding(key_32_err, 32)
+		// PKCS7UnPadding src len > blockSize
+		_, err = gaes.PKCS7UnPadding(key_32_err, 32)
 		t.AssertNE(err, nil)
 	})
 }
