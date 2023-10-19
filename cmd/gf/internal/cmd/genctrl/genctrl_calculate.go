@@ -50,7 +50,7 @@ func (c CGenCtrl) getApiItemsInSrc(apiModuleFolderPath string) (items []apiItem,
 					continue
 				}
 				// remove end "Req"
-				methodName = gstr.TrimRight(methodName, "Req")
+				methodName = gstr.TrimRightStr(methodName, "Req", 1)
 				item := apiItem{
 					Import:     gstr.Trim(importPath, `"`),
 					FileName:   gfile.Name(apiFileFolderPath),
