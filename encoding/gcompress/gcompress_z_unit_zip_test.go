@@ -248,3 +248,15 @@ func Test_ZipPathContent(t *testing.T) {
 		)
 	})
 }
+
+func Test_Unzip(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			srcPath = gtest.DataPath("zip", "path3")
+		)
+		//fmt.Println(srcPath)
+		err := gcompress.UnZipFile(gfile.Join(srcPath, "1.zip"), srcPath)
+		t.AssertNil(err)
+	})
+
+}

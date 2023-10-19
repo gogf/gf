@@ -10,6 +10,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
+	"github.com/gogf/gf/v2/encoding/gcharset"
 	"io"
 	"os"
 	"path/filepath"
@@ -174,6 +175,19 @@ func unZipFileWithReader(reader *zip.Reader, dstFolderPath string, zippedPrefix 
 	for _, file := range reader.File {
 		name = gstr.Replace(file.Name, `\`, `/`)
 		name = gstr.Trim(name, "/")
+		if file.NonUTF8 {
+			if nameWithUTF8, err := gcharset.ToUTF8("GBK", file.Name); err == nil {
+				name = nameWithUTF8
+			} else if nameWithUTF8, err = gcharset.ToUTF8("GB18030", file.Name); err == nil {
+				name = nameWithUTF8
+			} else if nameWithUTF8, err = gcharset.ToUTF8("GB2312", file.Name); err == nil {
+				name = nameWithUTF8
+			} else if nameWithUTF8, err = gcharset.ToUTF8("HZGB2312", file.Name); err == nil {
+				name = nameWithUTF8
+			} else if nameWithUTF8, err = gcharset.ToUTF8("Big5", file.Name); err == nil { //繁体中文 Big5编码
+				name = nameWithUTF8
+			}
+		}
 		if prefix != "" {
 			if !strings.HasPrefix(name, prefix) {
 				continue
