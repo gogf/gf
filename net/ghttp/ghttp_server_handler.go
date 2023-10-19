@@ -33,18 +33,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.config.ClientMaxBodySize > 0 {
 		r.Body = http.MaxBytesReader(w, r.Body, s.config.ClientMaxBodySize)
 	}
-	// In case of, eg:
-	// Case 1:
-	// 		GET /net/http
-	// 		r.URL.Path    : /net/http
-	// 		r.URL.RawPath : (empty string)
-	// Case 2:
-	// 		GET /net%2Fhttp
-	// 		r.URL.Path    : /net/http
-	// 		r.URL.RawPath : /net%2Fhttp
-	if r.URL.RawPath != "" {
-		r.URL.Path = r.URL.RawPath
-	}
 	// Rewrite feature checks.
 	if len(s.config.Rewrites) > 0 {
 		if rewrite, ok := s.config.Rewrites[r.URL.Path]; ok {
@@ -111,7 +99,10 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Search the dynamic service handler.
-	request.handlers, request.serveHandler, request.hasHookHandler, request.hasServeHandler = s.getHandlersWithCache(request)
+	request.handlers,
+		request.serveHandler,
+		request.hasHookHandler,
+		request.hasServeHandler = s.getHandlersWithCache(request)
 
 	// Check the service type static or dynamic for current request.
 	if request.StaticFile != nil && request.StaticFile.IsDir && request.hasServeHandler {

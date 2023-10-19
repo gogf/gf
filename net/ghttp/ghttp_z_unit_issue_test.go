@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/encoding/gurl"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -418,5 +419,23 @@ func Test_Issue2890(t *testing.T) {
 			c.PostContent(ctx, "/api/v2/issue2890", `{"Enums":"c"}`),
 			"{\"code\":51,\"message\":\"The Enums value `c` should be in enums of: [\\\"a\\\",\\\"b\\\"]\",\"data\":null}",
 		)
+	})
+}
+
+// https://github.com/gogf/gf/issues/2963
+func Test_Issue2963(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := g.Server(guid.S())
+		s.SetServerRoot(gtest.DataPath("issue2963"))
+		s.SetDumpRouterMap(false)
+		s.Start()
+		defer s.Shutdown()
+		time.Sleep(100 * time.Millisecond)
+
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		t.Assert(c.GetContent(ctx, "/1.txt"), `1`)
+		t.Assert(c.GetContent(ctx, "/中文G146(1)-icon.txt"), `中文G146(1)-icon`)
+		t.Assert(c.GetContent(ctx, "/"+gurl.Encode("中文G146(1)-icon.txt")), `中文G146(1)-icon`)
 	})
 }
