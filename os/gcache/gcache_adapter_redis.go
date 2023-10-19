@@ -39,7 +39,7 @@ func (c *AdapterRedis) Set(ctx context.Context, key interface{}, value interface
 		if duration == 0 {
 			_, err = c.redis.Set(ctx, redisKey, value)
 		} else {
-			err = c.redis.SetEX(ctx, redisKey, value, int64(duration.Seconds()))
+			_, err = c.redis.Set(ctx, redisKey, value, gredis.SetOption{TTLOption: gredis.TTLOption{PX: gconv.PtrInt64(duration.Milliseconds())}})
 		}
 	}
 	return err
@@ -125,7 +125,7 @@ func (c *AdapterRedis) SetIfNotExist(ctx context.Context, key interface{}, value
 	}
 	if ok && duration > 0 {
 		// Set the expiration.
-		_, err = c.redis.Expire(ctx, redisKey, int64(duration.Seconds()))
+		_, err = c.redis.PExpire(ctx, redisKey, duration.Milliseconds())
 		if err != nil {
 			return ok, err
 		}
@@ -311,16 +311,16 @@ func (c *AdapterRedis) Values(ctx context.Context) ([]interface{}, error) {
 func (c *AdapterRedis) Update(ctx context.Context, key interface{}, value interface{}) (oldValue *gvar.Var, exist bool, err error) {
 	var (
 		v        *gvar.Var
-		oldTTL   int64
+		oldPTTL  int64
 		redisKey = gconv.String(key)
 	)
 	// TTL.
-	oldTTL, err = c.redis.TTL(ctx, redisKey)
+	oldPTTL, err = c.redis.PTTL(ctx, redisKey) // update ttl -> pttl(millisecond)
 	if err != nil {
 		return
 	}
-	if oldTTL == -2 {
-		// It does not exist.
+	if oldPTTL == -2 || oldPTTL == 0 {
+		// It does not exist or expired.
 		return
 	}
 	// Check existence.
@@ -338,10 +338,12 @@ func (c *AdapterRedis) Update(ctx context.Context, key interface{}, value interf
 		return
 	}
 	// Update the value.
-	if oldTTL == -1 {
+	if oldPTTL == -1 {
 		_, err = c.redis.Set(ctx, redisKey, value)
 	} else {
-		err = c.redis.SetEX(ctx, redisKey, value, oldTTL)
+		// update SetEX -> SET PX Option(millisecond)
+		// Starting with Redis version 2.6.12: Added the EX, PX, NX and XX options.
+		_, err = c.redis.Set(ctx, redisKey, value, gredis.SetOption{TTLOption: gredis.TTLOption{PX: gconv.PtrInt64(oldPTTL)}})
 	}
 	return oldValue, true, err
 }
@@ -353,20 +355,20 @@ func (c *AdapterRedis) Update(ctx context.Context, key interface{}, value interf
 func (c *AdapterRedis) UpdateExpire(ctx context.Context, key interface{}, duration time.Duration) (oldDuration time.Duration, err error) {
 	var (
 		v        *gvar.Var
-		oldTTL   int64
+		oldPTTL  int64
 		redisKey = gconv.String(key)
 	)
 	// TTL.
-	oldTTL, err = c.redis.TTL(ctx, redisKey)
+	oldPTTL, err = c.redis.PTTL(ctx, redisKey)
 	if err != nil {
 		return
 	}
-	if oldTTL == -2 {
-		// It does not exist.
-		oldTTL = -1
+	if oldPTTL == -2 || oldPTTL == 0 {
+		// It does not exist or expired.
+		oldPTTL = -1
 		return
 	}
-	oldDuration = time.Duration(oldTTL) * time.Second
+	oldDuration = time.Duration(oldPTTL) * time.Millisecond
 	// DEL.
 	if duration < 0 {
 		_, err = c.redis.Del(ctx, redisKey)
@@ -374,7 +376,7 @@ func (c *AdapterRedis) UpdateExpire(ctx context.Context, key interface{}, durati
 	}
 	// Update the expiration.
 	if duration > 0 {
-		_, err = c.redis.Expire(ctx, redisKey, int64(duration.Seconds()))
+		_, err = c.redis.PExpire(ctx, redisKey, duration.Milliseconds())
 	}
 	// No expire.
 	if duration == 0 {
@@ -393,17 +395,17 @@ func (c *AdapterRedis) UpdateExpire(ctx context.Context, key interface{}, durati
 // It returns 0 if the `key` does not expire.
 // It returns -1 if the `key` does not exist in the cache.
 func (c *AdapterRedis) GetExpire(ctx context.Context, key interface{}) (time.Duration, error) {
-	ttl, err := c.redis.TTL(ctx, gconv.String(key))
+	pttl, err := c.redis.PTTL(ctx, gconv.String(key))
 	if err != nil {
 		return 0, err
 	}
-	switch ttl {
+	switch pttl {
 	case -1:
 		return 0, nil
-	case -2:
+	case -2, 0: // It does not exist or expired.
 		return -1, nil
 	default:
-		return time.Duration(ttl) * time.Second, nil
+		return time.Duration(pttl) * time.Millisecond, nil
 	}
 }
 
