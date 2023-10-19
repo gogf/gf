@@ -7,8 +7,13 @@
 package utils
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/printer"
+	"go/token"
 	"golang.org/x/tools/imports"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
@@ -134,4 +139,48 @@ func GetModPath() string {
 		}
 	}
 	return ""
+}
+
+// GetStructs gets structs info in the file
+func GetStructs(filePath string) (structsInfo map[string]string, err error) {
+	var (
+		fileContent  = gfile.GetContents(filePath)
+		fileSet      = token.NewFileSet()
+		typeSpecList []*ast.TypeSpec
+		buf          bytes.Buffer
+	)
+	structsInfo = make(map[string]string)
+
+	node, err := parser.ParseFile(fileSet, "", fileContent, parser.ParseComments)
+	if err != nil {
+		return
+	}
+
+	// Extract and store type declarations
+	for _, decl := range node.Decls {
+		genDecl, isGenDecl := decl.(*ast.GenDecl)
+		if !isGenDecl {
+			continue
+		}
+		for _, spec := range genDecl.Specs {
+			if typeSpec, isTypeSpec := spec.(*ast.TypeSpec); isTypeSpec {
+				typeSpecList = append(typeSpecList, typeSpec)
+			}
+		}
+	}
+
+	for _, typeSpec := range typeSpecList {
+		structType, isStruct := typeSpec.Type.(*ast.StructType)
+		if !isStruct {
+			continue
+		}
+
+		if err := printer.Fprint(&buf, fileSet, structType); err != nil {
+			return nil, err
+		}
+
+		structsInfo[typeSpec.Name.Name] = buf.String()
+	}
+
+	return
 }

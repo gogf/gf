@@ -13,11 +13,11 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gtag"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 )
 
 const (
@@ -37,10 +37,7 @@ gf gen ctrl
 	CGenCtrlControllerMerge    = `generate all controller files into one go file by name of api definition source go file`
 )
 
-const (
-	PatternApiDefinition  = `type\s+(\w+)Req\s+struct\s+{([\s\S]+?)}`
-	PatternCtrlDefinition = `func\s+\(.+?\)\s+\w+\(.+?\*(\w+)\.(\w+)Req\)\s+\(.+?\*(\w+)\.(\w+)Res,\s+\w+\s+error\)\s+{`
-)
+const PatternCtrlDefinition = `func\s+\(.+?\)\s+\w+\(.+?\*(\w+)\.(\w+)Req\)\s+\(.+?\*(\w+)\.(\w+)Res,\s+\w+\s+error\)\s+{`
 
 const (
 	genCtrlFileLockSeconds = 10
@@ -141,12 +138,17 @@ func (c CGenCtrl) generateByWatchFile(watchFile, sdkPath string, sdkStdVersion, 
 		apiModuleFolderPath = gfile.Dir(apiVersionPath)
 		shouldBeNameOfAPi   = gfile.Basename(gfile.Dir(apiModuleFolderPath))
 	)
+
 	if shouldBeNameOfAPi != "api" {
 		return nil
 	}
 	// watch file should have api definitions.
 	if gfile.Exists(watchFile) {
-		if !gregex.IsMatchString(PatternApiDefinition, gfile.GetContents(watchFile)) {
+		structsInfo, err := utils.GetStructs(watchFile)
+		if err != nil {
+			return err
+		}
+		if len(structsInfo) == 0 {
 			return nil
 		}
 	}
