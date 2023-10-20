@@ -173,8 +173,11 @@ func (l *Logger) rotateChecksTimely(ctx context.Context) {
 					if runtime.GOOS == "windows" {
 						fp := l.getOpenedFilePointer(ctx, file)
 						if fp == nil {
-							intlog.Errorf(ctx, `got nil file pointer for: %s`, file)
-							return
+							fp = l.getFilePointer(ctx, file)
+							if fp == nil {
+								intlog.Errorf(ctx, `got nil file pointer for: %s`, file)
+								return
+							}
 						}
 						if err := fp.Close(true); err != nil {
 							intlog.Errorf(ctx, `%+v`, err)
