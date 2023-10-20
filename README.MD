@@ -50,12 +50,6 @@ go install github.com/gogf/gf/cmd/gf/v2
 golang version >= 1.18
 ```
 
-# Architecture
-
-<div align=center>
-<img src="https://goframe.org/download/attachments/1114119/arch.png"/>
-</div>
-
 # Documentation
 
 - Chinese Official Site(中文官网): [https://goframe.org](https://goframe.org/display/gf)
