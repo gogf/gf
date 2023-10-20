@@ -37,7 +37,7 @@ You can also install `gf` tool using pre-built binaries: <https://github.com/gog
 ## 2) Manually Install
 
 ```shell
-go install github.com/gogf/gf/cmd/gf/v2
+go install github.com/gogf/gf/cmd/gf/v2@latest
 ```
 
 ## 2. Commands

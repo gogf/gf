@@ -88,6 +88,7 @@ func (s modServer) UnaryAllowNilRes(
 }
 
 // UnaryTracing is a unary interceptor for adding tracing feature for gRPC server using OpenTelemetry.
+// The tracing feature is builtin enabled.
 func (s modServer) UnaryTracing(
 	ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
 ) (interface{}, error) {
