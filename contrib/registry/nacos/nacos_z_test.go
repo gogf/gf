@@ -136,7 +136,7 @@ func TestWatch(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(registered.GetName(), svc2.GetName())
 
-		time.Sleep(time.Second * 1)
+		time.Sleep(time.Second * 10)
 
 		// Watch and retrieve the service changes:
 		// svc1 and svc2 is the same service name, which has 2 endpoints.
@@ -154,7 +154,7 @@ func TestWatch(t *testing.T) {
 		err = registry2.Deregister(ctx, svc2)
 		t.AssertNil(err)
 
-		time.Sleep(time.Second * 1)
+		time.Sleep(time.Second * 10)
 		proceedResult, err = watcher.Proceed()
 		t.AssertNil(err)
 		t.Assert(len(proceedResult), 1)
