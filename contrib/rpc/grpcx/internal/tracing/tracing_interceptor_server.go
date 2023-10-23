@@ -27,7 +27,7 @@ import (
 )
 
 // UnaryServerInterceptor returns a grpc.UnaryServerInterceptor suitable
-// for use in a grpc.NewServer call.
+// for usage in a grpc.NewServer call.
 func UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	tracer := otel.GetTracerProvider().Tracer(
 		tracingInstrumentGrpcServer,
