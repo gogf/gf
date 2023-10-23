@@ -32,7 +32,7 @@ var limiter = rate.NewLimiter(rate.Limit(10), 1) // 10 request per second
 
 func Limiter(r *ghttp.Request) {
 	if !limiter.Allow() {
-		r.Response.WriteStatusExit(503)
+		r.Response.WriteStatusExit(429)
 		r.ExitAll()
 	}
 	r.Middleware.Next()
