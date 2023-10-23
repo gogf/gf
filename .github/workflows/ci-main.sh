@@ -38,6 +38,14 @@ for file in `find . -name go.mod`; do
         fi
     fi
 
+    # package polaris needs golang >= v1.19
+    if [ "polaris" = $(basename $dirpath) ]; then
+        if ! go version|grep -qE "go1.19|go1.[2-9][0-9]"; then
+          echo "ignore polaris as go version: $(go version)"
+          continue 1
+        fi
+    fi
+
     # package example needs golang >= v1.20
     if [ "example" = $(basename $dirpath) ]; then
         if ! go version|grep -qE "go1.[2-9][0-9]"; then
