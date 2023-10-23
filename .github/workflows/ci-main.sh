@@ -21,7 +21,7 @@ for file in `find . -name go.mod`; do
         fi
     fi
 
-    # package kuhecm needs golang >= v1.19
+    # package consul needs golang >= v1.19
     if [ "consul" = $(basename $dirpath) ]; then
         continue 1
         if ! go version|grep -qE "go1.19|go1.[2-9][0-9]"; then
