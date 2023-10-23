@@ -1,4 +1,4 @@
-name: GoFrame CLI Build Release
+name: GoFrame Release
 
 on:
   push:

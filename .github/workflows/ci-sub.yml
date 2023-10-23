@@ -1,0 +1,67 @@
+# The sub codes build and unit testing running workflow.
+# It maintains the ci of unimportant packages.
+name: GoFrame Sub CI
+
+
+on:
+  push:
+    branches:
+    - master
+    - develop
+    - personal/**
+    - feature/**
+    - enhance/**
+    - fix/**
+
+  pull_request:
+    branches:
+    - master
+    - develop
+    - personal/**
+    - feature/**
+    - enhance/**
+    - fix/**
+
+# This allows a subsequently queued workflow run to interrupt previous runs
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+env:
+  TZ: "Asia/Shanghai"
+
+
+jobs:
+  code-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        go-version: [ "1.18", "1.19", "1.20", "1.21" ]
+        goarch: [ "386", "amd64" ]
+
+    steps:
+    - name: Setup Timezone
+      uses: szenius/set-timezone@v1.1
+      with:
+        timezoneLinux: "Asia/Shanghai"
+
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Start Minikube
+      uses: medyagh/setup-minikube@master
+
+    - name: Setup Golang ${{ matrix.go-version }}
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ matrix.go-version }}
+        cache-dependency-path: '**/go.sum' 
+
+    - name: Before Script
+      run:  bash .github/workflows/before_script.sh
+
+    - name: Build & Test
+      run: bash .github/workflows/ci-sub.sh
+
+

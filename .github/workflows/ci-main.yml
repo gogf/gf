@@ -1,3 +1,4 @@
+# The main codes build and unit testing running workflow.
 name: GoFrame Main CI
 
 
@@ -183,9 +184,6 @@ jobs:
     - name: Start Consul Containers
       run:  docker-compose -f ".github/workflows/consul/docker-compose.yml" up -d --build
 
-    # - name: Start Minikube
-    #   uses: medyagh/setup-minikube@master
-
     - name: Setup Golang ${{ matrix.go-version }}
       uses: actions/setup-go@v4
       with:
@@ -197,11 +195,11 @@ jobs:
 
     - name: Build & Test
       if: ${{ (github.event_name == 'push' && github.ref != 'refs/heads/master') || github.event_name == 'pull_request' }}
-      run: bash .github/workflows/build_and_test.sh
+      run: bash .github/workflows/ci-main.sh
 
     - name: Build & Test & Coverage
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-      run: bash .github/workflows/build_and_test.sh coverage
+      run: bash .github/workflows/ci-main.sh coverage
 
     - name: Stop Redis Cluster Containers
       run:  docker-compose -f ".github/workflows/redis/docker-compose.yml" down
