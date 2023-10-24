@@ -3,20 +3,21 @@ module github.com/gogf/gf/example
 go 1.20
 
 require (
-	github.com/gogf/gf/contrib/config/apollo/v2 v2.5.5
-	github.com/gogf/gf/contrib/config/consul/v2 v2.5.5
-	github.com/gogf/gf/contrib/config/kubecm/v2 v2.5.5
-	github.com/gogf/gf/contrib/config/nacos/v2 v2.5.5
-	github.com/gogf/gf/contrib/config/polaris/v2 v2.5.5
-	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.5.5
-	github.com/gogf/gf/contrib/nosql/redis/v2 v2.5.5
-	github.com/gogf/gf/contrib/registry/etcd/v2 v2.5.5
-	github.com/gogf/gf/contrib/registry/file/v2 v2.5.5
-	github.com/gogf/gf/contrib/registry/polaris/v2 v2.5.5
-	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.5.5
-	github.com/gogf/gf/contrib/trace/otlpgrpc/v2 v2.5.5
-	github.com/gogf/gf/contrib/trace/otlphttp/v2 v2.5.5
-	github.com/gogf/gf/v2 v2.5.5
+	github.com/gogf/gf/contrib/config/apollo/v2 v2.5.6
+	github.com/gogf/gf/contrib/config/consul/v2 v2.5.6
+	github.com/gogf/gf/contrib/config/kubecm/v2 v2.5.6
+	github.com/gogf/gf/contrib/config/nacos/v2 v2.5.6
+	github.com/gogf/gf/contrib/config/polaris/v2 v2.5.6
+	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.5.6
+	github.com/gogf/gf/contrib/nosql/redis/v2 v2.5.6
+	github.com/gogf/gf/contrib/registry/etcd/v2 v2.5.6
+	github.com/gogf/gf/contrib/registry/file/v2 v2.5.6
+	github.com/gogf/gf/contrib/registry/nacos/v2 v2.5.5
+	github.com/gogf/gf/contrib/registry/polaris/v2 v2.5.6
+	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.5.6
+	github.com/gogf/gf/contrib/trace/otlpgrpc/v2 v2.5.6
+	github.com/gogf/gf/contrib/trace/otlphttp/v2 v2.5.6
+	github.com/gogf/gf/v2 v2.5.6
 	github.com/hashicorp/consul/api v1.24.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/nacos-group/nacos-sdk-go v1.1.4
@@ -53,6 +54,7 @@ require (
 	github.com/go-openapi/swag v0.22.3 // indirect
 	github.com/go-sql-driver/mysql v1.7.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/gnostic v0.5.7-v3refs // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
@@ -72,6 +74,7 @@ require (
 	github.com/imdario/mergo v0.3.6 // indirect
 	github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af // indirect
 	github.com/josharian/intern v1.0.0 // indirect
+	github.com/joy999/nacos-sdk-go v0.0.0-20231008093845-7f2f84bc6faa // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect

@@ -439,3 +439,38 @@ func Test_Issue2963(t *testing.T) {
 		t.Assert(c.GetContent(ctx, "/"+gurl.Encode("中文G146(1)-icon.txt")), `中文G146(1)-icon`)
 	})
 }
+
+type Issue3077Req struct {
+	g.Meta `path:"/echo" method:"get"`
+	A      string `default:"a"`
+	B      string `default:""`
+}
+type Issue3077Res struct {
+	g.Meta `mime:"text/html"`
+}
+
+type Issue3077V1 struct{}
+
+func (c *Issue3077V1) Hello(ctx context.Context, req *Issue3077Req) (res *Issue3077Res, err error) {
+	g.RequestFromCtx(ctx).Response.Write(fmt.Sprintf("%v", req))
+	return
+}
+
+// https://github.com/gogf/gf/issues/3077
+func Test_Issue3077(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := g.Server(guid.S())
+		s.Group("/", func(group *ghttp.RouterGroup) {
+			group.Bind(Issue3077V1{})
+		})
+		s.SetDumpRouterMap(false)
+		s.Start()
+		defer s.Shutdown()
+		time.Sleep(100 * time.Millisecond)
+
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		t.Assert(c.GetContent(ctx, "/echo?a=1&b=2"), `&{{} 1 2}`)
+		t.Assert(c.GetContent(ctx, "/echo?"), `&{{} a }`)
+	})
+}
