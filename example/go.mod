@@ -3,24 +3,25 @@ module github.com/gogf/gf/example
 go 1.20
 
 require (
-	github.com/gogf/gf/contrib/config/apollo/v2 v2.5.4
-	github.com/gogf/gf/contrib/config/consul/v2 v2.5.4
-	github.com/gogf/gf/contrib/config/kubecm/v2 v2.5.4
-	github.com/gogf/gf/contrib/config/nacos/v2 v2.5.4
-	github.com/gogf/gf/contrib/config/polaris/v2 v2.5.4
-	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.5.4
-	github.com/gogf/gf/contrib/nosql/redis/v2 v2.5.4
-	github.com/gogf/gf/contrib/registry/etcd/v2 v2.5.4
-	github.com/gogf/gf/contrib/registry/file/v2 v2.5.4
-	github.com/gogf/gf/contrib/registry/polaris/v2 v2.5.4
-	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.5.4
-	github.com/gogf/gf/contrib/trace/otlpgrpc/v2 v2.5.4
-	github.com/gogf/gf/contrib/trace/otlphttp/v2 v2.5.4
-	github.com/gogf/gf/v2 v2.5.4
+	github.com/gogf/gf/contrib/config/apollo/v2 v2.5.5
+	github.com/gogf/gf/contrib/config/consul/v2 v2.5.5
+	github.com/gogf/gf/contrib/config/kubecm/v2 v2.5.5
+	github.com/gogf/gf/contrib/config/nacos/v2 v2.5.5
+	github.com/gogf/gf/contrib/config/polaris/v2 v2.5.5
+	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.5.5
+	github.com/gogf/gf/contrib/nosql/redis/v2 v2.5.5
+	github.com/gogf/gf/contrib/registry/etcd/v2 v2.5.5
+	github.com/gogf/gf/contrib/registry/file/v2 v2.5.5
+	github.com/gogf/gf/contrib/registry/polaris/v2 v2.5.5
+	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.5.5
+	github.com/gogf/gf/contrib/trace/otlpgrpc/v2 v2.5.5
+	github.com/gogf/gf/contrib/trace/otlphttp/v2 v2.5.5
+	github.com/gogf/gf/v2 v2.5.5
 	github.com/hashicorp/consul/api v1.24.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/nacos-group/nacos-sdk-go v1.1.4
 	github.com/polarismesh/polaris-go v1.5.4
+	golang.org/x/time v0.3.0
 	google.golang.org/grpc v1.58.2
 	google.golang.org/protobuf v1.31.0
 	k8s.io/client-go v0.27.4
@@ -123,7 +124,6 @@ require (
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/term v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
-	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230920204549-e6e6cdab5c13 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20231002182017-d307bd883b97 // indirect

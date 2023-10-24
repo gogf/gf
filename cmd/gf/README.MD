@@ -21,22 +21,24 @@ You can also install `gf` tool using pre-built binaries: <https://github.com/gog
 
 3. Database support
 
-   | DB | support | remarks |
-   | :------: | :------: | :------: |
-   | mysql | yes | - |
-   | mariadb | yes | - |
-   | tidb | yes | - |
-   | mssql | yes | - |
-   | oracle | yes | - |
-   | pgsql | yes | - |
-   | sqlite | yes | - |
-   | clickhouse | no | manually make some changes to the [source codes](./internal/cmd/cmd_gen_dao.go) and do the building. |
-   | dm | no | manually make some changes to the [source codes](./internal/cmd/cmd_gen_dao.go) and do the building. |
+   |     DB     | builtin support |                                                                             remarks                                                                              |
+   |:----------:|:---------------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+   |   mysql    |       yes       |                                                                                -                                                                                 |
+   |  mariadb   |       yes       |                                                                                -                                                                                 |
+   |    tidb    |       yes       |                                                                                -                                                                                 |
+   |   mssql    |       yes       |                                                                                -                                                                                 |
+   |   oracle   |       yes       |                                                                                -                                                                                 |
+   |   pgsql    |       yes       |                                                                                -                                                                                 |
+   |   sqlite   |       yes       |                                                                                -                                                                                 |
+   | sqlitecgo  |       no        | to support sqlite database on 32bit architecture systems, manually add package import to the [source codes](./internal/cmd/cmd_gen_dao.go) and do the building.  |
+   | clickhouse |       no        |                              manually add package import to the [source codes](./internal/cmd/cmd_gen_dao.go) and do the building.                               |
+   |     dm     |       no        |                              manually add package import to the [source codes](./internal/cmd/cmd_gen_dao.go) and do the building.                               |
 
 ## 2) Manually Install
 
 ```shell
-git clone https://github.com/gogf/gf && cd gf/cmd/gf && go install
+go install github.com/gogf/gf/cmd/gf/v2@latest # latest version
+go install github.com/gogf/gf/cmd/gf/v2@v2.5.5 # certain version(should be >= v2.5.5)
 ```
 
 ## 2. Commands
@@ -47,22 +49,24 @@ USAGE
     gf COMMAND [OPTION]
 
 COMMAND
-    env        show current Golang environment variables
-    run        running go codes with hot-compiled-like feature
-    gen        automatically generate go files for dao/do/entity/pb/pbentity
-    tpl        template parsing and building commands
-    init       create and initialize an empty GoFrame project
-    pack       packing any file/directory to a resource file, or a go file
-    build      cross-building go project for lots of platforms
-    docker     build docker image for current GoFrame project
-    install    install gf binary to system (might need root/admin permission)
-    version    show version information of current binary
+   up         upgrade GoFrame version/tool to latest one in current project
+   env        show current Golang environment variables
+   fix        auto fixing codes after upgrading to new GoFrame version
+   run        running go codes with hot-compiled-like feature
+   gen        automatically generate go files for dao/do/entity/pb/pbentity
+   tpl        template parsing and building commands
+   init       create and initialize an empty GoFrame project
+   pack       packing any file/directory to a resource file, or a go file
+   build      cross-building go project for lots of platforms
+   docker     build docker image for current GoFrame project
+   install    install gf binary to system (might need root/admin permission)
+   version    show version information of current binary
 
 OPTION
-    -y, --yes       all yes for all command without prompt ask
-    -v, --version   show version information of current binary
-    -d, --debug     show internal detailed debugging information
-    -h, --help      more information about this command
+   -y, --yes       all yes for all command without prompt ask
+   -v, --version   show version information of current binary
+   -d, --debug     show internal detailed debugging information
+   -h, --help      more information about this command
 
 ADDITIONAL
     Use "gf COMMAND -h" for details about a command.

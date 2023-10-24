@@ -41,7 +41,7 @@ go get -u -v github.com/gogf/gf/v2
 ## cli tool
 
 ```bash
-go install github.com/gogf/gf/cmd/gf/v2
+go install github.com/gogf/gf/cmd/gf/v2@latest
 ```
 
 # Limitation
@@ -49,12 +49,6 @@ go install github.com/gogf/gf/cmd/gf/v2
 ```
 golang version >= 1.18
 ```
-
-# Architecture
-
-<div align=center>
-<img src="https://goframe.org/download/attachments/1114119/arch.png"/>
-</div>
 
 # Documentation
 
