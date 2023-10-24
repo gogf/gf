@@ -14,14 +14,14 @@ type (
 		Title  string `v:"required"`
 	}
 
-	UpdateRes struct{}
+	CreateRes struct{}
 )
 
 type (
-	CreateRes struct{}
-
 	UpdateReq struct {
 		g.Meta `path:"/article/update" method:"post" tags:"ArticleService"`
 		Title  string `v:"required"`
 	}
+
+	UpdateRes struct{}
 )

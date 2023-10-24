@@ -12,16 +12,14 @@ type GetListReq struct {
 	g.Meta `path:"/article/list" method:"get" tags:"ArticleService"`
 }
 
+type GetListRes struct {
+	list []struct{}
+}
+
 type GetOneReq struct {
 	g.Meta `path:"/article/one" method:"get" tags:"ArticleService"`
 }
 
-type (
-	GetListRes struct {
-		list []struct{}
-	}
-
-	GetOneRes struct {
-		one struct{}
-	}
-)
+type GetOneRes struct {
+	one struct{}
+}

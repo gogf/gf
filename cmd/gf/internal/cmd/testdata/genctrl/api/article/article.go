@@ -21,8 +21,6 @@ type IArticleV1 interface {
 type IArticleV2 interface {
 	Update(ctx context.Context, req *v2.UpdateReq) (res *v2.UpdateRes, err error)
 	Create(ctx context.Context, req *v2.CreateReq) (res *v2.CreateRes, err error)
-	GetOne(ctx context.Context, req *v2.GetOneReq) (res *v2.GetOneRes, err error)
-	GetList(ctx context.Context, req *v2.GetListReq) (res *v2.GetListRes, err error)
 }
 
 
