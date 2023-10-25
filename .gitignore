@@ -17,3 +17,4 @@ temp/
 go.work
 go.work.sum
 !cmd/gf/go.work
+/cmd/gf/internal/cmd/testdata/genctrl/api/article/article.go
