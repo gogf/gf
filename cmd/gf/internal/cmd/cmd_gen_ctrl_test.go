@@ -19,9 +19,10 @@ import (
 func Test_Gen_Ctrl_Default(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			path = gfile.Temp(guid.S())
-			in   = genctrl.CGenCtrlInput{
-				SrcFolder:     gtest.DataPath("genctrl", "api"),
+			path      = gfile.Temp(guid.S())
+			apiFolder = gtest.DataPath("genctrl", "api")
+			in        = genctrl.CGenCtrlInput{
+				SrcFolder:     apiFolder,
 				DstFolder:     path,
 				WatchFile:     "",
 				SdkPath:       "",
@@ -43,6 +44,13 @@ func Test_Gen_Ctrl_Default(t *testing.T) {
 		if err != nil {
 			panic(err)
 		}
+
+		// apiInterface files
+		var (
+			genApi       = apiFolder + filepath.FromSlash("/article/article.go")
+			genApiExpect = apiFolder + filepath.FromSlash("/article/article_expect.go.txt")
+		)
+		t.Assert(gfile.GetContents(genApi), gfile.GetContents(genApiExpect))
 
 		// files
 		files, err := gfile.ScanDir(path, "*.go", true)

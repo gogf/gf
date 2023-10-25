@@ -16,7 +16,7 @@ package {Module}
 
 const TemplateGenCtrlControllerNewEmpty = `
 // =================================================================================
-// Code generated and maintained by GoFrame CLI tool. DO NOT EDIT. 
+// Code generated and maintained by GoFrame CLI tool. DO NOT EDIT.
 // =================================================================================
 
 package {Module}
@@ -60,7 +60,7 @@ func (c *{CtrlName}) {MethodName}(ctx context.Context, req *{Version}.{MethodNam
 
 const TemplateGenCtrlApiInterface = `
 // =================================================================================
-// Code generated and maintained by GoFrame CLI tool. DO NOT EDIT. 
+// Code generated and maintained by GoFrame CLI tool. DO NOT EDIT.
 // =================================================================================
 
 package {Module}

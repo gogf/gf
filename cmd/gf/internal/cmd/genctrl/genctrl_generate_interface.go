@@ -50,8 +50,7 @@ func (c *apiInterfaceGenerator) doGenerate(apiModuleFolderPath string, module st
 		moduleFilePath = filepath.FromSlash(gfile.Join(apiModuleFolderPath, fmt.Sprintf(`%s.if.go`, module)))
 	}
 	// all import paths.
-	importPathMap.Set("\t"+`"context"`, 1)
-	importPathMap.Set("\t"+``, 1)
+	importPathMap.Set("\t"+`"context"`+"\n", 1)
 	for _, item := range items {
 		importPathMap.Set(fmt.Sprintf("\t"+`"%s"`, item.Import), 1)
 	}
