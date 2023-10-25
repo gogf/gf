@@ -19,10 +19,10 @@ import (
 type (
 	CGenPb      struct{}
 	CGenPbInput struct {
-		g.Meta `name:"pb" config:"{CGenPbConfig}" brief:"{CGenPbBrief}" eg:"{CGenPbEg}"`
-		Path   string `name:"path" short:"p"  dc:"protobuf file folder path" d:"manifest/protobuf"`
-		Api    string `name:"api"  short:"a"  dc:"output folder path storing generated go files of api" d:"api"`
-		Ctrl   string `name:"ctrl" short:"c"  dc:"output folder path storing generated go files of controller" d:"internal/controller"`
+		g.Meta     `name:"pb" config:"{CGenPbConfig}" brief:"{CGenPbBrief}" eg:"{CGenPbEg}"`
+		Path       string `name:"path" short:"p"  dc:"protobuf file folder path" d:"manifest/protobuf"`
+		OutputApi  string `name:"api"  short:"a"  dc:"output folder path storing generated go files of api" d:"api"`
+		OutputCtrl string `name:"ctrl" short:"c"  dc:"output folder path storing generated go files of controller" d:"internal/controller"`
 	}
 	CGenPbOutput struct{}
 )
@@ -68,20 +68,20 @@ func (c CGenPb) Pb(ctx context.Context, in CGenPbInput) (out *CGenPbOutput, err 
 		}
 	}
 	// output path checks.
-	outputApiPath := gfile.RealPath(in.Api)
+	outputApiPath := gfile.RealPath(in.OutputApi)
 	if outputApiPath == "" {
 		if isParsingPWD {
 			outputApiPath = protoPath
 		} else {
-			mlog.Fatalf(`output api folder "%s" does not exist`, in.Api)
+			mlog.Fatalf(`output api folder "%s" does not exist`, in.OutputApi)
 		}
 	}
-	outputCtrlPath := gfile.RealPath(in.Ctrl)
+	outputCtrlPath := gfile.RealPath(in.OutputCtrl)
 	if outputCtrlPath == "" {
 		if isParsingPWD {
 			outputCtrlPath = ""
 		} else {
-			mlog.Fatalf(`output controller folder "%s" does not exist`, in.Ctrl)
+			mlog.Fatalf(`output controller folder "%s" does not exist`, in.OutputCtrl)
 		}
 	}
 
