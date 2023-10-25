@@ -1,5 +1,5 @@
 // =================================================================================
-// Code generated and maintained by GoFrame CLI tool. DO NOT EDIT. 
+// Code generated and maintained by GoFrame CLI tool. DO NOT EDIT.
 // =================================================================================
 
 package article
@@ -19,4 +19,3 @@ type ControllerV2 struct{}
 func NewV2() article.IArticleV2 {
 	return &ControllerV2{}
 }
-
