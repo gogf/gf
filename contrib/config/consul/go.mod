@@ -3,7 +3,7 @@ module github.com/gogf/gf/contrib/config/consul/v2
 go 1.19
 
 require (
-	github.com/gogf/gf/v2 v2.5.5
+	github.com/gogf/gf/v2 v2.5.6
 	github.com/hashicorp/consul/api v1.24.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
 )
@@ -13,7 +13,7 @@ require (
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/clbanning/mxj/v2 v2.7.0 // indirect
 	github.com/fatih/color v1.15.0 // indirect
-	github.com/fsnotify/fsnotify v1.6.0 // indirect
+	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
@@ -25,7 +25,7 @@ require (
 	github.com/hashicorp/serf v0.10.1 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect

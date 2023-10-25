@@ -3,25 +3,27 @@ module github.com/gogf/gf/example
 go 1.20
 
 require (
-	github.com/gogf/gf/contrib/config/apollo/v2 v2.5.5
-	github.com/gogf/gf/contrib/config/consul/v2 v2.5.5
-	github.com/gogf/gf/contrib/config/kubecm/v2 v2.5.5
-	github.com/gogf/gf/contrib/config/nacos/v2 v2.5.5
-	github.com/gogf/gf/contrib/config/polaris/v2 v2.5.5
-	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.5.5
-	github.com/gogf/gf/contrib/nosql/redis/v2 v2.5.5
-	github.com/gogf/gf/contrib/registry/etcd/v2 v2.5.5
-	github.com/gogf/gf/contrib/registry/file/v2 v2.5.5
-	github.com/gogf/gf/contrib/registry/polaris/v2 v2.5.5
-	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.5.5
-	github.com/gogf/gf/contrib/trace/otlpgrpc/v2 v2.5.5
-	github.com/gogf/gf/contrib/trace/otlphttp/v2 v2.5.5
-	github.com/gogf/gf/v2 v2.5.5
+	github.com/gogf/gf/contrib/config/apollo/v2 v2.5.6
+	github.com/gogf/gf/contrib/config/consul/v2 v2.5.6
+	github.com/gogf/gf/contrib/config/kubecm/v2 v2.5.6
+	github.com/gogf/gf/contrib/config/nacos/v2 v2.5.6
+	github.com/gogf/gf/contrib/config/polaris/v2 v2.5.6
+	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.5.6
+	github.com/gogf/gf/contrib/nosql/redis/v2 v2.5.6
+	github.com/gogf/gf/contrib/registry/etcd/v2 v2.5.6
+	github.com/gogf/gf/contrib/registry/file/v2 v2.5.6
+	github.com/gogf/gf/contrib/registry/nacos/v2 v2.5.6
+	github.com/gogf/gf/contrib/registry/polaris/v2 v2.5.6
+	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.5.6
+	github.com/gogf/gf/contrib/trace/otlpgrpc/v2 v2.5.6
+	github.com/gogf/gf/contrib/trace/otlphttp/v2 v2.5.6
+	github.com/gogf/gf/v2 v2.5.6
 	github.com/hashicorp/consul/api v1.24.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/nacos-group/nacos-sdk-go v1.1.4
-	github.com/polarismesh/polaris-go v1.5.4
-	google.golang.org/grpc v1.58.2
+	github.com/polarismesh/polaris-go v1.5.5
+	golang.org/x/time v0.3.0
+	google.golang.org/grpc v1.59.0
 	google.golang.org/protobuf v1.31.0
 	k8s.io/client-go v0.27.4
 )
@@ -43,7 +45,7 @@ require (
 	github.com/dlclark/regexp2 v1.7.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.9.0 // indirect
 	github.com/fatih/color v1.15.0 // indirect
-	github.com/fsnotify/fsnotify v1.6.0 // indirect
+	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/go-errors/errors v1.0.1 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -52,11 +54,12 @@ require (
 	github.com/go-openapi/swag v0.22.3 // indirect
 	github.com/go-sql-driver/mysql v1.7.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/gnostic v0.5.7-v3refs // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
-	github.com/google/uuid v1.3.0 // indirect
+	github.com/google/uuid v1.3.1 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/grokify/html-strip-tags-go v0.0.1 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.18.0 // indirect
@@ -71,11 +74,12 @@ require (
 	github.com/imdario/mergo v0.3.6 // indirect
 	github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af // indirect
 	github.com/josharian/intern v1.0.0 // indirect
+	github.com/joy999/nacos-sdk-go v0.0.0-20231008093845-7f2f84bc6faa // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
@@ -93,7 +97,7 @@ require (
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.32.1 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
-	github.com/redis/go-redis/v9 v9.0.5 // indirect
+	github.com/redis/go-redis/v9 v9.2.1 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/afero v1.6.0 // indirect
@@ -123,7 +127,6 @@ require (
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/term v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
-	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230920204549-e6e6cdab5c13 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20231002182017-d307bd883b97 // indirect

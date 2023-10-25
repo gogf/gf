@@ -21,10 +21,27 @@ for file in `find . -name go.mod`; do
         fi
     fi
 
+    # package consul needs golang >= v1.19
+    if [ "consul" = $(basename $dirpath) ]; then
+        continue 1
+        if ! go version|grep -qE "go1.19|go1.[2-9][0-9]"; then
+          echo "ignore consul as go version: $(go version)"
+          continue 1
+        fi
+    fi
+
     # package etcd needs golang >= v1.19
     if [ "etcd" = $(basename $dirpath) ]; then
         if ! go version|grep -qE "go1.19|go1.[2-9][0-9]"; then
           echo "ignore etcd as go version: $(go version)"
+          continue 1
+        fi
+    fi
+
+    # package polaris needs golang >= v1.19
+    if [ "polaris" = $(basename $dirpath) ]; then
+        if ! go version|grep -qE "go1.19|go1.[2-9][0-9]"; then
+          echo "ignore polaris as go version: $(go version)"
           continue 1
         fi
     fi

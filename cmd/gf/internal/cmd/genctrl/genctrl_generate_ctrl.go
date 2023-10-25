@@ -8,6 +8,7 @@ package genctrl
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
@@ -64,8 +65,8 @@ func (c *controllerGenerator) doGenerateCtrlNewByModuleAndVersion(
 	dstModuleFolderPath, module, version, importPath string,
 ) (err error) {
 	var (
-		moduleFilePath        = gfile.Join(dstModuleFolderPath, module+".go")
-		moduleFilePathNew     = gfile.Join(dstModuleFolderPath, module+"_new.go")
+		moduleFilePath        = filepath.FromSlash(gfile.Join(dstModuleFolderPath, module+".go"))
+		moduleFilePathNew     = filepath.FromSlash(gfile.Join(dstModuleFolderPath, module+"_new.go"))
 		ctrlName              = fmt.Sprintf(`Controller%s`, gstr.UcFirst(version))
 		interfaceName         = fmt.Sprintf(`%s.I%s%s`, module, gstr.CaseCamel(module), gstr.UcFirst(version))
 		newFuncName           = fmt.Sprintf(`New%s`, gstr.UcFirst(version))
@@ -119,9 +120,9 @@ func (c *controllerGenerator) doGenerateCtrlItem(dstModuleFolderPath string, ite
 	var (
 		methodNameSnake = gstr.CaseSnake(item.MethodName)
 		ctrlName        = fmt.Sprintf(`Controller%s`, gstr.UcFirst(item.Version))
-		methodFilePath  = gfile.Join(dstModuleFolderPath, fmt.Sprintf(
+		methodFilePath  = filepath.FromSlash(gfile.Join(dstModuleFolderPath, fmt.Sprintf(
 			`%s_%s_%s.go`, item.Module, item.Version, methodNameSnake,
-		))
+		)))
 	)
 	var content string
 
