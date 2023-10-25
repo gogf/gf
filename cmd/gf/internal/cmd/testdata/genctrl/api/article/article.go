@@ -1,12 +1,12 @@
 // =================================================================================
-// Code generated and maintained by GoFrame CLI tool. DO NOT EDIT. 
+// Code generated and maintained by GoFrame CLI tool. DO NOT EDIT.
 // =================================================================================
 
 package article
 
 import (
 	"context"
-	
+
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genctrl/api/article/v1"
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genctrl/api/article/v2"
 )
@@ -19,5 +19,3 @@ type IArticleV1 interface {
 type IArticleV2 interface {
 	Create(ctx context.Context, req *v2.CreateReq) (res *v2.CreateRes, err error)
 }
-
-
