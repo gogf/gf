@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/olekukonko/tablewriter"
@@ -106,7 +107,7 @@ type generateDaoIndexInput struct {
 }
 
 func generateDaoIndex(in generateDaoIndexInput) {
-	path := gfile.Join(in.DirPathDao, in.FileName+".go")
+	path := filepath.FromSlash(gfile.Join(in.DirPathDao, in.FileName+".go"))
 	if in.OverwriteDao || !gfile.Exists(path) {
 		indexContent := gstr.ReplaceByMap(
 			getTemplateFromPathOrDefault(in.TplDaoIndexPath, consts.TemplateGenDaoIndexContent),
@@ -136,7 +137,7 @@ type generateDaoInternalInput struct {
 }
 
 func generateDaoInternal(in generateDaoInternalInput) {
-	path := gfile.Join(in.DirPathDaoInternal, in.FileName+".go")
+	path := filepath.FromSlash(gfile.Join(in.DirPathDaoInternal, in.FileName+".go"))
 	modelContent := gstr.ReplaceByMap(
 		getTemplateFromPathOrDefault(in.TplDaoInternalPath, consts.TemplateGenDaoInternalContent),
 		g.MapStrStr{

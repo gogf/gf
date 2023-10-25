@@ -8,6 +8,7 @@ package genctrl
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
@@ -54,7 +55,7 @@ func (c *apiSdkGenerator) Generate(apiModuleApiItems []apiItem, sdkFolderPath st
 func (c *apiSdkGenerator) doGenerateSdkPkgFile(sdkFolderPath string) (err error) {
 	var (
 		pkgName     = gfile.Basename(sdkFolderPath)
-		pkgFilePath = gfile.Join(sdkFolderPath, fmt.Sprintf(`%s.go`, pkgName))
+		pkgFilePath = filepath.FromSlash(gfile.Join(sdkFolderPath, fmt.Sprintf(`%s.go`, pkgName)))
 		fileContent string
 	)
 	if gfile.Exists(pkgFilePath) {
@@ -79,7 +80,7 @@ func (c *apiSdkGenerator) doGenerateSdkIClient(
 		funcName                = gstr.CaseCamel(module) + gstr.UcFirst(version)
 		interfaceName           = fmt.Sprintf(`I%s`, funcName)
 		moduleImportPath        = gstr.Replace(fmt.Sprintf(`"%s"`, gfile.Dir(versionImportPath)), "\\", "/", -1)
-		iClientFilePath         = gfile.Join(sdkFolderPath, fmt.Sprintf(`%s.iclient.go`, pkgName))
+		iClientFilePath         = filepath.FromSlash(gfile.Join(sdkFolderPath, fmt.Sprintf(`%s.iclient.go`, pkgName)))
 		interfaceFuncDefinition = fmt.Sprintf(
 			`%s() %s.%s`,
 			gstr.CaseCamel(module)+gstr.UcFirst(version), module, interfaceName,
@@ -145,9 +146,9 @@ func (c *apiSdkGenerator) doGenerateSdkImplementer(
 		moduleImportPath    = gstr.Replace(gfile.Dir(versionImportPath), "\\", "/", -1)
 		versionPrefix       = ""
 		implementerName     = moduleNameCamel + gstr.UcFirst(version)
-		implementerFilePath = gfile.Join(sdkFolderPath, fmt.Sprintf(
+		implementerFilePath = filepath.FromSlash(gfile.Join(sdkFolderPath, fmt.Sprintf(
 			`%s_%s_%s.go`, pkgName, moduleNameSnake, version,
-		))
+		)))
 	)
 	if sdkNoV1 && version == "v1" {
 		implementerName = moduleNameCamel

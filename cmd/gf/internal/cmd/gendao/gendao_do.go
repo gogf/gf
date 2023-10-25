@@ -9,6 +9,7 @@ package gendao
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/gogf/gf/v2/frame/g"
@@ -22,7 +23,7 @@ import (
 )
 
 func generateDo(ctx context.Context, in CGenDaoInternalInput) {
-	var dirPathDo = gfile.Join(in.Path, in.DoPath)
+	var dirPathDo = filepath.FromSlash(gfile.Join(in.Path, in.DoPath))
 	if in.Clear {
 		doClear(ctx, dirPathDo, false)
 	}
