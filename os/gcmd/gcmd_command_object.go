@@ -144,7 +144,7 @@ func newCommandFromObjectMeta(object interface{}, name string) (command *Command
 	if err = gconv.Scan(metaData, &command); err != nil {
 		return
 	}
-	// Name filed is necessary.
+	// Name field is necessary.
 	if command.Name == "" {
 		if name == "" {
 			err = gerror.Newf(
