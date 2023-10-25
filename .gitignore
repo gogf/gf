@@ -17,4 +17,3 @@ temp/
 go.work
 go.work.sum
 !cmd/gf/go.work
-!cmd/gf/go.work.sum
