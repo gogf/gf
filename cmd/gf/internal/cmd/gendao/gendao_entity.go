@@ -8,6 +8,7 @@ package gendao
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 
 	"github.com/gogf/gf/v2/frame/g"
@@ -33,7 +34,7 @@ func generateEntity(ctx context.Context, in CGenDaoInternalInput) {
 
 		var (
 			newTableName                    = in.NewTableNames[i]
-			entityFilePath                  = gfile.Join(dirPathEntity, gstr.CaseSnake(newTableName)+".go")
+			entityFilePath                  = filepath.FromSlash(gfile.Join(dirPathEntity, gstr.CaseSnake(newTableName)+".go"))
 			structDefinition, appendImports = generateStructDefinition(ctx, generateStructDefinitionInput{
 				CGenDaoInternalInput: in,
 				TableName:            tableName,
