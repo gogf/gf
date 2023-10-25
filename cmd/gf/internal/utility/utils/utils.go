@@ -147,7 +147,6 @@ func GetStructs(filePath string) (structsInfo map[string]string, err error) {
 		fileContent  = gfile.GetContents(filePath)
 		fileSet      = token.NewFileSet()
 		typeSpecList []*ast.TypeSpec
-		buf          bytes.Buffer
 	)
 	structsInfo = make(map[string]string)
 
@@ -175,6 +174,7 @@ func GetStructs(filePath string) (structsInfo map[string]string, err error) {
 			continue
 		}
 
+		var buf bytes.Buffer
 		if err := printer.Fprint(&buf, fileSet, structType); err != nil {
 			return nil, err
 		}
