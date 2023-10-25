@@ -33,7 +33,6 @@ const TemplateGenCtrlControllerNewFunc = `
 type {CtrlName} struct{}
 
 func {NewFuncName}() {InterfaceName} {
-	// You can edit custom logic
 	return &{CtrlName}{}
 }
 
