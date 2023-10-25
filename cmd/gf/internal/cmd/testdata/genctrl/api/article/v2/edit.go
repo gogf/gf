@@ -13,13 +13,11 @@ type CreateReq struct {
 	Title  string `v:"required"`
 }
 
+type CreateRes struct{}
+
+type UpdateReq struct {
+	g.Meta `path:"/article/update" method:"post" tags:"ArticleService"`
+	Title  string `v:"required"`
+}
+
 type UpdateRes struct{}
-
-type (
-	UpdateReq struct {
-		g.Meta `path:"/article/update" method:"post" tags:"ArticleService"`
-		Title  string `v:"required"`
-	}
-
-	CreateRes struct{}
-)
