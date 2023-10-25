@@ -108,7 +108,7 @@ func (c *controllerGenerator) doGenerateCtrlNewByModuleAndVersion(
 			"{NewFuncName}":   newFuncName,
 			"{InterfaceName}": interfaceName,
 		})
-		err = gfile.PutContentsAppend(moduleFilePathNew, gstr.TrimLeft(content))
+		err = gfile.PutContentsAppend(moduleFilePathNew, content)
 		if err != nil {
 			return err
 		}

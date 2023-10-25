@@ -12,7 +12,6 @@ const TemplateGenCtrlControllerEmpty = `
 // =================================================================================
 
 package {Module}
-
 `
 
 const TemplateGenCtrlControllerNewEmpty = `
@@ -25,7 +24,6 @@ package {Module}
 import (
 	{ImportPath}
 )
-
 `
 
 const TemplateGenCtrlControllerNewFunc = `
@@ -34,7 +32,6 @@ type {CtrlName} struct{}
 func {NewFuncName}() {InterfaceName} {
 	return &{CtrlName}{}
 }
-
 `
 
 const TemplateGenCtrlControllerMethodFunc = `
