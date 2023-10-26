@@ -285,7 +285,7 @@ func TestConverter_CustomTimeType_ToPbTime(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			a = CustomGTime{
-				T: gtime.NewFromStrFormat("2023-10-26"),
+				T: gtime.NewFromStrFormat("2023-10-26", "Y-m-d"),
 			}
 			b *CustomPbTime
 		)
@@ -296,18 +296,18 @@ func TestConverter_CustomTimeType_ToPbTime(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		err := gconv.RegisterConverter(func(in gtime.Time) (*timestamppb.Timestamp, error) {
-			return timestamppb.New(in.Time.Local())
+			return timestamppb.New(in.Time.Local()), nil
 		})
 		t.AssertNil(err)
 		err = gconv.RegisterConverter(func(in timestamppb.Timestamp) (*gtime.Time, error) {
-			return gtime.NewFromTime(t.AsTime().Local())
+			return gtime.NewFromTime(in.AsTime().Local()), nil
 		})
 		t.AssertNil(err)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			a = CustomGTime{
-				T: gtime.NewFromStrFormat("2023-10-26"),
+				T: gtime.NewFromStrFormat("2023-10-26", "Y-m-d"),
 			}
 			b *CustomPbTime
 			c *CustomGTime
