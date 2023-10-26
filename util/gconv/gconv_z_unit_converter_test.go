@@ -290,8 +290,9 @@ func TestConverter_CustomTimeType_ToPbTime(t *testing.T) {
 			b *CustomPbTime
 		)
 		err := gconv.Scan(a, &b)
-		t.AssertNE(err, nil)
-		t.Assert(b, nil)
+		t.AssertNil(err)
+		t.AssertNE(b, nil)
+		t.Assert(b.T, nil)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -315,10 +316,12 @@ func TestConverter_CustomTimeType_ToPbTime(t *testing.T) {
 		err := gconv.Scan(a, &b)
 		t.AssertNil(err)
 		t.AssertNE(b, nil)
+		t.AssertNE(b.T, nil)
 
 		err = gconv.Scan(b, &c)
 		t.AssertNil(err)
 		t.AssertNE(c, nil)
+		t.AssertNE(c.T, nil)
 		t.AssertEQ(a.T.Timestamp(), c.T.Timestamp())
 	})
 }
