@@ -530,10 +530,10 @@ func ExampleCaseCamel() {
 	// HelloWorld
 }
 
-func ExampleCaseCamelLower() {
+func ExampleCaseLowerCamel() {
 	var (
 		str    = `hello world`
-		result = gstr.CaseCamelLower(str)
+		result = gstr.CaseLowerCamel(str)
 	)
 	fmt.Println(result)
 

@@ -20,15 +20,15 @@ import (
 // internal{TplTableNameCamelCase}Dao is internal type for wrapping internal DAO implements.
 type internal{TplTableNameCamelCase}Dao = *internal.{TplTableNameCamelCase}Dao
 
-// {TplTableNameCamelLowerCase}Dao is the data access object for table {TplTableName}.
+// {TplTableNameLowerCamelCase}Dao is the data access object for table {TplTableName}.
 // You can define custom methods on it to extend its functionality as you wish.
-type {TplTableNameCamelLowerCase}Dao struct {
+type {TplTableNameLowerCamelCase}Dao struct {
 	internal{TplTableNameCamelCase}Dao
 }
 
 var (
 	// {TplTableNameCamelCase} is globally public accessible object for table {TplTableName} operations.
-	{TplTableNameCamelCase} = {TplTableNameCamelLowerCase}Dao{
+	{TplTableNameCamelCase} = {TplTableNameLowerCamelCase}Dao{
 		internal.New{TplTableNameCamelCase}Dao(),
 	}
 )
@@ -63,8 +63,8 @@ type {TplTableNameCamelCase}Columns struct {
 	{TplColumnDefine}
 }
 
-// {TplTableNameCamelLowerCase}Columns holds the columns for table {TplTableName}.
-var {TplTableNameCamelLowerCase}Columns = {TplTableNameCamelCase}Columns{
+// {TplTableNameLowerCamelCase}Columns holds the columns for table {TplTableName}.
+var {TplTableNameLowerCamelCase}Columns = {TplTableNameCamelCase}Columns{
 	{TplColumnNames}
 }
 
@@ -73,7 +73,7 @@ func New{TplTableNameCamelCase}Dao() *{TplTableNameCamelCase}Dao {
 	return &{TplTableNameCamelCase}Dao{
 		group:   "{TplGroupName}",
 		table:   "{TplTableName}",
-		columns: {TplTableNameCamelLowerCase}Columns,
+		columns: {TplTableNameLowerCamelCase}Columns,
 	}
 }
 

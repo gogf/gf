@@ -14,7 +14,7 @@
 //   | CaseDelimited(s, '.')             | any.kind.of.string |
 //   | CaseDelimitedScreaming(s, '.')    | ANY.KIND.OF.STRING |
 //   | CaseCamel(s)                      | AnyKindOfString    |
-//   | CaseCamelLower(s)                 | anyKindOfString    |
+//   | CaseLowerCamel(s)                 | anyKindOfString    |
 
 package gstr
 
@@ -23,19 +23,74 @@ import (
 	"strings"
 )
 
+// CaseName defines the case name for Case function.
+const (
+	Camel           string = "Camel"
+	LowerCamel      string = "LowerCamel"
+	Snake           string = "Snake"
+	SnakeFirstUpper string = "SnakeFirstUpper"
+	SnakeScreaming  string = "SnakeScreaming"
+	Kebab           string = "Kebab"
+	KebabScreaming  string = "KebabScreaming"
+	Lower           string = "Lower"
+)
+
+const (
+	camelLower string = "CamelLower" // Deprecated
+)
+
 var (
 	numberSequence      = regexp.MustCompile(`([a-zA-Z]{0,1})(\d+)([a-zA-Z]{0,1})`)
 	firstCamelCaseStart = regexp.MustCompile(`([A-Z]+)([A-Z]?[_a-z\d]+)|$`)
 	firstCamelCaseEnd   = regexp.MustCompile(`([\w\W]*?)([_]?[A-Z]+)$`)
 )
 
+// CaseConvert converts a string to the specified naming convention.
+func CaseConvert(s string, caseName string, defaultCaseName ...string) string {
+	if s == "" || caseName == "" {
+		return s
+	}
+
+	switch ToLower(caseName) {
+	case ToLower(Camel):
+		return CaseCamel(s)
+
+	case ToLower(LowerCamel), ToLower(camelLower):
+		return CaseLowerCamel(s)
+
+	case ToLower(Kebab):
+		return CaseKebab(s)
+
+	case ToLower(KebabScreaming):
+		return CaseKebabScreaming(s)
+
+	case ToLower(Snake):
+		return CaseSnake(s)
+
+	case ToLower(SnakeFirstUpper):
+		return CaseSnakeFirstUpper(s)
+
+	case ToLower(SnakeScreaming):
+		return CaseSnakeScreaming(s)
+
+	case ToLower(Lower):
+		return ToLower(s)
+
+	default:
+		if len(defaultCaseName) > 0 {
+			return CaseConvert(s, defaultCaseName[0])
+		}
+		return s
+	}
+}
+
 // CaseCamel converts a string to CamelCase.
 func CaseCamel(s string) string {
 	return toCamelInitCase(s, true)
 }
 
-// CaseCamelLower converts a string to lowerCamelCase.
-func CaseCamelLower(s string) string {
+// CaseLowerCamel converts a string to lowerCamelCase.
+func CaseLowerCamel(s string) string {
 	if s == "" {
 		return s
 	}
@@ -43,6 +98,12 @@ func CaseCamelLower(s string) string {
 		s = strings.ToLower(string(r)) + s[1:]
 	}
 	return toCamelInitCase(s, false)
+}
+
+// Deprecated
+// CaseCamelLower converts a string to lowerCamelCase.
+func CaseCamelLower(s string) string {
+	return CaseLowerCamel(s)
 }
 
 // CaseSnake converts a string to snake_case.

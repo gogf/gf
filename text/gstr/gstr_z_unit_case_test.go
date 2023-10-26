@@ -36,7 +36,7 @@ func Test_CaseCamel(t *testing.T) {
 	}
 }
 
-func Test_CaseCamelLower(t *testing.T) {
+func Test_CaseLowerCamel(t *testing.T) {
 	cases := [][]string{
 		{"foo-bar", "fooBar"},
 		{"TestCase", "testCase"},
@@ -46,7 +46,7 @@ func Test_CaseCamelLower(t *testing.T) {
 	for _, i := range cases {
 		in := i[0]
 		out := i[1]
-		result := gstr.CaseCamelLower(in)
+		result := gstr.CaseLowerCamel(in)
 		if result != out {
 			t.Error("'" + result + "' != '" + out + "'")
 		}

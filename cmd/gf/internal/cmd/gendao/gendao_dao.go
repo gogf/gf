@@ -61,7 +61,7 @@ func generateDaoSingle(ctx context.Context, in generateDaoSingleInput) {
 	}
 	var (
 		tableNameCamelCase      = gstr.CaseCamel(in.NewTableName)
-		tableNameCamelLowerCase = gstr.CaseCamelLower(in.NewTableName)
+		tableNameLowerCamelCase = gstr.CaseLowerCamel(in.NewTableName)
 		tableNameSnakeCase      = gstr.CaseSnake(in.NewTableName)
 		importPrefix            = in.ImportPrefix
 	)
@@ -82,7 +82,7 @@ func generateDaoSingle(ctx context.Context, in generateDaoSingleInput) {
 	generateDaoIndex(generateDaoIndexInput{
 		generateDaoSingleInput:  in,
 		TableNameCamelCase:      tableNameCamelCase,
-		TableNameCamelLowerCase: tableNameCamelLowerCase,
+		TableNameLowerCamelCase: tableNameLowerCamelCase,
 		ImportPrefix:            importPrefix,
 		FileName:                fileName,
 	})
@@ -91,7 +91,7 @@ func generateDaoSingle(ctx context.Context, in generateDaoSingleInput) {
 	generateDaoInternal(generateDaoInternalInput{
 		generateDaoSingleInput:  in,
 		TableNameCamelCase:      tableNameCamelCase,
-		TableNameCamelLowerCase: tableNameCamelLowerCase,
+		TableNameLowerCamelCase: tableNameLowerCamelCase,
 		ImportPrefix:            importPrefix,
 		FileName:                fileName,
 		FieldMap:                fieldMap,
@@ -101,7 +101,7 @@ func generateDaoSingle(ctx context.Context, in generateDaoSingleInput) {
 type generateDaoIndexInput struct {
 	generateDaoSingleInput
 	TableNameCamelCase      string
-	TableNameCamelLowerCase string
+	TableNameLowerCamelCase string
 	ImportPrefix            string
 	FileName                string
 }
@@ -115,7 +115,7 @@ func generateDaoIndex(in generateDaoIndexInput) {
 				tplVarImportPrefix:            in.ImportPrefix,
 				tplVarTableName:               in.TableName,
 				tplVarTableNameCamelCase:      in.TableNameCamelCase,
-				tplVarTableNameCamelLowerCase: in.TableNameCamelLowerCase,
+				tplVarTableNameLowerCamelCase: in.TableNameLowerCamelCase,
 			})
 		indexContent = replaceDefaultVar(in.CGenDaoInternalInput, indexContent)
 		if err := gfile.PutContents(path, strings.TrimSpace(indexContent)); err != nil {
@@ -130,7 +130,7 @@ func generateDaoIndex(in generateDaoIndexInput) {
 type generateDaoInternalInput struct {
 	generateDaoSingleInput
 	TableNameCamelCase      string
-	TableNameCamelLowerCase string
+	TableNameLowerCamelCase string
 	ImportPrefix            string
 	FileName                string
 	FieldMap                map[string]*gdb.TableField
@@ -145,7 +145,7 @@ func generateDaoInternal(in generateDaoInternalInput) {
 			tplVarTableName:               in.TableName,
 			tplVarGroupName:               in.Group,
 			tplVarTableNameCamelCase:      in.TableNameCamelCase,
-			tplVarTableNameCamelLowerCase: in.TableNameCamelLowerCase,
+			tplVarTableNameLowerCamelCase: in.TableNameLowerCamelCase,
 			tplVarColumnDefine:            gstr.Trim(generateColumnDefinitionForDao(in.FieldMap)),
 			tplVarColumnNames:             gstr.Trim(generateColumnNamesForDao(in.FieldMap)),
 		})

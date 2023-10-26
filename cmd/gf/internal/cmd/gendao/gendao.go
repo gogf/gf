@@ -9,8 +9,9 @@ package gendao
 import (
 	"context"
 	"fmt"
-	"golang.org/x/mod/modfile"
 	"strings"
+
+	"golang.org/x/mod/modfile"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 	"github.com/gogf/gf/v2/container/garray"
@@ -46,7 +47,7 @@ CONFIGURATION SUPPORT
 		dao:
 		- link:     "mysql:root:12345678@tcp(127.0.0.1:3306)/test"
 		  tables:   "order,products"
-		  jsonCase: "CamelLower"
+		  jsonCase: "LowerCamel"
 		- link:   "mysql:root:12345678@tcp(127.0.0.1:3306)/primary"
 		  path:   "./my-app"
 		  prefix: "primary_"
@@ -88,7 +89,7 @@ generated json tag case for model struct, cases are as follows:
 | Case            | Example            |
 |---------------- |--------------------|
 | Camel           | AnyKindOfString    |
-| CamelLower      | anyKindOfString    | default
+| LowerCamel      | anyKindOfString    | default
 | Snake           | any_kind_of_string |
 | SnakeScreaming  | ANY_KIND_OF_STRING |
 | SnakeFirstUpper | rgb_code_md5       |
@@ -102,7 +103,7 @@ generated json tag case for model struct, cases are as follows:
 
 	tplVarTableName               = `{TplTableName}`
 	tplVarTableNameCamelCase      = `{TplTableNameCamelCase}`
-	tplVarTableNameCamelLowerCase = `{TplTableNameCamelLowerCase}`
+	tplVarTableNameLowerCamelCase = `{TplTableNameLowerCamelCase}`
 	tplVarPackageImports          = `{TplPackageImports}`
 	tplVarImportPrefix            = `{TplImportPrefix}`
 	tplVarStructDefine            = `{TplStructDefine}`
@@ -179,7 +180,7 @@ type (
 		Group              string `name:"group"               short:"g"  brief:"{CGenDaoBriefGroup}" d:"default"`
 		Prefix             string `name:"prefix"              short:"f"  brief:"{CGenDaoBriefPrefix}"`
 		RemovePrefix       string `name:"removePrefix"        short:"r"  brief:"{CGenDaoBriefRemovePrefix}"`
-		JsonCase           string `name:"jsonCase"            short:"j"  brief:"{CGenDaoBriefJsonCase}" d:"CamelLower"`
+		JsonCase           string `name:"jsonCase"            short:"j"  brief:"{CGenDaoBriefJsonCase}" d:"LowerCamel"`
 		ImportPrefix       string `name:"importPrefix"        short:"i"  brief:"{CGenDaoBriefImportPrefix}"`
 		DaoPath            string `name:"daoPath"             short:"d"  brief:"{CGenDaoBriefDaoPath}" d:"dao"`
 		DoPath             string `name:"doPath"              short:"o"  brief:"{CGenDaoBriefDoPath}" d:"model/do"`

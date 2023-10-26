@@ -97,7 +97,7 @@ generated json tag case for model struct, cases are as follows:
 | Case            | Example            |
 |---------------- |--------------------|
 | Camel           | AnyKindOfString    | 
-| CamelLower      | anyKindOfString    | default
+| LowerCamel      | anyKindOfString    | default
 | Snake           | any_kind_of_string |
 | SnakeScreaming  | ANY_KIND_OF_STRING |
 | SnakeFirstUpper | rgb_code_md5       |
@@ -128,7 +128,7 @@ type commandBuildInput struct {
 	Extra    string `short:"e" name:"extra"    brief:"extra custom \"go build\" options"`
 	Mod      string `short:"m" name:"mod"      brief:"like \"-mod\" option of \"go build\", use \"-m none\" to disable go module"`
 	Cgo      bool   `short:"c" name:"cgo"      brief:"enable or disable cgo feature, it's disabled in default" orphan:"true"`
-	JsonCase string `short:"j" name:"jsonCase" brief:"{commandGenDaoBriefJsonCase}" d:"CamelLower"`
+	JsonCase string `short:"j" name:"jsonCase" brief:"{commandGenDaoBriefJsonCase}" d:"LowerCamel"`
 	Pack     string `name:"pack" brief:"{commandBuildBriefPack}"`
 }
 
