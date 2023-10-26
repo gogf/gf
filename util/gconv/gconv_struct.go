@@ -377,6 +377,12 @@ func bindVarToStructAttr(structReflectValue reflect.Value, attrName string, valu
 	if empty.IsNil(value) {
 		structFieldValue.Set(reflect.Zero(structFieldValue.Type()))
 	} else {
+		// Try to call custom converter.
+		// Issue: https://github.com/gogf/gf/issues/3099
+		if ok, err := callCustomConverter(reflect.ValueOf(value), structFieldValue); ok {
+			return err
+		}
+
 		// Special handling for certain types:
 		// - Overwrite the default type converting logic of stdlib for time.Time/*time.Time.
 		var structFieldTypeName = structFieldValue.Type().String()
@@ -397,11 +403,6 @@ func bindVarToStructAttr(structReflectValue reflect.Value, attrName string, valu
 				ReferValue: structFieldValue,
 			})
 			return
-		}
-
-		// Try to call custom converter.
-		if ok, err := callCustomConverter(reflect.ValueOf(value), structFieldValue); ok {
-			return err
 		}
 
 		// Common interface check.

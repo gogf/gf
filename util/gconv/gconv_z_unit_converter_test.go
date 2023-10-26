@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestConverter_Struct(t *testing.T) {
@@ -270,5 +271,54 @@ func TestConverter_CustomBasicType_ToStruct(t *testing.T) {
 		t.AssertNil(err)
 		t.AssertNE(b, nil)
 		t.Assert(b.S, a)
+	})
+}
+
+// fix: https://github.com/gogf/gf/issues/3099
+func TestConverter_CustomTimeType_ToPbTime(t *testing.T) {
+	type CustomGTime struct {
+		T *gtime.Time
+	}
+	type CustomPbTime struct {
+		T *timestamppb.Timestamp
+	}
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			a = CustomGTime{
+				T: gtime.NewFromStrFormat("2023-10-26"),
+			}
+			b *CustomPbTime
+		)
+		err := gconv.Scan(a, &b)
+		t.AssertNE(err, nil)
+		t.Assert(b, nil)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		err := gconv.RegisterConverter(func(in gtime.Time) (*timestamppb.Timestamp, error) {
+			return timestamppb.New(in.Time.Local())
+		})
+		t.AssertNil(err)
+		err = gconv.RegisterConverter(func(in timestamppb.Timestamp) (*gtime.Time, error) {
+			return gtime.NewFromTime(t.AsTime().Local())
+		})
+		t.AssertNil(err)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			a = CustomGTime{
+				T: gtime.NewFromStrFormat("2023-10-26"),
+			}
+			b *CustomPbTime
+			c *CustomGTime
+		)
+		err := gconv.Scan(a, &b)
+		t.AssertNil(err)
+		t.AssertNE(b, nil)
+
+		err = gconv.Scan(b, &c)
+		t.AssertNil(err)
+		t.AssertNE(c, nil)
+		t.AssertEQ(a.T.Timestamp(), c.T.Timestamp())
 	})
 }
