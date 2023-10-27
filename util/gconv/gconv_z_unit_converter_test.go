@@ -14,7 +14,6 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestConverter_Struct(t *testing.T) {
@@ -275,12 +274,15 @@ func TestConverter_CustomBasicType_ToStruct(t *testing.T) {
 }
 
 // fix: https://github.com/gogf/gf/issues/3099
-func TestConverter_CustomTimeType_ToPbTime(t *testing.T) {
+func TestConverter_CustomTimeType_ToStruct(t *testing.T) {
+	type timestamppb struct {
+		S string
+	}
 	type CustomGTime struct {
 		T *gtime.Time
 	}
 	type CustomPbTime struct {
-		T *timestamppb.Timestamp
+		T *timestamppb
 	}
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -292,16 +294,18 @@ func TestConverter_CustomTimeType_ToPbTime(t *testing.T) {
 		err := gconv.Scan(a, &b)
 		t.AssertNil(err)
 		t.AssertNE(b, nil)
-		t.Assert(b.T, nil)
+		t.Assert(b.T.S, "")
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		err := gconv.RegisterConverter(func(in gtime.Time) (*timestamppb.Timestamp, error) {
-			return timestamppb.New(in.Time.Local()), nil
+		err := gconv.RegisterConverter(func(in gtime.Time) (*timestamppb, error) {
+			return &timestamppb{
+				S: in.Local().Format("Y-m-d"),
+			}, nil
 		})
 		t.AssertNil(err)
-		err = gconv.RegisterConverter(func(in timestamppb.Timestamp) (*gtime.Time, error) {
-			return gtime.NewFromTime(in.AsTime().Local()), nil
+		err = gconv.RegisterConverter(func(in timestamppb) (*gtime.Time, error) {
+			return gtime.NewFromStr(in.S), nil
 		})
 		t.AssertNil(err)
 	})
