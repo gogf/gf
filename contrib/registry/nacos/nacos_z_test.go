@@ -130,9 +130,15 @@ func TestWatch(t *testing.T) {
 
 		var latestProceedResult atomic.Value
 		g.Go(ctx, func(ctx context.Context) {
-			res, err := watcher.Proceed()
-			t.AssertNil(err)
-			latestProceedResult.Store(res)
+			var (
+				err error
+				res []gsvc.Service
+			)
+			for err == nil {
+				res, err = watcher.Proceed()
+				t.AssertNil(err)
+				latestProceedResult.Store(res)
+			}
 		}, func(ctx context.Context, exception error) {
 			t.Fatal(exception)
 		})
