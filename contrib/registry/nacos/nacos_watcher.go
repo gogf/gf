@@ -9,6 +9,8 @@ package nacos
 import (
 	"context"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/joy999/nacos-sdk-go/model"
 )
@@ -38,23 +40,16 @@ func newWatcher(ctx context.Context) *Watcher {
 // Proceed proceeds watch in blocking way.
 // It returns all complete services that watched by `key` if any change.
 func (w *Watcher) Proceed() (services []gsvc.Service, err error) {
-	n := len(w.event)
-	servicesMap := map[string]gsvc.Service{}
-	for i := 0; i < n; i++ {
-		e := <-w.event
-		if e.Err != nil {
-			err = e.Err
-			return
-		}
-		newServices := NewServicesFromInstances(e.Services)
-		for _, s := range newServices {
-			servicesMap[s.GetName()] = s
-		}
+	e, ok := <-w.event
+	if !ok || e == nil {
+		err = gerror.NewCode(gcode.CodeNil)
+		return
 	}
-	services = make([]gsvc.Service, 0, len(servicesMap))
-	for _, s := range servicesMap {
-		services = append(services, s)
+	if e.Err != nil {
+		err = e.Err
+		return
 	}
+	services = NewServicesFromInstances(e.Services)
 	return
 }
 
