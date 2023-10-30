@@ -7,6 +7,7 @@
 package gconv
 
 import (
+	. "encoding/json"
 	"reflect"
 	"strings"
 
@@ -380,6 +381,12 @@ func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) in
 						// as it might be changed from pointer to struct.
 						rvInterface = rvField.Interface()
 					)
+
+					if _, ok := rvField.Interface().(Marshaler); ok {
+						dataMap[mapKey] = rvField.Interface()
+						return dataMap
+					}
+
 					switch {
 					case hasNoTag && rtField.Anonymous:
 						// It means this attribute field has no tag.

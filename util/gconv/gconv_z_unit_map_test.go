@@ -8,6 +8,7 @@ package gconv_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"gopkg.in/yaml.v3"
@@ -618,5 +619,29 @@ func TestMapWithJsonOmitEmpty(t *testing.T) {
 			Value: 1,
 		}
 		t.Assert(gconv.Map(s), g.Map{"Value": 1})
+	})
+}
+
+// Issue3108String
+type Issue3108String struct {
+	Name string
+}
+
+func (i Issue3108String) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf(`"[%s]"`, i.Name)), nil
+}
+
+func Test_Issue3108(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Issue3108 struct {
+			MyName Issue3108String `json:"my_name"`
+		}
+		obj := &Issue3108{MyName: Issue3108String{Name: "test"}}
+
+		converted := gconv.MapDeep(obj)
+		jsonData, err := json.Marshal(converted)
+
+		t.AssertNil(err)
+		t.Assert(string(jsonData), `{"my_name":"[test]"}`)
 	})
 }

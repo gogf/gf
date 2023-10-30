@@ -8,6 +8,8 @@ package gjson_test
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/gogf/gf/v2/container/garray"
@@ -345,5 +347,33 @@ func Test_Set_WithEmptyStruct(t *testing.T) {
 		j := gjson.New(&struct{}{})
 		t.AssertNil(j.Set("aa", "123"))
 		t.Assert(j.MustToJsonString(), `{"aa":"123"}`)
+	})
+}
+
+// Issue3108String
+type Issue3108String struct {
+	Name string
+}
+
+func (i Issue3108String) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf(`"[%s]"`, i.Name)), nil
+}
+
+func Test_Issue3108(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Issue3108 struct {
+			MyName Issue3108String `json:"my_name"`
+		}
+		obj := &Issue3108{MyName: Issue3108String{Name: "test"}}
+
+		b, err := json.Marshal(obj)
+		t.AssertNil(err)
+		t.Log(string(b))
+		t.Assert(string(b), `{"my_name":"[test]"}`)
+
+		j := gjson.New(obj)
+		jb, err := j.ToJson()
+		t.AssertNil(err)
+		t.Assert(string(jb), `{"my_name":"[test]"}`)
 	})
 }
