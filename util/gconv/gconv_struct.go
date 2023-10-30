@@ -379,14 +379,16 @@ func bindVarToStructAttr(structReflectValue reflect.Value, attrName string, valu
 	} else {
 		// Try to call custom converter.
 		// Issue: https://github.com/gogf/gf/issues/3099
-		if reflectValue, ok := value.(reflect.Value); ok {
-			if ok, err := callCustomConverter(reflectValue, structFieldValue); ok {
-				return err
-			}
-		} else {
-			if ok, err := callCustomConverter(reflect.ValueOf(value), structFieldValue); ok {
-				return err
-			}
+		var (
+			customConverterInput reflect.Value
+			ok                   bool
+		)
+		if customConverterInput, ok = value.(reflect.Value); !ok {
+			customConverterInput = reflect.ValueOf(value)
+		}
+
+		if ok, err = callCustomConverter(customConverterInput, structFieldValue); ok || err != nil {
+			return
 		}
 
 		// Special handling for certain types:
@@ -412,7 +414,6 @@ func bindVarToStructAttr(structReflectValue reflect.Value, attrName string, valu
 		}
 
 		// Common interface check.
-		var ok bool
 		if err, ok = bindVarToReflectValueWithInterfaceCheck(structFieldValue, value); ok {
 			return err
 		}
