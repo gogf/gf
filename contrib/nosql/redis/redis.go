@@ -61,6 +61,7 @@ func New(config *gredis.Config) *Redis {
 		WriteTimeout:    config.WriteTimeout,
 		MasterName:      config.MasterName,
 		TLSConfig:       config.TLSConfig,
+		Protocol:        config.Protocol,
 	}
 
 	var client redis.UniversalClient
