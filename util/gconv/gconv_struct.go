@@ -414,8 +414,8 @@ func bindVarToStructAttr(structReflectValue reflect.Value, attrName string, valu
 		}
 
 		// Common interface check.
-		if err, ok = bindVarToReflectValueWithInterfaceCheck(structFieldValue, value); ok || err != nil {
-			return
+		if err, ok = bindVarToReflectValueWithInterfaceCheck(structFieldValue, value); ok {
+			return err
 		}
 
 		// Default converting.
