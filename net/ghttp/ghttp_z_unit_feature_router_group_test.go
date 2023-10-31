@@ -7,13 +7,16 @@
 package ghttp_test
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 	"time"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/guid"
 )
 
@@ -175,5 +178,37 @@ func Test_Router_Group_Map(t *testing.T) {
 
 		t.Assert(c.GetContent(ctx, "/test"), "get")
 		t.Assert(c.PostContent(ctx, "/test"), "post")
+	})
+}
+
+func Test_Router_OverWritten(t *testing.T) {
+	var (
+		s      = g.Server(guid.S())
+		obj    = new(GroupObject)
+		buf    = bytes.NewBuffer(nil)
+		logger = glog.NewWithWriter(buf)
+	)
+	logger.SetStdoutPrint(false)
+	s.SetLogger(logger)
+	s.SetRouteOverWrite(true)
+	s.Group("/api", func(group *ghttp.RouterGroup) {
+		group.ALLMap(g.Map{
+			"/obj": obj,
+		})
+		group.ALLMap(g.Map{
+			"/obj": obj,
+		})
+	})
+	s.Start()
+	defer s.Shutdown()
+
+	dumpContent := buf.String()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.Count(dumpContent, `/api/obj `), 1)
+		t.Assert(gstr.Count(dumpContent, `/api/obj/index`), 1)
+		t.Assert(gstr.Count(dumpContent, `/api/obj/show`), 1)
+		t.Assert(gstr.Count(dumpContent, `/api/obj/delete`), 1)
 	})
 }
