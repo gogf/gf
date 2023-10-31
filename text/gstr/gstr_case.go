@@ -23,7 +23,7 @@ import (
 	"strings"
 )
 
-// CaseName defines the case name for Case function.
+// The case name for Case function.
 const (
 	Camel           string = "Camel"
 	CamelLower      string = "CamelLower"
