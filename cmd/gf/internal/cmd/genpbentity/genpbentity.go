@@ -198,7 +198,7 @@ func doGenPbEntityForArray(ctx context.Context, index int, in CGenPbEntityInput)
 		if len(match) == 3 {
 			gdb.AddConfigNode(tempGroup, gdb.ConfigNode{
 				Type: gstr.Trim(match[1]),
-				Link: gstr.Trim(match[2]),
+				Link: in.Link,
 			})
 			db, _ = gdb.Instance(tempGroup)
 		}
