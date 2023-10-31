@@ -12,8 +12,6 @@ import (
 	"database/sql"
 	"fmt"
 	"net/url"
-	"reflect"
-	"strconv"
 	"strings"
 	"time"
 
@@ -303,6 +301,8 @@ func parseValue(listOne gdb.Map, char struct {
 	duplicateKey string
 	keys         []string
 }) (insertKeys []string, insertValues []string, updateValues []string, queryValues []string) {
+	g.Dump("parseValue list:", listOne)
+	g.Dump("parseValue char:", char)
 	for _, column := range char.keys {
 		if listOne[column] == nil {
 			// remove unassigned struct object
@@ -337,28 +337,37 @@ func parseUnion(list gdb.List, char struct {
 	duplicateKey string
 	keys         []string
 }) (unionValues []string) {
+	g.Dump("parseUnion list:", list)
+	g.Dump("parseUnion char:", char)
 	for _, mapper := range list {
+		g.Dump("parseUnion mapper:", mapper)
+
 		var saveValue []string
 		for _, column := range char.keys {
 			if mapper[column] == nil {
 				continue
 			}
-			va := reflect.ValueOf(mapper[column])
-			ty := reflect.TypeOf(mapper[column])
-			switch ty.Kind() {
-			case reflect.String:
-				saveValue = append(saveValue, char.valueCharL+va.String()+char.valueCharR)
+			// va := reflect.ValueOf(mapper[column])
+			// ty := reflect.TypeOf(mapper[column])
+			// switch ty.Kind() {
+			// case reflect.String:
+			// 	saveValue = append(saveValue, char.valueCharL+va.String()+char.valueCharR)
 
-			case reflect.Int:
-				saveValue = append(saveValue, strconv.FormatInt(va.Int(), 10))
+			// case reflect.Int:
+			// 	saveValue = append(saveValue, strconv.FormatInt(va.Int(), 10))
 
-			case reflect.Int64:
-				saveValue = append(saveValue, strconv.FormatInt(va.Int(), 10))
+			// case reflect.Int64:
+			// 	saveValue = append(saveValue, strconv.FormatInt(va.Int(), 10))
 
-			default:
-				// The fish has no chance getting here.
-				// Nothing to do.
-			}
+			// default:
+			// 	// The fish has no chance getting here.
+			// 	// Nothing to do.
+			// }
+			saveValue = append(saveValue,
+				fmt.Sprintf(
+					char.valueCharL+"%s"+char.valueCharR,
+					gconv.String(mapper[column]),
+				))
 		}
 		unionValues = append(
 			unionValues,
@@ -395,3 +404,4 @@ COMMIT;
 		insertKeyStr, insertValueStr, updateValueStr,
 	)
 }
+
