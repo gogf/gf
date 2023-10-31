@@ -39,7 +39,7 @@ type (
 		Prefix       string `name:"prefix"       short:"f" brief:"{CGenPbEntityBriefPrefix}"`
 		RemovePrefix string `name:"removePrefix" short:"r" brief:"{CGenPbEntityBriefRemovePrefix}"`
 		NameCase     string `name:"nameCase"     short:"n" brief:"{CGenPbEntityBriefNameCase}" d:"Camel"`
-		JsonCase     string `name:"jsonCase"     short:"j" brief:"{CGenPbEntityBriefJsonCase}" d:"LowerCamel"`
+		JsonCase     string `name:"jsonCase"     short:"j" brief:"{CGenPbEntityBriefJsonCase}" d:"CamelLower"`
 		Option       string `name:"option"       short:"o" brief:"{CGenPbEntityBriefOption}"`
 	}
 	CGenPbEntityOutput struct{}
@@ -104,7 +104,7 @@ case for message attribute names, default is "Camel":
 | Case            | Example            |
 |---------------- |--------------------|
 | Camel           | AnyKindOfString    | 
-| LowerCamel      | anyKindOfString    | default
+| CamelLower      | anyKindOfString    | default
 | Snake           | any_kind_of_string |
 | SnakeScreaming  | ANY_KIND_OF_STRING |
 | SnakeFirstUpper | rgb_code_md5       |
@@ -113,7 +113,7 @@ case for message attribute names, default is "Camel":
 `
 
 	CGenPbEntityBriefJsonCase = `
-case for message json tag, cases are the same as "nameCase", default "LowerCamel".
+case for message json tag, cases are the same as "nameCase", default "CamelLower".
 set it to "none" to ignore json tag generating.
 `
 )
@@ -372,8 +372,8 @@ func formatCase(str, caseStr string) string {
 	case gstr.ToLower("Camel"):
 		return gstr.CaseCamel(str)
 
-	case gstr.ToLower("LowerCamel"):
-		return gstr.CaseLowerCamel(str)
+	case gstr.ToLower("CamelLower"):
+		return gstr.CaseCamelLower(str)
 
 	case gstr.ToLower("Kebab"):
 		return gstr.CaseKebab(str)

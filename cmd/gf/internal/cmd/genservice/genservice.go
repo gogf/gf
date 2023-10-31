@@ -41,7 +41,7 @@ destination file name storing automatically generated go files, cases are as fol
 |---------------- |--------------------|
 | Lower           | anykindofstring    |
 | Camel           | AnyKindOfString    |
-| LowerCamel      | anyKindOfString    |
+| CamelLower      | anyKindOfString    |
 | Snake           | any_kind_of_string | default
 | SnakeScreaming  | ANY_KIND_OF_STRING |
 | SnakeFirstUpper | rgb_code_md5       |

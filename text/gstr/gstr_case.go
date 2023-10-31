@@ -14,7 +14,7 @@
 //   | CaseDelimited(s, '.')             | any.kind.of.string |
 //   | CaseDelimitedScreaming(s, '.')    | ANY.KIND.OF.STRING |
 //   | CaseCamel(s)                      | AnyKindOfString    |
-//   | CaseLowerCamel(s)                 | anyKindOfString    |
+//   | CaseCamelLower(s)                 | anyKindOfString    |
 
 package gstr
 
@@ -26,17 +26,13 @@ import (
 // CaseName defines the case name for Case function.
 const (
 	Camel           string = "Camel"
-	LowerCamel      string = "LowerCamel"
+	CamelLower      string = "CamelLower"
 	Snake           string = "Snake"
 	SnakeFirstUpper string = "SnakeFirstUpper"
 	SnakeScreaming  string = "SnakeScreaming"
 	Kebab           string = "Kebab"
 	KebabScreaming  string = "KebabScreaming"
 	Lower           string = "Lower"
-)
-
-const (
-	camelLower string = "CamelLower" // Deprecated
 )
 
 var (
@@ -55,8 +51,8 @@ func CaseConvert(s string, caseName string, defaultCaseName ...string) string {
 	case ToLower(Camel):
 		return CaseCamel(s)
 
-	case ToLower(LowerCamel), ToLower(camelLower):
-		return CaseLowerCamel(s)
+	case ToLower(CamelLower):
+		return CaseCamelLower(s)
 
 	case ToLower(Kebab):
 		return CaseKebab(s)
@@ -89,8 +85,8 @@ func CaseCamel(s string) string {
 	return toCamelInitCase(s, true)
 }
 
-// CaseLowerCamel converts a string to lowerCamelCase.
-func CaseLowerCamel(s string) string {
+// CaseCamelLower converts a string to lowerCamelCase.
+func CaseCamelLower(s string) string {
 	if s == "" {
 		return s
 	}
@@ -98,12 +94,6 @@ func CaseLowerCamel(s string) string {
 		s = strings.ToLower(string(r)) + s[1:]
 	}
 	return toCamelInitCase(s, false)
-}
-
-// Deprecated
-// CaseCamelLower converts a string to lowerCamelCase.
-func CaseCamelLower(s string) string {
-	return CaseLowerCamel(s)
 }
 
 // CaseSnake converts a string to snake_case.
