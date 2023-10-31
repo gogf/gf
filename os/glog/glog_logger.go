@@ -290,7 +290,7 @@ func (l *Logger) printToFile(ctx context.Context, t time.Time, in *HandlerInput)
 	// Rotation file size checks.
 	if l.config.RotateSize > 0 && gfile.Size(logFilePath) > l.config.RotateSize {
 		if runtime.GOOS == "windows" {
-			file := l.getFilePointer(ctx, logFilePath)
+			file := l.createFpInPool(ctx, logFilePath)
 			if file == nil {
 				intlog.Errorf(ctx, `got nil file pointer for: %s`, logFilePath)
 				return buffer
@@ -311,7 +311,7 @@ func (l *Logger) printToFile(ctx context.Context, t time.Time, in *HandlerInput)
 		l.rotateFileBySize(ctx, t)
 	}
 	// Logging content outputting to disk file.
-	if file := l.getFilePointer(ctx, logFilePath); file == nil {
+	if file := l.createFpInPool(ctx, logFilePath); file == nil {
 		intlog.Errorf(ctx, `got nil file pointer for: %s`, logFilePath)
 	} else {
 		if _, err := file.Write(buffer.Bytes()); err != nil {
@@ -324,8 +324,8 @@ func (l *Logger) printToFile(ctx context.Context, t time.Time, in *HandlerInput)
 	return buffer
 }
 
-// getFilePointer retrieves and returns a file pointer from file pool.
-func (l *Logger) getFilePointer(ctx context.Context, path string) *gfpool.File {
+// createFpInPool retrieves and returns a file pointer from file pool.
+func (l *Logger) createFpInPool(ctx context.Context, path string) *gfpool.File {
 	file, err := gfpool.Open(
 		path,
 		defaultFileFlags,
@@ -339,8 +339,8 @@ func (l *Logger) getFilePointer(ctx context.Context, path string) *gfpool.File {
 	return file
 }
 
-// getOpenedFilePointer retrieves and returns a file pointer from file pool.
-func (l *Logger) getOpenedFilePointer(ctx context.Context, path string) *gfpool.File {
+// getFpFromPool retrieves and returns a file pointer from file pool.
+func (l *Logger) getFpFromPool(ctx context.Context, path string) *gfpool.File {
 	file := gfpool.Get(
 		path,
 		defaultFileFlags,
