@@ -77,8 +77,8 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	// Data Source Name of DM8:
 	// dm://userName:password@ip:port/dbname
 	source = fmt.Sprintf(
-		"dm://%s:%s@%s:%s/%s?charset=%s",
-		config.User, config.Pass, config.Host, config.Port, config.Name, config.Charset,
+		"dm://%s:%s@%s:%s/%s?charset=%s&schema=%s",
+		config.User, config.Pass, config.Host, config.Port, config.Name, config.Charset, config.Name,
 	)
 	// Demo of timezone setting:
 	// &loc=Asia/Shanghai
