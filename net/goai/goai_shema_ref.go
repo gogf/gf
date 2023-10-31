@@ -83,16 +83,34 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 			schemaRef.Value.Default = gconv.Int64(schemaRef.Value.Default)
 		}
 		// keep the default value as nil.
+
+		// example value needs to be converted just like default value
+		if schemaRef.Value.Example != nil {
+			schemaRef.Value.Example = gconv.Int64(schemaRef.Value.Example)
+		}
+		// keep the example value as nil.
 	case TypeNumber:
 		if schemaRef.Value.Default != nil {
 			schemaRef.Value.Default = gconv.Float64(schemaRef.Value.Default)
 		}
 		// keep the default value as nil.
+
+		// example value needs to be converted just like default value
+		if schemaRef.Value.Example != nil {
+			schemaRef.Value.Example = gconv.Float64(schemaRef.Value.Example)
+		}
+		// keep the example value as nil.
 	case TypeBoolean:
 		if schemaRef.Value.Default != nil {
 			schemaRef.Value.Default = gconv.Bool(schemaRef.Value.Default)
 		}
 		// keep the default value as nil.
+
+		// example value needs to be converted just like default value
+		if schemaRef.Value.Example != nil {
+			schemaRef.Value.Example = gconv.Bool(schemaRef.Value.Example)
+		}
+		// keep the example value as nil.
 	case
 		TypeArray:
 		subSchemaRef, err := oai.newSchemaRefWithGolangType(golangType.Elem(), nil)
