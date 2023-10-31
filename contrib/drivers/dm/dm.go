@@ -80,6 +80,8 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 		"dm://%s:%s@%s:%s/%s?charset=%s&schema=%s",
 		config.User, config.Pass, config.Host, config.Port, config.Name, config.Charset, config.Name,
 	)
+	fmt.Println(source)
+
 	// Demo of timezone setting:
 	// &loc=Asia/Shanghai
 	if config.Timezone != "" {
@@ -134,6 +136,7 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 // TableFields retrieves and returns the fields' information of specified table of current schema.
 func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
 	fmt.Println(schema)
+	fmt.Println("strings.ToUpper(d.GetSchema()):", strings.ToUpper(d.GetSchema()))
 	var (
 		result gdb.Result
 		link   gdb.Link
@@ -150,7 +153,7 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 		fmt.Sprintf(
 			`SELECT * FROM ALL_TAB_COLUMNS WHERE Table_Name= '%s' AND OWNER = '%s'`,
 			strings.ToUpper(table),
-			strings.ToUpper(schema[0]),
+			strings.ToUpper(d.GetSchema()),
 		),
 	)
 	if err != nil {
