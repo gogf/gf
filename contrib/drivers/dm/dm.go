@@ -209,7 +209,7 @@ func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args [
 	return d.Core.DoFilter(
 		ctx,
 		link,
-		gstr.ReplaceI(gstr.ReplaceI(newSql, "GROUP_CONCAT", "WM_CONCAT"), "SEPARATOR", ","),
+		gstr.ReplaceI(gstr.ReplaceI(newSql, "GROUP_CONCAT", "LISTAGG"), "SEPARATOR", ","),
 		args,
 	)
 }
