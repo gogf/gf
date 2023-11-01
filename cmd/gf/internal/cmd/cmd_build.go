@@ -254,17 +254,23 @@ func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, e
 				continue
 			}
 			if len(customSystems) == 0 && len(customArches) == 0 {
+				// Single binary building, output the binary to current working folder.
+				// For example:
+				// `gf build`
+				// `gf build -o main.exe`
 				if runtime.GOOS == "windows" {
 					ext = ".exe"
 				}
-				// Single binary building, output the binary to current working folder.
-				output := ""
+				var outputPath string
 				if len(in.Output) > 0 {
-					output = "-o " + in.Output + ext
+					outputPath = "-o " + in.Output
 				} else {
-					output = "-o " + in.Name + ext
+					outputPath = "-o " + in.Name + ext
 				}
-				cmd = fmt.Sprintf(`go build %s -ldflags "%s" %s %s`, output, ldFlags, in.Extra, file)
+				cmd = fmt.Sprintf(
+					`go build %s -ldflags "%s" %s %s`,
+					outputPath, ldFlags, in.Extra, file,
+				)
 			} else {
 				// Cross-building, output the compiled binary to specified path.
 				if system == "windows" {
@@ -272,9 +278,19 @@ func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, e
 				}
 				genv.MustSet("GOOS", system)
 				genv.MustSet("GOARCH", arch)
+
+				var outputPath string
+				if len(in.Output) > 0 {
+					outputPath = "-o " + in.Output
+				} else {
+					outputPath = fmt.Sprintf(
+						"-o %s/%s/%s%s",
+						in.Path, system+"_"+arch, in.Name, ext,
+					)
+				}
 				cmd = fmt.Sprintf(
-					`go build -o %s/%s/%s%s -ldflags "%s" %s%s`,
-					in.Path, system+"_"+arch, in.Name, ext, ldFlags, in.Extra, file,
+					`go build %s -ldflags "%s" %s%s`,
+					outputPath, ldFlags, in.Extra, file,
 				)
 			}
 			mlog.Debug(cmd)
