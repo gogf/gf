@@ -12,7 +12,6 @@ const TemplateGenCtrlControllerEmpty = `
 // =================================================================================
 
 package {Module}
-
 `
 
 const TemplateGenCtrlControllerNewEmpty = `
@@ -25,17 +24,14 @@ package {Module}
 import (
 	{ImportPath}
 )
-
 `
 
 const TemplateGenCtrlControllerNewFunc = `
-
 type {CtrlName} struct{}
 
 func {NewFuncName}() {InterfaceName} {
 	return &{CtrlName}{}
 }
-
 `
 
 const TemplateGenCtrlControllerMethodFunc = `
@@ -64,7 +60,7 @@ func (c *{CtrlName}) {MethodName}(ctx context.Context, req *{Version}.{MethodNam
 
 const TemplateGenCtrlApiInterface = `
 // =================================================================================
-// Code generated and maintained by GoFrame CLI tool. DO NOT EDIT. 
+// Code generated and maintained by GoFrame CLI tool. DO NOT EDIT.
 // =================================================================================
 
 package {Module}

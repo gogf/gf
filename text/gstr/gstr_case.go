@@ -23,11 +23,85 @@ import (
 	"strings"
 )
 
+// CaseType is the type for Case.
+type CaseType string
+
+// The case type constants.
+const (
+	Camel           CaseType = "Camel"
+	CamelLower      CaseType = "CamelLower"
+	Snake           CaseType = "Snake"
+	SnakeFirstUpper CaseType = "SnakeFirstUpper"
+	SnakeScreaming  CaseType = "SnakeScreaming"
+	Kebab           CaseType = "Kebab"
+	KebabScreaming  CaseType = "KebabScreaming"
+	Lower           CaseType = "Lower"
+)
+
 var (
 	numberSequence      = regexp.MustCompile(`([a-zA-Z]{0,1})(\d+)([a-zA-Z]{0,1})`)
 	firstCamelCaseStart = regexp.MustCompile(`([A-Z]+)([A-Z]?[_a-z\d]+)|$`)
 	firstCamelCaseEnd   = regexp.MustCompile(`([\w\W]*?)([_]?[A-Z]+)$`)
 )
+
+// CaseTypeMatch matches the case type from string.
+func CaseTypeMatch(caseStr string) CaseType {
+	caseTypes := []CaseType{
+		Camel,
+		CamelLower,
+		Snake,
+		SnakeFirstUpper,
+		SnakeScreaming,
+		Kebab,
+		KebabScreaming,
+		Lower,
+	}
+
+	for _, caseType := range caseTypes {
+		if Equal(caseStr, string(caseType)) {
+			return caseType
+		}
+	}
+
+	return CaseType(caseStr)
+}
+
+// CaseConvert converts a string to the specified naming convention.
+// Use CaseTypeMatch to match the case type from string.
+func CaseConvert(s string, caseType CaseType) string {
+	if s == "" || caseType == "" {
+		return s
+	}
+
+	switch caseType {
+	case Camel:
+		return CaseCamel(s)
+
+	case CamelLower:
+		return CaseCamelLower(s)
+
+	case Kebab:
+		return CaseKebab(s)
+
+	case KebabScreaming:
+		return CaseKebabScreaming(s)
+
+	case Snake:
+		return CaseSnake(s)
+
+	case SnakeFirstUpper:
+		return CaseSnakeFirstUpper(s)
+
+	case SnakeScreaming:
+		return CaseSnakeScreaming(s)
+
+	case Lower:
+		return ToLower(s)
+
+	default:
+		return s
+	}
+}
 
 // CaseCamel converts a string to CamelCase.
 func CaseCamel(s string) string {
