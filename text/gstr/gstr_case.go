@@ -23,16 +23,19 @@ import (
 	"strings"
 )
 
-// The case name for Case function.
+// CaseType is the type for Case.
+type CaseType string
+
+// The case type constants.
 const (
-	Camel           string = "Camel"
-	CamelLower      string = "CamelLower"
-	Snake           string = "Snake"
-	SnakeFirstUpper string = "SnakeFirstUpper"
-	SnakeScreaming  string = "SnakeScreaming"
-	Kebab           string = "Kebab"
-	KebabScreaming  string = "KebabScreaming"
-	Lower           string = "Lower"
+	Camel           CaseType = "Camel"
+	CamelLower      CaseType = "CamelLower"
+	Snake           CaseType = "Snake"
+	SnakeFirstUpper CaseType = "SnakeFirstUpper"
+	SnakeScreaming  CaseType = "SnakeScreaming"
+	Kebab           CaseType = "Kebab"
+	KebabScreaming  CaseType = "KebabScreaming"
+	Lower           CaseType = "Lower"
 )
 
 var (
@@ -41,41 +44,61 @@ var (
 	firstCamelCaseEnd   = regexp.MustCompile(`([\w\W]*?)([_]?[A-Z]+)$`)
 )
 
+// CaseTypeMatch matches the case type from string.
+func CaseTypeMatch(caseStr string) CaseType {
+	caseTypes := []CaseType{
+		Camel,
+		CamelLower,
+		Snake,
+		SnakeFirstUpper,
+		SnakeScreaming,
+		Kebab,
+		KebabScreaming,
+		Lower,
+	}
+
+	for _, caseType := range caseTypes {
+		if Equal(caseStr, string(caseType)) {
+			return caseType
+		}
+	}
+
+	return CaseType(caseStr)
+}
+
 // CaseConvert converts a string to the specified naming convention.
-func CaseConvert(s string, caseName string, defaultCaseName ...string) string {
-	if s == "" || caseName == "" {
+// Use CaseTypeMatch to match the case type from string.
+func CaseConvert(s string, caseType CaseType) string {
+	if s == "" || caseType == "" {
 		return s
 	}
 
-	switch ToLower(caseName) {
-	case ToLower(Camel):
+	switch caseType {
+	case Camel:
 		return CaseCamel(s)
 
-	case ToLower(CamelLower):
+	case CamelLower:
 		return CaseCamelLower(s)
 
-	case ToLower(Kebab):
+	case Kebab:
 		return CaseKebab(s)
 
-	case ToLower(KebabScreaming):
+	case KebabScreaming:
 		return CaseKebabScreaming(s)
 
-	case ToLower(Snake):
+	case Snake:
 		return CaseSnake(s)
 
-	case ToLower(SnakeFirstUpper):
+	case SnakeFirstUpper:
 		return CaseSnakeFirstUpper(s)
 
-	case ToLower(SnakeScreaming):
+	case SnakeScreaming:
 		return CaseSnakeScreaming(s)
 
-	case ToLower(Lower):
+	case Lower:
 		return ToLower(s)
 
 	default:
-		if len(defaultCaseName) > 0 {
-			return CaseConvert(s, defaultCaseName[0])
-		}
 		return s
 	}
 }

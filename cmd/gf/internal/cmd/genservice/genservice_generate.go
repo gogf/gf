@@ -195,5 +195,8 @@ func (c CGenService) generateInitializationFile(in CGenServiceInput, importSrcPa
 
 // getDstFileNameCase call gstr.Case* function to convert the s to specified case.
 func (c CGenService) getDstFileNameCase(str, caseStr string) (newStr string) {
-	return gstr.CaseConvert(str, caseStr, gstr.Snake)
+	if newStr := gstr.CaseConvert(str, gstr.CaseTypeMatch(caseStr)); newStr != str {
+		return newStr
+	}
+	return gstr.CaseSnake(str)
 }
