@@ -159,7 +159,7 @@ func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, e
 		if gfile.Exists("main.go") {
 			file = "main.go"
 		} else {
-			mlog.Fatal("build file path cannot be empty")
+			mlog.Fatal("build file path is empty or main.go not found in current working directory")
 		}
 	}
 	if in.Name == "" {
@@ -289,8 +289,8 @@ func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, e
 					)
 				}
 				cmd = fmt.Sprintf(
-					`go build %s -ldflags "%s" %s%s`,
-					outputPath, ldFlags, in.Extra, file,
+					`GOOS=%s GOARCH=%s go build %s -ldflags "%s" %s%s`,
+					system, arch, outputPath, ldFlags, in.Extra, file,
 				)
 			}
 			mlog.Debug(cmd)
