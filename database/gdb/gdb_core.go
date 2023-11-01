@@ -451,7 +451,6 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 			return nil, err
 		}
 		tmpKeysInSequenceStr = gstr.Join(keys, ",")
-
 		if !keyListMap.Contains(tmpKeysInSequenceStr) {
 			keyListMap.Set(tmpKeysInSequenceStr, make(List, 0))
 		}
@@ -478,8 +477,9 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 			sqlResult.Affected += rowsAffected
 			return true
 		})
-		return &sqlResult, nil
+		return &sqlResult, err
 	}
+
 	// Prepare the batch result pointer.
 	var (
 		charL, charR = c.db.GetChars()

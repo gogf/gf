@@ -822,3 +822,62 @@ func Test_Issue2907(t *testing.T) {
 		t.Assert(all[0]["id"], 3)
 	})
 }
+
+// https://github.com/gogf/gf/issues/3086
+func Test_Issue3086(t *testing.T) {
+	table := "issue3086_user"
+	array := gstr.SplitAndTrim(gtest.DataContent(`issue3086.sql`), ";")
+	for _, v := range array {
+		if _, err := db.Exec(ctx, v); err != nil {
+			gtest.Error(err)
+		}
+	}
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			g.Meta     `orm:"do:true"`
+			Id         interface{}
+			Passport   interface{}
+			Password   interface{}
+			Nickname   interface{}
+			CreateTime interface{}
+		}
+		data := g.Slice{
+			User{
+				Id:       nil,
+				Passport: "user_1",
+			},
+			User{
+				Id:       2,
+				Passport: "user_2",
+			},
+		}
+		_, err := db.Model(table).Data(data).Batch(10).Insert()
+		t.AssertNE(err, nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			g.Meta     `orm:"do:true"`
+			Id         interface{}
+			Passport   interface{}
+			Password   interface{}
+			Nickname   interface{}
+			CreateTime interface{}
+		}
+		data := g.Slice{
+			User{
+				Id:       1,
+				Passport: "user_1",
+			},
+			User{
+				Id:       2,
+				Passport: "user_2",
+			},
+		}
+		result, err := db.Model(table).Data(data).Batch(10).Insert()
+		t.AssertNil(err)
+		n, err := result.RowsAffected()
+		t.AssertNil(err)
+		t.Assert(n, 2)
+	})
+}
