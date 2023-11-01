@@ -289,6 +289,10 @@ func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) in
 
 	case reflect.Struct:
 		var dataMap = make(map[string]interface{})
+		if _, ok := reflectValue.Interface().(Marshaler); ok {
+			dataMap[reflectValue.Type().Name()] = reflectValue.Interface()
+			return dataMap
+		}
 		// Map converting interface check.
 		if v, ok := in.Value.(iMapStrAny); ok {
 			// Value copy, in case of concurrent safety.

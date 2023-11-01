@@ -633,6 +633,15 @@ func (i Issue3108String) MarshalJSON() ([]byte, error) {
 
 func Test_Issue3108(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
+		obj := &Issue3108String{Name: "test"}
+
+		converted := gconv.MapDeep(obj)
+		jsonData, err := json.Marshal(converted)
+
+		t.AssertNil(err)
+		t.Assert(string(jsonData), `{"Issue3108String":"[test]"}`)
+	})
+	gtest.C(t, func(t *gtest.T) {
 		type Issue3108 struct {
 			MyName Issue3108String `json:"my_name"`
 		}
