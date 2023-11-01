@@ -8,16 +8,20 @@ package v1
 
 import "github.com/gogf/gf/v2/frame/g"
 
-type CreateReq struct {
-	g.Meta `path:"/article/create" method:"post" tags:"ArticleService"`
-	Title  string `v:"required"`
-}
+type (
+	CreateReq struct {
+		g.Meta `path:"/article/create" method:"post" tags:"ArticleService"`
+		Title  string `v:"required"`
+	}
 
-type CreateRes struct{}
+	CreateRes struct{}
+)
 
-type UpdateReq struct {
-	g.Meta `path:"/article/update" method:"post" tags:"ArticleService"`
-	Title  string `v:"required"`
-}
+type (
+	UpdateReq struct {
+		g.Meta `path:"/article/update" method:"post" tags:"ArticleService"`
+		Title  string `v:"required"`
+	}
 
-type UpdateRes struct{}
+	UpdateRes struct{}
+)
