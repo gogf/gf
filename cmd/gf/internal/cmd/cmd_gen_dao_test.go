@@ -7,7 +7,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"path/filepath"
 	"testing"
@@ -20,8 +19,6 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 	"github.com/gogf/gf/v2/util/gutil"
 )
-
-var ctx = context.Background()
 
 func dropTableWithDb(db gdb.DB, table string) {
 	dropTableStmt := fmt.Sprintf("DROP TABLE IF EXISTS `%s`", table)
