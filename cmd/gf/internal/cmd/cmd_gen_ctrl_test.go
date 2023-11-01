@@ -48,8 +48,9 @@ func Test_Gen_Ctrl_Default(t *testing.T) {
 		// apiInterface files
 		var (
 			genApi       = apiFolder + filepath.FromSlash("/article/article.go")
-			genApiExpect = apiFolder + filepath.FromSlash("/article/article_expect.go.txt")
+			genApiExpect = apiFolder + filepath.FromSlash("/article/article_expect.go")
 		)
+		defer gfile.Remove(genApi)
 		t.Assert(gfile.GetContents(genApi), gfile.GetContents(genApiExpect))
 
 		// files
