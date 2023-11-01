@@ -9,8 +9,9 @@ package gendao
 import (
 	"context"
 	"fmt"
-	"golang.org/x/mod/modfile"
 	"strings"
+
+	"golang.org/x/mod/modfile"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 	"github.com/gogf/gf/v2/container/garray"
