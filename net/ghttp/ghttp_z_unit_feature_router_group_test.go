@@ -9,6 +9,7 @@ package ghttp_test
 import (
 	"bytes"
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -181,11 +182,31 @@ func Test_Router_Group_Map(t *testing.T) {
 	})
 }
 
+type SafeBuffer struct {
+	buffer *bytes.Buffer
+	mu     sync.Mutex
+}
+
+func (b *SafeBuffer) Write(p []byte) (n int, err error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buffer.Write(p)
+}
+
+func (b *SafeBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buffer.String()
+}
+
 func Test_Router_OverWritten(t *testing.T) {
 	var (
-		s      = g.Server(guid.S())
-		obj    = new(GroupObject)
-		buf    = bytes.NewBuffer(nil)
+		s   = g.Server(guid.S())
+		obj = new(GroupObject)
+		buf = &SafeBuffer{
+			buffer: bytes.NewBuffer(nil),
+			mu:     sync.Mutex{},
+		}
 		logger = glog.NewWithWriter(buf)
 	)
 	logger.SetStdoutPrint(false)
