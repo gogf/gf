@@ -301,8 +301,6 @@ func parseValue(listOne gdb.Map, char struct {
 	duplicateKey string
 	keys         []string
 }) (insertKeys []string, insertValues []string, updateValues []string, queryValues []string) {
-	g.Dump("parseValue list:", listOne)
-	g.Dump("parseValue char:", char)
 	for _, column := range char.keys {
 		if listOne[column] == nil {
 			// remove unassigned struct object
@@ -337,11 +335,7 @@ func parseUnion(list gdb.List, char struct {
 	duplicateKey string
 	keys         []string
 }) (unionValues []string) {
-	g.Dump("parseUnion list:", list)
-	g.Dump("parseUnion char:", char)
 	for _, mapper := range list {
-		g.Dump("parseUnion mapper:", mapper)
-
 		var saveValue []string
 		for _, column := range char.keys {
 			if mapper[column] == nil {
@@ -404,4 +398,5 @@ COMMIT;
 		insertKeyStr, insertValueStr, updateValueStr,
 	)
 }
+
 
