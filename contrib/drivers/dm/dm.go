@@ -205,13 +205,41 @@ func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fie
 func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
 	// There should be no need to capitalize, because it has been done from field processing before
 	newSql, _ = gregex.ReplaceString(`["\n\t]`, "", sql)
+	// g.Dump("newSql111：", newSql)
+	// array, err := gregex.MatchAllString(`SELECT (.*) FROM .*`, newSql)
+	// g.Dump("err:", err)
+	// g.Dump("array:", array)
+	// g.Dump("array:", array[0][1])
+	newSql = gstr.ReplaceI(gstr.ReplaceI(newSql, "GROUP_CONCAT", "LISTAGG"), "SEPARATOR", ",")
+	// TODO 太粗糙了，应该 从 select from 之间去 处理 GROUP_CONCAT 以及 index 的问题 ，考虑使用 gregex.ReplaceString
+	l, r := d.GetChars()
+	newSql = gstr.ReplaceI(newSql, "INDEX", l+"INDEX"+r)
+	g.Dump("new:", newSql)
+
 	return d.Core.DoFilter(
 		ctx,
 		link,
-		gstr.ReplaceI(gstr.ReplaceI(newSql, "GROUP_CONCAT", "LISTAGG"), "SEPARATOR", ","),
+		newSql,
 		args,
 	)
 }
+
+// func (d *Driver) DoQuery(ctx context.Context, link gdb.Link, sql string, args ...interface{}) (gdb.Result, error) {
+// 	g.Dump("new111：", sql)
+// 	array, err := gregex.MatchAllString(`SELECT (.*) FROM .*`, sql)
+// 	g.Dump("err:", err)
+// 	g.Dump("array:", array)
+// 	g.Dump("array[0][1]:", array[0][1])
+// 	l, r := d.GetChars()
+// 	sql := gstr.ReplaceI(sql, "INDEX", l+"INDEX"+r)
+// 	g.Dump("sql222:", sql)
+// 	return d.Core.DoQuery(
+// 		ctx,
+// 		link,
+// 		sql,
+// 		args,
+// 	)
+// }
 
 // DoInsert inserts or updates data forF given table.
 func (d *Driver) DoInsert(
@@ -398,5 +426,3 @@ COMMIT;
 		insertKeyStr, insertValueStr, updateValueStr,
 	)
 }
-
-
