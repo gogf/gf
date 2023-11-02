@@ -205,16 +205,28 @@ func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fie
 func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
 	// There should be no need to capitalize, because it has been done from field processing before
 	newSql, _ = gregex.ReplaceString(`["\n\t]`, "", sql)
-	// g.Dump("newSql111：", newSql)
-	// array, err := gregex.MatchAllString(`SELECT (.*) FROM .*`, newSql)
+	newSql = gstr.ReplaceI(gstr.ReplaceI(newSql, "GROUP_CONCAT", "LISTAGG"), "SEPARATOR", ",")
+
+	// TODO The current approach is too rough. We should deal with the GROUP_CONCAT function and the parsing of the index field from within the select from match.
+	// （GROUP_CONCAT DM  does not approve; index cannot be used as a query column name, and security characters need to be added, such as "index"）
+	l, r := d.GetChars()
+	newSql = gstr.ReplaceI(newSql, "INDEX", l+"INDEX"+r)
+
+	// TODO i tried to do but it never work：
+	// array, err := gregex.MatchAllString(`SELECT (.*INDEX.*) FROM .*`, newSql)
 	// g.Dump("err:", err)
 	// g.Dump("array:", array)
 	// g.Dump("array:", array[0][1])
-	newSql = gstr.ReplaceI(gstr.ReplaceI(newSql, "GROUP_CONCAT", "LISTAGG"), "SEPARATOR", ",")
-	// TODO 太粗糙了，应该 从 select from 之间去 处理 GROUP_CONCAT 以及 index 的问题 ，考虑使用 gregex.ReplaceString
-	l, r := d.GetChars()
-	newSql = gstr.ReplaceI(newSql, "INDEX", l+"INDEX"+r)
-	g.Dump("new:", newSql)
+
+	// newSql, err = gregex.ReplaceString(`SELECT (.*INDEX.*) FROM .*`, l+"INDEX"+r, newSql)
+	// g.Dump("err:", err)
+	// g.Dump("newSql:", newSql)
+
+	// re, err := regexp.Compile(`.*SELECT (.*INDEX.*) FROM .*`)
+	// newSql = re.ReplaceAllStringFunc(newSql, func(data string) string {
+	// 	fmt.Println("data:", data)
+	// 	return data
+	// })
 
 	return d.Core.DoFilter(
 		ctx,
@@ -224,19 +236,18 @@ func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args [
 	)
 }
 
+// TODO I originally wanted to only convert keywords in select
+// 但是我发现 DoQuery 中会对 sql 会对 " " 达梦的安全字符 进行 / 转义，最后还是导致达梦无法正常解析
+// However, I found that DoQuery() will perform / escape on sql with " " Dameng's safe characters, which ultimately caused Dameng to be unable to parse normally.
+// But processing in DoFilter() is OK
 // func (d *Driver) DoQuery(ctx context.Context, link gdb.Link, sql string, args ...interface{}) (gdb.Result, error) {
-// 	g.Dump("new111：", sql)
-// 	array, err := gregex.MatchAllString(`SELECT (.*) FROM .*`, sql)
-// 	g.Dump("err:", err)
-// 	g.Dump("array:", array)
-// 	g.Dump("array[0][1]:", array[0][1])
 // 	l, r := d.GetChars()
-// 	sql := gstr.ReplaceI(sql, "INDEX", l+"INDEX"+r)
-// 	g.Dump("sql222:", sql)
+// 	new := gstr.ReplaceI(sql, "INDEX", l+"INDEX"+r)
+// 	g.Dump("new:", new)
 // 	return d.Core.DoQuery(
 // 		ctx,
 // 		link,
-// 		sql,
+// 		new,
 // 		args,
 // 	)
 // }
