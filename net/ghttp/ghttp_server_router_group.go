@@ -169,8 +169,12 @@ func (g *RouterGroup) Bind(handlerOrObject ...interface{}) *RouterGroup {
 				"/",
 				item,
 			)
+
 		default:
-			g.server.Logger().Fatalf(ctx, "invalid bind parameter type: %v", originValueAndKind.InputValue.Type())
+			g.server.Logger().Fatalf(
+				ctx, "invalid bind parameter type: %v, should be route function or struct object",
+				originValueAndKind.InputValue.Type(),
+			)
 		}
 	}
 	return group
