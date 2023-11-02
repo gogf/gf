@@ -228,10 +228,12 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 	// The key of the attrMap is the attribute name of the struct,
 	// and the value is its replaced name for later comparison to improve performance.
 	var (
-		tempName           string
-		elemFieldType      reflect.StructField
-		elemFieldValue     reflect.Value
-		elemType           = pointerElemReflectValue.Type()
+		tempName       string
+		elemFieldType  reflect.StructField
+		elemFieldValue reflect.Value
+		elemType       = pointerElemReflectValue.Type()
+		// Attribute name to its symbols-removed name,
+		// in order to quick index and comparison in following logic.
 		attrToCheckNameMap = make(map[string]string)
 	)
 	for i := 0; i < pointerElemReflectValue.NumField(); i++ {
@@ -290,7 +292,84 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 			paramsMap[attributeName] = paramsMap[tagName]
 		}
 	}
+	// To convert value base on precise attribute name.
+	err = doStructBaseOnAttribute(
+		pointerElemReflectValue,
+		paramsMap,
+		mapping,
+		doneMap,
+		attrToCheckNameMap,
+	)
+	if err != nil {
+		return err
+	}
+	// Already done all attributes value assignment nothing to do next.
+	if len(doneMap) == len(attrToCheckNameMap) {
+		return nil
+	}
+	// To convert value base on parameter map.
+	err = doStructBaseOnParamMap(
+		pointerElemReflectValue,
+		paramsMap,
+		mapping,
+		doneMap,
+		attrToCheckNameMap,
+		attrToTagCheckNameMap,
+		tagToAttrNameMap,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
+func doStructBaseOnAttribute(
+	pointerElemReflectValue reflect.Value,
+	paramsMap map[string]interface{},
+	mapping map[string]string,
+	doneMap map[string]struct{},
+	attrToCheckNameMap map[string]string,
+) error {
+	var customMappingAttrMap = make(map[string]struct{})
+	if len(mapping) > 0 {
+		for paramName, _ := range paramsMap {
+			if passedAttrKey, ok := mapping[paramName]; ok {
+				customMappingAttrMap[passedAttrKey] = struct{}{}
+			}
+		}
+	}
+	for attrName, _ := range attrToCheckNameMap {
+		// The value by precise attribute name.
+		paramValue, ok := paramsMap[attrName]
+		if !ok {
+			continue
+		}
+		// If the attribute name is in custom mapping, it then ignores this converting.
+		if _, ok = customMappingAttrMap[attrName]; ok {
+			continue
+		}
+		// If the attribute name is already checked converting, then skip it.
+		if _, ok = doneMap[attrName]; ok {
+			continue
+		}
+		// Mark it done.
+		doneMap[attrName] = struct{}{}
+		if err := bindVarToStructAttr(pointerElemReflectValue, attrName, paramValue, mapping); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func doStructBaseOnParamMap(
+	pointerElemReflectValue reflect.Value,
+	paramsMap map[string]interface{},
+	mapping map[string]string,
+	doneMap map[string]struct{},
+	attrToCheckNameMap map[string]string,
+	attrToTagCheckNameMap map[string]string,
+	tagToAttrNameMap map[string]string,
+) error {
 	var (
 		attrName  string
 		checkName string
@@ -344,12 +423,12 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 			continue
 		}
 		// If the attribute name is already checked converting, then skip it.
-		if _, ok = doneMap[attrName]; ok {
+		if _, ok := doneMap[attrName]; ok {
 			continue
 		}
 		// Mark it done.
 		doneMap[attrName] = struct{}{}
-		if err = bindVarToStructAttr(pointerElemReflectValue, attrName, paramValue, mapping); err != nil {
+		if err := bindVarToStructAttr(pointerElemReflectValue, attrName, paramValue, mapping); err != nil {
 			return err
 		}
 	}
@@ -357,7 +436,10 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 }
 
 // bindVarToStructAttr sets value to struct object attribute by name.
-func bindVarToStructAttr(structReflectValue reflect.Value, attrName string, value interface{}, mapping map[string]string) (err error) {
+func bindVarToStructAttr(
+	structReflectValue reflect.Value,
+	attrName string, value interface{}, mapping map[string]string,
+) (err error) {
 	structFieldValue := structReflectValue.FieldByName(attrName)
 	if !structFieldValue.IsValid() {
 		return nil
