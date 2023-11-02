@@ -187,6 +187,8 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*Han
 					repeatHandlerCheckMap[item.Id] = struct{}{}
 				}
 				// Serving handler can only be added to the handler array just once.
+				// The first route item in the list has the most priority than the rest.
+				// This ignoring can implement route overwritten feature.
 				if hasServe {
 					switch item.Type {
 					case HandlerTypeHandler, HandlerTypeObject:

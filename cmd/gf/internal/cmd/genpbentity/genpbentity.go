@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/olekukonko/tablewriter"
@@ -197,7 +198,7 @@ func doGenPbEntityForArray(ctx context.Context, index int, in CGenPbEntityInput)
 		if len(match) == 3 {
 			gdb.AddConfigNode(tempGroup, gdb.ConfigNode{
 				Type: gstr.Trim(match[1]),
-				Link: gstr.Trim(match[2]),
+				Link: in.Link,
 			})
 			db, _ = gdb.Instance(tempGroup)
 		}
@@ -246,7 +247,7 @@ func generatePbEntityContentFile(ctx context.Context, in CGenPbEntityInternalInp
 		tableNameSnakeCase  = gstr.CaseSnake(newTableName)
 		entityMessageDefine = generateEntityMessageDefinition(tableNameCamelCase, fieldMap, in)
 		fileName            = gstr.Trim(tableNameSnakeCase, "-_.")
-		path                = gfile.Join(in.Path, fileName+".proto")
+		path                = filepath.FromSlash(gfile.Join(in.Path, fileName+".proto"))
 	)
 	if gstr.Contains(entityMessageDefine, "google.protobuf.Timestamp") {
 		imports = `import "google/protobuf/timestamp.proto";`

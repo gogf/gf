@@ -7,10 +7,13 @@
 package nacos_test
 
 import (
+	"context"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/gogf/gf/contrib/registry/nacos/v2"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -121,8 +124,24 @@ func TestWatch(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
+		ctx := gctx.New()
 		watcher, err := registry.Watch(ctx, svc1.GetPrefix())
 		t.AssertNil(err)
+
+		var latestProceedResult atomic.Value
+		g.Go(ctx, func(ctx context.Context) {
+			var (
+				err error
+				res []gsvc.Service
+			)
+			for err == nil {
+				res, err = watcher.Proceed()
+				t.AssertNil(err)
+				latestProceedResult.Store(res)
+			}
+		}, func(ctx context.Context, exception error) {
+			t.Fatal(exception)
+		})
 
 		// Register another service.
 		svc2 := &gsvc.LocalService{
@@ -136,16 +155,15 @@ func TestWatch(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(registered.GetName(), svc2.GetName())
 
-		time.Sleep(time.Second * 1)
+		time.Sleep(time.Second * 10)
 
 		// Watch and retrieve the service changes:
 		// svc1 and svc2 is the same service name, which has 2 endpoints.
-		proceedResult, err := watcher.Proceed()
-
-		t.AssertNil(err)
+		proceedResult, ok := latestProceedResult.Load().([]gsvc.Service)
+		t.Assert(ok, true)
 		t.Assert(len(proceedResult), 1)
 		t.Assert(
-			sortEndpoints(proceedResult[0].GetEndpoints()),
+			allEndpoints(proceedResult),
 			gsvc.Endpoints{svc1.GetEndpoints()[0], svc2.GetEndpoints()[0]},
 		)
 
@@ -154,12 +172,12 @@ func TestWatch(t *testing.T) {
 		err = registry2.Deregister(ctx, svc2)
 		t.AssertNil(err)
 
-		time.Sleep(time.Second * 1)
-		proceedResult, err = watcher.Proceed()
-		t.AssertNil(err)
+		time.Sleep(time.Second * 10)
+		proceedResult, ok = latestProceedResult.Load().([]gsvc.Service)
+		t.Assert(ok, true)
 		t.Assert(len(proceedResult), 1)
 		t.Assert(
-			sortEndpoints(proceedResult[0].GetEndpoints()),
+			allEndpoints(proceedResult),
 			gsvc.Endpoints{svc1.GetEndpoints()[0]},
 		)
 		t.AssertNil(watcher.Close())
@@ -169,6 +187,20 @@ func TestWatch(t *testing.T) {
 		err := registry.Deregister(ctx, svc1)
 		t.AssertNil(err)
 	})
+}
+
+func allEndpoints(services []gsvc.Service) gsvc.Endpoints {
+	m := map[gsvc.Endpoint]struct{}{}
+	for _, s := range services {
+		for _, ep := range s.GetEndpoints() {
+			m[ep] = struct{}{}
+		}
+	}
+	var endpoints gsvc.Endpoints
+	for ep := range m {
+		endpoints = append(endpoints, ep)
+	}
+	return sortEndpoints(endpoints)
 }
 
 func sortEndpoints(in gsvc.Endpoints) gsvc.Endpoints {

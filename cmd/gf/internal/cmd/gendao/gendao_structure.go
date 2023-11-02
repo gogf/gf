@@ -10,8 +10,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/olekukonko/tablewriter"
 	"strings"
+
+	"github.com/olekukonko/tablewriter"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
@@ -70,7 +71,7 @@ func generateStructFieldDefinition(
 		err              error
 		localTypeName    gdb.LocalType
 		localTypeNameStr string
-		jsonTag          = getJsonTagFromCase(field.Name, in.JsonCase)
+		jsonTag          = gstr.CaseConvert(field.Name, gstr.CaseTypeMatch(in.JsonCase))
 	)
 
 	if in.TypeMapping != nil && len(in.TypeMapping) > 0 {
@@ -157,31 +158,4 @@ func formatComment(comment string) string {
 	comment = gstr.Replace(comment, `\n`, " ")
 	comment = gstr.Trim(comment)
 	return comment
-}
-
-// getJsonTagFromCase call gstr.Case* function to convert the s to specified case.
-func getJsonTagFromCase(str, caseStr string) string {
-	switch gstr.ToLower(caseStr) {
-	case gstr.ToLower("Camel"):
-		return gstr.CaseCamel(str)
-
-	case gstr.ToLower("CamelLower"):
-		return gstr.CaseCamelLower(str)
-
-	case gstr.ToLower("Kebab"):
-		return gstr.CaseKebab(str)
-
-	case gstr.ToLower("KebabScreaming"):
-		return gstr.CaseKebabScreaming(str)
-
-	case gstr.ToLower("Snake"):
-		return gstr.CaseSnake(str)
-
-	case gstr.ToLower("SnakeFirstUpper"):
-		return gstr.CaseSnakeFirstUpper(str)
-
-	case gstr.ToLower("SnakeScreaming"):
-		return gstr.CaseSnakeScreaming(str)
-	}
-	return str
 }

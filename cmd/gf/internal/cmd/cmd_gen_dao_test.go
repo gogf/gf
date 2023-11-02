@@ -7,8 +7,8 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
+	"path/filepath"
 	"testing"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/gendao"
@@ -19,8 +19,6 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 	"github.com/gogf/gf/v2/util/gutil"
 )
-
-var ctx = context.Background()
 
 func dropTableWithDb(db gdb.DB, table string) {
 	dropTableStmt := fmt.Sprintf("DROP TABLE IF EXISTS `%s`", table)
@@ -105,18 +103,18 @@ func Test_Gen_Dao_Default(t *testing.T) {
 		files, err := gfile.ScanDir(path, "*.go", true)
 		t.AssertNil(err)
 		t.Assert(files, []string{
-			path + "/dao/internal/table_user.go",
-			path + "/dao/table_user.go",
-			path + "/model/do/table_user.go",
-			path + "/model/entity/table_user.go",
+			filepath.FromSlash(path + "/dao/internal/table_user.go"),
+			filepath.FromSlash(path + "/dao/table_user.go"),
+			filepath.FromSlash(path + "/model/do/table_user.go"),
+			filepath.FromSlash(path + "/model/entity/table_user.go"),
 		})
 		// content
 		testPath := gtest.DataPath("gendao", "generated_user")
 		expectFiles := []string{
-			testPath + "/dao/internal/table_user.go",
-			testPath + "/dao/table_user.go",
-			testPath + "/model/do/table_user.go",
-			testPath + "/model/entity/table_user.go",
+			filepath.FromSlash(testPath + "/dao/internal/table_user.go"),
+			filepath.FromSlash(testPath + "/dao/table_user.go"),
+			filepath.FromSlash(testPath + "/model/do/table_user.go"),
+			filepath.FromSlash(testPath + "/model/entity/table_user.go"),
 		}
 		for i, _ := range files {
 			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))
@@ -209,18 +207,18 @@ func Test_Gen_Dao_TypeMapping(t *testing.T) {
 		files, err := gfile.ScanDir(path, "*.go", true)
 		t.AssertNil(err)
 		t.Assert(files, []string{
-			path + "/dao/internal/table_user.go",
-			path + "/dao/table_user.go",
-			path + "/model/do/table_user.go",
-			path + "/model/entity/table_user.go",
+			filepath.FromSlash(path + "/dao/internal/table_user.go"),
+			filepath.FromSlash(path + "/dao/table_user.go"),
+			filepath.FromSlash(path + "/model/do/table_user.go"),
+			filepath.FromSlash(path + "/model/entity/table_user.go"),
 		})
 		// content
 		testPath := gtest.DataPath("gendao", "generated_user_type_mapping")
 		expectFiles := []string{
-			testPath + "/dao/internal/table_user.go",
-			testPath + "/dao/table_user.go",
-			testPath + "/model/do/table_user.go",
-			testPath + "/model/entity/table_user.go",
+			filepath.FromSlash(testPath + "/dao/internal/table_user.go"),
+			filepath.FromSlash(testPath + "/dao/table_user.go"),
+			filepath.FromSlash(testPath + "/model/do/table_user.go"),
+			filepath.FromSlash(testPath + "/model/entity/table_user.go"),
 		}
 		for i, _ := range files {
 			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))

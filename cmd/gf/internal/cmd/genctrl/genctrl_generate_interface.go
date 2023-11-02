@@ -8,6 +8,7 @@ package genctrl
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
@@ -39,18 +40,17 @@ func (c *apiInterfaceGenerator) Generate(apiModuleFolderPath string, apiModuleAp
 
 func (c *apiInterfaceGenerator) doGenerate(apiModuleFolderPath string, module string, items []apiItem) (err error) {
 	var (
-		moduleFilePath = gfile.Join(apiModuleFolderPath, fmt.Sprintf(`%s.go`, module))
+		moduleFilePath = filepath.FromSlash(gfile.Join(apiModuleFolderPath, fmt.Sprintf(`%s.go`, module)))
 		importPathMap  = gmap.NewListMap()
 		importPaths    []string
 	)
 	// if there's already exist file that with the same but not auto generated go file,
 	// it uses another file name.
 	if !utils.IsFileDoNotEdit(moduleFilePath) {
-		moduleFilePath = gfile.Join(apiModuleFolderPath, fmt.Sprintf(`%s.if.go`, module))
+		moduleFilePath = filepath.FromSlash(gfile.Join(apiModuleFolderPath, fmt.Sprintf(`%s.if.go`, module)))
 	}
 	// all import paths.
-	importPathMap.Set("\t"+`"context"`, 1)
-	importPathMap.Set("\t"+``, 1)
+	importPathMap.Set("\t"+`"context"`+"\n", 1)
 	for _, item := range items {
 		importPathMap.Set(fmt.Sprintf("\t"+`"%s"`, item.Import), 1)
 	}
@@ -91,7 +91,7 @@ func (c *apiInterfaceGenerator) doGenerate(apiModuleFolderPath string, module st
 		interfaceDefinition += "\n\n"
 	}
 	interfaceContent = gstr.TrimLeft(gstr.ReplaceByMap(interfaceContent, g.MapStrStr{
-		"{Interfaces}": interfaceDefinition,
+		"{Interfaces}": gstr.TrimRightStr(interfaceDefinition, "\n", 2),
 	}))
 	err = gfile.PutContents(moduleFilePath, interfaceContent)
 	mlog.Printf(`generated: %s`, moduleFilePath)

@@ -257,13 +257,11 @@ func (s *Server) checkAndCreateFuncInfo(
 		return funcInfo, err
 	}
 	funcInfo.ReqStructFields = fields
-	funcInfo.Func = createRouterFunc(funcInfo, inputObject, inputObjectPtr)
+	funcInfo.Func = createRouterFunc(funcInfo)
 	return
 }
 
-func createRouterFunc(
-	funcInfo handlerFuncInfo, inputObject reflect.Value, inputObjectPtr interface{},
-) func(r *Request) {
+func createRouterFunc(funcInfo handlerFuncInfo) func(r *Request) {
 	return func(r *Request) {
 		var (
 			ok          bool
@@ -272,11 +270,20 @@ func createRouterFunc(
 				reflect.ValueOf(r.Context()),
 			}
 		)
-		r.error = r.Parse(inputObjectPtr)
-		if r.error != nil {
-			return
+		if funcInfo.Type.NumIn() == 2 {
+			var inputObject reflect.Value
+			if funcInfo.Type.In(1).Kind() == reflect.Ptr {
+				inputObject = reflect.New(funcInfo.Type.In(1).Elem())
+				r.error = r.Parse(inputObject.Interface())
+			} else {
+				inputObject = reflect.New(funcInfo.Type.In(1).Elem()).Elem()
+				r.error = r.Parse(inputObject.Addr().Interface())
+			}
+			if r.error != nil {
+				return
+			}
+			inputValues = append(inputValues, inputObject)
 		}
-		inputValues = append(inputValues, inputObject)
 		// Call handler with dynamic created parameter values.
 		results := funcInfo.Value.Call(inputValues)
 		switch len(results) {

@@ -4,7 +4,7 @@
 <img src="https://goframe.org/statics/image/logo2.png?v=1" width="300"/>
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/gogf/gf/v2.svg)](https://pkg.go.dev/github.com/gogf/gf/v2)
-[![GoFrame CI](https://github.com/gogf/gf/actions/workflows/gf.yml/badge.svg)](https://github.com/gogf/gf/actions/workflows/gf.yml)
+[![GoFrame CI](https://github.com/gogf/gf/actions/workflows/ci-main.yml/badge.svg)](https://github.com/gogf/gf/actions/workflows/ci-main.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/gogf/gf/v2)](https://goreportcard.com/report/github.com/gogf/gf/v2)
 [![Code Coverage](https://codecov.io/gh/gogf/gf/branch/master/graph/badge.svg)](https://codecov.io/gh/gogf/gf)
 [![Production Ready](https://img.shields.io/badge/production-ready-blue.svg)](https://github.com/gogf/gf)
@@ -41,7 +41,7 @@ go get -u -v github.com/gogf/gf/v2
 ## cli tool
 
 ```bash
-go install github.com/gogf/gf/cmd/gf/v2
+go install github.com/gogf/gf/cmd/gf/v2@latest
 ```
 
 # Limitation
