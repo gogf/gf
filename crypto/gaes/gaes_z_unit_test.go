@@ -81,7 +81,7 @@ func TestDecrypt(t *testing.T) {
 		t.Assert(decrypt, content)
 
 		decrypt, err = gaes.Decrypt([]byte(content_32_iv), keys, iv)
-		t.Assert(err, "invalid padding")
+		t.Assert(err, "invalid unpadding")
 	})
 }
 
@@ -126,6 +126,24 @@ func TestPKCS5UnPaddingErr(t *testing.T) {
 
 		// PKCS5UnPadding src len > blockSize
 		_, err = gaes.PKCS5UnPadding(key_32_err, 32)
+		t.AssertNE(err, nil)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// PKCS7UnPadding blockSize zero
+		_, err := gaes.PKCS7UnPadding(content, 0)
+		t.AssertNE(err, nil)
+
+		// PKCS7UnPadding src len zero
+		_, err = gaes.PKCS7UnPadding([]byte(""), 16)
+		t.AssertNE(err, nil)
+
+		// PKCS7UnPadding src len > blockSize
+		_, err = gaes.PKCS7UnPadding(key_17, 16)
+		t.AssertNE(err, nil)
+
+		// PKCS7UnPadding src len > blockSize
+		_, err = gaes.PKCS7UnPadding(key_32_err, 32)
 		t.AssertNE(err, nil)
 	})
 }

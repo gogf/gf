@@ -11,6 +11,7 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"fmt"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -41,7 +42,7 @@ func EncryptCBC(plainText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 		return nil, err
 	}
 	blockSize := block.BlockSize()
-	plainText = PKCS5Padding(plainText, blockSize)
+	plainText = PKCS7Padding(plainText, blockSize)
 	ivValue := ([]byte)(nil)
 	if len(iv) > 0 {
 		ivValue = iv[0]
@@ -80,23 +81,41 @@ func DecryptCBC(cipherText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 	blockModel := cipher.NewCBCDecrypter(block, ivValue)
 	plainText := make([]byte, len(cipherText))
 	blockModel.CryptBlocks(plainText, cipherText)
-	plainText, e := PKCS5UnPadding(plainText, blockSize)
+	plainText, e := PKCS7UnPadding(plainText, blockSize)
 	if e != nil {
 		return nil, e
 	}
 	return plainText, nil
 }
 
-func PKCS5Padding(src []byte, blockSize int) []byte {
+// PKCS5Padding default value for blockSize is 8
+func PKCS5Padding(src []byte, blockSize ...int) []byte {
+	blockSizeTemp := 8
+	if len(blockSize) > 0 {
+		blockSizeTemp = blockSize[0]
+	}
+	return PKCS7Padding(src, blockSizeTemp)
+}
+
+// PKCS5UnPadding default value for blockSize is 8
+func PKCS5UnPadding(src []byte, blockSize ...int) ([]byte, error) {
+	blockSizeTemp := 8
+	if len(blockSize) > 0 {
+		blockSizeTemp = blockSize[0]
+	}
+	return PKCS7UnPadding(src, blockSizeTemp)
+}
+
+func PKCS7Padding(src []byte, blockSize int) []byte {
 	padding := blockSize - len(src)%blockSize
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(src, padtext...)
 }
 
-func PKCS5UnPadding(src []byte, blockSize int) ([]byte, error) {
+func PKCS7UnPadding(src []byte, blockSize int) ([]byte, error) {
 	length := len(src)
 	if blockSize <= 0 {
-		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "invalid blocklen")
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, fmt.Sprintf("invalid blockSize: %d", blockSize))
 	}
 
 	if length%blockSize != 0 || length == 0 {
@@ -105,7 +124,7 @@ func PKCS5UnPadding(src []byte, blockSize int) ([]byte, error) {
 
 	unpadding := int(src[length-1])
 	if unpadding > blockSize || unpadding == 0 {
-		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "invalid padding")
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "invalid unpadding")
 	}
 
 	padding := src[length-unpadding:]
