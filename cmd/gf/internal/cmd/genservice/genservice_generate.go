@@ -194,28 +194,9 @@ func (c CGenService) generateInitializationFile(in CGenServiceInput, importSrcPa
 }
 
 // getDstFileNameCase call gstr.Case* function to convert the s to specified case.
-func (c CGenService) getDstFileNameCase(str, caseStr string) string {
-	switch gstr.ToLower(caseStr) {
-	case gstr.ToLower("Lower"):
-		return gstr.ToLower(str)
-
-	case gstr.ToLower("Camel"):
-		return gstr.CaseCamel(str)
-
-	case gstr.ToLower("CamelLower"):
-		return gstr.CaseCamelLower(str)
-
-	case gstr.ToLower("Kebab"):
-		return gstr.CaseKebab(str)
-
-	case gstr.ToLower("KebabScreaming"):
-		return gstr.CaseKebabScreaming(str)
-
-	case gstr.ToLower("SnakeFirstUpper"):
-		return gstr.CaseSnakeFirstUpper(str)
-
-	case gstr.ToLower("SnakeScreaming"):
-		return gstr.CaseSnakeScreaming(str)
+func (c CGenService) getDstFileNameCase(str, caseStr string) (newStr string) {
+	if newStr := gstr.CaseConvert(str, gstr.CaseTypeMatch(caseStr)); newStr != str {
+		return newStr
 	}
 	return gstr.CaseSnake(str)
 }
