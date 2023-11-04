@@ -406,9 +406,13 @@ func mergeDefaultStructValue(data map[string]interface{}, pointer interface{}) e
 		var (
 			foundKey   string
 			foundValue interface{}
+			fieldName  string
 		)
 		for _, field := range tagFields {
-			foundKey, foundValue = gutil.MapPossibleItemByKey(data, field.Tag("name"))
+			if fieldName = field.Tag("name"); fieldName == "" {
+				fieldName = field.Name()
+			}
+			foundKey, foundValue = gutil.MapPossibleItemByKey(data, fieldName)
 			if foundKey == "" {
 				data[field.Name()] = field.TagValue
 			} else {
