@@ -332,13 +332,13 @@ func doStructBaseOnAttribute(
 ) error {
 	var customMappingAttrMap = make(map[string]struct{})
 	if len(mapping) > 0 {
-		for paramName, _ := range paramsMap {
+		for paramName := range paramsMap {
 			if passedAttrKey, ok := mapping[paramName]; ok {
 				customMappingAttrMap[passedAttrKey] = struct{}{}
 			}
 		}
 	}
-	for attrName, _ := range attrToCheckNameMap {
+	for attrName := range attrToCheckNameMap {
 		// The value by precise attribute name.
 		paramValue, ok := paramsMap[attrName]
 		if !ok {
