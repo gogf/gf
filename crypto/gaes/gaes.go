@@ -88,7 +88,9 @@ func DecryptCBC(cipherText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 	return plainText, nil
 }
 
-// PKCS5Padding default value for blockSize is 8
+// PKCS5Padding applies PKCS#5 padding to the source byte slice to match the given block size.
+//
+// If the block size is not provided, it defaults to 8.
 func PKCS5Padding(src []byte, blockSize ...int) []byte {
 	blockSizeTemp := 8
 	if len(blockSize) > 0 {
@@ -97,7 +99,9 @@ func PKCS5Padding(src []byte, blockSize ...int) []byte {
 	return PKCS7Padding(src, blockSizeTemp)
 }
 
-// PKCS5UnPadding default value for blockSize is 8
+// PKCS5UnPadding removes PKCS#5 padding from the source byte slice based on the given block size.
+//
+// If the block size is not provided, it defaults to 8.
 func PKCS5UnPadding(src []byte, blockSize ...int) ([]byte, error) {
 	blockSizeTemp := 8
 	if len(blockSize) > 0 {
@@ -106,12 +110,14 @@ func PKCS5UnPadding(src []byte, blockSize ...int) ([]byte, error) {
 	return PKCS7UnPadding(src, blockSizeTemp)
 }
 
+// PKCS7Padding applies PKCS#7 padding to the source byte slice to match the given block size.
 func PKCS7Padding(src []byte, blockSize int) []byte {
 	padding := blockSize - len(src)%blockSize
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(src, padtext...)
 }
 
+// PKCS7UnPadding removes PKCS#7 padding from the source byte slice based on the given block size.
 func PKCS7UnPadding(src []byte, blockSize int) ([]byte, error) {
 	length := len(src)
 	if blockSize <= 0 {
