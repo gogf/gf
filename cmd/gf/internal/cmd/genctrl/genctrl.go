@@ -38,7 +38,7 @@ gf gen ctrl
 )
 
 const (
-	PatternApiDefinition  = `type\s+(\w+)Req\s+struct\s+{([\s\S]+?)}`
+	PatternApiDefinition  = `type[\s\(]+(\w+)Req\s+struct\s+{([\s\S]+?)}`
 	PatternCtrlDefinition = `func\s+\(.+?\)\s+\w+\(.+?\*(\w+)\.(\w+)Req\)\s+\(.+?\*(\w+)\.(\w+)Res,\s+\w+\s+error\)\s+{`
 )
 
