@@ -19,9 +19,10 @@ import (
 const pkgLoadMode = 0xffffff
 
 type EnumsParser struct {
-	enums     []EnumItem
-	parsedPkg map[string]struct{}
-	prefixes  []string
+	enums            []EnumItem
+	parsedPkg        map[string]struct{}
+	prefixes         []string
+	standardPackages map[string]struct{}
 }
 
 type EnumItem struct {
@@ -31,23 +32,12 @@ type EnumItem struct {
 	Type  string        // Pkg.ID + TypeName
 }
 
-var standardPackages = make(map[string]struct{})
-
-func init() {
-	stdPackages, err := packages.Load(nil, "std")
-	if err != nil {
-		panic(err)
-	}
-	for _, p := range stdPackages {
-		standardPackages[p.ID] = struct{}{}
-	}
-}
-
 func NewEnumsParser(prefixes []string) *EnumsParser {
 	return &EnumsParser{
-		enums:     make([]EnumItem, 0),
-		parsedPkg: make(map[string]struct{}),
-		prefixes:  prefixes,
+		enums:            make([]EnumItem, 0),
+		parsedPkg:        make(map[string]struct{}),
+		prefixes:         prefixes,
+		standardPackages: getStandardPackages(),
 	}
 }
 
@@ -59,7 +49,7 @@ func (p *EnumsParser) ParsePackages(pkgs []*packages.Package) {
 
 func (p *EnumsParser) ParsePackage(pkg *packages.Package) {
 	// Ignore std packages.
-	if _, ok := standardPackages[pkg.ID]; ok {
+	if _, ok := p.standardPackages[pkg.ID]; ok {
 		return
 	}
 	// Ignore pared packages.
@@ -143,4 +133,16 @@ func (p *EnumsParser) Export() string {
 		typeEnumMap[enum.Type] = append(typeEnumMap[enum.Type], value)
 	}
 	return gjson.MustEncodeString(typeEnumMap)
+}
+
+func getStandardPackages() map[string]struct{} {
+	standardPackages := make(map[string]struct{})
+	stdPackages, err := packages.Load(nil, "std")
+	if err != nil {
+		panic(err)
+	}
+	for _, p := range stdPackages {
+		standardPackages[p.ID] = struct{}{}
+	}
+	return standardPackages
 }
