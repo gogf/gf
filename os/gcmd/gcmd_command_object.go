@@ -353,6 +353,9 @@ func newArgumentsFromInput(object interface{}) (args []Argument, err error) {
 		}
 		if arg.Name == "" {
 			arg.Name = field.Name()
+		} else if arg.Name != field.Name() {
+			arg.FieldName = field.Name()
+			nameSet.Add(arg.FieldName)
 		}
 		if arg.Name == helpOptionName {
 			return nil, gerror.Newf(
@@ -406,13 +409,9 @@ func mergeDefaultStructValue(data map[string]interface{}, pointer interface{}) e
 		var (
 			foundKey   string
 			foundValue interface{}
-			fieldName  string
 		)
 		for _, field := range tagFields {
-			if fieldName = field.Tag("name"); fieldName == "" {
-				fieldName = field.Name()
-			}
-			foundKey, foundValue = gutil.MapPossibleItemByKey(data, fieldName)
+			foundKey, foundValue = gutil.MapPossibleItemByKey(data, field.Name())
 			if foundKey == "" {
 				data[field.Name()] = field.TagValue
 			} else {
