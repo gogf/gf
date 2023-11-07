@@ -4,18 +4,19 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gmetric
+package otelmetric
 
 import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 
+	"github.com/gogf/gf/v2/os/gmetric"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func optionToMeasureOption(option ...Option) []metric.MeasurementOption {
+func optionToMeasureOption(option ...gmetric.Option) []metric.MeasurementOption {
 	var (
-		usedOption  Option
+		usedOption  gmetric.Option
 		measureOpts = make([]metric.MeasurementOption, 0)
 	)
 	if len(option) > 0 {
@@ -30,7 +31,7 @@ func optionToMeasureOption(option ...Option) []metric.MeasurementOption {
 	return measureOpts
 }
 
-func attributesToKeyValues(attrs Attributes) []attribute.KeyValue {
+func attributesToKeyValues(attrs gmetric.Attributes) []attribute.KeyValue {
 	var keyValues = make([]attribute.KeyValue, 0)
 	for _, attr := range attrs {
 		keyValues = append(keyValues, attributeToKeyValue(attr))
@@ -38,7 +39,7 @@ func attributesToKeyValues(attrs Attributes) []attribute.KeyValue {
 	return keyValues
 }
 
-func attributeToKeyValue(attr Attribute) attribute.KeyValue {
+func attributeToKeyValue(attr gmetric.Attribute) attribute.KeyValue {
 	var (
 		key   = attr.Key()
 		value = attr.Value()

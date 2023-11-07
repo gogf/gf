@@ -9,13 +9,43 @@ package gmetric
 
 import "context"
 
+type MetricType string
+
+const (
+	MetricTypeCounter   MetricType = `Counter`
+	MetricTypeGauge     MetricType = `Gauge`
+	MetricTypeHistogram MetricType = `Histogram`
+)
+
+// Provider manages all Metric exporting.
+type Provider interface {
+	// Meter creates and returns a Meter.
+	Meter(instrument string) Meter
+
+	// ForceFlush flushes all pending telemetry.
+	//
+	// This method honors the deadline or cancellation of ctx. An appropriate
+	// error will be returned in these situations. There is no guaranteed that all
+	// telemetry be flushed or all resources have been released in these
+	// situations.
+	ForceFlush(ctx context.Context) error
+
+	// Shutdown shuts down the Provider flushing all pending telemetry and
+	// releasing any held computational resources.
+	Shutdown(ctx context.Context) error
+}
+
+// Meter manages all Metric performer creating.
+type Meter interface {
+	CounterPerformer(config CounterConfig) CounterPerformer
+	GaugePerformer(config GaugeConfig) GaugePerformer
+	HistogramPerformer(config HistogramConfig) HistogramPerformer
+}
+
 // Metric models a single sample value with its metadata being exported.
 type Metric interface {
-	Name() string      // Name returns the name of the metric.
-	Help() string      // Help returns the help description of the metric.
-	Unit() string      // Unit returns the unit name of the metric.
-	Inst() string      // Inst returns the instrument name of the metric.
-	Attrs() Attributes // Attrs returns the constant attribute slice of the metric.
+	// MetricInfo returns the basic information of a Metric.
+	MetricInfo() MetricInfo
 }
 
 // Attributes is a slice of Attribute.
@@ -37,15 +67,17 @@ type Attribute interface {
 //
 // To create Counter instances, use NewCounter.
 type Counter interface {
-	// Metric returns the basic information of a Metric.
-	Metric() Metric
+	Metric
+	CounterPerformer
+}
 
+type CounterPerformer interface {
 	// Inc increments the counter by 1. Use Add to increment it by arbitrary
 	// non-negative values.
-	Inc(ctx context.Context)
-	// Add adds the given value to the counter. It panics if the value is <
-	// 0.
-	Add(ctx context.Context, increment float64)
+	Inc(option ...Option)
+
+	// Add adds the given value to the counter. It panics if the value is < 0.
+	Add(increment float64, option ...Option)
 }
 
 // Gauge is a Metric that represents a single numerical value that can
@@ -57,23 +89,27 @@ type Counter interface {
 //
 // To create Gauge instances, use NewGauge.
 type Gauge interface {
-	// Metric returns the basic information of a Metric.
-	Metric() Metric
+	Metric
+	GaugePerformer
+}
 
+type GaugePerformer interface {
 	// Set sets the Gauge to an arbitrary value.
-	Set(ctx context.Context, value float64)
-	// Inc increments the Gauge by 1. Use Add to increment it by arbitrary
-	// values.
-	Inc(ctx context.Context)
-	// Dec decrements the Gauge by 1. Use Sub to decrement it by arbitrary
-	// values.
-	Dec(ctx context.Context)
+	Set(value float64)
+
+	// Inc increments the Gauge by 1. Use Add to increment it by arbitrary values.
+	Inc()
+
+	// Dec decrements the Gauge by 1. Use Sub to decrement it by arbitrary values.
+	Dec()
+
 	// Add adds the given value to the Gauge. (The value can be negative,
 	// resulting in a decrease of the Gauge.)
-	Add(ctx context.Context, increment float64)
+	Add(increment float64)
+
 	// Sub subtracts the given value from the Gauge. (The value can be
 	// negative, resulting in an increase of the Gauge.)
-	Sub(ctx context.Context, decrement float64)
+	Sub(decrement float64)
 }
 
 // Histogram counts individual observations from an event or sample stream in
@@ -81,10 +117,40 @@ type Gauge interface {
 // experimental Native Histograms, see below for more details). Similar to a
 // Summary, it also provides a sum of observations and an observation count.
 type Histogram interface {
-	// Metric returns the basic information of a Metric.
-	Metric() Metric
+	Metric
+	HistogramPerformer
 
+	// Buckets returns the bucket slice of the Histogram.
+	Buckets() []float64
+}
+
+type HistogramPerformer interface {
 	// Record adds a single value to the histogram.
 	// The value is usually positive or zero.
-	Record(ctx context.Context, increment float64, option ...Option)
+	Record(increment float64, option ...Option)
+}
+
+type MetricInfo interface {
+	Name() string      // Name returns the name of the metric.
+	Help() string      // Help returns the help description of the metric.
+	Unit() string      // Unit returns the unit name of the metric.
+	Inst() string      // Inst returns the instrument name of the metric.
+	Type() MetricType  // Type returns the type of the metric.
+	Attrs() Attributes // Attrs returns the constant attribute slice of the metric.
+}
+
+// Initializer manages the initialization for Metric.
+// It is called internally in Provider creation.
+type Initializer interface {
+	// Init initializes the Metric in Provider creation.
+	Init(provider Provider)
+}
+
+var (
+	// metrics stores all created Metric.
+	metrics = make([]Metric, 0)
+)
+
+func GetAllMetrics() []Metric {
+	return metrics
 }
