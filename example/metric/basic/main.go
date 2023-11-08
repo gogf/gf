@@ -4,7 +4,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/sdk/metric"
-	"log"
 
 	"github.com/gogf/gf/contrib/metric/otelmetric/v2"
 	"github.com/gogf/gf/v2/frame/g"
@@ -22,7 +21,6 @@ var (
 			Unit:       "%",
 			Attributes: gmetric.Attributes{
 				gmetric.NewAttribute("const_label_a", 1),
-				gmetric.NewAttribute("const_label_b", "value for const label b"),
 			},
 		},
 	})
@@ -33,47 +31,26 @@ var (
 			Help:       "This is a simple demo for Gauge usage",
 			Unit:       "bytes",
 			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("const_label_c", 2),
-				gmetric.NewAttribute("const_label_d", "value for const label d"),
+				gmetric.NewAttribute("const_label_b", 2),
 			},
 		},
 	})
-	histogram1 = gmetric.NewHistogram(gmetric.HistogramConfig{
+	histogram = gmetric.NewHistogram(gmetric.HistogramConfig{
 		MetricConfig: gmetric.MetricConfig{
 			Instrument: "github.com/gogf/gf/example/metric/basic",
-			Name:       "goframe.metric.demo.histogram1",
+			Name:       "goframe.metric.demo.histogram",
 			Help:       "This is a simple demo for histogram usage",
 			Unit:       "ms",
 			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("const_label_e", 3),
-				gmetric.NewAttribute("const_label_f", "value for const label f"),
+				gmetric.NewAttribute("const_label_c", 3),
 			},
 		},
 		Buckets: []float64{0, 10, 20, 50, 100, 500, 1000, 2000, 5000, 10000},
 	})
-	histogram2 = gmetric.NewHistogram(gmetric.HistogramConfig{
-		MetricConfig: gmetric.MetricConfig{
-			Instrument: "github.com/gogf/gf/example/metric/basic",
-			Name:       "goframe.metric.demo.histogram2",
-			Help:       "This demos we can specify custom buckets in Histogram creating",
-			Unit:       "",
-			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("const_label_g", 4),
-				gmetric.NewAttribute("const_label_h", "value for const label h"),
-			},
-		},
-		Buckets: []float64{100, 200, 300, 400, 500},
-	})
 )
 
 func main() {
-	var (
-		ctx               = gctx.New()
-		dynamicAttributes = gmetric.Attributes{
-			gmetric.NewAttribute("dynamic_a", 1),
-			gmetric.NewAttribute("dynamic_b", 0.1),
-		}
-	)
+	var ctx = gctx.New()
 
 	// Prometheus exporter to export metrics as Prometheus format.
 	exporter, err := prometheus.New(
@@ -81,7 +58,7 @@ func main() {
 		prometheus.WithoutUnits(),
 	)
 	if err != nil {
-		log.Fatal(err)
+		g.Log().Fatal(ctx, err)
 	}
 
 	// OpenTelemetry provider.
@@ -89,7 +66,7 @@ func main() {
 	defer provider.Shutdown(ctx)
 
 	// Add value for counter.
-	counter.Inc(gmetric.Option{Attributes: dynamicAttributes})
+	counter.Inc()
 	counter.Add(10)
 
 	// Set value for gauge.
@@ -97,23 +74,14 @@ func main() {
 	gauge.Inc()
 	gauge.Sub(1)
 
-	// Record values for histogram1.
-	histogram1.Record(1)
-	histogram1.Record(20)
-	histogram1.Record(30)
-	histogram1.Record(101)
-	histogram1.Record(2000)
-	histogram1.Record(9000)
-	histogram1.Record(20000)
-
-	// Record values for histogram2.
-	histogram2.Record(1)
-	histogram2.Record(10)
-	histogram2.Record(199)
-	histogram2.Record(299)
-	histogram2.Record(399)
-	histogram2.Record(499)
-	histogram2.Record(501)
+	// Record values for histogram.
+	histogram.Record(1)
+	histogram.Record(20)
+	histogram.Record(30)
+	histogram.Record(101)
+	histogram.Record(2000)
+	histogram.Record(9000)
+	histogram.Record(20000)
 
 	// HTTP Server for metrics exporting.
 	s := g.Server()

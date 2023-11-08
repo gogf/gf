@@ -4,44 +4,53 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gmetric interface definitions and basic functionalities for metric feature.
+// Package gmetric provides interface definitions and simple api for metric feature.
 package gmetric
 
 import "context"
 
+// MetricType is the type of metric.
 type MetricType string
 
 const (
-	MetricTypeCounter   MetricType = `Counter`
-	MetricTypeGauge     MetricType = `Gauge`
-	MetricTypeHistogram MetricType = `Histogram`
+	MetricTypeCounter   MetricType = `Counter`   // Counter.
+	MetricTypeGauge     MetricType = `Gauge`     // Gauge.
+	MetricTypeHistogram MetricType = `Histogram` // Histogram.
 )
 
 // Provider manages all Metric exporting.
 type Provider interface {
-	// SetAsGlobal sets current provider as global meter provider.
+	// SetAsGlobal sets current provider as global meter provider for current process.
 	SetAsGlobal()
 
 	// Meter creates and returns a Meter.
-	Meter(instrument string) Meter
+	// A Meter can produce types of Metric performer.
+	Meter() Meter
 
-	// ForceFlush flushes all pending telemetry.
+	// ForceFlush flushes all pending metrics.
 	//
 	// This method honors the deadline or cancellation of ctx. An appropriate
 	// error will be returned in these situations. There is no guaranteed that all
-	// telemetry be flushed or all resources have been released in these
-	// situations.
+	// metrics be flushed or all resources have been released in these situations.
 	ForceFlush(ctx context.Context) error
 
-	// Shutdown shuts down the Provider flushing all pending telemetry and
+	// Shutdown shuts down the Provider flushing all pending metrics and
 	// releasing any held computational resources.
 	Shutdown(ctx context.Context) error
 }
 
 // Meter manages all Metric performer creating.
 type Meter interface {
+	// CounterPerformer creates and returns a CounterPerformer that performs
+	// the operations for Counter metric.
 	CounterPerformer(config CounterConfig) CounterPerformer
+
+	// GaugePerformer creates and returns a GaugePerformer that performs
+	// the operations for Gauge metric.
 	GaugePerformer(config GaugeConfig) GaugePerformer
+
+	// HistogramPerformer creates and returns a HistogramPerformer that performs
+	// the operations for Histogram metric.
 	HistogramPerformer(config HistogramConfig) HistogramPerformer
 }
 
@@ -74,6 +83,7 @@ type Counter interface {
 	CounterPerformer
 }
 
+// CounterPerformer performs operations for Counter metric.
 type CounterPerformer interface {
 	// Inc increments the counter by 1. Use Add to increment it by arbitrary
 	// non-negative values.
@@ -96,6 +106,7 @@ type Gauge interface {
 	GaugePerformer
 }
 
+// GaugePerformer performs operations for Gauge metric.
 type GaugePerformer interface {
 	// Set sets the Gauge to an arbitrary value.
 	Set(value float64, option ...Option)
@@ -127,19 +138,22 @@ type Histogram interface {
 	Buckets() []float64
 }
 
+// HistogramPerformer performs operations for Histogram metric.
 type HistogramPerformer interface {
 	// Record adds a single value to the histogram.
 	// The value is usually positive or zero.
 	Record(increment float64, option ...Option)
 }
 
+// MetricInfo exports information of the Metric.
 type MetricInfo interface {
-	Name() string      // Name returns the name of the metric.
-	Help() string      // Help returns the help description of the metric.
-	Unit() string      // Unit returns the unit name of the metric.
-	Inst() string      // Inst returns the instrument name of the metric.
-	Type() MetricType  // Type returns the type of the metric.
-	Attrs() Attributes // Attrs returns the constant attribute slice of the metric.
+	Name() string              // Name returns the name of the metric.
+	Help() string              // Help returns the help description of the metric.
+	Unit() string              // Unit returns the unit name of the metric.
+	Type() MetricType          // Type returns the type of the metric.
+	Attrs() Attributes         // Attrs returns the constant attribute slice of the metric.
+	Instrument() string        // Inst returns the instrument name of the metric.
+	InstrumentVersion() string // Inst returns the instrument version of the metric.
 }
 
 // Initializer manages the initialization for Metric.
@@ -155,6 +169,7 @@ var (
 	metrics = make([]Metric, 0)
 )
 
+// GetAllMetrics returns all Metric that created by current package.
 func GetAllMetrics() []Metric {
 	return metrics
 }

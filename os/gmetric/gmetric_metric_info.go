@@ -6,12 +6,14 @@
 
 package gmetric
 
+import (
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+)
+
 // MetricConfig holds the basic options for creating a metric.
 type MetricConfig struct {
-	// Instrument is the OpenTelemetry instrumentation name to bind this Metric to a global MeterProvider.
-	Instrument string
-
-	// Name is the name of this metric.
+	// REQUIRED: Name is the name of this metric.
 	Name string
 
 	// Help provides information about this Histogram.
@@ -22,6 +24,12 @@ type MetricConfig struct {
 
 	// Attributes holds the constant key-value pair description metadata for this metric.
 	Attributes Attributes
+
+	// Instrument is the OpenTelemetry instrumentation name to bind this Metric to a global MeterProvider.
+	Instrument string
+
+	// InstrumentVersion is the OpenTelemetry instrumentation version to bind this Metric to a global MeterProvider.
+	InstrumentVersion string
 }
 
 type localMetricInfo struct {
@@ -30,14 +38,17 @@ type localMetricInfo struct {
 }
 
 func newMetricInfo(metricType MetricType, config MetricConfig) MetricInfo {
+	if config.Name == "" {
+		panic(gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`metric name cannot be empty, invalid metric config: %+v`,
+			config,
+		))
+	}
 	return &localMetricInfo{
 		config:     config,
 		metricType: metricType,
 	}
-}
-
-func (l *localMetricInfo) Inst() string {
-	return l.config.Instrument
 }
 
 func (l *localMetricInfo) Name() string {
@@ -58,4 +69,12 @@ func (l *localMetricInfo) Type() MetricType {
 
 func (l *localMetricInfo) Attrs() Attributes {
 	return l.config.Attributes
+}
+
+func (l *localMetricInfo) Instrument() string {
+	return l.config.Instrument
+}
+
+func (l *localMetricInfo) InstrumentVersion() string {
+	return l.config.InstrumentVersion
 }

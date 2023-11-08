@@ -21,7 +21,7 @@ type localGaugePerformer struct {
 	gauge                metric.Float64ObservableGauge
 }
 
-// newGaugePerformer creates and returns a GaugePerformer.
+// newGaugePerformer creates and returns a GaugePerformer that truly takes action to implement Gauge.
 func newGaugePerformer(meter metric.Meter, config gmetric.GaugeConfig) gmetric.GaugePerformer {
 	baseObservePerformer := newBaseObservePerformer(config.MetricConfig)
 	gauge, err := meter.Float64ObservableGauge(
@@ -40,7 +40,7 @@ func newGaugePerformer(meter metric.Meter, config gmetric.GaugeConfig) gmetric.G
 		panic(gerror.WrapCodef(
 			gcode.CodeInternalError,
 			err,
-			`create Float64Gauge failed with config: %+v`,
+			`create Float64ObservableGauge failed with config: %+v`,
 			config,
 		))
 	}

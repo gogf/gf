@@ -6,11 +6,13 @@
 
 package gmetric
 
+// localAttribute implements interface Attribute.
 type localAttribute struct {
 	key   string
 	value any
 }
 
+// NewAttribute creates and returns an Attribute by given `key` and `value`.
 func NewAttribute(key string, value any) Attribute {
 	return &localAttribute{
 		key:   key,
@@ -18,10 +20,12 @@ func NewAttribute(key string, value any) Attribute {
 	}
 }
 
+// Key returns the key of the attribute.
 func (l *localAttribute) Key() string {
 	return l.key
 }
 
+// Value returns the value of the attribute.
 func (l *localAttribute) Value() any {
 	return l.value
 }

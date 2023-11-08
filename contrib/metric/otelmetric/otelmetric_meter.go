@@ -7,6 +7,7 @@
 package otelmetric
 
 import (
+	otelmetric "go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/gogf/gf/v2/os/gmetric"
@@ -25,7 +26,10 @@ func newMeter(provider *metric.MeterProvider) gmetric.Meter {
 
 func (l *localMeter) CounterPerformer(config gmetric.CounterConfig) gmetric.CounterPerformer {
 	var (
-		meter     = l.provider.Meter(config.Instrument)
+		meter = l.provider.Meter(
+			config.Instrument,
+			otelmetric.WithInstrumentationVersion(config.InstrumentVersion),
+		)
 		performer = newCounterPerformer(meter, config)
 	)
 	return performer

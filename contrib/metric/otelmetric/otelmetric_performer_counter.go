@@ -21,7 +21,7 @@ type localCounterPerformer struct {
 	counter              metric.Float64ObservableCounter
 }
 
-// newCounterPerformer creates and returns a CounterPerformer.
+// newCounterPerformer creates and returns a CounterPerformer that truly takes action to implement Counter.
 func newCounterPerformer(meter metric.Meter, config gmetric.CounterConfig) gmetric.CounterPerformer {
 	baseObservePerformer := newBaseObservePerformer(config.MetricConfig)
 	counter, err := meter.Float64ObservableCounter(config.Name,
@@ -39,7 +39,7 @@ func newCounterPerformer(meter metric.Meter, config gmetric.CounterConfig) gmetr
 		panic(gerror.WrapCodef(
 			gcode.CodeInternalError,
 			err,
-			`create Float64Counter failed with config: %+v`,
+			`create Float64ObservableCounter failed with config: %+v`,
 			config,
 		))
 	}

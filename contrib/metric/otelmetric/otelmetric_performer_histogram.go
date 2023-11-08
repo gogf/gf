@@ -22,7 +22,7 @@ type localHistogramPerformer struct {
 	attributesOption metric.MeasurementOption
 }
 
-// newHistogramPerformer creates and returns a HistogramPerformer.
+// newHistogramPerformer creates and returns a HistogramPerformer that truly takes action to implement Histogram.
 func newHistogramPerformer(meter metric.Meter, config gmetric.HistogramConfig) gmetric.HistogramPerformer {
 	histogram, err := meter.Float64Histogram(
 		config.Name,
