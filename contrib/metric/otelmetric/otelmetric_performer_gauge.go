@@ -66,16 +66,15 @@ func (l *localGaugePerformer) Dec(option ...gmetric.Option) {
 	l.Sub(1, option...)
 }
 
+// Sub subtracts the given value from the Gauge. (The value can be
+// negative, resulting in an increase of the Gauge.)
+func (l *localGaugePerformer) Sub(decrement float64, option ...gmetric.Option) {
+	l.Add(-decrement, option...)
+}
+
 // Add adds the given value to the Gauge. (The value can be negative,
 // resulting in a decrease of the Gauge.)
 func (l *localGaugePerformer) Add(increment float64, option ...gmetric.Option) {
 	l.baseObservePerformer.AddValue(increment)
-	l.baseObservePerformer.SetObserveOptionsByOption(option...)
-}
-
-// Sub subtracts the given value from the Gauge. (The value can be
-// negative, resulting in an increase of the Gauge.)
-func (l *localGaugePerformer) Sub(decrement float64, option ...gmetric.Option) {
-	l.baseObservePerformer.AddValue(-decrement)
 	l.baseObservePerformer.SetObserveOptionsByOption(option...)
 }
