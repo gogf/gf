@@ -377,3 +377,45 @@ func Test_Router_Handler_Strict_WithGeneric(t *testing.T) {
 		t.Assert(client.GetContent(ctx, "/test3_slice?age=3"), `{"code":0,"message":"","data":[{"Test":3}]}`)
 	})
 }
+
+type ParameterCaseSensitiveController struct{}
+
+type ParameterCaseSensitiveControllerPathReq struct {
+	g.Meta `path:"/api/*path" method:"post"`
+	Path   string
+}
+
+type ParameterCaseSensitiveControllerPathRes struct {
+	Path string
+}
+
+func (c *ParameterCaseSensitiveController) Path(
+	ctx context.Context,
+	req *ParameterCaseSensitiveControllerPathReq,
+) (res *ParameterCaseSensitiveControllerPathRes, err error) {
+	return &ParameterCaseSensitiveControllerPathRes{Path: req.Path}, nil
+}
+
+func Test_Router_Handler_Strict_ParameterCaseSensitive(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Use(ghttp.MiddlewareHandlerResponse)
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Bind(&ParameterCaseSensitiveController{})
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		for i := 0; i < 1000; i++ {
+			t.Assert(
+				client.PostContent(ctx, "/api/111", `{"Path":"222"}`),
+				`{"code":0,"message":"","data":{"Path":"222"}}`,
+			)
+		}
+	})
+}

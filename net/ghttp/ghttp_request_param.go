@@ -158,6 +158,8 @@ func (r *Request) GetBody() []byte {
 	return r.bodyContent
 }
 
+// MakeBodyRepeatableRead marks the request body could be repeatedly readable or not.
+// It also returns the current content of the request body.
 func (r *Request) MakeBodyRepeatableRead(repeatableRead bool) []byte {
 	if r.bodyContent == nil {
 		var err error
