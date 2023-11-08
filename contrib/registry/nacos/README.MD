@@ -18,7 +18,7 @@ require github.com/gogf/gf/contrib/registry/nacos/v2 latest
 
 ### Reference example
 
-[server](example/registry/nacos/server/main.go)
+[server](../../../example/registry/nacos/server/main.go)
 ```go
 package main
 
@@ -43,7 +43,7 @@ func main() {
 }
 ```
 
-[client](example/registry/nacos/client/main.go)
+[client](../../../example/registry/nacos/client/main.go)
 ```go
 package main
 

@@ -18,7 +18,7 @@ require github.com/gogf/gf/contrib/registry/file/v2 latest
 
 ### Reference example
 
-[server](example/registry/file/server/main.go)
+[server](../../../example/registry/file/server/main.go)
 ```go
 package main
 
@@ -43,7 +43,7 @@ func main() {
 
 ```
 
-[client](example/registry/file/client/main.go)
+[client](../../../example/registry/file/client/main.go)
 ```go
 package main
 
