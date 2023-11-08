@@ -39,5 +39,5 @@ func (l *localGauge) Init(provider Provider) {
 	if _, ok := l.GaugePerformer.(noopGaugePerformer); !ok {
 		return
 	}
-	l.GaugePerformer = provider.Meter(l.Instrument).GaugePerformer(l.GaugeConfig)
+	l.GaugePerformer = provider.Meter().GaugePerformer(l.GaugeConfig)
 }

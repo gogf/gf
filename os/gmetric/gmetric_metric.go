@@ -6,10 +6,12 @@
 
 package gmetric
 
+// localMetric implements interface Metric.
 type localMetric struct {
 	metricInfo MetricInfo
 }
 
+// newMetric creates and returns an object that implements interface Metric.
 func newMetric(metricType MetricType, config MetricConfig) Metric {
 	return &localMetric{
 		metricInfo: newMetricInfo(metricType, config),

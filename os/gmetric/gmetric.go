@@ -151,9 +151,9 @@ type MetricInfo interface {
 	Help() string              // Help returns the help description of the metric.
 	Unit() string              // Unit returns the unit name of the metric.
 	Type() MetricType          // Type returns the type of the metric.
-	Attrs() Attributes         // Attrs returns the constant attribute slice of the metric.
-	Instrument() string        // Inst returns the instrument name of the metric.
-	InstrumentVersion() string // Inst returns the instrument version of the metric.
+	Attributes() Attributes    // Attributes returns the constant attribute slice of the metric.
+	Instrument() string        // Instrument returns the instrument name of the metric.
+	InstrumentVersion() string // InstrumentVersion returns the instrument version of the metric.
 }
 
 // Initializer manages the initialization for Metric.

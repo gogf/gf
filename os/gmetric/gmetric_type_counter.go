@@ -39,5 +39,5 @@ func (l *localCounter) Init(provider Provider) {
 	if _, ok := l.CounterPerformer.(noopCounterPerformer); !ok {
 		return
 	}
-	l.CounterPerformer = provider.Meter(l.Instrument).CounterPerformer(l.CounterConfig)
+	l.CounterPerformer = provider.Meter().CounterPerformer(l.CounterConfig)
 }

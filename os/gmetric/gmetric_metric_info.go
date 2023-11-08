@@ -14,6 +14,7 @@ import (
 // MetricConfig holds the basic options for creating a metric.
 type MetricConfig struct {
 	// REQUIRED: Name is the name of this metric.
+	// If no Name given, Metric creation panics.
 	Name string
 
 	// Help provides information about this Histogram.
@@ -32,11 +33,13 @@ type MetricConfig struct {
 	InstrumentVersion string
 }
 
+// localMetricInfo implements interface MetricInfo.
 type localMetricInfo struct {
 	config     MetricConfig
 	metricType MetricType
 }
 
+// newMetricInfo creates and returns a MetricInfo.
 func newMetricInfo(metricType MetricType, config MetricConfig) MetricInfo {
 	if config.Name == "" {
 		panic(gerror.NewCodef(
@@ -51,30 +54,37 @@ func newMetricInfo(metricType MetricType, config MetricConfig) MetricInfo {
 	}
 }
 
+// Name returns the name of the metric.
 func (l *localMetricInfo) Name() string {
 	return l.config.Name
 }
 
+// Help returns the help description of the metric.
 func (l *localMetricInfo) Help() string {
 	return l.config.Help
 }
 
+// Unit returns the unit name of the metric.
 func (l *localMetricInfo) Unit() string {
 	return l.config.Unit
 }
 
+// Type returns the type of the metric.
 func (l *localMetricInfo) Type() MetricType {
 	return l.metricType
 }
 
-func (l *localMetricInfo) Attrs() Attributes {
+// Attributes returns the constant attribute slice of the metric.
+func (l *localMetricInfo) Attributes() Attributes {
 	return l.config.Attributes
 }
 
+// Instrument returns the instrument name of the metric.
 func (l *localMetricInfo) Instrument() string {
 	return l.config.Instrument
 }
 
+// InstrumentVersion returns the instrument version of the metric.
 func (l *localMetricInfo) InstrumentVersion() string {
 	return l.config.InstrumentVersion
 }

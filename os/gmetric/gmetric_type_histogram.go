@@ -42,7 +42,7 @@ func (l *localHistogram) Init(provider Provider) {
 	if _, ok := l.HistogramPerformer.(noopHistogramPerformer); !ok {
 		return
 	}
-	l.HistogramPerformer = provider.Meter(l.Instrument).HistogramPerformer(l.HistogramConfig)
+	l.HistogramPerformer = provider.Meter().HistogramPerformer(l.HistogramConfig)
 }
 
 // Buckets returns the bucket slice of the Histogram.
