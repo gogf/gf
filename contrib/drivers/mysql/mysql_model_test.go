@@ -4118,7 +4118,7 @@ func Test_Model_Embedded_Filter(t *testing.T) {
 //			Password       string
 //			Nickname       string
 //			CreateTime     string
-//			NoneExistFiled string
+//			NoneExistField string
 //		}
 //		data := User{
 //			Id:         1,

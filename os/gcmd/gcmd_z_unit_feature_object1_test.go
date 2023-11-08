@@ -31,7 +31,7 @@ type TestCmdObjectEnvOutput struct{}
 
 type TestCmdObjectTestInput struct {
 	g.Meta `name:"test" usage:"root test" brief:"root test command" dc:"root test command description" ad:"root test command ad"`
-	Name   string `v:"required" short:"n" orphan:"false" brief:"name for test command"`
+	Name   string `name:"yourname" v:"required" short:"n" orphan:"false" brief:"name for test command" d:"tom"`
 }
 
 type TestCmdObjectTestOutput struct {
@@ -89,10 +89,23 @@ func Test_Command_NewFromObject_RunWithValue(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(cmd.Name, "root")
 
+		// test short name
 		os.Args = []string{"root", "test", "-n=john"}
 		value, err := cmd.RunWithValueError(ctx)
 		t.AssertNil(err)
 		t.Assert(value, `{"Content":"john"}`)
+
+		// test name tag name
+		os.Args = []string{"root", "test", "-yourname=hailaz"}
+		value1, err1 := cmd.RunWithValueError(ctx)
+		t.AssertNil(err1)
+		t.Assert(value1, `{"Content":"hailaz"}`)
+
+		// test default tag value
+		os.Args = []string{"root", "test"}
+		value2, err2 := cmd.RunWithValueError(ctx)
+		t.AssertNil(err2)
+		t.Assert(value2, `{"Content":"tom"}`)
 	})
 }
 
