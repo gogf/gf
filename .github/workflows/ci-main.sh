@@ -70,6 +70,14 @@ for file in `find . -name go.mod`; do
         fi
     fi
 
+    # package otelmetric needs golang >= v1.20
+    if [ "otelmetric" = $(basename $dirpath) ]; then
+        if ! go version|grep -qE "go1.[2-9][0-9]"; then
+          echo "ignore otelmetric as go version: $(go version)"
+          continue 1
+        fi
+    fi
+
     cd $dirpath
     go mod tidy
     go build ./...
