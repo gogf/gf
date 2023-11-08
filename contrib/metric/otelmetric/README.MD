@@ -34,7 +34,6 @@ import (
 var (
 	counter = gmetric.NewCounter(gmetric.CounterConfig{
 		MetricConfig: gmetric.MetricConfig{
-			Instrument: "github.com/gogf/gf/example/metric/basic",
 			Name:       "goframe.metric.demo.counter",
 			Help:       "This is a simple demo for Counter usage",
 			Unit:       "%",
@@ -45,7 +44,6 @@ var (
 	})
 	gauge = gmetric.NewGauge(gmetric.GaugeConfig{
 		MetricConfig: gmetric.MetricConfig{
-			Instrument: "github.com/gogf/gf/example/metric/basic",
 			Name:       "goframe.metric.demo.gauge",
 			Help:       "This is a simple demo for Gauge usage",
 			Unit:       "bytes",
@@ -56,7 +54,6 @@ var (
 	})
 	histogram = gmetric.NewHistogram(gmetric.HistogramConfig{
 		MetricConfig: gmetric.MetricConfig{
-			Instrument: "github.com/gogf/gf/example/metric/basic",
 			Name:       "goframe.metric.demo.histogram",
 			Help:       "This is a simple demo for histogram usage",
 			Unit:       "ms",
