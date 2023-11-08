@@ -20,11 +20,11 @@ func main() {
 	grpcx.Resolver.Register(etcd.New("127.0.0.1:2379"))
 
 	var ctx = gctx.New()
-	tp, err := otlpgrpc.Init(serviceName, endpoint, traceToken)
+	shutdown, err := otlpgrpc.Init(serviceName, endpoint, traceToken)
 	if err != nil {
 		g.Log().Fatal(ctx, err)
 	}
-	defer tp.Shutdown(ctx)
+	defer shutdown()
 
 	StartRequests()
 }
