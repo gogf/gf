@@ -8,6 +8,7 @@ package otelmetric
 
 import (
 	"context"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/sdk/instrumentation"
 	"go.opentelemetry.io/otel/sdk/metric"
 
@@ -30,16 +31,20 @@ func newLocalProvider(options ...metric.Option) gmetric.Provider {
 	return provider
 }
 
-func (l *localProvider) Meter(instrument string) gmetric.Meter {
+func (l *localProvider) SetAsGlobal() {
+	otel.SetMeterProvider(l.provider)
+}
 
+func (l *localProvider) Meter(instrument string) gmetric.Meter {
+	return newMeter(l.provider)
 }
 
 func (l *localProvider) ForceFlush(ctx context.Context) error {
-
+	return l.provider.ForceFlush(ctx)
 }
 
 func (l *localProvider) Shutdown(ctx context.Context) error {
-
+	return l.provider.Shutdown(ctx)
 }
 
 func createViewsByMetrics(metrics []gmetric.Metric) []metric.View {
@@ -49,6 +54,7 @@ func createViewsByMetrics(metrics []gmetric.Metric) []metric.View {
 		case gmetric.MetricTypeCounter:
 		case gmetric.MetricTypeGauge:
 		case gmetric.MetricTypeHistogram:
+			// Custom buckets for each Histogram.
 			views = append(views, metric.NewView(
 				metric.Instrument{
 					Name:  m.MetricInfo().Name(),

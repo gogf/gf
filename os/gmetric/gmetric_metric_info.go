@@ -21,7 +21,7 @@ type MetricConfig struct {
 	Unit string
 
 	// Attributes holds the constant key-value pair description metadata for this metric.
-	Attributes []Attribute
+	Attributes Attributes
 }
 
 type localMetricInfo struct {

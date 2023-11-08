@@ -14,21 +14,21 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func optionToMeasureOption(option ...gmetric.Option) []metric.MeasurementOption {
+func optionToObserveOptions(option ...gmetric.Option) []metric.ObserveOption {
 	var (
-		usedOption  gmetric.Option
-		measureOpts = make([]metric.MeasurementOption, 0)
+		usedOption     gmetric.Option
+		observeOptions = make([]metric.ObserveOption, 0)
 	)
 	if len(option) > 0 {
 		usedOption = option[0]
 	}
 	if len(usedOption.Attributes) > 0 {
-		measureOpts = append(
-			measureOpts,
+		observeOptions = append(
+			observeOptions,
 			metric.WithAttributes(attributesToKeyValues(usedOption.Attributes)...),
 		)
 	}
-	return measureOpts
+	return observeOptions
 }
 
 func attributesToKeyValues(attrs gmetric.Attributes) []attribute.KeyValue {

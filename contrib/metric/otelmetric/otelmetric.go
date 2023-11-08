@@ -12,6 +12,8 @@ import (
 	"github.com/gogf/gf/v2/os/gmetric"
 )
 
-func NewProvider(options ...metric.Option) gmetric.Provider {
-
+// NewProvider creates and returns a metrics provider.
+func NewProvider(option ...metric.Option) gmetric.Provider {
+	provider := newLocalProvider(option...)
+	return provider
 }

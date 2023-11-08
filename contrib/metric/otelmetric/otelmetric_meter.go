@@ -24,13 +24,25 @@ func newMeter(provider *metric.MeterProvider) gmetric.Meter {
 }
 
 func (l *localMeter) CounterPerformer(config gmetric.CounterConfig) gmetric.CounterPerformer {
-	l.provider.Meter(config.Instrument).
+	var (
+		meter     = l.provider.Meter(config.Instrument)
+		performer = newCounterPerformer(meter, config)
+	)
+	return performer
 }
 
 func (l *localMeter) GaugePerformer(config gmetric.GaugeConfig) gmetric.GaugePerformer {
-
+	var (
+		meter     = l.provider.Meter(config.Instrument)
+		performer = newGaugePerformer(meter, config)
+	)
+	return performer
 }
 
 func (l *localMeter) HistogramPerformer(config gmetric.HistogramConfig) gmetric.HistogramPerformer {
-
+	var (
+		meter     = l.provider.Meter(config.Instrument)
+		performer = newHistogramPerformer(meter, config)
+	)
+	return performer
 }

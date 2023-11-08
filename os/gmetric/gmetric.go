@@ -19,6 +19,9 @@ const (
 
 // Provider manages all Metric exporting.
 type Provider interface {
+	// SetAsGlobal sets current provider as global meter provider.
+	SetAsGlobal()
+
 	// Meter creates and returns a Meter.
 	Meter(instrument string) Meter
 
@@ -95,21 +98,21 @@ type Gauge interface {
 
 type GaugePerformer interface {
 	// Set sets the Gauge to an arbitrary value.
-	Set(value float64)
+	Set(value float64, option ...Option)
 
 	// Inc increments the Gauge by 1. Use Add to increment it by arbitrary values.
-	Inc()
+	Inc(option ...Option)
 
 	// Dec decrements the Gauge by 1. Use Sub to decrement it by arbitrary values.
-	Dec()
+	Dec(option ...Option)
 
 	// Add adds the given value to the Gauge. (The value can be negative,
 	// resulting in a decrease of the Gauge.)
-	Add(increment float64)
+	Add(increment float64, option ...Option)
 
 	// Sub subtracts the given value from the Gauge. (The value can be
 	// negative, resulting in an increase of the Gauge.)
-	Sub(decrement float64)
+	Sub(decrement float64, option ...Option)
 }
 
 // Histogram counts individual observations from an event or sample stream in
