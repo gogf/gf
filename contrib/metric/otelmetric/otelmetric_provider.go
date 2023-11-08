@@ -28,6 +28,7 @@ func newLocalProvider(options ...metric.Option) gmetric.Provider {
 	provider := &localProvider{
 		provider: metric.NewMeterProvider(options...),
 	}
+	initializeAllMetrics(metrics, provider)
 	return provider
 }
 
@@ -69,4 +70,12 @@ func createViewsByMetrics(metrics []gmetric.Metric) []metric.View {
 		}
 	}
 	return views
+}
+
+func initializeAllMetrics(metrics []gmetric.Metric, provider gmetric.Provider) {
+	for _, m := range metrics {
+		if initializer, ok := m.(gmetric.Initializer); ok {
+			initializer.Init(provider)
+		}
+	}
 }

@@ -9,5 +9,5 @@ package gmetric
 // Option holds the option for perform a metric operation.
 type Option struct {
 	// Attributes holds the dynamic key-value pair metadata.
-	Attributes []Attribute
+	Attributes Attributes
 }

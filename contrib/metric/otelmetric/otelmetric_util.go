@@ -8,28 +8,10 @@ package otelmetric
 
 import (
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/metric"
 
 	"github.com/gogf/gf/v2/os/gmetric"
 	"github.com/gogf/gf/v2/util/gconv"
 )
-
-func optionToObserveOptions(option ...gmetric.Option) []metric.ObserveOption {
-	var (
-		usedOption     gmetric.Option
-		observeOptions = make([]metric.ObserveOption, 0)
-	)
-	if len(option) > 0 {
-		usedOption = option[0]
-	}
-	if len(usedOption.Attributes) > 0 {
-		observeOptions = append(
-			observeOptions,
-			metric.WithAttributes(attributesToKeyValues(usedOption.Attributes)...),
-		)
-	}
-	return observeOptions
-}
 
 func attributesToKeyValues(attrs gmetric.Attributes) []attribute.KeyValue {
 	var keyValues = make([]attribute.KeyValue, 0)

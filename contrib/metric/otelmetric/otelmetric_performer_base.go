@@ -20,7 +20,6 @@ type iBaseObservePerformer interface {
 	AddValue(value float64) float64
 	GetObserveOptions() []metric.ObserveOption
 	SetObserveOptionsByOption(option ...gmetric.Option)
-	MergeToObserveOptions(option ...gmetric.Option) []metric.ObserveOption
 }
 
 // localBaseObservePerformer is a base struct to implement interface Performer.
@@ -57,10 +56,6 @@ func (l *localBaseObservePerformer) GetObserveOptions() []metric.ObserveOption {
 }
 
 func (l *localBaseObservePerformer) SetObserveOptionsByOption(option ...gmetric.Option) {
-	l.options.Set(optionToObserveOptions(option...))
-}
-
-func (l *localBaseObservePerformer) MergeToObserveOptions(option ...gmetric.Option) []metric.ObserveOption {
 	var (
 		usedOption     gmetric.Option
 		observeOptions = []metric.ObserveOption{l.attributesOption}
@@ -74,5 +69,5 @@ func (l *localBaseObservePerformer) MergeToObserveOptions(option ...gmetric.Opti
 			metric.WithAttributes(attributesToKeyValues(usedOption.Attributes)...),
 		)
 	}
-	return observeOptions
+	l.options.Set(observeOptions)
 }

@@ -146,6 +146,7 @@ type MetricInfo interface {
 // It is called internally in Provider creation.
 type Initializer interface {
 	// Init initializes the Metric in Provider creation.
+	// It sets the metric performer which really takes action.
 	Init(provider Provider)
 }
 
