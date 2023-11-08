@@ -51,7 +51,7 @@ func (c cVersion) Index(ctx context.Context, in cVersionInput) (*cVersionOutput,
 	goVersion, ok := getGoVersion()
 	if ok {
 		gfVersion = getGoFrameVersion()
-		goVersion = "\n  Go Version: " + goVersion
+		goVersion = "\n\tGo Version: " + goVersion
 	} else {
 		v, err := c.getGFVersionOfCurrentProject()
 		if err == nil {
@@ -61,19 +61,18 @@ func (c cVersion) Index(ctx context.Context, in cVersionInput) (*cVersionOutput,
 
 	envDetail = fmt.Sprintf(`
 Env Detail:
-  CLI Installed At: %s%s
-  GoFrame Version(go.mod): %s
+	CLI Installed At: %s%s
+	GoFrame Version(go.mod): %s
 `, gfile.SelfPath(), goVersion, gfVersion)
 
 	docDetail = fmt.Sprintf(`
 Others Detail:
-  Docs: https://goframe.org
-  Now Time: %s`, time.Now().Format("2006-01-02 15:04:05"))
+	Docs: https://goframe.org
+	Now Time: %s`, time.Now().Format("2006-01-02 15:04:05"))
 
-	mlog.Print(version +
-		envDetail +
-		cliDetail +
-		docDetail)
+	output := version + envDetail + cliDetail + docDetail
+	output = strings.ReplaceAll(output, "\t", "  ")
+	mlog.Print(output)
 
 	return nil, nil
 }
@@ -87,7 +86,7 @@ func getGoFrameVersion() (gfVersion string) {
 	pkgList := gstr.Split(pkgInfo, "\n")
 	for _, v := range pkgList {
 		if strings.HasPrefix(v, "github.com/gogf/gf") {
-			gfVersion += fmt.Sprintf("\n    %s", v)
+			gfVersion += fmt.Sprintf("\n\t\t%s", v)
 		}
 	}
 	return
@@ -116,16 +115,16 @@ GoFrame CLI Build Detail:`)
 	}
 	if info.GoFrame == "" {
 		cliDetail += fmt.Sprintf(`
-  Go Version: %s
+	Go Version: %s
 `, runtime.Version())
 		return
 	}
 
 	cliDetail += fmt.Sprintf(`
-  Go Version:  %s
-  GF Version:  %s
-  Git Commit:  %s
-  Build Time:  %s
+	Go Version:  %s
+	GF Version:  %s
+	Git Commit:  %s
+	Build Time:  %s
 `, info.Golang, info.GoFrame, info.Git, info.Time)
 	return
 }
