@@ -15,35 +15,38 @@ import (
 var (
 	counter = gmetric.NewCounter(gmetric.CounterConfig{
 		MetricConfig: gmetric.MetricConfig{
-			Instrument: "github.com/gogf/gf/example/metric/basic",
-			Name:       "goframe.metric.demo.counter",
-			Help:       "This is a simple demo for Counter usage",
-			Unit:       "%",
+			Name: "goframe.metric.demo.counter",
+			Help: "This is a simple demo for Counter usage",
+			Unit: "%",
 			Attributes: gmetric.Attributes{
 				gmetric.NewAttribute("const_label_a", 1),
 			},
+			Instrument:        "github.com/gogf/gf/example/metric/basic",
+			InstrumentVersion: "v1.0",
 		},
 	})
 	gauge = gmetric.NewGauge(gmetric.GaugeConfig{
 		MetricConfig: gmetric.MetricConfig{
-			Instrument: "github.com/gogf/gf/example/metric/basic",
-			Name:       "goframe.metric.demo.gauge",
-			Help:       "This is a simple demo for Gauge usage",
-			Unit:       "bytes",
+			Name: "goframe.metric.demo.gauge",
+			Help: "This is a simple demo for Gauge usage",
+			Unit: "bytes",
 			Attributes: gmetric.Attributes{
 				gmetric.NewAttribute("const_label_b", 2),
 			},
+			Instrument:        "github.com/gogf/gf/example/metric/basic",
+			InstrumentVersion: "v1.0",
 		},
 	})
 	histogram = gmetric.NewHistogram(gmetric.HistogramConfig{
 		MetricConfig: gmetric.MetricConfig{
-			Instrument: "github.com/gogf/gf/example/metric/basic",
-			Name:       "goframe.metric.demo.histogram",
-			Help:       "This is a simple demo for histogram usage",
-			Unit:       "ms",
+			Name: "goframe.metric.demo.histogram",
+			Help: "This is a simple demo for histogram usage",
+			Unit: "ms",
 			Attributes: gmetric.Attributes{
 				gmetric.NewAttribute("const_label_c", 3),
 			},
+			Instrument:        "github.com/gogf/gf/example/metric/basic",
+			InstrumentVersion: "v1.0",
 		},
 		Buckets: []float64{0, 10, 20, 50, 100, 500, 1000, 2000, 5000, 10000},
 	})

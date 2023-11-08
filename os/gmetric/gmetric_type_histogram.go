@@ -33,6 +33,9 @@ func NewHistogram(config HistogramConfig) Histogram {
 		HistogramConfig:    config,
 		HistogramPerformer: newNoopHistogramPerformer(),
 	}
+	if globalProvider != nil {
+		m.Init(globalProvider)
+	}
 	metrics = append(metrics, m)
 	return m
 }

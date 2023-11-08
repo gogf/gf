@@ -30,6 +30,9 @@ func NewCounter(config CounterConfig) Counter {
 		CounterConfig:    config,
 		CounterPerformer: newNoopCounterPerformer(),
 	}
+	if globalProvider != nil {
+		m.Init(globalProvider)
+	}
 	metrics = append(metrics, m)
 	return m
 }

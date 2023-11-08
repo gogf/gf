@@ -36,6 +36,7 @@ func newLocalProvider(options ...metric.Option) gmetric.Provider {
 
 // SetAsGlobal sets current provider as global meter provider for current process.
 func (l *localProvider) SetAsGlobal() {
+	gmetric.SetGlobalProvider(l)
 	otel.SetMeterProvider(l.provider)
 }
 

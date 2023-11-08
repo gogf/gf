@@ -30,6 +30,9 @@ func NewGauge(config GaugeConfig) Gauge {
 		GaugeConfig:    config,
 		GaugePerformer: newNoopGaugePerformer(),
 	}
+	if globalProvider != nil {
+		m.Init(globalProvider)
+	}
 	metrics = append(metrics, m)
 	return m
 }

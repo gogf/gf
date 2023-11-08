@@ -19,6 +19,8 @@ const (
 )
 
 // Provider manages all Metric exporting.
+// Be caution that the Histogram buckets could not be customized if the creation of the Histogram
+// is before the creation of Provider.
 type Provider interface {
 	// SetAsGlobal sets current provider as global meter provider for current process.
 	SetAsGlobal()
@@ -167,7 +169,16 @@ type Initializer interface {
 var (
 	// metrics stores all created Metric.
 	metrics = make([]Metric, 0)
+
+	// globalProvider is the provider for global usage.
+	globalProvider Provider
 )
+
+// SetGlobalProvider registers `provider` as the global Provider,
+// which means the following metrics creating will be base on the global provider.
+func SetGlobalProvider(provider Provider) {
+	globalProvider = provider
+}
 
 // GetAllMetrics returns all Metric that created by current package.
 func GetAllMetrics() []Metric {

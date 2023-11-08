@@ -15,13 +15,14 @@ import (
 var (
 	counter = gmetric.NewCounter(gmetric.CounterConfig{
 		MetricConfig: gmetric.MetricConfig{
-			Instrument: "github.com/gogf/gf/example/metric/basic",
-			Name:       "goframe.metric.demo.counter",
-			Help:       "This is a simple demo for dynamic attributes",
-			Unit:       "%",
+			Name: "goframe.metric.demo.counter",
+			Help: "This is a simple demo for dynamic attributes",
+			Unit: "%",
 			Attributes: gmetric.Attributes{
 				gmetric.NewAttribute("const_label", 1),
 			},
+			Instrument:        "github.com/gogf/gf/example/metric/dynamic_attributes",
+			InstrumentVersion: "v1.0",
 		},
 	})
 )

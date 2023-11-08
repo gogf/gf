@@ -15,25 +15,27 @@ import (
 var (
 	histogram1 = gmetric.NewHistogram(gmetric.HistogramConfig{
 		MetricConfig: gmetric.MetricConfig{
-			Instrument: "github.com/gogf/gf/example/metric/histogram_buckets",
-			Name:       "goframe.metric.demo.histogram1",
-			Help:       "This is a simple demo for histogram usage",
-			Unit:       "ms",
+			Name: "goframe.metric.demo.histogram1",
+			Help: "This is a simple demo for histogram usage",
+			Unit: "ms",
 			Attributes: gmetric.Attributes{
 				gmetric.NewAttribute("const_label_a", 1),
 			},
+			Instrument:        "github.com/gogf/gf/example/metric/histogram_buckets",
+			InstrumentVersion: "v1.0",
 		},
 		Buckets: []float64{0, 10, 20, 50, 100, 500, 1000, 2000, 5000, 10000},
 	})
 	histogram2 = gmetric.NewHistogram(gmetric.HistogramConfig{
 		MetricConfig: gmetric.MetricConfig{
-			Instrument: "github.com/gogf/gf/example/metric/histogram_buckets",
-			Name:       "goframe.metric.demo.histogram2",
-			Help:       "This demos we can specify custom buckets in Histogram creating",
-			Unit:       "",
+			Name: "goframe.metric.demo.histogram2",
+			Help: "This demos we can specify custom buckets in Histogram creating",
+			Unit: "",
 			Attributes: gmetric.Attributes{
 				gmetric.NewAttribute("const_label_b", 2),
 			},
+			Instrument:        "github.com/gogf/gf/example/metric/histogram_buckets",
+			InstrumentVersion: "v1.0",
 		},
 		Buckets: []float64{100, 200, 300, 400, 500},
 	})
