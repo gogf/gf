@@ -785,7 +785,7 @@ func (c *Core) HasTable(name string) (bool, error) {
 	return result.Bool(), nil
 }
 
-// isSoftCreatedFieldName checks and returns whether given filed name is an automatic-filled created time.
+// isSoftCreatedFieldName checks and returns whether given field name is an automatic-filled created time.
 func (c *Core) isSoftCreatedFieldName(fieldName string) bool {
 	if fieldName == "" {
 		return false
@@ -794,9 +794,9 @@ func (c *Core) isSoftCreatedFieldName(fieldName string) bool {
 		if utils.EqualFoldWithoutChars(fieldName, config.CreatedAt) {
 			return true
 		}
-		return gstr.InArray(append([]string{config.CreatedAt}, createdFiledNames...), fieldName)
+		return gstr.InArray(append([]string{config.CreatedAt}, createdFieldNames...), fieldName)
 	}
-	for _, v := range createdFiledNames {
+	for _, v := range createdFieldNames {
 		if utils.EqualFoldWithoutChars(fieldName, v) {
 			return true
 		}

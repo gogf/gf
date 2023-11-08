@@ -3726,7 +3726,7 @@ func Test_Model_Insert_KeyFieldNameMapping_Error(t *testing.T) {
 			Password       string
 			Nickname       string
 			CreateTime     string
-			NoneExistFiled string
+			NoneExistField string
 		}
 		data := User{
 			Id:         1,

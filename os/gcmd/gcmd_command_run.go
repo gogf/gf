@@ -171,10 +171,12 @@ func (c *Command) reParse(ctx context.Context, parser *Parser) (*Parser, error) 
 		if arg.IsArg {
 			continue
 		}
+		optionKey = arg.Name
+		if arg.FieldName != "" {
+			optionKey += fmt.Sprintf(`,%s`, arg.FieldName)
+		}
 		if arg.Short != "" {
-			optionKey = fmt.Sprintf(`%s,%s`, arg.Name, arg.Short)
-		} else {
-			optionKey = arg.Name
+			optionKey += fmt.Sprintf(`,%s`, arg.Short)
 		}
 		supportedOptions[optionKey] = !arg.Orphan
 	}

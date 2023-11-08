@@ -163,7 +163,7 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 			isNull    = false
 			fieldType = m["type"].String()
 		)
-		// in clickhouse , filed type like is Nullable(int)
+		// in clickhouse , field type like is Nullable(int)
 		fieldsResult, _ := gregex.MatchString(`^Nullable\((.*?)\)`, fieldType)
 		if len(fieldsResult) == 2 {
 			isNull = true
