@@ -118,7 +118,7 @@ func GetImportPath(filePath string) string {
 func GetModPath() string {
 	var (
 		oldDir    = gfile.Pwd()
-		newDir    = gfile.Dir(oldDir)
+		newDir    = oldDir
 		goModName = "go.mod"
 		goModPath string
 	)
@@ -127,11 +127,11 @@ func GetModPath() string {
 		if gfile.Exists(goModPath) {
 			return goModPath
 		}
-		oldDir = newDir
 		newDir = gfile.Dir(oldDir)
 		if newDir == oldDir {
 			break
 		}
+		oldDir = newDir
 	}
 	return ""
 }
