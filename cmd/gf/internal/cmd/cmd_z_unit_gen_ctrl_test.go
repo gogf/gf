@@ -33,7 +33,6 @@ func Test_Gen_Ctrl_Default(t *testing.T) {
 			}
 		)
 		err := gutil.FillStructWithDefault(&in)
-
 		t.AssertNil(err)
 
 		err = gfile.Mkdir(path)
@@ -45,7 +44,7 @@ func Test_Gen_Ctrl_Default(t *testing.T) {
 			panic(err)
 		}
 
-		// apiInterface files
+		// apiInterface file
 		var (
 			genApi       = apiFolder + filepath.FromSlash("/article/article.go")
 			genApiExpect = apiFolder + filepath.FromSlash("/article/article_expect.go")
@@ -79,7 +78,7 @@ func Test_Gen_Ctrl_Default(t *testing.T) {
 			testPath + filepath.FromSlash("/article/article_v2_create.go"),
 			testPath + filepath.FromSlash("/article/article_v2_update.go"),
 		}
-		for i, _ := range files {
+		for i := range files {
 			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))
 		}
 	})
