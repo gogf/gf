@@ -166,6 +166,16 @@ type Initializer interface {
 	Init(provider Provider)
 }
 
+// CallbackResult is the result that a callback should return.
+type CallbackResult struct {
+	Value      float64    // New metric value after callback.
+	Attributes Attributes // Dynamic attributes after callback.
+}
+
+// Callback function for metric.
+// A Callback is automatically called when metric reader starts reading the metric value.
+type Callback func(ctx context.Context) (*CallbackResult, error)
+
 var (
 	// metrics stores all created Metric.
 	metrics = make([]Metric, 0)

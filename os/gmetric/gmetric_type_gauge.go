@@ -9,6 +9,7 @@ package gmetric
 // GaugeConfig bundles the configuration for creating a Gauge metric.
 type GaugeConfig struct {
 	MetricConfig
+	Callback Callback // Callback function for metric.
 }
 
 // localGauge is the local implements for interface Gauge.

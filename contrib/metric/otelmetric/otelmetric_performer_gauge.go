@@ -28,7 +28,24 @@ func newGaugePerformer(meter metric.Meter, config gmetric.GaugeConfig) gmetric.G
 		config.Name,
 		metric.WithDescription(config.Help),
 		metric.WithUnit(config.Unit),
-		metric.WithFloat64Callback(func(_ context.Context, observer metric.Float64Observer) error {
+		metric.WithFloat64Callback(func(ctx context.Context, observer metric.Float64Observer) error {
+			if config.Callback != nil {
+				result, err := config.Callback(ctx)
+				if err != nil {
+					return gerror.WrapCodef(
+						gcode.CodeOperationFailed,
+						err,
+						`callback failed for metric "%s"`, config.Name,
+					)
+				}
+				if result != nil {
+					observer.Observe(
+						result.Value,
+						baseObservePerformer.MergeAttributesToObserveOptions(result.Attributes)...,
+					)
+				}
+				return nil
+			}
 			observer.Observe(
 				baseObservePerformer.GetValue(),
 				baseObservePerformer.GetObserveOptions()...,

@@ -31,6 +31,9 @@ type iBaseObservePerformer interface {
 	// SetObserveOptionsByOption sets the observe options for current observable performer with metric
 	// option.
 	SetObserveOptionsByOption(option ...gmetric.Option)
+
+	// MergeAttributesToObserveOptions merges constant and dynamic attributes and generates observe options.
+	MergeAttributesToObserveOptions(attributes gmetric.Attributes) []metric.ObserveOption
 }
 
 // localBaseObservePerformer is a base struct to implement interface Performer.
@@ -43,11 +46,15 @@ type localBaseObservePerformer struct {
 
 // newBaseObservePerformer create and returns a base iBaseObservePerformer to implement interface Performer.
 func newBaseObservePerformer(config gmetric.MetricConfig) iBaseObservePerformer {
+	var attributesOption metric.ObserveOption
+	if len(config.Attributes) > 0 {
+		attributesOption = metric.WithAttributes(attributesToKeyValues(config.Attributes)...)
+	}
 	return &localBaseObservePerformer{
 		config:           config,
 		value:            gtype.NewFloat64(),
 		options:          gtype.NewAny([]metric.ObserveOption{}),
-		attributesOption: metric.WithAttributes(attributesToKeyValues(config.Attributes)...),
+		attributesOption: attributesOption,
 	}
 }
 
@@ -77,8 +84,11 @@ func (l *localBaseObservePerformer) GetObserveOptions() []metric.ObserveOption {
 func (l *localBaseObservePerformer) SetObserveOptionsByOption(option ...gmetric.Option) {
 	var (
 		usedOption     gmetric.Option
-		observeOptions = []metric.ObserveOption{l.attributesOption}
+		observeOptions = make([]metric.ObserveOption, 0)
 	)
+	if l.attributesOption != nil {
+		observeOptions = append(observeOptions, l.attributesOption)
+	}
 	if len(option) > 0 {
 		usedOption = option[0]
 	}
@@ -89,4 +99,21 @@ func (l *localBaseObservePerformer) SetObserveOptionsByOption(option ...gmetric.
 		)
 	}
 	l.options.Set(observeOptions)
+}
+
+// MergeAttributesToObserveOptions merges constant and dynamic attributes and generates observe options.
+func (l *localBaseObservePerformer) MergeAttributesToObserveOptions(
+	attributes gmetric.Attributes,
+) []metric.ObserveOption {
+	var observeOptions = make([]metric.ObserveOption, 0)
+	if l.attributesOption != nil {
+		observeOptions = append(observeOptions, l.attributesOption)
+	}
+	if len(attributes) > 0 {
+		observeOptions = append(
+			observeOptions,
+			metric.WithAttributes(attributesToKeyValues(attributes)...),
+		)
+	}
+	return observeOptions
 }

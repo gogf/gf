@@ -9,6 +9,7 @@ package gmetric
 // CounterConfig bundles the configuration for creating a Counter metric.
 type CounterConfig struct {
 	MetricConfig
+	Callback Callback // Callback function for metric.
 }
 
 // localCounter is the local implements for interface Counter.
