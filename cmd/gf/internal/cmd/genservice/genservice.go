@@ -85,7 +85,16 @@ type (
 		ImportPrefix    string   `short:"i" name:"importPrefix" brief:"{CGenServiceBriefImportPrefix}"`
 		Clear           bool     `short:"l" name:"clear" brief:"{CGenServiceBriefClear}" orphan:"true"`
 	}
-	CGenServiceOutput struct{}
+	CGenServiceOutput        struct{}
+	CGenPkgInterfaceFuncInfo struct {
+		Name   string
+		Define string
+	}
+	CGenPkgInterfaceInfo struct {
+		FuncInfos      []*CGenPkgInterfaceFuncInfo
+		SubStructNames []string
+		StructName     string
+	}
 )
 
 const (
@@ -146,19 +155,22 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 	}
 
 	var (
-		isDirty                 bool                                         // Temp boolean.
-		files                   []string                                     // Temp file array.
-		fileContent             string                                       // Temp file content for handling go file.
-		initImportSrcPackages   []string                                     // Used for generating logic.go.
-		inputPackages           = in.Packages                                // Custom packages.
-		dstPackageName          = gstr.ToLower(gfile.Basename(in.DstFolder)) // Package name for generated go files.
-		generatedDstFilePathSet = gset.NewStrSet()                           // All generated file path set.
+		isDirty                    bool                                         // Temp boolean.
+		files                      []string                                     // Temp file array.
+		fileContent                string                                       // Temp file content for handling go file.
+		initImportSrcPackages      []string                                     // Used for generating logic.go.
+		inputPackages              = in.Packages                                // Custom packages.
+		dstPackageName             = gstr.ToLower(gfile.Basename(in.DstFolder)) // Package name for generated go files.
+		generatedDstFilePathSet    = gset.NewStrSet()                           // All generated file path set.
+		generateServiceFilesInputs []generateServiceFilesInput
+		allSrcPkgInterfaceMap      = make(map[string]*CGenPkgInterfaceInfo)
 	)
 	// The first level folders.
 	srcFolderPaths, err := gfile.ScanDir(in.SrcFolder, "*", false)
 	if err != nil {
 		return nil, err
 	}
+	generateServiceFilesInputs = make([]generateServiceFilesInput, 0, len(srcFolderPaths))
 	for _, srcFolderPath := range srcFolderPaths {
 		if !gfile.IsDir(srcFolderPath) {
 			continue
@@ -173,12 +185,11 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		// Parse single logic package folder.
 		var (
 			// StructName => FunctionDefinitions
-			srcPkgInterfaceMap   = make(map[string]*garray.StrArray)
+			srcPkgInterfaceMap   = make(map[string]*CGenPkgInterfaceInfo)
 			srcImportedPackages  = garray.NewSortedStrArray().SetUnique(true)
 			importAliasToPathMap = gmap.NewStrStrMap() // for conflict imports check. alias => import path(with `"`)
 			importPathToAliasMap = gmap.NewStrStrMap() // for conflict imports check. import path(with `"`) => alias
 			srcPackageName       = gfile.Basename(srcFolderPath)
-			ok                   bool
 			dstFilePath          = gfile.Join(in.DstFolder,
 				c.getDstFileNameCase(srcPackageName, in.DstFileNameCase)+".go",
 			)
@@ -295,15 +306,26 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 			continue
 		}
 		// Generating service go file for single logic package.
-		if ok, err = c.generateServiceFile(generateServiceFilesInput{
-			CGenServiceInput:    in,
-			SrcStructFunctions:  srcPkgInterfaceMap,
-			SrcImportedPackages: srcImportedPackages.Slice(),
-			SrcPackageName:      srcPackageName,
-			DstPackageName:      dstPackageName,
-			DstFilePath:         dstFilePath,
-			SrcCodeCommentedMap: srcCodeCommentedMap,
-		}); err != nil {
+		generateServiceFilesInputs = append(generateServiceFilesInputs, generateServiceFilesInput{
+			CGenServiceInput:      in,
+			SrcStructFunctions:    srcPkgInterfaceMap,
+			AllSrcStructFunctions: allSrcPkgInterfaceMap,
+			SrcImportedPackages:   srcImportedPackages.Slice(),
+			SrcPackageName:        srcPackageName,
+			DstPackageName:        dstPackageName,
+			DstFilePath:           dstFilePath,
+			SrcCodeCommentedMap:   srcCodeCommentedMap,
+		})
+
+		for k, v := range srcPkgInterfaceMap {
+			allSrcPkgInterfaceMap[k] = v
+		}
+	}
+
+	for _, input := range generateServiceFilesInputs {
+		// Generating service go file for single logic package.
+		var ok bool
+		if ok, err = c.generateServiceFile(input); err != nil {
 			return
 		}
 		if ok {

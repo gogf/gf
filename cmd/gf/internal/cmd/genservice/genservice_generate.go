@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gregex"
@@ -22,12 +23,45 @@ import (
 
 type generateServiceFilesInput struct {
 	CGenServiceInput
-	DstFilePath         string // Absolute file path for generated service go file.
-	SrcStructFunctions  map[string]*garray.StrArray
-	SrcImportedPackages []string
-	SrcPackageName      string
-	DstPackageName      string
-	SrcCodeCommentedMap map[string]string
+	DstFilePath           string // Absolute file path for generated service go file.
+	SrcStructFunctions    map[string]*CGenPkgInterfaceInfo
+	AllSrcStructFunctions map[string]*CGenPkgInterfaceInfo
+	SrcImportedPackages   []string
+	SrcPackageName        string
+	DstPackageName        string
+	SrcCodeCommentedMap   map[string]string
+}
+
+func (c CGenService) getMerginFuncMap(structInfo *CGenPkgInterfaceInfo, srcStructFunctions map[string]*CGenPkgInterfaceInfo) (funcMap *gmap.StrStrMap) {
+	var (
+		subStructInfo *CGenPkgInterfaceInfo
+		ok            bool
+		subFuncMap    *gmap.StrStrMap
+	)
+
+	funcMap = gmap.NewStrStrMap()
+
+	// range sub first
+	for _, subStructName := range structInfo.SubStructNames {
+		if subStructInfo, ok = srcStructFunctions[subStructName]; !ok {
+			continue
+		}
+		subFuncMap = c.getMerginFuncMap(subStructInfo, srcStructFunctions)
+		if !subFuncMap.IsEmpty() {
+			funcMap.Merge(subFuncMap)
+		}
+	}
+
+	for _, info := range structInfo.FuncInfos {
+		funcMap.Set(info.Name, info.Define)
+	}
+	return
+}
+
+func (c CGenService) getMerginFuncArray(structInfo *CGenPkgInterfaceInfo, srcStructFunctions map[string]*CGenPkgInterfaceInfo) *garray.StrArray {
+	funcMap := c.getMerginFuncMap(structInfo, srcStructFunctions)
+	sortedArray := garray.NewSortedStrArrayFrom(funcMap.Values())
+	return garray.NewStrArrayFrom(sortedArray.Slice())
 }
 
 func (c CGenService) generateServiceFile(in generateServiceFilesInput) (ok bool, err error) {
@@ -46,7 +80,9 @@ func (c CGenService) generateServiceFile(in generateServiceFilesInput) (ok bool,
 	// Type definitions.
 	generatedContent += "type("
 	generatedContent += "\n"
-	for structName, funcArray := range in.SrcStructFunctions {
+	for structName, structInfo := range in.SrcStructFunctions {
+		funcArray := c.getMerginFuncArray(structInfo, in.AllSrcStructFunctions)
+
 		allFuncArray.Append(funcArray.Slice()...)
 		// Add comments to a method.
 		for index, funcName := range funcArray.Slice() {

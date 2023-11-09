@@ -11,7 +11,6 @@ import (
 	"go/parser"
 	"go/token"
 
-	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 )
@@ -99,12 +98,12 @@ func (c CGenService) calculateCodeCommented(in CGenServiceInput, fileContent str
 }
 
 func (c CGenService) calculateInterfaceFunctions(
-	in CGenServiceInput, fileContent string, srcPkgInterfaceMap map[string]*garray.StrArray,
+	in CGenServiceInput, fileContent string, srcPkgInterfaceInfoMap map[string]*CGenPkgInterfaceInfo,
 ) (err error) {
 	var (
-		ok                       bool
-		matches                  [][]string
-		srcPkgInterfaceFuncArray *garray.StrArray
+		ok                  bool
+		matches             [][]string
+		srcPkgInterfaceInfo *CGenPkgInterfaceInfo
 	)
 	// calculate struct name and its functions according function definitions.
 	matches, err = gregex.MatchAllString(`func \((.+?)\) ([\s\S]+?) {`, fileContent)
@@ -142,21 +141,28 @@ func (c CGenService) calculateInterfaceFunctions(
 			continue
 		}
 		structName = gstr.CaseCamel(structMatch[1])
-		if srcPkgInterfaceFuncArray, ok = srcPkgInterfaceMap[structName]; !ok {
-			srcPkgInterfaceMap[structName] = garray.NewStrArray()
-			srcPkgInterfaceFuncArray = srcPkgInterfaceMap[structName]
+		if srcPkgInterfaceInfo, ok = srcPkgInterfaceInfoMap[structName]; !ok {
+			srcPkgInterfaceInfo = &CGenPkgInterfaceInfo{
+				StructName: structName,
+			}
+			srcPkgInterfaceInfoMap[structName] = srcPkgInterfaceInfo
 		}
-		srcPkgInterfaceFuncArray.Append(functionHead)
+		//parse the function name from functionHead
+		tmpArr := gstr.SplitAndTrim(functionHead, "(")
+		srcPkgInterfaceInfo.FuncInfos = append(srcPkgInterfaceInfo.FuncInfos, &CGenPkgInterfaceFuncInfo{
+			Name:   tmpArr[0],
+			Define: functionHead,
+		})
 	}
 	// calculate struct name according type definitions.
-	matches, err = gregex.MatchAllString(`type (.+) struct\s*{`, fileContent)
+	matches, err = gregex.MatchAllString(`type (.+) struct\s*\{([^\}]*)\}`, fileContent)
 	if err != nil {
 		return err
 	}
 	for _, match := range matches {
 		var (
-			structName  string
-			structMatch []string
+			structName, structBody       string
+			structMatch, structBodyLines []string
 		)
 		if structMatch, err = gregex.MatchString(in.StPattern, match[1]); err != nil {
 			return err
@@ -165,8 +171,32 @@ func (c CGenService) calculateInterfaceFunctions(
 			continue
 		}
 		structName = gstr.CaseCamel(structMatch[1])
-		if srcPkgInterfaceFuncArray, ok = srcPkgInterfaceMap[structName]; !ok {
-			srcPkgInterfaceMap[structName] = garray.NewStrArray()
+		if srcPkgInterfaceInfo, ok = srcPkgInterfaceInfoMap[structName]; !ok {
+			srcPkgInterfaceInfo = &CGenPkgInterfaceInfo{
+				StructName: structName,
+			}
+			srcPkgInterfaceInfoMap[structName] = srcPkgInterfaceInfo
+		}
+
+		structBody = gstr.Replace(match[2], "\r\n", "\n")
+		structBody = gstr.Replace(structBody, "\r", "\n")
+		structBodyLines = gstr.SplitAndTrim(structBody, "\n")
+		for _, line := range structBodyLines {
+			if gstr.Contains(line, " ") || gstr.Contains(line, "\t") {
+				continue
+			}
+			tmpArr := gstr.Split(line, ".")
+			subStructName := tmpArr[len(tmpArr)-1]
+
+			if structMatch, err = gregex.MatchString(in.StPattern, subStructName); err != nil {
+				return err
+			}
+			if len(structMatch) < 1 {
+				continue
+			}
+			subStructName = gstr.CaseCamel(structMatch[1])
+
+			srcPkgInterfaceInfo.SubStructNames = append(srcPkgInterfaceInfo.SubStructNames, subStructName)
 		}
 	}
 	return nil
