@@ -210,7 +210,7 @@ func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args [
 	// TODO The current approach is too rough. We should deal with the GROUP_CONCAT function and the parsing of the index field from within the select from match.
 	// （GROUP_CONCAT DM  does not approve; index cannot be used as a query column name, and security characters need to be added, such as "index"）
 	l, r := d.GetChars()
-	newSql = gstr.ReplaceI(newSql, "INDEX", l+"INDEX"+r)
+	newSql = gstr.ReplaceI(newSql, ",INDEX,", ","+l+"INDEX"+r+",")
 
 	// TODO i tried to do but it never work：
 	// array, err := gregex.MatchAllString(`SELECT (.*INDEX.*) FROM .*`, newSql)
