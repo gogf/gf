@@ -144,7 +144,7 @@ func newCommandFromObjectMeta(object interface{}, name string) (command *Command
 	if err = gconv.Scan(metaData, &command); err != nil {
 		return
 	}
-	// Name filed is necessary.
+	// Name field is necessary.
 	if command.Name == "" {
 		if name == "" {
 			err = gerror.Newf(
@@ -353,6 +353,9 @@ func newArgumentsFromInput(object interface{}) (args []Argument, err error) {
 		}
 		if arg.Name == "" {
 			arg.Name = field.Name()
+		} else if arg.Name != field.Name() {
+			arg.FieldName = field.Name()
+			nameSet.Add(arg.FieldName)
 		}
 		if arg.Name == helpOptionName {
 			return nil, gerror.Newf(
@@ -414,6 +417,8 @@ func mergeDefaultStructValue(data map[string]interface{}, pointer interface{}) e
 			} else {
 				if utils.IsEmpty(foundValue) {
 					data[foundKey] = field.TagValue
+				} else {
+					data[field.Name()] = foundValue
 				}
 			}
 		}
