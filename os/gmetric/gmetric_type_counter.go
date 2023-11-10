@@ -9,7 +9,7 @@ package gmetric
 // CounterConfig bundles the configuration for creating a Counter metric.
 type CounterConfig struct {
 	MetricConfig
-	Callback Callback // Callback function for metric.
+	Callback MetricCallback // Callback function for metric.
 }
 
 // localCounter is the local implements for interface Counter.
@@ -20,8 +20,10 @@ type localCounter struct {
 }
 
 var (
-	// Check the implements for interface Initializer.
-	_ Initializer = (*localCounter)(nil)
+	// Check the implements for interface MetricInitializer.
+	_ MetricInitializer = (*localCounter)(nil)
+	// Check the implements for interface PerformerExporter.
+	_ PerformerExporter = (*localCounter)(nil)
 )
 
 // NewCounter creates and returns a new Counter.
@@ -34,7 +36,7 @@ func NewCounter(config CounterConfig) Counter {
 	if globalProvider != nil {
 		m.Init(globalProvider)
 	}
-	metrics = append(metrics, m)
+	allMetrics = append(allMetrics, m)
 	return m
 }
 
@@ -43,5 +45,10 @@ func (l *localCounter) Init(provider Provider) {
 	if _, ok := l.CounterPerformer.(noopCounterPerformer); !ok {
 		return
 	}
-	l.CounterPerformer = provider.Meter().CounterPerformer(l.CounterConfig)
+	l.CounterPerformer = provider.Performer().Counter(l.CounterConfig)
+}
+
+// Performer exports internal Performer.
+func (l *localCounter) Performer() any {
+	return l.CounterPerformer
 }

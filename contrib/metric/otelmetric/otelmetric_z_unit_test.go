@@ -8,6 +8,7 @@ package otelmetric_test
 
 import (
 	"context"
+	"fmt"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	"testing"
@@ -231,7 +232,7 @@ func Test_HistogramBuckets(t *testing.T) {
 	})
 }
 
-func Test_Callback(t *testing.T) {
+func Test_MetricCallback(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx = gctx.New()
@@ -294,6 +295,70 @@ func Test_Callback(t *testing.T) {
 {"Name":"goframe.metric.demo.gauge","Description":"This is a simple demo for Gauge usage","Unit":"bytes","Data":{"DataPoints":[{"Attributes":[{"Key":"const_label_c","Value":{"Type":"INT64","Value":3}},{"Key":"const_label_d","Value":{"Type":"INT64","Value":4}}
 `
 
+		for _, line := range gstr.SplitAndTrim(expectContent, "\n") {
+			t.Assert(gstr.Contains(content, line), true)
+		}
+	})
+}
+
+func Test_GlobalCallback(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			ctx     = gctx.New()
+			counter = gmetric.NewCounter(gmetric.CounterConfig{
+				MetricConfig: gmetric.MetricConfig{
+					Name: "goframe.metric.demo.counter",
+					Help: "This is a simple demo for Counter usage",
+					Unit: "%",
+					Attributes: gmetric.Attributes{
+						gmetric.NewAttribute("const_label_a", 1),
+					},
+					Instrument:        "github.com/gogf/gf/example/metric/basic",
+					InstrumentVersion: "v1.4",
+				},
+			})
+			gauge = gmetric.NewGauge(gmetric.GaugeConfig{
+				MetricConfig: gmetric.MetricConfig{
+					Name: "goframe.metric.demo.gauge",
+					Help: "This is a simple demo for Gauge usage",
+					Unit: "bytes",
+					Attributes: gmetric.Attributes{
+						gmetric.NewAttribute("const_label_c", 3),
+					},
+					Instrument:        "github.com/gogf/gf/example/metric/basic",
+					InstrumentVersion: "v1.5",
+				},
+			})
+		)
+		// global callback.
+		err := gmetric.RegisterCallback(
+			func(ctx context.Context, setter gmetric.CallbackSetter) error {
+				setter.Set(counter, 100)
+				setter.Set(gauge, 101)
+				return nil
+			},
+			counter,
+			gauge,
+		)
+		t.AssertNil(err)
+
+		reader := metric.NewManualReader()
+		// OpenTelemetry provider.
+		provider := otelmetric.NewProvider(metric.WithReader(reader))
+		defer provider.Shutdown(ctx)
+
+		rm := metricdata.ResourceMetrics{}
+		err = reader.Collect(ctx, &rm)
+		t.AssertNil(err)
+
+		content := gjson.MustEncodeString(rm)
+		content, err = gregex.ReplaceString(`Time":".+?"`, `Time":""`, content)
+		t.AssertNil(err)
+		expectContent := `
+{"Scope":{"Name":"github.com/gogf/gf/example/metric/basic","Version":"v1.4","SchemaURL":""},"Metrics":[{"Name":"goframe.metric.demo.counter","Description":"This is a simple demo for Counter usage","Unit":"%","Data":{"DataPoints":[{"Attributes":[{"Key":"const_label_a","Value":{"Type":"INT64","Value":1}},{"Key":"const_label_b","Value":{"Type":"INT64","Value":2}}],"StartTime":"","Time":"","Value":100}],"Temporality":"CumulativeTemporality","IsMonotonic":true}}]}
+{"Name":"goframe.metric.demo.gauge","Description":"This is a simple demo for Gauge usage","Unit":"bytes","Data":{"DataPoints":[{"Attributes":[{"Key":"const_label_c","Value":{"Type":"INT64","Value":3}},{"Key":"const_label_d","Value":{"Type":"INT64","Value":4}}
+`
+		fmt.Println(content)
 		for _, line := range gstr.SplitAndTrim(expectContent, "\n") {
 			t.Assert(gstr.Contains(content, line), true)
 		}

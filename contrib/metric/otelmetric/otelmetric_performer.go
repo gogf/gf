@@ -13,22 +13,22 @@ import (
 	"github.com/gogf/gf/v2/os/gmetric"
 )
 
-// localMeter implements interface gmetric.Meter.
-type localMeter struct {
-	provider *metric.MeterProvider
+// localPerformer implements interface gmetric.Performer.
+type localPerformer struct {
+	*metric.MeterProvider
 }
 
-// newMeter creates and returns gmetric.Meter.
-func newMeter(provider *metric.MeterProvider) gmetric.Meter {
-	meter := &localMeter{
-		provider: provider,
+// newPerformer creates and returns gmetric.Meter.
+func newPerformer(provider *metric.MeterProvider) gmetric.Performer {
+	performer := &localPerformer{
+		MeterProvider: provider,
 	}
-	return meter
+	return performer
 }
 
-// CounterPerformer creates and returns a CounterPerformer that performs
+// Counter creates and returns a CounterPerformer that performs
 // the operations for Counter metric.
-func (l *localMeter) CounterPerformer(config gmetric.CounterConfig) gmetric.CounterPerformer {
+func (l *localPerformer) Counter(config gmetric.CounterConfig) gmetric.CounterPerformer {
 	var (
 		meter     = l.createMeter(config.Instrument, config.InstrumentVersion)
 		performer = newCounterPerformer(meter, config)
@@ -36,9 +36,9 @@ func (l *localMeter) CounterPerformer(config gmetric.CounterConfig) gmetric.Coun
 	return performer
 }
 
-// GaugePerformer creates and returns a GaugePerformer that performs
+// Gauge creates and returns a GaugePerformer that performs
 // the operations for Gauge metric.
-func (l *localMeter) GaugePerformer(config gmetric.GaugeConfig) gmetric.GaugePerformer {
+func (l *localPerformer) Gauge(config gmetric.GaugeConfig) gmetric.GaugePerformer {
 	var (
 		meter     = l.createMeter(config.Instrument, config.InstrumentVersion)
 		performer = newGaugePerformer(meter, config)
@@ -46,9 +46,9 @@ func (l *localMeter) GaugePerformer(config gmetric.GaugeConfig) gmetric.GaugePer
 	return performer
 }
 
-// HistogramPerformer creates and returns a HistogramPerformer that performs
+// Histogram creates and returns a HistogramPerformer that performs
 // the operations for Histogram metric.
-func (l *localMeter) HistogramPerformer(config gmetric.HistogramConfig) gmetric.HistogramPerformer {
+func (l *localPerformer) Histogram(config gmetric.HistogramConfig) gmetric.HistogramPerformer {
 	var (
 		meter     = l.createMeter(config.Instrument, config.InstrumentVersion)
 		performer = newHistogramPerformer(meter, config)
@@ -57,8 +57,8 @@ func (l *localMeter) HistogramPerformer(config gmetric.HistogramConfig) gmetric.
 }
 
 // createMeter creates and returns an OpenTelemetry Meter.
-func (l *localMeter) createMeter(instrument, instrumentVersion string) otelmetric.Meter {
-	return l.provider.Meter(
+func (l *localPerformer) createMeter(instrument, instrumentVersion string) otelmetric.Meter {
+	return l.Meter(
 		instrument,
 		otelmetric.WithInstrumentationVersion(instrumentVersion),
 	)

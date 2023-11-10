@@ -17,8 +17,8 @@ import (
 
 // localHistogramPerformer is an implementer for interface HistogramPerformer.
 type localHistogramPerformer struct {
+	metric.Float64Histogram
 	config           gmetric.HistogramConfig
-	histogram        metric.Float64Histogram
 	attributesOption metric.MeasurementOption
 }
 
@@ -38,15 +38,15 @@ func newHistogramPerformer(meter metric.Meter, config gmetric.HistogramConfig) g
 		))
 	}
 	return &localHistogramPerformer{
+		Float64Histogram: histogram,
 		config:           config,
-		histogram:        histogram,
 		attributesOption: metric.WithAttributes(attributesToKeyValues(config.Attributes)...),
 	}
 }
 
 // Record adds a single value to the histogram. The value is usually positive or zero.
 func (l *localHistogramPerformer) Record(increment float64, option ...gmetric.Option) {
-	l.histogram.Record(
+	l.Float64Histogram.Record(
 		context.Background(),
 		increment,
 		l.mergeToRecordOptions(option...)...,

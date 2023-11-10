@@ -7,7 +7,9 @@
 // Package gmetric provides interface definitions and simple api for metric feature.
 package gmetric
 
-import "context"
+import (
+	"context"
+)
 
 // MetricType is the type of metric.
 type MetricType string
@@ -25,9 +27,9 @@ type Provider interface {
 	// SetAsGlobal sets current provider as global meter provider for current process.
 	SetAsGlobal()
 
-	// Meter creates and returns a Meter.
-	// A Meter can produce types of Metric performer.
-	Meter() Meter
+	// Performer creates and returns a Performer.
+	// A Performer can produce types of Metric performer.
+	Performer() Performer
 
 	// ForceFlush flushes all pending metrics.
 	//
@@ -41,19 +43,19 @@ type Provider interface {
 	Shutdown(ctx context.Context) error
 }
 
-// Meter manages all Metric performer creating.
-type Meter interface {
-	// CounterPerformer creates and returns a CounterPerformer that performs
+// Performer manages all Metric performer creating.
+type Performer interface {
+	// Counter creates and returns a CounterPerformer that performs
 	// the operations for Counter metric.
-	CounterPerformer(config CounterConfig) CounterPerformer
+	Counter(config CounterConfig) CounterPerformer
 
-	// GaugePerformer creates and returns a GaugePerformer that performs
+	// Gauge creates and returns a GaugePerformer that performs
 	// the operations for Gauge metric.
-	GaugePerformer(config GaugeConfig) GaugePerformer
+	Gauge(config GaugeConfig) GaugePerformer
 
-	// HistogramPerformer creates and returns a HistogramPerformer that performs
+	// Histogram creates and returns a HistogramPerformer that performs
 	// the operations for Histogram metric.
-	HistogramPerformer(config HistogramConfig) HistogramPerformer
+	Histogram(config HistogramConfig) HistogramPerformer
 }
 
 // Metric models a single sample value with its metadata being exported.
@@ -158,12 +160,19 @@ type MetricInfo interface {
 	InstrumentVersion() string // InstrumentVersion returns the instrument version of the metric.
 }
 
-// Initializer manages the initialization for Metric.
+// MetricInitializer manages the initialization for Metric.
 // It is called internally in Provider creation.
-type Initializer interface {
+type MetricInitializer interface {
 	// Init initializes the Metric in Provider creation.
 	// It sets the metric performer which really takes action.
 	Init(provider Provider)
+}
+
+// PerformerExporter exports internal Performer of Metric.
+// It is called internally in Provider creation.
+type PerformerExporter interface {
+	// Performer exports internal Performer of Metric.
+	Performer() any
 }
 
 // CallbackResult is the result that a callback should return.
@@ -172,13 +181,22 @@ type CallbackResult struct {
 	Attributes Attributes // Dynamic attributes after callback.
 }
 
-// Callback function for metric.
+// GlobalCallback function for metric.
+type GlobalCallback func(ctx context.Context, m CallbackSetter) error
+
+// MetricCallback function for metric.
 // A Callback is automatically called when metric reader starts reading the metric value.
-type Callback func(ctx context.Context) (*CallbackResult, error)
+type MetricCallback func(ctx context.Context) (*CallbackResult, error)
+
+// CallbackSetter sets the value for certain initialized Metric.
+type CallbackSetter interface {
+	// Set sets the value for certain initialized Metric.
+	Set(m Metric, value float64, option ...Option)
+}
 
 var (
-	// metrics stores all created Metric.
-	metrics = make([]Metric, 0)
+	// metrics stores all created Metric by current package.
+	allMetrics = make([]Metric, 0)
 
 	// globalProvider is the provider for global usage.
 	globalProvider Provider
@@ -192,5 +210,5 @@ func SetGlobalProvider(provider Provider) {
 
 // GetAllMetrics returns all Metric that created by current package.
 func GetAllMetrics() []Metric {
-	return metrics
+	return allMetrics
 }

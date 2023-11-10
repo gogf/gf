@@ -8,10 +8,29 @@ package otelmetric
 
 import (
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gmetric"
 	"github.com/gogf/gf/v2/util/gconv"
 )
+
+func metricToFloat64Observable(m gmetric.Metric) metric.Float64Observable {
+	performer := m.(gmetric.PerformerExporter).Performer()
+	switch m.MetricInfo().Type() {
+	case gmetric.MetricTypeCounter:
+		return performer.(*localCounterPerformer).Float64ObservableCounter
+	case gmetric.MetricTypeGauge:
+		return performer.(*localGaugePerformer).Float64ObservableGauge
+	default:
+		panic(gerror.NewCode(
+			gcode.CodeInvalidParameter,
+			`Histogram is not support for converting to metric.Float64Observable`,
+		))
+	}
+	return nil
+}
 
 // attributesToKeyValues converts attributes to OpenTelemetry key-value pair attributes.
 func attributesToKeyValues(attrs gmetric.Attributes) []attribute.KeyValue {

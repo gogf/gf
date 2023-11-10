@@ -22,8 +22,10 @@ type localHistogram struct {
 }
 
 var (
-	// Check the implements for interface Initializer.
-	_ Initializer = (*localHistogram)(nil)
+	// Check the implements for interface MetricInitializer.
+	_ MetricInitializer = (*localHistogram)(nil)
+	// Check the implements for interface PerformerExporter.
+	_ PerformerExporter = (*localHistogram)(nil)
 )
 
 // NewHistogram creates and returns a new Histogram.
@@ -36,7 +38,7 @@ func NewHistogram(config HistogramConfig) Histogram {
 	if globalProvider != nil {
 		m.Init(globalProvider)
 	}
-	metrics = append(metrics, m)
+	allMetrics = append(allMetrics, m)
 	return m
 }
 
@@ -45,10 +47,15 @@ func (l *localHistogram) Init(provider Provider) {
 	if _, ok := l.HistogramPerformer.(noopHistogramPerformer); !ok {
 		return
 	}
-	l.HistogramPerformer = provider.Meter().HistogramPerformer(l.HistogramConfig)
+	l.HistogramPerformer = provider.Performer().Histogram(l.HistogramConfig)
 }
 
 // Buckets returns the bucket slice of the Histogram.
 func (l *localHistogram) Buckets() []float64 {
 	return l.HistogramConfig.Buckets
+}
+
+// Performer exports internal Performer.
+func (l *localHistogram) Performer() any {
+	return l.HistogramPerformer
 }

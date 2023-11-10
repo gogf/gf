@@ -17,8 +17,8 @@ import (
 
 // localCounterPerformer is an implementer for interface CounterPerformer.
 type localCounterPerformer struct {
+	metric.Float64ObservableCounter
 	baseObservePerformer iBaseObservePerformer
-	counter              metric.Float64ObservableCounter
 }
 
 // newCounterPerformer creates and returns a CounterPerformer that truly takes action to implement Counter.
@@ -62,8 +62,8 @@ func newCounterPerformer(meter metric.Meter, config gmetric.CounterConfig) gmetr
 		))
 	}
 	return &localCounterPerformer{
-		baseObservePerformer: baseObservePerformer,
-		counter:              counter,
+		Float64ObservableCounter: counter,
+		baseObservePerformer:     baseObservePerformer,
 	}
 }
 

@@ -8,57 +8,55 @@ package otelmetric
 
 import (
 	"context"
+	"fmt"
 	"go.opentelemetry.io/otel"
+	otelmetric "go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/sdk/instrumentation"
 	"go.opentelemetry.io/otel/sdk/metric"
 
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gmetric"
 )
 
 // localProvider implements interface gmetric.Provider.
 type localProvider struct {
-	provider *metric.MeterProvider
+	*metric.MeterProvider
 }
 
 // newLocalProvider creates and returns an object that implements gmetric.Provider.
-func newLocalProvider(options ...metric.Option) gmetric.Provider {
+func newLocalProvider(options ...metric.Option) (gmetric.Provider, error) {
+	// TODO global logger set for otel
+	// otel.SetLogger()
+
 	var (
+		err     error
 		metrics = gmetric.GetAllMetrics()
 		views   = createViewsByMetrics(metrics)
 	)
 	options = append(options, metric.WithView(views...))
 	provider := &localProvider{
-		provider: metric.NewMeterProvider(options...),
+		MeterProvider: metric.NewMeterProvider(options...),
 	}
 	initializeAllMetrics(metrics, provider)
-	return provider
+	err = initializeCallback(provider.MeterProvider)
+	if err != nil {
+		return nil, err
+	}
+	return provider, nil
 }
 
 // SetAsGlobal sets current provider as global meter provider for current process.
 func (l *localProvider) SetAsGlobal() {
 	gmetric.SetGlobalProvider(l)
-	otel.SetMeterProvider(l.provider)
+	otel.SetMeterProvider(l)
 }
 
-// Meter creates and returns a Meter.
-// A Meter can produce types of Metric performer.
-func (l *localProvider) Meter() gmetric.Meter {
-	return newMeter(l.provider)
-}
-
-// ForceFlush flushes all pending metrics.
-//
-// This method honors the deadline or cancellation of ctx. An appropriate
-// error will be returned in these situations. There is no guaranteed that all
-// metrics be flushed or all resources have been released in these situations.
-func (l *localProvider) ForceFlush(ctx context.Context) error {
-	return l.provider.ForceFlush(ctx)
-}
-
-// Shutdown shuts down the Provider flushing all pending metrics and
-// releasing any held computational resources.
-func (l *localProvider) Shutdown(ctx context.Context) error {
-	return l.provider.Shutdown(ctx)
+// Performer creates and returns a Performer.
+// A Performer can produce types of Metric performer.
+func (l *localProvider) Performer() gmetric.Performer {
+	return newPerformer(l.MeterProvider)
 }
 
 // createViewsByMetrics creates and returns OpenTelemetry metric.View according metric type for all metrics,
@@ -95,8 +93,57 @@ func createViewsByMetrics(metrics []gmetric.Metric) []metric.View {
 // that implements operations for types of metric.
 func initializeAllMetrics(metrics []gmetric.Metric, provider gmetric.Provider) {
 	for _, m := range metrics {
-		if initializer, ok := m.(gmetric.Initializer); ok {
+		if initializer, ok := m.(gmetric.MetricInitializer); ok {
 			initializer.Init(provider)
 		}
 	}
+}
+
+func initializeCallback(provider *metric.MeterProvider) error {
+	var callbacks = gmetric.GetRegisteredCallbacks()
+	for _, callback := range callbacks {
+		// group the metric by instrument and instrument version.
+		var (
+			instSet  = gset.NewStrSet()
+			meterMap = map[otelmetric.Meter][]otelmetric.Observable{}
+		)
+		for _, m := range callback.Metrics {
+			var meter = provider.Meter(
+				m.MetricInfo().Instrument(),
+				otelmetric.WithInstrumentationVersion(m.MetricInfo().InstrumentVersion()),
+			)
+			instSet.Add(fmt.Sprintf(
+				`%s@%s`,
+				m.MetricInfo().Instrument(),
+				m.MetricInfo().InstrumentVersion(),
+			))
+			if _, ok := meterMap[meter]; !ok {
+				meterMap[meter] = make([]otelmetric.Observable, 0)
+			}
+			meterMap[meter] = append(meterMap[meter], metricToFloat64Observable(m))
+		}
+		if len(meterMap) > 1 {
+			return gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`multiple instrument or instrument version metrics used in the same callback: %s`,
+				instSet.Join(","),
+			)
+		}
+		// do callback registering.
+		for meter, observables := range meterMap {
+			_, err := meter.RegisterCallback(
+				func(ctx context.Context, observer otelmetric.Observer) error {
+					return callback.Callback(ctx, newCallbackSetter(observer))
+				},
+				observables...,
+			)
+			if err != nil {
+				return gerror.WrapCode(
+					gcode.CodeInternalError, err,
+					`RegisterCallback failed`,
+				)
+			}
+		}
+	}
+	return nil
 }

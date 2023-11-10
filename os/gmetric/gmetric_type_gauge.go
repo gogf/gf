@@ -9,7 +9,7 @@ package gmetric
 // GaugeConfig bundles the configuration for creating a Gauge metric.
 type GaugeConfig struct {
 	MetricConfig
-	Callback Callback // Callback function for metric.
+	Callback MetricCallback // Callback function for metric.
 }
 
 // localGauge is the local implements for interface Gauge.
@@ -20,8 +20,10 @@ type localGauge struct {
 }
 
 var (
-	// Check the implements for interface Initializer.
-	_ Initializer = (*localGauge)(nil)
+	// Check the implements for interface MetricInitializer.
+	_ MetricInitializer = (*localGauge)(nil)
+	// Check the implements for interface PerformerExporter.
+	_ PerformerExporter = (*localGauge)(nil)
 )
 
 // NewGauge creates and returns a new Gauge.
@@ -34,7 +36,7 @@ func NewGauge(config GaugeConfig) Gauge {
 	if globalProvider != nil {
 		m.Init(globalProvider)
 	}
-	metrics = append(metrics, m)
+	allMetrics = append(allMetrics, m)
 	return m
 }
 
@@ -43,5 +45,10 @@ func (l *localGauge) Init(provider Provider) {
 	if _, ok := l.GaugePerformer.(noopGaugePerformer); !ok {
 		return
 	}
-	l.GaugePerformer = provider.Meter().GaugePerformer(l.GaugeConfig)
+	l.GaugePerformer = provider.Performer().Gauge(l.GaugeConfig)
+}
+
+// Performer exports internal Performer.
+func (l *localGauge) Performer() any {
+	return l.GaugePerformer
 }

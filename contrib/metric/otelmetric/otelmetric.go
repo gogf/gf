@@ -14,7 +14,6 @@ import (
 )
 
 // NewProvider creates and returns a metrics provider.
-func NewProvider(option ...metric.Option) gmetric.Provider {
-	provider := newLocalProvider(option...)
-	return provider
+func NewProvider(option ...metric.Option) (gmetric.Provider, error) {
+	return newLocalProvider(option...)
 }

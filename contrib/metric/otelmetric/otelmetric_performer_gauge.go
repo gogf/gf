@@ -17,8 +17,8 @@ import (
 
 // localGaugePerformer is an implementer for interface GaugePerformer.
 type localGaugePerformer struct {
+	metric.Float64ObservableGauge
 	baseObservePerformer iBaseObservePerformer
-	gauge                metric.Float64ObservableGauge
 }
 
 // newGaugePerformer creates and returns a GaugePerformer that truly takes action to implement Gauge.
@@ -62,8 +62,8 @@ func newGaugePerformer(meter metric.Meter, config gmetric.GaugeConfig) gmetric.G
 		))
 	}
 	return &localGaugePerformer{
-		baseObservePerformer: baseObservePerformer,
-		gauge:                gauge,
+		Float64ObservableGauge: gauge,
+		baseObservePerformer:   baseObservePerformer,
 	}
 }
 
