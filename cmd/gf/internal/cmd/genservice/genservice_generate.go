@@ -60,8 +60,12 @@ func (c CGenService) getMerginFuncMap(structInfo *CGenPkgInterfaceInfo, srcStruc
 
 func (c CGenService) getMerginFuncArray(structInfo *CGenPkgInterfaceInfo, srcStructFunctions map[string]*CGenPkgInterfaceInfo) *garray.StrArray {
 	funcMap := c.getMerginFuncMap(structInfo, srcStructFunctions)
-	sortedArray := garray.NewSortedStrArrayFrom(funcMap.Values())
-	return garray.NewStrArrayFrom(sortedArray.Slice())
+	keySortedArray := garray.NewSortedStrArrayFrom(funcMap.Keys())
+	retArray := garray.NewStrArray()
+	for _, k := range keySortedArray.Slice() {
+		retArray.Append(funcMap.Get(k))
+	}
+	return retArray
 }
 
 func (c CGenService) generateServiceFile(in generateServiceFilesInput) (ok bool, err error) {
