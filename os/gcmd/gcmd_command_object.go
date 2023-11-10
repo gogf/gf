@@ -288,6 +288,20 @@ func newCommandFromMethod(
 							data[arg.Name] = orphanValue.Bool()
 						}
 					}
+					if arg.FieldName != "" {
+						if orphanValue := parser.GetOpt(arg.FieldName); orphanValue != nil {
+							if orphanValue.String() == "" {
+								// Eg: gf -f
+								data[arg.FieldName] = "true"
+							} else {
+								// Adapter with common user habits.
+								// Eg:
+								// `gf -f=0`: which parameter `f` is parsed as false
+								// `gf -f=1`: which parameter `f` is parsed as true
+								data[arg.FieldName] = orphanValue.Bool()
+							}
+						}
+					}
 				}
 			}
 		}
