@@ -31,6 +31,7 @@ var (
 
 type cVersion struct {
 	g.Meta `name:"version" brief:"show version information of current binary"`
+	detail string
 }
 
 type cVersionInput struct {
@@ -40,41 +41,57 @@ type cVersionInput struct {
 type cVersionOutput struct{}
 
 func (c cVersion) Index(ctx context.Context, in cVersionInput) (*cVersionOutput, error) {
-	var (
-		version   = gf.VERSION
-		gfVersion string
-		envDetail string
-		cliDetail = getBuildDetail()
-		docDetail string
-	)
+	c.detail = fmt.Sprintf("%s", gf.VERSION)
 
+	c.appendLine(0, "Welcome to GoFrame!")
+
+	c.appendLine(0, "Env Detail:")
 	goVersion, ok := getGoVersion()
 	if ok {
-		gfVersion = getGoFrameVersion()
-		goVersion = "\n\tGo Version: " + goVersion
+		c.appendLine(1, fmt.Sprintf("Go Version: %s", goVersion))
+		c.appendLine(1, fmt.Sprintf("GF Version(go.mod): %s", getGoFrameVersion()))
 	} else {
 		v, err := c.getGFVersionOfCurrentProject()
 		if err == nil {
-			gfVersion = v
+			c.appendLine(1, fmt.Sprintf("GF Version(go.mod): %s", v))
+		} else {
+			c.appendLine(1, fmt.Sprintf("GF Version(go.mod): %s", err.Error()))
 		}
 	}
 
-	envDetail = fmt.Sprintf(`
-Env Detail:
-	CLI Installed At: %s%s
-	GoFrame Version(go.mod): %s
-`, gfile.SelfPath(), goVersion, gfVersion)
+	c.appendLine(0, "CLI Detail:")
+	c.appendLine(1, fmt.Sprintf("Installed At: %s", gfile.SelfPath()))
+	info := gbuild.Info()
+	if info.GoFrame == "" {
+		c.appendLine(1, fmt.Sprintf("Builded Go Version: %s", runtime.Version()))
+		c.appendLine(1, fmt.Sprintf("Builded GF Version: %s", gf.VERSION))
+	} else {
+		if info.Git == "" {
+			info.Git = "none"
+		}
+		c.appendLine(1, fmt.Sprintf("Builded Go Version: %s", info.Golang))
+		c.appendLine(1, fmt.Sprintf("Builded GF Version: %s", info.GoFrame))
+		c.appendLine(1, fmt.Sprintf("Git Commit: %s", info.Git))
+		c.appendLine(1, fmt.Sprintf("Builded Time: %s", info.Time))
+	}
 
-	docDetail = fmt.Sprintf(`
-Others Detail:
-	Docs: https://goframe.org
-	Now Time: %s`, time.Now().Format("2006-01-02 15:04:05"))
-
-	output := version + envDetail + cliDetail + docDetail
-	output = strings.ReplaceAll(output, "\t", "  ")
-	mlog.Print(output)
+	c.appendLine(0, "Others Detail:")
+	c.appendLine(1, "Docs: https://goframe.org")
+	c.appendLine(1, fmt.Sprintf("Now Time: %s", time.Now().Format("2006-01-02 15:04:05")))
+	c.print("  ")
 
 	return nil, nil
+}
+
+// appendLine description
+func (c *cVersion) appendLine(level int, line string) {
+	c.detail += "\n" + strings.Repeat("\t", level) + line
+}
+
+// print description
+func (c *cVersion) print(indent string) {
+	c.detail = strings.ReplaceAll(c.detail, "\t", indent)
+	mlog.Print(c.detail)
 }
 
 // getGoFrameVersion returns the goframe version of current project using.
@@ -101,32 +118,6 @@ func getGoVersion() (goVersion string, ok bool) {
 	goVersion = gstr.TrimLeftStr(goVersion, "go version ")
 	goVersion = gstr.TrimRightStr(goVersion, "\n")
 	return goVersion, true
-}
-
-// getBuildDetail returns the build information of current binary.
-func getBuildDetail() (cliDetail string) {
-	cliDetail = fmt.Sprintf(`
-GoFrame CLI Build Detail:`)
-
-	// build info
-	info := gbuild.Info()
-	if info.Git == "" {
-		info.Git = "none"
-	}
-	if info.GoFrame == "" {
-		cliDetail += fmt.Sprintf(`
-	Go Version: %s
-`, runtime.Version())
-		return
-	}
-
-	cliDetail += fmt.Sprintf(`
-	Go Version:  %s
-	GF Version:  %s
-	Git Commit:  %s
-	Build Time:  %s
-`, info.Golang, info.GoFrame, info.Git, info.Time)
-	return
 }
 
 // getGFVersionOfCurrentProject checks and returns the GoFrame version current project using.
