@@ -19,7 +19,6 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gbuild"
 	"github.com/gogf/gf/v2/os/gcmd"
-	"github.com/gogf/gf/v2/os/genv"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -232,12 +231,14 @@ func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, e
 		c.getBuildInVarStr(ctx, in),
 	)
 
+	envMap := make(map[string]string)
+
 	// start building
 	mlog.Print("start building...")
 	if in.Cgo {
-		genv.MustSet("CGO_ENABLED", "1")
+		envMap["CGO_ENABLED"] = "1"
 	} else {
-		genv.MustSet("CGO_ENABLED", "0")
+		envMap["CGO_ENABLED"] = "0"
 	}
 	var (
 		cmd = ""
@@ -276,8 +277,8 @@ func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, e
 				if system == "windows" {
 					ext = ".exe"
 				}
-				genv.MustSet("GOOS", system)
-				genv.MustSet("GOARCH", arch)
+				envMap["GOOS"] = system
+				envMap["GOARCH"] = arch
 
 				var outputPath string
 				if len(in.Output) > 0 {
@@ -289,9 +290,16 @@ func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, e
 					)
 				}
 				cmd = fmt.Sprintf(
-					`GOOS=%s GOARCH=%s go build %s -ldflags "%s" %s%s`,
-					system, arch, outputPath, ldFlags, in.Extra, file,
+					`go build %s -ldflags "%s" %s%s`,
+					outputPath, ldFlags, in.Extra, file,
 				)
+			}
+			for k, v := range envMap {
+				if runtime.GOOS == "windows" {
+					cmd = fmt.Sprintf(`set %s=%s&&`, k, v) + cmd
+				} else {
+					cmd = fmt.Sprintf(`%s=%s `, k, v) + cmd
+				}
 			}
 			mlog.Debug(cmd)
 			// It's not necessary printing the complete command string.
