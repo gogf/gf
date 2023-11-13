@@ -9,10 +9,12 @@ package otelmetric
 import (
 	"context"
 	"fmt"
+	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel"
 	otelmetric "go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/sdk/instrumentation"
 	"go.opentelemetry.io/otel/sdk/metric"
+	"time"
 
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -31,12 +33,14 @@ func newLocalProvider(options ...metric.Option) (gmetric.Provider, error) {
 	// otel.SetLogger()
 
 	var (
-		err       error
-		metrics   = gmetric.GetAllMetrics()
-		views     = createViewsByMetrics(metrics)
-		callbacks = gmetric.GetRegisteredCallbacks()
+		err          error
+		metrics      = gmetric.GetAllMetrics()
+		metricViews  = createViewsByMetrics(metrics)
+		builtinViews = createViewsForBuiltInMetrics()
+		callbacks    = gmetric.GetRegisteredCallbacks()
 	)
-	options = append(options, metric.WithView(views...))
+	metricViews = append(metricViews, builtinViews...)
+	options = append(options, metric.WithView(metricViews...))
 	provider := &localProvider{
 		MeterProvider: metric.NewMeterProvider(options...),
 	}
@@ -50,6 +54,18 @@ func newLocalProvider(options ...metric.Option) (gmetric.Provider, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// builtin metrics: golang.
+	err = runtime.Start(
+		runtime.WithMinimumReadMemStatsInterval(time.Second),
+		runtime.WithMeterProvider(provider),
+	)
+	if err != nil {
+		return nil, gerror.WrapCode(
+			gcode.CodeInternalError, err, `start runtime metrics failed`,
+		)
+	}
+
 	return provider, nil
 }
 
@@ -63,6 +79,40 @@ func (l *localProvider) SetAsGlobal() {
 // A Performer can produce types of Metric performer.
 func (l *localProvider) Performer() gmetric.Performer {
 	return newPerformer(l.MeterProvider)
+}
+
+// createViewsForBuiltInMetrics creates and returns views for builtin metrics.
+func createViewsForBuiltInMetrics() []metric.View {
+	var views = make([]metric.View, 0)
+	views = append(views, metric.NewView(
+		metric.Instrument{
+			Name: "process.runtime.go.gc.pause_ns",
+			Scope: instrumentation.Scope{
+				Name:    runtime.ScopeName,
+				Version: runtime.Version(),
+			},
+		},
+		metric.Stream{
+			Aggregation: metric.AggregationExplicitBucketHistogram{
+				Boundaries: []float64{
+					500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000,
+				},
+			},
+		},
+	))
+	views = append(views, metric.NewView(
+		metric.Instrument{
+			Name: "runtime.uptime",
+			Scope: instrumentation.Scope{
+				Name:    runtime.ScopeName,
+				Version: runtime.Version(),
+			},
+		},
+		metric.Stream{
+			Name: "process.runtime.uptime",
+		},
+	))
+	return views
 }
 
 // createViewsByMetrics creates and returns OpenTelemetry metric.View according metric type for all metrics,

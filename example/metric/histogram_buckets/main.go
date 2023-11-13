@@ -78,6 +78,6 @@ func main() {
 	// HTTP Server for metrics exporting.
 	s := g.Server()
 	s.BindHandler("/metrics", ghttp.WrapH(promhttp.Handler()))
-	s.SetPort(8199)
+	s.SetPort(8000)
 	s.Run()
 }

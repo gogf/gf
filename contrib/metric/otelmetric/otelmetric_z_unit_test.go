@@ -8,9 +8,11 @@ package otelmetric_test
 
 import (
 	"context"
+	"fmt"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	"testing"
+	"time"
 
 	"github.com/gogf/gf/contrib/metric/otelmetric/v2"
 	"github.com/gogf/gf/v2/encoding/gjson"
@@ -99,7 +101,12 @@ func Test_Basic(t *testing.T) {
 {"Scope":{"Name":"github.com/gogf/gf/example/metric/basic","Version":"v1.0","SchemaURL":""},"Metrics":[{"Name":"goframe.metric.demo.counter","Description":"This is a simple demo for Counter usage","Unit":"%","Data":{"DataPoints":[{"Attributes":[{"Key":"const_label_a","Value":{"Type":"INT64","Value":1}}],"StartTime":"","Time":"","Value":11}],"Temporality":"CumulativeTemporality","IsMonotonic":true}}]}
 {"Scope":{"Name":"github.com/gogf/gf/example/metric/basic","Version":"v1.1","SchemaURL":""},"Metrics":[{"Name":"goframe.metric.demo.gauge","Description":"This is a simple demo for Gauge usage","Unit":"bytes","Data":{"DataPoints":[{"Attributes":[{"Key":"const_label_b","Value":{"Type":"INT64","Value":2}}],"StartTime":"","Time":"","Value":100}]}}]}
 `
-
+		time.Sleep(time.Second)
+		fmt.Println(content)
+		time.Sleep(time.Second)
+		fmt.Println(content)
+		time.Sleep(time.Second)
+		fmt.Println(content)
 		for _, line := range gstr.SplitAndTrim(expectContent, "\n") {
 			t.Assert(gstr.Contains(content, line), true)
 		}
