@@ -8,16 +8,19 @@ package gmetric
 
 import "sync"
 
+// GlobalCallbackItem is the global callback item registered.
 type GlobalCallbackItem struct {
-	Callback GlobalCallback
-	Metrics  []Metric
+	Callback GlobalCallback // Global callback.
+	Metrics  []Metric       // Callback on certain metrics.
 }
 
 var (
-	globalCallbackMu    sync.Mutex
-	globalCallbackItems = make([]GlobalCallbackItem, 0)
+	globalCallbackMu    sync.Mutex                      // For concurrent safety of callback metrics.
+	globalCallbackItems = make([]GlobalCallbackItem, 0) // Registered callbacks.
 )
 
+// RegisterCallback registers global callback on certain metrics.
+// A global callback is called when these metrics are being read.
 func RegisterCallback(callback GlobalCallback, metrics ...Metric) error {
 	globalCallbackMu.Lock()
 	defer globalCallbackMu.Unlock()
@@ -34,6 +37,8 @@ func RegisterCallback(callback GlobalCallback, metrics ...Metric) error {
 	return nil
 }
 
+// GetRegisteredCallbacks retrieves and returns the registered global callbacks.
+// It truncates the callback slice is the callbacks are returned.
 func GetRegisteredCallbacks() []GlobalCallbackItem {
 	globalCallbackMu.Lock()
 	defer globalCallbackMu.Unlock()

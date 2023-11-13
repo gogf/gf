@@ -24,11 +24,11 @@ type iBaseObservePerformer interface {
 	// AddValue adds given `delta` to the `value` of current observable performer.
 	AddValue(delta float64) float64
 
-	// GetObserveOptions returns the observe currentOptions that is merged with constant and dynamic currentOptions
+	// GetObserveOptions returns the `currentOptions` that is merged with constant and dynamic currentOptions
 	// of current observable performer.
 	GetObserveOptions() []metric.ObserveOption
 
-	// SetObserveOptionsByOption sets the observe currentOptions for current observable performer with metric
+	// SetObserveOptionsByOption sets the `currentOptions` for current observable performer with metric
 	// option.
 	SetObserveOptionsByOption(option ...gmetric.Option)
 
@@ -79,7 +79,7 @@ func (l *localBaseObservePerformer) GetObserveOptions() []metric.ObserveOption {
 	return l.currentOptions.Val().([]metric.ObserveOption)
 }
 
-// SetObserveOptionsByOption sets the observe currentOptions for current observable performer with metric
+// SetObserveOptionsByOption sets the `currentOptions` for current observable performer with metric
 // option.
 func (l *localBaseObservePerformer) SetObserveOptionsByOption(option ...gmetric.Option) {
 	var (

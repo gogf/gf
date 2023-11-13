@@ -54,7 +54,7 @@ func main() {
 	}
 
 	// OpenTelemetry provider.
-	provider := otelmetric.NewProvider(metric.WithReader(exporter))
+	provider := otelmetric.MustProvider(metric.WithReader(exporter))
 	defer provider.Shutdown(ctx)
 
 	// Record values for histogram1.
