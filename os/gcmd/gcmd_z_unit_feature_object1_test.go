@@ -30,8 +30,9 @@ type TestCmdObjectEnvInput struct {
 type TestCmdObjectEnvOutput struct{}
 
 type TestCmdObjectTestInput struct {
-	g.Meta `name:"test" usage:"root test" brief:"root test command" dc:"root test command description" ad:"root test command ad"`
-	Name   string `name:"yourname" v:"required" short:"n" orphan:"false" brief:"name for test command" d:"tom"`
+	g.Meta  `name:"test" usage:"root test" brief:"root test command" dc:"root test command description" ad:"root test command ad"`
+	Name    string `name:"yourname" v:"required" short:"n" orphan:"false" brief:"name for test command" d:"tom"`
+	Version bool   `name:"version" short:"v" orphan:"true" brief:"show version"`
 }
 
 type TestCmdObjectTestOutput struct {
@@ -43,8 +44,15 @@ func (TestCmdObject) Env(ctx context.Context, in TestCmdObjectEnvInput) (out *Te
 }
 
 func (TestCmdObject) Test(ctx context.Context, in TestCmdObjectTestInput) (out *TestCmdObjectTestOutput, err error) {
+	if !in.Version {
+		out = &TestCmdObjectTestOutput{
+			Content: in.Name,
+		}
+		return
+	}
+
 	out = &TestCmdObjectTestOutput{
-		Content: in.Name,
+		Content: "v1.0.0",
 	}
 	return
 }
@@ -106,6 +114,12 @@ func Test_Command_NewFromObject_RunWithValue(t *testing.T) {
 		value2, err2 := cmd.RunWithValueError(ctx)
 		t.AssertNil(err2)
 		t.Assert(value2, `{"Content":"tom"}`)
+
+		// test name tag and orphan tag true
+		os.Args = []string{"root", "test", "-v"}
+		value3, err3 := cmd.RunWithValueError(ctx)
+		t.AssertNil(err3)
+		t.Assert(value3, `{"Content":"v1.0.0"}`)
 	})
 }
 

@@ -288,6 +288,7 @@ func newCommandFromMethod(
 							data[arg.Name] = orphanValue.Bool()
 						}
 					}
+					// when name tag is not empty, it means that the option name is different from the field name.
 					if arg.FieldName != "" {
 						if orphanValue := parser.GetOpt(arg.FieldName); orphanValue != nil {
 							if orphanValue.String() == "" {
