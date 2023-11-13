@@ -77,7 +77,7 @@ func (c cVersion) Index(ctx context.Context, in cVersionInput) (*cVersionOutput,
 
 	c.appendLine(0, "Others Detail:")
 	c.appendLine(1, "Docs: https://goframe.org")
-	c.appendLine(1, fmt.Sprintf("Now Time: %s", time.Now().Format("2006-01-02 15:04:05")))
+	c.appendLine(1, fmt.Sprintf("Now Time: %s", time.Now().Format(time.RFC3339)))
 	c.print("  ")
 
 	return nil, nil
