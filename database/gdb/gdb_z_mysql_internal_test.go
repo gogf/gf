@@ -222,6 +222,22 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 		t.Assert(newNode.Charset, defaultCharset)
 		t.Assert(newNode.Protocol, `file`)
 	})
+	// #3146
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Link: `pgsql:BASIC$xxxx:123456@tcp(xxxx.hologres.aliyuncs.com:80)/xxx`,
+		}
+		newNode := parseConfigNodeLink(node)
+		t.Assert(newNode.Type, `pgsql`)
+		t.Assert(newNode.User, `BASIC$xxxx`)
+		t.Assert(newNode.Pass, `123456`)
+		t.Assert(newNode.Host, `xxxx.hologres.aliyuncs.com`)
+		t.Assert(newNode.Port, `80`)
+		t.Assert(newNode.Name, `xxx`)
+		t.Assert(newNode.Extra, ``)
+		t.Assert(newNode.Charset, defaultCharset)
+		t.Assert(newNode.Protocol, `tcp`)
+	})
 }
 
 func Test_Func_doQuoteWord(t *testing.T) {
