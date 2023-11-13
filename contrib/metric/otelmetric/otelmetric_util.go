@@ -16,6 +16,38 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+func getDynamicOptionByMetricOption(option ...gmetric.Option) metric.ObserveOption {
+	var (
+		usedOption    gmetric.Option
+		dynamicOption metric.ObserveOption
+	)
+	if len(option) > 0 {
+		usedOption = option[0]
+	}
+	if len(usedOption.Attributes) > 0 {
+		dynamicOption = metric.WithAttributes(attributesToKeyValues(usedOption.Attributes)...)
+	}
+	return dynamicOption
+}
+
+func getConstOptionByMetricConfig(config gmetric.MetricConfig) metric.ObserveOption {
+	var constOption metric.ObserveOption
+	if len(config.Attributes) > 0 {
+		constOption = metric.WithAttributes(attributesToKeyValues(config.Attributes)...)
+	}
+	return constOption
+}
+
+func getConstOptionByMetric(m gmetric.Metric) metric.ObserveOption {
+	var constOption metric.ObserveOption
+	if len(m.MetricInfo().Attributes()) > 0 {
+		constOption = metric.WithAttributes(
+			attributesToKeyValues(m.MetricInfo().Attributes())...,
+		)
+	}
+	return constOption
+}
+
 func metricToFloat64Observable(m gmetric.Metric) metric.Float64Observable {
 	performer := m.(gmetric.PerformerExporter).Performer()
 	switch m.MetricInfo().Type() {

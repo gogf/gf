@@ -17,3 +17,13 @@ import (
 func NewProvider(option ...metric.Option) (gmetric.Provider, error) {
 	return newLocalProvider(option...)
 }
+
+// MustProvider creates and returns a metrics provider.
+// It panics if any error occurs.
+func MustProvider(option ...metric.Option) gmetric.Provider {
+	provider, err := newLocalProvider(option...)
+	if err != nil {
+		panic(err)
+	}
+	return provider
+}

@@ -23,5 +23,16 @@ func newCallbackSetter(observer metric.Observer) gmetric.CallbackSetter {
 }
 
 func (l *localCallbackSetter) Set(m gmetric.Metric, value float64, option ...gmetric.Option) {
-	l.observer.ObserveFloat64(metricToFloat64Observable(m), value)
+	var (
+		constOption    = getConstOptionByMetric(m)
+		dynamicOption  = getDynamicOptionByMetricOption(option...)
+		observeOptions = make([]metric.ObserveOption, 0)
+	)
+	if constOption != nil {
+		observeOptions = append(observeOptions, constOption)
+	}
+	if dynamicOption != nil {
+		observeOptions = append(observeOptions, dynamicOption)
+	}
+	l.observer.ObserveFloat64(metricToFloat64Observable(m), value, observeOptions...)
 }

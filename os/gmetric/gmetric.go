@@ -175,18 +175,25 @@ type PerformerExporter interface {
 	Performer() any
 }
 
+// CallbackRemover removes the callback of metric.
+// It is called internally in Provider creation.
+type CallbackRemover interface {
+	// RemoveCallback removes the callback when global callback is defined on metric.
+	RemoveCallback()
+}
+
 // CallbackResult is the result that a callback should return.
 type CallbackResult struct {
 	Value      float64    // New metric value after callback.
 	Attributes Attributes // Dynamic attributes after callback.
 }
 
-// GlobalCallback function for metric.
-type GlobalCallback func(ctx context.Context, m CallbackSetter) error
-
 // MetricCallback function for metric.
 // A Callback is automatically called when metric reader starts reading the metric value.
 type MetricCallback func(ctx context.Context) (*CallbackResult, error)
+
+// GlobalCallback function for metric.
+type GlobalCallback func(ctx context.Context, m CallbackSetter) error
 
 // CallbackSetter sets the value for certain initialized Metric.
 type CallbackSetter interface {

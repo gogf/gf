@@ -25,6 +25,12 @@ func RegisterCallback(callback GlobalCallback, metrics ...Metric) error {
 		Callback: callback,
 		Metrics:  metrics,
 	})
+	// It removes the callback of metric if global callback defined on it.
+	for _, m := range metrics {
+		if callbackRemover, ok := m.(CallbackRemover); ok {
+			callbackRemover.RemoveCallback()
+		}
+	}
 	return nil
 }
 

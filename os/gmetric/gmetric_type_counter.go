@@ -24,6 +24,8 @@ var (
 	_ MetricInitializer = (*localCounter)(nil)
 	// Check the implements for interface PerformerExporter.
 	_ PerformerExporter = (*localCounter)(nil)
+	// Check the implements for interface CallbackRemover.
+	_ CallbackRemover = (*localCounter)(nil)
 )
 
 // NewCounter creates and returns a new Counter.
@@ -51,4 +53,9 @@ func (l *localCounter) Init(provider Provider) {
 // Performer exports internal Performer.
 func (l *localCounter) Performer() any {
 	return l.CounterPerformer
+}
+
+// RemoveCallback removes the callback when global callback is defined on metric.
+func (l *localCounter) RemoveCallback() {
+	l.Callback = nil
 }
