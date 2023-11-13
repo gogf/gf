@@ -23,11 +23,15 @@ type localCounterPerformer struct {
 
 // newCounterPerformer creates and returns a CounterPerformer that truly takes action to implement Counter.
 func newCounterPerformer(meter metric.Meter, config gmetric.CounterConfig) gmetric.CounterPerformer {
-	baseObservePerformer := newBaseObservePerformer(config.MetricConfig)
-	counter, err := meter.Float64ObservableCounter(config.Name,
-		metric.WithDescription(config.Help),
-		metric.WithUnit(config.Unit),
-		metric.WithFloat64Callback(func(ctx context.Context, observer metric.Float64Observer) error {
+	var (
+		baseObservePerformer = newBaseObservePerformer(config.MetricConfig)
+		options              = []metric.Float64ObservableCounterOption{
+			metric.WithDescription(config.Help),
+			metric.WithUnit(config.Unit),
+		}
+	)
+	if !hasGlobalCallbackMetricSet.Contains(config.MetricKey()) {
+		callback := metric.WithFloat64Callback(func(ctx context.Context, observer metric.Float64Observer) error {
 			if config.Callback != nil {
 				result, err := config.Callback(ctx)
 				if err != nil {
@@ -51,8 +55,10 @@ func newCounterPerformer(meter metric.Meter, config gmetric.CounterConfig) gmetr
 				baseObservePerformer.GetObserveOptions()...,
 			)
 			return nil
-		}),
-	)
+		})
+		options = append(options, callback)
+	}
+	counter, err := meter.Float64ObservableCounter(config.Name, options...)
 	if err != nil {
 		panic(gerror.WrapCodef(
 			gcode.CodeInternalError,
@@ -78,3 +84,6 @@ func (l *localCounterPerformer) Add(increment float64, option ...gmetric.Option)
 	l.baseObservePerformer.AddValue(increment)
 	l.baseObservePerformer.SetObserveOptionsByOption(option...)
 }
+
+// RemoveCallback removes the callback when global callback is defined on metric.
+func (l *localCounterPerformer) RemoveCallback() {}

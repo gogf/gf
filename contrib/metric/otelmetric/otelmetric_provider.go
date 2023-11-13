@@ -31,16 +31,22 @@ func newLocalProvider(options ...metric.Option) (gmetric.Provider, error) {
 	// otel.SetLogger()
 
 	var (
-		err     error
-		metrics = gmetric.GetAllMetrics()
-		views   = createViewsByMetrics(metrics)
+		err       error
+		metrics   = gmetric.GetAllMetrics()
+		views     = createViewsByMetrics(metrics)
+		callbacks = gmetric.GetRegisteredCallbacks()
 	)
 	options = append(options, metric.WithView(views...))
 	provider := &localProvider{
 		MeterProvider: metric.NewMeterProvider(options...),
 	}
+	for _, callback := range callbacks {
+		for _, m := range callback.Metrics {
+			hasGlobalCallbackMetricSet.Add(m.MetricInfo().Key())
+		}
+	}
 	initializeAllMetrics(metrics, provider)
-	err = initializeCallback(provider.MeterProvider)
+	err = initializeCallback(callbacks, provider.MeterProvider)
 	if err != nil {
 		return nil, err
 	}
@@ -99,8 +105,7 @@ func initializeAllMetrics(metrics []gmetric.Metric, provider gmetric.Provider) {
 	}
 }
 
-func initializeCallback(provider *metric.MeterProvider) error {
-	var callbacks = gmetric.GetRegisteredCallbacks()
+func initializeCallback(callbacks []gmetric.GlobalCallbackItem, provider *metric.MeterProvider) error {
 	for _, callback := range callbacks {
 		// group the metric by instrument and instrument version.
 		var (

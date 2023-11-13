@@ -151,6 +151,7 @@ type HistogramPerformer interface {
 
 // MetricInfo exports information of the Metric.
 type MetricInfo interface {
+	Key() string               // Key returns the unique string key of the metric.
 	Name() string              // Name returns the name of the metric.
 	Help() string              // Help returns the help description of the metric.
 	Unit() string              // Unit returns the unit name of the metric.
@@ -173,13 +174,6 @@ type MetricInitializer interface {
 type PerformerExporter interface {
 	// Performer exports internal Performer of Metric.
 	Performer() any
-}
-
-// CallbackRemover removes the callback of metric.
-// It is called internally in Provider creation.
-type CallbackRemover interface {
-	// RemoveCallback removes the callback when global callback is defined on metric.
-	RemoveCallback()
 }
 
 // CallbackResult is the result that a callback should return.

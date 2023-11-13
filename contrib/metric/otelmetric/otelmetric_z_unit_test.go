@@ -361,6 +361,57 @@ func Test_GlobalCallback(t *testing.T) {
 	})
 }
 
+func Test_GlobalCallback_DynamicAttributes(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			ctx     = gctx.New()
+			counter = gmetric.NewCounter(gmetric.CounterConfig{
+				MetricConfig: gmetric.MetricConfig{
+					Name: "goframe.metric.demo.counter",
+					Help: "This is a simple demo for Counter usage",
+					Unit: "%",
+					Attributes: gmetric.Attributes{
+						gmetric.NewAttribute("const_label_a", 1),
+					},
+					Instrument: "github.com/gogf/gf/example/metric/basic",
+				},
+			})
+		)
+		// global callback.
+		err := gmetric.RegisterCallback(
+			func(ctx context.Context, setter gmetric.CallbackSetter) error {
+				setter.Set(counter, 1000, gmetric.Option{
+					Attributes: gmetric.Attributes{
+						gmetric.NewAttribute("dynamic_label_b", 2),
+					}},
+				)
+				return nil
+			},
+			counter,
+		)
+		t.AssertNil(err)
+
+		reader := metric.NewManualReader()
+		// OpenTelemetry provider.
+		provider := otelmetric.MustProvider(metric.WithReader(reader))
+		defer provider.Shutdown(ctx)
+
+		rm := metricdata.ResourceMetrics{}
+		err = reader.Collect(ctx, &rm)
+		t.AssertNil(err)
+
+		content := gjson.MustEncodeString(rm)
+		content, err = gregex.ReplaceString(`Time":".+?"`, `Time":""`, content)
+		t.AssertNil(err)
+		expectContent := `
+{"Scope":{"Name":"github.com/gogf/gf/example/metric/basic","Version":"","SchemaURL":""},"Metrics":[{"Name":"goframe.metric.demo.counter","Description":"This is a simple demo for Counter usage","Unit":"%","Data":{"DataPoints":[{"Attributes":[{"Key":"const_label_a","Value":{"Type":"INT64","Value":1}},{"Key":"dynamic_label_b","Value":{"Type":"INT64","Value":2}}],"StartTime":"","Time":"","Value":1000}],"Temporality":"CumulativeTemporality","IsMonotonic":true}}]}
+`
+		for _, line := range gstr.SplitAndTrim(expectContent, "\n") {
+			t.Assert(gstr.Contains(content, line), true)
+		}
+	})
+}
+
 func Test_GlobalCallback_Error(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (

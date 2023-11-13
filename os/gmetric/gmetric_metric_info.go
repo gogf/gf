@@ -7,6 +7,8 @@
 package gmetric
 
 import (
+	"fmt"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 )
@@ -87,4 +89,29 @@ func (l *localMetricInfo) Instrument() string {
 // InstrumentVersion returns the instrument version of the metric.
 func (l *localMetricInfo) InstrumentVersion() string {
 	return l.config.InstrumentVersion
+}
+
+// Key returns the unique string key for the metric.
+func (l *localMetricInfo) Key() string {
+	return l.config.MetricKey()
+}
+
+// MetricKey returns the unique string key for the metric.
+func (c MetricConfig) MetricKey() string {
+	if c.Instrument != "" && c.InstrumentVersion != "" {
+		return fmt.Sprintf(
+			`%s@%s:%s`,
+			c.Instrument,
+			c.InstrumentVersion,
+			c.Name,
+		)
+	}
+	if c.Instrument != "" && c.InstrumentVersion == "" {
+		return fmt.Sprintf(
+			`%s:%s`,
+			c.Instrument,
+			c.Name,
+		)
+	}
+	return c.Name
 }

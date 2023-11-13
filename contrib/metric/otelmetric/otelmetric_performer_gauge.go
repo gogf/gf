@@ -23,12 +23,15 @@ type localGaugePerformer struct {
 
 // newGaugePerformer creates and returns a GaugePerformer that truly takes action to implement Gauge.
 func newGaugePerformer(meter metric.Meter, config gmetric.GaugeConfig) gmetric.GaugePerformer {
-	baseObservePerformer := newBaseObservePerformer(config.MetricConfig)
-	gauge, err := meter.Float64ObservableGauge(
-		config.Name,
-		metric.WithDescription(config.Help),
-		metric.WithUnit(config.Unit),
-		metric.WithFloat64Callback(func(ctx context.Context, observer metric.Float64Observer) error {
+	var (
+		baseObservePerformer = newBaseObservePerformer(config.MetricConfig)
+		options              = []metric.Float64ObservableGaugeOption{
+			metric.WithDescription(config.Help),
+			metric.WithUnit(config.Unit),
+		}
+	)
+	if !hasGlobalCallbackMetricSet.Contains(config.MetricKey()) {
+		callback := metric.WithFloat64Callback(func(ctx context.Context, observer metric.Float64Observer) error {
 			if config.Callback != nil {
 				result, err := config.Callback(ctx)
 				if err != nil {
@@ -51,8 +54,10 @@ func newGaugePerformer(meter metric.Meter, config gmetric.GaugeConfig) gmetric.G
 				baseObservePerformer.GetObserveOptions()...,
 			)
 			return nil
-		}),
-	)
+		})
+		options = append(options, callback)
+	}
+	gauge, err := meter.Float64ObservableGauge(config.Name, options...)
 	if err != nil {
 		panic(gerror.WrapCodef(
 			gcode.CodeInternalError,

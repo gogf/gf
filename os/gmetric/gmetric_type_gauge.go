@@ -24,8 +24,6 @@ var (
 	_ MetricInitializer = (*localGauge)(nil)
 	// Check the implements for interface PerformerExporter.
 	_ PerformerExporter = (*localGauge)(nil)
-	// Check the implements for interface CallbackRemover.
-	_ CallbackRemover = (*localGauge)(nil)
 )
 
 // NewGauge creates and returns a new Gauge.
@@ -53,9 +51,4 @@ func (l *localGauge) Init(provider Provider) {
 // Performer exports internal Performer.
 func (l *localGauge) Performer() any {
 	return l.GaugePerformer
-}
-
-// RemoveCallback removes the callback when global callback is defined on metric.
-func (l *localGauge) RemoveCallback() {
-	l.Callback = nil
 }
