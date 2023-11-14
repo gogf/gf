@@ -16,10 +16,28 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func getDynamicOptionByMetricOption(option ...gmetric.Option) metric.ObserveOption {
+func getGlobalAttributesOption(option gmetric.GlobalAttributesOption) metric.MeasurementOption {
+	var (
+		globalAttributesOption metric.MeasurementOption
+		globalAttributes       = gmetric.GetGlobalAttributes(gmetric.GlobalAttributesOption{})
+		instrumentAttributes   gmetric.Attributes
+	)
+	if option.Instrument != "" {
+		instrumentAttributes = gmetric.GetGlobalAttributes(option)
+	}
+	if len(globalAttributes) > 0 {
+		globalAttributesOption = metric.WithAttributes(attributesToKeyValues(globalAttributes)...)
+	}
+	if len(instrumentAttributes) > 0 {
+		globalAttributesOption = metric.WithAttributes(attributesToKeyValues(instrumentAttributes)...)
+	}
+	return globalAttributesOption
+}
+
+func getDynamicOptionByMetricOption(option ...gmetric.Option) metric.MeasurementOption {
 	var (
 		usedOption    gmetric.Option
-		dynamicOption metric.ObserveOption
+		dynamicOption metric.MeasurementOption
 	)
 	if len(option) > 0 {
 		usedOption = option[0]
@@ -30,16 +48,16 @@ func getDynamicOptionByMetricOption(option ...gmetric.Option) metric.ObserveOpti
 	return dynamicOption
 }
 
-func getConstOptionByMetricConfig(config gmetric.MetricConfig) metric.ObserveOption {
-	var constOption metric.ObserveOption
+func getConstOptionByMetricConfig(config gmetric.MetricConfig) metric.MeasurementOption {
+	var constOption metric.MeasurementOption
 	if len(config.Attributes) > 0 {
 		constOption = metric.WithAttributes(attributesToKeyValues(config.Attributes)...)
 	}
 	return constOption
 }
 
-func getConstOptionByMetric(m gmetric.Metric) metric.ObserveOption {
-	var constOption metric.ObserveOption
+func getConstOptionByMetric(m gmetric.Metric) metric.MeasurementOption {
+	var constOption metric.MeasurementOption
 	if len(m.Info().Attributes()) > 0 {
 		constOption = metric.WithAttributes(
 			attributesToKeyValues(m.Info().Attributes())...,

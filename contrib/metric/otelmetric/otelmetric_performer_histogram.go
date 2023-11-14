@@ -55,17 +55,18 @@ func (l *localHistogramPerformer) Record(increment float64, option ...gmetric.Op
 
 func (l *localHistogramPerformer) mergeToRecordOptions(option ...gmetric.Option) []metric.RecordOption {
 	var (
-		usedOption     gmetric.Option
-		observeOptions = []metric.RecordOption{l.attributesOption}
+		dynamicOption          = getDynamicOptionByMetricOption(option...)
+		recordOptions          = []metric.RecordOption{l.attributesOption}
+		globalAttributesOption = getGlobalAttributesOption(gmetric.GlobalAttributesOption{
+			Instrument:        l.config.Instrument,
+			InstrumentVersion: l.config.InstrumentVersion,
+		})
 	)
-	if len(option) > 0 {
-		usedOption = option[0]
+	if globalAttributesOption != nil {
+		recordOptions = append(recordOptions, globalAttributesOption)
 	}
-	if len(usedOption.Attributes) > 0 {
-		observeOptions = append(
-			observeOptions,
-			metric.WithAttributes(attributesToKeyValues(usedOption.Attributes)...),
-		)
+	if dynamicOption != nil {
+		recordOptions = append(recordOptions, dynamicOption)
 	}
-	return observeOptions
+	return recordOptions
 }
