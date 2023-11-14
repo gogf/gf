@@ -768,7 +768,7 @@ func (m *Model) formatCondition(
 		}
 	}
 	// ORDER BY.
-	if !isCountStatement { //The count statement of sqlserver cannot contain the order by statement
+	if !isCountStatement { // The count statement of sqlserver cannot contain the order by statement
 		if m.orderBy != "" {
 			conditionExtra += " ORDER BY " + m.orderBy
 		}
