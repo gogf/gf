@@ -7,6 +7,7 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"runtime"
@@ -29,9 +30,12 @@ var (
 	Version = cVersion{}
 )
 
+const (
+	defaultIndent = "{{indent}}"
+)
+
 type cVersion struct {
 	g.Meta `name:"version" brief:"show version information of current binary"`
-	detail string
 }
 
 type cVersionInput struct {
@@ -41,69 +45,74 @@ type cVersionInput struct {
 type cVersionOutput struct{}
 
 func (c cVersion) Index(ctx context.Context, in cVersionInput) (*cVersionOutput, error) {
-	c.detail = fmt.Sprintf("%s", gf.VERSION)
+	detailBuffer := &detailBuffer{}
+	detailBuffer.WriteString(fmt.Sprintf("%s", gf.VERSION))
 
-	c.appendLine(0, "Welcome to GoFrame!")
+	detailBuffer.appendLine(0, "Welcome to GoFrame!")
 
-	c.appendLine(0, "Env Detail:")
+	detailBuffer.appendLine(0, "Env Detail:")
 	goVersion, ok := getGoVersion()
 	if ok {
-		c.appendLine(1, fmt.Sprintf("Go Version: %s", goVersion))
-		c.appendLine(1, fmt.Sprintf("GF Version(go.mod): %s", getGoFrameVersion()))
+		detailBuffer.appendLine(1, fmt.Sprintf("Go Version: %s", goVersion))
+		detailBuffer.appendLine(1, fmt.Sprintf("GF Version(go.mod): %s", getGoFrameVersion(2)))
 	} else {
 		v, err := c.getGFVersionOfCurrentProject()
 		if err == nil {
-			c.appendLine(1, fmt.Sprintf("GF Version(go.mod): %s", v))
+			detailBuffer.appendLine(1, fmt.Sprintf("GF Version(go.mod): %s", v))
 		} else {
-			c.appendLine(1, fmt.Sprintf("GF Version(go.mod): %s", err.Error()))
+			detailBuffer.appendLine(1, fmt.Sprintf("GF Version(go.mod): %s", err.Error()))
 		}
 	}
 
-	c.appendLine(0, "CLI Detail:")
-	c.appendLine(1, fmt.Sprintf("Installed At: %s", gfile.SelfPath()))
+	detailBuffer.appendLine(0, "CLI Detail:")
+	detailBuffer.appendLine(1, fmt.Sprintf("Installed At: %s", gfile.SelfPath()))
 	info := gbuild.Info()
 	if info.GoFrame == "" {
-		c.appendLine(1, fmt.Sprintf("Builded Go Version: %s", runtime.Version()))
-		c.appendLine(1, fmt.Sprintf("Builded GF Version: %s", gf.VERSION))
+		detailBuffer.appendLine(1, fmt.Sprintf("Built Go Version: %s", runtime.Version()))
+		detailBuffer.appendLine(1, fmt.Sprintf("Built GF Version: %s", gf.VERSION))
 	} else {
 		if info.Git == "" {
 			info.Git = "none"
 		}
-		c.appendLine(1, fmt.Sprintf("Builded Go Version: %s", info.Golang))
-		c.appendLine(1, fmt.Sprintf("Builded GF Version: %s", info.GoFrame))
-		c.appendLine(1, fmt.Sprintf("Git Commit: %s", info.Git))
-		c.appendLine(1, fmt.Sprintf("Builded Time: %s", info.Time))
+		detailBuffer.appendLine(1, fmt.Sprintf("Builded Go Version: %s", info.Golang))
+		detailBuffer.appendLine(1, fmt.Sprintf("Builded GF Version: %s", info.GoFrame))
+		detailBuffer.appendLine(1, fmt.Sprintf("Git Commit: %s", info.Git))
+		detailBuffer.appendLine(1, fmt.Sprintf("Builded Time: %s", info.Time))
 	}
 
-	c.appendLine(0, "Others Detail:")
-	c.appendLine(1, "Docs: https://goframe.org")
-	c.appendLine(1, fmt.Sprintf("Now Time: %s", time.Now().Format(time.RFC3339)))
-	c.print("  ")
+	detailBuffer.appendLine(0, "Others Detail:")
+	detailBuffer.appendLine(1, "Docs: https://goframe.org")
+	detailBuffer.appendLine(1, fmt.Sprintf("Now : %s", time.Now().Format(time.RFC3339)))
 
+	mlog.Print(detailBuffer.replaceAllIndent("  "))
 	return nil, nil
 }
 
-// appendLine description
-func (c *cVersion) appendLine(level int, line string) {
-	c.detail += "\n" + strings.Repeat("\t", level) + line
+// detailBuffer is a buffer for detail information.
+type detailBuffer struct {
+	bytes.Buffer
 }
 
-// print description
-func (c *cVersion) print(indent string) {
-	c.detail = strings.ReplaceAll(c.detail, "\t", indent)
-	mlog.Print(c.detail)
+// appendLine appends a line to the buffer with given indent level.
+func (d *detailBuffer) appendLine(indentLevel int, line string) {
+	d.WriteString(fmt.Sprintf("\n%s%s", strings.Repeat(defaultIndent, indentLevel), line))
+}
+
+// replaceAllIndent replaces the tab with given indent string and prints the buffer content.
+func (d *detailBuffer) replaceAllIndent(indentStr string) string {
+	return strings.ReplaceAll(d.String(), defaultIndent, indentStr)
 }
 
 // getGoFrameVersion returns the goframe version of current project using.
-func getGoFrameVersion() (gfVersion string) {
+func getGoFrameVersion(indentLevel int) (gfVersion string) {
 	pkgInfo, err := gproc.ShellExec(context.Background(), `go list -f "{{if (not .Main)}}{{.Path}}@{{.Version}}{{end}}" -m all`)
 	if err != nil {
-		return ""
+		return "cannot find go.mod"
 	}
 	pkgList := gstr.Split(pkgInfo, "\n")
 	for _, v := range pkgList {
 		if strings.HasPrefix(v, "github.com/gogf/gf") {
-			gfVersion += fmt.Sprintf("\n\t\t%s", v)
+			gfVersion += fmt.Sprintf("\n%s%s", strings.Repeat(defaultIndent, indentLevel), v)
 		}
 	}
 	return
