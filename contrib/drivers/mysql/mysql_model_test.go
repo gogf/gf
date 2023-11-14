@@ -4735,12 +4735,12 @@ func Test_Model_FixGdbJoin(t *testing.T) {
 				FieldsPrefix(`resource_mark`, "mark_name", "color").
 				FieldsPrefix(`rules_template`, "name").
 				FieldsPrefix(`common_resource`, `src_instance_id`, "database_kind", "source_type", "ip", "port")
-			all, err := orm.All()
+			all, err := orm.OrderAsc("src_instance_id").All()
 			t.Assert(len(all), 4)
 			t.Assert(all[0]["pay_mode"], 1)
-			t.Assert(all[0]["src_instance_id"], 3)
-			t.Assert(all[3]["instance_id"], "dmcins-erxms6ya")
-			t.Assert(all[3]["src_instance_id"], "tdsqlshard-313spncx")
+			t.Assert(all[0]["src_instance_id"], 2)
+			t.Assert(all[3]["instance_id"], "dmcins-jxy0x75m")
+			t.Assert(all[3]["src_instance_id"], "vdb-6b6m3u1u")
 			t.Assert(all[3]["resource_mark_id"], "11")
 			return err
 		})
