@@ -289,10 +289,11 @@ func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, e
 					)
 				}
 				cmd = fmt.Sprintf(
-					`GOOS=%s GOARCH=%s go build %s -ldflags "%s" %s%s`,
-					system, arch, outputPath, ldFlags, in.Extra, file,
+					`go build %s -ldflags "%s" %s%s`,
+					outputPath, ldFlags, in.Extra, file,
 				)
 			}
+			mlog.Debug(fmt.Sprintf("build for GOOS=%s GOARCH=%s", system, arch))
 			mlog.Debug(cmd)
 			// It's not necessary printing the complete command string.
 			cmdShow, _ := gregex.ReplaceString(`\s+(-ldflags ".+?")\s+`, " ", cmd)
