@@ -9,6 +9,7 @@ package genservice
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
@@ -93,10 +94,10 @@ const (
 )
 
 func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGenServiceOutput, err error) {
-	in.SrcFolder = gstr.TrimRight(in.SrcFolder, `\/`)
-	in.SrcFolder = gstr.Replace(in.SrcFolder, "\\", "/")
-	in.WatchFile = gstr.TrimRight(in.WatchFile, `\/`)
-	in.WatchFile = gstr.Replace(in.WatchFile, "\\", "/")
+	in.SrcFolder = filepath.ToSlash(in.SrcFolder)
+	in.SrcFolder = gstr.TrimRight(in.SrcFolder, `/`)
+	in.WatchFile = filepath.ToSlash(in.WatchFile)
+	in.WatchFile = gstr.TrimRight(in.WatchFile, `/`)
 
 	// Watch file handling.
 	if in.WatchFile != "" {
