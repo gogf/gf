@@ -74,10 +74,10 @@ func (c cVersion) Index(ctx context.Context, in cVersionInput) (*cVersionOutput,
 		if info.Git == "" {
 			info.Git = "none"
 		}
-		detailBuffer.appendLine(1, fmt.Sprintf("Builded Go Version: %s", info.Golang))
-		detailBuffer.appendLine(1, fmt.Sprintf("Builded GF Version: %s", info.GoFrame))
+		detailBuffer.appendLine(1, fmt.Sprintf("Built Go Version: %s", info.Golang))
+		detailBuffer.appendLine(1, fmt.Sprintf("Built GF Version: %s", info.GoFrame))
 		detailBuffer.appendLine(1, fmt.Sprintf("Git Commit: %s", info.Git))
-		detailBuffer.appendLine(1, fmt.Sprintf("Builded Time: %s", info.Time))
+		detailBuffer.appendLine(1, fmt.Sprintf("Built Time: %s", info.Time))
 	}
 
 	detailBuffer.appendLine(0, "Others Detail:")
