@@ -40,9 +40,9 @@ func getConstOptionByMetricConfig(config gmetric.MetricConfig) metric.ObserveOpt
 
 func getConstOptionByMetric(m gmetric.Metric) metric.ObserveOption {
 	var constOption metric.ObserveOption
-	if len(m.MetricInfo().Attributes()) > 0 {
+	if len(m.Info().Attributes()) > 0 {
 		constOption = metric.WithAttributes(
-			attributesToKeyValues(m.MetricInfo().Attributes())...,
+			attributesToKeyValues(m.Info().Attributes())...,
 		)
 	}
 	return constOption
@@ -50,11 +50,13 @@ func getConstOptionByMetric(m gmetric.Metric) metric.ObserveOption {
 
 func metricToFloat64Observable(m gmetric.Metric) metric.Float64Observable {
 	performer := m.(gmetric.PerformerExporter).Performer()
-	switch m.MetricInfo().Type() {
+	switch m.Info().Type() {
 	case gmetric.MetricTypeCounter:
 		return performer.(*localCounterPerformer).Float64ObservableCounter
+
 	case gmetric.MetricTypeGauge:
 		return performer.(*localGaugePerformer).Float64ObservableGauge
+
 	default:
 		panic(gerror.NewCode(
 			gcode.CodeInvalidParameter,

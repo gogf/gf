@@ -60,8 +60,25 @@ type Performer interface {
 
 // Metric models a single sample value with its metadata being exported.
 type Metric interface {
-	// MetricInfo returns the basic information of a Metric.
-	MetricInfo() MetricInfo
+	// Info returns the basic information of a Metric.
+	Info() MetricInfo
+}
+
+// MetricInfo exports information of the Metric.
+type MetricInfo interface {
+	Key() string                  // Key returns the unique string key of the metric.
+	Name() string                 // Name returns the name of the metric.
+	Help() string                 // Help returns the help description of the metric.
+	Unit() string                 // Unit returns the unit name of the metric.
+	Type() MetricType             // Type returns the type of the metric.
+	Attributes() Attributes       // Attributes returns the constant attribute slice of the metric.
+	Instrument() MetricInstrument // Instrument returns the instrument info of the metric.
+}
+
+// MetricInstrument exports the instrument information of a metric.
+type MetricInstrument interface {
+	Name() string    // Name returns the instrument name of the metric.
+	Version() string // Version returns the instrument version of the metric.
 }
 
 // Attributes is a slice of Attribute.
@@ -147,18 +164,6 @@ type HistogramPerformer interface {
 	// Record adds a single value to the histogram.
 	// The value is usually positive or zero.
 	Record(increment float64, option ...Option)
-}
-
-// MetricInfo exports information of the Metric.
-type MetricInfo interface {
-	Key() string               // Key returns the unique string key of the metric.
-	Name() string              // Name returns the name of the metric.
-	Help() string              // Help returns the help description of the metric.
-	Unit() string              // Unit returns the unit name of the metric.
-	Type() MetricType          // Type returns the type of the metric.
-	Attributes() Attributes    // Attributes returns the constant attribute slice of the metric.
-	Instrument() string        // Instrument returns the instrument name of the metric.
-	InstrumentVersion() string // InstrumentVersion returns the instrument version of the metric.
 }
 
 // MetricInitializer manages the initialization for Metric.

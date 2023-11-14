@@ -38,6 +38,7 @@ type MetricConfig struct {
 // localMetricInfo implements interface MetricInfo.
 type localMetricInfo struct {
 	config     MetricConfig
+	instrument MetricInstrument
 	metricType MetricType
 }
 
@@ -52,6 +53,7 @@ func newMetricInfo(metricType MetricType, config MetricConfig) MetricInfo {
 	}
 	return &localMetricInfo{
 		config:     config,
+		instrument: newMetricInstrument(config.Instrument, config.InstrumentVersion),
 		metricType: metricType,
 	}
 }
@@ -82,13 +84,8 @@ func (l *localMetricInfo) Attributes() Attributes {
 }
 
 // Instrument returns the instrument name of the metric.
-func (l *localMetricInfo) Instrument() string {
-	return l.config.Instrument
-}
-
-// InstrumentVersion returns the instrument version of the metric.
-func (l *localMetricInfo) InstrumentVersion() string {
-	return l.config.InstrumentVersion
+func (l *localMetricInfo) Instrument() MetricInstrument {
+	return l.instrument
 }
 
 // Key returns the unique string key for the metric.

@@ -30,12 +30,12 @@ func Test_Counter(t *testing.T) {
 			}
 			counter = gmetric.NewCounter(config)
 		)
-		t.Assert(counter.MetricInfo().Name(), config.Name)
-		t.Assert(counter.MetricInfo().Help(), config.Help)
-		t.Assert(counter.MetricInfo().Unit(), config.Unit)
-		t.Assert(counter.MetricInfo().Attributes(), config.Attributes)
-		t.Assert(counter.MetricInfo().Instrument(), config.Instrument)
-		t.Assert(counter.MetricInfo().InstrumentVersion(), config.InstrumentVersion)
+		t.Assert(counter.Info().Name(), config.Name)
+		t.Assert(counter.Info().Help(), config.Help)
+		t.Assert(counter.Info().Unit(), config.Unit)
+		t.Assert(counter.Info().Attributes(), config.Attributes)
+		t.Assert(counter.Info().Instrument().Name(), config.Instrument)
+		t.Assert(counter.Info().Instrument().Version(), config.InstrumentVersion)
 	})
 }
 
@@ -56,12 +56,12 @@ func Test_Gauge(t *testing.T) {
 			}
 			counter = gmetric.NewGauge(config)
 		)
-		t.Assert(counter.MetricInfo().Name(), config.Name)
-		t.Assert(counter.MetricInfo().Help(), config.Help)
-		t.Assert(counter.MetricInfo().Unit(), config.Unit)
-		t.Assert(counter.MetricInfo().Attributes(), config.Attributes)
-		t.Assert(counter.MetricInfo().Instrument(), config.Instrument)
-		t.Assert(counter.MetricInfo().InstrumentVersion(), config.InstrumentVersion)
+		t.Assert(counter.Info().Name(), config.Name)
+		t.Assert(counter.Info().Help(), config.Help)
+		t.Assert(counter.Info().Unit(), config.Unit)
+		t.Assert(counter.Info().Attributes(), config.Attributes)
+		t.Assert(counter.Info().Instrument().Name(), config.Instrument)
+		t.Assert(counter.Info().Instrument().Version(), config.InstrumentVersion)
 	})
 }
 
@@ -83,12 +83,12 @@ func Test_Histogram(t *testing.T) {
 			}
 			counter = gmetric.NewHistogram(config)
 		)
-		t.Assert(counter.MetricInfo().Name(), config.Name)
-		t.Assert(counter.MetricInfo().Help(), config.Help)
-		t.Assert(counter.MetricInfo().Unit(), config.Unit)
-		t.Assert(counter.MetricInfo().Attributes(), config.Attributes)
-		t.Assert(counter.MetricInfo().Instrument(), config.Instrument)
-		t.Assert(counter.MetricInfo().InstrumentVersion(), config.InstrumentVersion)
+		t.Assert(counter.Info().Name(), config.Name)
+		t.Assert(counter.Info().Help(), config.Help)
+		t.Assert(counter.Info().Unit(), config.Unit)
+		t.Assert(counter.Info().Attributes(), config.Attributes)
+		t.Assert(counter.Info().Instrument().Name(), config.Instrument)
+		t.Assert(counter.Info().Instrument().Version(), config.InstrumentVersion)
 		t.Assert(counter.Buckets(), config.Buckets)
 	})
 }

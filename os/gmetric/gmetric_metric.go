@@ -18,7 +18,7 @@ func newMetric(metricType MetricType, config MetricConfig) Metric {
 	}
 }
 
-// MetricInfo returns the basic information of a Metric.
-func (l *localMetric) MetricInfo() MetricInfo {
+// Info returns the basic information of a Metric.
+func (l *localMetric) Info() MetricInfo {
 	return l.metricInfo
 }

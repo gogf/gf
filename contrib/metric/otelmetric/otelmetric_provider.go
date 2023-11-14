@@ -46,7 +46,7 @@ func newLocalProvider(options ...metric.Option) (gmetric.Provider, error) {
 	}
 	for _, callback := range callbacks {
 		for _, m := range callback.Metrics {
-			hasGlobalCallbackMetricSet.Add(m.MetricInfo().Key())
+			hasGlobalCallbackMetricSet.Add(m.Info().Key())
 		}
 	}
 	initializeAllMetrics(metrics, provider)
@@ -120,17 +120,17 @@ func createViewsForBuiltInMetrics() []metric.View {
 func createViewsByMetrics(metrics []gmetric.Metric) []metric.View {
 	var views = make([]metric.View, 0)
 	for _, m := range metrics {
-		switch m.MetricInfo().Type() {
+		switch m.Info().Type() {
 		case gmetric.MetricTypeCounter:
 		case gmetric.MetricTypeGauge:
 		case gmetric.MetricTypeHistogram:
 			// Custom buckets for each Histogram.
 			views = append(views, metric.NewView(
 				metric.Instrument{
-					Name: m.MetricInfo().Name(),
+					Name: m.Info().Name(),
 					Scope: instrumentation.Scope{
-						Name:    m.MetricInfo().Instrument(),
-						Version: m.MetricInfo().InstrumentVersion(),
+						Name:    m.Info().Instrument().Name(),
+						Version: m.Info().Instrument().Version(),
 					},
 				},
 				metric.Stream{
@@ -164,13 +164,13 @@ func initializeCallback(callbacks []gmetric.GlobalCallbackItem, provider *metric
 		)
 		for _, m := range callback.Metrics {
 			var meter = provider.Meter(
-				m.MetricInfo().Instrument(),
-				otelmetric.WithInstrumentationVersion(m.MetricInfo().InstrumentVersion()),
+				m.Info().Instrument().Name(),
+				otelmetric.WithInstrumentationVersion(m.Info().Instrument().Version()),
 			)
 			instSet.Add(fmt.Sprintf(
 				`%s@%s`,
-				m.MetricInfo().Instrument(),
-				m.MetricInfo().InstrumentVersion(),
+				m.Info().Instrument().Name(),
+				m.Info().Instrument().Version(),
 			))
 			if _, ok := meterMap[meter]; !ok {
 				meterMap[meter] = make([]otelmetric.Observable, 0)
