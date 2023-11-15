@@ -27,12 +27,19 @@ func newCallbackSetter(observer metric.Observer) gmetric.CallbackSetter {
 // Set sets the value and option for current metric in global callback.
 func (l *localCallbackSetter) Set(m gmetric.Metric, value float64, option ...gmetric.Option) {
 	var (
-		constOption    = getConstOptionByMetric(m)
-		dynamicOption  = getDynamicOptionByMetricOption(option...)
+		constOption            = getConstOptionByMetric(m)
+		dynamicOption          = getDynamicOptionByMetricOption(option...)
+		globalAttributesOption = getGlobalAttributesOption(gmetric.GetGlobalAttributesOption{
+			Instrument:        m.Info().Instrument().Name(),
+			InstrumentVersion: m.Info().Instrument().Version(),
+		})
 		observeOptions = make([]metric.ObserveOption, 0)
 	)
 	if constOption != nil {
 		observeOptions = append(observeOptions, constOption)
+	}
+	if globalAttributesOption != nil {
+		observeOptions = append(observeOptions, globalAttributesOption)
 	}
 	if dynamicOption != nil {
 		observeOptions = append(observeOptions, dynamicOption)

@@ -6,37 +6,75 @@
 
 package gmetric
 
-import "fmt"
+import (
+	"sync"
 
-type GlobalAttributesOption struct {
-	Instrument        string
-	InstrumentVersion string
+	"github.com/gogf/gf/v2/text/gregex"
+)
+
+// SetGlobalAttributesOption binds the global attributes to certain instrument.
+type SetGlobalAttributesOption struct {
+	Instrument        string // Instrument specifies the instrument name.
+	InstrumentVersion string // Instrument specifies the instrument version.
+	InstrumentPattern string // InstrumentPattern specifies instrument by regular expression.
+}
+
+// GetGlobalAttributesOption binds the global attributes to certain instrument.
+type GetGlobalAttributesOption struct {
+	Instrument        string // Instrument specifies the instrument name.
+	InstrumentVersion string // Instrument specifies the instrument version.
+}
+
+type globalAttributeItem struct {
+	Attributes
+	SetGlobalAttributesOption
 }
 
 var (
-	globalAttributeMap = make(map[string]Attributes)
+	globalAttributesMu sync.Mutex
+	// globalAttributes stores the global attributes to a map.
+	globalAttributes = make([]globalAttributeItem, 0)
 )
 
-func SetGlobalAttributes(attrs Attributes, option ...GlobalAttributesOption) {
-	var usedOption GlobalAttributesOption
+// SetGlobalAttributes appends global attributes according `GlobalAttributesOption`.
+// It appends global attributes to all metrics if given `GlobalAttributesOption` is nil.
+// It appends global attributes to certain instrument by given `GlobalAttributesOption`.
+func SetGlobalAttributes(attrs Attributes, option ...SetGlobalAttributesOption) {
+	globalAttributesMu.Lock()
+	defer globalAttributesMu.Unlock()
+	var usedOption SetGlobalAttributesOption
 	if len(option) > 0 {
 		usedOption = option[0]
 	}
-	var mapKey = usedOption.String()
-	if _, ok := globalAttributeMap[mapKey]; !ok {
-		globalAttributeMap[mapKey] = make(Attributes, 0)
-	}
-	globalAttributeMap[mapKey] = append(globalAttributeMap[mapKey], attrs...)
+	globalAttributes = append(
+		globalAttributes, globalAttributeItem{
+			Attributes:                attrs,
+			SetGlobalAttributesOption: usedOption,
+		},
+	)
 }
 
-func GetGlobalAttributes(option GlobalAttributesOption) Attributes {
-	return globalAttributeMap[option.String()]
-}
-
-// String converts and returns GlobalAttributesOption as string.
-func (o GlobalAttributesOption) String() string {
-	if o.Instrument != "" {
-		return fmt.Sprintf(`%s@%s`, o.Instrument, o.InstrumentVersion)
+// GetGlobalAttributes retrieves and returns the global attributes by `GlobalAttributesOption`.
+// It returns the global attributes if given `GlobalAttributesOption` is empty.
+// It returns global attributes of certain instrument if `GlobalAttributesOption` is not empty.
+func GetGlobalAttributes(option GetGlobalAttributesOption) Attributes {
+	globalAttributesMu.Lock()
+	defer globalAttributesMu.Unlock()
+	var attributes = make(Attributes, 0)
+	for _, attrItem := range globalAttributes {
+		if option.InstrumentVersion != "" && attrItem.InstrumentVersion != option.InstrumentVersion {
+			continue
+		}
+		if attrItem.InstrumentPattern == "" {
+			if attrItem.Instrument != option.Instrument {
+				continue
+			}
+		} else {
+			if !gregex.IsMatchString(attrItem.InstrumentPattern, option.Instrument) {
+				continue
+			}
+		}
+		attributes = append(attributes, attrItem.Attributes...)
 	}
-	return ""
+	return attributes
 }

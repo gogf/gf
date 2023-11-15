@@ -6,6 +6,10 @@
 
 package gmetric
 
+import (
+	"fmt"
+)
+
 // localAttribute implements interface Attribute.
 type localAttribute struct {
 	key   string
@@ -28,4 +32,9 @@ func (l *localAttribute) Key() string {
 // Value returns the value of the attribute.
 func (l *localAttribute) Value() any {
 	return l.value
+}
+
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (l *localAttribute) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf(`{"%s":%#v}`, l.key, l.value)), nil
 }

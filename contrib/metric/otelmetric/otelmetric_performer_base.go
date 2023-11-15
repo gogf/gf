@@ -85,7 +85,7 @@ func (l *localBaseObservePerformer) SetObserveOptionsByOption(option ...gmetric.
 	var (
 		dynamicOption          = getDynamicOptionByMetricOption(option...)
 		observeOptions         = make([]metric.ObserveOption, 0)
-		globalAttributesOption = getGlobalAttributesOption(gmetric.GlobalAttributesOption{
+		globalAttributesOption = getGlobalAttributesOption(gmetric.GetGlobalAttributesOption{
 			Instrument:        l.config.Instrument,
 			InstrumentVersion: l.config.InstrumentVersion,
 		})
@@ -106,7 +106,7 @@ func (l *localBaseObservePerformer) SetObserveOptionsByOption(option ...gmetric.
 func (l *localBaseObservePerformer) MergeAttributesToObserveOptions(attributes gmetric.Attributes) []metric.ObserveOption {
 	var (
 		observeOptions         = make([]metric.ObserveOption, 0)
-		globalAttributesOption = getGlobalAttributesOption(gmetric.GlobalAttributesOption{
+		globalAttributesOption = getGlobalAttributesOption(gmetric.GetGlobalAttributesOption{
 			Instrument:        l.config.Instrument,
 			InstrumentVersion: l.config.InstrumentVersion,
 		})

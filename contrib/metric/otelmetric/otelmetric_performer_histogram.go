@@ -57,7 +57,7 @@ func (l *localHistogramPerformer) mergeToRecordOptions(option ...gmetric.Option)
 	var (
 		dynamicOption          = getDynamicOptionByMetricOption(option...)
 		recordOptions          = []metric.RecordOption{l.attributesOption}
-		globalAttributesOption = getGlobalAttributesOption(gmetric.GlobalAttributesOption{
+		globalAttributesOption = getGlobalAttributesOption(gmetric.GetGlobalAttributesOption{
 			Instrument:        l.config.Instrument,
 			InstrumentVersion: l.config.InstrumentVersion,
 		})

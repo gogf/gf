@@ -16,10 +16,10 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func getGlobalAttributesOption(option gmetric.GlobalAttributesOption) metric.MeasurementOption {
+func getGlobalAttributesOption(option gmetric.GetGlobalAttributesOption) metric.MeasurementOption {
 	var (
 		globalAttributesOption metric.MeasurementOption
-		globalAttributes       = gmetric.GetGlobalAttributes(gmetric.GlobalAttributesOption{})
+		globalAttributes       = gmetric.GetGlobalAttributes(gmetric.GetGlobalAttributesOption{})
 		instrumentAttributes   gmetric.Attributes
 	)
 	if option.Instrument != "" {
