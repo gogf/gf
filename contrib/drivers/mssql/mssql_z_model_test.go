@@ -2548,3 +2548,40 @@ func Test_Model_WherePrefixLike(t *testing.T) {
 		t.Assert(r[0]["ID"], "3")
 	})
 }
+
+func Test_Model_AllAndCount(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, total, err := db.Model(table).Order("id").Limit(0, 3).AllAndCount(false)
+		t.Assert(err, nil)
+
+		t.Assert(len(result), 3)
+		t.Assert(total, TableSize)
+	})
+}
+
+func Test_Model_ScanAndCount(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime gtime.Time
+		}
+
+		users := make([]User, 0)
+		total := 0
+
+		err := db.Model(table).Order("id").Limit(0, 3).ScanAndCount(&users, &total, false)
+		t.Assert(err, nil)
+
+		t.Assert(len(users), 3)
+		t.Assert(total, TableSize)
+	})
+}
