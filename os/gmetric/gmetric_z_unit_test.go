@@ -7,6 +7,7 @@
 package gmetric_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/gogf/gf/v2/os/gmetric"
@@ -90,5 +91,13 @@ func Test_Histogram(t *testing.T) {
 		t.Assert(counter.Info().Instrument().Name(), config.Instrument)
 		t.Assert(counter.Info().Instrument().Version(), config.InstrumentVersion)
 		t.Assert(counter.Buckets(), config.Buckets)
+	})
+}
+
+func Test_CommonAttributes(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		commonAttributes := gmetric.CommonAttributes()
+		t.AssertGT(len(commonAttributes), 1)
+		fmt.Println(commonAttributes)
 	})
 }
