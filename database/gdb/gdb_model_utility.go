@@ -52,8 +52,19 @@ func (m *Model) getModel() *Model {
 // Eg:
 // ID        -> id
 // NICK_Name -> nickname.
-func (m *Model) mappingAndFilterToTableFields(fields []string, filter bool) []string {
-	fieldsMap, _ := m.TableFields(m.tablesInit)
+func (m *Model) mappingAndFilterToTableFields(table string, fields []string, filter bool) []string {
+	var fieldsTable = table
+	if fieldsTable != "" {
+		hasTable, _ := m.db.GetCore().HasTable(fieldsTable)
+		if !hasTable {
+			fieldsTable = m.tablesInit
+		}
+	}
+	if fieldsTable == "" {
+		fieldsTable = m.tablesInit
+	}
+
+	fieldsMap, _ := m.TableFields(fieldsTable)
 	if len(fieldsMap) == 0 {
 		return fields
 	}

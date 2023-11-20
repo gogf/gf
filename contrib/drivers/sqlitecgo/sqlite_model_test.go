@@ -2835,12 +2835,14 @@ func Test_Model_HasTable(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
+		t.AssertNil(db.GetCore().ClearCacheAll(ctx))
 		result, err := db.GetCore().HasTable(table)
 		t.Assert(result, true)
 		t.AssertNil(err)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
+		t.AssertNil(db.GetCore().ClearCacheAll(ctx))
 		result, err := db.GetCore().HasTable("table12321")
 		t.Assert(result, false)
 		t.AssertNil(err)

@@ -3097,12 +3097,14 @@ func Test_Model_HasTable(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
+		t.AssertNil(db.GetCore().ClearCacheAll(ctx))
 		result, err := db.GetCore().HasTable(table)
 		t.Assert(result, true)
 		t.AssertNil(err)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
+		t.AssertNil(db.GetCore().ClearCacheAll(ctx))
 		result, err := db.GetCore().HasTable("table12321")
 		t.Assert(result, false)
 		t.AssertNil(err)
@@ -4704,5 +4706,46 @@ func Test_Scan_Nil_Result_Error(t *testing.T) {
 		var ss = make([]*S, 10)
 		err := db.Model(table).WhereGT("id", 100).Scan(&ss)
 		t.Assert(err, sql.ErrNoRows)
+	})
+}
+
+func Test_Model_FixGdbJoin(t *testing.T) {
+	array := gstr.SplitAndTrim(gtest.DataContent(`fix_gdb_join.sql`), ";")
+	for _, v := range array {
+		if _, err := db.Exec(ctx, v); err != nil {
+			gtest.Error(err)
+		}
+	}
+	defer dropTable(`common_resource`)
+	defer dropTable(`managed_resource`)
+	defer dropTable(`rules_template`)
+	defer dropTable(`resource_mark`)
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertNil(db.GetCore().ClearCacheAll(ctx))
+		sqlSlice, err := gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			orm := db.Model(`managed_resource`).Ctx(ctx).
+				LeftJoinOnField(`common_resource`, `resource_id`).
+				LeftJoinOnFields(`resource_mark`, `resource_mark_id`, `=`, `id`).
+				LeftJoinOnFields(`rules_template`, `rule_template_id`, `=`, `template_id`).
+				FieldsPrefix(
+					`managed_resource`,
+					"resource_id", "user", "status", "status_message", "safe_publication", "rule_template_id",
+					"created_at", "comments", "expired_at", "resource_mark_id", "instance_id", "resource_name",
+					"pay_mode").
+				FieldsPrefix(`resource_mark`, "mark_name", "color").
+				FieldsPrefix(`rules_template`, "name").
+				FieldsPrefix(`common_resource`, `src_instance_id`, "database_kind", "source_type", "ip", "port")
+			all, err := orm.OrderAsc("src_instance_id").All()
+			t.Assert(len(all), 4)
+			t.Assert(all[0]["pay_mode"], 1)
+			t.Assert(all[0]["src_instance_id"], 2)
+			t.Assert(all[3]["instance_id"], "dmcins-jxy0x75m")
+			t.Assert(all[3]["src_instance_id"], "vdb-6b6m3u1u")
+			t.Assert(all[3]["resource_mark_id"], "11")
+			return err
+		})
+		t.AssertNil(err)
+
+		t.Assert(gtest.DataContent(`fix_gdb_join_expect.sql`), sqlSlice[len(sqlSlice)-1])
 	})
 }
