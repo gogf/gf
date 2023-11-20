@@ -96,7 +96,7 @@ func DBFromCtx(ctx context.Context) DB {
 	return nil
 }
 
-// ToSQL formats and returns the last one of sql statements in given closure function.
+// ToSQL formats and returns the last one of sql statements in given closure function without truly executing it.
 func ToSQL(ctx context.Context, f func(ctx context.Context) error) (sql string, err error) {
 	var manager = &CatchSQLManager{
 		SQLArray: garray.NewStrArray(),
