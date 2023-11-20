@@ -23,22 +23,24 @@ func Test_Scan_WithMapParameter(t *testing.T) {
 		Name string
 	}
 	gtest.C(t, func(t *gtest.T) {
-		var (
-			user   = new(User)
-			params = g.Map{
-				"uid":    1,
-				"myname": "john",
-				"name":   "smith",
-			}
-		)
-		err := gconv.Scan(params, user, g.MapStrStr{
-			"myname": "Name",
-		})
-		t.AssertNil(err)
-		t.Assert(user, &User{
-			Uid:  1,
-			Name: "john",
-		})
+		for i := 0; i < 100; i++ {
+			var (
+				user   = new(User)
+				params = g.Map{
+					"uid":    1,
+					"myname": "john",
+					"name":   "smith",
+				}
+			)
+			err := gconv.Scan(params, user, g.MapStrStr{
+				"myname": "Name",
+			})
+			t.AssertNil(err)
+			t.Assert(user, &User{
+				Uid:  1,
+				Name: "john",
+			})
+		}
 	})
 }
 
