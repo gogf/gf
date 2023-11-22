@@ -50,6 +50,11 @@ type cGFInput struct {
 type cGFOutput struct{}
 
 func (c cGF) Index(ctx context.Context, in cGFInput) (out *cGFOutput, err error) {
+	// Version.
+	if in.Version {
+		_, err = Version.Index(ctx, cVersionInput{})
+		return
+	}
 
 	answer := "n"
 	// No argument or option, do installation checks.
@@ -65,12 +70,6 @@ func (c cGF) Index(ctx context.Context, in cGFInput) (out *cGFOutput, err error)
 			return
 		}
 		gcmd.Scan("press `Enter` to exit...")
-		return
-	}
-
-	// Version.
-	if in.Version {
-		_, err = Version.Index(ctx, cVersionInput{})
 		return
 	}
 
