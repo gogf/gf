@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 if [ $# -ne 2 ]; then
     echo "Parameter exception, please execute in the format of $0 [directory] [version number]"
     echo "PS：$0 ./ v2.4.0"
@@ -19,6 +18,13 @@ fi
 workdir=.
 newVersion=$2
 echo "Prepare to replace the GF library version numbers in all go.mod files in the ${workdir} directory with ${newVersion}"
+
+# check find command support or not
+output=$(find "${workdir}" -name go.mod 2>&1)
+if [[ $? -ne 0 ]]; then
+    echo "Error: please use bash or zsh to run!"
+    exit 1
+fi
 
 if [[ true ]]; then
     echo "package gf" > version.go
