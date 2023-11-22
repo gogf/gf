@@ -353,7 +353,7 @@ type (
 
 type CatchSQLManager struct {
 	SQLArray *garray.StrArray
-	DoCommit bool
+	DoCommit bool // DoCommit marks it will be committed to underlying driver or not.
 }
 
 const (
