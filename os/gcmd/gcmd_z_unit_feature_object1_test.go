@@ -30,12 +30,14 @@ type TestCmdObjectEnvInput struct {
 type TestCmdObjectEnvOutput struct{}
 
 type TestCmdObjectTestInput struct {
-	g.Meta `name:"test" usage:"root test" brief:"root test command" dc:"root test command description" ad:"root test command ad"`
-	Name   string `name:"yourname" v:"required" short:"n" orphan:"false" brief:"name for test command" d:"tom"`
+	g.Meta  `name:"test" usage:"root test" brief:"root test command" dc:"root test command description" ad:"root test command ad"`
+	Name    string `name:"yourname" v:"required" short:"n" orphan:"false" brief:"name for test command" d:"tom"`
+	Version bool   `name:"version" short:"v" orphan:"true" brief:"show version"`
 }
 
 type TestCmdObjectTestOutput struct {
-	Content string
+	Name    string
+	Version bool
 }
 
 func (TestCmdObject) Env(ctx context.Context, in TestCmdObjectEnvInput) (out *TestCmdObjectEnvOutput, err error) {
@@ -44,7 +46,8 @@ func (TestCmdObject) Env(ctx context.Context, in TestCmdObjectEnvInput) (out *Te
 
 func (TestCmdObject) Test(ctx context.Context, in TestCmdObjectTestInput) (out *TestCmdObjectTestOutput, err error) {
 	out = &TestCmdObjectTestOutput{
-		Content: in.Name,
+		Name:    in.Name,
+		Version: in.Version,
 	}
 	return
 }
@@ -93,19 +96,25 @@ func Test_Command_NewFromObject_RunWithValue(t *testing.T) {
 		os.Args = []string{"root", "test", "-n=john"}
 		value, err := cmd.RunWithValueError(ctx)
 		t.AssertNil(err)
-		t.Assert(value, `{"Content":"john"}`)
+		t.Assert(value, `{"Name":"john","Version":false}`)
 
 		// test name tag name
 		os.Args = []string{"root", "test", "-yourname=hailaz"}
 		value1, err1 := cmd.RunWithValueError(ctx)
 		t.AssertNil(err1)
-		t.Assert(value1, `{"Content":"hailaz"}`)
+		t.Assert(value1, `{"Name":"hailaz","Version":false}`)
 
 		// test default tag value
 		os.Args = []string{"root", "test"}
 		value2, err2 := cmd.RunWithValueError(ctx)
 		t.AssertNil(err2)
-		t.Assert(value2, `{"Content":"tom"}`)
+		t.Assert(value2, `{"Name":"tom","Version":false}`)
+
+		// test name tag and orphan tag true
+		os.Args = []string{"root", "test", "-v"}
+		value3, err3 := cmd.RunWithValueError(ctx)
+		t.AssertNil(err3)
+		t.Assert(value3, `{"Name":"tom","Version":true}`)
 	})
 }
 
@@ -123,7 +132,7 @@ func Test_Command_AddObject(t *testing.T) {
 		os.Args = []string{"start", "root", "test", "-n=john"}
 		value, err := command.RunWithValueError(ctx)
 		t.AssertNil(err)
-		t.Assert(value, `{"Content":"john"}`)
+		t.Assert(value, `{"Name":"john","Version":false}`)
 	})
 }
 

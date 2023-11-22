@@ -23,7 +23,7 @@ import (
 // It calls function `doMapToMaps` internally if `pointer` is type of *[]map/*[]*map       for converting.
 // It calls function `doStruct`    internally if `pointer` is type of *struct/**struct     for converting.
 // It calls function `doStructs`   internally if `pointer` is type of *[]struct/*[]*struct for converting.
-func Scan(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
+func Scan(params interface{}, pointer interface{}, paramKeyToAttrMap ...map[string]string) (err error) {
 	var (
 		pointerType  reflect.Type
 		pointerKind  reflect.Kind
@@ -82,12 +82,12 @@ func Scan(params interface{}, pointer interface{}, mapping ...map[string]string)
 		pointerElemKind           = pointerElem.Kind()
 		keyToAttributeNameMapping map[string]string
 	)
-	if len(mapping) > 0 {
-		keyToAttributeNameMapping = mapping[0]
+	if len(paramKeyToAttrMap) > 0 {
+		keyToAttributeNameMapping = paramKeyToAttrMap[0]
 	}
 	switch pointerElemKind {
 	case reflect.Map:
-		return doMapToMap(params, pointer, mapping...)
+		return doMapToMap(params, pointer, paramKeyToAttrMap...)
 
 	case reflect.Array, reflect.Slice:
 		var (
@@ -99,7 +99,7 @@ func Scan(params interface{}, pointer interface{}, mapping ...map[string]string)
 			sliceElemKind = sliceElem.Kind()
 		}
 		if sliceElemKind == reflect.Map {
-			return doMapToMaps(params, pointer, mapping...)
+			return doMapToMaps(params, pointer, paramKeyToAttrMap...)
 		}
 		return doStructs(params, pointer, keyToAttributeNameMapping, "")
 

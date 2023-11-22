@@ -42,12 +42,11 @@ type FuncWithValue func(ctx context.Context, parser *Parser) (out interface{}, e
 
 // Argument is the command value that are used by certain command.
 type Argument struct {
-	Name      string // Option name.
-	FieldName string // Option field name.
-	Short     string // Option short.
-	Brief     string // Brief info about this Option, which is used in help info.
-	IsArg     bool   // IsArg marks this argument taking value from command line argument instead of option.
-	Orphan    bool   // Whether this Option having or having no value bound to it.
+	Name   string // Option name.
+	Short  string // Option short.
+	Brief  string // Brief info about this Option, which is used in help info.
+	IsArg  bool   // IsArg marks this argument taking value from command line argument instead of option.
+	Orphan bool   // Whether this Option having or having no value bound to it.
 }
 
 var (

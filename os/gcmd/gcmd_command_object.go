@@ -353,9 +353,6 @@ func newArgumentsFromInput(object interface{}) (args []Argument, err error) {
 		}
 		if arg.Name == "" {
 			arg.Name = field.Name()
-		} else if arg.Name != field.Name() {
-			arg.FieldName = field.Name()
-			nameSet.Add(arg.FieldName)
 		}
 		if arg.Name == helpOptionName {
 			return nil, gerror.Newf(
@@ -411,14 +408,25 @@ func mergeDefaultStructValue(data map[string]interface{}, pointer interface{}) e
 			foundValue interface{}
 		)
 		for _, field := range tagFields {
+			var (
+				nameValue  = field.Tag(tagNameName)
+				shortValue = field.Tag(tagNameShort)
+			)
+			// If it already has value, it then ignores the default value.
+			if value, ok := data[nameValue]; ok {
+				data[field.Name()] = value
+				continue
+			}
+			if value, ok := data[shortValue]; ok {
+				data[field.Name()] = value
+				continue
+			}
 			foundKey, foundValue = gutil.MapPossibleItemByKey(data, field.Name())
 			if foundKey == "" {
 				data[field.Name()] = field.TagValue
 			} else {
 				if utils.IsEmpty(foundValue) {
 					data[foundKey] = field.TagValue
-				} else {
-					data[field.Name()] = foundValue
 				}
 			}
 		}
