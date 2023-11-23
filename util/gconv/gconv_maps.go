@@ -9,23 +9,19 @@ package gconv
 import "github.com/gogf/gf/v2/internal/json"
 
 // SliceMap is alias of Maps.
-func SliceMap(any interface{}) []map[string]interface{} {
-	return Maps(any)
+func SliceMap(any interface{}, option ...MapOption) []map[string]interface{} {
+	return Maps(any, option...)
 }
 
 // SliceMapDeep is alias of MapsDeep.
+// Deprecated: used SliceMap instead.
 func SliceMapDeep(any interface{}) []map[string]interface{} {
 	return MapsDeep(any)
 }
 
-// SliceStruct is alias of Structs.
-func SliceStruct(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
-	return Structs(params, pointer, mapping...)
-}
-
 // Maps converts `value` to []map[string]interface{}.
 // Note that it automatically checks and converts json string to []map if `value` is string/[]byte.
-func Maps(value interface{}, tags ...string) []map[string]interface{} {
+func Maps(value interface{}, option ...MapOption) []map[string]interface{} {
 	if value == nil {
 		return nil
 	}
@@ -62,7 +58,7 @@ func Maps(value interface{}, tags ...string) []map[string]interface{} {
 		}
 		list := make([]map[string]interface{}, len(array))
 		for k, v := range array {
-			list[k] = Map(v, tags...)
+			list[k] = Map(v, option...)
 		}
 		return list
 	}
@@ -71,6 +67,7 @@ func Maps(value interface{}, tags ...string) []map[string]interface{} {
 // MapsDeep converts `value` to []map[string]interface{} recursively.
 //
 // TODO completely implement the recursive converting for all types.
+// Deprecated: used Maps instead.
 func MapsDeep(value interface{}, tags ...string) []map[string]interface{} {
 	if value == nil {
 		return nil

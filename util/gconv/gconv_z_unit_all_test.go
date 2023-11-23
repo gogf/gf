@@ -946,8 +946,8 @@ func Test_Map_StructWithJsonTag_All(t *testing.T) {
 			ssa:      "222",
 		}
 		user2 := &user1
-		_ = gconv.Map(user1, "Ss")
-		map1 := gconv.Map(user1, "json", "json2")
+		_ = gconv.Map(user1, gconv.MapOption{Tags: []string{"Ss"}})
+		map1 := gconv.Map(user1, gconv.MapOption{Tags: []string{"json", "json2"}})
 		map2 := gconv.Map(user2)
 		map3 := gconv.Map(user3)
 		t.Assert(map1["Uid"], 100)
