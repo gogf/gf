@@ -24,15 +24,19 @@ var (
 )
 
 func init() {
-	logger.SetStack(false)
 	if genv.Get(headerPrintEnvName).String() == "1" {
 		logger.SetHeaderPrint(true)
 	} else {
 		logger.SetHeaderPrint(false)
 	}
+
 	if gcmd.GetOpt("debug") != nil || gcmd.GetOpt("gf.debug") != nil {
+		logger.SetHeaderPrint(true)
+		logger.SetStackSkip(4)
+		logger.SetFlags(logger.GetFlags() | glog.F_FILE_LONG)
 		logger.SetDebug(true)
 	} else {
+		logger.SetStack(false)
 		logger.SetDebug(false)
 	}
 }
@@ -69,4 +73,12 @@ func Debug(v ...interface{}) {
 
 func Debugf(format string, v ...interface{}) {
 	logger.Debugf(ctx, format, v...)
+}
+
+func Error(v ...interface{}) {
+	logger.Error(ctx, v...)
+}
+
+func Errorf(format string, v ...interface{}) {
+	logger.Errorf(ctx, format, v...)
 }
