@@ -99,6 +99,9 @@ func GetCommand(ctx context.Context) (*Command, error) {
 
 // zsh alias "git fetch" conflicts checks.
 func handleZshAlias() {
+	if runtime.GOOS == "windows" {
+		return
+	}
 	if home, err := gfile.Home(); err == nil {
 		zshPath := gfile.Join(home, ".zshrc")
 		if gfile.Exists(zshPath) {
