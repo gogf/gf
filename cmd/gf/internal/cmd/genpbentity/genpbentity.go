@@ -39,7 +39,7 @@ type (
 		Prefix       string `name:"prefix"       short:"f" brief:"{CGenPbEntityBriefPrefix}"`
 		RemovePrefix string `name:"removePrefix" short:"r" brief:"{CGenPbEntityBriefRemovePrefix}"`
 		NameCase     string `name:"nameCase"     short:"n" brief:"{CGenPbEntityBriefNameCase}" d:"Camel"`
-		JsonCase     string `name:"jsonCase"     short:"j" brief:"{CGenPbEntityBriefJsonCase}" d:"CamelLower"`
+		JsonCase     string `name:"jsonCase"     short:"j" brief:"{CGenPbEntityBriefJsonCase}" d:"none"`
 		Option       string `name:"option"       short:"o" brief:"{CGenPbEntityBriefOption}"`
 	}
 	CGenPbEntityOutput struct{}
@@ -339,6 +339,7 @@ func generateMessageFieldForPbEntity(index int, field *gdb.TableField, in CGenPb
 	comment = gstr.Replace(comment, `\n`, " ")
 	comment, _ = gregex.ReplaceString(`\s{2,}`, ` `, comment)
 	if jsonTagName := formatCase(field.Name, in.JsonCase); jsonTagName != "" {
+		jsonTagStr = fmt.Sprintf(`[json_name = "%s"]`, jsonTagName)
 		// beautiful indent.
 		if index < 10 {
 			// 3 spaces
@@ -368,32 +369,10 @@ func getTplPbEntityContent(tplEntityPath string) string {
 
 // formatCase call gstr.Case* function to convert the s to specified case.
 func formatCase(str, caseStr string) string {
-	switch gstr.ToLower(caseStr) {
-	case gstr.ToLower("Camel"):
-		return gstr.CaseCamel(str)
-
-	case gstr.ToLower("CamelLower"):
-		return gstr.CaseCamelLower(str)
-
-	case gstr.ToLower("Kebab"):
-		return gstr.CaseKebab(str)
-
-	case gstr.ToLower("KebabScreaming"):
-		return gstr.CaseKebabScreaming(str)
-
-	case gstr.ToLower("Snake"):
-		return gstr.CaseSnake(str)
-
-	case gstr.ToLower("SnakeFirstUpper"):
-		return gstr.CaseSnakeFirstUpper(str)
-
-	case gstr.ToLower("SnakeScreaming"):
-		return gstr.CaseSnakeScreaming(str)
-
-	case "none":
+	if caseStr == "none" {
 		return ""
 	}
-	return str
+	return gstr.CaseConvert(str, gstr.CaseTypeMatch(caseStr))
 }
 
 func sortFieldKeyForPbEntity(fieldMap map[string]*gdb.TableField) []string {
