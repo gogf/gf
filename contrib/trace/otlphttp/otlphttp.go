@@ -9,8 +9,8 @@ package otlphttp
 
 import (
 	"context"
+	"time"
 
-	"github.com/gogf/gf/v2/net/gipv4"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
@@ -19,6 +19,9 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.20.0"
+
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/gipv4"
 )
 
 const (
@@ -29,7 +32,7 @@ const (
 //
 // The output parameter `Shutdown` is used for waiting exported trace spans to be uploaded,
 // which is useful if your program is ending, and you do not want to lose recent spans.
-func Init(serviceName, endpoint, path string) (*sdktrace.TracerProvider, error) {
+func Init(serviceName, endpoint, path string) (func(), error) {
 	// Try retrieving host ip for tracing info.
 	var (
 		intranetIPArray, err = gipv4.GetIntranetIpArray()
@@ -85,5 +88,13 @@ func Init(serviceName, endpoint, path string) (*sdktrace.TracerProvider, error) 
 	otel.SetTextMapPropagator(propagation.TraceContext{})
 	otel.SetTracerProvider(tracerProvider)
 
-	return tracerProvider, nil
+	return func() {
+		ctx, cancel := context.WithTimeout(ctx, time.Second)
+		defer cancel()
+		if err = traceExp.Shutdown(ctx); err != nil {
+			g.Log().Errorf(ctx, "Shutdown traceExp failed err:%+v", err)
+			otel.Handle(err)
+		}
+		g.Log().Debug(ctx, "Shutdown traceExp success")
+	}, nil
 }

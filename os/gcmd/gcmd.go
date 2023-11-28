@@ -28,6 +28,8 @@ const (
 	helpOptionNameShort   = "h"
 	maxLineChars          = 120
 	tracingInstrumentName = "github.com/gogf/gf/v2/os/gcmd.Command"
+	tagNameName           = "name"
+	tagNameShort          = "short"
 )
 
 // Init does custom initialization.

@@ -159,6 +159,8 @@ func (m *Model) doJoin(operator joinOperator, tableOrSubQueryAndJoinConditions .
 	var (
 		model   = m.getModel()
 		joinStr = ""
+		table   string
+		alias   string
 	)
 	// Check the first parameter table or sub-query.
 	if len(tableOrSubQueryAndJoinConditions) > 0 {
@@ -168,30 +170,45 @@ func (m *Model) doJoin(operator joinOperator, tableOrSubQueryAndJoinConditions .
 				joinStr = "(" + joinStr + ")"
 			}
 		} else {
-			joinStr = m.db.GetCore().QuotePrefixTableName(tableOrSubQueryAndJoinConditions[0])
+			table = tableOrSubQueryAndJoinConditions[0]
+			joinStr = m.db.GetCore().QuotePrefixTableName(table)
 		}
 	}
 	// Generate join condition statement string.
 	conditionLength := len(tableOrSubQueryAndJoinConditions)
 	switch {
 	case conditionLength > 2:
+		alias = tableOrSubQueryAndJoinConditions[1]
 		model.tables += fmt.Sprintf(
 			" %s JOIN %s AS %s ON (%s)",
 			operator, joinStr,
-			m.db.GetCore().QuoteWord(tableOrSubQueryAndJoinConditions[1]),
+			m.db.GetCore().QuoteWord(alias),
 			tableOrSubQueryAndJoinConditions[2],
 		)
+		m.tableAliasMap[alias] = table
+
 	case conditionLength == 2:
 		model.tables += fmt.Sprintf(
 			" %s JOIN %s ON (%s)",
 			operator, joinStr, tableOrSubQueryAndJoinConditions[1],
 		)
+
 	case conditionLength == 1:
 		model.tables += fmt.Sprintf(
 			" %s JOIN %s", operator, joinStr,
 		)
 	}
 	return model
+}
+
+// getTableNameByPrefixOrAlias checks and returns the table name if `prefixOrAlias` is an alias of a table,
+// it or else returns the `prefixOrAlias` directly.
+func (m *Model) getTableNameByPrefixOrAlias(prefixOrAlias string) string {
+	value, ok := m.tableAliasMap[prefixOrAlias]
+	if ok {
+		return value
+	}
+	return prefixOrAlias
 }
 
 // isSubQuery checks and returns whether given string a sub-query sql string.

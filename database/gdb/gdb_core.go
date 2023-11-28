@@ -762,30 +762,40 @@ func (c *Core) writeSqlToLogger(ctx context.Context, sql *Sql) {
 
 // HasTable determine whether the table name exists in the database.
 func (c *Core) HasTable(name string) (bool, error) {
-	var (
-		ctx      = c.db.GetCtx()
-		cacheKey = fmt.Sprintf(`HasTable: %s`, name)
-	)
-	result, err := c.GetCache().GetOrSetFuncLock(ctx, cacheKey, func(ctx context.Context) (interface{}, error) {
-		tableList, err := c.db.Tables(ctx)
-		if err != nil {
-			return false, err
-		}
-		for _, table := range tableList {
-			if table == name {
-				return true, nil
-			}
-		}
-		return false, nil
-	}, 0,
-	)
+	tables, err := c.GetTablesWithCache()
 	if err != nil {
 		return false, err
 	}
-	return result.Bool(), nil
+	for _, table := range tables {
+		if table == name {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
-// isSoftCreatedFieldName checks and returns whether given filed name is an automatic-filled created time.
+// GetTablesWithCache retrieves and returns the table names of current database with cache.
+func (c *Core) GetTablesWithCache() ([]string, error) {
+	var (
+		ctx      = c.db.GetCtx()
+		cacheKey = fmt.Sprintf(`Tables: %s`, c.db.GetGroup())
+	)
+	result, err := c.GetCache().GetOrSetFuncLock(
+		ctx, cacheKey, func(ctx context.Context) (interface{}, error) {
+			tableList, err := c.db.Tables(ctx)
+			if err != nil {
+				return false, err
+			}
+			return tableList, nil
+		}, 0,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return result.Strings(), nil
+}
+
+// isSoftCreatedFieldName checks and returns whether given field name is an automatic-filled created time.
 func (c *Core) isSoftCreatedFieldName(fieldName string) bool {
 	if fieldName == "" {
 		return false
@@ -794,9 +804,9 @@ func (c *Core) isSoftCreatedFieldName(fieldName string) bool {
 		if utils.EqualFoldWithoutChars(fieldName, config.CreatedAt) {
 			return true
 		}
-		return gstr.InArray(append([]string{config.CreatedAt}, createdFiledNames...), fieldName)
+		return gstr.InArray(append([]string{config.CreatedAt}, createdFieldNames...), fieldName)
 	}
-	for _, v := range createdFiledNames {
+	for _, v := range createdFieldNames {
 		if utils.EqualFoldWithoutChars(fieldName, v) {
 			return true
 		}
