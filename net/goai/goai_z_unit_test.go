@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gmeta"
@@ -463,6 +464,37 @@ func TestOpenApiV3_CommonRequest_SubDataField(t *testing.T) {
 		t.Assert(len(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties.Get(`Request`).Value.Properties.Map()), 2)
 		t.Assert(len(oai.Paths["/index"].Post.RequestBody.Value.Content["application/json"].Schema.Value.Properties.Map()), 1)
 		t.Assert(len(oai.Paths["/index"].Post.RequestBody.Value.Content["application/json"].Schema.Value.Properties.Get(`Request`).Value.Properties.Map()), 4)
+	})
+}
+
+func TestOpenApiV3_CommonRequest_Files(t *testing.T) {
+	type Req struct {
+		g.Meta `path:"/upload" method:"POST" tags:"Upload" mime:"multipart/form-data" summary:"上传文件"`
+		Files  []*ghttp.UploadFile `json:"files" type:"file" dc:"选择上传文件"`
+		File   *ghttp.UploadFile   `json:"file" type:"file" dc:"选择上传文件"`
+	}
+	type Res struct {
+	}
+
+	f := func(ctx context.Context, req *Req) (res *Res, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+		)
+		err = oai.Add(goai.AddInput{
+			Path:   "/upload",
+			Method: http.MethodGet,
+			Object: f,
+		})
+		t.AssertNil(err)
+
+		// fmt.Println(oai.String())
+		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Req`).Value.Properties.Get("files").Value.Type, goai.TypeArray)
+		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Req`).Value.Properties.Get("file").Value.Type, goai.TypeFile)
 	})
 }
 
