@@ -74,11 +74,3 @@ func Debug(v ...interface{}) {
 func Debugf(format string, v ...interface{}) {
 	logger.Debugf(ctx, format, v...)
 }
-
-func Error(v ...interface{}) {
-	logger.Error(ctx, v...)
-}
-
-func Errorf(format string, v ...interface{}) {
-	logger.Errorf(ctx, format, v...)
-}
