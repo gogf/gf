@@ -44,7 +44,7 @@ func newValidationError(code gcode.Code, rules []fieldRule, fieldRuleErrorMap ma
 	for field, ruleErrorMap := range fieldRuleErrorMap {
 		for rule, err := range ruleErrorMap {
 			if !gerror.HasStack(err) {
-				ruleErrorMap[rule] = gerror.NewOption(gerror.Option{
+				ruleErrorMap[rule] = gerror.NewWithOption(gerror.Option{
 					Stack: false,
 					Text:  gstr.Trim(err.Error()),
 					Code:  code,
