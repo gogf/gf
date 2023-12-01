@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
@@ -20,7 +19,6 @@ type UploadRes struct {
 type cUpload struct{}
 
 func (u cUpload) Upload(ctx context.Context, req *UploadReq) (*UploadRes, error) {
-	fmt.Println(req.Msg)
 	if req.File != nil {
 		return &UploadRes{
 			FileName: req.File.Filename,
