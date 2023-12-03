@@ -46,7 +46,7 @@ func NewServiceFromInstance(instance []model.Instance) gsvc.Service {
 func NewServicesFromInstances(instances []model.Instance) []gsvc.Service {
 	serviceMap := map[string][]model.Instance{}
 	for _, inst := range instances {
-		serviceMap[inst.ServiceName] = append(serviceMap[inst.ServiceName], inst)
+		serviceMap[inst.InstanceId] = append(serviceMap[inst.InstanceId], inst)
 	}
 
 	services := make([]gsvc.Service, 0, len(serviceMap))
