@@ -442,7 +442,7 @@ func Test_HashCode(t *testing.T) {
 
 func Test_NewOption(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t.AssertNE(gerror.NewOption(gerror.Option{
+		t.AssertNE(gerror.NewWithOption(gerror.Option{
 			Error: errors.New("NewOptionError"),
 			Stack: true,
 			Text:  "Text",

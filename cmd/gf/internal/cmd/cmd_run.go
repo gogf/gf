@@ -82,11 +82,11 @@ func init() {
 type (
 	cRunInput struct {
 		g.Meta     `name:"run"`
-		File       string `name:"FILE"       arg:"true" brief:"{cRunFileBrief}" v:"required"`
-		Path       string `name:"path"       short:"p"  brief:"{cRunPathBrief}" d:"./"`
-		Extra      string `name:"extra"      short:"e"  brief:"{cRunExtraBrief}"`
-		Args       string `name:"args"       short:"a"  brief:"{cRunArgsBrief}"`
-		WatchPaths string `name:"watchPaths" short:"w"  brief:"{cRunWatchPathsBrief}"`
+		File       string   `name:"FILE"       arg:"true" brief:"{cRunFileBrief}" v:"required"`
+		Path       string   `name:"path"       short:"p"  brief:"{cRunPathBrief}" d:"./"`
+		Extra      string   `name:"extra"      short:"e"  brief:"{cRunExtraBrief}"`
+		Args       string   `name:"args"       short:"a"  brief:"{cRunArgsBrief}"`
+		WatchPaths []string `name:"watchPaths" short:"w"  brief:"{cRunWatchPathsBrief}"`
 	}
 	cRunOutput struct{}
 )
@@ -97,12 +97,16 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 		mlog.Fatalf(`command "go" not found in your environment, please install golang first to proceed this command`)
 	}
 
+	if len(in.WatchPaths) == 1 {
+		in.WatchPaths = strings.Split(in.WatchPaths[0], ",")
+	}
+
 	app := &cRunApp{
 		File:       in.File,
 		Path:       in.Path,
 		Options:    in.Extra,
 		Args:       in.Args,
-		WatchPaths: strings.Split(in.WatchPaths, ","),
+		WatchPaths: in.WatchPaths,
 	}
 	dirty := gtype.NewBool()
 	_, err = gfsnotify.Add(gfile.RealPath("."), func(event *gfsnotify.Event) {

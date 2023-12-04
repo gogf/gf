@@ -49,7 +49,7 @@ var defaultHandler Handler
 // doFinalPrint is a handler for logging content printing.
 // This handler outputs logging content to file/stdout/write if any of them configured.
 func doFinalPrint(ctx context.Context, in *HandlerInput) {
-	buffer := in.Logger.doDefaultPrint(ctx, in)
+	buffer := in.Logger.doFinalPrint(ctx, in)
 	if in.Buffer.Len() == 0 {
 		in.Buffer = buffer
 	}

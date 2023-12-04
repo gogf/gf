@@ -11,6 +11,7 @@ import (
 	"os"
 
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/genv"
@@ -63,4 +64,22 @@ func ExampleConfig_GetWithCmd() {
 	// Output:
 	// cmd:
 	// cmd:yes
+}
+
+func Example_NewWithAdapter() {
+	var (
+		ctx          = gctx.New()
+		content      = `{"a":"b", "c":1}`
+		adapter, err = gcfg.NewAdapterContent(content)
+	)
+	if err != nil {
+		panic(err)
+	}
+	config := gcfg.NewWithAdapter(adapter)
+	fmt.Println(config.MustGet(ctx, "a"))
+	fmt.Println(config.MustGet(ctx, "c"))
+
+	// Output:
+	// b
+	// 1
 }
