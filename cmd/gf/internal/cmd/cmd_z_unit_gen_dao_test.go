@@ -12,7 +12,6 @@ import (
 	"testing"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/gendao"
-	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -20,22 +19,11 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func dropTableWithDb(db gdb.DB, table string) {
-	dropTableStmt := fmt.Sprintf("DROP TABLE IF EXISTS `%s`", table)
-	if _, err := db.Exec(ctx, dropTableStmt); err != nil {
-		gtest.Error(err)
-	}
-}
-
 func Test_Gen_Dao_Default(t *testing.T) {
-	link := "mysql:root:12345678@tcp(127.0.0.1:3306)/test?loc=Local&parseTime=true"
-	db, err := gdb.New(gdb.ConfigNode{
-		Link: link,
-	})
-	gtest.AssertNil(err)
-
 	gtest.C(t, func(t *gtest.T) {
 		var (
+			err        error
+			db         = testDB
 			table      = "table_user"
 			sqlContent = fmt.Sprintf(
 				gtest.DataContent(`gendao`, `user.tpl.sql`),
@@ -123,14 +111,10 @@ func Test_Gen_Dao_Default(t *testing.T) {
 }
 
 func Test_Gen_Dao_TypeMapping(t *testing.T) {
-	link := "mysql:root:12345678@tcp(127.0.0.1:3306)/test?loc=Local&parseTime=true"
-	db, err := gdb.New(gdb.ConfigNode{
-		Link: link,
-	})
-	gtest.AssertNil(err)
-
 	gtest.C(t, func(t *gtest.T) {
 		var (
+			err        error
+			db         = testDB
 			table      = "table_user"
 			sqlContent = fmt.Sprintf(
 				gtest.DataContent(`gendao`, `user.tpl.sql`),
