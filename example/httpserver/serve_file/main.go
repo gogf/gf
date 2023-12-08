@@ -13,11 +13,7 @@ var pathMap = map[string]string{
 	"/aaa/": "./",
 }
 
-// ServeFile description
-//
-// createTime: 2023-12-08 12:06:12
-//
-// author: hailaz
+// ServeFile serves the file to the response.
 func ServeFile(r *ghttp.Request) {
 	truePath := r.URL.Path
 	// Replace the path prefix.
