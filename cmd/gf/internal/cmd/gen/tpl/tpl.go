@@ -12,6 +12,7 @@ import (
 	_ "github.com/gogf/gf/contrib/drivers/sqlite/v2"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gview"
 )
 
@@ -55,19 +56,37 @@ func Tpl() {
 	ctx := context.TODO()
 	db, _ := gdb.Instance("test")
 
+	fmt.Printf("%#v\n", Table{})
+	fmt.Printf("%#v\n", TableField{})
+
 	tables := GetTables(ctx, db)
 	view := gview.New()
-	res, err := view.ParseContent(ctx, `{{range $i,$v := .tables}}{{$i}} ---- {{$v}} {{$v.Name}} 
-{{$v.FieldsJsonStr}}
-	{{range $k,$vv := $v.Fields}}{{$k}} ---- {{$vv}} 
-	{{end}}
-{{end}}
-
-`, g.Map{"tables": tables})
-	if err != nil {
-		panic(err)
+	for _, table := range tables {
+		res, err := view.Parse(ctx, "./testdata/dao.tpl",
+			g.Map{
+				"table":  table,
+				"tables": tables,
+			},
+		)
+		if err != nil {
+			panic(err)
+		}
+		// fmt.Println(res, err)
+		gfile.PutContents(fmt.Sprintf("./output/%s.go", table.Name), res)
 	}
 
-	fmt.Println(res, err)
+	return
+	// 	res, err := view.ParseContent(ctx, `{{range $i,$v := .tables}}{{$i}} ---- {{$v}} {{$v.Name}}
+	// {{$v.FieldsJsonStr}}
+	// 	{{range $k,$vv := $v.Fields}}{{$k}} ---- {{$vv}}
+	// 	{{end}}
+	// {{end}}
+
+	// `, g.Map{"tables": tables})
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+
+	// 	fmt.Println(res, err)
 
 }

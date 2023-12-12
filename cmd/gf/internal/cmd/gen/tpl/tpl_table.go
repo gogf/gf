@@ -7,6 +7,7 @@ import (
 	"sort"
 
 	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 var (
@@ -74,12 +75,35 @@ func (t *Table) Show() string {
 	return fmt.Sprintf("table name is %s", t.Name)
 }
 
+// CaseCamel description
+func (t *Table) CaseCamel() string {
+	return gstr.CaseCamel(t.Name)
+}
+
+// CaseCamelLower description
+func (t *Table) CaseCamelLower() string {
+	return gstr.CaseCamelLower(t.Name)
+}
+
+// CaseSnake description
+func (t *Table) CaseSnake() string {
+	return gstr.CaseSnake(t.Name)
+}
+
+// CaseKebabScreaming description
+func (t *Table) CaseKebabScreaming() string {
+	return gstr.CaseKebabScreaming(t.Name)
+}
+
 // toTableFields description
 //
 // createTime: 2023-10-23 17:22:40
 //
 // author: hailaz
 func (t *Table) toTableFields() {
+	if len(t.Fields) > 0 {
+		return
+	}
 	t.Fields = make(TableFields, len(t.FieldsSource))
 	for _, v := range t.FieldsSource {
 		field := &TableField{
@@ -117,7 +141,7 @@ func (t *Table) SortFields(isReverse bool) {
 func (t *Table) FieldsJsonStr() string {
 	mapStr := make(map[string]interface{}, len(t.Fields))
 	for _, v := range t.Fields {
-		mapStr[v.Name] = v.Default
+		mapStr[v.JsonName] = v.Default
 	}
 	b, err := json.Marshal(mapStr)
 	if err != nil {
