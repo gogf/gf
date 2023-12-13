@@ -74,9 +74,16 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	}
 	// Data Source Name of DM8:
 	// dm://userName:password@ip:port/dbname
+	// dm://userName:password@DW/dbname?DW=(192.168.1.1:5236,192.168.1.2:5236)
+	var domain string
+	if config.Port != "" {
+		domain = fmt.Sprintf("%s:%s", config.Host, config.Port)
+	} else {
+		domain = config.Host
+	}
 	source = fmt.Sprintf(
-		"dm://%s:%s@%s:%s/%s?charset=%s&schema=%s",
-		config.User, config.Pass, config.Host, config.Port, config.Name, config.Charset, config.Name,
+		"dm://%s:%s@%s/%s?charset=%s&schema=%s",
+		config.User, config.Pass, domain, config.Name, config.Charset, config.Name,
 	)
 	// Demo of timezone setting:
 	// &loc=Asia/Shanghai
