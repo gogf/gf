@@ -13,7 +13,6 @@ import (
 type TableField struct {
 	gdb.TableField
 	LocalType string
-	JsonName  string
 }
 
 type TableFields []*TableField
@@ -29,7 +28,6 @@ type Input struct {
 	StdTime      bool
 	GJsonSupport bool
 	TypeMapping  map[DBFieldTypeName]CustomAttributeType
-	JsonNameType string
 }
 
 // GetLocalTypeName description
@@ -93,9 +91,12 @@ func (field *TableField) GetLocalTypeName(ctx context.Context, db gdb.DB, in Inp
 		}
 	}
 	field.LocalType = localTypeNameStr
-	field.JsonName = gstr.CaseConvert(field.Name, gstr.CaseTypeMatch(in.JsonNameType))
-
 	return
+}
+
+// NameCase description
+func (f *TableField) NameCase(caseName string) string {
+	return gstr.CaseConvert(f.Name, gstr.CaseTypeMatch(caseName))
 }
 
 // CaseCamel description

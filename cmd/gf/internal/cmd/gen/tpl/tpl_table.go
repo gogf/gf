@@ -38,6 +38,7 @@ type (
 // Table description
 type Table struct {
 	Name         string
+	PackageName  string
 	db           gdb.DB
 	Fields       TableFields
 	FieldsSource map[string]*gdb.TableField
@@ -138,12 +139,12 @@ func (t *Table) SortFields(isReverse bool) {
 // createTime: 2023-10-23 17:29:39
 //
 // author: hailaz
-func (t *Table) FieldsJsonStr() string {
+func (t *Table) FieldsJsonStr(caseName string) string {
 	mapStr := make(map[string]interface{}, len(t.Fields))
 	for _, v := range t.Fields {
-		mapStr[v.JsonName] = v.Default
+		mapStr[v.NameCase(caseName)] = v.Default
 	}
-	b, err := json.Marshal(mapStr)
+	b, err := json.MarshalIndent(mapStr, "", "    ")
 	if err != nil {
 		return ""
 	}

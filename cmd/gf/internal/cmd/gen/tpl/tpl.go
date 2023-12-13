@@ -3,7 +3,10 @@ package tpl
 import (
 	"context"
 	"fmt"
+	"path/filepath"
+	"strings"
 
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 	_ "github.com/gogf/gf/contrib/drivers/clickhouse/v2"
 	_ "github.com/gogf/gf/contrib/drivers/mssql/v2"
 	_ "github.com/gogf/gf/contrib/drivers/mysql/v2"
@@ -55,24 +58,45 @@ func GetTables(ctx context.Context, db gdb.DB) Tables {
 func Tpl() {
 	ctx := context.TODO()
 	db, _ := gdb.Instance("test")
+	outputDir := "./output"
+	tplRootDir := "./testdata"
+	tplRootDir = gfile.Abs(tplRootDir)
+	fmt.Println(tplRootDir)
+	tplList, err := gfile.ScanDirFile(tplRootDir, "*.tpl", true)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(tplList)
 
 	fmt.Printf("%#v\n", Table{})
 	fmt.Printf("%#v\n", TableField{})
 
 	tables := GetTables(ctx, db)
 	view := gview.New()
+
 	for _, table := range tables {
-		res, err := view.Parse(ctx, "./testdata/dao.tpl",
-			g.Map{
-				"table":  table,
-				"tables": tables,
-			},
-		)
-		if err != nil {
-			panic(err)
+		table.PackageName = "github.com/gogf/gf/cmd/gf/v2"
+		tplData := g.Map{
+			"table":  table,
+			"tables": tables,
 		}
-		// fmt.Println(res, err)
-		gfile.PutContents(fmt.Sprintf("./output/%s.go", table.Name), res)
+		fmt.Println(table.FieldsJsonStr("Snake"))
+		for _, tpl := range tplList {
+			tplDir := gfile.Dir(tpl)
+
+			res, err := view.Parse(ctx, tpl, tplData)
+			if err != nil {
+				panic(err)
+			}
+			// fmt.Println(res, err)
+			filePath := filepath.FromSlash(fmt.Sprintf(outputDir+"%s/%s.go", strings.TrimPrefix(tplDir, tplRootDir), table.Name))
+			err = gfile.PutContents(filePath, res)
+			if err != nil {
+				panic(err)
+			}
+			utils.GoFmt(filePath)
+		}
+
 	}
 
 	return

@@ -16,7 +16,7 @@ type {{.table.CaseCamel}}Dao struct {
 
 // {{.table.CaseCamel}}Columns defines and stores column names for table {{.table.Name}}.
 type {{.table.CaseCamel}}Columns struct { {{range $i,$v := .table.Fields}}
-	{{$v.CaseCamel}} string // {{$v.Comment}}{{end}}
+	{{$v.NameCase "Camel"}} string // {{$v.Comment}}{{end}}
 }
 
 // {{.table.CaseCamelLower}}Columns holds the columns for table {{.table.Name}}.
