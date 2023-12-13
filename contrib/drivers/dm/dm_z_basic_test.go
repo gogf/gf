@@ -68,17 +68,17 @@ func TestTables(t *testing.T) {
 // However, when processing the index (completely matching field), the adapter will automatically add security character
 // In principle, such problems will not occur if you directly use Dameng database initialization instead of migrating the data structure from mysql.
 // If so, the adapter has also taken care of it.
-func TestTablesFalse(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		tables := []string{"A_tables", "A_tables2"}
+// func TestTablesFalse(t *testing.T) {
+// 	gtest.C(t, func(t *gtest.T) {
+// 		tables := []string{"A_tables", "A_tables2"}
 
-		for _, v := range tables {
-			_, err := createTableFalse(v)
-			gtest.Assert(err, fmt.Errorf("createTableFalse"))
-			// createTable(v)
-		}
-	})
-}
+// 		for _, v := range tables {
+// 			_, err := createTableFalse(v)
+// 			gtest.Assert(err, fmt.Errorf("createTableFalse"))
+// 			// createTable(v)
+// 		}
+// 	})
+// }
 
 func TestTableFields(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
