@@ -17,6 +17,33 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+func Test_Scan_WithMapParameter(t *testing.T) {
+	type User struct {
+		Uid  int
+		Name string
+	}
+	gtest.C(t, func(t *gtest.T) {
+		for i := 0; i < 100; i++ {
+			var (
+				user   = new(User)
+				params = g.Map{
+					"uid":    1,
+					"myname": "john",
+					"name":   "smith",
+				}
+			)
+			err := gconv.Scan(params, user, g.MapStrStr{
+				"myname": "Name",
+			})
+			t.AssertNil(err)
+			t.Assert(user, &User{
+				Uid:  1,
+				Name: "john",
+			})
+		}
+	})
+}
+
 func Test_Scan_StructStructs(t *testing.T) {
 	type User struct {
 		Uid   int

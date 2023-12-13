@@ -15,6 +15,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"regexp"
 	"strings"
 
 	_ "github.com/lib/pq"
@@ -237,6 +238,12 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 	if err != nil {
 		return nil, err
 	}
+
+	useRelpartbound := ""
+	if gstr.CompareVersion(d.version(ctx, link), "10") >= 0 {
+		useRelpartbound = "AND c.relpartbound IS NULL"
+	}
+
 	var query = fmt.Sprintf(`
 SELECT
 	c.relname
@@ -247,10 +254,11 @@ INNER JOIN pg_namespace n ON
 WHERE
 	n.nspname = '%s'
 	AND c.relkind IN ('r', 'p')
-	AND c.relpartbound IS NULL
+	%s
 ORDER BY
 	c.relname`,
 		usedSchema,
+		useRelpartbound,
 	)
 
 	query, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(query))
@@ -264,6 +272,23 @@ ORDER BY
 		}
 	}
 	return
+}
+
+// version checks and returns the database version.
+func (d *Driver) version(ctx context.Context, link gdb.Link) string {
+	result, err := d.DoSelect(ctx, link, "SELECT version();")
+	if err != nil {
+		return ""
+	}
+	if len(result) > 0 {
+		if v, ok := result[0]["version"]; ok {
+			matches := regexp.MustCompile(`PostgreSQL (\d+\.\d+)`).FindStringSubmatch(v.String())
+			if len(matches) >= 2 {
+				return matches[1]
+			}
+		}
+	}
+	return ""
 }
 
 // TableFields retrieves and returns the fields' information of specified table of current schema.

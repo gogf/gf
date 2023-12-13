@@ -9,9 +9,10 @@ package mssql_test
 import (
 	"database/sql"
 	"fmt"
-	"github.com/gogf/gf/v2/util/gconv"
 	"testing"
 	"time"
+
+	"github.com/gogf/gf/v2/util/gconv"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
@@ -1906,12 +1907,14 @@ func Test_Model_HasTable(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
+		t.AssertNil(db.GetCore().ClearCacheAll(ctx))
 		result, err := db.GetCore().HasTable(table)
 		t.Assert(result, true)
 		t.AssertNil(err)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
+		t.AssertNil(db.GetCore().ClearCacheAll(ctx))
 		result, err := db.GetCore().HasTable("table12321")
 		t.Assert(result, false)
 		t.AssertNil(err)
@@ -2546,5 +2549,42 @@ func Test_Model_WherePrefixLike(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(r), 1)
 		t.Assert(r[0]["ID"], "3")
+	})
+}
+
+func Test_Model_AllAndCount(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, total, err := db.Model(table).Order("id").Limit(0, 3).AllAndCount(false)
+		t.Assert(err, nil)
+
+		t.Assert(len(result), 3)
+		t.Assert(total, TableSize)
+	})
+}
+
+func Test_Model_ScanAndCount(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime gtime.Time
+		}
+
+		users := make([]User, 0)
+		total := 0
+
+		err := db.Model(table).Order("id").Limit(0, 3).ScanAndCount(&users, &total, false)
+		t.Assert(err, nil)
+
+		t.Assert(len(users), 3)
+		t.Assert(total, TableSize)
 	})
 }
