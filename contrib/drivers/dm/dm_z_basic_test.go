@@ -63,6 +63,23 @@ func TestTables(t *testing.T) {
 	})
 }
 
+// The test scenario index of this test case (exact matching field) is a keyword in the Dameng database and cannot exist as a field name.
+// If the data structure previously migrated from mysql has an index (completely matching field), it will also be allowed.
+// However, when processing the index (completely matching field), the adapter will automatically add security character
+// In principle, such problems will not occur if you directly use Dameng database initialization instead of migrating the data structure from mysql.
+// If so, the adapter has also taken care of it.
+func TestTablesFalse(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		tables := []string{"A_tables", "A_tables2"}
+
+		for _, v := range tables {
+			_, err := createTableFalse(v)
+			gtest.Assert(err, fmt.Errorf("createTableFalse"))
+			// createTable(v)
+		}
+	})
+}
+
 func TestTableFields(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		tables := "A_tables"
@@ -70,6 +87,7 @@ func TestTableFields(t *testing.T) {
 			"ID":           {"BIGINT", false},
 			"ACCOUNT_NAME": {"VARCHAR", false},
 			"PWD_RESET":    {"TINYINT", false},
+			"ATTR_INDEX":   {"INT", true},
 			"DELETED":      {"INT", false},
 			"CREATED_TIME": {"TIMESTAMP", false},
 		}
@@ -127,6 +145,7 @@ func TestModelSave(t *testing.T) {
 			{
 				ID:          100,
 				AccountName: "user_100",
+				AttrIndex:   100,
 				CreatedTime: time.Now(),
 			},
 		}
@@ -177,6 +196,7 @@ func TestModelInsert(t *testing.T) {
 			ID:          int64(i),
 			AccountName: fmt.Sprintf(`A%dtwo`, i),
 			PwdReset:    0,
+			AttrIndex:   99,
 			// CreatedTime: time.Now(),
 			UpdatedTime: time.Now(),
 		}
@@ -193,6 +213,7 @@ func TestModelInsert(t *testing.T) {
 			AccountName: fmt.Sprintf(`A%dtwoONE`, i),
 			PwdReset:    1,
 			CreatedTime: time.Now(),
+			AttrIndex:   98,
 			// UpdatedTime: time.Now(),
 		}
 		// _, err := db.Schema(TestDbName).Model("A_tables").Data(data).Insert()
@@ -209,6 +230,7 @@ func TestDBInsert(t *testing.T) {
 			"ID":           i,
 			"ACCOUNT_NAME": fmt.Sprintf(`A%dthress`, i),
 			"PWD_RESET":    3,
+			"ATTR_INDEX":   98,
 		}
 		_, err := db.Insert(ctx, "A_tables", &data)
 		gtest.Assert(err, nil)

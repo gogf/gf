@@ -124,6 +124,7 @@ func createTable(table ...string) (name string) {
 "PWD_RESET" TINYINT DEFAULT 0 NOT NULL,
 "ENABLED" INT DEFAULT 1 NOT NULL,
 "DELETED" INT DEFAULT 0 NOT NULL,
+"ATTR_INDEX" INT DEFAULT 0 ,
 "CREATED_BY" VARCHAR(32) DEFAULT '' NOT NULL,
 "CREATED_TIME" TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP() NOT NULL,
 "UPDATED_BY" VARCHAR(32) DEFAULT '' NOT NULL,
@@ -136,10 +137,43 @@ NOT CLUSTER PRIMARY KEY("ID")) STORAGE(ON "MAIN", CLUSTERBTR) ;
 	return
 }
 
+func createTableFalse(table ...string) (name string, err error) {
+	if len(table) > 0 {
+		name = table[0]
+	} else {
+		name = fmt.Sprintf("random_%d", gtime.Timestamp())
+	}
+
+	dropTable(name)
+
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+	CREATE TABLE "%s"
+(
+"ID" BIGINT NOT NULL,
+"ACCOUNT_NAME" VARCHAR(128) DEFAULT '' NOT NULL,
+"PWD_RESET" TINYINT DEFAULT 0 NOT NULL,
+"ENABLED" INT DEFAULT 1 NOT NULL,
+"DELETED" INT DEFAULT 0 NOT NULL,
+"INDEX" INT DEFAULT 0 ,
+"ATTR_INDEX" INT DEFAULT 0 ,
+"CREATED_BY" VARCHAR(32) DEFAULT '' NOT NULL,
+"CREATED_TIME" TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP() NOT NULL,
+"UPDATED_BY" VARCHAR(32) DEFAULT '' NOT NULL,
+"UPDATED_TIME" TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP() NOT NULL,
+NOT CLUSTER PRIMARY KEY("ID")) STORAGE(ON "MAIN", CLUSTERBTR) ;
+	`, name)); err != nil {
+		// gtest.Fatal(err)
+		return name, fmt.Errorf("createTableFalse")
+	}
+
+	return name, nil
+}
+
 type User struct {
 	ID          int64     `orm:"id"`
 	AccountName string    `orm:"account_name"`
 	PwdReset    int64     `orm:"pwd_reset"`
+	AttrIndex   int64     `orm:"attr_index"`
 	Enabled     int64     `orm:"enabled"`
 	Deleted     int64     `orm:"deleted"`
 	CreatedBy   string    `orm:"created_by"`
