@@ -180,23 +180,16 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// if it creates a new session id in this request
 	// and SessionCookieOutput is enabled.
 	if s.config.SessionCookieOutput && request.Session.IsDirty() {
-
 		// Can change by r.Session.SetId("") before init session
-		sidFromSession := request.Session.MustId()
-
 		// Can change by r.Cookie.SetSessionId("")
-		sidFromRequest := request.GetSessionId()
-
+		sidFromSession, sidFromRequest := request.Session.MustId(), request.GetSessionId()
 		if sidFromSession != sidFromRequest {
-
 			if sidFromSession != sessionId {
 				request.Cookie.SetSessionId(sidFromSession)
 			} else {
 				request.Cookie.SetSessionId(sidFromRequest)
 			}
-
 		}
-
 	}
 	// Output the cookie content to the client.
 	request.Cookie.Flush()
