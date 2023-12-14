@@ -43,6 +43,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Create a new request object.
 	request := newRequest(s, r, w)
 
+	// Get sessionId before user handler
+	sessionId := request.GetSessionId()
+
 	defer func() {
 		request.LeaveTime = gtime.TimestampMilli()
 		// error log handling.
@@ -176,10 +179,24 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Automatically set the session id to cookie
 	// if it creates a new session id in this request
 	// and SessionCookieOutput is enabled.
-	if s.config.SessionCookieOutput &&
-		request.Session.IsDirty() &&
-		request.Session.MustId() != request.GetSessionId() {
-		request.Cookie.SetSessionId(request.Session.MustId())
+	if s.config.SessionCookieOutput && request.Session.IsDirty() {
+
+		// Can change by r.Session.SetId("") before init session
+		sidFromSession := request.Session.MustId()
+
+		// Can change by r.Cookie.SetSessionId("")
+		sidFromRequest := request.GetSessionId()
+
+		if sidFromSession != sidFromRequest {
+
+			if sidFromSession != sessionId {
+				request.Cookie.SetSessionId(sidFromSession)
+			} else {
+				request.Cookie.SetSessionId(sidFromRequest)
+			}
+
+		}
+
 	}
 	// Output the cookie content to the client.
 	request.Cookie.Flush()
