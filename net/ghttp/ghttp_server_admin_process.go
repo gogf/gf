@@ -117,7 +117,7 @@ func forkReloadProcess(ctx context.Context, newExeFilePath ...string) error {
 	var (
 		path = os.Args[0]
 	)
-	if len(newExeFilePath) > 0 {
+	if len(newExeFilePath) > 0 && newExeFilePath[0] != "" {
 		path = newExeFilePath[0]
 	}
 	var (
@@ -156,12 +156,12 @@ func forkReloadProcess(ctx context.Context, newExeFilePath ...string) error {
 }
 
 // forkRestartProcess creates a new server process.
-func forkRestartProcess(ctx context.Context, newExeFilePath string) error {
+func forkRestartProcess(ctx context.Context, newExeFilePath ...string) error {
 	var (
 		path = os.Args[0]
 	)
-	if newExeFilePath != "" {
-		path = newExeFilePath
+	if len(newExeFilePath) > 0 && newExeFilePath[0] != "" {
+		path = newExeFilePath[0]
 	}
 	if err := os.Unsetenv(adminActionReloadEnvKey); err != nil {
 		intlog.Errorf(ctx, `%+v`, err)
