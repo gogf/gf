@@ -10,7 +10,7 @@ require (
 	github.com/gogf/gf/contrib/drivers/pgsql/v2 v2.6.0-beta
 	github.com/gogf/gf/contrib/drivers/sqlite/v2 v2.6.0-beta
 	github.com/gogf/gf/v2 v2.6.0-beta
-	github.com/minio/selfupdate v0.6.0
+	github.com/hailaz/selfupdate v0.0.0-20231214083445-ff94a6158680
 	github.com/olekukonko/tablewriter v0.0.5
 	golang.org/x/mod v0.9.0
 	golang.org/x/tools v0.7.0
@@ -58,6 +58,3 @@ require (
 	modernc.org/memory v1.5.0 // indirect
 	modernc.org/sqlite v1.23.1 // indirect
 )
-
-// fix: https://github.com/gogf/gf/issues/3197
-replace aead.dev/minisign => github.com/aead/minisign v0.2.0
