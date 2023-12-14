@@ -21,38 +21,44 @@ import (
 )
 
 var (
-	db     gdb.DB
-	dblink gdb.DB
-	dbErr  gdb.DB
-	ctx    context.Context
-)
-
-const (
+	db        gdb.DB
+	dblink    gdb.DB
+	dbErr     gdb.DB
+	ctx       context.Context
 	TableSize = 10
-
-	// TableName       = "inf_group"
-	// TableNamePrefix = "t_"
-	// TestSchema = "SYSDBADP"
 )
 
 const (
-	TestDbIP    = "127.0.0.1"
-	TestDbPort  = "5236"
-	TestDbUser  = "SYSDBA"
-	TestDbPass  = "SYSDBA001"
-	TestDbName  = "SYSDBA"
-	TestDbType  = "dm"
+	TestDBHost  = "127.0.0.1"
+	TestDBPort  = "5236"
+	TestDBUser  = "SYSDBA"
+	TestDBPass  = "SYSDBA001"
+	TestDBName  = "SYSDBA"
+	TestDBType  = "dm"
 	TestCharset = "utf8"
 )
 
+type User struct {
+	ID          int64     `orm:"id"`
+	AccountName string    `orm:"account_name"`
+	PwdReset    int64     `orm:"pwd_reset"`
+	AttrIndex   int64     `orm:"attr_index"`
+	Enabled     int64     `orm:"enabled"`
+	Deleted     int64     `orm:"deleted"`
+	CreatedBy   string    `orm:"created_by"`
+	CreatedTime time.Time `orm:"created_time"`
+	UpdatedBy   string    `orm:"updated_by"`
+	UpdatedTime time.Time `orm:"updated_time"`
+}
+
 func init() {
 	node := gdb.ConfigNode{
-		Host:             TestDbIP,
-		Port:             TestDbPort,
-		User:             TestDbUser,
-		Pass:             TestDbPass,
-		Name:             TestDbName,
-		Type:             TestDbType,
+		Host:             TestDBHost,
+		Port:             TestDBPort,
+		User:             TestDBUser,
+		Pass:             TestDBPass,
+		Name:             TestDBName,
+		Type:             TestDBType,
 		Role:             "master",
 		Charset:          TestCharset,
 		Weight:           1,
@@ -62,22 +68,23 @@ func init() {
 		UpdatedAt:        "updated_time",
 	}
 
+	// todo
 	nodeLink := gdb.ConfigNode{
-		Type: TestDbType,
-		Name: TestDbName,
+		Type: TestDBType,
+		Name: TestDBName,
 		Link: fmt.Sprintf(
 			"dm:%s:%s@tcp(%s:%s)/%s?charset=%s",
-			TestDbUser, TestDbPass, TestDbIP, TestDbPort, TestDbName, TestCharset,
+			TestDBUser, TestDBPass, TestDBHost, TestDBPort, TestDBName, TestCharset,
 		),
 	}
 
 	nodeErr := gdb.ConfigNode{
-		Host:    TestDbIP,
-		Port:    TestDbPort,
-		User:    TestDbUser,
+		Host:    TestDBHost,
+		Port:    TestDBPort,
+		User:    TestDBUser,
 		Pass:    "1234",
-		Name:    TestDbName,
-		Type:    TestDbType,
+		Name:    TestDBName,
+		Type:    TestDBType,
 		Role:    "master",
 		Charset: TestCharset,
 		Weight:  1,
@@ -107,6 +114,23 @@ func init() {
 	ctx = context.Background()
 }
 
+func dropTable(table string) {
+	count, err := db.GetCount(
+		ctx,
+		"SELECT COUNT(*) FROM all_tables WHERE owner = ? And table_name= ?", TestDBName, strings.ToUpper(table),
+	)
+	if err != nil {
+		gtest.Fatal(err)
+	}
+
+	if count == 0 {
+		return
+	}
+	if _, err := db.Exec(ctx, fmt.Sprintf("DROP TABLE %s", table)); err != nil {
+		gtest.Fatal(err)
+	}
+}
+
 func createTable(table ...string) (name string) {
 	if len(table) > 0 {
 		name = table[0]
@@ -134,6 +158,27 @@ NOT CLUSTER PRIMARY KEY("ID")) STORAGE(ON "MAIN", CLUSTERBTR) ;
 		gtest.Fatal(err)
 	}
 
+	return
+}
+
+func createInitTable(table ...string) (name string) {
+	name = createTable(table...)
+	array := garray.New(true)
+	for i := 1; i <= TableSize; i++ {
+		array.Append(g.Map{
+			"id":           i,
+			"account_name": fmt.Sprintf(`name_%d`, i),
+			"pwd_reset":    0,
+			"attr_index":   i,
+			"create_time":  gtime.Now().String(),
+		})
+	}
+	result, err := db.Schema(TestDBName).Insert(context.Background(), name, array.Slice())
+	gtest.Assert(err, nil)
+
+	n, e := result.RowsAffected()
+	gtest.Assert(e, nil)
+	gtest.Assert(n, TableSize)
 	return
 }
 
@@ -167,54 +212,4 @@ NOT CLUSTER PRIMARY KEY("ID")) STORAGE(ON "MAIN", CLUSTERBTR) ;
 	}
 
 	return name, nil
-}
-
-type User struct {
-	ID          int64     `orm:"id"`
-	AccountName string    `orm:"account_name"`
-	PwdReset    int64     `orm:"pwd_reset"`
-	AttrIndex   int64     `orm:"attr_index"`
-	Enabled     int64     `orm:"enabled"`
-	Deleted     int64     `orm:"deleted"`
-	CreatedBy   string    `orm:"created_by"`
-	CreatedTime time.Time `orm:"created_time"`
-	UpdatedBy   string    `orm:"updated_by"`
-	UpdatedTime time.Time `orm:"updated_time"`
-}
-
-func createInitTable(table ...string) (name string) {
-	name = createTable(table...)
-	array := garray.New(true)
-	for i := 1; i <= TableSize; i++ {
-		array.Append(g.Map{
-			"id":           i,
-			"account_name": fmt.Sprintf(`name_%d`, i),
-			"pwd_reset":    0,
-			"create_time":  gtime.Now().String(),
-		})
-	}
-	result, err := db.Schema(TestDbName).Insert(context.Background(), name, array.Slice())
-	gtest.Assert(err, nil)
-
-	n, e := result.RowsAffected()
-	gtest.Assert(e, nil)
-	gtest.Assert(n, TableSize)
-	return
-}
-
-func dropTable(table string) {
-	count, err := db.GetCount(
-		ctx,
-		"SELECT COUNT(*) FROM USER_TABLES WHERE TABLE_NAME = ?", strings.ToUpper(table),
-	)
-	if err != nil {
-		gtest.Fatal(err)
-	}
-
-	if count == 0 {
-		return
-	}
-	if _, err := db.Exec(ctx, fmt.Sprintf("DROP TABLE %s", table)); err != nil {
-		gtest.Fatal(err)
-	}
 }
