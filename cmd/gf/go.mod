@@ -58,3 +58,6 @@ require (
 	modernc.org/memory v1.5.0 // indirect
 	modernc.org/sqlite v1.23.1 // indirect
 )
+
+// fix: https://github.com/gogf/gf/issues/3197
+replace aead.dev/minisign => github.com/aead/minisign v0.2.0
