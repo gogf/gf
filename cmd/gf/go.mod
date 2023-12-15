@@ -10,7 +10,7 @@ require (
 	github.com/gogf/gf/contrib/drivers/pgsql/v2 v2.6.0-beta
 	github.com/gogf/gf/contrib/drivers/sqlite/v2 v2.6.0-beta
 	github.com/gogf/gf/v2 v2.6.0-beta
-	github.com/hailaz/selfupdate v0.0.0-20231214083445-ff94a6158680
+	github.com/gogf/selfupdate v0.0.0-20231215043001-5c48c528462f
 	github.com/olekukonko/tablewriter v0.0.5
 	golang.org/x/mod v0.9.0
 	golang.org/x/tools v0.7.0
