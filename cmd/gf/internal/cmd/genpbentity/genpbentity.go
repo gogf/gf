@@ -38,7 +38,7 @@ type (
 		Tables            string `name:"tables"            short:"t"  brief:"{CGenPbEntityBriefTables}"`
 		Prefix            string `name:"prefix"            short:"f"  brief:"{CGenPbEntityBriefPrefix}"`
 		RemovePrefix      string `name:"removePrefix"      short:"r"  brief:"{CGenPbEntityBriefRemovePrefix}"`
-		RemoveFieldPrefix string `name:"removeFieldPrefix" short:"fr" brief:"{CGenPbEntityBriefRemoveFieldPrefix}"`
+		RemoveFieldPrefix string `name:"removeFieldPrefix" short:"rf" brief:"{CGenPbEntityBriefRemoveFieldPrefix}"`
 		NameCase          string `name:"nameCase"          short:"n"  brief:"{CGenPbEntityBriefNameCase}" d:"Camel"`
 		JsonCase          string `name:"jsonCase"          short:"j"  brief:"{CGenPbEntityBriefJsonCase}" d:"CamelLower"`
 		Option            string `name:"option"            short:"o"  brief:"{CGenPbEntityBriefOption}"`
