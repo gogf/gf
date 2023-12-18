@@ -881,3 +881,28 @@ func Test_Issue3086(t *testing.T) {
 		t.Assert(n, 2)
 	})
 }
+
+// https://github.com/gogf/gf/issues/3204
+func Test_Issue3204(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	db.SetDebug(true)
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			g.Meta     `orm:"do:true"`
+			Id         interface{} `orm:"id,omitempty"`
+			Passport   interface{} `orm:"passport,omitempty"`
+			Password   interface{} `orm:"password,omitempty"`
+			Nickname   interface{} `orm:"nickname,omitempty"`
+			CreateTime interface{} `orm:"create_time,omitempty"`
+		}
+		where := User{
+			Id:       2,
+			Passport: "",
+		}
+		all, err := db.Model(table).Where(where).All()
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["id"], 2)
+	})
+}
