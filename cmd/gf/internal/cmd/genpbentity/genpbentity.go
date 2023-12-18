@@ -354,9 +354,16 @@ func generateMessageFieldForPbEntity(index int, field *gdb.TableField, in CGenPb
 			jsonTagStr = " " + jsonTagStr
 		}
 	}
+
+	removeFieldPrefixArray := gstr.SplitAndTrim(in.RemoveFieldPrefix, ",")
+	newFiledName := field.Name
+	for _, v := range removeFieldPrefixArray {
+		newFiledName = gstr.TrimLeftStr(newFiledName, v, 1)
+	}
+
 	return []string{
 		"    #" + localTypeNameStr,
-		" #" + formatCase(field.Name, in.NameCase),
+		" #" + formatCase(newFiledName, in.NameCase),
 		" #= " + gconv.String(index) + jsonTagStr + ";",
 		" #" + fmt.Sprintf(`// %s`, comment),
 	}

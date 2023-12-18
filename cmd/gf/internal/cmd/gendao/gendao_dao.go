@@ -138,6 +138,7 @@ type generateDaoInternalInput struct {
 
 func generateDaoInternal(in generateDaoInternalInput) {
 	path := filepath.FromSlash(gfile.Join(in.DirPathDaoInternal, in.FileName+".go"))
+	removeFieldPrefixArray := gstr.SplitAndTrim(in.RemoveFieldPrefix, ",")
 	modelContent := gstr.ReplaceByMap(
 		getTemplateFromPathOrDefault(in.TplDaoInternalPath, consts.TemplateGenDaoInternalContent),
 		g.MapStrStr{
@@ -146,8 +147,8 @@ func generateDaoInternal(in generateDaoInternalInput) {
 			tplVarGroupName:               in.Group,
 			tplVarTableNameCamelCase:      in.TableNameCamelCase,
 			tplVarTableNameCamelLowerCase: in.TableNameCamelLowerCase,
-			tplVarColumnDefine:            gstr.Trim(generateColumnDefinitionForDao(in.FieldMap, in.RemoveFieldPrefix)),
-			tplVarColumnNames:             gstr.Trim(generateColumnNamesForDao(in.FieldMap, in.RemoveFieldPrefix)),
+			tplVarColumnDefine:            gstr.Trim(generateColumnDefinitionForDao(in.FieldMap, removeFieldPrefixArray)),
+			tplVarColumnNames:             gstr.Trim(generateColumnNamesForDao(in.FieldMap, removeFieldPrefixArray)),
 		})
 	modelContent = replaceDefaultVar(in.CGenDaoInternalInput, modelContent)
 	if err := gfile.PutContents(path, strings.TrimSpace(modelContent)); err != nil {
@@ -160,14 +161,13 @@ func generateDaoInternal(in generateDaoInternalInput) {
 
 // generateColumnNamesForDao generates and returns the column names assignment content of column struct
 // for specified table.
-func generateColumnNamesForDao(fieldMap map[string]*gdb.TableField, removeFieldPrefix string) string {
+func generateColumnNamesForDao(fieldMap map[string]*gdb.TableField, removeFieldPrefixArray []string) string {
 	var (
 		buffer = bytes.NewBuffer(nil)
 		array  = make([][]string, len(fieldMap))
 		names  = sortFieldKeyForDao(fieldMap)
 	)
 
-	removeFieldPrefixArray := gstr.SplitAndTrim(removeFieldPrefix, ",")
 	for index, name := range names {
 		field := fieldMap[name]
 
@@ -197,13 +197,13 @@ func generateColumnNamesForDao(fieldMap map[string]*gdb.TableField, removeFieldP
 }
 
 // generateColumnDefinitionForDao generates and returns the column names definition for specified table.
-func generateColumnDefinitionForDao(fieldMap map[string]*gdb.TableField, removeFieldPrefix string) string {
+func generateColumnDefinitionForDao(fieldMap map[string]*gdb.TableField, removeFieldPrefixArray []string) string {
 	var (
 		buffer = bytes.NewBuffer(nil)
 		array  = make([][]string, len(fieldMap))
 		names  = sortFieldKeyForDao(fieldMap)
 	)
-	removeFieldPrefixArray := gstr.SplitAndTrim(removeFieldPrefix, ",")
+
 	for index, name := range names {
 		var (
 			field   = fieldMap[name]
