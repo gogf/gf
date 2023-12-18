@@ -16,6 +16,40 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+func TestConverter_ConvertWithRefer(t *testing.T) {
+	type tA struct {
+		Val int
+	}
+
+	type tB struct {
+		Val1 int32
+		Val2 string
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		err := gconv.RegisterConverter(func(a tA) (b *tB, err error) {
+			b = &tB{
+				Val1: int32(a.Val),
+				Val2: "abcd",
+			}
+			return
+		})
+		t.AssertNil(err)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		a := &tA{
+			Val: 1,
+		}
+		var b tB
+		result := gconv.ConvertWithRefer(a, &b)
+		t.Assert(result.(*tB), &tB{
+			Val1: 1,
+			Val2: "abcd",
+		})
+	})
+}
+
 func TestConverter_Struct(t *testing.T) {
 	type tA struct {
 		Val int
