@@ -15,7 +15,22 @@ import (
 // Adapter is an interface for universal redis operations.
 type Adapter interface {
 	AdapterGroup
+	AdapterOperation
+}
 
+// AdapterGroup is an interface managing group operations for redis.
+type AdapterGroup interface {
+	GroupGeneric() IGroupGeneric
+	GroupHash() IGroupHash
+	GroupList() IGroupList
+	GroupPubSub() IGroupPubSub
+	GroupScript() IGroupScript
+	GroupSet() IGroupSet
+	GroupSortedSet() IGroupSortedSet
+	GroupString() IGroupString
+}
+
+type AdapterOperation interface {
 	// Do send a command to the server and returns the received reply.
 	// It uses json.Marshal for struct/slice/map type values before committing them to redis.
 	Do(ctx context.Context, command string, args ...interface{}) (*gvar.Var, error)
@@ -38,18 +53,6 @@ type Conn interface {
 
 	// Close puts the connection back to connection pool.
 	Close(ctx context.Context) (err error)
-}
-
-// AdapterGroup is an interface managing group operations for redis.
-type AdapterGroup interface {
-	GroupGeneric() IGroupGeneric
-	GroupHash() IGroupHash
-	GroupList() IGroupList
-	GroupPubSub() IGroupPubSub
-	GroupScript() IGroupScript
-	GroupSet() IGroupSet
-	GroupSortedSet() IGroupSortedSet
-	GroupString() IGroupString
 }
 
 // ConnCommand is an interface managing some operations bound to certain connection.
