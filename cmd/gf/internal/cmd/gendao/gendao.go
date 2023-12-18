@@ -182,7 +182,7 @@ type (
 		Group              string `name:"group"               short:"g"  brief:"{CGenDaoBriefGroup}" d:"default"`
 		Prefix             string `name:"prefix"              short:"f"  brief:"{CGenDaoBriefPrefix}"`
 		RemovePrefix       string `name:"removePrefix"        short:"r"  brief:"{CGenDaoBriefRemovePrefix}"`
-		RemoveFieldPrefix  string `name:"removeFieldPrefix"   short:"fr" brief:"{CGenDaoBriefRemoveFieldPrefix}"`
+		RemoveFieldPrefix  string `name:"removeFieldPrefix"   short:"rf" brief:"{CGenDaoBriefRemoveFieldPrefix}"`
 		JsonCase           string `name:"jsonCase"            short:"j"  brief:"{CGenDaoBriefJsonCase}" d:"CamelLower"`
 		ImportPrefix       string `name:"importPrefix"        short:"i"  brief:"{CGenDaoBriefImportPrefix}"`
 		DaoPath            string `name:"daoPath"             short:"d"  brief:"{CGenDaoBriefDaoPath}" d:"dao"`
