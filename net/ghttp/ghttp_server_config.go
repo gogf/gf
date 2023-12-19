@@ -222,8 +222,9 @@ type ServerConfig struct {
 	// API & Swagger.
 	// ======================================================================================================
 
-	OpenApiPath string `json:"openapiPath"` // OpenApiPath specifies the OpenApi specification file path.
-	SwaggerPath string `json:"swaggerPath"` // SwaggerPath specifies the swagger UI path for route registering.
+	OpenApiPath  string `json:"openapiPath"`  // OpenApiPath specifies the OpenApi specification file path.
+	SwaggerPath  string `json:"swaggerPath"`  // SwaggerPath specifies the swagger UI path for route registering.
+	SwaggerJsURL string `json:"swaggerJsURL"` // SwaggerJsURL specifies the swagger UI js URL for document. https://www.npmjs.com/package/redoc
 
 	// ======================================================================================================
 	// Other.
