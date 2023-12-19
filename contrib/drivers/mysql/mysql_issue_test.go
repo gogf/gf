@@ -886,7 +886,7 @@ func Test_Issue3086(t *testing.T) {
 func Test_Issue3204(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
-	db.SetDebug(true)
+
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			g.Meta     `orm:"do:true"`
@@ -904,5 +904,36 @@ func Test_Issue3204(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(all), 1)
 		t.Assert(all[0]["id"], 2)
+	})
+}
+
+// https://github.com/gogf/gf/issues/3218
+func Test_Issue3218(t *testing.T) {
+	table := "issue3218_sys_config"
+	array := gstr.SplitAndTrim(gtest.DataContent(`issue3218.sql`), ";")
+	for _, v := range array {
+		if _, err := db.Exec(ctx, v); err != nil {
+			gtest.Error(err)
+		}
+	}
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		type SysConfigInfo struct {
+			Name  string            `json:"name"`
+			Value map[string]string `json:"value"`
+		}
+		var configData *SysConfigInfo
+		err := db.Model(table).Scan(&configData)
+		t.AssertNil(err)
+		t.Assert(configData, &SysConfigInfo{
+			Name: "site",
+			Value: map[string]string{
+				"fixed_page": "",
+				"site_name":  "22",
+				"version":    "22",
+				"banned_ip":  "22",
+				"filings":    "2222",
+			},
+		})
 	})
 }

@@ -8,6 +8,11 @@ package gconv
 
 import "github.com/gogf/gf/v2/os/gtime"
 
+// iVal is used for type assert api for String().
+type iVal interface {
+	Val() interface{}
+}
+
 // iString is used for type assert api for String().
 type iString interface {
 	String() string
@@ -76,11 +81,6 @@ type iStrings interface {
 // iUints is used for type assert api for Uints().
 type iUints interface {
 	Uints() []uint
-}
-
-// iMapStrAny is the interface support for converting struct parameter to map.
-type iMapStrAny interface {
-	MapStrAny() map[string]interface{}
 }
 
 // iUnmarshalValue is the interface for custom defined types customizing value assignment.
