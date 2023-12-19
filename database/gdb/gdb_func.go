@@ -96,7 +96,9 @@ func DBFromCtx(ctx context.Context) DB {
 	return nil
 }
 
-// ToSQL formats and returns the last one of sql statements in given closure function without truly executing it.
+// ToSQL formats and returns the last one of sql statements in given closure function
+// WITHOUT TRULY EXECUTING IT.
+// Be caution that, all the following sql statements should use the context object passing by function `f`.
 func ToSQL(ctx context.Context, f func(ctx context.Context) error) (sql string, err error) {
 	var manager = &CatchSQLManager{
 		SQLArray: garray.NewStrArray(),
@@ -108,7 +110,8 @@ func ToSQL(ctx context.Context, f func(ctx context.Context) error) (sql string, 
 	return
 }
 
-// CatchSQL catches and returns all sql statements that are executed in given closure function.
+// CatchSQL catches and returns all sql statements that are EXECUTED in given closure function.
+// Be caution that, all the following sql statements should use the context object passing by function `f`.
 func CatchSQL(ctx context.Context, f func(ctx context.Context) error) (sqlArray []string, err error) {
 	var manager = &CatchSQLManager{
 		SQLArray: garray.NewStrArray(),
@@ -210,12 +213,15 @@ func GetInsertOperationByOption(option InsertOption) string {
 }
 
 func anyValueToMapBeforeToRecord(value interface{}) map[string]interface{} {
-	return gconv.Map(value, gconv.MapOption{Tags: structTagPriority})
+	return gconv.Map(value, gconv.MapOption{
+		Tags:      structTagPriority,
+		OmitEmpty: true, // To be compatible with old version from v2.6.0.
+	})
 }
 
 // DaToMapDeep is deprecated, use MapOrStructToMapDeep instead.
 func DaToMapDeep(value interface{}) map[string]interface{} {
-	return MapOrStructToMapDeep(value, false)
+	return MapOrStructToMapDeep(value, true)
 }
 
 // MapOrStructToMapDeep converts `value` to map type recursively(if attribute struct is embedded).

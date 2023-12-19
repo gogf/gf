@@ -8,6 +8,11 @@ package gconv
 
 import "github.com/gogf/gf/v2/os/gtime"
 
+// iVal is used for type assert api for String().
+type iVal interface {
+	Val() interface{}
+}
+
 // iString is used for type assert api for String().
 type iString interface {
 	String() string
