@@ -213,11 +213,19 @@ func anyValueToMapBeforeToRecord(value interface{}) map[string]interface{} {
 	return gconv.Map(value, gconv.MapOption{Tags: structTagPriority})
 }
 
-// DataToMapDeep converts `value` to map type recursively(if attribute struct is embedded).
+// DaToMapDeep is deprecated, use MapOrStructToMapDeep instead.
+func DaToMapDeep(value interface{}) map[string]interface{} {
+	return MapOrStructToMapDeep(value, false)
+}
+
+// MapOrStructToMapDeep converts `value` to map type recursively(if attribute struct is embedded).
 // The parameter `value` should be type of *map/map/*struct/struct.
 // It supports embedded struct definition for struct.
-func DataToMapDeep(value interface{}) map[string]interface{} {
-	m := gconv.Map(value, gconv.MapOption{Tags: structTagPriority})
+func MapOrStructToMapDeep(value interface{}, omitempty bool) map[string]interface{} {
+	m := gconv.Map(value, gconv.MapOption{
+		Tags:      structTagPriority,
+		OmitEmpty: omitempty,
+	})
 	for k, v := range m {
 		switch v.(type) {
 		case time.Time, *time.Time, gtime.Time, *gtime.Time, gjson.Json, *gjson.Json:
@@ -413,7 +421,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 		newArgs = formatWhereInterfaces(db, gconv.Interfaces(in.Where), buffer, newArgs)
 
 	case reflect.Map:
-		for key, value := range DataToMapDeep(in.Where) {
+		for key, value := range MapOrStructToMapDeep(in.Where, true) {
 			if in.OmitNil && empty.IsNil(value) {
 				continue
 			}
@@ -468,7 +476,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 		var (
 			reflectType = reflectInfo.OriginValue.Type()
 			structField reflect.StructField
-			data        = DataToMapDeep(in.Where)
+			data        = MapOrStructToMapDeep(in.Where, true)
 		)
 		// If `Prefix` is given, it checks and retrieves the table name.
 		if in.Prefix != "" {
