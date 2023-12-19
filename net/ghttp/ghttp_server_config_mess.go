@@ -32,6 +32,11 @@ func (s *Server) SetSwaggerPath(path string) {
 	s.config.SwaggerPath = path
 }
 
+// SetSwaggerJsURL sets the SwaggerJsURL for server.
+func (s *Server) SetSwaggerJsURL(jsURL string) {
+	s.config.SwaggerJsURL = jsURL
+}
+
 // SetOpenApiPath sets the OpenApiPath for server.
 func (s *Server) SetOpenApiPath(path string) {
 	s.config.OpenApiPath = path
