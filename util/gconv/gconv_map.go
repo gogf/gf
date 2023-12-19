@@ -29,7 +29,7 @@ type MapOption struct {
 	// a map[string]interface{} type variable.
 	Deep bool
 
-	// OmitEmpty ignores the attributes that has json omitempty tag.
+	// OmitEmpty ignores the attributes that has json `omitempty` tag.
 	OmitEmpty bool
 
 	// Tags specifies the converted map key name by struct tag name.
@@ -327,13 +327,35 @@ func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) in
 		return dataMap
 
 	case reflect.Struct:
+		var dataMap = make(map[string]interface{})
+		// Map converting interface check.
+		if v, ok := in.Value.(iMapStrAny); ok {
+			// Value copy, in case of concurrent safety.
+			for mapK, mapV := range v.MapStrAny() {
+				if in.RecursiveOption {
+					dataMap[mapK] = doMapConvertForMapOrStructValue(
+						doMapConvertForMapOrStructValueInput{
+							IsRoot:          false,
+							Value:           mapV,
+							RecursiveType:   in.RecursiveType,
+							RecursiveOption: in.RecursiveType == recursiveTypeTrue,
+							Option:          in.Option,
+						},
+					)
+				} else {
+					dataMap[mapK] = mapV
+				}
+			}
+			if len(dataMap) > 0 {
+				return dataMap
+			}
+		}
 		// Using reflect for converting.
 		var (
 			rtField     reflect.StructField
 			rvField     reflect.Value
 			reflectType = reflectValue.Type() // attribute value type.
 			mapKey      = ""                  // mapKey may be the tag name or the struct attribute name.
-			dataMap     = make(map[string]interface{})
 		)
 		for i := 0; i < reflectValue.NumField(); i++ {
 			rtField = reflectType.Field(i)

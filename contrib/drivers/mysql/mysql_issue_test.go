@@ -7,6 +7,7 @@
 package mysql_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -887,6 +888,7 @@ func Test_Issue3204(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
+	// where
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			g.Meta     `orm:"do:true"`
@@ -904,6 +906,66 @@ func Test_Issue3204(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(all), 1)
 		t.Assert(all[0]["id"], 2)
+	})
+	// data
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			g.Meta     `orm:"do:true"`
+			Id         interface{} `orm:"id,omitempty"`
+			Passport   interface{} `orm:"passport,omitempty"`
+			Password   interface{} `orm:"password,omitempty"`
+			Nickname   interface{} `orm:"nickname,omitempty"`
+			CreateTime interface{} `orm:"create_time,omitempty"`
+		}
+		var (
+			err      error
+			sqlArray []string
+			insertId int64
+			data     = User{
+				Id:       20,
+				Passport: "passport_20",
+				Password: "",
+			}
+		)
+		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			insertId, err = db.Ctx(ctx).Model(table).Data(data).InsertAndGetId()
+			return err
+		})
+		t.AssertNil(err)
+		t.Assert(insertId, 20)
+		t.Assert(
+			gstr.Contains(sqlArray[len(sqlArray)-1], "(`id`,`passport`) VALUES(20,'passport_20')"),
+			true,
+		)
+	})
+	// update data
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			g.Meta     `orm:"do:true"`
+			Id         interface{} `orm:"id,omitempty"`
+			Passport   interface{} `orm:"passport,omitempty"`
+			Password   interface{} `orm:"password,omitempty"`
+			Nickname   interface{} `orm:"nickname,omitempty"`
+			CreateTime interface{} `orm:"create_time,omitempty"`
+		}
+		var (
+			err      error
+			sqlArray []string
+			data     = User{
+				Passport: "passport_1",
+				Password: "",
+				Nickname: "",
+			}
+		)
+		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			_, err = db.Ctx(ctx).Model(table).Data(data).WherePri(1).Update()
+			return err
+		})
+		t.AssertNil(err)
+		t.Assert(
+			gstr.Contains(sqlArray[len(sqlArray)-1], "SET `passport`='passport_1' WHERE `id`=1"),
+			true,
+		)
 	})
 }
 

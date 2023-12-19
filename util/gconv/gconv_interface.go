@@ -83,6 +83,11 @@ type iUints interface {
 	Uints() []uint
 }
 
+// iMapStrAny is the interface support for converting struct parameter to map.
+type iMapStrAny interface {
+	MapStrAny() map[string]interface{}
+}
+
 // iUnmarshalValue is the interface for custom defined types customizing value assignment.
 // Note that only pointer can implement interface iUnmarshalValue.
 type iUnmarshalValue interface {
