@@ -27,13 +27,11 @@ func Test_DB_Ping(t *testing.T) {
 }
 
 func TestTables(t *testing.T) {
+	tables := []string{"A_tables", "A_tables2"}
+	for _, v := range tables {
+		createInitTable(v)
+	}
 	gtest.C(t, func(t *gtest.T) {
-		tables := []string{"A_tables", "A_tables2"}
-
-		for _, v := range tables {
-			createInitTable(v)
-			// createTable(v)
-		}
 		result, err := db.Tables(ctx)
 		gtest.Assert(err, nil)
 
@@ -63,13 +61,31 @@ func TestTables(t *testing.T) {
 	})
 }
 
-func TestTableFields(t *testing.T) {
+// The test scenario index of this test case (exact matching field) is a keyword in the Dameng database and cannot exist as a field name.
+// If the data structure previously migrated from mysql has an index (completely matching field), it will also be allowed.
+// However, when processing the index (completely matching field), the adapter will automatically add security character
+// In principle, such problems will not occur if you directly use Dameng database initialization instead of migrating the data structure from mysql.
+// If so, the adapter has also taken care of it.
+func TestTablesFalse(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		tables := "A_tables"
+		tables := []string{"A_tables", "A_tables2"}
+		for _, v := range tables {
+			_, err := createTableFalse(v)
+			gtest.Assert(err, fmt.Errorf("createTableFalse"))
+			// createTable(v)
+		}
+	})
+}
+
+func TestTableFields(t *testing.T) {
+	tables := "A_tables"
+	createInitTable(tables)
+	gtest.C(t, func(t *gtest.T) {
 		var expect = map[string][]interface{}{
 			"ID":           {"BIGINT", false},
 			"ACCOUNT_NAME": {"VARCHAR", false},
 			"PWD_RESET":    {"TINYINT", false},
+			"ATTR_INDEX":   {"INT", true},
 			"DELETED":      {"INT", false},
 			"CREATED_TIME": {"TIMESTAMP", false},
 		}
@@ -98,8 +114,9 @@ func TestTableFields(t *testing.T) {
 }
 
 func Test_DB_Query(t *testing.T) {
+	tableName := "A_tables"
+	createInitTable(tableName)
 	gtest.C(t, func(t *gtest.T) {
-		tableName := "A_tables"
 		// createTable(tableName)
 		_, err := db.Query(ctx, fmt.Sprintf("SELECT * from %s", tableName))
 		t.AssertNil(err)
@@ -121,16 +138,18 @@ func Test_DB_Query(t *testing.T) {
 }
 
 func TestModelSave(t *testing.T) {
+	table := "A_tables"
+	createInitTable(table)
 	gtest.C(t, func(t *gtest.T) {
-		// createTable("A_tables")
 		data := []User{
 			{
 				ID:          100,
 				AccountName: "user_100",
+				AttrIndex:   100,
 				CreatedTime: time.Now(),
 			},
 		}
-		_, err := db.Model("A_tables").Data(data).Save()
+		_, err := db.Model(table).Data(data).Save()
 		gtest.Assert(err, nil)
 
 		data2 := []User{
@@ -139,7 +158,7 @@ func TestModelSave(t *testing.T) {
 				AccountName: "user_101",
 			},
 		}
-		_, err = db.Model("A_tables").Data(&data2).Save()
+		_, err = db.Model(table).Data(&data2).Save()
 		gtest.Assert(err, nil)
 
 		data3 := []User{
@@ -149,7 +168,7 @@ func TestModelSave(t *testing.T) {
 				PwdReset:    10,
 			},
 		}
-		_, err = db.Model("A_tables").Save(data3)
+		_, err = db.Model(table).Save(data3)
 		gtest.Assert(err, nil)
 
 		data4 := []User{
@@ -159,63 +178,68 @@ func TestModelSave(t *testing.T) {
 				CreatedTime: time.Now(),
 			},
 		}
-		_, err = db.Model("A_tables").Save(&data4)
+		_, err = db.Model(table).Save(&data4)
 		gtest.Assert(err, nil)
 
 		// TODO:: Should be Supported 'Replace' Operation
-		// _, err = db.Schema(TestDbName).Replace(ctx, "DoInsert", data, 10)
+		// _, err = db.Schema(TestDBName).Replace(ctx, "DoInsert", data, 10)
 		// gtest.Assert(err, nil)
 	})
 }
 
 func TestModelInsert(t *testing.T) {
 	// g.Model.insert not lost default not null coloumn
+	table := "A_tables"
+	createInitTable(table)
 	gtest.C(t, func(t *gtest.T) {
-		// createTable("A_tables")
 		i := 200
 		data := User{
 			ID:          int64(i),
 			AccountName: fmt.Sprintf(`A%dtwo`, i),
 			PwdReset:    0,
+			AttrIndex:   99,
 			// CreatedTime: time.Now(),
 			UpdatedTime: time.Now(),
 		}
-		// _, err := db.Schema(TestDbName).Model("A_tables").Data(data).Insert()
-		_, err := db.Model("A_tables").Insert(&data)
+		// _, err := db.Schema(TestDBName).Model(table).Data(data).Insert()
+		_, err := db.Model(table).Insert(&data)
 		gtest.Assert(err, nil)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		// createTable("A_tables")
 		i := 201
 		data := User{
 			ID:          int64(i),
 			AccountName: fmt.Sprintf(`A%dtwoONE`, i),
 			PwdReset:    1,
 			CreatedTime: time.Now(),
+			AttrIndex:   98,
 			// UpdatedTime: time.Now(),
 		}
-		// _, err := db.Schema(TestDbName).Model("A_tables").Data(data).Insert()
-		_, err := db.Model("A_tables").Data(&data).Insert()
+		// _, err := db.Schema(TestDBName).Model(table).Data(data).Insert()
+		_, err := db.Model(table).Data(&data).Insert()
 		gtest.Assert(err, nil)
 	})
 }
 
 func TestDBInsert(t *testing.T) {
+	table := "A_tables"
+	createInitTable("A_tables")
 	gtest.C(t, func(t *gtest.T) {
-		// createTable("A_tables")
 		i := 300
 		data := g.Map{
 			"ID":           i,
 			"ACCOUNT_NAME": fmt.Sprintf(`A%dthress`, i),
 			"PWD_RESET":    3,
+			"ATTR_INDEX":   98,
 		}
-		_, err := db.Insert(ctx, "A_tables", &data)
+		_, err := db.Insert(ctx, table, &data)
 		gtest.Assert(err, nil)
 	})
 }
 
 func Test_DB_Exec(t *testing.T) {
+	createInitTable("A_tables")
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Exec(ctx, "SELECT ? from dual", 1)
 		t.AssertNil(err)
@@ -226,18 +250,18 @@ func Test_DB_Exec(t *testing.T) {
 }
 
 func Test_DB_Insert(t *testing.T) {
-	// table := createTable()
-	// defer dropTable(table)
+	table := "A_tables"
+	createInitTable(table)
 	gtest.C(t, func(t *gtest.T) {
 		// normal map
-		_, err := db.Insert(ctx, "A_tables", g.Map{
+		_, err := db.Insert(ctx, table, g.Map{
 			"ID":           1000,
 			"ACCOUNT_NAME": "map1",
 			"CREATED_TIME": gtime.Now(),
 		})
 		t.AssertNil(err)
 
-		result, err := db.Insert(ctx, "A_tables", g.Map{
+		result, err := db.Insert(ctx, table, g.Map{
 			"ID":           "2000",
 			"ACCOUNT_NAME": "map2",
 			"CREATED_TIME": gtime.Now(),
@@ -246,7 +270,7 @@ func Test_DB_Insert(t *testing.T) {
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
 
-		result, err = db.Insert(ctx, "A_tables", g.Map{
+		result, err = db.Insert(ctx, table, g.Map{
 			"ID":           3000,
 			"ACCOUNT_NAME": "map3",
 			// "CREATED_TIME": gtime.Now(),
@@ -256,7 +280,7 @@ func Test_DB_Insert(t *testing.T) {
 		t.Assert(n, 1)
 
 		// struct
-		result, err = db.Insert(ctx, "A_tables", User{
+		result, err = db.Insert(ctx, table, User{
 			ID:          4000,
 			AccountName: "struct_4",
 			// CreatedTime: timeStr,
@@ -266,7 +290,7 @@ func Test_DB_Insert(t *testing.T) {
 		n, _ = result.RowsAffected()
 		t.Assert(n, 1)
 
-		ones, err := db.Model("A_tables").Where("ID", 4000).All()
+		ones, err := db.Model(table).Where("ID", 4000).All()
 		t.AssertNil(err)
 		t.Assert(ones[0]["ID"].Int(), 4000)
 		t.Assert(ones[0]["ACCOUNT_NAME"].String(), "struct_4")
@@ -276,7 +300,7 @@ func Test_DB_Insert(t *testing.T) {
 
 		// *struct
 		timeStr := time.Now()
-		result, err = db.Insert(ctx, "A_tables", &User{
+		result, err = db.Insert(ctx, table, &User{
 			ID:          5000,
 			AccountName: "struct_5",
 			CreatedTime: timeStr,
@@ -286,13 +310,13 @@ func Test_DB_Insert(t *testing.T) {
 		n, _ = result.RowsAffected()
 		t.Assert(n, 1)
 
-		one, err := db.Model("A_tables").Where("ID", 5000).One()
+		one, err := db.Model(table).Where("ID", 5000).One()
 		t.AssertNil(err)
 		t.Assert(one["ID"].Int(), 5000)
 		t.Assert(one["ACCOUNT_NAME"].String(), "struct_5")
 
 		// batch with Insert
-		r, err := db.Insert(ctx, "A_tables", g.Slice{
+		r, err := db.Insert(ctx, table, g.Slice{
 			g.Map{
 				"ID":           6000,
 				"ACCOUNT_NAME": "t6000",
@@ -306,7 +330,7 @@ func Test_DB_Insert(t *testing.T) {
 		n, _ = r.RowsAffected()
 		t.Assert(n, 2)
 
-		one, err = db.Model("A_tables").Where("ID", 6000).One()
+		one, err = db.Model(table).Where("ID", 6000).One()
 		t.AssertNil(err)
 		t.Assert(one["ID"].Int(), 6000)
 		t.Assert(one["ACCOUNT_NAME"].String(), "t6000")
@@ -314,8 +338,9 @@ func Test_DB_Insert(t *testing.T) {
 }
 
 func Test_DB_BatchInsert(t *testing.T) {
+	table := "A_tables"
+	createInitTable(table)
 	gtest.C(t, func(t *gtest.T) {
-		table := "A_tables"
 		r, err := db.Insert(ctx, table, g.List{
 			{
 				"ID":           400,
@@ -334,9 +359,6 @@ func Test_DB_BatchInsert(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		table := "A_tables"
-		// table := createTable()
-		// defer dropTable(table)
 		// []interface{}
 		r, err := db.Insert(ctx, table, g.Slice{
 			g.Map{
@@ -357,9 +379,6 @@ func Test_DB_BatchInsert(t *testing.T) {
 
 	// batch insert map
 	gtest.C(t, func(t *gtest.T) {
-		table := "A_tables"
-		// table := createTable()
-		// defer dropTable(table)
 		result, err := db.Insert(ctx, table, g.Map{
 			"ID":           600,
 			"ACCOUNT_NAME": "600_batch_600",
@@ -373,10 +392,9 @@ func Test_DB_BatchInsert(t *testing.T) {
 
 func Test_DB_BatchInsert_Struct(t *testing.T) {
 	// batch insert struct
+	table := "A_tables"
+	createInitTable(table)
 	gtest.C(t, func(t *gtest.T) {
-		table := "A_tables"
-		// table := createTable()
-		// defer dropTable(table)
 		user := &User{
 			ID:          700,
 			AccountName: "BatchInsert_Struct_700",
@@ -391,26 +409,25 @@ func Test_DB_BatchInsert_Struct(t *testing.T) {
 
 func Test_DB_Update(t *testing.T) {
 	table := "A_tables"
-	// table := createInitTable()
+	createInitTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Update(ctx, table, "pwd_reset=7", "id=700")
+		result, err := db.Update(ctx, table, "pwd_reset=7", "id=7")
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
 
-		one, err := db.Model(table).Where("ID", 700).One()
+		one, err := db.Model(table).Where("ID", 7).One()
 		t.AssertNil(err)
-		t.Assert(one["ID"].Int(), 700)
-		t.Assert(one["ACCOUNT_NAME"].String(), "BatchInsert_Struct_700")
+		t.Assert(one["ID"].Int(), 7)
+		t.Assert(one["ACCOUNT_NAME"].String(), "name_7")
 		t.Assert(one["PWD_RESET"].String(), "7")
 	})
 }
 
 func Test_DB_GetAll(t *testing.T) {
 	table := "A_tables"
-	// table := createInitTable()
-	// defer dropTable(table)
+	createInitTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.GetAll(ctx, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 1)
@@ -459,41 +476,38 @@ func Test_DB_GetAll(t *testing.T) {
 }
 
 func Test_DB_GetOne(t *testing.T) {
-	// table := createInitTable()
 	table := "A_tables"
+	createInitTable(table)
 	gtest.C(t, func(t *gtest.T) {
-		record, err := db.GetOne(ctx, fmt.Sprintf("SELECT * FROM %s WHERE account_name=?", table), "struct_4")
+		record, err := db.GetOne(ctx, fmt.Sprintf("SELECT * FROM %s WHERE account_name=?", table), "name_4")
 		t.AssertNil(err)
-		t.Assert(record["ACCOUNT_NAME"].String(), "struct_4")
+		t.Assert(record["ACCOUNT_NAME"].String(), "name_4")
 	})
 }
 
 func Test_DB_GetValue(t *testing.T) {
 	table := "A_tables"
-	// table := createInitTable()
-	// defer dropTable(table)
+	createInitTable(table)
 	gtest.C(t, func(t *gtest.T) {
-		value, err := db.GetValue(ctx, fmt.Sprintf("SELECT id FROM %s WHERE account_name=?", table), "map2")
+		value, err := db.GetValue(ctx, fmt.Sprintf("SELECT id FROM %s WHERE account_name=?", table), "name_2")
 		t.AssertNil(err)
-		t.Assert(value.Int(), 2000)
+		t.Assert(value.Int(), 2)
 	})
 }
 
 func Test_DB_GetCount(t *testing.T) {
 	table := "A_tables"
-	// table := createInitTable()
-	// defer dropTable(table)
+	createInitTable(table)
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.GetCount(ctx, fmt.Sprintf("SELECT * FROM %s", table))
 		t.AssertNil(err)
-		t.Assert(count, 28)
+		t.Assert(count, 10)
 	})
 }
 
 func Test_DB_GetStruct(t *testing.T) {
 	table := "A_tables"
-	// table := createInitTable()
-	// defer dropTable(table)
+	createInitTable(table)
 	gtest.C(t, func(t *gtest.T) {
 		user := new(User)
 		err := db.GetScan(ctx, user, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 3)
@@ -502,33 +516,31 @@ func Test_DB_GetStruct(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		user := new(User)
-		err := db.GetScan(ctx, user, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 200)
+		err := db.GetScan(ctx, user, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 2)
 		t.AssertNil(err)
-		t.Assert(user.AccountName, "A200two")
+		t.Assert(user.AccountName, "name_2")
 	})
 }
 
 func Test_DB_GetStructs(t *testing.T) {
 	table := "A_tables"
-	// table := createInitTable()
-	// defer dropTable(table)
+	createInitTable(table)
 	gtest.C(t, func(t *gtest.T) {
 		var users []User
-		err := db.GetScan(ctx, &users, fmt.Sprintf("SELECT * FROM %s WHERE id>?", table), 4000)
+		err := db.GetScan(ctx, &users, fmt.Sprintf("SELECT * FROM %s WHERE id>?", table), 4)
 		t.AssertNil(err)
-		t.Assert(users[0].ID, 5000)
-		t.Assert(users[1].ID, 6000)
-		t.Assert(users[2].ID, 6001)
-		t.Assert(users[0].AccountName, "struct_5")
-		t.Assert(users[1].AccountName, "t6000")
-		t.Assert(users[2].AccountName, "t6001")
+		t.Assert(users[0].ID, 5)
+		t.Assert(users[1].ID, 6)
+		t.Assert(users[2].ID, 7)
+		t.Assert(users[0].AccountName, "name_5")
+		t.Assert(users[1].AccountName, "name_6")
+		t.Assert(users[2].AccountName, "name_7")
 	})
 }
 
 func Test_DB_GetScan(t *testing.T) {
 	table := "A_tables"
-	// table := createInitTable()
-	// defer dropTable(table)
+	createInitTable(table)
 	gtest.C(t, func(t *gtest.T) {
 		user := new(User)
 		err := db.GetScan(ctx, user, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 3)
@@ -555,17 +567,17 @@ func Test_DB_GetScan(t *testing.T) {
 }
 
 func Test_DB_Delete(t *testing.T) {
-	// table := createInitTable()
-	// defer dropTable(table)
+	table := "A_tables"
+	createInitTable(table)
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Delete(ctx, "A_tables", "id=32")
+		result, err := db.Delete(ctx, table, "id=32")
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 0)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model("A_tables").Where("id", 33).Delete()
+		result, err := db.Model(table).Where("id", 33).Delete()
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 0)
@@ -574,8 +586,7 @@ func Test_DB_Delete(t *testing.T) {
 
 func Test_Empty_Slice_Argument(t *testing.T) {
 	table := "A_tables"
-	// table := createInitTable()
-	// defer dropTable(table)
+	createInitTable(table)
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.GetAll(ctx, fmt.Sprintf(`select * from %s where id in(?)`, table), g.Slice{})
 		t.AssertNil(err)
