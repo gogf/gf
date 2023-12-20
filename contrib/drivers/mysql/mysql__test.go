@@ -55,7 +55,6 @@ func init() {
 	nodeInvalid := gdb.ConfigNode{
 		Link: fmt.Sprintf("mysql:root:%s@tcp(127.0.0.1:3307)/?loc=Local&parseTime=true", TestDbPass),
 	}
-
 	gdb.AddConfigNode("test", nodeDefault)
 	gdb.AddConfigNode("prefix", nodePrefix)
 	gdb.AddConfigNode("nodeinvalid", nodeInvalid)
