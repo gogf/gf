@@ -36,18 +36,18 @@ func New(config ...*Config) (*Redis, error) {
 		usedAdapter Adapter
 	)
 	if len(config) > 0 && config[0] != nil {
-		// Operation client with go redis implements adapter from given configuration.
+		// Redis client with go redis implements adapter from given configuration.
 		usedConfig = config[0]
 		usedAdapter = defaultAdapterFunc(config[0])
 	} else if configFromGlobal, ok := GetConfig(); ok {
-		// Operation client with go redis implements adapter from package configuration.
+		// Redis client with go redis implements adapter from package configuration.
 		usedConfig = configFromGlobal
 		usedAdapter = defaultAdapterFunc(configFromGlobal)
 	}
 	if usedConfig == nil {
 		return nil, gerror.NewCode(
 			gcode.CodeInvalidConfiguration,
-			`no configuration found for creating Operation client`,
+			`no configuration found for creating Redis client`,
 		)
 	}
 	if usedAdapter == nil {

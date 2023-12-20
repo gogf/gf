@@ -80,7 +80,7 @@ func (c *Conn) Do(ctx context.Context, command string, args ...interface{}) (rep
 
 	// Trace span start.
 	tr := otel.GetTracerProvider().Tracer(traceInstrumentName, trace.WithInstrumentationVersion(gf.VERSION))
-	_, span := tr.Start(ctx, "Operation."+command, trace.WithSpanKind(trace.SpanKindInternal))
+	_, span := tr.Start(ctx, "Redis."+command, trace.WithSpanKind(trace.SpanKindInternal))
 	defer span.End()
 
 	timestampMilli1 := gtime.TimestampMilli()
@@ -112,7 +112,7 @@ func (c *Conn) doCommand(ctx context.Context, command string, args ...interface{
 		if c.ps != nil {
 			err = c.ps.Unsubscribe(ctx, argStrSlice...)
 			if err != nil {
-				err = gerror.Wrapf(err, `Operation PubSub Unsubscribe failed with arguments "%v"`, argStrSlice)
+				err = gerror.Wrapf(err, `Redis PubSub Unsubscribe failed with arguments "%v"`, argStrSlice)
 			}
 		}
 
@@ -120,7 +120,7 @@ func (c *Conn) doCommand(ctx context.Context, command string, args ...interface{
 		if c.ps != nil {
 			err = c.ps.PUnsubscribe(ctx, argStrSlice...)
 			if err != nil {
-				err = gerror.Wrapf(err, `Operation PubSub PUnsubscribe failed with arguments "%v"`, argStrSlice)
+				err = gerror.Wrapf(err, `Redis PubSub PUnsubscribe failed with arguments "%v"`, argStrSlice)
 			}
 		}
 
@@ -130,7 +130,7 @@ func (c *Conn) doCommand(ctx context.Context, command string, args ...interface{
 		copy(arguments[1:], args)
 		reply, err = c.resultToVar(c.redis.client.Do(ctx, arguments...).Result())
 		if err != nil {
-			err = gerror.Wrapf(err, `Operation Client Do failed with arguments "%v"`, arguments)
+			err = gerror.Wrapf(err, `Redis Client Do failed with arguments "%v"`, arguments)
 		}
 	}
 	return
@@ -174,7 +174,7 @@ func (c *Conn) Receive(ctx context.Context) (*gvar.Var, error) {
 	if c.ps != nil {
 		v, err := c.resultToVar(c.ps.Receive(ctx))
 		if err != nil {
-			err = gerror.Wrapf(err, `Operation PubSub Receive failed`)
+			err = gerror.Wrapf(err, `Redis PubSub Receive failed`)
 		}
 		return v, err
 	}
@@ -186,7 +186,7 @@ func (c *Conn) Close(ctx context.Context) (err error) {
 	if c.ps != nil {
 		err = c.ps.Close()
 		if err != nil {
-			err = gerror.Wrapf(err, `Operation PubSub Close failed`)
+			err = gerror.Wrapf(err, `Redis PubSub Close failed`)
 		}
 	}
 	return

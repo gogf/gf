@@ -116,6 +116,6 @@ func Test_GroupScript_ScriptKill(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		err := redis.GroupScript().ScriptKill(ctx)
-		t.Assert(err.Error(), `Operation Client Do failed with arguments "[Script Kill]": NOTBUSY No scripts in execution right now.`)
+		t.Assert(err.Error(), `Redis Client Do failed with arguments "[Script Kill]": NOTBUSY No scripts in execution right now.`)
 	})
 }

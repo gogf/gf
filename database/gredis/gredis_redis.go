@@ -45,7 +45,7 @@ type (
 )
 
 const (
-	errorNilRedis = `the Operation object is nil`
+	errorNilRedis = `the Redis object is nil`
 )
 
 var (

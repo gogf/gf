@@ -18,8 +18,8 @@ import (
 // StorageRedisHashTable implements the Session Storage interface with redis hash table.
 type StorageRedisHashTable struct {
 	StorageBase
-	redis  *gredis.Redis // Operation client for session storage.
-	prefix string        // Operation key prefix for session id.
+	redis  *gredis.Redis // Redis client for session storage.
+	prefix string        // Redis key prefix for session id.
 }
 
 // NewStorageRedisHashTable creates and returns a redis hash table storage object for session.

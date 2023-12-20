@@ -30,6 +30,8 @@ type AdapterGroup interface {
 	GroupString() IGroupString
 }
 
+// AdapterOperation is the core operation functions for redis.
+// These functions can be easily overwritten by custom implements.
 type AdapterOperation interface {
 	// Do send a command to the server and returns the received reply.
 	// It uses json.Marshal for struct/slice/map type values before committing them to redis.
