@@ -18,13 +18,13 @@ import (
 
 // GroupGeneric provides generic functions of redis.
 type GroupGeneric struct {
-	Redis gredis.Adapter
+	Operation gredis.AdapterOperation
 }
 
 // GroupGeneric creates and returns GroupGeneric.
 func (r *Redis) GroupGeneric() gredis.IGroupGeneric {
 	return GroupGeneric{
-		Redis: r,
+		Operation: r.AdapterOperation,
 	}
 }
 
@@ -45,7 +45,7 @@ func (r GroupGeneric) Copy(ctx context.Context, source, destination string, opti
 	if len(option) > 0 {
 		usedOption = option[0]
 	}
-	v, err := r.Redis.Do(ctx, "Copy", mustMergeOptionToArgs(
+	v, err := r.Operation.Do(ctx, "Copy", mustMergeOptionToArgs(
 		[]interface{}{source, destination}, usedOption,
 	)...)
 	return v.Int64(), err
@@ -59,7 +59,7 @@ func (r GroupGeneric) Copy(ctx context.Context, source, destination string, opti
 //
 // https://redis.io/commands/exists/
 func (r GroupGeneric) Exists(ctx context.Context, keys ...string) (int64, error) {
-	v, err := r.Redis.Do(ctx, "Exists", gconv.Interfaces(keys)...)
+	v, err := r.Operation.Do(ctx, "Exists", gconv.Interfaces(keys)...)
 	return v.Int64(), err
 }
 
@@ -70,7 +70,7 @@ func (r GroupGeneric) Exists(ctx context.Context, keys ...string) (int64, error)
 //
 // https://redis.io/commands/type/
 func (r GroupGeneric) Type(ctx context.Context, key string) (string, error) {
-	v, err := r.Redis.Do(ctx, "Type", key)
+	v, err := r.Operation.Do(ctx, "Type", key)
 	return v.String(), err
 }
 
@@ -83,7 +83,7 @@ func (r GroupGeneric) Type(ctx context.Context, key string) (string, error) {
 //
 // https://redis.io/commands/unlink/
 func (r GroupGeneric) Unlink(ctx context.Context, keys ...string) (int64, error) {
-	v, err := r.Redis.Do(ctx, "Unlink", gconv.Interfaces(keys)...)
+	v, err := r.Operation.Do(ctx, "Unlink", gconv.Interfaces(keys)...)
 	return v.Int64(), err
 }
 
@@ -96,7 +96,7 @@ func (r GroupGeneric) Unlink(ctx context.Context, keys ...string) (int64, error)
 //
 // https://redis.io/commands/rename/
 func (r GroupGeneric) Rename(ctx context.Context, key, newKey string) error {
-	_, err := r.Redis.Do(ctx, "Rename", key, newKey)
+	_, err := r.Operation.Do(ctx, "Rename", key, newKey)
 	return err
 }
 
@@ -111,7 +111,7 @@ func (r GroupGeneric) Rename(ctx context.Context, key, newKey string) error {
 //
 // https://redis.io/commands/renamenx/
 func (r GroupGeneric) RenameNX(ctx context.Context, key, newKey string) (int64, error) {
-	v, err := r.Redis.Do(ctx, "RenameNX", key, newKey)
+	v, err := r.Operation.Do(ctx, "RenameNX", key, newKey)
 	return v.Int64(), err
 }
 
@@ -126,7 +126,7 @@ func (r GroupGeneric) RenameNX(ctx context.Context, key, newKey string) (int64, 
 //
 // https://redis.io/commands/move/
 func (r GroupGeneric) Move(ctx context.Context, key string, db int) (int64, error) {
-	v, err := r.Redis.Do(ctx, "Move", key, db)
+	v, err := r.Operation.Do(ctx, "Move", key, db)
 	return v.Int64(), err
 }
 
@@ -137,7 +137,7 @@ func (r GroupGeneric) Move(ctx context.Context, key string, db int) (int64, erro
 //
 // https://redis.io/commands/del/
 func (r GroupGeneric) Del(ctx context.Context, keys ...string) (int64, error) {
-	v, err := r.Redis.Do(ctx, "Del", gconv.Interfaces(keys)...)
+	v, err := r.Operation.Do(ctx, "Del", gconv.Interfaces(keys)...)
 	return v.Int64(), err
 }
 
@@ -147,7 +147,7 @@ func (r GroupGeneric) Del(ctx context.Context, keys ...string) (int64, error) {
 //
 // https://redis.io/commands/randomkey/
 func (r GroupGeneric) RandomKey(ctx context.Context) (string, error) {
-	v, err := r.Redis.Do(ctx, "RandomKey")
+	v, err := r.Operation.Do(ctx, "RandomKey")
 	return v.String(), err
 }
 
@@ -155,7 +155,7 @@ func (r GroupGeneric) RandomKey(ctx context.Context) (string, error) {
 //
 // https://redis.io/commands/dbsize/
 func (r GroupGeneric) DBSize(ctx context.Context) (int64, error) {
-	v, err := r.Redis.Do(ctx, "DBSize")
+	v, err := r.Operation.Do(ctx, "DBSize")
 	return v.Int64(), err
 }
 
@@ -166,7 +166,7 @@ func (r GroupGeneric) DBSize(ctx context.Context) (int64, error) {
 //
 // https://redis.io/commands/keys/
 func (r GroupGeneric) Keys(ctx context.Context, pattern string) ([]string, error) {
-	v, err := r.Redis.Do(ctx, "Keys", pattern)
+	v, err := r.Operation.Do(ctx, "Keys", pattern)
 	return v.Strings(), err
 }
 
@@ -174,7 +174,7 @@ func (r GroupGeneric) Keys(ctx context.Context, pattern string) ([]string, error
 //
 // https://redis.io/commands/flushdb/
 func (r GroupGeneric) FlushDB(ctx context.Context, option ...gredis.FlushOp) error {
-	_, err := r.Redis.Do(ctx, "FlushDB", gconv.Interfaces(option)...)
+	_, err := r.Operation.Do(ctx, "FlushDB", gconv.Interfaces(option)...)
 	return err
 }
 
@@ -191,7 +191,7 @@ func (r GroupGeneric) FlushDB(ctx context.Context, option ...gredis.FlushOp) err
 //
 // https://redis.io/commands/flushall/
 func (r GroupGeneric) FlushAll(ctx context.Context, option ...gredis.FlushOp) error {
-	_, err := r.Redis.Do(ctx, "FlushAll", gconv.Interfaces(option)...)
+	_, err := r.Operation.Do(ctx, "FlushAll", gconv.Interfaces(option)...)
 	return err
 }
 
@@ -208,7 +208,7 @@ func (r GroupGeneric) Expire(ctx context.Context, key string, seconds int64, opt
 	if len(option) > 0 {
 		usedOption = option[0]
 	}
-	v, err := r.Redis.Do(ctx, "Expire", mustMergeOptionToArgs(
+	v, err := r.Operation.Do(ctx, "Expire", mustMergeOptionToArgs(
 		[]interface{}{key, seconds}, usedOption,
 	)...)
 	return v.Int64(), err
@@ -229,7 +229,7 @@ func (r GroupGeneric) ExpireAt(ctx context.Context, key string, time time.Time, 
 	if len(option) > 0 {
 		usedOption = option[0]
 	}
-	v, err := r.Redis.Do(ctx, "ExpireAt", mustMergeOptionToArgs(
+	v, err := r.Operation.Do(ctx, "ExpireAt", mustMergeOptionToArgs(
 		[]interface{}{key, gtime.New(time).Timestamp()}, usedOption,
 	)...)
 	return v.Int64(), err
@@ -243,7 +243,7 @@ func (r GroupGeneric) ExpireAt(ctx context.Context, key string, time time.Time, 
 //
 // https://redis.io/commands/expiretime/
 func (r GroupGeneric) ExpireTime(ctx context.Context, key string) (*gvar.Var, error) {
-	return r.Redis.Do(ctx, "ExpireTime", key)
+	return r.Operation.Do(ctx, "ExpireTime", key)
 }
 
 // TTL returns the remaining time to live of a key that has a timeout.
@@ -263,7 +263,7 @@ func (r GroupGeneric) ExpireTime(ctx context.Context, key string) (*gvar.Var, er
 //
 // https://redis.io/commands/ttl/
 func (r GroupGeneric) TTL(ctx context.Context, key string) (int64, error) {
-	v, err := r.Redis.Do(ctx, "TTL", key)
+	v, err := r.Operation.Do(ctx, "TTL", key)
 	return v.Int64(), err
 }
 
@@ -276,7 +276,7 @@ func (r GroupGeneric) TTL(ctx context.Context, key string) (int64, error) {
 //
 // https://redis.io/commands/persist/
 func (r GroupGeneric) Persist(ctx context.Context, key string) (int64, error) {
-	v, err := r.Redis.Do(ctx, "Persist", key)
+	v, err := r.Operation.Do(ctx, "Persist", key)
 	return v.Int64(), err
 }
 
@@ -293,7 +293,7 @@ func (r GroupGeneric) PExpire(ctx context.Context, key string, milliseconds int6
 	if len(option) > 0 {
 		usedOption = option[0]
 	}
-	v, err := r.Redis.Do(ctx, "PExpire", mustMergeOptionToArgs(
+	v, err := r.Operation.Do(ctx, "PExpire", mustMergeOptionToArgs(
 		[]interface{}{key, milliseconds}, usedOption,
 	)...)
 	return v.Int64(), err
@@ -308,7 +308,7 @@ func (r GroupGeneric) PExpireAt(ctx context.Context, key string, time time.Time,
 	if len(option) > 0 {
 		usedOption = option[0]
 	}
-	v, err := r.Redis.Do(ctx, "PExpireAt", mustMergeOptionToArgs(
+	v, err := r.Operation.Do(ctx, "PExpireAt", mustMergeOptionToArgs(
 		[]interface{}{key, gtime.New(time).TimestampMilli()}, usedOption,
 	)...)
 	return v.Int64(), err
@@ -322,7 +322,7 @@ func (r GroupGeneric) PExpireAt(ctx context.Context, key string, time time.Time,
 //
 // https://redis.io/commands/pexpiretime/
 func (r GroupGeneric) PExpireTime(ctx context.Context, key string) (*gvar.Var, error) {
-	return r.Redis.Do(ctx, "PExpireTime", key)
+	return r.Operation.Do(ctx, "PExpireTime", key)
 }
 
 // PTTL like TTL this command returns the remaining time to live of a key that has an expired set,
@@ -336,6 +336,6 @@ func (r GroupGeneric) PExpireTime(ctx context.Context, key string) (*gvar.Var, e
 //
 //	https://redis.io/commands/pttl/
 func (r GroupGeneric) PTTL(ctx context.Context, key string) (int64, error) {
-	v, err := r.Redis.Do(ctx, "PTTL", key)
+	v, err := r.Operation.Do(ctx, "PTTL", key)
 	return v.Int64(), err
 }

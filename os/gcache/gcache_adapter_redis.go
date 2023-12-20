@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-// AdapterRedis is the gcache adapter implements using Redis server.
+// AdapterRedis is the gcache adapter implements using Operation server.
 type AdapterRedis struct {
 	redis *gredis.Redis
 }
@@ -342,7 +342,7 @@ func (c *AdapterRedis) Update(ctx context.Context, key interface{}, value interf
 		_, err = c.redis.Set(ctx, redisKey, value)
 	} else {
 		// update SetEX -> SET PX Option(millisecond)
-		// Starting with Redis version 2.6.12: Added the EX, PX, NX and XX options.
+		// Starting with Operation version 2.6.12: Added the EX, PX, NX and XX options.
 		_, err = c.redis.Set(ctx, redisKey, value, gredis.SetOption{TTLOption: gredis.TTLOption{PX: gconv.PtrInt64(oldPTTL)}})
 	}
 	return oldValue, true, err

@@ -315,7 +315,7 @@ func Test_GroupGeneric_Expire(t *testing.T) {
 		t.AssertEQ(ttl, int64(1))
 	})
 	// With Option.
-	// Starting with Redis version 7.0.0: Added options: NX, XX, GT and LT.
+	// Starting with Operation version 7.0.0: Added options: NX, XX, GT and LT.
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
@@ -357,7 +357,7 @@ func Test_GroupGeneric_ExpireAt(t *testing.T) {
 		t.AssertEQ(result, int64(0))
 	})
 	// With Option.
-	// Starting with Redis version 7.0.0: Added options: NX, XX, GT and LT.
+	// Starting with Operation version 7.0.0: Added options: NX, XX, GT and LT.
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
