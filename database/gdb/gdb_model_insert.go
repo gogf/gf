@@ -268,7 +268,7 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 
 	default:
 		// It uses gconv.Map here to simply fo the type converting from interface{} to map[string]interface{},
-		// as there's another DataToMapDeep in next logic to do the deep converting.
+		// as there's another MapOrStructToMapDeep in next logic to do the deep converting.
 		reflectInfo := reflection.OriginValueAndKind(newData)
 		switch reflectInfo.OriginKind {
 		// If it's slice type, it then converts it to List type.

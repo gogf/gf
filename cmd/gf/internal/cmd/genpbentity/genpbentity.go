@@ -31,16 +31,17 @@ import (
 type (
 	CGenPbEntity      struct{}
 	CGenPbEntityInput struct {
-		g.Meta       `name:"pbentity" config:"{CGenPbEntityConfig}" brief:"{CGenPbEntityBrief}" eg:"{CGenPbEntityEg}" ad:"{CGenPbEntityAd}"`
-		Path         string `name:"path"         short:"p" brief:"{CGenPbEntityBriefPath}" d:"manifest/protobuf/pbentity"`
-		Package      string `name:"package"      short:"k" brief:"{CGenPbEntityBriefPackage}"`
-		Link         string `name:"link"         short:"l" brief:"{CGenPbEntityBriefLink}"`
-		Tables       string `name:"tables"       short:"t" brief:"{CGenPbEntityBriefTables}"`
-		Prefix       string `name:"prefix"       short:"f" brief:"{CGenPbEntityBriefPrefix}"`
-		RemovePrefix string `name:"removePrefix" short:"r" brief:"{CGenPbEntityBriefRemovePrefix}"`
-		NameCase     string `name:"nameCase"     short:"n" brief:"{CGenPbEntityBriefNameCase}" d:"Camel"`
-		JsonCase     string `name:"jsonCase"     short:"j" brief:"{CGenPbEntityBriefJsonCase}" d:"none"`
-		Option       string `name:"option"       short:"o" brief:"{CGenPbEntityBriefOption}"`
+		g.Meta            `name:"pbentity" config:"{CGenPbEntityConfig}" brief:"{CGenPbEntityBrief}" eg:"{CGenPbEntityEg}" ad:"{CGenPbEntityAd}"`
+		Path              string `name:"path"              short:"p"  brief:"{CGenPbEntityBriefPath}" d:"manifest/protobuf/pbentity"`
+		Package           string `name:"package"           short:"k"  brief:"{CGenPbEntityBriefPackage}"`
+		Link              string `name:"link"              short:"l"  brief:"{CGenPbEntityBriefLink}"`
+		Tables            string `name:"tables"            short:"t"  brief:"{CGenPbEntityBriefTables}"`
+		Prefix            string `name:"prefix"            short:"f"  brief:"{CGenPbEntityBriefPrefix}"`
+		RemovePrefix      string `name:"removePrefix"      short:"r"  brief:"{CGenPbEntityBriefRemovePrefix}"`
+		RemoveFieldPrefix string `name:"removeFieldPrefix" short:"rf" brief:"{CGenPbEntityBriefRemoveFieldPrefix}"`
+		NameCase          string `name:"nameCase"          short:"n"  brief:"{CGenPbEntityBriefNameCase}" d:"Camel"`
+		JsonCase          string `name:"jsonCase"          short:"j"  brief:"{CGenPbEntityBriefJsonCase}" d:"none"`
+		Option            string `name:"option"            short:"o"  brief:"{CGenPbEntityBriefOption}"`
 	}
 	CGenPbEntityOutput struct{}
 
@@ -87,14 +88,15 @@ CONFIGURATION SUPPORT
 			  option java_package  = "protobuf/demos";
 			  option php_namespace = "protobuf/demos";
 `
-	CGenPbEntityBriefPath         = `directory path for generated files storing`
-	CGenPbEntityBriefPackage      = `package path for all entity proto files`
-	CGenPbEntityBriefLink         = `database configuration, the same as the ORM configuration of GoFrame`
-	CGenPbEntityBriefTables       = `generate models only for given tables, multiple table names separated with ','`
-	CGenPbEntityBriefPrefix       = `add specified prefix for all entity names and entity proto files`
-	CGenPbEntityBriefRemovePrefix = `remove specified prefix of the table, multiple prefix separated with ','`
-	CGenPbEntityBriefOption       = `extra protobuf options`
-	CGenPbEntityBriefGroup        = `
+	CGenPbEntityBriefPath              = `directory path for generated files storing`
+	CGenPbEntityBriefPackage           = `package path for all entity proto files`
+	CGenPbEntityBriefLink              = `database configuration, the same as the ORM configuration of GoFrame`
+	CGenPbEntityBriefTables            = `generate models only for given tables, multiple table names separated with ','`
+	CGenPbEntityBriefPrefix            = `add specified prefix for all entity names and entity proto files`
+	CGenPbEntityBriefRemovePrefix      = `remove specified prefix of the table, multiple prefix separated with ','`
+	CGenPbEntityBriefRemoveFieldPrefix = `remove specified prefix of the field, multiple prefix separated with ','`
+	CGenPbEntityBriefOption            = `extra protobuf options`
+	CGenPbEntityBriefGroup             = `
 specifying the configuration group name of database for generated ORM instance,
 it's not necessary and the default value is "default"
 `
@@ -120,20 +122,21 @@ set it to "none" to ignore json tag generating.
 
 func init() {
 	gtag.Sets(g.MapStrStr{
-		`CGenPbEntityConfig`:            CGenPbEntityConfig,
-		`CGenPbEntityBrief`:             CGenPbEntityBrief,
-		`CGenPbEntityEg`:                CGenPbEntityEg,
-		`CGenPbEntityAd`:                CGenPbEntityAd,
-		`CGenPbEntityBriefPath`:         CGenPbEntityBriefPath,
-		`CGenPbEntityBriefPackage`:      CGenPbEntityBriefPackage,
-		`CGenPbEntityBriefLink`:         CGenPbEntityBriefLink,
-		`CGenPbEntityBriefTables`:       CGenPbEntityBriefTables,
-		`CGenPbEntityBriefPrefix`:       CGenPbEntityBriefPrefix,
-		`CGenPbEntityBriefRemovePrefix`: CGenPbEntityBriefRemovePrefix,
-		`CGenPbEntityBriefGroup`:        CGenPbEntityBriefGroup,
-		`CGenPbEntityBriefNameCase`:     CGenPbEntityBriefNameCase,
-		`CGenPbEntityBriefJsonCase`:     CGenPbEntityBriefJsonCase,
-		`CGenPbEntityBriefOption`:       CGenPbEntityBriefOption,
+		`CGenPbEntityConfig`:                 CGenPbEntityConfig,
+		`CGenPbEntityBrief`:                  CGenPbEntityBrief,
+		`CGenPbEntityEg`:                     CGenPbEntityEg,
+		`CGenPbEntityAd`:                     CGenPbEntityAd,
+		`CGenPbEntityBriefPath`:              CGenPbEntityBriefPath,
+		`CGenPbEntityBriefPackage`:           CGenPbEntityBriefPackage,
+		`CGenPbEntityBriefLink`:              CGenPbEntityBriefLink,
+		`CGenPbEntityBriefTables`:            CGenPbEntityBriefTables,
+		`CGenPbEntityBriefPrefix`:            CGenPbEntityBriefPrefix,
+		`CGenPbEntityBriefRemovePrefix`:      CGenPbEntityBriefRemovePrefix,
+		`CGenPbEntityBriefRemoveFieldPrefix`: CGenPbEntityBriefRemoveFieldPrefix,
+		`CGenPbEntityBriefGroup`:             CGenPbEntityBriefGroup,
+		`CGenPbEntityBriefNameCase`:          CGenPbEntityBriefNameCase,
+		`CGenPbEntityBriefJsonCase`:          CGenPbEntityBriefJsonCase,
+		`CGenPbEntityBriefOption`:            CGenPbEntityBriefOption,
 	})
 }
 
@@ -352,9 +355,16 @@ func generateMessageFieldForPbEntity(index int, field *gdb.TableField, in CGenPb
 			jsonTagStr = " " + jsonTagStr
 		}
 	}
+
+	removeFieldPrefixArray := gstr.SplitAndTrim(in.RemoveFieldPrefix, ",")
+	newFiledName := field.Name
+	for _, v := range removeFieldPrefixArray {
+		newFiledName = gstr.TrimLeftStr(newFiledName, v, 1)
+	}
+
 	return []string{
 		"    #" + localTypeNameStr,
-		" #" + formatCase(field.Name, in.NameCase),
+		" #" + formatCase(newFiledName, in.NameCase),
 		" #= " + gconv.String(index) + jsonTagStr + ";",
 		" #" + fmt.Sprintf(`// %s`, comment),
 	}

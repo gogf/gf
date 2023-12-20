@@ -60,7 +60,7 @@ func (c *Core) GetFieldType(ctx context.Context, fieldName, table, schema string
 func (c *Core) ConvertDataForRecord(ctx context.Context, value interface{}, table string) (map[string]interface{}, error) {
 	var (
 		err  error
-		data = DataToMapDeep(value)
+		data = MapOrStructToMapDeep(value, true)
 	)
 	for fieldName, fieldValue := range data {
 		data[fieldName], err = c.db.ConvertValueForField(
