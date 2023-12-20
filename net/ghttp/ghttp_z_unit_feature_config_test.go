@@ -8,6 +8,7 @@ package ghttp_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -154,8 +155,11 @@ func Test_ClientMaxBodySize_File(t *testing.T) {
 		t.Assert(gfile.PutBytes(path, data), nil)
 		defer gfile.Remove(path)
 		t.Assert(
-			gstr.Trim(c.PostContent(ctx, "/", "name=john&file=@file:"+path)),
-			"Read from request Body failed: http: request body too large",
+			true,
+			strings.Contains(
+				gstr.Trim(c.PostContent(ctx, "/", "name=john&file=@file:"+path)),
+				"http: request body too large",
+			),
 		)
 	})
 }

@@ -269,8 +269,6 @@ func (r *Request) parseForm() {
 		return
 	}
 	if contentType := r.Header.Get("Content-Type"); contentType != "" {
-		r.MakeBodyRepeatableRead(true)
-
 		var err error
 		if gstr.Contains(contentType, "multipart/") {
 			// multipart/form-data, multipart/mixed
