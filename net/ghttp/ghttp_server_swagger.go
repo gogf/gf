@@ -12,7 +12,6 @@ import (
 
 const (
 	swaggerUIDocURLPlaceHolder = `{SwaggerUIDocUrl}`
-	swaggerUIDocJsPlaceHolder  = `{SwaggerUIDocJs}`
 	swaggerUITemplate          = `
 <!DOCTYPE html>
 <html>
@@ -29,7 +28,7 @@ const (
 	</head>
 	<body>
 		<redoc spec-url="{SwaggerUIDocUrl}" show-object-schema-examples="true"></redoc>
-		<script src="{SwaggerUIDocJs}"> </script>
+		<script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"> </script>
 	</body>
 </html>
 `
@@ -41,15 +40,14 @@ func (s *Server) swaggerUI(r *Request) {
 	if s.config.OpenApiPath == "" {
 		return
 	}
-
-	if s.config.SwaggerJsURL == "" {
-		s.config.SwaggerJsURL = "https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"
+	var templateContent = swaggerUITemplate
+	if s.config.SwaggerTemplate != "" {
+		templateContent = s.config.SwaggerTemplate
 	}
 
 	if r.StaticFile != nil && r.StaticFile.File != nil && r.StaticFile.IsDir {
-		content := gstr.ReplaceByMap(swaggerUITemplate, map[string]string{
+		content := gstr.ReplaceByMap(templateContent, map[string]string{
 			swaggerUIDocURLPlaceHolder: s.config.OpenApiPath,
-			swaggerUIDocJsPlaceHolder:  s.config.SwaggerJsURL,
 		})
 		r.Response.Write(content)
 		r.ExitAll()

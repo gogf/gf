@@ -32,9 +32,9 @@ func (s *Server) SetSwaggerPath(path string) {
 	s.config.SwaggerPath = path
 }
 
-// SetSwaggerJsURL sets the SwaggerJsURL for server.
-func (s *Server) SetSwaggerJsURL(jsURL string) {
-	s.config.SwaggerJsURL = jsURL
+// SetSwaggerTemplate sets the Swagger template for server.
+func (s *Server) SetSwaggerTemplate(swaggerTemplate string) {
+	s.config.SwaggerTemplate = swaggerTemplate
 }
 
 // SetOpenApiPath sets the OpenApiPath for server.
