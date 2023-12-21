@@ -76,8 +76,12 @@ func (s modServer) NewConfig() *GrpcServerConfig {
 	if g.Cfg().Available(ctx) {
 		// Server attributes configuration.
 		serverConfigMap := g.Cfg().MustGet(ctx, configNodeNameGrpcServer).Map()
+		if len(serverConfigMap) == 0 {
+			return config
+		}
 		if err = gconv.Struct(serverConfigMap, &config); err != nil {
 			g.Log().Error(ctx, err)
+			return config
 		}
 		// Server logger configuration checks.
 		serverLoggerConfigMap := g.Cfg().MustGet(
