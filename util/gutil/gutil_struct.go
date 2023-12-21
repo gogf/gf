@@ -83,7 +83,7 @@ func FillStructWithDefault(structPtr interface{}) error {
 	}
 	fields, err := gstructs.Fields(gstructs.FieldsInput{
 		Pointer:         reflectValue,
-		RecursiveOption: gstructs.RecursiveOptionNone,
+		RecursiveOption: gstructs.RecursiveOptionEmbedded,
 	})
 	if err != nil {
 		return err

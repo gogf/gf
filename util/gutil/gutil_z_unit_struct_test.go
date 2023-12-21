@@ -40,16 +40,32 @@ func Test_StructToSlice(t *testing.T) {
 func Test_FillStructWithDefault(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type A struct {
-			V1 int     `d:"1.01"`
-			V2 string  `d:"1.01"`
-			V3 float32 `d:"1.01"`
+			A1 int     `d:"1.01"`
+			A2 string  `d:"1.01"`
+			A3 float32 `d:"1.01"`
 		}
-		a := A{}
-		err := gutil.FillStructWithDefault(&a)
+		type B struct {
+			B1 bool `d:"true"`
+			B2 string
+			A  A
+		}
+		type C struct {
+			C1 float64 `d:"1.01"`
+			B
+			C2 bool
+			A  A
+		}
+
+		c := C{}
+		err := gutil.FillStructWithDefault(&c)
 		t.AssertNil(err)
 
-		t.Assert(a.V1, `1`)
-		t.Assert(a.V2, `1.01`)
-		t.Assert(a.V3, `1.01`)
+		t.Assert(c.C1, `1.01`)
+		t.Assert(c.C2, false)
+		t.Assert(c.B1, true)
+		t.Assert(c.B2, ``)
+		t.Assert(c.A.A1, `1`)
+		t.Assert(c.A.A2, `1.01`)
+		t.Assert(c.A.A3, `1.01`)
 	})
 }
