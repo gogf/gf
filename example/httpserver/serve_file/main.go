@@ -2,46 +2,36 @@ package main
 
 import (
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 )
 
+// pathMap is used for URL mapping
 var pathMap = map[string]string{
-	"/aaa/": "./",
+	"/aaa/": "/tmp/",
 }
 
 // ServeFile serves the file to the response.
 func ServeFile(r *ghttp.Request) {
 	truePath := r.URL.Path
+	hasPrefix := false
 	// Replace the path prefix.
 	for k, v := range pathMap {
 		if strings.HasPrefix(truePath, k) {
-			truePath = strings.Replace(truePath, k, v, 1)
+			truePath = strings.Replace(truePath, k, v, 1) // Replace only once.
+			hasPrefix = true
 			break
 		}
 	}
 
-	// Use file from dist.
-	file, err := os.Open(truePath)
-	if err != nil {
+	if !hasPrefix {
 		r.Response.WriteStatus(http.StatusForbidden)
 		return
 	}
-	defer file.Close()
 
-	// Clear the response buffer before file serving.
-	// It ignores all custom buffer content and uses the file content.
-	r.Response.ClearBuffer()
-
-	info, _ := file.Stat()
-	if info.IsDir() {
-		r.Response.WriteStatus(http.StatusForbidden)
-	} else {
-		r.Response.ServeContent(info.Name(), info.ModTime(), file)
-	}
+	r.Response.ServeFile(truePath)
 }
 
 func main() {
