@@ -338,8 +338,8 @@ func (c *Client) callRequest(req *http.Request) (resp *Response, err error) {
 	// raw HTTP request-response procedure.
 	reqBodyContent, _ := io.ReadAll(req.Body)
 	resp.requestBody = reqBodyContent
-	req.Body = utils.NewReadCloser(reqBodyContent, false)
 	for {
+		req.Body = utils.NewReadCloser(reqBodyContent, false)
 		if resp.Response, err = c.Do(req); err != nil {
 			err = gerror.Wrapf(err, `request failed`)
 			// The response might not be nil when err != nil.

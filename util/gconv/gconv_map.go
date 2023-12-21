@@ -29,7 +29,7 @@ type MapOption struct {
 	// a map[string]interface{} type variable.
 	Deep bool
 
-	// OmitEmpty ignores the attributes that has json omitempty tag.
+	// OmitEmpty ignores the attributes that has json `omitempty` tag.
 	OmitEmpty bool
 
 	// Tags specifies the converted map key name by struct tag name.
@@ -64,8 +64,15 @@ func doMapConvert(value interface{}, recursive recursiveType, mustMapReturn bool
 	if value == nil {
 		return nil
 	}
-	var usedOption = getUsedMapOption(option...)
-	newTags := StructTagPriority
+	// It redirects to its underlying value if it has implemented interface iVal.
+	if v, ok := value.(iVal); ok {
+		value = v.Val()
+	}
+
+	var (
+		usedOption = getUsedMapOption(option...)
+		newTags    = StructTagPriority
+	)
 	switch len(usedOption.Tags) {
 	case 0:
 		// No need handling.
