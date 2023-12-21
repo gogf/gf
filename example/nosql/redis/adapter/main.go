@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/gogf/gf/contrib/nosql/redis/v2"
-	_ "github.com/gogf/gf/contrib/nosql/redis/v2"
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gredis"
@@ -36,7 +35,7 @@ func (r *MyRedis) Do(ctx context.Context, command string, args ...interface{}) (
 func main() {
 	gredis.RegisterAdapterFunc(func(config *gredis.Config) gredis.Adapter {
 		r := &MyRedis{redis.New(config)}
-		r.AdapterOperation = r
+		r.AdapterOperation = r // This is necessary.
 		return r
 	})
 	gredis.SetConfig(&config, group)
