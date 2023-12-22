@@ -51,6 +51,8 @@ func Test_FillStructWithDefault(t *testing.T) {
 			Inner1 Inner1
 			I3V1   myInt `d:"1"`
 		}
+		type Inner4 struct {
+		}
 		type Outer struct {
 			O1 int     `d:"1.01"`
 			O2 string  `d:"1.01"`
@@ -59,6 +61,7 @@ func Test_FillStructWithDefault(t *testing.T) {
 			O4 bool `d:"true"`
 			Inner2
 			Inner3 Inner3
+			Inner4 *Inner4
 		}
 
 		outer := Outer{}
@@ -74,5 +77,6 @@ func Test_FillStructWithDefault(t *testing.T) {
 		t.Assert(outer.Inner3.I3V1, 1)
 		t.Assert(outer.Inner3.Inner1.I1V1, 0)
 		t.Assert(outer.Inner3.Inner1.I1V2, true)
+		t.Assert(outer.Inner4, nil)
 	})
 }

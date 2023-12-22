@@ -104,7 +104,7 @@ func (f *Field) OriginalValue() reflect.Value {
 		reflectKind  = reflectType.Kind()
 	)
 
-	for reflectKind == reflect.Ptr && !reflectValue.IsNil() {
+	for reflectKind == reflect.Ptr && !f.IsNil() {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Type().Kind()
 	}
