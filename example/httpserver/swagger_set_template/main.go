@@ -31,24 +31,16 @@ func (Hello) Say(ctx context.Context, req *HelloReq) (res *HelloRes, err error) 
 	return
 }
 
-func main() {
-	s := g.Server()
-	s.Use(ghttp.MiddlewareHandlerResponse)
-	s.Group("/", func(group *ghttp.RouterGroup) {
-		group.Bind(
-			new(Hello),
-		)
-	})
-
-	s.SetSwaggerTemplate(`
+const (
+	MySwaggerTemplate = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="SwaggerUI"/>
-  <title>SwaggerUI</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.10.5/swagger-ui.min.css" />
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="description" content="SwaggerUI"/>
+	<title>SwaggerUI</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.10.5/swagger-ui.min.css" />
 </head>
 <body>
 <div id="swagger-ui"></div>
@@ -63,10 +55,17 @@ func main() {
 </script>
 </body>
 </html>
-`)
-	// or with static files
-	// s.AddStaticPath("/js", "js")
-	// s.SetSwaggerJsURL("/js/redoc.standalone.js")
+`
+)
 
+func main() {
+	s := g.Server()
+	s.Use(ghttp.MiddlewareHandlerResponse)
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Bind(
+			new(Hello),
+		)
+	})
+	s.SetSwaggerTemplate(MySwaggerTemplate)
 	s.Run()
 }
