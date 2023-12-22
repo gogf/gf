@@ -32,7 +32,7 @@ func (Hello) Say(ctx context.Context, req *HelloReq) (res *HelloRes, err error) 
 }
 
 const (
-	MySwaggerTemplate = `
+	MySwaggerUITemplate = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -66,6 +66,6 @@ func main() {
 			new(Hello),
 		)
 	})
-	s.SetSwaggerTemplate(MySwaggerTemplate)
+	s.SetSwaggerUITemplate(MySwaggerUITemplate)
 	s.Run()
 }

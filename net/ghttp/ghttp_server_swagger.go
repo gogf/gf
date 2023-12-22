@@ -41,8 +41,8 @@ func (s *Server) swaggerUI(r *Request) {
 		return
 	}
 	var templateContent = swaggerUITemplate
-	if s.config.SwaggerTemplate != "" {
-		templateContent = s.config.SwaggerTemplate
+	if s.config.SwaggerUITemplate != "" {
+		templateContent = s.config.SwaggerUITemplate
 	}
 
 	if r.StaticFile != nil && r.StaticFile.File != nil && r.StaticFile.IsDir {
