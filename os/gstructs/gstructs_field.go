@@ -92,7 +92,24 @@ func (f *Field) OriginalKind() reflect.Kind {
 		reflectType = reflectType.Elem()
 		reflectKind = reflectType.Kind()
 	}
+
 	return reflectKind
+}
+
+// OriginalValue retrieves and returns the original reflect.Value of Field `f`.
+func (f *Field) OriginalValue() reflect.Value {
+	var (
+		reflectValue = f.Value
+		reflectType  = reflectValue.Type()
+		reflectKind  = reflectType.Kind()
+	)
+
+	for reflectKind == reflect.Ptr && !reflectValue.IsNil() {
+		reflectValue = reflectValue.Elem()
+		reflectKind = reflectValue.Type().Kind()
+	}
+
+	return reflectValue
 }
 
 // IsEmpty checks and returns whether the value of this Field is empty.

@@ -89,8 +89,8 @@ func FillStructWithDefault(structPtr interface{}) error {
 		return err
 	}
 	for _, field := range fields {
-		if field.Kind() == reflect.Struct {
-			err := FillStructWithDefault(field.Value.Addr())
+		if field.OriginalKind() == reflect.Struct {
+			err := FillStructWithDefault(field.OriginalValue().Addr())
 			if err != nil {
 				return err
 			}
