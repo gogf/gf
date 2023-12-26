@@ -67,6 +67,7 @@ var (
 )
 
 // Format formats and returns the formatted result with custom `format`.
+// Refer method Layout, if you want to follow stdlib layout.
 func (t *Time) Format(format string) string {
 	if t == nil {
 		return ""
