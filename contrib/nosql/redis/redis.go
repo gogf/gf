@@ -8,20 +8,19 @@
 package redis
 
 import (
-	"context"
 	"crypto/tls"
 	"time"
 
 	"github.com/redis/go-redis/v9"
 
-	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gredis"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // Redis is an implement of Adapter using go-redis.
 type Redis struct {
+	gredis.AdapterOperation
+
 	client redis.UniversalClient
 	config *gredis.Config
 }
@@ -75,40 +74,12 @@ func New(config *gredis.Config) *Redis {
 		client = redis.NewClient(opts.Simple())
 	}
 
-	return &Redis{
+	r := &Redis{
 		client: client,
 		config: config,
 	}
-}
-
-// Do send a command to the server and returns the received reply.
-// It uses json.Marshal for struct/slice/map type values before committing them to redis.
-func (r *Redis) Do(ctx context.Context, command string, args ...interface{}) (*gvar.Var, error) {
-	conn, err := r.Conn(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		_ = conn.Close(ctx)
-	}()
-	return conn.Do(ctx, command, args...)
-}
-
-// Close closes the redis connection pool, which will release all connections reserved by this pool.
-// It is commonly not necessary to call Close manually.
-func (r *Redis) Close(ctx context.Context) (err error) {
-	if err = r.client.Close(); err != nil {
-		err = gerror.Wrap(err, `Redis Client Close failed`)
-	}
-	return
-}
-
-// Conn retrieves and returns a connection object for continuous operations.
-// Note that you should call Close function manually if you do not use this connection any further.
-func (r *Redis) Conn(ctx context.Context) (gredis.Conn, error) {
-	return &Conn{
-		redis: r,
-	}, nil
+	r.AdapterOperation = r
+	return r
 }
 
 func fillWithDefaultConfiguration(config *gredis.Config) {
