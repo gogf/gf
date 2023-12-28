@@ -16,13 +16,13 @@ import (
 
 // GroupHash is the redis group object for hash operations.
 type GroupHash struct {
-	redis *Redis
+	Operation gredis.AdapterOperation
 }
 
 // GroupHash creates and returns a redis group object for hash operations.
 func (r *Redis) GroupHash() gredis.IGroupHash {
 	return GroupHash{
-		redis: r,
+		Operation: r.AdapterOperation,
 	}
 }
 
@@ -38,7 +38,7 @@ func (r GroupHash) HSet(ctx context.Context, key string, fields map[string]inter
 	for k, v := range fields {
 		s = append(s, k, v)
 	}
-	v, err := r.redis.Do(ctx, "HSet", s...)
+	v, err := r.Operation.Do(ctx, "HSet", s...)
 	return v.Int64(), err
 }
 
@@ -52,7 +52,7 @@ func (r GroupHash) HSet(ctx context.Context, key string, fields map[string]inter
 //
 // https://redis.io/commands/hsetnx/
 func (r GroupHash) HSetNX(ctx context.Context, key, field string, value interface{}) (int64, error) {
-	v, err := r.redis.Do(ctx, "HSetNX", key, field, value)
+	v, err := r.Operation.Do(ctx, "HSetNX", key, field, value)
 	return v.Int64(), err
 }
 
@@ -62,7 +62,7 @@ func (r GroupHash) HSetNX(ctx context.Context, key, field string, value interfac
 //
 // https://redis.io/commands/hget/
 func (r GroupHash) HGet(ctx context.Context, key, field string) (*gvar.Var, error) {
-	v, err := r.redis.Do(ctx, "HGet", key, field)
+	v, err := r.Operation.Do(ctx, "HGet", key, field)
 	return v, err
 }
 
@@ -74,7 +74,7 @@ func (r GroupHash) HGet(ctx context.Context, key, field string) (*gvar.Var, erro
 //
 // https://redis.io/commands/hstrlen/
 func (r GroupHash) HStrLen(ctx context.Context, key, field string) (int64, error) {
-	v, err := r.redis.Do(ctx, "HSTRLEN", key, field)
+	v, err := r.Operation.Do(ctx, "HSTRLEN", key, field)
 	return v.Int64(), err
 }
 
@@ -86,7 +86,7 @@ func (r GroupHash) HStrLen(ctx context.Context, key, field string) (int64, error
 //
 // https://redis.io/commands/hexists/
 func (r GroupHash) HExists(ctx context.Context, key, field string) (int64, error) {
-	v, err := r.redis.Do(ctx, "HExists", key, field)
+	v, err := r.Operation.Do(ctx, "HExists", key, field)
 	return v.Int64(), err
 }
 
@@ -98,7 +98,7 @@ func (r GroupHash) HExists(ctx context.Context, key, field string) (int64, error
 //
 // https://redis.io/commands/hdel/
 func (r GroupHash) HDel(ctx context.Context, key string, fields ...string) (int64, error) {
-	v, err := r.redis.Do(ctx, "HDel", append([]interface{}{key}, gconv.Interfaces(fields)...)...)
+	v, err := r.Operation.Do(ctx, "HDel", append([]interface{}{key}, gconv.Interfaces(fields)...)...)
 	return v.Int64(), err
 }
 
@@ -106,7 +106,7 @@ func (r GroupHash) HDel(ctx context.Context, key string, fields ...string) (int6
 //
 // https://redis.io/commands/hlen/
 func (r GroupHash) HLen(ctx context.Context, key string) (int64, error) {
-	v, err := r.redis.Do(ctx, "HLen", key)
+	v, err := r.Operation.Do(ctx, "HLen", key)
 	return v.Int64(), err
 }
 
@@ -118,7 +118,7 @@ func (r GroupHash) HLen(ctx context.Context, key string) (int64, error) {
 //
 // https://redis.io/commands/hincrby/
 func (r GroupHash) HIncrBy(ctx context.Context, key, field string, increment int64) (int64, error) {
-	v, err := r.redis.Do(ctx, "HIncrBy", key, field, increment)
+	v, err := r.Operation.Do(ctx, "HIncrBy", key, field, increment)
 	return v.Int64(), err
 }
 
@@ -138,7 +138,7 @@ func (r GroupHash) HIncrBy(ctx context.Context, key, field string, increment int
 //
 // https://redis.io/commands/hincrbyfloat/
 func (r GroupHash) HIncrByFloat(ctx context.Context, key, field string, increment float64) (float64, error) {
-	v, err := r.redis.Do(ctx, "HIncrByFloat", key, field, increment)
+	v, err := r.Operation.Do(ctx, "HIncrByFloat", key, field, increment)
 	return v.Float64(), err
 }
 
@@ -152,7 +152,7 @@ func (r GroupHash) HMSet(ctx context.Context, key string, fields map[string]inte
 	for k, v := range fields {
 		s = append(s, k, v)
 	}
-	_, err := r.redis.Do(ctx, "HMSet", s...)
+	_, err := r.Operation.Do(ctx, "HMSet", s...)
 	return err
 }
 
@@ -163,7 +163,7 @@ func (r GroupHash) HMSet(ctx context.Context, key string, fields map[string]inte
 //
 // https://redis.io/commands/hmget/
 func (r GroupHash) HMGet(ctx context.Context, key string, fields ...string) (gvar.Vars, error) {
-	v, err := r.redis.Do(ctx, "HMGet", append([]interface{}{key}, gconv.Interfaces(fields)...)...)
+	v, err := r.Operation.Do(ctx, "HMGet", append([]interface{}{key}, gconv.Interfaces(fields)...)...)
 	return v.Vars(), err
 }
 
@@ -171,7 +171,7 @@ func (r GroupHash) HMGet(ctx context.Context, key string, fields ...string) (gva
 //
 // https://redis.io/commands/hkeys/
 func (r GroupHash) HKeys(ctx context.Context, key string) ([]string, error) {
-	v, err := r.redis.Do(ctx, "HKeys", key)
+	v, err := r.Operation.Do(ctx, "HKeys", key)
 	return v.Strings(), err
 }
 
@@ -179,7 +179,7 @@ func (r GroupHash) HKeys(ctx context.Context, key string) ([]string, error) {
 //
 // https://redis.io/commands/hvals/
 func (r GroupHash) HVals(ctx context.Context, key string) (gvar.Vars, error) {
-	v, err := r.redis.Do(ctx, "HVals", key)
+	v, err := r.Operation.Do(ctx, "HVals", key)
 	return v.Vars(), err
 }
 
@@ -189,6 +189,6 @@ func (r GroupHash) HVals(ctx context.Context, key string) (gvar.Vars, error) {
 //
 // https://redis.io/commands/hgetall/
 func (r GroupHash) HGetAll(ctx context.Context, key string) (*gvar.Var, error) {
-	v, err := r.redis.Do(ctx, "HGetAll", key)
+	v, err := r.Operation.Do(ctx, "HGetAll", key)
 	return v, err
 }

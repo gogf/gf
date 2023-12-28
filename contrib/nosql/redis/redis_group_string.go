@@ -16,13 +16,13 @@ import (
 
 // GroupString is the function group manager for string operations.
 type GroupString struct {
-	redis *Redis
+	Operation gredis.AdapterOperation
 }
 
 // GroupString is the redis group object for string operations.
 func (r *Redis) GroupString() gredis.IGroupString {
 	return GroupString{
-		redis: r,
+		Operation: r.AdapterOperation,
 	}
 }
 
@@ -36,7 +36,7 @@ func (r GroupString) Set(ctx context.Context, key string, value interface{}, opt
 	if len(option) > 0 {
 		usedOption = option[0]
 	}
-	return r.redis.Do(ctx, "Set", mustMergeOptionToArgs(
+	return r.Operation.Do(ctx, "Set", mustMergeOptionToArgs(
 		[]interface{}{key, value}, usedOption,
 	)...)
 }
@@ -52,7 +52,7 @@ func (r GroupString) Set(ctx context.Context, key string, value interface{}, opt
 //
 // https://redis.io/commands/setnx/
 func (r GroupString) SetNX(ctx context.Context, key string, value interface{}) (bool, error) {
-	v, err := r.redis.Do(ctx, "SetNX", key, value)
+	v, err := r.Operation.Do(ctx, "SetNX", key, value)
 	return v.Bool(), err
 }
 
@@ -70,7 +70,7 @@ func (r GroupString) SetNX(ctx context.Context, key string, value interface{}) (
 //
 // https://redis.io/commands/setex/
 func (r GroupString) SetEX(ctx context.Context, key string, value interface{}, ttlInSeconds int64) error {
-	_, err := r.redis.Do(ctx, "SetEX", key, ttlInSeconds, value)
+	_, err := r.Operation.Do(ctx, "SetEX", key, ttlInSeconds, value)
 	return err
 }
 
@@ -79,7 +79,7 @@ func (r GroupString) SetEX(ctx context.Context, key string, value interface{}, t
 //
 // https://redis.io/commands/get/
 func (r GroupString) Get(ctx context.Context, key string) (*gvar.Var, error) {
-	return r.redis.Do(ctx, "Get", key)
+	return r.Operation.Do(ctx, "Get", key)
 }
 
 // GetDel gets the value of key and delete the key.
@@ -88,7 +88,7 @@ func (r GroupString) Get(ctx context.Context, key string) (*gvar.Var, error) {
 //
 // https://redis.io/commands/getdel/
 func (r GroupString) GetDel(ctx context.Context, key string) (*gvar.Var, error) {
-	return r.redis.Do(ctx, "GetDel", key)
+	return r.Operation.Do(ctx, "GetDel", key)
 }
 
 // GetEX is similar to GET, but is a write command with additional options.
@@ -99,7 +99,7 @@ func (r GroupString) GetEX(ctx context.Context, key string, option ...gredis.Get
 	if len(option) > 0 {
 		usedOption = option[0]
 	}
-	return r.redis.Do(ctx, "GetEX", mustMergeOptionToArgs(
+	return r.Operation.Do(ctx, "GetEX", mustMergeOptionToArgs(
 		[]interface{}{key}, usedOption,
 	)...)
 }
@@ -110,7 +110,7 @@ func (r GroupString) GetEX(ctx context.Context, key string, option ...gredis.Get
 //
 // https://redis.io/commands/getset/
 func (r GroupString) GetSet(ctx context.Context, key string, value interface{}) (*gvar.Var, error) {
-	return r.redis.Do(ctx, "GetSet", key, value)
+	return r.Operation.Do(ctx, "GetSet", key, value)
 }
 
 // StrLen returns the length of the string value stored at key.
@@ -120,7 +120,7 @@ func (r GroupString) GetSet(ctx context.Context, key string, value interface{}) 
 //
 // https://redis.io/commands/strlen/
 func (r GroupString) StrLen(ctx context.Context, key string) (int64, error) {
-	v, err := r.redis.Do(ctx, "StrLen", key)
+	v, err := r.Operation.Do(ctx, "StrLen", key)
 	return v.Int64(), err
 }
 
@@ -130,7 +130,7 @@ func (r GroupString) StrLen(ctx context.Context, key string) (int64, error) {
 //
 // https://redis.io/commands/append/
 func (r GroupString) Append(ctx context.Context, key string, value string) (int64, error) {
-	v, err := r.redis.Do(ctx, "Append", key, value)
+	v, err := r.Operation.Do(ctx, "Append", key, value)
 	return v.Int64(), err
 }
 
@@ -143,7 +143,7 @@ func (r GroupString) Append(ctx context.Context, key string, value string) (int6
 //
 // https://redis.io/commands/setrange/
 func (r GroupString) SetRange(ctx context.Context, key string, offset int64, value string) (int64, error) {
-	v, err := r.redis.Do(ctx, "SetRange", key, offset, value)
+	v, err := r.Operation.Do(ctx, "SetRange", key, offset, value)
 	return v.Int64(), err
 }
 
@@ -155,7 +155,7 @@ func (r GroupString) SetRange(ctx context.Context, key string, offset int64, val
 //
 // https://redis.io/commands/getrange/
 func (r GroupString) GetRange(ctx context.Context, key string, start, end int64) (string, error) {
-	v, err := r.redis.Do(ctx, "GetRange", key, start, end)
+	v, err := r.Operation.Do(ctx, "GetRange", key, start, end)
 	return v.String(), err
 }
 
@@ -166,7 +166,7 @@ func (r GroupString) GetRange(ctx context.Context, key string, start, end int64)
 //
 // https://redis.io/commands/incr/
 func (r GroupString) Incr(ctx context.Context, key string) (int64, error) {
-	v, err := r.redis.Do(ctx, "Incr", key)
+	v, err := r.Operation.Do(ctx, "Incr", key)
 	return v.Int64(), err
 }
 
@@ -178,7 +178,7 @@ func (r GroupString) Incr(ctx context.Context, key string) (int64, error) {
 //
 // https://redis.io/commands/incrby/
 func (r GroupString) IncrBy(ctx context.Context, key string, increment int64) (int64, error) {
-	v, err := r.redis.Do(ctx, "IncrBy", key, increment)
+	v, err := r.Operation.Do(ctx, "IncrBy", key, increment)
 	return v.Int64(), err
 }
 
@@ -186,7 +186,7 @@ func (r GroupString) IncrBy(ctx context.Context, key string, increment int64) (i
 //
 // https://redis.io/commands/incrbyfloat/
 func (r GroupString) IncrByFloat(ctx context.Context, key string, increment float64) (float64, error) {
-	v, err := r.redis.Do(ctx, "IncrByFloat", key, increment)
+	v, err := r.Operation.Do(ctx, "IncrByFloat", key, increment)
 	return v.Float64(), err
 }
 
@@ -194,7 +194,7 @@ func (r GroupString) IncrByFloat(ctx context.Context, key string, increment floa
 //
 // https://redis.io/commands/decr/
 func (r GroupString) Decr(ctx context.Context, key string) (int64, error) {
-	v, err := r.redis.Do(ctx, "Decr", key)
+	v, err := r.Operation.Do(ctx, "Decr", key)
 	return v.Int64(), err
 }
 
@@ -202,7 +202,7 @@ func (r GroupString) Decr(ctx context.Context, key string) (int64, error) {
 //
 // https://redis.io/commands/decrby/
 func (r GroupString) DecrBy(ctx context.Context, key string, decrement int64) (int64, error) {
-	v, err := r.redis.Do(ctx, "DecrBy", key, decrement)
+	v, err := r.Operation.Do(ctx, "DecrBy", key, decrement)
 	return v.Int64(), err
 }
 
@@ -219,7 +219,7 @@ func (r GroupString) MSet(ctx context.Context, keyValueMap map[string]interface{
 	for k, v := range keyValueMap {
 		args = append(args, k, v)
 	}
-	_, err := r.redis.Do(ctx, "MSet", args...)
+	_, err := r.Operation.Do(ctx, "MSet", args...)
 	return err
 }
 
@@ -233,7 +233,7 @@ func (r GroupString) MSetNX(ctx context.Context, keyValueMap map[string]interfac
 	for k, v := range keyValueMap {
 		args = append(args, k, v)
 	}
-	v, err := r.redis.Do(ctx, "MSetNX", args...)
+	v, err := r.Operation.Do(ctx, "MSetNX", args...)
 	return v.Bool(), err
 }
 
@@ -242,7 +242,7 @@ func (r GroupString) MSetNX(ctx context.Context, keyValueMap map[string]interfac
 // https://redis.io/commands/mget/
 func (r GroupString) MGet(ctx context.Context, keys ...string) (map[string]*gvar.Var, error) {
 	var result = make(map[string]*gvar.Var)
-	v, err := r.redis.Do(ctx, "MGet", gconv.Interfaces(keys)...)
+	v, err := r.Operation.Do(ctx, "MGet", gconv.Interfaces(keys)...)
 	if err == nil {
 		values := v.Vars()
 		for i, key := range keys {

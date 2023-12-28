@@ -16,13 +16,13 @@ import (
 
 // GroupList is the redis group list object.
 type GroupList struct {
-	redis *Redis
+	Operation gredis.AdapterOperation
 }
 
 // GroupList creates and returns a redis group object for list operations.
 func (r *Redis) GroupList() gredis.IGroupList {
 	return GroupList{
-		redis: r,
+		Operation: r.AdapterOperation,
 	}
 }
 
@@ -35,7 +35,7 @@ func (r *Redis) GroupList() gredis.IGroupList {
 //
 // https://redis.io/commands/lpush/
 func (r GroupList) LPush(ctx context.Context, key string, values ...interface{}) (int64, error) {
-	v, err := r.redis.Do(ctx, "LPush", append([]interface{}{key}, values...)...)
+	v, err := r.Operation.Do(ctx, "LPush", append([]interface{}{key}, values...)...)
 	return v.Int64(), err
 }
 
@@ -48,7 +48,7 @@ func (r GroupList) LPush(ctx context.Context, key string, values ...interface{})
 //
 // https://redis.io/commands/lpushx
 func (r GroupList) LPushX(ctx context.Context, key string, element interface{}, elements ...interface{}) (int64, error) {
-	v, err := r.redis.Do(ctx, "LPushX", append([]interface{}{key, element}, elements...)...)
+	v, err := r.Operation.Do(ctx, "LPushX", append([]interface{}{key, element}, elements...)...)
 	return v.Int64(), err
 }
 
@@ -67,7 +67,7 @@ func (r GroupList) LPushX(ctx context.Context, key string, element interface{}, 
 //
 // https://redis.io/commands/rpush
 func (r GroupList) RPush(ctx context.Context, key string, values ...interface{}) (int64, error) {
-	v, err := r.redis.Do(ctx, "RPush", append([]interface{}{key}, values...)...)
+	v, err := r.Operation.Do(ctx, "RPush", append([]interface{}{key}, values...)...)
 	return v.Int64(), err
 }
 
@@ -81,7 +81,7 @@ func (r GroupList) RPush(ctx context.Context, key string, values ...interface{})
 //
 // https://redis.io/commands/rpushx
 func (r GroupList) RPushX(ctx context.Context, key string, value interface{}) (int64, error) {
-	v, err := r.redis.Do(ctx, "RPushX", key, value)
+	v, err := r.Operation.Do(ctx, "RPushX", key, value)
 	return v.Int64(), err
 }
 
@@ -103,9 +103,9 @@ func (r GroupList) RPushX(ctx context.Context, key string, value interface{}) (i
 // https://redis.io/commands/lpop
 func (r GroupList) LPop(ctx context.Context, key string, count ...int) (*gvar.Var, error) {
 	if len(count) > 0 {
-		return r.redis.Do(ctx, "LPop", key, count[0])
+		return r.Operation.Do(ctx, "LPop", key, count[0])
 	}
-	return r.redis.Do(ctx, "LPop", key)
+	return r.Operation.Do(ctx, "LPop", key)
 }
 
 // RPop remove and returns the last element of the list stored at key.
@@ -126,9 +126,9 @@ func (r GroupList) LPop(ctx context.Context, key string, count ...int) (*gvar.Va
 // https://redis.io/commands/rpop
 func (r GroupList) RPop(ctx context.Context, key string, count ...int) (*gvar.Var, error) {
 	if len(count) > 0 {
-		return r.redis.Do(ctx, "RPop", key, count[0])
+		return r.Operation.Do(ctx, "RPop", key, count[0])
 	}
-	return r.redis.Do(ctx, "RPop", key)
+	return r.Operation.Do(ctx, "RPop", key)
 }
 
 // LRem removes the first count occurrences of elements equal to value from the list stored at key.
@@ -137,7 +137,7 @@ func (r GroupList) RPop(ctx context.Context, key string, count ...int) (*gvar.Va
 //
 // https://redis.io/commands/lrem/
 func (r GroupList) LRem(ctx context.Context, key string, count int64, value interface{}) (int64, error) {
-	v, err := r.redis.Do(ctx, "LRem", key, count, value)
+	v, err := r.Operation.Do(ctx, "LRem", key, count, value)
 	return v.Int64(), err
 }
 
@@ -148,7 +148,7 @@ func (r GroupList) LRem(ctx context.Context, key string, count int64, value inte
 //
 // https://redis.io/commands/llen
 func (r GroupList) LLen(ctx context.Context, key string) (int64, error) {
-	v, err := r.redis.Do(ctx, "LLen", key)
+	v, err := r.Operation.Do(ctx, "LLen", key)
 	return v.Int64(), err
 }
 
@@ -163,7 +163,7 @@ func (r GroupList) LLen(ctx context.Context, key string) (int64, error) {
 //
 // https://redis.io/commands/lindex
 func (r GroupList) LIndex(ctx context.Context, key string, index int64) (*gvar.Var, error) {
-	return r.redis.Do(ctx, "LIndex", key, index)
+	return r.Operation.Do(ctx, "LIndex", key, index)
 }
 
 // LInsert inserts element in the list stored at key either before or after the reference value pivot.
@@ -174,7 +174,7 @@ func (r GroupList) LIndex(ctx context.Context, key string, index int64) (*gvar.V
 //
 // https://redis.io/commands/linsert/
 func (r GroupList) LInsert(ctx context.Context, key string, op gredis.LInsertOp, pivot, value interface{}) (int64, error) {
-	v, err := r.redis.Do(ctx, "LInsert", key, string(op), pivot, value)
+	v, err := r.Operation.Do(ctx, "LInsert", key, string(op), pivot, value)
 	return v.Int64(), err
 }
 
@@ -184,7 +184,7 @@ func (r GroupList) LInsert(ctx context.Context, key string, op gredis.LInsertOp,
 //
 // https://redis.io/commands/lset/
 func (r GroupList) LSet(ctx context.Context, key string, index int64, value interface{}) (*gvar.Var, error) {
-	return r.redis.Do(ctx, "LSet", key, index, value)
+	return r.Operation.Do(ctx, "LSet", key, index, value)
 }
 
 // LRange returns the specified elements of the list stored at key.
@@ -196,7 +196,7 @@ func (r GroupList) LSet(ctx context.Context, key string, index int64, value inte
 //
 // https://redis.io/commands/lrange/
 func (r GroupList) LRange(ctx context.Context, key string, start, stop int64) (gvar.Vars, error) {
-	v, err := r.redis.Do(ctx, "LRange", key, start, stop)
+	v, err := r.Operation.Do(ctx, "LRange", key, start, stop)
 	return v.Vars(), err
 }
 
@@ -206,7 +206,7 @@ func (r GroupList) LRange(ctx context.Context, key string, start, stop int64) (g
 //
 // https://redis.io/commands/ltrim/
 func (r GroupList) LTrim(ctx context.Context, key string, start, stop int64) error {
-	_, err := r.redis.Do(ctx, "LTrim", key, start, stop)
+	_, err := r.Operation.Do(ctx, "LTrim", key, start, stop)
 	return err
 }
 
@@ -221,7 +221,7 @@ func (r GroupList) LTrim(ctx context.Context, key string, start, stop int64) err
 //
 // https://redis.io/commands/blpop/
 func (r GroupList) BLPop(ctx context.Context, timeout int64, keys ...string) (gvar.Vars, error) {
-	v, err := r.redis.Do(ctx, "BLPop", append(gconv.Interfaces(keys), timeout)...)
+	v, err := r.Operation.Do(ctx, "BLPop", append(gconv.Interfaces(keys), timeout)...)
 	return v.Vars(), err
 }
 
@@ -235,7 +235,7 @@ func (r GroupList) BLPop(ctx context.Context, timeout int64, keys ...string) (gv
 //
 // https://redis.io/commands/brpop/
 func (r GroupList) BRPop(ctx context.Context, timeout int64, keys ...string) (gvar.Vars, error) {
-	v, err := r.redis.Do(ctx, "BRPop", append(gconv.Interfaces(keys), timeout)...)
+	v, err := r.Operation.Do(ctx, "BRPop", append(gconv.Interfaces(keys), timeout)...)
 	return v.Vars(), err
 }
 
@@ -244,7 +244,7 @@ func (r GroupList) BRPop(ctx context.Context, timeout int64, keys ...string) (gv
 //
 // https://redis.io/commands/rpoplpush/
 func (r GroupList) RPopLPush(ctx context.Context, source, destination string) (*gvar.Var, error) {
-	return r.redis.Do(ctx, "RPopLPush", source, destination)
+	return r.Operation.Do(ctx, "RPopLPush", source, destination)
 }
 
 // BRPopLPush is the blocking variant of RPopLPush.
@@ -259,5 +259,5 @@ func (r GroupList) RPopLPush(ctx context.Context, source, destination string) (*
 //
 // https://redis.io/commands/brpoplpush/
 func (r GroupList) BRPopLPush(ctx context.Context, source, destination string, timeout int64) (*gvar.Var, error) {
-	return r.redis.Do(ctx, "BRPopLPush", source, destination, timeout)
+	return r.Operation.Do(ctx, "BRPopLPush", source, destination, timeout)
 }
