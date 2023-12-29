@@ -1,0 +1,34 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+syntax = "proto3";
+
+package article;
+
+option go_package = "github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genpb/api/article/v1";
+
+service ArticleRpc {
+  rpc GetArticle (GetArticleReq) returns (GetArticleRes);
+  rpc CreateArticle (CreateArticleReq) returns (CreateArticleRes);
+}
+
+message GetArticleReq {
+  uint32 id = 1;
+}
+
+message GetArticleRes {
+  string title = 1;
+  bool isPublish = 2;
+}
+
+message CreateArticleReq {
+  string title = 1;
+  bool isPublish = 2;
+}
+
+message CreateArticleRes {
+  uint32 id = 1;
+}
