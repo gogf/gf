@@ -15,13 +15,13 @@ import (
 
 // GroupSortedSet provides sorted set functions for redis.
 type GroupSortedSet struct {
-	redis *Redis
+	Operation gredis.AdapterOperation
 }
 
 // GroupSortedSet creates and returns GroupSortedSet.
 func (r *Redis) GroupSortedSet() gredis.IGroupSortedSet {
 	return GroupSortedSet{
-		redis: r,
+		Operation: r.AdapterOperation,
 	}
 }
 
@@ -55,7 +55,7 @@ func (r GroupSortedSet) ZAdd(
 	for _, item := range members {
 		s = append(s, item.Score, item.Member)
 	}
-	v, err := r.redis.Do(ctx, "ZAdd", s...)
+	v, err := r.Operation.Do(ctx, "ZAdd", s...)
 	return v, err
 }
 
@@ -67,7 +67,7 @@ func (r GroupSortedSet) ZAdd(
 //
 // https://redis.io/commands/zscore/
 func (r GroupSortedSet) ZScore(ctx context.Context, key string, member interface{}) (float64, error) {
-	v, err := r.redis.Do(ctx, "ZScore", key, member)
+	v, err := r.Operation.Do(ctx, "ZScore", key, member)
 	return v.Float64(), err
 }
 
@@ -84,7 +84,7 @@ func (r GroupSortedSet) ZScore(ctx context.Context, key string, member interface
 //
 // https://redis.io/commands/zincrby/
 func (r GroupSortedSet) ZIncrBy(ctx context.Context, key string, increment float64, member interface{}) (float64, error) {
-	v, err := r.redis.Do(ctx, "ZIncrBy", key, increment, member)
+	v, err := r.Operation.Do(ctx, "ZIncrBy", key, increment, member)
 	return v.Float64(), err
 }
 
@@ -94,7 +94,7 @@ func (r GroupSortedSet) ZIncrBy(ctx context.Context, key string, increment float
 //
 // https://redis.io/commands/zcard/
 func (r GroupSortedSet) ZCard(ctx context.Context, key string) (int64, error) {
-	v, err := r.redis.Do(ctx, "ZCard", key)
+	v, err := r.Operation.Do(ctx, "ZCard", key)
 	return v.Int64(), err
 }
 
@@ -109,7 +109,7 @@ func (r GroupSortedSet) ZCard(ctx context.Context, key string) (int64, error) {
 //
 // https://redis.io/commands/zcount/
 func (r GroupSortedSet) ZCount(ctx context.Context, key string, min, max string) (int64, error) {
-	v, err := r.redis.Do(ctx, "ZCount", key, min, max)
+	v, err := r.Operation.Do(ctx, "ZCount", key, min, max)
 	return v.Int64(), err
 }
 
@@ -124,7 +124,7 @@ func (r GroupSortedSet) ZRange(ctx context.Context, key string, start, stop int6
 	if len(option) > 0 {
 		usedOption = option[0]
 	}
-	v, err := r.redis.Do(ctx, "ZRange", mustMergeOptionToArgs(
+	v, err := r.Operation.Do(ctx, "ZRange", mustMergeOptionToArgs(
 		[]interface{}{key, start, stop}, usedOption,
 	)...)
 	return v.Vars(), err
@@ -144,7 +144,7 @@ func (r GroupSortedSet) ZRevRange(ctx context.Context, key string, start, stop i
 	if len(option) > 0 {
 		usedOption = option[0]
 	}
-	return r.redis.Do(ctx, "ZRevRange", mustMergeOptionToArgs(
+	return r.Operation.Do(ctx, "ZRevRange", mustMergeOptionToArgs(
 		[]interface{}{key, start, stop}, usedOption,
 	)...)
 }
@@ -160,7 +160,7 @@ func (r GroupSortedSet) ZRevRange(ctx context.Context, key string, start, stop i
 //
 // https://redis.io/commands/zrank/
 func (r GroupSortedSet) ZRank(ctx context.Context, key string, member interface{}) (int64, error) {
-	v, err := r.redis.Do(ctx, "ZRank", key, member)
+	v, err := r.Operation.Do(ctx, "ZRank", key, member)
 	return v.Int64(), err
 }
 
@@ -175,7 +175,7 @@ func (r GroupSortedSet) ZRank(ctx context.Context, key string, member interface{
 //
 // https://redis.io/commands/zrevrank/
 func (r GroupSortedSet) ZRevRank(ctx context.Context, key string, member interface{}) (int64, error) {
-	v, err := r.redis.Do(ctx, "ZRevRank", key, member)
+	v, err := r.Operation.Do(ctx, "ZRevRank", key, member)
 	return v.Int64(), err
 }
 
@@ -191,7 +191,7 @@ func (r GroupSortedSet) ZRem(ctx context.Context, key string, member interface{}
 	var s = []interface{}{key}
 	s = append(s, member)
 	s = append(s, members...)
-	v, err := r.redis.Do(ctx, "ZRem", s...)
+	v, err := r.Operation.Do(ctx, "ZRem", s...)
 	return v.Int64(), err
 }
 
@@ -206,7 +206,7 @@ func (r GroupSortedSet) ZRem(ctx context.Context, key string, member interface{}
 //
 // https://redis.io/commands/zremrangebyrank/
 func (r GroupSortedSet) ZRemRangeByRank(ctx context.Context, key string, start, stop int64) (int64, error) {
-	v, err := r.redis.Do(ctx, "ZRemRangeByRank", key, start, stop)
+	v, err := r.Operation.Do(ctx, "ZRemRangeByRank", key, start, stop)
 	return v.Int64(), err
 }
 
@@ -217,7 +217,7 @@ func (r GroupSortedSet) ZRemRangeByRank(ctx context.Context, key string, start, 
 //
 // https://redis.io/commands/zremrangebyscore/
 func (r GroupSortedSet) ZRemRangeByScore(ctx context.Context, key string, min, max string) (int64, error) {
-	v, err := r.redis.Do(ctx, "ZRemRangeByScore", key, min, max)
+	v, err := r.Operation.Do(ctx, "ZRemRangeByScore", key, min, max)
 	return v.Int64(), err
 }
 
@@ -232,7 +232,7 @@ func (r GroupSortedSet) ZRemRangeByScore(ctx context.Context, key string, min, m
 //
 // https://redis.io/commands/zremrangebylex/
 func (r GroupSortedSet) ZRemRangeByLex(ctx context.Context, key string, min, max string) (int64, error) {
-	v, err := r.redis.Do(ctx, "ZRemRangeByLex", key, min, max)
+	v, err := r.Operation.Do(ctx, "ZRemRangeByLex", key, min, max)
 	return v.Int64(), err
 }
 
@@ -249,6 +249,6 @@ func (r GroupSortedSet) ZRemRangeByLex(ctx context.Context, key string, min, max
 //
 // https://redis.io/commands/zlexcount/
 func (r GroupSortedSet) ZLexCount(ctx context.Context, key, min, max string) (int64, error) {
-	v, err := r.redis.Do(ctx, "ZLexCount", key, min, max)
+	v, err := r.Operation.Do(ctx, "ZLexCount", key, min, max)
 	return v.Int64(), err
 }

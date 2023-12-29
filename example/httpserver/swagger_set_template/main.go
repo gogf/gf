@@ -31,6 +31,33 @@ func (Hello) Say(ctx context.Context, req *HelloReq) (res *HelloRes, err error) 
 	return
 }
 
+const (
+	MySwaggerUITemplate = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="description" content="SwaggerUI"/>
+	<title>SwaggerUI</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.10.5/swagger-ui.min.css" />
+</head>
+<body>
+<div id="swagger-ui"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.10.5/swagger-ui-bundle.js" crossorigin></script>
+<script>
+	window.onload = () => {
+		window.ui = SwaggerUIBundle({
+			url:    '{SwaggerUIDocUrl}',
+			dom_id: '#swagger-ui',
+		});
+	};
+</script>
+</body>
+</html>
+`
+)
+
 func main() {
 	s := g.Server()
 	s.Use(ghttp.MiddlewareHandlerResponse)
@@ -39,5 +66,6 @@ func main() {
 			new(Hello),
 		)
 	})
+	s.SetSwaggerUITemplate(MySwaggerUITemplate)
 	s.Run()
 }
