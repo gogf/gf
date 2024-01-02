@@ -7,8 +7,8 @@ assignees: ''
 
 ---
 
-**Components that You wish to enhance**
+**Package that You wish to enhance**
 
-**Enhance what**
+**Enhancement description**
 
 **Additional**
