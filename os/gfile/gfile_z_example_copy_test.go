@@ -15,12 +15,12 @@ import (
 func ExampleCopy() {
 	// init
 	var (
-		srcFileName = "gflie_example.txt"
+		srcFileName = "gfile_example.txt"
 		srcTempDir  = gfile.Temp("gfile_example_copy_src")
 		srcTempFile = gfile.Join(srcTempDir, srcFileName)
 
 		// copy file
-		dstFileName = "gflie_example_copy.txt"
+		dstFileName = "gfile_example_copy.txt"
 		dstTempFile = gfile.Join(srcTempDir, dstFileName)
 
 		// copy dir
@@ -47,6 +47,6 @@ func ExampleCopy() {
 
 	// Output:
 	// goframe example copy
-	// gflie_example.txt
-	// gflie_example_copy.txt
+	// gfile_example.txt
+	// gfile_example_copy.txt
 }
