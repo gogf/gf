@@ -15,7 +15,7 @@ import (
 func ExampleGetContents() {
 	// init
 	var (
-		fileName = "gflie_example.txt"
+		fileName = "gfile_example.txt"
 		tempDir  = gfile.Temp("gfile_example_content")
 		tempFile = gfile.Join(tempDir, fileName)
 	)
@@ -34,7 +34,7 @@ func ExampleGetContents() {
 func ExampleGetBytes() {
 	// init
 	var (
-		fileName = "gflie_example.txt"
+		fileName = "gfile_example.txt"
 		tempDir  = gfile.Temp("gfile_example_content")
 		tempFile = gfile.Join(tempDir, fileName)
 	)
@@ -53,7 +53,7 @@ func ExampleGetBytes() {
 func ExamplePutContents() {
 	// init
 	var (
-		fileName = "gflie_example.txt"
+		fileName = "gfile_example.txt"
 		tempDir  = gfile.Temp("gfile_example_content")
 		tempFile = gfile.Join(tempDir, fileName)
 	)
@@ -72,7 +72,7 @@ func ExamplePutContents() {
 func ExamplePutBytes() {
 	// init
 	var (
-		fileName = "gflie_example.txt"
+		fileName = "gfile_example.txt"
 		tempDir  = gfile.Temp("gfile_example_content")
 		tempFile = gfile.Join(tempDir, fileName)
 	)
@@ -90,7 +90,7 @@ func ExamplePutBytes() {
 func ExamplePutContentsAppend() {
 	// init
 	var (
-		fileName = "gflie_example.txt"
+		fileName = "gfile_example.txt"
 		tempDir  = gfile.Temp("gfile_example_content")
 		tempFile = gfile.Join(tempDir, fileName)
 	)
@@ -116,7 +116,7 @@ func ExamplePutContentsAppend() {
 func ExamplePutBytesAppend() {
 	// init
 	var (
-		fileName = "gflie_example.txt"
+		fileName = "gfile_example.txt"
 		tempDir  = gfile.Temp("gfile_example_content")
 		tempFile = gfile.Join(tempDir, fileName)
 	)
@@ -141,7 +141,7 @@ func ExamplePutBytesAppend() {
 func ExampleGetNextCharOffsetByPath() {
 	// init
 	var (
-		fileName = "gflie_example.txt"
+		fileName = "gfile_example.txt"
 		tempDir  = gfile.Temp("gfile_example_content")
 		tempFile = gfile.Join(tempDir, fileName)
 	)
@@ -160,7 +160,7 @@ func ExampleGetNextCharOffsetByPath() {
 func ExampleGetBytesTilCharByPath() {
 	// init
 	var (
-		fileName = "gflie_example.txt"
+		fileName = "gfile_example.txt"
 		tempDir  = gfile.Temp("gfile_example_content")
 		tempFile = gfile.Join(tempDir, fileName)
 	)
@@ -178,7 +178,7 @@ func ExampleGetBytesTilCharByPath() {
 func ExampleGetBytesByTwoOffsetsByPath() {
 	// init
 	var (
-		fileName = "gflie_example.txt"
+		fileName = "gfile_example.txt"
 		tempDir  = gfile.Temp("gfile_example_content")
 		tempFile = gfile.Join(tempDir, fileName)
 	)
@@ -196,7 +196,7 @@ func ExampleGetBytesByTwoOffsetsByPath() {
 func ExampleReadLines() {
 	// init
 	var (
-		fileName = "gflie_example.txt"
+		fileName = "gfile_example.txt"
 		tempDir  = gfile.Temp("gfile_example_content")
 		tempFile = gfile.Join(tempDir, fileName)
 	)
@@ -219,7 +219,7 @@ func ExampleReadLines() {
 func ExampleReadLinesBytes() {
 	// init
 	var (
-		fileName = "gflie_example.txt"
+		fileName = "gfile_example.txt"
 		tempDir  = gfile.Temp("gfile_example_content")
 		tempFile = gfile.Join(tempDir, fileName)
 	)

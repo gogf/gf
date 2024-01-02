@@ -16,7 +16,7 @@ import (
 func ExampleGetContentsWithCache() {
 	// init
 	var (
-		fileName = "gflie_example.txt"
+		fileName = "gfile_example.txt"
 		tempDir  = gfile.Temp("gfile_example_cache")
 		tempFile = gfile.Join(tempDir, fileName)
 	)

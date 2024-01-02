@@ -15,7 +15,7 @@ import (
 func ExampleSearch() {
 	// init
 	var (
-		fileName = "gflie_example.txt"
+		fileName = "gfile_example.txt"
 		tempDir  = gfile.Temp("gfile_example_search")
 		tempFile = gfile.Join(tempDir, fileName)
 	)
@@ -28,5 +28,5 @@ func ExampleSearch() {
 	fmt.Println(gfile.Basename(realPath))
 
 	// Output:
-	// gflie_example.txt
+	// gfile_example.txt
 }
