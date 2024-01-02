@@ -17,7 +17,7 @@ assignees: ''
 **What version of `Go` and system type/arch are you using?**
 <!-- 
 Please paste the output of command `go version` from your terminal.
-What expect to see is like: `go 1.12, linux/amd64`
+What expects to see is like: `go 1.12, linux/amd64`
 -->
 
 
