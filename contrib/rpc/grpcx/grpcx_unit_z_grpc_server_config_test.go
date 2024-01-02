@@ -7,9 +7,13 @@
 package grpcx
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
 )
@@ -69,4 +73,29 @@ func Test_Grpcx_Grpc_Server_Config(t *testing.T) {
 			t.Assert(svc.GetEndpoints().String(), addr)
 		}
 	})
+}
+
+func Test_Grpcx_Grpc_Server_Config_Logger(t *testing.T) {
+	var (
+		pwd       = gfile.Pwd()
+		configDir = gfile.Join(gdebug.CallerDirectory(), "testdata", "configuration")
+	)
+	gtest.C(t, func(t *gtest.T) {
+		err := gfile.Chdir(configDir)
+		t.AssertNil(err)
+		defer gfile.Chdir(pwd)
+
+		s := Server.New()
+		s.Start()
+		time.Sleep(time.Millisecond * 100)
+		defer s.Stop()
+
+		var (
+			logFilePath    = fmt.Sprintf("/tmp/log/%s.log", gtime.Now().Format("Y-m-d"))
+			logFileContent = gfile.GetContents(logFilePath)
+		)
+		t.Assert(gfile.Exists(logFilePath), true)
+		t.Assert(gstr.Contains(logFileContent, "TestLogger "), true)
+	})
+
 }

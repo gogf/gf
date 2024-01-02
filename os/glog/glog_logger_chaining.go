@@ -65,6 +65,9 @@ func (l *Logger) Cat(category string) *Logger {
 // File is a chaining function,
 // which sets file name `pattern` for the current logging content output.
 func (l *Logger) File(file string) *Logger {
+	if file == "" {
+		return l
+	}
 	logger := (*Logger)(nil)
 	if l.parent == nil {
 		logger = l.Clone()

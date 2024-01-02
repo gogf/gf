@@ -8,6 +8,7 @@ package grpcx
 
 import (
 	"context"
+	"fmt"
 
 	"google.golang.org/grpc"
 
@@ -75,8 +76,26 @@ func (s modServer) NewConfig() *GrpcServerConfig {
 	// Reading configuration file and updating the configured keys.
 	if g.Cfg().Available(ctx) {
 		// Server attributes configuration.
-		if err = g.Cfg().MustGet(ctx, configNodeNameGrpcServer).Struct(&config); err != nil {
+		serverConfigMap := g.Cfg().MustGet(ctx, configNodeNameGrpcServer).Map()
+		if len(serverConfigMap) == 0 {
+			return config
+		}
+		if err = gconv.Struct(serverConfigMap, &config); err != nil {
 			g.Log().Error(ctx, err)
+			return config
+		}
+		// Server logger configuration checks.
+		serverLoggerConfigMap := g.Cfg().MustGet(
+			ctx,
+			fmt.Sprintf(`%s.logger`, configNodeNameGrpcServer),
+		).Map()
+		if len(serverLoggerConfigMap) == 0 && len(serverConfigMap) > 0 {
+			serverLoggerConfigMap = gconv.Map(serverConfigMap["logger"])
+		}
+		if len(serverLoggerConfigMap) > 0 {
+			if err = config.Logger.SetConfigWithMap(serverLoggerConfigMap); err != nil {
+				panic(err)
+			}
 		}
 	}
 	return config
