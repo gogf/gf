@@ -15,8 +15,8 @@
 [![GitHub closed pull requests](https://img.shields.io/github/issues-pr-closed/gogf/gf)](https://github.com/gogf/gf/pulls?q=is%3Apr+is%3Aclosed)
 [![GitHub issues](https://img.shields.io/github/issues/gogf/gf)](https://github.com/gogf/gf/issues)
 [![GitHub closed issues](https://img.shields.io/github/issues-closed/gogf/gf)](https://github.com/gogf/gf/issues?q=is%3Aissue+is%3Aclosed)
-![Stars](https://img.shields.io/github/stars/gogf/gf)
-![Forks](https://img.shields.io/github/forks/gogf/gf)
+![Stars](https://img.shields.io/github/stars/gogf/gf?style=flat)
+![Forks](https://img.shields.io/github/forks/gogf/gf?style=flat)
 
 </div>
 
