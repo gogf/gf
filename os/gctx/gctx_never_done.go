@@ -32,7 +32,11 @@ func (c *neverDoneCtx) Err() error {
 }
 
 // NeverDone wraps and returns a new context object that will be never done,
-// which forbids the context manually done, to make the context can be propagated to asynchronous goroutines.
+// which forbids the context manually done, to make the context can be propagated
+// to asynchronous goroutines.
+//
+// Note that, it does not affect the closing (canceling) of the parent context,
+// as it is a wrapper for its parent, which only affects the next context handling.
 func NeverDone(ctx context.Context) context.Context {
 	return &neverDoneCtx{ctx}
 }
