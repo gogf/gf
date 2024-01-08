@@ -2,7 +2,6 @@ package article
 
 import (
 	"context"
-	v1 "github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genpb/api/article/v1"
 
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 	"github.com/gogf/gf/v2/errors/gcode"
