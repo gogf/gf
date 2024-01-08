@@ -75,7 +75,8 @@ func TestQueue_Close(t *testing.T) {
 		q1 := gqueue.New()
 		q1.Push(1)
 		q1.Push(2)
-		time.Sleep(time.Millisecond)
+		// wait sync to channel
+		time.Sleep(10 * time.Millisecond)
 		t.Assert(q1.Len(), 2)
 		q1.Close()
 	})
@@ -83,7 +84,8 @@ func TestQueue_Close(t *testing.T) {
 		q1 := gqueue.New(2)
 		q1.Push(1)
 		q1.Push(2)
-		time.Sleep(time.Millisecond)
+		// wait sync to channel
+		time.Sleep(10 * time.Millisecond)
 		t.Assert(q1.Len(), 2)
 		q1.Close()
 	})

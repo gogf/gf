@@ -4,14 +4,10 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gstr
+package ghttp
 
-import "strings"
-
-// Repeat returns a new string consisting of multiplier copies of the string input.
-//
-// Example:
-// Repeat("a", 3) -> "aaa"
-func Repeat(input string, multiplier int) string {
-	return strings.Repeat(input, multiplier)
+// MiddlewareNeverDoneCtx sets the context never done for current process.
+func MiddlewareNeverDoneCtx(r *Request) {
+	r.SetCtx(r.GetNeverDoneCtx())
+	r.Middleware.Next()
 }
