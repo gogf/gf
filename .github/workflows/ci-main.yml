@@ -169,12 +169,6 @@ jobs:
       with:
         timezoneLinux: "Asia/Shanghai"
 
-    - name: Install Protoc
-      uses: arduino/setup-protoc@v2
-      with:
-        version: "23.x"
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
-
     - name: Checkout Repository
       uses: actions/checkout@v4
 
@@ -194,7 +188,13 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: ${{ matrix.go-version }}
-        cache-dependency-path: '**/go.sum' 
+        cache-dependency-path: '**/go.sum'
+
+    - name: Install Protoc
+      uses: arduino/setup-protoc@v2
+      with:
+        version: "23.x"
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Before Script
       run:  bash .github/workflows/before_script.sh
