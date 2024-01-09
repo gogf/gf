@@ -7,11 +7,12 @@
 package utils_test
 
 import (
-	"io"
-	"testing"
-
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/test/gtest"
+	"io"
+	"reflect"
+	"testing"
+	"unsafe"
 )
 
 func Test_ReadCloser(t *testing.T) {
@@ -69,5 +70,27 @@ func Test_RemoveSymbols(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(utils.RemoveSymbols(`-a-b._a c1!@#$%^&*()_+:";'.,'01`), `abac101`)
 		t.Assert(utils.RemoveSymbols(`-a-b我._a c1!@#$%^&*是()_+:帅";'.,哥'01`), `ab我ac1是帅哥01`)
+	})
+}
+
+func Test_CanCallIsNil(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			iValue         = "gf"
+			iChan          = make(chan struct{})
+			iFunc          = func() {}
+			iMap           = map[string]struct{}{}
+			iPtr           = &iValue
+			iSlice         = make([]struct{}, 0)
+			iUnsafePointer = unsafe.Pointer(&iValue)
+		)
+
+		t.Assert(utils.CanCallIsNil(reflect.ValueOf(iValue)), false)
+		t.Assert(utils.CanCallIsNil(reflect.ValueOf(iChan)), true)
+		t.Assert(utils.CanCallIsNil(reflect.ValueOf(iFunc)), true)
+		t.Assert(utils.CanCallIsNil(reflect.ValueOf(iMap)), true)
+		t.Assert(utils.CanCallIsNil(reflect.ValueOf(iPtr)), true)
+		t.Assert(utils.CanCallIsNil(reflect.ValueOf(iSlice)), true)
+		t.Assert(utils.CanCallIsNil(reflect.ValueOf(iUnsafePointer)), true)
 	})
 }

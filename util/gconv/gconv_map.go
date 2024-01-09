@@ -7,7 +7,6 @@
 package gconv
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 
@@ -304,11 +303,8 @@ func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) in
 			)
 			switch {
 			case mapKeyValue.IsZero():
-				var a = reflect.ValueOf(mapKeyValue)
-				// mapKeyValue.Kind() == reflect.Interface &&
-				if a.IsNil() {
+				if utils.CanCallIsNil(mapKeyValue) && mapKeyValue.IsNil() {
 					// quick check for nil value.
-					fmt.Println(312321)
 					mapValue = nil
 				} else {
 					// in case of:
