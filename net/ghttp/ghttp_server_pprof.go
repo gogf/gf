@@ -26,7 +26,7 @@ const (
 // StartPProfServer starts and runs a new server for pprof.
 func StartPProfServer(port int, pattern ...string) {
 	s := GetServer(defaultPProfServerName)
-	s.EnablePProf()
+	s.EnablePProf(pattern...)
 	s.SetPort(port)
 	s.Run()
 }
