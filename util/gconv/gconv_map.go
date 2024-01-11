@@ -303,7 +303,7 @@ func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) in
 			)
 			switch {
 			case mapKeyValue.IsZero():
-				if mapKeyValue.IsNil() {
+				if utils.CanCallIsNil(mapKeyValue) && mapKeyValue.IsNil() {
 					// quick check for nil value.
 					mapValue = nil
 				} else {
