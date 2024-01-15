@@ -7,13 +7,14 @@
 package cmd
 
 import (
+	"path/filepath"
+	"testing"
+
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/genctrl"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
 	"github.com/gogf/gf/v2/util/gutil"
-	"path/filepath"
-	"testing"
 )
 
 func Test_Gen_Ctrl_Default(t *testing.T) {
