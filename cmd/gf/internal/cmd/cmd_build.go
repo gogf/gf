@@ -44,8 +44,9 @@ type cBuild struct {
 }
 
 const (
-	cBuildBrief = `cross-building go project for lots of platforms`
-	cBuildEg    = `
+	cBuildDefaultFile = "main.go"
+	cBuildBrief       = `cross-building go project for lots of platforms`
+	cBuildEg          = `
 gf build main.go
 gf build main.go --ps public,template
 gf build main.go --cgo
@@ -123,7 +124,7 @@ type cBuildInput struct {
 	Arch          string `short:"a"  name:"arch"    brief:"output binary architecture, multiple arch separated with ','"`
 	System        string `short:"s"  name:"system"  brief:"output binary system, multiple os separated with ','"`
 	Output        string `short:"o"  name:"output"  brief:"output binary path, used when building single binary file"`
-	Path          string `short:"p"  name:"path"    brief:"output binary directory path, default is './temp'" d:"./temp"`
+	Path          string `short:"p"  name:"path"    brief:"output binary directory path, default is '.'" d:"."`
 	Extra         string `short:"e"  name:"extra"   brief:"extra custom \"go build\" options"`
 	Mod           string `short:"m"  name:"mod"     brief:"like \"-mod\" option of \"go build\", use \"-m none\" to disable go module"`
 	Cgo           bool   `short:"c"  name:"cgo"     brief:"enable or disable cgo feature, it's disabled in default" orphan:"true"`
@@ -152,12 +153,13 @@ func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, e
 
 	var (
 		parser = gcmd.ParserFromCtx(ctx)
-		file   = parser.GetArg(2).String()
+		file   = in.File
 	)
-	if len(file) < 1 {
+	if file == "" {
+		file = parser.GetArg(2).String()
 		// Check and use the main.go file.
-		if gfile.Exists("main.go") {
-			file = "main.go"
+		if gfile.Exists(cBuildDefaultFile) {
+			file = cBuildDefaultFile
 		} else {
 			mlog.Fatal("build file path is empty or main.go not found in current working directory")
 		}
@@ -239,13 +241,7 @@ func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, e
 	} else {
 		genv.MustSet("CGO_ENABLED", "0")
 	}
-	var (
-		cmd = ""
-		ext = ""
-	)
 	for system, item := range platformMap {
-		cmd = ""
-		ext = ""
 		if len(customSystems) > 0 && customSystems[0] != "all" && !gstr.InArray(customSystems, system) {
 			continue
 		}
@@ -258,57 +254,21 @@ func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, e
 				// For example:
 				// `gf build`
 				// `gf build -o main.exe`
-				if runtime.GOOS == "windows" {
-					ext = ".exe"
-				}
-				var outputPath string
-				if len(in.Output) > 0 {
-					outputPath = "-o " + in.Output
-				} else {
-					outputPath = "-o " + in.Name + ext
-				}
-				cmd = fmt.Sprintf(
-					`go build %s -ldflags "%s" %s %s`,
-					outputPath, ldFlags, in.Extra, file,
+				c.doBinaryBuild(
+					ctx, file,
+					in.Output, in.Path,
+					runtime.GOOS, runtime.GOARCH, in.Name, ldFlags, in.Extra,
+					in.ExitWhenError,
+					true,
 				)
 			} else {
-				// Cross-building, output the compiled binary to specified path.
-				if system == "windows" {
-					ext = ".exe"
-				}
-				genv.MustSet("GOOS", system)
-				genv.MustSet("GOARCH", arch)
-
-				var outputPath string
-				if len(in.Output) > 0 {
-					outputPath = "-o " + in.Output
-				} else {
-					outputPath = fmt.Sprintf(
-						"-o %s/%s/%s%s",
-						in.Path, system+"_"+arch, in.Name, ext,
-					)
-				}
-				cmd = fmt.Sprintf(
-					`go build %s -ldflags "%s" %s%s`,
-					outputPath, ldFlags, in.Extra, file,
+				c.doBinaryBuild(
+					ctx, file,
+					in.Output, in.Path,
+					system, arch, in.Name, ldFlags, in.Extra,
+					in.ExitWhenError,
+					false,
 				)
-			}
-			mlog.Debug(fmt.Sprintf("build for GOOS=%s GOARCH=%s", system, arch))
-			mlog.Debug(cmd)
-			// It's not necessary printing the complete command string.
-			cmdShow, _ := gregex.ReplaceString(`\s+(-ldflags ".+?")\s+`, " ", cmd)
-			mlog.Print(cmdShow)
-			if result, err := gproc.ShellExec(ctx, cmd); err != nil {
-				mlog.Printf(
-					"failed to build, os:%s, arch:%s, error:\n%s\n\n%s\n",
-					system, arch, gstr.Trim(result),
-					`you may use command option "--debug" to enable debug info and check the details`,
-				)
-				if in.ExitWhenError {
-					os.Exit(1)
-				}
-			} else {
-				mlog.Debug(gstr.Trim(result))
 			}
 			// single binary building.
 			if len(customSystems) == 0 && len(customArches) == 0 {
@@ -320,6 +280,68 @@ func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, e
 buildDone:
 	mlog.Print("done!")
 	return
+}
+
+func (c cBuild) doBinaryBuild(
+	ctx context.Context,
+	filePath string,
+	outputPath, dirPath string,
+	system, arch, name, ldFlags, extra string,
+	exitWhenError bool,
+	singleBuild bool,
+) {
+	var (
+		cmd string
+		ext string
+	)
+	// Cross-building, output the compiled binary to specified path.
+	if system == "windows" {
+		ext = ".exe"
+	}
+	genv.MustSet("GOOS", system)
+	genv.MustSet("GOARCH", arch)
+
+	if outputPath != "" {
+		outputPath = "-o " + outputPath
+	} else {
+		if dirPath == "" {
+			dirPath = "."
+		} else {
+			dirPath = gstr.TrimRight(dirPath, "/")
+		}
+		if singleBuild {
+			outputPath = fmt.Sprintf(
+				"-o %s/%s%s",
+				dirPath, name, ext,
+			)
+		} else {
+			outputPath = fmt.Sprintf(
+				"-o %s/%s/%s%s",
+				dirPath, system+"_"+arch, name, ext,
+			)
+		}
+	}
+	cmd = fmt.Sprintf(
+		`go build %s -ldflags "%s" %s%s`,
+		outputPath, ldFlags, extra, filePath,
+	)
+	mlog.Debug(fmt.Sprintf("build for GOOS=%s GOARCH=%s", system, arch))
+	mlog.Debug(cmd)
+	// It's not necessary printing the complete command string, filtering ldFlags.
+	cmdShow, _ := gregex.ReplaceString(`\s+(-ldflags ".+?")\s+`, " ", cmd)
+	mlog.Print(cmdShow)
+	if result, err := gproc.ShellExec(ctx, cmd); err != nil {
+		mlog.Printf(
+			"failed to build, os:%s, arch:%s, error:\n%s\n\n%s\n",
+			system, arch, gstr.Trim(result),
+			`you may use command option "--debug" to enable debug info and check the details`,
+		)
+		if exitWhenError {
+			os.Exit(1)
+		}
+	} else {
+		mlog.Debug(gstr.Trim(result))
+	}
 }
 
 // getBuildInVarStr retrieves and returns the custom build-in variables in configuration

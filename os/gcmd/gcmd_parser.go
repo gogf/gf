@@ -200,6 +200,9 @@ func (p *Parser) setOptionValue(name, value string) {
 
 // GetOpt returns the option value named `name` as gvar.Var.
 func (p *Parser) GetOpt(name string, def ...interface{}) *gvar.Var {
+	if p == nil {
+		return nil
+	}
 	if v, ok := p.parsedOptions[name]; ok {
 		return gvar.New(v)
 	}
@@ -211,11 +214,17 @@ func (p *Parser) GetOpt(name string, def ...interface{}) *gvar.Var {
 
 // GetOptAll returns all parsed options.
 func (p *Parser) GetOptAll() map[string]string {
+	if p == nil {
+		return nil
+	}
 	return p.parsedOptions
 }
 
 // GetArg returns the argument at `index` as gvar.Var.
 func (p *Parser) GetArg(index int, def ...string) *gvar.Var {
+	if p == nil {
+		return nil
+	}
 	if index >= 0 && index < len(p.parsedArgs) {
 		return gvar.New(p.parsedArgs[index])
 	}
@@ -227,6 +236,9 @@ func (p *Parser) GetArg(index int, def ...string) *gvar.Var {
 
 // GetArgAll returns all parsed arguments.
 func (p *Parser) GetArgAll() []string {
+	if p == nil {
+		return nil
+	}
 	return p.parsedArgs
 }
 
