@@ -174,7 +174,7 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		// Parse single logic package folder.
 		var (
 			// StructName => FunctionDefinitions
-			srcPkgInterfaceMap   = make(map[string]*garray.StrArray)
+			srcPkgInterfaceMap   = gmap.NewListMap()
 			srcImportedPackages  = garray.NewSortedStrArray().SetUnique(true)
 			importAliasToPathMap = gmap.NewStrStrMap() // for conflict imports check. alias => import path(with `"`)
 			importPathToAliasMap = gmap.NewStrStrMap() // for conflict imports check. import path(with `"`) => alias
