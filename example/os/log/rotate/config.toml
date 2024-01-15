@@ -1,0 +1,8 @@
+[logger]
+path = "./log"
+file = "{Y-m-d-H-i}.log"
+level = "all"
+stdout = true
+rotateExpire = "1m"
+rotateBackupLimit = 4
+rotateCheckInterval = "5s"

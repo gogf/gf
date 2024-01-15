@@ -189,3 +189,92 @@ func Test_Session_Custom_Id(t *testing.T) {
 		t.Assert(client.GetContent(ctx, "/value"), value)
 	})
 }
+
+func Test_Session_New_Id(t *testing.T) {
+	var (
+		sessionId     = "1234567890"
+		newSessionId  = "0987654321"
+		newSessionId2 = "abcdefghij"
+		key           = "key"
+		value         = "value"
+		s             = g.Server(guid.S())
+	)
+	s.BindHandler("/id", func(r *ghttp.Request) {
+		if err := r.Session.SetId(sessionId); err != nil {
+			r.Response.WriteExit(err.Error())
+		}
+		if err := r.Session.Set(key, value); err != nil {
+			r.Response.WriteExit(err.Error())
+		}
+		r.Response.WriteExit(r.Session.Id())
+	})
+
+	s.BindHandler("/newIdBySession", func(r *ghttp.Request) {
+		// Use before session init
+		if err := r.Session.SetId(newSessionId); err != nil {
+			r.Response.WriteExit(err.Error())
+		}
+		if err := r.Session.Set(key, value); err != nil {
+			r.Response.WriteExit(err.Error())
+		}
+		r.Response.WriteExit(r.Session.Id())
+	})
+
+	s.BindHandler("/newIdByCookie", func(r *ghttp.Request) {
+		if err := r.Session.Remove("someKey"); err != nil {
+			r.Response.WriteExit(err.Error())
+		}
+
+		r.Cookie.SetSessionId(newSessionId2)
+		//r.Response.WriteExit(r.Session.Id())    // only change in cookie
+
+		r.Response.WriteExit(newSessionId2)
+	})
+
+	s.BindHandler("/value", func(r *ghttp.Request) {
+		r.Response.WriteExit(r.Session.Get(key))
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		r, err := client.Get(ctx, "/id")
+		t.AssertNil(err)
+		defer r.Close()
+		t.Assert(r.ReadAllString(), sessionId)
+		t.Assert(r.GetCookie(s.GetSessionIdName()), sessionId)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		client.SetHeader(s.GetSessionIdName(), sessionId)
+		t.Assert(client.GetContent(ctx, "/value"), value)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		client.SetHeader(s.GetSessionIdName(), sessionId)
+		r, err := client.Get(ctx, "/newIdBySession")
+		t.AssertNil(err)
+		defer r.Close()
+		t.Assert(r.ReadAllString(), newSessionId)
+		t.Assert(r.GetCookie(s.GetSessionIdName()), newSessionId)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		r, err := client.Get(ctx, "/newIdByCookie")
+		client.SetHeader(s.GetSessionIdName(), sessionId)
+		t.AssertNil(err)
+		defer r.Close()
+		t.Assert(r.ReadAllString(), newSessionId2)
+		t.Assert(r.GetCookie(s.GetSessionIdName()), newSessionId2)
+	})
+}

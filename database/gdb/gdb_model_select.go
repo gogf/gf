@@ -306,7 +306,7 @@ func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 //		Where("u1.id<2").
 //		ScanAndCount(&users, &count, false)
 func (m *Model) ScanAndCount(pointer interface{}, totalCount *int, useFieldForCount bool) (err error) {
-	// support Fileds with *, example: .Fileds("a.*, b.name"). Count sql is select count(1) from xxx
+	// support Fields with *, example: .Fields("a.*, b.name"). Count sql is select count(1) from xxx
 	countModel := m.Clone()
 	// If useFieldForCount is false, set the fields to a constant value of 1 for counting
 	if !useFieldForCount {
@@ -768,8 +768,10 @@ func (m *Model) formatCondition(
 		}
 	}
 	// ORDER BY.
-	if m.orderBy != "" {
-		conditionExtra += " ORDER BY " + m.orderBy
+	if !isCountStatement { // The count statement of sqlserver cannot contain the order by statement
+		if m.orderBy != "" {
+			conditionExtra += " ORDER BY " + m.orderBy
+		}
 	}
 	// LIMIT.
 	if !isCountStatement {

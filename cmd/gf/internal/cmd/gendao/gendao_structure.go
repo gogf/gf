@@ -126,8 +126,13 @@ func generateStructFieldDefinition(
 		tagKey         = "`"
 		descriptionTag = gstr.Replace(formatComment(field.Comment), `"`, `\"`)
 	)
+	removeFieldPrefixArray := gstr.SplitAndTrim(in.RemoveFieldPrefix, ",")
+	newFiledName := field.Name
+	for _, v := range removeFieldPrefixArray {
+		newFiledName = gstr.TrimLeftStr(newFiledName, v, 1)
+	}
 	attrLines = []string{
-		"    #" + gstr.CaseCamel(field.Name),
+		"    #" + gstr.CaseCamel(newFiledName),
 		" #" + localTypeNameStr,
 	}
 	attrLines = append(attrLines, " #"+fmt.Sprintf(tagKey+`json:"%s"`, jsonTag))

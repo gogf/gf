@@ -2,5 +2,5 @@ package gf
 
 const (
 	// VERSION is the current GoFrame version.
-	VERSION = "v2.5.6"
+	VERSION = "v2.6.1"
 )

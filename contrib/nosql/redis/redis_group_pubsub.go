@@ -14,13 +14,13 @@ import (
 
 // GroupPubSub provides pub/sub functions for redis.
 type GroupPubSub struct {
-	redis *Redis
+	Operation gredis.AdapterOperation
 }
 
 // GroupPubSub creates and returns GroupPubSub.
 func (r *Redis) GroupPubSub() gredis.IGroupPubSub {
 	return GroupPubSub{
-		redis: r,
+		Operation: r.AdapterOperation,
 	}
 }
 
@@ -36,7 +36,7 @@ func (r *Redis) GroupPubSub() gredis.IGroupPubSub {
 //
 // https://redis.io/commands/publish/
 func (r GroupPubSub) Publish(ctx context.Context, channel string, message interface{}) (int64, error) {
-	v, err := r.redis.Do(ctx, "Publish", channel, message)
+	v, err := r.Operation.Do(ctx, "Publish", channel, message)
 	return v.Int64(), err
 }
 
@@ -46,7 +46,7 @@ func (r GroupPubSub) Publish(ctx context.Context, channel string, message interf
 func (r GroupPubSub) Subscribe(
 	ctx context.Context, channel string, channels ...string,
 ) (gredis.Conn, []*gredis.Subscription, error) {
-	conn, err := r.redis.Conn(ctx)
+	conn, err := r.Operation.Conn(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -70,7 +70,7 @@ func (r GroupPubSub) Subscribe(
 func (r GroupPubSub) PSubscribe(
 	ctx context.Context, pattern string, patterns ...string,
 ) (gredis.Conn, []*gredis.Subscription, error) {
-	conn, err := r.redis.Conn(ctx)
+	conn, err := r.Operation.Conn(ctx)
 	if err != nil {
 		return nil, nil, err
 	}

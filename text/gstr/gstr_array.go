@@ -24,6 +24,9 @@ func InArray(a []string, s string) bool {
 }
 
 // PrefixArray adds `prefix` string for each item of `array`.
+//
+// Example:
+// PrefixArray(["a","b"], "gf_") -> ["gf_a", "gf_b"]
 func PrefixArray(array []string, prefix string) {
 	for k, v := range array {
 		array[k] = prefix + v

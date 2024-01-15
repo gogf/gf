@@ -247,7 +247,7 @@ func doScanList(in doScanListInput) (err error) {
 		relationBindToFieldName string // Eg: relationKV: id:uid  -> uid
 	)
 	if len(in.RelationFields) > 0 {
-		// The relation key string of table filed name and attribute name
+		// The relation key string of table field name and attribute name
 		// can be joined with char '=' or ':'.
 		array := gstr.SplitAndTrim(in.RelationFields, "=")
 		if len(array) == 1 {
@@ -363,11 +363,11 @@ func doScanList(in doScanListInput) (err error) {
 		if in.RelationFields != "" && !relationBindToFieldNameChecked {
 			relationFromAttrField = relationFromAttrValue.FieldByName(relationBindToFieldName)
 			if !relationFromAttrField.IsValid() {
-				filedMap, _ := gstructs.FieldMap(gstructs.FieldMapInput{
+				fieldMap, _ := gstructs.FieldMap(gstructs.FieldMapInput{
 					Pointer:         relationFromAttrValue,
 					RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
 				})
-				if key, _ := gutil.MapPossibleItemByKey(gconv.Map(filedMap), relationBindToFieldName); key == "" {
+				if key, _ := gutil.MapPossibleItemByKey(gconv.Map(fieldMap), relationBindToFieldName); key == "" {
 					return gerror.NewCodef(
 						gcode.CodeInvalidParameter,
 						`cannot find possible related attribute name "%s" from given relation fields "%s"`,

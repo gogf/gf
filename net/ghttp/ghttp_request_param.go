@@ -158,6 +158,8 @@ func (r *Request) GetBody() []byte {
 	return r.bodyContent
 }
 
+// MakeBodyRepeatableRead marks the request body could be repeatedly readable or not.
+// It also returns the current content of the request body.
 func (r *Request) MakeBodyRepeatableRead(repeatableRead bool) []byte {
 	if r.bodyContent == nil {
 		var err error
@@ -267,8 +269,6 @@ func (r *Request) parseForm() {
 		return
 	}
 	if contentType := r.Header.Get("Content-Type"); contentType != "" {
-		r.MakeBodyRepeatableRead(true)
-
 		var err error
 		if gstr.Contains(contentType, "multipart/") {
 			// multipart/form-data, multipart/mixed
