@@ -42,13 +42,13 @@ func ExampleStrSet_Add() {
 	fmt.Println(strSet.Slice())
 	fmt.Println(strSet.AddIfNotExist("str"))
 
-	// Mya Output:
+	// May Output:
 	// [str str1 str2 str3]
 	// false
 }
 
 // AddIfNotExist checks whether item exists in the set,
-// it adds the item to set and returns true if it does not exists in the set,
+// it adds the item to set and returns true if it does not exist in the set,
 // or else it does nothing and returns false.
 func ExampleStrSet_AddIfNotExist() {
 	strSet := gset.NewStrSetFrom([]string{"str1", "str2", "str3"}, true)
@@ -56,13 +56,13 @@ func ExampleStrSet_AddIfNotExist() {
 	fmt.Println(strSet.Slice())
 	fmt.Println(strSet.AddIfNotExist("str"))
 
-	// Mya Output:
+	// May Output:
 	// [str str1 str2 str3]
 	// false
 }
 
 // AddIfNotExistFunc checks whether item exists in the set,
-// it adds the item to set and returns true if it does not exists in the set and function `f` returns true,
+// it adds the item to set and returns true if it does not exist in the set and function `f` returns true,
 // or else it does nothing and returns false.
 // Note that, the function `f` is executed without writing lock.
 func ExampleStrSet_AddIfNotExistFunc() {
@@ -79,7 +79,7 @@ func ExampleStrSet_AddIfNotExistFunc() {
 }
 
 // AddIfNotExistFunc checks whether item exists in the set,
-// it adds the item to set and returns true if it does not exists in the set and function `f` returns true,
+// it adds the item to set and returns true if it does not exist in the set and function `f` returns true,
 // or else it does nothing and returns false.
 // Note that, the function `f` is executed without writing lock.
 func ExampleStrSet_AddIfNotExistFuncLock() {

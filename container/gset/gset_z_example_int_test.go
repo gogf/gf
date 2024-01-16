@@ -42,7 +42,7 @@ func ExampleIntSet_Add() {
 	fmt.Println(intSet.Slice())
 	fmt.Println(intSet.AddIfNotExist(1))
 
-	// Mya Output:
+	// May Output:
 	// [1 2 3]
 	// false
 }
@@ -56,7 +56,7 @@ func ExampleIntSet_AddIfNotExist() {
 	fmt.Println(intSet.Slice())
 	fmt.Println(intSet.AddIfNotExist(1))
 
-	// Mya Output:
+	// May Output:
 	// [1 2 3]
 	// false
 }
