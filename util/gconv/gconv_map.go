@@ -52,6 +52,7 @@ func Map(value interface{}, option ...MapOption) map[string]interface{} {
 // Deprecated: used Map instead.
 func MapDeep(value interface{}, tags ...string) map[string]interface{} {
 	return doMapConvert(value, recursiveTypeTrue, false, MapOption{
+		Deep: true,
 		Tags: tags,
 	})
 }
