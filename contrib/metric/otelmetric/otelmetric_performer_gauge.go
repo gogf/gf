@@ -8,6 +8,7 @@ package otelmetric
 
 import (
 	"context"
+
 	"go.opentelemetry.io/otel/metric"
 
 	"github.com/gogf/gf/v2/errors/gcode"

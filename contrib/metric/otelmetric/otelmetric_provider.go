@@ -9,12 +9,13 @@ package otelmetric
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel"
 	otelmetric "go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/sdk/instrumentation"
 	"go.opentelemetry.io/otel/sdk/metric"
-	"time"
 
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/errors/gcode"

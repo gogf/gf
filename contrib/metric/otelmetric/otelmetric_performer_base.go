@@ -15,7 +15,7 @@ import (
 
 // iBaseObservePerformer for observable metric only.
 type iBaseObservePerformer interface {
-	// GetValue returns the value of current observable performer.
+	// GetValue returns the value of the current observable performer.
 	GetValue() float64
 
 	// SetValue sets the value for current observable performer.
@@ -29,7 +29,7 @@ type iBaseObservePerformer interface {
 	GetObserveOptions() []metric.ObserveOption
 
 	// SetObserveOptionsByOption sets the `currentOptions` for current observable performer with metric
-	// option.
+	// options.
 	SetObserveOptionsByOption(option ...gmetric.Option)
 
 	// MergeAttributesToObserveOptions merges constant and dynamic attributes and generates observe currentOptions.
@@ -58,7 +58,7 @@ func newBaseObservePerformer(config gmetric.MetricConfig) iBaseObservePerformer 
 	}
 }
 
-// GetValue returns the value of current observable performer.
+// GetValue returns the value of the current observable performer.
 func (l *localBaseObservePerformer) GetValue() float64 {
 	return l.value.Val()
 }

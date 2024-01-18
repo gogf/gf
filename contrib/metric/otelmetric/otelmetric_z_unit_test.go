@@ -8,9 +8,10 @@ package otelmetric_test
 
 import (
 	"context"
+	"testing"
+
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
-	"testing"
 
 	"github.com/gogf/gf/contrib/metric/otelmetric/v2"
 	"github.com/gogf/gf/v2/encoding/gjson"
