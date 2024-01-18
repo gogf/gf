@@ -31,14 +31,16 @@ import (
 //
 // The response object `res` should be a pointer type. It automatically converts result
 // to given object `res` is success.
-// Eg:
+//
+// Example:
 // var (
 //
 //	req = UseCreateReq{}
 //	res *UseCreateRes
 //
 // )
-// DoRequestObj(ctx, req, &res)
+//
+// err := DoRequestObj(ctx, req, &res)
 func (c *Client) DoRequestObj(ctx context.Context, req, res interface{}) error {
 	var (
 		method = gmeta.Get(req, gtag.Method).String()
