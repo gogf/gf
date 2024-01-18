@@ -8,11 +8,11 @@ package genservice
 
 import (
 	"fmt"
-	"github.com/gogf/gf/v2/container/gmap"
 	"go/parser"
 	"go/token"
 
 	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 )

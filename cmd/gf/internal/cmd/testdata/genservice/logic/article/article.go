@@ -8,6 +8,7 @@ package article
 
 import (
 	"context"
+
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genservice/service"
 )
 
