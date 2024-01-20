@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	"github.com/gogf/gf/contrib/trace/jaeger/v2"
+	"github.com/gogf/gf/contrib/trace/otlphttp/v2"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/os/gctx"
@@ -11,17 +11,18 @@ import (
 )
 
 const (
-	ServiceName       = "inprocess"
-	JaegerUdpEndpoint = "localhost:6831"
+	serviceName = "inprocess"
+	endpoint    = "localhost:6831"
+	path        = "adapt_******_******/api/otlp/traces"
 )
 
 func main() {
 	var ctx = gctx.New()
-	tp, err := jaeger.Init(ServiceName, JaegerUdpEndpoint)
+	shutdown, err := otlphttp.Init(serviceName, endpoint, path)
 	if err != nil {
 		g.Log().Fatal(ctx, err)
 	}
-	defer tp.Shutdown(ctx)
+	defer shutdown()
 
 	ctx, span := gtrace.NewSpan(ctx, "main")
 	defer span.End()

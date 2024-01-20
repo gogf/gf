@@ -17,38 +17,40 @@ import (
 
 // Model is core struct implementing the DAO for ORM.
 type Model struct {
-	db            DB            // Underlying DB interface.
-	tx            TX            // Underlying TX interface.
-	rawSql        string        // rawSql is the raw SQL string which marks a raw SQL based Model not a table based Model.
-	schema        string        // Custom database schema.
-	linkType      int           // Mark for operation on master or slave.
-	tablesInit    string        // Table names when model initialization.
-	tables        string        // Operation table names, which can be more than one table names and aliases, like: "user", "user u", "user u, user_detail ud".
-	fields        string        // Operation fields, multiple fields joined using char ','.
-	fieldsEx      string        // Excluded operation fields, multiple fields joined using char ','.
-	withArray     []interface{} // Arguments for With feature.
-	withAll       bool          // Enable model association operations on all objects that have "with" tag in the struct.
-	extraArgs     []interface{} // Extra custom arguments for sql, which are prepended to the arguments before sql committed to underlying driver.
-	whereBuilder  *WhereBuilder // Condition builder for where operation.
-	groupBy       string        // Used for "group by" statement.
-	orderBy       string        // Used for "order by" statement.
-	having        []interface{} // Used for "having..." statement.
-	start         int           // Used for "select ... start, limit ..." statement.
-	limit         int           // Used for "select ... start, limit ..." statement.
-	option        int           // Option for extra operation features.
-	offset        int           // Offset statement for some databases grammar.
-	data          interface{}   // Data for operation, which can be type of map/[]map/struct/*struct/string, etc.
-	batch         int           // Batch number for batch Insert/Replace/Save operations.
-	filter        bool          // Filter data and where key-value pairs according to the fields of the table.
-	distinct      string        // Force the query to only return distinct results.
-	lockInfo      string        // Lock for update or in shared lock.
-	cacheEnabled  bool          // Enable sql result cache feature, which is mainly for indicating cache duration(especially 0) usage.
-	cacheOption   CacheOption   // Cache option for query statement.
-	hookHandler   HookHandler   // Hook functions for model hook feature.
-	unscoped      bool          // Disables soft deleting features when select/delete operations.
-	safe          bool          // If true, it clones and returns a new model object whenever operation done; or else it changes the attribute of current model.
-	onDuplicate   interface{}   // onDuplicate is used for ON "DUPLICATE KEY UPDATE" statement.
-	onDuplicateEx interface{}   // onDuplicateEx is used for excluding some columns ON "DUPLICATE KEY UPDATE" statement.
+	db            DB                // Underlying DB interface.
+	tx            TX                // Underlying TX interface.
+	rawSql        string            // rawSql is the raw SQL string which marks a raw SQL based Model not a table based Model.
+	schema        string            // Custom database schema.
+	linkType      int               // Mark for operation on master or slave.
+	tablesInit    string            // Table names when model initialization.
+	tables        string            // Operation table names, which can be more than one table names and aliases, like: "user", "user u", "user u, user_detail ud".
+	fields        string            // Operation fields, multiple fields joined using char ','.
+	fieldsEx      string            // Excluded operation fields, multiple fields joined using char ','.
+	withArray     []interface{}     // Arguments for With feature.
+	withAll       bool              // Enable model association operations on all objects that have "with" tag in the struct.
+	extraArgs     []interface{}     // Extra custom arguments for sql, which are prepended to the arguments before sql committed to underlying driver.
+	whereBuilder  *WhereBuilder     // Condition builder for where operation.
+	groupBy       string            // Used for "group by" statement.
+	orderBy       string            // Used for "order by" statement.
+	having        []interface{}     // Used for "having..." statement.
+	start         int               // Used for "select ... start, limit ..." statement.
+	limit         int               // Used for "select ... start, limit ..." statement.
+	option        int               // Option for extra operation features.
+	offset        int               // Offset statement for some databases grammar.
+	partition     string            // Partition table partition name.
+	data          interface{}       // Data for operation, which can be type of map/[]map/struct/*struct/string, etc.
+	batch         int               // Batch number for batch Insert/Replace/Save operations.
+	filter        bool              // Filter data and where key-value pairs according to the fields of the table.
+	distinct      string            // Force the query to only return distinct results.
+	lockInfo      string            // Lock for update or in shared lock.
+	cacheEnabled  bool              // Enable sql result cache feature, which is mainly for indicating cache duration(especially 0) usage.
+	cacheOption   CacheOption       // Cache option for query statement.
+	hookHandler   HookHandler       // Hook functions for model hook feature.
+	unscoped      bool              // Disables soft deleting features when select/delete operations.
+	safe          bool              // If true, it clones and returns a new model object whenever operation done; or else it changes the attribute of current model.
+	onDuplicate   interface{}       // onDuplicate is used for ON "DUPLICATE KEY UPDATE" statement.
+	onDuplicateEx interface{}       // onDuplicateEx is used for excluding some columns ON "DUPLICATE KEY UPDATE" statement.
+	tableAliasMap map[string]string // Table alias to true table name, usually used in join statements.
 }
 
 // ModelHandler is a function that handles given Model and returns a new Model that is custom modified.
@@ -124,15 +126,16 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 		}
 	}
 	m := &Model{
-		db:         c.db,
-		schema:     c.schema,
-		tablesInit: tableStr,
-		tables:     tableStr,
-		fields:     defaultFields,
-		start:      -1,
-		offset:     -1,
-		filter:     true,
-		extraArgs:  extraArgs,
+		db:            c.db,
+		schema:        c.schema,
+		tablesInit:    tableStr,
+		tables:        tableStr,
+		fields:        defaultFields,
+		start:         -1,
+		offset:        -1,
+		filter:        true,
+		extraArgs:     extraArgs,
+		tableAliasMap: make(map[string]string),
 	}
 	m.whereBuilder = m.Builder()
 	if defaultModelSafe {
@@ -172,6 +175,15 @@ func (tx *TXCore) Raw(rawSql string, args ...interface{}) *Model {
 // With creates and returns an ORM model based on metadata of given object.
 func (c *Core) With(objects ...interface{}) *Model {
 	return c.db.Model().With(objects...)
+}
+
+// Partition sets Partition name.
+// Example:
+// dao.User.Ctx(ctx).Partition（"p1","p2","p3").All()
+func (m *Model) Partition(partitions ...string) *Model {
+	model := m.getModel()
+	model.partition = gstr.Join(partitions, ",")
+	return model
 }
 
 // Model acts like Core.Model except it operates on transaction.

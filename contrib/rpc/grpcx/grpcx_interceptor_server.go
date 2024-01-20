@@ -58,7 +58,7 @@ func (s modServer) UnaryRecover(
 	gutil.TryCatch(ctx, func(ctx2 context.Context) {
 		res, err = handler(ctx, req)
 	}, func(ctx context.Context, exception error) {
-		err = gerror.WrapCode(gcode.New(int(codes.Internal), "", nil), err, "panic recovered")
+		err = gerror.WrapCode(gcode.New(int(codes.Internal), "", nil), exception, "panic recovered")
 	})
 	return
 }
@@ -88,6 +88,7 @@ func (s modServer) UnaryAllowNilRes(
 }
 
 // UnaryTracing is a unary interceptor for adding tracing feature for gRPC server using OpenTelemetry.
+// The tracing feature is builtin enabled.
 func (s modServer) UnaryTracing(
 	ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
 ) (interface{}, error) {

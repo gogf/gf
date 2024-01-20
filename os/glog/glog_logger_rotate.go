@@ -9,7 +9,6 @@ package glog
 import (
 	"context"
 	"fmt"
-	"runtime"
 	"strings"
 	"time"
 
@@ -154,7 +153,7 @@ func (l *Logger) rotateChecksTimely(ctx context.Context) {
 		)
 		for _, file := range files {
 			// ignore backup file
-			if gregex.IsMatchString(`.+\.\d{20}\.log`, gfile.Basename(file)) {
+			if gregex.IsMatchString(`.+\.\d{20}\.log`, gfile.Basename(file)) || gfile.ExtName(file) == "gz" {
 				continue
 			}
 			// ignore not matching file
@@ -170,23 +169,13 @@ func (l *Logger) rotateChecksTimely(ctx context.Context) {
 						return
 					}
 					defer gmlock.Unlock(memoryLockFileKey)
-					if runtime.GOOS == "windows" {
-						fp := l.getOpenedFilePointer(ctx, file)
-						if fp == nil {
-							intlog.Errorf(ctx, `got nil file pointer for: %s`, file)
-							return
-						}
-						if err := fp.Close(true); err != nil {
-							intlog.Errorf(ctx, `%+v`, err)
-						}
-					}
 					expireRotated = true
 					intlog.Printf(
 						ctx,
 						`%v - %v = %v > %v, rotation expire logging file: %s`,
 						now, mtime, subDuration, l.config.RotateExpire, file,
 					)
-					if err := l.doRotateFile(ctx, file); err != nil {
+					if err = l.doRotateFile(ctx, file); err != nil {
 						intlog.Errorf(ctx, `%+v`, err)
 					}
 				}()

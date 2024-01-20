@@ -23,18 +23,98 @@ import (
 	"strings"
 )
 
+// CaseType is the type for Case.
+type CaseType string
+
+// The case type constants.
+const (
+	Camel           CaseType = "Camel"
+	CamelLower      CaseType = "CamelLower"
+	Snake           CaseType = "Snake"
+	SnakeFirstUpper CaseType = "SnakeFirstUpper"
+	SnakeScreaming  CaseType = "SnakeScreaming"
+	Kebab           CaseType = "Kebab"
+	KebabScreaming  CaseType = "KebabScreaming"
+	Lower           CaseType = "Lower"
+)
+
 var (
 	numberSequence      = regexp.MustCompile(`([a-zA-Z]{0,1})(\d+)([a-zA-Z]{0,1})`)
 	firstCamelCaseStart = regexp.MustCompile(`([A-Z]+)([A-Z]?[_a-z\d]+)|$`)
 	firstCamelCaseEnd   = regexp.MustCompile(`([\w\W]*?)([_]?[A-Z]+)$`)
 )
 
+// CaseTypeMatch matches the case type from string.
+func CaseTypeMatch(caseStr string) CaseType {
+	caseTypes := []CaseType{
+		Camel,
+		CamelLower,
+		Snake,
+		SnakeFirstUpper,
+		SnakeScreaming,
+		Kebab,
+		KebabScreaming,
+		Lower,
+	}
+
+	for _, caseType := range caseTypes {
+		if Equal(caseStr, string(caseType)) {
+			return caseType
+		}
+	}
+
+	return CaseType(caseStr)
+}
+
+// CaseConvert converts a string to the specified naming convention.
+// Use CaseTypeMatch to match the case type from string.
+func CaseConvert(s string, caseType CaseType) string {
+	if s == "" || caseType == "" {
+		return s
+	}
+
+	switch caseType {
+	case Camel:
+		return CaseCamel(s)
+
+	case CamelLower:
+		return CaseCamelLower(s)
+
+	case Kebab:
+		return CaseKebab(s)
+
+	case KebabScreaming:
+		return CaseKebabScreaming(s)
+
+	case Snake:
+		return CaseSnake(s)
+
+	case SnakeFirstUpper:
+		return CaseSnakeFirstUpper(s)
+
+	case SnakeScreaming:
+		return CaseSnakeScreaming(s)
+
+	case Lower:
+		return ToLower(s)
+
+	default:
+		return s
+	}
+}
+
 // CaseCamel converts a string to CamelCase.
+//
+// Example:
+// CaseCamel("any_kind_of_string") -> AnyKindOfString
 func CaseCamel(s string) string {
 	return toCamelInitCase(s, true)
 }
 
 // CaseCamelLower converts a string to lowerCamelCase.
+//
+// Example:
+// CaseCamelLower("any_kind_of_string") -> anyKindOfString
 func CaseCamelLower(s string) string {
 	if s == "" {
 		return s
@@ -46,17 +126,26 @@ func CaseCamelLower(s string) string {
 }
 
 // CaseSnake converts a string to snake_case.
+//
+// Example:
+// CaseSnake("AnyKindOfString") -> any_kind_of_string
 func CaseSnake(s string) string {
 	return CaseDelimited(s, '_')
 }
 
 // CaseSnakeScreaming converts a string to SNAKE_CASE_SCREAMING.
+//
+// Example:
+// CaseSnakeScreaming("AnyKindOfString") -> ANY_KIND_OF_STRING
 func CaseSnakeScreaming(s string) string {
 	return CaseDelimitedScreaming(s, '_', true)
 }
 
 // CaseSnakeFirstUpper converts a string like "RGBCodeMd5" to "rgb_code_md5".
 // TODO for efficiency should change regexp to traversing string in future.
+//
+// Example:
+// CaseSnakeFirstUpper("RGBCodeMd5") -> rgb_code_md5
 func CaseSnakeFirstUpper(word string, underscore ...string) string {
 	replace := "_"
 	if len(underscore) > 0 {
@@ -83,22 +172,34 @@ func CaseSnakeFirstUpper(word string, underscore ...string) string {
 	return TrimLeft(word, replace)
 }
 
-// CaseKebab converts a string to kebab-case
+// CaseKebab converts a string to kebab-case.
+//
+// Example:
+// CaseKebab("AnyKindOfString") -> any-kind-of-string
 func CaseKebab(s string) string {
 	return CaseDelimited(s, '-')
 }
 
 // CaseKebabScreaming converts a string to KEBAB-CASE-SCREAMING.
+//
+// Example:
+// CaseKebab("AnyKindOfString") -> ANY-KIND-OF-STRING
 func CaseKebabScreaming(s string) string {
 	return CaseDelimitedScreaming(s, '-', true)
 }
 
 // CaseDelimited converts a string to snake.case.delimited.
+//
+// Example:
+// CaseDelimited("AnyKindOfString", '.') -> any.kind.of.string
 func CaseDelimited(s string, del byte) string {
 	return CaseDelimitedScreaming(s, del, false)
 }
 
 // CaseDelimitedScreaming converts a string to DELIMITED.SCREAMING.CASE or delimited.screaming.case.
+//
+// Example:
+// CaseDelimitedScreaming("AnyKindOfString", '.') -> ANY.KIND.OF.STRING
 func CaseDelimitedScreaming(s string, del uint8, screaming bool) string {
 	s = addWordBoundariesToNumbers(s)
 	s = strings.Trim(s, " ")

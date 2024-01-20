@@ -5,6 +5,11 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package jaeger provides OpenTelemetry provider using jaeger.
+//
+// Deprecated:
+// Please use `github.com/gogf/gf/contrib/trace/otlphttp/v2` instead.
+// As dependent package `go.opentelemetry.io/otel/exporters/jaeger` is deprecated in otel,
+// this package will be never be maintained from goframe v2.6.0.
 package jaeger
 
 import (

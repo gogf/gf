@@ -4,11 +4,20 @@
 <img src="https://goframe.org/statics/image/logo2.png?v=1" width="300"/>
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/gogf/gf/v2.svg)](https://pkg.go.dev/github.com/gogf/gf/v2)
-[![GoFrame CI](https://github.com/gogf/gf/actions/workflows/gf.yml/badge.svg)](https://github.com/gogf/gf/actions/workflows/gf.yml)
+[![GoFrame CI](https://github.com/gogf/gf/actions/workflows/ci-main.yml/badge.svg)](https://github.com/gogf/gf/actions/workflows/ci-main.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/gogf/gf/v2)](https://goreportcard.com/report/github.com/gogf/gf/v2)
 [![Code Coverage](https://codecov.io/gh/gogf/gf/branch/master/graph/badge.svg)](https://codecov.io/gh/gogf/gf)
-[![Production Ready](https://img.shields.io/badge/production-ready-blue.svg)](https://github.com/gogf/gf)
+[![Production Ready](https://img.shields.io/badge/production-ready-blue.svg?style=flat)](https://github.com/gogf/gf)
 [![License](https://img.shields.io/github/license/gogf/gf.svg?style=flat)](https://github.com/gogf/gf)
+
+[![Release](https://img.shields.io/github/v/release/gogf/gf?style=flat)](https://github.com/gogf/gf/releases)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/gogf/gf?style=flat)](https://github.com/gogf/gf/pulls)
+[![GitHub closed pull requests](https://img.shields.io/github/issues-pr-closed/gogf/gf?style=flat)](https://github.com/gogf/gf/pulls?q=is%3Apr+is%3Aclosed)
+[![GitHub issues](https://img.shields.io/github/issues/gogf/gf?style=flat)](https://github.com/gogf/gf/issues)
+[![GitHub closed issues](https://img.shields.io/github/issues-closed/gogf/gf?style=flat)](https://github.com/gogf/gf/issues?q=is%3Aissue+is%3Aclosed)
+![Stars](https://img.shields.io/github/stars/gogf/gf?style=flat)
+![Forks](https://img.shields.io/github/forks/gogf/gf?style=flat)
+
 </div>
 
 `GoFrame` is a modular, powerful, high-performance and enterprise-class application development framework of Golang.
@@ -41,7 +50,7 @@ go get -u -v github.com/gogf/gf/v2
 ## cli tool
 
 ```bash
-go install github.com/gogf/gf/cmd/gf/v2
+go install github.com/gogf/gf/cmd/gf/v2@latest
 ```
 
 # Limitation
@@ -49,12 +58,6 @@ go install github.com/gogf/gf/cmd/gf/v2
 ```
 golang version >= 1.18
 ```
-
-# Architecture
-
-<div align=center>
-<img src="https://goframe.org/download/attachments/1114119/arch.png"/>
-</div>
 
 # Documentation
 

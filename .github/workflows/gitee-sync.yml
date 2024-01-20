@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - main
+      - master
     tags:
       - "*"
 
@@ -12,9 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v3
-      - name: Mirror Github to Gitee
-        uses: Yikun/hub-mirror-action@v1.2
+        uses: actions/checkout@v4
+      - name: Mirror GitHub to Gitee
+        uses: Yikun/hub-mirror-action@v1.3
         with:
           src: github/gogf
           dst: gitee/johng

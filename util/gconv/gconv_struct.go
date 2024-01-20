@@ -31,8 +31,8 @@ import (
 //     It will automatically convert the first letter of the key to uppercase
 //     in mapping procedure to do the matching.
 //     It ignores the map key, if it does not match.
-func Struct(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
-	return Scan(params, pointer, mapping...)
+func Struct(params interface{}, pointer interface{}, paramKeyToAttrMap ...map[string]string) (err error) {
+	return Scan(params, pointer, paramKeyToAttrMap...)
 }
 
 // StructTag acts as Struct but also with support for priority tag feature, which retrieves the
@@ -85,7 +85,7 @@ func doStructWithJsonCheck(params interface{}, pointer interface{}) (err error, 
 }
 
 // doStruct is the core internal converting function for any data to struct.
-func doStruct(params interface{}, pointer interface{}, mapping map[string]string, priorityTag string) (err error) {
+func doStruct(params interface{}, pointer interface{}, paramKeyToAttrMap map[string]string, priorityTag string) (err error) {
 	if params == nil {
 		// If `params` is nil, no conversion.
 		return nil
@@ -228,10 +228,12 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 	// The key of the attrMap is the attribute name of the struct,
 	// and the value is its replaced name for later comparison to improve performance.
 	var (
-		tempName           string
-		elemFieldType      reflect.StructField
-		elemFieldValue     reflect.Value
-		elemType           = pointerElemReflectValue.Type()
+		tempName       string
+		elemFieldType  reflect.StructField
+		elemFieldValue reflect.Value
+		elemType       = pointerElemReflectValue.Type()
+		// Attribute name to its symbols-removed name,
+		// in order to quick index and comparison in following logic.
 		attrToCheckNameMap = make(map[string]string)
 	)
 	for i := 0; i < pointerElemReflectValue.NumField(); i++ {
@@ -250,7 +252,7 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 					continue
 				}
 			}
-			if err = doStruct(paramsMap, elemFieldValue, mapping, priorityTag); err != nil {
+			if err = doStruct(paramsMap, elemFieldValue, paramKeyToAttrMap, priorityTag); err != nil {
 				return err
 			}
 		} else {
@@ -262,7 +264,7 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 		return nil
 	}
 
-	// The key of the tagMap is the attribute name of the struct,
+	// The key of the `attrToTagCheckNameMap` is the attribute name of the struct,
 	// and the value is its replaced tag name for later comparison to improve performance.
 	var (
 		attrToTagCheckNameMap = make(map[string]string)
@@ -291,50 +293,166 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 		}
 	}
 
+	// To convert value base on custom parameter key to attribute name map.
+	err = doStructBaseOnParamKeyToAttrMap(
+		pointerElemReflectValue,
+		paramsMap,
+		paramKeyToAttrMap,
+		doneMap,
+	)
+	if err != nil {
+		return err
+	}
+	// Already done all attributes value assignment nothing to do next.
+	if len(doneMap) == len(attrToCheckNameMap) {
+		return nil
+	}
+
+	// To convert value base on precise attribute name.
+	err = doStructBaseOnAttribute(
+		pointerElemReflectValue,
+		paramsMap,
+		paramKeyToAttrMap,
+		doneMap,
+		attrToCheckNameMap,
+	)
+	if err != nil {
+		return err
+	}
+	// Already done all attributes value assignment nothing to do next.
+	if len(doneMap) == len(attrToCheckNameMap) {
+		return nil
+	}
+
+	// To convert value base on parameter map.
+	err = doStructBaseOnParamMap(
+		pointerElemReflectValue,
+		paramsMap,
+		paramKeyToAttrMap,
+		doneMap,
+		attrToCheckNameMap,
+		attrToTagCheckNameMap,
+		tagToAttrNameMap,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func doStructBaseOnParamKeyToAttrMap(
+	pointerElemReflectValue reflect.Value,
+	paramsMap map[string]interface{},
+	paramKeyToAttrMap map[string]string,
+	doneAttrMap map[string]struct{},
+) error {
+	if len(paramKeyToAttrMap) == 0 {
+		return nil
+	}
+	for paramKey, attrName := range paramKeyToAttrMap {
+		paramValue, ok := paramsMap[paramKey]
+		if !ok {
+			continue
+		}
+		// If the attribute name is already checked converting, then skip it.
+		if _, ok = doneAttrMap[attrName]; ok {
+			continue
+		}
+		// Mark it done.
+		doneAttrMap[attrName] = struct{}{}
+		if err := bindVarToStructAttr(
+			pointerElemReflectValue, attrName, paramValue, paramKeyToAttrMap,
+		); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func doStructBaseOnAttribute(
+	pointerElemReflectValue reflect.Value,
+	paramsMap map[string]interface{},
+	paramKeyToAttrMap map[string]string,
+	doneAttrMap map[string]struct{},
+	attrToCheckNameMap map[string]string,
+) error {
+	var customMappingAttrMap = make(map[string]struct{})
+	if len(paramKeyToAttrMap) > 0 {
+		// It ignores the attribute names if it is specified in the `paramKeyToAttrMap`.
+		for paramName := range paramsMap {
+			if passedAttrKey, ok := paramKeyToAttrMap[paramName]; ok {
+				customMappingAttrMap[passedAttrKey] = struct{}{}
+			}
+		}
+	}
+	for attrName := range attrToCheckNameMap {
+		// The value by precise attribute name.
+		paramValue, ok := paramsMap[attrName]
+		if !ok {
+			continue
+		}
+		// If the attribute name is in custom paramKeyToAttrMap, it then ignores this converting.
+		if _, ok = customMappingAttrMap[attrName]; ok {
+			continue
+		}
+		// If the attribute name is already checked converting, then skip it.
+		if _, ok = doneAttrMap[attrName]; ok {
+			continue
+		}
+		// Mark it done.
+		doneAttrMap[attrName] = struct{}{}
+		if err := bindVarToStructAttr(
+			pointerElemReflectValue, attrName, paramValue, paramKeyToAttrMap,
+		); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func doStructBaseOnParamMap(
+	pointerElemReflectValue reflect.Value,
+	paramsMap map[string]interface{},
+	paramKeyToAttrMap map[string]string,
+	doneAttrMap map[string]struct{},
+	attrToCheckNameMap map[string]string,
+	attrToTagCheckNameMap map[string]string,
+	tagToAttrNameMap map[string]string,
+) error {
 	var (
 		attrName  string
 		checkName string
 	)
 	for paramName, paramValue := range paramsMap {
-		attrName = ""
-		// It firstly checks the passed mapping rules.
-		if len(mapping) > 0 {
-			if passedAttrKey, ok := mapping[paramName]; ok {
-				attrName = passedAttrKey
-			}
-		}
-		// It secondly checks the predefined tags and matching rules.
+		// It firstly considers `paramName` as accurate tag name,
+		// and retrieve attribute name from `tagToAttrNameMap` .
+		attrName = tagToAttrNameMap[paramName]
 		if attrName == "" {
-			// It firstly considers `paramName` as accurate tag name,
-			// and retrieve attribute name from `tagToAttrNameMap` .
-			attrName = tagToAttrNameMap[paramName]
-			if attrName == "" {
-				checkName = utils.RemoveSymbols(paramName)
-				// Loop to find the matched attribute name with or without
-				// string cases and chars like '-'/'_'/'.'/' '.
+			checkName = utils.RemoveSymbols(paramName)
+			// Loop to find the matched attribute name with or without
+			// string cases and chars like '-'/'_'/'.'/' '.
 
-				// Matching the parameters to struct tag names.
-				// The `attrKey` is the attribute name of the struct.
-				for attrKey, cmpKey := range attrToTagCheckNameMap {
-					if strings.EqualFold(checkName, cmpKey) {
-						attrName = attrKey
-						break
-					}
+			// Matching the parameters to struct tag names.
+			// The `attrKey` is the attribute name of the struct.
+			for attrKey, cmpKey := range attrToTagCheckNameMap {
+				if strings.EqualFold(checkName, cmpKey) {
+					attrName = attrKey
+					break
 				}
 			}
+		}
 
-			// Matching the parameters to struct attributes.
-			if attrName == "" {
-				for attrKey, cmpKey := range attrToCheckNameMap {
-					// Eg:
-					// UserName  eq user_name
-					// User-Name eq username
-					// username  eq userName
-					// etc.
-					if strings.EqualFold(checkName, cmpKey) {
-						attrName = attrKey
-						break
-					}
+		// Matching the parameters to struct attributes.
+		if attrName == "" {
+			for attrKey, cmpKey := range attrToCheckNameMap {
+				// Eg:
+				// UserName  eq user_name
+				// User-Name eq username
+				// username  eq userName
+				// etc.
+				if strings.EqualFold(checkName, cmpKey) {
+					attrName = attrKey
+					break
 				}
 			}
 		}
@@ -344,12 +462,14 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 			continue
 		}
 		// If the attribute name is already checked converting, then skip it.
-		if _, ok = doneMap[attrName]; ok {
+		if _, ok := doneAttrMap[attrName]; ok {
 			continue
 		}
 		// Mark it done.
-		doneMap[attrName] = struct{}{}
-		if err = bindVarToStructAttr(pointerElemReflectValue, attrName, paramValue, mapping); err != nil {
+		doneAttrMap[attrName] = struct{}{}
+		if err := bindVarToStructAttr(
+			pointerElemReflectValue, attrName, paramValue, paramKeyToAttrMap,
+		); err != nil {
 			return err
 		}
 	}
@@ -357,7 +477,10 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 }
 
 // bindVarToStructAttr sets value to struct object attribute by name.
-func bindVarToStructAttr(structReflectValue reflect.Value, attrName string, value interface{}, mapping map[string]string) (err error) {
+func bindVarToStructAttr(
+	structReflectValue reflect.Value,
+	attrName string, value interface{}, paramKeyToAttrMap map[string]string,
+) (err error) {
 	structFieldValue := structReflectValue.FieldByName(attrName)
 	if !structFieldValue.IsValid() {
 		return nil
@@ -368,7 +491,7 @@ func bindVarToStructAttr(structReflectValue reflect.Value, attrName string, valu
 	}
 	defer func() {
 		if exception := recover(); exception != nil {
-			if err = bindVarToReflectValue(structFieldValue, value, mapping); err != nil {
+			if err = bindVarToReflectValue(structFieldValue, value, paramKeyToAttrMap); err != nil {
 				err = gerror.Wrapf(err, `error binding value to attribute "%s"`, attrName)
 			}
 		}
@@ -377,6 +500,20 @@ func bindVarToStructAttr(structReflectValue reflect.Value, attrName string, valu
 	if empty.IsNil(value) {
 		structFieldValue.Set(reflect.Zero(structFieldValue.Type()))
 	} else {
+		// Try to call custom converter.
+		// Issue: https://github.com/gogf/gf/issues/3099
+		var (
+			customConverterInput reflect.Value
+			ok                   bool
+		)
+		if customConverterInput, ok = value.(reflect.Value); !ok {
+			customConverterInput = reflect.ValueOf(value)
+		}
+
+		if ok, err = callCustomConverter(customConverterInput, structFieldValue); ok || err != nil {
+			return
+		}
+
 		// Special handling for certain types:
 		// - Overwrite the default type converting logic of stdlib for time.Time/*time.Time.
 		var structFieldTypeName = structFieldValue.Type().String()
@@ -388,15 +525,18 @@ func bindVarToStructAttr(structReflectValue reflect.Value, attrName string, valu
 				ReferValue: structFieldValue,
 			})
 			return
-		}
-
-		// Try to call custom converter.
-		if ok, err := callCustomConverter(reflect.ValueOf(value), structFieldValue); ok {
-			return err
+		// Hold the time zone consistent in recursive
+		// Issue: https://github.com/gogf/gf/issues/2980
+		case "*gtime.Time", "gtime.Time":
+			doConvertWithReflectValueSet(structFieldValue, doConvertInput{
+				FromValue:  value,
+				ToTypeName: structFieldTypeName,
+				ReferValue: structFieldValue,
+			})
+			return
 		}
 
 		// Common interface check.
-		var ok bool
 		if err, ok = bindVarToReflectValueWithInterfaceCheck(structFieldValue, value); ok {
 			return err
 		}
@@ -476,7 +616,9 @@ func bindVarToReflectValueWithInterfaceCheck(reflectValue reflect.Value, value i
 }
 
 // bindVarToReflectValue sets `value` to reflect value object `structFieldValue`.
-func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, mapping map[string]string) (err error) {
+func bindVarToReflectValue(
+	structFieldValue reflect.Value, value interface{}, paramKeyToAttrMap map[string]string,
+) (err error) {
 	// JSON content converting.
 	err, ok := doStructWithJsonCheck(value, structFieldValue)
 	if err != nil {
@@ -501,7 +643,7 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 	// Converting using reflection by kind.
 	switch kind {
 	case reflect.Map:
-		return doMapToMap(value, structFieldValue, mapping)
+		return doMapToMap(value, structFieldValue, paramKeyToAttrMap)
 
 	case reflect.Struct:
 		// Recursively converting for struct attribute.
@@ -617,12 +759,12 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 				return err
 			}
 			elem := item.Elem()
-			if err = bindVarToReflectValue(elem, value, mapping); err == nil {
+			if err = bindVarToReflectValue(elem, value, paramKeyToAttrMap); err == nil {
 				structFieldValue.Set(elem.Addr())
 			}
 		} else {
 			// Not empty pointer, it assigns values to it.
-			return bindVarToReflectValue(structFieldValue.Elem(), value, mapping)
+			return bindVarToReflectValue(structFieldValue.Elem(), value, paramKeyToAttrMap)
 		}
 
 	// It mainly and specially handles the interface of nil value.

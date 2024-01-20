@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/gogf/gf/contrib/trace/jaeger/v2"
+	"github.com/gogf/gf/contrib/trace/otlphttp/v2"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
@@ -10,17 +10,18 @@ import (
 )
 
 const (
-	ServiceName       = "http-client-with-db"
-	JaegerUdpEndpoint = "localhost:6831"
+	serviceName = "otlp-http-client-with-db"
+	endpoint    = "tracing-analysis-dc-hz.aliyuncs.com"
+	path        = "adapt_******_******/api/otlp/traces"
 )
 
 func main() {
 	var ctx = gctx.New()
-	tp, err := jaeger.Init(ServiceName, JaegerUdpEndpoint)
+	shutdown, err := otlphttp.Init(serviceName, endpoint, path)
 	if err != nil {
 		g.Log().Fatal(ctx, err)
 	}
-	defer tp.Shutdown(ctx)
+	defer shutdown()
 
 	StartRequests()
 }

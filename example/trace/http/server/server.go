@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/gogf/gf/contrib/trace/jaeger/v2"
+	"github.com/gogf/gf/contrib/trace/otlphttp/v2"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/net/gtrace"
@@ -9,17 +9,18 @@ import (
 )
 
 const (
-	ServiceName       = "http-server"
-	JaegerUdpEndpoint = "localhost:6831"
+	serviceName = "otlp-http-server"
+	endpoint    = "tracing-analysis-dc-hz.aliyuncs.com"
+	path        = "adapt_******_******/api/otlp/traces"
 )
 
 func main() {
 	var ctx = gctx.New()
-	tp, err := jaeger.Init(ServiceName, JaegerUdpEndpoint)
+	shutdown, err := otlphttp.Init(serviceName, endpoint, path)
 	if err != nil {
 		g.Log().Fatal(ctx, err)
 	}
-	defer tp.Shutdown(ctx)
+	defer shutdown()
 
 	s := g.Server()
 	s.Group("/", func(group *ghttp.RouterGroup) {
@@ -29,6 +30,7 @@ func main() {
 	s.Run()
 }
 
+// HelloHandler is a demo handler for tracing.
 func HelloHandler(r *ghttp.Request) {
 	ctx, span := gtrace.NewSpan(r.Context(), "HelloHandler")
 	defer span.End()

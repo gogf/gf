@@ -10,6 +10,7 @@ package ghttp
 import (
 	"net/http"
 	"reflect"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -23,6 +24,7 @@ import (
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gsession"
+	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/util/gtag"
 )
 
@@ -41,6 +43,7 @@ type (
 		statusHandlerMap map[string][]HandlerFunc  // Custom status handler map.
 		sessionManager   *gsession.Manager         // Session manager.
 		openapi          *goai.OpenApiV3           // The OpenApi specification management object.
+		serviceMu        sync.Mutex                // Concurrent safety for operations of attribute service.
 		service          gsvc.Service              // The service for Registry.
 		registrar        gsvc.Registrar            // Registrar for service register.
 	}
@@ -74,15 +77,20 @@ type (
 
 	// handlerFuncInfo contains the HandlerFunc address and its reflection type.
 	handlerFuncInfo struct {
-		Func  HandlerFunc   // Handler function address.
-		Type  reflect.Type  // Reflect type information for current handler, which is used for extensions of the handler feature.
-		Value reflect.Value // Reflect value information for current handler, which is used for extensions of the handler feature.
+		Func            HandlerFunc      // Handler function address.
+		Type            reflect.Type     // Reflect type information for current handler, which is used for extensions of the handler feature.
+		Value           reflect.Value    // Reflect value information for current handler, which is used for extensions of the handler feature.
+		IsStrictRoute   bool             // Whether strict route matching is enabled.
+		ReqStructFields []gstructs.Field // Request struct fields.
 	}
 
 	// HandlerItem is the registered handler for route handling,
 	// including middleware and hook functions.
 	HandlerItem struct {
-		Id         int             // Unique handler item id mark.
+		// Unique handler item id mark.
+		// Note that the handler function may be registered multiple times as different handler items,
+		// which have different handler item id.
+		Id         int
 		Name       string          // Handler name, which is automatically retrieved from runtime stack when registered.
 		Type       HandlerType     // Handler type: object/handler/middleware/hook.
 		Info       handlerFuncInfo // Handler function information.
@@ -197,7 +205,7 @@ var (
 )
 
 var (
-	ErrNeedJsonBody = gerror.NewOption(gerror.Option{
+	ErrNeedJsonBody = gerror.NewWithOption(gerror.Option{
 		Text: "the request body content should be JSON format",
 		Code: gcode.CodeInvalidRequest,
 	})

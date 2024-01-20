@@ -7,6 +7,7 @@
 package gconv_test
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -49,6 +50,12 @@ func TestConverter_Struct(t *testing.T) {
 		Val1 time.Time  `json:"val1"`
 		Val2 *time.Time `json:"val2"`
 		Val3 *time.Time `json:"val3"`
+	}
+
+	type tFF struct {
+		Val1 json.RawMessage            `json:"val1"`
+		Val2 []json.RawMessage          `json:"val2"`
+		Val3 map[string]json.RawMessage `json:"val3"`
 	}
 
 	gtest.C(t, func(t *gtest.T) {
@@ -199,6 +206,25 @@ func TestConverter_Struct(t *testing.T) {
 		t.Assert(aa.Val2.Local(), gtime.New("2023-04-15 19:10:00 +0800 CST").Local().Time)
 		t.Assert(aa.Val3.Local(), gtime.New("2006-01-02T15:04:05Z07:00").Local().Time)
 	})
+
+	// fix: https://github.com/gogf/gf/issues/3006
+	gtest.C(t, func(t *gtest.T) {
+		ff := &tFF{}
+		var tmp = map[string]any{
+			"val1": map[string]any{"hello": "world"},
+			"val2": []any{map[string]string{"hello": "world"}},
+			"val3": map[string]map[string]string{"val3": {"hello": "world"}},
+		}
+
+		err := gconv.Struct(tmp, ff)
+		t.AssertNil(err)
+		t.AssertNE(ff, nil)
+		t.Assert(ff.Val1, []byte(`{"hello":"world"}`))
+		t.AssertEQ(len(ff.Val2), 1)
+		t.Assert(ff.Val2[0], []byte(`{"hello":"world"}`))
+		t.AssertEQ(len(ff.Val3), 1)
+		t.Assert(ff.Val3["val3"], []byte(`{"hello":"world"}`))
+	})
 }
 
 func TestConverter_CustomBasicType_ToStruct(t *testing.T) {
@@ -244,5 +270,62 @@ func TestConverter_CustomBasicType_ToStruct(t *testing.T) {
 		t.AssertNil(err)
 		t.AssertNE(b, nil)
 		t.Assert(b.S, a)
+	})
+}
+
+// fix: https://github.com/gogf/gf/issues/3099
+func TestConverter_CustomTimeType_ToStruct(t *testing.T) {
+	type timestamppb struct {
+		S string
+	}
+	type CustomGTime struct {
+		T *gtime.Time
+	}
+	type CustomPbTime struct {
+		T *timestamppb
+	}
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			a = CustomGTime{
+				T: gtime.NewFromStrFormat("2023-10-26", "Y-m-d"),
+			}
+			b *CustomPbTime
+		)
+		err := gconv.Scan(a, &b)
+		t.AssertNil(err)
+		t.AssertNE(b, nil)
+		t.Assert(b.T.S, "")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		err := gconv.RegisterConverter(func(in gtime.Time) (*timestamppb, error) {
+			return &timestamppb{
+				S: in.Local().Format("Y-m-d"),
+			}, nil
+		})
+		t.AssertNil(err)
+		err = gconv.RegisterConverter(func(in timestamppb) (*gtime.Time, error) {
+			return gtime.NewFromStr(in.S), nil
+		})
+		t.AssertNil(err)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			a = CustomGTime{
+				T: gtime.NewFromStrFormat("2023-10-26", "Y-m-d"),
+			}
+			b *CustomPbTime
+			c *CustomGTime
+		)
+		err := gconv.Scan(a, &b)
+		t.AssertNil(err)
+		t.AssertNE(b, nil)
+		t.AssertNE(b.T, nil)
+
+		err = gconv.Scan(b, &c)
+		t.AssertNil(err)
+		t.AssertNE(c, nil)
+		t.AssertNE(c.T, nil)
+		t.AssertEQ(a.T.Timestamp(), c.T.Timestamp())
 	})
 }

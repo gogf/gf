@@ -28,7 +28,7 @@ func MapToMaps(params interface{}, pointer interface{}, mapping ...map[string]st
 //
 // The optional parameter `mapping` is used for struct attribute to map key mapping, which makes
 // sense only if the item of `params` is type struct.
-func doMapToMaps(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
+func doMapToMaps(params interface{}, pointer interface{}, paramKeyToAttrMap ...map[string]string) (err error) {
 	// If given `params` is JSON, it then uses json.Unmarshal doing the converting.
 	switch r := params.(type) {
 	case []byte:
@@ -124,13 +124,13 @@ func doMapToMaps(params interface{}, pointer interface{}, mapping ...map[string]
 		var item reflect.Value
 		if pointerElemType.Kind() == reflect.Ptr {
 			item = reflect.New(pointerElemType.Elem())
-			if err = MapToMap(paramsRv.Index(i).Interface(), item, mapping...); err != nil {
+			if err = MapToMap(paramsRv.Index(i).Interface(), item, paramKeyToAttrMap...); err != nil {
 				return err
 			}
 			pointerSlice.Index(i).Set(item)
 		} else {
 			item = reflect.New(pointerElemType)
-			if err = MapToMap(paramsRv.Index(i).Interface(), item, mapping...); err != nil {
+			if err = MapToMap(paramsRv.Index(i).Interface(), item, paramKeyToAttrMap...); err != nil {
 				return err
 			}
 			pointerSlice.Index(i).Set(item.Elem())

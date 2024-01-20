@@ -9,6 +9,7 @@ package utils
 import (
 	"context"
 	"fmt"
+
 	"golang.org/x/tools/imports"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
@@ -118,7 +119,7 @@ func GetImportPath(filePath string) string {
 func GetModPath() string {
 	var (
 		oldDir    = gfile.Pwd()
-		newDir    = gfile.Dir(oldDir)
+		newDir    = oldDir
 		goModName = "go.mod"
 		goModPath string
 	)
@@ -127,11 +128,11 @@ func GetModPath() string {
 		if gfile.Exists(goModPath) {
 			return goModPath
 		}
-		oldDir = newDir
 		newDir = gfile.Dir(oldDir)
 		if newDir == oldDir {
 			break
 		}
+		oldDir = newDir
 	}
 	return ""
 }

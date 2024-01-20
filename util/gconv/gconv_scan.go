@@ -23,7 +23,7 @@ import (
 // It calls function `doMapToMaps` internally if `pointer` is type of *[]map/*[]*map       for converting.
 // It calls function `doStruct`    internally if `pointer` is type of *struct/**struct     for converting.
 // It calls function `doStructs`   internally if `pointer` is type of *[]struct/*[]*struct for converting.
-func Scan(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
+func Scan(params interface{}, pointer interface{}, paramKeyToAttrMap ...map[string]string) (err error) {
 	var (
 		pointerType  reflect.Type
 		pointerKind  reflect.Kind
@@ -82,12 +82,12 @@ func Scan(params interface{}, pointer interface{}, mapping ...map[string]string)
 		pointerElemKind           = pointerElem.Kind()
 		keyToAttributeNameMapping map[string]string
 	)
-	if len(mapping) > 0 {
-		keyToAttributeNameMapping = mapping[0]
+	if len(paramKeyToAttrMap) > 0 {
+		keyToAttributeNameMapping = paramKeyToAttrMap[0]
 	}
 	switch pointerElemKind {
 	case reflect.Map:
-		return doMapToMap(params, pointer, mapping...)
+		return doMapToMap(params, pointer, paramKeyToAttrMap...)
 
 	case reflect.Array, reflect.Slice:
 		var (
@@ -99,7 +99,7 @@ func Scan(params interface{}, pointer interface{}, mapping ...map[string]string)
 			sliceElemKind = sliceElem.Kind()
 		}
 		if sliceElemKind == reflect.Map {
-			return doMapToMaps(params, pointer, mapping...)
+			return doMapToMaps(params, pointer, paramKeyToAttrMap...)
 		}
 		return doStructs(params, pointer, keyToAttributeNameMapping, "")
 
@@ -114,34 +114,37 @@ func Scan(params interface{}, pointer interface{}, mapping ...map[string]string)
 // Usage example 1: Normal attribute struct relation:
 //
 //	type EntityUser struct {
-//		   Uid  int
-//		   Name string
+//	    Uid  int
+//	    Name string
 //	}
 //
 //	type EntityUserDetail struct {
-//		   Uid     int
-//		   Address string
+//	    Uid     int
+//	    Address string
 //	}
 //
 //	type EntityUserScores struct {
-//		   Id     int
-//		   Uid    int
-//		   Score  int
-//		   Course string
+//	    Id     int
+//	    Uid    int
+//	    Score  int
+//	    Course string
 //	}
 //
 //	type Entity struct {
 //	    User       *EntityUser
-//		   UserDetail *EntityUserDetail
-//		   UserScores []*EntityUserScores
+//	    UserDetail *EntityUserDetail
+//	    UserScores []*EntityUserScores
 //	}
 //
 // var users []*Entity
-// ScanList(records, &users, "User")
-// ScanList(records, &users, "User", "uid")
-// ScanList(records, &users, "UserDetail", "User", "uid:Uid")
-// ScanList(records, &users, "UserScores", "User", "uid:Uid")
-// ScanList(records, &users, "UserScores", "User", "uid")
+// var userRecords   = EntityUser{Uid: 1, Name:"john"}
+// var detailRecords = EntityUser{Uid: 1, Address: "chengdu"}
+// var scoresRecords = EntityUser{Id: 1, Uid: 1, Score: 100, Course: "math"}
+// ScanList(userRecords, &users, "User")
+// ScanList(userRecords, &users, "User", "uid")
+// ScanList(detailRecords, &users, "UserDetail", "User", "uid:Uid")
+// ScanList(scoresRecords, &users, "UserScores", "User", "uid:Uid")
+// ScanList(scoresRecords, &users, "UserScores", "User", "uid")
 //
 // Usage example 2: Embedded attribute struct relation:
 //
@@ -167,10 +170,12 @@ func Scan(params interface{}, pointer interface{}, mapping ...map[string]string)
 //		   UserScores []EntityUserScores
 //	}
 //
-// var users []*Entity
-// ScanList(records, &users)
-// ScanList(records, &users, "UserDetail", "uid")
-// ScanList(records, &users, "UserScores", "uid")
+// var userRecords   = EntityUser{Uid: 1, Name:"john"}
+// var detailRecords = EntityUser{Uid: 1, Address: "chengdu"}
+// var scoresRecords = EntityUser{Id: 1, Uid: 1, Score: 100, Course: "math"}
+// ScanList(userRecords, &users)
+// ScanList(detailRecords, &users, "UserDetail", "uid")
+// ScanList(scoresRecords, &users, "UserScores", "uid")
 //
 // The parameters "User/UserDetail/UserScores" in the example codes specify the target attribute struct
 // that current result will be bound to.
@@ -274,7 +279,7 @@ func doScanList(
 		relationBindToFieldName string // Eg: relationKV: id:uid  -> uid
 	)
 	if len(relationFields) > 0 {
-		// The relation key string of table filed name and attribute name
+		// The relation key string of table field name and attribute name
 		// can be joined with char '=' or ':'.
 		array := utils.SplitAndTrim(relationFields, "=")
 		if len(array) == 1 {
@@ -391,12 +396,12 @@ func doScanList(
 			relationFromAttrField = relationFromAttrValue.FieldByName(relationBindToFieldName)
 			if !relationFromAttrField.IsValid() {
 				var (
-					filedMap, _ = gstructs.FieldMap(gstructs.FieldMapInput{
+					fieldMap, _ = gstructs.FieldMap(gstructs.FieldMapInput{
 						Pointer:         relationFromAttrValue,
 						RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
 					})
 				)
-				if key, _ := utils.MapPossibleItemByKey(Map(filedMap), relationBindToFieldName); key == "" {
+				if key, _ := utils.MapPossibleItemByKey(Map(fieldMap), relationBindToFieldName); key == "" {
 					return gerror.NewCodef(
 						gcode.CodeInvalidParameter,
 						`cannot find possible related attribute name "%s" from given relation fields "%s"`,

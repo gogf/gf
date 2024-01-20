@@ -6,7 +6,7 @@ import (
 	"time"
 
 	_ "github.com/gogf/gf/contrib/drivers/mysql/v2"
-	"github.com/gogf/gf/contrib/trace/jaeger/v2"
+	"github.com/gogf/gf/contrib/trace/otlphttp/v2"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
@@ -17,17 +17,18 @@ import (
 type cTrace struct{}
 
 const (
-	ServiceName       = "http-server-with-db"
-	JaegerUdpEndpoint = "localhost:6831"
+	serviceName = "otlp-http-server-with-db"
+	endpoint    = "tracing-analysis-dc-hz.aliyuncs.com"
+	path        = "adapt_******_******/api/otlp/traces"
 )
 
 func main() {
 	var ctx = gctx.New()
-	tp, err := jaeger.Init(ServiceName, JaegerUdpEndpoint)
+	shutdown, err := otlphttp.Init(serviceName, endpoint, path)
 	if err != nil {
 		g.Log().Fatal(ctx, err)
 	}
-	defer tp.Shutdown(ctx)
+	defer shutdown()
 
 	// Set ORM cache adapter with redis.
 	g.DB().GetCache().SetAdapter(gcache.NewAdapterRedis(g.Redis()))
@@ -42,11 +43,14 @@ func main() {
 	s.Run()
 }
 
+// InsertReq is the input parameter for inserting user info.
 type InsertReq struct {
 	Name string `v:"required#Please input user name."`
 }
+
+// InsertRes is the output parameter for inserting user info.
 type InsertRes struct {
-	Id int64
+	ID int64
 }
 
 // Insert is a route handler for inserting user info into database.
@@ -57,14 +61,17 @@ func (c *cTrace) Insert(ctx context.Context, req *InsertReq) (res *InsertRes, er
 	}
 	id, _ := result.LastInsertId()
 	res = &InsertRes{
-		Id: id,
+		ID: id,
 	}
 	return
 }
 
+// QueryReq is the input parameter for querying user info.
 type QueryReq struct {
-	Id int `v:"min:1#User id is required for querying"`
+	ID int `v:"min:1#User id is required for querying"`
 }
+
+// QueryRes is the output parameter for querying user info.
 type QueryRes struct {
 	User gdb.Record
 }
@@ -74,9 +81,9 @@ type QueryRes struct {
 func (c *cTrace) Query(ctx context.Context, req *QueryReq) (res *QueryRes, err error) {
 	one, err := g.Model("user").Ctx(ctx).Cache(gdb.CacheOption{
 		Duration: 5 * time.Second,
-		Name:     c.userCacheKey(req.Id),
+		Name:     c.userCacheKey(req.ID),
 		Force:    false,
-	}).WherePri(req.Id).One()
+	}).WherePri(req.ID).One()
 	if err != nil {
 		return nil, err
 	}
@@ -86,9 +93,12 @@ func (c *cTrace) Query(ctx context.Context, req *QueryReq) (res *QueryRes, err e
 	return
 }
 
+// DeleteReq is the input parameter for deleting user info.
 type DeleteReq struct {
 	Id int `v:"min:1#User id is required for deleting."`
 }
+
+// DeleteRes is the output parameter for deleting user info.
 type DeleteRes struct{}
 
 // Delete is a route handler for deleting specified user info.

@@ -144,7 +144,7 @@ func newCommandFromObjectMeta(object interface{}, name string) (command *Command
 	if err = gconv.Scan(metaData, &command); err != nil {
 		return
 	}
-	// Name filed is necessary.
+	// Name field is necessary.
 	if command.Name == "" {
 		if name == "" {
 			err = gerror.Newf(
@@ -408,6 +408,19 @@ func mergeDefaultStructValue(data map[string]interface{}, pointer interface{}) e
 			foundValue interface{}
 		)
 		for _, field := range tagFields {
+			var (
+				nameValue  = field.Tag(tagNameName)
+				shortValue = field.Tag(tagNameShort)
+			)
+			// If it already has value, it then ignores the default value.
+			if value, ok := data[nameValue]; ok {
+				data[field.Name()] = value
+				continue
+			}
+			if value, ok := data[shortValue]; ok {
+				data[field.Name()] = value
+				continue
+			}
 			foundKey, foundValue = gutil.MapPossibleItemByKey(data, field.Name())
 			if foundKey == "" {
 				data[field.Name()] = field.TagValue

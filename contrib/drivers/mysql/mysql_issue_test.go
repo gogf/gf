@@ -7,6 +7,7 @@
 package mysql_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -795,5 +796,206 @@ func Test_Issue2787(t *testing.T) {
 			Where("passport", "pp").
 			Build()
 		t.Assert(condWhere, "((`nickname`=?) OR (`password`=?)) AND (`passport`=?)")
+	})
+}
+
+// https://github.com/gogf/gf/issues/2907
+func Test_Issue2907(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			orm = db.Model(table)
+			err error
+		)
+
+		orm = orm.WherePrefixNotIn(
+			table,
+			"id",
+			[]int{
+				1,
+				2,
+			},
+		)
+		all, err := orm.OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(all), TableSize-2)
+		t.Assert(all[0]["id"], 3)
+	})
+}
+
+// https://github.com/gogf/gf/issues/3086
+func Test_Issue3086(t *testing.T) {
+	table := "issue3086_user"
+	array := gstr.SplitAndTrim(gtest.DataContent(`issue3086.sql`), ";")
+	for _, v := range array {
+		if _, err := db.Exec(ctx, v); err != nil {
+			gtest.Error(err)
+		}
+	}
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			g.Meta     `orm:"do:true"`
+			Id         interface{}
+			Passport   interface{}
+			Password   interface{}
+			Nickname   interface{}
+			CreateTime interface{}
+		}
+		data := g.Slice{
+			User{
+				Id:       nil,
+				Passport: "user_1",
+			},
+			User{
+				Id:       2,
+				Passport: "user_2",
+			},
+		}
+		_, err := db.Model(table).Data(data).Batch(10).Insert()
+		t.AssertNE(err, nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			g.Meta     `orm:"do:true"`
+			Id         interface{}
+			Passport   interface{}
+			Password   interface{}
+			Nickname   interface{}
+			CreateTime interface{}
+		}
+		data := g.Slice{
+			User{
+				Id:       1,
+				Passport: "user_1",
+			},
+			User{
+				Id:       2,
+				Passport: "user_2",
+			},
+		}
+		result, err := db.Model(table).Data(data).Batch(10).Insert()
+		t.AssertNil(err)
+		n, err := result.RowsAffected()
+		t.AssertNil(err)
+		t.Assert(n, 2)
+	})
+}
+
+// https://github.com/gogf/gf/issues/3204
+func Test_Issue3204(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	// where
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			g.Meta     `orm:"do:true"`
+			Id         interface{} `orm:"id,omitempty"`
+			Passport   interface{} `orm:"passport,omitempty"`
+			Password   interface{} `orm:"password,omitempty"`
+			Nickname   interface{} `orm:"nickname,omitempty"`
+			CreateTime interface{} `orm:"create_time,omitempty"`
+		}
+		where := User{
+			Id:       2,
+			Passport: "",
+		}
+		all, err := db.Model(table).Where(where).All()
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["id"], 2)
+	})
+	// data
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			g.Meta     `orm:"do:true"`
+			Id         interface{} `orm:"id,omitempty"`
+			Passport   interface{} `orm:"passport,omitempty"`
+			Password   interface{} `orm:"password,omitempty"`
+			Nickname   interface{} `orm:"nickname,omitempty"`
+			CreateTime interface{} `orm:"create_time,omitempty"`
+		}
+		var (
+			err      error
+			sqlArray []string
+			insertId int64
+			data     = User{
+				Id:       20,
+				Passport: "passport_20",
+				Password: "",
+			}
+		)
+		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			insertId, err = db.Ctx(ctx).Model(table).Data(data).InsertAndGetId()
+			return err
+		})
+		t.AssertNil(err)
+		t.Assert(insertId, 20)
+		t.Assert(
+			gstr.Contains(sqlArray[len(sqlArray)-1], "(`id`,`passport`) VALUES(20,'passport_20')"),
+			true,
+		)
+	})
+	// update data
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			g.Meta     `orm:"do:true"`
+			Id         interface{} `orm:"id,omitempty"`
+			Passport   interface{} `orm:"passport,omitempty"`
+			Password   interface{} `orm:"password,omitempty"`
+			Nickname   interface{} `orm:"nickname,omitempty"`
+			CreateTime interface{} `orm:"create_time,omitempty"`
+		}
+		var (
+			err      error
+			sqlArray []string
+			data     = User{
+				Passport: "passport_1",
+				Password: "",
+				Nickname: "",
+			}
+		)
+		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			_, err = db.Ctx(ctx).Model(table).Data(data).WherePri(1).Update()
+			return err
+		})
+		t.AssertNil(err)
+		t.Assert(
+			gstr.Contains(sqlArray[len(sqlArray)-1], "SET `passport`='passport_1' WHERE `id`=1"),
+			true,
+		)
+	})
+}
+
+// https://github.com/gogf/gf/issues/3218
+func Test_Issue3218(t *testing.T) {
+	table := "issue3218_sys_config"
+	array := gstr.SplitAndTrim(gtest.DataContent(`issue3218.sql`), ";")
+	for _, v := range array {
+		if _, err := db.Exec(ctx, v); err != nil {
+			gtest.Error(err)
+		}
+	}
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		type SysConfigInfo struct {
+			Name  string            `json:"name"`
+			Value map[string]string `json:"value"`
+		}
+		var configData *SysConfigInfo
+		err := db.Model(table).Scan(&configData)
+		t.AssertNil(err)
+		t.Assert(configData, &SysConfigInfo{
+			Name: "site",
+			Value: map[string]string{
+				"fixed_page": "",
+				"site_name":  "22",
+				"version":    "22",
+				"banned_ip":  "22",
+				"filings":    "2222",
+			},
+		})
 	})
 }

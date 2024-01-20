@@ -53,6 +53,21 @@ func Test_New(t *testing.T) {
 		t.Assert(j.Get("k2"), "v2")
 		t.Assert(j.Get("k3"), nil)
 	})
+	// https://github.com/gogf/gf/issues/3253
+	gtest.C(t, func(t *gtest.T) {
+		type TestStruct struct {
+			Result []map[string]string `json:"result"`
+		}
+		ts := &TestStruct{
+			Result: []map[string]string{
+				{
+					"Name": "gf",
+					"Role": "",
+				},
+			},
+		}
+		gjson.New(ts)
+	})
 }
 
 func Test_Valid(t *testing.T) {

@@ -26,6 +26,25 @@ func Convert(fromValue interface{}, toTypeName string, extraParams ...interface{
 	})
 }
 
+// ConvertWithRefer converts the variable `fromValue` to the type referred by value `referValue`.
+//
+// The optional parameter `extraParams` is used for additional necessary parameter for this conversion.
+// It supports common basic types conversion as its conversion based on type name string.
+func ConvertWithRefer(fromValue interface{}, referValue interface{}, extraParams ...interface{}) interface{} {
+	var referValueRf reflect.Value
+	if v, ok := referValue.(reflect.Value); ok {
+		referValueRf = v
+	} else {
+		referValueRf = reflect.ValueOf(referValue)
+	}
+	return doConvert(doConvertInput{
+		FromValue:  fromValue,
+		ToTypeName: referValueRf.Type().String(),
+		ReferValue: referValue,
+		Extra:      extraParams,
+	})
+}
+
 type doConvertInput struct {
 	FromValue  interface{}   // Value that is converted from.
 	ToTypeName string        // Target value type name in string.
@@ -250,7 +269,7 @@ func doConvert(in doConvertInput) (convertedValue interface{}) {
 	case "[]map[string]interface{}":
 		return Maps(in.FromValue)
 
-	case "json.RawMessage":
+	case "RawMessage", "json.RawMessage":
 		return Bytes(in.FromValue)
 
 	default:

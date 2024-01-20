@@ -48,3 +48,13 @@ func Test_Duration(t *testing.T) {
 		t.Assert(d.Nanoseconds(), 1000000000)
 	})
 }
+
+func Test_ConvertWithRefer(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gconv.ConvertWithRefer("1", 100), 1)
+		t.AssertEQ(gconv.ConvertWithRefer("1.01", 1.111), 1.01)
+		t.AssertEQ(gconv.ConvertWithRefer("1.01", "1.111"), "1.01")
+		t.AssertEQ(gconv.ConvertWithRefer("1.01", false), true)
+		t.AssertNE(gconv.ConvertWithRefer("1.01", false), false)
+	})
+}

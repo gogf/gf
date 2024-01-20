@@ -9,6 +9,7 @@ package gstructs
 import (
 	"reflect"
 
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/util/gtag"
 )
@@ -91,142 +92,32 @@ func (f *Field) OriginalKind() reflect.Kind {
 		reflectType = reflectType.Elem()
 		reflectKind = reflectType.Kind()
 	}
+
 	return reflectKind
 }
 
-// Fields retrieves and returns the fields of `pointer` as slice.
-func Fields(in FieldsInput) ([]Field, error) {
+// OriginalValue retrieves and returns the original reflect.Value of Field `f`.
+func (f *Field) OriginalValue() reflect.Value {
 	var (
-		ok                   bool
-		fieldFilterMap       = make(map[string]struct{})
-		retrievedFields      = make([]Field, 0)
-		currentLevelFieldMap = make(map[string]Field)
+		reflectValue = f.Value
+		reflectType  = reflectValue.Type()
+		reflectKind  = reflectType.Kind()
 	)
-	rangeFields, err := getFieldValues(in.Pointer)
-	if err != nil {
-		return nil, err
+
+	for reflectKind == reflect.Ptr && !f.IsNil() {
+		reflectValue = reflectValue.Elem()
+		reflectKind = reflectValue.Type().Kind()
 	}
 
-	for index := 0; index < len(rangeFields); index++ {
-		field := rangeFields[index]
-		currentLevelFieldMap[field.Name()] = field
-	}
-
-	for index := 0; index < len(rangeFields); index++ {
-		field := rangeFields[index]
-		if _, ok = fieldFilterMap[field.Name()]; ok {
-			continue
-		}
-		if field.IsEmbedded() {
-			if in.RecursiveOption != RecursiveOptionNone {
-				switch in.RecursiveOption {
-				case RecursiveOptionEmbeddedNoTag:
-					if field.TagStr() != "" {
-						break
-					}
-					fallthrough
-
-				case RecursiveOptionEmbedded:
-					structFields, err := Fields(FieldsInput{
-						Pointer:         field.Value,
-						RecursiveOption: in.RecursiveOption,
-					})
-					if err != nil {
-						return nil, err
-					}
-					// The current level fields can overwrite the sub-struct fields with the same name.
-					for i := 0; i < len(structFields); i++ {
-						var (
-							structField = structFields[i]
-							fieldName   = structField.Name()
-						)
-						if _, ok = fieldFilterMap[fieldName]; ok {
-							continue
-						}
-						fieldFilterMap[fieldName] = struct{}{}
-						if v, ok := currentLevelFieldMap[fieldName]; !ok {
-							retrievedFields = append(retrievedFields, structField)
-						} else {
-							retrievedFields = append(retrievedFields, v)
-						}
-					}
-					continue
-				}
-			}
-			continue
-		}
-		fieldFilterMap[field.Name()] = struct{}{}
-		retrievedFields = append(retrievedFields, field)
-	}
-	return retrievedFields, nil
+	return reflectValue
 }
 
-// FieldMap retrieves and returns struct field as map[name/tag]Field from `pointer`.
-//
-// The parameter `pointer` should be type of struct/*struct.
-//
-// The parameter `priority` specifies the priority tag array for retrieving from high to low.
-// If it's given `nil`, it returns map[name]Field, of which the `name` is attribute name.
-//
-// The parameter `recursive` specifies the whether retrieving the fields recursively if the attribute
-// is an embedded struct.
-//
-// Note that it only retrieves the exported attributes with first letter upper-case from struct.
-func FieldMap(in FieldMapInput) (map[string]Field, error) {
-	fields, err := getFieldValues(in.Pointer)
-	if err != nil {
-		return nil, err
-	}
-	var (
-		tagValue string
-		mapField = make(map[string]Field)
-	)
-	for _, field := range fields {
-		// Only retrieve exported attributes.
-		if !field.IsExported() {
-			continue
-		}
-		tagValue = ""
-		for _, p := range in.PriorityTagArray {
-			tagValue = field.Tag(p)
-			if tagValue != "" && tagValue != "-" {
-				break
-			}
-		}
-		tempField := field
-		tempField.TagValue = tagValue
-		if tagValue != "" {
-			mapField[tagValue] = tempField
-		} else {
-			if in.RecursiveOption != RecursiveOptionNone && field.IsEmbedded() {
-				switch in.RecursiveOption {
-				case RecursiveOptionEmbeddedNoTag:
-					if field.TagStr() != "" {
-						mapField[field.Name()] = tempField
-						break
-					}
-					fallthrough
+// IsEmpty checks and returns whether the value of this Field is empty.
+func (f *Field) IsEmpty() bool {
+	return empty.IsEmpty(f.Value)
+}
 
-				case RecursiveOptionEmbedded:
-					m, err := FieldMap(FieldMapInput{
-						Pointer:          field.Value,
-						PriorityTagArray: in.PriorityTagArray,
-						RecursiveOption:  in.RecursiveOption,
-					})
-					if err != nil {
-						return nil, err
-					}
-					for k, v := range m {
-						if _, ok := mapField[k]; !ok {
-							tempV := v
-							mapField[k] = tempV
-						}
-					}
-				}
-			} else {
-				mapField[field.Name()] = tempField
-			}
-		}
-	}
-	return mapField, nil
+// IsNil checks and returns whether the value of this Field is nil.
+func (f *Field) IsNil(traceSource ...bool) bool {
+	return empty.IsNil(f.Value, traceSource...)
 }

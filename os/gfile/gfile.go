@@ -30,7 +30,7 @@ const (
 	DefaultPermOpen = os.FileMode(0666)
 
 	// DefaultPermCopy is the default perm for file/folder copy.
-	DefaultPermCopy = os.FileMode(0777)
+	DefaultPermCopy = os.FileMode(0755)
 )
 
 var (
@@ -64,7 +64,7 @@ func Mkdir(path string) (err error) {
 	return nil
 }
 
-// Create creates file with given `path` recursively.
+// Create creates a file with given `path` recursively.
 // The parameter `path` is suggested to be absolute path.
 func Create(path string) (*os.File, error) {
 	dir := Dir(path)
@@ -352,17 +352,19 @@ func SelfDir() string {
 // Trailing path separators are removed before extracting the last element.
 // If the path is empty, Base returns ".".
 // If the path consists entirely of separators, Basename returns a single separator.
+//
 // Example:
-// /var/www/file.js -> file.js
-// file.js          -> file.js
+// Basename("/var/www/file.js") -> file.js
+// Basename("file.js")          -> file.js
 func Basename(path string) string {
 	return filepath.Base(path)
 }
 
 // Name returns the last element of path without file extension.
+//
 // Example:
-// /var/www/file.js -> file
-// file.js          -> file
+// Name("/var/www/file.js") -> file
+// Name("file.js")          -> file
 func Name(path string) string {
 	base := filepath.Base(path)
 	if i := strings.LastIndexByte(base, '.'); i != -1 {
@@ -378,6 +380,10 @@ func Name(path string) string {
 // If the `path` is ".", Dir treats the path as current working directory.
 // If the `path` consists entirely of separators, Dir returns a single separator.
 // The returned path does not end in a separator unless it is the root directory.
+//
+// Example:
+// Dir("/var/www/file.js") -> "/var/www"
+// Dir("file.js")          -> "."
 func Dir(path string) string {
 	if path == "." {
 		return filepath.Dir(RealPath(path))
@@ -416,9 +422,10 @@ func IsEmpty(path string) bool {
 // in the final element of path; it is empty if there is
 // no dot.
 // Note: the result contains symbol '.'.
-// Eg:
-// main.go  => .go
-// api.json => .json
+//
+// Example:
+// Ext("main.go")  => .go
+// Ext("api.json") => .json
 func Ext(path string) string {
 	ext := filepath.Ext(path)
 	if p := strings.IndexByte(ext, '?'); p != -1 {
@@ -429,9 +436,10 @@ func Ext(path string) string {
 
 // ExtName is like function Ext, which returns the file name extension used by path,
 // but the result does not contain symbol '.'.
-// Eg:
-// main.go  => go
-// api.json => json
+//
+// Example:
+// ExtName("main.go")  => go
+// ExtName("api.json") => json
 func ExtName(path string) string {
 	return strings.TrimLeft(Ext(path), ".")
 }

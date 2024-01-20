@@ -125,3 +125,10 @@ func (c *Client) RedirectLimit(redirectLimit int) *Client {
 	newClient.SetRedirectLimit(redirectLimit)
 	return newClient
 }
+
+// NoUrlEncode sets the mark that do not encode the parameters before sending request.
+func (c *Client) NoUrlEncode() *Client {
+	newClient := c.Clone()
+	newClient.SetNoUrlEncode(true)
+	return newClient
+}

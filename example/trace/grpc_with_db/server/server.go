@@ -4,6 +4,7 @@ import (
 	_ "github.com/gogf/gf/contrib/drivers/mysql/v2"
 	_ "github.com/gogf/gf/contrib/nosql/redis/v2"
 	"github.com/gogf/gf/contrib/registry/etcd/v2"
+	"github.com/gogf/gf/contrib/trace/otlpgrpc/v2"
 	"github.com/gogf/gf/example/trace/grpc_with_db/protobuf/user"
 
 	"context"
@@ -11,31 +12,32 @@ import (
 	"time"
 
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
-	"github.com/gogf/gf/contrib/trace/jaeger/v2"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gctx"
 )
 
+// Controller is the gRPC controller for user management.
 type Controller struct {
 	user.UnimplementedUserServer
 }
 
 const (
-	ServiceName       = "grpc-server-with-db"
-	JaegerUdpEndpoint = "localhost:6831"
+	serviceName = "otlp-grpc-server"
+	endpoint    = "tracing-analysis-dc-bj.aliyuncs.com:8090"
+	traceToken  = "******_******"
 )
 
 func main() {
 	grpcx.Resolver.Register(etcd.New("127.0.0.1:2379"))
 
 	var ctx = gctx.New()
-	tp, err := jaeger.Init(ServiceName, JaegerUdpEndpoint)
+	shutdown, err := otlpgrpc.Init(serviceName, endpoint, traceToken)
 	if err != nil {
 		g.Log().Fatal(ctx, err)
 	}
-	defer tp.Shutdown(ctx)
+	defer shutdown()
 
 	// Set ORM cache adapter with redis.
 	g.DB().GetCache().SetAdapter(gcache.NewAdapterRedis(g.Redis()))
@@ -63,12 +65,11 @@ func (s *Controller) Insert(ctx context.Context, req *user.InsertReq) (res *user
 // Query is a route handler for querying user info. It firstly retrieves the info from redis,
 // if there's nothing in the redis, it then does db select.
 func (s *Controller) Query(ctx context.Context, req *user.QueryReq) (res *user.QueryRes, err error) {
-	err = g.Model("user").Ctx(ctx).Cache(gdb.CacheOption{
+	if err = g.Model("user").Ctx(ctx).Cache(gdb.CacheOption{
 		Duration: 5 * time.Second,
 		Name:     s.userCacheKey(req.Id),
 		Force:    false,
-	}).WherePri(req.Id).Scan(&res)
-	if err != nil {
+	}).WherePri(req.Id).Scan(&res); err != nil {
 		return nil, err
 	}
 	return

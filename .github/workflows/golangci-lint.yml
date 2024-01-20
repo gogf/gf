@@ -36,12 +36,12 @@ jobs:
   golangci:
     strategy:
       matrix:
-        go-version: [ '1.18','1.19','1.20' ]
+        go-version: [ '1.18','1.19','1.20','1.21.4' ]
     name: golangci-lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Golang ${{ matrix.go-version }}
         uses: actions/setup-go@v4
         with:

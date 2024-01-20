@@ -47,6 +47,18 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*HandlerItemPar
 		path   = r.URL.Path
 		host   = r.GetHost()
 	)
+	// In case of, eg:
+	// Case 1:
+	// 		GET /net/http
+	// 		r.URL.Path    : /net/http
+	// 		r.URL.RawPath : (empty string)
+	// Case 2:
+	// 		GET /net%2Fhttp
+	// 		r.URL.Path    : /net/http
+	// 		r.URL.RawPath : /net%2Fhttp
+	if r.URL.RawPath != "" {
+		path = r.URL.RawPath
+	}
 	// Special http method OPTIONS handling.
 	// It searches the handler with the request method instead of OPTIONS method.
 	if method == http.MethodOptions {
@@ -112,6 +124,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*Han
 	)
 
 	// The default domain has the most priority when iteration.
+	// Please see doSetHandler if you want to get known about the structure of serveTree.
 	for _, domainItem := range []string{DefaultDomainName, domain} {
 		p, ok := s.serveTree[domainItem]
 		if !ok {
@@ -157,12 +170,25 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*Han
 				item := e.Value.(*HandlerItem)
 				// Filter repeated handler items, especially the middleware and hook handlers.
 				// It is necessary, do not remove this checks logic unless you really know how it is necessary.
+				//
+				// The `repeatHandlerCheckMap` is used for repeat handler filtering during handler searching.
+				// As there are fuzzy nodes, and the fuzzy nodes have both sub-nodes and sub-list nodes, there
+				// may be repeated handler items in both sub-nodes and sub-list nodes. It here uses handler item id to
+				// identify the same handler item that registered.
+				//
+				// The same handler item is the one that is registered in the same function doSetHandler.
+				// Note that, one handler function(middleware or hook function) may be registered multiple times as
+				// different handler items using function doSetHandler, and they have different handler item id.
+				//
+				// Note that twice, the handler function may be registered multiple times as different handler items.
 				if _, isRepeatedHandler := repeatHandlerCheckMap[item.Id]; isRepeatedHandler {
 					continue
 				} else {
 					repeatHandlerCheckMap[item.Id] = struct{}{}
 				}
 				// Serving handler can only be added to the handler array just once.
+				// The first route item in the list has the most priority than the rest.
+				// This ignoring can implement route overwritten feature.
 				if hasServe {
 					switch item.Type {
 					case HandlerTypeHandler, HandlerTypeObject:

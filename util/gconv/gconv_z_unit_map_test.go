@@ -617,6 +617,53 @@ func TestMapWithJsonOmitEmpty(t *testing.T) {
 			Key:   "",
 			Value: 1,
 		}
-		t.Assert(gconv.Map(s), g.Map{"Value": 1})
+		m1 := gconv.Map(s)
+		t.Assert(m1, g.Map{
+			"Key":   "",
+			"Value": 1,
+		})
+
+		m2 := gconv.Map(s, gconv.MapOption{
+			Deep:      false,
+			OmitEmpty: true,
+			Tags:      nil,
+		})
+		t.Assert(m2, g.Map{
+			"Value": 1,
+		})
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		type ProductConfig struct {
+			Pid      int `v:"required" json:"pid,omitempty"`
+			TimeSpan int `v:"required" json:"timeSpan,omitempty"`
+		}
+		type CreateGoodsDetail struct {
+			ProductConfig
+			AutoRenewFlag int `v:"required" json:"autoRenewFlag"`
+		}
+		s := &CreateGoodsDetail{
+			ProductConfig: ProductConfig{
+				Pid:      1,
+				TimeSpan: 0,
+			},
+			AutoRenewFlag: 0,
+		}
+		m1 := gconv.Map(s)
+		t.Assert(m1, g.Map{
+			"pid":           1,
+			"timeSpan":      0,
+			"autoRenewFlag": 0,
+		})
+
+		m2 := gconv.Map(s, gconv.MapOption{
+			Deep:      false,
+			OmitEmpty: true,
+			Tags:      nil,
+		})
+		t.Assert(m2, g.Map{
+			"pid":           1,
+			"autoRenewFlag": 0,
+		})
 	})
 }

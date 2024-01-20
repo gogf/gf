@@ -33,18 +33,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.config.ClientMaxBodySize > 0 {
 		r.Body = http.MaxBytesReader(w, r.Body, s.config.ClientMaxBodySize)
 	}
-	// In case of, eg:
-	// Case 1:
-	// 		GET /net/http
-	// 		r.URL.Path    : /net/http
-	// 		r.URL.RawPath : (empty string)
-	// Case 2:
-	// 		GET /net%2Fhttp
-	// 		r.URL.Path    : /net/http
-	// 		r.URL.RawPath : /net%2Fhttp
-	if r.URL.RawPath != "" {
-		r.URL.Path = r.URL.RawPath
-	}
 	// Rewrite feature checks.
 	if len(s.config.Rewrites) > 0 {
 		if rewrite, ok := s.config.Rewrites[r.URL.Path]; ok {
@@ -54,6 +42,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Create a new request object.
 	request := newRequest(s, r, w)
+
+	// Get sessionId before user handler
+	sessionId := request.GetSessionId()
 
 	defer func() {
 		request.LeaveTime = gtime.TimestampMilli()
@@ -111,7 +102,10 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Search the dynamic service handler.
-	request.handlers, request.serveHandler, request.hasHookHandler, request.hasServeHandler = s.getHandlersWithCache(request)
+	request.handlers,
+		request.serveHandler,
+		request.hasHookHandler,
+		request.hasServeHandler = s.getHandlersWithCache(request)
 
 	// Check the service type static or dynamic for current request.
 	if request.StaticFile != nil && request.StaticFile.IsDir && request.hasServeHandler {
@@ -185,10 +179,17 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Automatically set the session id to cookie
 	// if it creates a new session id in this request
 	// and SessionCookieOutput is enabled.
-	if s.config.SessionCookieOutput &&
-		request.Session.IsDirty() &&
-		request.Session.MustId() != request.GetSessionId() {
-		request.Cookie.SetSessionId(request.Session.MustId())
+	if s.config.SessionCookieOutput && request.Session.IsDirty() {
+		// Can change by r.Session.SetId("") before init session
+		// Can change by r.Cookie.SetSessionId("")
+		sidFromSession, sidFromRequest := request.Session.MustId(), request.GetSessionId()
+		if sidFromSession != sidFromRequest {
+			if sidFromSession != sessionId {
+				request.Cookie.SetSessionId(sidFromSession)
+			} else {
+				request.Cookie.SetSessionId(sidFromRequest)
+			}
+		}
 	}
 	// Output the cookie content to the client.
 	request.Cookie.Flush()

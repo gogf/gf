@@ -353,7 +353,7 @@ type (
 
 type CatchSQLManager struct {
 	SQLArray *garray.StrArray
-	DoCommit bool
+	DoCommit bool // DoCommit marks it will be committed to underlying driver or not.
 }
 
 const (
@@ -378,7 +378,7 @@ const (
 	ctxKeyInternalProducedSQL gctx.StrKey = `CtxKeyInternalProducedSQL`
 
 	// type:[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
-	linkPattern = `(\w+):([\w\-]*):(.*?)@(\w+?)\((.+?)\)/{0,1}([^\?]*)\?{0,1}(.*)`
+	linkPattern = `(\w+):([\w\-\$]*):(.*?)@(\w+?)\((.+?)\)/{0,1}([^\?]*)\?{0,1}(.*)`
 )
 
 type queryType int

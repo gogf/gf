@@ -12,6 +12,7 @@ import (
 	"go/token"
 
 	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 )
@@ -99,10 +100,9 @@ func (c CGenService) calculateCodeCommented(in CGenServiceInput, fileContent str
 }
 
 func (c CGenService) calculateInterfaceFunctions(
-	in CGenServiceInput, fileContent string, srcPkgInterfaceMap map[string]*garray.StrArray,
+	in CGenServiceInput, fileContent string, srcPkgInterfaceMap *gmap.ListMap,
 ) (err error) {
 	var (
-		ok                       bool
 		matches                  [][]string
 		srcPkgInterfaceFuncArray *garray.StrArray
 	)
@@ -142,9 +142,11 @@ func (c CGenService) calculateInterfaceFunctions(
 			continue
 		}
 		structName = gstr.CaseCamel(structMatch[1])
-		if srcPkgInterfaceFuncArray, ok = srcPkgInterfaceMap[structName]; !ok {
-			srcPkgInterfaceMap[structName] = garray.NewStrArray()
-			srcPkgInterfaceFuncArray = srcPkgInterfaceMap[structName]
+		if !srcPkgInterfaceMap.Contains(structName) {
+			srcPkgInterfaceFuncArray = garray.NewStrArray()
+			srcPkgInterfaceMap.Set(structName, srcPkgInterfaceFuncArray)
+		} else {
+			srcPkgInterfaceFuncArray = srcPkgInterfaceMap.Get(structName).(*garray.StrArray)
 		}
 		srcPkgInterfaceFuncArray.Append(functionHead)
 	}
@@ -165,8 +167,8 @@ func (c CGenService) calculateInterfaceFunctions(
 			continue
 		}
 		structName = gstr.CaseCamel(structMatch[1])
-		if srcPkgInterfaceFuncArray, ok = srcPkgInterfaceMap[structName]; !ok {
-			srcPkgInterfaceMap[structName] = garray.NewStrArray()
+		if !srcPkgInterfaceMap.Contains(structName) {
+			srcPkgInterfaceMap.Set(structName, garray.NewStrArray())
 		}
 	}
 	return nil

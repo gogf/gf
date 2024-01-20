@@ -10,6 +10,7 @@ import "github.com/gogf/gf/v2/text/gstr"
 
 type apiItem struct {
 	Import     string `eg:"demo.com/api/user/v1"`
+	FileName   string `eg:"user"`
 	Module     string `eg:"user"`
 	Version    string `eg:"v1"`
 	MethodName string `eg:"GetList"`

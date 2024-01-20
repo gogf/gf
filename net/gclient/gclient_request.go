@@ -183,7 +183,7 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 				}
 			}
 		default:
-			params = httputil.BuildParams(data[0])
+			params = httputil.BuildParams(data[0], c.noUrlEncode)
 		}
 	}
 	if method == http.MethodGet {
@@ -338,8 +338,8 @@ func (c *Client) callRequest(req *http.Request) (resp *Response, err error) {
 	// raw HTTP request-response procedure.
 	reqBodyContent, _ := io.ReadAll(req.Body)
 	resp.requestBody = reqBodyContent
-	req.Body = utils.NewReadCloser(reqBodyContent, false)
 	for {
+		req.Body = utils.NewReadCloser(reqBodyContent, false)
 		if resp.Response, err = c.Do(req); err != nil {
 			err = gerror.Wrapf(err, `request failed`)
 			// The response might not be nil when err != nil.

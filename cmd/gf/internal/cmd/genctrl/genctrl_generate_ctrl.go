@@ -8,6 +8,7 @@ package genctrl
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
@@ -23,7 +24,7 @@ func newControllerGenerator() *controllerGenerator {
 	return &controllerGenerator{}
 }
 
-func (c *controllerGenerator) Generate(dstModuleFolderPath string, apiModuleApiItems []apiItem) (err error) {
+func (c *controllerGenerator) Generate(dstModuleFolderPath string, apiModuleApiItems []apiItem, merge bool) (err error) {
 	var (
 		doneApiItemSet = gset.NewStrSet()
 	)
@@ -42,7 +43,7 @@ func (c *controllerGenerator) Generate(dstModuleFolderPath string, apiModuleApiI
 			return
 		}
 		for _, subItem := range subItems {
-			if err = c.doGenerateCtrlItem(dstModuleFolderPath, subItem); err != nil {
+			if err = c.doGenerateCtrlItem(dstModuleFolderPath, subItem, merge); err != nil {
 				return
 			}
 			doneApiItemSet.Add(subItem.String())
@@ -64,8 +65,8 @@ func (c *controllerGenerator) doGenerateCtrlNewByModuleAndVersion(
 	dstModuleFolderPath, module, version, importPath string,
 ) (err error) {
 	var (
-		moduleFilePath        = gfile.Join(dstModuleFolderPath, module+".go")
-		moduleFilePathNew     = gfile.Join(dstModuleFolderPath, module+"_new.go")
+		moduleFilePath        = filepath.FromSlash(gfile.Join(dstModuleFolderPath, module+".go"))
+		moduleFilePathNew     = filepath.FromSlash(gfile.Join(dstModuleFolderPath, module+"_new.go"))
 		ctrlName              = fmt.Sprintf(`Controller%s`, gstr.UcFirst(version))
 		interfaceName         = fmt.Sprintf(`%s.I%s%s`, module, gstr.CaseCamel(module), gstr.UcFirst(version))
 		newFuncName           = fmt.Sprintf(`New%s`, gstr.UcFirst(version))
@@ -107,7 +108,7 @@ func (c *controllerGenerator) doGenerateCtrlNewByModuleAndVersion(
 			"{NewFuncName}":   newFuncName,
 			"{InterfaceName}": interfaceName,
 		})
-		err = gfile.PutContentsAppend(moduleFilePathNew, gstr.TrimLeft(content))
+		err = gfile.PutContentsAppend(moduleFilePathNew, content)
 		if err != nil {
 			return err
 		}
@@ -115,23 +116,48 @@ func (c *controllerGenerator) doGenerateCtrlNewByModuleAndVersion(
 	return
 }
 
-func (c *controllerGenerator) doGenerateCtrlItem(dstModuleFolderPath string, item apiItem) (err error) {
+func (c *controllerGenerator) doGenerateCtrlItem(dstModuleFolderPath string, item apiItem, merge bool) (err error) {
 	var (
 		methodNameSnake = gstr.CaseSnake(item.MethodName)
 		ctrlName        = fmt.Sprintf(`Controller%s`, gstr.UcFirst(item.Version))
-		methodFilePath  = gfile.Join(dstModuleFolderPath, fmt.Sprintf(
+		methodFilePath  = filepath.FromSlash(gfile.Join(dstModuleFolderPath, fmt.Sprintf(
 			`%s_%s_%s.go`, item.Module, item.Version, methodNameSnake,
-		))
+		)))
 	)
-	content := gstr.ReplaceByMap(consts.TemplateGenCtrlControllerMethodFunc, g.MapStrStr{
-		"{Module}":     item.Module,
-		"{ImportPath}": item.Import,
-		"{CtrlName}":   ctrlName,
-		"{Version}":    item.Version,
-		"{MethodName}": item.MethodName,
-	})
-	if err = gfile.PutContents(methodFilePath, gstr.TrimLeft(content)); err != nil {
-		return err
+	var content string
+
+	if merge {
+		methodFilePath = gfile.Join(dstModuleFolderPath, fmt.Sprintf(
+			`%s_%s_%s.go`, item.Module, item.Version, item.FileName,
+		))
+
+	}
+
+	if gfile.Exists(methodFilePath) {
+		content = gstr.ReplaceByMap(consts.TemplateGenCtrlControllerMethodFuncMerge, g.MapStrStr{
+			"{Module}":     item.Module,
+			"{CtrlName}":   ctrlName,
+			"{Version}":    item.Version,
+			"{MethodName}": item.MethodName,
+		})
+
+		if gstr.Contains(gfile.GetContents(methodFilePath), fmt.Sprintf(`func (c *%v) %v`, ctrlName, item.MethodName)) {
+			return
+		}
+		if err = gfile.PutContentsAppend(methodFilePath, gstr.TrimLeft(content)); err != nil {
+			return err
+		}
+	} else {
+		content = gstr.ReplaceByMap(consts.TemplateGenCtrlControllerMethodFunc, g.MapStrStr{
+			"{Module}":     item.Module,
+			"{ImportPath}": item.Import,
+			"{CtrlName}":   ctrlName,
+			"{Version}":    item.Version,
+			"{MethodName}": item.MethodName,
+		})
+		if err = gfile.PutContents(methodFilePath, gstr.TrimLeft(content)); err != nil {
+			return err
+		}
 	}
 	mlog.Printf(`generated: %s`, methodFilePath)
 	return

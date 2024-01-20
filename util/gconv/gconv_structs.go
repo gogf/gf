@@ -16,8 +16,13 @@ import (
 
 // Structs converts any slice to given struct slice.
 // Also see Scan, Struct.
-func Structs(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
-	return Scan(params, pointer, mapping...)
+func Structs(params interface{}, pointer interface{}, paramKeyToAttrMap ...map[string]string) (err error) {
+	return Scan(params, pointer, paramKeyToAttrMap...)
+}
+
+// SliceStruct is alias of Structs.
+func SliceStruct(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
+	return Structs(params, pointer, mapping...)
 }
 
 // StructsTag acts as Structs but also with support for priority tag feature, which retrieves the
@@ -34,7 +39,9 @@ func StructsTag(params interface{}, pointer interface{}, priorityTag string) (er
 // The parameter `pointer` should be type of pointer to slice of struct.
 // Note that if `pointer` is a pointer to another pointer of type of slice of struct,
 // it will create the struct/pointer internally.
-func doStructs(params interface{}, pointer interface{}, mapping map[string]string, priorityTag string) (err error) {
+func doStructs(
+	params interface{}, pointer interface{}, paramKeyToAttrMap map[string]string, priorityTag string,
+) (err error) {
 	if params == nil {
 		// If `params` is nil, no conversion.
 		return nil
@@ -133,7 +140,7 @@ func doStructs(params interface{}, pointer interface{}, mapping map[string]strin
 			if !tempReflectValue.IsValid() {
 				tempReflectValue = reflect.New(itemType.Elem()).Elem()
 			}
-			if err = doStruct(paramsList[i], tempReflectValue, mapping, priorityTag); err != nil {
+			if err = doStruct(paramsList[i], tempReflectValue, paramKeyToAttrMap, priorityTag); err != nil {
 				return err
 			}
 			reflectElemArray.Index(i).Set(tempReflectValue.Addr())
@@ -147,7 +154,7 @@ func doStructs(params interface{}, pointer interface{}, mapping map[string]strin
 			} else {
 				tempReflectValue = reflect.New(itemType).Elem()
 			}
-			if err = doStruct(paramsList[i], tempReflectValue, mapping, priorityTag); err != nil {
+			if err = doStruct(paramsList[i], tempReflectValue, paramKeyToAttrMap, priorityTag); err != nil {
 				return err
 			}
 			reflectElemArray.Index(i).Set(tempReflectValue)
