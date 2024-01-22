@@ -193,6 +193,7 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 				}
 				// The error should have error code that is `gcode.CodeValidationFailed`.
 				if gerror.Code(err) == gcode.CodeNil {
+					// TODO it's better using interface?
 					if e, ok := err.(*gerror.Error); ok {
 						e.SetCode(gcode.CodeValidationFailed)
 					}
