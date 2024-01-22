@@ -48,6 +48,18 @@ func TestConverter_ConvertWithRefer(t *testing.T) {
 			Val2: "abcd",
 		})
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		a := &tA{
+			Val: 1,
+		}
+		var b tB
+		result := gconv.ConvertWithRefer(a, b)
+		t.Assert(result.(tB), tB{
+			Val1: 1,
+			Val2: "abcd",
+		})
+	})
 }
 
 func TestConverter_Struct(t *testing.T) {

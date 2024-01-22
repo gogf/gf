@@ -24,7 +24,7 @@ var customConverters = make(map[converterInType]map[converterOutType]converterFu
 
 // RegisterConverter to register custom converter.
 // It must be registered before you use this custom converting feature.
-// It is suggested to do it in boot.
+// It is suggested to do it in boot procedure of the process.
 //
 // Note:
 //  1. The parameter `fn` must be defined as pattern `func(T1) (T2, error)`.
@@ -40,7 +40,7 @@ func RegisterConverter(fn interface{}) (err error) {
 		!fnReflectType.Out(1).Implements(errType) {
 		err = gerror.NewCodef(
 			gcode.CodeInvalidParameter,
-			"parameter must be type of function and defined as pattern `func(T1) (T2, error)`, but defined as `%s`",
+			"parameter must be type of converter function and defined as pattern `func(T1) (T2, error)`, but defined as `%s`",
 			fnReflectType.String(),
 		)
 		return
@@ -54,16 +54,16 @@ func RegisterConverter(fn interface{}) (err error) {
 	if inType.Kind() == reflect.Pointer {
 		err = gerror.NewCodef(
 			gcode.CodeInvalidParameter,
-			"invalid input parameter type `%s`: should not be type of pointer",
-			inType.String(),
+			"invalid converter function `%s`: invalid input parameter type `%s`, should not be type of pointer",
+			fnReflectType.String(), inType.String(),
 		)
 		return
 	}
 	if outType.Kind() != reflect.Pointer {
 		err = gerror.NewCodef(
 			gcode.CodeInvalidParameter,
-			"invalid output parameter type `%s`: should be type of pointer",
-			outType.String(),
+			"invalid converter function `%s`: invalid output parameter type `%s` should be type of pointer",
+			fnReflectType.String(), outType.String(),
 		)
 		return
 	}
@@ -102,10 +102,15 @@ func getRegisteredConverterFuncAndSrcType(
 		return reflect.Value{}, nil, false
 	}
 	var dstType = dstReflectValueForRefer.Type()
-	if dstType.Kind() == reflect.Pointer && dstReflectValueForRefer.Elem().Kind() == reflect.Pointer {
-		dstType = dstReflectValueForRefer.Elem().Type()
-	} else if dstType.Kind() != reflect.Pointer && dstReflectValueForRefer.CanAddr() {
+	if dstType.Kind() == reflect.Pointer {
+		// Might be **struct, which is support as designed.
+		if dstType.Elem().Kind() == reflect.Pointer {
+			dstType = dstType.Elem()
+		}
+	} else if dstReflectValueForRefer.IsValid() && dstReflectValueForRefer.CanAddr() {
 		dstType = dstReflectValueForRefer.Addr().Type()
+	} else {
+		dstType = reflect.PointerTo(dstType)
 	}
 	// secondly, it searches the input parameter type map
 	// and finds the result converter function by the output parameter type.
