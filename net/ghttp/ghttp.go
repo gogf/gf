@@ -161,6 +161,7 @@ const (
 	specialMethodNameShut                   = "Shut"
 	specialMethodNameIndex                  = "Index"
 	defaultEndpointPort                     = 80
+	noPrintInternalRoute                    = "internalMiddlewareServerTracing"
 )
 
 const (
