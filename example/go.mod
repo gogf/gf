@@ -1,6 +1,6 @@
 module github.com/gogf/gf/example
 
-go 1.20
+go 1.18
 
 require (
 	github.com/gogf/gf/contrib/config/apollo/v2 v2.6.1
