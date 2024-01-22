@@ -129,10 +129,8 @@ func HasCode(err error, code gcode.Code) bool {
 	if err == nil {
 		return false
 	}
-	if e, ok := err.(ICode); ok {
-		if code == e.Code() {
-			return true
-		}
+	if e, ok := err.(ICode); ok && code == e.Code() {
+		return true
 	}
 	if e, ok := err.(IUnwrap); ok {
 		return HasCode(e.Unwrap(), code)
