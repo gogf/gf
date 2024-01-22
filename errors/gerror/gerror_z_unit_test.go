@@ -433,10 +433,14 @@ func Test_HashCode(t *testing.T) {
 		err2 := gerror.WrapCode(gcode.CodeNotAuthorized, err1, "2")
 		err3 := gerror.Wrap(err2, "3")
 		err4 := gerror.Wrap(err3, "4")
+		err5 := gerror.WrapCode(gcode.CodeInvalidParameter, err4, "5")
 		t.Assert(gerror.HasCode(err1, gcode.CodeNotAuthorized), false)
 		t.Assert(gerror.HasCode(err2, gcode.CodeNotAuthorized), true)
 		t.Assert(gerror.HasCode(err3, gcode.CodeNotAuthorized), true)
 		t.Assert(gerror.HasCode(err4, gcode.CodeNotAuthorized), true)
+		t.Assert(gerror.HasCode(err5, gcode.CodeNotAuthorized), true)
+		t.Assert(gerror.HasCode(err5, gcode.CodeInvalidParameter), true)
+		t.Assert(gerror.HasCode(err5, gcode.CodeInternalError), false)
 	})
 }
 

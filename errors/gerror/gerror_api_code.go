@@ -109,7 +109,7 @@ func WrapCodeSkipf(code gcode.Code, skip int, err error, format string, args ...
 	}
 }
 
-// Code returns the error code of current error.
+// Code returns the error code of `current error`.
 // It returns `CodeNil` if it has no error code neither it does not implement interface Code.
 func Code(err error) gcode.Code {
 	if err == nil {
@@ -130,7 +130,9 @@ func HasCode(err error, code gcode.Code) bool {
 		return false
 	}
 	if e, ok := err.(ICode); ok {
-		return code == e.Code()
+		if code == e.Code() {
+			return true
+		}
 	}
 	if e, ok := err.(IUnwrap); ok {
 		return HasCode(e.Unwrap(), code)
