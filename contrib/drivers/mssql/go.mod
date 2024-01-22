@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/denisenkom/go-mssqldb v0.12.3
-	github.com/gogf/gf/v2 v2.6.1
+	github.com/gogf/gf/v2 v2.6.2
 )
 
 require (
