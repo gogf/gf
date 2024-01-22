@@ -280,6 +280,17 @@ func doConvert(in doConvertInput) (convertedValue interface{}) {
 			} else {
 				referReflectValue = reflect.ValueOf(in.ReferValue)
 			}
+			var fromReflectValue reflect.Value
+			if v, ok := in.FromValue.(reflect.Value); ok {
+				fromReflectValue = v
+			} else {
+				fromReflectValue = reflect.ValueOf(in.FromValue)
+			}
+
+			// custom converter.
+			if dstReflectValue, ok, _ := callCustomConverterWithRefer(fromReflectValue, referReflectValue); ok {
+				return dstReflectValue.Interface()
+			}
 
 			defer func() {
 				if recover() != nil {
