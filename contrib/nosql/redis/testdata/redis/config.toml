@@ -1,7 +1,7 @@
-# 模板引擎目录
+# Template directory
 viewpath = "/home/www/templates/"
 test = "v=3"
-# MySQL数据库配置
+# MySQL config
 [database]
     [[database.default]]
         host     = "127.0.0.1"
@@ -25,7 +25,7 @@ test = "v=3"
         role     = "master"
         charset  = "utf8"
         priority = "1"
-# Redis数据库配置
+# Redis config
 [redis]
     [redis.default]
         address = "127.0.0.1:6379"
