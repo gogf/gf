@@ -74,6 +74,9 @@ func doMapConvert(value interface{}, recursive recursiveType, mustMapReturn bool
 		usedOption = getUsedMapOption(option...)
 		newTags    = StructTagPriority
 	)
+	if usedOption.Deep {
+		recursive = recursiveTypeTrue
+	}
 	switch len(usedOption.Tags) {
 	case 0:
 		// No need handling.
