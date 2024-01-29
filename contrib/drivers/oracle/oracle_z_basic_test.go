@@ -8,9 +8,10 @@ package oracle_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/v2/util/gconv"
 	"strings"
 	"testing"
+
+	"github.com/gogf/gf/v2/util/gconv"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"

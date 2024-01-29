@@ -37,10 +37,65 @@ const (
 	quoteChar = `"`
 )
 
+var (
+	tablesSqlTmp      = `SELECT NAME FROM SYSOBJECTS WHERE XTYPE='U' AND STATUS >= 0 ORDER BY NAME`
+	tableFieldsSqlTmp = `
+SELECT 
+	a.name Field,
+	CASE b.name 
+		WHEN 'datetime' THEN 'datetime'
+		WHEN 'numeric' THEN b.name + '(' + convert(varchar(20), a.xprec) + ',' + convert(varchar(20), a.xscale) + ')' 
+		WHEN 'char' THEN b.name + '(' + convert(varchar(20), a.length)+ ')'
+		WHEN 'varchar' THEN b.name + '(' + convert(varchar(20), a.length)+ ')'
+		ELSE b.name + '(' + convert(varchar(20),a.length)+ ')' END AS Type,
+	CASE WHEN a.isnullable=1 THEN 'YES' ELSE 'NO' end AS [Null],
+	CASE WHEN exists (
+		SELECT 1 FROM sysobjects WHERE xtype='PK' AND name IN (
+			SELECT name FROM sysindexes WHERE indid IN (
+				SELECT indid FROM sysindexkeys WHERE id = a.id AND colid=a.colid
+			)
+		)
+	) THEN 'PRI' ELSE '' END AS [Key],
+	CASE WHEN COLUMNPROPERTY(a.id,a.name,'IsIdentity')=1 THEN 'auto_increment' ELSE '' END Extra,
+	isnull(e.text,'') AS [Default],
+	isnull(g.[value],'') AS [Comment]
+FROM syscolumns a
+LEFT JOIN systypes b ON a.xtype=b.xtype AND a.xusertype=b.xusertype
+INNER JOIN sysobjects d ON a.id=d.id AND d.xtype='U' AND d.name<>'dtproperties'
+LEFT JOIN syscomments e ON a.cdefault=e.id
+LEFT JOIN sys.extended_properties g ON a.id=g.major_id AND a.colid=g.minor_id
+LEFT JOIN sys.extended_properties f ON d.id=f.major_id AND f.minor_id =0
+WHERE d.name='%s'
+ORDER BY a.id,a.colorder
+`
+	selectSqlTmp          = `SELECT * FROM (SELECT TOP %d * FROM (SELECT TOP %d %s) as TMP1_ ) as TMP2_ `
+	selectWithOrderSqlTmp = `
+SELECT * FROM (SELECT ROW_NUMBER() OVER (ORDER BY %s) as ROWNUMBER_, %s ) as TMP_ 
+WHERE TMP_.ROWNUMBER_ > %d AND TMP_.ROWNUMBER_ <= %d
+`
+)
+
 func init() {
-	if err := gdb.Register(`mssql`, New()); err != nil {
+	var err error
+	tableFieldsSqlTmp = formatSqlTmp(tableFieldsSqlTmp)
+	if err = gdb.Register(`mssql`, New()); err != nil {
 		panic(err)
 	}
+}
+
+// formatSqlTmp formats sql template string into one line.
+func formatSqlTmp(sqlTmp string) string {
+	var err error
+	// format sql template string.
+	sqlTmp, err = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(sqlTmp))
+	if err != nil {
+		panic(err)
+	}
+	sqlTmp, err = gregex.ReplaceString(`\s{2,}`, " ", gstr.Trim(sqlTmp))
+	if err != nil {
+		panic(err)
+	}
+	return sqlTmp
 }
 
 // New create and returns a driver that implements gdb.Driver, which supports operations for Mssql.
@@ -103,111 +158,135 @@ func (d *Driver) GetChars() (charLeft string, charRight string) {
 }
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
-func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+func (d *Driver) DoFilter(
+	ctx context.Context, link gdb.Link, sql string, args []interface{},
+) (newSql string, newArgs []interface{}, err error) {
 	var index int
 	// Convert placeholder char '?' to string "@px".
-	newSql, _ = gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
+	newSql, err = gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
 		index++
 		return fmt.Sprintf("@p%d", index)
 	})
-	newSql, _ = gregex.ReplaceString("\"", "", newSql)
-	return d.Core.DoFilter(ctx, link, d.parseSql(newSql), args)
+	if err != nil {
+		return "", nil, err
+	}
+	newSql, err = gregex.ReplaceString("\"", "", newSql)
+	if err != nil {
+		return "", nil, err
+	}
+	newSql, err = d.parseSql(newSql)
+	if err != nil {
+		return "", nil, err
+	}
+	newArgs = args
+	return d.Core.DoFilter(ctx, link, newSql, newArgs)
 }
 
 // parseSql does some replacement of the sql before commits it to underlying driver,
 // for support of microsoft sql server.
-func (d *Driver) parseSql(sql string) string {
-	// SELECT * FROM USER WHERE ID=1 LIMIT 1
-	if m, _ := gregex.MatchString(`^SELECT(.+)LIMIT 1$`, sql); len(m) > 1 {
-		return fmt.Sprintf(`SELECT TOP 1 %s`, m[1])
+func (d *Driver) parseSql(toBeCommittedSql string) (string, error) {
+	var (
+		err       error
+		operation = gstr.StrTillEx(toBeCommittedSql, " ")
+		keyword   = strings.ToUpper(gstr.Trim(operation))
+	)
+	switch keyword {
+	case "SELECT":
+		toBeCommittedSql, err = d.handleSelectSqlReplacement(toBeCommittedSql)
+		if err != nil {
+			return "", err
+		}
 	}
+	return toBeCommittedSql, nil
+}
+
+func (d *Driver) handleSelectSqlReplacement(toBeCommittedSql string) (newSql string, err error) {
+	// SELECT * FROM USER WHERE ID=1 LIMIT 1
+	match, err := gregex.MatchString(`^SELECT(.+)LIMIT 1$`, toBeCommittedSql)
+	if err != nil {
+		return "", err
+	}
+	if len(match) > 1 {
+		return fmt.Sprintf(`SELECT TOP 1 %s`, match[1]), nil
+	}
+
 	// SELECT * FROM USER WHERE AGE>18 ORDER BY ID DESC LIMIT 100, 200
 	patten := `^\s*(?i)(SELECT)|(LIMIT\s*(\d+)\s*,\s*(\d+))`
-	if gregex.IsMatchString(patten, sql) == false {
-		return sql
+	if gregex.IsMatchString(patten, toBeCommittedSql) == false {
+		return toBeCommittedSql, nil
 	}
-	res, err := gregex.MatchAllString(patten, sql)
+	allMatch, err := gregex.MatchAllString(patten, toBeCommittedSql)
 	if err != nil {
-		return ""
+		return "", err
 	}
+	var index = 1
+	// LIMIT statement checks.
+	if len(allMatch) < 2 ||
+		(strings.HasPrefix(allMatch[index][0], "LIMIT") == false &&
+			strings.HasPrefix(allMatch[index][0], "limit") == false) {
+		return toBeCommittedSql, nil
+	}
+	if gregex.IsMatchString("((?i)SELECT)(.+)((?i)LIMIT)", toBeCommittedSql) == false {
+		return toBeCommittedSql, nil
+	}
+	// ORDER BY statement checks.
 	var (
-		index   = 0
-		keyword = strings.TrimSpace(res[index][0])
+		selectStr = ""
+		orderStr  = ""
+		haveOrder = gregex.IsMatchString("((?i)SELECT)(.+)((?i)ORDER BY)", toBeCommittedSql)
 	)
-	index++
-	switch strings.ToUpper(keyword) {
-	case "SELECT":
-		// LIMIT statement checks.
-		if len(res) < 2 ||
-			(strings.HasPrefix(res[index][0], "LIMIT") == false &&
-				strings.HasPrefix(res[index][0], "limit") == false) {
-			break
+	if haveOrder {
+		queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)ORDER BY)", toBeCommittedSql)
+		if len(queryExpr) != 4 ||
+			strings.EqualFold(queryExpr[1], "SELECT") == false ||
+			strings.EqualFold(queryExpr[3], "ORDER BY") == false {
+			return toBeCommittedSql, nil
 		}
-		if gregex.IsMatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql) == false {
-			break
+		selectStr = queryExpr[2]
+		orderExpr, _ := gregex.MatchString("((?i)ORDER BY)(.+)((?i)LIMIT)", toBeCommittedSql)
+		if len(orderExpr) != 4 ||
+			strings.EqualFold(orderExpr[1], "ORDER BY") == false ||
+			strings.EqualFold(orderExpr[3], "LIMIT") == false {
+			return toBeCommittedSql, nil
 		}
-		// ORDER BY statement checks.
-		var (
-			selectStr = ""
-			orderStr  = ""
-			haveOrder = gregex.IsMatchString("((?i)SELECT)(.+)((?i)ORDER BY)", sql)
-		)
-		if haveOrder {
-			queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)ORDER BY)", sql)
-			if len(queryExpr) != 4 ||
-				strings.EqualFold(queryExpr[1], "SELECT") == false ||
-				strings.EqualFold(queryExpr[3], "ORDER BY") == false {
-				break
-			}
-			selectStr = queryExpr[2]
-			orderExpr, _ := gregex.MatchString("((?i)ORDER BY)(.+)((?i)LIMIT)", sql)
-			if len(orderExpr) != 4 ||
-				strings.EqualFold(orderExpr[1], "ORDER BY") == false ||
-				strings.EqualFold(orderExpr[3], "LIMIT") == false {
-				break
-			}
-			orderStr = orderExpr[2]
-		} else {
-			queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql)
-			if len(queryExpr) != 4 ||
-				strings.EqualFold(queryExpr[1], "SELECT") == false ||
-				strings.EqualFold(queryExpr[3], "LIMIT") == false {
-				break
-			}
-			selectStr = queryExpr[2]
+		orderStr = orderExpr[2]
+	} else {
+		queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)LIMIT)", toBeCommittedSql)
+		if len(queryExpr) != 4 ||
+			strings.EqualFold(queryExpr[1], "SELECT") == false ||
+			strings.EqualFold(queryExpr[3], "LIMIT") == false {
+			return toBeCommittedSql, nil
 		}
-		first, limit := 0, 0
-		for i := 1; i < len(res[index]); i++ {
-			if len(strings.TrimSpace(res[index][i])) == 0 {
-				continue
-			}
-
-			if strings.HasPrefix(res[index][i], "LIMIT") ||
-				strings.HasPrefix(res[index][i], "limit") {
-				first, _ = strconv.Atoi(res[index][i+1])
-				limit, _ = strconv.Atoi(res[index][i+2])
-				break
-			}
-		}
-		if haveOrder {
-			sql = fmt.Sprintf(
-				"SELECT * FROM "+
-					"(SELECT ROW_NUMBER() OVER (ORDER BY %s) as ROWNUMBER_, %s ) as TMP_ "+
-					"WHERE TMP_.ROWNUMBER_ > %d AND TMP_.ROWNUMBER_ <= %d",
-				orderStr, selectStr, first, first+limit,
-			)
-		} else {
-			if first == 0 {
-				first = limit
-			}
-			sql = fmt.Sprintf(
-				"SELECT * FROM (SELECT TOP %d * FROM (SELECT TOP %d %s) as TMP1_ ) as TMP2_ ",
-				limit, first+limit, selectStr,
-			)
-		}
-	default:
+		selectStr = queryExpr[2]
 	}
-	return sql
+	first, limit := 0, 0
+	for i := 1; i < len(allMatch[index]); i++ {
+		if len(strings.TrimSpace(allMatch[index][i])) == 0 {
+			continue
+		}
+		if strings.HasPrefix(allMatch[index][i], "LIMIT") ||
+			strings.HasPrefix(allMatch[index][i], "limit") {
+			first, _ = strconv.Atoi(allMatch[index][i+1])
+			limit, _ = strconv.Atoi(allMatch[index][i+2])
+			break
+		}
+	}
+	if haveOrder {
+		toBeCommittedSql = fmt.Sprintf(
+			selectWithOrderSqlTmp,
+			orderStr, selectStr, first, first+limit,
+		)
+		return toBeCommittedSql, nil
+	}
+
+	if first == 0 {
+		first = limit
+	}
+	toBeCommittedSql = fmt.Sprintf(
+		selectSqlTmp,
+		limit, first+limit, selectStr,
+	)
+	return toBeCommittedSql, nil
 }
 
 // Tables retrieves and returns the tables of current schema.
@@ -219,9 +298,7 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 		return nil, err
 	}
 
-	result, err = d.DoSelect(
-		ctx, link, `SELECT NAME FROM SYSOBJECTS WHERE XTYPE='U' AND STATUS >= 0 ORDER BY NAME`,
-	)
+	result, err = d.DoSelect(ctx, link, tablesSqlTmp)
 	if err != nil {
 		return
 	}
@@ -245,37 +322,7 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 	if link, err = d.SlaveLink(usedSchema); err != nil {
 		return nil, err
 	}
-	structureSql := fmt.Sprintf(`
-SELECT 
-	a.name Field,
-	CASE b.name 
-		WHEN 'datetime' THEN 'datetime'
-		WHEN 'numeric' THEN b.name + '(' + convert(varchar(20), a.xprec) + ',' + convert(varchar(20), a.xscale) + ')' 
-		WHEN 'char' THEN b.name + '(' + convert(varchar(20), a.length)+ ')'
-		WHEN 'varchar' THEN b.name + '(' + convert(varchar(20), a.length)+ ')'
-		ELSE b.name + '(' + convert(varchar(20),a.length)+ ')' END AS Type,
-	CASE WHEN a.isnullable=1 THEN 'YES' ELSE 'NO' end AS [Null],
-	CASE WHEN exists (
-		SELECT 1 FROM sysobjects WHERE xtype='PK' AND name IN (
-			SELECT name FROM sysindexes WHERE indid IN (
-				SELECT indid FROM sysindexkeys WHERE id = a.id AND colid=a.colid
-			)
-		)
-	) THEN 'PRI' ELSE '' END AS [Key],
-	CASE WHEN COLUMNPROPERTY(a.id,a.name,'IsIdentity')=1 THEN 'auto_increment' ELSE '' END Extra,
-	isnull(e.text,'') AS [Default],
-	isnull(g.[value],'') AS [Comment]
-FROM syscolumns a
-LEFT JOIN systypes b ON a.xtype=b.xtype AND a.xusertype=b.xusertype
-INNER JOIN sysobjects d ON a.id=d.id AND d.xtype='U' AND d.name<>'dtproperties'
-LEFT JOIN syscomments e ON a.cdefault=e.id
-LEFT JOIN sys.extended_properties g ON a.id=g.major_id AND a.colid=g.minor_id
-LEFT JOIN sys.extended_properties f ON d.id=f.major_id AND f.minor_id =0
-WHERE d.name='%s'
-ORDER BY a.id,a.colorder`,
-		table,
-	)
-	structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
+	structureSql := fmt.Sprintf(tableFieldsSqlTmp, table)
 	result, err = d.DoSelect(ctx, link, structureSql)
 	if err != nil {
 		return nil, err

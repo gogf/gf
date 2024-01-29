@@ -38,10 +38,48 @@ const (
 	quoteChar = `"`
 )
 
+var (
+	tablesSqlTmp         = `SELECT TABLE_NAME FROM USER_TABLES ORDER BY TABLE_NAME`
+	newSqlReplacementTmp = `
+SELECT * FROM (
+	SELECT GFORM.*, ROWNUM ROWNUM_ FROM (%s %s) GFORM WHERE ROWNUM <= %d
+) 
+	WHERE ROWNUM_ > %d
+`
+	tableFieldsSqlTmp = `
+SELECT 
+    COLUMN_NAME AS FIELD, 
+    CASE   
+    WHEN (DATA_TYPE='NUMBER' AND NVL(DATA_SCALE,0)=0) THEN 'INT'||'('||DATA_PRECISION||','||DATA_SCALE||')'
+    WHEN (DATA_TYPE='NUMBER' AND NVL(DATA_SCALE,0)>0) THEN 'FLOAT'||'('||DATA_PRECISION||','||DATA_SCALE||')'
+    WHEN DATA_TYPE='FLOAT' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
+    ELSE DATA_TYPE||'('||DATA_LENGTH||')' END AS TYPE,NULLABLE
+FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID
+`
+)
+
 func init() {
-	if err := gdb.Register(`oracle`, New()); err != nil {
+	var err error
+	tableFieldsSqlTmp = formatSqlTmp(tableFieldsSqlTmp)
+	newSqlReplacementTmp = formatSqlTmp(newSqlReplacementTmp)
+	if err = gdb.Register(`oracle`, New()); err != nil {
 		panic(err)
 	}
+}
+
+// formatSqlTmp formats sql template string into one line.
+func formatSqlTmp(sqlTmp string) string {
+	var err error
+	// format sql template string.
+	sqlTmp, err = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(sqlTmp))
+	if err != nil {
+		panic(err)
+	}
+	sqlTmp, err = gregex.ReplaceString(`\s{2,}`, " ", gstr.Trim(sqlTmp))
+	if err != nil {
+		panic(err)
+	}
+	return sqlTmp
 }
 
 // New create and returns a driver that implements gdb.Driver, which supports operations for Oracle.
@@ -115,76 +153,110 @@ func (d *Driver) GetChars() (charLeft string, charRight string) {
 // DoFilter deals with the sql string before commits it to underlying sql driver.
 func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
 	var index int
+	newArgs = args
 	// Convert placeholder char '?' to string ":vx".
-	newSql, _ = gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
+	newSql, err = gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
 		index++
 		return fmt.Sprintf(":v%d", index)
 	})
-	newSql, _ = gregex.ReplaceString("\"", "", newSql)
-	return d.Core.DoFilter(ctx, link, d.parseSql(newSql), args)
+	if err != nil {
+		return
+	}
+	newSql, err = gregex.ReplaceString("\"", "", newSql)
+	if err != nil {
+		return
+	}
+	newSql, err = d.parseSql(newSql)
+	if err != nil {
+		return
+	}
+	return d.Core.DoFilter(ctx, link, newSql, newArgs)
 }
 
 // parseSql does some replacement of the sql before commits it to underlying driver,
 // for support of oracle server.
-func (d *Driver) parseSql(sql string) string {
+func (d *Driver) parseSql(toBeCommittedSql string) (string, error) {
 	var (
-		patten      = `^\s*(?i)(SELECT)|(LIMIT\s*(\d+)\s*,{0,1}\s*(\d*))`
-		allMatch, _ = gregex.MatchAllString(patten, sql)
+		err       error
+		operation = gstr.StrTillEx(toBeCommittedSql, " ")
+		keyword   = strings.ToUpper(gstr.Trim(operation))
 	)
-	if len(allMatch) == 0 {
-		return sql
-	}
-	var (
-		index   = 0
-		keyword = strings.ToUpper(strings.TrimSpace(allMatch[index][0]))
-	)
-	index++
 	switch keyword {
 	case "SELECT":
-		if len(allMatch) < 2 || strings.HasPrefix(allMatch[index][0], "LIMIT") == false {
-			break
+		toBeCommittedSql, err = d.handleSelectSqlReplacement(toBeCommittedSql)
+		if err != nil {
+			return "", err
 		}
-		if gregex.IsMatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql) == false {
-			break
-		}
-		queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql)
-		if len(queryExpr) != 4 ||
-			strings.EqualFold(queryExpr[1], "SELECT") == false ||
-			strings.EqualFold(queryExpr[3], "LIMIT") == false {
-			break
-		}
-		page, limit := 0, 0
-		for i := 1; i < len(allMatch[index]); i++ {
-			if len(strings.TrimSpace(allMatch[index][i])) == 0 {
-				continue
-			}
-
-			if strings.HasPrefix(allMatch[index][i], "LIMIT") {
-				if allMatch[index][i+2] != "" {
-					page, _ = strconv.Atoi(allMatch[index][i+1])
-					limit, _ = strconv.Atoi(allMatch[index][i+2])
-
-					if page <= 0 {
-						page = 1
-					}
-
-					limit = (page/limit + 1) * limit
-
-					page, _ = strconv.Atoi(allMatch[index][i+1])
-				} else {
-					limit, _ = strconv.Atoi(allMatch[index][i+1])
-				}
-				break
-			}
-		}
-		sql = fmt.Sprintf(
-			"SELECT * FROM "+
-				"(SELECT GFORM.*, ROWNUM ROWNUM_ FROM (%s %s) GFORM WHERE ROWNUM <= %d)"+
-				" WHERE ROWNUM_ > %d",
-			queryExpr[1], queryExpr[2], limit, page,
-		)
 	}
-	return sql
+	return toBeCommittedSql, nil
+}
+
+func (d *Driver) handleSelectSqlReplacement(toBeCommittedSql string) (newSql string, err error) {
+	var (
+		match  [][]string
+		patten = `^\s*(?i)(SELECT)|(LIMIT\s*(\d+)\s*,{0,1}\s*(\d*))`
+	)
+	match, err = gregex.MatchAllString(patten, toBeCommittedSql)
+	if err != nil {
+		return "", err
+	}
+	if len(match) == 0 {
+		return toBeCommittedSql, nil
+	}
+	var index = 1
+	if len(match) < 2 || strings.HasPrefix(match[index][0], "LIMIT") == false {
+		return toBeCommittedSql, nil
+	}
+	// only handle `SELECT ... LIMIT ...` statement.
+	queryExpr, err := gregex.MatchString("((?i)SELECT)(.+)((?i)LIMIT)", toBeCommittedSql)
+	if err != nil {
+		return "", err
+	}
+	if len(queryExpr) == 0 {
+		return toBeCommittedSql, nil
+	}
+	if len(queryExpr) != 4 ||
+		strings.EqualFold(queryExpr[1], "SELECT") == false ||
+		strings.EqualFold(queryExpr[3], "LIMIT") == false {
+		return toBeCommittedSql, nil
+	}
+	page, limit := 0, 0
+	for i := 1; i < len(match[index]); i++ {
+		if len(strings.TrimSpace(match[index][i])) == 0 {
+			continue
+		}
+		if strings.HasPrefix(match[index][i], "LIMIT") {
+			if match[index][i+2] != "" {
+				page, err = strconv.Atoi(match[index][i+1])
+				if err != nil {
+					return "", err
+				}
+				limit, err = strconv.Atoi(match[index][i+2])
+				if err != nil {
+					return "", err
+				}
+				if page <= 0 {
+					page = 1
+				}
+				limit = (page/limit + 1) * limit
+				page, err = strconv.Atoi(match[index][i+1])
+				if err != nil {
+					return "", err
+				}
+			} else {
+				limit, err = strconv.Atoi(match[index][i+1])
+				if err != nil {
+					return "", err
+				}
+			}
+			break
+		}
+	}
+	var newReplacedSql = fmt.Sprintf(
+		newSqlReplacementTmp,
+		queryExpr[1], queryExpr[2], limit, page,
+	)
+	return newReplacedSql, nil
 }
 
 // Tables retrieves and returns the tables of current schema.
@@ -192,7 +264,12 @@ func (d *Driver) parseSql(sql string) string {
 // Note that it ignores the parameter `schema` in oracle database, as it is not necessary.
 func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
 	var result gdb.Result
-	result, err = d.DoSelect(ctx, nil, "SELECT TABLE_NAME FROM USER_TABLES ORDER BY TABLE_NAME")
+	// DO NOT use `usedSchema` as parameter for function `SlaveLink`.
+	link, err := d.SlaveLink(schema...)
+	if err != nil {
+		return nil, err
+	}
+	result, err = d.DoSelect(ctx, link, tablesSqlTmp)
 	if err != nil {
 		return
 	}
@@ -212,22 +289,11 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 		result       gdb.Result
 		link         gdb.Link
 		usedSchema   = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
-		structureSql = fmt.Sprintf(`
-SELECT 
-    COLUMN_NAME AS FIELD, 
-    CASE   
-    WHEN (DATA_TYPE='NUMBER' AND NVL(DATA_SCALE,0)=0) THEN 'INT'||'('||DATA_PRECISION||','||DATA_SCALE||')'
-    WHEN (DATA_TYPE='NUMBER' AND NVL(DATA_SCALE,0)>0) THEN 'FLOAT'||'('||DATA_PRECISION||','||DATA_SCALE||')'
-    WHEN DATA_TYPE='FLOAT' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
-    ELSE DATA_TYPE||'('||DATA_LENGTH||')' END AS TYPE,NULLABLE
-FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`,
-			strings.ToUpper(table),
-		)
+		structureSql = fmt.Sprintf(tableFieldsSqlTmp, strings.ToUpper(table))
 	)
 	if link, err = d.SlaveLink(usedSchema); err != nil {
 		return nil, err
 	}
-	structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
 	result, err = d.DoSelect(ctx, link, structureSql)
 	if err != nil {
 		return nil, err
@@ -255,12 +321,17 @@ func (d *Driver) DoInsert(
 ) (result sql.Result, err error) {
 	switch option.InsertOption {
 	case gdb.InsertOptionSave:
-		return nil, gerror.NewCode(gcode.CodeNotSupported, `Save operation is not supported by oracle driver`)
+		return nil, gerror.NewCode(
+			gcode.CodeNotSupported,
+			`Save operation is not supported by oracle driver`,
+		)
 
 	case gdb.InsertOptionReplace:
-		return nil, gerror.NewCode(gcode.CodeNotSupported, `Replace operation is not supported by oracle driver`)
+		return nil, gerror.NewCode(
+			gcode.CodeNotSupported,
+			`Replace operation is not supported by oracle driver`,
+		)
 	}
-
 	var (
 		keys   []string
 		values []string
@@ -282,17 +353,27 @@ func (d *Driver) DoInsert(
 		valueHolderStr = strings.Join(valueHolder, ",")
 	)
 	// Format "INSERT...INTO..." statement.
-	intoStr := make([]string, 0)
+	intoStrArray := make([]string, 0)
 	for i := 0; i < len(list); i++ {
 		for _, k := range keys {
-			params = append(params, list[i][k])
+			if s, ok := list[i][k].(gdb.Raw); ok {
+				params = append(params, gconv.String(s))
+			} else {
+				params = append(params, list[i][k])
+			}
 		}
 		values = append(values, valueHolderStr)
-		intoStr = append(intoStr, fmt.Sprintf("INTO %s(%s) VALUES(%s)", table, keyStr, valueHolderStr))
-		if len(intoStr) == option.BatchCount || (i == listLength-1 && len(valueHolder) > 0) {
+		intoStrArray = append(
+			intoStrArray,
+			fmt.Sprintf(
+				"INTO %s(%s) VALUES(%s)",
+				table, keyStr, valueHolderStr,
+			),
+		)
+		if len(intoStrArray) == option.BatchCount || (i == listLength-1 && len(valueHolder) > 0) {
 			r, err := d.DoExec(ctx, link, fmt.Sprintf(
 				"INSERT ALL %s SELECT * FROM DUAL",
-				strings.Join(intoStr, " "),
+				strings.Join(intoStrArray, " "),
 			), params...)
 			if err != nil {
 				return r, err
@@ -304,7 +385,7 @@ func (d *Driver) DoInsert(
 				batchResult.Affected += n
 			}
 			params = params[:0]
-			intoStr = intoStr[:0]
+			intoStrArray = intoStrArray[:0]
 		}
 	}
 	return batchResult, nil
