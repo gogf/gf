@@ -8,14 +8,10 @@
 package dm
 
 import (
-	"context"
-	"time"
-
 	_ "gitee.com/chunanyong/dm"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gtime"
 )
 
 type Driver struct {
@@ -23,7 +19,9 @@ type Driver struct {
 }
 
 const (
-	quoteChar = `"`
+	quoteChar         = `"`
+	tablesSqlTmp      = `SELECT * FROM ALL_TABLES`
+	tableFieldsSqlTmp = `SELECT * FROM ALL_TAB_COLUMNS WHERE Table_Name= '%s' AND OWNER = '%s'`
 )
 
 func init() {
@@ -55,44 +53,3 @@ func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 func (d *Driver) GetChars() (charLeft string, charRight string) {
 	return quoteChar, quoteChar
 }
-
-// ConvertValueForField converts value to the type of the record field.
-func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) {
-	switch itemValue := fieldValue.(type) {
-	// dm does not support time.Time, it so here converts it to time string that it supports.
-	case time.Time:
-		// If the time is zero, it then updates it to nil,
-		// which will insert/update the value to database as "null".
-		if itemValue.IsZero() {
-			return nil, nil
-		}
-		return gtime.New(itemValue).String(), nil
-
-	// dm does not support time.Time, it so here converts it to time string that it supports.
-	case *time.Time:
-		// If the time is zero, it then updates it to nil,
-		// which will insert/update the value to database as "null".
-		if itemValue == nil || itemValue.IsZero() {
-			return nil, nil
-		}
-		return gtime.New(itemValue).String(), nil
-	}
-
-	return fieldValue, nil
-}
-
-// TODO I originally wanted to only convert keywords in select
-// 但是我发现 DoQuery 中会对 sql 会对 " " 达梦的安全字符 进行 / 转义，最后还是导致达梦无法正常解析
-// However, I found that DoQuery() will perform / escape on sql with " " Dameng's safe characters, which ultimately caused Dameng to be unable to parse normally.
-// But processing in DoFilter() is OK
-// func (d *Driver) DoQuery(ctx context.Context, link gdb.Link, sql string, args ...interface{}) (gdb.Result, error) {
-// 	l, r := d.GetChars()
-// 	new := gstr.ReplaceI(sql, "INDEX", l+"INDEX"+r)
-// 	g.Dump("new:", new)
-// 	return d.Core.DoQuery(
-// 		ctx,
-// 		link,
-// 		new,
-// 		args,
-// 	)
-// }

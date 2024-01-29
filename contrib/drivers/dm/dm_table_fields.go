@@ -17,7 +17,9 @@ import (
 )
 
 // TableFields retrieves and returns the fields' information of specified table of current schema.
-func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
+func (d *Driver) TableFields(
+	ctx context.Context, table string, schema ...string,
+) (fields map[string]*gdb.TableField, err error) {
 	var (
 		result gdb.Result
 		link   gdb.Link
@@ -32,7 +34,7 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 	result, err = d.DoSelect(
 		ctx, link,
 		fmt.Sprintf(
-			`SELECT * FROM ALL_TAB_COLUMNS WHERE Table_Name= '%s' AND OWNER = '%s'`,
+			tableFieldsSqlTmp,
 			strings.ToUpper(table),
 			strings.ToUpper(d.GetSchema()),
 		),

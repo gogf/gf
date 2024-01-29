@@ -23,9 +23,7 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 		return nil, err
 	}
 	// The link has been distinguished and no longer needs to judge the owner
-	result, err = d.DoSelect(
-		ctx, link, `SELECT * FROM ALL_TABLES`,
-	)
+	result, err = d.DoSelect(ctx, link, tablesSqlTmp)
 	if err != nil {
 		return
 	}
