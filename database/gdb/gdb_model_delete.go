@@ -8,13 +8,11 @@ package gdb
 
 import (
 	"database/sql"
-	"fmt"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/text/gstr"
-
-	"github.com/gogf/gf/v2/os/gtime"
 )
 
 // Delete does "DELETE FROM ... " statement for the model.
@@ -31,7 +29,7 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 		}
 	}()
 	var (
-		fieldNameDelete                               = m.getSoftFieldNameDeleted("", m.tablesInit)
+		fieldNameDelete, fieldTypeDelete              = m.getSoftFieldNameAndTypeDeleted(ctx, "", m.tablesInit)
 		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(ctx, false, false)
 		conditionStr                                  = conditionWhere + conditionExtra
 	)
@@ -52,6 +50,7 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 
 	// Soft deleting.
 	if fieldNameDelete != "" {
+		dataHolder, dataValue := m.getDataByFieldNameAndTypeForSoftDeleting(ctx, "", fieldNameDelete, fieldTypeDelete)
 		in := &HookUpdateInput{
 			internalParamHookUpdate: internalParamHookUpdate{
 				internalParamHook: internalParamHook{
@@ -61,9 +60,9 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 			},
 			Model:     m,
 			Table:     m.tables,
-			Data:      fmt.Sprintf(`%s=?`, m.db.GetCore().QuoteString(fieldNameDelete)),
+			Data:      dataHolder,
 			Condition: conditionStr,
-			Args:      append([]interface{}{gtime.Now()}, conditionArgs...),
+			Args:      append([]interface{}{dataValue}, conditionArgs...),
 		}
 		return in.Next(ctx)
 	}

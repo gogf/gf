@@ -15,7 +15,6 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/reflection"
-	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
@@ -243,10 +242,9 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 		return nil, gerror.NewCode(gcode.CodeMissingParameter, "inserting into table with empty data")
 	}
 	var (
-		list            List
-		now             = gtime.Now()
-		fieldNameCreate = m.getSoftFieldNameCreated("", m.tablesInit)
-		fieldNameUpdate = m.getSoftFieldNameUpdated("", m.tablesInit)
+		list                             List
+		fieldNameCreate, fieldTypeCreate = m.getSoftFieldNameAndTypeCreated(ctx, "", m.tablesInit)
+		fieldNameUpdate, fieldTypeUpdate = m.getSoftFieldNameAndTypeUpdated(ctx, "", m.tablesInit)
 	)
 	newData, err := m.filterDataForInsertOrUpdate(m.data)
 	if err != nil {
@@ -309,10 +307,10 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 	if !m.unscoped && (fieldNameCreate != "" || fieldNameUpdate != "") {
 		for k, v := range list {
 			if fieldNameCreate != "" {
-				v[fieldNameCreate] = now
+				v[fieldNameCreate] = m.getValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeCreate)
 			}
 			if fieldNameUpdate != "" {
-				v[fieldNameUpdate] = now
+				v[fieldNameUpdate] = m.getValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeUpdate)
 			}
 			list[k] = v
 		}

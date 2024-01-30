@@ -48,7 +48,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	var (
 		updateData                                    = m.data
 		reflectInfo                                   = reflection.OriginTypeAndKind(updateData)
-		fieldNameUpdate                               = m.getSoftFieldNameUpdated("", m.tablesInit)
+		fieldNameUpdate, fieldTypeUpdate              = m.getSoftFieldNameAndTypeUpdated(ctx, "", m.tablesInit)
 		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(ctx, false, false)
 		conditionStr                                  = conditionWhere + conditionExtra
 	)
@@ -69,9 +69,10 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		updates := gconv.String(m.data)
 		// Automatically update the record updating time.
 		if fieldNameUpdate != "" {
+			dataValue := m.getValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeUpdate)
 			if fieldNameUpdate != "" && !gstr.Contains(updates, fieldNameUpdate) {
 				updates += fmt.Sprintf(`,%s=?`, fieldNameUpdate)
-				conditionArgs = append([]interface{}{gtime.Now()}, conditionArgs...)
+				conditionArgs = append([]interface{}{dataValue}, conditionArgs...)
 			}
 		}
 		updateData = updates
