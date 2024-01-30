@@ -67,9 +67,13 @@ jobs:
           - 3306:3306
 
       # PostgreSQL backend server.
-      # docker run -d --name postgres -p 5432:5432 \
-      # -e POSTGRES_PASSWORD=12345678 -e POSTGRES_USER=postgres -e POSTGRES_DB=test \
-      # -v postgres:/Users/john/Temp/postgresql/data loads/postgres:13
+      # docker run -d --name postgres \
+      # -p 5432:5432 \
+      # -e POSTGRES_PASSWORD=12345678 \
+      # -e POSTGRES_USER=postgres \
+      # -e POSTGRES_DB=test \
+      # -v postgres:/Users/john/Temp/postgresql/data \
+      # loads/postgres:13
       postgres:
         image: loads/postgres:13
         env:
@@ -87,7 +91,8 @@ jobs:
           --health-retries 5
 
       # MSSQL backend server.
-      # docker run -d --name mssql -p 1433:1433 \
+      # docker run \
+      # -p 1433:1433 \
       # -e ACCEPT_EULA=Y \
       # -e SA_PASSWORD=LoremIpsum86 \
       # -e MSSQL_DB=test \
@@ -123,8 +128,13 @@ jobs:
           - 9001:9001
 
       # Polaris backend server.
-      # docker run -d --name polaris -p 8090:8090 -p 8091:8091 -p 8093:8093  -p 9090:9090 -p 9091:9091 loads/polaris-server-standalone:1.11.2
-      # docker run -d --name polaris -p 8090:8090 -p 8091:8091 -p 8093:8093  -p 9090:9090 -p 9091:9091 loads/polaris-standalone:v1.16.3
+      # docker run -d --name polaris \
+      # -p 8090:8090 -p 8091:8091 -p 8093:8093 -p 9090:9090 -p 9091:9091 \
+      # loads/polaris-server-standalone:1.11.2
+      #
+      # docker run -d --name polaris \
+      # -p 8090:8090 -p 8091:8091 -p 8093:8093 -p 9090:9090 -p 9091:9091 \
+      # loads/polaris-standalone:v1.16.3
       polaris:
         image: loads/polaris-standalone:v1.17.2
         ports:
@@ -134,7 +144,14 @@ jobs:
           - 9090:9090
           - 9091:9091
 
-      # Oracle 11g server
+      # Oracle 11g server.
+      # docker run \
+      # -e ORACLE_ALLOW_REMOTE=true \
+      # -e ORACLE_SID=XE \
+      # -e ORACLE_DB_USER_NAME=system \
+      # -e ORACLE_DB_PASSWORD=oracle \
+      # -p 1521:1521 \
+      # loads/oracle-xe-11g-r2:11.2.0
       oracle-server:
         image: loads/oracle-xe-11g-r2:11.2.0
         env:
