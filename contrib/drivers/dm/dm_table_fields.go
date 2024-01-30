@@ -9,11 +9,15 @@ package dm
 import (
 	"context"
 	"fmt"
-	_ "gitee.com/chunanyong/dm"
+
 	"strings"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/util/gutil"
+)
+
+const (
+	tableFieldsSqlTmp = `SELECT * FROM ALL_TAB_COLUMNS WHERE Table_Name= '%s' AND OWNER = '%s'`
 )
 
 // TableFields retrieves and returns the fields' information of specified table of current schema.

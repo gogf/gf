@@ -6,10 +6,6 @@
 
 package dm
 
-import (
-	_ "gitee.com/chunanyong/dm"
-)
-
 // TODO I originally wanted to only convert keywords in select
 // 但是我发现 DoQuery 中会对 sql 会对 " " 达梦的安全字符 进行 / 转义，最后还是导致达梦无法正常解析
 // However, I found that DoQuery() will perform / escape on sql with " " Dameng's safe characters, which ultimately caused Dameng to be unable to parse normally.

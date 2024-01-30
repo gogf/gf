@@ -8,7 +8,7 @@ package dm
 
 import (
 	"context"
-	_ "gitee.com/chunanyong/dm"
+
 	"time"
 
 	"github.com/gogf/gf/v2/os/gtime"

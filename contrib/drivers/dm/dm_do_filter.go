@@ -8,7 +8,7 @@ package dm
 
 import (
 	"context"
-	_ "gitee.com/chunanyong/dm"
+
 	"strings"
 
 	"github.com/gogf/gf/v2/database/gdb"

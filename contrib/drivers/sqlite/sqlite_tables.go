@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package dm
+package sqlite
 
 import (
 	"context"
@@ -13,25 +13,24 @@ import (
 )
 
 const (
-	tablesSqlTmp = `SELECT * FROM ALL_TABLES`
+	tablesSqlTmp = `SELECT NAME FROM SQLITE_MASTER WHERE TYPE='table' ORDER BY NAME`
 )
 
 // Tables retrieves and returns the tables of current schema.
 // It's mainly used in cli tool chain for automatically generating the models.
 func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
 	var result gdb.Result
-	// When schema is empty, return the default link
 	link, err := d.SlaveLink(schema...)
 	if err != nil {
 		return nil, err
 	}
-	// The link has been distinguished and no longer needs to judge the owner
+
 	result, err = d.DoSelect(ctx, link, tablesSqlTmp)
 	if err != nil {
 		return
 	}
 	for _, m := range result {
-		if v, ok := m["IOT_NAME"]; ok {
+		for _, v := range m {
 			tables = append(tables, v.String())
 		}
 	}

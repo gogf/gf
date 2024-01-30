@@ -19,9 +19,7 @@ type Driver struct {
 }
 
 const (
-	quoteChar         = `"`
-	tablesSqlTmp      = `SELECT * FROM ALL_TABLES`
-	tableFieldsSqlTmp = `SELECT * FROM ALL_TAB_COLUMNS WHERE Table_Name= '%s' AND OWNER = '%s'`
+	quoteChar = `"`
 )
 
 func init() {

@@ -9,7 +9,7 @@ package dm
 import (
 	"database/sql"
 	"fmt"
-	_ "gitee.com/chunanyong/dm"
+
 	"net/url"
 	"strings"
 
