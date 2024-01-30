@@ -131,7 +131,6 @@ func Test_Model_RightJoin(t *testing.T) {
 func TestPage(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
-	db.SetDebug(true)
 	result, err := db.Model(table).Page(1, 2).Order("ID").All()
 	gtest.Assert(err, nil)
 	fmt.Println("page:1--------", result)
@@ -232,6 +231,28 @@ func Test_Model_Insert(t *testing.T) {
 		t.AssertNil(err)
 		_, _ = result.RowsAffected()
 
+	})
+}
+
+// https://github.com/gogf/gf/issues/3286
+func Test_Model_Insert_Raw(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model(table).Data(g.Map{
+			"ID":          1,
+			"UID":         1,
+			"PASSPORT":    "t1",
+			"PASSWORD":    "25d55ad283aa400af464c76d713c07ad",
+			"NICKNAME":    gdb.Raw("name_1"),
+			"SALARY":      2675.11,
+			"CREATE_TIME": gtime.Now().String(),
+		}).Insert()
+		t.AssertNil(err)
+
+		value, err := db.Model(table).Fields("PASSPORT").Where("id=1").Value()
+		t.AssertNil(err)
+		t.Assert(value.String(), "t1")
 	})
 }
 

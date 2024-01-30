@@ -487,12 +487,13 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 		keysStr      = charL + strings.Join(keys, charR+","+charL) + charR
 		operation    = GetInsertOperationByOption(option.InsertOption)
 	)
+	// `ON DUPLICATED...` statement only takes effect on Save operation.
 	if option.InsertOption == InsertOptionSave {
 		onDuplicateStr = c.formatOnDuplicate(keys, option)
 	}
 	var (
-		listLength  = len(list)
-		valueHolder = make([]string, 0)
+		listLength   = len(list)
+		valueHolders = make([]string, 0)
 	)
 	for i := 0; i < listLength; i++ {
 		values = values[:0]
@@ -506,9 +507,9 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 				params = append(params, list[i][k])
 			}
 		}
-		valueHolder = append(valueHolder, "("+gstr.Join(values, ",")+")")
+		valueHolders = append(valueHolders, "("+gstr.Join(values, ",")+")")
 		// Batch package checks: It meets the batch number, or it is the last element.
-		if len(valueHolder) == option.BatchCount || (i == listLength-1 && len(valueHolder) > 0) {
+		if len(valueHolders) == option.BatchCount || (i == listLength-1 && len(valueHolders) > 0) {
 			var (
 				stdSqlResult sql.Result
 				affectedRows int64
@@ -516,7 +517,7 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 			stdSqlResult, err = c.db.DoExec(ctx, link, fmt.Sprintf(
 				"%s INTO %s(%s) VALUES%s %s",
 				operation, c.QuotePrefixTableName(table), keysStr,
-				gstr.Join(valueHolder, ","),
+				gstr.Join(valueHolders, ","),
 				onDuplicateStr,
 			), params...)
 			if err != nil {
@@ -530,7 +531,7 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 				batchResult.Affected += affectedRows
 			}
 			params = params[:0]
-			valueHolder = valueHolder[:0]
+			valueHolders = valueHolders[:0]
 		}
 	}
 	return batchResult, nil

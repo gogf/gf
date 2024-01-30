@@ -4,13 +4,15 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package mssql_test
+package oracle_test
 
 import (
 	"context"
 	"fmt"
+	"strings"
 
-	_ "github.com/denisenkom/go-mssqldb"
+	_ "github.com/sijms/go-ora/v2"
+
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
@@ -31,19 +33,26 @@ const (
 	TestSchema1      = "test1"
 	TestSchema2      = "test2"
 	TableNamePrefix1 = "gf_"
-	TestDbUser       = "sa"
-	TestDbPass       = "LoremIpsum86"
-	CreateTime       = "2018-10-24 10:00:00"
+	TestSchema       = "XE"
+)
+
+const (
+	TestDbIP   = "127.0.0.1"
+	TestDbPort = "1521"
+	TestDbUser = "system"
+	TestDbPass = "oracle"
+	TestDbName = "XE"
+	TestDbType = "oracle"
 )
 
 func init() {
 	node := gdb.ConfigNode{
-		Host:             "127.0.0.1",
-		Port:             "1433",
+		Host:             TestDbIP,
+		Port:             TestDbPort,
 		User:             TestDbUser,
 		Pass:             TestDbPass,
-		Name:             "test",
-		Type:             "mssql",
+		Name:             TestDbName,
+		Type:             TestDbType,
 		Role:             "master",
 		Charset:          "utf8",
 		Weight:           1,
@@ -52,18 +61,23 @@ func init() {
 	}
 
 	nodeLink := gdb.ConfigNode{
-		Type: "mssql",
-		Name: "test",
-		Link: fmt.Sprintf(
-			"mssql:%s:%s@tcp(%s:%s)/%s?encrypt=disable",
-			node.User, node.Pass, node.Host, node.Port, node.Name,
+		Type: TestDbType,
+		Name: TestDbName,
+		Link: fmt.Sprintf("%s:%s:%s@tcp(%s:%s)/%s",
+			TestDbType, TestDbUser, TestDbPass, TestDbIP, TestDbPort, TestDbName,
 		),
 	}
 
 	nodeErr := gdb.ConfigNode{
-		Type: "mssql",
-		Link: fmt.Sprintf("user id=%s;password=%s;server=%s;port=%s;database=%s;encrypt=disable",
-			node.User, "node.Pass", node.Host, node.Port, node.Name),
+		Host:    TestDbIP,
+		Port:    TestDbPort,
+		User:    TestDbUser,
+		Pass:    "1234",
+		Name:    TestDbName,
+		Type:    TestDbType,
+		Role:    "master",
+		Charset: "utf8",
+		Weight:  1,
 	}
 
 	gdb.AddConfigNode(gdb.DefaultGroupName, node)
@@ -99,22 +113,20 @@ func createTable(table ...string) (name string) {
 
 	dropTable(name)
 
-	if _, err := db.Exec(context.Background(), fmt.Sprintf(`
-		IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='%s' and xtype='U')
-		CREATE TABLE %s (
-		ID numeric(10,0) NOT NULL,
-		PASSPORT VARCHAR(45)  NULL,
-		PASSWORD VARCHAR(32)  NULL,
-		NICKNAME VARCHAR(45)  NULL,
-		CREATE_TIME datetime NULL,
-		CREATED_AT datetimeoffset NULL,
-		UPDATED_AT datetimeoffset NULL,
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+	CREATE TABLE %s (
+		ID NUMBER(10) NOT NULL,
+		PASSPORT VARCHAR(45) NOT NULL,
+		PASSWORD CHAR(32) NOT NULL,
+		NICKNAME VARCHAR(45) NOT NULL,
+		CREATE_TIME varchar(45),
+	    SALARY NUMBER(18,2),
 		PRIMARY KEY (ID))
-	`, name, name)); err != nil {
+	`, name)); err != nil {
 		gtest.Fatal(err)
 	}
 
-	db.Schema("test")
+	//db.Schema("test")
 	return
 }
 
@@ -127,7 +139,7 @@ func createInitTable(table ...string) (name string) {
 			"passport":    fmt.Sprintf(`user_%d`, i),
 			"password":    fmt.Sprintf(`pass_%d`, i),
 			"nickname":    fmt.Sprintf(`name_%d`, i),
-			"create_time": gtime.Now(),
+			"create_time": gtime.Now().String(),
 		})
 	}
 	result, err := db.Insert(context.Background(), name, array.Slice())
@@ -140,10 +152,15 @@ func createInitTable(table ...string) (name string) {
 }
 
 func dropTable(table string) {
-	if _, err := db.Exec(context.Background(), fmt.Sprintf(`
-		IF EXISTS (SELECT * FROM sysobjects WHERE name='%s' and xtype='U')
-		DROP TABLE %s
-	`, table, table)); err != nil {
+	count, err := db.GetCount(ctx, "SELECT COUNT(*) FROM USER_TABLES WHERE TABLE_NAME = ?", strings.ToUpper(table))
+	if err != nil {
+		gtest.Fatal(err)
+	}
+
+	if count == 0 {
+		return
+	}
+	if _, err = db.Exec(ctx, fmt.Sprintf("DROP TABLE %s", table)); err != nil {
 		gtest.Fatal(err)
 	}
 }
