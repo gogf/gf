@@ -118,6 +118,46 @@ func Test_Command_NewFromObject_RunWithValue(t *testing.T) {
 	})
 }
 
+func Test_Command_NewFromObject_RunWithSpecificArgs(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			ctx      = gctx.New()
+			cmd, err = gcmd.NewFromObject(&TestCmdObject{})
+		)
+		t.AssertNil(err)
+		t.Assert(cmd.Name, "root")
+
+		// test short name
+		args := []string{"root", "test", "-n=john"}
+		value, err := cmd.RunWithSpecificArgs(ctx, args)
+		t.AssertNil(err)
+		t.Assert(value, `{"Name":"john","Version":false}`)
+
+		// test name tag name
+		args = []string{"root", "test", "-yourname=hailaz"}
+		value1, err1 := cmd.RunWithSpecificArgs(ctx, args)
+		t.AssertNil(err1)
+		t.Assert(value1, `{"Name":"hailaz","Version":false}`)
+
+		// test default tag value
+		args = []string{"root", "test"}
+		value2, err2 := cmd.RunWithSpecificArgs(ctx, args)
+		t.AssertNil(err2)
+		t.Assert(value2, `{"Name":"tom","Version":false}`)
+
+		// test name tag and orphan tag true
+		args = []string{"root", "test", "-v"}
+		value3, err3 := cmd.RunWithSpecificArgs(ctx, args)
+		t.AssertNil(err3)
+		t.Assert(value3, `{"Name":"tom","Version":true}`)
+
+		// test empty args
+		value4, err4 := cmd.RunWithSpecificArgs(ctx, nil)
+		t.Assert(err4, "args can not be empty!")
+		t.Assert(value4, nil)
+	})
+}
+
 func Test_Command_AddObject(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
