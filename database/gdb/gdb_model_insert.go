@@ -243,8 +243,10 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 	}
 	var (
 		list                             List
-		fieldNameCreate, fieldTypeCreate = m.softTimeMaintainer().GetSoftFieldNameAndTypeCreated(ctx, "", m.tablesInit)
-		fieldNameUpdate, fieldTypeUpdate = m.softTimeMaintainer().GetSoftFieldNameAndTypeUpdated(ctx, "", m.tablesInit)
+		stm                              = m.softTimeMaintainer()
+		fieldNameCreate, fieldTypeCreate = stm.GetSoftFieldNameAndTypeCreated(ctx, "", m.tablesInit)
+		fieldNameUpdate, fieldTypeUpdate = stm.GetSoftFieldNameAndTypeUpdated(ctx, "", m.tablesInit)
+		fieldNameDelete, fieldTypeDelete = stm.GetSoftFieldNameAndTypeDeleted(ctx, "", m.tablesInit)
 	)
 	newData, err := m.filterDataForInsertOrUpdate(m.data)
 	if err != nil {
@@ -307,10 +309,22 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 	if !m.unscoped && (fieldNameCreate != "" || fieldNameUpdate != "") {
 		for k, v := range list {
 			if fieldNameCreate != "" {
-				v[fieldNameCreate] = m.softTimeMaintainer().GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeCreate)
+				fieldCreateValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeCreate, false)
+				if fieldCreateValue != nil {
+					v[fieldNameCreate] = fieldCreateValue
+				}
 			}
 			if fieldNameUpdate != "" {
-				v[fieldNameUpdate] = m.softTimeMaintainer().GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeUpdate)
+				fieldUpdateValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeUpdate, false)
+				if fieldUpdateValue != nil {
+					v[fieldNameUpdate] = fieldUpdateValue
+				}
+			}
+			if fieldNameDelete != "" {
+				fieldDeleteValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeDelete, true)
+				if fieldDeleteValue != nil {
+					v[fieldNameDelete] = fieldDeleteValue
+				}
 			}
 			list[k] = v
 		}

@@ -17,8 +17,8 @@ import (
 )
 
 // CreateAt/UpdateAt/DeleteAt.
-func Test_SoftCreateUpdateDeleteTimeMicroSecond(t *testing.T) {
-	table := "time_test_table_" + gtime.TimestampNanoStr()
+func Test_SoftTime_CreateUpdateDelete1(t *testing.T) {
+	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   id        int(11) NOT NULL,
@@ -151,8 +151,8 @@ CREATE TABLE %s (
 }
 
 // CreateAt/UpdateAt/DeleteAt.
-func Test_SoftCreateUpdateDeleteTimeSecond(t *testing.T) {
-	table := "time_test_table_" + gtime.TimestampNanoStr()
+func Test_SoftTime_CreateUpdateDelete2(t *testing.T) {
+	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   id        int(11) NOT NULL,
@@ -285,8 +285,8 @@ CREATE TABLE %s (
 }
 
 // CreatedAt/UpdatedAt/DeletedAt.
-func Test_SoftCreatedUpdatedDeletedTime_Map(t *testing.T) {
-	table := "time_test_table_" + gtime.TimestampNanoStr()
+func Test_SoftTime_CreatedUpdatedDeleted_Map(t *testing.T) {
+	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   id        int(11) NOT NULL,
@@ -419,8 +419,8 @@ CREATE TABLE %s (
 }
 
 // CreatedAt/UpdatedAt/DeletedAt.
-func Test_SoftCreatedUpdatedDeletedTime_Struct(t *testing.T) {
-	table := "time_test_table_" + gtime.TimestampNanoStr()
+func Test_SoftTime_CreatedUpdatedDeleted_Struct(t *testing.T) {
+	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   id        int(11) NOT NULL,
@@ -560,7 +560,7 @@ CREATE TABLE %s (
 }
 
 func Test_SoftUpdateTime(t *testing.T) {
-	table := "time_test_table_" + gtime.TimestampNanoStr()
+	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   id        int(11) NOT NULL,
@@ -600,7 +600,7 @@ CREATE TABLE %s (
 }
 
 func Test_SoftUpdateTime_WithDO(t *testing.T) {
-	table := "time_test_table_" + gtime.TimestampNanoStr()
+	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   id        int(11) NOT NULL,
@@ -657,7 +657,7 @@ CREATE TABLE %s (
 }
 
 func Test_SoftDelete(t *testing.T) {
-	table := "time_test_table_" + gtime.TimestampNanoStr()
+	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   id        int(11) NOT NULL,
@@ -796,7 +796,7 @@ CREATE TABLE %s (
 }
 
 func Test_SoftDelete_WhereAndOr(t *testing.T) {
-	table := "time_test_table_" + gtime.TimestampNanoStr()
+	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   id        int(11) NOT NULL,
@@ -838,7 +838,7 @@ CREATE TABLE %s (
 }
 
 func Test_CreateUpdateTime_Struct(t *testing.T) {
-	table := "time_test_table_" + gtime.TimestampNanoStr()
+	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   id        int(11) NOT NULL,
@@ -987,5 +987,160 @@ CREATE TABLE %s (
 		i, err = db.Model(table).Unscoped().Count()
 		t.AssertNil(err)
 		t.Assert(i, 0)
+	})
+}
+
+func Test_SoftTime_CreateUpdateDelete_UnixTimestamp(t *testing.T) {
+	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+CREATE TABLE %s (
+  id        int(11) NOT NULL,
+  name      varchar(45) DEFAULT NULL,
+  create_at int(11) DEFAULT NULL,
+  update_at int(11) DEFAULT NULL,
+  delete_at int(11) DEFAULT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    `, table)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(table)
+
+	// insert
+	gtest.C(t, func(t *gtest.T) {
+		dataInsert := g.Map{
+			"id":   1,
+			"name": "name_1",
+		}
+		r, err := db.Model(table).Data(dataInsert).Insert()
+		t.AssertNil(err)
+		n, _ := r.RowsAffected()
+		t.Assert(n, 1)
+
+		one, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one["name"].String(), "name_1")
+		t.AssertGT(one["create_at"].Int64(), 0)
+		t.AssertGT(one["update_at"].Int64(), 0)
+		t.Assert(one["delete_at"].Int64(), 0)
+		t.Assert(one["create_at"].Int64(), one["update_at"].Int64())
+	})
+
+	// sleep some seconds to make update time greater than create time.
+	time.Sleep(2 * time.Second)
+
+	// update
+	gtest.C(t, func(t *gtest.T) {
+		// update: map
+		dataInsert := g.Map{
+			"name": "name_11",
+		}
+		r, err := db.Model(table).Data(dataInsert).WherePri(1).Update()
+		t.AssertNil(err)
+		n, _ := r.RowsAffected()
+		t.Assert(n, 1)
+
+		one, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one["name"].String(), "name_11")
+		t.AssertGT(one["create_at"].Int64(), 0)
+		t.AssertGT(one["update_at"].Int64(), 0)
+		t.Assert(one["delete_at"].Int64(), 0)
+		t.AssertNE(one["create_at"].Int64(), one["update_at"].Int64())
+
+		var (
+			lastCreateTime = one["create_at"].Int64()
+			lastUpdateTime = one["update_at"].Int64()
+		)
+
+		time.Sleep(2 * time.Second)
+
+		// update: string
+		r, err = db.Model(table).Data("name='name_111'").WherePri(1).Update()
+		t.AssertNil(err)
+		n, _ = r.RowsAffected()
+		t.Assert(n, 1)
+
+		one, err = db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one["name"].String(), "name_111")
+		t.Assert(one["create_at"].Int64(), lastCreateTime)
+		t.AssertGT(one["update_at"].Int64(), lastUpdateTime)
+		t.Assert(one["delete_at"].Int64(), 0)
+	})
+
+	// delete
+	gtest.C(t, func(t *gtest.T) {
+		r, err := db.Model(table).WherePri(1).Delete()
+		t.AssertNil(err)
+		n, _ := r.RowsAffected()
+		t.Assert(n, 1)
+
+		one, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(len(one), 0)
+
+		one, err = db.Model(table).Unscoped().WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one["name"].String(), "name_111")
+		t.AssertGT(one["create_at"].Int64(), 0)
+		t.AssertGT(one["update_at"].Int64(), 0)
+		t.AssertGT(one["delete_at"].Int64(), 0)
+	})
+}
+
+func Test_SoftTime_CreateUpdateDelete_Bool_Deleted(t *testing.T) {
+	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+CREATE TABLE %s (
+  id        int(11) NOT NULL,
+  name      varchar(45) DEFAULT NULL,
+  create_at int(11) DEFAULT NULL,
+  update_at int(11) DEFAULT NULL,
+  delete_at bit(1) DEFAULT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    `, table)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(table)
+
+	// insert
+	gtest.C(t, func(t *gtest.T) {
+		dataInsert := g.Map{
+			"id":   1,
+			"name": "name_1",
+		}
+		r, err := db.Model(table).Data(dataInsert).Insert()
+		t.AssertNil(err)
+		n, _ := r.RowsAffected()
+		t.Assert(n, 1)
+
+		one, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one["name"].String(), "name_1")
+		t.AssertGT(one["create_at"].Int64(), 0)
+		t.AssertGT(one["update_at"].Int64(), 0)
+		t.Assert(one["delete_at"].Int64(), 0)
+		t.Assert(one["create_at"].Int64(), one["update_at"].Int64())
+	})
+
+	// delete
+	gtest.C(t, func(t *gtest.T) {
+		r, err := db.Model(table).WherePri(1).Delete()
+		t.AssertNil(err)
+		n, _ := r.RowsAffected()
+		t.Assert(n, 1)
+
+		one, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(len(one), 0)
+
+		one, err = db.Model(table).Unscoped().WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one["name"].String(), "name_1")
+		t.AssertGT(one["create_at"].Int64(), 0)
+		t.AssertGT(one["update_at"].Int64(), 0)
+		t.Assert(one["delete_at"].Int64(), 1)
 	})
 }

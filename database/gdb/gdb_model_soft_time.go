@@ -37,7 +37,7 @@ type iSoftTimeMaintainer interface {
 	) (fieldName string, fieldType LocalType)
 
 	GetValueByFieldTypeForCreateOrUpdate(
-		ctx context.Context, fieldType LocalType,
+		ctx context.Context, fieldType LocalType, isDeletedField bool,
 	) (dataValue any)
 
 	GetDataByFieldNameAndTypeForSoftDeleting(
@@ -281,22 +281,31 @@ func (m *softTimeMaintainer) GetDataByFieldNameAndTypeForSoftDeleting(
 		quotedFieldName = fmt.Sprintf(`%s.%s`, quotedFieldPrefix, quotedFieldName)
 	}
 	dataHolder = fmt.Sprintf(`%s=?`, quotedFieldName)
-	dataValue = m.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldType)
+	dataValue = m.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldType, false)
 	return
 }
 
 // GetValueByFieldTypeForCreateOrUpdate creates and returns the value for specified field type,
 // usually for creating or updating operations.
 func (m *softTimeMaintainer) GetValueByFieldTypeForCreateOrUpdate(
-	ctx context.Context, fieldType LocalType,
-) (dataValue any) {
+	ctx context.Context, fieldType LocalType, isDeletedField bool,
+) any {
 	switch fieldType {
 	case LocalTypeDate, LocalTypeDatetime:
-		dataValue = gtime.Now()
+		if isDeletedField {
+			return nil
+		}
+		return gtime.Now()
 	case LocalTypeInt, LocalTypeUint, LocalTypeInt64:
-		dataValue = gtime.Timestamp()
+		if isDeletedField {
+			return 0
+		}
+		return gtime.Timestamp()
 	case LocalTypeBool:
-		dataValue = 1
+		if isDeletedField {
+			return 0
+		}
+		return 1
 	default:
 		intlog.Errorf(
 			ctx,
@@ -304,5 +313,5 @@ func (m *softTimeMaintainer) GetValueByFieldTypeForCreateOrUpdate(
 			fieldType,
 		)
 	}
-	return
+	return nil
 }
