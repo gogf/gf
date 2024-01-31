@@ -229,8 +229,8 @@ func (m *softTimeMaintainer) getConditionByFieldNameAndTypeForSoftDeleting(
 	default:
 		intlog.Errorf(
 			ctx,
-			`invalid field type "%s" of field name "%s" for soft deleting condition`,
-			fieldType,
+			`invalid field type "%s" of field name "%s" with prefix "%s" for soft deleting condition`,
+			fieldType, fieldName, fieldPrefix,
 		)
 	}
 	return ""
@@ -309,7 +309,7 @@ func (m *softTimeMaintainer) GetValueByFieldTypeForCreateOrUpdate(
 	default:
 		intlog.Errorf(
 			ctx,
-			`invalid field type "%s" of field name "%s" for soft deleting data`,
+			`invalid field type "%s" for soft deleting data`,
 			fieldType,
 		)
 	}
