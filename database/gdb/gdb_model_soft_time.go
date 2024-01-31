@@ -73,7 +73,7 @@ func (m *softTimeMaintainer) GetSoftFieldNameAndTypeCreated(
 	ctx context.Context, schema string, table string,
 ) (fieldName string, fieldType LocalType) {
 	// It checks whether this feature disabled.
-	if m.Model.db.GetConfig().TimeMaintainDisabled {
+	if m.db.GetConfig().TimeMaintainDisabled {
 		return "", LocalTypeUndefined
 	}
 	tableName := ""
