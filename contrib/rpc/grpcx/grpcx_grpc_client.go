@@ -104,6 +104,8 @@ func (c modClient) ChainStream(interceptors ...grpc.StreamClientInterceptor) grp
 
 // isServiceName checks and returns whether given input parameter is service name or not.
 // It checks by whether the parameter is address by containing port delimiter character ':'.
+//
+// It does not contain any port number if using service discovery.
 func isServiceName(serviceNameOrAddress string) bool {
 	return !gstr.Contains(serviceNameOrAddress, gsvc.EndpointHostPortDelimiter)
 }
