@@ -244,9 +244,9 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 	var (
 		list                             List
 		stm                              = m.softTimeMaintainer()
-		fieldNameCreate, fieldTypeCreate = stm.GetSoftFieldNameAndTypeCreated(ctx, "", m.tablesInit)
-		fieldNameUpdate, fieldTypeUpdate = stm.GetSoftFieldNameAndTypeUpdated(ctx, "", m.tablesInit)
-		fieldNameDelete, fieldTypeDelete = stm.GetSoftFieldNameAndTypeDeleted(ctx, "", m.tablesInit)
+		fieldNameCreate, fieldTypeCreate = stm.GetFieldNameAndTypeForCreate(ctx, "", m.tablesInit)
+		fieldNameUpdate, fieldTypeUpdate = stm.GetFieldNameAndTypeForUpdate(ctx, "", m.tablesInit)
+		fieldNameDelete, fieldTypeDelete = stm.GetFieldNameAndTypeForDelete(ctx, "", m.tablesInit)
 	)
 	newData, err := m.filterDataForInsertOrUpdate(m.data)
 	if err != nil {

@@ -20,7 +20,7 @@ import (
 type Func func(ctx context.Context) (value interface{}, err error)
 
 const (
-	DurationNoExpire = 0 // Expire duration that never expires.
+	DurationNoExpire = time.Duration(0) // Expire duration that never expires.
 )
 
 // Default cache object.

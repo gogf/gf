@@ -1105,6 +1105,7 @@ CREATE TABLE %s (
 	}
 	defer dropTable(table)
 
+	//db.SetDebug(true)
 	// insert
 	gtest.C(t, func(t *gtest.T) {
 		dataInsert := g.Map{

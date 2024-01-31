@@ -12,6 +12,7 @@ import (
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -24,15 +25,15 @@ type softTimeMaintainer struct {
 }
 
 type iSoftTimeMaintainer interface {
-	GetSoftFieldNameAndTypeCreated(
+	GetFieldNameAndTypeForCreate(
 		ctx context.Context, schema string, table string,
 	) (fieldName string, fieldType LocalType)
 
-	GetSoftFieldNameAndTypeUpdated(
+	GetFieldNameAndTypeForUpdate(
 		ctx context.Context, schema string, table string,
 	) (fieldName string, fieldType LocalType)
 
-	GetSoftFieldNameAndTypeDeleted(
+	GetFieldNameAndTypeForDelete(
 		ctx context.Context, schema string, table string,
 	) (fieldName string, fieldType LocalType)
 
@@ -40,17 +41,26 @@ type iSoftTimeMaintainer interface {
 		ctx context.Context, fieldType LocalType, isDeletedField bool,
 	) (dataValue any)
 
-	GetDataByFieldNameAndTypeForSoftDeleting(
+	GetDataByFieldNameAndTypeForDelete(
 		ctx context.Context, fieldPrefix, fieldName string, fieldType LocalType,
 	) (dataHolder string, dataValue any)
 
-	GetConditionForSoftDeleting(ctx context.Context) string
+	GetWhereConditionForDelete(ctx context.Context) string
+}
+
+// getSoftFieldNameAndTypeCacheItem is the internal struct for storing create/update/delete fields.
+type getSoftFieldNameAndTypeCacheItem struct {
+	FieldName string
+	FieldType LocalType
 }
 
 var (
-	createdFieldNames = []string{"created_at", "create_at"} // Default field names of table for automatic-filled created datetime.
-	updatedFieldNames = []string{"updated_at", "update_at"} // Default field names of table for automatic-filled updated datetime.
-	deletedFieldNames = []string{"deleted_at", "delete_at"} // Default field names of table for automatic-filled deleted datetime.
+	// Default field names of table for automatic-filled for record creating.
+	createdFieldNames = []string{"created_at", "create_at"}
+	// Default field names of table for automatic-filled for record updating.
+	updatedFieldNames = []string{"updated_at", "update_at"}
+	// Default field names of table for automatic-filled for record deleting.
+	deletedFieldNames = []string{"deleted_at", "delete_at"}
 )
 
 // Unscoped disables the auto-update time feature for insert, update and delete options.
@@ -66,10 +76,10 @@ func (m *Model) softTimeMaintainer() iSoftTimeMaintainer {
 	}
 }
 
-// GetSoftFieldNameAndTypeCreated checks and returns the field name for record creating time.
+// GetFieldNameAndTypeForCreate checks and returns the field name for record creating time.
 // If there's no field name for storing creating time, it returns an empty string.
 // It checks the key with or without cases or chars '-'/'_'/'.'/' '.
-func (m *softTimeMaintainer) GetSoftFieldNameAndTypeCreated(
+func (m *softTimeMaintainer) GetFieldNameAndTypeForCreate(
 	ctx context.Context, schema string, table string,
 ) (fieldName string, fieldType LocalType) {
 	// It checks whether this feature disabled.
@@ -93,10 +103,10 @@ func (m *softTimeMaintainer) GetSoftFieldNameAndTypeCreated(
 	)
 }
 
-// GetSoftFieldNameAndTypeUpdated checks and returns the field name for record updating time.
+// GetFieldNameAndTypeForUpdate checks and returns the field name for record updating time.
 // If there's no field name for storing updating time, it returns an empty string.
 // It checks the key with or without cases or chars '-'/'_'/'.'/' '.
-func (m *softTimeMaintainer) GetSoftFieldNameAndTypeUpdated(
+func (m *softTimeMaintainer) GetFieldNameAndTypeForUpdate(
 	ctx context.Context, schema string, table string,
 ) (fieldName string, fieldType LocalType) {
 	// It checks whether this feature disabled.
@@ -120,10 +130,10 @@ func (m *softTimeMaintainer) GetSoftFieldNameAndTypeUpdated(
 	)
 }
 
-// GetSoftFieldNameAndTypeDeleted checks and returns the field name for record deleting time.
+// GetFieldNameAndTypeForDelete checks and returns the field name for record deleting time.
 // If there's no field name for storing deleting time, it returns an empty string.
 // It checks the key with or without cases or chars '-'/'_'/'.'/' '.
-func (m *softTimeMaintainer) GetSoftFieldNameAndTypeDeleted(
+func (m *softTimeMaintainer) GetFieldNameAndTypeForDelete(
 	ctx context.Context, schema string, table string,
 ) (fieldName string, fieldType LocalType) {
 	// It checks whether this feature disabled.
@@ -152,31 +162,51 @@ func (m *softTimeMaintainer) getSoftFieldNameAndType(
 	ctx context.Context,
 	schema string, table string, checkFiledNames []string,
 ) (fieldName string, fieldType LocalType) {
-	// Ignore the error from TableFields.
-	fieldsMap, _ := m.TableFields(table, schema)
-	if len(fieldsMap) > 0 {
-		for _, checkFiledName := range checkFiledNames {
-			fieldName, _ = gutil.MapPossibleItemByKey(
-				gconv.Map(fieldsMap), checkFiledName,
-			)
-			if fieldName != "" {
-				fieldType, _ = m.db.CheckLocalTypeForField(
-					ctx, fieldsMap[fieldName].Type, nil,
-				)
-				return
+	var (
+		cacheKey      = fmt.Sprintf(`getSoftFieldNameAndType:%s#%s#%p`, schema, table, checkFiledNames)
+		cacheDuration = gcache.DurationNoExpire
+		cacheFunc     = func(ctx context.Context) (value interface{}, err error) {
+			// Ignore the error from TableFields.
+			fieldsMap, _ := m.TableFields(table, schema)
+			if len(fieldsMap) > 0 {
+				for _, checkFiledName := range checkFiledNames {
+					fieldName, _ = gutil.MapPossibleItemByKey(
+						gconv.Map(fieldsMap), checkFiledName,
+					)
+					if fieldName != "" {
+						fieldType, _ = m.db.CheckLocalTypeForField(
+							ctx, fieldsMap[fieldName].Type, nil,
+						)
+						var cacheItem = getSoftFieldNameAndTypeCacheItem{
+							FieldName: fieldName,
+							FieldType: fieldType,
+						}
+						return cacheItem, nil
+					}
+				}
 			}
+			return
 		}
+	)
+	result, err := m.db.GetCache().GetOrSetFunc(ctx, cacheKey, cacheFunc, cacheDuration)
+	if err != nil {
+		intlog.Error(ctx, err)
+	}
+	if result != nil {
+		var cacheItem = result.Val().(getSoftFieldNameAndTypeCacheItem)
+		fieldName = cacheItem.FieldName
+		fieldType = cacheItem.FieldType
 	}
 	return
 }
 
-// GetConditionForSoftDeleting retrieves and returns the condition string for soft deleting.
+// GetWhereConditionForDelete retrieves and returns the condition string for soft deleting.
 // It supports multiple tables string like:
 // "user u, user_detail ud"
 // "user u LEFT JOIN user_detail ud ON(ud.uid=u.uid)"
 // "user LEFT JOIN user_detail ON(user_detail.uid=user.uid)"
 // "user u LEFT JOIN user_detail ud ON(ud.uid=u.uid) LEFT JOIN user_stats us ON(us.uid=u.uid)".
-func (m *softTimeMaintainer) GetConditionForSoftDeleting(ctx context.Context) string {
+func (m *softTimeMaintainer) GetWhereConditionForDelete(ctx context.Context) string {
 	if m.unscoped {
 		return ""
 	}
@@ -202,7 +232,7 @@ func (m *softTimeMaintainer) GetConditionForSoftDeleting(ctx context.Context) st
 		return conditionArray.Join(" AND ")
 	}
 	// Only one table.
-	fieldName, fieldType := m.GetSoftFieldNameAndTypeDeleted(ctx, "", m.tablesInit)
+	fieldName, fieldType := m.GetFieldNameAndTypeForDelete(ctx, "", m.tablesInit)
 	if fieldName != "" {
 		return m.getConditionByFieldNameAndTypeForSoftDeleting(ctx, "", fieldName, fieldType)
 	}
@@ -255,7 +285,7 @@ func (m *softTimeMaintainer) getConditionOfTableStringForSoftDeleting(ctx contex
 	} else {
 		table = array2[0]
 	}
-	fieldName, fieldType := m.GetSoftFieldNameAndTypeDeleted(ctx, schema, table)
+	fieldName, fieldType := m.GetFieldNameAndTypeForDelete(ctx, schema, table)
 	if fieldName == "" {
 		return ""
 	}
@@ -268,9 +298,9 @@ func (m *softTimeMaintainer) getConditionOfTableStringForSoftDeleting(ctx contex
 	return m.getConditionByFieldNameAndTypeForSoftDeleting(ctx, table, fieldName, fieldType)
 }
 
-// GetDataByFieldNameAndTypeForSoftDeleting creates and returns the placeholder and value for
+// GetDataByFieldNameAndTypeForDelete creates and returns the placeholder and value for
 // specified field name and type in soft-deleting scenario.
-func (m *softTimeMaintainer) GetDataByFieldNameAndTypeForSoftDeleting(
+func (m *softTimeMaintainer) GetDataByFieldNameAndTypeForDelete(
 	ctx context.Context, fieldPrefix, fieldName string, fieldType LocalType,
 ) (dataHolder string, dataValue any) {
 	var (

@@ -50,7 +50,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		reflectInfo                                   = reflection.OriginTypeAndKind(updateData)
 		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(ctx, false, false)
 		conditionStr                                  = conditionWhere + conditionExtra
-		fieldNameUpdate, fieldTypeUpdate              = stm.GetSoftFieldNameAndTypeUpdated(
+		fieldNameUpdate, fieldTypeUpdate              = stm.GetFieldNameAndTypeForUpdate(
 			ctx, "", m.tablesInit,
 		)
 	)
