@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -1023,7 +1024,8 @@ CREATE TABLE %s (
 		t.AssertGT(one["create_at"].Int64(), 0)
 		t.AssertGT(one["update_at"].Int64(), 0)
 		t.Assert(one["delete_at"].Int64(), 0)
-		t.Assert(one["create_at"].Int64(), one["update_at"].Int64())
+		t.Assert(len(one["create_at"].String()), 10)
+		t.Assert(len(one["update_at"].String()), 10)
 	})
 
 	// sleep some seconds to make update time greater than create time.
@@ -1046,7 +1048,8 @@ CREATE TABLE %s (
 		t.AssertGT(one["create_at"].Int64(), 0)
 		t.AssertGT(one["update_at"].Int64(), 0)
 		t.Assert(one["delete_at"].Int64(), 0)
-		t.AssertNE(one["create_at"].Int64(), one["update_at"].Int64())
+		t.Assert(len(one["create_at"].String()), 10)
+		t.Assert(len(one["update_at"].String()), 10)
 
 		var (
 			lastCreateTime = one["create_at"].Int64()
@@ -1123,7 +1126,8 @@ CREATE TABLE %s (
 		t.AssertGT(one["create_at"].Int64(), 0)
 		t.AssertGT(one["update_at"].Int64(), 0)
 		t.Assert(one["delete_at"].Int64(), 0)
-		t.Assert(one["create_at"].Int64(), one["update_at"].Int64())
+		t.Assert(len(one["create_at"].String()), 10)
+		t.Assert(len(one["update_at"].String()), 10)
 	})
 
 	// delete
@@ -1134,6 +1138,124 @@ CREATE TABLE %s (
 		t.Assert(n, 1)
 
 		one, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(len(one), 0)
+
+		one, err = db.Model(table).Unscoped().WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one["name"].String(), "name_1")
+		t.AssertGT(one["create_at"].Int64(), 0)
+		t.AssertGT(one["update_at"].Int64(), 0)
+		t.Assert(one["delete_at"].Int64(), 1)
+	})
+}
+
+func Test_SoftTime_CreateUpdateDelete_Option_SoftTimeTypeTimestampMilli(t *testing.T) {
+	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+CREATE TABLE %s (
+  id        int(11) NOT NULL,
+  name      varchar(45) DEFAULT NULL,
+  create_at bigint(19) unsigned DEFAULT NULL,
+  update_at bigint(19) unsigned DEFAULT NULL,
+  delete_at bit(1) DEFAULT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    `, table)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(table)
+
+	var softTimeOption = gdb.SoftTimeOption{
+		SoftTimeType: gdb.SoftTimeTypeTimestampMilli,
+	}
+
+	// insert
+	gtest.C(t, func(t *gtest.T) {
+		dataInsert := g.Map{
+			"id":   1,
+			"name": "name_1",
+		}
+		r, err := db.Model(table).SoftTime(softTimeOption).Data(dataInsert).Insert()
+		t.AssertNil(err)
+		n, _ := r.RowsAffected()
+		t.Assert(n, 1)
+
+		one, err := db.Model(table).SoftTime(softTimeOption).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one["name"].String(), "name_1")
+		t.Assert(len(one["create_at"].String()), 13)
+		t.Assert(len(one["update_at"].String()), 13)
+		t.Assert(one["delete_at"].Int64(), 0)
+	})
+
+	// delete
+	gtest.C(t, func(t *gtest.T) {
+		r, err := db.Model(table).SoftTime(softTimeOption).WherePri(1).Delete()
+		t.AssertNil(err)
+		n, _ := r.RowsAffected()
+		t.Assert(n, 1)
+
+		one, err := db.Model(table).SoftTime(softTimeOption).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(len(one), 0)
+
+		one, err = db.Model(table).Unscoped().WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one["name"].String(), "name_1")
+		t.AssertGT(one["create_at"].Int64(), 0)
+		t.AssertGT(one["update_at"].Int64(), 0)
+		t.Assert(one["delete_at"].Int64(), 1)
+	})
+}
+
+func Test_SoftTime_CreateUpdateDelete_Option_SoftTimeTypeTimestampNano(t *testing.T) {
+	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+CREATE TABLE %s (
+  id        int(11) NOT NULL,
+  name      varchar(45) DEFAULT NULL,
+  create_at bigint(19) unsigned DEFAULT NULL,
+  update_at bigint(19) unsigned DEFAULT NULL,
+  delete_at bit(1) DEFAULT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    `, table)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(table)
+
+	var softTimeOption = gdb.SoftTimeOption{
+		SoftTimeType: gdb.SoftTimeTypeTimestampNano,
+	}
+
+	// insert
+	gtest.C(t, func(t *gtest.T) {
+		dataInsert := g.Map{
+			"id":   1,
+			"name": "name_1",
+		}
+		r, err := db.Model(table).SoftTime(softTimeOption).Data(dataInsert).Insert()
+		t.AssertNil(err)
+		n, _ := r.RowsAffected()
+		t.Assert(n, 1)
+
+		one, err := db.Model(table).SoftTime(softTimeOption).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one["name"].String(), "name_1")
+		t.Assert(len(one["create_at"].String()), 19)
+		t.Assert(len(one["update_at"].String()), 19)
+		t.Assert(one["delete_at"].Int64(), 0)
+	})
+
+	// delete
+	gtest.C(t, func(t *gtest.T) {
+		r, err := db.Model(table).SoftTime(softTimeOption).WherePri(1).Delete()
+		t.AssertNil(err)
+		n, _ := r.RowsAffected()
+		t.Assert(n, 1)
+
+		one, err := db.Model(table).SoftTime(softTimeOption).WherePri(1).One()
 		t.AssertNil(err)
 		t.Assert(len(one), 0)
 

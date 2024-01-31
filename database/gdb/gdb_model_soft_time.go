@@ -11,6 +11,8 @@ import (
 	"fmt"
 
 	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -19,6 +21,23 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
 )
+
+// SoftTimeType custom defines the soft time field type.
+type SoftTimeType int
+
+const (
+	SoftTimeTypeAuto           SoftTimeType = 0 // (Default)Auto detect the field type by table field type.
+	SoftTimeTypeTime           SoftTimeType = 1 // Using datetime as the field value.
+	SoftTimeTypeTimestamp      SoftTimeType = 2 // In unix seconds.
+	SoftTimeTypeTimestampMilli SoftTimeType = 3 // In unix milliseconds.
+	SoftTimeTypeTimestampMicro SoftTimeType = 4 // In unix microseconds.
+	SoftTimeTypeTimestampNano  SoftTimeType = 5 // In unix nanoseconds.
+)
+
+// SoftTimeOption is the option to customize soft time feature for Model.
+type SoftTimeOption struct {
+	SoftTimeType SoftTimeType // The value type for soft time field.
+}
 
 type softTimeMaintainer struct {
 	*Model
@@ -63,7 +82,14 @@ var (
 	deletedFieldNames = []string{"deleted_at", "delete_at"}
 )
 
-// Unscoped disables the auto-update time feature for insert, update and delete options.
+// SoftTime sets the SoftTimeOption to customize soft time feature for Model.
+func (m *Model) SoftTime(option SoftTimeOption) *Model {
+	model := m.getModel()
+	model.softTimeOption = option
+	return model
+}
+
+// Unscoped disables the soft time feature for insert, update and delete operations.
 func (m *Model) Unscoped() *Model {
 	model := m.getModel()
 	model.unscoped = true
@@ -239,33 +265,6 @@ func (m *softTimeMaintainer) GetWhereConditionForDelete(ctx context.Context) str
 	return ""
 }
 
-func (m *softTimeMaintainer) getConditionByFieldNameAndTypeForSoftDeleting(
-	ctx context.Context, fieldPrefix, fieldName string, fieldType LocalType,
-) string {
-	var (
-		quotedFieldPrefix = m.db.GetCore().QuoteWord(fieldPrefix)
-		quotedFieldName   = m.db.GetCore().QuoteWord(fieldName)
-	)
-	if quotedFieldPrefix != "" {
-		quotedFieldName = fmt.Sprintf(`%s.%s`, quotedFieldPrefix, quotedFieldName)
-	}
-	switch fieldType {
-	case LocalTypeDate, LocalTypeDatetime:
-		return fmt.Sprintf(`%s IS NULL`, quotedFieldName)
-	case LocalTypeInt, LocalTypeUint, LocalTypeInt64:
-		return fmt.Sprintf(`%s=0`, quotedFieldName)
-	case LocalTypeBool:
-		return fmt.Sprintf(`%s=0`, quotedFieldName)
-	default:
-		intlog.Errorf(
-			ctx,
-			`invalid field type "%s" of field name "%s" with prefix "%s" for soft deleting condition`,
-			fieldType, fieldName, fieldPrefix,
-		)
-	}
-	return ""
-}
-
 // getConditionOfTableStringForSoftDeleting does something as its name describes.
 // Examples for `s`:
 // - `test`.`demo` as b
@@ -315,33 +314,110 @@ func (m *softTimeMaintainer) GetDataByFieldNameAndTypeForDelete(
 	return
 }
 
+func (m *softTimeMaintainer) getConditionByFieldNameAndTypeForSoftDeleting(
+	ctx context.Context, fieldPrefix, fieldName string, fieldType LocalType,
+) string {
+	var (
+		quotedFieldPrefix = m.db.GetCore().QuoteWord(fieldPrefix)
+		quotedFieldName   = m.db.GetCore().QuoteWord(fieldName)
+	)
+	if quotedFieldPrefix != "" {
+		quotedFieldName = fmt.Sprintf(`%s.%s`, quotedFieldPrefix, quotedFieldName)
+	}
+	switch m.softTimeOption.SoftTimeType {
+	case SoftTimeTypeAuto:
+		switch fieldType {
+		case LocalTypeDate, LocalTypeDatetime:
+			return fmt.Sprintf(`%s IS NULL`, quotedFieldName)
+		case LocalTypeInt, LocalTypeUint, LocalTypeInt64, LocalTypeBool:
+			return fmt.Sprintf(`%s=0`, quotedFieldName)
+		default:
+			intlog.Errorf(
+				ctx,
+				`invalid field type "%s" of field name "%s" with prefix "%s" for soft deleting condition`,
+				fieldType, fieldName, fieldPrefix,
+			)
+		}
+
+	case SoftTimeTypeTime:
+		return fmt.Sprintf(`%s IS NULL`, quotedFieldName)
+
+	default:
+		return fmt.Sprintf(`%s=0`, quotedFieldName)
+	}
+	return ""
+}
+
 // GetValueByFieldTypeForCreateOrUpdate creates and returns the value for specified field type,
 // usually for creating or updating operations.
 func (m *softTimeMaintainer) GetValueByFieldTypeForCreateOrUpdate(
 	ctx context.Context, fieldType LocalType, isDeletedField bool,
 ) any {
-	switch fieldType {
-	case LocalTypeDate, LocalTypeDatetime:
-		if isDeletedField {
-			return nil
+	var value any
+	if isDeletedField {
+		switch fieldType {
+		case LocalTypeDate, LocalTypeDatetime:
+			value = nil
+		default:
+			value = 0
 		}
-		return gtime.Now()
-	case LocalTypeInt, LocalTypeUint, LocalTypeInt64:
-		if isDeletedField {
-			return 0
-		}
-		return gtime.Timestamp()
-	case LocalTypeBool:
-		if isDeletedField {
-			return 0
-		}
-		return 1
-	default:
-		intlog.Errorf(
-			ctx,
-			`invalid field type "%s" for soft deleting data`,
-			fieldType,
-		)
+		return value
 	}
-	return nil
+	switch m.softTimeOption.SoftTimeType {
+	case SoftTimeTypeAuto:
+		switch fieldType {
+		case LocalTypeDate, LocalTypeDatetime:
+			value = gtime.Now()
+		case LocalTypeInt, LocalTypeUint, LocalTypeInt64:
+			value = gtime.Timestamp()
+		case LocalTypeBool:
+			value = 1
+		default:
+			intlog.Errorf(
+				ctx,
+				`invalid field type "%s" for soft deleting data`,
+				fieldType,
+			)
+		}
+
+	default:
+		switch fieldType {
+		case LocalTypeBool:
+			value = 1
+		default:
+			value = m.createValueBySoftTimeOption(isDeletedField)
+		}
+	}
+	return value
+}
+
+func (m *softTimeMaintainer) createValueBySoftTimeOption(isDeletedField bool) any {
+	var value any
+	if isDeletedField {
+		switch m.softTimeOption.SoftTimeType {
+		case SoftTimeTypeTime:
+			value = nil
+		default:
+			value = 0
+		}
+		return value
+	}
+	switch m.softTimeOption.SoftTimeType {
+	case SoftTimeTypeTime:
+		value = gtime.Now()
+	case SoftTimeTypeTimestamp:
+		value = gtime.Timestamp()
+	case SoftTimeTypeTimestampMilli:
+		value = gtime.TimestampMilli()
+	case SoftTimeTypeTimestampMicro:
+		value = gtime.TimestampMicro()
+	case SoftTimeTypeTimestampNano:
+		value = gtime.TimestampNano()
+	default:
+		panic(gerror.NewCodef(
+			gcode.CodeInternalPanic,
+			`unrecognized SoftTimeType "%d"`, m.softTimeOption.SoftTimeType,
+		))
+	}
+	return value
 }
