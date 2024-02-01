@@ -186,6 +186,7 @@ func (r *Request) doGetRequestStruct(pointer interface{}, mapping ...map[string]
 	if err = r.mergeInTagStructValue(data, pointer); err != nil {
 		return data, nil
 	}
+
 	return data, gconv.Struct(data, pointer, mapping...)
 }
 

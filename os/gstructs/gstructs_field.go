@@ -121,3 +121,9 @@ func (f *Field) IsEmpty() bool {
 func (f *Field) IsNil(traceSource ...bool) bool {
 	return empty.IsNil(f.Value, traceSource...)
 }
+
+// PriorityName returns tag name first in gconv.StructTagPriority
+// Then returns Name if it doesn't have a tag name anything.
+func (f *Field) PriorityName() {
+
+}

@@ -9,6 +9,7 @@ package ghttp_test
 import (
 	"context"
 	"fmt"
+	"github.com/gogf/gf/v2/util/gutil"
 	"net/http"
 	"net/url"
 	"runtime"
@@ -185,4 +186,55 @@ func Test_ServerSignal(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertEQ(s.Shutdown(), nil)
 	})
+}
+
+type HelloReq struct {
+	g.Meta      `path:"/hello" method:"get"`
+	Name        string `json:"name" dc:"Your name" p:"n"`
+	XHeaderName string `p:"Header-Name" in:"header" json:"X-Header-Name"`
+	XHeaderAge  string `p:"X-Header-Age" in:"header" json:"X-Header-Age"`
+}
+type HelloRes struct {
+	Reply any
+}
+
+type Hello struct{}
+
+func (Hello) Say(ctx context.Context, req *HelloReq) (res *HelloRes, err error) {
+	//panic("ee")
+	fmt.Println("------")
+	gutil.Dump(req)
+	res = &HelloRes{
+		Reply: req,
+	}
+	return
+}
+
+func TestMy(t *testing.T) {
+	s := g.Server()
+	s.SetPort(8800)
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Bind(
+			new(Hello),
+		)
+	})
+	s.Run()
+}
+
+func TestMy2(t *testing.T) {
+	s := g.Server()
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.ALL("/register", func(r *ghttp.Request) {
+			var req *HelloReq
+			if err := r.Parse(&req); err != nil {
+				panic(err)
+			}
+			// ...
+			r.Response.WriteJsonExit(HelloRes{
+				Reply: req,
+			})
+		})
+	})
+	s.SetPort(8199)
+	s.Run()
 }
