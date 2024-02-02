@@ -212,6 +212,26 @@ func Test_Fields_WithEmbedded_Filter(t *testing.T) {
 	})
 }
 
+func Test_Fields_PriorityName(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Name  string `gconv:"name_gconv" c:"name_c"`
+			Age   uint   `p:"name_p" param:"age_param"`
+			Pass  string `json:"pass_json"`
+			IsMen bool
+		}
+		var user *User
+		fields, _ := gstructs.Fields(gstructs.FieldsInput{
+			Pointer:         user,
+			RecursiveOption: 0,
+		})
+		t.Assert(fields[0].PriorityName(), "name_gconv")
+		t.Assert(fields[1].PriorityName(), "age_param")
+		t.Assert(fields[2].PriorityName(), "pass_json")
+		t.Assert(fields[3].PriorityName(), "IsMen")
+	})
+}
+
 func Test_FieldMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {

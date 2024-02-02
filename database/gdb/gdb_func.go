@@ -68,7 +68,7 @@ var (
 	quoteWordReg = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
 
 	// structTagPriority tags for struct converting for orm field mapping.
-	structTagPriority = append([]string{OrmTagForStruct}, gconv.StructTagPriority...)
+	structTagPriority = append([]string{OrmTagForStruct}, gstructs.StructTagPriority...)
 )
 
 // WithDB injects given db object into context and returns a new context.

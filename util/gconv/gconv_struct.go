@@ -271,9 +271,9 @@ func doStruct(params interface{}, pointer interface{}, paramKeyToAttrMap map[str
 		priorityTagArray      []string
 	)
 	if priorityTag != "" {
-		priorityTagArray = append(utils.SplitAndTrim(priorityTag, ","), StructTagPriority...)
+		priorityTagArray = append(utils.SplitAndTrim(priorityTag, ","), gstructs.StructTagPriority...)
 	} else {
-		priorityTagArray = StructTagPriority
+		priorityTagArray = gstructs.StructTagPriority
 	}
 	tagToAttrNameMap, err := gstructs.TagMapName(pointerElemReflectValue, priorityTagArray)
 	if err != nil {

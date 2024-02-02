@@ -7,6 +7,7 @@
 package gconv
 
 import (
+	"github.com/gogf/gf/v2/os/gstructs"
 	"reflect"
 	"strings"
 
@@ -72,7 +73,7 @@ func doMapConvert(value interface{}, recursive recursiveType, mustMapReturn bool
 
 	var (
 		usedOption = getUsedMapOption(option...)
-		newTags    = StructTagPriority
+		newTags    = gstructs.StructTagPriority
 	)
 	if usedOption.Deep {
 		recursive = recursiveTypeTrue
@@ -81,9 +82,9 @@ func doMapConvert(value interface{}, recursive recursiveType, mustMapReturn bool
 	case 0:
 		// No need handling.
 	case 1:
-		newTags = append(strings.Split(usedOption.Tags[0], ","), StructTagPriority...)
+		newTags = append(strings.Split(usedOption.Tags[0], ","), gstructs.StructTagPriority...)
 	default:
-		newTags = append(usedOption.Tags, StructTagPriority...)
+		newTags = append(usedOption.Tags, gstructs.StructTagPriority...)
 	}
 	// Assert the common combination of types, and finally it uses reflection.
 	dataMap := make(map[string]interface{})
