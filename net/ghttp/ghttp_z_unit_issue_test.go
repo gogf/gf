@@ -475,6 +475,56 @@ func Test_Issue3077(t *testing.T) {
 	})
 }
 
+type ListMessageReq struct {
+	g.Meta    `path:"/list" method:"get"`
+	StartTime int64
+	EndTime   int64
+}
+type ListMessageRes struct {
+	g.Meta
+	Title   string
+	Content string
+}
+type BaseRes[T any] struct {
+	g.Meta
+	Code int
+	Data T
+	Msg  string
+}
+type cMessage struct{}
+
+func (c *cMessage) List(ctx context.Context, req *ListMessageReq) (res *BaseRes[*ListMessageRes], err error) {
+	res = &BaseRes[*ListMessageRes]{
+		Code: 100,
+		Data: &ListMessageRes{
+			Title:   "title",
+			Content: "hello",
+		},
+	}
+	return res, err
+}
+
+// https://github.com/gogf/gf/issues/2457
+func Test_Issue2457(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := g.Server(guid.S())
+		s.Use(ghttp.MiddlewareHandlerResponse)
+		s.Group("/", func(group *ghttp.RouterGroup) {
+			group.Bind(
+				new(cMessage),
+			)
+		})
+		s.SetDumpRouterMap(false)
+		s.Start()
+		defer s.Shutdown()
+		time.Sleep(100 * time.Millisecond)
+
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		t.Assert(c.GetContent(ctx, "/list"), `{"code":0,"message":"","data":{"Code":100,"Data":{"Title":"title","Content":"hello"},"Msg":""}}`)
+	})
+}
+
 // https://github.com/gogf/gf/issues/3245
 type Issue3245Req struct {
 	g.Meta      `path:"/hello" method:"get"`
