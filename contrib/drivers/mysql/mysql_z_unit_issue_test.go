@@ -999,3 +999,95 @@ func Test_Issue3218(t *testing.T) {
 		})
 	})
 }
+
+// https://github.com/gogf/gf/issues/2552
+func Test_Issue2552_ClearTableFieldsAll(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	showTableKey := `SHOW FULL COLUMNS FROM`
+	gtest.C(t, func(t *gtest.T) {
+		ctx := context.Background()
+		sqlArray, err := gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			_, err := db.Model(table).Ctx(ctx).Insert(g.Map{
+				"passport":    guid.S(),
+				"password":    guid.S(),
+				"nickname":    guid.S(),
+				"create_time": gtime.NewFromStr(CreateTime).String(),
+			})
+			return err
+		})
+		t.AssertNil(err)
+		t.Assert(gstr.Contains(gstr.Join(sqlArray, "|"), showTableKey), true)
+
+		ctx = context.Background()
+		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			one, err := db.Model(table).Ctx(ctx).One()
+			t.Assert(len(one), 5)
+			return err
+		})
+		t.AssertNil(err)
+		t.Assert(gstr.Contains(gstr.Join(sqlArray, "|"), showTableKey), false)
+
+		_, err = db.Exec(ctx, fmt.Sprintf("alter table %s drop column `nickname`", table))
+		t.AssertNil(err)
+
+		err = db.GetCore().ClearTableFieldsAll(ctx)
+		t.AssertNil(err)
+
+		ctx = context.Background()
+		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			one, err := db.Model(table).Ctx(ctx).One()
+			t.Assert(len(one), 4)
+			return err
+		})
+		t.AssertNil(err)
+		t.Assert(gstr.Contains(gstr.Join(sqlArray, "|"), showTableKey), true)
+	})
+}
+
+// https://github.com/gogf/gf/issues/2552
+func Test_Issue2552_ClearTableFields(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	showTableKey := `SHOW FULL COLUMNS FROM`
+	gtest.C(t, func(t *gtest.T) {
+		ctx := context.Background()
+		sqlArray, err := gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			_, err := db.Model(table).Ctx(ctx).Insert(g.Map{
+				"passport":    guid.S(),
+				"password":    guid.S(),
+				"nickname":    guid.S(),
+				"create_time": gtime.NewFromStr(CreateTime).String(),
+			})
+			return err
+		})
+		t.AssertNil(err)
+		t.Assert(gstr.Contains(gstr.Join(sqlArray, "|"), showTableKey), true)
+
+		ctx = context.Background()
+		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			one, err := db.Model(table).Ctx(ctx).One()
+			t.Assert(len(one), 5)
+			return err
+		})
+		t.AssertNil(err)
+		t.Assert(gstr.Contains(gstr.Join(sqlArray, "|"), showTableKey), false)
+
+		_, err = db.Exec(ctx, fmt.Sprintf("alter table %s drop column `nickname`", table))
+		t.AssertNil(err)
+
+		err = db.GetCore().ClearTableFields(ctx, table)
+		t.AssertNil(err)
+
+		ctx = context.Background()
+		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			one, err := db.Model(table).Ctx(ctx).One()
+			t.Assert(len(one), 4)
+			return err
+		})
+		t.AssertNil(err)
+		t.Assert(gstr.Contains(gstr.Join(sqlArray, "|"), showTableKey), true)
+	})
+}
