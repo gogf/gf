@@ -212,26 +212,6 @@ func Test_Fields_WithEmbedded_Filter(t *testing.T) {
 	})
 }
 
-func Test_Fields_TagPriorityName(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		type User struct {
-			Name  string `gconv:"name_gconv" c:"name_c"`
-			Age   uint   `p:"name_p" param:"age_param"`
-			Pass  string `json:"pass_json"`
-			IsMen bool
-		}
-		var user *User
-		fields, _ := gstructs.Fields(gstructs.FieldsInput{
-			Pointer:         user,
-			RecursiveOption: 0,
-		})
-		t.Assert(fields[0].TagPriorityName(), "name_gconv")
-		t.Assert(fields[1].TagPriorityName(), "age_param")
-		t.Assert(fields[2].TagPriorityName(), "pass_json")
-		t.Assert(fields[3].TagPriorityName(), "IsMen")
-	})
-}
-
 func Test_FieldMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
@@ -545,5 +525,25 @@ func TestType_TagExample(t *testing.T) {
 		t.Assert(len(r), 2)
 		t.Assert(r[0].TagExample(), `john`)
 		t.Assert(r[1].TagExample(), `john`)
+	})
+}
+
+func Test_Fields_TagPriorityName(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Name  string `gconv:"name_gconv" c:"name_c"`
+			Age   uint   `p:"name_p" param:"age_param"`
+			Pass  string `json:"pass_json"`
+			IsMen bool
+		}
+		var user *User
+		fields, _ := gstructs.Fields(gstructs.FieldsInput{
+			Pointer:         user,
+			RecursiveOption: 0,
+		})
+		t.Assert(fields[0].TagPriorityName(), "name_gconv")
+		t.Assert(fields[1].TagPriorityName(), "age_param")
+		t.Assert(fields[2].TagPriorityName(), "pass_json")
+		t.Assert(fields[3].TagPriorityName(), "IsMen")
 	})
 }

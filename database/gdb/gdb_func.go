@@ -10,7 +10,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/util/gtag"
 	"reflect"
 	"regexp"
 	"strings"
@@ -27,6 +26,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gmeta"
+	"github.com/gogf/gf/v2/util/gtag"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 

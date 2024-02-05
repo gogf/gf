@@ -12,7 +12,6 @@ package gconv
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/util/gtag"
 	"math"
 	"reflect"
 	"strconv"
@@ -24,6 +23,7 @@ import (
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/util/gtag"
 )
 
 var (
