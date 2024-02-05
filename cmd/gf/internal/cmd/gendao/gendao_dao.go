@@ -30,9 +30,6 @@ func generateDao(ctx context.Context, in CGenDaoInternalInput) {
 		dirPathDao         = gfile.Join(in.Path, in.DaoPath)
 		dirPathDaoInternal = gfile.Join(dirPathDao, "internal")
 	)
-	if in.Clear {
-		doClear(ctx, dirPathDao, true)
-	}
 	for i := 0; i < len(in.TableNames); i++ {
 		generateDaoSingle(ctx, generateDaoSingleInput{
 			CGenDaoInternalInput: in,
@@ -118,6 +115,10 @@ func generateDaoIndex(in generateDaoIndexInput) {
 				tplVarTableNameCamelLowerCase: in.TableNameCamelLowerCase,
 			})
 		indexContent = replaceDefaultVar(in.CGenDaoInternalInput, indexContent)
+		in.generatedFilePaths.DaoFilePaths = append(
+			in.generatedFilePaths.DaoFilePaths,
+			path,
+		)
 		if err := gfile.PutContents(path, strings.TrimSpace(indexContent)); err != nil {
 			mlog.Fatalf("writing content to '%s' failed: %v", path, err)
 		} else {
@@ -151,6 +152,10 @@ func generateDaoInternal(in generateDaoInternalInput) {
 			tplVarColumnNames:             gstr.Trim(generateColumnNamesForDao(in.FieldMap, removeFieldPrefixArray)),
 		})
 	modelContent = replaceDefaultVar(in.CGenDaoInternalInput, modelContent)
+	in.generatedFilePaths.DaoInternalFilePaths = append(
+		in.generatedFilePaths.DaoInternalFilePaths,
+		path,
+	)
 	if err := gfile.PutContents(path, strings.TrimSpace(modelContent)); err != nil {
 		mlog.Fatalf("writing content to '%s' failed: %v", path, err)
 	} else {
