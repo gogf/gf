@@ -68,6 +68,7 @@ func (d *DriverWrapperDB) TableFields(
 		)
 	}
 	var (
+		// prefix:group@schema#table
 		cacheKey = fmt.Sprintf(
 			`%s%s@%s#%s`,
 			cachePrefixTableFields,
