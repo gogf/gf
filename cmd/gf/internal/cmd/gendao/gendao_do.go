@@ -24,9 +24,6 @@ import (
 
 func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 	var dirPathDo = filepath.FromSlash(gfile.Join(in.Path, in.DoPath))
-	if in.Clear {
-		doClear(ctx, dirPathDo, false)
-	}
 	in.NoJsonTag = true
 	in.DescriptionTag = false
 	in.NoModelComment = false
@@ -65,6 +62,10 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 			tableName,
 			gstr.CaseCamel(newTableName),
 			structDefinition,
+		)
+		in.generatedFilePaths.DoFilePaths = append(
+			in.generatedFilePaths.DoFilePaths,
+			doFilePath,
 		)
 		err = gfile.PutContents(doFilePath, strings.TrimSpace(modelContent))
 		if err != nil {

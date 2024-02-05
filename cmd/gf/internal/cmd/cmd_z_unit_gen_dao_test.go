@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/gendao"
+	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -207,5 +208,85 @@ func Test_Gen_Dao_TypeMapping(t *testing.T) {
 		for i, _ := range files {
 			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))
 		}
+	})
+}
+
+func execSqlFile(db gdb.DB, filePath string, args ...any) error {
+	sqlContent := fmt.Sprintf(
+		gfile.GetContents(filePath),
+		args...,
+	)
+	array := gstr.SplitAndTrim(sqlContent, ";")
+	for _, v := range array {
+		if _, err := db.Exec(ctx, v); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func Test_Gen_Dao_Issue2572(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err          error
+			db           = testDB
+			table1       = "user1"
+			table2       = "user2"
+			issueDirPath = gtest.DataPath(`issue`, `2572`)
+		)
+		t.AssertNil(execSqlFile(db, gtest.DataPath(`issue`, `2572`, `sql1.sql`)))
+		t.AssertNil(execSqlFile(db, gtest.DataPath(`issue`, `2572`, `sql2.sql`)))
+		defer dropTableWithDb(db, table1)
+		defer dropTableWithDb(db, table2)
+
+		var (
+			path  = gfile.Temp(guid.S())
+			group = "test"
+			in    = gendao.CGenDaoInput{
+				Path:               path,
+				Link:               link,
+				Tables:             "",
+				TablesEx:           "",
+				Group:              group,
+				Prefix:             "",
+				RemovePrefix:       "",
+				JsonCase:           "SnakeScreaming",
+				ImportPrefix:       "",
+				DaoPath:            "",
+				DoPath:             "",
+				EntityPath:         "",
+				TplDaoIndexPath:    "",
+				TplDaoInternalPath: "",
+				TplDaoDoPath:       "",
+				TplDaoEntityPath:   "",
+				StdTime:            false,
+				WithTime:           false,
+				GJsonSupport:       false,
+				OverwriteDao:       false,
+				DescriptionTag:     false,
+				NoJsonTag:          false,
+				NoModelComment:     false,
+				Clear:              false,
+				TypeMapping:        nil,
+			}
+		)
+		err = gutil.FillStructWithDefault(&in)
+		t.AssertNil(err)
+
+		err = gfile.Copy(issueDirPath, path)
+		t.AssertNil(err)
+
+		defer gfile.Remove(path)
+
+		pwd := gfile.Pwd()
+		err = gfile.Chdir(path)
+		t.AssertNil(err)
+
+		defer gfile.Chdir(pwd)
+
+		_, err = gendao.CGenDao{}.Dao(ctx, in)
+		t.AssertNil(err)
+
+		fmt.Println(path)
 	})
 }

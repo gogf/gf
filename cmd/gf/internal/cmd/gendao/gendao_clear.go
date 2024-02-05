@@ -10,19 +10,24 @@ import (
 	"context"
 
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/text/gstr"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 )
 
-func doClear(ctx context.Context, dirPath string, force bool) {
-	files, err := gfile.ScanDirFile(dirPath, "*.go", true)
+func doClear(ctx context.Context, in CGenDaoInput) {
+	filePaths, err := gfile.ScanDirFile(in.Path, "*.go", true)
 	if err != nil {
 		mlog.Fatal(err)
 	}
-	for _, file := range files {
-		if force || utils.IsFileDoNotEdit(file) {
-			if err = gfile.Remove(file); err != nil {
+	var allGeneratedFilePaths = make([]string, 0)
+	allGeneratedFilePaths = append(allGeneratedFilePaths, in.generatedFilePaths.DaoFilePaths...)
+	allGeneratedFilePaths = append(allGeneratedFilePaths, in.generatedFilePaths.DaoInternalFilePaths...)
+	allGeneratedFilePaths = append(allGeneratedFilePaths, in.generatedFilePaths.EntityFilePaths...)
+	allGeneratedFilePaths = append(allGeneratedFilePaths, in.generatedFilePaths.DoFilePaths...)
+	for _, filePath := range filePaths {
+		if !gstr.InArray(allGeneratedFilePaths, filePath) {
+			if err = gfile.Remove(filePath); err != nil {
 				mlog.Print(err)
 			}
 		}
