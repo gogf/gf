@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/gogf/gf/v2/util/gtag"
 	"reflect"
 	"regexp"
 	"strings"
@@ -68,7 +69,7 @@ var (
 	quoteWordReg = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
 
 	// structTagPriority tags for struct converting for orm field mapping.
-	structTagPriority = append([]string{OrmTagForStruct}, gstructs.StructTagPriority...)
+	structTagPriority = append([]string{OrmTagForStruct}, gtag.StructTagPriority...)
 )
 
 // WithDB injects given db object into context and returns a new context.

@@ -7,6 +7,7 @@
 package gconv
 
 import (
+	"github.com/gogf/gf/v2/util/gtag"
 	"reflect"
 	"strings"
 
@@ -271,9 +272,9 @@ func doStruct(params interface{}, pointer interface{}, paramKeyToAttrMap map[str
 		priorityTagArray      []string
 	)
 	if priorityTag != "" {
-		priorityTagArray = append(utils.SplitAndTrim(priorityTag, ","), gstructs.StructTagPriority...)
+		priorityTagArray = append(utils.SplitAndTrim(priorityTag, ","), gtag.StructTagPriority...)
 	} else {
-		priorityTagArray = gstructs.StructTagPriority
+		priorityTagArray = gtag.StructTagPriority
 	}
 	tagToAttrNameMap, err := gstructs.TagMapName(pointerElemReflectValue, priorityTagArray)
 	if err != nil {

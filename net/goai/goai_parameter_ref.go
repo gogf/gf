@@ -29,7 +29,7 @@ type ParameterRef struct {
 func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path, method string) (*ParameterRef, error) {
 	var (
 		tagMap    = field.TagMap()
-		fieldName = field.PriorityName()
+		fieldName = field.TagPriorityName()
 	)
 	fieldName = gstr.Split(gstr.Trim(fieldName), ",")[0]
 	if fieldName == "" {

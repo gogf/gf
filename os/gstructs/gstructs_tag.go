@@ -15,13 +15,6 @@ import (
 	"github.com/gogf/gf/v2/util/gtag"
 )
 
-// StructTagPriority defines the default priority tags for Map*/Struct* functions.
-// Note that, the `gconv/param` tags are used by old version of package.
-// It is strongly recommended using short tag `c/p` instead in the future.
-var StructTagPriority = []string{
-	gtag.GConv, gtag.Param, gtag.GConvShort, gtag.ParamShort, gtag.Json,
-}
-
 // ParseTag parses tag string into map.
 // For example:
 // ParseTag(`v:"required" p:"id" d:"1"`) => map[v:required p:id d:1].

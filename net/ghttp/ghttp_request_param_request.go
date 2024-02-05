@@ -263,7 +263,7 @@ func (r *Request) mergeInTagStructValue(data map[string]interface{}, pointer int
 			if tagValue := field.TagIn(); tagValue != "" {
 				switch tagValue {
 				case goai.ParameterInHeader:
-					foundHeaderKey, foundHeaderValue := gutil.MapPossibleItemByKey(headerMap, field.PriorityName())
+					foundHeaderKey, foundHeaderValue := gutil.MapPossibleItemByKey(headerMap, field.TagPriorityName())
 					if foundHeaderKey != "" {
 						foundKey, foundValue = gutil.MapPossibleItemByKey(data, foundHeaderKey)
 						if foundKey == "" {
@@ -275,7 +275,7 @@ func (r *Request) mergeInTagStructValue(data map[string]interface{}, pointer int
 						}
 					}
 				case goai.ParameterInCookie:
-					foundCookieKey, foundCookieValue := gutil.MapPossibleItemByKey(cookieMap, field.PriorityName())
+					foundCookieKey, foundCookieValue := gutil.MapPossibleItemByKey(cookieMap, field.TagPriorityName())
 					if foundCookieKey != "" {
 						foundKey, foundValue = gutil.MapPossibleItemByKey(data, foundCookieKey)
 						if foundKey == "" {
