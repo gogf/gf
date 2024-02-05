@@ -155,7 +155,7 @@ func (c *Core) ClearTableFields(ctx context.Context, table string, schema ...str
 func (c *Core) ClearTableFieldsAll(ctx context.Context) (err error) {
 	var (
 		keys        = tableFieldsMap.Keys()
-		cachePrefix = fmt.Sprintf(`%s@%s`, cachePrefixTableFields, c.db.GetGroup())
+		cachePrefix = fmt.Sprintf(`%s%s`, cachePrefixTableFields, c.db.GetGroup())
 		removedKeys = make([]string, 0)
 	)
 	for _, key := range keys {
