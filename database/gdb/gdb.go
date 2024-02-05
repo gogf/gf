@@ -494,6 +494,10 @@ var (
 	// which is a regular field name of table.
 	regularFieldNameRegPattern = `^[\w\.\-]+$`
 
+	// regularFieldNameWithCommaRegPattern is the regular expression pattern for one or more strings
+	// which are regular field names of table, multiple field names joined with char ','.
+	regularFieldNameWithCommaRegPattern = `^[\w\.\-,\s]+$`
+
 	// regularFieldNameWithoutDotRegPattern is similar to regularFieldNameRegPattern but not allows '.'.
 	// Note that, although some databases allow char '.' in the field name, but it here does not allow '.'
 	// in the field name as it conflicts with "db.table.field" pattern in SOME situations.

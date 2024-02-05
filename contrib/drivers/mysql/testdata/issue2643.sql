@@ -1,0 +1,7 @@
+CREATE TABLE `issue2643` (
+    `id` INT(10) NULL DEFAULT NULL,
+    `name` VARCHAR(50) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
+    `value` INT(10) NULL DEFAULT NULL,
+    `dept` VARCHAR(50) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci'
+)
+COLLATE='utf8mb4_0900_ai_ci' ENGINE=InnoDB

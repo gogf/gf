@@ -1091,3 +1091,37 @@ func Test_Issue2552_ClearTableFields(t *testing.T) {
 		t.Assert(gstr.Contains(gstr.Join(sqlArray, "|"), showTableKey), true)
 	})
 }
+
+// https://github.com/gogf/gf/issues/2643
+func Test_Issue2643(t *testing.T) {
+	table := "issue2643"
+	array := gstr.SplitAndTrim(gtest.DataContent(`issue2643.sql`), ";")
+	for _, v := range array {
+		if _, err := db.Exec(ctx, v); err != nil {
+			gtest.Error(err)
+		}
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			expectKey1 = "SELECT s.name,replace(concat_ws(',',lpad(s.id, 6, '0'),s.name),',','') `code` FROM `issue2643` AS s"
+			expectKey2 = "SELECT CASE WHEN dept='物资部' THEN '物资部' ELSE '其他' END dept,sum(s.value) FROM `issue2643` AS s GROUP BY CASE WHEN dept='物资部' THEN '物资部' ELSE '其他' END"
+		)
+		sqlArray, err := gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			db.Ctx(ctx).Model(table).As("s").Fields(
+				"s.name",
+				"replace(concat_ws(',',lpad(s.id, 6, '0'),s.name),',','') `code`",
+			).All()
+			db.Ctx(ctx).Model(table).As("s").Fields(
+				"CASE WHEN dept='物资部' THEN '物资部' ELSE '其他' END dept",
+				"sum(s.value)",
+			).Group("CASE WHEN dept='物资部' THEN '物资部' ELSE '其他' END").All()
+			return nil
+		})
+		t.AssertNil(err)
+		sqlContent := gstr.Join(sqlArray, "\n")
+		t.Assert(gstr.Contains(sqlContent, expectKey1), true)
+		t.Assert(gstr.Contains(sqlContent, expectKey2), true)
+	})
+}
