@@ -19,7 +19,7 @@ import (
 	"github.com/gogf/gf/v2/os/gstructs"
 )
 
-// Struct maps the params key-value pairs to the 1corresponding struct object's attributes.
+// Struct maps the params key-value pairs to the corresponding struct object's attributes.
 // The third parameter `mapping` is unnecessary, indicating the mapping rules between the
 // custom key name and the attribute name(case-sensitive).
 //
