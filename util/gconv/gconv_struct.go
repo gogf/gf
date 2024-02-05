@@ -7,7 +7,6 @@
 package gconv
 
 import (
-	"github.com/gogf/gf/v2/util/gtag"
 	"reflect"
 	"strings"
 
@@ -17,6 +16,7 @@ import (
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gstructs"
+	"github.com/gogf/gf/v2/util/gtag"
 )
 
 // Struct maps the params key-value pairs to the corresponding struct object's attributes.
