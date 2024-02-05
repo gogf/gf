@@ -823,5 +823,5 @@ func (c *Core) FormatSqlBeforeExecuting(sql string, args []interface{}) (newSql 
 	// sql = gstr.Trim(sql)
 	// sql = gstr.Replace(sql, "\n", " ")
 	// sql, _ = gregex.ReplaceString(`\s{2,}`, ` `, sql)
-	return handleArguments(sql, args)
+	return handleSliceAndStructArgsForSql(sql, args)
 }
