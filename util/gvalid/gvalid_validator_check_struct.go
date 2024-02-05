@@ -239,6 +239,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 			continue
 		}
 		if field.IsEmbedded() {
+			// The attributes of embedded struct are considered as direct attributes of its parent struct.
 			if err = v.doCheckStruct(ctx, field.Value); err != nil {
 				// It merges the errors into single error map.
 				for k, m := range err.(*validationError).errors {
@@ -257,7 +258,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 				value = getPossibleValueFromMap(
 					inputParamMap, field.Name(), fieldToAliasNameMap[field.Name()],
 				)
-				if value == nil {
+				if empty.IsNil(value) {
 					switch field.Kind() {
 					case reflect.Map, reflect.Ptr, reflect.Slice, reflect.Array:
 						// Nothing to do.
