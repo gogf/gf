@@ -39,9 +39,7 @@ var (
 	// StructTagPriority defines the default priority tags for Map*/Struct* functions.
 	// Note that, the `gconv/param` tags are used by old version of package.
 	// It is strongly recommended using short tag `c/p` instead in the future.
-	StructTagPriority = []string{
-		gtag.GConv, gtag.Param, gtag.GConvShort, gtag.ParamShort, gtag.Json,
-	}
+	StructTagPriority = gtag.StructTagPriority
 )
 
 // Byte converts `any` to byte.

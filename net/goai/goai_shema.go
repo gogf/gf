@@ -183,13 +183,7 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 		if !gstr.IsLetterUpper(structField.Name()[0]) {
 			continue
 		}
-		var fieldName = structField.Name()
-		for _, tagName := range gconv.StructTagPriority {
-			if tagValue := structField.Tag(tagName); tagValue != "" {
-				fieldName = tagValue
-				break
-			}
-		}
+		var fieldName = structField.TagPriorityName()
 		fieldName = gstr.Split(gstr.Trim(fieldName), ",")[0]
 		if fieldName == "" {
 			fieldName = structField.Name()
