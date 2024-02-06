@@ -767,6 +767,8 @@ func (c *Core) HasTable(name string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	charL, charR := c.db.GetChars()
+	name = gstr.Trim(name, charL+charR)
 	for _, table := range tables {
 		if table == name {
 			return true, nil
