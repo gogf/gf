@@ -61,9 +61,9 @@ type FieldMapInput struct {
 type RecursiveOption int
 
 const (
-	RecursiveOptionNone          RecursiveOption = 0 // No recursively retrieving fields as map if the field is an embedded struct.
-	RecursiveOptionEmbedded      RecursiveOption = 1 // Recursively retrieving fields as map if the field is an embedded struct.
-	RecursiveOptionEmbeddedNoTag RecursiveOption = 2 // Recursively retrieving fields as map if the field is an embedded struct and the field has no tag.
+	RecursiveOptionNone          RecursiveOption = iota // No recursively retrieving fields as map if the field is an embedded struct.
+	RecursiveOptionEmbedded                             // Recursively retrieving fields as map if the field is an embedded struct.
+	RecursiveOptionEmbeddedNoTag                        // Recursively retrieving fields as map if the field is an embedded struct and the field has no tag.
 )
 
 // Fields retrieves and returns the fields of `pointer` as slice.

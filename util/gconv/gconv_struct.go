@@ -16,6 +16,7 @@ import (
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gstructs"
+	"github.com/gogf/gf/v2/util/gtag"
 )
 
 // Struct maps the params key-value pairs to the corresponding struct object's attributes.
@@ -271,9 +272,9 @@ func doStruct(params interface{}, pointer interface{}, paramKeyToAttrMap map[str
 		priorityTagArray      []string
 	)
 	if priorityTag != "" {
-		priorityTagArray = append(utils.SplitAndTrim(priorityTag, ","), StructTagPriority...)
+		priorityTagArray = append(utils.SplitAndTrim(priorityTag, ","), gtag.StructTagPriority...)
 	} else {
-		priorityTagArray = StructTagPriority
+		priorityTagArray = gtag.StructTagPriority
 	}
 	tagToAttrNameMap, err := gstructs.TagMapName(pointerElemReflectValue, priorityTagArray)
 	if err != nil {
