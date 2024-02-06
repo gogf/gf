@@ -32,7 +32,6 @@ func TestSlash(t *testing.T) {
 			t.AssertEQ(sched.weekMap, c.expected)
 		}
 	})
-
 }
 
 func TestNext(t *testing.T) {

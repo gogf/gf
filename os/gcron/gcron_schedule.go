@@ -7,7 +7,6 @@
 package gcron
 
 import (
-	"context"
 	"strconv"
 	"strings"
 	"time"
@@ -203,7 +202,6 @@ func newSchedule(pattern string) (*cronSchedule, error) {
 		return nil, err
 	}
 	return cs, nil
-
 }
 
 // parsePatternItem parses every item in the pattern and returns the result as map, which is used for indexing.
@@ -227,7 +225,9 @@ func parsePatternItem(
 		)
 		if len(intervalArray) == 2 {
 			if number, err = strconv.Atoi(intervalArray[1]); err != nil {
-				return nil, 0, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid pattern item: "%s"`, itemElem)
+				return nil, 0, gerror.NewCodef(
+					gcode.CodeInvalidParameter, `invalid pattern item: "%s"`, itemElem,
+				)
 			} else {
 				itemInterval = int64(number)
 			}
@@ -240,19 +240,25 @@ func parsePatternItem(
 		// Example: 1-30/2
 		if rangeArray[0] != "*" {
 			if number, err = parseWeekAndMonthNameToInt(rangeArray[0], itemType); err != nil {
-				return nil, 0, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid pattern item: "%s"`, itemElem)
+				return nil, 0, gerror.NewCodef(
+					gcode.CodeInvalidParameter, `invalid pattern item: "%s"`, itemElem,
+				)
 			} else {
 				rangeMin = number
 				if len(intervalArray) == 1 {
 					rangeMax = number
 				}
 			}
-			interval = int(itemInterval)
+			if itemInterval > 0 {
+				interval = int(itemInterval)
+			}
 		}
 		// Example: 1-30/2
 		if len(rangeArray) == 2 {
 			if number, err = parseWeekAndMonthNameToInt(rangeArray[1], itemType); err != nil {
-				return nil, 0, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid pattern item: "%s"`, itemElem)
+				return nil, 0, gerror.NewCodef(
+					gcode.CodeInvalidParameter, `invalid pattern item: "%s"`, itemElem,
+				)
 			} else {
 				rangeMax = number
 			}
@@ -292,211 +298,4 @@ func parseWeekAndMonthNameToInt(value string, itemType patternItemType) (int, er
 		}
 	}
 	return 0, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid pattern value: "%s"`, value)
-}
-
-// checkMeetAndUpdateLastSeconds checks if the given time `t` meets the runnable point for the job.
-// This function is called every second.
-func (s *cronSchedule) checkMeetAndUpdateLastSeconds(ctx context.Context, currentTime time.Time) (ok bool) {
-	var (
-		lastCheckTimestamp = s.getAndUpdateLastCheckTimestamp(ctx, currentTime)
-		lastCheckTime      = gtime.NewFromTimeStamp(lastCheckTimestamp)
-		lastMeetTime       = gtime.NewFromTimeStamp(s.lastMeetTimestamp.Val())
-	)
-	defer func() {
-		if ok {
-			s.lastMeetTimestamp.Set(currentTime.Unix())
-		}
-	}()
-
-	if s.everySeconds != 0 {
-		// It checks using interval.
-		secondsAfterCreated := lastCheckTime.Timestamp() - s.createTimestamp
-		if secondsAfterCreated > 0 {
-			return secondsAfterCreated%s.everySeconds == 0
-		}
-		return false
-	}
-	if !s.checkMinIntervalMeet(lastMeetTime.Time, currentTime) {
-		return false
-	}
-	if !s.checkItemMapMeet(lastCheckTime.Time, currentTime) {
-		return false
-	}
-	return true
-}
-
-func (s *cronSchedule) checkMinIntervalMeet(lastMeetTime, currentTime time.Time) (ok bool) {
-	interval := currentTime.Sub(lastMeetTime)
-	if interval.Seconds() < float64(s.minIntervalSeconds) {
-		return false
-	}
-	if interval.Minutes() < float64(s.minIntervalMinutes) {
-		return false
-	}
-	if interval.Hours() < float64(s.minIntervalHours) {
-		return false
-	}
-	if interval.Hours()/24 < float64(s.minIntervalDays) {
-		return false
-	}
-	if s.minIntervalMonths > 0 {
-		monthDiff := currentTime.Month() - lastMeetTime.Month()
-		if monthDiff < 0 {
-			monthDiff += 12
-		}
-		if int64(monthDiff) < s.minIntervalMonths {
-			return false
-		}
-	}
-	if interval.Hours()/24 < float64(s.minIntervalWeeks) {
-		return false
-	}
-	return true
-}
-
-func (s *cronSchedule) checkItemMapMeet(lastCheckTime, currentTime time.Time) (ok bool) {
-	// second.
-	if s.ignoreSeconds {
-		if currentTime.Unix()-s.lastMeetTimestamp.Val() < 60 {
-			return false
-		}
-	} else {
-		if !s.keyMatch(s.secondMap, lastCheckTime.Second()) {
-			return false
-		}
-	}
-	// minute.
-	if !s.keyMatch(s.minuteMap, lastCheckTime.Minute()) {
-		return false
-	}
-	// hour.
-	if !s.keyMatch(s.hourMap, lastCheckTime.Hour()) {
-		return false
-	}
-	// day.
-	if !s.keyMatch(s.dayMap, lastCheckTime.Day()) {
-		return false
-	}
-	// month.
-	if !s.keyMatch(s.monthMap, int(lastCheckTime.Month())) {
-		return false
-	}
-	// week.
-	if !s.keyMatch(s.weekMap, int(lastCheckTime.Weekday())) {
-		return false
-	}
-	return true
-}
-
-// Next returns the next time this schedule is activated, greater than the given
-// time.  If no time can be found to satisfy the schedule, return the zero time.
-func (s *cronSchedule) Next(t time.Time) time.Time {
-	if s.everySeconds != 0 {
-		var (
-			diff  = t.Unix() - s.createTimestamp
-			count = diff/s.everySeconds + 1
-		)
-		return t.Add(time.Duration(count*s.everySeconds) * time.Second)
-	}
-
-	if s.ignoreSeconds {
-		// Start at the earliest possible time (the upcoming minute).
-		t = t.Add(1*time.Minute - time.Duration(t.Nanosecond())*time.Nanosecond)
-	} else {
-		// Start at the earliest possible time (the upcoming second).
-		t = t.Add(1*time.Second - time.Duration(t.Nanosecond())*time.Nanosecond)
-	}
-
-	var (
-		loc       = t.Location()
-		added     = false
-		yearLimit = t.Year() + 5
-	)
-
-WRAP:
-	if t.Year() > yearLimit {
-		return t // who will care the job that run in five years later
-	}
-
-	for !s.keyMatch(s.monthMap, int(t.Month())) {
-		if !added {
-			added = true
-			t = time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, loc)
-		}
-		t = t.AddDate(0, 1, 0)
-		// need recheck
-		if t.Month() == time.January {
-			goto WRAP
-		}
-	}
-
-	for !s.dayMatches(t) {
-		if !added {
-			added = true
-			t = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, loc)
-		}
-		t = t.AddDate(0, 0, 1)
-
-		// Notice if the hour is no longer midnight due to DST.
-		// Add an hour if it's 23, subtract an hour if it's 1.
-		if t.Hour() != 0 {
-			if t.Hour() > 12 {
-				t = t.Add(time.Duration(24-t.Hour()) * time.Hour)
-			} else {
-				t = t.Add(time.Duration(-t.Hour()) * time.Hour)
-			}
-		}
-		if t.Day() == 1 {
-			goto WRAP
-		}
-	}
-	for !s.keyMatch(s.hourMap, t.Hour()) {
-		if !added {
-			added = true
-			t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 0, 0, 0, loc)
-		}
-		t = t.Add(time.Hour)
-		// need recheck
-		if t.Hour() == 0 {
-			goto WRAP
-		}
-	}
-	for !s.keyMatch(s.minuteMap, t.Minute()) {
-		if !added {
-			added = true
-			t = t.Truncate(time.Minute)
-		}
-		t = t.Add(1 * time.Minute)
-
-		if t.Minute() == 0 {
-			goto WRAP
-		}
-	}
-
-	if !s.ignoreSeconds {
-		for !s.keyMatch(s.secondMap, t.Second()) {
-			if !added {
-				added = true
-				t = t.Truncate(time.Second)
-			}
-			t = t.Add(1 * time.Second)
-			if t.Second() == 0 {
-				goto WRAP
-			}
-		}
-	}
-	return t.In(loc)
-}
-
-// dayMatches returns true if the schedule's day-of-week and day-of-month
-// restrictions are satisfied by the given time.
-func (s *cronSchedule) dayMatches(t time.Time) bool {
-	_, ok1 := s.dayMap[t.Day()]
-	_, ok2 := s.weekMap[int(t.Weekday())]
-	return ok1 && ok2
-}
-
-func (s *cronSchedule) keyMatch(m map[int]struct{}, key int) bool {
-	_, ok := m[key]
-	return ok
 }
