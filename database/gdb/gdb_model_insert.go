@@ -15,7 +15,6 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/reflection"
-	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
@@ -243,10 +242,11 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 		return nil, gerror.NewCode(gcode.CodeMissingParameter, "inserting into table with empty data")
 	}
 	var (
-		list            List
-		now             = gtime.Now()
-		fieldNameCreate = m.getSoftFieldNameCreated("", m.tablesInit)
-		fieldNameUpdate = m.getSoftFieldNameUpdated("", m.tablesInit)
+		list                             List
+		stm                              = m.softTimeMaintainer()
+		fieldNameCreate, fieldTypeCreate = stm.GetFieldNameAndTypeForCreate(ctx, "", m.tablesInit)
+		fieldNameUpdate, fieldTypeUpdate = stm.GetFieldNameAndTypeForUpdate(ctx, "", m.tablesInit)
+		fieldNameDelete, fieldTypeDelete = stm.GetFieldNameAndTypeForDelete(ctx, "", m.tablesInit)
 	)
 	// m.data was already converted to type List/Map by function Data
 	newData, err := m.filterDataForInsertOrUpdate(m.data)
@@ -270,10 +270,22 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 	if !m.unscoped && (fieldNameCreate != "" || fieldNameUpdate != "") {
 		for k, v := range list {
 			if fieldNameCreate != "" {
-				v[fieldNameCreate] = now
+				fieldCreateValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeCreate, false)
+				if fieldCreateValue != nil {
+					v[fieldNameCreate] = fieldCreateValue
+				}
 			}
 			if fieldNameUpdate != "" {
-				v[fieldNameUpdate] = now
+				fieldUpdateValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeUpdate, false)
+				if fieldUpdateValue != nil {
+					v[fieldNameUpdate] = fieldUpdateValue
+				}
+			}
+			if fieldNameDelete != "" {
+				fieldDeleteValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeDelete, true)
+				if fieldDeleteValue != nil {
+					v[fieldNameDelete] = fieldDeleteValue
+				}
 			}
 			list[k] = v
 		}
