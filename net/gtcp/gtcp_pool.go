@@ -21,11 +21,12 @@ type PoolConn struct {
 	status int         // Status of current connection, which is used to mark this connection usable or not.
 }
 
+const defaultPoolExpire = 10 * time.Second // Default TTL for connection in the pool.
+
 const (
-	defaultPoolExpire = 10 * time.Second // Default TTL for connection in the pool.
-	connStatusUnknown = 0                // Means it is unknown it's connective or not.
-	connStatusActive  = 1                // Means it is now connective.
-	connStatusError   = 2                // Means it should be closed and removed from pool.
+	connStatusUnknown = iota // Means it is unknown it's connective or not.
+	connStatusActive         // Means it is now connective.
+	connStatusError          // Means it should be closed and removed from pool.
 )
 
 var (
