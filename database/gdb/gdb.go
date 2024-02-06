@@ -425,6 +425,7 @@ const (
 type LocalType string
 
 const (
+	LocalTypeUndefined   LocalType = ""
 	LocalTypeString      LocalType = "string"
 	LocalTypeDate        LocalType = "date"
 	LocalTypeDatetime    LocalType = "datetime"
