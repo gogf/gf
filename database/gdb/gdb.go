@@ -384,9 +384,9 @@ const (
 type queryType int
 
 const (
-	queryTypeNormal queryType = 0
-	queryTypeCount  queryType = 1
-	queryTypeValue  queryType = 2
+	queryTypeNormal queryType = iota
+	queryTypeCount
+	queryTypeValue
 )
 
 type joinOperator string
@@ -400,14 +400,17 @@ const (
 type InsertOption int
 
 const (
-	InsertOptionDefault        InsertOption = 0
-	InsertOptionReplace        InsertOption = 1
-	InsertOptionSave           InsertOption = 2
-	InsertOptionIgnore         InsertOption = 3
-	InsertOperationInsert                   = "INSERT"
-	InsertOperationReplace                  = "REPLACE"
-	InsertOperationIgnore                   = "INSERT IGNORE"
-	InsertOnDuplicateKeyUpdate              = "ON DUPLICATE KEY UPDATE"
+	InsertOptionDefault InsertOption = iota
+	InsertOptionReplace
+	InsertOptionSave
+	InsertOptionIgnore
+)
+
+const (
+	InsertOperationInsert      = "INSERT"
+	InsertOperationReplace     = "REPLACE"
+	InsertOperationIgnore      = "INSERT IGNORE"
+	InsertOnDuplicateKeyUpdate = "ON DUPLICATE KEY UPDATE"
 )
 
 const (
