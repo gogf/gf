@@ -50,9 +50,7 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 	// Compatible with mariaDB json type
 	dbType := d.GetConfig().Type
 	if dbType == "mariadb" {
-		var (
-			checkConstraintResult gdb.Result
-		)
+		var checkConstraintResult gdb.Result
 		checkConstraintResult, err = d.DoSelect(
 			ctx, link,
 			fmt.Sprintf(`SELECT CONSTRAINT_NAME as filedName, CHECK_CLAUSE as filedCheck FROM information_schema.CHECK_CONSTRAINTS WHERE TABLE_NAME = '%s'`, table),
