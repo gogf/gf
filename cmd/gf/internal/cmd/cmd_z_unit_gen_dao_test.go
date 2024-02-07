@@ -286,7 +286,81 @@ func Test_Gen_Dao_Issue2572(t *testing.T) {
 
 		_, err = gendao.CGenDao{}.Dao(ctx, in)
 		t.AssertNil(err)
+	})
+}
 
-		fmt.Println(path)
+func Test_Gen_Dao_Issue2746(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err        error
+			db         gdb.DB
+			link2746   = "mariadb:root:12345678@tcp(127.0.0.1:33307)/test?loc=Local&parseTime=true"
+			table      = "issue2746"
+			sqlContent = fmt.Sprintf(
+				gtest.DataContent(`issue`, `2746`, `sql.sql`),
+				table,
+			)
+		)
+
+		db, err = gdb.New(gdb.ConfigNode{
+			Link: link2746,
+		})
+		t.AssertNil(err)
+
+		dropTableWithDb(db, table)
+		array := gstr.SplitAndTrim(sqlContent, ";")
+		for _, v := range array {
+			if _, err = db.Exec(ctx, v); err != nil {
+				t.AssertNil(err)
+			}
+		}
+		defer dropTableWithDb(db, table)
+
+		var (
+			path  = gfile.Temp(guid.S())
+			group = "test"
+			in    = gendao.CGenDaoInput{
+				Path:               path,
+				Link:               link2746,
+				Tables:             "",
+				TablesEx:           "",
+				Group:              group,
+				Prefix:             "",
+				RemovePrefix:       "",
+				JsonCase:           "SnakeScreaming",
+				ImportPrefix:       "",
+				DaoPath:            "",
+				DoPath:             "",
+				EntityPath:         "",
+				TplDaoIndexPath:    "",
+				TplDaoInternalPath: "",
+				TplDaoDoPath:       "",
+				TplDaoEntityPath:   "",
+				StdTime:            false,
+				WithTime:           false,
+				GJsonSupport:       true,
+				OverwriteDao:       false,
+				DescriptionTag:     false,
+				NoJsonTag:          false,
+				NoModelComment:     false,
+				Clear:              false,
+				TypeMapping:        nil,
+			}
+		)
+		err = gutil.FillStructWithDefault(&in)
+		t.AssertNil(err)
+
+		err = gfile.Mkdir(path)
+		t.AssertNil(err)
+
+		_, err = gendao.CGenDao{}.Dao(ctx, in)
+		t.AssertNil(err)
+		defer gfile.Remove(path)
+
+		var (
+			file          = filepath.FromSlash(path + "/model/entity/issue_2746.go")
+			expectContent = gtest.DataContent(`issue`, `2746`, `issue_2746.go`)
+		)
+		t.Assert(expectContent, gfile.GetContents(file))
 	})
 }

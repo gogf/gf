@@ -10,7 +10,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
@@ -28,9 +31,10 @@ import (
 // process restarts.
 func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
 	var (
-		result     gdb.Result
-		link       gdb.Link
-		usedSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+		result             gdb.Result
+		link               gdb.Link
+		usedSchema         = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+		mariaJsonFiledName = gset.New(false)
 	)
 	if link, err = d.SlaveLink(usedSchema); err != nil {
 		return nil, err
@@ -42,8 +46,33 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 	if err != nil {
 		return nil, err
 	}
+
+	// Compatible with mariaDB json type
+	dbType := d.GetConfig().Type
+	if dbType == "mariadb" {
+		var (
+			checkConstraintResult gdb.Result
+		)
+		checkConstraintResult, err = d.DoSelect(
+			ctx, link,
+			fmt.Sprintf(`SELECT CONSTRAINT_NAME as filedName, CHECK_CLAUSE as filedCheck FROM information_schema.CHECK_CONSTRAINTS WHERE TABLE_NAME = '%s'`, table),
+		)
+		if err != nil {
+			return nil, err
+		}
+		for _, m := range checkConstraintResult {
+			if gstr.HasPrefix(m["filedCheck"].String(), "json_valid") {
+				mariaJsonFiledName.Add(m["filedName"].String())
+			}
+		}
+	}
+
 	fields = make(map[string]*gdb.TableField)
 	for i, m := range result {
+		// if filed exists in mariaJsonFiledName, replace its Type with "json"
+		if mariaJsonFiledName.Size() != 0 && mariaJsonFiledName.Contains(m["Field"].String()) {
+			m["Type"] = gvar.New("json")
+		}
 		fields[m["Field"].String()] = &gdb.TableField{
 			Index:   i,
 			Name:    m["Field"].String(),
