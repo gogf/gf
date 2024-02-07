@@ -105,6 +105,11 @@ type generateDaoIndexInput struct {
 
 func generateDaoIndex(in generateDaoIndexInput) {
 	path := filepath.FromSlash(gfile.Join(in.DirPathDao, in.FileName+".go"))
+	// It should add path to result slice whenever it would generate the path file or not.
+	in.generatedFilePaths.DaoFilePaths = append(
+		in.generatedFilePaths.DaoFilePaths,
+		path,
+	)
 	if in.OverwriteDao || !gfile.Exists(path) {
 		indexContent := gstr.ReplaceByMap(
 			getTemplateFromPathOrDefault(in.TplDaoIndexPath, consts.TemplateGenDaoIndexContent),
@@ -115,10 +120,6 @@ func generateDaoIndex(in generateDaoIndexInput) {
 				tplVarTableNameCamelLowerCase: in.TableNameCamelLowerCase,
 			})
 		indexContent = replaceDefaultVar(in.CGenDaoInternalInput, indexContent)
-		in.generatedFilePaths.DaoFilePaths = append(
-			in.generatedFilePaths.DaoFilePaths,
-			path,
-		)
 		if err := gfile.PutContents(path, strings.TrimSpace(indexContent)); err != nil {
 			mlog.Fatalf("writing content to '%s' failed: %v", path, err)
 		} else {
