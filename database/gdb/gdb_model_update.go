@@ -16,7 +16,6 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/reflection"
-	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -46,11 +45,14 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		return nil, gerror.NewCode(gcode.CodeMissingParameter, "updating table with empty data")
 	}
 	var (
+		stm                                           = m.softTimeMaintainer()
 		updateData                                    = m.data
 		reflectInfo                                   = reflection.OriginTypeAndKind(updateData)
-		fieldNameUpdate                               = m.getSoftFieldNameUpdated("", m.tablesInit)
 		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(ctx, false, false)
 		conditionStr                                  = conditionWhere + conditionExtra
+		fieldNameUpdate, fieldTypeUpdate              = stm.GetFieldNameAndTypeForUpdate(
+			ctx, "", m.tablesInit,
+		)
 	)
 	if m.unscoped {
 		fieldNameUpdate = ""
@@ -61,7 +63,8 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		var dataMap = anyValueToMapBeforeToRecord(m.data)
 		// Automatically update the record updating time.
 		if fieldNameUpdate != "" {
-			dataMap[fieldNameUpdate] = gtime.Now()
+			dataValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeUpdate, false)
+			dataMap[fieldNameUpdate] = dataValue
 		}
 		updateData = dataMap
 
@@ -69,9 +72,10 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		updates := gconv.String(m.data)
 		// Automatically update the record updating time.
 		if fieldNameUpdate != "" {
+			dataValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeUpdate, false)
 			if fieldNameUpdate != "" && !gstr.Contains(updates, fieldNameUpdate) {
 				updates += fmt.Sprintf(`,%s=?`, fieldNameUpdate)
-				conditionArgs = append([]interface{}{gtime.Now()}, conditionArgs...)
+				conditionArgs = append([]interface{}{dataValue}, conditionArgs...)
 			}
 		}
 		updateData = updates

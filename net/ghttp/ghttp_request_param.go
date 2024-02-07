@@ -30,9 +30,9 @@ import (
 )
 
 const (
-	parseTypeRequest = 0
-	parseTypeQuery   = 1
-	parseTypeForm    = 2
+	parseTypeRequest = iota
+	parseTypeQuery
+	parseTypeForm
 )
 
 var (

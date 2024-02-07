@@ -28,6 +28,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gmeta"
+	"github.com/gogf/gf/v2/util/gtag"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
@@ -70,7 +71,7 @@ var (
 	quoteWordReg = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
 
 	// structTagPriority tags for struct converting for orm field mapping.
-	structTagPriority = append([]string{OrmTagForStruct}, gconv.StructTagPriority...)
+	structTagPriority = append([]string{OrmTagForStruct}, gtag.StructTagPriority...)
 )
 
 // WithDB injects given db object into context and returns a new context.

@@ -384,9 +384,9 @@ const (
 type queryType int
 
 const (
-	queryTypeNormal queryType = 0
-	queryTypeCount  queryType = 1
-	queryTypeValue  queryType = 2
+	queryTypeNormal queryType = iota
+	queryTypeCount
+	queryTypeValue
 )
 
 type joinOperator string
@@ -400,14 +400,17 @@ const (
 type InsertOption int
 
 const (
-	InsertOptionDefault        InsertOption = 0
-	InsertOptionReplace        InsertOption = 1
-	InsertOptionSave           InsertOption = 2
-	InsertOptionIgnore         InsertOption = 3
-	InsertOperationInsert                   = "INSERT"
-	InsertOperationReplace                  = "REPLACE"
-	InsertOperationIgnore                   = "INSERT IGNORE"
-	InsertOnDuplicateKeyUpdate              = "ON DUPLICATE KEY UPDATE"
+	InsertOptionDefault InsertOption = iota
+	InsertOptionReplace
+	InsertOptionSave
+	InsertOptionIgnore
+)
+
+const (
+	InsertOperationInsert      = "INSERT"
+	InsertOperationReplace     = "REPLACE"
+	InsertOperationIgnore      = "INSERT IGNORE"
+	InsertOnDuplicateKeyUpdate = "ON DUPLICATE KEY UPDATE"
 )
 
 const (
@@ -425,6 +428,7 @@ const (
 type LocalType string
 
 const (
+	LocalTypeUndefined   LocalType = ""
 	LocalTypeString      LocalType = "string"
 	LocalTypeDate        LocalType = "date"
 	LocalTypeDatetime    LocalType = "datetime"
@@ -493,6 +497,10 @@ var (
 	// regularFieldNameRegPattern is the regular expression pattern for a string
 	// which is a regular field name of table.
 	regularFieldNameRegPattern = `^[\w\.\-]+$`
+
+	// regularFieldNameWithCommaRegPattern is the regular expression pattern for one or more strings
+	// which are regular field names of table, multiple field names joined with char ','.
+	regularFieldNameWithCommaRegPattern = `^[\w\.\-,\s]+$`
 
 	// regularFieldNameWithoutDotRegPattern is similar to regularFieldNameRegPattern but not allows '.'.
 	// Note that, although some databases allow char '.' in the field name, but it here does not allow '.'

@@ -24,15 +24,14 @@ func TestSlash(t *testing.T) {
 	}
 	gtest.C(t, func(t *gtest.T) {
 		for _, c := range runs {
-			sched, err := newSchedule(c.spec)
+			s, err := newSchedule(c.spec)
 			if err != nil {
 				t.Fatal(err)
 
 			}
-			t.AssertEQ(sched.weekMap, c.expected)
+			t.AssertEQ(s.weekMap, c.expected)
 		}
 	})
-
 }
 
 func TestNext(t *testing.T) {
@@ -82,19 +81,26 @@ func TestNext(t *testing.T) {
 		{"Mon Jul 9 23:35 2012", "@daily", "Tue Jul 10 00:00:00 2012"},
 		{"Mon Jul 9 23:35 2012", "@midnight", "Tue Jul 10 00:00:00 2012"},
 		{"Mon Jul 9 23:35 2012", "@hourly", "Tue Jul 10 00:00:00 2012"},
+
+		// Ignore seconds.
+		{"Mon Jul 9 23:35 2012", "# * * * * *", "Mon Jul 9 23:36 2012"},
+		{"Mon Jul 9 23:35 2012", "# */2 * * * *", "Mon Jul 9 23:36 2012"},
 	}
 
 	for _, c := range runs {
-		sched, err := newSchedule(c.spec)
+		s, err := newSchedule(c.spec)
 		if err != nil {
 			t.Error(err)
 			continue
 		}
 		// fmt.Printf("%+v", sched)
-		actual := sched.Next(getTime(c.time))
+		actual := s.Next(getTime(c.time))
 		expected := getTime(c.expected)
 		if !(actual.Unix() == expected.Unix()) {
-			t.Errorf("%s, \"%s\": (expected) %v != %v (actual)", c.time, c.spec, expected, actual)
+			t.Errorf(
+				"%s, \"%s\": (expected) %v != %v (actual)",
+				c.time, c.spec, expected, actual,
+			)
 		}
 	}
 }
