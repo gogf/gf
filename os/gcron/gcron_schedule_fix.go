@@ -13,35 +13,48 @@ import (
 	"github.com/gogf/gf/v2/internal/intlog"
 )
 
-// getAndUpdateLastTimestamp checks fixes and returns the last timestamp that have delay fix in some seconds.
-func (s *cronSchedule) getAndUpdateLastTimestamp(ctx context.Context, t time.Time) int64 {
+// getAndUpdateLastCheckTimestamp checks fixes and returns the last timestamp that have delay fix in some seconds.
+func (s *cronSchedule) getAndUpdateLastCheckTimestamp(ctx context.Context, t time.Time) int64 {
 	var (
-		currentTimestamp = t.Unix()
-		lastTimestamp    = s.lastTimestamp.Val()
+		currentTimestamp   = t.Unix()
+		lastCheckTimestamp = s.lastCheckTimestamp.Val()
 	)
 	switch {
+	// Often happens, timer triggers in the same second.
+	// Example:
+	// lastCheckTimestamp:    10
+	// currentTimestamp: 10
 	case
-		lastTimestamp == currentTimestamp:
-		lastTimestamp += 1
+		lastCheckTimestamp == currentTimestamp:
+		lastCheckTimestamp += 1
 
+	// Often happens, no latency.
+	// Example:
+	// lastCheckTimestamp:    9
+	// currentTimestamp: 10
 	case
-		lastTimestamp == currentTimestamp-1:
-		lastTimestamp = currentTimestamp
+		lastCheckTimestamp == currentTimestamp-1:
+		lastCheckTimestamp = currentTimestamp
 
+	// Latency in 3 seconds, which can be tolerant.
+	// Example:
+	// lastCheckTimestamp:    7/8
+	// currentTimestamp: 10
 	case
-		lastTimestamp == currentTimestamp-2,
-		lastTimestamp == currentTimestamp-3:
-		lastTimestamp += 1
+		lastCheckTimestamp == currentTimestamp-2,
+		lastCheckTimestamp == currentTimestamp-3:
+		lastCheckTimestamp += 1
 
+	// Too much latency, it ignores the fix, the cron job might not be triggered.
 	default:
 		// Too much delay, let's update the last timestamp to current one.
 		intlog.Printf(
 			ctx,
-			`too much delay, last timestamp "%d", current "%d"`,
-			lastTimestamp, currentTimestamp,
+			`too much latency, last timestamp "%d", current "%d", latency "%d"`,
+			lastCheckTimestamp, currentTimestamp, currentTimestamp-lastCheckTimestamp,
 		)
-		lastTimestamp = currentTimestamp
+		lastCheckTimestamp = currentTimestamp
 	}
-	s.lastTimestamp.Set(lastTimestamp)
-	return lastTimestamp
+	s.lastCheckTimestamp.Set(lastCheckTimestamp)
+	return lastCheckTimestamp
 }

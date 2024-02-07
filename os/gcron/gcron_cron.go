@@ -17,6 +17,7 @@ import (
 	"github.com/gogf/gf/v2/os/gtimer"
 )
 
+// Cron stores all the cron job entries.
 type Cron struct {
 	idGen   *gtype.Int64    // Used for unique name generation.
 	status  *gtype.Int      // Timed task status(0: Not Start; 1: Running; 2: Stopped; -1: Closed)
@@ -44,7 +45,9 @@ func (c *Cron) GetLogger() glog.ILogger {
 }
 
 // AddEntry creates and returns a new Entry object.
-func (c *Cron) AddEntry(ctx context.Context, pattern string, job JobFunc, times int, isSingleton bool, name ...string) (*Entry, error) {
+func (c *Cron) AddEntry(
+	ctx context.Context, pattern string, job JobFunc, times int, isSingleton bool, name ...string,
+) (*Entry, error) {
 	var (
 		entryName = ""
 		infinite  = false

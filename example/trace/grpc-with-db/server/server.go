@@ -11,7 +11,7 @@ import (
 	_ "github.com/gogf/gf/contrib/nosql/redis/v2"
 	"github.com/gogf/gf/contrib/registry/etcd/v2"
 	"github.com/gogf/gf/contrib/trace/otlpgrpc/v2"
-	"github.com/gogf/gf/example/trace/grpc_with_db/protobuf/user"
+	"github.com/gogf/gf/example/trace/grpc-with-db/protobuf/user"
 
 	"context"
 	"fmt"
