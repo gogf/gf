@@ -294,7 +294,7 @@ func Test_Gen_Dao_Issue2746(t *testing.T) {
 		var (
 			err        error
 			db         gdb.DB
-			link2746   = "mariadb:root:12345678@tcp(127.0.0.1:33307)/test?loc=Local&parseTime=true"
+			link2746   = "mariadb:root:12345678@tcp(127.0.0.1:3307)/test?loc=Local&parseTime=true"
 			table      = "issue2746"
 			sqlContent = fmt.Sprintf(
 				gtest.DataContent(`issue`, `2746`, `sql.sql`),
