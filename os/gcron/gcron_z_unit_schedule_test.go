@@ -24,12 +24,12 @@ func TestSlash(t *testing.T) {
 	}
 	gtest.C(t, func(t *gtest.T) {
 		for _, c := range runs {
-			sched, err := newSchedule(c.spec)
+			s, err := newSchedule(c.spec)
 			if err != nil {
 				t.Fatal(err)
 
 			}
-			t.AssertEQ(sched.weekMap, c.expected)
+			t.AssertEQ(s.weekMap, c.expected)
 		}
 	})
 }
@@ -84,7 +84,7 @@ func TestNext(t *testing.T) {
 
 		// Ignore seconds.
 		{"Mon Jul 9 23:35 2012", "# * * * * *", "Mon Jul 9 23:36 2012"},
-		{"Mon Jul 9 23:35 2012", "# */2 * * * *", "Mon Jul 9 23:37 2012"},
+		{"Mon Jul 9 23:35 2012", "# */2 * * * *", "Mon Jul 9 23:36 2012"},
 	}
 
 	for _, c := range runs {

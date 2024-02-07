@@ -6,7 +6,9 @@
 
 package gcron
 
-import "time"
+import (
+	"time"
+)
 
 // Next returns the next time this schedule is activated, greater than the given
 // time.  If no time can be found to satisfy the schedule, return the zero time.
@@ -30,7 +32,6 @@ func (s *cronSchedule) Next(lastMeetTime time.Time) time.Time {
 
 	var (
 		loc       = currentTime.Location()
-		added     = false
 		yearLimit = currentTime.Year() + 5
 	)
 
@@ -39,73 +40,39 @@ WRAP:
 		return currentTime // who will care the job that run in five years later
 	}
 
-	for !s.checkMeetMonth(lastMeetTime, currentTime) {
-		if !added {
-			added = true
-			currentTime = time.Date(currentTime.Year(), currentTime.Month(), 1, 0, 0, 0, 0, loc)
-		}
+	for !s.checkMeetMonth(currentTime) {
 		currentTime = currentTime.AddDate(0, 1, 0)
-		// need recheck
+		currentTime = time.Date(currentTime.Year(), currentTime.Month(), 1, 0, 0, 0, 0, loc)
 		if currentTime.Month() == time.January {
 			goto WRAP
 		}
 	}
-
-	for !s.checkMeetDay(lastMeetTime, currentTime) {
-		if !added {
-			added = true
-			currentTime = time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), 0, 0, 0, 0, loc)
-		}
+	for !s.checkMeetWeek(currentTime) || !s.checkMeetDay(currentTime) {
 		currentTime = currentTime.AddDate(0, 0, 1)
-
-		// Notice if the hour is no longer midnight due to DST.
-		// Add an hour if it's 23, subtract an hour if it's 1.
-		if currentTime.Hour() != 0 {
-			if currentTime.Hour() > 12 {
-				currentTime = currentTime.Add(time.Duration(24-currentTime.Hour()) * time.Hour)
-			} else {
-				currentTime = currentTime.Add(time.Duration(-currentTime.Hour()) * time.Hour)
-			}
-		}
+		currentTime = time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), 0, 0, 0, 0, loc)
 		if currentTime.Day() == 1 {
 			goto WRAP
 		}
 	}
-	for !s.checkMeetHour(lastMeetTime, currentTime) {
-		if !added {
-			added = true
-			currentTime = time.Date(
-				currentTime.Year(), currentTime.Month(), currentTime.Day(), currentTime.Hour(), 0, 0, 0, loc,
-			)
-		}
+	for !s.checkMeetHour(currentTime) {
 		currentTime = currentTime.Add(time.Hour)
-		// need recheck
+		currentTime = currentTime.Truncate(time.Hour)
 		if currentTime.Hour() == 0 {
 			goto WRAP
 		}
 	}
-	for !s.checkMeetMinute(lastMeetTime, currentTime) {
-		if !added {
-			added = true
-			currentTime = currentTime.Truncate(time.Minute)
-		}
+	for !s.checkMeetMinute(currentTime) {
 		currentTime = currentTime.Add(1 * time.Minute)
-
+		currentTime = currentTime.Truncate(time.Minute)
 		if currentTime.Minute() == 0 {
 			goto WRAP
 		}
 	}
 
-	if !s.ignoreSeconds {
-		for !s.checkMeetSecond(lastMeetTime, currentTime) {
-			if !added {
-				added = true
-				currentTime = currentTime.Truncate(time.Second)
-			}
-			currentTime = currentTime.Add(1 * time.Second)
-			if currentTime.Second() == 0 {
-				goto WRAP
-			}
+	for !s.checkMeetSecond(lastMeetTime, currentTime) {
+		currentTime = currentTime.Add(1 * time.Second)
+		if currentTime.Second() == 0 {
+			goto WRAP
 		}
 	}
 	return currentTime.In(loc)

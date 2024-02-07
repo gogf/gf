@@ -31,16 +31,6 @@ type cronSchedule struct {
 	weekMap         map[int]struct{} // Job can run in these week numbers.
 	monthMap        map[int]struct{} // Job can run in these moth numbers.
 
-	// Used in pattern which has interval part like number "2" in pattern "# */2 * * * *".
-	// The escaped value should be greater or equal than this interval,
-	// unit of which is according to its part type.
-	minIntervalSeconds int64
-	minIntervalMinutes int64
-	minIntervalHours   int64
-	minIntervalDays    int64
-	minIntervalWeeks   int64
-	minIntervalMonths  int64
-
 	// This field stores the timestamp that meets schedule latest.
 	lastMeetTimestamp *gtype.Int64
 
@@ -67,13 +57,13 @@ const (
 var (
 	// Predefined pattern map.
 	predefinedPatternMap = map[string]string{
-		"@yearly":   "0 0 0 1 1 *",
-		"@annually": "0 0 0 1 1 *",
-		"@monthly":  "0 0 0 1 * *",
-		"@weekly":   "0 0 0 * * 0",
-		"@daily":    "0 0 0 * * *",
-		"@midnight": "0 0 0 * * *",
-		"@hourly":   "0 0 * * * *",
+		"@yearly":   "# 0 0 1 1 *",
+		"@annually": "# 0 0 1 1 *",
+		"@monthly":  "# 0 0 1 * *",
+		"@weekly":   "# 0 0 * * 0",
+		"@daily":    "# 0 0 * * *",
+		"@midnight": "# 0 0 * * *",
+		"@hourly":   "# 0 * * * *",
 	}
 	// Short month name to its number.
 	monthShortNameMap = map[string]int{
@@ -171,33 +161,33 @@ func newSchedule(pattern string) (*cronSchedule, error) {
 	if match[1] == "#" {
 		cs.ignoreSeconds = true
 	} else {
-		cs.secondMap, cs.minIntervalSeconds, err = parsePatternItem(match[1], 0, 59, false, patternItemTypeSecond)
+		cs.secondMap, err = parsePatternItem(match[1], 0, 59, false, patternItemTypeSecond)
 		if err != nil {
 			return nil, err
 		}
 	}
 	// Minute.
-	cs.minuteMap, cs.minIntervalMinutes, err = parsePatternItem(match[2], 0, 59, false, patternItemTypeMinute)
+	cs.minuteMap, err = parsePatternItem(match[2], 0, 59, false, patternItemTypeMinute)
 	if err != nil {
 		return nil, err
 	}
 	// Hour.
-	cs.hourMap, cs.minIntervalHours, err = parsePatternItem(match[3], 0, 23, false, patternItemTypeHour)
+	cs.hourMap, err = parsePatternItem(match[3], 0, 23, false, patternItemTypeHour)
 	if err != nil {
 		return nil, err
 	}
 	// Day.
-	cs.dayMap, cs.minIntervalDays, err = parsePatternItem(match[4], 1, 31, true, patternItemTypeDay)
+	cs.dayMap, err = parsePatternItem(match[4], 1, 31, true, patternItemTypeDay)
 	if err != nil {
 		return nil, err
 	}
 	// Month.
-	cs.monthMap, cs.minIntervalMonths, err = parsePatternItem(match[5], 1, 12, false, patternItemTypeMonth)
+	cs.monthMap, err = parsePatternItem(match[5], 1, 12, false, patternItemTypeMonth)
 	if err != nil {
 		return nil, err
 	}
 	// Week.
-	cs.weekMap, cs.minIntervalWeeks, err = parsePatternItem(match[6], 0, 6, true, patternItemTypeWeek)
+	cs.weekMap, err = parsePatternItem(match[6], 0, 6, true, patternItemTypeWeek)
 	if err != nil {
 		return nil, err
 	}
@@ -208,13 +198,13 @@ func newSchedule(pattern string) (*cronSchedule, error) {
 func parsePatternItem(
 	item string, min int, max int,
 	allowQuestionMark bool, itemType patternItemType,
-) (itemMap map[int]struct{}, itemInterval int64, err error) {
+) (itemMap map[int]struct{}, err error) {
 	itemMap = make(map[int]struct{}, max-min+1)
 	if item == "*" || (allowQuestionMark && item == "?") {
 		for i := min; i <= max; i++ {
 			itemMap[i] = struct{}{}
 		}
-		return itemMap, 0, nil
+		return itemMap, nil
 	}
 	// Example: 1-10/2,11-30/3
 	var number int
@@ -225,11 +215,11 @@ func parsePatternItem(
 		)
 		if len(intervalArray) == 2 {
 			if number, err = strconv.Atoi(intervalArray[1]); err != nil {
-				return nil, 0, gerror.NewCodef(
+				return nil, gerror.NewCodef(
 					gcode.CodeInvalidParameter, `invalid pattern item: "%s"`, itemElem,
 				)
 			} else {
-				itemInterval = int64(number)
+				interval = number
 			}
 		}
 		var (
@@ -240,7 +230,7 @@ func parsePatternItem(
 		// Example: 1-30/2
 		if rangeArray[0] != "*" {
 			if number, err = parseWeekAndMonthNameToInt(rangeArray[0], itemType); err != nil {
-				return nil, 0, gerror.NewCodef(
+				return nil, gerror.NewCodef(
 					gcode.CodeInvalidParameter, `invalid pattern item: "%s"`, itemElem,
 				)
 			} else {
@@ -249,14 +239,11 @@ func parsePatternItem(
 					rangeMax = number
 				}
 			}
-			if itemInterval > 0 {
-				interval = int(itemInterval)
-			}
 		}
 		// Example: 1-30/2
 		if len(rangeArray) == 2 {
 			if number, err = parseWeekAndMonthNameToInt(rangeArray[1], itemType); err != nil {
-				return nil, 0, gerror.NewCodef(
+				return nil, gerror.NewCodef(
 					gcode.CodeInvalidParameter, `invalid pattern item: "%s"`, itemElem,
 				)
 			} else {
