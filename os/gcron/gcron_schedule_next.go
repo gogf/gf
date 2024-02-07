@@ -77,11 +77,3 @@ WRAP:
 	}
 	return currentTime.In(loc)
 }
-
-// dayMatches returns true if the schedule's day-of-week and day-of-month
-// restrictions are satisfied by the given time.
-func (s *cronSchedule) dayMatches(t time.Time) bool {
-	_, ok1 := s.dayMap[t.Day()]
-	_, ok2 := s.weekMap[int(t.Weekday())]
-	return ok1 && ok2
-}
