@@ -12,7 +12,7 @@ require (
 	github.com/gogf/gf/contrib/nosql/redis/v2 v2.6.3
 	github.com/gogf/gf/contrib/registry/etcd/v2 v2.6.3
 	github.com/gogf/gf/contrib/registry/file/v2 v2.6.3
-	github.com/gogf/gf/contrib/registry/nacos/v2 v2.5.6
+	github.com/gogf/gf/contrib/registry/nacos/v2 v2.6.3
 	github.com/gogf/gf/contrib/registry/polaris/v2 v2.6.3
 	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.6.3
 	github.com/gogf/gf/contrib/trace/otlpgrpc/v2 v2.6.3
