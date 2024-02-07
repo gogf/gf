@@ -156,6 +156,7 @@ replace (
 	github.com/gogf/gf/contrib/nosql/redis/v2 => ../contrib/nosql/redis/
 	github.com/gogf/gf/contrib/registry/etcd/v2 => ../contrib/registry/etcd/
 	github.com/gogf/gf/contrib/registry/file/v2 => ../contrib/registry/file/
+	github.com/gogf/gf/contrib/registry/nacos/v2 => ../contrib/registry/nacos/
 	github.com/gogf/gf/contrib/registry/polaris/v2 => ../contrib/registry/polaris/
 	github.com/gogf/gf/contrib/rpc/grpcx/v2 => ../contrib/rpc/grpcx/
 	github.com/gogf/gf/contrib/trace/otlpgrpc/v2 => ../contrib/trace/otlpgrpc
