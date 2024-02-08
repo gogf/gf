@@ -14,4 +14,5 @@ type Issue2746 struct {
 	Nickname string      `json:"NICKNAME" ` // User Nickname
 	Tag      *gjson.Json `json:"TAG"      ` //
 	Info     string      `json:"INFO"     ` //
+	Tag2     *gjson.Json `json:"TAG_2"    ` // Tag2
 }
