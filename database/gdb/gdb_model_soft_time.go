@@ -219,10 +219,24 @@ func (m *softTimeMaintainer) getSoftFieldNameAndType(
 		intlog.Error(ctx, err)
 	}
 	if result != nil {
-		var cacheItem = result.Val().(getSoftFieldNameAndTypeCacheItem)
-		fieldName = cacheItem.FieldName
-		fieldType = cacheItem.FieldType
+		switch v := result.Val().(type) {
+		case getSoftFieldNameAndTypeCacheItem:
+			fieldName = v.FieldName
+			fieldType = v.FieldType
+		case string:
+			// 处理 string 类型的值
+			var cacheItem getSoftFieldNameAndTypeCacheItem
+			err := gconv.Scan(v, &cacheItem)
+			if err != nil {
+				return "", ""
+			}
+			fieldName = cacheItem.FieldName
+			fieldType = cacheItem.FieldType
+		default:
+			// 处理其他类型的值
+		}
 	}
+
 	return
 }
 
