@@ -740,9 +740,17 @@ func (c Core) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf(`%+v`, c)), nil
 }
 
-// writeSqlToLogger outputs the Sql object to logger.
+func (c *Core) writeSqlStartToLogger(ctx context.Context, sql *Sql) {
+	s := fmt.Sprintf(
+		"[%s] [%s] %s",
+		sql.Group, sql.Schema, sql.Format,
+	)
+	c.logger.Debug(ctx, s)
+}
+
+// writeSqlEndToLogger outputs the Sql object to logger.
 // It is enabled only if configuration "debug" is true.
-func (c *Core) writeSqlToLogger(ctx context.Context, sql *Sql) {
+func (c *Core) writeSqlEndToLogger(ctx context.Context, sql *Sql) {
 	var transactionIdStr string
 	if sql.IsTransaction {
 		if v := ctx.Value(transactionIdForLoggerCtx); v != nil {
@@ -750,8 +758,8 @@ func (c *Core) writeSqlToLogger(ctx context.Context, sql *Sql) {
 		}
 	}
 	s := fmt.Sprintf(
-		"[%3d ms] [%s] [%s] [rows:%-3d] %s%s",
-		sql.End-sql.Start, sql.Group, sql.Schema, sql.RowsAffected, transactionIdStr, sql.Format,
+		"[%3d ms] [rows:%-3d] %s%s",
+		sql.End-sql.Start, sql.RowsAffected, transactionIdStr, sql.Format,
 	)
 	if sql.Error != nil {
 		s += "\nError: " + sql.Error.Error()

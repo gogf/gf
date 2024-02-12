@@ -169,12 +169,23 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 		cancelFuncForTimeout context.CancelFunc
 		formattedSql         = FormatSqlWithArgs(in.Sql, in.Args)
 		timestampMilli1      = gtime.TimestampMilli()
+		sqlObj               = &Sql{
+			Format: formattedSql,
+			Start:  timestampMilli1,
+			Group:  c.db.GetGroup(),
+			Schema: c.db.GetSchema(),
+		}
 	)
 
 	// Trace span start.
 	tr := otel.GetTracerProvider().Tracer(traceInstrumentName, trace.WithInstrumentationVersion(gf.VERSION))
 	ctx, span := tr.Start(ctx, in.Type, trace.WithSpanKind(trace.SpanKindInternal))
 	defer span.End()
+
+	// Logging start.
+	if c.db.GetDebug() {
+		c.writeSqlStartToLogger(ctx, sqlObj)
+	}
 
 	// Execution cased by type.
 	switch in.Type {
@@ -256,29 +267,21 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 			sql:  in.Sql,
 		}
 	}
-	var (
-		timestampMilli2 = gtime.TimestampMilli()
-		sqlObj          = &Sql{
-			Sql:           in.Sql,
-			Type:          in.Type,
-			Args:          in.Args,
-			Format:        formattedSql,
-			Error:         err,
-			Start:         timestampMilli1,
-			End:           timestampMilli2,
-			Group:         c.db.GetGroup(),
-			Schema:        c.db.GetSchema(),
-			RowsAffected:  rowsAffected,
-			IsTransaction: in.IsTransaction,
-		}
-	)
+
+	sqlObj.Sql = in.Sql
+	sqlObj.Type = in.Type
+	sqlObj.Args = in.Args
+	sqlObj.IsTransaction = in.IsTransaction
+	sqlObj.RowsAffected = rowsAffected
+	sqlObj.Error = err
+	sqlObj.End = gtime.TimestampMilli()
 
 	// Tracing.
 	c.traceSpanEnd(ctx, span, sqlObj)
 
-	// Logging.
+	// Logging end.
 	if c.db.GetDebug() {
-		c.writeSqlToLogger(ctx, sqlObj)
+		c.writeSqlEndToLogger(ctx, sqlObj)
 	}
 	if err != nil && err != sql.ErrNoRows {
 		err = gerror.WrapCode(
