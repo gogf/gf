@@ -9,7 +9,6 @@ package mysql_test
 import (
 	"context"
 	"fmt"
-	"sync"
 	"testing"
 	"time"
 
@@ -1125,23 +1124,4 @@ func Test_Issue2643(t *testing.T) {
 		t.Assert(gstr.Contains(sqlContent, expectKey1), true)
 		t.Assert(gstr.Contains(sqlContent, expectKey2), true)
 	})
-}
-
-func TestA(t *testing.T) {
-	db.SetDebug(true)
-
-	var (
-		num = 5
-		wg  = sync.WaitGroup{}
-	)
-	wg.Add(num)
-
-	for i := 0; i < num; i++ {
-		go func(i int) {
-			defer wg.Done()
-			sql := fmt.Sprintf("select sleep(%d)", i)
-			db.Raw(sql).All()
-		}(i)
-	}
-	wg.Wait()
 }
