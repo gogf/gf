@@ -8,10 +8,7 @@ package sqlite
 
 import (
 	"context"
-
 	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
@@ -27,10 +24,8 @@ func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args [
 
 	default:
 		if gstr.Contains(sql, gdb.InsertOnDuplicateKeyUpdate) {
-			return sql, args, gerror.NewCode(
-				gcode.CodeNotSupported,
-				`Save operation is not supported by sqlite driver`,
-			)
+			sql = gstr.Replace(sql, gdb.InsertOperationInsert, gdb.InsertOperationReplace)
+			sql = gstr.StrTillEx(sql, gdb.InsertOnDuplicateKeyUpdate)
 		}
 	}
 	return d.Core.DoFilter(ctx, link, sql, args)

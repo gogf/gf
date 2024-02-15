@@ -425,19 +425,58 @@ func Test_DB_BatchInsert_Struct(t *testing.T) {
 }
 
 func Test_DB_Save(t *testing.T) {
-	table := createInitTable()
+	table := createTable()
 	defer dropTable(table)
-
 	gtest.C(t, func(t *gtest.T) {
-		timeStr := gtime.Now().String()
-		_, err := db.Save(ctx, table, g.Map{
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime *gtime.Time
+		}
+		var (
+			user  User
+			count int
+			err   error
+		)
+
+		_, err = db.Model(table).Data(g.Map{
 			"id":          1,
-			"passport":    "t1",
-			"password":    "25d55ad283aa400af464c76d713c07ad",
-			"nickname":    "T11",
-			"create_time": timeStr,
-		})
-		t.Assert(err, ErrorSave)
+			"passport":    "CN",
+			"password":    "12345678",
+			"nickname":    "oldme",
+			"create_time": CreateTime,
+		}).Save()
+		t.Assert(err, nil)
+
+		err = db.Model(table).Scan(&user)
+		t.Assert(err, nil)
+		t.Assert(user.Id, 1)
+		t.Assert(user.Passport, "CN")
+		t.Assert(user.Password, "12345678")
+		t.Assert(user.NickName, "oldme")
+		t.Assert(user.CreateTime.String(), CreateTime)
+
+		_, err = db.Model(table).Data(g.Map{
+			"id":          1,
+			"passport":    "CN",
+			"password":    "abc123456",
+			"nickname":    "HappyNewYear",
+			"create_time": CreateTime,
+		}).Save()
+		t.Assert(err, nil)
+
+		err = db.Model(table).Scan(&user)
+		t.Assert(err, nil)
+		t.Assert(user.Passport, "CN")
+		t.Assert(user.Password, "abc123456")
+		t.Assert(user.NickName, "HappyNewYear")
+		t.Assert(user.CreateTime.String(), CreateTime)
+
+		count, err = db.Model(table).Count()
+		t.Assert(err, nil)
+		t.Assert(count, 1)
 	})
 }
 
