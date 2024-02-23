@@ -8,6 +8,7 @@ package oracle
 
 import (
 	"database/sql"
+
 	gora "github.com/sijms/go-ora/v2"
 
 	"github.com/gogf/gf/v2/database/gdb"
@@ -51,6 +52,11 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 			}
 			for k, v := range extraMap {
 				options[k] = gconv.String(v)
+			}
+			// fix #3226
+			if k, ok := options["lob_fetch"]; ok {
+				options["lob fetch"] = k
+				delete(options, "lob_fetch")
 			}
 		}
 		source = gora.BuildUrl(
