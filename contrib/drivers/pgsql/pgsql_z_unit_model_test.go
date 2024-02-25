@@ -8,12 +8,11 @@ package pgsql_test
 
 import (
 	"fmt"
-	"testing"
-
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"testing"
 )
 
 func Test_Model_Insert(t *testing.T) {
@@ -320,7 +319,7 @@ func Test_Model_OnConflict(t *testing.T) {
 		}
 		_, err := db.Model(table).OnConflict("passport,password").Data(data).Save()
 		t.AssertNil(err)
-		one, err := db.Model(table).WherePri(1).One()
+		one, err := db.Model(table).Where("id", 1).One()
 		t.AssertNil(err)
 		t.Assert(one["passport"], data["passport"])
 		t.Assert(one["password"], data["password"])
@@ -338,7 +337,7 @@ func Test_Model_OnConflict(t *testing.T) {
 		}
 		_, err := db.Model(table).OnConflict("passport", "password").Data(data).Save()
 		t.AssertNil(err)
-		one, err := db.Model(table).WherePri(1).One()
+		one, err := db.Model(table).Where("id", 1).One()
 		t.AssertNil(err)
 		t.Assert(one["passport"], data["passport"])
 		t.Assert(one["password"], data["password"])
@@ -356,7 +355,7 @@ func Test_Model_OnConflict(t *testing.T) {
 		}
 		_, err := db.Model(table).OnConflict(g.Slice{"passport", "password"}).Data(data).Save()
 		t.AssertNil(err)
-		one, err := db.Model(table).WherePri(1).One()
+		one, err := db.Model(table).Where("id", 1).One()
 		t.AssertNil(err)
 		t.Assert(one["passport"], data["passport"])
 		t.Assert(one["password"], data["password"])
