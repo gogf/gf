@@ -487,9 +487,12 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 		keysStr      = charL + strings.Join(keys, charR+","+charL) + charR
 		operation    = GetInsertOperationByOption(option.InsertOption)
 	)
-	// `ON DUPLICATED...` statement only takes effect on Save operation.
+	// Upsert clause only takes effect on Save operation.
 	if option.InsertOption == InsertOptionSave {
-		onDuplicateStr = c.formatOnDuplicate(keys, option)
+		onDuplicateStr, err = c.db.DoFormatUpsert(keys, option)
+		if err != nil {
+			return nil, err
+		}
 	}
 	var (
 		listLength   = len(list)
@@ -535,49 +538,6 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 		}
 	}
 	return batchResult, nil
-}
-
-func (c *Core) formatOnDuplicate(columns []string, option DoInsertOption) string {
-	var onDuplicateStr string
-	if option.OnDuplicateStr != "" {
-		onDuplicateStr = option.OnDuplicateStr
-	} else if len(option.OnDuplicateMap) > 0 {
-		for k, v := range option.OnDuplicateMap {
-			if len(onDuplicateStr) > 0 {
-				onDuplicateStr += ","
-			}
-			switch v.(type) {
-			case Raw, *Raw:
-				onDuplicateStr += fmt.Sprintf(
-					"%s=%s",
-					c.QuoteWord(k),
-					v,
-				)
-			default:
-				onDuplicateStr += fmt.Sprintf(
-					"%s=VALUES(%s)",
-					c.QuoteWord(k),
-					c.QuoteWord(gconv.String(v)),
-				)
-			}
-		}
-	} else {
-		for _, column := range columns {
-			// If it's SAVE operation, do not automatically update the creating time.
-			if c.isSoftCreatedFieldName(column) {
-				continue
-			}
-			if len(onDuplicateStr) > 0 {
-				onDuplicateStr += ","
-			}
-			onDuplicateStr += fmt.Sprintf(
-				"%s=VALUES(%s)",
-				c.QuoteWord(column),
-				c.QuoteWord(column),
-			)
-		}
-	}
-	return InsertOnDuplicateKeyUpdate + " " + onDuplicateStr
 }
 
 // Update does "UPDATE ... " statement for the table.
@@ -798,8 +758,8 @@ func (c *Core) GetTablesWithCache() ([]string, error) {
 	return result.Strings(), nil
 }
 
-// isSoftCreatedFieldName checks and returns whether given field name is an automatic-filled created time.
-func (c *Core) isSoftCreatedFieldName(fieldName string) bool {
+// IsSoftCreatedFieldName checks and returns whether given field name is an automatic-filled created time.
+func (c *Core) IsSoftCreatedFieldName(fieldName string) bool {
 	if fieldName == "" {
 		return false
 	}

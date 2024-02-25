@@ -110,6 +110,8 @@ type DB interface {
 
 	DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, error) // See Core.DoPrepare.
 
+	DoFormatUpsert(columns []string, option DoInsertOption) (string, error) // See Core.DoFormatUpsert
+
 	// ===========================================================================
 	// Query APIs for convenience purpose.
 	// ===========================================================================
@@ -320,6 +322,7 @@ type Sql struct {
 type DoInsertOption struct {
 	OnDuplicateStr string                 // Custom string for `on duplicated` statement.
 	OnDuplicateMap map[string]interface{} // Custom key-value map from `OnDuplicateEx` function for `on duplicated` statement.
+	OnConflict     []string               // Custom conflict key of upsert clause, if the database needs it.
 	InsertOption   InsertOption           // Insert operation in constant value.
 	BatchCount     int                    // Batch count for batch inserting.
 }
