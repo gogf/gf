@@ -8,13 +8,12 @@ package gproc
 
 import (
 	"context"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/util/gutil"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
-
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // SigHandler defines a function type for signal handling.
@@ -23,6 +22,8 @@ type SigHandler func(sig os.Signal)
 var (
 	// Use internal variable to guarantee concurrent safety
 	// when multiple Listen happen.
+	listenOnce        = sync.Once{}
+	waitChan          = make(chan struct{})
 	signalChan        = make(chan os.Signal, 1)
 	signalHandlerMu   sync.Mutex
 	signalHandlerMap  = make(map[os.Signal][]SigHandler)
@@ -48,6 +49,7 @@ func AddSigHandler(handler SigHandler, signals ...os.Signal) {
 	for _, sig := range signals {
 		signalHandlerMap[sig] = append(signalHandlerMap[sig], handler)
 	}
+	notifySignals()
 }
 
 // AddSigHandlerShutdown adds custom signal handler for shutdown signals:
@@ -64,17 +66,26 @@ func AddSigHandlerShutdown(handler ...SigHandler) {
 			signalHandlerMap[sig] = append(signalHandlerMap[sig], h)
 		}
 	}
+	notifySignals()
 }
 
 // Listen blocks and does signal listening and handling.
 func Listen() {
+	listenOnce.Do(func() {
+		go listen()
+	})
+
+	<-waitChan
+}
+
+func listen() {
+	defer close(waitChan)
+
 	var (
-		signals = getHandlerSignals()
-		ctx     = context.Background()
-		wg      = sync.WaitGroup{}
-		sig     os.Signal
+		ctx = context.Background()
+		wg  = sync.WaitGroup{}
+		sig os.Signal
 	)
-	signal.Notify(signalChan, signals...)
 	for {
 		sig = <-signalChan
 		intlog.Printf(ctx, `signal received: %s`, sig.String())
@@ -108,14 +119,12 @@ func Listen() {
 	}
 }
 
-func getHandlerSignals() []os.Signal {
-	signalHandlerMu.Lock()
-	defer signalHandlerMu.Unlock()
+func notifySignals() {
 	var signals = make([]os.Signal, 0)
 	for s := range signalHandlerMap {
 		signals = append(signals, s)
 	}
-	return signals
+	signal.Notify(signalChan, signals...)
 }
 
 func getHandlersBySignal(sig os.Signal) []SigHandler {
