@@ -19,9 +19,13 @@ func Test_Signal(t *testing.T) {
 	)
 
 	clearTesting := func() {
+		signalHandlerMu.Lock()
+		defer signalHandlerMu.Unlock()
+
 		for sig, _ := range signalHandlerMap {
 			signalHandlerMap[sig] = make([]SigHandler, 0)
 		}
+
 		sigRec = nil
 		sigsRec = make([]os.Signal, 0)
 	}
