@@ -21,12 +21,6 @@ import (
 // DoInsert inserts or updates data forF given table.
 func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
 	switch option.InsertOption {
-	case gdb.InsertOptionSave:
-		//return nil, gerror.NewCode(
-		//	gcode.CodeNotSupported,
-		//	`Save operation is not supported by pgsql driver`,
-		//)
-
 	case gdb.InsertOptionReplace:
 		return nil, gerror.NewCode(
 			gcode.CodeNotSupported,
