@@ -8,11 +8,12 @@ package pgsql_test
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
-	"testing"
 )
 
 func Test_Model_Insert(t *testing.T) {
