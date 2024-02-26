@@ -75,7 +75,7 @@ require (
 	github.com/imdario/mergo v0.3.6 // indirect
 	github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af // indirect
 	github.com/josharian/intern v1.0.0 // indirect
-	github.com/joy999/nacos-sdk-go v0.0.0-20231008093845-7f2f84bc6faa // indirect
+	github.com/joy999/nacos-sdk-go v0.0.0-20231120071639-10a34b3e7288 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect

@@ -473,6 +473,7 @@ github.com/josharian/intern v1.0.0 h1:vlS4z54oSdjm0bgjRigI+G1HpF+tI+9rE5LLzOg8Hm
 github.com/josharian/intern v1.0.0/go.mod h1:5DoeVV0s6jJacbCEi61lwdGj/aVlrQvzHFFd8Hwg//Y=
 github.com/joy999/nacos-sdk-go v0.0.0-20231008093845-7f2f84bc6faa h1:FPzhsWW/aZQKw9tWOTvLc8lpKLGnPVBMaF0B+DIvKlc=
 github.com/joy999/nacos-sdk-go v0.0.0-20231008093845-7f2f84bc6faa/go.mod h1:vks3UUh7Hp+e5qbvDySGnvVCD0RYqjyDy/RpVMSf3xc=
+github.com/joy999/nacos-sdk-go v0.0.0-20231120071639-10a34b3e7288/go.mod h1:xF3RcNkFUEIik3RCihkvgORtZXZXlp+OeGK0aUALVYU=
 github.com/jpillora/backoff v1.0.0/go.mod h1:J/6gKK9jxlEcS3zixgDgUAsiuZ7yrSoa/FX5e0EB2j4=
 github.com/json-iterator/go v1.1.5/go.mod h1:+SdeFBvtyEkXs7REEP0seUULqWtbJapLOCVDaaPEHmU=
 github.com/json-iterator/go v1.1.6/go.mod h1:+SdeFBvtyEkXs7REEP0seUULqWtbJapLOCVDaaPEHmU=

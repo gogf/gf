@@ -9,77 +9,82 @@ import (
 )
 
 func Test_Signal(t *testing.T) {
-	var (
-		sigRec     os.Signal
-		sigsRec    = make([]os.Signal, 0)
-		sigHandler = func(sig os.Signal) {
-			sigRec = sig
-			sigsRec = append(sigsRec, sig)
-		}
-	)
-
-	clearTesting := func() {
-		signalHandlerMu.Lock()
-		defer signalHandlerMu.Unlock()
-
-		for sig, _ := range signalHandlerMap {
-			signalHandlerMap[sig] = make([]SigHandler, 0)
-		}
-
-		sigRec = nil
-		sigsRec = make([]os.Signal, 0)
-	}
-
 	go Listen()
 
 	// non shutdown signal
 	gtest.C(t, func(t *gtest.T) {
-		defer clearTesting()
+		sigRec := make(chan os.Signal, 1)
+		AddSigHandler(func(sig os.Signal) {
+			sigRec <- sig
+		}, syscall.SIGUSR1, syscall.SIGUSR2)
 
-		AddSigHandler(sigHandler, syscall.SIGUSR1, syscall.SIGUSR2)
+		sendSignal(syscall.SIGUSR1)
+		select {
+		case s := <-sigRec:
+			t.AssertEQ(s, syscall.SIGUSR1)
+			t.AssertEQ(false, isWaitChClosed())
+		case <-time.After(time.Second):
+			t.Error("signal SIGUSR1 handler timeout")
+		}
 
-		sendSignalWithSleep(syscall.SIGUSR1)
-		t.AssertEQ(sigRec, syscall.SIGUSR1)
-		t.AssertEQ(false, isWaitChClosed())
+		sendSignal(syscall.SIGUSR2)
+		select {
+		case s := <-sigRec:
+			t.AssertEQ(s, syscall.SIGUSR2)
+			t.AssertEQ(false, isWaitChClosed())
+		case <-time.After(time.Second):
+			t.Error("signal SIGUSR2 handler timeout")
+		}
 
-		sendSignalWithSleep(syscall.SIGUSR2)
-		t.AssertEQ(sigRec, syscall.SIGUSR2)
-		t.AssertEQ(false, isWaitChClosed())
+		sendSignal(syscall.SIGHUP)
+		select {
+		case <-sigRec:
+			t.Error("signal SIGHUP should not be listen")
+		case <-time.After(time.Millisecond * 100):
+		}
 
-		sendSignalWithSleep(syscall.SIGHUP)
-		t.AssertNE(sigRec, syscall.SIGHUP)
-		t.AssertEQ(false, isWaitChClosed())
-	})
-
-	// test multiple listen case
-	gtest.C(t, func(t *gtest.T) {
+		// multiple listen
 		go Listen()
-		defer clearTesting()
-
-		AddSigHandler(sigHandler, syscall.SIGUSR1)
-		sendSignalWithSleep(syscall.SIGUSR1)
-		t.AssertEQ(sigRec, syscall.SIGUSR1)
-		t.AssertEQ(len(sigsRec), 1)
+		go Listen()
+		sendSignal(syscall.SIGUSR1)
+		cnt := 0
+		timeout := time.After(time.Second)
+		for {
+			select {
+			case <-sigRec:
+				cnt++
+			case <-timeout:
+				if cnt == 0 {
+					t.Error("signal SIGUSR2 handler timeout")
+				}
+				if cnt != 1 {
+					t.Error("multi Listen() repetitive execution")
+				}
+				return
+			}
+		}
 	})
 
 	// test shutdown signal
 	gtest.C(t, func(t *gtest.T) {
-		defer func() {
-			clearTesting()
-			waitChan = make(chan struct{}) // channel will be closed when shutdown signal received, reset wait chan
-		}()
+		sigRec := make(chan os.Signal, 1)
+		AddSigHandlerShutdown(func(sig os.Signal) {
+			sigRec <- sig
+		})
 
-		AddSigHandlerShutdown(sigHandler)
-
-		sendSignalWithSleep(syscall.SIGTERM)
-		t.AssertEQ(sigRec, syscall.SIGTERM)
-		t.AssertEQ(true, isWaitChClosed())
+		sendSignal(syscall.SIGTERM)
+		select {
+		case s := <-sigRec:
+			t.AssertEQ(s, syscall.SIGTERM)
+			t.AssertEQ(true, isWaitChClosed())
+		case <-time.After(time.Second):
+			t.Error("signal SIGUSR2 handler timeout")
+		}
 	})
 }
 
-func sendSignalWithSleep(sig os.Signal) {
+func sendSignal(sig os.Signal) {
 	signalChan <- sig
-	time.Sleep(time.Millisecond * 100) // make sure handlers executed
 }
 
 func isWaitChClosed() bool {
