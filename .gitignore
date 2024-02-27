@@ -17,3 +17,8 @@ temp/
 go.work
 go.work.sum
 !cmd/gf/go.work
+
+# Ignore for docs
+node_modules
+.docusaurus
+output
