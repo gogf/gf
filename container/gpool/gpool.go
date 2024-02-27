@@ -25,7 +25,7 @@ type Pool struct {
 	closed  *gtype.Bool                 // Whether the pool is closed.
 	TTL     time.Duration               // Time To Live for pool items.
 	NewFunc func() (interface{}, error) // Callback function to create pool item.
-	// ExpireFunc is the for expired items destruction.
+	// ExpireFunc is the function for expired items destruction.
 	// This function needs to be defined when the pool items
 	// need to perform additional destruction operations.
 	// Eg: net.Conn, os.File, etc.
