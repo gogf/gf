@@ -461,6 +461,23 @@ func ExampleCache_Removes() {
 	// map[k4:v4]
 }
 
+func ExampleCache_Clear() {
+	// Create a cache object,
+	// Of course, you can also easily use the gcache package method directly
+	c := gcache.New()
+
+	c.SetMap(ctx, g.MapAnyAny{"k1": "v1", "k2": "v2", "k3": "v3", "k4": "v4"}, 0)
+
+	// clears all data of the cache.
+	c.Clear(ctx)
+
+	data, _ := c.Data(ctx)
+	fmt.Println(data)
+
+	// Output:
+	// map[]
+}
+
 func ExampleCache_MustGet() {
 	// Intercepting panic exception information
 	// err is empty, so panic is not performed
