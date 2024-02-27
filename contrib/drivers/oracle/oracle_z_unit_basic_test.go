@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/util/gconv"
 
 	"github.com/gogf/gf/v2/frame/g"
@@ -690,5 +691,24 @@ func Test_Empty_Slice_Argument(t *testing.T) {
 		result, err := db.GetAll(ctx, fmt.Sprintf(`select * from %s where id in(?)`, table), g.Slice{})
 		t.AssertNil(err)
 		t.Assert(len(result), 0)
+	})
+}
+
+// fix #3226
+func Test_Extra(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		nodeLink := gdb.ConfigNode{
+			Type: TestDbType,
+			Name: TestDbName,
+			Link: fmt.Sprintf("%s:%s:%s@tcp(%s:%s)/%s?lob fetch=post&SSL VERIFY=false",
+				TestDbType, TestDbUser, TestDbPass, TestDbIP, TestDbPort, TestDbName,
+			),
+		}
+		if r, err := gdb.New(nodeLink); err != nil {
+			gtest.Fatal(err)
+		} else {
+			err1 := r.PingMaster()
+			t.Assert(err1, nil)
+		}
 	})
 }
