@@ -8,10 +8,6 @@ package cmd
 
 import (
 	"fmt"
-	"path/filepath"
-	"testing"
-	"time"
-
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/gendao"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -19,6 +15,8 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/guid"
 	"github.com/gogf/gf/v2/util/gutil"
+	"path/filepath"
+	"testing"
 )
 
 func Test_Gen_Dao_Default(t *testing.T) {
@@ -409,21 +407,11 @@ func Test_Gen_Dao_Issue2746(t *testing.T) {
 		)
 
 		db, err = gdb.New(gdb.ConfigNode{
-			Type: "mariadb",
-			User: "root",
-			Pass: "12345678",
-			Host: "127.0.0.1",
-			Port: "3307",
-			Name: "test",
-
-			//Link:        link2746,
-			MaxConnLifeTime: 3000 * time.Second,
-			ExecTimeout:     3000 * time.Second,
+			Link: link2746,
 		})
 		t.AssertNil(err)
 
 		array := gstr.SplitAndTrim(sqlContent, ";")
-		db.SetMaxConnLifeTime(10 * time.Minute)
 		for _, v := range array {
 			if _, err = db.Exec(ctx, v); err != nil {
 				t.AssertNil(err)

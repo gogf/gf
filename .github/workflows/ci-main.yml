@@ -70,7 +70,6 @@ jobs:
       mariadb:
         image: loads/mariadb:10.4
         env:
-          MARIADB_DATABASE: test
           MARIADB_ROOT_PASSWORD: 12345678
         ports:
           - 3307:3307
