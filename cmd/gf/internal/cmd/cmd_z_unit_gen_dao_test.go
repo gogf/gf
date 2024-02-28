@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/gendao"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -408,7 +409,8 @@ func Test_Gen_Dao_Issue2746(t *testing.T) {
 		)
 
 		db, err = gdb.New(gdb.ConfigNode{
-			Link: link2746,
+			Link:            link2746,
+			MaxConnLifeTime: 300 * time.Second,
 		})
 		t.AssertNil(err)
 
