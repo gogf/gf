@@ -412,7 +412,6 @@ func Test_Gen_Dao_Issue2746(t *testing.T) {
 		})
 		t.AssertNil(err)
 
-		dropTableWithDb(db, table)
 		array := gstr.SplitAndTrim(sqlContent, ";")
 		for _, v := range array {
 			if _, err = db.Exec(ctx, v); err != nil {
