@@ -409,8 +409,14 @@ func Test_Gen_Dao_Issue2746(t *testing.T) {
 		)
 
 		db, err = gdb.New(gdb.ConfigNode{
-			Link: link2746,
-			//MaxConnLifeTime: 3000 * time.Second,
+			Type: "mariadb",
+			User: "root",
+			Pass: "12345678",
+			Host: "127.0.0.1",
+			Port: "3307",
+			Name: "test",
+
+			//Link:        link2746,
 			ExecTimeout: 3000 * time.Second,
 		})
 		t.AssertNil(err)
