@@ -50,7 +50,7 @@ type Options struct {
 }
 
 var (
-	// defaultDelimiters defines the default language if user does not specify in options.
+	// defaultLanguage defines the default language if user does not specify in options.
 	defaultLanguage = "en"
 
 	// defaultDelimiters defines the default key variable delimiters.
