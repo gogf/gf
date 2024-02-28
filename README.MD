@@ -62,7 +62,8 @@ golang version >= 1.18
 # Documentation
 
 - Chinese Official Site(中文官网): [https://goframe.org](https://goframe.org/display/gf)
-- Offline Document(中文离线文档): [https://github.com/gogf/goframe.org-pdf](https://github.com/gogf/goframe.org-pdf)
+- Chinese Pages Document(中文镜像文档): [https://pages.goframe.org](https://pages.goframe.org)
+- Chinese Offline Document(中文离线文档): [https://github.com/gogf/goframe.org-pdf](https://github.com/gogf/goframe.org-pdf)
 - GoDoc API: [https://pkg.go.dev/github.com/gogf/gf/v2](https://pkg.go.dev/github.com/gogf/gf/v2)
 
 # License
