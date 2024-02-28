@@ -119,7 +119,7 @@ func (m *Model) Data(data ...interface{}) *Model {
 }
 
 // OnConflict sets the primary key or index when columns conflicts occurs.
-// In MySQL, it's not needed.
+// It's not necessary for MySQL driver.
 func (m *Model) OnConflict(onConflict ...interface{}) *Model {
 	if len(onConflict) == 0 {
 		return m
