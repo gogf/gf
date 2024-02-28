@@ -417,7 +417,8 @@ func Test_Gen_Dao_Issue2746(t *testing.T) {
 			Name: "test",
 
 			//Link:        link2746,
-			ExecTimeout: 3000 * time.Second,
+			MaxConnLifeTime: 3000 * time.Second,
+			ExecTimeout:     3000 * time.Second,
 		})
 		t.AssertNil(err)
 
