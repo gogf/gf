@@ -8,13 +8,14 @@ package oracle
 
 import (
 	"database/sql"
+	"strings"
+
 	gora "github.com/sijms/go-ora/v2"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gregex"
-	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -45,12 +46,13 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 		}
 	} else {
 		if config.Extra != "" {
-			var extraMap map[string]interface{}
-			if extraMap, err = gstr.Parse(config.Extra); err != nil {
-				return nil, err
-			}
-			for k, v := range extraMap {
-				options[k] = gconv.String(v)
+			// fix #3226
+			list := strings.Split(config.Extra, "&")
+			for _, v := range list {
+				kv := strings.Split(v, "=")
+				if len(kv) == 2 {
+					options[kv[0]] = kv[1]
+				}
 			}
 		}
 		source = gora.BuildUrl(

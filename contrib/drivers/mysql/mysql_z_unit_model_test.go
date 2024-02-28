@@ -3646,7 +3646,7 @@ func Test_Model_OnDuplicate(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
-	// string.
+	// string type 1.
 	gtest.C(t, func(t *gtest.T) {
 		data := g.Map{
 			"id":          1,
@@ -3656,6 +3656,24 @@ func Test_Model_OnDuplicate(t *testing.T) {
 			"create_time": "2016-06-06",
 		}
 		_, err := db.Model(table).OnDuplicate("passport,password").Data(data).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one["passport"], data["passport"])
+		t.Assert(one["password"], data["password"])
+		t.Assert(one["nickname"], "name_1")
+	})
+
+	// string type 2.
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			"id":          1,
+			"passport":    "pp1",
+			"password":    "pw1",
+			"nickname":    "n1",
+			"create_time": "2016-06-06",
+		}
+		_, err := db.Model(table).OnDuplicate("passport", "password").Data(data).Save()
 		t.AssertNil(err)
 		one, err := db.Model(table).WherePri(1).One()
 		t.AssertNil(err)
@@ -3729,7 +3747,7 @@ func Test_Model_OnDuplicateEx(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
-	// string.
+	// string type 1.
 	gtest.C(t, func(t *gtest.T) {
 		data := g.Map{
 			"id":          1,
@@ -3739,6 +3757,24 @@ func Test_Model_OnDuplicateEx(t *testing.T) {
 			"create_time": "2016-06-06",
 		}
 		_, err := db.Model(table).OnDuplicateEx("nickname,create_time").Data(data).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one["passport"], data["passport"])
+		t.Assert(one["password"], data["password"])
+		t.Assert(one["nickname"], "name_1")
+	})
+
+	// string type 2.
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			"id":          1,
+			"passport":    "pp1",
+			"password":    "pw1",
+			"nickname":    "n1",
+			"create_time": "2016-06-06",
+		}
+		_, err := db.Model(table).OnDuplicateEx("nickname", "create_time").Data(data).Save()
 		t.AssertNil(err)
 		one, err := db.Model(table).WherePri(1).One()
 		t.AssertNil(err)
