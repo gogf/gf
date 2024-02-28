@@ -397,7 +397,7 @@ func Test_Gen_Dao_Issue2746(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err        error
-			db         gdb.DB
+			mdb        gdb.DB
 			link2746   = "mariadb:root:12345678@tcp(127.0.0.1:3307)/test?loc=Local&parseTime=true"
 			table      = "issue2746"
 			sqlContent = fmt.Sprintf(
@@ -405,19 +405,18 @@ func Test_Gen_Dao_Issue2746(t *testing.T) {
 				table,
 			)
 		)
-
-		db, err = gdb.New(gdb.ConfigNode{
+		mdb, err = gdb.New(gdb.ConfigNode{
 			Link: link2746,
 		})
 		t.AssertNil(err)
 
 		array := gstr.SplitAndTrim(sqlContent, ";")
 		for _, v := range array {
-			if _, err = db.Exec(ctx, v); err != nil {
+			if _, err = mdb.Exec(ctx, v); err != nil {
 				t.AssertNil(err)
 			}
 		}
-		defer dropTableWithDb(db, table)
+		defer dropTableWithDb(mdb, table)
 
 		var (
 			path  = gfile.Temp(guid.S())
