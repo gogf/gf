@@ -409,8 +409,9 @@ func Test_Gen_Dao_Issue2746(t *testing.T) {
 		)
 
 		db, err = gdb.New(gdb.ConfigNode{
-			Link:            link2746,
-			MaxConnLifeTime: 300 * time.Second,
+			Link: link2746,
+			//MaxConnLifeTime: 3000 * time.Second,
+			ExecTimeout: 3000 * time.Second,
 		})
 		t.AssertNil(err)
 
