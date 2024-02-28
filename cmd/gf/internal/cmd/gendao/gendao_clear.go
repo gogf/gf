@@ -25,7 +25,7 @@ func doClear(ctx context.Context, in CGenDaoInput) {
 	allGeneratedFilePaths = append(allGeneratedFilePaths, in.generatedFilePaths.DaoInternalFilePaths...)
 	allGeneratedFilePaths = append(allGeneratedFilePaths, in.generatedFilePaths.EntityFilePaths...)
 	allGeneratedFilePaths = append(allGeneratedFilePaths, in.generatedFilePaths.DoFilePaths...)
-	// file seperator replacement, to guarantee the string comparison.
+	// file separator replacement, to guarantee the string comparison.
 	for i, v := range filePaths {
 		filePaths[i] = gstr.Replace(v, `\`, `/`)
 	}
