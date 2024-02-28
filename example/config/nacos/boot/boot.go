@@ -7,8 +7,8 @@
 package boot
 
 import (
-	"github.com/nacos-group/nacos-sdk-go/common/constant"
-	"github.com/nacos-group/nacos-sdk-go/vo"
+	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
+	"github.com/nacos-group/nacos-sdk-go/v2/vo"
 
 	"github.com/gogf/gf/contrib/config/nacos/v2"
 	"github.com/gogf/gf/v2/frame/g"
