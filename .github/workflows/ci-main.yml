@@ -73,7 +73,7 @@ jobs:
           MARIADB_DATABASE: test
           MARIADB_ROOT_PASSWORD: 12345678
         ports:
-          - 3307:3307
+          - 3307:3306
 
       # PostgreSQL backend server.
       # docker run -d --name postgres \
