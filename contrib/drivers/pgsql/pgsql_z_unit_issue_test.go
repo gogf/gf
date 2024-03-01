@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 )
@@ -41,5 +42,23 @@ func Test_Issue3330(t *testing.T) {
 
 		t.Assert(fields["id"].Key, "pri")
 		t.Assert(fields["password"].Key, "uni")
+
+		data := g.Map{
+			"id":          1,
+			"passport":    "pp1",
+			"password":    "pw1",
+			"nickname":    "n1",
+			"create_time": "2016-06-06",
+		}
+		_, err = db.Model(table).Data(data).Insert()
+		t.AssertNil(err)
+
+		for i := 0; i < 10; i++ {
+			one, err := db.Model(table).WherePri(1).One()
+			t.AssertNil(err)
+			t.Assert(one["passport"], data["passport"])
+			t.Assert(one["password"], data["password"])
+			t.Assert(one["nickname"], "n1")
+		}
 	})
 }
