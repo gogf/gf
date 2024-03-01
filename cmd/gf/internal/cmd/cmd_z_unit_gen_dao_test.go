@@ -14,7 +14,6 @@ import (
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/gendao"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/guid"
@@ -401,7 +400,7 @@ func Test_Gen_Dao_Issue2746(t *testing.T) {
 			err        error
 			mdb        gdb.DB
 			link2746   = "mariadb:root:12345678@tcp(127.0.0.1:3307)/test?loc=Local&parseTime=true"
-			table      = "issue2746" + gtime.TimestampMicroStr()
+			table      = "issue2746"
 			sqlContent = fmt.Sprintf(
 				gtest.DataContent(`issue`, `2746`, `sql.sql`),
 				table,
