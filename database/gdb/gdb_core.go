@@ -489,7 +489,7 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 	)
 	// Upsert clause only takes effect on Save operation.
 	if option.InsertOption == InsertOptionSave {
-		onDuplicateStr, err = c.db.FormatUpsert(keys, option)
+		onDuplicateStr, err = c.db.FormatUpsert(keys, list, option)
 		if err != nil {
 			return nil, err
 		}
