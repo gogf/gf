@@ -110,8 +110,6 @@ type DB interface {
 
 	DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, error) // See Core.DoPrepare.
 
-	DoFormatUpsert(columns []string, option DoInsertOption) (string, error) // See Core.DoFormatUpsert
-
 	// ===========================================================================
 	// Query APIs for convenience purpose.
 	// ===========================================================================
@@ -177,6 +175,7 @@ type DB interface {
 	ConvertValueForField(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) // See Core.ConvertValueForField
 	ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) // See Core.ConvertValueForLocal
 	CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (LocalType, error) // See Core.CheckLocalTypeForField
+	FormatUpsert(columns []string, option DoInsertOption) (string, error)                                    // See Core.DoFormatUpsert
 }
 
 // TX defines the interfaces for ORM transaction operations.

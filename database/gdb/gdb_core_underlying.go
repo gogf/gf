@@ -353,8 +353,10 @@ func (c *Core) DoPrepare(ctx context.Context, link Link, sql string) (stmt *Stmt
 	return out.Stmt, err
 }
 
-// DoFormatUpsert returns SQL clause for type upsert.
-func (c *Core) DoFormatUpsert(columns []string, option DoInsertOption) (string, error) {
+// FormatUpsert formats and returns SQL clause part for upsert statement.
+// In default implements, this function performs upsert statement for MySQL like:
+// `INSERT INTO ... ON DUPLICATE KEY UPDATE x=VALUES(z),m=VALUES(y)...`
+func (c *Core) FormatUpsert(columns []string, option DoInsertOption) (string, error) {
 	var onDuplicateStr string
 	if option.OnDuplicateStr != "" {
 		onDuplicateStr = option.OnDuplicateStr
