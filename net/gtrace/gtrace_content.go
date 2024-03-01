@@ -4,20 +4,19 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gtrace provides convenience wrapping functionality for tracing feature using OpenTelemetry.
 package gtrace
 
 import (
 	"bytes"
 	"compress/gzip"
 	"fmt"
-	"github.com/gogf/gf/v2/text/gstr"
 	"io"
+
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // SafeContent safe trace content
 func SafeContent(data []byte) (string, error) {
-
 	var err error
 	if IsGzipped(data) {
 		if data, err = unCompressGzip(data); err != nil {
@@ -27,15 +26,14 @@ func SafeContent(data []byte) (string, error) {
 
 	content := string(data)
 	if gstr.LenRune(content) > MaxContentLogSize() {
-
 		content = gstr.StrLimitRune(content, MaxContentLogSize(), "...")
 	}
 
 	return content, nil
 }
 
+// unCompressGzip decode gzip content
 func unCompressGzip(data []byte) ([]byte, error) {
-
 	reader, err := gzip.NewReader(bytes.NewReader(data))
 	if err != nil {
 		return nil, fmt.Errorf(`read gzip response err:%+v`, err)
@@ -50,8 +48,8 @@ func unCompressGzip(data []byte) ([]byte, error) {
 	return uncompressed, nil
 }
 
+// IsGzipped check content was gzip
 func IsGzipped(input []byte) bool {
-
 	if len(input) < 2 {
 		return false
 	}

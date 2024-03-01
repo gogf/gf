@@ -7,9 +7,10 @@
 package gtrace_test
 
 import (
-	"github.com/gogf/gf/v2/encoding/gcompress"
 	"strings"
 	"testing"
+
+	"github.com/gogf/gf/v2/encoding/gcompress"
 
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/test/gtest"
