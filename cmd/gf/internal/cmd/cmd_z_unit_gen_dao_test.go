@@ -8,6 +8,9 @@ package cmd
 
 import (
 	"fmt"
+	"path/filepath"
+	"testing"
+
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/gendao"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -16,8 +19,6 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/guid"
 	"github.com/gogf/gf/v2/util/gutil"
-	"path/filepath"
-	"testing"
 )
 
 func Test_Gen_Dao_Default(t *testing.T) {
