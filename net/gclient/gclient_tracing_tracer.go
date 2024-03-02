@@ -152,7 +152,7 @@ func (ct *clientTracer) wroteRequest(info httptrace.WroteRequestInfo) {
 		ct.span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, info.Err))
 	}
 
-	reqBodyContent, err := gtrace.SafeContent(ct.requestBody)
+	reqBodyContent, err := gtrace.SafeContent(ct.requestBody, ct.request.Header)
 	if err != nil {
 		ct.span.SetStatus(codes.Error, fmt.Sprintf(`safe req content:%+v`, err))
 	}

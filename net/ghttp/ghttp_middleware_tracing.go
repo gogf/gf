@@ -88,7 +88,7 @@ func internalMiddlewareServerTracing(r *Request) {
 		return
 	}
 	r.Body = utils.NewReadCloser(reqBodyContentBytes, false)
-	reqBodyContent, err := gtrace.SafeContent(reqBodyContentBytes)
+	reqBodyContent, err := gtrace.SafeContent(reqBodyContentBytes, r.Header)
 	if err != nil {
 		span.SetStatus(codes.Error, fmt.Sprintf(`safe req content:%+v`, err))
 	}
@@ -109,7 +109,7 @@ func internalMiddlewareServerTracing(r *Request) {
 	}
 
 	// Response content logging.
-	resBodyContent, err := gtrace.SafeContent(r.Response.Buffer())
+	resBodyContent, err := gtrace.SafeContent(r.Response.Buffer(), r.Response.Header())
 	if err != nil {
 		span.SetStatus(codes.Error, fmt.Sprintf(`safe res content:%+v`, err))
 	}

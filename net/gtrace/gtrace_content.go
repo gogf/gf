@@ -7,19 +7,19 @@
 package gtrace
 
 import (
-	"bytes"
-	"compress/gzip"
-	"fmt"
-	"io"
+	"net/http"
+	"strings"
+
+	"github.com/gogf/gf/v2/encoding/gcompress"
 
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // SafeContent safe trace content
-func SafeContent(data []byte) (string, error) {
+func SafeContent(data []byte, header http.Header) (string, error) {
 	var err error
-	if IsGzipped(data) {
-		if data, err = unCompressGzip(data); err != nil {
+	if GzipAccepted(header) {
+		if data, err = gcompress.UnGzip(data); err != nil {
 			return string(data), err
 		}
 	}
@@ -32,27 +32,16 @@ func SafeContent(data []byte) (string, error) {
 	return content, nil
 }
 
-// unCompressGzip decode gzip content
-func unCompressGzip(data []byte) ([]byte, error) {
-	reader, err := gzip.NewReader(bytes.NewReader(data))
-	if err != nil {
-		return nil, fmt.Errorf(`read gzip response err:%+v`, err)
-	}
-	defer reader.Close()
-
-	uncompressed, err := io.ReadAll(reader)
-	if err != nil {
-		return data, fmt.Errorf(`get uncompress value err:%+v`, err)
+// GzipAccepted returns whether the client will accept gzip-encoded content.
+func GzipAccepted(header http.Header) bool {
+	a := header.Get("Content-Encoding")
+	parts := strings.Split(a, ",")
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "gzip" || strings.HasPrefix(part, "gzip;") {
+			return true
+		}
 	}
 
-	return uncompressed, nil
-}
-
-// IsGzipped check content was gzip
-func IsGzipped(input []byte) bool {
-	if len(input) < 2 {
-		return false
-	}
-
-	return (int64(input[0])&0xff | (int64(int64(input[1])<<8) & 0xff00)) == 0x8b1f
+	return false
 }
