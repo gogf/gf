@@ -6,8 +6,21 @@
 
 package gendao
 
+type (
+	CGenDaoInternalGenItems struct {
+		index int
+		Items []CGenDaoInternalGenItem
+	}
+	CGenDaoInternalGenItem struct {
+		Clear              bool
+		StorageDirPaths    []string
+		GeneratedFilePaths []string
+	}
+)
+
 func newCGenDaoInternalGenItems() *CGenDaoInternalGenItems {
 	return &CGenDaoInternalGenItems{
+		index: -1,
 		Items: make([]CGenDaoInternalGenItem, 0),
 	}
 }
@@ -18,43 +31,23 @@ func (i *CGenDaoInternalGenItems) Scale() {
 		GeneratedFilePaths: make([]string, 0),
 		Clear:              false,
 	})
+	i.index++
 }
 
 func (i *CGenDaoInternalGenItems) SetClear(clear bool) {
-	var (
-		index  = 0
-		length = len(i.Items)
-	)
-	if length > 0 {
-		index = length - 1
-	}
-	i.Items[index].Clear = clear
+	i.Items[i.index].Clear = clear
 }
 
 func (i CGenDaoInternalGenItems) AppendDirPath(storageDirPath string) {
-	var (
-		index  = 0
-		length = len(i.Items)
-	)
-	if length > 0 {
-		index = length - 1
-	}
-	i.Items[index].StorageDirPaths = append(
-		i.Items[index].StorageDirPaths,
+	i.Items[i.index].StorageDirPaths = append(
+		i.Items[i.index].StorageDirPaths,
 		storageDirPath,
 	)
 }
 
 func (i CGenDaoInternalGenItems) AppendGeneratedFilePath(generatedFilePath string) {
-	var (
-		index  = 0
-		length = len(i.Items)
-	)
-	if length > 0 {
-		index = length - 1
-	}
-	i.Items[index].GeneratedFilePaths = append(
-		i.Items[index].GeneratedFilePaths,
+	i.Items[i.index].GeneratedFilePaths = append(
+		i.Items[i.index].GeneratedFilePaths,
 		generatedFilePath,
 	)
 }

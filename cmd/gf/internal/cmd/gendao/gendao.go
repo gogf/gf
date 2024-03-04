@@ -213,15 +213,6 @@ type (
 		NewTableNames []string
 	}
 
-	CGenDaoInternalGenItems struct {
-		Items []CGenDaoInternalGenItem
-	}
-	CGenDaoInternalGenItem struct {
-		Clear              bool
-		StorageDirPaths    []string
-		GeneratedFilePaths []string
-	}
-
 	DBFieldTypeName     = string
 	CustomAttributeType struct {
 		Type   string `brief:"custom attribute type name"`
