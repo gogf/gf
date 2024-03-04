@@ -69,24 +69,24 @@ func TestSafeContent(t *testing.T) {
 			"Content-Encoding": []string{"gzip"},
 		}
 	)
-	gtest.C(t, func(t *gtest.T) {
-		t.AssertEQ(gtrace.GzipAccepted(gzipHeader), true)
-	})
 
 	// safe content
 	gtest.C(t, func(t *gtest.T) {
 
-		t1, err := gtrace.SafeContent([]byte(shortData), header)
+		t1, err := gtrace.SafeContentForHttp([]byte(shortData), header)
 		t.AssertNil(err)
 		t.Assert(t1, shortData)
+		t.Assert(gtrace.SafeContent([]byte(shortData)), shortData)
 
-		t2, err := gtrace.SafeContent([]byte(standData), header)
+		t2, err := gtrace.SafeContentForHttp([]byte(standData), header)
 		t.AssertNil(err)
 		t.Assert(t2, standData)
+		t.Assert(gtrace.SafeContent([]byte(standData)), standData)
 
-		t3, err := gtrace.SafeContent([]byte(longData), header)
+		t3, err := gtrace.SafeContentForHttp([]byte(longData), header)
 		t.AssertNil(err)
 		t.Assert(t3, standData+"...")
+		t.Assert(gtrace.SafeContent([]byte(longData)), standData+"...")
 	})
 
 	// compress content
@@ -97,15 +97,15 @@ func TestSafeContent(t *testing.T) {
 	)
 	gtest.C(t, func(t *gtest.T) {
 
-		t1, err := gtrace.SafeContent(compressShortData, gzipHeader)
+		t1, err := gtrace.SafeContentForHttp(compressShortData, gzipHeader)
 		t.AssertNil(err)
 		t.Assert(t1, shortData)
 
-		t2, err := gtrace.SafeContent(compressStandData, gzipHeader)
+		t2, err := gtrace.SafeContentForHttp(compressStandData, gzipHeader)
 		t.AssertNil(err)
 		t.Assert(t2, standData)
 
-		t3, err := gtrace.SafeContent(compressLongData, gzipHeader)
+		t3, err := gtrace.SafeContentForHttp(compressLongData, gzipHeader)
 		t.AssertNil(err)
 		t.Assert(t3, standData+"...")
 	})

@@ -91,9 +91,9 @@ func internalMiddlewareTracing(c *Client, r *http.Request) (response *Response, 
 	reqBodyContentBytes, _ := io.ReadAll(response.Body)
 	response.Body = utils.NewReadCloser(reqBodyContentBytes, false)
 
-	resBodyContent, err := gtrace.SafeContent(reqBodyContentBytes, response.Header)
+	resBodyContent, err := gtrace.SafeContentForHttp(reqBodyContentBytes, response.Header)
 	if err != nil {
-		span.SetStatus(codes.Error, fmt.Sprintf(`safe res content:%+v`, err))
+		span.SetStatus(codes.Error, fmt.Sprintf(`converting safe content failed: %s`, err.Error()))
 	}
 
 	span.AddEvent(tracingEventHttpResponse, trace.WithAttributes(
