@@ -48,8 +48,9 @@ type Model struct {
 	hookHandler    HookHandler       // Hook functions for model hook feature.
 	unscoped       bool              // Disables soft deleting features when select/delete operations.
 	safe           bool              // If true, it clones and returns a new model object whenever operation done; or else it changes the attribute of current model.
-	onDuplicate    interface{}       // onDuplicate is used for ON "DUPLICATE KEY UPDATE" statement.
-	onDuplicateEx  interface{}       // onDuplicateEx is used for excluding some columns ON "DUPLICATE KEY UPDATE" statement.
+	onDuplicate    interface{}       // onDuplicate is used for on Upsert clause.
+	onDuplicateEx  interface{}       // onDuplicateEx is used for excluding some columns on Upsert clause.
+	onConflict     interface{}       // onConflict is used for conflict keys on Upsert clause.
 	tableAliasMap  map[string]string // Table alias to true table name, usually used in join statements.
 	softTimeOption SoftTimeOption    // SoftTimeOption is the option to customize soft time feature for Model.
 }
