@@ -10,6 +10,7 @@ package gdb
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"reflect"
 
 	"go.opentelemetry.io/otel"
@@ -350,6 +351,52 @@ func (c *Core) DoPrepare(ctx context.Context, link Link, sql string) (stmt *Stmt
 		IsTransaction: link.IsTransaction(),
 	})
 	return out.Stmt, err
+}
+
+// FormatUpsert formats and returns SQL clause part for upsert statement.
+// In default implements, this function performs upsert statement for MySQL like:
+// `INSERT INTO ... ON DUPLICATE KEY UPDATE x=VALUES(z),m=VALUES(y)...`
+func (c *Core) FormatUpsert(columns []string, list List, option DoInsertOption) (string, error) {
+	var onDuplicateStr string
+	if option.OnDuplicateStr != "" {
+		onDuplicateStr = option.OnDuplicateStr
+	} else if len(option.OnDuplicateMap) > 0 {
+		for k, v := range option.OnDuplicateMap {
+			if len(onDuplicateStr) > 0 {
+				onDuplicateStr += ","
+			}
+			switch v.(type) {
+			case Raw, *Raw:
+				onDuplicateStr += fmt.Sprintf(
+					"%s=%s",
+					c.QuoteWord(k),
+					v,
+				)
+			default:
+				onDuplicateStr += fmt.Sprintf(
+					"%s=VALUES(%s)",
+					c.QuoteWord(k),
+					c.QuoteWord(gconv.String(v)),
+				)
+			}
+		}
+	} else {
+		for _, column := range columns {
+			// If it's SAVE operation, do not automatically update the creating time.
+			if c.IsSoftCreatedFieldName(column) {
+				continue
+			}
+			if len(onDuplicateStr) > 0 {
+				onDuplicateStr += ","
+			}
+			onDuplicateStr += fmt.Sprintf(
+				"%s=VALUES(%s)",
+				c.QuoteWord(column),
+				c.QuoteWord(column),
+			)
+		}
+	}
+	return InsertOnDuplicateKeyUpdate + " " + onDuplicateStr, nil
 }
 
 // RowsToResult converts underlying data record type sql.Rows to Result type.

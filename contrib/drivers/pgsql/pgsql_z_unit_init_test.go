@@ -78,12 +78,12 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 		CREATE TABLE %s (
-		   id bigserial  NOT NULL,
-		   passport varchar(45) NOT NULL,
-		   password varchar(32) NOT NULL,
-		   nickname varchar(45) NOT NULL,
-		   create_time timestamp NOT NULL,
-		   PRIMARY KEY (id)
+		   	id bigserial  NOT NULL,
+		   	passport varchar(45) NOT NULL,
+		   	password varchar(32) NOT NULL,
+		   	nickname varchar(45) NOT NULL,
+		   	create_time timestamp NOT NULL,
+		   	PRIMARY KEY (id)
 		) ;`, name,
 	)); err != nil {
 		gtest.Fatal(err)
