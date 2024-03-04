@@ -18,6 +18,9 @@ func doClear(items *CGenDaoInternalGenItems) {
 	for _, item := range items.Items {
 		allGeneratedFilePaths = append(allGeneratedFilePaths, item.GeneratedFilePaths...)
 	}
+	for i, v := range allGeneratedFilePaths {
+		allGeneratedFilePaths[i] = gfile.RealPath(v)
+	}
 	for _, item := range items.Items {
 		if !item.Clear {
 			continue
