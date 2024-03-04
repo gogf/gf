@@ -262,7 +262,7 @@ linters-settings:
     # Select the Go version to target.
     # Default: "1.13"
     # Deprecated: use the global `run.go` instead.
-    go: "1.15"
+    go: "1.20"
     # SAxxxx checks in https://staticcheck.io/docs/configuration/options/#checks
     # Default: ["*"]
     checks: [ "all","-SA1019","-SA4015","-SA1029","-SA1016","-SA9003","-SA4006","-SA6003" ]
