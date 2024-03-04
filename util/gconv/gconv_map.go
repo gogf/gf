@@ -365,6 +365,9 @@ func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) in
 		for i := 0; i < reflectValue.NumField(); i++ {
 			rtField = reflectType.Field(i)
 			rvField = reflectValue.Field(i)
+			for rvField.Kind() == reflect.Ptr {
+				rvField = rvField.Elem()
+			}
 			// Only convert the public attributes.
 			fieldName := rtField.Name
 			if !utils.IsLetterUpper(fieldName[0]) {
@@ -503,7 +506,7 @@ func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) in
 					dataMap[mapKey] = nestedMap
 				default:
 					if rvField.IsValid() {
-						dataMap[mapKey] = reflectValue.Field(i).Interface()
+						dataMap[mapKey] = rvField.Interface()
 					} else {
 						dataMap[mapKey] = nil
 					}
@@ -511,7 +514,7 @@ func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) in
 			} else {
 				// No recursive map value converting
 				if rvField.IsValid() {
-					dataMap[mapKey] = reflectValue.Field(i).Interface()
+					dataMap[mapKey] = rvField.Interface()
 				} else {
 					dataMap[mapKey] = nil
 				}
