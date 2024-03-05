@@ -175,6 +175,7 @@ type DB interface {
 	ConvertValueForField(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) // See Core.ConvertValueForField
 	ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) // See Core.ConvertValueForLocal
 	CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (LocalType, error) // See Core.CheckLocalTypeForField
+	FormatUpsert(columns []string, list List, option DoInsertOption) (string, error)                         // See Core.DoFormatUpsert
 }
 
 // TX defines the interfaces for ORM transaction operations.
@@ -320,6 +321,7 @@ type Sql struct {
 type DoInsertOption struct {
 	OnDuplicateStr string                 // Custom string for `on duplicated` statement.
 	OnDuplicateMap map[string]interface{} // Custom key-value map from `OnDuplicateEx` function for `on duplicated` statement.
+	OnConflict     []string               // Custom conflict key of upsert clause, if the database needs it.
 	InsertOption   InsertOption           // Insert operation in constant value.
 	BatchCount     int                    // Batch count for batch inserting.
 }
