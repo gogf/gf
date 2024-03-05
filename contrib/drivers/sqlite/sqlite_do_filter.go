@@ -8,6 +8,7 @@ package sqlite
 
 import (
 	"context"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/text/gstr"
 )
@@ -21,12 +22,6 @@ func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args [
 
 	case gstr.HasPrefix(sql, gdb.InsertOperationReplace):
 		sql = "INSERT OR REPLACE" + sql[len(gdb.InsertOperationReplace):]
-
-	default:
-		if gstr.Contains(sql, gdb.InsertOnDuplicateKeyUpdate) {
-			sql = gstr.Replace(sql, gdb.InsertOperationInsert, gdb.InsertOperationReplace)
-			sql = gstr.StrTillEx(sql, gdb.InsertOnDuplicateKeyUpdate)
-		}
 	}
 	return d.Core.DoFilter(ctx, link, sql, args)
 }
