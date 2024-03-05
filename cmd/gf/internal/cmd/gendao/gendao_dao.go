@@ -30,6 +30,7 @@ func generateDao(ctx context.Context, in CGenDaoInternalInput) {
 		dirPathDao         = gfile.Join(in.Path, in.DaoPath)
 		dirPathDaoInternal = gfile.Join(dirPathDao, "internal")
 	)
+	in.genItems.AppendDirPath(dirPathDao)
 	for i := 0; i < len(in.TableNames); i++ {
 		generateDaoSingle(ctx, generateDaoSingleInput{
 			CGenDaoInternalInput: in,
@@ -106,10 +107,7 @@ type generateDaoIndexInput struct {
 func generateDaoIndex(in generateDaoIndexInput) {
 	path := filepath.FromSlash(gfile.Join(in.DirPathDao, in.FileName+".go"))
 	// It should add path to result slice whenever it would generate the path file or not.
-	in.generatedFilePaths.DaoFilePaths = append(
-		in.generatedFilePaths.DaoFilePaths,
-		path,
-	)
+	in.genItems.AppendGeneratedFilePath(path)
 	if in.OverwriteDao || !gfile.Exists(path) {
 		indexContent := gstr.ReplaceByMap(
 			getTemplateFromPathOrDefault(in.TplDaoIndexPath, consts.TemplateGenDaoIndexContent),
@@ -153,10 +151,7 @@ func generateDaoInternal(in generateDaoInternalInput) {
 			tplVarColumnNames:             gstr.Trim(generateColumnNamesForDao(in.FieldMap, removeFieldPrefixArray)),
 		})
 	modelContent = replaceDefaultVar(in.CGenDaoInternalInput, modelContent)
-	in.generatedFilePaths.DaoInternalFilePaths = append(
-		in.generatedFilePaths.DaoInternalFilePaths,
-		path,
-	)
+	in.genItems.AppendGeneratedFilePath(path)
 	if err := gfile.PutContents(path, strings.TrimSpace(modelContent)); err != nil {
 		mlog.Fatalf("writing content to '%s' failed: %v", path, err)
 	} else {
