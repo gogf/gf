@@ -22,6 +22,7 @@ import (
 
 func generateEntity(ctx context.Context, in CGenDaoInternalInput) {
 	var dirPathEntity = gfile.Join(in.Path, in.EntityPath)
+	in.genItems.AppendDirPath(dirPathEntity)
 	// Model content.
 	for i, tableName := range in.TableNames {
 		fieldMap, err := in.DB.TableFields(ctx, tableName)
@@ -48,10 +49,7 @@ func generateEntity(ctx context.Context, in CGenDaoInternalInput) {
 				appendImports,
 			)
 		)
-		in.generatedFilePaths.EntityFilePaths = append(
-			in.generatedFilePaths.EntityFilePaths,
-			entityFilePath,
-		)
+		in.genItems.AppendGeneratedFilePath(entityFilePath)
 		err = gfile.PutContents(entityFilePath, strings.TrimSpace(entityContent))
 		if err != nil {
 			mlog.Fatalf("writing content to '%s' failed: %v", entityFilePath, err)

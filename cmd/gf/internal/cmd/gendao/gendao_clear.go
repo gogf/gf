@@ -7,27 +7,40 @@
 package gendao
 
 import (
-	"context"
-
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gstr"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
-func doClear(ctx context.Context, in CGenDaoInput) {
-	filePaths, err := gfile.ScanDirFile(in.Path, "*.go", true)
-	if err != nil {
-		mlog.Fatal(err)
-	}
+func doClear(items *CGenDaoInternalGenItems) {
 	var allGeneratedFilePaths = make([]string, 0)
-	allGeneratedFilePaths = append(allGeneratedFilePaths, in.generatedFilePaths.DaoFilePaths...)
-	allGeneratedFilePaths = append(allGeneratedFilePaths, in.generatedFilePaths.DaoInternalFilePaths...)
-	allGeneratedFilePaths = append(allGeneratedFilePaths, in.generatedFilePaths.EntityFilePaths...)
-	allGeneratedFilePaths = append(allGeneratedFilePaths, in.generatedFilePaths.DoFilePaths...)
-	for _, filePath := range filePaths {
+	for _, item := range items.Items {
+		allGeneratedFilePaths = append(allGeneratedFilePaths, item.GeneratedFilePaths...)
+	}
+	for i, v := range allGeneratedFilePaths {
+		allGeneratedFilePaths[i] = gfile.RealPath(v)
+	}
+	for _, item := range items.Items {
+		if !item.Clear {
+			continue
+		}
+		doClearItem(item, allGeneratedFilePaths)
+	}
+}
+
+func doClearItem(item CGenDaoInternalGenItem, allGeneratedFilePaths []string) {
+	var generatedFilePaths = make([]string, 0)
+	for _, dirPath := range item.StorageDirPaths {
+		filePaths, err := gfile.ScanDirFile(dirPath, "*.go", true)
+		if err != nil {
+			mlog.Fatal(err)
+		}
+		generatedFilePaths = append(generatedFilePaths, filePaths...)
+	}
+	for _, filePath := range generatedFilePaths {
 		if !gstr.InArray(allGeneratedFilePaths, filePath) {
-			if err = gfile.Remove(filePath); err != nil {
+			if err := gfile.Remove(filePath); err != nil {
 				mlog.Print(err)
 			}
 		}

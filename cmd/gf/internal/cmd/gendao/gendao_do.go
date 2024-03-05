@@ -24,6 +24,7 @@ import (
 
 func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 	var dirPathDo = filepath.FromSlash(gfile.Join(in.Path, in.DoPath))
+	in.genItems.AppendDirPath(dirPathDo)
 	in.NoJsonTag = true
 	in.DescriptionTag = false
 	in.NoModelComment = false
@@ -63,10 +64,7 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 			gstr.CaseCamel(newTableName),
 			structDefinition,
 		)
-		in.generatedFilePaths.DoFilePaths = append(
-			in.generatedFilePaths.DoFilePaths,
-			doFilePath,
-		)
+		in.genItems.AppendGeneratedFilePath(doFilePath)
 		err = gfile.PutContents(doFilePath, strings.TrimSpace(modelContent))
 		if err != nil {
 			mlog.Fatalf(`writing content to "%s" failed: %v`, doFilePath, err)
