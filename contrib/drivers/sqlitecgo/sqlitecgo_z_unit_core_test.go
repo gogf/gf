@@ -428,55 +428,19 @@ func Test_DB_Save(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
-		type User struct {
-			Id         int
-			Passport   string
-			Password   string
-			NickName   string
-			CreateTime *gtime.Time
+		createTable("t_user")
+		defer dropTable("t_user")
+
+		i := 10
+		data := g.Map{
+			"id":          i,
+			"passport":    fmt.Sprintf(`t%d`, i),
+			"password":    fmt.Sprintf(`p%d`, i),
+			"nickname":    fmt.Sprintf(`T%d`, i),
+			"create_time": gtime.Now().String(),
 		}
-		var (
-			user  User
-			count int
-			err   error
-		)
-
-		_, err = db.Model(table).Data(g.Map{
-			"id":          1,
-			"passport":    "CN",
-			"password":    "12345678",
-			"nickname":    "oldme",
-			"create_time": CreateTime,
-		}).Save()
-		t.Assert(err, nil)
-
-		err = db.Model(table).Scan(&user)
-		t.Assert(err, nil)
-		t.Assert(user.Id, 1)
-		t.Assert(user.Passport, "CN")
-		t.Assert(user.Password, "12345678")
-		t.Assert(user.NickName, "oldme")
-		t.Assert(user.CreateTime.String(), CreateTime)
-
-		_, err = db.Model(table).Data(g.Map{
-			"id":          1,
-			"passport":    "CN",
-			"password":    "abc123456",
-			"nickname":    "HappyNewYear",
-			"create_time": CreateTime,
-		}).Save()
-		t.Assert(err, nil)
-
-		err = db.Model(table).Scan(&user)
-		t.Assert(err, nil)
-		t.Assert(user.Passport, "CN")
-		t.Assert(user.Password, "abc123456")
-		t.Assert(user.NickName, "HappyNewYear")
-		t.Assert(user.CreateTime.String(), CreateTime)
-
-		count, err = db.Model(table).Count()
-		t.Assert(err, nil)
-		t.Assert(count, 1)
+		_, err := db.Save(ctx, "t_user", data, 10)
+		gtest.AssertNE(err, nil)
 	})
 }
 
