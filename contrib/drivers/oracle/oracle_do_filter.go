@@ -27,7 +27,7 @@ SELECT * FROM (
 )
 
 func init() {
-	newSqlReplacementTmp = formatSqlTmp(newSqlReplacementTmp)
+	newSqlReplacementTmp = gdb.FormatMultiLineSqlToSingle(newSqlReplacementTmp)
 }
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.

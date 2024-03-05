@@ -32,7 +32,7 @@ ORDER BY a.attnum`
 )
 
 func init() {
-	tableFieldsSqlTmp = formatSqlTmp(tableFieldsSqlTmp)
+	tableFieldsSqlTmp = gdb.FormatMultiLineSqlToSingle(tableFieldsSqlTmp)
 }
 
 // TableFields retrieves and returns the fields' information of specified table of current schema.

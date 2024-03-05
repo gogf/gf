@@ -36,6 +36,10 @@ WHERE
 	ORDER BY c.ORDINAL_POSITION`
 )
 
+func init() {
+	tableFieldsSqlByMariadb = gdb.FormatMultiLineSqlToSingle(tableFieldsSqlByMariadb)
+}
+
 // TableFields retrieves and returns the fields' information of specified table of current
 // schema.
 //
@@ -68,7 +72,7 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 
 	result, err = d.DoSelect(
 		ctx, link,
-		formatSqlTmp(tableFieldsSql),
+		tableFieldsSql,
 	)
 	if err != nil {
 		return nil, err
