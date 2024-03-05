@@ -99,6 +99,7 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 
 	if len(in.WatchPaths) == 1 {
 		in.WatchPaths = strings.Split(in.WatchPaths[0], ",")
+		mlog.Printf("watchPaths: %v", in.WatchPaths)
 	}
 
 	app := &cRunApp{
@@ -109,8 +110,9 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 		WatchPaths: in.WatchPaths,
 	}
 	dirty := gtype.NewBool()
-	_, err = gfsnotify.Add(gfile.RealPath("."), func(event *gfsnotify.Event) {
-		if gfile.ExtName(event.Path) != "go" && !matchWatchPaths(app.WatchPaths, event.Path) {
+
+	callbackFunc := func(event *gfsnotify.Event) {
+		if gfile.ExtName(event.Path) != "go" {
 			return
 		}
 
@@ -125,10 +127,22 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 			mlog.Printf(`watched file changes: %s`, event.String())
 			app.Run(ctx)
 		})
-	})
-	if err != nil {
-		mlog.Fatal(err)
 	}
+
+	if len(app.WatchPaths) > 0 {
+		for _, path := range app.WatchPaths {
+			_, err = gfsnotify.Add(gfile.RealPath(path), callbackFunc)
+			if err != nil {
+				mlog.Fatal(err)
+			}
+		}
+	} else {
+		_, err = gfsnotify.Add(gfile.RealPath("."), callbackFunc)
+		if err != nil {
+			mlog.Fatal(err)
+		}
+	}
+
 	go app.Run(ctx)
 	select {}
 }

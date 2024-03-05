@@ -7,8 +7,10 @@
 package pgsql_test
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -258,14 +260,16 @@ func Test_Model_Save(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
-		_, err := db.Model(table).Data(g.Map{
+		result, err := db.Model(table).Data(g.Map{
 			"id":          1,
 			"passport":    "t111",
 			"password":    "25d55ad283aa400af464c76d713c07ad",
 			"nickname":    "T111",
 			"create_time": "2018-10-24 10:00:00",
-		}).Save()
-		t.Assert(err, "Save operation is not supported by pgsql driver")
+		}).OnConflict("id").Save()
+		t.AssertNil(err)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
 	})
 }
 
@@ -282,5 +286,261 @@ func Test_Model_Replace(t *testing.T) {
 			"create_time": "2018-10-24 10:00:00",
 		}).Replace()
 		t.Assert(err, "Replace operation is not supported by pgsql driver")
+	})
+}
+
+func Test_Model_OnConflict(t *testing.T) {
+	var (
+		table      = fmt.Sprintf(`%s_%d`, TablePrefix+"test", gtime.TimestampNano())
+		uniqueName = fmt.Sprintf(`%s_%d`, TablePrefix+"test_unique", gtime.TimestampNano())
+	)
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+		CREATE TABLE %s (
+		   	id bigserial  NOT NULL,
+		   	passport varchar(45) NOT NULL,
+		   	password varchar(32) NOT NULL,
+		   	nickname varchar(45) NOT NULL,
+		   	create_time timestamp NOT NULL,
+		   	PRIMARY KEY (id),
+			CONSTRAINT %s UNIQUE ("passport", "password")
+		) ;`, table, uniqueName,
+	)); err != nil {
+		gtest.Fatal(err)
+	}
+	defer dropTable(table)
+
+	// string type 1.
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			"id":          1,
+			"passport":    "pp1",
+			"password":    "pw1",
+			"nickname":    "n1",
+			"create_time": "2016-06-06",
+		}
+		_, err := db.Model(table).OnConflict("passport,password").Data(data).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["passport"], data["passport"])
+		t.Assert(one["password"], data["password"])
+		t.Assert(one["nickname"], "n1")
+	})
+
+	// string type 2.
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			"id":          1,
+			"passport":    "pp1",
+			"password":    "pw1",
+			"nickname":    "n1",
+			"create_time": "2016-06-06",
+		}
+		_, err := db.Model(table).OnConflict("passport", "password").Data(data).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["passport"], data["passport"])
+		t.Assert(one["password"], data["password"])
+		t.Assert(one["nickname"], "n1")
+	})
+
+	// slice.
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			"id":          1,
+			"passport":    "pp1",
+			"password":    "pw1",
+			"nickname":    "n1",
+			"create_time": "2016-06-06",
+		}
+		_, err := db.Model(table).OnConflict(g.Slice{"passport", "password"}).Data(data).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["passport"], data["passport"])
+		t.Assert(one["password"], data["password"])
+		t.Assert(one["nickname"], "n1")
+	})
+}
+
+func Test_Model_OnDuplicate(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	// string type 1.
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			"id":          1,
+			"passport":    "pp1",
+			"password":    "pw1",
+			"nickname":    "n1",
+			"create_time": "2016-06-06",
+		}
+		_, err := db.Model(table).OnConflict("id").OnDuplicate("passport,password").Data(data).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one["passport"], data["passport"])
+		t.Assert(one["password"], data["password"])
+		t.Assert(one["nickname"], "name_1")
+	})
+
+	// string type 2.
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			"id":          1,
+			"passport":    "pp1",
+			"password":    "pw1",
+			"nickname":    "n1",
+			"create_time": "2016-06-06",
+		}
+		_, err := db.Model(table).OnConflict("id").OnDuplicate("passport", "password").Data(data).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one["passport"], data["passport"])
+		t.Assert(one["password"], data["password"])
+		t.Assert(one["nickname"], "name_1")
+	})
+
+	// slice.
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			"id":          1,
+			"passport":    "pp1",
+			"password":    "pw1",
+			"nickname":    "n1",
+			"create_time": "2016-06-06",
+		}
+		_, err := db.Model(table).OnConflict("id").OnDuplicate(g.Slice{"passport", "password"}).Data(data).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one["passport"], data["passport"])
+		t.Assert(one["password"], data["password"])
+		t.Assert(one["nickname"], "name_1")
+	})
+
+	// map.
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			"id":          1,
+			"passport":    "pp1",
+			"password":    "pw1",
+			"nickname":    "n1",
+			"create_time": "2016-06-06",
+		}
+		_, err := db.Model(table).OnConflict("id").OnDuplicate(g.Map{
+			"passport": "nickname",
+			"password": "nickname",
+		}).Data(data).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one["passport"], data["nickname"])
+		t.Assert(one["password"], data["nickname"])
+		t.Assert(one["nickname"], "name_1")
+	})
+
+	// map+raw.
+	gtest.C(t, func(t *gtest.T) {
+		data := g.MapStrStr{
+			"id":          "1",
+			"passport":    "pp1",
+			"password":    "pw1",
+			"nickname":    "n1",
+			"create_time": "2016-06-06",
+		}
+		_, err := db.Model(table).OnConflict("id").OnDuplicate(g.Map{
+			"passport": gdb.Raw("CONCAT(EXCLUDED.passport, '1')"),
+			"password": gdb.Raw("CONCAT(EXCLUDED.password, '2')"),
+		}).Data(data).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one["passport"], data["passport"]+"1")
+		t.Assert(one["password"], data["password"]+"2")
+		t.Assert(one["nickname"], "name_1")
+	})
+}
+
+func Test_Model_OnDuplicateEx(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	// string type 1.
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			"id":          1,
+			"passport":    "pp1",
+			"password":    "pw1",
+			"nickname":    "n1",
+			"create_time": "2016-06-06",
+		}
+		_, err := db.Model(table).OnConflict("id").OnDuplicateEx("nickname,create_time").Data(data).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one["passport"], data["passport"])
+		t.Assert(one["password"], data["password"])
+		t.Assert(one["nickname"], "name_1")
+	})
+
+	// string type 2.
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			"id":          1,
+			"passport":    "pp1",
+			"password":    "pw1",
+			"nickname":    "n1",
+			"create_time": "2016-06-06",
+		}
+		_, err := db.Model(table).OnConflict("id").OnDuplicateEx("nickname", "create_time").Data(data).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one["passport"], data["passport"])
+		t.Assert(one["password"], data["password"])
+		t.Assert(one["nickname"], "name_1")
+	})
+
+	// slice.
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			"id":          1,
+			"passport":    "pp1",
+			"password":    "pw1",
+			"nickname":    "n1",
+			"create_time": "2016-06-06",
+		}
+		_, err := db.Model(table).OnConflict("id").OnDuplicateEx(g.Slice{"nickname", "create_time"}).Data(data).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one["passport"], data["passport"])
+		t.Assert(one["password"], data["password"])
+		t.Assert(one["nickname"], "name_1")
+	})
+
+	// map.
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			"id":          1,
+			"passport":    "pp1",
+			"password":    "pw1",
+			"nickname":    "n1",
+			"create_time": "2016-06-06",
+		}
+		_, err := db.Model(table).OnConflict("id").OnDuplicateEx(g.Map{
+			"nickname":    "nickname",
+			"create_time": "nickname",
+		}).Data(data).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one["passport"], data["passport"])
+		t.Assert(one["password"], data["password"])
+		t.Assert(one["nickname"], "name_1")
 	})
 }
