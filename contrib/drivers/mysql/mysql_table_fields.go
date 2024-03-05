@@ -50,10 +50,10 @@ WHERE
 // process restarts.
 func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
 	var (
-		result     gdb.Result
-		link       gdb.Link
-		usedSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
-		sql        string
+		result         gdb.Result
+		link           gdb.Link
+		usedSchema     = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+		tableFieldsSql string
 	)
 	if link, err = d.SlaveLink(usedSchema); err != nil {
 		return nil, err
@@ -61,14 +61,14 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 	dbType := d.GetConfig().Type
 	switch dbType {
 	case "mariadb":
-		sql = fmt.Sprintf(tableFieldsSqlByMariadb, usedSchema, table)
+		tableFieldsSql = fmt.Sprintf(tableFieldsSqlByMariadb, usedSchema, table)
 	default:
-		sql = fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.QuoteWord(table))
+		tableFieldsSql = fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.QuoteWord(table))
 	}
 
 	result, err = d.DoSelect(
 		ctx, link,
-		sql,
+		formatSqlTmp(tableFieldsSql),
 	)
 	if err != nil {
 		return nil, err

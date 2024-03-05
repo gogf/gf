@@ -394,6 +394,7 @@ func Test_Gen_Dao_Issue2616(t *testing.T) {
 	})
 }
 
+// https://github.com/gogf/gf/issues/2746
 func Test_Gen_Dao_Issue2746(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
