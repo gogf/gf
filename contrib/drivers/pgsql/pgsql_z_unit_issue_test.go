@@ -43,22 +43,27 @@ func Test_Issue3330(t *testing.T) {
 		t.Assert(fields["id"].Key, "pri")
 		t.Assert(fields["password"].Key, "uni")
 
-		data := g.Map{
-			"id":          1,
-			"passport":    "pp1",
-			"password":    "pw1",
-			"nickname":    "n1",
-			"create_time": "2016-06-06",
+		var list []map[string]interface{}
+		for i := 1; i <= 10; i++ {
+			list = append(list, g.Map{
+				"id":          i,
+				"passport":    fmt.Sprintf("p%d", i),
+				"password":    fmt.Sprintf("pw%d", i),
+				"nickname":    fmt.Sprintf("n%d", i),
+				"create_time": "2016-06-01 00:00:00",
+			})
 		}
-		_, err = db.Model(table).Data(data).Insert()
+
+		_, err = db.Model(table).Data(list).Insert()
 		t.AssertNil(err)
 
-		for i := 0; i < 10; i++ {
-			one, err := db.Model(table).WherePri(1).One()
+		for i := 1; i <= 10; i++ {
+			one, err := db.Model(table).WherePri(i).One()
 			t.AssertNil(err)
-			t.Assert(one["passport"], data["passport"])
-			t.Assert(one["password"], data["password"])
-			t.Assert(one["nickname"], "n1")
+			t.Assert(one["id"], list[i-1]["id"])
+			t.Assert(one["passport"], list[i-1]["passport"])
+			t.Assert(one["password"], list[i-1]["password"])
+			t.Assert(one["nickname"], list[i-1]["nickname"])
 		}
 	})
 }
