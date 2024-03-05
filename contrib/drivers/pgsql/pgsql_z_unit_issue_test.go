@@ -8,6 +8,7 @@ package pgsql_test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/v2/database/gdb"
 	"testing"
 
 	"github.com/gogf/gf/v2/frame/g"
@@ -37,13 +38,18 @@ func Test_Issue3330(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
+		var (
+			list []map[string]interface{}
+			one  gdb.Record
+			err  error
+		)
+
 		fields, err := db.TableFields(ctx, table)
 		t.AssertNil(err)
 
 		t.Assert(fields["id"].Key, "pri")
 		t.Assert(fields["password"].Key, "uni")
 
-		var list []map[string]interface{}
 		for i := 1; i <= 10; i++ {
 			list = append(list, g.Map{
 				"id":          i,
@@ -58,7 +64,7 @@ func Test_Issue3330(t *testing.T) {
 		t.AssertNil(err)
 
 		for i := 1; i <= 10; i++ {
-			one, err := db.Model(table).WherePri(i).One()
+			one, err = db.Model(table).WherePri(i).One()
 			t.AssertNil(err)
 			t.Assert(one["id"], list[i-1]["id"])
 			t.Assert(one["passport"], list[i-1]["passport"])
