@@ -219,7 +219,10 @@ func (m *softTimeMaintainer) getSoftFieldNameAndType(
 		intlog.Error(ctx, err)
 	}
 	if result != nil {
-		var cacheItem = result.Val().(getSoftFieldNameAndTypeCacheItem)
+		var cacheItem getSoftFieldNameAndTypeCacheItem
+		if err = result.Scan(&cacheItem); err != nil {
+			return "", ""
+		}
 		fieldName = cacheItem.FieldName
 		fieldType = cacheItem.FieldType
 	}
