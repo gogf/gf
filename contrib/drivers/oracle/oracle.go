@@ -13,8 +13,6 @@ package oracle
 
 import (
 	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/text/gregex"
-	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // Driver is the driver for oracle database.
@@ -30,21 +28,6 @@ func init() {
 	if err := gdb.Register(`oracle`, New()); err != nil {
 		panic(err)
 	}
-}
-
-// formatSqlTmp formats sql template string into one line.
-func formatSqlTmp(sqlTmp string) string {
-	var err error
-	// format sql template string.
-	sqlTmp, err = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(sqlTmp))
-	if err != nil {
-		panic(err)
-	}
-	sqlTmp, err = gregex.ReplaceString(`\s{2,}`, " ", gstr.Trim(sqlTmp))
-	if err != nil {
-		panic(err)
-	}
-	return sqlTmp
 }
 
 // New create and returns a driver that implements gdb.Driver, which supports operations for Oracle.

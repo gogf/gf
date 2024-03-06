@@ -35,7 +35,7 @@ ORDER BY
 )
 
 func init() {
-	tablesSqlTmp = formatSqlTmp(tablesSqlTmp)
+	tablesSqlTmp = gdb.FormatMultiLineSqlToSingle(tablesSqlTmp)
 }
 
 // Tables retrieves and returns the tables of current schema.

@@ -9,7 +9,6 @@ package mssql
 import (
 	"context"
 	"fmt"
-
 	"strconv"
 	"strings"
 
@@ -27,7 +26,7 @@ WHERE TMP_.ROWNUMBER_ > %d AND TMP_.ROWNUMBER_ <= %d
 )
 
 func init() {
-	selectWithOrderSqlTmp = formatSqlTmp(selectWithOrderSqlTmp)
+	selectWithOrderSqlTmp = gdb.FormatMultiLineSqlToSingle(selectWithOrderSqlTmp)
 }
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
