@@ -5,7 +5,6 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package sqlite implements gdb.Driver, which supports operations for database SQLite.
-
 package sqlite
 
 import (
