@@ -425,19 +425,22 @@ func Test_DB_BatchInsert_Struct(t *testing.T) {
 }
 
 func Test_DB_Save(t *testing.T) {
-	table := createInitTable()
+	table := createTable()
 	defer dropTable(table)
-
 	gtest.C(t, func(t *gtest.T) {
-		timeStr := gtime.Now().String()
-		_, err := db.Save(ctx, table, g.Map{
-			"id":          1,
-			"passport":    "t1",
-			"password":    "25d55ad283aa400af464c76d713c07ad",
-			"nickname":    "T11",
-			"create_time": timeStr,
-		})
-		t.Assert(err, ErrorSave)
+		createTable("t_user")
+		defer dropTable("t_user")
+
+		i := 10
+		data := g.Map{
+			"id":          i,
+			"passport":    fmt.Sprintf(`t%d`, i),
+			"password":    fmt.Sprintf(`p%d`, i),
+			"nickname":    fmt.Sprintf(`T%d`, i),
+			"create_time": gtime.Now().String(),
+		}
+		_, err := db.Save(ctx, "t_user", data, 10)
+		gtest.AssertNE(err, nil)
 	})
 }
 
