@@ -99,7 +99,9 @@ func doMapToMap(params interface{}, pointer interface{}, mapping ...map[string]s
 		mapValue := reflect.New(pointerValueType).Elem()
 		switch pointerValueKind {
 		case reflect.Map, reflect.Struct:
-			if err = doStruct(paramsRv.MapIndex(key).Interface(), mapValue, keyToAttributeNameMapping, ""); err != nil {
+			if err = doStruct(
+				paramsRv.MapIndex(key).Interface(), mapValue, keyToAttributeNameMapping, "",
+			); err != nil {
 				return err
 			}
 		default:

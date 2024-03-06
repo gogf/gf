@@ -47,6 +47,23 @@ func StructTag(params interface{}, pointer interface{}, priorityTag string) (err
 func doStruct(
 	params interface{}, pointer interface{}, paramKeyToAttrMap map[string]string, priorityTag string,
 ) (err error) {
+	if params == nil {
+		// If `params` is nil, no conversion.
+		return nil
+	}
+	if pointer == nil {
+		return gerror.NewCode(gcode.CodeInvalidParameter, "object pointer cannot be nil")
+	}
+
+	// JSON content converting.
+	ok, err := doConvertWithJsonCheck(params, pointer)
+	if err != nil {
+		return err
+	}
+	if ok {
+		return nil
+	}
+
 	defer func() {
 		// Catch the panic, especially the reflection operation panics.
 		if exception := recover(); exception != nil {
@@ -94,13 +111,19 @@ func doStruct(
 		pointerElemReflectValue = pointerReflectValue.Elem()
 	}
 
+	// If `params` and `pointer` are the same type, the do directly assignment.
+	// For performance enhancement purpose.
+	if ok = doConvertWithTypeCheck(paramsReflectValue, pointerElemReflectValue); ok {
+		return nil
+	}
+
 	// custom convert.
-	if ok, err := callCustomConverter(paramsReflectValue, pointerReflectValue); ok {
+	if ok, err = callCustomConverter(paramsReflectValue, pointerReflectValue); ok {
 		return err
 	}
 
 	// Normal unmarshalling interfaces checks.
-	if ok, err := bindVarToReflectValueWithInterfaceCheck(pointerReflectValue, paramsInterface); ok {
+	if ok, err = bindVarToReflectValueWithInterfaceCheck(pointerReflectValue, paramsInterface); ok {
 		return err
 	}
 

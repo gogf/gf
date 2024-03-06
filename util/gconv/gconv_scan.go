@@ -79,42 +79,8 @@ func Scan(srcValue interface{}, dstPointer interface{}, paramKeyToAttrMap ...map
 	var dstPointerReflectValueElem = dstPointerReflectValue.Elem()
 	// if `srcValue` and `dstPointer` are the same type, the do directly assignment.
 	// for performance enhancement purpose.
-	if dstPointerReflectValueElem.IsValid() && srcValueReflectValue.IsValid() {
-		switch {
-		// Example:
-		// UploadFile    => UploadFile
-		// []UploadFile  => []UploadFile
-		// *UploadFile   => *UploadFile
-		// *[]UploadFile => *[]UploadFile
-		// map           => map
-		// []map         => []map
-		// *[]map        => *[]map
-		case dstPointerReflectValueElem.Type() == srcValueReflectValue.Type():
-			dstPointerReflectValueElem.Set(srcValueReflectValue)
-			return nil
-
-		// Example:
-		// UploadFile    => *UploadFile
-		// []UploadFile  => *[]UploadFile
-		// map           => *map
-		// []map         => *[]map
-		case dstPointerReflectValueElem.Kind() == reflect.Ptr &&
-			dstPointerReflectValueElem.Elem().IsValid() &&
-			dstPointerReflectValueElem.Elem().Type() == srcValueReflectValue.Type():
-			dstPointerReflectValueElem.Elem().Set(srcValueReflectValue)
-			return nil
-
-		// Example:
-		// *UploadFile    => UploadFile
-		// *[]UploadFile  => []UploadFile
-		// *map           => map
-		// *[]map         => []map
-		case srcValueReflectValue.Kind() == reflect.Ptr &&
-			srcValueReflectValue.Elem().IsValid() &&
-			dstPointerReflectValueElem.Type() == srcValueReflectValue.Elem().Type():
-			dstPointerReflectValueElem.Set(srcValueReflectValue.Elem())
-			return nil
-		}
+	if ok = doConvertWithTypeCheck(srcValueReflectValue, dstPointerReflectValueElem); ok {
+		return nil
 	}
 
 	// do the converting.
@@ -146,6 +112,50 @@ func Scan(srcValue interface{}, dstPointer interface{}, paramKeyToAttrMap ...map
 
 	default:
 		return doStruct(srcValue, dstPointer, keyToAttributeNameMapping, "")
+	}
+}
+
+func doConvertWithTypeCheck(srcValueReflectValue, dstPointerReflectValueElem reflect.Value) (ok bool) {
+	if !dstPointerReflectValueElem.IsValid() || !srcValueReflectValue.IsValid() {
+		return false
+	}
+	switch {
+	// Example:
+	// UploadFile    => UploadFile
+	// []UploadFile  => []UploadFile
+	// *UploadFile   => *UploadFile
+	// *[]UploadFile => *[]UploadFile
+	// map           => map
+	// []map         => []map
+	// *[]map        => *[]map
+	case dstPointerReflectValueElem.Type() == srcValueReflectValue.Type():
+		dstPointerReflectValueElem.Set(srcValueReflectValue)
+		return true
+
+	// Example:
+	// UploadFile    => *UploadFile
+	// []UploadFile  => *[]UploadFile
+	// map           => *map
+	// []map         => *[]map
+	case dstPointerReflectValueElem.Kind() == reflect.Ptr &&
+		dstPointerReflectValueElem.Elem().IsValid() &&
+		dstPointerReflectValueElem.Elem().Type() == srcValueReflectValue.Type():
+		dstPointerReflectValueElem.Elem().Set(srcValueReflectValue)
+		return true
+
+	// Example:
+	// *UploadFile    => UploadFile
+	// *[]UploadFile  => []UploadFile
+	// *map           => map
+	// *[]map         => []map
+	case srcValueReflectValue.Kind() == reflect.Ptr &&
+		srcValueReflectValue.Elem().IsValid() &&
+		dstPointerReflectValueElem.Type() == srcValueReflectValue.Elem().Type():
+		dstPointerReflectValueElem.Set(srcValueReflectValue.Elem())
+		return true
+
+	default:
+		return false
 	}
 }
 
