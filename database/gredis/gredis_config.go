@@ -25,6 +25,8 @@ type Config struct {
 	Db              int           `json:"db"`              // Redis db.
 	User            string        `json:"user"`            // Username for AUTH.
 	Pass            string        `json:"pass"`            // Password for AUTH.
+	SentinelUser    string        `json:"sentinel_user"`   // Username for sentinel AUTH.
+	SentinelPass    string        `json:"sentinel_pass"`   // Password for sentinel AUTH.
 	MinIdle         int           `json:"minIdle"`         // Minimum number of connections allowed to be idle (default is 0)
 	MaxIdle         int           `json:"maxIdle"`         // Maximum number of connections allowed to be idle (default is 10)
 	MaxActive       int           `json:"maxActive"`       // Maximum number of connections limit (default is 0 means no limit).
