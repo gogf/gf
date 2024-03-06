@@ -277,9 +277,9 @@ func Test_Model_Save(t *testing.T) {
 
 		result, err = db.Model(table).Data(g.Map{
 			"id":          1,
-			"passport":    "CN",
-			"password":    "12345678",
-			"nickname":    "oldme",
+			"passport":    "p1",
+			"password":    "pw1",
+			"nickname":    "n1",
 			"create_time": CreateTime,
 		}).OnConflict("id").Save()
 		t.AssertNil(nil)
@@ -289,25 +289,25 @@ func Test_Model_Save(t *testing.T) {
 		err = db.Model(table).Scan(&user)
 		t.Assert(err, nil)
 		t.Assert(user.Id, 1)
-		t.Assert(user.Passport, "CN")
-		t.Assert(user.Password, "12345678")
-		t.Assert(user.NickName, "oldme")
+		t.Assert(user.Passport, "p1")
+		t.Assert(user.Password, "pw1")
+		t.Assert(user.NickName, "n1")
 		t.Assert(user.CreateTime.String(), CreateTime)
 
 		_, err = db.Model(table).Data(g.Map{
 			"id":          1,
-			"passport":    "CN",
-			"password":    "abc123456",
-			"nickname":    "to be not to be",
+			"passport":    "p1",
+			"password":    "pw2",
+			"nickname":    "n2",
 			"create_time": CreateTime,
 		}).OnConflict("id").Save()
 		t.AssertNil(err)
 
 		err = db.Model(table).Scan(&user)
 		t.Assert(err, nil)
-		t.Assert(user.Passport, "CN")
-		t.Assert(user.Password, "abc123456")
-		t.Assert(user.NickName, "to be not to be")
+		t.Assert(user.Passport, "p1")
+		t.Assert(user.Password, "pw2")
+		t.Assert(user.NickName, "n2")
 		t.Assert(user.CreateTime.String(), CreateTime)
 
 		count, err = db.Model(table).Count()
