@@ -929,3 +929,18 @@ func FormatSqlWithArgs(sql string, args []interface{}) string {
 		})
 	return newQuery
 }
+
+// FormatMultiLineSqlToSingle formats sql template string into one line.
+func FormatMultiLineSqlToSingle(sqlTmp string) string {
+	var err error
+	// format sql template string.
+	sqlTmp, err = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(sqlTmp))
+	if err != nil {
+		panic(err)
+	}
+	sqlTmp, err = gregex.ReplaceString(`\s{2,}`, " ", gstr.Trim(sqlTmp))
+	if err != nil {
+		panic(err)
+	}
+	return sqlTmp
+}

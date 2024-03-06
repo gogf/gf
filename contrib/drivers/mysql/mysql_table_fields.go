@@ -14,6 +14,32 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
+var (
+	tableFieldsSqlByMariadb = `
+SELECT
+	c.COLUMN_NAME AS 'Field',
+	( CASE WHEN ch.CHECK_CLAUSE LIKE 'json_valid%%' THEN 'json' ELSE c.COLUMN_TYPE END ) AS 'Type',
+	c.COLLATION_NAME AS 'Collation',
+	c.IS_NULLABLE AS 'Null',
+	c.COLUMN_KEY AS 'Key',
+	( CASE WHEN c.COLUMN_DEFAULT = 'NULL' OR c.COLUMN_DEFAULT IS NULL THEN NULL ELSE c.COLUMN_DEFAULT END) AS 'Default',
+	c.EXTRA AS 'Extra',
+	c.PRIVILEGES AS 'Privileges',
+	c.COLUMN_COMMENT AS 'Comment' 
+FROM
+	information_schema.COLUMNS AS c
+	LEFT JOIN information_schema.CHECK_CONSTRAINTS AS ch ON c.TABLE_NAME = ch.TABLE_NAME 
+	AND c.COLUMN_NAME = ch.CONSTRAINT_NAME 
+WHERE
+	c.TABLE_SCHEMA = '%s' 
+	AND c.TABLE_NAME = '%s'
+	ORDER BY c.ORDINAL_POSITION`
+)
+
+func init() {
+	tableFieldsSqlByMariadb = gdb.FormatMultiLineSqlToSingle(tableFieldsSqlByMariadb)
+}
+
 // TableFields retrieves and returns the fields' information of specified table of current
 // schema.
 //
@@ -28,16 +54,25 @@ import (
 // process restarts.
 func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
 	var (
-		result     gdb.Result
-		link       gdb.Link
-		usedSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+		result         gdb.Result
+		link           gdb.Link
+		usedSchema     = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+		tableFieldsSql string
 	)
 	if link, err = d.SlaveLink(usedSchema); err != nil {
 		return nil, err
 	}
+	dbType := d.GetConfig().Type
+	switch dbType {
+	case "mariadb":
+		tableFieldsSql = fmt.Sprintf(tableFieldsSqlByMariadb, usedSchema, table)
+	default:
+		tableFieldsSql = fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.QuoteWord(table))
+	}
+
 	result, err = d.DoSelect(
 		ctx, link,
-		fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.QuoteWord(table)),
+		tableFieldsSql,
 	)
 	if err != nil {
 		return nil, err
