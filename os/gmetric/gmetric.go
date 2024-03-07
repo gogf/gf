@@ -20,6 +20,11 @@ const (
 	MetricTypeHistogram MetricType = `Histogram` // Histogram.
 )
 
+const (
+	// MetricNamePattern is the regular expression pattern for validating metric name.
+	MetricNamePattern = `[\w\.\-\/]`
+)
+
 // Provider manages all Metric exporting.
 // Be caution that the Histogram buckets could not be customized if the creation of the Histogram
 // is before the creation of Provider.
@@ -47,15 +52,15 @@ type Provider interface {
 type Performer interface {
 	// Counter creates and returns a CounterPerformer that performs
 	// the operations for Counter metric.
-	Counter(config CounterConfig) CounterPerformer
+	Counter(config CounterConfig) (CounterPerformer, error)
 
 	// Gauge creates and returns a GaugePerformer that performs
 	// the operations for Gauge metric.
-	Gauge(config GaugeConfig) GaugePerformer
+	Gauge(config GaugeConfig) (GaugePerformer, error)
 
 	// Histogram creates and returns a HistogramPerformer that performs
 	// the operations for Histogram metric.
-	Histogram(config HistogramConfig) HistogramPerformer
+	Histogram(config HistogramConfig) (HistogramPerformer, error)
 }
 
 // Metric models a single sample value with its metadata being exported.
@@ -171,7 +176,7 @@ type HistogramPerformer interface {
 type MetricInitializer interface {
 	// Init initializes the Metric in Provider creation.
 	// It sets the metric performer which really takes action.
-	Init(provider Provider)
+	Init(provider Provider) error
 }
 
 // PerformerExporter exports internal Performer of Metric.

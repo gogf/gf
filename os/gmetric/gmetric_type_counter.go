@@ -27,25 +27,43 @@ var (
 )
 
 // NewCounter creates and returns a new Counter.
-func NewCounter(config CounterConfig) Counter {
+func NewCounter(config CounterConfig) (Counter, error) {
+	baseMetric, err := newMetric(MetricTypeCounter, config.MetricConfig)
+	if err != nil {
+		return nil, err
+	}
 	m := &localCounter{
-		Metric:           newMetric(MetricTypeCounter, config.MetricConfig),
+		Metric:           baseMetric,
 		CounterConfig:    config,
 		CounterPerformer: newNoopCounterPerformer(),
 	}
 	if globalProvider != nil {
-		m.Init(globalProvider)
+		if err = m.Init(globalProvider); err != nil {
+			return nil, err
+		}
 	}
 	allMetrics = append(allMetrics, m)
+	return m, nil
+}
+
+// MustNewCounter creates and returns a new Counter.
+// It panics if any error occurs.
+func MustNewCounter(config CounterConfig) Counter {
+	m, err := NewCounter(config)
+	if err != nil {
+		panic(err)
+	}
 	return m
 }
 
 // Init initializes the Metric in Provider creation.
-func (l *localCounter) Init(provider Provider) {
+func (l *localCounter) Init(provider Provider) (err error) {
 	if _, ok := l.CounterPerformer.(noopCounterPerformer); !ok {
+		// already initialized.
 		return
 	}
-	l.CounterPerformer = provider.Performer().Counter(l.CounterConfig)
+	l.CounterPerformer, err = provider.Performer().Counter(l.CounterConfig)
+	return
 }
 
 // Performer exports internal Performer.

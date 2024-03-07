@@ -16,7 +16,7 @@ import (
 type SetGlobalAttributesOption struct {
 	Instrument        string // Instrument specifies the instrument name.
 	InstrumentVersion string // Instrument specifies the instrument version.
-	InstrumentPattern string // InstrumentPattern specifies instrument by regular expression.
+	InstrumentPattern string // InstrumentPattern specifies instrument by regular expression on Instrument name.
 }
 
 // GetGlobalAttributesOption binds the global attributes to certain instrument.
@@ -36,9 +36,9 @@ var (
 	globalAttributes = make([]globalAttributeItem, 0)
 )
 
-// SetGlobalAttributes appends global attributes according `GlobalAttributesOption`.
-// It appends global attributes to all metrics if given `GlobalAttributesOption` is nil.
-// It appends global attributes to certain instrument by given `GlobalAttributesOption`.
+// SetGlobalAttributes appends global attributes according `SetGlobalAttributesOption`.
+// It appends global attributes to all metrics if given `SetGlobalAttributesOption` is empty.
+// It appends global attributes to certain instrument by given `SetGlobalAttributesOption`.
 func SetGlobalAttributes(attrs Attributes, option ...SetGlobalAttributesOption) {
 	globalAttributesMu.Lock()
 	defer globalAttributesMu.Unlock()
@@ -54,9 +54,9 @@ func SetGlobalAttributes(attrs Attributes, option ...SetGlobalAttributesOption) 
 	)
 }
 
-// GetGlobalAttributes retrieves and returns the global attributes by `GlobalAttributesOption`.
-// It returns the global attributes if given `GlobalAttributesOption` is empty.
-// It returns global attributes of certain instrument if `GlobalAttributesOption` is not empty.
+// GetGlobalAttributes retrieves and returns the global attributes by `GetGlobalAttributesOption`.
+// It returns the global attributes if given `GetGlobalAttributesOption` is empty.
+// It returns global attributes of certain instrument if `GetGlobalAttributesOption` is not empty.
 func GetGlobalAttributes(option GetGlobalAttributesOption) Attributes {
 	globalAttributesMu.Lock()
 	defer globalAttributesMu.Unlock()

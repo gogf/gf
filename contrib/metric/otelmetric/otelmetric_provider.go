@@ -29,20 +29,20 @@ type localProvider struct {
 }
 
 // newLocalProvider creates and returns an object that implements gmetric.Provider.
+// DO NOT set this as global provider internally.
 func newLocalProvider(options ...metric.Option) (gmetric.Provider, error) {
-	// TODO global logger set for otel
+	// TODO global logger set for otel.
 	// otel.SetLogger()
 
 	var (
 		err          error
 		metrics      = gmetric.GetAllMetrics()
-		metricViews  = createViewsByMetrics(metrics)
 		builtinViews = createViewsForBuiltInMetrics()
 		callbacks    = gmetric.GetRegisteredCallbacks()
 	)
-	metricViews = append(metricViews, builtinViews...)
-	options = append(options, metric.WithView(metricViews...))
+	options = append(options, metric.WithView(builtinViews...))
 	provider := &localProvider{
+		// MeterProvider is the core object that can create otel metrics.
 		MeterProvider: metric.NewMeterProvider(options...),
 	}
 	for _, callback := range callbacks {
@@ -50,7 +50,10 @@ func newLocalProvider(options ...metric.Option) (gmetric.Provider, error) {
 			hasGlobalCallbackMetricSet.Add(m.Info().Key())
 		}
 	}
-	initializeAllMetrics(metrics, provider)
+	err = initializeMetrics(metrics, provider)
+	if err != nil {
+		return nil, err
+	}
 	err = initializeCallback(callbacks, provider.MeterProvider)
 	if err != nil {
 		return nil, err
@@ -71,6 +74,7 @@ func newLocalProvider(options ...metric.Option) (gmetric.Provider, error) {
 }
 
 // SetAsGlobal sets current provider as global meter provider for current process.
+// This makes the following metrics creation on current Provider.
 func (l *localProvider) SetAsGlobal() {
 	gmetric.SetGlobalProvider(l)
 	otel.SetMeterProvider(l)
@@ -116,44 +120,22 @@ func createViewsForBuiltInMetrics() []metric.View {
 	return views
 }
 
-// createViewsByMetrics creates and returns OpenTelemetry metric.View according metric type for all metrics,
-// especially the Histogram which needs a metric.View to custom buckets.
-func createViewsByMetrics(metrics []gmetric.Metric) []metric.View {
-	var views = make([]metric.View, 0)
-	for _, m := range metrics {
-		switch m.Info().Type() {
-		case gmetric.MetricTypeCounter:
-		case gmetric.MetricTypeGauge:
-		case gmetric.MetricTypeHistogram:
-			// Custom buckets for each Histogram.
-			views = append(views, metric.NewView(
-				metric.Instrument{
-					Name: m.Info().Name(),
-					Scope: instrumentation.Scope{
-						Name:    m.Info().Instrument().Name(),
-						Version: m.Info().Instrument().Version(),
-					},
-				},
-				metric.Stream{
-					Aggregation: metric.AggregationExplicitBucketHistogram{
-						Boundaries: m.(gmetric.Histogram).Buckets(),
-					},
-				},
-			))
-		}
-	}
-	return views
-}
-
-// initializeAllMetrics initializes all metrics in provider creating.
+// initializeMetrics initializes all metrics in provider creating.
 // The initialization replaces the underlying metric performer using noop-performer with truly performer
 // that implements operations for types of metric.
-func initializeAllMetrics(metrics []gmetric.Metric, provider gmetric.Provider) {
+func initializeMetrics(metrics []gmetric.Metric, provider gmetric.Provider) error {
 	for _, m := range metrics {
 		if initializer, ok := m.(gmetric.MetricInitializer); ok {
 			initializer.Init(provider)
+		} else {
+			return gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`metric "%s" does not implement interface "gmetric.MetricInitializer"`,
+				m.Info().Key(),
+			)
 		}
 	}
+	return nil
 }
 
 func initializeCallback(callbacks []gmetric.GlobalCallbackItem, provider *metric.MeterProvider) error {

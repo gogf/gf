@@ -29,7 +29,7 @@ func Test_Counter(t *testing.T) {
 					InstrumentVersion: "v1.0",
 				},
 			}
-			counter = gmetric.NewCounter(config)
+			counter = gmetric.MustNewCounter(config)
 		)
 		t.Assert(counter.Info().Name(), config.Name)
 		t.Assert(counter.Info().Help(), config.Help)
@@ -55,7 +55,7 @@ func Test_Gauge(t *testing.T) {
 					InstrumentVersion: "v1.0",
 				},
 			}
-			counter = gmetric.NewGauge(config)
+			counter = gmetric.MustNewGauge(config)
 		)
 		t.Assert(counter.Info().Name(), config.Name)
 		t.Assert(counter.Info().Help(), config.Help)
@@ -82,7 +82,7 @@ func Test_Histogram(t *testing.T) {
 				},
 				Buckets: []float64{0, 10, 20, 50, 100, 500, 1000, 2000, 5000, 10000},
 			}
-			counter = gmetric.NewHistogram(config)
+			counter = gmetric.MustNewHistogram(config)
 		)
 		t.Assert(counter.Info().Name(), config.Name)
 		t.Assert(counter.Info().Help(), config.Help)

@@ -24,25 +24,26 @@ type localHistogramPerformer struct {
 }
 
 // newHistogramPerformer creates and returns a HistogramPerformer that truly takes action to implement Histogram.
-func newHistogramPerformer(meter metric.Meter, config gmetric.HistogramConfig) gmetric.HistogramPerformer {
+func newHistogramPerformer(meter metric.Meter, config gmetric.HistogramConfig) (gmetric.HistogramPerformer, error) {
 	histogram, err := meter.Float64Histogram(
 		config.Name,
 		metric.WithDescription(config.Help),
 		metric.WithUnit(config.Unit),
+		metric.WithExplicitBucketBoundaries(config.Buckets...),
 	)
 	if err != nil {
-		panic(gerror.WrapCodef(
+		return nil, gerror.WrapCodef(
 			gcode.CodeInternalError,
 			err,
 			`create Float64Histogram failed with config: %+v`,
 			config,
-		))
+		)
 	}
 	return &localHistogramPerformer{
 		Float64Histogram: histogram,
 		config:           config,
 		attributesOption: metric.WithAttributes(attributesToKeyValues(config.Attributes)...),
-	}
+	}, nil
 }
 
 // Record adds a single value to the histogram. The value is usually positive or zero.

@@ -23,7 +23,7 @@ type localCounterPerformer struct {
 }
 
 // newCounterPerformer creates and returns a CounterPerformer that truly takes action to implement Counter.
-func newCounterPerformer(meter metric.Meter, config gmetric.CounterConfig) gmetric.CounterPerformer {
+func newCounterPerformer(meter metric.Meter, config gmetric.CounterConfig) (gmetric.CounterPerformer, error) {
 	var (
 		baseObservePerformer = newBaseObservePerformer(config.MetricConfig)
 		options              = []metric.Float64ObservableCounterOption{
@@ -61,17 +61,17 @@ func newCounterPerformer(meter metric.Meter, config gmetric.CounterConfig) gmetr
 	}
 	counter, err := meter.Float64ObservableCounter(config.Name, options...)
 	if err != nil {
-		panic(gerror.WrapCodef(
+		return nil, gerror.WrapCodef(
 			gcode.CodeInternalError,
 			err,
 			`create Float64ObservableCounter failed with config: %+v`,
 			config,
-		))
+		)
 	}
 	return &localCounterPerformer{
 		Float64ObservableCounter: counter,
 		baseObservePerformer:     baseObservePerformer,
-	}
+	}, nil
 }
 
 // Inc increments the counter by 1. Use Add to increment it by arbitrary

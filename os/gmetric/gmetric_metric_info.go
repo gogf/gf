@@ -15,23 +15,28 @@ import (
 
 // MetricConfig holds the basic options for creating a metric.
 type MetricConfig struct {
-	// REQUIRED: Name is the name of this metric.
-	// If no Name given, Metric creation panics.
+	// Name is the name of this metric.
+	// It is a REQUIRED configuration, Metric creation panics if no Name given.
 	Name string
 
 	// Help provides information about this Histogram.
+	// This is an optional configuration for a metric.
 	Help string
 
 	// Unit is the unit for metric value.
+	// This is an optional configuration for a metric.
 	Unit string
 
 	// Attributes holds the constant key-value pair description metadata for this metric.
+	// This is an optional configuration for a metric.
 	Attributes Attributes
 
 	// Instrument is the OpenTelemetry instrumentation name to bind this Metric to a global MeterProvider.
+	// This is an optional configuration for a metric.
 	Instrument string
 
 	// InstrumentVersion is the OpenTelemetry instrumentation version to bind this Metric to a global MeterProvider.
+	// This is an optional configuration for a metric.
 	InstrumentVersion string
 }
 

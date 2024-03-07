@@ -6,12 +6,6 @@
 
 package gmetric
 
-import (
-	"context"
-
-	"github.com/gogf/gf/v2/internal/intlog"
-)
-
 // HistogramConfig bundles the configuration for creating a Histogram metric.
 type HistogramConfig struct {
 	MetricConfig
@@ -35,32 +29,45 @@ var (
 )
 
 // NewHistogram creates and returns a new Histogram.
-func NewHistogram(config HistogramConfig) Histogram {
+func NewHistogram(config HistogramConfig) (Histogram, error) {
+	baseMetric, err := newMetric(MetricTypeHistogram, config.MetricConfig)
+	if err != nil {
+		return nil, err
+	}
 	m := &localHistogram{
-		Metric:             newMetric(MetricTypeHistogram, config.MetricConfig),
+		Metric:             baseMetric,
 		HistogramConfig:    config,
 		HistogramPerformer: newNoopHistogramPerformer(),
 	}
 	if globalProvider != nil {
 		// Note that, if Histogram is created after Provider is creation,
 		// it cannot customize its Buckets.
-		m.Init(globalProvider)
-		intlog.Printf(
-			context.Background(),
-			`Histogram "%s" is created after Provider creation, it cannot customize its Buckets`,
-			config.MetricKey(),
-		)
+		if err = m.Init(globalProvider); err != nil {
+			return nil, err
+		}
 	}
 	allMetrics = append(allMetrics, m)
+	return m, nil
+}
+
+// MustNewHistogram creates and returns a new Histogram.
+// It panics if any error occurs.
+func MustNewHistogram(config HistogramConfig) Histogram {
+	m, err := NewHistogram(config)
+	if err != nil {
+		panic(err)
+	}
 	return m
 }
 
 // Init initializes the Metric in Provider creation.
-func (l *localHistogram) Init(provider Provider) {
+func (l *localHistogram) Init(provider Provider) (err error) {
 	if _, ok := l.HistogramPerformer.(noopHistogramPerformer); !ok {
+		// already initialized.
 		return
 	}
-	l.HistogramPerformer = provider.Performer().Histogram(l.HistogramConfig)
+	l.HistogramPerformer, err = provider.Performer().Histogram(l.HistogramConfig)
+	return err
 }
 
 // Buckets returns the bucket slice of the Histogram.

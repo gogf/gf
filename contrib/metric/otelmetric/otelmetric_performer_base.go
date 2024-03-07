@@ -39,7 +39,7 @@ type iBaseObservePerformer interface {
 // localBaseObservePerformer is a base struct to implement interface Performer.
 type localBaseObservePerformer struct {
 	config         gmetric.MetricConfig // Metric Configuration.
-	value          *gtype.Float64       // Metric value in concurrent-safety.
+	value          *gtype.Float64       // Metric value in concurrent-safety, which might be type of Counter/Gauge.
 	constOption    metric.ObserveOption // Converted attributes to key-value pairs.
 	currentOptions *gtype.Any           // Merged const and dynamic []metric.ObserveOption.
 }
@@ -73,7 +73,7 @@ func (l *localBaseObservePerformer) AddValue(value float64) float64 {
 	return l.value.Add(value)
 }
 
-// GetObserveOptions returns the observe currentOptions that is merged with constant and dynamic currentOptions
+// GetObserveOptions returns the observe Options that is merged with constant and dynamic currentOptions
 // of current observable performer.
 func (l *localBaseObservePerformer) GetObserveOptions() []metric.ObserveOption {
 	return l.currentOptions.Val().([]metric.ObserveOption)

@@ -8,6 +8,7 @@ package otelmetric_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"go.opentelemetry.io/otel/sdk/metric"
@@ -26,7 +27,7 @@ func Test_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx     = gctx.New()
-			counter = gmetric.NewCounter(gmetric.CounterConfig{
+			counter = gmetric.MustNewCounter(gmetric.CounterConfig{
 				MetricConfig: gmetric.MetricConfig{
 					Name: "goframe.metric.demo.counter",
 					Help: "This is a simple demo for Counter usage",
@@ -38,7 +39,7 @@ func Test_Basic(t *testing.T) {
 					InstrumentVersion: "v1.0",
 				},
 			})
-			gauge = gmetric.NewGauge(gmetric.GaugeConfig{
+			gauge = gmetric.MustNewGauge(gmetric.GaugeConfig{
 				MetricConfig: gmetric.MetricConfig{
 					Name: "goframe.metric.demo.gauge",
 					Help: "This is a simple demo for Gauge usage",
@@ -50,7 +51,7 @@ func Test_Basic(t *testing.T) {
 					InstrumentVersion: "v1.1",
 				},
 			})
-			histogram = gmetric.NewHistogram(gmetric.HistogramConfig{
+			histogram = gmetric.MustNewHistogram(gmetric.HistogramConfig{
 				MetricConfig: gmetric.MetricConfig{
 					Name: "goframe.metric.demo.histogram",
 					Help: "This is a simple demo for histogram usage",
@@ -96,11 +97,12 @@ func Test_Basic(t *testing.T) {
 		content, err = gregex.ReplaceString(`Time":".+?"`, `Time":""`, content)
 		t.AssertNil(err)
 		expectContent := `
-{"Scope":{"Name":"github.com/gogf/gf/example/metric/basic","Version":"v1.2","SchemaURL":""},"Metrics":[{"Name":"goframe.metric.demo.histogram","Description":"This is a simple demo for histogram usage","Unit":"ms","Data":{"DataPoints":[{"Attributes":[{"Key":"const_label_c","Value":{"Type":"INT64","Value":3}}],"StartTime":"","Time":"","Count":7,"Bounds":[0,10,20,50,100,500,1000,2000,5000,10000],"BucketCounts":[0,1,1,1,0,1,0,1,0,1,1],"Min":{},"Max":{},"Sum":31152}],"Temporality":"CumulativeTemporality"}}]}
+{"Scope":{"Name":"github.com/gogf/gf/example/metric/basic","Version":"v1.2","SchemaURL":""},"Metrics":[{"Name":"goframe.metric.demo.histogram","Description":"This is a simple demo for histogram usage","Unit":"ms","Data":{"DataPoints":[{"Attributes":[{"Key":"const_label_c","Value":{"Type":"INT64","Value":3}}],"StartTime":"","Time":"","Count":7,"Bounds":[0,10,20,50,100,500,1000,2000,5000,10000],"BucketCounts":[0,1,1,1,0,1,0,1,0,1,1],"Min":1,"Max":20000,"Sum":31152}],"Temporality":"CumulativeTemporality"}}]}
 {"Scope":{"Name":"github.com/gogf/gf/example/metric/basic","Version":"v1.0","SchemaURL":""},"Metrics":[{"Name":"goframe.metric.demo.counter","Description":"This is a simple demo for Counter usage","Unit":"%","Data":{"DataPoints":[{"Attributes":[{"Key":"const_label_a","Value":{"Type":"INT64","Value":1}}],"StartTime":"","Time":"","Value":11}],"Temporality":"CumulativeTemporality","IsMonotonic":true}}]}
 {"Scope":{"Name":"github.com/gogf/gf/example/metric/basic","Version":"v1.1","SchemaURL":""},"Metrics":[{"Name":"goframe.metric.demo.gauge","Description":"This is a simple demo for Gauge usage","Unit":"bytes","Data":{"DataPoints":[{"Attributes":[{"Key":"const_label_b","Value":{"Type":"INT64","Value":2}}],"StartTime":"","Time":"","Value":100}]}}]}
 `
 		for _, line := range gstr.SplitAndTrim(expectContent, "\n") {
+			fmt.Println(line)
 			t.Assert(gstr.Contains(content, line), true)
 		}
 	})
@@ -110,7 +112,7 @@ func Test_DynamicAttributes(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx     = gctx.New()
-			counter = gmetric.NewCounter(gmetric.CounterConfig{
+			counter = gmetric.MustNewCounter(gmetric.CounterConfig{
 				MetricConfig: gmetric.MetricConfig{
 					Name: "goframe.metric.demo.counter",
 					Help: "This is a simple demo for dynamic attributes",
@@ -160,7 +162,7 @@ func Test_HistogramBuckets(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx        = gctx.New()
-			histogram1 = gmetric.NewHistogram(gmetric.HistogramConfig{
+			histogram1 = gmetric.MustNewHistogram(gmetric.HistogramConfig{
 				MetricConfig: gmetric.MetricConfig{
 					Name: "goframe.metric.demo.histogram1",
 					Help: "This is a simple demo for histogram usage",
@@ -173,7 +175,7 @@ func Test_HistogramBuckets(t *testing.T) {
 				},
 				Buckets: []float64{0, 10, 20, 50, 100, 500, 1000, 2000, 5000, 10000},
 			})
-			histogram2 = gmetric.NewHistogram(gmetric.HistogramConfig{
+			histogram2 = gmetric.MustNewHistogram(gmetric.HistogramConfig{
 				MetricConfig: gmetric.MetricConfig{
 					Name: "goframe.metric.demo.histogram2",
 					Help: "This demos we can specify custom buckets in Histogram creating",
@@ -222,10 +224,11 @@ func Test_HistogramBuckets(t *testing.T) {
 
 		expectKeyContent := `
 {"Scope":{"Name":"github.com/gogf/gf/example/metric/histogram_buckets","Version":"v1.0","SchemaURL":""}
-{"Name":"goframe.metric.demo.histogram1","Description":"This is a simple demo for histogram usage","Unit":"ms","Data":{"DataPoints":[{"Attributes":[{"Key":"const_label_a","Value":{"Type":"INT64","Value":1}}],"StartTime":"","Time":"","Count":7,"Bounds":[0,10,20,50,100,500,1000,2000,5000,10000],"BucketCounts":[0,1,1,1,0,1,0,1,0,1,1],"Min":{},"Max":{},"Sum":31152}],"Temporality":"CumulativeTemporality"}}
-{"Name":"goframe.metric.demo.histogram2","Description":"This demos we can specify custom buckets in Histogram creating","Unit":"","Data":{"DataPoints":[{"Attributes":[{"Key":"const_label_b","Value":{"Type":"INT64","Value":2}}],"StartTime":"","Time":"","Count":7,"Bounds":[100,200,300,400,500],"BucketCounts":[2,1,1,1,1,1],"Min":{},"Max":{},"Sum":1908}],"Temporality":"CumulativeTemporality"}}
+{"Name":"goframe.metric.demo.histogram1","Description":"This is a simple demo for histogram usage","Unit":"ms","Data":{"DataPoints":[{"Attributes":[{"Key":"const_label_a","Value":{"Type":"INT64","Value":1}}],"StartTime":"","Time":"","Count":7,"Bounds":[0,10,20,50,100,500,1000,2000,5000,10000],"BucketCounts":[0,1,1,1,0,1,0,1,0,1,1],"Min":1,"Max":20000,"Sum":31152}],"Temporality":"CumulativeTemporality"}}
+{"Name":"goframe.metric.demo.histogram2","Description":"This demos we can specify custom buckets in Histogram creating","Unit":"","Data":{"DataPoints":[{"Attributes":[{"Key":"const_label_b","Value":{"Type":"INT64","Value":2}}],"StartTime":"","Time":"","Count":7,"Bounds":[100,200,300,400,500],"BucketCounts":[2,1,1,1,1,1],"Min":1,"Max":501,"Sum":1908}],"Temporality":"CumulativeTemporality"}}
 `
 		for _, line := range gstr.SplitAndTrim(expectKeyContent, "\n") {
+			fmt.Println(line)
 			t.Assert(gstr.Contains(content, line), true)
 		}
 	})
@@ -235,7 +238,7 @@ func Test_MetricCallback(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx = gctx.New()
-			_   = gmetric.NewCounter(gmetric.CounterConfig{
+			_   = gmetric.MustNewCounter(gmetric.CounterConfig{
 				MetricConfig: gmetric.MetricConfig{
 					Name: "goframe.metric.demo.counter",
 					Help: "This is a simple demo for Counter usage",
@@ -255,7 +258,7 @@ func Test_MetricCallback(t *testing.T) {
 					}, nil
 				},
 			})
-			_ = gmetric.NewGauge(gmetric.GaugeConfig{
+			_ = gmetric.MustNewGauge(gmetric.GaugeConfig{
 				MetricConfig: gmetric.MetricConfig{
 					Name: "goframe.metric.demo.gauge",
 					Help: "This is a simple demo for Gauge usage",
@@ -304,7 +307,7 @@ func Test_GlobalCallback(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx     = gctx.New()
-			counter = gmetric.NewCounter(gmetric.CounterConfig{
+			counter = gmetric.MustNewCounter(gmetric.CounterConfig{
 				MetricConfig: gmetric.MetricConfig{
 					Name: "goframe.metric.demo.counter",
 					Help: "This is a simple demo for Counter usage",
@@ -315,7 +318,7 @@ func Test_GlobalCallback(t *testing.T) {
 					Instrument: "github.com/gogf/gf/example/metric/basic",
 				},
 			})
-			gauge = gmetric.NewGauge(gmetric.GaugeConfig{
+			gauge = gmetric.MustNewGauge(gmetric.GaugeConfig{
 				MetricConfig: gmetric.MetricConfig{
 					Name: "goframe.metric.demo.gauge",
 					Help: "This is a simple demo for Gauge usage",
@@ -364,7 +367,7 @@ func Test_GlobalCallback_DynamicAttributes(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx     = gctx.New()
-			counter = gmetric.NewCounter(gmetric.CounterConfig{
+			counter = gmetric.MustNewCounter(gmetric.CounterConfig{
 				MetricConfig: gmetric.MetricConfig{
 					Name: "goframe.metric.demo.counter",
 					Help: "This is a simple demo for Counter usage",
@@ -413,7 +416,7 @@ func Test_GlobalCallback_DynamicAttributes(t *testing.T) {
 func Test_GlobalCallback_Error(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			counter = gmetric.NewCounter(gmetric.CounterConfig{
+			counter = gmetric.MustNewCounter(gmetric.CounterConfig{
 				MetricConfig: gmetric.MetricConfig{
 					Name: "goframe.metric.demo.counter",
 					Help: "This is a simple demo for Counter usage",
@@ -425,7 +428,7 @@ func Test_GlobalCallback_Error(t *testing.T) {
 					InstrumentVersion: "v1.4",
 				},
 			})
-			gauge = gmetric.NewGauge(gmetric.GaugeConfig{
+			gauge = gmetric.MustNewGauge(gmetric.GaugeConfig{
 				MetricConfig: gmetric.MetricConfig{
 					Name: "goframe.metric.demo.gauge",
 					Help: "This is a simple demo for Gauge usage",
@@ -477,7 +480,7 @@ func Test_GlobalAttributes(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx     = gctx.New()
-			counter = gmetric.NewCounter(gmetric.CounterConfig{
+			counter = gmetric.MustNewCounter(gmetric.CounterConfig{
 				MetricConfig: gmetric.MetricConfig{
 					Name: "goframe.metric.demo.counter",
 					Help: "This is a simple demo for Counter usage",
