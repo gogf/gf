@@ -5,6 +5,8 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gdb provides ORM features for popular relationship databases.
+//
+// TODO use context.Context as required parameter for all DB operations.
 package gdb
 
 import (

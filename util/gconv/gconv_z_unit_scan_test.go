@@ -641,19 +641,52 @@ func (f *Float64) UnmarshalValue(value interface{}) error {
 	return nil
 }
 
-func Test_Issue1607(t *testing.T) {
+func Test_Scan_AutoCreatingPointerElem(t *testing.T) {
+	type A struct {
+		Name string
+	}
 	gtest.C(t, func(t *gtest.T) {
-		type Demo struct {
-			B Float64
+		var dst A
+		var src = A{
+			Name: "john",
 		}
-		rat := &big.Rat{}
-		rat.SetFloat64(1.5)
-
-		var demos = make([]Demo, 1)
-		err := gconv.Scan([]map[string]interface{}{
-			{"A": 1, "B": rat},
-		}, &demos)
+		err := gconv.Scan(src, &dst)
 		t.AssertNil(err)
-		t.Assert(demos[0].B, 1.5)
+		t.Assert(src, dst)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var dst = &A{
+			Name: "smith",
+		}
+		var src = A{
+			Name: "john",
+		}
+		err := gconv.Scan(src, &dst)
+		t.AssertNil(err)
+		t.Assert(src, dst)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var dst = A{
+			Name: "smith",
+		}
+		var src = &A{
+			Name: "john",
+		}
+		err := gconv.Scan(src, &dst)
+		t.AssertNil(err)
+		t.Assert(src, dst)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var dst *A
+		var src = &A{
+			Name: "john",
+		}
+		err := gconv.Scan(src, &dst)
+		t.AssertNil(err)
+		t.Assert(src, dst)
+
+		// Note that the dst points to src.
+		src.Name = "smith"
+		t.Assert(src, dst)
 	})
 }

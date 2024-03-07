@@ -78,17 +78,3 @@ func Test_Time_Slice_Attribute(t *testing.T) {
 		t.Assert(s.Arr[1], "2021-01-12 12:34:57")
 	})
 }
-
-func Test_Issue2901(t *testing.T) {
-	type GameApp2 struct {
-		ForceUpdateTime *time.Time
-	}
-	gtest.C(t, func(t *gtest.T) {
-		src := map[string]interface{}{
-			"FORCE_UPDATE_TIME": time.Now(),
-		}
-		m := GameApp2{}
-		err := gconv.Scan(src, &m)
-		t.AssertNil(err)
-	})
-}

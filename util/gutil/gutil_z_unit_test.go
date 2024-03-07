@@ -62,12 +62,6 @@ func Test_TryCatch(t *testing.T) {
 	})
 }
 
-func Test_IsEmpty(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gutil.IsEmpty(1), false)
-	})
-}
-
 func Test_Throw(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer func() {

@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/internal/json"
 )
 
 // CacheOption is options for model cache control in query.
@@ -67,7 +66,6 @@ func (m *Model) getSelectResultFromCache(ctx context.Context, sql string, args .
 		return
 	}
 	var (
-		ok        bool
 		cacheItem *selectCacheItem
 		cacheKey  = m.makeSelectCacheKey(sql, args...)
 		cacheObj  = m.db.GetCache()
@@ -82,12 +80,7 @@ func (m *Model) getSelectResultFromCache(ctx context.Context, sql string, args .
 		}
 	}()
 	if v, _ := cacheObj.Get(ctx, cacheKey); !v.IsNil() {
-		if cacheItem, ok = v.Val().(*selectCacheItem); ok {
-			// In-memory cache.
-			return cacheItem.Result, nil
-		}
-		// Other cache, it needs conversion.
-		if err = json.UnmarshalUseNumber(v.Bytes(), &cacheItem); err != nil {
+		if err = v.Scan(&cacheItem); err != nil {
 			return nil, err
 		}
 		return cacheItem.Result, nil
