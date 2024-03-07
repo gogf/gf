@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	histogram1 = gmetric.NewHistogram(gmetric.HistogramConfig{
+	histogram1 = gmetric.MustNewHistogram(gmetric.HistogramConfig{
 		MetricConfig: gmetric.MetricConfig{
 			Name: "goframe.metric.demo.histogram1",
 			Help: "This is a simple demo for histogram usage",
@@ -26,7 +26,7 @@ var (
 		},
 		Buckets: []float64{0, 10, 20, 50, 100, 500, 1000, 2000, 5000, 10000},
 	})
-	histogram2 = gmetric.NewHistogram(gmetric.HistogramConfig{
+	histogram2 = gmetric.MustNewHistogram(gmetric.HistogramConfig{
 		MetricConfig: gmetric.MetricConfig{
 			Name: "goframe.metric.demo.histogram2",
 			Help: "This demos we can specify custom buckets in Histogram creating",

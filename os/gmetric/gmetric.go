@@ -29,7 +29,8 @@ const (
 // Be caution that the Histogram buckets could not be customized if the creation of the Histogram
 // is before the creation of Provider.
 type Provider interface {
-	// SetAsGlobal sets current provider as global meter provider for current process.
+	// SetAsGlobal sets current provider as global meter provider for current process,
+	// which makes the following metrics creating on this Provider, especially the metrics created in runtime.
 	SetAsGlobal()
 
 	// Performer creates and returns a Performer.

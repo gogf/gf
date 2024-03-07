@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	counter = gmetric.NewCounter(gmetric.CounterConfig{
+	counter = gmetric.MustNewCounter(gmetric.CounterConfig{
 		MetricConfig: gmetric.MetricConfig{
 			Name: "goframe.metric.demo.counter",
 			Help: "This is a simple demo for dynamic attributes",

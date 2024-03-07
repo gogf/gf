@@ -32,7 +32,7 @@ import (
 )
 
 var (
-	counter = gmetric.NewCounter(gmetric.CounterConfig{
+	counter = gmetric.MustNewCounter(gmetric.CounterConfig{
 		MetricConfig: gmetric.MetricConfig{
 			Name:       "goframe.metric.demo.counter",
 			Help:       "This is a simple demo for Counter usage",
@@ -42,7 +42,7 @@ var (
 			},
 		},
 	})
-	gauge = gmetric.NewGauge(gmetric.GaugeConfig{
+	gauge = gmetric.MustNewGauge(gmetric.GaugeConfig{
 		MetricConfig: gmetric.MetricConfig{
 			Name:       "goframe.metric.demo.gauge",
 			Help:       "This is a simple demo for Gauge usage",
@@ -52,7 +52,7 @@ var (
 			},
 		},
 	})
-	histogram = gmetric.NewHistogram(gmetric.HistogramConfig{
+	histogram = gmetric.MustNewHistogram(gmetric.HistogramConfig{
 		MetricConfig: gmetric.MetricConfig{
 			Name:       "goframe.metric.demo.histogram",
 			Help:       "This is a simple demo for histogram usage",

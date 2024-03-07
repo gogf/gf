@@ -66,15 +66,15 @@ func newLocalProvider(options ...metric.Option) (gmetric.Provider, error) {
 	)
 	if err != nil {
 		return nil, gerror.WrapCode(
-			gcode.CodeInternalError, err, `start runtime metrics failed`,
+			gcode.CodeInternalError, err, `start built-in runtime metrics failed`,
 		)
 	}
 
 	return provider, nil
 }
 
-// SetAsGlobal sets current provider as global meter provider for current process.
-// This makes the following metrics creation on current Provider.
+// SetAsGlobal sets current provider as global meter provider for current process,
+// which makes the following metrics creating on this Provider, especially the metrics created in runtime.
 func (l *localProvider) SetAsGlobal() {
 	gmetric.SetGlobalProvider(l)
 	otel.SetMeterProvider(l)
@@ -126,13 +126,9 @@ func createViewsForBuiltInMetrics() []metric.View {
 func initializeMetrics(metrics []gmetric.Metric, provider gmetric.Provider) error {
 	for _, m := range metrics {
 		if initializer, ok := m.(gmetric.MetricInitializer); ok {
-			initializer.Init(provider)
-		} else {
-			return gerror.NewCodef(
-				gcode.CodeInvalidParameter,
-				`metric "%s" does not implement interface "gmetric.MetricInitializer"`,
-				m.Info().Key(),
-			)
+			if err := initializer.Init(provider); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
