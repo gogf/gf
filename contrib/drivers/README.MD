@@ -46,7 +46,6 @@ import _ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
 ```
 Note:
 - It does not support `Replace` features.
-- It does not support `LastInsertId`.
 
 ## SQL Server
 ```
