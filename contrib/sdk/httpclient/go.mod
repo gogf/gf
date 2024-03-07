@@ -2,7 +2,7 @@ module github.com/gogf/gf/contrib/sdk/httpclient/v2
 
 go 1.18
 
-require github.com/gogf/gf/v2 v2.6.3
+require github.com/gogf/gf/v2 v2.6.4
 
 require (
 	github.com/BurntSushi/toml v1.2.0 // indirect
