@@ -97,7 +97,7 @@ func internalMiddlewareServerTracing(r *Request) {
 		attribute.String(tracingEventHttpRequestUrl, r.URL.String()),
 		attribute.String(tracingEventHttpRequestHeaders, gconv.String(httputil.HeaderToMap(r.Header))),
 		attribute.String(tracingEventHttpRequestBaggage, gtrace.GetBaggageMap(ctx).String()),
-		attribute.String(tracingEventHttpRequestBody, gstr.StrLimit(
+		attribute.String(tracingEventHttpRequestBody, gstr.StrLimitRune(
 			string(reqBodyContentBytes),
 			gtrace.MaxContentLogSize(),
 			"...",
@@ -107,12 +107,17 @@ func internalMiddlewareServerTracing(r *Request) {
 	// Continue executing.
 	r.Middleware.Next()
 
+	// parse after set route as span name
+	if r.Router.Uri != defaultMiddlewarePattern || r.Router.RegNames != nil {
+		span.SetName(r.Router.Uri)
+	}
+
 	// Error logging.
 	if err = r.GetError(); err != nil {
 		span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, err))
 	}
 	// Response content logging.
-	var resBodyContent = gstr.StrLimit(r.Response.BufferString(), gtrace.MaxContentLogSize(), "...")
+	var resBodyContent = gstr.StrLimitRune(r.Response.BufferString(), gtrace.MaxContentLogSize(), "...")
 	if gzipAccepted(r.Response.Header()) {
 		reader, err := gzip.NewReader(strings.NewReader(r.Response.BufferString()))
 		if err != nil {
@@ -123,7 +128,7 @@ func internalMiddlewareServerTracing(r *Request) {
 		if err != nil {
 			span.SetStatus(codes.Error, fmt.Sprintf(`get uncompress value err:%+v`, err))
 		}
-		resBodyContent = gstr.StrLimit(string(uncompressed), gtrace.MaxContentLogSize(), "...")
+		resBodyContent = gstr.StrLimitRune(string(uncompressed), gtrace.MaxContentLogSize(), "...")
 	}
 
 	span.AddEvent(tracingEventHttpResponse, trace.WithAttributes(

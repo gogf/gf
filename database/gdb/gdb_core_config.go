@@ -30,7 +30,7 @@ type ConfigNode struct {
 	User                 string        `json:"user"`                 // Authentication username.
 	Pass                 string        `json:"pass"`                 // Authentication password.
 	Name                 string        `json:"name"`                 // Default used database name.
-	Type                 string        `json:"type"`                 // Database type: mysql, sqlite, mssql, pgsql, oracle.
+	Type                 string        `json:"type"`                 // Database type: mysql, mariadb, sqlite, mssql, pgsql, oracle, clickhouse, dm.
 	Link                 string        `json:"link"`                 // (Optional) Custom link information for all configuration in one single string.
 	Extra                string        `json:"extra"`                // (Optional) Extra configuration according the registered third-party database driver.
 	Role                 string        `json:"role"`                 // (Optional, "master" in default) Node role, used for master-slave mode: master, slave.

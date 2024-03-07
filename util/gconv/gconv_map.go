@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/util/gtag"
 )
 
 type recursiveType string
@@ -72,15 +73,18 @@ func doMapConvert(value interface{}, recursive recursiveType, mustMapReturn bool
 
 	var (
 		usedOption = getUsedMapOption(option...)
-		newTags    = StructTagPriority
+		newTags    = gtag.StructTagPriority
 	)
+	if usedOption.Deep {
+		recursive = recursiveTypeTrue
+	}
 	switch len(usedOption.Tags) {
 	case 0:
 		// No need handling.
 	case 1:
-		newTags = append(strings.Split(usedOption.Tags[0], ","), StructTagPriority...)
+		newTags = append(strings.Split(usedOption.Tags[0], ","), gtag.StructTagPriority...)
 	default:
-		newTags = append(usedOption.Tags, StructTagPriority...)
+		newTags = append(usedOption.Tags, gtag.StructTagPriority...)
 	}
 	// Assert the common combination of types, and finally it uses reflection.
 	dataMap := make(map[string]interface{})

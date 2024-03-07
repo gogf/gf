@@ -12,16 +12,16 @@ require (
 	github.com/gogf/gf/contrib/metric/otelmetric/v2 v2.6.1
 	github.com/gogf/gf/contrib/nosql/redis/v2 v2.6.1
 	github.com/gogf/gf/contrib/registry/etcd/v2 v2.6.1
-	github.com/gogf/gf/contrib/registry/file/v2 v2.6.1
+	github.com/gogf/gf/contrib/registry/file/v2 v2.6.4
 	github.com/gogf/gf/contrib/registry/nacos/v2 v2.6.1
 	github.com/gogf/gf/contrib/registry/polaris/v2 v2.6.1
 	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.6.1
 	github.com/gogf/gf/contrib/trace/otlpgrpc/v2 v2.6.1
 	github.com/gogf/gf/contrib/trace/otlphttp/v2 v2.6.1
-	github.com/gogf/gf/v2 v2.6.1
+	github.com/gogf/gf/v2 v2.6.4
 	github.com/hashicorp/consul/api v1.24.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
-	github.com/nacos-group/nacos-sdk-go v1.1.4
+	github.com/nacos-group/nacos-sdk-go/v2 v2.2.5
 	github.com/polarismesh/polaris-go v1.5.5
 	github.com/prometheus/client_golang v1.17.0
 	go.opentelemetry.io/otel/exporters/prometheus v0.42.0
@@ -55,7 +55,6 @@ require (
 	github.com/emicklei/go-restful/v3 v3.9.0 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
-	github.com/go-errors/errors v1.5.1 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect

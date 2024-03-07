@@ -301,6 +301,11 @@ func (s *Server) doRouterMapDump() {
 				handlerName = gstr.TrimRightStr(item.Handler.Name, "-fm")
 				middlewares = gstr.SplitAndTrim(item.Middleware, ",")
 			)
+
+			// No printing special internal middleware that may lead confused.
+			if gstr.SubStrFromREx(handlerName, ".") == noPrintInternalRoute {
+				continue
+			}
 			for k, v := range middlewares {
 				middlewares[k] = gstr.TrimRightStr(v, "-fm")
 			}

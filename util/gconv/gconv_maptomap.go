@@ -11,14 +11,13 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/json"
 )
 
 // MapToMap converts any map type variable `params` to another map type variable `pointer`
 // using reflect.
 // See doMapToMap.
 func MapToMap(params interface{}, pointer interface{}, mapping ...map[string]string) error {
-	return doMapToMap(params, pointer, mapping...)
+	return Scan(params, pointer, mapping...)
 }
 
 // doMapToMap converts any map type variable `params` to another map type variable `pointer`.
@@ -32,29 +31,6 @@ func MapToMap(params interface{}, pointer interface{}, mapping ...map[string]str
 // The optional parameter `mapping` is used for struct attribute to map key mapping, which makes
 // sense only if the items of original map `params` is type struct.
 func doMapToMap(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
-	// If given `params` is JSON, it then uses json.Unmarshal doing the converting.
-	switch r := params.(type) {
-	case []byte:
-		if json.Valid(r) {
-			if rv, ok := pointer.(reflect.Value); ok {
-				if rv.Kind() == reflect.Ptr {
-					return json.UnmarshalUseNumber(r, rv.Interface())
-				}
-			} else {
-				return json.UnmarshalUseNumber(r, pointer)
-			}
-		}
-	case string:
-		if paramsBytes := []byte(r); json.Valid(paramsBytes) {
-			if rv, ok := pointer.(reflect.Value); ok {
-				if rv.Kind() == reflect.Ptr {
-					return json.UnmarshalUseNumber(paramsBytes, rv.Interface())
-				}
-			} else {
-				return json.UnmarshalUseNumber(paramsBytes, pointer)
-			}
-		}
-	}
 	var (
 		paramsRv                  reflect.Value
 		paramsKind                reflect.Kind
@@ -92,7 +68,11 @@ func doMapToMap(params interface{}, pointer interface{}, mapping ...map[string]s
 		pointerKind = pointerRv.Kind()
 	}
 	if pointerKind != reflect.Map {
-		return gerror.NewCodef(gcode.CodeInvalidParameter, "pointer should be type of *map, but got:%s", pointerKind)
+		return gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`destination pointer should be type of *map, but got: %s`,
+			pointerKind,
+		)
 	}
 	defer func() {
 		// Catch the panic, especially the reflection operation panics.
@@ -119,7 +99,9 @@ func doMapToMap(params interface{}, pointer interface{}, mapping ...map[string]s
 		mapValue := reflect.New(pointerValueType).Elem()
 		switch pointerValueKind {
 		case reflect.Map, reflect.Struct:
-			if err = doStruct(paramsRv.MapIndex(key).Interface(), mapValue, keyToAttributeNameMapping, ""); err != nil {
+			if err = doStruct(
+				paramsRv.MapIndex(key).Interface(), mapValue, keyToAttributeNameMapping, "",
+			); err != nil {
 				return err
 			}
 		default:

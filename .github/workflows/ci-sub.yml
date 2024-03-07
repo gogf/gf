@@ -37,7 +37,7 @@ jobs:
 
     strategy:
       matrix:
-        go-version: [ "1.18", "1.19", "1.20", "1.21" ]
+        go-version: [ "1.18", "1.19", "1.20", "1.22" ]
         goarch: [ "386", "amd64" ]
 
     steps:
@@ -53,7 +53,7 @@ jobs:
       uses: medyagh/setup-minikube@master
 
     - name: Setup Golang ${{ matrix.go-version }}
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: ${{ matrix.go-version }}
         cache-dependency-path: '**/go.sum' 

@@ -202,6 +202,7 @@ type (
 		Clear              bool   `name:"clear"               short:"a"  brief:"{CGenDaoBriefClear}" orphan:"true"`
 
 		TypeMapping map[DBFieldTypeName]CustomAttributeType `name:"typeMapping" short:"y" brief:"{CGenDaoBriefTypeMapping}" orphan:"true"`
+		genItems    *CGenDaoInternalGenItems
 	}
 	CGenDaoOutput struct{}
 
@@ -220,6 +221,7 @@ type (
 )
 
 func (c CGenDao) Dao(ctx context.Context, in CGenDaoInput) (out *CGenDaoOutput, err error) {
+	in.genItems = newCGenDaoInternalGenItems()
 	if g.Cfg().Available(ctx) {
 		v := g.Cfg().MustGet(ctx, CGenDaoConfig)
 		if v.IsSlice() {
@@ -232,6 +234,7 @@ func (c CGenDao) Dao(ctx context.Context, in CGenDaoInput) (out *CGenDaoOutput, 
 	} else {
 		doGenDaoForArray(ctx, -1, in)
 	}
+	doClear(in.genItems)
 	mlog.Print("done!")
 	return
 }
@@ -312,6 +315,8 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 		newTableNames[i] = newTableName
 	}
 
+	in.genItems.Scale()
+
 	// Dao: index and internal.
 	generateDao(ctx, CGenDaoInternalInput{
 		CGenDaoInput:  in,
@@ -333,6 +338,8 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 		TableNames:    tableNames,
 		NewTableNames: newTableNames,
 	})
+
+	in.genItems.SetClear(in.Clear)
 }
 
 func getImportPartContent(ctx context.Context, source string, isDo bool, appendImports []string) string {

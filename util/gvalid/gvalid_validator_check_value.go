@@ -23,7 +23,7 @@ import (
 )
 
 type doCheckValueInput struct {
-	Name      string                 // Name specifies the name of parameter `value`.
+	Name      string                 // Name specifies the name of parameter `value`, which might be the custom tag name of the parameter.
 	Value     interface{}            // Value specifies the value for the rules to be validated.
 	ValueType reflect.Type           // ValueType specifies the type of the value, mainly used for value type id retrieving.
 	Rule      string                 // Rule specifies the validation rules string, like "required", "required|between:1,100", etc.
@@ -193,6 +193,7 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 				}
 				// The error should have error code that is `gcode.CodeValidationFailed`.
 				if gerror.Code(err) == gcode.CodeNil {
+					// TODO it's better using interface?
 					if e, ok := err.(*gerror.Error); ok {
 						e.SetCode(gcode.CodeValidationFailed)
 					}

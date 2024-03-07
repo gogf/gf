@@ -5,6 +5,8 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gdb provides ORM features for popular relationship databases.
+//
+// TODO use context.Context as required parameter for all DB operations.
 package gdb
 
 import (
@@ -175,6 +177,7 @@ type DB interface {
 	ConvertValueForField(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) // See Core.ConvertValueForField
 	ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) // See Core.ConvertValueForLocal
 	CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (LocalType, error) // See Core.CheckLocalTypeForField
+	FormatUpsert(columns []string, list List, option DoInsertOption) (string, error)                         // See Core.DoFormatUpsert
 }
 
 // TX defines the interfaces for ORM transaction operations.
@@ -320,6 +323,7 @@ type Sql struct {
 type DoInsertOption struct {
 	OnDuplicateStr string                 // Custom string for `on duplicated` statement.
 	OnDuplicateMap map[string]interface{} // Custom key-value map from `OnDuplicateEx` function for `on duplicated` statement.
+	OnConflict     []string               // Custom conflict key of upsert clause, if the database needs it.
 	InsertOption   InsertOption           // Insert operation in constant value.
 	BatchCount     int                    // Batch count for batch inserting.
 }
@@ -384,9 +388,9 @@ const (
 type queryType int
 
 const (
-	queryTypeNormal queryType = 0
-	queryTypeCount  queryType = 1
-	queryTypeValue  queryType = 2
+	queryTypeNormal queryType = iota
+	queryTypeCount
+	queryTypeValue
 )
 
 type joinOperator string
@@ -400,14 +404,17 @@ const (
 type InsertOption int
 
 const (
-	InsertOptionDefault        InsertOption = 0
-	InsertOptionReplace        InsertOption = 1
-	InsertOptionSave           InsertOption = 2
-	InsertOptionIgnore         InsertOption = 3
-	InsertOperationInsert                   = "INSERT"
-	InsertOperationReplace                  = "REPLACE"
-	InsertOperationIgnore                   = "INSERT IGNORE"
-	InsertOnDuplicateKeyUpdate              = "ON DUPLICATE KEY UPDATE"
+	InsertOptionDefault InsertOption = iota
+	InsertOptionReplace
+	InsertOptionSave
+	InsertOptionIgnore
+)
+
+const (
+	InsertOperationInsert      = "INSERT"
+	InsertOperationReplace     = "REPLACE"
+	InsertOperationIgnore      = "INSERT IGNORE"
+	InsertOnDuplicateKeyUpdate = "ON DUPLICATE KEY UPDATE"
 )
 
 const (
@@ -425,6 +432,7 @@ const (
 type LocalType string
 
 const (
+	LocalTypeUndefined   LocalType = ""
 	LocalTypeString      LocalType = "string"
 	LocalTypeDate        LocalType = "date"
 	LocalTypeDatetime    LocalType = "datetime"
@@ -493,6 +501,10 @@ var (
 	// regularFieldNameRegPattern is the regular expression pattern for a string
 	// which is a regular field name of table.
 	regularFieldNameRegPattern = `^[\w\.\-]+$`
+
+	// regularFieldNameWithCommaRegPattern is the regular expression pattern for one or more strings
+	// which are regular field names of table, multiple field names joined with char ','.
+	regularFieldNameWithCommaRegPattern = `^[\w\.\-,\s]+$`
 
 	// regularFieldNameWithoutDotRegPattern is similar to regularFieldNameRegPattern but not allows '.'.
 	// Note that, although some databases allow char '.' in the field name, but it here does not allow '.'

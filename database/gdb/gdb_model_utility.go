@@ -68,30 +68,40 @@ func (m *Model) mappingAndFilterToTableFields(table string, fields []string, fil
 	if len(fieldsMap) == 0 {
 		return fields
 	}
-	var (
-		inputFieldsArray  = gstr.SplitAndTrim(gstr.Join(fields, ","), ",")
-		outputFieldsArray = make([]string, 0, len(inputFieldsArray))
-	)
+	var outputFieldsArray = make([]string, 0)
 	fieldsKeyMap := make(map[string]interface{}, len(fieldsMap))
 	for k := range fieldsMap {
 		fieldsKeyMap[k] = nil
 	}
-	for _, field := range inputFieldsArray {
-		if _, ok := fieldsKeyMap[field]; !ok {
-			if !gregex.IsMatchString(regularFieldNameWithoutDotRegPattern, field) {
-				// Eg: user.id, user.name
-				outputFieldsArray = append(outputFieldsArray, field)
+	for _, field := range fields {
+		var inputFieldsArray []string
+		if gregex.IsMatchString(regularFieldNameWithoutDotRegPattern, field) {
+			inputFieldsArray = append(inputFieldsArray, field)
+		} else if gregex.IsMatchString(regularFieldNameWithCommaRegPattern, field) {
+			inputFieldsArray = gstr.SplitAndTrim(field, ",")
+		} else {
+			// Example:
+			// user.id, user.name
+			// replace(concat_ws(',',lpad(s.id, 6, '0'),s.name),',','') `code`
+			outputFieldsArray = append(outputFieldsArray, field)
+			continue
+		}
+		for _, inputField := range inputFieldsArray {
+			if !gregex.IsMatchString(regularFieldNameWithoutDotRegPattern, inputField) {
+				outputFieldsArray = append(outputFieldsArray, inputField)
 				continue
-			} else {
-				// Eg: id, name
-				if foundKey, _ := gutil.MapPossibleItemByKey(fieldsKeyMap, field); foundKey != "" {
+			}
+			if _, ok := fieldsKeyMap[inputField]; !ok {
+				// Example:
+				// id, name
+				if foundKey, _ := gutil.MapPossibleItemByKey(fieldsKeyMap, inputField); foundKey != "" {
 					outputFieldsArray = append(outputFieldsArray, foundKey)
 				} else if !filter {
-					outputFieldsArray = append(outputFieldsArray, field)
+					outputFieldsArray = append(outputFieldsArray, inputField)
 				}
+			} else {
+				outputFieldsArray = append(outputFieldsArray, inputField)
 			}
-		} else {
-			outputFieldsArray = append(outputFieldsArray, field)
 		}
 	}
 	return outputFieldsArray

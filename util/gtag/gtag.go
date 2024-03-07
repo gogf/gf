@@ -47,3 +47,10 @@ const (
 	Security          = "security"     // Security defines scheme for authentication. Detail to see https://swagger.io/docs/specification/authentication/
 	In                = "in"           // Swagger distinguishes between the following parameter types based on the parameter location. Detail to see https://swagger.io/docs/specification/describing-parameters/
 )
+
+// StructTagPriority defines the default priority tags for Map*/Struct* functions.
+// Note that, the `gconv/param` tags are used by old version of package.
+// It is strongly recommended using short tag `c/p` instead in the future.
+var StructTagPriority = []string{
+	GConv, Param, GConvShort, ParamShort, Json,
+}

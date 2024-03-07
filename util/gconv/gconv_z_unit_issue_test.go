@@ -7,6 +7,7 @@
 package gconv_test
 
 import (
+	"math/big"
 	"testing"
 	"time"
 
@@ -115,6 +116,25 @@ func Test_Issue1227(t *testing.T) {
 	})
 }
 
+// https://github.com/gogf/gf/issues/1607
+func Test_Issue1607(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Demo struct {
+			B Float64
+		}
+		rat := &big.Rat{}
+		rat.SetFloat64(1.5)
+
+		var demos = make([]Demo, 1)
+		err := gconv.Scan([]map[string]interface{}{
+			{"A": 1, "B": rat},
+		}, &demos)
+		t.AssertNil(err)
+		t.Assert(demos[0].B, 1.5)
+	})
+}
+
+// https://github.com/gogf/gf/issues/1946
 func Test_Issue1946(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
@@ -290,5 +310,19 @@ func Test_Issue2371(t *testing.T) {
 		err := gconv.Struct(jsonMap, &s)
 		t.AssertNil(err)
 		t.Assert(s.Time.UTC(), `2022-12-15 08:11:34 +0000 UTC`)
+	})
+}
+
+func Test_Issue2901(t *testing.T) {
+	type GameApp2 struct {
+		ForceUpdateTime *time.Time
+	}
+	gtest.C(t, func(t *gtest.T) {
+		src := map[string]interface{}{
+			"FORCE_UPDATE_TIME": time.Now(),
+		}
+		m := GameApp2{}
+		err := gconv.Scan(src, &m)
+		t.AssertNil(err)
 	})
 }

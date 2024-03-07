@@ -1,0 +1,20 @@
+gfcli:
+  gen:
+    dao:
+      - link: "mysql:root:12345678@tcp(127.0.0.1:3306)/test"
+        tables: "user1"
+        descriptionTag: true
+        noModelComment: true
+        group: "sys"
+        clear: true
+        overwriteDao: false
+      - link: "mysql:root:12345678@tcp(127.0.0.1:3306)/test"
+        tables: "user2"
+        descriptionTag: true
+        noModelComment: true
+        group: "book"
+        clear: true
+        overwriteDao: true
+
+
+

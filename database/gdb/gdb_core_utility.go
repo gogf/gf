@@ -93,6 +93,9 @@ func (c *Core) QuoteWord(s string) string {
 //
 // The meaning of a `string` can be considered as part of a statement string including columns.
 func (c *Core) QuoteString(s string) string {
+	if !gregex.IsMatchString(regularFieldNameWithCommaRegPattern, s) {
+		return s
+	}
 	charLeft, charRight := c.db.GetChars()
 	return doQuoteString(s, charLeft, charRight)
 }
@@ -155,7 +158,7 @@ func (c *Core) ClearTableFields(ctx context.Context, table string, schema ...str
 func (c *Core) ClearTableFieldsAll(ctx context.Context) (err error) {
 	var (
 		keys        = tableFieldsMap.Keys()
-		cachePrefix = fmt.Sprintf(`%s@%s`, cachePrefixTableFields, c.db.GetGroup())
+		cachePrefix = fmt.Sprintf(`%s%s`, cachePrefixTableFields, c.db.GetGroup())
 		removedKeys = make([]string, 0)
 	)
 	for _, key := range keys {
