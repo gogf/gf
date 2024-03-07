@@ -10,20 +10,12 @@ package gutil
 import (
 	"reflect"
 
-	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
 const (
 	dumpIndent = `    `
 )
-
-// IsEmpty checks given `value` empty or not.
-// It returns false if `value` is: integer(0), bool(false), slice/map(len=0), nil;
-// or else returns true.
-func IsEmpty(value interface{}) bool {
-	return empty.IsEmpty(value)
-}
 
 // Keys retrieves and returns the keys from given map or struct.
 func Keys(mapOrStruct interface{}) (keysOrAttrs []string) {
