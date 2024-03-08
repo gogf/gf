@@ -385,12 +385,12 @@ func Test_Model_Save(t *testing.T) {
 			"nickname":    "oldme",
 			"create_time": CreateTime,
 		}).OnConflict("id").Save()
-		t.AssertNil(nil)
+		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
 
 		err = db.Model(table).Scan(&user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.Id, 1)
 		t.Assert(user.Passport, "CN")
 		t.Assert(user.Password, "12345678")
@@ -414,7 +414,7 @@ func Test_Model_Save(t *testing.T) {
 		t.Assert(user.CreateTime.String(), CreateTime)
 
 		count, err = db.Model(table).Count()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(count, 1)
 	})
 }
