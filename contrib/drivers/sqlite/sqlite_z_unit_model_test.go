@@ -407,7 +407,7 @@ func Test_Model_Save(t *testing.T) {
 		t.AssertNil(err)
 
 		err = db.Model(table).Scan(&user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.Passport, "CN")
 		t.Assert(user.Password, "abc123456")
 		t.Assert(user.NickName, "to be not to be")
