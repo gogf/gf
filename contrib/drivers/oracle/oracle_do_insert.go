@@ -24,10 +24,7 @@ func (d *Driver) DoInsert(
 ) (result sql.Result, err error) {
 	switch option.InsertOption {
 	case gdb.InsertOptionSave:
-		return nil, gerror.NewCode(
-			gcode.CodeNotSupported,
-			`Save operation is not supported by oracle driver`,
-		)
+		return d.Core.DoInsert(ctx, link, table, list, option)
 
 	case gdb.InsertOptionReplace:
 		return nil, gerror.NewCode(
