@@ -16,10 +16,7 @@ type Client struct {
 }
 
 const (
-	noEvent = ""
-	message = "message"
-
-	noId = ""
-
+	noEvent      = ""
+	noId         = ""
 	emptyComment = ""
 )

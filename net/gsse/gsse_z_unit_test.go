@@ -15,6 +15,7 @@ func Test_SendMessage(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/sse", gsse.Handle(func(client *gsse.Client) {
 		client.SendMessage("send message")
+		client.SendComment("send message")
 	}))
 	s.SetDumpRouterMap(false)
 	_ = s.Start()
@@ -27,7 +28,7 @@ func Test_SendMessage(t *testing.T) {
 		client.SetPrefix(prefix)
 
 		t.Assert(client.GetContent(gctx.New(), "/sse"),
-			"event:message\ndata:send message\n\n")
+			"data:send message\n\n:send message\n\n")
 	})
 }
 
@@ -51,7 +52,7 @@ func Test_SendMessageWithId(t *testing.T) {
 		client.SetPrefix(prefix)
 
 		t.Assert(client.GetContent(gctx.New(), "/sse"),
-			"event:message\ndata:send message with id\nid:1\n\n")
+			"data:send message with id\nid:1\n\n")
 
 		select {
 		case value := <-ch:

@@ -44,14 +44,12 @@ func (c *Client) SendEventWithId(event, data, id string) {
 func (c *Client) emit(event, data, id string) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-	// default event: message
+	// event: not required
 	if event != noEvent {
 		c.Response().Writeln("event:", event)
-	} else {
-		c.Response().Writeln("event:", message)
 	}
 	c.Response().Writeln("data:", data)
-	// default id: no id
+	// id: not required
 	if id != noId {
 		c.Response().Writeln("id:", id)
 	}
@@ -63,6 +61,16 @@ func (c *Client) emit(event, data, id string) {
 func (c *Client) SendComment(comment string) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+	c.comment(comment)
+}
+
+func (c *Client) heartbeat() {
+	c.mutex.TryLockFunc(func() {
+		c.comment(emptyComment)
+	})
+}
+
+func (c *Client) comment(comment string) {
 	c.Response().Writeln(":", comment)
 	c.Response().Writeln()
 	c.Response().Flush()

@@ -37,7 +37,7 @@ func Handle(fn func(*Client)) func(*ghttp.Request) {
 				case <-keepAliveCtx.Done():
 					return
 				default:
-					client.SendComment(emptyComment)
+					client.heartbeat()
 					time.Sleep(5 * time.Second)
 				}
 			}
