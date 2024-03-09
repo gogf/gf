@@ -3,6 +3,7 @@ package gsse
 import (
 	"context"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/os/gmutex"
 )
 
 // Request return ghttp.Request.
@@ -41,6 +42,8 @@ func (c *Client) SendEventWithId(event, data, id string) {
 }
 
 func (c *Client) emit(event, data, id string) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 	// default event: message
 	if event != noEvent {
 		c.Response().Writeln("event:", event)
@@ -58,6 +61,8 @@ func (c *Client) emit(event, data, id string) {
 
 // SendComment send comment with prefix":"
 func (c *Client) SendComment(comment string) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 	c.Response().Writeln(":", comment)
 	c.Response().Writeln()
 	c.Response().Flush()
@@ -94,5 +99,6 @@ func newClient(request *ghttp.Request) *Client {
 		cancel:    cancel,
 		onClose:   nil,
 		keepAlive: false,
+		mutex:     &gmutex.Mutex{},
 	}
 }
