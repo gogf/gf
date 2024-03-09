@@ -128,7 +128,7 @@ func Test_Model_RightJoin(t *testing.T) {
 	})
 }
 
-func TestPage(t *testing.T) {
+func Test_Page(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	result, err := db.Model(table).Page(1, 2).Order("ID").All()
@@ -1098,6 +1098,87 @@ func Test_Model_WhereOrNotLike(t *testing.T) {
 		t.Assert(len(result), TableSize)
 		t.Assert(result[0]["ID"], 1)
 		t.Assert(result[TableSize-1]["ID"], TableSize)
+	})
+}
+
+func Test_Model_Save(t *testing.T) {
+	table := createTable("test")
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime *gtime.Time
+		}
+		var (
+			user       User
+			count      int
+			result     sql.Result
+			createTime = gtime.Now()
+			err        error
+		)
+
+		// TODO
+		db.SetDebug(true)
+
+		result, err = db.Model(table).Data(g.Map{
+			"id":          1,
+			"passport":    "p1",
+			"password":    "pw1",
+			"nickname":    "n1",
+			"create_time": createTime,
+		}).OnConflict("id").Save()
+
+		t.AssertNil(err)
+		return
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+
+		err = db.Model(table).Scan(&user)
+		t.AssertNil(err)
+		t.Assert(user.Id, 1)
+		t.Assert(user.Passport, "p1")
+		t.Assert(user.Password, "pw1")
+		t.Assert(user.NickName, "n1")
+		t.Assert(user.CreateTime.String(), createTime)
+
+		_, err = db.Model(table).Data(g.Map{
+			"id":          1,
+			"passport":    "p1",
+			"password":    "pw2",
+			"nickname":    "n2",
+			"create_time": createTime,
+		}).OnConflict("id").Save()
+		t.AssertNil(err)
+
+		err = db.Model(table).Scan(&user)
+		t.AssertNil(err)
+		t.Assert(user.Passport, "p1")
+		t.Assert(user.Password, "pw2")
+		t.Assert(user.NickName, "n2")
+		t.Assert(user.CreateTime.String(), createTime)
+
+		count, err = db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
+	})
+}
+
+func Test_Model_Replace(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model(table).Data(g.Map{
+			"id":          1,
+			"passport":    "t11",
+			"password":    "25d55ad283aa400af464c76d713c07ad",
+			"nickname":    "T11",
+			"create_time": "2018-10-24 10:00:00",
+		}).Replace()
+		t.Assert(err, "Replace operation is not supported by oracle driver")
 	})
 }
 
