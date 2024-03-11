@@ -31,7 +31,7 @@ import (
 )
 
 const (
-	tracingInstrumentName                       = "github.com/gogf/gf/v2/net/ghttp.Server"
+	instrumentName                              = "github.com/gogf/gf/v2/net/ghttp.Server"
 	tracingEventHttpRequest                     = "http.request"
 	tracingEventHttpRequestHeaders              = "http.request.headers"
 	tracingEventHttpRequestBaggage              = "http.request.baggage"
@@ -59,7 +59,7 @@ func internalMiddlewareServerTracing(r *Request) {
 	var (
 		span trace.Span
 		tr   = otel.GetTracerProvider().Tracer(
-			tracingInstrumentName,
+			instrumentName,
 			trace.WithInstrumentationVersion(gf.VERSION),
 		)
 	)

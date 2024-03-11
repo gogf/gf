@@ -17,6 +17,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gmetric"
 	"github.com/gogf/gf/v2/os/gres"
 	"github.com/gogf/gf/v2/os/gspath"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -40,52 +41,18 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Create a new request object.
-	request := newRequest(s, r, w)
+	var (
+		request   = newRequest(s, r, w)    // Create a new request object.
+		sessionId = request.GetSessionId() // Get sessionId before user handler
+	)
+	defer s.handleAfterRequestDone(request)
 
-	// Get sessionId before user handler
-	sessionId := request.GetSessionId()
-
-	defer func() {
-		request.LeaveTime = gtime.TimestampMilli()
-		// error log handling.
-		if request.error != nil {
-			s.handleErrorLog(request.error, request)
-		} else {
-			if exception := recover(); exception != nil {
-				request.Response.WriteStatus(http.StatusInternalServerError)
-				if v, ok := exception.(error); ok {
-					if code := gerror.Code(v); code != gcode.CodeNil {
-						s.handleErrorLog(v, request)
-					} else {
-						s.handleErrorLog(gerror.WrapCodeSkip(gcode.CodeInternalPanic, 1, v, ""), request)
-					}
-				} else {
-					s.handleErrorLog(gerror.NewCodeSkipf(gcode.CodeInternalPanic, 1, "%+v", exception), request)
-				}
-			}
-		}
-		// access log handling.
-		s.handleAccessLog(request)
-		// Close the session, which automatically update the TTL
-		// of the session if it exists.
-		if err := request.Session.Close(); err != nil {
-			intlog.Errorf(request.Context(), `%+v`, err)
-		}
-
-		// Close the request and response body
-		// to release the file descriptor in time.
-		err := request.Request.Body.Close()
-		if err != nil {
-			intlog.Errorf(request.Context(), `%+v`, err)
-		}
-		if request.Request.Response != nil {
-			err = request.Request.Response.Body.Close()
-			if err != nil {
-				intlog.Errorf(request.Context(), `%+v`, err)
-			}
-		}
-	}()
+	// Metrics.
+	if gmetric.IsEnabled() {
+		s.metricManager.HttpServerRequestActive.Inc(
+			s.metricManager.GetMetricOptionForActiveByRequest(request),
+		)
+	}
 
 	// ============================================================
 	// Priority:
@@ -149,6 +116,16 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.callHookHandler(HookBeforeOutput, request)
 	}
 
+	// Response handling.
+	s.handleResponse(request, sessionId)
+
+	// HOOK - AfterOutput
+	if !request.IsExited() {
+		s.callHookHandler(HookAfterOutput, request)
+	}
+}
+
+func (s *Server) handleResponse(request *Request, sessionId string) {
 	// HTTP status checking.
 	if request.Response.Status == 0 {
 		if request.StaticFile != nil || request.Middleware.served || request.Response.buffer.Len() > 0 {
@@ -195,10 +172,72 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	request.Cookie.Flush()
 	// Output the buffer content to the client.
 	request.Response.Flush()
-	// HOOK - AfterOutput
-	if !request.IsExited() {
-		s.callHookHandler(HookAfterOutput, request)
+}
+
+func (s *Server) handleAfterRequestDone(request *Request) {
+	request.LeaveTime = gtime.TimestampMilli()
+	// error log handling.
+	if request.error != nil {
+		s.handleErrorLog(request.error, request)
+	} else {
+		if exception := recover(); exception != nil {
+			request.Response.WriteStatus(http.StatusInternalServerError)
+			if v, ok := exception.(error); ok {
+				if code := gerror.Code(v); code != gcode.CodeNil {
+					s.handleErrorLog(v, request)
+				} else {
+					s.handleErrorLog(
+						gerror.WrapCodeSkip(gcode.CodeInternalPanic, 1, v, ""),
+						request,
+					)
+				}
+			} else {
+				s.handleErrorLog(
+					gerror.NewCodeSkipf(gcode.CodeInternalPanic, 1, "%+v", exception),
+					request,
+				)
+			}
+		}
 	}
+	// access log handling.
+	s.handleAccessLog(request)
+	// Close the session, which automatically update the TTL
+	// of the session if it exists.
+	if err := request.Session.Close(); err != nil {
+		intlog.Errorf(request.Context(), `%+v`, err)
+	}
+
+	// Close the request and response body
+	// to release the file descriptor in time.
+	err := request.Request.Body.Close()
+	if err != nil {
+		intlog.Errorf(request.Context(), `%+v`, err)
+	}
+	if request.Request.Response != nil {
+		err = request.Request.Response.Body.Close()
+		if err != nil {
+			intlog.Errorf(request.Context(), `%+v`, err)
+		}
+	}
+
+	// Metrics.
+	s.handleMetricsAfterRequestDone(request)
+}
+
+func (s *Server) handleMetricsAfterRequestDone(request *Request) {
+	if !gmetric.IsEnabled() {
+		return
+	}
+	var (
+		mm      = s.metricManager
+		attrMap = mm.GetMetricAttributeMap(request)
+	)
+	mm.HttpServerRequestTotal.Inc(mm.GetMetricOptionForTotalByMap(attrMap))
+	mm.HttpServerRequestActive.Dec(mm.GetMetricOptionForActiveByMap(attrMap))
+	mm.HttpServerRequestDuration.Record(
+		float64(request.LeaveTime-request.EnterTime),
+		mm.getMetricOptionForDurationByMap(attrMap),
+	)
 }
 
 // searchStaticFile searches the file with given URI.

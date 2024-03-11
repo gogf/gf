@@ -106,6 +106,7 @@ func GetServer(name ...interface{}) *Server {
 			routesMap:        make(map[string][]*HandlerItem),
 			openapi:          goai.New(),
 			registrar:        gsvc.GetRegistry(),
+			metricManager:    newMetricManager(),
 		}
 		// Initialize the server using default configurations.
 		if err := s.SetConfig(NewConfig()); err != nil {

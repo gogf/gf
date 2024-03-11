@@ -96,7 +96,7 @@ func attributesToKeyValues(attrs gmetric.Attributes) []attribute.KeyValue {
 // attributeToKeyValue converts attribute to OpenTelemetry key-value pair attribute.
 func attributeToKeyValue(attr gmetric.Attribute) attribute.KeyValue {
 	var (
-		key   = attr.Key()
+		key   = string(attr.Key())
 		value = attr.Value()
 	)
 	switch result := value.(type) {

@@ -17,7 +17,7 @@ import (
 
 // localAttribute implements interface Attribute.
 type localAttribute struct {
-	key   string
+	key   AttributeKey
 	value any
 }
 
@@ -40,7 +40,7 @@ func CommonAttributes() Attributes {
 }
 
 // NewAttribute creates and returns an Attribute by given `key` and `value`.
-func NewAttribute(key string, value any) Attribute {
+func NewAttribute(key AttributeKey, value any) Attribute {
 	return &localAttribute{
 		key:   key,
 		value: value,
@@ -48,7 +48,7 @@ func NewAttribute(key string, value any) Attribute {
 }
 
 // Key returns the key of the attribute.
-func (l *localAttribute) Key() string {
+func (l *localAttribute) Key() AttributeKey {
 	return l.key
 }
 

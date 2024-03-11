@@ -97,9 +97,12 @@ type Attributes []Attribute
 
 // Attribute is the key-value pair item for Metric.
 type Attribute interface {
-	Key() string // The key for this attribute.
-	Value() any  // The value for this attribute.
+	Key() AttributeKey // The key for this attribute.
+	Value() any        // The value for this attribute.
 }
+
+// AttributeKey is the attribute key.
+type AttributeKey string
 
 // Counter is a Metric that represents a single numerical value that only ever
 // goes up. That implies that it cannot be used to count items whose number can
@@ -228,6 +231,11 @@ var (
 	// globalProvider is the provider for global usage.
 	globalProvider Provider
 )
+
+// IsEnabled returns whether the metrics feature is enabled.
+func IsEnabled() bool {
+	return globalProvider != nil
+}
 
 // SetGlobalProvider registers `provider` as the global Provider,
 // which means the following metrics creating will be base on the global provider.

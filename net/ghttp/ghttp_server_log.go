@@ -21,14 +21,9 @@ func (s *Server) handleAccessLog(r *Request) {
 		return
 	}
 	var (
-		scheme            = "http"
-		proto             = r.Header.Get("X-Forwarded-Proto")
+		scheme            = r.GetSchema()
 		loggerInstanceKey = fmt.Sprintf(`Acccess Logger Of Server:%s`, s.instance)
 	)
-
-	if r.TLS != nil || gstr.Equal(proto, "https") {
-		scheme = "https"
-	}
 	content := fmt.Sprintf(
 		`%d "%s %s %s %s %s" %.3f, %s, "%s", "%s"`,
 		r.Response.Status, r.Method, scheme, r.Host, r.URL.String(), r.Proto,
@@ -53,15 +48,11 @@ func (s *Server) handleErrorLog(err error, r *Request) {
 	}
 	var (
 		code              = gerror.Code(err)
-		scheme            = "http"
+		scheme            = r.GetSchema()
 		codeDetail        = code.Detail()
-		proto             = r.Header.Get("X-Forwarded-Proto")
 		loggerInstanceKey = fmt.Sprintf(`Error Logger Of Server:%s`, s.instance)
 		codeDetailStr     string
 	)
-	if r.TLS != nil || gstr.Equal(proto, "https") {
-		scheme = "https"
-	}
 	if codeDetail != nil {
 		codeDetailStr = gstr.Replace(fmt.Sprintf(`%+v`, codeDetail), "\n", " ")
 	}
