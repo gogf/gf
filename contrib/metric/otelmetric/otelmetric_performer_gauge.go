@@ -50,6 +50,7 @@ func newGaugePerformer(meter metric.Meter, config gmetric.GaugeConfig) (gmetric.
 				}
 				return nil
 			}
+
 			observer.Observe(
 				baseObservePerformer.GetValue(),
 				baseObservePerformer.GetObserveOptions()...,

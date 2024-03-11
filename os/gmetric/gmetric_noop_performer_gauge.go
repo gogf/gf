@@ -30,3 +30,5 @@ func (noopGaugePerformer) Add(increment float64, option ...Option) {}
 // Sub subtracts the given value from the Gauge. (The value can be
 // negative, resulting in an increase of the Gauge.)
 func (noopGaugePerformer) Sub(decrement float64, option ...Option) {}
+
+func (noopGaugePerformer) canBeCallback() {}

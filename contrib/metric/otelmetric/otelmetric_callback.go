@@ -12,20 +12,22 @@ import (
 	"github.com/gogf/gf/v2/os/gmetric"
 )
 
-// localCallbackSetter implements interface gmetric.CallbackSetter.
+// localCallbackSetter implements interface gmetric.CallbackObserver.
 type localCallbackSetter struct {
 	observer metric.Observer
 }
 
-// newCallbackSetter creates and returns gmetric.CallbackSetter.
-func newCallbackSetter(observer metric.Observer) gmetric.CallbackSetter {
+// newCallbackObserver creates and returns gmetric.CallbackObserver.
+func newCallbackObserver(observer metric.Observer) gmetric.CallbackObserver {
 	return &localCallbackSetter{
 		observer: observer,
 	}
 }
 
-// Set sets the value and option for current metric in global callback.
-func (l *localCallbackSetter) Set(m gmetric.Metric, value float64, option ...gmetric.Option) {
+// Observe observes the value for certain initialized Metric.
+// It adds the value to total result if the observed Metrics is type of Counter.
+// It sets the value as the result if the observed Metrics is type of Gauge.
+func (l *localCallbackSetter) Observe(m gmetric.CanBeCallbackMetric, value float64, option ...gmetric.Option) {
 	var (
 		constOption            = getConstOptionByMetric(m)
 		dynamicOption          = getDynamicOptionByMetricOption(option...)

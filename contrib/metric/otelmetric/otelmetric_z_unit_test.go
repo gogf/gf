@@ -331,10 +331,10 @@ func Test_GlobalCallback(t *testing.T) {
 			})
 		)
 		// global callback.
-		gmetric.RegisterCallback(
-			func(ctx context.Context, setter gmetric.CallbackSetter) error {
-				setter.Set(counter, 100)
-				setter.Set(gauge, 101)
+		gmetric.MustRegisterCallback(
+			func(ctx context.Context, obs gmetric.CallbackObserver) error {
+				obs.Observe(counter, 100)
+				obs.Observe(gauge, 101)
 				return nil
 			},
 			counter,
@@ -380,9 +380,9 @@ func Test_GlobalCallback_DynamicAttributes(t *testing.T) {
 			})
 		)
 		// global callback.
-		gmetric.RegisterCallback(
-			func(ctx context.Context, setter gmetric.CallbackSetter) error {
-				setter.Set(counter, 1000, gmetric.Option{
+		gmetric.MustRegisterCallback(
+			func(ctx context.Context, obs gmetric.CallbackObserver) error {
+				obs.Observe(counter, 1000, gmetric.Option{
 					Attributes: gmetric.Attributes{
 						gmetric.NewAttribute("dynamic_label_b", 2),
 					}},
@@ -442,10 +442,10 @@ func Test_GlobalCallback_Error(t *testing.T) {
 			})
 		)
 		// global callback.
-		gmetric.RegisterCallback(
-			func(ctx context.Context, setter gmetric.CallbackSetter) error {
-				setter.Set(counter, 100)
-				setter.Set(gauge, 101)
+		gmetric.MustRegisterCallback(
+			func(ctx context.Context, obs gmetric.CallbackObserver) error {
+				obs.Observe(counter, 100)
+				obs.Observe(gauge, 101)
 				return nil
 			},
 			counter,
@@ -493,9 +493,9 @@ func Test_GlobalAttributes(t *testing.T) {
 			})
 		)
 		// global callback.
-		gmetric.RegisterCallback(
-			func(ctx context.Context, setter gmetric.CallbackSetter) error {
-				setter.Set(counter, 1000, gmetric.Option{
+		gmetric.MustRegisterCallback(
+			func(ctx context.Context, obs gmetric.CallbackObserver) error {
+				obs.Observe(counter, 1000, gmetric.Option{
 					Attributes: gmetric.Attributes{
 						gmetric.NewAttribute("dynamic_label_b", 2),
 					}},

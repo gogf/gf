@@ -70,3 +70,5 @@ func (l *localCounter) Init(provider Provider) (err error) {
 func (l *localCounter) Performer() any {
 	return l.CounterPerformer
 }
+
+func (*localCounter) canBeCallback() {}

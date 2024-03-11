@@ -20,3 +20,5 @@ func (noopCounterPerformer) Inc(option ...Option) {}
 
 // Add adds the given value to the counter. It panics if the value is < 0.
 func (noopCounterPerformer) Add(increment float64, option ...Option) {}
+
+func (noopCounterPerformer) canBeCallback() {}

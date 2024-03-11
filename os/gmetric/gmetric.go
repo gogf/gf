@@ -33,6 +33,11 @@ type Provider interface {
 	// which makes the following metrics creating on this Provider, especially the metrics created in runtime.
 	SetAsGlobal()
 
+	// RegisterCallback registers callback on certain metrics.
+	// A callback is bound to certain component and version, it is called when the associated metrics are read.
+	// Multiple callbacks on the same component and version will be called by their registered sequence.
+	RegisterCallback(callback GlobalCallback, canBeCallbackMetrics ...CanBeCallbackMetric) error
+
 	// Performer creates and returns a Performer.
 	// A Performer can produce types of Metric performer.
 	Performer() Performer
@@ -108,6 +113,7 @@ type Attribute interface {
 type Counter interface {
 	Metric
 	CounterPerformer
+	CanBeCallbackMetric
 }
 
 // CounterPerformer performs operations for Counter metric.
@@ -131,6 +137,7 @@ type CounterPerformer interface {
 type Gauge interface {
 	Metric
 	GaugePerformer
+	CanBeCallbackMetric
 }
 
 // GaugePerformer performs operations for Gauge metric.
@@ -172,6 +179,12 @@ type HistogramPerformer interface {
 	Record(increment float64, option ...Option)
 }
 
+// CanBeCallbackMetric marks certain metrics that can be registered callbacks.
+type CanBeCallbackMetric interface {
+	Metric
+	canBeCallback()
+}
+
 // MetricInitializer manages the initialization for Metric.
 // It is called internally in Provider creation.
 type MetricInitializer interface {
@@ -198,12 +211,14 @@ type CallbackResult struct {
 type MetricCallback func(ctx context.Context) (*CallbackResult, error)
 
 // GlobalCallback function for metric.
-type GlobalCallback func(ctx context.Context, m CallbackSetter) error
+type GlobalCallback func(ctx context.Context, obs CallbackObserver) error
 
-// CallbackSetter sets the value for certain initialized Metric.
-type CallbackSetter interface {
-	// Set sets the value for certain initialized Metric.
-	Set(m Metric, value float64, option ...Option)
+// CallbackObserver sets the value for certain initialized Metric.
+type CallbackObserver interface {
+	// Observe observes the value for certain initialized Metric.
+	// It adds the value to total result if the observed Metrics is type of Counter.
+	// It sets the value as the result if the observed Metrics is type of Gauge.
+	Observe(m CanBeCallbackMetric, value float64, option ...Option)
 }
 
 var (

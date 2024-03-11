@@ -70,3 +70,5 @@ func (l *localGauge) Init(provider Provider) (err error) {
 func (l *localGauge) Performer() any {
 	return l.GaugePerformer
 }
+
+func (*localGauge) canBeCallback() {}
