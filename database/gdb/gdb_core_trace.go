@@ -81,6 +81,6 @@ func (c *Core) traceSpanEnd(ctx context.Context, span trace.Span, sql *Sql) {
 			))
 		}
 	}
-	events = append(events, attribute.String(traceEventDbExecutionType, sql.Type))
+	events = append(events, attribute.String(traceEventDbExecutionType, string(sql.Type)))
 	span.AddEvent(traceEventDbExecution, trace.WithAttributes(events...))
 }

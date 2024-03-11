@@ -12,7 +12,6 @@ package gdb
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
@@ -169,6 +168,7 @@ type DB interface {
 	// Utility methods.
 	// ===========================================================================
 
+	Stats(ctx context.Context) []StatsItem                                                                   // See Core.Stats.
 	GetCtx() context.Context                                                                                 // See Core.GetCtx.
 	GetCore() *Core                                                                                          // See Core.GetCore
 	GetChars() (charLeft string, charRight string)                                                           // See Core.GetChars.
@@ -247,6 +247,15 @@ type TX interface {
 	RollbackTo(point string) error
 }
 
+// StatsItem defines the stats information for a configuration node.
+type StatsItem interface {
+	// Node returns the configuration node info.
+	Node() ConfigNode
+
+	// Stats returns the connection stat for current node.
+	Stats() sql.DBStats
+}
+
 // Core is the base struct for database management.
 type Core struct {
 	db            DB              // DB interface object.
@@ -255,7 +264,7 @@ type Core struct {
 	schema        string          // Custom schema for this object.
 	debug         *gtype.Bool     // Enable debug mode for the database, which can be changed in runtime.
 	cache         *gcache.Cache   // Cache manager, SQL result cache only.
-	links         *gmap.StrAnyMap // links caches all created links by node.
+	links         *gmap.Map       // links caches all created links by node.
 	logger        glog.ILogger    // Logger for logging functionality.
 	config        *ConfigNode     // Current config node.
 	dynamicConfig dynamicConfig   // Dynamic configurations, which can be changed in runtime.
@@ -275,7 +284,7 @@ type DoCommitInput struct {
 	Link          Link
 	Sql           string
 	Args          []interface{}
-	Type          string
+	Type          SqlType
 	IsTransaction bool
 }
 
@@ -307,7 +316,7 @@ type Link interface {
 // Sql is the sql recording struct.
 type Sql struct {
 	Sql           string        // SQL string(may contain reserved char '?').
-	Type          string        // SQL operation type.
+	Type          SqlType       // SQL operation type.
 	Args          []interface{} // Arguments for this sql.
 	Format        string        // Formatted sql which contains arguments in the sql.
 	Error         error         // Execution result.
@@ -417,16 +426,18 @@ const (
 	InsertOnDuplicateKeyUpdate = "ON DUPLICATE KEY UPDATE"
 )
 
+type SqlType string
+
 const (
-	SqlTypeBegin               = "DB.Begin"
-	SqlTypeTXCommit            = "TX.Commit"
-	SqlTypeTXRollback          = "TX.Rollback"
-	SqlTypeExecContext         = "DB.ExecContext"
-	SqlTypeQueryContext        = "DB.QueryContext"
-	SqlTypePrepareContext      = "DB.PrepareContext"
-	SqlTypeStmtExecContext     = "DB.Statement.ExecContext"
-	SqlTypeStmtQueryContext    = "DB.Statement.QueryContext"
-	SqlTypeStmtQueryRowContext = "DB.Statement.QueryRowContext"
+	SqlTypeBegin               SqlType = "DB.Begin"
+	SqlTypeTXCommit            SqlType = "TX.Commit"
+	SqlTypeTXRollback          SqlType = "TX.Rollback"
+	SqlTypeExecContext         SqlType = "DB.ExecContext"
+	SqlTypeQueryContext        SqlType = "DB.QueryContext"
+	SqlTypePrepareContext      SqlType = "DB.PrepareContext"
+	SqlTypeStmtExecContext     SqlType = "DB.Statement.ExecContext"
+	SqlTypeStmtQueryContext    SqlType = "DB.Statement.QueryContext"
+	SqlTypeStmtQueryRowContext SqlType = "DB.Statement.QueryRowContext"
 )
 
 type LocalType string
@@ -579,7 +590,7 @@ func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
 		group:  group,
 		debug:  gtype.NewBool(),
 		cache:  gcache.New(),
-		links:  gmap.NewStrAnyMap(true),
+		links:  gmap.New(true),
 		logger: glog.New(),
 		config: node,
 		dynamicConfig: dynamicConfig{
@@ -738,8 +749,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		internalData.ConfigNode = node
 	}
 	// Cache the underlying connection pool object by node.
-	instanceNameByNode := fmt.Sprintf(`%+v`, node)
-	instanceValue := c.links.GetOrSetFuncLock(instanceNameByNode, func() interface{} {
+	instanceValue := c.links.GetOrSetFuncLock(node, func() interface{} {
 		if sqlDb, err = c.db.Open(node); err != nil {
 			return nil
 		}
