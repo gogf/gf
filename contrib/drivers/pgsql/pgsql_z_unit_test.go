@@ -37,12 +37,12 @@ func Test_LastInsertId(t *testing.T) {
 			{"passport": "user2", "password": "pwd", "nickname": "nickname", "create_time": CreateTime},
 			{"passport": "user3", "password": "pwd", "nickname": "nickname", "create_time": CreateTime},
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		lastInsertId, err := res.LastInsertId()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(lastInsertId, int64(3))
 		rowsAffected, err := res.RowsAffected()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(rowsAffected, int64(3))
 	})
 }
@@ -58,29 +58,29 @@ func Test_TxLastInsertId(t *testing.T) {
 				{"passport": "user2", "password": "pwd", "nickname": "nickname", "create_time": CreateTime},
 				{"passport": "user3", "password": "pwd", "nickname": "nickname", "create_time": CreateTime},
 			})
-			t.Assert(err, nil)
+			t.AssertNil(err)
 			lastInsertId, err := res.LastInsertId()
-			t.Assert(err, nil)
+			t.AssertNil(err)
 			t.AssertEQ(lastInsertId, int64(3))
 			rowsAffected, err := res.RowsAffected()
-			t.Assert(err, nil)
+			t.AssertNil(err)
 			t.AssertEQ(rowsAffected, int64(3))
 
 			res1, err := tx.Model(tableName).Insert(g.List{
 				{"passport": "user4", "password": "pwd", "nickname": "nickname", "create_time": CreateTime},
 				{"passport": "user5", "password": "pwd", "nickname": "nickname", "create_time": CreateTime},
 			})
-			t.Assert(err, nil)
+			t.AssertNil(err)
 			lastInsertId1, err := res1.LastInsertId()
-			t.Assert(err, nil)
+			t.AssertNil(err)
 			t.AssertEQ(lastInsertId1, int64(5))
 			rowsAffected1, err := res1.RowsAffected()
-			t.Assert(err, nil)
+			t.AssertNil(err)
 			t.AssertEQ(rowsAffected1, int64(2))
 			return nil
 
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 }
 

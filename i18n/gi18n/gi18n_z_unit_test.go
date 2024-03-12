@@ -214,7 +214,7 @@ func Test_PathInResource(t *testing.T) {
 		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "你好世界")
 
 		err = i18n.SetPath("i18n")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		i18n.SetLanguage("ja")
 		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "こんにちは世界")
 	})
@@ -245,7 +245,7 @@ func Test_PathInNormal(t *testing.T) {
 		i18n.SetLanguage("en")
 		t.Assert(i18n.T(context.Background(), "{#hello}{#world}{#name}"), "HelloWorld{#name}")
 		err := gfile.PutContentsAppend(gfile.Join(gdebug.CallerDirectory(), "manifest/i18n/en.toml"), "\nname = \"GoFrame\"")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		// Wait for the file modification time to change.
 		time.Sleep(10 * time.Millisecond)
 		t.Assert(i18n.T(context.Background(), "{#hello}{#world}{#name}"), "HelloWorldGoFrame")
@@ -254,7 +254,7 @@ func Test_PathInNormal(t *testing.T) {
 	// Add new language
 	gtest.C(t, func(t *gtest.T) {
 		err := gfile.PutContents(gfile.Join(gdebug.CallerDirectory(), "manifest/i18n/en-US.toml"), "lang = \"en-US\"")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		// Wait for the file modification time to change.
 		time.Sleep(10 * time.Millisecond)
 		i18n.SetLanguage("en-US")
