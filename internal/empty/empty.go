@@ -101,7 +101,7 @@ func IsEmpty(value interface{}, traceSource ...bool) bool {
 			// Common interfaces checks.
 			// =========================
 			if f, ok := value.(iTime); ok {
-				if f == (*time.Time)(nil) {
+				if reflect.ValueOf(f).IsNil() {
 					return true
 				}
 				return f.IsZero()
