@@ -21,7 +21,7 @@ import (
 func (d *Driver) FormatUpsert(columns []string, list gdb.List, option gdb.DoInsertOption) (string, error) {
 	if len(option.OnConflict) == 0 {
 		return "", gerror.NewCode(
-			gcode.CodeInvalidRequest, `Please specify conflict columns`,
+			gcode.CodeInvalidParameter, `Please specify conflict columns`,
 		)
 	}
 
