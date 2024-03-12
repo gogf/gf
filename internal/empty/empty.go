@@ -92,11 +92,17 @@ func IsEmpty(value interface{}, traceSource ...bool) bool {
 		return len(result) == 0
 
 	default:
+
 		// Finally, using reflect.
 		var rv reflect.Value
 		if v, ok := value.(reflect.Value); ok {
 			rv = v
 		} else {
+			rv = reflect.ValueOf(value)
+			if IsNil(rv) {
+				return true
+			}
+
 			// =========================
 			// Common interfaces checks.
 			// =========================
@@ -124,8 +130,6 @@ func IsEmpty(value interface{}, traceSource ...bool) bool {
 				}
 				return len(f.MapStrAny()) == 0
 			}
-
-			rv = reflect.ValueOf(value)
 		}
 
 		switch rv.Kind() {
@@ -188,9 +192,11 @@ func IsEmpty(value interface{}, traceSource ...bool) bool {
 
 		case reflect.Invalid:
 			return true
+
+		default:
+			return false
 		}
 	}
-	return false
 }
 
 // IsNil checks whether given `value` is nil, especially for interface{} type value.
@@ -230,6 +236,9 @@ func IsNil(value interface{}, traceSource ...bool) bool {
 		} else {
 			return !rv.IsValid() || rv.IsNil()
 		}
+
+	default:
+		return false
 	}
 	return false
 }
