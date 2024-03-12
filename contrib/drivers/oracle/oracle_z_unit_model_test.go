@@ -162,7 +162,6 @@ func Test_Page(t *testing.T) {
 func Test_Model_Insert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
-	// db.SetDebug(true)
 	gtest.C(t, func(t *gtest.T) {
 		user := db.Model(table)
 		result, err := user.Data(g.Map{
@@ -1116,7 +1115,7 @@ func Test_Model_Save(t *testing.T) {
 			user       User
 			count      int
 			result     sql.Result
-			createTime = gtime.Now()
+			createTime = gtime.Now().Format("Y-m-d")
 			err        error
 		)
 
@@ -1126,13 +1125,12 @@ func Test_Model_Save(t *testing.T) {
 		result, err = db.Model(table).Data(g.Map{
 			"id":          1,
 			"passport":    "p1",
-			"password":    "pw1",
+			"password":    "15d55ad283aa400af464c76d713c07ad",
 			"nickname":    "n1",
 			"create_time": createTime,
 		}).OnConflict("id").Save()
 
 		t.AssertNil(err)
-		return
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
 
@@ -1140,14 +1138,14 @@ func Test_Model_Save(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(user.Id, 1)
 		t.Assert(user.Passport, "p1")
-		t.Assert(user.Password, "pw1")
+		t.Assert(user.Password, "15d55ad283aa400af464c76d713c07ad")
 		t.Assert(user.NickName, "n1")
-		t.Assert(user.CreateTime.String(), createTime)
+		t.Assert(user.CreateTime.Format("Y-m-d"), createTime)
 
 		_, err = db.Model(table).Data(g.Map{
 			"id":          1,
 			"passport":    "p1",
-			"password":    "pw2",
+			"password":    "25d55ad283aa400af464c76d713c07ad",
 			"nickname":    "n2",
 			"create_time": createTime,
 		}).OnConflict("id").Save()
@@ -1156,9 +1154,9 @@ func Test_Model_Save(t *testing.T) {
 		err = db.Model(table).Scan(&user)
 		t.AssertNil(err)
 		t.Assert(user.Passport, "p1")
-		t.Assert(user.Password, "pw2")
+		t.Assert(user.Password, "25d55ad283aa400af464c76d713c07ad")
 		t.Assert(user.NickName, "n2")
-		t.Assert(user.CreateTime.String(), createTime)
+		t.Assert(user.CreateTime.Format("Y-m-d"), createTime)
 
 		count, err = db.Model(table).Count()
 		t.AssertNil(err)

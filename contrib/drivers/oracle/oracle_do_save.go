@@ -10,32 +10,24 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
+
+	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/gogf/gf/v2/util/gutil"
-	"strings"
 )
 
-// MERGE INTO test USING dual ON ( ID = 1 )
-// WHEN MATCHED THEN
-// UPDATE
-// SET PASSPORT = '1',
-// PASSWORD = '2',
-// NICKNAME = '3',
-// CREATE_TIME = '3',
-// SALARY = 4
-// WHEN NOT MATCHED THEN
-// INSERT (ID, PASSPORT, PASSWORD, NICKNAME, CREATE_TIME, SALARY )
-// VALUES
-// (1, 'a', 'b', 'c', 'd', 100);
-func (d *Driver) doSave(
-	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
+// doSave support upsert for Oracle
+func (d *Driver) doSave(ctx context.Context,
+	link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
 ) (result sql.Result, err error) {
 	if len(option.OnConflict) == 0 {
-		return nil, gerror.New("Please specify conflict columns")
+		return nil, gerror.NewCode(
+			gcode.CodeInvalidRequest, `Please specify conflict columns`,
+		)
 	}
 
 	if len(list) == 0 {
@@ -45,32 +37,26 @@ func (d *Driver) doSave(
 	}
 
 	var (
-		charL, charR = d.GetChars()
-		//onConflict   = option.OnConflict
-		keys                   []string
-		insertKeys             []string
-		insertValues           []string
-		updateValues           []string
-		queryValues            []string
-		valueCharL, valueCharR = "\"", "\""
 		one                    = list[0]
+		charL, charR           = d.GetChars()
+		valueCharL, valueCharR = "'", "'"
+
+		conflictKeys   = option.OnConflict
+		conflictKeySet = gset.New(true)
+
+		// insertKeys:   Handle valid keys that need to be inserted
+		// insertValues: Handle values that need to be inserted
+		// updateValues: Handle values that need to be updated
+		// queryValues:  Handle data that need to be upsert
+		queryValues, insertKeys, insertValues, updateValues []string
 	)
-	// Column names need to be aligned in the syntax
-	for k := range list[0] {
-		keys = append(keys, k)
+
+	// conflictKeys slice type conv to set type
+	for _, conflictKey := range conflictKeys {
+		conflictKeySet.Add(gstr.ToUpper(conflictKey))
 	}
 
 	for key, value := range one {
-		insertKeys = append(insertKeys, charL+key+charR)
-		insertValues = append(insertValues, "T2."+charL+key+charR)
-		// TODO
-		if key != "id" {
-			updateValues = append(
-				updateValues,
-				fmt.Sprintf(`T1.%s = T2.%s`, charL+key+charR, charL+key+charR),
-			)
-		}
-
 		saveValue := gconv.String(value)
 		queryValues = append(
 			queryValues,
@@ -79,88 +65,68 @@ func (d *Driver) doSave(
 				saveValue, key,
 			),
 		)
-	}
-	// insertKeys:   Handle valid keys that need to be inserted and updated
-	// insertValues: Handle values that need to be inserted
-	// updateValues: Handle values that need to be updated
-	// queryValues:  Handle only one insert with column name
-	//insertKeys, insertValues, updateValues, queryValues := parseValue(list[0])
-	//
-	// unionValues: Handling values that need to be inserted and updated
-	unionValues := parseUnion(list[1:], keys)
-	gutil.Dump(unionValues)
-	//
-	//batchResult := new(gdb.SqlResult)
-	//sqlStr := parseSql(
-	//	insertKeys, insertValues, updateValues, queryValues, []string{"231321321"}, table, "id",
-	//)
-	//fmt.Println(sqlStr)
-	//
-	//fmt.Println(sqlStr)
-	//return nil, err
-	//r, err := d.DoExec(ctx, link, sqlStr)
-	//if err != nil {
-	//	return r, err
-	//}
-	//if n, err := r.RowsAffected(); err != nil {
-	//	return r, err
-	//} else {
-	//	batchResult.Result = r
-	//	batchResult.Affected += n
-	//}
-	//return batchResult, nil
-	return nil, err
-}
 
-func parseUnion(list gdb.List, keys []string) (unionValues []string) {
-	for _, mapper := range list {
-		var saveValue []string
-		var (
-			valueCharL = "\""
-			valueCharR = "\""
-		)
-		for _, column := range keys {
-			if mapper[column] == nil {
-				continue
-			}
-			saveValue = append(saveValue,
-				fmt.Sprintf(
-					valueCharL+"%s"+valueCharR,
-					gconv.String(mapper[column]),
-				))
+		insertKeys = append(insertKeys, charL+key+charR)
+		insertValues = append(insertValues, "T2."+charL+key+charR)
+
+		// filter conflict keys in updateValues
+		if !conflictKeySet.Contains(key) {
+			updateValues = append(
+				updateValues,
+				fmt.Sprintf(`T1.%s = T2.%s`, charL+key+charR, charL+key+charR),
+			)
 		}
-		unionValues = append(
-			unionValues,
-			fmt.Sprintf(`UNION ALL SELECT %s FROM DUAL`, strings.Join(saveValue, ",")),
-		)
 	}
-	return
+
+	batchResult := new(gdb.SqlResult)
+	sqlStr := parseSqlForUpsert(table, queryValues, insertKeys, insertValues, updateValues, conflictKeys)
+	r, err := d.DoExec(ctx, link, sqlStr)
+	if err != nil {
+		return r, err
+	}
+	if n, err := r.RowsAffected(); err != nil {
+		return r, err
+	} else {
+		batchResult.Result = r
+		batchResult.Affected += n
+	}
+	return batchResult, nil
 }
 
-func parseSql(
-	insertKeys, insertValues, updateValues, queryValues, unionValues []string, table, duplicateKey string,
+// parseSqlForUpsert
+// MERGE INTO {{table}} T1
+// USING ( SELECT {{queryValues}} FROM DUAL T2
+// ON (T1.{{duplicateKey}} = T2.{{duplicateKey}} AND ...)
+// WHEN NOT MATCHED THEN
+// INSERT {{insertKeys}} VALUES {{insertValues}}
+// WHEN MATCHED THEN
+// UPDATE SET {{updateValues}}
+func parseSqlForUpsert(table string,
+	queryValues, insertKeys, insertValues, updateValues, duplicateKey []string,
 ) (sqlStr string) {
 	var (
-		queryValueStr  = strings.Join(queryValues, ",")
-		unionValueStr  = strings.Join(unionValues, " ")
-		insertKeyStr   = strings.Join(insertKeys, ",")
-		insertValueStr = strings.Join(insertValues, ",")
-		updateValueStr = strings.Join(updateValues, ",")
-		pattern        = gstr.Trim(`
-MERGE INTO %s T1 USING (SELECT %s FROM DUAL %s) T2 ON %s 
-WHEN NOT MATCHED 
-THEN 
-INSERT(%s) VALUES (%s) 
-WHEN MATCHED 
-THEN 
-UPDATE SET %s; 
-COMMIT;
-`)
+		queryValueStr   = strings.Join(queryValues, ",")
+		insertKeyStr    = strings.Join(insertKeys, ",")
+		insertValueStr  = strings.Join(insertValues, ",")
+		updateValueStr  = strings.Join(updateValues, ",")
+		duplicateKeyStr string
+		pattern         = gstr.Trim(`MERGE INTO %s T1 USING (SELECT %s FROM DUAL) T2 ON (%s) WHEN NOT MATCHED THEN INSERT(%s) VALUES (%s) WHEN MATCHED THEN UPDATE SET %s`)
 	)
-	return fmt.Sprintf(
-		pattern,
-		table, queryValueStr, unionValueStr,
-		fmt.Sprintf("(T1.%s = T2.%s)", duplicateKey, duplicateKey),
-		insertKeyStr, insertValueStr, updateValueStr,
+
+	for index, keys := range duplicateKey {
+		if index != 0 {
+			duplicateKeyStr += " AND "
+		}
+		duplicateTmp := fmt.Sprintf("T1.%s = T2.%s", keys, keys)
+		duplicateKeyStr += duplicateTmp
+	}
+
+	return fmt.Sprintf(pattern,
+		table,
+		queryValueStr,
+		duplicateKeyStr,
+		insertKeyStr,
+		insertValueStr,
+		updateValueStr,
 	)
 }
