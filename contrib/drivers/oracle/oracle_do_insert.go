@@ -24,7 +24,8 @@ func (d *Driver) DoInsert(
 ) (result sql.Result, err error) {
 	switch option.InsertOption {
 	case gdb.InsertOptionSave:
-		return d.Core.DoInsert(ctx, link, table, list, option)
+		//return d.Core.DoInsert(ctx, link, table, list, option)
+		return d.doSave(ctx, link, table, list, option)
 
 	case gdb.InsertOptionReplace:
 		return nil, gerror.NewCode(

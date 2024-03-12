@@ -1103,7 +1103,7 @@ func Test_Model_WhereOrNotLike(t *testing.T) {
 
 func Test_Model_Save(t *testing.T) {
 	table := createTable("test")
-	defer dropTable(table)
+	//defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Id         int
