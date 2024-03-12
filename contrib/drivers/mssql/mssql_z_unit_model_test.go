@@ -2649,3 +2649,19 @@ func Test_Model_Save(t *testing.T) {
 		t.Assert(count, 1)
 	})
 }
+
+func Test_Model_Replace(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model(table).Data(g.Map{
+			"id":          1,
+			"passport":    "t11",
+			"password":    "25d55ad283aa400af464c76d713c07ad",
+			"nickname":    "T11",
+			"create_time": "2018-10-24 10:00:00",
+		}).Replace()
+		t.Assert(err, "Replace operation is not supported by mssql driver")
+	})
+}

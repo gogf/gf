@@ -32,7 +32,7 @@ func (d *Driver) doSave(ctx context.Context,
 
 	if len(list) == 0 {
 		return nil, gerror.NewCode(
-			gcode.CodeInvalidRequest, `Save operation list is empty by SQL server driver`,
+			gcode.CodeInvalidRequest, `Save operation list is empty by mssql driver`,
 		)
 	}
 
@@ -100,7 +100,7 @@ func (d *Driver) doSave(ctx context.Context,
 // WHEN NOT MATCHED THEN
 // INSERT {{insertKeys}} VALUES {{insertValues}}
 // WHEN MATCHED THEN
-// UPDATE SET {{updateValues}}
+// UPDATE SET {{updateValues}};
 func parseSqlForUpsert(table string,
 	queryValues, insertKeys, insertValues, updateValues, duplicateKey []string,
 ) (sqlStr string) {
@@ -110,7 +110,7 @@ func parseSqlForUpsert(table string,
 		insertValueStr  = strings.Join(insertValues, ",")
 		updateValueStr  = strings.Join(updateValues, ",")
 		duplicateKeyStr string
-		pattern         = gstr.Trim(`MERGE INTO %s T1 USING (SELECT %s FROM DUAL) T2 ON (%s) WHEN NOT MATCHED THEN INSERT(%s) VALUES (%s) WHEN MATCHED THEN UPDATE SET %s`)
+		pattern         = gstr.Trim(`MERGE INTO %s T1 USING (SELECT %s FROM DUAL) T2 ON (%s) WHEN NOT MATCHED THEN INSERT(%s) VALUES (%s) WHEN MATCHED THEN UPDATE SET %s;`)
 	)
 
 	for index, keys := range duplicateKey {
