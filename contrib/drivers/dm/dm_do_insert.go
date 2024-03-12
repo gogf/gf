@@ -20,7 +20,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-// DoInsert inserts or updates data forF given table.
+// DoInsert inserts or updates data for given table.
 func (d *Driver) DoInsert(
 	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
 ) (result sql.Result, err error) {
