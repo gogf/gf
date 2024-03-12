@@ -37,8 +37,8 @@ const (
 )
 
 const (
-	TestDbIP   = "192.168.10.41"
-	TestDbPort = "31521"
+	TestDbIP   = "127.0.0.1"
+	TestDbPort = "1521"
 	TestDbUser = "system"
 	TestDbPass = "oracle"
 	TestDbName = "XE"
