@@ -24,7 +24,7 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func TestPage(t *testing.T) {
+func Test_Page(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	//db.SetDebug(true)
@@ -2586,5 +2586,66 @@ func Test_Model_ScanAndCount(t *testing.T) {
 
 		t.Assert(len(users), 3)
 		t.Assert(total, TableSize)
+	})
+}
+
+func Test_Model_Save(t *testing.T) {
+	table := createTable("test")
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime *gtime.Time
+		}
+		var (
+			user       User
+			count      int
+			result     sql.Result
+			createTime = gtime.Now().Format("Y-m-d")
+			err        error
+		)
+
+		result, err = db.Model(table).Data(g.Map{
+			"id":          1,
+			"passport":    "p1",
+			"password":    "15d55ad283aa400af464c76d713c07ad",
+			"nickname":    "n1",
+			"create_time": createTime,
+		}).OnConflict("id").Save()
+
+		t.AssertNil(err)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+
+		err = db.Model(table).Scan(&user)
+		t.AssertNil(err)
+		t.Assert(user.Id, 1)
+		t.Assert(user.Passport, "p1")
+		t.Assert(user.Password, "15d55ad283aa400af464c76d713c07ad")
+		t.Assert(user.NickName, "n1")
+		t.Assert(user.CreateTime.Format("Y-m-d"), createTime)
+
+		_, err = db.Model(table).Data(g.Map{
+			"id":          1,
+			"passport":    "p1",
+			"password":    "25d55ad283aa400af464c76d713c07ad",
+			"nickname":    "n2",
+			"create_time": createTime,
+		}).OnConflict("id").Save()
+		t.AssertNil(err)
+
+		err = db.Model(table).Scan(&user)
+		t.AssertNil(err)
+		t.Assert(user.Passport, "p1")
+		t.Assert(user.Password, "25d55ad283aa400af464c76d713c07ad")
+		t.Assert(user.NickName, "n2")
+		t.Assert(user.CreateTime.Format("Y-m-d"), createTime)
+
+		count, err = db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
 	})
 }
