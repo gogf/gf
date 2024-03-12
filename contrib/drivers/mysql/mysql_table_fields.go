@@ -37,7 +37,7 @@ WHERE
 )
 
 func init() {
-	tableFieldsSqlByMariadb = gdb.FormatMultiLineSqlToSingle(tableFieldsSqlByMariadb)
+	tableFieldsSqlByMariadb, _ = gdb.FormatMultiLineSqlToSingle(tableFieldsSqlByMariadb)
 }
 
 // TableFields retrieves and returns the fields' information of specified table of current
