@@ -47,7 +47,11 @@ ORDER BY a.id,a.colorder
 )
 
 func init() {
-	tableFieldsSqlTmp = gdb.FormatMultiLineSqlToSingle(tableFieldsSqlTmp)
+	var err error
+	tableFieldsSqlTmp, err = gdb.FormatMultiLineSqlToSingle(tableFieldsSqlTmp)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // TableFields retrieves and returns the fields' information of specified table of current schema.

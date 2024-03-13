@@ -26,7 +26,11 @@ WHERE TMP_.ROWNUMBER_ > %d AND TMP_.ROWNUMBER_ <= %d
 )
 
 func init() {
-	selectWithOrderSqlTmp = gdb.FormatMultiLineSqlToSingle(selectWithOrderSqlTmp)
+	var err error
+	selectWithOrderSqlTmp, err = gdb.FormatMultiLineSqlToSingle(selectWithOrderSqlTmp)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
