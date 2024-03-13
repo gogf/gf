@@ -28,8 +28,8 @@ var (
 )
 
 const (
-	TestDBHost  = "127.0.0.1"
-	TestDBPort  = "5236"
+	TestDBHost  = "192.168.10.43"
+	TestDBPort  = "35236"
 	TestDBUser  = "SYSDBA"
 	TestDBPass  = "SYSDBA001"
 	TestDBName  = "SYSDBA"
