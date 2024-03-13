@@ -29,7 +29,11 @@ FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID
 )
 
 func init() {
-	tableFieldsSqlTmp, _ = gdb.FormatMultiLineSqlToSingle(tableFieldsSqlTmp)
+	var err error
+	tableFieldsSqlTmp, err = gdb.FormatMultiLineSqlToSingle(tableFieldsSqlTmp)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // TableFields retrieves and returns the fields' information of specified table of current schema.
