@@ -115,7 +115,7 @@ func (d *Driver) doSave(ctx context.Context,
 		valueCharL, valueCharR = "'", "'"
 
 		conflictKeys   = option.OnConflict
-		conflictKeySet = gset.New(true)
+		conflictKeySet = gset.New(false)
 
 		// insertKeys:   Handle valid keys that need to be inserted
 		// insertValues: Handle values that need to be inserted
