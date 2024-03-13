@@ -14,6 +14,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/gogf/gf/v2/encoding/gbase64"
 	"github.com/gogf/gf/v2/frame/g"
@@ -366,15 +367,21 @@ func (c cBuild) getGitCommit(ctx context.Context) string {
 	if gproc.SearchBinary("git") == "" {
 		return ""
 	}
-	var (
-		cmd  = `git log -1 --format="%cd %H" --date=format:"%Y-%m-%d %H:%M:%S"`
-		s, _ = gproc.ShellExec(ctx, cmd)
-	)
-	mlog.Debug(cmd)
+	// 定义时间字符串的格式
+	const timeLayout = "Mon Jan 2 15:04:05 2006 -0700"
+
+	cmd := `git log -1`
+	s, _ := gproc.ShellExec(ctx, cmd)
+
 	if s != "" {
-		if !gstr.Contains(s, "fatal") {
-			return gstr.Trim(s)
-		}
+		arr := strings.Split(s, "\n")
+
+		commit := strings.Split(arr[0], " ")[1]
+		dateFormatStr := strings.Split(arr[2], " ")[3:]
+		date := strings.Join(dateFormatStr, " ")
+		dateTime, _ := time.Parse(timeLayout, date)
+		dateString := dateTime.Format("2006-01-02 15:04:05")
+		return dateString + " " + commit
 	}
 	return ""
 }
