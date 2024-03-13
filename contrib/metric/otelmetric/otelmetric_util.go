@@ -69,11 +69,11 @@ func getConstOptionByMetric(m gmetric.Metric) metric.MeasurementOption {
 func metricToFloat64Observable(m gmetric.Metric) metric.Float64Observable {
 	performer := m.(gmetric.PerformerExporter).Performer()
 	switch m.Info().Type() {
-	case gmetric.MetricTypeCounter:
-		return performer.(*localCounterPerformer).Float64ObservableCounter
+	case gmetric.MetricTypeObservableCounter:
+		return performer.(*localObservableCounterPerformer).Float64ObservableUpDownCounter
 
-	case gmetric.MetricTypeGauge:
-		return performer.(*localGaugePerformer).Float64ObservableGauge
+	case gmetric.MetricTypeObservableGauge:
+		return performer.(*localObservableGaugePerformer).Float64ObservableGauge
 
 	default:
 		panic(gerror.NewCode(

@@ -7,15 +7,11 @@
 package gmetric
 
 // noopObservableMetric is an implementer for interface ObservableMetric with no truly operations.
-type noopObservableMetric struct {
-	Metric
-}
+type noopObservableMetric struct{}
 
 // newNoopObservableMetric creates and returns a CounterPerformer with no truly operations.
-func newNoopObservableMetric(m Metric) ObservableMetric {
-	return noopObservableMetric{
-		Metric: m,
-	}
+func newNoopObservableMetric() ObservableMetric {
+	return noopObservableMetric{}
 }
 
-func (m noopObservableMetric) Observe(value float64, option ...Option) {}
+func (m noopObservableMetric) observable() {}

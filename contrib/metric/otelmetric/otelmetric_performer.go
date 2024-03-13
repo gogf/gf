@@ -28,23 +28,26 @@ func newPerformer(provider *metric.MeterProvider) gmetric.Performer {
 
 // Counter creates and returns a CounterPerformer that performs
 // the operations for Counter metric.
-func (l *localPerformer) Counter(config gmetric.CounterConfig) (gmetric.CounterPerformer, error) {
+func (l *localPerformer) Counter(config gmetric.MetricConfig) (gmetric.CounterPerformer, error) {
 	var meter = l.createMeter(config.Instrument, config.InstrumentVersion)
 	return newCounterPerformer(meter, config)
 }
 
-// Gauge creates and returns a GaugePerformer that performs
-// the operations for Gauge metric.
-func (l *localPerformer) Gauge(config gmetric.GaugeConfig) (gmetric.GaugePerformer, error) {
-	var meter = l.createMeter(config.Instrument, config.InstrumentVersion)
-	return newGaugePerformer(meter, config)
-}
-
 // Histogram creates and returns a HistogramPerformer that performs
 // the operations for Histogram metric.
-func (l *localPerformer) Histogram(config gmetric.HistogramConfig) (gmetric.HistogramPerformer, error) {
+func (l *localPerformer) Histogram(config gmetric.MetricConfig) (gmetric.HistogramPerformer, error) {
 	var meter = l.createMeter(config.Instrument, config.InstrumentVersion)
 	return newHistogramPerformer(meter, config)
+}
+
+func (l *localPerformer) ObservableCounter(config gmetric.MetricConfig) (gmetric.ObservableMetric, error) {
+	var meter = l.createMeter(config.Instrument, config.InstrumentVersion)
+	return newObservableCounterPerformer(meter, config)
+}
+
+func (l *localPerformer) ObservableGauge(config gmetric.MetricConfig) (gmetric.ObservableMetric, error) {
+	var meter = l.createMeter(config.Instrument, config.InstrumentVersion)
+	return newObservableGaugePerformer(meter, config)
 }
 
 // createMeter creates and returns an OpenTelemetry Meter.

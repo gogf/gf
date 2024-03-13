@@ -49,9 +49,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Metrics.
 	if gmetric.IsEnabled() {
-		s.metricManager.HttpServerRequestActive.Inc(
-			s.metricManager.GetMetricOptionForActiveByRequest(request),
-		)
+		//s.metricManager.HttpServerRequestActive.Inc(
+		//	s.metricManager.GetMetricOptionForActiveByRequest(request),
+		//)
 	}
 
 	// ============================================================
@@ -228,16 +228,16 @@ func (s *Server) handleMetricsAfterRequestDone(request *Request) {
 	if !gmetric.IsEnabled() {
 		return
 	}
-	var (
-		mm      = s.metricManager
-		attrMap = mm.GetMetricAttributeMap(request)
-	)
-	mm.HttpServerRequestTotal.Inc(mm.GetMetricOptionForTotalByMap(attrMap))
-	mm.HttpServerRequestActive.Dec(mm.GetMetricOptionForActiveByMap(attrMap))
-	mm.HttpServerRequestDuration.Record(
-		float64(request.LeaveTime-request.EnterTime),
-		mm.getMetricOptionForDurationByMap(attrMap),
-	)
+	//var (
+	//	mm      = s.metricManager
+	//	attrMap = mm.GetMetricAttributeMap(request)
+	//)
+	//mm.HttpServerRequestTotal.Inc(mm.GetMetricOptionForTotalByMap(attrMap))
+	//mm.HttpServerRequestActive.Dec(mm.GetMetricOptionForActiveByMap(attrMap))
+	//mm.HttpServerRequestDuration.Record(
+	//	float64(request.LeaveTime-request.EnterTime),
+	//	mm.getMetricOptionForDurationByMap(attrMap),
+	//)
 }
 
 // searchStaticFile searches the file with given URI.

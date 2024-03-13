@@ -27,7 +27,7 @@ func NewObservableCounter(config MetricConfig) (ObservableCounter, error) {
 	m := &localObservableCounter{
 		Metric:           baseMetric,
 		MetricConfig:     config,
-		ObservableMetric: newNoopObservableMetric(baseMetric),
+		ObservableMetric: newNoopObservableMetric(),
 	}
 	if globalProvider != nil {
 		if err = m.Init(globalProvider); err != nil {
@@ -54,6 +54,6 @@ func (l *localObservableCounter) Init(provider Provider) (err error) {
 		// already initialized.
 		return
 	}
-	l.ObservableMetric, err = provider.Performer().ObservableMetric(l.MetricConfig)
+	l.ObservableMetric, err = provider.Performer().ObservableCounter(l.MetricConfig)
 	return
 }

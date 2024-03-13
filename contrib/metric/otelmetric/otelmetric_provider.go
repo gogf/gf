@@ -9,6 +9,7 @@ package otelmetric
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
@@ -44,11 +45,6 @@ func newLocalProvider(options ...metric.Option) (gmetric.Provider, error) {
 	provider := &localProvider{
 		// MeterProvider is the core object that can create otel metrics.
 		MeterProvider: metric.NewMeterProvider(options...),
-	}
-	for _, callback := range callbacks {
-		for _, m := range callback.Metrics {
-			hasGlobalCallbackMetricSet.Add(m.Info().Key())
-		}
 	}
 
 	if err = provider.initializeMetrics(metrics); err != nil {
@@ -90,11 +86,19 @@ func (l *localProvider) Performer() gmetric.Performer {
 // A callback is bound to certain component and version, it is called when the associated metrics are read.
 // Multiple callbacks on the same component and version will be called by their registered sequence.
 func (l *localProvider) RegisterCallback(
-	callback gmetric.GlobalCallback, canBeCallbackMetrics ...gmetric.ObservableMetric,
+	callback gmetric.Callback, observableMetrics ...gmetric.ObservableMetric,
 ) error {
 	var metrics = make([]gmetric.Metric, 0)
-	for _, m := range canBeCallbackMetrics {
-		metrics = append(metrics, m.(gmetric.Metric))
+	for _, v := range observableMetrics {
+		m, ok := v.(gmetric.Metric)
+		if !ok {
+			return gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`invalid metric parameter "%s" for RegisterCallback, which does not implement interface Metric`,
+				reflect.TypeOf(v).String(),
+			)
+		}
+		metrics = append(metrics, m)
 	}
 	// group the metric by instrument and instrument version.
 	var (
@@ -102,6 +106,8 @@ func (l *localProvider) RegisterCallback(
 		meterMap = map[otelmetric.Meter][]otelmetric.Observable{}
 	)
 	for _, m := range metrics {
+		hasGlobalCallbackMetricSet.Add(m.Info().Key())
+
 		var meter = l.Meter(
 			m.Info().Instrument().Name(),
 			otelmetric.WithInstrumentationVersion(m.Info().Instrument().Version()),
@@ -189,8 +195,12 @@ func (l *localProvider) initializeMetrics(metrics []gmetric.Metric) error {
 	return nil
 }
 
-func (l *localProvider) initializeCallback(callbackItems []gmetric.GlobalCallbackItem) error {
+func (l *localProvider) initializeCallback(callbackItems []gmetric.CallbackItem) error {
 	for _, callbackItem := range callbackItems {
+		if callbackItem.Provider != nil {
+			continue
+		}
+		callbackItem.Provider = l
 		if err := l.RegisterCallback(callbackItem.Callback, callbackItem.Metrics...); err != nil {
 			return err
 		}

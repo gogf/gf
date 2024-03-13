@@ -19,42 +19,27 @@ import (
 )
 
 var (
-	counter = gmetric.MustNewCounter(gmetric.CounterConfig{
-		MetricConfig: gmetric.MetricConfig{
-			Name: "goframe.metric.demo.counter",
-			Help: "This is a simple demo for Counter usage",
-			Unit: "%",
-			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("const_label_a", 1),
-			},
-			Instrument:        "github.com/gogf/gf/example/metric/basic",
-			InstrumentVersion: "v1.0",
+	counter = gmetric.MustNewCounter(gmetric.MetricConfig{
+		Name: "goframe.metric.demo.counter",
+		Help: "This is a simple demo for Counter usage",
+		Unit: "%",
+		Attributes: gmetric.Attributes{
+			gmetric.NewAttribute("const_label_a", 1),
 		},
+		Instrument:        "github.com/gogf/gf/example/metric/basic",
+		InstrumentVersion: "v1.0",
 	})
-	gauge = gmetric.MustNewGauge(gmetric.GaugeConfig{
-		MetricConfig: gmetric.MetricConfig{
-			Name: "goframe.metric.demo.gauge",
-			Help: "This is a simple demo for Gauge usage",
-			Unit: "bytes",
-			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("const_label_b", 2),
-			},
-			Instrument:        "github.com/gogf/gf/example/metric/basic",
-			InstrumentVersion: "v1.0",
+
+	histogram = gmetric.MustNewHistogram(gmetric.MetricConfig{
+		Name: "goframe.metric.demo.histogram",
+		Help: "This is a simple demo for histogram usage",
+		Unit: "ms",
+		Attributes: gmetric.Attributes{
+			gmetric.NewAttribute("const_label_c", 3),
 		},
-	})
-	histogram = gmetric.MustNewHistogram(gmetric.HistogramConfig{
-		MetricConfig: gmetric.MetricConfig{
-			Name: "goframe.metric.demo.histogram",
-			Help: "This is a simple demo for histogram usage",
-			Unit: "ms",
-			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("const_label_c", 3),
-			},
-			Instrument:        "github.com/gogf/gf/example/metric/basic",
-			InstrumentVersion: "v1.0",
-		},
-		Buckets: []float64{0, 10, 20, 50, 100, 500, 1000, 2000, 5000, 10000},
+		Instrument:        "github.com/gogf/gf/example/metric/basic",
+		InstrumentVersion: "v1.0",
+		Buckets:           []float64{0, 10, 20, 50, 100, 500, 1000, 2000, 5000, 10000},
 	})
 )
 
@@ -76,13 +61,9 @@ func main() {
 	defer provider.Shutdown(ctx)
 
 	// Add value for counter.
-	counter.Inc()
-	counter.Add(10)
-
-	// Set value for gauge.
-	gauge.Set(100)
-	gauge.Inc()
-	gauge.Sub(1)
+	counter.Inc(ctx)
+	counter.Add(ctx, 10)
+	counter.Dec(ctx)
 
 	// Record values for histogram.
 	histogram.Record(1)

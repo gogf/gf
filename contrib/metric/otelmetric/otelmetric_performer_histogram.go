@@ -19,12 +19,12 @@ import (
 // localHistogramPerformer is an implementer for interface HistogramPerformer.
 type localHistogramPerformer struct {
 	metric.Float64Histogram
-	config           gmetric.HistogramConfig
+	config           gmetric.MetricConfig
 	attributesOption metric.MeasurementOption
 }
 
 // newHistogramPerformer creates and returns a HistogramPerformer that truly takes action to implement Histogram.
-func newHistogramPerformer(meter metric.Meter, config gmetric.HistogramConfig) (gmetric.HistogramPerformer, error) {
+func newHistogramPerformer(meter metric.Meter, config gmetric.MetricConfig) (gmetric.HistogramPerformer, error) {
 	histogram, err := meter.Float64Histogram(
 		config.Name,
 		metric.WithDescription(config.Help),

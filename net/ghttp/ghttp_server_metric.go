@@ -19,7 +19,6 @@ import (
 type metricManager struct {
 	HttpServerRequestDuration gmetric.Histogram
 	HttpServerRequestTotal    gmetric.Counter
-	HttpServerRequestActive   gmetric.Gauge
 }
 
 const (
@@ -36,15 +35,13 @@ const (
 
 func newMetricManager() *metricManager {
 	mm := &metricManager{
-		HttpServerRequestDuration: gmetric.MustNewHistogram(gmetric.HistogramConfig{
-			MetricConfig: gmetric.MetricConfig{
-				Name:              "http.server.request.duration",
-				Help:              "Measures the duration of inbound request.",
-				Unit:              "ms",
-				Attributes:        gmetric.Attributes{},
-				Instrument:        instrumentName,
-				InstrumentVersion: gf.VERSION,
-			},
+		HttpServerRequestDuration: gmetric.MustNewHistogram(gmetric.MetricConfig{
+			Name:              "http.server.request.duration",
+			Help:              "Measures the duration of inbound request.",
+			Unit:              "ms",
+			Attributes:        gmetric.Attributes{},
+			Instrument:        instrumentName,
+			InstrumentVersion: gf.VERSION,
 			Buckets: []float64{
 				1,
 				5,
@@ -63,26 +60,24 @@ func newMetricManager() *metricManager {
 				10000,
 			},
 		}),
-		HttpServerRequestTotal: gmetric.MustNewCounter(gmetric.CounterConfig{
-			MetricConfig: gmetric.MetricConfig{
-				Name:              "http.server.request.total",
-				Help:              "Total processed request number.",
-				Unit:              "",
-				Attributes:        gmetric.Attributes{},
-				Instrument:        instrumentName,
-				InstrumentVersion: gf.VERSION,
-			},
+		HttpServerRequestTotal: gmetric.MustNewCounter(gmetric.MetricConfig{
+			Name:              "http.server.request.total",
+			Help:              "Total processed request number.",
+			Unit:              "",
+			Attributes:        gmetric.Attributes{},
+			Instrument:        instrumentName,
+			InstrumentVersion: gf.VERSION,
 		}),
-		HttpServerRequestActive: gmetric.MustNewGauge(gmetric.GaugeConfig{
-			MetricConfig: gmetric.MetricConfig{
-				Name:              "http.server.request.active",
-				Help:              "Number of active server requests.",
-				Unit:              "",
-				Attributes:        gmetric.Attributes{},
-				Instrument:        instrumentName,
-				InstrumentVersion: gf.VERSION,
-			},
-		}),
+		//HttpServerRequestActive: gmetric.MustNewGauge(gmetric.GaugeConfig{
+		//	MetricConfig: gmetric.MetricConfig{
+		//		Name:              "http.server.request.active",
+		//		Help:              "Number of active server requests.",
+		//		Unit:              "",
+		//		Attributes:        gmetric.Attributes{},
+		//		Instrument:        instrumentName,
+		//		InstrumentVersion: gf.VERSION,
+		//	},
+		//}),
 	}
 	return mm
 }

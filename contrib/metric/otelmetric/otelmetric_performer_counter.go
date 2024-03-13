@@ -8,7 +8,6 @@ package otelmetric
 
 import (
 	"context"
-
 	"go.opentelemetry.io/otel/metric"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -18,73 +17,69 @@ import (
 
 // localCounterPerformer is an implementer for interface CounterPerformer.
 type localCounterPerformer struct {
-	metric.Float64ObservableCounter
-	baseObservePerformer iBaseObservePerformer
+	metric.Float64UpDownCounter
+	config      gmetric.MetricConfig
+	constOption metric.MeasurementOption
 }
 
 // newCounterPerformer creates and returns a CounterPerformer that truly takes action to implement Counter.
-func newCounterPerformer(meter metric.Meter, config gmetric.CounterConfig) (gmetric.CounterPerformer, error) {
+func newCounterPerformer(meter metric.Meter, config gmetric.MetricConfig) (gmetric.CounterPerformer, error) {
 	var (
-		baseObservePerformer = newBaseObservePerformer(config.MetricConfig)
-		options              = []metric.Float64ObservableCounterOption{
+		options = []metric.Float64UpDownCounterOption{
 			metric.WithDescription(config.Help),
 			metric.WithUnit(config.Unit),
 		}
 	)
-	if !hasGlobalCallbackMetricSet.Contains(config.MetricKey()) {
-		callback := metric.WithFloat64Callback(func(ctx context.Context, observer metric.Float64Observer) error {
-			if config.Callback != nil {
-				result, err := config.Callback(ctx)
-				if err != nil {
-					return gerror.WrapCodef(
-						gcode.CodeOperationFailed,
-						err,
-						`callback failed for metric "%s"`, config.Name,
-					)
-				}
-				if result != nil {
-					observer.Observe(
-						result.Value,
-						baseObservePerformer.MergeAttributesToObserveOptions(result.Attributes)...,
-					)
-				}
-				return nil
-			}
-
-			observer.Observe(
-				baseObservePerformer.GetValue(),
-				baseObservePerformer.GetObserveOptions()...,
-			)
-			return nil
-		})
-		options = append(options, callback)
-	}
-	counter, err := meter.Float64ObservableCounter(config.Name, options...)
+	counter, err := meter.Float64UpDownCounter(config.Name, options...)
 	if err != nil {
 		return nil, gerror.WrapCodef(
 			gcode.CodeInternalError,
 			err,
-			`create Float64ObservableCounter failed with config: %+v`,
+			`create Float64Counter failed with config: %+v`,
 			config,
 		)
 	}
 	return &localCounterPerformer{
-		Float64ObservableCounter: counter,
-		baseObservePerformer:     baseObservePerformer,
+		Float64UpDownCounter: counter,
+		config:               config,
+		constOption:          getConstOptionByMetricConfig(config),
 	}, nil
 }
 
 // Inc increments the counter by 1. Use Add to increment it by arbitrary
 // non-negative values.
-func (l *localCounterPerformer) Inc(option ...gmetric.Option) {
-	l.Add(1, option...)
+func (l *localCounterPerformer) Inc(ctx context.Context, option ...gmetric.Option) {
+	l.Add(ctx, 1, option...)
+}
+
+func (l *localCounterPerformer) Dec(ctx context.Context, option ...gmetric.Option) {
+	l.Add(ctx, -1, option...)
 }
 
 // Add adds the given value to the counter. It panics if the value is < 0.
-func (l *localCounterPerformer) Add(increment float64, option ...gmetric.Option) {
-	l.baseObservePerformer.AddValue(increment)
-	l.baseObservePerformer.SetObserveOptionsByOption(option...)
+func (l *localCounterPerformer) Add(ctx context.Context, increment float64, option ...gmetric.Option) {
+	l.Float64UpDownCounter.Add(ctx, increment, l.generateAddOptions(option...)...)
 }
 
-// RemoveCallback removes the callback when global callback is defined on metric.
-func (l *localCounterPerformer) RemoveCallback() {}
+func (l *localCounterPerformer) generateAddOptions(option ...gmetric.Option) []metric.AddOption {
+	var (
+		addOptions             = make([]metric.AddOption, 0)
+		globalAttributesOption = getGlobalAttributesOption(gmetric.GetGlobalAttributesOption{
+			Instrument:        l.config.Instrument,
+			InstrumentVersion: l.config.InstrumentVersion,
+		})
+	)
+	if l.constOption != nil {
+		addOptions = append(addOptions, l.constOption)
+	}
+	if globalAttributesOption != nil {
+		addOptions = append(addOptions, globalAttributesOption)
+	}
+	if len(option) > 0 {
+		addOptions = append(
+			addOptions,
+			metric.WithAttributes(attributesToKeyValues(option[0].Attributes)...),
+		)
+	}
+	return addOptions
+}

@@ -38,7 +38,7 @@ type Provider interface {
 	// RegisterCallback registers callback on certain metrics.
 	// A callback is bound to certain component and version, it is called when the associated metrics are read.
 	// Multiple callbacks on the same component and version will be called by their registered sequence.
-	RegisterCallback(callback GlobalCallback, canBeCallbackMetrics ...ObservableMetric) error
+	RegisterCallback(callback Callback, canBeCallbackMetrics ...ObservableMetric) error
 
 	// Performer creates and returns a Performer.
 	// A Performer can produce types of Metric performer.
@@ -62,15 +62,13 @@ type Performer interface {
 	// the operations for Counter metric.
 	Counter(config MetricConfig) (CounterPerformer, error)
 
-	// Gauge creates and returns a GaugePerformer that performs
-	// the operations for Gauge metric.
-	Gauge(config MetricConfig) (GaugePerformer, error)
-
 	// Histogram creates and returns a HistogramPerformer that performs
 	// the operations for Histogram metric.
 	Histogram(config MetricConfig) (HistogramPerformer, error)
 
-	ObservableMetric(config MetricConfig) (ObservableMetric, error)
+	ObservableCounter(config MetricConfig) (ObservableMetric, error)
+
+	ObservableGauge(config MetricConfig) (ObservableMetric, error)
 }
 
 // Metric models a single sample value with its metadata being exported.
@@ -131,48 +129,18 @@ type ObservableCounter interface {
 type CounterPerformer interface {
 	// Inc increments the counter by 1. Use Add to increment it by arbitrary
 	// non-negative values.
-	Inc(option ...Option)
+	Inc(ctx context.Context, option ...Option)
+
+	// Dec decrements the Gauge by 1. Use Sub to decrement it by arbitrary values.
+	Dec(ctx context.Context, option ...Option)
 
 	// Add adds the given value to the counter. It panics if the value is < 0.
-	Add(increment float64, option ...Option)
-}
-
-// Gauge is a Metric that represents a single numerical value that can
-// arbitrarily go up and down.
-//
-// A Gauge is typically used for measured values like temperatures or current
-// memory usage, but also "counts" that can go up and down, like the number of
-// running goroutines.
-//
-// To create Gauge instances, use NewGauge.
-type Gauge interface {
-	Metric
-	GaugePerformer
+	Add(ctx context.Context, increment float64, option ...Option)
 }
 
 type ObservableGauge interface {
 	Metric
 	ObservableMetric
-}
-
-// GaugePerformer performs operations for Gauge metric.
-type GaugePerformer interface {
-	// Set sets the Gauge to an arbitrary value.
-	Set(value float64, option ...Option)
-
-	// Inc increments the Gauge by 1. Use Add to increment it by arbitrary values.
-	Inc(option ...Option)
-
-	// Dec decrements the Gauge by 1. Use Sub to decrement it by arbitrary values.
-	Dec(option ...Option)
-
-	// Add adds the given value to the Gauge. (The value can be negative,
-	// resulting in a decrease of the Gauge.)
-	Add(increment float64, option ...Option)
-
-	// Sub subtracts the given value from the Gauge. (The value can be
-	// negative, resulting in an increase of the Gauge.)
-	Sub(decrement float64, option ...Option)
 }
 
 // Histogram counts individual observations from an event or sample stream in
@@ -196,8 +164,7 @@ type HistogramPerformer interface {
 
 // ObservableMetric marks certain metrics that can be registered callbacks.
 type ObservableMetric interface {
-	Metric
-	Observe(value float64, option ...Option)
+	observable()
 }
 
 // MetricInitializer manages the initialization for Metric.
@@ -237,10 +204,10 @@ type ObservableCallback func(ctx context.Context) (*CallbackResult, error)
 // the same attributes as another Callback will report.
 //
 // The function needs to be concurrent safe.
-type Callback func(ctx context.Context, obs CallbackObserver) error
+type Callback func(ctx context.Context, obs Observer) error
 
-// CallbackObserver sets the value for certain initialized Metric.
-type CallbackObserver interface {
+// Observer sets the value for certain initialized Metric.
+type Observer interface {
 	// Observe observes the value for certain initialized Metric.
 	// It adds the value to total result if the observed Metrics is type of Counter.
 	// It sets the value as the result if the observed Metrics is type of Gauge.
