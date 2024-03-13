@@ -396,6 +396,7 @@ func (c *Core) FormatUpsert(columns []string, list List, option DoInsertOption) 
 			)
 		}
 	}
+
 	return InsertOnDuplicateKeyUpdate + " " + onDuplicateStr, nil
 }
 

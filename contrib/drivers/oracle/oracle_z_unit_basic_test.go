@@ -19,7 +19,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func TestTables(t *testing.T) {
+func Test_Tables(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		tables := []string{"t_user1", "pop", "haha"}
 
@@ -60,7 +60,7 @@ func TestTables(t *testing.T) {
 	})
 }
 
-func TestTableFields(t *testing.T) {
+func Test_Table_Fields(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		createTable("t_user")
 		defer dropTable("t_user")
@@ -107,7 +107,7 @@ func TestTableFields(t *testing.T) {
 	})
 }
 
-func TestDoInsert(t *testing.T) {
+func Test_Do_Insert(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		createTable("t_user")
 		defer dropTable("t_user")
