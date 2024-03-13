@@ -72,7 +72,7 @@ func Test_Datetime(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp, err := gtime.StrToTime("")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.AssertLT(timeTemp.Unix(), 0)
 		timeTemp, err = gtime.StrToTime("2006-01")
 		t.AssertNE(err, nil)

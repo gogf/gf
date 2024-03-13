@@ -35,7 +35,11 @@ ORDER BY
 )
 
 func init() {
-	tablesSqlTmp = gdb.FormatMultiLineSqlToSingle(tablesSqlTmp)
+	var err error
+	tablesSqlTmp, err = gdb.FormatMultiLineSqlToSingle(tablesSqlTmp)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // Tables retrieves and returns the tables of current schema.
