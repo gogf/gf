@@ -24,7 +24,6 @@ import (
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -92,13 +91,14 @@ func internalMiddlewareTracing(c *Client, r *http.Request) (response *Response, 
 	reqBodyContentBytes, _ := io.ReadAll(response.Body)
 	response.Body = utils.NewReadCloser(reqBodyContentBytes, false)
 
+	resBodyContent, err := gtrace.SafeContentForHttp(reqBodyContentBytes, response.Header)
+	if err != nil {
+		span.SetStatus(codes.Error, fmt.Sprintf(`converting safe content failed: %s`, err.Error()))
+	}
+
 	span.AddEvent(tracingEventHttpResponse, trace.WithAttributes(
 		attribute.String(tracingEventHttpResponseHeaders, gconv.String(httputil.HeaderToMap(response.Header))),
-		attribute.String(tracingEventHttpResponseBody, gstr.StrLimit(
-			string(reqBodyContentBytes),
-			gtrace.MaxContentLogSize(),
-			"...",
-		)),
+		attribute.String(tracingEventHttpResponseBody, resBodyContent),
 	))
 	return
 }
