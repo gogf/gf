@@ -15,9 +15,11 @@ import (
 type MetricType string
 
 const (
-	MetricTypeCounter   MetricType = `Counter`   // Counter.
-	MetricTypeGauge     MetricType = `Gauge`     // Gauge.
-	MetricTypeHistogram MetricType = `Histogram` // Histogram.
+	MetricTypeCounter           MetricType = `Counter`           // Counter.
+	MetricTypeGauge             MetricType = `Gauge`             // Gauge.
+	MetricTypeHistogram         MetricType = `Histogram`         // Histogram.
+	MetricTypeObservableCounter MetricType = `ObservableCounter` // ObservableCounter.
+	MetricTypeObservableGauge   MetricType = `ObservableGauge`   // ObservableGauge.
 )
 
 const (
@@ -36,7 +38,7 @@ type Provider interface {
 	// RegisterCallback registers callback on certain metrics.
 	// A callback is bound to certain component and version, it is called when the associated metrics are read.
 	// Multiple callbacks on the same component and version will be called by their registered sequence.
-	RegisterCallback(callback GlobalCallback, canBeCallbackMetrics ...CanBeCallbackMetric) error
+	RegisterCallback(callback GlobalCallback, canBeCallbackMetrics ...ObservableMetric) error
 
 	// Performer creates and returns a Performer.
 	// A Performer can produce types of Metric performer.
@@ -58,15 +60,17 @@ type Provider interface {
 type Performer interface {
 	// Counter creates and returns a CounterPerformer that performs
 	// the operations for Counter metric.
-	Counter(config CounterConfig) (CounterPerformer, error)
+	Counter(config MetricConfig) (CounterPerformer, error)
 
 	// Gauge creates and returns a GaugePerformer that performs
 	// the operations for Gauge metric.
-	Gauge(config GaugeConfig) (GaugePerformer, error)
+	Gauge(config MetricConfig) (GaugePerformer, error)
 
 	// Histogram creates and returns a HistogramPerformer that performs
 	// the operations for Histogram metric.
-	Histogram(config HistogramConfig) (HistogramPerformer, error)
+	Histogram(config MetricConfig) (HistogramPerformer, error)
+
+	ObservableMetric(config MetricConfig) (ObservableMetric, error)
 }
 
 // Metric models a single sample value with its metadata being exported.
@@ -116,7 +120,11 @@ type AttributeKey string
 type Counter interface {
 	Metric
 	CounterPerformer
-	CanBeCallbackMetric
+}
+
+type ObservableCounter interface {
+	Metric
+	ObservableMetric
 }
 
 // CounterPerformer performs operations for Counter metric.
@@ -140,7 +148,11 @@ type CounterPerformer interface {
 type Gauge interface {
 	Metric
 	GaugePerformer
-	CanBeCallbackMetric
+}
+
+type ObservableGauge interface {
+	Metric
+	ObservableMetric
 }
 
 // GaugePerformer performs operations for Gauge metric.
@@ -182,10 +194,10 @@ type HistogramPerformer interface {
 	Record(increment float64, option ...Option)
 }
 
-// CanBeCallbackMetric marks certain metrics that can be registered callbacks.
-type CanBeCallbackMetric interface {
+// ObservableMetric marks certain metrics that can be registered callbacks.
+type ObservableMetric interface {
 	Metric
-	canBeCallback()
+	Observe(value float64, option ...Option)
 }
 
 // MetricInitializer manages the initialization for Metric.
@@ -209,19 +221,30 @@ type CallbackResult struct {
 	Attributes Attributes // Dynamic attributes after callback.
 }
 
-// MetricCallback function for metric.
-// A Callback is automatically called when metric reader starts reading the metric value.
-type MetricCallback func(ctx context.Context) (*CallbackResult, error)
+// ObservableCallback function for metric.
+// A ObservableCallback is automatically called when metric reader starts reading the metric value.
+type ObservableCallback func(ctx context.Context) (*CallbackResult, error)
 
-// GlobalCallback function for metric.
-type GlobalCallback func(ctx context.Context, obs CallbackObserver) error
+// Callback is a function registered with a Meter that makes observations for
+// the set of instruments it is registered with. The Observer parameter is used
+// to record measurement observations for these instruments.
+//
+// The function needs to complete in a finite amount of time and the deadline
+// of the passed context is expected to be honored.
+//
+// The function needs to make unique observations across all registered
+// Callbacks. Meaning, it should not report measurements for an instrument with
+// the same attributes as another Callback will report.
+//
+// The function needs to be concurrent safe.
+type Callback func(ctx context.Context, obs CallbackObserver) error
 
 // CallbackObserver sets the value for certain initialized Metric.
 type CallbackObserver interface {
 	// Observe observes the value for certain initialized Metric.
 	// It adds the value to total result if the observed Metrics is type of Counter.
 	// It sets the value as the result if the observed Metrics is type of Gauge.
-	Observe(m CanBeCallbackMetric, value float64, option ...Option)
+	Observe(m ObservableMetric, value float64, option ...Option)
 }
 
 var (

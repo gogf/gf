@@ -6,16 +6,10 @@
 
 package gmetric
 
-// GaugeConfig bundles the configuration for creating a Gauge metric.
-type GaugeConfig struct {
-	MetricConfig
-	Callback MetricCallback // Callback function for metric.
-}
-
 // localGauge is the local implements for interface Gauge.
 type localGauge struct {
 	Metric
-	GaugeConfig
+	MetricConfig
 	GaugePerformer
 }
 
@@ -27,14 +21,14 @@ var (
 )
 
 // NewGauge creates and returns a new Gauge.
-func NewGauge(config GaugeConfig) (Gauge, error) {
-	baseMetric, err := newMetric(MetricTypeGauge, config.MetricConfig)
+func NewGauge(config MetricConfig) (Gauge, error) {
+	baseMetric, err := newMetric(MetricTypeGauge, config)
 	if err != nil {
 		return nil, err
 	}
 	m := &localGauge{
 		Metric:         baseMetric,
-		GaugeConfig:    config,
+		MetricConfig:   config,
 		GaugePerformer: newNoopGaugePerformer(),
 	}
 	if globalProvider != nil {
@@ -48,7 +42,7 @@ func NewGauge(config GaugeConfig) (Gauge, error) {
 
 // MustNewGauge creates and returns a new Gauge.
 // It panics if any error occurs.
-func MustNewGauge(config GaugeConfig) Gauge {
+func MustNewGauge(config MetricConfig) Gauge {
 	m, err := NewGauge(config)
 	if err != nil {
 		panic(err)
@@ -62,7 +56,7 @@ func (l *localGauge) Init(provider Provider) (err error) {
 		// already initialized.
 		return
 	}
-	l.GaugePerformer, err = provider.Performer().Gauge(l.GaugeConfig)
+	l.GaugePerformer, err = provider.Performer().Gauge(l.MetricConfig)
 	return err
 }
 
@@ -71,4 +65,4 @@ func (l *localGauge) Performer() any {
 	return l.GaugePerformer
 }
 
-func (*localGauge) canBeCallback() {}
+func (*localGauge) observable() {}

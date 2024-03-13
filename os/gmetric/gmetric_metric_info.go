@@ -38,6 +38,14 @@ type MetricConfig struct {
 	// InstrumentVersion is the OpenTelemetry instrumentation version to bind this Metric to a global MeterProvider.
 	// This is an optional configuration for a metric.
 	InstrumentVersion string
+
+	// Buckets defines the buckets into which observations are counted.
+	// For Histogram metric only.
+	Buckets []float64
+
+	// Callback function for metric, which is called when metric value changes.
+	// For observable metric only.
+	Callback ObservableCallback
 }
 
 // localMetricInfo implements interface MetricInfo.

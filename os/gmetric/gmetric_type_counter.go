@@ -6,16 +6,10 @@
 
 package gmetric
 
-// CounterConfig bundles the configuration for creating a Counter metric.
-type CounterConfig struct {
-	MetricConfig
-	Callback MetricCallback // Callback function for metric.
-}
-
 // localCounter is the local implements for interface Counter.
 type localCounter struct {
 	Metric
-	CounterConfig
+	MetricConfig
 	CounterPerformer
 }
 
@@ -27,14 +21,14 @@ var (
 )
 
 // NewCounter creates and returns a new Counter.
-func NewCounter(config CounterConfig) (Counter, error) {
-	baseMetric, err := newMetric(MetricTypeCounter, config.MetricConfig)
+func NewCounter(config MetricConfig) (Counter, error) {
+	baseMetric, err := newMetric(MetricTypeCounter, config)
 	if err != nil {
 		return nil, err
 	}
 	m := &localCounter{
 		Metric:           baseMetric,
-		CounterConfig:    config,
+		MetricConfig:     config,
 		CounterPerformer: newNoopCounterPerformer(),
 	}
 	if globalProvider != nil {
@@ -48,7 +42,7 @@ func NewCounter(config CounterConfig) (Counter, error) {
 
 // MustNewCounter creates and returns a new Counter.
 // It panics if any error occurs.
-func MustNewCounter(config CounterConfig) Counter {
+func MustNewCounter(config MetricConfig) Counter {
 	m, err := NewCounter(config)
 	if err != nil {
 		panic(err)
@@ -62,7 +56,7 @@ func (l *localCounter) Init(provider Provider) (err error) {
 		// already initialized.
 		return
 	}
-	l.CounterPerformer, err = provider.Performer().Counter(l.CounterConfig)
+	l.CounterPerformer, err = provider.Performer().Counter(l.MetricConfig)
 	return
 }
 
@@ -70,5 +64,3 @@ func (l *localCounter) Init(provider Provider) (err error) {
 func (l *localCounter) Performer() any {
 	return l.CounterPerformer
 }
-
-func (*localCounter) canBeCallback() {}

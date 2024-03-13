@@ -90,7 +90,7 @@ func (l *localProvider) Performer() gmetric.Performer {
 // A callback is bound to certain component and version, it is called when the associated metrics are read.
 // Multiple callbacks on the same component and version will be called by their registered sequence.
 func (l *localProvider) RegisterCallback(
-	callback gmetric.GlobalCallback, canBeCallbackMetrics ...gmetric.CanBeCallbackMetric,
+	callback gmetric.GlobalCallback, canBeCallbackMetrics ...gmetric.ObservableMetric,
 ) error {
 	var metrics = make([]gmetric.Metric, 0)
 	for _, m := range canBeCallbackMetrics {

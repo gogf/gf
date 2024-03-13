@@ -6,18 +6,10 @@
 
 package gmetric
 
-// HistogramConfig bundles the configuration for creating a Histogram metric.
-type HistogramConfig struct {
-	MetricConfig
-
-	// Buckets defines the buckets into which observations are counted.
-	Buckets []float64
-}
-
 // localHistogram is the local implements for interface Histogram.
 type localHistogram struct {
 	Metric
-	HistogramConfig
+	MetricConfig
 	HistogramPerformer
 }
 
@@ -29,14 +21,14 @@ var (
 )
 
 // NewHistogram creates and returns a new Histogram.
-func NewHistogram(config HistogramConfig) (Histogram, error) {
-	baseMetric, err := newMetric(MetricTypeHistogram, config.MetricConfig)
+func NewHistogram(config MetricConfig) (Histogram, error) {
+	baseMetric, err := newMetric(MetricTypeHistogram, config)
 	if err != nil {
 		return nil, err
 	}
 	m := &localHistogram{
 		Metric:             baseMetric,
-		HistogramConfig:    config,
+		MetricConfig:       config,
 		HistogramPerformer: newNoopHistogramPerformer(),
 	}
 	if globalProvider != nil {
@@ -52,7 +44,7 @@ func NewHistogram(config HistogramConfig) (Histogram, error) {
 
 // MustNewHistogram creates and returns a new Histogram.
 // It panics if any error occurs.
-func MustNewHistogram(config HistogramConfig) Histogram {
+func MustNewHistogram(config MetricConfig) Histogram {
 	m, err := NewHistogram(config)
 	if err != nil {
 		panic(err)
@@ -66,13 +58,13 @@ func (l *localHistogram) Init(provider Provider) (err error) {
 		// already initialized.
 		return
 	}
-	l.HistogramPerformer, err = provider.Performer().Histogram(l.HistogramConfig)
+	l.HistogramPerformer, err = provider.Performer().Histogram(l.MetricConfig)
 	return err
 }
 
 // Buckets returns the bucket slice of the Histogram.
 func (l *localHistogram) Buckets() []float64 {
-	return l.HistogramConfig.Buckets
+	return l.MetricConfig.Buckets
 }
 
 // Performer exports internal Performer.

@@ -27,7 +27,7 @@ func newCallbackObserver(observer metric.Observer) gmetric.CallbackObserver {
 // Observe observes the value for certain initialized Metric.
 // It adds the value to total result if the observed Metrics is type of Counter.
 // It sets the value as the result if the observed Metrics is type of Gauge.
-func (l *localCallbackSetter) Observe(m gmetric.CanBeCallbackMetric, value float64, option ...gmetric.Option) {
+func (l *localCallbackSetter) Observe(m gmetric.ObservableMetric, value float64, option ...gmetric.Option) {
 	var (
 		constOption            = getConstOptionByMetric(m)
 		dynamicOption          = getDynamicOptionByMetricOption(option...)
