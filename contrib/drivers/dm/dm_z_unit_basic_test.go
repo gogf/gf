@@ -394,7 +394,8 @@ func Test_DB_BatchInsert_Struct(t *testing.T) {
 	// batch insert struct
 	table := "A_tables"
 	createInitTable(table)
-	gtest.C(t, func(t *gtest.T) {
+	defer dropTable(table)
+	defer gtest.C(t, func(t *gtest.T) {
 		user := &User{
 			ID:          700,
 			AccountName: "BatchInsert_Struct_700",
