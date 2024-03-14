@@ -16,7 +16,6 @@ type MetricType string
 
 const (
 	MetricTypeCounter           MetricType = `Counter`           // Counter.
-	MetricTypeGauge             MetricType = `Gauge`             // Gauge.
 	MetricTypeHistogram         MetricType = `Histogram`         // Histogram.
 	MetricTypeObservableCounter MetricType = `ObservableCounter` // ObservableCounter.
 	MetricTypeObservableGauge   MetricType = `ObservableGauge`   // ObservableGauge.
@@ -66,8 +65,12 @@ type Performer interface {
 	// the operations for Histogram metric.
 	Histogram(config MetricConfig) (HistogramPerformer, error)
 
+	// ObservableCounter creates and returns an ObservableMetric that performs
+	// the operations for ObservableCounter metric.
 	ObservableCounter(config MetricConfig) (ObservableMetric, error)
 
+	// ObservableGauge creates and returns an ObservableMetric that performs
+	// the operations for ObservableGauge metric.
 	ObservableGauge(config MetricConfig) (ObservableMetric, error)
 }
 
@@ -112,20 +115,17 @@ type Option struct {
 	Attributes Attributes
 }
 
-// Counter is a Metric that represents a single numerical value that only ever
-// goes up. That implies that it cannot be used to count items whose number can
-// also go down, e.g. the number of currently running goroutines. Those
-// "counters" are represented by Gauges.
-//
-// A Counter is typically used to count requests served, tasks completed, errors
-// occurred, etc.
-//
-// To create Counter instances, use NewCounter.
+// Counter is a Metric that represents a single numerical value that can ever
+// goes up or down.
 type Counter interface {
 	Metric
 	CounterPerformer
 }
 
+// ObservableCounter is an instrument used to asynchronously
+// record float64 measurements once per collection cycle. Observations are only
+// made within a callback for this instrument. The value observed is assumed
+// the to be the cumulative sum of the count.
 type ObservableCounter interface {
 	Metric
 	ObservableMetric
@@ -144,6 +144,9 @@ type CounterPerformer interface {
 	Add(ctx context.Context, increment float64, option ...Option)
 }
 
+// ObservableGauge is an instrument used to asynchronously record
+// instantaneous float64 measurements once per collection cycle. Observations
+// are only made within a callback for this instrument.
 type ObservableGauge interface {
 	Metric
 	ObservableMetric
@@ -168,13 +171,14 @@ type HistogramPerformer interface {
 	Record(increment float64, option ...Option)
 }
 
-// ObservableMetric marks certain metrics that can be registered callbacks.
+// ObservableMetric is an instrument used to asynchronously record
+// instantaneous float64 measurements once per collection cycle.
 type ObservableMetric interface {
 	observable()
 }
 
 // MetricInitializer manages the initialization for Metric.
-// It is called internally in Provider creation.
+// It is called internally in metric interface implements.
 type MetricInitializer interface {
 	// Init initializes the Metric in Provider creation.
 	// It sets the metric performer which really takes action.
@@ -182,7 +186,7 @@ type MetricInitializer interface {
 }
 
 // PerformerExporter exports internal Performer of Metric.
-// It is called internally in Provider creation.
+// It is called internally in metric interface implements.
 type PerformerExporter interface {
 	// Performer exports internal Performer of Metric.
 	// This is usually used by metric implements.
@@ -195,15 +199,6 @@ type MetricCallback func(ctx context.Context, obs MetricObserver) error
 // Callback is a function registered with a Meter that makes observations for
 // the set of instruments it is registered with. The Observer parameter is used
 // to record measurement observations for these instruments.
-//
-// The function needs to complete in a finite amount of time and the deadline
-// of the passed context is expected to be honored.
-//
-// The function needs to make unique observations across all registered
-// Callbacks. Meaning, it should not report measurements for an instrument with
-// the same attributes as another Callback will report.
-//
-// The function needs to be concurrent safe.
 type Callback func(ctx context.Context, obs Observer) error
 
 // Observer sets the value for certain initialized Metric.
@@ -214,7 +209,7 @@ type Observer interface {
 	Observe(m ObservableMetric, value float64, option ...Option)
 }
 
-// MetricObserver sets the value for certain initialized Metric.
+// MetricObserver sets the value for bound Metric.
 type MetricObserver interface {
 	// Observe observes the value for certain initialized Metric.
 	// It adds the value to total result if the observed Metrics is type of Counter.

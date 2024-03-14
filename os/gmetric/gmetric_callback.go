@@ -10,7 +10,7 @@ package gmetric
 type CallbackItem struct {
 	Callback Callback           // Global callback.
 	Metrics  []ObservableMetric // Callback on certain metrics.
-	Provider Provider
+	Provider Provider           // Provider is the provider that the callback item is bound to.
 }
 
 var (

@@ -16,7 +16,6 @@ type localObservableGauge struct {
 var (
 	// Check the implements for interface MetricInitializer.
 	_ MetricInitializer = (*localObservableGauge)(nil)
-
 	// Check the implements for interface PerformerExporter.
 	_ PerformerExporter = (*localObservableGauge)(nil)
 )

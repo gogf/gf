@@ -12,6 +12,7 @@ import (
 	"github.com/gogf/gf/v2/os/gmetric"
 )
 
+// localMetricObserver implements interface gmetric.CallbackObserver.
 type localMetricObserver struct {
 	config          gmetric.MetricConfig
 	float64Observer metric.Float64Observer

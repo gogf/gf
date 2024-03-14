@@ -41,10 +41,12 @@ type MetricConfig struct {
 
 	// Buckets defines the buckets into which observations are counted.
 	// For Histogram metric only.
+	// A histogram metric uses default buckets if no explicit buckets configured.
 	Buckets []float64
 
 	// Callback function for metric, which is called when metric value changes.
 	// For observable metric only.
+	// If an observable metric has either Callback attribute nor global callback configured, it does nothing.
 	Callback MetricCallback
 }
 

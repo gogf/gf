@@ -16,7 +16,6 @@ type localObservableCounter struct {
 var (
 	// Check the implements for interface MetricInitializer.
 	_ MetricInitializer = (*localObservableCounter)(nil)
-
 	// Check the implements for interface PerformerExporter.
 	_ PerformerExporter = (*localObservableCounter)(nil)
 )

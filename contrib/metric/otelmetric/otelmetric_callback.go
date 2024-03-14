@@ -12,14 +12,14 @@ import (
 	"github.com/gogf/gf/v2/os/gmetric"
 )
 
-// localCallbackSetter implements interface gmetric.CallbackObserver.
-type localCallbackSetter struct {
+// localObserver implements interface gmetric.Observer.
+type localObserver struct {
 	observer metric.Observer
 }
 
-// newCallbackObserver creates and returns gmetric.CallbackObserver.
-func newCallbackObserver(observer metric.Observer) gmetric.Observer {
-	return &localCallbackSetter{
+// newObserver creates and returns gmetric.Observer.
+func newObserver(observer metric.Observer) gmetric.Observer {
+	return &localObserver{
 		observer: observer,
 	}
 }
@@ -27,7 +27,7 @@ func newCallbackObserver(observer metric.Observer) gmetric.Observer {
 // Observe observes the value for certain initialized Metric.
 // It adds the value to total result if the observed Metrics is type of Counter.
 // It sets the value as the result if the observed Metrics is type of Gauge.
-func (l *localCallbackSetter) Observe(om gmetric.ObservableMetric, value float64, option ...gmetric.Option) {
+func (l *localObserver) Observe(om gmetric.ObservableMetric, value float64, option ...gmetric.Option) {
 	var (
 		m                      = om.(gmetric.Metric)
 		constOption            = getConstOptionByMetric(m)

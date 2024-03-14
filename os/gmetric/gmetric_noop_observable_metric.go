@@ -9,7 +9,7 @@ package gmetric
 // noopObservableMetric is an implementer for interface ObservableMetric with no truly operations.
 type noopObservableMetric struct{}
 
-// newNoopObservableMetric creates and returns a CounterPerformer with no truly operations.
+// newNoopObservableMetric creates and returns a ObservableMetric with no truly operations.
 func newNoopObservableMetric() ObservableMetric {
 	return noopObservableMetric{}
 }

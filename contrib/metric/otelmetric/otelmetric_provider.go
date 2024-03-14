@@ -132,7 +132,7 @@ func (l *localProvider) RegisterCallback(
 	for meter, observables := range meterMap {
 		_, err := meter.RegisterCallback(
 			func(ctx context.Context, observer otelmetric.Observer) error {
-				return callback(ctx, newCallbackObserver(observer))
+				return callback(ctx, newObserver(observer))
 			},
 			observables...,
 		)
