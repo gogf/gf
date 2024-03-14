@@ -27,7 +27,11 @@ SELECT * FROM (
 )
 
 func init() {
-	newSqlReplacementTmp = gdb.FormatMultiLineSqlToSingle(newSqlReplacementTmp)
+	var err error
+	newSqlReplacementTmp, err = gdb.FormatMultiLineSqlToSingle(newSqlReplacementTmp)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.

@@ -9,6 +9,7 @@ package utils
 
 import (
 	"fmt"
+	"unicode/utf8"
 
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -40,5 +41,13 @@ func MarshalMessageToJsonStringForTracing(value interface{}, msgType string, max
 	} else {
 		messageContent = fmt.Sprintf("%v", value)
 	}
+
+	if !utf8.ValidString(messageContent) {
+		messageContent = fmt.Sprintf(
+			"[%s Message Is Invalid UTF-8 Content For Tracing]",
+			msgType,
+		)
+	}
+
 	return messageContent
 }
