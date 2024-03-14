@@ -400,6 +400,7 @@ func Test_DB_BatchInsert_Struct(t *testing.T) {
 			ID:          700,
 			AccountName: "BatchInsert_Struct_700",
 			CreatedTime: time.Now(),
+			UpdatedTime: time.Now(),
 		}
 		result, err := db.Model(table).Insert(user)
 		t.AssertNil(err)
