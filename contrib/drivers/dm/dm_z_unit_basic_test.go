@@ -214,7 +214,7 @@ func TestModelInsert(t *testing.T) {
 			PwdReset:    1,
 			CreatedTime: time.Now(),
 			AttrIndex:   98,
-			// UpdatedTime: time.Now(),
+			UpdatedTime: time.Now(),
 		}
 		// _, err := db.Schema(TestDBName).Model(table).Data(data).Insert()
 		_, err := db.Model(table).Data(&data).Insert()
@@ -232,6 +232,8 @@ func TestDBInsert(t *testing.T) {
 			"ACCOUNT_NAME": fmt.Sprintf(`A%dthress`, i),
 			"PWD_RESET":    3,
 			"ATTR_INDEX":   98,
+			"CREATED_TIME": gtime.Now(),
+			"UPDATED_TIME": gtime.Now(),
 		}
 		_, err := db.Insert(ctx, table, &data)
 		gtest.Assert(err, nil)
