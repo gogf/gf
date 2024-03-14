@@ -13,6 +13,7 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
+	"syscall"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
@@ -54,13 +55,19 @@ func NewProcess(path string, args []string, environment ...[]string) *Process {
 		},
 	}
 	process.Dir, _ = os.Getwd()
-	if len(args) > 0 {
-		// Exclude of current binary path.
-		start := 0
-		if strings.EqualFold(path, args[0]) {
-			start = 1
+	// If you are using Windows, you can use the native cmdline parameter pass
+	if runtime.GOOS == "windows" {
+		process.SysProcAttr = &syscall.SysProcAttr{}
+		process.SysProcAttr.CmdLine = path + " " + gstr.Join(args, " ")
+	} else {
+		if len(args) > 0 {
+			// Exclude of current binary path.
+			start := 0
+			if strings.EqualFold(path, args[0]) {
+				start = 1
+			}
+			process.Args = append(process.Args, args[start:]...)
 		}
-		process.Args = append(process.Args, args[start:]...)
 	}
 	return process
 }
