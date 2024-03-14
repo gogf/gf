@@ -45,7 +45,7 @@ type MetricConfig struct {
 
 	// Callback function for metric, which is called when metric value changes.
 	// For observable metric only.
-	Callback ObservableCallback
+	Callback MetricCallback
 }
 
 // localMetricInfo implements interface MetricInfo.

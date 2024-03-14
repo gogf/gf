@@ -16,6 +16,9 @@ type localObservableCounter struct {
 var (
 	// Check the implements for interface MetricInitializer.
 	_ MetricInitializer = (*localObservableCounter)(nil)
+
+	// Check the implements for interface PerformerExporter.
+	_ PerformerExporter = (*localObservableCounter)(nil)
 )
 
 // NewObservableCounter creates and returns a new CounterObservable.
@@ -56,4 +59,10 @@ func (l *localObservableCounter) Init(provider Provider) (err error) {
 	}
 	l.ObservableMetric, err = provider.Performer().ObservableCounter(l.MetricConfig)
 	return
+}
+
+// Performer implements interface PerformerExporter, which exports internal Performer of Metric.
+// This is usually used by metric implements.
+func (l *localObservableCounter) Performer() any {
+	return l.ObservableMetric
 }

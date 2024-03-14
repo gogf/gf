@@ -106,6 +106,12 @@ type Attribute interface {
 // AttributeKey is the attribute key.
 type AttributeKey string
 
+// Option holds the option for perform a metric operation.
+type Option struct {
+	// Attributes holds the dynamic key-value pair metadata.
+	Attributes Attributes
+}
+
 // Counter is a Metric that represents a single numerical value that only ever
 // goes up. That implies that it cannot be used to count items whose number can
 // also go down, e.g. the number of currently running goroutines. Those
@@ -179,18 +185,12 @@ type MetricInitializer interface {
 // It is called internally in Provider creation.
 type PerformerExporter interface {
 	// Performer exports internal Performer of Metric.
+	// This is usually used by metric implements.
 	Performer() any
 }
 
-// CallbackResult is the result that a callback should return.
-type CallbackResult struct {
-	Value      float64    // New metric value after callback.
-	Attributes Attributes // Dynamic attributes after callback.
-}
-
-// ObservableCallback function for metric.
-// A ObservableCallback is automatically called when metric reader starts reading the metric value.
-type ObservableCallback func(ctx context.Context) (*CallbackResult, error)
+// MetricCallback is automatically called when metric reader starts reading the metric value.
+type MetricCallback func(ctx context.Context, obs MetricObserver) error
 
 // Callback is a function registered with a Meter that makes observations for
 // the set of instruments it is registered with. The Observer parameter is used
@@ -212,6 +212,14 @@ type Observer interface {
 	// It adds the value to total result if the observed Metrics is type of Counter.
 	// It sets the value as the result if the observed Metrics is type of Gauge.
 	Observe(m ObservableMetric, value float64, option ...Option)
+}
+
+// MetricObserver sets the value for certain initialized Metric.
+type MetricObserver interface {
+	// Observe observes the value for certain initialized Metric.
+	// It adds the value to total result if the observed Metrics is type of Counter.
+	// It sets the value as the result if the observed Metrics is type of Gauge.
+	Observe(value float64, option ...Option)
 }
 
 var (

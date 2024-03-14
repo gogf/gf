@@ -16,6 +16,9 @@ type localObservableGauge struct {
 var (
 	// Check the implements for interface MetricInitializer.
 	_ MetricInitializer = (*localObservableGauge)(nil)
+
+	// Check the implements for interface PerformerExporter.
+	_ PerformerExporter = (*localObservableGauge)(nil)
 )
 
 // NewObservableGauge creates and returns a new CounterObservable.
@@ -56,4 +59,10 @@ func (l *localObservableGauge) Init(provider Provider) (err error) {
 	}
 	l.ObservableMetric, err = provider.Performer().ObservableGauge(l.MetricConfig)
 	return
+}
+
+// Performer implements interface PerformerExporter, which exports internal Performer of Metric.
+// This is usually used by metric implements.
+func (l *localObservableGauge) Performer() any {
+	return l.ObservableMetric
 }

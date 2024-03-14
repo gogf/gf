@@ -67,7 +67,8 @@ func (l *localHistogram) Buckets() []float64 {
 	return l.MetricConfig.Buckets
 }
 
-// Performer exports internal Performer.
+// Performer implements interface PerformerExporter, which exports internal Performer of Metric.
+// This is usually used by metric implements.
 func (l *localHistogram) Performer() any {
 	return l.HistogramPerformer
 }

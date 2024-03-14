@@ -25,8 +25,7 @@ type localObservableCounterPerformer struct {
 // newCounterPerformer creates and returns a CounterPerformer that truly takes action to implement Counter.
 func newObservableCounterPerformer(meter metric.Meter, config gmetric.MetricConfig) (gmetric.ObservableMetric, error) {
 	var (
-		observableBase = newObservableBase(config)
-		options        = []metric.Float64ObservableUpDownCounterOption{
+		options = []metric.Float64ObservableUpDownCounterOption{
 			metric.WithDescription(config.Help),
 			metric.WithUnit(config.Unit),
 		}
@@ -36,21 +35,7 @@ func newObservableCounterPerformer(meter metric.Meter, config gmetric.MetricConf
 			if config.Callback == nil {
 				return nil
 			}
-			result, err := config.Callback(ctx)
-			if err != nil {
-				return gerror.WrapCodef(
-					gcode.CodeOperationFailed,
-					err,
-					`callback failed for metric "%s"`, config.Name,
-				)
-			}
-			if result != nil {
-				observer.Observe(
-					result.Value,
-					observableBase.MergeAttributesToObserveOptions(result.Attributes)...,
-				)
-			}
-			return nil
+			return config.Callback(ctx, newMetricObserver(config, observer))
 		})
 		options = append(options, callback)
 	}

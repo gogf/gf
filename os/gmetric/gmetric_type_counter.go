@@ -60,7 +60,8 @@ func (l *localCounter) Init(provider Provider) (err error) {
 	return
 }
 
-// Performer exports internal Performer.
+// Performer implements interface PerformerExporter, which exports internal Performer of Metric.
+// This is usually used by metric implements.
 func (l *localCounter) Performer() any {
 	return l.CounterPerformer
 }

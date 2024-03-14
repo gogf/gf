@@ -51,11 +51,11 @@ func (l *localHistogramPerformer) Record(increment float64, option ...gmetric.Op
 	l.Float64Histogram.Record(
 		context.Background(),
 		increment,
-		l.mergeToRecordOptions(option...)...,
+		l.generateRecordOptions(option...)...,
 	)
 }
 
-func (l *localHistogramPerformer) mergeToRecordOptions(option ...gmetric.Option) []metric.RecordOption {
+func (l *localHistogramPerformer) generateRecordOptions(option ...gmetric.Option) []metric.RecordOption {
 	var (
 		dynamicOption          = getDynamicOptionByMetricOption(option...)
 		recordOptions          = []metric.RecordOption{l.attributesOption}

@@ -43,7 +43,7 @@ var (
 		Buckets:           []float64{0, 10, 20, 50, 100, 500, 1000, 2000, 5000, 10000},
 	})
 
-	observableCounter = gmetric.MustNewObservableCounter(gmetric.MetricConfig{
+	_ = gmetric.MustNewObservableCounter(gmetric.MetricConfig{
 		Name: "goframe.metric.demo.observable_counter",
 		Help: "This is a simple demo for ObservableCounter usage",
 		Unit: "%",
@@ -52,9 +52,16 @@ var (
 		},
 		Instrument:        "github.com/gogf/gf/example/metric/basic",
 		InstrumentVersion: "v1.0",
+		Callback: func(ctx context.Context, obs gmetric.MetricObserver) error {
+			obs.Observe(10)
+			obs.Observe(10, gmetric.Option{
+				Attributes: gmetric.Attributes{gmetric.NewAttribute("dynamic_label_a", "1")},
+			})
+			return nil
+		},
 	})
 
-	observableGauge = gmetric.MustNewObservableGauge(gmetric.MetricConfig{
+	_ = gmetric.MustNewObservableGauge(gmetric.MetricConfig{
 		Name: "goframe.metric.demo.observable_gauge",
 		Help: "This is a simple demo for ObservableGauge usage",
 		Unit: "%",
@@ -63,17 +70,18 @@ var (
 		},
 		Instrument:        "github.com/gogf/gf/example/metric/basic",
 		InstrumentVersion: "v1.0",
+		Callback: func(ctx context.Context, obs gmetric.MetricObserver) error {
+			obs.Observe(10)
+			obs.Observe(10, gmetric.Option{
+				Attributes: gmetric.Attributes{gmetric.NewAttribute("dynamic_label_b", "2")},
+			})
+			return nil
+		},
 	})
 )
 
 func main() {
 	var ctx = gctx.New()
-
-	gmetric.MustRegisterCallback(func(ctx context.Context, obs gmetric.Observer) error {
-		obs.Observe(observableCounter, 10)
-		obs.Observe(observableGauge, 10)
-		return nil
-	}, observableCounter, observableGauge)
 
 	// Prometheus exporter to export metrics as Prometheus format.
 	exporter, err := prometheus.New(
