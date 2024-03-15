@@ -17,7 +17,6 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/gmetric"
 	"github.com/gogf/gf/v2/os/gres"
 	"github.com/gogf/gf/v2/os/gspath"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -73,12 +72,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Metrics.
-	if gmetric.IsEnabled() {
-		s.metricManager.HttpServerRequestActive.Inc(
-			request.Context(),
-			s.metricManager.GetMetricOptionForActiveByRequest(request),
-		)
-	}
+	s.handleMetricsBeforeRequest(request)
 
 	// HOOK - BeforeServe
 	s.callHookHandler(HookBeforeServe, request)
@@ -129,7 +123,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleResponse(request *Request, sessionId string) {
 	// HTTP status checking.
 	if request.Response.Status == 0 {
-		if request.StaticFile != nil || request.Middleware.served || request.Response.buffer.Len() > 0 {
+		if request.StaticFile != nil || request.Middleware.served || request.Response.BufferLength() > 0 {
 			request.Response.WriteHeader(http.StatusOK)
 		} else if err := request.GetError(); err != nil {
 			if request.Response.BufferLength() == 0 {

@@ -189,19 +189,43 @@ func (m *metricManager) GetMetricAttributeMap(r *Request) gmetric.AttributeMap {
 	return attrMap
 }
 
+func (s *Server) handleMetricsBeforeRequest(r *Request) {
+	if !gmetric.IsEnabled() {
+		return
+	}
+	s.metricManager.HttpServerRequestActive.Inc(
+		r.Context(),
+		s.metricManager.GetMetricOptionForActiveByRequest(r),
+	)
+}
+
 func (s *Server) handleMetricsAfterRequestDone(r *Request) {
 	if !gmetric.IsEnabled() {
 		return
 	}
 	var (
-		mm            = s.metricManager
-		ctx           = r.Context()
-		attrMap       = mm.GetMetricAttributeMap(r)
-		durationMilli = float64(r.LeaveTime.Sub(r.EnterTime).Milliseconds())
+		mm             = s.metricManager
+		ctx            = r.Context()
+		attrMap        = mm.GetMetricAttributeMap(r)
+		durationMilli  = float64(r.LeaveTime.Sub(r.EnterTime).Milliseconds())
+		responseOption = mm.GetMetricOptionForResponseByMap(attrMap)
 	)
 	mm.HttpServerRequestActive.Dec(ctx, mm.GetMetricOptionForActiveByMap(attrMap))
-	mm.HttpServerRequestTotal.Inc(ctx, mm.GetMetricOptionForResponseByMap(attrMap))
-	mm.HttpServerRequestBodySize.Add(ctx, float64(r.ContentLength), mm.GetMetricOptionForResponseByMap(attrMap))
-	mm.HttpServerRequestDurationTotal.Add(ctx, durationMilli, mm.GetMetricOptionForResponseByMap(attrMap))
+	mm.HttpServerRequestTotal.Inc(ctx, responseOption)
+	mm.HttpServerRequestBodySize.Add(
+		ctx,
+		float64(r.ContentLength),
+		responseOption,
+	)
+	mm.HttpServerResponseBodySize.Add(
+		ctx,
+		float64(r.Response.BytesWritten()),
+		responseOption,
+	)
+	mm.HttpServerRequestDurationTotal.Add(
+		ctx,
+		durationMilli,
+		responseOption,
+	)
 	mm.HttpServerRequestDuration.Record(durationMilli, mm.GetMetricOptionForDurationByMap(attrMap))
 }
