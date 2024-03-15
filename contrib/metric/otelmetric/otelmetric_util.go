@@ -16,6 +16,31 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+func generateAddOptions(
+	config gmetric.MetricConfig, constOption metric.MeasurementOption, option ...gmetric.Option,
+) []metric.AddOption {
+	var (
+		addOptions             = make([]metric.AddOption, 0)
+		globalAttributesOption = getGlobalAttributesOption(gmetric.GetGlobalAttributesOption{
+			Instrument:        config.Instrument,
+			InstrumentVersion: config.InstrumentVersion,
+		})
+	)
+	if constOption != nil {
+		addOptions = append(addOptions, constOption)
+	}
+	if globalAttributesOption != nil {
+		addOptions = append(addOptions, globalAttributesOption)
+	}
+	if len(option) > 0 {
+		addOptions = append(
+			addOptions,
+			metric.WithAttributes(attributesToKeyValues(option[0].Attributes)...),
+		)
+	}
+	return addOptions
+}
+
 func getGlobalAttributesOption(option gmetric.GetGlobalAttributesOption) metric.MeasurementOption {
 	var (
 		globalAttributesOption metric.MeasurementOption
@@ -70,7 +95,10 @@ func metricToFloat64Observable(m gmetric.Metric) metric.Float64Observable {
 	performer := m.(gmetric.PerformerExporter).Performer()
 	switch m.Info().Type() {
 	case gmetric.MetricTypeObservableCounter:
-		return performer.(*localObservableCounterPerformer).Float64ObservableUpDownCounter
+		return performer.(*localObservableCounterPerformer).Float64ObservableCounter
+
+	case gmetric.MetricTypeObservableUpDownCounter:
+		return performer.(*localObservableUpDownCounterPerformer).Float64ObservableUpDownCounter
 
 	case gmetric.MetricTypeObservableGauge:
 		return performer.(*localObservableGaugePerformer).Float64ObservableGauge

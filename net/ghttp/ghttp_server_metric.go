@@ -17,9 +17,12 @@ import (
 )
 
 type metricManager struct {
-	HttpServerRequestDuration gmetric.Histogram
-	HttpServerRequestActive   gmetric.Counter
-	HttpServerRequestTotal    gmetric.Counter
+	HttpServerRequestActive        gmetric.UpDownCounter
+	HttpServerRequestTotal         gmetric.Counter
+	HttpServerRequestDuration      gmetric.Histogram
+	HttpServerRequestDurationTotal gmetric.Counter
+	HttpServerRequestBodySize      gmetric.Counter
+	HttpServerResponseBodySize     gmetric.Counter
 }
 
 const (
@@ -59,6 +62,8 @@ func newMetricManager() *metricManager {
 				5000,
 				7500,
 				10000,
+				30000,
+				60000,
 			},
 		}),
 		HttpServerRequestTotal: gmetric.MustNewCounter(gmetric.MetricConfig{
@@ -69,10 +74,34 @@ func newMetricManager() *metricManager {
 			Instrument:        instrumentName,
 			InstrumentVersion: gf.VERSION,
 		}),
-		HttpServerRequestActive: gmetric.MustNewCounter(gmetric.MetricConfig{
+		HttpServerRequestActive: gmetric.MustNewUpDownCounter(gmetric.MetricConfig{
 			Name:              "http.server.request.active",
 			Help:              "Number of active server requests.",
 			Unit:              "",
+			Attributes:        gmetric.Attributes{},
+			Instrument:        instrumentName,
+			InstrumentVersion: gf.VERSION,
+		}),
+		HttpServerRequestDurationTotal: gmetric.MustNewCounter(gmetric.MetricConfig{
+			Name:              "http.server.request.duration_total",
+			Help:              "Total execution duration of request.",
+			Unit:              "ms",
+			Attributes:        gmetric.Attributes{},
+			Instrument:        instrumentName,
+			InstrumentVersion: gf.VERSION,
+		}),
+		HttpServerRequestBodySize: gmetric.MustNewCounter(gmetric.MetricConfig{
+			Name:              "http.server.request.body_size",
+			Help:              "Incoming request bytes total.",
+			Unit:              "bytes",
+			Attributes:        gmetric.Attributes{},
+			Instrument:        instrumentName,
+			InstrumentVersion: gf.VERSION,
+		}),
+		HttpServerResponseBodySize: gmetric.MustNewCounter(gmetric.MetricConfig{
+			Name:              "http.server.response.body_size",
+			Help:              "Response bytes total.",
+			Unit:              "bytes",
 			Attributes:        gmetric.Attributes{},
 			Instrument:        instrumentName,
 			InstrumentVersion: gf.VERSION,
@@ -110,7 +139,7 @@ func (m *metricManager) GetMetricOptionForActiveByMap(attrMap gmetric.AttributeM
 	}
 }
 
-func (m *metricManager) GetMetricOptionForTotalByMap(attrMap gmetric.AttributeMap) gmetric.Option {
+func (m *metricManager) GetMetricOptionForResponseByMap(attrMap gmetric.AttributeMap) gmetric.Option {
 	return gmetric.Option{
 		Attributes: attrMap.PickEx(),
 	}
@@ -158,4 +187,21 @@ func (m *metricManager) GetMetricAttributeMap(r *Request) gmetric.AttributeMap {
 		})
 	}
 	return attrMap
+}
+
+func (s *Server) handleMetricsAfterRequestDone(r *Request) {
+	if !gmetric.IsEnabled() {
+		return
+	}
+	var (
+		mm            = s.metricManager
+		ctx           = r.Context()
+		attrMap       = mm.GetMetricAttributeMap(r)
+		durationMilli = float64(r.LeaveTime.Sub(r.EnterTime).Milliseconds())
+	)
+	mm.HttpServerRequestActive.Dec(ctx, mm.GetMetricOptionForActiveByMap(attrMap))
+	mm.HttpServerRequestTotal.Inc(ctx, mm.GetMetricOptionForResponseByMap(attrMap))
+	mm.HttpServerRequestBodySize.Add(ctx, float64(r.ContentLength), mm.GetMetricOptionForResponseByMap(attrMap))
+	mm.HttpServerRequestDurationTotal.Add(ctx, durationMilli, mm.GetMetricOptionForResponseByMap(attrMap))
+	mm.HttpServerRequestDuration.Record(durationMilli, mm.GetMetricOptionForDurationByMap(attrMap))
 }

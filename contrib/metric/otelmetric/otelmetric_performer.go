@@ -33,6 +33,13 @@ func (l *localPerformer) Counter(config gmetric.MetricConfig) (gmetric.CounterPe
 	return newCounterPerformer(meter, config)
 }
 
+// UpDownCounter creates and returns a UpDownCounterPerformer that performs
+// the operations for UpDownCounter metric.
+func (l *localPerformer) UpDownCounter(config gmetric.MetricConfig) (gmetric.UpDownCounterPerformer, error) {
+	var meter = l.createMeter(config.Instrument, config.InstrumentVersion)
+	return newUpDownCounterPerformer(meter, config)
+}
+
 // Histogram creates and returns a HistogramPerformer that performs
 // the operations for Histogram metric.
 func (l *localPerformer) Histogram(config gmetric.MetricConfig) (gmetric.HistogramPerformer, error) {
@@ -40,11 +47,22 @@ func (l *localPerformer) Histogram(config gmetric.MetricConfig) (gmetric.Histogr
 	return newHistogramPerformer(meter, config)
 }
 
+// ObservableCounter creates and returns an ObservableMetric that performs
+// the operations for ObservableCounter metric.
 func (l *localPerformer) ObservableCounter(config gmetric.MetricConfig) (gmetric.ObservableMetric, error) {
 	var meter = l.createMeter(config.Instrument, config.InstrumentVersion)
 	return newObservableCounterPerformer(meter, config)
 }
 
+// ObservableUpDownCounter creates and returns an ObservableMetric that performs
+// the operations for ObservableUpDownCounter metric.
+func (l *localPerformer) ObservableUpDownCounter(config gmetric.MetricConfig) (gmetric.ObservableMetric, error) {
+	var meter = l.createMeter(config.Instrument, config.InstrumentVersion)
+	return newObservableUpDownCounterPerformer(meter, config)
+}
+
+// ObservableGauge creates and returns an ObservableMetric that performs
+// the operations for ObservableGauge metric.
 func (l *localPerformer) ObservableGauge(config gmetric.MetricConfig) (gmetric.ObservableMetric, error) {
 	var meter = l.createMeter(config.Instrument, config.InstrumentVersion)
 	return newObservableGaugePerformer(meter, config)

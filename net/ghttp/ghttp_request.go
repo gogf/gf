@@ -117,6 +117,8 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 // WebSocket upgrades current request as a websocket request.
 // It returns a new WebSocket object if success, or the error if failure.
 // Note that the request should be a websocket request, or it will surely fail upgrading.
+//
+// Deprecated: will be removed in the future, please use third-party websocket library instead.
 func (r *Request) WebSocket() (*WebSocket, error) {
 	if conn, err := wsUpGrader.Upgrade(r.Response.Writer, r.Request, nil); err == nil {
 		return &WebSocket{

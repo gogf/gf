@@ -225,23 +225,6 @@ func (s *Server) handleAfterRequestDone(request *Request) {
 	s.handleMetricsAfterRequestDone(request)
 }
 
-func (s *Server) handleMetricsAfterRequestDone(request *Request) {
-	if !gmetric.IsEnabled() {
-		return
-	}
-	var (
-		mm      = s.metricManager
-		ctx     = request.Context()
-		attrMap = mm.GetMetricAttributeMap(request)
-	)
-	mm.HttpServerRequestActive.Dec(ctx, mm.GetMetricOptionForActiveByMap(attrMap))
-	mm.HttpServerRequestTotal.Inc(ctx, mm.GetMetricOptionForTotalByMap(attrMap))
-	mm.HttpServerRequestDuration.Record(
-		float64(request.LeaveTime.Sub(request.EnterTime).Milliseconds()),
-		mm.GetMetricOptionForDurationByMap(attrMap),
-	)
-}
-
 // searchStaticFile searches the file with given URI.
 // It returns a file struct specifying the file information.
 func (s *Server) searchStaticFile(uri string) *staticFile {

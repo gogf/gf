@@ -15,9 +15,9 @@ import (
 	"github.com/gogf/gf/v2/os/gmetric"
 )
 
-// localCounterPerformer is an implementer for interface CounterPerformer.
+// localCounterPerformer is an implementer for interface gmetric.CounterPerformer.
 type localCounterPerformer struct {
-	metric.Float64UpDownCounter
+	metric.Float64Counter
 	config      gmetric.MetricConfig
 	constOption metric.MeasurementOption
 }
@@ -25,12 +25,12 @@ type localCounterPerformer struct {
 // newCounterPerformer creates and returns a CounterPerformer that truly takes action to implement Counter.
 func newCounterPerformer(meter metric.Meter, config gmetric.MetricConfig) (gmetric.CounterPerformer, error) {
 	var (
-		options = []metric.Float64UpDownCounterOption{
+		options = []metric.Float64CounterOption{
 			metric.WithDescription(config.Help),
 			metric.WithUnit(config.Unit),
 		}
 	)
-	counter, err := meter.Float64UpDownCounter(config.Name, options...)
+	counter, err := meter.Float64Counter(config.Name, options...)
 	if err != nil {
 		return nil, gerror.WrapCodef(
 			gcode.CodeInternalError,
@@ -40,46 +40,18 @@ func newCounterPerformer(meter metric.Meter, config gmetric.MetricConfig) (gmetr
 		)
 	}
 	return &localCounterPerformer{
-		Float64UpDownCounter: counter,
-		config:               config,
-		constOption:          getConstOptionByMetricConfig(config),
+		Float64Counter: counter,
+		config:         config,
+		constOption:    getConstOptionByMetricConfig(config),
 	}, nil
 }
 
-// Inc increments the counter by 1. Use Add to increment it by arbitrary
-// non-negative values.
+// Inc increments the counter by 1.
 func (l *localCounterPerformer) Inc(ctx context.Context, option ...gmetric.Option) {
 	l.Add(ctx, 1, option...)
 }
 
-func (l *localCounterPerformer) Dec(ctx context.Context, option ...gmetric.Option) {
-	l.Add(ctx, -1, option...)
-}
-
 // Add adds the given value to the counter. It panics if the value is < 0.
 func (l *localCounterPerformer) Add(ctx context.Context, increment float64, option ...gmetric.Option) {
-	l.Float64UpDownCounter.Add(ctx, increment, l.generateAddOptions(option...)...)
-}
-
-func (l *localCounterPerformer) generateAddOptions(option ...gmetric.Option) []metric.AddOption {
-	var (
-		addOptions             = make([]metric.AddOption, 0)
-		globalAttributesOption = getGlobalAttributesOption(gmetric.GetGlobalAttributesOption{
-			Instrument:        l.config.Instrument,
-			InstrumentVersion: l.config.InstrumentVersion,
-		})
-	)
-	if l.constOption != nil {
-		addOptions = append(addOptions, l.constOption)
-	}
-	if globalAttributesOption != nil {
-		addOptions = append(addOptions, globalAttributesOption)
-	}
-	if len(option) > 0 {
-		addOptions = append(
-			addOptions,
-			metric.WithAttributes(attributesToKeyValues(option[0].Attributes)...),
-		)
-	}
-	return addOptions
+	l.Float64Counter.Add(ctx, increment, generateAddOptions(l.config, l.constOption, option...)...)
 }

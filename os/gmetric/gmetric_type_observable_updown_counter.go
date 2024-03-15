@@ -6,8 +6,8 @@
 
 package gmetric
 
-// localObservableCounter is the local implements for interface Counter.
-type localObservableCounter struct {
+// localObservableUpDownCounter is the local implements for interface Counter.
+type localObservableUpDownCounter struct {
 	Metric
 	MetricConfig
 	ObservableMetric
@@ -15,14 +15,14 @@ type localObservableCounter struct {
 
 var (
 	// Check the implements for interface MetricInitializer.
-	_ MetricInitializer = (*localObservableCounter)(nil)
+	_ MetricInitializer = (*localObservableUpDownCounter)(nil)
 	// Check the implements for interface PerformerExporter.
-	_ PerformerExporter = (*localObservableCounter)(nil)
+	_ PerformerExporter = (*localObservableUpDownCounter)(nil)
 )
 
-// NewObservableCounter creates and returns a new ObservableCounter.
-func NewObservableCounter(config MetricConfig) (ObservableCounter, error) {
-	baseMetric, err := newMetric(MetricTypeObservableCounter, config)
+// NewObservableUpDownCounter creates and returns a new ObservableUpDownCounter.
+func NewObservableUpDownCounter(config MetricConfig) (ObservableCounter, error) {
+	baseMetric, err := newMetric(MetricTypeObservableUpDownCounter, config)
 	if err != nil {
 		return nil, err
 	}
@@ -40,9 +40,9 @@ func NewObservableCounter(config MetricConfig) (ObservableCounter, error) {
 	return m, nil
 }
 
-// MustNewObservableCounter creates and returns a new ObservableCounter.
+// MustNewObservableUpDownCounter creates and returns a new ObservableUpDownCounter.
 // It panics if any error occurs.
-func MustNewObservableCounter(config MetricConfig) ObservableCounter {
+func MustNewObservableUpDownCounter(config MetricConfig) ObservableCounter {
 	m, err := NewObservableCounter(config)
 	if err != nil {
 		panic(err)
@@ -51,17 +51,17 @@ func MustNewObservableCounter(config MetricConfig) ObservableCounter {
 }
 
 // Init initializes the Metric in Provider creation.
-func (l *localObservableCounter) Init(provider Provider) (err error) {
+func (l *localObservableUpDownCounter) Init(provider Provider) (err error) {
 	if _, ok := l.ObservableMetric.(noopObservableMetric); !ok {
 		// already initialized.
 		return
 	}
-	l.ObservableMetric, err = provider.Performer().ObservableCounter(l.MetricConfig)
+	l.ObservableMetric, err = provider.Performer().ObservableUpDownCounter(l.MetricConfig)
 	return
 }
 
 // Performer implements interface PerformerExporter, which exports internal Performer of Metric.
 // This is usually used by metric implements.
-func (l *localObservableCounter) Performer() any {
+func (l *localObservableUpDownCounter) Performer() any {
 	return l.ObservableMetric
 }

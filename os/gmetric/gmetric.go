@@ -15,10 +15,12 @@ import (
 type MetricType string
 
 const (
-	MetricTypeCounter           MetricType = `Counter`           // Counter.
-	MetricTypeHistogram         MetricType = `Histogram`         // Histogram.
-	MetricTypeObservableCounter MetricType = `ObservableCounter` // ObservableCounter.
-	MetricTypeObservableGauge   MetricType = `ObservableGauge`   // ObservableGauge.
+	MetricTypeCounter                 MetricType = `Counter`                 // Counter.
+	MetricTypeUpDownCounter           MetricType = `UpDownCounter`           // UpDownCounter.
+	MetricTypeHistogram               MetricType = `Histogram`               // Histogram.
+	MetricTypeObservableCounter       MetricType = `ObservableCounter`       // ObservableCounter.
+	MetricTypeObservableUpDownCounter MetricType = `ObservableUpDownCounter` // ObservableUpDownCounter.
+	MetricTypeObservableGauge         MetricType = `ObservableGauge`         // ObservableGauge.
 )
 
 const (
@@ -61,6 +63,10 @@ type Performer interface {
 	// the operations for Counter metric.
 	Counter(config MetricConfig) (CounterPerformer, error)
 
+	// UpDownCounter creates and returns a UpDownCounterPerformer that performs
+	// the operations for UpDownCounter metric.
+	UpDownCounter(config MetricConfig) (UpDownCounterPerformer, error)
+
 	// Histogram creates and returns a HistogramPerformer that performs
 	// the operations for Histogram metric.
 	Histogram(config MetricConfig) (HistogramPerformer, error)
@@ -68,6 +74,10 @@ type Performer interface {
 	// ObservableCounter creates and returns an ObservableMetric that performs
 	// the operations for ObservableCounter metric.
 	ObservableCounter(config MetricConfig) (ObservableMetric, error)
+
+	// ObservableUpDownCounter creates and returns an ObservableMetric that performs
+	// the operations for ObservableUpDownCounter metric.
+	ObservableUpDownCounter(config MetricConfig) (ObservableMetric, error)
 
 	// ObservableGauge creates and returns an ObservableMetric that performs
 	// the operations for ObservableGauge metric.
@@ -116,10 +126,17 @@ type Option struct {
 }
 
 // Counter is a Metric that represents a single numerical value that can ever
-// goes up or down.
+// goes up.
 type Counter interface {
 	Metric
 	CounterPerformer
+}
+
+// UpDownCounter is a Metric that represents a single numerical value that can ever
+// goes up or down.
+type UpDownCounter interface {
+	Metric
+	UpDownCounterPerformer
 }
 
 // ObservableCounter is an instrument used to asynchronously
@@ -133,6 +150,16 @@ type ObservableCounter interface {
 
 // CounterPerformer performs operations for Counter metric.
 type CounterPerformer interface {
+	// Inc increments the counter by 1. Use Add to increment it by arbitrary
+	// non-negative values.
+	Inc(ctx context.Context, option ...Option)
+
+	// Add adds the given value to the counter. It panics if the value is < 0.
+	Add(ctx context.Context, increment float64, option ...Option)
+}
+
+// UpDownCounterPerformer performs operations for UpDownCounter metric.
+type UpDownCounterPerformer interface {
 	// Inc increments the counter by 1. Use Add to increment it by arbitrary
 	// non-negative values.
 	Inc(ctx context.Context, option ...Option)

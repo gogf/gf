@@ -20,7 +20,7 @@ var (
 	_ PerformerExporter = (*localObservableGauge)(nil)
 )
 
-// NewObservableGauge creates and returns a new CounterObservable.
+// NewObservableGauge creates and returns a new ObservableGauge.
 func NewObservableGauge(config MetricConfig) (ObservableCounter, error) {
 	baseMetric, err := newMetric(MetricTypeObservableGauge, config)
 	if err != nil {
@@ -40,7 +40,7 @@ func NewObservableGauge(config MetricConfig) (ObservableCounter, error) {
 	return m, nil
 }
 
-// MustNewObservableGauge creates and returns a new CounterObservable.
+// MustNewObservableGauge creates and returns a new ObservableGauge.
 // It panics if any error occurs.
 func MustNewObservableGauge(config MetricConfig) ObservableGauge {
 	m, err := NewObservableGauge(config)

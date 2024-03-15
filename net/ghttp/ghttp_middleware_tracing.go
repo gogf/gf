@@ -104,8 +104,8 @@ func internalMiddlewareServerTracing(r *Request) {
 	r.Middleware.Next()
 
 	// parse after set route as span name
-	if r.Router.Uri != defaultMiddlewarePattern || r.Router.RegNames != nil {
-		span.SetName(r.Router.Uri)
+	if handler := r.GetServeHandler(); handler.Handler.Router != nil {
+		span.SetName(handler.Handler.Router.Uri)
 	}
 
 	// Error logging.

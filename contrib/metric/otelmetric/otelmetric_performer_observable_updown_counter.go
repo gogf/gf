@@ -16,16 +16,17 @@ import (
 	"github.com/gogf/gf/v2/os/gmetric"
 )
 
-// localCounterPerformer is an implementer for interface CounterPerformer.
-type localObservableCounterPerformer struct {
+// localObservableUpDownCounterPerformer is an implementer for interface CounterPerformer.
+type localObservableUpDownCounterPerformer struct {
 	gmetric.ObservableMetric
-	metric.Float64ObservableCounter
+	metric.Float64ObservableUpDownCounter
 }
 
-// newCounterPerformer creates and returns a CounterPerformer that truly takes action to implement Counter.
-func newObservableCounterPerformer(meter metric.Meter, config gmetric.MetricConfig) (gmetric.ObservableMetric, error) {
+// newObservableUpDownCounterPerformer creates and returns a UpDownCounterPerformer that truly takes action to
+// implement ObservableUpDownCounter.
+func newObservableUpDownCounterPerformer(meter metric.Meter, config gmetric.MetricConfig) (gmetric.ObservableMetric, error) {
 	var (
-		options = []metric.Float64ObservableCounterOption{
+		options = []metric.Float64ObservableUpDownCounterOption{
 			metric.WithDescription(config.Help),
 			metric.WithUnit(config.Unit),
 		}
@@ -39,16 +40,16 @@ func newObservableCounterPerformer(meter metric.Meter, config gmetric.MetricConf
 		})
 		options = append(options, callback)
 	}
-	counter, err := meter.Float64ObservableCounter(config.Name, options...)
+	counter, err := meter.Float64ObservableUpDownCounter(config.Name, options...)
 	if err != nil {
 		return nil, gerror.WrapCodef(
 			gcode.CodeInternalError,
 			err,
-			`create Float64ObservableCounter failed with config: %+v`,
+			`create Float64ObservableUpDownCounter failed with config: %+v`,
 			config,
 		)
 	}
-	return &localObservableCounterPerformer{
-		Float64ObservableCounter: counter,
+	return &localObservableUpDownCounterPerformer{
+		Float64ObservableUpDownCounter: counter,
 	}, nil
 }
