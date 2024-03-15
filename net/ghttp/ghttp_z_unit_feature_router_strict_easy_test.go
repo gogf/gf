@@ -59,7 +59,6 @@ type testControllerFeature3385 struct{}
 func (c *testControllerFeature3385) Hello(ctx context.Context, req *Feature3385_testHelloReq) (res *Feature3385_testHelloRes, err error) {
 	return &Feature3385_testHelloRes{"hello"}, nil
 }
-
 func (c *testControllerFeature3385) Delete(ctx context.Context, req *Feature3385_testDeleteReq) (res *Feature3385_testDeleteRes, err error) {
 	return &Feature3385_testDeleteRes{"delete"}, nil
 }
@@ -82,9 +81,7 @@ func Test_Router_Handler_Strict_WithObject_MethodUri(t *testing.T) {
 			&testControllerFeature3385{},
 		)
 	})
-
 	s.Start()
-
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
@@ -94,9 +91,7 @@ func Test_Router_Handler_Strict_WithObject_MethodUri(t *testing.T) {
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.PutContent(ctx, "/add"), `{"code":0,"message":"","data":{"Reply":"add"}}`)
-		// all
 		t.Assert(client.DeleteContent(ctx, "/delete"), `{"code":0,"message":"","data":{"Reply":"delete"}}`)
-		//
 		t.Assert(client.GetContent(ctx, "/hello"), `{"code":0,"message":"","data":{"Reply":"hello"}}`)
 		t.Assert(client.GetContent(ctx, "/login"), `{"code":0,"message":"","data":{"Reply":"login"}}`)
 		t.Assert(client.PostContent(ctx, "/login"), `{"code":0,"message":"","data":{"Reply":"login"}}`)
@@ -104,11 +99,8 @@ func Test_Router_Handler_Strict_WithObject_MethodUri(t *testing.T) {
 
 		expect := `Not Found`
 		add := client.GetContent(ctx, "/add")
-
 		t.Assert(add, expect)
-		// all
 		t.Assert(client.DeleteContent(ctx, "/delete/1"), expect)
-		//
 		t.Assert(client.DeleteContent(ctx, "/hello"), expect)
 		t.Assert(client.PutContent(ctx, "/login"), expect)
 		t.Assert(client.DeleteContent(ctx, "/login"), expect)

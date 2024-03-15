@@ -96,9 +96,7 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 	// It supports multiple methods that are joined using char `,`.
 	// ====================================================================================
 	if handler.Info.Type != nil && handler.Info.Type.NumIn() == 2 {
-
 		setMethod := false
-
 		var objectReq = reflect.New(handler.Info.Type.In(1))
 		if v := gmeta.Get(objectReq, gtag.Path); !v.IsEmpty() {
 			uri = v.String()
@@ -122,7 +120,6 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 				method = v.String()
 			}
 		}
-
 		// Multiple methods registering, which are joined using char `,`.
 		if gstr.Contains(method, ",") {
 			methods := gstr.SplitAndTrim(method, ",")

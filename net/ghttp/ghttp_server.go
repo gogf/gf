@@ -43,9 +43,7 @@ import (
 )
 
 func init() {
-
 	httpMethodList = strings.Split(supportedHttpMethods, ",")
-
 	// Initialize the method map.
 	for _, v := range httpMethodList {
 		methodsMap[v] = struct{}{}
