@@ -5,7 +5,6 @@ package gproc
 import "strings"
 
 func newProcess(p *Process, args []string, path string) *Process {
-
 	if len(args) > 0 {
 		// Exclude of current binary path.
 		start := 0
