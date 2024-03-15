@@ -30,8 +30,8 @@ type Request struct {
 	Session    *gsession.Session // Session.
 	Response   *Response         // Corresponding Response of this request.
 	Router     *Router           // Matched Router for this request. Note that it's not available in HOOK handler.
-	EnterTime  int64             // Request starting time in milliseconds.
-	LeaveTime  int64             // Request to end time in milliseconds.
+	EnterTime  *gtime.Time       // Request starting time in milliseconds.
+	LeaveTime  *gtime.Time       // Request to end time in milliseconds.
 	Middleware *middleware       // Middleware manager.
 	StaticFile *staticFile       // Static file object for static file serving.
 
@@ -76,7 +76,7 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 		Server:        s,
 		Request:       r,
 		Response:      newResponse(s, w),
-		EnterTime:     gtime.TimestampMilli(),
+		EnterTime:     gtime.Now(),
 		originUrlPath: r.URL.Path,
 	}
 	request.Cookie = GetCookie(request)

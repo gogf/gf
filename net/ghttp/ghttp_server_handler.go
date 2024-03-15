@@ -47,13 +47,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	)
 	defer s.handleAfterRequestDone(request)
 
-	// Metrics.
-	if gmetric.IsEnabled() {
-		//s.metricManager.HttpServerRequestActive.Inc(
-		//	s.metricManager.GetMetricOptionForActiveByRequest(request),
-		//)
-	}
-
 	// ============================================================
 	// Priority:
 	// Static File > Dynamic Service > Static Directory
@@ -77,6 +70,14 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Check the service type static or dynamic for current request.
 	if request.StaticFile != nil && request.StaticFile.IsDir && request.hasServeHandler {
 		request.isFileRequest = false
+	}
+
+	// Metrics.
+	if gmetric.IsEnabled() {
+		s.metricManager.HttpServerRequestActive.Inc(
+			request.Context(),
+			s.metricManager.GetMetricOptionForActiveByRequest(request),
+		)
 	}
 
 	// HOOK - BeforeServe
@@ -175,7 +176,7 @@ func (s *Server) handleResponse(request *Request, sessionId string) {
 }
 
 func (s *Server) handleAfterRequestDone(request *Request) {
-	request.LeaveTime = gtime.TimestampMilli()
+	request.LeaveTime = gtime.Now()
 	// error log handling.
 	if request.error != nil {
 		s.handleErrorLog(request.error, request)
@@ -228,16 +229,17 @@ func (s *Server) handleMetricsAfterRequestDone(request *Request) {
 	if !gmetric.IsEnabled() {
 		return
 	}
-	//var (
-	//	mm      = s.metricManager
-	//	attrMap = mm.GetMetricAttributeMap(request)
-	//)
-	//mm.HttpServerRequestTotal.Inc(mm.GetMetricOptionForTotalByMap(attrMap))
-	//mm.HttpServerRequestActive.Dec(mm.GetMetricOptionForActiveByMap(attrMap))
-	//mm.HttpServerRequestDuration.Record(
-	//	float64(request.LeaveTime-request.EnterTime),
-	//	mm.getMetricOptionForDurationByMap(attrMap),
-	//)
+	var (
+		mm      = s.metricManager
+		ctx     = request.Context()
+		attrMap = mm.GetMetricAttributeMap(request)
+	)
+	mm.HttpServerRequestActive.Dec(ctx, mm.GetMetricOptionForActiveByMap(attrMap))
+	mm.HttpServerRequestTotal.Inc(ctx, mm.GetMetricOptionForTotalByMap(attrMap))
+	mm.HttpServerRequestDuration.Record(
+		float64(request.LeaveTime.Sub(request.EnterTime).Milliseconds()),
+		mm.GetMetricOptionForDurationByMap(attrMap),
+	)
 }
 
 // searchStaticFile searches the file with given URI.

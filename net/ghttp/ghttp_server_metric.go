@@ -18,19 +18,20 @@ import (
 
 type metricManager struct {
 	HttpServerRequestDuration gmetric.Histogram
+	HttpServerRequestActive   gmetric.Counter
 	HttpServerRequestTotal    gmetric.Counter
 }
 
 const (
-	metricAttrKeyNetServiceName         gmetric.AttributeKey = "net.service.name"
-	metricAttrKeyNetHostAddress         gmetric.AttributeKey = "net.host.address"
-	metricAttrKeyNetHostPort            gmetric.AttributeKey = "net.host.port"
-	metricAttrKeyHttpRequestRoute       gmetric.AttributeKey = "http.request.route"
-	metricAttrKeyHttpRequestSchema      gmetric.AttributeKey = "http.request.schema"
-	metricAttrKeyHttpRequestVersion     gmetric.AttributeKey = "http.request.version"
+	metricAttrKeyServerName             gmetric.AttributeKey = "server.name"
+	metricAttrKeyServerAddress          gmetric.AttributeKey = "server.address"
+	metricAttrKeyServerPort             gmetric.AttributeKey = "server.port"
+	metricAttrKeyHttpRoute              gmetric.AttributeKey = "http.route"
+	metricAttrKeyUrlSchema              gmetric.AttributeKey = "url.schema"
 	metricAttrKeyHttpRequestMethod      gmetric.AttributeKey = "http.request.method"
-	metricAttrKeyHttpResponseErrorCode  gmetric.AttributeKey = "http.response.error_code"
+	metricAttrKeyErrorCode              gmetric.AttributeKey = "error.code"
 	metricAttrKeyHttpResponseStatusCode gmetric.AttributeKey = "http.response.status_code"
+	metricAttrKeyNetworkProtocolVersion gmetric.AttributeKey = "network.protocol.version"
 )
 
 func newMetricManager() *metricManager {
@@ -68,26 +69,24 @@ func newMetricManager() *metricManager {
 			Instrument:        instrumentName,
 			InstrumentVersion: gf.VERSION,
 		}),
-		//HttpServerRequestActive: gmetric.MustNewGauge(gmetric.GaugeConfig{
-		//	MetricConfig: gmetric.MetricConfig{
-		//		Name:              "http.server.request.active",
-		//		Help:              "Number of active server requests.",
-		//		Unit:              "",
-		//		Attributes:        gmetric.Attributes{},
-		//		Instrument:        instrumentName,
-		//		InstrumentVersion: gf.VERSION,
-		//	},
-		//}),
+		HttpServerRequestActive: gmetric.MustNewCounter(gmetric.MetricConfig{
+			Name:              "http.server.request.active",
+			Help:              "Number of active server requests.",
+			Unit:              "",
+			Attributes:        gmetric.Attributes{},
+			Instrument:        instrumentName,
+			InstrumentVersion: gf.VERSION,
+		}),
 	}
 	return mm
 }
 
-func (m *metricManager) getMetricOptionForDurationByMap(attrMap gmetric.AttributeMap) gmetric.Option {
+func (m *metricManager) GetMetricOptionForDurationByMap(attrMap gmetric.AttributeMap) gmetric.Option {
 	return gmetric.Option{
 		Attributes: attrMap.Pick(
-			metricAttrKeyNetServiceName,
-			metricAttrKeyNetHostAddress,
-			metricAttrKeyNetHostPort,
+			metricAttrKeyServerName,
+			metricAttrKeyServerAddress,
+			metricAttrKeyServerPort,
 		),
 	}
 }
@@ -96,7 +95,7 @@ func (m *metricManager) GetMetricOptionForActiveByRequest(r *Request) gmetric.Op
 	attrMap := m.GetMetricAttributeMap(r)
 	return gmetric.Option{
 		Attributes: attrMap.PickEx(
-			metricAttrKeyHttpResponseErrorCode,
+			metricAttrKeyErrorCode,
 			metricAttrKeyHttpResponseStatusCode,
 		),
 	}
@@ -105,7 +104,7 @@ func (m *metricManager) GetMetricOptionForActiveByRequest(r *Request) gmetric.Op
 func (m *metricManager) GetMetricOptionForActiveByMap(attrMap gmetric.AttributeMap) gmetric.Option {
 	return gmetric.Option{
 		Attributes: attrMap.PickEx(
-			metricAttrKeyHttpResponseErrorCode,
+			metricAttrKeyErrorCode,
 			metricAttrKeyHttpResponseStatusCode,
 		),
 	}
@@ -119,39 +118,42 @@ func (m *metricManager) GetMetricOptionForTotalByMap(attrMap gmetric.AttributeMa
 
 func (m *metricManager) GetMetricAttributeMap(r *Request) gmetric.AttributeMap {
 	var (
-		hostAddress string
-		hostPort    string
-		reqRoute    string
-		reqVersion  string
-		localAddr   = r.Context().Value(http.LocalAddrContextKey)
-		attrMap     = make(gmetric.AttributeMap)
+		serverAddress   string
+		serverPort      string
+		httpRoute       string
+		protocolVersion string
+		handler         = r.GetServeHandler()
+		localAddr       = r.Context().Value(http.LocalAddrContextKey)
+		attrMap         = make(gmetric.AttributeMap)
 	)
 	if localAddr != nil {
 		addr := localAddr.(net.Addr)
-		hostAddress, hostPort = gstr.List2(addr.String(), ":")
+		serverAddress, serverPort = gstr.List2(addr.String(), ":")
 	}
-	if r.Router != nil {
-		reqRoute = r.Router.Uri
+	if handler.Handler.Router != nil {
+		httpRoute = handler.Handler.Router.Uri
+	} else {
+		httpRoute = r.URL.Path
 	}
 	if array := gstr.Split(r.Proto, "/"); len(array) > 1 {
-		reqVersion = array[1]
+		protocolVersion = array[1]
 	}
 	attrMap.Sets(gmetric.AttributeMap{
-		metricAttrKeyNetServiceName:     r.Server.GetName(),
-		metricAttrKeyNetHostAddress:     hostAddress,
-		metricAttrKeyNetHostPort:        hostPort,
-		metricAttrKeyHttpRequestRoute:   reqRoute,
-		metricAttrKeyHttpRequestSchema:  r.GetSchema(),
-		metricAttrKeyHttpRequestVersion: reqVersion,
-		metricAttrKeyHttpRequestMethod:  r.Method,
+		metricAttrKeyServerName:             r.Server.GetName(),
+		metricAttrKeyServerAddress:          serverAddress,
+		metricAttrKeyServerPort:             serverPort,
+		metricAttrKeyHttpRoute:              httpRoute,
+		metricAttrKeyUrlSchema:              r.GetSchema(),
+		metricAttrKeyHttpRequestMethod:      r.Method,
+		metricAttrKeyNetworkProtocolVersion: protocolVersion,
 	})
-	if r.LeaveTime != 0 {
+	if r.LeaveTime != nil {
 		var errCode int
 		if err := r.GetError(); err != nil {
 			errCode = gerror.Code(err).Code()
 		}
 		attrMap.Sets(gmetric.AttributeMap{
-			metricAttrKeyHttpResponseErrorCode:  errCode,
+			metricAttrKeyErrorCode:              errCode,
 			metricAttrKeyHttpResponseStatusCode: r.Response.Status,
 		})
 	}

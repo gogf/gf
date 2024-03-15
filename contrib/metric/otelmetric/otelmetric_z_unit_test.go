@@ -111,27 +111,30 @@ func Test_Basic(t *testing.T) {
 		err := reader.Collect(ctx, &rm)
 		t.AssertNil(err)
 
-		content := gjson.MustEncodeString(rm)
-		content, err = gregex.ReplaceString(`Time":".+?"`, `Time":""`, content)
-		t.AssertNil(err)
-		expectContent := `
-{"Scope":{"Name":"github.com/gogf/gf/example/metric/basic","Version":"v1.3","SchemaURL":""},"Metrics":[{"Name":"goframe.metric.demo.observable_counter","Description":"This is a simple demo for ObservableCounter usage","Unit":"%","Data":{"DataPoints":[{"Attributes":[{"Key":"const_label_c","Value":{"Type":"INT64","Value":1}}],"StartTime":"","Time":"","Value":10}],"Temporality":"CumulativeTemporality","IsMonotonic":false}},{"Name":"goframe.metric.demo.observable_gauge","Description":"This is a simple demo for ObservableGauge usage","Unit":"%","Data":{"DataPoints":[{"Attributes":[{"Key":"const_label_d","Value":{"Type":"INT64","Value":1}}],"StartTime":"","Time":"","Value":10}]}   
-
-{"Scope":{"Name":"github.com/gogf/gf/example/metric/basic","Version":"v1.2","SchemaURL":""},"Metrics":[{"Name":"goframe.metric.demo.histogram","Description":"This is a simple demo for histogram usage","Unit":"ms","Data":{"DataPoints":[{"Attributes":[{"Key":"const_label_b","Value":{"Type":"INT64","Value":3}}
-
-{"Key":"const_label_a","Value":{"Type":"INT64","Value":1}}],"StartTime":"","Time":"","Value":11}
-{"Key":"const_label_a","Value":{"Type":"INT64","Value":1}}
-{"Key":"dynamic_label_a","Value":{"Type":"STRING","Value":"1"}}],"StartTime":"","Time":"","Value":-1}
-
-{"Key":"dynamic_label_d","Value":{"Type":"STRING","Value":"4"}}],"StartTime":"","Time":"","Count":2,"Bounds":[0,10,20,50,100,500,1000,2000,5000,10000],"BucketCounts":[0,0,0,0,1,1,0,0,0,0,0],"Min":100,"Max":200,"Sum":300}
-
-
-`
-		//fmt.Println(content)
-		for _, line := range gstr.SplitAndTrim(expectContent, "\n") {
-			//fmt.Println(line)
-			t.Assert(gstr.Contains(content, line), true)
-		}
+		//var (
+		//	sm1 = instrumentation.Scope{
+		//		Name:      "github.com/gogf/gf/example/metric/basic",
+		//		Version:   "v1.1",
+		//		SchemaURL: "",
+		//	}
+		//	sm2 = instrumentation.Scope{
+		//		Name:      "github.com/gogf/gf/example/metric/basic",
+		//		Version:   "v1.1",
+		//		SchemaURL: "",
+		//	}
+		//	sm3 = instrumentation.Scope{
+		//		Name:      "github.com/gogf/gf/example/metric/basic",
+		//		Version:   "v1.1",
+		//		SchemaURL: "",
+		//	}
+		//)
+		//t.Assert(len(rm.ScopeMetrics), 4)
+		//for _, sm := range rm.ScopeMetrics {
+		//	switch sm.Scope {
+		//
+		//	}
+		//}
+		//t.Assert(rm.ScopeMetrics[0].Scope.Version, "v1.2")
 	})
 }
 

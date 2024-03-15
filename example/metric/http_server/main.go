@@ -10,6 +10,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/sdk/metric"
+	"time"
 
 	"github.com/gogf/gf/contrib/metric/otelmetric/v2"
 	"github.com/gogf/gf/v2/frame/g"
@@ -40,6 +41,10 @@ func main() {
 	})
 	s.BindHandler("/error", func(r *ghttp.Request) {
 		panic("error")
+	})
+	s.BindHandler("/sleep", func(r *ghttp.Request) {
+		time.Sleep(time.Second * 5)
+		r.Response.Write("ok")
 	})
 	s.BindHandler("/metrics", ghttp.WrapH(promhttp.Handler()))
 	s.SetPort(8000)
