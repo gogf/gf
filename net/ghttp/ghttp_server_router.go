@@ -96,16 +96,33 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 	// It supports multiple methods that are joined using char `,`.
 	// ====================================================================================
 	if handler.Info.Type != nil && handler.Info.Type.NumIn() == 2 {
+
+		setMethod := false
+
 		var objectReq = reflect.New(handler.Info.Type.In(1))
 		if v := gmeta.Get(objectReq, gtag.Path); !v.IsEmpty() {
 			uri = v.String()
+		} else {
+			// If the path tag is not found (`path:"/login"`)
+			// Use `GET:/login` to find the method and uri
+			for _, m := range httpMethodList {
+				if v := gmeta.Get(objectReq, m); !v.IsEmpty() {
+					uri = v.String()
+					method = m
+					setMethod = true
+				}
+			}
 		}
 		if v := gmeta.Get(objectReq, gtag.Domain); !v.IsEmpty() {
 			domain = v.String()
 		}
-		if v := gmeta.Get(objectReq, gtag.Method); !v.IsEmpty() {
-			method = v.String()
+		// Only when method is not set
+		if setMethod == false {
+			if v := gmeta.Get(objectReq, gtag.Method); !v.IsEmpty() {
+				method = v.String()
+			}
 		}
+
 		// Multiple methods registering, which are joined using char `,`.
 		if gstr.Contains(method, ",") {
 			methods := gstr.SplitAndTrim(method, ",")

@@ -174,6 +174,9 @@ var (
 	// methodsMap stores all supported HTTP method.
 	// It is used for quick HTTP method searching using map.
 	methodsMap = make(map[string]struct{})
+	// httpMethodList stores all supported HTTP method.
+	// It is used for quick HTTP method searching using slices.
+	httpMethodList []string
 
 	// serverMapping stores more than one server instances for current processes.
 	// The key is the name of the server, and the value is its instance.
