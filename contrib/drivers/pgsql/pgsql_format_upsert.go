@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -19,7 +20,9 @@ import (
 // For example: ON CONFLICT (id) DO UPDATE SET ...
 func (d *Driver) FormatUpsert(columns []string, list gdb.List, option gdb.DoInsertOption) (string, error) {
 	if len(option.OnConflict) == 0 {
-		return "", gerror.New("Please specify conflict columns")
+		return "", gerror.NewCode(
+			gcode.CodeMissingParameter, `Please specify conflict columns`,
+		)
 	}
 
 	var onDuplicateStr string
