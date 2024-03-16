@@ -414,7 +414,7 @@ func (c *Core) fieldsToSequence(ctx context.Context, table string, fields []stri
 	return fieldsResultInSequence, nil
 }
 
-// DoInsert inserts or updates data forF given table.
+// DoInsert inserts or updates data for given table.
 // This function is usually used for custom interface definition, you do not need call it manually.
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
 // Eg:

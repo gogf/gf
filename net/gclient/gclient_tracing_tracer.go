@@ -23,7 +23,6 @@ import (
 
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/net/gtrace"
-	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -153,14 +152,15 @@ func (ct *clientTracer) wroteRequest(info httptrace.WroteRequestInfo) {
 		ct.span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, info.Err))
 	}
 
+	reqBodyContent, err := gtrace.SafeContentForHttp(ct.requestBody, ct.request.Header)
+	if err != nil {
+		ct.span.SetStatus(codes.Error, fmt.Sprintf(`converting safe content failed: %s`, err.Error()))
+	}
+
 	ct.span.AddEvent(tracingEventHttpRequest, trace.WithAttributes(
 		attribute.String(tracingEventHttpRequestHeaders, gconv.String(ct.headers)),
 		attribute.String(tracingEventHttpRequestBaggage, gtrace.GetBaggageMap(ct.Context).String()),
-		attribute.String(tracingEventHttpRequestBody, gstr.StrLimit(
-			string(ct.requestBody),
-			gtrace.MaxContentLogSize(),
-			"...",
-		)),
+		attribute.String(tracingEventHttpRequestBody, reqBodyContent),
 	))
 }
 

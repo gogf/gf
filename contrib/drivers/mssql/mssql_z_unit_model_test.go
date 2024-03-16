@@ -2558,7 +2558,7 @@ func Test_Model_AllAndCount(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		result, total, err := db.Model(table).Order("id").Limit(0, 3).AllAndCount(false)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		t.Assert(len(result), 3)
 		t.Assert(total, TableSize)
@@ -2582,7 +2582,7 @@ func Test_Model_ScanAndCount(t *testing.T) {
 		total := 0
 
 		err := db.Model(table).Order("id").Limit(0, 3).ScanAndCount(&users, &total, false)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		t.Assert(len(users), 3)
 		t.Assert(total, TableSize)
