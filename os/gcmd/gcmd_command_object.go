@@ -280,6 +280,8 @@ func newCommandFromMethod(
 						if orphanValue.String() == "" {
 							// Eg: gf -f
 							data[arg.Name] = "true"
+							// short tag need set true
+							data[arg.Short] = "true"
 						} else {
 							// Adapter with common user habits.
 							// Eg:
