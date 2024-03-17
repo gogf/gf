@@ -167,22 +167,29 @@ func doStruct(
 		return nil
 	}
 
-	// It only performs one converting to the same attribute.
-	// doneMap is used to check repeated converting, its key is the real attribute name
-	// of the struct.
-	doneMap := make(map[string]struct{})
-
 	// The key of the attrMap is the attribute name of the struct,
 	// and the value is its replaced name for later comparison to improve performance.
 	var (
-		tempName       string
 		elemFieldType  reflect.StructField
 		elemFieldValue reflect.Value
 		elemType       = pointerElemReflectValue.Type()
-		// Attribute name to its symbols-removed name,
-		// in order to quick index and comparison in following logic.
-		attrToCheckNameMap = make(map[string]string)
 	)
+
+	// 用来维护paramsMap对应结构体字段的
+	// 根据pk去paramsMap找到对应的值，设置后set=true
+	// 初始的时候全部以 paramsKey = 字段的默认名字
+	// 根据优先级来设置
+	// 1 用户自定义映射规则
+	// 2 根据tag
+	// 3 同名字段
+	// 4 忽略下划线 大小写
+	type setField struct {
+		paramsKey string
+		set       bool
+	}
+
+	var setFields = make(map[string]setField)
+
 	for i := 0; i < pointerElemReflectValue.NumField(); i++ {
 		elemFieldType = elemType.Field(i)
 		// Only do converting to public attributes.
@@ -199,225 +206,240 @@ func doStruct(
 					continue
 				}
 			}
+			// TODO 是否需要判断类型为结构体，也有可能是其他基础类型
 			if err = doStruct(paramsMap, elemFieldValue, paramKeyToAttrMap, priorityTag); err != nil {
 				return err
 			}
 		} else {
-			tempName = elemFieldType.Name
-			attrToCheckNameMap[tempName] = utils.RemoveSymbols(tempName)
+			// 存储所有的结构体字段
+			setFields[elemFieldType.Name] = setField{
+				paramsKey: elemFieldType.Name,
+			}
+
 		}
 	}
-	if len(attrToCheckNameMap) == 0 {
+	// 如果没有字段，就退出
+	if len(setFields) == 0 {
+		return nil
+	}
+	// 表示已经从paramsMap中用过这个值了，后面不能再用了
+	paramsMapDeleted := make(map[string]struct{})
+
+	// TODO 如果自定义映射规则重复的话，是否需要报错
+	// 1.首先设置用户预定义的规则
+	if len(paramKeyToAttrMap) != 0 {
+
+		for paramsKey, field := range paramKeyToAttrMap {
+
+			// 在paramsMap中找到才能设置
+			if val, ok := paramsMap[paramsKey]; ok {
+				param, _ := setFields[field]
+				if param.set == false {
+					err := bindVarToStructAttr(pointerElemReflectValue, field, val, paramKeyToAttrMap)
+					if err != nil {
+						return err
+					}
+					param.set = true
+					param.paramsKey = paramsKey
+					setFields[field] = param
+					paramsMapDeleted[paramsKey] = struct{}{}
+				} else {
+					//TODO 自定义规则重复的话，过滤掉
+					paramsMapDeleted[paramsKey] = struct{}{}
+				}
+			}
+		}
+	}
+
+	// 已经全部匹配完了
+	if len(paramsMapDeleted) == len(paramsMap) {
 		return nil
 	}
 
 	// The key of the `attrToTagCheckNameMap` is the attribute name of the struct,
 	// and the value is its replaced tag name for later comparison to improve performance.
 	var (
-		attrToTagCheckNameMap = make(map[string]string)
-		priorityTagArray      []string
+		priorityTagArray []string
 	)
+
+	// 设置gf预定义的tag，
 	if priorityTag != "" {
 		priorityTagArray = append(utils.SplitAndTrim(priorityTag, ","), gtag.StructTagPriority...)
 	} else {
 		priorityTagArray = gtag.StructTagPriority
 	}
+
+	// 获取tag
 	tagToAttrNameMap, err := gstructs.TagMapName(pointerElemReflectValue, priorityTagArray)
 	if err != nil {
 		return err
 	}
-	for tagName, attributeName := range tagToAttrNameMap {
+	// 2.验证gf预定义的一组tag  conv，p，json
+	for tagName, fieldName := range tagToAttrNameMap {
+
+		// 如果在前面的预定义规则中已经设置过的话
+		param, _ := setFields[fieldName]
+		if param.set {
+			continue
+		}
 		// If there's something else in the tag string,
 		// it uses the first part which is split using char ','.
 		// Eg:
 		// orm:"id, priority"
 		// orm:"name, with:uid=id"
-		attrToTagCheckNameMap[attributeName] = utils.RemoveSymbols(strings.Split(tagName, ",")[0])
-		// If tag and attribute values both exist in `paramsMap`,
-		// it then uses the tag value overwriting the attribute value in `paramsMap`.
-		if paramsMap[tagName] != nil && paramsMap[attributeName] != nil {
-			paramsMap[attributeName] = paramsMap[tagName]
-		}
-	}
+		tag := strings.Split(tagName, ",")[0]
 
-	// To convert value base on custom parameter key to attribute name map.
-	err = doStructBaseOnParamKeyToAttrMap(
-		pointerElemReflectValue,
-		paramsMap,
-		paramKeyToAttrMap,
-		doneMap,
-	)
-	if err != nil {
-		return err
-	}
-	// Already done all attributes value assignment nothing to do next.
-	if len(doneMap) == len(attrToCheckNameMap) {
-		return nil
-	}
-
-	// To convert value base on precise attribute name.
-	err = doStructBaseOnAttribute(
-		pointerElemReflectValue,
-		paramsMap,
-		paramKeyToAttrMap,
-		doneMap,
-		attrToCheckNameMap,
-	)
-	if err != nil {
-		return err
-	}
-	// Already done all attributes value assignment nothing to do next.
-	if len(doneMap) == len(attrToCheckNameMap) {
-		return nil
-	}
-
-	// To convert value base on parameter map.
-	err = doStructBaseOnParamMap(
-		pointerElemReflectValue,
-		paramsMap,
-		paramKeyToAttrMap,
-		doneMap,
-		attrToCheckNameMap,
-		attrToTagCheckNameMap,
-		tagToAttrNameMap,
-	)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func doStructBaseOnParamKeyToAttrMap(
-	pointerElemReflectValue reflect.Value,
-	paramsMap map[string]interface{},
-	paramKeyToAttrMap map[string]string,
-	doneAttrMap map[string]struct{},
-) error {
-	if len(paramKeyToAttrMap) == 0 {
-		return nil
-	}
-	for paramKey, attrName := range paramKeyToAttrMap {
-		paramValue, ok := paramsMap[paramKey]
-		if !ok {
+		// 已经用过一次了
+		if _, ok := paramsMapDeleted[tag]; ok {
 			continue
 		}
-		// If the attribute name is already checked converting, then skip it.
-		if _, ok = doneAttrMap[attrName]; ok {
-			continue
-		}
-		// Mark it done.
-		doneAttrMap[attrName] = struct{}{}
-		if err := bindVarToStructAttr(
-			pointerElemReflectValue, attrName, paramValue, paramKeyToAttrMap,
-		); err != nil {
-			return err
+
+		// 在params里找到对应tag的值
+		// 如果在paramsMap找到对应的映射规则，表示存在
+		// 如果没有则等后面模糊匹配
+		val, found := paramsMap[tag]
+		if found {
+			err := bindVarToStructAttr(pointerElemReflectValue, fieldName, val, paramKeyToAttrMap)
+			if err != nil {
+				return err
+			}
+			param.set = true
+			param.paramsKey = tag
+			setFields[fieldName] = param
+			paramsMapDeleted[tag] = struct{}{}
+
+		} else {
+			// 如果没找到，等后面模糊匹配
+			param.paramsKey = tag
+			setFields[fieldName] = param
 		}
 	}
-	return nil
-}
+	// 已经全部匹配完了
+	if len(paramsMapDeleted) == len(paramsMap) {
+		return nil
+	}
 
-func doStructBaseOnAttribute(
-	pointerElemReflectValue reflect.Value,
-	paramsMap map[string]interface{},
-	paramKeyToAttrMap map[string]string,
-	doneAttrMap map[string]struct{},
-	attrToCheckNameMap map[string]string,
-) error {
-	var customMappingAttrMap = make(map[string]struct{})
-	if len(paramKeyToAttrMap) > 0 {
-		// It ignores the attribute names if it is specified in the `paramKeyToAttrMap`.
-		for paramName := range paramsMap {
-			if passedAttrKey, ok := paramKeyToAttrMap[paramName]; ok {
-				customMappingAttrMap[passedAttrKey] = struct{}{}
+	// 3. 根据字段名精确匹配
+	for field, param := range setFields {
+		// 已经用过一次了
+		if _, ok := paramsMapDeleted[field]; ok {
+			continue
+		}
+		// 如果前面自定义规则和tag已经设置过了
+		if param.set {
+			continue
+		}
+
+		if val, found := paramsMap[field]; found {
+			err := bindVarToStructAttr(pointerElemReflectValue, field, val, paramKeyToAttrMap)
+			if err != nil {
+				return err
+			}
+			param.set = true
+			setFields[field] = param
+			paramsMapDeleted[field] = struct{}{}
+		}
+	}
+
+	// 已经全部匹配完了
+	if len(paramsMapDeleted) == len(paramsMap) {
+		return nil
+	}
+
+	// 剩下的是没有匹配到的
+	//4. 忽略下划线，大小写之类的
+	for field, param := range setFields {
+		// 模糊匹配时需要去映射规则中查找有没有对应的，如果没有就走下面的流程
+		// 已经用过一次了
+		if _, ok := paramsMapDeleted[field]; ok {
+			continue
+		}
+		if param.set {
+			continue
+		}
+
+		// paramsKey 在前面默认设置的结构体字段，然后自定义规则设置，
+		// 剩下的是tag的设置
+		// 去除下划线之后的的paramsKey  field_name field_Name Field_name Field_Name
+		// 去paramsMap中查找
+		fieldUnderline := utils.RemoveSymbols(param.paramsKey)
+		if _, ok := paramsMap[fieldUnderline]; ok {
+			param.paramsKey = fieldUnderline
+			setFields[field] = param
+
+			paramsMapDeleted[fieldUnderline] = struct{}{}
+			continue
+		}
+		// 没有找到下划线之类的符号，就尝试 大小写匹配
+		for paramsKey, _ := range paramsMap {
+			if _, ok := paramsMapDeleted[paramsKey]; ok {
+				continue
+			}
+			keyUnderline := utils.RemoveSymbols(paramsKey)
+			// 以结构体字段或者tag或者自定义规则的为准，忽略大小写比较
+			if strings.EqualFold(keyUnderline, fieldUnderline) {
+
+				param.paramsKey = paramsKey
+				setFields[field] = param
+				paramsMapDeleted[paramsKey] = struct{}{}
+				break
 			}
 		}
 	}
-	for attrName := range attrToCheckNameMap {
-		// The value by precise attribute name.
-		paramValue, ok := paramsMap[attrName]
-		if !ok {
+
+	// 遍历设置值
+	for field, param := range setFields {
+		if param.set {
 			continue
 		}
-		// If the attribute name is in custom paramKeyToAttrMap, it then ignores this converting.
-		if _, ok = customMappingAttrMap[attrName]; ok {
-			continue
+		val := paramsMap[param.paramsKey]
+		if val != nil {
+			param.set = true
 		}
-		// If the attribute name is already checked converting, then skip it.
-		if _, ok = doneAttrMap[attrName]; ok {
-			continue
-		}
-		// Mark it done.
-		doneAttrMap[attrName] = struct{}{}
-		if err := bindVarToStructAttr(
-			pointerElemReflectValue, attrName, paramValue, paramKeyToAttrMap,
-		); err != nil {
+		err := bindVarToStructAttr(pointerElemReflectValue, field, val, paramKeyToAttrMap)
+		if err != nil {
 			return err
 		}
+		setFields[field] = param
 	}
-	return nil
-}
 
-func doStructBaseOnParamMap(
-	pointerElemReflectValue reflect.Value,
-	paramsMap map[string]interface{},
-	paramKeyToAttrMap map[string]string,
-	doneAttrMap map[string]struct{},
-	attrToCheckNameMap map[string]string,
-	attrToTagCheckNameMap map[string]string,
-	tagToAttrNameMap map[string]string,
-) error {
-	var (
-		attrName  string
-		checkName string
-	)
-	for paramName, paramValue := range paramsMap {
-		// It firstly considers `paramName` as accurate tag name,
-		// and retrieve attribute name from `tagToAttrNameMap` .
-		attrName = tagToAttrNameMap[paramName]
-		if attrName == "" {
-			checkName = utils.RemoveSymbols(paramName)
-			// Loop to find the matched attribute name with or without
-			// string cases and chars like '-'/'_'/'.'/' '.
+	// 已经匹配完了
+	if len(paramsMapDeleted) == len(paramsMap) {
+		return nil
+	}
+	// field还没设置完的话，如果paramsMap中还有数据没有用到的话
+	for field, param := range setFields {
+		if param.set == true {
+			continue
+		}
 
-			// Matching the parameters to struct tag names.
-			// The `attrKey` is the attribute name of the struct.
-			for attrKey, cmpKey := range attrToTagCheckNameMap {
-				if strings.EqualFold(checkName, cmpKey) {
-					attrName = attrKey
-					break
+		// 去除下划线
+		fieldUnderline := utils.RemoveSymbols(field)
+		// 如果去除下划线就找到的话
+		if val, ok := paramsMap[fieldUnderline]; ok {
+			err := bindVarToStructAttr(pointerElemReflectValue, field, val, paramKeyToAttrMap)
+			if err != nil {
+				return err
+			}
+			paramsMapDeleted[fieldUnderline] = struct{}{}
+			continue
+		}
+		// 没有找到下划线之类的符号，就尝试 大小写匹配
+		for paramsKey, val := range paramsMap {
+			// 忽略已经匹配过的值
+			if _, ok := paramsMapDeleted[paramsKey]; ok {
+				continue
+			}
+			keyUnderline := utils.RemoveSymbols(paramsKey)
+
+			if strings.EqualFold(keyUnderline, fieldUnderline) {
+				err := bindVarToStructAttr(pointerElemReflectValue, field, val, paramKeyToAttrMap)
+				if err != nil {
+					return err
 				}
+				paramsMapDeleted[paramsKey] = struct{}{}
+				break
 			}
-		}
-
-		// Matching the parameters to struct attributes.
-		if attrName == "" {
-			for attrKey, cmpKey := range attrToCheckNameMap {
-				// Eg:
-				// UserName  eq user_name
-				// User-Name eq username
-				// username  eq userName
-				// etc.
-				if strings.EqualFold(checkName, cmpKey) {
-					attrName = attrKey
-					break
-				}
-			}
-		}
-
-		// No matching, it gives up this attribute converting.
-		if attrName == "" {
-			continue
-		}
-		// If the attribute name is already checked converting, then skip it.
-		if _, ok := doneAttrMap[attrName]; ok {
-			continue
-		}
-		// Mark it done.
-		doneAttrMap[attrName] = struct{}{}
-		if err := bindVarToStructAttr(
-			pointerElemReflectValue, attrName, paramValue, paramKeyToAttrMap,
-		); err != nil {
-			return err
 		}
 	}
 	return nil
