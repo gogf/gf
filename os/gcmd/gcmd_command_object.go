@@ -305,7 +305,7 @@ func newCommandFromMethod(
 			if inputObject.Kind() == reflect.Ptr {
 				err = gconv.Scan(data, inputObject.Interface())
 			} else {
-				err = gconv.Struct(data, inputObject.Addr().Interface())
+				err = gconv.StructTag(data, inputObject.Addr().Interface(), "name,short")
 			}
 			intlog.PrintFunc(ctx, func() string {
 				return fmt.Sprintf(`input object assigned data: %s`, gjson.MustEncode(inputObject.Interface()))
