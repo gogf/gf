@@ -9,9 +9,11 @@ package ghttp
 import (
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gtag"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
@@ -193,49 +195,124 @@ func (r *Request) doGetRequestStruct(pointer interface{}, mapping ...map[string]
 // mergeDefaultStructValue merges the request parameters with default values from struct tag definition.
 func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer interface{}) error {
 	fields := r.serveHandler.Handler.Info.ReqStructFields
-	if len(fields) > 0 {
-		var (
-			foundKey   string
-			foundValue interface{}
-		)
+	// If the length of data is 0,
+	// you can directly use the default value of the structure field to set the value for data.
+	if len(data) == 0 {
+		return r.setDefaultFields(data, pointer)
+	}
+
+	if len(fields) != 0 {
+		tempFields := []gstructs.Field{}
 		for _, field := range fields {
-			if tagValue := field.TagDefault(); tagValue != "" {
-				foundKey, foundValue = gutil.MapPossibleItemByKey(data, field.Name())
+			if v, ok := field.TagLookup("default"); ok {
+				tempField := gstructs.Field{
+					Value:    field.Value,
+					Field:    field.Field,
+					TagName:  "default",
+					TagValue: v,
+				}
+
+				tempFields = append(tempFields, tempField)
+				continue
+			}
+			if v, ok := field.TagLookup("d"); ok {
+				tempField := gstructs.Field{
+					Value:    field.Value,
+					Field:    field.Field,
+					TagName:  "d",
+					TagValue: v,
+				}
+				tempFields = append(tempFields, tempField)
+
+			}
+		}
+		fields = tempFields
+	} else {
+		var err error
+		// provide non strict routing
+		fields, err = gstructs.TagFields(pointer, defaultValueTags)
+		if err != nil {
+			return err
+		}
+	}
+	r.setDefaultFieldsWithDataMap(data, fields)
+	return nil
+}
+
+func (r *Request) setDefaultFields(data map[string]interface{}, pointer any) error {
+	fields, err := gstructs.TagFields(pointer, defaultValueTags)
+	if err != nil {
+		return err
+	}
+
+	for _, field := range fields {
+		v := gconv.Convert(field.TagValue, field.Type().String())
+		data[field.Name()] = v
+	}
+	return nil
+}
+
+func (r *Request) setDefaultFieldsWithDataMap(data map[string]any, fields []gstructs.Field) {
+	var in = func(arr []string, k string) bool {
+		for _, v := range arr {
+			if v == k {
+				return true
+			}
+		}
+		return false
+	}
+	tags := gtag.StructTagPriority
+
+	if len(fields) > 0 {
+		for _, field := range fields {
+			// Verify whether the field can be set
+			if field.IsExported() {
+				tag := ""
+				// Find out if there is a gf tag, and assign it if so
+				for tagName, tagVal := range field.TagMap() {
+					if in(tags, tagName) {
+						tag = tagVal
+						break
+					}
+				}
+
+				if tag != "" {
+					// Exact match first. If the match is found, skip it directly.
+					_, ok := data[tag]
+					if ok {
+						continue
+					}
+					// Ignore case and underscores for matching
+					foundKey, foundValue := utils.MapPossibleItemByKey(data, tag)
+					if foundKey == "" {
+						// if not found
+						data[tag] = field.TagValue
+						continue
+					} else {
+						// If found, determine whether it is a null value
+						if empty.IsEmpty(foundValue) {
+							data[foundKey] = field.TagValue
+						}
+					}
+
+				}
+				fieldName := field.Name()
+				_, ok := data[fieldName]
+				if ok {
+					continue
+				}
+
+				foundKey, foundValue := utils.MapPossibleItemByKey(data, fieldName)
 				if foundKey == "" {
-					data[field.Name()] = tagValue
+					data[fieldName] = field.TagValue
 				} else {
 					if empty.IsEmpty(foundValue) {
-						data[foundKey] = tagValue
+						data[foundKey] = field.TagValue
 					}
 				}
 			}
 		}
-		return nil
 	}
-
-	// provide non strict routing
-	tagFields, err := gstructs.TagFields(pointer, defaultValueTags)
-	if err != nil {
-		return err
-	}
-	if len(tagFields) > 0 {
-		var (
-			foundKey   string
-			foundValue interface{}
-		)
-		for _, field := range tagFields {
-			foundKey, foundValue = gutil.MapPossibleItemByKey(data, field.Name())
-			if foundKey == "" {
-				data[field.Name()] = field.TagValue
-			} else {
-				if empty.IsEmpty(foundValue) {
-					data[foundKey] = field.TagValue
-				}
-			}
-		}
-	}
-
-	return nil
 }
 
 // mergeInTagStructValue merges the request parameters with header or cookie values from struct `in` tag definition.
