@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Model_LeftJoinOnField(t *testing.T) {
+func TestModelLeftJoinOnField(t *testing.T) {
 	var (
 		table1 = gtime.TimestampNanoStr() + "_table1"
 		table2 = gtime.TimestampNanoStr() + "_table2"
@@ -37,7 +37,7 @@ func Test_Model_LeftJoinOnField(t *testing.T) {
 	})
 }
 
-func Test_Model_RightJoinOnField(t *testing.T) {
+func TestModelRightJoinOnField(t *testing.T) {
 	var (
 		table1 = gtime.TimestampNanoStr() + "_table1"
 		table2 = gtime.TimestampNanoStr() + "_table2"
@@ -60,7 +60,7 @@ func Test_Model_RightJoinOnField(t *testing.T) {
 	})
 }
 
-func Test_Model_InnerJoinOnField(t *testing.T) {
+func TestModelInnerJoinOnField(t *testing.T) {
 	var (
 		table1 = gtime.TimestampNanoStr() + "_table1"
 		table2 = gtime.TimestampNanoStr() + "_table2"
@@ -83,7 +83,7 @@ func Test_Model_InnerJoinOnField(t *testing.T) {
 	})
 }
 
-func Test_Model_LeftJoinOnFields(t *testing.T) {
+func TestModelLeftJoinOnFields(t *testing.T) {
 	var (
 		table1 = gtime.TimestampNanoStr() + "_table1"
 		table2 = gtime.TimestampNanoStr() + "_table2"
@@ -106,7 +106,7 @@ func Test_Model_LeftJoinOnFields(t *testing.T) {
 	})
 }
 
-func Test_Model_RightJoinOnFields(t *testing.T) {
+func TestModelRightJoinOnFields(t *testing.T) {
 	var (
 		table1 = gtime.TimestampNanoStr() + "_table1"
 		table2 = gtime.TimestampNanoStr() + "_table2"
@@ -129,7 +129,7 @@ func Test_Model_RightJoinOnFields(t *testing.T) {
 	})
 }
 
-func Test_Model_InnerJoinOnFields(t *testing.T) {
+func TestModelInnerJoinOnFields(t *testing.T) {
 	var (
 		table1 = gtime.TimestampNanoStr() + "_table1"
 		table2 = gtime.TimestampNanoStr() + "_table2"
@@ -152,7 +152,7 @@ func Test_Model_InnerJoinOnFields(t *testing.T) {
 	})
 }
 
-func Test_Model_FieldsPrefix(t *testing.T) {
+func TestModelFieldsPrefix(t *testing.T) {
 	var (
 		table1 = gtime.TimestampNanoStr() + "_table1"
 		table2 = gtime.TimestampNanoStr() + "_table2"

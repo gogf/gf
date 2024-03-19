@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_RWMutex_RUnlock(t *testing.T) {
+func TestRWMutexRUnlock(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		mu := gmutex.RWMutex{}
 		mu.RLockFunc(func() {
@@ -39,7 +39,7 @@ func Test_RWMutex_RUnlock(t *testing.T) {
 	})
 }
 
-func Test_RWMutex_IsLocked(t *testing.T) {
+func TestRWMutexIsLocked(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		mu := gmutex.RWMutex{}
 		go func() {
@@ -57,7 +57,7 @@ func Test_RWMutex_IsLocked(t *testing.T) {
 	})
 }
 
-func Test_RWMutex_Unlock(t *testing.T) {
+func TestRWMutexUnlock(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		mu := gmutex.RWMutex{}
 		array := garray.New(true)
@@ -87,7 +87,7 @@ func Test_RWMutex_Unlock(t *testing.T) {
 	})
 }
 
-func Test_RWMutex_LockFunc(t *testing.T) {
+func TestRWMutexLockFunc(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		mu := gmutex.RWMutex{}
 		array := garray.New(true)
@@ -112,7 +112,7 @@ func Test_RWMutex_LockFunc(t *testing.T) {
 	})
 }
 
-func Test_RWMutex_TryLockFunc(t *testing.T) {
+func TestRWMutexTryLockFunc(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		mu := gmutex.RWMutex{}
 		array := garray.New(true)
@@ -143,7 +143,7 @@ func Test_RWMutex_TryLockFunc(t *testing.T) {
 	})
 }
 
-func Test_RWMutex_RLockFunc(t *testing.T) {
+func TestRWMutexRLockFunc(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		mu := gmutex.RWMutex{}
 		array := garray.New(true)
@@ -198,7 +198,7 @@ func Test_RWMutex_RLockFunc(t *testing.T) {
 	})
 }
 
-func Test_RWMutex_TryRLockFunc(t *testing.T) {
+func TestRWMutexTryRLockFunc(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			mu    = gmutex.RWMutex{}

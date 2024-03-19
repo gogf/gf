@@ -19,7 +19,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Client_Server_Tracing(t *testing.T) {
+func TestClientServerTracing(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		p := 8888
 		s := g.Server(p)
@@ -46,7 +46,7 @@ func Test_Client_Server_Tracing(t *testing.T) {
 	})
 }
 
-func Test_WithTraceID(t *testing.T) {
+func TestWithTraceID(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		p := 8889
 		s := g.Server(p)

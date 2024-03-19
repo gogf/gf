@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/v2/util/grand"
 )
 
-func Test_Intn(t *testing.T) {
+func TestIntn(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 1000000; i++ {
 			n := grand.Intn(100)
@@ -33,7 +33,7 @@ func Test_Intn(t *testing.T) {
 	})
 }
 
-func Test_Meet(t *testing.T) {
+func TestMeet(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
 			t.Assert(grand.Meet(100, 100), true)
@@ -47,7 +47,7 @@ func Test_Meet(t *testing.T) {
 	})
 }
 
-func Test_MeetProb(t *testing.T) {
+func TestMeetProb(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
 			t.Assert(grand.MeetProb(1), true)
@@ -61,7 +61,7 @@ func Test_MeetProb(t *testing.T) {
 	})
 }
 
-func Test_N(t *testing.T) {
+func TestN(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
 			t.Assert(grand.N(1, 1), 1)
@@ -75,7 +75,7 @@ func Test_N(t *testing.T) {
 	})
 }
 
-func Test_D(t *testing.T) {
+func TestD(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
 			t.Assert(grand.D(time.Second, time.Second), time.Second)
@@ -92,7 +92,7 @@ func Test_D(t *testing.T) {
 	})
 }
 
-func Test_Rand(t *testing.T) {
+func TestRand(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
 			t.Assert(grand.N(1, 1), 1)
@@ -109,7 +109,7 @@ func Test_Rand(t *testing.T) {
 	})
 }
 
-func Test_S(t *testing.T) {
+func TestS(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
 			t.Assert(len(grand.S(5)), 5)
@@ -125,7 +125,7 @@ func Test_S(t *testing.T) {
 	})
 }
 
-func Test_B(t *testing.T) {
+func TestB(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
 			b := grand.B(5)
@@ -139,7 +139,7 @@ func Test_B(t *testing.T) {
 	})
 }
 
-func Test_Str(t *testing.T) {
+func TestStr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
 			t.Assert(len(grand.S(5)), 5)
@@ -147,7 +147,7 @@ func Test_Str(t *testing.T) {
 	})
 }
 
-func Test_RandStr(t *testing.T) {
+func TestRandStr(t *testing.T) {
 	str := "我爱GoFrame"
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 10; i++ {
@@ -181,7 +181,7 @@ func Test_RandStr(t *testing.T) {
 	})
 }
 
-func Test_Digits(t *testing.T) {
+func TestDigits(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
 			t.Assert(len(grand.Digits(5)), 5)
@@ -189,7 +189,7 @@ func Test_Digits(t *testing.T) {
 	})
 }
 
-func Test_RandDigits(t *testing.T) {
+func TestRandDigits(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
 			t.Assert(len(grand.Digits(5)), 5)
@@ -200,7 +200,7 @@ func Test_RandDigits(t *testing.T) {
 	})
 }
 
-func Test_Letters(t *testing.T) {
+func TestLetters(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
 			t.Assert(len(grand.Letters(5)), 5)
@@ -208,7 +208,7 @@ func Test_Letters(t *testing.T) {
 	})
 }
 
-func Test_RandLetters(t *testing.T) {
+func TestRandLetters(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
 			t.Assert(len(grand.Letters(5)), 5)
@@ -219,7 +219,7 @@ func Test_RandLetters(t *testing.T) {
 	})
 }
 
-func Test_Perm(t *testing.T) {
+func TestPerm(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
 			t.AssertIN(grand.Perm(5), []int{0, 1, 2, 3, 4})
@@ -227,7 +227,7 @@ func Test_Perm(t *testing.T) {
 	})
 }
 
-func Test_Symbols(t *testing.T) {
+func TestSymbols(t *testing.T) {
 	symbols := "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {

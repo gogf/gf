@@ -141,7 +141,7 @@ func TestRing_Slice(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/1394
-func Test_Issue1394(t *testing.T) {
+func TestIssue1394(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// gring.
 		gRing := gring.New(10)

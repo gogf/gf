@@ -15,7 +15,7 @@ import (
 
 type boolStruct struct{}
 
-func Test_Bool(t *testing.T) {
+func TestBool(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var any interface{} = nil
 		t.AssertEQ(gconv.Bool(any), false)

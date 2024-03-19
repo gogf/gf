@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func Test_MapCopy(t *testing.T) {
+func TestMapCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := g.Map{
 			"k1": "v1",
@@ -29,7 +29,7 @@ func Test_MapCopy(t *testing.T) {
 	})
 }
 
-func Test_MapContains(t *testing.T) {
+func TestMapContains(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := g.Map{
 			"k1": "v1",
@@ -42,7 +42,7 @@ func Test_MapContains(t *testing.T) {
 	})
 }
 
-func Test_MapDelete(t *testing.T) {
+func TestMapDelete(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := g.Map{
 			"k1": "v1",
@@ -54,7 +54,7 @@ func Test_MapDelete(t *testing.T) {
 	})
 }
 
-func Test_MapMerge(t *testing.T) {
+func TestMapMerge(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := g.Map{
 			"k1": "v1",
@@ -75,7 +75,7 @@ func Test_MapMerge(t *testing.T) {
 	})
 }
 
-func Test_MapMergeCopy(t *testing.T) {
+func TestMapMergeCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := g.Map{
 			"k1": "v1",
@@ -97,7 +97,7 @@ func Test_MapMergeCopy(t *testing.T) {
 	})
 }
 
-func Test_MapPossibleItemByKey(t *testing.T) {
+func TestMapPossibleItemByKey(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := g.Map{
 			"name":     "guo",
@@ -117,7 +117,7 @@ func Test_MapPossibleItemByKey(t *testing.T) {
 	})
 }
 
-func Test_MapContainsPossibleKey(t *testing.T) {
+func TestMapContainsPossibleKey(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := g.Map{
 			"name":     "guo",
@@ -134,7 +134,7 @@ func Test_MapContainsPossibleKey(t *testing.T) {
 	})
 }
 
-func Test_MapOmitEmpty(t *testing.T) {
+func TestMapOmitEmpty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := g.Map{
 			"k1": "john",
@@ -153,7 +153,7 @@ func Test_MapOmitEmpty(t *testing.T) {
 	})
 }
 
-func Test_MapToSlice(t *testing.T) {
+func TestMapToSlice(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := g.Map{
 			"k1": "v1",

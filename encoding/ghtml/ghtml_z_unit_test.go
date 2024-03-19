@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_StripTags(t *testing.T) {
+func TestStripTags(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		src := `<p>Test paragraph.</p><!-- Comment -->  <a href="#fragment">Other text</a>`
 		dst := `Test paragraph.  Other text`
@@ -22,7 +22,7 @@ func Test_StripTags(t *testing.T) {
 	})
 }
 
-func Test_Entities(t *testing.T) {
+func TestEntities(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		src := `A 'quote' "is" <b>bold</b>`
 		dst := `A &#39;quote&#39; &#34;is&#34; &lt;b&gt;bold&lt;/b&gt;`
@@ -31,7 +31,7 @@ func Test_Entities(t *testing.T) {
 	})
 }
 
-func Test_SpecialChars(t *testing.T) {
+func TestSpecialChars(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		src := `A 'quote' "is" <b>bold</b>`
 		dst := `A &#39;quote&#39; &#34;is&#34; &lt;b&gt;bold&lt;/b&gt;`
@@ -40,7 +40,7 @@ func Test_SpecialChars(t *testing.T) {
 	})
 }
 
-func Test_SpecialCharsMapOrStruct_Map(t *testing.T) {
+func TestSpecialCharsMapOrStructMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a := g.Map{
 			"Title":   "<h1>T</h1>",
@@ -63,7 +63,7 @@ func Test_SpecialCharsMapOrStruct_Map(t *testing.T) {
 	})
 }
 
-func Test_SpecialCharsMapOrStruct_Struct(t *testing.T) {
+func TestSpecialCharsMapOrStructStruct(t *testing.T) {
 	type A struct {
 		Title   string
 		Content string

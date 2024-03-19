@@ -21,7 +21,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_IntArray_Basic(t *testing.T) {
+func TestIntArrayBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := []int{0, 1, 2, 3}
 		expect2 := []int{}

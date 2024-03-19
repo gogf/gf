@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_MapToMap1(t *testing.T) {
+func TestMapToMap1(t *testing.T) {
 	// map[int]int -> map[string]string
 	// empty original map.
 	gtest.C(t, func(t *gtest.T) {
@@ -81,7 +81,7 @@ func Test_MapToMap1(t *testing.T) {
 	})
 }
 
-func Test_MapToMap2(t *testing.T) {
+func TestMapToMap2(t *testing.T) {
 	type User struct {
 		Id   int
 		Name string
@@ -126,7 +126,7 @@ func Test_MapToMap2(t *testing.T) {
 	})
 }
 
-func Test_MapToMapDeep(t *testing.T) {
+func TestMapToMapDeep(t *testing.T) {
 	type Ids struct {
 		Id  int
 		Uid int
@@ -155,7 +155,7 @@ func Test_MapToMapDeep(t *testing.T) {
 	})
 }
 
-func Test_MapToMaps(t *testing.T) {
+func TestMapToMaps(t *testing.T) {
 	params := g.Slice{
 		g.Map{"id": 1, "name": "john"},
 		g.Map{"id": 2, "name": "smith"},
@@ -188,7 +188,7 @@ func Test_MapToMaps(t *testing.T) {
 	})
 }
 
-func Test_MapToMaps_StructParams(t *testing.T) {
+func TestMapToMapsStructParams(t *testing.T) {
 	type User struct {
 		Id   int
 		Name string

@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Client(t *testing.T) {
+func TestClient(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			c  = gins.HttpClient()

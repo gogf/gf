@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func Test_Replace(t *testing.T) {
+func TestReplace(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := "abcdEFG乱入的中文abcdefg"
 		t.Assert(gstr.Replace(s1, "ab", "AB"), "ABcdEFG乱入的中文ABcdefg")
@@ -36,7 +36,7 @@ func Test_Replace(t *testing.T) {
 	})
 }
 
-func Test_ReplaceI_1(t *testing.T) {
+func TestReplaceI1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := "abcd乱入的中文ABCD"
 		s2 := "a"
@@ -66,7 +66,7 @@ func Test_ReplaceI_1(t *testing.T) {
 	})
 }
 
-func Test_ReplaceI_2(t *testing.T) {
+func TestReplaceI2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.ReplaceI("aaa", "A", "-a-"), `-a--a--a-`)
 		t.Assert(gstr.ReplaceI("aaaa", "AA", "-"), `--`)

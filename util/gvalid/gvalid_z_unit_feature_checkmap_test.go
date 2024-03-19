@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/util/gvalid"
 )
 
-func Test_CheckMap1(t *testing.T) {
+func TestCheckMap1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		data := map[string]interface{}{
 			"id":   "0",
@@ -36,7 +36,7 @@ func Test_CheckMap1(t *testing.T) {
 	})
 }
 
-func Test_CheckMap2(t *testing.T) {
+func TestCheckMap2(t *testing.T) {
 	var params interface{}
 	gtest.C(t, func(t *gtest.T) {
 		if err := g.Validator().Data(params).Run(context.TODO()); err == nil {
@@ -159,7 +159,7 @@ func Test_CheckMap2(t *testing.T) {
 	}
 }
 
-func Test_CheckMapWithNilAndNotRequiredField(t *testing.T) {
+func TestCheckMapWithNilAndNotRequiredField(t *testing.T) {
 	data := map[string]interface{}{
 		"id": "1",
 	}
@@ -172,7 +172,7 @@ func Test_CheckMapWithNilAndNotRequiredField(t *testing.T) {
 	}
 }
 
-func Test_Sequence(t *testing.T) {
+func TestSequence(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		params := map[string]interface{}{
 			"passport":  "",
@@ -211,7 +211,7 @@ func Test_Sequence(t *testing.T) {
 	})
 }
 
-func Test_Map_Bail(t *testing.T) {
+func TestMapBail(t *testing.T) {
 	// global bail
 	gtest.C(t, func(t *gtest.T) {
 		params := map[string]interface{}{

@@ -31,7 +31,7 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func Test_Model_Insert(t *testing.T) {
+func TestModelInsert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -108,7 +108,7 @@ func Test_Model_Insert(t *testing.T) {
 }
 
 // Fix issue: https://github.com/gogf/gf/issues/819
-func Test_Model_Insert_WithStructAndSliceAttribute(t *testing.T) {
+func TestModelInsertWithStructAndSliceAttribute(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -134,7 +134,7 @@ func Test_Model_Insert_WithStructAndSliceAttribute(t *testing.T) {
 	})
 }
 
-func Test_Model_Insert_KeyFieldNameMapping(t *testing.T) {
+func TestModelInsertKeyFieldNameMapping(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -164,7 +164,7 @@ func Test_Model_Insert_KeyFieldNameMapping(t *testing.T) {
 	})
 }
 
-func Test_Model_Update_KeyFieldNameMapping(t *testing.T) {
+func TestModelUpdateKeyFieldNameMapping(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -194,7 +194,7 @@ func Test_Model_Update_KeyFieldNameMapping(t *testing.T) {
 	})
 }
 
-func Test_Model_Insert_Time(t *testing.T) {
+func TestModelInsertTime(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -216,7 +216,7 @@ func Test_Model_Insert_Time(t *testing.T) {
 	})
 }
 
-func Test_Model_BatchInsertWithArrayStruct(t *testing.T) {
+func TestModelBatchInsertWithArrayStruct(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -240,7 +240,7 @@ func Test_Model_BatchInsertWithArrayStruct(t *testing.T) {
 	})
 }
 
-func Test_Model_InsertIgnore(t *testing.T) {
+func TestModelInsertIgnore(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -267,7 +267,7 @@ func Test_Model_InsertIgnore(t *testing.T) {
 	})
 }
 
-func Test_Model_Batch(t *testing.T) {
+func TestModelBatch(t *testing.T) {
 	// batch insert
 	gtest.C(t, func(t *gtest.T) {
 		table := createTable()
@@ -334,7 +334,7 @@ func Test_Model_Batch(t *testing.T) {
 	})
 }
 
-func Test_Model_Replace(t *testing.T) {
+func TestModelReplace(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -360,7 +360,7 @@ func Test_Model_Replace(t *testing.T) {
 	})
 }
 
-func Test_Model_Save(t *testing.T) {
+func TestModelSave(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -419,7 +419,7 @@ func Test_Model_Save(t *testing.T) {
 	})
 }
 
-func Test_Model_Update(t *testing.T) {
+func TestModelUpdate(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	// UPDATE...LIMIT
@@ -471,7 +471,7 @@ func Test_Model_Update(t *testing.T) {
 	})
 }
 
-func Test_Model_UpdateAndGetAffected(t *testing.T) {
+func TestModelUpdateAndGetAffected(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -483,7 +483,7 @@ func Test_Model_UpdateAndGetAffected(t *testing.T) {
 	})
 }
 
-func Test_Model_Clone(t *testing.T) {
+func TestModelClone(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -506,7 +506,7 @@ func Test_Model_Clone(t *testing.T) {
 	})
 }
 
-func Test_Model_Safe(t *testing.T) {
+func TestModelSafe(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -601,7 +601,7 @@ func Test_Model_Safe(t *testing.T) {
 	})
 }
 
-func Test_Model_All(t *testing.T) {
+func TestModelAll(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -617,7 +617,7 @@ func Test_Model_All(t *testing.T) {
 	})
 }
 
-func Test_Model_AllAndCount(t *testing.T) {
+func TestModelAllAndCount(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	tableName2 := "user_" + gtime.Now().TimestampNanoStr()
@@ -711,7 +711,7 @@ func Test_Model_AllAndCount(t *testing.T) {
 	})
 }
 
-func Test_Model_Fields(t *testing.T) {
+func TestModelFields(t *testing.T) {
 	tableName1 := createInitTable()
 	defer dropTable(tableName1)
 
@@ -771,7 +771,7 @@ func Test_Model_Fields(t *testing.T) {
 	})
 }
 
-func Test_Model_One(t *testing.T) {
+func TestModelOne(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -787,7 +787,7 @@ func Test_Model_One(t *testing.T) {
 	})
 }
 
-func Test_Model_Value(t *testing.T) {
+func TestModelValue(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -804,7 +804,7 @@ func Test_Model_Value(t *testing.T) {
 	})
 }
 
-func Test_Model_Array(t *testing.T) {
+func TestModelArray(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -826,7 +826,7 @@ func Test_Model_Array(t *testing.T) {
 	})
 }
 
-func Test_Model_Count(t *testing.T) {
+func TestModelCount(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -864,7 +864,7 @@ func Test_Model_Count(t *testing.T) {
 	})
 }
 
-func Test_Model_Select(t *testing.T) {
+func TestModelSelect(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -883,7 +883,7 @@ func Test_Model_Select(t *testing.T) {
 	})
 }
 
-func Test_Model_Struct(t *testing.T) {
+func TestModelStruct(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -973,7 +973,7 @@ func Test_Model_Struct(t *testing.T) {
 	})
 }
 
-func Test_Model_Struct_CustomType(t *testing.T) {
+func TestModelStructCustomType(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -995,7 +995,7 @@ func Test_Model_Struct_CustomType(t *testing.T) {
 	})
 }
 
-func Test_Model_Structs(t *testing.T) {
+func TestModelStructs(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -1082,7 +1082,7 @@ func Test_Model_Structs(t *testing.T) {
 	})
 }
 
-func Test_Model_StructsWithOrmTag(t *testing.T) {
+func TestModelStructsWithOrmTag(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -1128,7 +1128,7 @@ func Test_Model_StructsWithOrmTag(t *testing.T) {
 	})
 }
 
-func Test_Model_Scan(t *testing.T) {
+func TestModelScan(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -1220,7 +1220,7 @@ func Test_Model_Scan(t *testing.T) {
 	})
 }
 
-func Test_Model_ScanAndCount(t *testing.T) {
+func TestModelScanAndCount(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	tableName2 := "user_" + gtime.Now().TimestampNanoStr()
@@ -1383,7 +1383,7 @@ func Test_Model_ScanAndCount(t *testing.T) {
 	})
 }
 
-func Test_Model_Scan_NilSliceAttrWhenNoRecordsFound(t *testing.T) {
+func TestModelScanNilSliceAttrWhenNoRecordsFound(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -1405,7 +1405,7 @@ func Test_Model_Scan_NilSliceAttrWhenNoRecordsFound(t *testing.T) {
 	})
 }
 
-func Test_Model_OrderBy(t *testing.T) {
+func TestModelOrderBy(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -1425,7 +1425,7 @@ func Test_Model_OrderBy(t *testing.T) {
 
 }
 
-func Test_Model_GroupBy(t *testing.T) {
+func TestModelGroupBy(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -1437,7 +1437,7 @@ func Test_Model_GroupBy(t *testing.T) {
 	})
 }
 
-func Test_Model_Data(t *testing.T) {
+func TestModelData(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := createInitTable()
 		defer dropTable(table)
@@ -1484,7 +1484,7 @@ func Test_Model_Data(t *testing.T) {
 	})
 }
 
-func Test_Model_Where(t *testing.T) {
+func TestModelWhere(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -1733,7 +1733,7 @@ func Test_Model_Where(t *testing.T) {
 	})
 }
 
-func Test_Model_Where_ISNULL_1(t *testing.T) {
+func TestModelWhereISNULL1(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -1751,7 +1751,7 @@ func Test_Model_Where_ISNULL_1(t *testing.T) {
 	})
 }
 
-func Test_Model_Where_ISNULL_2(t *testing.T) {
+func TestModelWhereISNULL2(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -1772,7 +1772,7 @@ func Test_Model_Where_ISNULL_2(t *testing.T) {
 	})
 }
 
-func Test_Model_Where_OmitEmpty(t *testing.T) {
+func TestModelWhereOmitEmpty(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -1795,7 +1795,7 @@ func Test_Model_Where_OmitEmpty(t *testing.T) {
 	})
 }
 
-func Test_Model_Where_GTime(t *testing.T) {
+func TestModelWhereGTime(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -1811,7 +1811,7 @@ func Test_Model_Where_GTime(t *testing.T) {
 	})
 }
 
-func Test_Model_WherePri(t *testing.T) {
+func TestModelWherePri(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -2069,7 +2069,7 @@ func Test_Model_WherePri(t *testing.T) {
 	})
 }
 
-func Test_Model_Delete(t *testing.T) {
+func TestModelDelete(t *testing.T) {
 	// table := createInitTable()
 	// defer dropTable(table)
 
@@ -2092,7 +2092,7 @@ func Test_Model_Delete(t *testing.T) {
 	})
 }
 
-func Test_Model_Offset(t *testing.T) {
+func TestModelOffset(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -2104,7 +2104,7 @@ func Test_Model_Offset(t *testing.T) {
 	})
 }
 
-func Test_Model_Page(t *testing.T) {
+func TestModelPage(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -2126,7 +2126,7 @@ func Test_Model_Page(t *testing.T) {
 	})
 }
 
-func Test_Model_Option_Map(t *testing.T) {
+func TestModelOptionMap(t *testing.T) {
 	// Insert
 	gtest.C(t, func(t *gtest.T) {
 		table := createTable()
@@ -2224,7 +2224,7 @@ func Test_Model_Option_Map(t *testing.T) {
 	})
 }
 
-func Test_Model_Option_Where(t *testing.T) {
+func TestModelOptionWhere(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := createInitTable()
 		defer dropTable(table)
@@ -2235,7 +2235,7 @@ func Test_Model_Option_Where(t *testing.T) {
 	})
 }
 
-func Test_Model_Where_MultiSliceArguments(t *testing.T) {
+func TestModelWhereMultiSliceArguments(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -2261,7 +2261,7 @@ func Test_Model_Where_MultiSliceArguments(t *testing.T) {
 	})
 }
 
-func Test_Model_FieldsEx(t *testing.T) {
+func TestModelFieldsEx(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	// Select.
@@ -2295,7 +2295,7 @@ func Test_Model_FieldsEx(t *testing.T) {
 	})
 }
 
-func Test_Model_Prefix(t *testing.T) {
+func TestModelPrefix(t *testing.T) {
 	db := dbPrefix
 	noPrefixName := fmt.Sprintf(`%s_%d`, TableName, gtime.TimestampNano())
 	table := TableNamePrefix + noPrefixName
@@ -2349,7 +2349,7 @@ func Test_Model_Prefix(t *testing.T) {
 	})
 }
 
-func Test_Model_FieldsExStruct(t *testing.T) {
+func TestModelFieldsExStruct(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -2403,7 +2403,7 @@ func Test_Model_FieldsExStruct(t *testing.T) {
 	})
 }
 
-func Test_Model_OmitEmpty_Time(t *testing.T) {
+func TestModelOmitEmptyTime(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -2427,7 +2427,7 @@ func Test_Model_OmitEmpty_Time(t *testing.T) {
 	})
 }
 
-func Test_Result_Chunk(t *testing.T) {
+func TestResultChunk(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -2442,7 +2442,7 @@ func Test_Result_Chunk(t *testing.T) {
 	})
 }
 
-func Test_Model_DryRun(t *testing.T) {
+func TestModelDryRun(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	db.SetDryRun(true)
@@ -2462,7 +2462,7 @@ func Test_Model_DryRun(t *testing.T) {
 	})
 }
 
-func Test_Model_Join_SubQuery(t *testing.T) {
+func TestModelJoinSubQuery(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -2475,7 +2475,7 @@ func Test_Model_Join_SubQuery(t *testing.T) {
 	})
 }
 
-func Test_Model_Cache(t *testing.T) {
+func TestModelCache(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -2634,7 +2634,7 @@ func Test_Model_Cache(t *testing.T) {
 	})
 }
 
-func Test_Model_Having(t *testing.T) {
+func TestModelHaving(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -2660,7 +2660,7 @@ func Test_Model_Having(t *testing.T) {
 	})
 }
 
-func Test_Model_Distinct(t *testing.T) {
+func TestModelDistinct(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -2676,7 +2676,7 @@ func Test_Model_Distinct(t *testing.T) {
 	})
 }
 
-func Test_Model_Min_Max(t *testing.T) {
+func TestModelMinMax(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -2692,7 +2692,7 @@ func Test_Model_Min_Max(t *testing.T) {
 	})
 }
 
-func Test_Model_Fields_AutoMapping(t *testing.T) {
+func TestModelFieldsAutoMapping(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -2735,7 +2735,7 @@ func Test_Model_Fields_AutoMapping(t *testing.T) {
 	})
 }
 
-func Test_Model_FieldsEx_AutoMapping(t *testing.T) {
+func TestModelFieldsExAutoMapping(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -2787,7 +2787,7 @@ func Test_Model_FieldsEx_AutoMapping(t *testing.T) {
 	})
 }
 
-func Test_Model_Fields_Struct(t *testing.T) {
+func TestModelFieldsStruct(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -2831,7 +2831,7 @@ func Test_Model_Fields_Struct(t *testing.T) {
 	})
 }
 
-// func Test_Model_NullField(t *testing.T) {
+// func TestModelNullField(t *testing.T) {
 // 	table := createTable()
 // 	defer dropTable(table)
 
@@ -2859,7 +2859,7 @@ func Test_Model_Fields_Struct(t *testing.T) {
 // 	})
 // }
 
-func Test_Model_Empty_Slice_Argument(t *testing.T) {
+func TestModelEmptySliceArgument(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -2874,7 +2874,7 @@ func Test_Model_Empty_Slice_Argument(t *testing.T) {
 	})
 }
 
-func Test_Model_HasTable(t *testing.T) {
+func TestModelHasTable(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -2893,7 +2893,7 @@ func Test_Model_HasTable(t *testing.T) {
 	})
 }
 
-func Test_Model_HasField(t *testing.T) {
+func TestModelHasField(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -2911,7 +2911,7 @@ func Test_Model_HasField(t *testing.T) {
 }
 
 // Issue: https://github.com/gogf/gf/issues/1002
-func Test_Model_Issue1002(t *testing.T) {
+func TestModelIssue1002(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -2984,7 +2984,7 @@ func createTableForTimeZoneTest() string {
 }
 
 // https://github.com/gogf/gf/issues/1012
-func Test_TimeZoneInsert(t *testing.T) {
+func TestTimeZoneInsert(t *testing.T) {
 	tableName := createTableForTimeZoneTest()
 	defer dropTable(tableName)
 
@@ -3022,7 +3022,7 @@ func Test_TimeZoneInsert(t *testing.T) {
 	})
 }
 
-func Test_Model_Fields_Map_Struct(t *testing.T) {
+func TestModelFieldsMapStruct(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	// map
@@ -3081,7 +3081,7 @@ func Test_Model_Fields_Map_Struct(t *testing.T) {
 	})
 }
 
-func Test_Model_WhereIn(t *testing.T) {
+func TestModelWhereIn(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3104,7 +3104,7 @@ func Test_Model_WhereIn(t *testing.T) {
 	})
 }
 
-func Test_Model_WhereNotIn(t *testing.T) {
+func TestModelWhereNotIn(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3117,7 +3117,7 @@ func Test_Model_WhereNotIn(t *testing.T) {
 	})
 }
 
-func Test_Model_WhereOrIn(t *testing.T) {
+func TestModelWhereOrIn(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3130,7 +3130,7 @@ func Test_Model_WhereOrIn(t *testing.T) {
 	})
 }
 
-func Test_Model_WhereOrNotIn(t *testing.T) {
+func TestModelWhereOrNotIn(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3143,7 +3143,7 @@ func Test_Model_WhereOrNotIn(t *testing.T) {
 	})
 }
 
-func Test_Model_WhereBetween(t *testing.T) {
+func TestModelWhereBetween(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3156,7 +3156,7 @@ func Test_Model_WhereBetween(t *testing.T) {
 	})
 }
 
-func Test_Model_WhereNotBetween(t *testing.T) {
+func TestModelWhereNotBetween(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3168,7 +3168,7 @@ func Test_Model_WhereNotBetween(t *testing.T) {
 	})
 }
 
-func Test_Model_WhereOrBetween(t *testing.T) {
+func TestModelWhereOrBetween(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3181,7 +3181,7 @@ func Test_Model_WhereOrBetween(t *testing.T) {
 	})
 }
 
-func Test_Model_WhereOrNotBetween(t *testing.T) {
+func TestModelWhereOrNotBetween(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	// db.SetDebug(true)
@@ -3194,7 +3194,7 @@ func Test_Model_WhereOrNotBetween(t *testing.T) {
 	})
 }
 
-func Test_Model_WhereLike(t *testing.T) {
+func TestModelWhereLike(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3207,7 +3207,7 @@ func Test_Model_WhereLike(t *testing.T) {
 	})
 }
 
-func Test_Model_WhereNotLike(t *testing.T) {
+func TestModelWhereNotLike(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3218,7 +3218,7 @@ func Test_Model_WhereNotLike(t *testing.T) {
 	})
 }
 
-func Test_Model_WhereOrLike(t *testing.T) {
+func TestModelWhereOrLike(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3231,7 +3231,7 @@ func Test_Model_WhereOrLike(t *testing.T) {
 	})
 }
 
-func Test_Model_WhereOrNotLike(t *testing.T) {
+func TestModelWhereOrNotLike(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3244,7 +3244,7 @@ func Test_Model_WhereOrNotLike(t *testing.T) {
 	})
 }
 
-func Test_Model_WhereNull(t *testing.T) {
+func TestModelWhereNull(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3255,7 +3255,7 @@ func Test_Model_WhereNull(t *testing.T) {
 	})
 }
 
-func Test_Model_WhereNotNull(t *testing.T) {
+func TestModelWhereNotNull(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3268,7 +3268,7 @@ func Test_Model_WhereNotNull(t *testing.T) {
 	})
 }
 
-// func Test_Model_WhereOrNull(t *testing.T) {
+// func TestModelWhereOrNull(t *testing.T) {
 // 	table := createInitTable()
 // 	defer dropTable(table)
 
@@ -3279,7 +3279,7 @@ func Test_Model_WhereNotNull(t *testing.T) {
 // 	})
 // }
 
-func Test_Model_WhereOrNotNull(t *testing.T) {
+func TestModelWhereOrNotNull(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3292,7 +3292,7 @@ func Test_Model_WhereOrNotNull(t *testing.T) {
 	})
 }
 
-func Test_Model_WhereLT(t *testing.T) {
+func TestModelWhereLT(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3304,7 +3304,7 @@ func Test_Model_WhereLT(t *testing.T) {
 	})
 }
 
-func Test_Model_WhereLTE(t *testing.T) {
+func TestModelWhereLTE(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3316,7 +3316,7 @@ func Test_Model_WhereLTE(t *testing.T) {
 	})
 }
 
-func Test_Model_WhereGT(t *testing.T) {
+func TestModelWhereGT(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3328,7 +3328,7 @@ func Test_Model_WhereGT(t *testing.T) {
 	})
 }
 
-func Test_Model_WhereGTE(t *testing.T) {
+func TestModelWhereGTE(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3340,7 +3340,7 @@ func Test_Model_WhereGTE(t *testing.T) {
 	})
 }
 
-func Test_Model_WhereOrLT(t *testing.T) {
+func TestModelWhereOrLT(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3353,7 +3353,7 @@ func Test_Model_WhereOrLT(t *testing.T) {
 	})
 }
 
-func Test_Model_WhereOrLTE(t *testing.T) {
+func TestModelWhereOrLTE(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3366,7 +3366,7 @@ func Test_Model_WhereOrLTE(t *testing.T) {
 	})
 }
 
-func Test_Model_WhereOrGT(t *testing.T) {
+func TestModelWhereOrGT(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3378,7 +3378,7 @@ func Test_Model_WhereOrGT(t *testing.T) {
 	})
 }
 
-func Test_Model_WhereOrGTE(t *testing.T) {
+func TestModelWhereOrGTE(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3390,7 +3390,7 @@ func Test_Model_WhereOrGTE(t *testing.T) {
 	})
 }
 
-func Test_Model_Min_Max_Avg_Sum(t *testing.T) {
+func TestModelMinMaxAvgSum(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3416,7 +3416,7 @@ func Test_Model_Min_Max_Avg_Sum(t *testing.T) {
 	})
 }
 
-func Test_Model_CountColumn(t *testing.T) {
+func TestModelCountColumn(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3432,7 +3432,7 @@ func Test_Model_CountColumn(t *testing.T) {
 	})
 }
 
-func Test_Model_InsertAndGetId(t *testing.T) {
+func TestModelInsertAndGetId(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -3458,7 +3458,7 @@ func Test_Model_InsertAndGetId(t *testing.T) {
 	})
 }
 
-func Test_Model_Increment_Decrement(t *testing.T) {
+func TestModelIncrementDecrement(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -3480,7 +3480,7 @@ func Test_Model_Increment_Decrement(t *testing.T) {
 	})
 }
 
-func Test_Model_Raw(t *testing.T) {
+func TestModelRaw(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3511,7 +3511,7 @@ func Test_Model_Raw(t *testing.T) {
 	})
 }
 
-func Test_Model_Handler(t *testing.T) {
+func TestModelHandler(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3535,7 +3535,7 @@ func Test_Model_Handler(t *testing.T) {
 	})
 }
 
-func Test_Model_FieldCount(t *testing.T) {
+func TestModelFieldCount(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3548,7 +3548,7 @@ func Test_Model_FieldCount(t *testing.T) {
 	})
 }
 
-func Test_Model_FieldMax(t *testing.T) {
+func TestModelFieldMax(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3561,7 +3561,7 @@ func Test_Model_FieldMax(t *testing.T) {
 	})
 }
 
-func Test_Model_FieldMin(t *testing.T) {
+func TestModelFieldMin(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3574,7 +3574,7 @@ func Test_Model_FieldMin(t *testing.T) {
 	})
 }
 
-func Test_Model_FieldAvg(t *testing.T) {
+func TestModelFieldAvg(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3587,7 +3587,7 @@ func Test_Model_FieldAvg(t *testing.T) {
 	})
 }
 
-func Test_Model_OmitEmptyWhere(t *testing.T) {
+func TestModelOmitEmptyWhere(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -3666,7 +3666,7 @@ func Test_Model_OmitEmptyWhere(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/1387
-func Test_Model_GTime_DefaultValue(t *testing.T) {
+func TestModelGTimeDefaultValue(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -3708,7 +3708,7 @@ func Test_Model_GTime_DefaultValue(t *testing.T) {
 }
 
 // Using filter does not affect the outside value inside function.
-func Test_Model_Insert_Filter(t *testing.T) {
+func TestModelInsertFilter(t *testing.T) {
 	// map
 	gtest.C(t, func(t *gtest.T) {
 		table := createTable()
@@ -3761,7 +3761,7 @@ func Test_Model_Insert_Filter(t *testing.T) {
 	})
 }
 
-func Test_Model_Embedded_Filter(t *testing.T) {
+func TestModelEmbeddedFilter(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -3800,7 +3800,7 @@ func Test_Model_Embedded_Filter(t *testing.T) {
 }
 
 // This is no longer used as the filter feature is automatically enabled from GoFrame v1.16.0.
-func Test_Model_Insert_KeyFieldNameMapping_Error(t *testing.T) {
+func TestModelInsertKeyFieldNameMappingError(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -3825,7 +3825,7 @@ func Test_Model_Insert_KeyFieldNameMapping_Error(t *testing.T) {
 	})
 }
 
-func Test_Model_Fields_AutoFilterInJoinStatement(t *testing.T) {
+func TestModelFieldsAutoFilterInJoinStatement(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var err error
 		table1 := "user"
@@ -3913,7 +3913,7 @@ func Test_Model_Fields_AutoFilterInJoinStatement(t *testing.T) {
 	})
 }
 
-func Test_Model_WherePrefix(t *testing.T) {
+func TestModelWherePrefix(t *testing.T) {
 	var (
 		table1 = "table1_" + gtime.TimestampNanoStr()
 		table2 = "table2_" + gtime.TimestampNanoStr()
@@ -3938,7 +3938,7 @@ func Test_Model_WherePrefix(t *testing.T) {
 	})
 }
 
-func Test_Model_WhereOrPrefix(t *testing.T) {
+func TestModelWhereOrPrefix(t *testing.T) {
 	var (
 		table1 = "table1_" + gtime.TimestampNanoStr()
 		table2 = "table2_" + gtime.TimestampNanoStr()
@@ -3968,7 +3968,7 @@ func Test_Model_WhereOrPrefix(t *testing.T) {
 	})
 }
 
-func Test_Model_WherePrefixLike(t *testing.T) {
+func TestModelWherePrefixLike(t *testing.T) {
 	var (
 		table1 = "table1_" + gtime.TimestampNanoStr()
 		table2 = "table2_" + gtime.TimestampNanoStr()
@@ -3998,7 +3998,7 @@ func Test_Model_WherePrefixLike(t *testing.T) {
 
 // TODO
 // https://github.com/gogf/gf/issues/1700
-// func Test_Model_Issue1700(t *testing.T) {
+// func TestModelIssue1700(t *testing.T) {
 // 	table := "user_" + gtime.Now().TimestampNanoStr()
 // 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 // 	CREATE TABLE IF NOT EXISTS %s (
@@ -4047,7 +4047,7 @@ func Test_Model_WherePrefixLike(t *testing.T) {
 // }
 
 // https://github.com/gogf/gf/issues/1159
-func Test_ScanList_NoRecreate_PtrAttribute(t *testing.T) {
+func TestScanListNoRecreatePtrAttribute(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type S1 struct {
 			Id    int
@@ -4103,7 +4103,7 @@ func Test_ScanList_NoRecreate_PtrAttribute(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/1159
-func Test_ScanList_NoRecreate_StructAttribute(t *testing.T) {
+func TestScanListNoRecreateStructAttribute(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type S1 struct {
 			Id    int
@@ -4159,7 +4159,7 @@ func Test_ScanList_NoRecreate_StructAttribute(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/1159
-func Test_ScanList_NoRecreate_SliceAttribute_Ptr(t *testing.T) {
+func TestScanListNoRecreateSliceAttributePtr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type S1 struct {
 			Id    int
@@ -4263,7 +4263,7 @@ func Test_ScanList_NoRecreate_SliceAttribute_Ptr(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/1159
-func Test_ScanList_NoRecreate_SliceAttribute_Struct(t *testing.T) {
+func TestScanListNoRecreateSliceAttributeStruct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type S1 struct {
 			Id    int

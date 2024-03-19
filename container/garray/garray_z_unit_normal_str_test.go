@@ -22,7 +22,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_StrArray_Basic(t *testing.T) {
+func TestStrArrayBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := []string{"0", "1", "2", "3"}
 		array := garray.NewStrArrayFrom(expect)

@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func Test_BTree_Basic(t *testing.T) {
+func TestBTreeBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gtree.NewBTree(3, gutil.ComparatorString)
 		m.Set("key1", "val1")
@@ -51,7 +51,7 @@ func Test_BTree_Basic(t *testing.T) {
 	})
 }
 
-func Test_BTree_Set_Fun(t *testing.T) {
+func TestBTreeSetFun(t *testing.T) {
 	//GetOrSetFunc lock or unlock
 	gtest.C(t, func(t *gtest.T) {
 		m := gtree.NewBTree(3, gutil.ComparatorString)
@@ -75,7 +75,7 @@ func Test_BTree_Set_Fun(t *testing.T) {
 
 }
 
-func Test_BTree_Get_Set_Var(t *testing.T) {
+func TestBTreeGetSetVar(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gtree.NewBTree(3, gutil.ComparatorString)
 		t.AssertEQ(m.SetIfNotExist("key1", "val1"), true)
@@ -93,7 +93,7 @@ func Test_BTree_Get_Set_Var(t *testing.T) {
 	})
 }
 
-func Test_BTree_Batch(t *testing.T) {
+func TestBTreeBatch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gtree.NewBTree(3, gutil.ComparatorString)
 		m.Sets(map[interface{}]interface{}{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
@@ -103,7 +103,7 @@ func Test_BTree_Batch(t *testing.T) {
 	})
 }
 
-func Test_BTree_Iterator(t *testing.T) {
+func TestBTreeIterator(t *testing.T) {
 	keys := []string{"1", "key1", "key2", "key3", "key4"}
 	keyLen := len(keys)
 	index := 0
@@ -161,7 +161,7 @@ func Test_BTree_Iterator(t *testing.T) {
 	})
 }
 
-func Test_BTree_IteratorFrom(t *testing.T) {
+func TestBTreeIteratorFrom(t *testing.T) {
 	m := make(map[interface{}]interface{})
 	for i := 1; i <= 10; i++ {
 		m[i] = i * 10
@@ -195,7 +195,7 @@ func Test_BTree_IteratorFrom(t *testing.T) {
 	})
 }
 
-func Test_BTree_Clone(t *testing.T) {
+func TestBTreeClone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		//clone 方法是深克隆
 		m := gtree.NewBTreeFrom(3, gutil.ComparatorString, map[interface{}]interface{}{1: 1, "key1": "val1"})
@@ -210,7 +210,7 @@ func Test_BTree_Clone(t *testing.T) {
 	})
 }
 
-func Test_BTree_LRNode(t *testing.T) {
+func TestBTreeLRNode(t *testing.T) {
 	expect := map[interface{}]interface{}{"key4": "val4", "key1": "val1", "key2": "val2", "key3": "val3"}
 	//safe
 	gtest.C(t, func(t *gtest.T) {
@@ -226,7 +226,7 @@ func Test_BTree_LRNode(t *testing.T) {
 	})
 }
 
-func Test_BTree_Remove(t *testing.T) {
+func TestBTreeRemove(t *testing.T) {
 	m := gtree.NewBTree(3, gutil.ComparatorInt)
 	for i := 1; i <= 100; i++ {
 		m.Set(i, fmt.Sprintf("val%d", i))

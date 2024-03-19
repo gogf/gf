@@ -20,7 +20,7 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func Test_Gen_Dao_Default(t *testing.T) {
+func TestGenDaoDefault(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err        error
@@ -111,7 +111,7 @@ func Test_Gen_Dao_Default(t *testing.T) {
 	})
 }
 
-func Test_Gen_Dao_TypeMapping(t *testing.T) {
+func TestGenDaoTypeMapping(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err        error
@@ -225,7 +225,7 @@ func execSqlFile(db gdb.DB, filePath string, args ...any) error {
 	return nil
 }
 
-func Test_Gen_Dao_Issue2572(t *testing.T) {
+func TestGenDaoIssue2572(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err          error
@@ -304,7 +304,7 @@ func Test_Gen_Dao_Issue2572(t *testing.T) {
 	})
 }
 
-func Test_Gen_Dao_Issue2616(t *testing.T) {
+func TestGenDaoIssue2616(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err          error
@@ -395,7 +395,7 @@ func Test_Gen_Dao_Issue2616(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/2746
-func Test_Gen_Dao_Issue2746(t *testing.T) {
+func TestGenDaoIssue2746(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err        error

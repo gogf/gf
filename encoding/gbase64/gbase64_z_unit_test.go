@@ -43,7 +43,7 @@ var pairs = []testPair{
 	{"sure.", "c3VyZS4="},
 }
 
-func Test_Basic(t *testing.T) {
+func TestBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for k := range pairs {
 			// Encode
@@ -64,7 +64,7 @@ func Test_Basic(t *testing.T) {
 	})
 }
 
-func Test_File(t *testing.T) {
+func TestFile(t *testing.T) {
 	path := gtest.DataPath("test")
 	expect := "dGVzdA=="
 	gtest.C(t, func(t *gtest.T) {
@@ -79,7 +79,7 @@ func Test_File(t *testing.T) {
 	})
 }
 
-func Test_File_Error(t *testing.T) {
+func TestFileError(t *testing.T) {
 	path := "none-exist-file"
 	expect := ""
 	gtest.C(t, func(t *gtest.T) {

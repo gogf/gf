@@ -91,7 +91,7 @@ func TestQueue_Close(t *testing.T) {
 	})
 }
 
-func Test_Issue2509(t *testing.T) {
+func TestIssue2509(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		q := gqueue.New()
 		q.Push(1)

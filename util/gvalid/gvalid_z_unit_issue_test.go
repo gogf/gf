@@ -25,7 +25,7 @@ type Baz struct {
 }
 
 // https://github.com/gogf/gf/issues/2503
-func Test_Issue2503(t *testing.T) {
+func TestIssue2503(t *testing.T) {
 	foo := &Foo{
 		Bar: &Bar{BarKey: "value"},
 	}

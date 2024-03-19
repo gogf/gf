@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func Test_AVLTree_Basic(t *testing.T) {
+func TestAVLTreeBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gtree.NewAVLTree(gutil.ComparatorString)
 		m.Set("key1", "val1")
@@ -57,7 +57,7 @@ func Test_AVLTree_Basic(t *testing.T) {
 	})
 }
 
-func Test_AVLTree_Set_Fun(t *testing.T) {
+func TestAVLTreeSetFun(t *testing.T) {
 	//GetOrSetFunc lock or unlock
 	gtest.C(t, func(t *gtest.T) {
 		m := gtree.NewAVLTree(gutil.ComparatorString)
@@ -81,7 +81,7 @@ func Test_AVLTree_Set_Fun(t *testing.T) {
 
 }
 
-func Test_AVLTree_Get_Set_Var(t *testing.T) {
+func TestAVLTreeGetSetVar(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gtree.NewAVLTree(gutil.ComparatorString)
 		t.AssertEQ(m.SetIfNotExist("key1", "val1"), true)
@@ -99,7 +99,7 @@ func Test_AVLTree_Get_Set_Var(t *testing.T) {
 	})
 }
 
-func Test_AVLTree_Batch(t *testing.T) {
+func TestAVLTreeBatch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gtree.NewAVLTree(gutil.ComparatorString)
 		m.Sets(map[interface{}]interface{}{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
@@ -109,7 +109,7 @@ func Test_AVLTree_Batch(t *testing.T) {
 	})
 }
 
-func Test_AVLTree_Iterator(t *testing.T) {
+func TestAVLTreeIterator(t *testing.T) {
 
 	keys := []string{"1", "key1", "key2", "key3", "key4"}
 	keyLen := len(keys)
@@ -169,7 +169,7 @@ func Test_AVLTree_Iterator(t *testing.T) {
 
 }
 
-func Test_AVLTree_IteratorFrom(t *testing.T) {
+func TestAVLTreeIteratorFrom(t *testing.T) {
 	m := make(map[interface{}]interface{})
 	for i := 1; i <= 10; i++ {
 		m[i] = i * 10
@@ -203,7 +203,7 @@ func Test_AVLTree_IteratorFrom(t *testing.T) {
 	})
 }
 
-func Test_AVLTree_Clone(t *testing.T) {
+func TestAVLTreeClone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		//clone 方法是深克隆
 		m := gtree.NewAVLTreeFrom(gutil.ComparatorString, map[interface{}]interface{}{1: 1, "key1": "val1"})
@@ -218,7 +218,7 @@ func Test_AVLTree_Clone(t *testing.T) {
 	})
 }
 
-func Test_AVLTree_LRNode(t *testing.T) {
+func TestAVLTreeLRNode(t *testing.T) {
 	expect := map[interface{}]interface{}{"key4": "val4", "key1": "val1", "key2": "val2", "key3": "val3"}
 	//safe
 	gtest.C(t, func(t *gtest.T) {
@@ -234,7 +234,7 @@ func Test_AVLTree_LRNode(t *testing.T) {
 	})
 }
 
-func Test_AVLTree_CeilingFloor(t *testing.T) {
+func TestAVLTreeCeilingFloor(t *testing.T) {
 	expect := map[interface{}]interface{}{
 		20: "val20",
 		6:  "val6",
@@ -277,7 +277,7 @@ func Test_AVLTree_CeilingFloor(t *testing.T) {
 	})
 }
 
-func Test_AVLTree_Remove(t *testing.T) {
+func TestAVLTreeRemove(t *testing.T) {
 	m := gtree.NewAVLTree(gutil.ComparatorInt)
 	for i := 1; i <= 50; i++ {
 		m.Set(i, fmt.Sprintf("val%d", i))

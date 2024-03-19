@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func Test_Grpcx_Grpc_Server(t *testing.T) {
+func TestGrpcxGrpcServer(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := Server.New()
 		s.Start()
@@ -30,7 +30,7 @@ func Test_Grpcx_Grpc_Server(t *testing.T) {
 	})
 }
 
-func Test_Grpcx_Grpc_Server_Address(t *testing.T) {
+func TestGrpcxGrpcServerAddress(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c := Server.NewConfig()
 		c.Address = "127.0.0.1:0"
@@ -46,7 +46,7 @@ func Test_Grpcx_Grpc_Server_Address(t *testing.T) {
 	})
 }
 
-func Test_Grpcx_Grpc_Server_Config(t *testing.T) {
+func TestGrpcxGrpcServerConfig(t *testing.T) {
 	cfg := Server.NewConfig()
 	addr := "10.0.0.29:80"
 	cfg.Endpoints = []string{
@@ -75,7 +75,7 @@ func Test_Grpcx_Grpc_Server_Config(t *testing.T) {
 	})
 }
 
-func Test_Grpcx_Grpc_Server_Config_Logger(t *testing.T) {
+func TestGrpcxGrpcServerConfigLogger(t *testing.T) {
 	var (
 		pwd       = gfile.Pwd()
 		configDir = gfile.Join(gdebug.CallerDirectory(), "testdata", "configuration")

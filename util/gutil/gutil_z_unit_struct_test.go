@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func Test_StructToSlice(t *testing.T) {
+func TestStructToSlice(t *testing.T) {
 	type A struct {
 		K1 int
 		K2 string
@@ -37,7 +37,7 @@ func Test_StructToSlice(t *testing.T) {
 	})
 }
 
-func Test_FillStructWithDefault(t *testing.T) {
+func TestFillStructWithDefault(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type myInt int
 		type Inner1 struct {

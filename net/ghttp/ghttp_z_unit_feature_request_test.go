@@ -20,7 +20,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_Params_Basic(t *testing.T) {
+func TestParamsBasic(t *testing.T) {
 	type User struct {
 		Id    int
 		Name  string
@@ -359,7 +359,7 @@ func Test_Params_Basic(t *testing.T) {
 	})
 }
 
-func Test_Params_Header(t *testing.T) {
+func TestParamsHeader(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/header", func(r *ghttp.Request) {
 		r.Response.Write(r.GetHeader("test"))
@@ -378,7 +378,7 @@ func Test_Params_Header(t *testing.T) {
 	})
 }
 
-func Test_Params_SupportChars(t *testing.T) {
+func TestParamsSupportChars(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/form-value", func(r *ghttp.Request) {
 		r.Response.Write(r.GetForm("test-value"))
@@ -399,7 +399,7 @@ func Test_Params_SupportChars(t *testing.T) {
 	})
 }
 
-func Test_Params_Priority(t *testing.T) {
+func TestParamsPriority(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/query", func(r *ghttp.Request) {
 		r.Response.Write(r.GetQuery("a"))
@@ -434,7 +434,7 @@ func Test_Params_Priority(t *testing.T) {
 	})
 }
 
-func Test_Params_GetRequestMap(t *testing.T) {
+func TestParamsGetRequestMap(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/map", func(r *ghttp.Request) {
 		r.Response.Write(r.GetRequestMap())
@@ -481,7 +481,7 @@ func Test_Params_GetRequestMap(t *testing.T) {
 	})
 }
 
-func Test_Params_Modify(t *testing.T) {
+func TestParamsModify(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/param/modify", func(r *ghttp.Request) {
 		param := r.GetMap()
@@ -515,7 +515,7 @@ func Test_Params_Modify(t *testing.T) {
 	})
 }
 
-func Test_Params_Parse_DefaultValueTag(t *testing.T) {
+func TestParamsParseDefaultValueTag(t *testing.T) {
 	type T struct {
 		Name  string  `d:"john"`
 		Score float32 `d:"60"`
@@ -544,7 +544,7 @@ func Test_Params_Parse_DefaultValueTag(t *testing.T) {
 	})
 }
 
-func Test_Params_Parse_Validation(t *testing.T) {
+func TestParamsParseValidation(t *testing.T) {
 	type RegisterReq struct {
 		Name  string `p:"username"  v:"required|length:6,30#请输入账号|账号长度为{min}到{max}位"`
 		Pass  string `p:"password1" v:"required|length:6,30#请输入密码|密码长度不够"`
@@ -577,7 +577,7 @@ func Test_Params_Parse_Validation(t *testing.T) {
 	})
 }
 
-func Test_Params_Parse_EmbeddedWithAliasName1(t *testing.T) {
+func TestParamsParseEmbeddedWithAliasName1(t *testing.T) {
 	// 获取内容列表
 	type ContentGetListInput struct {
 		Type       string
@@ -618,7 +618,7 @@ func Test_Params_Parse_EmbeddedWithAliasName1(t *testing.T) {
 	})
 }
 
-func Test_Params_Parse_EmbeddedWithAliasName2(t *testing.T) {
+func TestParamsParseEmbeddedWithAliasName2(t *testing.T) {
 	// 获取内容列表
 	type ContentGetListInput struct {
 		Type       string
@@ -659,7 +659,7 @@ func Test_Params_Parse_EmbeddedWithAliasName2(t *testing.T) {
 	})
 }
 
-func Test_Params_GetParam(t *testing.T) {
+func TestParamsGetParam(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/", func(r *ghttp.Request) {
 		r.Response.Write(r.GetParam("key", "val"))
@@ -678,7 +678,7 @@ func Test_Params_GetParam(t *testing.T) {
 	})
 }
 
-func Test_Params_SetQuery(t *testing.T) {
+func TestParamsSetQuery(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/SetQuery", func(r *ghttp.Request) {
 		r.SetQuery("a", 100)
@@ -699,7 +699,7 @@ func Test_Params_SetQuery(t *testing.T) {
 	})
 }
 
-func Test_Params_GetQuery(t *testing.T) {
+func TestParamsGetQuery(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/GetQuery", func(r *ghttp.Request) {
 		r.Response.Write(r.GetQuery("a", 200))
@@ -719,7 +719,7 @@ func Test_Params_GetQuery(t *testing.T) {
 	})
 }
 
-func Test_Params_GetQueryMap(t *testing.T) {
+func TestParamsGetQueryMap(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/GetQueryMap", func(r *ghttp.Request) {
 		if m := r.GetQueryMap(); len(m) > 0 {
@@ -757,7 +757,7 @@ func Test_Params_GetQueryMap(t *testing.T) {
 	})
 }
 
-func Test_Params_GetQueryMapStrStr(t *testing.T) {
+func TestParamsGetQueryMapStrStr(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/GetQueryMapStrStr", func(r *ghttp.Request) {
 		r.Response.Write(r.GetQueryMapStrStr())
@@ -776,7 +776,7 @@ func Test_Params_GetQueryMapStrStr(t *testing.T) {
 	})
 }
 
-func Test_Params_GetQueryMapStrVar(t *testing.T) {
+func TestParamsGetQueryMapStrVar(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/GetQueryMapStrVar", func(r *ghttp.Request) {
 		m := r.GetQueryMapStrVar()
@@ -797,7 +797,7 @@ func Test_Params_GetQueryMapStrVar(t *testing.T) {
 	})
 }
 
-func Test_Params_GetRequest(t *testing.T) {
+func TestParamsGetRequest(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/GetRequest", func(r *ghttp.Request) {
 		r.Response.Write(r.GetRequest("id"))
@@ -822,7 +822,7 @@ func Test_Params_GetRequest(t *testing.T) {
 	})
 }
 
-func Test_Params_GetRequestMapStrStr(t *testing.T) {
+func TestParamsGetRequestMapStrStr(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/GetRequestMapStrStr", func(r *ghttp.Request) {
 		r.Response.Write(r.GetRequestMapStrStr())
@@ -841,7 +841,7 @@ func Test_Params_GetRequestMapStrStr(t *testing.T) {
 	})
 }
 
-func Test_Params_GetRequestMapStrVar(t *testing.T) {
+func TestParamsGetRequestMapStrVar(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/GetRequestMapStrVar", func(r *ghttp.Request) {
 		m := r.GetRequestMapStrVar()

@@ -23,7 +23,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_HTTPS_Basic(t *testing.T) {
+func TestHTTPSBasic(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.GET("/test", func(r *ghttp.Request) {
@@ -56,7 +56,7 @@ func Test_HTTPS_Basic(t *testing.T) {
 	})
 }
 
-func Test_HTTPS_Resource(t *testing.T) {
+func TestHTTPSResource(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.GET("/test", func(r *ghttp.Request) {
@@ -89,7 +89,7 @@ func Test_HTTPS_Resource(t *testing.T) {
 	})
 }
 
-func Test_HTTPS_HTTP_Basic(t *testing.T) {
+func TestHTTPSHTTPBasic(t *testing.T) {
 	var (
 		portHttp, _  = gtcp.GetFreePort()
 		portHttps, _ = gtcp.GetFreePort()

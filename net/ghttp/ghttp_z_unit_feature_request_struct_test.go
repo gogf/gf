@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/v2/util/gvalid"
 )
 
-func Test_Params_Parse(t *testing.T) {
+func TestParamsParse(t *testing.T) {
 	type User struct {
 		Id   int
 		Name string
@@ -50,7 +50,7 @@ func Test_Params_Parse(t *testing.T) {
 	})
 }
 
-func Test_Params_ParseQuery(t *testing.T) {
+func TestParamsParseQuery(t *testing.T) {
 	type User struct {
 		Id   int
 		Name string
@@ -81,7 +81,7 @@ func Test_Params_ParseQuery(t *testing.T) {
 	})
 }
 
-func Test_Params_ParseForm(t *testing.T) {
+func TestParamsParseForm(t *testing.T) {
 	type User struct {
 		Id   int
 		Name string
@@ -115,7 +115,7 @@ func Test_Params_ParseForm(t *testing.T) {
 	})
 }
 
-func Test_Params_ComplexJsonStruct(t *testing.T) {
+func TestParamsComplexJsonStruct(t *testing.T) {
 	type ItemEnv struct {
 		Type  string
 		Key   string
@@ -288,7 +288,7 @@ func Test_Params_ComplexJsonStruct(t *testing.T) {
 	})
 }
 
-func Test_Params_Parse_Attr_Pointer1(t *testing.T) {
+func TestParamsParseAttrPointer1(t *testing.T) {
 	type User struct {
 		Id   *int
 		Name *string
@@ -327,7 +327,7 @@ func Test_Params_Parse_Attr_Pointer1(t *testing.T) {
 	})
 }
 
-func Test_Params_Parse_Attr_Pointer2(t *testing.T) {
+func TestParamsParseAttrPointer2(t *testing.T) {
 	type User struct {
 		Id *int `v:"required"`
 	}
@@ -353,7 +353,7 @@ func Test_Params_Parse_Attr_Pointer2(t *testing.T) {
 }
 
 // It does not support this kind of converting yet.
-// func Test_Params_Parse_Attr_SliceSlice(t *testing.T) {
+// func TestParamsParseAttrSliceSlice(t *testing.T) {
 //	type User struct {
 //		Id     int
 //		Name   string
@@ -381,7 +381,7 @@ func Test_Params_Parse_Attr_Pointer2(t *testing.T) {
 //	})
 // }
 
-func Test_Params_Struct(t *testing.T) {
+func TestParamsStruct(t *testing.T) {
 	type User struct {
 		Id    int
 		Name  string
@@ -448,7 +448,7 @@ func Test_Params_Struct(t *testing.T) {
 	})
 }
 
-func Test_Params_Structs(t *testing.T) {
+func TestParamsStructs(t *testing.T) {
 	type User struct {
 		Id    int
 		Name  string
@@ -480,7 +480,7 @@ func Test_Params_Structs(t *testing.T) {
 	})
 }
 
-func Test_Params_Struct_Validation(t *testing.T) {
+func TestParamsStructValidation(t *testing.T) {
 	type User struct {
 		Id   int    `v:"required"`
 		Name string `v:"name@required-with:id"`
@@ -515,7 +515,7 @@ func Test_Params_Struct_Validation(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/1488
-func Test_Params_Parse_Issue1488(t *testing.T) {
+func TestParamsParseIssue1488(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.ALL("/", func(r *ghttp.Request) {

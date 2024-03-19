@@ -19,7 +19,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_PackFolderToGoFile(t *testing.T) {
+func TestPackFolderToGoFile(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			srcPath    = gtest.DataPath("files")
@@ -32,7 +32,7 @@ func Test_PackFolderToGoFile(t *testing.T) {
 	})
 }
 
-func Test_PackMultiFilesToGoFile(t *testing.T) {
+func TestPackMultiFilesToGoFile(t *testing.T) {
 	gres.Dump()
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -50,7 +50,7 @@ func Test_PackMultiFilesToGoFile(t *testing.T) {
 	})
 }
 
-func Test_Pack(t *testing.T) {
+func TestPack(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			srcPath   = gtest.DataPath("files")
@@ -65,7 +65,7 @@ func Test_Pack(t *testing.T) {
 	})
 }
 
-func Test_PackToFile(t *testing.T) {
+func TestPackToFile(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			srcPath = gtest.DataPath("files")
@@ -83,7 +83,7 @@ func Test_PackToFile(t *testing.T) {
 	})
 }
 
-func Test_PackWithPrefix1(t *testing.T) {
+func TestPackWithPrefix1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			srcPath    = gtest.DataPath("files")
@@ -96,7 +96,7 @@ func Test_PackWithPrefix1(t *testing.T) {
 	})
 }
 
-func Test_PackWithPrefix2(t *testing.T) {
+func TestPackWithPrefix2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			srcPath    = gtest.DataPath("files")
@@ -109,7 +109,7 @@ func Test_PackWithPrefix2(t *testing.T) {
 	})
 }
 
-func Test_Unpack(t *testing.T) {
+func TestUnpack(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			srcPath    = gtest.DataPath("testdata.txt")
@@ -120,7 +120,7 @@ func Test_Unpack(t *testing.T) {
 	})
 }
 
-func Test_Basic(t *testing.T) {
+func TestBasic(t *testing.T) {
 	gres.Dump()
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gres.Get("none"), nil)
@@ -179,7 +179,7 @@ func Test_Basic(t *testing.T) {
 	})
 }
 
-func Test_Get(t *testing.T) {
+func TestGet(t *testing.T) {
 	gres.Dump()
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertNE(gres.Get("dir1/test1"), nil)
@@ -195,7 +195,7 @@ func Test_Get(t *testing.T) {
 	})
 }
 
-func Test_ScanDir(t *testing.T) {
+func TestScanDir(t *testing.T) {
 	gres.Dump()
 	gtest.C(t, func(t *gtest.T) {
 		path := "dir1"
@@ -220,7 +220,7 @@ func Test_ScanDir(t *testing.T) {
 	})
 }
 
-func Test_ScanDirFile(t *testing.T) {
+func TestScanDirFile(t *testing.T) {
 	gres.Dump()
 	gtest.C(t, func(t *gtest.T) {
 		path := "dir2"
@@ -245,7 +245,7 @@ func Test_ScanDirFile(t *testing.T) {
 	})
 }
 
-func Test_Export(t *testing.T) {
+func TestExport(t *testing.T) {
 	gres.Dump()
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -296,7 +296,7 @@ func Test_Export(t *testing.T) {
 	})
 }
 
-func Test_IsEmpty(t *testing.T) {
+func TestIsEmpty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gres.IsEmpty(), false)
 	})

@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_New(t *testing.T) {
+func TestNew(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		ctx := gctx.New()
 		t.AssertNE(ctx, nil)
@@ -22,7 +22,7 @@ func Test_New(t *testing.T) {
 	})
 }
 
-func Test_WithCtx(t *testing.T) {
+func TestWithCtx(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		ctx := context.WithValue(context.TODO(), "TEST", 1)
 		ctx = gctx.WithCtx(ctx)
@@ -31,7 +31,7 @@ func Test_WithCtx(t *testing.T) {
 	})
 }
 
-func Test_SetInitCtx(t *testing.T) {
+func TestSetInitCtx(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		ctx := context.WithValue(context.TODO(), "TEST", 1)
 		gctx.SetInitCtx(ctx)

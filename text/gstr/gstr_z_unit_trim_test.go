@@ -15,14 +15,14 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func Test_Trim(t *testing.T) {
+func TestTrim(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.Trim(" 123456\n "), "123456")
 		t.Assert(gstr.Trim("#123456#;", "#;"), "123456")
 	})
 }
 
-func Test_TrimStr(t *testing.T) {
+func TestTrimStr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.TrimStr("gogo我爱gogo", "go"), "我爱")
 	})
@@ -36,14 +36,14 @@ func Test_TrimStr(t *testing.T) {
 	})
 }
 
-func Test_TrimRight(t *testing.T) {
+func TestTrimRight(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.TrimRight(" 123456\n "), " 123456")
 		t.Assert(gstr.TrimRight("#123456#;", "#;"), "#123456")
 	})
 }
 
-func Test_TrimRightStr(t *testing.T) {
+func TestTrimRightStr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.TrimRightStr("gogo我爱gogo", "go"), "gogo我爱")
 		t.Assert(gstr.TrimRightStr("gogo我爱gogo", "go我爱gogo"), "go")
@@ -59,14 +59,14 @@ func Test_TrimRightStr(t *testing.T) {
 	})
 }
 
-func Test_TrimLeft(t *testing.T) {
+func TestTrimLeft(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.TrimLeft(" \r123456\n "), "123456\n ")
 		t.Assert(gstr.TrimLeft("#;123456#;", "#;"), "123456#;")
 	})
 }
 
-func Test_TrimLeftStr(t *testing.T) {
+func TestTrimLeftStr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.TrimLeftStr("gogo我爱gogo", "go"), "我爱gogo")
 		t.Assert(gstr.TrimLeftStr("gogo我爱gogo", "gogo我爱go"), "go")
@@ -82,7 +82,7 @@ func Test_TrimLeftStr(t *testing.T) {
 	})
 }
 
-func Test_TrimAll(t *testing.T) {
+func TestTrimAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.TrimAll("gogo我go\n爱gogo\n", "go"), "我爱")
 	})

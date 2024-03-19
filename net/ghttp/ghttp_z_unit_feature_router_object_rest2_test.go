@@ -43,7 +43,7 @@ func (o *ObjectRest2) Delete(r *ghttp.Request) {
 	r.Response.Write("Object Delete", r.Get("id"))
 }
 
-func Test_Router_ObjectRest_Id(t *testing.T) {
+func TestRouterObjectRestId(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindObjectRest("/object/:id", new(ObjectRest2))
 	s.SetDumpRouterMap(false)

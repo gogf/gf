@@ -21,7 +21,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Array_Basic(t *testing.T) {
+func TestArrayBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := []interface{}{0, 1, 2, 3}
 		array := garray.NewArrayFrom(expect)

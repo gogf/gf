@@ -83,7 +83,7 @@ func TestChaining(t *testing.T) {
 	})
 }
 
-func Test_SetFile(t *testing.T) {
+func TestSetFile(t *testing.T) {
 	defaultLog := glog.DefaultLogger().Clone()
 	defer glog.SetDefaultLogger(defaultLog)
 	gtest.C(t, func(t *gtest.T) {
@@ -91,7 +91,7 @@ func Test_SetFile(t *testing.T) {
 	})
 }
 
-func Test_SetTimeFormat(t *testing.T) {
+func TestSetTimeFormat(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		w := bytes.NewBuffer(nil)
 		l := glog.NewWithWriter(w)
@@ -111,7 +111,7 @@ func Test_SetTimeFormat(t *testing.T) {
 	})
 }
 
-func Test_SetLevel(t *testing.T) {
+func TestSetLevel(t *testing.T) {
 	defaultLog := glog.DefaultLogger().Clone()
 	defer glog.SetDefaultLogger(defaultLog)
 	gtest.C(t, func(t *gtest.T) {
@@ -120,7 +120,7 @@ func Test_SetLevel(t *testing.T) {
 	})
 }
 
-func Test_SetAsync(t *testing.T) {
+func TestSetAsync(t *testing.T) {
 	defaultLog := glog.DefaultLogger().Clone()
 	defer glog.SetDefaultLogger(defaultLog)
 	gtest.C(t, func(t *gtest.T) {
@@ -128,7 +128,7 @@ func Test_SetAsync(t *testing.T) {
 	})
 }
 
-func Test_SetStdoutPrint(t *testing.T) {
+func TestSetStdoutPrint(t *testing.T) {
 	defaultLog := glog.DefaultLogger().Clone()
 	defer glog.SetDefaultLogger(defaultLog)
 	gtest.C(t, func(t *gtest.T) {
@@ -136,7 +136,7 @@ func Test_SetStdoutPrint(t *testing.T) {
 	})
 }
 
-func Test_SetHeaderPrint(t *testing.T) {
+func TestSetHeaderPrint(t *testing.T) {
 	defaultLog := glog.DefaultLogger().Clone()
 	defer glog.SetDefaultLogger(defaultLog)
 	gtest.C(t, func(t *gtest.T) {
@@ -144,7 +144,7 @@ func Test_SetHeaderPrint(t *testing.T) {
 	})
 }
 
-func Test_SetPrefix(t *testing.T) {
+func TestSetPrefix(t *testing.T) {
 	defaultLog := glog.DefaultLogger().Clone()
 	defer glog.SetDefaultLogger(defaultLog)
 	gtest.C(t, func(t *gtest.T) {
@@ -152,7 +152,7 @@ func Test_SetPrefix(t *testing.T) {
 	})
 }
 
-func Test_SetConfigWithMap(t *testing.T) {
+func TestSetConfigWithMap(t *testing.T) {
 	defaultLog := glog.DefaultLogger().Clone()
 	defer glog.SetDefaultLogger(defaultLog)
 	gtest.C(t, func(t *gtest.T) {
@@ -162,7 +162,7 @@ func Test_SetConfigWithMap(t *testing.T) {
 	})
 }
 
-func Test_SetPath(t *testing.T) {
+func TestSetPath(t *testing.T) {
 	defaultLog := glog.DefaultLogger().Clone()
 	defer glog.SetDefaultLogger(defaultLog)
 	gtest.C(t, func(t *gtest.T) {
@@ -171,7 +171,7 @@ func Test_SetPath(t *testing.T) {
 	})
 }
 
-func Test_SetWriter(t *testing.T) {
+func TestSetWriter(t *testing.T) {
 	defaultLog := glog.DefaultLogger().Clone()
 	defer glog.SetDefaultLogger(defaultLog)
 	gtest.C(t, func(t *gtest.T) {
@@ -180,7 +180,7 @@ func Test_SetWriter(t *testing.T) {
 	})
 }
 
-func Test_SetFlags(t *testing.T) {
+func TestSetFlags(t *testing.T) {
 	defaultLog := glog.DefaultLogger().Clone()
 	defer glog.SetDefaultLogger(defaultLog)
 	gtest.C(t, func(t *gtest.T) {
@@ -189,7 +189,7 @@ func Test_SetFlags(t *testing.T) {
 	})
 }
 
-func Test_SetCtxKeys(t *testing.T) {
+func TestSetCtxKeys(t *testing.T) {
 	defaultLog := glog.DefaultLogger().Clone()
 	defer glog.SetDefaultLogger(defaultLog)
 	gtest.C(t, func(t *gtest.T) {
@@ -198,7 +198,7 @@ func Test_SetCtxKeys(t *testing.T) {
 	})
 }
 
-func Test_PrintStack(t *testing.T) {
+func TestPrintStack(t *testing.T) {
 	defaultLog := glog.DefaultLogger().Clone()
 	defer glog.SetDefaultLogger(defaultLog)
 	gtest.C(t, func(t *gtest.T) {
@@ -206,7 +206,7 @@ func Test_PrintStack(t *testing.T) {
 	})
 }
 
-func Test_SetStack(t *testing.T) {
+func TestSetStack(t *testing.T) {
 	defaultLog := glog.DefaultLogger().Clone()
 	defer glog.SetDefaultLogger(defaultLog)
 	gtest.C(t, func(t *gtest.T) {
@@ -215,7 +215,7 @@ func Test_SetStack(t *testing.T) {
 	})
 }
 
-func Test_SetLevelStr(t *testing.T) {
+func TestSetLevelStr(t *testing.T) {
 	defaultLog := glog.DefaultLogger().Clone()
 	defer glog.SetDefaultLogger(defaultLog)
 	gtest.C(t, func(t *gtest.T) {
@@ -227,7 +227,7 @@ func Test_SetLevelStr(t *testing.T) {
 	})
 }
 
-func Test_SetLevelPrefix(t *testing.T) {
+func TestSetLevelPrefix(t *testing.T) {
 	defaultLog := glog.DefaultLogger().Clone()
 	defer glog.SetDefaultLogger(defaultLog)
 	gtest.C(t, func(t *gtest.T) {
@@ -236,7 +236,7 @@ func Test_SetLevelPrefix(t *testing.T) {
 	})
 }
 
-func Test_SetLevelPrefixes(t *testing.T) {
+func TestSetLevelPrefixes(t *testing.T) {
 	defaultLog := glog.DefaultLogger().Clone()
 	defer glog.SetDefaultLogger(defaultLog)
 	gtest.C(t, func(t *gtest.T) {
@@ -246,7 +246,7 @@ func Test_SetLevelPrefixes(t *testing.T) {
 	})
 }
 
-func Test_SetHandlers(t *testing.T) {
+func TestSetHandlers(t *testing.T) {
 	defaultLog := glog.DefaultLogger().Clone()
 	defer glog.SetDefaultLogger(defaultLog)
 	gtest.C(t, func(t *gtest.T) {
@@ -255,7 +255,7 @@ func Test_SetHandlers(t *testing.T) {
 	})
 }
 
-func Test_SetWriterColorEnable(t *testing.T) {
+func TestSetWriterColorEnable(t *testing.T) {
 	defaultLog := glog.DefaultLogger().Clone()
 	defer glog.SetDefaultLogger(defaultLog)
 	gtest.C(t, func(t *gtest.T) {
@@ -263,7 +263,7 @@ func Test_SetWriterColorEnable(t *testing.T) {
 	})
 }
 
-func Test_Instance(t *testing.T) {
+func TestInstance(t *testing.T) {
 	defaultLog := glog.DefaultLogger().Clone()
 	defer glog.SetDefaultLogger(defaultLog)
 	gtest.C(t, func(t *gtest.T) {
@@ -271,7 +271,7 @@ func Test_Instance(t *testing.T) {
 	})
 }
 
-func Test_GetConfig(t *testing.T) {
+func TestGetConfig(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		config := glog.DefaultLogger().GetConfig()
 		t.Assert(config.Path, "")
@@ -279,7 +279,7 @@ func Test_GetConfig(t *testing.T) {
 	})
 }
 
-func Test_Write(t *testing.T) {
+func TestWrite(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := glog.New()
 		len, err := l.Write([]byte("GoFrame"))
@@ -288,7 +288,7 @@ func Test_Write(t *testing.T) {
 	})
 }
 
-func Test_Chaining_To(t *testing.T) {
+func TestChainingTo(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := glog.DefaultLogger().Clone()
 		logTo := l.To(os.Stdout)
@@ -301,7 +301,7 @@ func Test_Chaining_To(t *testing.T) {
 	})
 }
 
-func Test_Chaining_Path(t *testing.T) {
+func TestChainingPath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := glog.DefaultLogger().Clone()
 		logPath := l.Path("./")
@@ -314,7 +314,7 @@ func Test_Chaining_Path(t *testing.T) {
 	})
 }
 
-func Test_Chaining_Cat(t *testing.T) {
+func TestChainingCat(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := glog.New()
 		logCat := l.Cat(".gf")
@@ -322,7 +322,7 @@ func Test_Chaining_Cat(t *testing.T) {
 	})
 }
 
-func Test_Chaining_Level(t *testing.T) {
+func TestChainingLevel(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := glog.New()
 		logLevel := l.Level(glog.LEVEL_ALL)
@@ -330,7 +330,7 @@ func Test_Chaining_Level(t *testing.T) {
 	})
 }
 
-func Test_Chaining_LevelStr(t *testing.T) {
+func TestChainingLevelStr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := glog.New()
 		logLevelStr := l.LevelStr("all")
@@ -338,7 +338,7 @@ func Test_Chaining_LevelStr(t *testing.T) {
 	})
 }
 
-func Test_Chaining_Skip(t *testing.T) {
+func TestChainingSkip(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := glog.New()
 		logSkip := l.Skip(1)
@@ -346,7 +346,7 @@ func Test_Chaining_Skip(t *testing.T) {
 	})
 }
 
-func Test_Chaining_Stack(t *testing.T) {
+func TestChainingStack(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := glog.New()
 		logStack := l.Stack(true)
@@ -354,7 +354,7 @@ func Test_Chaining_Stack(t *testing.T) {
 	})
 }
 
-func Test_Chaining_StackWithFilter(t *testing.T) {
+func TestChainingStackWithFilter(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := glog.New()
 		logStackWithFilter := l.StackWithFilter("gtest")
@@ -362,7 +362,7 @@ func Test_Chaining_StackWithFilter(t *testing.T) {
 	})
 }
 
-func Test_Chaining_Stdout(t *testing.T) {
+func TestChainingStdout(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := glog.New()
 		logStdout := l.Stdout(true)
@@ -370,7 +370,7 @@ func Test_Chaining_Stdout(t *testing.T) {
 	})
 }
 
-func Test_Chaining_Header(t *testing.T) {
+func TestChainingHeader(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := glog.New()
 		logHeader := l.Header(true)
@@ -378,7 +378,7 @@ func Test_Chaining_Header(t *testing.T) {
 	})
 }
 
-func Test_Chaining_Line(t *testing.T) {
+func TestChainingLine(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := glog.New()
 		logLine := l.Line(true)
@@ -386,7 +386,7 @@ func Test_Chaining_Line(t *testing.T) {
 	})
 }
 
-func Test_Chaining_Async(t *testing.T) {
+func TestChainingAsync(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := glog.New()
 		logAsync := l.Async(true)
@@ -394,14 +394,14 @@ func Test_Chaining_Async(t *testing.T) {
 	})
 }
 
-func Test_Config_SetDebug(t *testing.T) {
+func TestConfigSetDebug(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := glog.New()
 		l.SetDebug(false)
 	})
 }
 
-func Test_Config_AppendCtxKeys(t *testing.T) {
+func TestConfigAppendCtxKeys(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := glog.New()
 		l.AppendCtxKeys("Trace-Id", "Span-Id", "Test")
@@ -409,21 +409,21 @@ func Test_Config_AppendCtxKeys(t *testing.T) {
 	})
 }
 
-func Test_Config_SetPath(t *testing.T) {
+func TestConfigSetPath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := glog.New()
 		t.AssertNE(l.SetPath(""), nil)
 	})
 }
 
-func Test_Config_SetStdoutColorDisabled(t *testing.T) {
+func TestConfigSetStdoutColorDisabled(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := glog.New()
 		l.SetStdoutColorDisabled(false)
 	})
 }
 
-func Test_Ctx(t *testing.T) {
+func TestCtx(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		w := bytes.NewBuffer(nil)
 		l := glog.NewWithWriter(w)
@@ -438,7 +438,7 @@ func Test_Ctx(t *testing.T) {
 	})
 }
 
-func Test_Ctx_Config(t *testing.T) {
+func TestCtxConfig(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		w := bytes.NewBuffer(nil)
 		l := glog.NewWithWriter(w)
@@ -462,7 +462,7 @@ func Test_Ctx_Config(t *testing.T) {
 	})
 }
 
-func Test_Concurrent(t *testing.T) {
+func TestConcurrent(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c := 1000
 		l := glog.New()

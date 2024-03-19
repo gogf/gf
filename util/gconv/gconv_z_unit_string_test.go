@@ -7,11 +7,12 @@
 package gconv_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
-	"testing"
-	"time"
 )
 
 type stringStruct1 struct {
@@ -26,7 +27,7 @@ func (s *stringStruct1) String() string {
 	return s.Name
 }
 
-func Test_String(t *testing.T) {
+func TestString(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertEQ(gconv.String(int(123)), "123")
 		t.AssertEQ(gconv.String(int(-123)), "-123")

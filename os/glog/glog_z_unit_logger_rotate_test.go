@@ -23,7 +23,7 @@ var (
 	ctx = context.TODO()
 )
 
-func Test_Rotate_Size(t *testing.T) {
+func TestRotateSize(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := glog.New()
 		p := gfile.Temp(gtime.TimestampNanoStr())
@@ -67,7 +67,7 @@ func Test_Rotate_Size(t *testing.T) {
 	})
 }
 
-func Test_Rotate_Expire(t *testing.T) {
+func TestRotateExpire(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := glog.New()
 		p := gfile.Temp(gtime.TimestampNanoStr())

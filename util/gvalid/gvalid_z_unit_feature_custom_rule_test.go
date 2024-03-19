@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/v2/util/gvalid"
 )
 
-func Test_CustomRule1(t *testing.T) {
+func TestCustomRule1(t *testing.T) {
 	rule := "custom"
 	gvalid.RegisterRule(
 		rule,
@@ -69,7 +69,7 @@ func Test_CustomRule1(t *testing.T) {
 	})
 }
 
-func Test_CustomRule2(t *testing.T) {
+func TestCustomRule2(t *testing.T) {
 	rule := "required-map"
 	gvalid.RegisterRule(rule, func(ctx context.Context, in gvalid.RuleFuncInput) error {
 		m := in.Value.Map()
@@ -112,7 +112,7 @@ func Test_CustomRule2(t *testing.T) {
 	})
 }
 
-func Test_CustomRule_AllowEmpty(t *testing.T) {
+func TestCustomRuleAllowEmpty(t *testing.T) {
 	rule := "allow-empty-str"
 	gvalid.RegisterRule(rule, func(ctx context.Context, in gvalid.RuleFuncInput) error {
 		s := in.Value.String()
@@ -274,7 +274,7 @@ func TestValidator_RuleFuncMap(t *testing.T) {
 	})
 }
 
-func Test_CustomRule_Overwrite(t *testing.T) {
+func TestCustomRuleOverwrite(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var rule = "custom-" + guid.S()
 		gvalid.RegisterRule(rule, func(ctx context.Context, in gvalid.RuleFuncInput) error {
@@ -289,7 +289,7 @@ func Test_CustomRule_Overwrite(t *testing.T) {
 	g.Dump(gvalid.GetRegisteredRuleMap())
 }
 
-func Test_Issue2499(t *testing.T) {
+func TestIssue2499(t *testing.T) {
 	ruleName := "required"
 	ruleFunc := func(ctx context.Context, in gvalid.RuleFuncInput) error {
 		return errors.New(in.Message)

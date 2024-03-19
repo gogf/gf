@@ -23,7 +23,7 @@ func (o *NamesObject) ShowName(r *ghttp.Request) {
 	r.Response.Write("Object Show Name")
 }
 
-func Test_NameToUri_FullName(t *testing.T) {
+func TestNameToUriFullName(t *testing.T) {
 	s := g.Server(guid.S())
 	s.SetNameToUriType(ghttp.UriTypeFullName)
 	s.BindObject("/{.struct}/{.method}", new(NamesObject))
@@ -42,7 +42,7 @@ func Test_NameToUri_FullName(t *testing.T) {
 	})
 }
 
-func Test_NameToUri_AllLower(t *testing.T) {
+func TestNameToUriAllLower(t *testing.T) {
 	s := g.Server(guid.S())
 	s.SetNameToUriType(ghttp.UriTypeAllLower)
 	s.BindObject("/{.struct}/{.method}", new(NamesObject))
@@ -61,7 +61,7 @@ func Test_NameToUri_AllLower(t *testing.T) {
 	})
 }
 
-func Test_NameToUri_Camel(t *testing.T) {
+func TestNameToUriCamel(t *testing.T) {
 	s := g.Server(guid.S())
 	s.SetNameToUriType(ghttp.UriTypeCamel)
 	s.BindObject("/{.struct}/{.method}", new(NamesObject))
@@ -80,7 +80,7 @@ func Test_NameToUri_Camel(t *testing.T) {
 	})
 }
 
-func Test_NameToUri_Default(t *testing.T) {
+func TestNameToUriDefault(t *testing.T) {
 	s := g.Server(guid.S())
 	s.SetNameToUriType(ghttp.UriTypeDefault)
 	s.BindObject("/{.struct}/{.method}", new(NamesObject))

@@ -55,7 +55,7 @@ func (o *ObjectRest) Head(r *ghttp.Request) {
 	r.Response.Header().Set("head-ok", "1")
 }
 
-func Test_Router_ObjectRest(t *testing.T) {
+func TestRouterObjectRest(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindObjectRest("/", new(ObjectRest))
 	s.BindObjectRest("/{.struct}/{.method}", new(ObjectRest))

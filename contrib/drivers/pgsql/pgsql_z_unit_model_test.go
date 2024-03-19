@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Model_Insert(t *testing.T) {
+func TestModelInsert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -93,7 +93,7 @@ func Test_Model_Insert(t *testing.T) {
 	})
 }
 
-func Test_Model_One(t *testing.T) {
+func TestModelOne(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -123,7 +123,7 @@ func Test_Model_One(t *testing.T) {
 	})
 }
 
-func Test_Model_All(t *testing.T) {
+func TestModelAll(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -134,7 +134,7 @@ func Test_Model_All(t *testing.T) {
 	})
 }
 
-func Test_Model_Delete(t *testing.T) {
+func TestModelDelete(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -146,7 +146,7 @@ func Test_Model_Delete(t *testing.T) {
 	})
 }
 
-func Test_Model_Update(t *testing.T) {
+func TestModelUpdate(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -170,7 +170,7 @@ func Test_Model_Update(t *testing.T) {
 	})
 }
 
-func Test_Model_Array(t *testing.T) {
+func TestModelArray(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -192,7 +192,7 @@ func Test_Model_Array(t *testing.T) {
 	})
 }
 
-func Test_Model_Scan(t *testing.T) {
+func TestModelScan(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -211,7 +211,7 @@ func Test_Model_Scan(t *testing.T) {
 	})
 }
 
-func Test_Model_Count(t *testing.T) {
+func TestModelCount(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -226,7 +226,7 @@ func Test_Model_Count(t *testing.T) {
 	})
 }
 
-func Test_Model_Where(t *testing.T) {
+func TestModelWhere(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -257,7 +257,7 @@ func Test_Model_Where(t *testing.T) {
 	})
 }
 
-func Test_Model_Save(t *testing.T) {
+func TestModelSave(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -316,7 +316,7 @@ func Test_Model_Save(t *testing.T) {
 	})
 }
 
-func Test_Model_Replace(t *testing.T) {
+func TestModelReplace(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -332,7 +332,7 @@ func Test_Model_Replace(t *testing.T) {
 	})
 }
 
-func Test_Model_OnConflict(t *testing.T) {
+func TestModelOnConflict(t *testing.T) {
 	var (
 		table      = fmt.Sprintf(`%s_%d`, TablePrefix+"test", gtime.TimestampNano())
 		uniqueName = fmt.Sprintf(`%s_%d`, TablePrefix+"test_unique", gtime.TimestampNano())
@@ -407,7 +407,7 @@ func Test_Model_OnConflict(t *testing.T) {
 	})
 }
 
-func Test_Model_OnDuplicate(t *testing.T) {
+func TestModelOnDuplicate(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -508,7 +508,7 @@ func Test_Model_OnDuplicate(t *testing.T) {
 	})
 }
 
-func Test_Model_OnDuplicateEx(t *testing.T) {
+func TestModelOnDuplicateEx(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 

@@ -19,7 +19,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_New(t *testing.T) {
+func TestNew(t *testing.T) {
 	// New with json map.
 	gtest.C(t, func(t *gtest.T) {
 		data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
@@ -70,7 +70,7 @@ func Test_New(t *testing.T) {
 	})
 }
 
-func Test_Valid(t *testing.T) {
+func TestValid(t *testing.T) {
 	data1 := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 	data2 := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]`)
 	gtest.C(t, func(t *gtest.T) {
@@ -79,7 +79,7 @@ func Test_Valid(t *testing.T) {
 	})
 }
 
-func Test_Encode(t *testing.T) {
+func TestEncode(t *testing.T) {
 	value := g.Slice{1, 2, 3}
 	gtest.C(t, func(t *gtest.T) {
 		b, err := gjson.Encode(value)
@@ -88,7 +88,7 @@ func Test_Encode(t *testing.T) {
 	})
 }
 
-func Test_Decode(t *testing.T) {
+func TestDecode(t *testing.T) {
 	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 	gtest.C(t, func(t *gtest.T) {
 		v, err := gjson.Decode(data)
@@ -124,7 +124,7 @@ func Test_Decode(t *testing.T) {
 	})
 }
 
-func Test_SplitChar(t *testing.T) {
+func TestSplitChar(t *testing.T) {
 	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.DecodeToJson(data)
@@ -138,7 +138,7 @@ func Test_SplitChar(t *testing.T) {
 	})
 }
 
-func Test_ViolenceCheck(t *testing.T) {
+func TestViolenceCheck(t *testing.T) {
 	data := []byte(`{"m":{"a":[1,2,3], "v1.v2":"4"}}`)
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.DecodeToJson(data)
@@ -150,7 +150,7 @@ func Test_ViolenceCheck(t *testing.T) {
 	})
 }
 
-func Test_GetVar(t *testing.T) {
+func TestGetVar(t *testing.T) {
 	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.DecodeToJson(data)
@@ -163,7 +163,7 @@ func Test_GetVar(t *testing.T) {
 	})
 }
 
-func Test_GetMap(t *testing.T) {
+func TestGetMap(t *testing.T) {
 	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.DecodeToJson(data)
@@ -174,7 +174,7 @@ func Test_GetMap(t *testing.T) {
 	})
 }
 
-func Test_GetJson(t *testing.T) {
+func TestGetJson(t *testing.T) {
 	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.DecodeToJson(data)
@@ -187,7 +187,7 @@ func Test_GetJson(t *testing.T) {
 	})
 }
 
-func Test_GetArray(t *testing.T) {
+func TestGetArray(t *testing.T) {
 	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.DecodeToJson(data)
@@ -198,7 +198,7 @@ func Test_GetArray(t *testing.T) {
 	})
 }
 
-func Test_GetString(t *testing.T) {
+func TestGetString(t *testing.T) {
 	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.DecodeToJson(data)
@@ -210,7 +210,7 @@ func Test_GetString(t *testing.T) {
 	})
 }
 
-func Test_GetStrings(t *testing.T) {
+func TestGetStrings(t *testing.T) {
 	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.DecodeToJson(data)
@@ -222,7 +222,7 @@ func Test_GetStrings(t *testing.T) {
 	})
 }
 
-func Test_GetInterfaces(t *testing.T) {
+func TestGetInterfaces(t *testing.T) {
 	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.DecodeToJson(data)
@@ -233,7 +233,7 @@ func Test_GetInterfaces(t *testing.T) {
 	})
 }
 
-func Test_Len(t *testing.T) {
+func TestLen(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		p := gjson.New(nil)
 		p.Append("a", 1)
@@ -253,7 +253,7 @@ func Test_Len(t *testing.T) {
 	})
 }
 
-func Test_Append(t *testing.T) {
+func TestAppend(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		p := gjson.New(nil)
 		p.Append("a", 1)
@@ -278,7 +278,7 @@ func Test_Append(t *testing.T) {
 	})
 }
 
-func Test_RawArray(t *testing.T) {
+func TestRawArray(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		j := gjson.New(nil)
 		t.AssertNil(j.Set("0", 1))
@@ -345,7 +345,7 @@ func TestJson_Default(t *testing.T) {
 	})
 }
 
-func Test_Convert(t *testing.T) {
+func TestConvert(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		j := gjson.New(`{"name":"gf"}`)
 		arr, err := j.ToXml()
@@ -384,7 +384,7 @@ func Test_Convert(t *testing.T) {
 	})
 }
 
-func Test_Convert2(t *testing.T) {
+func TestConvert2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		name := struct {
 			Name string
@@ -423,7 +423,7 @@ func Test_Convert2(t *testing.T) {
 	})
 }
 
-func Test_Basic(t *testing.T) {
+func TestBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		j := gjson.New(`{"name":"gf","time":"2019-06-12"}`)
 		j.SetViolenceCheck(true)
@@ -571,7 +571,7 @@ func TestJson_Options(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/1617
-func Test_Issue1617(t *testing.T) {
+func TestIssue1617(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type MyJsonName struct {
 			F中文   int64 `json:"F中文"`
@@ -595,7 +595,7 @@ func Test_Issue1617(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/1747
-func Test_Issue1747(t *testing.T) {
+func TestIssue1747(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var j *gjson.Json
 		err := gconv.Struct(gvar.New("[1, 2, 336371793314971759]"), &j)
@@ -605,7 +605,7 @@ func Test_Issue1747(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/2520
-func Test_Issue2520(t *testing.T) {
+func TestIssue2520(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type test struct {
 			Unique *gvar.Var `json:"unique"`

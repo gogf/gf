@@ -21,7 +21,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_Grpcx_Grpc_Server_Basic(t *testing.T) {
+func TestGrpcxGrpcServerBasic(t *testing.T) {
 	c := grpcx.Server.NewConfig()
 	c.Name = guid.S()
 	s := grpcx.Server.New(c)

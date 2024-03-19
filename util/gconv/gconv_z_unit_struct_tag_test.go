@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_StructTag(t *testing.T) {
+func TestStructTag(t *testing.T) {
 	type User struct {
 		Uid   int
 		Name  string

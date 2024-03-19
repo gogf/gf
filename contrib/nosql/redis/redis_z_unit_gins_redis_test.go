@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_GINS_Redis(t *testing.T) {
+func TestGINSRedis(t *testing.T) {
 	redisContent := gfile.GetContents(
 		gtest.DataPath("redis", "config.toml"),
 	)

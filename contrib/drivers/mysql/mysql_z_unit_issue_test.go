@@ -23,7 +23,7 @@ import (
 )
 
 // https://github.com/gogf/gf/issues/1934
-func Test_Issue1934(t *testing.T) {
+func TestIssue1934(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -35,7 +35,7 @@ func Test_Issue1934(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/1570
-func Test_Issue1570(t *testing.T) {
+func TestIssue1570(t *testing.T) {
 	var (
 		tableUser       = "user_" + gtime.TimestampMicroStr()
 		tableUserDetail = "user_detail_" + gtime.TimestampMicroStr()
@@ -163,7 +163,7 @@ CREATE TABLE %s (
 }
 
 // https://github.com/gogf/gf/issues/1401
-func Test_Issue1401(t *testing.T) {
+func TestIssue1401(t *testing.T) {
 	var (
 		table1 = "parcels"
 		table2 = "parcel_items"
@@ -205,7 +205,7 @@ func Test_Issue1401(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/1412
-func Test_Issue1412(t *testing.T) {
+func TestIssue1412(t *testing.T) {
 	var (
 		table1 = "parcels"
 		table2 = "items"
@@ -267,7 +267,7 @@ func Test_Issue1412(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/1002
-func Test_Issue1002(t *testing.T) {
+func TestIssue1002(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -341,7 +341,7 @@ func Test_Issue1002(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/1700
-func Test_Issue1700(t *testing.T) {
+func TestIssue1700(t *testing.T) {
 	table := "user_" + gtime.Now().TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 	    CREATE TABLE %s (
@@ -389,7 +389,7 @@ func Test_Issue1700(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/1701
-func Test_Issue1701(t *testing.T) {
+func TestIssue1701(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -400,7 +400,7 @@ func Test_Issue1701(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/1733
-func Test_Issue1733(t *testing.T) {
+func TestIssue1733(t *testing.T) {
 	table := "user_" + guid.S()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 	    CREATE TABLE %s (
@@ -431,7 +431,7 @@ func Test_Issue1733(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/2105
-func Test_Issue2105(t *testing.T) {
+func TestIssue2105(t *testing.T) {
 	table := "issue2105"
 	array := gstr.SplitAndTrim(gtest.DataContent(`issue2105.sql`), ";")
 	for _, v := range array {
@@ -461,7 +461,7 @@ func Test_Issue2105(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/2231
-func Test_Issue2231(t *testing.T) {
+func TestIssue2231(t *testing.T) {
 	var (
 		pattern = `(\w+):([\w\-]*):(.*?)@(\w+?)\((.+?)\)/{0,1}([^\?]*)\?{0,1}(.*)`
 		link    = `mysql:root:12345678@tcp(127.0.0.1:3306)/a正bc式?loc=Local&parseTime=true`
@@ -480,7 +480,7 @@ func Test_Issue2231(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/2339
-func Test_Issue2339(t *testing.T) {
+func TestIssue2339(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -500,7 +500,7 @@ func Test_Issue2339(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/2356
-func Test_Issue2356(t *testing.T) {
+func TestIssue2356(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := "demo_" + guid.S()
 		if _, err := db.Exec(ctx, fmt.Sprintf(`
@@ -525,7 +525,7 @@ func Test_Issue2356(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/2338
-func Test_Issue2338(t *testing.T) {
+func TestIssue2338(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table1 := "demo_" + guid.S()
 		table2 := "demo_" + guid.S()
@@ -636,7 +636,7 @@ CREATE TABLE %s (
 }
 
 // https://github.com/gogf/gf/issues/2427
-func Test_Issue2427(t *testing.T) {
+func TestIssue2427(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := "demo_" + guid.S()
 		if _, err := db.Exec(ctx, fmt.Sprintf(`
@@ -667,7 +667,7 @@ CREATE TABLE %s (
 }
 
 // https://github.com/gogf/gf/issues/2561
-func Test_Issue2561(t *testing.T) {
+func TestIssue2561(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -729,7 +729,7 @@ func Test_Issue2561(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/2439
-func Test_Issue2439(t *testing.T) {
+func TestIssue2439(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := gstr.SplitAndTrim(gtest.DataContent(`issue2439.sql`), ";")
 		for _, v := range array {
@@ -763,7 +763,7 @@ func Test_Issue2439(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/2782
-func Test_Issue2787(t *testing.T) {
+func TestIssue2787(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -800,7 +800,7 @@ func Test_Issue2787(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/2907
-func Test_Issue2907(t *testing.T) {
+func TestIssue2907(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -825,7 +825,7 @@ func Test_Issue2907(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/3086
-func Test_Issue3086(t *testing.T) {
+func TestIssue3086(t *testing.T) {
 	table := "issue3086_user"
 	array := gstr.SplitAndTrim(gtest.DataContent(`issue3086.sql`), ";")
 	for _, v := range array {
@@ -884,7 +884,7 @@ func Test_Issue3086(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/3204
-func Test_Issue3204(t *testing.T) {
+func TestIssue3204(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -970,7 +970,7 @@ func Test_Issue3204(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/3218
-func Test_Issue3218(t *testing.T) {
+func TestIssue3218(t *testing.T) {
 	table := "issue3218_sys_config"
 	array := gstr.SplitAndTrim(gtest.DataContent(`issue3218.sql`), ";")
 	for _, v := range array {
@@ -1001,7 +1001,7 @@ func Test_Issue3218(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/2552
-func Test_Issue2552_ClearTableFieldsAll(t *testing.T) {
+func TestIssue2552ClearTableFieldsAll(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -1047,7 +1047,7 @@ func Test_Issue2552_ClearTableFieldsAll(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/2552
-func Test_Issue2552_ClearTableFields(t *testing.T) {
+func TestIssue2552ClearTableFields(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -1093,7 +1093,7 @@ func Test_Issue2552_ClearTableFields(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/2643
-func Test_Issue2643(t *testing.T) {
+func TestIssue2643(t *testing.T) {
 	table := "issue2643"
 	array := gstr.SplitAndTrim(gtest.DataContent(`issue2643.sql`), ";")
 	for _, v := range array {

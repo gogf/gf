@@ -22,7 +22,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_ConfigFromMap(t *testing.T) {
+func TestConfigFromMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := g.Map{
 			"address":         ":12345",
@@ -50,7 +50,7 @@ func Test_ConfigFromMap(t *testing.T) {
 	})
 }
 
-func Test_SetConfigWithMap(t *testing.T) {
+func TestSetConfigWithMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := g.Map{
 			"Address": ":8199",
@@ -73,7 +73,7 @@ func Test_SetConfigWithMap(t *testing.T) {
 	})
 }
 
-func Test_ClientMaxBodySize(t *testing.T) {
+func TestClientMaxBodySize(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.POST("/", func(r *ghttp.Request) {
@@ -105,7 +105,7 @@ func Test_ClientMaxBodySize(t *testing.T) {
 	})
 }
 
-func Test_ClientMaxBodySize_File(t *testing.T) {
+func TestClientMaxBodySizeFile(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.POST("/", func(r *ghttp.Request) {

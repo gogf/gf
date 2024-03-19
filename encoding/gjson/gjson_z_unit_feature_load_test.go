@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Load_JSON1(t *testing.T) {
+func TestLoadJSON1(t *testing.T) {
 	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 	// JSON
 	gtest.C(t, func(t *gtest.T) {
@@ -48,7 +48,7 @@ func Test_Load_JSON1(t *testing.T) {
 	})
 }
 
-func Test_Load_JSON2(t *testing.T) {
+func TestLoadJSON2(t *testing.T) {
 	data := []byte(`{"n":123456789000000000000, "m":{"k":"v"}, "a":[1,2,3]}`)
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.LoadContent(data)
@@ -61,7 +61,7 @@ func Test_Load_JSON2(t *testing.T) {
 	})
 }
 
-func Test_Load_XML(t *testing.T) {
+func TestLoadXML(t *testing.T) {
 	data := []byte(`<doc><a>1</a><a>2</a><a>3</a><m><k>v</k></m><n>123456789</n></doc>`)
 	// XML
 	gtest.C(t, func(t *gtest.T) {
@@ -122,7 +122,7 @@ func Test_Load_XML(t *testing.T) {
 	})
 }
 
-func Test_Load_YAML1(t *testing.T) {
+func TestLoadYAML1(t *testing.T) {
 	data := []byte(`
 a:
 - 1
@@ -167,7 +167,7 @@ m:
 	})
 }
 
-func Test_Load_YAML2(t *testing.T) {
+func TestLoadYAML2(t *testing.T) {
 	data := []byte("i : 123456789")
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.LoadContent(data)
@@ -181,7 +181,7 @@ func Test_Load_YAML2(t *testing.T) {
 	})
 }
 
-func Test_Load_TOML1(t *testing.T) {
+func TestLoadTOML1(t *testing.T) {
 	data := []byte(`
 a = ["1", "2", "3"]
 n = 123456789
@@ -224,7 +224,7 @@ n = 123456789
 	})
 }
 
-func Test_Load_TOML2(t *testing.T) {
+func TestLoadTOML2(t *testing.T) {
 	data := []byte("i=123456789")
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.LoadContent(data)
@@ -238,7 +238,7 @@ func Test_Load_TOML2(t *testing.T) {
 	})
 }
 
-func Test_Load_Basic(t *testing.T) {
+func TestLoadBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		j := gjson.New(nil)
 		t.Assert(j.Interface(), nil)
@@ -262,7 +262,7 @@ func Test_Load_Basic(t *testing.T) {
 	})
 }
 
-func Test_Load_Ini(t *testing.T) {
+func TestLoadIni(t *testing.T) {
 	var data = `
 
 ;注释
@@ -319,7 +319,7 @@ enable=true
 	})
 }
 
-func Test_Load_YamlWithV3(t *testing.T) {
+func TestLoadYamlWithV3(t *testing.T) {
 	content := `
 # CLI tool, only in development environment.
 # https://goframe.org/pages/viewpage.action?pageId=3673173
@@ -362,7 +362,7 @@ gfcli:
 	})
 }
 
-func Test_Load_Properties(t *testing.T) {
+func TestLoadProperties(t *testing.T) {
 	var data = `
 
 #注释

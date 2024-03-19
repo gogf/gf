@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_StrIntMap_Var(t *testing.T) {
+func TestStrIntMapVar(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var m gmap.StrIntMap
 		m.Set("a", 1)
@@ -50,7 +50,7 @@ func Test_StrIntMap_Var(t *testing.T) {
 	})
 }
 
-func Test_StrIntMap_Basic(t *testing.T) {
+func TestStrIntMapBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewStrIntMap()
 		m.Set("a", 1)
@@ -86,7 +86,7 @@ func Test_StrIntMap_Basic(t *testing.T) {
 	})
 }
 
-func Test_StrIntMap_Set_Fun(t *testing.T) {
+func TestStrIntMapSetFun(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewStrIntMap()
 
@@ -107,7 +107,7 @@ func Test_StrIntMap_Set_Fun(t *testing.T) {
 	})
 }
 
-func Test_StrIntMap_Batch(t *testing.T) {
+func TestStrIntMapBatch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewStrIntMap()
 
@@ -118,7 +118,7 @@ func Test_StrIntMap_Batch(t *testing.T) {
 	})
 }
 
-func Test_StrIntMap_Iterator(t *testing.T) {
+func TestStrIntMapIterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[string]int{"a": 1, "b": 2}
 		m := gmap.NewStrIntMapFrom(expect)
@@ -142,7 +142,7 @@ func Test_StrIntMap_Iterator(t *testing.T) {
 	})
 }
 
-func Test_StrIntMap_Lock(t *testing.T) {
+func TestStrIntMapLock(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[string]int{"a": 1, "b": 2}
 
@@ -156,7 +156,7 @@ func Test_StrIntMap_Lock(t *testing.T) {
 	})
 }
 
-func Test_StrIntMap_Clone(t *testing.T) {
+func TestStrIntMapClone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// clone 方法是深克隆
 		m := gmap.NewStrIntMapFrom(map[string]int{"a": 1, "b": 2, "c": 3})
@@ -172,7 +172,7 @@ func Test_StrIntMap_Clone(t *testing.T) {
 	})
 }
 
-func Test_StrIntMap_Merge(t *testing.T) {
+func TestStrIntMapMerge(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.NewStrIntMap()
 		m2 := gmap.NewStrIntMap()
@@ -186,7 +186,7 @@ func Test_StrIntMap_Merge(t *testing.T) {
 	})
 }
 
-func Test_StrIntMap_Map(t *testing.T) {
+func TestStrIntMapMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewStrIntMap()
 		m.Set("1", 1)
@@ -203,7 +203,7 @@ func Test_StrIntMap_Map(t *testing.T) {
 	})
 }
 
-func Test_StrIntMap_MapCopy(t *testing.T) {
+func TestStrIntMapMapCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewStrIntMap()
 		m.Set("1", 1)
@@ -220,7 +220,7 @@ func Test_StrIntMap_MapCopy(t *testing.T) {
 	})
 }
 
-func Test_StrIntMap_FilterEmpty(t *testing.T) {
+func TestStrIntMapFilterEmpty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewStrIntMap()
 		m.Set("1", 0)
@@ -234,7 +234,7 @@ func Test_StrIntMap_FilterEmpty(t *testing.T) {
 	})
 }
 
-func Test_StrIntMap_Json(t *testing.T) {
+func TestStrIntMapJson(t *testing.T) {
 	// Marshal
 	gtest.C(t, func(t *gtest.T) {
 		data := g.MapStrInt{
@@ -278,7 +278,7 @@ func Test_StrIntMap_Json(t *testing.T) {
 	})
 }
 
-func Test_StrIntMap_Pop(t *testing.T) {
+func TestStrIntMapPop(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewStrIntMapFrom(g.MapStrInt{
 			"k1": 11,
@@ -304,7 +304,7 @@ func Test_StrIntMap_Pop(t *testing.T) {
 	})
 }
 
-func Test_StrIntMap_Pops(t *testing.T) {
+func TestStrIntMapPops(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewStrIntMapFrom(g.MapStrInt{
 			"k1": 11,
@@ -376,7 +376,7 @@ func TestStrIntMap_UnmarshalValue(t *testing.T) {
 	})
 }
 
-func Test_StrIntMap_DeepCopy(t *testing.T) {
+func TestStrIntMapDeepCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewStrIntMapFrom(g.MapStrInt{
 			"key1": 1,
@@ -390,7 +390,7 @@ func Test_StrIntMap_DeepCopy(t *testing.T) {
 	})
 }
 
-func Test_StrIntMap_IsSubOf(t *testing.T) {
+func TestStrIntMapIsSubOf(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.NewStrIntMapFrom(g.MapStrInt{
 			"k1": 1,
@@ -405,7 +405,7 @@ func Test_StrIntMap_IsSubOf(t *testing.T) {
 	})
 }
 
-func Test_StrIntMap_Diff(t *testing.T) {
+func TestStrIntMapDiff(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.NewStrIntMapFrom(g.MapStrInt{
 			"0": 0,

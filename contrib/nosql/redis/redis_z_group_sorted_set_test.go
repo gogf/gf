@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_GroupSortedSet_ZADD(t *testing.T) {
+func TestGroupSortedSetZADD(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
@@ -223,7 +223,7 @@ func Test_GroupSortedSet_ZADD(t *testing.T) {
 	})
 }
 
-func Test_GroupSortedSet_ZScore(t *testing.T) {
+func TestGroupSortedSetZScore(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
@@ -259,7 +259,7 @@ func Test_GroupSortedSet_ZScore(t *testing.T) {
 	})
 }
 
-func Test_GroupSortedSet_ZIncrBy(t *testing.T) {
+func TestGroupSortedSetZIncrBy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
@@ -277,7 +277,7 @@ func Test_GroupSortedSet_ZIncrBy(t *testing.T) {
 	})
 }
 
-func Test_GroupSortedSet_ZCard(t *testing.T) {
+func TestGroupSortedSetZCard(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -300,7 +300,7 @@ func Test_GroupSortedSet_ZCard(t *testing.T) {
 	})
 }
 
-func Test_GroupSortedSet_ZCount(t *testing.T) {
+func TestGroupSortedSetZCount(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
@@ -345,7 +345,7 @@ func Test_GroupSortedSet_ZCount(t *testing.T) {
 	})
 }
 
-func Test_GroupSortedSet_ZRange(t *testing.T) {
+func TestGroupSortedSetZRange(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
@@ -386,7 +386,7 @@ func Test_GroupSortedSet_ZRange(t *testing.T) {
 	})
 }
 
-func Test_GroupSortedSet_ZRevRange(t *testing.T) {
+func TestGroupSortedSetZRevRange(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
@@ -415,7 +415,7 @@ func Test_GroupSortedSet_ZRevRange(t *testing.T) {
 	})
 }
 
-func Test_GroupSortedSet_ZRank(t *testing.T) {
+func TestGroupSortedSetZRank(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
@@ -446,7 +446,7 @@ func Test_GroupSortedSet_ZRank(t *testing.T) {
 	})
 }
 
-func Test_GroupSortedSet_ZRevRank(t *testing.T) {
+func TestGroupSortedSetZRevRank(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
@@ -481,7 +481,7 @@ func Test_GroupSortedSet_ZRevRank(t *testing.T) {
 	})
 }
 
-func Test_GroupSortedSet_ZRem(t *testing.T) {
+func TestGroupSortedSetZRem(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
@@ -525,7 +525,7 @@ func Test_GroupSortedSet_ZRem(t *testing.T) {
 	})
 }
 
-func Test_GroupSortedSet_ZRemRangeByRank(t *testing.T) {
+func TestGroupSortedSetZRemRangeByRank(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
@@ -629,7 +629,7 @@ func Test_GroupSortedSet_ZRemRangeByRank(t *testing.T) {
 		t.AssertEQ(score, float64(3))
 	})
 }
-func Test_GroupSortedSet_ZRemRangeByScore(t *testing.T) {
+func TestGroupSortedSetZRemRangeByScore(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
@@ -754,7 +754,7 @@ func Test_GroupSortedSet_ZRemRangeByScore(t *testing.T) {
 		t.AssertEQ(cnt, int64(0))
 	})
 }
-func Test_GroupSortedSet_ZRemRangeByLex(t *testing.T) {
+func TestGroupSortedSetZRemRangeByLex(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
@@ -780,7 +780,7 @@ func Test_GroupSortedSet_ZRemRangeByLex(t *testing.T) {
 		t.AssertEQ(cnt, int64(4))
 	})
 }
-func Test_GroupSortedSet_ZLexCount(t *testing.T) {
+func TestGroupSortedSetZLexCount(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 

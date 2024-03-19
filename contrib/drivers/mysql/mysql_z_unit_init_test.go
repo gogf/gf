@@ -166,7 +166,7 @@ func dropTableWithDb(db gdb.DB, table string) {
 	}
 }
 
-func Test_PartitionTable(t *testing.T) {
+func TestPartitionTable(t *testing.T) {
 	dropShopDBTable()
 	createShopDBTable()
 	insertShopDBData()

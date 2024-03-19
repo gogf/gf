@@ -13,7 +13,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_SetGet(t *testing.T) {
+func TestSetGet(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		instance.Set("test-user", 1)
 		t.Assert(instance.Get("test-user"), 1)

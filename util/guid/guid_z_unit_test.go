@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_S(t *testing.T) {
+func TestS(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		set := gset.NewStrSet()
 		for i := 0; i < 1000000; i++ {
@@ -27,7 +27,7 @@ func Test_S(t *testing.T) {
 	})
 }
 
-func Test_S_Data(t *testing.T) {
+func TestSData(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(len(guid.S([]byte("123"))), 32)
 	})

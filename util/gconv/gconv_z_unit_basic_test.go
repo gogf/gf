@@ -13,7 +13,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Basic(t *testing.T) {
+func TestBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		f32 := float32(123.456)
 		i64 := int64(1552578474888)
@@ -41,7 +41,7 @@ func Test_Basic(t *testing.T) {
 	})
 }
 
-func Test_Duration(t *testing.T) {
+func TestDuration(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		d := gconv.Duration("1s")
 		t.Assert(d.String(), "1s")
@@ -49,7 +49,7 @@ func Test_Duration(t *testing.T) {
 	})
 }
 
-func Test_ConvertWithRefer(t *testing.T) {
+func TestConvertWithRefer(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertEQ(gconv.ConvertWithRefer("1", 100), 1)
 		t.AssertEQ(gconv.ConvertWithRefer("1.01", 1.111), 1.01)

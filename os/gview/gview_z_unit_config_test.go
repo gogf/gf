@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Config(t *testing.T) {
+func TestConfig(t *testing.T) {
 	// show error print
 	command.Init("-gf.gview.errorprint=true")
 	gtest.C(t, func(t *gtest.T) {
@@ -80,7 +80,7 @@ func Test_Config(t *testing.T) {
 	})
 }
 
-func Test_ConfigWithMap(t *testing.T) {
+func TestConfigWithMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		view := gview.New()
 		err := view.SetConfigWithMap(g.Map{

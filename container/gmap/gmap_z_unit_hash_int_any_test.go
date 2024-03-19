@@ -21,7 +21,7 @@ func getAny() interface{} {
 	return 123
 }
 
-func Test_IntAnyMap_Var(t *testing.T) {
+func TestIntAnyMapVar(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var m gmap.IntAnyMap
 		m.Set(1, 1)
@@ -51,7 +51,7 @@ func Test_IntAnyMap_Var(t *testing.T) {
 	})
 }
 
-func Test_IntAnyMap_Basic(t *testing.T) {
+func TestIntAnyMapBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntAnyMap()
 		m.Set(1, 1)
@@ -90,7 +90,7 @@ func Test_IntAnyMap_Basic(t *testing.T) {
 	})
 }
 
-func Test_IntAnyMap_Set_Fun(t *testing.T) {
+func TestIntAnyMapSetFun(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntAnyMap()
 
@@ -107,7 +107,7 @@ func Test_IntAnyMap_Set_Fun(t *testing.T) {
 	})
 }
 
-func Test_IntAnyMap_Batch(t *testing.T) {
+func TestIntAnyMapBatch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntAnyMap()
 
@@ -118,7 +118,7 @@ func Test_IntAnyMap_Batch(t *testing.T) {
 	})
 }
 
-func Test_IntAnyMap_Iterator(t *testing.T) {
+func TestIntAnyMapIterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[int]interface{}{1: 1, 2: "2"}
 		m := gmap.NewIntAnyMapFrom(expect)
@@ -143,7 +143,7 @@ func Test_IntAnyMap_Iterator(t *testing.T) {
 
 }
 
-func Test_IntAnyMap_Lock(t *testing.T) {
+func TestIntAnyMapLock(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[int]interface{}{1: 1, 2: "2"}
 		m := gmap.NewIntAnyMapFrom(expect)
@@ -156,7 +156,7 @@ func Test_IntAnyMap_Lock(t *testing.T) {
 	})
 }
 
-func Test_IntAnyMap_Clone(t *testing.T) {
+func TestIntAnyMapClone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// clone 方法是深克隆
 		m := gmap.NewIntAnyMapFrom(map[int]interface{}{1: 1, 2: "2"})
@@ -172,7 +172,7 @@ func Test_IntAnyMap_Clone(t *testing.T) {
 	})
 }
 
-func Test_IntAnyMap_Merge(t *testing.T) {
+func TestIntAnyMapMerge(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.NewIntAnyMap()
 		m2 := gmap.NewIntAnyMap()
@@ -186,7 +186,7 @@ func Test_IntAnyMap_Merge(t *testing.T) {
 	})
 }
 
-func Test_IntAnyMap_Map(t *testing.T) {
+func TestIntAnyMapMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntAnyMap()
 		m.Set(1, 0)
@@ -203,7 +203,7 @@ func Test_IntAnyMap_Map(t *testing.T) {
 	})
 }
 
-func Test_IntAnyMap_MapCopy(t *testing.T) {
+func TestIntAnyMapMapCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntAnyMap()
 		m.Set(1, 0)
@@ -220,7 +220,7 @@ func Test_IntAnyMap_MapCopy(t *testing.T) {
 	})
 }
 
-func Test_IntAnyMap_FilterEmpty(t *testing.T) {
+func TestIntAnyMapFilterEmpty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntAnyMap()
 		m.Set(1, 0)
@@ -234,7 +234,7 @@ func Test_IntAnyMap_FilterEmpty(t *testing.T) {
 	})
 }
 
-func Test_IntAnyMap_Json(t *testing.T) {
+func TestIntAnyMapJson(t *testing.T) {
 	// Marshal
 	gtest.C(t, func(t *gtest.T) {
 		data := g.MapIntAny{
@@ -264,7 +264,7 @@ func Test_IntAnyMap_Json(t *testing.T) {
 	})
 }
 
-func Test_IntAnyMap_Pop(t *testing.T) {
+func TestIntAnyMapPop(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntAnyMapFrom(g.MapIntAny{
 			1: "v1",
@@ -290,7 +290,7 @@ func Test_IntAnyMap_Pop(t *testing.T) {
 	})
 }
 
-func Test_IntAnyMap_Pops(t *testing.T) {
+func TestIntAnyMapPops(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntAnyMapFrom(g.MapIntAny{
 			1: "v1",
@@ -362,7 +362,7 @@ func TestIntAnyMap_UnmarshalValue(t *testing.T) {
 	})
 }
 
-func Test_IntAnyMap_DeepCopy(t *testing.T) {
+func TestIntAnyMapDeepCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntAnyMapFrom(g.MapIntAny{
 			1: "v1",
@@ -376,7 +376,7 @@ func Test_IntAnyMap_DeepCopy(t *testing.T) {
 	})
 }
 
-func Test_IntAnyMap_IsSubOf(t *testing.T) {
+func TestIntAnyMapIsSubOf(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.NewIntAnyMapFrom(g.MapIntAny{
 			1: "v1",
@@ -391,7 +391,7 @@ func Test_IntAnyMap_IsSubOf(t *testing.T) {
 	})
 }
 
-func Test_IntAnyMap_Diff(t *testing.T) {
+func TestIntAnyMapDiff(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.NewIntAnyMapFrom(g.MapIntAny{
 			0: "v0",

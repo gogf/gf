@@ -7,16 +7,17 @@
 package redis_test
 
 import (
-	"github.com/gogf/gf/v2/container/gvar"
 	"testing"
 	"time"
+
+	"github.com/gogf/gf/v2/container/gvar"
 
 	"github.com/gogf/gf/v2/database/gredis"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_ConfigFromMap(t *testing.T) {
+func TestConfigFromMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c, err := gredis.ConfigFromMap(g.Map{
 			`address`:     `127.0.0.1:6379`,
@@ -36,7 +37,7 @@ func Test_ConfigFromMap(t *testing.T) {
 	})
 }
 
-func Test_ConfigAddUser(t *testing.T) {
+func TestConfigAddUser(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			c   *gredis.Redis

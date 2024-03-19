@@ -19,7 +19,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_TX_Query(t *testing.T) {
+func TestTXQuery(t *testing.T) {
 	tx, err := db.Begin(ctx)
 	if err != nil {
 		gtest.Error(err)
@@ -41,7 +41,7 @@ func Test_TX_Query(t *testing.T) {
 	}
 }
 
-func Test_TX_Exec(t *testing.T) {
+func TestTXExec(t *testing.T) {
 	tx, err := db.Begin(ctx)
 	if err != nil {
 		gtest.Error(err)
@@ -63,7 +63,7 @@ func Test_TX_Exec(t *testing.T) {
 	}
 }
 
-func Test_TX_Commit(t *testing.T) {
+func TestTXCommit(t *testing.T) {
 	tx, err := db.Begin(ctx)
 	if err != nil {
 		gtest.Error(err)
@@ -73,7 +73,7 @@ func Test_TX_Commit(t *testing.T) {
 	}
 }
 
-func Test_TX_Rollback(t *testing.T) {
+func TestTXRollback(t *testing.T) {
 	tx, err := db.Begin(ctx)
 	if err != nil {
 		gtest.Error(err)
@@ -83,7 +83,7 @@ func Test_TX_Rollback(t *testing.T) {
 	}
 }
 
-func Test_TX_Prepare(t *testing.T) {
+func TestTXPrepare(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin(ctx)
 		t.AssertNil(err)
@@ -106,7 +106,7 @@ func Test_TX_Prepare(t *testing.T) {
 	})
 }
 
-func Test_TX_Insert(t *testing.T) {
+func TestTXInsert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -147,7 +147,7 @@ func Test_TX_Insert(t *testing.T) {
 	})
 }
 
-func Test_TX_BatchInsert(t *testing.T) {
+func TestTXBatchInsert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -185,7 +185,7 @@ func Test_TX_BatchInsert(t *testing.T) {
 	})
 }
 
-func Test_TX_BatchReplace(t *testing.T) {
+func TestTXBatchReplace(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -228,7 +228,7 @@ func Test_TX_BatchReplace(t *testing.T) {
 	})
 }
 
-func Test_TX_BatchSave(t *testing.T) {
+func TestTXBatchSave(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -266,7 +266,7 @@ func Test_TX_BatchSave(t *testing.T) {
 	})
 }
 
-func Test_TX_Replace(t *testing.T) {
+func TestTXReplace(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -295,7 +295,7 @@ func Test_TX_Replace(t *testing.T) {
 	})
 }
 
-func Test_TX_Save(t *testing.T) {
+func TestTXSave(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -324,7 +324,7 @@ func Test_TX_Save(t *testing.T) {
 	})
 }
 
-func Test_TX_Update(t *testing.T) {
+func TestTXUpdate(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -353,7 +353,7 @@ func Test_TX_Update(t *testing.T) {
 	})
 }
 
-func Test_TX_GetAll(t *testing.T) {
+func TestTXGetAll(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -373,7 +373,7 @@ func Test_TX_GetAll(t *testing.T) {
 	})
 }
 
-func Test_TX_GetOne(t *testing.T) {
+func TestTXGetOne(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -396,7 +396,7 @@ func Test_TX_GetOne(t *testing.T) {
 	})
 }
 
-func Test_TX_GetValue(t *testing.T) {
+func TestTXGetValue(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -416,7 +416,7 @@ func Test_TX_GetValue(t *testing.T) {
 	})
 }
 
-func Test_TX_GetCount(t *testing.T) {
+func TestTXGetCount(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -436,7 +436,7 @@ func Test_TX_GetCount(t *testing.T) {
 	})
 }
 
-func Test_TX_GetStruct(t *testing.T) {
+func TestTXGetStruct(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -486,7 +486,7 @@ func Test_TX_GetStruct(t *testing.T) {
 	})
 }
 
-func Test_TX_GetStructs(t *testing.T) {
+func TestTXGetStructs(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -549,7 +549,7 @@ func Test_TX_GetStructs(t *testing.T) {
 	})
 }
 
-func Test_TX_GetScan(t *testing.T) {
+func TestTXGetScan(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -657,7 +657,7 @@ func Test_TX_GetScan(t *testing.T) {
 	})
 }
 
-func Test_TX_Delete(t *testing.T) {
+func TestTXDelete(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := createInitTable()
 		defer dropTable(table)
@@ -709,7 +709,7 @@ func Test_TX_Delete(t *testing.T) {
 	})
 }
 
-func Test_Transaction(t *testing.T) {
+func TestTransaction(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -761,7 +761,7 @@ func Test_Transaction(t *testing.T) {
 	})
 }
 
-func Test_Transaction_Panic(t *testing.T) {
+func TestTransactionPanic(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -790,7 +790,7 @@ func Test_Transaction_Panic(t *testing.T) {
 	})
 }
 
-func Test_Transaction_Nested_Begin_Rollback_Commit(t *testing.T) {
+func TestTransactionNestedBeginRollbackCommit(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -826,7 +826,7 @@ func Test_Transaction_Nested_Begin_Rollback_Commit(t *testing.T) {
 	})
 }
 
-func Test_Transaction_Nested_TX_Transaction_UseTX(t *testing.T) {
+func TestTransactionNestedTXTransactionUseTX(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -948,7 +948,7 @@ func Test_Transaction_Nested_TX_Transaction_UseTX(t *testing.T) {
 	})
 }
 
-func Test_Transaction_Nested_TX_Transaction_UseDB(t *testing.T) {
+func TestTransactionNestedTXTransactionUseDB(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -1072,7 +1072,7 @@ func Test_Transaction_Nested_TX_Transaction_UseDB(t *testing.T) {
 	})
 }
 
-func Test_Transaction_Nested_SavePoint_RollbackTo(t *testing.T) {
+func TestTransactionNestedSavePointRollbackTo(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -1109,7 +1109,7 @@ func Test_Transaction_Nested_SavePoint_RollbackTo(t *testing.T) {
 	})
 }
 
-func Test_Transaction_Method(t *testing.T) {
+func TestTransactionMethod(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 

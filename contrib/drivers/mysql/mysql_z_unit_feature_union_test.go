@@ -13,7 +13,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Union(t *testing.T) {
+func TestUnion(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -45,7 +45,7 @@ func Test_Union(t *testing.T) {
 	})
 }
 
-func Test_UnionAll(t *testing.T) {
+func TestUnionAll(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -79,7 +79,7 @@ func Test_UnionAll(t *testing.T) {
 	})
 }
 
-func Test_Model_Union(t *testing.T) {
+func TestModelUnion(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -111,7 +111,7 @@ func Test_Model_Union(t *testing.T) {
 	})
 }
 
-func Test_Model_UnionAll(t *testing.T) {
+func TestModelUnionAll(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 

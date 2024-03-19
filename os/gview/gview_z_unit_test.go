@@ -32,7 +32,7 @@ func init() {
 	os.Setenv("GF_GVIEW_ERRORPRINT", "false")
 }
 
-func Test_Basic(t *testing.T) {
+func TestBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		str := `hello {{.name}},version:{{.version}};hello {{GetName}},version:{{GetVersion}};{{.other}}`
 		pwd := gfile.Pwd()
@@ -61,7 +61,7 @@ func Test_Basic(t *testing.T) {
 	})
 }
 
-func Test_Func(t *testing.T) {
+func TestFunc(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		str := `{{eq 1 1}};{{eq 1 2}};{{eq "A" "B"}}`
 		result, err := gview.ParseContent(context.TODO(), str, nil)
@@ -195,7 +195,7 @@ func Test_Func(t *testing.T) {
 	})
 }
 
-func Test_FuncNl2Br(t *testing.T) {
+func TestFuncNl2Br(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		str := `{{"Go\nFrame" | nl2br}}`
 		result, err := gview.ParseContent(context.TODO(), str, nil)
@@ -216,7 +216,7 @@ func Test_FuncNl2Br(t *testing.T) {
 	})
 }
 
-func Test_FuncInclude(t *testing.T) {
+func TestFuncInclude(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			header = `<h1>HEADER</h1>`
@@ -258,7 +258,7 @@ template file "footer_not_exist.html" not found
 	})
 }
 
-func Test_SetPath(t *testing.T) {
+func TestSetPath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		view := gview.Instance("addpath")
 		err := view.AddPath("tmp")
@@ -288,7 +288,7 @@ func Test_SetPath(t *testing.T) {
 	})
 }
 
-func Test_ParseContent(t *testing.T) {
+func TestParseContent(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		str := `{{.name}}`
 		view := gview.New()
@@ -298,7 +298,7 @@ func Test_ParseContent(t *testing.T) {
 	})
 }
 
-func Test_HotReload(t *testing.T) {
+func TestHotReload(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		dirPath := gfile.Join(
 			gfile.Temp(),
@@ -334,7 +334,7 @@ func Test_HotReload(t *testing.T) {
 	})
 }
 
-func Test_XSS(t *testing.T) {
+func TestXSS(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		s := "<br>"
@@ -376,7 +376,7 @@ func (t *TypeForBuildInFuncMap) Test() (*TypeForBuildInFuncMap, error) {
 	return &TypeForBuildInFuncMap{"john", 99.9}, nil
 }
 
-func Test_BuildInFuncMap(t *testing.T) {
+func TestBuildInFuncMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		v.Assign("v", new(TypeForBuildInFuncMap))
@@ -407,7 +407,7 @@ func (t *TypeForBuildInFuncMaps) Test() ([]*TypeForBuildInFuncMaps, error) {
 	}, nil
 }
 
-func Test_BuildInFuncMaps(t *testing.T) {
+func TestBuildInFuncMaps(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		v.Assign("v", new(TypeForBuildInFuncMaps))
@@ -425,7 +425,7 @@ func Test_BuildInFuncMaps(t *testing.T) {
 	})
 }
 
-func Test_BuildInFuncDump(t *testing.T) {
+func TestBuildInFuncDump(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		v.Assign("v", g.Map{
@@ -456,7 +456,7 @@ func Test_BuildInFuncDump(t *testing.T) {
 	})
 }
 
-func Test_BuildInFuncJson(t *testing.T) {
+func TestBuildInFuncJson(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		v.Assign("v", g.Map{
@@ -468,7 +468,7 @@ func Test_BuildInFuncJson(t *testing.T) {
 	})
 }
 
-func Test_BuildInFuncXml(t *testing.T) {
+func TestBuildInFuncXml(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		v.Assign("v", g.Map{
@@ -480,7 +480,7 @@ func Test_BuildInFuncXml(t *testing.T) {
 	})
 }
 
-func Test_BuildInFuncIni(t *testing.T) {
+func TestBuildInFuncIni(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		v.Assign("v", g.Map{
@@ -493,7 +493,7 @@ func Test_BuildInFuncIni(t *testing.T) {
 	})
 }
 
-func Test_BuildInFuncYaml(t *testing.T) {
+func TestBuildInFuncYaml(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		v.Assign("v", g.Map{
@@ -506,7 +506,7 @@ func Test_BuildInFuncYaml(t *testing.T) {
 	})
 }
 
-func Test_BuildInFuncYamlIndent(t *testing.T) {
+func TestBuildInFuncYamlIndent(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		v.Assign("v", g.Map{
@@ -519,7 +519,7 @@ func Test_BuildInFuncYamlIndent(t *testing.T) {
 	})
 }
 
-func Test_BuildInFuncToml(t *testing.T) {
+func TestBuildInFuncToml(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		v.Assign("v", g.Map{
@@ -532,7 +532,7 @@ func Test_BuildInFuncToml(t *testing.T) {
 	})
 }
 
-func Test_BuildInFuncPlus(t *testing.T) {
+func TestBuildInFuncPlus(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		r, err := v.ParseContent(gctx.New(), "{{plus 1 2 3}}")
@@ -547,7 +547,7 @@ func Test_BuildInFuncPlus(t *testing.T) {
 	})
 }
 
-func Test_BuildInFuncMinus(t *testing.T) {
+func TestBuildInFuncMinus(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		r, err := v.ParseContent(gctx.New(), "{{minus 1 2 3}}")
@@ -562,7 +562,7 @@ func Test_BuildInFuncMinus(t *testing.T) {
 	})
 }
 
-func Test_BuildInFuncTimes(t *testing.T) {
+func TestBuildInFuncTimes(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		r, err := v.ParseContent(gctx.New(), "{{times 1 2 3 4}}")
@@ -577,7 +577,7 @@ func Test_BuildInFuncTimes(t *testing.T) {
 	})
 }
 
-func Test_BuildInFuncDivide(t *testing.T) {
+func TestBuildInFuncDivide(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		r, err := v.ParseContent(gctx.New(), "{{divide 8 2 2}}")
@@ -598,7 +598,7 @@ func Test_BuildInFuncDivide(t *testing.T) {
 	})
 }
 
-func Test_Issue1416(t *testing.T) {
+func TestIssue1416(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		err := v.SetPath(gtest.DataPath("issue1416"))
@@ -623,7 +623,7 @@ func init() {
 	}
 }
 
-func Test_GviewInGres(t *testing.T) {
+func TestGviewInGres(t *testing.T) {
 	gres.Dump()
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()

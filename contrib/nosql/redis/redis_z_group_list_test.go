@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func Test_GroupList_LPush(t *testing.T) {
+func TestGroupListLPush(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -49,7 +49,7 @@ func Test_GroupList_LPush(t *testing.T) {
 	})
 }
 
-func Test_GroupList_LPushX(t *testing.T) {
+func TestGroupListLPushX(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -71,7 +71,7 @@ func Test_GroupList_LPushX(t *testing.T) {
 	})
 }
 
-func Test_GroupList_RPush(t *testing.T) {
+func TestGroupListRPush(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -105,7 +105,7 @@ func Test_GroupList_RPush(t *testing.T) {
 	})
 }
 
-func Test_GroupList_RPushX(t *testing.T) {
+func TestGroupListRPushX(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -153,7 +153,7 @@ func GetRedisVersion() string {
 	return ""
 }
 
-func Test_GroupList_LPop(t *testing.T) {
+func TestGroupListLPop(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -198,7 +198,7 @@ func Test_GroupList_LPop(t *testing.T) {
 	}
 }
 
-func Test_GroupList_RPop(t *testing.T) {
+func TestGroupListRPop(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -243,7 +243,7 @@ func Test_GroupList_RPop(t *testing.T) {
 	}
 }
 
-func Test_GroupList_LRem(t *testing.T) {
+func TestGroupListLRem(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -302,7 +302,7 @@ func Test_GroupList_LRem(t *testing.T) {
 	})
 }
 
-func Test_GroupList_LLen(t *testing.T) {
+func TestGroupListLLen(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -320,7 +320,7 @@ func Test_GroupList_LLen(t *testing.T) {
 	})
 }
 
-func Test_GroupList_LIndex(t *testing.T) {
+func TestGroupListLIndex(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -370,7 +370,7 @@ func Test_GroupList_LIndex(t *testing.T) {
 	})
 }
 
-func Test_GroupList_LInsert(t *testing.T) {
+func TestGroupListLInsert(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -412,7 +412,7 @@ func Test_GroupList_LInsert(t *testing.T) {
 	})
 }
 
-func Test_GroupList_LSet(t *testing.T) {
+func TestGroupListLSet(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -454,7 +454,7 @@ func Test_GroupList_LSet(t *testing.T) {
 	})
 }
 
-func Test_GroupList_LRange(t *testing.T) {
+func TestGroupListLRange(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -536,7 +536,7 @@ func Test_GroupList_LRange(t *testing.T) {
 	})
 }
 
-func Test_GroupList_LTrim(t *testing.T) {
+func TestGroupListLTrim(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -598,7 +598,7 @@ func Test_GroupList_LTrim(t *testing.T) {
 	})
 }
 
-func Test_GroupList_BLPop(t *testing.T) {
+func TestGroupListBLPop(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -618,7 +618,7 @@ func Test_GroupList_BLPop(t *testing.T) {
 	})
 }
 
-func Test_GroupList_BRPop(t *testing.T) {
+func TestGroupListBRPop(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -638,7 +638,7 @@ func Test_GroupList_BRPop(t *testing.T) {
 	})
 }
 
-func Test_GroupList_RPopLPush(t *testing.T) {
+func TestGroupListRPopLPush(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -666,7 +666,7 @@ func Test_GroupList_RPopLPush(t *testing.T) {
 	})
 }
 
-func Test_GroupList_BRPopLPush(t *testing.T) {
+func TestGroupListBRPopLPush(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (

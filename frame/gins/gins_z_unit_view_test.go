@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_View(t *testing.T) {
+func TestView(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertNE(View(), nil)
 		b, e := View().ParseContent(context.TODO(), `{{"我是中国人" | substr 2 -1}}`, nil)
@@ -50,7 +50,7 @@ func Test_View(t *testing.T) {
 	})
 }
 
-func Test_View_Config(t *testing.T) {
+func TestViewConfig(t *testing.T) {
 	var ctx = context.TODO()
 	// view1 test1
 	gtest.C(t, func(t *gtest.T) {

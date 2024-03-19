@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func Test_Build_Single(t *testing.T) {
+func TestBuildSingle(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			buildPath  = gtest.DataPath(`build`, `single`)
@@ -39,7 +39,7 @@ func Test_Build_Single(t *testing.T) {
 	})
 }
 
-func Test_Build_Single_Output(t *testing.T) {
+func TestBuildSingleOutput(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			buildPath     = gtest.DataPath(`build`, `single`)
@@ -63,7 +63,7 @@ func Test_Build_Single_Output(t *testing.T) {
 	})
 }
 
-func Test_Build_Single_Path(t *testing.T) {
+func TestBuildSinglePath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			buildPath     = gtest.DataPath(`build`, `single`)
@@ -88,7 +88,7 @@ func Test_Build_Single_Path(t *testing.T) {
 	})
 }
 
-func Test_Build_Single_VarMap(t *testing.T) {
+func TestBuildSingleVarMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			buildPath  = gtest.DataPath(`build`, `varmap`)
@@ -119,7 +119,7 @@ func Test_Build_Single_VarMap(t *testing.T) {
 	})
 }
 
-func Test_Build_Multiple(t *testing.T) {
+func TestBuildMultiple(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			buildPath         = gtest.DataPath(`build`, `multiple`)

@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_SetConfigWithMap(t *testing.T) {
+func TestSetConfigWithMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := New()
 		m := map[string]interface{}{
@@ -31,7 +31,7 @@ func Test_SetConfigWithMap(t *testing.T) {
 	})
 }
 
-func Test_SetConfigWithMap_LevelStr(t *testing.T) {
+func TestSetConfigWithMapLevelStr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		buffer := bytes.NewBuffer(nil)
 		l := New()
