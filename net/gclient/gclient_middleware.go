@@ -1,9 +1,8 @@
 package gclient
 
 import (
-	"net/http"
-
 	"github.com/gogf/gf/v2/os/gctx"
+	"net/http"
 )
 
 // HandlerFunc middleware handler func

@@ -46,7 +46,6 @@ type (
 		serviceMu        sync.Mutex                // Concurrent safety for operations of attribute service.
 		service          gsvc.Service              // The service for Registry.
 		registrar        gsvc.Registrar            // Registrar for service register.
-		metricManager    *metricManager            // Metric manager.
 	}
 
 	// Router object.

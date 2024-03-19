@@ -9,6 +9,7 @@ package gclient
 import (
 	"bytes"
 	"context"
+	"github.com/gogf/gf/v2/os/gtime"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -121,11 +122,18 @@ func (c *Client) PostForm(ctx context.Context, url string, data map[string]strin
 // else it uses "application/x-www-form-urlencoded". It also automatically detects the post
 // content for JSON format, and for that it automatically sets the Content-Type as
 // "application/json".
-func (c *Client) DoRequest(ctx context.Context, method, url string, data ...interface{}) (resp *Response, err error) {
+func (c *Client) DoRequest(
+	ctx context.Context, method, url string, data ...interface{},
+) (resp *Response, err error) {
+	var requestStartTime = gtime.Now()
 	req, err := c.prepareRequest(ctx, method, url, data...)
 	if err != nil {
 		return nil, err
 	}
+
+	// Metrics.
+	c.handleMetricsBeforeRequest(req)
+	defer c.handleMetricsAfterRequestDone(req, requestStartTime)
 
 	// Client middleware.
 	if len(c.middlewareHandler) > 0 {
@@ -144,6 +152,7 @@ func (c *Client) DoRequest(ctx context.Context, method, url string, data ...inte
 	} else {
 		resp, err = c.callRequest(req)
 	}
+	req.Response = resp.Response
 	return resp, err
 }
 
