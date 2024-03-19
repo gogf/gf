@@ -206,6 +206,8 @@ func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer i
 		if _, ok := data[name]; !ok {
 			v := gconv.Convert(field.TagValue, field.Type().String())
 			field.Value.Set(reflect.ValueOf(v))
+			// When it does not exist, it is stored in data and is compatible with required rules.
+			data[name] = v
 		}
 
 	}

@@ -49,7 +49,7 @@ func checkValidRequestParams(ptr any) (reflect.Value, reflect.Kind, error) {
 		// used for standard routing
 		srcTyp := srcVal.Type()
 		// XXXReq(ctx,&LoginReq{})
-		elem, err := setStruct(srcTyp, srcVal, 1)
+		elem, err := checkValidStruct(srcTyp, srcVal, 1)
 		return elem, reflect.Struct, err
 	} else {
 		//Routes registered by other rules
@@ -82,12 +82,12 @@ func checkValidRequestParams(ptr any) (reflect.Value, reflect.Kind, error) {
 		// The type is correct when we get here, and it is not a null pointer.
 		switch elemTyp.Kind() {
 		case reflect.Slice, reflect.Array:
-			elem, err := setStructSlice(elemTyp, srcValof, derefCount)
+			elem, err := checkValidStructSlice(elemTyp, srcValof, derefCount)
 			fmt.Println("elemTyp==", elemTyp)
 			return elem, elemTyp.Kind(), err
 
 		case reflect.Struct:
-			elem, err := setStruct(elemTyp, srcValof, derefCount)
+			elem, err := checkValidStruct(elemTyp, srcValof, derefCount)
 			return elem, reflect.Struct, err
 
 		default:
@@ -103,7 +103,7 @@ func checkValidRequestParams(ptr any) (reflect.Value, reflect.Kind, error) {
 
 }
 
-func setStructSlice(elemTyp reflect.Type, srcValof reflect.Value, derefCount int) (reflect.Value, error) {
+func checkValidStructSlice(elemTyp reflect.Type, srcValof reflect.Value, derefCount int) (reflect.Value, error) {
 	// []slice =>  *struct / struct
 	// After slice dereference it may be *struct/struct
 	elemTyp = elemTyp.Elem()
@@ -125,7 +125,7 @@ func setStructSlice(elemTyp reflect.Type, srcValof reflect.Value, derefCount int
 
 // derefCount is equal to several levels of pointers.
 // The first-level pointer is 1 and the second-level pointer is 2. Dereference is required.
-func setStruct(elemTyp reflect.Type, srcValof reflect.Value, derefCount int) (reflect.Value, error) {
+func checkValidStruct(elemTyp reflect.Type, srcValof reflect.Value, derefCount int) (reflect.Value, error) {
 	// The type is correct when we get here
 	var elemPtr reflect.Value
 	if derefCount == 1 {
