@@ -194,15 +194,20 @@ func (r *Request) doGetRequestStruct(pointer interface{}, mapping ...map[string]
 
 // mergeDefaultStructValue merges the request parameters with default values from struct tag definition.
 func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer interface{}) error {
-	// 直接使用上层传来的reflect.Value
-	// 反射赋值
+	// Directly use reflect.Value passed from the upper layer to reflect the assignment
 	fields, err := gstructs.TagFields(pointer, defaultValueTags)
 	if err != nil {
 		return err
 	}
 	for _, field := range fields {
-		v := gconv.Convert(field.TagValue, field.Type().String())
-		field.Value.Set(reflect.ValueOf(v))
+
+		name := field.TagPriorityName()
+		// If no value is set
+		if _, ok := data[name]; !ok {
+			v := gconv.Convert(field.TagValue, field.Type().String())
+			field.Value.Set(reflect.ValueOf(v))
+		}
+
 	}
 
 	return nil
@@ -230,6 +235,7 @@ func (r *Request) mergeInTagStructValue(data map[string]interface{}, pointer int
 
 		for _, cookie := range r.Cookies() {
 			cookieMap[cookie.Name] = cookie.Value
+
 		}
 
 		for _, field := range fields {
@@ -238,14 +244,20 @@ func (r *Request) mergeInTagStructValue(data map[string]interface{}, pointer int
 				case goai.ParameterInHeader:
 					foundHeaderKey, foundHeaderValue := gutil.MapPossibleItemByKey(headerMap, field.TagPriorityName())
 					if foundHeaderKey != "" {
-						header := reflect.ValueOf(foundHeaderValue)
+						val := gconv.Convert(foundHeaderValue, field.Type().String())
+						header := reflect.ValueOf(val)
 						field.Value.Set(header)
+						// The value needs to be registered in data and possibly verified.
+						data[foundHeaderKey] = foundHeaderValue
 					}
 				case goai.ParameterInCookie:
 					foundCookieKey, foundCookieValue := gutil.MapPossibleItemByKey(cookieMap, field.TagPriorityName())
 					if foundCookieKey != "" {
-						cookie := reflect.ValueOf(foundCookieValue)
+						val := gconv.Convert(foundCookieValue, field.Type().String())
+						cookie := reflect.ValueOf(val)
 						field.Value.Set(cookie)
+						// The value needs to be registered in data and possibly verified.
+						data[foundCookieKey] = foundCookieValue
 					}
 				}
 			}

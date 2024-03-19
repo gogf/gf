@@ -68,7 +68,7 @@ func (r *Request) ParseForm(pointer interface{}) error {
 // doParse parses the request data to struct/structs according to request type.
 func (r *Request) doParse(pointer interface{}, requestType int) error {
 
-	srcVal, kind, err := checkValidStructPtr(pointer)
+	elemPtr, kind, err := checkValidRequestParams(pointer)
 	if err != nil {
 		return err
 	}
@@ -85,28 +85,23 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 		// Converting.
 		switch requestType {
 		case parseTypeQuery:
-			if data, err = r.doGetQueryStruct(srcVal); err != nil {
+			if data, err = r.doGetQueryStruct(elemPtr); err != nil {
 				return err
 			}
 		case parseTypeForm:
-			if data, err = r.doGetFormStruct(srcVal); err != nil {
+			if data, err = r.doGetFormStruct(elemPtr); err != nil {
 				return err
 			}
 		default:
-			if data, err = r.doGetRequestStruct(srcVal); err != nil {
+			if data, err = r.doGetRequestStruct(elemPtr); err != nil {
 				return err
 			}
 		}
 		// TODO: https://github.com/gogf/gf/pull/2450
 		// Validation.
-		if r.serveHandler.Handler.Info.IsStrictRoute {
-			if len(data) == 0 {
-				return nil
-			}
-		}
 		if err = gvalid.New().
 			Bail().
-			Data(srcVal).
+			Data(elemPtr).
 			Assoc(data).
 			Run(r.Context()); err != nil {
 			return err
@@ -115,20 +110,9 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 	// Multiple struct, it only supports JSON type post content like:
 	// [{"id":1, "name":"john"}, {"id":, "name":"smith"}]
 	case reflect.Array, reflect.Slice:
+
 		var (
-			reflectVal1  = reflect.ValueOf(pointer)
-			reflectKind1 = reflectVal1.Kind()
-		)
-		if reflectKind1 != reflect.Ptr {
-			return gerror.NewCodef(
-				gcode.CodeInvalidParameter,
-				`invalid parameter type "%v", of which kind should be of *struct/**struct/*[]struct/*[]*struct, but got: "%v"`,
-				reflectVal1.Type(),
-				reflectKind1,
-			)
-		}
-		var (
-			reflectVal2 = reflectVal1.Elem()
+			sliceElem = elemPtr
 		)
 		// If struct slice conversion, it might post JSON/XML/... content,
 		// so it uses `gjson` for the conversion.
@@ -139,10 +123,10 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 		if err = j.Var().Scan(pointer); err != nil {
 			return err
 		}
-		for i := 0; i < reflectVal2.Len(); i++ {
+		for i := 0; i < sliceElem.Len(); i++ {
 			if err = gvalid.New().
 				Bail().
-				Data(reflectVal2.Index(i)).
+				Data(sliceElem.Index(i)).
 				Assoc(j.Get(gconv.String(i)).Map()).
 				Run(r.Context()); err != nil {
 				return err
