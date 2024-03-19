@@ -7,11 +7,12 @@
 package gclient
 
 import (
+	"net/http"
+
 	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/os/gmetric"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gstr"
-	"net/http"
 )
 
 type localMetricManager struct {

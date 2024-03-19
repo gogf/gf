@@ -9,7 +9,6 @@ package gclient
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/os/gmetric"
 	"io"
 	"net/http"
 	"net/http/httptrace"
@@ -25,6 +24,7 @@ import (
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/os/gmetric"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
