@@ -44,7 +44,7 @@ func (d *Driver) doSave(ctx context.Context,
 ) (result sql.Result, err error) {
 	if len(option.OnConflict) == 0 {
 		return nil, gerror.NewCode(
-			gcode.CodeInvalidRequest, `Please specify conflict columns`,
+			gcode.CodeMissingParameter, `Please specify conflict columns`,
 		)
 	}
 
