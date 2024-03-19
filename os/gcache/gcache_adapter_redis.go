@@ -272,8 +272,12 @@ func (c *AdapterRedis) Data(ctx context.Context) (map[interface{}]interface{}, e
 }
 
 // Keys returns all keys in the cache as slice.
-func (c *AdapterRedis) Keys(ctx context.Context) ([]interface{}, error) {
-	keys, err := c.redis.Keys(ctx, "*")
+func (c *AdapterRedis) Keys(ctx context.Context, regexp ...string) ([]interface{}, error) {
+	pattern := "*"
+	if len(regexp) > 0 {
+		pattern = regexp[0]
+	}
+	keys, err := c.redis.Keys(ctx, pattern)
 	if err != nil {
 		return nil, err
 	}

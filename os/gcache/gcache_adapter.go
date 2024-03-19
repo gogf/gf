@@ -104,7 +104,7 @@ type Adapter interface {
 	Data(ctx context.Context) (data map[interface{}]interface{}, err error)
 
 	// Keys returns all keys in the cache as slice.
-	Keys(ctx context.Context) (keys []interface{}, err error)
+	Keys(ctx context.Context, regexp ...string) (keys []interface{}, err error)
 
 	// Values returns all values in the cache as slice.
 	Values(ctx context.Context) (values []interface{}, err error)

@@ -56,8 +56,8 @@ func (c *Cache) Removes(ctx context.Context, keys []interface{}) error {
 }
 
 // KeyStrings returns all keys in the cache as string slice.
-func (c *Cache) KeyStrings(ctx context.Context) ([]string, error) {
-	keys, err := c.Keys(ctx)
+func (c *Cache) KeyStrings(ctx context.Context, pattern ...string) ([]string, error) {
+	keys, err := c.Keys(ctx, pattern...)
 	if err != nil {
 		return nil, err
 	}

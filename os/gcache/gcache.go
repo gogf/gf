@@ -174,13 +174,13 @@ func Data(ctx context.Context) (map[interface{}]interface{}, error) {
 }
 
 // Keys returns all keys in the cache as slice.
-func Keys(ctx context.Context) ([]interface{}, error) {
-	return defaultCache.Keys(ctx)
+func Keys(ctx context.Context, regexp ...string) ([]interface{}, error) {
+	return defaultCache.Keys(ctx, regexp...)
 }
 
 // KeyStrings returns all keys in the cache as string slice.
-func KeyStrings(ctx context.Context) ([]string, error) {
-	return defaultCache.KeyStrings(ctx)
+func KeyStrings(ctx context.Context, pattern ...string) ([]string, error) {
+	return defaultCache.KeyStrings(ctx, pattern...)
 }
 
 // Values returns all values in the cache as slice.
