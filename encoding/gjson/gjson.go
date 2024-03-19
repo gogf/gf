@@ -69,6 +69,10 @@ type iVal interface {
 	Val() interface{}
 }
 
+type JsonScanner struct {
+	*Json
+}
+
 // setValue sets `value` to `j` by `pattern`.
 // Note:
 // 1. If value is nil and removed is true, means deleting this value;
@@ -468,5 +472,10 @@ func (j *Json) checkPatternByPointer(key string, pointer *interface{}) *interfac
 			}
 		}
 	}
+	return nil
+}
+
+func (j *JsonScanner) Scan(src any) error {
+	j.Json = New(src)
 	return nil
 }
