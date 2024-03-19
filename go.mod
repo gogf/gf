@@ -1,4 +1,4 @@
-module github.com/gogf/gf/v2
+module github.com/wangyougui/gf/v2
 
 go 1.18
 
