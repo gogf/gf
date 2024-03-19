@@ -152,7 +152,9 @@ func (c *Client) DoRequest(
 	} else {
 		resp, err = c.callRequest(req)
 	}
-	req.Response = resp.Response
+	if resp != nil && resp.Response != nil {
+		req.Response = resp.Response
+	}
 	return resp, err
 }
 
