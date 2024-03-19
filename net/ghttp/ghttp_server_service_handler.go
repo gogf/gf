@@ -274,10 +274,10 @@ func createRouterFunc(funcInfo handlerFuncInfo) func(r *Request) {
 			var inputObject reflect.Value
 			if funcInfo.Type.In(1).Kind() == reflect.Ptr {
 				inputObject = reflect.New(funcInfo.Type.In(1).Elem())
-				r.error = r.Parse(inputObject.Interface())
+				r.error = r.Parse(inputObject)
 			} else {
 				inputObject = reflect.New(funcInfo.Type.In(1).Elem()).Elem()
-				r.error = r.Parse(inputObject.Addr().Interface())
+				r.error = r.Parse(inputObject.Addr())
 			}
 			if r.error != nil {
 				return
