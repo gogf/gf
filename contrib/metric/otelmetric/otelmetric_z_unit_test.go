@@ -8,7 +8,6 @@ package otelmetric_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"go.opentelemetry.io/otel/sdk/metric"
@@ -19,7 +18,6 @@ import (
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gmetric"
 	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
@@ -32,10 +30,21 @@ func Test_Basic(t *testing.T) {
 				Help: "This is a simple demo for Counter usage",
 				Unit: "%",
 				Attributes: gmetric.Attributes{
-					gmetric.NewAttribute("const_label_a", 1),
+					gmetric.NewAttribute("const_label_1", 1),
 				},
 				Instrument:        "github.com/gogf/gf/example/metric/basic",
 				InstrumentVersion: "v1.1",
+			})
+
+			upDownCounter = gmetric.MustNewUpDownCounter(gmetric.MetricConfig{
+				Name: "goframe.metric.demo.updown_counter",
+				Help: "This is a simple demo for UpDownCounter usage",
+				Unit: "%",
+				Attributes: gmetric.Attributes{
+					gmetric.NewAttribute("const_label_2", 2),
+				},
+				Instrument:        "github.com/gogf/gf/example/metric/basic",
+				InstrumentVersion: "v1.2",
 			})
 
 			histogram = gmetric.MustNewHistogram(gmetric.MetricConfig{
@@ -43,10 +52,10 @@ func Test_Basic(t *testing.T) {
 				Help: "This is a simple demo for histogram usage",
 				Unit: "ms",
 				Attributes: gmetric.Attributes{
-					gmetric.NewAttribute("const_label_b", 3),
+					gmetric.NewAttribute("const_label_3", 3),
 				},
 				Instrument:        "github.com/gogf/gf/example/metric/basic",
-				InstrumentVersion: "v1.2",
+				InstrumentVersion: "v1.3",
 				Buckets:           []float64{0, 10, 20, 50, 100, 500, 1000, 2000, 5000, 10000},
 			})
 
@@ -55,10 +64,21 @@ func Test_Basic(t *testing.T) {
 				Help: "This is a simple demo for ObservableCounter usage",
 				Unit: "%",
 				Attributes: gmetric.Attributes{
-					gmetric.NewAttribute("const_label_c", 1),
+					gmetric.NewAttribute("const_label_4", 4),
 				},
 				Instrument:        "github.com/gogf/gf/example/metric/basic",
-				InstrumentVersion: "v1.3",
+				InstrumentVersion: "v1.4",
+			})
+
+			observableUpDownCounter = gmetric.MustNewObservableUpDownCounter(gmetric.MetricConfig{
+				Name: "goframe.metric.demo.observable_updown_counter",
+				Help: "This is a simple demo for ObservableUpDownCounter usage",
+				Unit: "%",
+				Attributes: gmetric.Attributes{
+					gmetric.NewAttribute("const_label_5", 5),
+				},
+				Instrument:        "github.com/gogf/gf/example/metric/basic",
+				InstrumentVersion: "v1.4",
 			})
 
 			observableGauge = gmetric.MustNewObservableGauge(gmetric.MetricConfig{
@@ -66,18 +86,25 @@ func Test_Basic(t *testing.T) {
 				Help: "This is a simple demo for ObservableGauge usage",
 				Unit: "%",
 				Attributes: gmetric.Attributes{
-					gmetric.NewAttribute("const_label_d", 1),
+					gmetric.NewAttribute("const_label_6", 6),
 				},
 				Instrument:        "github.com/gogf/gf/example/metric/basic",
-				InstrumentVersion: "v1.3",
+				InstrumentVersion: "v1.4",
 			})
 		)
 
 		gmetric.MustRegisterCallback(func(ctx context.Context, obs gmetric.Observer) error {
-			obs.Observe(observableCounter, 10)
-			obs.Observe(observableGauge, 10)
+			obs.Observe(observableCounter, 10, gmetric.Option{
+				Attributes: gmetric.Attributes{gmetric.NewAttribute("dynamic_label_4", "4")},
+			})
+			obs.Observe(observableUpDownCounter, 20, gmetric.Option{
+				Attributes: gmetric.Attributes{gmetric.NewAttribute("dynamic_label_5", "5")},
+			})
+			obs.Observe(observableGauge, 30, gmetric.Option{
+				Attributes: gmetric.Attributes{gmetric.NewAttribute("dynamic_label_6", "6")},
+			})
 			return nil
-		}, observableCounter, observableGauge)
+		}, observableCounter, observableUpDownCounter, observableGauge)
 
 		reader := metric.NewManualReader()
 
@@ -85,11 +112,15 @@ func Test_Basic(t *testing.T) {
 		provider := otelmetric.MustProvider(metric.WithReader(reader))
 		defer provider.Shutdown(ctx)
 
-		// Add value for counter.
+		// Counter.
 		counter.Inc(ctx)
-		counter.Add(ctx, 10)
-		counter.Dec(ctx, gmetric.Option{
-			Attributes: gmetric.Attributes{gmetric.NewAttribute("dynamic_label_a", "1")},
+		counter.Add(ctx, 10, gmetric.Option{
+			Attributes: gmetric.Attributes{gmetric.NewAttribute("dynamic_label_1", "1")},
+		})
+
+		upDownCounter.Add(ctx, 10)
+		upDownCounter.Dec(ctx, gmetric.Option{
+			Attributes: gmetric.Attributes{gmetric.NewAttribute("dynamic_label_2", "2")},
 		})
 
 		// Record values for histogram.
@@ -102,7 +133,7 @@ func Test_Basic(t *testing.T) {
 		histogram.Record(20000)
 
 		histogramOption := gmetric.Option{
-			Attributes: gmetric.Attributes{gmetric.NewAttribute("dynamic_label_d", "4")},
+			Attributes: gmetric.Attributes{gmetric.NewAttribute("dynamic_label_3", "3")},
 		}
 		histogram.Record(100, histogramOption)
 		histogram.Record(200, histogramOption)
@@ -111,30 +142,29 @@ func Test_Basic(t *testing.T) {
 		err := reader.Collect(ctx, &rm)
 		t.AssertNil(err)
 
-		//var (
-		//	sm1 = instrumentation.Scope{
-		//		Name:      "github.com/gogf/gf/example/metric/basic",
-		//		Version:   "v1.1",
-		//		SchemaURL: "",
-		//	}
-		//	sm2 = instrumentation.Scope{
-		//		Name:      "github.com/gogf/gf/example/metric/basic",
-		//		Version:   "v1.1",
-		//		SchemaURL: "",
-		//	}
-		//	sm3 = instrumentation.Scope{
-		//		Name:      "github.com/gogf/gf/example/metric/basic",
-		//		Version:   "v1.1",
-		//		SchemaURL: "",
-		//	}
-		//)
-		//t.Assert(len(rm.ScopeMetrics), 4)
-		//for _, sm := range rm.ScopeMetrics {
-		//	switch sm.Scope {
-		//
-		//	}
-		//}
-		//t.Assert(rm.ScopeMetrics[0].Scope.Version, "v1.2")
+		metricsJsonContent := gjson.MustEncodeString(rm)
+		t.Assert(len(rm.ScopeMetrics), 5)
+		t.Assert(gstr.Count(metricsJsonContent, `goframe.metric.demo.counter`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `goframe.metric.demo.updown_counter`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `goframe.metric.demo.histogram`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `goframe.metric.demo.observable_counter`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `goframe.metric.demo.observable_updown_counter"`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `goframe.metric.demo.observable_gauge`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `{"Key":"const_label_2","Value":{"Type":"INT64","Value":2}}`), 2)
+		t.Assert(gstr.Count(metricsJsonContent, `{"Key":"dynamic_label_2","Value":{"Type":"STRING","Value":"2"}}`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `{"Key":"const_label_3","Value":{"Type":"INT64","Value":3}}`), 2)
+		t.Assert(gstr.Count(metricsJsonContent, `"Count":7,"Bounds":[0,10,20,50,100,500,1000,2000,5000,10000],"BucketCounts":[0,1,1,1,0,1,0,1,0,1,1],"Min":1,"Max":20000,"Sum":31152`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `{"Key":"const_label_3","Value":{"Type":"INT64","Value":3}}`), 2)
+		t.Assert(gstr.Count(metricsJsonContent, `{"Key":"dynamic_label_3","Value":{"Type":"STRING","Value":"3"}}`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `"Count":2,"Bounds":[0,10,20,50,100,500,1000,2000,5000,10000],"BucketCounts":[0,0,0,0,1,1,0,0,0,0,0],"Min":100,"Max":200,"Sum":300`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `{"Key":"const_label_4","Value":{"Type":"INT64","Value":4}}`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `{"Key":"dynamic_label_4","Value":{"Type":"STRING","Value":"4"}}`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `{"Key":"const_label_5","Value":{"Type":"INT64","Value":5}}`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `{"Key":"dynamic_label_5","Value":{"Type":"STRING","Value":"5"}}`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `{"Key":"const_label_6","Value":{"Type":"INT64","Value":6}}`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `{"Key":"dynamic_label_6","Value":{"Type":"STRING","Value":"6"}}`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `{"Key":"const_label_1","Value":{"Type":"INT64","Value":1}}`), 2)
+		t.Assert(gstr.Count(metricsJsonContent, `{"Key":"dynamic_label_1","Value":{"Type":"STRING","Value":"1"}}`), 1)
 	})
 }
 
@@ -161,7 +191,7 @@ func Test_GlobalAttributes(t *testing.T) {
 				Help: "This is a simple demo for Counter usage",
 				Unit: "%",
 				Attributes: gmetric.Attributes{
-					gmetric.NewAttribute("const_label_a", 1),
+					gmetric.NewAttribute("const_label_1", 1),
 				},
 				Instrument:        "github.com/gogf/gf/example/metric/basic",
 				InstrumentVersion: "v1.1",
@@ -172,7 +202,7 @@ func Test_GlobalAttributes(t *testing.T) {
 				Help: "This is a simple demo for histogram usage",
 				Unit: "ms",
 				Attributes: gmetric.Attributes{
-					gmetric.NewAttribute("const_label_b", 3),
+					gmetric.NewAttribute("const_label_2", 2),
 				},
 				Instrument:        "github.com/gogf/gf/example/metric/basic",
 				InstrumentVersion: "v1.2",
@@ -184,7 +214,7 @@ func Test_GlobalAttributes(t *testing.T) {
 				Help: "This is a simple demo for ObservableCounter usage",
 				Unit: "%",
 				Attributes: gmetric.Attributes{
-					gmetric.NewAttribute("const_label_c", 1),
+					gmetric.NewAttribute("const_label_3", 3),
 				},
 				Instrument:        "github.com/gogf/gf/example/metric/basic",
 				InstrumentVersion: "v1.3",
@@ -195,7 +225,7 @@ func Test_GlobalAttributes(t *testing.T) {
 				Help: "This is a simple demo for ObservableGauge usage",
 				Unit: "%",
 				Attributes: gmetric.Attributes{
-					gmetric.NewAttribute("const_label_d", 1),
+					gmetric.NewAttribute("const_label_4", 4),
 				},
 				Instrument:        "github.com/gogf/gf/example/metric/basic",
 				InstrumentVersion: "v1.3",
@@ -203,8 +233,12 @@ func Test_GlobalAttributes(t *testing.T) {
 		)
 
 		gmetric.MustRegisterCallback(func(ctx context.Context, obs gmetric.Observer) error {
-			obs.Observe(observableCounter, 10)
-			obs.Observe(observableGauge, 10)
+			obs.Observe(observableCounter, 10, gmetric.Option{
+				Attributes: gmetric.Attributes{gmetric.NewAttribute("dynamic_label_3", "3")},
+			})
+			obs.Observe(observableGauge, 10, gmetric.Option{
+				Attributes: gmetric.Attributes{gmetric.NewAttribute("dynamic_label_4", "4")},
+			})
 			return nil
 		}, observableCounter, observableGauge)
 
@@ -216,9 +250,8 @@ func Test_GlobalAttributes(t *testing.T) {
 
 		// Add value for counter.
 		counter.Inc(ctx)
-		counter.Add(ctx, 10)
-		counter.Dec(ctx, gmetric.Option{
-			Attributes: gmetric.Attributes{gmetric.NewAttribute("dynamic_label_a", "1")},
+		counter.Add(ctx, 10, gmetric.Option{
+			Attributes: gmetric.Attributes{gmetric.NewAttribute("dynamic_label_1", "1")},
 		})
 
 		// Record values for histogram.
@@ -231,7 +264,7 @@ func Test_GlobalAttributes(t *testing.T) {
 		histogram.Record(20000)
 
 		histogramOption := gmetric.Option{
-			Attributes: gmetric.Attributes{gmetric.NewAttribute("dynamic_label_d", "4")},
+			Attributes: gmetric.Attributes{gmetric.NewAttribute("dynamic_label_2", "2")},
 		}
 		histogram.Record(100, histogramOption)
 		histogram.Record(200, histogramOption)
@@ -240,16 +273,24 @@ func Test_GlobalAttributes(t *testing.T) {
 		err := reader.Collect(ctx, &rm)
 		t.AssertNil(err)
 
-		content := gjson.MustEncodeString(rm)
-		content, err = gregex.ReplaceString(`Time":".+?"`, `Time":""`, content)
-		t.AssertNil(err)
-		expectContent := `
-{"Name":"goframe.metric.demo.counter","Description":"This is a simple demo for Counter usage","Unit":"%","Data":{"DataPoints":[{"Attributes":[{"Key":"const_label_a","Value":{"Type":"INT64","Value":1}},{"Key":"dynamic_label_b","Value":{"Type":"INT64","Value":2}},{"Key":"g1","Value":{"Type":"INT64","Value":1}}],"StartTime":"","Time":"","Value":1000}],"Temporality":"CumulativeTemporality","IsMonotonic":true}}
-`
-		fmt.Println(content)
-		for _, line := range gstr.SplitAndTrim(expectContent, "\n") {
-			fmt.Println(line)
-			t.Assert(gstr.Contains(content, line), true)
-		}
+		metricsJsonContent := gjson.MustEncodeString(rm)
+		t.Assert(len(rm.ScopeMetrics), 4)
+		t.Assert(gstr.Count(metricsJsonContent, `goframe.metric.demo.counter`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `goframe.metric.demo.histogram`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `goframe.metric.demo.observable_counter`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `goframe.metric.demo.observable_gauge`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `goframe.metric.demo.observable_gauge`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `{"Key":"const_label_1","Value":{"Type":"INT64","Value":1}}`), 2)
+		t.Assert(gstr.Count(metricsJsonContent, `{"Key":"g1","Value":{"Type":"INT64","Value":1}}`), 2)
+		t.Assert(gstr.Count(metricsJsonContent, `{"Key":"dynamic_label_1","Value":{"Type":"STRING","Value":"1"}}`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `{"Key":"const_label_2","Value":{"Type":"INT64","Value":2}}`), 2)
+		t.Assert(gstr.Count(metricsJsonContent, `{"Key":"dynamic_label_2","Value":{"Type":"STRING","Value":"2"}}`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `"Count":2,"Bounds":[0,10,20,50,100,500,1000,2000,5000,10000],"BucketCounts":[0,0,0,0,1,1,0,0,0,0,0],"Min":100,"Max":200,"Sum":300`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `"Count":7,"Bounds":[0,10,20,50,100,500,1000,2000,5000,10000],"BucketCounts":[0,1,1,1,0,1,0,1,0,1,1],"Min":1,"Max":20000,"Sum":31152`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `{"Key":"const_label_3","Value":{"Type":"INT64","Value":3}}`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `{"Key":"dynamic_label_3","Value":{"Type":"STRING","Value":"3"}}`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `{"Key":"g2","Value":{"Type":"INT64","Value":2}}`), 2)
+		t.Assert(gstr.Count(metricsJsonContent, `{"Key":"const_label_4","Value":{"Type":"INT64","Value":4}}`), 1)
+		t.Assert(gstr.Count(metricsJsonContent, `{"Key":"dynamic_label_4","Value":{"Type":"STRING","Value":"4"}}`), 1)
 	})
 }
