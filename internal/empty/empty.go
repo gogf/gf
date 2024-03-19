@@ -92,7 +92,6 @@ func IsEmpty(value interface{}, traceSource ...bool) bool {
 		return len(result) == 0
 
 	default:
-
 		// Finally, using reflect.
 		var rv reflect.Value
 		if v, ok := value.(reflect.Value); ok {
