@@ -39,7 +39,7 @@ func (o *Object) Info(r *ghttp.Request) {
 	r.Response.Write("Object Info")
 }
 
-func Test_Router_Object1(t *testing.T) {
+func TestRouterObject1(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindObject("/", new(Object))
 	s.BindObject("/{.struct}/{.method}", new(Object))
@@ -68,7 +68,7 @@ func Test_Router_Object1(t *testing.T) {
 	})
 }
 
-func Test_Router_Object2(t *testing.T) {
+func TestRouterObject2(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindObject("/object", new(Object), "Show, Info")
 	s.SetDumpRouterMap(false)
@@ -92,7 +92,7 @@ func Test_Router_Object2(t *testing.T) {
 	})
 }
 
-func Test_Router_ObjectMethod(t *testing.T) {
+func TestRouterObjectMethod(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindObjectMethod("/object-info", new(Object), "Info")
 	s.SetDumpRouterMap(false)

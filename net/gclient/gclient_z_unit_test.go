@@ -33,7 +33,7 @@ var (
 	ctx = context.TODO()
 )
 
-func Test_Client_Basic(t *testing.T) {
+func TestClientBasic(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/hello", func(r *ghttp.Request) {
 		r.Response.Write("hello")
@@ -66,7 +66,7 @@ func Test_Client_Basic(t *testing.T) {
 	})
 }
 
-func Test_Client_BasicAuth(t *testing.T) {
+func TestClientBasicAuth(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/auth", func(r *ghttp.Request) {
 		if r.BasicAuth("admin", "admin") {
@@ -88,7 +88,7 @@ func Test_Client_BasicAuth(t *testing.T) {
 	})
 }
 
-func Test_Client_Cookie(t *testing.T) {
+func TestClientCookie(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/cookie", func(r *ghttp.Request) {
 		r.Response.Write(r.Cookie.Get("test"))
@@ -107,7 +107,7 @@ func Test_Client_Cookie(t *testing.T) {
 	})
 }
 
-func Test_Client_MapParam(t *testing.T) {
+func TestClientMapParam(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/map", func(r *ghttp.Request) {
 		r.Response.Write(r.Get("test"))
@@ -125,7 +125,7 @@ func Test_Client_MapParam(t *testing.T) {
 	})
 }
 
-func Test_Client_Cookies(t *testing.T) {
+func TestClientCookies(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/cookie", func(r *ghttp.Request) {
 		r.Cookie.Set("test1", "1")
@@ -156,7 +156,7 @@ func Test_Client_Cookies(t *testing.T) {
 	})
 }
 
-func Test_Client_Chain_Header(t *testing.T) {
+func TestClientChainHeader(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/header1", func(r *ghttp.Request) {
 		r.Response.Write(r.Header.Get("test1"))
@@ -179,7 +179,7 @@ func Test_Client_Chain_Header(t *testing.T) {
 	})
 }
 
-func Test_Client_Chain_Context(t *testing.T) {
+func TestClientChainContext(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/context", func(r *ghttp.Request) {
 		time.Sleep(1 * time.Second)
@@ -202,7 +202,7 @@ func Test_Client_Chain_Context(t *testing.T) {
 	})
 }
 
-func Test_Client_Chain_Timeout(t *testing.T) {
+func TestClientChainTimeout(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/timeout", func(r *ghttp.Request) {
 		time.Sleep(1 * time.Second)
@@ -221,7 +221,7 @@ func Test_Client_Chain_Timeout(t *testing.T) {
 	})
 }
 
-func Test_Client_Chain_ContentJson(t *testing.T) {
+func TestClientChainContentJson(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/json", func(r *ghttp.Request) {
 		r.Response.Write(r.Get("name"), r.Get("score"))
@@ -248,7 +248,7 @@ func Test_Client_Chain_ContentJson(t *testing.T) {
 	})
 }
 
-func Test_Client_Chain_ContentXml(t *testing.T) {
+func TestClientChainContentXml(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/xml", func(r *ghttp.Request) {
 		r.Response.Write(r.Get("name"), r.Get("score"))
@@ -275,7 +275,7 @@ func Test_Client_Chain_ContentXml(t *testing.T) {
 	})
 }
 
-func Test_Client_Param_Containing_Special_Char(t *testing.T) {
+func TestClientParamContainingSpecialChar(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/", func(r *ghttp.Request) {
 		r.Response.Write("k1=", r.Get("k1"), "&k2=", r.Get("k2"))
@@ -298,7 +298,7 @@ func Test_Client_Param_Containing_Special_Char(t *testing.T) {
 
 // It posts data along with file uploading.
 // It does not url-encodes the parameters.
-func Test_Client_File_And_Param(t *testing.T) {
+func TestClientFileAndParam(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/", func(r *ghttp.Request) {
 		tmpPath := gfile.Temp(guid.S())
@@ -332,7 +332,7 @@ func Test_Client_File_And_Param(t *testing.T) {
 	})
 }
 
-func Test_Client_Middleware(t *testing.T) {
+func TestClientMiddleware(t *testing.T) {
 	s := g.Server(guid.S())
 	isServerHandler := false
 	s.BindHandler("/", func(r *ghttp.Request) {
@@ -414,7 +414,7 @@ func Test_Client_Middleware(t *testing.T) {
 	})
 }
 
-func Test_Client_Agent(t *testing.T) {
+func TestClientAgent(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/", func(r *ghttp.Request) {
 		r.Response.Write(r.UserAgent())
@@ -432,7 +432,7 @@ func Test_Client_Agent(t *testing.T) {
 	})
 }
 
-func Test_Client_Request_13_Dump(t *testing.T) {
+func TestClientRequest13Dump(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/hello", func(r *ghttp.Request) {
 		r.Response.WriteHeader(200)
@@ -490,7 +490,7 @@ func Test_Client_Request_13_Dump(t *testing.T) {
 	})
 }
 
-func Test_WebSocketClient(t *testing.T) {
+func TestWebSocketClient(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/ws", func(r *ghttp.Request) {
 		ws, err := r.WebSocket()

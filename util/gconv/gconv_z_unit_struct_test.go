@@ -19,7 +19,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Struct_Basic1(t *testing.T) {
+func TestStructBasic1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Uid      int
@@ -73,7 +73,7 @@ func Test_Struct_Basic1(t *testing.T) {
 	})
 }
 
-func Test_Struct_Basic2(t *testing.T) {
+func TestStructBasic2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Uid     int
@@ -103,7 +103,7 @@ func Test_Struct_Basic2(t *testing.T) {
 	})
 }
 
-func Test_Struct_Attr_Pointer(t *testing.T) {
+func TestStructAttrPointer(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Uid  *int
@@ -122,7 +122,7 @@ func Test_Struct_Attr_Pointer(t *testing.T) {
 	})
 }
 
-func Test_Struct_Attr_Slice1(t *testing.T) {
+func TestStructAttrSlice1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Scores []int
@@ -140,7 +140,7 @@ func Test_Struct_Attr_Slice1(t *testing.T) {
 }
 
 // It does not support this kind of converting yet.
-//func Test_Struct_Attr_Slice2(t *testing.T) {
+//func TestStructAttrSlice2(t *testing.T) {
 //	gtest.C(t, func(t *gtest.T) {
 //		type User struct {
 //			Scores [][]int
@@ -157,7 +157,7 @@ func Test_Struct_Attr_Slice1(t *testing.T) {
 //	})
 //}
 
-func Test_Struct_Attr_Struct(t *testing.T) {
+func TestStructAttrStruct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Score struct {
 			Name   string
@@ -189,7 +189,7 @@ func Test_Struct_Attr_Struct(t *testing.T) {
 	})
 }
 
-func Test_Struct_Attr_Struct_Ptr(t *testing.T) {
+func TestStructAttrStructPtr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Score struct {
 			Name   string
@@ -219,7 +219,7 @@ func Test_Struct_Attr_Struct_Ptr(t *testing.T) {
 	})
 }
 
-func Test_Struct_Attr_Struct_Slice1(t *testing.T) {
+func TestStructAttrStructSlice1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Score struct {
 			Name   string
@@ -250,7 +250,7 @@ func Test_Struct_Attr_Struct_Slice1(t *testing.T) {
 	})
 }
 
-func Test_Struct_Attr_Struct_Slice2(t *testing.T) {
+func TestStructAttrStructSlice2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Score struct {
 			Name   string
@@ -291,7 +291,7 @@ func Test_Struct_Attr_Struct_Slice2(t *testing.T) {
 	})
 }
 
-func Test_Struct_Attr_Struct_Slice_Ptr(t *testing.T) {
+func TestStructAttrStructSlicePtr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Score struct {
 			Name   string
@@ -332,7 +332,7 @@ func Test_Struct_Attr_Struct_Slice_Ptr(t *testing.T) {
 	})
 }
 
-func Test_Struct_Attr_CustomType1(t *testing.T) {
+func TestStructAttrCustomType1(t *testing.T) {
 	type MyInt int
 	type User struct {
 		Id   MyInt
@@ -347,7 +347,7 @@ func Test_Struct_Attr_CustomType1(t *testing.T) {
 	})
 }
 
-func Test_Struct_Attr_CustomType2(t *testing.T) {
+func TestStructAttrCustomType2(t *testing.T) {
 	type MyInt int
 	type User struct {
 		Id   []MyInt
@@ -383,7 +383,7 @@ func (d *MyDuration) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func Test_Struct_Attr_CustomType3(t *testing.T) {
+func TestStructAttrCustomType3(t *testing.T) {
 	type Config struct {
 		D MyDuration
 	}
@@ -401,7 +401,7 @@ func Test_Struct_Attr_CustomType3(t *testing.T) {
 	})
 }
 
-func Test_Struct_PrivateAttribute(t *testing.T) {
+func TestStructPrivateAttribute(t *testing.T) {
 	type User struct {
 		Id   int
 		name string
@@ -415,7 +415,7 @@ func Test_Struct_PrivateAttribute(t *testing.T) {
 	})
 }
 
-func Test_StructEmbedded1(t *testing.T) {
+func TestStructEmbedded1(t *testing.T) {
 	type Base struct {
 		Age int
 	}
@@ -439,7 +439,7 @@ func Test_StructEmbedded1(t *testing.T) {
 	})
 }
 
-func Test_StructEmbedded2(t *testing.T) {
+func TestStructEmbedded2(t *testing.T) {
 	type Ids struct {
 		Id  int
 		Uid int
@@ -467,7 +467,7 @@ func Test_StructEmbedded2(t *testing.T) {
 	})
 }
 
-func Test_StructEmbedded3(t *testing.T) {
+func TestStructEmbedded3(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Ids struct {
 			Id  int `json:"id"`
@@ -502,7 +502,7 @@ func Test_StructEmbedded3(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/775
-func Test_StructEmbedded4(t *testing.T) {
+func TestStructEmbedded4(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Sub2 struct {
 			SubName string
@@ -538,7 +538,7 @@ func Test_StructEmbedded4(t *testing.T) {
 	})
 }
 
-func Test_StructEmbedded5(t *testing.T) {
+func TestStructEmbedded5(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Base struct {
 			Pass1 string `param:"password1"`
@@ -579,7 +579,7 @@ func Test_StructEmbedded5(t *testing.T) {
 	})
 }
 
-func Test_Struct_Time(t *testing.T) {
+func TestStructTime(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			CreateTime time.Time
@@ -641,7 +641,7 @@ func Test_Struct_Time(t *testing.T) {
 	})
 }
 
-func Test_Struct_GTime(t *testing.T) {
+func TestStructGTime(t *testing.T) {
 	// https://github.com/gogf/gf/issues/1387
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
@@ -658,7 +658,7 @@ func Test_Struct_GTime(t *testing.T) {
 }
 
 // Auto create struct when given pointer.
-func Test_Struct_Create(t *testing.T) {
+func TestStructCreate(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Uid  int
@@ -691,7 +691,7 @@ func Test_Struct_Create(t *testing.T) {
 	})
 }
 
-func Test_Struct_Interface(t *testing.T) {
+func TestStructInterface(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Uid  interface{}
@@ -709,7 +709,7 @@ func Test_Struct_Interface(t *testing.T) {
 	})
 }
 
-func Test_Struct_NilAttribute(t *testing.T) {
+func TestStructNilAttribute(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Item struct {
 			Title string `json:"title"`
@@ -739,7 +739,7 @@ func Test_Struct_NilAttribute(t *testing.T) {
 	})
 }
 
-func Test_Struct_Complex(t *testing.T) {
+func TestStructComplex(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type ApplyReportDetail struct {
 			ApplyScore        string `json:"apply_score"`
@@ -891,7 +891,7 @@ func Test_Struct_Complex(t *testing.T) {
 	})
 }
 
-func Test_Struct_CatchPanic(t *testing.T) {
+func TestStructCatchPanic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Score struct {
 			Name   string
@@ -926,7 +926,7 @@ type TestStruct struct {
 	TestInterface
 }
 
-func Test_Struct_Embedded(t *testing.T) {
+func TestStructEmbedded(t *testing.T) {
 	// Implemented interface attribute.
 	gtest.C(t, func(t *gtest.T) {
 		v1 := TestStruct{
@@ -961,7 +961,7 @@ func Test_Struct_Embedded(t *testing.T) {
 	})
 }
 
-func Test_Struct_Slice(t *testing.T) {
+func TestStructSlice(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Scores []int
@@ -1044,7 +1044,7 @@ func Test_Struct_Slice(t *testing.T) {
 	})
 }
 
-func Test_Struct_To_Struct(t *testing.T) {
+func TestStructToStruct(t *testing.T) {
 	var TestA struct {
 		Id   int       `p:"id"`
 		Date time.Time `p:"date"`
@@ -1064,7 +1064,7 @@ func Test_Struct_To_Struct(t *testing.T) {
 	})
 }
 
-func Test_Struct_WithJson(t *testing.T) {
+func TestStructWithJson(t *testing.T) {
 	type A struct {
 		Name string
 	}
@@ -1084,7 +1084,7 @@ func Test_Struct_WithJson(t *testing.T) {
 	})
 }
 
-func Test_Struct_AttrStructHasTheSameTag(t *testing.T) {
+func TestStructAttrStructHasTheSameTag(t *testing.T) {
 	type Product struct {
 		Id              int       `json:"id"`
 		UpdatedAt       time.Time `json:"-" `
@@ -1112,7 +1112,7 @@ func Test_Struct_AttrStructHasTheSameTag(t *testing.T) {
 	})
 }
 
-func Test_Struct_DirectReflectSet(t *testing.T) {
+func TestStructDirectReflectSet(t *testing.T) {
 	type A struct {
 		Id   int
 		Name string
@@ -1144,7 +1144,7 @@ func Test_Struct_DirectReflectSet(t *testing.T) {
 	})
 }
 
-func Test_Struct_NilEmbeddedStructAttribute(t *testing.T) {
+func TestStructNilEmbeddedStructAttribute(t *testing.T) {
 	type A struct {
 		Name string
 	}
@@ -1167,7 +1167,7 @@ func Test_Struct_NilEmbeddedStructAttribute(t *testing.T) {
 	})
 }
 
-func Test_Struct_JsonParam(t *testing.T) {
+func TestStructJsonParam(t *testing.T) {
 	type A struct {
 		Id   int    `json:"id"`
 		Name string `json:"name"`
@@ -1198,7 +1198,7 @@ func Test_Struct_JsonParam(t *testing.T) {
 	})
 }
 
-func Test_Struct_GVarAttribute(t *testing.T) {
+func TestStructGVarAttribute(t *testing.T) {
 	type A struct {
 		Id     int    `json:"id"`
 		Name   string `json:"name"`
@@ -1222,7 +1222,7 @@ func Test_Struct_GVarAttribute(t *testing.T) {
 
 }
 
-func Test_Struct_MapAttribute(t *testing.T) {
+func TestStructMapAttribute(t *testing.T) {
 	type NodeStatus struct {
 		ID int
 	}
@@ -1247,7 +1247,7 @@ func Test_Struct_MapAttribute(t *testing.T) {
 	})
 }
 
-func Test_Struct_Empty_MapStringString(t *testing.T) {
+func TestStructEmptyMapStringString(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type S struct {
 			Id int
@@ -1261,7 +1261,7 @@ func Test_Struct_Empty_MapStringString(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/1563
-func Test_Struct_Issue1563(t *testing.T) {
+func TestStructIssue1563(t *testing.T) {
 	type User struct {
 		Pass1 string `c:"password1"`
 	}
@@ -1281,7 +1281,7 @@ func Test_Struct_Issue1563(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/1597
-func Test_Struct_Issue1597(t *testing.T) {
+func TestStructIssue1597(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type S struct {
 			A int
@@ -1304,7 +1304,7 @@ func Test_Struct_Issue1597(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/2980
-func Test_Struct_Issue2980(t *testing.T) {
+func TestStructIssue2980(t *testing.T) {
 	type Post struct {
 		CreatedAt *gtime.Time `json:"createdAt" `
 	}
@@ -1328,7 +1328,7 @@ func Test_Struct_Issue2980(t *testing.T) {
 	})
 }
 
-func Test_Scan_WithDoubleSliceAttribute(t *testing.T) {
+func TestScanWithDoubleSliceAttribute(t *testing.T) {
 	inputData := [][]string{
 		{"aa", "bb", "cc"},
 		{"11", "22", "33"},
@@ -1347,7 +1347,7 @@ func Test_Scan_WithDoubleSliceAttribute(t *testing.T) {
 
 }
 
-func Test_Struct_WithCustomType(t *testing.T) {
+func TestStructWithCustomType(t *testing.T) {
 	type PayMode int
 
 	type Req1 struct {
@@ -1375,7 +1375,7 @@ func Test_Struct_WithCustomType(t *testing.T) {
 	})
 }
 
-func Test_Struct_EmptyStruct(t *testing.T) {
+func TestStructEmptyStruct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var err error
 

@@ -15,13 +15,13 @@ import (
 	"github.com/gogf/gf/v2/util/gmode"
 )
 
-func Test_AutoCheckSourceCodes(t *testing.T) {
+func TestAutoCheckSourceCodes(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gmode.IsDevelop(), true)
 	})
 }
 
-func Test_Set(t *testing.T) {
+func TestSet(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		oldMode := gmode.Mode()
 		defer gmode.Set(oldMode)

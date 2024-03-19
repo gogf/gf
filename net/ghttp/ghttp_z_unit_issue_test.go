@@ -23,7 +23,7 @@ import (
 )
 
 // https://github.com/gogf/gf/issues/1609
-func Test_Issue1609(t *testing.T) {
+func TestIssue1609(t *testing.T) {
 	s := g.Server(guid.S())
 	group := s.Group("/api/get")
 	group.GET("/", func(r *ghttp.Request) {
@@ -43,7 +43,7 @@ func Test_Issue1609(t *testing.T) {
 	})
 }
 
-func Test_Issue1611(t *testing.T) {
+func TestIssue1611(t *testing.T) {
 	s := g.Server(guid.S())
 	v := g.View(guid.S())
 	content := "This is header"
@@ -68,7 +68,7 @@ func Test_Issue1611(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/1626
-func Test_Issue1626(t *testing.T) {
+func TestIssue1626(t *testing.T) {
 	type TestReq struct {
 		Name string `v:"required"`
 	}
@@ -127,7 +127,7 @@ func (r cIssue1653Foo) PostTest(ctx context.Context, req *Issue1653TestReq) (*Is
 	return &Issue1653TestRes{UUID: req.UUID, FeedBack: req.Filter[0]["code"]}, nil
 }
 
-func Test_Issue1653(t *testing.T) {
+func TestIssue1653(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Use(ghttp.MiddlewareHandlerResponse)
 	s.Group("/boot", func(grp *ghttp.RouterGroup) {
@@ -202,7 +202,7 @@ func (r cFoo1) PostTest1(ctx context.Context, req *TemplateCreateReq) (res *Temp
 }
 
 // https://github.com/gogf/gf/issues/1662
-func Test_Issue662(t *testing.T) {
+func TestIssue662(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Use(ghttp.MiddlewareHandlerResponse)
 	s.Group("/boot", func(grp *ghttp.RouterGroup) {
@@ -245,7 +245,7 @@ func (a *Api) Demo(ctx context.Context, req *DemoReq) (res *DemoRes, err error) 
 var api = Api{}
 
 // https://github.com/gogf/gf/issues/2172
-func Test_Issue2172(t *testing.T) {
+func TestIssue2172(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Use(ghttp.MiddlewareHandlerResponse)
 	s.Group("/", func(group *ghttp.RouterGroup) {
@@ -265,7 +265,7 @@ func Test_Issue2172(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/2334
-func Test_Issue2334(t *testing.T) {
+func TestIssue2334(t *testing.T) {
 	s := g.Server(guid.S())
 	s.SetServerRoot(gtest.DataPath("static1"))
 	s.SetDumpRouterMap(false)
@@ -305,7 +305,7 @@ func (c *OrderController) CreateOrder(ctx context.Context, req *CreateOrderReq) 
 }
 
 // https://github.com/gogf/gf/issues/2482
-func Test_Issue2482(t *testing.T) {
+func TestIssue2482(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Group("/api/v2", func(group *ghttp.RouterGroup) {
 		group.Middleware(ghttp.MiddlewareHandlerResponse)
@@ -390,7 +390,7 @@ func (c *Issue2890Controller) Post(ctx context.Context, req *Issue2890Req) (res 
 }
 
 // https://github.com/gogf/gf/issues/2890
-func Test_Issue2890(t *testing.T) {
+func TestIssue2890(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		oldEnumsJson, err := gtag.GetGlobalEnums()
 		t.AssertNil(err)
@@ -423,7 +423,7 @@ func Test_Issue2890(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/2963
-func Test_Issue2963(t *testing.T) {
+func TestIssue2963(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
 		s.SetServerRoot(gtest.DataPath("issue2963"))
@@ -457,7 +457,7 @@ func (c *Issue3077V1) Hello(ctx context.Context, req *Issue3077Req) (res *Issue3
 }
 
 // https://github.com/gogf/gf/issues/3077
-func Test_Issue3077(t *testing.T) {
+func TestIssue3077(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
 		s.Group("/", func(group *ghttp.RouterGroup) {
@@ -505,7 +505,7 @@ func (c *cMessage) List(ctx context.Context, req *ListMessageReq) (res *BaseRes[
 }
 
 // https://github.com/gogf/gf/issues/2457
-func Test_Issue2457(t *testing.T) {
+func TestIssue2457(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
 		s.Use(ghttp.MiddlewareHandlerResponse)
@@ -545,7 +545,7 @@ func (Issue3245V1) Hello(ctx context.Context, req *Issue3245Req) (res *Issue3245
 	return
 }
 
-func Test_Issue3245(t *testing.T) {
+func TestIssue3245(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
 		s.Use(ghttp.MiddlewareHandlerResponse)

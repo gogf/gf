@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Model_Sharding_Table(t *testing.T) {
+func TestModelShardingTable(t *testing.T) {
 	var (
 		table1 = gtime.TimestampNanoStr() + "_table1"
 		table2 = gtime.TimestampNanoStr() + "_table2"
@@ -127,7 +127,7 @@ func Test_Model_Sharding_Table(t *testing.T) {
 	})
 }
 
-func Test_Model_Sharding_Schema(t *testing.T) {
+func TestModelShardingSchema(t *testing.T) {
 	var (
 		table = gtime.TimestampNanoStr() + "_table"
 	)

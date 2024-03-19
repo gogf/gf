@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Slice(t *testing.T) {
+func TestSlice(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		value := 123.456
 		t.AssertEQ(gconv.Bytes("123"), []byte("123"))
@@ -48,7 +48,7 @@ func Test_Slice(t *testing.T) {
 	})
 }
 
-func Test_Slice_Ints(t *testing.T) {
+func TestSliceInts(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertEQ(gconv.Ints(nil), nil)
 		t.AssertEQ(gconv.Ints("[26, 27]"), []int{26, 27})
@@ -59,7 +59,7 @@ func Test_Slice_Ints(t *testing.T) {
 	})
 }
 
-func Test_Slice_Int32s(t *testing.T) {
+func TestSliceInt32s(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertEQ(gconv.Int32s(nil), nil)
 		t.AssertEQ(gconv.Int32s(" [26, 27] "), []int32{26, 27})
@@ -88,7 +88,7 @@ func Test_Slice_Int32s(t *testing.T) {
 	})
 }
 
-func Test_Slice_Int64s(t *testing.T) {
+func TestSliceInt64s(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertEQ(gconv.Int64s(nil), nil)
 		t.AssertEQ(gconv.Int64s(" [26, 27] "), []int64{26, 27})
@@ -117,7 +117,7 @@ func Test_Slice_Int64s(t *testing.T) {
 	})
 }
 
-func Test_Slice_Uints(t *testing.T) {
+func TestSliceUints(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertEQ(gconv.Uints(nil), nil)
 		t.AssertEQ(gconv.Uints("1"), []uint{1})
@@ -147,7 +147,7 @@ func Test_Slice_Uints(t *testing.T) {
 	})
 }
 
-func Test_Slice_Uint32s(t *testing.T) {
+func TestSliceUint32s(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertEQ(gconv.Uint32s(nil), nil)
 		t.AssertEQ(gconv.Uint32s("1"), []uint32{1})
@@ -177,7 +177,7 @@ func Test_Slice_Uint32s(t *testing.T) {
 	})
 }
 
-func Test_Slice_Uint64s(t *testing.T) {
+func TestSliceUint64s(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertEQ(gconv.Uint64s(nil), nil)
 		t.AssertEQ(gconv.Uint64s("1"), []uint64{1})
@@ -207,7 +207,7 @@ func Test_Slice_Uint64s(t *testing.T) {
 	})
 }
 
-func Test_Slice_Float32s(t *testing.T) {
+func TestSliceFloat32s(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertEQ(gconv.Float32s("123.4"), []float32{123.4})
 		t.AssertEQ(gconv.Float32s([]string{"123.4", "123.5"}), []float32{123.4, 123.5})
@@ -234,7 +234,7 @@ func Test_Slice_Float32s(t *testing.T) {
 	})
 }
 
-func Test_Slice_Float64s(t *testing.T) {
+func TestSliceFloat64s(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertEQ(gconv.Float64s("123.4"), []float64{123.4})
 		t.AssertEQ(gconv.Float64s([]string{"123.4", "123.5"}), []float64{123.4, 123.5})
@@ -255,7 +255,7 @@ func Test_Slice_Float64s(t *testing.T) {
 	})
 }
 
-func Test_Slice_Empty(t *testing.T) {
+func TestSliceEmpty(t *testing.T) {
 	// Int.
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertEQ(gconv.Ints(""), []int{})
@@ -305,7 +305,7 @@ func Test_Slice_Empty(t *testing.T) {
 	})
 }
 
-func Test_Strings(t *testing.T) {
+func TestStrings(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := []*g.Var{
 			g.NewVar(1),
@@ -323,7 +323,7 @@ func Test_Strings(t *testing.T) {
 	})
 }
 
-func Test_Slice_Interfaces(t *testing.T) {
+func TestSliceInterfaces(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := gconv.Interfaces([]uint8(`[{"id": 1, "name":"john"},{"id": 2, "name":"huang"}]`))
 		t.Assert(len(array), 2)
@@ -356,7 +356,7 @@ func Test_Slice_Interfaces(t *testing.T) {
 	})
 }
 
-func Test_Slice_PrivateAttribute(t *testing.T) {
+func TestSlicePrivateAttribute(t *testing.T) {
 	type User struct {
 		Id   int    `json:"id"`
 		name string `json:"name"`
@@ -370,7 +370,7 @@ func Test_Slice_PrivateAttribute(t *testing.T) {
 	})
 }
 
-func Test_Slice_Structs(t *testing.T) {
+func TestSliceStructs(t *testing.T) {
 	type Base struct {
 		Age int
 	}
@@ -417,7 +417,7 @@ func Test_Slice_Structs(t *testing.T) {
 	})
 }
 
-func Test_EmptyString_To_CustomType(t *testing.T) {
+func TestEmptyStringToCustomType(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Status string
 		type Req struct {
@@ -460,7 +460,7 @@ func Test_EmptyString_To_CustomType(t *testing.T) {
 	})
 }
 
-func Test_SliceMap_WithNilMapValue(t *testing.T) {
+func TestSliceMapWithNilMapValue(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			list1 = []gdb.Record{

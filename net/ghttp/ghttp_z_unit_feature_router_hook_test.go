@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_Router_Hook_Basic(t *testing.T) {
+func TestRouterHookBasic(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHookHandlerByMap("/*", map[ghttp.HookName]ghttp.HandlerFunc{
 		ghttp.HookBeforeServe:  func(r *ghttp.Request) { r.Response.Write("1") },
@@ -42,7 +42,7 @@ func Test_Router_Hook_Basic(t *testing.T) {
 	})
 }
 
-func Test_Router_Hook_Fuzzy_Router(t *testing.T) {
+func TestRouterHookFuzzyRouter(t *testing.T) {
 	s := g.Server(guid.S())
 	i := 1000
 	pattern1 := "/:name/info"
@@ -84,7 +84,7 @@ func Test_Router_Hook_Fuzzy_Router(t *testing.T) {
 	})
 }
 
-func Test_Router_Hook_Priority(t *testing.T) {
+func TestRouterHookPriority(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/priority/show", func(r *ghttp.Request) {
 		r.Response.Write("show")
@@ -121,7 +121,7 @@ func Test_Router_Hook_Priority(t *testing.T) {
 	})
 }
 
-func Test_Router_Hook_Multi(t *testing.T) {
+func TestRouterHookMulti(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/multi-hook", func(r *ghttp.Request) {
 		r.Response.Write("show")
@@ -151,7 +151,7 @@ func Test_Router_Hook_Multi(t *testing.T) {
 	})
 }
 
-func Test_Router_Hook_ExitAll(t *testing.T) {
+func TestRouterHookExitAll(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/test", func(r *ghttp.Request) {
 		r.Response.Write("test")

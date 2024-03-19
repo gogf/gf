@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Bool(t *testing.T) {
+func TestBool(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		i := gtype.NewBool(true)
 		iClone := i.Clone()
@@ -45,7 +45,7 @@ func Test_Bool(t *testing.T) {
 	})
 }
 
-func Test_Bool_JSON(t *testing.T) {
+func TestBoolJSON(t *testing.T) {
 	// Marshal
 	gtest.C(t, func(t *gtest.T) {
 		i := gtype.NewBool(true)
@@ -109,7 +109,7 @@ func Test_Bool_JSON(t *testing.T) {
 	})
 }
 
-func Test_Bool_UnmarshalValue(t *testing.T) {
+func TestBoolUnmarshalValue(t *testing.T) {
 	type V struct {
 		Name string
 		Var  *gtype.Bool

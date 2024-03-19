@@ -21,7 +21,7 @@ import (
 	"github.com/gogf/gf/v2/util/gtag"
 )
 
-func Test_Basic(t *testing.T) {
+func TestBasic(t *testing.T) {
 	type CommonReq struct {
 		AppId      int64  `json:"appId" v:"required" in:"cookie" description:"应用Id"`
 		ResourceId string `json:"resourceId" in:"query" description:"资源Id"`
@@ -795,7 +795,7 @@ func TestOpenApiV3_HtmlResponseWithCommonResponse(t *testing.T) {
 	})
 }
 
-func Test_Required_In_Schema(t *testing.T) {
+func TestRequiredInSchema(t *testing.T) {
 	type CommonReq struct {
 		AppId      int64  `json:"appId" v:"required" in:"cookie" description:"应用Id"`
 		ResourceId string `json:"resourceId" in:"query" description:"资源Id"`
@@ -846,7 +846,7 @@ func Test_Required_In_Schema(t *testing.T) {
 	})
 }
 
-func Test_Properties_In_Sequence(t *testing.T) {
+func TestPropertiesInSequence(t *testing.T) {
 	type ResourceCreateReq struct {
 		g.Meta           `path:"/resource" tags:"OSS Resource" method:"put" x-sort:"1" summary:"创建实例(发货)"`
 		AppId            uint64 `v:"required" dc:"应用Id"`
@@ -922,7 +922,7 @@ func TestOpenApiV3_Ignore_Parameter(t *testing.T) {
 	})
 }
 
-func Test_EnumOfSchemaItems(t *testing.T) {
+func TestEnumOfSchemaItems(t *testing.T) {
 	type CreateResourceReq struct {
 		gmeta.Meta `path:"/CreateResourceReq" method:"POST"`
 		Members    []string `v:"required|in:a,b,c"`
@@ -948,7 +948,7 @@ func Test_EnumOfSchemaItems(t *testing.T) {
 	})
 }
 
-func Test_AliasNameOfAttribute(t *testing.T) {
+func TestAliasNameOfAttribute(t *testing.T) {
 	type CreateResourceReq struct {
 		gmeta.Meta `path:"/CreateResourceReq" method:"POST"`
 		Name       string `p:"n"`
@@ -985,7 +985,7 @@ func Test_AliasNameOfAttribute(t *testing.T) {
 	})
 }
 
-func Test_EmbeddedStructAttribute(t *testing.T) {
+func TestEmbeddedStructAttribute(t *testing.T) {
 	type CreateResourceReq struct {
 		gmeta.Meta `path:"/CreateResourceReq" method:"POST"`
 		Name       string `dc:"This is name."`
@@ -1011,7 +1011,7 @@ func Test_EmbeddedStructAttribute(t *testing.T) {
 	})
 }
 
-func Test_NameFromJsonTag(t *testing.T) {
+func TestNameFromJsonTag(t *testing.T) {
 	// POST
 	gtest.C(t, func(t *gtest.T) {
 		type CreateReq struct {
@@ -1109,7 +1109,7 @@ func TestOpenApiV3_PathSecurity(t *testing.T) {
 	})
 }
 
-func Test_EmptyJsonNameWithOmitEmpty(t *testing.T) {
+func TestEmptyJsonNameWithOmitEmpty(t *testing.T) {
 	type CreateResourceReq struct {
 		gmeta.Meta `path:"/CreateResourceReq" method:"POST" tags:"default"`
 		Name       string `description:"实例名称" json:",omitempty"`
@@ -1133,7 +1133,7 @@ func Test_EmptyJsonNameWithOmitEmpty(t *testing.T) {
 	})
 }
 
-func Test_Enums(t *testing.T) {
+func TestEnums(t *testing.T) {
 	type Status string
 	const (
 		StatusA Status = "a"
@@ -1172,7 +1172,7 @@ func Test_Enums(t *testing.T) {
 	})
 }
 
-func Test_XExtension(t *testing.T) {
+func TestXExtension(t *testing.T) {
 	type GetListReq struct {
 		g.Meta `path:"/user" tags:"User" method:"get" x-group:"User/Info" summary:"Get user list with basic info."`
 		Page   int `dc:"Page number" d:"1" x-sort:"1"`

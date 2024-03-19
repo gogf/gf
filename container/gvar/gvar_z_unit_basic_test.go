@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Set(t *testing.T) {
+func TestSet(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var v gvar.Var
 		v.Set(123.456)
@@ -41,7 +41,7 @@ func Test_Set(t *testing.T) {
 	})
 }
 
-func Test_Val(t *testing.T) {
+func TestVal(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		objOne := gvar.New(1, true)
 		objOneOld, _ := objOne.Val().(int)
@@ -56,7 +56,7 @@ func Test_Val(t *testing.T) {
 	})
 }
 
-func Test_Interface(t *testing.T) {
+func TestInterface(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		objOne := gvar.New(1, true)
 		objOneOld, _ := objOne.Interface().(int)
@@ -68,7 +68,7 @@ func Test_Interface(t *testing.T) {
 	})
 }
 
-func Test_IsNil(t *testing.T) {
+func TestIsNil(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		objOne := gvar.New(nil, true)
 		t.Assert(objOne.IsNil(), true)
@@ -79,7 +79,7 @@ func Test_IsNil(t *testing.T) {
 	})
 }
 
-func Test_Bytes(t *testing.T) {
+func TestBytes(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		x := int32(1)
 		bytesBuffer := bytes.NewBuffer([]byte{})
@@ -96,7 +96,7 @@ func Test_Bytes(t *testing.T) {
 	})
 }
 
-func Test_String(t *testing.T) {
+func TestString(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var str string = "hello"
 		objOne := gvar.New(str, true)
@@ -105,7 +105,7 @@ func Test_String(t *testing.T) {
 	})
 }
 
-func Test_Bool(t *testing.T) {
+func TestBool(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var ok bool = true
 		objOne := gvar.New(ok, true)
@@ -118,7 +118,7 @@ func Test_Bool(t *testing.T) {
 	})
 }
 
-func Test_Int(t *testing.T) {
+func TestInt(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var num int = 1
 		objOne := gvar.New(num, true)
@@ -127,7 +127,7 @@ func Test_Int(t *testing.T) {
 	})
 }
 
-func Test_Int8(t *testing.T) {
+func TestInt8(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var num int8 = 1
 		objOne := gvar.New(num, true)
@@ -136,7 +136,7 @@ func Test_Int8(t *testing.T) {
 	})
 }
 
-func Test_Int16(t *testing.T) {
+func TestInt16(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var num int16 = 1
 		objOne := gvar.New(num, true)
@@ -145,7 +145,7 @@ func Test_Int16(t *testing.T) {
 	})
 }
 
-func Test_Int32(t *testing.T) {
+func TestInt32(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var num int32 = 1
 		objOne := gvar.New(num, true)
@@ -154,7 +154,7 @@ func Test_Int32(t *testing.T) {
 	})
 }
 
-func Test_Int64(t *testing.T) {
+func TestInt64(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var num int64 = 1
 		objOne := gvar.New(num, true)
@@ -163,7 +163,7 @@ func Test_Int64(t *testing.T) {
 	})
 }
 
-func Test_Uint(t *testing.T) {
+func TestUint(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var num uint = 1
 		objOne := gvar.New(num, true)
@@ -172,7 +172,7 @@ func Test_Uint(t *testing.T) {
 	})
 }
 
-func Test_Uint8(t *testing.T) {
+func TestUint8(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var num uint8 = 1
 		objOne := gvar.New(num, true)
@@ -181,7 +181,7 @@ func Test_Uint8(t *testing.T) {
 	})
 }
 
-func Test_Uint16(t *testing.T) {
+func TestUint16(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var num uint16 = 1
 		objOne := gvar.New(num, true)
@@ -190,7 +190,7 @@ func Test_Uint16(t *testing.T) {
 	})
 }
 
-func Test_Uint32(t *testing.T) {
+func TestUint32(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var num uint32 = 1
 		objOne := gvar.New(num, true)
@@ -199,7 +199,7 @@ func Test_Uint32(t *testing.T) {
 	})
 }
 
-func Test_Uint64(t *testing.T) {
+func TestUint64(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var num uint64 = 1
 		objOne := gvar.New(num, true)
@@ -208,7 +208,7 @@ func Test_Uint64(t *testing.T) {
 	})
 }
 
-func Test_Float32(t *testing.T) {
+func TestFloat32(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var num float32 = 1.1
 		objOne := gvar.New(num, true)
@@ -217,7 +217,7 @@ func Test_Float32(t *testing.T) {
 	})
 }
 
-func Test_Float64(t *testing.T) {
+func TestFloat64(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var num float64 = 1.1
 		objOne := gvar.New(num, true)
@@ -226,7 +226,7 @@ func Test_Float64(t *testing.T) {
 	})
 }
 
-func Test_Time(t *testing.T) {
+func TestTime(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var timeUnix int64 = 1556242660
 		objOne := gvar.New(timeUnix, true)
@@ -234,7 +234,7 @@ func Test_Time(t *testing.T) {
 	})
 }
 
-func Test_GTime(t *testing.T) {
+func TestGTime(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var timeUnix int64 = 1556242660
 		objOne := gvar.New(timeUnix, true)
@@ -242,7 +242,7 @@ func Test_GTime(t *testing.T) {
 	})
 }
 
-func Test_Duration(t *testing.T) {
+func TestDuration(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var timeUnix int64 = 1556242660
 		objOne := gvar.New(timeUnix, true)
@@ -250,7 +250,7 @@ func Test_Duration(t *testing.T) {
 	})
 }
 
-func Test_UnmarshalJson(t *testing.T) {
+func TestUnmarshalJson(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type V struct {
 			Name string
@@ -281,7 +281,7 @@ func Test_UnmarshalJson(t *testing.T) {
 	})
 }
 
-func Test_UnmarshalValue(t *testing.T) {
+func TestUnmarshalValue(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type V struct {
 			Name string
@@ -312,7 +312,7 @@ func Test_UnmarshalValue(t *testing.T) {
 	})
 }
 
-func Test_Copy(t *testing.T) {
+func TestCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		src := g.Map{
 			"k1": "v1",
@@ -336,7 +336,7 @@ func Test_Copy(t *testing.T) {
 	})
 }
 
-func Test_DeepCopy(t *testing.T) {
+func TestDeepCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		src := g.Map{
 			"k1": "v1",

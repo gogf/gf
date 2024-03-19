@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Table_Relation_One(t *testing.T) {
+func TestTableRelationOne(t *testing.T) {
 	var (
 		tableUser       = "user_" + gtime.TimestampMicroStr()
 		tableUserDetail = "user_detail_" + gtime.TimestampMicroStr()
@@ -163,7 +163,7 @@ CREATE TABLE %s (
 	})
 }
 
-func Test_Table_Relation_Many(t *testing.T) {
+func TestTableRelationMany(t *testing.T) {
 	var (
 		tableUser       = "user_" + gtime.TimestampMicroStr()
 		tableUserDetail = "user_detail_" + gtime.TimestampMicroStr()
@@ -477,7 +477,7 @@ CREATE TABLE %s (
 	})
 }
 
-func Test_Table_Relation_Many_ModelScanList(t *testing.T) {
+func TestTableRelationManyModelScanList(t *testing.T) {
 	var (
 		tableUser       = "user_" + gtime.TimestampMicroStr()
 		tableUserDetail = "user_detail_" + gtime.TimestampMicroStr()
@@ -604,7 +604,7 @@ CREATE TABLE %s (
 	})
 }
 
-func Test_Table_Relation_Many_RelationKeyCaseInsensitive(t *testing.T) {
+func TestTableRelationManyRelationKeyCaseInsensitive(t *testing.T) {
 	var (
 		tableUser       = "user_" + gtime.TimestampMicroStr()
 		tableUserDetail = "user_detail_" + gtime.TimestampMicroStr()
@@ -918,7 +918,7 @@ CREATE TABLE %s (
 	})
 }
 
-func Test_Table_Relation_Many_TheSameRelationNames(t *testing.T) {
+func TestTableRelationManyTheSameRelationNames(t *testing.T) {
 	var (
 		tableUser       = "user_" + gtime.TimestampMicroStr()
 		tableUserDetail = "user_detail_" + gtime.TimestampMicroStr()
@@ -1213,7 +1213,7 @@ CREATE TABLE %s (
 	})
 }
 
-func Test_Table_Relation_EmptyData(t *testing.T) {
+func TestTableRelationEmptyData(t *testing.T) {
 	var (
 		tableUser       = "user_" + gtime.TimestampMicroStr()
 		tableUserDetail = "user_detail_" + gtime.TimestampMicroStr()
@@ -1424,7 +1424,7 @@ CREATE TABLE %s (
 	})
 }
 
-func Test_Table_Relation_NoneEqualDataSize(t *testing.T) {
+func TestTableRelationNoneEqualDataSize(t *testing.T) {
 	var (
 		tableUser       = "user_" + gtime.TimestampMicroStr()
 		tableUserDetail = "user_detail_" + gtime.TimestampMicroStr()
@@ -1679,7 +1679,7 @@ CREATE TABLE %s (
 	})
 }
 
-func Test_Table_Relation_EmbeddedStruct1(t *testing.T) {
+func TestTableRelationEmbeddedStruct1(t *testing.T) {
 	var (
 		tableUser       = "user_" + gtime.TimestampMicroStr()
 		tableUserDetail = "user_detail_" + gtime.TimestampMicroStr()
@@ -1797,7 +1797,7 @@ CREATE TABLE %s (
 	})
 }
 
-func Test_Table_Relation_EmbeddedStruct2(t *testing.T) {
+func TestTableRelationEmbeddedStruct2(t *testing.T) {
 	var (
 		tableUser       = "user_" + gtime.TimestampMicroStr()
 		tableUserDetail = "user_detail_" + gtime.TimestampMicroStr()

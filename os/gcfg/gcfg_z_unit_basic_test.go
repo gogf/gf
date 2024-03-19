@@ -19,7 +19,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Basic1(t *testing.T) {
+func TestBasic1(t *testing.T) {
 	config := `
 v1    = 1
 v2    = "true"
@@ -46,7 +46,7 @@ array = [1,2,3]
 	})
 }
 
-func Test_Basic2(t *testing.T) {
+func TestBasic2(t *testing.T) {
 	config := `log-path = "logs"`
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -64,7 +64,7 @@ func Test_Basic2(t *testing.T) {
 	})
 }
 
-func Test_Content(t *testing.T) {
+func TestContent(t *testing.T) {
 	content := `
 v1    = 1
 v2    = "true"
@@ -84,7 +84,7 @@ array = [1,2,3]
 	})
 }
 
-func Test_SetFileName(t *testing.T) {
+func TestSetFileName(t *testing.T) {
 	config := `
 {
 	"array": [
@@ -178,7 +178,7 @@ func TestCfg_Get_WrongConfigFile(t *testing.T) {
 	})
 }
 
-func Test_GetWithEnv(t *testing.T) {
+func TestGetWithEnv(t *testing.T) {
 	content := `
 v1    = 1
 v2    = "true"
@@ -202,7 +202,7 @@ array = [1,2,3]
 	})
 }
 
-func Test_GetWithCmd(t *testing.T) {
+func TestGetWithCmd(t *testing.T) {
 	content := `
 v1    = 1
 v2    = "true"

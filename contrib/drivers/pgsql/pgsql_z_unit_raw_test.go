@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Raw_Insert(t *testing.T) {
+func TestRawInsert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -32,7 +32,7 @@ func Test_Raw_Insert(t *testing.T) {
 	})
 }
 
-func Test_Raw_BatchInsert(t *testing.T) {
+func TestRawBatchInsert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -60,7 +60,7 @@ func Test_Raw_BatchInsert(t *testing.T) {
 	})
 }
 
-func Test_Raw_Delete(t *testing.T) {
+func TestRawDelete(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -75,7 +75,7 @@ func Test_Raw_Delete(t *testing.T) {
 	})
 }
 
-func Test_Raw_Update(t *testing.T) {
+func TestRawUpdate(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 

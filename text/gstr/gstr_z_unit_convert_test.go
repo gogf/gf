@@ -13,13 +13,13 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func Test_OctStr(t *testing.T) {
+func TestOctStr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.OctStr(`\346\200\241`), "怡")
 	})
 }
 
-func Test_WordWrap(t *testing.T) {
+func TestWordWrap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.WordWrap("12 34", 2, "<br>"), "12<br>34")
 		t.Assert(gstr.WordWrap("12 34", 2, "\n"), "12\n34")

@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_DB_Ping(t *testing.T) {
+func TestDBPing(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err1 := dblink.PingMaster()
 		err2 := dblink.PingSlave()
@@ -114,7 +114,7 @@ func TestTableFields(t *testing.T) {
 	})
 }
 
-func Test_DB_Query(t *testing.T) {
+func TestDBQuery(t *testing.T) {
 	tableName := "A_tables"
 	createInitTable(tableName)
 	gtest.C(t, func(t *gtest.T) {
@@ -242,7 +242,7 @@ func TestDBInsert(t *testing.T) {
 	})
 }
 
-func Test_DB_Exec(t *testing.T) {
+func TestDBExec(t *testing.T) {
 	createInitTable("A_tables")
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Exec(ctx, "SELECT ? from dual", 1)
@@ -253,7 +253,7 @@ func Test_DB_Exec(t *testing.T) {
 	})
 }
 
-func Test_DB_Insert(t *testing.T) {
+func TestDBInsert(t *testing.T) {
 	table := "A_tables"
 	createInitTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -348,7 +348,7 @@ func Test_DB_Insert(t *testing.T) {
 	})
 }
 
-func Test_DB_BatchInsert(t *testing.T) {
+func TestDBBatchInsert(t *testing.T) {
 	table := "A_tables"
 	createInitTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -406,7 +406,7 @@ func Test_DB_BatchInsert(t *testing.T) {
 	})
 }
 
-func Test_DB_BatchInsert_Struct(t *testing.T) {
+func TestDBBatchInsertStruct(t *testing.T) {
 	// batch insert struct
 	table := "A_tables"
 	createInitTable(table)
@@ -425,7 +425,7 @@ func Test_DB_BatchInsert_Struct(t *testing.T) {
 	})
 }
 
-func Test_DB_Update(t *testing.T) {
+func TestDBUpdate(t *testing.T) {
 	table := "A_tables"
 	createInitTable(table)
 
@@ -443,7 +443,7 @@ func Test_DB_Update(t *testing.T) {
 	})
 }
 
-func Test_DB_GetAll(t *testing.T) {
+func TestDBGetAll(t *testing.T) {
 	table := "A_tables"
 	createInitTable(table)
 
@@ -493,7 +493,7 @@ func Test_DB_GetAll(t *testing.T) {
 	})
 }
 
-func Test_DB_GetOne(t *testing.T) {
+func TestDBGetOne(t *testing.T) {
 	table := "A_tables"
 	createInitTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -503,7 +503,7 @@ func Test_DB_GetOne(t *testing.T) {
 	})
 }
 
-func Test_DB_GetValue(t *testing.T) {
+func TestDBGetValue(t *testing.T) {
 	table := "A_tables"
 	createInitTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -513,7 +513,7 @@ func Test_DB_GetValue(t *testing.T) {
 	})
 }
 
-func Test_DB_GetCount(t *testing.T) {
+func TestDBGetCount(t *testing.T) {
 	table := "A_tables"
 	createInitTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -523,7 +523,7 @@ func Test_DB_GetCount(t *testing.T) {
 	})
 }
 
-func Test_DB_GetStruct(t *testing.T) {
+func TestDBGetStruct(t *testing.T) {
 	table := "A_tables"
 	createInitTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -540,7 +540,7 @@ func Test_DB_GetStruct(t *testing.T) {
 	})
 }
 
-func Test_DB_GetStructs(t *testing.T) {
+func TestDBGetStructs(t *testing.T) {
 	table := "A_tables"
 	createInitTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -556,7 +556,7 @@ func Test_DB_GetStructs(t *testing.T) {
 	})
 }
 
-func Test_DB_GetScan(t *testing.T) {
+func TestDBGetScan(t *testing.T) {
 	table := "A_tables"
 	createInitTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -584,7 +584,7 @@ func Test_DB_GetScan(t *testing.T) {
 	})
 }
 
-func Test_DB_Delete(t *testing.T) {
+func TestDBDelete(t *testing.T) {
 	table := "A_tables"
 	createInitTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -602,7 +602,7 @@ func Test_DB_Delete(t *testing.T) {
 	})
 }
 
-func Test_Empty_Slice_Argument(t *testing.T) {
+func TestEmptySliceArgument(t *testing.T) {
 	table := "A_tables"
 	createInitTable(table)
 	gtest.C(t, func(t *gtest.T) {

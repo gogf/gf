@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Basic(t *testing.T) {
+func TestBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Id   int
@@ -78,7 +78,7 @@ func Test_Basic(t *testing.T) {
 	})
 }
 
-func Test_StructOfNilPointer(t *testing.T) {
+func TestStructOfNilPointer(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Id   int
@@ -100,7 +100,7 @@ func Test_StructOfNilPointer(t *testing.T) {
 	})
 }
 
-func Test_Fields(t *testing.T) {
+func TestFields(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Id   int
@@ -123,7 +123,7 @@ func Test_Fields(t *testing.T) {
 	})
 }
 
-func Test_Fields_WithEmbedded1(t *testing.T) {
+func TestFieldsWithEmbedded1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
 			Name string
@@ -147,7 +147,7 @@ func Test_Fields_WithEmbedded1(t *testing.T) {
 	})
 }
 
-func Test_Fields_WithEmbedded2(t *testing.T) {
+func TestFieldsWithEmbedded2(t *testing.T) {
 	type MetaNode struct {
 		Id          uint   `orm:"id,primary"  description:""`
 		Capacity    string `orm:"capacity"    description:"Capacity string"`
@@ -186,7 +186,7 @@ func Test_Fields_WithEmbedded2(t *testing.T) {
 }
 
 // Filter repeated fields when there is embedded struct.
-func Test_Fields_WithEmbedded_Filter(t *testing.T) {
+func TestFieldsWithEmbeddedFilter(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
 			Name string
@@ -212,7 +212,7 @@ func Test_Fields_WithEmbedded_Filter(t *testing.T) {
 	})
 }
 
-func Test_FieldMap(t *testing.T) {
+func TestFieldMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Id   int
@@ -263,7 +263,7 @@ func Test_FieldMap(t *testing.T) {
 	})
 }
 
-func Test_StructType(t *testing.T) {
+func TestStructType(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
 			Name string
@@ -311,7 +311,7 @@ func Test_StructType(t *testing.T) {
 	})
 }
 
-func Test_StructTypeBySlice(t *testing.T) {
+func TestStructTypeBySlice(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
 			Name string
@@ -528,7 +528,7 @@ func TestType_TagExample(t *testing.T) {
 	})
 }
 
-func Test_Fields_TagPriorityName(t *testing.T) {
+func TestFieldsTagPriorityName(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Name  string `gconv:"name_gconv" c:"name_c"`

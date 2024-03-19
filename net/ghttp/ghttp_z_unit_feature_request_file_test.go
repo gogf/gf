@@ -25,7 +25,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_Params_File_Single(t *testing.T) {
+func TestParamsFileSingle(t *testing.T) {
 	dstDirPath := gfile.Temp(gtime.TimestampNanoStr())
 	s := g.Server(guid.S())
 	s.BindHandler("/upload/single", func(r *ghttp.Request) {
@@ -77,7 +77,7 @@ func Test_Params_File_Single(t *testing.T) {
 	})
 }
 
-func Test_Params_File_CustomName(t *testing.T) {
+func TestParamsFileCustomName(t *testing.T) {
 	dstDirPath := gfile.Temp(gtime.TimestampNanoStr())
 	s := g.Server(guid.S())
 	s.BindHandler("/upload/single", func(r *ghttp.Request) {
@@ -112,7 +112,7 @@ func Test_Params_File_CustomName(t *testing.T) {
 	})
 }
 
-func Test_Params_File_Batch(t *testing.T) {
+func TestParamsFileBatch(t *testing.T) {
 	dstDirPath := gfile.Temp(gtime.TimestampNanoStr())
 	s := g.Server(guid.S())
 	s.BindHandler("/upload/batch", func(r *ghttp.Request) {
@@ -174,7 +174,7 @@ func Test_Params_File_Batch(t *testing.T) {
 	})
 }
 
-func Test_Params_Strict_Route_File_Single_Ptr_Attrr(t *testing.T) {
+func TestParamsStrictRouteFileSinglePtrAttrr(t *testing.T) {
 	type Req struct {
 		gmeta.Meta `method:"post" mime:"multipart/form-data"`
 		File       *ghttp.UploadFile `type:"file"`
@@ -220,7 +220,7 @@ func Test_Params_Strict_Route_File_Single_Ptr_Attrr(t *testing.T) {
 	})
 }
 
-func Test_Params_Strict_Route_File_Single_Struct_Attr(t *testing.T) {
+func TestParamsStrictRouteFileSingleStructAttr(t *testing.T) {
 	type Req struct {
 		gmeta.Meta `method:"post" mime:"multipart/form-data"`
 		File       ghttp.UploadFile `type:"file"`
@@ -262,7 +262,7 @@ func Test_Params_Strict_Route_File_Single_Struct_Attr(t *testing.T) {
 	})
 }
 
-func Test_Params_File_Upload_Required(t *testing.T) {
+func TestParamsFileUploadRequired(t *testing.T) {
 	type Req struct {
 		gmeta.Meta `method:"post" mime:"multipart/form-data"`
 		File       *ghttp.UploadFile `type:"file" v:"required#upload file is required"`
@@ -287,7 +287,7 @@ func Test_Params_File_Upload_Required(t *testing.T) {
 	})
 }
 
-func Test_Params_File_MarshalJSON(t *testing.T) {
+func TestParamsFileMarshalJSON(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/upload/single", func(r *ghttp.Request) {
 		file := r.GetUploadFile("file")
@@ -319,7 +319,7 @@ func Test_Params_File_MarshalJSON(t *testing.T) {
 }
 
 // Select only one file when batch uploading
-func Test_Params_Strict_Route_File_Batch_Up_One(t *testing.T) {
+func TestParamsStrictRouteFileBatchUpOne(t *testing.T) {
 	type Req struct {
 		gmeta.Meta `method:"post" mime:"multipart/form-data"`
 		Files      ghttp.UploadFiles `type:"file"`
@@ -366,7 +366,7 @@ func Test_Params_Strict_Route_File_Batch_Up_One(t *testing.T) {
 }
 
 // Select multiple files during batch upload
-func Test_Params_Strict_Route_File_Batch_Up_Multiple(t *testing.T) {
+func TestParamsStrictRouteFileBatchUpMultiple(t *testing.T) {
 	type Req struct {
 		gmeta.Meta `method:"post" mime:"multipart/form-data"`
 		Files      ghttp.UploadFiles `type:"file"`

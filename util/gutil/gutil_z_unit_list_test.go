@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func Test_ListItemValues_Map(t *testing.T) {
+func TestListItemValuesMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		listMap := g.List{
 			g.Map{"id": 1, "score": 100},
@@ -40,7 +40,7 @@ func Test_ListItemValues_Map(t *testing.T) {
 	})
 }
 
-func Test_ListItemValues_Map_SubKey(t *testing.T) {
+func TestListItemValuesMapSubKey(t *testing.T) {
 	type Scores struct {
 		Math    int
 		English int
@@ -57,7 +57,7 @@ func Test_ListItemValues_Map_SubKey(t *testing.T) {
 	})
 }
 
-func Test_ListItemValues_Map_Array_SubKey(t *testing.T) {
+func TestListItemValuesMapArraySubKey(t *testing.T) {
 	type Scores struct {
 		Math    int
 		English int
@@ -74,7 +74,7 @@ func Test_ListItemValues_Map_Array_SubKey(t *testing.T) {
 	})
 }
 
-func Test_ListItemValues_Struct(t *testing.T) {
+func TestListItemValuesStruct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type T struct {
 			Id    int
@@ -118,7 +118,7 @@ func Test_ListItemValues_Struct(t *testing.T) {
 	})
 }
 
-func Test_ListItemValues_Struct_SubKey(t *testing.T) {
+func TestListItemValuesStructSubKey(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Student struct {
 			Id    int
@@ -157,7 +157,7 @@ func Test_ListItemValues_Struct_SubKey(t *testing.T) {
 	})
 }
 
-func Test_ListItemValuesUnique(t *testing.T) {
+func TestListItemValuesUnique(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		listMap := g.List{
 			g.Map{"id": 1, "score": 100},
@@ -193,7 +193,7 @@ func Test_ListItemValuesUnique(t *testing.T) {
 	})
 }
 
-func Test_ListItemValuesUnique_Struct_SubKey(t *testing.T) {
+func TestListItemValuesUniqueStructSubKey(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Student struct {
 			Id    int
@@ -230,7 +230,7 @@ func Test_ListItemValuesUnique_Struct_SubKey(t *testing.T) {
 	})
 }
 
-func Test_ListItemValuesUnique_Map_Array_SubKey(t *testing.T) {
+func TestListItemValuesUniqueMapArraySubKey(t *testing.T) {
 	type Scores struct {
 		Math    int
 		English int
@@ -247,7 +247,7 @@ func Test_ListItemValuesUnique_Map_Array_SubKey(t *testing.T) {
 	})
 }
 
-func Test_ListItemValuesUnique_Binary_ID(t *testing.T) {
+func TestListItemValuesUniqueBinaryID(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		listMap := g.List{
 			g.Map{"id": []byte{1}, "score": 100},

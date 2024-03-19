@@ -13,7 +13,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_NewWithTag(t *testing.T) {
+func TestNewWithTag(t *testing.T) {
 	type User struct {
 		Age  int    `xml:"age-xml"  json:"age-json"`
 		Name string `xml:"name-xml" json:"name-json"`
@@ -48,7 +48,7 @@ func Test_NewWithTag(t *testing.T) {
 	})
 }
 
-func Test_New_CustomStruct(t *testing.T) {
+func TestNewCustomStruct(t *testing.T) {
 	type Base struct {
 		Id int
 	}
@@ -70,7 +70,7 @@ func Test_New_CustomStruct(t *testing.T) {
 	})
 }
 
-func Test_New_HierarchicalStruct(t *testing.T) {
+func TestNewHierarchicalStruct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Me struct {
 			Name     string `json:"name"`
@@ -98,7 +98,7 @@ func Test_New_HierarchicalStruct(t *testing.T) {
 	})
 }
 
-func Test_NewWithOptions(t *testing.T) {
+func TestNewWithOptions(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		data := []byte("[9223372036854775807, 9223372036854775806]")
 		array := gjson.New(data).Var().Array()
@@ -111,7 +111,7 @@ func Test_NewWithOptions(t *testing.T) {
 	})
 }
 
-func Test_LoadContentType(t *testing.T) {
+func TestLoadContentType(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		data := []byte("value = 79937385836643329")
 		j, err := gjson.LoadContentType("toml", data)

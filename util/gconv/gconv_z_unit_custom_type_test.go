@@ -26,7 +26,7 @@ func (d *Duration) UnmarshalText(text []byte) error {
 	return err
 }
 
-func Test_Struct_CustomTimeDuration_Attribute(t *testing.T) {
+func TestStructCustomTimeDurationAttribute(t *testing.T) {
 	type A struct {
 		Name    string
 		Timeout Duration

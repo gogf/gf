@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_Params_Json_Request(t *testing.T) {
+func TestParamsJsonRequest(t *testing.T) {
 	type User struct {
 		Id    int
 		Name  string
@@ -60,7 +60,7 @@ func Test_Params_Json_Request(t *testing.T) {
 	})
 }
 
-func Test_Params_Json_Response(t *testing.T) {
+func TestParamsJsonResponse(t *testing.T) {
 	type User struct {
 		Uid      int
 		Name     string

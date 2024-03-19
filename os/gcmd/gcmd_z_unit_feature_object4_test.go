@@ -36,7 +36,7 @@ func (c *TestNoNameTagCase) TEST(ctx context.Context, in TestNoNameTagCaseRootIn
 	return
 }
 
-func Test_Command_NoNameTagCase(t *testing.T) {
+func TestCommandNoNameTagCase(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var ctx = gctx.New()
 		cmd, err := gcmd.NewFromObject(TestNoNameTagCase{})

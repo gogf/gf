@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Database(t *testing.T) {
+func TestDatabase(t *testing.T) {
 	databaseContent := gfile.GetContents(
 		gtest.DataPath("database", "config.toml"),
 	)

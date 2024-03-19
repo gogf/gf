@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func Test_Issue2594(t *testing.T) {
+func TestIssue2594(t *testing.T) {
 	table := "HANDLE_INFO"
 	array := gstr.SplitAndTrim(gtest.DataContent(`issue`, `2594`, `sql.sql`), ";")
 	for _, v := range array {

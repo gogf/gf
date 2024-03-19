@@ -7,8 +7,9 @@
 package clickhouse
 
 import (
-	"github.com/shopspring/decimal"
 	"testing"
+
+	"github.com/shopspring/decimal"
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/frame/g"
@@ -16,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Issue2584(t *testing.T) {
+func TestIssue2584(t *testing.T) {
 	type TDecimal struct {
 		F1 *decimal.Decimal `json:"f1"`
 	}

@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func Test_Array_Var(t *testing.T) {
+func TestArrayVar(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var array garray.Array
 		expect := []int{2, 3, 1}
@@ -58,7 +58,7 @@ func Test_Array_Var(t *testing.T) {
 	})
 }
 
-func Test_SortedIntArray_Var(t *testing.T) {
+func TestSortedIntArrayVar(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var array garray.SortedIntArray
 		expect := []int{1, 2, 3}
@@ -67,7 +67,7 @@ func Test_SortedIntArray_Var(t *testing.T) {
 	})
 }
 
-func Test_IntArray_Unique(t *testing.T) {
+func TestIntArrayUnique(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := []int{1, 2, 3, 4, 5, 6}
 		array := garray.NewIntArray()
@@ -77,7 +77,7 @@ func Test_IntArray_Unique(t *testing.T) {
 	})
 }
 
-func Test_SortedIntArray1(t *testing.T) {
+func TestSortedIntArray1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 		array := garray.NewSortedIntArray()
@@ -89,7 +89,7 @@ func Test_SortedIntArray1(t *testing.T) {
 	})
 }
 
-func Test_SortedIntArray2(t *testing.T) {
+func TestSortedIntArray2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 		array := garray.NewSortedIntArray()
@@ -100,7 +100,7 @@ func Test_SortedIntArray2(t *testing.T) {
 	})
 }
 
-func Test_SortedStrArray1(t *testing.T) {
+func TestSortedStrArray1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := []string{"0", "1", "10", "2", "3", "4", "5", "6", "7", "8", "9"}
 		array1 := garray.NewSortedStrArray()
@@ -115,7 +115,7 @@ func Test_SortedStrArray1(t *testing.T) {
 
 }
 
-func Test_SortedStrArray2(t *testing.T) {
+func TestSortedStrArray2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := []string{"0", "1", "10", "2", "3", "4", "5", "6", "7", "8", "9"}
 		array := garray.NewSortedStrArray()
@@ -128,7 +128,7 @@ func Test_SortedStrArray2(t *testing.T) {
 	})
 }
 
-func Test_SortedArray1(t *testing.T) {
+func TestSortedArray1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := []string{"0", "1", "10", "2", "3", "4", "5", "6", "7", "8", "9"}
 		array := garray.NewSortedArray(func(v1, v2 interface{}) int {
@@ -141,7 +141,7 @@ func Test_SortedArray1(t *testing.T) {
 	})
 }
 
-func Test_SortedArray2(t *testing.T) {
+func TestSortedArray2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := []string{"0", "1", "10", "2", "3", "4", "5", "6", "7", "8", "9"}
 		func1 := func(v1, v2 interface{}) int {

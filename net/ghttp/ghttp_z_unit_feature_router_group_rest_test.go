@@ -55,7 +55,7 @@ func (o *GroupObjRest) Head(r *ghttp.Request) {
 	r.Response.Header().Set("head-ok", "1")
 }
 
-func Test_Router_GroupRest1(t *testing.T) {
+func TestRouterGroupRest1(t *testing.T) {
 	s := g.Server(guid.S())
 	group := s.Group("/api")
 	obj := new(GroupObjRest)
@@ -99,7 +99,7 @@ func Test_Router_GroupRest1(t *testing.T) {
 	})
 }
 
-func Test_Router_GroupRest2(t *testing.T) {
+func TestRouterGroupRest2(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Group("/api", func(group *ghttp.RouterGroup) {
 		obj := new(GroupObjRest)

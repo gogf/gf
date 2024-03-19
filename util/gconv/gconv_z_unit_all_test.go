@@ -41,7 +41,7 @@ func (s1 S1) Error() string {
 	return "22222"
 }
 
-func Test_Bool_All(t *testing.T) {
+func TestBoolAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var any interface{} = nil
 		t.AssertEQ(gconv.Bool(any), false)
@@ -75,7 +75,7 @@ func Test_Bool_All(t *testing.T) {
 	})
 }
 
-func Test_Int_All(t *testing.T) {
+func TestIntAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var any interface{} = nil
 		t.AssertEQ(gconv.Int(any), 0)
@@ -111,7 +111,7 @@ func Test_Int_All(t *testing.T) {
 	})
 }
 
-func Test_Int8_All(t *testing.T) {
+func TestInt8All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var any interface{} = nil
 		t.Assert(gconv.Int8(any), int8(0))
@@ -147,7 +147,7 @@ func Test_Int8_All(t *testing.T) {
 	})
 }
 
-func Test_Int16_All(t *testing.T) {
+func TestInt16All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var any interface{} = nil
 		t.Assert(gconv.Int16(any), int16(0))
@@ -182,7 +182,7 @@ func Test_Int16_All(t *testing.T) {
 	})
 }
 
-func Test_Int32_All(t *testing.T) {
+func TestInt32All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var any interface{} = nil
 		t.Assert(gconv.Int32(any), int32(0))
@@ -217,7 +217,7 @@ func Test_Int32_All(t *testing.T) {
 	})
 }
 
-func Test_Int64_All(t *testing.T) {
+func TestInt64All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var any interface{} = nil
 		t.AssertEQ(gconv.Int64("0x00e"), int64(14))
@@ -272,7 +272,7 @@ func Test_Int64_All(t *testing.T) {
 	})
 }
 
-func Test_Uint_All(t *testing.T) {
+func TestUintAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var any interface{} = nil
 		t.AssertEQ(gconv.Uint(any), uint(0))
@@ -308,7 +308,7 @@ func Test_Uint_All(t *testing.T) {
 	})
 }
 
-func Test_Uint8_All(t *testing.T) {
+func TestUint8All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var any interface{} = nil
 		t.Assert(gconv.Uint8(any), uint8(0))
@@ -344,7 +344,7 @@ func Test_Uint8_All(t *testing.T) {
 	})
 }
 
-func Test_Uint16_All(t *testing.T) {
+func TestUint16All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var any interface{} = nil
 		t.Assert(gconv.Uint16(any), uint16(0))
@@ -380,7 +380,7 @@ func Test_Uint16_All(t *testing.T) {
 	})
 }
 
-func Test_Uint32_All(t *testing.T) {
+func TestUint32All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var any interface{} = nil
 		t.Assert(gconv.Uint32(any), uint32(0))
@@ -416,7 +416,7 @@ func Test_Uint32_All(t *testing.T) {
 	})
 }
 
-func Test_Uint64_All(t *testing.T) {
+func TestUint64All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var any interface{} = nil
 		t.AssertEQ(gconv.Uint64("0x00e"), uint64(14))
@@ -471,7 +471,7 @@ func Test_Uint64_All(t *testing.T) {
 	})
 }
 
-func Test_Float32_All(t *testing.T) {
+func TestFloat32All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var any interface{} = nil
 		t.Assert(gconv.Float32(any), float32(0))
@@ -507,7 +507,7 @@ func Test_Float32_All(t *testing.T) {
 	})
 }
 
-func Test_Float64_All(t *testing.T) {
+func TestFloat64All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var any interface{} = nil
 		t.Assert(gconv.Float64(any), float64(0))
@@ -543,7 +543,7 @@ func Test_Float64_All(t *testing.T) {
 	})
 }
 
-func Test_String_All(t *testing.T) {
+func TestStringAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var s []rune
 		t.AssertEQ(gconv.String(s), "")
@@ -597,7 +597,7 @@ func Test_String_All(t *testing.T) {
 	})
 }
 
-func Test_Runes_All(t *testing.T) {
+func TestRunesAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertEQ(gconv.Runes("www"), []int32{119, 119, 119})
 		var s []rune
@@ -605,7 +605,7 @@ func Test_Runes_All(t *testing.T) {
 	})
 }
 
-func Test_Rune_All(t *testing.T) {
+func TestRuneAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertEQ(gconv.Rune("www"), int32(0))
 		t.AssertEQ(gconv.Rune(int32(0)), int32(0))
@@ -614,7 +614,7 @@ func Test_Rune_All(t *testing.T) {
 	})
 }
 
-func Test_Bytes_All(t *testing.T) {
+func TestBytesAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertEQ(gconv.Bytes(nil), nil)
 		t.AssertEQ(gconv.Bytes(int32(0)), []uint8{0, 0, 0, 0})
@@ -624,7 +624,7 @@ func Test_Bytes_All(t *testing.T) {
 	})
 }
 
-func Test_Byte_All(t *testing.T) {
+func TestByteAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertEQ(gconv.Byte(uint8(0)), uint8(0))
 		t.AssertEQ(gconv.Byte("s"), uint8(0))
@@ -632,7 +632,7 @@ func Test_Byte_All(t *testing.T) {
 	})
 }
 
-func Test_Convert_All(t *testing.T) {
+func TestConvertAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var any interface{} = nil
 		t.AssertEQ(gconv.Convert(any, "string"), "")
@@ -724,7 +724,7 @@ func Test_Convert_All(t *testing.T) {
 	})
 }
 
-func Test_Slice_All(t *testing.T) {
+func TestSliceAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		value := 123.456
 		t.AssertEQ(gconv.Ints(value), []int{123})
@@ -815,7 +815,7 @@ func Test_Slice_All(t *testing.T) {
 }
 
 // 私有属性不会进行转换
-func Test_Slice_PrivateAttribute_All(t *testing.T) {
+func TestSlicePrivateAttributeAll(t *testing.T) {
 	type User struct {
 		Id   int           `json:"id"`
 		name string        `json:"name"`
@@ -831,7 +831,7 @@ func Test_Slice_PrivateAttribute_All(t *testing.T) {
 	})
 }
 
-func Test_Map_Basic_All(t *testing.T) {
+func TestMapBasicAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := map[string]string{
 			"k": "v",
@@ -873,7 +873,7 @@ func Test_Map_Basic_All(t *testing.T) {
 	})
 }
 
-func Test_Map_StructWithGconvTag_All(t *testing.T) {
+func TestMapStructWithGconvTagAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Uid      int
@@ -912,7 +912,7 @@ func Test_Map_StructWithGconvTag_All(t *testing.T) {
 	})
 }
 
-func Test_Map_StructWithJsonTag_All(t *testing.T) {
+func TestMapStructWithJsonTagAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Uid      int
@@ -968,7 +968,7 @@ func Test_Map_StructWithJsonTag_All(t *testing.T) {
 	})
 }
 
-func Test_Map_PrivateAttribute_All(t *testing.T) {
+func TestMapPrivateAttributeAll(t *testing.T) {
 	type User struct {
 		Id   int
 		name string
@@ -979,7 +979,7 @@ func Test_Map_PrivateAttribute_All(t *testing.T) {
 	})
 }
 
-func Test_Map_StructInherit_All(t *testing.T) {
+func TestMapStructInheritAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Ids struct {
 			Id  int `json:"id"`
@@ -1012,7 +1012,7 @@ func Test_Map_StructInherit_All(t *testing.T) {
 	})
 }
 
-func Test_Struct_Basic1_All(t *testing.T) {
+func TestStructBasic1All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Score struct {
 			Name   int
@@ -1088,7 +1088,7 @@ func Test_Struct_Basic1_All(t *testing.T) {
 }
 
 // 使用默认映射规则绑定属性值到对象
-func Test_Struct_Basic2_All(t *testing.T) {
+func TestStructBasic2All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Uid     int
@@ -1119,7 +1119,7 @@ func Test_Struct_Basic2_All(t *testing.T) {
 }
 
 // 带有指针的基础类型属性
-func Test_Struct_Basic3_All(t *testing.T) {
+func TestStructBasic3All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Uid  int
@@ -1139,7 +1139,7 @@ func Test_Struct_Basic3_All(t *testing.T) {
 }
 
 // slice类型属性的赋值
-func Test_Struct_Attr_Slice_All(t *testing.T) {
+func TestStructAttrSliceAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Scores []int
@@ -1157,7 +1157,7 @@ func Test_Struct_Attr_Slice_All(t *testing.T) {
 }
 
 // 属性为struct对象
-func Test_Struct_Attr_Struct_All(t *testing.T) {
+func TestStructAttrStructAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Score struct {
 			Name   string
@@ -1190,7 +1190,7 @@ func Test_Struct_Attr_Struct_All(t *testing.T) {
 }
 
 // 属性为struct对象指针
-func Test_Struct_Attr_Struct_Ptr_All(t *testing.T) {
+func TestStructAttrStructPtrAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Score struct {
 			Name   string
@@ -1221,7 +1221,7 @@ func Test_Struct_Attr_Struct_Ptr_All(t *testing.T) {
 }
 
 // 属性为struct对象slice
-func Test_Struct_Attr_Struct_Slice1_All(t *testing.T) {
+func TestStructAttrStructSlice1All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Score struct {
 			Name   string
@@ -1254,7 +1254,7 @@ func Test_Struct_Attr_Struct_Slice1_All(t *testing.T) {
 }
 
 // 属性为struct对象slice
-func Test_Struct_Attr_Struct_Slice2_All(t *testing.T) {
+func TestStructAttrStructSlice2All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Score struct {
 			Name   string
@@ -1297,7 +1297,7 @@ func Test_Struct_Attr_Struct_Slice2_All(t *testing.T) {
 }
 
 // 属性为struct对象slice ptr
-func Test_Struct_Attr_Struct_Slice_Ptr_All(t *testing.T) {
+func TestStructAttrStructSlicePtrAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Score struct {
 			Name   string
@@ -1338,7 +1338,7 @@ func Test_Struct_Attr_Struct_Slice_Ptr_All(t *testing.T) {
 	})
 }
 
-func Test_Struct_PrivateAttribute_All(t *testing.T) {
+func TestStructPrivateAttributeAll(t *testing.T) {
 	type User struct {
 		Id   int
 		name string
@@ -1352,7 +1352,7 @@ func Test_Struct_PrivateAttribute_All(t *testing.T) {
 	})
 }
 
-func Test_Struct_Embedded_All(t *testing.T) {
+func TestStructEmbeddedAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Ids struct {
 			Id  int `json:"id"`
@@ -1385,7 +1385,7 @@ func Test_Struct_Embedded_All(t *testing.T) {
 	})
 }
 
-func Test_Struct_Time_All(t *testing.T) {
+func TestStructTimeAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			CreateTime time.Time

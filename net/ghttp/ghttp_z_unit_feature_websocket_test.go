@@ -19,7 +19,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_WebSocket(t *testing.T) {
+func TestWebSocket(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/ws", func(r *ghttp.Request) {
 		ws, err := r.WebSocket()

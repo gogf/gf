@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func Test_Copy(t *testing.T) {
+func TestCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gutil.Copy(0), 0)
 		t.Assert(gutil.Copy(1), 1)

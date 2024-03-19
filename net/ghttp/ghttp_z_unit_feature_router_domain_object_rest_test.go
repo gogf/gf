@@ -55,7 +55,7 @@ func (o *DomainObjectRest) Head(r *ghttp.Request) {
 	r.Response.Header().Set("head-ok", "1")
 }
 
-func Test_Router_DomainObjectRest(t *testing.T) {
+func TestRouterDomainObjectRest(t *testing.T) {
 	s := g.Server(guid.S())
 	d := s.Domain("localhost, local")
 	d.BindObjectRest("/", new(DomainObjectRest))

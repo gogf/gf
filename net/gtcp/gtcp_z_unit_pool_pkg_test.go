@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Pool_Package_Basic(t *testing.T) {
+func TestPoolPackageBasic(t *testing.T) {
 	s := gtcp.NewServer(gtcp.FreePortAddress, func(conn *gtcp.Conn) {
 		defer conn.Close()
 		for {
@@ -94,7 +94,7 @@ func Test_Pool_Package_Basic(t *testing.T) {
 	})
 }
 
-func Test_Pool_Package_Timeout(t *testing.T) {
+func TestPoolPackageTimeout(t *testing.T) {
 	s := gtcp.NewServer(gtcp.FreePortAddress, func(conn *gtcp.Conn) {
 		defer conn.Close()
 		for {
@@ -129,7 +129,7 @@ func Test_Pool_Package_Timeout(t *testing.T) {
 	})
 }
 
-func Test_Pool_Package_Option(t *testing.T) {
+func TestPoolPackageOption(t *testing.T) {
 	s := gtcp.NewServer(gtcp.FreePortAddress, func(conn *gtcp.Conn) {
 		defer conn.Close()
 		option := gtcp.PkgOption{HeaderSize: 1}

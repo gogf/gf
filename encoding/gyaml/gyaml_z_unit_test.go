@@ -38,7 +38,7 @@ dd = 11
     cache = "127.0.0.1:6379,1"
 `
 
-func Test_Encode(t *testing.T) {
+func TestEncode(t *testing.T) {
 	// Map.
 	gtest.C(t, func(t *gtest.T) {
 		b, err := gyaml.Encode(g.Map{
@@ -59,7 +59,7 @@ func Test_Encode(t *testing.T) {
 	})
 }
 
-func Test_EncodeIndent(t *testing.T) {
+func TestEncodeIndent(t *testing.T) {
 	// Array.
 	gtest.C(t, func(t *gtest.T) {
 		b, err := gyaml.EncodeIndent([]string{"a", "b", "c"}, "####")
@@ -71,7 +71,7 @@ func Test_EncodeIndent(t *testing.T) {
 	})
 }
 
-func Test_Decode(t *testing.T) {
+func TestDecode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		result, err := gyaml.Decode([]byte(yamlStr))
 		t.AssertNil(err)
@@ -86,7 +86,7 @@ func Test_Decode(t *testing.T) {
 	})
 }
 
-func Test_DecodeTo(t *testing.T) {
+func TestDecodeTo(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		result := make(map[string]interface{})
 		err := gyaml.DecodeTo([]byte(yamlStr), &result)
@@ -101,7 +101,7 @@ func Test_DecodeTo(t *testing.T) {
 	})
 }
 
-func Test_DecodeError(t *testing.T) {
+func TestDecodeError(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		_, err := gyaml.Decode([]byte(yamlErr))
 		t.AssertNE(err, nil)
@@ -112,7 +112,7 @@ func Test_DecodeError(t *testing.T) {
 	})
 }
 
-func Test_DecodeMapToJson(t *testing.T) {
+func TestDecodeMapToJson(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		data := []byte(`
 m:
@@ -126,7 +126,7 @@ m:
 	})
 }
 
-func Test_ToJson(t *testing.T) {
+func TestToJson(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := make(map[string]string)
 		m["yaml"] = yamlStr

@@ -20,7 +20,7 @@ var (
 	ctx = context.TODO()
 )
 
-func Test_HookSelect_Regex(t *testing.T) {
+func TestHookSelectRegex(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err              error
@@ -54,7 +54,7 @@ func Test_HookSelect_Regex(t *testing.T) {
 	})
 }
 
-func Test_parseConfigNodeLink_WithType(t *testing.T) {
+func TestparseConfigNodeLinkWithType(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		node := &ConfigNode{
 			Link: `mysql:root:CxzhD*624:27jh@tcp(9.135.69.119:3306)/khaos_oss?loc=Local&parseTime=true&charset=latin`,
@@ -240,7 +240,7 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 	})
 }
 
-func Test_Func_doQuoteWord(t *testing.T) {
+func TestFuncdoQuoteWord(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := map[string]string{
 			"user":                   "`user`",
@@ -257,7 +257,7 @@ func Test_Func_doQuoteWord(t *testing.T) {
 	})
 }
 
-func Test_Func_doQuoteString(t *testing.T) {
+func TestFuncdoQuoteString(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := map[string]string{
 			"user":                             "`user`",
@@ -277,7 +277,7 @@ func Test_Func_doQuoteString(t *testing.T) {
 	})
 }
 
-func Test_Func_addTablePrefix(t *testing.T) {
+func TestFuncaddTablePrefix(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		prefix := ""
 		array := map[string]string{
@@ -318,7 +318,7 @@ func Test_Func_addTablePrefix(t *testing.T) {
 	})
 }
 
-func Test_isSubQuery(t *testing.T) {
+func TestisSubQuery(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(isSubQuery("user"), false)
 		t.Assert(isSubQuery("user.uid"), false)

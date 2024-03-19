@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Size(t *testing.T) {
+func TestSize(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths1 string = "/testfile_t1.txt"
@@ -33,7 +33,7 @@ func Test_Size(t *testing.T) {
 	})
 }
 
-func Test_SizeFormat(t *testing.T) {
+func TestSizeFormat(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths1 = "/testfile_t1.txt"
@@ -52,7 +52,7 @@ func Test_SizeFormat(t *testing.T) {
 	})
 }
 
-func Test_StrToSize(t *testing.T) {
+func TestStrToSize(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gfile.StrToSize("0.00B"), 0)
 		t.Assert(gfile.StrToSize("16.00B"), 16)
@@ -76,7 +76,7 @@ func Test_StrToSize(t *testing.T) {
 	})
 }
 
-func Test_FormatSize(t *testing.T) {
+func TestFormatSize(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gfile.FormatSize(0), "0.00B")
 		t.Assert(gfile.FormatSize(16), "16.00B")
@@ -92,7 +92,7 @@ func Test_FormatSize(t *testing.T) {
 	})
 }
 
-func Test_ReadableSize(t *testing.T) {
+func TestReadableSize(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 
 		var (

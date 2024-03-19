@@ -36,7 +36,7 @@ func (c *cUser) User(ctx context.Context, req *UserReq) (res *UserRes, err error
 	return
 }
 
-func Test_Params_Tag(t *testing.T) {
+func TestParamsTag(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(ghttp.MiddlewareHandlerResponse)

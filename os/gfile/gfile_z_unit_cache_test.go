@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_GetContentsWithCache(t *testing.T) {
+func TestGetContentsWithCache(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var f *os.File
 		var err error

@@ -32,7 +32,7 @@ func init() {
 	genv.Set("UNDER_TEST", "1")
 }
 
-func Test_GetUrl(t *testing.T) {
+func TestGetUrl(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/url", func(r *ghttp.Request) {
 		r.Response.Write(r.GetUrl())
@@ -52,7 +52,7 @@ func Test_GetUrl(t *testing.T) {
 	})
 }
 
-func Test_XUrlPath(t *testing.T) {
+func TestXUrlPath(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/test1", func(r *ghttp.Request) {
 		r.Response.Write(`test1`)
@@ -79,7 +79,7 @@ func Test_XUrlPath(t *testing.T) {
 	})
 }
 
-func Test_GetListenedAddress(t *testing.T) {
+func TestGetListenedAddress(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/", func(r *ghttp.Request) {
 		r.Response.Write(`test`)
@@ -99,7 +99,7 @@ func Test_GetListenedAddress(t *testing.T) {
 	})
 }
 
-func Test_GetListenedAddressWithHost(t *testing.T) {
+func TestGetListenedAddressWithHost(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/", func(r *ghttp.Request) {
 		r.Response.Write(`test`)
@@ -120,7 +120,7 @@ func Test_GetListenedAddressWithHost(t *testing.T) {
 	})
 }
 
-func Test_RoutePathParams(t *testing.T) {
+func TestRoutePathParams(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/:param", func(r *ghttp.Request) {
 		r.Response.Write(r.Get("param"), ",", r.Get("c"))
@@ -143,7 +143,7 @@ func Test_RoutePathParams(t *testing.T) {
 	})
 }
 
-func Test_BuildParams(t *testing.T) {
+func TestBuildParams(t *testing.T) {
 	// normal && special cases
 	params := map[string]string{
 		"val":   "12345678",
@@ -170,7 +170,7 @@ func Test_BuildParams(t *testing.T) {
 	})
 }
 
-func Test_ServerSignal(t *testing.T) {
+func TestServerSignal(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Log("skip windows")
 		return

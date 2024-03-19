@@ -13,7 +13,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Model_SubQuery_Where(t *testing.T) {
+func TestModelSubQueryWhere(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -31,7 +31,7 @@ func Test_Model_SubQuery_Where(t *testing.T) {
 	})
 }
 
-func Test_Model_SubQuery_Having(t *testing.T) {
+func TestModelSubQueryHaving(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -50,7 +50,7 @@ func Test_Model_SubQuery_Having(t *testing.T) {
 	})
 }
 
-func Test_Model_SubQuery_Model(t *testing.T) {
+func TestModelSubQueryModel(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 

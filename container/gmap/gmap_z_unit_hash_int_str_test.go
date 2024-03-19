@@ -21,7 +21,7 @@ func getStr() string {
 	return "z"
 }
 
-func Test_IntStrMap_Var(t *testing.T) {
+func TestIntStrMapVar(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var m gmap.IntStrMap
 		m.Set(1, "a")
@@ -54,7 +54,7 @@ func Test_IntStrMap_Var(t *testing.T) {
 	})
 }
 
-func Test_IntStrMap_Basic(t *testing.T) {
+func TestIntStrMapBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntStrMap()
 		m.Set(1, "a")
@@ -116,7 +116,7 @@ func TestIntStrMap_Sets(t *testing.T) {
 	})
 }
 
-func Test_IntStrMap_Set_Fun(t *testing.T) {
+func TestIntStrMapSetFun(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntStrMap()
 		m.GetOrSetFunc(1, getStr)
@@ -143,7 +143,7 @@ func Test_IntStrMap_Set_Fun(t *testing.T) {
 	})
 }
 
-func Test_IntStrMap_Batch(t *testing.T) {
+func TestIntStrMapBatch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntStrMap()
 		m.Sets(map[int]string{1: "a", 2: "b", 3: "c"})
@@ -153,7 +153,7 @@ func Test_IntStrMap_Batch(t *testing.T) {
 	})
 }
 
-func Test_IntStrMap_Iterator(t *testing.T) {
+func TestIntStrMapIterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[int]string{1: "a", 2: "b"}
 		m := gmap.NewIntStrMapFrom(expect)
@@ -177,7 +177,7 @@ func Test_IntStrMap_Iterator(t *testing.T) {
 	})
 }
 
-func Test_IntStrMap_Lock(t *testing.T) {
+func TestIntStrMapLock(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[int]string{1: "a", 2: "b", 3: "c"}
 		m := gmap.NewIntStrMapFrom(expect)
@@ -190,7 +190,7 @@ func Test_IntStrMap_Lock(t *testing.T) {
 	})
 }
 
-func Test_IntStrMap_Clone(t *testing.T) {
+func TestIntStrMapClone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// clone 方法是深克隆
 		m := gmap.NewIntStrMapFrom(map[int]string{1: "a", 2: "b", 3: "c"})
@@ -206,7 +206,7 @@ func Test_IntStrMap_Clone(t *testing.T) {
 	})
 }
 
-func Test_IntStrMap_Merge(t *testing.T) {
+func TestIntStrMapMerge(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.NewIntStrMap()
 		m2 := gmap.NewIntStrMap()
@@ -221,7 +221,7 @@ func Test_IntStrMap_Merge(t *testing.T) {
 	})
 }
 
-func Test_IntStrMap_Map(t *testing.T) {
+func TestIntStrMapMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntStrMap()
 		m.Set(1, "0")
@@ -238,7 +238,7 @@ func Test_IntStrMap_Map(t *testing.T) {
 	})
 }
 
-func Test_IntStrMap_MapCopy(t *testing.T) {
+func TestIntStrMapMapCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntStrMap()
 		m.Set(1, "0")
@@ -255,7 +255,7 @@ func Test_IntStrMap_MapCopy(t *testing.T) {
 	})
 }
 
-func Test_IntStrMap_FilterEmpty(t *testing.T) {
+func TestIntStrMapFilterEmpty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntStrMap()
 		m.Set(1, "")
@@ -268,7 +268,7 @@ func Test_IntStrMap_FilterEmpty(t *testing.T) {
 	})
 }
 
-func Test_IntStrMap_Json(t *testing.T) {
+func TestIntStrMapJson(t *testing.T) {
 	// Marshal
 	gtest.C(t, func(t *gtest.T) {
 		data := g.MapIntStr{
@@ -298,7 +298,7 @@ func Test_IntStrMap_Json(t *testing.T) {
 	})
 }
 
-func Test_IntStrMap_Pop(t *testing.T) {
+func TestIntStrMapPop(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntStrMapFrom(g.MapIntStr{
 			1: "v1",
@@ -324,7 +324,7 @@ func Test_IntStrMap_Pop(t *testing.T) {
 	})
 }
 
-func Test_IntStrMap_Pops(t *testing.T) {
+func TestIntStrMapPops(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntStrMapFrom(g.MapIntStr{
 			1: "v1",
@@ -434,7 +434,7 @@ func TestIntStrMap_String(t *testing.T) {
 	})
 }
 
-func Test_IntStrMap_DeepCopy(t *testing.T) {
+func TestIntStrMapDeepCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntStrMapFrom(g.MapIntStr{
 			1: "val1",
@@ -448,7 +448,7 @@ func Test_IntStrMap_DeepCopy(t *testing.T) {
 	})
 }
 
-func Test_IntStrMap_IsSubOf(t *testing.T) {
+func TestIntStrMapIsSubOf(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.NewIntStrMapFrom(g.MapIntStr{
 			1: "v1",
@@ -463,7 +463,7 @@ func Test_IntStrMap_IsSubOf(t *testing.T) {
 	})
 }
 
-func Test_IntStrMap_Diff(t *testing.T) {
+func TestIntStrMapDiff(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.NewIntStrMapFrom(g.MapIntStr{
 			0: "0",

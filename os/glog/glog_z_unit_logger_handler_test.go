@@ -108,7 +108,7 @@ func TestLogger_SetHandlers_HandlerStructure(t *testing.T) {
 	})
 }
 
-func Test_SetDefaultHandler(t *testing.T) {
+func TestSetDefaultHandler(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		oldHandler := glog.GetDefaultHandler()
 		glog.SetDefaultHandler(func(ctx context.Context, in *glog.HandlerInput) {

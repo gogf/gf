@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Model_Insert_Data_DO(t *testing.T) {
+func TestModelInsertDataDO(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -48,7 +48,7 @@ func Test_Model_Insert_Data_DO(t *testing.T) {
 	})
 }
 
-func Test_Model_Insert_Data_List_DO(t *testing.T) {
+func TestModelInsertDataListDO(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -96,7 +96,7 @@ func Test_Model_Insert_Data_List_DO(t *testing.T) {
 	})
 }
 
-func Test_Model_Update_Data_DO(t *testing.T) {
+func TestModelUpdateDataDO(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -126,7 +126,7 @@ func Test_Model_Update_Data_DO(t *testing.T) {
 	})
 }
 
-func Test_Model_Update_Pointer_Data_DO(t *testing.T) {
+func TestModelUpdatePointerDataDO(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -170,7 +170,7 @@ func Test_Model_Update_Pointer_Data_DO(t *testing.T) {
 	})
 }
 
-func Test_Model_Where_DO(t *testing.T) {
+func TestModelWhereDO(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -197,7 +197,7 @@ func Test_Model_Where_DO(t *testing.T) {
 	})
 }
 
-func Test_Model_Insert_Data_ForDao(t *testing.T) {
+func TestModelInsertDataForDao(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -229,7 +229,7 @@ func Test_Model_Insert_Data_ForDao(t *testing.T) {
 	})
 }
 
-func Test_Model_Insert_Data_List_ForDao(t *testing.T) {
+func TestModelInsertDataListForDao(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -276,7 +276,7 @@ func Test_Model_Insert_Data_List_ForDao(t *testing.T) {
 	})
 }
 
-func Test_Model_Update_Data_ForDao(t *testing.T) {
+func TestModelUpdateDataForDao(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -305,7 +305,7 @@ func Test_Model_Update_Data_ForDao(t *testing.T) {
 	})
 }
 
-func Test_Model_Where_ForDao(t *testing.T) {
+func TestModelWhereForDao(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -331,7 +331,7 @@ func Test_Model_Where_ForDao(t *testing.T) {
 	})
 }
 
-func Test_Model_Where_FieldPrefix(t *testing.T) {
+func TestModelWhereFieldPrefix(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := gstr.SplitAndTrim(gtest.DataContent(`table_with_prefix.sql`), ";")
 		for _, v := range array {

@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_AnyAnyMap_Var(t *testing.T) {
+func TestAnyAnyMapVar(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var m gmap.AnyAnyMap
 		m.Set(1, 1)
@@ -48,7 +48,7 @@ func Test_AnyAnyMap_Var(t *testing.T) {
 	})
 }
 
-func Test_AnyAnyMap_Basic(t *testing.T) {
+func TestAnyAnyMapBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewAnyAnyMap()
 		m.Set(1, 1)
@@ -81,7 +81,7 @@ func Test_AnyAnyMap_Basic(t *testing.T) {
 	})
 }
 
-func Test_AnyAnyMap_Set_Fun(t *testing.T) {
+func TestAnyAnyMapSetFun(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewAnyAnyMap()
 
@@ -99,7 +99,7 @@ func Test_AnyAnyMap_Set_Fun(t *testing.T) {
 
 }
 
-func Test_AnyAnyMap_Batch(t *testing.T) {
+func TestAnyAnyMapBatch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewAnyAnyMap()
 
@@ -110,7 +110,7 @@ func Test_AnyAnyMap_Batch(t *testing.T) {
 	})
 }
 
-func Test_AnyAnyMap_Iterator(t *testing.T) {
+func TestAnyAnyMapIterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[interface{}]interface{}{1: 1, 2: "2"}
 		m := gmap.NewAnyAnyMapFrom(expect)
@@ -134,7 +134,7 @@ func Test_AnyAnyMap_Iterator(t *testing.T) {
 	})
 }
 
-func Test_AnyAnyMap_Lock(t *testing.T) {
+func TestAnyAnyMapLock(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[interface{}]interface{}{1: 1, 2: "2"}
 		m := gmap.NewAnyAnyMapFrom(expect)
@@ -147,7 +147,7 @@ func Test_AnyAnyMap_Lock(t *testing.T) {
 	})
 }
 
-func Test_AnyAnyMap_Clone(t *testing.T) {
+func TestAnyAnyMapClone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// clone 方法是深克隆
 		m := gmap.NewAnyAnyMapFrom(map[interface{}]interface{}{1: 1, 2: "2"})
@@ -163,7 +163,7 @@ func Test_AnyAnyMap_Clone(t *testing.T) {
 	})
 }
 
-func Test_AnyAnyMap_Merge(t *testing.T) {
+func TestAnyAnyMapMerge(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.NewAnyAnyMap()
 		m2 := gmap.NewAnyAnyMap()
@@ -177,7 +177,7 @@ func Test_AnyAnyMap_Merge(t *testing.T) {
 	})
 }
 
-func Test_AnyAnyMap_Map(t *testing.T) {
+func TestAnyAnyMapMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewAnyAnyMap()
 		m.Set(1, 0)
@@ -194,7 +194,7 @@ func Test_AnyAnyMap_Map(t *testing.T) {
 	})
 }
 
-func Test_AnyAnyMap_MapCopy(t *testing.T) {
+func TestAnyAnyMapMapCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewAnyAnyMap()
 		m.Set(1, 0)
@@ -211,7 +211,7 @@ func Test_AnyAnyMap_MapCopy(t *testing.T) {
 	})
 }
 
-func Test_AnyAnyMap_FilterEmpty(t *testing.T) {
+func TestAnyAnyMapFilterEmpty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewAnyAnyMap()
 		m.Set(1, 0)
@@ -236,7 +236,7 @@ func Test_AnyAnyMap_FilterEmpty(t *testing.T) {
 	})
 }
 
-func Test_AnyAnyMap_Json(t *testing.T) {
+func TestAnyAnyMapJson(t *testing.T) {
 	// Marshal
 	gtest.C(t, func(t *gtest.T) {
 		data := g.MapAnyAny{
@@ -280,7 +280,7 @@ func Test_AnyAnyMap_Json(t *testing.T) {
 	})
 }
 
-func Test_AnyAnyMap_Pop(t *testing.T) {
+func TestAnyAnyMapPop(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewAnyAnyMapFrom(g.MapAnyAny{
 			"k1": "v1",
@@ -306,7 +306,7 @@ func Test_AnyAnyMap_Pop(t *testing.T) {
 	})
 }
 
-func Test_AnyAnyMap_Pops(t *testing.T) {
+func TestAnyAnyMapPops(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewAnyAnyMapFrom(g.MapAnyAny{
 			"k1": "v1",
@@ -378,7 +378,7 @@ func TestAnyAnyMap_UnmarshalValue(t *testing.T) {
 	})
 }
 
-func Test_AnyAnyMap_DeepCopy(t *testing.T) {
+func TestAnyAnyMapDeepCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewAnyAnyMapFrom(g.MapAnyAny{
 			"k1": "v1",
@@ -392,7 +392,7 @@ func Test_AnyAnyMap_DeepCopy(t *testing.T) {
 	})
 }
 
-func Test_AnyAnyMap_IsSubOf(t *testing.T) {
+func TestAnyAnyMapIsSubOf(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.NewAnyAnyMapFrom(g.MapAnyAny{
 			"k1": "v1",
@@ -407,7 +407,7 @@ func Test_AnyAnyMap_IsSubOf(t *testing.T) {
 	})
 }
 
-func Test_AnyAnyMap_Diff(t *testing.T) {
+func TestAnyAnyMapDiff(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.NewAnyAnyMapFrom(g.MapAnyAny{
 			"0": "v0",

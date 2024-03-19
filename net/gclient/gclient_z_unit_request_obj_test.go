@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_Client_DoRequestObj(t *testing.T) {
+func TestClientDoRequestObj(t *testing.T) {
 	type UserCreateReq struct {
 		g.Meta `path:"/user" method:"post"`
 		Id     int

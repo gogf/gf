@@ -12,7 +12,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_parseSequenceTag(t *testing.T) {
+func TestparseSequenceTag(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := "name@required|length:2,20|password3|same:password1#||密码强度不足|两次密码不一致"
 		field, rule, msg := ParseTagValue(s)
@@ -43,7 +43,7 @@ func Test_parseSequenceTag(t *testing.T) {
 	})
 }
 
-func Test_GetTags(t *testing.T) {
+func TestGetTags(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(structTagPriority, GetTags())
 	})

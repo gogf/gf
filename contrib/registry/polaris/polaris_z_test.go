@@ -728,7 +728,7 @@ func TestService_GetKey(t *testing.T) {
 }
 
 // Test_trimAndReplace Test trimAndReplace
-func Test_trimAndReplace(t *testing.T) {
+func TesttrimAndReplace(t *testing.T) {
 	type args struct {
 		key string
 	}

@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_ZipPath(t *testing.T) {
+func TestZipPath(t *testing.T) {
 	// file
 	gtest.C(t, func(t *gtest.T) {
 		srcPath := gtest.DataPath("zip", "path1", "1.txt")
@@ -177,7 +177,7 @@ func Test_ZipPath(t *testing.T) {
 	})
 }
 
-func Test_ZipPathWriter(t *testing.T) {
+func TestZipPathWriter(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			srcPath  = gtest.DataPath("zip")
@@ -216,7 +216,7 @@ func Test_ZipPathWriter(t *testing.T) {
 	})
 }
 
-func Test_ZipPathContent(t *testing.T) {
+func TestZipPathContent(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			srcPath  = gtest.DataPath("zip")

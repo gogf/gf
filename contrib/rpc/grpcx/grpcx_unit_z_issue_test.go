@@ -9,10 +9,11 @@ package grpcx_test
 import (
 	"context"
 	"fmt"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"testing"
 	"time"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 	"github.com/gogf/gf/v2/frame/g"
@@ -24,7 +25,7 @@ import (
 var ctx = context.Background()
 
 // https://github.com/gogf/gf/issues/3292
-func Test_Issue3292(t *testing.T) {
+func TestIssue3292(t *testing.T) {
 	var (
 		_ = grpcx.Client.MustNewGrpcClientConn(
 			"127.0.0.1:8888",

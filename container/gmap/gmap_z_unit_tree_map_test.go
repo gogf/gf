@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func Test_TreeMap_Var(t *testing.T) {
+func TestTreeMapVar(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var m gmap.TreeMap
 		m.SetComparator(gutil.ComparatorString)
@@ -50,7 +50,7 @@ func Test_TreeMap_Var(t *testing.T) {
 	})
 }
 
-func Test_TreeMap_Basic(t *testing.T) {
+func TestTreeMapBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewTreeMap(gutil.ComparatorString)
 		m.Set("key1", "val1")
@@ -85,7 +85,7 @@ func Test_TreeMap_Basic(t *testing.T) {
 	})
 }
 
-func Test_TreeMap_Set_Fun(t *testing.T) {
+func TestTreeMapSetFun(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewTreeMap(gutil.ComparatorString)
 		m.GetOrSetFunc("fun", getValue)
@@ -98,7 +98,7 @@ func Test_TreeMap_Set_Fun(t *testing.T) {
 	})
 }
 
-func Test_TreeMap_Batch(t *testing.T) {
+func TestTreeMapBatch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewTreeMap(gutil.ComparatorString)
 		m.Sets(map[interface{}]interface{}{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
@@ -108,7 +108,7 @@ func Test_TreeMap_Batch(t *testing.T) {
 	})
 }
 
-func Test_TreeMap_Iterator(t *testing.T) {
+func TestTreeMapIterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[interface{}]interface{}{1: 1, "key1": "val1"}
 		m := gmap.NewTreeMapFrom(gutil.ComparatorString, expect)
@@ -151,7 +151,7 @@ func Test_TreeMap_Iterator(t *testing.T) {
 	})
 }
 
-func Test_TreeMap_Clone(t *testing.T) {
+func TestTreeMapClone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// clone 方法是深克隆
 		m := gmap.NewTreeMapFrom(gutil.ComparatorString, map[interface{}]interface{}{1: 1, "key1": "val1"})
@@ -166,7 +166,7 @@ func Test_TreeMap_Clone(t *testing.T) {
 	})
 }
 
-func Test_TreeMap_Json(t *testing.T) {
+func TestTreeMapJson(t *testing.T) {
 	// Marshal
 	gtest.C(t, func(t *gtest.T) {
 		data := g.MapAnyAny{

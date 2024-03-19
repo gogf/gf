@@ -21,7 +21,7 @@ var (
 	ctx = context.TODO()
 )
 
-func Test_Try(t *testing.T) {
+func TestTry(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := `gutil Try test`
 		t.Assert(gutil.Try(ctx, func(ctx context.Context) {
@@ -36,7 +36,7 @@ func Test_Try(t *testing.T) {
 	})
 }
 
-func Test_TryCatch(t *testing.T) {
+func TestTryCatch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		gutil.TryCatch(ctx, func(ctx context.Context) {
 			panic("gutil TryCatch test")
@@ -62,7 +62,7 @@ func Test_TryCatch(t *testing.T) {
 	})
 }
 
-func Test_Throw(t *testing.T) {
+func TestThrow(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer func() {
 			t.Assert(recover(), "gutil Throw test")
@@ -72,7 +72,7 @@ func Test_Throw(t *testing.T) {
 	})
 }
 
-func Test_Keys(t *testing.T) {
+func TestKeys(t *testing.T) {
 	// not support int
 	gtest.C(t, func(t *gtest.T) {
 		var val int = 1
@@ -135,7 +135,7 @@ func Test_Keys(t *testing.T) {
 	})
 }
 
-func Test_Values(t *testing.T) {
+func TestValues(t *testing.T) {
 	// not support int
 	gtest.C(t, func(t *gtest.T) {
 		var val int = 1
@@ -191,7 +191,7 @@ func TestListToMapByKey(t *testing.T) {
 	})
 }
 
-func Test_GetOrDefaultStr(t *testing.T) {
+func TestGetOrDefaultStr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gutil.GetOrDefaultStr("a", "b"), "b")
 		t.Assert(gutil.GetOrDefaultStr("a", "b", "c"), "b")
@@ -199,7 +199,7 @@ func Test_GetOrDefaultStr(t *testing.T) {
 	})
 }
 
-func Test_GetOrDefaultAny(t *testing.T) {
+func TestGetOrDefaultAny(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gutil.GetOrDefaultAny("a", "b"), "b")
 		t.Assert(gutil.GetOrDefaultAny("a", "b", "c"), "b")

@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_StrStrMap_Var(t *testing.T) {
+func TestStrStrMapVar(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var m gmap.StrStrMap
 		m.Set("a", "a")
@@ -49,7 +49,7 @@ func Test_StrStrMap_Var(t *testing.T) {
 	})
 }
 
-func Test_StrStrMap_Basic(t *testing.T) {
+func TestStrStrMapBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewStrStrMap()
 		m.Set("a", "a")
@@ -84,7 +84,7 @@ func Test_StrStrMap_Basic(t *testing.T) {
 	})
 }
 
-func Test_StrStrMap_Set_Fun(t *testing.T) {
+func TestStrStrMapSetFun(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewStrStrMap()
 
@@ -106,7 +106,7 @@ func Test_StrStrMap_Set_Fun(t *testing.T) {
 	})
 }
 
-func Test_StrStrMap_Batch(t *testing.T) {
+func TestStrStrMapBatch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewStrStrMap()
 
@@ -117,7 +117,7 @@ func Test_StrStrMap_Batch(t *testing.T) {
 	})
 }
 
-func Test_StrStrMap_Iterator(t *testing.T) {
+func TestStrStrMapIterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[string]string{"a": "a", "b": "b"}
 		m := gmap.NewStrStrMapFrom(expect)
@@ -141,7 +141,7 @@ func Test_StrStrMap_Iterator(t *testing.T) {
 	})
 }
 
-func Test_StrStrMap_Lock(t *testing.T) {
+func TestStrStrMapLock(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[string]string{"a": "a", "b": "b"}
 
@@ -155,7 +155,7 @@ func Test_StrStrMap_Lock(t *testing.T) {
 	})
 }
 
-func Test_StrStrMap_Clone(t *testing.T) {
+func TestStrStrMapClone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// clone 方法是深克隆
 		m := gmap.NewStrStrMapFrom(map[string]string{"a": "a", "b": "b", "c": "c"})
@@ -171,7 +171,7 @@ func Test_StrStrMap_Clone(t *testing.T) {
 	})
 }
 
-func Test_StrStrMap_Merge(t *testing.T) {
+func TestStrStrMapMerge(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.NewStrStrMap()
 		m2 := gmap.NewStrStrMap()
@@ -185,7 +185,7 @@ func Test_StrStrMap_Merge(t *testing.T) {
 	})
 }
 
-func Test_StrStrMap_Map(t *testing.T) {
+func TestStrStrMapMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewStrStrMap()
 		m.Set("1", "1")
@@ -202,7 +202,7 @@ func Test_StrStrMap_Map(t *testing.T) {
 	})
 }
 
-func Test_StrStrMap_MapCopy(t *testing.T) {
+func TestStrStrMapMapCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewStrStrMap()
 		m.Set("1", "1")
@@ -219,7 +219,7 @@ func Test_StrStrMap_MapCopy(t *testing.T) {
 	})
 }
 
-func Test_StrStrMap_FilterEmpty(t *testing.T) {
+func TestStrStrMapFilterEmpty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewStrStrMap()
 		m.Set("1", "")
@@ -233,7 +233,7 @@ func Test_StrStrMap_FilterEmpty(t *testing.T) {
 	})
 }
 
-func Test_StrStrMap_Json(t *testing.T) {
+func TestStrStrMapJson(t *testing.T) {
 	// Marshal
 	gtest.C(t, func(t *gtest.T) {
 		data := g.MapStrStr{
@@ -277,7 +277,7 @@ func Test_StrStrMap_Json(t *testing.T) {
 	})
 }
 
-func Test_StrStrMap_Pop(t *testing.T) {
+func TestStrStrMapPop(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewStrStrMapFrom(g.MapStrStr{
 			"k1": "v1",
@@ -303,7 +303,7 @@ func Test_StrStrMap_Pop(t *testing.T) {
 	})
 }
 
-func Test_StrStrMap_Pops(t *testing.T) {
+func TestStrStrMapPops(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewStrStrMapFrom(g.MapStrStr{
 			"k1": "v1",
@@ -375,7 +375,7 @@ func TestStrStrMap_UnmarshalValue(t *testing.T) {
 	})
 }
 
-func Test_StrStrMap_DeepCopy(t *testing.T) {
+func TestStrStrMapDeepCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewStrStrMapFrom(g.MapStrStr{
 			"key1": "val1",
@@ -389,7 +389,7 @@ func Test_StrStrMap_DeepCopy(t *testing.T) {
 	})
 }
 
-func Test_StrStrMap_IsSubOf(t *testing.T) {
+func TestStrStrMapIsSubOf(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.NewStrStrMapFrom(g.MapStrStr{
 			"k1": "v1",
@@ -404,7 +404,7 @@ func Test_StrStrMap_IsSubOf(t *testing.T) {
 	})
 }
 
-func Test_StrStrMap_Diff(t *testing.T) {
+func TestStrStrMapDiff(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.NewStrStrMapFrom(g.MapStrStr{
 			"0": "0",

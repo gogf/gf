@@ -12,7 +12,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_checkDataType(t *testing.T) {
+func TestcheckDataType(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		data := []byte(`
 bb           = """

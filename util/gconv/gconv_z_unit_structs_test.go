@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Structs_WithTag(t *testing.T) {
+func TestStructsWithTag(t *testing.T) {
 	type User struct {
 		Uid      int    `json:"id"`
 		NickName string `json:"name"`
@@ -61,7 +61,7 @@ func Test_Structs_WithTag(t *testing.T) {
 	})
 }
 
-func Test_Structs_WithoutTag(t *testing.T) {
+func TestStructsWithoutTag(t *testing.T) {
 	type User struct {
 		Uid      int
 		NickName string
@@ -108,7 +108,7 @@ func Test_Structs_WithoutTag(t *testing.T) {
 	})
 }
 
-func Test_Structs_SliceParameter(t *testing.T) {
+func TestStructsSliceParameter(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Uid      int
@@ -152,7 +152,7 @@ func Test_Structs_SliceParameter(t *testing.T) {
 	})
 }
 
-func Test_Structs_DirectReflectSet(t *testing.T) {
+func TestStructsDirectReflectSet(t *testing.T) {
 	type A struct {
 		Id   int
 		Name string
@@ -183,7 +183,7 @@ func Test_Structs_DirectReflectSet(t *testing.T) {
 	})
 }
 
-func Test_Structs_IntSliceAttribute(t *testing.T) {
+func TestStructsIntSliceAttribute(t *testing.T) {
 	type A struct {
 		Id []int
 	}

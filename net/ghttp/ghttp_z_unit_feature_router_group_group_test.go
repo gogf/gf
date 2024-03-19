@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_Router_Group_Group(t *testing.T) {
+func TestRouterGroupGroup(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
 		group.Middleware(func(r *ghttp.Request) {

@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func Test_Gen_Service_Default(t *testing.T) {
+func TestGenServiceDefault(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			path      = gfile.Temp(guid.S())

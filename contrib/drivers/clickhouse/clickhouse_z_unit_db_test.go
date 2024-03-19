@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_DB_Ping(t *testing.T) {
+func TestDBPing(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err1 := db.PingMaster()
 		err2 := db.PingSlave()
@@ -24,7 +24,7 @@ func Test_DB_Ping(t *testing.T) {
 	})
 }
 
-func Test_DB_Query(t *testing.T) {
+func TestDBQuery(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Query(ctx, "SELECT ?", 1)
 		t.AssertNil(err)
@@ -40,7 +40,7 @@ func Test_DB_Query(t *testing.T) {
 	})
 }
 
-func Test_DB_Exec(t *testing.T) {
+func TestDBExec(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -50,7 +50,7 @@ func Test_DB_Exec(t *testing.T) {
 	})
 }
 
-func Test_DB_Insert(t *testing.T) {
+func TestDBInsert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -89,7 +89,7 @@ func Test_DB_Insert(t *testing.T) {
 	})
 }
 
-func Test_DB_Save(t *testing.T) {
+func TestDBSave(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		createTable("t_user")
 		defer dropTable("t_user")
@@ -107,7 +107,7 @@ func Test_DB_Save(t *testing.T) {
 	})
 }
 
-func Test_DB_Replace(t *testing.T) {
+func TestDBReplace(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		createTable("t_user")
 		defer dropTable("t_user")
@@ -125,7 +125,7 @@ func Test_DB_Replace(t *testing.T) {
 	})
 }
 
-func Test_DB_GetAll(t *testing.T) {
+func TestDBGetAll(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -175,7 +175,7 @@ func Test_DB_GetAll(t *testing.T) {
 	})
 }
 
-func Test_DB_GetOne(t *testing.T) {
+func TestDBGetOne(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -205,7 +205,7 @@ func Test_DB_GetOne(t *testing.T) {
 	})
 }
 
-func Test_DB_GetValue(t *testing.T) {
+func TestDBGetValue(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -215,7 +215,7 @@ func Test_DB_GetValue(t *testing.T) {
 	})
 }
 
-func Test_DB_GetCount(t *testing.T) {
+func TestDBGetCount(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -225,7 +225,7 @@ func Test_DB_GetCount(t *testing.T) {
 	})
 }
 
-func Test_DB_GetArray(t *testing.T) {
+func TestDBGetArray(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -239,7 +239,7 @@ func Test_DB_GetArray(t *testing.T) {
 	})
 }
 
-func Test_DB_GetScan(t *testing.T) {
+func TestDBGetScan(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -257,7 +257,7 @@ func Test_DB_GetScan(t *testing.T) {
 	})
 }
 
-func Test_DB_Update(t *testing.T) {
+func TestDBUpdate(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -275,7 +275,7 @@ func Test_DB_Update(t *testing.T) {
 	})
 }
 
-func Test_DB_Delete(t *testing.T) {
+func TestDBDelete(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -286,7 +286,7 @@ func Test_DB_Delete(t *testing.T) {
 	})
 }
 
-func Test_DB_Tables(t *testing.T) {
+func TestDBTables(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		tables := []string{"t_user1", "pop", "haha"}
 
@@ -310,7 +310,7 @@ func Test_DB_Tables(t *testing.T) {
 	})
 }
 
-func Test_DB_TableFields(t *testing.T) {
+func TestDBTableFields(t *testing.T) {
 	table := createInitTable("user")
 	defer dropTable(table)
 

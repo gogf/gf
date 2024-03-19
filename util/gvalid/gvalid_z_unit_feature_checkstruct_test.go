@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_CheckStruct(t *testing.T) {
+func TestCheckStruct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Object struct {
 			Name string
@@ -227,7 +227,7 @@ func Test_CheckStruct(t *testing.T) {
 	})
 }
 
-func Test_CheckStruct_EmbeddedObject_Attribute(t *testing.T) {
+func TestCheckStructEmbeddedObjectAttribute(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Base struct {
 			Time *gtime.Time
@@ -278,7 +278,7 @@ func Test_CheckStruct_EmbeddedObject_Attribute(t *testing.T) {
 	})
 }
 
-func Test_CheckStruct_With_EmbeddedObject(t *testing.T) {
+func TestCheckStructWithEmbeddedObject(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Pass struct {
 			Pass1 string `valid:"password1@required|same:password2#请输入您的密码|您两次输入的密码不一致"`
@@ -304,7 +304,7 @@ func Test_CheckStruct_With_EmbeddedObject(t *testing.T) {
 	})
 }
 
-func Test_CheckStruct_With_StructAttribute(t *testing.T) {
+func TestCheckStructWithStructAttribute(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Pass struct {
 			Pass1 string `valid:"password1@required|same:password2#请输入您的密码|您两次输入的密码不一致"`
@@ -330,7 +330,7 @@ func Test_CheckStruct_With_StructAttribute(t *testing.T) {
 	})
 }
 
-func Test_CheckStruct_Optional(t *testing.T) {
+func TestCheckStructOptional(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Params struct {
 			Page      int    `v:"required|min:1         # page is required"`
@@ -372,7 +372,7 @@ func Test_CheckStruct_Optional(t *testing.T) {
 	})
 }
 
-func Test_CheckStruct_NoTag(t *testing.T) {
+func TestCheckStructNoTag(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Params struct {
 			Page      int
@@ -388,7 +388,7 @@ func Test_CheckStruct_NoTag(t *testing.T) {
 	})
 }
 
-func Test_CheckStruct_InvalidRule(t *testing.T) {
+func TestCheckStructInvalidRule(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Params struct {
 			Name  string
@@ -469,7 +469,7 @@ func TestValidator_CheckStructWithData(t *testing.T) {
 	})
 }
 
-func Test_CheckStruct_PointerAttribute(t *testing.T) {
+func TestCheckStructPointerAttribute(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Req struct {
 			Name string

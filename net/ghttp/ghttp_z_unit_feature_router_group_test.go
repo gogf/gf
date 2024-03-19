@@ -48,7 +48,7 @@ func Handler(r *ghttp.Request) {
 	r.Response.Write("Handler")
 }
 
-func Test_Router_GroupBasic1(t *testing.T) {
+func TestRouterGroupBasic1(t *testing.T) {
 	s := g.Server(guid.S())
 	obj := new(GroupObject)
 	// 分组路由方法注册
@@ -81,7 +81,7 @@ func Test_Router_GroupBasic1(t *testing.T) {
 	})
 }
 
-func Test_Router_GroupBuildInVar(t *testing.T) {
+func TestRouterGroupBuildInVar(t *testing.T) {
 	s := g.Server(guid.S())
 	obj := new(GroupObject)
 	// 分组路由方法注册
@@ -105,7 +105,7 @@ func Test_Router_GroupBuildInVar(t *testing.T) {
 	})
 }
 
-func Test_Router_Group_Methods(t *testing.T) {
+func TestRouterGroupMethods(t *testing.T) {
 	s := g.Server(guid.S())
 	obj := new(GroupObject)
 	group := s.Group("/")
@@ -123,7 +123,7 @@ func Test_Router_Group_Methods(t *testing.T) {
 	})
 }
 
-func Test_Router_Group_MultiServer(t *testing.T) {
+func TestRouterGroupMultiServer(t *testing.T) {
 	s1 := g.Server(guid.S())
 	s2 := g.Server(guid.S())
 	s1.Group("/", func(group *ghttp.RouterGroup) {
@@ -154,7 +154,7 @@ func Test_Router_Group_MultiServer(t *testing.T) {
 	})
 }
 
-func Test_Router_Group_Map(t *testing.T) {
+func TestRouterGroupMap(t *testing.T) {
 	testFuncGet := func(r *ghttp.Request) {
 		r.Response.Write("get")
 	}
@@ -199,7 +199,7 @@ func (b *SafeBuffer) String() string {
 	return b.buffer.String()
 }
 
-func Test_Router_OverWritten(t *testing.T) {
+func TestRouterOverWritten(t *testing.T) {
 	var (
 		s   = g.Server(guid.S())
 		obj = new(GroupObject)

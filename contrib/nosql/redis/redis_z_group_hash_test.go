@@ -12,7 +12,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_GroupHash_HSet(t *testing.T) {
+func TestGroupHashHSet(t *testing.T) {
 	defer redis.FlushAll(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -32,7 +32,7 @@ func Test_GroupHash_HSet(t *testing.T) {
 	})
 }
 
-func Test_GroupHash_HSetNX(t *testing.T) {
+func TestGroupHashHSetNX(t *testing.T) {
 	defer redis.FlushAll(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -50,7 +50,7 @@ func Test_GroupHash_HSetNX(t *testing.T) {
 	})
 }
 
-func Test_GroupHash_HStrLen(t *testing.T) {
+func TestGroupHashHStrLen(t *testing.T) {
 	defer redis.FlushAll(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -80,7 +80,7 @@ func Test_GroupHash_HStrLen(t *testing.T) {
 	})
 }
 
-func Test_GroupHash_HExists(t *testing.T) {
+func TestGroupHashHExists(t *testing.T) {
 	defer redis.FlushAll(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -104,7 +104,7 @@ func Test_GroupHash_HExists(t *testing.T) {
 	})
 }
 
-func Test_GroupHash_HDel(t *testing.T) {
+func TestGroupHashHDel(t *testing.T) {
 	defer redis.FlushAll(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -138,7 +138,7 @@ func Test_GroupHash_HDel(t *testing.T) {
 	})
 }
 
-func Test_GroupHash_HLen(t *testing.T) {
+func TestGroupHashHLen(t *testing.T) {
 	defer redis.FlushAll(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -166,7 +166,7 @@ func Test_GroupHash_HLen(t *testing.T) {
 	})
 }
 
-func Test_GroupHash_HIncrBy(t *testing.T) {
+func TestGroupHashHIncrBy(t *testing.T) {
 	defer redis.FlushAll(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -194,7 +194,7 @@ func Test_GroupHash_HIncrBy(t *testing.T) {
 	})
 }
 
-func Test_GroupHash_HIncrByFloat(t *testing.T) {
+func TestGroupHashHIncrByFloat(t *testing.T) {
 	defer redis.FlushAll(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -222,7 +222,7 @@ func Test_GroupHash_HIncrByFloat(t *testing.T) {
 	})
 }
 
-func Test_GroupHash_HMSet(t *testing.T) {
+func TestGroupHashHMSet(t *testing.T) {
 	defer redis.FlushAll(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -249,7 +249,7 @@ func Test_GroupHash_HMSet(t *testing.T) {
 	})
 }
 
-func Test_GroupHash_HMGet(t *testing.T) {
+func TestGroupHashHMGet(t *testing.T) {
 	defer redis.FlushAll(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -272,7 +272,7 @@ func Test_GroupHash_HMGet(t *testing.T) {
 	})
 }
 
-func Test_GroupHash_HKeys(t *testing.T) {
+func TestGroupHashHKeys(t *testing.T) {
 	defer redis.FlushAll(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -292,7 +292,7 @@ func Test_GroupHash_HKeys(t *testing.T) {
 	})
 }
 
-func Test_GroupHash_HVals(t *testing.T) {
+func TestGroupHashHVals(t *testing.T) {
 	defer redis.FlushAll(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -312,7 +312,7 @@ func Test_GroupHash_HVals(t *testing.T) {
 	})
 }
 
-func Test_GroupHash_HGetAll(t *testing.T) {
+func TestGroupHashHGetAll(t *testing.T) {
 	defer redis.FlushAll(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		var (

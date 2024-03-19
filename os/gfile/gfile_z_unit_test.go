@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_IsDir(t *testing.T) {
+func TestIsDir(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		paths := "/testfile"
 		createDir(paths)
@@ -31,7 +31,7 @@ func Test_IsDir(t *testing.T) {
 	})
 }
 
-func Test_IsEmpty(t *testing.T) {
+func TestIsEmpty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		path := "/testdir_" + gconv.String(gtime.TimestampNano())
 		createDir(path)
@@ -56,7 +56,7 @@ func Test_IsEmpty(t *testing.T) {
 	})
 }
 
-func Test_Create(t *testing.T) {
+func TestCreate(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err       error
@@ -83,7 +83,7 @@ func Test_Create(t *testing.T) {
 	})
 }
 
-func Test_Open(t *testing.T) {
+func TestOpen(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err     error
@@ -116,7 +116,7 @@ func Test_Open(t *testing.T) {
 	})
 }
 
-func Test_OpenFile(t *testing.T) {
+func TestOpenFile(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err     error
@@ -149,7 +149,7 @@ func Test_OpenFile(t *testing.T) {
 	})
 }
 
-func Test_OpenWithFlag(t *testing.T) {
+func TestOpenWithFlag(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err     error
@@ -181,7 +181,7 @@ func Test_OpenWithFlag(t *testing.T) {
 	})
 }
 
-func Test_OpenWithFlagPerm(t *testing.T) {
+func TestOpenWithFlagPerm(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err     error
@@ -212,7 +212,7 @@ func Test_OpenWithFlagPerm(t *testing.T) {
 	})
 }
 
-func Test_Exists(t *testing.T) {
+func TestExists(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -244,7 +244,7 @@ func Test_Exists(t *testing.T) {
 	})
 }
 
-func Test_Pwd(t *testing.T) {
+func TestPwd(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		paths, err := os.Getwd()
 		t.AssertNil(err)
@@ -253,7 +253,7 @@ func Test_Pwd(t *testing.T) {
 	})
 }
 
-func Test_IsFile(t *testing.T) {
+func TestIsFile(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			flag  bool
@@ -289,7 +289,7 @@ func Test_IsFile(t *testing.T) {
 	})
 }
 
-func Test_Info(t *testing.T) {
+func TestInfo(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err    error
@@ -311,7 +311,7 @@ func Test_Info(t *testing.T) {
 	})
 }
 
-func Test_Move(t *testing.T) {
+func TestMove(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths     string = "/ovetest"
@@ -335,7 +335,7 @@ func Test_Move(t *testing.T) {
 	})
 }
 
-func Test_Rename(t *testing.T) {
+func TestRename(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths  string = "/testfiles"
@@ -358,7 +358,7 @@ func Test_Rename(t *testing.T) {
 
 }
 
-func Test_DirNames(t *testing.T) {
+func TestDirNames(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths    string = "/testdirs"
@@ -388,7 +388,7 @@ func Test_DirNames(t *testing.T) {
 	})
 }
 
-func Test_Glob(t *testing.T) {
+func TestGlob(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths      string = "/testfiles/*.txt"
@@ -429,7 +429,7 @@ func Test_Glob(t *testing.T) {
 	})
 }
 
-func Test_Remove(t *testing.T) {
+func TestRemove(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths string = "/testfile_t1.txt"
@@ -444,7 +444,7 @@ func Test_Remove(t *testing.T) {
 	})
 }
 
-func Test_IsReadable(t *testing.T) {
+func TestIsReadable(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths1 string = "/testfile_GetContents.txt"
@@ -460,7 +460,7 @@ func Test_IsReadable(t *testing.T) {
 	})
 }
 
-func Test_IsWritable(t *testing.T) {
+func TestIsWritable(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths1 string = "/testfile_GetContents.txt"
@@ -475,7 +475,7 @@ func Test_IsWritable(t *testing.T) {
 	})
 }
 
-func Test_Chmod(t *testing.T) {
+func TestChmod(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths1 string = "/testfile_GetContents.txt"
@@ -491,7 +491,7 @@ func Test_Chmod(t *testing.T) {
 }
 
 // 获取绝对目录地址
-func Test_RealPath(t *testing.T) {
+func TestRealPath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths1    string = "/testfile_files"
@@ -515,7 +515,7 @@ func Test_RealPath(t *testing.T) {
 }
 
 // 获取当前执行文件的目录
-func Test_SelfPath(t *testing.T) {
+func TestSelfPath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths1    string
@@ -534,7 +534,7 @@ func Test_SelfPath(t *testing.T) {
 	})
 }
 
-func Test_SelfDir(t *testing.T) {
+func TestSelfDir(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths1    string
@@ -551,7 +551,7 @@ func Test_SelfDir(t *testing.T) {
 	})
 }
 
-func Test_Basename(t *testing.T) {
+func TestBasename(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths1    string = "/testfilerr_GetContents.txt"
@@ -567,7 +567,7 @@ func Test_Basename(t *testing.T) {
 	})
 }
 
-func Test_Dir(t *testing.T) {
+func TestDir(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths1    string = "/testfiless"
@@ -584,7 +584,7 @@ func Test_Dir(t *testing.T) {
 	})
 }
 
-func Test_Ext(t *testing.T) {
+func TestExt(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths1   string = "/testfile_GetContents.txt"
@@ -608,7 +608,7 @@ func Test_Ext(t *testing.T) {
 	})
 }
 
-func Test_ExtName(t *testing.T) {
+func TestExtName(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gfile.ExtName("/var/www/test.js"), "js")
 		t.Assert(gfile.ExtName("/var/www/test.min.js"), "js")
@@ -617,13 +617,13 @@ func Test_ExtName(t *testing.T) {
 	})
 }
 
-func Test_TempDir(t *testing.T) {
+func TestTempDir(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gfile.Temp(), os.TempDir())
 	})
 }
 
-func Test_Mkdir(t *testing.T) {
+func TestMkdir(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			tpath string = "/testfile/createdir"
@@ -644,7 +644,7 @@ func Test_Mkdir(t *testing.T) {
 	})
 }
 
-func Test_Stat(t *testing.T) {
+func TestStat(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			tpath1   = "/testfile_t1.txt"
@@ -667,20 +667,20 @@ func Test_Stat(t *testing.T) {
 	})
 }
 
-func Test_MainPkgPath(t *testing.T) {
+func TestMainPkgPath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		reads := gfile.MainPkgPath()
 		t.Assert(reads, "")
 	})
 }
 
-func Test_SelfName(t *testing.T) {
+func TestSelfName(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(len(gfile.SelfName()) > 0, true)
 	})
 }
 
-func Test_MTimestamp(t *testing.T) {
+func TestMTimestamp(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gfile.MTimestamp(gfile.Temp()) > 0, true)
 	})

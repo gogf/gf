@@ -20,7 +20,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_SetSingleCustomListener(t *testing.T) {
+func TestSetSingleCustomListener(t *testing.T) {
 	var (
 		p1  int
 		ln1 net.Listener
@@ -59,7 +59,7 @@ func Test_SetSingleCustomListener(t *testing.T) {
 	})
 }
 
-func Test_SetMultipleCustomListeners(t *testing.T) {
+func TestSetMultipleCustomListeners(t *testing.T) {
 	var (
 		p1  int
 		p2  int
@@ -112,7 +112,7 @@ func Test_SetMultipleCustomListeners(t *testing.T) {
 	})
 }
 
-func Test_SetWrongCustomListeners(t *testing.T) {
+func TestSetWrongCustomListeners(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
 		s.Group("/", func(group *ghttp.RouterGroup) {

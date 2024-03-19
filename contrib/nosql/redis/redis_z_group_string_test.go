@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_GroupString_Set(t *testing.T) {
+func TestGroupStringSet(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -74,7 +74,7 @@ func Test_GroupString_Set(t *testing.T) {
 	})
 }
 
-func Test_GroupString_SetNX(t *testing.T) {
+func TestGroupStringSetNX(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -94,7 +94,7 @@ func Test_GroupString_SetNX(t *testing.T) {
 	})
 }
 
-func Test_GroupString_SetEX(t *testing.T) {
+func TestGroupStringSetEX(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -116,7 +116,7 @@ func Test_GroupString_SetEX(t *testing.T) {
 	})
 }
 
-func Test_GroupString_GetDel(t *testing.T) {
+func TestGroupStringGetDel(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -136,7 +136,7 @@ func Test_GroupString_GetDel(t *testing.T) {
 	})
 }
 
-func Test_GroupString_GetEX(t *testing.T) {
+func TestGroupStringGetEX(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -160,7 +160,7 @@ func Test_GroupString_GetEX(t *testing.T) {
 	})
 }
 
-func Test_GroupString_GetSet(t *testing.T) {
+func TestGroupStringGetSet(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -190,7 +190,7 @@ func Test_GroupString_GetSet(t *testing.T) {
 	})
 }
 
-func Test_GroupString_StrLen(t *testing.T) {
+func TestGroupStringStrLen(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -206,7 +206,7 @@ func Test_GroupString_StrLen(t *testing.T) {
 	})
 }
 
-func Test_GroupString_Append(t *testing.T) {
+func TestGroupStringAppend(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -227,7 +227,7 @@ func Test_GroupString_Append(t *testing.T) {
 	})
 }
 
-func Test_GroupString_SetRange(t *testing.T) {
+func TestGroupStringSetRange(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -248,7 +248,7 @@ func Test_GroupString_SetRange(t *testing.T) {
 	})
 }
 
-func Test_GroupString_GetRange(t *testing.T) {
+func TestGroupStringGetRange(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -264,7 +264,7 @@ func Test_GroupString_GetRange(t *testing.T) {
 	})
 }
 
-func Test_GroupString_Incr(t *testing.T) {
+func TestGroupStringIncr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -280,7 +280,7 @@ func Test_GroupString_Incr(t *testing.T) {
 	})
 }
 
-func Test_GroupString_IncrBy(t *testing.T) {
+func TestGroupStringIncrBy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -296,7 +296,7 @@ func Test_GroupString_IncrBy(t *testing.T) {
 	})
 }
 
-func Test_GroupString_IncrByFloat(t *testing.T) {
+func TestGroupStringIncrByFloat(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -312,7 +312,7 @@ func Test_GroupString_IncrByFloat(t *testing.T) {
 	})
 }
 
-func Test_GroupString_Decr(t *testing.T) {
+func TestGroupStringDecr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -328,7 +328,7 @@ func Test_GroupString_Decr(t *testing.T) {
 	})
 }
 
-func Test_GroupString_DecrBy(t *testing.T) {
+func TestGroupStringDecrBy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -344,7 +344,7 @@ func Test_GroupString_DecrBy(t *testing.T) {
 	})
 }
 
-func Test_GroupString_MSet(t *testing.T) {
+func TestGroupStringMSet(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -369,7 +369,7 @@ func Test_GroupString_MSet(t *testing.T) {
 	})
 }
 
-func Test_GroupString_MSetNX(t *testing.T) {
+func TestGroupStringMSetNX(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -401,7 +401,7 @@ func Test_GroupString_MSetNX(t *testing.T) {
 	})
 }
 
-func Test_GroupString_MGet(t *testing.T) {
+func TestGroupStringMGet(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (

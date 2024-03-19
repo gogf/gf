@@ -24,7 +24,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Default(t *testing.T) {
+func TestDefault(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		gcmd.Init([]string{"gf", "--force", "remove", "-fq", "-p=www", "path", "-n", "root"}...)
 		t.Assert(len(gcmd.GetArgAll()), 2)
@@ -45,7 +45,7 @@ func Test_Default(t *testing.T) {
 	})
 }
 
-func Test_BuildOptions(t *testing.T) {
+func TestBuildOptions(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gcmd.BuildOptions(g.MapStrStr{
 			"n": "john",
@@ -70,7 +70,7 @@ func Test_BuildOptions(t *testing.T) {
 	})
 }
 
-func Test_GetWithEnv(t *testing.T) {
+func TestGetWithEnv(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		genv.Set("TEST", "1")
 		defer genv.Remove("TEST")
@@ -84,7 +84,7 @@ func Test_GetWithEnv(t *testing.T) {
 	})
 }
 
-func Test_Command(t *testing.T) {
+func TestCommand(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx = gctx.New()
@@ -152,7 +152,7 @@ gf get golang.org/x/sys
 	})
 }
 
-func Test_Command_Print(t *testing.T) {
+func TestCommandPrint(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx = gctx.New()
@@ -239,7 +239,7 @@ gf build main.go -n my-app -v 1.0 -a amd64,386 -s linux,windows,darwin -p ./dock
 	})
 }
 
-func Test_Command_NotFound(t *testing.T) {
+func TestCommandNotFound(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c0 := &gcmd.Command{
 			Name: "c0",

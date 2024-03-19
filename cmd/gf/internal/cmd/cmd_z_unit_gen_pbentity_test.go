@@ -19,7 +19,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_Gen_Pbentity_NameCase(t *testing.T) {
+func TestGenPbentityNameCase(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err        error

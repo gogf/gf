@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Model_Hook_Select(t *testing.T) {
+func TestModelHookSelect(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -47,7 +47,7 @@ func Test_Model_Hook_Select(t *testing.T) {
 	})
 }
 
-func Test_Model_Hook_Insert(t *testing.T) {
+func TestModelHookInsert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -75,7 +75,7 @@ func Test_Model_Hook_Insert(t *testing.T) {
 	})
 }
 
-func Test_Model_Hook_Update(t *testing.T) {
+func TestModelHookUpdate(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -112,7 +112,7 @@ func Test_Model_Hook_Update(t *testing.T) {
 	})
 }
 
-func Test_Model_Hook_Delete(t *testing.T) {
+func TestModelHookDelete(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 

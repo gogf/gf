@@ -8,85 +8,85 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func Test_CallerPackage(t *testing.T) {
+func TestCallerPackage(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gdebug.CallerPackage(), "github.com/gogf/gf/v2/test/gtest")
 	})
 }
 
-func Test_CallerFunction(t *testing.T) {
+func TestCallerFunction(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gdebug.CallerFunction(), "C")
 	})
 }
 
-func Test_CallerFilePath(t *testing.T) {
+func TestCallerFilePath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.Contains(gdebug.CallerFilePath(), "gtest_util.go"), true)
 	})
 }
 
-func Test_CallerDirectory(t *testing.T) {
+func TestCallerDirectory(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.Contains(gdebug.CallerDirectory(), "gtest"), true)
 	})
 }
 
-func Test_CallerFileLine(t *testing.T) {
+func TestCallerFileLine(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.Contains(gdebug.CallerFileLine(), "gtest_util.go:35"), true)
 	})
 }
 
-func Test_CallerFileLineShort(t *testing.T) {
+func TestCallerFileLineShort(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.Contains(gdebug.CallerFileLineShort(), "gtest_util.go:35"), true)
 	})
 }
 
-func Test_FuncPath(t *testing.T) {
+func TestFuncPath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gdebug.FuncPath(Test_FuncPath), "github.com/gogf/gf/v2/debug/gdebug_test.Test_FuncPath")
 	})
 }
 
-func Test_FuncName(t *testing.T) {
+func TestFuncName(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gdebug.FuncName(Test_FuncName), "gdebug_test.Test_FuncName")
 	})
 }
 
-func Test_PrintStack(t *testing.T) {
+func TestPrintStack(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		gdebug.PrintStack()
 	})
 }
 
-func Test_GoroutineId(t *testing.T) {
+func TestGoroutineId(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertGT(gdebug.GoroutineId(), 0)
 	})
 }
 
-func Test_Stack(t *testing.T) {
+func TestStack(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.Contains(gdebug.Stack(), "gtest_util.go:35"), true)
 	})
 }
 
-func Test_StackWithFilter(t *testing.T) {
+func TestStackWithFilter(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.Contains(gdebug.StackWithFilter([]string{"github.com"}), "gtest_util.go:35"), true)
 	})
 }
 
-func Test_BinVersion(t *testing.T) {
+func TestBinVersion(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertGT(len(gdebug.BinVersion()), 0)
 	})
 }
 
-func Test_BinVersionMd5(t *testing.T) {
+func TestBinVersionMd5(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertGT(len(gdebug.BinVersionMd5()), 0)
 	})

@@ -20,7 +20,7 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func Test_Dump(t *testing.T) {
+func TestDump(t *testing.T) {
 	type CommonReq struct {
 		AppId      int64  `json:"appId" v:"required" in:"path" des:"应用Id" sum:"应用Id Summary"`
 		ResourceId string `json:"resourceId" in:"query" des:"资源Id" sum:"资源Id Summary"`
@@ -80,7 +80,7 @@ func Test_Dump(t *testing.T) {
 	})
 }
 
-func Test_Dump_Map(t *testing.T) {
+func TestDumpMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		buffer := bytes.NewBuffer(nil)
 		m := g.Map{
@@ -153,7 +153,7 @@ func TestDumpWithType(t *testing.T) {
 	})
 }
 
-func Test_Dump_Slashes(t *testing.T) {
+func TestDumpSlashes(t *testing.T) {
 	type Req struct {
 		Content string
 	}
@@ -170,7 +170,7 @@ func Test_Dump_Slashes(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/1661
-func Test_Dump_Issue1661(t *testing.T) {
+func TestDumpIssue1661(t *testing.T) {
 	type B struct {
 		ba int
 		bb string
@@ -275,7 +275,7 @@ func Test_Dump_Issue1661(t *testing.T) {
 	})
 }
 
-func Test_Dump_Cycle_Attribute(t *testing.T) {
+func TestDumpCycleAttribute(t *testing.T) {
 	type Abc struct {
 		ab int
 		cd *Abc
@@ -289,7 +289,7 @@ func Test_Dump_Cycle_Attribute(t *testing.T) {
 	})
 }
 
-func Test_DumpJson(t *testing.T) {
+func TestDumpJson(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var jsonContent = `{"a":1,"b":2}`
 		gutil.DumpJson(jsonContent)

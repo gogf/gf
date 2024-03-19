@@ -20,7 +20,7 @@ import (
 )
 
 // https://github.com/gogf/gf/issues/1227
-func Test_Issue1227(t *testing.T) {
+func TestIssue1227(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type StructFromIssue1227 struct {
 			Name string `json:"n1"`
@@ -117,7 +117,7 @@ func Test_Issue1227(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/1607
-func Test_Issue1607(t *testing.T) {
+func TestIssue1607(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Demo struct {
 			B Float64
@@ -135,7 +135,7 @@ func Test_Issue1607(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/1946
-func Test_Issue1946(t *testing.T) {
+func TestIssue1946(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
 			init *gtype.Bool
@@ -209,7 +209,7 @@ func Test_Issue1946(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/2381
-func Test_Issue2381(t *testing.T) {
+func TestIssue2381(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Inherit struct {
 			Id        int64       `json:"id"          description:"Id"`
@@ -246,7 +246,7 @@ func Test_Issue2381(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/2391
-func Test_Issue2391(t *testing.T) {
+func TestIssue2391(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Inherit struct {
 			Ids   []int
@@ -286,7 +286,7 @@ func Test_Issue2391(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/2395
-func Test_Issue2395(t *testing.T) {
+func TestIssue2395(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Test struct {
 			Num int
@@ -298,7 +298,7 @@ func Test_Issue2395(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/2371
-func Test_Issue2371(t *testing.T) {
+func TestIssue2371(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			s = struct {
@@ -313,7 +313,7 @@ func Test_Issue2371(t *testing.T) {
 	})
 }
 
-func Test_Issue2901(t *testing.T) {
+func TestIssue2901(t *testing.T) {
 	type GameApp2 struct {
 		ForceUpdateTime *time.Time
 	}

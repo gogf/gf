@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_New(t *testing.T) {
+func TestNew(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		node := gdb.ConfigNode{
 			Host:  "127.0.0.1",
@@ -36,7 +36,7 @@ func Test_New(t *testing.T) {
 	})
 }
 
-func Test_Model_Raw(t *testing.T) {
+func TestModelRaw(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -60,7 +60,7 @@ func Test_Model_Raw(t *testing.T) {
 	})
 }
 
-func Test_Model_Insert(t *testing.T) {
+func TestModelInsert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -128,7 +128,7 @@ func Test_Model_Insert(t *testing.T) {
 	})
 }
 
-func Test_Model_One(t *testing.T) {
+func TestModelOne(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -158,7 +158,7 @@ func Test_Model_One(t *testing.T) {
 	})
 }
 
-func Test_Model_All(t *testing.T) {
+func TestModelAll(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -169,7 +169,7 @@ func Test_Model_All(t *testing.T) {
 	})
 }
 
-func Test_Model_Delete(t *testing.T) {
+func TestModelDelete(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -180,7 +180,7 @@ func Test_Model_Delete(t *testing.T) {
 	})
 }
 
-func Test_Model_Update(t *testing.T) {
+func TestModelUpdate(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -202,7 +202,7 @@ func Test_Model_Update(t *testing.T) {
 	})
 }
 
-func Test_Model_Array(t *testing.T) {
+func TestModelArray(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -224,7 +224,7 @@ func Test_Model_Array(t *testing.T) {
 	})
 }
 
-func Test_Model_Scan(t *testing.T) {
+func TestModelScan(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -243,7 +243,7 @@ func Test_Model_Scan(t *testing.T) {
 	})
 }
 
-func Test_Model_Count(t *testing.T) {
+func TestModelCount(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -258,7 +258,7 @@ func Test_Model_Count(t *testing.T) {
 	})
 }
 
-func Test_Model_Where(t *testing.T) {
+func TestModelWhere(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -289,7 +289,7 @@ func Test_Model_Where(t *testing.T) {
 	})
 }
 
-func Test_Model_Sav(t *testing.T) {
+func TestModelSav(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -304,7 +304,7 @@ func Test_Model_Sav(t *testing.T) {
 	})
 }
 
-func Test_Model_Replace(t *testing.T) {
+func TestModelReplace(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 

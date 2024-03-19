@@ -23,7 +23,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_Response_ServeFile(t *testing.T) {
+func TestResponseServeFile(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/ServeFile", func(r *ghttp.Request) {
 		filePath := r.GetQuery("filePath")
@@ -54,7 +54,7 @@ func Test_Response_ServeFile(t *testing.T) {
 	})
 }
 
-func Test_Response_ServeFileDownload(t *testing.T) {
+func TestResponseServeFileDownload(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/ServeFileDownload", func(r *ghttp.Request) {
 		filePath := r.GetQuery("filePath")
@@ -85,7 +85,7 @@ func Test_Response_ServeFileDownload(t *testing.T) {
 	})
 }
 
-func Test_Response_Redirect(t *testing.T) {
+func TestResponseRedirect(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/", func(r *ghttp.Request) {
 		r.Response.Write("RedirectResult")
@@ -115,7 +115,7 @@ func Test_Response_Redirect(t *testing.T) {
 	})
 }
 
-func Test_Response_Buffer(t *testing.T) {
+func TestResponseBuffer(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/Buffer", func(r *ghttp.Request) {
 		name := r.GetQuery("name").Bytes()
@@ -146,7 +146,7 @@ func Test_Response_Buffer(t *testing.T) {
 	})
 }
 
-func Test_Response_WriteTpl(t *testing.T) {
+func TestResponseWriteTpl(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New(gtest.DataPath("template", "basic"))
 		s := g.Server(guid.S())
@@ -168,7 +168,7 @@ func Test_Response_WriteTpl(t *testing.T) {
 	})
 }
 
-func Test_Response_WriteTplDefault(t *testing.T) {
+func TestResponseWriteTplDefault(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		v.SetDefaultFile(gtest.DataPath("template", "basic", "index.html"))
@@ -207,7 +207,7 @@ func Test_Response_WriteTplDefault(t *testing.T) {
 	})
 }
 
-func Test_Response_ParseTplDefault(t *testing.T) {
+func TestResponseParseTplDefault(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		v.SetDefaultFile(gtest.DataPath("template", "basic", "index.html"))
@@ -229,7 +229,7 @@ func Test_Response_ParseTplDefault(t *testing.T) {
 	})
 }
 
-func Test_Response_Write(t *testing.T) {
+func TestResponseWrite(t *testing.T) {
 	type User struct {
 		Name string `json:"name"`
 	}

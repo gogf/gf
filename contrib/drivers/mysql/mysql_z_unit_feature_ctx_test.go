@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Ctx(t *testing.T) {
+func TestCtx(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		db, err := gdb.Instance()
 		t.AssertNil(err)
@@ -30,7 +30,7 @@ func Test_Ctx(t *testing.T) {
 	})
 }
 
-func Test_Ctx_Query(t *testing.T) {
+func TestCtxQuery(t *testing.T) {
 	db.GetLogger().(*glog.Logger).SetCtxKeys("SpanId", "TraceId")
 	gtest.C(t, func(t *gtest.T) {
 		db.SetDebug(true)
@@ -46,7 +46,7 @@ func Test_Ctx_Query(t *testing.T) {
 	})
 }
 
-func Test_Ctx_Model(t *testing.T) {
+func TestCtxModel(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	db.GetLogger().(*glog.Logger).SetCtxKeys("SpanId", "TraceId")

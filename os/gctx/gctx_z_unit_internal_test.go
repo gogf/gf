@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_NeverDone(t *testing.T) {
+func TestNeverDone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		ctx, _ := context.WithDeadline(gctx.New(), time.Now().Add(time.Hour))
 		t.AssertNE(ctx, nil)

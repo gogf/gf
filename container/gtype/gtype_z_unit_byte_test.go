@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Byte(t *testing.T) {
+func TestByte(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var wg sync.WaitGroup
 		addTimes := 127
@@ -52,7 +52,7 @@ func Test_Byte(t *testing.T) {
 	})
 }
 
-func Test_Byte_JSON(t *testing.T) {
+func TestByteJSON(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		i := gtype.NewByte(49)
 		b1, err1 := json.Marshal(i)
@@ -71,7 +71,7 @@ func Test_Byte_JSON(t *testing.T) {
 	})
 }
 
-func Test_Byte_UnmarshalValue(t *testing.T) {
+func TestByteUnmarshalValue(t *testing.T) {
 	type V struct {
 		Name string
 		Var  *gtype.Byte

@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/util/gmeta"
 )
 
-func Test_Model_Builder(t *testing.T) {
+func TestModelBuilder(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -126,7 +126,7 @@ func Test_Model_Builder(t *testing.T) {
 	})
 }
 
-func Test_Safe_Builder(t *testing.T) {
+func TestSafeBuilder(t *testing.T) {
 	// test whether m.Builder() is chain safe
 	gtest.C(t, func(t *gtest.T) {
 		b := db.Model().Builder()

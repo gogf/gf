@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_String(t *testing.T) {
+func TestString(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		i := gtype.NewString("abc")
 		iClone := i.Clone()
@@ -35,7 +35,7 @@ func Test_String(t *testing.T) {
 	})
 }
 
-func Test_String_JSON(t *testing.T) {
+func TestStringJSON(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := "i love gf"
 		i1 := gtype.NewString(s)
@@ -52,7 +52,7 @@ func Test_String_JSON(t *testing.T) {
 	})
 }
 
-func Test_String_UnmarshalValue(t *testing.T) {
+func TestStringUnmarshalValue(t *testing.T) {
 	type V struct {
 		Name string
 		Var  *gtype.String

@@ -25,7 +25,7 @@ func intIntCallBack(int, int) bool {
 	return true
 }
 
-func Test_IntIntMap_Var(t *testing.T) {
+func TestIntIntMapVar(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var m gmap.IntIntMap
 		m.Set(1, 1)
@@ -55,7 +55,7 @@ func Test_IntIntMap_Var(t *testing.T) {
 	})
 }
 
-func Test_IntIntMap_Basic(t *testing.T) {
+func TestIntIntMapBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntIntMap()
 		m.Set(1, 1)
@@ -94,7 +94,7 @@ func Test_IntIntMap_Basic(t *testing.T) {
 	})
 }
 
-func Test_IntIntMap_Set_Fun(t *testing.T) {
+func TestIntIntMapSetFun(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntIntMap()
 
@@ -115,7 +115,7 @@ func Test_IntIntMap_Set_Fun(t *testing.T) {
 	})
 }
 
-func Test_IntIntMap_Batch(t *testing.T) {
+func TestIntIntMapBatch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntIntMap()
 
@@ -127,7 +127,7 @@ func Test_IntIntMap_Batch(t *testing.T) {
 	})
 }
 
-func Test_IntIntMap_Iterator(t *testing.T) {
+func TestIntIntMapIterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[int]int{1: 1, 2: 2}
 		m := gmap.NewIntIntMapFrom(expect)
@@ -151,7 +151,7 @@ func Test_IntIntMap_Iterator(t *testing.T) {
 	})
 }
 
-func Test_IntIntMap_Lock(t *testing.T) {
+func TestIntIntMapLock(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[int]int{1: 1, 2: 2}
 		m := gmap.NewIntIntMapFrom(expect)
@@ -164,7 +164,7 @@ func Test_IntIntMap_Lock(t *testing.T) {
 	})
 }
 
-func Test_IntIntMap_Clone(t *testing.T) {
+func TestIntIntMapClone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// clone 方法是深克隆
 		m := gmap.NewIntIntMapFrom(map[int]int{1: 1, 2: 2})
@@ -180,7 +180,7 @@ func Test_IntIntMap_Clone(t *testing.T) {
 	})
 }
 
-func Test_IntIntMap_Merge(t *testing.T) {
+func TestIntIntMapMerge(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.NewIntIntMap()
 		m2 := gmap.NewIntIntMap()
@@ -194,7 +194,7 @@ func Test_IntIntMap_Merge(t *testing.T) {
 	})
 }
 
-func Test_IntIntMap_Map(t *testing.T) {
+func TestIntIntMapMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntIntMap()
 		m.Set(1, 0)
@@ -211,7 +211,7 @@ func Test_IntIntMap_Map(t *testing.T) {
 	})
 }
 
-func Test_IntIntMap_MapCopy(t *testing.T) {
+func TestIntIntMapMapCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntIntMap()
 		m.Set(1, 0)
@@ -228,7 +228,7 @@ func Test_IntIntMap_MapCopy(t *testing.T) {
 	})
 }
 
-func Test_IntIntMap_FilterEmpty(t *testing.T) {
+func TestIntIntMapFilterEmpty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntIntMap()
 		m.Set(1, 0)
@@ -242,7 +242,7 @@ func Test_IntIntMap_FilterEmpty(t *testing.T) {
 	})
 }
 
-func Test_IntIntMap_Json(t *testing.T) {
+func TestIntIntMapJson(t *testing.T) {
 	// Marshal
 	gtest.C(t, func(t *gtest.T) {
 		data := g.MapIntInt{
@@ -272,7 +272,7 @@ func Test_IntIntMap_Json(t *testing.T) {
 	})
 }
 
-func Test_IntIntMap_Pop(t *testing.T) {
+func TestIntIntMapPop(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntIntMapFrom(g.MapIntInt{
 			1: 11,
@@ -298,7 +298,7 @@ func Test_IntIntMap_Pop(t *testing.T) {
 	})
 }
 
-func Test_IntIntMap_Pops(t *testing.T) {
+func TestIntIntMapPops(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntIntMapFrom(g.MapIntInt{
 			1: 11,
@@ -370,7 +370,7 @@ func TestIntIntMap_UnmarshalValue(t *testing.T) {
 	})
 }
 
-func Test_IntIntMap_DeepCopy(t *testing.T) {
+func TestIntIntMapDeepCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntIntMapFrom(g.MapIntInt{
 			1: 1,
@@ -384,7 +384,7 @@ func Test_IntIntMap_DeepCopy(t *testing.T) {
 	})
 }
 
-func Test_IntIntMap_IsSubOf(t *testing.T) {
+func TestIntIntMapIsSubOf(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.NewIntAnyMapFrom(g.MapIntAny{
 			1: 1,
@@ -399,7 +399,7 @@ func Test_IntIntMap_IsSubOf(t *testing.T) {
 	})
 }
 
-func Test_IntIntMap_Diff(t *testing.T) {
+func TestIntIntMapDiff(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.NewIntIntMapFrom(g.MapIntInt{
 			0: 0,

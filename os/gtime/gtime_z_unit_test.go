@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_TimestampStr(t *testing.T) {
+func TestTimestampStr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertGT(len(gtime.TimestampMilliStr()), 0)
 		t.AssertGT(len(gtime.TimestampMicroStr()), 0)
@@ -23,7 +23,7 @@ func Test_TimestampStr(t *testing.T) {
 	})
 }
 
-func Test_Nanosecond(t *testing.T) {
+func TestNanosecond(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		nanos := gtime.TimestampNano()
 		timeTemp := time.Unix(0, nanos)
@@ -31,7 +31,7 @@ func Test_Nanosecond(t *testing.T) {
 	})
 }
 
-func Test_Microsecond(t *testing.T) {
+func TestMicrosecond(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		micros := gtime.TimestampMicro()
 		timeTemp := time.Unix(0, micros*1e3)
@@ -39,7 +39,7 @@ func Test_Microsecond(t *testing.T) {
 	})
 }
 
-func Test_Millisecond(t *testing.T) {
+func TestMillisecond(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		millis := gtime.TimestampMilli()
 		timeTemp := time.Unix(0, millis*1e6)
@@ -47,7 +47,7 @@ func Test_Millisecond(t *testing.T) {
 	})
 }
 
-func Test_Second(t *testing.T) {
+func TestSecond(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gtime.Timestamp()
 		timeTemp := time.Unix(s, 0)
@@ -55,13 +55,13 @@ func Test_Second(t *testing.T) {
 	})
 }
 
-func Test_Date(t *testing.T) {
+func TestDate(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gtime.Date(), time.Now().Format("2006-01-02"))
 	})
 }
 
-func Test_Datetime(t *testing.T) {
+func TestDatetime(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		datetime := gtime.Datetime()
 		timeTemp, err := gtime.StrToTime(datetime, "Y-m-d H:i:s")
@@ -80,21 +80,21 @@ func Test_Datetime(t *testing.T) {
 	})
 }
 
-func Test_ISO8601(t *testing.T) {
+func TestISO8601(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		iso8601 := gtime.ISO8601()
 		t.Assert(iso8601, gtime.Now().Format("c"))
 	})
 }
 
-func Test_RFC822(t *testing.T) {
+func TestRFC822(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rfc822 := gtime.RFC822()
 		t.Assert(rfc822, gtime.Now().Format("r"))
 	})
 }
 
-func Test_StrToTime(t *testing.T) {
+func TestStrToTime(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// Correct datetime string.
 		var testDateTimes = []string{
@@ -191,7 +191,7 @@ func Test_StrToTime(t *testing.T) {
 	})
 }
 
-func Test_ConvertZone(t *testing.T) {
+func TestConvertZone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// 现行时间
 		nowUTC := time.Now().UTC()
@@ -238,7 +238,7 @@ func Test_ConvertZone(t *testing.T) {
 	})
 }
 
-func Test_ParseDuration(t *testing.T) {
+func TestParseDuration(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		d, err := gtime.ParseDuration("1d")
 		t.AssertNil(err)
@@ -267,7 +267,7 @@ func Test_ParseDuration(t *testing.T) {
 	})
 }
 
-func Test_ParseTimeFromContent(t *testing.T) {
+func TestParseTimeFromContent(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.ParseTimeFromContent("我是中文2006-01-02 15:04:05我也是中文", "Y-m-d H:i:s")
 		t.Assert(timeTemp.Time.Format("2006-01-02 15:04:05"), "2006-01-02 15:04:05")
@@ -291,7 +291,7 @@ func Test_ParseTimeFromContent(t *testing.T) {
 	})
 }
 
-func Test_FuncCost(t *testing.T) {
+func TestFuncCost(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		gtime.FuncCost(func() {
 

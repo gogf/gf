@@ -19,7 +19,7 @@ var (
 	ctx = context.TODO()
 )
 
-func Test_Print(t *testing.T) {
+func TestPrint(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		w := bytes.NewBuffer(nil)
 		l := NewWithWriter(w)
@@ -30,7 +30,7 @@ func Test_Print(t *testing.T) {
 	})
 }
 
-func Test_Debug(t *testing.T) {
+func TestDebug(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		w := bytes.NewBuffer(nil)
 		l := NewWithWriter(w)
@@ -41,7 +41,7 @@ func Test_Debug(t *testing.T) {
 	})
 }
 
-func Test_Info(t *testing.T) {
+func TestInfo(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		w := bytes.NewBuffer(nil)
 		l := NewWithWriter(w)
@@ -52,7 +52,7 @@ func Test_Info(t *testing.T) {
 	})
 }
 
-func Test_Notice(t *testing.T) {
+func TestNotice(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		w := bytes.NewBuffer(nil)
 		l := NewWithWriter(w)
@@ -63,7 +63,7 @@ func Test_Notice(t *testing.T) {
 	})
 }
 
-func Test_Warning(t *testing.T) {
+func TestWarning(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		w := bytes.NewBuffer(nil)
 		l := NewWithWriter(w)
@@ -74,7 +74,7 @@ func Test_Warning(t *testing.T) {
 	})
 }
 
-func Test_Error(t *testing.T) {
+func TestError(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		w := bytes.NewBuffer(nil)
 		l := NewWithWriter(w)
@@ -85,7 +85,7 @@ func Test_Error(t *testing.T) {
 	})
 }
 
-func Test_LevelPrefix(t *testing.T) {
+func TestLevelPrefix(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := New()
 		t.Assert(l.GetLevelPrefix(LEVEL_DEBU), defaultLevelPrefixes[LEVEL_DEBU])

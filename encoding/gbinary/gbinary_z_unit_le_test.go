@@ -13,7 +13,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_LeEncodeAndLeDecode(t *testing.T) {
+func TestLeEncodeAndLeDecode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for k, v := range testData {
 			ve := gbinary.LeEncode(v)
@@ -78,7 +78,7 @@ func Test_LeEncodeAndLeDecode(t *testing.T) {
 	})
 }
 
-func Test_LeEncodeStruct(t *testing.T) {
+func TestLeEncodeStruct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		user := User{"wenzi1", 999, "www.baidu.com"}
 		ve := gbinary.LeEncode(user)
