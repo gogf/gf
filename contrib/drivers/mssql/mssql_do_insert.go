@@ -10,14 +10,15 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/gogf/gf/v2/container/gset"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
 	"strings"
+	"time"
 
+	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // DoInsert inserts or updates data for given table.
@@ -74,12 +75,17 @@ func (d *Driver) doSave(ctx context.Context,
 	}
 
 	for key, value := range one {
-		saveValue := gconv.String(value)
+		var saveValue string
+		if t, ok := value.(time.Time); ok {
+			saveValue = t.Format(`2006-01-02 15:04:05`)
+		} else {
+			saveValue = gconv.String(value)
+		}
 		queryValues = append(
 			queryValues,
 			fmt.Sprintf(
-				valueCharL+"%s"+valueCharR+" AS "+charL+"%s"+charR,
-				saveValue, key,
+				valueCharL+"%s"+valueCharR,
+				saveValue,
 			),
 		)
 
@@ -112,12 +118,12 @@ func (d *Driver) doSave(ctx context.Context,
 
 // parseSqlForUpsert
 // MERGE INTO {{table}} T1
-// USING ( SELECT {{queryValues}} FROM DUAL T2
+// USING ( VALUES( {{queryValues}}) T2 ({{insertKeyStr}})
 // ON (T1.{{duplicateKey}} = T2.{{duplicateKey}} AND ...)
 // WHEN NOT MATCHED THEN
 // INSERT {{insertKeys}} VALUES {{insertValues}}
 // WHEN MATCHED THEN
-// UPDATE SET {{updateValues}};
+// UPDATE SET {{updateValues}}
 func parseSqlForUpsert(table string,
 	queryValues, insertKeys, insertValues, updateValues, duplicateKey []string,
 ) (sqlStr string) {
@@ -141,7 +147,7 @@ func parseSqlForUpsert(table string,
 	return fmt.Sprintf(pattern,
 		table,
 		queryValueStr,
-		duplicateKeyStr,
+		insertKeyStr,
 		duplicateKeyStr,
 		insertKeyStr,
 		insertValueStr,

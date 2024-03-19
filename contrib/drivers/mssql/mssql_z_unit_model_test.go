@@ -27,7 +27,7 @@ import (
 func Test_Page(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
-	//db.SetDebug(true)
+	// db.SetDebug(true)
 	result, err := db.Model(table).Page(1, 2).Order("id").All()
 	gtest.Assert(err, nil)
 	fmt.Println("page:1--------", result)
