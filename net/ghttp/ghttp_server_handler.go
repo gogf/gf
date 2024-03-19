@@ -305,7 +305,9 @@ func (s *Server) serveFile(r *Request, f *staticFile, allowIndex ...bool) {
 		r.Response.WriteStatus(http.StatusForbidden)
 		return
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	// Clear the response buffer before file serving.
 	// It ignores all custom buffer content and uses the file content.

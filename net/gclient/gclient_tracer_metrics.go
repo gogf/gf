@@ -8,10 +8,11 @@ package gclient
 
 import (
 	"crypto/tls"
-	"github.com/gogf/gf/v2/os/gtime"
 	"net/http"
 	"net/http/httptrace"
 	"net/textproto"
+
+	"github.com/gogf/gf/v2/os/gtime"
 )
 
 type clientTracerMetrics struct {

@@ -9,7 +9,6 @@ package gclient
 import (
 	"bytes"
 	"context"
-	"github.com/gogf/gf/v2/os/gtime"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -24,6 +23,7 @@ import (
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
