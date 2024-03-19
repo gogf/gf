@@ -1,8 +1,8 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2019 gf Author(https://github.com/wangyougui/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package oracle_test
 
@@ -13,13 +13,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/guid"
-	"github.com/gogf/gf/v2/util/gutil"
+	"github.com/wangyougui/gf/v2/container/gmap"
+	"github.com/wangyougui/gf/v2/database/gdb"
+	"github.com/wangyougui/gf/v2/frame/g"
+	"github.com/wangyougui/gf/v2/os/gtime"
+	"github.com/wangyougui/gf/v2/test/gtest"
+	"github.com/wangyougui/gf/v2/util/guid"
+	"github.com/wangyougui/gf/v2/util/gutil"
 )
 
 func Test_Model_InnerJoin(t *testing.T) {
@@ -233,7 +233,7 @@ func Test_Model_Insert(t *testing.T) {
 	})
 }
 
-// https://github.com/gogf/gf/issues/3286
+// https://github.com/wangyougui/gf/issues/3286
 func Test_Model_Insert_Raw(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)

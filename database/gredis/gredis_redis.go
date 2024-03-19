@@ -2,17 +2,17 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package gredis
 
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/wangyougui/gf/v2/container/gvar"
+	"github.com/wangyougui/gf/v2/errors/gcode"
+	"github.com/wangyougui/gf/v2/errors/gerror"
+	"github.com/wangyougui/gf/v2/text/gstr"
 )
 
 // Redis client.
@@ -51,7 +51,7 @@ const (
 var (
 	errorNilAdapter = gstr.Trim(gstr.Replace(`
 redis adapter is not set, missing configuration or adapter register? 
-possible reference: https://github.com/gogf/gf/tree/master/contrib/nosql/redis
+possible reference: https://github.com/wangyougui/gf/tree/master/contrib/nosql/redis
 `, "\n", ""))
 )
 

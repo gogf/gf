@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // Package apollo implements gcfg.Adapter using apollo service.
 package apollo
@@ -13,12 +13,12 @@ import (
 	"github.com/apolloconfig/agollo/v4"
 	apolloConfig "github.com/apolloconfig/agollo/v4/env/config"
 	"github.com/apolloconfig/agollo/v4/storage"
-	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gcfg"
-	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/wangyougui/gf/v2/encoding/gjson"
+	"github.com/wangyougui/gf/v2/errors/gerror"
+	"github.com/wangyougui/gf/v2/frame/g"
+	"github.com/wangyougui/gf/v2/os/gcfg"
+	"github.com/wangyougui/gf/v2/os/gctx"
+	"github.com/wangyougui/gf/v2/util/gconv"
 )
 
 // Config is the configuration object for apollo client.

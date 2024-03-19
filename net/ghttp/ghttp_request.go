@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package ghttp
 
@@ -12,14 +12,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/os/gres"
-	"github.com/gogf/gf/v2/os/gsession"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/os/gview"
-	"github.com/gogf/gf/v2/text/gregex"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/guid"
+	"github.com/wangyougui/gf/v2/internal/intlog"
+	"github.com/wangyougui/gf/v2/os/gres"
+	"github.com/wangyougui/gf/v2/os/gsession"
+	"github.com/wangyougui/gf/v2/os/gtime"
+	"github.com/wangyougui/gf/v2/os/gview"
+	"github.com/wangyougui/gf/v2/text/gregex"
+	"github.com/wangyougui/gf/v2/text/gstr"
+	"github.com/wangyougui/gf/v2/util/guid"
 )
 
 // Request is the context object for a request.

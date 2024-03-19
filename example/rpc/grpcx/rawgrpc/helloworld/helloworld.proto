@@ -5,7 +5,7 @@ syntax = "proto3";
 
 package helloworld;
 
-option go_package = "github.com/gogf/gf/grpc/example/helloworld";
+option go_package = "github.com/wangyougui/gf/grpc/example/helloworld";
 
 
 // The greeting service definition.

@@ -2,13 +2,13 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // Package gsvc provides service registry and discovery definition.
 package gsvc
 
 import (
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/wangyougui/gf/v2/text/gstr"
 )
 
 // NewEndpoints creates and returns Endpoints from multiple addresses like:

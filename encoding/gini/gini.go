@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // Package gini provides accessing and converting for INI content.
 package gini
@@ -14,9 +14,9 @@ import (
 	"io"
 	"strings"
 
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/json"
+	"github.com/wangyougui/gf/v2/errors/gcode"
+	"github.com/wangyougui/gf/v2/errors/gerror"
+	"github.com/wangyougui/gf/v2/internal/json"
 )
 
 // Decode converts INI format to map.

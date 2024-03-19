@@ -1,12 +1,12 @@
-module github.com/gogf/gf/contrib/drivers/dm/v2
+module github.com/wangyougui/gf/contrib/drivers/dm/v2
 
 go 1.18
 
-replace github.com/gogf/gf/v2 => ../../../
+replace github.com/wangyougui/gf/v2 => ../../../
 
 require (
 	gitee.com/chunanyong/dm v1.8.12
-	github.com/gogf/gf/v2 v2.6.4
+	github.com/wangyougui/gf/v2 v2.6.4
 )
 
 require (

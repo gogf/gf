@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // Package gtrace provides convenience wrapping functionality for tracing feature using OpenTelemetry.
 package gtrace
@@ -18,15 +18,15 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/command"
-	"github.com/gogf/gf/v2/net/gipv4"
-	"github.com/gogf/gf/v2/net/gtrace/internal/provider"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/wangyougui/gf/v2/container/gmap"
+	"github.com/wangyougui/gf/v2/container/gvar"
+	"github.com/wangyougui/gf/v2/errors/gcode"
+	"github.com/wangyougui/gf/v2/errors/gerror"
+	"github.com/wangyougui/gf/v2/internal/command"
+	"github.com/wangyougui/gf/v2/net/gipv4"
+	"github.com/wangyougui/gf/v2/net/gtrace/internal/provider"
+	"github.com/wangyougui/gf/v2/text/gstr"
+	"github.com/wangyougui/gf/v2/util/gconv"
 )
 
 const (

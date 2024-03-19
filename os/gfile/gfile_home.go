@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package gfile
 
@@ -14,7 +14,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/wangyougui/gf/v2/errors/gerror"
 )
 
 // Home returns absolute path of current user's home directory.

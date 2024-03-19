@@ -2,11 +2,11 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package gi18n
 
-import "github.com/gogf/gf/v2/container/gmap"
+import "github.com/wangyougui/gf/v2/container/gmap"
 
 const (
 	// DefaultName is the default group name for instance usage.

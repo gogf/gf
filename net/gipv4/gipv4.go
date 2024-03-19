@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 //
 
 // Package gipv4 provides useful API for IPv4 address handling.
@@ -14,7 +14,7 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/wangyougui/gf/v2/text/gregex"
 )
 
 // Ip2long converts ip address to an uint32 integer.

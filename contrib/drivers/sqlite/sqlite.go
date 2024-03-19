@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // Package sqlite implements gdb.Driver, which supports operations for database SQLite.
 package sqlite
@@ -10,7 +10,7 @@ package sqlite
 import (
 	_ "github.com/glebarez/go-sqlite"
 
-	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/wangyougui/gf/v2/database/gdb"
 )
 
 // Driver is the driver for sqlite database.

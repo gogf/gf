@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // Package gstructs provides functions for struct information retrieving.
 package gstructs
@@ -10,7 +10,7 @@ package gstructs
 import (
 	"reflect"
 
-	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/wangyougui/gf/v2/errors/gerror"
 )
 
 // Type wraps reflect.Type for additional features.

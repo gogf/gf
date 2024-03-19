@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // Package json provides json operations wrapping ignoring stdlib or third-party lib json.
 package json
@@ -12,7 +12,7 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/wangyougui/gf/v2/errors/gerror"
 )
 
 // RawMessage is a raw encoded JSON value.

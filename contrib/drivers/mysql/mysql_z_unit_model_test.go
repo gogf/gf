@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package mysql_test
 
@@ -15,19 +15,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/container/garray"
-	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/glog"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/guid"
-	"github.com/gogf/gf/v2/util/gutil"
+	"github.com/wangyougui/gf/v2/container/garray"
+	"github.com/wangyougui/gf/v2/container/gmap"
+	"github.com/wangyougui/gf/v2/container/gvar"
+	"github.com/wangyougui/gf/v2/database/gdb"
+	"github.com/wangyougui/gf/v2/encoding/gjson"
+	"github.com/wangyougui/gf/v2/frame/g"
+	"github.com/wangyougui/gf/v2/os/gfile"
+	"github.com/wangyougui/gf/v2/os/glog"
+	"github.com/wangyougui/gf/v2/os/gtime"
+	"github.com/wangyougui/gf/v2/test/gtest"
+	"github.com/wangyougui/gf/v2/text/gstr"
+	"github.com/wangyougui/gf/v2/util/guid"
+	"github.com/wangyougui/gf/v2/util/gutil"
 )
 
 func Test_Model_Insert(t *testing.T) {
@@ -105,7 +105,7 @@ func Test_Model_Insert(t *testing.T) {
 	})
 }
 
-// Fix issue: https://github.com/gogf/gf/issues/819
+// Fix issue: https://github.com/wangyougui/gf/issues/819
 func Test_Model_Insert_WithStructAndSliceAttribute(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
@@ -3148,7 +3148,7 @@ func createTableForTimeZoneTest() string {
 	return tableName
 }
 
-// https://github.com/gogf/gf/issues/1012
+// https://github.com/wangyougui/gf/issues/1012
 func Test_TimeZoneInsert(t *testing.T) {
 	tableName := createTableForTimeZoneTest()
 	defer dropTable(tableName)
@@ -4011,7 +4011,7 @@ func Test_Model_OmitEmptyWhere(t *testing.T) {
 	})
 }
 
-// https://github.com/gogf/gf/issues/1387
+// https://github.com/wangyougui/gf/issues/1387
 func Test_Model_GTime_DefaultValue(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
@@ -4338,7 +4338,7 @@ func Test_Model_WherePrefixLike(t *testing.T) {
 	})
 }
 
-// https://github.com/gogf/gf/issues/1159
+// https://github.com/wangyougui/gf/issues/1159
 func Test_ScanList_NoRecreate_PtrAttribute(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type S1 struct {
@@ -4394,7 +4394,7 @@ func Test_ScanList_NoRecreate_PtrAttribute(t *testing.T) {
 	})
 }
 
-// https://github.com/gogf/gf/issues/1159
+// https://github.com/wangyougui/gf/issues/1159
 func Test_ScanList_NoRecreate_StructAttribute(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type S1 struct {
@@ -4450,7 +4450,7 @@ func Test_ScanList_NoRecreate_StructAttribute(t *testing.T) {
 	})
 }
 
-// https://github.com/gogf/gf/issues/1159
+// https://github.com/wangyougui/gf/issues/1159
 func Test_ScanList_NoRecreate_SliceAttribute_Ptr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type S1 struct {
@@ -4554,7 +4554,7 @@ func Test_ScanList_NoRecreate_SliceAttribute_Ptr(t *testing.T) {
 	})
 }
 
-// https://github.com/gogf/gf/issues/1159
+// https://github.com/wangyougui/gf/issues/1159
 func Test_ScanList_NoRecreate_SliceAttribute_Struct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type S1 struct {

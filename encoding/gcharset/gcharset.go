@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // Package gcharset implements character-set conversion functionality.
 //
@@ -28,9 +28,9 @@ import (
 	"golang.org/x/text/encoding/ianaindex"
 	"golang.org/x/text/transform"
 
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/wangyougui/gf/v2/errors/gcode"
+	"github.com/wangyougui/gf/v2/errors/gerror"
+	"github.com/wangyougui/gf/v2/internal/intlog"
 )
 
 var (

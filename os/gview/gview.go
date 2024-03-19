@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // Package gview implements a template engine based on text/template.
 //
@@ -13,13 +13,13 @@ package gview
 import (
 	"context"
 
-	"github.com/gogf/gf/v2"
-	"github.com/gogf/gf/v2/container/garray"
-	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/os/gcmd"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/glog"
+	"github.com/wangyougui/gf/v2"
+	"github.com/wangyougui/gf/v2/container/garray"
+	"github.com/wangyougui/gf/v2/container/gmap"
+	"github.com/wangyougui/gf/v2/internal/intlog"
+	"github.com/wangyougui/gf/v2/os/gcmd"
+	"github.com/wangyougui/gf/v2/os/gfile"
+	"github.com/wangyougui/gf/v2/os/glog"
 )
 
 // View object for template engine.

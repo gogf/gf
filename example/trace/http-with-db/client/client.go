@@ -2,17 +2,17 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package main
 
 import (
-	"github.com/gogf/gf/contrib/trace/otlphttp/v2"
-	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/net/gtrace"
-	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/wangyougui/gf/contrib/trace/otlphttp/v2"
+	"github.com/wangyougui/gf/v2/database/gdb"
+	"github.com/wangyougui/gf/v2/frame/g"
+	"github.com/wangyougui/gf/v2/net/ghttp"
+	"github.com/wangyougui/gf/v2/net/gtrace"
+	"github.com/wangyougui/gf/v2/os/gctx"
 )
 
 const (

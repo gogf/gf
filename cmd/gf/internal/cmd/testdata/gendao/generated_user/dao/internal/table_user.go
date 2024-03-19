@@ -7,8 +7,8 @@ package internal
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/frame/g"
+	"github.com/wangyougui/gf/v2/database/gdb"
+	"github.com/wangyougui/gf/v2/frame/g"
 )
 
 // TableUserDao is the data access object for table table_user.

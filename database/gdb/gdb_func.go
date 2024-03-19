@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package gdb
 
@@ -15,21 +15,21 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/v2/container/garray"
-	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/internal/empty"
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/internal/reflection"
-	"github.com/gogf/gf/v2/internal/utils"
-	"github.com/gogf/gf/v2/os/gstructs"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/text/gregex"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/gogf/gf/v2/util/gmeta"
-	"github.com/gogf/gf/v2/util/gtag"
-	"github.com/gogf/gf/v2/util/gutil"
+	"github.com/wangyougui/gf/v2/container/garray"
+	"github.com/wangyougui/gf/v2/encoding/gjson"
+	"github.com/wangyougui/gf/v2/internal/empty"
+	"github.com/wangyougui/gf/v2/internal/intlog"
+	"github.com/wangyougui/gf/v2/internal/json"
+	"github.com/wangyougui/gf/v2/internal/reflection"
+	"github.com/wangyougui/gf/v2/internal/utils"
+	"github.com/wangyougui/gf/v2/os/gstructs"
+	"github.com/wangyougui/gf/v2/os/gtime"
+	"github.com/wangyougui/gf/v2/text/gregex"
+	"github.com/wangyougui/gf/v2/text/gstr"
+	"github.com/wangyougui/gf/v2/util/gconv"
+	"github.com/wangyougui/gf/v2/util/gmeta"
+	"github.com/wangyougui/gf/v2/util/gtag"
+	"github.com/wangyougui/gf/v2/util/gutil"
 )
 
 // iString is the type assert api for String.
@@ -764,7 +764,7 @@ func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []interface{}) {
 				} else {
 					// The key is not a regular field name.
 					// Eg: Where(g.Map{"age > 16": nil})
-					// Issue: https://github.com/gogf/gf/issues/765
+					// Issue: https://github.com/wangyougui/gf/issues/765
 					if empty.IsEmpty(in.Value) {
 						in.Buffer.WriteString(quotedKey)
 						break

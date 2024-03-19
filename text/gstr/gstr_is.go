@@ -2,11 +2,11 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package gstr
 
-import "github.com/gogf/gf/v2/internal/utils"
+import "github.com/wangyougui/gf/v2/internal/utils"
 
 // IsNumeric tests whether the given string s is numeric.
 func IsNumeric(s string) bool {

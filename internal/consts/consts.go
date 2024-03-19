@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // Package consts defines constants that are shared all among packages of framework.
 package consts
@@ -16,6 +16,6 @@ const (
 	ConfigNodeNameServerSecondary = "httpserver" // New version configuration item name support from v2.
 
 	// StackFilterKeyForGoFrame is the stack filtering key for all GoFrame module paths.
-	// Eg: .../pkg/mod/github.com/gogf/gf/v2@v2.0.0-20211011134327-54dd11f51122/debug/gdebug/gdebug_caller.go
-	StackFilterKeyForGoFrame = "github.com/gogf/gf/"
+	// Eg: .../pkg/mod/github.com/wangyougui/gf/v2@v2.0.0-20211011134327-54dd11f51122/debug/gdebug/gdebug_caller.go
+	StackFilterKeyForGoFrame = "github.com/wangyougui/gf/"
 )

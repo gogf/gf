@@ -2,12 +2,12 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with gm file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package gmap
 
 import (
-	"github.com/gogf/gf/v2/container/gtree"
+	"github.com/wangyougui/gf/v2/container/gtree"
 )
 
 // TreeMap based on red-black tree, alias of RedBlackTree.

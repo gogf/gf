@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // Package gxml provides accessing and converting for XML content.
 package gxml
@@ -12,9 +12,9 @@ import (
 
 	"github.com/clbanning/mxj/v2"
 
-	"github.com/gogf/gf/v2/encoding/gcharset"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/wangyougui/gf/v2/encoding/gcharset"
+	"github.com/wangyougui/gf/v2/errors/gerror"
+	"github.com/wangyougui/gf/v2/text/gregex"
 )
 
 // Decode parses `content` into and returns as map.

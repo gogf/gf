@@ -2,14 +2,14 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package gstr
 
 import (
 	"strings"
 
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/wangyougui/gf/v2/util/gconv"
 )
 
 // IsGNUVersion checks and returns whether given `version` is valid GNU version string.

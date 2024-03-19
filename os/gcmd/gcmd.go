@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 //
 
 // Package gcmd provides console operations, like options/arguments reading and command running.
@@ -11,10 +11,10 @@ package gcmd
 import (
 	"os"
 
-	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/internal/command"
-	"github.com/gogf/gf/v2/internal/utils"
-	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/wangyougui/gf/v2/container/gvar"
+	"github.com/wangyougui/gf/v2/internal/command"
+	"github.com/wangyougui/gf/v2/internal/utils"
+	"github.com/wangyougui/gf/v2/os/gctx"
 )
 
 const (
@@ -27,7 +27,7 @@ const (
 	helpOptionName        = "help"
 	helpOptionNameShort   = "h"
 	maxLineChars          = 120
-	tracingInstrumentName = "github.com/gogf/gf/v2/os/gcmd.Command"
+	tracingInstrumentName = "github.com/wangyougui/gf/v2/os/gcmd.Command"
 	tagNameName           = "name"
 	tagNameShort          = "short"
 )

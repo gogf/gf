@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // Package ghttp provides powerful http server and simple client implements.
 package ghttp
@@ -15,17 +15,17 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/container/gtype"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/net/goai"
-	"github.com/gogf/gf/v2/net/gsvc"
-	"github.com/gogf/gf/v2/os/gcache"
-	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/os/gsession"
-	"github.com/gogf/gf/v2/os/gstructs"
-	"github.com/gogf/gf/v2/util/gtag"
+	"github.com/wangyougui/gf/v2/container/gmap"
+	"github.com/wangyougui/gf/v2/container/gtype"
+	"github.com/wangyougui/gf/v2/errors/gcode"
+	"github.com/wangyougui/gf/v2/errors/gerror"
+	"github.com/wangyougui/gf/v2/net/goai"
+	"github.com/wangyougui/gf/v2/net/gsvc"
+	"github.com/wangyougui/gf/v2/os/gcache"
+	"github.com/wangyougui/gf/v2/os/gctx"
+	"github.com/wangyougui/gf/v2/os/gsession"
+	"github.com/wangyougui/gf/v2/os/gstructs"
+	"github.com/wangyougui/gf/v2/util/gtag"
 )
 
 type (

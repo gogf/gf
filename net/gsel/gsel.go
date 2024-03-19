@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // Package gsel provides selector definition and implements.
 package gsel
@@ -10,7 +10,7 @@ package gsel
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/wangyougui/gf/v2/net/gsvc"
 )
 
 // Builder creates and returns selector in runtime.

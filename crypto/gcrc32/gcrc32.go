@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // Package gcrc32 provides useful API for CRC32 encryption algorithms.
 package gcrc32
@@ -10,7 +10,7 @@ package gcrc32
 import (
 	"hash/crc32"
 
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/wangyougui/gf/v2/util/gconv"
 )
 
 // Encrypt encrypts any type of variable using CRC32 algorithms.

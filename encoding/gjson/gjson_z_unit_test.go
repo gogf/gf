@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package gjson_test
 
@@ -10,13 +10,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/wangyougui/gf/v2/container/gmap"
+	"github.com/wangyougui/gf/v2/container/gvar"
+	"github.com/wangyougui/gf/v2/encoding/gjson"
+	"github.com/wangyougui/gf/v2/frame/g"
+	"github.com/wangyougui/gf/v2/os/gtime"
+	"github.com/wangyougui/gf/v2/test/gtest"
+	"github.com/wangyougui/gf/v2/util/gconv"
 )
 
 func Test_New(t *testing.T) {
@@ -35,7 +35,7 @@ func Test_New(t *testing.T) {
 		t.Assert(j.Get("2.c").String(), `3`)
 	})
 	// New with gvar.
-	// https://github.com/gogf/gf/issues/1571
+	// https://github.com/wangyougui/gf/issues/1571
 	gtest.C(t, func(t *gtest.T) {
 		v := gvar.New(`[{"a":1},{"b":2},{"c":3}]`)
 		j := gjson.New(v)
@@ -53,7 +53,7 @@ func Test_New(t *testing.T) {
 		t.Assert(j.Get("k2"), "v2")
 		t.Assert(j.Get("k3"), nil)
 	})
-	// https://github.com/gogf/gf/issues/3253
+	// https://github.com/wangyougui/gf/issues/3253
 	gtest.C(t, func(t *gtest.T) {
 		type TestStruct struct {
 			Result []map[string]string `json:"result"`
@@ -570,7 +570,7 @@ func TestJson_Options(t *testing.T) {
 	})
 }
 
-// https://github.com/gogf/gf/issues/1617
+// https://github.com/wangyougui/gf/issues/1617
 func Test_Issue1617(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type MyJsonName struct {
@@ -594,7 +594,7 @@ func Test_Issue1617(t *testing.T) {
 	})
 }
 
-// https://github.com/gogf/gf/issues/1747
+// https://github.com/wangyougui/gf/issues/1747
 func Test_Issue1747(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var j *gjson.Json
@@ -604,7 +604,7 @@ func Test_Issue1747(t *testing.T) {
 	})
 }
 
-// https://github.com/gogf/gf/issues/2520
+// https://github.com/wangyougui/gf/issues/2520
 func Test_Issue2520(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type test struct {

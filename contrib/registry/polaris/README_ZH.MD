@@ -7,13 +7,13 @@
 ## 安装
 
 ```
-go get -u -v github.com/gogf/gf/contrib/registry/polaris/v2
+go get -u -v github.com/wangyougui/gf/contrib/registry/polaris/v2
 ```
 
 suggested using `go.mod`:
 
 ```
-require github.com/gogf/gf/contrib/registry/polaris/v2 latest
+require github.com/wangyougui/gf/contrib/registry/polaris/v2 latest
 ```
 
 ## Golang版本限制
@@ -34,10 +34,10 @@ package main
 import (
     "github.com/polarismesh/polaris-go/pkg/config"
     
-    "github.com/gogf/gf/contrib/registry/polaris/v2"
-    "github.com/gogf/gf/v2/frame/g"
-    "github.com/gogf/gf/v2/net/ghttp"
-    "github.com/gogf/gf/v2/net/gsvc"
+    "github.com/wangyougui/gf/contrib/registry/polaris/v2"
+    "github.com/wangyougui/gf/v2/frame/g"
+    "github.com/wangyougui/gf/v2/net/ghttp"
+    "github.com/wangyougui/gf/v2/net/gsvc"
 )
 
 func main() {
@@ -67,11 +67,11 @@ import (
     
     "github.com/polarismesh/polaris-go/pkg/config"
     
-    "github.com/gogf/gf/contrib/registry/polaris/v2"
+    "github.com/wangyougui/gf/contrib/registry/polaris/v2"
     
-    "github.com/gogf/gf/v2/frame/g"
-    "github.com/gogf/gf/v2/net/gsvc"
-    "github.com/gogf/gf/v2/os/gctx"
+    "github.com/wangyougui/gf/v2/frame/g"
+    "github.com/wangyougui/gf/v2/net/gsvc"
+    "github.com/wangyougui/gf/v2/os/gctx"
 )
 
 func main() {

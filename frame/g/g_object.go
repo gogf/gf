@@ -2,24 +2,24 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package g
 
 import (
-	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/database/gredis"
-	"github.com/gogf/gf/v2/frame/gins"
-	"github.com/gogf/gf/v2/i18n/gi18n"
-	"github.com/gogf/gf/v2/net/gclient"
-	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/net/gtcp"
-	"github.com/gogf/gf/v2/net/gudp"
-	"github.com/gogf/gf/v2/os/gcfg"
-	"github.com/gogf/gf/v2/os/glog"
-	"github.com/gogf/gf/v2/os/gres"
-	"github.com/gogf/gf/v2/os/gview"
-	"github.com/gogf/gf/v2/util/gvalid"
+	"github.com/wangyougui/gf/v2/database/gdb"
+	"github.com/wangyougui/gf/v2/database/gredis"
+	"github.com/wangyougui/gf/v2/frame/gins"
+	"github.com/wangyougui/gf/v2/i18n/gi18n"
+	"github.com/wangyougui/gf/v2/net/gclient"
+	"github.com/wangyougui/gf/v2/net/ghttp"
+	"github.com/wangyougui/gf/v2/net/gtcp"
+	"github.com/wangyougui/gf/v2/net/gudp"
+	"github.com/wangyougui/gf/v2/os/gcfg"
+	"github.com/wangyougui/gf/v2/os/glog"
+	"github.com/wangyougui/gf/v2/os/gres"
+	"github.com/wangyougui/gf/v2/os/gview"
+	"github.com/wangyougui/gf/v2/util/gvalid"
 )
 
 // Client is a convenience function, which creates and returns a new HTTP client.

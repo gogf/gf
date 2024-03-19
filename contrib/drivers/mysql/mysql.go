@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // Package mysql implements gdb.Driver, which supports operations for database MySQL.
 package mysql
@@ -10,8 +10,8 @@ package mysql
 import (
 	_ "github.com/go-sql-driver/mysql"
 
-	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/frame/g"
+	"github.com/wangyougui/gf/v2/database/gdb"
+	"github.com/wangyougui/gf/v2/frame/g"
 )
 
 // Driver is the driver for mysql database.

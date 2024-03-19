@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package utils
 
@@ -12,12 +12,12 @@ import (
 
 	"golang.org/x/tools/imports"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/gproc"
-	"github.com/gogf/gf/v2/text/gregex"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/wangyougui/gf/cmd/gf/v2/internal/consts"
+	"github.com/wangyougui/gf/cmd/gf/v2/internal/utility/mlog"
+	"github.com/wangyougui/gf/v2/os/gfile"
+	"github.com/wangyougui/gf/v2/os/gproc"
+	"github.com/wangyougui/gf/v2/text/gregex"
+	"github.com/wangyougui/gf/v2/text/gstr"
 )
 
 // GoFmt formats the source file and adds or removes import statements as necessary.
@@ -65,10 +65,10 @@ func IsFileDoNotEdit(filePath string) bool {
 // ReplaceGeneratedContentGFV2 replaces generated go content from goframe v1 to v2.
 func ReplaceGeneratedContentGFV2(folderPath string) (err error) {
 	return gfile.ReplaceDirFunc(func(path, content string) string {
-		if gstr.Contains(content, `"github.com/gogf/gf`) && !gstr.Contains(content, `"github.com/gogf/gf/v2`) {
-			content = gstr.Replace(content, `"github.com/gogf/gf"`, `"github.com/gogf/gf/v2"`)
-			content = gstr.Replace(content, `"github.com/gogf/gf/`, `"github.com/gogf/gf/v2/`)
-			content = gstr.Replace(content, `"github.com/gogf/gf/v2/contrib/`, `"github.com/gogf/gf/contrib/`)
+		if gstr.Contains(content, `"github.com/wangyougui/gf`) && !gstr.Contains(content, `"github.com/wangyougui/gf/v2`) {
+			content = gstr.Replace(content, `"github.com/wangyougui/gf"`, `"github.com/wangyougui/gf/v2"`)
+			content = gstr.Replace(content, `"github.com/wangyougui/gf/`, `"github.com/wangyougui/gf/v2/`)
+			content = gstr.Replace(content, `"github.com/wangyougui/gf/v2/contrib/`, `"github.com/wangyougui/gf/contrib/`)
 			return content
 		}
 		return content

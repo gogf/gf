@@ -2,13 +2,13 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // Package errors provides functionalities to manipulate errors for internal usage purpose.
 package errors
 
 import (
-	"github.com/gogf/gf/v2/internal/command"
+	"github.com/wangyougui/gf/v2/internal/command"
 )
 
 // StackMode is the mode that printing stack information in StackModeBrief or StackModeDetail mode.

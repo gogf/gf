@@ -2,15 +2,15 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package gvalid_test
 
 import (
 	"testing"
 
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/wangyougui/gf/v2/frame/g"
+	"github.com/wangyougui/gf/v2/test/gtest"
 )
 
 func Test_CheckStruct_Recursive_Struct(t *testing.T) {
@@ -274,7 +274,7 @@ func Test_CheckStruct_Recursively_SliceAttribute(t *testing.T) {
 		t.Assert(err, `Student Name is required`)
 	})
 
-	// https://github.com/gogf/gf/issues/1864
+	// https://github.com/wangyougui/gf/issues/1864
 	gtest.C(t, func(t *gtest.T) {
 		type Student struct {
 			Name string `v:"required"`
@@ -342,7 +342,7 @@ func Test_CheckStruct_Recursively_MapAttribute(t *testing.T) {
 	})
 }
 
-// https://github.com/gogf/gf/issues/1983
+// https://github.com/wangyougui/gf/issues/1983
 func Test_Issue1983(t *testing.T) {
 	// Error as the attribute Student in Teacher is an initialized struct, which has default value.
 	gtest.C(t, func(t *gtest.T) {
@@ -400,7 +400,7 @@ func Test_Issue1983(t *testing.T) {
 	})
 }
 
-// https://github.com/gogf/gf/issues/1921
+// https://github.com/wangyougui/gf/issues/1921
 func Test_Issue1921(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type SearchOption struct {
@@ -422,7 +422,7 @@ func Test_Issue1921(t *testing.T) {
 	})
 }
 
-// https://github.com/gogf/gf/issues/2011
+// https://github.com/wangyougui/gf/issues/2011
 func Test_Issue2011(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Student struct {

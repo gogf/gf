@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // go test *.go -bench=".*" -benchmem
 
@@ -13,8 +13,8 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/gogf/gf/v2/container/gtype"
-	"github.com/gogf/gf/v2/encoding/gbinary"
+	"github.com/wangyougui/gf/v2/container/gtype"
+	"github.com/wangyougui/gf/v2/encoding/gbinary"
 )
 
 var (

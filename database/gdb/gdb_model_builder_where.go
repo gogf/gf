@@ -2,14 +2,14 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package gdb
 
 import (
 	"fmt"
 
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/wangyougui/gf/v2/text/gstr"
 )
 
 // doWhereType sets the condition statement for the model. The parameter `where` can be type of

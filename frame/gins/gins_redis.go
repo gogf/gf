@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package gins
 
@@ -10,14 +10,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gogf/gf/v2/database/gredis"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/consts"
-	"github.com/gogf/gf/v2/internal/instance"
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/gogf/gf/v2/util/gutil"
+	"github.com/wangyougui/gf/v2/database/gredis"
+	"github.com/wangyougui/gf/v2/errors/gcode"
+	"github.com/wangyougui/gf/v2/errors/gerror"
+	"github.com/wangyougui/gf/v2/internal/consts"
+	"github.com/wangyougui/gf/v2/internal/instance"
+	"github.com/wangyougui/gf/v2/internal/intlog"
+	"github.com/wangyougui/gf/v2/util/gconv"
+	"github.com/wangyougui/gf/v2/util/gutil"
 )
 
 // Redis returns an instance of redis client with specified configuration group name.

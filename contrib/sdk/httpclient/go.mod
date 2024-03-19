@@ -1,8 +1,8 @@
-module github.com/gogf/gf/contrib/sdk/httpclient/v2
+module github.com/wangyougui/gf/contrib/sdk/httpclient/v2
 
 go 1.18
 
-require github.com/gogf/gf/v2 v2.6.4
+require github.com/wangyougui/gf/v2 v2.6.4
 
 require (
 	github.com/BurntSushi/toml v1.2.0 // indirect
@@ -28,4 +28,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/gogf/gf/v2 => ../../../
+replace github.com/wangyougui/gf/v2 => ../../../

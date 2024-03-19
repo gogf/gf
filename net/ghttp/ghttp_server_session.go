@@ -2,11 +2,11 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package ghttp
 
-import "github.com/gogf/gf/v2/os/gsession"
+import "github.com/wangyougui/gf/v2/os/gsession"
 
 // Session is actually an alias of gsession.Session,
 // which is bound to a single request.

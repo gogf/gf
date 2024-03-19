@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package gconv
 
@@ -10,13 +10,13 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/empty"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/internal/utils"
-	"github.com/gogf/gf/v2/os/gstructs"
-	"github.com/gogf/gf/v2/util/gtag"
+	"github.com/wangyougui/gf/v2/errors/gcode"
+	"github.com/wangyougui/gf/v2/errors/gerror"
+	"github.com/wangyougui/gf/v2/internal/empty"
+	"github.com/wangyougui/gf/v2/internal/json"
+	"github.com/wangyougui/gf/v2/internal/utils"
+	"github.com/wangyougui/gf/v2/os/gstructs"
+	"github.com/wangyougui/gf/v2/util/gtag"
 )
 
 // Struct maps the params key-value pairs to the corresponding struct object's attributes.
@@ -448,7 +448,7 @@ func bindVarToStructAttr(
 		structFieldValue.Set(reflect.Zero(structFieldValue.Type()))
 	} else {
 		// Try to call custom converter.
-		// Issue: https://github.com/gogf/gf/issues/3099
+		// Issue: https://github.com/wangyougui/gf/issues/3099
 		var (
 			customConverterInput reflect.Value
 			ok                   bool
@@ -473,7 +473,7 @@ func bindVarToStructAttr(
 			})
 			return
 		// Hold the time zone consistent in recursive
-		// Issue: https://github.com/gogf/gf/issues/2980
+		// Issue: https://github.com/wangyougui/gf/issues/2980
 		case "*gtime.Time", "gtime.Time":
 			doConvertWithReflectValueSet(structFieldValue, doConvertInput{
 				FromValue:  value,

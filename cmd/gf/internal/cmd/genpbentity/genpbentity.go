@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package genpbentity
 
@@ -15,17 +15,17 @@ import (
 
 	"github.com/olekukonko/tablewriter"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
-	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/text/gregex"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/gogf/gf/v2/util/gtag"
+	"github.com/wangyougui/gf/cmd/gf/v2/internal/consts"
+	"github.com/wangyougui/gf/cmd/gf/v2/internal/utility/mlog"
+	"github.com/wangyougui/gf/v2/database/gdb"
+	"github.com/wangyougui/gf/v2/frame/g"
+	"github.com/wangyougui/gf/v2/os/gctx"
+	"github.com/wangyougui/gf/v2/os/gfile"
+	"github.com/wangyougui/gf/v2/os/gtime"
+	"github.com/wangyougui/gf/v2/text/gregex"
+	"github.com/wangyougui/gf/v2/text/gstr"
+	"github.com/wangyougui/gf/v2/util/gconv"
+	"github.com/wangyougui/gf/v2/util/gtag"
 )
 
 type (
@@ -61,7 +61,7 @@ const (
 gf gen pbentity
 gf gen pbentity -l "mysql:root:12345678@tcp(127.0.0.1:3306)/test"
 gf gen pbentity -p ./protocol/demos/entity -t user,user_detail,user_login
-gf gen pbentity -r user_ -k github.com/gogf/gf/example/protobuf
+gf gen pbentity -r user_ -k github.com/wangyougui/gf/example/protobuf
 gf gen pbentity -r user_
 `
 

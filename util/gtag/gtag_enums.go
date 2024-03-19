@@ -2,12 +2,12 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package gtag
 
 import (
-	"github.com/gogf/gf/v2/internal/json"
+	"github.com/wangyougui/gf/v2/internal/json"
 )
 
 var (
@@ -31,7 +31,7 @@ func GetGlobalEnums() (string, error) {
 }
 
 // GetEnumsByType retrieves and returns the stored enums json by type name.
-// The type name is like: github.com/gogf/gf/v2/encoding/gjson.ContentType
+// The type name is like: github.com/wangyougui/gf/v2/encoding/gjson.ContentType
 func GetEnumsByType(typeName string) string {
 	return string(enumsMap[typeName])
 }

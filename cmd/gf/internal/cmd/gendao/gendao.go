@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package gendao
 
@@ -13,17 +13,17 @@ import (
 
 	"golang.org/x/mod/modfile"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
-	"github.com/gogf/gf/v2/container/garray"
-	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/gproc"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gtag"
+	"github.com/wangyougui/gf/cmd/gf/v2/internal/utility/utils"
+	"github.com/wangyougui/gf/v2/container/garray"
+	"github.com/wangyougui/gf/v2/database/gdb"
+	"github.com/wangyougui/gf/v2/frame/g"
+	"github.com/wangyougui/gf/v2/os/gfile"
+	"github.com/wangyougui/gf/v2/os/gproc"
+	"github.com/wangyougui/gf/v2/os/gtime"
+	"github.com/wangyougui/gf/v2/text/gstr"
+	"github.com/wangyougui/gf/v2/util/gtag"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
+	"github.com/wangyougui/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 const (
@@ -345,19 +345,19 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 func getImportPartContent(ctx context.Context, source string, isDo bool, appendImports []string) string {
 	var packageImportsArray = garray.NewStrArray()
 	if isDo {
-		packageImportsArray.Append(`"github.com/gogf/gf/v2/frame/g"`)
+		packageImportsArray.Append(`"github.com/wangyougui/gf/v2/frame/g"`)
 	}
 
 	// Time package recognition.
 	if strings.Contains(source, "gtime.Time") {
-		packageImportsArray.Append(`"github.com/gogf/gf/v2/os/gtime"`)
+		packageImportsArray.Append(`"github.com/wangyougui/gf/v2/os/gtime"`)
 	} else if strings.Contains(source, "time.Time") {
 		packageImportsArray.Append(`"time"`)
 	}
 
 	// Json type.
 	if strings.Contains(source, "gjson.Json") {
-		packageImportsArray.Append(`"github.com/gogf/gf/v2/encoding/gjson"`)
+		packageImportsArray.Append(`"github.com/wangyougui/gf/v2/encoding/gjson"`)
 	}
 
 	// Check and update imports in go.mod

@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package goai_test
 
@@ -12,13 +12,13 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/net/goai"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/gmeta"
-	"github.com/gogf/gf/v2/util/gtag"
+	"github.com/wangyougui/gf/v2/encoding/gjson"
+	"github.com/wangyougui/gf/v2/frame/g"
+	"github.com/wangyougui/gf/v2/internal/json"
+	"github.com/wangyougui/gf/v2/net/goai"
+	"github.com/wangyougui/gf/v2/test/gtest"
+	"github.com/wangyougui/gf/v2/util/gmeta"
+	"github.com/wangyougui/gf/v2/util/gtag"
 )
 
 func Test_Basic(t *testing.T) {
@@ -1155,7 +1155,7 @@ func Test_Enums(t *testing.T) {
 			req = new(Req)
 		)
 		err = gtag.SetGlobalEnums(gjson.MustEncodeString(g.Map{
-			"github.com/gogf/gf/v2/net/goai_test.Status": []interface{}{StatusA, StatusB},
+			"github.com/wangyougui/gf/v2/net/goai_test.Status": []interface{}{StatusA, StatusB},
 		}))
 		t.AssertNil(err)
 

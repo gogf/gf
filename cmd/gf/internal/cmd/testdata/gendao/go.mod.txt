@@ -3,7 +3,7 @@ module for-gendao-test/pkg
 go 1.18
 
 require (
-	github.com/gogf/gf/v2 v2.5.3
+	github.com/wangyougui/gf/v2 v2.5.3
 	github.com/shopspring/decimal v1.3.1
 )
 

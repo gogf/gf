@@ -5,8 +5,8 @@
 package entity
 
 import (
-	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/shopspring/decimal"
+	"github.com/wangyougui/gf/v2/os/gtime"
 )
 
 // TableUser is the golang structure for table table_user.

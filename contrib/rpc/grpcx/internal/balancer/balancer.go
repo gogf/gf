@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // Package balancer defines APIs for load balancing in gRPC.
 package balancer
@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc/balancer"
 	"google.golang.org/grpc/balancer/base"
 
-	"github.com/gogf/gf/v2/net/gsel"
+	"github.com/wangyougui/gf/v2/net/gsel"
 )
 
 type Balancer struct{}

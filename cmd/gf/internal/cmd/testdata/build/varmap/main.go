@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/gogf/gf/v2/os/gbuild"
+	"github.com/wangyougui/gf/v2/os/gbuild"
 )
 
 func main() {

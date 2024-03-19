@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package pgsql
 
@@ -10,8 +10,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/wangyougui/gf/v2/database/gdb"
+	"github.com/wangyougui/gf/v2/text/gregex"
 )
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
@@ -29,7 +29,7 @@ func (d *Driver) DoFilter(
 	}
 	// Handle pgsql jsonb feature support, which contains place-holder char '?'.
 	// Refer:
-	// https://github.com/gogf/gf/issues/1537
+	// https://github.com/wangyougui/gf/issues/1537
 	// https://www.postgresql.org/docs/12/functions-json.html
 	newSql, err = gregex.ReplaceStringFuncMatch(`(::jsonb([^\w\d]*)\$\d)`, newSql, func(match []string) string {
 		return fmt.Sprintf(`::jsonb%s?`, match[2])

@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package gins
 
@@ -10,10 +10,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gogf/gf/v2/internal/consts"
-	"github.com/gogf/gf/v2/internal/instance"
-	"github.com/gogf/gf/v2/os/glog"
-	"github.com/gogf/gf/v2/util/gutil"
+	"github.com/wangyougui/gf/v2/internal/consts"
+	"github.com/wangyougui/gf/v2/internal/instance"
+	"github.com/wangyougui/gf/v2/os/glog"
+	"github.com/wangyougui/gf/v2/util/gutil"
 )
 
 // Log returns an instance of glog.Logger.

@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // Package gsha1 provides useful API for SHA1 encryption algorithms.
 package gsha1
@@ -13,8 +13,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/wangyougui/gf/v2/errors/gerror"
+	"github.com/wangyougui/gf/v2/util/gconv"
 )
 
 // Encrypt encrypts any type of variable using SHA1 algorithms.

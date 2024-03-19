@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package ghttp_test
 
@@ -12,17 +12,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/encoding/gurl"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gtag"
-	"github.com/gogf/gf/v2/util/guid"
+	"github.com/wangyougui/gf/v2/encoding/gjson"
+	"github.com/wangyougui/gf/v2/encoding/gurl"
+	"github.com/wangyougui/gf/v2/frame/g"
+	"github.com/wangyougui/gf/v2/net/ghttp"
+	"github.com/wangyougui/gf/v2/test/gtest"
+	"github.com/wangyougui/gf/v2/text/gstr"
+	"github.com/wangyougui/gf/v2/util/gtag"
+	"github.com/wangyougui/gf/v2/util/guid"
 )
 
-// https://github.com/gogf/gf/issues/1609
+// https://github.com/wangyougui/gf/issues/1609
 func Test_Issue1609(t *testing.T) {
 	s := g.Server(guid.S())
 	group := s.Group("/api/get")
@@ -67,7 +67,7 @@ func Test_Issue1611(t *testing.T) {
 	})
 }
 
-// https://github.com/gogf/gf/issues/1626
+// https://github.com/wangyougui/gf/issues/1626
 func Test_Issue1626(t *testing.T) {
 	type TestReq struct {
 		Name string `v:"required"`
@@ -201,7 +201,7 @@ func (r cFoo1) PostTest1(ctx context.Context, req *TemplateCreateReq) (res *Temp
 	return
 }
 
-// https://github.com/gogf/gf/issues/1662
+// https://github.com/wangyougui/gf/issues/1662
 func Test_Issue662(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Use(ghttp.MiddlewareHandlerResponse)
@@ -244,7 +244,7 @@ func (a *Api) Demo(ctx context.Context, req *DemoReq) (res *DemoRes, err error) 
 
 var api = Api{}
 
-// https://github.com/gogf/gf/issues/2172
+// https://github.com/wangyougui/gf/issues/2172
 func Test_Issue2172(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Use(ghttp.MiddlewareHandlerResponse)
@@ -264,7 +264,7 @@ func Test_Issue2172(t *testing.T) {
 	})
 }
 
-// https://github.com/gogf/gf/issues/2334
+// https://github.com/wangyougui/gf/issues/2334
 func Test_Issue2334(t *testing.T) {
 	s := g.Server(guid.S())
 	s.SetServerRoot(gtest.DataPath("static1"))
@@ -304,7 +304,7 @@ func (c *OrderController) CreateOrder(ctx context.Context, req *CreateOrderReq) 
 	return
 }
 
-// https://github.com/gogf/gf/issues/2482
+// https://github.com/wangyougui/gf/issues/2482
 func Test_Issue2482(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Group("/api/v2", func(group *ghttp.RouterGroup) {
@@ -389,14 +389,14 @@ func (c *Issue2890Controller) Post(ctx context.Context, req *Issue2890Req) (res 
 	return
 }
 
-// https://github.com/gogf/gf/issues/2890
+// https://github.com/wangyougui/gf/issues/2890
 func Test_Issue2890(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		oldEnumsJson, err := gtag.GetGlobalEnums()
 		t.AssertNil(err)
 		defer t.AssertNil(gtag.SetGlobalEnums(oldEnumsJson))
 
-		err = gtag.SetGlobalEnums(`{"github.com/gogf/gf/v2/net/ghttp_test.Issue2890Enum": ["a","b"]}`)
+		err = gtag.SetGlobalEnums(`{"github.com/wangyougui/gf/v2/net/ghttp_test.Issue2890Enum": ["a","b"]}`)
 		t.AssertNil(err)
 
 		s := g.Server(guid.S())
@@ -422,7 +422,7 @@ func Test_Issue2890(t *testing.T) {
 	})
 }
 
-// https://github.com/gogf/gf/issues/2963
+// https://github.com/wangyougui/gf/issues/2963
 func Test_Issue2963(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
@@ -456,7 +456,7 @@ func (c *Issue3077V1) Hello(ctx context.Context, req *Issue3077Req) (res *Issue3
 	return
 }
 
-// https://github.com/gogf/gf/issues/3077
+// https://github.com/wangyougui/gf/issues/3077
 func Test_Issue3077(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
@@ -504,7 +504,7 @@ func (c *cMessage) List(ctx context.Context, req *ListMessageReq) (res *BaseRes[
 	return res, err
 }
 
-// https://github.com/gogf/gf/issues/2457
+// https://github.com/wangyougui/gf/issues/2457
 func Test_Issue2457(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
@@ -525,7 +525,7 @@ func Test_Issue2457(t *testing.T) {
 	})
 }
 
-// https://github.com/gogf/gf/issues/3245
+// https://github.com/wangyougui/gf/issues/3245
 type Issue3245Req struct {
 	g.Meta      `path:"/hello" method:"get"`
 	Name        string `p:"nickname" json:"name"`

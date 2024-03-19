@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package gtimer
 
@@ -11,7 +11,7 @@ import (
 	"math"
 	"sync"
 
-	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/wangyougui/gf/v2/container/gtype"
 )
 
 // priorityQueue is an abstract data type similar to a regular queue or stack data structure in which

@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package gconv_test
 
@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/wangyougui/gf/v2/os/gtime"
+	"github.com/wangyougui/gf/v2/test/gtest"
+	"github.com/wangyougui/gf/v2/util/gconv"
 )
 
 func TestConverter_ConvertWithRefer(t *testing.T) {
@@ -236,7 +236,7 @@ func TestConverter_Struct(t *testing.T) {
 		t.Assert(dd.ValTa.Val2, "abc")
 	})
 
-	// fix: https://github.com/gogf/gf/issues/2665
+	// fix: https://github.com/wangyougui/gf/issues/2665
 	gtest.C(t, func(t *gtest.T) {
 		aa := &tEE{}
 
@@ -253,7 +253,7 @@ func TestConverter_Struct(t *testing.T) {
 		t.Assert(aa.Val3.Local(), gtime.New("2006-01-02T15:04:05Z07:00").Local().Time)
 	})
 
-	// fix: https://github.com/gogf/gf/issues/3006
+	// fix: https://github.com/wangyougui/gf/issues/3006
 	gtest.C(t, func(t *gtest.T) {
 		ff := &tFF{}
 		var tmp = map[string]any{
@@ -319,7 +319,7 @@ func TestConverter_CustomBasicType_ToStruct(t *testing.T) {
 	})
 }
 
-// fix: https://github.com/gogf/gf/issues/3099
+// fix: https://github.com/wangyougui/gf/issues/3099
 func TestConverter_CustomTimeType_ToStruct(t *testing.T) {
 	type timestamppb struct {
 		S string

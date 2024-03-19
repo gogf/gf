@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // Package glog implements powerful and easy-to-use leveled logging functionality.
 package glog
@@ -10,9 +10,9 @@ package glog
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/internal/command"
-	"github.com/gogf/gf/v2/os/grpool"
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/wangyougui/gf/v2/internal/command"
+	"github.com/wangyougui/gf/v2/os/grpool"
+	"github.com/wangyougui/gf/v2/util/gconv"
 )
 
 // ILogger is the API interface for logger.

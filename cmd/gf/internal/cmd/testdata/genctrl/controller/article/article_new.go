@@ -5,7 +5,7 @@
 package article
 
 import (
-	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genctrl/api/article"
+	"github.com/wangyougui/gf/cmd/gf/v2/internal/cmd/testdata/genctrl/api/article"
 )
 
 type ControllerV1 struct{}

@@ -2,15 +2,15 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package gbase64_test
 
 import (
 	"testing"
 
-	"github.com/gogf/gf/v2/encoding/gbase64"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/wangyougui/gf/v2/encoding/gbase64"
+	"github.com/wangyougui/gf/v2/test/gtest"
 )
 
 type testPair struct {

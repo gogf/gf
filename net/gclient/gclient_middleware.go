@@ -3,7 +3,7 @@ package gclient
 import (
 	"net/http"
 
-	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/wangyougui/gf/v2/os/gctx"
 )
 
 // HandlerFunc middleware handler func

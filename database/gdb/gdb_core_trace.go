@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 //
 
 package gdb
@@ -16,11 +16,11 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/gogf/gf/v2/net/gtrace"
+	"github.com/wangyougui/gf/v2/net/gtrace"
 )
 
 const (
-	traceInstrumentName       = "github.com/gogf/gf/v2/database/gdb"
+	traceInstrumentName       = "github.com/wangyougui/gf/v2/database/gdb"
 	traceAttrDbType           = "db.type"
 	traceAttrDbHost           = "db.host"
 	traceAttrDbPort           = "db.port"

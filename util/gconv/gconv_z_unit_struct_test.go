@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package gconv_test
 
@@ -10,13 +10,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/wangyougui/gf/v2/container/gvar"
+	"github.com/wangyougui/gf/v2/encoding/gjson"
+	"github.com/wangyougui/gf/v2/frame/g"
+	"github.com/wangyougui/gf/v2/internal/json"
+	"github.com/wangyougui/gf/v2/os/gtime"
+	"github.com/wangyougui/gf/v2/test/gtest"
+	"github.com/wangyougui/gf/v2/util/gconv"
 )
 
 func Test_Struct_Basic1(t *testing.T) {
@@ -501,7 +501,7 @@ func Test_StructEmbedded3(t *testing.T) {
 	})
 }
 
-// https://github.com/gogf/gf/issues/775
+// https://github.com/wangyougui/gf/issues/775
 func Test_StructEmbedded4(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Sub2 struct {
@@ -642,7 +642,7 @@ func Test_Struct_Time(t *testing.T) {
 }
 
 func Test_Struct_GTime(t *testing.T) {
-	// https://github.com/gogf/gf/issues/1387
+	// https://github.com/wangyougui/gf/issues/1387
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Name       string
@@ -1260,7 +1260,7 @@ func Test_Struct_Empty_MapStringString(t *testing.T) {
 	})
 }
 
-// https://github.com/gogf/gf/issues/1563
+// https://github.com/wangyougui/gf/issues/1563
 func Test_Struct_Issue1563(t *testing.T) {
 	type User struct {
 		Pass1 string `c:"password1"`
@@ -1280,7 +1280,7 @@ func Test_Struct_Issue1563(t *testing.T) {
 	})
 }
 
-// https://github.com/gogf/gf/issues/1597
+// https://github.com/wangyougui/gf/issues/1597
 func Test_Struct_Issue1597(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type S struct {
@@ -1303,7 +1303,7 @@ func Test_Struct_Issue1597(t *testing.T) {
 	})
 }
 
-// https://github.com/gogf/gf/issues/2980
+// https://github.com/wangyougui/gf/issues/2980
 func Test_Struct_Issue2980(t *testing.T) {
 	type Post struct {
 		CreatedAt *gtime.Time `json:"createdAt" `

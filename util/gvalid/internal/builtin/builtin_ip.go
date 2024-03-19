@@ -2,15 +2,15 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package builtin
 
 import (
 	"errors"
 
-	"github.com/gogf/gf/v2/net/gipv4"
-	"github.com/gogf/gf/v2/net/gipv6"
+	"github.com/wangyougui/gf/v2/net/gipv4"
+	"github.com/wangyougui/gf/v2/net/gipv6"
 )
 
 // RuleIp implements `ip` rule:

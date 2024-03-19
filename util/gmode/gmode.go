@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // Package gmode provides release mode management for project.
 //
@@ -10,9 +10,9 @@
 package gmode
 
 import (
-	"github.com/gogf/gf/v2/debug/gdebug"
-	"github.com/gogf/gf/v2/internal/command"
-	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/wangyougui/gf/v2/debug/gdebug"
+	"github.com/wangyougui/gf/v2/internal/command"
+	"github.com/wangyougui/gf/v2/os/gfile"
 )
 
 const (

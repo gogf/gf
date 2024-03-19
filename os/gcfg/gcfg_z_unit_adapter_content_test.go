@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // go test *.go -bench=".*" -benchmem
 
@@ -11,9 +11,9 @@ package gcfg_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gcfg"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/wangyougui/gf/v2/frame/g"
+	"github.com/wangyougui/gf/v2/os/gcfg"
+	"github.com/wangyougui/gf/v2/test/gtest"
 )
 
 func TestAdapterContent_Available_Get_Data(t *testing.T) {

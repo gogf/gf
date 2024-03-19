@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // Package redis provides gredis.Adapter implements using go-redis.
 package redis
@@ -13,8 +13,8 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
-	"github.com/gogf/gf/v2/database/gredis"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/wangyougui/gf/v2/database/gredis"
+	"github.com/wangyougui/gf/v2/text/gstr"
 )
 
 // Redis is an implement of Adapter using go-redis.

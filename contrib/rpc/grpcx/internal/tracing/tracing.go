@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // Package tracing provide tracing feature for GRPC.
 //
@@ -26,8 +26,8 @@ const (
 
 const (
 	tracingMaxContentLogSize         = 256 * 1024 // Max log size for request and response body.
-	tracingInstrumentGrpcClient      = "github.com/gogf/gf/contrib/rpc/grpcx/v2/krpc.GrpcClient"
-	tracingInstrumentGrpcServer      = "github.com/gogf/gf/contrib/rpc/grpcx/v2/krpc.GrpcServer"
+	tracingInstrumentGrpcClient      = "github.com/wangyougui/gf/contrib/rpc/grpcx/v2/krpc.GrpcClient"
+	tracingInstrumentGrpcServer      = "github.com/wangyougui/gf/contrib/rpc/grpcx/v2/krpc.GrpcServer"
 	tracingEventGrpcRequest          = "grpc.request"
 	tracingEventGrpcRequestMessage   = "grpc.request.message"
 	tracingEventGrpcRequestBaggage   = "grpc.request.baggage"

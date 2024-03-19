@@ -1,10 +1,10 @@
-module github.com/gogf/gf/contrib/rpc/grpcx/v2
+module github.com/wangyougui/gf/contrib/rpc/grpcx/v2
 
 go 1.18
 
 require (
-	github.com/gogf/gf/contrib/registry/file/v2 v2.6.4
-	github.com/gogf/gf/v2 v2.6.4
+	github.com/wangyougui/gf/contrib/registry/file/v2 v2.6.4
+	github.com/wangyougui/gf/v2 v2.6.4
 	go.opentelemetry.io/otel v1.14.0
 	go.opentelemetry.io/otel/trace v1.14.0
 	google.golang.org/grpc v1.57.2
@@ -36,6 +36,6 @@ require (
 )
 
 replace (
-	github.com/gogf/gf/contrib/registry/file/v2 => ../../registry/file/
-	github.com/gogf/gf/v2 => ../../../
+	github.com/wangyougui/gf/contrib/registry/file/v2 => ../../registry/file/
+	github.com/wangyougui/gf/v2 => ../../../
 )

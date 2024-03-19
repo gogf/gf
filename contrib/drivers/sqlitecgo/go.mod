@@ -1,10 +1,10 @@
-module github.com/gogf/gf/contrib/drivers/sqlitecgo/v2
+module github.com/wangyougui/gf/contrib/drivers/sqlitecgo/v2
 
 go 1.18
 
 require (
-	github.com/gogf/gf/contrib/drivers/sqlite/v2 v2.6.4
-	github.com/gogf/gf/v2 v2.6.4
+	github.com/wangyougui/gf/contrib/drivers/sqlite/v2 v2.6.4
+	github.com/wangyougui/gf/v2 v2.6.4
 	github.com/mattn/go-sqlite3 v1.14.17
 )
 
@@ -41,6 +41,6 @@ require (
 )
 
 replace (
-	github.com/gogf/gf/contrib/drivers/sqlite/v2 => ../sqlite/
-	github.com/gogf/gf/v2 => ../../../
+	github.com/wangyougui/gf/contrib/drivers/sqlite/v2 => ../sqlite/
+	github.com/wangyougui/gf/v2 => ../../../
 )

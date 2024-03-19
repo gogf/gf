@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 //go:build !windows
 // +build !windows
@@ -14,9 +14,9 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/os/glog"
-	"github.com/gogf/gf/v2/os/gproc"
+	"github.com/wangyougui/gf/v2/internal/intlog"
+	"github.com/wangyougui/gf/v2/os/glog"
+	"github.com/wangyougui/gf/v2/os/gproc"
 )
 
 // handleProcessSignal handles all signals from system in blocking way.

@@ -4,7 +4,7 @@ syntax = "proto3";
 
 package protobuf;
 
-option go_package = "github.com/gogf/gf/grpc/example/helloworld/protobuf";
+option go_package = "github.com/wangyougui/gf/grpc/example/helloworld/protobuf";
 
 
 // The greeting service definition.

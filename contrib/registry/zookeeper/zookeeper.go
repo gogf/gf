@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // Package zookeeper implements service Registry and Discovery using zookeeper.
 package zookeeper
@@ -12,8 +12,8 @@ import (
 	"golang.org/x/sync/singleflight"
 	"time"
 
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/wangyougui/gf/v2/errors/gerror"
+	"github.com/wangyougui/gf/v2/net/gsvc"
 )
 
 var _ gsvc.Registry = &Registry{}

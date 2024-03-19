@@ -9,10 +9,10 @@ package gtree_test
 import (
 	"fmt"
 
-	"github.com/gogf/gf/v2/container/gtree"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/gogf/gf/v2/util/gutil"
+	"github.com/wangyougui/gf/v2/container/gtree"
+	"github.com/wangyougui/gf/v2/internal/json"
+	"github.com/wangyougui/gf/v2/util/gconv"
+	"github.com/wangyougui/gf/v2/util/gutil"
 )
 
 func ExampleBTree_Clone() {

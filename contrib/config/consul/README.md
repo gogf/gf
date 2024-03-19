@@ -5,7 +5,7 @@ Package `consul` implements GoFrame `gcfg.Adapter` using consul service.
 # Installation
 
 ```
-go get -u github.com/gogf/gf/contrib/config/consul/v2
+go get -u github.com/wangyougui/gf/contrib/config/consul/v2
 ```
 
 # Usage
@@ -20,10 +20,10 @@ which sets the Adapter of default configuration instance before any other packag
 package boot
 
 import (
-	consul "github.com/gogf/gf/contrib/config/consul/v2"
+	consul "github.com/wangyougui/gf/contrib/config/consul/v2"
 
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/wangyougui/gf/v2/frame/g"
+	"github.com/wangyougui/gf/v2/os/gctx"
 	"github.com/hashicorp/consul/api"
 	"github.com/hashicorp/go-cleanhttp"
 )
@@ -58,16 +58,16 @@ func init() {
 
 It is strongly recommended import your boot package in top of your `main.go`.
 
-Note the top `import`: `_ "github.com/gogf/gf/example/config/consul/boot"` .
+Note the top `import`: `_ "github.com/wangyougui/gf/example/config/consul/boot"` .
 
 ```go
 package main
 
 import (
-	_ "github.com/gogf/gf/example/config/consul/boot"
+	_ "github.com/wangyougui/gf/example/config/consul/boot"
 
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/wangyougui/gf/v2/frame/g"
+	"github.com/wangyougui/gf/v2/os/gctx"
 )
 
 func main() {

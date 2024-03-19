@@ -1,9 +1,9 @@
-module github.com/gogf/gf/contrib/drivers/pgsql/v2
+module github.com/wangyougui/gf/contrib/drivers/pgsql/v2
 
 go 1.18
 
 require (
-	github.com/gogf/gf/v2 v2.6.4
+	github.com/wangyougui/gf/v2 v2.6.4
 	github.com/lib/pq v1.10.9
 )
 
@@ -31,4 +31,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/gogf/gf/v2 => ../../../
+replace github.com/wangyougui/gf/v2 => ../../../

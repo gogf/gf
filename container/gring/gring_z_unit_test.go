@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package gring_test
 
@@ -10,9 +10,9 @@ import (
 	"container/ring"
 	"testing"
 
-	"github.com/gogf/gf/v2/container/gring"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/wangyougui/gf/v2/container/gring"
+	"github.com/wangyougui/gf/v2/frame/g"
+	"github.com/wangyougui/gf/v2/test/gtest"
 )
 
 type Student struct {
@@ -140,7 +140,7 @@ func TestRing_Slice(t *testing.T) {
 	})
 }
 
-// https://github.com/gogf/gf/issues/1394
+// https://github.com/wangyougui/gf/issues/1394
 func Test_Issue1394(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// gring.

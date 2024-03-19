@@ -6,12 +6,12 @@
 
 ## 1) PreCompiled Binary
 
-You can also install `gf` tool using pre-built binaries: <https://github.com/gogf/gf/releases>
+You can also install `gf` tool using pre-built binaries: <https://github.com/wangyougui/gf/releases>
 
 1. `Mac` & `Linux`
 
    ```shell
-    wget -O gf https://github.com/gogf/gf/releases/latest/download/gf_$(go env GOOS)_$(go env GOARCH) && chmod +x gf && ./gf install -y && rm ./gf
+    wget -O gf https://github.com/wangyougui/gf/releases/latest/download/gf_$(go env GOOS)_$(go env GOARCH) && chmod +x gf && ./gf install -y && rm ./gf
    ```
 
    > If you're using `zsh`, you might need rename your alias by command `alias gf=gf` to resolve the conflicts between `gf` and `git fetch`.
@@ -37,8 +37,8 @@ You can also install `gf` tool using pre-built binaries: <https://github.com/gog
 ## 2) Manually Install
 
 ```shell
-go install github.com/gogf/gf/cmd/gf/v2@latest # latest version
-go install github.com/gogf/gf/cmd/gf/v2@v2.5.5 # certain version(should be >= v2.5.5)
+go install github.com/wangyougui/gf/cmd/gf/v2@latest # latest version
+go install github.com/wangyougui/gf/cmd/gf/v2@v2.5.5 # certain version(should be >= v2.5.5)
 ```
 
 ## 2. Commands

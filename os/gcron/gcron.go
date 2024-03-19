@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // Package gcron implements a cron pattern parser and job runner.
 package gcron
@@ -11,8 +11,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/gogf/gf/v2/os/glog"
-	"github.com/gogf/gf/v2/os/gtimer"
+	"github.com/wangyougui/gf/v2/os/glog"
+	"github.com/wangyougui/gf/v2/os/gtimer"
 )
 
 const (

@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package gfcmd
 
@@ -10,18 +10,18 @@ import (
 	"context"
 	"runtime"
 
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gcfg"
-	"github.com/gogf/gf/v2/os/gcmd"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/wangyougui/gf/v2/errors/gcode"
+	"github.com/wangyougui/gf/v2/errors/gerror"
+	"github.com/wangyougui/gf/v2/frame/g"
+	"github.com/wangyougui/gf/v2/os/gcfg"
+	"github.com/wangyougui/gf/v2/os/gcmd"
+	"github.com/wangyougui/gf/v2/os/gfile"
+	"github.com/wangyougui/gf/v2/text/gstr"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/cmd"
-	_ "github.com/gogf/gf/cmd/gf/v2/internal/packed"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/allyes"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
+	"github.com/wangyougui/gf/cmd/gf/v2/internal/cmd"
+	_ "github.com/wangyougui/gf/cmd/gf/v2/internal/packed"
+	"github.com/wangyougui/gf/cmd/gf/v2/internal/utility/allyes"
+	"github.com/wangyougui/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 const (

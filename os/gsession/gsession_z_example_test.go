@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package gsession_test
 
@@ -10,10 +10,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/os/gsession"
+	"github.com/wangyougui/gf/v2/container/gmap"
+	"github.com/wangyougui/gf/v2/frame/g"
+	"github.com/wangyougui/gf/v2/os/gctx"
+	"github.com/wangyougui/gf/v2/os/gsession"
 )
 
 func ExampleNew() {
@@ -297,7 +297,7 @@ func ExampleStorageRedisHashTable_Get() {
 
 	// May Output:
 	// <nil>
-	// redis adapter is not set, missing configuration or adapter register? possible reference: https://github.com/gogf/gf/tree/master/contrib/nosql/redis
+	// redis adapter is not set, missing configuration or adapter register? possible reference: https://github.com/wangyougui/gf/tree/master/contrib/nosql/redis
 }
 
 func ExampleStorageRedisHashTable_Data() {
@@ -310,7 +310,7 @@ func ExampleStorageRedisHashTable_Data() {
 
 	// May Output:
 	// map[]
-	// redis adapter is not set, missing configuration or adapter register? possible reference: https://github.com/gogf/gf/tree/master/contrib/nosql/redis
+	// redis adapter is not set, missing configuration or adapter register? possible reference: https://github.com/wangyougui/gf/tree/master/contrib/nosql/redis
 }
 
 func ExampleStorageRedisHashTable_GetSize() {
@@ -323,7 +323,7 @@ func ExampleStorageRedisHashTable_GetSize() {
 
 	// May Output:
 	// 0
-	// redis adapter is not set, missing configuration or adapter register? possible reference: https://github.com/gogf/gf/tree/master/contrib/nosql/redis
+	// redis adapter is not set, missing configuration or adapter register? possible reference: https://github.com/wangyougui/gf/tree/master/contrib/nosql/redis
 }
 
 func ExampleStorageRedisHashTable_Remove() {
@@ -334,7 +334,7 @@ func ExampleStorageRedisHashTable_Remove() {
 	fmt.Println(err)
 
 	// May Output:
-	// redis adapter is not set, missing configuration or adapter register? possible reference: https://github.com/gogf/gf/tree/master/contrib/nosql/redis
+	// redis adapter is not set, missing configuration or adapter register? possible reference: https://github.com/wangyougui/gf/tree/master/contrib/nosql/redis
 }
 
 func ExampleStorageRedisHashTable_RemoveAll() {
@@ -345,7 +345,7 @@ func ExampleStorageRedisHashTable_RemoveAll() {
 	fmt.Println(err)
 
 	// May Output:
-	// redis adapter is not set, missing configuration or adapter register? possible reference: https://github.com/gogf/gf/tree/master/contrib/nosql/redis
+	// redis adapter is not set, missing configuration or adapter register? possible reference: https://github.com/wangyougui/gf/tree/master/contrib/nosql/redis
 }
 
 func ExampleStorageRedisHashTable_GetSession() {
@@ -357,7 +357,7 @@ func ExampleStorageRedisHashTable_GetSession() {
 
 	// May Output:
 	//
-	// redis adapter is not set, missing configuration or adapter register? possible reference: https://github.com/gogf/gf/tree/master/contrib/nosql/redis
+	// redis adapter is not set, missing configuration or adapter register? possible reference: https://github.com/wangyougui/gf/tree/master/contrib/nosql/redis
 }
 
 func ExampleStorageRedisHashTable_SetSession() {
@@ -370,7 +370,7 @@ func ExampleStorageRedisHashTable_SetSession() {
 	fmt.Println(err)
 
 	// May Output:
-	// redis adapter is not set, missing configuration or adapter register? possible reference: https://github.com/gogf/gf/tree/master/contrib/nosql/redis
+	// redis adapter is not set, missing configuration or adapter register? possible reference: https://github.com/wangyougui/gf/tree/master/contrib/nosql/redis
 }
 
 func ExampleStorageRedisHashTable_UpdateTTL() {
@@ -381,5 +381,5 @@ func ExampleStorageRedisHashTable_UpdateTTL() {
 	fmt.Println(err)
 
 	// May Output:
-	// redis adapter is not set, missing configuration or adapter register? possible reference: https://github.com/gogf/gf/tree/master/contrib/nosql/redis
+	// redis adapter is not set, missing configuration or adapter register? possible reference: https://github.com/wangyougui/gf/tree/master/contrib/nosql/redis
 }

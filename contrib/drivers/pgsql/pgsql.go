@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // Package pgsql implements gdb.Driver, which supports operations for database PostgreSQL.
 //
@@ -14,8 +14,8 @@ package pgsql
 import (
 	_ "github.com/lib/pq"
 
-	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/wangyougui/gf/v2/database/gdb"
+	"github.com/wangyougui/gf/v2/os/gctx"
 )
 
 // Driver is the driver for postgresql database.

@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // Package empty provides functions for checking empty/nil variables.
 package empty
@@ -11,7 +11,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/gogf/gf/v2/internal/reflection"
+	"github.com/wangyougui/gf/v2/internal/reflection"
 )
 
 // iString is used for type assert api for String().

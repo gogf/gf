@@ -2,14 +2,14 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package gdb
 
 import (
 	"fmt"
 
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/wangyougui/gf/v2/text/gstr"
 )
 
 // LeftJoin does "LEFT JOIN ... ON ..." statement on the model.
@@ -154,7 +154,7 @@ func (m *Model) InnerJoinOnFields(table, firstField, operator, secondField strin
 // Model("user", "u").InnerJoin("user_detail", "ud", "ud.uid>u.uid")
 // Model("user", "u").InnerJoin("SELECT xxx FROM xxx","a", "a.uid=u.uid")
 // Related issues:
-// https://github.com/gogf/gf/issues/1024
+// https://github.com/wangyougui/gf/issues/1024
 func (m *Model) doJoin(operator joinOperator, tableOrSubQueryAndJoinConditions ...string) *Model {
 	var (
 		model   = m.getModel()

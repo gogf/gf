@@ -4,21 +4,21 @@ Use `zookeeper` as service registration and discovery management.
 
 ## Installation
 ```
-go get -u -v github.com/gogf/gf/contrib/registry/zookeeper/v2
+go get -u -v github.com/wangyougui/gf/contrib/registry/zookeeper/v2
 ```
 suggested using `go.mod`:
 ```
-require github.com/gogf/gf/contrib/registry/zookeeper/v2 latest
+require github.com/wangyougui/gf/contrib/registry/zookeeper/v2 latest
 ```
 
 ```go
 package main
 
 import (
-	"github.com/gogf/gf/contrib/registry/zookeeper/v2"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/wangyougui/gf/contrib/registry/zookeeper/v2"
+	"github.com/wangyougui/gf/v2/frame/g"
+	"github.com/wangyougui/gf/v2/net/ghttp"
+	"github.com/wangyougui/gf/v2/net/gsvc"
 )
 
 func main() {
@@ -42,11 +42,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gogf/gf/contrib/registry/zookeeper/v2"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/gsel"
-	"github.com/gogf/gf/v2/net/gsvc"
-	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/wangyougui/gf/contrib/registry/zookeeper/v2"
+	"github.com/wangyougui/gf/v2/frame/g"
+	"github.com/wangyougui/gf/v2/net/gsel"
+	"github.com/wangyougui/gf/v2/net/gsvc"
+	"github.com/wangyougui/gf/v2/os/gctx"
 )
 
 func main() {

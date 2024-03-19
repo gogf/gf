@@ -1,23 +1,23 @@
-module github.com/gogf/gf/example
+module github.com/wangyougui/gf/example
 
 go 1.18
 
 require (
-	github.com/gogf/gf/contrib/config/apollo/v2 v2.6.4
-	github.com/gogf/gf/contrib/config/consul/v2 v2.6.4
-	github.com/gogf/gf/contrib/config/kubecm/v2 v2.6.4
-	github.com/gogf/gf/contrib/config/nacos/v2 v2.6.4
-	github.com/gogf/gf/contrib/config/polaris/v2 v2.6.4
-	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.6.4
-	github.com/gogf/gf/contrib/nosql/redis/v2 v2.6.4
-	github.com/gogf/gf/contrib/registry/etcd/v2 v2.6.4
-	github.com/gogf/gf/contrib/registry/file/v2 v2.6.4
-	github.com/gogf/gf/contrib/registry/nacos/v2 v2.6.4
-	github.com/gogf/gf/contrib/registry/polaris/v2 v2.6.4
-	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.6.4
-	github.com/gogf/gf/contrib/trace/otlpgrpc/v2 v2.6.4
-	github.com/gogf/gf/contrib/trace/otlphttp/v2 v2.6.4
-	github.com/gogf/gf/v2 v2.6.4
+	github.com/wangyougui/gf/contrib/config/apollo/v2 v2.6.4
+	github.com/wangyougui/gf/contrib/config/consul/v2 v2.6.4
+	github.com/wangyougui/gf/contrib/config/kubecm/v2 v2.6.4
+	github.com/wangyougui/gf/contrib/config/nacos/v2 v2.6.4
+	github.com/wangyougui/gf/contrib/config/polaris/v2 v2.6.4
+	github.com/wangyougui/gf/contrib/drivers/mysql/v2 v2.6.4
+	github.com/wangyougui/gf/contrib/nosql/redis/v2 v2.6.4
+	github.com/wangyougui/gf/contrib/registry/etcd/v2 v2.6.4
+	github.com/wangyougui/gf/contrib/registry/file/v2 v2.6.4
+	github.com/wangyougui/gf/contrib/registry/nacos/v2 v2.6.4
+	github.com/wangyougui/gf/contrib/registry/polaris/v2 v2.6.4
+	github.com/wangyougui/gf/contrib/rpc/grpcx/v2 v2.6.4
+	github.com/wangyougui/gf/contrib/trace/otlpgrpc/v2 v2.6.4
+	github.com/wangyougui/gf/contrib/trace/otlphttp/v2 v2.6.4
+	github.com/wangyougui/gf/v2 v2.6.4
 	github.com/hashicorp/consul/api v1.24.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/nacos-group/nacos-sdk-go/v2 v2.2.5
@@ -152,19 +152,19 @@ require (
 )
 
 replace (
-	github.com/gogf/gf/contrib/config/apollo/v2 => ../contrib/config/apollo/
-	github.com/gogf/gf/contrib/config/consul/v2 => ../contrib/config/consul/
-	github.com/gogf/gf/contrib/config/kubecm/v2 => ../contrib/config/kubecm/
-	github.com/gogf/gf/contrib/config/nacos/v2 => ../contrib/config/nacos/
-	github.com/gogf/gf/contrib/config/polaris/v2 => ../contrib/config/polaris/
-	github.com/gogf/gf/contrib/drivers/mysql/v2 => ../contrib/drivers/mysql/
-	github.com/gogf/gf/contrib/nosql/redis/v2 => ../contrib/nosql/redis/
-	github.com/gogf/gf/contrib/registry/etcd/v2 => ../contrib/registry/etcd/
-	github.com/gogf/gf/contrib/registry/file/v2 => ../contrib/registry/file/
-	github.com/gogf/gf/contrib/registry/nacos/v2 => ../contrib/registry/nacos/
-	github.com/gogf/gf/contrib/registry/polaris/v2 => ../contrib/registry/polaris/
-	github.com/gogf/gf/contrib/rpc/grpcx/v2 => ../contrib/rpc/grpcx/
-	github.com/gogf/gf/contrib/trace/otlpgrpc/v2 => ../contrib/trace/otlpgrpc
-	github.com/gogf/gf/contrib/trace/otlphttp/v2 => ../contrib/trace/otlphttp
-	github.com/gogf/gf/v2 => ../
+	github.com/wangyougui/gf/contrib/config/apollo/v2 => ../contrib/config/apollo/
+	github.com/wangyougui/gf/contrib/config/consul/v2 => ../contrib/config/consul/
+	github.com/wangyougui/gf/contrib/config/kubecm/v2 => ../contrib/config/kubecm/
+	github.com/wangyougui/gf/contrib/config/nacos/v2 => ../contrib/config/nacos/
+	github.com/wangyougui/gf/contrib/config/polaris/v2 => ../contrib/config/polaris/
+	github.com/wangyougui/gf/contrib/drivers/mysql/v2 => ../contrib/drivers/mysql/
+	github.com/wangyougui/gf/contrib/nosql/redis/v2 => ../contrib/nosql/redis/
+	github.com/wangyougui/gf/contrib/registry/etcd/v2 => ../contrib/registry/etcd/
+	github.com/wangyougui/gf/contrib/registry/file/v2 => ../contrib/registry/file/
+	github.com/wangyougui/gf/contrib/registry/nacos/v2 => ../contrib/registry/nacos/
+	github.com/wangyougui/gf/contrib/registry/polaris/v2 => ../contrib/registry/polaris/
+	github.com/wangyougui/gf/contrib/rpc/grpcx/v2 => ../contrib/rpc/grpcx/
+	github.com/wangyougui/gf/contrib/trace/otlpgrpc/v2 => ../contrib/trace/otlpgrpc
+	github.com/wangyougui/gf/contrib/trace/otlphttp/v2 => ../contrib/trace/otlphttp
+	github.com/wangyougui/gf/v2 => ../
 )

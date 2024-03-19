@@ -5,7 +5,7 @@ Package `polaris` implements GoFrame `gcfg.Adapter` using polaris service.
 # Installation
 
 ```
-go get -u github.com/gogf/gf/contrib/config/polaris/v2
+go get -u github.com/wangyougui/gf/contrib/config/polaris/v2
 ```
 
 # Usage
@@ -20,9 +20,9 @@ which sets the Adapter of default configuration instance before any other packag
 package boot
 
 import (
-    "github.com/gogf/gf/contrib/config/polaris/v2"
-    "github.com/gogf/gf/v2/frame/g"
-    "github.com/gogf/gf/v2/os/gctx"
+    "github.com/wangyougui/gf/contrib/config/polaris/v2"
+    "github.com/wangyougui/gf/v2/frame/g"
+    "github.com/wangyougui/gf/v2/os/gctx"
 )
 
 func init() {
@@ -55,16 +55,16 @@ func init() {
 
 It is strongly recommended import your boot package in top of your `main.go`.
 
-Note the top `import`: `_ "github.com/gogf/gf/example/config/polaris/boot"` .
+Note the top `import`: `_ "github.com/wangyougui/gf/example/config/polaris/boot"` .
 
 ```go
 package main
 
 import (
-    _ "github.com/gogf/gf/example/config/polaris/boot"
+    _ "github.com/wangyougui/gf/example/config/polaris/boot"
     
-    "github.com/gogf/gf/v2/frame/g"
-    "github.com/gogf/gf/v2/os/gctx"
+    "github.com/wangyougui/gf/v2/frame/g"
+    "github.com/wangyougui/gf/v2/os/gctx"
 )
 
 func main() {

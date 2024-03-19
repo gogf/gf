@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 //
 
 package ghttp
@@ -15,10 +15,10 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/gogf/gf/v2/net/ghttp/internal/response"
-	"github.com/gogf/gf/v2/net/gtrace"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/gres"
+	"github.com/wangyougui/gf/v2/net/ghttp/internal/response"
+	"github.com/wangyougui/gf/v2/net/gtrace"
+	"github.com/wangyougui/gf/v2/os/gfile"
+	"github.com/wangyougui/gf/v2/os/gres"
 )
 
 // Response is the http response manager.

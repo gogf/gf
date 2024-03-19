@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package gres
 
@@ -12,18 +12,18 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/gogf/gf/v2/encoding/gbase64"
-	"github.com/gogf/gf/v2/encoding/gcompress"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/wangyougui/gf/v2/encoding/gbase64"
+	"github.com/wangyougui/gf/v2/encoding/gcompress"
+	"github.com/wangyougui/gf/v2/errors/gerror"
+	"github.com/wangyougui/gf/v2/os/gfile"
+	"github.com/wangyougui/gf/v2/text/gstr"
 )
 
 const (
 	packedGoSourceTemplate = `
 package %s
 
-import "github.com/gogf/gf/v2/os/gres"
+import "github.com/wangyougui/gf/v2/os/gres"
 
 func init() {
 	if err := gres.Add("%s"); err != nil {

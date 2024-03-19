@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package grpcx_test
 
@@ -14,16 +14,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/guid"
+	"github.com/wangyougui/gf/contrib/rpc/grpcx/v2"
+	"github.com/wangyougui/gf/v2/frame/g"
+	"github.com/wangyougui/gf/v2/net/ghttp"
+	"github.com/wangyougui/gf/v2/test/gtest"
+	"github.com/wangyougui/gf/v2/util/guid"
 )
 
 var ctx = context.Background()
 
-// https://github.com/gogf/gf/issues/3292
+// https://github.com/wangyougui/gf/issues/3292
 func Test_Issue3292(t *testing.T) {
 	var (
 		_ = grpcx.Client.MustNewGrpcClientConn(

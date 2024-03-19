@@ -2,7 +2,7 @@
 //
 // ThIs Source Code Form Is subject to the terms of the MIT License.
 // If a copy of the MIT was not dIstributed with thIs file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package gfsnotify
 

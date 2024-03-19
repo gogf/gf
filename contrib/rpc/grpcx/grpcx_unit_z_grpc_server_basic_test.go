@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 package grpcx_test
 
@@ -11,14 +11,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2/testdata/controller"
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2/testdata/protobuf"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/gipv4"
-	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/guid"
+	"github.com/wangyougui/gf/contrib/rpc/grpcx/v2"
+	"github.com/wangyougui/gf/contrib/rpc/grpcx/v2/testdata/controller"
+	"github.com/wangyougui/gf/contrib/rpc/grpcx/v2/testdata/protobuf"
+	"github.com/wangyougui/gf/v2/frame/g"
+	"github.com/wangyougui/gf/v2/net/gipv4"
+	"github.com/wangyougui/gf/v2/os/gctx"
+	"github.com/wangyougui/gf/v2/test/gtest"
+	"github.com/wangyougui/gf/v2/util/guid"
 )
 
 func Test_Grpcx_Grpc_Server_Basic(t *testing.T) {

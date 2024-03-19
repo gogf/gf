@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // go test *.go -bench=".*" -benchmem
 
@@ -15,13 +15,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gcmd"
-	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/os/genv"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/wangyougui/gf/v2/errors/gcode"
+	"github.com/wangyougui/gf/v2/errors/gerror"
+	"github.com/wangyougui/gf/v2/frame/g"
+	"github.com/wangyougui/gf/v2/os/gcmd"
+	"github.com/wangyougui/gf/v2/os/gctx"
+	"github.com/wangyougui/gf/v2/os/genv"
+	"github.com/wangyougui/gf/v2/test/gtest"
 )
 
 func Test_Default(t *testing.T) {
@@ -107,9 +107,9 @@ func Test_Command(t *testing.T) {
 			Brief:       "test brief",
 			Description: "test description current Golang environment variables",
 			Examples: `
-gf get github.com/gogf/gf
-gf get github.com/gogf/gf@latest
-gf get github.com/gogf/gf@master
+gf get github.com/wangyougui/gf
+gf get github.com/wangyougui/gf@latest
+gf get github.com/wangyougui/gf@master
 gf get golang.org/x/sys
 `,
 			Arguments: []gcmd.Argument{
@@ -183,9 +183,9 @@ Use 'gf help COMMAND' or 'gf COMMAND -h' for detail about a command, which has '
 			Description: "show current Golang environment variables",
 
 			Examples: `
-gf get github.com/gogf/gf
-gf get github.com/gogf/gf@latest
-gf get github.com/gogf/gf@master
+gf get github.com/wangyougui/gf
+gf get github.com/wangyougui/gf@latest
+gf get github.com/wangyougui/gf@master
 gf get golang.org/x/sys
 `,
 			Func: func(ctx context.Context, parser *gcmd.Parser) error {

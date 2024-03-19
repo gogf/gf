@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/wangyougui/gf.
 
 // Package gurl provides useful API for URL handling.
 package gurl
@@ -11,7 +11,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/wangyougui/gf/v2/errors/gerror"
 )
 
 // Encode escapes the string so it can be safely placed
