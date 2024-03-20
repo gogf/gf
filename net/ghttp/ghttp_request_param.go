@@ -23,6 +23,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -107,14 +108,30 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 				return err
 			}
 		}
-		// TODO: https://github.com/gogf/gf/pull/2450
-		// Validation.
-		if err = gvalid.New().
-			Bail().
-			Data(pointer).
-			Assoc(data).
-			Run(r.Context()); err != nil {
-			return err
+		handlerInfo := r.serveHandler.Handler.Info
+		if handlerInfo.IsStrictRoute {
+			// TODO: Improve the performance by reducing duplicated reflect usage on the same variable across packages
+			fields, err := gstructs.TagFields(pointer, []string{"v", "valid"})
+			if err != nil {
+				return err
+			}
+			for _, field := range fields {
+				err = handlerInfo.StrictRouteParamsValidFunc(r.Context(), &gvalid.Validator{}, data, field.Value)
+				if err != nil {
+					return err
+				}
+			}
+
+		} else {
+			// TODO: https://github.com/gogf/gf/pull/2450
+			// Validation.
+			if err = gvalid.New().
+				Bail().
+				Data(pointer).
+				Assoc(data).
+				Run(r.Context()); err != nil {
+				return err
+			}
 		}
 
 	// Multiple struct, it only supports JSON type post content like:

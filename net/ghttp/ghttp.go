@@ -8,11 +8,13 @@
 package ghttp
 
 import (
+	"context"
 	"net/http"
 	"reflect"
 	"sync"
 	"time"
 
+	"github.com/gogf/gf/v2/util/gvalid"
 	"github.com/gorilla/websocket"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -82,6 +84,8 @@ type (
 		Value           reflect.Value    // Reflect value information for current handler, which is used for extensions of the handler feature.
 		IsStrictRoute   bool             // Whether strict route matching is enabled.
 		ReqStructFields []gstructs.Field // Request struct fields.
+
+		StrictRouteParamsValidFunc func(ctx context.Context, valid *gvalid.Validator, assoc any, fieldVal reflect.Value) error
 	}
 
 	// HandlerItem is the registered handler for route handling,

@@ -22,6 +22,12 @@ import (
 	"github.com/gogf/gf/v2/util/gvalid/internal/builtin"
 )
 
+type DoCheckValueInput doCheckValueInput
+
+func (v *Validator) DoCheckValue(ctx context.Context, in DoCheckValueInput) Error {
+	return v.doCheckValue(ctx, doCheckValueInput(in))
+}
+
 type doCheckValueInput struct {
 	Name      string                 // Name specifies the name of parameter `value`, which might be the custom tag name of the parameter.
 	Value     interface{}            // Value specifies the value for the rules to be validated.

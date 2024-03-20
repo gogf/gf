@@ -16,6 +16,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gvalid"
 )
 
 // BindHandler registers a handler function to server with a given pattern.
@@ -258,7 +259,53 @@ func (s *Server) checkAndCreateFuncInfo(
 	}
 	funcInfo.ReqStructFields = fields
 	funcInfo.Func = createRouterFunc(funcInfo)
+	funcInfo.StrictRouteParamsValidFunc = createRouteParamsValidFunc(inputObject)
 	return
+}
+
+func createRouteParamsValidFunc(a any) func(ctx context.Context, valid *gvalid.Validator, assoc any, fieldVal reflect.Value) error {
+	vFields, err := gstructs.TagFields(a, []string{"v", "valid"})
+	if err != nil {
+		panic(err)
+	}
+
+	type validateInfo struct {
+		name string
+		rule string
+		msg  string
+	}
+
+	var validateInfos []validateInfo
+
+	for _, field := range vFields {
+		if field.TagValue != "" {
+			name, rule, msg := gvalid.ParseTagValue(field.TagValue)
+			validateInfos = append(validateInfos, validateInfo{
+				name: name,
+				rule: rule,
+				msg:  msg,
+			})
+		}
+	}
+
+	return func(ctx context.Context, valid *gvalid.Validator, assoc any, fieldVal reflect.Value) error {
+
+		for _, vinfo := range validateInfos {
+			err := valid.DoCheckValue(ctx, gvalid.DoCheckValueInput{
+				Name:      vinfo.name,
+				Value:     fieldVal,
+				ValueType: fieldVal.Type(),
+				Rule:      vinfo.rule,
+				Messages:  vinfo.msg,
+				DataRaw:   assoc,
+				DataMap:   nil,
+			})
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 }
 
 func createRouterFunc(funcInfo handlerFuncInfo) func(r *Request) {
