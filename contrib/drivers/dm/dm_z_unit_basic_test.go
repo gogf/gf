@@ -222,25 +222,7 @@ func TestModelInsert(t *testing.T) {
 	})
 }
 
-func TestDBInsert(t *testing.T) {
-	table := "A_tables"
-	createInitTable("A_tables")
-	gtest.C(t, func(t *gtest.T) {
-		i := 300
-		data := g.Map{
-			"ID":           i,
-			"ACCOUNT_NAME": fmt.Sprintf(`A%dthress`, i),
-			"PWD_RESET":    3,
-			"ATTR_INDEX":   98,
-			"CREATED_TIME": gtime.Now(),
-			"UPDATED_TIME": gtime.Now(),
-		}
-		_, err := db.Insert(ctx, table, &data)
-		gtest.Assert(err, nil)
-	})
-}
-
-func Test_DB_Exec(t *testing.T) {
+func TestDBExec(t *testing.T) {
 	createInitTable("A_tables")
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Exec(ctx, "SELECT ? from dual", 1)
@@ -251,7 +233,7 @@ func Test_DB_Exec(t *testing.T) {
 	})
 }
 
-func Test_DB_Insert(t *testing.T) {
+func TestDBInsert(t *testing.T) {
 	table := "A_tables"
 	createInitTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -343,17 +325,6 @@ func Test_DB_Insert(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(one["ID"].Int(), 6000)
 		t.Assert(one["ACCOUNT_NAME"].String(), "t6000")
-	})
-}
-
-func TestDBExec(t *testing.T) {
-	createInitTable("A_tables")
-	gtest.C(t, func(t *gtest.T) {
-		_, err := db.Exec(ctx, "SELECT ? from dual", 1)
-		t.AssertNil(err)
-
-		_, err = db.Exec(ctx, "ERROR")
-		t.AssertNE(err, nil)
 	})
 }
 
