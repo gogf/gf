@@ -157,11 +157,14 @@ func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, e
 	)
 	if file == "" {
 		file = parser.GetArg(2).String()
-		// Check and use the main.go file.
-		if gfile.Exists(cBuildDefaultFile) {
-			file = cBuildDefaultFile
-		} else {
-			mlog.Fatal("build file path is empty or main.go not found in current working directory")
+		// Check and use Arg(2) as the file path.
+		if !gfile.Exists(file) {
+			// Check and use the main.go file.
+			if gfile.Exists(cBuildDefaultFile) {
+				file = cBuildDefaultFile
+			} else {
+				mlog.Fatal("build file path is empty or main.go not found in current working directory")
+			}
 		}
 	}
 	if in.Name == "" {
