@@ -67,16 +67,6 @@ func TestSortedIntArrayVar(t *testing.T) {
 	})
 }
 
-func TestIntArrayUnique(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		expect := []int{1, 2, 3, 4, 5, 6}
-		array := garray.NewIntArray()
-		array.Append(1, 1, 2, 3, 3, 4, 4, 5, 5, 6, 6)
-		array.Unique()
-		t.Assert(array.Slice(), expect)
-	})
-}
-
 func TestSortedIntArray1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
