@@ -7,6 +7,7 @@
 package dm_test
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 	"testing"
@@ -138,52 +139,53 @@ func Test_DB_Query(t *testing.T) {
 }
 
 func TestModelSave(t *testing.T) {
-	table := "A_tables"
-	createInitTable(table)
+	table := createTable("test")
+	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
-		data := []User{
-			{
-				ID:          100,
-				AccountName: "user_100",
-				AttrIndex:   100,
-				CreatedTime: time.Now(),
-			},
+		type User struct {
+			Id          int
+			AccountName string
+			AttrIndex   int
 		}
-		_, err := db.Model(table).Data(data).Save()
-		gtest.Assert(err, nil)
+		var (
+			user   User
+			count  int
+			result sql.Result
+			err    error
+		)
+		db.SetDebug(true)
 
-		data2 := []User{
-			{
-				ID:          101,
-				AccountName: "user_101",
-			},
-		}
-		_, err = db.Model(table).Data(&data2).Save()
-		gtest.Assert(err, nil)
+		result, err = db.Model(table).Data(g.Map{
+			"id":          1,
+			"accountName": "ac1",
+			"attrIndex":   100,
+		}).OnConflict("id").Save()
 
-		data3 := []User{
-			{
-				ID:          10,
-				AccountName: "user_10",
-				PwdReset:    10,
-			},
-		}
-		_, err = db.Model(table).Save(data3)
-		gtest.Assert(err, nil)
+		t.AssertNil(err)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
 
-		data4 := []User{
-			{
-				ID:          9,
-				AccountName: "user_9",
-				CreatedTime: time.Now(),
-			},
-		}
-		_, err = db.Model(table).Save(&data4)
-		gtest.Assert(err, nil)
+		err = db.Model(table).Scan(&user)
+		t.AssertNil(err)
+		t.Assert(user.Id, 1)
+		t.Assert(user.AccountName, "ac1")
+		t.Assert(user.AttrIndex, 100)
 
-		// TODO:: Should be Supported 'Replace' Operation
-		// _, err = db.Schema(TestDBName).Replace(ctx, "DoInsert", data, 10)
-		// gtest.Assert(err, nil)
+		_, err = db.Model(table).Data(g.Map{
+			"id":          1,
+			"accountName": "ac2",
+			"attrIndex":   200,
+		}).OnConflict("id").Save()
+		t.AssertNil(err)
+
+		err = db.Model(table).Scan(&user)
+		t.AssertNil(err)
+		t.Assert(user.AccountName, "ac2")
+		t.Assert(user.AttrIndex, 200)
+
+		count, err = db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
 	})
 }
 
