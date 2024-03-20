@@ -7,7 +7,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func TestTime_Scan(t1 *testing.T) {
+func TestTimeScan(t1 *testing.T) {
 	gtest.C(t1, func(t *gtest.T) {
 		tt := gtime.Time{}
 		// test string
@@ -26,7 +26,7 @@ func TestTime_Scan(t1 *testing.T) {
 
 }
 
-func TestTime_Value(t1 *testing.T) {
+func TestTimeValue(t1 *testing.T) {
 	gtest.C(t1, func(t *gtest.T) {
 		tt := gtime.Now()
 		s, err := tt.Value()

@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func TestQueue_Len(t *testing.T) {
+func TestQueueLen(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			maxNum   = 100
@@ -47,7 +47,7 @@ func TestQueue_Len(t *testing.T) {
 	})
 }
 
-func TestQueue_Basic(t *testing.T) {
+func TestQueueBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		q := gqueue.New()
 		for i := 0; i < 100; i++ {
@@ -58,7 +58,7 @@ func TestQueue_Basic(t *testing.T) {
 	})
 }
 
-func TestQueue_Pop(t *testing.T) {
+func TestQueuePop(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		q1 := gqueue.New()
 		q1.Push(1)
@@ -70,7 +70,7 @@ func TestQueue_Pop(t *testing.T) {
 	})
 }
 
-func TestQueue_Close(t *testing.T) {
+func TestQueueClose(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		q1 := gqueue.New()
 		q1.Push(1)

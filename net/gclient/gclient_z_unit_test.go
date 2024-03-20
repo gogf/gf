@@ -557,7 +557,7 @@ func TestLoadKeyCrt(t *testing.T) {
 	})
 }
 
-func TestClient_DoRequest(t *testing.T) {
+func TestClientDoRequest(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/hello", func(r *ghttp.Request) {
 		r.Response.WriteHeader(200)
@@ -591,7 +591,7 @@ func TestClient_DoRequest(t *testing.T) {
 	})
 }
 
-func TestClient_RequestVar(t *testing.T) {
+func TestClientRequestVar(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			url = "http://127.0.0.1:99999/var/jsons"
@@ -614,7 +614,7 @@ func TestClient_RequestVar(t *testing.T) {
 	})
 }
 
-func TestClient_SetBodyContent(t *testing.T) {
+func TestClientSetBodyContent(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/", func(r *ghttp.Request) {
 		r.Response.Write("hello")
@@ -636,7 +636,7 @@ func TestClient_SetBodyContent(t *testing.T) {
 	})
 }
 
-func TestClient_SetNoUrlEncode(t *testing.T) {
+func TestClientSetNoUrlEncode(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/", func(r *ghttp.Request) {
 		r.Response.Write(r.URL.RawQuery)
@@ -663,7 +663,7 @@ func TestClient_SetNoUrlEncode(t *testing.T) {
 	})
 }
 
-func TestClient_NoUrlEncode(t *testing.T) {
+func TestClientNoUrlEncode(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/", func(r *ghttp.Request) {
 		r.Response.Write(r.URL.RawQuery)

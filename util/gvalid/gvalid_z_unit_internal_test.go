@@ -12,7 +12,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func TestparseSequenceTag(t *testing.T) {
+func TestParseSequenceTag(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := "name@required|length:2,20|password3|same:password1#||密码强度不足|两次密码不一致"
 		field, rule, msg := ParseTagValue(s)

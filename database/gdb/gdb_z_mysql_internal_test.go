@@ -54,7 +54,7 @@ func TestHookSelectRegex(t *testing.T) {
 	})
 }
 
-func TestparseConfigNodeLinkWithType(t *testing.T) {
+func TestParseConfigNodeLinkWithType(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		node := &ConfigNode{
 			Link: `mysql:root:CxzhD*624:27jh@tcp(9.135.69.119:3306)/khaos_oss?loc=Local&parseTime=true&charset=latin`,
@@ -318,7 +318,7 @@ func TestFuncaddTablePrefix(t *testing.T) {
 	})
 }
 
-func TestisSubQuery(t *testing.T) {
+func TestIsSubQuery(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(isSubQuery("user"), false)
 		t.Assert(isSubQuery("user.uid"), false)

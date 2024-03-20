@@ -430,7 +430,7 @@ func TestMoveUnknownMark(t *testing.T) {
 	})
 }
 
-func TestList_RemoveAll(t *testing.T) {
+func TestListRemoveAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := New()
 		l.PushBack(1)
@@ -441,7 +441,7 @@ func TestList_RemoveAll(t *testing.T) {
 	})
 }
 
-func TestList_PushFronts(t *testing.T) {
+func TestListPushFronts(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := New()
 		a1 := []interface{}{1, 2}
@@ -453,7 +453,7 @@ func TestList_PushFronts(t *testing.T) {
 	})
 }
 
-func TestList_PushBacks(t *testing.T) {
+func TestListPushBacks(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := New()
 		a1 := []interface{}{1, 2}
@@ -465,7 +465,7 @@ func TestList_PushBacks(t *testing.T) {
 	})
 }
 
-func TestList_PopBacks(t *testing.T) {
+func TestListPopBacks(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := New()
 		a1 := []interface{}{1, 2, 3, 4}
@@ -480,7 +480,7 @@ func TestList_PopBacks(t *testing.T) {
 	})
 }
 
-func TestList_PopFronts(t *testing.T) {
+func TestListPopFronts(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := New()
 		a1 := []interface{}{1, 2, 3, 4}
@@ -491,7 +491,7 @@ func TestList_PopFronts(t *testing.T) {
 	})
 }
 
-func TestList_PopBackAll(t *testing.T) {
+func TestListPopBackAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := New()
 		a1 := []interface{}{1, 2, 3, 4}
@@ -502,7 +502,7 @@ func TestList_PopBackAll(t *testing.T) {
 	})
 }
 
-func TestList_PopFrontAll(t *testing.T) {
+func TestListPopFrontAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := New()
 		a1 := []interface{}{1, 2, 3, 4}
@@ -513,7 +513,7 @@ func TestList_PopFrontAll(t *testing.T) {
 	})
 }
 
-func TestList_FrontAll(t *testing.T) {
+func TestListFrontAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := New()
 		a1 := []interface{}{1, 2, 3, 4}
@@ -524,7 +524,7 @@ func TestList_FrontAll(t *testing.T) {
 	})
 }
 
-func TestList_BackAll(t *testing.T) {
+func TestListBackAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := New()
 		a1 := []interface{}{1, 2, 3, 4}
@@ -535,7 +535,7 @@ func TestList_BackAll(t *testing.T) {
 	})
 }
 
-func TestList_FrontValue(t *testing.T) {
+func TestListFrontValue(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := New()
 		l2 := New()
@@ -550,7 +550,7 @@ func TestList_FrontValue(t *testing.T) {
 	})
 }
 
-func TestList_BackValue(t *testing.T) {
+func TestListBackValue(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := New()
 		l2 := New()
@@ -565,7 +565,7 @@ func TestList_BackValue(t *testing.T) {
 	})
 }
 
-func TestList_Back(t *testing.T) {
+func TestListBack(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := New()
 		a1 := []interface{}{1, 2, 3, 4}
@@ -576,7 +576,7 @@ func TestList_Back(t *testing.T) {
 	})
 }
 
-func TestList_Size(t *testing.T) {
+func TestListSize(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := New()
 		a1 := []interface{}{1, 2, 3, 4}
@@ -587,7 +587,7 @@ func TestList_Size(t *testing.T) {
 	})
 }
 
-func TestList_Removes(t *testing.T) {
+func TestListRemoves(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := New()
 		a1 := []interface{}{1, 2, 3, 4}
@@ -603,7 +603,7 @@ func TestList_Removes(t *testing.T) {
 	})
 }
 
-func TestList_Pop(t *testing.T) {
+func TestListPop(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := NewFrom([]interface{}{1, 2, 3, 4, 5, 6, 7, 8, 9})
 
@@ -614,7 +614,7 @@ func TestList_Pop(t *testing.T) {
 	})
 }
 
-func TestList_Clear(t *testing.T) {
+func TestListClear(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := New()
 		a1 := []interface{}{1, 2, 3, 4}
@@ -624,7 +624,7 @@ func TestList_Clear(t *testing.T) {
 	})
 }
 
-func TestList_IteratorAsc(t *testing.T) {
+func TestListIteratorAsc(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := New()
 		a1 := []interface{}{1, 2, 5, 6, 3, 4}
@@ -639,7 +639,7 @@ func TestList_IteratorAsc(t *testing.T) {
 	})
 }
 
-func TestList_IteratorDesc(t *testing.T) {
+func TestListIteratorDesc(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := New()
 		a1 := []interface{}{1, 2, 3, 4}
@@ -654,7 +654,7 @@ func TestList_IteratorDesc(t *testing.T) {
 	})
 }
 
-func TestList_Iterator(t *testing.T) {
+func TestListIterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := New()
 		a1 := []interface{}{"a", "b", "c", "d", "e"}
@@ -669,7 +669,7 @@ func TestList_Iterator(t *testing.T) {
 	})
 }
 
-func TestList_Join(t *testing.T) {
+func TestListJoin(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := NewFrom([]interface{}{1, 2, "a", `"b"`, `\c`})
 		t.Assert(l.Join(","), `1,2,a,"b",\c`)
@@ -677,14 +677,14 @@ func TestList_Join(t *testing.T) {
 	})
 }
 
-func TestList_String(t *testing.T) {
+func TestListString(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := NewFrom([]interface{}{1, 2, "a", `"b"`, `\c`})
 		t.Assert(l.String(), `[1,2,a,"b",\c]`)
 	})
 }
 
-func TestList_Json(t *testing.T) {
+func TestListJson(t *testing.T) {
 	// Marshal
 	gtest.C(t, func(t *gtest.T) {
 		a := []interface{}{"a", "b", "c"}
@@ -718,7 +718,7 @@ func TestList_Json(t *testing.T) {
 	})
 }
 
-func TestList_UnmarshalValue(t *testing.T) {
+func TestListUnmarshalValue(t *testing.T) {
 	type TList struct {
 		Name string
 		List *List
@@ -747,7 +747,7 @@ func TestList_UnmarshalValue(t *testing.T) {
 	})
 }
 
-func TestList_DeepCopy(t *testing.T) {
+func TestListDeepCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := NewFrom([]interface{}{1, 2, "a", `"b"`, `\c`})
 		copyList := l.DeepCopy()

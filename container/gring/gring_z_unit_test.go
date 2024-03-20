@@ -21,7 +21,7 @@ type Student struct {
 	upgrade  bool
 }
 
-func TestRing_Val(t *testing.T) {
+func TestRingVal(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		//定义cap 为3的ring类型数据
 		r := gring.New(3, true)
@@ -44,7 +44,7 @@ func TestRing_Val(t *testing.T) {
 	})
 }
 
-func TestRing_CapLen(t *testing.T) {
+func TestRingCapLen(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		r := gring.New(10)
 		t.Assert(r.Cap(), 10)
@@ -60,7 +60,7 @@ func TestRing_CapLen(t *testing.T) {
 	})
 }
 
-func TestRing_Position(t *testing.T) {
+func TestRingPosition(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		r := gring.New(2)
 		r.Put(1)
@@ -75,7 +75,7 @@ func TestRing_Position(t *testing.T) {
 	})
 }
 
-func TestRing_Link(t *testing.T) {
+func TestRingLink(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		r := gring.New(3)
 		r.Put(1)
@@ -90,7 +90,7 @@ func TestRing_Link(t *testing.T) {
 	})
 }
 
-func TestRing_Unlink(t *testing.T) {
+func TestRingUnlink(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		r := gring.New(5)
 		for i := 1; i <= 5; i++ {
@@ -106,7 +106,7 @@ func TestRing_Unlink(t *testing.T) {
 	})
 }
 
-func TestRing_Slice(t *testing.T) {
+func TestRingSlice(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		ringLen := 5
 		r := gring.New(ringLen)
@@ -185,7 +185,7 @@ func TestIssue1394(t *testing.T) {
 
 }
 
-func TestRing_RLockIteratorNext(t *testing.T) {
+func TestRingRLockIteratorNext(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		r := gring.New(10)
 		for i := 0; i < 10; i++ {
@@ -205,7 +205,7 @@ func TestRing_RLockIteratorNext(t *testing.T) {
 	})
 }
 
-func TestRing_RLockIteratorPrev(t *testing.T) {
+func TestRingRLockIteratorPrev(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		r := gring.New(10)
 		for i := 0; i < 10; i++ {

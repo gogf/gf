@@ -150,7 +150,7 @@ func TestSetFileName(t *testing.T) {
 	})
 }
 
-func TestCfg_Get_WrongConfigFile(t *testing.T) {
+func TestCfgGetWrongConfigFile(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var err error
 		configPath := gfile.Temp(gtime.TimestampNanoStr())

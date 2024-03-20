@@ -339,7 +339,7 @@ func TestStrStrMapPops(t *testing.T) {
 	})
 }
 
-func TestStrStrMap_UnmarshalValue(t *testing.T) {
+func TestStrStrMapUnmarshalValue(t *testing.T) {
 	type V struct {
 		Name string
 		Map  *gmap.StrStrMap

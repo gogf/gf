@@ -302,7 +302,7 @@ func TestIsEmpty(t *testing.T) {
 	})
 }
 
-func TestFile_Name(t *testing.T) {
+func TestFileName(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			src = `template-res`
@@ -311,7 +311,7 @@ func TestFile_Name(t *testing.T) {
 	})
 }
 
-func TestFile_Export(t *testing.T) {
+func TestFileExport(t *testing.T) {
 	gres.Dump()
 	gtest.C(t, func(t *gtest.T) {
 		var (

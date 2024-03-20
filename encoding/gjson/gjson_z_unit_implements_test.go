@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func TestJson_UnmarshalJSON(t *testing.T) {
+func TestJsonUnmarshalJSON(t *testing.T) {
 	// Json Array
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -56,7 +56,7 @@ func TestJson_UnmarshalJSON(t *testing.T) {
 
 }
 
-func TestJson_UnmarshalValue(t *testing.T) {
+func TestJsonUnmarshalValue(t *testing.T) {
 	type V struct {
 		Name string
 		Json *gjson.Json

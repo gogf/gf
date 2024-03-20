@@ -334,7 +334,7 @@ func TestIntIntMapPops(t *testing.T) {
 	})
 }
 
-func TestIntIntMap_UnmarshalValue(t *testing.T) {
+func TestIntIntMapUnmarshalValue(t *testing.T) {
 	type V struct {
 		Name string
 		Map  *gmap.IntIntMap

@@ -50,7 +50,7 @@ func (id *CustomIDGenerator) NewSpanID(ctx context.Context, traceID trace.TraceI
 	return tracing.NewSpanID()
 }
 
-func TestClient_CustomProvider(t *testing.T) {
+func TestClientCustomProvider(t *testing.T) {
 	provider := otel.GetTracerProvider()
 	defer otel.SetTracerProvider(provider)
 

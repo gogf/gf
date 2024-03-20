@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func TestCron_Entry_Operations(t *testing.T) {
+func TestCronEntryOperations(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			cron  = gcron.New()

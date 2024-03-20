@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func TestTimer_Proceed(t *testing.T) {
+func TestTimerProceed(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.New(true)
 		timer := New(TimerOptions{
@@ -49,7 +49,7 @@ func TestTimer_Proceed(t *testing.T) {
 	})
 }
 
-func TestTimer_PriorityQueue(t *testing.T) {
+func TestTimerPriorityQueue(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		queue := newPriorityQueue()
 		queue.Push(1, 1)
@@ -65,7 +65,7 @@ func TestTimer_PriorityQueue(t *testing.T) {
 	})
 }
 
-func TestTimer_PriorityQueue_FirstOneInArrayIsTheLeast(t *testing.T) {
+func TestTimerPriorityQueueFirstOneInArrayIsTheLeast(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			size  = 1000000

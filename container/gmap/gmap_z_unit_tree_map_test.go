@@ -210,7 +210,7 @@ func TestTreeMapJson(t *testing.T) {
 	})
 }
 
-func TestTreeMap_UnmarshalValue(t *testing.T) {
+func TestTreeMapUnmarshalValue(t *testing.T) {
 	type V struct {
 		Name string
 		Map  *gmap.TreeMap

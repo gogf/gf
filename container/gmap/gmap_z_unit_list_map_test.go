@@ -313,7 +313,7 @@ func TestListMapPops(t *testing.T) {
 	})
 }
 
-func TestListMap_UnmarshalValue(t *testing.T) {
+func TestListMapUnmarshalValue(t *testing.T) {
 	type V struct {
 		Name string
 		Map  *gmap.ListMap
@@ -349,7 +349,7 @@ func TestListMap_UnmarshalValue(t *testing.T) {
 	})
 }
 
-func TestListMap_String(t *testing.T) {
+func TestListMapString(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewListMap()
 		m.Set(1, "")
@@ -361,7 +361,7 @@ func TestListMap_String(t *testing.T) {
 	})
 }
 
-func TestListMap_MarshalJSON(t *testing.T) {
+func TestListMapMarshalJSON(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewListMap()
 		m.Set(1, "")
@@ -377,7 +377,7 @@ func TestListMap_MarshalJSON(t *testing.T) {
 	})
 }
 
-func TestListMap_DeepCopy(t *testing.T) {
+func TestListMapDeepCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewListMap()
 		m.Set(1, "1")

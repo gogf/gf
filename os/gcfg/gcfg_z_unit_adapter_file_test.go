@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func TestAdapterFile_Dump(t *testing.T) {
+func TestAdapterFileDump(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c, err := gcfg.NewAdapterFile("config.yml")
 		t.AssertNil(err)
@@ -37,7 +37,7 @@ func TestAdapterFile_Dump(t *testing.T) {
 	})
 
 }
-func TestAdapterFile_Available(t *testing.T) {
+func TestAdapterFileAvailable(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c, err := gcfg.NewAdapterFile("testdata/default/config.toml")
 		t.AssertNil(err)
@@ -45,7 +45,7 @@ func TestAdapterFile_Available(t *testing.T) {
 	})
 }
 
-func TestAdapterFile_SetPath(t *testing.T) {
+func TestAdapterFileSetPath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c, err := gcfg.NewAdapterFile("config.yml")
 		t.AssertNil(err)
@@ -71,7 +71,7 @@ func TestAdapterFile_SetPath(t *testing.T) {
 	})
 }
 
-func TestAdapterFile_AddPath(t *testing.T) {
+func TestAdapterFileAddPath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c, err := gcfg.NewAdapterFile("config.yml")
 		t.AssertNil(err)
@@ -97,7 +97,7 @@ func TestAdapterFile_AddPath(t *testing.T) {
 	})
 }
 
-func TestAdapterFile_SetViolenceCheck(t *testing.T) {
+func TestAdapterFileSetViolenceCheck(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c, err := gcfg.NewAdapterFile("config.yml")
 		t.AssertNil(err)
@@ -108,7 +108,7 @@ func TestAdapterFile_SetViolenceCheck(t *testing.T) {
 	})
 }
 
-func TestAdapterFile_FilePath(t *testing.T) {
+func TestAdapterFileFilePath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c, err := gcfg.NewAdapterFile("config.yml")
 		t.AssertNil(err)
@@ -121,7 +121,7 @@ func TestAdapterFile_FilePath(t *testing.T) {
 	})
 }
 
-func TestAdapterFile_Content(t *testing.T) {
+func TestAdapterFileContent(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c, err := gcfg.NewAdapterFile()
 		t.AssertNil(err)
@@ -136,7 +136,7 @@ func TestAdapterFile_Content(t *testing.T) {
 	})
 }
 
-func TestAdapterFile_With_UTF8_BOM(t *testing.T) {
+func TestAdapterFileWithUTF8BOM(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c, err := gcfg.NewAdapterFile("test-cfg-with-utf8-bom")
 		t.AssertNil(err)
@@ -148,7 +148,7 @@ func TestAdapterFile_With_UTF8_BOM(t *testing.T) {
 	})
 }
 
-func TestAdapterFile_Set(t *testing.T) {
+func TestAdapterFileSet(t *testing.T) {
 	config := `log-path = "logs"`
 	gtest.C(t, func(t *gtest.T) {
 		var (
