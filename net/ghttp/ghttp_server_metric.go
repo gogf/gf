@@ -17,10 +17,12 @@ import (
 )
 
 type localMetricManager struct {
-	HttpServerRequestActive    gmetric.UpDownCounter
-	HttpServerRequestDuration  gmetric.Histogram
-	HttpServerRequestBodySize  gmetric.Counter
-	HttpServerResponseBodySize gmetric.Counter
+	HttpServerRequestActive        gmetric.UpDownCounter
+	HttpServerRequestTotal         gmetric.Counter
+	HttpServerRequestDuration      gmetric.Histogram
+	HttpServerRequestDurationTotal gmetric.Counter
+	HttpServerRequestBodySize      gmetric.Counter
+	HttpServerResponseBodySize     gmetric.Counter
 }
 
 const (
@@ -68,10 +70,26 @@ func newMetricManager() *localMetricManager {
 				60000,
 			},
 		}),
+		HttpServerRequestTotal: gmetric.MustNewCounter(gmetric.MetricConfig{
+			Name:              "http.server.request.total",
+			Help:              "Total processed request number.",
+			Unit:              "",
+			Attributes:        gmetric.Attributes{},
+			Instrument:        instrumentName,
+			InstrumentVersion: gf.VERSION,
+		}),
 		HttpServerRequestActive: gmetric.MustNewUpDownCounter(gmetric.MetricConfig{
 			Name:              "http.server.request.active",
 			Help:              "Number of active server requests.",
 			Unit:              "",
+			Attributes:        gmetric.Attributes{},
+			Instrument:        instrumentName,
+			InstrumentVersion: gf.VERSION,
+		}),
+		HttpServerRequestDurationTotal: gmetric.MustNewCounter(gmetric.MetricConfig{
+			Name:              "http.server.request.duration_total",
+			Help:              "Total execution duration of request.",
+			Unit:              "ms",
 			Attributes:        gmetric.Attributes{},
 			Instrument:        instrumentName,
 			InstrumentVersion: gf.VERSION,
@@ -94,6 +112,15 @@ func newMetricManager() *localMetricManager {
 		}),
 	}
 	return mm
+}
+
+func (m *localMetricManager) GetMetricOptionForRequestDurationByMap(attrMap gmetric.AttributeMap) gmetric.Option {
+	return gmetric.Option{
+		Attributes: attrMap.Pick(
+			metricAttrKeyServerAddress,
+			metricAttrKeyServerPort,
+		),
+	}
 }
 
 func (m *localMetricManager) GetMetricOptionForRequest(r *Request) gmetric.Option {
@@ -139,11 +166,11 @@ func (m *localMetricManager) GetMetricAttributeMap(r *Request) gmetric.Attribute
 		localAddr       = r.Context().Value(http.LocalAddrContextKey)
 		attrMap         = make(gmetric.AttributeMap)
 	)
-	serverAddress = r.Host
+	serverAddress, serverPort = gstr.List2(r.Host, ":")
 	if localAddr != nil {
 		_, serverPort = gstr.List2(localAddr.(net.Addr).String(), ":")
 	}
-	if handler.Handler.Router != nil {
+	if handler != nil && handler.Handler.Router != nil {
 		httpRoute = handler.Handler.Router.Uri
 	} else {
 		httpRoute = r.URL.Path
@@ -197,11 +224,13 @@ func (s *Server) handleMetricsAfterRequestDone(r *Request) {
 		return
 	}
 	var (
-		ctx            = r.Context()
-		attrMap        = metricManager.GetMetricAttributeMap(r)
-		durationMilli  = float64(r.LeaveTime.Sub(r.EnterTime).Milliseconds())
-		responseOption = metricManager.GetMetricOptionForResponseByMap(attrMap)
+		ctx             = r.Context()
+		attrMap         = metricManager.GetMetricAttributeMap(r)
+		durationMilli   = float64(r.LeaveTime.Sub(r.EnterTime).Milliseconds())
+		responseOption  = metricManager.GetMetricOptionForResponseByMap(attrMap)
+		histogramOption = metricManager.GetMetricOptionForRequestDurationByMap(attrMap)
 	)
+	metricManager.HttpServerRequestTotal.Inc(ctx, responseOption)
 	metricManager.HttpServerRequestActive.Dec(
 		ctx,
 		metricManager.GetMetricOptionForRequestByMap(attrMap),
@@ -211,8 +240,13 @@ func (s *Server) handleMetricsAfterRequestDone(r *Request) {
 		float64(r.Response.BytesWritten()),
 		responseOption,
 	)
-	metricManager.HttpServerRequestDuration.Record(
+	metricManager.HttpServerRequestDurationTotal.Add(
+		ctx,
 		durationMilli,
 		responseOption,
+	)
+	metricManager.HttpServerRequestDuration.Record(
+		durationMilli,
+		histogramOption,
 	)
 }
