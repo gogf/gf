@@ -177,10 +177,7 @@ func (r *Request) GetRequestStruct(pointer interface{}, mapping ...map[string]st
 
 func (r *Request) doGetRequestStruct(pointer interface{}, mapping ...map[string]string) (data map[string]interface{}, err error) {
 	data = r.GetRequestMap()
-	if data == nil {
-		data = map[string]interface{}{}
-	}
-	// Default struct values.
+	// `default` `d` Tag struct values.
 	if err = r.mergeDefaultStructValue(data, pointer); err != nil {
 		return data, nil
 	}
@@ -188,7 +185,20 @@ func (r *Request) doGetRequestStruct(pointer interface{}, mapping ...map[string]
 	if err = r.mergeInTagStructValue(data, pointer); err != nil {
 		return data, nil
 	}
+	// Delete the null value,
+	// otherwise the null value will be overwritten when calling gconv.Struct subsequently.
+	for k, v := range data {
+		if v == "" {
+			delete(data, k)
+		}
+	}
 
+	// If there is no data, it needs to be set to nil
+	// Otherwise required and default tag conflict
+	// fast path
+	if len(data) == 0 || data == nil {
+		return nil, nil
+	}
 	return data, gconv.Struct(data, pointer, mapping...)
 }
 
@@ -202,13 +212,6 @@ func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer i
 	for _, field := range fields {
 		v := gconv.Convert(field.TagValue, field.Type().String())
 		field.Value.Set(reflect.ValueOf(v))
-		name := field.TagPriorityName()
-		// If no value is set
-		if _, ok := data[name]; !ok {
-			// When it does not exist, it is stored in data and is compatible with required rules.
-			data[name] = v
-		}
-
 	}
 
 	return nil
@@ -249,7 +252,7 @@ func (r *Request) mergeInTagStructValue(data map[string]interface{}, pointer int
 						header := reflect.ValueOf(val)
 						field.Value.Set(header)
 						// The value needs to be registered in data and possibly verified.
-						data[foundHeaderKey] = foundHeaderValue
+						// data[foundHeaderKey] = foundHeaderValue
 					}
 				case goai.ParameterInCookie:
 					foundCookieKey, foundCookieValue := gutil.MapPossibleItemByKey(cookieMap, field.TagPriorityName())
@@ -258,7 +261,7 @@ func (r *Request) mergeInTagStructValue(data map[string]interface{}, pointer int
 						cookie := reflect.ValueOf(val)
 						field.Value.Set(cookie)
 						// The value needs to be registered in data and possibly verified.
-						data[foundCookieKey] = foundCookieValue
+						// data[foundCookieKey] = foundCookieValue
 					}
 				}
 			}
