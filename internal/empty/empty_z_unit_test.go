@@ -8,7 +8,9 @@ package empty_test
 
 import (
 	"testing"
+	"time"
 
+	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -113,6 +115,39 @@ func TestIsEmpty(t *testing.T) {
 func TestIsNil(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(empty.IsNil(nil), true)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var i int
+		t.Assert(empty.IsNil(i), false)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var i *int
+		t.Assert(empty.IsNil(i), true)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var i *int
+		t.Assert(empty.IsNil(&i), false)
+		t.Assert(empty.IsNil(&i, true), true)
+	})
+}
+
+type Issue3362St struct {
+	time.Time
+}
+
+func Test_Issue3362(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type A struct {
+			Issue3362 *Issue3362St `json:"issue,omitempty"`
+		}
+		m := gvar.New(
+			&A{},
+		).Map(
+			gvar.MapOption{
+				OmitEmpty: true,
+			},
+		)
+		t.Assert(m, nil)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var i int
