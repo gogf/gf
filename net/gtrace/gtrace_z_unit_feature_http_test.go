@@ -46,7 +46,7 @@ func TestClientServerTracing(t *testing.T) {
 	})
 }
 
-func TestWithTraceID(t *testing.T) {
+func TestClientWithTraceID(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		p := 8889
 		s := g.Server(p)

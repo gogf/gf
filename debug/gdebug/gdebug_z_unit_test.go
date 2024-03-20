@@ -46,13 +46,13 @@ func TestCallerFileLineShort(t *testing.T) {
 
 func TestFuncPath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gdebug.FuncPath(Test_FuncPath), "github.com/gogf/gf/v2/debug/gdebug_test.Test_FuncPath")
+		t.Assert(gdebug.FuncPath(TestFuncPath), "github.com/gogf/gf/v2/debug/gdebug_test.Test_FuncPath")
 	})
 }
 
 func TestFuncName(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gdebug.FuncName(Test_FuncName), "gdebug_test.Test_FuncName")
+		t.Assert(gdebug.FuncName(TestFuncName), "gdebug_test.Test_FuncName")
 	})
 }
 
