@@ -16,7 +16,6 @@ import (
 )
 
 type localMetricManager struct {
-	HttpClientOpenConnections      gmetric.UpDownCounter
 	HttpClientRequestActive        gmetric.UpDownCounter
 	HttpClientRequestTotal         gmetric.Counter
 	HttpClientRequestDuration      gmetric.Histogram
@@ -33,12 +32,6 @@ const (
 	metricAttrKeyHttpRequestMethod      gmetric.AttributeKey = "http.request.method"
 	metricAttrKeyHttpResponseStatusCode gmetric.AttributeKey = "http.response.status_code"
 	metricAttrKeyNetworkProtocolVersion gmetric.AttributeKey = "network.protocol.version"
-	metricAttrKeHttpConnectionState     gmetric.AttributeKey = "http.connection.state"
-)
-
-const (
-	connectionStateActive = "active"
-	connectionStateIdle   = "idle"
 )
 
 var (
@@ -116,14 +109,6 @@ func newMetricManager() *localMetricManager {
 			Instrument:        instrumentName,
 			InstrumentVersion: gf.VERSION,
 		}),
-		HttpClientOpenConnections: gmetric.MustNewUpDownCounter(gmetric.MetricConfig{
-			Name:              "http.client.open_connections",
-			Help:              "Number of outbound HTTP connections that are currently active or idle on the client.",
-			Unit:              "",
-			Attributes:        gmetric.Attributes{},
-			Instrument:        instrumentName,
-			InstrumentVersion: gf.VERSION,
-		}),
 		HttpClientConnectionDuration: gmetric.MustNewHistogram(gmetric.MetricConfig{
 			Name:              "http.client.connection_duration",
 			Help:              "Measures the connection establish duration of client requests.",
@@ -135,21 +120,6 @@ func newMetricManager() *localMetricManager {
 		}),
 	}
 	return mm
-}
-
-func (m *localMetricManager) GetMetricOptionForOpenConnectionsByMap(
-	state string, attrMap gmetric.AttributeMap,
-) gmetric.Option {
-	attrMap[metricAttrKeHttpConnectionState] = state
-	return gmetric.Option{
-		Attributes: attrMap.Pick(
-			metricAttrKeyServerAddress,
-			metricAttrKeyServerPort,
-			metricAttrKeyUrlSchema,
-			metricAttrKeyNetworkProtocolVersion,
-			metricAttrKeHttpConnectionState,
-		),
-	}
 }
 
 func (m *localMetricManager) GetMetricOptionForConnectionDuration(r *http.Request) gmetric.Option {
@@ -244,19 +214,22 @@ func (c *Client) handleMetricsBeforeRequest(r *http.Request) {
 	}
 
 	var (
-		ctx           = r.Context()
-		attrMap       = metricManager.GetMetricAttributeMap(r)
-		requestOption = metricManager.GetMetricOptionForRequestByMap(attrMap)
+		ctx             = r.Context()
+		attrMap         = metricManager.GetMetricAttributeMap(r)
+		requestOption   = metricManager.GetMetricOptionForRequestByMap(attrMap)
+		requestBodySize = float64(r.ContentLength)
 	)
 	metricManager.HttpClientRequestActive.Inc(
 		ctx,
 		requestOption,
 	)
-	metricManager.HttpClientRequestBodySize.Add(
-		ctx,
-		float64(r.ContentLength),
-		requestOption,
-	)
+	if requestBodySize > 0 {
+		metricManager.HttpClientRequestBodySize.Add(
+			ctx,
+			requestBodySize,
+			requestOption,
+		)
+	}
 }
 
 func (c *Client) handleMetricsAfterRequestDone(r *http.Request, requestStartTime *gtime.Time) {
@@ -290,10 +263,13 @@ func (c *Client) handleMetricsAfterRequestDone(r *http.Request, requestStartTime
 		responseOption,
 	)
 	if r.Response != nil {
-		metricManager.HttpClientResponseBodySize.Add(
-			ctx,
-			float64(r.Response.ContentLength),
-			responseOption,
-		)
+		var responseBodySize = float64(r.Response.ContentLength)
+		if responseBodySize > 0 {
+			metricManager.HttpClientResponseBodySize.Add(
+				ctx,
+				responseBodySize,
+				responseOption,
+			)
+		}
 	}
 }

@@ -60,22 +60,6 @@ func (ct *clientTracerMetrics) GetConn(hostPort string) {
 // connection; instead, use the error from
 // Transport.RoundTrip.
 func (ct *clientTracerMetrics) GotConn(info httptrace.GotConnInfo) {
-	if !info.Reused {
-		var (
-			ctx     = ct.Request.Context()
-			attrMap = metricManager.GetMetricAttributeMap(ct.Request)
-		)
-		metricManager.HttpClientOpenConnections.Add(
-			ctx, 1,
-			metricManager.GetMetricOptionForOpenConnectionsByMap(connectionStateActive, attrMap),
-		)
-		if info.WasIdle {
-			metricManager.HttpClientOpenConnections.Add(
-				ctx, -1,
-				metricManager.GetMetricOptionForOpenConnectionsByMap(connectionStateIdle, attrMap),
-			)
-		}
-	}
 	ct.ClientTrace.GotConn(info)
 }
 
@@ -88,20 +72,6 @@ func (ct *clientTracerMetrics) GotConn(info httptrace.GotConnInfo) {
 // call returns.
 // For HTTP/2, this hook is not currently used.
 func (ct *clientTracerMetrics) PutIdleConn(err error) {
-	var (
-		ctx     = ct.Request.Context()
-		attrMap = metricManager.GetMetricAttributeMap(ct.Request)
-	)
-	metricManager.HttpClientOpenConnections.Add(
-		ctx, -1,
-		metricManager.GetMetricOptionForOpenConnectionsByMap(connectionStateActive, attrMap),
-	)
-	if err == nil {
-		metricManager.HttpClientOpenConnections.Add(
-			ctx, 1,
-			metricManager.GetMetricOptionForOpenConnectionsByMap(connectionStateIdle, attrMap),
-		)
-	}
 	ct.ClientTrace.PutIdleConn(err)
 }
 
@@ -152,9 +122,13 @@ func (ct *clientTracerMetrics) ConnectStart(network, addr string) {
 // If net.Dialer.DualStack ("Happy Eyeballs") support is
 // enabled, this may be called multiple times.
 func (ct *clientTracerMetrics) ConnectDone(network, addr string, err error) {
+	var (
+		duration       = float64(gtime.Now().Sub(ct.ConnectStartTime).Milliseconds())
+		durationOption = metricManager.GetMetricOptionForConnectionDuration(ct.Request)
+	)
 	metricManager.HttpClientConnectionDuration.Record(
-		float64(gtime.Now().Sub(ct.ConnectStartTime).Milliseconds()),
-		metricManager.GetMetricOptionForConnectionDuration(ct.Request),
+		duration,
+		durationOption,
 	)
 	ct.ClientTrace.ConnectDone(network, addr, err)
 }
