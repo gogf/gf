@@ -50,14 +50,14 @@ const (
 gf build main.go
 gf build main.go --ps public,template
 gf build main.go --cgo
-gf build main.go -m none 
+gf build main.go -m none
 gf build main.go -n my-app -a all -s all
 gf build main.go -n my-app -a amd64,386 -s linux -p .
 gf build main.go -n my-app -v 1.0 -a amd64,386 -s linux,windows,darwin -p ./docker/bin
 `
 	cBuildDc = `
-The "build" command is most commonly used command, which is designed as a powerful wrapper for 
-"go build" command for convenience cross-compiling usage. 
+The "build" command is most commonly used command, which is designed as a powerful wrapper for
+"go build" command for convenience cross-compiling usage.
 It provides much more features for building binary:
 1. Cross-Compiling for many platforms and architectures.
 2. Configuration file support for compiling.
