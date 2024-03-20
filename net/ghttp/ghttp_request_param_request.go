@@ -10,6 +10,7 @@ import (
 	"reflect"
 
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -177,14 +178,6 @@ func (r *Request) GetRequestStruct(pointer interface{}, mapping ...map[string]st
 
 func (r *Request) doGetRequestStruct(pointer interface{}, mapping ...map[string]string) (data map[string]interface{}, err error) {
 	data = r.GetRequestMap()
-	// `default` `d` Tag struct values.
-	if err = r.mergeDefaultStructValue(data, pointer); err != nil {
-		return data, nil
-	}
-	// `in` Tag Struct values.
-	if err = r.mergeInTagStructValue(data, pointer); err != nil {
-		return data, nil
-	}
 	// Delete the null value,
 	// otherwise the null value will be overwritten when calling gconv.Struct subsequently.
 	for k, v := range data {
@@ -193,13 +186,22 @@ func (r *Request) doGetRequestStruct(pointer interface{}, mapping ...map[string]
 		}
 	}
 
+	// `default` `d` Tag struct values.
+	if err = r.mergeDefaultStructValue(data, pointer); err != nil {
+		return data, nil
+	}
+	// `in` Tag Struct values.
+	if err = r.mergeInTagStructValue(data, pointer); err != nil {
+		return data, nil
+	}
+
 	// If there is no data, it needs to be set to nil
 	// Otherwise required and default tag conflict
 	// fast path
 	if len(data) == 0 || data == nil {
 		return nil, nil
 	}
-	return data, gconv.Struct(data, pointer, mapping...)
+	return nil, gconv.Struct(data, pointer, mapping...)
 }
 
 // mergeDefaultStructValue merges the request parameters with default values from struct tag definition.
@@ -213,19 +215,17 @@ func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer i
 		v := gconv.Convert(field.TagValue, field.Type().String())
 		field.Value.Set(reflect.ValueOf(v))
 	}
-
 	return nil
 }
 
 // mergeInTagStructValue merges the request parameters with header or cookie values from struct `in` tag definition.
 func (r *Request) mergeInTagStructValue(data map[string]interface{}, pointer interface{}) error {
-	// fields := r.serveHandler.Handler.Info.ReqStructFields
-	fields, err := gstructs.TagFields(pointer, []string{gtag.In})
+	// TODO: https://github.com/gogf/gf/pull/2450
+	tagFields, err := gstructs.TagFields(pointer, []string{gtag.In})
 	if err != nil {
 		return err
 	}
-
-	if len(fields) > 0 {
+	if len(tagFields) > 0 {
 		var (
 			headerMap = make(map[string]interface{})
 			cookieMap = make(map[string]interface{})
@@ -239,29 +239,26 @@ func (r *Request) mergeInTagStructValue(data map[string]interface{}, pointer int
 
 		for _, cookie := range r.Cookies() {
 			cookieMap[cookie.Name] = cookie.Value
-
 		}
 
-		for _, field := range fields {
-			if tagValue := field.TagIn(); tagValue != "" {
-				switch tagValue {
-				case goai.ParameterInHeader:
-					foundHeaderKey, foundHeaderValue := gutil.MapPossibleItemByKey(headerMap, field.TagPriorityName())
-					if foundHeaderKey != "" {
+		for _, field := range tagFields {
+			switch field.TagValue {
+			case goai.ParameterInHeader:
+				foundHeaderKey, foundHeaderValue := gutil.MapPossibleItemByKey(headerMap, field.TagPriorityName())
+				if foundHeaderKey != "" {
+					if empty.IsEmpty(foundHeaderValue) == false {
 						val := gconv.Convert(foundHeaderValue, field.Type().String())
-						header := reflect.ValueOf(val)
-						field.Value.Set(header)
-						// The value needs to be registered in data and possibly verified.
-						// data[foundHeaderKey] = foundHeaderValue
+						v := reflect.ValueOf(val)
+						field.Value.Set(v)
 					}
-				case goai.ParameterInCookie:
-					foundCookieKey, foundCookieValue := gutil.MapPossibleItemByKey(cookieMap, field.TagPriorityName())
-					if foundCookieKey != "" {
+				}
+			case goai.ParameterInCookie:
+				foundCookieKey, foundCookieValue := gutil.MapPossibleItemByKey(cookieMap, field.TagPriorityName())
+				if foundCookieKey != "" {
+					if empty.IsEmpty(foundCookieValue) == false {
 						val := gconv.Convert(foundCookieValue, field.Type().String())
-						cookie := reflect.ValueOf(val)
-						field.Value.Set(cookie)
-						// The value needs to be registered in data and possibly verified.
-						// data[foundCookieKey] = foundCookieValue
+						v := reflect.ValueOf(val)
+						field.Value.Set(v)
 					}
 				}
 			}

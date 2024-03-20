@@ -29,8 +29,7 @@ func WrapH(h http.Handler) HandlerFunc {
 	}
 }
 
-// *struct/ **struct
-// Check whether ptr is *struct or **struct []*struct *[]*struct
+// Check whether ptr is *struct / **struct / []*struct / *[]*struct
 // If the type is satisfied, directly dereference and return
 // Subsequent operations such as setting fields can be performed by returning values.
 // Whether it is first level or second level
@@ -68,7 +67,6 @@ func checkValidRequestParams(ptr any) (reflect.Value, reflect.Kind, error) {
 		if srcValof.IsNil() {
 			return srcVal, 0, gerror.NewCodef(
 				gcode.CodeInvalidParameter, `Cannot pass in a null pointer`)
-
 		}
 
 		elemTyp := srcTyp.Elem()
