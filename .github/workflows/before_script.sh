@@ -6,6 +6,7 @@ git diff --name-only --exit-code || if [ $? != 0 ];
 fi
 echo "gofmt checks have passed."
 
+echo -name;
 find . -name "*_test.go" -print0 | while IFS= read -r -d '' file; do
     awk '/func Test[[:upper:]][[:alnum:]]*\(/ {
         if ($0 !~ /func Test[[:upper:]][[:alnum:]]*\(/) {
