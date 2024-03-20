@@ -44,7 +44,7 @@ func (s *GrpcServer) handleAccessLog(
 		"%s, %.3fms, %+v, %+v",
 		info.FullMethod, float64(duration)/1e6, req, res,
 	)
-	s.config.Logger.Stdout(s.config.LogStdout).File(s.config.AccessLogPattern).Print(ctx, content)
+	s.config.Logger.Stdout(s.config.LogStdout).File(s.config.AccessLogPattern).Path(s.config.LogPath).Print(ctx, content)
 }
 
 // handleErrorLog handles the error logging for server.
@@ -85,5 +85,5 @@ func (s *GrpcServer) handleErrorLog(
 	}
 	s.config.Logger.Stack(false).
 		Stdout(s.config.LogStdout).
-		File(s.config.ErrorLogPattern).Error(ctx, content)
+		File(s.config.ErrorLogPattern).Path(s.config.LogPath).Error(ctx, content)
 }
