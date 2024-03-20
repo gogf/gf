@@ -106,6 +106,7 @@ func TestIntArrayUnique(t *testing.T) {
 		t.Assert(array.Unique().Slice(), []int{1, 2, 3, 4, 5})
 		array2 := garray.NewIntArrayFrom([]int{})
 		t.Assert(array2.Unique().Slice(), []int{})
+
 	})
 }
 
