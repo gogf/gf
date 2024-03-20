@@ -12,7 +12,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func TestGroupHashHSet(t *testing.T) {
+func TestGroup_HashHSet(t *testing.T) {
 	defer redis.FlushAll(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		var (
