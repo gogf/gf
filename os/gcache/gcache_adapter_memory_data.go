@@ -8,6 +8,8 @@ package gcache
 
 import (
 	"context"
+	"github.com/wangyougui/gf/v2/util/gconv"
+	"regexp"
 	"sync"
 	"time"
 
@@ -91,14 +93,20 @@ func (d *adapterMemoryData) Data() (map[interface{}]interface{}, error) {
 }
 
 // Keys returns all keys in the cache as slice.
-func (d *adapterMemoryData) Keys() ([]interface{}, error) {
+func (d *adapterMemoryData) Keys(regexps ...string) ([]interface{}, error) {
 	d.mu.RLock()
 	var (
 		index = 0
 		keys  = make([]interface{}, len(d.data))
 	)
 	for k, v := range d.data {
-		if !v.IsExpired() {
+		matched := true
+		for _, reg := range regexps {
+			if flag, _ := regexp.MatchString(reg, gconv.String(k)); !flag {
+				matched = false
+			}
+		}
+		if !v.IsExpired() && matched {
 			keys[index] = k
 			index++
 		}
