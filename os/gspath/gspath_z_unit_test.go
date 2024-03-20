@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func TestSPath_Api(t *testing.T) {
+func TestSPathApi(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		pwd := gfile.Pwd()
 		root := pwd
@@ -36,7 +36,7 @@ func TestSPath_Api(t *testing.T) {
 	})
 }
 
-func TestSPath_Basic(t *testing.T) {
+func TestSPathBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		pwd := gfile.Pwd()
 		root := pwd

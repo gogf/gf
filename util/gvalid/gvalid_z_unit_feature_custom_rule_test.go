@@ -156,7 +156,7 @@ func TestCustomRuleAllowEmpty(t *testing.T) {
 	})
 }
 
-func TestValidator_RuleFunc(t *testing.T) {
+func TestValidatorRuleFunc(t *testing.T) {
 	ruleName := "custom_1"
 	ruleFunc := func(ctx context.Context, in gvalid.RuleFuncInput) error {
 		pass := in.Value.String()
@@ -211,7 +211,7 @@ func TestValidator_RuleFunc(t *testing.T) {
 	})
 }
 
-func TestValidator_RuleFuncMap(t *testing.T) {
+func TestValidatorRuleFuncMap(t *testing.T) {
 	ruleName := "custom_1"
 	ruleFunc := func(ctx context.Context, in gvalid.RuleFuncInput) error {
 		pass := in.Value.String()

@@ -23,7 +23,7 @@ var (
 	}
 )
 
-func TestConn_sentinel_master(t *testing.T) {
+func TestConnSentinelMaster(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		sentinelConfig.SlaveOnly = false
 		redis, err := gredis.New(sentinelConfig)
@@ -45,7 +45,7 @@ func TestConn_sentinel_master(t *testing.T) {
 	})
 }
 
-func TestConn_sentinel_slave(t *testing.T) {
+func TestConnSentinelSlave(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		sentinelConfig.SlaveOnly = true
 		redis, err := gredis.New(sentinelConfig)

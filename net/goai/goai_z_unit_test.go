@@ -63,7 +63,7 @@ func TestBasic(t *testing.T) {
 	})
 }
 
-func TestOpenApiV3_Add(t *testing.T) {
+func TestOpenApiV3Add(t *testing.T) {
 	type CommonReq struct {
 		AppId      int64  `json:"appId" v:"required" in:"path" description:"应用Id"`
 		ResourceId string `json:"resourceId" in:"query" description:"资源Id"`
@@ -136,7 +136,7 @@ func TestOpenApiV3_Add(t *testing.T) {
 	})
 }
 
-func TestOpenApiV3_Add_Recursive(t *testing.T) {
+func TestOpenApiV3AddRecursive(t *testing.T) {
 	type CategoryTreeItem struct {
 		Id       uint                `json:"id"`
 		ParentId uint                `json:"parent_id"`
@@ -172,7 +172,7 @@ func TestOpenApiV3_Add_Recursive(t *testing.T) {
 	})
 }
 
-func TestOpenApiV3_Add_EmptyReqAndRes(t *testing.T) {
+func TestOpenApiV3AddEmptyReqAndRes(t *testing.T) {
 	type CaptchaIndexReq struct {
 		gmeta.Meta `method:"PUT" summary:"获取默认的验证码" description:"注意直接返回的是图片二进制内容" tags:"前台-验证码"`
 	}
@@ -199,7 +199,7 @@ func TestOpenApiV3_Add_EmptyReqAndRes(t *testing.T) {
 	})
 }
 
-func TestOpenApiV3_Add_AutoDetectIn(t *testing.T) {
+func TestOpenApiV3AddAutoDetectIn(t *testing.T) {
 	type Req struct {
 		gmeta.Meta `method:"get" tags:"default"`
 		Name       string
@@ -243,7 +243,7 @@ func TestOpenApiV3_Add_AutoDetectIn(t *testing.T) {
 	})
 }
 
-func TestOpenApiV3_CommonRequest(t *testing.T) {
+func TestOpenApiV3CommonRequest(t *testing.T) {
 	type CommonRequest struct {
 		Code    int         `json:"code"    description:"Error code"`
 		Message string      `json:"message" description:"Error message"`
@@ -288,7 +288,7 @@ func TestOpenApiV3_CommonRequest(t *testing.T) {
 	})
 }
 
-func TestOpenApiV3_CommonRequest_WithoutDataField_Setting(t *testing.T) {
+func TestOpenApiV3CommonRequestWithoutDataFieldSetting(t *testing.T) {
 	type CommonRequest struct {
 		Code    int         `json:"code"    description:"Error code"`
 		Message string      `json:"message" description:"Error message"`
@@ -352,7 +352,7 @@ func TestOpenApiV3_CommonRequest_WithoutDataField_Setting(t *testing.T) {
 	})
 }
 
-func TestOpenApiV3_CommonRequest_EmptyRequest(t *testing.T) {
+func TestOpenApiV3CommonRequestEmptyRequest(t *testing.T) {
 	type CommonRequest struct {
 		Code    int         `json:"code"    description:"Error code"`
 		Message string      `json:"message" description:"Error message"`
@@ -392,7 +392,7 @@ func TestOpenApiV3_CommonRequest_EmptyRequest(t *testing.T) {
 	})
 }
 
-func TestOpenApiV3_CommonRequest_SubDataField(t *testing.T) {
+func TestOpenApiV3CommonRequestSubDataField(t *testing.T) {
 	type CommonReqError struct {
 		Code    string `description:"错误码"`
 		Message string `description:"错误描述"`
@@ -466,7 +466,7 @@ func TestOpenApiV3_CommonRequest_SubDataField(t *testing.T) {
 	})
 }
 
-func TestOpenApiV3_CommonResponse(t *testing.T) {
+func TestOpenApiV3CommonResponse(t *testing.T) {
 	type CommonResponse struct {
 		Code    int         `json:"code"    description:"Error code"`
 		Message string      `json:"message" description:"Error message"`
@@ -517,7 +517,7 @@ func TestOpenApiV3_CommonResponse(t *testing.T) {
 	})
 }
 
-func TestOpenApiV3_CommonResponse_WithoutDataField_Setting(t *testing.T) {
+func TestOpenApiV3CommonResponseWithoutDataFieldSetting(t *testing.T) {
 	type CommonResponse struct {
 		Code    int         `json:"code"    description:"Error code"`
 		Message string      `json:"message" description:"Error message"`
@@ -562,7 +562,7 @@ func TestOpenApiV3_CommonResponse_WithoutDataField_Setting(t *testing.T) {
 	})
 }
 
-func TestOpenApiV3_CommonResponse_EmptyResponse(t *testing.T) {
+func TestOpenApiV3CommonResponseEmptyResponse(t *testing.T) {
 	type CommonResponse struct {
 		Code    int         `json:"code"    description:"Error code"`
 		Message string      `json:"message" description:"Error message"`
@@ -603,7 +603,7 @@ func TestOpenApiV3_CommonResponse_EmptyResponse(t *testing.T) {
 	})
 }
 
-func TestOpenApiV3_CommonResponse_SubDataField(t *testing.T) {
+func TestOpenApiV3CommonResponseSubDataField(t *testing.T) {
 	type CommonResError struct {
 		Code    string `description:"错误码"`
 		Message string `description:"错误描述"`
@@ -659,7 +659,7 @@ func TestOpenApiV3_CommonResponse_SubDataField(t *testing.T) {
 	})
 }
 
-func TestOpenApiV3_ShortTags(t *testing.T) {
+func TestOpenApiV3ShortTags(t *testing.T) {
 	type CommonReq struct {
 		AppId      int64  `json:"appId" v:"required" in:"path" dc:"应用Id" sm:"应用Id Summary"`
 		ResourceId string `json:"resourceId" in:"query" dc:"资源Id" sm:"资源Id Summary"`
@@ -718,7 +718,7 @@ func TestOpenApiV3_ShortTags(t *testing.T) {
 	})
 }
 
-func TestOpenApiV3_HtmlResponse(t *testing.T) {
+func TestOpenApiV3HtmlResponse(t *testing.T) {
 	type Req struct {
 		g.Meta `path:"/test" method:"get" summary:"展示内容详情页面" tags:"内容"`
 		Id     uint `json:"id" v:"min:1#请选择查看的内容" dc:"内容id"`
@@ -748,7 +748,7 @@ func TestOpenApiV3_HtmlResponse(t *testing.T) {
 	})
 }
 
-func TestOpenApiV3_HtmlResponseWithCommonResponse(t *testing.T) {
+func TestOpenApiV3HtmlResponseWithCommonResponse(t *testing.T) {
 	type CommonResError struct {
 		Code    string `description:"错误码"`
 		Message string `description:"错误描述"`
@@ -878,7 +878,7 @@ func TestPropertiesInSequence(t *testing.T) {
 	})
 }
 
-func TestOpenApiV3_Ignore_Parameter(t *testing.T) {
+func TestOpenApiV3IgnoreParameter(t *testing.T) {
 	type CommonResponse struct {
 		Code    int         `json:"code"    description:"Error code"`
 		Message string      `json:"message" description:"Error message"`
@@ -1056,7 +1056,7 @@ func TestNameFromJsonTag(t *testing.T) {
 	})
 }
 
-func TestOpenApiV3_PathSecurity(t *testing.T) {
+func TestOpenApiV3PathSecurity(t *testing.T) {
 	type CommonResponse struct {
 		Code    int         `json:"code"    description:"Error code"`
 		Message string      `json:"message" description:"Error message"`

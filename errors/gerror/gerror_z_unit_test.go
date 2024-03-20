@@ -342,14 +342,14 @@ func TestCode(t *testing.T) {
 	})
 }
 
-func TestError_Error(t *testing.T) {
+func TestErrorError(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var e *gerror.Error = nil
 		t.Assert(e.Error(), nil)
 	})
 }
 
-func TestError_Code(t *testing.T) {
+func TestErrorCode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var e *gerror.Error = nil
 		t.Assert(e.Code(), gcode.CodeNil)

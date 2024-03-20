@@ -99,7 +99,7 @@ func TestIntStrMapBasic(t *testing.T) {
 	})
 }
 
-func TestIntStrMap_MapStrAny(t *testing.T) {
+func TestIntStrMapMapStrAny(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntStrMap()
 		m.GetOrSetFunc(1, getStr)
@@ -108,7 +108,7 @@ func TestIntStrMap_MapStrAny(t *testing.T) {
 	})
 }
 
-func TestIntStrMap_Sets(t *testing.T) {
+func TestIntStrMapSets(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntStrMapFrom(nil)
 		m.Sets(g.MapIntStr{1: "z", 2: "z"})
@@ -360,7 +360,7 @@ func TestIntStrMapPops(t *testing.T) {
 	})
 }
 
-func TestIntStrMap_UnmarshalValue(t *testing.T) {
+func TestIntStrMapUnmarshalValue(t *testing.T) {
 	type V struct {
 		Name string
 		Map  *gmap.IntStrMap
@@ -396,7 +396,7 @@ func TestIntStrMap_UnmarshalValue(t *testing.T) {
 	})
 }
 
-func TestIntStrMap_Replace(t *testing.T) {
+func TestIntStrMapReplace(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntStrMapFrom(g.MapIntStr{
 			1: "v1",
@@ -420,7 +420,7 @@ func TestIntStrMap_Replace(t *testing.T) {
 	})
 }
 
-func TestIntStrMap_String(t *testing.T) {
+func TestIntStrMapString(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntStrMapFrom(g.MapIntStr{
 			1: "v1",

@@ -24,7 +24,7 @@ func customHandler1(ctx context.Context, input *glog.HandlerInput) {
 	input.Next(ctx)
 }
 
-func TestLogger_SetHandlers1(t *testing.T) {
+func TestLoggerSetHandlers1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		w := bytes.NewBuffer(nil)
 		l := glog.NewWithWriter(w)
@@ -51,7 +51,7 @@ func customHandler2(ctx context.Context, input *glog.HandlerInput) {
 	arrayForHandlerTest2.Append(input.String(false))
 }
 
-func TestLogger_SetHandlers2(t *testing.T) {
+func TestLoggerSetHandlers2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		w := bytes.NewBuffer(nil)
 		l := glog.NewWithWriter(w)
@@ -72,7 +72,7 @@ func TestLogger_SetHandlers2(t *testing.T) {
 	})
 }
 
-func TestLogger_SetHandlers_HandlerJson(t *testing.T) {
+func TestLoggerSetHandlersHandlerJson(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		w := bytes.NewBuffer(nil)
 		l := glog.NewWithWriter(w)
@@ -89,7 +89,7 @@ func TestLogger_SetHandlers_HandlerJson(t *testing.T) {
 	})
 }
 
-func TestLogger_SetHandlers_HandlerStructure(t *testing.T) {
+func TestLoggerSetHandlersHandlerStructure(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		w := bytes.NewBuffer(nil)
 		l := glog.NewWithWriter(w)

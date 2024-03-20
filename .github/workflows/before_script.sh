@@ -6,12 +6,13 @@ git diff --name-only --exit-code || if [ $? != 0 ]; then
 fi
 echo "gofmt checks have passed."
 
+trap 'exit 1' ERR
 find . -name "*_test.go" -print0 | while IFS= read -r -d '' file; do
     grep -oP 'func \KTest\w+' "$file" | while read -r funcName; do
-        if ! [[ $funcName =~ ^[A-Z][a-zA-Z0-9]*$ ]]; then
+        if ! [[ ${funcName#Test} =~ ^[A-Z0-9][a-zA-Z0-9]*$ ]]; then
             echo "Notice: Func name $funcName in file $file checks have failed, please check that it is upper camel case before pr." && exit 1;
         fi
-    done
+    done || exit 1
 done
 echo "Func name of unit test checks have passed."
 

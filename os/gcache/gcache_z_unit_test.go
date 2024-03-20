@@ -26,7 +26,7 @@ var (
 	ctx = context.Background()
 )
 
-func TestCache_GCache_Set(t *testing.T) {
+func TestCacheGCacheSet(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertNil(gcache.Set(ctx, 1, 11, 0))
 		defer gcache.Remove(ctx, g.Slice{1, 2, 3}...)
@@ -37,7 +37,7 @@ func TestCache_GCache_Set(t *testing.T) {
 	})
 }
 
-func TestCache_Set(t *testing.T) {
+func TestCacheSet(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c := gcache.New()
 		defer c.Close(ctx)
@@ -49,7 +49,7 @@ func TestCache_Set(t *testing.T) {
 	})
 }
 
-func TestCache_Set_Expire(t *testing.T) {
+func TestCacheSetExpire(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
 		t.Assert(cache.Set(ctx, 2, 22, 100*time.Millisecond), nil)
@@ -75,7 +75,7 @@ func TestCache_Set_Expire(t *testing.T) {
 	})
 }
 
-func TestCache_Update(t *testing.T) {
+func TestCacheUpdate(t *testing.T) {
 	// gcache
 	gtest.C(t, func(t *gtest.T) {
 		key := guid.S()
@@ -109,7 +109,7 @@ func TestCache_Update(t *testing.T) {
 	})
 }
 
-func TestCache_UpdateExpire(t *testing.T) {
+func TestCacheUpdateExpire(t *testing.T) {
 	// gcache
 	gtest.C(t, func(t *gtest.T) {
 		key := guid.S()
@@ -144,7 +144,7 @@ func TestCache_UpdateExpire(t *testing.T) {
 	})
 }
 
-func TestCache_Keys_Values(t *testing.T) {
+func TestCacheKeysValues(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c := gcache.New()
 		for i := 0; i < 10; i++ {
@@ -161,7 +161,7 @@ func TestCache_Keys_Values(t *testing.T) {
 	})
 }
 
-func TestCache_LRU(t *testing.T) {
+func TestCacheLRU(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New(2)
 		for i := 0; i < 10; i++ {
@@ -183,7 +183,7 @@ func TestCache_LRU(t *testing.T) {
 	})
 }
 
-func TestCache_LRU_expire(t *testing.T) {
+func TestCacheLRUExpire(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New(2)
 		t.Assert(cache.Set(ctx, 1, nil, 1000), nil)
@@ -195,7 +195,7 @@ func TestCache_LRU_expire(t *testing.T) {
 	})
 }
 
-func TestCache_SetIfNotExist(t *testing.T) {
+func TestCacheSetIfNotExist(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
 		ok, err := cache.SetIfNotExist(ctx, 1, 11, 0)
@@ -236,7 +236,7 @@ func TestCache_SetIfNotExist(t *testing.T) {
 	})
 }
 
-func TestCache_SetIfNotExistFunc(t *testing.T) {
+func TestCacheSetIfNotExistFunc(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
 		exist, err := cache.SetIfNotExistFunc(ctx, 1, func(ctx context.Context) (value interface{}, err error) {
@@ -280,7 +280,7 @@ func TestCache_SetIfNotExistFunc(t *testing.T) {
 	})
 }
 
-func TestCache_SetIfNotExistFuncLock(t *testing.T) {
+func TestCacheSetIfNotExistFuncLock(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
 		exist, err := cache.SetIfNotExistFuncLock(ctx, 1, func(ctx context.Context) (value interface{}, err error) {
@@ -324,7 +324,7 @@ func TestCache_SetIfNotExistFuncLock(t *testing.T) {
 	})
 }
 
-func TestCache_SetMap(t *testing.T) {
+func TestCacheSetMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
 		t.AssertNil(cache.SetMap(ctx, g.MapAnyAny{1: 11, 2: 22}, 0))
@@ -338,7 +338,7 @@ func TestCache_SetMap(t *testing.T) {
 	})
 }
 
-func TestCache_GetOrSet(t *testing.T) {
+func TestCacheGetOrSet(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
 		value, err := cache.GetOrSet(ctx, 1, 11, 0)
@@ -375,7 +375,7 @@ func TestCache_GetOrSet(t *testing.T) {
 	})
 }
 
-func TestCache_GetOrSetFunc(t *testing.T) {
+func TestCacheGetOrSetFunc(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
 		cache.GetOrSetFunc(ctx, 1, func(ctx context.Context) (value interface{}, err error) {
@@ -406,7 +406,7 @@ func TestCache_GetOrSetFunc(t *testing.T) {
 	})
 }
 
-func TestCache_GetOrSetFuncLock(t *testing.T) {
+func TestCacheGetOrSetFuncLock(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
 		cache.GetOrSetFuncLock(ctx, 1, func(ctx context.Context) (value interface{}, err error) {
@@ -436,7 +436,7 @@ func TestCache_GetOrSetFuncLock(t *testing.T) {
 	})
 }
 
-func TestCache_Clear(t *testing.T) {
+func TestCacheClear(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
 		cache.SetMap(ctx, g.MapAnyAny{1: 11, 2: 22}, 0)
@@ -446,7 +446,7 @@ func TestCache_Clear(t *testing.T) {
 	})
 }
 
-func TestCache_SetConcurrency(t *testing.T) {
+func TestCacheSetConcurrency(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
 		pool := grpool.New(4)
@@ -476,7 +476,7 @@ func TestCache_SetConcurrency(t *testing.T) {
 	})
 }
 
-func TestCache_Basic(t *testing.T) {
+func TestCacheBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		{
 			cache := gcache.New()
@@ -537,7 +537,7 @@ func TestCache_Basic(t *testing.T) {
 	})
 }
 
-func TestCache_Removes(t *testing.T) {
+func TestCacheRemoves(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
 		t.AssertNil(cache.Set(ctx, 1, 11, 0))
@@ -570,7 +570,7 @@ func TestCache_Removes(t *testing.T) {
 	})
 }
 
-func TestCache_Basic_Must(t *testing.T) {
+func TestCacheBasicMust(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer gcache.Remove(ctx, g.Slice{1, 2, 3, 4}...)
 
@@ -616,7 +616,7 @@ func TestCache_Basic_Must(t *testing.T) {
 	})
 }
 
-func TestCache_NewWithAdapter(t *testing.T) {
+func TestCacheNewWithAdapter(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.NewWithAdapter(gcache.NewAdapterMemory())
 		t.AssertNE(cache, nil)

@@ -185,24 +185,24 @@ func dropClickhouseExampleTable(conn gdb.DB) {
 	_, _ = conn.Exec(context.Background(), sqlStr)
 }
 
-func TestDriverClickhouse_Create(t *testing.T) {
+func TestDriverClickhouseCreate(t *testing.T) {
 	gtest.AssertNil(createClickhouseTableVisits(clickhouseConfigDB()))
 }
 
-func TestDriverClickhouse_New(t *testing.T) {
+func TestDriverClickhouseNew(t *testing.T) {
 	connect := clickhouseConfigDB()
 	gtest.AssertNE(connect, nil)
 	gtest.AssertNil(connect.PingMaster())
 	gtest.AssertNil(connect.PingSlave())
 }
 
-func TestDriverClickhouse_OpenLink_Ping(t *testing.T) {
+func TestDriverClickhouseOpenLinkPing(t *testing.T) {
 	connect := clickhouseConfigDB()
 	gtest.AssertNE(connect, nil)
 	gtest.AssertNil(connect.PingMaster())
 }
 
-func TestDriverClickhouse_Tables(t *testing.T) {
+func TestDriverClickhouseTables(t *testing.T) {
 	connect := clickhouseConfigDB()
 	gtest.AssertEQ(createClickhouseTableVisits(connect), nil)
 	defer dropClickhouseTableVisits(connect)
@@ -211,7 +211,7 @@ func TestDriverClickhouse_Tables(t *testing.T) {
 	gtest.AssertNE(len(tables), 0)
 }
 
-func TestDriverClickhouse_TableFields_Use_Config(t *testing.T) {
+func TestDriverClickhouseTableFieldsUseConfig(t *testing.T) {
 	connect := clickhouseConfigDB()
 	gtest.AssertNil(createClickhouseTableVisits(connect))
 	defer dropClickhouseTableVisits(connect)
@@ -221,7 +221,7 @@ func TestDriverClickhouse_TableFields_Use_Config(t *testing.T) {
 	gtest.AssertNQ(field, nil)
 }
 
-func TestDriverClickhouse_TableFields_Use_Link(t *testing.T) {
+func TestDriverClickhouseTableFieldsUseLink(t *testing.T) {
 	connect := clickhouseLink()
 	gtest.AssertNil(createClickhouseTableVisits(connect))
 	defer dropClickhouseTableVisits(connect)
@@ -231,7 +231,7 @@ func TestDriverClickhouse_TableFields_Use_Link(t *testing.T) {
 	gtest.AssertNQ(field, nil)
 }
 
-func TestDriverClickhouse_Transaction(t *testing.T) {
+func TestDriverClickhouseTransaction(t *testing.T) {
 	connect := clickhouseConfigDB()
 	defer dropClickhouseTableVisits(connect)
 	gtest.AssertNE(connect.Transaction(context.Background(), func(ctx context.Context, tx gdb.TX) error {
@@ -239,19 +239,19 @@ func TestDriverClickhouse_Transaction(t *testing.T) {
 	}), nil)
 }
 
-func TestDriverClickhouse_InsertIgnore(t *testing.T) {
+func TestDriverClickhouseInsertIgnore(t *testing.T) {
 	connect := clickhouseConfigDB()
 	_, err := connect.InsertIgnore(context.Background(), "", nil)
 	gtest.AssertEQ(err, errUnsupportedInsertIgnore)
 }
 
-func TestDriverClickhouse_InsertAndGetId(t *testing.T) {
+func TestDriverClickhouseInsertAndGetId(t *testing.T) {
 	connect := clickhouseConfigDB()
 	_, err := connect.InsertAndGetId(context.Background(), "", nil)
 	gtest.AssertEQ(err, errUnsupportedInsertGetId)
 }
 
-func TestDriverClickhouse_InsertOne(t *testing.T) {
+func TestDriverClickhouseInsertOne(t *testing.T) {
 	connect := clickhouseConfigDB()
 	gtest.AssertEQ(createClickhouseTableVisits(connect), nil)
 	defer dropClickhouseTableVisits(connect)
@@ -263,7 +263,7 @@ func TestDriverClickhouse_InsertOne(t *testing.T) {
 	gtest.AssertNil(err)
 }
 
-func TestDriverClickhouse_InsertOneAutoDateTimeWrite(t *testing.T) {
+func TestDriverClickhouseInsertOneAutoDateTimeWrite(t *testing.T) {
 	connect, err := gdb.New(gdb.ConfigNode{
 		Host:      "127.0.0.1",
 		Port:      "9000",
@@ -292,7 +292,7 @@ func TestDriverClickhouse_InsertOneAutoDateTimeWrite(t *testing.T) {
 	gtest.AssertGE(createdTime.Unix(), beforeInsertTime.Unix())
 }
 
-func TestDriverClickhouse_InsertMany(t *testing.T) {
+func TestDriverClickhouseInsertMany(t *testing.T) {
 	connect := clickhouseConfigDB()
 	gtest.AssertEQ(createClickhouseTableVisits(connect), nil)
 	defer dropClickhouseTableVisits(connect)
@@ -301,7 +301,7 @@ func TestDriverClickhouse_InsertMany(t *testing.T) {
 	gtest.AssertNil(tx)
 }
 
-func TestDriverClickhouse_Insert(t *testing.T) {
+func TestDriverClickhouseInsert(t *testing.T) {
 	connect := clickhouseConfigDB()
 	gtest.AssertEQ(createClickhouseTableVisits(connect), nil)
 	defer dropClickhouseTableVisits(connect)
@@ -344,7 +344,7 @@ func TestDriverClickhouse_Insert(t *testing.T) {
 	gtest.AssertEQ(total, 102)
 }
 
-func TestDriverClickhouse_Insert_Use_Exec(t *testing.T) {
+func TestDriverClickhouseInsertUseExec(t *testing.T) {
 	connect := clickhouseConfigDB()
 	gtest.AssertEQ(createClickhouseTableFact(connect), nil)
 	defer dropClickhouseTableFact(connect)
@@ -352,7 +352,7 @@ func TestDriverClickhouse_Insert_Use_Exec(t *testing.T) {
 	gtest.AssertNil(err)
 }
 
-func TestDriverClickhouse_Delete(t *testing.T) {
+func TestDriverClickhouseDelete(t *testing.T) {
 	connect := clickhouseConfigDB()
 	gtest.AssertEQ(createClickhouseTableVisits(connect), nil)
 	defer dropClickhouseTableVisits(connect)
@@ -366,7 +366,7 @@ func TestDriverClickhouse_Delete(t *testing.T) {
 	gtest.AssertNil(err)
 }
 
-func TestDriverClickhouse_Update(t *testing.T) {
+func TestDriverClickhouseUpdate(t *testing.T) {
 	connect := clickhouseConfigDB()
 	gtest.AssertEQ(createClickhouseTableVisits(connect), nil)
 	defer dropClickhouseTableVisits(connect)
@@ -383,13 +383,13 @@ func TestDriverClickhouse_Update(t *testing.T) {
 		}).Update()
 }
 
-func TestDriverClickhouse_Replace(t *testing.T) {
+func TestDriverClickhouseReplace(t *testing.T) {
 	connect := clickhouseConfigDB()
 	_, err := connect.Replace(context.Background(), "", nil)
 	gtest.AssertEQ(err, errUnsupportedReplace)
 }
 
-func TestDriverClickhouse_DoFilter(t *testing.T) {
+func TestDriverClickhouseDoFilter(t *testing.T) {
 	rawSQL := "select * from visits where 1 = 1"
 	this := Driver{}
 	replaceSQL, _, err := this.DoFilter(context.Background(), nil, rawSQL, []interface{}{1})
@@ -418,7 +418,7 @@ func TestDriverClickhouse_DoFilter(t *testing.T) {
 	gtest.AssertEQ(replaceSQL, "ALTER TABLE visit DELETE WHERE url = '0'")
 }
 
-func TestDriverClickhouse_Select(t *testing.T) {
+func TestDriverClickhouseSelect(t *testing.T) {
 	connect := clickhouseConfigDB()
 	gtest.AssertNil(createClickhouseTableVisits(connect))
 	defer dropClickhouseTableVisits(connect)
@@ -440,7 +440,7 @@ func TestDriverClickhouse_Select(t *testing.T) {
 	gtest.AssertEQ(len(data), 2)
 }
 
-func TestDriverClickhouse_Exec_OPTIMIZE(t *testing.T) {
+func TestDriverClickhouseExecOPTIMIZE(t *testing.T) {
 	connect := clickhouseConfigDB()
 	gtest.AssertNil(createClickhouseTableVisits(connect))
 	defer dropClickhouseTableVisits(connect)
@@ -449,7 +449,7 @@ func TestDriverClickhouse_Exec_OPTIMIZE(t *testing.T) {
 	gtest.AssertNil(err)
 }
 
-func TestDriverClickhouse_ExecInsert(t *testing.T) {
+func TestDriverClickhouseExecInsert(t *testing.T) {
 	connect := clickhouseConfigDB()
 	gtest.AssertEQ(createClickhouseTableDim(connect), nil)
 	defer dropClickhouseTableDim(connect)
@@ -457,7 +457,7 @@ func TestDriverClickhouse_ExecInsert(t *testing.T) {
 	gtest.AssertNil(err)
 }
 
-func TestDriverClickhouse_NilTime(t *testing.T) {
+func TestDriverClickhouseNilTime(t *testing.T) {
 	connect := clickhouseConfigDB()
 	gtest.AssertNil(createClickhouseExampleTable(connect))
 	defer dropClickhouseExampleTable(connect)
@@ -506,7 +506,7 @@ func TestDriverClickhouse_NilTime(t *testing.T) {
 	gtest.AssertEQ(data["Col12"].String(), "99999.99")
 }
 
-func TestDriverClickhouse_BatchInsert(t *testing.T) {
+func TestDriverClickhouseBatchInsert(t *testing.T) {
 	// example from
 	// https://github.com/ClickHouse/clickhouse-go/blob/v2/examples/std/batch/main.go
 	connect := clickhouseConfigDB()
@@ -540,7 +540,7 @@ func TestDriverClickhouse_BatchInsert(t *testing.T) {
 	gtest.AssertEQ(count, 10000)
 }
 
-func TestDriverClickhouse_Open(t *testing.T) {
+func TestDriverClickhouseOpen(t *testing.T) {
 	// link
 	// DSM
 	// clickhouse://username:password@host1:9000,host2:9000/database?dial_timeout=200ms&max_execution_time=60
@@ -553,7 +553,7 @@ func TestDriverClickhouse_Open(t *testing.T) {
 	gtest.AssertNil(db.PingMaster())
 }
 
-func TestDriverClickhouse_TableFields(t *testing.T) {
+func TestDriverClickhouseTableFields(t *testing.T) {
 	connect := clickhouseConfigDB()
 	gtest.AssertNil(createClickhouseExampleTable(connect))
 	defer dropClickhouseExampleTable(connect)
@@ -588,7 +588,7 @@ func TestDriverClickhouse_TableFields(t *testing.T) {
 	}
 }
 
-func TestDriverClickhouse_TableFields_HasField(t *testing.T) {
+func TestDriverClickhouseTableFieldsHasField(t *testing.T) {
 	connect := clickhouseConfigDB()
 	gtest.AssertNil(createClickhouseExampleTable(connect))
 	defer dropClickhouseExampleTable(connect)

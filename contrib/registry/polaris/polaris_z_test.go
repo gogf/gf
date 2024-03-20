@@ -20,7 +20,7 @@ import (
 )
 
 // TestRegistry_Register TestRegistryManyService
-func TestRegistry_Register(t *testing.T) {
+func TestRegistryRegister(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
 	conf.GetGlobal().GetStatReporter().SetEnable(false)
 	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-registry/backup")
@@ -52,7 +52,7 @@ func TestRegistry_Register(t *testing.T) {
 }
 
 // TestRegistry_Deregister TestRegistryManyService
-func TestRegistry_Deregister(t *testing.T) {
+func TestRegistryDeregister(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
 	conf.GetGlobal().GetStatReporter().SetEnable(false)
 	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-registry/backup")
@@ -146,7 +146,7 @@ func TestRegistryMany(t *testing.T) {
 }
 
 // TestRegistry_Search Test GetService
-func TestRegistry_Search(t *testing.T) {
+func TestRegistrySearch(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
 	conf.GetGlobal().GetStatReporter().SetEnable(false)
 	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-get-service/backup")
@@ -191,7 +191,7 @@ func TestRegistry_Search(t *testing.T) {
 }
 
 // TestRegistry_Watch Test Watch
-func TestRegistry_Watch(t *testing.T) {
+func TestRegistryWatch(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
 	conf.GetGlobal().GetStatReporter().SetEnable(false)
 	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-watch/backup")
@@ -263,7 +263,7 @@ func TestRegistry_Watch(t *testing.T) {
 }
 
 // TestWatcher_Proceed Test Watch
-func TestWatcher_Proceed(t *testing.T) {
+func TestWatcherProceed(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
 	conf.GetGlobal().GetStatReporter().SetEnable(false)
 	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-watch/backup")
@@ -525,7 +525,7 @@ func TestRegistryManyForEndpoints(t *testing.T) {
 }
 
 // TestWatcher_Close Test Close
-func TestWatcher_Close(t *testing.T) {
+func TestWatcherClose(t *testing.T) {
 	conf := config.NewDefaultConfiguration([]string{"127.0.0.1:8091"})
 	conf.GetGlobal().GetStatReporter().SetEnable(false)
 	conf.Consumer.LocalCache.SetPersistDir(os.TempDir() + "/polaris-watch/backup")
@@ -594,7 +594,7 @@ func TestGetKey(t *testing.T) {
 }
 
 // TestService_GetPrefix Test GetPrefix
-func TestService_GetPrefix(t *testing.T) {
+func TestServiceGetPrefix(t *testing.T) {
 	type fields struct {
 		Service gsvc.Service
 		ID      string
@@ -658,7 +658,7 @@ func TestService_GetPrefix(t *testing.T) {
 }
 
 // TestService_GetName Test GetName
-func TestService_GetKey(t *testing.T) {
+func TestServiceGetKey(t *testing.T) {
 	type fields struct {
 		Service gsvc.Service
 		ID      string
@@ -727,8 +727,8 @@ func TestService_GetKey(t *testing.T) {
 	}
 }
 
-// Test_trimAndReplace Test trimAndReplace
-func TesttrimAndReplace(t *testing.T) {
+// TestTrimAndReplace Test trimAndReplace
+func TestTrimAndReplace(t *testing.T) {
 	type args struct {
 		key string
 	}

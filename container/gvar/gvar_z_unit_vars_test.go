@@ -38,7 +38,7 @@ func TestVars(t *testing.T) {
 	})
 }
 
-func TestVars_Scan(t *testing.T) {
+func TestVarsScan(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Id   int

@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func TestVar_Struct(t *testing.T) {
+func TestVarStruct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type StTest struct {
 			Test int
@@ -43,7 +43,7 @@ func TestVar_Struct(t *testing.T) {
 	})
 }
 
-func TestVar_Var_Attribute_Struct(t *testing.T) {
+func TestVarVarAttributeStruct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Uid  int

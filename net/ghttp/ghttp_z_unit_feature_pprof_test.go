@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func TestServer_EnablePProf(t *testing.T) {
+func TestServerEnablePProf(t *testing.T) {
 	C(t, func(t *T) {
 		s := g.Server(guid.S())
 		s.EnablePProf("/pprof")

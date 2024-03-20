@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func TestVar_Map(t *testing.T) {
+func TestVarMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := g.Map{
 			"k1": "v1",
@@ -26,7 +26,7 @@ func TestVar_Map(t *testing.T) {
 	})
 }
 
-func TestVar_MapToMap(t *testing.T) {
+func TestVarMapToMap(t *testing.T) {
 	// map[int]int -> map[string]string
 	// empty original map.
 	gtest.C(t, func(t *gtest.T) {
@@ -81,7 +81,7 @@ func TestVar_MapToMap(t *testing.T) {
 	})
 }
 
-func TestVar_MapStrVar(t *testing.T) {
+func TestVarMapStrVar(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := g.Map{
 			"k1": "v1",

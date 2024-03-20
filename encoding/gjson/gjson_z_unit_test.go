@@ -294,7 +294,7 @@ func TestRawArray(t *testing.T) {
 	})
 }
 
-func TestJson_ToJson(t *testing.T) {
+func TestJsonToJson(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		p := gjson.New(1)
 		s, e := p.ToJsonString()
@@ -309,7 +309,7 @@ func TestJson_ToJson(t *testing.T) {
 	})
 }
 
-func TestJson_Default(t *testing.T) {
+func TestJsonDefault(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		j := gjson.New(nil)
 		t.AssertEQ(j.Get("no", 100).Int(), 100)
@@ -516,7 +516,7 @@ func TestBasic(t *testing.T) {
 	})
 }
 
-func TestJson_Var(t *testing.T) {
+func TestJsonVar(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		data := []byte("[9223372036854775807, 9223372036854775806]")
 		array := gjson.New(data).Var().Array()
@@ -529,14 +529,14 @@ func TestJson_Var(t *testing.T) {
 	})
 }
 
-func TestJson_IsNil(t *testing.T) {
+func TestJsonIsNil(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		j := gjson.New(nil)
 		t.Assert(j.IsNil(), true)
 	})
 }
 
-func TestJson_Set_With_Struct(t *testing.T) {
+func TestJsonSetWithStruct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gjson.New(g.Map{
 			"user1": g.Map{"name": "user1"},
@@ -550,7 +550,7 @@ func TestJson_Set_With_Struct(t *testing.T) {
 	})
 }
 
-func TestJson_Options(t *testing.T) {
+func TestJsonOptions(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type S struct {
 			Id int64

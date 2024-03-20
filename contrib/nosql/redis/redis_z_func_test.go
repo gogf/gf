@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func TestmustMergeOptionToArgs(t *testing.T) {
+func TestMustMergeOptionToArgs(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var args []interface{}
 		newArgs := mustMergeOptionToArgs(args, gredis.SetOption{

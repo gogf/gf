@@ -347,7 +347,7 @@ func TestStructTypeBySlice(t *testing.T) {
 	})
 }
 
-func TestType_FieldKeys(t *testing.T) {
+func TestTypeFieldKeys(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
 			Id   int
@@ -362,7 +362,7 @@ func TestType_FieldKeys(t *testing.T) {
 	})
 }
 
-func TestType_TagMap(t *testing.T) {
+func TestTypeTagMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type A struct {
 			Id   int    `d:"123" description:"I love gf"`
@@ -382,7 +382,7 @@ func TestType_TagMap(t *testing.T) {
 	})
 }
 
-func TestType_TagJsonName(t *testing.T) {
+func TestTypeTagJsonName(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type A struct {
 			Name string `json:"name,omitempty"`
@@ -398,7 +398,7 @@ func TestType_TagJsonName(t *testing.T) {
 	})
 }
 
-func TestType_TagDefault(t *testing.T) {
+func TestTypeTagDefault(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type A struct {
 			Name  string `default:"john"`
@@ -416,7 +416,7 @@ func TestType_TagDefault(t *testing.T) {
 	})
 }
 
-func TestType_TagParam(t *testing.T) {
+func TestTypeTagParam(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type A struct {
 			Name  string `param:"name"`
@@ -434,7 +434,7 @@ func TestType_TagParam(t *testing.T) {
 	})
 }
 
-func TestType_TagValid(t *testing.T) {
+func TestTypeTagValid(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type A struct {
 			Name  string `valid:"required"`
@@ -452,7 +452,7 @@ func TestType_TagValid(t *testing.T) {
 	})
 }
 
-func TestType_TagDescription(t *testing.T) {
+func TestTypeTagDescription(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type A struct {
 			Name  string `description:"my name"`
@@ -472,7 +472,7 @@ func TestType_TagDescription(t *testing.T) {
 	})
 }
 
-func TestType_TagSummary(t *testing.T) {
+func TestTypeTagSummary(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type A struct {
 			Name  string `summary:"my name"`
@@ -492,7 +492,7 @@ func TestType_TagSummary(t *testing.T) {
 	})
 }
 
-func TestType_TagAdditional(t *testing.T) {
+func TestTypeTagAdditional(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type A struct {
 			Name  string `additional:"my name"`
@@ -510,7 +510,7 @@ func TestType_TagAdditional(t *testing.T) {
 	})
 }
 
-func TestType_TagExample(t *testing.T) {
+func TestTypeTagExample(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type A struct {
 			Name  string `example:"john"`

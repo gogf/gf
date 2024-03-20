@@ -405,7 +405,7 @@ func TestCheckStructInvalidRule(t *testing.T) {
 	})
 }
 
-func TestValidator_CheckStructWithData(t *testing.T) {
+func TestValidatorCheckStructWithData(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type UserApiSearch struct {
 			Uid      int64  `v:"required"`

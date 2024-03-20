@@ -4366,7 +4366,7 @@ func TestScanListNoRecreateSliceAttributeStruct(t *testing.T) {
 	})
 }
 
-func TestResult_Structs1(t *testing.T) {
+func TestResultStructs1(t *testing.T) {
 	type A struct {
 		Id int `orm:"id"`
 	}
