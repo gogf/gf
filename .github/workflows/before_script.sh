@@ -7,9 +7,8 @@ fi
 echo "gofmt checks have passed."
 
 find . -name "*_test.go" -print0 | while IFS= read -r -d '' file; do
-    grep -oP 'func Test\K([a-z]+)' "$file" | while read -r funcName; do
-        echo $funcName;
-        if [[ $funcName =~ ^[[:upper:]] ]]; then
+    grep -oP 'func \KTest\w+' "$file" | while read -r funcName; do
+        if ! [[ $funcName =~ ^[A-Z][a-zA-Z0-9]*$ ]]; then
             echo "Notice: Func name $funcName in file $file checks have failed, please check that it is upper camel case before pr." && exit 1;
         fi
     done
