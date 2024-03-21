@@ -37,7 +37,7 @@ func checkValidRequestParams(ptr any) (reflect.Value, reflect.Kind, error) {
 		// elem, err := checkValidStruct(srcTyp, srcVal, 1)
 		return srcVal.Elem(), reflect.Struct, nil
 	} else {
-		//Routes registered by other rules
+		// Routes registered by other rules
 		srcTyp := reflect.TypeOf(ptr)
 		if srcTyp.Kind() != reflect.Ptr {
 			return srcVal, 0, gerror.NewCodef(
@@ -56,7 +56,7 @@ func checkValidRequestParams(ptr any) (reflect.Value, reflect.Kind, error) {
 		}
 
 		elemTyp := srcTyp.Elem()
-		//Number of dereferences
+		// Number of dereferences
 		derefCount := 1
 		// Determine whether it is a secondary pointer
 		if elemTyp.Kind() == reflect.Ptr {

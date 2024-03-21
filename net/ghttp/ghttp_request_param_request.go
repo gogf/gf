@@ -254,7 +254,7 @@ func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer i
 
 // mergeInTagStructValue merges the request parameters with header or cookie values from struct `in` tag definition.
 func (r *Request) mergeInTagStructValue(data map[string]interface{}, pointer interface{}) error {
-	fields, err := gstructs.TagFields(pointer, defaultValueTags)
+	fields, err := gstructs.TagFields(pointer, []string{"in"})
 	if err != nil {
 		return err
 	}
