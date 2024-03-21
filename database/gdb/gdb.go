@@ -749,30 +749,34 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		internalData.ConfigNode = node
 	}
 	// Cache the underlying connection pool object by node.
-	instanceValue := c.links.GetOrSetFuncLock(node, func() interface{} {
-		if sqlDb, err = c.db.Open(node); err != nil {
-			return nil
+	var (
+		instanceCacheFunc = func() interface{} {
+			if sqlDb, err = c.db.Open(node); err != nil {
+				return nil
+			}
+			if sqlDb == nil {
+				return nil
+			}
+			if c.dynamicConfig.MaxIdleConnCount > 0 {
+				sqlDb.SetMaxIdleConns(c.dynamicConfig.MaxIdleConnCount)
+			} else {
+				sqlDb.SetMaxIdleConns(defaultMaxIdleConnCount)
+			}
+			if c.dynamicConfig.MaxOpenConnCount > 0 {
+				sqlDb.SetMaxOpenConns(c.dynamicConfig.MaxOpenConnCount)
+			} else {
+				sqlDb.SetMaxOpenConns(defaultMaxOpenConnCount)
+			}
+			if c.dynamicConfig.MaxConnLifeTime > 0 {
+				sqlDb.SetConnMaxLifetime(c.dynamicConfig.MaxConnLifeTime)
+			} else {
+				sqlDb.SetConnMaxLifetime(defaultMaxConnLifeTime)
+			}
+			return sqlDb
 		}
-		if sqlDb == nil {
-			return nil
-		}
-		if c.dynamicConfig.MaxIdleConnCount > 0 {
-			sqlDb.SetMaxIdleConns(c.dynamicConfig.MaxIdleConnCount)
-		} else {
-			sqlDb.SetMaxIdleConns(defaultMaxIdleConnCount)
-		}
-		if c.dynamicConfig.MaxOpenConnCount > 0 {
-			sqlDb.SetMaxOpenConns(c.dynamicConfig.MaxOpenConnCount)
-		} else {
-			sqlDb.SetMaxOpenConns(defaultMaxOpenConnCount)
-		}
-		if c.dynamicConfig.MaxConnLifeTime > 0 {
-			sqlDb.SetConnMaxLifetime(c.dynamicConfig.MaxConnLifeTime)
-		} else {
-			sqlDb.SetConnMaxLifetime(defaultMaxConnLifeTime)
-		}
-		return sqlDb
-	})
+		// it here uses node value not pointer as the cache key, in case of oracle ORA-12516 error.
+		instanceValue = c.links.GetOrSetFuncLock(*node, instanceCacheFunc)
+	)
 	if instanceValue != nil && sqlDb == nil {
 		// It reads from instance map.
 		sqlDb = instanceValue.(*sql.DB)

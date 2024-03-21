@@ -32,11 +32,11 @@ func (c *Core) Stats(ctx context.Context) []StatsItem {
 	var items = make([]StatsItem, 0)
 	c.links.Iterator(func(k, v any) bool {
 		var (
-			node  = k.(*ConfigNode)
+			node  = k.(ConfigNode)
 			sqlDB = v.(*sql.DB)
 		)
 		items = append(items, &localStatsItem{
-			node:  node,
+			node:  &node,
 			stats: sqlDB.Stats(),
 		})
 		return true
