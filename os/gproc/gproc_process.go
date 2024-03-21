@@ -12,7 +12,6 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
-	"strings"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
@@ -54,14 +53,7 @@ func NewProcess(path string, args []string, environment ...[]string) *Process {
 		},
 	}
 	process.Dir, _ = os.Getwd()
-	if len(args) > 0 {
-		// Exclude of current binary path.
-		start := 0
-		if strings.EqualFold(path, args[0]) {
-			start = 1
-		}
-		process.Args = append(process.Args, args[start:]...)
-	}
+	process = newProcess(process, args, path)
 	return process
 }
 
