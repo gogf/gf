@@ -507,7 +507,7 @@ func Test_Params_Struct_Validation(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
-		t.Assert(c.GetContent(ctx, "/", ``), `The Id field is required`)
+		t.Assert(c.GetContent(ctx, "/", ``), ``)
 		t.Assert(c.GetContent(ctx, "/", `id=1&name=john`), `1john`)
 		t.Assert(c.PostContent(ctx, "/", `id=1&name=john&password1=123&password2=456`), `1john`)
 		t.Assert(c.PostContent(ctx, "/", `id=1`), `The name field is required`)

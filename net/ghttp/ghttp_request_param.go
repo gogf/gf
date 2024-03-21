@@ -67,72 +67,69 @@ func (r *Request) ParseForm(pointer interface{}) error {
 
 // doParse parses the request data to struct/structs according to request type.
 func (r *Request) doParse(pointer interface{}, requestType int) error {
-	var (
-		reflectVal1  = reflect.ValueOf(pointer)
-		reflectKind1 = reflectVal1.Kind()
-	)
-	if reflectKind1 != reflect.Ptr {
-		return gerror.NewCodef(
-			gcode.CodeInvalidParameter,
-			`invalid parameter type "%v", of which kind should be of *struct/**struct/*[]struct/*[]*struct, but got: "%v"`,
-			reflectVal1.Type(),
-			reflectKind1,
-		)
+	// Verify whether the parameters passed in by the user are legal.
+	// They must be pointers and cannot be nil.
+	elemPtr, kind, err := checkValidRequestParams(pointer)
+	if err != nil {
+		return err
 	}
-	var (
-		reflectVal2  = reflectVal1.Elem()
-		reflectKind2 = reflectVal2.Kind()
-	)
-	switch reflectKind2 {
+
+	switch kind {
 	// Single struct, post content like:
 	// 1. {"id":1, "name":"john"}
 	// 2. ?id=1&name=john
-	case reflect.Ptr, reflect.Struct:
+	case reflect.Struct:
 		var (
 			err  error
 			data map[string]interface{}
+			_    = data
 		)
 		// Converting.
 		switch requestType {
 		case parseTypeQuery:
-			if data, err = r.doGetQueryStruct(pointer); err != nil {
+			if data, err = r.doGetQueryStruct(elemPtr); err != nil {
 				return err
 			}
 		case parseTypeForm:
-			if data, err = r.doGetFormStruct(pointer); err != nil {
+			if data, err = r.doGetFormStruct(elemPtr); err != nil {
 				return err
 			}
 		default:
-			if data, err = r.doGetRequestStruct(pointer); err != nil {
+			if data, err = r.doGetRequestStruct(elemPtr); err != nil {
 				return err
 			}
 		}
 		// TODO: https://github.com/gogf/gf/pull/2450
-		// Validation.
-		if err = gvalid.New().
-			Bail().
-			Data(pointer).
-			Assoc(data).
-			Run(r.Context()); err != nil {
-			return err
+		valid := gvalid.New().Bail().Data(elemPtr)
+		// If there is no data, it needs to be set to nil
+		// Otherwise required and default tag conflict
+		if len(data) != 0 {
+			valid = valid.Assoc(data)
 		}
+		err = valid.Run(r.Context())
+		return err
 
 	// Multiple struct, it only supports JSON type post content like:
 	// [{"id":1, "name":"john"}, {"id":, "name":"smith"}]
 	case reflect.Array, reflect.Slice:
+
+		var (
+			sliceElem = elemPtr
+		)
 		// If struct slice conversion, it might post JSON/XML/... content,
 		// so it uses `gjson` for the conversion.
 		j, err := gjson.LoadContent(r.GetBody())
 		if err != nil {
 			return err
 		}
+		// j.Var().Scan(pointer)  ==> j.Var().Scan(sliceElem)
 		if err = j.Var().Scan(pointer); err != nil {
 			return err
 		}
-		for i := 0; i < reflectVal2.Len(); i++ {
+		for i := 0; i < sliceElem.Len(); i++ {
 			if err = gvalid.New().
 				Bail().
-				Data(reflectVal2.Index(i)).
+				Data(sliceElem.Index(i)).
 				Assoc(j.Get(gconv.String(i)).Map()).
 				Run(r.Context()); err != nil {
 				return err

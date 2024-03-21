@@ -175,10 +175,15 @@ func (r *Request) GetRequestStruct(pointer interface{}, mapping ...map[string]st
 
 func (r *Request) doGetRequestStruct(pointer interface{}, mapping ...map[string]string) (data map[string]interface{}, err error) {
 	data = r.GetRequestMap()
-	if data == nil {
-		data = map[string]interface{}{}
+	// Delete the null value,
+	// otherwise the null value will be overwritten when calling gconv.Struct subsequently.
+	for k, v := range data {
+		if v == "" {
+			delete(data, k)
+		}
 	}
-	// Default struct values.
+
+	// `default` `d` Tag struct values.
 	if err = r.mergeDefaultStructValue(data, pointer); err != nil {
 		return data, nil
 	}
@@ -187,12 +192,21 @@ func (r *Request) doGetRequestStruct(pointer interface{}, mapping ...map[string]
 		return data, nil
 	}
 
+	// If there is no data, it needs to be set to nil
+	// Otherwise required and default tag conflict
+	// fast path
+	if len(data) == 0 || data == nil {
+		return nil, nil
+	}
 	return data, gconv.Struct(data, pointer, mapping...)
 }
 
 // mergeDefaultStructValue merges the request parameters with default values from struct tag definition.
 func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer interface{}) error {
-	fields := r.serveHandler.Handler.Info.ReqStructFields
+	fields, err := gstructs.TagFields(pointer, defaultValueTags)
+	if err != nil {
+		return err
+	}
 	if len(fields) > 0 {
 		var (
 			foundKey   string
@@ -240,7 +254,10 @@ func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer i
 
 // mergeInTagStructValue merges the request parameters with header or cookie values from struct `in` tag definition.
 func (r *Request) mergeInTagStructValue(data map[string]interface{}, pointer interface{}) error {
-	fields := r.serveHandler.Handler.Info.ReqStructFields
+	fields, err := gstructs.TagFields(pointer, defaultValueTags)
+	if err != nil {
+		return err
+	}
 	if len(fields) > 0 {
 		var (
 			foundKey   string
