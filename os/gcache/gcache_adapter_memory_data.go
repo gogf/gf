@@ -112,7 +112,7 @@ func (d *adapterMemoryData) Keys(regexps ...string) ([]interface{}, error) {
 		}
 	}
 	d.mu.RUnlock()
-	return keys, nil
+	return keys[0:index], nil
 }
 
 // Values returns all values in the cache as slice.
