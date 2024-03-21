@@ -101,11 +101,19 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 		}
 		// TODO: https://github.com/gogf/gf/pull/2450
 		valid := gvalid.New().Bail().Data(elemPtr)
-		// If there is no data, it needs to be set to nil
-		// Otherwise required and default tag conflict
-		if len(data) != 0 {
-			valid = valid.Assoc(data)
+
+		if r.serveHandler.Handler.Info.IsStrictRoute {
+			// TODO: As long as subsequent requests are strictly routed,
+			//  another verification method will be used, which is to be implemented.
+		} else {
+			// If the user does not transmit data, no associated data verification is required
+			if len(data) != 0 {
+				// data only header and cookie data
+				valid = valid.Assoc(data)
+			}
+
 		}
+
 		err = valid.Run(r.Context())
 		return err
 
