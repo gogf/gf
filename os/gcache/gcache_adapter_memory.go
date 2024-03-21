@@ -337,7 +337,7 @@ func (c *AdapterMemory) Data(ctx context.Context) (map[interface{}]interface{}, 
 
 // Keys returns all keys in the cache as slice.
 func (c *AdapterMemory) Keys(ctx context.Context, regexp ...string) ([]interface{}, error) {
-	return c.data.Keys()
+	return c.data.Keys(regexp...)
 }
 
 // Values returns all values in the cache as slice.
