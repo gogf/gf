@@ -77,7 +77,7 @@ func (d *Driver) doSave(ctx context.Context,
 	for key, value := range one {
 		var saveValue string
 		if t, ok := value.(time.Time); ok {
-			saveValue = t.Format(`2006-01-02 15:04:05`)
+			saveValue = t.Format(time.RFC3339Nano)
 		} else {
 			saveValue = gconv.String(value)
 		}

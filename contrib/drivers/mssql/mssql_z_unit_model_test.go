@@ -2604,7 +2604,7 @@ func Test_Model_Save(t *testing.T) {
 			user       User
 			count      int
 			result     sql.Result
-			createTime = gtime.Now().Format("Y-m-d")
+			createTime = gtime.New("2024-10-01 12:01:01").Format("Y-m-d")
 			err        error
 		)
 
