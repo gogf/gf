@@ -82,6 +82,11 @@ var (
 	deletedFieldNames = []string{"deleted_at", "delete_at"}
 )
 
+var (
+	// In-memory cache for soft field name and type.
+	softFieldNameAndTypeCache = gcache.New()
+)
+
 // SoftTime sets the SoftTimeOption to customize soft time feature for Model.
 func (m *Model) SoftTime(option SoftTimeOption) *Model {
 	model := m.getModel()
@@ -214,7 +219,7 @@ func (m *softTimeMaintainer) getSoftFieldNameAndType(
 			return
 		}
 	)
-	result, err := m.db.GetCache().GetOrSetFunc(ctx, cacheKey, cacheFunc, cacheDuration)
+	result, err := softFieldNameAndTypeCache.GetOrSetFunc(ctx, cacheKey, cacheFunc, cacheDuration)
 	if err != nil {
 		intlog.Error(ctx, err)
 	}
