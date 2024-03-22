@@ -217,7 +217,7 @@ func Test_DB_Insert(t *testing.T) {
 			Nickname   string      `gconv:"nickname"`
 			CreateTime *gtime.Time `json:"create_time"`
 		}
-		timeNow := gtime.Now()
+		timeNow := gtime.New("2024-10-01 12:01:01")
 		result, err = db.Insert(ctx, table, User{
 			Id:         3,
 			Passport:   "user_3",
