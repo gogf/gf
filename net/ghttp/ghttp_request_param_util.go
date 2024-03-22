@@ -28,13 +28,11 @@ import (
 // var t []T ==>checkValidRequestParams(&t) OK
 // var t *[]*T ==>checkValidRequestParams(&t) OK
 func checkValidRequestParams(ptr any) (reflect.Value, reflect.Kind, error) {
-
 	srcVal, ok := ptr.(reflect.Value)
 	if ok {
 		// used for strict routing
 		// srcTyp := srcVal.Type()
 		// XXXReq(ctx,&LoginReq{})
-		// elem, err := checkValidStruct(srcTyp, srcVal, 1)
 		return srcVal.Elem(), reflect.Struct, nil
 	} else {
 		// Routes registered by other rules
@@ -46,13 +44,12 @@ func checkValidRequestParams(ptr any) (reflect.Value, reflect.Kind, error) {
 				srcTyp,
 				srcTyp.Kind(),
 			)
-
 		}
 		srcValof := reflect.ValueOf(ptr)
 		// Determine whether it is a nil pointer
 		if srcValof.IsNil() {
-			return srcVal, 0, gerror.NewCodef(
-				gcode.CodeInvalidParameter, `Cannot pass in a null pointer`)
+			return srcVal, 0,
+				gerror.NewCodef(gcode.CodeInvalidParameter, `Cannot pass in a null pointer`)
 		}
 
 		elemTyp := srcTyp.Elem()
@@ -68,11 +65,9 @@ func checkValidRequestParams(ptr any) (reflect.Value, reflect.Kind, error) {
 		case reflect.Slice, reflect.Array:
 			elem, err := checkValidStructSlice(elemTyp, srcValof, derefCount)
 			return elem, elemTyp.Kind(), err
-
 		case reflect.Struct:
 			elem, err := checkValidStruct(elemTyp, srcValof, derefCount)
 			return elem, reflect.Struct, err
-
 		default:
 			return reflect.Value{}, 0, gerror.NewCodef(
 				gcode.CodeInvalidParameter,
@@ -82,7 +77,6 @@ func checkValidRequestParams(ptr any) (reflect.Value, reflect.Kind, error) {
 			)
 		}
 	}
-
 }
 
 func checkValidStructSlice(elemTyp reflect.Type, srcValof reflect.Value, derefCount int) (reflect.Value, error) {
@@ -92,7 +86,6 @@ func checkValidStructSlice(elemTyp reflect.Type, srcValof reflect.Value, derefCo
 	if elemTyp.Kind() == reflect.Ptr {
 		elemTyp = elemTyp.Elem()
 	}
-
 	if elemTyp.Kind() != reflect.Struct {
 		return srcValof, gerror.NewCodef(
 			gcode.CodeInvalidParameter,
@@ -101,7 +94,6 @@ func checkValidStructSlice(elemTyp reflect.Type, srcValof reflect.Value, derefCo
 			elemTyp.Kind(),
 		)
 	}
-	// type ok
 	return srcValof.Elem(), nil
 }
 
@@ -120,7 +112,6 @@ func checkValidStruct(elemTyp reflect.Type, srcValof reflect.Value, derefCount i
 			srcValof.Set(newTyp)
 		}
 		elemPtr = srcValof.Elem()
-
 	} else {
 		return srcValof, gerror.NewCodef(
 			gcode.CodeInvalidParameter,

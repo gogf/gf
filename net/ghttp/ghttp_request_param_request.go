@@ -222,7 +222,6 @@ func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer i
 		}
 		return nil
 	}
-
 	// Other styles of routing
 	if len(tagFields) > 0 {
 		var (
