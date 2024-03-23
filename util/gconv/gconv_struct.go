@@ -182,8 +182,7 @@ func doStruct(
 		// 2. It can be the specified tag attribute
 		// 3. The key of paramKeyToAttrMap can be used
 		tag string
-		// Used to identify whether the value has been set
-		set bool
+		val any
 	}
 	// Used to save some attributes related to subsequent operations
 	// key=field
@@ -239,14 +238,33 @@ func doStruct(
 		// Eg:
 		// orm:"id, priority"
 		// orm:"name, with:uid=id"
-		setFields[field.Name()] = setField{
-			tag: utils.RemoveSymbols(strings.Split(field.TagValue, ",")[0]),
+		paramsVal, ok := paramsMap[field.TagValue]
+		attr := setField{}
+		// If found in paramsMap, direct assignment does not require removing special symbols such as underscores.
+		// Can reduce the number of subsequent traversals of paramsMap
+		if ok {
+			attr.val = paramsVal
+			attr.tag = field.TagValue
+		} else {
+			// If not found, wait for the following, ignore case, and match underscores.
+			attr.tag = utils.RemoveSymbols(strings.Split(field.TagValue, ",")[0])
 		}
+		setFields[field.Name()] = attr
 	}
 
+	// First search according to custom rules. If a direct assignment is found, reduce the number of subsequent map searches.
 	for paramKey, field := range paramKeyToAttrMap {
-		setFields[field] = setField{
-			tag: paramKey,
+		// Prevent setting of non-existent fields
+		attr, ok := setFields[field]
+		if ok {
+			// If the corresponding value is found, assign it directly
+			// If not found, the underline will not be removed and the case will be ignored.
+			// There will be no matching in the follow-up
+			paramsVal, ok := paramsMap[paramKey]
+			if ok {
+				attr.val = paramsVal
+				setFields[field] = attr
+			}
 		}
 	}
 
@@ -254,16 +272,35 @@ func doStruct(
 	paramsToFieldMap := map[string]struct{}{}
 	// Exact match
 	for field, attr := range setFields {
-		val, ok := paramsMap[attr.tag]
-		if ok {
+		// Don't put the public code out for optimization here
+		// Because the field tag or user-defined rule has already matched paramsVal, this branch is taken first.
+		// else is matched based on the field name. If it is not written,
+		// it will be searched in paramsMap when all values are assigned to setFields at the beginning.
+		// Because if we do that, we need (n fields + n fields with tags + n user-defined rules) queries
+		// Most of the time, user fields will be tagged,
+		// which can save the number of queries for the first n fields. Only when there is no match, query in paramsMap.
+		if attr.val != nil {
 			if err := bindVarToStructAttr(
-				pointerElemReflectValue, field, val, paramKeyToAttrMap,
+				pointerElemReflectValue, field, attr.val, paramKeyToAttrMap,
 			); err != nil {
 				return err
 			}
 			// It is necessary to delete the set fields for quick traversal later.
 			paramsToFieldMap[attr.tag] = struct{}{}
 			delete(setFields, field)
+		} else {
+			// match field
+			paramVal, ok := paramsMap[field]
+			if ok {
+				if err := bindVarToStructAttr(
+					pointerElemReflectValue, field, paramVal, paramKeyToAttrMap,
+				); err != nil {
+					return err
+				}
+				// It is necessary to delete the set fields for quick traversal later.
+				paramsToFieldMap[field] = struct{}{}
+				delete(setFields, field)
+			}
 		}
 	}
 	// All fields have been assigned values
@@ -271,41 +308,35 @@ func doStruct(
 		return nil
 	}
 
-	// Ignore case, underscore, dash and other special symbols
+	count := 0
 	for paramKey, paramVal := range paramsMap {
 		_, ok := paramsToFieldMap[paramKey]
 		if ok {
 			continue
 		}
 		removeParamKeyUnderline := utils.RemoveSymbols(paramKey)
-		fieldName := ""
-		for field, attr := range setFields {
-			// If the field is found but the value has already been set, skip it
-			if attr.set {
-				continue
-			}
+		for fieldName, attr := range setFields {
 			// Ignore case comparison with tag
 			if strings.EqualFold(attr.tag, removeParamKeyUnderline) {
-				fieldName = field
-				attr.set = true
-				setFields[field] = attr
-				break
+				attr.val = paramVal
+			} else {
+				fieldName = utils.RemoveSymbols(fieldName)
+				if strings.EqualFold(fieldName, removeParamKeyUnderline) {
+					attr.val = paramVal
+				}
 			}
-			// Ignore case comparisons with fields
-			if strings.EqualFold(field, removeParamKeyUnderline) {
-				fieldName = field
-				attr.set = true
-				setFields[field] = attr
-				break
+
+			if attr.val != nil {
+				if err := bindVarToStructAttr(
+					pointerElemReflectValue, fieldName, attr.val, paramKeyToAttrMap,
+				); err != nil {
+					return err
+				}
+				count++
 			}
 		}
-		if fieldName == "" {
-			continue
-		}
-		if err := bindVarToStructAttr(
-			pointerElemReflectValue, fieldName, paramVal, paramKeyToAttrMap,
-		); err != nil {
-			return err
+		if count == len(setFields) {
+			return nil
 		}
 	}
 	return nil
