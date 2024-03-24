@@ -8,9 +8,10 @@ package gmetric
 
 // CallbackItem is the global callback item registered.
 type CallbackItem struct {
-	Callback       Callback           // Global callback.
-	Metrics        []ObservableMetric // Callback on certain metrics.
-	MeterPerformer MeterPerformer     // MeterPerformer is the MeterPerformer that the callback item is bound to.
+	Callback    Callback           // Global callback.
+	Metrics     []ObservableMetric // Callback on certain metrics.
+	MeterOption MeterOption        // MeterOption is the option that the meter holds.
+	Provider    Provider           // Provider is the Provider that the callback item is bound to.
 }
 
 var (
@@ -26,8 +27,9 @@ func (meter *localMeter) RegisterCallback(callback Callback, observableMetrics .
 		return nil
 	}
 	globalCallbackItems = append(globalCallbackItems, CallbackItem{
-		Callback: callback,
-		Metrics:  observableMetrics,
+		Callback:    callback,
+		Metrics:     observableMetrics,
+		MeterOption: meter.MeterOption,
 	})
 	return nil
 }

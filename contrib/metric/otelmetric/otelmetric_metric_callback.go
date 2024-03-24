@@ -35,7 +35,7 @@ func (l *localMeterPerformer) newMetricObserver(
 // It sets the value as the result if the observed Metrics is type of Gauge.
 func (l *localMetricObserver) Observe(value float64, option ...gmetric.Option) {
 	var (
-		constOption            = getConstOptionByMetricOption(l.MetricOption)
+		constOption            = genConstOptionForMetric(l.MeterOption, l.MetricOption)
 		dynamicOption          = getDynamicOptionByMetricOption(option...)
 		globalAttributesOption = getGlobalAttributesOption(gmetric.GetGlobalAttributesOption{
 			Instrument:        l.Instrument,
@@ -43,11 +43,11 @@ func (l *localMetricObserver) Observe(value float64, option ...gmetric.Option) {
 		})
 		observeOptions = make([]metric.ObserveOption, 0)
 	)
-	if constOption != nil {
-		observeOptions = append(observeOptions, constOption)
-	}
 	if globalAttributesOption != nil {
 		observeOptions = append(observeOptions, globalAttributesOption)
+	}
+	if constOption != nil {
+		observeOptions = append(observeOptions, constOption)
 	}
 	if dynamicOption != nil {
 		observeOptions = append(observeOptions, dynamicOption)

@@ -209,7 +209,7 @@ type ObservableMetric interface {
 type MetricInitializer interface {
 	// Init initializes the Metric in Provider creation.
 	// It sets the metric performer which really takes action.
-	Init(meterPerformer MeterPerformer) error
+	Init(provider Provider) error
 }
 
 // PerformerExporter exports internal Performer of Metric.

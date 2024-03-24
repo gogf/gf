@@ -50,7 +50,7 @@ func (l *localMeterPerformer) newCounterPerformer(
 		Float64Counter: counter,
 		MetricOption:   metricOption,
 		MeterOption:    l.MeterOption,
-		constOption:    getConstOptionByMetricOption(metricOption),
+		constOption:    genConstOptionForMetric(l.MeterOption, metricOption),
 	}, nil
 }
 

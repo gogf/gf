@@ -14,13 +14,15 @@ import (
 
 // localObserver implements interface gmetric.Observer.
 type localObserver struct {
-	observer metric.Observer
+	metric.Observer
+	gmetric.MeterOption
 }
 
 // newObserver creates and returns gmetric.Observer.
-func newObserver(observer metric.Observer) gmetric.Observer {
+func newObserver(observer metric.Observer, meterOption gmetric.MeterOption) gmetric.Observer {
 	return &localObserver{
-		observer: observer,
+		Observer:    observer,
+		MeterOption: meterOption,
 	}
 }
 
@@ -30,7 +32,7 @@ func newObserver(observer metric.Observer) gmetric.Observer {
 func (l *localObserver) Observe(om gmetric.ObservableMetric, value float64, option ...gmetric.Option) {
 	var (
 		m                      = om.(gmetric.Metric)
-		constOption            = getConstOptionByMetric(m)
+		constOption            = getConstOptionByMetric(l.MeterOption, m)
 		dynamicOption          = getDynamicOptionByMetricOption(option...)
 		globalAttributesOption = getGlobalAttributesOption(gmetric.GetGlobalAttributesOption{
 			Instrument:        m.Info().Instrument().Name(),
@@ -38,14 +40,14 @@ func (l *localObserver) Observe(om gmetric.ObservableMetric, value float64, opti
 		})
 		observeOptions = make([]metric.ObserveOption, 0)
 	)
-	if constOption != nil {
-		observeOptions = append(observeOptions, constOption)
-	}
 	if globalAttributesOption != nil {
 		observeOptions = append(observeOptions, globalAttributesOption)
+	}
+	if constOption != nil {
+		observeOptions = append(observeOptions, constOption)
 	}
 	if dynamicOption != nil {
 		observeOptions = append(observeOptions, dynamicOption)
 	}
-	l.observer.ObserveFloat64(metricToFloat64Observable(m), value, observeOptions...)
+	l.Observer.ObserveFloat64(metricToFloat64Observable(m), value, observeOptions...)
 }

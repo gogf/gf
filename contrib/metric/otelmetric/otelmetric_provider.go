@@ -115,14 +115,9 @@ func createViewsForBuiltInMetrics() []metric.View {
 // The initialization replaces the underlying metric performer using noop-performer with truly performer
 // that implements operations for types of metric.
 func (l *localProvider) initializeMetrics(metrics []gmetric.Metric) error {
-	var meterPerformer gmetric.MeterPerformer
 	for _, m := range metrics {
-		meterPerformer = l.MeterPerformer(gmetric.MeterOption{
-			Instrument:        m.Info().Instrument().Name(),
-			InstrumentVersion: m.Info().Instrument().Version(),
-		})
 		if initializer, ok := m.(gmetric.MetricInitializer); ok {
-			if err := initializer.Init(meterPerformer); err != nil {
+			if err := initializer.Init(l); err != nil {
 				return err
 			}
 		}
@@ -131,20 +126,16 @@ func (l *localProvider) initializeMetrics(metrics []gmetric.Metric) error {
 }
 
 func (l *localProvider) initializeCallback(callbackItems []gmetric.CallbackItem) error {
-	var meterPerformer gmetric.MeterPerformer
+	var err error
 	for _, callbackItem := range callbackItems {
-		if callbackItem.MeterPerformer != nil {
+		if callbackItem.Provider != nil {
 			continue
 		}
 		if len(callbackItem.Metrics) == 0 {
 			continue
 		}
-		meterPerformer = l.MeterPerformer(gmetric.MeterOption{
-			Instrument:        callbackItem.Metrics[0].(gmetric.Metric).Info().Instrument().Name(),
-			InstrumentVersion: callbackItem.Metrics[0].(gmetric.Metric).Info().Instrument().Version(),
-		})
-		callbackItem.MeterPerformer = meterPerformer
-		if err := meterPerformer.RegisterCallback(
+		callbackItem.Provider = l
+		if err = l.MeterPerformer(callbackItem.MeterOption).RegisterCallback(
 			callbackItem.Callback, callbackItem.Metrics...,
 		); err != nil {
 			return err

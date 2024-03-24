@@ -9,6 +9,7 @@ package gmetric
 // localUpDownCounter is the local implements for interface Counter.
 type localUpDownCounter struct {
 	Metric
+	MeterOption
 	MetricOption
 	UpDownCounterPerformer
 }
@@ -28,11 +29,12 @@ func (meter *localMeter) UpDownCounter(name string, option MetricOption) (UpDown
 	}
 	updownCounter := &localUpDownCounter{
 		Metric:                 m,
+		MeterOption:            meter.MeterOption,
 		MetricOption:           option,
 		UpDownCounterPerformer: newNoopUpDownCounterPerformer(),
 	}
 	if globalProvider != nil {
-		if err = updownCounter.Init(meter.Performer()); err != nil {
+		if err = updownCounter.Init(globalProvider); err != nil {
 			return nil, err
 		}
 	}
@@ -51,12 +53,12 @@ func (meter *localMeter) MustUpDownCounter(name string, option MetricOption) UpD
 }
 
 // Init initializes the Metric in Provider creation.
-func (l *localUpDownCounter) Init(performer MeterPerformer) (err error) {
+func (l *localUpDownCounter) Init(provider Provider) (err error) {
 	if _, ok := l.UpDownCounterPerformer.(noopUpDownCounterPerformer); !ok {
 		// already initialized.
 		return
 	}
-	l.UpDownCounterPerformer, err = performer.UpDownCounterPerformer(
+	l.UpDownCounterPerformer, err = provider.MeterPerformer(l.MeterOption).UpDownCounterPerformer(
 		l.Info().Name(),
 		l.MetricOption,
 	)

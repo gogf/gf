@@ -9,6 +9,7 @@ package gmetric
 // localObservableCounter is the local implements for interface Counter.
 type localObservableCounter struct {
 	Metric
+	MeterOption
 	MetricOption
 	ObservableCounterPerformer
 }
@@ -28,11 +29,12 @@ func (meter *localMeter) ObservableCounter(name string, option MetricOption) (Ob
 	}
 	observableCounter := &localObservableCounter{
 		Metric:                     m,
+		MeterOption:                meter.MeterOption,
 		MetricOption:               option,
 		ObservableCounterPerformer: newNoopObservableCounterPerformer(),
 	}
 	if globalProvider != nil {
-		if err = observableCounter.Init(meter.Performer()); err != nil {
+		if err = observableCounter.Init(globalProvider); err != nil {
 			return nil, err
 		}
 	}
@@ -51,12 +53,12 @@ func (meter *localMeter) MustObservableCounter(name string, option MetricOption)
 }
 
 // Init initializes the Metric in Provider creation.
-func (l *localObservableCounter) Init(performer MeterPerformer) (err error) {
+func (l *localObservableCounter) Init(provider Provider) (err error) {
 	if _, ok := l.ObservableCounterPerformer.(noopObservableCounterPerformer); !ok {
 		// already initialized.
 		return
 	}
-	l.ObservableCounterPerformer, err = performer.ObservableCounterPerformer(
+	l.ObservableCounterPerformer, err = provider.MeterPerformer(l.MeterOption).ObservableCounterPerformer(
 		l.Info().Name(),
 		l.MetricOption,
 	)

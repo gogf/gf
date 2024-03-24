@@ -9,6 +9,7 @@ package gmetric
 // localObservableUpDownCounter is the local implements for interface Counter.
 type localObservableUpDownCounter struct {
 	Metric
+	MeterOption
 	MetricOption
 	ObservableUpDownCounterPerformer
 }
@@ -28,11 +29,12 @@ func (meter *localMeter) ObservableUpDownCounter(name string, option MetricOptio
 	}
 	observableUpDownCounter := &localObservableUpDownCounter{
 		Metric:                           m,
+		MeterOption:                      meter.MeterOption,
 		MetricOption:                     option,
 		ObservableUpDownCounterPerformer: newNoopObservableUpDownCounterPerformer(),
 	}
 	if globalProvider != nil {
-		if err = observableUpDownCounter.Init(meter.Performer()); err != nil {
+		if err = observableUpDownCounter.Init(globalProvider); err != nil {
 			return nil, err
 		}
 	}
@@ -51,12 +53,12 @@ func (meter *localMeter) MustObservableUpDownCounter(name string, option MetricO
 }
 
 // Init initializes the Metric in Provider creation.
-func (l *localObservableUpDownCounter) Init(performer MeterPerformer) (err error) {
+func (l *localObservableUpDownCounter) Init(provider Provider) (err error) {
 	if _, ok := l.ObservableUpDownCounterPerformer.(noopObservableUpDownCounterPerformer); !ok {
 		// already initialized.
 		return
 	}
-	l.ObservableUpDownCounterPerformer, err = performer.ObservableUpDownCounterPerformer(
+	l.ObservableUpDownCounterPerformer, err = provider.MeterPerformer(l.MeterOption).ObservableUpDownCounterPerformer(
 		l.Info().Name(),
 		l.MetricOption,
 	)

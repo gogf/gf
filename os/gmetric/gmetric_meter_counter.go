@@ -9,6 +9,7 @@ package gmetric
 // localCounter is the local implements for interface Counter.
 type localCounter struct {
 	Metric
+	MeterOption
 	MetricOption
 	CounterPerformer
 }
@@ -28,11 +29,12 @@ func (meter *localMeter) Counter(name string, option MetricOption) (Counter, err
 	}
 	counter := &localCounter{
 		Metric:           m,
+		MeterOption:      meter.MeterOption,
 		MetricOption:     option,
 		CounterPerformer: newNoopCounterPerformer(),
 	}
 	if globalProvider != nil {
-		if err = counter.Init(meter.Performer()); err != nil {
+		if err = counter.Init(globalProvider); err != nil {
 			return nil, err
 		}
 	}
@@ -51,12 +53,12 @@ func (meter *localMeter) MustCounter(name string, option MetricOption) Counter {
 }
 
 // Init initializes the Metric in Provider creation.
-func (l *localCounter) Init(performer MeterPerformer) (err error) {
+func (l *localCounter) Init(provider Provider) (err error) {
 	if _, ok := l.CounterPerformer.(noopCounterPerformer); !ok {
 		// already initialized.
 		return
 	}
-	l.CounterPerformer, err = performer.CounterPerformer(
+	l.CounterPerformer, err = provider.MeterPerformer(l.MeterOption).CounterPerformer(
 		l.Info().Name(),
 		l.MetricOption,
 	)

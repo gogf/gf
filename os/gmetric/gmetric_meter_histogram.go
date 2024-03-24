@@ -9,6 +9,7 @@ package gmetric
 // localHistogram is the local implements for interface Histogram.
 type localHistogram struct {
 	Metric
+	MeterOption
 	MetricOption
 	HistogramPerformer
 }
@@ -28,11 +29,12 @@ func (meter *localMeter) Histogram(name string, option MetricOption) (Histogram,
 	}
 	histogram := &localHistogram{
 		Metric:             m,
+		MeterOption:        meter.MeterOption,
 		MetricOption:       option,
 		HistogramPerformer: newNoopHistogramPerformer(),
 	}
 	if globalProvider != nil {
-		if err = histogram.Init(meter.Performer()); err != nil {
+		if err = histogram.Init(globalProvider); err != nil {
 			return nil, err
 		}
 	}
@@ -51,12 +53,12 @@ func (meter *localMeter) MustHistogram(name string, option MetricOption) Histogr
 }
 
 // Init initializes the Metric in Provider creation.
-func (l *localHistogram) Init(performer MeterPerformer) (err error) {
+func (l *localHistogram) Init(provider Provider) (err error) {
 	if _, ok := l.HistogramPerformer.(noopHistogramPerformer); !ok {
 		// already initialized.
 		return
 	}
-	l.HistogramPerformer, err = performer.HistogramPerformer(
+	l.HistogramPerformer, err = provider.MeterPerformer(l.MeterOption).HistogramPerformer(
 		l.Info().Name(),
 		l.MetricOption,
 	)

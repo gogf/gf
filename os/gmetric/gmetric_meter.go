@@ -18,6 +18,10 @@ type MeterOption struct {
 	// InstrumentVersion is the instrumentation version to bind this Metric to a global MeterProvider.
 	// This is an optional configuration for a metric.
 	InstrumentVersion string
+
+	// Attributes holds the constant key-value pair description metadata for all metrics of Meter.
+	// This is an optional configuration for a meter.
+	Attributes Attributes
 }
 
 func newMeter(option MeterOption) Meter {
@@ -27,5 +31,8 @@ func newMeter(option MeterOption) Meter {
 }
 
 func (meter *localMeter) Performer() MeterPerformer {
+	if globalProvider == nil {
+		return nil
+	}
 	return globalProvider.MeterPerformer(meter.MeterOption)
 }

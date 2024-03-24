@@ -9,6 +9,7 @@ package gmetric
 // localObservableGauge is the local implements for interface Counter.
 type localObservableGauge struct {
 	Metric
+	MeterOption
 	MetricOption
 	ObservableGaugePerformer
 }
@@ -28,11 +29,12 @@ func (meter *localMeter) ObservableGauge(name string, option MetricOption) (Obse
 	}
 	observableGauge := &localObservableGauge{
 		Metric:                   m,
+		MeterOption:              meter.MeterOption,
 		MetricOption:             option,
 		ObservableGaugePerformer: newNoopObservableGaugePerformer(),
 	}
 	if globalProvider != nil {
-		if err = observableGauge.Init(meter.Performer()); err != nil {
+		if err = observableGauge.Init(globalProvider); err != nil {
 			return nil, err
 		}
 	}
@@ -51,12 +53,12 @@ func (meter *localMeter) MustObservableGauge(name string, option MetricOption) O
 }
 
 // Init initializes the Metric in Provider creation.
-func (l *localObservableGauge) Init(performer MeterPerformer) (err error) {
+func (l *localObservableGauge) Init(provider Provider) (err error) {
 	if _, ok := l.ObservableGaugePerformer.(noopObservableGaugePerformer); !ok {
 		// already initialized.
 		return
 	}
-	l.ObservableGaugePerformer, err = performer.ObservableGaugePerformer(
+	l.ObservableGaugePerformer, err = provider.MeterPerformer(l.MeterOption).ObservableGaugePerformer(
 		l.Info().Name(),
 		l.MetricOption,
 	)

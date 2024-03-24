@@ -73,21 +73,32 @@ func getDynamicOptionByMetricOption(option ...gmetric.Option) metric.Measurement
 	return dynamicOption
 }
 
-func getConstOptionByMetricOption(option gmetric.MetricOption) metric.MeasurementOption {
-	var constOption metric.MeasurementOption
-	if len(option.Attributes) > 0 {
-		constOption = metric.WithAttributes(attributesToKeyValues(option.Attributes)...)
-	}
-	return constOption
+func genConstOptionForMetric(
+	meterOption gmetric.MeterOption,
+	metricOption gmetric.MetricOption,
+) metric.MeasurementOption {
+	return genConstOptionForMetricByAttributes(meterOption.Attributes, metricOption.Attributes)
 }
 
-func getConstOptionByMetric(m gmetric.Metric) metric.MeasurementOption {
-	var constOption metric.MeasurementOption
-	if len(m.Info().Attributes()) > 0 {
-		constOption = metric.WithAttributes(
-			attributesToKeyValues(m.Info().Attributes())...,
-		)
+func getConstOptionByMetric(meterOption gmetric.MeterOption, m gmetric.Metric) metric.MeasurementOption {
+	return genConstOptionForMetricByAttributes(meterOption.Attributes, m.Info().Attributes())
+}
+
+func genConstOptionForMetricByAttributes(
+	meterAttrs gmetric.Attributes,
+	metricAttrs gmetric.Attributes,
+) metric.MeasurementOption {
+	var (
+		constOption metric.MeasurementOption
+		attributes  = make([]attribute.KeyValue, 0)
+	)
+	if len(meterAttrs) > 0 {
+		attributes = append(attributes, attributesToKeyValues(meterAttrs)...)
 	}
+	if len(metricAttrs) > 0 {
+		attributes = append(attributes, attributesToKeyValues(metricAttrs)...)
+	}
+	constOption = metric.WithAttributes(attributes...)
 	return constOption
 }
 

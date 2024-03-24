@@ -22,7 +22,7 @@ type localHistogramPerformer struct {
 	metric.Float64Histogram
 	gmetric.MeterOption
 	gmetric.MetricOption
-	attributesOption metric.MeasurementOption
+	constOption metric.MeasurementOption
 }
 
 // newHistogramPerformer creates and returns a HistogramPerformer that truly takes action to implement Histogram.
@@ -49,7 +49,7 @@ func (l *localMeterPerformer) newHistogramPerformer(
 		Float64Histogram: histogram,
 		MeterOption:      l.MeterOption,
 		MetricOption:     metricOption,
-		attributesOption: metric.WithAttributes(attributesToKeyValues(metricOption.Attributes)...),
+		constOption:      genConstOptionForMetric(l.MeterOption, metricOption),
 	}, nil
 }
 
@@ -65,7 +65,7 @@ func (l *localHistogramPerformer) Record(increment float64, option ...gmetric.Op
 func (l *localHistogramPerformer) generateRecordOptions(option ...gmetric.Option) []metric.RecordOption {
 	var (
 		dynamicOption          = getDynamicOptionByMetricOption(option...)
-		recordOptions          = []metric.RecordOption{l.attributesOption}
+		recordOptions          = make([]metric.RecordOption, 0)
 		globalAttributesOption = getGlobalAttributesOption(gmetric.GetGlobalAttributesOption{
 			Instrument:        l.MeterOption.Instrument,
 			InstrumentVersion: l.MeterOption.InstrumentVersion,
@@ -73,6 +73,9 @@ func (l *localHistogramPerformer) generateRecordOptions(option ...gmetric.Option
 	)
 	if globalAttributesOption != nil {
 		recordOptions = append(recordOptions, globalAttributesOption)
+	}
+	if l.constOption != nil {
+		recordOptions = append(recordOptions, l.constOption)
 	}
 	if dynamicOption != nil {
 		recordOptions = append(recordOptions, dynamicOption)
