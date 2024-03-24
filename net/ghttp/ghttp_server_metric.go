@@ -26,14 +26,14 @@ type localMetricManager struct {
 }
 
 const (
-	metricAttrKeyServerAddress          gmetric.AttributeKey = "server.address"
-	metricAttrKeyServerPort             gmetric.AttributeKey = "server.port"
-	metricAttrKeyHttpRoute              gmetric.AttributeKey = "http.route"
-	metricAttrKeyUrlSchema              gmetric.AttributeKey = "url.schema"
-	metricAttrKeyHttpRequestMethod      gmetric.AttributeKey = "http.request.method"
-	metricAttrKeyErrorCode              gmetric.AttributeKey = "error.code"
-	metricAttrKeyHttpResponseStatusCode gmetric.AttributeKey = "http.response.status_code"
-	metricAttrKeyNetworkProtocolVersion gmetric.AttributeKey = "network.protocol.version"
+	metricAttrKeyServerAddress          = "server.address"
+	metricAttrKeyServerPort             = "server.port"
+	metricAttrKeyHttpRoute              = "http.route"
+	metricAttrKeyUrlSchema              = "url.schema"
+	metricAttrKeyHttpRequestMethod      = "http.request.method"
+	metricAttrKeyErrorCode              = "error.code"
+	metricAttrKeyHttpResponseStatusCode = "http.response.status_code"
+	metricAttrKeyNetworkProtocolVersion = "network.protocol.version"
 )
 
 var (
