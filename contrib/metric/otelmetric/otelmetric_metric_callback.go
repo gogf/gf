@@ -14,14 +14,19 @@ import (
 
 // localMetricObserver implements interface gmetric.CallbackObserver.
 type localMetricObserver struct {
-	config          gmetric.MetricConfig
-	float64Observer metric.Float64Observer
+	gmetric.MeterOption
+	gmetric.MetricOption
+	metric.Float64Observer
 }
 
-func newMetricObserver(config gmetric.MetricConfig, float64Observer metric.Float64Observer) gmetric.MetricObserver {
+func (l *localMeterPerformer) newMetricObserver(
+	metricOption gmetric.MetricOption,
+	float64Observer metric.Float64Observer,
+) gmetric.MetricObserver {
 	return &localMetricObserver{
-		config:          config,
-		float64Observer: float64Observer,
+		MeterOption:     l.MeterOption,
+		MetricOption:    metricOption,
+		Float64Observer: float64Observer,
 	}
 }
 
@@ -30,11 +35,11 @@ func newMetricObserver(config gmetric.MetricConfig, float64Observer metric.Float
 // It sets the value as the result if the observed Metrics is type of Gauge.
 func (l *localMetricObserver) Observe(value float64, option ...gmetric.Option) {
 	var (
-		constOption            = getConstOptionByMetricConfig(l.config)
+		constOption            = getConstOptionByMetricOption(l.MetricOption)
 		dynamicOption          = getDynamicOptionByMetricOption(option...)
 		globalAttributesOption = getGlobalAttributesOption(gmetric.GetGlobalAttributesOption{
-			Instrument:        l.config.Instrument,
-			InstrumentVersion: l.config.InstrumentVersion,
+			Instrument:        l.Instrument,
+			InstrumentVersion: l.InstrumentVersion,
 		})
 		observeOptions = make([]metric.ObserveOption, 0)
 	)
@@ -47,5 +52,5 @@ func (l *localMetricObserver) Observe(value float64, option ...gmetric.Option) {
 	if dynamicOption != nil {
 		observeOptions = append(observeOptions, dynamicOption)
 	}
-	l.float64Observer.Observe(value, observeOptions...)
+	l.Float64Observer.Observe(value, observeOptions...)
 }

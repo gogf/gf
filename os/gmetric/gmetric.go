@@ -36,14 +36,7 @@ type Provider interface {
 	// which makes the following metrics creating on this Provider, especially the metrics created in runtime.
 	SetAsGlobal()
 
-	// RegisterCallback registers callback on certain metrics.
-	// A callback is bound to certain component and version, it is called when the associated metrics are read.
-	// Multiple callbacks on the same component and version will be called by their registered sequence.
-	RegisterCallback(callback Callback, canBeCallbackMetrics ...ObservableMetric) error
-
-	// Performer creates and returns a Performer.
-	// A Performer can produce types of Metric performer.
-	Performer() Performer
+	MeterPerformer(config MeterOption) MeterPerformer
 
 	// ForceFlush flushes all pending metrics.
 	//
@@ -57,31 +50,43 @@ type Provider interface {
 	Shutdown(ctx context.Context) error
 }
 
-// Performer manages all Metric performer creating.
-type Performer interface {
-	// Counter creates and returns a CounterPerformer that performs
-	// the operations for Counter metric.
-	Counter(config MetricConfig) (CounterPerformer, error)
+type MeterPerformer interface {
+	CounterPerformer(name string, option MetricOption) (CounterPerformer, error)
+	UpDownCounterPerformer(name string, option MetricOption) (UpDownCounterPerformer, error)
+	HistogramPerformer(name string, option MetricOption) (HistogramPerformer, error)
+	ObservableCounterPerformer(name string, option MetricOption) (ObservableCounterPerformer, error)
+	ObservableUpDownCounterPerformer(name string, option MetricOption) (ObservableUpDownCounterPerformer, error)
+	ObservableGaugePerformer(name string, option MetricOption) (ObservableGaugePerformer, error)
 
-	// UpDownCounter creates and returns a UpDownCounterPerformer that performs
-	// the operations for UpDownCounter metric.
-	UpDownCounter(config MetricConfig) (UpDownCounterPerformer, error)
+	// RegisterCallback registers callback on certain metrics.
+	// A callback is bound to certain component and version, it is called when the associated metrics are read.
+	// Multiple callbacks on the same component and version will be called by their registered sequence.
+	RegisterCallback(callback Callback, canBeCallbackMetrics ...ObservableMetric) error
+}
 
-	// Histogram creates and returns a HistogramPerformer that performs
-	// the operations for Histogram metric.
-	Histogram(config MetricConfig) (HistogramPerformer, error)
+// MetricOption holds the basic options for creating a metric.
+type MetricOption struct {
+	// Help provides information about this Histogram.
+	// This is an optional configuration for a metric.
+	Help string
 
-	// ObservableCounter creates and returns an ObservableMetric that performs
-	// the operations for ObservableCounter metric.
-	ObservableCounter(config MetricConfig) (ObservableMetric, error)
+	// Unit is the unit for metric value.
+	// This is an optional configuration for a metric.
+	Unit string
 
-	// ObservableUpDownCounter creates and returns an ObservableMetric that performs
-	// the operations for ObservableUpDownCounter metric.
-	ObservableUpDownCounter(config MetricConfig) (ObservableMetric, error)
+	// Attributes holds the constant key-value pair description metadata for this metric.
+	// This is an optional configuration for a metric.
+	Attributes Attributes
 
-	// ObservableGauge creates and returns an ObservableMetric that performs
-	// the operations for ObservableGauge metric.
-	ObservableGauge(config MetricConfig) (ObservableMetric, error)
+	// Buckets defines the buckets into which observations are counted.
+	// For Histogram metric only.
+	// A histogram metric uses default buckets if no explicit buckets configured.
+	Buckets []float64
+
+	// Callback function for metric, which is called when metric value changes.
+	// For observable metric only.
+	// If an observable metric has either Callback attribute nor global callback configured, it does nothing.
+	Callback MetricCallback
 }
 
 // Metric models a single sample value with its metadata being exported.
@@ -92,37 +97,19 @@ type Metric interface {
 
 // MetricInfo exports information of the Metric.
 type MetricInfo interface {
-	Key() string                  // Key returns the unique string key of the metric.
-	Name() string                 // Name returns the name of the metric.
-	Help() string                 // Help returns the help description of the metric.
-	Unit() string                 // Unit returns the unit name of the metric.
-	Type() MetricType             // Type returns the type of the metric.
-	Attributes() Attributes       // Attributes returns the constant attribute slice of the metric.
-	Instrument() MetricInstrument // Instrument returns the instrument info of the metric.
+	Key() string                // Key returns the unique string key of the metric.
+	Name() string               // Name returns the name of the metric.
+	Help() string               // Help returns the help description of the metric.
+	Unit() string               // Unit returns the unit name of the metric.
+	Type() MetricType           // Type returns the type of the metric.
+	Attributes() Attributes     // Attributes returns the constant attribute slice of the metric.
+	Instrument() InstrumentInfo // InstrumentInfo returns the instrument info of the metric.
 }
 
-// MetricInstrument exports the instrument information of a metric.
-type MetricInstrument interface {
+// InstrumentInfo exports the instrument information of a metric.
+type InstrumentInfo interface {
 	Name() string    // Name returns the instrument name of the metric.
 	Version() string // Version returns the instrument version of the metric.
-}
-
-// Attributes is a slice of Attribute.
-type Attributes []Attribute
-
-// Attribute is the key-value pair item for Metric.
-type Attribute interface {
-	Key() AttributeKey // The key for this attribute.
-	Value() any        // The value for this attribute.
-}
-
-// AttributeKey is the attribute key.
-type AttributeKey string
-
-// Option holds the option for perform a metric operation.
-type Option struct {
-	// Attributes holds the dynamic key-value pair metadata.
-	Attributes Attributes
 }
 
 // Counter is a Metric that represents a single numerical value that can ever
@@ -130,22 +117,6 @@ type Option struct {
 type Counter interface {
 	Metric
 	CounterPerformer
-}
-
-// UpDownCounter is a Metric that represents a single numerical value that can ever
-// goes up or down.
-type UpDownCounter interface {
-	Metric
-	UpDownCounterPerformer
-}
-
-// ObservableCounter is an instrument used to asynchronously
-// record float64 measurements once per collection cycle. Observations are only
-// made within a callback for this instrument. The value observed is assumed
-// the to be the cumulative sum of the count.
-type ObservableCounter interface {
-	Metric
-	ObservableMetric
 }
 
 // CounterPerformer performs operations for Counter metric.
@@ -156,6 +127,13 @@ type CounterPerformer interface {
 
 	// Add adds the given value to the counter. It panics if the value is < 0.
 	Add(ctx context.Context, increment float64, option ...Option)
+}
+
+// UpDownCounter is a Metric that represents a single numerical value that can ever
+// goes up or down.
+type UpDownCounter interface {
+	Metric
+	UpDownCounterPerformer
 }
 
 // UpDownCounterPerformer performs operations for UpDownCounter metric.
@@ -169,14 +147,6 @@ type UpDownCounterPerformer interface {
 
 	// Add adds the given value to the counter. It panics if the value is < 0.
 	Add(ctx context.Context, increment float64, option ...Option)
-}
-
-// ObservableGauge is an instrument used to asynchronously record
-// instantaneous float64 measurements once per collection cycle. Observations
-// are only made within a callback for this instrument.
-type ObservableGauge interface {
-	Metric
-	ObservableMetric
 }
 
 // Histogram counts individual observations from an event or sample stream in
@@ -198,6 +168,36 @@ type HistogramPerformer interface {
 	Record(increment float64, option ...Option)
 }
 
+// ObservableCounter is an instrument used to asynchronously
+// record float64 measurements once per collection cycle. Observations are only
+// made within a callback for this instrument. The value observed is assumed
+// the to be the cumulative sum of the count.
+type ObservableCounter interface {
+	Metric
+	ObservableCounterPerformer
+}
+
+// ObservableUpDownCounter is used to synchronously record float64 measurements during a computational
+// operation.
+type ObservableUpDownCounter interface {
+	Metric
+	ObservableUpDownCounterPerformer
+}
+
+// ObservableGauge is an instrument used to asynchronously record
+// instantaneous float64 measurements once per collection cycle. Observations
+// are only made within a callback for this instrument.
+type ObservableGauge interface {
+	Metric
+	ObservableGaugePerformer
+}
+
+type (
+	ObservableCounterPerformer       = ObservableMetric
+	ObservableUpDownCounterPerformer = ObservableMetric
+	ObservableGaugePerformer         = ObservableMetric
+)
+
 // ObservableMetric is an instrument used to asynchronously record
 // instantaneous float64 measurements once per collection cycle.
 type ObservableMetric interface {
@@ -209,7 +209,7 @@ type ObservableMetric interface {
 type MetricInitializer interface {
 	// Init initializes the Metric in Provider creation.
 	// It sets the metric performer which really takes action.
-	Init(provider Provider) error
+	Init(meterPerformer MeterPerformer) error
 }
 
 // PerformerExporter exports internal Performer of Metric.
@@ -247,20 +247,11 @@ type MetricObserver interface {
 var (
 	// metrics stores all created Metric by current package.
 	allMetrics = make([]Metric, 0)
-
-	// globalProvider is the provider for global usage.
-	globalProvider Provider
 )
 
 // IsEnabled returns whether the metrics feature is enabled.
 func IsEnabled() bool {
 	return globalProvider != nil
-}
-
-// SetGlobalProvider registers `provider` as the global Provider,
-// which means the following metrics creating will be base on the global provider.
-func SetGlobalProvider(provider Provider) {
-	globalProvider = provider
 }
 
 // GetAllMetrics returns all Metric that created by current package.

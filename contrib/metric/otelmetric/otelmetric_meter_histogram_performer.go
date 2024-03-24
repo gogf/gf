@@ -11,6 +11,7 @@ import (
 
 	"go.opentelemetry.io/otel/metric"
 
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gmetric"
@@ -19,30 +20,36 @@ import (
 // localHistogramPerformer is an implementer for interface HistogramPerformer.
 type localHistogramPerformer struct {
 	metric.Float64Histogram
-	config           gmetric.MetricConfig
+	gmetric.MeterOption
+	gmetric.MetricOption
 	attributesOption metric.MeasurementOption
 }
 
 // newHistogramPerformer creates and returns a HistogramPerformer that truly takes action to implement Histogram.
-func newHistogramPerformer(meter metric.Meter, config gmetric.MetricConfig) (gmetric.HistogramPerformer, error) {
+func (l *localMeterPerformer) newHistogramPerformer(
+	meter metric.Meter,
+	metricName string,
+	metricOption gmetric.MetricOption,
+) (gmetric.HistogramPerformer, error) {
 	histogram, err := meter.Float64Histogram(
-		config.Name,
-		metric.WithDescription(config.Help),
-		metric.WithUnit(config.Unit),
-		metric.WithExplicitBucketBoundaries(config.Buckets...),
+		metricName,
+		metric.WithDescription(metricOption.Help),
+		metric.WithUnit(metricOption.Unit),
+		metric.WithExplicitBucketBoundaries(metricOption.Buckets...),
 	)
 	if err != nil {
 		return nil, gerror.WrapCodef(
 			gcode.CodeInternalError,
 			err,
-			`create Float64Histogram failed with config: %+v`,
-			config,
+			`create Float64Histogram "%s" failed with option: %s`,
+			metricName, gjson.MustEncodeString(metricOption),
 		)
 	}
 	return &localHistogramPerformer{
 		Float64Histogram: histogram,
-		config:           config,
-		attributesOption: metric.WithAttributes(attributesToKeyValues(config.Attributes)...),
+		MeterOption:      l.MeterOption,
+		MetricOption:     metricOption,
+		attributesOption: metric.WithAttributes(attributesToKeyValues(metricOption.Attributes)...),
 	}, nil
 }
 
@@ -60,8 +67,8 @@ func (l *localHistogramPerformer) generateRecordOptions(option ...gmetric.Option
 		dynamicOption          = getDynamicOptionByMetricOption(option...)
 		recordOptions          = []metric.RecordOption{l.attributesOption}
 		globalAttributesOption = getGlobalAttributesOption(gmetric.GetGlobalAttributesOption{
-			Instrument:        l.config.Instrument,
-			InstrumentVersion: l.config.InstrumentVersion,
+			Instrument:        l.MeterOption.Instrument,
+			InstrumentVersion: l.MeterOption.InstrumentVersion,
 		})
 	)
 	if globalAttributesOption != nil {

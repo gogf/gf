@@ -11,6 +11,7 @@ import (
 
 	"go.opentelemetry.io/otel/metric"
 
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gmetric"
@@ -24,29 +25,30 @@ type localObservableUpDownCounterPerformer struct {
 
 // newObservableUpDownCounterPerformer creates and returns a UpDownCounterPerformer that truly takes action to
 // implement ObservableUpDownCounter.
-func newObservableUpDownCounterPerformer(meter metric.Meter, config gmetric.MetricConfig) (gmetric.ObservableMetric, error) {
+func (l *localMeterPerformer) newObservableUpDownCounterPerformer(
+	meter metric.Meter,
+	metricName string,
+	metricOption gmetric.MetricOption,
+) (gmetric.ObservableUpDownCounterPerformer, error) {
 	var (
 		options = []metric.Float64ObservableUpDownCounterOption{
-			metric.WithDescription(config.Help),
-			metric.WithUnit(config.Unit),
+			metric.WithDescription(metricOption.Help),
+			metric.WithUnit(metricOption.Unit),
 		}
 	)
-	if !hasGlobalCallbackMetricSet.Contains(config.MetricKey()) {
+	if metricOption.Callback != nil {
 		callback := metric.WithFloat64Callback(func(ctx context.Context, observer metric.Float64Observer) error {
-			if config.Callback == nil {
-				return nil
-			}
-			return config.Callback(ctx, newMetricObserver(config, observer))
+			return metricOption.Callback(ctx, l.newMetricObserver(metricOption, observer))
 		})
 		options = append(options, callback)
 	}
-	counter, err := meter.Float64ObservableUpDownCounter(config.Name, options...)
+	counter, err := meter.Float64ObservableUpDownCounter(metricName, options...)
 	if err != nil {
 		return nil, gerror.WrapCodef(
 			gcode.CodeInternalError,
 			err,
-			`create Float64ObservableUpDownCounter failed with config: %+v`,
-			config,
+			`create Float64ObservableUpDownCounter "%s" failed with option: %s`,
+			metricName, gjson.MustEncodeString(metricOption),
 		)
 	}
 	return &localObservableUpDownCounterPerformer{

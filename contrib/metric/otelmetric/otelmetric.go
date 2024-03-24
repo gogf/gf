@@ -10,18 +10,12 @@ package otelmetric
 import (
 	"go.opentelemetry.io/otel/sdk/metric"
 
-	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/os/gmetric"
-)
-
-var (
-	// hasGlobalCallbackMetricSet marks the metric set that has global callback definition.
-	hasGlobalCallbackMetricSet = gset.NewStrSet()
 )
 
 // NewProvider creates and returns a metrics provider.
 func NewProvider(option ...metric.Option) (gmetric.Provider, error) {
-	provider, err := newLocalProvider(option...)
+	provider, err := newProvider(option...)
 	if err != nil {
 		return nil, err
 	}

@@ -24,7 +24,11 @@ import (
 func Test_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			ctx     = gctx.New()
+			ctx   = gctx.New()
+			meter = gmetric.NewMeter(gmetric.MeterConfig{
+				Instrument:        "",
+				InstrumentVersion: "",
+			})
 			counter = gmetric.MustNewCounter(gmetric.MetricConfig{
 				Name: "goframe.metric.demo.counter",
 				Help: "This is a simple demo for Counter usage",

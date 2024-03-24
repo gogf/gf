@@ -15,6 +15,24 @@ import (
 	"github.com/gogf/gf/v2/os/gfile"
 )
 
+// Attributes is a slice of Attribute.
+type Attributes []Attribute
+
+// Attribute is the key-value pair item for Metric.
+type Attribute interface {
+	Key() AttributeKey // The key for this attribute.
+	Value() any        // The value for this attribute.
+}
+
+// AttributeKey is the attribute key.
+type AttributeKey string
+
+// Option holds the option for perform a metric operation.
+type Option struct {
+	// Attributes holds the dynamic key-value pair metadata.
+	Attributes Attributes
+}
+
 // localAttribute implements interface Attribute.
 type localAttribute struct {
 	key   AttributeKey

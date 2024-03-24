@@ -11,6 +11,7 @@ import (
 
 	"go.opentelemetry.io/otel/metric"
 
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gmetric"
@@ -19,31 +20,37 @@ import (
 // localUpDownCounterPerformer is an implementer for interface gmetric.UpDownCounterPerformer.
 type localUpDownCounterPerformer struct {
 	metric.Float64UpDownCounter
-	config      gmetric.MetricConfig
+	gmetric.MeterOption
+	gmetric.MetricOption
 	constOption metric.MeasurementOption
 }
 
 // newUpDownCounterPerformer creates and returns a CounterPerformer that truly takes action to implement Counter.
-func newUpDownCounterPerformer(meter metric.Meter, config gmetric.MetricConfig) (gmetric.UpDownCounterPerformer, error) {
+func (l *localMeterPerformer) newUpDownCounterPerformer(
+	meter metric.Meter,
+	metricName string,
+	metricOption gmetric.MetricOption,
+) (gmetric.UpDownCounterPerformer, error) {
 	var (
 		options = []metric.Float64UpDownCounterOption{
-			metric.WithDescription(config.Help),
-			metric.WithUnit(config.Unit),
+			metric.WithDescription(metricOption.Help),
+			metric.WithUnit(metricOption.Unit),
 		}
 	)
-	counter, err := meter.Float64UpDownCounter(config.Name, options...)
+	counter, err := meter.Float64UpDownCounter(metricName, options...)
 	if err != nil {
 		return nil, gerror.WrapCodef(
 			gcode.CodeInternalError,
 			err,
-			`create Float64Counter failed with config: %+v`,
-			config,
+			`create Float64Counter "%s" failed with config: %s`,
+			metricName, gjson.MustEncodeString(metricOption),
 		)
 	}
 	return &localUpDownCounterPerformer{
 		Float64UpDownCounter: counter,
-		config:               config,
-		constOption:          getConstOptionByMetricConfig(config),
+		MeterOption:          l.MeterOption,
+		MetricOption:         metricOption,
+		constOption:          getConstOptionByMetricOption(metricOption),
 	}, nil
 }
 
@@ -59,5 +66,5 @@ func (l *localUpDownCounterPerformer) Dec(ctx context.Context, option ...gmetric
 
 // Add adds the given value to the counter.
 func (l *localUpDownCounterPerformer) Add(ctx context.Context, increment float64, option ...gmetric.Option) {
-	l.Float64UpDownCounter.Add(ctx, increment, generateAddOptions(l.config, l.constOption, option...)...)
+	l.Float64UpDownCounter.Add(ctx, increment, generateAddOptions(l.MeterOption, l.constOption, option...)...)
 }

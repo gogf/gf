@@ -15,31 +15,33 @@ import (
 
 // localMetric implements interface Metric.
 type localMetric struct {
-	metricInfo MetricInfo
+	MetricInfo
 }
 
 // newMetric creates and returns an object that implements interface Metric.
-func newMetric(metricType MetricType, config MetricConfig) (Metric, error) {
-	if config.Name == "" {
+func (meter *localMeter) newMetric(
+	metricType MetricType, metricName string, metricOption MetricOption,
+) (Metric, error) {
+	if metricName == "" {
 		return nil, gerror.NewCodef(
 			gcode.CodeInvalidParameter,
-			`error creating %s metric while given name is empty, config: %s`,
-			metricType, gjson.MustEncodeString(config),
+			`error creating %s metric while given name is empty, option: %s`,
+			metricType, gjson.MustEncodeString(metricOption),
 		)
 	}
-	if !gregex.IsMatchString(MetricNamePattern, config.Name) {
+	if !gregex.IsMatchString(MetricNamePattern, metricName) {
 		return nil, gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			`invalid metric name "%s", should match regular expression pattern "%s"`,
-			config.Name, MetricNamePattern,
+			metricName, MetricNamePattern,
 		)
 	}
 	return &localMetric{
-		metricInfo: newMetricInfo(metricType, config),
+		MetricInfo: meter.newMetricInfo(metricType, metricName, metricOption),
 	}, nil
 }
 
 // Info returns the basic information of a Metric.
 func (l *localMetric) Info() MetricInfo {
-	return l.metricInfo
+	return l.MetricInfo
 }

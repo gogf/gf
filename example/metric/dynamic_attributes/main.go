@@ -29,38 +29,33 @@ var (
 	counter = gmetric.MustNewCounter(gmetric.MetricConfig{
 		Name: "goframe.metric.demo.counter",
 		Help: "This is a simple demo for Counter usage",
-		Unit: "%",
+		Unit: "bytes",
 		Attributes: gmetric.Attributes{
 			gmetric.NewAttribute("const_label_1", 1),
 		},
 		Instrument:        instrument,
 		InstrumentVersion: instrumentVersion,
 	})
-
-	_ = gmetric.MustNewObservableCounter(gmetric.MetricConfig{
+	observableCounter = gmetric.MustNewObservableCounter(gmetric.MetricConfig{
 		Name: "goframe.metric.demo.observable_counter",
 		Help: "This is a simple demo for ObservableCounter usage",
 		Unit: "%",
 		Attributes: gmetric.Attributes{
-			gmetric.NewAttribute("const_label_3", 3),
+			gmetric.NewAttribute("const_label_4", 4),
 		},
-
 		Instrument:        instrument,
 		InstrumentVersion: instrumentVersion,
-		Callback: func(ctx context.Context, obs gmetric.MetricObserver) error {
-			obs.Observe(10)
-			obs.Observe(10, gmetric.Option{
-				Attributes: gmetric.Attributes{
-					gmetric.NewAttribute("dynamic_label_1", 1),
-				},
-			})
-			return nil
-		},
 	})
 )
 
 func main() {
 	var ctx = gctx.New()
+
+	// Callback for observable metrics.
+	gmetric.MustRegisterCallback(func(ctx context.Context, obs gmetric.Observer) error {
+		obs.Observe(observableCounter, 10)
+		return nil
+	}, observableCounter)
 
 	// Prometheus exporter to export metrics as Prometheus format.
 	exporter, err := prometheus.New(
@@ -76,7 +71,7 @@ func main() {
 	provider.SetAsGlobal()
 	defer provider.Shutdown(ctx)
 
-	// Add value for counter.
+	// Counter.
 	counter.Inc(ctx)
 	counter.Add(ctx, 10)
 

@@ -7,18 +7,13 @@
 package otelmetric
 
 import (
-	"context"
-	"fmt"
-	"reflect"
 	"time"
 
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel"
-	otelmetric "go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/sdk/instrumentation"
 	"go.opentelemetry.io/otel/sdk/metric"
 
-	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gmetric"
@@ -29,9 +24,9 @@ type localProvider struct {
 	*metric.MeterProvider
 }
 
-// newLocalProvider creates and returns an object that implements gmetric.Provider.
+// newProvider creates and returns an object that implements gmetric.Provider.
 // DO NOT set this as global provider internally.
-func newLocalProvider(options ...metric.Option) (gmetric.Provider, error) {
+func newProvider(options ...metric.Option) (gmetric.Provider, error) {
 	// TODO global logger set for otel.
 	// otel.SetLogger()
 
@@ -76,75 +71,10 @@ func (l *localProvider) SetAsGlobal() {
 	otel.SetMeterProvider(l)
 }
 
-// Performer creates and returns a Performer.
+// MeterPerformer creates and returns a MeterPerformer.
 // A Performer can produce types of Metric performer.
-func (l *localProvider) Performer() gmetric.Performer {
-	return newPerformer(l.MeterProvider)
-}
-
-// RegisterCallback registers callback on certain metrics.
-// A callback is bound to certain component and version, it is called when the associated metrics are read.
-// Multiple callbacks on the same component and version will be called by their registered sequence.
-func (l *localProvider) RegisterCallback(
-	callback gmetric.Callback, observableMetrics ...gmetric.ObservableMetric,
-) error {
-	var metrics = make([]gmetric.Metric, 0)
-	for _, v := range observableMetrics {
-		m, ok := v.(gmetric.Metric)
-		if !ok {
-			return gerror.NewCodef(
-				gcode.CodeInvalidParameter,
-				`invalid metric parameter "%s" for RegisterCallback, which does not implement interface Metric`,
-				reflect.TypeOf(v).String(),
-			)
-		}
-		metrics = append(metrics, m)
-	}
-	// group the metric by instrument and instrument version.
-	var (
-		instSet  = gset.NewStrSet()
-		meterMap = map[otelmetric.Meter][]otelmetric.Observable{}
-	)
-	for _, m := range metrics {
-		hasGlobalCallbackMetricSet.Add(m.Info().Key())
-
-		var meter = l.Meter(
-			m.Info().Instrument().Name(),
-			otelmetric.WithInstrumentationVersion(m.Info().Instrument().Version()),
-		)
-		instSet.Add(fmt.Sprintf(
-			`%s@%s`,
-			m.Info().Instrument().Name(),
-			m.Info().Instrument().Version(),
-		))
-		if _, ok := meterMap[meter]; !ok {
-			meterMap[meter] = make([]otelmetric.Observable, 0)
-		}
-		meterMap[meter] = append(meterMap[meter], metricToFloat64Observable(m))
-	}
-	if len(meterMap) > 1 {
-		return gerror.NewCodef(
-			gcode.CodeInvalidParameter,
-			`multiple instrument or instrument version metrics used in the same callback: %s`,
-			instSet.Join(","),
-		)
-	}
-	// do callback registering.
-	for meter, observables := range meterMap {
-		_, err := meter.RegisterCallback(
-			func(ctx context.Context, observer otelmetric.Observer) error {
-				return callback(ctx, newObserver(observer))
-			},
-			observables...,
-		)
-		if err != nil {
-			return gerror.WrapCode(
-				gcode.CodeInternalError, err,
-				`RegisterCallback failed`,
-			)
-		}
-	}
-	return nil
+func (l *localProvider) MeterPerformer(option gmetric.MeterOption) gmetric.MeterPerformer {
+	return newMeterPerformer(l.MeterProvider, option)
 }
 
 // createViewsForBuiltInMetrics creates and returns views for builtin metrics.
@@ -185,9 +115,14 @@ func createViewsForBuiltInMetrics() []metric.View {
 // The initialization replaces the underlying metric performer using noop-performer with truly performer
 // that implements operations for types of metric.
 func (l *localProvider) initializeMetrics(metrics []gmetric.Metric) error {
+	var meterPerformer gmetric.MeterPerformer
 	for _, m := range metrics {
+		meterPerformer = l.MeterPerformer(gmetric.MeterOption{
+			Instrument:        m.Info().Instrument().Name(),
+			InstrumentVersion: m.Info().Instrument().Version(),
+		})
 		if initializer, ok := m.(gmetric.MetricInitializer); ok {
-			if err := initializer.Init(l); err != nil {
+			if err := initializer.Init(meterPerformer); err != nil {
 				return err
 			}
 		}
@@ -196,12 +131,22 @@ func (l *localProvider) initializeMetrics(metrics []gmetric.Metric) error {
 }
 
 func (l *localProvider) initializeCallback(callbackItems []gmetric.CallbackItem) error {
+	var meterPerformer gmetric.MeterPerformer
 	for _, callbackItem := range callbackItems {
-		if callbackItem.Provider != nil {
+		if callbackItem.MeterPerformer != nil {
 			continue
 		}
-		callbackItem.Provider = l
-		if err := l.RegisterCallback(callbackItem.Callback, callbackItem.Metrics...); err != nil {
+		if len(callbackItem.Metrics) == 0 {
+			continue
+		}
+		meterPerformer = l.MeterPerformer(gmetric.MeterOption{
+			Instrument:        callbackItem.Metrics[0].(gmetric.Metric).Info().Instrument().Name(),
+			InstrumentVersion: callbackItem.Metrics[0].(gmetric.Metric).Info().Instrument().Version(),
+		})
+		callbackItem.MeterPerformer = meterPerformer
+		if err := meterPerformer.RegisterCallback(
+			callbackItem.Callback, callbackItem.Metrics...,
+		); err != nil {
 			return err
 		}
 	}

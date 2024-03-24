@@ -7,25 +7,25 @@
 package gmetric
 
 // localMetricInstrument implements interface MetricInstrument.
-type localMetricInstrument struct {
+type localInstrumentInfo struct {
 	name    string
 	version string
 }
 
-// newMetricInstrument creates and returns a MetricInstrument.
-func newMetricInstrument(name, version string) MetricInstrument {
-	return &localMetricInstrument{
-		name:    name,
-		version: version,
+// newInstrumentInfo creates and returns a MetricInstrument.
+func (meter *localMeter) newInstrumentInfo() InstrumentInfo {
+	return &localInstrumentInfo{
+		name:    meter.Instrument,
+		version: meter.InstrumentVersion,
 	}
 }
 
 // Name returns the instrument name of the metric.
-func (l *localMetricInstrument) Name() string {
+func (l *localInstrumentInfo) Name() string {
 	return l.name
 }
 
 // Version returns the instrument version of the metric.
-func (l *localMetricInstrument) Version() string {
+func (l *localInstrumentInfo) Version() string {
 	return l.version
 }

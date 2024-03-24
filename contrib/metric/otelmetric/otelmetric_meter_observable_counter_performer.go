@@ -11,6 +11,7 @@ import (
 
 	"go.opentelemetry.io/otel/metric"
 
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gmetric"
@@ -23,29 +24,30 @@ type localObservableCounterPerformer struct {
 }
 
 // newCounterPerformer creates and returns a CounterPerformer that truly takes action to implement Counter.
-func newObservableCounterPerformer(meter metric.Meter, config gmetric.MetricConfig) (gmetric.ObservableMetric, error) {
+func (l *localMeterPerformer) newObservableCounterPerformer(
+	meter metric.Meter,
+	metricName string,
+	metricOption gmetric.MetricOption,
+) (gmetric.ObservableCounterPerformer, error) {
 	var (
 		options = []metric.Float64ObservableCounterOption{
-			metric.WithDescription(config.Help),
-			metric.WithUnit(config.Unit),
+			metric.WithDescription(metricOption.Help),
+			metric.WithUnit(metricOption.Unit),
 		}
 	)
-	if !hasGlobalCallbackMetricSet.Contains(config.MetricKey()) {
+	if metricOption.Callback != nil {
 		callback := metric.WithFloat64Callback(func(ctx context.Context, observer metric.Float64Observer) error {
-			if config.Callback == nil {
-				return nil
-			}
-			return config.Callback(ctx, newMetricObserver(config, observer))
+			return metricOption.Callback(ctx, l.newMetricObserver(metricOption, observer))
 		})
 		options = append(options, callback)
 	}
-	counter, err := meter.Float64ObservableCounter(config.Name, options...)
+	counter, err := meter.Float64ObservableCounter(metricName, options...)
 	if err != nil {
 		return nil, gerror.WrapCodef(
 			gcode.CodeInternalError,
 			err,
-			`create Float64ObservableCounter failed with config: %+v`,
-			config,
+			`create Float64ObservableCounter "%s" failed with option: %s`,
+			metricName, gjson.MustEncodeString(metricOption),
 		)
 	}
 	return &localObservableCounterPerformer{

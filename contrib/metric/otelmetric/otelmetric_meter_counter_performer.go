@@ -11,6 +11,7 @@ import (
 
 	"go.opentelemetry.io/otel/metric"
 
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gmetric"
@@ -19,31 +20,37 @@ import (
 // localCounterPerformer is an implementer for interface gmetric.CounterPerformer.
 type localCounterPerformer struct {
 	metric.Float64Counter
-	config      gmetric.MetricConfig
+	gmetric.MeterOption
+	gmetric.MetricOption
 	constOption metric.MeasurementOption
 }
 
 // newCounterPerformer creates and returns a CounterPerformer that truly takes action to implement Counter.
-func newCounterPerformer(meter metric.Meter, config gmetric.MetricConfig) (gmetric.CounterPerformer, error) {
+func (l *localMeterPerformer) newCounterPerformer(
+	meter metric.Meter,
+	metricName string,
+	metricOption gmetric.MetricOption,
+) (gmetric.CounterPerformer, error) {
 	var (
 		options = []metric.Float64CounterOption{
-			metric.WithDescription(config.Help),
-			metric.WithUnit(config.Unit),
+			metric.WithDescription(metricOption.Help),
+			metric.WithUnit(metricOption.Unit),
 		}
 	)
-	counter, err := meter.Float64Counter(config.Name, options...)
+	counter, err := meter.Float64Counter(metricName, options...)
 	if err != nil {
 		return nil, gerror.WrapCodef(
 			gcode.CodeInternalError,
 			err,
-			`create Float64Counter failed with config: %+v`,
-			config,
+			`create Float64Counter "%s" failed with option: %s`,
+			metricName, gjson.MustEncodeString(metricOption),
 		)
 	}
 	return &localCounterPerformer{
 		Float64Counter: counter,
-		config:         config,
-		constOption:    getConstOptionByMetricConfig(config),
+		MetricOption:   metricOption,
+		MeterOption:    l.MeterOption,
+		constOption:    getConstOptionByMetricOption(metricOption),
 	}, nil
 }
 
@@ -54,5 +61,5 @@ func (l *localCounterPerformer) Inc(ctx context.Context, option ...gmetric.Optio
 
 // Add adds the given value to the counter. It panics if the value is < 0.
 func (l *localCounterPerformer) Add(ctx context.Context, increment float64, option ...gmetric.Option) {
-	l.Float64Counter.Add(ctx, increment, generateAddOptions(l.config, l.constOption, option...)...)
+	l.Float64Counter.Add(ctx, increment, generateAddOptions(l.MeterOption, l.constOption, option...)...)
 }

@@ -72,7 +72,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Metrics.
-	s.handleMetricsBeforeRequest(request)
+	//s.handleMetricsBeforeRequest(request)
 
 	// HOOK - BeforeServe
 	s.callHookHandler(HookBeforeServe, request)
@@ -216,7 +216,7 @@ func (s *Server) handleAfterRequestDone(request *Request) {
 	}
 
 	// Metrics.
-	s.handleMetricsAfterRequestDone(request)
+	//s.handleMetricsAfterRequestDone(request)
 }
 
 // searchStaticFile searches the file with given URI.

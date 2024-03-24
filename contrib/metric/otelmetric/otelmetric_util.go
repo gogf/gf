@@ -17,13 +17,13 @@ import (
 )
 
 func generateAddOptions(
-	config gmetric.MetricConfig, constOption metric.MeasurementOption, option ...gmetric.Option,
+	meterOption gmetric.MeterOption, constOption metric.MeasurementOption, option ...gmetric.Option,
 ) []metric.AddOption {
 	var (
 		addOptions             = make([]metric.AddOption, 0)
 		globalAttributesOption = getGlobalAttributesOption(gmetric.GetGlobalAttributesOption{
-			Instrument:        config.Instrument,
-			InstrumentVersion: config.InstrumentVersion,
+			Instrument:        meterOption.Instrument,
+			InstrumentVersion: meterOption.InstrumentVersion,
 		})
 	)
 	if constOption != nil {
@@ -73,10 +73,10 @@ func getDynamicOptionByMetricOption(option ...gmetric.Option) metric.Measurement
 	return dynamicOption
 }
 
-func getConstOptionByMetricConfig(config gmetric.MetricConfig) metric.MeasurementOption {
+func getConstOptionByMetricOption(option gmetric.MetricOption) metric.MeasurementOption {
 	var constOption metric.MeasurementOption
-	if len(config.Attributes) > 0 {
-		constOption = metric.WithAttributes(attributesToKeyValues(config.Attributes)...)
+	if len(option.Attributes) > 0 {
+		constOption = metric.WithAttributes(attributesToKeyValues(option.Attributes)...)
 	}
 	return constOption
 }

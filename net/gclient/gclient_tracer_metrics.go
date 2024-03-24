@@ -122,14 +122,14 @@ func (ct *clientTracerMetrics) ConnectStart(network, addr string) {
 // If net.Dialer.DualStack ("Happy Eyeballs") support is
 // enabled, this may be called multiple times.
 func (ct *clientTracerMetrics) ConnectDone(network, addr string, err error) {
-	var (
-		duration       = float64(gtime.Now().Sub(ct.ConnectStartTime).Milliseconds())
-		durationOption = metricManager.GetMetricOptionForConnectionDuration(ct.Request)
-	)
-	metricManager.HttpClientConnectionDuration.Record(
-		duration,
-		durationOption,
-	)
+	//var (
+	//	duration       = float64(gtime.Now().Sub(ct.ConnectStartTime).Milliseconds())
+	//	durationOption = metricManager.GetMetricOptionForConnectionDuration(ct.Request)
+	//)
+	//metricManager.HttpClientConnectionDuration.Record(
+	//	duration,
+	//	durationOption,
+	//)
 	ct.ClientTrace.ConnectDone(network, addr, err)
 }
 

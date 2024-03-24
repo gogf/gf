@@ -8,9 +8,9 @@ package gmetric
 
 // CallbackItem is the global callback item registered.
 type CallbackItem struct {
-	Callback Callback           // Global callback.
-	Metrics  []ObservableMetric // Callback on certain metrics.
-	Provider Provider           // Provider is the provider that the callback item is bound to.
+	Callback       Callback           // Global callback.
+	Metrics        []ObservableMetric // Callback on certain metrics.
+	MeterPerformer MeterPerformer     // MeterPerformer is the MeterPerformer that the callback item is bound to.
 }
 
 var (
@@ -21,10 +21,7 @@ var (
 // RegisterCallback registers callback on certain metrics.
 // A callback is bound to certain component and version, it is called when the associated metrics are read.
 // Multiple callbacks on the same component and version will be called by their registered sequence.
-func RegisterCallback(callback Callback, observableMetrics ...ObservableMetric) error {
-	if globalProvider != nil {
-		return globalProvider.RegisterCallback(callback, observableMetrics...)
-	}
+func (meter *localMeter) RegisterCallback(callback Callback, observableMetrics ...ObservableMetric) error {
 	if len(observableMetrics) == 0 {
 		return nil
 	}
@@ -36,8 +33,8 @@ func RegisterCallback(callback Callback, observableMetrics ...ObservableMetric) 
 }
 
 // MustRegisterCallback performs as RegisterCallback, but it panics if any error occurs.
-func MustRegisterCallback(callback Callback, observableMetrics ...ObservableMetric) {
-	err := RegisterCallback(callback, observableMetrics...)
+func (meter *localMeter) MustRegisterCallback(callback Callback, observableMetrics ...ObservableMetric) {
+	err := meter.RegisterCallback(callback, observableMetrics...)
 	if err != nil {
 		panic(err)
 	}

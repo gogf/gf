@@ -9,7 +9,7 @@ package gmetric
 // localHistogram is the local implements for interface Histogram.
 type localHistogram struct {
 	Metric
-	MetricConfig
+	MetricOption
 	HistogramPerformer
 }
 
@@ -20,32 +20,30 @@ var (
 	_ PerformerExporter = (*localHistogram)(nil)
 )
 
-// NewHistogram creates and returns a new Histogram.
-func NewHistogram(config MetricConfig) (Histogram, error) {
-	baseMetric, err := newMetric(MetricTypeHistogram, config)
+// Histogram creates and returns a new Histogram.
+func (meter *localMeter) Histogram(name string, option MetricOption) (Histogram, error) {
+	m, err := meter.newMetric(MetricTypeHistogram, name, option)
 	if err != nil {
 		return nil, err
 	}
-	m := &localHistogram{
-		Metric:             baseMetric,
-		MetricConfig:       config,
+	histogram := &localHistogram{
+		Metric:             m,
+		MetricOption:       option,
 		HistogramPerformer: newNoopHistogramPerformer(),
 	}
 	if globalProvider != nil {
-		// Note that, if Histogram is created after Provider is creation,
-		// it cannot customize its Buckets.
-		if err = m.Init(globalProvider); err != nil {
+		if err = histogram.Init(meter.Performer()); err != nil {
 			return nil, err
 		}
 	}
-	allMetrics = append(allMetrics, m)
-	return m, nil
+	allMetrics = append(allMetrics, histogram)
+	return histogram, nil
 }
 
-// MustNewHistogram creates and returns a new Histogram.
+// MustHistogram creates and returns a new Histogram.
 // It panics if any error occurs.
-func MustNewHistogram(config MetricConfig) Histogram {
-	m, err := NewHistogram(config)
+func (meter *localMeter) MustHistogram(name string, option MetricOption) Histogram {
+	m, err := meter.Histogram(name, option)
 	if err != nil {
 		panic(err)
 	}
@@ -53,18 +51,21 @@ func MustNewHistogram(config MetricConfig) Histogram {
 }
 
 // Init initializes the Metric in Provider creation.
-func (l *localHistogram) Init(provider Provider) (err error) {
+func (l *localHistogram) Init(performer MeterPerformer) (err error) {
 	if _, ok := l.HistogramPerformer.(noopHistogramPerformer); !ok {
 		// already initialized.
 		return
 	}
-	l.HistogramPerformer, err = provider.Performer().Histogram(l.MetricConfig)
+	l.HistogramPerformer, err = performer.HistogramPerformer(
+		l.Info().Name(),
+		l.MetricOption,
+	)
 	return err
 }
 
 // Buckets returns the bucket slice of the Histogram.
 func (l *localHistogram) Buckets() []float64 {
-	return l.MetricConfig.Buckets
+	return l.MetricOption.Buckets
 }
 
 // Performer implements interface PerformerExporter, which exports internal Performer of Metric.

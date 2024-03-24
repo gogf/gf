@@ -9,7 +9,7 @@ package gmetric
 // localCounter is the local implements for interface Counter.
 type localCounter struct {
 	Metric
-	MetricConfig
+	MetricOption
 	CounterPerformer
 }
 
@@ -20,30 +20,30 @@ var (
 	_ PerformerExporter = (*localCounter)(nil)
 )
 
-// NewCounter creates and returns a new Counter.
-func NewCounter(config MetricConfig) (Counter, error) {
-	baseMetric, err := newMetric(MetricTypeCounter, config)
+// Counter creates and returns a new Counter.
+func (meter *localMeter) Counter(name string, option MetricOption) (Counter, error) {
+	m, err := meter.newMetric(MetricTypeCounter, name, option)
 	if err != nil {
 		return nil, err
 	}
-	m := &localCounter{
-		Metric:           baseMetric,
-		MetricConfig:     config,
+	counter := &localCounter{
+		Metric:           m,
+		MetricOption:     option,
 		CounterPerformer: newNoopCounterPerformer(),
 	}
 	if globalProvider != nil {
-		if err = m.Init(globalProvider); err != nil {
+		if err = counter.Init(meter.Performer()); err != nil {
 			return nil, err
 		}
 	}
-	allMetrics = append(allMetrics, m)
-	return m, nil
+	allMetrics = append(allMetrics, counter)
+	return counter, nil
 }
 
-// MustNewCounter creates and returns a new Counter.
+// MustCounter creates and returns a new Counter.
 // It panics if any error occurs.
-func MustNewCounter(config MetricConfig) Counter {
-	m, err := NewCounter(config)
+func (meter *localMeter) MustCounter(name string, option MetricOption) Counter {
+	m, err := meter.Counter(name, option)
 	if err != nil {
 		panic(err)
 	}
@@ -51,12 +51,15 @@ func MustNewCounter(config MetricConfig) Counter {
 }
 
 // Init initializes the Metric in Provider creation.
-func (l *localCounter) Init(provider Provider) (err error) {
+func (l *localCounter) Init(performer MeterPerformer) (err error) {
 	if _, ok := l.CounterPerformer.(noopCounterPerformer); !ok {
 		// already initialized.
 		return
 	}
-	l.CounterPerformer, err = provider.Performer().Counter(l.MetricConfig)
+	l.CounterPerformer, err = performer.CounterPerformer(
+		l.Info().Name(),
+		l.MetricOption,
+	)
 	return
 }
 
