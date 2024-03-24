@@ -20,43 +20,36 @@ import (
 	"github.com/gogf/gf/v2/os/gmetric"
 )
 
-const (
-	instrument        = "github.com/gogf/gf/example/metric/basic"
-	instrumentVersion = "v1.0"
-)
-
 var (
-	counter = gmetric.MustNewCounter(gmetric.MetricConfig{
-		Name: "goframe.metric.demo.counter",
-		Help: "This is a simple demo for Counter usage",
-		Unit: "%",
-		Attributes: gmetric.Attributes{
-			gmetric.NewAttribute("const_label_1", 1),
-		},
-		Instrument:        instrument,
-		InstrumentVersion: instrumentVersion,
+	meter = gmetric.GetGlobalProvider().Meter(gmetric.MeterOption{
+		Instrument:        "github.com/gogf/gf/example/metric/basic",
+		InstrumentVersion: "v1.0",
 	})
-
-	_ = gmetric.MustNewObservableCounter(gmetric.MetricConfig{
-		Name: "goframe.metric.demo.observable_counter",
-		Help: "This is a simple demo for ObservableCounter usage",
-		Unit: "%",
-		Attributes: gmetric.Attributes{
-			gmetric.NewAttribute("const_label_3", 3),
+	counter = meter.MustCounter(
+		"goframe.metric.demo.counter",
+		gmetric.MetricOption{
+			Help: "This is a simple demo for Counter usage",
+			Unit: "%",
+			Attributes: gmetric.Attributes{
+				gmetric.NewAttribute("const_label_1", 1),
+			},
 		},
+	)
 
-		Instrument:        instrument,
-		InstrumentVersion: instrumentVersion,
-		Callback: func(ctx context.Context, obs gmetric.MetricObserver) error {
-			obs.Observe(10)
-			obs.Observe(10, gmetric.Option{
-				Attributes: gmetric.Attributes{
-					gmetric.NewAttribute("dynamic_label_1", 1),
-				},
-			})
-			return nil
+	_ = meter.MustObservableCounter(
+		"goframe.metric.demo.observable_counter",
+		gmetric.MetricOption{
+			Help: "This is a simple demo for ObservableCounter usage",
+			Unit: "%",
+			Attributes: gmetric.Attributes{
+				gmetric.NewAttribute("const_label_3", 3),
+			},
+			Callback: func(ctx context.Context, obs gmetric.MetricObserver) error {
+				obs.Observe(10)
+				return nil
+			},
 		},
-	})
+	)
 )
 
 func main() {

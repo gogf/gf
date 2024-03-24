@@ -20,40 +20,43 @@ import (
 	"github.com/gogf/gf/v2/os/gmetric"
 )
 
-const (
-	instrument        = "github.com/gogf/gf/example/metric/basic"
-	instrumentVersion = "v1.0"
-)
-
 var (
-	counter = gmetric.MustNewCounter(gmetric.MetricConfig{
-		Name: "goframe.metric.demo.counter",
-		Help: "This is a simple demo for Counter usage",
-		Unit: "bytes",
-		Attributes: gmetric.Attributes{
-			gmetric.NewAttribute("const_label_1", 1),
-		},
-		Instrument:        instrument,
-		InstrumentVersion: instrumentVersion,
+	meter = gmetric.GetGlobalProvider().Meter(gmetric.MeterOption{
+		Instrument:        "github.com/gogf/gf/example/metric/basic",
+		InstrumentVersion: "v1.0",
 	})
-	observableCounter = gmetric.MustNewObservableCounter(gmetric.MetricConfig{
-		Name: "goframe.metric.demo.observable_counter",
-		Help: "This is a simple demo for ObservableCounter usage",
-		Unit: "%",
-		Attributes: gmetric.Attributes{
-			gmetric.NewAttribute("const_label_4", 4),
+	counter = meter.MustCounter(
+		"goframe.metric.demo.counter",
+		gmetric.MetricOption{
+			Help: "This is a simple demo for Counter usage",
+			Unit: "bytes",
+			Attributes: gmetric.Attributes{
+				gmetric.NewAttribute("const_label_1", 1),
+			},
 		},
-		Instrument:        instrument,
-		InstrumentVersion: instrumentVersion,
-	})
+	)
+	observableCounter = meter.MustObservableCounter(
+		"goframe.metric.demo.observable_counter",
+		gmetric.MetricOption{
+			Help: "This is a simple demo for ObservableCounter usage",
+			Unit: "%",
+			Attributes: gmetric.Attributes{
+				gmetric.NewAttribute("const_label_4", 4),
+			},
+		},
+	)
 )
 
 func main() {
 	var ctx = gctx.New()
 
 	// Callback for observable metrics.
-	gmetric.MustRegisterCallback(func(ctx context.Context, obs gmetric.Observer) error {
-		obs.Observe(observableCounter, 10)
+	meter.MustRegisterCallback(func(ctx context.Context, obs gmetric.Observer) error {
+		obs.Observe(observableCounter, 10, gmetric.Option{
+			Attributes: gmetric.Attributes{
+				gmetric.NewAttribute("dynamic_label_1", 1),
+			},
+		})
 		return nil
 	}, observableCounter)
 
@@ -73,7 +76,11 @@ func main() {
 
 	// Counter.
 	counter.Inc(ctx)
-	counter.Add(ctx, 10)
+	counter.Add(ctx, 10, gmetric.Option{
+		Attributes: gmetric.Attributes{
+			gmetric.NewAttribute("dynamic_label_2", 2),
+		},
+	})
 
 	// HTTP Server for metrics exporting.
 	s := g.Server()

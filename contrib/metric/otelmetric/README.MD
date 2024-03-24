@@ -39,7 +39,7 @@ const (
 )
 
 var (
-	counter = gmetric.MustNewCounter(gmetric.MetricConfig{
+	counter = gmetric.MustNewCounter(gmetric.MetricOption{
 		Name: "goframe.metric.demo.counter",
 		Help: "This is a simple demo for Counter usage",
 		Unit: "bytes",
@@ -49,7 +49,7 @@ var (
 		Instrument:        instrument,
 		InstrumentVersion: instrumentVersion,
 	})
-	upDownCounter = gmetric.MustNewUpDownCounter(gmetric.MetricConfig{
+	upDownCounter = gmetric.MustNewUpDownCounter(gmetric.MetricOption{
 		Name: "goframe.metric.demo.updown_counter",
 		Help: "This is a simple demo for UpDownCounter usage",
 		Unit: "%",
@@ -59,7 +59,7 @@ var (
 		Instrument:        instrument,
 		InstrumentVersion: instrumentVersion,
 	})
-	histogram = gmetric.MustNewHistogram(gmetric.MetricConfig{
+	histogram = gmetric.MustNewHistogram(gmetric.MetricOption{
 		Name: "goframe.metric.demo.histogram",
 		Help: "This is a simple demo for histogram usage",
 		Unit: "ms",
@@ -70,7 +70,7 @@ var (
 		InstrumentVersion: instrumentVersion,
 		Buckets:           []float64{0, 10, 20, 50, 100, 500, 1000, 2000, 5000, 10000},
 	})
-	observableCounter = gmetric.MustNewObservableCounter(gmetric.MetricConfig{
+	observableCounter = gmetric.MustNewObservableCounter(gmetric.MetricOption{
 		Name: "goframe.metric.demo.observable_counter",
 		Help: "This is a simple demo for ObservableCounter usage",
 		Unit: "%",
@@ -80,7 +80,7 @@ var (
 		Instrument:        instrument,
 		InstrumentVersion: instrumentVersion,
 	})
-	observableUpDownCounter = gmetric.MustNewObservableUpDownCounter(gmetric.MetricConfig{
+	observableUpDownCounter = gmetric.MustNewObservableUpDownCounter(gmetric.MetricOption{
 		Name: "goframe.metric.demo.observable_updown_counter",
 		Help: "This is a simple demo for ObservableUpDownCounter usage",
 		Unit: "%",
@@ -90,7 +90,7 @@ var (
 		Instrument:        instrument,
 		InstrumentVersion: instrumentVersion,
 	})
-	observableGauge = gmetric.MustNewObservableGauge(gmetric.MetricConfig{
+	observableGauge = gmetric.MustNewObservableGauge(gmetric.MetricOption{
 		Name: "goframe.metric.demo.observable_gauge",
 		Help: "This is a simple demo for ObservableGauge usage",
 		Unit: "%",

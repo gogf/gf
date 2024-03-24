@@ -24,80 +24,87 @@ import (
 func Test_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			ctx   = gctx.New()
-			meter = gmetric.NewMeter(gmetric.MeterConfig{
-				Instrument:        "",
-				InstrumentVersion: "",
-			})
-			counter = gmetric.MustNewCounter(gmetric.MetricConfig{
-				Name: "goframe.metric.demo.counter",
-				Help: "This is a simple demo for Counter usage",
-				Unit: "%",
-				Attributes: gmetric.Attributes{
-					gmetric.NewAttribute("const_label_1", 1),
-				},
+			ctx      = gctx.New()
+			meterV11 = gmetric.GetGlobalProvider().Meter(gmetric.MeterOption{
 				Instrument:        "github.com/gogf/gf/example/metric/basic",
 				InstrumentVersion: "v1.1",
 			})
-
-			upDownCounter = gmetric.MustNewUpDownCounter(gmetric.MetricConfig{
-				Name: "goframe.metric.demo.updown_counter",
-				Help: "This is a simple demo for UpDownCounter usage",
-				Unit: "%",
-				Attributes: gmetric.Attributes{
-					gmetric.NewAttribute("const_label_2", 2),
-				},
+			meterV12 = gmetric.GetGlobalProvider().Meter(gmetric.MeterOption{
 				Instrument:        "github.com/gogf/gf/example/metric/basic",
 				InstrumentVersion: "v1.2",
 			})
-
-			histogram = gmetric.MustNewHistogram(gmetric.MetricConfig{
-				Name: "goframe.metric.demo.histogram",
-				Help: "This is a simple demo for histogram usage",
-				Unit: "ms",
-				Attributes: gmetric.Attributes{
-					gmetric.NewAttribute("const_label_3", 3),
-				},
+			meterV13 = gmetric.GetGlobalProvider().Meter(gmetric.MeterOption{
 				Instrument:        "github.com/gogf/gf/example/metric/basic",
 				InstrumentVersion: "v1.3",
-				Buckets:           []float64{0, 10, 20, 50, 100, 500, 1000, 2000, 5000, 10000},
 			})
-
-			observableCounter = gmetric.MustNewObservableCounter(gmetric.MetricConfig{
-				Name: "goframe.metric.demo.observable_counter",
-				Help: "This is a simple demo for ObservableCounter usage",
-				Unit: "%",
-				Attributes: gmetric.Attributes{
-					gmetric.NewAttribute("const_label_4", 4),
-				},
+			meterV14 = gmetric.GetGlobalProvider().Meter(gmetric.MeterOption{
 				Instrument:        "github.com/gogf/gf/example/metric/basic",
 				InstrumentVersion: "v1.4",
 			})
-
-			observableUpDownCounter = gmetric.MustNewObservableUpDownCounter(gmetric.MetricConfig{
-				Name: "goframe.metric.demo.observable_updown_counter",
-				Help: "This is a simple demo for ObservableUpDownCounter usage",
-				Unit: "%",
-				Attributes: gmetric.Attributes{
-					gmetric.NewAttribute("const_label_5", 5),
+			counter = meterV11.MustCounter(
+				"goframe.metric.demo.counter",
+				gmetric.MetricOption{
+					Help: "This is a simple demo for Counter usage",
+					Unit: "%",
+					Attributes: gmetric.Attributes{
+						gmetric.NewAttribute("const_label_1", 1),
+					},
 				},
-				Instrument:        "github.com/gogf/gf/example/metric/basic",
-				InstrumentVersion: "v1.4",
-			})
-
-			observableGauge = gmetric.MustNewObservableGauge(gmetric.MetricConfig{
-				Name: "goframe.metric.demo.observable_gauge",
-				Help: "This is a simple demo for ObservableGauge usage",
-				Unit: "%",
-				Attributes: gmetric.Attributes{
-					gmetric.NewAttribute("const_label_6", 6),
+			)
+			upDownCounter = meterV12.MustUpDownCounter(
+				"goframe.metric.demo.updown_counter",
+				gmetric.MetricOption{
+					Help: "This is a simple demo for UpDownCounter usage",
+					Unit: "%",
+					Attributes: gmetric.Attributes{
+						gmetric.NewAttribute("const_label_2", 2),
+					},
 				},
-				Instrument:        "github.com/gogf/gf/example/metric/basic",
-				InstrumentVersion: "v1.4",
-			})
+			)
+			histogram = meterV13.MustHistogram(
+				"goframe.metric.demo.histogram",
+				gmetric.MetricOption{
+					Help: "This is a simple demo for histogram usage",
+					Unit: "ms",
+					Attributes: gmetric.Attributes{
+						gmetric.NewAttribute("const_label_3", 3),
+					},
+					Buckets: []float64{0, 10, 20, 50, 100, 500, 1000, 2000, 5000, 10000},
+				},
+			)
+			observableCounter = meterV14.MustObservableCounter(
+				"goframe.metric.demo.observable_counter",
+				gmetric.MetricOption{
+					Help: "This is a simple demo for ObservableCounter usage",
+					Unit: "%",
+					Attributes: gmetric.Attributes{
+						gmetric.NewAttribute("const_label_4", 4),
+					},
+				},
+			)
+			observableUpDownCounter = meterV14.MustObservableUpDownCounter(
+				"goframe.metric.demo.observable_updown_counter",
+				gmetric.MetricOption{
+					Help: "This is a simple demo for ObservableUpDownCounter usage",
+					Unit: "%",
+					Attributes: gmetric.Attributes{
+						gmetric.NewAttribute("const_label_5", 5),
+					},
+				},
+			)
+			observableGauge = meterV14.MustObservableGauge(
+				"goframe.metric.demo.observable_gauge",
+				gmetric.MetricOption{
+					Help: "This is a simple demo for ObservableGauge usage",
+					Unit: "%",
+					Attributes: gmetric.Attributes{
+						gmetric.NewAttribute("const_label_6", 6),
+					},
+				},
+			)
 		)
 
-		gmetric.MustRegisterCallback(func(ctx context.Context, obs gmetric.Observer) error {
+		meterV14.MustRegisterCallback(func(ctx context.Context, obs gmetric.Observer) error {
 			obs.Observe(observableCounter, 10, gmetric.Option{
 				Attributes: gmetric.Attributes{gmetric.NewAttribute("dynamic_label_4", "4")},
 			})
@@ -147,6 +154,7 @@ func Test_Basic(t *testing.T) {
 		t.AssertNil(err)
 
 		metricsJsonContent := gjson.MustEncodeString(rm)
+
 		t.Assert(len(rm.ScopeMetrics), 5)
 		t.Assert(gstr.Count(metricsJsonContent, `goframe.metric.demo.counter`), 1)
 		t.Assert(gstr.Count(metricsJsonContent, `goframe.metric.demo.updown_counter`), 1)
@@ -189,54 +197,66 @@ func Test_GlobalAttributes(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			ctx     = gctx.New()
-			counter = gmetric.MustNewCounter(gmetric.MetricConfig{
-				Name: "goframe.metric.demo.counter",
-				Help: "This is a simple demo for Counter usage",
-				Unit: "%",
-				Attributes: gmetric.Attributes{
-					gmetric.NewAttribute("const_label_1", 1),
-				},
+			ctx      = gctx.New()
+			meterV11 = gmetric.GetGlobalProvider().Meter(gmetric.MeterOption{
 				Instrument:        "github.com/gogf/gf/example/metric/basic",
 				InstrumentVersion: "v1.1",
 			})
-
-			histogram = gmetric.MustNewHistogram(gmetric.MetricConfig{
-				Name: "goframe.metric.demo.histogram",
-				Help: "This is a simple demo for histogram usage",
-				Unit: "ms",
-				Attributes: gmetric.Attributes{
-					gmetric.NewAttribute("const_label_2", 2),
-				},
+			meterV12 = gmetric.GetGlobalProvider().Meter(gmetric.MeterOption{
 				Instrument:        "github.com/gogf/gf/example/metric/basic",
 				InstrumentVersion: "v1.2",
-				Buckets:           []float64{0, 10, 20, 50, 100, 500, 1000, 2000, 5000, 10000},
 			})
-
-			observableCounter = gmetric.MustNewObservableCounter(gmetric.MetricConfig{
-				Name: "goframe.metric.demo.observable_counter",
-				Help: "This is a simple demo for ObservableCounter usage",
-				Unit: "%",
-				Attributes: gmetric.Attributes{
-					gmetric.NewAttribute("const_label_3", 3),
-				},
+			meterV13 = gmetric.GetGlobalProvider().Meter(gmetric.MeterOption{
 				Instrument:        "github.com/gogf/gf/example/metric/basic",
 				InstrumentVersion: "v1.3",
 			})
-
-			observableGauge = gmetric.MustNewObservableGauge(gmetric.MetricConfig{
-				Name: "goframe.metric.demo.observable_gauge",
-				Help: "This is a simple demo for ObservableGauge usage",
-				Unit: "%",
-				Attributes: gmetric.Attributes{
-					gmetric.NewAttribute("const_label_4", 4),
+			counter = meterV11.MustCounter(
+				"goframe.metric.demo.counter",
+				gmetric.MetricOption{
+					Help: "This is a simple demo for Counter usage",
+					Unit: "%",
+					Attributes: gmetric.Attributes{
+						gmetric.NewAttribute("const_label_1", 1),
+					},
 				},
-				Instrument:        "github.com/gogf/gf/example/metric/basic",
-				InstrumentVersion: "v1.3",
-			})
+			)
+
+			histogram = meterV12.MustHistogram(
+				"goframe.metric.demo.histogram",
+				gmetric.MetricOption{
+					Help: "This is a simple demo for histogram usage",
+					Unit: "ms",
+					Attributes: gmetric.Attributes{
+						gmetric.NewAttribute("const_label_2", 2),
+					},
+					Buckets: []float64{0, 10, 20, 50, 100, 500, 1000, 2000, 5000, 10000},
+				},
+			)
+
+			observableCounter = meterV13.MustObservableCounter(
+				"goframe.metric.demo.observable_counter",
+				gmetric.MetricOption{
+					Help: "This is a simple demo for ObservableCounter usage",
+					Unit: "%",
+					Attributes: gmetric.Attributes{
+						gmetric.NewAttribute("const_label_3", 3),
+					},
+				},
+			)
+
+			observableGauge = meterV13.MustObservableGauge(
+				"goframe.metric.demo.observable_gauge",
+				gmetric.MetricOption{
+					Help: "This is a simple demo for ObservableGauge usage",
+					Unit: "%",
+					Attributes: gmetric.Attributes{
+						gmetric.NewAttribute("const_label_4", 4),
+					},
+				},
+			)
 		)
 
-		gmetric.MustRegisterCallback(func(ctx context.Context, obs gmetric.Observer) error {
+		meterV13.MustRegisterCallback(func(ctx context.Context, obs gmetric.Observer) error {
 			obs.Observe(observableCounter, 10, gmetric.Option{
 				Attributes: gmetric.Attributes{gmetric.NewAttribute("dynamic_label_3", "3")},
 			})
