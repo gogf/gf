@@ -6,7 +6,7 @@
 
 package gmetric
 
-// localObservableUpDownCounter is the local implements for interface Counter.
+// localObservableUpDownCounter is the local implements for interface ObservableUpDownCounter.
 type localObservableUpDownCounter struct {
 	Metric
 	MeterOption

@@ -7,17 +7,17 @@
 package gmetric
 
 // AttributeMap contains the attribute key and value as map for easy filtering.
-type AttributeMap map[AttributeKey]any
+type AttributeMap map[string]any
 
 // Sets adds given attribute map to current map.
-func (m AttributeMap) Sets(attrMap map[AttributeKey]any) {
+func (m AttributeMap) Sets(attrMap map[string]any) {
 	for k, v := range attrMap {
 		m[k] = v
 	}
 }
 
 // Pick picks and returns attributes by given attribute keys.
-func (m AttributeMap) Pick(keys ...AttributeKey) Attributes {
+func (m AttributeMap) Pick(keys ...string) Attributes {
 	var attrs = make(Attributes, 0)
 	for _, key := range keys {
 		value, ok := m[key]
@@ -30,9 +30,9 @@ func (m AttributeMap) Pick(keys ...AttributeKey) Attributes {
 }
 
 // PickEx picks and returns attributes of which the given attribute keys does not in given `keys`.
-func (m AttributeMap) PickEx(keys ...AttributeKey) Attributes {
+func (m AttributeMap) PickEx(keys ...string) Attributes {
 	var (
-		exKeyMap = make(map[AttributeKey]struct{})
+		exKeyMap = make(map[string]struct{})
 		attrs    = make(Attributes, 0)
 	)
 	for _, key := range keys {

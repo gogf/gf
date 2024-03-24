@@ -19,9 +19,9 @@ import (
 
 // localHistogramPerformer is an implementer for interface HistogramPerformer.
 type localHistogramPerformer struct {
-	metric.Float64Histogram
 	gmetric.MeterOption
 	gmetric.MetricOption
+	metric.Float64Histogram
 	constOption metric.MeasurementOption
 }
 
@@ -46,9 +46,9 @@ func (l *localMeterPerformer) newHistogramPerformer(
 		)
 	}
 	return &localHistogramPerformer{
-		Float64Histogram: histogram,
 		MeterOption:      l.MeterOption,
 		MetricOption:     metricOption,
+		Float64Histogram: histogram,
 		constOption:      genConstOptionForMetric(l.MeterOption, metricOption),
 	}, nil
 }

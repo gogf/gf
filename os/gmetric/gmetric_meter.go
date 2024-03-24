@@ -6,10 +6,12 @@
 
 package gmetric
 
+// localMeter for Meter implements.
 type localMeter struct {
 	MeterOption
 }
 
+// MeterOption holds the creation option for a Meter.
 type MeterOption struct {
 	// Instrument is the instrumentation name to bind this Metric to a global MeterProvider.
 	// This is an optional configuration for a metric.
@@ -24,12 +26,14 @@ type MeterOption struct {
 	Attributes Attributes
 }
 
+// newMeter creates and returns a Meter implementer.
 func newMeter(option MeterOption) Meter {
 	return &localMeter{
 		MeterOption: option,
 	}
 }
 
+// Performer creates and returns the Performer of the Meter.
 func (meter *localMeter) Performer() MeterPerformer {
 	if globalProvider == nil {
 		return nil

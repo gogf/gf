@@ -76,33 +76,3 @@ func (l *localMetricInfo) Key() string {
 	}
 	return l.Name()
 }
-
-// Key returns the unique string key for the metric.
-//func (l *localMetricInfo) Key() string {
-//	return l.config.MetricKey()
-//}
-
-//// Instrument returns the instrument info of the metric.
-//func (c MetricConfig) Instrument() MetricInstrument {
-//	return c.instrument
-//}
-//
-// MetricKey returns the unique string key for the metric.
-//func (c MetricConfig) MetricKey() string {
-//	if c.Instrument().Name() != "" && c.Instrument().Version() != "" {
-//		return fmt.Sprintf(
-//			`%s@%s:%s`,
-//			c.Instrument().Name(),
-//			c.Instrument().Version(),
-//			c.Name,
-//		)
-//	}
-//	if c.Instrument().Name() != "" && c.Instrument().Version() == "" {
-//		return fmt.Sprintf(
-//			`%s:%s`,
-//			c.Instrument().Name(),
-//			c.Name,
-//		)
-//	}
-//	return c.Name
-//}

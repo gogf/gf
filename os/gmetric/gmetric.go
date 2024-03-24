@@ -36,6 +36,7 @@ type Provider interface {
 	// which makes the following metrics creating on this Provider, especially the metrics created in runtime.
 	SetAsGlobal()
 
+	// MeterPerformer creates and returns the MeterPerformer that can produce kinds of metric Performer.
 	MeterPerformer(config MeterOption) MeterPerformer
 
 	// ForceFlush flushes all pending metrics.
@@ -50,12 +51,30 @@ type Provider interface {
 	Shutdown(ctx context.Context) error
 }
 
+// MeterPerformer manages all Metric performers creating.
 type MeterPerformer interface {
+	// CounterPerformer creates and returns a CounterPerformer that performs
+	// the operations for Counter metric.
 	CounterPerformer(name string, option MetricOption) (CounterPerformer, error)
+
+	// UpDownCounterPerformer creates and returns a UpDownCounterPerformer that performs
+	// the operations for UpDownCounter metric.
 	UpDownCounterPerformer(name string, option MetricOption) (UpDownCounterPerformer, error)
+
+	// HistogramPerformer creates and returns a HistogramPerformer that performs
+	// the operations for Histogram metric.
 	HistogramPerformer(name string, option MetricOption) (HistogramPerformer, error)
+
+	// ObservableCounterPerformer creates and returns an ObservableCounterPerformer that performs
+	// the operations for ObservableCounter metric.
 	ObservableCounterPerformer(name string, option MetricOption) (ObservableCounterPerformer, error)
+
+	// ObservableUpDownCounterPerformer creates and returns an ObservableUpDownCounterPerformer that performs
+	// the operations for ObservableUpDownCounter metric.
 	ObservableUpDownCounterPerformer(name string, option MetricOption) (ObservableUpDownCounterPerformer, error)
+
+	// ObservableGaugePerformer creates and returns an ObservableGaugePerformer that performs
+	// the operations for ObservableGauge metric.
 	ObservableGaugePerformer(name string, option MetricOption) (ObservableGaugePerformer, error)
 
 	// RegisterCallback registers callback on certain metrics.
@@ -193,9 +212,14 @@ type ObservableGauge interface {
 }
 
 type (
-	ObservableCounterPerformer       = ObservableMetric
+	// ObservableCounterPerformer is performer for observable ObservableCounter.
+	ObservableCounterPerformer = ObservableMetric
+
+	// ObservableUpDownCounterPerformer is performer for observable ObservableUpDownCounter.
 	ObservableUpDownCounterPerformer = ObservableMetric
-	ObservableGaugePerformer         = ObservableMetric
+
+	// ObservableGaugePerformer is performer for observable ObservableGauge.
+	ObservableGaugePerformer = ObservableMetric
 )
 
 // ObservableMetric is an instrument used to asynchronously record

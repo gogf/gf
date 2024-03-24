@@ -19,9 +19,9 @@ import (
 
 // localCounterPerformer is an implementer for interface gmetric.CounterPerformer.
 type localCounterPerformer struct {
-	metric.Float64Counter
 	gmetric.MeterOption
 	gmetric.MetricOption
+	metric.Float64Counter
 	constOption metric.MeasurementOption
 }
 
@@ -47,9 +47,9 @@ func (l *localMeterPerformer) newCounterPerformer(
 		)
 	}
 	return &localCounterPerformer{
-		Float64Counter: counter,
 		MetricOption:   metricOption,
 		MeterOption:    l.MeterOption,
+		Float64Counter: counter,
 		constOption:    genConstOptionForMetric(l.MeterOption, metricOption),
 	}, nil
 }

@@ -19,9 +19,9 @@ import (
 
 // localUpDownCounterPerformer is an implementer for interface gmetric.UpDownCounterPerformer.
 type localUpDownCounterPerformer struct {
-	metric.Float64UpDownCounter
 	gmetric.MeterOption
 	gmetric.MetricOption
+	metric.Float64UpDownCounter
 	constOption metric.MeasurementOption
 }
 
@@ -47,9 +47,9 @@ func (l *localMeterPerformer) newUpDownCounterPerformer(
 		)
 	}
 	return &localUpDownCounterPerformer{
-		Float64UpDownCounter: counter,
 		MeterOption:          l.MeterOption,
 		MetricOption:         metricOption,
+		Float64UpDownCounter: counter,
 		constOption:          genConstOptionForMetric(l.MeterOption, metricOption),
 	}, nil
 }

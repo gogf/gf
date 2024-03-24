@@ -6,7 +6,7 @@
 
 package gmetric
 
-// localObservableGauge is the local implements for interface Counter.
+// localObservableGauge is the local implements for interface ObservableGauge.
 type localObservableGauge struct {
 	Metric
 	MeterOption

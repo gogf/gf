@@ -20,8 +20,8 @@ type Attributes []Attribute
 
 // Attribute is the key-value pair item for Metric.
 type Attribute interface {
-	Key() AttributeKey // The key for this attribute.
-	Value() any        // The value for this attribute.
+	Key() string // The key for this attribute.
+	Value() any  // The value for this attribute.
 }
 
 // AttributeKey is the attribute key.
@@ -35,7 +35,7 @@ type Option struct {
 
 // localAttribute implements interface Attribute.
 type localAttribute struct {
-	key   AttributeKey
+	key   string
 	value any
 }
 
@@ -58,7 +58,7 @@ func CommonAttributes() Attributes {
 }
 
 // NewAttribute creates and returns an Attribute by given `key` and `value`.
-func NewAttribute(key AttributeKey, value any) Attribute {
+func NewAttribute(key string, value any) Attribute {
 	return &localAttribute{
 		key:   key,
 		value: value,
@@ -66,7 +66,7 @@ func NewAttribute(key AttributeKey, value any) Attribute {
 }
 
 // Key returns the key of the attribute.
-func (l *localAttribute) Key() AttributeKey {
+func (l *localAttribute) Key() string {
 	return l.key
 }
 
