@@ -30,8 +30,8 @@ type Request struct {
 	Session    *gsession.Session // Session.
 	Response   *Response         // Corresponding Response of this request.
 	Router     *Router           // Matched Router for this request. Note that it's not available in HOOK handler.
-	EnterTime  int64             // Request starting time in milliseconds.
-	LeaveTime  int64             // Request to end time in milliseconds.
+	EnterTime  *gtime.Time       // Request starting time in milliseconds.
+	LeaveTime  *gtime.Time       // Request to end time in milliseconds.
 	Middleware *middleware       // Middleware manager.
 	StaticFile *staticFile       // Static file object for static file serving.
 
@@ -76,7 +76,7 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 		Server:        s,
 		Request:       r,
 		Response:      newResponse(s, w),
-		EnterTime:     gtime.TimestampMilli(),
+		EnterTime:     gtime.Now(),
 		originUrlPath: r.URL.Path,
 	}
 	request.Cookie = GetCookie(request)
@@ -117,6 +117,8 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 // WebSocket upgrades current request as a websocket request.
 // It returns a new WebSocket object if success, or the error if failure.
 // Note that the request should be a websocket request, or it will surely fail upgrading.
+//
+// Deprecated: will be removed in the future, please use third-party websocket library instead.
 func (r *Request) WebSocket() (*WebSocket, error) {
 	if conn, err := wsUpGrader.Upgrade(r.Response.Writer, r.Request, nil); err == nil {
 		return &WebSocket{
@@ -215,6 +217,18 @@ func (r *Request) GetRemoteIp() string {
 		return strings.Trim(array[1], "[]")
 	}
 	return r.RemoteAddr
+}
+
+// GetSchema returns the schema of this request.
+func (r *Request) GetSchema() string {
+	var (
+		scheme = "http"
+		proto  = r.Header.Get("X-Forwarded-Proto")
+	)
+	if r.TLS != nil || gstr.Equal(proto, "https") {
+		scheme = "https"
+	}
+	return scheme
 }
 
 // GetUrl returns current URL of this request.

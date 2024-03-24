@@ -1,0 +1,141 @@
+
+# HELP http_client_connection_duration Measures the connection establish duration of client requests.
+# TYPE http_client_connection_duration histogram
+http_client_connection_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="1"}
+http_client_connection_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="5"}
+http_client_connection_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="10"}
+http_client_connection_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="25"}
+http_client_connection_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="50"}
+http_client_connection_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="75"}
+http_client_connection_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="100"}
+http_client_connection_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="250"}
+http_client_connection_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="500"}
+http_client_connection_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="750"}
+http_client_connection_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="1000"}
+http_client_connection_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="2500"}
+http_client_connection_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="5000"}
+http_client_connection_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="7500"}
+http_client_connection_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="10000"}
+http_client_connection_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="30000"}
+http_client_connection_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="60000"}
+http_client_connection_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="+Inf"}
+http_client_connection_duration_sum{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730"}
+http_client_connection_duration_count{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730"} 9
+# HELP http_client_request_active Number of active client requests.
+# TYPE http_client_request_active gauge
+http_client_request_active{http_request_method="DELETE",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 0
+http_client_request_active{http_request_method="GET",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 1
+http_client_request_active{http_request_method="POST",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 0
+http_client_request_active{http_request_method="PUT",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 0
+# HELP http_client_request_body_size Outgoing request bytes total.
+# TYPE http_client_request_body_size counter
+http_client_request_body_size{http_request_method="POST",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 7
+http_client_request_body_size{http_request_method="PUT",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 7
+# HELP http_client_request_duration Measures the duration of client requests.
+# TYPE http_client_request_duration histogram
+http_client_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="1"}
+http_client_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="5"}
+http_client_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="10"}
+http_client_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="25"}
+http_client_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="50"}
+http_client_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="75"}
+http_client_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="100"}
+http_client_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="250"}
+http_client_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="500"}
+http_client_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="750"}
+http_client_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="1000"}
+http_client_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="2500"}
+http_client_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="5000"}
+http_client_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="7500"}
+http_client_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="10000"}
+http_client_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="30000"}
+http_client_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="60000"}
+http_client_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="+Inf"}
+http_client_request_duration_sum{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730"}
+http_client_request_duration_count{otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730"} 8
+# HELP http_client_request_duration_total Total execution duration of request.
+# TYPE http_client_request_duration_total counter
+http_client_request_duration_total{http_request_method="DELETE",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"}
+http_client_request_duration_total{http_request_method="GET",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"}
+http_client_request_duration_total{http_request_method="POST",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"}
+http_client_request_duration_total{http_request_method="PUT",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"}
+# HELP http_client_request_total Total processed request number.
+# TYPE http_client_request_total counter
+http_client_request_total{http_request_method="DELETE",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 2
+http_client_request_total{http_request_method="GET",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 2
+http_client_request_total{http_request_method="POST",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 2
+http_client_request_total{http_request_method="PUT",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/gclient.Client",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 2
+# HELP http_server_request_active Number of active server requests.
+# TYPE http_server_request_active gauge
+http_server_request_active{http_request_method="DELETE",http_route="/order/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 0
+http_server_request_active{http_request_method="DELETE",http_route="/user/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 0
+http_server_request_active{http_request_method="GET",http_route="/metrics",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 1
+http_server_request_active{http_request_method="GET",http_route="/order/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 0
+http_server_request_active{http_request_method="GET",http_route="/user/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 0
+http_server_request_active{http_request_method="POST",http_route="/order/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 0
+http_server_request_active{http_request_method="POST",http_route="/user/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 0
+http_server_request_active{http_request_method="PUT",http_route="/order/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 0
+http_server_request_active{http_request_method="PUT",http_route="/user/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 0
+# HELP http_server_request_body_size Incoming request bytes total.
+# TYPE http_server_request_body_size counter
+http_server_request_body_size{http_request_method="DELETE",http_route="/order/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 0
+http_server_request_body_size{http_request_method="DELETE",http_route="/user/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 0
+http_server_request_body_size{http_request_method="GET",http_route="/metrics",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 0
+http_server_request_body_size{http_request_method="GET",http_route="/order/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 0
+http_server_request_body_size{http_request_method="GET",http_route="/user/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 0
+http_server_request_body_size{http_request_method="POST",http_route="/order/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 4
+http_server_request_body_size{http_request_method="POST",http_route="/user/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 3
+http_server_request_body_size{http_request_method="PUT",http_route="/order/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 4
+http_server_request_body_size{http_request_method="PUT",http_route="/user/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 3
+# HELP http_server_request_duration Measures the duration of inbound request.
+# TYPE http_server_request_duration histogram
+http_server_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="1"}
+http_server_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="5"}
+http_server_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="10"}
+http_server_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="25"}
+http_server_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="50"}
+http_server_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="75"}
+http_server_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="100"}
+http_server_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="250"}
+http_server_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="500"}
+http_server_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="750"}
+http_server_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="1000"}
+http_server_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="2500"}
+http_server_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="5000"}
+http_server_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="7500"}
+http_server_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="10000"}
+http_server_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="30000"}
+http_server_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="60000"}
+http_server_request_duration_bucket{otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",le="+Inf"}
+http_server_request_duration_sum{otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730"}
+http_server_request_duration_count{otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730"}
+# HELP http_server_request_duration_total Total execution duration of request.
+# TYPE http_server_request_duration_total counter
+http_server_request_duration_total{error_code="0",http_request_method="DELETE",http_response_status_code="200",http_route="/order/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"}
+http_server_request_duration_total{error_code="0",http_request_method="DELETE",http_response_status_code="200",http_route="/user/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"}
+http_server_request_duration_total{error_code="0",http_request_method="GET",http_response_status_code="200",http_route="/order/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"}
+http_server_request_duration_total{error_code="0",http_request_method="GET",http_response_status_code="200",http_route="/user/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"}
+http_server_request_duration_total{error_code="0",http_request_method="POST",http_response_status_code="200",http_route="/order/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"}
+http_server_request_duration_total{error_code="0",http_request_method="POST",http_response_status_code="200",http_route="/user/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"}
+http_server_request_duration_total{error_code="0",http_request_method="PUT",http_response_status_code="200",http_route="/order/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"}
+http_server_request_duration_total{error_code="0",http_request_method="PUT",http_response_status_code="200",http_route="/user/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"}
+# HELP http_server_request_total Total processed request number.
+# TYPE http_server_request_total counter
+http_server_request_total{error_code="0",http_request_method="DELETE",http_response_status_code="200",http_route="/order/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 1
+http_server_request_total{error_code="0",http_request_method="DELETE",http_response_status_code="200",http_route="/user/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 1
+http_server_request_total{error_code="0",http_request_method="GET",http_response_status_code="200",http_route="/order/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 1
+http_server_request_total{error_code="0",http_request_method="GET",http_response_status_code="200",http_route="/user/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 1
+http_server_request_total{error_code="0",http_request_method="POST",http_response_status_code="200",http_route="/order/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 1
+http_server_request_total{error_code="0",http_request_method="POST",http_response_status_code="200",http_route="/user/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 1
+http_server_request_total{error_code="0",http_request_method="PUT",http_response_status_code="200",http_route="/order/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 1
+http_server_request_total{error_code="0",http_request_method="PUT",http_response_status_code="200",http_route="/user/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 1
+# HELP http_server_response_body_size Response bytes total.
+# TYPE http_server_response_body_size counter
+http_server_response_body_size{error_code="0",http_request_method="DELETE",http_response_status_code="200",http_route="/order/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 5
+http_server_response_body_size{error_code="0",http_request_method="DELETE",http_response_status_code="200",http_route="/user/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 4
+http_server_response_body_size{error_code="0",http_request_method="GET",http_response_status_code="200",http_route="/order/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 5
+http_server_response_body_size{error_code="0",http_request_method="GET",http_response_status_code="200",http_route="/user/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 4
+http_server_response_body_size{error_code="0",http_request_method="POST",http_response_status_code="200",http_route="/order/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 5
+http_server_response_body_size{error_code="0",http_request_method="POST",http_response_status_code="200",http_route="/user/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 4
+http_server_response_body_size{error_code="0",http_request_method="PUT",http_response_status_code="200",http_route="/order/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 5
+http_server_response_body_size{error_code="0",http_request_method="PUT",http_response_status_code="200",http_route="/user/:id",network_protocol_version="1.1",otel_scope_name="github.com/gogf/gf/v2/net/ghttp.Server",otel_scope_version="v2.6.4",server_address="127.0.0.1",server_port="62730",url_schema="http"} 4

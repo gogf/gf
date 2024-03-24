@@ -106,7 +106,7 @@ func (c *Core) Close(ctx context.Context) (err error) {
 	if err = c.cache.Close(ctx); err != nil {
 		return err
 	}
-	c.links.LockFunc(func(m map[string]interface{}) {
+	c.links.LockFunc(func(m map[any]any) {
 		for k, v := range m {
 			if db, ok := v.(*sql.DB); ok {
 				err = db.Close()

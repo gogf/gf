@@ -13,7 +13,7 @@ import (
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.18.0"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/gogf/gf/v2/net/gtrace"
@@ -48,7 +48,7 @@ func (c *Core) traceSpanEnd(ctx context.Context, span trace.Span, sql *Sql) {
 	labels = append(labels, gtrace.CommonLabels()...)
 	labels = append(labels,
 		attribute.String(traceAttrDbType, c.db.GetConfig().Type),
-		semconv.DBStatementKey.String(sql.Format),
+		semconv.DBStatement(sql.Format),
 	)
 	if c.db.GetConfig().Host != "" {
 		labels = append(labels, attribute.String(traceAttrDbHost, c.db.GetConfig().Host))
@@ -81,6 +81,6 @@ func (c *Core) traceSpanEnd(ctx context.Context, span trace.Span, sql *Sql) {
 			))
 		}
 	}
-	events = append(events, attribute.String(traceEventDbExecutionType, sql.Type))
+	events = append(events, attribute.String(traceEventDbExecutionType, string(sql.Type)))
 	span.AddEvent(traceEventDbExecution, trace.WithAttributes(events...))
 }

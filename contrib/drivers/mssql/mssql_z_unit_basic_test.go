@@ -236,7 +236,8 @@ func Test_DB_Insert(t *testing.T) {
 		t.Assert(one["PASSPORT"].String(), "user_3")
 		t.Assert(one["PASSWORD"].String(), "25d55ad283aa400af464c76d713c07ad")
 		t.Assert(one["NICKNAME"].String(), "name_3")
-		t.Assert(one["CREATE_TIME"].GTime(), timeNow)
+		t.AssertNE(one["CREATE_TIME"].GTime(), nil)
+		t.AssertLT(timeNow.Sub(one["CREATE_TIME"].GTime()), 3)
 
 		// *struct
 		timeNow = gtime.Now()

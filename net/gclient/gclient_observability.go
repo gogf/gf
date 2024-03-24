@@ -24,11 +24,12 @@ import (
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/os/gmetric"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
 const (
-	tracingInstrumentName                       = "github.com/gogf/gf/v2/net/gclient.Client"
+	instrumentName                              = "github.com/gogf/gf/v2/net/gclient.Client"
 	tracingAttrHttpAddressRemote                = "http.address.remote"
 	tracingAttrHttpAddressLocal                 = "http.address.local"
 	tracingAttrHttpDnsStart                     = "http.dns.start"
@@ -45,8 +46,8 @@ const (
 	tracingMiddlewareHandled        gctx.StrKey = `MiddlewareClientTracingHandled`
 )
 
-// internalMiddlewareTracing is a client middleware that enables tracing feature using standards of OpenTelemetry.
-func internalMiddlewareTracing(c *Client, r *http.Request) (response *Response, err error) {
+// internalMiddlewareObservability is a client middleware that enables observability feature.
+func internalMiddlewareObservability(c *Client, r *http.Request) (response *Response, err error) {
 	var ctx = r.Context()
 	// Mark this request is handled by server tracing middleware,
 	// to avoid repeated handling by the same middleware.
@@ -56,7 +57,7 @@ func internalMiddlewareTracing(c *Client, r *http.Request) (response *Response, 
 
 	ctx = context.WithValue(ctx, tracingMiddlewareHandled, 1)
 	tr := otel.GetTracerProvider().Tracer(
-		tracingInstrumentName,
+		instrumentName,
 		trace.WithInstrumentationVersion(gf.VERSION),
 	)
 	ctx, span := tr.Start(ctx, r.URL.String(), trace.WithSpanKind(trace.SpanKindClient))
@@ -67,20 +68,33 @@ func internalMiddlewareTracing(c *Client, r *http.Request) (response *Response, 
 	// Inject tracing content into http header.
 	otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(r.Header))
 
+	// Inject ClientTrace into context for http request.
+	var (
+		httpClientTracer       *httptrace.ClientTrace
+		baseClientTracer       = newClientTracerNoop()
+		isUsingDefaultProvider = gtrace.IsUsingDefaultProvider()
+	)
+	// Tracing.
+	if !isUsingDefaultProvider {
+		baseClientTracer = newClientTracerTracing(ctx, span, r)
+	}
+	// Metrics.
+	if gmetric.IsEnabled() {
+		baseClientTracer = newClientTracerMetrics(r, baseClientTracer)
+	}
+	httpClientTracer = newClientTracer(baseClientTracer)
+	r = r.WithContext(
+		httptrace.WithClientTrace(
+			ctx, httpClientTracer,
+		),
+	)
+	response, err = c.Next(r)
+
 	// If it is now using default trace provider, it then does no complex tracing jobs.
-	if gtrace.IsUsingDefaultProvider() {
-		response, err = c.Next(r)
+	if isUsingDefaultProvider {
 		return
 	}
 
-	// Continue client handler executing.
-	response, err = c.Next(
-		r.WithContext(
-			httptrace.WithClientTrace(
-				ctx, newClientTrace(ctx, span, r),
-			),
-		),
-	)
 	if err != nil {
 		span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, err))
 	}

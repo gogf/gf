@@ -101,6 +101,7 @@ func (c *Client) BasicAuth(user, pass string) *Client {
 
 // Retry is a chaining function,
 // which sets retry count and interval when failure for next request.
+// TODO removed.
 func (c *Client) Retry(retryCount int, retryInterval time.Duration) *Client {
 	newClient := c.Clone()
 	newClient.SetRetry(retryCount, retryInterval)
