@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Mutex_Unlock(t *testing.T) {
+func TestMutexUnlock(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		mu := gmutex.Mutex{}
 		array := garray.New(true)
@@ -45,7 +45,7 @@ func Test_Mutex_Unlock(t *testing.T) {
 	})
 }
 
-func Test_Mutex_LockFunc(t *testing.T) {
+func TestMutexLockFunc(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		mu := gmutex.Mutex{}
 		array := garray.New(true)
@@ -70,7 +70,7 @@ func Test_Mutex_LockFunc(t *testing.T) {
 	})
 }
 
-func Test_Mutex_TryLockFunc(t *testing.T) {
+func TestMutexTryLockFunc(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		mu := gmutex.Mutex{}
 		array := garray.New(true)

@@ -20,7 +20,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_Static_ServerRoot(t *testing.T) {
+func TestStaticServerRoot(t *testing.T) {
 	// SetServerRoot with absolute path
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
@@ -56,7 +56,7 @@ func Test_Static_ServerRoot(t *testing.T) {
 	})
 }
 
-func Test_Static_ServerRoot_Security(t *testing.T) {
+func TestStaticServerRootSecurity(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
 		s.SetServerRoot(gtest.DataPath("static1"))
@@ -75,7 +75,7 @@ func Test_Static_ServerRoot_Security(t *testing.T) {
 	})
 }
 
-func Test_Static_Folder_Forbidden(t *testing.T) {
+func TestStaticFolderForbidden(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
 		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), s.GetListenedPort())
@@ -94,7 +94,7 @@ func Test_Static_Folder_Forbidden(t *testing.T) {
 	})
 }
 
-func Test_Static_IndexFolder(t *testing.T) {
+func TestStaticIndexFolder(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
 		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), s.GetListenedPort())
@@ -115,7 +115,7 @@ func Test_Static_IndexFolder(t *testing.T) {
 	})
 }
 
-func Test_Static_IndexFiles1(t *testing.T) {
+func TestStaticIndexFiles1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
 		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), s.GetListenedPort())
@@ -135,7 +135,7 @@ func Test_Static_IndexFiles1(t *testing.T) {
 	})
 }
 
-func Test_Static_IndexFiles2(t *testing.T) {
+func TestStaticIndexFiles2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
 		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), s.GetListenedPort())
@@ -155,7 +155,7 @@ func Test_Static_IndexFiles2(t *testing.T) {
 	})
 }
 
-func Test_Static_AddSearchPath1(t *testing.T) {
+func TestStaticAddSearchPath1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
 		path1 := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), s.GetListenedPort())
@@ -176,7 +176,7 @@ func Test_Static_AddSearchPath1(t *testing.T) {
 	})
 }
 
-func Test_Static_AddSearchPath2(t *testing.T) {
+func TestStaticAddSearchPath2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
 		path1 := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), s.GetListenedPort())
@@ -198,7 +198,7 @@ func Test_Static_AddSearchPath2(t *testing.T) {
 	})
 }
 
-func Test_Static_AddStaticPath(t *testing.T) {
+func TestStaticAddStaticPath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
 		path1 := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), s.GetListenedPort())
@@ -221,7 +221,7 @@ func Test_Static_AddStaticPath(t *testing.T) {
 	})
 }
 
-func Test_Static_AddStaticPath_Priority(t *testing.T) {
+func TestStaticAddStaticPathPriority(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
 		path1 := fmt.Sprintf(`%s/ghttp/static/test/%d/test`, gfile.Temp(), s.GetListenedPort())
@@ -244,7 +244,7 @@ func Test_Static_AddStaticPath_Priority(t *testing.T) {
 	})
 }
 
-func Test_Static_Rewrite(t *testing.T) {
+func TestStaticRewrite(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
 		path := fmt.Sprintf(`%s/ghttp/static/test/%d`, gfile.Temp(), s.GetListenedPort())

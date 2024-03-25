@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Ctx_Basic(t *testing.T) {
+func TestCtxBasic(t *testing.T) {
 	ctx := metadata.NewIncomingContext(context.Background(), metadata.Pairs(
 		"k1", "v1",
 		"k2", "v2",

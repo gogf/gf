@@ -26,7 +26,7 @@ var (
 	)
 )
 
-func Test_Config1(t *testing.T) {
+func TestConfig1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertNE(configContent, "")
 	})
@@ -35,7 +35,7 @@ func Test_Config1(t *testing.T) {
 	})
 }
 
-func Test_Config2(t *testing.T) {
+func TestConfig2(t *testing.T) {
 	// relative path
 	gtest.C(t, func(t *gtest.T) {
 		var err error
@@ -85,7 +85,7 @@ func Test_Config2(t *testing.T) {
 	})
 }
 
-func Test_Config3(t *testing.T) {
+func TestConfig3(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var err error
 		dirPath := gfile.Temp(gtime.TimestampNanoStr())
@@ -135,7 +135,7 @@ func Test_Config3(t *testing.T) {
 	time.Sleep(500 * time.Millisecond)
 }
 
-func Test_Config4(t *testing.T) {
+func TestConfig4(t *testing.T) {
 	// absolute path
 	gtest.C(t, func(t *gtest.T) {
 		path := fmt.Sprintf(`%s/%d`, gfile.Temp(), gtime.TimestampNano())
@@ -196,7 +196,7 @@ func Test_Config4(t *testing.T) {
 	})
 }
 
-func Test_Basic2(t *testing.T) {
+func TestBasic2(t *testing.T) {
 	config := `log-path = "logs"`
 	gtest.C(t, func(t *gtest.T) {
 		var (

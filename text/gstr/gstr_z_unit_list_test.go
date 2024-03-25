@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func Test_List2(t *testing.T) {
+func TestList2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		p1, p2 := gstr.List2("1:2", ":")
 		t.Assert(p1, "1")
@@ -43,7 +43,7 @@ func Test_List2(t *testing.T) {
 	})
 }
 
-func Test_ListAndTrim2(t *testing.T) {
+func TestListAndTrim2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		p1, p2 := gstr.ListAndTrim2("1::2", ":")
 		t.Assert(p1, "1")
@@ -71,7 +71,7 @@ func Test_ListAndTrim2(t *testing.T) {
 	})
 }
 
-func Test_List3(t *testing.T) {
+func TestList3(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		p1, p2, p3 := gstr.List3("1:2:3", ":")
 		t.Assert(p1, "1")
@@ -116,7 +116,7 @@ func Test_List3(t *testing.T) {
 	})
 }
 
-func Test_ListAndTrim3(t *testing.T) {
+func TestListAndTrim3(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		p1, p2, p3 := gstr.ListAndTrim3("1::2:3", ":")
 		t.Assert(p1, "1")

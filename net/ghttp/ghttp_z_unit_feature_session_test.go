@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_Session_Cookie(t *testing.T) {
+func TestSessionCookie(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/set", func(r *ghttp.Request) {
 		r.Session.Set(r.Get("k").String(), r.Get("v").String())
@@ -62,7 +62,7 @@ func Test_Session_Cookie(t *testing.T) {
 	})
 }
 
-func Test_Session_Header(t *testing.T) {
+func TestSessionHeader(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/set", func(r *ghttp.Request) {
 		r.Session.Set(r.Get("k").String(), r.Get("v").String())
@@ -110,7 +110,7 @@ func Test_Session_Header(t *testing.T) {
 	})
 }
 
-func Test_Session_StorageFile(t *testing.T) {
+func TestSessionStorageFile(t *testing.T) {
 	sessionId := ""
 	s := g.Server(guid.S())
 	s.BindHandler("/set", func(r *ghttp.Request) {
@@ -148,7 +148,7 @@ func Test_Session_StorageFile(t *testing.T) {
 	})
 }
 
-func Test_Session_Custom_Id(t *testing.T) {
+func TestSessionCustomId(t *testing.T) {
 	var (
 		sessionId = "1234567890"
 		key       = "key"
@@ -190,7 +190,7 @@ func Test_Session_Custom_Id(t *testing.T) {
 	})
 }
 
-func Test_Session_New_Id(t *testing.T) {
+func TestSessionNewId(t *testing.T) {
 	var (
 		sessionId     = "1234567890"
 		newSessionId  = "0987654321"

@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func TestJob_Start_Stop_Close(t *testing.T) {
+func TestJobStartStopClose(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timer := gtimer.New()
 		array := garray.New(true)
@@ -41,7 +41,7 @@ func TestJob_Start_Stop_Close(t *testing.T) {
 	})
 }
 
-func TestJob_Singleton(t *testing.T) {
+func TestJobSingleton(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timer := gtimer.New()
 		array := garray.New(true)
@@ -60,7 +60,7 @@ func TestJob_Singleton(t *testing.T) {
 	})
 }
 
-func TestJob_SingletonQuick(t *testing.T) {
+func TestJobSingletonQuick(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timer := gtimer.New(gtimer.TimerOptions{
 			Quick: true,
@@ -81,7 +81,7 @@ func TestJob_SingletonQuick(t *testing.T) {
 	})
 }
 
-func TestJob_SetTimes(t *testing.T) {
+func TestJobSetTimes(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timer := gtimer.New()
 		array := garray.New(true)
@@ -95,7 +95,7 @@ func TestJob_SetTimes(t *testing.T) {
 	})
 }
 
-func TestJob_Run(t *testing.T) {
+func TestJobRun(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timer := gtimer.New()
 		array := garray.New(true)

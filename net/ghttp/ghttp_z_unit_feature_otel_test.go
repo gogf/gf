@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_OTEL_TraceID(t *testing.T) {
+func TestOTELTraceID(t *testing.T) {
 	var (
 		traceId string
 	)

@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Search(t *testing.T) {
+func TestSearch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths1  string = "/testfiless"

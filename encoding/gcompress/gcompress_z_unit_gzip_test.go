@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Gzip_UnGzip(t *testing.T) {
+func TestGzipUnGzip(t *testing.T) {
 	var (
 		src  = "Hello World!!"
 		gzip = []byte{
@@ -43,7 +43,7 @@ func Test_Gzip_UnGzip(t *testing.T) {
 	})
 }
 
-func Test_Gzip_UnGzip_File(t *testing.T) {
+func TestGzipUnGzipFile(t *testing.T) {
 	var (
 		srcPath  = gtest.DataPath("gzip", "file.txt")
 		dstPath1 = gfile.Temp(gtime.TimestampNanoStr(), "gzip.zip")

@@ -59,7 +59,7 @@ func TestNewSortedIntArrayFromCopy(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_At(t *testing.T) {
+func TestSortedIntArrayAt(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{0, 3, 2, 1}
 
@@ -70,7 +70,7 @@ func TestSortedIntArray_At(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_SetArray(t *testing.T) {
+func TestSortedIntArraySetArray(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{0, 1, 2, 3}
 		a2 := []int{4, 5, 6}
@@ -84,7 +84,7 @@ func TestSortedIntArray_SetArray(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_Sort(t *testing.T) {
+func TestSortedIntArraySort(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{0, 3, 2, 1}
 
@@ -96,7 +96,7 @@ func TestSortedIntArray_Sort(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_Get(t *testing.T) {
+func TestSortedIntArrayGet(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 3, 5, 0}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -118,7 +118,7 @@ func TestSortedIntArray_Get(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_Remove(t *testing.T) {
+func TestSortedIntArrayRemove(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 3, 5, 0}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -159,7 +159,7 @@ func TestSortedIntArray_Remove(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_PopLeft(t *testing.T) {
+func TestSortedIntArrayPopLeft(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 3, 5, 2}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -186,7 +186,7 @@ func TestSortedIntArray_PopLeft(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_PopRight(t *testing.T) {
+func TestSortedIntArrayPopRight(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 3, 5, 2}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -215,7 +215,7 @@ func TestSortedIntArray_PopRight(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_PopRand(t *testing.T) {
+func TestSortedIntArrayPopRand(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 3, 5, 2}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -227,7 +227,7 @@ func TestSortedIntArray_PopRand(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_PopRands(t *testing.T) {
+func TestSortedIntArrayPopRands(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 3, 5, 2}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -244,7 +244,7 @@ func TestSortedIntArray_PopRands(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_Empty(t *testing.T) {
+func TestSortedIntArrayEmpty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewSortedIntArray()
 		v, ok := array.PopLeft()
@@ -264,7 +264,7 @@ func TestSortedIntArray_Empty(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_PopLefts(t *testing.T) {
+func TestSortedIntArrayPopLefts(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 3, 5, 2}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -280,7 +280,7 @@ func TestSortedIntArray_PopLefts(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_PopRights(t *testing.T) {
+func TestSortedIntArrayPopRights(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 3, 5, 2}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -296,7 +296,7 @@ func TestSortedIntArray_PopRights(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_Range(t *testing.T) {
+func TestSortedIntArrayRange(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 3, 5, 2, 6, 7}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -317,7 +317,7 @@ func TestSortedIntArray_Range(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_Sum(t *testing.T) {
+func TestSortedIntArraySum(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 3, 5}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -326,7 +326,7 @@ func TestSortedIntArray_Sum(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_Join(t *testing.T) {
+func TestSortedIntArrayJoin(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 3, 5}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -337,7 +337,7 @@ func TestSortedIntArray_Join(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_String(t *testing.T) {
+func TestSortedIntArrayString(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 3, 5}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -348,7 +348,7 @@ func TestSortedIntArray_String(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_Contains(t *testing.T) {
+func TestSortedIntArrayContains(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 3, 5}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -356,7 +356,7 @@ func TestSortedIntArray_Contains(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_Clone(t *testing.T) {
+func TestSortedIntArrayClone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 3, 5}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -366,7 +366,7 @@ func TestSortedIntArray_Clone(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_Clear(t *testing.T) {
+func TestSortedIntArrayClear(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 3, 5}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -375,7 +375,7 @@ func TestSortedIntArray_Clear(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_Chunk(t *testing.T) {
+func TestSortedIntArrayChunk(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 2, 3, 4, 5}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -416,7 +416,7 @@ func TestSortedIntArray_Chunk(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_SubSlice(t *testing.T) {
+func TestSortedIntArraySubSlice(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 2, 3, 4, 5}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -442,7 +442,7 @@ func TestSortedIntArray_SubSlice(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_Rand(t *testing.T) {
+func TestSortedIntArrayRand(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 2, 3, 4, 5}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -457,7 +457,7 @@ func TestSortedIntArray_Rand(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_Rands(t *testing.T) {
+func TestSortedIntArrayRands(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 2, 3, 4, 5}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -474,7 +474,7 @@ func TestSortedIntArray_Rands(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_CountValues(t *testing.T) {
+func TestSortedIntArrayCountValues(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 2, 3, 4, 5, 3}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -485,7 +485,7 @@ func TestSortedIntArray_CountValues(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_SetUnique(t *testing.T) {
+func TestSortedIntArraySetUnique(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 2, 3, 4, 5, 3, 2, 2, 3, 5, 5}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -495,7 +495,7 @@ func TestSortedIntArray_SetUnique(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_Unique(t *testing.T) {
+func TestSortedIntArrayUnique(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 2, 3, 4, 5, 3, 2, 2, 3, 5, 5}
 		array1 := garray.NewSortedIntArrayFrom(a1)
@@ -509,7 +509,7 @@ func TestSortedIntArray_Unique(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_LockFunc(t *testing.T) {
+func TestSortedIntArrayLockFunc(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := []int{1, 2, 3, 4}
 		a1 := garray.NewSortedIntArrayFrom(s1, true)
@@ -540,7 +540,7 @@ func TestSortedIntArray_LockFunc(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_RLockFunc(t *testing.T) {
+func TestSortedIntArrayRLockFunc(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := []int{1, 2, 3, 4}
 		a1 := garray.NewSortedIntArrayFrom(s1, true)
@@ -572,7 +572,7 @@ func TestSortedIntArray_RLockFunc(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_Merge(t *testing.T) {
+func TestSortedIntArrayMerge(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		func1 := func(v1, v2 interface{}) int {
 			if gconv.Int(v1) < gconv.Int(v2) {
@@ -600,7 +600,7 @@ func TestSortedIntArray_Merge(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_Json(t *testing.T) {
+func TestSortedIntArrayJson(t *testing.T) {
 	// array pointer
 	gtest.C(t, func(t *gtest.T) {
 		s1 := []int{1, 4, 3, 2}
@@ -681,7 +681,7 @@ func TestSortedIntArray_Json(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_Iterator(t *testing.T) {
+func TestSortedIntArrayIterator(t *testing.T) {
 	slice := g.SliceInt{10, 20, 30, 40}
 	array := garray.NewSortedIntArrayFrom(slice)
 	gtest.C(t, func(t *gtest.T) {
@@ -728,7 +728,7 @@ func TestSortedIntArray_Iterator(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_RemoveValue(t *testing.T) {
+func TestSortedIntArrayRemoveValue(t *testing.T) {
 	slice := g.SliceInt{10, 20, 30, 40}
 	array := garray.NewSortedIntArrayFrom(slice)
 	gtest.C(t, func(t *gtest.T) {
@@ -741,7 +741,7 @@ func TestSortedIntArray_RemoveValue(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_RemoveValues(t *testing.T) {
+func TestSortedIntArrayRemoveValues(t *testing.T) {
 	slice := g.SliceInt{10, 20, 30, 40}
 	array := garray.NewSortedIntArrayFrom(slice)
 	gtest.C(t, func(t *gtest.T) {
@@ -750,7 +750,7 @@ func TestSortedIntArray_RemoveValues(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_UnmarshalValue(t *testing.T) {
+func TestSortedIntArrayUnmarshalValue(t *testing.T) {
 	type V struct {
 		Name  string
 		Array *garray.SortedIntArray
@@ -778,7 +778,7 @@ func TestSortedIntArray_UnmarshalValue(t *testing.T) {
 		t.Assert(v.Array.Slice(), g.Slice{1, 2, 3})
 	})
 }
-func TestSortedIntArray_Filter(t *testing.T) {
+func TestSortedIntArrayFilter(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewSortedIntArrayFrom(g.SliceInt{0, 1, 2, 3, 4, 0})
 		t.Assert(array.Filter(func(index int, value int) bool {
@@ -793,7 +793,7 @@ func TestSortedIntArray_Filter(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_FilterEmpty(t *testing.T) {
+func TestSortedIntArrayFilterEmpty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewSortedIntArrayFrom(g.SliceInt{0, 1, 2, 3, 4, 0})
 		t.Assert(array.FilterEmpty(), g.SliceInt{1, 2, 3, 4})
@@ -804,7 +804,7 @@ func TestSortedIntArray_FilterEmpty(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_Walk(t *testing.T) {
+func TestSortedIntArrayWalk(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewSortedIntArrayFrom(g.SliceInt{1, 2})
 		t.Assert(array.Walk(func(value int) int {
@@ -813,14 +813,14 @@ func TestSortedIntArray_Walk(t *testing.T) {
 	})
 }
 
-func TestSortedIntArray_IsEmpty(t *testing.T) {
+func TestSortedIntArrayIsEmpty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewSortedIntArrayFrom([]int{})
 		t.Assert(array.IsEmpty(), true)
 	})
 }
 
-func TestSortedIntArray_DeepCopy(t *testing.T) {
+func TestSortedIntArrayDeepCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewSortedIntArrayFrom([]int{1, 2, 3, 4, 5})
 		copyArray := array.DeepCopy().(*garray.SortedIntArray)

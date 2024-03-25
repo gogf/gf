@@ -20,14 +20,14 @@ var (
 	PatternErr = `([\d+`
 )
 
-func Test_Quote(t *testing.T) {
+func TestQuote(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := `[foo]` //`\[foo\]`
 		t.Assert(gregex.Quote(s1), `\[foo\]`)
 	})
 }
 
-func Test_Validate(t *testing.T) {
+func TestValidate(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var s1 = `(.+):(\d+)`
 		t.Assert(gregex.Validate(s1), nil)
@@ -36,7 +36,7 @@ func Test_Validate(t *testing.T) {
 	})
 }
 
-func Test_IsMatch(t *testing.T) {
+func TestIsMatch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var pattern = `(.+):(\d+)`
 		s1 := []byte(`sfs:2323`)
@@ -50,7 +50,7 @@ func Test_IsMatch(t *testing.T) {
 	})
 }
 
-func Test_IsMatchString(t *testing.T) {
+func TestIsMatchString(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var pattern = `(.+):(\d+)`
 		s1 := `sfs:2323`
@@ -64,7 +64,7 @@ func Test_IsMatchString(t *testing.T) {
 	})
 }
 
-func Test_Match(t *testing.T) {
+func TestMatch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		re := "a(a+b+)b"
 		wantSubs := "aaabb"
@@ -83,7 +83,7 @@ func Test_Match(t *testing.T) {
 	})
 }
 
-func Test_MatchString(t *testing.T) {
+func TestMatchString(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		re := "a(a+b+)b"
 		wantSubs := "aaabb"
@@ -102,7 +102,7 @@ func Test_MatchString(t *testing.T) {
 	})
 }
 
-func Test_MatchAll(t *testing.T) {
+func TestMatchAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		re := "a(a+b+)b"
 		wantSubs := "aaabb"
@@ -129,7 +129,7 @@ func Test_MatchAll(t *testing.T) {
 	})
 }
 
-func Test_MatchAllString(t *testing.T) {
+func TestMatchAllString(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		re := "a(a+b+)b"
 		wantSubs := "aaabb"
@@ -155,7 +155,7 @@ func Test_MatchAllString(t *testing.T) {
 	})
 }
 
-func Test_Replace(t *testing.T) {
+func TestReplace(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		re := "a(a+b+)b"
 		wantSubs := "aaabb"
@@ -173,7 +173,7 @@ func Test_Replace(t *testing.T) {
 	})
 }
 
-func Test_ReplaceString(t *testing.T) {
+func TestReplaceString(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		re := "a(a+b+)b"
 		wantSubs := "aaabb"
@@ -191,7 +191,7 @@ func Test_ReplaceString(t *testing.T) {
 	})
 }
 
-func Test_ReplaceFun(t *testing.T) {
+func TestReplaceFun(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		re := "a(a+b+)b"
 		wantSubs := "aaabb"
@@ -217,7 +217,7 @@ func Test_ReplaceFun(t *testing.T) {
 	})
 }
 
-func Test_ReplaceFuncMatch(t *testing.T) {
+func TestReplaceFuncMatch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := []byte("1234567890")
 		p := `(\d{3})(\d{3})(.+)`
@@ -249,7 +249,7 @@ func Test_ReplaceFuncMatch(t *testing.T) {
 	})
 }
 
-func Test_ReplaceStringFunc(t *testing.T) {
+func TestReplaceStringFunc(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		re := "a(a+b+)b"
 		wantSubs := "aaabb"
@@ -275,7 +275,7 @@ func Test_ReplaceStringFunc(t *testing.T) {
 	})
 }
 
-func Test_ReplaceStringFuncMatch(t *testing.T) {
+func TestReplaceStringFuncMatch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := "1234567890"
 		p := `(\d{3})(\d{3})(.+)`
@@ -307,7 +307,7 @@ func Test_ReplaceStringFuncMatch(t *testing.T) {
 	})
 }
 
-func Test_Split(t *testing.T) {
+func TestSplit(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		re := "a(a+b+)b"
 		matched := "aaabb"

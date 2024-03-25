@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func Test_IsSubDomain(t *testing.T) {
+func TestIsSubDomain(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		main := "goframe.org"
 		t.Assert(gstr.IsSubDomain("goframe.org", main), true)

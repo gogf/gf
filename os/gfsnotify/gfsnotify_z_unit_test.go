@@ -19,7 +19,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func TestWatcher_AddOnce(t *testing.T) {
+func TestWatcherAddOnce(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		value := gtype.New()
 		path := gfile.Temp(gconv.String(gtime.TimestampNano()))
@@ -55,7 +55,7 @@ func TestWatcher_AddOnce(t *testing.T) {
 	})
 }
 
-func TestWatcher_AddRemove(t *testing.T) {
+func TestWatcherAddRemove(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		path1 := gfile.Temp() + gfile.Separator + gconv.String(gtime.TimestampNano())
 		path2 := gfile.Temp() + gfile.Separator + gconv.String(gtime.TimestampNano()) + "2"
@@ -122,7 +122,7 @@ func TestWatcher_AddRemove(t *testing.T) {
 	})
 }
 
-func TestWatcher_Callback1(t *testing.T) {
+func TestWatcherCallback1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		path1 := gfile.Temp(gtime.TimestampNanoStr())
 		gfile.PutContents(path1, "1")
@@ -151,7 +151,7 @@ func TestWatcher_Callback1(t *testing.T) {
 	})
 }
 
-func TestWatcher_Callback2(t *testing.T) {
+func TestWatcherCallback2(t *testing.T) {
 	// multiple callbacks
 	gtest.C(t, func(t *gtest.T) {
 		path1 := gfile.Temp(gtime.TimestampNanoStr())
@@ -193,7 +193,7 @@ func TestWatcher_Callback2(t *testing.T) {
 	})
 }
 
-func TestWatcher_WatchFolderWithoutRecursively(t *testing.T) {
+func TestWatcherWatchFolderWithoutRecursively(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err     error

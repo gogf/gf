@@ -18,7 +18,7 @@ func getValue() interface{} {
 	return 3
 }
 
-func Test_Map_Var(t *testing.T) {
+func TestMapVar(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var m gmap.Map
 		m.Set(1, 11)
@@ -67,7 +67,7 @@ func Test_Map_Var(t *testing.T) {
 	})
 }
 
-func Test_Map_Basic(t *testing.T) {
+func TestMapBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.New()
 		m.Set("key1", "val1")
@@ -102,7 +102,7 @@ func Test_Map_Basic(t *testing.T) {
 	})
 }
 
-func Test_Map_Set_Fun(t *testing.T) {
+func TestMapSetFun(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.New()
 		m.GetOrSetFunc("fun", getValue)
@@ -115,7 +115,7 @@ func Test_Map_Set_Fun(t *testing.T) {
 	})
 }
 
-func Test_Map_Batch(t *testing.T) {
+func TestMapBatch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.New()
 		m.Sets(map[interface{}]interface{}{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
@@ -125,7 +125,7 @@ func Test_Map_Batch(t *testing.T) {
 	})
 }
 
-func Test_Map_Iterator(t *testing.T) {
+func TestMapIterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[interface{}]interface{}{1: 1, "key1": "val1"}
 
@@ -150,7 +150,7 @@ func Test_Map_Iterator(t *testing.T) {
 	})
 }
 
-func Test_Map_Lock(t *testing.T) {
+func TestMapLock(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[interface{}]interface{}{1: 1, "key1": "val1"}
 		m := gmap.NewFrom(expect)
@@ -163,7 +163,7 @@ func Test_Map_Lock(t *testing.T) {
 	})
 }
 
-func Test_Map_Clone(t *testing.T) {
+func TestMapClone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// clone 方法是深克隆
 		m := gmap.NewFrom(map[interface{}]interface{}{1: 1, "key1": "val1"})
@@ -178,7 +178,7 @@ func Test_Map_Clone(t *testing.T) {
 	})
 }
 
-func Test_Map_Basic_Merge(t *testing.T) {
+func TestMapBasicMerge(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.New()
 		m2 := gmap.New()

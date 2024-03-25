@@ -19,7 +19,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_StatusHandler(t *testing.T) {
+func TestStatusHandler(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
 		s.BindStatusHandlerByMap(map[int]ghttp.HandlerFunc{
@@ -41,7 +41,7 @@ func Test_StatusHandler(t *testing.T) {
 	})
 }
 
-func Test_StatusHandler_Multi(t *testing.T) {
+func TestStatusHandlerMulti(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
 		s.BindStatusHandler(502, func(r *ghttp.Request) {

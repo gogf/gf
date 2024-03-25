@@ -27,7 +27,7 @@ var ef gpool.ExpireFunc = func(i interface{}) {
 	gtest.Assert(i, assertIndex)
 }
 
-func Test_Gpool(t *testing.T) {
+func TestGpool(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		//
 		// expire = 0

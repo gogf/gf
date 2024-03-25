@@ -21,7 +21,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_Request_IsFileRequest(t *testing.T) {
+func TestRequestIsFileRequest(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
 		s.Group("/", func(group *ghttp.RouterGroup) {
@@ -42,7 +42,7 @@ func Test_Request_IsFileRequest(t *testing.T) {
 	})
 }
 
-func Test_Request_IsAjaxRequest(t *testing.T) {
+func TestRequestIsAjaxRequest(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
 		s.Group("/", func(group *ghttp.RouterGroup) {
@@ -63,7 +63,7 @@ func Test_Request_IsAjaxRequest(t *testing.T) {
 	})
 }
 
-func Test_Request_GetClientIp(t *testing.T) {
+func TestRequestGetClientIp(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
 		s.Group("/", func(group *ghttp.RouterGroup) {
@@ -85,7 +85,7 @@ func Test_Request_GetClientIp(t *testing.T) {
 	})
 }
 
-func Test_Request_GetUrl(t *testing.T) {
+func TestRequestGetUrl(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
 		s.Group("/", func(group *ghttp.RouterGroup) {
@@ -107,7 +107,7 @@ func Test_Request_GetUrl(t *testing.T) {
 	})
 }
 
-func Test_Request_GetReferer(t *testing.T) {
+func TestRequestGetReferer(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
 		s.Group("/", func(group *ghttp.RouterGroup) {
@@ -129,7 +129,7 @@ func Test_Request_GetReferer(t *testing.T) {
 	})
 }
 
-func Test_Request_GetServeHandler(t *testing.T) {
+func TestRequestGetServeHandler(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
 		s.Group("/", func(group *ghttp.RouterGroup) {
@@ -151,7 +151,7 @@ func Test_Request_GetServeHandler(t *testing.T) {
 	})
 }
 
-func Test_Request_BasicAuth(t *testing.T) {
+func TestRequestBasicAuth(t *testing.T) {
 	const (
 		user      = "root"
 		pass      = "123456"
@@ -213,7 +213,7 @@ func Test_Request_BasicAuth(t *testing.T) {
 	})
 }
 
-func Test_Request_SetCtx(t *testing.T) {
+func TestRequestSetCtx(t *testing.T) {
 	type ctxKey string
 	const testkey ctxKey = "test"
 	s := g.Server(guid.S())
@@ -240,7 +240,7 @@ func Test_Request_SetCtx(t *testing.T) {
 	})
 }
 
-func Test_Request_GetCtx(t *testing.T) {
+func TestRequestGetCtx(t *testing.T) {
 	type ctxKey string
 	const testkey ctxKey = "test"
 	s := g.Server(guid.S())
@@ -267,7 +267,7 @@ func Test_Request_GetCtx(t *testing.T) {
 	})
 }
 
-func Test_Request_GetCtxVar(t *testing.T) {
+func TestRequestGetCtxVar(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(func(r *ghttp.Request) {
@@ -290,7 +290,7 @@ func Test_Request_GetCtxVar(t *testing.T) {
 	})
 }
 
-func Test_Request_Form(t *testing.T) {
+func TestRequestForm(t *testing.T) {
 	type User struct {
 		Id   int
 		Name string
@@ -347,7 +347,7 @@ func Test_Request_Form(t *testing.T) {
 	})
 }
 
-func Test_Request_NeverDoneCtx_Done(t *testing.T) {
+func TestRequestNeverDoneCtxDone(t *testing.T) {
 	var array = garray.New(true)
 	s := g.Server(guid.S())
 	s.BindHandler("/done", func(r *ghttp.Request) {
@@ -391,7 +391,7 @@ func Test_Request_NeverDoneCtx_Done(t *testing.T) {
 	})
 }
 
-func Test_Request_NeverDoneCtx_NeverDone(t *testing.T) {
+func TestRequestNeverDoneCtxNeverDone(t *testing.T) {
 	var array = garray.New(true)
 	s := g.Server(guid.S())
 	s.Use(ghttp.MiddlewareNeverDoneCtx)

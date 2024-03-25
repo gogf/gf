@@ -8,8 +8,9 @@ package pgsql_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/v2/database/gdb"
 	"testing"
+
+	"github.com/gogf/gf/v2/database/gdb"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -17,7 +18,7 @@ import (
 )
 
 // https://github.com/gogf/gf/issues/3330
-func Test_Issue3330(t *testing.T) {
+func TestIssue3330(t *testing.T) {
 	var (
 		table      = fmt.Sprintf(`%s_%d`, TablePrefix+"test", gtime.TimestampNano())
 		uniqueName = fmt.Sprintf(`%s_%d`, TablePrefix+"test_unique", gtime.TimestampNano())

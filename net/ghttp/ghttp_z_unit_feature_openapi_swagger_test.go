@@ -21,7 +21,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_OpenApi_Swagger(t *testing.T) {
+func TestOpenApiSwagger(t *testing.T) {
 	type TestReq struct {
 		gmeta.Meta `method:"get" summary:"Test summary" tags:"Test"`
 		Age        int
@@ -67,7 +67,7 @@ func Test_OpenApi_Swagger(t *testing.T) {
 	})
 }
 
-func Test_OpenApi_Multiple_Methods_Swagger(t *testing.T) {
+func TestOpenApiMultipleMethodsSwagger(t *testing.T) {
 	type TestReq struct {
 		gmeta.Meta `method:"get,post" summary:"Test summary" tags:"Test"`
 		Age        int
@@ -130,7 +130,7 @@ func Test_OpenApi_Multiple_Methods_Swagger(t *testing.T) {
 	})
 }
 
-func Test_OpenApi_Method_All_Swagger(t *testing.T) {
+func TestOpenApiMethodAllSwagger(t *testing.T) {
 	type TestReq struct {
 		gmeta.Meta `method:"all" summary:"Test summary" tags:"Test"`
 		Age        int

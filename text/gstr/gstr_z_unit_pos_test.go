@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func Test_Pos(t *testing.T) {
+func TestPos(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := "abcdEFGabcdefg"
 		t.Assert(gstr.Pos(s1, "ab"), 0)
@@ -31,7 +31,7 @@ func Test_Pos(t *testing.T) {
 	})
 }
 
-func Test_PosRune(t *testing.T) {
+func TestPosRune(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := "abcdEFGabcdefg"
 		t.Assert(gstr.PosRune(s1, "ab"), 0)
@@ -47,7 +47,7 @@ func Test_PosRune(t *testing.T) {
 	})
 }
 
-func Test_PosI(t *testing.T) {
+func TestPosI(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := "abcdEFGabcdefg"
 		t.Assert(gstr.PosI(s1, "zz"), -1)
@@ -64,7 +64,7 @@ func Test_PosI(t *testing.T) {
 	})
 }
 
-func Test_PosIRune(t *testing.T) {
+func TestPosIRune(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := "abcdEFGabcdefg"
 		t.Assert(gstr.PosIRune(s1, "zz"), -1)
@@ -81,7 +81,7 @@ func Test_PosIRune(t *testing.T) {
 	})
 }
 
-func Test_PosR(t *testing.T) {
+func TestPosR(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := "abcdEFGabcdefg"
 		s2 := "abcdEFGz1cdeab"
@@ -100,7 +100,7 @@ func Test_PosR(t *testing.T) {
 	})
 }
 
-func Test_PosRRune(t *testing.T) {
+func TestPosRRune(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := "abcdEFGabcdefg"
 		s2 := "abcdEFGz1cdeab"
@@ -119,7 +119,7 @@ func Test_PosRRune(t *testing.T) {
 	})
 }
 
-func Test_PosRI(t *testing.T) {
+func TestPosRI(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := "abcdEFGabcdefg"
 		s2 := "abcdEFGz1cdeab"
@@ -138,7 +138,7 @@ func Test_PosRI(t *testing.T) {
 	})
 }
 
-func Test_PosRIRune(t *testing.T) {
+func TestPosRIRune(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := "abcdEFGabcdefg"
 		s2 := "abcdEFGz1cdeab"

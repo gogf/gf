@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Parse(t *testing.T) {
+func TestParse(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		os.Args = []string{"gf", "--force", "remove", "-fq", "-p=www", "path", "-n", "root"}
 		p, err := gcmd.Parse(map[string]bool{
@@ -54,7 +54,7 @@ func Test_Parse(t *testing.T) {
 	})
 }
 
-func Test_ParseArgs(t *testing.T) {
+func TestParseArgs(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		p, err := gcmd.ParseArgs(
 			[]string{"gf", "--force", "remove", "-fq", "-p=www", "path", "-n", "root"},

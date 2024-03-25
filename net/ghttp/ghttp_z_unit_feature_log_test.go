@@ -22,7 +22,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_Log(t *testing.T) {
+func TestLog(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		logDir := gfile.Temp(gtime.TimestampNanoStr())
 		s := g.Server(guid.S())

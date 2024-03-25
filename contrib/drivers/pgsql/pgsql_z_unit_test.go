@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/contrib/drivers/pgsql/v2"
 )
 
-func Test_LastInsertId(t *testing.T) {
+func TestLastInsertId(t *testing.T) {
 	// err not nil
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Model("notexist").Insert(g.List{
@@ -47,7 +47,7 @@ func Test_LastInsertId(t *testing.T) {
 	})
 }
 
-func Test_TxLastInsertId(t *testing.T) {
+func TestTxLastInsertId(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		tableName := createTable()
 		defer dropTable(tableName)
@@ -84,7 +84,7 @@ func Test_TxLastInsertId(t *testing.T) {
 	})
 }
 
-func Test_Driver_DoFilter(t *testing.T) {
+func TestDriverDoFilter(t *testing.T) {
 	var (
 		ctx    = gctx.New()
 		driver = pgsql.Driver{}

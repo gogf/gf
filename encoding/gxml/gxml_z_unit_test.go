@@ -56,7 +56,7 @@ func buildXml(charset string, str string) (string, string) {
 }
 
 // 测试XML中字符集的转换
-func Test_XmlToJson(t *testing.T) {
+func TestXmlToJson(t *testing.T) {
 	for _, v := range testData {
 		srcXml, dstXml := buildXml(v.otherEncoding, v.utf8)
 		if len(srcXml) == 0 && len(dstXml) == 0 {
@@ -80,7 +80,7 @@ func Test_XmlToJson(t *testing.T) {
 	}
 }
 
-func Test_Decode1(t *testing.T) {
+func TestDecode1(t *testing.T) {
 	for _, v := range testData {
 		srcXml, dstXml := buildXml(v.otherEncoding, v.utf8)
 		if len(srcXml) == 0 && len(dstXml) == 0 {
@@ -106,7 +106,7 @@ func Test_Decode1(t *testing.T) {
 	}
 }
 
-func Test_Decode2(t *testing.T) {
+func TestDecode2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		content := `
 <?xml version="1.0" encoding="UTF-8"?><doc><username>johngcn</username><password1>123456</password1><password2>123456</password2></doc>
@@ -119,7 +119,7 @@ func Test_Decode2(t *testing.T) {
 	})
 }
 
-func Test_DecodeWitoutRoot(t *testing.T) {
+func TestDecodeWitoutRoot(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		content := `
 <?xml version="1.0" encoding="UTF-8"?><doc><username>johngcn</username><password1>123456</password1><password2>123456</password2></doc>
@@ -132,7 +132,7 @@ func Test_DecodeWitoutRoot(t *testing.T) {
 	})
 }
 
-func Test_Encode(t *testing.T) {
+func TestEncode(t *testing.T) {
 	m := make(map[string]interface{})
 	v := map[string]interface{}{
 		"string": "hello world",
@@ -154,7 +154,7 @@ func Test_Encode(t *testing.T) {
 	}
 }
 
-func Test_EncodeIndent(t *testing.T) {
+func TestEncodeIndent(t *testing.T) {
 	m := make(map[string]interface{})
 	v := map[string]interface{}{
 		"string": "hello world",

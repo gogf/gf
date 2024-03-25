@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func Test_ToJson(t *testing.T) {
+func TestToJson(t *testing.T) {
 	type ModifyFieldInfoType struct {
 		Id  int64  `json:"id"`
 		New string `json:"new"`
@@ -48,7 +48,7 @@ func Test_ToJson(t *testing.T) {
 	})
 }
 
-func Test_MapAttributeConvert(t *testing.T) {
+func TestMapAttributeConvert(t *testing.T) {
 	var data = `
  {
    "title": {"l1":"标签1","l2":"标签2"}

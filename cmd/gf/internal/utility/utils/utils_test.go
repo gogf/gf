@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_GetModPath(t *testing.T) {
+func TestGetModPath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		goModPath := utils.GetModPath()
 		fmt.Println(goModPath)

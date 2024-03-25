@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func Test_SearchArray(t *testing.T) {
+func TestSearchArray(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a := g.SliceStr{"a", "b", "c"}
 		t.AssertEQ(gstr.SearchArray(a, "a"), 0)
@@ -26,7 +26,7 @@ func Test_SearchArray(t *testing.T) {
 	})
 }
 
-func Test_InArray(t *testing.T) {
+func TestInArray(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a := g.SliceStr{"a", "b", "c"}
 		t.AssertEQ(gstr.InArray(a, "a"), true)
@@ -36,7 +36,7 @@ func Test_InArray(t *testing.T) {
 	})
 }
 
-func Test_PrefixArray(t *testing.T) {
+func TestPrefixArray(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a := g.SliceStr{"a", "b", "c"}
 		gstr.PrefixArray(a, "1-")

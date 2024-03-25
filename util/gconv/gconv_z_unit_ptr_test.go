@@ -13,7 +13,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Ptr_Functions(t *testing.T) {
+func TestPtrFunctions(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var v interface{} = 1
 		t.AssertEQ(gconv.PtrAny(v), &v)

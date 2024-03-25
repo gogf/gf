@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func TestAdapterContent_Available_Get_Data(t *testing.T) {
+func TestAdapterContentAvailableGetData(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		adapter, err := gcfg.NewAdapterContent()
 		t.AssertNil(err)
@@ -43,7 +43,7 @@ func TestAdapterContent_Available_Get_Data(t *testing.T) {
 	})
 }
 
-func TestAdapterContent_SetContent(t *testing.T) {
+func TestAdapterContentSetContent(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		adapter, err := gcfg.NewAdapterContent()
 		t.AssertNil(err)

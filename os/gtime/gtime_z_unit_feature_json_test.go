@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Json_Pointer(t *testing.T) {
+func TestJsonPointer(t *testing.T) {
 	// Marshal
 	gtest.C(t, func(t *gtest.T) {
 		type MyTime struct {
@@ -70,7 +70,7 @@ func Test_Json_Pointer(t *testing.T) {
 	})
 }
 
-func Test_Json_Struct(t *testing.T) {
+func TestJsonStruct(t *testing.T) {
 	// Marshal struct.
 	gtest.C(t, func(t *gtest.T) {
 		type MyTime struct {

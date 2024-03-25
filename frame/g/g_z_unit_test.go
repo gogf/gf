@@ -22,38 +22,38 @@ var (
 	ctx = context.TODO()
 )
 
-func Test_NewVar(t *testing.T) {
+func TestNewVar(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(g.NewVar(1).Int(), 1)
 		t.Assert(g.NewVar(1, true).Int(), 1)
 	})
 }
 
-func Test_Dump(t *testing.T) {
+func TestDump(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		g.Dump("GoFrame")
 	})
 }
 
-func Test_DumpTo(t *testing.T) {
+func TestDumpTo(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		g.DumpTo(os.Stdout, "GoFrame", gutil.DumpOption{})
 	})
 }
 
-func Test_DumpWithType(t *testing.T) {
+func TestDumpWithType(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		g.DumpWithType("GoFrame", 123)
 	})
 }
 
-func Test_DumpWithOption(t *testing.T) {
+func TestDumpWithOption(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		g.DumpWithOption("GoFrame", gutil.DumpOption{})
 	})
 }
 
-func Test_Try(t *testing.T) {
+func TestTry(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		g.Try(ctx, func(ctx context.Context) {
 			g.Dump("GoFrame")
@@ -61,7 +61,7 @@ func Test_Try(t *testing.T) {
 	})
 }
 
-func Test_TryCatch(t *testing.T) {
+func TestTryCatch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		g.TryCatch(ctx, func(ctx context.Context) {
 			g.Dump("GoFrame")
@@ -78,7 +78,7 @@ func Test_TryCatch(t *testing.T) {
 	})
 }
 
-func Test_IsNil(t *testing.T) {
+func TestIsNil(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(g.IsNil(nil), true)
 		t.Assert(g.IsNil(0), false)
@@ -86,7 +86,7 @@ func Test_IsNil(t *testing.T) {
 	})
 }
 
-func Test_IsEmpty(t *testing.T) {
+func TestIsEmpty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(g.IsEmpty(nil), true)
 		t.Assert(g.IsEmpty(0), true)
@@ -94,13 +94,13 @@ func Test_IsEmpty(t *testing.T) {
 	})
 }
 
-func Test_SetDebug(t *testing.T) {
+func TestSetDebug(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		g.SetDebug(true)
 	})
 }
 
-func Test_Object(t *testing.T) {
+func TestObject(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertNE(g.Client(), nil)
 		t.AssertNE(g.Server(), nil)
@@ -117,7 +117,7 @@ func Test_Object(t *testing.T) {
 	})
 }
 
-func Test_Go(t *testing.T) {
+func TestGo(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			wg    = sync.WaitGroup{}

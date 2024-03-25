@@ -135,7 +135,7 @@ type Issue3362St struct {
 	time.Time
 }
 
-func Test_Issue3362(t *testing.T) {
+func TestIssue3362(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type A struct {
 			Issue3362 *Issue3362St `json:"issue,omitempty"`

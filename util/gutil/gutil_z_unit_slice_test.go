@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func Test_SliceCopy(t *testing.T) {
+func TestSliceCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Slice{
 			"K1", "v1", "K2", "v2",
@@ -24,7 +24,7 @@ func Test_SliceCopy(t *testing.T) {
 	})
 }
 
-func Test_SliceDelete(t *testing.T) {
+func TestSliceDelete(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Slice{
 			"K1", "v1", "K2", "v2",
@@ -36,7 +36,7 @@ func Test_SliceDelete(t *testing.T) {
 	})
 }
 
-func Test_SliceToMap(t *testing.T) {
+func TestSliceToMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Slice{
 			"K1", "v1", "K2", "v2",
@@ -70,7 +70,7 @@ func Test_SliceToMap(t *testing.T) {
 	})
 }
 
-func Test_SliceToMapWithColumnAsKey(t *testing.T) {
+func TestSliceToMapWithColumnAsKey(t *testing.T) {
 	m1 := g.Map{"K1": "v1", "K2": 1}
 	m2 := g.Map{"K1": "v2", "K2": 2}
 	s := g.Slice{m1, m2}

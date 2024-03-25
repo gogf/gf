@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func Test_To(t *testing.T) {
+func TestTo(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		w := bytes.NewBuffer(nil)
 		To(w).Error(ctx, 1, 2, 3)
@@ -28,7 +28,7 @@ func Test_To(t *testing.T) {
 	})
 }
 
-func Test_Path(t *testing.T) {
+func TestPath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		path := gfile.Temp(gtime.TimestampNanoStr())
 		file := fmt.Sprintf(`%d.log`, gtime.TimestampNano())
@@ -45,7 +45,7 @@ func Test_Path(t *testing.T) {
 	})
 }
 
-func Test_Cat(t *testing.T) {
+func TestCat(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cat := "category"
 		path := gfile.Temp(gtime.TimestampNanoStr())
@@ -63,7 +63,7 @@ func Test_Cat(t *testing.T) {
 	})
 }
 
-func Test_Level(t *testing.T) {
+func TestLevel(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		path := gfile.Temp(gtime.TimestampNanoStr())
 		file := fmt.Sprintf(`%d.log`, gtime.TimestampNano())
@@ -80,7 +80,7 @@ func Test_Level(t *testing.T) {
 	})
 }
 
-func Test_Skip(t *testing.T) {
+func TestSkip(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		path := gfile.Temp(gtime.TimestampNanoStr())
 		file := fmt.Sprintf(`%d.log`, gtime.TimestampNano())
@@ -99,7 +99,7 @@ func Test_Skip(t *testing.T) {
 	})
 }
 
-func Test_Stack(t *testing.T) {
+func TestStack(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		path := gfile.Temp(gtime.TimestampNanoStr())
 		file := fmt.Sprintf(`%d.log`, gtime.TimestampNano())
@@ -118,7 +118,7 @@ func Test_Stack(t *testing.T) {
 	})
 }
 
-func Test_StackWithFilter(t *testing.T) {
+func TestStackWithFilter(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		path := gfile.Temp(gtime.TimestampNanoStr())
 		file := fmt.Sprintf(`%d.log`, gtime.TimestampNano())
@@ -152,7 +152,7 @@ func Test_StackWithFilter(t *testing.T) {
 	})
 }
 
-func Test_Header(t *testing.T) {
+func TestHeader(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		path := gfile.Temp(gtime.TimestampNanoStr())
 		file := fmt.Sprintf(`%d.log`, gtime.TimestampNano())
@@ -181,7 +181,7 @@ func Test_Header(t *testing.T) {
 	})
 }
 
-func Test_Line(t *testing.T) {
+func TestLine(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		path := gfile.Temp(gtime.TimestampNanoStr())
 		file := fmt.Sprintf(`%d.log`, gtime.TimestampNano())
@@ -215,7 +215,7 @@ func Test_Line(t *testing.T) {
 	})
 }
 
-func Test_Async(t *testing.T) {
+func TestAsync(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		path := gfile.Temp(gtime.TimestampNanoStr())
 		file := fmt.Sprintf(`%d.log`, gtime.TimestampNano())

@@ -24,7 +24,7 @@ import (
 
 var ctx = gctx.GetInitCtx()
 
-func Test_HTTP_Registry(t *testing.T) {
+func TestHTTPRegistry(t *testing.T) {
 	var (
 		svcName = guid.S()
 		dirPath = gfile.Temp(svcName)
@@ -50,7 +50,7 @@ func Test_HTTP_Registry(t *testing.T) {
 	})
 }
 
-func Test_HTTP_Discovery_Disable(t *testing.T) {
+func TestHTTPDiscoveryDisable(t *testing.T) {
 	var (
 		svcName = guid.S()
 		dirPath = gfile.Temp(svcName)
@@ -85,7 +85,7 @@ func Test_HTTP_Discovery_Disable(t *testing.T) {
 	})
 }
 
-func Test_HTTP_Server_Endpoints(t *testing.T) {
+func TestHTTPServerEndpoints(t *testing.T) {
 	var (
 		svcName = guid.S()
 		dirPath = gfile.Temp(svcName)

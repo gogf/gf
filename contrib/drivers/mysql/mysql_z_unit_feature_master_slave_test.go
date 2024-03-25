@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_Master_Slave(t *testing.T) {
+func TestMasterSlave(t *testing.T) {
 	var err error
 
 	gtest.C(t, func(t *gtest.T) {

@@ -48,7 +48,7 @@ var testData = map[string]interface{}{
 
 var testBitData = []int{0, 99, 122, 129, 222, 999, 22322}
 
-func Test_EncodeAndDecode(t *testing.T) {
+func TestEncodeAndDecode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for k, v := range testData {
 			ve := gbinary.Encode(v)
@@ -113,7 +113,7 @@ func Test_EncodeAndDecode(t *testing.T) {
 	})
 }
 
-func Test_EncodeStruct(t *testing.T) {
+func TestEncodeStruct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		user := User{"wenzi1", 999, "www.baidu.com"}
 		ve := gbinary.Encode(user)
@@ -122,7 +122,7 @@ func Test_EncodeStruct(t *testing.T) {
 	})
 }
 
-func Test_Bits(t *testing.T) {
+func TestBits(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for i := range testBitData {
 			bits := make([]gbinary.Bit, 0)

@@ -23,7 +23,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-func Test_BindMiddleware_Basic1(t *testing.T) {
+func TestBindMiddlewareBasic1(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
@@ -61,7 +61,7 @@ func Test_BindMiddleware_Basic1(t *testing.T) {
 	})
 }
 
-func Test_BindMiddleware_Basic2(t *testing.T) {
+func TestBindMiddlewareBasic2(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
@@ -86,7 +86,7 @@ func Test_BindMiddleware_Basic2(t *testing.T) {
 	})
 }
 
-func Test_BindMiddleware_Basic3(t *testing.T) {
+func TestBindMiddlewareBasic3(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
@@ -128,7 +128,7 @@ func Test_BindMiddleware_Basic3(t *testing.T) {
 	})
 }
 
-func Test_BindMiddleware_Basic4(t *testing.T) {
+func TestBindMiddlewareBasic4(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(func(r *ghttp.Request) {
@@ -158,7 +158,7 @@ func Test_BindMiddleware_Basic4(t *testing.T) {
 	})
 }
 
-func Test_Middleware_With_Static(t *testing.T) {
+func TestMiddlewareWithStatic(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(func(r *ghttp.Request) {
@@ -186,7 +186,7 @@ func Test_Middleware_With_Static(t *testing.T) {
 	})
 }
 
-func Test_Middleware_Status(t *testing.T) {
+func TestMiddlewareStatus(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(func(r *ghttp.Request) {
@@ -215,7 +215,7 @@ func Test_Middleware_Status(t *testing.T) {
 	})
 }
 
-func Test_Middleware_Hook_With_Static(t *testing.T) {
+func TestMiddlewareHookWithStatic(t *testing.T) {
 	s := g.Server(guid.S())
 	a := garray.New(true)
 	s.Group("/", func(group *ghttp.RouterGroup) {
@@ -267,7 +267,7 @@ func Test_Middleware_Hook_With_Static(t *testing.T) {
 	})
 }
 
-func Test_BindMiddleware_Status(t *testing.T) {
+func TestBindMiddlewareStatus(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
@@ -291,7 +291,7 @@ func Test_BindMiddleware_Status(t *testing.T) {
 	})
 }
 
-func Test_BindMiddlewareDefault_Basic1(t *testing.T) {
+func TestBindMiddlewareDefaultBasic1(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
@@ -320,7 +320,7 @@ func Test_BindMiddlewareDefault_Basic1(t *testing.T) {
 	})
 }
 
-func Test_BindMiddlewareDefault_Basic2(t *testing.T) {
+func TestBindMiddlewareDefaultBasic2(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("PUT:/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
@@ -351,7 +351,7 @@ func Test_BindMiddlewareDefault_Basic2(t *testing.T) {
 	})
 }
 
-func Test_BindMiddlewareDefault_Basic3(t *testing.T) {
+func TestBindMiddlewareDefaultBasic3(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
@@ -378,7 +378,7 @@ func Test_BindMiddlewareDefault_Basic3(t *testing.T) {
 	})
 }
 
-func Test_BindMiddlewareDefault_Basic4(t *testing.T) {
+func TestBindMiddlewareDefaultBasic4(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
@@ -405,7 +405,7 @@ func Test_BindMiddlewareDefault_Basic4(t *testing.T) {
 	})
 }
 
-func Test_BindMiddlewareDefault_Basic5(t *testing.T) {
+func TestBindMiddlewareDefaultBasic5(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
@@ -432,7 +432,7 @@ func Test_BindMiddlewareDefault_Basic5(t *testing.T) {
 	})
 }
 
-func Test_BindMiddlewareDefault_Status(t *testing.T) {
+func TestBindMiddlewareDefaultStatus(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
@@ -476,7 +476,7 @@ func (o *ObjectMiddleware) Info(r *ghttp.Request) {
 	r.Response.Write("Object Info")
 }
 
-func Test_BindMiddlewareDefault_Basic6(t *testing.T) {
+func TestBindMiddlewareDefaultBasic6(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindObject("/", new(ObjectMiddleware))
 	s.BindMiddlewareDefault(func(r *ghttp.Request) {
@@ -507,7 +507,7 @@ func Test_BindMiddlewareDefault_Basic6(t *testing.T) {
 	})
 }
 
-func Test_Hook_Middleware_Basic1(t *testing.T) {
+func TestHookMiddlewareBasic1(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
@@ -562,7 +562,7 @@ func MiddlewareCORS(r *ghttp.Request) {
 	r.Middleware.Next()
 }
 
-func Test_Middleware_CORSAndAuth(t *testing.T) {
+func TestMiddlewareCORSAndAuth(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Use(MiddlewareCORS)
 	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
@@ -625,7 +625,7 @@ func MiddlewareScope3(r *ghttp.Request) {
 	r.Response.Write("f")
 }
 
-func Test_Middleware_Scope(t *testing.T) {
+func TestMiddlewareScope(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(MiddlewareScope1)
@@ -660,7 +660,7 @@ func Test_Middleware_Scope(t *testing.T) {
 	})
 }
 
-func Test_Middleware_Panic(t *testing.T) {
+func TestMiddlewarePanic(t *testing.T) {
 	s := g.Server(guid.S())
 	i := 0
 	s.Group("/", func(group *ghttp.RouterGroup) {
@@ -690,7 +690,7 @@ func Test_Middleware_Panic(t *testing.T) {
 	})
 }
 
-func Test_Middleware_JsonBody(t *testing.T) {
+func TestMiddlewareJsonBody(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(ghttp.MiddlewareJsonBody)
@@ -713,7 +713,7 @@ func Test_Middleware_JsonBody(t *testing.T) {
 	})
 }
 
-func Test_MiddlewareHandlerResponse(t *testing.T) {
+func TestMiddlewareHandlerResponse(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(ghttp.MiddlewareHandlerResponse)
@@ -741,7 +741,7 @@ func Test_MiddlewareHandlerResponse(t *testing.T) {
 	})
 }
 
-func Test_MiddlewareHandlerGzipResponse(t *testing.T) {
+func TestMiddlewareHandlerGzipResponse(t *testing.T) {
 	tp := testTracerProvider{}
 	otel.SetTracerProvider(&tp)
 	s := g.Server(guid.S())

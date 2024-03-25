@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Info(t *testing.T) {
+func TestInfo(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gconv.Map(gbuild.Info()), g.Map{
 			"GoFrame": "",
@@ -28,7 +28,7 @@ func Test_Info(t *testing.T) {
 	})
 }
 
-func Test_Get(t *testing.T) {
+func TestGet(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gbuild.Get(`none`), nil)
 	})
@@ -37,7 +37,7 @@ func Test_Get(t *testing.T) {
 	})
 }
 
-func Test_Map(t *testing.T) {
+func TestMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gbuild.Data(), map[string]interface{}{})
 	})

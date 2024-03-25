@@ -23,7 +23,7 @@ var (
 	ctx = gctx.New()
 )
 
-func Test_Check(t *testing.T) {
+func TestCheck(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "abc:6,16"
 		val1 := 0
@@ -38,7 +38,7 @@ func Test_Check(t *testing.T) {
 	})
 }
 
-func Test_Array(t *testing.T) {
+func TestArray(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err := g.Validator().Data("1").Rules("array").Run(ctx)
 		t.Assert(err, "The value `1` is not of valid array type")
@@ -65,7 +65,7 @@ func Test_Array(t *testing.T) {
 	})
 }
 
-func Test_Required(t *testing.T) {
+func TestRequired(t *testing.T) {
 	if m := g.Validator().Data("1").Rules("required").Run(ctx); m != nil {
 		t.Error(m)
 	}
@@ -80,7 +80,7 @@ func Test_Required(t *testing.T) {
 	}
 }
 
-func Test_RequiredIf(t *testing.T) {
+func TestRequiredIf(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "required-if:id,1,age,18"
 		t.AssertNE(g.Validator().Data("").Assoc(g.Map{"id": 1}).Rules(rule).Run(ctx), nil)
@@ -90,7 +90,7 @@ func Test_RequiredIf(t *testing.T) {
 	})
 }
 
-func Test_RequiredUnless(t *testing.T) {
+func TestRequiredUnless(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "required-unless:id,1,age,18"
 		t.Assert(g.Validator().Data("").Assoc(g.Map{"id": 1}).Rules(rule).Run(ctx), nil)
@@ -100,7 +100,7 @@ func Test_RequiredUnless(t *testing.T) {
 	})
 }
 
-func Test_RequiredWith(t *testing.T) {
+func TestRequiredWith(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "required-with:id,name"
 		val1 := ""
@@ -189,7 +189,7 @@ func Test_RequiredWith(t *testing.T) {
 	})
 }
 
-func Test_RequiredWithAll(t *testing.T) {
+func TestRequiredWithAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "required-with-all:id,name"
 		val1 := ""
@@ -212,7 +212,7 @@ func Test_RequiredWithAll(t *testing.T) {
 	})
 }
 
-func Test_RequiredWithOut(t *testing.T) {
+func TestRequiredWithOut(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "required-without:id,name"
 		val1 := ""
@@ -235,7 +235,7 @@ func Test_RequiredWithOut(t *testing.T) {
 	})
 }
 
-func Test_RequiredWithOutAll(t *testing.T) {
+func TestRequiredWithOutAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "required-without-all:id,name"
 		val1 := ""
@@ -258,7 +258,7 @@ func Test_RequiredWithOutAll(t *testing.T) {
 	})
 }
 
-func Test_Date(t *testing.T) {
+func TestDate(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "date"
 		val1 := "2010"
@@ -288,7 +288,7 @@ func Test_Date(t *testing.T) {
 	})
 }
 
-func Test_Datetime(t *testing.T) {
+func TestDatetime(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := g.MapStrBool{
 			"2010":                false,
@@ -309,7 +309,7 @@ func Test_Datetime(t *testing.T) {
 	})
 }
 
-func Test_DateFormat(t *testing.T) {
+func TestDateFormat(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := g.MapStrStr{
 			"2010":                 "date-format:Y",
@@ -344,7 +344,7 @@ func Test_DateFormat(t *testing.T) {
 	})
 }
 
-func Test_Email(t *testing.T) {
+func TestEmail(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "email"
 		value1 := "m@johngcn"
@@ -362,7 +362,7 @@ func Test_Email(t *testing.T) {
 	})
 }
 
-func Test_Phone(t *testing.T) {
+func TestPhone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err1 := g.Validator().Data("1361990897").Rules("phone").Run(ctx)
 		err2 := g.Validator().Data("13619908979").Rules("phone").Run(ctx)
@@ -375,7 +375,7 @@ func Test_Phone(t *testing.T) {
 	})
 }
 
-func Test_PhoneLoose(t *testing.T) {
+func TestPhoneLoose(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err1 := g.Validator().Data("13333333333").Rules("phone-loose").Run(ctx)
 		err2 := g.Validator().Data("15555555555").Rules("phone-loose").Run(ctx)
@@ -392,7 +392,7 @@ func Test_PhoneLoose(t *testing.T) {
 	})
 }
 
-func Test_Telephone(t *testing.T) {
+func TestTelephone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "telephone"
 		val1 := "869265"
@@ -413,7 +413,7 @@ func Test_Telephone(t *testing.T) {
 	})
 }
 
-func Test_Passport(t *testing.T) {
+func TestPassport(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "passport"
 		val1 := "123456"
@@ -434,7 +434,7 @@ func Test_Passport(t *testing.T) {
 	})
 }
 
-func Test_Password(t *testing.T) {
+func TestPassword(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "password"
 		val1 := "12345"
@@ -455,7 +455,7 @@ func Test_Password(t *testing.T) {
 	})
 }
 
-func Test_Password2(t *testing.T) {
+func TestPassword2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "password2"
 		val1 := "12345"
@@ -482,7 +482,7 @@ func Test_Password2(t *testing.T) {
 	})
 }
 
-func Test_Password3(t *testing.T) {
+func TestPassword3(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "password3"
 		val1 := "12345"
@@ -509,7 +509,7 @@ func Test_Password3(t *testing.T) {
 	})
 }
 
-func Test_Postcode(t *testing.T) {
+func TestPostcode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "postcode"
 		val1 := "12345"
@@ -521,7 +521,7 @@ func Test_Postcode(t *testing.T) {
 	})
 }
 
-func Test_ResidentId(t *testing.T) {
+func TestResidentId(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "resident-id"
 		val1 := "11111111111111"
@@ -542,7 +542,7 @@ func Test_ResidentId(t *testing.T) {
 	})
 }
 
-func Test_BankCard(t *testing.T) {
+func TestBankCard(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "bank-card"
 		val1 := "6230514630000424470"
@@ -554,7 +554,7 @@ func Test_BankCard(t *testing.T) {
 	})
 }
 
-func Test_QQ(t *testing.T) {
+func TestQQ(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "qq"
 		val1 := "100"
@@ -575,7 +575,7 @@ func Test_QQ(t *testing.T) {
 	})
 }
 
-func Test_Ip(t *testing.T) {
+func TestIp(t *testing.T) {
 	if m := g.Validator().Data("10.0.0.1").Rules("ip").Run(ctx); m != nil {
 		t.Error(m)
 	}
@@ -605,7 +605,7 @@ func Test_Ip(t *testing.T) {
 	}
 }
 
-func Test_IPv4(t *testing.T) {
+func TestIPv4(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "ipv4"
 		val1 := "0.0.0"
@@ -626,7 +626,7 @@ func Test_IPv4(t *testing.T) {
 	})
 }
 
-func Test_IPv6(t *testing.T) {
+func TestIPv6(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "ipv6"
 		val1 := "192.168.1.1"
@@ -647,7 +647,7 @@ func Test_IPv6(t *testing.T) {
 	})
 }
 
-func Test_MAC(t *testing.T) {
+func TestMAC(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "mac"
 		val1 := "192.168.1.1"
@@ -662,7 +662,7 @@ func Test_MAC(t *testing.T) {
 	})
 }
 
-func Test_URL(t *testing.T) {
+func TestURL(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "url"
 		val1 := "127.0.0.1"
@@ -680,7 +680,7 @@ func Test_URL(t *testing.T) {
 	})
 }
 
-func Test_Domain(t *testing.T) {
+func TestDomain(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := g.MapStrBool{
 			"localhost":     false,
@@ -711,7 +711,7 @@ func Test_Domain(t *testing.T) {
 	})
 }
 
-func Test_Length(t *testing.T) {
+func TestLength(t *testing.T) {
 	rule := "length:6,16"
 	if m := g.Validator().Data("123456").Rules(rule).Run(ctx); m != nil {
 		t.Error(m)
@@ -721,7 +721,7 @@ func Test_Length(t *testing.T) {
 	}
 }
 
-func Test_MinLength(t *testing.T) {
+func TestMinLength(t *testing.T) {
 	rule := "min-length:6"
 	msgs := map[string]string{
 		"min-length": "地址长度至少为{min}位",
@@ -742,7 +742,7 @@ func Test_MinLength(t *testing.T) {
 	}
 }
 
-func Test_MaxLength(t *testing.T) {
+func TestMaxLength(t *testing.T) {
 	rule := "max-length:6"
 	msgs := map[string]string{
 		"max-length": "地址长度至大为{max}位",
@@ -763,7 +763,7 @@ func Test_MaxLength(t *testing.T) {
 	}
 }
 
-func Test_Size(t *testing.T) {
+func TestSize(t *testing.T) {
 	rule := "size:5"
 	if m := g.Validator().Data("12345").Rules(rule).Run(ctx); m != nil {
 		t.Error(m)
@@ -773,7 +773,7 @@ func Test_Size(t *testing.T) {
 	}
 }
 
-func Test_Between(t *testing.T) {
+func TestBetween(t *testing.T) {
 	rule := "between:6.01, 10.01"
 	if m := g.Validator().Data(10).Rules(rule).Run(ctx); m != nil {
 		t.Error(m)
@@ -786,7 +786,7 @@ func Test_Between(t *testing.T) {
 	}
 }
 
-func Test_Min(t *testing.T) {
+func TestMin(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "min:100"
 		val1 := "1"
@@ -811,7 +811,7 @@ func Test_Min(t *testing.T) {
 	})
 }
 
-func Test_Max(t *testing.T) {
+func TestMax(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "max:100"
 		val1 := "1"
@@ -836,7 +836,7 @@ func Test_Max(t *testing.T) {
 	})
 }
 
-func Test_Json(t *testing.T) {
+func TestJson(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "json"
 		val1 := ""
@@ -860,7 +860,7 @@ func Test_Json(t *testing.T) {
 	})
 }
 
-func Test_Integer(t *testing.T) {
+func TestInteger(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "integer"
 		val1 := ""
@@ -884,7 +884,7 @@ func Test_Integer(t *testing.T) {
 	})
 }
 
-func Test_Float(t *testing.T) {
+func TestFloat(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "float"
 		val1 := ""
@@ -908,7 +908,7 @@ func Test_Float(t *testing.T) {
 	})
 }
 
-func Test_Boolean(t *testing.T) {
+func TestBoolean(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "boolean"
 		val1 := "a"
@@ -932,7 +932,7 @@ func Test_Boolean(t *testing.T) {
 	})
 }
 
-func Test_Same(t *testing.T) {
+func TestSame(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "same:id"
 		val1 := "100"
@@ -955,7 +955,7 @@ func Test_Same(t *testing.T) {
 	})
 }
 
-func Test_Different(t *testing.T) {
+func TestDifferent(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "different:id"
 		val1 := "100"
@@ -978,7 +978,7 @@ func Test_Different(t *testing.T) {
 	})
 }
 
-func Test_EQ(t *testing.T) {
+func TestEQ(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "eq:id"
 		val1 := "100"
@@ -1001,7 +1001,7 @@ func Test_EQ(t *testing.T) {
 	})
 }
 
-func Test_Not_EQ(t *testing.T) {
+func TestNotEQ(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "not-eq:id"
 		val1 := "100"
@@ -1024,7 +1024,7 @@ func Test_Not_EQ(t *testing.T) {
 	})
 }
 
-func Test_In(t *testing.T) {
+func TestIn(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "in:100,200"
 		val1 := ""
@@ -1042,7 +1042,7 @@ func Test_In(t *testing.T) {
 	})
 }
 
-func Test_NotIn(t *testing.T) {
+func TestNotIn(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "not-in:100"
 		val1 := ""
@@ -1075,7 +1075,7 @@ func Test_NotIn(t *testing.T) {
 	})
 }
 
-func Test_Regex1(t *testing.T) {
+func TestRegex1(t *testing.T) {
 	rule := `regex:\d{6}|\D{6}|length:6,16`
 	if m := g.Validator().Data("123456").Rules(rule).Run(ctx); m != nil {
 		t.Error(m)
@@ -1085,7 +1085,7 @@ func Test_Regex1(t *testing.T) {
 	}
 }
 
-func Test_Regex2(t *testing.T) {
+func TestRegex2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := `required|min-length:6|regex:^data:image\/(jpeg|png);base64,`
 		str1 := ""
@@ -1103,7 +1103,7 @@ func Test_Regex2(t *testing.T) {
 	})
 }
 
-func Test_Not_Regex(t *testing.T) {
+func TestNotRegex(t *testing.T) {
 	rule := `not-regex:\d{6}|\D{6}|length:6,16`
 	gtest.C(t, func(t *gtest.T) {
 		err := g.Validator().Data("123456").Rules(rule).Run(ctx)
@@ -1116,7 +1116,7 @@ func Test_Not_Regex(t *testing.T) {
 }
 
 // issue: https://github.com/gogf/gf/issues/1077
-func Test_InternalError_String(t *testing.T) {
+func TestInternalErrorString(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type a struct {
 			Name string `v:"hh"`
@@ -1131,7 +1131,7 @@ func Test_InternalError_String(t *testing.T) {
 	})
 }
 
-func Test_Code(t *testing.T) {
+func TestCode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err := g.Validator().Rules("required").Data("").Run(ctx)
 		t.AssertNE(err, nil)
@@ -1145,7 +1145,7 @@ func Test_Code(t *testing.T) {
 	})
 }
 
-func Test_Bail(t *testing.T) {
+func TestBail(t *testing.T) {
 	// check value with no bail
 	gtest.C(t, func(t *gtest.T) {
 		err := g.Validator().
@@ -1196,7 +1196,7 @@ func Test_Bail(t *testing.T) {
 	})
 }
 
-func Test_After(t *testing.T) {
+func TestAfter(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Params struct {
 			T1 string `v:"after:T2"`
@@ -1247,7 +1247,7 @@ func Test_After(t *testing.T) {
 	})
 }
 
-func Test_After_Equal(t *testing.T) {
+func TestAfterEqual(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Params struct {
 			T1 string `v:"after-equal:T2"`
@@ -1310,7 +1310,7 @@ func Test_After_Equal(t *testing.T) {
 	})
 }
 
-func Test_Before(t *testing.T) {
+func TestBefore(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Params struct {
 			T1 string `v:"before:T2"`
@@ -1361,7 +1361,7 @@ func Test_Before(t *testing.T) {
 	})
 }
 
-func Test_Before_Equal(t *testing.T) {
+func TestBeforeEqual(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Params struct {
 			T1 string `v:"before-equal:T2"`
@@ -1424,7 +1424,7 @@ func Test_Before_Equal(t *testing.T) {
 	})
 }
 
-func Test_GT(t *testing.T) {
+func TestGT(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Params struct {
 			V1 string `v:"gt:V2"`
@@ -1451,7 +1451,7 @@ func Test_GT(t *testing.T) {
 	})
 }
 
-func Test_GTE(t *testing.T) {
+func TestGTE(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Params struct {
 			V1 string `v:"gte:V2"`
@@ -1490,7 +1490,7 @@ func Test_GTE(t *testing.T) {
 	})
 }
 
-func Test_LT(t *testing.T) {
+func TestLT(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Params struct {
 			V1 string `v:"lt:V2"`
@@ -1517,7 +1517,7 @@ func Test_LT(t *testing.T) {
 	})
 }
 
-func Test_LTE(t *testing.T) {
+func TestLTE(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Params struct {
 			V1 string `v:"lte:V2"`
@@ -1556,7 +1556,7 @@ func Test_LTE(t *testing.T) {
 	})
 }
 
-func Test_Enums(t *testing.T) {
+func TestEnums(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type EnumsTest string
 		const (

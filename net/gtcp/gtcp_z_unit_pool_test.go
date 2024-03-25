@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func Test_Pool_Basic1(t *testing.T) {
+func TestPoolBasic1(t *testing.T) {
 	s := gtcp.NewServer(gtcp.FreePortAddress, func(conn *gtcp.Conn) {
 		defer conn.Close()
 		for {
@@ -46,7 +46,7 @@ func Test_Pool_Basic1(t *testing.T) {
 	})
 }
 
-func Test_Pool_Basic2(t *testing.T) {
+func TestPoolBasic2(t *testing.T) {
 	s := gtcp.NewServer(gtcp.FreePortAddress, func(conn *gtcp.Conn) {
 		conn.Close()
 	})
@@ -68,7 +68,7 @@ func Test_Pool_Basic2(t *testing.T) {
 	})
 }
 
-func Test_Pool_Send(t *testing.T) {
+func TestPoolSend(t *testing.T) {
 	s := gtcp.NewServer(gtcp.FreePortAddress, func(conn *gtcp.Conn) {
 		for {
 			data, err := conn.Recv(-1)
@@ -94,7 +94,7 @@ func Test_Pool_Send(t *testing.T) {
 	})
 }
 
-func Test_Pool_Recv(t *testing.T) {
+func TestPoolRecv(t *testing.T) {
 	s := gtcp.NewServer(gtcp.FreePortAddress, func(conn *gtcp.Conn) {
 		for {
 			data, err := conn.Recv(-1)
@@ -121,7 +121,7 @@ func Test_Pool_Recv(t *testing.T) {
 	})
 }
 
-func Test_Pool_RecvLine(t *testing.T) {
+func TestPoolRecvLine(t *testing.T) {
 	s := gtcp.NewServer(gtcp.FreePortAddress, func(conn *gtcp.Conn) {
 		for {
 			data, err := conn.Recv(-1)
@@ -149,7 +149,7 @@ func Test_Pool_RecvLine(t *testing.T) {
 	})
 }
 
-func Test_Pool_RecvTill(t *testing.T) {
+func TestPoolRecvTill(t *testing.T) {
 	s := gtcp.NewServer(gtcp.FreePortAddress, func(conn *gtcp.Conn) {
 		for {
 			data, err := conn.Recv(-1)
@@ -176,7 +176,7 @@ func Test_Pool_RecvTill(t *testing.T) {
 	})
 }
 
-func Test_Pool_RecvWithTimeout(t *testing.T) {
+func TestPoolRecvWithTimeout(t *testing.T) {
 	s := gtcp.NewServer(gtcp.FreePortAddress, func(conn *gtcp.Conn) {
 		for {
 			data, err := conn.Recv(-1)
@@ -203,7 +203,7 @@ func Test_Pool_RecvWithTimeout(t *testing.T) {
 	})
 }
 
-func Test_Pool_SendWithTimeout(t *testing.T) {
+func TestPoolSendWithTimeout(t *testing.T) {
 	s := gtcp.NewServer(gtcp.FreePortAddress, func(conn *gtcp.Conn) {
 		for {
 			data, err := conn.Recv(-1)
@@ -229,7 +229,7 @@ func Test_Pool_SendWithTimeout(t *testing.T) {
 	})
 }
 
-func Test_Pool_SendRecvWithTimeout(t *testing.T) {
+func TestPoolSendRecvWithTimeout(t *testing.T) {
 	s := gtcp.NewServer(gtcp.FreePortAddress, func(conn *gtcp.Conn) {
 		for {
 			data, err := conn.Recv(-1)

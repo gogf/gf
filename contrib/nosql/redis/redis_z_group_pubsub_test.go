@@ -12,7 +12,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_GroupPubSub_Publish(t *testing.T) {
+func TestGroupPubSubPublish(t *testing.T) {
 	defer redis.FlushAll(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		conn, subs, err := redis.Subscribe(ctx, "gf")
@@ -31,7 +31,7 @@ func Test_GroupPubSub_Publish(t *testing.T) {
 	})
 }
 
-func Test_GroupPubSub_Subscribe(t *testing.T) {
+func TestGroupPubSubSubscribe(t *testing.T) {
 	defer redis.FlushAll(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		conn, subs, err := redis.Subscribe(ctx, "aa", "bb", "gf")
@@ -53,7 +53,7 @@ func Test_GroupPubSub_Subscribe(t *testing.T) {
 	})
 }
 
-func Test_GroupPubSub_PSubscribe(t *testing.T) {
+func TestGroupPubSubPSubscribe(t *testing.T) {
 	defer redis.FlushAll(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		conn, subs, err := redis.PSubscribe(ctx, "aa", "bb", "g?")

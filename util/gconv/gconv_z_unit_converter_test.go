@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func TestConverter_ConvertWithRefer(t *testing.T) {
+func TestConverterConvertWithRefer(t *testing.T) {
 	type tA struct {
 		Val int
 	}
@@ -62,7 +62,7 @@ func TestConverter_ConvertWithRefer(t *testing.T) {
 	})
 }
 
-func TestConverter_Struct(t *testing.T) {
+func TestConverterStruct(t *testing.T) {
 	type tA struct {
 		Val int
 	}
@@ -273,7 +273,7 @@ func TestConverter_Struct(t *testing.T) {
 	})
 }
 
-func TestConverter_CustomBasicType_ToStruct(t *testing.T) {
+func TestConverterCustomBasicTypeToStruct(t *testing.T) {
 	type CustomString string
 	type CustomStruct struct {
 		S string
@@ -320,7 +320,7 @@ func TestConverter_CustomBasicType_ToStruct(t *testing.T) {
 }
 
 // fix: https://github.com/gogf/gf/issues/3099
-func TestConverter_CustomTimeType_ToStruct(t *testing.T) {
+func TestConverterCustomTimeTypeToStruct(t *testing.T) {
 	type timestamppb struct {
 		S string
 	}

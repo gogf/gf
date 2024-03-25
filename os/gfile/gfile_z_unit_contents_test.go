@@ -53,7 +53,7 @@ func testpath() string {
 	return gstr.TrimRight(os.TempDir(), "\\/")
 }
 
-func Test_GetContents(t *testing.T) {
+func TestGetContents(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 
 		var (
@@ -68,7 +68,7 @@ func Test_GetContents(t *testing.T) {
 	})
 }
 
-func Test_GetBinContents(t *testing.T) {
+func TestGetBinContents(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			filepaths1  = "/testfile_t1.txt"
@@ -89,7 +89,7 @@ func Test_GetBinContents(t *testing.T) {
 	})
 }
 
-func Test_Truncate(t *testing.T) {
+func TestTruncate(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			filepaths1 = "/testfile_GetContentsyyui.txt"
@@ -114,7 +114,7 @@ func Test_Truncate(t *testing.T) {
 	})
 }
 
-func Test_PutContents(t *testing.T) {
+func TestPutContents(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			filepaths   = "/testfile_PutContents.txt"
@@ -137,7 +137,7 @@ func Test_PutContents(t *testing.T) {
 	})
 }
 
-func Test_PutContentsAppend(t *testing.T) {
+func TestPutContentsAppend(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			filepaths   = "/testfile_PutContents.txt"
@@ -161,7 +161,7 @@ func Test_PutContentsAppend(t *testing.T) {
 
 }
 
-func Test_PutBinContents(t *testing.T) {
+func TestPutBinContents(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			filepaths   = "/testfile_PutContents.txt"
@@ -184,7 +184,7 @@ func Test_PutBinContents(t *testing.T) {
 	})
 }
 
-func Test_PutBinContentsAppend(t *testing.T) {
+func TestPutBinContentsAppend(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			filepaths   = "/testfile_PutContents.txt"
@@ -206,7 +206,7 @@ func Test_PutBinContentsAppend(t *testing.T) {
 	})
 }
 
-func Test_GetBinContentsByTwoOffsetsByPath(t *testing.T) {
+func TestGetBinContentsByTwoOffsetsByPath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			filepaths   = "/testfile_GetContents.txt"
@@ -226,7 +226,7 @@ func Test_GetBinContentsByTwoOffsetsByPath(t *testing.T) {
 
 }
 
-func Test_GetNextCharOffsetByPath(t *testing.T) {
+func TestGetNextCharOffsetByPath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			filepaths  = "/testfile_GetContents.txt"
@@ -243,7 +243,7 @@ func Test_GetNextCharOffsetByPath(t *testing.T) {
 	})
 }
 
-func Test_GetNextCharOffset(t *testing.T) {
+func TestGetNextCharOffset(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			localindex int64
@@ -259,7 +259,7 @@ func Test_GetNextCharOffset(t *testing.T) {
 	})
 }
 
-func Test_GetBinContentsByTwoOffsets(t *testing.T) {
+func TestGetBinContentsByTwoOffsets(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			reads []byte
@@ -275,7 +275,7 @@ func Test_GetBinContentsByTwoOffsets(t *testing.T) {
 	})
 }
 
-func Test_GetBinContentsTilChar(t *testing.T) {
+func TestGetBinContentsTilChar(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			reads  []byte
@@ -292,7 +292,7 @@ func Test_GetBinContentsTilChar(t *testing.T) {
 	})
 }
 
-func Test_GetBinContentsTilCharByPath(t *testing.T) {
+func TestGetBinContentsTilCharByPath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			reads     []byte
@@ -315,7 +315,7 @@ func Test_GetBinContentsTilCharByPath(t *testing.T) {
 	})
 }
 
-func Test_Home(t *testing.T) {
+func TestHome(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			reads string
@@ -328,7 +328,7 @@ func Test_Home(t *testing.T) {
 	})
 }
 
-func Test_NotFound(t *testing.T) {
+func TestNotFound(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		teatFile := gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/readline/error.log"
 		callback := func(line string) error {
@@ -339,7 +339,7 @@ func Test_NotFound(t *testing.T) {
 	})
 }
 
-func Test_ReadLines(t *testing.T) {
+func TestReadLines(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			expectList = []string{"a", "b", "c", "d", "e"}
@@ -356,7 +356,7 @@ func Test_ReadLines(t *testing.T) {
 	})
 }
 
-func Test_ReadLines_Error(t *testing.T) {
+func TestReadLinesError(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			callback = func(line string) error {
@@ -369,7 +369,7 @@ func Test_ReadLines_Error(t *testing.T) {
 	})
 }
 
-func Test_ReadLinesBytes(t *testing.T) {
+func TestReadLinesBytes(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			expectList = [][]byte{[]byte("a"), []byte("b"), []byte("c"), []byte("d"), []byte("e")}
@@ -386,7 +386,7 @@ func Test_ReadLinesBytes(t *testing.T) {
 	})
 }
 
-func Test_ReadLinesBytes_Error(t *testing.T) {
+func TestReadLinesBytesError(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			callback = func(line []byte) error {

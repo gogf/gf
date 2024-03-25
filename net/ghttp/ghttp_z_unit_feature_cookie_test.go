@@ -19,7 +19,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_Cookie(t *testing.T) {
+func TestCookie(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/set", func(r *ghttp.Request) {
 		r.Cookie.Set(r.Get("k").String(), r.Get("v").String())
@@ -60,7 +60,7 @@ func Test_Cookie(t *testing.T) {
 	})
 }
 
-func Test_SetHttpCookie(t *testing.T) {
+func TestSetHttpCookie(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/set", func(r *ghttp.Request) {
 		r.Cookie.SetHttpCookie(&http.Cookie{
@@ -103,7 +103,7 @@ func Test_SetHttpCookie(t *testing.T) {
 	})
 }
 
-func Test_CookieOptionsDefault(t *testing.T) {
+func TestCookieOptionsDefault(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/test", func(r *ghttp.Request) {
 		r.Cookie.Set(r.Get("k").String(), r.Get("v").String())
@@ -131,7 +131,7 @@ func Test_CookieOptionsDefault(t *testing.T) {
 	})
 }
 
-func Test_CookieOptions(t *testing.T) {
+func TestCookieOptions(t *testing.T) {
 	s := g.Server(guid.S())
 	s.SetConfigWithMap(g.Map{
 		"cookieSameSite": "lax",

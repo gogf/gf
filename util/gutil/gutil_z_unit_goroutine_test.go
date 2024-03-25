@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func Test_Go(t *testing.T) {
+func TestGo(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			wg    = sync.WaitGroup{}

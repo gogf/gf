@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Time(t *testing.T) {
+func TestTime(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertEQ(gconv.Duration(""), time.Duration(int64(0)))
 		t.AssertEQ(gconv.GTime(""), gtime.New())
@@ -61,7 +61,7 @@ func Test_Time(t *testing.T) {
 	})
 }
 
-func Test_Time_Slice_Attribute(t *testing.T) {
+func TestTimeSliceAttribute(t *testing.T) {
 	type SelectReq struct {
 		Arr []*gtime.Time
 		One *gtime.Time

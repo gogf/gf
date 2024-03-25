@@ -12,7 +12,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Fix_doFixV25Content(t *testing.T) {
+func TestFixdoFixV25Content(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			content = gtest.DataContent(`fix`, `fix25_content.go`)

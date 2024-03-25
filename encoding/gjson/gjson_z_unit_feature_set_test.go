@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func Test_Set1(t *testing.T) {
+func TestSet1(t *testing.T) {
 	e := []byte(`{"k1":{"k11":[1,2,3]},"k2":"v2"}`)
 	p := gjson.New(map[string]string{
 		"k1": "v1",
@@ -34,7 +34,7 @@ func Test_Set1(t *testing.T) {
 	}
 }
 
-func Test_Set2(t *testing.T) {
+func TestSet2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		e := `[[null,1]]`
 		p := gjson.New([]string{"a"})
@@ -44,7 +44,7 @@ func Test_Set2(t *testing.T) {
 	})
 }
 
-func Test_Set3(t *testing.T) {
+func TestSet3(t *testing.T) {
 	e := []byte(`{"kv":{"k1":"v1"}}`)
 	p := gjson.New([]string{"a"})
 	p.Set("kv", map[string]string{
@@ -59,7 +59,7 @@ func Test_Set3(t *testing.T) {
 	}
 }
 
-func Test_Set4(t *testing.T) {
+func TestSet4(t *testing.T) {
 	e := []byte(`["a",[{"k1":"v1"}]]`)
 	p := gjson.New([]string{"a"})
 	p.Set("1.0", map[string]string{
@@ -75,7 +75,7 @@ func Test_Set4(t *testing.T) {
 	}
 }
 
-func Test_Set5(t *testing.T) {
+func TestSet5(t *testing.T) {
 	e := []byte(`[[[[[[[[[[[[[[[[[[[[[1,2,3]]]]]]]]]]]]]]]]]]]]]`)
 	p := gjson.New([]string{"a"})
 	p.Set("0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0", []int{1, 2, 3})
@@ -89,7 +89,7 @@ func Test_Set5(t *testing.T) {
 	}
 }
 
-func Test_Set6(t *testing.T) {
+func TestSet6(t *testing.T) {
 	e := []byte(`["a",[1,2,3]]`)
 	p := gjson.New([]string{"a"})
 	p.Set("1", []int{1, 2, 3})
@@ -103,7 +103,7 @@ func Test_Set6(t *testing.T) {
 	}
 }
 
-func Test_Set7(t *testing.T) {
+func TestSet7(t *testing.T) {
 	e := []byte(`{"0":[null,[1,2,3]],"k1":"v1","k2":"v2"}`)
 	p := gjson.New(map[string]string{
 		"k1": "v1",
@@ -120,7 +120,7 @@ func Test_Set7(t *testing.T) {
 	}
 }
 
-func Test_Set8(t *testing.T) {
+func TestSet8(t *testing.T) {
 	e := []byte(`{"0":[[[[[[null,[1,2,3]]]]]]],"k1":"v1","k2":"v2"}`)
 	p := gjson.New(map[string]string{
 		"k1": "v1",
@@ -137,7 +137,7 @@ func Test_Set8(t *testing.T) {
 	}
 }
 
-func Test_Set9(t *testing.T) {
+func TestSet9(t *testing.T) {
 	e := []byte(`{"k1":[null,[1,2,3]],"k2":"v2"}`)
 	p := gjson.New(map[string]string{
 		"k1": "v1",
@@ -154,7 +154,7 @@ func Test_Set9(t *testing.T) {
 	}
 }
 
-func Test_Set10(t *testing.T) {
+func TestSet10(t *testing.T) {
 	e := []byte(`{"a":{"b":{"c":1}}}`)
 	p := gjson.New(nil)
 	p.Set("a.b.c", 1)
@@ -168,7 +168,7 @@ func Test_Set10(t *testing.T) {
 	}
 }
 
-func Test_Set11(t *testing.T) {
+func TestSet11(t *testing.T) {
 	e := []byte(`{"a":{"b":{}}}`)
 	p, _ := gjson.LoadContent([]byte(`{"a":{"b":{"c":1}}}`))
 	p.Remove("a.b.c")
@@ -182,7 +182,7 @@ func Test_Set11(t *testing.T) {
 	}
 }
 
-func Test_Set12(t *testing.T) {
+func TestSet12(t *testing.T) {
 	e := []byte(`[0,1]`)
 	p := gjson.New(nil)
 	p.Set("0", 0)
@@ -197,7 +197,7 @@ func Test_Set12(t *testing.T) {
 	}
 }
 
-func Test_Set13(t *testing.T) {
+func TestSet13(t *testing.T) {
 	e := []byte(`{"array":[0,1]}`)
 	p := gjson.New(nil)
 	p.Set("array.0", 0)
@@ -212,7 +212,7 @@ func Test_Set13(t *testing.T) {
 	}
 }
 
-func Test_Set14(t *testing.T) {
+func TestSet14(t *testing.T) {
 	e := []byte(`{"f":{"a":1}}`)
 	p := gjson.New(nil)
 	p.Set("f", "m")
@@ -227,7 +227,7 @@ func Test_Set14(t *testing.T) {
 	}
 }
 
-func Test_Set15(t *testing.T) {
+func TestSet15(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		j := gjson.New(nil)
 
@@ -250,7 +250,7 @@ func Test_Set15(t *testing.T) {
 	})
 }
 
-func Test_Set16(t *testing.T) {
+func TestSet16(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		j := gjson.New(nil)
 
@@ -272,7 +272,7 @@ func Test_Set16(t *testing.T) {
 	})
 }
 
-func Test_Set17(t *testing.T) {
+func TestSet17(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		j := gjson.New(nil)
 
@@ -287,7 +287,7 @@ func Test_Set17(t *testing.T) {
 	})
 }
 
-func Test_Set18(t *testing.T) {
+func TestSet18(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		j := gjson.New(nil)
 
@@ -299,7 +299,7 @@ func Test_Set18(t *testing.T) {
 	})
 }
 
-func Test_Set19(t *testing.T) {
+func TestSet19(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		j := gjson.New(nil)
 
@@ -311,7 +311,7 @@ func Test_Set19(t *testing.T) {
 	})
 }
 
-func Test_Set20(t *testing.T) {
+func TestSet20(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		j := gjson.New(nil)
 
@@ -331,7 +331,7 @@ func Test_Set20(t *testing.T) {
 	})
 }
 
-func Test_Set_GArray(t *testing.T) {
+func TestSetGArray(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		j := gjson.New(nil)
 		arr := garray.New().Append("test")
@@ -340,7 +340,7 @@ func Test_Set_GArray(t *testing.T) {
 	})
 }
 
-func Test_Set_WithEmptyStruct(t *testing.T) {
+func TestSetWithEmptyStruct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		j := gjson.New(&struct{}{})
 		t.AssertNil(j.Set("aa", "123"))

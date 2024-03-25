@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_Router_Group_Hook1(t *testing.T) {
+func TestRouterGroupHook1(t *testing.T) {
 	s := g.Server(guid.S())
 	group := s.Group("/api")
 	group.GET("/handler", func(r *ghttp.Request) {
@@ -44,7 +44,7 @@ func Test_Router_Group_Hook1(t *testing.T) {
 	})
 }
 
-func Test_Router_Group_Hook2(t *testing.T) {
+func TestRouterGroupHook2(t *testing.T) {
 	s := g.Server(guid.S())
 	group := s.Group("/api")
 	group.GET("/handler", func(r *ghttp.Request) {

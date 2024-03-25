@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Map(t *testing.T) {
+func TestMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			rule = "ipv4"
@@ -29,7 +29,7 @@ func Test_Map(t *testing.T) {
 	})
 }
 
-func Test_FirstString(t *testing.T) {
+func TestFirstString(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			rule = "ipv4"
@@ -40,7 +40,7 @@ func Test_FirstString(t *testing.T) {
 	})
 }
 
-func Test_CustomError1(t *testing.T) {
+func TestCustomError1(t *testing.T) {
 	rule := "integer|length:6,16"
 	msgs := map[string]string{
 		"integer": "请输入一个整数",
@@ -63,7 +63,7 @@ func Test_CustomError1(t *testing.T) {
 	}
 }
 
-func Test_CustomError2(t *testing.T) {
+func TestCustomError2(t *testing.T) {
 	rule := "integer|length:6,16"
 	msgs := "请输入一个整数|参数长度不对啊老铁"
 	e := g.Validator().Data("6.66").Rules(rule).Messages(msgs).Run(context.TODO())

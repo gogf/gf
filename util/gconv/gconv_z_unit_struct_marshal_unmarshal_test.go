@@ -37,7 +37,7 @@ func (st *MyTimeSt) UnmarshalValue(v interface{}) error {
 	return nil
 }
 
-func Test_Struct_UnmarshalValue1(t *testing.T) {
+func TestStructUnmarshalValue1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		st := &MyTimeSt{}
 		err := gconv.Struct(g.Map{"ServiceDate": "2020-10-10 12:00:01"}, st)
@@ -99,7 +99,7 @@ func (p *Pkg) UnmarshalValue(v interface{}) error {
 	return nil
 }
 
-func Test_Struct_UnmarshalValue2(t *testing.T) {
+func TestStructUnmarshalValue2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var p1, p2 *Pkg
 		p1 = NewPkg([]byte("123"))

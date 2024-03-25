@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/util/gvalid"
 )
 
-func TestValidator_I18n(t *testing.T) {
+func TestValidatorI18n(t *testing.T) {
 	var (
 		err         gvalid.Error
 		i18nManager = gi18n.New(gi18n.Options{Path: gtest.DataPath("i18n")})

@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func Test_New(t *testing.T) {
+func TestNew(t *testing.T) {
 	// time.Time
 	gtest.C(t, func(t *gtest.T) {
 		timeNow := time.Now()
@@ -89,7 +89,7 @@ func Test_New(t *testing.T) {
 	})
 }
 
-func Test_Nil(t *testing.T) {
+func TestNil(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var t1 *gtime.Time
 		t.Assert(t1.String(), "")
@@ -100,7 +100,7 @@ func Test_Nil(t *testing.T) {
 	})
 }
 
-func Test_NewFromStr(t *testing.T) {
+func TestNewFromStr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2006-01-02 15:04:05")
 		t.Assert(timeTemp.Format("Y-m-d H:i:s"), "2006-01-02 15:04:05")
@@ -112,7 +112,7 @@ func Test_NewFromStr(t *testing.T) {
 	})
 }
 
-func Test_String(t *testing.T) {
+func TestString(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t1 := gtime.NewFromStr("2006-01-02 15:04:05")
 		t.Assert(t1.String(), "2006-01-02 15:04:05")
@@ -124,7 +124,7 @@ func Test_String(t *testing.T) {
 	})
 }
 
-func Test_NewFromStrFormat(t *testing.T) {
+func TestNewFromStrFormat(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStrFormat("2006-01-02 15:04:05", "Y-m-d H:i:s")
 		t.Assert(timeTemp.Format("Y-m-d H:i:s"), "2006-01-02 15:04:05")
@@ -144,7 +144,7 @@ func Test_NewFromStrFormat(t *testing.T) {
 	})
 }
 
-func Test_NewFromStrLayout(t *testing.T) {
+func TestNewFromStrLayout(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStrLayout("2006-01-02 15:04:05", "2006-01-02 15:04:05")
 		t.Assert(timeTemp.Format("Y-m-d H:i:s"), "2006-01-02 15:04:05")
@@ -156,7 +156,7 @@ func Test_NewFromStrLayout(t *testing.T) {
 	})
 }
 
-func Test_NewFromTimeStamp(t *testing.T) {
+func TestNewFromTimeStamp(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromTimeStamp(1554459846000)
 		t.Assert(timeTemp.Format("Y-m-d H:i:s"), "2019-04-05 18:24:06")
@@ -167,21 +167,21 @@ func Test_NewFromTimeStamp(t *testing.T) {
 	})
 }
 
-func Test_Time_Second(t *testing.T) {
+func TestTimeSecond(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.Now()
 		t.Assert(timeTemp.Second(), timeTemp.Time.Second())
 	})
 }
 
-func Test_Time_IsZero(t *testing.T) {
+func TestTimeIsZero(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var ti *gtime.Time = nil
 		t.Assert(ti.IsZero(), true)
 	})
 }
 
-func Test_Time_AddStr(t *testing.T) {
+func TestTimeAddStr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		gt := gtime.New("2018-08-08 08:08:08")
 		gt1, err := gt.AddStr("10T")
@@ -190,7 +190,7 @@ func Test_Time_AddStr(t *testing.T) {
 	})
 }
 
-func Test_Time_Equal(t *testing.T) {
+func TestTimeEqual(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var t1 *gtime.Time = nil
 		var t2 = gtime.New()
@@ -200,7 +200,7 @@ func Test_Time_Equal(t *testing.T) {
 	})
 }
 
-func Test_Time_After(t *testing.T) {
+func TestTimeAfter(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var t1 *gtime.Time = nil
 		var t2 = gtime.New()
@@ -209,7 +209,7 @@ func Test_Time_After(t *testing.T) {
 	})
 }
 
-func Test_Time_Sub(t *testing.T) {
+func TestTimeSub(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var t1 *gtime.Time = nil
 		var t2 = gtime.New()
@@ -218,49 +218,49 @@ func Test_Time_Sub(t *testing.T) {
 	})
 }
 
-func Test_Time_Nanosecond(t *testing.T) {
+func TestTimeNanosecond(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.Now()
 		t.Assert(timeTemp.Nanosecond(), timeTemp.Time.Nanosecond())
 	})
 }
 
-func Test_Time_Microsecond(t *testing.T) {
+func TestTimeMicrosecond(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.Now()
 		t.Assert(timeTemp.Microsecond(), timeTemp.Time.Nanosecond()/1e3)
 	})
 }
 
-func Test_Time_Millisecond(t *testing.T) {
+func TestTimeMillisecond(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.Now()
 		t.Assert(timeTemp.Millisecond(), timeTemp.Time.Nanosecond()/1e6)
 	})
 }
 
-func Test_Time_String(t *testing.T) {
+func TestTimeString(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.Now()
 		t.Assert(timeTemp.String(), timeTemp.Time.Format("2006-01-02 15:04:05"))
 	})
 }
 
-func Test_Time_ISO8601(t *testing.T) {
+func TestTimeISO8601(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		now := gtime.Now()
 		t.Assert(now.ISO8601(), now.Format("c"))
 	})
 }
 
-func Test_Time_RFC822(t *testing.T) {
+func TestTimeRFC822(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		now := gtime.Now()
 		t.Assert(now.RFC822(), now.Format("r"))
 	})
 }
 
-func Test_Clone(t *testing.T) {
+func TestClone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.Now()
 		timeTemp1 := timeTemp.Clone()
@@ -268,7 +268,7 @@ func Test_Clone(t *testing.T) {
 	})
 }
 
-func Test_ToTime(t *testing.T) {
+func TestToTime(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.Now()
 		timeTemp1 := timeTemp.Time
@@ -276,7 +276,7 @@ func Test_ToTime(t *testing.T) {
 	})
 }
 
-func Test_Add(t *testing.T) {
+func TestAdd(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2006-01-02 15:04:05")
 		timeTemp = timeTemp.Add(time.Second)
@@ -284,7 +284,7 @@ func Test_Add(t *testing.T) {
 	})
 }
 
-func Test_ToZone(t *testing.T) {
+func TestToZone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.Now()
 		timeTemp, _ = timeTemp.ToZone("America/Los_Angeles")
@@ -304,7 +304,7 @@ func Test_ToZone(t *testing.T) {
 	})
 }
 
-func Test_AddDate(t *testing.T) {
+func TestAddDate(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2006-01-02 15:04:05")
 		timeTemp = timeTemp.AddDate(1, 2, 3)
@@ -312,7 +312,7 @@ func Test_AddDate(t *testing.T) {
 	})
 }
 
-func Test_UTC(t *testing.T) {
+func TestUTC(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.Now()
 		timeTemp1 := timeTemp.Time
@@ -321,7 +321,7 @@ func Test_UTC(t *testing.T) {
 	})
 }
 
-func Test_Local(t *testing.T) {
+func TestLocal(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.Now()
 		timeTemp1 := timeTemp.Time
@@ -330,7 +330,7 @@ func Test_Local(t *testing.T) {
 	})
 }
 
-func Test_Round(t *testing.T) {
+func TestRound(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.Now()
 		timeTemp1 := timeTemp.Time
@@ -339,7 +339,7 @@ func Test_Round(t *testing.T) {
 	})
 }
 
-func Test_Truncate(t *testing.T) {
+func TestTruncate(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.Now()
 		timeTemp1 := timeTemp.Time
@@ -348,7 +348,7 @@ func Test_Truncate(t *testing.T) {
 	})
 }
 
-func Test_StartOfMinute(t *testing.T) {
+func TestStartOfMinute(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2020-12-12 18:24:06")
 		timeTemp1 := timeTemp.StartOfMinute()
@@ -356,7 +356,7 @@ func Test_StartOfMinute(t *testing.T) {
 	})
 }
 
-func Test_EndOfMinute(t *testing.T) {
+func TestEndOfMinute(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2020-12-12 18:24:06")
 		timeTemp1 := timeTemp.EndOfMinute()
@@ -369,7 +369,7 @@ func Test_EndOfMinute(t *testing.T) {
 	})
 }
 
-func Test_StartOfHour(t *testing.T) {
+func TestStartOfHour(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2020-12-12 18:24:06")
 		timeTemp1 := timeTemp.StartOfHour()
@@ -377,7 +377,7 @@ func Test_StartOfHour(t *testing.T) {
 	})
 }
 
-func Test_EndOfHour(t *testing.T) {
+func TestEndOfHour(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2020-12-12 18:24:06")
 		timeTemp1 := timeTemp.EndOfHour()
@@ -390,7 +390,7 @@ func Test_EndOfHour(t *testing.T) {
 	})
 }
 
-func Test_StartOfDay(t *testing.T) {
+func TestStartOfDay(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2020-12-12 18:24:06")
 		timeTemp1 := timeTemp.StartOfDay()
@@ -398,7 +398,7 @@ func Test_StartOfDay(t *testing.T) {
 	})
 }
 
-func Test_EndOfDay(t *testing.T) {
+func TestEndOfDay(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2020-12-12 18:24:06")
 		timeTemp1 := timeTemp.EndOfDay()
@@ -411,7 +411,7 @@ func Test_EndOfDay(t *testing.T) {
 	})
 }
 
-func Test_StartOfWeek(t *testing.T) {
+func TestStartOfWeek(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2020-12-12 18:24:06")
 		timeTemp1 := timeTemp.StartOfWeek()
@@ -419,7 +419,7 @@ func Test_StartOfWeek(t *testing.T) {
 	})
 }
 
-func Test_EndOfWeek(t *testing.T) {
+func TestEndOfWeek(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2020-12-12 18:24:06")
 		timeTemp1 := timeTemp.EndOfWeek()
@@ -432,7 +432,7 @@ func Test_EndOfWeek(t *testing.T) {
 	})
 }
 
-func Test_StartOfMonth(t *testing.T) {
+func TestStartOfMonth(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2020-12-12 18:24:06")
 		timeTemp1 := timeTemp.StartOfMonth()
@@ -440,7 +440,7 @@ func Test_StartOfMonth(t *testing.T) {
 	})
 }
 
-func Test_EndOfMonth(t *testing.T) {
+func TestEndOfMonth(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2020-12-12 18:24:06")
 		timeTemp1 := timeTemp.EndOfMonth()
@@ -453,7 +453,7 @@ func Test_EndOfMonth(t *testing.T) {
 	})
 }
 
-func Test_StartOfQuarter(t *testing.T) {
+func TestStartOfQuarter(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2020-12-06 18:24:06")
 		timeTemp1 := timeTemp.StartOfQuarter()
@@ -461,7 +461,7 @@ func Test_StartOfQuarter(t *testing.T) {
 	})
 }
 
-func Test_EndOfQuarter(t *testing.T) {
+func TestEndOfQuarter(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2020-12-06 18:24:06")
 		timeTemp1 := timeTemp.EndOfQuarter()
@@ -474,7 +474,7 @@ func Test_EndOfQuarter(t *testing.T) {
 	})
 }
 
-func Test_StartOfHalf(t *testing.T) {
+func TestStartOfHalf(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2020-12-06 18:24:06")
 		timeTemp1 := timeTemp.StartOfHalf()
@@ -482,7 +482,7 @@ func Test_StartOfHalf(t *testing.T) {
 	})
 }
 
-func Test_EndOfHalf(t *testing.T) {
+func TestEndOfHalf(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2020-12-06 18:24:06")
 		timeTemp1 := timeTemp.EndOfHalf()
@@ -495,7 +495,7 @@ func Test_EndOfHalf(t *testing.T) {
 	})
 }
 
-func Test_StartOfYear(t *testing.T) {
+func TestStartOfYear(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2020-12-06 18:24:06")
 		timeTemp1 := timeTemp.StartOfYear()
@@ -503,7 +503,7 @@ func Test_StartOfYear(t *testing.T) {
 	})
 }
 
-func Test_EndOfYear(t *testing.T) {
+func TestEndOfYear(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2020-12-06 18:24:06")
 		timeTemp1 := timeTemp.EndOfYear()
@@ -516,14 +516,14 @@ func Test_EndOfYear(t *testing.T) {
 	})
 }
 
-func Test_OnlyTime(t *testing.T) {
+func TestOnlyTime(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		obj := gtime.NewFromStr("18:24:06")
 		t.Assert(obj.String(), "18:24:06")
 	})
 }
 
-func Test_DeepCopy(t *testing.T) {
+func TestDeepCopy(t *testing.T) {
 	type User struct {
 		Id          int
 		CreatedTime *gtime.Time
@@ -548,7 +548,7 @@ func Test_DeepCopy(t *testing.T) {
 	})
 }
 
-func Test_UnmarshalJSON(t *testing.T) {
+func TestUnmarshalJSON(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var t1 gtime.Time
 		t.AssertNE(json.Unmarshal([]byte("{}"), &t1), nil)

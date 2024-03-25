@@ -13,7 +13,7 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func Test_ComparatorString(t *testing.T) {
+func TestComparatorString(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gutil.ComparatorString(1, 1), 0)
@@ -22,7 +22,7 @@ func Test_ComparatorString(t *testing.T) {
 	})
 }
 
-func Test_ComparatorInt(t *testing.T) {
+func TestComparatorInt(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gutil.ComparatorInt(1, 1), 0)
@@ -31,7 +31,7 @@ func Test_ComparatorInt(t *testing.T) {
 	})
 }
 
-func Test_ComparatorInt8(t *testing.T) {
+func TestComparatorInt8(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gutil.ComparatorInt8(1, 1), 0)
@@ -40,7 +40,7 @@ func Test_ComparatorInt8(t *testing.T) {
 	})
 }
 
-func Test_ComparatorInt16(t *testing.T) {
+func TestComparatorInt16(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gutil.ComparatorInt16(1, 1), 0)
@@ -49,7 +49,7 @@ func Test_ComparatorInt16(t *testing.T) {
 	})
 }
 
-func Test_ComparatorInt32(t *testing.T) {
+func TestComparatorInt32(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gutil.ComparatorInt32(1, 1), 0)
@@ -58,7 +58,7 @@ func Test_ComparatorInt32(t *testing.T) {
 	})
 }
 
-func Test_ComparatorInt64(t *testing.T) {
+func TestComparatorInt64(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gutil.ComparatorInt64(1, 1), 0)
@@ -67,7 +67,7 @@ func Test_ComparatorInt64(t *testing.T) {
 	})
 }
 
-func Test_ComparatorUint(t *testing.T) {
+func TestComparatorUint(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gutil.ComparatorUint(1, 1), 0)
@@ -76,7 +76,7 @@ func Test_ComparatorUint(t *testing.T) {
 	})
 }
 
-func Test_ComparatorUint8(t *testing.T) {
+func TestComparatorUint8(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gutil.ComparatorUint8(1, 1), 0)
@@ -85,7 +85,7 @@ func Test_ComparatorUint8(t *testing.T) {
 	})
 }
 
-func Test_ComparatorUint16(t *testing.T) {
+func TestComparatorUint16(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gutil.ComparatorUint16(1, 1), 0)
@@ -94,7 +94,7 @@ func Test_ComparatorUint16(t *testing.T) {
 	})
 }
 
-func Test_ComparatorUint32(t *testing.T) {
+func TestComparatorUint32(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gutil.ComparatorUint32(1, 1), 0)
@@ -103,7 +103,7 @@ func Test_ComparatorUint32(t *testing.T) {
 	})
 }
 
-func Test_ComparatorUint64(t *testing.T) {
+func TestComparatorUint64(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gutil.ComparatorUint64(1, 1), 0)
@@ -112,7 +112,7 @@ func Test_ComparatorUint64(t *testing.T) {
 	})
 }
 
-func Test_ComparatorFloat32(t *testing.T) {
+func TestComparatorFloat32(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gutil.ComparatorFloat32(1, 1), 0)
@@ -121,7 +121,7 @@ func Test_ComparatorFloat32(t *testing.T) {
 	})
 }
 
-func Test_ComparatorFloat64(t *testing.T) {
+func TestComparatorFloat64(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gutil.ComparatorFloat64(1, 1), 0)
@@ -130,7 +130,7 @@ func Test_ComparatorFloat64(t *testing.T) {
 	})
 }
 
-func Test_ComparatorByte(t *testing.T) {
+func TestComparatorByte(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gutil.ComparatorByte(1, 1), 0)
@@ -139,7 +139,7 @@ func Test_ComparatorByte(t *testing.T) {
 	})
 }
 
-func Test_ComparatorRune(t *testing.T) {
+func TestComparatorRune(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gutil.ComparatorRune(1, 1), 0)
@@ -148,7 +148,7 @@ func Test_ComparatorRune(t *testing.T) {
 	})
 }
 
-func Test_ComparatorTime(t *testing.T) {
+func TestComparatorTime(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		j := gutil.ComparatorTime("2019-06-14", "2019-06-14")
 		t.Assert(j, 0)
@@ -161,7 +161,7 @@ func Test_ComparatorTime(t *testing.T) {
 	})
 }
 
-func Test_ComparatorFloat32OfFixed(t *testing.T) {
+func TestComparatorFloat32OfFixed(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gutil.ComparatorFloat32(0.1, 0.1), 0)
 		t.Assert(gutil.ComparatorFloat32(1.1, 2.1), -1)
@@ -169,7 +169,7 @@ func Test_ComparatorFloat32OfFixed(t *testing.T) {
 	})
 }
 
-func Test_ComparatorFloat64OfFixed(t *testing.T) {
+func TestComparatorFloat64OfFixed(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gutil.ComparatorFloat64(0.1, 0.1), 0)

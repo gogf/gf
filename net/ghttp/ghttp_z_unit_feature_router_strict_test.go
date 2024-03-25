@@ -20,7 +20,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_Router_Handler_Strict_WithObject(t *testing.T) {
+func TestRouterHandlerStrictWithObject(t *testing.T) {
 	type TestReq struct {
 		Age  int
 		Name string
@@ -136,7 +136,7 @@ func (ControllerForHandlerWithObjectAndMeta2) Test4(ctx context.Context, req *Te
 	}, nil
 }
 
-func Test_Router_Handler_Strict_WithObjectAndMeta(t *testing.T) {
+func TestRouterHandlerStrictWithObjectAndMeta(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Use(ghttp.MiddlewareHandlerResponse)
 	s.Group("/", func(group *ghttp.RouterGroup) {
@@ -158,7 +158,7 @@ func Test_Router_Handler_Strict_WithObjectAndMeta(t *testing.T) {
 	})
 }
 
-func Test_Router_Handler_Strict_Group_Bind(t *testing.T) {
+func TestRouterHandlerStrictGroupBind(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Use(ghttp.MiddlewareHandlerResponse)
 	s.Group("/api/v1", func(group *ghttp.RouterGroup) {
@@ -197,7 +197,7 @@ func Test_Router_Handler_Strict_Group_Bind(t *testing.T) {
 	})
 }
 
-func Test_Issue1708(t *testing.T) {
+func TestIssue1708(t *testing.T) {
 	type Test struct {
 		Name string `json:"name"`
 	}
@@ -255,7 +255,7 @@ func Test_Issue1708(t *testing.T) {
 	})
 }
 
-func Test_Custom_Slice_Type_Attribute(t *testing.T) {
+func TestCustomSliceTypeAttribute(t *testing.T) {
 	type (
 		WhiteListKey    string
 		WhiteListValues []string
@@ -299,7 +299,7 @@ func Test_Custom_Slice_Type_Attribute(t *testing.T) {
 	})
 }
 
-func Test_Router_Handler_Strict_WithGeneric(t *testing.T) {
+func TestRouterHandlerStrictWithGeneric(t *testing.T) {
 	type TestReq struct {
 		Age int
 	}
@@ -396,7 +396,7 @@ func (c *ParameterCaseSensitiveController) Path(
 	return &ParameterCaseSensitiveControllerPathRes{Path: req.Path}, nil
 }
 
-func Test_Router_Handler_Strict_ParameterCaseSensitive(t *testing.T) {
+func TestRouterHandlerStrictParameterCaseSensitive(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Use(ghttp.MiddlewareHandlerResponse)
 	s.Group("/", func(group *ghttp.RouterGroup) {

@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/util/gpage"
 )
 
-func Test_New(t *testing.T) {
+func TestNew(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		page := gpage.New(9, 2, 1, `/user/list?page={.page}`)
 		t.Assert(page.TotalSize, 9)
@@ -30,7 +30,7 @@ func Test_New(t *testing.T) {
 	})
 }
 
-func Test_Basic(t *testing.T) {
+func TestBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		page := gpage.New(9, 2, 1, `/user/list?page={.page}`)
 		t.Assert(page.NextPage(), `<a class="GPageLink" href="/user/list?page=2" title="">></a>`)
@@ -59,7 +59,7 @@ func Test_Basic(t *testing.T) {
 	})
 }
 
-func Test_CustomTag(t *testing.T) {
+func TestCustomTag(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		page := gpage.New(5, 1, 2, `/user/list/{.page}`)
 		page.PrevPageTag = "《"
@@ -76,7 +76,7 @@ func Test_CustomTag(t *testing.T) {
 	})
 }
 
-func Test_CustomStyle(t *testing.T) {
+func TestCustomStyle(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		page := gpage.New(5, 1, 2, `/user/list/{.page}`)
 		page.LinkStyle = "MyPageLink"
@@ -91,7 +91,7 @@ func Test_CustomStyle(t *testing.T) {
 	})
 }
 
-func Test_Ajax(t *testing.T) {
+func TestAjax(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		page := gpage.New(5, 1, 2, `/user/list/{.page}`)
 		page.AjaxActionName = "LoadPage"
@@ -103,7 +103,7 @@ func Test_Ajax(t *testing.T) {
 	})
 }
 
-func Test_PredefinedContent(t *testing.T) {
+func TestPredefinedContent(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		page := gpage.New(5, 1, 2, `/user/list/{.page}`)
 		page.AjaxActionName = "LoadPage"

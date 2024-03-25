@@ -12,7 +12,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_NewSessionId(t *testing.T) {
+func TestNewSessionId(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		id1 := NewSessionId()
 		id2 := NewSessionId()

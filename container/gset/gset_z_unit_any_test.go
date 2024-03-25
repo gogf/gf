@@ -22,7 +22,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func TestSet_Var(t *testing.T) {
+func TestSetVar(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var s gset.Set
 		s.Add(1, 1, 2)
@@ -42,7 +42,7 @@ func TestSet_Var(t *testing.T) {
 	})
 }
 
-func TestSet_New(t *testing.T) {
+func TestSetNew(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.New()
 		s.Add(1, 1, 2)
@@ -62,7 +62,7 @@ func TestSet_New(t *testing.T) {
 	})
 }
 
-func TestSet_Basic(t *testing.T) {
+func TestSetBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.NewSet()
 		s.Add(1, 1, 2)
@@ -82,7 +82,7 @@ func TestSet_Basic(t *testing.T) {
 	})
 }
 
-func TestSet_Iterator(t *testing.T) {
+func TestSetIterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.NewSet()
 		s.Add(1, 2, 3)
@@ -103,7 +103,7 @@ func TestSet_Iterator(t *testing.T) {
 	})
 }
 
-func TestSet_LockFunc(t *testing.T) {
+func TestSetLockFunc(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.NewSet()
 		s.Add(1, 2, 3)
@@ -121,7 +121,7 @@ func TestSet_LockFunc(t *testing.T) {
 	})
 }
 
-func TestSet_Equal(t *testing.T) {
+func TestSetEqual(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewSet()
 		s2 := gset.NewSet()
@@ -139,7 +139,7 @@ func TestSet_Equal(t *testing.T) {
 	})
 }
 
-func TestSet_IsSubsetOf(t *testing.T) {
+func TestSetIsSubsetOf(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewSet()
 		s2 := gset.NewSet()
@@ -158,7 +158,7 @@ func TestSet_IsSubsetOf(t *testing.T) {
 	})
 }
 
-func TestSet_Union(t *testing.T) {
+func TestSetUnion(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewSet()
 		s2 := gset.NewSet()
@@ -172,7 +172,7 @@ func TestSet_Union(t *testing.T) {
 	})
 }
 
-func TestSet_Diff(t *testing.T) {
+func TestSetDiff(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewSet()
 		s2 := gset.NewSet()
@@ -193,7 +193,7 @@ func TestSet_Diff(t *testing.T) {
 	})
 }
 
-func TestSet_Intersect(t *testing.T) {
+func TestSetIntersect(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewSet()
 		s2 := gset.NewSet()
@@ -207,7 +207,7 @@ func TestSet_Intersect(t *testing.T) {
 	})
 }
 
-func TestSet_Complement(t *testing.T) {
+func TestSetComplement(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewSet()
 		s2 := gset.NewSet()
@@ -247,7 +247,7 @@ func TestNew(t *testing.T) {
 	})
 }
 
-func TestSet_Join(t *testing.T) {
+func TestSetJoin(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.New(true)
 		s1.Add("a", "a1", "b", "c")
@@ -268,7 +268,7 @@ func TestSet_Join(t *testing.T) {
 	})
 }
 
-func TestSet_String(t *testing.T) {
+func TestSetString(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.New(true)
 		s1.Add("a", "a2", "b", "c")
@@ -286,7 +286,7 @@ func TestSet_String(t *testing.T) {
 	})
 }
 
-func TestSet_Merge(t *testing.T) {
+func TestSetMerge(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.New(true)
 		s2 := gset.New(true)
@@ -299,7 +299,7 @@ func TestSet_Merge(t *testing.T) {
 	})
 }
 
-func TestSet_Sum(t *testing.T) {
+func TestSetSum(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.New(true)
 		s1.Add(1, 2, 3, 4)
@@ -308,7 +308,7 @@ func TestSet_Sum(t *testing.T) {
 	})
 }
 
-func TestSet_Pop(t *testing.T) {
+func TestSetPop(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.New(true)
 		t.Assert(s.Pop(), nil)
@@ -319,7 +319,7 @@ func TestSet_Pop(t *testing.T) {
 	})
 }
 
-func TestSet_Pops(t *testing.T) {
+func TestSetPops(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.New(true)
 		s.Add(1, 2, 3, 4)
@@ -343,7 +343,7 @@ func TestSet_Pops(t *testing.T) {
 	})
 }
 
-func TestSet_Json(t *testing.T) {
+func TestSetJson(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := []interface{}{"a", "b", "d", "c"}
 		a1 := gset.NewFrom(s1)
@@ -372,7 +372,7 @@ func TestSet_Json(t *testing.T) {
 	})
 }
 
-func TestSet_AddIfNotExist(t *testing.T) {
+func TestSetAddIfNotExist(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.New(true)
 		s.Add(1)
@@ -386,7 +386,7 @@ func TestSet_AddIfNotExist(t *testing.T) {
 	})
 }
 
-func TestSet_AddIfNotExistFunc(t *testing.T) {
+func TestSetAddIfNotExistFunc(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.New(true)
 		s.Add(1)
@@ -421,7 +421,7 @@ func TestSet_AddIfNotExistFunc(t *testing.T) {
 	})
 }
 
-func TestSet_Walk(t *testing.T) {
+func TestSetWalk(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var set gset.Set
 		set.Add(g.Slice{1, 2}...)
@@ -434,7 +434,7 @@ func TestSet_Walk(t *testing.T) {
 	})
 }
 
-func TestSet_AddIfNotExistFuncLock(t *testing.T) {
+func TestSetAddIfNotExistFuncLock(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.New(true)
 		wg := sync.WaitGroup{}
@@ -465,7 +465,7 @@ func TestSet_AddIfNotExistFuncLock(t *testing.T) {
 	})
 }
 
-func TestSet_UnmarshalValue(t *testing.T) {
+func TestSetUnmarshalValue(t *testing.T) {
 	type V struct {
 		Name string
 		Set  *gset.Set
@@ -502,7 +502,7 @@ func TestSet_UnmarshalValue(t *testing.T) {
 	})
 }
 
-func TestSet_DeepCopy(t *testing.T) {
+func TestSetDeepCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		set := gset.New()
 		set.Add(1, 2, 3)

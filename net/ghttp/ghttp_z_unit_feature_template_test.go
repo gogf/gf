@@ -21,7 +21,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_Template_Basic(t *testing.T) {
+func TestTemplateBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New(gtest.DataPath("template", "basic"))
 		s := g.Server(guid.S())
@@ -44,7 +44,7 @@ func Test_Template_Basic(t *testing.T) {
 	})
 }
 
-func Test_Template_Encode(t *testing.T) {
+func TestTemplateEncode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New(gtest.DataPath("template", "basic"))
 		v.SetAutoEncode(true)
@@ -68,7 +68,7 @@ func Test_Template_Encode(t *testing.T) {
 	})
 }
 
-func Test_Template_Layout1(t *testing.T) {
+func TestTemplateLayout1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New(gtest.DataPath("template", "layout1"))
 		s := g.Server(guid.S())
@@ -96,7 +96,7 @@ func Test_Template_Layout1(t *testing.T) {
 	})
 }
 
-func Test_Template_Layout2(t *testing.T) {
+func TestTemplateLayout2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New(gtest.DataPath("template", "layout2"))
 		s := g.Server(guid.S())
@@ -131,7 +131,7 @@ func Test_Template_Layout2(t *testing.T) {
 	})
 }
 
-func Test_Template_BuildInVarRequest(t *testing.T) {
+func TestTemplateBuildInVarRequest(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
 		s.BindHandler("/:table/test", func(r *ghttp.Request) {
@@ -150,7 +150,7 @@ func Test_Template_BuildInVarRequest(t *testing.T) {
 	})
 }
 
-func Test_Template_XSS(t *testing.T) {
+func TestTemplateXSS(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		v.SetAutoEncode(true)

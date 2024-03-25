@@ -20,7 +20,7 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func Test_NewClose(t *testing.T) {
+func TestNewClose(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		redis, err := gredis.New(config)
 		t.AssertNil(err)
@@ -31,7 +31,7 @@ func Test_NewClose(t *testing.T) {
 	})
 }
 
-func Test_Do(t *testing.T) {
+func TestDo(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		_, err := redis.Do(ctx, "SET", "k", "v")
 		t.AssertNil(err)
@@ -48,7 +48,7 @@ func Test_Do(t *testing.T) {
 	})
 }
 
-func Test_Conn(t *testing.T) {
+func TestConn(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		conn, err := redis.Conn(ctx)
 		t.AssertNil(err)
@@ -71,7 +71,7 @@ func Test_Conn(t *testing.T) {
 	})
 }
 
-func Test_Instance(t *testing.T) {
+func TestInstance(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		group := "my-test"
 		gredis.SetConfig(config, group)
@@ -99,7 +99,7 @@ func Test_Instance(t *testing.T) {
 	})
 }
 
-func Test_Error(t *testing.T) {
+func TestError(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		config1 := &gredis.Config{
 			Address:     "192.111.0.2:6379",
@@ -150,7 +150,7 @@ func Test_Error(t *testing.T) {
 	})
 }
 
-func Test_Bool(t *testing.T) {
+func TestBool(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer func() {
 			redis.Do(ctx, "DEL", "key-true")
@@ -173,7 +173,7 @@ func Test_Bool(t *testing.T) {
 	})
 }
 
-func Test_Int(t *testing.T) {
+func TestInt(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		redis, err := gredis.New(config)
 		t.AssertNil(err)
@@ -192,7 +192,7 @@ func Test_Int(t *testing.T) {
 	})
 }
 
-func Test_HSet(t *testing.T) {
+func TestHSet(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		redis, err := gredis.New(config)
 		t.AssertNil(err)
@@ -211,7 +211,7 @@ func Test_HSet(t *testing.T) {
 	})
 }
 
-func Test_HGetAll1(t *testing.T) {
+func TestHGetAll1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			key = guid.S()
@@ -236,7 +236,7 @@ func Test_HGetAll1(t *testing.T) {
 	})
 }
 
-func Test_HGetAll2(t *testing.T) {
+func TestHGetAll2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			key = guid.S()
@@ -260,7 +260,7 @@ func Test_HGetAll2(t *testing.T) {
 	})
 }
 
-func Test_HMSet(t *testing.T) {
+func TestHMSet(t *testing.T) {
 	// map
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -312,7 +312,7 @@ func Test_HMSet(t *testing.T) {
 	})
 }
 
-func Test_Auto_Marshal(t *testing.T) {
+func TestAutoMarshal(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			key = guid.S()
@@ -351,7 +351,7 @@ func Test_Auto_Marshal(t *testing.T) {
 	})
 }
 
-func Test_Auto_MarshalSlice(t *testing.T) {
+func TestAutoMarshalSlice(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			key = "user-slice"

@@ -22,7 +22,7 @@ var (
 	ctx = context.TODO()
 )
 
-func Test_Instance_Basic(t *testing.T) {
+func TestInstanceBasic(t *testing.T) {
 	config := `
 array = [1.0, 2.0, 3.0]
 v1 = 1.0
@@ -52,7 +52,7 @@ v4 = "1.234"
 	})
 }
 
-func Test_Instance_AutoLocateConfigFile(t *testing.T) {
+func TestInstanceAutoLocateConfigFile(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(Instance("gf") != nil, true)
 	})
@@ -87,7 +87,7 @@ func Test_Instance_AutoLocateConfigFile(t *testing.T) {
 	})
 }
 
-func Test_Instance_EnvPath(t *testing.T) {
+func TestInstanceEnvPath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		genv.Set("GF_GCFG_PATH", gtest.DataPath("envpath"))
 		defer genv.Set("GF_GCFG_PATH", "")
@@ -98,7 +98,7 @@ func Test_Instance_EnvPath(t *testing.T) {
 	})
 }
 
-func Test_Instance_EnvFile(t *testing.T) {
+func TestInstanceEnvFile(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		genv.Set("GF_GCFG_PATH", gtest.DataPath("envfile"))
 		defer genv.Set("GF_GCFG_PATH", "")

@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_ReadCloser(t *testing.T) {
+func TestReadCloser(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			n    int
@@ -67,14 +67,14 @@ func Test_ReadCloser(t *testing.T) {
 	})
 }
 
-func Test_RemoveSymbols(t *testing.T) {
+func TestRemoveSymbols(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(utils.RemoveSymbols(`-a-b._a c1!@#$%^&*()_+:";'.,'01`), `abac101`)
 		t.Assert(utils.RemoveSymbols(`-a-b我._a c1!@#$%^&*是()_+:帅";'.,哥'01`), `ab我ac1是帅哥01`)
 	})
 }
 
-func Test_CanCallIsNil(t *testing.T) {
+func TestCanCallIsNil(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			iValue         = "gf"

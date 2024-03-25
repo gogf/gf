@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Basic(t *testing.T) {
+func TestBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err   error
@@ -43,7 +43,7 @@ func Test_Basic(t *testing.T) {
 	})
 }
 
-func Test_Limit1(t *testing.T) {
+func TestLimit1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			wg    = sync.WaitGroup{}
@@ -63,7 +63,7 @@ func Test_Limit1(t *testing.T) {
 	})
 }
 
-func Test_Limit2(t *testing.T) {
+func TestLimit2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err   error
@@ -85,7 +85,7 @@ func Test_Limit2(t *testing.T) {
 	})
 }
 
-func Test_Limit3(t *testing.T) {
+func TestLimit3(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			array = garray.NewArray(true)
@@ -113,7 +113,7 @@ func Test_Limit3(t *testing.T) {
 	})
 }
 
-func Test_AddWithRecover(t *testing.T) {
+func TestAddWithRecover(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err   error

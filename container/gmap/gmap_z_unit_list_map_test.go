@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_ListMap_Var(t *testing.T) {
+func TestListMapVar(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var m gmap.ListMap
 		m.Set("key1", "val1")
@@ -49,7 +49,7 @@ func Test_ListMap_Var(t *testing.T) {
 	})
 }
 
-func Test_ListMap_Basic(t *testing.T) {
+func TestListMapBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewListMap()
 		m.Set("key1", "val1")
@@ -84,7 +84,7 @@ func Test_ListMap_Basic(t *testing.T) {
 	})
 }
 
-func Test_ListMap_Set_Fun(t *testing.T) {
+func TestListMapSetFun(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewListMap()
 		m.GetOrSetFunc("fun", getValue)
@@ -97,7 +97,7 @@ func Test_ListMap_Set_Fun(t *testing.T) {
 	})
 }
 
-func Test_ListMap_Batch(t *testing.T) {
+func TestListMapBatch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewListMap()
 		m.Sets(map[interface{}]interface{}{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
@@ -107,7 +107,7 @@ func Test_ListMap_Batch(t *testing.T) {
 	})
 }
 
-func Test_ListMap_Iterator(t *testing.T) {
+func TestListMapIterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[interface{}]interface{}{1: 1, "key1": "val1"}
 
@@ -132,7 +132,7 @@ func Test_ListMap_Iterator(t *testing.T) {
 	})
 }
 
-func Test_ListMap_Clone(t *testing.T) {
+func TestListMapClone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// clone 方法是深克隆
 		m := gmap.NewListMapFrom(map[interface{}]interface{}{1: 1, "key1": "val1"})
@@ -147,7 +147,7 @@ func Test_ListMap_Clone(t *testing.T) {
 	})
 }
 
-func Test_ListMap_Basic_Merge(t *testing.T) {
+func TestListMapBasicMerge(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := gmap.NewListMap()
 		m2 := gmap.NewListMap()
@@ -161,7 +161,7 @@ func Test_ListMap_Basic_Merge(t *testing.T) {
 	})
 }
 
-func Test_ListMap_Order(t *testing.T) {
+func TestListMapOrder(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewListMap()
 		m.Set("k1", "v1")
@@ -172,7 +172,7 @@ func Test_ListMap_Order(t *testing.T) {
 	})
 }
 
-func Test_ListMap_FilterEmpty(t *testing.T) {
+func TestListMapFilterEmpty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewListMap()
 		m.Set(1, "")
@@ -185,7 +185,7 @@ func Test_ListMap_FilterEmpty(t *testing.T) {
 	})
 }
 
-func Test_ListMap_Json(t *testing.T) {
+func TestListMapJson(t *testing.T) {
 	// Marshal
 	gtest.C(t, func(t *gtest.T) {
 		data := g.MapAnyAny{
@@ -230,7 +230,7 @@ func Test_ListMap_Json(t *testing.T) {
 	})
 }
 
-func Test_ListMap_Json_Sequence(t *testing.T) {
+func TestListMapJsonSequence(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewListMap()
 		for i := 'z'; i >= 'a'; i-- {
@@ -251,7 +251,7 @@ func Test_ListMap_Json_Sequence(t *testing.T) {
 	})
 }
 
-func Test_ListMap_Pop(t *testing.T) {
+func TestListMapPop(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewListMapFrom(g.MapAnyAny{
 			"k1": "v1",
@@ -277,7 +277,7 @@ func Test_ListMap_Pop(t *testing.T) {
 	})
 }
 
-func Test_ListMap_Pops(t *testing.T) {
+func TestListMapPops(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewListMapFrom(g.MapAnyAny{
 			"k1": "v1",
@@ -313,7 +313,7 @@ func Test_ListMap_Pops(t *testing.T) {
 	})
 }
 
-func TestListMap_UnmarshalValue(t *testing.T) {
+func TestListMapUnmarshalValue(t *testing.T) {
 	type V struct {
 		Name string
 		Map  *gmap.ListMap
@@ -349,7 +349,7 @@ func TestListMap_UnmarshalValue(t *testing.T) {
 	})
 }
 
-func TestListMap_String(t *testing.T) {
+func TestListMapString(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewListMap()
 		m.Set(1, "")
@@ -361,7 +361,7 @@ func TestListMap_String(t *testing.T) {
 	})
 }
 
-func TestListMap_MarshalJSON(t *testing.T) {
+func TestListMapMarshalJSON(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewListMap()
 		m.Set(1, "")
@@ -377,7 +377,7 @@ func TestListMap_MarshalJSON(t *testing.T) {
 	})
 }
 
-func TestListMap_DeepCopy(t *testing.T) {
+func TestListMapDeepCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewListMap()
 		m.Set(1, "1")

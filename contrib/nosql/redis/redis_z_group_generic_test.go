@@ -21,7 +21,7 @@ var (
 	TestValue = "hello"
 )
 
-func Test_GroupGeneric_Copy(t *testing.T) {
+func TestGroupGenericCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -64,7 +64,7 @@ func Test_GroupGeneric_Copy(t *testing.T) {
 	})
 }
 
-func Test_GroupGeneric_Exists(t *testing.T) {
+func TestGroupGenericExists(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -89,7 +89,7 @@ func Test_GroupGeneric_Exists(t *testing.T) {
 	})
 }
 
-func Test_GroupGeneric_Type(t *testing.T) {
+func TestGroupGenericType(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		_, err := redis.GroupString().Set(ctx, "k1", "v1")
@@ -111,7 +111,7 @@ func Test_GroupGeneric_Type(t *testing.T) {
 	})
 }
 
-func Test_GroupGeneric_Unlink(t *testing.T) {
+func TestGroupGenericUnlink(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		_, err := redis.GroupString().Set(ctx, "k1", "v1")
@@ -131,7 +131,7 @@ func Test_GroupGeneric_Unlink(t *testing.T) {
 	})
 }
 
-func Test_GroupGeneric_Rename(t *testing.T) {
+func TestGroupGenericRename(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		_, err := redis.GroupString().Set(ctx, "k1", "v1")
@@ -147,7 +147,7 @@ func Test_GroupGeneric_Rename(t *testing.T) {
 	})
 }
 
-func Test_GroupGeneric_RenameNX(t *testing.T) {
+func TestGroupGenericRenameNX(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		_, err := redis.GroupString().Set(ctx, "k1", "v1")
@@ -169,7 +169,7 @@ func Test_GroupGeneric_RenameNX(t *testing.T) {
 	})
 }
 
-func Test_GroupGeneric_Move(t *testing.T) {
+func TestGroupGenericMove(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushAll(ctx)
 		_, err := redis.GroupString().Set(ctx, "k1", "v1")
@@ -180,7 +180,7 @@ func Test_GroupGeneric_Move(t *testing.T) {
 	})
 }
 
-func Test_GroupGeneric_Del(t *testing.T) {
+func TestGroupGenericDel(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		_, err := redis.GroupString().Set(ctx, "k1", "v1")
@@ -199,7 +199,7 @@ func Test_GroupGeneric_Del(t *testing.T) {
 	})
 }
 
-func Test_GroupGeneric_RandomKey(t *testing.T) {
+func TestGroupGenericRandomKey(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		key, err := redis.GroupGeneric().RandomKey(ctx)
@@ -217,7 +217,7 @@ func Test_GroupGeneric_RandomKey(t *testing.T) {
 	})
 }
 
-func Test_GroupGeneric_DBSize(t *testing.T) {
+func TestGroupGenericDBSize(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		dbSize, err := redis.GroupGeneric().DBSize(ctx)
@@ -235,7 +235,7 @@ func Test_GroupGeneric_DBSize(t *testing.T) {
 	})
 }
 
-func Test_GroupGeneric_Keys(t *testing.T) {
+func TestGroupGenericKeys(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
@@ -257,7 +257,7 @@ func Test_GroupGeneric_Keys(t *testing.T) {
 	})
 }
 
-func Test_GroupGeneric_FlushDB(t *testing.T) {
+func TestGroupGenericFlushDB(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
@@ -279,7 +279,7 @@ func Test_GroupGeneric_FlushDB(t *testing.T) {
 	})
 }
 
-func Test_GroupGeneric_FlushAll(t *testing.T) {
+func TestGroupGenericFlushAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
@@ -301,7 +301,7 @@ func Test_GroupGeneric_FlushAll(t *testing.T) {
 	})
 }
 
-func Test_GroupGeneric_Expire(t *testing.T) {
+func TestGroupGenericExpire(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
@@ -339,7 +339,7 @@ func Test_GroupGeneric_Expire(t *testing.T) {
 	})
 }
 
-func Test_GroupGeneric_ExpireAt(t *testing.T) {
+func TestGroupGenericExpireAt(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
@@ -378,7 +378,7 @@ func Test_GroupGeneric_ExpireAt(t *testing.T) {
 	})
 }
 
-func Test_GroupGeneric_ExpireTime(t *testing.T) {
+func TestGroupGenericExpireTime(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
@@ -404,7 +404,7 @@ func Test_GroupGeneric_ExpireTime(t *testing.T) {
 	})
 }
 
-func Test_GroupGeneric_TTL(t *testing.T) {
+func TestGroupGenericTTL(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
@@ -419,7 +419,7 @@ func Test_GroupGeneric_TTL(t *testing.T) {
 	})
 }
 
-func Test_GroupGeneric_Persist(t *testing.T) {
+func TestGroupGenericPersist(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
@@ -440,7 +440,7 @@ func Test_GroupGeneric_Persist(t *testing.T) {
 	})
 }
 
-func Test_GroupGeneric_PExpire(t *testing.T) {
+func TestGroupGenericPExpire(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
@@ -477,7 +477,7 @@ func Test_GroupGeneric_PExpire(t *testing.T) {
 	})
 }
 
-func Test_GroupGeneric_PExpireAt(t *testing.T) {
+func TestGroupGenericPExpireAt(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
@@ -495,7 +495,7 @@ func Test_GroupGeneric_PExpireAt(t *testing.T) {
 	})
 }
 
-func Test_GroupGeneric_PExpireTime(t *testing.T) {
+func TestGroupGenericPExpireTime(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
@@ -512,7 +512,7 @@ func Test_GroupGeneric_PExpireTime(t *testing.T) {
 	})
 }
 
-func Test_GroupGeneric_PTTL(t *testing.T) {
+func TestGroupGenericPTTL(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 

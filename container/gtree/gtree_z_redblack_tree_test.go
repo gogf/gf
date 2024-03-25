@@ -20,7 +20,7 @@ func getValue() interface{} {
 	return 3
 }
 
-func Test_RedBlackTree_Basic(t *testing.T) {
+func TestRedBlackTreeBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gtree.NewRedBlackTree(gutil.ComparatorString)
 		m.Set("key1", "val1")
@@ -61,7 +61,7 @@ func Test_RedBlackTree_Basic(t *testing.T) {
 	})
 }
 
-func Test_RedBlackTree_Set_Fun(t *testing.T) {
+func TestRedBlackTreeSetFun(t *testing.T) {
 	//GetOrSetFunc lock or unlock
 	gtest.C(t, func(t *gtest.T) {
 		m := gtree.NewRedBlackTree(gutil.ComparatorString)
@@ -85,7 +85,7 @@ func Test_RedBlackTree_Set_Fun(t *testing.T) {
 
 }
 
-func Test_RedBlackTree_Get_Set_Var(t *testing.T) {
+func TestRedBlackTreeGetSetVar(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gtree.NewRedBlackTree(gutil.ComparatorString)
 		t.AssertEQ(m.SetIfNotExist("key1", "val1"), true)
@@ -103,7 +103,7 @@ func Test_RedBlackTree_Get_Set_Var(t *testing.T) {
 	})
 }
 
-func Test_RedBlackTree_Batch(t *testing.T) {
+func TestRedBlackTreeBatch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gtree.NewRedBlackTree(gutil.ComparatorString)
 		m.Sets(map[interface{}]interface{}{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
@@ -113,7 +113,7 @@ func Test_RedBlackTree_Batch(t *testing.T) {
 	})
 }
 
-func Test_RedBlackTree_Iterator(t *testing.T) {
+func TestRedBlackTreeIterator(t *testing.T) {
 	keys := []string{"1", "key1", "key2", "key3", "key4"}
 	keyLen := len(keys)
 	index := 0
@@ -170,7 +170,7 @@ func Test_RedBlackTree_Iterator(t *testing.T) {
 	})
 }
 
-func Test_RedBlackTree_IteratorFrom(t *testing.T) {
+func TestRedBlackTreeIteratorFrom(t *testing.T) {
 	m := make(map[interface{}]interface{})
 	for i := 1; i <= 10; i++ {
 		m[i] = i * 10
@@ -204,7 +204,7 @@ func Test_RedBlackTree_IteratorFrom(t *testing.T) {
 	})
 }
 
-func Test_RedBlackTree_Clone(t *testing.T) {
+func TestRedBlackTreeClone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		//clone 方法是深克隆
 		m := gtree.NewRedBlackTreeFrom(gutil.ComparatorString, map[interface{}]interface{}{1: 1, "key1": "val1"})
@@ -219,7 +219,7 @@ func Test_RedBlackTree_Clone(t *testing.T) {
 	})
 }
 
-func Test_RedBlackTree_LRNode(t *testing.T) {
+func TestRedBlackTreeLRNode(t *testing.T) {
 	expect := map[interface{}]interface{}{"key4": "val4", "key1": "val1", "key2": "val2", "key3": "val3"}
 	//safe
 	gtest.C(t, func(t *gtest.T) {
@@ -235,7 +235,7 @@ func Test_RedBlackTree_LRNode(t *testing.T) {
 	})
 }
 
-func Test_RedBlackTree_CeilingFloor(t *testing.T) {
+func TestRedBlackTreeCeilingFloor(t *testing.T) {
 	expect := map[interface{}]interface{}{
 		20: "val20",
 		6:  "val6",
@@ -278,7 +278,7 @@ func Test_RedBlackTree_CeilingFloor(t *testing.T) {
 	})
 }
 
-func Test_RedBlackTree_Remove(t *testing.T) {
+func TestRedBlackTreeRemove(t *testing.T) {
 	m := gtree.NewRedBlackTree(gutil.ComparatorInt)
 	for i := 1; i <= 100; i++ {
 		m.Set(i, fmt.Sprintf("val%d", i))

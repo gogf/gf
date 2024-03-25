@@ -39,7 +39,7 @@ func (o *DomainObject) Info(r *ghttp.Request) {
 	r.Response.Write("Object Info")
 }
 
-func Test_Router_DomainObject1(t *testing.T) {
+func TestRouterDomainObject1(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Domain("localhost, local").BindObject("/", new(DomainObject))
 	s.SetDumpRouterMap(false)
@@ -86,7 +86,7 @@ func Test_Router_DomainObject1(t *testing.T) {
 	})
 }
 
-func Test_Router_DomainObject2(t *testing.T) {
+func TestRouterDomainObject2(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Domain("localhost, local").BindObject("/object", new(DomainObject), "Show, Info")
 	s.SetDumpRouterMap(false)
@@ -135,7 +135,7 @@ func Test_Router_DomainObject2(t *testing.T) {
 	})
 }
 
-func Test_Router_DomainObjectMethod(t *testing.T) {
+func TestRouterDomainObjectMethod(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Domain("localhost, local").BindObjectMethod("/object-info", new(DomainObject), "Info")
 	s.SetDumpRouterMap(false)

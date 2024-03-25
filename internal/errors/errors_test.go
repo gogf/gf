@@ -13,7 +13,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_IsStackModeBrief(t *testing.T) {
+func TestIsStackModeBrief(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(errors.IsStackModeBrief(), true)
 	})

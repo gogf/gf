@@ -21,7 +21,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Model_Embedded_Insert(t *testing.T) {
+func TestModelEmbeddedInsert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -56,7 +56,7 @@ func Test_Model_Embedded_Insert(t *testing.T) {
 	})
 }
 
-func Test_Model_Embedded_MapToStruct(t *testing.T) {
+func TestModelEmbeddedMapToStruct(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -102,7 +102,7 @@ func Test_Model_Embedded_MapToStruct(t *testing.T) {
 	})
 }
 
-func Test_Struct_Pointer_Attribute(t *testing.T) {
+func TestStructPointerAttribute(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -144,7 +144,7 @@ func Test_Struct_Pointer_Attribute(t *testing.T) {
 	})
 }
 
-func Test_Structs_Pointer_Attribute(t *testing.T) {
+func TestStructsPointerAttribute(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -246,7 +246,7 @@ func Test_Structs_Pointer_Attribute(t *testing.T) {
 	})
 }
 
-func Test_Struct_Empty(t *testing.T) {
+func TestStructEmpty(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -280,7 +280,7 @@ func Test_Struct_Empty(t *testing.T) {
 	})
 }
 
-func Test_Structs_Empty(t *testing.T) {
+func TestStructsEmpty(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -348,7 +348,7 @@ func (st *MyTimeSt) UnmarshalValue(v interface{}) error {
 	return nil
 }
 
-func Test_Model_Scan_CustomType_Time(t *testing.T) {
+func TestModelScanCustomTypeTime(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -367,7 +367,7 @@ func Test_Model_Scan_CustomType_Time(t *testing.T) {
 	})
 }
 
-func Test_Model_Scan_CustomType_String(t *testing.T) {
+func TestModelScanCustomTypeString(t *testing.T) {
 	type MyString string
 
 	type MyStringSt struct {
@@ -413,7 +413,7 @@ func (user *User) UnmarshalValue(value interface{}) error {
 	return gerror.NewCodef(gcode.CodeInvalidParameter, `unsupported value type for UnmarshalValue: %v`, reflect.TypeOf(value))
 }
 
-func Test_Model_Scan_UnmarshalValue(t *testing.T) {
+func TestModelScanUnmarshalValue(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -435,7 +435,7 @@ func Test_Model_Scan_UnmarshalValue(t *testing.T) {
 	})
 }
 
-func Test_Model_Scan_Map(t *testing.T) {
+func TestModelScanMap(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -458,7 +458,7 @@ func Test_Model_Scan_Map(t *testing.T) {
 	})
 }
 
-func Test_Scan_AutoFilteringByStructAttributes(t *testing.T) {
+func TestScanAutoFilteringByStructAttributes(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -482,7 +482,7 @@ func Test_Scan_AutoFilteringByStructAttributes(t *testing.T) {
 	})
 }
 
-func Test_Scan_JsonAttributes(t *testing.T) {
+func TestScanJsonAttributes(t *testing.T) {
 	type GiftImage struct {
 		Uid    string `json:"uid"`
 		Url    string `json:"url"`

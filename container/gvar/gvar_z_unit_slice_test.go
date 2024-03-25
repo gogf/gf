@@ -13,7 +13,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func TestVar_Ints(t *testing.T) {
+func TestVarInts(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var arr = []int{1, 2, 3, 4, 5}
 		objOne := gvar.New(arr, true)
@@ -21,7 +21,7 @@ func TestVar_Ints(t *testing.T) {
 	})
 }
 
-func TestVar_Uints(t *testing.T) {
+func TestVarUints(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var arr = []int{1, 2, 3, 4, 5}
 		objOne := gvar.New(arr, true)
@@ -29,7 +29,7 @@ func TestVar_Uints(t *testing.T) {
 	})
 }
 
-func TestVar_Int64s(t *testing.T) {
+func TestVarInt64s(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var arr = []int{1, 2, 3, 4, 5}
 		objOne := gvar.New(arr, true)
@@ -37,7 +37,7 @@ func TestVar_Int64s(t *testing.T) {
 	})
 }
 
-func TestVar_Uint64s(t *testing.T) {
+func TestVarUint64s(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var arr = []int{1, 2, 3, 4, 5}
 		objOne := gvar.New(arr, true)
@@ -45,7 +45,7 @@ func TestVar_Uint64s(t *testing.T) {
 	})
 }
 
-func TestVar_Floats(t *testing.T) {
+func TestVarFloats(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var arr = []float64{1, 2, 3, 4, 5}
 		objOne := gvar.New(arr, true)
@@ -53,7 +53,7 @@ func TestVar_Floats(t *testing.T) {
 	})
 }
 
-func TestVar_Float32s(t *testing.T) {
+func TestVarFloat32s(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var arr = []float32{1, 2, 3, 4, 5}
 		objOne := gvar.New(arr, true)
@@ -61,7 +61,7 @@ func TestVar_Float32s(t *testing.T) {
 	})
 }
 
-func TestVar_Float64s(t *testing.T) {
+func TestVarFloat64s(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var arr = []float64{1, 2, 3, 4, 5}
 		objOne := gvar.New(arr, true)
@@ -69,7 +69,7 @@ func TestVar_Float64s(t *testing.T) {
 	})
 }
 
-func TestVar_Strings(t *testing.T) {
+func TestVarStrings(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var arr = []string{"hello", "world"}
 		objOne := gvar.New(arr, true)
@@ -77,7 +77,7 @@ func TestVar_Strings(t *testing.T) {
 	})
 }
 
-func TestVar_Interfaces(t *testing.T) {
+func TestVarInterfaces(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var arr = []int{1, 2, 3, 4, 5}
 		objOne := gvar.New(arr, true)
@@ -85,7 +85,7 @@ func TestVar_Interfaces(t *testing.T) {
 	})
 }
 
-func TestVar_Slice(t *testing.T) {
+func TestVarSlice(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var arr = []int{1, 2, 3, 4, 5}
 		objOne := gvar.New(arr, true)
@@ -93,7 +93,7 @@ func TestVar_Slice(t *testing.T) {
 	})
 }
 
-func TestVar_Array(t *testing.T) {
+func TestVarArray(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var arr = []int{1, 2, 3, 4, 5}
 		objOne := gvar.New(arr, false)
@@ -101,7 +101,7 @@ func TestVar_Array(t *testing.T) {
 	})
 }
 
-func TestVar_Vars(t *testing.T) {
+func TestVarVars(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var arr = []int{1, 2, 3, 4, 5}
 		objOne := gvar.New(arr, false)

@@ -19,7 +19,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_I18n(t *testing.T) {
+func TestI18n(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		content := `{{.name}} says "{#hello}{#world}!"`
 		expect1 := `john says "你好世界!"`

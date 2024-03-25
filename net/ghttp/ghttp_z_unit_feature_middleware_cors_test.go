@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_Middleware_CORS1(t *testing.T) {
+func TestMiddlewareCORS1(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
 		group.Middleware(MiddlewareCORS)
@@ -78,7 +78,7 @@ func Test_Middleware_CORS1(t *testing.T) {
 	})
 }
 
-func Test_Middleware_CORS2(t *testing.T) {
+func TestMiddlewareCORS2(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
 		group.Middleware(MiddlewareCORS)
@@ -142,7 +142,7 @@ func Test_Middleware_CORS2(t *testing.T) {
 	})
 }
 
-func Test_Middleware_CORS3(t *testing.T) {
+func TestMiddlewareCORS3(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
 		group.Middleware(ghttp.MiddlewareCORS)

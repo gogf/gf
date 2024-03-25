@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func Test_IsGNUVersion(t *testing.T) {
+func TestIsGNUVersion(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertEQ(gstr.IsGNUVersion(""), false)
 		t.AssertEQ(gstr.IsGNUVersion("v"), false)
@@ -32,7 +32,7 @@ func Test_IsGNUVersion(t *testing.T) {
 	})
 }
 
-func Test_CompareVersion(t *testing.T) {
+func TestCompareVersion(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertEQ(gstr.CompareVersion("1", ""), 1)
 		t.AssertEQ(gstr.CompareVersion("", ""), 0)
@@ -46,7 +46,7 @@ func Test_CompareVersion(t *testing.T) {
 	})
 }
 
-func Test_CompareVersionGo(t *testing.T) {
+func TestCompareVersionGo(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertEQ(gstr.CompareVersionGo("1", ""), 1)
 		t.AssertEQ(gstr.CompareVersionGo("", ""), 0)

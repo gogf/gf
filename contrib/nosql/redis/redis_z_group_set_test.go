@@ -7,12 +7,13 @@
 package redis_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
-	"testing"
 )
 
-func Test_GroupSet_SAdd(t *testing.T) {
+func TestGroupSetSAdd(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -28,7 +29,7 @@ func Test_GroupSet_SAdd(t *testing.T) {
 	})
 }
 
-func Test_GroupSet_SIsMember(t *testing.T) {
+func TestGroupSetSIsMember(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -48,7 +49,7 @@ func Test_GroupSet_SIsMember(t *testing.T) {
 	})
 }
 
-func Test_GroupSet_SPop(t *testing.T) {
+func TestGroupSetSPop(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -68,7 +69,7 @@ func Test_GroupSet_SPop(t *testing.T) {
 	})
 }
 
-func Test_GroupSet_SRandMember(t *testing.T) {
+func TestGroupSetSRandMember(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -88,7 +89,7 @@ func Test_GroupSet_SRandMember(t *testing.T) {
 	})
 }
 
-func Test_GroupSet_SRem(t *testing.T) {
+func TestGroupSetSRem(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -108,7 +109,7 @@ func Test_GroupSet_SRem(t *testing.T) {
 	})
 }
 
-func Test_GroupSet_SMove(t *testing.T) {
+func TestGroupSetSMove(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -143,7 +144,7 @@ func Test_GroupSet_SMove(t *testing.T) {
 	})
 }
 
-func Test_GroupSet_SCard(t *testing.T) {
+func TestGroupSetSCard(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -163,7 +164,7 @@ func Test_GroupSet_SCard(t *testing.T) {
 	})
 }
 
-func Test_GroupSet_SMembers(t *testing.T) {
+func TestGroupSetSMembers(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -183,7 +184,7 @@ func Test_GroupSet_SMembers(t *testing.T) {
 	})
 }
 
-func Test_GroupSet_SMIsMember(t *testing.T) {
+func TestGroupSetSMIsMember(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -203,7 +204,7 @@ func Test_GroupSet_SMIsMember(t *testing.T) {
 	})
 }
 
-func Test_GroupSet_SInter(t *testing.T) {
+func TestGroupSetSInter(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -234,7 +235,7 @@ func Test_GroupSet_SInter(t *testing.T) {
 	})
 }
 
-func Test_GroupSet_SInterStore(t *testing.T) {
+func TestGroupSetSInterStore(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -268,7 +269,7 @@ func Test_GroupSet_SInterStore(t *testing.T) {
 	})
 }
 
-func Test_GroupSet_SUnion(t *testing.T) {
+func TestGroupSetSUnion(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -297,7 +298,7 @@ func Test_GroupSet_SUnion(t *testing.T) {
 	})
 }
 
-func Test_GroupSet_SUnionStore(t *testing.T) {
+func TestGroupSetSUnionStore(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -331,7 +332,7 @@ func Test_GroupSet_SUnionStore(t *testing.T) {
 	})
 }
 
-func Test_GroupSet_SDiff(t *testing.T) {
+func TestGroupSetSDiff(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -360,7 +361,7 @@ func Test_GroupSet_SDiff(t *testing.T) {
 	})
 }
 
-func Test_GroupSet_SDiffStore(t *testing.T) {
+func TestGroupSetSDiffStore(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (

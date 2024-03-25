@@ -22,7 +22,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func TestIntSet_Var(t *testing.T) {
+func TestIntSetVar(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var s gset.IntSet
 		s.Add(1, 1, 2)
@@ -42,7 +42,7 @@ func TestIntSet_Var(t *testing.T) {
 	})
 }
 
-func TestIntSet_Basic(t *testing.T) {
+func TestIntSetBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.NewIntSet()
 		s.Add(1, 1, 2)
@@ -62,7 +62,7 @@ func TestIntSet_Basic(t *testing.T) {
 	})
 }
 
-func TestIntSet_Iterator(t *testing.T) {
+func TestIntSetIterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.NewIntSet()
 		s.Add(1, 2, 3)
@@ -83,7 +83,7 @@ func TestIntSet_Iterator(t *testing.T) {
 	})
 }
 
-func TestIntSet_LockFunc(t *testing.T) {
+func TestIntSetLockFunc(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.NewIntSet()
 		s.Add(1, 2, 3)
@@ -101,7 +101,7 @@ func TestIntSet_LockFunc(t *testing.T) {
 	})
 }
 
-func TestIntSet_Equal(t *testing.T) {
+func TestIntSetEqual(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewIntSet()
 		s2 := gset.NewIntSet()
@@ -119,7 +119,7 @@ func TestIntSet_Equal(t *testing.T) {
 	})
 }
 
-func TestIntSet_IsSubsetOf(t *testing.T) {
+func TestIntSetIsSubsetOf(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewIntSet()
 		s2 := gset.NewIntSet()
@@ -138,7 +138,7 @@ func TestIntSet_IsSubsetOf(t *testing.T) {
 	})
 }
 
-func TestIntSet_Union(t *testing.T) {
+func TestIntSetUnion(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewIntSet()
 		s2 := gset.NewIntSet()
@@ -152,7 +152,7 @@ func TestIntSet_Union(t *testing.T) {
 	})
 }
 
-func TestIntSet_Diff(t *testing.T) {
+func TestIntSetDiff(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewIntSet()
 		s2 := gset.NewIntSet()
@@ -173,7 +173,7 @@ func TestIntSet_Diff(t *testing.T) {
 	})
 }
 
-func TestIntSet_Intersect(t *testing.T) {
+func TestIntSetIntersect(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewIntSet()
 		s2 := gset.NewIntSet()
@@ -187,7 +187,7 @@ func TestIntSet_Intersect(t *testing.T) {
 	})
 }
 
-func TestIntSet_Complement(t *testing.T) {
+func TestIntSetComplement(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewIntSet()
 		s2 := gset.NewIntSet()
@@ -201,7 +201,7 @@ func TestIntSet_Complement(t *testing.T) {
 	})
 }
 
-func TestIntSet_Size(t *testing.T) {
+func TestIntSetSize(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewIntSet(true)
 		s1.Add(1, 2, 3)
@@ -211,7 +211,7 @@ func TestIntSet_Size(t *testing.T) {
 
 }
 
-func TestIntSet_Merge(t *testing.T) {
+func TestIntSetMerge(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewIntSet()
 		s2 := gset.NewIntSet()
@@ -224,7 +224,7 @@ func TestIntSet_Merge(t *testing.T) {
 	})
 }
 
-func TestIntSet_Join(t *testing.T) {
+func TestIntSetJoin(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewIntSet()
 		t.Assert(s1.Join(","), "")
@@ -236,7 +236,7 @@ func TestIntSet_Join(t *testing.T) {
 	})
 }
 
-func TestIntSet_String(t *testing.T) {
+func TestIntSetString(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewIntSet()
 		s1.Add(1, 2, 3)
@@ -251,7 +251,7 @@ func TestIntSet_String(t *testing.T) {
 	})
 }
 
-func TestIntSet_Sum(t *testing.T) {
+func TestIntSetSum(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewIntSet()
 		s1.Add(1, 2, 3)
@@ -263,7 +263,7 @@ func TestIntSet_Sum(t *testing.T) {
 
 }
 
-func TestIntSet_Pop(t *testing.T) {
+func TestIntSetPop(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.NewIntSet()
 		t.Assert(s.Pop(), 0)
@@ -275,7 +275,7 @@ func TestIntSet_Pop(t *testing.T) {
 	})
 }
 
-func TestIntSet_Pops(t *testing.T) {
+func TestIntSetPops(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.NewIntSet()
 		s.Add(1, 4, 2, 3)
@@ -299,7 +299,7 @@ func TestIntSet_Pops(t *testing.T) {
 	})
 }
 
-func TestIntSet_AddIfNotExist(t *testing.T) {
+func TestIntSetAddIfNotExist(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.NewIntSet(true)
 		s.Add(1)
@@ -316,7 +316,7 @@ func TestIntSet_AddIfNotExist(t *testing.T) {
 	})
 }
 
-func TestIntSet_AddIfNotExistFunc(t *testing.T) {
+func TestIntSetAddIfNotExistFunc(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.NewIntSet(true)
 		s.Add(1)
@@ -350,7 +350,7 @@ func TestIntSet_AddIfNotExistFunc(t *testing.T) {
 	})
 }
 
-func TestIntSet_AddIfNotExistFuncLock(t *testing.T) {
+func TestIntSetAddIfNotExistFuncLock(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.NewIntSet(true)
 		wg := sync.WaitGroup{}
@@ -379,7 +379,7 @@ func TestIntSet_AddIfNotExistFuncLock(t *testing.T) {
 	})
 }
 
-func TestIntSet_Json(t *testing.T) {
+func TestIntSetJson(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := []int{1, 3, 2, 4}
 		a1 := gset.NewIntSetFrom(s1)
@@ -408,7 +408,7 @@ func TestIntSet_Json(t *testing.T) {
 	})
 }
 
-func TestIntSet_Walk(t *testing.T) {
+func TestIntSetWalk(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var set gset.IntSet
 		set.Add(g.SliceInt{1, 2}...)
@@ -421,7 +421,7 @@ func TestIntSet_Walk(t *testing.T) {
 	})
 }
 
-func TestIntSet_UnmarshalValue(t *testing.T) {
+func TestIntSetUnmarshalValue(t *testing.T) {
 	type V struct {
 		Name string
 		Set  *gset.IntSet
@@ -458,7 +458,7 @@ func TestIntSet_UnmarshalValue(t *testing.T) {
 	})
 }
 
-func TestIntSet_DeepCopy(t *testing.T) {
+func TestIntSetDeepCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		set := gset.NewIntSet()
 		set.Add(1, 2, 3)

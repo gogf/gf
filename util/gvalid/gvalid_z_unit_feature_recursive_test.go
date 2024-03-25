@@ -13,7 +13,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_CheckStruct_Recursive_Struct(t *testing.T) {
+func TestCheckStructRecursiveStruct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Pass struct {
 			Pass1 string `v:"required|same:Pass2"`
@@ -39,7 +39,7 @@ func Test_CheckStruct_Recursive_Struct(t *testing.T) {
 	})
 }
 
-func Test_CheckStruct_Recursive_Struct_WithData(t *testing.T) {
+func TestCheckStructRecursiveStructWithData(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Pass struct {
 			Pass1 string `v:"required|same:Pass2"`
@@ -66,7 +66,7 @@ func Test_CheckStruct_Recursive_Struct_WithData(t *testing.T) {
 	})
 }
 
-func Test_CheckStruct_Recursive_SliceStruct(t *testing.T) {
+func TestCheckStructRecursiveSliceStruct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Pass struct {
 			Pass1 string `v:"required|same:Pass2"`
@@ -99,7 +99,7 @@ func Test_CheckStruct_Recursive_SliceStruct(t *testing.T) {
 	})
 }
 
-func Test_CheckStruct_Recursive_SliceStruct_Bail(t *testing.T) {
+func TestCheckStructRecursiveSliceStructBail(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Pass struct {
 			Pass1 string `v:"required|same:Pass2"`
@@ -132,7 +132,7 @@ func Test_CheckStruct_Recursive_SliceStruct_Bail(t *testing.T) {
 	})
 }
 
-func Test_CheckStruct_Recursive_SliceStruct_Required(t *testing.T) {
+func TestCheckStructRecursiveSliceStructRequired(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Pass struct {
 			Pass1 string `v:"required|same:Pass2"`
@@ -153,7 +153,7 @@ func Test_CheckStruct_Recursive_SliceStruct_Required(t *testing.T) {
 	})
 }
 
-func Test_CheckStruct_Recursive_MapStruct(t *testing.T) {
+func TestCheckStructRecursiveMapStruct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Pass struct {
 			Pass1 string `v:"required|same:Pass2"`
@@ -186,7 +186,7 @@ func Test_CheckStruct_Recursive_MapStruct(t *testing.T) {
 	})
 }
 
-func Test_CheckMap_Recursive_SliceStruct(t *testing.T) {
+func TestCheckMapRecursiveSliceStruct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Pass struct {
 			Pass1 string `v:"required|same:Pass2"`
@@ -214,7 +214,7 @@ func Test_CheckMap_Recursive_SliceStruct(t *testing.T) {
 	})
 }
 
-func Test_CheckStruct_Recursively_SliceAttribute(t *testing.T) {
+func TestCheckStructRecursivelySliceAttribute(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Student struct {
 			Name string `v:"required#Student Name is required"`
@@ -296,7 +296,7 @@ func Test_CheckStruct_Recursively_SliceAttribute(t *testing.T) {
 	})
 }
 
-func Test_CheckStruct_Recursively_SliceAttribute_WithTypeAlias(t *testing.T) {
+func TestCheckStructRecursivelySliceAttributeWithTypeAlias(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type ParamsItemBase struct {
 			Component string `v:"required" dc:"组件名称"`
@@ -320,7 +320,7 @@ func Test_CheckStruct_Recursively_SliceAttribute_WithTypeAlias(t *testing.T) {
 	})
 }
 
-func Test_CheckStruct_Recursively_MapAttribute(t *testing.T) {
+func TestCheckStructRecursivelyMapAttribute(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Student struct {
 			Name string `v:"required#Student Name is required"`
@@ -343,7 +343,7 @@ func Test_CheckStruct_Recursively_MapAttribute(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/1983
-func Test_Issue1983(t *testing.T) {
+func TestIssue1983(t *testing.T) {
 	// Error as the attribute Student in Teacher is an initialized struct, which has default value.
 	gtest.C(t, func(t *gtest.T) {
 		type Student struct {
@@ -401,7 +401,7 @@ func Test_Issue1983(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/1921
-func Test_Issue1921(t *testing.T) {
+func TestIssue1921(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type SearchOption struct {
 			Size int `v:"max:100"`
@@ -423,7 +423,7 @@ func Test_Issue1921(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/2011
-func Test_Issue2011(t *testing.T) {
+func TestIssue2011(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Student struct {
 			Name string `v:"required|min-length:6"`

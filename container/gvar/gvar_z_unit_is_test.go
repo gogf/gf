@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func TestVar_IsNil(t *testing.T) {
+func TestVarIsNil(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(g.NewVar(0).IsNil(), false)
 		t.Assert(g.NewVar(nil).IsNil(), true)
@@ -29,7 +29,7 @@ func TestVar_IsNil(t *testing.T) {
 	})
 }
 
-func TestVar_IsEmpty(t *testing.T) {
+func TestVarIsEmpty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(g.NewVar(0).IsEmpty(), true)
 		t.Assert(g.NewVar(nil).IsEmpty(), true)
@@ -44,7 +44,7 @@ func TestVar_IsEmpty(t *testing.T) {
 	})
 }
 
-func TestVar_IsInt(t *testing.T) {
+func TestVarIsInt(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(g.NewVar(0).IsInt(), true)
 		t.Assert(g.NewVar(nil).IsInt(), false)
@@ -64,7 +64,7 @@ func TestVar_IsInt(t *testing.T) {
 	})
 }
 
-func TestVar_IsUint(t *testing.T) {
+func TestVarIsUint(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(g.NewVar(0).IsUint(), false)
 		t.Assert(g.NewVar(nil).IsUint(), false)
@@ -84,7 +84,7 @@ func TestVar_IsUint(t *testing.T) {
 	})
 }
 
-func TestVar_IsFloat(t *testing.T) {
+func TestVarIsFloat(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(g.NewVar(0).IsFloat(), false)
 		t.Assert(g.NewVar(nil).IsFloat(), false)
@@ -105,7 +105,7 @@ func TestVar_IsFloat(t *testing.T) {
 	})
 }
 
-func TestVar_IsSlice(t *testing.T) {
+func TestVarIsSlice(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(g.NewVar(0).IsSlice(), false)
 		t.Assert(g.NewVar(nil).IsSlice(), false)
@@ -126,7 +126,7 @@ func TestVar_IsSlice(t *testing.T) {
 	})
 }
 
-func TestVar_IsMap(t *testing.T) {
+func TestVarIsMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(g.NewVar(0).IsMap(), false)
 		t.Assert(g.NewVar(nil).IsMap(), false)
@@ -151,7 +151,7 @@ func TestVar_IsMap(t *testing.T) {
 	})
 }
 
-func TestVar_IsStruct(t *testing.T) {
+func TestVarIsStruct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(g.NewVar(0).IsStruct(), false)
 		t.Assert(g.NewVar(nil).IsStruct(), false)

@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func Test_OriginValueAndKind(t *testing.T) {
+func TestOriginValueAndKind(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var s = "s"
 		out := gutil.OriginValueAndKind(s)
@@ -41,7 +41,7 @@ func Test_OriginValueAndKind(t *testing.T) {
 	})
 }
 
-func Test_OriginTypeAndKind(t *testing.T) {
+func TestOriginTypeAndKind(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var s = "s"
 		out := gutil.OriginTypeAndKind(s)

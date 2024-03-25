@@ -7,13 +7,12 @@
 package gi18n_test
 
 import (
+	"context"
+	"testing"
 	"time"
 
 	"github.com/gogf/gf/v2/encoding/gbase64"
 	"github.com/gogf/gf/v2/os/gctx"
-
-	"context"
-	"testing"
 
 	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/g"
@@ -25,7 +24,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Basic(t *testing.T) {
+func TestBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		i18n := gi18n.New(gi18n.Options{
 			Path: gtest.DataPath("i18n"),
@@ -77,7 +76,7 @@ func Test_Basic(t *testing.T) {
 	})
 }
 
-func Test_TranslateFormat(t *testing.T) {
+func TestTranslateFormat(t *testing.T) {
 	// Tf
 	gtest.C(t, func(t *gtest.T) {
 		i18n := gi18n.New(gi18n.Options{
@@ -91,7 +90,7 @@ func Test_TranslateFormat(t *testing.T) {
 	})
 }
 
-func Test_DefaultManager(t *testing.T) {
+func TestDefaultManager(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err := gi18n.SetPath(gtest.DataPath("i18n"))
 		t.AssertNil(err)
@@ -121,7 +120,7 @@ func Test_DefaultManager(t *testing.T) {
 	})
 }
 
-func Test_Instance(t *testing.T) {
+func TestInstance(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gi18n.Instance()
 		err := m.SetPath(gtest.DataPath("i18n-dir"))
@@ -147,7 +146,7 @@ func Test_Instance(t *testing.T) {
 	})
 }
 
-func Test_Resource(t *testing.T) {
+func TestResource(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := g.I18n("resource")
 		err := m.SetPath(gtest.DataPath("i18n-dir"))
@@ -164,7 +163,7 @@ func Test_Resource(t *testing.T) {
 	})
 }
 
-func Test_SetCtxLanguage(t *testing.T) {
+func TestSetCtxLanguage(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		ctx := gctx.New()
 		t.Assert(gi18n.LanguageFromCtx(ctx), "")
@@ -187,7 +186,7 @@ func Test_SetCtxLanguage(t *testing.T) {
 
 }
 
-func Test_GetContent(t *testing.T) {
+func TestGetContent(t *testing.T) {
 	i18n := gi18n.New(gi18n.Options{
 		Path: gtest.DataPath("i18n-file"),
 	})
@@ -202,7 +201,7 @@ func Test_GetContent(t *testing.T) {
 	})
 }
 
-func Test_PathInResource(t *testing.T) {
+func TestPathInResource(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		binContent, err := gres.Pack(gtest.DataPath("i18n"))
 		t.AssertNil(err)
@@ -220,7 +219,7 @@ func Test_PathInResource(t *testing.T) {
 	})
 }
 
-func Test_PathInNormal(t *testing.T) {
+func TestPathInNormal(t *testing.T) {
 	// Copy i18n files to current directory.
 	gfile.CopyDir(gtest.DataPath("i18n"), gfile.Join(gdebug.CallerDirectory(), "manifest/i18n"))
 	// Remove copied files after testing.

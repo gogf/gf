@@ -13,7 +13,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Unsafe(t *testing.T) {
+func TestUnsafe(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := "I love 小泽玛利亚"
 		t.AssertEQ(gconv.UnsafeStrToBytes(s), []byte(s))

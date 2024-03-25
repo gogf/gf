@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func TestTimer_Add_Close(t *testing.T) {
+func TestTimerAddClose(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timer := gtimer.New()
 		array := garray.New(true)
@@ -47,7 +47,7 @@ func TestTimer_Add_Close(t *testing.T) {
 	})
 }
 
-func TestTimer_Start_Stop_Close(t *testing.T) {
+func TestTimerStartStopClose(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timer := gtimer.New()
 		array := garray.New(true)
@@ -69,7 +69,7 @@ func TestTimer_Start_Stop_Close(t *testing.T) {
 	})
 }
 
-func TestJob_Reset(t *testing.T) {
+func TestJobReset(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timer := gtimer.New()
 		array := garray.New(true)
@@ -87,7 +87,7 @@ func TestJob_Reset(t *testing.T) {
 	})
 }
 
-func TestTimer_AddSingleton(t *testing.T) {
+func TestTimerAddSingleton(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timer := gtimer.New()
 		array := garray.New(true)
@@ -103,7 +103,7 @@ func TestTimer_AddSingleton(t *testing.T) {
 	})
 }
 
-func TestTimer_AddSingletonWithQuick(t *testing.T) {
+func TestTimerAddSingletonWithQuick(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timer := gtimer.New(gtimer.TimerOptions{
 			Interval: 100 * time.Millisecond,
@@ -122,7 +122,7 @@ func TestTimer_AddSingletonWithQuick(t *testing.T) {
 	})
 }
 
-func TestTimer_AddSingletonWithoutQuick(t *testing.T) {
+func TestTimerAddSingletonWithoutQuick(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timer := gtimer.New(gtimer.TimerOptions{
 			Interval: 100 * time.Millisecond,
@@ -141,7 +141,7 @@ func TestTimer_AddSingletonWithoutQuick(t *testing.T) {
 	})
 }
 
-func TestTimer_AddOnce(t *testing.T) {
+func TestTimerAddOnce(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timer := gtimer.New()
 		array := garray.New(true)
@@ -163,7 +163,7 @@ func TestTimer_AddOnce(t *testing.T) {
 	})
 }
 
-func TestTimer_AddTimes(t *testing.T) {
+func TestTimerAddTimes(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timer := gtimer.New()
 		array := garray.New(true)
@@ -175,7 +175,7 @@ func TestTimer_AddTimes(t *testing.T) {
 	})
 }
 
-func TestTimer_DelayAdd(t *testing.T) {
+func TestTimerDelayAdd(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timer := gtimer.New()
 		array := garray.New(true)
@@ -189,7 +189,7 @@ func TestTimer_DelayAdd(t *testing.T) {
 	})
 }
 
-func TestTimer_DelayAddJob(t *testing.T) {
+func TestTimerDelayAddJob(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timer := gtimer.New()
 		array := garray.New(true)
@@ -203,7 +203,7 @@ func TestTimer_DelayAddJob(t *testing.T) {
 	})
 }
 
-func TestTimer_DelayAddSingleton(t *testing.T) {
+func TestTimerDelayAddSingleton(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timer := gtimer.New()
 		array := garray.New(true)
@@ -219,7 +219,7 @@ func TestTimer_DelayAddSingleton(t *testing.T) {
 	})
 }
 
-func TestTimer_DelayAddOnce(t *testing.T) {
+func TestTimerDelayAddOnce(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timer := gtimer.New()
 		array := garray.New(true)
@@ -237,7 +237,7 @@ func TestTimer_DelayAddOnce(t *testing.T) {
 	})
 }
 
-func TestTimer_DelayAddTimes(t *testing.T) {
+func TestTimerDelayAddTimes(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timer := gtimer.New()
 		array := garray.New(true)
@@ -258,7 +258,7 @@ func TestTimer_DelayAddTimes(t *testing.T) {
 	})
 }
 
-func TestTimer_AddLessThanInterval(t *testing.T) {
+func TestTimerAddLessThanInterval(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timer := gtimer.New(gtimer.TimerOptions{
 			Interval: 100 * time.Millisecond,
@@ -278,7 +278,7 @@ func TestTimer_AddLessThanInterval(t *testing.T) {
 	})
 }
 
-func TestTimer_AddLeveledJob1(t *testing.T) {
+func TestTimerAddLeveledJob1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timer := gtimer.New()
 		array := garray.New(true)
@@ -292,7 +292,7 @@ func TestTimer_AddLeveledJob1(t *testing.T) {
 	})
 }
 
-func TestTimer_Exit(t *testing.T) {
+func TestTimerExit(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timer := gtimer.New()
 		array := garray.New(true)

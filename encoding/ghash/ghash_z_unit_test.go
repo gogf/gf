@@ -17,7 +17,7 @@ var (
 	strBasic = []byte("This is the test string for hash.")
 )
 
-func Test_BKDR(t *testing.T) {
+func TestBKDR(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		x := uint32(200645773)
 		j := ghash.BKDR(strBasic)
@@ -30,7 +30,7 @@ func Test_BKDR(t *testing.T) {
 	})
 }
 
-func Test_SDBM(t *testing.T) {
+func TestSDBM(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		x := uint32(1069170245)
 		j := ghash.SDBM(strBasic)
@@ -43,7 +43,7 @@ func Test_SDBM(t *testing.T) {
 	})
 }
 
-func Test_RS(t *testing.T) {
+func TestRS(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		x := uint32(1944033799)
 		j := ghash.RS(strBasic)
@@ -56,7 +56,7 @@ func Test_RS(t *testing.T) {
 	})
 }
 
-func Test_JS(t *testing.T) {
+func TestJS(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		x := uint32(498688898)
 		j := ghash.JS(strBasic)
@@ -69,7 +69,7 @@ func Test_JS(t *testing.T) {
 	})
 }
 
-func Test_PJW(t *testing.T) {
+func TestPJW(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		x := uint32(7244206)
 		j := ghash.PJW(strBasic)
@@ -82,7 +82,7 @@ func Test_PJW(t *testing.T) {
 	})
 }
 
-func Test_ELF(t *testing.T) {
+func TestELF(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		x := uint32(7244206)
 		j := ghash.ELF(strBasic)
@@ -95,7 +95,7 @@ func Test_ELF(t *testing.T) {
 	})
 }
 
-func Test_DJB(t *testing.T) {
+func TestDJB(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		x := uint32(959862602)
 		j := ghash.DJB(strBasic)
@@ -108,7 +108,7 @@ func Test_DJB(t *testing.T) {
 	})
 }
 
-func Test_AP(t *testing.T) {
+func TestAP(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		x := uint32(3998202516)
 		j := ghash.AP(strBasic)

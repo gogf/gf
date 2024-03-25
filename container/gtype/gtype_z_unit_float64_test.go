@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Float64(t *testing.T) {
+func TestFloat64(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		i := gtype.NewFloat64(0)
 		iClone := i.Clone()
@@ -41,7 +41,7 @@ func Test_Float64(t *testing.T) {
 	})
 }
 
-func Test_Float64_JSON(t *testing.T) {
+func TestFloat64JSON(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := math.MaxFloat64
 		i := gtype.NewFloat64(v)
@@ -58,7 +58,7 @@ func Test_Float64_JSON(t *testing.T) {
 	})
 }
 
-func Test_Float64_UnmarshalValue(t *testing.T) {
+func TestFloat64UnmarshalValue(t *testing.T) {
 	type V struct {
 		Name string
 		Var  *gtype.Float64

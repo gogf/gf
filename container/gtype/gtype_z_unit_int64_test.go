@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Int64(t *testing.T) {
+func TestInt64(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var wg sync.WaitGroup
 		addTimes := 1000
@@ -54,7 +54,7 @@ func Test_Int64(t *testing.T) {
 	})
 }
 
-func Test_Int64_JSON(t *testing.T) {
+func TestInt64JSON(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		i := gtype.NewInt64(math.MaxInt64)
 		b1, err1 := json.Marshal(i)
@@ -70,7 +70,7 @@ func Test_Int64_JSON(t *testing.T) {
 	})
 }
 
-func Test_Int64_UnmarshalValue(t *testing.T) {
+func TestInt64UnmarshalValue(t *testing.T) {
 	type V struct {
 		Name string
 		Var  *gtype.Int64

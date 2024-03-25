@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_Router_Exit(t *testing.T) {
+func TestRouterExit(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHookHandlerByMap("/*", map[ghttp.HookName]ghttp.HandlerFunc{
 		ghttp.HookBeforeServe:  func(r *ghttp.Request) { r.Response.Write("1") },
@@ -44,7 +44,7 @@ func Test_Router_Exit(t *testing.T) {
 	})
 }
 
-func Test_Router_ExitHook(t *testing.T) {
+func TestRouterExitHook(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/priority/show", func(r *ghttp.Request) {
 		r.Response.Write("show")
@@ -80,7 +80,7 @@ func Test_Router_ExitHook(t *testing.T) {
 	})
 }
 
-func Test_Router_ExitAll(t *testing.T) {
+func TestRouterExitAll(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/priority/show", func(r *ghttp.Request) {
 		r.Response.Write("show")

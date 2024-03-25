@@ -13,13 +13,13 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func Test_IsEmpty(t *testing.T) {
+func TestIsEmpty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gutil.IsEmpty(1), false)
 	})
 }
 
-func Test_IsTypeOf(t *testing.T) {
+func TestIsTypeOf(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gutil.IsTypeOf(1, 0), true)
 		t.Assert(gutil.IsTypeOf(1.1, 0.1), true)

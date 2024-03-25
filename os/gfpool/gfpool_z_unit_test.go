@@ -145,7 +145,7 @@ func stop(testFile string) {
 	}
 }
 
-func Test_ConcurrentOS(t *testing.T) {
+func TestConcurrentOS(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		path := gfile.Temp(gtime.TimestampNanoStr())
 		defer gfile.Remove(path)
@@ -263,7 +263,7 @@ func Test_ConcurrentOS(t *testing.T) {
 	// })
 }
 
-func Test_ConcurrentGFPool(t *testing.T) {
+func TestConcurrentGFPool(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		path := gfile.Temp(gtime.TimestampNanoStr())
 		defer gfile.Remove(path)

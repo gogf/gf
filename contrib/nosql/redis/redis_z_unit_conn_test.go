@@ -12,7 +12,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func TestConn_DoWithTimeout(t *testing.T) {
+func TestConnDoWithTimeout(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		conn, err := redis.Conn(ctx)
 		t.AssertNil(err)
@@ -28,7 +28,7 @@ func TestConn_DoWithTimeout(t *testing.T) {
 	})
 }
 
-func TestConn_ReceiveVarWithTimeout(t *testing.T) {
+func TestConnReceiveVarWithTimeout(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		conn, err := redis.Conn(ctx)
 		t.AssertNil(err)

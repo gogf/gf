@@ -197,7 +197,7 @@ func TestNewConnKeyCrt(t *testing.T) {
 	})
 }
 
-func TestConn_Send(t *testing.T) {
+func TestConnSend(t *testing.T) {
 	s := startTCPServer(gtcp.FreePortAddress)
 
 	gtest.C(t, func(t *gtest.T) {
@@ -212,7 +212,7 @@ func TestConn_Send(t *testing.T) {
 	})
 }
 
-func TestConn_SendWithTimeout(t *testing.T) {
+func TestConnSendWithTimeout(t *testing.T) {
 	s := startTCPServer(gtcp.FreePortAddress)
 
 	gtest.C(t, func(t *gtest.T) {
@@ -227,7 +227,7 @@ func TestConn_SendWithTimeout(t *testing.T) {
 	})
 }
 
-func TestConn_SendRecv(t *testing.T) {
+func TestConnSendRecv(t *testing.T) {
 	s := startTCPServer(gtcp.FreePortAddress)
 
 	gtest.C(t, func(t *gtest.T) {
@@ -240,7 +240,7 @@ func TestConn_SendRecv(t *testing.T) {
 	})
 }
 
-func TestConn_SendRecvWithTimeout(t *testing.T) {
+func TestConnSendRecvWithTimeout(t *testing.T) {
 	s := startTCPServer(gtcp.FreePortAddress)
 
 	gtest.C(t, func(t *gtest.T) {
@@ -253,7 +253,7 @@ func TestConn_SendRecvWithTimeout(t *testing.T) {
 	})
 }
 
-func TestConn_RecvWithTimeout(t *testing.T) {
+func TestConnRecvWithTimeout(t *testing.T) {
 	s := startTCPServer(gtcp.FreePortAddress)
 
 	gtest.C(t, func(t *gtest.T) {
@@ -267,7 +267,7 @@ func TestConn_RecvWithTimeout(t *testing.T) {
 	})
 }
 
-func TestConn_RecvLine(t *testing.T) {
+func TestConnRecvLine(t *testing.T) {
 	s := startTCPServer(gtcp.FreePortAddress)
 
 	gtest.C(t, func(t *gtest.T) {
@@ -283,7 +283,7 @@ func TestConn_RecvLine(t *testing.T) {
 	})
 }
 
-func TestConn_RecvTill(t *testing.T) {
+func TestConnRecvTill(t *testing.T) {
 	s := startTCPServer(gtcp.FreePortAddress)
 
 	gtest.C(t, func(t *gtest.T) {
@@ -297,7 +297,7 @@ func TestConn_RecvTill(t *testing.T) {
 	})
 }
 
-func TestConn_SetDeadline(t *testing.T) {
+func TestConnSetDeadline(t *testing.T) {
 	s := startTCPServer(gtcp.FreePortAddress)
 
 	gtest.C(t, func(t *gtest.T) {
@@ -313,7 +313,7 @@ func TestConn_SetDeadline(t *testing.T) {
 	})
 }
 
-func TestConn_SetReceiveBufferWait(t *testing.T) {
+func TestConnSetReceiveBufferWait(t *testing.T) {
 	s := startTCPServer(gtcp.FreePortAddress)
 
 	gtest.C(t, func(t *gtest.T) {
@@ -531,7 +531,7 @@ func TestGetServer(t *testing.T) {
 	})
 }
 
-func TestServer_SetAddress(t *testing.T) {
+func TestServerSetAddress(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gtcp.NewServer("", func(conn *gtcp.Conn) {
 			defer conn.Close()
@@ -556,7 +556,7 @@ func TestServer_SetAddress(t *testing.T) {
 	})
 }
 
-func TestServer_SetHandler(t *testing.T) {
+func TestServerSetHandler(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gtcp.NewServer(gtcp.FreePortAddress, nil)
 		defer s.Close()
@@ -580,7 +580,7 @@ func TestServer_SetHandler(t *testing.T) {
 	})
 }
 
-func TestServer_Run(t *testing.T) {
+func TestServerRun(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gtcp.NewServer(gtcp.FreePortAddress, func(conn *gtcp.Conn) {
 			defer conn.Close()

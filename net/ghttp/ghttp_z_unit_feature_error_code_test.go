@@ -21,7 +21,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_Error_Code(t *testing.T) {
+func TestErrorCode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
 		s.Group("/", func(group *ghttp.RouterGroup) {

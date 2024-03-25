@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_GroupScript_Eval(t *testing.T) {
+func TestGroupScriptEval(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -30,7 +30,7 @@ func Test_GroupScript_Eval(t *testing.T) {
 	})
 }
 
-func Test_GroupScript_EvalSha(t *testing.T) {
+func TestGroupScriptEvalSha(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -46,7 +46,7 @@ func Test_GroupScript_EvalSha(t *testing.T) {
 }
 
 // https://redis.io/docs/manual/programmability/eval-intro/
-func Test_GroupScript_ScriptLoad(t *testing.T) {
+func TestGroupScriptScriptLoad(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -62,7 +62,7 @@ func Test_GroupScript_ScriptLoad(t *testing.T) {
 	})
 }
 
-func Test_GroupScript_ScriptExists(t *testing.T) {
+func TestGroupScriptScriptExists(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -82,7 +82,7 @@ func Test_GroupScript_ScriptExists(t *testing.T) {
 	})
 }
 
-func Test_GroupScript_ScriptFlush(t *testing.T) {
+func TestGroupScriptScriptFlush(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		var (
@@ -112,7 +112,7 @@ func Test_GroupScript_ScriptFlush(t *testing.T) {
 	})
 }
 
-func Test_GroupScript_ScriptKill(t *testing.T) {
+func TestGroupScriptScriptKill(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 		err := redis.GroupScript().ScriptKill(ctx)

@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func Test_Map_Basic(t *testing.T) {
+func TestMapBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m1 := map[string]string{
 			"k": "v",
@@ -51,7 +51,7 @@ func Test_Map_Basic(t *testing.T) {
 	})
 }
 
-func Test_Map_Slice(t *testing.T) {
+func TestMapSlice(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		slice1 := g.Slice{"1", "2", "3", "4"}
 		slice2 := g.Slice{"1", "2", "3"}
@@ -68,7 +68,7 @@ func Test_Map_Slice(t *testing.T) {
 	})
 }
 
-func Test_Maps_Basic(t *testing.T) {
+func TestMapsBasic(t *testing.T) {
 	params := g.Slice{
 		g.Map{"id": 100, "name": "john"},
 		g.Map{"id": 200, "name": "smith"},
@@ -119,7 +119,7 @@ func Test_Maps_Basic(t *testing.T) {
 	})
 }
 
-func Test_Maps_JsonStr(t *testing.T) {
+func TestMapsJsonStr(t *testing.T) {
 	jsonStr := `[{"id":100, "name":"john"},{"id":200, "name":"smith"}]`
 	gtest.C(t, func(t *gtest.T) {
 		list := gconv.Maps(jsonStr)
@@ -141,7 +141,7 @@ func Test_Maps_JsonStr(t *testing.T) {
 	})
 }
 
-func Test_Map_StructWithGConvTag(t *testing.T) {
+func TestMapStructWithGConvTag(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Uid      int
@@ -179,7 +179,7 @@ func Test_Map_StructWithGConvTag(t *testing.T) {
 	})
 }
 
-func Test_Map_StructWithJsonTag(t *testing.T) {
+func TestMapStructWithJsonTag(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Uid      int
@@ -217,7 +217,7 @@ func Test_Map_StructWithJsonTag(t *testing.T) {
 	})
 }
 
-func Test_Map_StructWithCTag(t *testing.T) {
+func TestMapStructWithCTag(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Uid      int
@@ -255,7 +255,7 @@ func Test_Map_StructWithCTag(t *testing.T) {
 	})
 }
 
-func Test_Map_PrivateAttribute(t *testing.T) {
+func TestMapPrivateAttribute(t *testing.T) {
 	type User struct {
 		Id   int
 		name string
@@ -266,7 +266,7 @@ func Test_Map_PrivateAttribute(t *testing.T) {
 	})
 }
 
-func Test_Map_Embedded(t *testing.T) {
+func TestMapEmbedded(t *testing.T) {
 	type Base struct {
 		Id int
 	}
@@ -302,7 +302,7 @@ func Test_Map_Embedded(t *testing.T) {
 	})
 }
 
-func Test_Map_Embedded2(t *testing.T) {
+func TestMapEmbedded2(t *testing.T) {
 	type Ids struct {
 		Id  int `c:"id"`
 		Uid int `c:"uid"`
@@ -339,7 +339,7 @@ func Test_Map_Embedded2(t *testing.T) {
 	})
 }
 
-func Test_MapDeep2(t *testing.T) {
+func TestMapDeep2(t *testing.T) {
 	type A struct {
 		F string
 		G string
@@ -380,7 +380,7 @@ func Test_MapDeep2(t *testing.T) {
 	})
 }
 
-func Test_MapDeep3(t *testing.T) {
+func TestMapDeep3(t *testing.T) {
 	type Base struct {
 		Id   int    `c:"id"`
 		Date string `c:"date"`
@@ -434,7 +434,7 @@ func Test_MapDeep3(t *testing.T) {
 	})
 }
 
-func Test_MapDeepWithAttributeTag(t *testing.T) {
+func TestMapDeepWithAttributeTag(t *testing.T) {
 	type Ids struct {
 		Id  int `c:"id"`
 		Uid int `c:"uid"`
@@ -471,7 +471,7 @@ func Test_MapDeepWithAttributeTag(t *testing.T) {
 	})
 }
 
-func Test_MapDeepWithNestedMapAnyAny(t *testing.T) {
+func TestMapDeepWithNestedMapAnyAny(t *testing.T) {
 	type User struct {
 		ExtraAttributes g.Map `c:"extra_attributes"`
 	}
@@ -538,7 +538,7 @@ field3:
 	})
 }
 
-func Test_MapWithDeepOption(t *testing.T) {
+func TestMapWithDeepOption(t *testing.T) {
 	type Base struct {
 		Id   int    `c:"id"`
 		Date string `c:"date"`

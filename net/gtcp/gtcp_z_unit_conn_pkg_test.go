@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Package_Basic(t *testing.T) {
+func TestPackageBasic(t *testing.T) {
 	s := gtcp.NewServer(gtcp.FreePortAddress, func(conn *gtcp.Conn) {
 		defer conn.Close()
 		for {
@@ -97,7 +97,7 @@ func Test_Package_Basic(t *testing.T) {
 	})
 }
 
-func Test_Package_Basic_HeaderSize1(t *testing.T) {
+func TestPackageBasicHeaderSize1(t *testing.T) {
 	s := gtcp.NewServer(gtcp.FreePortAddress, func(conn *gtcp.Conn) {
 		defer conn.Close()
 		for {
@@ -124,7 +124,7 @@ func Test_Package_Basic_HeaderSize1(t *testing.T) {
 	})
 }
 
-func Test_Package_Timeout(t *testing.T) {
+func TestPackageTimeout(t *testing.T) {
 	s := gtcp.NewServer(gtcp.FreePortAddress, func(conn *gtcp.Conn) {
 		defer conn.Close()
 		for {
@@ -168,7 +168,7 @@ func Test_Package_Timeout(t *testing.T) {
 	})
 }
 
-func Test_Package_Option(t *testing.T) {
+func TestPackageOption(t *testing.T) {
 	s := gtcp.NewServer(gtcp.FreePortAddress, func(conn *gtcp.Conn) {
 		defer conn.Close()
 		option := gtcp.PkgOption{HeaderSize: 1}
@@ -207,7 +207,7 @@ func Test_Package_Option(t *testing.T) {
 	})
 }
 
-func Test_Package_Option_HeadSize3(t *testing.T) {
+func TestPackageOptionHeadSize3(t *testing.T) {
 	s := gtcp.NewServer(gtcp.FreePortAddress, func(conn *gtcp.Conn) {
 		defer conn.Close()
 		option := gtcp.PkgOption{HeaderSize: 3}
@@ -236,7 +236,7 @@ func Test_Package_Option_HeadSize3(t *testing.T) {
 	})
 }
 
-func Test_Package_Option_HeadSize4(t *testing.T) {
+func TestPackageOptionHeadSize4(t *testing.T) {
 	s := gtcp.NewServer(gtcp.FreePortAddress, func(conn *gtcp.Conn) {
 		defer conn.Close()
 		option := gtcp.PkgOption{HeaderSize: 4}
@@ -285,7 +285,7 @@ func Test_Package_Option_HeadSize4(t *testing.T) {
 	})
 }
 
-func Test_Server_NewServerKeyCrt(t *testing.T) {
+func TestServerNewServerKeyCrt(t *testing.T) {
 	var (
 		noCrtFile = "noCrtFile"
 		noKeyFile = "noKeyFile"
@@ -324,7 +324,7 @@ func Test_Server_NewServerKeyCrt(t *testing.T) {
 	})
 }
 
-func Test_Conn_RecvPkgError(t *testing.T) {
+func TestConnRecvPkgError(t *testing.T) {
 
 	s := gtcp.NewServer(gtcp.FreePortAddress, func(conn *gtcp.Conn) {
 		defer conn.Close()

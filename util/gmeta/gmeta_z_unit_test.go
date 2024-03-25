@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/util/gmeta"
 )
 
-func TestMeta_Basic(t *testing.T) {
+func TestMetaBasic(t *testing.T) {
 	type A struct {
 		gmeta.Meta `tag:"123" orm:"456"`
 		Id         int
@@ -38,7 +38,7 @@ func TestMeta_Basic(t *testing.T) {
 	})
 }
 
-func TestMeta_Convert_Map(t *testing.T) {
+func TestMetaConvertMap(t *testing.T) {
 	type A struct {
 		gmeta.Meta `tag:"123" orm:"456"`
 		Id         int
@@ -56,7 +56,7 @@ func TestMeta_Convert_Map(t *testing.T) {
 	})
 }
 
-func TestMeta_Json(t *testing.T) {
+func TestMetaJson(t *testing.T) {
 	type A struct {
 		gmeta.Meta `tag:"123" orm:"456"`
 		Id         int

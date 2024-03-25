@@ -30,7 +30,7 @@ func RuleUserCreateReq(ctx context.Context, in gvalid.RuleFuncInput) error {
 	return gerror.Newf(`The name "%s" is already token by others`, req.Name)
 }
 
-func Test_Meta(t *testing.T) {
+func TestMeta(t *testing.T) {
 	var user = &UserCreateReq{
 		Name: "john",
 		Pass: "123456",

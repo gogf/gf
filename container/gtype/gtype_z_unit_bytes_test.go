@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Bytes(t *testing.T) {
+func TestBytes(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		i := gtype.NewBytes([]byte("abc"))
 		iClone := i.Clone()
@@ -38,7 +38,7 @@ func Test_Bytes(t *testing.T) {
 	})
 }
 
-func Test_Bytes_JSON(t *testing.T) {
+func TestBytesJSON(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		b := []byte("i love gf")
 		i := gtype.NewBytes(b)
@@ -55,7 +55,7 @@ func Test_Bytes_JSON(t *testing.T) {
 	})
 }
 
-func Test_Bytes_UnmarshalValue(t *testing.T) {
+func TestBytesUnmarshalValue(t *testing.T) {
 	type V struct {
 		Name string
 		Var  *gtype.Bytes

@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Uint(t *testing.T) {
+func TestUint(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var wg sync.WaitGroup
 		addTimes := 1000
@@ -53,7 +53,7 @@ func Test_Uint(t *testing.T) {
 	})
 }
 
-func Test_Uint_JSON(t *testing.T) {
+func TestUintJSON(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		i := gtype.NewUint(666)
 		b1, err1 := json.Marshal(i)
@@ -69,7 +69,7 @@ func Test_Uint_JSON(t *testing.T) {
 	})
 }
 
-func Test_Uint_UnmarshalValue(t *testing.T) {
+func TestUintUnmarshalValue(t *testing.T) {
 	type V struct {
 		Name string
 		Var  *gtype.Uint

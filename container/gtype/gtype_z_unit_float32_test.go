@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Float32(t *testing.T) {
+func TestFloat32(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		i := gtype.NewFloat32(0)
 		iClone := i.Clone()
@@ -42,7 +42,7 @@ func Test_Float32(t *testing.T) {
 	})
 }
 
-func Test_Float32_JSON(t *testing.T) {
+func TestFloat32JSON(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := float32(math.MaxFloat32)
 		i := gtype.NewFloat32(v)
@@ -60,7 +60,7 @@ func Test_Float32_JSON(t *testing.T) {
 	})
 }
 
-func Test_Float32_UnmarshalValue(t *testing.T) {
+func TestFloat32UnmarshalValue(t *testing.T) {
 	type V struct {
 		Name string
 		Var  *gtype.Float32

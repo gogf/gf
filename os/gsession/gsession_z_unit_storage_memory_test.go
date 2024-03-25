@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_StorageMemory(t *testing.T) {
+func TestStorageMemory(t *testing.T) {
 	storage := gsession.NewStorageMemory()
 	manager := gsession.New(time.Second, storage)
 	sessionId := ""

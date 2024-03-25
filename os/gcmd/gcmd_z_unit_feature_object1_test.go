@@ -52,7 +52,7 @@ func (TestCmdObject) Test(ctx context.Context, in TestCmdObjectTestInput) (out *
 	return
 }
 
-func Test_Command_NewFromObject_Help(t *testing.T) {
+func TestCommandNewFromObjectHelp(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx      = gctx.New()
@@ -68,7 +68,7 @@ func Test_Command_NewFromObject_Help(t *testing.T) {
 	})
 }
 
-func Test_Command_NewFromObject_Run(t *testing.T) {
+func TestCommandNewFromObjectRun(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx      = gctx.New()
@@ -83,7 +83,7 @@ func Test_Command_NewFromObject_Run(t *testing.T) {
 	})
 }
 
-func Test_Command_NewFromObject_RunWithValue(t *testing.T) {
+func TestCommandNewFromObjectRunWithValue(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx      = gctx.New()
@@ -118,7 +118,7 @@ func Test_Command_NewFromObject_RunWithValue(t *testing.T) {
 	})
 }
 
-func Test_Command_NewFromObject_RunWithSpecificArgs(t *testing.T) {
+func TestCommandNewFromObjectRunWithSpecificArgs(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx      = gctx.New()
@@ -158,7 +158,7 @@ func Test_Command_NewFromObject_RunWithSpecificArgs(t *testing.T) {
 	})
 }
 
-func Test_Command_AddObject(t *testing.T) {
+func TestCommandAddObject(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx     = gctx.New()
@@ -206,7 +206,7 @@ func (TestObjectForRootTag) Root(ctx context.Context, in TestObjectForRootTagTes
 	return
 }
 
-func Test_Command_RootTag(t *testing.T) {
+func TestCommandRootTag(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx = gctx.New()
@@ -266,7 +266,7 @@ func (TestObjectForNeedArgs) Test(ctx context.Context, in TestObjectForNeedArgsT
 	return
 }
 
-func Test_Command_NeedArgs(t *testing.T) {
+func TestCommandNeedArgs(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx = gctx.New()
@@ -315,7 +315,7 @@ func (c *TestObjectPointerTag) Root(ctx context.Context, in TestObjectPointerTag
 	return
 }
 
-func Test_Command_Pointer(t *testing.T) {
+func TestCommandPointer(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx = gctx.New()
@@ -369,7 +369,7 @@ func (c *TestCommandOrphan) Index(ctx context.Context, in TestCommandOrphanIndex
 	return
 }
 
-func Test_Command_Orphan_Parameter(t *testing.T) {
+func TestCommandOrphanParameter(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var ctx = gctx.New()
 		cmd, err := gcmd.NewFromObject(TestCommandOrphan{})

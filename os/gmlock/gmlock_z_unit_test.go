@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Locker_Lock(t *testing.T) {
+func TestLockerLock(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		key := "testLock"
 		array := garray.New(true)
@@ -68,7 +68,7 @@ func Test_Locker_Lock(t *testing.T) {
 
 }
 
-func Test_Locker_TryLock(t *testing.T) {
+func TestLockerTryLock(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		key := "testTryLock"
 		array := garray.New(true)
@@ -102,7 +102,7 @@ func Test_Locker_TryLock(t *testing.T) {
 
 }
 
-func Test_Locker_LockFunc(t *testing.T) {
+func TestLockerLockFunc(t *testing.T) {
 	//no expire
 	gtest.C(t, func(t *gtest.T) {
 		key := "testLockFunc"
@@ -128,7 +128,7 @@ func Test_Locker_LockFunc(t *testing.T) {
 	})
 }
 
-func Test_Locker_TryLockFunc(t *testing.T) {
+func TestLockerTryLockFunc(t *testing.T) {
 	//no expire
 	gtest.C(t, func(t *gtest.T) {
 		key := "testTryLockFunc"
@@ -158,7 +158,7 @@ func Test_Locker_TryLockFunc(t *testing.T) {
 	})
 }
 
-func Test_Multiple_Goroutine(t *testing.T) {
+func TestMultipleGoroutine(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		ch := make(chan struct{})
 		num := 1000
@@ -205,7 +205,7 @@ func Test_Multiple_Goroutine(t *testing.T) {
 	})
 }
 
-func Test_Locker_RLock(t *testing.T) {
+func TestLockerRLock(t *testing.T) {
 	// RLock before Lock
 	gtest.C(t, func(t *gtest.T) {
 		key := "testRLockBeforeLock"
@@ -281,7 +281,7 @@ func Test_Locker_RLock(t *testing.T) {
 	})
 }
 
-func Test_Locker_TryRLock(t *testing.T) {
+func TestLockerTryRLock(t *testing.T) {
 	// Lock before TryRLock
 	gtest.C(t, func(t *gtest.T) {
 		key := "testLockBeforeTryRLock"
@@ -336,7 +336,7 @@ func Test_Locker_TryRLock(t *testing.T) {
 	})
 }
 
-func Test_Locker_RLockFunc(t *testing.T) {
+func TestLockerRLockFunc(t *testing.T) {
 	// RLockFunc before Lock
 	gtest.C(t, func(t *gtest.T) {
 		key := "testRLockFuncBeforeLock"
@@ -412,7 +412,7 @@ func Test_Locker_RLockFunc(t *testing.T) {
 	})
 }
 
-func Test_Locker_TryRLockFunc(t *testing.T) {
+func TestLockerTryRLockFunc(t *testing.T) {
 	// Lock before TryRLockFunc
 	gtest.C(t, func(t *gtest.T) {
 		key := "testLockBeforeTryRLockFunc"

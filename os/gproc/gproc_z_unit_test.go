@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_ShellExec(t *testing.T) {
+func TestShellExec(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s, err := gproc.ShellExec(gctx.New(), `echo 123`)
 		t.AssertNil(err)

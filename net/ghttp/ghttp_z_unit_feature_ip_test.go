@@ -19,7 +19,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func TestRequest_GetRemoteIp(t *testing.T) {
+func TestRequestGetRemoteIp(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
 		s.BindHandler("/", func(r *ghttp.Request) {

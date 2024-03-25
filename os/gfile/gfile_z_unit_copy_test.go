@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_Copy(t *testing.T) {
+func TestCopy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths  = "/testfile_copyfile1.txt"
@@ -35,7 +35,7 @@ func Test_Copy(t *testing.T) {
 	})
 }
 
-func Test_Copy_File_To_Dir(t *testing.T) {
+func TestCopyFileToDir(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			src = gtest.DataPath("dir1", "file1")
@@ -53,7 +53,7 @@ func Test_Copy_File_To_Dir(t *testing.T) {
 	})
 }
 
-func Test_Copy_Dir_To_File(t *testing.T) {
+func TestCopyDirToFile(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			src = gtest.DataPath("dir1")
@@ -69,7 +69,7 @@ func Test_Copy_Dir_To_File(t *testing.T) {
 	})
 }
 
-func Test_CopyFile(t *testing.T) {
+func TestCopyFile(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths  = "/testfile_copyfile1.txt"
@@ -138,7 +138,7 @@ func Test_CopyFile(t *testing.T) {
 	})
 }
 
-func Test_CopyDir(t *testing.T) {
+func TestCopyDir(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			dirPath1 = "/test-copy-dir1"

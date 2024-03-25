@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_Params_Xml_Request(t *testing.T) {
+func TestParamsXmlRequest(t *testing.T) {
 	type User struct {
 		Id    int
 		Name  string

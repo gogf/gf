@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func Test_Parse(t *testing.T) {
+func TestParse(t *testing.T) {
 	// cover test
 	gtest.C(t, func(t *gtest.T) {
 		// empty

@@ -7,14 +7,15 @@
 package gproc
 
 import (
-	"github.com/gogf/gf/v2/test/gtest"
 	"os"
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Signal(t *testing.T) {
+func TestSignal(t *testing.T) {
 	go Listen()
 
 	// non shutdown signal

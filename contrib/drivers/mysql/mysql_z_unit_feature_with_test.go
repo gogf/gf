@@ -85,7 +85,7 @@ mysql> select * from `user_score`;
 25 rows in set (0.00 sec)
 */
 
-func Test_Table_Relation_With_Scan(t *testing.T) {
+func TestTableRelationWithScan(t *testing.T) {
 	var (
 		tableUser       = "user"
 		tableUserDetail = "user_detail"
@@ -283,7 +283,7 @@ PRIMARY KEY (id)
 	})
 }
 
-func Test_Table_Relation_With(t *testing.T) {
+func TestTableRelationWith(t *testing.T) {
 	var (
 		tableUser       = "user"
 		tableUserDetail = "user_detail"
@@ -483,7 +483,7 @@ PRIMARY KEY (id)
 	})
 }
 
-func Test_Table_Relation_WithAll(t *testing.T) {
+func TestTableRelationWithAll(t *testing.T) {
 	var (
 		tableUser       = "user"
 		tableUserDetail = "user_detail"
@@ -598,7 +598,7 @@ PRIMARY KEY (id)
 	})
 }
 
-func Test_Table_Relation_WithAll_List(t *testing.T) {
+func TestTableRelationWithAllList(t *testing.T) {
 	var (
 		tableUser       = "user"
 		tableUserDetail = "user_detail"
@@ -739,7 +739,7 @@ PRIMARY KEY (id)
 	})
 }
 
-func Test_Table_Relation_WithAllCondition_List(t *testing.T) {
+func TestTableRelationWithAllConditionList(t *testing.T) {
 	var (
 		tableUser       = "user"
 		tableUserDetail = "user_detail"
@@ -875,7 +875,7 @@ PRIMARY KEY (id)
 	})
 }
 
-func Test_Table_Relation_WithAll_Embedded_With_SelfMaintained_Attributes(t *testing.T) {
+func TestTableRelationWithAllEmbeddedWithSelfMaintainedAttributes(t *testing.T) {
 	var (
 		tableUser       = "user"
 		tableUserDetail = "user_detail"
@@ -990,7 +990,7 @@ PRIMARY KEY (id)
 	})
 }
 
-func Test_Table_Relation_WithAll_Embedded_Without_SelfMaintained_Attributes(t *testing.T) {
+func TestTableRelationWithAllEmbeddedWithoutSelfMaintainedAttributes(t *testing.T) {
 	var (
 		tableUser       = "user"
 		tableUserDetail = "user_detail"
@@ -1113,7 +1113,7 @@ PRIMARY KEY (id)
 	})
 }
 
-func Test_Table_Relation_WithAll_Embedded_WithoutMeta(t *testing.T) {
+func TestTableRelationWithAllEmbeddedWithoutMeta(t *testing.T) {
 	var (
 		tableUser       = "user"
 		tableUserDetail = "user_detail"
@@ -1229,7 +1229,7 @@ PRIMARY KEY (id)
 	})
 }
 
-func Test_Table_Relation_WithAll_AttributeStructAlsoHasWithTag(t *testing.T) {
+func TestTableRelationWithAllAttributeStructAlsoHasWithTag(t *testing.T) {
 	var (
 		tableUser       = "user"
 		tableUserDetail = "user_detail"
@@ -1345,7 +1345,7 @@ PRIMARY KEY (id)
 	})
 }
 
-func Test_Table_Relation_WithAll_AttributeStructAlsoHasWithTag_MoreDeep(t *testing.T) {
+func TestTableRelationWithAllAttributeStructAlsoHasWithTagMoreDeep(t *testing.T) {
 	var (
 		tableUser       = "user"
 		tableUserDetail = "user_detail"
@@ -1491,7 +1491,7 @@ PRIMARY KEY (id)
 	})
 }
 
-func Test_Table_Relation_With_AttributeStructAlsoHasWithTag_MoreDeep(t *testing.T) {
+func TestTableRelationWithAttributeStructAlsoHasWithTagMoreDeep(t *testing.T) {
 	var (
 		tableUser       = "user"
 		tableUserDetail = "user_detail"
@@ -1637,7 +1637,7 @@ PRIMARY KEY (id)
 	})
 }
 
-func Test_Table_Relation_With_MultipleDepends1(t *testing.T) {
+func TestTableRelationWithMultipleDepends1(t *testing.T) {
 	defer func() {
 		dropTable("table_a")
 		dropTable("table_b")
@@ -1709,7 +1709,7 @@ func Test_Table_Relation_With_MultipleDepends1(t *testing.T) {
 	})
 }
 
-func Test_Table_Relation_With_MultipleDepends2(t *testing.T) {
+func TestTableRelationWithMultipleDepends2(t *testing.T) {
 	defer func() {
 		dropTable("table_a")
 		dropTable("table_b")
@@ -1796,7 +1796,7 @@ func Test_Table_Relation_With_MultipleDepends2(t *testing.T) {
 	})
 }
 
-func Test_Table_Relation_With_MultipleDepends_Embedded(t *testing.T) {
+func TestTableRelationWithMultipleDependsEmbedded(t *testing.T) {
 	defer func() {
 		dropTable("table_a")
 		dropTable("table_b")
@@ -1868,7 +1868,7 @@ func Test_Table_Relation_With_MultipleDepends_Embedded(t *testing.T) {
 	})
 }
 
-func Test_Table_Relation_WithAll_Embedded_Meta_NameMatchingRule(t *testing.T) {
+func TestTableRelationWithAllEmbeddedMetaNameMatchingRule(t *testing.T) {
 	var (
 		tableUser       = "user100"
 		tableUserDetail = "user_detail100"

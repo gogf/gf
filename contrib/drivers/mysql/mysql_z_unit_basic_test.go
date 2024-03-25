@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Instance(t *testing.T) {
+func TestInstance(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		_, err := gdb.Instance("none")
 		t.AssertNE(err, nil)
@@ -29,7 +29,7 @@ func Test_Instance(t *testing.T) {
 	})
 }
 
-func Test_Func_FormatSqlWithArgs(t *testing.T) {
+func TestFuncFormatSqlWithArgs(t *testing.T) {
 	// mysql
 	gtest.C(t, func(t *gtest.T) {
 		var s string
@@ -56,7 +56,7 @@ func Test_Func_FormatSqlWithArgs(t *testing.T) {
 	})
 }
 
-func Test_Func_ToSQL(t *testing.T) {
+func TestFuncToSQL(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		sql, err := gdb.ToSQL(ctx, func(ctx context.Context) error {
 			value, err := db.Ctx(ctx).Model(TableName).Fields("nickname").Where("id", 1).Value()
@@ -68,7 +68,7 @@ func Test_Func_ToSQL(t *testing.T) {
 	})
 }
 
-func Test_Func_CatchSQL(t *testing.T) {
+func TestFuncCatchSQL(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {

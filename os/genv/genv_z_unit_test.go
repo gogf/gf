@@ -18,13 +18,13 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_GEnv_All(t *testing.T) {
+func TestGEnvAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(os.Environ(), genv.All())
 	})
 }
 
-func Test_GEnv_Map(t *testing.T) {
+func TestGEnvMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		value := gconv.String(gtime.TimestampNano())
 		key := "TEST_ENV_" + value
@@ -34,7 +34,7 @@ func Test_GEnv_Map(t *testing.T) {
 	})
 }
 
-func Test_GEnv_Get(t *testing.T) {
+func TestGEnvGet(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		value := gconv.String(gtime.TimestampNano())
 		key := "TEST_ENV_" + value
@@ -44,7 +44,7 @@ func Test_GEnv_Get(t *testing.T) {
 	})
 }
 
-func Test_GEnv_GetVar(t *testing.T) {
+func TestGEnvGetVar(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		value := gconv.String(gtime.TimestampNano())
 		key := "TEST_ENV_" + value
@@ -54,7 +54,7 @@ func Test_GEnv_GetVar(t *testing.T) {
 	})
 }
 
-func Test_GEnv_Contains(t *testing.T) {
+func TestGEnvContains(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		value := gconv.String(gtime.TimestampNano())
 		key := "TEST_ENV_" + value
@@ -65,7 +65,7 @@ func Test_GEnv_Contains(t *testing.T) {
 	})
 }
 
-func Test_GEnv_Set(t *testing.T) {
+func TestGEnvSet(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		value := gconv.String(gtime.TimestampNano())
 		key := "TEST_ENV_" + value
@@ -75,7 +75,7 @@ func Test_GEnv_Set(t *testing.T) {
 	})
 }
 
-func Test_GEnv_SetMap(t *testing.T) {
+func TestGEnvSetMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err := genv.SetMap(g.MapStrStr{
 			"K1": "TEST1",
@@ -87,7 +87,7 @@ func Test_GEnv_SetMap(t *testing.T) {
 	})
 }
 
-func Test_GEnv_Build(t *testing.T) {
+func TestGEnvBuild(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := genv.Build(map[string]string{
 			"k1": "v1",
@@ -98,7 +98,7 @@ func Test_GEnv_Build(t *testing.T) {
 	})
 }
 
-func Test_GEnv_Remove(t *testing.T) {
+func TestGEnvRemove(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		value := gconv.String(gtime.TimestampNano())
 		key := "TEST_ENV_" + value
@@ -110,7 +110,7 @@ func Test_GEnv_Remove(t *testing.T) {
 	})
 }
 
-func Test_GetWithCmd(t *testing.T) {
+func TestGetWithCmd(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		gcmd.Init("-test", "2")
 		t.Assert(genv.GetWithCmd("TEST"), 2)
@@ -123,21 +123,21 @@ func Test_GetWithCmd(t *testing.T) {
 	})
 }
 
-func Test_MapFromEnv(t *testing.T) {
+func TestMapFromEnv(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := genv.MapFromEnv([]string{"a=1", "b=2"})
 		t.Assert(m, g.Map{"a": 1, "b": 2})
 	})
 }
 
-func Test_MapToEnv(t *testing.T) {
+func TestMapToEnv(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := genv.MapToEnv(g.MapStrStr{"a": "1"})
 		t.Assert(s, []string{"a=1"})
 	})
 }
 
-func Test_Filter(t *testing.T) {
+func TestFilter(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := genv.Filter([]string{"a=1", "a=3"})
 		t.Assert(s, []string{"a=3"})

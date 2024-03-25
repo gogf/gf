@@ -18,7 +18,7 @@ import (
 )
 
 // CreateAt/UpdateAt/DeleteAt.
-func Test_SoftTime_CreateUpdateDelete1(t *testing.T) {
+func TestSoftTimeCreateUpdateDelete1(t *testing.T) {
 	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
@@ -152,7 +152,7 @@ CREATE TABLE %s (
 }
 
 // CreateAt/UpdateAt/DeleteAt.
-func Test_SoftTime_CreateUpdateDelete2(t *testing.T) {
+func TestSoftTimeCreateUpdateDelete2(t *testing.T) {
 	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
@@ -286,7 +286,7 @@ CREATE TABLE %s (
 }
 
 // CreatedAt/UpdatedAt/DeletedAt.
-func Test_SoftTime_CreatedUpdatedDeleted_Map(t *testing.T) {
+func TestSoftTimeCreatedUpdatedDeletedMap(t *testing.T) {
 	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
@@ -420,7 +420,7 @@ CREATE TABLE %s (
 }
 
 // CreatedAt/UpdatedAt/DeletedAt.
-func Test_SoftTime_CreatedUpdatedDeleted_Struct(t *testing.T) {
+func TestSoftTimeCreatedUpdatedDeletedStruct(t *testing.T) {
 	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
@@ -560,7 +560,7 @@ CREATE TABLE %s (
 	})
 }
 
-func Test_SoftUpdateTime(t *testing.T) {
+func TestSoftUpdateTime(t *testing.T) {
 	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
@@ -600,7 +600,7 @@ CREATE TABLE %s (
 	})
 }
 
-func Test_SoftUpdateTime_WithDO(t *testing.T) {
+func TestSoftUpdateTimeWithDO(t *testing.T) {
 	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
@@ -657,7 +657,7 @@ CREATE TABLE %s (
 	})
 }
 
-func Test_SoftDelete(t *testing.T) {
+func TestSoftDelete(t *testing.T) {
 	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
@@ -725,7 +725,7 @@ CREATE TABLE %s (
 	})
 }
 
-func Test_SoftDelete_Join(t *testing.T) {
+func TestSoftDeleteJoin(t *testing.T) {
 	table1 := "time_test_table1"
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
@@ -796,7 +796,7 @@ CREATE TABLE %s (
 	})
 }
 
-func Test_SoftDelete_WhereAndOr(t *testing.T) {
+func TestSoftDeleteWhereAndOr(t *testing.T) {
 	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
@@ -838,7 +838,7 @@ CREATE TABLE %s (
 	})
 }
 
-func Test_CreateUpdateTime_Struct(t *testing.T) {
+func TestCreateUpdateTimeStruct(t *testing.T) {
 	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
@@ -991,7 +991,7 @@ CREATE TABLE %s (
 	})
 }
 
-func Test_SoftTime_CreateUpdateDelete_UnixTimestamp(t *testing.T) {
+func TestSoftTimeCreateUpdateDeleteUnixTimestamp(t *testing.T) {
 	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
@@ -1092,7 +1092,7 @@ CREATE TABLE %s (
 	})
 }
 
-func Test_SoftTime_CreateUpdateDelete_Bool_Deleted(t *testing.T) {
+func TestSoftTimeCreateUpdateDeleteBoolDeleted(t *testing.T) {
 	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
@@ -1150,7 +1150,7 @@ CREATE TABLE %s (
 	})
 }
 
-func Test_SoftTime_CreateUpdateDelete_Option_SoftTimeTypeTimestampMilli(t *testing.T) {
+func TestSoftTimeCreateUpdateDeleteOptionSoftTimeTypeTimestampMilli(t *testing.T) {
 	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
@@ -1209,7 +1209,7 @@ CREATE TABLE %s (
 	})
 }
 
-func Test_SoftTime_CreateUpdateDelete_Option_SoftTimeTypeTimestampNano(t *testing.T) {
+func TestSoftTimeCreateUpdateDeleteOptionSoftTimeTypeTimestampNano(t *testing.T) {
 	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (

@@ -13,7 +13,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func Test_CaseCamel(t *testing.T) {
+func TestCaseCamel(t *testing.T) {
 	cases := [][]string{
 		{"test_case", "TestCase"},
 		{"test", "Test"},
@@ -36,7 +36,7 @@ func Test_CaseCamel(t *testing.T) {
 	}
 }
 
-func Test_CaseCamelLower(t *testing.T) {
+func TestCaseCamelLower(t *testing.T) {
 	cases := [][]string{
 		{"foo-bar", "fooBar"},
 		{"TestCase", "testCase"},
@@ -53,7 +53,7 @@ func Test_CaseCamelLower(t *testing.T) {
 	}
 }
 
-func Test_CaseSnake(t *testing.T) {
+func TestCaseSnake(t *testing.T) {
 	cases := [][]string{
 		{"testCase", "test_case"},
 		{"TestCase", "test_case"},
@@ -83,7 +83,7 @@ func Test_CaseSnake(t *testing.T) {
 	}
 }
 
-func Test_CaseDelimited(t *testing.T) {
+func TestCaseDelimited(t *testing.T) {
 	cases := [][]string{
 		{"testCase", "test@case"},
 		{"TestCase", "test@case"},
@@ -114,7 +114,7 @@ func Test_CaseDelimited(t *testing.T) {
 	}
 }
 
-func Test_CaseSnakeScreaming(t *testing.T) {
+func TestCaseSnakeScreaming(t *testing.T) {
 	cases := [][]string{
 		{"testCase", "TEST_CASE"},
 	}
@@ -128,7 +128,7 @@ func Test_CaseSnakeScreaming(t *testing.T) {
 	}
 }
 
-func Test_CaseKebab(t *testing.T) {
+func TestCaseKebab(t *testing.T) {
 	cases := [][]string{
 		{"testCase", "test-case"},
 		{"optimization1.0.0", "optimization-1-0-0"},
@@ -143,7 +143,7 @@ func Test_CaseKebab(t *testing.T) {
 	}
 }
 
-func Test_CaseKebabScreaming(t *testing.T) {
+func TestCaseKebabScreaming(t *testing.T) {
 	cases := [][]string{
 		{"testCase", "TEST-CASE"},
 	}
@@ -157,7 +157,7 @@ func Test_CaseKebabScreaming(t *testing.T) {
 	}
 }
 
-func Test_CaseDelimitedScreaming(t *testing.T) {
+func TestCaseDelimitedScreaming(t *testing.T) {
 	cases := [][]string{
 		{"testCase", "TEST.CASE"},
 	}
@@ -171,7 +171,7 @@ func Test_CaseDelimitedScreaming(t *testing.T) {
 	}
 }
 
-func Test_CaseSnakeFirstUpper(t *testing.T) {
+func TestCaseSnakeFirstUpper(t *testing.T) {
 	cases := [][]string{
 		{"RGBCodeMd5", "rgb_code_md5"},
 		{"testCase", "test_case"},
@@ -194,7 +194,7 @@ func Test_CaseSnakeFirstUpper(t *testing.T) {
 	})
 
 }
-func Test_CaseTypeMatch(t *testing.T) {
+func TestCaseTypeMatch(t *testing.T) {
 	caseTypes := []gstr.CaseType{
 		gstr.Camel,
 		gstr.CamelLower,
@@ -224,7 +224,7 @@ func Test_CaseTypeMatch(t *testing.T) {
 	})
 }
 
-func Test_CaseConvert(t *testing.T) {
+func TestCaseConvert(t *testing.T) {
 	caseTypes := []gstr.CaseType{
 		gstr.Camel,
 		gstr.CamelLower,

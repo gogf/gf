@@ -13,7 +13,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_GetScan(t *testing.T) {
+func TestGetScan(t *testing.T) {
 	type User struct {
 		Name  string
 		Score float64
@@ -45,7 +45,7 @@ func Test_GetScan(t *testing.T) {
 	})
 }
 
-func Test_GetScanDeep(t *testing.T) {
+func TestGetScanDeep(t *testing.T) {
 	type User struct {
 		Name  string
 		Score float64
@@ -77,7 +77,7 @@ func Test_GetScanDeep(t *testing.T) {
 	})
 }
 
-func Test_Scan1(t *testing.T) {
+func TestScan1(t *testing.T) {
 	type User struct {
 		Name  string
 		Score float64
@@ -100,7 +100,7 @@ func Test_Scan1(t *testing.T) {
 	})
 }
 
-func Test_Scan2(t *testing.T) {
+func TestScan2(t *testing.T) {
 	type User struct {
 		Name  string
 		Score float64
@@ -123,7 +123,7 @@ func Test_Scan2(t *testing.T) {
 	})
 }
 
-func Test_Struct1(t *testing.T) {
+func TestStruct1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type BaseInfoItem struct {
 			IdCardNumber        string `db:"id_card_number" json:"idCardNumber" field:"id_card_number"`
@@ -204,7 +204,7 @@ func Test_Struct1(t *testing.T) {
 	})
 }
 
-func Test_Struct(t *testing.T) {
+func TestStruct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Item struct {
 			Title string `json:"title"`
@@ -240,7 +240,7 @@ func Test_Struct(t *testing.T) {
 	})
 }
 
-func Test_Struct_Complicated(t *testing.T) {
+func TestStructComplicated(t *testing.T) {
 	type CertInfo struct {
 		UserRealName        string `json:"userRealname,omitempty"`
 		IdentType           string `json:"identType,omitempty"`

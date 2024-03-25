@@ -37,7 +37,7 @@ func (c *TestParamsCase) Root(ctx context.Context, in TestParamsCaseRootInput) (
 	return
 }
 
-func Test_Command_ParamsCase(t *testing.T) {
+func TestCommandParamsCase(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var ctx = gctx.New()
 		cmd, err := gcmd.NewFromObject(TestParamsCase{})

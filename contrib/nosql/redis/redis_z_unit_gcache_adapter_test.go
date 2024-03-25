@@ -8,9 +8,10 @@ package redis_test
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/frame/g"
 	"testing"
 	"time"
+
+	"github.com/gogf/gf/v2/frame/g"
 
 	"github.com/gogf/gf/v2/database/gredis"
 	"github.com/gogf/gf/v2/os/gcache"
@@ -33,7 +34,7 @@ func init() {
 	cacheRedis.SetAdapter(gcache.NewAdapterRedis(redis))
 }
 
-func Test_AdapterRedis_Basic1(t *testing.T) {
+func TestAdapterRedisBasic1(t *testing.T) {
 	// Set
 	size := 10
 	gtest.C(t, func(t *gtest.T) {
@@ -67,7 +68,7 @@ func Test_AdapterRedis_Basic1(t *testing.T) {
 	})
 }
 
-func Test_AdapterRedis_Basic2(t *testing.T) {
+func TestAdapterRedisBasic2(t *testing.T) {
 	defer cacheRedis.Clear(ctx)
 	size := 10
 	gtest.C(t, func(t *gtest.T) {
@@ -83,7 +84,7 @@ func Test_AdapterRedis_Basic2(t *testing.T) {
 	})
 }
 
-func Test_AdapterRedis_Basic3(t *testing.T) {
+func TestAdapterRedisBasic3(t *testing.T) {
 	defer cacheRedis.Clear(ctx)
 	size := 10
 	gtest.C(t, func(t *gtest.T) {
@@ -108,7 +109,7 @@ func Test_AdapterRedis_Basic3(t *testing.T) {
 	})
 }
 
-func Test_AdapterRedis_Update(t *testing.T) {
+func TestAdapterRedisUpdate(t *testing.T) {
 	defer cacheRedis.Clear(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -135,7 +136,7 @@ func Test_AdapterRedis_Update(t *testing.T) {
 	})
 }
 
-func Test_AdapterRedis_UpdateExpire(t *testing.T) {
+func TestAdapterRedisUpdateExpire(t *testing.T) {
 	defer cacheRedis.Clear(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -190,7 +191,7 @@ func Test_AdapterRedis_UpdateExpire(t *testing.T) {
 	})
 }
 
-func Test_AdapterRedis_SetIfNotExist(t *testing.T) {
+func TestAdapterRedisSetIfNotExist(t *testing.T) {
 	defer cacheRedis.Clear(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -239,7 +240,7 @@ func Test_AdapterRedis_SetIfNotExist(t *testing.T) {
 	})
 }
 
-func Test_AdapterRedis_SetIfNotExistFunc(t *testing.T) {
+func TestAdapterRedisSetIfNotExistFunc(t *testing.T) {
 	defer cacheRedis.Clear(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		exist, err := cacheRedis.SetIfNotExistFunc(ctx, 1, func(ctx context.Context) (value interface{}, err error) {
@@ -250,7 +251,7 @@ func Test_AdapterRedis_SetIfNotExistFunc(t *testing.T) {
 	})
 }
 
-func Test_AdapterRedis_SetIfNotExistFuncLock(t *testing.T) {
+func TestAdapterRedisSetIfNotExistFuncLock(t *testing.T) {
 	defer cacheRedis.Clear(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		exist, err := cacheRedis.SetIfNotExistFuncLock(ctx, 1, func(ctx context.Context) (value interface{}, err error) {
@@ -261,7 +262,7 @@ func Test_AdapterRedis_SetIfNotExistFuncLock(t *testing.T) {
 	})
 }
 
-func Test_AdapterRedis_GetOrSet(t *testing.T) {
+func TestAdapterRedisGetOrSet(t *testing.T) {
 	defer cacheRedis.Clear(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -278,7 +279,7 @@ func Test_AdapterRedis_GetOrSet(t *testing.T) {
 	})
 }
 
-func Test_AdapterRedis_GetOrSetFunc(t *testing.T) {
+func TestAdapterRedisGetOrSetFunc(t *testing.T) {
 	defer cacheRedis.Clear(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -312,7 +313,7 @@ func Test_AdapterRedis_GetOrSetFunc(t *testing.T) {
 	})
 }
 
-func Test_AdapterRedis_GetOrSetFuncLock(t *testing.T) {
+func TestAdapterRedisGetOrSetFuncLock(t *testing.T) {
 	defer cacheRedis.Clear(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -328,7 +329,7 @@ func Test_AdapterRedis_GetOrSetFuncLock(t *testing.T) {
 	})
 }
 
-func Test_AdapterRedis_SetMap(t *testing.T) {
+func TestAdapterRedisSetMap(t *testing.T) {
 	defer cacheRedis.Clear(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertNil(cacheRedis.SetMap(ctx, g.MapAnyAny{}, 0))
@@ -343,7 +344,7 @@ func Test_AdapterRedis_SetMap(t *testing.T) {
 	})
 }
 
-func Test_AdapterRedis_Contains(t *testing.T) {
+func TestAdapterRedisContains(t *testing.T) {
 	defer cacheRedis.Clear(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertNil(cacheRedis.Set(ctx, "key", "value", 0))
@@ -358,7 +359,7 @@ func Test_AdapterRedis_Contains(t *testing.T) {
 	})
 }
 
-func Test_AdapterRedis_Keys(t *testing.T) {
+func TestAdapterRedisKeys(t *testing.T) {
 	defer cacheRedis.Clear(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertNil(cacheRedis.Set(ctx, "key1", "value1", 0))
@@ -375,7 +376,7 @@ func Test_AdapterRedis_Keys(t *testing.T) {
 	})
 }
 
-func Test_AdapterRedis_Values(t *testing.T) {
+func TestAdapterRedisValues(t *testing.T) {
 	defer cacheRedis.Clear(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertNil(cacheRedis.Set(ctx, "key1", "value1", 0))
@@ -392,7 +393,7 @@ func Test_AdapterRedis_Values(t *testing.T) {
 	})
 }
 
-func Test_AdapterRedis_Remove(t *testing.T) {
+func TestAdapterRedisRemove(t *testing.T) {
 	defer cacheRedis.Clear(ctx)
 	gtest.C(t, func(t *gtest.T) {
 		var (

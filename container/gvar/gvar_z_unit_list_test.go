@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func TestVar_ListItemValues_Map(t *testing.T) {
+func TestVarListItemValuesMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		listMap := g.List{
 			g.Map{"id": 1, "score": 100},
@@ -35,7 +35,7 @@ func TestVar_ListItemValues_Map(t *testing.T) {
 	})
 }
 
-func TestVar_ListItemValues_Struct(t *testing.T) {
+func TestVarListItemValuesStruct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type T struct {
 			Id    int
@@ -79,7 +79,7 @@ func TestVar_ListItemValues_Struct(t *testing.T) {
 	})
 }
 
-func TestVar_ListItemValuesUnique(t *testing.T) {
+func TestVarListItemValuesUnique(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		listMap := g.List{
 			g.Map{"id": 1, "score": 100},

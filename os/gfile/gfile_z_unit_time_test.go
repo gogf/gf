@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_MTime(t *testing.T) {
+func TestMTime(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 
 		var (
@@ -34,7 +34,7 @@ func Test_MTime(t *testing.T) {
 	})
 }
 
-func Test_MTimeMillisecond(t *testing.T) {
+func TestMTimeMillisecond(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			file1   = "/testfile_t1.txt"

@@ -22,7 +22,7 @@ type Temp struct {
 	Age  int
 }
 
-func Test_Uint64(t *testing.T) {
+func TestUint64(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var wg sync.WaitGroup
 		addTimes := 1000
@@ -59,7 +59,7 @@ func Test_Uint64(t *testing.T) {
 	})
 }
 
-func Test_Uint64_JSON(t *testing.T) {
+func TestUint64JSON(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		i := gtype.NewUint64(math.MaxUint64)
 		b1, err1 := json.Marshal(i)
@@ -75,7 +75,7 @@ func Test_Uint64_JSON(t *testing.T) {
 	})
 }
 
-func Test_Uint64_UnmarshalValue(t *testing.T) {
+func TestUint64UnmarshalValue(t *testing.T) {
 	type V struct {
 		Name string
 		Var  *gtype.Uint64

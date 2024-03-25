@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_Set_Get(t *testing.T) {
+func TestSetGet(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		k := guid.S()
 		v := guid.S()
@@ -25,7 +25,7 @@ func Test_Set_Get(t *testing.T) {
 	})
 }
 
-func Test_SetOver_Get(t *testing.T) {
+func TestSetOverGet(t *testing.T) {
 	// panic by Set
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -53,7 +53,7 @@ func Test_SetOver_Get(t *testing.T) {
 	})
 }
 
-func Test_Sets_Get(t *testing.T) {
+func TestSetsGet(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			k1 = guid.S()
@@ -70,7 +70,7 @@ func Test_Sets_Get(t *testing.T) {
 	})
 }
 
-func Test_SetsOver_Get(t *testing.T) {
+func TestSetsOverGet(t *testing.T) {
 	// panic by Sets
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -117,7 +117,7 @@ func Test_SetsOver_Get(t *testing.T) {
 	})
 }
 
-func Test_Parse(t *testing.T) {
+func TestParse(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			k1      = guid.S()
@@ -135,7 +135,7 @@ func Test_Parse(t *testing.T) {
 	})
 }
 
-func Test_SetGlobalEnums(t *testing.T) {
+func TestSetGlobalEnums(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		oldEnumsJson, err := gtag.GetGlobalEnums()
 		t.AssertNil(err)

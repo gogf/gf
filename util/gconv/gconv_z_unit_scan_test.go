@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Scan_WithMapParameter(t *testing.T) {
+func TestScanWithMapParameter(t *testing.T) {
 	type User struct {
 		Uid  int
 		Name string
@@ -44,7 +44,7 @@ func Test_Scan_WithMapParameter(t *testing.T) {
 	})
 }
 
-func Test_Scan_StructStructs(t *testing.T) {
+func TestScanStructStructs(t *testing.T) {
 	type User struct {
 		Uid   int
 		Name  string
@@ -107,7 +107,7 @@ func Test_Scan_StructStructs(t *testing.T) {
 	})
 }
 
-func Test_Scan_StructStr(t *testing.T) {
+func TestScanStructStr(t *testing.T) {
 	type User struct {
 		Uid   int
 		Name  string
@@ -155,7 +155,7 @@ func Test_Scan_StructStr(t *testing.T) {
 	})
 }
 
-func Test_Scan_Map(t *testing.T) {
+func TestScanMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var m map[string]string
 		data := g.Map{
@@ -189,7 +189,7 @@ func Test_Scan_Map(t *testing.T) {
 	})
 }
 
-func Test_Scan_Maps(t *testing.T) {
+func TestScanMaps(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var maps []map[string]string
 		data := g.Slice{
@@ -225,7 +225,7 @@ func Test_Scan_Maps(t *testing.T) {
 	})
 }
 
-func Test_Scan_JsonAttributes(t *testing.T) {
+func TestScanJsonAttributes(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Sku struct {
 			GiftId      int64  `json:"gift_id"`
@@ -266,7 +266,7 @@ func Test_Scan_JsonAttributes(t *testing.T) {
 	})
 }
 
-func Test_Scan_JsonAttributes_StringArray(t *testing.T) {
+func TestScanJsonAttributesStringArray(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type S struct {
 			Array []string
@@ -306,7 +306,7 @@ func Test_Scan_JsonAttributes_StringArray(t *testing.T) {
 	})
 }
 
-func Test_Scan_SameType_Just_Assign(t *testing.T) {
+func TestScanSameTypeJustAssign(t *testing.T) {
 	// Struct.
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
@@ -349,7 +349,7 @@ func Test_Scan_SameType_Just_Assign(t *testing.T) {
 	})
 }
 
-func Test_ScanList_Basic(t *testing.T) {
+func TestScanListBasic(t *testing.T) {
 	// Struct attribute.
 	gtest.C(t, func(t *gtest.T) {
 		type EntityUser struct {
@@ -490,7 +490,7 @@ func Test_ScanList_Basic(t *testing.T) {
 	})
 }
 
-func Test_ScanList_Embedded(t *testing.T) {
+func TestScanListEmbedded(t *testing.T) {
 	// Struct attribute.
 	gtest.C(t, func(t *gtest.T) {
 		type EntityUser struct {
@@ -641,7 +641,7 @@ func (f *Float64) UnmarshalValue(value interface{}) error {
 	return nil
 }
 
-func Test_Scan_AutoCreatingPointerElem(t *testing.T) {
+func TestScanAutoCreatingPointerElem(t *testing.T) {
 	type A struct {
 		Name string
 	}

@@ -13,7 +13,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Format(t *testing.T) {
+func TestFormat(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp, err := gtime.StrToTime("2006-01-11 15:04:05", "Y-m-d H:i:s")
 		timeTemp.ToZone("Asia/Shanghai")
@@ -103,7 +103,7 @@ func Test_Format(t *testing.T) {
 	})
 }
 
-func Test_Format_ZeroString(t *testing.T) {
+func TestFormatZeroString(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp, err := gtime.StrToTime("0000-00-00 00:00:00")
 		t.AssertNE(err, nil)
@@ -111,21 +111,21 @@ func Test_Format_ZeroString(t *testing.T) {
 	})
 }
 
-func Test_FormatTo(t *testing.T) {
+func TestFormatTo(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.Now()
 		t.Assert(timeTemp.FormatTo("Y-m-01 00:00:01"), timeTemp.Time.Format("2006-01")+"-01 00:00:01")
 	})
 }
 
-func Test_Layout(t *testing.T) {
+func TestLayout(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.Now()
 		t.Assert(timeTemp.Layout("2006-01-02 15:04:05"), timeTemp.Time.Format("2006-01-02 15:04:05"))
 	})
 }
 
-func Test_LayoutTo(t *testing.T) {
+func TestLayoutTo(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.Now()
 		t.Assert(timeTemp.LayoutTo("2006-01-02 00:00:00"), timeTemp.Time.Format("2006-01-02 00:00:00"))

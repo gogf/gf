@@ -20,7 +20,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Server(t *testing.T) {
+func TestServer(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			path                = gcfg.DefaultConfigFileName

@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Encode_Parse(t *testing.T) {
+func TestEncodeParse(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		v.SetPath(gtest.DataPath("tpl"))
@@ -29,7 +29,7 @@ func Test_Encode_Parse(t *testing.T) {
 	})
 }
 
-func Test_Encode_ParseContent(t *testing.T) {
+func TestEncodeParseContent(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		tplContent := gfile.GetContents(gtest.DataPath("tpl", "encode.tpl"))

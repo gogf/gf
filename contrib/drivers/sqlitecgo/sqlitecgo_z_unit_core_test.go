@@ -23,7 +23,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_New(t *testing.T) {
+func TestNew(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		node := gdb.ConfigNode{
 			Type:    "sqlite",
@@ -39,7 +39,7 @@ func Test_New(t *testing.T) {
 	})
 }
 
-func Test_New_Path_With_Colon(t *testing.T) {
+func TestNewPathWithColon(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 
 		dbFilePathWithColon := gfile.Join(dbDir, "test:1")
@@ -60,7 +60,7 @@ func Test_New_Path_With_Colon(t *testing.T) {
 	})
 }
 
-func Test_DB_Ping(t *testing.T) {
+func TestDBPing(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err1 := db.PingMaster()
 		err2 := db.PingSlave()
@@ -69,7 +69,7 @@ func Test_DB_Ping(t *testing.T) {
 	})
 }
 
-func Test_DB_Query(t *testing.T) {
+func TestDBQuery(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Query(ctx, "SELECT ?", 1)
 		t.AssertNil(err)
@@ -82,14 +82,14 @@ func Test_DB_Query(t *testing.T) {
 	})
 }
 
-func Test_DB_Exec(t *testing.T) {
+func TestDBExec(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Exec(ctx, "SELECT ?", 1)
 		t.AssertNil(err)
 	})
 }
 
-func Test_DB_Prepare(t *testing.T) {
+func TestDBPrepare(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		st, err := db.Prepare(ctx, "SELECT 100")
 		t.AssertNil(err)
@@ -106,7 +106,7 @@ func Test_DB_Prepare(t *testing.T) {
 	})
 }
 
-func Test_DB_Insert(t *testing.T) {
+func TestDBInsert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -215,7 +215,7 @@ func Test_DB_Insert(t *testing.T) {
 }
 
 // Fix issue: https://github.com/gogf/gf/issues/819
-func Test_DB_Insert_WithStructAndSliceAttribute(t *testing.T) {
+func TestDBInsertWithStructAndSliceAttribute(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -242,7 +242,7 @@ func Test_DB_Insert_WithStructAndSliceAttribute(t *testing.T) {
 	})
 }
 
-func Test_DB_Insert_KeyFieldNameMapping(t *testing.T) {
+func TestDBInsertKeyFieldNameMapping(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -272,7 +272,7 @@ func Test_DB_Insert_KeyFieldNameMapping(t *testing.T) {
 	})
 }
 
-func Test_DB_Update_KeyFieldNameMapping(t *testing.T) {
+func TestDBUpdateKeyFieldNameMapping(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -302,7 +302,7 @@ func Test_DB_Update_KeyFieldNameMapping(t *testing.T) {
 	})
 }
 
-func Test_DB_InsertIgnore(t *testing.T) {
+func TestDBInsertIgnore(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -327,7 +327,7 @@ func Test_DB_InsertIgnore(t *testing.T) {
 	})
 }
 
-func Test_DB_BatchInsert(t *testing.T) {
+func TestDBBatchInsert(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := createTable()
 		defer dropTable(table)
@@ -397,7 +397,7 @@ func Test_DB_BatchInsert(t *testing.T) {
 	})
 }
 
-func Test_DB_BatchInsert_Struct(t *testing.T) {
+func TestDBBatchInsertStruct(t *testing.T) {
 	// batch insert struct
 	gtest.C(t, func(t *gtest.T) {
 		table := createTable()
@@ -424,7 +424,7 @@ func Test_DB_BatchInsert_Struct(t *testing.T) {
 	})
 }
 
-func Test_DB_Save(t *testing.T) {
+func TestDBSave(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -444,7 +444,7 @@ func Test_DB_Save(t *testing.T) {
 	})
 }
 
-func Test_DB_Replace(t *testing.T) {
+func TestDBReplace(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -469,7 +469,7 @@ func Test_DB_Replace(t *testing.T) {
 	})
 }
 
-func Test_DB_Update(t *testing.T) {
+func TestDBUpdate(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -488,7 +488,7 @@ func Test_DB_Update(t *testing.T) {
 	})
 }
 
-func Test_DB_GetAll(t *testing.T) {
+func TestDBGetAll(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -538,7 +538,7 @@ func Test_DB_GetAll(t *testing.T) {
 	})
 }
 
-func Test_DB_GetOne(t *testing.T) {
+func TestDBGetOne(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -548,7 +548,7 @@ func Test_DB_GetOne(t *testing.T) {
 	})
 }
 
-func Test_DB_GetValue(t *testing.T) {
+func TestDBGetValue(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -558,7 +558,7 @@ func Test_DB_GetValue(t *testing.T) {
 	})
 }
 
-func Test_DB_GetCount(t *testing.T) {
+func TestDBGetCount(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -568,7 +568,7 @@ func Test_DB_GetCount(t *testing.T) {
 	})
 }
 
-func Test_DB_GetStruct(t *testing.T) {
+func TestDBGetStruct(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -599,7 +599,7 @@ func Test_DB_GetStruct(t *testing.T) {
 	})
 }
 
-func Test_DB_GetStructs(t *testing.T) {
+func TestDBGetStructs(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -643,7 +643,7 @@ func Test_DB_GetStructs(t *testing.T) {
 	})
 }
 
-func Test_DB_GetArray(t *testing.T) {
+func TestDBGetArray(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -656,7 +656,7 @@ func Test_DB_GetArray(t *testing.T) {
 	})
 }
 
-func Test_DB_GetScan(t *testing.T) {
+func TestDBGetScan(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -740,7 +740,7 @@ func Test_DB_GetScan(t *testing.T) {
 	})
 }
 
-func Test_DB_Delete(t *testing.T) {
+func TestDBDelete(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -751,7 +751,7 @@ func Test_DB_Delete(t *testing.T) {
 	})
 }
 
-func Test_DB_Time(t *testing.T) {
+func TestDBTime(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -800,7 +800,7 @@ func Test_DB_Time(t *testing.T) {
 	})
 }
 
-func Test_DB_ToJson(t *testing.T) {
+func TestDBToJson(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(ctx, table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
@@ -873,7 +873,7 @@ func Test_DB_ToJson(t *testing.T) {
 	})
 }
 
-func Test_DB_ToXml(t *testing.T) {
+func TestDBToXml(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(ctx, table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
@@ -937,7 +937,7 @@ func Test_DB_ToXml(t *testing.T) {
 	})
 }
 
-func Test_DB_ToStringMap(t *testing.T) {
+func TestDBToStringMap(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(ctx, table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
@@ -972,7 +972,7 @@ func Test_DB_ToStringMap(t *testing.T) {
 	})
 }
 
-func Test_DB_ToIntMap(t *testing.T) {
+func TestDBToIntMap(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(ctx, table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
@@ -1008,7 +1008,7 @@ func Test_DB_ToIntMap(t *testing.T) {
 	})
 }
 
-func Test_DB_ToUintMap(t *testing.T) {
+func TestDBToUintMap(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(ctx, table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
@@ -1044,7 +1044,7 @@ func Test_DB_ToUintMap(t *testing.T) {
 	})
 }
 
-func Test_DB_ToStringRecord(t *testing.T) {
+func TestDBToStringRecord(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(ctx, table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
@@ -1081,7 +1081,7 @@ func Test_DB_ToStringRecord(t *testing.T) {
 	})
 }
 
-func Test_DB_ToIntRecord(t *testing.T) {
+func TestDBToIntRecord(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(ctx, table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
@@ -1117,7 +1117,7 @@ func Test_DB_ToIntRecord(t *testing.T) {
 	})
 }
 
-func Test_DB_ToUintRecord(t *testing.T) {
+func TestDBToUintRecord(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(ctx, table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
@@ -1153,7 +1153,7 @@ func Test_DB_ToUintRecord(t *testing.T) {
 	})
 }
 
-func Test_DB_TableField(t *testing.T) {
+func TestDBTableField(t *testing.T) {
 	name := "field_test"
 	dropTable(name)
 	defer dropTable(name)
@@ -1203,7 +1203,7 @@ func Test_DB_TableField(t *testing.T) {
 	gtest.Assert(result[0], data)
 }
 
-func Test_DB_Prefix(t *testing.T) {
+func TestDBPrefix(t *testing.T) {
 	db := dbPrefix
 	noPrefixName := fmt.Sprintf(`%s_%d`, TableName, gtime.TimestampNano())
 	table := TableNamePrefix + noPrefixName
@@ -1289,7 +1289,7 @@ func Test_DB_Prefix(t *testing.T) {
 	})
 }
 
-func Test_Model_InnerJoin(t *testing.T) {
+func TestModelInnerJoin(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table1 := createInitTable("user1")
 		table2 := createInitTable("user2")
@@ -1325,7 +1325,7 @@ func Test_Model_InnerJoin(t *testing.T) {
 	})
 }
 
-func Test_Model_LeftJoin(t *testing.T) {
+func TestModelLeftJoin(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table1 := createInitTable("user1")
 		table2 := createInitTable("user2")
@@ -1361,7 +1361,7 @@ func Test_Model_LeftJoin(t *testing.T) {
 	})
 }
 
-func Test_Empty_Slice_Argument(t *testing.T) {
+func TestEmptySliceArgument(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -1372,7 +1372,7 @@ func Test_Empty_Slice_Argument(t *testing.T) {
 }
 
 // update counter test.
-func Test_DB_UpdateCounter(t *testing.T) {
+func TestDBUpdateCounter(t *testing.T) {
 	tableName := "gf_update_counter_test_" + gtime.TimestampNanoStr()
 	_, err := db.Exec(ctx, fmt.Sprintf(`
 	CREATE TABLE IF NOT EXISTS %s (
@@ -1436,7 +1436,7 @@ func Test_DB_UpdateCounter(t *testing.T) {
 	})
 }
 
-func Test_DB_Ctx_Logger(t *testing.T) {
+func TestDBCtxLogger(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type TraceId string
 		defer db.SetDebug(db.GetDebug())
@@ -1449,7 +1449,7 @@ func Test_DB_Ctx_Logger(t *testing.T) {
 
 // All types testing.
 // https://www.sqlite.org/datatype3.html
-func Test_Types(t *testing.T) {
+func TestTypes(t *testing.T) {
 	tableName := "types_" + gtime.TimestampNanoStr()
 	gtest.C(t, func(t *gtest.T) {
 		if _, err := db.Exec(ctx, fmt.Sprintf(`
@@ -1537,7 +1537,7 @@ func Test_Types(t *testing.T) {
 	})
 }
 
-func Test_TableFields(t *testing.T) {
+func TestTableFields(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		tableName := "fields_" + gtime.TimestampNanoStr()
@@ -1575,7 +1575,7 @@ func Test_TableFields(t *testing.T) {
 	})
 }
 
-func Test_TableNameIsKeyword(t *testing.T) {
+func TestTableNameIsKeyword(t *testing.T) {
 	table := createInitTable(TableNameWhichIsKeyword)
 	defer dropTable(table)
 	_, err := db.Update(ctx, table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
