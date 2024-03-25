@@ -60,10 +60,11 @@ func init() {
 }
 
 type cInitInput struct {
-	g.Meta `name:"init"`
-	Name   string `name:"NAME" arg:"true" v:"required" brief:"{cInitNameBrief}"`
-	Mono   bool   `name:"mono"   short:"m" brief:"initialize a mono-repo instead a single-repo" orphan:"true"`
-	Update bool   `name:"update" short:"u" brief:"update to the latest goframe version" orphan:"true"`
+	g.Meta     `name:"init"`
+	Name       string `name:"NAME" arg:"true" v:"required" brief:"{cInitNameBrief}"`
+	Mono       bool   `name:"mono"   short:"m" brief:"initialize a mono-repo instead a single-repo" orphan:"true"`
+	Update     bool   `name:"update" short:"u" brief:"update to the latest goframe version" orphan:"true"`
+	ModuleName string `name:"moduleName" short:"mn" brief:"module name default name "`
 }
 
 type cInitOutput struct{}
@@ -118,6 +119,11 @@ func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err 
 		}
 	}
 
+	// Replace module name.
+	if in.ModuleName == "" {
+		in.ModuleName = in.Name
+	}
+
 	// Replace template name to project name.
 	err = gfile.ReplaceDirFunc(func(path, content string) string {
 		for _, ignoreFile := range ignoreFiles {
@@ -125,7 +131,7 @@ func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err 
 				return content
 			}
 		}
-		return gstr.Replace(gfile.GetContents(path), cInitRepoPrefix+templateRepoName, gfile.Basename(gfile.RealPath(in.Name)))
+		return gstr.Replace(gfile.GetContents(path), cInitRepoPrefix+templateRepoName, in.ModuleName)
 	}, in.Name, "*", true)
 	if err != nil {
 		return
