@@ -19,7 +19,7 @@ import (
 
 // Write writes `content` to the response buffer.
 func (r *Response) Write(content ...interface{}) {
-	if r.writer.IsHijacked() || len(content) == 0 {
+	if r.IsHijacked() || len(content) == 0 {
 		return
 	}
 	if r.Status == 0 {
@@ -28,11 +28,11 @@ func (r *Response) Write(content ...interface{}) {
 	for _, v := range content {
 		switch value := v.(type) {
 		case []byte:
-			r.buffer.Write(value)
+			_, _ = r.BufferWriter.Write(value)
 		case string:
-			r.buffer.WriteString(value)
+			_, _ = r.BufferWriter.WriteString(value)
 		default:
-			r.buffer.WriteString(gconv.String(v))
+			_, _ = r.BufferWriter.WriteString(gconv.String(v))
 		}
 	}
 }

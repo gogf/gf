@@ -27,7 +27,7 @@ import (
 )
 
 const (
-	tracingInstrumentName                       = "github.com/gogf/gf/v2/net/ghttp.Server"
+	instrumentName                              = "github.com/gogf/gf/v2/net/ghttp.Server"
 	tracingEventHttpRequest                     = "http.request"
 	tracingEventHttpRequestHeaders              = "http.request.headers"
 	tracingEventHttpRequestBaggage              = "http.request.baggage"
@@ -55,7 +55,7 @@ func internalMiddlewareServerTracing(r *Request) {
 	var (
 		span trace.Span
 		tr   = otel.GetTracerProvider().Tracer(
-			tracingInstrumentName,
+			instrumentName,
 			trace.WithInstrumentationVersion(gf.VERSION),
 		)
 	)
@@ -104,8 +104,8 @@ func internalMiddlewareServerTracing(r *Request) {
 	r.Middleware.Next()
 
 	// parse after set route as span name
-	if r.Router.Uri != defaultMiddlewarePattern || r.Router.RegNames != nil {
-		span.SetName(r.Router.Uri)
+	if handler := r.GetServeHandler(); handler != nil && handler.Handler.Router != nil {
+		span.SetName(handler.Handler.Router.Uri)
 	}
 
 	// Error logging.
