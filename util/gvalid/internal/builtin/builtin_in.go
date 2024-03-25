@@ -32,8 +32,11 @@ func (r RuleIn) Message() string {
 }
 
 func (r RuleIn) Run(in RunInput) error {
-	var ok bool
-	inputValueString := in.Value.String()
+	var (
+		ok               bool
+		inputValueString = in.Value.String()
+	)
+
 	for _, rulePattern := range gstr.SplitAndTrim(in.RulePattern, ",") {
 		if in.Option.CaseInsensitive {
 			ok = strings.EqualFold(inputValueString, strings.TrimSpace(rulePattern))

@@ -38,8 +38,9 @@ func (r RuleRequiredUnless) Run(in RunInput) error {
 		required   = true
 		array      = strings.Split(in.RulePattern, ",")
 		foundValue interface{}
+		dataMap    = in.Data.Map()
 	)
-	dataMap := in.Data.Map()
+
 	// It supports multiple field and value pairs.
 	if len(array)%2 == 0 {
 		for i := 0; i < len(array); {
