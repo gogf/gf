@@ -218,3 +218,23 @@ func TestWatcher_WatchFolderWithoutRecursively(t *testing.T) {
 		t.Assert(array.Len(), 1)
 	})
 }
+
+func TestWatcher_WatchClose(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err     error
+			dirPath = gfile.Temp(gtime.TimestampNanoStr())
+			watcher *gfsnotify.Watcher
+		)
+
+		err = gfile.Mkdir(dirPath)
+		t.AssertNil(err)
+
+		watcher, err = gfsnotify.New()
+		t.AssertNil(err)
+		t.AssertNE(watcher, nil)
+
+		time.Sleep(time.Millisecond * 100)
+		watcher.Close()
+	})
+}
