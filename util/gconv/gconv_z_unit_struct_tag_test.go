@@ -76,3 +76,30 @@ func Test_StructTag(t *testing.T) {
 		})
 	})
 }
+
+func Test_Struct_HTTP_Params_Parse_Issue1488(t *testing.T) {
+	type Request struct {
+		Type         []int  `p:"type"`
+		Keyword      string `p:"keyword"`
+		Limit        int    `p:"per_page" d:"10"`
+		Page         int    `p:"page" d:"1"`
+		Order        string
+		CreatedAtLte string
+		CreatedAtGte string
+		CreatorID    []int
+	}
+	data := g.Map{
+		"type[]":   []int{1, 2, 3},
+		"Limit":    10,
+		"per_page": 6,
+	}
+	gtest.C(t, func(t *gtest.T) {
+		for i := 0; i < 10; i++ {
+			var req = &Request{}
+			err := gconv.Struct(data, req)
+			t.AssertNil(err)
+			// maybe 10
+			t.AssertEQ(req.Limit, 6)
+		}
+	})
+}

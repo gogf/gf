@@ -16,22 +16,60 @@ import (
 type structType struct {
 	Name  string
 	Score int
+	Age   int
+	ID    int
+}
+
+type structType8 struct {
+	Name        string  `json:"name"   `
+	CategoryId  string  `json:"category-Id" `
+	Price       float64 `json:"price"    `
+	Code        string  `json:"code"       `
+	Image       string  `json:"image"   `
+	Description string  `json:"description" `
+	Status      int     `json:"status"   `
+	IdType      int     `json:"id-type"`
+	Score       int
+	Age         int
+	ID          int
 }
 
 var (
 	structMap = map[string]interface{}{
 		"name":  "gf",
 		"score": 100,
+		"Age":   98,
+		"ID":    199,
 	}
+
+	structMapFields8 = map[string]interface{}{
+		"name":  "gf",
+		"score": 100,
+		"Age":   98,
+		"ID":    199,
+
+		"category-Id": "1",
+		"price":       198.09,
+		"code":        "1",
+		"image":       "https://goframe.org",
+		"description": "This is the data for testing eight fields",
+		"status":      1,
+		"id-type":     2,
+	}
+
 	structObj = structType{
 		Name:  "john",
 		Score: 60,
+		Age:   98,
+		ID:    199,
 	}
 	structPointer = &structType{
 		Name:  "john",
 		Score: 60,
 	}
+	structPointer8   = &structType8{}
 	structPointerNil *structType
+
 	// struct slice
 	structSliceNil []structType
 	structSlice    = []structType{
@@ -49,6 +87,12 @@ var (
 func Benchmark_Struct_Basic(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		Struct(structMap, structPointer)
+	}
+}
+
+func Benchmark_doStruct_Fields8_Basic_MapToStruct(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		doStruct(structMapFields8, structPointer8, map[string]string{}, "")
 	}
 }
 
