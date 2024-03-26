@@ -20,7 +20,7 @@ require github.com/gogf/gf/contrib/registry/polaris/v2 latest
 
 ### Reference example
 
-[server](example/registry/polaris/server/main.go)
+[server](../../../example/registry/polaris/server/server.go)
 
 ```go
 package main
@@ -49,7 +49,7 @@ func main() {
 }
 ```
 
-[client](example/registry/polaris/client/main.go)
+[client](../../../example/registry/polaris/client/client.go)
 
 ```go
 package main

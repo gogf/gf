@@ -7,6 +7,7 @@
 package dm_test
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 	"testing"
@@ -138,52 +139,53 @@ func Test_DB_Query(t *testing.T) {
 }
 
 func TestModelSave(t *testing.T) {
-	table := "A_tables"
-	createInitTable(table)
+	table := createTable("test")
+	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
-		data := []User{
-			{
-				ID:          100,
-				AccountName: "user_100",
-				AttrIndex:   100,
-				CreatedTime: time.Now(),
-			},
+		type User struct {
+			Id          int
+			AccountName string
+			AttrIndex   int
 		}
-		_, err := db.Model(table).Data(data).Save()
-		gtest.Assert(err, nil)
+		var (
+			user   User
+			count  int
+			result sql.Result
+			err    error
+		)
+		db.SetDebug(true)
 
-		data2 := []User{
-			{
-				ID:          101,
-				AccountName: "user_101",
-			},
-		}
-		_, err = db.Model(table).Data(&data2).Save()
-		gtest.Assert(err, nil)
+		result, err = db.Model(table).Data(g.Map{
+			"id":          1,
+			"accountName": "ac1",
+			"attrIndex":   100,
+		}).OnConflict("id").Save()
 
-		data3 := []User{
-			{
-				ID:          10,
-				AccountName: "user_10",
-				PwdReset:    10,
-			},
-		}
-		_, err = db.Model(table).Save(data3)
-		gtest.Assert(err, nil)
+		t.AssertNil(err)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
 
-		data4 := []User{
-			{
-				ID:          9,
-				AccountName: "user_9",
-				CreatedTime: time.Now(),
-			},
-		}
-		_, err = db.Model(table).Save(&data4)
-		gtest.Assert(err, nil)
+		err = db.Model(table).Scan(&user)
+		t.AssertNil(err)
+		t.Assert(user.Id, 1)
+		t.Assert(user.AccountName, "ac1")
+		t.Assert(user.AttrIndex, 100)
 
-		// TODO:: Should be Supported 'Replace' Operation
-		// _, err = db.Schema(TestDBName).Replace(ctx, "DoInsert", data, 10)
-		// gtest.Assert(err, nil)
+		_, err = db.Model(table).Data(g.Map{
+			"id":          1,
+			"accountName": "ac2",
+			"attrIndex":   200,
+		}).OnConflict("id").Save()
+		t.AssertNil(err)
+
+		err = db.Model(table).Scan(&user)
+		t.AssertNil(err)
+		t.Assert(user.AccountName, "ac2")
+		t.Assert(user.AttrIndex, 200)
+
+		count, err = db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
 	})
 }
 
@@ -198,7 +200,7 @@ func TestModelInsert(t *testing.T) {
 			AccountName: fmt.Sprintf(`A%dtwo`, i),
 			PwdReset:    0,
 			AttrIndex:   99,
-			// CreatedTime: time.Now(),
+			CreatedTime: time.Now(),
 			UpdatedTime: time.Now(),
 		}
 		// _, err := db.Schema(TestDBName).Model(table).Data(data).Insert()
@@ -214,7 +216,7 @@ func TestModelInsert(t *testing.T) {
 			PwdReset:    1,
 			CreatedTime: time.Now(),
 			AttrIndex:   98,
-			// UpdatedTime: time.Now(),
+			UpdatedTime: time.Now(),
 		}
 		// _, err := db.Schema(TestDBName).Model(table).Data(data).Insert()
 		_, err := db.Model(table).Data(&data).Insert()
@@ -232,6 +234,8 @@ func TestDBInsert(t *testing.T) {
 			"ACCOUNT_NAME": fmt.Sprintf(`A%dthress`, i),
 			"PWD_RESET":    3,
 			"ATTR_INDEX":   98,
+			"CREATED_TIME": gtime.Now(),
+			"UPDATED_TIME": gtime.Now(),
 		}
 		_, err := db.Insert(ctx, table, &data)
 		gtest.Assert(err, nil)
@@ -253,18 +257,21 @@ func Test_DB_Insert(t *testing.T) {
 	table := "A_tables"
 	createInitTable(table)
 	gtest.C(t, func(t *gtest.T) {
+		timeNow := time.Now()
 		// normal map
 		_, err := db.Insert(ctx, table, g.Map{
 			"ID":           1000,
 			"ACCOUNT_NAME": "map1",
-			"CREATED_TIME": gtime.Now(),
+			"CREATED_TIME": timeNow,
+			"UPDATED_TIME": timeNow,
 		})
 		t.AssertNil(err)
 
 		result, err := db.Insert(ctx, table, g.Map{
 			"ID":           "2000",
 			"ACCOUNT_NAME": "map2",
-			"CREATED_TIME": gtime.Now(),
+			"CREATED_TIME": timeNow,
+			"UPDATED_TIME": timeNow,
 		})
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
@@ -273,7 +280,8 @@ func Test_DB_Insert(t *testing.T) {
 		result, err = db.Insert(ctx, table, g.Map{
 			"ID":           3000,
 			"ACCOUNT_NAME": "map3",
-			// "CREATED_TIME": gtime.Now(),
+			"CREATED_TIME": timeNow,
+			"UPDATED_TIME": timeNow,
 		})
 		t.AssertNil(err)
 		n, _ = result.RowsAffected()
@@ -283,8 +291,8 @@ func Test_DB_Insert(t *testing.T) {
 		result, err = db.Insert(ctx, table, User{
 			ID:          4000,
 			AccountName: "struct_4",
-			// CreatedTime: timeStr,
-			// UpdatedTime: timeStr,
+			CreatedTime: timeNow,
+			UpdatedTime: timeNow,
 		})
 		t.AssertNil(err)
 		n, _ = result.RowsAffected()
@@ -299,12 +307,11 @@ func Test_DB_Insert(t *testing.T) {
 		// t.Assert(one["CREATED_TIME"].GTime().String(), timeStr)
 
 		// *struct
-		timeStr := time.Now()
 		result, err = db.Insert(ctx, table, &User{
 			ID:          5000,
 			AccountName: "struct_5",
-			CreatedTime: timeStr,
-			// UpdatedTime: timeStr,
+			CreatedTime: timeNow,
+			UpdatedTime: timeNow,
 		})
 		t.AssertNil(err)
 		n, _ = result.RowsAffected()
@@ -320,10 +327,14 @@ func Test_DB_Insert(t *testing.T) {
 			g.Map{
 				"ID":           6000,
 				"ACCOUNT_NAME": "t6000",
+				"CREATED_TIME": timeNow,
+				"UPDATED_TIME": timeNow,
 			},
 			g.Map{
 				"ID":           6001,
 				"ACCOUNT_NAME": "t6001",
+				"CREATED_TIME": timeNow,
+				"UPDATED_TIME": timeNow,
 			},
 		})
 		t.AssertNil(err)
@@ -345,12 +356,14 @@ func Test_DB_BatchInsert(t *testing.T) {
 			{
 				"ID":           400,
 				"ACCOUNT_NAME": "list_400",
-				// "CREATE_TIME":  gtime.Now(),
+				"CREATE_TIME":  gtime.Now(),
+				"UPDATED_TIME": gtime.Now(),
 			},
 			{
 				"ID":           401,
 				"ACCOUNT_NAME": "list_401",
 				"CREATE_TIME":  gtime.Now(),
+				"UPDATED_TIME": gtime.Now(),
 			},
 		}, 1)
 		t.AssertNil(err)
@@ -365,11 +378,13 @@ func Test_DB_BatchInsert(t *testing.T) {
 				"ID":           500,
 				"ACCOUNT_NAME": "500_batch_500",
 				"CREATE_TIME":  gtime.Now(),
+				"UPDATED_TIME": gtime.Now(),
 			},
 			g.Map{
 				"ID":           501,
 				"ACCOUNT_NAME": "501_batch_501",
-				// "CREATE_TIME":  gtime.Now(),
+				"CREATE_TIME":  gtime.Now(),
+				"UPDATED_TIME": gtime.Now(),
 			},
 		}, 1)
 		t.AssertNil(err)
@@ -383,6 +398,7 @@ func Test_DB_BatchInsert(t *testing.T) {
 			"ID":           600,
 			"ACCOUNT_NAME": "600_batch_600",
 			"CREATE_TIME":  gtime.Now(),
+			"UPDATED_TIME": gtime.Now(),
 		})
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
@@ -400,6 +416,7 @@ func Test_DB_BatchInsert_Struct(t *testing.T) {
 			ID:          700,
 			AccountName: "BatchInsert_Struct_700",
 			CreatedTime: time.Now(),
+			UpdatedTime: time.Now(),
 		}
 		result, err := db.Model(table).Insert(user)
 		t.AssertNil(err)
