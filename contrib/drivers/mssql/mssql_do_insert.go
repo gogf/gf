@@ -60,11 +60,11 @@ func (d *Driver) doSave(ctx context.Context,
 		conflictKeys   = option.OnConflict
 		conflictKeySet = gset.New(true)
 
-		// queryHolders:   Handle data with Holder that need to be upsert
-		// queryValues:  		Handle data that need to be upsert
-		// insertKeys:   		Handle valid keys that need to be inserted
-		// insertValues: 		Handle values that need to be inserted
-		// updateValues: 		Handle values that need to be updated
+		// queryHolders:	Handle data with Holder that need to be upsert
+		// queryValues:		Handle data that need to be upsert
+		// insertKeys:		Handle valid keys that need to be inserted
+		// insertValues:	Handle values that need to be inserted
+		// updateValues:	Handle values that need to be updated
 		queryHolders = make([]string, oneLen)
 		queryValues  = make([]interface{}, oneLen)
 		insertKeys   = make([]string, oneLen)
