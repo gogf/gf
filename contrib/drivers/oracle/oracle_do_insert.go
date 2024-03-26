@@ -10,9 +10,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
+
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/text/gstr"
-	"strings"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -21,9 +22,7 @@ import (
 )
 
 // DoInsert inserts or updates data for given table.
-func (d *Driver) DoInsert(
-	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
-) (result sql.Result, err error) {
+func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
 	switch option.InsertOption {
 	case gdb.InsertOptionSave:
 		return d.doSave(ctx, link, table, list, option)
@@ -110,18 +109,23 @@ func (d *Driver) doSave(ctx context.Context,
 	}
 
 	var (
-		one                    = list[0]
-		charL, charR           = d.GetChars()
-		valueCharL, valueCharR = "'", "'"
+		one          = list[0]
+		oneLen       = len(one)
+		charL, charR = d.GetChars()
 
 		conflictKeys   = option.OnConflict
 		conflictKeySet = gset.New(false)
 
-		// insertKeys:   Handle valid keys that need to be inserted
-		// insertValues: Handle values that need to be inserted
-		// updateValues: Handle values that need to be updated
-		// queryValues:  Handle data that need to be upsert
-		queryValues, insertKeys, insertValues, updateValues []string
+		// queryHolders:	Handle data with Holder that need to be upsert
+		// queryValues:		Handle data that need to be upsert
+		// insertKeys:		Handle valid keys that need to be inserted
+		// insertValues:	Handle values that need to be inserted
+		// updateValues:	Handle values that need to be updated
+		queryHolders = make([]string, oneLen)
+		queryValues  = make([]interface{}, oneLen)
+		insertKeys   = make([]string, oneLen)
+		insertValues = make([]string, oneLen)
+		updateValues []string
 	)
 
 	// conflictKeys slice type conv to set type
@@ -129,31 +133,27 @@ func (d *Driver) doSave(ctx context.Context,
 		conflictKeySet.Add(gstr.ToUpper(conflictKey))
 	}
 
+	index := 0
 	for key, value := range one {
-		saveValue := gconv.String(value)
-		queryValues = append(
-			queryValues,
-			fmt.Sprintf(
-				valueCharL+"%s"+valueCharR+" AS "+charL+"%s"+charR,
-				saveValue, key,
-			),
-		)
+		queryHolders[index] = "?"
+		queryValues[index] = value
+		insertKeys[index] = charL + key + charR
+		insertValues[index] = "T2." + charL + key + charR
 
-		insertKeys = append(insertKeys, charL+key+charR)
-		insertValues = append(insertValues, "T2."+charL+key+charR)
-
-		// filter conflict keys in updateValues
-		if !conflictKeySet.Contains(key) {
+		// filter conflict keys in updateValues.
+		// And the key is not a soft created field.
+		if !(conflictKeySet.Contains(key) || d.Core.IsSoftCreatedFieldName(key)) {
 			updateValues = append(
 				updateValues,
 				fmt.Sprintf(`T1.%s = T2.%s`, charL+key+charR, charL+key+charR),
 			)
 		}
+		index++
 	}
 
 	batchResult := new(gdb.SqlResult)
-	sqlStr := parseSqlForUpsert(table, queryValues, insertKeys, insertValues, updateValues, conflictKeys)
-	r, err := d.DoExec(ctx, link, sqlStr)
+	sqlStr := parseSqlForUpsert(table, queryHolders, insertKeys, insertValues, updateValues, conflictKeys)
+	r, err := d.DoExec(ctx, link, sqlStr, queryValues...)
 	if err != nil {
 		return r, err
 	}
@@ -168,17 +168,17 @@ func (d *Driver) doSave(ctx context.Context,
 
 // parseSqlForUpsert
 // MERGE INTO {{table}} T1
-// USING ( SELECT {{queryValues}} FROM DUAL T2
+// USING ( SELECT {{queryHolders}} FROM DUAL T2
 // ON (T1.{{duplicateKey}} = T2.{{duplicateKey}} AND ...)
 // WHEN NOT MATCHED THEN
 // INSERT {{insertKeys}} VALUES {{insertValues}}
 // WHEN MATCHED THEN
 // UPDATE SET {{updateValues}}
 func parseSqlForUpsert(table string,
-	queryValues, insertKeys, insertValues, updateValues, duplicateKey []string,
+	queryHolders, insertKeys, insertValues, updateValues, duplicateKey []string,
 ) (sqlStr string) {
 	var (
-		queryValueStr   = strings.Join(queryValues, ",")
+		queryHolderStr  = strings.Join(queryHolders, ",")
 		insertKeyStr    = strings.Join(insertKeys, ",")
 		insertValueStr  = strings.Join(insertValues, ",")
 		updateValueStr  = strings.Join(updateValues, ",")
@@ -196,7 +196,7 @@ func parseSqlForUpsert(table string,
 
 	return fmt.Sprintf(pattern,
 		table,
-		queryValueStr,
+		queryHolderStr,
 		duplicateKeyStr,
 		insertKeyStr,
 		insertValueStr,
