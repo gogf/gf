@@ -2594,26 +2594,25 @@ func Test_Model_Save(t *testing.T) {
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
-			Id         int
-			Passport   string
-			Password   string
-			NickName   string
-			CreateTime *gtime.Time
+			Id        int
+			Passport  string
+			Password  string
+			NickName  string
+			CreatedAt *gtime.Time
+			UpdatedAt *gtime.Time
 		}
 		var (
-			user       User
-			count      int
-			result     sql.Result
-			createTime = gtime.New("2024-10-01 12:01:01").Format("Y-m-d")
-			err        error
+			user   User
+			count  int
+			result sql.Result
+			err    error
 		)
 
 		result, err = db.Model(table).Data(g.Map{
-			"id":          1,
-			"passport":    "p1",
-			"password":    "15d55ad283aa400af464c76d713c07ad",
-			"nickname":    "n1",
-			"create_time": createTime,
+			"id":       1,
+			"passport": "p1",
+			"password": "15d55ad283aa400af464c76d713c07ad",
+			"nickname": "n1",
 		}).OnConflict("id").Save()
 
 		t.AssertNil(err)
@@ -2626,14 +2625,14 @@ func Test_Model_Save(t *testing.T) {
 		t.Assert(user.Passport, "p1")
 		t.Assert(user.Password, "15d55ad283aa400af464c76d713c07ad")
 		t.Assert(user.NickName, "n1")
-		t.Assert(user.CreateTime.Format("Y-m-d"), createTime)
 
+		// Sleep 1 second to make sure the updated time is different.
+		time.Sleep(1 * time.Second)
 		_, err = db.Model(table).Data(g.Map{
-			"id":          1,
-			"passport":    "p1",
-			"password":    "25d55ad283aa400af464c76d713c07ad",
-			"nickname":    "n2",
-			"create_time": createTime,
+			"id":       1,
+			"passport": "p1",
+			"password": "25d55ad283aa400af464c76d713c07ad",
+			"nickname": "n2",
 		}).OnConflict("id").Save()
 		t.AssertNil(err)
 
@@ -2642,7 +2641,8 @@ func Test_Model_Save(t *testing.T) {
 		t.Assert(user.Passport, "p1")
 		t.Assert(user.Password, "25d55ad283aa400af464c76d713c07ad")
 		t.Assert(user.NickName, "n2")
-		t.Assert(user.CreateTime.Format("Y-m-d"), createTime)
+		// check created_at not equal to updated_at
+		t.AssertNE(user.CreatedAt, user.UpdatedAt)
 
 		count, err = db.Model(table).Count()
 		t.AssertNil(err)

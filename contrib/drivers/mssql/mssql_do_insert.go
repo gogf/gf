@@ -84,8 +84,9 @@ func (d *Driver) doSave(ctx context.Context,
 		insertKeys[index] = charL + key + charR
 		insertValues[index] = "T2." + charL + key + charR
 
-		// filter conflict keys in updateValues
-		if !conflictKeySet.Contains(key) {
+		// filter conflict keys in updateValues.
+		// And the key is not a soft created field.
+		if !(conflictKeySet.Contains(key) || d.Core.IsSoftCreatedFieldName(key)) {
 			updateValues = append(
 				updateValues,
 				fmt.Sprintf(`T1.%s = T2.%s`, charL+key+charR, charL+key+charR),
