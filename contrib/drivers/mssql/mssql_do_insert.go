@@ -58,7 +58,7 @@ func (d *Driver) doSave(ctx context.Context,
 		charL, charR = d.GetChars()
 
 		conflictKeys   = option.OnConflict
-		conflictKeySet = gset.New(true)
+		conflictKeySet = gset.New(false)
 
 		// queryHolders:	Handle data with Holder that need to be upsert
 		// queryValues:		Handle data that need to be upsert
