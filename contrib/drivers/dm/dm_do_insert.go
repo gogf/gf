@@ -93,6 +93,7 @@ func (d *Driver) doSave(ctx context.Context,
 				fmt.Sprintf(`T1.%s = T2.%s`, charL+key+charR, charL+key+charR),
 			)
 		}
+		index++
 	}
 
 	batchResult := new(gdb.SqlResult)
