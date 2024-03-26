@@ -24,10 +24,10 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func TestPage(t *testing.T) {
+func Test_Page(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
-	//db.SetDebug(true)
+	// db.SetDebug(true)
 	result, err := db.Model(table).Page(1, 2).Order("id").All()
 	gtest.Assert(err, nil)
 	fmt.Println("page:1--------", result)
@@ -2586,5 +2586,82 @@ func Test_Model_ScanAndCount(t *testing.T) {
 
 		t.Assert(len(users), 3)
 		t.Assert(total, TableSize)
+	})
+}
+
+func Test_Model_Save(t *testing.T) {
+	table := createTable("test")
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id        int
+			Passport  string
+			Password  string
+			NickName  string
+			CreatedAt *gtime.Time
+			UpdatedAt *gtime.Time
+		}
+		var (
+			user   User
+			count  int
+			result sql.Result
+			err    error
+		)
+
+		result, err = db.Model(table).Data(g.Map{
+			"id":       1,
+			"passport": "p1",
+			"password": "15d55ad283aa400af464c76d713c07ad",
+			"nickname": "n1",
+		}).OnConflict("id").Save()
+
+		t.AssertNil(err)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+
+		err = db.Model(table).Scan(&user)
+		t.AssertNil(err)
+		t.Assert(user.Id, 1)
+		t.Assert(user.Passport, "p1")
+		t.Assert(user.Password, "15d55ad283aa400af464c76d713c07ad")
+		t.Assert(user.NickName, "n1")
+
+		// Sleep 1 second to make sure the updated time is different.
+		time.Sleep(1 * time.Second)
+		_, err = db.Model(table).Data(g.Map{
+			"id":       1,
+			"passport": "p1",
+			"password": "25d55ad283aa400af464c76d713c07ad",
+			"nickname": "n2",
+		}).OnConflict("id").Save()
+		t.AssertNil(err)
+
+		err = db.Model(table).Scan(&user)
+		t.AssertNil(err)
+		t.Assert(user.Passport, "p1")
+		t.Assert(user.Password, "25d55ad283aa400af464c76d713c07ad")
+		t.Assert(user.NickName, "n2")
+		// check created_at not equal to updated_at
+		t.AssertNE(user.CreatedAt, user.UpdatedAt)
+
+		count, err = db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
+	})
+}
+
+func Test_Model_Replace(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model(table).Data(g.Map{
+			"id":          1,
+			"passport":    "t11",
+			"password":    "25d55ad283aa400af464c76d713c07ad",
+			"nickname":    "T11",
+			"create_time": "2018-10-24 10:00:00",
+		}).Replace()
+		t.Assert(err, "Replace operation is not supported by mssql driver")
 	})
 }
