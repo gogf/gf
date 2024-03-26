@@ -111,17 +111,17 @@ func (d *Driver) doSave(ctx context.Context,
 
 // parseSqlForUpsert
 // MERGE INTO {{table}} T1
-// USING ( VALUES( {{queryValues}}) T2 ({{insertKeyStr}})
+// USING ( VALUES( {{queryHolders}}) T2 ({{insertKeyStr}})
 // ON (T1.{{duplicateKey}} = T2.{{duplicateKey}} AND ...)
 // WHEN NOT MATCHED THEN
 // INSERT {{insertKeys}} VALUES {{insertValues}}
 // WHEN MATCHED THEN
 // UPDATE SET {{updateValues}}
 func parseSqlForUpsert(table string,
-	queryValues, insertKeys, insertValues, updateValues, duplicateKey []string,
+	queryHolders, insertKeys, insertValues, updateValues, duplicateKey []string,
 ) (sqlStr string) {
 	var (
-		queryValueStr   = strings.Join(queryValues, ",")
+		queryHolderStr  = strings.Join(queryHolders, ",")
 		insertKeyStr    = strings.Join(insertKeys, ",")
 		insertValueStr  = strings.Join(insertValues, ",")
 		updateValueStr  = strings.Join(updateValues, ",")
@@ -139,7 +139,7 @@ func parseSqlForUpsert(table string,
 
 	return fmt.Sprintf(pattern,
 		table,
-		queryValueStr,
+		queryHolderStr,
 		insertKeyStr,
 		duplicateKeyStr,
 		insertKeyStr,
