@@ -11,14 +11,12 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // DoInsert inserts or updates data for given table.
@@ -55,18 +53,23 @@ func (d *Driver) doSave(ctx context.Context,
 	}
 
 	var (
-		one                    = list[0]
-		charL, charR           = d.GetChars()
-		valueCharL, valueCharR = "'", "'"
+		one          = list[0]
+		oneLen       = len(one)
+		charL, charR = d.GetChars()
 
 		conflictKeys   = option.OnConflict
 		conflictKeySet = gset.New(true)
 
-		// insertKeys:   Handle valid keys that need to be inserted
-		// insertValues: Handle values that need to be inserted
-		// updateValues: Handle values that need to be updated
-		// queryValues:  Handle data that need to be upsert
-		queryValues, insertKeys, insertValues, updateValues []string
+		// queryHolders:   Handle data with Holder that need to be upsert
+		// queryValues:  		Handle data that need to be upsert
+		// insertKeys:   		Handle valid keys that need to be inserted
+		// insertValues: 		Handle values that need to be inserted
+		// updateValues: 		Handle values that need to be updated
+		queryHolders = make([]string, oneLen)
+		queryValues  = make([]interface{}, oneLen)
+		insertKeys   = make([]string, oneLen)
+		insertValues = make([]string, oneLen)
+		updateValues []string
 	)
 
 	// conflictKeys slice type conv to set type
@@ -74,23 +77,12 @@ func (d *Driver) doSave(ctx context.Context,
 		conflictKeySet.Add(gstr.ToUpper(conflictKey))
 	}
 
+	index := 0
 	for key, value := range one {
-		var saveValue string
-		if t, ok := value.(time.Time); ok {
-			saveValue = t.Format(time.RFC3339Nano)
-		} else {
-			saveValue = gconv.String(value)
-		}
-		queryValues = append(
-			queryValues,
-			fmt.Sprintf(
-				valueCharL+"%s"+valueCharR,
-				saveValue,
-			),
-		)
-
-		insertKeys = append(insertKeys, charL+key+charR)
-		insertValues = append(insertValues, "T2."+charL+key+charR)
+		queryHolders[index] = "?"
+		queryValues[index] = value
+		insertKeys[index] = charL + key + charR
+		insertValues[index] = "T2." + charL + key + charR
 
 		// filter conflict keys in updateValues
 		if !conflictKeySet.Contains(key) {
@@ -99,11 +91,12 @@ func (d *Driver) doSave(ctx context.Context,
 				fmt.Sprintf(`T1.%s = T2.%s`, charL+key+charR, charL+key+charR),
 			)
 		}
+		index++
 	}
 
 	batchResult := new(gdb.SqlResult)
-	sqlStr := parseSqlForUpsert(table, queryValues, insertKeys, insertValues, updateValues, conflictKeys)
-	r, err := d.DoExec(ctx, link, sqlStr)
+	sqlStr := parseSqlForUpsert(table, queryHolders, insertKeys, insertValues, updateValues, conflictKeys)
+	r, err := d.DoExec(ctx, link, sqlStr, queryValues...)
 	if err != nil {
 		return r, err
 	}
