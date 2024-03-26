@@ -251,6 +251,12 @@ func newCommandFromMethod(
 		return
 	}
 
+	// Options creating.
+	var paramKeyToAttrMap map[string]string
+	if paramKeyToAttrMap, err = newTagToAttrMappingFromInput(inputObject.Interface()); err != nil {
+		return
+	}
+
 	// =============================================================================================
 	// Create function that has value return.
 	// =============================================================================================
@@ -278,8 +284,11 @@ func newCommandFromMethod(
 				if arg.Orphan {
 					if orphanValue := parser.GetOpt(arg.Name); orphanValue != nil {
 						if orphanValue.String() == "" {
-							// Eg: gf -f
+							// Example: gf -f
 							data[arg.Name] = "true"
+							if arg.Short != "" {
+								data[arg.Short] = "true"
+							}
 						} else {
 							// Adapter with common user habits.
 							// Eg:
@@ -301,9 +310,9 @@ func newCommandFromMethod(
 				return fmt.Sprintf(`input command data map: %s`, gjson.MustEncode(data))
 			})
 			if inputObject.Kind() == reflect.Ptr {
-				err = gconv.Scan(data, inputObject.Interface())
+				err = gconv.Scan(data, inputObject.Interface(), paramKeyToAttrMap)
 			} else {
-				err = gconv.Struct(data, inputObject.Addr().Interface())
+				err = gconv.Struct(data, inputObject.Addr().Interface(), paramKeyToAttrMap)
 			}
 			intlog.PrintFunc(ctx, func() string {
 				return fmt.Sprintf(`input object assigned data: %s`, gjson.MustEncode(inputObject.Interface()))
@@ -329,6 +338,28 @@ func newCommandFromMethod(
 			}
 		}
 		return
+	}
+	return
+}
+
+func newTagToAttrMappingFromInput(object interface{}) (paramKeyToAttrMap map[string]string, err error) {
+	var fields []gstructs.Field
+	fields, err = gstructs.Fields(gstructs.FieldsInput{
+		Pointer:         object,
+		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
+	})
+	paramKeyToAttrMap = make(map[string]string)
+	for _, field := range fields {
+		var (
+			nameValue  = field.Tag(tagNameName)
+			shortValue = field.Tag(tagNameShort)
+		)
+		if nameValue != "" {
+			paramKeyToAttrMap[nameValue] = field.Name()
+		}
+		if shortValue != "" {
+			paramKeyToAttrMap[shortValue] = field.Name()
+		}
 	}
 	return
 }
