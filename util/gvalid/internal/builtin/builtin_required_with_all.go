@@ -38,9 +38,11 @@ func (r RuleRequiredWithAll) Run(in RunInput) error {
 		required   = true
 		array      = strings.Split(in.RulePattern, ",")
 		foundValue interface{}
+		dataMap    = in.Data.Map()
 	)
+
 	for i := 0; i < len(array); i++ {
-		_, foundValue = gutil.MapPossibleItemByKey(in.Data.Map(), array[i])
+		_, foundValue = gutil.MapPossibleItemByKey(dataMap, array[i])
 		if empty.IsEmpty(foundValue) {
 			required = false
 			break

@@ -38,13 +38,15 @@ func (r RuleRequiredUnless) Run(in RunInput) error {
 		required   = true
 		array      = strings.Split(in.RulePattern, ",")
 		foundValue interface{}
+		dataMap    = in.Data.Map()
 	)
+
 	// It supports multiple field and value pairs.
 	if len(array)%2 == 0 {
 		for i := 0; i < len(array); {
 			tk := array[i]
 			tv := array[i+1]
-			_, foundValue = gutil.MapPossibleItemByKey(in.Data.Map(), tk)
+			_, foundValue = gutil.MapPossibleItemByKey(dataMap, tk)
 			if in.Option.CaseInsensitive {
 				required = !strings.EqualFold(tv, gconv.String(foundValue))
 			} else {

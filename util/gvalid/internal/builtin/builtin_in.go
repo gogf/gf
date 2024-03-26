@@ -32,12 +32,16 @@ func (r RuleIn) Message() string {
 }
 
 func (r RuleIn) Run(in RunInput) error {
-	var ok bool
+	var (
+		ok               bool
+		inputValueString = in.Value.String()
+	)
+
 	for _, rulePattern := range gstr.SplitAndTrim(in.RulePattern, ",") {
 		if in.Option.CaseInsensitive {
-			ok = strings.EqualFold(in.Value.String(), strings.TrimSpace(rulePattern))
+			ok = strings.EqualFold(inputValueString, strings.TrimSpace(rulePattern))
 		} else {
-			ok = strings.Compare(in.Value.String(), strings.TrimSpace(rulePattern)) == 0
+			ok = strings.Compare(inputValueString, strings.TrimSpace(rulePattern)) == 0
 		}
 		if ok {
 			return nil
