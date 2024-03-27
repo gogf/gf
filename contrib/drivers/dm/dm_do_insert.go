@@ -80,17 +80,18 @@ func (d *Driver) doSave(ctx context.Context,
 
 	index := 0
 	for key, value := range one {
-		queryHolders[index] = "?"
+		keyWithChar := charL + key + charR
+		queryHolders[index] = fmt.Sprintf("? AS %s", keyWithChar)
 		queryValues[index] = value
-		insertKeys[index] = charL + key + charR
-		insertValues[index] = "T2." + charL + key + charR
+		insertKeys[index] = keyWithChar
+		insertValues[index] = fmt.Sprintf("T2.%s", keyWithChar)
 
 		// filter conflict keys in updateValues.
 		// And the key is not a soft created field.
 		if !(conflictKeySet.Contains(key) || d.Core.IsSoftCreatedFieldName(key)) {
 			updateValues = append(
 				updateValues,
-				fmt.Sprintf(`T1.%s = T2.%s`, charL+key+charR, charL+key+charR),
+				fmt.Sprintf(`T1.%s = T2.%s`, keyWithChar, keyWithChar),
 			)
 		}
 		index++
