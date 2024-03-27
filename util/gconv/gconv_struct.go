@@ -241,6 +241,16 @@ func doStruct(
 	}
 
 	// To convert value base on custom parameter key to attribute name map.
+	if priorityTag != "" {
+		if paramKeyToAttrMap == nil {
+			paramKeyToAttrMap = make(map[string]string)
+		}
+		if len(tagToAttrNameMap) > 0 {
+			for k, v := range tagToAttrNameMap {
+				paramKeyToAttrMap[k] = v
+			}
+		}
+	}
 	err = doStructBaseOnParamKeyToAttrMap(
 		pointerElemReflectValue,
 		paramsMap,
