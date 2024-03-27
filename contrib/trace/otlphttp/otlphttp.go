@@ -91,13 +91,10 @@ func Init(serviceName, endpoint, path string) (func(), error) {
 	return func() {
 		ctx, cancel := context.WithTimeout(ctx, time.Second)
 		defer cancel()
-		if err = tracerProvider.Shutdown(ctx); err != nil {
-			g.Log().Errorf(ctx, "Shutdown tracerProvider failed err:%+v", err)
-		}
 		if err = traceExp.Shutdown(ctx); err != nil {
-			g.Log().Errorf(ctx, "Shutdown traceExp failed err:%+v", err)
+			g.Log().Errorf(ctx, "Shutdown tracerProvider failed err:%+v", err)
 			otel.Handle(err)
 		}
-		g.Log().Debug(ctx, "Shutdown traceExp success")
+		g.Log().Debug(ctx, "Shutdown tracerProvider success")
 	}, nil
 }
