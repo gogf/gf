@@ -95,8 +95,8 @@ func Init(serviceName, endpoint, traceToken string) (func(), error) {
 		defer cancel()
 		if err = tracerProvider.Shutdown(ctx); err != nil {
 			g.Log().Errorf(ctx, "Shutdown tracerProvider failed err:%+v", err)
-			otel.Handle(err)
+		} else {
+			g.Log().Debug(ctx, "Shutdown tracerProvider success")
 		}
-		g.Log().Debug(ctx, "Shutdown tracerProvider success")
 	}, nil
 }
