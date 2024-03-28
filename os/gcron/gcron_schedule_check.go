@@ -72,7 +72,7 @@ func (s *cronSchedule) checkMeetSecond(lastMeetTime, currentTime time.Time) (ok 
 	} else {
 		// If this pattern is set in precise second time,
 		// it is not allowed executed in the same time.
-		if len(s.secondMap) == 1 && lastMeetTime.Format(time.DateTime) == currentTime.Format(time.DateTime) {
+		if len(s.secondMap) == 1 && lastMeetTime.Format(time.RFC3339) == currentTime.Format(time.RFC3339) {
 			return false
 		}
 		if !s.keyMatch(s.secondMap, currentTime.Second()) {
