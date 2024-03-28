@@ -1,6 +1,6 @@
 module github.com/gogf/gf/contrib/config/consul/v2
 
-go 1.19
+go 1.18
 
 require (
 	github.com/gogf/gf/v2 v2.6.4
