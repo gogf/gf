@@ -47,9 +47,7 @@ func (c Issue3390TestCase1) Index(ctx context.Context, in Issue3390Case1Input) (
 func Test_Issue3390_Case1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		root, err := gcmd.NewFromObject(Issue3390TestCase1{})
-		if err != nil {
-			t.AssertNil(err)
-		}
+		t.AssertNil(err)
 		command := &Issue3390CommandCase1{root}
 		value, err := command.RunWithSpecificArgs(
 			gctx.New(),
@@ -87,9 +85,7 @@ func (c Issue3390TestCase2) Index(ctx context.Context, in Issue3390Case2Input) (
 func Test_Issue3390_Case2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		root, err := gcmd.NewFromObject(Issue3390TestCase2{})
-		if err != nil {
-			t.AssertNil(err)
-		}
+		t.AssertNil(err)
 		command := &Issue3390CommandCase2{root}
 		value, err := command.RunWithSpecificArgs(
 			gctx.New(),
@@ -127,9 +123,7 @@ func (c Issue3390TestCase3) Index(ctx context.Context, in Issue3390Case3Input) (
 func Test_Issue3390_Case3(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		root, err := gcmd.NewFromObject(Issue3390TestCase3{})
-		if err != nil {
-			t.AssertNil(err)
-		}
+		t.AssertNil(err)
 		command := &Issue3390CommandCase3{root}
 		value, err := command.RunWithSpecificArgs(
 			gctx.New(),
@@ -168,9 +162,7 @@ func (c Issue3390TestCase4) Index(ctx context.Context, in Issue3390Case4Input) (
 func Test_Issue3390_Case4(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		root, err := gcmd.NewFromObject(Issue3390TestCase4{})
-		if err != nil {
-			t.AssertNil(err)
-		}
+		t.AssertNil(err)
 		command := &Issue3390CommandCase4{root}
 		value, err := command.RunWithSpecificArgs(
 			gctx.New(),
@@ -218,9 +210,7 @@ func (c *Issue3417Test) Build(ctx context.Context, in Issue3417BuildInput) (out 
 func Test_Issue3417(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		command, err := gcmd.NewFromObject(Issue3417Test{})
-		if err != nil {
-			t.AssertNil(err)
-		}
+		t.AssertNil(err)
 		value, err := command.RunWithSpecificArgs(
 			gctx.New(),
 			[]string{
