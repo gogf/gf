@@ -2,8 +2,6 @@ module github.com/gogf/gf/contrib/drivers/dm/v2
 
 go 1.18
 
-replace github.com/gogf/gf/v2 => ../../../
-
 require (
 	gitee.com/chunanyong/dm v1.8.12
 	github.com/gogf/gf/v2 v2.6.4
@@ -33,3 +31,5 @@ require (
 	golang.org/x/text v0.13.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/gogf/gf/v2 => ../../../
