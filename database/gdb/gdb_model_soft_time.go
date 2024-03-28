@@ -214,7 +214,7 @@ func (m *softTimeMaintainer) getSoftFieldNameAndType(
 			return
 		}
 	)
-	result, err := m.db.GetCache().GetOrSetFunc(ctx, cacheKey, cacheFunc, cacheDuration)
+	result, err := gcache.GetOrSetFunc(ctx, cacheKey, cacheFunc, cacheDuration)
 	if err != nil {
 		intlog.Error(ctx, err)
 	}
