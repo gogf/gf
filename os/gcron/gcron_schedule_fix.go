@@ -20,26 +20,26 @@ func (s *cronSchedule) getAndUpdateLastCheckTimestamp(ctx context.Context, t tim
 		lastCheckTimestamp = s.lastCheckTimestamp.Val()
 	)
 	switch {
-	// Often happens, timer triggers in the same second.
+	// Often happens, timer triggers in the same second, but the millisecond is different.
 	// Example:
-	// lastCheckTimestamp:    10
-	// currentTimestamp: 10
+	// lastCheckTimestamp: 2024-03-26 19:47:34.000
+	// currentTimestamp:   2024-03-26 19:47:34.999
 	case
 		lastCheckTimestamp == currentTimestamp:
 		lastCheckTimestamp += 1
 
 	// Often happens, no latency.
 	// Example:
-	// lastCheckTimestamp:    9
-	// currentTimestamp: 10
+	// lastCheckTimestamp: 2024-03-26 19:47:34.000
+	// currentTimestamp:   2024-03-26 19:47:35.000
 	case
 		lastCheckTimestamp == currentTimestamp-1:
 		lastCheckTimestamp = currentTimestamp
 
 	// Latency in 3 seconds, which can be tolerant.
 	// Example:
-	// lastCheckTimestamp:    7/8
-	// currentTimestamp: 10
+	// lastCheckTimestamp: 2024-03-26 19:47:31.000、2024-03-26 19:47:32.000
+	// currentTimestamp:   2024-03-26 19:47:34.000
 	case
 		lastCheckTimestamp == currentTimestamp-2,
 		lastCheckTimestamp == currentTimestamp-3:
