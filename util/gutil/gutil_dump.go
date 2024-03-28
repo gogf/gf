@@ -472,12 +472,28 @@ func addSlashesForString(s string) string {
 }
 
 // DumpJson pretty dumps json content to stdout.
-func DumpJson(jsonContent string) {
+func DumpJson(value any) {
+	switch result := value.(type) {
+	case []byte:
+		doDumpJson(result)
+	case string:
+		doDumpJson([]byte(result))
+	default:
+		jsonContent, err := json.Marshal(value)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+		doDumpJson(jsonContent)
+	}
+}
+
+func doDumpJson(jsonContent []byte) {
 	var (
 		buffer    = bytes.NewBuffer(nil)
-		jsonBytes = []byte(jsonContent)
+		jsonBytes = jsonContent
 	)
-	if err := json.Indent(buffer, jsonBytes, "", "\t"); err != nil {
+	if err := json.Indent(buffer, jsonBytes, "", "    "); err != nil {
 		fmt.Println(err.Error())
 	}
 	fmt.Println(buffer.String())
