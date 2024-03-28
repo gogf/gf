@@ -144,7 +144,7 @@ func doStruct(
 		//	return v.UnmarshalValue(params)
 		// }
 		// Note that it's `pointerElemReflectValue` here not `pointerReflectValue`.
-		if ok, err := bindVarToReflectValueWithInterfaceCheck(pointerElemReflectValue, paramsInterface); ok {
+		if ok, err = bindVarToReflectValueWithInterfaceCheck(pointerElemReflectValue, paramsInterface); ok {
 			return err
 		}
 		// Retrieve its element, may be struct at last.
@@ -170,7 +170,7 @@ func doStruct(
 	// It only performs one converting to the same attribute.
 	// doneMap is used to check repeated converting, its key is the real attribute name
 	// of the struct.
-	doneMap := make(map[string]struct{})
+	doneAttrMap := make(map[string]struct{})
 
 	// The key of the attrMap is the attribute name of the struct,
 	// and the value is its replaced name for later comparison to improve performance.
@@ -213,10 +213,7 @@ func doStruct(
 
 	// The key of the `attrToTagCheckNameMap` is the attribute name of the struct,
 	// and the value is its replaced tag name for later comparison to improve performance.
-	var (
-		attrToTagCheckNameMap = make(map[string]string)
-		priorityTagArray      []string
-	)
+	var priorityTagArray []string
 	if priorityTag != "" {
 		priorityTagArray = append(utils.SplitAndTrim(priorityTag, ","), gtag.StructTagPriority...)
 	} else {
@@ -226,59 +223,60 @@ func doStruct(
 	if err != nil {
 		return err
 	}
+	var toBeDeletedTagNames = make([]string, 0)
 	for tagName, attributeName := range tagToAttrNameMap {
 		// If there's something else in the tag string,
 		// it uses the first part which is split using char ','.
-		// Eg:
+		// Example:
 		// orm:"id, priority"
 		// orm:"name, with:uid=id"
-		attrToTagCheckNameMap[attributeName] = utils.RemoveSymbols(strings.Split(tagName, ",")[0])
+		if array := strings.Split(tagName, ","); len(array) > 1 {
+			toBeDeletedTagNames = append(toBeDeletedTagNames, tagName)
+			tagName = array[0]
+			tagToAttrNameMap[tagName] = attributeName
+		}
 		// If tag and attribute values both exist in `paramsMap`,
 		// it then uses the tag value overwriting the attribute value in `paramsMap`.
 		if paramsMap[tagName] != nil && paramsMap[attributeName] != nil {
 			paramsMap[attributeName] = paramsMap[tagName]
 		}
 	}
+	for _, tagName := range toBeDeletedTagNames {
+		delete(tagToAttrNameMap, tagName)
+	}
 
 	// To convert value base on custom parameter key to attribute name map.
-	if priorityTag != "" {
-		if paramKeyToAttrMap == nil {
-			paramKeyToAttrMap = make(map[string]string)
-		}
-		if len(tagToAttrNameMap) > 0 {
-			for k, v := range tagToAttrNameMap {
-				paramKeyToAttrMap[k] = v
-			}
-		}
-	}
 	err = doStructBaseOnParamKeyToAttrMap(
 		pointerElemReflectValue,
 		paramsMap,
 		paramKeyToAttrMap,
-		doneMap,
+		doneAttrMap,
 	)
 	if err != nil {
 		return err
 	}
-	// Already done all attributes value assignment nothing to do next.
-	if len(doneMap) == len(attrToCheckNameMap) {
-		return nil
-	}
 
-	// To convert value base on precise attribute name.
-	err = doStructBaseOnAttribute(
+	err = doStructBaseOnTagToAttrNameMap(
 		pointerElemReflectValue,
 		paramsMap,
 		paramKeyToAttrMap,
-		doneMap,
+		doneAttrMap,
+		tagToAttrNameMap,
+	)
+	if err != nil {
+		return err
+	}
+
+	// To convert value base on precise attribute name.
+	err = doStructBaseOnAttrToCheckNameMap(
+		pointerElemReflectValue,
+		paramsMap,
+		paramKeyToAttrMap,
+		doneAttrMap,
 		attrToCheckNameMap,
 	)
 	if err != nil {
 		return err
-	}
-	// Already done all attributes value assignment nothing to do next.
-	if len(doneMap) == len(attrToCheckNameMap) {
-		return nil
 	}
 
 	// To convert value base on parameter map.
@@ -286,14 +284,14 @@ func doStruct(
 		pointerElemReflectValue,
 		paramsMap,
 		paramKeyToAttrMap,
-		doneMap,
+		doneAttrMap,
 		attrToCheckNameMap,
-		attrToTagCheckNameMap,
 		tagToAttrNameMap,
 	)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -326,33 +324,53 @@ func doStructBaseOnParamKeyToAttrMap(
 	return nil
 }
 
-func doStructBaseOnAttribute(
+func doStructBaseOnAttrToCheckNameMap(
 	pointerElemReflectValue reflect.Value,
 	paramsMap map[string]interface{},
 	paramKeyToAttrMap map[string]string,
 	doneAttrMap map[string]struct{},
 	attrToCheckNameMap map[string]string,
 ) error {
-	var customMappingAttrMap = make(map[string]struct{})
-	if len(paramKeyToAttrMap) > 0 {
-		// It ignores the attribute names if it is specified in the `paramKeyToAttrMap`.
-		for paramName := range paramsMap {
-			if passedAttrKey, ok := paramKeyToAttrMap[paramName]; ok {
-				customMappingAttrMap[passedAttrKey] = struct{}{}
-			}
-		}
-	}
 	for attrName := range attrToCheckNameMap {
 		// The value by precise attribute name.
 		paramValue, ok := paramsMap[attrName]
 		if !ok {
 			continue
 		}
-		// If the attribute name is in custom paramKeyToAttrMap, it then ignores this converting.
-		if _, ok = customMappingAttrMap[attrName]; ok {
+		// If the attribute name is already converted, it then skips it.
+		if _, ok = doneAttrMap[attrName]; ok {
 			continue
 		}
-		// If the attribute name is already checked converting, then skip it.
+		// Mark it done.
+		doneAttrMap[attrName] = struct{}{}
+		if err := bindVarToStructAttr(
+			pointerElemReflectValue, attrName, paramValue, paramKeyToAttrMap,
+		); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func doStructBaseOnTagToAttrNameMap(
+	pointerElemReflectValue reflect.Value,
+	paramsMap map[string]interface{},
+	paramKeyToAttrMap map[string]string,
+	doneAttrMap map[string]struct{},
+	tagToAttrNameMap map[string]string,
+) error {
+	var (
+		paramValue interface{}
+		ok         bool
+	)
+	for tagName, attrName := range tagToAttrNameMap {
+		// It firstly considers `paramName` as accurate tag name,
+		// and retrieve attribute name from `tagToAttrNameMap` .
+		paramValue, ok = paramsMap[tagName]
+		if !ok {
+			continue
+		}
+		// If the attribute name is already converted, it then skips it.
 		if _, ok = doneAttrMap[attrName]; ok {
 			continue
 		}
@@ -373,44 +391,34 @@ func doStructBaseOnParamMap(
 	paramKeyToAttrMap map[string]string,
 	doneAttrMap map[string]struct{},
 	attrToCheckNameMap map[string]string,
-	attrToTagCheckNameMap map[string]string,
 	tagToAttrNameMap map[string]string,
 ) error {
 	var (
-		attrName  string
-		checkName string
+		attrName                string
+		paramNameWithoutSymbols string
+		ok                      bool
 	)
 	for paramName, paramValue := range paramsMap {
-		// It firstly considers `paramName` as accurate tag name,
-		// and retrieve attribute name from `tagToAttrNameMap` .
-		attrName = tagToAttrNameMap[paramName]
-		if attrName == "" {
-			checkName = utils.RemoveSymbols(paramName)
-			// Loop to find the matched attribute name with or without
-			// string cases and chars like '-'/'_'/'.'/' '.
-
-			// Matching the parameters to struct tag names.
-			// The `attrKey` is the attribute name of the struct.
-			for attrKey, cmpKey := range attrToTagCheckNameMap {
-				if strings.EqualFold(checkName, cmpKey) {
-					attrName = attrKey
-					break
-				}
-			}
+		// It was already converted in previous procedure.
+		if _, ok = tagToAttrNameMap[paramName]; ok {
+			continue
+		}
+		// It was already converted in previous procedure.
+		if _, ok = attrToCheckNameMap[paramName]; ok {
+			continue
 		}
 
+		paramNameWithoutSymbols = utils.RemoveSymbols(paramName)
 		// Matching the parameters to struct attributes.
-		if attrName == "" {
-			for attrKey, cmpKey := range attrToCheckNameMap {
-				// Eg:
-				// UserName  eq user_name
-				// User-Name eq username
-				// username  eq userName
-				// etc.
-				if strings.EqualFold(checkName, cmpKey) {
-					attrName = attrKey
-					break
-				}
+		for attrKey, cmpKey := range attrToCheckNameMap {
+			// Example:
+			// UserName  eq user_name
+			// User-Name eq username
+			// username  eq userName
+			// etc.
+			if strings.EqualFold(paramNameWithoutSymbols, cmpKey) {
+				attrName = attrKey
+				break
 			}
 		}
 
@@ -418,8 +426,8 @@ func doStructBaseOnParamMap(
 		if attrName == "" {
 			continue
 		}
-		// If the attribute name is already checked converting, then skip it.
-		if _, ok := doneAttrMap[attrName]; ok {
+		// If the attribute name is already converted, it then skips it.
+		if _, ok = doneAttrMap[attrName]; ok {
 			continue
 		}
 		// Mark it done.
