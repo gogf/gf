@@ -65,22 +65,15 @@ type cInitInput struct {
 	Name   string `name:"NAME" arg:"true" v:"required" brief:"{cInitNameBrief}"`
 	Mono   bool   `name:"mono"   short:"m" brief:"initialize a mono-repo instead a single-repo" orphan:"true"`
 	Update bool   `name:"update" short:"u" brief:"update to the latest goframe version" orphan:"true"`
-	Path   string `name:"path" short:"p" brief:"project creation directory"`
+	Module string `name:"module" short:"g" brief:"custom go module"`
 }
 
 type cInitOutput struct{}
 
 func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err error) {
-	var (
-		overwrote = false
-	)
-
-	// set path.
-	if in.Path == "" {
-		in.Path = gfile.Basename(gfile.RealPath(in.Name))
-	}
-	if !gfile.IsEmpty(in.Path) && !allyes.Check() {
-		s := gcmd.Scanf(`the folder "%s" is not empty, files might be overwrote, continue? [y/n]: `, in.Path)
+	var overwrote = false
+	if !gfile.IsEmpty(in.Name) && !allyes.Check() {
+		s := gcmd.Scanf(`the folder "%s" is not empty, files might be overwrote, continue? [y/n]: `, in.Name)
 		if strings.EqualFold(s, "n") {
 			return
 		}
@@ -91,14 +84,14 @@ func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err 
 	// Create project folder and files.
 	var (
 		templateRepoName string
-		gitignoreFile    = in.Path + "/" + cInitGitignore
+		gitignoreFile    = in.Name + "/" + cInitGitignore
 	)
 	if in.Mono {
 		templateRepoName = cInitMonoRepo
 	} else {
 		templateRepoName = cInitSingleRepo
 	}
-	err = gres.Export(templateRepoName, in.Path, gres.ExportOption{
+	err = gres.Export(templateRepoName, in.Name, gres.ExportOption{
 		RemovePrefix: templateRepoName,
 	})
 	if err != nil {
@@ -125,6 +118,11 @@ func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err 
 		}
 	}
 
+	// Replace module name.
+	if in.Module == "" {
+		in.Module = in.Name
+	}
+
 	// Replace template name to project name.
 	err = gfile.ReplaceDirFunc(func(path, content string) string {
 		for _, ignoreFile := range ignoreFiles {
@@ -132,8 +130,8 @@ func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err 
 				return content
 			}
 		}
-		return gstr.Replace(gfile.GetContents(path), cInitRepoPrefix+templateRepoName, in.Name)
-	}, in.Path, "*", true)
+		return gstr.Replace(gfile.GetContents(path), cInitRepoPrefix+templateRepoName, in.Module)
+	}, in.Name, "*", true)
 	if err != nil {
 		return
 	}
@@ -144,7 +142,7 @@ func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err 
 		// go get -u github.com/gogf/gf/v2@latest
 		updateCommand := `go get -u github.com/gogf/gf/v2@latest`
 		if in.Name != "." {
-			updateCommand = fmt.Sprintf(`cd %s && %s`, in.Path, updateCommand)
+			updateCommand = fmt.Sprintf(`cd %s && %s`, in.Name, updateCommand)
 		}
 		if err = gproc.ShellRun(ctx, updateCommand); err != nil {
 			mlog.Fatal(err)
@@ -152,7 +150,7 @@ func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err 
 		// go mod tidy
 		gomModTidyCommand := `go mod tidy`
 		if in.Name != "." {
-			gomModTidyCommand = fmt.Sprintf(`cd %s && %s`, in.Path, gomModTidyCommand)
+			gomModTidyCommand = fmt.Sprintf(`cd %s && %s`, in.Name, gomModTidyCommand)
 		}
 		if err = gproc.ShellRun(ctx, gomModTidyCommand); err != nil {
 			mlog.Fatal(err)
@@ -163,7 +161,7 @@ func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err 
 	if !in.Mono {
 		enjoyCommand := `gf run main.go`
 		if in.Name != "." {
-			enjoyCommand = fmt.Sprintf(`cd %s && %s`, in.Path, enjoyCommand)
+			enjoyCommand = fmt.Sprintf(`cd %s && %s`, in.Name, enjoyCommand)
 		}
 		mlog.Printf(`you can now run "%s" to start your journey, enjoy!`, enjoyCommand)
 	}
