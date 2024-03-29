@@ -70,9 +70,9 @@ func New(address string, option ...Option) gsvc.Registry {
 			panic(gerror.NewCode(gcode.CodeInvalidParameter, `invalid etcd auth not support ":" at username or password `))
 		}
 	}
-	// if len(endpoints) == 0 {
-	// 	panic(gerror.NewCodef(gcode.CodeInvalidParameter, `invalid etcd address "%s"`, address))
-	// }
+	if len(endpoints) == 0 {
+		panic(gerror.NewCodef(gcode.CodeInvalidParameter, `invalid etcd address "%s"`, address))
+	}
 	cfg := etcd3.Config{Endpoints: endpoints}
 	if userName != "" {
 		cfg.Username = userName
