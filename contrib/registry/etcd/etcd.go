@@ -8,6 +8,7 @@
 package etcd
 
 import (
+	"strings"
 	"time"
 
 	etcd3 "go.etcd.io/etcd/client/v3"
@@ -45,14 +46,41 @@ const (
 )
 
 // New creates and returns a new etcd registry.
+// Support Etcd Address format: ip:port,ip:port...,ip:port@username:password
 func New(address string, option ...Option) gsvc.Registry {
-	endpoints := gstr.SplitAndTrim(address, ",")
+	if address == "" {
+		panic(gerror.NewCode(gcode.CodeInvalidParameter, `invalid etcd address ""`))
+	}
+	addressAndAuth := gstr.SplitAndTrim(address, "@")
+	var (
+		endpoints          []string
+		userName, password string
+	)
+	switch len(addressAndAuth) {
+	case 1:
+		endpoints = gstr.SplitAndTrim(address, ",")
+	default:
+		endpoints = gstr.SplitAndTrim(addressAndAuth[0], ",")
+		parts := gstr.SplitAndTrim(strings.Join(addressAndAuth[1:], "@"), ":")
+		switch len(parts) {
+		case 2:
+			userName = parts[0]
+			password = parts[1]
+		default:
+			panic(gerror.NewCode(gcode.CodeInvalidParameter, `invalid etcd auth not support ":" at username or password `))
+		}
+	}
 	if len(endpoints) == 0 {
 		panic(gerror.NewCodef(gcode.CodeInvalidParameter, `invalid etcd address "%s"`, address))
 	}
-	client, err := etcd3.New(etcd3.Config{
-		Endpoints: endpoints,
-	})
+	cfg := etcd3.Config{Endpoints: endpoints}
+	if userName != "" {
+		cfg.Username = userName
+	}
+	if password != "" {
+		cfg.Password = password
+	}
+	client, err := etcd3.New(cfg)
 	if err != nil {
 		panic(gerror.Wrap(err, `create etcd client failed`))
 	}

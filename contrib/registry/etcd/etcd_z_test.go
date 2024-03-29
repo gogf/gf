@@ -19,7 +19,7 @@ import (
 func TestRegistry(t *testing.T) {
 	var (
 		ctx      = gctx.GetInitCtx()
-		registry = etcd.New(`127.0.0.1:2379`)
+		registry = etcd.New(`127.0.0.1:2379@root:123`)
 	)
 	svc := &gsvc.LocalService{
 		Name:      guid.S(),
@@ -86,7 +86,7 @@ func TestRegistry(t *testing.T) {
 func TestWatch(t *testing.T) {
 	var (
 		ctx      = gctx.GetInitCtx()
-		registry = etcd.New(`127.0.0.1:2379`)
+		registry = etcd.New(`127.0.0.1:2379@root:123`)
 	)
 
 	svc1 := &gsvc.LocalService{
