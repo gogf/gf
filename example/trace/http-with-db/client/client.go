@@ -32,6 +32,7 @@ func main() {
 	StartRequests()
 }
 
+// StartRequests starts requests.
 func StartRequests() {
 	ctx, span := gtrace.NewSpan(gctx.New(), "StartRequests")
 	defer span.End()
@@ -43,7 +44,7 @@ func StartRequests() {
 	// Add user info.
 	var insertRes = struct {
 		ghttp.DefaultHandlerResponse
-		Data struct{ Id int64 } `json:"data"`
+		Data struct{ ID int64 } `json:"data"`
 	}{}
 	err = client.PostVar(ctx, "http://127.0.0.1:8199/user/insert", g.Map{
 		"name": "john",
@@ -52,7 +53,7 @@ func StartRequests() {
 		panic(err)
 	}
 	g.Log().Info(ctx, "insert result:", insertRes)
-	if insertRes.Data.Id == 0 {
+	if insertRes.Data.ID == 0 {
 		g.Log().Error(ctx, "retrieve empty id string")
 		return
 	}
@@ -63,7 +64,7 @@ func StartRequests() {
 		Data struct{ User gdb.Record } `json:"data"`
 	}{}
 	err = client.GetVar(ctx, "http://127.0.0.1:8199/user/query", g.Map{
-		"id": insertRes.Data.Id,
+		"id": insertRes.Data.ID,
 	}).Scan(&queryRes)
 	if err != nil {
 		panic(err)
@@ -75,7 +76,7 @@ func StartRequests() {
 		ghttp.DefaultHandlerResponse
 	}{}
 	err = client.PostVar(ctx, "http://127.0.0.1:8199/user/delete", g.Map{
-		"id": insertRes.Data.Id,
+		"id": insertRes.Data.ID,
 	}).Scan(&deleteRes)
 	if err != nil {
 		panic(err)
