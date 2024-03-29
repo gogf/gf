@@ -28,7 +28,11 @@ func NewWriter(writer http.ResponseWriter) *Writer {
 }
 
 // WriteHeader implements the interface of http.ResponseWriter.WriteHeader.
+// Note that the underlying `WriteHeader` can only be called once in a http response.
 func (w *Writer) WriteHeader(status int) {
+	if w.wroteHeader {
+		return
+	}
 	w.ResponseWriter.WriteHeader(status)
 	w.wroteHeader = true
 }
@@ -42,6 +46,7 @@ func (w *Writer) BytesWritten() int64 {
 func (w *Writer) Write(data []byte) (int, error) {
 	n, err := w.ResponseWriter.Write(data)
 	w.bytesWritten += int64(n)
+	w.wroteHeader = true
 	return n, err
 }
 

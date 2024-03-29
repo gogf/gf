@@ -1,6 +1,6 @@
 module github.com/gogf/gf/contrib/trace/otlphttp/v2
 
-go 1.20
+go 1.18
 
 require (
 	github.com/gogf/gf/v2 v2.6.4
