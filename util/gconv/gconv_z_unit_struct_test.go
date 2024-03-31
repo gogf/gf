@@ -108,17 +108,20 @@ func Test_Struct_Attr_Pointer(t *testing.T) {
 		type User struct {
 			Uid  *int
 			Name *string
+			Open bool
 		}
 		user := new(User)
 		params := g.Map{
 			"uid":  "1",
 			"Name": "john",
+			"Open": gconv.PtrBool(false),
 		}
 		if err := gconv.Struct(params, user); err != nil {
 			t.Error(err)
 		}
 		t.Assert(user.Uid, 1)
 		t.Assert(*user.Name, "john")
+		t.Assert(user.Open, true)
 	})
 }
 

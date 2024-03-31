@@ -123,10 +123,17 @@ func doMapToMap(params interface{}, pointer interface{}, mapping ...map[string]s
 				return err
 			}
 		default:
+			var FromValue = paramsRv.MapIndex(key)
+			for FromValue.Kind() == reflect.Ptr {
+				FromValue = FromValue.Elem()
+			}
+			for pointerValueType.Kind() == reflect.Ptr {
+				pointerValueType = pointerValueType.Elem()
+			}
 			mapValue.Set(
 				reflect.ValueOf(
 					doConvert(doConvertInput{
-						FromValue:  paramsRv.MapIndex(key).Interface(),
+						FromValue:  FromValue,
 						ToTypeName: pointerValueType.String(),
 						ReferValue: mapValue,
 						Extra:      nil,
