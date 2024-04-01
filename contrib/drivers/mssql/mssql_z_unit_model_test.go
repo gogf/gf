@@ -24,7 +24,7 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func Test_Page(t *testing.T) {
+func TestPage(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	// db.SetDebug(true)
