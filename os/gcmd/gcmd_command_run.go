@@ -93,7 +93,7 @@ func (c *Command) RunWithSpecificArgs(ctx context.Context, args []string) (value
 	parsedArgs = parsedArgs[1:]
 
 	// Find the matched command and run it.
-	lastCmd, foundCmd, newCtx := c.searchCommand(ctx, parsedArgs)
+	lastCmd, foundCmd, newCtx := c.searchCommand(ctx, parsedArgs, 0)
 	if foundCmd != nil {
 		return foundCmd.doRun(newCtx, args, parser)
 	}
@@ -215,25 +215,27 @@ func (c *Command) reParse(ctx context.Context, args []string, parser *Parser) (*
 }
 
 // searchCommand recursively searches the command according given arguments.
-func (c *Command) searchCommand(ctx context.Context, args []string) (lastCmd, foundCmd *Command, newCtx context.Context) {
+func (c *Command) searchCommand(
+	ctx context.Context, args []string, fromArgIndex int,
+) (lastCmd, foundCmd *Command, newCtx context.Context) {
 	if len(args) == 0 {
 		return c, nil, ctx
 	}
 	for _, cmd := range c.commands {
 		// Recursively searching the command.
+		// String comparison case-sensitive.
 		if cmd.Name == args[0] {
 			leftArgs := args[1:]
 			// If this command needs argument,
-			// it then gives all its left arguments to it.
-			if cmd.hasArgumentFromIndex() {
-				ctx = context.WithValue(ctx, CtxKeyArguments, leftArgs)
+			// it then gives all its left arguments to it using arg index marks.
+			//
+			// Note that the args here (using default args parsing) could be different with the args
+			// that are parsed in command.
+			if cmd.hasArgumentFromIndex() || len(leftArgs) == 0 {
+				ctx = context.WithValue(ctx, CtxKeyArgumentsIndex, fromArgIndex+1)
 				return c, cmd, ctx
 			}
-			// Recursively searching.
-			if len(leftArgs) == 0 {
-				return c, cmd, ctx
-			}
-			return cmd.searchCommand(ctx, leftArgs)
+			return cmd.searchCommand(ctx, leftArgs, fromArgIndex+1)
 		}
 	}
 	return c, nil, ctx

@@ -200,7 +200,7 @@ func TestModelInsert(t *testing.T) {
 			AccountName: fmt.Sprintf(`A%dtwo`, i),
 			PwdReset:    0,
 			AttrIndex:   99,
-			CreatedTime: time.Now(),
+			// CreatedTime: time.Now(),
 			UpdatedTime: time.Now(),
 		}
 		// _, err := db.Schema(TestDBName).Model(table).Data(data).Insert()
@@ -216,7 +216,7 @@ func TestModelInsert(t *testing.T) {
 			PwdReset:    1,
 			CreatedTime: time.Now(),
 			AttrIndex:   98,
-			UpdatedTime: time.Now(),
+			// UpdatedTime: time.Now(),
 		}
 		// _, err := db.Schema(TestDBName).Model(table).Data(data).Insert()
 		_, err := db.Model(table).Data(&data).Insert()

@@ -4669,13 +4669,13 @@ func TestResultStructs1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		r := gdb.Result{
 			gdb.Record{"id": gvar.New(nil), "name": gvar.New("john")},
-			gdb.Record{"id": gvar.New(nil), "name": gvar.New("smith")},
+			gdb.Record{"id": gvar.New(1), "name": gvar.New("smith")},
 		}
 		array := make([]*B, 2)
 		err := r.Structs(&array)
 		t.AssertNil(err)
 		t.Assert(array[0].Id, 0)
-		t.Assert(array[1].Id, 0)
+		t.Assert(array[1].Id, 1)
 		t.Assert(array[0].Name, "john")
 		t.Assert(array[1].Name, "smith")
 	})
