@@ -126,7 +126,7 @@ func createTable(table ...string) (name string) {
 		gtest.Fatal(err)
 	}
 
-	//db.Schema("test")
+	// db.Schema("test")
 	return
 }
 
