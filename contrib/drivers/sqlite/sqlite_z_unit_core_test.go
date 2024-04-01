@@ -140,7 +140,7 @@ func TestDBInsert(t *testing.T) {
 			Nickname   string `gconv:"nickname"`
 			CreateTime string `json:"create_time"`
 		}
-		timeStr := gtime.Now().String()
+		timeStr := gtime.New("2024-10-01 12:01:01").String()
 		result, err = db.Insert(ctx, table, User{
 			Id:         3,
 			Passport:   "user_3",
@@ -162,7 +162,7 @@ func TestDBInsert(t *testing.T) {
 		t.Assert(one["create_time"].GTime().String(), timeStr)
 
 		// *struct
-		timeStr = gtime.Now().String()
+		timeStr = gtime.New("2024-10-01 12:01:01").String()
 		result, err = db.Insert(ctx, table, &User{
 			Id:         4,
 			Passport:   "t4",
@@ -183,7 +183,7 @@ func TestDBInsert(t *testing.T) {
 		t.Assert(one["create_time"].GTime().String(), timeStr)
 
 		// batch with Insert
-		timeStr = gtime.Now().String()
+		timeStr = gtime.New("2024-10-01 12:01:01").String()
 		r, err := db.Insert(ctx, table, g.Slice{
 			g.Map{
 				"id":          200,
@@ -449,7 +449,7 @@ func TestDBReplace(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		timeStr := gtime.Now().String()
+		timeStr := gtime.New("2024-10-01 12:01:01").String()
 		_, err := db.Replace(ctx, table, g.Map{
 			"id":          1,
 			"passport":    "t1",

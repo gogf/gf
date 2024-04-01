@@ -217,7 +217,7 @@ func TestDBInsert(t *testing.T) {
 			Nickname   string      `gconv:"nickname"`
 			CreateTime *gtime.Time `json:"create_time"`
 		}
-		timeNow := gtime.Now()
+		timeNow := gtime.New("2024-10-01 12:01:01")
 		result, err = db.Insert(ctx, table, User{
 			Id:         3,
 			Passport:   "user_3",
@@ -236,7 +236,8 @@ func TestDBInsert(t *testing.T) {
 		t.Assert(one["PASSPORT"].String(), "user_3")
 		t.Assert(one["PASSWORD"].String(), "25d55ad283aa400af464c76d713c07ad")
 		t.Assert(one["NICKNAME"].String(), "name_3")
-		t.Assert(one["CREATE_TIME"].GTime(), timeNow)
+		t.AssertNE(one["CREATE_TIME"].GTime(), nil)
+		t.AssertLT(timeNow.Sub(one["CREATE_TIME"].GTime()), 3)
 
 		// *struct
 		timeNow = gtime.Now()

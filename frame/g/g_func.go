@@ -72,8 +72,8 @@ func DumpWithOption(value interface{}, option gutil.DumpOption) {
 }
 
 // DumpJson pretty dumps json content to stdout.
-func DumpJson(jsonContent string) {
-	gutil.DumpJson(jsonContent)
+func DumpJson(value any) {
+	gutil.DumpJson(value)
 }
 
 // Throw throws an exception, which can be caught by TryCatch function.

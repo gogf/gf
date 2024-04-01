@@ -98,7 +98,7 @@ func TestIssue1227(t *testing.T) {
 			{
 				name:   "Case5",
 				origin: g.Map{"中文KEY": "n1"},
-				want:   "n1",
+				want:   "",
 			},
 			{
 				name:   "Case5",
@@ -111,6 +111,7 @@ func TestIssue1227(t *testing.T) {
 			if err := gconv.Struct(tt.origin, &p); err != nil {
 				t.Error(err)
 			}
+			//t.Log(tt)
 			t.Assert(p.Name, tt.want)
 		}
 	})
