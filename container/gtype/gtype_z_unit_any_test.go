@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Any(t *testing.T) {
+func TestAny(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t1 := Temp{Name: "gf", Age: 18}
 		t2 := Temp{Name: "gf", Age: 19}
@@ -39,7 +39,7 @@ func Test_Any(t *testing.T) {
 	})
 }
 
-func Test_Any_JSON(t *testing.T) {
+func TestAnyJSON(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := "i love gf"
 		i := gtype.New(s)
@@ -56,7 +56,7 @@ func Test_Any_JSON(t *testing.T) {
 	})
 }
 
-func Test_Any_UnmarshalValue(t *testing.T) {
+func TestAnyUnmarshalValue(t *testing.T) {
 	type V struct {
 		Name string
 		Var  *gtype.Any
