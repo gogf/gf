@@ -46,7 +46,12 @@ func (c *Cron) GetLogger() glog.ILogger {
 
 // AddEntry creates and returns a new Entry object.
 func (c *Cron) AddEntry(
-	ctx context.Context, pattern string, job JobFunc, times int, isSingleton bool, name ...string,
+	ctx context.Context,
+	pattern string,
+	job JobFunc,
+	times int,
+	isSingleton bool,
+	name ...string,
 ) (*Entry, error) {
 	var (
 		entryName = ""
@@ -204,7 +209,7 @@ func (c *Cron) Entries() []*Entry {
 	array := garray.NewSortedArraySize(c.entries.Size(), func(v1, v2 interface{}) int {
 		entry1 := v1.(*Entry)
 		entry2 := v2.(*Entry)
-		if entry1.Time.Nanosecond() > entry2.Time.Nanosecond() {
+		if entry1.RegisterTime.Nanosecond() > entry2.RegisterTime.Nanosecond() {
 			return 1
 		}
 		return -1
