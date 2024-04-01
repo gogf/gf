@@ -21,7 +21,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func Test_Basic(t *testing.T) {
+func TestBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx      = gctx.New()
@@ -180,7 +180,7 @@ func Test_Basic(t *testing.T) {
 	})
 }
 
-func Test_GlobalAttributes(t *testing.T) {
+func TestGlobalAttributes(t *testing.T) {
 	gmetric.SetGlobalAttributes(gmetric.Attributes{
 		gmetric.NewAttribute("g1", 1),
 	}, gmetric.SetGlobalAttributesOption{
