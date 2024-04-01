@@ -7,7 +7,7 @@
 // Package mssql implements gdb.Driver, which supports operations for database MSSql.
 //
 // Note:
-// 1. It does not support Save/Replace features.
+// 1. It does not support Replace features.
 // 2. It does not support LastInsertId.
 package mssql
 
