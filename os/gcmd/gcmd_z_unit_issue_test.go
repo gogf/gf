@@ -44,7 +44,7 @@ func (c Issue3390TestCase1) Index(ctx context.Context, in Issue3390Case1Input) (
 	return
 }
 
-func Test_Issue3390_Case1(t *testing.T) {
+func TestIssue3390Case1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		root, err := gcmd.NewFromObject(Issue3390TestCase1{})
 		t.AssertNil(err)
@@ -82,7 +82,7 @@ func (c Issue3390TestCase2) Index(ctx context.Context, in Issue3390Case2Input) (
 	}
 	return
 }
-func Test_Issue3390_Case2(t *testing.T) {
+func TestIssue3390Case2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		root, err := gcmd.NewFromObject(Issue3390TestCase2{})
 		t.AssertNil(err)
@@ -120,7 +120,7 @@ func (c Issue3390TestCase3) Index(ctx context.Context, in Issue3390Case3Input) (
 	}
 	return
 }
-func Test_Issue3390_Case3(t *testing.T) {
+func TestIssue3390Case3(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		root, err := gcmd.NewFromObject(Issue3390TestCase3{})
 		t.AssertNil(err)
@@ -159,7 +159,7 @@ func (c Issue3390TestCase4) Index(ctx context.Context, in Issue3390Case4Input) (
 	return
 }
 
-func Test_Issue3390_Case4(t *testing.T) {
+func TestIssue3390Case4(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		root, err := gcmd.NewFromObject(Issue3390TestCase4{})
 		t.AssertNil(err)
@@ -207,7 +207,7 @@ func (c *Issue3417Test) Build(ctx context.Context, in Issue3417BuildInput) (out 
 	return
 }
 
-func Test_Issue3417(t *testing.T) {
+func TestIssue3417(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		command, err := gcmd.NewFromObject(Issue3417Test{})
 		t.AssertNil(err)
