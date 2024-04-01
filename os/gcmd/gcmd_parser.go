@@ -185,11 +185,24 @@ func (p *Parser) isOptionNeedArgument(name string) bool {
 
 // setOptionValue sets the option value for name and according alias.
 func (p *Parser) setOptionValue(name, value string) {
+	// Accurate option name match.
 	for optionName := range p.passedOptions {
-		array := gstr.SplitAndTrim(optionName, ",")
-		for _, v := range array {
-			if strings.EqualFold(v, name) {
-				for _, v := range array {
+		optionNameAndShort := gstr.SplitAndTrim(optionName, ",")
+		for _, optionNameItem := range optionNameAndShort {
+			if optionNameItem == name {
+				for _, v := range optionNameAndShort {
+					p.parsedOptions[v] = value
+				}
+				return
+			}
+		}
+	}
+	// Fuzzy option name match.
+	for optionName := range p.passedOptions {
+		optionNameAndShort := gstr.SplitAndTrim(optionName, ",")
+		for _, optionNameItem := range optionNameAndShort {
+			if strings.EqualFold(optionNameItem, name) {
+				for _, v := range optionNameAndShort {
 					p.parsedOptions[v] = value
 				}
 				return

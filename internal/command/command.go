@@ -17,7 +17,7 @@ import (
 var (
 	defaultParsedArgs    = make([]string, 0)
 	defaultParsedOptions = make(map[string]string)
-	argumentRegex        = regexp.MustCompile(`^\-{1,2}([\w\?\.\-]+)(=){0,1}(.*)$`)
+	argumentOptionRegex  = regexp.MustCompile(`^\-{1,2}([\w\?\.\-]+)(=){0,1}(.*)$`)
 )
 
 // Init does custom initialization.
@@ -41,22 +41,22 @@ func ParseUsingDefaultAlgorithm(args ...string) (parsedArgs []string, parsedOpti
 	parsedArgs = make([]string, 0)
 	parsedOptions = make(map[string]string)
 	for i := 0; i < len(args); {
-		array := argumentRegex.FindStringSubmatch(args[i])
+		array := argumentOptionRegex.FindStringSubmatch(args[i])
 		if len(array) > 2 {
 			if array[2] == "=" {
 				parsedOptions[array[1]] = array[3]
 			} else if i < len(args)-1 {
 				if len(args[i+1]) > 0 && args[i+1][0] == '-' {
-					// Eg: gf gen -d -n 1
+					// Example: gf gen -d -n 1
 					parsedOptions[array[1]] = array[3]
 				} else {
-					// Eg: gf gen -n 2
+					// Example: gf gen -n 2
 					parsedOptions[array[1]] = args[i+1]
 					i += 2
 					continue
 				}
 			} else {
-				// Eg: gf gen -h
+				// Example: gf gen -h
 				parsedOptions[array[1]] = array[3]
 			}
 		} else {
