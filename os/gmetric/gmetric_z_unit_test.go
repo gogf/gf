@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Counter(t *testing.T) {
+func TestCounter(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			meterOption = gmetric.MeterOption{
@@ -41,7 +41,7 @@ func Test_Counter(t *testing.T) {
 	})
 }
 
-func Test_Histogram(t *testing.T) {
+func TestHistogram(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			meterOption = gmetric.MeterOption{
@@ -70,7 +70,7 @@ func Test_Histogram(t *testing.T) {
 	})
 }
 
-func Test_CommonAttributes(t *testing.T) {
+func TestCommonAttributes(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		commonAttributes := gmetric.CommonAttributes()
 		t.AssertGT(len(commonAttributes), 1)

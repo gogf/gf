@@ -18,7 +18,7 @@ func truncateGlobalAttributes() {
 	globalAttributes = make([]globalAttributeItem, 0)
 }
 
-func Test_GlobalAttributes(t *testing.T) {
+func TestGlobalAttributes(t *testing.T) {
 	defer truncateGlobalAttributes()
 	gtest.C(t, func(t *gtest.T) {
 		SetGlobalAttributes(Attributes{
