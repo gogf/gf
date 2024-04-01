@@ -2589,7 +2589,7 @@ func TestModelScanAndCount(t *testing.T) {
 	})
 }
 
-func Test_Model_Save(t *testing.T) {
+func TestModelSave(t *testing.T) {
 	table := createTable("test")
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -2650,7 +2650,7 @@ func Test_Model_Save(t *testing.T) {
 	})
 }
 
-func Test_Model_Replace(t *testing.T) {
+func TestModelReplace(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
