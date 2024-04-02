@@ -28,7 +28,7 @@ var (
 			Help: "This is a simple demo for Counter usage",
 			Unit: "bytes",
 			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("const_label_1", 1),
+				gmetric.NewAttribute("const_attr_1", 1),
 			},
 		},
 	)
@@ -38,7 +38,7 @@ var (
 			Help: "This is a simple demo for UpDownCounter usage",
 			Unit: "%",
 			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("const_label_2", 2),
+				gmetric.NewAttribute("const_attr_2", 2),
 			},
 		},
 	)
@@ -48,7 +48,7 @@ var (
 			Help: "This is a simple demo for histogram usage",
 			Unit: "ms",
 			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("const_label_3", 3),
+				gmetric.NewAttribute("const_attr_3", 3),
 			},
 			Buckets: []float64{0, 10, 20, 50, 100, 500, 1000, 2000, 5000, 10000},
 		},
@@ -59,7 +59,7 @@ var (
 			Help: "This is a simple demo for ObservableCounter usage",
 			Unit: "%",
 			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("const_label_4", 4),
+				gmetric.NewAttribute("const_attr_4", 4),
 			},
 		},
 	)
@@ -69,7 +69,7 @@ var (
 			Help: "This is a simple demo for ObservableUpDownCounter usage",
 			Unit: "%",
 			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("const_label_5", 5),
+				gmetric.NewAttribute("const_attr_5", 5),
 			},
 		},
 	)
@@ -79,7 +79,7 @@ var (
 			Help: "This is a simple demo for ObservableGauge usage",
 			Unit: "%",
 			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("const_label_6", 6),
+				gmetric.NewAttribute("const_attr_6", 6),
 			},
 		},
 	)

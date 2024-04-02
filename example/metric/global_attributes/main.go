@@ -33,7 +33,7 @@ var (
 			Help: "This is a simple demo for Counter usage",
 			Unit: "bytes",
 			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("const_label_1", 1),
+				gmetric.NewAttribute("const_attr_1", 1),
 			},
 		},
 	)
@@ -43,7 +43,7 @@ var (
 			Help: "This is a simple demo for ObservableCounter usage",
 			Unit: "%",
 			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("const_label_2", 2),
+				gmetric.NewAttribute("const_attr_2", 2),
 			},
 		},
 	)
@@ -53,7 +53,7 @@ func main() {
 	var ctx = gctx.New()
 
 	gmetric.SetGlobalAttributes(gmetric.Attributes{
-		gmetric.NewAttribute("g1", 1),
+		gmetric.NewAttribute("global_attr_1", 1),
 	}, gmetric.SetGlobalAttributesOption{
 		Instrument:        instrument,
 		InstrumentVersion: instrumentVersion,

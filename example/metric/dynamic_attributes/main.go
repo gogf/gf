@@ -28,7 +28,7 @@ var (
 			Help: "This is a simple demo for Counter usage",
 			Unit: "bytes",
 			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("const_label_1", 1),
+				gmetric.NewAttribute("const_attr_1", 1),
 			},
 		},
 	)
@@ -38,7 +38,7 @@ var (
 			Help: "This is a simple demo for ObservableCounter usage",
 			Unit: "%",
 			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("const_label_4", 4),
+				gmetric.NewAttribute("const_attr_4", 4),
 			},
 		},
 	)
@@ -51,7 +51,7 @@ func main() {
 	meter.MustRegisterCallback(func(ctx context.Context, obs gmetric.Observer) error {
 		obs.Observe(observableCounter, 10, gmetric.Option{
 			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("dynamic_label_1", 1),
+				gmetric.NewAttribute("dynamic_attr_1", 1),
 			},
 		})
 		return nil
@@ -78,7 +78,7 @@ func main() {
 	counter.Inc(ctx)
 	counter.Add(ctx, 10, gmetric.Option{
 		Attributes: gmetric.Attributes{
-			gmetric.NewAttribute("dynamic_label_2", 2),
+			gmetric.NewAttribute("dynamic_attr_2", 2),
 		},
 	})
 

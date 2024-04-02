@@ -28,7 +28,7 @@ var (
 			Help: "This is a simple demo for Counter usage",
 			Unit: "%",
 			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("const_label_1", 1),
+				gmetric.NewAttribute("const_attr_1", 1),
 			},
 		},
 	)
@@ -39,7 +39,7 @@ var (
 			Help: "This is a simple demo for ObservableCounter usage",
 			Unit: "%",
 			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("const_label_3", 3),
+				gmetric.NewAttribute("const_attr_3", 3),
 			},
 			Callback: func(ctx context.Context, obs gmetric.MetricObserver) error {
 				obs.Observe(10)
