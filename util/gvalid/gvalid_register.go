@@ -52,7 +52,7 @@ func RegisterRule(rule string, f RuleFunc) {
 	if customRuleFuncMap[rule] != nil {
 		intlog.PrintFunc(context.TODO(), func() string {
 			return fmt.Sprintf(
-				`rule "%s" is over written by function "%s"`,
+				`rule "%s" is overwrite by function "%s"`,
 				rule, runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name(),
 			)
 		})
