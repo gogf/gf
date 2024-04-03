@@ -285,13 +285,8 @@ func Test_GroupGeneric_Scan(t *testing.T) {
 				}
 				cursor = nextCursor
 			}
-			return allKeys, err
+			return allKeys, nil
 		}
-
-		// Test pattern with no matches
-		noMatchKeys, err := performScan("xyz*")
-		t.AssertNil(err)
-		t.AssertEQ(len(noMatchKeys), 0)
 
 		// Test scanning for keys with `*name*` pattern
 		keysWithName, err := performScan("*name*")
@@ -313,8 +308,13 @@ func Test_GroupGeneric_Scan(t *testing.T) {
 
 		// Test empty pattern
 		emptyPatternKeys, err := performScan("")
-		t.Assert(err.Error(), "no keys for empty pattern")
+		t.AssertNil(err)
 		t.AssertEQ(len(emptyPatternKeys), 0)
+
+		// Test pattern with no matches
+		noMatchKeys, err := performScan("xyz*")
+		t.AssertNil(err)
+		t.AssertEQ(len(noMatchKeys), 0)
 	})
 }
 

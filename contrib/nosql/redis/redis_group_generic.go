@@ -181,10 +181,6 @@ func (r GroupGeneric) Keys(ctx context.Context, pattern string) ([]string, error
 //
 // https://redis.io/commands/scan/
 func (r GroupGeneric) Scan(ctx context.Context, cursor int64, pattern string, count int) ([]string, int64, error) {
-	if pattern == "" {
-		return nil, 0, gerror.New("no keys for empty pattern")
-	}
-
 	v, err := r.Operation.Do(ctx, "Scan", cursor, "Match", pattern, "Count", count)
 	if err != nil {
 		return nil, 0, err
