@@ -180,9 +180,8 @@ func (r GroupGeneric) Keys(ctx context.Context, pattern string) ([]string, error
 //
 // https://redis.io/commands/scan/
 func (r GroupGeneric) Scan(ctx context.Context, cursor int64, pattern string, count int) ([]string, int64, error) {
-	var countDefault int = 100
-	if count <= 0 {
-		count = countDefault
+	if cursor < 0 {
+		return nil, 0, gerror.New("cursor must be non-negative")
 	}
 
 	var countThreshold int = 1000
