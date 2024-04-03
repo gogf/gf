@@ -8,12 +8,11 @@ package redis
 
 import (
 	"context"
-	"encoding/json"
-	"strconv"
 	"time"
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gredis"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -173,13 +172,6 @@ func (r GroupGeneric) Keys(ctx context.Context, pattern string) ([]string, error
 	return v.Strings(), err
 }
 
-// Scan returns a subset of keys matching pattern along with the next cursor position, allowing for incremental retrieval.
-//
-// This method uses the SCAN command under the hood, which provides more efficient and safer way to iterate over large datasets compared to KEYS command.
-// The SCAN command is a cursor based iterator, meaning it scans the key space incrementally and returns a cursor which you use in subsequence SCAN calls until the cursor returned is 0, indicating the end of the scan.
-//
-// https://redis.io/commands/scan/
-
 // Scan executes a single iteration of the SCAN command, returning a subset of keys matching the pattern along with the next cursor position.
 // This method provides more efficient and safer way to iterate over large datasets compared to KEYS command.
 //
@@ -189,14 +181,18 @@ func (r GroupGeneric) Keys(ctx context.Context, pattern string) ([]string, error
 //
 // https://redis.io/commands/scan/
 func (r GroupGeneric) Scan(ctx context.Context, cursor int64, pattern string, count int) ([]string, int64, error) {
+	if pattern == "" {
+		return nil, 0, gerror.New("no keys for empty pattern")
+	}
+
 	v, err := r.Operation.Do(ctx, "Scan", cursor, "Match", pattern, "Count", count)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	validRange := 2
+	var vValidRange int = 2
 	data, ok := v.Slice(), true
-	if !ok || len(data) == validRange {
+	if !ok || len(data) != vValidRange {
 		return nil, 0, gerror.New("unexpected response format from SCAN")
 	}
 
@@ -204,18 +200,15 @@ func (r GroupGeneric) Scan(ctx context.Context, cursor int64, pattern string, co
 	if !ok {
 		return nil, 0, gerror.New("unexpected cursor format")
 	}
-	nextCursor, err := strconv.ParseInt(cursorStr, 10, 64)
-	if err != nil {
-		return nil, 0, gerror.Newf("error parsing cursor: %v", err)
-	}
+	nextCursor := gconv.Int64(cursorStr)
 
 	keysStr, ok := data[1].(string)
 	if !ok {
 		return nil, 0, gerror.New("unexpected keys format")
 	}
 	var keys []string
-	if err = json.Unmarshal([]byte(keysStr), &keys); err != nil {
-		return nil, 0, gerror.Newf("error unmarshaling keys: %v", err)
+	if err = gjson.Unmarshal([]byte(keysStr), &keys); err != nil {
+		return nil, 0, gerror.Newf("error unmarshal keys: %v", err)
 	}
 
 	return keys, nextCursor, nil

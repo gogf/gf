@@ -257,6 +257,71 @@ func Test_GroupGeneric_Keys(t *testing.T) {
 	})
 }
 
+func Test_GroupGeneric_Scan(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		err := redis.GroupString().MSet(ctx, map[string]interface{}{
+			"firstname": "Jack",
+			"lastname":  "Stuntman",
+			"age":       35,
+			"nickname":  "Jumper",
+		})
+		t.AssertNil(err)
+
+		var count = 10
+
+		// Scan for keys with the `*name*` pattern
+		var cursor int64 = 0
+		var allKeys []string
+		for {
+			keys, nextCursor, err := redis.GroupGeneric().Scan(ctx, cursor, "*name*", count)
+			t.AssertNil(err)
+
+			allKeys = append(allKeys, keys...)
+			if nextCursor == 0 {
+				break
+			}
+
+			cursor = nextCursor
+		}
+		t.AssertIN(allKeys, []string{"lastname", "firstname", "nickname"})
+
+		// Scan for keys with the `a??` pattern
+		cursor = 0
+		allKeys = []string{}
+		for {
+			keys, nextCursor, err := redis.GroupGeneric().Scan(ctx, cursor, "a??", count)
+			t.AssertNil(err)
+
+			allKeys = append(allKeys, keys...)
+			if nextCursor == 0 {
+				break
+			}
+
+			cursor = nextCursor
+		}
+		t.AssertEQ(allKeys, []string{"age"})
+
+		// Scan for keys with the `*` pattern
+		cursor = 0
+		allKeys = []string{}
+		for {
+			keys, nextCursor, err := redis.GroupGeneric().Scan(ctx, cursor, "*", count)
+			t.AssertNil(err)
+
+			allKeys = append(allKeys, keys...)
+			if nextCursor == 0 {
+				break
+			}
+
+			cursor = nextCursor
+		}
+		t.Assert(len(allKeys) >= 4, true)
+		t.AssertIN(allKeys, []string{"lastname", "firstname", "age", "nickname"})
+	})
+}
+
 func Test_GroupGeneric_FlushDB(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
