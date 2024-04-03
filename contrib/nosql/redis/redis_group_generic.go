@@ -8,10 +8,13 @@ package redis
 
 import (
 	"context"
+	"encoding/json"
+	"strconv"
 	"time"
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gredis"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -168,6 +171,54 @@ func (r GroupGeneric) DBSize(ctx context.Context) (int64, error) {
 func (r GroupGeneric) Keys(ctx context.Context, pattern string) ([]string, error) {
 	v, err := r.Operation.Do(ctx, "Keys", pattern)
 	return v.Strings(), err
+}
+
+// Scan returns a subset of keys matching pattern along with the next cursor position, allowing for incremental retrieval.
+//
+// This method uses the SCAN command under the hood, which provides more efficient and safer way to iterate over large datasets compared to KEYS command.
+// The SCAN command is a cursor based iterator, meaning it scans the key space incrementally and returns a cursor which you use in subsequence SCAN calls until the cursor returned is 0, indicating the end of the scan.
+//
+// https://redis.io/commands/scan/
+
+// Scan executes a single iteration of the SCAN command, returning a subset of keys matching the pattern along with the next cursor position.
+// This method provides more efficient and safer way to iterate over large datasets compared to KEYS command.
+//
+// Users are responsible for controlling the iteration by managing the cursor.
+//
+// The `count` parameter advises Redis on the number of keys to return. While it's not a strict limit, it guides the operation's granularity.
+//
+// https://redis.io/commands/scan/
+func (r GroupGeneric) Scan(ctx context.Context, cursor int64, pattern string, count int) ([]string, int64, error) {
+	v, err := r.Operation.Do(ctx, "Scan", cursor, "Match", pattern, "Count", count)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	validRange := 2
+	data, ok := v.Slice(), true
+	if !ok || len(data) == validRange {
+		return nil, 0, gerror.New("unexpected response format from SCAN")
+	}
+
+	cursorStr, ok := data[0].(string)
+	if !ok {
+		return nil, 0, gerror.New("unexpected cursor format")
+	}
+	nextCursor, err := strconv.ParseInt(cursorStr, 10, 64)
+	if err != nil {
+		return nil, 0, gerror.Newf("error parsing cursor: %v", err)
+	}
+
+	keysStr, ok := data[1].(string)
+	if !ok {
+		return nil, 0, gerror.New("unexpected keys format")
+	}
+	var keys []string
+	if err = json.Unmarshal([]byte(keysStr), &keys); err != nil {
+		return nil, 0, gerror.Newf("error unmarshaling keys: %v", err)
+	}
+
+	return keys, nextCursor, nil
 }
 
 // FlushDB delete all the keys of the currently selected DB. This command never fails.

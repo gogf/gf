@@ -27,6 +27,7 @@ type IGroupGeneric interface {
 	RandomKey(ctx context.Context) (string, error)
 	DBSize(ctx context.Context) (int64, error)
 	Keys(ctx context.Context, pattern string) ([]string, error)
+	Scan(ctx context.Context, cursor int64, pattern string, count int) ([]string, int64, error)
 	FlushDB(ctx context.Context, option ...FlushOp) error
 	FlushAll(ctx context.Context, option ...FlushOp) error
 	Expire(ctx context.Context, key string, seconds int64, option ...ExpireOption) (int64, error)
