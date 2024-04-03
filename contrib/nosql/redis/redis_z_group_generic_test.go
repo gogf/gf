@@ -269,56 +269,52 @@ func Test_GroupGeneric_Scan(t *testing.T) {
 		})
 		t.AssertNil(err)
 
-		var count = 10
+		performScan := func(pattern string) ([]string, error) {
+			var count = 10
+			var cursor int64
+			var allKeys = []string{}
+			for {
+				keys, nextCursor, err := redis.GroupGeneric().Scan(ctx, cursor, pattern, count)
+				if err != nil {
+					return nil, err
+				}
 
-		// Scan for keys with the `*name*` pattern
-		var cursor int64 = 0
-		var allKeys []string
-		for {
-			keys, nextCursor, err := redis.GroupGeneric().Scan(ctx, cursor, "*name*", count)
-			t.AssertNil(err)
-
-			allKeys = append(allKeys, keys...)
-			if nextCursor == 0 {
-				break
+				allKeys = append(allKeys, keys...)
+				if nextCursor == 0 {
+					break
+				}
+				cursor = nextCursor
 			}
-
-			cursor = nextCursor
+			return allKeys, err
 		}
-		t.AssertIN(allKeys, []string{"lastname", "firstname", "nickname"})
 
-		// Scan for keys with the `a??` pattern
-		cursor = 0
-		allKeys = []string{}
-		for {
-			keys, nextCursor, err := redis.GroupGeneric().Scan(ctx, cursor, "a??", count)
-			t.AssertNil(err)
+		// Test pattern with no matches
+		noMatchKeys, err := performScan("xyz*")
+		t.AssertNil(err)
+		t.AssertEQ(len(noMatchKeys), 0)
 
-			allKeys = append(allKeys, keys...)
-			if nextCursor == 0 {
-				break
-			}
+		// Test scanning for keys with `*name*` pattern
+		keysWithName, err := performScan("*name*")
+		t.AssertNil(err)
+		t.AssertGE(len(keysWithName), 3)
+		t.AssertIN(keysWithName, []string{"lastname", "firstname", "nickname"})
 
-			cursor = nextCursor
-		}
-		t.AssertEQ(allKeys, []string{"age"})
+		// Test scanning with a pattern that matches exactly one key
+		keysWithAge, err := performScan("a??")
+		t.AssertNil(err)
+		t.AssertEQ(len(keysWithAge), 1)
+		t.AssertEQ(keysWithAge, []string{"age"})
 
-		// Scan for keys with the `*` pattern
-		cursor = 0
-		allKeys = []string{}
-		for {
-			keys, nextCursor, err := redis.GroupGeneric().Scan(ctx, cursor, "*", count)
-			t.AssertNil(err)
+		// Test scanning for all keys
+		all, err := performScan("*")
+		t.AssertNil(err)
+		t.AssertGE(len(all), 4)
+		t.AssertIN(all, []string{"lastname", "firstname", "age", "nickname"})
 
-			allKeys = append(allKeys, keys...)
-			if nextCursor == 0 {
-				break
-			}
-
-			cursor = nextCursor
-		}
-		t.Assert(len(allKeys) >= 4, true)
-		t.AssertIN(allKeys, []string{"lastname", "firstname", "age", "nickname"})
+		// Test empty pattern
+		emptyPatternKeys, err := performScan("")
+		t.Assert(err.Error(), "no keys for empty pattern")
+		t.AssertEQ(len(emptyPatternKeys), 0)
 	})
 }
 
