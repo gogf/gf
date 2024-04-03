@@ -32,7 +32,7 @@ env:
 
 jobs:
   code-test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     # Service containers to run with `code-test`
     services:
@@ -199,16 +199,16 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Start Apollo Containers
-      run:  docker-compose -f ".github/workflows/apollo/docker-compose.yml" up -d --build
+      run:  docker compose -f ".github/workflows/apollo/docker-compose.yml" up -d --build
       
     - name: Start Nacos Containers
-      run:  docker-compose -f ".github/workflows/nacos/docker-compose.yml" up -d --build
+      run:  docker compose -f ".github/workflows/nacos/docker-compose.yml" up -d --build
 
     - name: Start Redis Cluster Containers
-      run:  docker-compose -f ".github/workflows/redis/docker-compose.yml" up -d --build
+      run:  docker compose -f ".github/workflows/redis/docker-compose.yml" up -d --build
 
     - name: Start Consul Containers
-      run:  docker-compose -f ".github/workflows/consul/docker-compose.yml" up -d --build
+      run:  docker compose -f ".github/workflows/consul/docker-compose.yml" up -d --build
 
     - name: Setup Golang ${{ matrix.go-version }}
       uses: actions/setup-go@v5
@@ -228,16 +228,16 @@ jobs:
       run: bash .github/workflows/ci-main.sh coverage
 
     - name: Stop Redis Cluster Containers
-      run:  docker-compose -f ".github/workflows/redis/docker-compose.yml" down
+      run:  docker compose -f ".github/workflows/redis/docker-compose.yml" down
 
     - name: Stop Apollo Containers
-      run:  docker-compose -f ".github/workflows/apollo/docker-compose.yml" down
+      run:  docker compose -f ".github/workflows/apollo/docker-compose.yml" down
 
     - name: Stop Nacos Containers
-      run:  docker-compose -f ".github/workflows/nacos/docker-compose.yml" down
+      run:  docker compose -f ".github/workflows/nacos/docker-compose.yml" down
 
     - name: Stop Consul Containers
-      run:  docker-compose -f ".github/workflows/consul/docker-compose.yml" down
+      run:  docker compose -f ".github/workflows/consul/docker-compose.yml" down
 
     - name: Report Coverage
       uses: codecov/codecov-action@v4
