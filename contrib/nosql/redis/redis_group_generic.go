@@ -12,7 +12,6 @@ import (
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gredis"
-	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -181,33 +180,40 @@ func (r GroupGeneric) Keys(ctx context.Context, pattern string) ([]string, error
 //
 // https://redis.io/commands/scan/
 func (r GroupGeneric) Scan(ctx context.Context, cursor int64, pattern string, count int) ([]string, int64, error) {
+	var countDefault int = 100
+	if count <= 0 {
+		count = countDefault
+	}
+
+	var countThreshold int = 1000
+	if count > countThreshold {
+		count = countThreshold
+	}
+
 	v, err := r.Operation.Do(ctx, "Scan", cursor, "Match", pattern, "Count", count)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	var vValidRange int = 2
+	var validRange int = 2
 	data, ok := v.Slice(), true
-	if !ok || len(data) != vValidRange {
+	if !ok || len(data) != validRange {
 		return nil, 0, gerror.New("unexpected response format from SCAN")
 	}
 
-	cursorStr, ok := data[0].(string)
-	if !ok {
-		return nil, 0, gerror.New("unexpected cursor format")
-	}
-	nextCursor := gconv.Int64(cursorStr)
+	nextCursor := gconv.Int64(data[0])
 
-	keysStr, ok := data[1].(string)
-	if !ok {
-		return nil, 0, gerror.New("unexpected keys format")
-	}
-	var keys []string
-	if err = gjson.Unmarshal([]byte(keysStr), &keys); err != nil {
-		return nil, 0, gerror.Newf("error unmarshal keys: %v", err)
+	keys := gconv.Interfaces(data[1])
+	keysStr := make([]string, len(keys))
+	for i, key := range keys {
+		keyStr, ok := key.(string)
+		if !ok {
+			return nil, 0, gerror.New("key is not a string")
+		}
+		keysStr[i] = keyStr
 	}
 
-	return keys, nextCursor, nil
+	return keysStr, nextCursor, nil
 }
 
 // FlushDB delete all the keys of the currently selected DB. This command never fails.
