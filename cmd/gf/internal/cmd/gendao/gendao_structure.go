@@ -136,6 +136,11 @@ func generateStructFieldDefinition(
 		" #" + localTypeNameStr,
 	}
 	attrLines = append(attrLines, " #"+fmt.Sprintf(tagKey+`json:"%s"`, jsonTag))
+	// orm tag
+	if !in.IsDo {
+		// entity
+		attrLines = append(attrLines, " #"+fmt.Sprintf(`orm:"%s"`, field.Name))
+	}
 	attrLines = append(attrLines, " #"+fmt.Sprintf(`description:"%s"`+tagKey, descriptionTag))
 	attrLines = append(attrLines, " #"+fmt.Sprintf(`// %s`, formatComment(field.Comment)))
 
