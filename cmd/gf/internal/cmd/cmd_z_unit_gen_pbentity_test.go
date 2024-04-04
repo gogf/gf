@@ -8,18 +8,18 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/gogf/gf/v2/os/gcmd"
+	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/genpbentity"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/guid"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func Test_Gen_Pbentity_NameCase(t *testing.T) {
+func TestGenPbentityDefault(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err        error
@@ -38,31 +38,107 @@ func Test_Gen_Pbentity_NameCase(t *testing.T) {
 			}
 		}
 		defer dropTableWithDb(db, table)
-		var path = gfile.Temp(guid.S())
+
+		var (
+			path = gfile.Temp(guid.S())
+			in   = genpbentity.CGenPbEntityInput{
+				Path:              path,
+				Package:           "unittest",
+				Link:              link,
+				Tables:            "",
+				Prefix:            "",
+				RemovePrefix:      "",
+				RemoveFieldPrefix: "",
+				NameCase:          "",
+				JsonCase:          "",
+				Option:            "",
+			}
+		)
+		err = gutil.FillStructWithDefault(&in)
+		t.AssertNil(err)
+
 		err = gfile.Mkdir(path)
 		t.AssertNil(err)
 		defer gfile.Remove(path)
 
-		root, err := gcmd.NewFromObject(GF)
-		t.AssertNil(err)
-		err = root.AddObject(
-			Gen,
-		)
-		t.AssertNil(err)
-		os.Args = []string{"gf", "gen", "pbentity", "-l", link, "-p", path, "-package=unittest", "-nameCase=SnakeScreaming"}
+		_, err = genpbentity.CGenPbEntity{}.PbEntity(ctx, in)
+		t.AssertNil(nil)
 
-		err = root.RunWithError(ctx)
+		// files
+		files, err := gfile.ScanDir(path, "*.proto", false)
 		t.AssertNil(err)
+		t.Assert(files, []string{
+			path + filepath.FromSlash("/table_user.proto"),
+		})
 
-		files := []string{
-			filepath.FromSlash(path + "/table_user.proto"),
-		}
-
-		testPath := gtest.DataPath("genpbentity", "generated_user")
+		// contents
+		testPath := gtest.DataPath("genpbentity", "generated")
 		expectFiles := []string{
-			filepath.FromSlash(testPath + "/table_user.proto"),
+			testPath + filepath.FromSlash("/table_user.proto"),
 		}
-		// check files content
+		for i := range files {
+			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))
+		}
+	})
+}
+
+func TestGenPbentityNameCaseSnakeScreaming(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err        error
+			db         = testDB
+			table      = "table_user"
+			sqlContent = fmt.Sprintf(
+				gtest.DataContent(`genpbentity`, `user.tpl.sql`),
+				table,
+			)
+		)
+		dropTableWithDb(db, table)
+		array := gstr.SplitAndTrim(sqlContent, ";")
+		for _, v := range array {
+			if _, err = db.Exec(ctx, v); err != nil {
+				t.AssertNil(err)
+			}
+		}
+		defer dropTableWithDb(db, table)
+
+		var (
+			path = gfile.Temp(guid.S())
+			in   = genpbentity.CGenPbEntityInput{
+				Path:              path,
+				Package:           "unittest",
+				Link:              link,
+				Tables:            "",
+				Prefix:            "",
+				RemovePrefix:      "",
+				RemoveFieldPrefix: "",
+				NameCase:          "SnakeScreaming",
+				JsonCase:          "",
+				Option:            "",
+			}
+		)
+		err = gutil.FillStructWithDefault(&in)
+		t.AssertNil(err)
+
+		err = gfile.Mkdir(path)
+		t.AssertNil(err)
+		defer gfile.Remove(path)
+
+		_, err = genpbentity.CGenPbEntity{}.PbEntity(ctx, in)
+		t.AssertNil(nil)
+
+		// files
+		files, err := gfile.ScanDir(path, "*.proto", false)
+		t.AssertNil(err)
+		t.Assert(files, []string{
+			path + filepath.FromSlash("/table_user.proto"),
+		})
+
+		// contents
+		testPath := gtest.DataPath("genpbentity", "generated")
+		expectFiles := []string{
+			testPath + filepath.FromSlash("/table_user_snake_screaming.proto"),
+		}
 		for i := range files {
 			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))
 		}
