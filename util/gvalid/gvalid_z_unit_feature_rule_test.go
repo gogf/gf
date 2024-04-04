@@ -90,6 +90,26 @@ func Test_RequiredIf(t *testing.T) {
 	})
 }
 
+func Test_RequiredIfAnyEq(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		rule := "required-if-any-eq:id,1,age,18"
+		t.AssertNE(g.Validator().Data("").Assoc(g.Map{"id": 1}).Rules(rule).Run(ctx), nil)
+		t.Assert(g.Validator().Data("").Assoc(g.Map{"id": 0}).Rules(rule).Run(ctx), nil)
+		t.AssertNE(g.Validator().Data("").Assoc(g.Map{"age": 18}).Rules(rule).Run(ctx), nil)
+		t.Assert(g.Validator().Data("").Assoc(g.Map{"age": 20}).Rules(rule).Run(ctx), nil)
+	})
+}
+
+func Test_RequiredIfAllEq(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		rule := "required-if-all-eq:id,1,age,18"
+		t.Assert(g.Validator().Data("").Assoc(g.Map{"id": 1}).Rules(rule).Run(ctx), nil)
+		t.Assert(g.Validator().Data("").Assoc(g.Map{"age": 18}).Rules(rule).Run(ctx), nil)
+		t.Assert(g.Validator().Data("").Assoc(g.Map{"id": 0, "age": 20}).Rules(rule).Run(ctx), nil)
+		t.AssertNE(g.Validator().Data("").Assoc(g.Map{"id": 1, "age": 18}).Rules(rule).Run(ctx), nil)
+	})
+}
+
 func Test_RequiredUnless(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "required-unless:id,1,age,18"
