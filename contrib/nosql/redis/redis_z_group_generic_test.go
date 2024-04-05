@@ -271,7 +271,7 @@ func Test_GroupGeneric_Scan(t *testing.T) {
 
 		performScan := func(pattern string) ([]string, error) {
 			var count = 10
-			var cursor int64
+			var cursor uint64
 			var allKeys = []string{}
 			for {
 				keys, nextCursor, err := redis.GroupGeneric().Scan(ctx, cursor, pattern, count)

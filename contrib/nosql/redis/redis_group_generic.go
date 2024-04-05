@@ -12,7 +12,6 @@ import (
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gredis"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -179,40 +178,16 @@ func (r GroupGeneric) Keys(ctx context.Context, pattern string) ([]string, error
 // The `count` parameter advises Redis on the number of keys to return. While it's not a strict limit, it guides the operation's granularity.
 //
 // https://redis.io/commands/scan/
-func (r GroupGeneric) Scan(ctx context.Context, cursor int64, pattern string, count int) ([]string, int64, error) {
-	if cursor < 0 {
-		return nil, 0, gerror.New("cursor must be non-negative")
-	}
-
-	var countThreshold int = 1000
-	if count > countThreshold {
-		count = countThreshold
-	}
-
+func (r GroupGeneric) Scan(ctx context.Context, cursor uint64, pattern string, count int) ([]string, uint64, error) {
 	v, err := r.Operation.Do(ctx, "Scan", cursor, "Match", pattern, "Count", count)
 	if err != nil {
-		return nil, 0, err
+		return []string{}, 0, err
 	}
 
-	var validRange int = 2
-	data, ok := v.Slice(), true
-	if !ok || len(data) != validRange {
-		return nil, 0, gerror.New("unexpected response format from SCAN")
-	}
+	nextCursor := gconv.Uint64(v.Slice()[0])
+	keys := gconv.SliceStr(v.Slice()[1])
 
-	nextCursor := gconv.Int64(data[0])
-
-	keys := gconv.Interfaces(data[1])
-	keysStr := make([]string, len(keys))
-	for i, key := range keys {
-		keyStr, ok := key.(string)
-		if !ok {
-			return nil, 0, gerror.New("key is not a string")
-		}
-		keysStr[i] = keyStr
-	}
-
-	return keysStr, nextCursor, nil
+	return keys, nextCursor, nil
 }
 
 // FlushDB delete all the keys of the currently selected DB. This command never fails.
