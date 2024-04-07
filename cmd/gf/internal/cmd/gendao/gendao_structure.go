@@ -135,9 +135,14 @@ func generateStructFieldDefinition(
 		"    #" + gstr.CaseCamel(newFiledName),
 		" #" + localTypeNameStr,
 	}
-	attrLines = append(attrLines, " #"+fmt.Sprintf(tagKey+`json:"%s"`, jsonTag))
-	attrLines = append(attrLines, " #"+fmt.Sprintf(`description:"%s"`+tagKey, descriptionTag))
-	attrLines = append(attrLines, " #"+fmt.Sprintf(`// %s`, formatComment(field.Comment)))
+	attrLines = append(attrLines, fmt.Sprintf(` #%sjson:"%s"`, tagKey, jsonTag))
+	// orm tag
+	if !in.IsDo {
+		// entity
+		attrLines = append(attrLines, fmt.Sprintf(` #orm:"%s"`, field.Name))
+	}
+	attrLines = append(attrLines, fmt.Sprintf(` #description:"%s"%s`, descriptionTag, tagKey))
+	attrLines = append(attrLines, fmt.Sprintf(` #// %s`, formatComment(field.Comment)))
 
 	for k, v := range attrLines {
 		if in.NoJsonTag {
