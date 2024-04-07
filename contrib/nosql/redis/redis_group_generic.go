@@ -175,19 +175,26 @@ func (r GroupGeneric) Keys(ctx context.Context, pattern string) ([]string, error
 //
 // Users are responsible for controlling the iteration by managing the cursor.
 //
-// The `count` parameter advises Redis on the number of keys to return. While it's not a strict limit, it guides the operation's granularity.
+// The `count` optional parameter advises Redis on the number of keys to return. While it's not a strict limit, it guides the operation's granularity.
 //
 // https://redis.io/commands/scan/
-func (r GroupGeneric) Scan(ctx context.Context, cursor uint64, pattern string, count int) ([]string, uint64, error) {
-	v, err := r.Operation.Do(ctx, "Scan", cursor, "Match", pattern, "Count", count)
+func (r GroupGeneric) Scan(ctx context.Context, cursor uint64, option ...gredis.ScanOption) (uint64, []string, error) {
+	var usedOption interface{}
+	if len(option) > 0 {
+		usedOption = option[0]
+	}
+
+	v, err := r.Operation.Do(ctx, "Scan", mustMergeOptionToArgs(
+		[]interface{}{cursor}, usedOption,
+	)...)
 	if err != nil {
-		return []string{}, 0, err
+		return 0, nil, err
 	}
 
 	nextCursor := gconv.Uint64(v.Slice()[0])
 	keys := gconv.SliceStr(v.Slice()[1])
 
-	return keys, nextCursor, nil
+	return nextCursor, keys, nil
 }
 
 // FlushDB delete all the keys of the currently selected DB. This command never fails.

@@ -27,7 +27,7 @@ type IGroupGeneric interface {
 	RandomKey(ctx context.Context) (string, error)
 	DBSize(ctx context.Context) (int64, error)
 	Keys(ctx context.Context, pattern string) ([]string, error)
-	Scan(ctx context.Context, cursor uint64, pattern string, count int) ([]string, uint64, error)
+	Scan(ctx context.Context, cursor uint64, option ...ScanOption) (uint64, []string, error)
 	FlushDB(ctx context.Context, option ...FlushOp) error
 	FlushAll(ctx context.Context, option ...FlushOp) error
 	Expire(ctx context.Context, key string, seconds int64, option ...ExpireOption) (int64, error)
@@ -60,4 +60,10 @@ type ExpireOption struct {
 	XX bool // XX -- Set expiry only when the key has an existing expiry
 	GT bool // GT -- Set expiry only when the new expiry is greater than current one
 	LT bool // LT -- Set expiry only when the new expiry is less than current one
+}
+
+type ScanOption struct {
+	Match *string // Match -- Specifies a glob-style pattern for filtering keys.
+	Count *int    // Count -- Suggests the number of keys to return per scan.
+	Type  *string // Type -- Filters keys by their data type. Valid types are "string", "list", "set", "zset", "hash", and "stream".
 }

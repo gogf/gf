@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/v2/database/gredis"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/guid"
 )
 
@@ -269,12 +270,18 @@ func Test_GroupGeneric_Scan(t *testing.T) {
 		})
 		t.AssertNil(err)
 
-		performScan := func(pattern string) ([]string, error) {
-			var count = 10
-			var cursor uint64
+		performScan := func(cursor uint64, option *gredis.ScanOption) ([]string, error) {
 			var allKeys = []string{}
 			for {
-				keys, nextCursor, err := redis.GroupGeneric().Scan(ctx, cursor, pattern, count)
+				var nextCursor uint64
+				var keys []string
+				var err error
+
+				if option != nil {
+					nextCursor, keys, err = redis.Scan(ctx, cursor, *option)
+				} else {
+					nextCursor, keys, err = redis.Scan(ctx, cursor)
+				}
 				if err != nil {
 					return nil, err
 				}
@@ -289,32 +296,48 @@ func Test_GroupGeneric_Scan(t *testing.T) {
 		}
 
 		// Test scanning for keys with `*name*` pattern
-		keysWithName, err := performScan("*name*")
+		optWithName := gredis.ScanOption{Match: gconv.PtrString("*name*"), Count: gconv.PtrInt(10)}
+		keysWithName, err := performScan(0, &optWithName)
 		t.AssertNil(err)
 		t.AssertGE(len(keysWithName), 3)
 		t.AssertIN(keysWithName, []string{"lastname", "firstname", "nickname"})
 
 		// Test scanning with a pattern that matches exactly one key
-		keysWithAge, err := performScan("a??")
+		optWithAge := gredis.ScanOption{Match: gconv.PtrString("a??"), Count: gconv.PtrInt(10)}
+		keysWithAge, err := performScan(0, &optWithAge)
 		t.AssertNil(err)
 		t.AssertEQ(len(keysWithAge), 1)
 		t.AssertEQ(keysWithAge, []string{"age"})
 
 		// Test scanning for all keys
-		all, err := performScan("*")
+		optWithAll := gredis.ScanOption{Match: gconv.PtrString("*"), Count: gconv.PtrInt(10)}
+		all, err := performScan(0, &optWithAll)
 		t.AssertNil(err)
 		t.AssertGE(len(all), 4)
 		t.AssertIN(all, []string{"lastname", "firstname", "age", "nickname"})
 
 		// Test empty pattern
-		emptyPatternKeys, err := performScan("")
+		optWithEmptyPattern := gredis.ScanOption{Match: gconv.PtrString(""), Count: gconv.PtrInt(10)}
+		emptyPatternKeys, err := performScan(0, &optWithEmptyPattern)
 		t.AssertNil(err)
 		t.AssertEQ(len(emptyPatternKeys), 0)
 
 		// Test pattern with no matches
-		noMatchKeys, err := performScan("xyz*")
+		optWithNoMatch := gredis.ScanOption{Match: gconv.PtrString("xyz*"), Count: gconv.PtrInt(10)}
+		noMatchKeys, err := performScan(0, &optWithNoMatch)
 		t.AssertNil(err)
 		t.AssertEQ(len(noMatchKeys), 0)
+
+		// Test scanning for keys with invalid count value
+		optWithInvalidCount := gredis.ScanOption{Count: gconv.PtrInt(-1)}
+		_, err = performScan(0, &optWithInvalidCount)
+		t.AssertNQ(err, nil)
+
+		// Test scanning for all keys without options
+		allWithoutOpt, err := performScan(0, nil)
+		t.AssertNil(err)
+		t.AssertGE(len(allWithoutOpt), 4)
+		t.AssertIN(all, []string{"lastname", "firstname", "age", "nickname"})
 	})
 }
 
