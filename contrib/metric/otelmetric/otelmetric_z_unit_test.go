@@ -120,7 +120,7 @@ func Test_Basic(t *testing.T) {
 		reader := metric.NewManualReader()
 
 		// OpenTelemetry provider.
-		provider := otelmetric.MustProvider(metric.WithReader(reader))
+		provider := otelmetric.MustProvider(otelmetric.WithReader(reader))
 		defer provider.Shutdown(ctx)
 
 		// Counter.
@@ -155,7 +155,7 @@ func Test_Basic(t *testing.T) {
 
 		metricsJsonContent := gjson.MustEncodeString(rm)
 
-		t.Assert(len(rm.ScopeMetrics), 5)
+		t.Assert(len(rm.ScopeMetrics), 4)
 		t.Assert(gstr.Count(metricsJsonContent, `goframe.metric.demo.counter`), 1)
 		t.Assert(gstr.Count(metricsJsonContent, `goframe.metric.demo.updown_counter`), 1)
 		t.Assert(gstr.Count(metricsJsonContent, `goframe.metric.demo.histogram`), 1)
@@ -269,7 +269,7 @@ func Test_GlobalAttributes(t *testing.T) {
 		reader := metric.NewManualReader()
 
 		// OpenTelemetry provider.
-		provider := otelmetric.MustProvider(metric.WithReader(reader))
+		provider := otelmetric.MustProvider(otelmetric.WithReader(reader))
 		defer provider.Shutdown(ctx)
 
 		// Add value for counter.
@@ -298,7 +298,7 @@ func Test_GlobalAttributes(t *testing.T) {
 		t.AssertNil(err)
 
 		metricsJsonContent := gjson.MustEncodeString(rm)
-		t.Assert(len(rm.ScopeMetrics), 4)
+		t.Assert(len(rm.ScopeMetrics), 3)
 		t.Assert(gstr.Count(metricsJsonContent, `goframe.metric.demo.counter`), 1)
 		t.Assert(gstr.Count(metricsJsonContent, `goframe.metric.demo.histogram`), 1)
 		t.Assert(gstr.Count(metricsJsonContent, `goframe.metric.demo.observable_counter`), 1)

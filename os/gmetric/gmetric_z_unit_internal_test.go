@@ -81,10 +81,7 @@ func Test_GlobalAttributes(t *testing.T) {
 		t.Assert(GetGlobalAttributes(GetGlobalAttributesOption{
 			Instrument:        "ins_a",
 			InstrumentVersion: "",
-		}), Attributes{
-			NewAttribute("a", 1),
-			NewAttribute("d", 4),
-		})
+		}), Attributes{})
 		t.Assert(GetGlobalAttributes(GetGlobalAttributesOption{
 			Instrument:        "ins_a",
 			InstrumentVersion: "1.1",

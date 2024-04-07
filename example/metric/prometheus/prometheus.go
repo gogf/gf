@@ -42,7 +42,6 @@ func main() {
 
 	// Start metric http server.
 	s := g.Server()
-	s.SetPort(8000)
 	// Fake metric values.
 	// http://127.0.0.1:8000/
 	s.BindHandler("/", func(r *ghttp.Request) {
@@ -53,5 +52,6 @@ func main() {
 	// Export metric values.
 	// You can view http://127.0.0.1:8000/metrics to see all metric values.
 	s.BindHandler("/metrics", ghttp.WrapH(promhttp.Handler()))
+	s.SetPort(8000)
 	s.Run()
 }

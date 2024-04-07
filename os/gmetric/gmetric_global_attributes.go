@@ -14,9 +14,17 @@ import (
 
 // SetGlobalAttributesOption binds the global attributes to certain instrument.
 type SetGlobalAttributesOption struct {
-	Instrument        string // Instrument specifies the instrument name.
-	InstrumentVersion string // Instrument specifies the instrument version.
-	InstrumentPattern string // InstrumentPattern specifies instrument by regular expression on Instrument name.
+	// Instrument specifies the instrument name.
+	Instrument string
+
+	// Instrument specifies the instrument version.
+	InstrumentVersion string
+
+	// InstrumentPattern specifies instrument by regular expression on Instrument name.
+	// Example:
+	// 1. given `.+` will match all instruments.
+	// 2. given `github.com/gogf/gf.+` will match all goframe instruments.
+	InstrumentPattern string
 }
 
 // GetGlobalAttributesOption binds the global attributes to certain instrument.
@@ -39,17 +47,13 @@ var (
 // SetGlobalAttributes appends global attributes according `SetGlobalAttributesOption`.
 // It appends global attributes to all metrics if given `SetGlobalAttributesOption` is empty.
 // It appends global attributes to certain instrument by given `SetGlobalAttributesOption`.
-func SetGlobalAttributes(attrs Attributes, option ...SetGlobalAttributesOption) {
+func SetGlobalAttributes(attrs Attributes, option SetGlobalAttributesOption) {
 	globalAttributesMu.Lock()
 	defer globalAttributesMu.Unlock()
-	var usedOption SetGlobalAttributesOption
-	if len(option) > 0 {
-		usedOption = option[0]
-	}
 	globalAttributes = append(
 		globalAttributes, globalAttributeItem{
 			Attributes:                attrs,
-			SetGlobalAttributesOption: usedOption,
+			SetGlobalAttributesOption: option,
 		},
 	)
 }
@@ -62,17 +66,21 @@ func GetGlobalAttributes(option GetGlobalAttributesOption) Attributes {
 	defer globalAttributesMu.Unlock()
 	var attributes = make(Attributes, 0)
 	for _, attrItem := range globalAttributes {
-		if option.InstrumentVersion != "" && attrItem.InstrumentVersion != option.InstrumentVersion {
-			continue
-		}
-		if attrItem.InstrumentPattern == "" {
-			if attrItem.Instrument != option.Instrument {
-				continue
-			}
-		} else {
+		// instrument name.
+		if attrItem.InstrumentPattern != "" {
 			if !gregex.IsMatchString(attrItem.InstrumentPattern, option.Instrument) {
 				continue
 			}
+		} else {
+			if (attrItem.Instrument != "" || option.Instrument != "") &&
+				attrItem.Instrument != option.Instrument {
+				continue
+			}
+		}
+		// instrument version.
+		if (attrItem.InstrumentVersion != "" || option.InstrumentVersion != "") &&
+			attrItem.InstrumentVersion != option.InstrumentVersion {
+			continue
 		}
 		attributes = append(attributes, attrItem.Attributes...)
 	}

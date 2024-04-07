@@ -7,10 +7,9 @@
 package main
 
 import (
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"go.opentelemetry.io/otel/exporters/prometheus"
-	"go.opentelemetry.io/otel/sdk/metric"
 	"time"
+
+	"go.opentelemetry.io/otel/exporters/prometheus"
 
 	"github.com/gogf/gf/contrib/metric/otelmetric/v2"
 	"github.com/gogf/gf/v2/frame/g"
@@ -31,7 +30,10 @@ func main() {
 	}
 
 	// OpenTelemetry provider.
-	provider := otelmetric.MustProvider(metric.WithReader(exporter))
+	provider := otelmetric.MustProvider(
+		otelmetric.WithReader(exporter),
+		otelmetric.WithBuiltInMetrics(),
+	)
 	provider.SetAsGlobal()
 	defer provider.Shutdown(ctx)
 
@@ -46,7 +48,7 @@ func main() {
 		time.Sleep(time.Second * 5)
 		r.Response.Write("ok")
 	})
-	s.BindHandler("/metrics", ghttp.WrapH(promhttp.Handler()))
+	s.BindHandler("/metrics", otelmetric.PrometheusHandler)
 	s.SetPort(8000)
 	s.Run()
 }

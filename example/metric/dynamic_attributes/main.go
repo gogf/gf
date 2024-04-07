@@ -9,13 +9,10 @@ package main
 import (
 	"context"
 
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/otel/exporters/prometheus"
-	"go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/gogf/gf/contrib/metric/otelmetric/v2"
 	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gmetric"
 )
@@ -31,7 +28,7 @@ var (
 			Help: "This is a simple demo for Counter usage",
 			Unit: "bytes",
 			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("const_label_1", 1),
+				gmetric.NewAttribute("const_attr_1", 1),
 			},
 		},
 	)
@@ -41,7 +38,7 @@ var (
 			Help: "This is a simple demo for ObservableCounter usage",
 			Unit: "%",
 			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("const_label_4", 4),
+				gmetric.NewAttribute("const_attr_4", 4),
 			},
 		},
 	)
@@ -54,7 +51,7 @@ func main() {
 	meter.MustRegisterCallback(func(ctx context.Context, obs gmetric.Observer) error {
 		obs.Observe(observableCounter, 10, gmetric.Option{
 			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("dynamic_label_1", 1),
+				gmetric.NewAttribute("dynamic_attr_1", 1),
 			},
 		})
 		return nil
@@ -70,7 +67,10 @@ func main() {
 	}
 
 	// OpenTelemetry provider.
-	provider := otelmetric.MustProvider(metric.WithReader(exporter))
+	provider := otelmetric.MustProvider(
+		otelmetric.WithReader(exporter),
+		otelmetric.WithBuiltInMetrics(),
+	)
 	provider.SetAsGlobal()
 	defer provider.Shutdown(ctx)
 
@@ -78,13 +78,10 @@ func main() {
 	counter.Inc(ctx)
 	counter.Add(ctx, 10, gmetric.Option{
 		Attributes: gmetric.Attributes{
-			gmetric.NewAttribute("dynamic_label_2", 2),
+			gmetric.NewAttribute("dynamic_attr_2", 2),
 		},
 	})
 
 	// HTTP Server for metrics exporting.
-	s := g.Server()
-	s.BindHandler("/metrics", ghttp.WrapH(promhttp.Handler()))
-	s.SetPort(8000)
-	s.Run()
+	otelmetric.StartPrometheusMetricsServer(8000, "/metrics")
 }

@@ -8,13 +8,11 @@
 package otelmetric
 
 import (
-	"go.opentelemetry.io/otel/sdk/metric"
-
 	"github.com/gogf/gf/v2/os/gmetric"
 )
 
 // NewProvider creates and returns a metrics provider.
-func NewProvider(option ...metric.Option) (gmetric.Provider, error) {
+func NewProvider(option ...Option) (gmetric.Provider, error) {
 	provider, err := newProvider(option...)
 	if err != nil {
 		return nil, err
@@ -24,7 +22,7 @@ func NewProvider(option ...metric.Option) (gmetric.Provider, error) {
 
 // MustProvider creates and returns a metrics provider.
 // It panics if any error occurs.
-func MustProvider(option ...metric.Option) gmetric.Provider {
+func MustProvider(option ...Option) gmetric.Provider {
 	provider, err := NewProvider(option...)
 	if err != nil {
 		panic(err)

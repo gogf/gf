@@ -9,13 +9,10 @@ package main
 import (
 	"context"
 
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/otel/exporters/prometheus"
-	"go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/gogf/gf/contrib/metric/otelmetric/v2"
 	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gmetric"
 )
@@ -31,7 +28,7 @@ var (
 			Help: "This is a simple demo for Counter usage",
 			Unit: "bytes",
 			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("const_label_1", 1),
+				gmetric.NewAttribute("const_attr_1", 1),
 			},
 		},
 	)
@@ -41,7 +38,7 @@ var (
 			Help: "This is a simple demo for UpDownCounter usage",
 			Unit: "%",
 			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("const_label_2", 2),
+				gmetric.NewAttribute("const_attr_2", 2),
 			},
 		},
 	)
@@ -51,7 +48,7 @@ var (
 			Help: "This is a simple demo for histogram usage",
 			Unit: "ms",
 			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("const_label_3", 3),
+				gmetric.NewAttribute("const_attr_3", 3),
 			},
 			Buckets: []float64{0, 10, 20, 50, 100, 500, 1000, 2000, 5000, 10000},
 		},
@@ -62,7 +59,7 @@ var (
 			Help: "This is a simple demo for ObservableCounter usage",
 			Unit: "%",
 			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("const_label_4", 4),
+				gmetric.NewAttribute("const_attr_4", 4),
 			},
 		},
 	)
@@ -72,7 +69,7 @@ var (
 			Help: "This is a simple demo for ObservableUpDownCounter usage",
 			Unit: "%",
 			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("const_label_5", 5),
+				gmetric.NewAttribute("const_attr_5", 5),
 			},
 		},
 	)
@@ -82,7 +79,7 @@ var (
 			Help: "This is a simple demo for ObservableGauge usage",
 			Unit: "%",
 			Attributes: gmetric.Attributes{
-				gmetric.NewAttribute("const_label_6", 6),
+				gmetric.NewAttribute("const_attr_6", 6),
 			},
 		},
 	)
@@ -109,7 +106,10 @@ func main() {
 	}
 
 	// OpenTelemetry provider.
-	provider := otelmetric.MustProvider(metric.WithReader(exporter))
+	provider := otelmetric.MustProvider(
+		otelmetric.WithReader(exporter),
+		otelmetric.WithBuiltInMetrics(),
+	)
 	provider.SetAsGlobal()
 	defer provider.Shutdown(ctx)
 
@@ -132,8 +132,5 @@ func main() {
 	histogram.Record(20000)
 
 	// HTTP Server for metrics exporting.
-	s := g.Server()
-	s.BindHandler("/metrics", ghttp.WrapH(promhttp.Handler()))
-	s.SetPort(8000)
-	s.Run()
+	otelmetric.StartPrometheusMetricsServer(8000, "/metrics")
 }
