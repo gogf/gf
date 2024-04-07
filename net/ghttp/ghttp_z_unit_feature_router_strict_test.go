@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
@@ -417,5 +418,70 @@ func Test_Router_Handler_Strict_ParameterCaseSensitive(t *testing.T) {
 				`{"code":0,"message":"","data":{"Path":"222"}}`,
 			)
 		}
+	})
+}
+
+type testJsonRawMessageIssue3449Req struct {
+	g.Meta `path:"/test" method:"POST" sm:"hello" tags:"示例"`
+
+	Name    string          `json:"name" v:"required" dc:"名称"`
+	JSONRaw json.RawMessage `json:"jsonRaw" dc:"原始JSON"`
+}
+type testJsonRawMessageIssue3449Res struct {
+	Name    string          `json:"name" v:"required" dc:"名称"`
+	JSONRaw json.RawMessage `json:"jsonRaw" dc:"原始JSON"`
+}
+
+type testJsonRawMessageIssue3449 struct {
+}
+
+func (t *testJsonRawMessageIssue3449) Test(ctx context.Context, req *testJsonRawMessageIssue3449Req) (res *testJsonRawMessageIssue3449Res, err error) {
+	return &testJsonRawMessageIssue3449Res{
+		Name:    req.Name,
+		JSONRaw: req.JSONRaw,
+	}, nil
+}
+
+// https://github.com/gogf/gf/issues/3449
+func Test_JsonRawMessage_Issue3449(t *testing.T) {
+
+	s := g.Server(guid.S())
+	s.Use(ghttp.MiddlewareHandlerResponse)
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Bind(new(testJsonRawMessageIssue3449))
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		v1 := map[string]any{
+			"jkey1": "11",
+			"jkey2": "12",
+		}
+
+		v2 := map[string]any{
+			"jkey1": "21",
+			"jkey2": "22",
+		}
+		data := map[string]any{
+			"Name": "test",
+			"jsonRaw": []any{
+				v1, v2,
+			},
+		}
+
+		expect1 := `{"code":0,"message":"","data":{"name":"test","jsonRaw":[{"jkey1":"11","jkey2":"12"},{"jkey1":"21","jkey2":"22"}]}}`
+		t.Assert(client.PostContent(ctx, "/test", data), expect1)
+
+		expect2 := `{"code":0,"message":"","data":{"name":"test","jsonRaw":{"jkey1":"11","jkey2":"12"}}}`
+		t.Assert(client.PostContent(ctx, "/test", map[string]any{
+			"Name":    "test",
+			"jsonRaw": v1,
+		}), expect2)
+
 	})
 }
