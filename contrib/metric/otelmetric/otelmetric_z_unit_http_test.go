@@ -13,7 +13,6 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/otel/exporters/prometheus"
-	"go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/gogf/gf/contrib/metric/otelmetric/v2"
 	"github.com/gogf/gf/v2"
@@ -54,7 +53,7 @@ func Test_HTTP_Server(t *testing.T) {
 		}
 
 		// OpenTelemetry provider.
-		provider := otelmetric.MustProvider(metric.WithReader(exporter))
+		provider := otelmetric.MustProvider(otelmetric.WithReader(exporter))
 		defer provider.Shutdown(ctx)
 
 		gmetric.SetGlobalProvider(provider)
