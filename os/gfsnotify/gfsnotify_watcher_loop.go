@@ -8,6 +8,7 @@ package gfsnotify
 
 import (
 	"context"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 
@@ -25,7 +26,10 @@ func (w *Watcher) watchLoop() {
 				return
 
 			// Event listening.
-			case ev := <-w.watcher.Events:
+			case ev, ok := <-w.watcher.Events:
+				if !ok {
+					return
+				}
 				// Filter the repeated event in custom duration.
 				_, err := w.cache.SetIfNotExist(
 					context.Background(),
