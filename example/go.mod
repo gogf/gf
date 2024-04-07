@@ -3,29 +3,28 @@ module github.com/gogf/gf/example
 go 1.18
 
 require (
-	github.com/gogf/gf/contrib/config/apollo/v2 v2.6.1
-	github.com/gogf/gf/contrib/config/consul/v2 v2.6.1
-	github.com/gogf/gf/contrib/config/kubecm/v2 v2.6.1
-	github.com/gogf/gf/contrib/config/nacos/v2 v2.6.1
-	github.com/gogf/gf/contrib/config/polaris/v2 v2.6.1
-	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.6.1
-	github.com/gogf/gf/contrib/metric/otelmetric/v2 v2.6.1
-	github.com/gogf/gf/contrib/nosql/redis/v2 v2.6.1
-	github.com/gogf/gf/contrib/registry/etcd/v2 v2.6.1
-	github.com/gogf/gf/contrib/registry/file/v2 v2.6.4
-	github.com/gogf/gf/contrib/registry/nacos/v2 v2.6.1
-	github.com/gogf/gf/contrib/registry/polaris/v2 v2.6.1
-	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.6.1
-	github.com/gogf/gf/contrib/trace/otlpgrpc/v2 v2.6.1
-	github.com/gogf/gf/contrib/trace/otlphttp/v2 v2.6.1
-	github.com/gogf/gf/v2 v2.6.4
+	github.com/gogf/gf/contrib/config/apollo/v2 v2.7.0
+	github.com/gogf/gf/contrib/config/consul/v2 v2.7.0
+	github.com/gogf/gf/contrib/config/kubecm/v2 v2.7.0
+	github.com/gogf/gf/contrib/config/nacos/v2 v2.7.0
+	github.com/gogf/gf/contrib/config/polaris/v2 v2.7.0
+	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.7.0
+	github.com/gogf/gf/contrib/metric/otelmetric/v2 v2.7.0
+	github.com/gogf/gf/contrib/nosql/redis/v2 v2.7.0
+	github.com/gogf/gf/contrib/registry/etcd/v2 v2.7.0
+	github.com/gogf/gf/contrib/registry/file/v2 v2.7.0
+	github.com/gogf/gf/contrib/registry/nacos/v2 v2.7.0
+	github.com/gogf/gf/contrib/registry/polaris/v2 v2.7.0
+	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.7.0
+	github.com/gogf/gf/contrib/trace/otlpgrpc/v2 v2.7.0
+	github.com/gogf/gf/contrib/trace/otlphttp/v2 v2.7.0
+	github.com/gogf/gf/v2 v2.7.0
 	github.com/hashicorp/consul/api v1.24.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/nacos-group/nacos-sdk-go/v2 v2.2.5
 	github.com/polarismesh/polaris-go v1.5.5
 	github.com/prometheus/client_golang v1.19.0
 	go.opentelemetry.io/otel/exporters/prometheus v0.46.0
-	go.opentelemetry.io/otel/sdk/metric v1.24.0
 	golang.org/x/time v0.5.0
 	google.golang.org/grpc v1.60.1
 	google.golang.org/protobuf v1.32.0
@@ -122,6 +121,7 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.22.0 // indirect
 	go.opentelemetry.io/otel/metric v1.24.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.24.0 // indirect
+	go.opentelemetry.io/otel/sdk/metric v1.24.0 // indirect
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.1.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
@@ -165,6 +165,7 @@ replace (
 	github.com/gogf/gf/contrib/nosql/redis/v2 => ../contrib/nosql/redis/
 	github.com/gogf/gf/contrib/registry/etcd/v2 => ../contrib/registry/etcd/
 	github.com/gogf/gf/contrib/registry/file/v2 => ../contrib/registry/file/
+	github.com/gogf/gf/contrib/registry/nacos/v2 => ../contrib/registry/nacos/
 	github.com/gogf/gf/contrib/registry/polaris/v2 => ../contrib/registry/polaris/
 	github.com/gogf/gf/contrib/rpc/grpcx/v2 => ../contrib/rpc/grpcx/
 	github.com/gogf/gf/contrib/trace/otlpgrpc/v2 => ../contrib/trace/otlpgrpc
