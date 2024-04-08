@@ -57,6 +57,29 @@ func ExampleRule_RequiredIf() {
 	// The WifeName field is required
 }
 
+func ExampleRule_RequiredIfAll() {
+	type BizReq struct {
+		ID       uint   `v:"required" dc:"Your ID"`
+		Name     string `v:"required" dc:"Your name"`
+		Age      int    `v:"required" dc:"Your age"`
+		MoreInfo string `v:"required-if-all:id,1,age:18" dc:"Your more info"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			ID:   1,
+			Name: "test",
+			Age:  18,
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// The MoreInfo field is required
+}
+
 func ExampleRule_RequiredUnless() {
 	type BizReq struct {
 		ID          uint   `v:"required" dc:"Your ID"`
