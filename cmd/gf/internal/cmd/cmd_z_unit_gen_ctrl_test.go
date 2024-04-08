@@ -84,3 +84,51 @@ func Test_Gen_Ctrl_Default(t *testing.T) {
 		}
 	})
 }
+
+// https://github.com/gogf/gf/issues/3460
+func Test_Gen_Ctrl_Issue3460(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			ctrlPath  = gfile.Temp(guid.S())
+			apiFolder = gtest.DataPath("issue", "3460", "api")
+			in        = genctrl.CGenCtrlInput{
+				SrcFolder:     apiFolder,
+				DstFolder:     ctrlPath,
+				WatchFile:     "",
+				SdkPath:       "",
+				SdkStdVersion: false,
+				SdkNoV1:       false,
+				Clear:         false,
+				Merge:         true,
+			}
+		)
+
+		err := gfile.Mkdir(ctrlPath)
+		t.AssertNil(err)
+		defer gfile.Remove(ctrlPath)
+
+		_, err = genctrl.CGenCtrl{}.Ctrl(ctx, in)
+		if err != nil {
+			panic(err)
+		}
+
+		files, err := gfile.ScanDir(ctrlPath, "*.go", true)
+		t.AssertNil(err)
+		t.Assert(files, []string{
+			ctrlPath + filepath.FromSlash("/hello/hello.go"),
+			ctrlPath + filepath.FromSlash("/hello/hello_new.go"),
+			ctrlPath + filepath.FromSlash("/hello/hello_v1_req.go"),
+		})
+
+		testPath := gtest.DataPath("issue", "3460", "controller")
+		expectFiles := []string{
+			testPath + filepath.FromSlash("/hello/hello.go"),
+			testPath + filepath.FromSlash("/hello/hello_new.go"),
+			testPath + filepath.FromSlash("/hello/hello_v1_req.go"),
+		}
+		for i := range expectFiles {
+			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))
+		}
+
+	})
+}

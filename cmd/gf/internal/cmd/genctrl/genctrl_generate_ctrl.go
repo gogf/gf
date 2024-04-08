@@ -140,8 +140,14 @@ func (c *controllerGenerator) doGenerateCtrlItem(dstModuleFolderPath string, ite
 			"{Version}":    item.Version,
 			"{MethodName}": item.MethodName,
 		})
-
-		if gstr.Contains(gfile.GetContents(methodFilePath), fmt.Sprintf(`func (c *%v) %v`, ctrlName, item.MethodName)) {
+		fileContents := gfile.GetContents(methodFilePath)
+		// 这里的括号(不要删除，不然有相同前缀的方法名时会缺少对应的ctrl方法
+		// 比如 func (c *ControllerV1) DictTypeAddPage
+		// 		func (c *ControllerV1) DictTypeAdd
+		// 不加括号(时Contains判断会为true，导致少生成一个ctrl方法
+		// https://github.com/gogf/gf/issues/3460
+		substr := fmt.Sprintf(`func (c *%v) %v(`, ctrlName, item.MethodName)
+		if gstr.Contains(fileContents, substr) {
 			return
 		}
 		if err = gfile.PutContentsAppend(methodFilePath, gstr.TrimLeft(content)); err != nil {
