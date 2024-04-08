@@ -26,7 +26,7 @@ type localProvider struct {
 
 // newProvider creates and returns an object that implements gmetric.Provider.
 // DO NOT set this as global provider internally.
-func newProvider(options ...metric.Option) (gmetric.Provider, error) {
+func newProvider(options ...Option) (gmetric.Provider, error) {
 	// TODO global logger set for otel.
 	// otel.SetLogger()
 
@@ -36,11 +36,15 @@ func newProvider(options ...metric.Option) (gmetric.Provider, error) {
 		builtinViews = createViewsForBuiltInMetrics()
 		callbacks    = gmetric.GetRegisteredCallbacks()
 	)
-	options = append(options, metric.WithView(builtinViews...))
-	provider := &localProvider{
-		// MeterProvider is the core object that can create otel metrics.
-		MeterProvider: metric.NewMeterProvider(options...),
-	}
+	options = append(options, WithView(builtinViews...))
+
+	var (
+		config   = newProviderConfigByOptions(options)
+		provider = &localProvider{
+			// MeterProvider is the core object that can create otel metrics.
+			MeterProvider: metric.NewMeterProvider(config.MetricOptions()...),
+		}
+	)
 
 	if err = provider.initializeMetrics(metrics); err != nil {
 		return nil, err
@@ -51,10 +55,12 @@ func newProvider(options ...metric.Option) (gmetric.Provider, error) {
 	}
 
 	// builtin metrics: golang.
-	err = runtime.Start(
-		runtime.WithMinimumReadMemStatsInterval(time.Second),
-		runtime.WithMeterProvider(provider),
-	)
+	if config.IsBuiltInMetricsEnabled() {
+		err = runtime.Start(
+			runtime.WithMinimumReadMemStatsInterval(time.Second),
+			runtime.WithMeterProvider(provider),
+		)
+	}
 	if err != nil {
 		return nil, gerror.WrapCode(
 			gcode.CodeInternalError, err, `start built-in runtime metrics failed`,
