@@ -14,11 +14,11 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-// RuleRequiredIfAllEq implements `required-if-all-eq` rule:
+// RuleRequiredIfAllEq implements `required-if-all` rule:
 // Required if all given field and its value are equal.
 //
-// Format:  required-if-all-eq:field,value,...
-// Example: required-if-all-eq: id,1,age,18
+// Format:  required-if-all:field,value,...
+// Example: required-if-all: id,1,age,18
 type RuleRequiredIfAllEq struct{}
 
 func init() {
@@ -26,7 +26,7 @@ func init() {
 }
 
 func (r RuleRequiredIfAllEq) Name() string {
-	return "required-if-all-eq"
+	return "required-if-all"
 }
 
 func (r RuleRequiredIfAllEq) Message() string {
