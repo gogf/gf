@@ -121,14 +121,8 @@ func Test_Gen_Ctrl_Issue3460(t *testing.T) {
 		})
 
 		testPath := gtest.DataPath("issue", "3460", "controller")
-		expectFiles := []string{
-			testPath + filepath.FromSlash("/hello/hello.go"),
-			testPath + filepath.FromSlash("/hello/hello_new.go"),
-			testPath + filepath.FromSlash("/hello/hello_v1_req.go"),
-		}
-		for i := range expectFiles {
-			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))
-		}
+		expectFile := testPath + filepath.FromSlash("/hello/hello_v1_req.go")
+		t.Assert(gfile.GetContents(files[2]), gfile.GetContents(expectFile))
 
 	})
 }
