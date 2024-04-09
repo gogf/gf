@@ -2,7 +2,7 @@
 
 ## Usage
 
-### OpenTelemetry Protocol (stable)
+### OpenTelemetry Protocol (stable) [more](https://www.jaegertracing.io/docs/apis/#opentelemetry-protocol-stable)
 
 Since v1.35, the Jaeger backend can receive trace data from the OpenTelemetry SDKs in their native [OpenTelemetry Protocol (OTLP)][otlp]. It is no longer necessary to configure the OpenTelemetry SDKs with Jaeger exporters, nor deploy the OpenTelemetry Collector between the OpenTelemetry SDKs and the Jaeger backend.
 
@@ -44,10 +44,10 @@ docker run --rm --name jaeger \
   -p 14268:14268 \
   -p 14269:14269 \
   -p 9411:9411 \
-  jaegertracing/all-in-one:{{< currentVersion >}}
+  jaegertracing/all-in-one:1.56
 ```
 
-Or run the `jaeger-all-in-one(.exe)` executable from the [binary distribution archives][download]:
+Or run the `jaeger-all-in-one(.exe)` executable from the [binary distribution archives](https://www.jaegertracing.io/download/):
 
 ```bash
 jaeger-all-in-one --collector.zipkin.host-port=:9411
@@ -63,9 +63,7 @@ Port  | Protocol | Component | Function
 6832  | UDP      | agent     | accept `jaeger.thrift` over Thrift-binary protocol (used by Node.js SDK)
 5775  | UDP      | agent     | (deprecated) accept `zipkin.thrift` over compact Thrift protocol (used by legacy clients only)
 5778  | HTTP     | agent     | serve configs (sampling, etc.)
-|          |           |
 16686 | HTTP     | query     | serve frontend
-|          |           |
 4317  | HTTP     | collector | accept OpenTelemetry Protocol (OTLP) over gRPC
 4318  | HTTP     | collector | accept OpenTelemetry Protocol (OTLP) over HTTP
 14268 | HTTP     | collector | accept `jaeger.thrift` directly from clients
