@@ -10,6 +10,8 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
 )
@@ -18,7 +20,7 @@ import (
 // Required if all given field and its value are equal.
 //
 // Format:  required-if-all:field,value,...
-// Example: required-if-all: id,1,age,18
+// Example: required-if-all:id,1,age,18
 type RuleRequiredIfAllEq struct{}
 
 func init() {
@@ -40,33 +42,32 @@ func (r RuleRequiredIfAllEq) Run(in RunInput) error {
 		foundValue interface{}
 		dataMap    = in.Data.Map()
 	)
-	// It supports multiple field and value pairs.
-	if len(array)%2 == 0 {
-		eqMap := make(map[string]bool)
-		for i := 0; i < len(array); {
-			tk := array[i]
-			tv := array[i+1]
-			var eq bool
-			_, foundValue = gutil.MapPossibleItemByKey(dataMap, tk)
-			if in.Option.CaseInsensitive {
-				eq = strings.EqualFold(tv, gconv.String(foundValue))
-			} else {
-				eq = strings.Compare(tv, gconv.String(foundValue)) == 0
-			}
-			eqMap[tk] = eq
-			if !eq {
-				break
-			}
-			i += 2
-		}
-		for _, eq := range eqMap {
-			if !eq {
-				required = false
-				break
-			}
-		}
+	if len(array)%2 != 0 {
+		return gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`invalid "%s" rule pattern: %s`,
+			r.Name(),
+			in.RulePattern,
+		)
 	}
-
+	for i := 0; i < len(array); {
+		var (
+			tk = array[i]
+			tv = array[i+1]
+			eq bool
+		)
+		_, foundValue = gutil.MapPossibleItemByKey(dataMap, tk)
+		if in.Option.CaseInsensitive {
+			eq = strings.EqualFold(tv, gconv.String(foundValue))
+		} else {
+			eq = strings.Compare(tv, gconv.String(foundValue)) == 0
+		}
+		if !eq {
+			required = false
+			break
+		}
+		i += 2
+	}
 	if required && isRequiredEmpty(in.Value.Val()) {
 		return errors.New(in.Message)
 	}
