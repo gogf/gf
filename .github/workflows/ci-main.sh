@@ -48,7 +48,7 @@ for file in `find . -name go.mod`; do
 
     # package example needs golang >= v1.20
     if [ "example" = $(basename $dirpath) ]; then
-        if ! go version|grep -qE "go1.[2-9][0-9]"; then
+        if ! go version|grep -qE "go1.[2-9][1-9]"; then
           echo "ignore example as go version: $(go version)"
           continue 1
         fi
