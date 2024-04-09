@@ -27,7 +27,7 @@ func main() {
 		ctx,
 		provider.WithServiceName(serviceName),
 		// Support setting ExportEndpoint via environment variables: OTEL_EXPORTER_OTLP_ENDPOINT
-		provider.WithExportEndpoint("localhost:4317"),
+		provider.WithExportEndpoint(endpoint),
 		provider.WithHeaders(map[string]string{"Authentication": traceToken}),
 		provider.WithInsecure(),
 	)
