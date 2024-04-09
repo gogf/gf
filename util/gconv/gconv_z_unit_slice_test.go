@@ -315,11 +315,18 @@ func Test_Strings(t *testing.T) {
 		t.AssertEQ(gconv.Strings(array), []string{"1", "2", "3"})
 
 		t.AssertEQ(gconv.Strings([]uint8(`["1","2"]`)), []string{"1", "2"})
+		t.AssertEQ(gconv.Strings([]uint8(` ["1","2"] `)), []string{"1", "2"})
 		t.AssertEQ(gconv.Strings([][]byte{{byte(0)}, {byte(1)}}), []string{"\u0000", "\u0001"})
 	})
 	// https://github.com/gogf/gf/issues/1750
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertEQ(gconv.Strings("123"), []string{"123"})
+	})
+	// https://github.com/gogf/gf/issues/3465
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gconv.Strings("null"), []string{"null"})
+		t.AssertEQ(gconv.Strings([]byte("null")), []string{"110", "117", "108", "108"})
+		t.AssertEQ(gconv.Strings("{\"name\":\"wln\"}"), []string{"{\"name\":\"wln\"}"})
 	})
 }
 
