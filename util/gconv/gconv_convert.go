@@ -7,9 +7,12 @@
 package gconv
 
 import (
+	"context"
 	"reflect"
 	"time"
 
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/os/gtime"
 )
 
@@ -270,7 +273,12 @@ func doConvert(in doConvertInput) (convertedValue interface{}) {
 		return Maps(in.FromValue)
 
 	case "RawMessage", "json.RawMessage":
-		return Bytes(in.FromValue)
+		// issue 3449
+		bytes, err := json.Marshal(in.FromValue)
+		if err != nil {
+			intlog.Errorf(context.TODO(), `%+v`, err)
+		}
+		return bytes
 
 	default:
 		if in.ReferValue != nil {
