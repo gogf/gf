@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
@@ -141,13 +142,10 @@ func (c *controllerGenerator) doGenerateCtrlItem(dstModuleFolderPath string, ite
 			"{MethodName}": item.MethodName,
 		})
 		fileContents := gfile.GetContents(methodFilePath)
-		// 这里的括号(不要删除，不然有相同前缀的方法名时会缺少对应的ctrl方法
-		// 比如 func (c *ControllerV1) DictTypeAddPage
-		// 		func (c *ControllerV1) DictTypeAdd
-		// 不加括号(时Contains判断会为true，导致少生成一个ctrl方法
 		// https://github.com/gogf/gf/issues/3460
-		substr := fmt.Sprintf(`func (c *%v) %v(`, ctrlName, item.MethodName)
-		if gstr.Contains(fileContents, substr) {
+		// TODO: Use the regular rule to determine whether it is better？
+		substr := fmt.Sprintf(`func[^\S\n]*\(c[^\S\n]+\*%v\s*\)[^\S\n]*%v[^\S\n]*\(`, ctrlName, item.MethodName)
+		if gregex.IsMatchString(fileContents, substr) {
 			return
 		}
 		if err = gfile.PutContentsAppend(methodFilePath, gstr.TrimLeft(content)); err != nil {
