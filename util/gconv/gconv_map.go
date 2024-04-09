@@ -298,12 +298,12 @@ func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) in
 	switch reflectKind {
 	case reflect.Map:
 		var (
-			mapKeys = reflectValue.MapKeys()
+			mapIter = reflectValue.MapRange()
 			dataMap = make(map[string]interface{})
 		)
-		for _, k := range mapKeys {
+		for mapIter.Next() {
 			var (
-				mapKeyValue = reflectValue.MapIndex(k)
+				mapKeyValue = mapIter.Value()
 				mapValue    interface{}
 			)
 			switch {
@@ -319,7 +319,7 @@ func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) in
 			default:
 				mapValue = mapKeyValue.Interface()
 			}
-			dataMap[String(k.Interface())] = doMapConvertForMapOrStructValue(
+			dataMap[String(mapIter.Key().Interface())] = doMapConvertForMapOrStructValue(
 				doMapConvertForMapOrStructValueInput{
 					IsRoot:          false,
 					Value:           mapValue,
@@ -486,14 +486,14 @@ func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) in
 					dataMap[mapKey] = array
 				case reflect.Map:
 					var (
-						mapKeys   = rvAttrField.MapKeys()
+						mapIter   = rvAttrField.MapRange()
 						nestedMap = make(map[string]interface{})
 					)
-					for _, k := range mapKeys {
-						nestedMap[String(k.Interface())] = doMapConvertForMapOrStructValue(
+					for mapIter.Next() {
+						nestedMap[String(mapIter.Key().Interface())] = doMapConvertForMapOrStructValue(
 							doMapConvertForMapOrStructValueInput{
 								IsRoot:          false,
-								Value:           rvAttrField.MapIndex(k).Interface(),
+								Value:           mapIter.Value().Interface(),
 								RecursiveType:   in.RecursiveType,
 								RecursiveOption: in.RecursiveType == recursiveTypeTrue,
 								Option:          in.Option,
