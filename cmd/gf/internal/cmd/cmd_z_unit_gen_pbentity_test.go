@@ -19,7 +19,7 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func TestGenPbentityDefault(t *testing.T) {
+func Test_Gen_Pbentity_Default(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err        error
@@ -82,7 +82,7 @@ func TestGenPbentityDefault(t *testing.T) {
 	})
 }
 
-func TestGenPbentityNameCaseSnakeScreaming(t *testing.T) {
+func Test_Gen_Pbentity_NameCase_SnakeScreaming(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err        error
