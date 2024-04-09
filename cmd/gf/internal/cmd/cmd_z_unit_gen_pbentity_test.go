@@ -62,7 +62,7 @@ func Test_Gen_Pbentity_Default(t *testing.T) {
 		defer gfile.Remove(path)
 
 		_, err = genpbentity.CGenPbEntity{}.PbEntity(ctx, in)
-		t.AssertNil(nil)
+		t.AssertNil(err)
 
 		// files
 		files, err := gfile.ScanDir(path, "*.proto", false)
@@ -125,7 +125,7 @@ func Test_Gen_Pbentity_NameCase_SnakeScreaming(t *testing.T) {
 		defer gfile.Remove(path)
 
 		_, err = genpbentity.CGenPbEntity{}.PbEntity(ctx, in)
-		t.AssertNil(nil)
+		t.AssertNil(err)
 
 		// files
 		files, err := gfile.ScanDir(path, "*.proto", false)

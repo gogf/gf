@@ -42,7 +42,7 @@ func Test_Gen_Service_Default(t *testing.T) {
 		defer gfile.Remove(path)
 
 		_, err = genservice.CGenService{}.Service(ctx, in)
-		t.AssertNil(nil)
+		t.AssertNil(err)
 
 		// logic file
 		var (
