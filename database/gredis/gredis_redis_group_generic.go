@@ -62,6 +62,7 @@ type ExpireOption struct {
 	LT bool // LT -- Set expiry only when the new expiry is less than current one
 }
 
+// ScanOption provides options for function Scan.
 type ScanOption struct {
 	Match *string // Match -- Specifies a glob-style pattern for filtering keys.
 	Count *int    // Count -- Suggests the number of keys to return per scan.
