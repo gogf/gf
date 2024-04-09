@@ -60,11 +60,24 @@ func Strings(any interface{}) []string {
 	case []uint8:
 		if json.Valid(value) {
 			_ = json.UnmarshalUseNumber(value, &array)
-		} else {
+		}
+		// Prevent strings from being null
+		// See Issue 3465 for details
+		if array == nil {
 			array = make([]string, len(value))
 			for k, v := range value {
-				array[k] = String(v)
+				array[k] = string(v)
 			}
+		}
+	case string:
+		byteValue := []byte(value)
+		if json.Valid(byteValue) {
+			_ = json.UnmarshalUseNumber(byteValue, &array)
+		}
+		// Prevent strings from being null
+		// See Issue 3465 for details
+		if array == nil {
+			return []string{value}
 		}
 	case []uint16:
 		array = make([]string, len(value))
@@ -118,10 +131,7 @@ func Strings(any interface{}) []string {
 	if v, ok := any.(iInterfaces); ok {
 		return Strings(v.Interfaces())
 	}
-	// JSON format string value converting.
-	if checkJsonAndUnmarshalUseNumber(any, &array) {
-		return array
-	}
+
 	// Not a common type, it then uses reflection for conversion.
 	originValueAndKind := reflection.OriginValueAndKind(any)
 	switch originValueAndKind.OriginKind {
