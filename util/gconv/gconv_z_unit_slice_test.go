@@ -315,6 +315,7 @@ func Test_Strings(t *testing.T) {
 		t.AssertEQ(gconv.Strings(array), []string{"1", "2", "3"})
 
 		t.AssertEQ(gconv.Strings([]uint8(`["1","2"]`)), []string{"1", "2"})
+		t.AssertEQ(gconv.Strings([]uint8(` ["1","2"] `)), []string{"1", "2"})
 		t.AssertEQ(gconv.Strings([][]byte{{byte(0)}, {byte(1)}}), []string{"\u0000", "\u0001"})
 	})
 	// https://github.com/gogf/gf/issues/1750

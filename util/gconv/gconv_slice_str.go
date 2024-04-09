@@ -61,10 +61,7 @@ func Strings(any interface{}) []string {
 		}
 	case []uint8:
 		if json.Valid(value) {
-			// Determine whether it is JSON in array format
-			if value[0] == '[' && value[len(value)-1] == ']' {
-				_ = json.UnmarshalUseNumber(value, &array)
-			}
+			_ = json.UnmarshalUseNumber(value, &array)
 		}
 		// Prevent strings from being null
 		// See Issue 3465 for details
@@ -83,10 +80,7 @@ func Strings(any interface{}) []string {
 	case string:
 		byteValue := []byte(value)
 		if json.Valid(byteValue) {
-			// Determine whether it is JSON in array format
-			if byteValue[0] == '[' && byteValue[len(value)-1] == ']' {
-				_ = json.UnmarshalUseNumber(byteValue, &array)
-			}
+			_ = json.UnmarshalUseNumber(byteValue, &array)
 		}
 		// Prevent strings from being null
 		// See Issue 3465 for details
