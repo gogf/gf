@@ -325,6 +325,7 @@ func Test_Strings(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertEQ(gconv.Strings("null"), []string{"null"})
 		t.AssertEQ(gconv.Strings([]byte("null")), []string{"n", "u", "l", "l"})
+		t.AssertEQ(gconv.Strings("{\"name\":\"wln\"}"), []string{"{\"name\":\"wln\"}"})
 	})
 }
 
