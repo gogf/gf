@@ -1,10 +1,6 @@
----
-title: "OpenTelemetry"
-date: 2024-04-09
-weight: 5
-keywords: ["OpenTelemetry"]
-description: "GoFrame provides openTelemetry capabilities."
----
+# OpenTelemetry
+GoFrame provides openTelemetry capabilities.
+
 
 [OpenTelemetry](https://opentelemetry.io/) is an open source observability framework
 from [CNCF](https://www.cncf.io/) that consist of a series of tools, APIs and SDKs, and it enables IT teams to detect, generate,
