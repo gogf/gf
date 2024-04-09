@@ -30,7 +30,7 @@ func main() {
 	if err != nil {
 		g.Log().Fatal(ctx, err)
 	}
-	defer shutdown()
+	defer shutdown(ctx)
 
 	StartRequests()
 }
