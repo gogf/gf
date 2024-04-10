@@ -62,7 +62,7 @@ func ExampleRule_RequiredIfAll() {
 		ID       uint   `v:"required" dc:"Your ID"`
 		Name     string `v:"required" dc:"Your name"`
 		Age      int    `v:"required" dc:"Your age"`
-		MoreInfo string `v:"required-if-all:id,1,age:18" dc:"Your more info"`
+		MoreInfo string `v:"required-if-all:id,1,age,18" dc:"Your more info"`
 	}
 	var (
 		ctx = context.Background()
