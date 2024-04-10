@@ -315,25 +315,19 @@ func doStruct(
 			continue
 		}
 		removeParamKeyUnderline := utils.RemoveSymbols(paramKey)
-		for fieldName, attr := range setFields {
-			// Ignore case comparison with tag
-			if strings.EqualFold(attr.tag, removeParamKeyUnderline) {
-				attr.val = paramVal
-			} else {
-				fieldName = utils.RemoveSymbols(fieldName)
-				if strings.EqualFold(fieldName, removeParamKeyUnderline) {
-					attr.val = paramVal
-				}
-			}
-
-			if attr.val != nil {
+		for fieldName, _ := range setFields {
+			// Field names are underlined regardless of the size
+			name := utils.RemoveSymbols(fieldName)
+			if strings.EqualFold(name, removeParamKeyUnderline) {
 				if err := bindVarToStructAttr(
-					pointerElemReflectValue, fieldName, attr.val, paramKeyToAttrMap,
+					pointerElemReflectValue, fieldName, paramVal, paramKeyToAttrMap,
 				); err != nil {
 					return err
 				}
+				paramsToFieldMap[paramKey] = struct{}{}
 				count++
 			}
+
 		}
 		if count == len(setFields) {
 			return nil
