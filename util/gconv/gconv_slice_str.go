@@ -63,31 +63,27 @@ func Strings(any interface{}) []string {
 		if json.Valid(value) {
 			_ = json.UnmarshalUseNumber(value, &array)
 		}
-		// Prevent strings from being null
-		// See Issue 3465 for details
 		if array == nil {
 			array = make([]string, len(value))
 			for k, v := range value {
-				// v = [a-zA-Z]
-				if v >= 'a' && v <= 'z' || v >= 'A' && v <= 'Z' {
-					array[k] = string(v)
-				} else {
-					array[k] = String(v)
-				}
+				array[k] = String(v)
 			}
+			return array
 		}
 
 	case string:
+
 		byteValue := []byte(value)
 		if json.Valid(byteValue) {
 			_ = json.UnmarshalUseNumber(byteValue, &array)
 		}
-		// Prevent strings from being null
-		// See Issue 3465 for details
+
 		if array == nil {
 			if value == "" {
 				return []string{}
 			}
+			// Prevent strings from being null
+			// See Issue 3465 for details
 			return []string{value}
 		}
 	case []uint16:
