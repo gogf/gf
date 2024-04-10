@@ -64,7 +64,31 @@ type ExpireOption struct {
 
 // ScanOption provides options for function Scan.
 type ScanOption struct {
-	Match *string // Match -- Specifies a glob-style pattern for filtering keys.
-	Count *int    // Count -- Suggests the number of keys to return per scan.
-	Type  *string // Type -- Filters keys by their data type. Valid types are "string", "list", "set", "zset", "hash", and "stream".
+	Match string // Match -- Specifies a glob-style pattern for filtering keys.
+	Count int    // Count -- Suggests the number of keys to return per scan.
+	Type  string // Type -- Filters keys by their data type. Valid types are "string", "list", "set", "zset", "hash", and "stream".
+}
+
+// doScanOption is the internal representation of ScanOption.
+type doScanOption struct {
+	Match *string
+	Count *int
+	Type  *string
+}
+
+// ToUsedOption converts fields in ScanOption with zero values to nil. Only fields with values are retained.
+func (scanOpt *ScanOption) ToUsedOption() doScanOption {
+	var usedOption doScanOption
+
+	if scanOpt.Match != "" {
+		usedOption.Match = &scanOpt.Match
+	}
+	if scanOpt.Count != 0 {
+		usedOption.Count = &scanOpt.Count
+	}
+	if scanOpt.Type != "" {
+		usedOption.Type = &scanOpt.Type
+	}
+
+	return usedOption
 }

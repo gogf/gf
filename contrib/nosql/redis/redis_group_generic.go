@@ -181,7 +181,7 @@ func (r GroupGeneric) Keys(ctx context.Context, pattern string) ([]string, error
 func (r GroupGeneric) Scan(ctx context.Context, cursor uint64, option ...gredis.ScanOption) (uint64, []string, error) {
 	var usedOption interface{}
 	if len(option) > 0 {
-		usedOption = option[0]
+		usedOption = option[0].ToUsedOption()
 	}
 
 	v, err := r.Operation.Do(ctx, "Scan", mustMergeOptionToArgs(
