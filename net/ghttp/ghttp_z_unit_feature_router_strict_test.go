@@ -485,3 +485,53 @@ func Test_JsonRawMessage_Issue3449(t *testing.T) {
 
 	})
 }
+
+type testNullStringIssue3465Req struct {
+	g.Meta `path:"/test" method:"get" sm:"hello" tags:"示例"`
+	Name   []string `json:"name" v:"required"`
+}
+type testNullStringIssue3465Res struct {
+	Name []string `json:"name" v:"required" `
+}
+
+type testNullStringIssue3465 struct {
+}
+
+func (t *testNullStringIssue3465) Test(ctx context.Context, req *testNullStringIssue3465Req) (res *testNullStringIssue3465Res, err error) {
+	return &testNullStringIssue3465Res{
+		Name: req.Name,
+	}, nil
+}
+
+// https://github.com/gogf/gf/issues/3465
+func Test_NullString_Issue3465(t *testing.T) {
+
+	s := g.Server(guid.S())
+	s.Use(ghttp.MiddlewareHandlerResponse)
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Bind(new(testNullStringIssue3465))
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		data1 := map[string]any{
+			"name": "null",
+		}
+
+		expect1 := `{"code":0,"message":"","data":{"name":["null"]}}`
+		t.Assert(client.GetContent(ctx, "/test", data1), expect1)
+
+		data2 := map[string]any{
+			"name": []string{"null", "null"},
+		}
+		expect2 := `{"code":0,"message":"","data":{"name":["null","null"]}}`
+		t.Assert(client.GetContent(ctx, "/test", data2), expect2)
+
+	})
+}
