@@ -14,10 +14,7 @@ import (
 )
 
 func (c CGenCtrl) getApiItemsInSrc(apiModuleFolderPath string) (items []apiItem, err error) {
-	var (
-		fileContent string
-		importPath  string
-	)
+	var importPath string
 	// The second level folders: versions.
 	apiVersionFolderPaths, err := gfile.ScanDir(apiModuleFolderPath, "*", false)
 	if err != nil {
@@ -37,20 +34,21 @@ func (c CGenCtrl) getApiItemsInSrc(apiModuleFolderPath string) (items []apiItem,
 			if gfile.IsDir(apiFileFolderPath) {
 				continue
 			}
-			fileContent = gfile.GetContents(apiFileFolderPath)
-			matches, err := gregex.MatchAllString(PatternApiDefinition, fileContent)
+			structsInfo, err := utils.GetStructs(apiFileFolderPath)
 			if err != nil {
 				return nil, err
 			}
-			for _, match := range matches {
-				var (
-					methodName = match[1]
-					structBody = match[2]
-				)
+			for methodName, structBody := range structsInfo {
+				// ignore struct name that do not end in "Req"
+				if !gstr.HasSuffix(methodName, "Req") {
+					continue
+				}
 				// ignore struct name that match a request, but has no g.Meta in its body.
 				if !gstr.Contains(structBody, `g.Meta`) {
 					continue
 				}
+				// remove end "Req"
+				methodName = gstr.TrimRightStr(methodName, "Req", 1)
 				item := apiItem{
 					Import:     gstr.Trim(importPath, `"`),
 					FileName:   gfile.Name(apiFileFolderPath),
