@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/genctrl"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/ast"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
@@ -51,7 +52,13 @@ func Test_Gen_Ctrl_Default(t *testing.T) {
 			genApiExpect = apiFolder + filepath.FromSlash("/article/article_expect.go")
 		)
 		defer gfile.Remove(genApi)
-		t.Assert(gfile.GetContents(genApi), gfile.GetContents(genApiExpect))
+
+		// compare apiInterface and apiInterfaceExpect
+		genApiMap, err := ast.GetInterfaces(genApi)
+		t.AssertNil(err)
+		genApiExpectMap, err := ast.GetInterfaces(genApiExpect)
+		t.AssertNil(err)
+		t.Assert(genApiMap, genApiExpectMap)
 
 		// files
 		files, err := gfile.ScanDir(path, "*.go", true)

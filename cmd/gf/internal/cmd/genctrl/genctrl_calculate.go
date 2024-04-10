@@ -7,6 +7,7 @@
 package genctrl
 
 import (
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/ast"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gregex"
@@ -34,7 +35,7 @@ func (c CGenCtrl) getApiItemsInSrc(apiModuleFolderPath string) (items []apiItem,
 			if gfile.IsDir(apiFileFolderPath) {
 				continue
 			}
-			structsInfo, err := utils.GetStructs(apiFileFolderPath)
+			structsInfo, err := ast.GetStructs(apiFileFolderPath)
 			if err != nil {
 				return nil, err
 			}

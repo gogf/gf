@@ -7,13 +7,8 @@
 package utils
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"go/ast"
-	"go/parser"
-	"go/printer"
-	"go/token"
 
 	"golang.org/x/tools/imports"
 
@@ -140,32 +135,4 @@ func GetModPath() string {
 		oldDir = newDir
 	}
 	return ""
-}
-
-func GetStructs(filePath string) (structsInfo map[string]string, err error) {
-	var (
-		fileContent = gfile.GetContents(filePath)
-		fileSet     = token.NewFileSet()
-	)
-	structsInfo = make(map[string]string)
-
-	node, err := parser.ParseFile(fileSet, "", fileContent, parser.ParseComments)
-	if err != nil {
-		return
-	}
-
-	ast.Inspect(node, func(n ast.Node) bool {
-		if typeSpec, ok := n.(*ast.TypeSpec); ok {
-			if structType, ok := typeSpec.Type.(*ast.StructType); ok {
-				var buf bytes.Buffer
-				if err := printer.Fprint(&buf, fileSet, structType); err != nil {
-					return false
-				}
-				structsInfo[typeSpec.Name.Name] = buf.String()
-			}
-		}
-		return true
-	})
-
-	return
 }

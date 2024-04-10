@@ -9,7 +9,7 @@ package genctrl
 import (
 	"context"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/ast"
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -145,7 +145,7 @@ func (c CGenCtrl) generateByWatchFile(watchFile, sdkPath string, sdkStdVersion, 
 	}
 	// watch file should have api definitions.
 	if gfile.Exists(watchFile) {
-		structsInfo, err := utils.GetStructs(watchFile)
+		structsInfo, err := ast.GetStructs(watchFile)
 		if err != nil {
 			return err
 		}
