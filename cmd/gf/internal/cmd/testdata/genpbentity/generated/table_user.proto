@@ -1,0 +1,21 @@
+// ==========================================================================
+// Code generated and maintained by GoFrame CLI tool. DO NOT EDIT.
+// ==========================================================================
+
+syntax = "proto3";
+
+package unittest;
+
+option go_package = "unittest";
+
+import "google/protobuf/timestamp.proto";
+
+message TableUser {
+    uint32                    Id       = 1; // User ID              
+    string                    Passport = 2; // User Passport        
+    string                    Password = 3; // User Password        
+    string                    Nickname = 4; // User Nickname        
+    string                    Score    = 5; // Total score amount.  
+    google.protobuf.Timestamp CreateAt = 6; // Created Time         
+    google.protobuf.Timestamp UpdateAt = 7; // Updated Time         
+}

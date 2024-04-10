@@ -41,9 +41,7 @@ func Test_Gen_Ctrl_Default(t *testing.T) {
 		defer gfile.Remove(path)
 
 		_, err = genctrl.CGenCtrl{}.Ctrl(ctx, in)
-		if err != nil {
-			panic(err)
-		}
+		t.AssertNil(err)
 
 		// apiInterface file
 		var (

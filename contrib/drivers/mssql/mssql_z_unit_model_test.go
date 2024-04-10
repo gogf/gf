@@ -2590,7 +2590,7 @@ func Test_Model_ScanAndCount(t *testing.T) {
 }
 
 func Test_Model_Save(t *testing.T) {
-	table := createTable("test")
+	table := createTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
