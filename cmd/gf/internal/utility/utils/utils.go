@@ -144,9 +144,8 @@ func GetModPath() string {
 
 func GetStructs(filePath string) (structsInfo map[string]string, err error) {
 	var (
-		fileContent  = gfile.GetContents(filePath)
-		fileSet      = token.NewFileSet()
-		typeSpecList []*ast.TypeSpec
+		fileContent = gfile.GetContents(filePath)
+		fileSet     = token.NewFileSet()
 	)
 	structsInfo = make(map[string]string)
 
@@ -155,32 +154,45 @@ func GetStructs(filePath string) (structsInfo map[string]string, err error) {
 		return
 	}
 
-	// Extract and store type declarations
-	for _, decl := range node.Decls {
-		genDecl, isGenDecl := decl.(*ast.GenDecl)
-		if !isGenDecl {
-			continue
-		}
-		for _, spec := range genDecl.Specs {
-			if typeSpec, isTypeSpec := spec.(*ast.TypeSpec); isTypeSpec {
-				typeSpecList = append(typeSpecList, typeSpec)
+	ast.Inspect(node, func(n ast.Node) bool {
+		if typeSpec, ok := n.(*ast.TypeSpec); ok {
+			if structType, ok := typeSpec.Type.(*ast.StructType); ok {
+				var buf bytes.Buffer
+				if err := printer.Fprint(&buf, fileSet, structType); err != nil {
+					return false
+				}
+				structsInfo[typeSpec.Name.Name] = buf.String()
 			}
 		}
-	}
+		return true
+	})
 
-	for _, typeSpec := range typeSpecList {
-		structType, isStruct := typeSpec.Type.(*ast.StructType)
-		if !isStruct {
-			continue
-		}
-
-		var buf bytes.Buffer
-		if err := printer.Fprint(&buf, fileSet, structType); err != nil {
-			return nil, err
-		}
-
-		structsInfo[typeSpec.Name.Name] = buf.String()
-	}
+	// Extract and store type declarations
+	// for _, decl := range node.Decls {
+	// 	genDecl, isGenDecl := decl.(*ast.GenDecl)
+	// 	if !isGenDecl {
+	// 		continue
+	// 	}
+	// 	for _, spec := range genDecl.Specs {
+	// 		if typeSpec, isTypeSpec := spec.(*ast.TypeSpec); isTypeSpec {
+	// 			typeSpecList = append(typeSpecList, typeSpec)
+	// 		}
+	// 	}
+	// }
+	//
+	// for _, typeSpec := range typeSpecList {
+	// 	structType, isStruct := typeSpec.Type.(*ast.StructType)
+	// 	if !isStruct {
+	// 		continue
+	// 	}
+	//
+	// 	var buf bytes.Buffer
+	// 	if err := printer.Fprint(&buf, fileSet, structType); err != nil {
+	// 		return nil, err
+	// 	}
+	//
+	// 	structsInfo[typeSpec.Name.Name] = buf.String()
+	// }
 
 	return
 }
