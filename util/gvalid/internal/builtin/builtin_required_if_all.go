@@ -16,26 +16,26 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-// RuleRequiredIfAllEq implements `required-if-all` rule:
+// RuleRequiredIfAll implements `required-if-all` rule:
 // Required if all given field and its value are equal.
 //
 // Format:  required-if-all:field,value,...
 // Example: required-if-all:id,1,age,18
-type RuleRequiredIfAllEq struct{}
+type RuleRequiredIfAll struct{}
 
 func init() {
-	Register(RuleRequiredIfAllEq{})
+	Register(RuleRequiredIfAll{})
 }
 
-func (r RuleRequiredIfAllEq) Name() string {
+func (r RuleRequiredIfAll) Name() string {
 	return "required-if-all"
 }
 
-func (r RuleRequiredIfAllEq) Message() string {
+func (r RuleRequiredIfAll) Message() string {
 	return "The {field} field is required"
 }
 
-func (r RuleRequiredIfAllEq) Run(in RunInput) error {
+func (r RuleRequiredIfAll) Run(in RunInput) error {
 	var (
 		required   = true
 		array      = strings.Split(in.RulePattern, ",")
