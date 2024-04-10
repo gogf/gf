@@ -44,7 +44,7 @@ func HandlerJson(ctx context.Context, in *HandlerInput) {
 	for _, v := range in.Values {
 		valueContent = gconv.String(v)
 		if len(valueContent) == 0 {
-			continue
+			output.Content += " "
 		}
 		if len(output.Content) > 0 {
 			if output.Content[len(output.Content)-1] == '\n' {

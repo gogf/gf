@@ -126,7 +126,7 @@ func (in *HandlerInput) getDefaultBuffer(withColor bool) *bytes.Buffer {
 	for _, v := range in.Values {
 		valueContent = gconv.String(v)
 		if len(valueContent) == 0 {
-			continue
+			buffer.WriteString(" ")
 		}
 		if buffer.Len() > 0 {
 			if buffer.Bytes()[buffer.Len()-1] == '\n' {
