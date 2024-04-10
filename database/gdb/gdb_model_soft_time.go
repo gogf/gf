@@ -9,6 +9,7 @@ package gdb
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -189,7 +190,7 @@ func (m *softTimeMaintainer) getSoftFieldNameAndType(
 	schema string, table string, checkFiledNames []string,
 ) (fieldName string, fieldType LocalType) {
 	var (
-		cacheKey      = fmt.Sprintf(`getSoftFieldNameAndType:%s#%s#%p`, schema, table, checkFiledNames)
+		cacheKey      = fmt.Sprintf(`getSoftFieldNameAndType:%s#%s#%s`, schema, table, strings.Join(checkFiledNames, "_"))
 		cacheDuration = gcache.DurationNoExpire
 		cacheFunc     = func(ctx context.Context) (value interface{}, err error) {
 			// Ignore the error from TableFields.
@@ -214,7 +215,7 @@ func (m *softTimeMaintainer) getSoftFieldNameAndType(
 			return
 		}
 	)
-	result, err := m.db.GetCache().GetOrSetFunc(ctx, cacheKey, cacheFunc, cacheDuration)
+	result, err := gcache.GetOrSetFunc(ctx, cacheKey, cacheFunc, cacheDuration)
 	if err != nil {
 		intlog.Error(ctx, err)
 	}
