@@ -223,6 +223,22 @@ func doStruct(
 		if !utils.IsLetterUpper(elemFieldType.Name[0]) {
 			continue
 		}
+		// Anonymous struct fields also need to be documented
+		// Otherwise, some situations may not be covered
+		// see: gconv_z_unit_struct_tag_test.go\Test_StructTag_AnonymousStruct_Nest
+
+		tempName = elemFieldType.Name
+		f := setField{
+			index: elemFieldType.Index[0],
+		}
+		tag := getTag(elemFieldType, priorityTagArray)
+		// Use the native field name as the tag
+		if tag == "" {
+			tag = tempName
+		}
+		f.tag = tag
+		setFields[tempName] = f
+
 		// Maybe it's struct/*struct embedded.
 		if elemFieldType.Anonymous {
 			elemFieldValue = pointerElemReflectValue.Field(i)
@@ -236,19 +252,6 @@ func doStruct(
 			if err = doStruct(paramsMap, elemFieldValue, paramKeyToAttrMap, priorityTag); err != nil {
 				return err
 			}
-		} else {
-
-			tempName = elemFieldType.Name
-			f := setField{
-				index: elemFieldType.Index[0],
-			}
-			tag := getTag(elemFieldType, priorityTagArray)
-			// Use the native field name as the tag
-			if tag == "" {
-				tag = tempName
-			}
-			f.tag = tag
-			setFields[tempName] = f
 		}
 	}
 	if len(setFields) == 0 {

@@ -129,3 +129,39 @@ func Test_StructTag_MultiAttribute(t *testing.T) {
 	})
 
 }
+
+func Test_StructTag_AnonymousStruct_Nest(t *testing.T) {
+	type MetaData struct {
+		Name string `json:"name"`
+	}
+
+	type NestStruct struct {
+		// 匿名字段带tag
+		MetaData   `json:"metadata"`
+		ApiVersion string `json:"apiVersion"`
+		Kind       string `json:"kind"`
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			// 结构体字段是个匿名的，且带tag
+			// name在第二层级
+			"metadata": g.Map{
+				"name": "test-configmap",
+			},
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+		}
+		var n NestStruct
+		err := gconv.Struct(data, &n)
+		t.AssertNil(err)
+		t.Assert(n, NestStruct{
+			ApiVersion: "v1",
+			Kind:       "ConfigMap",
+			MetaData: MetaData{
+				Name: "test-configmap",
+			},
+		})
+	})
+
+}
