@@ -744,7 +744,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		node.Name = nodeSchema
 	}
 	// Update the configuration object in internal data.
-	internalData := c.GetInternalCtxDataFromCtx(ctx)
+	internalData := c.getInternalCtxDataFromCtx(ctx)
 	if internalData != nil {
 		internalData.ConfigNode = node
 	}

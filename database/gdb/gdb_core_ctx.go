@@ -14,12 +14,12 @@ import (
 
 // internalCtxData stores data in ctx for internal usage purpose.
 type internalCtxData struct {
-	// Operation DB.
-	DB DB
-
 	// Used configuration node in current operation.
 	ConfigNode *ConfigNode
+}
 
+// column stores column data in ctx for internal usage purpose.
+type internalColumnData struct {
 	// The first column in result response from database server.
 	// This attribute is used for Value/Count selection statement purpose,
 	// which is to avoid HOOK handler that might modify the result columns
@@ -30,6 +30,8 @@ type internalCtxData struct {
 const (
 	internalCtxDataKeyInCtx gctx.StrKey = "InternalCtxData"
 
+	internalColumnDataKeyInCtx gctx.StrKey = "InternalColumnData"
+
 	// `ignoreResultKeyInCtx` is a mark for some db drivers that do not support `RowsAffected` function,
 	// for example: `clickhouse`. The `clickhouse` does not support fetching insert/update results,
 	// but returns errors when execute `RowsAffected`. It here ignores the calling of `RowsAffected`
@@ -37,20 +39,30 @@ const (
 	ignoreResultKeyInCtx gctx.StrKey = "IgnoreResult"
 )
 
-func (c *Core) InjectInternalCtxData(ctx context.Context) context.Context {
+func (c *Core) injectInternalCtxData(ctx context.Context) context.Context {
 	// If the internal data is already injected, it does nothing.
 	if ctx.Value(internalCtxDataKeyInCtx) != nil {
 		return ctx
 	}
 	return context.WithValue(ctx, internalCtxDataKeyInCtx, &internalCtxData{
-		DB:         c.db,
 		ConfigNode: c.config,
 	})
 }
 
-func (c *Core) GetInternalCtxDataFromCtx(ctx context.Context) *internalCtxData {
+func (c *Core) getInternalCtxDataFromCtx(ctx context.Context) *internalCtxData {
 	if v := ctx.Value(internalCtxDataKeyInCtx); v != nil {
 		return v.(*internalCtxData)
+	}
+	return nil
+}
+
+func (c *Core) injectInternalColumn(ctx context.Context) context.Context {
+	return context.WithValue(ctx, internalColumnDataKeyInCtx, &internalColumnData{})
+}
+
+func (c *Core) getInternalColumnFromCtx(ctx context.Context) *internalColumnData {
+	if v := ctx.Value(internalColumnDataKeyInCtx); v != nil {
+		return v.(*internalColumnData)
 	}
 	return nil
 }

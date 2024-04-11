@@ -208,7 +208,7 @@ func (c *Core) SetMaxConnLifeTime(d time.Duration) {
 
 // GetConfig returns the current used node configuration.
 func (c *Core) GetConfig() *ConfigNode {
-	internalData := c.GetInternalCtxDataFromCtx(c.db.GetCtx())
+	internalData := c.getInternalCtxDataFromCtx(c.db.GetCtx())
 	if internalData != nil && internalData.ConfigNode != nil {
 		// Note:
 		// It so here checks and returns the config from current DB,
