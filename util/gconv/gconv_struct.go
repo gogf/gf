@@ -15,7 +15,6 @@ import (
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/utils"
-	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/util/gtag"
 )
 
@@ -181,12 +180,42 @@ func doStruct(
 		// 1. Delete the underlined fields and use them during initialization
 		// 2. It can be the specified tag attribute
 		// 3. The key of paramKeyToAttrMap can be used
-		tag string
-		val any
+		tag   string
+		val   any
+		index int
 	}
 	// Used to save some attributes related to subsequent operations
 	// key=field
 	var setFields = map[string]setField{}
+
+	// The key of the `attrToTagCheckNameMap` is the attribute name of the struct,
+	// and the value is its replaced tag name for later comparison to improve performance.
+	var (
+		priorityTagArray []string
+	)
+	if priorityTag != "" {
+		priorityTagArray = append(utils.SplitAndTrim(priorityTag, ","), gtag.StructTagPriority...)
+	} else {
+		priorityTagArray = gtag.StructTagPriority
+	}
+
+	var getTag = func(field reflect.StructField, tags []string) string {
+		for _, tag := range tags {
+			value, ok := field.Tag.Lookup(tag)
+			if ok {
+				// If there's something else in the tag string,
+				// it uses the first part which is split using char ','.
+				// Eg:
+				// orm:"id, priority"
+				// orm:"name, with:uid=id"
+				split := strings.Split(value, ",")
+				// json:",omitempty"
+				trimTag := strings.TrimSpace(split[0])
+				return trimTag
+			}
+		}
+		return ""
+	}
 
 	for i := 0; i < pointerElemReflectValue.NumField(); i++ {
 		elemFieldType = elemType.Field(i)
@@ -208,48 +237,30 @@ func doStruct(
 				return err
 			}
 		} else {
+
 			tempName = elemFieldType.Name
-			setFields[tempName] = setField{
-				tag: utils.RemoveSymbols(tempName),
+			f := setField{
+				index: elemFieldType.Index[0],
 			}
+			tag := getTag(elemFieldType, priorityTagArray)
+			// 使用原生字段名来当tag
+			if tag == "" {
+				tag = tempName
+			}
+			f.tag = tag
+			setFields[tempName] = f
 		}
 	}
 	if len(setFields) == 0 {
 		return nil
 	}
 
-	// The key of the `attrToTagCheckNameMap` is the attribute name of the struct,
-	// and the value is its replaced tag name for later comparison to improve performance.
-	var (
-		priorityTagArray []string
-	)
-	if priorityTag != "" {
-		priorityTagArray = append(utils.SplitAndTrim(priorityTag, ","), gtag.StructTagPriority...)
-	} else {
-		priorityTagArray = gtag.StructTagPriority
-	}
-	tagFields, err := gstructs.TagFields(pointerElemReflectValue, priorityTagArray)
-	if err != nil {
-		return err
-	}
-	for _, field := range tagFields {
-		// If there's something else in the tag string,
-		// it uses the first part which is split using char ','.
-		// Eg:
-		// orm:"id, priority"
-		// orm:"name, with:uid=id"
-		paramsVal, ok := paramsMap[field.TagValue]
-		attr := setField{}
-		// If found in paramsMap, direct assignment does not require removing special symbols such as underscores.
-		// Can reduce the number of subsequent traversals of paramsMap
+	for field, attr := range setFields {
+		paramsVal, ok := paramsMap[attr.tag]
 		if ok {
 			attr.val = paramsVal
-			attr.tag = field.TagValue
-		} else {
-			// If not found, wait for the following, ignore case, and match underscores.
-			attr.tag = utils.RemoveSymbols(strings.Split(field.TagValue, ",")[0])
+			setFields[field] = attr
 		}
-		setFields[field.Name()] = attr
 	}
 
 	// First search according to custom rules. If a direct assignment is found, reduce the number of subsequent map searches.
@@ -270,68 +281,126 @@ func doStruct(
 
 	// Indicates that those values have been used and cannot be reused.
 	paramsToFieldMap := map[string]struct{}{}
-	// Exact match
+
 	for field, attr := range setFields {
-		// Don't put the public code out for optimization here
-		// Because the field tag or user-defined rule has already matched paramsVal, this branch is taken first.
-		// else is matched based on the field name. If it is not written,
-		// it will be searched in paramsMap when all values are assigned to setFields at the beginning.
-		// Because if we do that, we need (n fields + n fields with tags + n user-defined rules) queries
-		// Most of the time, user fields will be tagged,
-		// which can save the number of queries for the first n fields. Only when there is no match, query in paramsMap.
+
+		// 如果不为空，说明tag或者field name匹配上了
 		if attr.val != nil {
-			if err := bindVarToStructAttr(
-				pointerElemReflectValue, field, attr.val, paramKeyToAttrMap,
+			if err := bindVarToStructAttrWithFieldIndex(
+				pointerElemReflectValue, field, attr.index, attr.val, paramKeyToAttrMap,
 			); err != nil {
 				return err
 			}
 			// It is necessary to delete the set fields for quick traversal later.
 			paramsToFieldMap[attr.tag] = struct{}{}
-			delete(setFields, field)
+
 		} else {
-			// match field
-			paramVal, ok := paramsMap[field]
-			if ok {
-				if err := bindVarToStructAttr(
-					pointerElemReflectValue, field, paramVal, paramKeyToAttrMap,
+			// 如果为空，需要模糊匹配
+			key, val := fuzzyMatchingFieldName(field, paramsMap, paramsToFieldMap)
+			if val != nil {
+				if err := bindVarToStructAttrWithFieldIndex(
+					pointerElemReflectValue, field, attr.index, val, paramKeyToAttrMap,
 				); err != nil {
 					return err
 				}
 				// It is necessary to delete the set fields for quick traversal later.
-				paramsToFieldMap[field] = struct{}{}
-				delete(setFields, field)
+				paramsToFieldMap[key] = struct{}{}
 			}
+
 		}
 	}
-	// All fields have been assigned values
-	if 0 == len(setFields) {
-		return nil
-	}
 
-	count := 0
+	return nil
+}
+
+func fuzzyMatchingFieldName(fieldName string, paramsMap map[string]any, paramsToFieldMap map[string]struct{}) (string, any) {
+	fieldName = utils.RemoveSymbols(fieldName)
+
 	for paramKey, paramVal := range paramsMap {
-		_, ok := paramsToFieldMap[paramKey]
-		if ok {
+		if _, ok := paramsToFieldMap[paramKey]; ok {
 			continue
 		}
 		removeParamKeyUnderline := utils.RemoveSymbols(paramKey)
-		for fieldName, _ := range setFields {
-			// Field names are underlined regardless of the size
-			name := utils.RemoveSymbols(fieldName)
-			if strings.EqualFold(name, removeParamKeyUnderline) {
-				if err := bindVarToStructAttr(
-					pointerElemReflectValue, fieldName, paramVal, paramKeyToAttrMap,
-				); err != nil {
-					return err
-				}
-				paramsToFieldMap[paramKey] = struct{}{}
-				count++
-			}
 
+		if strings.EqualFold(fieldName, removeParamKeyUnderline) {
+			return paramKey, paramVal
 		}
-		if count == len(setFields) {
-			return nil
+
+	}
+	return "", nil
+}
+
+// bindVarToStructAttrWithFieldIndex sets value to struct object attribute by name.
+func bindVarToStructAttrWithFieldIndex(
+	structReflectValue reflect.Value, attrName string,
+	fieldIndex int, value interface{}, paramKeyToAttrMap map[string]string,
+) (err error) {
+	structFieldValue := structReflectValue.Field(fieldIndex)
+	if !structFieldValue.IsValid() {
+		return nil
+	}
+	// CanSet checks whether attribute is public accessible.
+	if !structFieldValue.CanSet() {
+		return nil
+	}
+	defer func() {
+		if exception := recover(); exception != nil {
+			if err = bindVarToReflectValue(structFieldValue, value, paramKeyToAttrMap); err != nil {
+				err = gerror.Wrapf(err, `error binding value to attribute "%s"`, attrName)
+			}
 		}
+	}()
+	// Directly converting.
+	if empty.IsNil(value) {
+		structFieldValue.Set(reflect.Zero(structFieldValue.Type()))
+	} else {
+		// Try to call custom converter.
+		// Issue: https://github.com/gogf/gf/issues/3099
+		var (
+			customConverterInput reflect.Value
+			ok                   bool
+		)
+		if customConverterInput, ok = value.(reflect.Value); !ok {
+			customConverterInput = reflect.ValueOf(value)
+		}
+
+		if ok, err = callCustomConverter(customConverterInput, structFieldValue); ok || err != nil {
+			return
+		}
+
+		// Special handling for certain types:
+		// - Overwrite the default type converting logic of stdlib for time.Time/*time.Time.
+		var structFieldTypeName = structFieldValue.Type().String()
+		switch structFieldTypeName {
+		case "time.Time", "*time.Time":
+			doConvertWithReflectValueSet(structFieldValue, doConvertInput{
+				FromValue:  value,
+				ToTypeName: structFieldTypeName,
+				ReferValue: structFieldValue,
+			})
+			return
+		// Hold the time zone consistent in recursive
+		// Issue: https://github.com/gogf/gf/issues/2980
+		case "*gtime.Time", "gtime.Time":
+			doConvertWithReflectValueSet(structFieldValue, doConvertInput{
+				FromValue:  value,
+				ToTypeName: structFieldTypeName,
+				ReferValue: structFieldValue,
+			})
+			return
+		}
+
+		// Common interface check.
+		if ok, err = bindVarToReflectValueWithInterfaceCheck(structFieldValue, value); ok {
+			return err
+		}
+
+		// Default converting.
+		doConvertWithReflectValueSet(structFieldValue, doConvertInput{
+			FromValue:  value,
+			ToTypeName: structFieldTypeName,
+			ReferValue: structFieldValue,
+		})
 	}
 	return nil
 }

@@ -103,3 +103,29 @@ func Test_Struct_HTTP_Params_Parse_Issue1488(t *testing.T) {
 		}
 	})
 }
+
+func Test_StructTag_MultiAttribute(t *testing.T) {
+	type ConfigMap struct {
+		TypeMeta   string `json:",inline"`
+		ObjectMeta string `json:" metadata,omitempty" `
+		Immutable  bool   `json:" immutable,omitempty" `
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			"TypeMeta":  "1",
+			"metadata":  "2",
+			"immutable": true,
+		}
+		var cfg ConfigMap
+		err := gconv.Struct(data, &cfg)
+		t.AssertNil(err)
+
+		t.Assert(cfg, &ConfigMap{
+			TypeMeta:   "1",
+			ObjectMeta: "2",
+			Immutable:  true,
+		})
+	})
+
+}
