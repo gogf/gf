@@ -166,15 +166,6 @@ func doStruct(
 		return nil
 	}
 
-	// The key of the attrMap is the attribute name of the struct,
-	// and the value is its replaced name for later comparison to improve performance.
-	var (
-		tempName       string
-		elemFieldType  reflect.StructField
-		elemFieldValue reflect.Value
-		elemType       = pointerElemReflectValue.Type()
-	)
-
 	type setField struct {
 		// tag can be one of the following values
 		// 1. Delete the underlined fields and use them during initialization
@@ -184,15 +175,14 @@ func doStruct(
 		val   any
 		index int
 	}
-	// Used to save some attributes related to subsequent operations
-	// key=field
-	var setFields = map[string]setField{}
 
-	// The key of the `attrToTagCheckNameMap` is the attribute name of the struct,
-	// and the value is its replaced tag name for later comparison to improve performance.
 	var (
+		// Used to save some attributes related to subsequent operations
+		// key=field
+		setFields        = map[string]setField{}
 		priorityTagArray []string
 	)
+
 	if priorityTag != "" {
 		priorityTagArray = append(utils.SplitAndTrim(priorityTag, ","), gtag.StructTagPriority...)
 	} else {
@@ -217,16 +207,25 @@ func doStruct(
 		return ""
 	}
 
+	// The key of the attrMap is the attribute name of the struct,
+	// and the value is its replaced name for later comparison to improve performance.
+	var (
+		tempName       string
+		elemFieldType  reflect.StructField
+		elemFieldValue reflect.Value
+		elemType       = pointerElemReflectValue.Type()
+	)
+
 	for i := 0; i < pointerElemReflectValue.NumField(); i++ {
 		elemFieldType = elemType.Field(i)
 		// Only do converting to public attributes.
 		if !utils.IsLetterUpper(elemFieldType.Name[0]) {
 			continue
 		}
-		// Anonymous struct fields also need to be documented
-		// Otherwise, some situations may not be covered
-		// see: gconv_z_unit_struct_tag_test.go\Test_StructTag_AnonymousStruct_Nest
 
+		// All fields need to be documented,
+		// including those of the anonymous struct type
+		// see: gconv_z_unit_struct_tag_test.go\Test_StructTag_AnonymousStruct_Nest
 		tempName = elemFieldType.Name
 		f := setField{
 			index: elemFieldType.Index[0],
@@ -238,7 +237,6 @@ func doStruct(
 		}
 		f.tag = tag
 		setFields[tempName] = f
-
 		// Maybe it's struct/*struct embedded.
 		if elemFieldType.Anonymous {
 			elemFieldValue = pointerElemReflectValue.Field(i)
@@ -254,6 +252,7 @@ func doStruct(
 			}
 		}
 	}
+
 	if len(setFields) == 0 {
 		return nil
 	}
@@ -284,7 +283,6 @@ func doStruct(
 	paramsToFieldMap := map[string]struct{}{}
 
 	for field, attr := range setFields {
-
 		// If it is not empty, the tag or field name matches
 		if attr.val != nil {
 			if err := bindVarToStructAttrWithFieldIndex(
@@ -294,7 +292,6 @@ func doStruct(
 			}
 			// It is necessary to delete the set fields for quick traversal later.
 			paramsToFieldMap[attr.tag] = struct{}{}
-
 		} else {
 			// If it is empty, a fuzzy match is required
 			key, val := fuzzyMatchingFieldName(field, paramsMap, paramsToFieldMap)
@@ -309,23 +306,19 @@ func doStruct(
 			}
 		}
 	}
-
 	return nil
 }
 
 func fuzzyMatchingFieldName(fieldName string, paramsMap map[string]any, paramsToFieldMap map[string]struct{}) (string, any) {
 	fieldName = utils.RemoveSymbols(fieldName)
-
 	for paramKey, paramVal := range paramsMap {
 		if _, ok := paramsToFieldMap[paramKey]; ok {
 			continue
 		}
 		removeParamKeyUnderline := utils.RemoveSymbols(paramKey)
-
 		if strings.EqualFold(fieldName, removeParamKeyUnderline) {
 			return paramKey, paramVal
 		}
-
 	}
 	return "", nil
 }
