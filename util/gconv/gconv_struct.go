@@ -243,7 +243,7 @@ func doStruct(
 				index: elemFieldType.Index[0],
 			}
 			tag := getTag(elemFieldType, priorityTagArray)
-			// 使用原生字段名来当tag
+			// Use the native field name as the tag
 			if tag == "" {
 				tag = tempName
 			}
@@ -268,9 +268,7 @@ func doStruct(
 		// Prevent setting of non-existent fields
 		attr, ok := setFields[field]
 		if ok {
-			// If the corresponding value is found, assign it directly
-			// If not found, the underline will not be removed and the case will be ignored.
-			// There will be no matching in the follow-up
+			// Prevent non-existent values from being set
 			paramsVal, ok := paramsMap[paramKey]
 			if ok {
 				attr.val = paramsVal
@@ -284,7 +282,7 @@ func doStruct(
 
 	for field, attr := range setFields {
 
-		// 如果不为空，说明tag或者field name匹配上了
+		// If it is not empty, the tag or field name matches
 		if attr.val != nil {
 			if err := bindVarToStructAttrWithFieldIndex(
 				pointerElemReflectValue, field, attr.index, attr.val, paramKeyToAttrMap,
@@ -295,7 +293,7 @@ func doStruct(
 			paramsToFieldMap[attr.tag] = struct{}{}
 
 		} else {
-			// 如果为空，需要模糊匹配
+			// If it is empty, a fuzzy match is required
 			key, val := fuzzyMatchingFieldName(field, paramsMap, paramsToFieldMap)
 			if val != nil {
 				if err := bindVarToStructAttrWithFieldIndex(
@@ -306,7 +304,6 @@ func doStruct(
 				// It is necessary to delete the set fields for quick traversal later.
 				paramsToFieldMap[key] = struct{}{}
 			}
-
 		}
 	}
 
