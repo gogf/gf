@@ -7,7 +7,12 @@
 package genctrl
 
 import (
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/ast"
+	"bytes"
+	"go/ast"
+	"go/parser"
+	"go/printer"
+	"go/token"
+
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gregex"
@@ -35,19 +40,11 @@ func (c CGenCtrl) getApiItemsInSrc(apiModuleFolderPath string) (items []apiItem,
 			if gfile.IsDir(apiFileFolderPath) {
 				continue
 			}
-			structsInfo, err := ast.GetStructs(apiFileFolderPath)
+			structsInfo, err := c.getStructsNameInSrc(apiFileFolderPath)
 			if err != nil {
 				return nil, err
 			}
-			for methodName, structBody := range structsInfo {
-				// ignore struct name that do not end in "Req"
-				if !gstr.HasSuffix(methodName, "Req") {
-					continue
-				}
-				// ignore struct name that match a request, but has no g.Meta in its body.
-				if !gstr.Contains(structBody, `g.Meta`) {
-					continue
-				}
+			for _, methodName := range structsInfo {
 				// remove end "Req"
 				methodName = gstr.TrimRightStr(methodName, "Req", 1)
 				item := apiItem{
@@ -140,5 +137,43 @@ func (c CGenCtrl) getApiItemsInDst(dstFolder string) (items []apiItem, err error
 			items = append(items, item)
 		}
 	}
+	return
+}
+
+// getStructsNameInSrc retrieves all struct names
+// that end in "Req" and have "g.Meta" in their body.
+func (c CGenCtrl) getStructsNameInSrc(filePath string) (structsName []string, err error) {
+	var (
+		fileContent = gfile.GetContents(filePath)
+		fileSet     = token.NewFileSet()
+	)
+
+	node, err := parser.ParseFile(fileSet, "", fileContent, parser.ParseComments)
+	if err != nil {
+		return
+	}
+
+	ast.Inspect(node, func(n ast.Node) bool {
+		if typeSpec, ok := n.(*ast.TypeSpec); ok {
+			methodName := typeSpec.Name.Name
+			if !gstr.HasSuffix(methodName, "Req") {
+				// ignore struct name that do not end in "Req"
+				return true
+			}
+			if structType, ok := typeSpec.Type.(*ast.StructType); ok {
+				var buf bytes.Buffer
+				if err := printer.Fprint(&buf, fileSet, structType); err != nil {
+					return false
+				}
+				// ignore struct name that match a request, but has no g.Meta in its body.
+				if !gstr.Contains(buf.String(), `g.Meta`) {
+					return true
+				}
+				structsName = append(structsName, methodName)
+			}
+		}
+		return true
+	})
+
 	return
 }
