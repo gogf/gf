@@ -101,6 +101,8 @@ func (c CGenCtrl) getApiItemsInDst(dstFolder string) (items []apiItem, err error
 		}
 		// retrieve all api usages.
 		// retrieve it without using AST, but use regular expressions to retrieve.
+		// It's because the api definition is simple and regular.
+		// Use regular expressions to get better performance.
 		fileContent := gfile.GetContents(filePath)
 		matches, err := gregex.MatchAllString(PatternCtrlDefinition, fileContent)
 		if err != nil {
