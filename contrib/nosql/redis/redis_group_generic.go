@@ -170,6 +170,33 @@ func (r GroupGeneric) Keys(ctx context.Context, pattern string) ([]string, error
 	return v.Strings(), err
 }
 
+// Scan executes a single iteration of the SCAN command, returning a subset of keys matching the pattern along with the next cursor position.
+// This method provides more efficient and safer way to iterate over large datasets compared to KEYS command.
+//
+// Users are responsible for controlling the iteration by managing the cursor.
+//
+// The `count` optional parameter advises Redis on the number of keys to return. While it's not a strict limit, it guides the operation's granularity.
+//
+// https://redis.io/commands/scan/
+func (r GroupGeneric) Scan(ctx context.Context, cursor uint64, option ...gredis.ScanOption) (uint64, []string, error) {
+	var usedOption interface{}
+	if len(option) > 0 {
+		usedOption = option[0].ToUsedOption()
+	}
+
+	v, err := r.Operation.Do(ctx, "Scan", mustMergeOptionToArgs(
+		[]interface{}{cursor}, usedOption,
+	)...)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	nextCursor := gconv.Uint64(v.Slice()[0])
+	keys := gconv.SliceStr(v.Slice()[1])
+
+	return nextCursor, keys, nil
+}
+
 // FlushDB delete all the keys of the currently selected DB. This command never fails.
 //
 // https://redis.io/commands/flushdb/
