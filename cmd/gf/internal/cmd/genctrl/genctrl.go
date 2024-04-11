@@ -9,15 +9,13 @@ package genctrl
 import (
 	"context"
 
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gtag"
-
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 const (
@@ -38,7 +36,6 @@ gf gen ctrl
 )
 
 const (
-	PatternApiDefinition  = `type[\s\(]+(\w+)Req\s+struct\s+{([\s\S]+?)}`
 	PatternCtrlDefinition = `func\s+\(.+?\)\s+\w+\(.+?\*(\w+)\.(\w+)Req\)\s+\(.+?\*(\w+)\.(\w+)Res,\s+\w+\s+error\)\s+{`
 )
 
@@ -146,7 +143,11 @@ func (c CGenCtrl) generateByWatchFile(watchFile, sdkPath string, sdkStdVersion, 
 	}
 	// watch file should have api definitions.
 	if gfile.Exists(watchFile) {
-		if !gregex.IsMatchString(PatternApiDefinition, gfile.GetContents(watchFile)) {
+		structsInfo, err := c.getStructsNameInSrc(watchFile)
+		if err != nil {
+			return err
+		}
+		if len(structsInfo) == 0 {
 			return nil
 		}
 	}
