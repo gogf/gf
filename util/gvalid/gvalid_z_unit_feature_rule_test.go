@@ -90,6 +90,16 @@ func Test_RequiredIf(t *testing.T) {
 	})
 }
 
+func Test_RequiredIfAll(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		rule := "required-if-all:id,1,age,18"
+		t.Assert(g.Validator().Data("").Assoc(g.Map{"id": 1}).Rules(rule).Run(ctx), nil)
+		t.Assert(g.Validator().Data("").Assoc(g.Map{"age": 18}).Rules(rule).Run(ctx), nil)
+		t.Assert(g.Validator().Data("").Assoc(g.Map{"id": 0, "age": 20}).Rules(rule).Run(ctx), nil)
+		t.AssertNE(g.Validator().Data("").Assoc(g.Map{"id": 1, "age": 18}).Rules(rule).Run(ctx), nil)
+	})
+}
+
 func Test_RequiredUnless(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "required-unless:id,1,age,18"
