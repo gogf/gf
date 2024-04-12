@@ -14,10 +14,15 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-// Because when the underlying parameters are passed in on the Windows platform,
-// escape characters will be added, causing some commands to fail.
-func newProcess(p *Process, args []string, path string) *Process {
-	p.SysProcAttr = &syscall.SysProcAttr{}
-	p.SysProcAttr.CmdLine = path + " " + gstr.Join(args, " ")
+// The Windows platform goes back directly and does nothing
+// When the Process.Start method is called, it is handled in joinProcessArgs
+func newProcess(p *Process, _ []string, _ string) *Process {
 	return p
+}
+
+// When the Process.Start method is called,
+// it will be called on the Windows platform
+func joinProcessArgs(p *Process) {
+	p.SysProcAttr = &syscall.SysProcAttr{}
+	p.SysProcAttr.CmdLine = gstr.Join(p.Args, " ")
 }

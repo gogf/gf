@@ -21,3 +21,6 @@ func newProcess(p *Process, args []string, path string) *Process {
 	}
 	return p
 }
+
+// Do nothing, just set it on the Windows platform
+func joinProcessArgs(p *Process) {}
