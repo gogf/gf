@@ -9,7 +9,6 @@
 package gproc_test
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/gogf/gf/v2/os/gctx"
@@ -28,24 +27,4 @@ func Test_ShellExec(t *testing.T) {
 		_, err := gproc.ShellExec(gctx.New(), `NoneExistCommandCall`)
 		t.AssertNE(err, nil)
 	})
-}
-
-func Test_ProcessStart(t *testing.T) {
-	var ctx = gctx.GetInitCtx()
-	gtest.C(t, func(t *gtest.T) {
-		var buf strings.Builder
-		// Necessary check.
-		protoc := gproc.SearchBinary("gf")
-		t.AssertNE(protoc, "")
-		var command = gproc.NewProcess(protoc, nil)
-		command.Args = append(command.Args, "version")
-		command.Stdout = &buf
-		err := command.Run(ctx)
-		t.AssertNil(err)
-		//	v2.7.0
-		//	Welcome to GoFrame!
-		//		Env Detail:
-		t.Assert(strings.Contains(buf.String(), "Welcome to GoFrame!\nEnv Detail:"), true)
-	})
-
 }

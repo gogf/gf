@@ -14,14 +14,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-// The Windows platform goes back directly and does nothing
-// When the Process.Start method is called, it is handled in joinProcessArgs
-func newProcess(p *Process, _ []string, _ string) *Process {
-	return p
-}
-
-// When the Process.Start method is called,
-// it will be called on the Windows platform
+// Do nothing, just set it on the Windows platform
 func joinProcessArgs(p *Process) {
 	p.SysProcAttr = &syscall.SysProcAttr{}
 	p.SysProcAttr.CmdLine = gstr.Join(p.Args, " ")
