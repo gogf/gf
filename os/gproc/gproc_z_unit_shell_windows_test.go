@@ -31,10 +31,11 @@ func Test_ShellExec_GoBuild_Windows(t *testing.T) {
 
 		err := gproc.ShellRun(gctx.New(), cmd)
 		t.Assert(err, nil)
-		realPath, err := gfile.Search(output)
 
+		realPath, err := gfile.Search(output)
 		t.AssertNE(realPath, "")
 		t.Assert(err, nil)
+
 		defer gfile.Remove(output)
 	})
 
@@ -46,8 +47,8 @@ func Test_ShellExec_GoBuild_Windows(t *testing.T) {
 
 		err := gproc.ShellRun(gctx.New(), cmd)
 		t.Assert(err, nil)
-		realPath, err := gfile.Search(output)
 
+		realPath, err := gfile.Search(output)
 		t.AssertNE(realPath, "")
 		t.Assert(err, nil)
 		defer gfile.Remove(output)
