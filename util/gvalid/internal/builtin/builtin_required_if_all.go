@@ -16,28 +16,28 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-// RuleRequiredIf implements `required-if` rule:
-// Required if any of given field and its value are equal.
+// RuleRequiredIfAll implements `required-if-all` rule:
+// Required if all given field and its value are equal.
 //
-// Format:  required-if:field,value,...
-// Example: required-if:id,1,age,18
-type RuleRequiredIf struct{}
+// Format:  required-if-all:field,value,...
+// Example: required-if-all:id,1,age,18
+type RuleRequiredIfAll struct{}
 
 func init() {
-	Register(RuleRequiredIf{})
+	Register(RuleRequiredIfAll{})
 }
 
-func (r RuleRequiredIf) Name() string {
-	return "required-if"
+func (r RuleRequiredIfAll) Name() string {
+	return "required-if-all"
 }
 
-func (r RuleRequiredIf) Message() string {
+func (r RuleRequiredIfAll) Message() string {
 	return "The {field} field is required"
 }
 
-func (r RuleRequiredIf) Run(in RunInput) error {
+func (r RuleRequiredIfAll) Run(in RunInput) error {
 	var (
-		required   = false
+		required   = true
 		array      = strings.Split(in.RulePattern, ",")
 		foundValue interface{}
 		dataMap    = in.Data.Map()
@@ -50,19 +50,20 @@ func (r RuleRequiredIf) Run(in RunInput) error {
 			in.RulePattern,
 		)
 	}
-	// It supports multiple field and value pairs.
 	for i := 0; i < len(array); {
 		var (
 			tk = array[i]
 			tv = array[i+1]
+			eq bool
 		)
 		_, foundValue = gutil.MapPossibleItemByKey(dataMap, tk)
 		if in.Option.CaseInsensitive {
-			required = strings.EqualFold(tv, gconv.String(foundValue))
+			eq = strings.EqualFold(tv, gconv.String(foundValue))
 		} else {
-			required = strings.Compare(tv, gconv.String(foundValue)) == 0
+			eq = strings.Compare(tv, gconv.String(foundValue)) == 0
 		}
-		if required {
+		if !eq {
+			required = false
 			break
 		}
 		i += 2
