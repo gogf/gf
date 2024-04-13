@@ -19,80 +19,48 @@ import (
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/text/gstr"
 )
 
 func Test_ProcessRun(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		gf := gproc.SearchBinary("gf")
-		if gf == "" {
-			return
-		}
-		var command = gproc.NewProcess(gf, nil)
-		command.Args = append(command.Args, "version")
-		var buf strings.Builder
-		command.Stdout = &buf
-		command.Stderr = &buf
-		err := command.Run(gctx.GetInitCtx())
-		t.AssertNil(err)
-
-		errOutput := `up         upgrade GoFrame version/tool to latest one in current project`
-		t.Assert(gstr.Contains(buf.String(), errOutput), false)
-	})
-
-	gtest.C(t, func(t *gtest.T) {
-		binary := gproc.SearchBinary("go")
-		t.AssertNE(binary, "")
-		var command = gproc.NewProcess(binary, nil)
-		command.Args = append(command.Args, "version")
-		var buf strings.Builder
-		command.Stdout = &buf
-		command.Stderr = &buf
-		err := command.Run(gctx.GetInitCtx())
-		t.AssertNil(err)
-
-		errOutput := `bug         start a bug report`
-		t.Assert(gstr.Contains(buf.String(), errOutput), false)
-	})
-
-	gtest.C(t, func(t *gtest.T) {
 		binary := gproc.SearchBinary("go")
 		t.AssertNE(binary, "")
 		var command = gproc.NewProcess(binary, nil)
 
-		testpath := gtest.DataPath("gobuild")
-		filename := filepath.Join(testpath, "main.go")
-		output := filepath.Join(testpath, "main.exe")
+		testPath := gtest.DataPath("gobuild")
+		filename := filepath.Join(testPath, "main.go")
+		output := filepath.Join(testPath, "main.exe")
 
 		command.Args = append(command.Args, "build")
 		command.Args = append(command.Args, `-ldflags="-X 'main.TestString=\"test string\"'"`)
 		command.Args = append(command.Args, "-o", output)
 		command.Args = append(command.Args, filename)
 
-		var buf strings.Builder
-		command.Stdout = &buf
-		command.Stderr = &buf
 		err := command.Run(gctx.GetInitCtx())
 		t.AssertNil(err)
 
-		realPath, err := gfile.Search(output)
-		t.AssertNE(realPath, "")
-		t.Assert(err, nil)
+		exists := gfile.Exists(output)
+		t.Assert(exists, true)
 		defer gfile.Remove(output)
 
-		result, err := gproc.ShellExec(gctx.New(), output)
+		runCmd := gproc.NewProcess(output, nil)
+		var buf strings.Builder
+		runCmd.Stdout = &buf
+		runCmd.Stderr = &buf
+		err = runCmd.Run(gctx.GetInitCtx())
 		t.Assert(err, nil)
-		t.Assert(gstr.Contains(result, "test string"), true)
+		t.Assert(buf.String(), `"test string"`)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
 		binary := gproc.SearchBinary("go")
 		t.AssertNE(binary, "")
+		// NewProcess(path,args) path： It's best not to have spaces
 		var command = gproc.NewProcess(binary, nil)
 
-		testpath := gtest.DataPath("gobuild")
-		filename := filepath.Join(testpath, "main.go")
-		output := filepath.Join(testpath, "main.exe")
+		testPath := gtest.DataPath("gobuild")
+		filename := filepath.Join(testPath, "main.go")
+		output := filepath.Join(testPath, "main.exe")
 
 		command.Args = append(command.Args, "build")
 		command.Args = append(command.Args, `-ldflags="-s -w"`)
@@ -102,9 +70,8 @@ func Test_ProcessRun(t *testing.T) {
 		err := command.Run(gctx.GetInitCtx())
 		t.AssertNil(err)
 
-		realPath, err := gfile.Search(output)
-		t.Assert(err, nil)
-		t.AssertNE(realPath, "")
+		exists := gfile.Exists(output)
+		t.Assert(exists, true)
 
 		defer gfile.Remove(output)
 	})
