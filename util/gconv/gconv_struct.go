@@ -223,22 +223,29 @@ func doStruct(
 			continue
 		}
 
-		// All fields need to be documented,
-		// including those of the anonymous struct type
-		// see: gconv_z_unit_struct_tag_test.go\Test_StructTag_AnonymousStruct_Nest
 		tempName = elemFieldType.Name
+		tag := getTag(elemFieldType, priorityTagArray)
+
 		f := setField{
 			index: elemFieldType.Index[0],
 		}
-		tag := getTag(elemFieldType, priorityTagArray)
-		// Use the native field name as the tag
-		if tag == "" {
-			tag = tempName
-		}
-		f.tag = tag
-		setFields[tempName] = f
+
 		// Maybe it's struct/*struct embedded.
 		if elemFieldType.Anonymous {
+			// type Name struct {
+			//    LastName string `json:"lastName"`
+			//    FirstName string `json:"firstName"`
+			// }
+			// type User struct {
+			//     Name `json:"name"`
+			//     Other fields...
+			// }
+			// It is only recorded if the name has a tag
+			if tag != "" {
+				f.tag = tag
+				setFields[tempName] = f
+			}
+
 			elemFieldValue = pointerElemReflectValue.Field(i)
 			// Ignore the interface attribute if it's nil.
 			if elemFieldValue.Kind() == reflect.Interface {
@@ -250,7 +257,15 @@ func doStruct(
 			if err = doStruct(paramsMap, elemFieldValue, paramKeyToAttrMap, priorityTag); err != nil {
 				return err
 			}
+		} else {
+			// Use the native field name as the tag
+			if tag == "" {
+				tag = tempName
+			}
+			f.tag = tag
+			setFields[tempName] = f
 		}
+
 	}
 
 	if len(setFields) == 0 {
