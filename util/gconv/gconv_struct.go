@@ -225,7 +225,6 @@ func doStruct(
 
 		tempName = elemFieldType.Name
 		tag := getTag(elemFieldType, priorityTagArray)
-
 		f := setField{
 			index: elemFieldType.Index[0],
 		}
@@ -265,7 +264,6 @@ func doStruct(
 			f.tag = tag
 			setFields[tempName] = f
 		}
-
 	}
 
 	if len(setFields) == 0 {
@@ -344,81 +342,6 @@ func bindVarToStructAttrWithFieldIndex(
 	fieldIndex int, value interface{}, paramKeyToAttrMap map[string]string,
 ) (err error) {
 	structFieldValue := structReflectValue.Field(fieldIndex)
-	if !structFieldValue.IsValid() {
-		return nil
-	}
-	// CanSet checks whether attribute is public accessible.
-	if !structFieldValue.CanSet() {
-		return nil
-	}
-	defer func() {
-		if exception := recover(); exception != nil {
-			if err = bindVarToReflectValue(structFieldValue, value, paramKeyToAttrMap); err != nil {
-				err = gerror.Wrapf(err, `error binding value to attribute "%s"`, attrName)
-			}
-		}
-	}()
-	// Directly converting.
-	if empty.IsNil(value) {
-		structFieldValue.Set(reflect.Zero(structFieldValue.Type()))
-	} else {
-		// Try to call custom converter.
-		// Issue: https://github.com/gogf/gf/issues/3099
-		var (
-			customConverterInput reflect.Value
-			ok                   bool
-		)
-		if customConverterInput, ok = value.(reflect.Value); !ok {
-			customConverterInput = reflect.ValueOf(value)
-		}
-
-		if ok, err = callCustomConverter(customConverterInput, structFieldValue); ok || err != nil {
-			return
-		}
-
-		// Special handling for certain types:
-		// - Overwrite the default type converting logic of stdlib for time.Time/*time.Time.
-		var structFieldTypeName = structFieldValue.Type().String()
-		switch structFieldTypeName {
-		case "time.Time", "*time.Time":
-			doConvertWithReflectValueSet(structFieldValue, doConvertInput{
-				FromValue:  value,
-				ToTypeName: structFieldTypeName,
-				ReferValue: structFieldValue,
-			})
-			return
-		// Hold the time zone consistent in recursive
-		// Issue: https://github.com/gogf/gf/issues/2980
-		case "*gtime.Time", "gtime.Time":
-			doConvertWithReflectValueSet(structFieldValue, doConvertInput{
-				FromValue:  value,
-				ToTypeName: structFieldTypeName,
-				ReferValue: structFieldValue,
-			})
-			return
-		}
-
-		// Common interface check.
-		if ok, err = bindVarToReflectValueWithInterfaceCheck(structFieldValue, value); ok {
-			return err
-		}
-
-		// Default converting.
-		doConvertWithReflectValueSet(structFieldValue, doConvertInput{
-			FromValue:  value,
-			ToTypeName: structFieldTypeName,
-			ReferValue: structFieldValue,
-		})
-	}
-	return nil
-}
-
-// bindVarToStructAttr sets value to struct object attribute by name.
-func bindVarToStructAttr(
-	structReflectValue reflect.Value,
-	attrName string, value interface{}, paramKeyToAttrMap map[string]string,
-) (err error) {
-	structFieldValue := structReflectValue.FieldByName(attrName)
 	if !structFieldValue.IsValid() {
 		return nil
 	}
