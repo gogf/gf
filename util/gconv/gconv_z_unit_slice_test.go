@@ -321,6 +321,12 @@ func Test_Strings(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertEQ(gconv.Strings("123"), []string{"123"})
 	})
+	// https://github.com/gogf/gf/issues/3465
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gconv.Strings("null"), []string{"null"})
+		t.AssertEQ(gconv.Strings([]byte("null")), []string{"110", "117", "108", "108"})
+		t.AssertEQ(gconv.Strings("{\"name\":\"wln\"}"), []string{"{\"name\":\"wln\"}"})
+	})
 }
 
 func Test_Slice_Interfaces(t *testing.T) {
