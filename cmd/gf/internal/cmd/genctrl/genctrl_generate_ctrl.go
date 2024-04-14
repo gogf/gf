@@ -144,7 +144,9 @@ func (c *controllerGenerator) doGenerateCtrlItem(dstModuleFolderPath string, ite
 		fileContents := gfile.GetContents(methodFilePath)
 		// https://github.com/gogf/gf/issues/3460
 		// TODO: Use the regular rule to determine whether it is better？
-		substr := fmt.Sprintf(`func[^\S\n]*\([^\S\n]*c[^\S\n]+\*%v\s*\)[^\S\n]*%v[^\S\n]*\(`, ctrlName, item.MethodName)
+		substr := fmt.Sprintf(
+			`func[^\S\n]*\([^\S\n]*c[^\S\n]+\*[^\S\n]*%v[^\S\n]*\)[^\S\n]*%v[^\S\n]*\(`,
+			ctrlName, item.MethodName)
 		if gregex.IsMatchString(fileContents, substr) {
 			return
 		}
