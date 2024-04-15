@@ -195,7 +195,7 @@ func (in *HandlerInput) getDefaultBuffer(withColor bool) *bytes.Buffer {
 	}
 
 	if len(in.Values) > 0 {
-		buffer.WriteString(in.ValuesContent())
+		in.addStringToBuffer(buffer, in.ValuesContent())
 	}
 
 	if in.Stack != "" {
