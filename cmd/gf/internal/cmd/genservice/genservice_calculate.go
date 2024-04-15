@@ -7,12 +7,16 @@
 package genservice
 
 import (
+	"bytes"
 	"fmt"
+	"go/ast"
+	"go/format"
 	"go/parser"
 	"go/token"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 )
@@ -172,4 +176,94 @@ func (c CGenService) calculateInterfaceFunctions(
 		}
 	}
 	return nil
+}
+
+func (c CGenService) CalculateInterfaceFunctions2(filePath string) ([]map[string]string, error) {
+	var (
+		fileContent = gfile.GetContents(filePath)
+		fileSet     = token.NewFileSet()
+	)
+
+	node, err := parser.ParseFile(fileSet, "", fileContent, parser.ParseComments)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]map[string]string, 0)
+
+	// 遍历AST节点，获取属于结构体的方法
+	ast.Inspect(node, func(n ast.Node) bool {
+		switch x := n.(type) {
+		case *ast.FuncDecl:
+			if x.Recv == nil {
+				return true
+			}
+			var (
+				// 函数名
+				funcName     = x.Name.Name
+				receiverName string
+				funcComment  string
+			)
+
+			receiverName, _ = c.astExprToString(x.Recv.List[0].Type)
+
+			if x.Doc != nil {
+				funcComment = x.Doc.Text()
+			}
+
+			// 获取函数形参的名称和类型
+			funcParams := make([]string, 0)
+			params := make([]string, 0)
+			if x.Type.Params != nil {
+				for _, param := range x.Type.Params.List {
+					for _, name := range param.Names {
+						funcParams = append(funcParams, name.Name)
+						s, _ := c.astExprToString(param.Type)
+						params = append(params, s)
+					}
+				}
+			}
+
+			// 获取函数返回值的名称和类型
+			funcResults := make([]string, 0)
+			results := make([]string, 0)
+			if x.Type.Results != nil {
+				for _, result := range x.Type.Results.List {
+					for _, name := range result.Names {
+						funcResults = append(funcResults, name.Name)
+						s, _ := c.astExprToString(result.Type)
+						results = append(results, s)
+					}
+				}
+			}
+
+			res = append(res, map[string]string{
+				"funcName":     funcName,
+				"funcComment":  funcComment,
+				"receiverName": receiverName,
+				// "funcParams":  gstr.Join(funcParams, ","),
+				// "funcResults": gstr.Join(funcResults, ","),
+			})
+		}
+		return true
+	})
+	return res, nil
+}
+
+// exprToString converts ast.Expr to string.
+// For example:
+//
+// ast.Expr -> "context.Context"
+// ast.Expr -> "*v1.XxxReq"
+// ast.Expr -> "error"
+// ast.Expr -> "int"
+func (c CGenService) astExprToString(expr ast.Expr) (string, error) {
+	var (
+		buf bytes.Buffer
+		err error
+	)
+	err = format.Node(&buf, token.NewFileSet(), expr)
+	if err != nil {
+		return "", err
+	}
+	return buf.String(), nil
 }
