@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strings"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
@@ -53,7 +54,14 @@ func NewProcess(path string, args []string, environment ...[]string) *Process {
 		},
 	}
 	process.Dir, _ = os.Getwd()
-	process = newProcess(process, args, path)
+	if len(args) > 0 {
+		// Exclude of current binary path.
+		start := 0
+		if strings.EqualFold(path, args[0]) {
+			start = 1
+		}
+		process.Args = append(process.Args, args[start:]...)
+	}
 	return process
 }
 
@@ -94,6 +102,11 @@ func (p *Process) Start(ctx context.Context) (int, error) {
 	}
 	p.Env = append(p.Env, fmt.Sprintf("%s=%d", envKeyPPid, p.PPid))
 	p.Env = genv.Filter(p.Env)
+
+	// On Windows, this works and doesn't work on other platforms
+	if runtime.GOOS == "windows" {
+		joinProcessArgs(p)
+	}
 
 	if err := p.Cmd.Start(); err == nil {
 		if p.Manager != nil {
