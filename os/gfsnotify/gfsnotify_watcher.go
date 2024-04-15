@@ -106,11 +106,11 @@ func (w *Watcher) addWithCallbackFunc(name, path string, callbackFunc func(event
 
 // Close closes the watcher.
 func (w *Watcher) Close() {
-	close(w.closeChan)
+	w.events.Close()
 	if err := w.watcher.Close(); err != nil {
 		intlog.Errorf(context.TODO(), `%+v`, err)
 	}
-	w.events.Close()
+	close(w.closeChan)
 }
 
 // Remove removes monitor and all callbacks associated with the `path` recursively.
