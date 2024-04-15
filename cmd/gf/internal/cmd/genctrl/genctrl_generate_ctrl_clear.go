@@ -38,6 +38,7 @@ func (c *controllerClearer) doClear(dstModuleFolderPath string, item apiItem) (e
 		))
 		fileContent = gstr.Trim(gfile.GetContents(methodFilePath))
 	)
+	// retrieve it without using AST, because it's simple.
 	match, err := gregex.MatchString(`.+?Req.+?Res.+?{([\s\S]+?)}`, fileContent)
 	if err != nil {
 		return err

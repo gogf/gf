@@ -103,6 +103,7 @@ func (c *apiSdkGenerator) doGenerateSdkIClient(
 	// append the import path to current import paths.
 	if !gstr.Contains(fileContent, moduleImportPath) {
 		isDirty = true
+		// It is without using AST, because it is from a template.
 		fileContent, err = gregex.ReplaceString(
 			`(import \([\s\S]*?)\)`,
 			fmt.Sprintf("$1\t%s\n)", moduleImportPath),
@@ -116,6 +117,7 @@ func (c *apiSdkGenerator) doGenerateSdkIClient(
 	// append the function definition to interface definition.
 	if !gstr.Contains(fileContent, interfaceFuncDefinition) {
 		isDirty = true
+		// It is without using AST, because it is from a template.
 		fileContent, err = gregex.ReplaceString(
 			`(type IClient interface {[\s\S]*?)}`,
 			fmt.Sprintf("$1\t%s\n}", interfaceFuncDefinition),
