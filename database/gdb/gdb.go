@@ -744,10 +744,10 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		node.Name = nodeSchema
 	}
 	// Update the configuration object in internal data.
-	internalData := c.getInternalCtxDataFromCtx(ctx)
-	if internalData != nil {
-		internalData.ConfigNode = node
+	if err = c.setConfigNodeToCtx(ctx, node); err != nil {
+		return
 	}
+
 	// Cache the underlying connection pool object by node.
 	var (
 		instanceCacheFunc = func() interface{} {

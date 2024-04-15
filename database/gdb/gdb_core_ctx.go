@@ -8,12 +8,16 @@ package gdb
 
 import (
 	"context"
+	"sync"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gctx"
 )
 
 // internalCtxData stores data in ctx for internal usage purpose.
 type internalCtxData struct {
+	sync.Mutex
 	// Used configuration node in current operation.
 	ConfigNode *ConfigNode
 }
@@ -28,8 +32,7 @@ type internalColumnData struct {
 }
 
 const (
-	internalCtxDataKeyInCtx gctx.StrKey = "InternalCtxData"
-
+	internalCtxDataKeyInCtx    gctx.StrKey = "InternalCtxData"
 	internalColumnDataKeyInCtx gctx.StrKey = "InternalColumnData"
 
 	// `ignoreResultKeyInCtx` is a mark for some db drivers that do not support `RowsAffected` function,
@@ -49,9 +52,25 @@ func (c *Core) injectInternalCtxData(ctx context.Context) context.Context {
 	})
 }
 
-func (c *Core) getInternalCtxDataFromCtx(ctx context.Context) *internalCtxData {
-	if v := ctx.Value(internalCtxDataKeyInCtx); v != nil {
-		return v.(*internalCtxData)
+func (c *Core) setConfigNodeToCtx(ctx context.Context, node *ConfigNode) error {
+	value := ctx.Value(internalCtxDataKeyInCtx)
+	if value == nil {
+		return gerror.NewCode(gcode.CodeInternalError, `no internal data found in context`)
+	}
+
+	data := value.(*internalCtxData)
+	data.Lock()
+	defer data.Unlock()
+	data.ConfigNode = node
+	return nil
+}
+
+func (c *Core) getConfigNodeFromCtx(ctx context.Context) *ConfigNode {
+	if value := ctx.Value(internalCtxDataKeyInCtx); value != nil {
+		data := value.(*internalCtxData)
+		data.Lock()
+		defer data.Unlock()
+		return data.ConfigNode
 	}
 	return nil
 }
