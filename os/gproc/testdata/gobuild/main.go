@@ -4,9 +4,12 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-//go:build !windows
+package main
 
-package gproc
+var (
+	TestString string
+)
 
-// Do nothing, just set it on the Windows platform
-func joinProcessArgs(p *Process) {}
+func main() {
+	print(TestString)
+}
