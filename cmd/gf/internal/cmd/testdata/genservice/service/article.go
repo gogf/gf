@@ -7,6 +7,9 @@ package service
 
 import (
 	"context"
+	"go/ast"
+
+	gdbas "github.com/gogf/gf/v2/database/gdb"
 )
 
 type (
@@ -19,6 +22,10 @@ type (
 		 * @author oldme
 		 */
 		Create(ctx context.Context, info struct{}) (id uint, err error)
+		A1o2(ctx context.Context, str string, a, b *ast.GoStmt) error
+		T1(ctx context.Context, id, id2 uint) (gdb gdbas.Model, err error)
+		T3(ctx context.Context, b *gdbas.Model) (c, d *gdbas.Model, err error)
+		T4(i interface{}) interface{}
 	}
 )
 

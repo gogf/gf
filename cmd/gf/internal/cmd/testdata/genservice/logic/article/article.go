@@ -8,6 +8,7 @@ package article
 
 import (
 	"context"
+	"go/ast"
 	t "time"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genservice/service"
@@ -34,4 +35,8 @@ func (s *sArticle) Create(ctx context.Context, info struct{}) (id uint, err erro
 	// Use time package to test alias import.
 	t.Now()
 	return id, err
+}
+
+func (s *sArticle) A1o2(ctx context.Context, str string, a, b *ast.GoStmt) error {
+	return nil
 }
