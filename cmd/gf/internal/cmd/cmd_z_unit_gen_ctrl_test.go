@@ -113,13 +113,13 @@ func Test_Gen_Ctrl_Issue3460(t *testing.T) {
 		files, err := gfile.ScanDir(ctrlPath, "*.go", true)
 		t.AssertNil(err)
 		t.Assert(files, []string{
-			ctrlPath + filepath.FromSlash("/hello/hello.go"),
-			ctrlPath + filepath.FromSlash("/hello/hello_new.go"),
-			ctrlPath + filepath.FromSlash("/hello/hello_v1_req.go"),
+			filepath.Join(ctrlPath, "/hello/hello.go"),
+			filepath.Join(ctrlPath, "/hello/hello_new.go"),
+			filepath.Join(ctrlPath, "/hello/hello_v1_req.go"),
 		})
 
-		testPath := gtest.DataPath("issue", "3460", "controller")
-		expectFile := testPath + filepath.FromSlash("/hello/hello_v1_req.go")
+		expectFile := filepath.Join(apiFolder, "/controller/hello/hello_v1_req.go")
+		// Line Feed maybe \r\n or \n
 		t.Assert(gfile.GetContents(files[2]), gfile.GetContents(expectFile))
 
 	})
