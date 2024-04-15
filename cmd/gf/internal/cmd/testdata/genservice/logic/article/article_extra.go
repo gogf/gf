@@ -12,7 +12,7 @@ import (
 	gdbas "github.com/gogf/gf/v2/database/gdb"
 )
 
-func (s *sArticle) T1(ctx context.Context, id, id2 uint) (gdb gdbas.Model, err error) {
+func (s sArticle) T1(ctx context.Context, id, id2 uint) (gdb gdbas.Model, err error) {
 	g := gdbas.Model{}
 	return g, err
 }
