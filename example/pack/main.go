@@ -30,5 +30,9 @@ func main() {
 		content = g.I18n().T(ctx, `{#hello} {#world}!`)
 		r.Response.Write(content)
 	})
+	s.SetErrorLogEnabled(true)
+	s.SetAccessLogEnabled(true)
 	s.Run()
+	// gf pack resource packed/packed.go
+	// http://127.0.0.1:8199/index.html
 }
