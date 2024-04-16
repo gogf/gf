@@ -10,6 +10,7 @@ import (
 	"context"
 
 	gdbas "github.com/gogf/gf/v2/database/gdb"
+	_ "github.com/gogf/gf/v2/os/gfile"
 )
 
 // T1 random comment
