@@ -24,10 +24,10 @@ type logicItem struct {
 	Comment     string              `eg:"Get user list"`
 }
 
-// GetLogicItemInSrc retrieves the logic items in the specified source file.
+// CalculateItemsInSrc retrieves the logic items in the specified source file.
 // It can't skip the private methods.
 // It can't skip the imported packages of import alias equal to `_`.
-func (c CGenService) GetLogicItemInSrc(filePath string) (pkgItems []packageItem, logicItems []logicItem, err error) {
+func (c CGenService) CalculateItemsInSrc(filePath string) (pkgItems []packageItem, logicItems []logicItem, err error) {
 	var (
 		fileContent = gfile.GetContents(filePath)
 		fileSet     = token.NewFileSet()

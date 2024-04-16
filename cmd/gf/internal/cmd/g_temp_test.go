@@ -10,7 +10,7 @@ import (
 
 func TestTemp(t *testing.T) {
 	path := gtest.DataPath("genservice", "logic", "article", "article_extra.go")
-	pkgs, items, err := genservice.CGenService{}.GetLogicItemInSrc(path)
+	pkgs, items, err := genservice.CGenService{}.CalculateItemsInSrc(path)
 	if err != nil {
 		panic(err)
 	}
