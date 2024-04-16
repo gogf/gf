@@ -167,22 +167,23 @@ func (c *controllerGenerator) doGenerateCtrlItem(dstModuleFolderPath string, ite
 
 // use -merge
 func (c *controllerGenerator) doGenerateCtrlMergeItem(dstModuleFolderPath string, items []apiItem, doneApiSet *gset.StrSet) (err error) {
-	methodFilePath := gfile.Join(dstModuleFolderPath, fmt.Sprintf(
-		`%s_%s_%s.go`, items[0].Module, items[0].Version, items[0].FileName,
-	))
-	var contents strings.Builder
 
+	var (
+		methodFilePath = gfile.Join(dstModuleFolderPath, fmt.Sprintf(
+			`%s_%s_%s.go`, items[0].Module, items[0].Version, items[0].FileName,
+		))
+
+		contents strings.Builder
+	)
+	// Generate a CTRL file header
 	if gfile.Exists(methodFilePath) == false {
-		contents.WriteString(gstr.TrimLeft(gstr.ReplaceByMap(consts.TemplateGenCtrlControllerMethodFunc, g.MapStrStr{
+		contents.WriteString(gstr.TrimLeft(gstr.ReplaceByMap(consts.TemplateGenCtrlControllerHeader, g.MapStrStr{
 			"{Module}":     items[0].Module,
 			"{ImportPath}": items[0].Import,
-			"{CtrlName}":   fmt.Sprintf(`Controller%s`, gstr.UcFirst(items[0].Version)),
-			"{Version}":    items[0].Version,
-			"{MethodName}": items[0].MethodName,
 		})))
 	}
 
-	for i := 1; i < len(items); i++ {
+	for i := 0; i < len(items); i++ {
 		item := items[i]
 		ctrlName := fmt.Sprintf(`Controller%s`, gstr.UcFirst(item.Version))
 		contents.WriteString(gstr.TrimLeft(gstr.ReplaceByMap(consts.TemplateGenCtrlControllerMethodFuncMerge, g.MapStrStr{
@@ -194,8 +195,8 @@ func (c *controllerGenerator) doGenerateCtrlMergeItem(dstModuleFolderPath string
 
 		doneApiSet.Add(items[i].String())
 	}
-
-	if err = gfile.PutContents(methodFilePath, contents.String()); err != nil {
+	// Add all ctrl to the end of the file at once
+	if err = gfile.PutContentsAppend(methodFilePath, contents.String()); err != nil {
 		return err
 	}
 
