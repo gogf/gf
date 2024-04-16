@@ -14,6 +14,7 @@ import (
 	"go/token"
 
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 type logicItem struct {
@@ -24,6 +25,8 @@ type logicItem struct {
 	Comment     string              `eg:"Get user list"`
 }
 
+// GetLogicItemInSrc retrieves the logic items in the specified source file.
+// It can skip the private methods.
 func (c CGenService) GetLogicItemInSrc(filePath string) (items []logicItem, err error) {
 	var (
 		fileContent = gfile.GetContents(filePath)
@@ -41,6 +44,12 @@ func (c CGenService) GetLogicItemInSrc(filePath string) (items []logicItem, err 
 			if x.Recv == nil {
 				return true
 			}
+
+			// Skip private methods.
+			if !gstr.IsLetterUpper(x.Name.Name[0]) {
+				return true
+			}
+
 			var funcName = x.Name.Name
 			items = append(items, logicItem{
 				Receiver:    c.getFuncReceiverTypeName(x),
