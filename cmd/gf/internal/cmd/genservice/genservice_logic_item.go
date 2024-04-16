@@ -14,7 +14,6 @@ import (
 	"go/token"
 
 	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/text/gstr"
 )
 
 type logicItem struct {
@@ -26,8 +25,9 @@ type logicItem struct {
 }
 
 // GetLogicItemInSrc retrieves the logic items in the specified source file.
-// It can skip the private methods.
-func (c CGenService) GetLogicItemInSrc(filePath string) (items []logicItem, err error) {
+// It can't skip the private methods.
+// It can't skip the imported packages of import alias equal to `_`.
+func (c CGenService) GetLogicItemInSrc(filePath string) (pkgItems []packageItem, logicItems []logicItem, err error) {
 	var (
 		fileContent = gfile.GetContents(filePath)
 		fileSet     = token.NewFileSet()
@@ -35,23 +35,23 @@ func (c CGenService) GetLogicItemInSrc(filePath string) (items []logicItem, err 
 
 	node, err := parser.ParseFile(fileSet, "", fileContent, parser.ParseComments)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	ast.Inspect(node, func(n ast.Node) bool {
 		switch x := n.(type) {
+		case *ast.ImportSpec:
+			// calculate the imported packages
+			pkgItems = append(pkgItems, c.getImportPackages(x))
+
 		case *ast.FuncDecl:
+			// calculate the logic items
 			if x.Recv == nil {
 				return true
 			}
 
-			// Skip private methods.
-			if !gstr.IsLetterUpper(x.Name.Name[0]) {
-				return true
-			}
-
 			var funcName = x.Name.Name
-			items = append(items, logicItem{
+			logicItems = append(logicItems, logicItem{
 				Receiver:    c.getFuncReceiverTypeName(x),
 				MethodName:  funcName,
 				InputParam:  c.getFuncInputParams(x),
@@ -62,6 +62,29 @@ func (c CGenService) GetLogicItemInSrc(filePath string) (items []logicItem, err 
 		return true
 	})
 	return
+}
+
+// getImportPackages retrieves the imported packages from the specified ast.ImportSpec.
+func (c CGenService) getImportPackages(node *ast.ImportSpec) (packages packageItem) {
+	if node.Path == nil {
+		return
+	}
+	var (
+		alias     string
+		path      = node.Path.Value
+		rawImport string
+	)
+	if node.Name != nil {
+		alias = node.Name.Name
+		rawImport = alias + " " + path
+	} else {
+		rawImport = path
+	}
+	return packageItem{
+		Alias:     alias,
+		Path:      path,
+		RawImport: rawImport,
+	}
 }
 
 // getFuncReceiverTypeName retrieves the receiver type of the function.
