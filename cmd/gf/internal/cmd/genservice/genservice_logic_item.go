@@ -17,11 +17,11 @@ import (
 )
 
 type logicItem struct {
-	Receiver    string              `eg:"sUser"`
-	MethodName  string              `eg:"GetList"`
-	InputParam  []map[string]string `eg:"ctx: context.Context, cond: *SearchInput"`
-	OutputParam []map[string]string `eg:"list: []*User, err: error"`
-	Comment     string              `eg:"Get user list"`
+	Receiver     string              `eg:"sUser"`
+	MethodName   string              `eg:"GetList"`
+	InputParams  []map[string]string `eg:"ctx: context.Context, cond: *SearchInput"`
+	OutputParams []map[string]string `eg:"list: []*User, err: error"`
+	Comment      string              `eg:"Get user list"`
 }
 
 // CalculateItemsInSrc retrieves the logic items in the specified source file.
@@ -52,11 +52,11 @@ func (c CGenService) CalculateItemsInSrc(filePath string) (pkgItems []packageIte
 
 			var funcName = x.Name.Name
 			logicItems = append(logicItems, logicItem{
-				Receiver:    c.getFuncReceiverTypeName(x),
-				MethodName:  funcName,
-				InputParam:  c.getFuncInputParams(x),
-				OutputParam: c.getFuncOutputParams(x),
-				Comment:     c.getFuncComment(x),
+				Receiver:     c.getFuncReceiverTypeName(x),
+				MethodName:   funcName,
+				InputParams:  c.getFuncInputParams(x),
+				OutputParams: c.getFuncOutputParams(x),
+				Comment:      c.getFuncComment(x),
 			})
 		}
 		return true
@@ -114,6 +114,18 @@ func (c CGenService) getFuncInputParams(node *ast.FuncDecl) (inputParams []map[s
 		return
 	}
 	for _, param := range node.Type.Params.List {
+		if param.Names == nil {
+			// No name for the return value.
+			resultType, err := c.astExprToString(param.Type)
+			if err != nil {
+				continue
+			}
+			inputParams = append(inputParams, map[string]string{
+				"paramName": "",
+				"paramType": resultType,
+			})
+			continue
+		}
 		for _, name := range param.Names {
 			paramType, err := c.astExprToString(param.Type)
 			if err != nil {
@@ -134,17 +146,29 @@ func (c CGenService) getFuncInputParams(node *ast.FuncDecl) (inputParams []map[s
 //
 // list: []*User
 // err: error
-func (c CGenService) getFuncOutputParams(node *ast.FuncDecl) (outputParams []map[string]string) {
+func (c CGenService) getFuncOutputParams(node *ast.FuncDecl) (results []map[string]string) {
 	if node.Type.Results == nil {
 		return
 	}
 	for _, result := range node.Type.Results.List {
+		if result.Names == nil {
+			// No name for the return value.
+			resultType, err := c.astExprToString(result.Type)
+			if err != nil {
+				continue
+			}
+			results = append(results, map[string]string{
+				"paramName": "",
+				"paramType": resultType,
+			})
+			continue
+		}
 		for _, name := range result.Names {
 			resultType, err := c.astExprToString(result.Type)
 			if err != nil {
 				continue
 			}
-			outputParams = append(outputParams, map[string]string{
+			results = append(results, map[string]string{
 				"paramName": name.Name,
 				"paramType": resultType,
 			})
