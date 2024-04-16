@@ -17,11 +17,11 @@ import (
 )
 
 type logicItem struct {
-	Receiver     string              `eg:"sUser"`
-	MethodName   string              `eg:"GetList"`
-	InputParams  []map[string]string `eg:"ctx: context.Context, cond: *SearchInput"`
-	OutputParams []map[string]string `eg:"list: []*User, err: error"`
-	Comment      string              `eg:"Get user list"`
+	Receiver   string              `eg:"sUser"`
+	MethodName string              `eg:"GetList"`
+	Params     []map[string]string `eg:"ctx: context.Context, cond: *SearchInput"`
+	Results    []map[string]string `eg:"list: []*User, err: error"`
+	Comment    string              `eg:"Get user list"`
 }
 
 // CalculateItemsInSrc retrieves the logic items in the specified source file.
@@ -52,11 +52,11 @@ func (c CGenService) CalculateItemsInSrc(filePath string) (pkgItems []packageIte
 
 			var funcName = x.Name.Name
 			logicItems = append(logicItems, logicItem{
-				Receiver:     c.getFuncReceiverTypeName(x),
-				MethodName:   funcName,
-				InputParams:  c.getFuncInputParams(x),
-				OutputParams: c.getFuncOutputParams(x),
-				Comment:      c.getFuncComment(x),
+				Receiver:   c.getFuncReceiverTypeName(x),
+				MethodName: funcName,
+				Params:     c.getFuncParams(x),
+				Results:    c.getFuncResults(x),
+				Comment:    c.getFuncComment(x),
 			})
 		}
 		return true
@@ -103,13 +103,12 @@ func (c CGenService) getFuncReceiverTypeName(node *ast.FuncDecl) (receiverType s
 	return
 }
 
-// getFuncInputParams retrieves the input parameters of the function.
+// getFuncParams retrieves the input parameters of the function.
 // It returns the name and type of the input parameters.
 // For example:
 //
-// ctx: context.Context
-// req: *v1.XxxReq
-func (c CGenService) getFuncInputParams(node *ast.FuncDecl) (inputParams []map[string]string) {
+// []map[string]string{paramName:ctx paramType:context.Context, paramName:info paramType:struct{}}
+func (c CGenService) getFuncParams(node *ast.FuncDecl) (params []map[string]string) {
 	if node.Type.Params == nil {
 		return
 	}
@@ -120,7 +119,7 @@ func (c CGenService) getFuncInputParams(node *ast.FuncDecl) (inputParams []map[s
 			if err != nil {
 				continue
 			}
-			inputParams = append(inputParams, map[string]string{
+			params = append(params, map[string]string{
 				"paramName": "",
 				"paramType": resultType,
 			})
@@ -131,7 +130,7 @@ func (c CGenService) getFuncInputParams(node *ast.FuncDecl) (inputParams []map[s
 			if err != nil {
 				continue
 			}
-			inputParams = append(inputParams, map[string]string{
+			params = append(params, map[string]string{
 				"paramName": name.Name,
 				"paramType": paramType,
 			})
@@ -140,13 +139,13 @@ func (c CGenService) getFuncInputParams(node *ast.FuncDecl) (inputParams []map[s
 	return
 }
 
-// getFuncOutputParams retrieves the output parameters of the function.
+// getFuncResults retrieves the output parameters of the function.
 // It returns the name and type of the output parameters.
 // For example:
 //
-// list: []*User
-// err: error
-func (c CGenService) getFuncOutputParams(node *ast.FuncDecl) (results []map[string]string) {
+// []map[string]string{resultName:list resultType:[]*User, resultName:err resultType:error}
+// []map[string]string{resultName: "", resultType: error}
+func (c CGenService) getFuncResults(node *ast.FuncDecl) (results []map[string]string) {
 	if node.Type.Results == nil {
 		return
 	}
@@ -158,8 +157,8 @@ func (c CGenService) getFuncOutputParams(node *ast.FuncDecl) (results []map[stri
 				continue
 			}
 			results = append(results, map[string]string{
-				"paramName": "",
-				"paramType": resultType,
+				"resultName": "",
+				"resultType": resultType,
 			})
 			continue
 		}
@@ -169,8 +168,8 @@ func (c CGenService) getFuncOutputParams(node *ast.FuncDecl) (results []map[stri
 				continue
 			}
 			results = append(results, map[string]string{
-				"paramName": name.Name,
-				"paramType": resultType,
+				"resultName": name.Name,
+				"resultType": resultType,
 			})
 		}
 	}
