@@ -167,8 +167,8 @@ type DictTypeAddRes struct {
 		t.AssertNil(err)
 
 		var (
-			genApi       = filepath.Join(apiFolder, "/dict.go")
-			genApiExpect = filepath.Join(apiFolder, "/dict_expect.gotest")
+			genApi       = filepath.Join(apiFolder, "/dict/dict.go")
+			genApiExpect = filepath.Join(apiFolder, "/dict/dict_expect.go")
 		)
 		defer gfile.Remove(genApi)
 		t.Assert(gfile.GetContents(genApi), gfile.GetContents(genApiExpect))
@@ -240,7 +240,7 @@ func Test_Gen_Ctrl_UseMerge_AddNewCtrl(t *testing.T) {
 
 		var (
 			genApi       = filepath.Join(apiFolder, "/dict/dict.go")
-			genApiExpect = filepath.Join(apiFolder, "/dict/dict_expect.gotest")
+			genApiExpect = filepath.Join(apiFolder, "/dict/dict_expect.go")
 		)
 		defer gfile.Remove(genApi)
 		t.Assert(gfile.GetContents(genApi), gfile.GetContents(genApiExpect))

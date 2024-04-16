@@ -12,5 +12,4 @@ import (
 
 type IDictV1 interface {
 	DictTypeAddPage(ctx context.Context, req *v1.DictTypeAddPageReq) (res *v1.DictTypeAddPageRes, err error)
-	DictTypeAdd(ctx context.Context, req *v1.DictTypeAddReq) (res *v1.DictTypeAddRes, err error)
 }
