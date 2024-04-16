@@ -11,6 +11,8 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gset"
@@ -21,9 +23,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gtag"
-
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 const (
@@ -187,7 +187,11 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		)
 		generatedDstFilePathSet.Add(dstFilePath)
 		for _, file := range files {
-			var packageItems []packageItem
+			packageItems, logicItems, err := c.CalculateItemsInSrc(file)
+			if err != nil {
+				return nil, err
+			}
+
 			fileContent = gfile.GetContents(file)
 			// Calculate code comments in source Go files.
 			err = c.calculateCodeCommented(in, fileContent, srcCodeCommentedMap)
@@ -200,11 +204,6 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 				return nil, err
 			}
 
-			// Calculate imported packages of source go files.
-			packageItems, err = c.calculateImportedPackages(fileContent)
-			if err != nil {
-				return nil, err
-			}
 			// try finding the conflicts imports between files.
 			for _, item := range packageItems {
 				var alias = item.Alias
@@ -277,7 +276,7 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 			}
 
 			// Calculate functions and interfaces for service generating.
-			err = c.calculateInterfaceFunctions(in, fileContent, srcPkgInterfaceMap)
+			err = c.calculateInterfaceFunctions(in, logicItems, srcPkgInterfaceMap)
 			if err != nil {
 				return nil, err
 			}
@@ -295,6 +294,8 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 			)
 			continue
 		}
+
+		gutil.Dump(srcPkgInterfaceMap)
 		// Generating service go file for single logic package.
 		if ok, err = c.generateServiceFile(generateServiceFilesInput{
 			CGenServiceInput:    in,
