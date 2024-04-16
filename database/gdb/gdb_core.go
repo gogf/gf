@@ -56,7 +56,7 @@ func (c *Core) Ctx(ctx context.Context) DB {
 		panic(err)
 	}
 	newCore.ctx = WithDB(ctx, newCore.db)
-	newCore.ctx = c.InjectInternalCtxData(newCore.ctx)
+	newCore.ctx = c.injectInternalCtxData(newCore.ctx)
 	return newCore.db
 }
 
@@ -67,7 +67,7 @@ func (c *Core) GetCtx() context.Context {
 	if ctx == nil {
 		ctx = context.TODO()
 	}
-	return c.InjectInternalCtxData(ctx)
+	return c.injectInternalCtxData(ctx)
 }
 
 // GetCtxTimeout returns the context and cancel function for specified timeout type.

@@ -9,6 +9,7 @@ package mysql_test
 import (
 	"context"
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -1123,5 +1124,39 @@ func Test_Issue2643(t *testing.T) {
 		sqlContent := gstr.Join(sqlArray, "\n")
 		t.Assert(gstr.Contains(sqlContent, expectKey1), true)
 		t.Assert(gstr.Contains(sqlContent, expectKey2), true)
+	})
+}
+
+// https://github.com/gogf/gf/issues/3238
+func Test_Issue3238(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		for i := 0; i < 100; i++ {
+			_, err := db.Ctx(ctx).Model(table).Hook(gdb.HookHandler{
+				Select: func(ctx context.Context, in *gdb.HookSelectInput) (result gdb.Result, err error) {
+					result, err = in.Next(ctx)
+					if err != nil {
+						return
+					}
+					var wg sync.WaitGroup
+					for _, record := range result {
+						wg.Add(1)
+						go func(record gdb.Record) {
+							defer wg.Done()
+							id, _ := db.Ctx(ctx).Model(table).WherePri(1).Value(`id`)
+							nickname, _ := db.Ctx(ctx).Model(table).WherePri(1).Value(`nickname`)
+							t.Assert(id.Int(), 1)
+							t.Assert(nickname.String(), "name_1")
+						}(record)
+					}
+					wg.Wait()
+					return
+				},
+			},
+			).All()
+			t.AssertNil(err)
+		}
 	})
 }

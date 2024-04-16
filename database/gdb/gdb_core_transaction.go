@@ -72,7 +72,7 @@ func (c *Core) Transaction(ctx context.Context, f func(ctx context.Context, tx T
 	if ctx == nil {
 		ctx = c.db.GetCtx()
 	}
-	ctx = c.InjectInternalCtxData(ctx)
+	ctx = c.injectInternalCtxData(ctx)
 	// Check transaction object from context.
 	var tx TX
 	tx = TXFromCtx(ctx, c.db.GetGroup())
@@ -160,7 +160,7 @@ func (tx *TXCore) transactionKeyForNestedPoint() string {
 func (tx *TXCore) Ctx(ctx context.Context) TX {
 	tx.ctx = ctx
 	if tx.ctx != nil {
-		tx.ctx = tx.db.GetCore().InjectInternalCtxData(tx.ctx)
+		tx.ctx = tx.db.GetCore().injectInternalCtxData(tx.ctx)
 	}
 	return tx
 }
