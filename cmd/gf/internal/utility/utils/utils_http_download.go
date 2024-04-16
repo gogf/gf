@@ -69,16 +69,18 @@ func doPrintDownloadPercent(doneCh chan int64, localSaveFilePath string, total i
 		stop           = false
 		lastPercentFmt string
 	)
+	file, err := os.Open(localSaveFilePath)
+	if err != nil {
+		mlog.Fatal(err)
+	}
+	defer file.Close()
+
 	for {
 		select {
 		case <-doneCh:
 			stop = true
 
 		default:
-			file, err := os.Open(localSaveFilePath)
-			if err != nil {
-				mlog.Fatal(err)
-			}
 			fi, err := file.Stat()
 			if err != nil {
 				mlog.Fatal(err)
