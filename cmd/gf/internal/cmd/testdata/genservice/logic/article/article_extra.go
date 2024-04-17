@@ -6,10 +6,19 @@
 
 package article
 
+// import (
+//	"context"
+//
+//	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genservice/service"
+// )
 import (
 	"context"
 
+	// This is a random comment
 	gdbas "github.com/gogf/gf/v2/database/gdb"
+	/**
+	 *
+	 */
 	_ "github.com/gogf/gf/v2/os/gfile"
 )
 
@@ -19,8 +28,16 @@ func (s sArticle) T1(ctx context.Context, id, id2 uint) (gdb gdbas.Model, err er
 	return g, err
 }
 
+// I'm a random comment
+
 // t2 random comment
 func (s *sArticle) t2(ctx context.Context) (err error) {
+	/**
+			 * random comment
+	* i (1). func (s *sArticle) t2(ctx context.Context) (err error) { /** 1883
+		*
+	*/
+	_ = func(ctx2 context.Context) {}
 	return nil
 }
 
@@ -33,11 +50,26 @@ func (s *sArticle) t2(ctx context.Context) (err error) {
  * @author oldme
  */
 func (s *sArticle) T3(ctx context.Context, b *gdbas.Model) (c, d *gdbas.Model, err error) {
+	/* import (
+	*	"context"
+	*
+	*	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genservice/service"
+	 */
 	return nil, nil, nil
 }
+
+/**
+ * random comment
+ */
 
 // func (s *sArticle) T4(i interface{}) interface{}
 // # $ % ^ & * ( ) _ + - = { } | [ ] \ : " ; ' < > ? , . /
 func (s *sArticle) T4(i interface{}) interface{} {
 	return nil
 }
+
+/**
+ * func (s *sArticle) T4(i interface{}) interface{} {
+ * 		return nil
+ * }
+ */
