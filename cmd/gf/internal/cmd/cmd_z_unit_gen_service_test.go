@@ -39,7 +39,7 @@ func Test_Gen_Service_Default(t *testing.T) {
 
 		err = gfile.Mkdir(path)
 		t.AssertNil(err)
-		defer gfile.Remove(path)
+		// defer gfile.Remove(path)
 
 		_, err = genservice.CGenService{}.Service(ctx, in)
 		t.AssertNil(err)
