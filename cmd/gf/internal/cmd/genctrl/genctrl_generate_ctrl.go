@@ -168,38 +168,64 @@ func (c *controllerGenerator) doGenerateCtrlItem(dstModuleFolderPath string, ite
 // use -merge
 func (c *controllerGenerator) doGenerateCtrlMergeItem(dstModuleFolderPath string, items []apiItem, doneApiSet *gset.StrSet) (err error) {
 
-	var (
-		methodFilePath = gfile.Join(dstModuleFolderPath, fmt.Sprintf(
-			`%s_%s_%s.go`, items[0].Module, items[0].Version, items[0].FileName,
-		))
-
-		contents strings.Builder
-	)
-	// Generate a CTRL file header
-	if gfile.Exists(methodFilePath) == false {
-		contents.WriteString(gstr.TrimLeft(gstr.ReplaceByMap(consts.TemplateGenCtrlControllerHeader, g.MapStrStr{
-			"{Module}":     items[0].Module,
-			"{ImportPath}": items[0].Import,
-		})))
+	type generateFileItem struct {
+		module    string
+		version   string
+		importPkg string
+		contents  strings.Builder
 	}
+	// It is possible that there are multiple files under one module
+	// And each file has multiple CTRLs
+	genFiles := make(map[string]*generateFileItem)
 
-	for i := 0; i < len(items); i++ {
-		item := items[i]
+	for _, item := range items {
+
+		genFile, ok := genFiles[item.FileName]
+		if !ok {
+
+			genFile = &generateFileItem{
+				module:    item.Module,
+				version:   item.Version,
+				contents:  strings.Builder{},
+				importPkg: item.Import,
+			}
+			genFiles[item.FileName] = genFile
+		}
+
 		ctrlName := fmt.Sprintf(`Controller%s`, gstr.UcFirst(item.Version))
-		contents.WriteString(gstr.TrimLeft(gstr.ReplaceByMap(consts.TemplateGenCtrlControllerMethodFuncMerge, g.MapStrStr{
+		genFile.contents.WriteString(gstr.TrimLeft(gstr.ReplaceByMap(consts.TemplateGenCtrlControllerMethodFuncMerge, g.MapStrStr{
 			"{Module}":     item.Module,
 			"{CtrlName}":   ctrlName,
 			"{Version}":    item.Version,
 			"{MethodName}": item.MethodName,
 		})))
 
-		doneApiSet.Add(items[i].String())
-	}
-	// Add all ctrl to the end of the file at once
-	if err = gfile.PutContentsAppend(methodFilePath, contents.String()); err != nil {
-		return err
+		doneApiSet.Add(item.String())
 	}
 
-	mlog.Printf(`generated: %s`, methodFilePath)
+	for fileName, file := range genFiles {
+		methodFilePath := gfile.Join(dstModuleFolderPath, fmt.Sprintf(
+			`%s_%s_%s.go`, file.module, file.version, fileName,
+		))
+
+		// This logic is only followed when a new file is generated
+		// Most of the rest of the time, the following logic is followed
+		if gfile.Exists(methodFilePath) == false {
+			ctrlHeader := gstr.TrimLeft(gstr.ReplaceByMap(consts.TemplateGenCtrlControllerHeader, g.MapStrStr{
+				"{Module}":     file.module,
+				"{ImportPath}": file.importPkg,
+			}))
+			err = gfile.PutContents(methodFilePath, ctrlHeader)
+			if err != nil {
+				return err
+			}
+		}
+
+		if err = gfile.PutContentsAppend(methodFilePath, file.contents.String()); err != nil {
+			return err
+		}
+
+		mlog.Printf(`generated: %s`, methodFilePath)
+	}
 	return
 }
