@@ -23,7 +23,6 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gtag"
-	"github.com/gogf/gf/v2/util/gutil"
 )
 
 const (
@@ -183,26 +182,15 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 			dstFilePath          = gfile.Join(in.DstFolder,
 				c.getDstFileNameCase(srcPackageName, in.DstFileNameCase)+".go",
 			)
-			srcCodeCommentedMap = make(map[string]string)
 		)
 		generatedDstFilePathSet.Add(dstFilePath)
 		for _, file := range files {
-			packageItems, logicItems, err := c.CalculateItemsInSrc(file)
+			packageItems, funcItems, err := c.parseItemsInSrc(file)
 			if err != nil {
 				return nil, err
 			}
 
 			fileContent = gfile.GetContents(file)
-			// Calculate code comments in source Go files.
-			err = c.calculateCodeCommented(in, fileContent, srcCodeCommentedMap)
-			if err != nil {
-				return nil, err
-			}
-			// remove all comments.
-			fileContent, err = gregex.ReplaceString(`(//.*)|((?s)/\*.*?\*/)`, "", fileContent)
-			if err != nil {
-				return nil, err
-			}
 
 			// try finding the conflicts imports between files.
 			for _, item := range packageItems {
@@ -276,7 +264,7 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 			}
 
 			// Calculate functions and interfaces for service generating.
-			err = c.calculateInterfaceFunctions(in, logicItems, srcPkgInterfaceMap)
+			err = c.calculateInterfaceFunctions(in, funcItems, srcPkgInterfaceMap)
 			if err != nil {
 				return nil, err
 			}
@@ -295,7 +283,6 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 			continue
 		}
 
-		gutil.Dump(srcPkgInterfaceMap)
 		// Generating service go file for single logic package.
 		if ok, err = c.generateServiceFile(generateServiceFilesInput{
 			CGenServiceInput:    in,
@@ -304,7 +291,6 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 			SrcPackageName:      srcPackageName,
 			DstPackageName:      dstPackageName,
 			DstFilePath:         dstFilePath,
-			SrcCodeCommentedMap: srcCodeCommentedMap,
 		}); err != nil {
 			return
 		}

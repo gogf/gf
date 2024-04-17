@@ -26,7 +26,7 @@ func (c CGenService) calculateInterfaceFunctions(
 			receiverMatch []string
 
 			// eg: "GetList(ctx context.Context, req *v1.ArticleListReq) (list []*v1.Article, err error)"
-			methodHead string
+			funcHead string
 		)
 
 		// handle the receiver name.
@@ -44,7 +44,7 @@ func (c CGenService) calculateInterfaceFunctions(
 		}
 		receiverName = gstr.CaseCamel(receiverMatch[1])
 
-		// check if the method name is public.
+		// check if the func name is public.
 		if !gstr.IsLetterUpper(item.MethodName[0]) {
 			continue
 		}
@@ -56,14 +56,14 @@ func (c CGenService) calculateInterfaceFunctions(
 			srcPkgInterfaceFunc = srcPkgInterfaceMap.Get(receiverName).([]map[string]string)
 		}
 
-		// make the method head.
+		// make the func head.
 		inputParamStr := c.tidyParam(item.Params)
 		outputParamStr := c.tidyResult(item.Results)
-		methodHead = fmt.Sprintf("%s(%s) (%s)", item.MethodName, inputParamStr, outputParamStr)
+		funcHead = fmt.Sprintf("%s(%s) (%s)", item.MethodName, inputParamStr, outputParamStr)
 
 		srcPkgInterfaceFunc = append(srcPkgInterfaceFunc, map[string]string{
-			"methodHead":    methodHead,
-			"methodComment": item.Comment,
+			"funcHead":    funcHead,
+			"funcComment": item.Comment,
 		})
 		srcPkgInterfaceMap.Set(receiverName, srcPkgInterfaceFunc)
 	}

@@ -31,11 +31,12 @@ type generateServiceFilesInput struct {
 
 func (c CGenService) generateServiceFile(in generateServiceFilesInput) (ok bool, err error) {
 	var (
-		generatedContent string
-		// allFuncArray            = garray.NewStrArray() // Used for check whether interface dirty, going to change file content.
+		generatedContent        string
 		importedPackagesContent = fmt.Sprintf(
 			"import (\n%s\n)", gstr.Join(in.SrcImportedPackages, "\n"),
 		)
+		funcContents = make([]string, 0)
+		funcContent  string
 	)
 	generatedContent += gstr.ReplaceByMap(consts.TemplateGenServiceContentHead, g.MapStrStr{
 		"{Imports}":     importedPackagesContent,
@@ -47,15 +48,13 @@ func (c CGenService) generateServiceFile(in generateServiceFilesInput) (ok bool,
 	generatedContent += "\n"
 	in.SrcStructFunctions.Iterator(func(key, value interface{}) bool {
 		structName, funcSlice := key.(string), value.([]map[string]string)
-		funcs := make([]string, 0)
-		// allFuncArray.Append(funcArray.Slice()...)
-		// Add comments to a method.
+		// Generating interface content.
 		for _, funcInfo := range funcSlice {
-			funName := funcInfo["methodComment"] + funcInfo["methodHead"]
-			funcs = append(funcs, funName)
+			funcContent = funcInfo["funcComment"] + funcInfo["funcHead"]
+			funcContents = append(funcContents, funcContent)
 		}
-		// funcs to string
-		funcArray := garray.NewStrArrayFrom(funcs)
+		// funcContents to string
+		funcArray := garray.NewStrArrayFrom(funcContents)
 		generatedContent += gstr.Trim(gstr.ReplaceByMap(consts.TemplateGenServiceContentInterface, g.MapStrStr{
 			"{InterfaceName}":  "I" + structName,
 			"{FuncDefinition}": funcArray.Join("\n\t"),
@@ -119,57 +118,12 @@ func (c CGenService) generateServiceFile(in generateServiceFilesInput) (ok bool,
 			mlog.Printf(`ignore file as it is manually maintained: %s`, in.DstFilePath)
 			return false, nil
 		}
-		// if !c.isToGenerateServiceGoFile(in.DstPackageName, in.DstFilePath, allFuncArray) {
-		// 	mlog.Printf(`not dirty, ignore generating service go file: %s`, in.DstFilePath)
-		// 	return false, nil
-		// }
 	}
 	mlog.Printf(`generating service go file: %s`, in.DstFilePath)
 	if err = gfile.PutContents(in.DstFilePath, generatedContent); err != nil {
 		return true, err
 	}
 	return true, nil
-}
-
-// isToGenerateServiceGoFile checks and returns whether the service content dirty.
-func (c CGenService) isToGenerateServiceGoFile(dstPackageName, filePath string, funcArray *garray.StrArray) bool {
-	var (
-		err                error
-		fileContent        = gfile.GetContents(filePath)
-		generatedFuncArray = garray.NewSortedStrArrayFrom(funcArray.Slice())
-		contentFuncArray   = garray.NewSortedStrArray()
-	)
-	if fileContent == "" {
-		return true
-	}
-	// remove all comments.
-	fileContent, err = gregex.ReplaceString(`(//.*)|((?s)/\*.*?\*/)`, "", fileContent)
-	if err != nil {
-		panic(err)
-		return false
-	}
-	matches, _ := gregex.MatchAllString(`\s+interface\s+{([\s\S]+?)}`, fileContent)
-	for _, match := range matches {
-		contentFuncArray.Append(gstr.SplitAndTrim(match[1], "\n")...)
-	}
-	if generatedFuncArray.Len() != contentFuncArray.Len() {
-		mlog.Debugf(
-			`dirty, generatedFuncArray.Len()[%d] != contentFuncArray.Len()[%d]`,
-			generatedFuncArray.Len(), contentFuncArray.Len(),
-		)
-		return true
-	}
-	var funcDefinition string
-	for i := 0; i < generatedFuncArray.Len(); i++ {
-		funcDefinition, _ = gregex.ReplaceString(
-			fmt.Sprintf(`\*{0,1}%s\.`, dstPackageName), ``, generatedFuncArray.At(i),
-		)
-		if funcDefinition != contentFuncArray.At(i) {
-			mlog.Debugf(`dirty, %s != %s`, funcDefinition, contentFuncArray.At(i))
-			return true
-		}
-	}
-	return false
 }
 
 // generateInitializationFile generates `logic.go`.
