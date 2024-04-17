@@ -22,9 +22,9 @@ type (
 		 * @author oldme
 		 */
 		Create(ctx context.Context, info struct{}) (id uint, err error)
-		A1o2(ctx context.Context, str string, a, b *ast.GoStmt) error
+		A1o2(ctx context.Context, str string, a *ast.GoStmt, b *ast.GoStmt) error
 		// T1 random comment
-		T1(ctx context.Context, id, id2 uint) (gdb gdbas.Model, err error)
+		T1(ctx context.Context, id uint, id2 uint) (gdb gdbas.Model, err error)
 		// T3
 		/**
 		 * random comment @*4213hHY1&%##%><<Y
@@ -33,7 +33,7 @@ type (
 		 * @return err
 		 * @author oldme
 		 */
-		T3(ctx context.Context, b *gdbas.Model) (c, d *gdbas.Model, err error)
+		T3(ctx context.Context, b *gdbas.Model) (c *gdbas.Model, d *gdbas.Model, err error)
 		// func (s *sArticle) T4(i interface{}) interface{}
 		// # $ % ^ & * ( ) _ + - = {} | [ ] \ : " ; ' < > ? , . /
 		T4(i interface{}) interface{}
