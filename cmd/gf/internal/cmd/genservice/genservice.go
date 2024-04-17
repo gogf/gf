@@ -148,7 +148,6 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 	var (
 		isDirty                 bool                                         // Temp boolean.
 		files                   []string                                     // Temp file array.
-		fileContent             string                                       // Temp file content for handling go file.
 		initImportSrcPackages   []string                                     // Used for generating logic.go.
 		inputPackages           = in.Packages                                // Custom packages.
 		dstPackageName          = gstr.ToLower(gfile.Basename(in.DstFolder)) // Package name for generated go files.
@@ -172,99 +171,29 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		}
 		// Parse single logic package folder.
 		var (
-			// StructName => FunctionDefinitions
-			srcPkgInterfaceMap   = gmap.NewListMap()
-			srcImportedPackages  = garray.NewSortedStrArray().SetUnique(true)
-			importAliasToPathMap = gmap.NewStrStrMap() // for conflict imports check. alias => import path(with `"`)
-			importPathToAliasMap = gmap.NewStrStrMap() // for conflict imports check. import path(with `"`) => alias
-			srcPackageName       = gfile.Basename(srcFolderPath)
-			ok                   bool
-			dstFilePath          = gfile.Join(in.DstFolder,
+			srcPackageName      = gfile.Basename(srcFolderPath)
+			srcPkgInterface     = gmap.NewListMap()
+			srcImportedPackages = garray.NewSortedStrArray().SetUnique(true)
+			ok                  bool
+			dstFilePath         = gfile.Join(in.DstFolder,
 				c.getDstFileNameCase(srcPackageName, in.DstFileNameCase)+".go",
 			)
 		)
 		generatedDstFilePathSet.Add(dstFilePath)
 		for _, file := range files {
-			packageItems, funcItems, err := c.parseItemsInSrc(file)
+			pkgItems, funcItems, err := c.parseItemsInSrc(file)
 			if err != nil {
 				return nil, err
 			}
 
-			fileContent = gfile.GetContents(file)
-
-			// try finding the conflicts imports between files.
-			for _, item := range packageItems {
-				var alias = item.Alias
-				if alias == "" {
-					alias = gfile.Basename(gstr.Trim(item.Path, `"`))
-				}
-
-				// ignore unused import paths, which do not exist in function definitions.
-				if !gregex.IsMatchString(fmt.Sprintf(`func .+?([^\w])%s(\.\w+).+?{`, alias), fileContent) {
-					mlog.Debugf(`ignore unused package: %s`, item.RawImport)
-					continue
-				}
-
-				// find the exist alias with the same import path.
-				var existAlias = importPathToAliasMap.Get(item.Path)
-				if existAlias != "" {
-					fileContent, err = gregex.ReplaceStringFuncMatch(
-						fmt.Sprintf(`([^\w])%s(\.\w+)`, alias), fileContent,
-						func(match []string) string {
-							return match[1] + existAlias + match[2]
-						},
-					)
-					if err != nil {
-						return nil, err
-					}
-					continue
-				}
-
-				// resolve alias conflicts.
-				var importPath = importAliasToPathMap.Get(alias)
-				if importPath == "" {
-					importAliasToPathMap.Set(alias, item.Path)
-					importPathToAliasMap.Set(item.Path, alias)
-					srcImportedPackages.Add(item.RawImport)
-					continue
-				}
-				if importPath != item.Path {
-					// update the conflicted alias for import path with suffix.
-					// eg:
-					// v1  -> v10
-					// v11 -> v110
-					for aliasIndex := 0; ; aliasIndex++ {
-						item.Alias = fmt.Sprintf(`%s%d`, alias, aliasIndex)
-						var existPathForAlias = importAliasToPathMap.Get(item.Alias)
-						if existPathForAlias != "" {
-							if existPathForAlias == item.Path {
-								break
-							}
-							continue
-						}
-						break
-					}
-					importPathToAliasMap.Set(item.Path, item.Alias)
-					importAliasToPathMap.Set(item.Alias, item.Path)
-					// reformat the import path with alias.
-					item.RawImport = fmt.Sprintf(`%s %s`, item.Alias, item.Path)
-
-					// update the file content with new alias import.
-					fileContent, err = gregex.ReplaceStringFuncMatch(
-						fmt.Sprintf(`([^\w])%s(\.\w+)`, alias), fileContent,
-						func(match []string) string {
-							return match[1] + item.Alias + match[2]
-						},
-					)
-					if err != nil {
-						return nil, err
-					}
-					srcImportedPackages.Add(item.RawImport)
-				}
+			// Calculate imported packages for service generating.
+			err = c.calculatePkgItems(in, pkgItems, funcItems, srcImportedPackages)
+			if err != nil {
+				return nil, err
 			}
 
 			// Calculate functions and interfaces for service generating.
-			err = c.calculateInterfaceFunctions(in, funcItems, srcPkgInterfaceMap)
+			err = c.calculateFuncItems(in, funcItems, srcPkgInterface)
 			if err != nil {
 				return nil, err
 			}
@@ -286,7 +215,7 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		// Generating service go file for single logic package.
 		if ok, err = c.generateServiceFile(generateServiceFilesInput{
 			CGenServiceInput:    in,
-			SrcStructFunctions:  srcPkgInterfaceMap,
+			SrcStructFunctions:  srcPkgInterface,
 			SrcImportedPackages: srcImportedPackages.Slice(),
 			SrcPackageName:      srcPackageName,
 			DstPackageName:      dstPackageName,

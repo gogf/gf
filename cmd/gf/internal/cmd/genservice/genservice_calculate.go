@@ -8,13 +8,53 @@ package genservice
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
+	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func (c CGenService) calculateInterfaceFunctions(
+func (c CGenService) calculatePkgItems(
+	in CGenServiceInput, pkgItems []pkgItem, funcItems []funcItem, srcImportedPackages *garray.SortedStrArray,
+) (err error) {
+	// allFuncParamType saves all the param and result types of the functions.
+	var allFuncParamType strings.Builder
+
+	for _, item := range funcItems {
+		for _, param := range item.Params {
+			allFuncParamType.WriteString(param["paramType"] + ",")
+		}
+		for _, result := range item.Results {
+			allFuncParamType.WriteString(result["resultType"] + ",")
+		}
+	}
+
+	for _, item := range pkgItems {
+		alias := item.Alias
+
+		// If the alias is _, it means that the package is not generated.
+		if alias == "_" {
+			mlog.Debugf(`ignore anonymous package: %s`, item.RawImport)
+			continue
+		}
+		// If the alias is empty, it will use the package name as the alias.
+		if alias == "" {
+			alias = gfile.Basename(gstr.Trim(item.Path, `"`))
+		}
+		if !gstr.Contains(allFuncParamType.String(), alias) {
+			mlog.Debugf(`ignore unused package: %s`, item.RawImport)
+			continue
+		}
+		srcImportedPackages.Add(item.RawImport)
+	}
+	return nil
+}
+
+func (c CGenService) calculateFuncItems(
 	in CGenServiceInput, funcItems []funcItem, srcPkgInterfaceMap *gmap.ListMap,
 ) (err error) {
 	var srcPkgInterfaceFunc []map[string]string
@@ -57,9 +97,9 @@ func (c CGenService) calculateInterfaceFunctions(
 		}
 
 		// make the func head.
-		inputParamStr := c.tidyParam(item.Params)
-		outputParamStr := c.tidyResult(item.Results)
-		funcHead = fmt.Sprintf("%s(%s) (%s)", item.MethodName, inputParamStr, outputParamStr)
+		paramsStr := c.tidyParam(item.Params)
+		resultsStr := c.tidyResult(item.Results)
+		funcHead = fmt.Sprintf("%s(%s) (%s)", item.MethodName, paramsStr, resultsStr)
 
 		srcPkgInterfaceFunc = append(srcPkgInterfaceFunc, map[string]string{
 			"funcHead":    funcHead,
