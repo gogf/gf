@@ -12,6 +12,7 @@ import (
 	t "time"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genservice/service"
+	gdbalias "github.com/gogf/gf/v2/database/gdb"
 )
 
 type sArticle struct {
@@ -38,5 +39,9 @@ func (s *sArticle) Create(ctx context.Context, info struct{}) (id uint, err erro
 }
 
 func (s *sArticle) A1o2(ctx context.Context, str string, a, b *ast.GoStmt) error {
+	return nil
+}
+
+func (s *sArticle) B_2(ctx context.Context, db gdbalias.Raw) (err error) {
 	return nil
 }

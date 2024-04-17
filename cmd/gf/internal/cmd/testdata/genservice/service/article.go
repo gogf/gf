@@ -9,6 +9,7 @@ import (
 	"context"
 	"go/ast"
 
+	gdbalias "github.com/gogf/gf/v2/database/gdb"
 	gdbas "github.com/gogf/gf/v2/database/gdb"
 )
 
@@ -23,6 +24,7 @@ type (
 		 */
 		Create(ctx context.Context, info struct{}) (id uint, err error)
 		A1o2(ctx context.Context, str string, a *ast.GoStmt, b *ast.GoStmt) error
+		B_2(ctx context.Context, db gdbalias.Raw) (err error)
 		// T1 random comment
 		T1(ctx context.Context, id uint, id2 uint) (gdb gdbas.Model, err error)
 		// T3
