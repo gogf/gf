@@ -51,7 +51,7 @@ var (
 	serverMapping = gmap.NewStrAnyMap(true)
 )
 
-// GetServer creates and returns a UDP server instance with given name.
+// GetServer creates and returns an udp server instance with given name.
 func GetServer(name ...interface{}) *Server {
 	serverName := defaultServer
 	if len(name) > 0 && name[0] != "" {
@@ -65,7 +65,7 @@ func GetServer(name ...interface{}) *Server {
 	return s
 }
 
-// NewServer creates and returns a UDP server.
+// NewServer creates and returns an udp server.
 // The optional parameter `name` is used to specify its name, which can be used for
 // GetServer function to retrieve its instance.
 func NewServer(address string, handler ServerHandler, name ...string) *Server {
