@@ -9,16 +9,15 @@ package genservice
 import (
 	"fmt"
 
+	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
-
-	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 )
 
 type generateServiceFilesInput struct {
@@ -28,13 +27,12 @@ type generateServiceFilesInput struct {
 	SrcImportedPackages []string
 	SrcPackageName      string
 	DstPackageName      string
-	SrcCodeCommentedMap map[string]string
 }
 
 func (c CGenService) generateServiceFile(in generateServiceFilesInput) (ok bool, err error) {
 	var (
-		generatedContent        string
-		allFuncArray            = garray.NewStrArray() // Used for check whether interface dirty, going to change file content.
+		generatedContent string
+		// allFuncArray            = garray.NewStrArray() // Used for check whether interface dirty, going to change file content.
 		importedPackagesContent = fmt.Sprintf(
 			"import (\n%s\n)", gstr.Join(in.SrcImportedPackages, "\n"),
 		)
@@ -48,15 +46,16 @@ func (c CGenService) generateServiceFile(in generateServiceFilesInput) (ok bool,
 	generatedContent += "type("
 	generatedContent += "\n"
 	in.SrcStructFunctions.Iterator(func(key, value interface{}) bool {
-		structName, funcArray := key.(string), value.(*garray.StrArray)
-		allFuncArray.Append(funcArray.Slice()...)
+		structName, funcSlice := key.(string), value.([]map[string]string)
+		funcs := make([]string, 0)
+		// allFuncArray.Append(funcArray.Slice()...)
 		// Add comments to a method.
-		for index, funcName := range funcArray.Slice() {
-			if commentedInfo, exist := in.SrcCodeCommentedMap[fmt.Sprintf("%s-%s", structName, funcName)]; exist {
-				funcName = commentedInfo + funcName
-				_ = funcArray.Set(index, funcName)
-			}
+		for _, funcInfo := range funcSlice {
+			funName := funcInfo["methodComment"] + funcInfo["methodHead"]
+			funcs = append(funcs, funName)
 		}
+		// funcs to string
+		funcArray := garray.NewStrArrayFrom(funcs)
 		generatedContent += gstr.Trim(gstr.ReplaceByMap(consts.TemplateGenServiceContentInterface, g.MapStrStr{
 			"{InterfaceName}":  "I" + structName,
 			"{FuncDefinition}": funcArray.Join("\n\t"),
@@ -120,10 +119,10 @@ func (c CGenService) generateServiceFile(in generateServiceFilesInput) (ok bool,
 			mlog.Printf(`ignore file as it is manually maintained: %s`, in.DstFilePath)
 			return false, nil
 		}
-		if !c.isToGenerateServiceGoFile(in.DstPackageName, in.DstFilePath, allFuncArray) {
-			mlog.Printf(`not dirty, ignore generating service go file: %s`, in.DstFilePath)
-			return false, nil
-		}
+		// if !c.isToGenerateServiceGoFile(in.DstPackageName, in.DstFilePath, allFuncArray) {
+		// 	mlog.Printf(`not dirty, ignore generating service go file: %s`, in.DstFilePath)
+		// 	return false, nil
+		// }
 	}
 	mlog.Printf(`generating service go file: %s`, in.DstFilePath)
 	if err = gfile.PutContents(in.DstFilePath, generatedContent); err != nil {

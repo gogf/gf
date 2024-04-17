@@ -14,7 +14,13 @@ import (
 	"github.com/gogf/gf/v2/os/gfile"
 )
 
-type logicItem struct {
+type pkgItem struct {
+	Alias     string `eg:"gdbas"`
+	Path      string `eg:"github.com/gogf/gf/v2/database/gdb"`
+	RawImport string `eg:"gdbas github.com/gogf/gf/v2/database/gdb"`
+}
+
+type funcItem struct {
 	Receiver   string              `eg:"sUser"`
 	MethodName string              `eg:"GetList"`
 	Params     []map[string]string `eg:"ctx: context.Context, cond: *SearchInput"`
@@ -22,10 +28,10 @@ type logicItem struct {
 	Comment    string              `eg:"Get user list"`
 }
 
-// CalculateItemsInSrc retrieves the logic items in the specified source file.
+// parseItemsInSrc parses the pkgItem and funcItem from the specified file.
 // It can't skip the private methods.
 // It can't skip the imported packages of import alias equal to `_`.
-func (c CGenService) CalculateItemsInSrc(filePath string) (pkgItems []packageItem, logicItems []logicItem, err error) {
+func (c CGenService) parseItemsInSrc(filePath string) (pkgItems []pkgItem, funcItems []funcItem, err error) {
 	var (
 		fileContent = gfile.GetContents(filePath)
 		fileSet     = token.NewFileSet()
@@ -39,22 +45,22 @@ func (c CGenService) CalculateItemsInSrc(filePath string) (pkgItems []packageIte
 	ast.Inspect(node, func(n ast.Node) bool {
 		switch x := n.(type) {
 		case *ast.ImportSpec:
-			// calculate the imported packages
-			pkgItems = append(pkgItems, c.getImportPackages(x))
+			// parse the imported packages.
+			pkgItems = append(pkgItems, c.parseImportPackages(x))
 
 		case *ast.FuncDecl:
-			// calculate the logic items
+			// parse the function items.
 			if x.Recv == nil {
 				return true
 			}
 
 			var funcName = x.Name.Name
-			logicItems = append(logicItems, logicItem{
-				Receiver:   c.getFuncReceiverTypeName(x),
+			funcItems = append(funcItems, funcItem{
+				Receiver:   c.parseFuncReceiverTypeName(x),
 				MethodName: funcName,
-				Params:     c.getFuncParams(x),
-				Results:    c.getFuncResults(x),
-				Comment:    c.getFuncComment(x),
+				Params:     c.parseFuncParams(x),
+				Results:    c.parseFuncResults(x),
+				Comment:    c.parseFuncComment(x),
 			})
 		}
 		return true
@@ -62,8 +68,8 @@ func (c CGenService) CalculateItemsInSrc(filePath string) (pkgItems []packageIte
 	return
 }
 
-// getImportPackages retrieves the imported packages from the specified ast.ImportSpec.
-func (c CGenService) getImportPackages(node *ast.ImportSpec) (packages packageItem) {
+// parseImportPackages retrieves the imported packages from the specified ast.ImportSpec.
+func (c CGenService) parseImportPackages(node *ast.ImportSpec) (packages pkgItem) {
 	if node.Path == nil {
 		return
 	}
@@ -78,19 +84,19 @@ func (c CGenService) getImportPackages(node *ast.ImportSpec) (packages packageIt
 	} else {
 		rawImport = path
 	}
-	return packageItem{
+	return pkgItem{
 		Alias:     alias,
 		Path:      path,
 		RawImport: rawImport,
 	}
 }
 
-// getFuncReceiverTypeName retrieves the receiver type of the function.
+// parseFuncReceiverTypeName retrieves the receiver type of the function.
 // For example:
 //
 // func(s *sArticle) -> *sArticle
 // func(s sArticle) -> sArticle
-func (c CGenService) getFuncReceiverTypeName(node *ast.FuncDecl) (receiverType string) {
+func (c CGenService) parseFuncReceiverTypeName(node *ast.FuncDecl) (receiverType string) {
 	if node.Recv == nil {
 		return ""
 	}
@@ -101,12 +107,12 @@ func (c CGenService) getFuncReceiverTypeName(node *ast.FuncDecl) (receiverType s
 	return
 }
 
-// getFuncParams retrieves the input parameters of the function.
+// parseFuncParams retrieves the input parameters of the function.
 // It returns the name and type of the input parameters.
 // For example:
 //
 // []map[string]string{paramName:ctx paramType:context.Context, paramName:info paramType:struct{}}
-func (c CGenService) getFuncParams(node *ast.FuncDecl) (params []map[string]string) {
+func (c CGenService) parseFuncParams(node *ast.FuncDecl) (params []map[string]string) {
 	if node.Type.Params == nil {
 		return
 	}
@@ -137,13 +143,13 @@ func (c CGenService) getFuncParams(node *ast.FuncDecl) (params []map[string]stri
 	return
 }
 
-// getFuncResults retrieves the output parameters of the function.
+// parseFuncResults retrieves the output parameters of the function.
 // It returns the name and type of the output parameters.
 // For example:
 //
 // []map[string]string{resultName:list resultType:[]*User, resultName:err resultType:error}
 // []map[string]string{resultName: "", resultType: error}
-func (c CGenService) getFuncResults(node *ast.FuncDecl) (results []map[string]string) {
+func (c CGenService) parseFuncResults(node *ast.FuncDecl) (results []map[string]string) {
 	if node.Type.Results == nil {
 		return
 	}
@@ -174,7 +180,7 @@ func (c CGenService) getFuncResults(node *ast.FuncDecl) (results []map[string]st
 	return
 }
 
-// getFuncComment retrieves the comment of the function.
-func (c CGenService) getFuncComment(node *ast.FuncDecl) string {
+// parseFuncComment retrieves the comment of the function.
+func (c CGenService) parseFuncComment(node *ast.FuncDecl) string {
 	return c.astCommentToString(node.Doc)
 }
