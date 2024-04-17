@@ -7,9 +7,7 @@
 package genservice
 
 import (
-	"bytes"
 	"go/ast"
-	"go/format"
 	"go/parser"
 	"go/token"
 
@@ -178,27 +176,5 @@ func (c CGenService) getFuncResults(node *ast.FuncDecl) (results []map[string]st
 
 // getFuncComment retrieves the comment of the function.
 func (c CGenService) getFuncComment(node *ast.FuncDecl) string {
-	if node.Doc == nil {
-		return ""
-	}
-	return node.Doc.Text()
-}
-
-// exprToString converts ast.Expr to string.
-// For example:
-//
-// ast.Expr -> "context.Context"
-// ast.Expr -> "*v1.XxxReq"
-// ast.Expr -> "error"
-// ast.Expr -> "int"
-func (c CGenService) astExprToString(expr ast.Expr) (string, error) {
-	var (
-		buf bytes.Buffer
-		err error
-	)
-	err = format.Node(&buf, token.NewFileSet(), expr)
-	if err != nil {
-		return "", err
-	}
-	return buf.String(), nil
+	return c.astCommentToString(node.Doc)
 }
