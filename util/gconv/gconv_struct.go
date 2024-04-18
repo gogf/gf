@@ -166,11 +166,11 @@ func doStruct(
 		return nil
 	}
 
-	type setField struct {
+	type fieldInfo struct {
 		// tag can be one of the following values
-		// 1. Delete the underlined fields and use them during initialization
+		// 1. The key of paramKeyToAttrMap
 		// 2. It can be the specified tag attribute
-		// 3. The key of paramKeyToAttrMap can be used
+		// 3. The name of the elemFieldName
 		tag   string
 		val   any
 		index int
@@ -178,8 +178,8 @@ func doStruct(
 
 	var (
 		// Used to save some attributes related to subsequent operations
-		// key=field
-		setFields        = map[string]setField{}
+		// key=elemFieldName
+		fieldInfoMap     = map[string]fieldInfo{}
 		priorityTagArray []string
 	)
 
@@ -189,8 +189,8 @@ func doStruct(
 		priorityTagArray = gtag.StructTagPriority
 	}
 
-	var getTag = func(field reflect.StructField, tags []string) string {
-		for _, tag := range tags {
+	var getTag = func(field reflect.StructField, priorityTags []string) string {
+		for _, tag := range priorityTags {
 			value, ok := field.Tag.Lookup(tag)
 			if ok {
 				// If there's something else in the tag string,
@@ -210,7 +210,7 @@ func doStruct(
 	// The key of the attrMap is the attribute name of the struct,
 	// and the value is its replaced name for later comparison to improve performance.
 	var (
-		tempName       string
+		elemFieldName  string
 		elemFieldType  reflect.StructField
 		elemFieldValue reflect.Value
 		elemType       = pointerElemReflectValue.Type()
@@ -218,17 +218,13 @@ func doStruct(
 
 	for i := 0; i < pointerElemReflectValue.NumField(); i++ {
 		elemFieldType = elemType.Field(i)
+		elemFieldName = elemFieldType.Name
 		// Only do converting to public attributes.
-		if !utils.IsLetterUpper(elemFieldType.Name[0]) {
+		if !utils.IsLetterUpper(elemFieldName[0]) {
 			continue
 		}
 
-		tempName = elemFieldType.Name
-		tag := getTag(elemFieldType, priorityTagArray)
-		f := setField{
-			index: elemFieldType.Index[0],
-		}
-
+		fieldTag := getTag(elemFieldType, priorityTagArray)
 		// Maybe it's struct/*struct embedded.
 		if elemFieldType.Anonymous {
 			// type Name struct {
@@ -239,10 +235,12 @@ func doStruct(
 			//     Name `json:"name"`
 			//     Other fields...
 			// }
-			// It is only recorded if the name has a tag
-			if tag != "" {
-				f.tag = tag
-				setFields[tempName] = f
+			// It is only recorded if the name has a fieldTag
+			if fieldTag != "" {
+				fieldInfoMap[elemFieldName] = fieldInfo{
+					index: elemFieldType.Index[0],
+					tag:   fieldTag,
+				}
 			}
 
 			elemFieldValue = pointerElemReflectValue.Field(i)
@@ -257,75 +255,77 @@ func doStruct(
 				return err
 			}
 		} else {
-			// Use the native field name as the tag
-			if tag == "" {
-				tag = tempName
+			// Use the native elemFieldName name as the fieldTag
+			if fieldTag == "" {
+				fieldTag = elemFieldName
 			}
-			f.tag = tag
-			setFields[tempName] = f
+			fieldInfoMap[elemFieldName] = fieldInfo{
+				index: elemFieldType.Index[0],
+				tag:   fieldTag,
+			}
 		}
 	}
 
-	if len(setFields) == 0 {
+	if len(fieldInfoMap) == 0 {
 		return nil
 	}
 
-	for field, attr := range setFields {
-		paramsVal, ok := paramsMap[attr.tag]
+	for fieldName, field := range fieldInfoMap {
+		paramsVal, ok := paramsMap[field.tag]
 		if ok {
-			attr.val = paramsVal
-			setFields[field] = attr
+			field.val = paramsVal
+			fieldInfoMap[fieldName] = field
 		}
 	}
 
 	// First search according to custom rules. If a direct assignment is found, reduce the number of subsequent map searches.
-	for paramKey, field := range paramKeyToAttrMap {
+	for paramKey, fieldName := range paramKeyToAttrMap {
 		// Prevent setting of non-existent fields
-		attr, ok := setFields[field]
+		field, ok := fieldInfoMap[fieldName]
 		if ok {
 			// Prevent non-existent values from being set
 			paramsVal, ok := paramsMap[paramKey]
 			if ok {
-				attr.val = paramsVal
-				setFields[field] = attr
+				field.val = paramsVal
+				fieldInfoMap[fieldName] = field
 			}
 		}
 	}
 
 	// Indicates that those values have been used and cannot be reused.
-	paramsToFieldMap := map[string]struct{}{}
+	usedParamsKey := map[string]struct{}{}
 
-	for field, attr := range setFields {
-		// If it is not empty, the tag or field name matches
-		if attr.val != nil {
+	for fieldName, field := range fieldInfoMap {
+		// If it is not empty, the tag or elemFieldName name matches
+		if field.val != nil {
 			if err := bindVarToStructAttrWithFieldIndex(
-				pointerElemReflectValue, field, attr.index, attr.val, paramKeyToAttrMap,
+				pointerElemReflectValue, fieldName, field.index, field.val, paramKeyToAttrMap,
 			); err != nil {
 				return err
 			}
 			// It is necessary to delete the set fields for quick traversal later.
-			paramsToFieldMap[attr.tag] = struct{}{}
+			usedParamsKey[field.tag] = struct{}{}
 		} else {
 			// If it is empty, a fuzzy match is required
-			key, val := fuzzyMatchingFieldName(field, paramsMap, paramsToFieldMap)
+			key, val := fuzzyMatchingFieldName(fieldName, paramsMap, usedParamsKey)
 			if val != nil {
 				if err := bindVarToStructAttrWithFieldIndex(
-					pointerElemReflectValue, field, attr.index, val, paramKeyToAttrMap,
+					pointerElemReflectValue, fieldName, field.index, val, paramKeyToAttrMap,
 				); err != nil {
 					return err
 				}
 				// It is necessary to delete the set fields for quick traversal later.
-				paramsToFieldMap[key] = struct{}{}
+				usedParamsKey[key] = struct{}{}
 			}
 		}
 	}
 	return nil
 }
 
-func fuzzyMatchingFieldName(fieldName string, paramsMap map[string]any, paramsToFieldMap map[string]struct{}) (string, any) {
+func fuzzyMatchingFieldName(fieldName string, paramsMap map[string]any, usedParamsKey map[string]struct{}) (string, any) {
 	fieldName = utils.RemoveSymbols(fieldName)
 	for paramKey, paramVal := range paramsMap {
-		if _, ok := paramsToFieldMap[paramKey]; ok {
+		if _, ok := usedParamsKey[paramKey]; ok {
 			continue
 		}
 		removeParamKeyUnderline := utils.RemoveSymbols(paramKey)
