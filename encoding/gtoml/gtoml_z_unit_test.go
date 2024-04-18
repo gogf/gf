@@ -48,10 +48,7 @@ func TestEncode(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		_, err := gtoml.Encode(tomlErr)
-		if err == nil {
-			t.Errorf("encode should be failed. %v", err)
-			return
-		}
+		t.Assert(err, nil)
 	})
 }
 
