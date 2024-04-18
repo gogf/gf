@@ -26,7 +26,7 @@ type localMeterPerformer struct {
 	*metric.MeterProvider
 }
 
-// newPerformer creates and returns gmetric.Meter.
+// newMeterPerformer creates and returns gmetric.Meter.
 func newMeterPerformer(provider *metric.MeterProvider, option gmetric.MeterOption) gmetric.MeterPerformer {
 	meterPerformer := &localMeterPerformer{
 		MeterOption:   option,
