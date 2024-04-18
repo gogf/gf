@@ -47,8 +47,8 @@ func TestEncode(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		_, err := gtoml.Decode([]byte(tomlErr))
-		t.AssertNE(err, nil)
+		_, err := gtoml.Encode(tomlErr)
+		t.Assert(err, nil)
 	})
 }
 
