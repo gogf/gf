@@ -172,8 +172,8 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		// Parse single logic package folder.
 		var (
 			srcPackageName      = gfile.Basename(srcFolderPath)
-			srcPkgInterface     = gmap.NewListMap()
 			srcImportedPackages = garray.NewSortedStrArray().SetUnique(true)
+			srcStructFunctions  = gmap.NewListMap()
 			ok                  bool
 			dstFilePath         = gfile.Join(in.DstFolder,
 				c.getDstFileNameCase(srcPackageName, in.DstFileNameCase)+".go",
@@ -187,13 +187,13 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 			}
 
 			// Calculate imported packages for service generating.
-			err = c.calculatePkgItems(in, pkgItems, funcItems, srcImportedPackages)
+			err = c.calculateImportedItems(in, pkgItems, funcItems, srcImportedPackages)
 			if err != nil {
 				return nil, err
 			}
 
 			// Calculate functions and interfaces for service generating.
-			err = c.calculateFuncItems(in, funcItems, srcPkgInterface)
+			err = c.calculateFuncItems(in, funcItems, srcStructFunctions)
 			if err != nil {
 				return nil, err
 			}
@@ -215,9 +215,9 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		// Generating service go file for single logic package.
 		if ok, err = c.generateServiceFile(generateServiceFilesInput{
 			CGenServiceInput:    in,
-			SrcStructFunctions:  srcPkgInterface,
-			SrcImportedPackages: srcImportedPackages.Slice(),
 			SrcPackageName:      srcPackageName,
+			SrcImportedPackages: srcImportedPackages.Slice(),
+			SrcStructFunctions:  srcStructFunctions,
 			DstPackageName:      dstPackageName,
 			DstFilePath:         dstFilePath,
 		}); err != nil {
@@ -236,7 +236,9 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		var relativeFilePath string
 		for _, file := range files {
 			relativeFilePath = gstr.SubStrFromR(file, in.DstFolder)
-			if !generatedDstFilePathSet.Contains(relativeFilePath) && utils.IsFileDoNotEdit(relativeFilePath) {
+			if !generatedDstFilePathSet.Contains(relativeFilePath) &&
+				utils.IsFileDoNotEdit(relativeFilePath) {
+
 				mlog.Printf(`remove no longer used service file: %s`, relativeFilePath)
 				if err = gfile.Remove(file); err != nil {
 					return nil, err

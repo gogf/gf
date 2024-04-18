@@ -18,8 +18,10 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func (c CGenService) calculatePkgItems(
-	in CGenServiceInput, pkgItems []pkgItem, funcItems []funcItem, srcImportedPackages *garray.SortedStrArray,
+func (c CGenService) calculateImportedItems(
+	in CGenServiceInput,
+	pkgItems []pkgItem, funcItems []funcItem,
+	srcImportedPackages *garray.SortedStrArray,
 ) (err error) {
 	// allFuncParamType saves all the param and result types of the functions.
 	var allFuncParamType strings.Builder
@@ -55,7 +57,9 @@ func (c CGenService) calculatePkgItems(
 }
 
 func (c CGenService) calculateFuncItems(
-	in CGenServiceInput, funcItems []funcItem, srcPkgInterfaceMap *gmap.ListMap,
+	in CGenServiceInput,
+	funcItems []funcItem,
+	srcPkgInterfaceMap *gmap.ListMap,
 ) (err error) {
 	var srcPkgInterfaceFunc []map[string]string
 

@@ -22,11 +22,11 @@ import (
 
 type generateServiceFilesInput struct {
 	CGenServiceInput
-	DstFilePath         string // Absolute file path for generated service go file.
-	SrcStructFunctions  *gmap.ListMap
-	SrcImportedPackages []string
 	SrcPackageName      string
+	SrcImportedPackages []string
+	SrcStructFunctions  *gmap.ListMap
 	DstPackageName      string
+	DstFilePath         string // Absolute file path for generated service go file.
 }
 
 func (c CGenService) generateServiceFile(in generateServiceFilesInput) (ok bool, err error) {
