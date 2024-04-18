@@ -22,6 +22,17 @@ viewpath = "/home/www/templates/"
     cache = "127.0.0.1:6379,1"
 `
 
+var tomlErr string = `
+# 模板引擎目录
+viewpath = "/home/www/templates/"
+# MySQL数据库配置
+[redis]
+dd = 11
+[redis]
+    disk  = "127.0.0.1:6379,0"
+    cache = "127.0.0.1:6379,1"
+`
+
 func TestEncode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := make(map[string]string)
@@ -35,6 +46,10 @@ func TestEncode(t *testing.T) {
 		t.Assert(gjson.New(res).Get("toml").String(), tomlStr)
 	})
 
+	gtest.C(t, func(t *gtest.T) {
+		_, err := gtoml.Decode([]byte(tomlErr))
+		t.AssertNE(err, nil)
+	})
 }
 
 func TestDecode(t *testing.T) {
