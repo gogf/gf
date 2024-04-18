@@ -51,6 +51,20 @@ func (c *{CtrlName}) {MethodName}(ctx context.Context, req *{Version}.{MethodNam
 }
 `
 
+const TemplateGenCtrlControllerHeader = `
+package {Module}
+
+import (
+	"context"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+
+	"{ImportPath}"
+)
+
+`
+
 const TemplateGenCtrlControllerMethodFuncMerge = `
 
 func (c *{CtrlName}) {MethodName}(ctx context.Context, req *{Version}.{MethodName}Req) (res *{Version}.{MethodName}Res, err error) {
