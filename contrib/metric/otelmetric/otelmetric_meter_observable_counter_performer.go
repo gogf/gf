@@ -23,7 +23,7 @@ type localObservableCounterPerformer struct {
 	metric.Float64ObservableCounter
 }
 
-// newCounterPerformer creates and returns a CounterPerformer that truly takes action to implement Counter.
+// newObservableCounterPerformer creates and returns a CounterPerformer that truly takes action to implement Counter.
 func (l *localMeterPerformer) newObservableCounterPerformer(
 	meter metric.Meter,
 	metricName string,
