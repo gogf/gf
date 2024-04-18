@@ -139,9 +139,13 @@ func (m *Model) Array(fieldsAndWhere ...interface{}) ([]Value, error) {
 	if err != nil {
 		return nil, err
 	}
-	var field string
+	var (
+		field string
+		core  = m.db.GetCore()
+		ctx   = core.injectInternalColumn(m.GetCtx())
+	)
 	if len(all) > 0 {
-		if internalData := m.db.GetCore().GetInternalCtxDataFromCtx(m.GetCtx()); internalData != nil {
+		if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
 			field = internalData.FirstResultColumn
 		} else {
 			return nil, gerror.NewCode(
@@ -376,7 +380,10 @@ func (m *Model) ScanList(structSlicePointer interface{}, bindToAttrName string, 
 // and fieldsAndWhere[1:] is treated as where condition fields.
 // Also see Model.Fields and Model.Where functions.
 func (m *Model) Value(fieldsAndWhere ...interface{}) (Value, error) {
-	var ctx = m.GetCtx()
+	var (
+		core = m.db.GetCore()
+		ctx  = core.injectInternalColumn(m.GetCtx())
+	)
 	if len(fieldsAndWhere) > 0 {
 		if len(fieldsAndWhere) > 2 {
 			return m.Fields(gconv.String(fieldsAndWhere[0])).Where(fieldsAndWhere[1], fieldsAndWhere[2:]...).Value()
@@ -394,7 +401,7 @@ func (m *Model) Value(fieldsAndWhere ...interface{}) (Value, error) {
 		return nil, err
 	}
 	if len(all) > 0 {
-		if internalData := m.db.GetCore().GetInternalCtxDataFromCtx(ctx); internalData != nil {
+		if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
 			if v, ok := all[0][internalData.FirstResultColumn]; ok {
 				return v, nil
 			}
@@ -412,7 +419,10 @@ func (m *Model) Value(fieldsAndWhere ...interface{}) (Value, error) {
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 func (m *Model) Count(where ...interface{}) (int, error) {
-	var ctx = m.GetCtx()
+	var (
+		core = m.db.GetCore()
+		ctx  = core.injectInternalColumn(m.GetCtx())
+	)
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).Count()
 	}
@@ -424,7 +434,7 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 		return 0, err
 	}
 	if len(all) > 0 {
-		if internalData := m.db.GetCore().GetInternalCtxDataFromCtx(ctx); internalData != nil {
+		if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
 			if v, ok := all[0][internalData.FirstResultColumn]; ok {
 				return v.Int(), nil
 			}
