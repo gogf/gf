@@ -386,8 +386,9 @@ func getImportPartContent(ctx context.Context, source string, isDo bool, appendI
 				}
 			}
 			if !found {
-				err = gproc.ShellRun(ctx, `go get `+appendImport)
-				mlog.Fatalf(`%+v`, err)
+				if err = gproc.ShellRun(ctx, `go get `+appendImport); err != nil {
+					mlog.Fatalf(`%+v`, err)
+				}
 			}
 			packageImportsArray.Append(fmt.Sprintf(`"%s"`, appendImport))
 		}
