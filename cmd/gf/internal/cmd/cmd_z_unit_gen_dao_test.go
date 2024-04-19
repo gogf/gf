@@ -69,6 +69,7 @@ func Test_Gen_Dao_Default(t *testing.T) {
 				NoModelComment:     false,
 				Clear:              false,
 				TypeMapping:        nil,
+				FieldMapping:       nil,
 			}
 		)
 		err = gutil.FillStructWithDefault(&in)
@@ -167,6 +168,12 @@ func Test_Gen_Dao_TypeMapping(t *testing.T) {
 					"decimal": {
 						Type:   "decimal.Decimal",
 						Import: "github.com/shopspring/decimal",
+					},
+				},
+				FieldMapping: map[gendao.DBTableFieldName]gendao.CustomAttributeType{
+					"table_user.other": {
+						Type:   "map[string]string",
+						Import: "",
 					},
 				},
 			}
@@ -268,6 +275,7 @@ func Test_Gen_Dao_Issue2572(t *testing.T) {
 				NoModelComment:     false,
 				Clear:              false,
 				TypeMapping:        nil,
+				FieldMapping:       nil,
 			}
 		)
 		err = gutil.FillStructWithDefault(&in)
@@ -347,6 +355,7 @@ func Test_Gen_Dao_Issue2616(t *testing.T) {
 				NoModelComment:     false,
 				Clear:              false,
 				TypeMapping:        nil,
+				FieldMapping:       nil,
 			}
 		)
 		err = gutil.FillStructWithDefault(&in)
@@ -449,6 +458,7 @@ func Test_Gen_Dao_Issue2746(t *testing.T) {
 				NoModelComment:     false,
 				Clear:              false,
 				TypeMapping:        nil,
+				FieldMapping:       nil,
 			}
 		)
 		err = gutil.FillStructWithDefault(&in)
