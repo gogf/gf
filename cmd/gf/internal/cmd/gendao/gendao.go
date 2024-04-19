@@ -204,7 +204,7 @@ type (
 		Clear              bool   `name:"clear"               short:"a"  brief:"{CGenDaoBriefClear}" orphan:"true"`
 
 		TypeMapping  map[DBFieldTypeName]CustomAttributeType  `name:"typeMapping" short:"y" brief:"{CGenDaoBriefTypeMapping}" orphan:"true"`
-		FieldMapping map[DBTableFieldName]CustomAttributeType `name:"jsonMapping" short:"jm"  brief:"{CGenDaoBriefFieldMapping}" orphan:"true"`
+		FieldMapping map[DBTableFieldName]CustomAttributeType `name:"fieldMapping" short:"fm"  brief:"{CGenDaoBriefFieldMapping}" orphan:"true"`
 		genItems     *CGenDaoInternalGenItems
 	}
 	CGenDaoOutput struct{}
