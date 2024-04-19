@@ -69,26 +69,22 @@ func (c CGenCtrl) getApiItemsInDst(dstFolder string) (items []apiItem, err error
 		Path  string
 		Alias string
 	}
-	var fileContent string
 	filePaths, err := gfile.ScanDir(dstFolder, "*.go", true)
 	if err != nil {
 		return nil, err
 	}
 	for _, filePath := range filePaths {
-		fileContent = gfile.GetContents(filePath)
-		match, err := gregex.MatchString(`import\s+\(([\s\S]+?)\)`, fileContent)
-		if err != nil {
-			return nil, err
-		}
-		if len(match) < 2 {
-			continue
-		}
 		var (
 			array       []string
 			importItems []importItem
-			importLines = gstr.SplitAndTrim(match[1], "\n")
+			importLines []string
 			module      = gfile.Basename(gfile.Dir(filePath))
 		)
+		importLines, err = c.getImportsInDst(filePath)
+		if err != nil {
+			return nil, err
+		}
+
 		// retrieve all imports.
 		for _, importLine := range importLines {
 			array = gstr.SplitAndTrim(importLine, " ")
@@ -104,11 +100,15 @@ func (c CGenCtrl) getApiItemsInDst(dstFolder string) (items []apiItem, err error
 			}
 		}
 		// retrieve all api usages.
+		// retrieve it without using AST, but use regular expressions to retrieve.
+		// It's because the api definition is simple and regular.
+		// Use regular expressions to get better performance.
+		fileContent := gfile.GetContents(filePath)
 		matches, err := gregex.MatchAllString(PatternCtrlDefinition, fileContent)
 		if err != nil {
 			return nil, err
 		}
-		for _, match = range matches {
+		for _, match := range matches {
 			// try to find the import path of the api.
 			var (
 				importPath string
@@ -171,6 +171,28 @@ func (c CGenCtrl) getStructsNameInSrc(filePath string) (structsName []string, er
 				}
 				structsName = append(structsName, methodName)
 			}
+		}
+		return true
+	})
+
+	return
+}
+
+// getImportsInDst retrieves all import paths in the file.
+func (c CGenCtrl) getImportsInDst(filePath string) (imports []string, err error) {
+	var (
+		fileContent = gfile.GetContents(filePath)
+		fileSet     = token.NewFileSet()
+	)
+
+	node, err := parser.ParseFile(fileSet, "", fileContent, parser.ParseComments)
+	if err != nil {
+		return
+	}
+
+	ast.Inspect(node, func(n ast.Node) bool {
+		if imp, ok := n.(*ast.ImportSpec); ok {
+			imports = append(imports, imp.Path.Value)
 		}
 		return true
 	})
