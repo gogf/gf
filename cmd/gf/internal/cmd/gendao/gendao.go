@@ -58,6 +58,10 @@ CONFIGURATION SUPPORT
 			  import: github.com/shopspring/decimal
 			numeric:
 			  type: string
+		  fieldMapping:
+			user.other:
+			  type:   map[string]string
+          
 `
 	CGenDaoBriefPath              = `directory path for generated files`
 	CGenDaoBriefLink              = `database configuration, the same as the ORM configuration of GoFrame`
@@ -364,7 +368,7 @@ func getImportPartContent(ctx context.Context, source string, isDo bool, appendI
 	}
 
 	// Check and update imports in go.mod
-	if appendImports != nil && len(appendImports) > 0 {
+	if len(appendImports) > 0 {
 		goModPath := utils.GetModPath()
 		if goModPath == "" {
 			mlog.Fatal("go.mod not found in current project")
