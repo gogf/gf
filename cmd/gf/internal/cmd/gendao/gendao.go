@@ -61,7 +61,6 @@ CONFIGURATION SUPPORT
 		  fieldMapping:
 			user.other:
 			  type:   map[string]string
-          
 `
 	CGenDaoBriefPath              = `directory path for generated files`
 	CGenDaoBriefLink              = `database configuration, the same as the ORM configuration of GoFrame`
