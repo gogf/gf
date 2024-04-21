@@ -306,7 +306,7 @@ func Test_Gen_Dao_FieldMapping(t *testing.T) {
 			filepath.FromSlash(path + "/model/entity/table_user.go"),
 		})
 		// content
-		testPath := gtest.DataPath("gendao", "generated_user_field_mapping")
+		testPath := gtest.DataPath("gendao", "generated_user_type_mapping")
 		expectFiles := []string{
 			filepath.FromSlash(testPath + "/dao/internal/table_user.go"),
 			filepath.FromSlash(testPath + "/dao/table_user.go"),

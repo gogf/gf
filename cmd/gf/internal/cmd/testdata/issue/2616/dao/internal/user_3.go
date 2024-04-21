@@ -24,7 +24,7 @@ type User3Columns struct {
 	Passport string // User Passport
 	Password string // User Password
 	Nickname string // User Nickname
-	Score    string // Total score amount
+	Score    string // Total score amount.
 	CreateAt string // Created Time
 	UpdateAt string // Updated Time
 }

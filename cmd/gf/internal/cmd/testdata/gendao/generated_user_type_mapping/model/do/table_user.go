@@ -16,8 +16,7 @@ type TableUser struct {
 	Passport interface{} // User Passport
 	Password interface{} // User Password
 	Nickname interface{} // User Nickname
-	Score    interface{} // Total score amount
-	Other    interface{} // Other info
+	Score    interface{} // Total score amount.
 	CreateAt *gtime.Time // Created Time
 	UpdateAt *gtime.Time // Updated Time
 }

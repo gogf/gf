@@ -15,7 +15,7 @@ message TableUser {
     string                    PASSPORT  = 2; // User Passport        
     string                    PASSWORD  = 3; // User Password        
     string                    NICKNAME  = 4; // User Nickname        
-    string                    SCORE     = 5; // Total score amount
+    string                    SCORE     = 5; // Total score amount.  
     google.protobuf.Timestamp CREATE_AT = 6; // Created Time         
     google.protobuf.Timestamp UPDATE_AT = 7; // Updated Time         
 }

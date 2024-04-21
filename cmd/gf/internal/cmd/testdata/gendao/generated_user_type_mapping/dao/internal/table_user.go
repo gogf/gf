@@ -24,8 +24,7 @@ type TableUserColumns struct {
 	Passport string // User Passport
 	Password string // User Password
 	Nickname string // User Nickname
-	Score    string // Total score amount
-	Other    string // Other info
+	Score    string // Total score amount.
 	CreateAt string // Created Time
 	UpdateAt string // Updated Time
 }
@@ -37,7 +36,6 @@ var tableUserColumns = TableUserColumns{
 	Password: "password",
 	Nickname: "nickname",
 	Score:    "score",
-	Other:    "other",
 	CreateAt: "create_at",
 	UpdateAt: "update_at",
 }
