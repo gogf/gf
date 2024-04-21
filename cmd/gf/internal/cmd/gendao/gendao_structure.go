@@ -74,7 +74,7 @@ func generateStructFieldDefinition(
 		jsonTag          = gstr.CaseConvert(field.Name, gstr.CaseTypeMatch(in.JsonCase))
 	)
 
-	if len(in.TypeMapping) > 0 {
+	if in.TypeMapping != nil && len(in.TypeMapping) > 0 {
 		var (
 			tryTypeName string
 		)
@@ -132,7 +132,7 @@ func generateStructFieldDefinition(
 		newFiledName = gstr.TrimLeftStr(newFiledName, v, 1)
 	}
 
-	if len(in.FieldMapping) > 0 {
+	if in.FieldMapping != nil && len(in.FieldMapping) > 0 {
 		if typeMapping, ok := in.FieldMapping[fmt.Sprintf("%s.%s", in.Tables, newFiledName)]; ok {
 			localTypeNameStr = typeMapping.Type
 			appendImport = typeMapping.Import
