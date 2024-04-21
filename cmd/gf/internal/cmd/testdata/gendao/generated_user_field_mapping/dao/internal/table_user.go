@@ -20,14 +20,14 @@ type TableUserDao struct {
 
 // TableUserColumns defines and stores column names for table table_user.
 type TableUserColumns struct {
-	Id       string // User ID
-	Passport string // User Passport
-	Password string // User Password
-	Nickname string // User Nickname
-	Score    string // Total score amount
-	Other    string // Other info
-	CreateAt string // Created Time
-	UpdateAt string // Updated Time
+	Id       string            // User ID
+	Passport string            // User Passport
+	Password string            // User Password
+	Nickname string            // User Nickname
+	Score    string            // Total score amount
+	Other    map[string]string // Other info
+	CreateAt string            // Created Time
+	UpdateAt string            // Updated Time
 }
 
 // tableUserColumns holds the columns for table table_user.

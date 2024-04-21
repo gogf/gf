@@ -15,7 +15,8 @@ type TableUser struct {
 	Passport string          `json:"passport" orm:"passport"  ` // User Passport
 	Password string          `json:"password" orm:"password"  ` // User Password
 	Nickname string          `json:"nickname" orm:"nickname"  ` // User Nickname
-	Score    decimal.Decimal `json:"score"    orm:"score"     ` // Total score amount.
+	Score    decimal.Decimal `json:"score"    orm:"score"     ` // Total score amount
+	Other    string          `json:"other"    orm:"other"     ` // Other info
 	CreateAt *gtime.Time     `json:"createAt" orm:"create_at" ` // Created Time
 	UpdateAt *gtime.Time     `json:"updateAt" orm:"update_at" ` // Updated Time
 }
