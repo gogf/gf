@@ -13,6 +13,8 @@ import (
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/gendao"
 	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -244,7 +246,7 @@ func Test_Gen_Dao_Issue2572(t *testing.T) {
 			group = "test"
 			in    = gendao.CGenDaoInput{
 				Path:               path,
-				Link:               link,
+				Link:               "",
 				Tables:             "",
 				TablesEx:           "",
 				Group:              group,
@@ -466,5 +468,101 @@ func Test_Gen_Dao_Issue2746(t *testing.T) {
 			expectContent = gtest.DataContent(`issue`, `2746`, `issue_2746.go`)
 		)
 		t.Assert(expectContent, gfile.GetContents(file))
+	})
+}
+
+// https://github.com/gogf/gf/issues/3459
+func Test_Gen_Dao_Issue3459(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err        error
+			db         = testDB
+			table      = "table_user"
+			sqlContent = fmt.Sprintf(
+				gtest.DataContent(`gendao`, `user.tpl.sql`),
+				table,
+			)
+		)
+		dropTableWithDb(db, table)
+		array := gstr.SplitAndTrim(sqlContent, ";")
+		for _, v := range array {
+			if _, err = db.Exec(ctx, v); err != nil {
+				t.AssertNil(err)
+			}
+		}
+		defer dropTableWithDb(db, table)
+
+		var (
+			confDir = gtest.DataPath("issue", "3459")
+			path    = gfile.Temp(guid.S())
+			group   = "test"
+			in      = gendao.CGenDaoInput{
+				Path:               path,
+				Link:               link,
+				Tables:             "",
+				TablesEx:           "",
+				Group:              group,
+				Prefix:             "",
+				RemovePrefix:       "",
+				JsonCase:           "SnakeScreaming",
+				ImportPrefix:       "",
+				DaoPath:            "",
+				DoPath:             "",
+				EntityPath:         "",
+				TplDaoIndexPath:    "",
+				TplDaoInternalPath: "",
+				TplDaoDoPath:       "",
+				TplDaoEntityPath:   "",
+				StdTime:            false,
+				WithTime:           false,
+				GJsonSupport:       false,
+				OverwriteDao:       false,
+				DescriptionTag:     false,
+				NoJsonTag:          false,
+				NoModelComment:     false,
+				Clear:              false,
+				TypeMapping:        nil,
+			}
+		)
+		err = g.Cfg().GetAdapter().(*gcfg.AdapterFile).SetPath(confDir)
+		t.AssertNil(err)
+
+		err = gutil.FillStructWithDefault(&in)
+		t.AssertNil(err)
+
+		err = gfile.Mkdir(path)
+		t.AssertNil(err)
+
+		// for go mod import path auto retrieve.
+		err = gfile.Copy(
+			gtest.DataPath("gendao", "go.mod.txt"),
+			gfile.Join(path, "go.mod"),
+		)
+		t.AssertNil(err)
+
+		_, err = gendao.CGenDao{}.Dao(ctx, in)
+		t.AssertNil(err)
+		defer gfile.Remove(path)
+
+		// files
+		files, err := gfile.ScanDir(path, "*.go", true)
+		t.AssertNil(err)
+		t.Assert(files, []string{
+			filepath.FromSlash(path + "/dao/internal/table_user.go"),
+			filepath.FromSlash(path + "/dao/table_user.go"),
+			filepath.FromSlash(path + "/model/do/table_user.go"),
+			filepath.FromSlash(path + "/model/entity/table_user.go"),
+		})
+		// content
+		testPath := gtest.DataPath("gendao", "generated_user")
+		expectFiles := []string{
+			filepath.FromSlash(testPath + "/dao/internal/table_user.go"),
+			filepath.FromSlash(testPath + "/dao/table_user.go"),
+			filepath.FromSlash(testPath + "/model/do/table_user.go"),
+			filepath.FromSlash(testPath + "/model/entity/table_user.go"),
+		}
+		for i, _ := range files {
+			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))
+		}
 	})
 }
