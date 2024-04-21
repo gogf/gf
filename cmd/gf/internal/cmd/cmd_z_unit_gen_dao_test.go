@@ -261,7 +261,12 @@ func Test_Gen_Dao_FieldMapping(t *testing.T) {
 				NoJsonTag:          false,
 				NoModelComment:     false,
 				Clear:              false,
-				TypeMapping:        nil,
+				TypeMapping: map[gendao.DBFieldTypeName]gendao.CustomAttributeType{
+					"int": {
+						Type:   "int64",
+						Import: "",
+					},
+				},
 				FieldMapping: map[gendao.DBTableFieldName]gendao.CustomAttributeType{
 					"table_user.score": {
 						Type:   "decimal.Decimal",
