@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gogf/gf/v2/util/gutil"
 	"golang.org/x/mod/modfile"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
@@ -222,6 +223,9 @@ type (
 
 func (c CGenDao) Dao(ctx context.Context, in CGenDaoInput) (out *CGenDaoOutput, err error) {
 	in.genItems = newCGenDaoInternalGenItems()
+	if err := c.mergeConf(ctx, &in); err != nil {
+		return nil, err
+	}
 	if g.Cfg().Available(ctx) {
 		v := g.Cfg().MustGet(ctx, CGenDaoConfig)
 		if v.IsSlice() {
@@ -237,6 +241,27 @@ func (c CGenDao) Dao(ctx context.Context, in CGenDaoInput) (out *CGenDaoOutput, 
 	doClear(in.genItems)
 	mlog.Print("done!")
 	return
+}
+
+// mergeConfig merges the configuration from configuration file to the input.
+func (c CGenDao) mergeConf(ctx context.Context, in *CGenDaoInput) (err error) {
+	if !g.Cfg().Available(ctx) {
+		return nil
+	}
+	v := g.Cfg().MustGet(ctx, fmt.Sprintf(`%s.%d`, CGenDaoConfig, 0)).Map()
+	gutil.Dump(v)
+	// if v.IsSlice() {
+	// 	for i := 0; i < len(v.Interfaces()); i++ {
+	// 		if err := v.GetStruct(i, in); err == nil {
+	// 			return
+	// 		}
+	// 	}
+	// } else {
+	// 	if err := v.GetStruct(-1, in); err == nil {
+	// 		return
+	// 	}
+	// }
+	return nil
 }
 
 // doGenDaoForArray implements the "gen dao" command for configuration array.

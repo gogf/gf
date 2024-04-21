@@ -1,0 +1,10 @@
+gfcli:
+  gen:
+    dao:
+      - link: "pgsql:postgres:postgres@tcp(127.0.0.1:5432)/postgres"
+        typeMapping:
+          decimal:
+            type: decimal.Decimal
+            import: github.com/shopspring/decimal
+          numeric:
+            type: string
