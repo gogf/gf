@@ -261,20 +261,11 @@ func Test_Gen_Dao_FieldMapping(t *testing.T) {
 				NoJsonTag:          false,
 				NoModelComment:     false,
 				Clear:              false,
-				TypeMapping: map[gendao.DBFieldTypeName]gendao.CustomAttributeType{
-					"int": {
-						Type:   "int64",
-						Import: "",
-					},
-					"decimal": {
+				TypeMapping:        nil,
+				FieldMapping: map[gendao.DBTableFieldName]gendao.CustomAttributeType{
+					"table_user.score": {
 						Type:   "decimal.Decimal",
 						Import: "github.com/shopspring/decimal",
-					},
-				},
-				FieldMapping: map[gendao.DBTableFieldName]gendao.CustomAttributeType{
-					"table_user.other": {
-						Type:   "map[string]string",
-						Import: "",
 					},
 				},
 			}
@@ -306,7 +297,7 @@ func Test_Gen_Dao_FieldMapping(t *testing.T) {
 			filepath.FromSlash(path + "/model/entity/table_user.go"),
 		})
 		// content
-		testPath := gtest.DataPath("gendao", "generated_user_type_mapping")
+		testPath := gtest.DataPath("gendao", "generated_user_field_mapping")
 		expectFiles := []string{
 			filepath.FromSlash(testPath + "/dao/internal/table_user.go"),
 			filepath.FromSlash(testPath + "/dao/table_user.go"),
