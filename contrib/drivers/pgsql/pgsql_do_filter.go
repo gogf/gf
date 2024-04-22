@@ -21,6 +21,10 @@ func (d *Driver) DoFilter(
 	var index int
 	// Convert placeholder char '?' to string "$x".
 	newSql, err = gregex.ReplaceStringFunc(`\?`, sql, func(s string) string {
+		if _, ok := args[index].(gdb.NoReplacement); ok {
+			args = append(args[:index], args[index+1:]...)
+			return s
+		}
 		index++
 		return fmt.Sprintf(`$%d`, index)
 	})

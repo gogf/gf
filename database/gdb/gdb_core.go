@@ -623,6 +623,11 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 
 			default:
 				if s, ok := v.(Raw); ok {
+					placeholders := strings.Index(string(s), "?")
+					if placeholders != -1 {
+						// 插入一个空的
+						args = append([]any{(NoReplacement)(true)}, args...)
+					}
 					fields = append(fields, c.QuoteWord(k)+"="+gconv.String(s))
 				} else {
 					fields = append(fields, c.QuoteWord(k)+"=?")
