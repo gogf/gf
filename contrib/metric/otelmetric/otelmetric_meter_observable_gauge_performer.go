@@ -23,7 +23,7 @@ type localObservableGaugePerformer struct {
 	metric.Float64ObservableGauge
 }
 
-// newGaugePerformer creates and returns a GaugePerformer that truly takes action to implement Gauge.
+// newObservableGaugePerformer creates and returns a GaugePerformer that truly takes action to implement Gauge.
 func (l *localMeterPerformer) newObservableGaugePerformer(
 	meter metric.Meter,
 	metricName string,

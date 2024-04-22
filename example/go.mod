@@ -37,7 +37,7 @@ require (
 	github.com/alibabacloud-go/debug v0.0.0-20190504072949-9472017b5c68 // indirect
 	github.com/alibabacloud-go/tea v1.1.17 // indirect
 	github.com/alibabacloud-go/tea-utils v1.4.4 // indirect
-	github.com/aliyun/alibaba-cloud-sdk-go v1.62.589 // indirect
+	github.com/aliyun/alibaba-cloud-sdk-go v1.62.719 // indirect
 	github.com/aliyun/alibabacloud-dkms-gcs-go-sdk v0.2.2 // indirect
 	github.com/aliyun/alibabacloud-dkms-transfer-go-sdk v0.1.7 // indirect
 	github.com/apolloconfig/agollo/v4 v4.3.1 // indirect
@@ -80,7 +80,7 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/serf v0.10.1 // indirect
 	github.com/imdario/mergo v0.3.6 // indirect
-	github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/joy999/nacos-sdk-go v0.0.0-20231120071639-10a34b3e7288 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect

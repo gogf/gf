@@ -364,58 +364,18 @@ func Test_Model_Save(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
-		type User struct {
-			Id         int
-			Passport   string
-			Password   string
-			NickName   string
-			CreateTime *gtime.Time
-		}
 		var (
-			user   User
-			count  int
-			result sql.Result
-			err    error
+			err error
 		)
 
-		result, err = db.Model(table).Data(g.Map{
+		_, err = db.Model(table).Data(g.Map{
 			"id":          1,
 			"passport":    "CN",
 			"password":    "12345678",
 			"nickname":    "oldme",
 			"create_time": CreateTime,
 		}).OnConflict("id").Save()
-		t.AssertNil(err)
-		n, _ := result.RowsAffected()
-		t.Assert(n, 1)
-
-		err = db.Model(table).Scan(&user)
-		t.AssertNil(err)
-		t.Assert(user.Id, 1)
-		t.Assert(user.Passport, "CN")
-		t.Assert(user.Password, "12345678")
-		t.Assert(user.NickName, "oldme")
-		t.Assert(user.CreateTime.String(), CreateTime)
-
-		_, err = db.Model(table).Data(g.Map{
-			"id":          1,
-			"passport":    "CN",
-			"password":    "abc123456",
-			"nickname":    "to be not to be",
-			"create_time": CreateTime,
-		}).OnConflict("id").Save()
-		t.AssertNil(err)
-
-		err = db.Model(table).Scan(&user)
-		t.AssertNil(err)
-		t.Assert(user.Passport, "CN")
-		t.Assert(user.Password, "abc123456")
-		t.Assert(user.NickName, "to be not to be")
-		t.Assert(user.CreateTime.String(), CreateTime)
-
-		count, err = db.Model(table).Count()
-		t.AssertNil(err)
-		t.Assert(count, 1)
+		t.Assert(err, ErrorSave)
 	})
 }
 
