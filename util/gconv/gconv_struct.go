@@ -143,7 +143,7 @@ func doStruct(
 		//	return v.UnmarshalValue(params)
 		// }
 		// Note that it's `pointerElemReflectValue` here not `pointerReflectValue`.
-		if ok, err := bindVarToReflectValueWithInterfaceCheck(pointerElemReflectValue, paramsInterface); ok {
+		if ok, err = bindVarToReflectValueWithInterfaceCheck(pointerElemReflectValue, paramsInterface); ok {
 			return err
 		}
 		// Retrieve its element, may be struct at last.
@@ -166,21 +166,20 @@ func doStruct(
 		return nil
 	}
 
-	type fieldInfo struct {
-		// tag can be one of the following values
-		// 1. The key of paramKeyToAttrMap
-		// 2. It can be the specified tag attribute
-		// 3. The name of the elemFieldName
-		tag   string
-		val   any
-		index int
+	// Holds the info for subsequent converting.
+	type toBeConvertedFieldInfo struct {
+		Value          any    // Found value by tag name or field name from input.
+		FieldIndex     int    // The associated reflection field index.
+		FieldOrTagName string // Field name or tag name for field tag by priority tags.
 	}
 
 	var (
-		// Used to save some attributes related to subsequent operations
-		// key=elemFieldName
-		fieldInfoMap     = map[string]fieldInfo{}
-		priorityTagArray []string
+		priorityTagArray                []string
+		elemFieldName                   string
+		elemFieldType                   reflect.StructField
+		elemFieldValue                  reflect.Value
+		elemType                        = pointerElemReflectValue.Type()
+		toBeConvertedFieldNameToInfoMap = map[string]toBeConvertedFieldInfo{} // key=elemFieldName
 	)
 
 	if priorityTag != "" {
@@ -188,33 +187,6 @@ func doStruct(
 	} else {
 		priorityTagArray = gtag.StructTagPriority
 	}
-
-	var getTag = func(field reflect.StructField, priorityTags []string) string {
-		for _, tag := range priorityTags {
-			value, ok := field.Tag.Lookup(tag)
-			if ok {
-				// If there's something else in the tag string,
-				// it uses the first part which is split using char ','.
-				// Eg:
-				// orm:"id, priority"
-				// orm:"name, with:uid=id"
-				split := strings.Split(value, ",")
-				// json:",omitempty"
-				trimTag := strings.TrimSpace(split[0])
-				return trimTag
-			}
-		}
-		return ""
-	}
-
-	// The key of the attrMap is the attribute name of the struct,
-	// and the value is its replaced name for later comparison to improve performance.
-	var (
-		elemFieldName  string
-		elemFieldType  reflect.StructField
-		elemFieldValue reflect.Value
-		elemType       = pointerElemReflectValue.Type()
-	)
 
 	for i := 0; i < pointerElemReflectValue.NumField(); i++ {
 		elemFieldType = elemType.Field(i)
@@ -224,22 +196,24 @@ func doStruct(
 			continue
 		}
 
-		fieldTag := getTag(elemFieldType, priorityTagArray)
+		var fieldTagName = getTagNameFromField(elemFieldType, priorityTagArray)
 		// Maybe it's struct/*struct embedded.
 		if elemFieldType.Anonymous {
 			// type Name struct {
-			//    LastName string `json:"lastName"`
+			//    LastName  string `json:"lastName"`
 			//    FirstName string `json:"firstName"`
 			// }
+			//
 			// type User struct {
 			//     Name `json:"name"`
-			//     Other fields...
+			//     // ...
 			// }
+			//
 			// It is only recorded if the name has a fieldTag
-			if fieldTag != "" {
-				fieldInfoMap[elemFieldName] = fieldInfo{
-					index: elemFieldType.Index[0],
-					tag:   fieldTag,
+			if fieldTagName != "" {
+				toBeConvertedFieldNameToInfoMap[elemFieldName] = toBeConvertedFieldInfo{
+					FieldIndex:     elemFieldType.Index[0],
+					FieldOrTagName: fieldTagName,
 				}
 			}
 
@@ -256,81 +230,111 @@ func doStruct(
 			}
 		} else {
 			// Use the native elemFieldName name as the fieldTag
-			if fieldTag == "" {
-				fieldTag = elemFieldName
+			if fieldTagName == "" {
+				fieldTagName = elemFieldName
 			}
-			fieldInfoMap[elemFieldName] = fieldInfo{
-				index: elemFieldType.Index[0],
-				tag:   fieldTag,
+			toBeConvertedFieldNameToInfoMap[elemFieldName] = toBeConvertedFieldInfo{
+				FieldIndex:     elemFieldType.Index[0],
+				FieldOrTagName: fieldTagName,
 			}
 		}
 	}
 
-	if len(fieldInfoMap) == 0 {
+	// Nothing to be converted.
+	if len(toBeConvertedFieldNameToInfoMap) == 0 {
 		return nil
 	}
 
-	for fieldName, field := range fieldInfoMap {
-		paramsVal, ok := paramsMap[field.tag]
-		if ok {
-			field.val = paramsVal
-			fieldInfoMap[fieldName] = field
+	// Search the parameter value for the field.
+	var paramsValue any
+	for fieldName, fieldInfo := range toBeConvertedFieldNameToInfoMap {
+		if paramsValue, ok = paramsMap[fieldInfo.FieldOrTagName]; ok {
+			fieldInfo.Value = paramsValue
+			toBeConvertedFieldNameToInfoMap[fieldName] = fieldInfo
 		}
 	}
 
-	// First search according to custom rules. If a direct assignment is found, reduce the number of subsequent map searches.
+	// Firstly, search according to custom mapping rules.
+	// If a possible direct assignment is found, reduce the number of subsequent map searches.
+	var fieldInfo toBeConvertedFieldInfo
 	for paramKey, fieldName := range paramKeyToAttrMap {
 		// Prevent setting of non-existent fields
-		field, ok := fieldInfoMap[fieldName]
+		fieldInfo, ok = toBeConvertedFieldNameToInfoMap[fieldName]
 		if ok {
-			// Prevent non-existent values from being set
-			paramsVal, ok := paramsMap[paramKey]
-			if ok {
-				field.val = paramsVal
-				fieldInfoMap[fieldName] = field
+			// Prevent non-existent values from being set.
+			if paramsValue, ok = paramsMap[paramKey]; ok {
+				fieldInfo.Value = paramsValue
+				toBeConvertedFieldNameToInfoMap[fieldName] = fieldInfo
 			}
 		}
 	}
 
-	// Indicates that those values have been used and cannot be reused.
-	usedParamsKey := map[string]struct{}{}
-
-	for fieldName, field := range fieldInfoMap {
+	var (
+		paramKey   string
+		paramValue any
+		fieldName  string
+		// Indicates that those values have been used and cannot be reused.
+		usedParamsKeyOrTagNameMap = map[string]struct{}{}
+	)
+	for fieldName, fieldInfo = range toBeConvertedFieldNameToInfoMap {
 		// If it is not empty, the tag or elemFieldName name matches
-		if field.val != nil {
-			if err := bindVarToStructAttrWithFieldIndex(
-				pointerElemReflectValue, fieldName, field.index, field.val, paramKeyToAttrMap,
+		if fieldInfo.Value != nil {
+			if err = bindVarToStructAttrWithFieldIndex(
+				pointerElemReflectValue, fieldName, fieldInfo.FieldIndex, fieldInfo.Value, paramKeyToAttrMap,
 			); err != nil {
 				return err
 			}
-			// It is necessary to delete the set fields for quick traversal later.
-			usedParamsKey[field.tag] = struct{}{}
-		} else {
-			// If it is empty, a fuzzy match is required
-			key, val := fuzzyMatchingFieldName(fieldName, paramsMap, usedParamsKey)
-			if val != nil {
-				if err := bindVarToStructAttrWithFieldIndex(
-					pointerElemReflectValue, fieldName, field.index, val, paramKeyToAttrMap,
-				); err != nil {
-					return err
-				}
-				// It is necessary to delete the set fields for quick traversal later.
-				usedParamsKey[key] = struct{}{}
+			usedParamsKeyOrTagNameMap[fieldInfo.FieldOrTagName] = struct{}{}
+			continue
+		}
+
+		// If value is nil, a fuzzy match is used for search the key and value for converting.
+		paramKey, paramValue = fuzzyMatchingFieldName(fieldName, paramsMap, usedParamsKeyOrTagNameMap)
+		if paramValue != nil {
+			if err = bindVarToStructAttrWithFieldIndex(
+				pointerElemReflectValue, fieldName, fieldInfo.FieldIndex, paramValue, paramKeyToAttrMap,
+			); err != nil {
+				return err
 			}
+			usedParamsKeyOrTagNameMap[paramKey] = struct{}{}
 		}
 	}
 	return nil
 }
 
-func fuzzyMatchingFieldName(fieldName string, paramsMap map[string]any, usedParamsKey map[string]struct{}) (string, any) {
+func getTagNameFromField(field reflect.StructField, priorityTags []string) string {
+	for _, tag := range priorityTags {
+		value, ok := field.Tag.Lookup(tag)
+		if ok {
+			// If there's something else in the tag string,
+			// it uses the first part which is split using char ','.
+			// Example:
+			// orm:"id, priority"
+			// orm:"name, with:uid=id"
+			array := strings.Split(value, ",")
+			// json:",omitempty"
+			trimmedTagName := strings.TrimSpace(array[0])
+			return trimmedTagName
+		}
+	}
+	return ""
+}
+
+// fuzzy matching rule:
+// to match field name and param key in case-insensitive and without symbols.
+func fuzzyMatchingFieldName(
+	fieldName string,
+	paramsMap map[string]any,
+	usedParamsKeyMap map[string]struct{},
+) (string, any) {
 	fieldName = utils.RemoveSymbols(fieldName)
-	for paramKey, paramVal := range paramsMap {
-		if _, ok := usedParamsKey[paramKey]; ok {
+	for paramKey, paramValue := range paramsMap {
+		if _, ok := usedParamsKeyMap[paramKey]; ok {
 			continue
 		}
 		removeParamKeyUnderline := utils.RemoveSymbols(paramKey)
 		if strings.EqualFold(fieldName, removeParamKeyUnderline) {
-			return paramKey, paramVal
+			return paramKey, paramValue
 		}
 	}
 	return "", nil
