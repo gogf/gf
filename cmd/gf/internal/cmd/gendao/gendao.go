@@ -11,6 +11,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
 	"golang.org/x/mod/modfile"
 
@@ -226,59 +228,46 @@ func (c CGenDao) Dao(ctx context.Context, in CGenDaoInput) (out *CGenDaoOutput, 
 	if err := c.mergeConf(ctx, &in); err != nil {
 		return nil, err
 	}
-	if g.Cfg().Available(ctx) {
-		v := g.Cfg().MustGet(ctx, CGenDaoConfig)
-		if v.IsSlice() {
-			for i := 0; i < len(v.Interfaces()); i++ {
-				doGenDaoForArray(ctx, i, in)
-			}
-		} else {
-			doGenDaoForArray(ctx, -1, in)
-		}
-	} else {
-		doGenDaoForArray(ctx, -1, in)
-	}
+	doGenDaoForArray(ctx, in)
 	doClear(in.genItems)
 	mlog.Print("done!")
 	return
 }
 
-// mergeConfig merges the configuration from configuration file to the input.
+// mergeConf merges the configuration from configuration file to the input.
 func (c CGenDao) mergeConf(ctx context.Context, in *CGenDaoInput) (err error) {
 	if !g.Cfg().Available(ctx) {
 		return nil
 	}
-	v := g.Cfg().MustGet(ctx, fmt.Sprintf(`%s.%d`, CGenDaoConfig, 0)).Map()
-	gutil.Dump(v)
-	// if v.IsSlice() {
-	// 	for i := 0; i < len(v.Interfaces()); i++ {
-	// 		if err := v.GetStruct(i, in); err == nil {
-	// 			return
-	// 		}
-	// 	}
-	// } else {
-	// 	if err := v.GetStruct(-1, in); err == nil {
-	// 		return
-	// 	}
-	// }
+
+	var (
+		inMap   = gconv.Map(in)
+		fileMap = g.Cfg().MustGet(ctx, fmt.Sprintf(`%s.%d`, CGenDaoConfig, 0)).Map()
+	)
+	for k, v := range inMap {
+		// If `v` is empty, it does not overwrite the configuration to input.
+		if gutil.IsEmpty(v) {
+			continue
+		}
+
+		k = gstr.LcFirst(k)
+		if _, ok := fileMap[k]; ok {
+			fileMap[k] = v
+		}
+	}
+	err = gconv.Struct(fileMap, in)
+	if err != nil {
+		return gerror.Newf(`invalid configuration of "%s": %+v`, CGenDaoConfig, err)
+	}
 	return nil
 }
 
 // doGenDaoForArray implements the "gen dao" command for configuration array.
-func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
+func doGenDaoForArray(ctx context.Context, in CGenDaoInput) {
 	var (
 		err error
 		db  gdb.DB
 	)
-	if index >= 0 {
-		err = g.Cfg().MustGet(
-			ctx,
-			fmt.Sprintf(`%s.%d`, CGenDaoConfig, index),
-		).Scan(&in)
-		if err != nil {
-			mlog.Fatalf(`invalid configuration of "%s": %+v`, CGenDaoConfig, err)
-		}
-	}
 	if dirRealPath := gfile.RealPath(in.Path); dirRealPath == "" {
 		mlog.Fatalf(`path "%s" does not exist`, in.Path)
 	}

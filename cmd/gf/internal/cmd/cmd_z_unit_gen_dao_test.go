@@ -227,6 +227,7 @@ func execSqlFile(db gdb.DB, filePath string, args ...any) error {
 	return nil
 }
 
+// https://github.com/gogf/gf/issues/2572
 func Test_Gen_Dao_Issue2572(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -306,6 +307,7 @@ func Test_Gen_Dao_Issue2572(t *testing.T) {
 	})
 }
 
+// https://github.com/gogf/gf/issues/2616
 func Test_Gen_Dao_Issue2616(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -479,11 +481,13 @@ func Test_Gen_Dao_Issue3459(t *testing.T) {
 			db         = testDB
 			table      = "table_user"
 			sqlContent = fmt.Sprintf(
-				gtest.DataContent(`gendao`, `user.tpl.sql`),
+				gtest.DataContent(`issue`, `3459`, `3459.sql`),
 				table,
 			)
 		)
 		dropTableWithDb(db, table)
+		dropTableWithDb(db, "ex_table1")
+		dropTableWithDb(db, "ex_table2")
 		array := gstr.SplitAndTrim(sqlContent, ";")
 		for _, v := range array {
 			if _, err = db.Exec(ctx, v); err != nil {
@@ -491,6 +495,8 @@ func Test_Gen_Dao_Issue3459(t *testing.T) {
 			}
 		}
 		defer dropTableWithDb(db, table)
+		defer dropTableWithDb(db, "ex_table1")
+		defer dropTableWithDb(db, "ex_table2")
 
 		var (
 			path    = gfile.Temp(guid.S())
@@ -498,7 +504,7 @@ func Test_Gen_Dao_Issue3459(t *testing.T) {
 			confDir = gtest.DataPath("issue", "3459")
 			in      = gendao.CGenDaoInput{
 				Path:               path,
-				Link:               "",
+				Link:               link,
 				Tables:             "",
 				TablesEx:           "",
 				Group:              group,
@@ -533,13 +539,6 @@ func Test_Gen_Dao_Issue3459(t *testing.T) {
 		err = gfile.Mkdir(path)
 		t.AssertNil(err)
 
-		// for go mod import path auto retrieve.
-		err = gfile.Copy(
-			gtest.DataPath("gendao", "go.mod.txt"),
-			gfile.Join(path, "go.mod"),
-		)
-		t.AssertNil(err)
-
 		_, err = gendao.CGenDao{}.Dao(ctx, in)
 		t.AssertNil(err)
 		defer gfile.Remove(path)
@@ -554,7 +553,7 @@ func Test_Gen_Dao_Issue3459(t *testing.T) {
 			filepath.FromSlash(path + "/model/entity/table_user.go"),
 		})
 		// content
-		testPath := gtest.DataPath("gendao", "generated_user")
+		testPath := gtest.DataPath("issue", "3459", "generated_user")
 		expectFiles := []string{
 			filepath.FromSlash(testPath + "/dao/internal/table_user.go"),
 			filepath.FromSlash(testPath + "/dao/table_user.go"),
