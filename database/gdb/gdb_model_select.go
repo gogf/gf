@@ -183,11 +183,8 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 			model = m.Fields(pointer)
 		}
 	}
-	one, err := model.One(where...)
+	err := model.one(pointer, where...)
 	if err != nil {
-		return err
-	}
-	if err = one.Struct(pointer); err != nil {
 		return err
 	}
 	return model.doWithScanStruct(pointer)
@@ -227,11 +224,8 @@ func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 			)
 		}
 	}
-	all, err := model.All(where...)
+	err := model.all(pointer, where...)
 	if err != nil {
-		return err
-	}
-	if err = all.Structs(pointer); err != nil {
 		return err
 	}
 	return model.doWithScanStructs(pointer)

@@ -71,6 +71,8 @@ type HookSelectInput struct {
 	Schema string        // The schema name that to be used. Update this attribute to change target schema name.
 	Sql    string        // The sql string that to be committed.
 	Args   []interface{} // The arguments of sql.
+	// 结构体指针
+	Pointer any
 }
 
 // HookInsertInput holds the parameters for insert hook operation.
