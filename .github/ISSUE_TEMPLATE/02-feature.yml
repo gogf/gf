@@ -13,7 +13,7 @@ body:
         Thanks for helping us improve! 🙏 Please answer these questions and provide as much information as possible about your problem.
 
   - type: dropdown
-    id: has-problem
+    id: is-problem
     attributes:
       label: Is your feature request related to a problem?
       options:

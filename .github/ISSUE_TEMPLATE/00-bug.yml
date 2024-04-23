@@ -32,6 +32,16 @@ body:
     validations:
       required: true
 
+  - type: dropdown
+    id: is-reproducible
+    attributes:
+      label: Can this bug be reproduced with the latest release?
+      options:
+        - Option Yes
+        - Option No
+    validations:
+      required: true
+
   - type: textarea
     id: what-did-you-do
     attributes:
