@@ -325,7 +325,7 @@ func Test_Gen_Dao_Issue2616(t *testing.T) {
 			group = "test"
 			in    = gendao.CGenDaoInput{
 				Path:               path,
-				Link:               link,
+				Link:               "",
 				Tables:             "",
 				TablesEx:           "",
 				Group:              group,
