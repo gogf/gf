@@ -225,6 +225,7 @@ func execSqlFile(db gdb.DB, filePath string, args ...any) error {
 	return nil
 }
 
+// https://github.com/gogf/gf/issues/2572
 func Test_Gen_Dao_Issue2572(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -293,17 +294,26 @@ func Test_Gen_Dao_Issue2572(t *testing.T) {
 		for i, generatedFile := range generatedFiles {
 			generatedFiles[i] = gstr.TrimLeftStr(generatedFile, path)
 		}
-		t.Assert(gstr.InArray(generatedFiles, "/dao/internal/user_1.go"), true)
-		t.Assert(gstr.InArray(generatedFiles, "/dao/internal/user_2.go"), true)
-		t.Assert(gstr.InArray(generatedFiles, "/dao/user_1.go"), true)
-		t.Assert(gstr.InArray(generatedFiles, "/dao/user_2.go"), true)
-		t.Assert(gstr.InArray(generatedFiles, "/model/do/user_1.go"), true)
-		t.Assert(gstr.InArray(generatedFiles, "/model/do/user_2.go"), true)
-		t.Assert(gstr.InArray(generatedFiles, "/model/entity/user_1.go"), true)
-		t.Assert(gstr.InArray(generatedFiles, "/model/entity/user_2.go"), true)
+		t.Assert(gstr.InArray(generatedFiles,
+			filepath.FromSlash("/dao/internal/user_1.go")), true)
+		t.Assert(gstr.InArray(generatedFiles,
+			filepath.FromSlash("/dao/internal/user_2.go")), true)
+		t.Assert(gstr.InArray(generatedFiles,
+			filepath.FromSlash("/dao/user_1.go")), true)
+		t.Assert(gstr.InArray(generatedFiles,
+			filepath.FromSlash("/dao/user_2.go")), true)
+		t.Assert(gstr.InArray(generatedFiles,
+			filepath.FromSlash("/model/do/user_1.go")), true)
+		t.Assert(gstr.InArray(generatedFiles,
+			filepath.FromSlash("/model/do/user_2.go")), true)
+		t.Assert(gstr.InArray(generatedFiles,
+			filepath.FromSlash("/model/entity/user_1.go")), true)
+		t.Assert(gstr.InArray(generatedFiles,
+			filepath.FromSlash("/model/entity/user_2.go")), true)
 	})
 }
 
+// https://github.com/gogf/gf/issues/2616
 func Test_Gen_Dao_Issue2616(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -372,14 +382,22 @@ func Test_Gen_Dao_Issue2616(t *testing.T) {
 		for i, generatedFile := range generatedFiles {
 			generatedFiles[i] = gstr.TrimLeftStr(generatedFile, path)
 		}
-		t.Assert(gstr.InArray(generatedFiles, "/dao/internal/user_1.go"), true)
-		t.Assert(gstr.InArray(generatedFiles, "/dao/internal/user_2.go"), true)
-		t.Assert(gstr.InArray(generatedFiles, "/dao/user_1.go"), true)
-		t.Assert(gstr.InArray(generatedFiles, "/dao/user_2.go"), true)
-		t.Assert(gstr.InArray(generatedFiles, "/model/do/user_1.go"), true)
-		t.Assert(gstr.InArray(generatedFiles, "/model/do/user_2.go"), true)
-		t.Assert(gstr.InArray(generatedFiles, "/model/entity/user_1.go"), true)
-		t.Assert(gstr.InArray(generatedFiles, "/model/entity/user_2.go"), true)
+		t.Assert(gstr.InArray(generatedFiles,
+			filepath.FromSlash("/dao/internal/user_1.go")), true)
+		t.Assert(gstr.InArray(generatedFiles,
+			filepath.FromSlash("/dao/internal/user_2.go")), true)
+		t.Assert(gstr.InArray(generatedFiles,
+			filepath.FromSlash("/dao/user_1.go")), true)
+		t.Assert(gstr.InArray(generatedFiles,
+			filepath.FromSlash("/dao/user_2.go")), true)
+		t.Assert(gstr.InArray(generatedFiles,
+			filepath.FromSlash("/model/do/user_1.go")), true)
+		t.Assert(gstr.InArray(generatedFiles,
+			filepath.FromSlash("/model/do/user_2.go")), true)
+		t.Assert(gstr.InArray(generatedFiles,
+			filepath.FromSlash("/model/entity/user_1.go")), true)
+		t.Assert(gstr.InArray(generatedFiles,
+			filepath.FromSlash("/model/entity/user_2.go")), true)
 
 		// Key string to check if overwrite the dao files.
 		// dao user1 is not be overwritten as configured in config.yaml.
