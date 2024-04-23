@@ -138,19 +138,19 @@ func (in *HandlerInput) ValuesContent() string {
 		if len(valueContent) == 0 {
 			continue
 		}
-		if buffer.Len() > 0 {
-			if buffer.Bytes()[buffer.Len()-1] == '\n' {
-				// Remove one blank line(\n\n).
-				if valueContent[0] == '\n' {
-					valueContent = valueContent[1:]
-				}
-				buffer.WriteString(valueContent)
-			} else {
-				buffer.WriteString(" " + valueContent)
-			}
-		} else {
+		if buffer.Len() == 0 {
 			buffer.WriteString(valueContent)
+			continue
 		}
+		if buffer.Bytes()[buffer.Len()-1] != '\n' {
+			buffer.WriteString(" " + valueContent)
+			continue
+		}
+		// Remove one blank line(\n\n).
+		if valueContent[0] == '\n' {
+			valueContent = valueContent[1:]
+		}
+		buffer.WriteString(valueContent)
 	}
 	return buffer.String()
 }
