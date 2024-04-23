@@ -17,8 +17,8 @@ body:
     attributes:
       label: Is your feature request related to a problem?
       options:
-        - Yes
-        - No
+        - Option Yes
+        - Option No
     validations:
       required: true
 
