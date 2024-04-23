@@ -1,18 +1,19 @@
 **Please ensure you adhere to every item in this list.**
-**提交前请遵守每个事项，感谢！**
 
 + The PR title is formatted as follows: `os/gtime: fixed time zone issues`
-+ PR 标题格式如下：`os/gtime: fixed time zone issues`
-  + The package name goes before the colon / 冒号前是包名
-  + The part after the colon uses the verb tense + phrase that completes the blank in / 冒号后使用动词时态 + 短语
-  + Lowercase verb after the colon / 冒号后的动词小写
-  + No trailing period / 不要有结尾句号
-  + Keep the title as short as possible. ideally under 76 characters or shorter / 标题尽量保持简短，最好在 76 个字符或更短
-+ No Markdown / 不要使用 Markdown
+  + The package name goes before the colon
+  + The part after the colon uses the verb tense + phrase that completes the blank in
+  + Lowercase verb after the colon
+  + No trailing period
+  + Keep the title as short as possible. ideally under 76 characters or shorter
++ No Markdown
 + If there is a corresponding issue, add either `Fixes #1234` or `Updates #1234`
   (the latter if this is not a complete fix) to this comment
 + Delete these instructions once you have read and applied them
 
+-------
+
+**提交前请遵守每个事项，感谢！**
 + PR 标题格式如下：`os/gtime: fixed time zone issues`
   + 冒号前是包名
   + 冒号后使用动词时态 + 短语
