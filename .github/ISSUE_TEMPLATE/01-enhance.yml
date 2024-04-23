@@ -16,7 +16,7 @@ body:
     id: description
     attributes:
       label: "Description"
-      description: "Please describe your idea in detail"
+      description: "Please describe your idea in detail."
     validations:
       required: true
 
