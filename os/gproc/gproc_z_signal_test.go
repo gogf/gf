@@ -7,11 +7,12 @@
 package gproc
 
 import (
-	"github.com/gogf/gf/v2/test/gtest"
 	"os"
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Signal(t *testing.T) {
@@ -79,6 +80,9 @@ func Test_Signal(t *testing.T) {
 		})
 
 		sendSignal(syscall.SIGTERM)
+		// wait the listen done
+		time.Sleep(time.Second)
+
 		select {
 		case s := <-sigRec:
 			t.AssertEQ(s, syscall.SIGTERM)
