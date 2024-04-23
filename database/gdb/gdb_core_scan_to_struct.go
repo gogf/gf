@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func (m *Model) one(pointer any, where ...interface{}) error {
@@ -179,7 +180,8 @@ func (c *Core) DoQueryAndScanToPointer(ctx context.Context, link Link, pointer a
 type scanArgMappingToStructField struct {
 	structFieldIndex int
 	scanArgIndex     int
-	columnType       *sql.ColumnType
+
+	columnType *sql.ColumnType
 }
 
 // RowsToResult converts underlying data record type sql.Rows to Result type.
@@ -315,19 +317,19 @@ func (c *Core) rowsConvertToSliceStruct(
 	}
 	// todo 直接提前缓存一份所有字段的从数据库字段类型到go语言类型的映射函数
 	// 假设to = string
-	fieldConvertFunc := func(from any) (to any) {
-		switch f := from.(type) {
-		case []byte:
-			return string(f)
-		case string:
-			return f
-		case *[]byte:
-			return string(*f)
-		case *string:
-			return *f
-		}
-		return ""
-	}
+	//fieldConvertFunc := func(from any) (to any) {
+	//	switch f := from.(type) {
+	//	case []byte:
+	//		return string(f)
+	//	case string:
+	//		return f
+	//	case *[]byte:
+	//		return string(*f)
+	//	case *string:
+	//		return *f
+	//	}
+	//	return ""
+	//}
 
 	for {
 		dest := reflect.New(structType).Elem()
@@ -346,7 +348,7 @@ func (c *Core) rowsConvertToSliceStruct(
 			//if err != nil {
 			//	return sliceStructValue, err
 			//}
-			convertedValue := fieldConvertFunc(columnValue)
+			convertedValue := gconv.Convert(columnValue, dstField.Type().String())
 			dstField.Set(reflect.ValueOf(convertedValue))
 		}
 		if deref {
@@ -388,10 +390,7 @@ func (c *Core) rowsConvertToStruct(
 			if columnValue == nil {
 				continue
 			}
-			convertedValue, err := c.columnValueToLocalValue(ctx, columnValue, field.columnType)
-			if err != nil {
-				return structValue, err
-			}
+			convertedValue := gconv.Convert(columnValue, dstField.Type().String())
 			dstField.Set(reflect.ValueOf(convertedValue))
 		}
 
