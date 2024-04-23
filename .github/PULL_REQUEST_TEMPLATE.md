@@ -1,5 +1,8 @@
 **Please ensure you adhere to every item in this list.**
 
+<div align="left">1</div>
+<div align="right">1</div>
+
 + The PR title is formatted as follows: `os/gtime: fixed time zone issues`
   + The package name goes before the colon
   + The part after the colon uses the verb tense + phrase that completes the blank in
