@@ -3,6 +3,8 @@
 name: Bugs
 description: The gf command, module, or anything else
 title: "os/gtime: issue title"
+labels:
+  - bug
 
 body:
   - type: markdown

@@ -1,10 +1,10 @@
 # https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository#creating-issue-forms
 # https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/syntax-for-githubs-form-schema
-name: Enhancement request
-description: Enhance an idea for this project
+name: Feature request
+description: Suggest an idea for this project
 title: "os/gtime: issue title"
 labels:
-  - enhancement
+  - feature
 
 body:
   - type: markdown
@@ -12,11 +12,27 @@ body:
       value: |
         Thanks for helping us improve! 🙏 Please answer these questions and provide as much information as possible about your problem.
 
-  - type: textarea
-    id: description
+  - type: dropdown
+    id: has-problem
     attributes:
-      label: "Description"
-      description: "Please describe your idea in detail"
+      label: Is your feature request related to a problem?
+      options:
+        - Option Yes
+        - Option No
+    validations:
+      required: true
+
+  - type: textarea
+    id: description-solution
+    attributes:
+      label: "Describe the solution you'd like"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description-considered
+    attributes:
+      label: "Describe alternatives you've considered"
     validations:
       required: true
 
