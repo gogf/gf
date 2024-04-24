@@ -358,7 +358,7 @@ func (l *Logger) printStd(ctx context.Context, level int, values ...interface{})
 	l.print(ctx, level, "", values...)
 }
 
-// printStd prints content `s` with stack check.
+// printErr prints content `s` with stack check.
 func (l *Logger) printErr(ctx context.Context, level int, values ...interface{}) {
 	var stack string
 	if l.config.StStatus == 1 {
