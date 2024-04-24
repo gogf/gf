@@ -37,8 +37,10 @@ body:
     attributes:
       label: Can this bug be reproduced with the latest release?
       options:
-        - Option Yes
-        - Option No
+        - Firefox
+        - Chrome
+        - Safari
+        - Microsoft Edge
     validations:
       required: true
 
