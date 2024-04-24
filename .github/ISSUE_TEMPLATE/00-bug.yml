@@ -1,7 +1,7 @@
 # https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository#creating-issue-forms
 # https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/syntax-for-githubs-form-schema
 name: Bugs
-description: The gf command, module, or anything else
+description: The goframe command, module, or anything else
 title: "os/gtime: issue title"
 labels:
   - bug
@@ -25,9 +25,9 @@ body:
   - type: input
     id: gf-version
     attributes:
-      label: Gf version
+      label: GoFrame version
       description: |
-        What version of Gf are you using (`gf version`)?
+        What version of GoFrame are you using (`gf version`)?
       placeholder: ex. 2.7.0
     validations:
       required: true
