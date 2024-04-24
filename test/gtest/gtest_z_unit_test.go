@@ -52,7 +52,6 @@ func TestCase(t *testing.T) {
 }
 
 func TestAssert(t *testing.T) {
-
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			nilChan chan struct{}
@@ -93,7 +92,6 @@ EXPECT: map[k2:v2]`)
 }
 
 func TestAssertEQ(t *testing.T) {
-
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			nilChan chan struct{}
@@ -291,6 +289,7 @@ func TestAssertIN(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertIN("a", []string{"a", "b", "c"})
 		t.AssertIN(1, []int{1, 2, 3})
+		t.AssertIN("a", "abc")
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -312,12 +311,22 @@ func TestAssertIN(t *testing.T) {
 		// t.AssertIN(0, []int{ 1, 2, 3})
 		t.AssertIN(4, []int{1, 2, 3})
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		defer func() {
+			if err := recover(); err != nil {
+				t.Assert(err, "[ASSERT] EXPECT d IN abc")
+			}
+		}()
+		t.AssertIN("d", "abc")
+	})
 }
 
 func TestAssertNI(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertNI("d", []string{"a", "b", "c"})
 		t.AssertNI(4, []int{1, 2, 3})
+		t.AssertNI("d", "abc")
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -336,6 +345,15 @@ func TestAssertNI(t *testing.T) {
 			}
 		}()
 		t.AssertNI(1, []int{1, 2, 3})
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		defer func() {
+			if err := recover(); err != nil {
+				t.Assert(err, "[ASSERT] EXPECT a NOT IN abc")
+			}
+		}()
+		t.AssertNI("a", "abc")
 	})
 }
 
