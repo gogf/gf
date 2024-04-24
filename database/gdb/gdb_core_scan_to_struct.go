@@ -18,12 +18,17 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+const (
+	gfOrmScanToStructPointerCtxKey = "gf.orm.scan_to_struct_pointer.ctx.key"
+)
+
 func (m *Model) one(pointer any, where ...interface{}) error {
 	var ctx = m.GetCtx()
 	//if len(where) > 0 {
 	//	return m.Where(where[0], where[1:]...).one(pointer)
 	//}
-	err := m.doScanToPointer(ctx, pointer, true)
+	ctx = context.WithValue(ctx, gfOrmScanToStructPointerCtxKey, pointer)
+	err := m.doScanToPointer(ctx, true)
 	if err != nil {
 		return err
 	}
@@ -36,7 +41,8 @@ func (m *Model) all(pointer any, where ...interface{}) error {
 	//if len(where) > 0 {
 	//	return m.Where(where[0], where[1:]...).all(pointer)
 	//}
-	err := m.doScanToPointer(ctx, pointer, false)
+	ctx = context.WithValue(ctx, gfOrmScanToStructPointerCtxKey, pointer)
+	err := m.doScanToPointer(ctx, false)
 	if err != nil {
 		return err
 	}
@@ -44,17 +50,16 @@ func (m *Model) all(pointer any, where ...interface{}) error {
 	return nil
 }
 
-func (m *Model) doScanToPointer(ctx context.Context, pointer any, limit1 bool) error {
+func (m *Model) doScanToPointer(ctx context.Context, limit1 bool) error {
 	//if len(where) > 0 {
 	//	return m.Where(where[0], where[1:]...).all(pointer)
 	//}
 	sqlWithHolder, holderArgs := m.getFormattedSqlAndArgs(ctx, queryTypeNormal, limit1)
-	return m.doGetAllBySqlAndScanToPointer(ctx, pointer, queryTypeNormal, sqlWithHolder, holderArgs...)
+	return m.doGetAllBySqlAndScanToPointer(ctx, queryTypeNormal, sqlWithHolder, holderArgs...)
 }
 
 func (m *Model) doGetAllBySqlAndScanToPointer(
 	ctx context.Context,
-	pointer any,
 	queryType queryType, sql string, args ...interface{}) (err error) {
 	// todo 缓存的api是否也需要更改？
 	if _, err = m.getSelectResultFromCache(ctx, sql, args...); err != nil {
@@ -68,11 +73,10 @@ func (m *Model) doGetAllBySqlAndScanToPointer(
 			},
 			handler: m.hookHandler.Select,
 		},
-		Model:   m,
-		Table:   m.tables,
-		Sql:     sql,
-		Args:    m.mergeArguments(args),
-		Pointer: pointer,
+		Model: m,
+		Table: m.tables,
+		Sql:   sql,
+		Args:  m.mergeArguments(args),
 	}
 	if err = in.Next2(ctx); err != nil {
 		return
@@ -83,8 +87,12 @@ func (m *Model) doGetAllBySqlAndScanToPointer(
 	return
 }
 
-// Next calls the next hook handler.
 func (h *HookSelectInput) Next2(ctx context.Context) (err error) {
+	structPointer := ctx.Value(gfOrmScanToStructPointerCtxKey)
+	if structPointer == nil {
+		panic("请考虑调用Scan方法来查询数据库")
+	}
+
 	if h.originalTableName.IsNil() {
 		h.originalTableName = gvar.New(h.Table)
 	}
@@ -116,64 +124,7 @@ func (h *HookSelectInput) Next2(ctx context.Context) (err error) {
 			return
 		}
 	}
-	err = h.Model.db.DoSelectAndScanToPointer(ctx, h.link, h.Pointer, toBeCommittedSql, h.Args...)
-	return err
-}
-
-func (c *Core) DoSelectAndScanToPointer(ctx context.Context, link Link, pointer any, sql string, args ...interface{}) (err error) {
-	return c.db.DoQueryAndScanToPointer(ctx, link, pointer, sql, args...)
-}
-
-// DoQueryScanStruct commits the sql string and its arguments to underlying driver
-// through given link object and returns the execution result.
-func (c *Core) DoQueryAndScanToPointer(ctx context.Context, link Link, pointer any, sql string, args ...interface{}) (err error) {
-	// Transaction checks.
-	if link == nil {
-		if tx := TXFromCtx(ctx, c.db.GetGroup()); tx != nil {
-			// Firstly, check and retrieve transaction link from context.
-			link = &txLink{tx.GetSqlTX()}
-		} else if link, err = c.SlaveLink(); err != nil {
-			// Or else it creates one from master node.
-			return err
-		}
-	} else if !link.IsTransaction() {
-		// If current link is not transaction link, it checks and retrieves transaction from context.
-		if tx := TXFromCtx(ctx, c.db.GetGroup()); tx != nil {
-			link = &txLink{tx.GetSqlTX()}
-		}
-	}
-
-	if c.db.GetConfig().QueryTimeout > 0 {
-		ctx, _ = context.WithTimeout(ctx, c.db.GetConfig().QueryTimeout)
-	}
-
-	// Sql filtering.
-	sql, args = c.FormatSqlBeforeExecuting(sql, args)
-	sql, args, err = c.db.DoFilter(ctx, link, sql, args)
-	if err != nil {
-		return err
-	}
-	// SQL format and retrieve.
-	if v := ctx.Value(ctxKeyCatchSQL); v != nil {
-		var (
-			manager      = v.(*CatchSQLManager)
-			formattedSql = FormatSqlWithArgs(sql, args)
-		)
-		manager.SQLArray.Append(formattedSql)
-		if !manager.DoCommit && ctx.Value(ctxKeyInternalProducedSQL) == nil {
-			return nil
-		}
-	}
-	// Link execution.
-	_, err = c.db.DoCommit(ctx, DoCommitInput{
-		Link:          link,
-		Sql:           sql,
-		Args:          args,
-		Stmt:          nil,
-		Type:          SqlTypeQueryContext,
-		IsTransaction: link.IsTransaction(),
-		Pointer:       pointer,
-	})
+	_, err = h.Model.db.DoSelect(ctx, h.link, toBeCommittedSql, h.Args...)
 	return err
 }
 
@@ -186,11 +137,9 @@ type columnToStructField struct {
 	columnType  *sql.ColumnType
 }
 
-// RowsToResult converts underlying data record type sql.Rows to Result type.
-func (c *Core) RowsToResult(ctx context.Context, pointer any, rows *sql.Rows) (int64, error) {
-	if pointer == nil {
-		return 0, nil
-	}
+// RowsScanToPointer converts underlying data record type sql.Rows to Result type.
+func (c *Core) RowsScanToPointer(ctx context.Context, pointer any, rows *sql.Rows) (int64, error) {
+
 	if rows == nil {
 		return 0, nil
 	}
@@ -228,7 +177,7 @@ func (c *Core) RowsToResult(ctx context.Context, pointer any, rows *sql.Rows) (i
 				continue
 			}
 
-			// todo 1.如果为空，是否还需要根据json tag
+			// todo 1.如果为空，是否还需要根据其他tag，如json，conv之类的
 			ormTag := field.Tag.Get(OrmTagForStruct)
 			if ormTag != "" {
 				v, ok := columnNameToStructFieldMap[ormTag]
@@ -242,7 +191,7 @@ func (c *Core) RowsToResult(ctx context.Context, pointer any, rows *sql.Rows) (i
 		}
 	}
 
-	var getScanArgMappingToStructFieldsMap = func(pointerType reflect.Type, columnNameToStructFieldMap map[string]columnToStructField) {
+	var getColumnNameToStructFieldMap = func(pointerType reflect.Type, columnNameToStructFieldMap map[string]columnToStructField) {
 		for i := 0; i < len(columnTypes); i++ {
 			column := columnTypes[i]
 			columnNameToStructFieldMap[column.Name()] = columnToStructField{
@@ -283,7 +232,7 @@ func (c *Core) RowsToResult(ctx context.Context, pointer any, rows *sql.Rows) (i
 		result_rows = int64(1)
 	)
 
-	getScanArgMappingToStructFieldsMap(structType, columnNameToStructFieldMap)
+	getColumnNameToStructFieldMap(structType, columnNameToStructFieldMap)
 
 	for i := range values {
 		scanArgs[i] = &values[i]
@@ -329,21 +278,6 @@ func (c *Core) rowsConvertToSliceStruct(
 		deref = true
 	}
 	// todo 直接提前缓存一份所有字段的从数据库字段类型到go语言类型的映射函数
-	// 假设to = string
-	//fieldConvertFunc := func(from any) (to any) {
-	//	switch f := from.(type) {
-	//	case []byte:
-	//		return string(f)
-	//	case string:
-	//		return f
-	//	case *[]byte:
-	//		return string(*f)
-	//	case *string:
-	//		return *f
-	//	}
-	//	return ""
-	//}
-
 	for {
 		dest := reflect.New(structType).Elem()
 		if err = rows.Scan(scanArgs...); err != nil {
@@ -357,10 +291,7 @@ func (c *Core) rowsConvertToSliceStruct(
 			if columnValue == nil {
 				continue
 			}
-			//convertedValue, err := c.columnValueToLocalValue(ctx, columnValue, structField.columnType)
-			//if err != nil {
-			//	return sliceStructValue, err
-			//}
+
 			convertedValue := gconv.Convert(columnValue, structField.structFieldType)
 			dstField.Set(reflect.ValueOf(convertedValue))
 		}

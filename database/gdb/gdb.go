@@ -106,12 +106,8 @@ type DB interface {
 	DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error)    // See Core.DoQuery.
 	DoExec(ctx context.Context, link Link, sql string, args ...interface{}) (result sql.Result, err error) // See Core.DoExec.
 
-	// 新增
-	DoSelectAndScanToPointer(ctx context.Context, link Link, pointer any, sql string, args ...interface{}) (err error)
-	DoQueryAndScanToPointer(ctx context.Context, link Link, pointer any, sql string, args ...interface{}) (err error)
-
 	DoFilter(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) // See Core.DoFilter.
-	DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutput, err error)
+	DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutput, err error)                                            // See Core.DoCommit.
 
 	DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, error) // See Core.DoPrepare.
 

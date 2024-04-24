@@ -241,7 +241,20 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 		out.Result = sqlResult
 
 	case sqlRows != nil:
-		rowsAffected, err = c.RowsToResult(ctx, in.Pointer, sqlRows)
+		structPointer := ctx.Value(gfOrmScanToStructPointerCtxKey)
+		// scan 方法进来的
+		if structPointer != nil {
+			rowsAffected, err = c.RowsScanToPointer(ctx, structPointer, sqlRows)
+
+		} else {
+			// 其他查询类的方法
+			out.Records, err = c.RowsToResult(ctx, sqlRows)
+			rowsAffected = int64(len(out.Records))
+		}
+
+		if err != nil {
+			return out, err
+		}
 
 	case sqlStmt != nil:
 		out.Stmt = &Stmt{
