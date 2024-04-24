@@ -177,11 +177,13 @@ func (c *Core) DoQueryAndScanToPointer(ctx context.Context, link Link, pointer a
 	return err
 }
 
-type scanArgMappingToStructField struct {
-	structFieldIndex int
-	scanArgIndex     int
-
-	columnType *sql.ColumnType
+type columnToStructField struct {
+	// 可能是嵌套的
+	structFieldIndex []int
+	structFieldType  string
+	//=====
+	columnIndex int
+	columnType  *sql.ColumnType
 }
 
 // RowsToResult converts underlying data record type sql.Rows to Result type.
@@ -212,12 +214,40 @@ func (c *Core) RowsToResult(ctx context.Context, pointer any, rows *sql.Rows) (i
 		}
 	}
 
-	var getScanArgMappingToStructFieldsMap = func(pointerType reflect.Type, scanArgMappingToStructFieldsMap map[string]scanArgMappingToStructField) {
+	var getStructFields func(structType reflect.Type, parentIndex []int, columnNameToStructFieldMap map[string]columnToStructField)
+
+	getStructFields = func(structType reflect.Type, parentIndex []int, columnNameToStructFieldMap map[string]columnToStructField) {
+		for i := 0; i < structType.NumField(); i++ {
+
+			field := structType.Field(i)
+			if field.IsExported() == false || field.Type.Kind() == reflect.Interface {
+				continue
+			}
+			if field.Anonymous {
+				getStructFields(field.Type, append(parentIndex, i), columnNameToStructFieldMap)
+				continue
+			}
+
+			// todo 1.如果为空，是否还需要根据json tag
+			ormTag := field.Tag.Get(OrmTagForStruct)
+			if ormTag != "" {
+				v, ok := columnNameToStructFieldMap[ormTag]
+				if ok {
+					v.structFieldIndex = append(parentIndex, i)
+					v.structFieldType = field.Type.Name()
+					columnNameToStructFieldMap[ormTag] = v
+				}
+			}
+			// todo 2.是否需要循环遍历 columns ，去做模糊匹配 和每一个字段名
+		}
+	}
+
+	var getScanArgMappingToStructFieldsMap = func(pointerType reflect.Type, columnNameToStructFieldMap map[string]columnToStructField) {
 		for i := 0; i < len(columnTypes); i++ {
 			column := columnTypes[i]
-			scanArgMappingToStructFieldsMap[column.Name()] = scanArgMappingToStructField{
-				scanArgIndex: i,
-				columnType:   column,
+			columnNameToStructFieldMap[column.Name()] = columnToStructField{
+				columnIndex: i,
+				columnType:  column,
 			}
 		}
 		// *struct -> struct
@@ -236,24 +266,7 @@ func (c *Core) RowsToResult(ctx context.Context, pointer any, rows *sql.Rows) (i
 		case reflect.Struct:
 
 		}
-		for i := 0; i < pointerType.NumField(); i++ {
-
-			fieldType := pointerType.Field(i)
-			if fieldType.IsExported() == false {
-				continue
-			}
-			// todo 1.如果为空，是否还需要根据json tag
-			ormTag := fieldType.Tag.Get(OrmTagForStruct)
-			if ormTag != "" {
-				v, ok := scanArgMappingToStructFieldsMap[ormTag]
-				if ok {
-					// todo 需要判断当前字段是否是匿名字段，如果是匿名字段，索引是错误的
-					v.structFieldIndex = fieldType.Index[0]
-					scanArgMappingToStructFieldsMap[ormTag] = v
-				}
-			}
-			// todo 2.是否需要循环遍历 columns ，去做模糊匹配 和每一个字段名
-		}
+		getStructFields(pointerType, []int{}, columnNameToStructFieldMap)
 
 	}
 
@@ -262,15 +275,15 @@ func (c *Core) RowsToResult(ctx context.Context, pointer any, rows *sql.Rows) (i
 	structType := reflect.TypeOf(pointer).Elem()
 
 	var (
-		values                          = make([]interface{}, len(columnTypes))
-		scanArgs                        = make([]interface{}, len(values))
-		scanArgMappingToStructFieldsMap = make(map[string]scanArgMappingToStructField)
+		values                     = make([]interface{}, len(columnTypes))
+		scanArgs                   = make([]interface{}, len(values))
+		columnNameToStructFieldMap = make(map[string]columnToStructField)
 		//=================
 		ptr         = reflect.ValueOf(pointer).Elem()
 		result_rows = int64(1)
 	)
 
-	getScanArgMappingToStructFieldsMap(structType, scanArgMappingToStructFieldsMap)
+	getScanArgMappingToStructFieldsMap(structType, columnNameToStructFieldMap)
 
 	for i := range values {
 		scanArgs[i] = &values[i]
@@ -279,17 +292,17 @@ func (c *Core) RowsToResult(ctx context.Context, pointer any, rows *sql.Rows) (i
 	switch ptr.Kind() {
 	case reflect.Slice, reflect.Array: // slice array
 		// []struct []*struct
-		sliceStructValue, err := c.rowsConvertToSliceStruct(ctx, rows, structType, scanArgs, scanArgMappingToStructFieldsMap)
+		sliceStructValue, err := c.rowsConvertToSliceStruct(ctx, rows, structType, scanArgs, columnNameToStructFieldMap)
 		if err != nil {
 			return 0, err
 		}
 		ptr.Set(sliceStructValue)
 		result_rows = int64(sliceStructValue.Len())
 
-		//  kind= []*map[string]any []map[string]any
-		// kind= *map[string]any
+		// kind = []*map[string]any []map[string]any
+		// kind = *map[string]any
 	case reflect.Struct:
-		structValue, err := c.rowsConvertToStruct(ctx, rows, structType, scanArgs, scanArgMappingToStructFieldsMap)
+		structValue, err := c.rowsConvertToStruct(ctx, rows, structType, scanArgs, columnNameToStructFieldMap)
 		if err != nil {
 			return 0, err
 		}
@@ -302,7 +315,7 @@ func (c *Core) rowsConvertToSliceStruct(
 	ctx context.Context, rows *sql.Rows,
 	sliceType reflect.Type,
 	scanArgs []any,
-	scanArgMappingToStructFieldsMap map[string]scanArgMappingToStructField,
+	columnNameToStructFieldMap map[string]columnToStructField,
 ) (sliceStructValue reflect.Value, err error) {
 
 	sliceStruct := reflect.MakeSlice(sliceType, 0, 4)
@@ -337,18 +350,18 @@ func (c *Core) rowsConvertToSliceStruct(
 			return sliceStructValue, err
 		}
 
-		for _, field := range scanArgMappingToStructFieldsMap {
-			dstField := dest.Field(field.structFieldIndex)
+		for _, structField := range columnNameToStructFieldMap {
+			dstField := dest.FieldByIndex(structField.structFieldIndex)
 			// var convertedValue any
-			columnValue := *(scanArgs[field.scanArgIndex].(*any))
+			columnValue := *(scanArgs[structField.columnIndex].(*any))
 			if columnValue == nil {
 				continue
 			}
-			//convertedValue, err := c.columnValueToLocalValue(ctx, columnValue, field.columnType)
+			//convertedValue, err := c.columnValueToLocalValue(ctx, columnValue, structField.columnType)
 			//if err != nil {
 			//	return sliceStructValue, err
 			//}
-			convertedValue := gconv.Convert(columnValue, dstField.Type().String())
+			convertedValue := gconv.Convert(columnValue, structField.structFieldType)
 			dstField.Set(reflect.ValueOf(convertedValue))
 		}
 		if deref {
@@ -367,7 +380,7 @@ func (c *Core) rowsConvertToStruct(
 	ctx context.Context, rows *sql.Rows,
 	structType reflect.Type,
 	scanArgs []any,
-	scanArgMappingToStructFieldsMap map[string]scanArgMappingToStructField,
+	columnNameToStructFieldMap map[string]columnToStructField,
 ) (structValue reflect.Value, err error) {
 	deref := false
 	if structType.Kind() == reflect.Ptr {
@@ -383,14 +396,14 @@ func (c *Core) rowsConvertToStruct(
 			return structValue, err
 		}
 
-		for _, field := range scanArgMappingToStructFieldsMap {
-			dstField := dest.Field(field.structFieldIndex)
+		for _, structField := range columnNameToStructFieldMap {
+			dstField := dest.FieldByIndex(structField.structFieldIndex)
 			// var convertedValue any
-			columnValue := *(scanArgs[field.scanArgIndex].(*any))
+			columnValue := *(scanArgs[structField.columnIndex].(*any))
 			if columnValue == nil {
 				continue
 			}
-			convertedValue := gconv.Convert(columnValue, dstField.Type().String())
+			convertedValue := gconv.Convert(columnValue, structField.structFieldType)
 			dstField.Set(reflect.ValueOf(convertedValue))
 		}
 
