@@ -15,6 +15,7 @@ import (
 
 	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -242,6 +243,12 @@ func AssertIN(value, expect interface{}) {
 				break
 			}
 		}
+	case reflect.String:
+		var (
+			valueStr  = gconv.String(value)
+			expectStr = gconv.String(expect)
+		)
+		passed = gstr.Contains(expectStr, valueStr)
 	default:
 		panic(fmt.Sprintf(`[ASSERT] INVALID EXPECT VALUE TYPE: %v`, expectKind))
 	}
@@ -274,6 +281,12 @@ func AssertNI(value, expect interface{}) {
 				break
 			}
 		}
+	case reflect.String:
+		var (
+			valueStr  = gconv.String(value)
+			expectStr = gconv.String(expect)
+		)
+		passed = !gstr.Contains(expectStr, valueStr)
 	default:
 		panic(fmt.Sprintf(`[ASSERT] INVALID EXPECT VALUE TYPE: %v`, expectKind))
 	}
