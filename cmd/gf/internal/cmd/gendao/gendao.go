@@ -59,8 +59,9 @@ CONFIGURATION SUPPORT
 			numeric:
 			  type: string
 		  fieldMapping:
-			user.other:
-			  type:   map[string]string
+			user.balance:
+			  type:   decimal.Decimal
+			  import: github.com/shopspring/decimal
 `
 	CGenDaoBriefPath              = `directory path for generated files`
 	CGenDaoBriefLink              = `database configuration, the same as the ORM configuration of GoFrame`
