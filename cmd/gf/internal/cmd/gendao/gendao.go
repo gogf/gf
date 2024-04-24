@@ -229,7 +229,9 @@ type (
 
 func (c CGenDao) Dao(ctx context.Context, in CGenDaoInput) (out *CGenDaoOutput, err error) {
 	in.genItems = newCGenDaoInternalGenItems()
-	if g.Cfg().Available(ctx) {
+	if in.Link != "" {
+		doGenDaoForArray(ctx, -1, in)
+	} else if g.Cfg().Available(ctx) {
 		v := g.Cfg().MustGet(ctx, CGenDaoConfig)
 		if v.IsSlice() {
 			for i := 0; i < len(v.Interfaces()); i++ {
