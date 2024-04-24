@@ -72,13 +72,13 @@ func Test_GoroutineId(t *testing.T) {
 
 func Test_Stack(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gstr.Contains(gdebug.Stack(), "gtest_util.go:35"), true)
+		t.Assert(gstr.Contains(gdebug.Stack(), "gtest_util.go:36"), true)
 	})
 }
 
 func Test_StackWithFilter(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gstr.Contains(gdebug.StackWithFilter([]string{"github.com"}), "gtest_util.go:35"), true)
+		t.Assert(gstr.Contains(gdebug.StackWithFilter([]string{"github.com"}), "gtest_util.go:36"), true)
 	})
 }
 
