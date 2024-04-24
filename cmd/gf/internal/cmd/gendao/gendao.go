@@ -59,7 +59,7 @@ CONFIGURATION SUPPORT
 			numeric:
 			  type: string
 		  fieldMapping:
-			user.balance:
+			table_name.field_name:
 			  type:   decimal.Decimal
 			  import: github.com/shopspring/decimal
 `
