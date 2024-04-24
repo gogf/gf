@@ -37,8 +37,8 @@ body:
     attributes:
       label: Can this bug be reproduced with the latest release?
       options:
-        - Option Yes
-        - Option No
+        - Yes
+        - No
     validations:
       required: true
 
