@@ -37,7 +37,7 @@ func NewAdapterContent(content ...string) (*AdapterContent, error) {
 // SetContent sets customized configuration content for specified `file`.
 // The `file` is unnecessary param, default is DefaultConfigFile.
 func (a *AdapterContent) SetContent(content string) error {
-	j, err := gjson.LoadContent(content, true)
+	j, err := gjson.LoadContent([]byte(content), true)
 	if err != nil {
 		return gerror.Wrap(err, `load configuration content failed`)
 	}

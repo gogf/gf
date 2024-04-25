@@ -262,9 +262,9 @@ func (a *AdapterFile) getJson(fileName ...string) (configJson *gjson.Json, err e
 		// Note that the underlying configuration json object operations are concurrent safe.
 		dataType := gjson.ContentType(gfile.ExtName(filePath))
 		if gjson.IsValidDataType(dataType) && !isFromConfigContent {
-			configJson, err = gjson.LoadContentType(dataType, content, true)
+			configJson, err = gjson.LoadContentType(dataType, []byte(content), true)
 		} else {
-			configJson, err = gjson.LoadContent(content, true)
+			configJson, err = gjson.LoadContent([]byte(content), true)
 		}
 		if err != nil {
 			if filePath != "" {
