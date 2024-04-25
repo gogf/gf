@@ -269,7 +269,6 @@ func isYamlContent(data []byte) bool {
 			gregex.IsMatch(`^[\n\r]*[\w\-\s\t]+\s*:\s*\w+`, data)) ||
 			(gregex.IsMatch(`[\n\r]+[\w\-\s\t]+\s*:\s*".+"`, data) ||
 				gregex.IsMatch(`[\n\r]+[\w\-\s\t]+\s*:\s*\w+`, data)))
-
 }
 
 func isTomlContent(data []byte) bool {
@@ -278,7 +277,6 @@ func isTomlContent(data []byte) bool {
 		!gregex.IsMatch(`[\n\r]+[\s\t\w\-]+\.[\s\t\w\-]+\s*=\s*.+`, data) &&
 		(gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*".+"`, data) ||
 			gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*\w+`, data))
-
 }
 
 func isIniContent(data []byte) bool {
