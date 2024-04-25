@@ -9,10 +9,12 @@ package httpclient
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/gogf/gf/v2/encoding/gurl"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gclient"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/text/gregex"
@@ -25,7 +27,7 @@ import (
 // Client is an http client for SDK.
 type Client struct {
 	*gclient.Client
-	IHandler
+	Handler
 }
 
 // New creates and returns an http client for SDK.
@@ -34,13 +36,19 @@ func New(config Config) *Client {
 	if client == nil {
 		client = gclient.New()
 	}
+	if config.Logger == nil {
+		config.Logger = g.Log()
+	}
 	handler := config.Handler
 	if handler == nil {
 		handler = NewDefaultHandler(config)
 	}
+	if !gstr.HasPrefix(config.URL, "http") {
+		config.URL = fmt.Sprintf("http://%s", config.URL)
+	}
 	return &Client{
-		Client:   client.Prefix(config.URL),
-		IHandler: handler,
+		Client:  client.Prefix(config.URL),
+		Handler: handler,
 	}
 }
 

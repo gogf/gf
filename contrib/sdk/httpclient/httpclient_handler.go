@@ -1,3 +1,9 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package httpclient
 
 import (
@@ -11,7 +17,10 @@ import (
 	"github.com/gogf/gf/v2/os/glog"
 )
 
-type IHandler interface {
+// Handler is the interface for http response handling.
+type Handler interface {
+	// HandleResponse handles the http response and transforms its body to the specified object.
+	// The parameter `out` specifies the object that the response body is transformed to.
 	HandleResponse(ctx context.Context, res *gclient.Response, out interface{}) error
 }
 
