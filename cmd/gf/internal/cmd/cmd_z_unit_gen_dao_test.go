@@ -71,6 +71,7 @@ func Test_Gen_Dao_Default(t *testing.T) {
 				NoModelComment:     false,
 				Clear:              false,
 				TypeMapping:        nil,
+				FieldMapping:       nil,
 			}
 		)
 		err = gutil.FillStructWithDefault(&in)
@@ -171,6 +172,7 @@ func Test_Gen_Dao_TypeMapping(t *testing.T) {
 						Import: "github.com/shopspring/decimal",
 					},
 				},
+				FieldMapping: nil,
 			}
 		)
 		err = gutil.FillStructWithDefault(&in)
@@ -201,6 +203,108 @@ func Test_Gen_Dao_TypeMapping(t *testing.T) {
 		})
 		// content
 		testPath := gtest.DataPath("gendao", "generated_user_type_mapping")
+		expectFiles := []string{
+			filepath.FromSlash(testPath + "/dao/internal/table_user.go"),
+			filepath.FromSlash(testPath + "/dao/table_user.go"),
+			filepath.FromSlash(testPath + "/model/do/table_user.go"),
+			filepath.FromSlash(testPath + "/model/entity/table_user.go"),
+		}
+		for i, _ := range files {
+			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))
+		}
+	})
+}
+
+func Test_Gen_Dao_FieldMapping(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err        error
+			db         = testDB
+			table      = "table_user"
+			sqlContent = fmt.Sprintf(
+				gtest.DataContent(`gendao`, `user.tpl.sql`),
+				table,
+			)
+		)
+		defer dropTableWithDb(db, table)
+		array := gstr.SplitAndTrim(sqlContent, ";")
+		for _, v := range array {
+			if _, err = db.Exec(ctx, v); err != nil {
+				t.AssertNil(err)
+			}
+		}
+		defer dropTableWithDb(db, table)
+
+		var (
+			path  = gfile.Temp(guid.S())
+			group = "test"
+			in    = gendao.CGenDaoInput{
+				Path:               path,
+				Link:               link,
+				Tables:             "table_user",
+				TablesEx:           "",
+				Group:              group,
+				Prefix:             "",
+				RemovePrefix:       "",
+				JsonCase:           "",
+				ImportPrefix:       "",
+				DaoPath:            "",
+				DoPath:             "",
+				EntityPath:         "",
+				TplDaoIndexPath:    "",
+				TplDaoInternalPath: "",
+				TplDaoDoPath:       "",
+				TplDaoEntityPath:   "",
+				StdTime:            false,
+				WithTime:           false,
+				GJsonSupport:       false,
+				OverwriteDao:       false,
+				DescriptionTag:     false,
+				NoJsonTag:          false,
+				NoModelComment:     false,
+				Clear:              false,
+				TypeMapping: map[gendao.DBFieldTypeName]gendao.CustomAttributeType{
+					"int": {
+						Type:   "int64",
+						Import: "",
+					},
+				},
+				FieldMapping: map[gendao.DBTableFieldName]gendao.CustomAttributeType{
+					"table_user.score": {
+						Type:   "decimal.Decimal",
+						Import: "github.com/shopspring/decimal",
+					},
+				},
+			}
+		)
+		err = gutil.FillStructWithDefault(&in)
+		t.AssertNil(err)
+
+		err = gfile.Mkdir(path)
+		t.AssertNil(err)
+
+		// for go mod import path auto retrieve.
+		err = gfile.Copy(
+			gtest.DataPath("gendao", "go.mod.txt"),
+			gfile.Join(path, "go.mod"),
+		)
+		t.AssertNil(err)
+
+		_, err = gendao.CGenDao{}.Dao(ctx, in)
+		t.AssertNil(err)
+		defer gfile.Remove(path)
+
+		// files
+		files, err := gfile.ScanDir(path, "*.go", true)
+		t.AssertNil(err)
+		t.Assert(files, []string{
+			filepath.FromSlash(path + "/dao/internal/table_user.go"),
+			filepath.FromSlash(path + "/dao/table_user.go"),
+			filepath.FromSlash(path + "/model/do/table_user.go"),
+			filepath.FromSlash(path + "/model/entity/table_user.go"),
+		})
+		// content
+		testPath := gtest.DataPath("gendao", "generated_user_field_mapping")
 		expectFiles := []string{
 			filepath.FromSlash(testPath + "/dao/internal/table_user.go"),
 			filepath.FromSlash(testPath + "/dao/table_user.go"),
@@ -271,6 +375,7 @@ func Test_Gen_Dao_Issue2572(t *testing.T) {
 				NoModelComment:     false,
 				Clear:              false,
 				TypeMapping:        nil,
+				FieldMapping:       nil,
 			}
 		)
 		err = gutil.FillStructWithDefault(&in)
@@ -359,6 +464,7 @@ func Test_Gen_Dao_Issue2616(t *testing.T) {
 				NoModelComment:     false,
 				Clear:              false,
 				TypeMapping:        nil,
+				FieldMapping:       nil,
 			}
 		)
 		err = gutil.FillStructWithDefault(&in)
@@ -469,6 +575,7 @@ func Test_Gen_Dao_Issue2746(t *testing.T) {
 				NoModelComment:     false,
 				Clear:              false,
 				TypeMapping:        nil,
+				FieldMapping:       nil,
 			}
 		)
 		err = gutil.FillStructWithDefault(&in)
