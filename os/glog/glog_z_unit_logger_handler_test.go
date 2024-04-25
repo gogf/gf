@@ -82,10 +82,9 @@ func TestLogger_SetHandlers_HandlerJson(t *testing.T) {
 		ctx = context.WithValue(ctx, "Span-Id", "abcdefg")
 
 		l.Debug(ctx, 1, 2, 3)
-		t.Assert(gstr.Count(w.String(), "1234567890"), 1)
-		t.Assert(gstr.Count(w.String(), "abcdefg"), 1)
-		t.Assert(gstr.Count(w.String(), `"1 2 3"`), 1)
-		t.Assert(gstr.Count(w.String(), `"DEBU"`), 1)
+		t.Assert(gstr.Count(w.String(), `"CtxStr":"1234567890, abcdefg"`), 1)
+		t.Assert(gstr.Count(w.String(), `"Content":"1 2 3"`), 1)
+		t.Assert(gstr.Count(w.String(), `"Level":"DEBU"`), 1)
 	})
 }
 
