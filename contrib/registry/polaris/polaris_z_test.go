@@ -657,7 +657,7 @@ func TestService_GetPrefix(t *testing.T) {
 	}
 }
 
-// TestService_GetName Test GetName
+// TestService_GetKey Test GetKey
 func TestService_GetKey(t *testing.T) {
 	type fields struct {
 		Service gsvc.Service
