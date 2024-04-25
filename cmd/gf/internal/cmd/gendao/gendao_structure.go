@@ -131,6 +131,14 @@ func generateStructFieldDefinition(
 	for _, v := range removeFieldPrefixArray {
 		newFiledName = gstr.TrimLeftStr(newFiledName, v, 1)
 	}
+
+	if in.FieldMapping != nil && len(in.FieldMapping) > 0 {
+		if typeMapping, ok := in.FieldMapping[fmt.Sprintf("%s.%s", in.Tables, newFiledName)]; ok {
+			localTypeNameStr = typeMapping.Type
+			appendImport = typeMapping.Import
+		}
+	}
+
 	attrLines = []string{
 		"    #" + gstr.CaseCamel(newFiledName),
 		" #" + localTypeNameStr,

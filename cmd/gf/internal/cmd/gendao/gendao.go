@@ -58,6 +58,10 @@ CONFIGURATION SUPPORT
 			  import: github.com/shopspring/decimal
 			numeric:
 			  type: string
+		  fieldMapping:
+			table_name.field_name:
+			  type:   decimal.Decimal
+			  import: github.com/shopspring/decimal
 `
 	CGenDaoBriefPath              = `directory path for generated files`
 	CGenDaoBriefLink              = `database configuration, the same as the ORM configuration of GoFrame`
@@ -81,6 +85,7 @@ CONFIGURATION SUPPORT
 	CGenDaoBriefNoModelComment    = `no model comment will be added for each field`
 	CGenDaoBriefClear             = `delete all generated go files that do not exist in database`
 	CGenDaoBriefTypeMapping       = `custom local type mapping for generated struct attributes relevant to fields of table`
+	CGenDaoBriefFieldMapping      = `custom local type mapping for generated struct attributes relevant to specific fields of table`
 	CGenDaoBriefGroup             = `
 specifying the configuration group name of database for generated ORM instance,
 it's not necessary and the default value is "default"
@@ -162,6 +167,7 @@ func init() {
 		`CGenDaoBriefNoModelComment`:     CGenDaoBriefNoModelComment,
 		`CGenDaoBriefClear`:              CGenDaoBriefClear,
 		`CGenDaoBriefTypeMapping`:        CGenDaoBriefTypeMapping,
+		`CGenDaoBriefFieldMapping`:       CGenDaoBriefFieldMapping,
 		`CGenDaoBriefGroup`:              CGenDaoBriefGroup,
 		`CGenDaoBriefJsonCase`:           CGenDaoBriefJsonCase,
 		`CGenDaoBriefTplDaoIndexPath`:    CGenDaoBriefTplDaoIndexPath,
@@ -201,8 +207,9 @@ type (
 		NoModelComment     bool   `name:"noModelComment"      short:"m"  brief:"{CGenDaoBriefNoModelComment}" orphan:"true"`
 		Clear              bool   `name:"clear"               short:"a"  brief:"{CGenDaoBriefClear}" orphan:"true"`
 
-		TypeMapping map[DBFieldTypeName]CustomAttributeType `name:"typeMapping" short:"y" brief:"{CGenDaoBriefTypeMapping}" orphan:"true"`
-		genItems    *CGenDaoInternalGenItems
+		TypeMapping  map[DBFieldTypeName]CustomAttributeType  `name:"typeMapping" short:"y" brief:"{CGenDaoBriefTypeMapping}" orphan:"true"`
+		FieldMapping map[DBTableFieldName]CustomAttributeType `name:"fieldMapping" short:"fm"  brief:"{CGenDaoBriefFieldMapping}" orphan:"true"`
+		genItems     *CGenDaoInternalGenItems
 	}
 	CGenDaoOutput struct{}
 
@@ -212,7 +219,7 @@ type (
 		TableNames    []string
 		NewTableNames []string
 	}
-
+	DBTableFieldName    = string
 	DBFieldTypeName     = string
 	CustomAttributeType struct {
 		Type   string `brief:"custom attribute type name"`
@@ -363,7 +370,7 @@ func getImportPartContent(ctx context.Context, source string, isDo bool, appendI
 	}
 
 	// Check and update imports in go.mod
-	if appendImports != nil && len(appendImports) > 0 {
+	if len(appendImports) > 0 {
 		goModPath := utils.GetModPath()
 		if goModPath == "" {
 			mlog.Fatal("go.mod not found in current project")
@@ -381,8 +388,9 @@ func getImportPartContent(ctx context.Context, source string, isDo bool, appendI
 				}
 			}
 			if !found {
-				err = gproc.ShellRun(ctx, `go get `+appendImport)
-				mlog.Fatalf(`%+v`, err)
+				if err = gproc.ShellRun(ctx, `go get `+appendImport); err != nil {
+					mlog.Fatalf(`%+v`, err)
+				}
 			}
 			packageImportsArray.Append(fmt.Sprintf(`"%s"`, appendImport))
 		}
