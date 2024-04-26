@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 	"github.com/olekukonko/tablewriter"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
@@ -176,20 +177,8 @@ func doGenPbEntityForArray(ctx context.Context, index int, in CGenPbEntityInput)
 	}
 	if in.Package == "" {
 		mlog.Debug(`package parameter is empty, trying calculating the package path using go.mod`)
-		if !gfile.Exists("go.mod") {
-			mlog.Fatal("go.mod does not exist in current working directory")
-		}
-		var (
-			modName      string
-			goModContent = gfile.GetContents("go.mod")
-			match, _     = gregex.MatchString(`^module\s+(.+)\s*`, goModContent)
-		)
-		if len(match) > 1 {
-			modName = gstr.Trim(match[1])
-			in.Package = modName + "/" + defaultPackageSuffix
-		} else {
-			mlog.Fatal("module name does not found in go.mod")
-		}
+		modName := utils.GetImportPath(gfile.Pwd())
+		in.Package = modName + "/" + defaultPackageSuffix
 	}
 	removePrefixArray := gstr.SplitAndTrim(in.RemovePrefix, ",")
 	// It uses user passed database configuration.
