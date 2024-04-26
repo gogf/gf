@@ -186,7 +186,7 @@ func Test_Issue_3545(t *testing.T) {
 
 		err = gfile.Mkdir(path)
 		t.AssertNil(err)
-		// defer gfile.Remove(path)
+		defer gfile.Remove(path)
 
 		_, err = genpbentity.CGenPbEntity{}.PbEntity(ctx, in)
 		t.AssertNil(err)
