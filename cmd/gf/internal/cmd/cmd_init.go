@@ -12,6 +12,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/allyes"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -19,9 +22,6 @@ import (
 	"github.com/gogf/gf/v2/os/gres"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gtag"
-
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/allyes"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 var (
@@ -34,11 +34,12 @@ type cInit struct {
 }
 
 const (
-	cInitRepoPrefix = `github.com/gogf/`
-	cInitMonoRepo   = `template-mono`
-	cInitSingleRepo = `template-single`
-	cInitBrief      = `create and initialize an empty GoFrame project`
-	cInitEg         = `
+	cInitRepoPrefix  = `github.com/gogf/`
+	cInitMonoRepo    = `template-mono`
+	cInitMonoRepoApp = `template-mono-app`
+	cInitSingleRepo  = `template-single`
+	cInitBrief       = `create and initialize an empty GoFrame project`
+	cInitEg          = `
 gf init my-project
 gf init my-mono-repo -m
 `
@@ -61,11 +62,12 @@ func init() {
 }
 
 type cInitInput struct {
-	g.Meta `name:"init"`
-	Name   string `name:"NAME" arg:"true" v:"required" brief:"{cInitNameBrief}"`
-	Mono   bool   `name:"mono"   short:"m" brief:"initialize a mono-repo instead a single-repo" orphan:"true"`
-	Update bool   `name:"update" short:"u" brief:"update to the latest goframe version" orphan:"true"`
-	Module string `name:"module" short:"g" brief:"custom go module"`
+	g.Meta  `name:"init"`
+	Name    string `name:"NAME" arg:"true" v:"required" brief:"{cInitNameBrief}"`
+	Mono    bool   `name:"mono"   short:"m" brief:"initialize a mono-repo instead a single-repo" orphan:"true"`
+	MonoApp bool   `name:"mono-app"   short:"ma" brief:"initialize a mono-repo-app instead a single-repo" orphan:"true"`
+	Update  bool   `name:"update" short:"u" brief:"update to the latest goframe version" orphan:"true"`
+	Module  string `name:"module" short:"g" brief:"custom go module"`
 }
 
 type cInitOutput struct{}
@@ -86,11 +88,15 @@ func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err 
 		templateRepoName string
 		gitignoreFile    = in.Name + "/" + cInitGitignore
 	)
+
 	if in.Mono {
 		templateRepoName = cInitMonoRepo
+	} else if in.MonoApp {
+		templateRepoName = cInitMonoRepoApp
 	} else {
 		templateRepoName = cInitSingleRepo
 	}
+
 	err = gres.Export(templateRepoName, in.Name, gres.ExportOption{
 		RemovePrefix: templateRepoName,
 	})
@@ -118,9 +124,14 @@ func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err 
 		}
 	}
 
-	// Replace module name.
+	// Get template name and module name.
+	tempName := cInitRepoPrefix + templateRepoName
 	if in.Module == "" {
 		in.Module = gfile.Basename(gfile.RealPath(in.Name))
+	}
+	if in.MonoApp {
+		tempName = cInitRepoPrefix + cInitMonoRepo + "/" + cInitMonoRepoApp
+		in.Module = utils.GetImportPath(gfile.Pwd()) + "/" + in.Name
 	}
 
 	// Replace template name to project name.
@@ -130,7 +141,7 @@ func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err 
 				return content
 			}
 		}
-		return gstr.Replace(gfile.GetContents(path), cInitRepoPrefix+templateRepoName, in.Module)
+		return gstr.Replace(gfile.GetContents(path), tempName, in.Module)
 	}, in.Name, "*", true)
 	if err != nil {
 		return
