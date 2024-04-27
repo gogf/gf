@@ -131,7 +131,8 @@ func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err 
 	}
 	if in.MonoApp {
 		tempName = cInitRepoPrefix + cInitMonoRepo + "/" + cInitMonoRepoApp
-		in.Module = utils.GetImportPath(gfile.Pwd()) + "/" + in.Name
+		pwd := gfile.Pwd() + string(os.PathSeparator) + in.Name
+		in.Module = utils.GetImportPath(pwd) + "/" + in.Name
 	}
 
 	// Replace template name to project name.
