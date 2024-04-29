@@ -23,7 +23,7 @@ import (
 
 // LoadWithOptions creates a Json object from given JSON format content and options.
 func LoadWithOptions(data []byte, options Options) (*Json, error) {
-	return doLoadContentWithOptions(data, options)
+	return loadContentWithOptions(data, options)
 }
 
 // LoadJson creates a Json object from given JSON format content.
@@ -34,7 +34,7 @@ func LoadJson(data []byte, safe ...bool) (*Json, error) {
 	if len(safe) > 0 && safe[0] {
 		option.Safe = true
 	}
-	return doLoadContentWithOptions(data, option)
+	return loadContentWithOptions(data, option)
 }
 
 // LoadXml creates a Json object from given XML format content.
@@ -45,7 +45,7 @@ func LoadXml(data []byte, safe ...bool) (*Json, error) {
 	if len(safe) > 0 && safe[0] {
 		option.Safe = true
 	}
-	return doLoadContentWithOptions(data, option)
+	return loadContentWithOptions(data, option)
 }
 
 // LoadIni creates a Json object from given INI format content.
@@ -56,7 +56,7 @@ func LoadIni(data []byte, safe ...bool) (*Json, error) {
 	if len(safe) > 0 && safe[0] {
 		option.Safe = true
 	}
-	return doLoadContentWithOptions(data, option)
+	return loadContentWithOptions(data, option)
 }
 
 // LoadYaml creates a Json object from given YAML format content.
@@ -67,7 +67,7 @@ func LoadYaml(data []byte, safe ...bool) (*Json, error) {
 	if len(safe) > 0 && safe[0] {
 		option.Safe = true
 	}
-	return doLoadContentWithOptions(data, option)
+	return loadContentWithOptions(data, option)
 }
 
 // LoadToml creates a Json object from given TOML format content.
@@ -78,7 +78,7 @@ func LoadToml(data []byte, safe ...bool) (*Json, error) {
 	if len(safe) > 0 && safe[0] {
 		option.Safe = true
 	}
-	return doLoadContentWithOptions(data, option)
+	return loadContentWithOptions(data, option)
 }
 
 // LoadProperties creates a Json object from given TOML format content.
@@ -89,17 +89,14 @@ func LoadProperties(data []byte, safe ...bool) (*Json, error) {
 	if len(safe) > 0 && safe[0] {
 		option.Safe = true
 	}
-	return doLoadContentWithOptions(data, option)
+	return loadContentWithOptions(data, option)
 }
 
 // LoadContent creates a Json object from given content, it checks the data type of `content`
 // automatically, supporting data content type as follows:
 // JSON, XML, INI, YAML and TOML.
 func LoadContent(data []byte, safe ...bool) (*Json, error) {
-	if len(data) == 0 {
-		return New(nil, safe...), nil
-	}
-	return LoadContentType(checkDataType(data), data, safe...)
+	return LoadContentType("", data, safe...)
 }
 
 // LoadContentType creates a Json object from given type and content,
@@ -109,18 +106,14 @@ func LoadContentType(dataType ContentType, data []byte, safe ...bool) (*Json, er
 	if len(data) == 0 {
 		return New(nil, safe...), nil
 	}
-	// ignore UTF8-BOM
-	if data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF {
-		data = data[3:]
-	}
-	options := Options{
+	var options = Options{
 		Type:      dataType,
 		StrNumber: true,
 	}
 	if len(safe) > 0 && safe[0] {
 		options.Safe = true
 	}
-	return doLoadContentWithOptions(data, options)
+	return loadContentWithOptions(data, options)
 }
 
 // IsValidDataType checks and returns whether given `dataType` a valid data type for loading.
@@ -146,40 +139,33 @@ func IsValidDataType(dataType ContentType) bool {
 	return false
 }
 
-func loadContentWithOptions(data []byte, options Options) (*Json, error) {
-	if len(data) == 0 {
-		return NewWithOptions(nil, options), nil
+func trimBOM(data []byte) []byte {
+	if len(data) < 3 {
+		return data
 	}
-	if options.Type == "" {
-		options.Type = checkDataType(data)
-	}
-	return loadContentTypeWithOptions(data, options)
-}
-
-func loadContentTypeWithOptions(data []byte, options Options) (*Json, error) {
-	if len(data) == 0 {
-		return NewWithOptions(nil, options), nil
-	}
-	// ignore UTF8-BOM
 	if data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF {
 		data = data[3:]
 	}
-	return doLoadContentWithOptions(data, options)
+	return data
 }
 
-// doLoadContent creates a Json object from given content.
+// loadContentWithOptions creates a Json object from given content.
 // It supports data content type as follows:
 // JSON, XML, INI, YAML and TOML.
-func doLoadContentWithOptions(data []byte, options Options) (*Json, error) {
+func loadContentWithOptions(data []byte, options Options) (*Json, error) {
 	var (
 		err    error
 		result interface{}
 	)
+	data = trimBOM(data)
 	if len(data) == 0 {
 		return NewWithOptions(nil, options), nil
 	}
 	if options.Type == "" {
-		options.Type = checkDataType(data)
+		options.Type, err = checkDataType(data)
+		if err != nil {
+			return nil, err
+		}
 	}
 	options.Type = ContentType(gstr.TrimLeft(
 		string(options.Type), "."),
@@ -188,28 +174,19 @@ func doLoadContentWithOptions(data []byte, options Options) (*Json, error) {
 	case ContentTypeJson, ContentTypeJs:
 
 	case ContentTypeXml:
-		if data, err = gxml.ToJson(data); err != nil {
-			return nil, err
-		}
+		data, err = gxml.ToJson(data)
 
 	case ContentTypeYaml, ContentTypeYml:
-		if data, err = gyaml.ToJson(data); err != nil {
-			return nil, err
-		}
+		data, err = gyaml.ToJson(data)
 
 	case ContentTypeToml:
-		if data, err = gtoml.ToJson(data); err != nil {
-			return nil, err
-		}
+		data, err = gtoml.ToJson(data)
 
 	case ContentTypeIni:
-		if data, err = gini.ToJson(data); err != nil {
-			return nil, err
-		}
+		data, err = gini.ToJson(data)
+
 	case ContentTypeProperties:
-		if data, err = gproperties.ToJson(data); err != nil {
-			return nil, err
-		}
+		data, err = gproperties.ToJson(data)
 
 	default:
 		err = gerror.NewCodef(
@@ -221,6 +198,7 @@ func doLoadContentWithOptions(data []byte, options Options) (*Json, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	decoder := json.NewDecoder(bytes.NewReader(data))
 	if options.StrNumber {
 		decoder.UseNumber()
@@ -238,23 +216,32 @@ func doLoadContentWithOptions(data []byte, options Options) (*Json, error) {
 // checkDataType automatically checks and returns the data type for `content`.
 // Note that it uses regular expression for loose checking, you can use LoadXXX/LoadContentType
 // functions to load the content for certain content type.
-func checkDataType(data []byte) ContentType {
+func checkDataType(data []byte) (ContentType, error) {
 	switch {
 	case json.Valid(data):
-		return ContentTypeJson
+		return ContentTypeJson, nil
+
 	case isXmlContent(data):
-		return ContentTypeXml
+		return ContentTypeXml, nil
+
 	case isYamlContent(data):
-		return ContentTypeYaml
+		return ContentTypeYaml, nil
+
 	case isTomlContent(data):
-		return ContentTypeToml
+		return ContentTypeToml, nil
+
 	case isIniContent(data):
 		// Must contain "[xxx]" section.
-		return ContentTypeIni
+		return ContentTypeIni, nil
+
 	case isPropertyContent(data):
-		return ContentTypeProperties
+		return ContentTypeProperties, nil
+
 	default:
-		return ""
+		return "", gerror.NewCode(
+			gcode.CodeOperationFailed,
+			`unable auto check the data format type`,
+		)
 	}
 }
 

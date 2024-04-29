@@ -30,5 +30,5 @@ func LoadPath(path string, options Options) (*Json, error) {
 	if options.Type == "" {
 		options.Type = ContentType(gfile.Ext(path))
 	}
-	return doLoadContentWithOptions(gfile.GetBytesWithCache(path), options)
+	return loadContentWithOptions(gfile.GetBytesWithCache(path), options)
 }
