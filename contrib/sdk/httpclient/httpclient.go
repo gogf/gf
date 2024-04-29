@@ -14,7 +14,6 @@ import (
 
 	"github.com/gogf/gf/v2/encoding/gurl"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gclient"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/text/gregex"
@@ -24,24 +23,21 @@ import (
 	"github.com/gogf/gf/v2/util/gtag"
 )
 
-// Client is an http client for SDK.
+// Client is a http client for SDK.
 type Client struct {
 	*gclient.Client
 	Handler
 }
 
-// New creates and returns an http client for SDK.
+// New creates and returns a http client for SDK.
 func New(config Config) *Client {
 	client := config.Client
 	if client == nil {
 		client = gclient.New()
 	}
-	if config.Logger == nil {
-		config.Logger = g.Log()
-	}
 	handler := config.Handler
 	if handler == nil {
-		handler = NewDefaultHandler(config)
+		handler = NewDefaultHandler(config.Logger, config.RawDump)
 	}
 	if !gstr.HasPrefix(config.URL, "http") {
 		config.URL = fmt.Sprintf("http://%s", config.URL)
@@ -73,7 +69,8 @@ func (c *Client) Request(ctx context.Context, req, res interface{}) error {
 
 // Get sends a request using GET method.
 func (c *Client) Get(ctx context.Context, path string, in, out interface{}) error {
-	if urlParams := ghttp.BuildParams(in); urlParams != "" {
+	// TODO: Path params will also be built in urlParams, not graceful now.
+	if urlParams := ghttp.BuildParams(in); urlParams != "" && urlParams != "{}" {
 		path += "?" + urlParams
 	}
 	res, err := c.ContentJson().Get(ctx, c.handlePath(path, in))

@@ -12,6 +12,7 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gclient"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/glog"
@@ -30,10 +31,13 @@ type DefaultHandler struct {
 	RawDump bool
 }
 
-func NewDefaultHandler(config Config) *DefaultHandler {
+func NewDefaultHandler(logger *glog.Logger, rawRump bool) *DefaultHandler {
+	if rawRump && logger == nil {
+		logger = g.Log()
+	}
 	return &DefaultHandler{
-		Logger:  config.Logger,
-		RawDump: config.RawDump,
+		Logger:  logger,
+		RawDump: rawRump,
 	}
 }
 
