@@ -333,7 +333,7 @@ func (m *softTimeMaintainer) getConditionByFieldNameAndTypeForSoftDeleting(
 		switch fieldType {
 		case LocalTypeDate, LocalTypeDatetime:
 			return fmt.Sprintf(`%s IS NULL`, quotedFieldName)
-		case LocalTypeInt, LocalTypeUint, LocalTypeInt64, LocalTypeBool:
+		case LocalTypeInt, LocalTypeUint, LocalTypeInt64, LocalTypeUint64, LocalTypeBool:
 			return fmt.Sprintf(`%s=0`, quotedFieldName)
 		default:
 			intlog.Errorf(
@@ -372,7 +372,7 @@ func (m *softTimeMaintainer) GetValueByFieldTypeForCreateOrUpdate(
 		switch fieldType {
 		case LocalTypeDate, LocalTypeDatetime:
 			value = gtime.Now()
-		case LocalTypeInt, LocalTypeUint, LocalTypeInt64:
+		case LocalTypeInt, LocalTypeUint, LocalTypeInt64, LocalTypeUint64:
 			value = gtime.Timestamp()
 		case LocalTypeBool:
 			value = 1
