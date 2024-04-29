@@ -11,6 +11,10 @@ body:
     attributes:
       value: |
         Thanks for helping us improve! 🙏 Please answer these questions and provide as much information as possible about your problem.
+        
+        The issue title uses the format of the package name goes before the colon. Thanks!
+        
+        标题使用包名在冒号前的格式！谢谢！ 
 
   - type: dropdown
     id: is-problem
