@@ -241,7 +241,7 @@ func Test_Gen_Dao_FieldMapping(t *testing.T) {
 			in    = gendao.CGenDaoInput{
 				Path:               path,
 				Link:               link,
-				Tables:             "table_user",
+				Tables:             "",
 				TablesEx:           "",
 				Group:              group,
 				Prefix:             "",
