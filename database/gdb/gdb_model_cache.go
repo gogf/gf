@@ -69,10 +69,11 @@ func (m *Model) getSelectResultFromCache(ctx context.Context, sql string, args .
 		cacheItem *selectCacheItem
 		cacheKey  = m.makeSelectCacheKey(sql, args...)
 		cacheObj  = m.db.GetCache()
+		core      = m.db.GetCore()
 	)
 	defer func() {
 		if cacheItem != nil {
-			if internalData := m.db.GetCore().GetInternalCtxDataFromCtx(ctx); internalData != nil {
+			if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
 				if cacheItem.FirstResultColumn != "" {
 					internalData.FirstResultColumn = cacheItem.FirstResultColumn
 				}
@@ -106,9 +107,10 @@ func (m *Model) saveSelectResultToCache(
 	}
 	// Special handler for Value/Count operations result.
 	if len(result) > 0 {
+		var core = m.db.GetCore()
 		switch queryType {
 		case queryTypeValue, queryTypeCount:
-			if internalData := m.db.GetCore().GetInternalCtxDataFromCtx(ctx); internalData != nil {
+			if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
 				if result[0][internalData.FirstResultColumn].IsEmpty() {
 					result = nil
 				}
@@ -124,10 +126,13 @@ func (m *Model) saveSelectResultToCache(
 			result = nil
 		}
 	}
-	var cacheItem = &selectCacheItem{
-		Result: result,
-	}
-	if internalData := m.db.GetCore().GetInternalCtxDataFromCtx(ctx); internalData != nil {
+	var (
+		core      = m.db.GetCore()
+		cacheItem = &selectCacheItem{
+			Result: result,
+		}
+	)
+	if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
 		cacheItem.FirstResultColumn = internalData.FirstResultColumn
 	}
 	if errCache := cacheObj.Set(ctx, cacheKey, cacheItem, m.cacheOption.Duration); errCache != nil {
