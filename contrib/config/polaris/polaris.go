@@ -147,7 +147,7 @@ func (c *Client) doUpdate(ctx context.Context) (err error) {
 		return gerror.New("config file is empty")
 	}
 	var j *gjson.Json
-	if j, err = gjson.LoadContent(c.client.GetContent()); err != nil {
+	if j, err = gjson.LoadContent([]byte(c.client.GetContent())); err != nil {
 		return gerror.Wrap(err, `parse config map item from polaris failed`)
 	}
 	c.value.Set(j)

@@ -11,13 +11,14 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/consul/api"
+	"github.com/hashicorp/consul/api/watch"
+
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/glog"
-	"github.com/hashicorp/consul/api"
-	"github.com/hashicorp/consul/api/watch"
 )
 
 // Config is the configuration object for consul client.
