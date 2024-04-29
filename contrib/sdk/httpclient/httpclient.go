@@ -9,11 +9,10 @@ package httpclient
 
 import (
 	"context"
-	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/gogf/gf/v2/encoding/gurl"
-	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gclient"
 	"github.com/gogf/gf/v2/net/ghttp"
@@ -24,48 +23,29 @@ import (
 	"github.com/gogf/gf/v2/util/gtag"
 )
 
-// Client is an http client for SDK.
+// Client is a http client for SDK.
 type Client struct {
 	*gclient.Client
-	config Config
+	Handler
 }
 
-// New creates and returns an http client for SDK.
+// New creates and returns a http client for SDK.
 func New(config Config) *Client {
 	client := config.Client
 	if client == nil {
 		client = gclient.New()
 	}
+	handler := config.Handler
+	if handler == nil {
+		handler = NewDefaultHandler(config.Logger, config.RawDump)
+	}
+	if !gstr.HasPrefix(config.URL, "http") {
+		config.URL = fmt.Sprintf("http://%s", config.URL)
+	}
 	return &Client{
-		Client: client,
-		config: config,
+		Client:  client.Prefix(config.URL),
+		Handler: handler,
 	}
-}
-
-func (c *Client) handleResponse(ctx context.Context, res *gclient.Response, out interface{}) error {
-	if c.config.RawDump {
-		c.config.Logger.Debugf(ctx, "raw request&response:\n%s", res.Raw())
-	}
-
-	var (
-		responseBytes = res.ReadAll()
-		result        = ghttp.DefaultHandlerResponse{
-			Data: out,
-		}
-	)
-	if !json.Valid(responseBytes) {
-		return gerror.Newf(`invalid response content: %s`, responseBytes)
-	}
-	if err := json.Unmarshal(responseBytes, &result); err != nil {
-		return gerror.Wrapf(err, `json.Unmarshal failed with content:%s`, responseBytes)
-	}
-	if result.Code != gcode.CodeOK.Code() {
-		return gerror.NewCode(
-			gcode.New(result.Code, result.Message, nil),
-			result.Message,
-		)
-	}
-	return nil
 }
 
 // Request sends request to service by struct object `req`, and receives response to struct object `res`.
@@ -83,20 +63,21 @@ func (c *Client) Request(ctx context.Context, req, res interface{}) error {
 		if err != nil {
 			return err
 		}
-		return c.handleResponse(ctx, result, res)
+		return c.HandleResponse(ctx, result, res)
 	}
 }
 
 // Get sends a request using GET method.
 func (c *Client) Get(ctx context.Context, path string, in, out interface{}) error {
-	if urlParams := ghttp.BuildParams(in); urlParams != "" {
-		path += "?" + ghttp.BuildParams(in)
+	// TODO: Path params will also be built in urlParams, not graceful now.
+	if urlParams := ghttp.BuildParams(in); urlParams != "" && urlParams != "{}" {
+		path += "?" + urlParams
 	}
 	res, err := c.ContentJson().Get(ctx, c.handlePath(path, in))
 	if err != nil {
 		return gerror.Wrap(err, `http request failed`)
 	}
-	return c.handleResponse(ctx, res, out)
+	return c.HandleResponse(ctx, res, out)
 }
 
 func (c *Client) handlePath(path string, in interface{}) string {

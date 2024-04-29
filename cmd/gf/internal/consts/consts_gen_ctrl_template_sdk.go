@@ -26,12 +26,6 @@ type implementer struct {
 }
 
 func New(config httpclient.Config) IClient {
-	if !gstr.HasPrefix(config.URL, "http") {
-		config.URL = fmt.Sprintf("http://%s", config.URL)
-	}
-	if config.Logger == nil {
-		config.Logger = g.Log()
-	}
 	return &implementer{
 		config: config,
 	}
