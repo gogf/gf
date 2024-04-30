@@ -445,6 +445,7 @@ type LocalType string
 const (
 	LocalTypeUndefined   LocalType = ""
 	LocalTypeString      LocalType = "string"
+	LocalTypeDecimal     LocalType = "decimal"
 	LocalTypeDate        LocalType = "date"
 	LocalTypeDatetime    LocalType = "datetime"
 	LocalTypeInt         LocalType = "int"

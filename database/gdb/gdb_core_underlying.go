@@ -13,13 +13,13 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/gogf/gf/v2/container/gvar"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/gogf/gf/v2/util/gconv"
 
 	"github.com/gogf/gf/v2"
-	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
@@ -421,30 +421,62 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 			internalData.FirstResultColumn = columnTypes[0].Name()
 		}
 	}
-	var (
-		values   = make([]interface{}, len(columnTypes))
-		result   = make(Result, 0)
-		scanArgs = make([]interface{}, len(values))
-	)
-	for i := range values {
-		scanArgs[i] = &values[i]
+
+	table := parseStruct(ctx, c.db, columnTypes)
+	if table != nil {
+		return c.scanRowsToStruct(table.scanArgs, rows, table)
 	}
+	var (
+		scanArgs = make([]interface{}, len(columnTypes))
+	)
+
+	for i := 0; i < len(scanArgs); i++ {
+		scanArgs[i] = new(any)
+	}
+
+	return c.scanRowsToResult(ctx, scanArgs, rows, columnTypes)
+}
+
+func (c *Core) scanRowsToStruct(scanArgs []any, rows *sql.Rows, table *Table) (result Result, err error) {
+	var ()
+
 	for {
 		if err = rows.Scan(scanArgs...); err != nil {
 			return result, err
 		}
+
 		record := Record{}
-		for i, value := range values {
-			if value == nil {
-				// DO NOT use `gvar.New(nil)` here as it creates an initialized object
-				// which will cause struct converting issue.
-				record[columnTypes[i].Name()] = nil
-			} else {
-				var convertedValue interface{}
-				if convertedValue, err = c.columnValueToLocalValue(ctx, value, columnTypes[i]); err != nil {
-					return nil, err
+		val := reflect.Value{}
+		if table != nil {
+			for tableFieldName, field := range table.fields {
+
+				arg := scanArgs[field.ColumnFieldIndex]
+				switch v := arg.(type) {
+				case *sql.RawBytes:
+					if *v == nil {
+						record[tableFieldName] = nil
+						continue
+					}
+					val = reflect.New(field.StructFieldType).Elem()
+					if field.isCustomConvert == false {
+						err = field.scanFunc(string(*v), val)
+					} else {
+						err = field.scanFunc(v, val)
+					}
+				case *sql.NullTime:
+					if v.Valid == false {
+						record[tableFieldName] = nil
+						continue
+					}
+					val = reflect.New(field.StructFieldType).Elem()
+					err = field.scanFunc(v.Time, val)
 				}
-				record[columnTypes[i].Name()] = gvar.New(convertedValue)
+				if err != nil {
+					return result, err
+				}
+
+				record[tableFieldName] = gvar.New(val.Interface())
+
 			}
 		}
 		result = append(result, record)
@@ -452,7 +484,36 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 			break
 		}
 	}
-	return result, nil
+	return
+}
+
+func (c *Core) scanRowsToResult(ctx context.Context, scanArgs []any, rows *sql.Rows, columnTypes []*sql.ColumnType) (result Result, err error) {
+	for {
+		if err = rows.Scan(scanArgs...); err != nil {
+			return result, err
+		}
+
+		record := Record{}
+		for i, value := range scanArgs {
+			arg := *value.(*any)
+			if arg == nil {
+				// DO NOT use `gvar.New(nil)` here as it creates an initialized object
+				// which will cause struct converting issue.
+				record[columnTypes[i].Name()] = nil
+				continue
+			}
+			var convertedValue interface{}
+			if convertedValue, err = c.columnValueToLocalValue(ctx, arg, columnTypes[i]); err != nil {
+				return nil, err
+			}
+			record[columnTypes[i].Name()] = gvar.New(convertedValue)
+		}
+		result = append(result, record)
+		if !rows.Next() {
+			break
+		}
+	}
+	return
 }
 
 func (c *Core) columnValueToLocalValue(ctx context.Context, value interface{}, columnType *sql.ColumnType) (interface{}, error) {

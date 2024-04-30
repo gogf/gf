@@ -173,7 +173,7 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 		typeName = gstr.Trim(match[1])
 		typePattern = gstr.Trim(match[2])
 	} else {
-		typeName = gstr.Split(fieldType, " ")[0]
+		typeName = fieldType
 	}
 
 	typeName = strings.ToLower(typeName)
@@ -219,7 +219,7 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 		fieldTypeMoney,
 		fieldTypeNumeric,
 		fieldTypeSmallmoney:
-		return LocalTypeString, nil
+		return LocalTypeDecimal, nil
 	case
 		fieldTypeFloat,
 		fieldTypeDouble:

@@ -30,6 +30,15 @@ func (m *Model) All(where ...interface{}) (Result, error) {
 	return m.doGetAll(ctx, false, where...)
 }
 
+func (m *Model) all(pointer any, where ...interface{}) (Result, error) {
+	var ctx = m.GetCtx()
+	ctx = context.WithValue(ctx, scanPointerCtxKey, &scanPointer{
+		scan:    true,
+		pointer: pointer,
+	})
+	return m.doGetAll(ctx, false, where...)
+}
+
 // AllAndCount retrieves all records and the total count of records from the model.
 // If useFieldForCount is true, it will use the fields specified in the model for counting;
 // otherwise, it will use a constant value of 1 for counting.
@@ -119,6 +128,25 @@ func (m *Model) One(where ...interface{}) (Record, error) {
 	return nil, nil
 }
 
+func (m *Model) one(pointer any, where ...any) (Record, error) {
+	var ctx = m.GetCtx()
+	if len(where) > 0 {
+		return m.Where(where[0], where[1:]...).One()
+	}
+	ctx = context.WithValue(ctx, scanPointerCtxKey, &scanPointer{
+		scan:    true,
+		pointer: pointer,
+	})
+	all, err := m.doGetAll(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+	if len(all) > 0 {
+		return all[0], nil
+	}
+	return nil, nil
+}
+
 // Array queries and returns data values as slice from database.
 // Note that if there are multiple columns in the result, it returns just one column values randomly.
 //
@@ -183,7 +211,8 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 			model = m.Fields(pointer)
 		}
 	}
-	one, err := model.One(where...)
+
+	one, err := model.one(pointer, where...)
 	if err != nil {
 		return err
 	}
@@ -227,7 +256,8 @@ func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 			)
 		}
 	}
-	all, err := model.All(where...)
+
+	all, err := model.all(pointer, where...)
 	if err != nil {
 		return err
 	}

@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"database/sql"
+	"fmt"
 	"reflect"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -140,6 +141,7 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 		bindToReflectValue := field.Value
 		if bindToReflectValue.Kind() != reflect.Ptr && bindToReflectValue.CanAddr() {
 			bindToReflectValue = bindToReflectValue.Addr()
+			fmt.Println("with field is ptr=", field.Name(), bindToReflectValue)
 		}
 
 		// It automatically retrieves struct field names from current attribute struct/slice.
@@ -166,12 +168,48 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 		if m.cacheEnabled && m.cacheOption.Name == "" {
 			model = model.Cache(m.cacheOption)
 		}
+		fmt.Println("with field is nil=", field.IsNil(), field.Name(), field.Type())
+
+		var (
+			fieldIsPtrAndNil = bindToReflectValue.IsNil()
+			fieldKind        = bindToReflectValue.Kind()
+			newFieldValue    = bindToReflectValue
+		)
+		// 如果字段是指针类型的，并且是nil的话，需要使用反射创建一个
+		// 如果是值类型的字段，经过bindToReflectValue.Addr()后就不是nil
+		//type  _ struct {
+		//	A int   => Addr().IsNil() = false
+		//	B *int  => Addr().IsNil() = true
+		//}
+		if fieldIsPtrAndNil {
+			fieldType := field.Field.Type
+			switch fieldKind {
+			case reflect.Ptr:
+				fieldType = fieldType.Elem()
+				newFieldValue = reflect.New(fieldType)
+
+			case reflect.Slice, reflect.Array:
+				newFieldValue = reflect.New(fieldType)
+			}
+		}
+
 		err = model.Fields(fieldKeys).
 			Where(relatedSourceName, relatedTargetValue).
-			Scan(bindToReflectValue)
+			Scan(newFieldValue.Interface())
 		// It ignores sql.ErrNoRows in with feature.
 		if err != nil && err != sql.ErrNoRows {
 			return err
+		}
+
+		// 如果字段是指针类型的，并且是nil的话，需要重新使用反射赋值
+		// 如果是值类型的字段，经过bindToReflectValue.Addr()后就不是nil
+		if fieldIsPtrAndNil {
+			switch fieldKind {
+			case reflect.Ptr:
+				field.Value.Set(newFieldValue)
+			case reflect.Slice, reflect.Array:
+				field.Value.Set(newFieldValue.Elem())
+			}
 		}
 	}
 	return nil
