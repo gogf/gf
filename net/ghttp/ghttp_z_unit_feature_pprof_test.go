@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
 	. "github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
 )
@@ -54,5 +55,37 @@ func TestServer_EnablePProf(t *testing.T) {
 		Assert(r.StatusCode, 200)
 		r.Close()
 	})
+}
 
+func TestServer_StartPProfServer(t *testing.T) {
+	C(t, func(t *T) {
+		s, err := ghttp.StartPProfServer(":0")
+		t.AssertNil(err)
+
+		defer ghttp.ShutdownAllServer(ctx)
+
+		time.Sleep(100 * time.Millisecond)
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		r, err := client.Get(ctx, "/debug/pprof/index")
+		Assert(err, nil)
+		Assert(r.StatusCode, 200)
+		r.Close()
+
+		r, err = client.Get(ctx, "/debug/pprof/cmdline")
+		Assert(err, nil)
+		Assert(r.StatusCode, 200)
+		r.Close()
+
+		r, err = client.Get(ctx, "/debug/pprof/symbol")
+		Assert(err, nil)
+		Assert(r.StatusCode, 200)
+		r.Close()
+
+		r, err = client.Get(ctx, "/debug/pprof/trace")
+		Assert(err, nil)
+		Assert(r.StatusCode, 200)
+		r.Close()
+	})
 }
