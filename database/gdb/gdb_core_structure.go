@@ -381,6 +381,9 @@ func (c *Core) mappingAndFilterData(ctx context.Context, schema, table string, d
 	if err != nil {
 		return nil, err
 	}
+	if len(fieldsMap) == 0 {
+		return nil, gerror.Newf("The number of fields in the table %s is 0", table)
+	}
 	fieldsKeyMap := make(map[string]interface{}, len(fieldsMap))
 	for k := range fieldsMap {
 		fieldsKeyMap[k] = nil
