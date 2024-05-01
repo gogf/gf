@@ -9,6 +9,7 @@ package gdb
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"reflect"
 	"strings"
 	"sync"
@@ -25,7 +26,7 @@ func getTableName(pointerType reflect.Type) string {
 }
 
 type scanPointer struct {
-	// 只有scan时为true
+	// 只有在调用Scan时为true
 	scan    bool
 	pointer any
 }
@@ -130,10 +131,22 @@ func parseStruct(ctx context.Context, db DB, columnTypes []*sql.ColumnType) *Tab
 		fields:   fieldsInfo,
 		scanArgs: scanArgs,
 	}
-
-	scanCount := table.getStructFields(ctx, db, pointerType, []int{}, fieldsInfo)
+	existsColumn := make(map[string]struct{})
+	scanCount := table.getStructFields(ctx, db, pointerType, []int{}, existsColumn)
 	if scanCount == 0 {
 		return nil
+	}
+	// 主要是mssql 需要对比，其他的不需要
+	// mssql 使用带有limit order的查询时，会多一个字段出来出来，
+	for colName, field := range table.fields {
+		_, ok := existsColumn[colName]
+		if !ok {
+			fmt.Println(db.GetConfig().Type, ": getStructFields: Not Found :", colName)
+
+			delete(table.fields, colName)
+			// scanArgs不需要删除
+			table.scanArgs[field.ColumnFieldIndex] = new(any)
+		}
 	}
 
 	for i := 0; i < len(table.scanArgs); i++ {
@@ -147,10 +160,8 @@ func parseStruct(ctx context.Context, db DB, columnTypes []*sql.ColumnType) *Tab
 	return table
 }
 
-func (t *Table) getStructFields(ctx context.Context,
-	db DB, structType reflect.Type,
-	parentIndex []int, fieldsInfo map[string]*fieldConvertInfo) (scanCount int) {
-	existsColumn := map[string]struct{}{}
+func (t *Table) getStructFields(ctx context.Context, db DB, structType reflect.Type, parentIndex []int, existsColumn map[string]struct{}) (scanCount int) {
+
 	for i := 0; i < structType.NumField(); i++ {
 
 		field := structType.Field(i)
@@ -173,7 +184,7 @@ func (t *Table) getStructFields(ctx context.Context,
 			if field.Type.Kind() == reflect.Ptr {
 				field.Type = field.Type.Elem()
 			}
-			scanCount += t.getStructFields(ctx, db, field.Type, append(parentIndex, i), fieldsInfo)
+			scanCount += t.getStructFields(ctx, db, field.Type, append(parentIndex, i), existsColumn)
 			continue
 		}
 
@@ -203,10 +214,10 @@ func (t *Table) getStructFields(ctx context.Context,
 		)
 
 		if tag != "" {
-			fieldInfo, ok = fieldsInfo[tag]
+			fieldInfo, ok = t.fields[tag]
 			if !ok {
 				// 可能没有匹配到tag
-				fieldInfo, ok = fieldsInfo[field.Name]
+				fieldInfo, ok = t.fields[field.Name]
 				if ok {
 					tag = field.Name
 				}
@@ -218,7 +229,7 @@ func (t *Table) getStructFields(ctx context.Context,
 		if !ok {
 
 			removeSymbolsFieldName := utils.RemoveSymbols(field.Name)
-			for columnName, structField := range fieldsInfo {
+			for columnName, structField := range t.fields {
 				if _, exists := existsColumn[columnName]; exists {
 					continue
 				}
@@ -231,7 +242,6 @@ func (t *Table) getStructFields(ctx context.Context,
 					break
 				}
 			}
-
 		}
 
 		if ok {
@@ -256,12 +266,5 @@ func (t *Table) getStructFields(ctx context.Context,
 			existsColumn[tag] = struct{}{}
 		}
 	}
-
-	//for colName, _ := range fieldsInfo {
-	//	_, ok := existsColumn[colName]
-	//	if !ok {
-	//		delete(fieldsInfo, colName)
-	//	}
-	//}
 	return
 }
