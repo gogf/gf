@@ -281,7 +281,7 @@ func Test_DB_Delete(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Delete(ctx, table, "id>3")
-		t.AssertNE(err, nil)
+		t.Assert(err, nil)
 
 	})
 }
