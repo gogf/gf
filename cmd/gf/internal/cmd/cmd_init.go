@@ -64,8 +64,8 @@ func init() {
 type cInitInput struct {
 	g.Meta  `name:"init"`
 	Name    string `name:"NAME" arg:"true" v:"required" brief:"{cInitNameBrief}"`
-	Mono    bool   `name:"mono"   short:"m" brief:"initialize a mono-repo instead a single-repo" orphan:"true"`
-	MonoApp bool   `name:"mono-app"   short:"ma" brief:"initialize a mono-repo-app instead a single-repo" orphan:"true"`
+	Mono    bool   `name:"mono" short:"m" brief:"initialize a mono-repo instead a single-repo" orphan:"true"`
+	MonoApp bool   `name:"mono-app" short:"a" brief:"initialize a mono-repo-app instead a single-repo" orphan:"true"`
 	Update  bool   `name:"update" short:"u" brief:"update to the latest goframe version" orphan:"true"`
 	Module  string `name:"module" short:"g" brief:"custom go module"`
 }
@@ -107,7 +107,8 @@ func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err 
 	// build ignoreFiles from the .gitignore file
 	ignoreFiles := make([]string, 0, 10)
 	ignoreFiles = append(ignoreFiles, cInitGitDir)
-	if overwrote {
+	// in.MonoApp is a mono-repo-app, it should ignore the .gitignore file
+	if overwrote && !in.MonoApp {
 		err = gfile.ReadLines(gitignoreFile, func(line string) error {
 			// Add only hidden files or directories
 			// If other directories are added, it may cause the entire directory to be ignored
@@ -130,9 +131,9 @@ func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err 
 		in.Module = gfile.Basename(gfile.RealPath(in.Name))
 	}
 	if in.MonoApp {
-		tempName = cInitRepoPrefix + cInitMonoRepo + "/" + cInitMonoRepoApp
 		pwd := gfile.Pwd() + string(os.PathSeparator) + in.Name
-		in.Module = utils.GetImportPath(pwd) + "/" + in.Name
+		//in.Module = utils.GetImportPath(pwd) + "/" + in.Name
+		in.Module = utils.GetImportPath(pwd)
 	}
 
 	// Replace template name to project name.
