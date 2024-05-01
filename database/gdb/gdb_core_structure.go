@@ -283,6 +283,13 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 				return LocalTypeUint, nil
 			}
 			return LocalTypeInt, nil
+		case strings.Contains(typeName, "number"):
+			// oracle
+			// github.com/sijms/go-ora/v2@v2.7.10/data_set.go:412
+			// number(p,s)
+			// if p > 0 float64
+			// else int64
+			return LocalTypeFloat64, nil
 
 		case strings.Contains(typeName, "time"):
 			return LocalTypeDatetime, nil
