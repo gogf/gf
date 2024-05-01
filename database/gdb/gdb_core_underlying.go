@@ -439,12 +439,10 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 }
 
 func (c *Core) scanRowsToStruct(scanArgs []any, rows *sql.Rows, table *Table) (result Result, err error) {
-
 	for {
 		if err = rows.Scan(scanArgs...); err != nil {
 			return result, err
 		}
-
 		record := Record{}
 		val := reflect.Value{}
 		if table != nil {
@@ -459,9 +457,9 @@ func (c *Core) scanRowsToStruct(scanArgs []any, rows *sql.Rows, table *Table) (r
 					}
 					val = reflect.New(field.StructFieldType).Elem()
 					if field.isCustomConvert == false {
-						err = field.scanFunc(string(*v), val)
+						err = field.convertFunc(string(*v), val)
 					} else {
-						err = field.scanFunc(v, val)
+						err = field.convertFunc(v, val)
 					}
 				case *sql.NullTime:
 					if v.Valid == false {
@@ -469,7 +467,7 @@ func (c *Core) scanRowsToStruct(scanArgs []any, rows *sql.Rows, table *Table) (r
 						continue
 					}
 					val = reflect.New(field.StructFieldType).Elem()
-					err = field.scanFunc(v.Time, val)
+					err = field.convertFunc(v.Time, val)
 				}
 				if err != nil {
 					return result, err
@@ -490,7 +488,6 @@ func (c *Core) scanRowsToResult(ctx context.Context, scanArgs []any, rows *sql.R
 		if err = rows.Scan(scanArgs...); err != nil {
 			return result, err
 		}
-
 		record := Record{}
 		for i, value := range scanArgs {
 			arg := *value.(*any)

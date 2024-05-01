@@ -217,11 +217,13 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 	if err != nil {
 		return err
 	}
-	// *struct => struct
-	// **struct => *struct
-	elemType := reflect.TypeOf(pointer).Elem()
 
-	elemIsPtr := false
+	var (
+		// *struct => struct
+		// **struct => *struct
+		elemType  = reflect.TypeOf(pointer).Elem()
+		elemIsPtr = false
+	)
 
 	switch elemType.Kind() {
 	case reflect.Ptr:
@@ -231,8 +233,10 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 	case reflect.Struct:
 	}
 
-	var table *Table
-	tableName := getTableName(elemType)
+	var (
+		table     *Table
+		tableName = getTableName(elemType)
+	)
 	tableValue, ok := tablesMap.Load(tableName)
 	if ok {
 		// It needs to be deleted, otherwise it will cause
@@ -272,10 +276,7 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 			return err
 		}
 	}
-
-	err = model.doWithScanStruct(pointer)
-
-	return err
+	return model.doWithScanStruct(pointer)
 }
 
 // Structs retrieves records from table and converts them into given struct slice.
@@ -317,12 +318,15 @@ func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 	if err != nil {
 		return err
 	}
-	// *[]struct => []struct
-	elemType := reflect.TypeOf(pointer).Elem()
-	sliceType := elemType
-	elemIsPtr := false
+	var (
+		// *[]struct => []struct
+		elemType  = reflect.TypeOf(pointer).Elem()
+		sliceType = elemType
+		elemIsPtr = false
+	)
 	// []struct => struct
 	elemType = elemType.Elem()
+
 	switch elemType.Kind() {
 	case reflect.Ptr:
 		elemIsPtr = true
@@ -330,8 +334,11 @@ func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 	case reflect.Struct:
 	}
 
-	var table *Table
-	tableName := getTableName(elemType)
+	var (
+		table     *Table
+		tableName = getTableName(elemType)
+	)
+
 	tableValue, ok := tablesMap.Load(tableName)
 	if ok {
 		// It needs to be deleted, otherwise it will cause
@@ -347,7 +354,6 @@ func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 			// UnmarshalValue
 			fn, ok := structValue.Interface().(iUnmarshalValue)
 			if ok {
-
 				err = fn.UnmarshalValue(record)
 				if err != nil {
 					return err
@@ -376,9 +382,7 @@ func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 			return err
 		}
 	}
-	err = model.doWithScanStructs(pointer)
-
-	return err
+	return model.doWithScanStructs(pointer)
 }
 
 // Scan automatically calls Struct or Structs function according to the type of parameter `pointer`.

@@ -34,19 +34,18 @@ type scanPointer struct {
 	pointer any
 }
 
-type fieldScanFunc = func(src any, dst reflect.Value) error
+type fieldConvertFunc = func(src any, dst reflect.Value) error
 
-// todo 实现scan方法
 type fieldConvertInfo struct {
-	// table
+	// table field
 	ColumnField      string
 	ColumnFieldIndex int
 	ColumnFieldType  *sql.ColumnType
-	// struct
+	// struct field
 	StructField      reflect.StructField
 	StructFieldType  reflect.Type
 	StructFieldIndex []int
-	scanFunc         fieldScanFunc
+	convertFunc      fieldConvertFunc
 	// flag
 	isCustomConvert bool
 }
@@ -124,8 +123,12 @@ func parseStruct(ctx context.Context, db DB, columnTypes []*sql.ColumnType) *Tab
 		fields:   fieldsInfo,
 		scanArgs: scanArgs,
 	}
-	existsColumn := make(map[string]struct{})
-	scanCount := table.getStructFields(ctx, db, pointerType, []int{}, existsColumn)
+
+	var (
+		existsColumn = make(map[string]struct{})
+		scanCount    = table.getStructFields(ctx, db, pointerType, []int{}, existsColumn)
+	)
+
 	if scanCount == 0 {
 		return nil
 	}
@@ -153,9 +156,7 @@ func parseStruct(ctx context.Context, db DB, columnTypes []*sql.ColumnType) *Tab
 func (t *Table) getStructFields(ctx context.Context, db DB, structType reflect.Type, parentIndex []int, existsColumn map[string]struct{}) (scanCount int) {
 
 	for i := 0; i < structType.NumField(); i++ {
-
 		field := structType.Field(i)
-
 		if field.IsExported() == false {
 			continue
 		}
@@ -216,7 +217,6 @@ func (t *Table) getStructFields(ctx context.Context, db DB, structType reflect.T
 
 		// Neither the tag nor the field name matched
 		if !ok {
-
 			removeSymbolsFieldName := utils.RemoveSymbols(field.Name)
 			for columnName, structField := range t.fields {
 				if _, exists := existsColumn[columnName]; exists {
@@ -238,7 +238,7 @@ func (t *Table) getStructFields(ctx context.Context, db DB, structType reflect.T
 			fieldInfo.StructFieldType = field.Type
 			fieldInfo.StructField = field
 			var (
-				convertFn       fieldScanFunc
+				convertFn       fieldConvertFunc
 				tempArg         = any(&sql.RawBytes{})
 				isCustomConvert = true
 			)
@@ -249,7 +249,7 @@ func (t *Table) getStructFields(ctx context.Context, db DB, structType reflect.T
 				convertFn, tempArg = RegisterFieldConverterFunc(ctx, db, fieldInfo.ColumnFieldType, fieldInfo.StructField)
 			}
 			fieldInfo.isCustomConvert = isCustomConvert
-			fieldInfo.scanFunc = convertFn
+			fieldInfo.convertFunc = convertFn
 			t.scanArgs[fieldInfo.ColumnFieldIndex] = tempArg
 			scanCount++
 			existsColumn[tag] = struct{}{}

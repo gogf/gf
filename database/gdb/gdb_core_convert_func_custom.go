@@ -19,7 +19,7 @@ type iUnmarshalValue interface {
 	UnmarshalValue(val interface{}) error
 }
 
-func checkFieldImplConvertInterface(structField reflect.StructField) (fn fieldScanFunc, arg any) {
+func checkFieldImplConvertInterface(structField reflect.StructField) (fn fieldConvertFunc, arg any) {
 	var impl = reflect.Value{}
 	fieldType := structField.Type
 	isptr := fieldType.Kind() == reflect.Ptr
@@ -39,11 +39,10 @@ func checkFieldImplConvertInterface(structField reflect.StructField) (fn fieldSc
 	return
 }
 
-func getUnmarshalValueConvertFunc(isptr bool, typ reflect.Type) fieldScanFunc {
+func getUnmarshalValueConvertFunc(isptr bool, typ reflect.Type) fieldConvertFunc {
 	// The arguments of the custom type conversion function are all []byte, from SQL. RawBytes
 	if isptr == false {
 		return func(src any, dst reflect.Value) error {
-
 			fn, ok := dst.Addr().Interface().(iUnmarshalValue)
 			// todo: If the conversion is successful, you can cancel the check
 			if !ok {
@@ -67,7 +66,7 @@ func getUnmarshalValueConvertFunc(isptr bool, typ reflect.Type) fieldScanFunc {
 	}
 
 }
-func getSqlScannerConvertFunc(isptr bool, typ reflect.Type) fieldScanFunc {
+func getSqlScannerConvertFunc(isptr bool, typ reflect.Type) fieldConvertFunc {
 	// The arguments of the custom type conversion function are all []byte, from SQL. RawBytes
 	return func(src any, dst reflect.Value) error {
 		var (

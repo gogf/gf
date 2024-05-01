@@ -29,18 +29,14 @@ func parseFloat[T int64 | uint64 | float64](typ reflect.Type, val string, dst re
 	return nil
 }
 
-func getFloatConvertFunc(fieldType reflect.Type) fieldScanFunc {
+func getFloatConvertFunc(fieldType reflect.Type) fieldConvertFunc {
 
-	var convert func(originType, elemTyp reflect.Type) fieldScanFunc
-
-	convert = func(originType, elemTyp reflect.Type) fieldScanFunc {
-
+	convert := func(originType, elemTyp reflect.Type) fieldConvertFunc {
 		switch elemTyp.Kind() {
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 			return func(val any, dst reflect.Value) error {
 				return parseFloat[int64](originType, val.(string), dst, dst.SetInt)
 			}
-
 		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 			return func(val any, dst reflect.Value) error {
 				return parseFloat[uint64](originType, val.(string), dst, dst.SetUint)
@@ -55,7 +51,6 @@ func getFloatConvertFunc(fieldType reflect.Type) fieldScanFunc {
 				dst.SetString(val.(string))
 				return nil
 			}
-
 		default:
 			return nil
 		}
@@ -66,13 +61,12 @@ func getFloatConvertFunc(fieldType reflect.Type) fieldScanFunc {
 	default:
 		return convert(fieldType, fieldType)
 	}
-
 }
 
 func getIntegerConvertFunc[T int64 | uint64](fieldType reflect.Type,
-	parseFunc func(val string, base int, bitSize int) (T, error)) fieldScanFunc {
+	parseFunc func(val string, base int, bitSize int) (T, error)) fieldConvertFunc {
 	//
-	convert := func(originType, elemType reflect.Type, parseFunc func(val string, base int, bitSize int) (T, error)) fieldScanFunc {
+	convert := func(originType, elemType reflect.Type, parseFunc func(val string, base int, bitSize int) (T, error)) fieldConvertFunc {
 		switch elemType.Kind() {
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 			return func(val any, dst reflect.Value) error {
@@ -148,7 +142,7 @@ func getIntegerConvertFunc[T int64 | uint64](fieldType reflect.Type,
 
 }
 
-func getStringConvertFunc(fieldType reflect.Type) fieldScanFunc {
+func getStringConvertFunc(fieldType reflect.Type) fieldConvertFunc {
 
 	convertString := func(val any, dst reflect.Value) error {
 		if dst.Kind() == reflect.Ptr {
@@ -188,11 +182,10 @@ func getStringConvertFunc(fieldType reflect.Type) fieldScanFunc {
 	if convertJson != nil {
 		return convertJson
 	}
-
 	return nil
 }
 
-func getBoolConvertFunc(fieldType reflect.Type) fieldScanFunc {
+func getBoolConvertFunc(fieldType reflect.Type) fieldConvertFunc {
 
 	convertBool := func(val any, dst reflect.Value) error {
 		b, err := strconv.ParseBool(val.(string))
@@ -225,8 +218,8 @@ func getBoolConvertFunc(fieldType reflect.Type) fieldScanFunc {
 	return nil
 }
 
-func getTimeConvertFunc(fieldType reflect.Type) fieldScanFunc {
-	// 可能不同数据库存储的时间格式不一样
+func getTimeConvertFunc(fieldType reflect.Type) fieldConvertFunc {
+	// The time format may be different for different databases
 	switch fieldType.String() {
 	case "*time.Time":
 		return func(val any, dst reflect.Value) (err error) {
@@ -246,7 +239,6 @@ func getTimeConvertFunc(fieldType reflect.Type) fieldScanFunc {
 		}
 	case "time.Time":
 		return func(val any, dst reflect.Value) (err error) {
-
 			var t time.Time
 			switch v := val.(type) {
 			case time.Time:
@@ -278,9 +270,8 @@ func getTimeConvertFunc(fieldType reflect.Type) fieldScanFunc {
 	return nil
 }
 
-func getDecimalConvertFunc(fieldType reflect.Type) fieldScanFunc {
+func getDecimalConvertFunc(fieldType reflect.Type) fieldConvertFunc {
 	switch fieldType.Kind() {
-
 	case reflect.Float64, reflect.Float32:
 		return func(val any, dst reflect.Value) error {
 			v, _ := val.(string)
@@ -303,7 +294,6 @@ func getDecimalConvertFunc(fieldType reflect.Type) fieldScanFunc {
 		}
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		return func(val any, dst reflect.Value) error {
-
 			v, _ := val.(string)
 			n, err := strconv.ParseFloat(v, 64)
 			if err != nil {
@@ -312,7 +302,6 @@ func getDecimalConvertFunc(fieldType reflect.Type) fieldScanFunc {
 			dst.SetUint(uint64(n))
 			return nil
 		}
-
 	case reflect.String:
 		return func(val any, dst reflect.Value) error {
 			v, _ := val.(string)
@@ -324,8 +313,8 @@ func getDecimalConvertFunc(fieldType reflect.Type) fieldScanFunc {
 	}
 }
 
-// bit类型可以转换到任意整数类型，bool类型，string，[]byte,
-func getBitConvertFunc(fieldType reflect.Type) fieldScanFunc {
+// Bit types can be converted to arbitrary integer types, Boolean types, Stirling, [] bits,
+func getBitConvertFunc(fieldType reflect.Type) fieldConvertFunc {
 	switch fieldType.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return func(val any, dst reflect.Value) error {
@@ -353,7 +342,6 @@ func getBitConvertFunc(fieldType reflect.Type) fieldScanFunc {
 			return nil
 		}
 	// case reflect.Float32, reflect.Float64: // todo Does it support bit-to-float conversion?
-
 	case reflect.String:
 		return func(val any, dst reflect.Value) error {
 			v, _ := val.(string)
@@ -369,7 +357,6 @@ func getBitConvertFunc(fieldType reflect.Type) fieldScanFunc {
 				return nil
 			}
 		}
-
 	case reflect.Bool:
 		return func(val any, dst reflect.Value) error {
 			v, _ := val.(string)
@@ -381,7 +368,6 @@ func getBitConvertFunc(fieldType reflect.Type) fieldScanFunc {
 	default:
 		return nil
 	}
-
 	return nil
 }
 
@@ -390,7 +376,6 @@ func bitArrayToUint64(b []byte) uint64 {
 	for _, v := range b {
 		n = n<<8 | uint64(v)
 	}
-
 	return n
 }
 
@@ -399,7 +384,7 @@ func bitArrayToUint64(b []byte) uint64 {
 // map[string]any
 // []int, []string ... All base types of slices
 // []struct []*struct
-func getJsonConvertFunc(fieldType reflect.Type, errPanic bool) fieldScanFunc {
+func getJsonConvertFunc(fieldType reflect.Type, errPanic bool) fieldConvertFunc {
 
 	convertJson := func(val any, dst reflect.Value) error {
 		v, _ := val.(string)
@@ -412,7 +397,7 @@ func getJsonConvertFunc(fieldType reflect.Type, errPanic bool) fieldScanFunc {
 		return json.Unmarshal([]byte(v), dst.Addr().Interface())
 	}
 
-	check := func(typ reflect.Type) fieldScanFunc {
+	check := func(typ reflect.Type) fieldConvertFunc {
 		switch typ.Kind() {
 		case reflect.Map:
 			return convertJson

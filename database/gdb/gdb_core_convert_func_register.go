@@ -15,7 +15,7 @@ import (
 )
 
 func RegisterFieldConverterFunc(ctx context.Context, db DB,
-	tableField *sql.ColumnType, structField reflect.StructField) (convertFn fieldScanFunc, tempArg any) {
+	tableField *sql.ColumnType, structField reflect.StructField) (convertFn fieldConvertFunc, tempArg any) {
 	tempArg = &sql.RawBytes{}
 
 	tableFieldIsTimeType := func(typ reflect.Type) bool {
@@ -29,11 +29,8 @@ func RegisterFieldConverterFunc(ctx context.Context, db DB,
 			return false
 		}
 	}
-
 	tabFieldType := tableField
-
-	localType, err := db.CheckLocalTypeForField(ctx, tableField.DatabaseTypeName(), nil)
-	_ = err
+	localType, _ := db.CheckLocalTypeForField(ctx, tableField.DatabaseTypeName(), nil)
 
 	switch localType {
 	case LocalTypeBytes:
@@ -43,23 +40,14 @@ func RegisterFieldConverterFunc(ctx context.Context, db DB,
 		// To support string to other types of conversions, it must be compatible
 		// Cannot be converted to a numeric type
 		convertFn = getStringConvertFunc(structField.Type)
-
 	case LocalTypeInt, LocalTypeInt64:
-
 		convertFn = getIntegerConvertFunc[int64](structField.Type, strconv.ParseInt)
-
 	case LocalTypeUint, LocalTypeUint64:
 		convertFn = getIntegerConvertFunc[uint64](structField.Type, strconv.ParseUint)
-
-	case LocalTypeFloat32:
+	case LocalTypeFloat32, LocalTypeFloat64:
 		convertFn = getFloatConvertFunc(structField.Type)
-
-	case LocalTypeFloat64:
-		convertFn = getFloatConvertFunc(structField.Type)
-
 	case LocalTypeBool:
 		convertFn = getBoolConvertFunc(structField.Type)
-
 	case LocalTypeDate:
 		// The time format of different databases may be different, and the compatibility is not good enough
 		// Unified use of sql.RawBytes are received and processed by standard libraries or drivers
@@ -67,9 +55,7 @@ func RegisterFieldConverterFunc(ctx context.Context, db DB,
 		if ok {
 			tempArg = &sql.NullTime{}
 		}
-
 		convertFn = getTimeConvertFunc(structField.Type)
-
 	case LocalTypeDatetime:
 		// The time format of different databases may be different, and the compatibility is not good enough
 		// Unified use of sql.RawBytes are received and processed by standard libraries or drivers
@@ -80,17 +66,13 @@ func RegisterFieldConverterFunc(ctx context.Context, db DB,
 		convertFn = getTimeConvertFunc(structField.Type)
 	case LocalTypeDecimal: // float
 		convertFn = getDecimalConvertFunc(structField.Type)
-
 	case LocalTypeInt64Bytes:
 		convertFn = getBitConvertFunc(structField.Type)
-
 	case LocalTypeJson:
 		convertFn = getJsonConvertFunc(structField.Type, true)
 	case LocalTypeJsonb:
 		convertFn = getJsonConvertFunc(structField.Type, true)
-
 	default:
-
 	}
 	if convertFn == nil {
 		panic(&typeConvertError{
