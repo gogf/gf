@@ -42,6 +42,7 @@ const (
 	cInitEg          = `
 gf init my-project
 gf init my-mono-repo -m
+gf init my-mono-repo -a
 `
 	cInitNameBrief = `
 name for the project. It will create a folder with NAME in current directory.
@@ -126,13 +127,11 @@ func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err 
 	}
 
 	// Get template name and module name.
-	tempName := cInitRepoPrefix + templateRepoName
 	if in.Module == "" {
 		in.Module = gfile.Basename(gfile.RealPath(in.Name))
 	}
 	if in.MonoApp {
 		pwd := gfile.Pwd() + string(os.PathSeparator) + in.Name
-		//in.Module = utils.GetImportPath(pwd) + "/" + in.Name
 		in.Module = utils.GetImportPath(pwd)
 	}
 
@@ -143,7 +142,7 @@ func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err 
 				return content
 			}
 		}
-		return gstr.Replace(gfile.GetContents(path), tempName, in.Module)
+		return gstr.Replace(gfile.GetContents(path), cInitRepoPrefix+templateRepoName, in.Module)
 	}, in.Name, "*", true)
 	if err != nil {
 		return
