@@ -235,14 +235,15 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 	tableName := getTableName(elemType)
 	tableValue, ok := tablesMap.Load(tableName)
 	if ok {
-		// 删掉
+		// It needs to be deleted, otherwise it will cause
+		// conflicts as long as the struct name is the same within different functions during testing
 		defer tablesMap.Delete(tableName)
 
 		table = tableValue.(*Table)
 		structPointerValue := reflect.ValueOf(pointer).Elem()
 
 		var structValue = reflect.New(elemType)
-		// UnmarshalValue 接口
+		// UnmarshalValue
 		fn, ok := structValue.Interface().(iUnmarshalValue)
 		if ok {
 			err = fn.UnmarshalValue(one)
@@ -260,12 +261,10 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 				}
 				fieldValue.Set(reflect.ValueOf(value.Val()))
 			}
-
 		}
 		if elemIsPtr {
 			structValue = structValue.Addr()
 		}
-
 		structPointerValue.Set(structValue)
 
 	} else {
@@ -335,7 +334,8 @@ func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 	tableName := getTableName(elemType)
 	tableValue, ok := tablesMap.Load(tableName)
 	if ok {
-		// 删掉
+		// It needs to be deleted, otherwise it will cause
+		// conflicts as long as the struct name is the same within different functions during testing
 		defer tablesMap.Delete(tableName)
 		//
 		table = tableValue.(*Table)
@@ -344,7 +344,7 @@ func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 
 		for _, record := range all {
 			var structValue = reflect.New(elemType)
-			// UnmarshalValue 接口
+			// UnmarshalValue
 			fn, ok := structValue.Interface().(iUnmarshalValue)
 			if ok {
 
@@ -363,15 +363,14 @@ func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 					}
 					fieldValue.Set(reflect.ValueOf(val))
 				}
-
 			}
 			if elemIsPtr {
 				structValue = structValue.Addr()
 			}
-
 			sliceValue = reflect.Append(sliceValue, structValue)
 		}
 		slicePtr.Elem().Set(sliceValue)
+
 	} else {
 		if err = all.Structs(pointer); err != nil {
 			return err
