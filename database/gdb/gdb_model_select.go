@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/frame/g"
+
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -219,7 +219,7 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 		return err
 	}
 	fmt.Println("doStruct=======")
-	g.Dump(one)
+	fmt.Println(one)
 	fmt.Println("doStruct=======")
 	var (
 		// *struct => struct
