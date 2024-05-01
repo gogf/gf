@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -217,7 +218,9 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 	if err != nil {
 		return err
 	}
-
+	fmt.Println("doStruct=======")
+	g.Dump(one)
+	fmt.Println("doStruct=======")
 	var (
 		// *struct => struct
 		// **struct => *struct
@@ -263,6 +266,7 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 				if value == nil {
 					continue
 				}
+				fmt.Println("doStruct col=", colName, value, value.Val())
 				fieldValue.Set(reflect.ValueOf(value.Val()))
 			}
 		}
