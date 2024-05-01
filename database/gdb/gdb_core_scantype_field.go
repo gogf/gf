@@ -11,9 +11,18 @@ import (
 	"database/sql"
 	"reflect"
 	"strings"
+	"sync"
 
 	"github.com/gogf/gf/v2/internal/utils"
 )
+
+var (
+	tablesMap sync.Map
+)
+
+func getTableName(pointerType reflect.Type) string {
+	return pointerType.PkgPath() + "." + pointerType.Name()
+}
 
 type scanPointer struct {
 	// 只有scan时为true
@@ -23,6 +32,7 @@ type scanPointer struct {
 
 const (
 	scanPointerCtxKey = "gf.orm.scan.ctx.key"
+	scanTableCtxKey   = "gf.orm.scan.table"
 )
 
 type fieldScanFunc func(src any, dst reflect.Value) error
@@ -40,8 +50,11 @@ type fieldConvertInfo struct {
 	scanFunc         fieldScanFunc
 	// flag
 	isCustomConvert bool
-	isptr           bool
-	isnil           bool
+	// 后续会被删除
+	isUnmarshalValue bool
+	isSqlScanner     bool
+	isptr            bool
+	isnil            bool
 }
 
 // GetReflectValue 此方法只是复制了reflect.Value.FieldByIndex,并做了一些改造
@@ -66,9 +79,9 @@ func (c *fieldConvertInfo) GetReflectValue(structValue reflect.Value) reflect.Va
 
 type Table struct {
 	// tableField
-	fields    map[string]*fieldConvertInfo
-	scanIndex int
-	scanArgs  []any
+	fields map[string]*fieldConvertInfo
+	// 用来接收驱动的临时参数
+	scanArgs []any
 }
 
 func parseStruct(ctx context.Context, db DB, columnTypes []*sql.ColumnType) *Table {
@@ -81,6 +94,26 @@ func parseStruct(ctx context.Context, db DB, columnTypes []*sql.ColumnType) *Tab
 		return nil
 	}
 	pointer := val.pointer
+
+	pointerType := reflect.TypeOf(pointer).Elem()
+	switch pointerType.Kind() {
+	case reflect.Array, reflect.Slice:
+		// 1.[]*struct => *struct
+		// 2.[]struct => struct
+		pointerType = pointerType.Elem()
+		if pointerType.Kind() == reflect.Ptr {
+			pointerType = pointerType.Elem()
+		}
+	case reflect.Ptr: // **struct
+		pointerType = pointerType.Elem()
+	}
+
+	tableName := getTableName(pointerType)
+	tableValue, ok := tablesMap.Load(tableName)
+	if ok {
+		return tableValue.(*Table)
+	}
+
 	var (
 		scanArgs   = make([]any, len(columnTypes))
 		fieldsInfo = make(map[string]*fieldConvertInfo)
@@ -93,39 +126,30 @@ func parseStruct(ctx context.Context, db DB, columnTypes []*sql.ColumnType) *Tab
 		}
 	}
 
-	pointerType := reflect.TypeOf(pointer).Elem()
-
-	switch pointerType.Kind() {
-	case reflect.Array, reflect.Slice:
-		// 1.[]*struct => *struct
-		// 2.[]struct => struct
-		pointerType = pointerType.Elem()
-		if pointerType.Kind() == reflect.Ptr {
-			pointerType = pointerType.Elem()
-		}
-	case reflect.Ptr: // **struct
-		pointerType = pointerType.Elem()
+	table := &Table{
+		fields:   fieldsInfo,
+		scanArgs: scanArgs,
 	}
-	scanCount := getStructFields(ctx, db, pointerType, []int{}, scanArgs, fieldsInfo)
+
+	scanCount := table.getStructFields(ctx, db, pointerType, []int{}, fieldsInfo)
 	if scanCount == 0 {
 		return nil
 	}
-	for i := range scanArgs {
+
+	for i := 0; i < len(table.scanArgs); i++ {
 		if scanArgs[i] == nil {
-			scanArgs[i] = &sql.RawBytes{}
+			table.scanArgs[i] = &sql.RawBytes{}
 		}
 	}
 
-	return &Table{
-		fields:    fieldsInfo,
-		scanIndex: 0,
-		scanArgs:  scanArgs,
-	}
+	tablesMap.Store(tableName, table)
+
+	return table
 }
 
-func getStructFields(ctx context.Context,
+func (t *Table) getStructFields(ctx context.Context,
 	db DB, structType reflect.Type,
-	parentIndex []int, scanArgs []any, fieldsInfo map[string]*fieldConvertInfo) (scanCount int) {
+	parentIndex []int, fieldsInfo map[string]*fieldConvertInfo) (scanCount int) {
 	existsColumn := map[string]struct{}{}
 	for i := 0; i < structType.NumField(); i++ {
 
@@ -149,7 +173,7 @@ func getStructFields(ctx context.Context,
 			if field.Type.Kind() == reflect.Ptr {
 				field.Type = field.Type.Elem()
 			}
-			scanCount += getStructFields(ctx, db, field.Type, append(parentIndex, i), scanArgs, fieldsInfo)
+			scanCount += t.getStructFields(ctx, db, field.Type, append(parentIndex, i), fieldsInfo)
 			continue
 		}
 
@@ -227,8 +251,16 @@ func getStructFields(ctx context.Context,
 			}
 			fieldInfo.isCustomConvert = isCustomConvert
 			fieldInfo.scanFunc = convertFn
-			scanArgs[fieldInfo.ColumnFieldIndex] = tempArg
+			t.scanArgs[fieldInfo.ColumnFieldIndex] = tempArg
 			scanCount++
+			existsColumn[tag] = struct{}{}
+		}
+	}
+
+	for colName, _ := range fieldsInfo {
+		_, ok := existsColumn[colName]
+		if !ok {
+			delete(fieldsInfo, colName)
 		}
 	}
 	return

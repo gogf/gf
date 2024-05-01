@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"context"
+
 	"fmt"
 	"reflect"
 
@@ -216,10 +217,66 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 	if err != nil {
 		return err
 	}
-	if err = one.Struct(pointer); err != nil {
-		return err
+	// *struct => struct
+	// **struct => *struct
+	elemType := reflect.TypeOf(pointer).Elem()
+
+	elemIsPtr := false
+
+	switch elemType.Kind() {
+	case reflect.Ptr:
+		elemIsPtr = true
+		// *struct => struct
+		elemType = elemType.Elem()
+	case reflect.Struct:
 	}
-	return model.doWithScanStruct(pointer)
+
+	var table *Table
+	tableName := getTableName(elemType)
+	tableValue, ok := tablesMap.Load(tableName)
+	if ok {
+		// 删掉
+		defer tablesMap.Delete(tableName)
+
+		table = tableValue.(*Table)
+		structPointerValue := reflect.ValueOf(pointer).Elem()
+
+		var structValue = reflect.New(elemType)
+		// UnmarshalValue 接口
+		fn, ok := structValue.Interface().(iUnmarshalValue)
+		if ok {
+			err = fn.UnmarshalValue(one)
+			if err != nil {
+				return err
+			}
+			structValue = structValue.Elem()
+		} else {
+			structValue = structValue.Elem()
+			for colName, field := range table.fields {
+				fieldValue := field.GetReflectValue(structValue)
+				value := one[colName]
+				if value == nil {
+					continue
+				}
+				fieldValue.Set(reflect.ValueOf(value.Val()))
+			}
+
+		}
+		if elemIsPtr {
+			structValue = structValue.Addr()
+		}
+
+		structPointerValue.Set(structValue)
+
+	} else {
+		if err = one.Struct(pointer); err != nil {
+			return err
+		}
+	}
+
+	err = model.doWithScanStruct(pointer)
+
+	return err
 }
 
 // Structs retrieves records from table and converts them into given struct slice.
@@ -261,10 +318,68 @@ func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 	if err != nil {
 		return err
 	}
-	if err = all.Structs(pointer); err != nil {
-		return err
+	// *[]struct => []struct
+	elemType := reflect.TypeOf(pointer).Elem()
+	sliceType := elemType
+	elemIsPtr := false
+	// []struct => struct
+	elemType = elemType.Elem()
+	switch elemType.Kind() {
+	case reflect.Ptr:
+		elemIsPtr = true
+		elemType = elemType.Elem()
+	case reflect.Struct:
 	}
-	return model.doWithScanStructs(pointer)
+
+	var table *Table
+	tableName := getTableName(elemType)
+	tableValue, ok := tablesMap.Load(tableName)
+	if ok {
+		// 删掉
+		defer tablesMap.Delete(tableName)
+		//
+		table = tableValue.(*Table)
+		slicePtr := reflect.ValueOf(pointer)
+		sliceValue := reflect.MakeSlice(sliceType, 0, len(all))
+
+		for _, record := range all {
+			var structValue = reflect.New(elemType)
+			// UnmarshalValue 接口
+			fn, ok := structValue.Interface().(iUnmarshalValue)
+			if ok {
+
+				err = fn.UnmarshalValue(record)
+				if err != nil {
+					return err
+				}
+				structValue = structValue.Elem()
+			} else {
+				structValue = structValue.Elem()
+				for colName, field := range table.fields {
+					fieldValue := field.GetReflectValue(structValue)
+					val := record[colName].Val()
+					if val == nil {
+						continue
+					}
+					fieldValue.Set(reflect.ValueOf(val))
+				}
+
+			}
+			if elemIsPtr {
+				structValue = structValue.Addr()
+			}
+
+			sliceValue = reflect.Append(sliceValue, structValue)
+		}
+		slicePtr.Elem().Set(sliceValue)
+	} else {
+		if err = all.Structs(pointer); err != nil {
+			return err
+		}
+	}
+	err = model.doWithScanStructs(pointer)
+
+	return err
 }
 
 // Scan automatically calls Struct or Structs function according to the type of parameter `pointer`.

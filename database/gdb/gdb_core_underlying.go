@@ -424,6 +424,7 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 
 	table := parseStruct(ctx, c.db, columnTypes)
 	if table != nil {
+
 		return c.scanRowsToStruct(table.scanArgs, rows, table)
 	}
 	var (
@@ -438,7 +439,6 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 }
 
 func (c *Core) scanRowsToStruct(scanArgs []any, rows *sql.Rows, table *Table) (result Result, err error) {
-	var ()
 
 	for {
 		if err = rows.Scan(scanArgs...); err != nil {

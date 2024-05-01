@@ -18,6 +18,28 @@ type iUnmarshalValue interface {
 	UnmarshalValue(val interface{}) error
 }
 
+// fn = 1 iUnmarshalValue
+// fn = 2 sql.Scanner
+func checkFieldImplConvertInterface2(fieldType reflect.Type) (fn int, isptr bool) {
+	var impl = reflect.Value{}
+	fn = -1
+	isptr = fieldType.Kind() == reflect.Ptr
+	if fieldType.Kind() != reflect.Ptr {
+		impl = reflect.New(fieldType)
+	} else {
+		impl = reflect.New(fieldType.Elem())
+	}
+
+	// 可能会导致顺序差异
+	switch impl.Interface().(type) {
+	case iUnmarshalValue:
+		fn = 1
+	case sql.Scanner:
+		fn = 2
+	}
+	return
+}
+
 // 自定义类型转换函数的参数全部都是[]byte， 从sql.RawBytes转换而来
 
 func checkFieldImplConvertInterface(structField reflect.StructField) (fn fieldScanFunc, arg any) {
