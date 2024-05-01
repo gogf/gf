@@ -8,7 +8,6 @@ package gdb
 
 import (
 	"database/sql"
-	"fmt"
 	"reflect"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -141,7 +140,6 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 		bindToReflectValue := field.Value
 		if bindToReflectValue.Kind() != reflect.Ptr && bindToReflectValue.CanAddr() {
 			bindToReflectValue = bindToReflectValue.Addr()
-			fmt.Println("with field is ptr=", field.Name(), bindToReflectValue)
 		}
 
 		// It automatically retrieves struct field names from current attribute struct/slice.
@@ -168,15 +166,14 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 		if m.cacheEnabled && m.cacheOption.Name == "" {
 			model = model.Cache(m.cacheOption)
 		}
-		fmt.Println("with field is nil=", field.IsNil(), field.Name(), field.Type())
 
 		var (
 			fieldIsPtrAndNil = bindToReflectValue.IsNil()
 			fieldKind        = bindToReflectValue.Kind()
 			newFieldValue    = bindToReflectValue
 		)
-		// 如果字段是指针类型的，并且是nil的话，需要使用反射创建一个
-		// 如果是值类型的字段，经过bindToReflectValue.Addr()后就不是nil
+		// If the field is of the pointer type and is nil, you will need to re-use the reflection assignment
+		// If it's a value-type field, it's not nil after bindToReflectValue.Addr().
 		//type  _ struct {
 		//	A int   => Addr().IsNil() = false
 		//	B *int  => Addr().IsNil() = true
@@ -201,8 +198,8 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 			return err
 		}
 
-		// 如果字段是指针类型的，并且是nil的话，需要重新使用反射赋值
-		// 如果是值类型的字段，经过bindToReflectValue.Addr()后就不是nil
+		// If the field is of the pointer type and is nil, you will need to re-use the reflection assignment
+		// If it's a value-type field, it's not nil after bindToReflectValue.Addr().
 		if fieldIsPtrAndNil {
 			switch fieldKind {
 			case reflect.Ptr:
