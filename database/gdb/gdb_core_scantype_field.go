@@ -257,11 +257,11 @@ func (t *Table) getStructFields(ctx context.Context,
 		}
 	}
 
-	for colName, _ := range fieldsInfo {
-		_, ok := existsColumn[colName]
-		if !ok {
-			delete(fieldsInfo, colName)
-		}
-	}
+	//for colName, _ := range fieldsInfo {
+	//	_, ok := existsColumn[colName]
+	//	if !ok {
+	//		delete(fieldsInfo, colName)
+	//	}
+	//}
 	return
 }
