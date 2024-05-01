@@ -1627,6 +1627,7 @@ func Test_Types(t *testing.T) {
 		t.AssertNil(err)
 		t.Log("version=", res)
 		err = db.Model("types").Scan(&obj)
+		t.Log("date=", data["date"], obj.Date)
 		t.AssertNil(err)
 		t.Assert(obj.Id, 1)
 		t.Assert(obj.Blob, data["blob"])
