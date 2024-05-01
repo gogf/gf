@@ -1623,7 +1623,11 @@ func Test_Types(t *testing.T) {
 		}
 		var obj *T
 		err = db.Model("types").Scan(&obj)
-		t.Log("obj.Date=", obj.Date)
+		now, err := db.Query(ctx, "select now();")
+		t.Log("mysql now=", now, err)
+		zone, err := db.Query(ctx, "SHOW  VARIABLES LIKE '%time_zone';")
+		t.Log("mysql zone=", zone, err)
+
 		t.AssertNil(err)
 		t.Assert(obj.Id, 1)
 		t.Assert(obj.Blob, data["blob"])

@@ -422,7 +422,7 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 		}
 	}
 
-	table := parseStruct(ctx, c.db, columnTypes)
+	table := parseStruct(ctx, c.GetDB(), columnTypes)
 	if table != nil {
 
 		return c.scanRowsToStruct(table.scanArgs, rows, table)
@@ -459,6 +459,7 @@ func (c *Core) scanRowsToStruct(scanArgs []any, rows *sql.Rows, table *Table) (r
 					if field.isCustomConvert == false {
 						err = field.convertFunc(string(*v), val)
 					} else {
+						fmt.Println("scanRowsToStruct.colname=", tableFieldName, string(*v))
 						err = field.convertFunc(v, val)
 					}
 				case *sql.NullTime:

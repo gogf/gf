@@ -218,9 +218,6 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("doStruct=======")
-	fmt.Println(one)
-	fmt.Println("doStruct=======")
 	var (
 		// *struct => struct
 		// **struct => *struct
@@ -266,7 +263,6 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 				if value == nil {
 					continue
 				}
-				fmt.Println("doStruct col=", colName, value, value.Val())
 				fieldValue.Set(reflect.ValueOf(value.Val()))
 			}
 		}
