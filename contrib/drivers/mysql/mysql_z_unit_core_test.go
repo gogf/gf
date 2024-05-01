@@ -1622,6 +1622,10 @@ func Test_Types(t *testing.T) {
 			TinyInt   bool
 		}
 		var obj *T
+		t.Log(db.GetConfig())
+		res, err := db.Query(ctx, "select version();")
+		t.AssertNil(err)
+		t.Log("version=", res)
 		err = db.Model("types").Scan(&obj)
 		t.AssertNil(err)
 		t.Assert(obj.Id, 1)
