@@ -9,7 +9,6 @@ package gdb
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"reflect"
 	"strings"
 	"sync"
@@ -21,22 +20,21 @@ var (
 	tablesMap sync.Map
 )
 
+const (
+	scanPointerCtxKey = "gf.orm.scan.ctx.key"
+)
+
 func getTableName(pointerType reflect.Type) string {
 	return pointerType.PkgPath() + "." + pointerType.Name()
 }
 
 type scanPointer struct {
-	// 只有在调用Scan时为true
+	// True only when Scan is called
 	scan    bool
 	pointer any
 }
 
-const (
-	scanPointerCtxKey = "gf.orm.scan.ctx.key"
-	scanTableCtxKey   = "gf.orm.scan.table"
-)
-
-type fieldScanFunc func(src any, dst reflect.Value) error
+type fieldScanFunc = func(src any, dst reflect.Value) error
 
 // todo 实现scan方法
 type fieldConvertInfo struct {
@@ -51,14 +49,9 @@ type fieldConvertInfo struct {
 	scanFunc         fieldScanFunc
 	// flag
 	isCustomConvert bool
-	// 后续会被删除
-	isUnmarshalValue bool
-	isSqlScanner     bool
-	isptr            bool
-	isnil            bool
 }
 
-// GetReflectValue 此方法只是复制了reflect.Value.FieldByIndex,并做了一些改造
+// GetReflectValue  reflect.Value.FieldByIndex
 func (c *fieldConvertInfo) GetReflectValue(structValue reflect.Value) reflect.Value {
 	if len(c.StructFieldIndex) == 1 {
 		return structValue.Field(c.StructFieldIndex[0])
@@ -81,7 +74,7 @@ func (c *fieldConvertInfo) GetReflectValue(structValue reflect.Value) reflect.Va
 type Table struct {
 	// tableField
 	fields map[string]*fieldConvertInfo
-	// 用来接收驱动的临时参数
+	// Temporary parameters used to receive the driver
 	scanArgs []any
 }
 
@@ -136,15 +129,13 @@ func parseStruct(ctx context.Context, db DB, columnTypes []*sql.ColumnType) *Tab
 	if scanCount == 0 {
 		return nil
 	}
-	// 主要是mssql 需要对比，其他的不需要
-	// mssql 使用带有limit order的查询时，会多一个字段出来出来，
+	// Mainly mssql needs to be compared, and the others are not
+	// When mssql uses a query with limit order, one more field will come out.
 	for colName, field := range table.fields {
 		_, ok := existsColumn[colName]
 		if !ok {
-			fmt.Println(db.GetConfig().Type, ": getStructFields: Not Found :", colName)
-
 			delete(table.fields, colName)
-			// scanArgs不需要删除
+			// scanArgs do not need to be deleted
 			table.scanArgs[field.ColumnFieldIndex] = new(any)
 		}
 	}
@@ -156,7 +147,6 @@ func parseStruct(ctx context.Context, db DB, columnTypes []*sql.ColumnType) *Tab
 	}
 
 	tablesMap.Store(tableName, table)
-
 	return table
 }
 
@@ -216,7 +206,7 @@ func (t *Table) getStructFields(ctx context.Context, db DB, structType reflect.T
 		if tag != "" {
 			fieldInfo, ok = t.fields[tag]
 			if !ok {
-				// 可能没有匹配到tag
+				// There may not be a match to the tag
 				fieldInfo, ok = t.fields[field.Name]
 				if ok {
 					tag = field.Name
@@ -224,8 +214,7 @@ func (t *Table) getStructFields(ctx context.Context, db DB, structType reflect.T
 			}
 		}
 
-		// tag 和字段名都没有匹配到
-		// todo 如果没有匹配到，则不设置
+		// Neither the tag nor the field name matched
 		if !ok {
 
 			removeSymbolsFieldName := utils.RemoveSymbols(field.Name)
@@ -253,7 +242,7 @@ func (t *Table) getStructFields(ctx context.Context, db DB, structType reflect.T
 				tempArg         = any(&sql.RawBytes{})
 				isCustomConvert = true
 			)
-			// 检查自定义转换接口实现
+			// Check the custom translation interface implementation
 			convertFn, _ = checkFieldImplConvertInterface(field)
 			if convertFn == nil {
 				isCustomConvert = false

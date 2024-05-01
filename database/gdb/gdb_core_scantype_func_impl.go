@@ -57,7 +57,7 @@ func getFloatConvertFunc(fieldType reflect.Type) fieldScanFunc {
 			}
 
 		default:
-			panic(fmt.Errorf("不支持从float类型转换到%v", fieldType))
+			return nil
 		}
 	}
 	switch fieldType.Kind() {
@@ -135,7 +135,7 @@ func getIntegerConvertFunc[T int64 | uint64](fieldType reflect.Type,
 				return nil
 			}
 		default:
-			panic(fmt.Errorf("不支持从int类型转换到%v", fieldType))
+			return nil
 		}
 	}
 
@@ -175,7 +175,7 @@ func getStringConvertFunc(fieldType reflect.Type) fieldScanFunc {
 			}
 		}
 	case reflect.Array:
-		// 检查长度是否相同，如果不同，则不转换
+		// Check if the length is the same, if not, don't convert
 	case reflect.Ptr:
 		if fieldType.Elem().Kind() == reflect.String {
 			return convertString
@@ -183,7 +183,7 @@ func getStringConvertFunc(fieldType reflect.Type) fieldScanFunc {
 	default:
 		// convert to int
 	}
-	// 支持将字符串转换到结构体，切片 map，符合json格式的数据即可
+	// Support converting strings to structs, slicing maps, and data in JSON format
 	convertJson := getJsonConvertFunc(fieldType, false)
 	if convertJson != nil {
 		return convertJson
@@ -222,7 +222,7 @@ func getBoolConvertFunc(fieldType reflect.Type) fieldScanFunc {
 			return convertBool
 		}
 	}
-	panic(fmt.Errorf("不支持从bool类型转换到%v", fieldType))
+	return nil
 }
 
 func getTimeConvertFunc(fieldType reflect.Type) fieldScanFunc {
@@ -235,7 +235,6 @@ func getTimeConvertFunc(fieldType reflect.Type) fieldScanFunc {
 			case time.Time:
 				t = v
 			case string:
-				// mysql time(10:01:01)类型会被转换为[]byte
 				t, err = parseTime(v)
 				if err != nil {
 					return err
@@ -243,7 +242,6 @@ func getTimeConvertFunc(fieldType reflect.Type) fieldScanFunc {
 			}
 			ptr := dst.Interface().(*time.Time)
 			*ptr = t
-			// dst.Set(reflect.ValueOf(&t))
 			return nil
 		}
 	case "time.Time":
@@ -254,7 +252,6 @@ func getTimeConvertFunc(fieldType reflect.Type) fieldScanFunc {
 			case time.Time:
 				t = v
 			case string:
-				// mysql time(10:01:01)类型会被转换为[]byte
 				t, err = parseTime(v)
 				if err != nil {
 					return err
@@ -262,12 +259,11 @@ func getTimeConvertFunc(fieldType reflect.Type) fieldScanFunc {
 			}
 			ptr := dst.Addr().Interface().(*time.Time)
 			*ptr = t
-			// dst.Set(reflect.ValueOf(t))
 			return nil
 		}
 	default:
 		if fieldType.Kind() == reflect.String {
-			// TODO 可以格式化一下
+			// TODO Does formatting need to be done?
 			return func(val any, dst reflect.Value) (err error) {
 				switch v := val.(type) {
 				case time.Time:
@@ -279,7 +275,7 @@ func getTimeConvertFunc(fieldType reflect.Type) fieldScanFunc {
 			}
 		}
 	}
-	panic(fmt.Errorf("不支持从time类型转换到%v", fieldType))
+	return nil
 }
 
 func getDecimalConvertFunc(fieldType reflect.Type) fieldScanFunc {
@@ -324,8 +320,7 @@ func getDecimalConvertFunc(fieldType reflect.Type) fieldScanFunc {
 			return nil
 		}
 	default:
-		// todo 是否需要支持第三方库的decimal 类型
-		panic(fmt.Errorf("不支持从decimal类型转换到%v", fieldType))
+		return nil
 	}
 }
 
@@ -357,9 +352,9 @@ func getBitConvertFunc(fieldType reflect.Type) fieldScanFunc {
 			dst.SetUint(bitArrayToUint64([]byte(v)))
 			return nil
 		}
-	// case reflect.Float32, reflect.Float64: // todo 是否支持bit转换到float?
+	// case reflect.Float32, reflect.Float64: // todo Does it support bit-to-float conversion?
 
-	case reflect.String: // todo 如果是字符串，是否需要将 1 转为'1' ？
+	case reflect.String:
 		return func(val any, dst reflect.Value) error {
 			v, _ := val.(string)
 			dst.SetString(v)
@@ -374,7 +369,7 @@ func getBitConvertFunc(fieldType reflect.Type) fieldScanFunc {
 				return nil
 			}
 		}
-		panic(fmt.Errorf("不支持从bit类型转换到%v", fieldType))
+
 	case reflect.Bool:
 		return func(val any, dst reflect.Value) error {
 			v, _ := val.(string)
@@ -384,7 +379,7 @@ func getBitConvertFunc(fieldType reflect.Type) fieldScanFunc {
 			return nil
 		}
 	default:
-		panic(fmt.Errorf("不支持从bit类型转换到%v", fieldType))
+		return nil
 	}
 
 	return nil
@@ -399,10 +394,10 @@ func bitArrayToUint64(b []byte) uint64 {
 	return n
 }
 
-// json 可以转换到以下类型之一,调用标准库的json.Marshal
+// json It can be converted to one of the following types, calling the standard library's json. Marshal
 // struct *struct
 // map[string]any
-// []int, []string 所有基础类型的切片
+// []int, []string ... All base types of slices
 // []struct []*struct
 func getJsonConvertFunc(fieldType reflect.Type, errPanic bool) fieldScanFunc {
 

@@ -474,9 +474,7 @@ func (c *Core) scanRowsToStruct(scanArgs []any, rows *sql.Rows, table *Table) (r
 				if err != nil {
 					return result, err
 				}
-
 				record[tableFieldName] = gvar.New(val.Interface())
-
 			}
 		}
 		result = append(result, record)

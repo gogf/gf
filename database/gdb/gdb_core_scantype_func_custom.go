@@ -8,8 +8,9 @@ package gdb
 
 import (
 	"database/sql"
-	"fmt"
 	"reflect"
+
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 // iUnmarshalValue is the interface for custom defined types customizing value assignment.
@@ -17,30 +18,6 @@ import (
 type iUnmarshalValue interface {
 	UnmarshalValue(val interface{}) error
 }
-
-// fn = 1 iUnmarshalValue
-// fn = 2 sql.Scanner
-func checkFieldImplConvertInterface2(fieldType reflect.Type) (fn int, isptr bool) {
-	var impl = reflect.Value{}
-	fn = -1
-	isptr = fieldType.Kind() == reflect.Ptr
-	if fieldType.Kind() != reflect.Ptr {
-		impl = reflect.New(fieldType)
-	} else {
-		impl = reflect.New(fieldType.Elem())
-	}
-
-	// 可能会导致顺序差异
-	switch impl.Interface().(type) {
-	case iUnmarshalValue:
-		fn = 1
-	case sql.Scanner:
-		fn = 2
-	}
-	return
-}
-
-// 自定义类型转换函数的参数全部都是[]byte， 从sql.RawBytes转换而来
 
 func checkFieldImplConvertInterface(structField reflect.StructField) (fn fieldScanFunc, arg any) {
 	var impl = reflect.Value{}
@@ -52,7 +29,7 @@ func checkFieldImplConvertInterface(structField reflect.StructField) (fn fieldSc
 		impl = reflect.New(fieldType.Elem())
 	}
 	arg = impl.Interface()
-	// 可能会导致顺序差异
+	// Differences in order may occur
 	switch impl.Interface().(type) {
 	case iUnmarshalValue:
 		fn = getUnmarshalValueConvertFunc(isptr, impl.Elem().Type())
@@ -63,13 +40,14 @@ func checkFieldImplConvertInterface(structField reflect.StructField) (fn fieldSc
 }
 
 func getUnmarshalValueConvertFunc(isptr bool, typ reflect.Type) fieldScanFunc {
-
+	// The arguments of the custom type conversion function are all []byte, from SQL. RawBytes
 	if isptr == false {
 		return func(src any, dst reflect.Value) error {
 
 			fn, ok := dst.Addr().Interface().(iUnmarshalValue)
+			// todo: If the conversion is successful, you can cancel the check
 			if !ok {
-				return fmt.Errorf("自定义类型:%v 转换到接口类型:%v 失败", dst.Type(), "iUnmarshalValue")
+				return gerror.Newf("custom Type: %v Conversion to Interface Type: %v failed", dst.Type(), "iUnmarshalValue")
 			}
 			v := *src.(*sql.RawBytes)
 			return fn.UnmarshalValue([]byte(v))
@@ -80,8 +58,9 @@ func getUnmarshalValueConvertFunc(isptr bool, typ reflect.Type) fieldScanFunc {
 			dst.Set(reflect.New(typ))
 		}
 		fn, ok := dst.Interface().(iUnmarshalValue)
+		// todo: If the conversion is successful, you can cancel the check
 		if !ok {
-			return fmt.Errorf("自定义类型:%v 转换到接口类型:%v 失败", dst.Type(), "iUnmarshalValue")
+			return gerror.Newf("custom Type: %v Conversion to Interface Type: %v failed", dst.Type(), "iUnmarshalValue")
 		}
 		v := *src.(*sql.RawBytes)
 		return fn.UnmarshalValue([]byte(v))
@@ -89,6 +68,7 @@ func getUnmarshalValueConvertFunc(isptr bool, typ reflect.Type) fieldScanFunc {
 
 }
 func getSqlScannerConvertFunc(isptr bool, typ reflect.Type) fieldScanFunc {
+	// The arguments of the custom type conversion function are all []byte, from SQL. RawBytes
 	return func(src any, dst reflect.Value) error {
 		var (
 			fn sql.Scanner
@@ -102,9 +82,9 @@ func getSqlScannerConvertFunc(isptr bool, typ reflect.Type) fieldScanFunc {
 		} else {
 			fn, ok = dst.Addr().Interface().(sql.Scanner)
 		}
-		// todo 一定转换成功，可以取消检查
+		// todo: If the conversion is successful, you can cancel the check
 		if !ok {
-			return fmt.Errorf("自定义类型:%v 转换到接口类型:%v 失败", dst.Type(), "sql.Scanner")
+			return gerror.Newf("custom Type: %v Conversion to Interface Type: %v failed", dst.Type(), "sql.Scanner")
 		}
 
 		v := *src.(*sql.RawBytes)

@@ -14,7 +14,6 @@ import (
 	"strconv"
 )
 
-// 默认实现
 func RegisterFieldConverterFunc(ctx context.Context, db DB,
 	tableField *sql.ColumnType, structField reflect.StructField) (convertFn fieldScanFunc, tempArg any) {
 	tempArg = &sql.RawBytes{}
@@ -41,21 +40,15 @@ func RegisterFieldConverterFunc(ctx context.Context, db DB,
 		convertFn = getStringConvertFunc(structField.Type)
 
 	case LocalTypeString:
-		// todo 支持string到其他类型的转换，必须是兼容的
-		// 不能转换到数字类型的
+		// To support string to other types of conversions, it must be compatible
+		// Cannot be converted to a numeric type
 		convertFn = getStringConvertFunc(structField.Type)
 
-	case LocalTypeInt:
+	case LocalTypeInt, LocalTypeInt64:
 
 		convertFn = getIntegerConvertFunc[int64](structField.Type, strconv.ParseInt)
 
-	case LocalTypeUint:
-		convertFn = getIntegerConvertFunc[uint64](structField.Type, strconv.ParseUint)
-
-	case LocalTypeInt64:
-		convertFn = getIntegerConvertFunc[int64](structField.Type, strconv.ParseInt)
-
-	case LocalTypeUint64:
+	case LocalTypeUint, LocalTypeUint64:
 		convertFn = getIntegerConvertFunc[uint64](structField.Type, strconv.ParseUint)
 
 	case LocalTypeFloat32:
@@ -68,8 +61,8 @@ func RegisterFieldConverterFunc(ctx context.Context, db DB,
 		convertFn = getBoolConvertFunc(structField.Type)
 
 	case LocalTypeDate:
-		// 可能不同数据库存储的时间格式不一样，后续如果兼容性不够好的话
-		// 统一使用sql.RawBytes接收，让标准库或者驱动去处理
+		// The time format of different databases may be different, and the compatibility is not good enough
+		// Unified use of sql.RawBytes are received and processed by standard libraries or drivers
 		ok := tableFieldIsTimeType(tabFieldType.ScanType())
 		if ok {
 			tempArg = &sql.NullTime{}
@@ -78,8 +71,8 @@ func RegisterFieldConverterFunc(ctx context.Context, db DB,
 		convertFn = getTimeConvertFunc(structField.Type)
 
 	case LocalTypeDatetime:
-		// 可能不同数据库存储的时间格式不一样，后续如果兼容性不够好的话
-		// 统一使用sql.RawBytes接收，让标准库或者驱动去处理
+		// The time format of different databases may be different, and the compatibility is not good enough
+		// Unified use of sql.RawBytes are received and processed by standard libraries or drivers
 		ok := tableFieldIsTimeType(tabFieldType.ScanType())
 		if ok {
 			tempArg = &sql.NullTime{}
@@ -100,10 +93,24 @@ func RegisterFieldConverterFunc(ctx context.Context, db DB,
 
 	}
 	if convertFn == nil {
-		panic(fmt.Errorf("不支持的类型  字段名:%s 表字段类型:%v localType:%v",
-			tableField.Name(), tableField.DatabaseTypeName(),
-			localType,
-		))
+		panic(&typeConvertError{
+			driverName:  db.GetConfig().Type,
+			columnName:  tabFieldType.Name(),
+			columnType:  tableField.DatabaseTypeName(),
+			structField: structField,
+		})
 	}
 	return
+}
+
+type typeConvertError struct {
+	driverName  string
+	columnName  string
+	columnType  string
+	structField reflect.StructField
+}
+
+func (t *typeConvertError) Error() string {
+	err := `Driver: %s does not support conversion from (%s: %s) to (%s: %s)`
+	return fmt.Sprintf(err, t.driverName, t.columnName, t.columnType, t.structField.Name, t.structField.Type)
 }
