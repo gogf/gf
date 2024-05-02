@@ -12,6 +12,8 @@ import (
 	"reflect"
 	"strconv"
 	"time"
+
+	"github.com/gogf/gf/v2/os/gtime"
 )
 
 func parseFloat[T int64 | uint64 | float64](typ reflect.Type, val string, dst reflect.Value, setFn func(T)) error {
@@ -218,10 +220,17 @@ func getBoolConvertFunc(fieldType reflect.Type) fieldConvertFunc {
 	return nil
 }
 
+var (
+	timeTimeType     = reflect.TypeOf(time.Time{})
+	timeTimePtrType  = reflect.TypeOf(&time.Time{})
+	gtimeTimeType    = reflect.TypeOf(gtime.Time{})
+	gtimeTimePtrType = reflect.TypeOf(&gtime.Time{})
+)
+
 func getTimeConvertFunc(fieldType reflect.Type) fieldConvertFunc {
 	// The time format may be different for different databases
-	switch fieldType.String() {
-	case "*time.Time":
+	switch fieldType {
+	case timeTimeType:
 		return func(val any, dst reflect.Value) (err error) {
 			var t time.Time
 			switch v := val.(type) {
@@ -237,7 +246,7 @@ func getTimeConvertFunc(fieldType reflect.Type) fieldConvertFunc {
 			*ptr = t
 			return nil
 		}
-	case "time.Time":
+	case timeTimePtrType:
 		return func(val any, dst reflect.Value) (err error) {
 			var t time.Time
 			switch v := val.(type) {
@@ -249,11 +258,50 @@ func getTimeConvertFunc(fieldType reflect.Type) fieldConvertFunc {
 					return err
 				}
 			}
+			if dst.IsNil() {
+				dst.Set(reflect.New(timeTimeType))
+			}
 			ptr := dst.Addr().Interface().(*time.Time)
 			*ptr = t
 			return nil
 		}
+	case gtimeTimeType:
+		return func(val any, dst reflect.Value) (err error) {
+			var t time.Time
+			switch v := val.(type) {
+			case time.Time:
+				t = v
+			case string:
+				t, err = parseTime(v)
+				if err != nil {
+					return err
+				}
+			}
+			ptr := dst.Addr().Interface().(*gtime.Time)
+			ptr.Time = t
+			return nil
+		}
+	case gtimeTimePtrType:
+		return func(val any, dst reflect.Value) (err error) {
+			var t time.Time
+			switch v := val.(type) {
+			case time.Time:
+				t = v
+			case string:
+				t, err = parseTime(v)
+				if err != nil {
+					return err
+				}
+			}
+			if dst.IsNil() {
+				dst.Set(reflect.New(gtimeTimeType))
+			}
+			ptr := dst.Interface().(*gtime.Time)
+			ptr.Time = t
+			return nil
+		}
 	default:
+		// todo typ.ConvertibleTo(reflect.TypeOf(time.Time{}))？
 		if fieldType.Kind() == reflect.String {
 			// TODO Does formatting need to be done?
 			return func(val any, dst reflect.Value) (err error) {

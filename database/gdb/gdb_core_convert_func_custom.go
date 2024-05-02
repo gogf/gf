@@ -11,6 +11,7 @@ import (
 	"reflect"
 
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/gtime"
 )
 
 // iUnmarshalValue is the interface for custom defined types customizing value assignment.
@@ -19,16 +20,28 @@ type iUnmarshalValue interface {
 	UnmarshalValue(val interface{}) error
 }
 
-func checkFieldImplConvertInterface(structField reflect.StructField) (fn fieldConvertFunc, arg any) {
-	var impl = reflect.Value{}
-	fieldType := structField.Type
-	isptr := fieldType.Kind() == reflect.Ptr
+func checkFieldImplConvertInterface(structField reflect.StructField) (fn fieldConvertFunc, scanArg any) {
+	var (
+		impl      = reflect.Value{}
+		fieldType = structField.Type
+		isptr     = false
+		// gtime.Time
+		isGtime = false
+	)
+
 	if fieldType.Kind() != reflect.Ptr {
 		impl = reflect.New(fieldType)
+		isGtime = fieldType == reflect.TypeOf(gtime.Time{})
 	} else {
 		impl = reflect.New(fieldType.Elem())
+		isptr = true
+		isGtime = fieldType == reflect.TypeOf(&gtime.Time{})
 	}
-	arg = impl.Interface()
+	//
+	if isGtime {
+		return nil, nil
+	}
+
 	// Differences in order may occur
 	switch impl.Interface().(type) {
 	case iUnmarshalValue:
@@ -36,11 +49,12 @@ func checkFieldImplConvertInterface(structField reflect.StructField) (fn fieldCo
 	case sql.Scanner:
 		fn = getSqlScannerConvertFunc(isptr, impl.Elem().Type())
 	}
+	scanArg = &sql.RawBytes{}
 	return
 }
 
 func getUnmarshalValueConvertFunc(isptr bool, typ reflect.Type) fieldConvertFunc {
-	// The arguments of the custom type conversion function are all []byte, from SQL. RawBytes
+	// The arguments of the custom type conversion function are all []byte, from sql.RawBytes
 	if isptr == false {
 		return func(src any, dst reflect.Value) error {
 			fn, ok := dst.Addr().Interface().(iUnmarshalValue)
@@ -67,7 +81,7 @@ func getUnmarshalValueConvertFunc(isptr bool, typ reflect.Type) fieldConvertFunc
 
 }
 func getSqlScannerConvertFunc(isptr bool, typ reflect.Type) fieldConvertFunc {
-	// The arguments of the custom type conversion function are all []byte, from SQL. RawBytes
+	// The arguments of the custom type conversion function are all []byte, from sql.RawBytes
 	return func(src any, dst reflect.Value) error {
 		var (
 			fn sql.Scanner

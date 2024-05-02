@@ -25,7 +25,6 @@ func RegisterFieldConverterFunc(ctx context.Context, db DB,
 		case "sql.NullTime":
 			return true
 		default:
-			// todo typ.ConvertibleTo(reflect.TypeOf(time.Time{}))
 			return false
 		}
 	}

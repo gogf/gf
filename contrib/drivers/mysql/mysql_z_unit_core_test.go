@@ -1628,6 +1628,9 @@ func Test_Types(t *testing.T) {
 		zone, err := db.Query(ctx, "SHOW  VARIABLES LIKE '%time_zone';")
 		t.Log("mysql zone=", zone, err)
 
+		version, err := db.Query(ctx, "select version();")
+		t.Log("mysql version=", version, err)
+
 		t.AssertNil(err)
 		t.Assert(obj.Id, 1)
 		t.Assert(obj.Blob, data["blob"])

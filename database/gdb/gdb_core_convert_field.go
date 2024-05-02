@@ -243,7 +243,7 @@ func (t *Table) getStructFields(ctx context.Context, db DB, structType reflect.T
 				isCustomConvert = true
 			)
 			// Check the custom translation interface implementation
-			convertFn, _ = checkFieldImplConvertInterface(field)
+			convertFn, tempArg = checkFieldImplConvertInterface(field)
 			if convertFn == nil {
 				isCustomConvert = false
 				convertFn, tempArg = RegisterFieldConverterFunc(ctx, db, fieldInfo.ColumnFieldType, fieldInfo.StructField)

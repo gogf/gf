@@ -459,7 +459,6 @@ func (c *Core) scanRowsToStruct(scanArgs []any, rows *sql.Rows, table *Table) (r
 					if field.isCustomConvert == false {
 						err = field.convertFunc(string(*v), val)
 					} else {
-						fmt.Println("scanRowsToStruct.colname=", tableFieldName, string(*v))
 						err = field.convertFunc(v, val)
 					}
 				case *sql.NullTime:
