@@ -242,7 +242,7 @@ func getTimeConvertFunc(fieldType reflect.Type) fieldConvertFunc {
 					return err
 				}
 			}
-			ptr := dst.Interface().(*time.Time)
+			ptr := dst.Addr().Interface().(*time.Time)
 			*ptr = t
 			return nil
 		}
@@ -261,7 +261,7 @@ func getTimeConvertFunc(fieldType reflect.Type) fieldConvertFunc {
 			if dst.IsNil() {
 				dst.Set(reflect.New(timeTimeType))
 			}
-			ptr := dst.Addr().Interface().(*time.Time)
+			ptr := dst.Interface().(*time.Time)
 			*ptr = t
 			return nil
 		}
@@ -439,6 +439,8 @@ func getJsonConvertFunc(fieldType reflect.Type, errPanic bool) fieldConvertFunc 
 		if v == "" {
 			return nil
 		}
+		// unmarshalJson
+
 		if dst.Kind() == reflect.Ptr {
 			return json.Unmarshal([]byte(v), dst.Interface())
 		}
