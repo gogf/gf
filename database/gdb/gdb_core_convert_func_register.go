@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"time"
 )
 
 func RegisterFieldConverterFunc(ctx context.Context, db DB,
@@ -19,26 +20,46 @@ func RegisterFieldConverterFunc(ctx context.Context, db DB,
 	tempArg = &sql.RawBytes{}
 
 	tableFieldIsTimeType := func(typ reflect.Type) bool {
-		switch typ.String() {
-		case "time.Time":
+		switch typ {
+		case reflect.TypeOf(time.Time{}):
 			return true
-		case "sql.NullTime":
+		case reflect.TypeOf(sql.NullTime{}):
 			return true
 		default:
 			return false
 		}
 	}
+
+	structFieldIsTimeType := func(typ reflect.Type) bool {
+		switch typ {
+		case timeTimeType, timeTimePtrType:
+			return true
+		case gtimeTimeType, gtimeTimePtrType:
+			return true
+		default:
+			return false
+		}
+	}
+
 	tabFieldType := tableField
 	localType, _ := db.CheckLocalTypeForField(ctx, tableField.DatabaseTypeName(), nil)
 
 	switch localType {
 	case LocalTypeBytes:
-		convertFn = getStringConvertFunc(structField.Type)
-
+		if structFieldIsTimeType(structField.Type) {
+			convertFn = getTimeConvertFunc(structField.Type)
+		} else {
+			convertFn = getStringConvertFunc(structField.Type)
+		}
 	case LocalTypeString:
-		// To support string to other types of conversions, it must be compatible
-		// Cannot be converted to a numeric type
-		convertFn = getStringConvertFunc(structField.Type)
+
+		if structFieldIsTimeType(structField.Type) {
+			convertFn = getTimeConvertFunc(structField.Type)
+		} else {
+			// To support string to other types of conversions, it must be compatible
+			// Cannot be converted to a numeric type
+			convertFn = getStringConvertFunc(structField.Type)
+		}
 	case LocalTypeInt, LocalTypeInt64:
 		convertFn = getIntegerConvertFunc[int64](structField.Type, strconv.ParseInt)
 	case LocalTypeUint, LocalTypeUint64:

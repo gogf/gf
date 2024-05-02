@@ -434,13 +434,24 @@ func bitArrayToUint64(b []byte) uint64 {
 // []struct []*struct
 func getJsonConvertFunc(fieldType reflect.Type, errPanic bool) fieldConvertFunc {
 
+	impl, fieldIsPtr := checkImplUnmarshalJSON(fieldType)
+
 	convertJson := func(val any, dst reflect.Value) error {
 		v, _ := val.(string)
 		if v == "" {
+			// todo Do I need to initialize a pointer field?
 			return nil
 		}
-		// unmarshalJson
-
+		// impl json.Unmarshaler
+		if impl {
+			if fieldIsPtr {
+				if dst.IsNil() {
+					dst.Set(reflect.New(fieldType.Elem()))
+				}
+				return dst.Interface().(json.Unmarshaler).UnmarshalJSON([]byte(v))
+			}
+			return dst.Addr().Interface().(json.Unmarshaler).UnmarshalJSON([]byte(v))
+		}
 		if dst.Kind() == reflect.Ptr {
 			return json.Unmarshal([]byte(v), dst.Interface())
 		}
@@ -457,7 +468,7 @@ func getJsonConvertFunc(fieldType reflect.Type, errPanic bool) fieldConvertFunc 
 			return convertJson
 		default:
 			if errPanic {
-				panic(fmt.Errorf("不支持从json类型转换到%v", fieldType))
+				panic(fmt.Errorf("conversion from JSON type to %v is not supported", fieldType))
 			}
 		}
 		return nil
@@ -468,6 +479,21 @@ func getJsonConvertFunc(fieldType reflect.Type, errPanic bool) fieldConvertFunc 
 	default:
 		return check(fieldType)
 	}
+}
+
+func checkImplUnmarshalJSON(typ reflect.Type) (impl, isptr bool) {
+	v := reflect.Value{}
+	if typ.Kind() != reflect.Ptr {
+		v = reflect.New(typ)
+	} else {
+		v = reflect.New(typ.Elem())
+		isptr = true
+	}
+	switch v.Interface().(type) {
+	case json.Unmarshaler:
+		impl = true
+	}
+	return
 }
 
 const (
