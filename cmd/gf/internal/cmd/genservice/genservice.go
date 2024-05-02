@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"sync"
+	"sync/atomic"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
@@ -147,7 +148,7 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 	}
 
 	var (
-		isDirty                 bool                                         // Temp boolean.
+		isDirty                 atomic.Bool                                  // Temp boolean.
 		files                   []string                                     // Temp file array.
 		initImportSrcPackages   []string                                     // Used for generating logic.go.
 		inputPackages           = in.Packages                                // Custom packages.
@@ -224,8 +225,8 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 			if err != nil {
 				mlog.Printf(`error generating service file "%s": %v`, generateServiceFilesInput.DstFilePath, err)
 			}
-			if !isDirty && ok {
-				isDirty = true
+			if !isDirty.Load() && ok {
+				isDirty.Store(true)
 			}
 		}(generateServiceFilesInput{
 			CGenServiceInput:    in,
@@ -257,7 +258,7 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		}
 	}
 
-	if isDirty {
+	if isDirty.Load() {
 		// Generate initialization go file.
 		if len(initImportSrcPackages) > 0 {
 			if err = c.generateInitializationFile(in, initImportSrcPackages); err != nil {
