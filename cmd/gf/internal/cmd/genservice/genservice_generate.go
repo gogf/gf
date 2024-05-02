@@ -44,7 +44,7 @@ func (c CGenService) generateServiceFile(in generateServiceFilesInput) (ok bool,
 		}
 	}
 	mlog.Printf(`generating service go file: %s`, in.DstFilePath)
-	if err = gfile.PutContents(in.DstFilePath, generatedContent.String()); err != nil {
+	if err = gfile.PutBytes(in.DstFilePath, generatedContent.Bytes()); err != nil {
 		return true, err
 	}
 	return true, nil
