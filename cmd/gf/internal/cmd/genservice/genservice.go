@@ -155,6 +155,8 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		dstPackageName          = gstr.ToLower(gfile.Basename(in.DstFolder)) // Package name for generated go files.
 		generatedDstFilePathSet = gset.NewStrSet()                           // All generated file path set.
 	)
+	isDirty.Store(false)
+
 	// The first level folders.
 	srcFolderPaths, err := gfile.ScanDir(in.SrcFolder, "*", false)
 	if err != nil {
