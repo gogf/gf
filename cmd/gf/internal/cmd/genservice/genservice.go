@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"sync"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
@@ -158,6 +159,8 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 	if err != nil {
 		return nil, err
 	}
+	// it will use goroutine to generate service files for each package.
+	var wg = sync.WaitGroup{}
 	for _, srcFolderPath := range srcFolderPaths {
 		if !gfile.IsDir(srcFolderPath) {
 			continue
@@ -174,12 +177,13 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 			srcPackageName      = gfile.Basename(srcFolderPath)
 			srcImportedPackages = garray.NewSortedStrArray().SetUnique(true)
 			srcStructFunctions  = gmap.NewListMap()
-			ok                  bool
 			dstFilePath         = gfile.Join(in.DstFolder,
 				c.getDstFileNameCase(srcPackageName, in.DstFileNameCase)+".go",
 			)
 		)
 		generatedDstFilePathSet.Add(dstFilePath)
+		// if it were to use goroutine,
+		// it would cause the order of the generated functions in the file to be disordered.
 		for _, file := range files {
 			pkgItems, funcItems, err := c.parseItemsInSrc(file)
 			if err != nil {
@@ -213,20 +217,26 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		}
 
 		// Generating service go file for single logic package.
-		if ok, err = c.generateServiceFile(generateServiceFilesInput{
+		wg.Add(1)
+		go func(generateServiceFilesInput generateServiceFilesInput) {
+			defer wg.Done()
+			ok, err := c.generateServiceFile(generateServiceFilesInput)
+			if err != nil {
+				mlog.Printf(`error generating service file "%s": %v`, generateServiceFilesInput.DstFilePath, err)
+			}
+			if !isDirty && ok {
+				isDirty = true
+			}
+		}(generateServiceFilesInput{
 			CGenServiceInput:    in,
 			SrcPackageName:      srcPackageName,
 			SrcImportedPackages: srcImportedPackages.Slice(),
 			SrcStructFunctions:  srcStructFunctions,
 			DstPackageName:      dstPackageName,
 			DstFilePath:         dstFilePath,
-		}); err != nil {
-			return
-		}
-		if ok {
-			isDirty = true
-		}
+		})
 	}
+	wg.Wait()
 
 	if in.Clear {
 		files, err = gfile.ScanDirFile(in.DstFolder, "*.go", false)
