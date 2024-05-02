@@ -8,6 +8,8 @@ package delivery
 
 import (
 	"context"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genservice/service"
 )
 
 type sDeliveryApp struct{}
@@ -21,6 +23,7 @@ func (s *sDeliveryApp) Create(ctx context.Context) (err error) {
 }
 
 func (s *sDeliveryApp) GetList(ctx context.Context) (err error) {
+	service.Article().Get(ctx, 1)
 	return
 }
 

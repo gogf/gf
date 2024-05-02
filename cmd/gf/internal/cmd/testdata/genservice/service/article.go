@@ -37,7 +37,7 @@ type (
 		 */
 		T3(ctx context.Context, b *gdbas.Model) (c *gdbas.Model, d *gdbas.Model, err error)
 		// func (s *sArticle) T4(i interface{}) interface{}
-		// # $ % ^ & * ( ) _ + - = {} | [ ] \ : " ; ' < > ? , . /
+		// # $ % ^ & * ( ) _ + - = { } | [ ] \ : " ; ' < > ? , . /
 		T4(i interface{}) interface{}
 	}
 )

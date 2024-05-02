@@ -13,15 +13,14 @@ import (
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/genservice"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
 func Test_Gen_Service_Default(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			//path      = gfile.Temp(guid.S())
-			// TODO
-			path      = "aa"
+			path      = gfile.Temp(guid.S())
 			dstFolder = path + filepath.FromSlash("/service")
 			apiFolder = gtest.DataPath("genservice", "logic")
 			in        = genservice.CGenServiceInput{
@@ -35,14 +34,12 @@ func Test_Gen_Service_Default(t *testing.T) {
 				Clear:           false,
 			}
 		)
-		gfile.Remove(path)
 		err := gutil.FillStructWithDefault(&in)
 		t.AssertNil(err)
 
 		err = gfile.Mkdir(path)
 		t.AssertNil(err)
-		// TODO
-		//defer gfile.Remove(path)
+		defer gfile.Remove(path)
 
 		_, err = genservice.CGenService{}.Service(ctx, in)
 		t.AssertNil(err)
@@ -60,6 +57,7 @@ func Test_Gen_Service_Default(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(files, []string{
 			dstFolder + filepath.FromSlash("/article.go"),
+			dstFolder + filepath.FromSlash("/delivery.go"),
 			dstFolder + filepath.FromSlash("/user.go"),
 		})
 
@@ -67,6 +65,7 @@ func Test_Gen_Service_Default(t *testing.T) {
 		testPath := gtest.DataPath("genservice", "service")
 		expectFiles := []string{
 			testPath + filepath.FromSlash("/article.go"),
+			testPath + filepath.FromSlash("/delivery.go"),
 			testPath + filepath.FromSlash("/user.go"),
 		}
 		for i := range files {

@@ -20,11 +20,6 @@ type (
 		AA(ctx context.Context) (err error)
 	}
 	IDeliveryCluster interface {
-		Create(ctx context.Context) (err error)
-		GetList(ctx context.Context) (err error)
-		GetOne(ctx context.Context) (err error)
-		Delete(ctx context.Context) (err error)
-		AA(ctx context.Context) (err error)
 		// Create 自动创建Cluster及Project.
 		Create(ctx context.Context) (err error, gdb gdbas.Model)
 		Delete(ctx context.Context) (err error)
