@@ -174,10 +174,10 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 		)
 		// If the field is of the pointer type and is nil, you will need to re-use the reflection assignment
 		// If it's a value-type field, it's not nil after bindToReflectValue.Addr().
-		//type  _ struct {
+		// type  _ struct {
 		//	A int   => Addr().IsNil() = false
 		//	B *int  => Addr().IsNil() = true
-		//}
+		// }
 		if fieldIsPtrAndNil {
 			fieldType := field.Field.Type
 			switch fieldKind {

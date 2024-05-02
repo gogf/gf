@@ -37,11 +37,10 @@ func checkFieldImplConvertInterface(structField reflect.StructField) (fn fieldCo
 		isptr = true
 		isGtime = fieldType == reflect.TypeOf(&gtime.Time{})
 	}
-	//
+
 	if isGtime {
 		return nil, nil
 	}
-
 	// Differences in order may occur
 	switch impl.Interface().(type) {
 	case iUnmarshalValue:
@@ -78,8 +77,8 @@ func getUnmarshalValueConvertFunc(isptr bool, typ reflect.Type) fieldConvertFunc
 		v := *src.(*sql.RawBytes)
 		return fn.UnmarshalValue([]byte(v))
 	}
-
 }
+
 func getSqlScannerConvertFunc(isptr bool, typ reflect.Type) fieldConvertFunc {
 	// The arguments of the custom type conversion function are all []byte, from sql.RawBytes
 	return func(src any, dst reflect.Value) error {
@@ -99,9 +98,7 @@ func getSqlScannerConvertFunc(isptr bool, typ reflect.Type) fieldConvertFunc {
 		if !ok {
 			return gerror.Newf("custom Type: %v Conversion to Interface Type: %v failed", dst.Type(), "sql.Scanner")
 		}
-
 		v := *src.(*sql.RawBytes)
 		return fn.Scan([]byte(v))
 	}
-
 }

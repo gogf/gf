@@ -16,14 +16,14 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 )
 
-func parseFloat[T int64 | uint64 | float64](typ reflect.Type, val string, dst reflect.Value, setFn func(T)) error {
+func parseFloat[T int64 | uint64 | float64](elemType reflect.Type, val string, dst reflect.Value, setFn func(T)) error {
 	n, err := strconv.ParseFloat(val, 64)
 	if err != nil {
 		return err
 	}
 	if dst.Kind() == reflect.Ptr {
 		if dst.IsNil() {
-			dst.Set(reflect.New(typ))
+			dst.Set(reflect.New(elemType))
 		}
 		dst = dst.Elem()
 	}
@@ -31,22 +31,21 @@ func parseFloat[T int64 | uint64 | float64](typ reflect.Type, val string, dst re
 	return nil
 }
 
-func getFloatConvertFunc(fieldType reflect.Type) fieldConvertFunc {
+func getFloatConvertFunc(structFieldType reflect.Type) fieldConvertFunc {
 
-	convert := func(originType, elemTyp reflect.Type) fieldConvertFunc {
+	convert := func(elemTyp reflect.Type) fieldConvertFunc {
 		switch elemTyp.Kind() {
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 			return func(val any, dst reflect.Value) error {
-				return parseFloat[int64](originType, val.(string), dst, dst.SetInt)
+				return parseFloat[int64](elemTyp, val.(string), dst, dst.SetInt)
 			}
 		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 			return func(val any, dst reflect.Value) error {
-				return parseFloat[uint64](originType, val.(string), dst, dst.SetUint)
+				return parseFloat[uint64](elemTyp, val.(string), dst, dst.SetUint)
 			}
 		case reflect.Float32, reflect.Float64:
 			return func(val any, dst reflect.Value) error {
-				return parseFloat[float64](originType, val.(string), dst, dst.SetFloat)
-
+				return parseFloat[float64](elemTyp, val.(string), dst, dst.SetFloat)
 			}
 		case reflect.String:
 			return func(val any, dst reflect.Value) error {
@@ -57,18 +56,18 @@ func getFloatConvertFunc(fieldType reflect.Type) fieldConvertFunc {
 			return nil
 		}
 	}
-	switch fieldType.Kind() {
+	switch structFieldType.Kind() {
 	case reflect.Pointer:
-		return convert(fieldType, fieldType.Elem())
+		return convert(structFieldType.Elem())
 	default:
-		return convert(fieldType, fieldType)
+		return convert(structFieldType)
 	}
 }
 
-func getIntegerConvertFunc[T int64 | uint64](fieldType reflect.Type,
+func getIntegerConvertFunc[T int64 | uint64](structFieldType reflect.Type,
 	parseFunc func(val string, base int, bitSize int) (T, error)) fieldConvertFunc {
-	//
-	convert := func(originType, elemType reflect.Type, parseFunc func(val string, base int, bitSize int) (T, error)) fieldConvertFunc {
+
+	convert := func(elemType reflect.Type, parseFunc func(val string, base int, bitSize int) (T, error)) fieldConvertFunc {
 		switch elemType.Kind() {
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 			return func(val any, dst reflect.Value) error {
@@ -135,21 +134,20 @@ func getIntegerConvertFunc[T int64 | uint64](fieldType reflect.Type,
 		}
 	}
 
-	switch fieldType.Kind() {
+	switch structFieldType.Kind() {
 	case reflect.Pointer:
-		return convert(fieldType, fieldType.Elem(), parseFunc)
+		return convert(structFieldType.Elem(), parseFunc)
 	default:
-		return convert(fieldType, fieldType, parseFunc)
+		return convert(structFieldType, parseFunc)
 	}
-
 }
 
-func getStringConvertFunc(fieldType reflect.Type) fieldConvertFunc {
+func getStringConvertFunc(structFieldType reflect.Type) fieldConvertFunc {
 
 	convertString := func(val any, dst reflect.Value) error {
 		if dst.Kind() == reflect.Ptr {
 			if dst.IsNil() {
-				dst.Set(reflect.New(fieldType.Elem()))
+				dst.Set(reflect.New(structFieldType.Elem()))
 			}
 			dst = dst.Elem()
 		}
@@ -157,13 +155,13 @@ func getStringConvertFunc(fieldType reflect.Type) fieldConvertFunc {
 		return nil
 	}
 
-	switch fieldType.Kind() {
+	switch structFieldType.Kind() {
 	case reflect.String:
 		return convertString
 	case reflect.Slice:
-		fieldType = fieldType.Elem()
+		structFieldType = structFieldType.Elem()
 		// []uint8 []byte
-		if fieldType.Kind() == reflect.Uint8 {
+		if structFieldType.Kind() == reflect.Uint8 {
 			return func(val any, dst reflect.Value) error {
 				v, _ := val.(string)
 				dst.SetBytes([]byte(v))
@@ -173,21 +171,21 @@ func getStringConvertFunc(fieldType reflect.Type) fieldConvertFunc {
 	case reflect.Array:
 		// Check if the length is the same, if not, don't convert
 	case reflect.Ptr:
-		if fieldType.Elem().Kind() == reflect.String {
+		if structFieldType.Elem().Kind() == reflect.String {
 			return convertString
 		}
 	default:
-		// convert to int
+		// convert to int?
 	}
 	// Support converting strings to structs, slicing maps, and data in JSON format
-	convertJson := getJsonConvertFunc(fieldType, false)
+	convertJson := getJsonConvertFunc(structFieldType, false)
 	if convertJson != nil {
 		return convertJson
 	}
 	return nil
 }
 
-func getBoolConvertFunc(fieldType reflect.Type) fieldConvertFunc {
+func getBoolConvertFunc(structFieldType reflect.Type) fieldConvertFunc {
 
 	convertBool := func(val any, dst reflect.Value) error {
 		b, err := strconv.ParseBool(val.(string))
@@ -196,7 +194,7 @@ func getBoolConvertFunc(fieldType reflect.Type) fieldConvertFunc {
 		}
 		if dst.Kind() == reflect.Ptr {
 			if dst.IsNil() {
-				dst.Set(reflect.New(fieldType.Elem()))
+				dst.Set(reflect.New(structFieldType.Elem()))
 			}
 			dst = dst.Elem()
 		}
@@ -204,7 +202,7 @@ func getBoolConvertFunc(fieldType reflect.Type) fieldConvertFunc {
 		return nil
 	}
 
-	switch fieldType.Kind() {
+	switch structFieldType.Kind() {
 	case reflect.Bool:
 		return convertBool
 	case reflect.String:
@@ -213,7 +211,7 @@ func getBoolConvertFunc(fieldType reflect.Type) fieldConvertFunc {
 			return nil
 		}
 	case reflect.Ptr:
-		if fieldType.Elem().Kind() == reflect.Bool {
+		if structFieldType.Elem().Kind() == reflect.Bool {
 			return convertBool
 		}
 	}
@@ -227,9 +225,9 @@ var (
 	gtimeTimePtrType = reflect.TypeOf(&gtime.Time{})
 )
 
-func getTimeConvertFunc(fieldType reflect.Type) fieldConvertFunc {
+func getTimeConvertFunc(structFieldType reflect.Type) fieldConvertFunc {
 	// The time format may be different for different databases
-	switch fieldType {
+	switch structFieldType {
 	case timeTimeType:
 		return func(val any, dst reflect.Value) (err error) {
 			var t time.Time
@@ -302,11 +300,11 @@ func getTimeConvertFunc(fieldType reflect.Type) fieldConvertFunc {
 		}
 	default:
 		// todo typ.ConvertibleTo(reflect.TypeOf(time.Time{}))？
-		if fieldType.Kind() == reflect.String {
-			// TODO Does formatting need to be done?
+		if structFieldType.Kind() == reflect.String {
 			return func(val any, dst reflect.Value) (err error) {
 				switch v := val.(type) {
 				case time.Time:
+					// TODO Does formatting need to be done?
 					dst.SetString(v.String())
 				case string:
 					dst.SetString(v)
@@ -318,8 +316,8 @@ func getTimeConvertFunc(fieldType reflect.Type) fieldConvertFunc {
 	return nil
 }
 
-func getDecimalConvertFunc(fieldType reflect.Type) fieldConvertFunc {
-	switch fieldType.Kind() {
+func getDecimalConvertFunc(structFieldType reflect.Type) fieldConvertFunc {
+	switch structFieldType.Kind() {
 	case reflect.Float64, reflect.Float32:
 		return func(val any, dst reflect.Value) error {
 			v, _ := val.(string)
@@ -362,13 +360,13 @@ func getDecimalConvertFunc(fieldType reflect.Type) fieldConvertFunc {
 }
 
 // Bit types can be converted to arbitrary integer types, Boolean types, Stirling, [] bits,
-func getBitConvertFunc(fieldType reflect.Type) fieldConvertFunc {
-	switch fieldType.Kind() {
+func getBitConvertFunc(structFieldType reflect.Type) fieldConvertFunc {
+	switch structFieldType.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return func(val any, dst reflect.Value) error {
 			if dst.Kind() == reflect.Ptr {
 				if dst.IsNil() {
-					dst.Set(reflect.New(fieldType.Elem()))
+					dst.Set(reflect.New(structFieldType.Elem()))
 				}
 				dst = dst.Elem()
 			}
@@ -381,7 +379,7 @@ func getBitConvertFunc(fieldType reflect.Type) fieldConvertFunc {
 		return func(val any, dst reflect.Value) error {
 			if dst.Kind() == reflect.Ptr {
 				if dst.IsNil() {
-					dst.Set(reflect.New(fieldType.Elem()))
+					dst.Set(reflect.New(structFieldType.Elem()))
 				}
 				dst = dst.Elem()
 			}
@@ -398,7 +396,7 @@ func getBitConvertFunc(fieldType reflect.Type) fieldConvertFunc {
 		}
 	case reflect.Slice:
 		// []byte
-		if fieldType.Elem().Kind() == reflect.Uint8 {
+		if structFieldType.Elem().Kind() == reflect.Uint8 {
 			return func(val any, dst reflect.Value) error {
 				v, _ := val.(string)
 				dst.SetBytes([]byte(v))
@@ -409,7 +407,7 @@ func getBitConvertFunc(fieldType reflect.Type) fieldConvertFunc {
 		return func(val any, dst reflect.Value) error {
 			v, _ := val.(string)
 			if len(v) > 0 {
-				dst.SetBool(v[len(v)-1] == 0)
+				dst.SetBool(v[0] != 0)
 			}
 			return nil
 		}

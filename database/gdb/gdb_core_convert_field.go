@@ -86,9 +86,12 @@ func parseStruct(ctx context.Context, db DB, columnTypes []*sql.ColumnType) *Tab
 	if val.scan == false {
 		return nil
 	}
-	pointer := val.pointer
 
-	pointerType := reflect.TypeOf(pointer).Elem()
+	var (
+		pointer     = val.pointer
+		pointerType = reflect.TypeOf(pointer).Elem()
+	)
+
 	switch pointerType.Kind() {
 	case reflect.Array, reflect.Slice:
 		// 1.[]*struct => *struct
@@ -154,17 +157,13 @@ func parseStruct(ctx context.Context, db DB, columnTypes []*sql.ColumnType) *Tab
 }
 
 func (t *Table) getStructFields(ctx context.Context, db DB, structType reflect.Type, parentIndex []int, existsColumn map[string]struct{}) (scanCount int) {
-
 	for i := 0; i < structType.NumField(); i++ {
 		field := structType.Field(i)
 		if field.IsExported() == false {
 			continue
 		}
 		if field.Type.Kind() == reflect.Interface {
-			// empty interface
-			if field.Type.NumMethod() != 0 {
-				continue
-			}
+			continue
 		}
 		// g.Meta
 		if field.Type.String() == "gmeta.Meta" {

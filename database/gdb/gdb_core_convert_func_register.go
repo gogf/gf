@@ -52,7 +52,6 @@ func RegisterFieldConverterFunc(ctx context.Context, db DB,
 			convertFn = getStringConvertFunc(structField.Type)
 		}
 	case LocalTypeString:
-
 		if structFieldIsTimeType(structField.Type) {
 			convertFn = getTimeConvertFunc(structField.Type)
 		} else {
