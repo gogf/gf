@@ -148,7 +148,7 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 	}
 
 	var (
-		isDirty                 atomic.Bool                                  // Temp boolean.
+		isDirty                 atomic.Value                                 // Temp boolean.
 		files                   []string                                     // Temp file array.
 		initImportSrcPackages   []string                                     // Used for generating logic.go.
 		inputPackages           = in.Packages                                // Custom packages.
@@ -225,7 +225,7 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 			if err != nil {
 				mlog.Printf(`error generating service file "%s": %v`, generateServiceFilesInput.DstFilePath, err)
 			}
-			if !isDirty.Load() && ok {
+			if !isDirty.Load().(bool) && ok {
 				isDirty.Store(true)
 			}
 		}(generateServiceFilesInput{
@@ -258,7 +258,7 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		}
 	}
 
-	if isDirty.Load() {
+	if isDirty.Load().(bool) {
 		// Generate initialization go file.
 		if len(initImportSrcPackages) > 0 {
 			if err = c.generateInitializationFile(in, initImportSrcPackages); err != nil {
