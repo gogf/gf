@@ -166,9 +166,13 @@ func doStruct(
 		return nil
 	}
 
-	toBeConvertedFieldNameToInfoMap := map[string]toBeConvertedFieldInfo{} // key=elemFieldName
+	var (
+		// key=fieldName
+		toBeConvertedFieldNameToInfoMap = map[string]toBeConvertedFieldInfo{}
+		parentIndex                     = make([]int, 0)
+	)
 	// parse struct
-	parseStruct(pointerElemReflectValue, pointerElemReflectValue.Type(), priorityTag, []int{}, toBeConvertedFieldNameToInfoMap)
+	parseStruct(pointerElemReflectValue, pointerElemReflectValue.Type(), priorityTag, parentIndex, toBeConvertedFieldNameToInfoMap)
 
 	// Nothing to be converted.
 	if len(toBeConvertedFieldNameToInfoMap) == 0 {
@@ -221,11 +225,12 @@ func doStruct(
 		// If value is nil, a fuzzy match is used for search the key and value for converting.
 		paramKey, paramValue = fuzzyMatchingFieldName(fieldName, paramsMap, usedParamsKeyOrTagNameMap)
 
-		// 有可能paramKey有值，但是paramValue是nil值，需要兼容之前的行为
+		// It is possible that paramKey has a value,
+		// but paramValue is a nil value and needs to be compatible with the previous behavior
 		if paramKey != "" {
 			fieldValue = fieldInfo.getFieldReflectValue(pointerElemReflectValue)
-			// 如果paramValue是nil值，就不需要在设置什么值了
-			// 因为getFieldReflectValue已经初始化了
+			// If paramValue is nil, you don't need to set any value
+			// Because getFieldReflectValue is already initialized
 			if paramValue != nil {
 				if err = bindVarToStructAttrWithFieldIndex(fieldName, fieldValue, paramValue, paramKeyToAttrMap); err != nil {
 					return err
@@ -351,11 +356,17 @@ func parseStruct(
 			if fieldTagName == "" {
 				fieldTagName = fieldName
 			}
+			var fieldIndex []int
+			if len(parentIndex) > 0 {
+				fieldIndex = append(parentIndex, i)
+			} else {
+				fieldIndex = []int{i}
+			}
 			_, ok := toBeConvertedFieldNameToInfoMap[fieldName]
 			if !ok {
 				// If there is a duplicate name, the default one is based on the previous one
 				toBeConvertedFieldNameToInfoMap[fieldName] = toBeConvertedFieldInfo{
-					FieldIndex:     append(parentIndex, i),
+					FieldIndex:     fieldIndex,
 					FieldOrTagName: fieldTagName,
 				}
 			}
