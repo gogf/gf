@@ -166,79 +166,9 @@ func doStruct(
 		return nil
 	}
 
-	// Holds the info for subsequent converting.
-	type toBeConvertedFieldInfo struct {
-		Value          any    // Found value by tag name or field name from input.
-		FieldIndex     int    // The associated reflection field index.
-		FieldOrTagName string // Field name or tag name for field tag by priority tags.
-	}
-
-	var (
-		priorityTagArray                []string
-		elemFieldName                   string
-		elemFieldType                   reflect.StructField
-		elemFieldValue                  reflect.Value
-		elemType                        = pointerElemReflectValue.Type()
-		toBeConvertedFieldNameToInfoMap = map[string]toBeConvertedFieldInfo{} // key=elemFieldName
-	)
-
-	if priorityTag != "" {
-		priorityTagArray = append(utils.SplitAndTrim(priorityTag, ","), gtag.StructTagPriority...)
-	} else {
-		priorityTagArray = gtag.StructTagPriority
-	}
-
-	for i := 0; i < pointerElemReflectValue.NumField(); i++ {
-		elemFieldType = elemType.Field(i)
-		elemFieldName = elemFieldType.Name
-		// Only do converting to public attributes.
-		if !utils.IsLetterUpper(elemFieldName[0]) {
-			continue
-		}
-
-		var fieldTagName = getTagNameFromField(elemFieldType, priorityTagArray)
-		// Maybe it's struct/*struct embedded.
-		if elemFieldType.Anonymous {
-			// type Name struct {
-			//    LastName  string `json:"lastName"`
-			//    FirstName string `json:"firstName"`
-			// }
-			//
-			// type User struct {
-			//     Name `json:"name"`
-			//     // ...
-			// }
-			//
-			// It is only recorded if the name has a fieldTag
-			if fieldTagName != "" {
-				toBeConvertedFieldNameToInfoMap[elemFieldName] = toBeConvertedFieldInfo{
-					FieldIndex:     elemFieldType.Index[0],
-					FieldOrTagName: fieldTagName,
-				}
-			}
-
-			elemFieldValue = pointerElemReflectValue.Field(i)
-			// Ignore the interface attribute if it's nil.
-			if elemFieldValue.Kind() == reflect.Interface {
-				elemFieldValue = elemFieldValue.Elem()
-				if !elemFieldValue.IsValid() {
-					continue
-				}
-			}
-			if err = doStruct(paramsMap, elemFieldValue, paramKeyToAttrMap, priorityTag); err != nil {
-				return err
-			}
-		} else {
-			// Use the native elemFieldName name as the fieldTag
-			if fieldTagName == "" {
-				fieldTagName = elemFieldName
-			}
-			toBeConvertedFieldNameToInfoMap[elemFieldName] = toBeConvertedFieldInfo{
-				FieldIndex:     elemFieldType.Index[0],
-				FieldOrTagName: fieldTagName,
-			}
-		}
-	}
+	toBeConvertedFieldNameToInfoMap := map[string]toBeConvertedFieldInfo{} // key=elemFieldName
+	// parse struct
+	parseStruct(pointerElemReflectValue, pointerElemReflectValue.Type(), priorityTag, []int{}, toBeConvertedFieldNameToInfoMap)
 
 	// Nothing to be converted.
 	if len(toBeConvertedFieldNameToInfoMap) == 0 {
@@ -273,15 +203,15 @@ func doStruct(
 		paramKey   string
 		paramValue any
 		fieldName  string
+		fieldValue reflect.Value
 		// Indicates that those values have been used and cannot be reused.
 		usedParamsKeyOrTagNameMap = map[string]struct{}{}
 	)
 	for fieldName, fieldInfo = range toBeConvertedFieldNameToInfoMap {
 		// If it is not empty, the tag or elemFieldName name matches
 		if fieldInfo.Value != nil {
-			if err = bindVarToStructAttrWithFieldIndex(
-				pointerElemReflectValue, fieldName, fieldInfo.FieldIndex, fieldInfo.Value, paramKeyToAttrMap,
-			); err != nil {
+			fieldValue := fieldInfo.getFieldReflectValue(pointerElemReflectValue)
+			if err = bindVarToStructAttrWithFieldIndex(fieldName, fieldValue, fieldInfo.Value, paramKeyToAttrMap); err != nil {
 				return err
 			}
 			usedParamsKeyOrTagNameMap[fieldInfo.FieldOrTagName] = struct{}{}
@@ -290,16 +220,147 @@ func doStruct(
 
 		// If value is nil, a fuzzy match is used for search the key and value for converting.
 		paramKey, paramValue = fuzzyMatchingFieldName(fieldName, paramsMap, usedParamsKeyOrTagNameMap)
-		if paramValue != nil {
-			if err = bindVarToStructAttrWithFieldIndex(
-				pointerElemReflectValue, fieldName, fieldInfo.FieldIndex, paramValue, paramKeyToAttrMap,
-			); err != nil {
-				return err
+
+		// 有可能paramKey有值，但是paramValue是nil值，需要兼容之前的行为
+		if paramKey != "" {
+			fieldValue = fieldInfo.getFieldReflectValue(pointerElemReflectValue)
+			// 如果paramValue是nil值，就不需要在设置什么值了
+			// 因为getFieldReflectValue已经初始化了
+			if paramValue != nil {
+				if err = bindVarToStructAttrWithFieldIndex(fieldName, fieldValue, paramValue, paramKeyToAttrMap); err != nil {
+					return err
+				}
 			}
 			usedParamsKeyOrTagNameMap[paramKey] = struct{}{}
 		}
 	}
 	return nil
+}
+
+// Holds the info for subsequent converting.
+type toBeConvertedFieldInfo struct {
+	Value          any    // Found value by tag name or field name from input.
+	FieldIndex     []int  // The associated reflection field index.
+	FieldOrTagName string // Field name or tag name for field tag by priority tags.
+
+}
+
+func (f *toBeConvertedFieldInfo) getFieldReflectValue(structValue reflect.Value) reflect.Value {
+	if len(f.FieldIndex) == 1 {
+		return structValue.Field(f.FieldIndex[0])
+	}
+	v := structValue
+	for i, x := range f.FieldIndex {
+		if i > 0 {
+			switch v.Kind() {
+			case reflect.Pointer:
+				if v.IsNil() {
+					v.Set(reflect.New(v.Type().Elem()))
+				}
+				v = v.Elem()
+			case reflect.Interface:
+				// Compatible with previous code
+				// Interface => struct
+				v = v.Elem()
+				if v.Kind() == reflect.Ptr {
+					v = v.Elem()
+				}
+			}
+		}
+		v = v.Field(x)
+	}
+	return v
+}
+
+func parseStruct(
+	pointerElem reflect.Value,
+	structType reflect.Type,
+	priorityTag string,
+	parentIndex []int,
+	toBeConvertedFieldNameToInfoMap map[string]toBeConvertedFieldInfo) {
+
+	if structType.Kind() != reflect.Struct {
+		return
+	}
+	var (
+		priorityTagArray []string
+		fieldName        string
+		structField      reflect.StructField
+		fieldType        reflect.Type
+	)
+	if priorityTag != "" {
+		priorityTagArray = append(utils.SplitAndTrim(priorityTag, ","), gtag.StructTagPriority...)
+	} else {
+		priorityTagArray = gtag.StructTagPriority
+	}
+	for i := 0; i < structType.NumField(); i++ {
+		structField = structType.Field(i)
+		fieldType = structField.Type
+		fieldName = structField.Name
+		// Only do converting to public attributes.
+		if !utils.IsLetterUpper(fieldName[0]) {
+			continue
+		}
+		var fieldTagName = getTagNameFromField(structField, priorityTagArray)
+		// Maybe it's struct/*struct embedded.
+		if structField.Anonymous {
+			if fieldType.Kind() == reflect.Interface {
+				fieldValue := pointerElem.FieldByIndex(append(parentIndex, i))
+				if fieldValue.IsValid() == false || fieldValue.IsNil() {
+					// empty interface or nil
+					continue
+				}
+				// interface => struct
+				fieldValue = fieldValue.Elem()
+				if fieldValue.Kind() == reflect.Ptr {
+					fieldValue = fieldValue.Elem()
+				}
+				fieldType = fieldValue.Type()
+			} else {
+				if fieldType.Kind() == reflect.Ptr {
+					fieldType = fieldType.Elem()
+				}
+			}
+			if fieldType.Kind() != reflect.Struct {
+				continue
+			}
+			// type Name struct {
+			//    LastName  string `json:"lastName"`
+			//    FirstName string `json:"firstName"`
+			// }
+			//
+			// type User struct {
+			//     Name `json:"name"`
+			//     // ...
+			// }
+			//
+			// It is only recorded if the name has a fieldTag
+			// TODO: If it's an anonymous field with a tag, doesn't it need to be recursive?
+			_, ok := toBeConvertedFieldNameToInfoMap[fieldName]
+			if !ok {
+				// If there is a duplicate name, the default one is based on the previous one
+				toBeConvertedFieldNameToInfoMap[fieldName] = toBeConvertedFieldInfo{
+					FieldIndex:     append(parentIndex, i),
+					FieldOrTagName: fieldTagName,
+				}
+			}
+			parseStruct(pointerElem, fieldType, priorityTag, append(parentIndex, i), toBeConvertedFieldNameToInfoMap)
+
+		} else {
+			// Use the native fieldName name as the fieldTag
+			if fieldTagName == "" {
+				fieldTagName = fieldName
+			}
+			_, ok := toBeConvertedFieldNameToInfoMap[fieldName]
+			if !ok {
+				// If there is a duplicate name, the default one is based on the previous one
+				toBeConvertedFieldNameToInfoMap[fieldName] = toBeConvertedFieldInfo{
+					FieldIndex:     append(parentIndex, i),
+					FieldOrTagName: fieldTagName,
+				}
+			}
+		}
+	}
 }
 
 func getTagNameFromField(field reflect.StructField, priorityTags []string) string {
@@ -342,10 +403,11 @@ func fuzzyMatchingFieldName(
 
 // bindVarToStructAttrWithFieldIndex sets value to struct object attribute by name.
 func bindVarToStructAttrWithFieldIndex(
-	structReflectValue reflect.Value, attrName string,
-	fieldIndex int, value interface{}, paramKeyToAttrMap map[string]string,
+	attrName string,
+	structFieldValue reflect.Value, value any,
+	paramKeyToAttrMap map[string]string,
 ) (err error) {
-	structFieldValue := structReflectValue.Field(fieldIndex)
+
 	if !structFieldValue.IsValid() {
 		return nil
 	}
@@ -360,6 +422,7 @@ func bindVarToStructAttrWithFieldIndex(
 			}
 		}
 	}()
+
 	// Directly converting.
 	if empty.IsNil(value) {
 		structFieldValue.Set(reflect.Zero(structFieldValue.Type()))
