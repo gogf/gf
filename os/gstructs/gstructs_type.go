@@ -6,16 +6,34 @@
 
 package gstructs
 
+import "reflect"
+
 // Signature returns a unique string as this type.
 func (t Type) Signature() string {
 	return t.PkgPath() + "/" + t.String()
 }
 
-// FieldKeys returns the keys of current struct/map.
+// FieldKeys returns the keys of current struct.
 func (t Type) FieldKeys() []string {
-	keys := make([]string, t.NumField())
-	for i := 0; i < t.NumField(); i++ {
-		keys[i] = t.Field(i).Name
+	if t.Kind() != reflect.Struct {
+		return []string{}
+	}
+	return getStructFields(t.Type)
+}
+
+func getStructFields(structType reflect.Type) []string {
+	keys := make([]string, 0, structType.NumField())
+	for i := 0; i < structType.NumField(); i++ {
+		field := structType.Field(i)
+		if field.Anonymous {
+			if field.Type.Kind() == reflect.Ptr {
+				field.Type = field.Type.Elem()
+			}
+			if field.Type.Kind() == reflect.Struct {
+				keys = append(keys, getStructFields(field.Type)...)
+			}
+		}
+		keys = append(keys, field.Name)
 	}
 	return keys
 }
