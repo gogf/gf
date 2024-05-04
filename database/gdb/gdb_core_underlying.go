@@ -443,11 +443,12 @@ func (c *Core) scanRowsToStruct(scanArgs []any, rows *sql.Rows, table *Table) (r
 		if err = rows.Scan(scanArgs...); err != nil {
 			return result, err
 		}
-		record := Record{}
-		val := reflect.Value{}
+		var (
+			record = Record{}
+			val    = reflect.Value{}
+		)
 		if table != nil {
 			for tableFieldName, field := range table.fields {
-
 				arg := scanArgs[field.ColumnFieldIndex]
 				switch v := arg.(type) {
 				case *sql.RawBytes:

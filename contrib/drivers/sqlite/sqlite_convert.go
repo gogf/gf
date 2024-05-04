@@ -23,13 +23,9 @@ const (
 func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (gdb.LocalType, error) {
 	typeName := strings.ToLower(fieldType)
 	switch typeName {
-	case
-		fieldTypeDate:
+	case fieldTypeDate:
 		return gdb.LocalTypeDate, nil
-	case
-		fieldTypeDatetime,
-		fieldTypeTimestamp,
-		fieldTypeTimestampz:
+	case fieldTypeDatetime, fieldTypeTimestamp, fieldTypeTimestampz:
 		return gdb.LocalTypeDatetime, nil
 	default:
 		if strings.Contains(typeName, "time") {

@@ -1621,16 +1621,15 @@ func Test_Types(t *testing.T) {
 			Bit       int8
 			TinyInt   bool
 		}
-		var obj *T
-		err = db.Model("types").Scan(&obj)
 		now, err := db.Query(ctx, "select now();")
 		t.Log("mysql now=", now, err)
 		zone, err := db.Query(ctx, "SHOW  VARIABLES LIKE '%time_zone';")
 		t.Log("mysql zone=", zone, err)
-
 		version, err := db.Query(ctx, "select version();")
 		t.Log("mysql version=", version, err)
 
+		var obj *T
+		err = db.Model("types").Scan(&obj)
 		t.AssertNil(err)
 		t.Assert(obj.Id, 1)
 		t.Assert(obj.Blob, data["blob"])
