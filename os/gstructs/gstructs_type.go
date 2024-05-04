@@ -31,6 +31,7 @@ func getStructFields(structType reflect.Type) []string {
 			}
 			if field.Type.Kind() == reflect.Struct {
 				keys = append(keys, getStructFields(field.Type)...)
+				continue
 			}
 		}
 		keys = append(keys, field.Name)
