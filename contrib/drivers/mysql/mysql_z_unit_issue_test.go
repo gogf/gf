@@ -1205,15 +1205,12 @@ func Test_Issue2119(t *testing.T) {
 		_ = tables
 		array := gstr.SplitAndTrim(gtest.DataContent(`issue2119.sql`), ";")
 		for _, v := range array {
-			if _, err := db.Exec(ctx, v); err != nil {
-				gtest.Error(err)
-			}
+			_, err := db.Exec(ctx, v)
+			t.AssertNil(err)
 		}
 		roles := make([]*Role, 0)
 		err := db.Ctx(context.Background()).Model(&Role{}).WithAll().Scan(&roles)
-		if err != nil {
-			t.Error("err != nil")
-		}
+		t.AssertNil(err)
 		expectStatus := []*Status{
 			{
 				StatusBase: StatusBase{

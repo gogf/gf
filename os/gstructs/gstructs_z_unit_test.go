@@ -388,12 +388,13 @@ func TestType_FieldKeys(t *testing.T) {
 		type B struct {
 			*A
 			Time
+			Aa   *A
 			Id   int
 			Name string
 		}
 		r, err := gstructs.StructType(new(B))
 		t.AssertNil(err)
-		t.Assert(r.FieldKeys(), g.Slice{"Age", "Score", "CreatedAt", "UpdatedAt", "Id", "Name"})
+		t.Assert(r.FieldKeys(), g.Slice{"Age", "Score", "CreatedAt", "UpdatedAt", "Aa", "Id", "Name"})
 	})
 }
 
