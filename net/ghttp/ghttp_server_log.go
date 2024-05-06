@@ -20,6 +20,11 @@ func (s *Server) handleAccessLog(r *Request) {
 	if !s.IsAccessLogEnabled() {
 		return
 	}
+
+	if s.config.AccessLogConditionUnless != "" && r.GetCtxVar(s.config.AccessLogConditionUnless).String() != "" {
+		return
+	}
+
 	var (
 		scheme            = r.GetSchema()
 		loggerInstanceKey = fmt.Sprintf(`Acccess Logger Of Server:%s`, s.instance)
@@ -33,7 +38,7 @@ func (s *Server) handleAccessLog(r *Request) {
 	logger := instance.GetOrSetFuncLock(loggerInstanceKey, func() interface{} {
 		l := s.Logger().Clone()
 		l.SetFile(s.config.AccessLogPattern)
-		l.SetStdoutPrint(s.config.LogStdout)
+		l.SetStdoutPrint(s.config.LogStdout && !s.config.AccessLogStdoutDisabled)
 		l.SetLevelPrint(false)
 		return l
 	}).(*glog.Logger)

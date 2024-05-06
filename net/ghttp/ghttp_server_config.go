@@ -205,15 +205,17 @@ type ServerConfig struct {
 	// Logging.
 	// ======================================================================================================
 
-	Logger           *glog.Logger `json:"logger"`           // Logger specifies the logger for server.
-	LogPath          string       `json:"logPath"`          // LogPath specifies the directory for storing logging files.
-	LogLevel         string       `json:"logLevel"`         // LogLevel specifies the logging level for logger.
-	LogStdout        bool         `json:"logStdout"`        // LogStdout specifies whether printing logging content to stdout.
-	ErrorStack       bool         `json:"errorStack"`       // ErrorStack specifies whether logging stack information when error.
-	ErrorLogEnabled  bool         `json:"errorLogEnabled"`  // ErrorLogEnabled enables error logging content to files.
-	ErrorLogPattern  string       `json:"errorLogPattern"`  // ErrorLogPattern specifies the error log file pattern like: error-{Ymd}.log
-	AccessLogEnabled bool         `json:"accessLogEnabled"` // AccessLogEnabled enables access logging content to files.
-	AccessLogPattern string       `json:"accessLogPattern"` // AccessLogPattern specifies the error log file pattern like: access-{Ymd}.log
+	Logger                   *glog.Logger `json:"logger"`                   // Logger specifies the logger for server.
+	LogPath                  string       `json:"logPath"`                  // LogPath specifies the directory for storing logging files.
+	LogLevel                 string       `json:"logLevel"`                 // LogLevel specifies the logging level for logger.
+	LogStdout                bool         `json:"logStdout"`                // LogStdout specifies whether printing logging content to stdout.
+	ErrorStack               bool         `json:"errorStack"`               // ErrorStack specifies whether logging stack information when error.
+	ErrorLogEnabled          bool         `json:"errorLogEnabled"`          // ErrorLogEnabled enables error logging content to files.
+	ErrorLogPattern          string       `json:"errorLogPattern"`          // ErrorLogPattern specifies the error log file pattern like: error-{Ymd}.log
+	AccessLogEnabled         bool         `json:"accessLogEnabled"`         // AccessLogEnabled enables access logging content to files.
+	AccessLogPattern         string       `json:"accessLogPattern"`         // AccessLogPattern specifies the error log file pattern like: access-{Ymd}.log
+	AccessLogStdoutDisabled  bool         `json:"accessLogStdoutDisabled"`  // AccessLogStdoutDisabled specifies whether not printing access logging content to stdout if AccessLogStdoutDisabled is true.
+	AccessLogConditionUnless string       `json:"accessLogConditionUnless"` // AccessLogConditionUnless specifies condition which is meant not to printing access logging
 
 	// ======================================================================================================
 	// PProf.
