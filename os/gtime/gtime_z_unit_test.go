@@ -111,7 +111,7 @@ func Test_StrToTime(t *testing.T) {
 			"02.jan.2006 15:04:05",
 			"02.jan.2006:15:04:05",
 		}
-		// 保存之前的时区
+		// Save the previous time zone
 		local := *time.Local
 		defer func() {
 			*time.Local = local
