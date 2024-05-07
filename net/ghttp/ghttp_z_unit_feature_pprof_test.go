@@ -30,30 +30,15 @@ func TestServer_EnablePProf(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
-		r, err := client.Get(ctx, "/pprof/index")
-		Assert(err, nil)
-		Assert(r.StatusCode, 200)
-		r.Close()
-
-		r, err = client.Get(ctx, "/pprof/cmdline")
-		Assert(err, nil)
-		Assert(r.StatusCode, 200)
-		r.Close()
-
-		//r, err = client.Get(ctx, "/pprof/profile")
-		//Assert(err, nil)
-		//Assert(r.StatusCode, 200)
-		//r.Close()
-
-		r, err = client.Get(ctx, "/pprof/symbol")
-		Assert(err, nil)
-		Assert(r.StatusCode, 200)
-		r.Close()
-
-		r, err = client.Get(ctx, "/pprof/trace")
-		Assert(err, nil)
-		Assert(r.StatusCode, 200)
-		r.Close()
+		urlPaths := []string{
+			"/pprof/index", "/pprof/cmdline", "/pprof/symbol", "/pprof/trace",
+		}
+		for _, urlPath := range urlPaths {
+			r, err := client.Get(ctx, urlPath)
+			AssertNil(err)
+			Assert(r.StatusCode, 200)
+			AssertNil(r.Close())
+		}
 	})
 }
 
@@ -66,26 +51,16 @@ func TestServer_StartPProfServer(t *testing.T) {
 
 		time.Sleep(100 * time.Millisecond)
 		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d/debug", s.GetListenedPort()))
 
-		r, err := client.Get(ctx, "/debug/pprof/index")
-		Assert(err, nil)
-		Assert(r.StatusCode, 200)
-		r.Close()
-
-		r, err = client.Get(ctx, "/debug/pprof/cmdline")
-		Assert(err, nil)
-		Assert(r.StatusCode, 200)
-		r.Close()
-
-		r, err = client.Get(ctx, "/debug/pprof/symbol")
-		Assert(err, nil)
-		Assert(r.StatusCode, 200)
-		r.Close()
-
-		r, err = client.Get(ctx, "/debug/pprof/trace")
-		Assert(err, nil)
-		Assert(r.StatusCode, 200)
-		r.Close()
+		urlPaths := []string{
+			"/pprof/index", "/pprof/cmdline", "/pprof/symbol", "/pprof/trace",
+		}
+		for _, urlPath := range urlPaths {
+			r, err := client.Get(ctx, urlPath)
+			AssertNil(err)
+			Assert(r.StatusCode, 200)
+			AssertNil(r.Close())
+		}
 	})
 }
