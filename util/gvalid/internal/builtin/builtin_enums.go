@@ -9,6 +9,7 @@ package builtin
 import (
 	"errors"
 	"fmt"
+	"reflect"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -47,6 +48,10 @@ func (r RuleEnums) Run(in RunInput) error {
 		pkgPath  = in.ValueType.PkgPath()
 		typeName = in.ValueType.Name()
 	)
+	if in.ValueType.Kind() == reflect.Slice {
+		pkgPath = in.ValueType.Elem().PkgPath()
+		typeName = in.ValueType.Elem().Name()
+	}
 	if pkgPath == "" {
 		return gerror.NewCodef(
 			gcode.CodeInvalidOperation,

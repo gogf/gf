@@ -1577,6 +1577,10 @@ func Test_Enums(t *testing.T) {
 			Id    int
 			Enums EnumsTest `v:"enums"`
 		}
+		type SliceParams struct {
+			Id    int
+			Enums []EnumsTest `v:"foreach|enums"`
+		}
 
 		oldEnumsJson, err := gtag.GetGlobalEnums()
 		t.AssertNil(err)
@@ -1596,5 +1600,11 @@ func Test_Enums(t *testing.T) {
 			Enums: "c",
 		}).Run(ctx)
 		t.Assert(err, "The Enums value `c` should be in enums of: [\"a\",\"b\"]")
+
+		err = g.Validator().Data(&SliceParams{
+			Id:    1,
+			Enums: []EnumsTest{EnumsTestA, EnumsTestB},
+		}).Run(ctx)
+		t.AssertNil(err)
 	})
 }
