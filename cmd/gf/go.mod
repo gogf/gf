@@ -13,7 +13,7 @@ require (
 	github.com/gogf/selfupdate v0.0.0-20231215043001-5c48c528462f
 	github.com/olekukonko/tablewriter v0.0.5
 	golang.org/x/mod v0.17.0
-	golang.org/x/tools v0.21.0
+	golang.org/x/tools v0.18.0
 )
 
 require (
