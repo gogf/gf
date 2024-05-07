@@ -11,92 +11,30 @@ import (
 	"database/sql"
 	"fmt"
 	"reflect"
-	"strconv"
-	"time"
 )
 
-func RegisterFieldConverterFunc(ctx context.Context, db DB,
-	tableField *sql.ColumnType, structField reflect.StructField) (convertFn fieldConvertFunc, tempArg any) {
-	tempArg = &sql.RawBytes{}
-
-	tableFieldIsTimeType := func(typ reflect.Type) bool {
-		switch typ {
-		case reflect.TypeOf(time.Time{}):
-			return true
-		case reflect.TypeOf(sql.NullTime{}):
-			return true
-		default:
-			return false
-		}
-	}
-
-	structFieldIsTimeType := func(typ reflect.Type) bool {
-		switch typ {
-		case timeTimeType, timeTimePtrType:
-			return true
-		case gtimeTimeType, gtimeTimePtrType:
-			return true
-		default:
-			return false
-		}
-	}
-
-	tabFieldType := tableField
+func registerFieldConvertFunc(ctx context.Context, db DB,
+	tableField *sql.ColumnType, structField reflect.StructField) (convertFn fieldConvertFunc) {
 	localType, _ := db.CheckLocalTypeForField(ctx, tableField.DatabaseTypeName(), nil)
-
+	// 有几个特殊的类型，需要特殊处理
 	switch localType {
-	case LocalTypeBytes:
-		if structFieldIsTimeType(structField.Type) {
-			convertFn = getTimeConvertFunc(structField.Type)
-		} else {
-			convertFn = getStringConvertFunc(structField.Type)
-		}
-	case LocalTypeString:
-		if structFieldIsTimeType(structField.Type) {
-			convertFn = getTimeConvertFunc(structField.Type)
-		} else {
-			// To support string to other types of conversions, it must be compatible
-			// Cannot be converted to a numeric type
-			convertFn = getStringConvertFunc(structField.Type)
-		}
-	case LocalTypeInt, LocalTypeInt64:
-		convertFn = getIntegerConvertFunc[int64](structField.Type, strconv.ParseInt)
-	case LocalTypeUint, LocalTypeUint64:
-		convertFn = getIntegerConvertFunc[uint64](structField.Type, strconv.ParseUint)
-	case LocalTypeFloat32, LocalTypeFloat64:
-		convertFn = getFloatConvertFunc(structField.Type)
-	case LocalTypeBool:
-		convertFn = getBoolConvertFunc(structField.Type)
-	case LocalTypeDate:
-		// The time format of different databases may be different, and the compatibility is not good enough
-		// Unified use of sql.RawBytes are received and processed by standard libraries or drivers
-		ok := tableFieldIsTimeType(tabFieldType.ScanType())
-		if ok {
-			tempArg = &sql.NullTime{}
-		}
-		convertFn = getTimeConvertFunc(structField.Type)
-	case LocalTypeDatetime:
-		// The time format of different databases may be different, and the compatibility is not good enough
-		// Unified use of sql.RawBytes are received and processed by standard libraries or drivers
-		ok := tableFieldIsTimeType(tabFieldType.ScanType())
-		if ok {
-			tempArg = &sql.NullTime{}
-		}
-		convertFn = getTimeConvertFunc(structField.Type)
-	case LocalTypeDecimal: // float
-		convertFn = getDecimalConvertFunc(structField.Type)
+	case LocalTypeUint64Bytes:
+		// bit
+		convertFn = getBitConvertFunc(structField.Type, 0)
 	case LocalTypeInt64Bytes:
-		convertFn = getBitConvertFunc(structField.Type)
-	case LocalTypeJson:
-		convertFn = getJsonConvertFunc(structField.Type, true)
-	case LocalTypeJsonb:
-		convertFn = getJsonConvertFunc(structField.Type, true)
+		// bit
+		convertFn = getBitConvertFunc(structField.Type, 0)
+	case LocalTypeDecimal:
+		// decimal numeric money
+		convertFn = getDecimalConvertFunc(structField.Type, 0)
 	default:
+		convertFn = getConverter(structField.Type, 0)
 	}
+
 	if convertFn == nil {
 		panic(&typeConvertError{
 			driverName:  db.GetConfig().Type,
-			columnName:  tabFieldType.Name(),
+			columnName:  tableField.Name(),
 			columnType:  tableField.DatabaseTypeName(),
 			structField: structField,
 		})

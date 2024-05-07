@@ -424,8 +424,8 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 
 	table := parseStruct(ctx, c.GetDB(), columnTypes)
 	if table != nil {
-
-		return c.scanRowsToStruct(table.scanArgs, rows, table)
+		mapQuery := table.makeMapQueryModel(len(columnTypes))
+		return c.scanRowsToMap(rows, mapQuery)
 	}
 	var (
 		scanArgs = make([]interface{}, len(columnTypes))
@@ -438,43 +438,12 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 	return c.scanRowsToResult(ctx, scanArgs, rows, columnTypes)
 }
 
-func (c *Core) scanRowsToStruct(scanArgs []any, rows *sql.Rows, table *Table) (result Result, err error) {
+func (c *Core) scanRowsToMap(rows *sql.Rows, mapQuery *queryMapModel) (result Result, err error) {
 	for {
-		if err = rows.Scan(scanArgs...); err != nil {
+		record := Record{}
+		mapQuery.next(record)
+		if err = rows.Scan(mapQuery.scanArgs...); err != nil {
 			return result, err
-		}
-		var (
-			record = Record{}
-			val    = reflect.Value{}
-		)
-		if table != nil {
-			for tableFieldName, field := range table.fields {
-				arg := scanArgs[field.ColumnFieldIndex]
-				switch v := arg.(type) {
-				case *sql.RawBytes:
-					if *v == nil {
-						record[tableFieldName] = nil
-						continue
-					}
-					val = reflect.New(field.StructFieldType).Elem()
-					if field.isCustomConvert == false {
-						err = field.convertFunc(string(*v), val)
-					} else {
-						err = field.convertFunc(v, val)
-					}
-				case *sql.NullTime:
-					if v.Valid == false {
-						record[tableFieldName] = nil
-						continue
-					}
-					val = reflect.New(field.StructFieldType).Elem()
-					err = field.convertFunc(v.Time, val)
-				}
-				if err != nil {
-					return result, err
-				}
-				record[tableFieldName] = gvar.New(val.Interface())
-			}
 		}
 		result = append(result, record)
 		if !rows.Next() {
