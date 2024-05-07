@@ -216,6 +216,8 @@ func loadContentWithOptions(data []byte, options Options) (*Json, error) {
 // checkDataType automatically checks and returns the data type for `content`.
 // Note that it uses regular expression for loose checking, you can use LoadXXX/LoadContentType
 // functions to load the content for certain content type.
+// TODO it is not graceful here automatic judging the data type.
+// TODO it might be removed in the future, which lets the user explicitly specify the data type not automatic checking.
 func checkDataType(data []byte) (ContentType, error) {
 	switch {
 	case json.Valid(data):
