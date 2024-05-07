@@ -130,7 +130,6 @@ func (t *Table) getStructFields(ctx context.Context, db DB, structType reflect.T
 			scanCount += t.getStructFields(ctx, db, field.Type, append(parentIndex, i), existsColumn)
 			continue
 		}
-
 		// orm:"with:id1=id2" json:"name"
 		if strings.Contains(tag, "with:") {
 			tag = ""
@@ -150,12 +149,10 @@ func (t *Table) getStructFields(ctx context.Context, db DB, structType reflect.T
 				continue
 			}
 		}
-
 		var (
 			fieldInfo *fieldConvertInfo
 			ok        bool
 		)
-
 		if tag != "" {
 			fieldInfo, ok = t.fieldsMap[tag]
 			if !ok {
@@ -166,7 +163,6 @@ func (t *Table) getStructFields(ctx context.Context, db DB, structType reflect.T
 				}
 			}
 		}
-
 		// Neither the tag nor the field name matched
 		if !ok {
 			removeSymbolsFieldName := utils.RemoveSymbols(field.Name)
@@ -184,7 +180,6 @@ func (t *Table) getStructFields(ctx context.Context, db DB, structType reflect.T
 				}
 			}
 		}
-
 		if ok {
 			fieldInfo.StructFieldIndex = append(parentIndex, i)
 			fieldInfo.StructFieldType = field.Type

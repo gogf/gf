@@ -54,8 +54,6 @@ func (q *queryMapModel) Scan(src any) error {
 	return err
 }
 
-// 需要给下一个结构体赋值
-// 给结构体切片用的
 func (q *queryMapModel) next(mapValue map[string]Value) {
 	q.Map = mapValue
 	// 索引需要初始化

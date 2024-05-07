@@ -30,7 +30,6 @@ func registerFieldConvertFunc(ctx context.Context, db DB,
 	default:
 		convertFn = getConverter(structField.Type, 0)
 	}
-
 	if convertFn == nil {
 		panic(&typeConvertError{
 			driverName:  db.GetConfig().Type,

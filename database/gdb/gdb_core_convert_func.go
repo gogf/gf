@@ -22,7 +22,10 @@ type iUnmarshalValue interface {
 	UnmarshalValue(any) error
 }
 
-var convertFuncMap map[reflect.Kind]fieldConvertFunc
+var (
+	convertFuncMap map[reflect.Kind]fieldConvertFunc
+	converterMap   sync.Map
+)
 
 var (
 	bytesType           = reflect.TypeOf((*[]byte)(nil)).Elem()
@@ -55,41 +58,21 @@ func init() {
 		reflect.Complex128: nil,
 		reflect.Array:      nil,
 		// reflect.Interface:     convertToInterface,
-		reflect.Ptr:           nil,
-		reflect.Slice:         convertToJSON,
-		reflect.Map:           convertToJSON,
-		reflect.Struct:        convertToJSON,
+		// reflect.Slice:         convertToJSON,
+		// reflect.Map:           convertToJSON,
+		// reflect.Struct:        convertToJSON,
 		reflect.String:        convertToString,
+		reflect.Ptr:           nil,
 		reflect.UnsafePointer: nil,
 	}
 }
 
-var converterMap sync.Map
-
-func getConverter(typ reflect.Type, n int) fieldConvertFunc {
-	// 不支持二级指针赋值
-	if n > 1 {
-		return nil
-	}
-
-	if v, ok := converterMap.Load(typ); ok {
-		return v.(fieldConvertFunc)
-	}
-
-	fn := getConvertFunc(typ, n)
-
-	if v, ok := converterMap.LoadOrStore(typ, fn); ok {
-		return v.(fieldConvertFunc)
-	}
-	return fn
-}
-
-func getBitConvertFunc(typ reflect.Type, n int) fieldConvertFunc {
-	if n > 1 {
+func getBitConvertFunc(typ reflect.Type, deref int) fieldConvertFunc {
+	if deref > 1 {
 		return nil
 	}
 	if typ.Kind() == reflect.Ptr {
-		fn := getBitConvertFunc(typ.Elem(), n+1)
+		fn := getBitConvertFunc(typ.Elem(), deref+1)
 		if fn != nil {
 			return ptrConverter(fn)
 		}
@@ -148,12 +131,12 @@ func bitArrayToUint64(b []byte) uint64 {
 	return n
 }
 
-func getDecimalConvertFunc(typ reflect.Type, n int) fieldConvertFunc {
-	if n > 1 {
+func getDecimalConvertFunc(typ reflect.Type, deref int) fieldConvertFunc {
+	if deref > 1 {
 		return nil
 	}
 	if typ.Kind() == reflect.Ptr {
-		fn := getDecimalConvertFunc(typ.Elem(), n+1)
+		fn := getDecimalConvertFunc(typ.Elem(), deref+1)
 		if fn != nil {
 			return ptrConverter(fn)
 		}
@@ -201,26 +184,17 @@ func decimalConvertFunc[T int64 | uint64](set func(T), src any) error {
 
 func ptrConverter(fn fieldConvertFunc) fieldConvertFunc {
 	return func(dest reflect.Value, src interface{}) error {
-		// 如果从数据库查询出来的是null值
 		if src == nil {
-			//if !dest.CanAddr() {
-			//	if dest.IsNil() {
-			//		return nil
-			//	}
-			//	// 如果结构体字段不是nil
-			//	return fn(dest.Elem(), src)
-			//}
-			if !dest.IsNil() {
+			// todo 是否直接退出，不初始化？
+			if dest.IsNil() == false {
 				// 如果结构体字段不是nil，重新初始化
 				dest.Set(reflect.New(dest.Type().Elem()))
 			}
 			return nil
 		}
-
 		if dest.IsNil() {
 			dest.Set(reflect.New(dest.Type().Elem()))
 		}
-
 		if dest.Kind() == reflect.Map {
 			return fn(dest, src)
 		}
@@ -228,17 +202,29 @@ func ptrConverter(fn fieldConvertFunc) fieldConvertFunc {
 	}
 }
 
-func addrConverter(fn fieldConvertFunc) fieldConvertFunc {
-	return func(dest reflect.Value, src interface{}) error {
-		return fn(dest.Addr(), src)
+func getConverter(typ reflect.Type, deref int) fieldConvertFunc {
+	// 不支持二级指针赋值
+	if deref > 1 {
+		return nil
 	}
+	if v, ok := converterMap.Load(typ); ok {
+		return v.(fieldConvertFunc)
+	}
+	fn := getConvertFunc(typ, deref)
+	if v, ok := converterMap.LoadOrStore(typ, fn); ok {
+		return v.(fieldConvertFunc)
+	}
+	return fn
 }
 
-func getConvertFunc(typ reflect.Type, n int) fieldConvertFunc {
+func getConvertFunc(typ reflect.Type, deref int) fieldConvertFunc {
 	kind := typ.Kind()
-
 	if kind == reflect.Ptr {
-		if fn := getConverter(typ.Elem(), n+1); fn != nil {
+		fn := checkPtrImplInterface(typ, deref)
+		if fn != nil {
+			return fn
+		}
+		if fn = getConverter(typ.Elem(), deref+1); fn != nil {
 			return ptrConverter(fn)
 		}
 	}
@@ -248,14 +234,11 @@ func getConvertFunc(typ reflect.Type, n int) fieldConvertFunc {
 		return convertToBytes
 	case timeType:
 		return convertToTime
-	case gtimeType:
-		// 对于gtime.Time类型，不走Scan方法的逻辑
-		return convertToGTime
 	case jsonRawMessageType:
 		return convertToBytes
 	}
 
-	fn := checkInterface(typ)
+	fn := checkTypeImplInterface(typ)
 	if fn != nil {
 		return fn
 	}
@@ -264,34 +247,68 @@ func getConvertFunc(typ reflect.Type, n int) fieldConvertFunc {
 	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
 		return convertToBytes
 	}
+	// json
+	switch typ.Kind() {
+	case reflect.Slice, reflect.Map, reflect.Struct:
+		return getJsonConverter(typ)
+	}
 
 	return convertFuncMap[kind]
 }
 
-func checkInterface(typ reflect.Type) fieldConvertFunc {
-	isptr := false
-	ptrType := typ
-	if typ.Kind() == reflect.Ptr {
-		isptr = true
-	} else {
-		ptrType = reflect.PointerTo(typ)
+// 检查指针类型实现的接口
+func checkPtrImplInterface(typ reflect.Type, deref int) (fn fieldConvertFunc) {
+	// 防止二级指针
+	if deref > 0 {
+		return nil
 	}
+	switch {
+	case typ.Implements(scannerType):
+		return func(dest reflect.Value, src any) error {
+			if src == nil {
+				if dest.IsNil() == false {
+					// 如果结构体字段不是nil，重新初始化
+					dest.Set(reflect.New(typ.Elem()))
+				}
+				return nil
+			}
+			if dest.IsNil() {
+				dest.Set(reflect.New(typ.Elem()))
+			}
+			return dest.Interface().(sql.Scanner).Scan(src)
+		}
+	case typ.Implements(jsonUnmarshalerType):
+		return func(dest reflect.Value, src any) error {
+			if src == nil {
+				if dest.IsNil() == false {
+					// 如果结构体字段不是nil，重新初始化
+					dest.Set(reflect.New(typ.Elem()))
+				}
+				return nil
+			}
+			b, err := toBytes(src)
+			if err != nil {
+				return err
+			}
+			if dest.IsNil() {
+				dest.Set(reflect.New(typ.Elem()))
+			}
+			return dest.Interface().(json.Unmarshaler).UnmarshalJSON(b)
+		}
+	}
+	return
+}
 
-	// 1.如果实现了sql.Scanner接口
-	if ptrType.Implements(scannerType) {
-		if isptr == false {
-			return addrConverter(convertToScanner)
-		}
-		return convertToScanner
-	}
-	// 2.如果实现了json.Unmarshal接口
-	if typ.Implements(jsonUnmarshalerType) {
-		if isptr == false {
-			return addrConverter(convertToJsonUnmarshal)
-		}
-		return convertToJsonUnmarshal
+func checkTypeImplInterface(typ reflect.Type) fieldConvertFunc {
+	typ = reflect.PointerTo(typ)
+	if typ.Implements(scannerType) {
+		return sqlScannerConvert
 	}
 	return nil
+}
+
+func sqlScannerConvert(dest reflect.Value, src interface{}) error {
+	return dest.Addr().Interface().(sql.Scanner).Scan(src)
 }
 
 func convertToBool(dest reflect.Value, src interface{}) error {
@@ -349,13 +366,15 @@ func convertToInt64(dest reflect.Value, src interface{}) error {
 		}
 		dest.SetInt(n)
 		return nil
-	case int8: // dm tinyint
-		dest.SetInt(int64(sv))
-		return nil
-	case int32: // dm tinyint
-		dest.SetInt(int64(sv))
-		return nil
 	default:
+		switch sv := src.(type) {
+		case int8: // dm tinyint
+			dest.SetInt(int64(sv))
+			return nil
+		case int32: // dm tinyint
+			dest.SetInt(int64(sv))
+			return nil
+		}
 		return convertError()
 	}
 }
@@ -499,38 +518,15 @@ func convertToTime(dest reflect.Value, src interface{}) error {
 	}
 }
 
-func convertToGTime(dest reflect.Value, src interface{}) error {
-	switch src := src.(type) {
-	case time.Time:
-		destTime := dest.Addr().Interface().(*gtime.Time)
-		destTime.Time = src
-		return nil
-	case string:
-		srcTime, err := parseTime(src)
-		if err != nil {
-			return err
-		}
-		destTime := dest.Addr().Interface().(*gtime.Time)
-		destTime.Time = srcTime
-		return nil
-	case []byte:
-		srcTime, err := parseTime(unsafeBytesToString(src))
-		if err != nil {
-			return err
-		}
-		destTime := dest.Addr().Interface().(*gtime.Time)
-		destTime.Time = srcTime
-		return nil
-	default:
-		return convertError()
+func getJsonConverter(typ reflect.Type) fieldConvertFunc {
+	typ = reflect.PointerTo(typ)
+	if typ.Implements(jsonUnmarshalerType) {
+		return unmarshalJsonConvert
 	}
+	return convertToJSON
 }
 
-func convertToScanner(dest reflect.Value, src interface{}) error {
-	return dest.Interface().(sql.Scanner).Scan(src)
-}
-
-func convertToJsonUnmarshal(dest reflect.Value, src interface{}) error {
+func unmarshalJsonConvert(dest reflect.Value, src interface{}) error {
 	if src == nil {
 		return nil
 	}
@@ -538,7 +534,7 @@ func convertToJsonUnmarshal(dest reflect.Value, src interface{}) error {
 	if err != nil {
 		return err
 	}
-	return dest.Interface().(json.Unmarshaler).UnmarshalJSON(b)
+	return dest.Addr().Interface().(json.Unmarshaler).UnmarshalJSON(b)
 }
 
 func convertToJSON(dest reflect.Value, src interface{}) error {
