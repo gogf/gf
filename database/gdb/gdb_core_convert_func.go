@@ -71,6 +71,16 @@ func getBitConvertFunc(typ reflect.Type, deref int) fieldConvertFunc {
 	if deref > 1 {
 		return nil
 	}
+	if deref == 0 {
+		fn := checkTypeImplSqlScanner(typ)
+		if fn != nil {
+			if typ.Kind() == reflect.Ptr {
+				return ptrSqlScannerConvert
+			}
+			return fn
+		}
+	}
+
 	if typ.Kind() == reflect.Ptr {
 		fn := getBitConvertFunc(typ.Elem(), deref+1)
 		if fn != nil {
@@ -135,6 +145,16 @@ func getDecimalConvertFunc(typ reflect.Type, deref int) fieldConvertFunc {
 	if deref > 1 {
 		return nil
 	}
+	if deref == 0 {
+		fn := checkTypeImplSqlScanner(typ)
+		if fn != nil {
+			if typ.Kind() == reflect.Ptr {
+				return ptrSqlScannerConvert
+			}
+			return fn
+		}
+	}
+
 	if typ.Kind() == reflect.Ptr {
 		fn := getDecimalConvertFunc(typ.Elem(), deref+1)
 		if fn != nil {
@@ -142,6 +162,7 @@ func getDecimalConvertFunc(typ reflect.Type, deref int) fieldConvertFunc {
 		}
 		return nil
 	}
+
 	switch typ.Kind() {
 	case reflect.Float32, reflect.Float64:
 		return convertToFloat64
@@ -201,108 +222,102 @@ func ptrConverter(fn fieldConvertFunc) fieldConvertFunc {
 	}
 }
 
-func getConverter(typ reflect.Type, deref int) fieldConvertFunc {
+// impl Indicates whether the type implements the following two interfaces
+// 1. sql.Scanner
+// 2. json.Unmarshaler
+func getConverter(typ reflect.Type, deref int) (fn fieldConvertFunc, impl bool) {
 	// Secondary pointer assignment is not supported
 	if deref > 1 {
-		return nil
+		return nil, false
 	}
 	if v, ok := converterMap.Load(typ); ok {
-		return v.(fieldConvertFunc)
+		return v.(fieldConvertFunc), false
 	}
-	fn := getConvertFunc(typ, deref)
+	fn, impl = getConvertFunc(typ, deref)
 	if v, ok := converterMap.LoadOrStore(typ, fn); ok {
-		return v.(fieldConvertFunc)
+		return v.(fieldConvertFunc), impl
 	}
-	return fn
+	return fn, impl
 }
 
-func getConvertFunc(typ reflect.Type, deref int) fieldConvertFunc {
+// implInterface Indicates whether the type implements the following two interfaces, and if so,
+// it will not be wrapped in any other way, and will be returned directly
+// 1. sql.Scanner
+// 2. json.Unmarshaler
+func getConvertFunc(typ reflect.Type, deref int) (fn fieldConvertFunc, implInterface bool) {
 	kind := typ.Kind()
-	if kind == reflect.Ptr {
-		fn := checkPtrImplInterface(typ, deref)
+
+	if deref == 0 {
+		fn = checkTypeImplSqlScanner(typ)
 		if fn != nil {
-			return fn
+			if kind == reflect.Ptr {
+				return ptrSqlScannerConvert, true
+			}
+			return fn, true
 		}
-		if fn = getConverter(typ.Elem(), deref+1); fn != nil {
-			return ptrConverter(fn)
+	}
+
+	if kind == reflect.Ptr {
+		fn, implInterface = getConverter(typ.Elem(), deref+1)
+		if fn != nil {
+			if implInterface {
+				return fn, true
+			}
+			return ptrConverter(fn), implInterface
 		}
 	}
 
 	switch typ {
 	case bytesType:
-		return convertToBytes
+		return convertToBytes, false
 	case timeType:
-		return convertToTime
+		return convertToTime, false
 	case jsonRawMessageType:
-		return convertToBytes
-	}
-
-	fn := checkTypeImplInterface(typ)
-	if fn != nil {
-		return fn
+		return convertToBytes, false
 	}
 
 	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
-		return convertToBytes
+		return convertToBytes, false
 	}
 	// json
 	switch typ.Kind() {
 	case reflect.Slice, reflect.Map, reflect.Struct:
-		return getJsonConverter(typ)
+		fn := checkTypeImplJsonUnmarshaler(typ)
+		if fn != nil {
+			if deref > 0 {
+				return ptrUnmarshalJsonConvert, true
+			}
+			return unmarshalJsonConvert, true
+		}
+		return convertToJSON, false
 	}
 
-	return convertFuncMap[kind]
+	return convertFuncMap[kind], false
 }
 
-// Check the interface implemented by the pointer type
-func checkPtrImplInterface(typ reflect.Type, deref int) (fn fieldConvertFunc) {
-	// Prevent secondary pointers
-	if deref > 0 {
-		return nil
+func checkTypeImplSqlScanner(typ reflect.Type) fieldConvertFunc {
+	if typ.Kind() != reflect.Ptr {
+		typ = reflect.PointerTo(typ)
 	}
-	switch {
-	case typ.Implements(scannerType):
-		return func(dest reflect.Value, src any) error {
-			if src == nil {
-				if dest.IsNil() == false {
-					// If the struct field is not nil, reinitialize
-					dest.Set(reflect.New(typ.Elem()))
-				}
-				return nil
-			}
-			if dest.IsNil() {
-				dest.Set(reflect.New(typ.Elem()))
-			}
-			return dest.Interface().(sql.Scanner).Scan(src)
-		}
-	case typ.Implements(jsonUnmarshalerType):
-		return func(dest reflect.Value, src any) error {
-			if src == nil {
-				if dest.IsNil() == false {
-					// If the struct field is not nil, reinitialize
-					dest.Set(reflect.New(typ.Elem()))
-				}
-				return nil
-			}
-			b, err := toBytes(src)
-			if err != nil {
-				return err
-			}
-			if dest.IsNil() {
-				dest.Set(reflect.New(typ.Elem()))
-			}
-			return dest.Interface().(json.Unmarshaler).UnmarshalJSON(b)
-		}
-	}
-	return
-}
-
-func checkTypeImplInterface(typ reflect.Type) fieldConvertFunc {
-	typ = reflect.PointerTo(typ)
 	if typ.Implements(scannerType) {
 		return sqlScannerConvert
 	}
 	return nil
+}
+
+func ptrSqlScannerConvert(dest reflect.Value, src interface{}) error {
+	typ := dest.Type()
+	if src == nil {
+		if dest.IsNil() == false {
+			// If the struct field is not nil, reinitialize
+			dest.Set(reflect.New(typ.Elem()))
+		}
+		return nil
+	}
+	if dest.IsNil() {
+		dest.Set(reflect.New(typ.Elem()))
+	}
+	return dest.Interface().(sql.Scanner).Scan(src)
 }
 
 func sqlScannerConvert(dest reflect.Value, src interface{}) error {
@@ -516,12 +531,32 @@ func convertToTime(dest reflect.Value, src interface{}) error {
 	}
 }
 
-func getJsonConverter(typ reflect.Type) fieldConvertFunc {
-	typ = reflect.PointerTo(typ)
+func checkTypeImplJsonUnmarshaler(typ reflect.Type) fieldConvertFunc {
+	if typ.Kind() != reflect.Ptr {
+		typ = reflect.PointerTo(typ)
+	}
 	if typ.Implements(jsonUnmarshalerType) {
 		return unmarshalJsonConvert
 	}
-	return convertToJSON
+	return nil
+}
+
+func ptrUnmarshalJsonConvert(dest reflect.Value, src any) error {
+	if src == nil {
+		if dest.IsNil() == false {
+			// If the struct field is not nil, reinitialize
+			dest.Set(reflect.New(dest.Type().Elem()))
+		}
+		return nil
+	}
+	b, err := toBytes(src)
+	if err != nil {
+		return err
+	}
+	if dest.IsNil() {
+		dest.Set(reflect.New(dest.Type().Elem()))
+	}
+	return dest.Interface().(json.Unmarshaler).UnmarshalJSON(b)
 }
 
 func unmarshalJsonConvert(dest reflect.Value, src interface{}) error {

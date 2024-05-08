@@ -18,6 +18,7 @@ func registerFieldConvertFunc(ctx context.Context, db DB,
 	localType, _ := db.CheckLocalTypeForField(ctx, tableField.DatabaseTypeName(), nil)
 	// There are several special types that require special handling
 	// todo: Priority issues if the field implements sql.Scanner
+
 	switch localType {
 	case LocalTypeUint64Bytes:
 		// mysql bit
@@ -29,7 +30,7 @@ func registerFieldConvertFunc(ctx context.Context, db DB,
 		// decimal numeric money
 		convertFn = getDecimalConvertFunc(structField.Type, 0)
 	default:
-		convertFn = getConverter(structField.Type, 0)
+		convertFn, _ = getConverter(structField.Type, 0)
 	}
 	if convertFn == nil {
 		panic(&typeConvertError{
