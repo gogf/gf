@@ -17,8 +17,6 @@ func registerFieldConvertFunc(ctx context.Context, db DB,
 	tableField *sql.ColumnType, structField reflect.StructField) (convertFn fieldConvertFunc) {
 	localType, _ := db.CheckLocalTypeForField(ctx, tableField.DatabaseTypeName(), nil)
 	// There are several special types that require special handling
-	// todo: Priority issues if the field implements sql.Scanner
-
 	switch localType {
 	case LocalTypeUint64Bytes:
 		// mysql bit
