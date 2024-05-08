@@ -66,7 +66,7 @@ type cInitInput struct {
 	g.Meta  `name:"init"`
 	Name    string `name:"NAME" arg:"true" v:"required" brief:"{cInitNameBrief}"`
 	Mono    bool   `name:"mono" short:"m" brief:"initialize a mono-repo instead a single-repo" orphan:"true"`
-	MonoApp bool   `name:"mono-app" short:"a" brief:"initialize a mono-repo-app instead a single-repo" orphan:"true"`
+	MonoApp bool   `name:"monoApp" short:"a" brief:"initialize a mono-repo-app instead a single-repo" orphan:"true"`
 	Update  bool   `name:"update" short:"u" brief:"update to the latest goframe version" orphan:"true"`
 	Module  string `name:"module" short:"g" brief:"custom go module"`
 }
