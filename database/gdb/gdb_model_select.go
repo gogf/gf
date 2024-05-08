@@ -33,12 +33,17 @@ func (m *Model) All(where ...interface{}) (Result, error) {
 }
 
 func (m *Model) all(pointer any, where ...interface{}) (Result, error) {
+	if len(where) > 0 {
+		return m.Where(where[0], where[1:]...).all(pointer)
+	}
+
 	var ctx = m.GetCtx()
 	ctx = context.WithValue(ctx, scanPointerCtxKey, &scanPointer{
 		scan:    true,
 		pointer: pointer,
 	})
-	return m.doGetAll(ctx, false, where...)
+	sqlWithHolder, holderArgs := m.getFormattedSqlAndArgs(ctx, queryTypeNormal, false)
+	return m.doGetAllBySql(ctx, queryTypeNormal, sqlWithHolder, holderArgs...)
 }
 
 // AllAndCount retrieves all records and the total count of records from the model.
@@ -131,15 +136,16 @@ func (m *Model) One(where ...interface{}) (Record, error) {
 }
 
 func (m *Model) one(pointer any, where ...any) (Record, error) {
-	var ctx = m.GetCtx()
 	if len(where) > 0 {
-		return m.Where(where[0], where[1:]...).One()
+		return m.Where(where[0], where[1:]...).one(pointer)
 	}
+	var ctx = m.GetCtx()
 	ctx = context.WithValue(ctx, scanPointerCtxKey, &scanPointer{
 		scan:    true,
 		pointer: pointer,
 	})
-	all, err := m.doGetAll(ctx, true)
+	sqlWithHolder, holderArgs := m.getFormattedSqlAndArgs(ctx, queryTypeNormal, true)
+	all, err := m.doGetAllBySql(ctx, queryTypeNormal, sqlWithHolder, holderArgs...)
 	if err != nil {
 		return nil, err
 	}
