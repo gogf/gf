@@ -276,7 +276,6 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 			structValue = structValue.Addr()
 		}
 		structPointerValue.Set(structValue)
-
 	} else {
 		if err = one.Struct(pointer); err != nil {
 			return err
@@ -382,7 +381,6 @@ func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 			sliceValue = reflect.Append(sliceValue, structValue)
 		}
 		slicePtr.Elem().Set(sliceValue)
-
 	} else {
 		if err = all.Structs(pointer); err != nil {
 			return err

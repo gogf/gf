@@ -100,7 +100,6 @@ func getBitConvertFunc(typ reflect.Type, deref int) fieldConvertFunc {
 		}
 	default:
 		return nil
-
 	}
 }
 
