@@ -38,8 +38,8 @@ type Table struct {
 	// tableFields
 	// todo 直接存储索引和字段信息，不再需要fieldsIndex
 	fieldsMap map[string]*fieldConvertInfo
-	// columnIndex => fieldsMapKey
-	fieldsIndex map[int]string
+
+	fields []*fieldConvertInfo
 }
 
 func parseStruct(ctx context.Context, db DB, columnTypes []*sql.ColumnType) *Table {
@@ -100,9 +100,11 @@ func parseStruct(ctx context.Context, db DB, columnTypes []*sql.ColumnType) *Tab
 		return nil
 	}
 
-	table.fieldsIndex = make(map[int]string)
-	for k, v := range table.fieldsMap {
-		table.fieldsIndex[v.ColumnFieldIndex] = k
+	// table.fieldsIndex = make(map[int]string)
+	table.fields = make([]*fieldConvertInfo, len(columnTypes))
+	for _, v := range table.fieldsMap {
+		// table.fieldsIndex[v.ColumnFieldIndex] = k
+		table.fields[v.ColumnFieldIndex] = v
 	}
 
 	tablesMap.Store(tableName, table)

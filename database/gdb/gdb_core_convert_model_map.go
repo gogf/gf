@@ -33,8 +33,7 @@ type queryMapModel struct {
 }
 
 func (q *queryMapModel) Scan(src any) error {
-	fieldName := q.table.fieldsIndex[q.scanIndex]
-	field := q.table.fieldsMap[fieldName]
+	field := q.table.fields[q.scanIndex]
 	if field.convertFunc == nil {
 		// 表示这个字段是多余的，在结构体中不存在
 		q.scanIndex++
@@ -50,7 +49,7 @@ func (q *queryMapModel) Scan(src any) error {
 			field.StructField.Name, field.StructFieldType, err)
 	}
 	q.scanIndex++
-	q.Map[fieldName] = gvar.New(fieldValue.Interface())
+	q.Map[field.ColumnField] = gvar.New(fieldValue.Interface())
 	return err
 }
 

@@ -32,8 +32,7 @@ type queryStructModel struct {
 }
 
 func (q *queryStructModel) Scan(src any) error {
-	fieldName := q.table.fieldsIndex[q.scanIndex]
-	field := q.table.fieldsMap[fieldName]
+	field := q.table.fields[q.scanIndex]
 	if field.convertFunc == nil {
 		// 表示这个字段是多余的，在结构体中不存在
 		q.scanIndex++
