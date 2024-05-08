@@ -16,13 +16,14 @@ import (
 func registerFieldConvertFunc(ctx context.Context, db DB,
 	tableField *sql.ColumnType, structField reflect.StructField) (convertFn fieldConvertFunc) {
 	localType, _ := db.CheckLocalTypeForField(ctx, tableField.DatabaseTypeName(), nil)
-	// 有几个特殊的类型，需要特殊处理
+	// There are several special types that require special handling
+	// todo: Priority issues if the field implements sql.Scanner
 	switch localType {
 	case LocalTypeUint64Bytes:
-		// bit
+		// mysql bit
 		convertFn = getBitConvertFunc(structField.Type, 0)
 	case LocalTypeInt64Bytes:
-		// bit
+		// mysql bit
 		convertFn = getBitConvertFunc(structField.Type, 0)
 	case LocalTypeDecimal:
 		// decimal numeric money

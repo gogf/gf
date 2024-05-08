@@ -35,7 +35,7 @@ type queryMapModel struct {
 func (q *queryMapModel) Scan(src any) error {
 	field := q.table.fields[q.scanIndex]
 	if field.convertFunc == nil {
-		// 表示这个字段是多余的，在结构体中不存在
+		// Indicates that this field is redundant and does not exist in the struct
 		q.scanIndex++
 		return nil
 	}
@@ -43,7 +43,7 @@ func (q *queryMapModel) Scan(src any) error {
 	fieldValue := reflect.New(field.StructFieldType).Elem()
 	err := field.convertFunc(fieldValue, src)
 	if err != nil {
-		err = fmt.Errorf("不能从`%v:%T`(%s: %s)转换到`%s: %s` err: %v",
+		err = fmt.Errorf("it is not possible to convert from `%v :%T`(%s: %s) to `%s: %s` err:%v",
 			src, src,
 			field.ColumnField, field.ColumnFieldType.DatabaseTypeName(),
 			field.StructField.Name, field.StructFieldType, err)
@@ -55,6 +55,6 @@ func (q *queryMapModel) Scan(src any) error {
 
 func (q *queryMapModel) next(mapValue map[string]Value) {
 	q.Map = mapValue
-	// 索引需要初始化
+	// The index needs to be initialized
 	q.scanIndex = 0
 }

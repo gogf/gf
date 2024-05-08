@@ -23,7 +23,8 @@ func (t *Table) makeStructQueryModel(columns int) *queryStructModel {
 	return q
 }
 
-// 留作后续的扩展，如果直接传结构体指针不走map的话
+// Leave it for subsequent extensions,
+// if you pass the struct pointer directly without taking the map
 type queryStructModel struct {
 	table     *Table
 	scanArgs  []any
@@ -34,7 +35,7 @@ type queryStructModel struct {
 func (q *queryStructModel) Scan(src any) error {
 	field := q.table.fields[q.scanIndex]
 	if field.convertFunc == nil {
-		// 表示这个字段是多余的，在结构体中不存在
+		// Indicates that this field is redundant and does not exist in the struct
 		q.scanIndex++
 		return nil
 	}
@@ -42,7 +43,7 @@ func (q *queryStructModel) Scan(src any) error {
 	err := field.convertFunc(fieldValue, src)
 	q.scanIndex++
 	if err != nil {
-		err = fmt.Errorf("不能从`%v: %T`(%s: %s)转换到`%s: %s` err: %v",
+		err = fmt.Errorf("it is not possible to convert from `%v :%T`(%s: %s) to `%s: %s` err:%v",
 			src, src,
 			field.ColumnField, field.ColumnFieldType.DatabaseTypeName(),
 			field.StructField.Name, field.StructFieldType, err)
@@ -52,6 +53,6 @@ func (q *queryStructModel) Scan(src any) error {
 
 func (q *queryStructModel) next(structValue reflect.Value) {
 	q.Struct = structValue
-	// 索引需要初始化
+	// The index needs to be initialized
 	q.scanIndex = 0
 }

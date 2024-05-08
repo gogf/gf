@@ -82,15 +82,15 @@ func getBitConvertFunc(typ reflect.Type, deref int) fieldConvertFunc {
 	switch typ.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return func(dst reflect.Value, src any) error {
-			return bitsToNumber[int64](dst.SetInt, src)
+			return bitArrayConvertToNumber[int64](dst.SetInt, src)
 		}
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		return func(dst reflect.Value, src any) error {
-			return bitsToNumber[uint64](dst.SetUint, src)
+			return bitArrayConvertToNumber[uint64](dst.SetUint, src)
 		}
 	case reflect.Float32, reflect.Float64:
 		return func(dst reflect.Value, src any) error {
-			return bitsToNumber[float64](dst.SetFloat, src)
+			return bitArrayConvertToNumber[float64](dst.SetFloat, src)
 		}
 	default:
 		return nil
@@ -99,7 +99,7 @@ func getBitConvertFunc(typ reflect.Type, deref int) fieldConvertFunc {
 }
 
 // [0xff,0xff] => 0xfffff
-func bitsToNumber[T int64 | uint64 | float64](setFn func(T), src any) error {
+func bitArrayConvertToNumber[T int64 | uint64 | float64](setFn func(T), src any) error {
 	switch src := src.(type) {
 	case nil:
 		setFn(0)
@@ -172,8 +172,8 @@ func decimalConvertFunc[T int64 | uint64](set func(T), src any) error {
 			return err
 		}
 		set(T(val))
-	//case float32:
-	//	dest.SetUint(uint64(sv))
+	case float32:
+		set(T(sv))
 	case float64:
 		set(T(sv))
 	default:
@@ -185,9 +185,8 @@ func decimalConvertFunc[T int64 | uint64](set func(T), src any) error {
 func ptrConverter(fn fieldConvertFunc) fieldConvertFunc {
 	return func(dest reflect.Value, src interface{}) error {
 		if src == nil {
-			// todo 是否直接退出，不初始化？
 			if dest.IsNil() == false {
-				// 如果结构体字段不是nil，重新初始化
+				// If the struct field is not nil, reinitialize
 				dest.Set(reflect.New(dest.Type().Elem()))
 			}
 			return nil
@@ -203,7 +202,7 @@ func ptrConverter(fn fieldConvertFunc) fieldConvertFunc {
 }
 
 func getConverter(typ reflect.Type, deref int) fieldConvertFunc {
-	// 不支持二级指针赋值
+	// Secondary pointer assignment is not supported
 	if deref > 1 {
 		return nil
 	}
@@ -243,7 +242,6 @@ func getConvertFunc(typ reflect.Type, deref int) fieldConvertFunc {
 		return fn
 	}
 
-	// 如果是底层是[]byte 类型的,比如 type MyBytes []byte
 	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
 		return convertToBytes
 	}
@@ -256,9 +254,9 @@ func getConvertFunc(typ reflect.Type, deref int) fieldConvertFunc {
 	return convertFuncMap[kind]
 }
 
-// 检查指针类型实现的接口
+// Check the interface implemented by the pointer type
 func checkPtrImplInterface(typ reflect.Type, deref int) (fn fieldConvertFunc) {
-	// 防止二级指针
+	// Prevent secondary pointers
 	if deref > 0 {
 		return nil
 	}
@@ -267,7 +265,7 @@ func checkPtrImplInterface(typ reflect.Type, deref int) (fn fieldConvertFunc) {
 		return func(dest reflect.Value, src any) error {
 			if src == nil {
 				if dest.IsNil() == false {
-					// 如果结构体字段不是nil，重新初始化
+					// If the struct field is not nil, reinitialize
 					dest.Set(reflect.New(typ.Elem()))
 				}
 				return nil
@@ -281,7 +279,7 @@ func checkPtrImplInterface(typ reflect.Type, deref int) (fn fieldConvertFunc) {
 		return func(dest reflect.Value, src any) error {
 			if src == nil {
 				if dest.IsNil() == false {
-					// 如果结构体字段不是nil，重新初始化
+					// If the struct field is not nil, reinitialize
 					dest.Set(reflect.New(typ.Elem()))
 				}
 				return nil
@@ -477,8 +475,8 @@ func convertToBytes(dest reflect.Value, src interface{}) error {
 		return nil
 	case []byte:
 		clone := make([]byte, len(src))
-		// 必须要调用copy函数，不然的话，保存的引用
-		// 等下一次查询的时候，值会被覆盖
+		// The copy function must be called, otherwise the reference is saved
+		// The next time you query, the value will be overwritten
 		copy(clone, src)
 		dest.SetBytes(clone)
 		return nil
@@ -548,8 +546,8 @@ func convertToJSON(dest reflect.Value, src interface{}) error {
 	return json.Unmarshal(b, dest.Addr().Interface())
 }
 
-// 代表不支持数据表字段的类型转换到go类型
-// 具体的错误信息在上层的Scan那里抛出
+// Indicates that the type of a data table field is not supported and the type is converted to the go type
+// The specific error message is thrown at the upper Scan
 func convertError() error {
 	return fmt.Errorf("unsupported types")
 }
