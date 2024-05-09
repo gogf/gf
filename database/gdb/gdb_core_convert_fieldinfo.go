@@ -15,7 +15,7 @@ type fieldConvertFunc = func(dst reflect.Value, src any) error
 
 type fieldConvertInfo struct {
 	// table field
-	ColumnField      string
+	ColumnFieldName  string
 	ColumnFieldIndex int
 	ColumnFieldType  *sql.ColumnType
 	// struct field

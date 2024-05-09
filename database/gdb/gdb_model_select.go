@@ -263,9 +263,9 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 			structValue = structValue.Elem()
 		} else {
 			structValue = structValue.Elem()
-			for colName, field := range table.fieldsMap {
+			for _, field := range table.fields {
 				fieldValue := field.GetReflectValue(structValue)
-				value := one[colName]
+				value := one[field.ColumnFieldName]
 				if value == nil {
 					continue
 				}
@@ -366,9 +366,9 @@ func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 				structValue = structValue.Elem()
 			} else {
 				structValue = structValue.Elem()
-				for colName, field := range table.fieldsMap {
+				for _, field := range table.fields {
 					fieldValue := field.GetReflectValue(structValue)
-					val := record[colName].Val()
+					val := record[field.ColumnFieldName].Val()
 					if val == nil {
 						continue
 					}

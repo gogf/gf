@@ -45,7 +45,7 @@ func (q *queryStructModel) Scan(src any) error {
 	if err != nil {
 		err = fmt.Errorf("it is not possible to convert from `%v :%T`(%s: %s) to `%s: %s` err:%v",
 			src, src,
-			field.ColumnField, field.ColumnFieldType.DatabaseTypeName(),
+			field.ColumnFieldName, field.ColumnFieldType.DatabaseTypeName(),
 			field.StructField.Name, field.StructFieldType, err)
 	}
 	return err

@@ -36,8 +36,7 @@ type scanPointer struct {
 
 type Table struct {
 	// tableFields
-	fieldsMap map[string]*fieldConvertInfo
-	fields    []*fieldConvertInfo
+	fields []*fieldConvertInfo
 }
 
 func parseStruct(ctx context.Context, db DB, columnTypes []*sql.ColumnType) *Table {
@@ -74,32 +73,29 @@ func parseStruct(ctx context.Context, db DB, columnTypes []*sql.ColumnType) *Tab
 	}
 
 	var (
-		fieldsInfo = make(map[string]*fieldConvertInfo)
+		fieldsMap = make(map[string]*fieldConvertInfo)
 	)
 	for i := 0; i < len(columnTypes); i++ {
 		column := columnTypes[i]
-		fieldsInfo[column.Name()] = &fieldConvertInfo{
+		fieldsMap[column.Name()] = &fieldConvertInfo{
 			ColumnFieldIndex: i,
 			ColumnFieldType:  column,
-			ColumnField:      column.Name(),
+			ColumnFieldName:  column.Name(),
 		}
 	}
 
-	table := &Table{
-		fieldsMap: fieldsInfo,
-	}
-
 	var (
-		existsColumn = make(map[string]struct{})
-		scanCount    = table.getStructFields(ctx, db, pointerType, []int{}, existsColumn)
+		table         = &Table{}
+		matchedColumn = make(map[string]struct{})
+		matchedCount  = table.getStructFields(ctx, db, fieldsMap, pointerType, []int{}, matchedColumn)
 	)
 
-	if scanCount == 0 {
+	if matchedCount == 0 {
 		return nil
 	}
 
 	table.fields = make([]*fieldConvertInfo, len(columnTypes))
-	for _, v := range table.fieldsMap {
+	for _, v := range fieldsMap {
 		table.fields[v.ColumnFieldIndex] = v
 	}
 
@@ -107,7 +103,7 @@ func parseStruct(ctx context.Context, db DB, columnTypes []*sql.ColumnType) *Tab
 	return table
 }
 
-func (t *Table) getStructFields(ctx context.Context, db DB, structType reflect.Type, parentIndex []int, existsColumn map[string]struct{}) (scanCount int) {
+func (t *Table) getStructFields(ctx context.Context, db DB, fieldsMap map[string]*fieldConvertInfo, structType reflect.Type, parentIndex []int, matchedColumn map[string]struct{}) (matchedCount int) {
 	for i := 0; i < structType.NumField(); i++ {
 		field := structType.Field(i)
 		if field.IsExported() == false {
@@ -116,77 +112,89 @@ func (t *Table) getStructFields(ctx context.Context, db DB, structType reflect.T
 		if field.Type.Kind() == reflect.Interface {
 			continue
 		}
-		// g.Meta
+		// gmeta.Meta
 		if field.Type.String() == "gmeta.Meta" {
 			continue
 		}
+
 		tag := field.Tag.Get(OrmTagForStruct)
 		if field.Anonymous && tag == "" {
 			if field.Type.Kind() == reflect.Ptr {
 				field.Type = field.Type.Elem()
 			}
-			scanCount += t.getStructFields(ctx, db, field.Type, append(parentIndex, i), existsColumn)
+			matchedCount += t.getStructFields(ctx, db, fieldsMap, field.Type, append(parentIndex, i), matchedColumn)
 			continue
 		}
-		// orm:"with:id1=id2" json:"name"
-		if strings.Contains(tag, "with:") {
-			tag = ""
-		}
-		// json
-		if tag == "" {
-			tag = field.Tag.Get("json")
-		}
-		if tag != "" {
-			// json:"name,omitempty"
-			// json:"-"
-			// json:",omitempty"
-			// orm:"id,omitempty"
-			tag = strings.Split(tag, ",")[0]
-			tag = strings.TrimSpace(tag)
-			if tag == "-" {
-				continue
-			}
-		}
-		var (
-			fieldInfo *fieldConvertInfo
-			ok        bool
-		)
-		if tag != "" {
-			fieldInfo, ok = t.fieldsMap[tag]
-			if !ok {
-				// There may not be a match to the tag
-				fieldInfo, ok = t.fieldsMap[field.Name]
-				if ok {
-					tag = field.Name
-				}
-			}
-		}
-		// Neither the tag nor the field name matched
-		if !ok {
-			removeSymbolsFieldName := utils.RemoveSymbols(field.Name)
-			for columnName, structField := range t.fieldsMap {
-				if _, exists := existsColumn[columnName]; exists {
-					continue
-				}
-				removeSymbolsColumnName := utils.RemoveSymbols(columnName)
-				if strings.EqualFold(removeSymbolsFieldName, removeSymbolsColumnName) {
-					tag = columnName
-					ok = true
-					fieldInfo = structField
-					existsColumn[columnName] = struct{}{}
-					break
-				}
-			}
-		}
-		if ok {
+
+		fieldInfo := t.parseTagAndMatchColumn(field.Tag, field.Name, fieldsMap, matchedColumn)
+
+		if fieldInfo != nil {
 			fieldInfo.StructFieldIndex = append(parentIndex, i)
 			fieldInfo.StructFieldType = field.Type
 			fieldInfo.StructField = field
 			convertFn := registerFieldConvertFunc(ctx, db, fieldInfo.ColumnFieldType, fieldInfo.StructField)
 			fieldInfo.convertFunc = convertFn
-			scanCount++
-			existsColumn[tag] = struct{}{}
+			matchedCount++
 		}
 	}
 	return
+}
+
+func (t *Table) parseTagAndMatchColumn(fieldTag reflect.StructTag, fieldName string, fieldsMap map[string]*fieldConvertInfo, matchedColumn map[string]struct{}) *fieldConvertInfo {
+	tag := fieldTag.Get("orm")
+	// If there is with, skip it directly
+	// type User struct {
+	//	 gmeta.Meta `orm:"table:user"`
+	//	 Id         int           `json:"id"`
+	//	 Name       string        `json:"name"`
+	//	 UserDetail *UserDetail   `orm:"with:uid=id"`
+	//	 UserScores []*UserScores `orm:"with:uid=id"`
+	// }
+	if strings.Contains(tag, "with:") {
+		// tag = ""
+		return nil
+	}
+	// json
+	if tag == "" {
+		tag = fieldTag.Get("json")
+	}
+	if tag != "" {
+		// json:"name,omitempty"
+		// json:"-"
+		// json:",omitempty"
+		// orm:"id,omitempty"
+		tag = strings.Split(tag, ",")[0]
+		tag = strings.TrimSpace(tag)
+		if tag == "-" {
+			return nil
+		}
+	}
+
+	if tag != "" {
+		fieldInfo, ok := fieldsMap[tag]
+		if ok {
+			matchedColumn[tag] = struct{}{}
+			return fieldInfo
+		}
+	}
+	// There may not be a match to the tag
+	fieldInfo, ok := fieldsMap[fieldName]
+	if ok {
+		matchedColumn[fieldName] = struct{}{}
+		return fieldInfo
+	}
+
+	// Neither the tag nor the field name matched
+	removeSymbolsFieldName := utils.RemoveSymbols(fieldName)
+	for columnName, fieldInfo := range fieldsMap {
+		if _, matched := matchedColumn[columnName]; matched {
+			continue
+		}
+		removeSymbolsColumnName := utils.RemoveSymbols(columnName)
+		if strings.EqualFold(removeSymbolsFieldName, removeSymbolsColumnName) {
+			matchedColumn[columnName] = struct{}{}
+			return fieldInfo
+		}
+	}
+	return nil
 }
