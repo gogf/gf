@@ -1993,8 +1993,8 @@ PRIMARY KEY (id)
 
 func Test_Table_Relation_WithAll_Unscoped(t *testing.T) {
 	var (
-		tableUser       = "user100"
-		tableUserDetail = "user_detail100"
+		tableUser       = "user101"
+		tableUserDetail = "user_detail101"
 	)
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE IF NOT EXISTS %s (
@@ -2020,7 +2020,7 @@ PRIMARY KEY (user_id)
 	defer dropTable(tableUserDetail)
 
 	type UserDetail struct {
-		gmeta.Meta `orm:"table:user_detail100"`
+		gmeta.Meta `orm:"table:user_detail101"`
 		UserID     int         `json:"user_id"`
 		Address    string      `json:"address"`
 		DeletedAt  *gtime.Time `json:"deleted_at"`
@@ -2033,12 +2033,12 @@ PRIMARY KEY (user_id)
 	}
 
 	type User struct {
-		gmeta.Meta `orm:"table:user100"`
+		gmeta.Meta `orm:"table:user101"`
 		UserEmbedded
 		UserDetail *UserDetail `orm:"with:user_id=id"`
 	}
 	type UserWithDeletedDetail struct {
-		gmeta.Meta `orm:"table:user100"`
+		gmeta.Meta `orm:"table:user101"`
 		UserEmbedded
 		UserDetail *UserDetail `orm:"with:user_id=id, unscoped:true"`
 	}
