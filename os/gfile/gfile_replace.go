@@ -19,7 +19,7 @@ func ReplaceFile(search, replace, path string) error {
 func ReplaceFileFunc(f func(path, content string) string, path string) error {
 	data := GetContents(path)
 	result := f(path, data)
-	if len(data) != len(result) && data != result {
+	if len(data) != len(result) || data != result {
 		return PutContents(path, result)
 	}
 	return nil

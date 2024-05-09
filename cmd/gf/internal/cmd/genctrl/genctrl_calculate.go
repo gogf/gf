@@ -7,6 +7,12 @@
 package genctrl
 
 import (
+	"bytes"
+	"go/ast"
+	"go/parser"
+	"go/printer"
+	"go/token"
+
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gregex"
@@ -14,10 +20,7 @@ import (
 )
 
 func (c CGenCtrl) getApiItemsInSrc(apiModuleFolderPath string) (items []apiItem, err error) {
-	var (
-		fileContent string
-		importPath  string
-	)
+	var importPath string
 	// The second level folders: versions.
 	apiVersionFolderPaths, err := gfile.ScanDir(apiModuleFolderPath, "*", false)
 	if err != nil {
@@ -37,20 +40,13 @@ func (c CGenCtrl) getApiItemsInSrc(apiModuleFolderPath string) (items []apiItem,
 			if gfile.IsDir(apiFileFolderPath) {
 				continue
 			}
-			fileContent = gfile.GetContents(apiFileFolderPath)
-			matches, err := gregex.MatchAllString(PatternApiDefinition, fileContent)
+			structsInfo, err := c.getStructsNameInSrc(apiFileFolderPath)
 			if err != nil {
 				return nil, err
 			}
-			for _, match := range matches {
-				var (
-					methodName = match[1]
-					structBody = match[2]
-				)
-				// ignore struct name that match a request, but has no g.Meta in its body.
-				if !gstr.Contains(structBody, `g.Meta`) {
-					continue
-				}
+			for _, methodName := range structsInfo {
+				// remove end "Req"
+				methodName = gstr.TrimRightStr(methodName, "Req", 1)
 				item := apiItem{
 					Import:     gstr.Trim(importPath, `"`),
 					FileName:   gfile.Name(apiFileFolderPath),
@@ -73,26 +69,22 @@ func (c CGenCtrl) getApiItemsInDst(dstFolder string) (items []apiItem, err error
 		Path  string
 		Alias string
 	}
-	var fileContent string
 	filePaths, err := gfile.ScanDir(dstFolder, "*.go", true)
 	if err != nil {
 		return nil, err
 	}
 	for _, filePath := range filePaths {
-		fileContent = gfile.GetContents(filePath)
-		match, err := gregex.MatchString(`import\s+\(([\s\S]+?)\)`, fileContent)
-		if err != nil {
-			return nil, err
-		}
-		if len(match) < 2 {
-			continue
-		}
 		var (
 			array       []string
 			importItems []importItem
-			importLines = gstr.SplitAndTrim(match[1], "\n")
+			importLines []string
 			module      = gfile.Basename(gfile.Dir(filePath))
 		)
+		importLines, err = c.getImportsInDst(filePath)
+		if err != nil {
+			return nil, err
+		}
+
 		// retrieve all imports.
 		for _, importLine := range importLines {
 			array = gstr.SplitAndTrim(importLine, " ")
@@ -108,11 +100,15 @@ func (c CGenCtrl) getApiItemsInDst(dstFolder string) (items []apiItem, err error
 			}
 		}
 		// retrieve all api usages.
+		// retrieve it without using AST, but use regular expressions to retrieve.
+		// It's because the api definition is simple and regular.
+		// Use regular expressions to get better performance.
+		fileContent := gfile.GetContents(filePath)
 		matches, err := gregex.MatchAllString(PatternCtrlDefinition, fileContent)
 		if err != nil {
 			return nil, err
 		}
-		for _, match = range matches {
+		for _, match := range matches {
 			// try to find the import path of the api.
 			var (
 				importPath string
@@ -141,5 +137,65 @@ func (c CGenCtrl) getApiItemsInDst(dstFolder string) (items []apiItem, err error
 			items = append(items, item)
 		}
 	}
+	return
+}
+
+// getStructsNameInSrc retrieves all struct names
+// that end in "Req" and have "g.Meta" in their body.
+func (c CGenCtrl) getStructsNameInSrc(filePath string) (structsName []string, err error) {
+	var (
+		fileContent = gfile.GetContents(filePath)
+		fileSet     = token.NewFileSet()
+	)
+
+	node, err := parser.ParseFile(fileSet, "", fileContent, parser.ParseComments)
+	if err != nil {
+		return
+	}
+
+	ast.Inspect(node, func(n ast.Node) bool {
+		if typeSpec, ok := n.(*ast.TypeSpec); ok {
+			methodName := typeSpec.Name.Name
+			if !gstr.HasSuffix(methodName, "Req") {
+				// ignore struct name that do not end in "Req"
+				return true
+			}
+			if structType, ok := typeSpec.Type.(*ast.StructType); ok {
+				var buf bytes.Buffer
+				if err := printer.Fprint(&buf, fileSet, structType); err != nil {
+					return false
+				}
+				// ignore struct name that match a request, but has no g.Meta in its body.
+				if !gstr.Contains(buf.String(), `g.Meta`) {
+					return true
+				}
+				structsName = append(structsName, methodName)
+			}
+		}
+		return true
+	})
+
+	return
+}
+
+// getImportsInDst retrieves all import paths in the file.
+func (c CGenCtrl) getImportsInDst(filePath string) (imports []string, err error) {
+	var (
+		fileContent = gfile.GetContents(filePath)
+		fileSet     = token.NewFileSet()
+	)
+
+	node, err := parser.ParseFile(fileSet, "", fileContent, parser.ParseComments)
+	if err != nil {
+		return
+	}
+
+	ast.Inspect(node, func(n ast.Node) bool {
+		if imp, ok := n.(*ast.ImportSpec); ok {
+			imports = append(imports, imp.Path.Value)
+		}
+		return true
+	})
+
 	return
 }

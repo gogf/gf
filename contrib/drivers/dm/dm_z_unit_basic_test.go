@@ -139,7 +139,7 @@ func Test_DB_Query(t *testing.T) {
 }
 
 func TestModelSave(t *testing.T) {
-	table := createTable("test")
+	table := createTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {

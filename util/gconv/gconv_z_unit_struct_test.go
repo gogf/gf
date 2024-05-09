@@ -1451,3 +1451,29 @@ func Test_Struct_EmptyStruct(t *testing.T) {
 
 	})
 }
+
+func Test_Struct_Mapping(t *testing.T) {
+	type User struct {
+		Name     string
+		Password string `json:"password"`
+		Pass2    string
+	}
+	gtest.C(t, func(t *gtest.T) {
+		user := new(User)
+		params2 := g.Map{
+			"password": "222",
+			"name":     "wln",
+			"pass3":    "fksngjfngjfd",
+		}
+		if err := gconv.Struct(params2, user, map[string]string{
+			"pass3": "Password",
+		}); err != nil {
+			t.Error(err)
+		}
+		t.Assert(user, &User{
+			Name:     "wln",
+			Pass2:    "",
+			Password: "fksngjfngjfd",
+		})
+	})
+}
