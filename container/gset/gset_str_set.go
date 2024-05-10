@@ -47,9 +47,7 @@ func NewStrSetFrom(items []string, safe ...bool) *StrSet {
 // Iterator iterates the set readonly with given callback function `f`,
 // if `f` returns true then continue iterating; or false to stop.
 func (set *StrSet) Iterator(f func(v string) bool) {
-	set.mu.RLock()
-	defer set.mu.RUnlock()
-	for k := range set.data {
+	for k := range set.DeepCopy().(map[string]struct{}) {
 		if !f(k) {
 			break
 		}

@@ -725,9 +725,7 @@ func (a *StrArray) Iterator(f func(k int, v string) bool) {
 // IteratorAsc iterates the array readonly in ascending order with given callback function `f`.
 // If `f` returns true, then it continues iterating; or false to stop.
 func (a *StrArray) IteratorAsc(f func(k int, v string) bool) {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-	for k, v := range a.array {
+	for k, v := range a.Slice() {
 		if !f(k, v) {
 			break
 		}
@@ -737,10 +735,9 @@ func (a *StrArray) IteratorAsc(f func(k int, v string) bool) {
 // IteratorDesc iterates the array readonly in descending order with given callback function `f`.
 // If `f` returns true, then it continues iterating; or false to stop.
 func (a *StrArray) IteratorDesc(f func(k int, v string) bool) {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-	for i := len(a.array) - 1; i >= 0; i-- {
-		if !f(i, a.array[i]) {
+	data := a.Slice()
+	for i := len(data) - 1; i >= 0; i-- {
+		if !f(i, data[i]) {
 			break
 		}
 	}
