@@ -715,7 +715,9 @@ func (a *Array) Iterator(f func(k int, v interface{}) bool) {
 // IteratorAsc iterates the array readonly in ascending order with given callback function `f`.
 // If `f` returns true, then it continues iterating; or false to stop.
 func (a *Array) IteratorAsc(f func(k int, v interface{}) bool) {
-	for k, v := range a.Slice() {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	for k, v := range a.array {
 		if !f(k, v) {
 			break
 		}
@@ -725,9 +727,10 @@ func (a *Array) IteratorAsc(f func(k int, v interface{}) bool) {
 // IteratorDesc iterates the array readonly in descending order with given callback function `f`.
 // If `f` returns true, then it continues iterating; or false to stop.
 func (a *Array) IteratorDesc(f func(k int, v interface{}) bool) {
-	data := a.Slice()
-	for i := len(data) - 1; i >= 0; i-- {
-		if !f(i, data[i]) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	for i := len(a.array) - 1; i >= 0; i-- {
+		if !f(i, a.array[i]) {
 			break
 		}
 	}
