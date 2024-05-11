@@ -8,6 +8,7 @@ package gtime_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -33,5 +34,40 @@ func Test_Issue2803(t *testing.T) {
 		t.Assert(newTime.Hour(), 0)
 		t.Assert(newTime.Minute(), 0)
 		t.Assert(newTime.Second(), 0)
+	})
+}
+
+// https://github.com/gogf/gf/issues/3558
+func Test_Issue3558(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		timeStr := "1880-10-24T00:00:00+08:05"
+		gfTime := gtime.NewFromStr(timeStr)
+		t.Assert(gfTime.Year(), 1880)
+		t.Assert(gfTime.Month(), 10)
+		t.Assert(gfTime.Day(), 24)
+		t.Assert(gfTime.Hour(), 0)
+		t.Assert(gfTime.Minute(), 0)
+		t.Assert(gfTime.Second(), 0)
+
+		stdTime, err := time.Parse(time.RFC3339, timeStr)
+		t.AssertNil(err)
+		stdTimeFormat := stdTime.Format("2006-01-02 15:04:05")
+		gfTimeFormat := gfTime.Format("Y-m-d H:i:s")
+		t.Assert(gfTimeFormat, stdTimeFormat)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		timeStr := "1880-10-24T00:00:00-08:05"
+		gfTime := gtime.NewFromStr(timeStr)
+		t.Assert(gfTime.Year(), 1880)
+		t.Assert(gfTime.Month(), 10)
+		t.Assert(gfTime.Day(), 24)
+		t.Assert(gfTime.Hour(), 0)
+		t.Assert(gfTime.Minute(), 0)
+		t.Assert(gfTime.Second(), 0)
+		stdTime, err := time.Parse(time.RFC3339, timeStr)
+		t.AssertNil(err)
+		stdTimeFormat := stdTime.Format("2006-01-02 15:04:05")
+		gfTimeFormat := gfTime.Format("Y-m-d H:i:s")
+		t.Assert(gfTimeFormat, stdTimeFormat)
 	})
 }
