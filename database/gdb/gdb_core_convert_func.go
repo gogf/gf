@@ -169,6 +169,8 @@ func getDecimalConvertFunc(typ reflect.Type, deref int) fieldConvertFunc {
 		return func(dst reflect.Value, src any) error {
 			return decimalConvertFunc[uint64](dst.SetUint, src)
 		}
+	case reflect.String:
+		return convertToString
 	default:
 		return nil
 	}
@@ -379,7 +381,10 @@ func convertToInt64(dest reflect.Value, src interface{}) error {
 		case int8: // dm tinyint
 			dest.SetInt(int64(sv))
 			return nil
-		case int32: // dm tinyint
+		case int16: // dm smallint
+			dest.SetInt(int64(sv))
+			return nil
+		case int32: // dm int
 			dest.SetInt(int64(sv))
 			return nil
 		}
@@ -413,6 +418,18 @@ func convertToUint64(dest reflect.Value, src interface{}) error {
 		dest.SetUint(n)
 		return nil
 	default:
+		// clickhouse
+		switch sv := src.(type) {
+		case uint8:
+			dest.SetUint(uint64(sv))
+			return nil
+		case uint16:
+			dest.SetUint(uint64(sv))
+			return nil
+		case uint32:
+			dest.SetUint(uint64(sv))
+			return nil
+		}
 		return convertError()
 	}
 }
@@ -424,6 +441,9 @@ func convertToFloat64(dest reflect.Value, src interface{}) error {
 		return nil
 	case float64:
 		dest.SetFloat(src)
+		return nil
+	case float32:
+		dest.SetFloat(float64(src))
 		return nil
 	case []byte:
 		f, err := strconv.ParseFloat(unsafeBytesToString(src), 64)
@@ -471,6 +491,29 @@ func convertToString(dest reflect.Value, src interface{}) error {
 		dest.SetString(strconv.FormatFloat(src, 'G', -1, 64))
 		return nil
 	default:
+		switch sv := src.(type) {
+		case int8:
+			dest.SetString(strconv.FormatInt(int64(sv), 10))
+			return nil
+		case int16:
+			dest.SetString(strconv.FormatInt(int64(sv), 10))
+			return nil
+		case int32:
+			dest.SetString(strconv.FormatInt(int64(sv), 10))
+			return nil
+		case uint8:
+			dest.SetString(strconv.FormatUint(uint64(sv), 10))
+			return nil
+		case uint16:
+			dest.SetString(strconv.FormatUint(uint64(sv), 10))
+			return nil
+		case uint32:
+			dest.SetString(strconv.FormatUint(uint64(sv), 10))
+			return nil
+		case float32:
+			dest.SetString(strconv.FormatFloat(float64(sv), 'G', -1, 64))
+			return nil
+		}
 		return convertError()
 	}
 }
