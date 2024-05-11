@@ -377,6 +377,8 @@ func convertToInt64(dest reflect.Value, src interface{}) error {
 		dest.SetInt(n)
 		return nil
 	default:
+		// Most drivers will go to the top branch,
+		// and only a few drivers will go to the bottom branch
 		switch sv := src.(type) {
 		case int8: // dm tinyint
 			dest.SetInt(int64(sv))
@@ -418,6 +420,8 @@ func convertToUint64(dest reflect.Value, src interface{}) error {
 		dest.SetUint(n)
 		return nil
 	default:
+		// Most drivers will go to the top branch,
+		// and only a few drivers will go to the bottom branch
 		// clickhouse
 		switch sv := src.(type) {
 		case uint8:
@@ -491,6 +495,8 @@ func convertToString(dest reflect.Value, src interface{}) error {
 		dest.SetString(strconv.FormatFloat(src, 'G', -1, 64))
 		return nil
 	default:
+		// Most drivers will go to the top branch,
+		// and only a few drivers will go to the bottom branch
 		switch sv := src.(type) {
 		case int8:
 			dest.SetString(strconv.FormatInt(int64(sv), 10))
