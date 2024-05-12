@@ -29,7 +29,7 @@ var (
 )
 
 func init() {
-	if goRootForFilter != "" {
+	if goRootForFilter != "" && runtime.GOOS == "windows" {
 		goRootForFilter = strings.ReplaceAll(goRootForFilter, "\\", "/")
 	}
 	// Initialize internal package variable: selfPath.
