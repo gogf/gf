@@ -21,7 +21,7 @@ var (
 )
 
 func init() {
-	if goRootForFilter != "" {
+	if goRootForFilter != ""  && runtime.GOOS == "windows" {
 		goRootForFilter = strings.ReplaceAll(goRootForFilter, "\\", "/")
 	}
 }
