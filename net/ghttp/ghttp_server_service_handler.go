@@ -307,7 +307,6 @@ func createRouterFunc(funcInfo handlerFuncInfo) func(r *Request) {
 }
 
 func parseStructFields(funcInfo *handlerFuncInfo) {
-
 	reqStructType := funcInfo.Type.In(1)
 	reqStructType = reqStructType.Elem()
 
@@ -332,7 +331,6 @@ func parseStructFields(funcInfo *handlerFuncInfo) {
 }
 
 func getValidTagField(field reflect.Type) (count int) {
-
 	if field.Kind() == reflect.Ptr {
 		field = field.Elem()
 	}
