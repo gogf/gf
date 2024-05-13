@@ -82,6 +82,13 @@ type (
 		Value           reflect.Value    // Reflect value information for current handler, which is used for extensions of the handler feature.
 		IsStrictRoute   bool             // Whether strict route matching is enabled.
 		ReqStructFields []gstructs.Field // Request struct fields.
+		// Language string `d:"go"`
+		defaultTagFields []gstructs.Field
+		// Language string `in:"header"`
+		inTagFields []gstructs.Field
+		// Language string `v:"required|eq:go"`
+		// todo: Subsequently, the fields with valid tags are parsed into maps for direct verification
+		validTagFields int
 	}
 
 	// HandlerItem is the registered handler for route handling,

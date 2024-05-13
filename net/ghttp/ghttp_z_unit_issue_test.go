@@ -202,7 +202,7 @@ func (r cFoo1) PostTest1(ctx context.Context, req *TemplateCreateReq) (res *Temp
 }
 
 // https://github.com/gogf/gf/issues/1662
-func Test_Issue662(t *testing.T) {
+func Test_Issue1662(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Use(ghttp.MiddlewareHandlerResponse)
 	s.Group("/boot", func(grp *ghttp.RouterGroup) {

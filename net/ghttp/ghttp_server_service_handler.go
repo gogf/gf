@@ -257,6 +257,7 @@ func (s *Server) checkAndCreateFuncInfo(
 		return funcInfo, err
 	}
 	funcInfo.ReqStructFields = fields
+	parseStructFields(&funcInfo)
 	funcInfo.Func = createRouterFunc(funcInfo)
 	return
 }
@@ -303,6 +304,54 @@ func createRouterFunc(funcInfo handlerFuncInfo) func(r *Request) {
 			}
 		}
 	}
+}
+
+func parseStructFields(funcInfo *handlerFuncInfo) {
+
+	reqStructType := funcInfo.Type.In(1)
+	reqStructType = reqStructType.Elem()
+
+	for i := 0; i < len(funcInfo.ReqStructFields); i++ {
+		field := funcInfo.ReqStructFields[i]
+		defaultTag := field.TagDefault()
+		if defaultTag != "" {
+			funcInfo.defaultTagFields = append(funcInfo.defaultTagFields, field)
+		}
+		inTag := field.TagIn()
+		if inTag != "" {
+			funcInfo.inTagFields = append(funcInfo.inTagFields, field)
+		}
+		// Check for recursively nested structs
+		validTag := field.TagValid()
+		if validTag == "" {
+			funcInfo.validTagFields = getValidTagField(field.Field.Type)
+		} else {
+			funcInfo.validTagFields = 1
+		}
+	}
+}
+
+func getValidTagField(field reflect.Type) (count int) {
+
+	if field.Kind() == reflect.Ptr {
+		field = field.Elem()
+	}
+	if field.Kind() == reflect.Struct {
+		for i := 0; i < field.NumField(); i++ {
+			f := field.Field(i)
+			tag := f.Tag.Get("v")
+			if tag == "" {
+				tag = f.Tag.Get("valid")
+			}
+			if tag != "" {
+				count++
+				return
+			}
+			count += getValidTagField(f.Type)
+		}
+	}
+
+	return
 }
 
 // trimGeneric removes type definitions string from response type name if generic
