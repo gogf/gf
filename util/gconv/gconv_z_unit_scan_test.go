@@ -17,6 +17,20 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+type scanStructTest struct {
+	Name  string
+	Place string
+}
+
+type scanExpectTest struct {
+	mapStrStr map[string]string
+	mapStrAny map[string]interface{}
+	mapAnyAny map[interface{}]interface{}
+
+	structSub    scanStructTest
+	structSubPtr *scanStructTest
+}
+
 var scanValueMapsTest = []map[string]interface{}{
 	{"Name": false, "Place": true},
 	{"Name": int(0), "Place": int(1)},
@@ -42,26 +56,12 @@ var scanValueMapsTest = []map[string]interface{}{
 	{"Name": []string{"Earth", "Moon"}, "Place": []string{"好望角", "万户环形山"}},
 }
 
-type scanStructTest struct {
-	Name  string
-	Place string
-}
-
 var scanValueStructsTest = []scanStructTest{
 	{"Venus", "阿佛洛狄特高原"},
 }
 
 var scanValueJsonTest = []string{
 	`{"Name": "Mars", "Place": "奥林帕斯山"}`,
-}
-
-type scanExpectTest struct {
-	mapStrStr map[string]string
-	mapStrAny map[string]interface{}
-	mapAnyAny map[interface{}]interface{}
-
-	structSub    scanStructTest
-	structSubPtr *scanStructTest
 }
 
 var scanExpects = scanExpectTest{
@@ -74,6 +74,28 @@ var scanExpects = scanExpectTest{
 }
 
 func TestScan(t *testing.T) {
+	// Test for special types.
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			src = "Sun"
+			dst = "日冕"
+		)
+
+		err = gconv.Scan(nil, &dst)
+		t.AssertNil(err)
+		t.Assert(dst, "日冕")
+
+		err = gconv.Scan(src, nil)
+		t.Assert(err, gerror.New("destination pointer should not be nil"))
+
+		// Test for non-pointer.
+		err = gconv.Scan(src, dst)
+		t.Assert(err, gerror.New(
+			"destination pointer should be type of pointer, but got type: string",
+		))
+	})
+
 	// Test for map converting.
 	gtest.C(t, func(t *gtest.T) {
 		scanValuesTest := scanValueMapsTest
