@@ -59,6 +59,13 @@ type DocSetting struct {
 func NewDocSetting() *DocSetting {
 	fileName := "gf-doc-md.zip"
 	tempDir := gfile.Temp("goframe")
+	if _, err := os.Stat(tempDir); err != nil {
+		err = gfile.Mkdir(tempDir)
+		if err != nil {
+			mlog.Print("创建临时目录失败:", err)
+			return nil
+		}
+	}
 	return &DocSetting{
 		TempDir:    tempDir,
 		DocDir:     path.Join(tempDir, "gf-gh-pages"),
