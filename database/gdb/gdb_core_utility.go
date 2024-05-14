@@ -174,12 +174,20 @@ func (c *Core) ClearTableFieldsAll(ctx context.Context) (err error) {
 
 // ClearCache removes cached sql result of certain table.
 func (c *Core) ClearCache(ctx context.Context, table string) (err error) {
-	return c.db.GetCache().Clear(ctx)
+	if err := c.db.GetCache().Clear(ctx); err != nil {
+		return err
+	}
+
+	return c.db.GetMemCache().Clear(ctx)
 }
 
 // ClearCacheAll removes all cached sql result from cache
 func (c *Core) ClearCacheAll(ctx context.Context) (err error) {
-	return c.db.GetCache().Clear(ctx)
+	if err := c.db.GetCache().Clear(ctx); err != nil {
+		return err
+	}
+
+	return c.db.GetMemCache().Clear(ctx)
 }
 
 func (c *Core) makeSelectCacheKey(name, schema, table, sql string, args ...interface{}) string {
