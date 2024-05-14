@@ -237,6 +237,11 @@ func (c *Core) GetCache() *gcache.Cache {
 	return c.cache
 }
 
+// GetMemCache returns the internal cache object.
+func (c *Core) GetMemCache() *gcache.Cache {
+	return c.memCache
+}
+
 // GetGroup returns the group string configured.
 func (c *Core) GetGroup() string {
 	return c.group

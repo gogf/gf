@@ -106,6 +106,10 @@ func (c *Core) Close(ctx context.Context) (err error) {
 	if err = c.cache.Close(ctx); err != nil {
 		return err
 	}
+	if err = c.memCache.Close(ctx); err != nil {
+		return err
+	}
+
 	c.links.LockFunc(func(m map[any]any) {
 		for k, v := range m {
 			if db, ok := v.(*sql.DB); ok {
@@ -743,7 +747,7 @@ func (c *Core) GetTablesWithCache() ([]string, error) {
 		ctx      = c.db.GetCtx()
 		cacheKey = fmt.Sprintf(`Tables: %s`, c.db.GetGroup())
 	)
-	result, err := c.GetCache().GetOrSetFuncLock(
+	result, err := c.GetMemCache().GetOrSetFuncLock(
 		ctx, cacheKey, func(ctx context.Context) (interface{}, error) {
 			tableList, err := c.db.Tables(ctx)
 			if err != nil {

@@ -23,6 +23,7 @@ func (c *Core) Schema(schema string) *Schema {
 	// Different schema share some same objects.
 	core.logger = c.logger
 	core.cache = c.cache
+	core.memCache = c.memCache
 	core.schema = schema
 	return &Schema{
 		DB: db,

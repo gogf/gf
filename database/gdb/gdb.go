@@ -150,6 +150,7 @@ type DB interface {
 	// ===========================================================================
 
 	GetCache() *gcache.Cache            // See Core.GetCache.
+	GetMemCache() *gcache.Cache         // See Core.GetMemCache.
 	SetDebug(debug bool)                // See Core.SetDebug.
 	GetDebug() bool                     // See Core.GetDebug.
 	GetSchema() string                  // See Core.GetSchema.
@@ -264,6 +265,7 @@ type Core struct {
 	schema        string          // Custom schema for this object.
 	debug         *gtype.Bool     // Enable debug mode for the database, which can be changed in runtime.
 	cache         *gcache.Cache   // Cache manager, SQL result cache only.
+	memCache      *gcache.Cache   // Cache manager, inner memory cache use
 	links         *gmap.Map       // links caches all created links by node.
 	logger        glog.ILogger    // Logger for logging functionality.
 	config        *ConfigNode     // Current config node.
@@ -587,12 +589,13 @@ func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
 		node = parseConfigNodeLink(node)
 	}
 	c := &Core{
-		group:  group,
-		debug:  gtype.NewBool(),
-		cache:  gcache.New(),
-		links:  gmap.New(true),
-		logger: glog.New(),
-		config: node,
+		group:    group,
+		debug:    gtype.NewBool(),
+		cache:    gcache.New(),
+		memCache: gcache.New(),
+		links:    gmap.New(true),
+		logger:   glog.New(),
+		config:   node,
 		dynamicConfig: dynamicConfig{
 			MaxIdleConnCount: node.MaxIdleConnCount,
 			MaxOpenConnCount: node.MaxOpenConnCount,
