@@ -22,13 +22,22 @@ var mapTests = []struct {
 	value  interface{}
 	expect map[string]interface{}
 }{
-	{map[int]int{1: 1}, map[string]interface{}{"1": 1}},
-	{map[float64]int{1.1: 1}, map[string]interface{}{"1.1": 1}},
 	{map[string]int{"k1": 1}, map[string]interface{}{"k1": 1}},
-
-	{map[string]int{"k1": 1}, map[string]interface{}{"k1": 1}},
-	{map[string]float64{"k1": 1.1}, map[string]interface{}{"k1": 1.1}},
+	{map[string]uint{"k1": 1}, map[string]interface{}{"k1": 1}},
 	{map[string]string{"k1": "v1"}, map[string]interface{}{"k1": "v1"}},
+	{map[string]float32{"k1": 1.1}, map[string]interface{}{"k1": 1.1}},
+	{map[string]float64{"k1": 1.1}, map[string]interface{}{"k1": 1.1}},
+	{map[string]interface{}{"k1": "v1"}, map[string]interface{}{"k1": "v1"}},
+
+	{map[interface{}]int{"k1": 1}, map[string]interface{}{"k1": 1}},
+	{map[interface{}]uint{"k1": 1}, map[string]interface{}{"k1": 1}},
+	{map[interface{}]string{"k1": "v1"}, map[string]interface{}{"k1": "v1"}},
+	{map[interface{}]float32{"k1": 1.1}, map[string]interface{}{"k1": 1.1}},
+	{map[interface{}]float64{"k1": 1.1}, map[string]interface{}{"k1": 1.1}},
+	{map[interface{}]interface{}{"k1": "v1"}, map[string]interface{}{"k1": "v1"}},
+
+	{map[int]int{1: 1}, map[string]interface{}{"1": 1}},
+	{map[uint]int{1: 1}, map[string]interface{}{"1": 1}},
 
 	{`{"earth": "亚马逊雨林"}`,
 		map[string]interface{}{"earth": "亚马逊雨林"}},
