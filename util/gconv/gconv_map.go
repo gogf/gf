@@ -7,7 +7,6 @@
 package gconv
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 
@@ -104,7 +103,6 @@ func doMapConvert(value interface{}, recursive recursiveType, mustMapReturn bool
 		// If it is a JSON string, automatically unmarshal it!
 		if len(r) > 0 && r[0] == '{' && r[len(r)-1] == '}' {
 			if err := json.UnmarshalUseNumber(r, &dataMap); err != nil {
-				fmt.Println(r)
 				return nil
 			}
 		} else {
