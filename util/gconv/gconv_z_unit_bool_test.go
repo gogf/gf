@@ -46,6 +46,7 @@ var boolTests = []struct {
 	{struct{}{}, true},
 	{make(chan interface{}), true},
 	{func() {}, true},
+	{&struct{}{}, true},
 	{nil, false},
 }
 
