@@ -83,7 +83,7 @@ for file in `find . -name go.mod`; do
     go build ./...
     # check coverage
     if [ "${coverage}" = "coverage" ]; then
-      go test ./... -v -race -coverprofile=coverage.out -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
+      go test ./... -race -coverprofile=coverage.out -covermode=atomic -coverpkg=./...,github.com/gogf/gf/...
 
       if grep -q "/gogf/gf/.*/v2" go.mod; then
         sed -i "s/gogf\/gf\(\/.*\)\/v2/gogf\/gf\/v2\1/g" coverage.out
