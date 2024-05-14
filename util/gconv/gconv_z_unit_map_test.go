@@ -27,6 +27,7 @@ var mapTests = []struct {
 	{map[string]string{"k1": "v1"}, map[string]interface{}{"k1": "v1"}},
 	{map[string]float32{"k1": 1.1}, map[string]interface{}{"k1": 1.1}},
 	{map[string]float64{"k1": 1.1}, map[string]interface{}{"k1": 1.1}},
+	{map[string]bool{"k1": true}, map[string]interface{}{"k1": true}},
 	{map[string]interface{}{"k1": "v1"}, map[string]interface{}{"k1": "v1"}},
 
 	{map[interface{}]int{"k1": 1}, map[string]interface{}{"k1": 1}},
@@ -34,10 +35,16 @@ var mapTests = []struct {
 	{map[interface{}]string{"k1": "v1"}, map[string]interface{}{"k1": "v1"}},
 	{map[interface{}]float32{"k1": 1.1}, map[string]interface{}{"k1": 1.1}},
 	{map[interface{}]float64{"k1": 1.1}, map[string]interface{}{"k1": 1.1}},
+	{map[interface{}]bool{"k1": true}, map[string]interface{}{"k1": true}},
 	{map[interface{}]interface{}{"k1": "v1"}, map[string]interface{}{"k1": "v1"}},
 
 	{map[int]int{1: 1}, map[string]interface{}{"1": 1}},
+	{map[int]string{1: "v1"}, map[string]interface{}{"1": "v1"}},
 	{map[uint]int{1: 1}, map[string]interface{}{"1": 1}},
+	{map[uint]string{1: "v1"}, map[string]interface{}{"1": "v1"}},
+
+	{[]int{1, 2, 3}, map[string]interface{}{"1": 2, "3": nil}},
+	{[]int{1, 2, 3, 4}, map[string]interface{}{"1": 2, "3": 4}},
 
 	{`{"earth": "亚马逊雨林"}`,
 		map[string]interface{}{"earth": "亚马逊雨林"}},
@@ -85,6 +92,26 @@ var mapTests = []struct {
 	}, map[string]interface{}{"Earth": "中国", "China": map[string]interface{}{"Name": "黄河"}}},
 
 	{struct {
+		Earth      string
+		SubMapTest `json:"sub_map_test"`
+	}{
+		Earth: "中国",
+		SubMapTest: SubMapTest{
+			Name: "淮河",
+		},
+	}, map[string]interface{}{"Earth": "中国", "sub_map_test": map[string]interface{}{"Name": "淮河"}}},
+
+	{struct {
+		Earth string
+		China SubMapTest `gconv:"中国"`
+	}{
+		Earth: "中国",
+		China: SubMapTest{
+			Name: "黄河",
+		},
+	}, map[string]interface{}{"Earth": "中国", "中国": map[string]interface{}{"Name": "黄河"}}},
+
+	{struct {
 		China         string `c:"中国"`
 		America       string `c:"-"`
 		UnitedKingdom string `c:"UK,omitempty"`
@@ -113,12 +140,18 @@ var mapTests = []struct {
 		America:       "Empire State Building",
 		UnitedKingdom: "",
 	}, map[string]interface{}{"中国": "东方明珠", "UK": ""}},
-
-	{[]int{1, 2, 3}, map[string]interface{}{"1": 2, "3": nil}},
-	{[]int{1, 2, 3, 4}, map[string]interface{}{"1": 2, "3": 4}},
 }
 
 func TestMap(t *testing.T) {
+	// Test for special types.
+	gtest.C(t, func(t *gtest.T) {
+		jsonFail := `{"Moon: 广寒宫}`
+		t.AssertNil(gconv.Map(jsonFail))
+
+		jsonFailByte := []byte(`{"Mars: 阿拉伯高地"}`)
+		t.AssertNil(gconv.Map(jsonFailByte))
+	})
+
 	gtest.C(t, func(t *gtest.T) {
 		for _, test := range mapTests {
 			t.Assert(gconv.Map(test.value), test.expect)
