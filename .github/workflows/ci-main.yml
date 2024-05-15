@@ -5,21 +5,21 @@ name: GoFrame Main CI
 on:
   push:
     branches:
-      - master
-      - develop
-      - personal/**
-      - feature/**
-      - enhance/**
-      - fix/**
+    - master
+    - develop
+    - personal/**
+    - feature/**
+    - enhance/**
+    - fix/**
 
   pull_request:
     branches:
-      - master
-      - develop
-      - personal/**
-      - feature/**
-      - enhance/**
-      - fix/**
+    - master
+    - develop
+    - personal/**
+    - feature/**
+    - enhance/**
+    - fix/**
 
 # This allows a subsequently queued workflow run to interrupt previous runs
 concurrency:
@@ -189,59 +189,59 @@ jobs:
         goarch: [ "386", "amd64" ]
 
     steps:
-      # TODO: szenius/set-timezone update to node16
-      - name: Setup Timezone
-        uses: szenius/set-timezone@v1.1
-        with:
-          timezoneLinux: "Asia/Shanghai"
+    # TODO: szenius/set-timezone update to node16
+    - name: Setup Timezone
+      uses: szenius/set-timezone@v1.1
+      with:
+        timezoneLinux: "Asia/Shanghai"
 
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+    - name: Checkout Repository
+      uses: actions/checkout@v4
 
-      - name: Start Apollo Containers
-        run:  docker compose -f ".github/workflows/apollo/docker-compose.yml" up -d --build
+    - name: Start Apollo Containers
+      run:  docker compose -f ".github/workflows/apollo/docker-compose.yml" up -d --build
+      
+    - name: Start Nacos Containers
+      run:  docker compose -f ".github/workflows/nacos/docker-compose.yml" up -d --build
 
-      - name: Start Nacos Containers
-        run:  docker compose -f ".github/workflows/nacos/docker-compose.yml" up -d --build
+    - name: Start Redis Cluster Containers
+      run:  docker compose -f ".github/workflows/redis/docker-compose.yml" up -d --build
 
-      - name: Start Redis Cluster Containers
-        run:  docker compose -f ".github/workflows/redis/docker-compose.yml" up -d --build
+    - name: Start Consul Containers
+      run:  docker compose -f ".github/workflows/consul/docker-compose.yml" up -d --build
 
-      - name: Start Consul Containers
-        run:  docker compose -f ".github/workflows/consul/docker-compose.yml" up -d --build
+    - name: Setup Golang ${{ matrix.go-version }}
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ matrix.go-version }}
+        cache-dependency-path: '**/go.sum' 
 
-      - name: Setup Golang ${{ matrix.go-version }}
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ matrix.go-version }}
-          cache-dependency-path: '**/go.sum'
+    - name: Before Script
+      run:  bash .github/workflows/before_script.sh
 
-      - name: Before Script
-        run:  bash .github/workflows/before_script.sh
+    - name: Build & Test
+      if: ${{ (github.event_name == 'push' && github.ref != 'refs/heads/master') || github.event_name == 'pull_request' }}
+      run: bash .github/workflows/ci-main.sh
 
-      - name: Build & Test
-        if: ${{ (github.event_name == 'push' && github.ref != 'refs/heads/master') || github.event_name == 'pull_request' }}
-        run: bash .github/workflows/ci-main.sh
+    - name: Build & Test & Coverage
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+      run: bash .github/workflows/ci-main.sh coverage
 
-      - name: Build & Test & Coverage
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-        run: bash .github/workflows/ci-main.sh coverage
+    - name: Stop Redis Cluster Containers
+      run:  docker compose -f ".github/workflows/redis/docker-compose.yml" down
 
-      - name: Stop Redis Cluster Containers
-        run:  docker compose -f ".github/workflows/redis/docker-compose.yml" down
+    - name: Stop Apollo Containers
+      run:  docker compose -f ".github/workflows/apollo/docker-compose.yml" down
 
-      - name: Stop Apollo Containers
-        run:  docker compose -f ".github/workflows/apollo/docker-compose.yml" down
+    - name: Stop Nacos Containers
+      run:  docker compose -f ".github/workflows/nacos/docker-compose.yml" down
 
-      - name: Stop Nacos Containers
-        run:  docker compose -f ".github/workflows/nacos/docker-compose.yml" down
+    - name: Stop Consul Containers
+      run:  docker compose -f ".github/workflows/consul/docker-compose.yml" down
 
-      - name: Stop Consul Containers
-        run:  docker compose -f ".github/workflows/consul/docker-compose.yml" down
-
-      - name: Report Coverage
-        uses: codecov/codecov-action@v4
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-        with:
-          flags: go-${{ matrix.go-version }}-${{ matrix.goarch }}
-          token: ${{ secrets.CODECOV_TOKEN }}
+    - name: Report Coverage
+      uses: codecov/codecov-action@v4
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+      with:
+        flags: go-${{ matrix.go-version }}-${{ matrix.goarch }}
+        token: ${{ secrets.CODECOV_TOKEN }}
