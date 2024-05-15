@@ -74,28 +74,6 @@ var scanExpects = scanExpectTest{
 }
 
 func TestScan(t *testing.T) {
-	// Test for special types.
-	gtest.C(t, func(t *gtest.T) {
-		var (
-			err error
-			src = "Sun"
-			dst = "日冕"
-		)
-
-		err = gconv.Scan(nil, &dst)
-		t.AssertNil(err)
-		t.Assert(dst, "日冕")
-
-		err = gconv.Scan(src, nil)
-		t.Assert(err, gerror.New("destination pointer should not be nil"))
-
-		// Test for non-pointer.
-		err = gconv.Scan(src, dst)
-		t.Assert(err, gerror.New(
-			"destination pointer should be type of pointer, but got type: string",
-		))
-	})
-
 	// Test for map converting.
 	gtest.C(t, func(t *gtest.T) {
 		scanValuesTest := scanValueMapsTest
@@ -409,5 +387,27 @@ func TestScan(t *testing.T) {
 			t.Assert(test["Name"], scanExpects.structSubPtr.Place)
 			t.Assert(test["Place"], scanExpects.structSubPtr.Name)
 		}
+	})
+
+	// Test for special types.
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			src = "Sun"
+			dst = "日冕"
+		)
+
+		err = gconv.Scan(nil, &dst)
+		t.AssertNil(err)
+		t.Assert(dst, "日冕")
+
+		err = gconv.Scan(src, nil)
+		t.Assert(err, gerror.New("destination pointer should not be nil"))
+
+		// Test for non-pointer.
+		err = gconv.Scan(src, dst)
+		t.Assert(err, gerror.New(
+			"destination pointer should be type of pointer, but got type: string",
+		))
 	})
 }

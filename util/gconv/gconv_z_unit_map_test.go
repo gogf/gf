@@ -7,6 +7,7 @@
 package gconv_test
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -20,7 +21,7 @@ type SubMapTest struct {
 
 var mapTests = []struct {
 	value  interface{}
-	expect map[string]interface{}
+	expect interface{}
 }{
 	{map[string]int{"k1": 1}, map[string]interface{}{"k1": 1}},
 	{map[string]uint{"k1": 1}, map[string]interface{}{"k1": 1}},
@@ -50,6 +51,11 @@ var mapTests = []struct {
 		map[string]interface{}{"earth": "亚马逊雨林"}},
 	{[]byte(`{"earth": "撒哈拉沙漠"}`),
 		map[string]interface{}{"earth": "撒哈拉沙漠"}},
+
+	{"", nil},
+	{[]byte(""), nil},
+	{`"{earth亚马逊雨林}`, nil},
+	{[]byte(`{earth撒哈拉沙漠}`), nil},
 
 	{&struct {
 		Earth string
@@ -143,17 +149,6 @@ var mapTests = []struct {
 }
 
 func TestMap(t *testing.T) {
-	// Test for special types.
-	gtest.C(t, func(t *gtest.T) {
-		jsonFail := `{"Moon广寒宫}`
-		t.AssertNil(gconv.Map(jsonFail))
-
-		jsonFailByte := []byte("")
-		t.AssertNil(gconv.Map(jsonFailByte))
-		jsonFailByte = []byte(`{"Mars阿拉伯高地"}`)
-		t.AssertNil(gconv.Map(jsonFailByte))
-	})
-
 	gtest.C(t, func(t *gtest.T) {
 		for _, test := range mapTests {
 			t.Assert(gconv.Map(test.value), test.expect)
@@ -165,26 +160,60 @@ func TestMaps(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for _, test := range mapTests {
 			var (
+				maps    interface{}
+				expects interface{}
+			)
+
+			if v, ok := test.value.(string); ok {
+				maps = fmt.Sprintf(`[%s,%s]`, v, v)
+			} else if v, ok := test.value.([]byte); ok {
+				maps = fmt.Sprintf(`[%s,%s]`, v, v)
+			} else {
 				maps = []interface{}{
 					test.value,
 					test.value,
 				}
+			}
+
+			if test.expect == nil {
+				expects = test.expect
+			} else {
 				expects = []interface{}{
 					test.expect,
 					test.expect,
 				}
-			)
+			}
 			t.Assert(gconv.Maps(maps), expects)
+
+			// The following is the same as gconv.Maps.
+			t.Assert(gconv.MapsDeep(maps), expects)
 			t.Assert(gconv.SliceMap(maps), expects)
+			t.Assert(gconv.SliceMapDeep(maps), expects)
 		}
+	})
+
+	// Test for special types.
+	gtest.C(t, func(t *gtest.T) {
+		mapStrAny := []map[string]interface{}{
+			{"earth": "亚马逊雨林"},
+			{"mars": "奥林帕斯山"},
+		}
+		t.Assert(gconv.Maps(mapStrAny), mapStrAny)
+
+		mapEmpty := []map[string]string{}
+		t.AssertNil(gconv.Maps(mapEmpty))
 	})
 }
 
 func TestMapStrStr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for _, test := range mapTests {
-			for k, v := range test.expect {
-				test.expect[k] = gconv.String(v)
+			var expect map[string]interface{}
+			if v, ok := test.expect.(map[string]interface{}); ok {
+				expect = v
+			}
+			for k, v := range expect {
+				expect[k] = gconv.String(v)
 			}
 			t.Assert(gconv.MapStrStr(test.value), test.expect)
 		}
