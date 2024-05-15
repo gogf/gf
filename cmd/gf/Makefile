@@ -22,9 +22,6 @@ pack.template-mono-app:
 	@mkdir temp || exit 0
 	@cd temp && git clone https://github.com/gogf/template-single
 	@cd temp && mv template-single template-mono-app
-	@rm -fr temp/template-mono-app/api/*
-	@rm -fr temp/template-mono-app/internal/controller/*
-	@rm -fr temp/template-mono-app/resource/*
 	@rm -fr temp/template-mono-app/.git
 	@rm -fr temp/template-mono-app/.gitattributes
 	@rm -fr temp/template-mono-app/.gitignore
