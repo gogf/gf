@@ -145,10 +145,12 @@ var mapTests = []struct {
 func TestMap(t *testing.T) {
 	// Test for special types.
 	gtest.C(t, func(t *gtest.T) {
-		jsonFail := `{"Moon: 广寒宫}`
+		jsonFail := `{"Moon广寒宫}`
 		t.AssertNil(gconv.Map(jsonFail))
 
-		jsonFailByte := []byte(`{"Mars: 阿拉伯高地"}`)
+		jsonFailByte := []byte("")
+		t.AssertNil(gconv.Map(jsonFailByte))
+		jsonFailByte = []byte(`{"Mars阿拉伯高地"}`)
 		t.AssertNil(gconv.Map(jsonFailByte))
 	})
 
