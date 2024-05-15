@@ -57,6 +57,8 @@ var mapTests = []struct {
 	{`"{earth亚马逊雨林}`, nil},
 	{[]byte(`{earth撒哈拉沙漠}`), nil},
 
+	{nil, nil},
+
 	{&struct {
 		Earth string
 	}{
@@ -167,7 +169,9 @@ func TestMaps(t *testing.T) {
 			if v, ok := test.value.(string); ok {
 				maps = fmt.Sprintf(`[%s,%s]`, v, v)
 			} else if v, ok := test.value.([]byte); ok {
-				maps = fmt.Sprintf(`[%s,%s]`, v, v)
+				maps = []byte(fmt.Sprintf(`[%s,%s]`, v, v))
+			} else if test.value == nil {
+				maps = nil
 			} else {
 				maps = []interface{}{
 					test.value,
