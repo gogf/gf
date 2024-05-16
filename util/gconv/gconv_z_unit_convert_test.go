@@ -35,18 +35,28 @@ func TestConvert(t *testing.T) {
 		t.Assert(gconv.Convert(float32(0), "float32"), float32(0))
 		t.Assert(gconv.Convert(float64(0), "float64"), float64(0))
 
+		t.AssertEQ(gconv.Convert([]int{1, 2}, "[]int"), []int{1, 2})
+		t.AssertEQ(gconv.Convert([]int8{1, 2}, "[]int8}"), []int8{1, 2})
+		t.AssertEQ(gconv.Convert([]int16{1, 2}, "[]int16"), []int16{1, 2})
+		t.AssertEQ(gconv.Convert([]int32{1, 2}, "[]int32"), []int32{1, 2})
+		t.AssertEQ(gconv.Convert([]int64{1, 2}, "[]int64"), []int64{1, 2})
+		t.AssertEQ(gconv.Convert([]uint{1, 2}, "[]uint"), []uint{1, 2})
+		t.AssertEQ(gconv.Convert([]uint8{1, 2}, "[]uint8}"), []uint8{1, 2})
+		t.AssertEQ(gconv.Convert([]uint16{1, 2}, "[]uint16"), []uint16{1, 2})
+		t.AssertEQ(gconv.Convert([]uint32{1, 2}, "[]uint32"), []uint32{1, 2})
+		t.AssertEQ(gconv.Convert([]uint64{1, 2}, "[]uint64"), []uint64{1, 2})
+		t.AssertEQ(gconv.Convert([]float32{1, 2}, "[]float32"), []float32{1, 2})
+		t.AssertEQ(gconv.Convert([]float64{1, 2}, "[]float64"), []float64{1, 2})
+		t.AssertEQ(gconv.Convert([]string{"1", "2"}, "[]string"), []string{"1", "2"})
 		t.AssertEQ(gconv.Convert([]byte{}, "[]byte"), []uint8{})
 
 		var anyTest interface{} = nil
 		t.AssertEQ(gconv.Convert(anyTest, "string"), "")
 		t.AssertEQ(gconv.Convert("1", "string"), "1")
 
-		t.AssertEQ(gconv.Convert([]string{}, "[]string"), []string{})
-		t.AssertEQ(gconv.Convert([2]int{1, 2}, "[]int"), []int{1, 2})
-		t.AssertEQ(gconv.Convert([2]uint8{1, 2}, "[]uint8"), []uint8{1, 2})
-
 		t.AssertEQ(gconv.Convert("1989-01-02", "Time", "Y-m-d"),
 			gconv.Time("1989-01-02", "Y-m-d"))
+
 		t.AssertEQ(gconv.Convert(1989, "Time"),
 			gconv.Time("1970-01-01 08:33:09 +0800 CST"))
 		t.AssertEQ(gconv.Convert(1989, "gtime.Time"),
