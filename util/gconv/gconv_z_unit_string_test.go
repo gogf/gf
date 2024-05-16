@@ -108,6 +108,7 @@ func TestStrings(t *testing.T) {
 			)
 			strings = reflect.Append(strings, reflect.ValueOf(test.value))
 			strings = reflect.Append(strings, reflect.ValueOf(test.value))
+
 			t.AssertEQ(gconv.Strings(strings.Interface()), expects)
 		}
 	})
