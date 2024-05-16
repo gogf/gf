@@ -142,8 +142,9 @@ func (m *Model) saveSelectResultToCache(
 }
 
 func (m *Model) makeSelectCacheKey(sql string, args ...interface{}) string {
-	return m.db.GetCore().makeSelectCacheKey(
+	return genSelectCacheKey(
 		m.cacheOption.Name,
+		m.db.GetGroup(),
 		m.db.GetSchema(),
 		m.db.GetCore().guessPrimaryTableName(m.tables),
 		sql,

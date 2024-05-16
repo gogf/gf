@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/encoding/ghash"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/intlog"
@@ -943,4 +944,27 @@ func FormatMultiLineSqlToSingle(sql string) (string, error) {
 		return "", err
 	}
 	return sql, nil
+}
+
+func genTableFieldsCacheKey(group, schema, table string) string {
+	return fmt.Sprintf(
+		`%s%s@%s#%s`,
+		cachePrefixTableFields,
+		group,
+		schema,
+		table,
+	)
+}
+
+func genSelectCacheKey(name, group, schema, table, sql string, args ...interface{}) string {
+	if name == "" {
+		name = fmt.Sprintf(
+			`%s@%s#%s:%d`,
+			group,
+			schema,
+			table,
+			ghash.BKDR64([]byte(sql+", @PARAMS:"+gconv.String(args))),
+		)
+	}
+	return fmt.Sprintf(`%s%s`, cachePrefixSelectCache, name)
 }
