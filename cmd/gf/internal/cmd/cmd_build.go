@@ -35,6 +35,8 @@ var (
 		nodeNameInConfigFile: "gfcli.build",
 		packedGoFileName:     "internal/packed/build_pack_data.go",
 	}
+
+	spaceRegex  = regexp.MustCompile(`\s+`)
 )
 
 type cBuild struct {
@@ -190,7 +192,6 @@ func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, e
 	}
 	// System and arch checks.
 	var (
-		spaceRegex  = regexp.MustCompile(`\s+`)
 		platformMap = make(map[string]map[string]bool)
 	)
 	for _, line := range strings.Split(strings.TrimSpace(cBuildPlatforms), "\n") {
