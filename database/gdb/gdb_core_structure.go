@@ -410,7 +410,7 @@ func (c *Core) mappingAndFilterData(ctx context.Context, schema, table string, d
 			}
 		}
 		if len(data) == 0 {
-			return nil, gerror.Newf(`The insert/update fields are filtered and have a quantity of 0`)
+			return nil, gerror.Newf(`input data match no fields in table %s`, table)
 		}
 	}
 	return data, nil

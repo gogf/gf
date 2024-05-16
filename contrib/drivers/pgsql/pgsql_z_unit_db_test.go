@@ -363,7 +363,7 @@ int_col INT);`
 		t.Assert(err, errStr)
 
 	})
-
+	// The inserted field does not exist in the table
 	gtest.C(t, func(t *gtest.T) {
 		data := map[string]any{
 			"id1":        22,
@@ -372,13 +372,14 @@ int_col INT);`
 		_, err = db.Model(tableName).Data(data).Insert()
 		t.Assert(err, errStr)
 
-		_, err = db.Model(strings.ToLower(tableName)).Data(data).Insert()
-		t.Assert(err, `The insert/update fields are filtered and have a quantity of 0`)
+		lowerTableName := strings.ToLower(tableName)
+		_, err = db.Model(lowerTableName).Data(data).Insert()
+		t.Assert(err, fmt.Errorf(`input data match no fields in table "%s"`, lowerTableName))
 
-		_, err = db.Model(strings.ToLower(tableName)).Where("id", 1).Data(g.Map{
+		_, err = db.Model(lowerTableName).Where("id", 1).Data(g.Map{
 			"int_col-2": 9999,
 		}).Update()
-		t.Assert(err, `The insert/update fields are filtered and have a quantity of 0`)
+		t.Assert(err, fmt.Errorf(`input data match no fields in table "%s"`, lowerTableName))
 	})
 
 }
