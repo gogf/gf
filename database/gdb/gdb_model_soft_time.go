@@ -229,7 +229,7 @@ func (m *softTimeMaintainer) getSoftFieldNameAndType(
 	if err != nil {
 		return
 	}
-	if result != nil {
+	if result == nil {
 		return
 	}
 	cacheItem := result.Val().(getSoftFieldNameAndTypeCacheItem)
