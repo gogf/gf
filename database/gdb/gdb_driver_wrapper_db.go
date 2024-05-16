@@ -88,6 +88,9 @@ func (d *DriverWrapperDB) TableFields(
 	value, err = innerMemCache.GetOrSetFuncLock(
 		ctx, cacheKey, cacheFunc, gcache.DurationNoExpire,
 	)
+	if err != nil {
+		return
+	}
 	if !value.IsNil() {
 		fields = value.Val().(map[string]*TableField)
 	}
