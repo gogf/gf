@@ -76,8 +76,6 @@ var intTests = []struct {
 	{map[string]string{"Earth": "大西洋"}, 0, 0, 0, 0, 0},
 
 	{struct{}{}, 0, 0, 0, 0, 0},
-	//{make(chan interface{}), 0, 0, 0, 0, 0},
-	//{func() {}, 0, 0, 0, 0, 0},
 	{nil, 0, 0, 0, 0, 0},
 
 	{gvar.New(123), 123, 123, 123, 123, 123},
