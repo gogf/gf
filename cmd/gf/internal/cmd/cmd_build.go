@@ -36,7 +36,7 @@ var (
 		packedGoFileName:     "internal/packed/build_pack_data.go",
 	}
 
-	spaceRegex  = regexp.MustCompile(`\s+`)
+	spaceRegex = regexp.MustCompile(`\s+`)
 )
 
 type cBuild struct {
