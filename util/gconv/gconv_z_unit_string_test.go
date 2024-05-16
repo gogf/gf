@@ -7,6 +7,7 @@
 package gconv_test
 
 import (
+	"reflect"
 	"testing"
 	"time"
 
@@ -63,7 +64,6 @@ var stringTests = []struct {
 	{map[string]string{"Earth": "太平洋"}, `{"Earth":"太平洋"}`},
 
 	{struct{}{}, "{}"},
-	{nil, ""},
 
 	{gvar.New(123), "123"},
 	{gvar.New(123.456), "123.456"},
@@ -90,19 +90,25 @@ func TestString(t *testing.T) {
 			t.AssertEQ(gconv.String(test.value), test.expect)
 		}
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gconv.Strings(nil), nil)
+	})
 }
 
 func TestStrings(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for _, test := range stringTests {
 			var (
-				strings interface{}
-				expects = []string{
+				sliceType = reflect.SliceOf(reflect.TypeOf(test.value))
+				strings   = reflect.MakeSlice(sliceType, 0, 0)
+				expects   = []string{
 					test.expect, test.expect,
 				}
 			)
-			strings = []interface{}{test.value, test.value}
-			t.AssertEQ(gconv.Strings(strings), expects)
+			strings = reflect.Append(strings, reflect.ValueOf(test.value))
+			strings = reflect.Append(strings, reflect.ValueOf(test.value))
+			t.AssertEQ(gconv.Strings(strings.Interface()), expects)
 		}
 	})
 
