@@ -11,6 +11,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -82,13 +83,13 @@ func (d *DriverWrapperDB) TableFields(
 				table, schema...,
 			)
 		}
-		value any
+		value *gvar.Var
 	)
 	value, err = innerMemCache.GetOrSetFuncLock(
 		ctx, cacheKey, cacheFunc, gcache.DurationNoExpire,
 	)
-	if value != nil {
-		fields = value.(map[string]*TableField)
+	if !value.IsNil() {
+		fields = value.Val().(map[string]*TableField)
 	}
 	return
 }
