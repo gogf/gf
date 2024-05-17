@@ -126,7 +126,7 @@ func TestUints(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for _, test := range uintTests {
 			if test.value == nil {
-				t.AssertEQ(gconv.Uints(test.value), nil)
+				t.AssertNil(gconv.Uints(test.value))
 				continue
 			}
 
@@ -144,13 +144,32 @@ func TestUints(t *testing.T) {
 			t.AssertEQ(gconv.SliceUint(uints.Interface()), expects)
 		}
 	})
+
+	// Test for special types.
+	gtest.C(t, func(t *gtest.T) {
+		// string
+		t.AssertEQ(gconv.Uints(""), []uint{})
+		t.AssertEQ(gconv.Uints("123"), []uint{123})
+
+		// []int8 json
+		t.AssertEQ(gconv.Uints([]uint8(`{"Name":"Earth"}"`)),
+			[]uint{123, 34, 78, 97, 109, 101, 34, 58, 34, 69, 97, 114, 116, 104, 34, 125, 34})
+
+		// []interface
+		t.AssertEQ(gconv.Uints([]interface{}{1, 2, 3}), []uint{1, 2, 3})
+
+		// gvar.Var
+		t.AssertEQ(gconv.Uints(
+			gvar.New([]uint{1, 2, 3}),
+		), []uint{1, 2, 3})
+	})
 }
 
 func TestUint32s(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for _, test := range uintTests {
 			if test.value == nil {
-				t.AssertEQ(gconv.Uint32s(test.value), nil)
+				t.AssertNil(gconv.Uint32s(test.value))
 				continue
 			}
 
@@ -168,13 +187,32 @@ func TestUint32s(t *testing.T) {
 			t.AssertEQ(gconv.SliceUint32(uint32s.Interface()), expects)
 		}
 	})
+
+	// Test for special types.
+	gtest.C(t, func(t *gtest.T) {
+		// string
+		t.AssertEQ(gconv.Uint32s(""), []uint32{})
+		t.AssertEQ(gconv.Uint32s("123"), []uint32{123})
+
+		// []int8 json
+		t.AssertEQ(gconv.Uint32s([]uint8(`{"Name":"Earth"}"`)),
+			[]uint32{123, 34, 78, 97, 109, 101, 34, 58, 34, 69, 97, 114, 116, 104, 34, 125, 34})
+
+		// []interface
+		t.AssertEQ(gconv.Uint32s([]interface{}{1, 2, 3}), []uint32{1, 2, 3})
+
+		// gvar.Var
+		t.AssertEQ(gconv.Uint32s(
+			gvar.New([]uint32{1, 2, 3}),
+		), []uint32{1, 2, 3})
+	})
 }
 
 func TestUint64s(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for _, test := range uintTests {
 			if test.value == nil {
-				t.AssertEQ(gconv.Uint64s(test.value), nil)
+				t.AssertNil(gconv.Uint64s(test.value))
 				continue
 			}
 
@@ -191,5 +229,24 @@ func TestUint64s(t *testing.T) {
 			t.AssertEQ(gconv.Uint64s(uint64s.Interface()), expects)
 			t.AssertEQ(gconv.SliceUint64(uint64s.Interface()), expects)
 		}
+	})
+
+	// Test for special types.
+	gtest.C(t, func(t *gtest.T) {
+		// string
+		t.AssertEQ(gconv.Uint64s(""), []uint64{})
+		t.AssertEQ(gconv.Uint64s("123"), []uint64{123})
+
+		// []int8 json
+		t.AssertEQ(gconv.Uint64s([]uint8(`{"Name":"Earth"}"`)),
+			[]uint64{123, 34, 78, 97, 109, 101, 34, 58, 34, 69, 97, 114, 116, 104, 34, 125, 34})
+
+		// []interface
+		t.AssertEQ(gconv.Uint64s([]interface{}{1, 2, 3}), []uint64{1, 2, 3})
+
+		// gvar.Var
+		t.AssertEQ(gconv.Uint64s(
+			gvar.New([]uint64{1, 2, 3}),
+		), []uint64{1, 2, 3})
 	})
 }

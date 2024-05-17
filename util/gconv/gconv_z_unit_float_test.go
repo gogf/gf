@@ -95,7 +95,7 @@ func TestFloat32s(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for _, test := range floatTests {
 			if test.value == nil {
-				t.AssertEQ(gconv.Float32s(test.value), nil)
+				t.AssertNil(gconv.Float32s(test.value))
 				continue
 			}
 
@@ -113,13 +113,32 @@ func TestFloat32s(t *testing.T) {
 			t.AssertEQ(gconv.SliceFloat32(float32s.Interface()), expects)
 		}
 	})
+
+	// Test for special types.
+	gtest.C(t, func(t *gtest.T) {
+		// string
+		t.AssertEQ(gconv.Float32s(""), []float32{})
+		t.AssertEQ(gconv.Float32s("123"), []float32{123})
+
+		// []int8 json
+		t.AssertEQ(gconv.Float32s([]uint8(`{"Name":"Earth"}"`)),
+			[]float32{123, 34, 78, 97, 109, 101, 34, 58, 34, 69, 97, 114, 116, 104, 34, 125, 34})
+
+		// []interface
+		t.AssertEQ(gconv.Float32s([]interface{}{1, 2, 3}), []float32{1, 2, 3})
+
+		// gvar.Var
+		t.AssertEQ(gconv.Float32s(
+			gvar.New([]float32{1, 2, 3}),
+		), []float32{1, 2, 3})
+	})
 }
 
 func TestFloat64s(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for _, test := range floatTests {
 			if test.value == nil {
-				t.AssertEQ(gconv.Float64s(test.value), nil)
+				t.AssertNil(gconv.Float64s(test.value))
 				continue
 			}
 
@@ -137,6 +156,25 @@ func TestFloat64s(t *testing.T) {
 			t.AssertEQ(gconv.SliceFloat64(float64s.Interface()), expects)
 		}
 	})
+
+	// Test for special types.
+	gtest.C(t, func(t *gtest.T) {
+		// string
+		t.AssertEQ(gconv.Float64s(""), []float64{})
+		t.AssertEQ(gconv.Float64s("123"), []float64{123})
+
+		// []int8 json
+		t.AssertEQ(gconv.Float64s([]uint8(`{"Name":"Earth"}"`)),
+			[]float64{123, 34, 78, 97, 109, 101, 34, 58, 34, 69, 97, 114, 116, 104, 34, 125, 34})
+
+		// []interface
+		t.AssertEQ(gconv.Float64s([]interface{}{1, 2, 3}), []float64{1, 2, 3})
+
+		// gvar.Var
+		t.AssertEQ(gconv.Float64s(
+			gvar.New([]float64{1, 2, 3}),
+		), []float64{1, 2, 3})
+	})
 }
 
 // gconv.Floats uses gconv.Float64s.
@@ -144,7 +182,7 @@ func TestFloats(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for _, test := range floatTests {
 			if test.value == nil {
-				t.AssertEQ(gconv.Floats(test.value), nil)
+				t.AssertNil(gconv.Floats(test.value))
 				continue
 			}
 

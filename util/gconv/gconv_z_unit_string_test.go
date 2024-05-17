@@ -101,7 +101,7 @@ func TestStrings(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for _, test := range stringTests {
 			if test.value == nil {
-				t.AssertEQ(gconv.Strings(test.value), nil)
+				t.AssertNil(gconv.Strings(test.value))
 				continue
 			}
 
@@ -118,5 +118,12 @@ func TestStrings(t *testing.T) {
 			t.AssertEQ(gconv.Strings(strings.Interface()), expects)
 			t.AssertEQ(gconv.SliceStr(strings.Interface()), expects)
 		}
+	})
+
+	// Test for special types.
+	gtest.C(t, func(t *gtest.T) {
+		// []int8 json
+		t.AssertEQ(gconv.Strings([]uint8(`{"Name":"Earth"}"`)),
+			[]string{"123", "34", "78", "97", "109", "101", "34", "58", "34", "69", "97", "114", "116", "104", "34", "125", "34"})
 	})
 }
