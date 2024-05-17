@@ -30,7 +30,7 @@ func TestScanList(t *testing.T) {
 		Score int
 	}
 
-	// Struct attribute.
+	// Test for struct attribute.
 	gtest.C(t, func(t *gtest.T) {
 		type Entity struct {
 			User       EntityUser
@@ -84,7 +84,7 @@ func TestScanList(t *testing.T) {
 		t.Assert(len(entities[2].UserScores), 0)
 	})
 
-	// Pointer attribute.
+	// Test for pointer attribute.
 	gtest.C(t, func(t *gtest.T) {
 		type Entity struct {
 			User       *EntityUser
@@ -138,7 +138,7 @@ func TestScanList(t *testing.T) {
 		t.Assert(len(entities[2].UserScores), 0)
 	})
 
-	// Struct embedded attribute.
+	// Test struct embedded attribute.
 	gtest.C(t, func(t *gtest.T) {
 		type Entity struct {
 			EntityUser
@@ -192,7 +192,7 @@ func TestScanList(t *testing.T) {
 		t.Assert(len(entities[2].UserScores), 0)
 	})
 
-	// Pointer embedded attribute.
+	// Test struct embedded pointer attribute.
 	gtest.C(t, func(t *gtest.T) {
 		type Entity struct {
 			*EntityUser
@@ -244,5 +244,50 @@ func TestScanList(t *testing.T) {
 		t.Assert(entities[1].UserScores[0], userScores[2])
 
 		t.Assert(len(entities[2].UserScores), 0)
+	})
+
+	// Test for special types.
+	gtest.C(t, func(t *gtest.T) {
+		type Entity struct {
+			User       EntityUser
+			UserDetail EntityUserDetail
+			UserScores []EntityUserScores
+		}
+
+		var (
+			err         error
+			entities    []Entity
+			entityUsers = []EntityUser{
+				{Uid: 1, Name: "name1"},
+				{Uid: 2, Name: "name2"},
+				{Uid: 3, Name: "name3"},
+			}
+			userDetails = []EntityUserDetail{
+				{Uid: 1, Address: "address1"},
+				{Uid: 2, Address: "address2"},
+			}
+			//userScores = []EntityUserScores{
+			//	{Id: 10, Uid: 1, Score: 100},
+			//	{Id: 11, Uid: 1, Score: 60},
+			//	{Id: 20, Uid: 2, Score: 99},
+			//}
+		)
+
+		err = gconv.ScanList(nil, nil, "")
+		t.AssertNil(err)
+
+		err = gconv.ScanList(entityUsers, &entities, "")
+		t.AssertNE(err, nil)
+
+		err = gconv.ScanList(entityUsers, &entities, "User")
+		t.AssertNil(err)
+
+		err = gconv.ScanList(userDetails, entities, "User")
+		t.AssertNE(err, nil)
+
+		var a int = 1
+		err = gconv.ScanList(userDetails, &a, "User")
+		t.AssertNE(err, nil)
+
 	})
 }
