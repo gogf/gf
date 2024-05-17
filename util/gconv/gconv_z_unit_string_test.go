@@ -64,6 +64,7 @@ var stringTests = []struct {
 	{map[string]string{"Earth": "太平洋"}, `{"Earth":"太平洋"}`},
 
 	{struct{}{}, "{}"},
+	{nil, ""},
 
 	{gvar.New(123), "123"},
 	{gvar.New(123.456), "123.456"},
@@ -99,6 +100,11 @@ func TestString(t *testing.T) {
 func TestStrings(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for _, test := range stringTests {
+			if test.value == nil {
+				t.AssertEQ(gconv.Strings(test.value), nil)
+				continue
+			}
+
 			var (
 				sliceType = reflect.SliceOf(reflect.TypeOf(test.value))
 				strings   = reflect.MakeSlice(sliceType, 0, 0)
@@ -112,9 +118,5 @@ func TestStrings(t *testing.T) {
 			t.AssertEQ(gconv.Strings(strings.Interface()), expects)
 			t.AssertEQ(gconv.SliceStr(strings.Interface()), expects)
 		}
-	})
-
-	gtest.C(t, func(t *gtest.T) {
-		t.AssertEQ(gconv.Strings(nil), nil)
 	})
 }

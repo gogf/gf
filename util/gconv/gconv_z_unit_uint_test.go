@@ -7,6 +7,7 @@
 package gconv_test
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/gogf/gf/v2/container/gvar"
@@ -117,6 +118,78 @@ func TestUint64(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for _, test := range uintTests {
 			t.AssertEQ(gconv.Uint64(test.value), test.expect64)
+		}
+	})
+}
+
+func TestUints(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		for _, test := range uintTests {
+			if test.value == nil {
+				t.AssertEQ(gconv.Uints(test.value), nil)
+				continue
+			}
+
+			var (
+				sliceType = reflect.SliceOf(reflect.TypeOf(test.value))
+				uints     = reflect.MakeSlice(sliceType, 0, 0)
+				expects   = []uint{
+					test.expect, test.expect,
+				}
+			)
+			uints = reflect.Append(uints, reflect.ValueOf(test.value))
+			uints = reflect.Append(uints, reflect.ValueOf(test.value))
+
+			t.AssertEQ(gconv.Uints(uints.Interface()), expects)
+			t.AssertEQ(gconv.SliceUint(uints.Interface()), expects)
+		}
+	})
+}
+
+func TestUint32s(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		for _, test := range uintTests {
+			if test.value == nil {
+				t.AssertEQ(gconv.Uint32s(test.value), nil)
+				continue
+			}
+
+			var (
+				sliceType = reflect.SliceOf(reflect.TypeOf(test.value))
+				uint32s   = reflect.MakeSlice(sliceType, 0, 0)
+				expects   = []uint32{
+					test.expect32, test.expect32,
+				}
+			)
+			uint32s = reflect.Append(uint32s, reflect.ValueOf(test.value))
+			uint32s = reflect.Append(uint32s, reflect.ValueOf(test.value))
+
+			t.AssertEQ(gconv.Uint32s(uint32s.Interface()), expects)
+			t.AssertEQ(gconv.SliceUint32(uint32s.Interface()), expects)
+		}
+	})
+}
+
+func TestUint64s(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		for _, test := range uintTests {
+			if test.value == nil {
+				t.AssertEQ(gconv.Uint64s(test.value), nil)
+				continue
+			}
+
+			var (
+				sliceType = reflect.SliceOf(reflect.TypeOf(test.value))
+				uint64s   = reflect.MakeSlice(sliceType, 0, 0)
+				expects   = []uint64{
+					test.expect64, test.expect64,
+				}
+			)
+			uint64s = reflect.Append(uint64s, reflect.ValueOf(test.value))
+			uint64s = reflect.Append(uint64s, reflect.ValueOf(test.value))
+
+			t.AssertEQ(gconv.Uint64s(uint64s.Interface()), expects)
+			t.AssertEQ(gconv.SliceUint64(uint64s.Interface()), expects)
 		}
 	})
 }

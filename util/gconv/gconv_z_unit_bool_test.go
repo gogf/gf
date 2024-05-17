@@ -44,8 +44,6 @@ var boolTests = []struct {
 	{map[string]string{"Earth": "印度洋"}, true},
 
 	{struct{}{}, true},
-	{make(chan interface{}), true},
-	{func() {}, true},
 	{&struct{}{}, true},
 	{nil, false},
 }

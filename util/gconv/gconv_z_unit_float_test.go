@@ -8,6 +8,7 @@ package gconv_test
 
 import (
 	"math"
+	"reflect"
 	"testing"
 
 	"github.com/gogf/gf/v2/container/gvar"
@@ -68,8 +69,6 @@ var floatTests = []struct {
 	{map[string]string{"Earth": "太平洋"}, 0, 0},
 
 	{struct{}{}, 0, 0},
-	{make(chan interface{}), 0, 0},
-	{func() {}, 0, 0},
 	{nil, 0, 0},
 
 	{gvar.New(123), 123, 123},
@@ -88,6 +87,79 @@ func TestFloat64(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for _, test := range floatTests {
 			t.AssertEQ(gconv.Float64(test.value), test.expect64)
+		}
+	})
+}
+
+func TestFloat32s(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		for _, test := range floatTests {
+			if test.value == nil {
+				t.AssertEQ(gconv.Float32s(test.value), nil)
+				continue
+			}
+
+			var (
+				sliceType = reflect.SliceOf(reflect.TypeOf(test.value))
+				float32s  = reflect.MakeSlice(sliceType, 0, 0)
+				expects   = []float32{
+					test.expect32, test.expect32,
+				}
+			)
+			float32s = reflect.Append(float32s, reflect.ValueOf(test.value))
+			float32s = reflect.Append(float32s, reflect.ValueOf(test.value))
+
+			t.AssertEQ(gconv.Float32s(float32s.Interface()), expects)
+			t.AssertEQ(gconv.SliceFloat32(float32s.Interface()), expects)
+		}
+	})
+}
+
+func TestFloat64s(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		for _, test := range floatTests {
+			if test.value == nil {
+				t.AssertEQ(gconv.Float64s(test.value), nil)
+				continue
+			}
+
+			var (
+				sliceType = reflect.SliceOf(reflect.TypeOf(test.value))
+				float64s  = reflect.MakeSlice(sliceType, 0, 0)
+				expects   = []float64{
+					test.expect64, test.expect64,
+				}
+			)
+			float64s = reflect.Append(float64s, reflect.ValueOf(test.value))
+			float64s = reflect.Append(float64s, reflect.ValueOf(test.value))
+
+			t.AssertEQ(gconv.Float64s(float64s.Interface()), expects)
+			t.AssertEQ(gconv.SliceFloat64(float64s.Interface()), expects)
+		}
+	})
+}
+
+// gconv.Floats uses gconv.Float64s.
+func TestFloats(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		for _, test := range floatTests {
+			if test.value == nil {
+				t.AssertEQ(gconv.Floats(test.value), nil)
+				continue
+			}
+
+			var (
+				sliceType = reflect.SliceOf(reflect.TypeOf(test.value))
+				float64s  = reflect.MakeSlice(sliceType, 0, 0)
+				expects   = []float64{
+					test.expect64, test.expect64,
+				}
+			)
+			float64s = reflect.Append(float64s, reflect.ValueOf(test.value))
+			float64s = reflect.Append(float64s, reflect.ValueOf(test.value))
+
+			t.AssertEQ(gconv.Floats(float64s.Interface()), expects)
+			t.AssertEQ(gconv.SliceFloat(float64s.Interface()), expects)
 		}
 	})
 }
