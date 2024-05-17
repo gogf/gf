@@ -163,6 +163,20 @@ func TestStruct(t *testing.T) {
 			t.Assert(expectTagJson.PlanetPlaceJson, "")
 		}
 	})
+
+	// Test for nil.
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err    error
+			expect = new(structExpect)
+		)
+
+		err = gconv.Struct(nil, nil)
+		t.AssertNil(err)
+		t.Assert(expect.PlanetName, "")
+		t.Assert(expect.Planet_Place, "")
+		t.Assert(expect.planetTime, "")
+	})
 }
 
 func TestStructs(t *testing.T) {
@@ -173,7 +187,7 @@ func TestStructs(t *testing.T) {
 				tests   = []map[string]string{test, test}
 				expects []*structExpect
 			)
-			err = gconv.Structs(tests, &expects)
+			err = gconv.SliceStruct(tests, &expects)
 			t.AssertNil(err)
 			t.Assert(len(expects), 2)
 			for _, expect := range expects {
@@ -194,7 +208,7 @@ func TestStructs(t *testing.T) {
 				expectTagJsons  = []*structTagJsonExpect{}
 			)
 
-			err = gconv.Structs(tests, &expectTagGconvs)
+			err = gconv.SliceStruct(tests, &expectTagGconvs)
 			t.AssertNil(err)
 			t.Assert(len(expectTagGconvs), 2)
 			for _, expect := range expectTagGconvs {
@@ -202,7 +216,7 @@ func TestStructs(t *testing.T) {
 				t.Assert(expect.PlanetPlaceGconv, "")
 			}
 
-			err = gconv.Structs(tests, &expectTagParams)
+			err = gconv.SliceStruct(tests, &expectTagParams)
 			t.AssertNil(err)
 			t.Assert(len(expectTagParams), 2)
 			for _, expect := range expectTagParams {
@@ -210,7 +224,7 @@ func TestStructs(t *testing.T) {
 				t.Assert(expect.PlanetPlaceParam, "")
 			}
 
-			err = gconv.Structs(tests, &expectTagCs)
+			err = gconv.SliceStruct(tests, &expectTagCs)
 			t.AssertNil(err)
 			t.Assert(len(expectTagCs), 2)
 			for _, expect := range expectTagCs {
@@ -218,7 +232,7 @@ func TestStructs(t *testing.T) {
 				t.Assert(expect.PlanetPlaceC, "")
 			}
 
-			err = gconv.Structs(tests, &expectTagPs)
+			err = gconv.SliceStruct(tests, &expectTagPs)
 			t.AssertNil(err)
 			t.Assert(len(expectTagPs), 2)
 			for _, expect := range expectTagPs {
@@ -226,7 +240,7 @@ func TestStructs(t *testing.T) {
 				t.Assert(expect.PlanetPlaceP, "")
 			}
 
-			err = gconv.Structs(tests, &expectTagJsons)
+			err = gconv.SliceStruct(tests, &expectTagJsons)
 			t.AssertNil(err)
 			t.Assert(len(expectTagJsons), 2)
 			for _, expect := range expectTagJsons {
