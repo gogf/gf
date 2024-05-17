@@ -37,9 +37,8 @@ type MapOption struct {
 	Tags []string
 }
 
-// Map converts any variable `value` to map[string]interface{}.
-// If the parameter `value` is not a map/struct/*struct type,
-// then the conversion will fail and returns nil.
+// Map converts any variable `value` to map[string]interface{}. If the parameter `value` is not a
+// map/struct/*struct type, then the conversion will fail and returns nil.
 //
 // If `value` is a struct/*struct object, the second parameter `tags` specifies the most priority
 // tags that will be detected, otherwise it detects the tags in order of:
