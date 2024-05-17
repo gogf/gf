@@ -33,7 +33,7 @@ ORDER BY
 	c.relname
 `
 
-	postgreRegex = regexp.MustCompile(`PostgreSQL (\d+\.\d+)`)
+	versionRegex = regexp.MustCompile(`PostgreSQL (\d+\.\d+)`)
 )
 
 func init() {
@@ -92,7 +92,7 @@ func (d *Driver) version(ctx context.Context, link gdb.Link) string {
 	}
 	if len(result) > 0 {
 		if v, ok := result[0]["version"]; ok {
-			matches := postgreRegex.FindStringSubmatch(v.String())
+			matches := versionRegex.FindStringSubmatch(v.String())
 			if len(matches) >= 2 {
 				return matches[1]
 			}
