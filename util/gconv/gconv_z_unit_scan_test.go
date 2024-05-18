@@ -12,6 +12,7 @@ import (
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -409,5 +410,28 @@ func TestScan(t *testing.T) {
 		t.Assert(err, gerror.New(
 			"destination pointer should be type of pointer, but got type: string",
 		))
+	})
+}
+
+func TestScanEmptyStringToCustomType(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Status string
+		type Req struct {
+			Name     string
+			Statuses []Status
+			Types    []string
+		}
+		var (
+			req  *Req
+			data = g.Map{
+				"Name":     "john",
+				"Statuses": "",
+				"Types":    "",
+			}
+		)
+		err := gconv.Scan(data, &req)
+		t.AssertNil(err)
+		t.Assert(len(req.Statuses), 0)
+		t.Assert(len(req.Types), 0)
 	})
 }
