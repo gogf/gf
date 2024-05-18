@@ -113,23 +113,6 @@ var structValueTests = []map[string]string{
 	},
 }
 
-func TestA(t *testing.T) {
-	type CustomString string
-	type CustomStruct struct {
-		S string
-	}
-	gtest.C(t, func(t *gtest.T) {
-		var (
-			a CustomString = "abc"
-			b *CustomStruct
-		)
-		err := gconv.Scan(a, &b)
-		t.AssertNil(err)
-		t.AssertNE(err, nil)
-		t.Assert(b, nil)
-	})
-}
-
 func TestStruct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for _, test := range structValueTests {
@@ -226,6 +209,12 @@ func TestStructErr(t *testing.T) {
 		err := gconv.Scan(a, &b)
 		t.AssertNE(err, nil)
 		t.Assert(b, nil)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		var i *int = nil
+		err := gconv.Struct(map[string]string{}, i)
+		t.AssertNE(err, nil)
 	})
 }
 
