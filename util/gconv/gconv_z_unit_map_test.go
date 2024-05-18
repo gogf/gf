@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -148,6 +149,14 @@ var mapTests = []struct {
 		America:       "Empire State Building",
 		UnitedKingdom: "",
 	}, map[string]interface{}{"中国": "东方明珠", "UK": ""}},
+
+	{struct {
+		China   interface{} `json:",omitempty"`
+		America string      `json:",omitempty"`
+	}{
+		China:   "黄山",
+		America: "",
+	}, map[string]interface{}{"China": "黄山", "America": ""}},
 }
 
 func TestMap(t *testing.T) {
@@ -209,6 +218,40 @@ func TestMaps(t *testing.T) {
 	})
 }
 
+func TestMapsDeepExtra(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type s struct {
+			Earth g.Map `c:"earth_map"`
+		}
+
+		t.Assert(gconv.MapDeep(&s{
+			Earth: g.Map{
+				"sea_num": 4,
+				"one_sea": g.Map{
+					"sea_name": "太平洋",
+				},
+				"map_sat": g.MapAnyAny{
+					1:         "Arctic",
+					"Pacific": 2,
+					"Indian":  "印度洋",
+				},
+			},
+		}), g.Map{
+			"earth_map": g.Map{
+				"sea_num": 4,
+				"one_sea": g.Map{
+					"sea_name": "太平洋",
+				},
+				"map_sat": g.Map{
+					"1":       "Arctic",
+					"Pacific": 2,
+					"Indian":  "印度洋",
+				},
+			},
+		})
+	})
+}
+
 func TestMapStrStr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for _, test := range mapTests {
@@ -221,6 +264,13 @@ func TestMapStrStr(t *testing.T) {
 			}
 			t.Assert(gconv.MapStrStr(test.value), test.expect)
 		}
+	})
+}
+
+func TestMapStrStrDeepExtra(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gconv.MapStrStrDeep(map[string]string{"mars": "Syrtis"}), map[string]string{"mars": "Syrtis"})
+		t.Assert(gconv.MapStrStrDeep(`{}`), nil)
 	})
 }
 
