@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -224,7 +225,7 @@ func TestStructErr(t *testing.T) {
 func TestStructWithTime(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type S struct {
-			T *time.Time
+			T *gtime.Time
 		}
 		var (
 			err error
