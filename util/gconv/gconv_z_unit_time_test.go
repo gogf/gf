@@ -40,7 +40,9 @@ func TestDuration(t *testing.T) {
 
 func TestGtime(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gconv.GTime(""), gtime.New())
 		t.AssertEQ(gconv.GTime(nil), nil)
+
 		t.AssertEQ(gconv.GTime(gtime.New(timeStrTests)), gtime.New(timeStrTests))
 		t.AssertEQ(gconv.GTime(timeTimeTests).Year(), 2024)
 		t.AssertEQ(gconv.GTime(timeTimeTests).Month(), 4)
