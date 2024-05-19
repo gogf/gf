@@ -217,6 +217,9 @@ func TestMaps(t *testing.T) {
 
 		mapEmpty := []map[string]string{}
 		t.AssertNil(gconv.Maps(mapEmpty))
+
+		t.Assert(gconv.Maps(`test`), nil)
+		t.Assert(gconv.Maps([]byte(`test`)), nil)
 	})
 }
 
@@ -251,6 +254,11 @@ func TestMapsDeepExtra(t *testing.T) {
 				},
 			},
 		})
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gconv.MapsDeep(`test`), nil)
+		t.Assert(gconv.MapsDeep([]byte(`test`)), nil)
 	})
 }
 
