@@ -74,3 +74,13 @@ func TestRegisterConverter(t *testing.T) {
 		t.Assert(converterStructOut.Place, converterStructIn.Name)
 	})
 }
+
+func TestConvertWithRefer(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gconv.ConvertWithRefer("1", 100), 1)
+		t.AssertEQ(gconv.ConvertWithRefer("1.01", 1.111), 1.01)
+		t.AssertEQ(gconv.ConvertWithRefer("1.01", "1.111"), "1.01")
+		t.AssertEQ(gconv.ConvertWithRefer("1.01", false), true)
+		t.AssertNE(gconv.ConvertWithRefer("1.01", false), false)
+	})
+}

@@ -52,11 +52,13 @@ var mapTests = []struct {
 		map[string]interface{}{"earth": "亚马逊雨林"}},
 	{[]byte(`{"earth": "撒哈拉沙漠"}`),
 		map[string]interface{}{"earth": "撒哈拉沙漠"}},
+	{`{Earth}`, nil},
 
 	{"", nil},
 	{[]byte(""), nil},
 	{`"{earth亚马逊雨林}`, nil},
 	{[]byte(`{earth撒哈拉沙漠}`), nil},
+	{[]byte(`{Earth}`), nil},
 
 	{nil, nil},
 

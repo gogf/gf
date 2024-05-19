@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -324,6 +325,7 @@ func TestIssue2371(t *testing.T) {
 	})
 }
 
+// https://github.com/gogf/gf/issues/2901
 func TestIssue2901(t *testing.T) {
 	type GameApp2 struct {
 		ForceUpdateTime *time.Time
@@ -335,5 +337,32 @@ func TestIssue2901(t *testing.T) {
 		m := GameApp2{}
 		err := gconv.Scan(src, &m)
 		t.AssertNil(err)
+	})
+}
+
+// https://github.com/gogf/gf/issues/3006
+func TestIssue3006(t *testing.T) {
+	type tFF struct {
+		Val1 json.RawMessage            `json:"val1"`
+		Val2 []json.RawMessage          `json:"val2"`
+		Val3 map[string]json.RawMessage `json:"val3"`
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		ff := &tFF{}
+		var tmp = map[string]any{
+			"val1": map[string]any{"hello": "world"},
+			"val2": []any{map[string]string{"hello": "world"}},
+			"val3": map[string]map[string]string{"val3": {"hello": "world"}},
+		}
+
+		err := gconv.Struct(tmp, ff)
+		t.AssertNil(err)
+		t.AssertNE(ff, nil)
+		t.Assert(ff.Val1, []byte(`{"hello":"world"}`))
+		t.AssertEQ(len(ff.Val2), 1)
+		t.Assert(ff.Val2[0], []byte(`{"hello":"world"}`))
+		t.AssertEQ(len(ff.Val3), 1)
+		t.Assert(ff.Val3["val3"], []byte(`{"hello":"world"}`))
 	})
 }

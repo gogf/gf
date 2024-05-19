@@ -8,7 +8,9 @@ package gconv_test
 
 import (
 	"testing"
+	"time"
 
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -215,6 +217,25 @@ func TestStructErr(t *testing.T) {
 		var i *int = nil
 		err := gconv.Struct(map[string]string{}, i)
 		t.AssertNE(err, nil)
+	})
+}
+
+// Test for Struct containing time.Time attribute.
+func TestStructWithTime(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type S struct {
+			T *time.Time
+		}
+		var (
+			err error
+			now = time.Now()
+			s   = new(S)
+		)
+		err = gconv.Struct(g.Map{
+			"t": &now,
+		}, s)
+		t.AssertNil(err)
+		t.Assert(s.T.UTC().String(), now.UTC().String())
 	})
 }
 
