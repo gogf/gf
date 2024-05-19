@@ -337,8 +337,7 @@ func TestMapWithMapOption(t *testing.T) {
 	})
 }
 
-// See gconv_test.TestScan for more.
-func TestMapToMap(t *testing.T) {
+func TestMapToMapExtra(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err    error
@@ -348,5 +347,32 @@ func TestMapToMap(t *testing.T) {
 		err = gconv.MapToMap(value, &expect)
 		t.Assert(err, nil)
 		t.Assert(value["k1"], expect["k1"])
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		v := g.Map{
+			"k": g.Map{
+				"name": "Earth",
+			},
+		}
+		e := make(map[string]SubMapTest)
+		err := gconv.MapToMap(v, &e)
+		t.AssertNil(err)
+		t.Assert(len(e), 1)
+		t.Assert(e["k"].Name, "Earth")
+	})
+}
+
+func TestMaptoMapsExtra(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := g.Slice{
+			g.Map{"id": 1, "name": "john"},
+			g.Map{"id": 2, "name": "smith"},
+		}
+		var e []*g.Map
+		err := gconv.MapToMaps(v, &e)
+		t.AssertNil(err)
+		t.Assert(len(v), 2)
+		t.Assert(v, e)
 	})
 }

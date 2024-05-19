@@ -160,6 +160,9 @@ func TestUints(t *testing.T) {
 		t.AssertEQ(gconv.Uints(
 			gvar.New([]uint{1, 2, 3}),
 		), []uint{1, 2, 3})
+
+		// array
+		t.AssertEQ(gconv.Uints("[1, 2]"), []uint{1, 2})
 	})
 }
 
