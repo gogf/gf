@@ -241,6 +241,7 @@ jobs:
 
     - name: Report Coverage
       uses: codecov/codecov-action@v4
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
       with:
         flags: go-${{ matrix.go-version }}-${{ matrix.goarch }}
         token: ${{ secrets.CODECOV_TOKEN }}
