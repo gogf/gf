@@ -236,7 +236,7 @@ func TestStructWithTime(t *testing.T) {
 			"t": &now,
 		}, s)
 		t.AssertNil(err)
-		t.Assert(s.T.UTC().String(), now.UTC().String())
+		t.Assert(s.T.UTC().Time.String(), now.UTC().String())
 	})
 }
 
