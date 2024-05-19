@@ -74,8 +74,6 @@ var uintTests = []struct {
 	{map[string]string{"Earth": "珠穆朗玛峰"}, 0, 0, 0, 0, 0},
 
 	{struct{}{}, 0, 0, 0, 0, 0},
-	//{make(chan interface{}), 0, 0, 0, 0, 0},
-	//{func() {}, 0, 0, 0, 0, 0},
 	{nil, 0, 0, 0, 0, 0},
 
 	{gvar.New(123), 123, 123, 123, 123, 123},
@@ -152,8 +150,8 @@ func TestUints(t *testing.T) {
 		t.AssertEQ(gconv.Uints("123"), []uint{123})
 
 		// []int8 json
-		t.AssertEQ(gconv.Uints([]uint8(`{"Name":"Earth"}"`)),
-			[]uint{123, 34, 78, 97, 109, 101, 34, 58, 34, 69, 97, 114, 116, 104, 34, 125, 34})
+		t.AssertEQ(gconv.Uints([]uint8(`{"Name":"Earth"}`)),
+			[]uint{123, 34, 78, 97, 109, 101, 34, 58, 34, 69, 97, 114, 116, 104, 34, 125})
 
 		// []interface
 		t.AssertEQ(gconv.Uints([]interface{}{1, 2, 3}), []uint{1, 2, 3})

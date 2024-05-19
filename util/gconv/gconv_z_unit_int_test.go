@@ -153,8 +153,8 @@ func TestInts(t *testing.T) {
 		t.AssertEQ(gconv.Ints("123"), []int{123})
 
 		// []int8 json
-		t.AssertEQ(gconv.Ints([]uint8(`{"Name":"Earth"}"`)),
-			[]int{123, 34, 78, 97, 109, 101, 34, 58, 34, 69, 97, 114, 116, 104, 34, 125, 34})
+		t.AssertEQ(gconv.Ints([]uint8(`{"Name":"Earth"}`)),
+			[]int{123, 34, 78, 97, 109, 101, 34, 58, 34, 69, 97, 114, 116, 104, 34, 125})
 
 		// []interface
 		t.AssertEQ(gconv.Ints([]interface{}{1, 2, 3}), []int{1, 2, 3})
