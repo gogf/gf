@@ -7,7 +7,6 @@
 package gconv
 
 import (
-	"database/sql"
 	"reflect"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -115,9 +114,10 @@ func doScanList(
 	structSlice interface{}, structSlicePointer interface{}, bindToAttrName, relationAttrName, relationFields string,
 ) (err error) {
 	var (
-		maps = Maps(structSlice)
+		maps    = Maps(structSlice)
+		lenMaps = len(maps)
 	)
-	if len(maps) == 0 {
+	if lenMaps == 0 {
 		return nil
 	}
 	// Necessary checks for parameters.
@@ -153,19 +153,6 @@ func doScanList(
 			reflectKind,
 		)
 	}
-	length := len(maps)
-	if length == 0 {
-		// The pointed slice is not empty.
-		if reflectValue.Len() > 0 {
-			// It here checks if it has struct item, which is already initialized.
-			// It then returns error to warn the developer its empty and no conversion.
-			if v := reflectValue.Index(0); v.Kind() != reflect.Ptr {
-				return sql.ErrNoRows
-			}
-		}
-		// Do nothing for empty struct slice.
-		return nil
-	}
 	var (
 		arrayValue    reflect.Value // Like: []*Entity
 		arrayItemType reflect.Type  // Like: *Entity
@@ -174,7 +161,7 @@ func doScanList(
 	if reflectValue.Len() > 0 {
 		arrayValue = reflectValue
 	} else {
-		arrayValue = reflect.MakeSlice(reflectType.Elem(), length, length)
+		arrayValue = reflect.MakeSlice(reflectType.Elem(), lenMaps, lenMaps)
 	}
 
 	// Slice element item.
