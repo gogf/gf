@@ -216,9 +216,9 @@ func (a *AdapterFile) doGetFilePath(fileName string) (filePath string) {
 	// Searching local file system.
 	if filePath == "" {
 		// Absolute path.
-		if filePath = gfile.RealPath(fileName); filePath != "" && !gfile.IsDir(filePath) {
+		/*if filePath = gfile.RealPath(fileName); filePath != "" && !gfile.IsDir(filePath) {
 			return
-		}
+		}*/
 		a.searchPaths.RLockFunc(func(array []string) {
 			for _, searchPath := range array {
 				searchPath = gstr.TrimRight(searchPath, `\/`)
@@ -234,6 +234,12 @@ func (a *AdapterFile) doGetFilePath(fileName string) (filePath string) {
 				}
 			}
 		})
+	}
+	if filePath == "" {
+		// Absolute path.
+		if filePath = gfile.RealPath(fileName); filePath != "" && !gfile.IsDir(filePath) {
+			return
+		}
 	}
 	return
 }
