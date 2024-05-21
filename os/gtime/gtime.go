@@ -277,14 +277,36 @@ func StrToTime(str string, format ...string) (*Time, error) {
 				operation = "-"
 			}
 			// Comparing the given time zone whether equals to current time zone,
+			// it converts it to UTC if they do not equal.
 			_, localOffset := time.Now().Zone()
-			zoneOffset := h*3600 + m*60 + s
-			if operation == "-" {
-				zoneOffset = -zoneOffset
-			}
 			// Comparing in seconds.
-			if localOffset != zoneOffset {
-				local = time.FixedZone("", zoneOffset)
+			if (h*3600+m*60+s) != localOffset ||
+				(localOffset > 0 && operation == "-") ||
+				(localOffset < 0 && operation == "+") {
+				local = time.UTC
+				// UTC conversion.
+				switch operation {
+				case "+":
+					if h > 0 {
+						hour -= h
+					}
+					if m > 0 {
+						min -= m
+					}
+					if s > 0 {
+						sec -= s
+					}
+				case "-":
+					if h > 0 {
+						hour += h
+					}
+					if m > 0 {
+						min += m
+					}
+					if s > 0 {
+						sec += s
+					}
+				}
 			}
 		}
 	}
