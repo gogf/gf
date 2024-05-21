@@ -190,6 +190,7 @@ jobs:
 
     steps:
     # TODO: szenius/set-timezone update to node16
+    # sudo ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
     - name: Setup Timezone
       uses: szenius/set-timezone@v1.1
       with:
