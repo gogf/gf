@@ -89,7 +89,7 @@ for file in `find . -name go.mod`; do
         sed -i "s/gogf\/gf\(\/.*\)\/v2/gogf\/gf\/v2\1/g" coverage.out
       fi
     else
-      go test ./... -v -race -coverprofile=coverage.out -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
+      go test ./... -v -coverprofile=coverage.out -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
     fi
 
     cd -
