@@ -12,6 +12,7 @@ import (
 	"github.com/emirpasic/gods/trees/btree"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/internal/rwmutex"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -332,7 +333,7 @@ func (tree *BTree) Right() *BTreeEntry {
 func (tree *BTree) String() string {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	return tree.tree.String()
+	return gstr.Replace(tree.tree.String(), "BTree\n", "")
 }
 
 // Search searches the tree with given `key`.
@@ -345,7 +346,7 @@ func (tree *BTree) Search(key interface{}) (value interface{}, found bool) {
 
 // Print prints the tree to stdout.
 func (tree *BTree) Print() {
-	fmt.Println(tree.tree.String())
+	fmt.Println(tree.String())
 }
 
 // Iterator is alias of IteratorAsc.
@@ -364,7 +365,11 @@ func (tree *BTree) IteratorAsc(f func(key, value interface{}) bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	it := tree.tree.Iterator()
-	for it.NextTo(f) {
+	for it.Begin(); it.Next(); {
+		index, value := it.Key(), it.Value()
+		if ok := f(index, value); !ok {
+			break
+		}
 	}
 }
 
@@ -375,7 +380,14 @@ func (tree *BTree) IteratorAsc(f func(key, value interface{}) bool) {
 func (tree *BTree) IteratorAscFrom(key interface{}, match bool, f func(key, value interface{}) bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	// TODO
+	var keys = tree.tree.Keys()
+	index, isIterator := iteratorFromGetIndex(key, keys, match)
+	if !isIterator {
+		return
+	}
+	for ; index < len(keys); index++ {
+		f(keys[index], tree.Get(keys[index]))
+	}
 }
 
 // IteratorDesc iterates the tree readonly in descending order with given callback function `f`.
@@ -384,7 +396,11 @@ func (tree *BTree) IteratorDesc(f func(key, value interface{}) bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	it := tree.tree.Iterator()
-	for it.End(); it.PrevTo(f); {
+	for it.End(); it.Prev(); {
+		index, value := it.Key(), it.Value()
+		if ok := f(index, value); !ok {
+			break
+		}
 	}
 }
 
@@ -395,10 +411,38 @@ func (tree *BTree) IteratorDesc(f func(key, value interface{}) bool) {
 func (tree *BTree) IteratorDescFrom(key interface{}, match bool, f func(key, value interface{}) bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	// TODO
+	var keys = tree.tree.Keys()
+	index, isIterator := iteratorFromGetIndex(key, keys, match)
+	if !isIterator {
+		return
+	}
+	for ; index >= 0; index-- {
+		f(keys[index], tree.Get(keys[index]))
+	}
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (tree *BTree) MarshalJSON() (jsonBytes []byte, err error) {
 	return tree.tree.MarshalJSON()
+}
+
+// iteratorFromGetIndex returns the index of the key in the keys slice.
+// The parameter `match` specifies whether starting iterating if the `key` is fully matched,
+// or else using index searching iterating.
+// If `isIterator` is true, iterator is available; or else not.
+func iteratorFromGetIndex(key interface{}, keys []interface{}, match bool) (index int, isIterator bool) {
+	if match {
+		for i, k := range keys {
+			if k == key {
+				isIterator = true
+				index = i
+			}
+		}
+	} else {
+		if i, ok := key.(int); ok {
+			isIterator = true
+			index = i
+		}
+	}
+	return
 }
