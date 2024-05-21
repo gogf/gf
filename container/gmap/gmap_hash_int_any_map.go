@@ -46,9 +46,7 @@ func NewIntAnyMapFrom(data map[int]interface{}, safe ...bool) *IntAnyMap {
 // Iterator iterates the hash map readonly with custom callback function `f`.
 // If `f` returns true, then it continues iterating; or false to stop.
 func (m *IntAnyMap) Iterator(f func(k int, v interface{}) bool) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	for k, v := range m.data {
+	for k, v := range m.Map() {
 		if !f(k, v) {
 			break
 		}

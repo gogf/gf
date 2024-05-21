@@ -127,6 +127,22 @@ func Test_IntIntMap_Batch(t *testing.T) {
 	})
 }
 
+func Test_IntIntMap_Iterator_Deadlock(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewIntIntMapFrom(map[int]int{1: 1, 2: 2, 3: 3, 4: 4}, true)
+		m.Iterator(func(k int, _ int) bool {
+			if k%2 == 0 {
+				m.Remove(k)
+			}
+			return true
+		})
+		t.Assert(m.Map(), map[int]int{
+			1: 1,
+			3: 3,
+		})
+	})
+}
+
 func Test_IntIntMap_Iterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[int]int{1: 1, 2: 2}

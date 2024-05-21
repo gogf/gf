@@ -7,6 +7,7 @@
 package gmap_test
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/gogf/gf/v2/container/garray"
@@ -114,6 +115,20 @@ func Test_StrStrMap_Batch(t *testing.T) {
 		t.Assert(m.Map(), map[string]string{"a": "a", "b": "b", "c": "c"})
 		m.Removes([]string{"a", "b"})
 		t.Assert(m.Map(), map[string]string{"c": "c"})
+	})
+}
+
+func Test_StrStrMap_Iterator_Deadlock(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewStrStrMapFrom(map[string]string{"1": "1", "2": "2", "3": "3", "4": "4"}, true)
+		m.Iterator(func(k string, _ string) bool {
+			kInt, _ := strconv.Atoi(k)
+			if kInt%2 == 0 {
+				m.Remove(k)
+			}
+			return true
+		})
+		t.Assert(m.Size(), 2)
 	})
 }
 
