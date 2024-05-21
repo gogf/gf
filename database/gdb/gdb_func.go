@@ -956,13 +956,13 @@ func genTableFieldsCacheKey(group, schema, table string) string {
 	)
 }
 
-func genSelectCacheKey(name, group, schema, table, sql string, args ...interface{}) string {
+func genSelectCacheKey(table, group, schema, name, sql string, args ...interface{}) string {
 	if name == "" {
 		name = fmt.Sprintf(
 			`%s@%s#%s:%d`,
+			table,
 			group,
 			schema,
-			table,
 			ghash.BKDR64([]byte(sql+", @PARAMS:"+gconv.String(args))),
 		)
 	}

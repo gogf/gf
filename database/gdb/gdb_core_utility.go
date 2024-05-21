@@ -9,6 +9,7 @@ package gdb
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -171,12 +172,31 @@ func (c *Core) ClearTableFieldsAll(ctx context.Context) (err error) {
 
 // ClearCache removes cached sql result of certain table.
 func (c *Core) ClearCache(ctx context.Context, table string) (err error) {
-	return c.db.GetCache().Clear(ctx)
+	var (
+		keys, _     = c.db.GetCache().KeyStrings(ctx)
+		cachePrefix = fmt.Sprintf(`%s%s@`, cachePrefixSelectCache, table)
+		removedKeys = make([]any, 0)
+	)
+	for _, key := range keys {
+		if gstr.HasPrefix(key, cachePrefix) {
+			removedKeys = append(removedKeys, key)
+		}
+	}
+	if len(removedKeys) > 0 {
+		err = c.db.GetCache().Removes(ctx, removedKeys)
+	}
+	return
 }
 
 // ClearCacheAll removes all cached sql result from cache
 func (c *Core) ClearCacheAll(ctx context.Context) (err error) {
-	return c.db.GetCache().Clear(ctx)
+	if err = c.db.GetCache().Clear(ctx); err != nil {
+		return err
+	}
+	if err = c.GetInnerMemCache().Clear(ctx); err != nil {
+		return err
+	}
+	return
 }
 
 // HasField determine whether the field exists in the table.
