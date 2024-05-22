@@ -162,6 +162,9 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 		if parsedTagOutput.Order != "" {
 			model = model.Order(parsedTagOutput.Order)
 		}
+		if parsedTagOutput.Unscoped == "true" {
+			model = model.Unscoped()
+		}
 		// With cache feature.
 		if m.cacheEnabled && m.cacheOption.Name == "" {
 			model = model.Cache(m.cacheOption)
@@ -277,6 +280,9 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 		if parsedTagOutput.Order != "" {
 			model = model.Order(parsedTagOutput.Order)
 		}
+		if parsedTagOutput.Unscoped == "true" {
+			model = model.Unscoped()
+		}
 		// With cache feature.
 		if m.cacheEnabled && m.cacheOption.Name == "" {
 			model = model.Cache(m.cacheOption)
@@ -293,9 +299,10 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 }
 
 type parseWithTagInFieldStructOutput struct {
-	With  string
-	Where string
-	Order string
+	With     string
+	Where    string
+	Order    string
+	Unscoped string
 }
 
 func (m *Model) parseWithTagInFieldStruct(field gstructs.Field) (output parseWithTagInFieldStructOutput) {
@@ -320,5 +327,6 @@ func (m *Model) parseWithTagInFieldStruct(field gstructs.Field) (output parseWit
 	output.With = data[OrmTagForWith]
 	output.Where = data[OrmTagForWithWhere]
 	output.Order = data[OrmTagForWithOrder]
+	output.Unscoped = data[OrmTagForWithUnscoped]
 	return
 }
