@@ -746,7 +746,7 @@ func (c *Core) GetInnerMemCache() *gcache.Cache {
 func (c *Core) GetTablesWithCache() ([]string, error) {
 	var (
 		ctx           = c.db.GetCtx()
-		cacheKey      = fmt.Sprintf(`Tables: %s`, c.db.GetGroup())
+		cacheKey      = fmt.Sprintf(`Tables:%s`, c.db.GetGroup())
 		cacheDuration = gcache.DurationNoExpire
 		innerMemCache = c.GetInnerMemCache()
 	)
