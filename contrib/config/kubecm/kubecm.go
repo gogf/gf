@@ -164,14 +164,16 @@ func (c *Client) doWatch(ctx context.Context, namespace string) (err error) {
 			c.config.ConfigMap, namespace,
 		)
 	}
-	go func() {
-		for {
-			event := <-watchHandler.ResultChan()
-			switch event.Type {
-			case watch.Modified:
-				_ = c.doUpdate(ctx, namespace)
-			}
-		}
-	}()
+	go c.startAsynchronousWatch(ctx, namespace, watchHandler)
 	return nil
+}
+
+func (c *Client) startAsynchronousWatch(ctx context.Context, namespace string, watchHandler watch.Interface) {
+	for {
+		event := <-watchHandler.ResultChan()
+		switch event.Type {
+		case watch.Modified:
+			_ = c.doUpdate(ctx, namespace)
+		}
+	}
 }

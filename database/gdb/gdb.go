@@ -268,6 +268,7 @@ type Core struct {
 	logger        glog.ILogger    // Logger for logging functionality.
 	config        *ConfigNode     // Current config node.
 	dynamicConfig dynamicConfig   // Dynamic configurations, which can be changed in runtime.
+	innerMemCache *gcache.Cache
 }
 
 type dynamicConfig struct {
@@ -525,9 +526,6 @@ var (
 	// allDryRun sets dry-run feature for all database connections.
 	// It is commonly used for command options for convenience.
 	allDryRun = false
-
-	// tableFieldsMap caches the table information retrieved from database.
-	tableFieldsMap = gmap.NewStrAnyMap(true)
 )
 
 func init() {
@@ -587,12 +585,13 @@ func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
 		node = parseConfigNodeLink(node)
 	}
 	c := &Core{
-		group:  group,
-		debug:  gtype.NewBool(),
-		cache:  gcache.New(),
-		links:  gmap.New(true),
-		logger: glog.New(),
-		config: node,
+		group:         group,
+		debug:         gtype.NewBool(),
+		cache:         gcache.New(),
+		links:         gmap.New(true),
+		logger:        glog.New(),
+		config:        node,
+		innerMemCache: gcache.New(),
 		dynamicConfig: dynamicConfig{
 			MaxIdleConnCount: node.MaxIdleConnCount,
 			MaxOpenConnCount: node.MaxOpenConnCount,

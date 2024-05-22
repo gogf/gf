@@ -108,11 +108,7 @@ func (s *GrpcServer) Run() {
 	}
 
 	// Start listening.
-	go func() {
-		if err = s.Server.Serve(s.listener); err != nil {
-			s.Logger().Fatalf(ctx, `%+v`, err)
-		}
-	}()
+	go s.doServeAsynchronously(ctx)
 
 	// Service register.
 	s.doServiceRegister()
@@ -122,6 +118,12 @@ func (s *GrpcServer) Run() {
 		gproc.Pid(), s.GetListenedAddress(),
 	)
 	s.doSignalListen()
+}
+
+func (s *GrpcServer) doServeAsynchronously(ctx context.Context) {
+	if err := s.Server.Serve(s.listener); err != nil {
+		s.Logger().Fatalf(ctx, `%+v`, err)
+	}
 }
 
 // doSignalListen does signal listening and handling for gracefully shutdown.
@@ -204,10 +206,12 @@ func (s *GrpcServer) doServiceDeregister() {
 // Start starts the server in no-blocking way.
 func (s *GrpcServer) Start() {
 	s.waitGroup.Add(1)
-	go func() {
-		defer s.waitGroup.Done()
-		s.Run()
-	}()
+	go s.doStartAsynchronously()
+}
+
+func (s *GrpcServer) doStartAsynchronously() {
+	defer s.waitGroup.Done()
+	s.Run()
 }
 
 // Wait works with Start, which blocks current goroutine until the server stops.

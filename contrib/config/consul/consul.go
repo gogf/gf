@@ -11,13 +11,14 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/consul/api"
+	"github.com/hashicorp/consul/api/watch"
+
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/glog"
-	"github.com/hashicorp/consul/api"
-	"github.com/hashicorp/consul/api/watch"
 )
 
 // Config is the configuration object for consul client.
@@ -156,22 +157,28 @@ func (c *Client) addWatcher() (err error) {
 			return
 		}
 
-		if err := c.doUpdate(v.Value); err != nil {
-			c.config.Logger.Errorf(context.Background(),
+		if err = c.doUpdate(v.Value); err != nil {
+			c.config.Logger.Errorf(
+				context.Background(),
 				"watch config from consul path %+v update failed: %s",
-				c.config.Path, err)
+				c.config.Path, err,
+			)
 		}
 	}
 
 	plan.Datacenter = c.config.ConsulConfig.Datacenter
 	plan.Token = c.config.ConsulConfig.Token
 
-	go func() {
-		if err := plan.Run(c.config.ConsulConfig.Address); err != nil {
-			c.config.Logger.Errorf(context.Background(),
-				"watch config from consul path %+v plan start failed: %s",
-				c.config.Path, err)
-		}
-	}()
+	go c.startAsynchronousWatch(plan)
 	return nil
+}
+
+func (c *Client) startAsynchronousWatch(plan *watch.Plan) {
+	if err := plan.Run(c.config.ConsulConfig.Address); err != nil {
+		c.config.Logger.Errorf(
+			context.Background(),
+			"watch config from consul path %+v plan start failed: %s",
+			c.config.Path, err,
+		)
+	}
 }

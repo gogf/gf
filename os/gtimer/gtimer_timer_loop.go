@@ -10,40 +10,36 @@ import "time"
 
 // loop starts the ticker using a standalone goroutine.
 func (t *Timer) loop() {
-	go func() {
-		var (
-			currentTimerTicks   int64
-			timerIntervalTicker = time.NewTicker(t.options.Interval)
-		)
-		defer timerIntervalTicker.Stop()
-		for {
-			select {
-			case <-timerIntervalTicker.C:
-				// Check the timer status.
-				switch t.status.Val() {
-				case StatusRunning:
-					// Timer proceeding.
-					if currentTimerTicks = t.ticks.Add(1); currentTimerTicks >= t.queue.NextPriority() {
-						t.proceed(currentTimerTicks)
-					}
-
-				case StatusStopped:
-					// Do nothing.
-
-				case StatusClosed:
-					// Timer exits.
-					return
+	var (
+		currentTimerTicks   int64
+		timerIntervalTicker = time.NewTicker(t.options.Interval)
+	)
+	defer timerIntervalTicker.Stop()
+	for {
+		select {
+		case <-timerIntervalTicker.C:
+			// Check the timer status.
+			switch t.status.Val() {
+			case StatusRunning:
+				// Timer proceeding.
+				if currentTimerTicks = t.ticks.Add(1); currentTimerTicks >= t.queue.NextPriority() {
+					t.proceed(currentTimerTicks)
 				}
+
+			case StatusStopped:
+				// Do nothing.
+
+			case StatusClosed:
+				// Timer exits.
+				return
 			}
 		}
-	}()
+	}
 }
 
 // proceed function proceeds the timer job checking and running logic.
 func (t *Timer) proceed(currentTimerTicks int64) {
-	var (
-		value interface{}
-	)
+	var value interface{}
 	for {
 		value = t.queue.Pop()
 		if value == nil {

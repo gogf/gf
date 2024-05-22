@@ -38,7 +38,7 @@ linters:
   # Custom enable linters we want to use.
   enable:
     - errcheck      # Errcheck is a program for checking for unchecked errors in go programs.
-    - errchkjson    # Checks types passed to the json encoding functions. Reports unsupported types and optionally reports occasions, where the check for the returned error can be omitted.
+    - errchkjson    # Checks types passed to the JSON encoding functions. Reports unsupported types and optionally reports occasions, where the check for the returned error can be omitted.
     - funlen        # Tool for detection of long functions
     - goconst       # Finds repeated strings that could be replaced by a constant
     - gocritic      # Provides diagnostics that check for bugs, performance and style issues.
@@ -172,10 +172,6 @@ linters-settings:
 
   # https://golangci-lint.run/usage/linters/#gosimple
   gosimple:
-    # Select the Go version to target.
-    # Default: 1.13
-    # Deprecated: use the global `run.go` instead.
-    go: "1.15"
     # Sxxxx checks in https://staticcheck.io/docs/configuration/options/#checks
     # Default: ["*"]
     checks: [
@@ -184,9 +180,6 @@ linters-settings:
 
   # https://golangci-lint.run/usage/linters/#govet
   govet:
-    # Report about shadowed variables.
-    # Default: false
-    check-shadowing: true
     # Settings per analyzer.
     settings:
       # Analyzer name, run `go tool vet help` to see all analyzers.
@@ -259,10 +252,6 @@ linters-settings:
 
   # https://golangci-lint.run/usage/linters/#staticcheck
   staticcheck:
-    # Select the Go version to target.
-    # Default: "1.13"
-    # Deprecated: use the global `run.go` instead.
-    go: "1.20"
     # SAxxxx checks in https://staticcheck.io/docs/configuration/options/#checks
     # Default: ["*"]
     checks: [ "all","-SA1019","-SA4015","-SA1029","-SA1016","-SA9003","-SA4006","-SA6003" ]

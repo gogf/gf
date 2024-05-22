@@ -22,6 +22,7 @@ import (
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -737,20 +738,27 @@ func (c *Core) HasTable(name string) (bool, error) {
 	return false, nil
 }
 
+func (c *Core) GetInnerMemCache() *gcache.Cache {
+	return c.innerMemCache
+}
+
 // GetTablesWithCache retrieves and returns the table names of current database with cache.
 func (c *Core) GetTablesWithCache() ([]string, error) {
 	var (
-		ctx      = c.db.GetCtx()
-		cacheKey = fmt.Sprintf(`Tables: %s`, c.db.GetGroup())
+		ctx           = c.db.GetCtx()
+		cacheKey      = fmt.Sprintf(`Tables:%s`, c.db.GetGroup())
+		cacheDuration = gcache.DurationNoExpire
+		innerMemCache = c.GetInnerMemCache()
 	)
-	result, err := c.GetCache().GetOrSetFuncLock(
-		ctx, cacheKey, func(ctx context.Context) (interface{}, error) {
+	result, err := innerMemCache.GetOrSetFuncLock(
+		ctx, cacheKey,
+		func(ctx context.Context) (interface{}, error) {
 			tableList, err := c.db.Tables(ctx)
 			if err != nil {
-				return false, err
+				return nil, err
 			}
 			return tableList, nil
-		}, 0,
+		}, cacheDuration,
 	)
 	if err != nil {
 		return nil, err
