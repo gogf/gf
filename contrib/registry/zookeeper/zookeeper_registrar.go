@@ -31,7 +31,7 @@ func (r *Registry) Register(_ context.Context, service gsvc.Service) (gsvc.Servi
 			r.opts.namespace,
 		)
 	}
-	prefix := strings.TrimPrefix(strings.ReplaceAll(service.GetPrefix(), "/", "-"), "-")
+	prefix := strings.Trim(strings.ReplaceAll(service.GetPrefix(), "/", "-"), "-")
 	servicePrefixPath := path.Join(r.opts.namespace, prefix)
 	if err = r.ensureName(servicePrefixPath, []byte(""), 0); err != nil {
 		return service, gerror.Wrapf(
