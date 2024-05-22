@@ -18,6 +18,9 @@ func (t *Table) makeStructQueryModel(columns int) *queryStructModel {
 		scanArgs: scaArgs,
 	}
 	for i := 0; i < columns; i++ {
+		// The reason for doing this is because the [queryStructModel] implements the [sql.Scanner] interface
+		// This way, when calling the standard library's [sql.Rows.Scan], you can enter our custom conversion logic
+		// Control which field needs to be assigned the current value to through the [queryStructModel.scanIndex] variable
 		q.scanArgs[i] = q
 	}
 	return q
@@ -41,13 +44,13 @@ func (q *queryStructModel) Scan(src any) error {
 	}
 	fieldValue := field.GetReflectValue(q.Struct)
 	err := field.convertFunc(fieldValue, src)
-	q.scanIndex++
 	if err != nil {
 		err = fmt.Errorf("it is not possible to convert from `%v :%T`(%s: %s) to `%s: %s` err:%v",
 			src, src,
 			field.ColumnFieldName, field.ColumnFieldType.DatabaseTypeName(),
 			field.StructField.Name, field.StructFieldType, err)
 	}
+	q.scanIndex++
 	return err
 }
 

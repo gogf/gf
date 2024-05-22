@@ -11,7 +11,9 @@ import (
 	"reflect"
 )
 
-type fieldConvertFunc = func(dst reflect.Value, src any) error
+// dest represents the structural field to be assigned a value to
+// src is the field value of the database
+type fieldConvertFunc = func(dest reflect.Value, src any) error
 
 type fieldConvertInfo struct {
 	// table field
@@ -19,8 +21,9 @@ type fieldConvertInfo struct {
 	ColumnFieldIndex int
 	ColumnFieldType  *sql.ColumnType
 	// struct field
-	StructField      reflect.StructField
-	StructFieldType  reflect.Type
+	StructField     reflect.StructField
+	StructFieldType reflect.Type
+	// The reason why an index is an []int is because this field may be an anonymous structure
 	StructFieldIndex []int
 	convertFunc      fieldConvertFunc
 }
@@ -30,17 +33,16 @@ func (c *fieldConvertInfo) GetReflectValue(structValue reflect.Value) reflect.Va
 	if len(c.StructFieldIndex) == 1 {
 		return structValue.Field(c.StructFieldIndex[0])
 	}
-	v := structValue
-	for i, x := range c.StructFieldIndex {
-		if i > 0 {
-			if v.Kind() == reflect.Pointer {
-				if v.IsNil() {
-					v.Set(reflect.New(v.Type().Elem()))
-				}
-				v = v.Elem()
+
+	fieldValue := structValue.Field(c.StructFieldIndex[0])
+	for i := 1; i < len(c.StructFieldIndex); i++ {
+		if fieldValue.Kind() == reflect.Pointer {
+			if fieldValue.IsNil() {
+				fieldValue.Set(reflect.New(fieldValue.Type().Elem()))
 			}
+			fieldValue = fieldValue.Elem()
 		}
-		v = v.Field(x)
+		fieldValue = fieldValue.Field(c.StructFieldIndex[i])
 	}
-	return v
+	return fieldValue
 }

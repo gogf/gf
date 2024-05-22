@@ -13,17 +13,16 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/gogf/gf/v2/container/gvar"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/gogf/gf/v2/util/gconv"
-
 	"github.com/gogf/gf/v2"
+	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/guid"
 )
 
@@ -424,21 +423,18 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 
 	table := parseStruct(ctx, c.GetDB(), columnTypes)
 	if table != nil {
-		mapQuery := table.makeMapQueryModel(len(columnTypes))
-		return c.scanRowsToMap(rows, mapQuery)
+		return c.scanRowsToMap(rows, table, len(columnTypes))
 	}
-	var (
-		scanArgs = make([]interface{}, len(columnTypes))
-	)
 
+	scanArgs := make([]interface{}, len(columnTypes))
 	for i := 0; i < len(scanArgs); i++ {
 		scanArgs[i] = new(any)
 	}
-
 	return c.scanRowsToResult(ctx, scanArgs, rows, columnTypes)
 }
 
-func (c *Core) scanRowsToMap(rows *sql.Rows, mapQuery *queryMapModel) (result Result, err error) {
+func (c *Core) scanRowsToMap(rows *sql.Rows, table *Table, columns int) (result Result, err error) {
+	mapQuery := table.makeMapQueryModel(columns)
 	for {
 		record := Record{}
 		mapQuery.next(record)

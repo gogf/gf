@@ -20,6 +20,9 @@ func (t *Table) makeMapQueryModel(columns int) *queryMapModel {
 		scanArgs: scaArgs,
 	}
 	for i := 0; i < columns; i++ {
+		// The reason for doing this is because the [queryMapModel] implements the [sql.Scanner] interface
+		// This way, when calling the standard library's [sql.Rows.Scan], you can enter our custom conversion logic
+		// Control which field needs to be assigned the current value to through the [queryMapModel.scanIndex] variable
 		q.scanArgs[i] = q
 	}
 	return q
@@ -34,7 +37,7 @@ type queryMapModel struct {
 
 func (q *queryMapModel) Scan(src any) error {
 	field := q.table.fields[q.scanIndex]
-	if field.convertFunc == nil {
+	if field.convertFunc == nil || src == nil {
 		// Indicates that this field is redundant and does not exist in the struct
 		q.scanIndex++
 		return nil
@@ -43,7 +46,7 @@ func (q *queryMapModel) Scan(src any) error {
 	fieldValue := reflect.New(field.StructFieldType).Elem()
 	err := field.convertFunc(fieldValue, src)
 	if err != nil {
-		err = fmt.Errorf("it is not possible to convert from `%v :%T`(%s: %s) to `%s: %s` err:%v",
+		err = fmt.Errorf("it is not possible to convert from `%v :%T`(%s: %s) to `%s: %s` err: %v",
 			src, src,
 			field.ColumnFieldName, field.ColumnFieldType.DatabaseTypeName(),
 			field.StructField.Name, field.StructFieldType, err)

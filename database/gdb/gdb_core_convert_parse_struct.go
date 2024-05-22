@@ -50,19 +50,26 @@ func parseStruct(ctx context.Context, db DB, columnTypes []*sql.ColumnType) *Tab
 	}
 
 	var (
-		pointer     = val.pointer
+		pointer = val.pointer
+		// 1.[]*struct  => *struct
+		// 2.[]struct   => struct
+		// 3.*[]*struct => []*struct
+		// 4.*[]struct  => []struct
+		// 5.*struct    => struct
+		// 6.**struct   => *struct
 		pointerType = reflect.TypeOf(pointer).Elem()
 	)
 
 	switch pointerType.Kind() {
 	case reflect.Array, reflect.Slice:
 		// 1.[]*struct => *struct
-		// 2.[]struct => struct
+		// 2.[]struct  => struct
 		pointerType = pointerType.Elem()
 		if pointerType.Kind() == reflect.Ptr {
 			pointerType = pointerType.Elem()
 		}
-	case reflect.Ptr: // **struct
+	case reflect.Ptr:
+		// *struct => struct
 		pointerType = pointerType.Elem()
 	}
 
@@ -71,13 +78,12 @@ func parseStruct(ctx context.Context, db DB, columnTypes []*sql.ColumnType) *Tab
 	if ok {
 		return tableValue.(*Table)
 	}
-
 	var (
-		fieldsMap = make(map[string]*fieldConvertInfo)
+		fieldsConvertInfoMap = make(map[string]*fieldConvertInfo)
 	)
 	for i := 0; i < len(columnTypes); i++ {
 		column := columnTypes[i]
-		fieldsMap[column.Name()] = &fieldConvertInfo{
+		fieldsConvertInfoMap[column.Name()] = &fieldConvertInfo{
 			ColumnFieldIndex: i,
 			ColumnFieldType:  column,
 			ColumnFieldName:  column.Name(),
@@ -87,7 +93,7 @@ func parseStruct(ctx context.Context, db DB, columnTypes []*sql.ColumnType) *Tab
 	var (
 		table         = &Table{}
 		matchedColumn = make(map[string]struct{})
-		matchedCount  = table.getStructFields(ctx, db, fieldsMap, pointerType, []int{}, matchedColumn)
+		matchedCount  = table.getStructFields(ctx, db, fieldsConvertInfoMap, pointerType, []int{}, matchedColumn)
 	)
 
 	if matchedCount == 0 {
@@ -95,7 +101,7 @@ func parseStruct(ctx context.Context, db DB, columnTypes []*sql.ColumnType) *Tab
 	}
 
 	table.fields = make([]*fieldConvertInfo, len(columnTypes))
-	for _, v := range fieldsMap {
+	for _, v := range fieldsConvertInfoMap {
 		table.fields[v.ColumnFieldIndex] = v
 	}
 
@@ -103,7 +109,19 @@ func parseStruct(ctx context.Context, db DB, columnTypes []*sql.ColumnType) *Tab
 	return table
 }
 
-func (t *Table) getStructFields(ctx context.Context, db DB, fieldsMap map[string]*fieldConvertInfo, structType reflect.Type, parentIndex []int, matchedColumn map[string]struct{}) (matchedCount int) {
+// parentIndex is the index of anonymous structures, or in other words, Nested index in Hello
+// For example, Hello.A parentIndex is []int{0}, Hello.B parentIndex is also []int{0},
+//
+//	type Nested struct {
+//		A int
+//		B int
+//	}
+//	type Hello struct{
+//		Nested
+//		ID int
+//	}
+func (t *Table) getStructFields(ctx context.Context, db DB, fieldsConvertInfoMap map[string]*fieldConvertInfo,
+	structType reflect.Type, parentIndex []int, matchedColumn map[string]struct{}) (matchedCount int) {
 	for i := 0; i < structType.NumField(); i++ {
 		field := structType.Field(i)
 		if field.IsExported() == false {
@@ -122,11 +140,11 @@ func (t *Table) getStructFields(ctx context.Context, db DB, fieldsMap map[string
 			if field.Type.Kind() == reflect.Ptr {
 				field.Type = field.Type.Elem()
 			}
-			matchedCount += t.getStructFields(ctx, db, fieldsMap, field.Type, append(parentIndex, i), matchedColumn)
+			matchedCount += t.getStructFields(ctx, db, fieldsConvertInfoMap, field.Type, append(parentIndex, i), matchedColumn)
 			continue
 		}
 
-		fieldInfo := t.parseTagAndMatchColumn(field.Tag, field.Name, fieldsMap, matchedColumn)
+		fieldInfo := t.parseTagAndMatchColumn(field.Tag, field.Name, fieldsConvertInfoMap, matchedColumn)
 
 		if fieldInfo != nil {
 			fieldInfo.StructFieldIndex = append(parentIndex, i)
@@ -140,7 +158,8 @@ func (t *Table) getStructFields(ctx context.Context, db DB, fieldsMap map[string
 	return
 }
 
-func (t *Table) parseTagAndMatchColumn(fieldTag reflect.StructTag, fieldName string, fieldsMap map[string]*fieldConvertInfo, matchedColumn map[string]struct{}) *fieldConvertInfo {
+func (t *Table) parseTagAndMatchColumn(fieldTag reflect.StructTag, fieldName string,
+	fieldsConvertInfoMap map[string]*fieldConvertInfo, matchedColumn map[string]struct{}) *fieldConvertInfo {
 	tag := fieldTag.Get("orm")
 	// If there is with, skip it directly
 	// type User struct {
@@ -171,14 +190,14 @@ func (t *Table) parseTagAndMatchColumn(fieldTag reflect.StructTag, fieldName str
 	}
 
 	if tag != "" {
-		fieldInfo, ok := fieldsMap[tag]
+		fieldInfo, ok := fieldsConvertInfoMap[tag]
 		if ok {
 			matchedColumn[tag] = struct{}{}
 			return fieldInfo
 		}
 	}
 	// There may not be a match to the tag
-	fieldInfo, ok := fieldsMap[fieldName]
+	fieldInfo, ok := fieldsConvertInfoMap[fieldName]
 	if ok {
 		matchedColumn[fieldName] = struct{}{}
 		return fieldInfo
@@ -186,7 +205,7 @@ func (t *Table) parseTagAndMatchColumn(fieldTag reflect.StructTag, fieldName str
 
 	// Neither the tag nor the field name matched
 	removeSymbolsFieldName := utils.RemoveSymbols(fieldName)
-	for columnName, fieldInfo := range fieldsMap {
+	for columnName, fieldInfo := range fieldsConvertInfoMap {
 		if _, matched := matchedColumn[columnName]; matched {
 			continue
 		}

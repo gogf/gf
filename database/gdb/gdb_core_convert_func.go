@@ -9,7 +9,7 @@ package gdb
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"reflect"
 	"strconv"
 	"sync"
@@ -63,10 +63,13 @@ func init() {
 	}
 }
 
+// Mainly the bit type of MySQL
 func getBitConvertFunc(typ reflect.Type, deref int) fieldConvertFunc {
+	// Supports up to one level of pointers
 	if deref > 1 {
 		return nil
 	}
+	// When entering this method for the first time
 	if deref == 0 {
 		fn := checkTypeImplSqlScanner(typ)
 		if fn != nil {
@@ -98,13 +101,19 @@ func getBitConvertFunc(typ reflect.Type, deref int) fieldConvertFunc {
 		return func(dst reflect.Value, src any) error {
 			return bitArrayConvertToNumber[float64](dst.SetFloat, src)
 		}
+	case reflect.String:
+		return convertToString
 	default:
+		if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
+			// []byte
+			return convertToBytes
+		}
 		return nil
 	}
 }
 
-// [0xff,0xff] => 0xfffff
-func bitArrayConvertToNumber[T int64 | uint64 | float64](setFn func(T), src any) error {
+// []byte{0xff,0xff} => 0xffff
+func bitArrayConvertToNumber[T int64 | uint64 | float64](setFn func(value T), src any) error {
 	switch src := src.(type) {
 	case nil:
 		setFn(0)
@@ -137,9 +146,11 @@ func bitArrayToUint64(b []byte) uint64 {
 }
 
 func getDecimalConvertFunc(typ reflect.Type, deref int) fieldConvertFunc {
+	// Supports up to one level of pointers
 	if deref > 1 {
 		return nil
 	}
+	// When entering this method for the first time
 	if deref == 0 {
 		fn := checkTypeImplSqlScanner(typ)
 		if fn != nil {
@@ -172,11 +183,15 @@ func getDecimalConvertFunc(typ reflect.Type, deref int) fieldConvertFunc {
 	case reflect.String:
 		return convertToString
 	default:
+		if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
+			// []byte
+			return convertToBytes
+		}
 		return nil
 	}
 }
 
-func decimalConvertFunc[T int64 | uint64](set func(T), src any) error {
+func decimalConvertFunc[T int64 | uint64](set func(value T), src any) error {
 	switch sv := src.(type) {
 	case []byte:
 		val, err := strconv.ParseFloat(unsafeBytesToString(sv), 64)
@@ -219,6 +234,8 @@ func ptrConverter(fn fieldConvertFunc) fieldConvertFunc {
 	}
 }
 
+// deref represents the number of times the pointer has been dereferenced.
+// If it is greater than 1, it returns nil directly
 // impl Indicates whether the type implements the following two interfaces
 // 1. sql.Scanner
 // 2. json.Unmarshaler
@@ -237,13 +254,14 @@ func getConverter(typ reflect.Type, deref int) (fn fieldConvertFunc, impl bool) 
 	return fn, impl
 }
 
+// deref represents the number of times the pointer has been dereferenced.
+// If it is greater than 1, it returns nil directly
 // implInterface Indicates whether the type implements the following two interfaces, and if so,
 // it will not be wrapped in any other way, and will be returned directly
 // 1. sql.Scanner
 // 2. json.Unmarshaler
 func getConvertFunc(typ reflect.Type, deref int) (fn fieldConvertFunc, implInterface bool) {
 	kind := typ.Kind()
-
 	if deref == 0 {
 		fn = checkTypeImplSqlScanner(typ)
 		if fn != nil {
@@ -257,10 +275,17 @@ func getConvertFunc(typ reflect.Type, deref int) (fn fieldConvertFunc, implInter
 	if kind == reflect.Ptr {
 		fn, implInterface = getConverter(typ.Elem(), deref+1)
 		if fn != nil {
+			// If the type implements the [sql.Scanner] or [json.Unmarshaler] interface,
+			// there is no need for [ptrConverter] to wrap it once
 			if implInterface {
 				return fn, true
 			}
-			return ptrConverter(fn), implInterface
+			// If those two interfaces are not implemented, [ptrConverter] needs to be wrapped and returned once,
+			// For example, if the database driver returns an `int`, but the structure field type `*int`,
+			// it will return `ptrConverter(convertToInt64)`
+			// After the initialization of the pointer is completed in ptrConverter,
+			// the callback convertToInt64 completes the final assignment
+			return ptrConverter(fn), false
 		}
 	}
 
@@ -276,10 +301,24 @@ func getConvertFunc(typ reflect.Type, deref int) (fn fieldConvertFunc, implInter
 	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
 		return convertToBytes, false
 	}
-	// json
+	// Covers, Prop, Sku, regardless of whether these three types are struct, slice, map, or other custom types,
+	// If the [json.Unmarshaler] interface is implemented, the user-defined UnmarshalJSON method will be called
+	// tip:  But there is an exception to custom types, which is the custom []byte type.
+	//       Even if the [json.Unmarshaler] interface is implemented, it will not be called
+	// If not implemented, it is necessary to ensure that the database driver returns either a `[]byte` or a `string` type
+	// If it is not a `[]byte` or a `string` type, it will return an error
+	//
+	//  type MyBytes []byte // Assuming it implements [json.Unmarshaler], it will not call
+	//
+	// 	type GiftEntity struct {
+	//		Covers    Covers
+	//		Props     []Prop
+	//		Skus      map[int]Sku
+	//	}
 	switch typ.Kind() {
 	case reflect.Slice, reflect.Map, reflect.Struct:
 		fn := checkTypeImplJsonUnmarshaler(typ)
+		// If the type implements json.Unmarshaler interface
 		if fn != nil {
 			if deref > 0 {
 				return ptrUnmarshalJsonConvert, true
@@ -322,25 +361,25 @@ func sqlScannerConvert(dest reflect.Value, src interface{}) error {
 }
 
 func convertToBool(dest reflect.Value, src interface{}) error {
-	switch src := src.(type) {
+	switch sv := src.(type) {
 	case nil:
 		dest.SetBool(false)
 		return nil
 	case bool:
-		dest.SetBool(src)
+		dest.SetBool(sv)
 		return nil
 	case int64:
-		dest.SetBool(src != 0)
+		dest.SetBool(sv != 0)
 		return nil
 	case []byte:
-		f, err := strconv.ParseBool(unsafeBytesToString(src))
+		f, err := strconv.ParseBool(unsafeBytesToString(sv))
 		if err != nil {
 			return err
 		}
 		dest.SetBool(f)
 		return nil
 	case string:
-		f, err := strconv.ParseBool(src)
+		f, err := strconv.ParseBool(sv)
 		if err != nil {
 			return err
 		}
@@ -395,25 +434,25 @@ func convertToInt64(dest reflect.Value, src interface{}) error {
 }
 
 func convertToUint64(dest reflect.Value, src interface{}) error {
-	switch src := src.(type) {
+	switch sv := src.(type) {
 	case nil:
 		dest.SetUint(0)
 		return nil
 	case uint64:
-		dest.SetUint(src)
+		dest.SetUint(sv)
 		return nil
 	case int64:
-		dest.SetUint(uint64(src))
+		dest.SetUint(uint64(sv))
 		return nil
 	case []byte:
-		n, err := strconv.ParseUint(unsafeBytesToString(src), 10, 64)
+		n, err := strconv.ParseUint(unsafeBytesToString(sv), 10, 64)
 		if err != nil {
 			return err
 		}
 		dest.SetUint(n)
 		return nil
 	case string:
-		n, err := strconv.ParseUint(src, 10, 64)
+		n, err := strconv.ParseUint(sv, 10, 64)
 		if err != nil {
 			return err
 		}
@@ -439,25 +478,25 @@ func convertToUint64(dest reflect.Value, src interface{}) error {
 }
 
 func convertToFloat64(dest reflect.Value, src interface{}) error {
-	switch src := src.(type) {
+	switch sv := src.(type) {
 	case nil:
 		dest.SetFloat(0)
 		return nil
 	case float64:
-		dest.SetFloat(src)
+		dest.SetFloat(sv)
 		return nil
 	case float32:
-		dest.SetFloat(float64(src))
+		dest.SetFloat(float64(sv))
 		return nil
 	case []byte:
-		f, err := strconv.ParseFloat(unsafeBytesToString(src), 64)
+		f, err := strconv.ParseFloat(unsafeBytesToString(sv), 64)
 		if err != nil {
 			return err
 		}
 		dest.SetFloat(f)
 		return nil
 	case string:
-		f, err := strconv.ParseFloat(src, 64)
+		f, err := strconv.ParseFloat(sv, 64)
 		if err != nil {
 			return err
 		}
@@ -469,30 +508,27 @@ func convertToFloat64(dest reflect.Value, src interface{}) error {
 }
 
 func convertToString(dest reflect.Value, src interface{}) error {
-	if src == nil {
-		return nil
-	}
-	switch src := src.(type) {
+	switch sv := src.(type) {
 	case nil:
 		dest.SetString("")
 		return nil
 	case string:
-		dest.SetString(src)
+		dest.SetString(sv)
 		return nil
 	case []byte:
-		dest.SetString(string(src))
+		dest.SetString(string(sv))
 		return nil
 	case time.Time:
-		dest.SetString(src.Format(time.RFC3339Nano))
+		dest.SetString(sv.Format(time.RFC3339Nano))
 		return nil
 	case int64:
-		dest.SetString(strconv.FormatInt(src, 10))
+		dest.SetString(strconv.FormatInt(sv, 10))
 		return nil
 	case uint64:
-		dest.SetString(strconv.FormatUint(src, 10))
+		dest.SetString(strconv.FormatUint(sv, 10))
 		return nil
 	case float64:
-		dest.SetString(strconv.FormatFloat(src, 'G', -1, 64))
+		dest.SetString(strconv.FormatFloat(sv, 'G', -1, 64))
 		return nil
 	default:
 		// Most drivers will go to the top branch,
@@ -525,18 +561,18 @@ func convertToString(dest reflect.Value, src interface{}) error {
 }
 
 func convertToBytes(dest reflect.Value, src interface{}) error {
-	switch src := src.(type) {
+	switch sv := src.(type) {
 	case nil:
 		dest.SetBytes(nil)
 		return nil
 	case string:
-		dest.SetBytes([]byte(src))
+		dest.SetBytes([]byte(sv))
 		return nil
 	case []byte:
-		clone := make([]byte, len(src))
+		clone := make([]byte, len(sv))
 		// The copy function must be called, otherwise the reference is saved
 		// The next time you query, the value will be overwritten
-		copy(clone, src)
+		copy(clone, sv)
 		dest.SetBytes(clone)
 		return nil
 	default:
@@ -545,17 +581,17 @@ func convertToBytes(dest reflect.Value, src interface{}) error {
 }
 
 func convertToTime(dest reflect.Value, src interface{}) error {
-	switch src := src.(type) {
+	switch sv := src.(type) {
 	case nil:
 		destTime := dest.Addr().Interface().(*time.Time)
 		*destTime = time.Time{}
 		return nil
 	case time.Time:
 		destTime := dest.Addr().Interface().(*time.Time)
-		*destTime = src
+		*destTime = sv
 		return nil
 	case string:
-		srcTime, err := parseTime(src)
+		srcTime, err := parseTime(sv)
 		if err != nil {
 			return err
 		}
@@ -563,7 +599,7 @@ func convertToTime(dest reflect.Value, src interface{}) error {
 		*destTime = srcTime
 		return nil
 	case []byte:
-		srcTime, err := parseTime(unsafeBytesToString(src))
+		srcTime, err := parseTime(unsafeBytesToString(sv))
 		if err != nil {
 			return err
 		}
@@ -628,5 +664,5 @@ func convertToJSON(dest reflect.Value, src interface{}) error {
 // Indicates that the type of a data table field is not supported and the type is converted to the go type
 // The specific error message is thrown at the upper Scan
 func convertError() error {
-	return fmt.Errorf("unsupported types")
+	return errors.New("unsupported types")
 }

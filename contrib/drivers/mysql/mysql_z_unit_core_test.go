@@ -1622,12 +1622,6 @@ func Test_Types(t *testing.T) {
 			Bit       int8
 			TinyInt   bool
 		}
-		now, err := db.Query(ctx, "select now();")
-		t.Log("mysql now=", now, err)
-		zone, err := db.Query(ctx, "SHOW  VARIABLES LIKE '%time_zone';")
-		t.Log("mysql zone=", zone, err)
-		version, err := db.Query(ctx, "select version();")
-		t.Log("mysql version=", version, err)
 
 		var obj *T
 		err = db.Model("types").Scan(&obj)
@@ -1706,8 +1700,7 @@ func (m *MyDecimal) Scan(src any) (err error) {
 	return nil
 }
 
-func Test_Core_Convert_Custom(t *testing.T) {
-
+func Test_Core_Convert_Custom_SqlScanner(t *testing.T) {
 	sql := `CREATE TABLE IF NOT EXISTS %s (
 	id int(10) unsigned NOT NULL AUTO_INCREMENT primary key,
 	my_decimal1 decimal(5,2) NOT NULL,
