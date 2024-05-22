@@ -25,10 +25,10 @@ import (
 
 // AdapterFile implements interface Adapter using file.
 type AdapterFile struct {
-	defaultName   string           // Default configuration file name.
-	searchPaths   *garray.StrArray // Searching path array.
-	jsonMap       *gmap.StrAnyMap  // The pared JSON objects for configuration files.
-	violenceCheck bool             // Whether it does violence check in value index searching. It affects the performance when set true(false in default).
+	defaultFileNameOrPath string           // Default configuration file name or file path.
+	searchPaths           *garray.StrArray // Searching path array.
+	jsonMap               *gmap.StrAnyMap  // The pared JSON objects for configuration files.
+	violenceCheck         bool             // Whether it does violence check in value index searching. It affects the performance when set true(false in default).
 }
 
 const (
@@ -53,23 +53,23 @@ var (
 
 // NewAdapterFile returns a new configuration management object.
 // The parameter `file` specifies the default configuration file name for reading.
-func NewAdapterFile(file ...string) (*AdapterFile, error) {
+func NewAdapterFile(fileNameOrPath ...string) (*AdapterFile, error) {
 	var (
-		err  error
-		name = DefaultConfigFileName
+		err                error
+		usedFileNameOrPath = DefaultConfigFileName
 	)
-	if len(file) > 0 {
-		name = file[0]
+	if len(fileNameOrPath) > 0 {
+		usedFileNameOrPath = fileNameOrPath[0]
 	} else {
 		// Custom default configuration file name from command line or environment.
 		if customFile := command.GetOptWithEnv(commandEnvKeyForFile); customFile != "" {
-			name = customFile
+			usedFileNameOrPath = customFile
 		}
 	}
 	config := &AdapterFile{
-		defaultName: name,
-		searchPaths: garray.NewStrArray(true),
-		jsonMap:     gmap.NewStrAnyMap(true),
+		defaultFileNameOrPath: usedFileNameOrPath,
+		searchPaths:           garray.NewStrArray(true),
+		jsonMap:               gmap.NewStrAnyMap(true),
 	}
 	// Customized dir path from env/cmd.
 	if customPath := command.GetOptWithEnv(commandEnvKeyForPath); customPath != "" {
@@ -120,13 +120,13 @@ func (a *AdapterFile) SetViolenceCheck(check bool) {
 }
 
 // SetFileName sets the default configuration file name.
-func (a *AdapterFile) SetFileName(name string) {
-	a.defaultName = name
+func (a *AdapterFile) SetFileName(fileNameOrPath string) {
+	a.defaultFileNameOrPath = fileNameOrPath
 }
 
 // GetFileName returns the default configuration file name.
 func (a *AdapterFile) GetFileName() string {
-	return a.defaultName
+	return a.defaultFileNameOrPath
 }
 
 // Get retrieves and returns value by specified `pattern`.
@@ -200,7 +200,7 @@ func (a *AdapterFile) Dump() {
 
 // Available checks and returns whether configuration of given `file` is available.
 func (a *AdapterFile) Available(ctx context.Context, fileName ...string) bool {
-	checkFileName := gutil.GetOrDefaultStr(a.defaultName, fileName...)
+	checkFileName := gutil.GetOrDefaultStr(a.defaultFileNameOrPath, fileName...)
 	// Custom configuration content exists.
 	if a.GetContent(checkFileName) != "" {
 		return true
@@ -227,26 +227,26 @@ func (a *AdapterFile) autoCheckAndAddMainPkgPathToSearchPaths() {
 
 // getJson returns a *gjson.Json object for the specified `file` content.
 // It would print error if file reading fails. It returns nil if any error occurs.
-func (a *AdapterFile) getJson(fileName ...string) (configJson *gjson.Json, err error) {
+func (a *AdapterFile) getJson(fileNameOrPath ...string) (configJson *gjson.Json, err error) {
 	var (
-		usedFileName = a.defaultName
+		usedFileNameOrPath = a.defaultFileNameOrPath
 	)
-	if len(fileName) > 0 && fileName[0] != "" {
-		usedFileName = fileName[0]
+	if len(fileNameOrPath) > 0 && fileNameOrPath[0] != "" {
+		usedFileNameOrPath = fileNameOrPath[0]
 	} else {
-		usedFileName = a.defaultName
+		usedFileNameOrPath = a.defaultFileNameOrPath
 	}
 	// It uses json map to cache specified configuration file content.
-	result := a.jsonMap.GetOrSetFuncLock(usedFileName, func() interface{} {
+	result := a.jsonMap.GetOrSetFuncLock(usedFileNameOrPath, func() interface{} {
 		var (
 			content  string
 			filePath string
 		)
 		// The configured content can be any kind of data type different from its file type.
 		isFromConfigContent := true
-		if content = a.GetContent(usedFileName); content == "" {
+		if content = a.GetContent(usedFileNameOrPath); content == "" {
 			isFromConfigContent = false
-			filePath, err = a.GetFilePath(usedFileName)
+			filePath, err = a.GetFilePath(usedFileNameOrPath)
 			if err != nil {
 				return nil
 			}
@@ -279,7 +279,7 @@ func (a *AdapterFile) getJson(fileName ...string) (configJson *gjson.Json, err e
 		// any changes of this file will refresh its cache in Config object.
 		if filePath != "" && !gres.Contains(filePath) {
 			_, err = gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
-				a.jsonMap.Remove(usedFileName)
+				a.jsonMap.Remove(usedFileNameOrPath)
 			})
 			if err != nil {
 				return nil
