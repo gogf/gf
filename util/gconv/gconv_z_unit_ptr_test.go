@@ -13,65 +13,107 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func Test_Ptr_Functions(t *testing.T) {
+func TestPtrAny(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var v interface{} = 1
 		t.AssertEQ(gconv.PtrAny(v), &v)
 	})
+}
+
+func TestPtrString(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var v string = "1"
+		var v string = "Pluto"
 		t.AssertEQ(gconv.PtrString(v), &v)
 	})
+}
+
+func TestPtrBool(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var v bool = true
 		t.AssertEQ(gconv.PtrBool(v), &v)
 	})
+}
+
+func TestPtrInt(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var v int = 1
+		var v int = 123
 		t.AssertEQ(gconv.PtrInt(v), &v)
 	})
+}
+
+func TestPtrInt8(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var v int8 = 1
+		var v int8 = 123
 		t.AssertEQ(gconv.PtrInt8(v), &v)
 	})
+}
+
+func TestPtrInt16(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var v int16 = 1
+		var v int16 = 123
 		t.AssertEQ(gconv.PtrInt16(v), &v)
 	})
+}
+
+func TestPtrInt32(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var v int32 = 1
+		var v int32 = 123
 		t.AssertEQ(gconv.PtrInt32(v), &v)
 	})
+}
+
+func TestPtrInt64(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var v int64 = 1
+		var v int64 = 123
 		t.AssertEQ(gconv.PtrInt64(v), &v)
 	})
+}
+
+func TestPtrUint(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var v uint = 1
+		var v uint = 123
 		t.AssertEQ(gconv.PtrUint(v), &v)
 	})
+}
+
+func TestPtrUint8(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var v uint8 = 1
+		var v uint8 = 123
 		t.AssertEQ(gconv.PtrUint8(v), &v)
 	})
+}
+
+func TestPtrUint16(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var v uint16 = 1
+		var v uint16 = 123
 		t.AssertEQ(gconv.PtrUint16(v), &v)
 	})
+}
+
+func TestPtrUint32(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var v uint32 = 1
+		var v uint32 = 123
 		t.AssertEQ(gconv.PtrUint32(v), &v)
 	})
+}
+
+func TestPtrUint64(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var v uint64 = 1
+		var v uint64 = 123
 		t.AssertEQ(gconv.PtrUint64(v), &v)
 	})
+}
+
+func TestPtrFloat32(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var v float32 = 1.01
+		var v float32 = 123.456
 		t.AssertEQ(gconv.PtrFloat32(v), &v)
 	})
+}
+
+func TestPtrFloat64(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var v float64 = 1.01
+		var v float64 = 123.456
 		t.AssertEQ(gconv.PtrFloat64(v), &v)
 	})
 }

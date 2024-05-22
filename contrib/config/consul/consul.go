@@ -157,22 +157,28 @@ func (c *Client) addWatcher() (err error) {
 			return
 		}
 
-		if err := c.doUpdate(v.Value); err != nil {
-			c.config.Logger.Errorf(context.Background(),
+		if err = c.doUpdate(v.Value); err != nil {
+			c.config.Logger.Errorf(
+				context.Background(),
 				"watch config from consul path %+v update failed: %s",
-				c.config.Path, err)
+				c.config.Path, err,
+			)
 		}
 	}
 
 	plan.Datacenter = c.config.ConsulConfig.Datacenter
 	plan.Token = c.config.ConsulConfig.Token
 
-	go func() {
-		if err := plan.Run(c.config.ConsulConfig.Address); err != nil {
-			c.config.Logger.Errorf(context.Background(),
-				"watch config from consul path %+v plan start failed: %s",
-				c.config.Path, err)
-		}
-	}()
+	go c.startAsynchronousWatch(plan)
 	return nil
+}
+
+func (c *Client) startAsynchronousWatch(plan *watch.Plan) {
+	if err := plan.Run(c.config.ConsulConfig.Address); err != nil {
+		c.config.Logger.Errorf(
+			context.Background(),
+			"watch config from consul path %+v plan start failed: %s",
+			c.config.Path, err,
+		)
+	}
 }
