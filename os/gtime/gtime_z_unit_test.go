@@ -111,21 +111,14 @@ func Test_StrToTime(t *testing.T) {
 			"02.jan.2006 15:04:05",
 			"02.jan.2006:15:04:05",
 		}
-		// Save the previous time zone
-		local := *time.Local
-		defer func() {
-			*time.Local = local
-		}()
-		time.Local = time.FixedZone("Asia/Shanghai", 8*3600)
 
-		for i, item := range testDateTimes {
+		for _, item := range testDateTimes {
 			timeTemp, err := gtime.StrToTime(item)
 			t.AssertNil(err)
-			t.Log(i)
 			t.Assert(timeTemp.Time.Local().Format("2006-01-02 15:04:05"), "2006-01-02 15:04:05")
 		}
 
-		// Correct date string,.
+		// Correct date string.
 		var testDates = []string{
 			"2006.01.02",
 			"2006.01.02 00:00",
