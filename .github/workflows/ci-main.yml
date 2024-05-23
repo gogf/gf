@@ -241,7 +241,7 @@ jobs:
       run:  docker compose -f ".github/workflows/consul/docker-compose.yml" down
 
     - name: Report Coverage
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v4.4.1
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
       with:
         flags: go-${{ matrix.go-version }}-${{ matrix.goarch }}
