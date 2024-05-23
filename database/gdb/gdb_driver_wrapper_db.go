@@ -11,10 +11,12 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gutil"
 )
@@ -68,25 +70,29 @@ func (d *DriverWrapperDB) TableFields(
 		)
 	}
 	var (
+		innerMemCache = d.GetCore().GetInnerMemCache()
 		// prefix:group@schema#table
-		cacheKey = fmt.Sprintf(
-			`%s%s@%s#%s`,
-			cachePrefixTableFields,
+		cacheKey = genTableFieldsCacheKey(
 			d.GetGroup(),
 			gutil.GetOrDefaultStr(d.GetSchema(), schema...),
 			table,
 		)
-		value = tableFieldsMap.GetOrSetFuncLock(cacheKey, func() interface{} {
-			ctx = context.WithValue(ctx, ctxKeyInternalProducedSQL, struct{}{})
-			fields, err = d.DB.TableFields(ctx, table, schema...)
-			if err != nil {
-				return nil
-			}
-			return fields
-		})
+		cacheFunc = func(ctx context.Context) (interface{}, error) {
+			return d.DB.TableFields(
+				context.WithValue(ctx, ctxKeyInternalProducedSQL, struct{}{}),
+				table, schema...,
+			)
+		}
+		value *gvar.Var
 	)
-	if value != nil {
-		fields = value.(map[string]*TableField)
+	value, err = innerMemCache.GetOrSetFuncLock(
+		ctx, cacheKey, cacheFunc, gcache.DurationNoExpire,
+	)
+	if err != nil {
+		return
+	}
+	if !value.IsNil() {
+		fields = value.Val().(map[string]*TableField)
 	}
 	return
 }
