@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
@@ -27,7 +28,7 @@ func (c CGenService) generatePackageImports(generatedContent *bytes.Buffer, pack
 
 // generateType type definitions.
 // See: const.TemplateGenServiceContentInterface
-func (c CGenService) generateType(generatedContent *bytes.Buffer, srcStructFunctions *gmap.ListMap) {
+func (c CGenService) generateType(generatedContent *bytes.Buffer, srcStructFunctions *gmap.ListMap, dstPackageName string) {
 	generatedContent.WriteString("type(")
 	generatedContent.WriteString("\n")
 
@@ -39,7 +40,12 @@ func (c CGenService) generateType(generatedContent *bytes.Buffer, srcStructFunct
 		structName, funcSlice := key.(string), value.([]map[string]string)
 		// Generating interface content.
 		for _, funcInfo := range funcSlice {
-			funcContent = funcInfo["funcComment"] + funcInfo["funcHead"]
+			// Remove package name calls of `dstPackageName` in produced codes.
+			funcHead, _ := gregex.ReplaceString(
+				fmt.Sprintf(`\*{0,1}%s\.`, dstPackageName),
+				``, funcInfo["funcHead"],
+			)
+			funcContent = funcInfo["funcComment"] + funcHead
 			funcContents = append(funcContents, funcContent)
 		}
 

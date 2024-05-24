@@ -18,11 +18,11 @@ func NewDeliveryApp() *sDeliveryApp {
 	return &sDeliveryApp{}
 }
 
-func (s *sDeliveryApp) Create(ctx context.Context) (err error) {
+func (s *sDeliveryApp) Create(ctx context.Context) (i service.IDeliveryCluster, err error) {
 	return
 }
 
-func (s *sDeliveryApp) GetList(ctx context.Context) (err error) {
+func (s *sDeliveryApp) GetList(ctx context.Context, i service.IDeliveryCluster) (err error) {
 	service.Article().Get(ctx, 1)
 	return
 }

@@ -13,8 +13,8 @@ import (
 
 type (
 	IDeliveryApp interface {
-		Create(ctx context.Context) (err error)
-		GetList(ctx context.Context) (err error)
+		Create(ctx context.Context) (i IDeliveryCluster, err error)
+		GetList(ctx context.Context, i IDeliveryCluster) (err error)
 		GetOne(ctx context.Context) (err error)
 		Delete(ctx context.Context) (err error)
 		AA(ctx context.Context) (err error)

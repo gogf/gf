@@ -32,7 +32,7 @@ func (c CGenService) generateServiceFile(in generateServiceFilesInput) (ok bool,
 	var generatedContent bytes.Buffer
 
 	c.generatePackageImports(&generatedContent, in.DstPackageName, in.SrcImportedPackages)
-	c.generateType(&generatedContent, in.SrcStructFunctions)
+	c.generateType(&generatedContent, in.SrcStructFunctions, in.DstPackageName)
 	c.generateVar(&generatedContent, in.SrcStructFunctions)
 	c.generateFunc(&generatedContent, in.SrcStructFunctions)
 
