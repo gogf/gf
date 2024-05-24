@@ -381,6 +381,9 @@ func (c *Core) mappingAndFilterData(ctx context.Context, schema, table string, d
 	if err != nil {
 		return nil, err
 	}
+	if len(fieldsMap) == 0 {
+		return nil, gerror.Newf(`The table %s may not exist, or the table contains no fields`, table)
+	}
 	fieldsKeyMap := make(map[string]interface{}, len(fieldsMap))
 	for k := range fieldsMap {
 		fieldsKeyMap[k] = nil
@@ -405,6 +408,9 @@ func (c *Core) mappingAndFilterData(ctx context.Context, schema, table string, d
 			if _, ok := fieldsMap[dataKey]; !ok {
 				delete(data, dataKey)
 			}
+		}
+		if len(data) == 0 {
+			return nil, gerror.Newf(`input data match no fields in table %s`, table)
 		}
 	}
 	return data, nil
