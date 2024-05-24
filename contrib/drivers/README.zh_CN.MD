@@ -54,7 +54,9 @@ import _ "github.com/gogf/gf/contrib/drivers/mysql/v2"
 import _ "github.com/gogf/gf/contrib/drivers/sqlite/v2"
 ```
 
-#### 32位Windows请使用cgo版本
+#### cgo 版本
+
+32位Windows请使用cgo版本
 
 ```go
 import _ "github.com/gogf/gf/contrib/drivers/sqlitecgo/v2"

@@ -56,7 +56,9 @@ import _ "github.com/gogf/gf/contrib/drivers/mysql/v2"
 import _ "github.com/gogf/gf/contrib/drivers/sqlite/v2"
 ```
 
-#### When the target is a 32-bit Windows system, the cgo version needs to be used.
+#### cgo version
+
+When the target is a 32-bit Windows system, the cgo version needs to be used.
 
 ```go
 import _ "github.com/gogf/gf/contrib/drivers/sqlitecgo/v2"
