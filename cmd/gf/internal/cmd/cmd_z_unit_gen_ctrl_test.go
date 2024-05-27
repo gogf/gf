@@ -307,3 +307,41 @@ func expectFilesContent(t *gtest.T, paths []string, expectPaths []string) {
 		t.Assert(val, expect)
 	}
 }
+
+// https://github.com/gogf/gf/issues/3569
+func Test_Gen_Ctrl_Comments_Issue3569(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			ctrlPath  = gfile.Temp(guid.S())
+			apiFolder = gtest.DataPath("issue", "3569", "api")
+			in        = genctrl.CGenCtrlInput{
+				SrcFolder:     apiFolder,
+				DstFolder:     ctrlPath,
+				WatchFile:     "",
+				SdkPath:       "",
+				SdkStdVersion: false,
+				SdkNoV1:       false,
+				Clear:         false,
+				Merge:         true,
+			}
+		)
+
+		err := gutil.FillStructWithDefault(&in)
+		t.AssertNil(err)
+
+		err = gfile.Mkdir(ctrlPath)
+		t.AssertNil(err)
+		defer gfile.Remove(ctrlPath)
+
+		_, err = genctrl.CGenCtrl{}.Ctrl(ctx, in)
+		t.AssertNil(err)
+
+		//apiInterface file
+		var (
+			genApi       = apiFolder + filepath.FromSlash("/hello/hello.go")
+			genApiExpect = apiFolder + filepath.FromSlash("/hello/hello_expect.go")
+		)
+		defer gfile.Remove(genApi)
+		t.Assert(gfile.GetContents(genApi), gfile.GetContents(genApiExpect))
+	})
+}
