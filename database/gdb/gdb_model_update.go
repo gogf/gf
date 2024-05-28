@@ -11,10 +11,10 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/gogf/gf/v2/internal/intlog"
-
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -62,7 +62,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	case reflect.Map, reflect.Struct:
 		var dataMap = anyValueToMapBeforeToRecord(m.data)
 		// Automatically update the record updating time.
-		if fieldNameUpdate != "" {
+		if fieldNameUpdate != "" && empty.IsNil(dataMap[fieldNameUpdate]) {
 			dataValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeUpdate, false)
 			dataMap[fieldNameUpdate] = dataValue
 		}
@@ -71,12 +71,10 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	default:
 		updates := gconv.String(m.data)
 		// Automatically update the record updating time.
-		if fieldNameUpdate != "" {
+		if fieldNameUpdate != "" && !gstr.Contains(updates, fieldNameUpdate) {
 			dataValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeUpdate, false)
-			if fieldNameUpdate != "" && !gstr.Contains(updates, fieldNameUpdate) {
-				updates += fmt.Sprintf(`,%s=?`, fieldNameUpdate)
-				conditionArgs = append([]interface{}{dataValue}, conditionArgs...)
-			}
+			updates += fmt.Sprintf(`,%s=?`, fieldNameUpdate)
+			conditionArgs = append([]interface{}{dataValue}, conditionArgs...)
 		}
 		updateData = updates
 	}
