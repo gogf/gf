@@ -140,7 +140,7 @@ func generateStructFieldDefinition(
 	}
 
 	attrLines = []string{
-		"    #" + gstr.CaseCamel(newFiledName),
+		"    #" + gstr.CaseCamel(strings.ToLower(newFiledName)),
 		" #" + localTypeNameStr,
 	}
 	attrLines = append(attrLines, fmt.Sprintf(` #%sjson:"%s"`, tagKey, jsonTag))
