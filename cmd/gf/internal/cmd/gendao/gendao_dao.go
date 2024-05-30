@@ -105,6 +105,10 @@ type generateDaoIndexInput struct {
 }
 
 func generateDaoIndex(in generateDaoIndexInput) {
+	daoPackage := "dao"
+	if in.WithPathPackage {
+		daoPackage = filepath.Base(in.DaoPath)
+	}
 	path := filepath.FromSlash(gfile.Join(in.DirPathDao, in.FileName+".go"))
 	// It should add path to result slice whenever it would generate the path file or not.
 	in.genItems.AppendGeneratedFilePath(path)
@@ -116,6 +120,7 @@ func generateDaoIndex(in generateDaoIndexInput) {
 				tplVarTableName:               in.TableName,
 				tplVarTableNameCamelCase:      in.TableNameCamelCase,
 				tplVarTableNameCamelLowerCase: in.TableNameCamelLowerCase,
+				tplVarPackageName:             daoPackage,
 			})
 		indexContent = replaceDefaultVar(in.CGenDaoInternalInput, indexContent)
 		if err := gfile.PutContents(path, strings.TrimSpace(indexContent)); err != nil {
