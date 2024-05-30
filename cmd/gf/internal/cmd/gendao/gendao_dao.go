@@ -58,8 +58,8 @@ func generateDaoSingle(ctx context.Context, in generateDaoSingleInput) {
 		mlog.Fatalf(`fetching tables fields failed for table "%s": %+v`, in.TableName, err)
 	}
 	var (
-		tableNameCamelCase      = gstr.CaseCamel(in.NewTableName)
-		tableNameCamelLowerCase = gstr.CaseCamelLower(in.NewTableName)
+		tableNameCamelCase      = gstr.CaseCamel(strings.ToLower(in.NewTableName))
+		tableNameCamelLowerCase = gstr.CaseCamelLower(strings.ToLower(in.NewTableName))
 		tableNameSnakeCase      = gstr.CaseSnake(in.NewTableName)
 		importPrefix            = in.ImportPrefix
 	)
@@ -178,7 +178,7 @@ func generateColumnNamesForDao(fieldMap map[string]*gdb.TableField, removeFieldP
 		}
 
 		array[index] = []string{
-			"            #" + gstr.CaseCamel(newFiledName) + ":",
+			"            #" + gstr.CaseCamel(strings.ToLower(newFiledName)) + ":",
 			fmt.Sprintf(` #"%s",`, field.Name),
 		}
 	}
@@ -218,7 +218,7 @@ func generateColumnDefinitionForDao(fieldMap map[string]*gdb.TableField, removeF
 			newFiledName = gstr.TrimLeftStr(newFiledName, v, 1)
 		}
 		array[index] = []string{
-			"    #" + gstr.CaseCamel(newFiledName),
+			"    #" + gstr.CaseCamel(strings.ToLower(newFiledName)),
 			" # " + "string",
 			" #" + fmt.Sprintf(`// %s`, comment),
 		}
