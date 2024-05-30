@@ -63,6 +63,10 @@ func generateEntity(ctx context.Context, in CGenDaoInternalInput) {
 func generateEntityContent(
 	ctx context.Context, in CGenDaoInternalInput, tableName, tableNameCamelCase, structDefine string, appendImports []string,
 ) string {
+	entityPackage := "entity"
+	if in.WithPathPackage {
+		entityPackage = filepath.Base(in.EntityPath)
+	}
 	entityContent := gstr.ReplaceByMap(
 		getTemplateFromPathOrDefault(in.TplDaoEntityPath, consts.TemplateGenDaoEntityContent),
 		g.MapStrStr{
@@ -70,6 +74,7 @@ func generateEntityContent(
 			tplVarPackageImports:     getImportPartContent(ctx, structDefine, false, appendImports),
 			tplVarTableNameCamelCase: tableNameCamelCase,
 			tplVarStructDefine:       structDefine,
+			tplVarPackageName:        entityPackage,
 		},
 	)
 	entityContent = replaceDefaultVar(in, entityContent)
