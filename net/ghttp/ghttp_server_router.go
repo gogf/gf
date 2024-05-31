@@ -167,7 +167,7 @@ func (s *Server) doSetHandler(
 				if duplicatedHandler != nil {
 					s.Logger().Fatalf(
 						ctx,
-						"The duplicated route registry [%s] what is meaning [{hook}%%{method}:{path}@{domain}] at \n%s=>%s , which has already been registered at \n%s=>%s"+
+						"The duplicated route registry [%s] which is meaning [{hook}%%{method}:{path}@{domain}] at \n%s -> %s , which has already been registered at \n%s -> %s"+
 							"\nYou can disable duplicate route detection by modifying the server.routeOverWrite configuration, but this will cause some routes to be overwritten",
 						routerKey, handler.Source, handler.Name, duplicatedHandler.Source, duplicatedHandler.Name,
 					)
