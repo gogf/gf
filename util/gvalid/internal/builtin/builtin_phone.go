@@ -25,7 +25,7 @@ import (
 //  3. China Telecom:
 //     133, 153, 180, 181, 189, 177(4G)
 //
-//  4. Satelite:
+//  4. Satellite:
 //     1349
 //
 //  5. Virtual:
