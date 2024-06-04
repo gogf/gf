@@ -7,17 +7,11 @@
 package gdb
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gregex"
-)
-
-var (
-	db  DB
-	ctx = context.TODO()
 )
 
 func Test_HookSelect_Regex(t *testing.T) {

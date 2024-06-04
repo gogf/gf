@@ -86,9 +86,7 @@ func (c *Core) ConvertValueForField(ctx context.Context, fieldType string, field
 	// If `value` implements interface `driver.Valuer`, it then uses the interface for value converting.
 	if valuer, ok := fieldValue.(driver.Valuer); ok {
 		if convertedValue, err = valuer.Value(); err != nil {
-			if err != nil {
-				return nil, err
-			}
+			return nil, err
 		}
 		return convertedValue, nil
 	}

@@ -137,6 +137,9 @@ func (h *HookSelectInput) Next(ctx context.Context) (result Result, err error) {
 				return fmt.Sprintf(` FROM %s%s%s`, charL, h.Table, charR)
 			},
 		)
+		if err != nil {
+			return
+		}
 	}
 	// Schema change.
 	if h.Schema != "" && h.Schema != h.originalSchemaName.String() {
