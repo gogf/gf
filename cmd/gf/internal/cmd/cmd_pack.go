@@ -63,7 +63,7 @@ func init() {
 }
 
 type cPackInput struct {
-	g.Meta   `name:"pack"`
+	g.Meta   `name:"pack" config:"gfcli.pack"`
 	Src      string `name:"SRC" arg:"true" v:"required" brief:"{cPackSrcBrief}"`
 	Dst      string `name:"DST" arg:"true" v:"required" brief:"{cPackDstBrief}"`
 	Name     string `name:"name"     short:"n" brief:"{cPackNameBrief}"`

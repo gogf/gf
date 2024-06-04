@@ -48,7 +48,7 @@ func init() {
 }
 
 type cUpInput struct {
-	g.Meta `name:"up"  config:"gfcli.up"`
+	g.Meta `name:"up" config:"gfcli.up"`
 	All    bool `name:"all" short:"a" brief:"upgrade both version and cli, auto fix codes" orphan:"true"`
 	Cli    bool `name:"cli" short:"c" brief:"also upgrade CLI tool" orphan:"true"`
 	Fix    bool `name:"fix" short:"f" brief:"auto fix codes(it only make sense if cli is to be upgraded)" orphan:"true"`
