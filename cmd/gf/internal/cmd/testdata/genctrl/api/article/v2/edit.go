@@ -21,3 +21,11 @@ type UpdateReq struct {
 }
 
 type UpdateRes struct{}
+
+//type GetListReq struct {
+//	g.Meta `path:"/article/list" method:"get" tags:"ArticleService"`
+//}
+//
+//type GetListRes struct {
+//	list []struct{}
+//}

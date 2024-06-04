@@ -83,56 +83,12 @@ func Test_Gen_Ctrl_Default(t *testing.T) {
 	})
 }
 
-// https://github.com/gogf/gf/issues/3460
-func Test_Gen_Ctrl_UseMerge_Issue3460(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		var (
-			ctrlPath = gfile.Temp(guid.S())
-			//ctrlPath  = gtest.DataPath("issue", "3460", "controller")
-			apiFolder = gtest.DataPath("issue", "3460", "api")
-			in        = genctrl.CGenCtrlInput{
-				SrcFolder:     apiFolder,
-				DstFolder:     ctrlPath,
-				WatchFile:     "",
-				SdkPath:       "",
-				SdkStdVersion: false,
-				SdkNoV1:       false,
-				Clear:         false,
-				Merge:         true,
-			}
-		)
-
-		err := gfile.Mkdir(ctrlPath)
-		t.AssertNil(err)
-		defer gfile.Remove(ctrlPath)
-
-		_, err = genctrl.CGenCtrl{}.Ctrl(ctx, in)
-		t.AssertNil(err)
-
-		files, err := gfile.ScanDir(ctrlPath, "*.go", true)
-		t.AssertNil(err)
-		t.Assert(files, []string{
-			filepath.Join(ctrlPath, "/hello/hello.go"),
-			filepath.Join(ctrlPath, "/hello/hello_new.go"),
-			filepath.Join(ctrlPath, "/hello/hello_v1_req.go"),
-			filepath.Join(ctrlPath, "/hello/hello_v2_req.go"),
-		})
-
-		expectCtrlPath := gtest.DataPath("issue", "3460", "controller")
-		expectFiles := []string{
-			filepath.Join(expectCtrlPath, "/hello/hello.go"),
-			filepath.Join(expectCtrlPath, "/hello/hello_new.go"),
-			filepath.Join(expectCtrlPath, "/hello/hello_v1_req.go"),
-			filepath.Join(expectCtrlPath, "/hello/hello_v2_req.go"),
-		}
-
-		// Line Feed maybe \r\n or \n
-		for i, expectFile := range expectFiles {
-			val := gfile.GetContents(files[i])
-			expect := gfile.GetContents(expectFile)
-			t.Assert(val, expect)
-		}
-	})
+func expectFilesContent(t *gtest.T, paths []string, expectPaths []string) {
+	for i, expectFile := range expectPaths {
+		val := gfile.GetContents(paths[i])
+		expect := gfile.GetContents(expectFile)
+		t.Assert(val, expect)
+	}
 }
 
 // gf gen ctrl -m
@@ -300,20 +256,13 @@ type DictTypeAddRes struct {
 
 }
 
-func expectFilesContent(t *gtest.T, paths []string, expectPaths []string) {
-	for i, expectFile := range expectPaths {
-		val := gfile.GetContents(paths[i])
-		expect := gfile.GetContents(expectFile)
-		t.Assert(val, expect)
-	}
-}
-
-// https://github.com/gogf/gf/issues/3569
-func Test_Gen_Ctrl_Comments_Issue3569(t *testing.T) {
+// https://github.com/gogf/gf/issues/3460
+func Test_Gen_Ctrl_UseMerge_Issue3460(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			ctrlPath  = gfile.Temp(guid.S())
-			apiFolder = gtest.DataPath("issue", "3569", "api")
+			ctrlPath = gfile.Temp(guid.S())
+			//ctrlPath  = gtest.DataPath("issue", "3460", "controller")
+			apiFolder = gtest.DataPath("issue", "3460", "api")
 			in        = genctrl.CGenCtrlInput{
 				SrcFolder:     apiFolder,
 				DstFolder:     ctrlPath,
@@ -326,22 +275,35 @@ func Test_Gen_Ctrl_Comments_Issue3569(t *testing.T) {
 			}
 		)
 
-		err := gutil.FillStructWithDefault(&in)
-		t.AssertNil(err)
-
-		err = gfile.Mkdir(ctrlPath)
+		err := gfile.Mkdir(ctrlPath)
 		t.AssertNil(err)
 		defer gfile.Remove(ctrlPath)
 
 		_, err = genctrl.CGenCtrl{}.Ctrl(ctx, in)
 		t.AssertNil(err)
 
-		//apiInterface file
-		var (
-			genApi       = apiFolder + filepath.FromSlash("/hello/hello.go")
-			genApiExpect = apiFolder + filepath.FromSlash("/hello/hello_expect.go")
-		)
-		defer gfile.Remove(genApi)
-		t.Assert(gfile.GetContents(genApi), gfile.GetContents(genApiExpect))
+		files, err := gfile.ScanDir(ctrlPath, "*.go", true)
+		t.AssertNil(err)
+		t.Assert(files, []string{
+			filepath.Join(ctrlPath, "/hello/hello.go"),
+			filepath.Join(ctrlPath, "/hello/hello_new.go"),
+			filepath.Join(ctrlPath, "/hello/hello_v1_req.go"),
+			filepath.Join(ctrlPath, "/hello/hello_v2_req.go"),
+		})
+
+		expectCtrlPath := gtest.DataPath("issue", "3460", "controller")
+		expectFiles := []string{
+			filepath.Join(expectCtrlPath, "/hello/hello.go"),
+			filepath.Join(expectCtrlPath, "/hello/hello_new.go"),
+			filepath.Join(expectCtrlPath, "/hello/hello_v1_req.go"),
+			filepath.Join(expectCtrlPath, "/hello/hello_v2_req.go"),
+		}
+
+		// Line Feed maybe \r\n or \n
+		for i, expectFile := range expectFiles {
+			val := gfile.GetContents(files[i])
+			expect := gfile.GetContents(expectFile)
+			t.Assert(val, expect)
+		}
 	})
 }
