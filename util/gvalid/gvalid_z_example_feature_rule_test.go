@@ -394,8 +394,8 @@ func ExampleRule_Phone() {
 		ctx = context.Background()
 		req = BizReq{
 			PhoneNumber1: "13578912345",
-			PhoneNumber2: "11578912345", // error 11x not exist
-			PhoneNumber3: "17178912345", // error 171 not exit
+			PhoneNumber2: "17178912345",
+			PhoneNumber3: "11578912345", // error 11x not exist
 			PhoneNumber4: "1357891234",  // error len must be 11
 		}
 	)
@@ -404,8 +404,7 @@ func ExampleRule_Phone() {
 	}
 
 	// Output:
-	// The PhoneNumber2 value `11578912345` is not a valid phone number
-	// The PhoneNumber3 value `17178912345` is not a valid phone number
+	// The PhoneNumber3 value `11578912345` is not a valid phone number
 	// The PhoneNumber4 value `1357891234` is not a valid phone number
 }
 
