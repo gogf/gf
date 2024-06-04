@@ -9,12 +9,16 @@ package gcron_test
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 	"testing"
 	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcron"
+	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
@@ -275,5 +279,43 @@ func TestCron_DelayAddTimes(t *testing.T) {
 		time.Sleep(3000 * time.Millisecond)
 		t.Assert(array.Len(), 2)
 		t.Assert(cron.Size(), 0)
+	})
+}
+
+func TestCron_JobWaiter(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		s1 := make([]struct{}, 0)
+		s2 := make([]struct{}, 0)
+		_, err = gcron.Add(ctx, "* * * * * *", func(ctx context.Context) {
+			g.Log().Debug(ctx, "Every second")
+			s1 = append(s1, struct{}{})
+		}, "MyFirstCronJob")
+		t.Assert(err, nil)
+		_, err = gcron.Add(ctx, "*/2 * * * * *", func(ctx context.Context) {
+			g.Log().Debug(ctx, "Every 2s job start")
+			time.Sleep(3 * time.Second)
+			s2 = append(s2, struct{}{})
+			g.Log().Debug(ctx, "Every 2s job after 3 second end")
+		}, "MySecondCronJob")
+		t.Assert(err, nil)
+
+		quit := make(chan os.Signal, 1)
+		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+		go func() {
+			time.Sleep(4 * time.Second) // 确保任务启动
+			glog.Print(ctx, "Sending SIGINT")
+			quit <- syscall.SIGINT // 模拟 SIGINT 信号
+		}()
+
+		sig := <-quit
+		glog.Printf(ctx, "signal: %s，stopping cron", sig)
+
+		glog.Print(ctx, "Waiting for all cron jobs to complete...")
+		gcron.Stop()
+		glog.Print(ctx, "all cron jobs completed")
+		t.Assert(len(s1), 4)
+		t.Assert(len(s2), 2)
 	})
 }
