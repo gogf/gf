@@ -63,6 +63,19 @@ func Test_Pack(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(r.Contains("files/"), true)
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			srcPath   = gtest.DataPath("files")
+			data, err = gres.Pack(srcPath, "/")
+		)
+		t.AssertNil(err)
+
+		r := gres.New()
+		err = r.Add(string(data))
+		t.AssertNil(err)
+		t.Assert(r.Contains("/root/"), true)
+	})
 }
 
 func Test_PackToFile(t *testing.T) {
@@ -121,7 +134,7 @@ func Test_Unpack(t *testing.T) {
 }
 
 func Test_Basic(t *testing.T) {
-	gres.Dump()
+	// gres.Dump()
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gres.Get("none"), nil)
 		t.Assert(gres.Contains("none"), false)
@@ -180,7 +193,7 @@ func Test_Basic(t *testing.T) {
 }
 
 func Test_Get(t *testing.T) {
-	gres.Dump()
+	// gres.Dump()
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertNE(gres.Get("dir1/test1"), nil)
 	})
@@ -196,7 +209,7 @@ func Test_Get(t *testing.T) {
 }
 
 func Test_ScanDir(t *testing.T) {
-	gres.Dump()
+	// gres.Dump()
 	gtest.C(t, func(t *gtest.T) {
 		path := "dir1"
 		files := gres.ScanDir(path, "*", false)
@@ -221,7 +234,7 @@ func Test_ScanDir(t *testing.T) {
 }
 
 func Test_ScanDirFile(t *testing.T) {
-	gres.Dump()
+	// gres.Dump()
 	gtest.C(t, func(t *gtest.T) {
 		path := "dir2"
 		files := gres.ScanDirFile(path, "*", false)
@@ -246,7 +259,7 @@ func Test_ScanDirFile(t *testing.T) {
 }
 
 func Test_Export(t *testing.T) {
-	gres.Dump()
+	// gres.Dump()
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			src = `template-res`
@@ -312,7 +325,7 @@ func TestFile_Name(t *testing.T) {
 }
 
 func TestFile_Export(t *testing.T) {
-	gres.Dump()
+	// gres.Dump()
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			src = `template-res`

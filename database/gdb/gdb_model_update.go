@@ -45,9 +45,9 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		return nil, gerror.NewCode(gcode.CodeMissingParameter, "updating table with empty data")
 	}
 	var (
+		newData                                       interface{}
 		stm                                           = m.softTimeMaintainer()
-		updateData                                    = m.data
-		reflectInfo                                   = reflection.OriginTypeAndKind(updateData)
+		reflectInfo                                   = reflection.OriginTypeAndKind(m.data)
 		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(ctx, false, false)
 		conditionStr                                  = conditionWhere + conditionExtra
 		fieldNameUpdate, fieldTypeUpdate              = stm.GetFieldNameAndTypeForUpdate(
@@ -58,29 +58,30 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		fieldNameUpdate = ""
 	}
 
+	newData, err = m.filterDataForInsertOrUpdate(m.data)
+	if err != nil {
+		return nil, err
+	}
+
 	switch reflectInfo.OriginKind {
 	case reflect.Map, reflect.Struct:
-		var dataMap = anyValueToMapBeforeToRecord(m.data)
+		var dataMap = anyValueToMapBeforeToRecord(newData)
 		// Automatically update the record updating time.
 		if fieldNameUpdate != "" && empty.IsNil(dataMap[fieldNameUpdate]) {
 			dataValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeUpdate, false)
 			dataMap[fieldNameUpdate] = dataValue
 		}
-		updateData = dataMap
+		newData = dataMap
 
 	default:
-		updates := gconv.String(m.data)
+		var updateStr = gconv.String(newData)
 		// Automatically update the record updating time.
-		if fieldNameUpdate != "" && !gstr.Contains(updates, fieldNameUpdate) {
+		if fieldNameUpdate != "" && !gstr.Contains(updateStr, fieldNameUpdate) {
 			dataValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeUpdate, false)
-			updates += fmt.Sprintf(`,%s=?`, fieldNameUpdate)
+			updateStr += fmt.Sprintf(`,%s=?`, fieldNameUpdate)
 			conditionArgs = append([]interface{}{dataValue}, conditionArgs...)
 		}
-		updateData = updates
-	}
-	newData, err := m.filterDataForInsertOrUpdate(updateData)
-	if err != nil {
-		return nil, err
+		newData = updateStr
 	}
 
 	if !gstr.ContainsI(conditionStr, " WHERE ") {
