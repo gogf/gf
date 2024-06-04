@@ -24,7 +24,7 @@ type Cron struct {
 	status    *gtype.Int      // Timed task status(0: Not Start; 1: Running; 2: Stopped; -1: Closed)
 	entries   *gmap.StrAnyMap // All timed task entries.
 	logger    glog.ILogger    // Logger, it is nil in default.
-	jobWaiter sync.WaitGroup  // graceful shutdown when cron jobs are stopped.
+	jobWaiter sync.WaitGroup  // Graceful shutdown when cron jobs are stopped.
 }
 
 // New returns a new Cron object with default settings.
@@ -186,8 +186,13 @@ func (c *Cron) Stop(name ...string) {
 		}
 	} else {
 		c.status.Set(StatusStopped)
-		c.jobWaiter.Wait()
 	}
+}
+
+// GracefulStop Blocks and waits all current running jobs done.
+func (c *Cron) GracefulStop() {
+	c.status.Set(StatusStopped)
+	c.jobWaiter.Wait()
 }
 
 // Remove deletes scheduled task which named `name`.

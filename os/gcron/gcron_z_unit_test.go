@@ -304,17 +304,17 @@ func TestCron_JobWaiter(t *testing.T) {
 		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 		go func() {
-			time.Sleep(4 * time.Second) // 确保任务启动
+			time.Sleep(4 * time.Second) // Ensure that the job is triggered twice
 			glog.Print(ctx, "Sending SIGINT")
-			quit <- syscall.SIGINT // 模拟 SIGINT 信号
+			quit <- syscall.SIGINT // Send SIGINT
 		}()
 
 		sig := <-quit
-		glog.Printf(ctx, "signal: %s，stopping cron", sig)
+		glog.Printf(ctx, "Signal received: %s, stopping cron", sig)
 
 		glog.Print(ctx, "Waiting for all cron jobs to complete...")
-		gcron.Stop()
-		glog.Print(ctx, "all cron jobs completed")
+		gcron.GracefulStop()
+		glog.Print(ctx, "All cron jobs completed")
 		t.Assert(s1.Len(), 4)
 		t.Assert(s2.Len(), 2)
 	})

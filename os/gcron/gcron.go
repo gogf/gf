@@ -120,3 +120,8 @@ func Start(name ...string) {
 func Stop(name ...string) {
 	defaultCron.Stop(name...)
 }
+
+// GracefulStop Blocks and waits all current running jobs done.
+func GracefulStop() {
+	defaultCron.GracefulStop()
+}
