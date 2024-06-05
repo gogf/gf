@@ -81,7 +81,7 @@ func init() {
 
 type (
 	cRunInput struct {
-		g.Meta     `name:"run"`
+		g.Meta     `name:"run" config:"gfcli.run"`
 		File       string   `name:"FILE"       arg:"true" brief:"{cRunFileBrief}" v:"required"`
 		Path       string   `name:"path"       short:"p"  brief:"{cRunPathBrief}" d:"./"`
 		Extra      string   `name:"extra"      short:"e"  brief:"{cRunExtraBrief}"`
