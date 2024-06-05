@@ -10,11 +10,9 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/signal"
 	"path/filepath"
 	"runtime"
 	"strings"
-	"syscall"
 
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/frame/g"
@@ -149,14 +147,12 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 
 	go app.Run(ctx, outputPath)
 
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-	go func() {
-		<-sigs
-		app.End(ctx, outputPath)
+	gproc.AddSigHandlerShutdown(func(sig os.Signal) {
+		app.End(ctx, sig, outputPath)
 		os.Exit(0)
-	}()
+	})
+	gproc.Listen()
+
 	select {}
 }
 
@@ -201,7 +197,7 @@ func (app *cRunApp) Run(ctx context.Context, outputPath string) {
 	}
 }
 
-func (app *cRunApp) End(ctx context.Context, outputPath string) {
+func (app *cRunApp) End(ctx context.Context, sig os.Signal, outputPath string) {
 	// Delete the binary file.
 	// firstly, kill the process.
 	if process != nil {
