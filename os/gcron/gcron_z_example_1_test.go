@@ -40,9 +40,9 @@ func ExampleCronGracefulShutdown() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	sig := <-quit
-	glog.Printf(ctx, "signal: %s，stopping cron", sig)
+	glog.Printf(ctx, "Signal received: %s, stopping cron", sig)
 
 	glog.Print(ctx, "Waiting for all cron jobs to complete...")
-	gcron.Stop()
-	glog.Print(ctx, "all cron jobs completed")
+	gcron.GracefulStop()
+	glog.Print(ctx, "All cron jobs completed")
 }
