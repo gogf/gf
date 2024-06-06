@@ -1,0 +1,3 @@
+database:
+  default:
+  - link: "hellosql:root:cm9vdDEyMw==@tcp(127.0.0.1:3306)/focus"
