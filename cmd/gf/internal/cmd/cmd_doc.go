@@ -25,11 +25,11 @@ var (
 )
 
 type cDoc struct {
-	g.Meta `name:"doc" brief:"show current Golang environment variables"`
+	g.Meta `name:"doc" brief:"download https://pages.goframe.org/ to run locally"`
 }
 
 type cDocInput struct {
-	g.Meta `name:"doc"`
+	g.Meta `name:"doc" config:"gfcli.doc"`
 	Path   string `short:"p"  name:"path"    brief:"download docs directory path, default is \"%temp%/goframe\""`
 	Port   int    `short:"o"  name:"port"    brief:"http server port, default is 8080" d:"8080"`
 	Update bool   `short:"u"  name:"update"  brief:"clean docs directory and update docs"`
@@ -40,34 +40,34 @@ type cDocOutput struct{}
 
 func (c cDoc) Index(ctx context.Context, in cDocInput) (out *cDocOutput, err error) {
 	docs := NewDocSetting(in.Path)
-	mlog.Print("下载文档所在目录:", docs.DocDir)
+	mlog.Print("Directory where the document is downloaded:", docs.DocDir)
 	if in.Clean {
-		mlog.Print("清理文档目录")
+		mlog.Print("Cleaning document directory")
 		err = docs.Clean()
 		if err != nil {
-			mlog.Print("清理文档目录失败:", err)
+			mlog.Print("Failed to clean document directory:", err)
 			return
 		}
 		return
 	}
 	if in.Update {
-		mlog.Print("清理旧文档目录")
+		mlog.Print("Cleaning old document directory")
 		err = docs.Clean()
 		if err != nil {
-			mlog.Print("清理旧文档目录失败:", err)
+			mlog.Print("Failed to clean old document directory:", err)
 			return
 		}
 	}
 	err = docs.DownloadDoc()
 	if err != nil {
-		mlog.Print("下载文档失败:", err)
+		mlog.Print("Failed to download document:", err)
 		return
 	}
 	s := g.Server()
 	s.SetServerRoot(docs.DocDir)
 	s.SetPort(in.Port)
 	s.SetDumpRouterMap(false)
-	mlog.Printf("访问地址 http://127.0.0.1:%d", in.Port)
+	mlog.Printf("Access address http://127.0.0.1:%d", in.Port)
 	s.Run()
 	return
 }
@@ -103,7 +103,7 @@ func (d *DocSetting) Clean() error {
 	if _, err := os.Stat(d.TempDir); err == nil {
 		err = gfile.Remove(d.TempDir)
 		if err != nil {
-			mlog.Print("删除临时目录失败:", err)
+			mlog.Print("Failed to delete temporary directory:", err)
 			return err
 		}
 	}
@@ -114,53 +114,53 @@ func (d *DocSetting) DownloadDoc() error {
 	if _, err := os.Stat(d.TempDir); err != nil {
 		err = gfile.Mkdir(d.TempDir)
 		if err != nil {
-			mlog.Print("创建临时目录失败:", err)
+			mlog.Print("Failed to create temporary directory:", err)
 			return nil
 		}
 	}
-	// 判断文件是否存在
+	// Check if the file exists
 	if _, err := os.Stat(d.DocDir); err == nil {
-		mlog.Print("文档已存在，无需下载解压缩")
+		mlog.Print("Document already exists, no need to download and unzip")
 		return nil
 	}
 
 	if _, err := os.Stat(d.DocZipFile); err == nil {
-		mlog.Print("文件已存在，无需下载")
+		mlog.Print("File already exists, no need to download")
 	} else {
-		mlog.Print("文件不存在，开始下载")
-		// 下载文件
+		mlog.Print("File does not exist, start downloading")
+		// Download the file
 		resp, err := http.Get(d.DocURL)
 		if err != nil {
-			mlog.Print("下载文件失败:", err)
+			mlog.Print("Failed to download file:", err)
 			return err
 		}
 		defer resp.Body.Close()
 
-		// 创建文件
+		// Create the file
 		out, err := os.Create(d.DocZipFile)
 		if err != nil {
-			mlog.Print("创建文件失败:", err)
+			mlog.Print("Failed to create file:", err)
 			return err
 		}
 		defer out.Close()
 
-		// 将响应体内容写入文件
+		// Write the response body to the file
 		_, err = io.Copy(out, resp.Body)
 		if err != nil {
-			mlog.Print("写入文件失败:", err)
+			mlog.Print("Failed to write file:", err)
 			return err
 		}
 	}
 
-	mlog.Print("开始解压缩文件...")
-	// 解压缩文件
+	mlog.Print("Start unzipping the file...")
+	// Unzip the file
 	err := gcompress.UnZipFile(d.DocZipFile, d.TempDir)
 	if err != nil {
-		mlog.Print("解压缩文件失败，请重新运行:", err)
+		mlog.Print("Failed to unzip the file, please run again:", err)
 		gfile.Remove(d.DocZipFile)
 		return err
 	}
 
-	mlog.Print("下载并解压缩成功")
+	mlog.Print("Download and unzip successful")
 	return nil
 }
