@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	// DocURL
+	// DocURL is the download address of the document
 	DocURL = "https://github.com/gogf/gf/archive/refs/heads/gh-pages.zip"
 )
 
@@ -79,7 +79,7 @@ func (c cDoc) Index(ctx context.Context, in cDocInput) (out *cDocOutput, err err
 	return
 }
 
-// DocSetting description
+// DocSetting doc setting
 type DocSetting struct {
 	TempDir    string
 	DocURL     string
@@ -87,9 +87,7 @@ type DocSetting struct {
 	DocZipFile string
 }
 
-// NewDocSetting description
-//
-// createTime: 2024-05-14 12:19:55
+// NewDocSetting new DocSetting
 func NewDocSetting(ctx context.Context, in cDocInput) *DocSetting {
 	fileName := "gf-doc-md.zip"
 	tempDir := in.Path
@@ -108,6 +106,7 @@ func NewDocSetting(ctx context.Context, in cDocInput) *DocSetting {
 
 }
 
+// Clean clean the temporary directory
 func (d *DocSetting) Clean() error {
 	if _, err := os.Stat(d.TempDir); err == nil {
 		err = gfile.Remove(d.TempDir)
@@ -119,6 +118,7 @@ func (d *DocSetting) Clean() error {
 	return nil
 }
 
+// DownloadDoc download the document
 func (d *DocSetting) DownloadDoc() error {
 	if _, err := os.Stat(d.TempDir); err != nil {
 		err = gfile.Mkdir(d.TempDir)
