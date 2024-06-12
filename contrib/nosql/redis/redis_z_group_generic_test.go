@@ -434,7 +434,7 @@ func Test_GroupGeneric_ExpireAt(t *testing.T) {
 		result, err = redis.GroupGeneric().ExpireAt(ctx, TestKey, time.Now().Add(time.Millisecond*100))
 		t.AssertNil(err)
 		t.AssertEQ(result, int64(1))
-		time.Sleep(time.Millisecond * 100)
+		time.Sleep(time.Millisecond * 200)
 		result, err = redis.GroupGeneric().Exists(ctx, TestKey)
 		t.AssertNil(err)
 		t.AssertEQ(result, int64(0))

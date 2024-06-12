@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -286,19 +287,19 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 	// Automatic handling for creating/updating time.
 	if !m.unscoped && (fieldNameCreate != "" || fieldNameUpdate != "") {
 		for k, v := range list {
-			if fieldNameCreate != "" {
+			if fieldNameCreate != "" && empty.IsNil(v[fieldNameCreate]) {
 				fieldCreateValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeCreate, false)
 				if fieldCreateValue != nil {
 					v[fieldNameCreate] = fieldCreateValue
 				}
 			}
-			if fieldNameUpdate != "" {
+			if fieldNameUpdate != "" && empty.IsNil(v[fieldNameUpdate]) {
 				fieldUpdateValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeUpdate, false)
 				if fieldUpdateValue != nil {
 					v[fieldNameUpdate] = fieldUpdateValue
 				}
 			}
-			if fieldNameDelete != "" {
+			if fieldNameDelete != "" && empty.IsNil(v[fieldNameDelete]) {
 				fieldDeleteValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeDelete, true)
 				if fieldDeleteValue != nil {
 					v[fieldNameDelete] = fieldDeleteValue
