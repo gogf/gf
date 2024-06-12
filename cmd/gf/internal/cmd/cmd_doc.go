@@ -13,11 +13,17 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"time"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/encoding/gcompress"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
+)
+
+const (
+	// DocURL
+	DocURL = "https://github.com/gogf/gf/archive/refs/heads/gh-pages.zip"
 )
 
 var (
@@ -34,13 +40,14 @@ type cDocInput struct {
 	Port   int    `short:"o"  name:"port"    brief:"http server port, default is 8080" d:"8080"`
 	Update bool   `short:"u"  name:"update"  brief:"clean docs directory and update docs"`
 	Clean  bool   `short:"c"  name:"clean"   brief:"clean docs directory"`
+	Proxy  string `short:"x"  name:"proxy"   brief:"proxy for download, such as https://hub.gitmirror.com/;https://ghproxy.com/;https://ghproxy.net/;https://ghps.cc/"`
 }
 
 type cDocOutput struct{}
 
 func (c cDoc) Index(ctx context.Context, in cDocInput) (out *cDocOutput, err error) {
-	docs := NewDocSetting(in.Path)
-	mlog.Print("Directory where the document is downloaded:", docs.DocDir)
+	docs := NewDocSetting(ctx, in)
+	mlog.Print("Directory where the document is downloaded:", docs.TempDir)
 	if in.Clean {
 		mlog.Print("Cleaning document directory")
 		err = docs.Clean()
@@ -83,8 +90,9 @@ type DocSetting struct {
 // NewDocSetting description
 //
 // createTime: 2024-05-14 12:19:55
-func NewDocSetting(tempDir string) *DocSetting {
+func NewDocSetting(ctx context.Context, in cDocInput) *DocSetting {
 	fileName := "gf-doc-md.zip"
+	tempDir := in.Path
 	if tempDir == "" {
 		tempDir = gfile.Temp("goframe/docs")
 	} else {
@@ -94,9 +102,10 @@ func NewDocSetting(tempDir string) *DocSetting {
 	return &DocSetting{
 		TempDir:    filepath.FromSlash(tempDir),
 		DocDir:     filepath.FromSlash(path.Join(tempDir, "gf-gh-pages")),
-		DocURL:     "https://codeload.github.com/gogf/gf/zip/refs/heads/gh-pages",
+		DocURL:     in.Proxy + DocURL,
 		DocZipFile: filepath.FromSlash(path.Join(tempDir, fileName)),
 	}
+
 }
 
 func (d *DocSetting) Clean() error {
@@ -127,7 +136,8 @@ func (d *DocSetting) DownloadDoc() error {
 	if _, err := os.Stat(d.DocZipFile); err == nil {
 		mlog.Print("File already exists, no need to download")
 	} else {
-		mlog.Print("File does not exist, start downloading")
+		mlog.Printf("File does not exist, start downloading: %s", d.DocURL)
+		startTime := time.Now()
 		// Download the file
 		resp, err := http.Get(d.DocURL)
 		if err != nil {
@@ -150,6 +160,7 @@ func (d *DocSetting) DownloadDoc() error {
 			mlog.Print("Failed to write file:", err)
 			return err
 		}
+		mlog.Printf("Download successful, time-consuming: %v", time.Since(startTime))
 	}
 
 	mlog.Print("Start unzipping the file...")
