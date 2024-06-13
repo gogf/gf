@@ -78,10 +78,6 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 func generateDoContent(
 	ctx context.Context, in CGenDaoInternalInput, tableName, tableNameCamelCase, structDefine string,
 ) string {
-	doPackage := "do"
-	if in.WithPathPackage {
-		doPackage = filepath.Base(in.DoPath)
-	}
 	doContent := gstr.ReplaceByMap(
 		getTemplateFromPathOrDefault(in.TplDaoDoPath, consts.TemplateGenDaoDoContent),
 		g.MapStrStr{
@@ -89,7 +85,7 @@ func generateDoContent(
 			tplVarPackageImports:     getImportPartContent(ctx, structDefine, true, nil),
 			tplVarTableNameCamelCase: tableNameCamelCase,
 			tplVarStructDefine:       structDefine,
-			tplVarPackageName:        doPackage,
+			tplVarPackageName:        filepath.Base(in.DoPath),
 		},
 	)
 	doContent = replaceDefaultVar(in, doContent)

@@ -86,7 +86,6 @@ CONFIGURATION SUPPORT
 	CGenDaoBriefClear             = `delete all generated go files that do not exist in database`
 	CGenDaoBriefTypeMapping       = `custom local type mapping for generated struct attributes relevant to fields of table`
 	CGenDaoBriefFieldMapping      = `custom local type mapping for generated struct attributes relevant to specific fields of table`
-	CGenDaoBriefWithPathPackage   = `is should make the dao package by the path`
 	CGenDaoBriefGroup             = `
 specifying the configuration group name of database for generated ORM instance,
 it's not necessary and the default value is "default"
@@ -176,7 +175,6 @@ func init() {
 		`CGenDaoBriefTplDaoInternalPath`: CGenDaoBriefTplDaoInternalPath,
 		`CGenDaoBriefTplDaoDoPathPath`:   CGenDaoBriefTplDaoDoPathPath,
 		`CGenDaoBriefTplDaoEntityPath`:   CGenDaoBriefTplDaoEntityPath,
-		`CGenDaoBriefWithPathPackage`:    CGenDaoBriefWithPathPackage,
 	})
 }
 
@@ -209,7 +207,6 @@ type (
 		NoJsonTag          bool   `name:"noJsonTag"           short:"k"  brief:"{CGenDaoBriefNoJsonTag}" orphan:"true"`
 		NoModelComment     bool   `name:"noModelComment"      short:"m"  brief:"{CGenDaoBriefNoModelComment}" orphan:"true"`
 		Clear              bool   `name:"clear"               short:"a"  brief:"{CGenDaoBriefClear}" orphan:"true"`
-		WithPathPackage    bool   `name:"withPathPackage"     short:"wp" brief:"{CGenDaoBriefWithPathPackage}" orphan:"true"`
 
 		TypeMapping  map[DBFieldTypeName]CustomAttributeType  `name:"typeMapping" short:"y" brief:"{CGenDaoBriefTypeMapping}" orphan:"true"`
 		FieldMapping map[DBTableFieldName]CustomAttributeType `name:"fieldMapping" short:"fm"  brief:"{CGenDaoBriefFieldMapping}" orphan:"true"`
