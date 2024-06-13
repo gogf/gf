@@ -125,22 +125,3 @@ func (err *Error) Equal(target error) bool {
 	}
 	return true
 }
-
-// Is reports whether current error `err` has error `target` in its chaining errors.
-// It is just for implements for stdlib errors.Is from Go version 1.17.
-func (err *Error) Is(target error) bool {
-	if Equal(err, target) {
-		return true
-	}
-	nextErr := err.Unwrap()
-	if nextErr == nil {
-		return false
-	}
-	if Equal(nextErr, target) {
-		return true
-	}
-	if e, ok := nextErr.(IIs); ok {
-		return e.Is(target)
-	}
-	return false
-}
