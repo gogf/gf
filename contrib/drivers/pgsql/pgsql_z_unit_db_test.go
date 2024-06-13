@@ -8,6 +8,7 @@ package pgsql_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/gogf/gf/v2/frame/g"
@@ -326,4 +327,59 @@ func Test_DB_TableFields(t *testing.T) {
 			gtest.AssertEQ(res[k].Comment, v[5])
 		}
 	})
+}
+
+func Test_NoFields_Error(t *testing.T) {
+	createSql := `CREATE TABLE IF NOT EXISTS %s (
+id bigint PRIMARY KEY,
+int_col INT);`
+
+	type Data struct {
+		Id     int64
+		IntCol int64
+	}
+	// pgsql converts table names to lowercase
+	tableName := "Error_table"
+	errStr := fmt.Sprintf(`The table "%s" may not exist, or the table contains no fields`, tableName)
+	_, err := db.Exec(ctx, fmt.Sprintf(createSql, tableName))
+	gtest.AssertNil(err)
+	defer dropTable(tableName)
+
+	gtest.C(t, func(t *gtest.T) {
+		var data = Data{
+			Id:     2,
+			IntCol: 2,
+		}
+		_, err = db.Model(tableName).Data(data).Insert()
+		t.Assert(err, errStr)
+
+		// Insert a piece of test data using lowercase
+		_, err = db.Model(strings.ToLower(tableName)).Data(data).Insert()
+		t.AssertNil(err)
+
+		_, err = db.Model(tableName).Where("id", 1).Data(g.Map{
+			"int_col": 9999,
+		}).Update()
+		t.Assert(err, errStr)
+
+	})
+	// The inserted field does not exist in the table
+	gtest.C(t, func(t *gtest.T) {
+		data := map[string]any{
+			"id1":        22,
+			"int_col_22": 11111,
+		}
+		_, err = db.Model(tableName).Data(data).Insert()
+		t.Assert(err, errStr)
+
+		lowerTableName := strings.ToLower(tableName)
+		_, err = db.Model(lowerTableName).Data(data).Insert()
+		t.Assert(err, fmt.Errorf(`input data match no fields in table "%s"`, lowerTableName))
+
+		_, err = db.Model(lowerTableName).Where("id", 1).Data(g.Map{
+			"int_col-2": 9999,
+		}).Update()
+		t.Assert(err, fmt.Errorf(`input data match no fields in table "%s"`, lowerTableName))
+	})
+
 }

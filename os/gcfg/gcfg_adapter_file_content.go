@@ -14,58 +14,58 @@ import (
 
 // SetContent sets customized configuration content for specified `file`.
 // The `file` is unnecessary param, default is DefaultConfigFile.
-func (a *AdapterFile) SetContent(content string, file ...string) {
-	name := DefaultConfigFileName
-	if len(file) > 0 {
-		name = file[0]
+func (a *AdapterFile) SetContent(content string, fileNameOrPath ...string) {
+	var usedFileNameOrPath = DefaultConfigFileName
+	if len(fileNameOrPath) > 0 {
+		usedFileNameOrPath = fileNameOrPath[0]
 	}
 	// Clear file cache for instances which cached `name`.
 	localInstances.LockFunc(func(m map[string]interface{}) {
-		if customConfigContentMap.Contains(name) {
+		if customConfigContentMap.Contains(usedFileNameOrPath) {
 			for _, v := range m {
 				if configInstance, ok := v.(*Config); ok {
 					if fileConfig, ok := configInstance.GetAdapter().(*AdapterFile); ok {
-						fileConfig.jsonMap.Remove(name)
+						fileConfig.jsonMap.Remove(usedFileNameOrPath)
 					}
 				}
 			}
 		}
-		customConfigContentMap.Set(name, content)
+		customConfigContentMap.Set(usedFileNameOrPath, content)
 	})
 }
 
 // GetContent returns customized configuration content for specified `file`.
 // The `file` is unnecessary param, default is DefaultConfigFile.
-func (a *AdapterFile) GetContent(file ...string) string {
-	name := DefaultConfigFileName
-	if len(file) > 0 {
-		name = file[0]
+func (a *AdapterFile) GetContent(fileNameOrPath ...string) string {
+	var usedFileNameOrPath = DefaultConfigFileName
+	if len(fileNameOrPath) > 0 {
+		usedFileNameOrPath = fileNameOrPath[0]
 	}
-	return customConfigContentMap.Get(name)
+	return customConfigContentMap.Get(usedFileNameOrPath)
 }
 
 // RemoveContent removes the global configuration with specified `file`.
 // If `name` is not passed, it removes configuration of the default group name.
-func (a *AdapterFile) RemoveContent(file ...string) {
-	name := DefaultConfigFileName
-	if len(file) > 0 {
-		name = file[0]
+func (a *AdapterFile) RemoveContent(fileNameOrPath ...string) {
+	var usedFileNameOrPath = DefaultConfigFileName
+	if len(fileNameOrPath) > 0 {
+		usedFileNameOrPath = fileNameOrPath[0]
 	}
 	// Clear file cache for instances which cached `name`.
 	localInstances.LockFunc(func(m map[string]interface{}) {
-		if customConfigContentMap.Contains(name) {
+		if customConfigContentMap.Contains(usedFileNameOrPath) {
 			for _, v := range m {
 				if configInstance, ok := v.(*Config); ok {
 					if fileConfig, ok := configInstance.GetAdapter().(*AdapterFile); ok {
-						fileConfig.jsonMap.Remove(name)
+						fileConfig.jsonMap.Remove(usedFileNameOrPath)
 					}
 				}
 			}
-			customConfigContentMap.Remove(name)
+			customConfigContentMap.Remove(usedFileNameOrPath)
 		}
 	})
 
-	intlog.Printf(context.TODO(), `RemoveContent: %s`, name)
+	intlog.Printf(context.TODO(), `RemoveContent: %s`, usedFileNameOrPath)
 }
 
 // ClearContent removes all global configuration contents.

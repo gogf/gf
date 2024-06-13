@@ -3,7 +3,7 @@ module github.com/gogf/gf/contrib/registry/nacos/v2
 go 1.18
 
 require (
-	github.com/gogf/gf/v2 v2.7.0
+	github.com/gogf/gf/v2 v2.7.1
 	github.com/joy999/nacos-sdk-go v0.0.0-20231120071639-10a34b3e7288
 )
 

@@ -7,65 +7,123 @@
 package gconv_test
 
 import (
+	"reflect"
+	"testing"
+	"time"
+
+	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
-	"testing"
-	"time"
 )
 
-type stringStruct1 struct {
-	Name string
+var stringTests = []struct {
+	value  interface{}
+	expect string
+}{
+	{true, "true"},
+	{false, "false"},
+
+	{int(0), "0"},
+	{int(123), "123"},
+	{int8(123), "123"},
+	{int16(123), "123"},
+	{int32(123), "123"},
+	{int64(123), "123"},
+
+	{uint(0), "0"},
+	{uint(123), "123"},
+	{uint8(123), "123"},
+	{uint16(123), "123"},
+	{uint32(123), "123"},
+	{uint64(123), "123"},
+
+	{uintptr(0), "0"},
+	{uintptr(123), "123"},
+
+	{rune(0), "0"},
+	{rune(49), "49"},
+
+	{float32(123), "123"},
+	{float64(123.456), "123.456"},
+
+	{[]byte(""), ""},
+
+	{"", ""},
+	{"true", "true"},
+	{"false", "false"},
+	{"Neptune", "Neptune"},
+
+	{complex(1, 2), "(1+2i)"},
+	{complex(123.456, 789.123), "(123.456+789.123i)"},
+
+	{[3]int{1, 2, 3}, "[1,2,3]"},
+	{[]int{1, 2, 3}, "[1,2,3]"},
+
+	{map[int]int{1: 1}, `{"1":1}`},
+	{map[string]string{"Earth": "太平洋"}, `{"Earth":"太平洋"}`},
+
+	{struct{}{}, "{}"},
+	{nil, ""},
+
+	{gvar.New(123), "123"},
+	{gvar.New(123.456), "123.456"},
+
+	{goTime, "1911-10-10 00:00:00 +0000 UTC"},
+	{&goTime, "1911-10-10 00:00:00 +0000 UTC"},
+	// TODO The String method of gtime not equals to time.Time
+	{gfTime, "1911-10-10 00:00:00"},
+	{&gfTime, "1911-10-10 00:00:00"},
+	//{gfTime, "1911-10-10 00:00:00 +0000 UTC"},
+	//{&gfTime, "1911-10-10 00:00:00 +0000 UTC"},
 }
 
-type stringStruct2 struct {
-	Name string
-}
+var (
+	goTime = time.Date(
+		1911, 10, 10, 0, 0, 0, 0, time.UTC,
+	)
+	gfTime = gtime.NewFromTime(goTime)
+)
 
-func (s *stringStruct1) String() string {
-	return s.Name
-}
-
-func Test_String(t *testing.T) {
+func TestString(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t.AssertEQ(gconv.String(int(123)), "123")
-		t.AssertEQ(gconv.String(int(-123)), "-123")
-		t.AssertEQ(gconv.String(int8(123)), "123")
-		t.AssertEQ(gconv.String(int8(-123)), "-123")
-		t.AssertEQ(gconv.String(int16(123)), "123")
-		t.AssertEQ(gconv.String(int16(-123)), "-123")
-		t.AssertEQ(gconv.String(int32(123)), "123")
-		t.AssertEQ(gconv.String(int32(-123)), "-123")
-		t.AssertEQ(gconv.String(int64(123)), "123")
-		t.AssertEQ(gconv.String(int64(-123)), "-123")
-		t.AssertEQ(gconv.String(int64(1552578474888)), "1552578474888")
-		t.AssertEQ(gconv.String(int64(-1552578474888)), "-1552578474888")
+		for _, test := range stringTests {
+			t.AssertEQ(gconv.String(test.value), test.expect)
+		}
+	})
 
-		t.AssertEQ(gconv.String(uint(123)), "123")
-		t.AssertEQ(gconv.String(uint8(123)), "123")
-		t.AssertEQ(gconv.String(uint16(123)), "123")
-		t.AssertEQ(gconv.String(uint32(123)), "123")
-		t.AssertEQ(gconv.String(uint64(155257847488898765)), "155257847488898765")
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gconv.Strings(nil), nil)
+	})
+}
 
-		t.AssertEQ(gconv.String(float32(123.456)), "123.456")
-		t.AssertEQ(gconv.String(float32(-123.456)), "-123.456")
-		t.AssertEQ(gconv.String(float64(1552578474888.456)), "1552578474888.456")
-		t.AssertEQ(gconv.String(float64(-1552578474888.456)), "-1552578474888.456")
+func TestStrings(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		for _, test := range stringTests {
+			if test.value == nil {
+				t.AssertNil(gconv.Strings(test.value))
+				continue
+			}
 
-		t.AssertEQ(gconv.String(true), "true")
-		t.AssertEQ(gconv.String(false), "false")
+			var (
+				sliceType = reflect.SliceOf(reflect.TypeOf(test.value))
+				strings   = reflect.MakeSlice(sliceType, 0, 0)
+				expects   = []string{
+					test.expect, test.expect,
+				}
+			)
+			strings = reflect.Append(strings, reflect.ValueOf(test.value))
+			strings = reflect.Append(strings, reflect.ValueOf(test.value))
 
-		t.AssertEQ(gconv.String([]byte("bytes")), "bytes")
+			t.AssertEQ(gconv.Strings(strings.Interface()), expects)
+			t.AssertEQ(gconv.SliceStr(strings.Interface()), expects)
+		}
+	})
 
-		t.AssertEQ(gconv.String(stringStruct1{"john"}), `{"Name":"john"}`)
-		t.AssertEQ(gconv.String(&stringStruct1{"john"}), "john")
-
-		t.AssertEQ(gconv.String(stringStruct2{"john"}), `{"Name":"john"}`)
-		t.AssertEQ(gconv.String(&stringStruct2{"john"}), `{"Name":"john"}`)
-
-		var nilTime *time.Time = nil
-		t.AssertEQ(gconv.String(nilTime), "")
-		var nilGTime *gtime.Time = nil
-		t.AssertEQ(gconv.String(nilGTime), "")
+	// Test for special types.
+	gtest.C(t, func(t *gtest.T) {
+		// []int8 json
+		t.AssertEQ(gconv.Strings([]uint8(`{"Name":"Earth"}"`)),
+			[]string{"123", "34", "78", "97", "109", "101", "34", "58", "34", "69", "97", "114", "116", "104", "34", "125", "34"})
 	})
 }

@@ -52,6 +52,12 @@ for file in `find . -name go.mod`; do
           echo "ignore example as go version: $(go version)"
           continue 1
         fi
+        echo "the example directory only needs to be built, not unit tests and coverage tests."
+        cd $dirpath
+        go mod tidy
+        go build ./...
+        cd -
+        continue 1
     fi
 
     # package otlpgrpc needs golang >= v1.20

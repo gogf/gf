@@ -11,12 +11,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gogf/gf/v2/crypto/gmd5"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
@@ -144,22 +142,40 @@ func (c *Core) TableFields(ctx context.Context, table string, schema ...string) 
 
 // ClearTableFields removes certain cached table fields of current configuration group.
 func (c *Core) ClearTableFields(ctx context.Context, table string, schema ...string) (err error) {
-	tableFieldsMap.Remove(fmt.Sprintf(
-		`%s%s@%s#%s`,
-		cachePrefixTableFields,
+	tableFieldsCacheKey := genTableFieldsCacheKey(
 		c.db.GetGroup(),
 		gutil.GetOrDefaultStr(c.db.GetSchema(), schema...),
 		table,
-	))
+	)
+	_, err = c.innerMemCache.Remove(ctx, tableFieldsCacheKey)
 	return
 }
 
 // ClearTableFieldsAll removes all cached table fields of current configuration group.
 func (c *Core) ClearTableFieldsAll(ctx context.Context) (err error) {
 	var (
-		keys        = tableFieldsMap.Keys()
-		cachePrefix = fmt.Sprintf(`%s%s`, cachePrefixTableFields, c.db.GetGroup())
-		removedKeys = make([]string, 0)
+		keys, _     = c.innerMemCache.KeyStrings(ctx)
+		cachePrefix = cachePrefixTableFields
+		removedKeys = make([]any, 0)
+	)
+	for _, key := range keys {
+		if gstr.HasPrefix(key, cachePrefix) {
+			removedKeys = append(removedKeys, key)
+		}
+	}
+
+	if len(removedKeys) > 0 {
+		err = c.innerMemCache.Removes(ctx, removedKeys)
+	}
+	return
+}
+
+// ClearCache removes cached sql result of certain table.
+func (c *Core) ClearCache(ctx context.Context, table string) (err error) {
+	var (
+		keys, _     = c.db.GetCache().KeyStrings(ctx)
+		cachePrefix = fmt.Sprintf(`%s%s@`, cachePrefixSelectCache, table)
+		removedKeys = make([]any, 0)
 	)
 	for _, key := range keys {
 		if gstr.HasPrefix(key, cachePrefix) {
@@ -167,32 +183,20 @@ func (c *Core) ClearTableFieldsAll(ctx context.Context) (err error) {
 		}
 	}
 	if len(removedKeys) > 0 {
-		tableFieldsMap.Removes(removedKeys)
+		err = c.db.GetCache().Removes(ctx, removedKeys)
 	}
 	return
 }
 
-// ClearCache removes cached sql result of certain table.
-func (c *Core) ClearCache(ctx context.Context, table string) (err error) {
-	return c.db.GetCache().Clear(ctx)
-}
-
 // ClearCacheAll removes all cached sql result from cache
 func (c *Core) ClearCacheAll(ctx context.Context) (err error) {
-	return c.db.GetCache().Clear(ctx)
-}
-
-func (c *Core) makeSelectCacheKey(name, schema, table, sql string, args ...interface{}) string {
-	if name == "" {
-		name = fmt.Sprintf(
-			`%s@%s#%s:%s`,
-			c.db.GetGroup(),
-			schema,
-			table,
-			gmd5.MustEncryptString(sql+", @PARAMS:"+gconv.String(args)),
-		)
+	if err = c.db.GetCache().Clear(ctx); err != nil {
+		return err
 	}
-	return fmt.Sprintf(`%s%s`, cachePrefixSelectCache, name)
+	if err = c.GetInnerMemCache().Clear(ctx); err != nil {
+		return err
+	}
+	return
 }
 
 // HasField determine whether the field exists in the table.

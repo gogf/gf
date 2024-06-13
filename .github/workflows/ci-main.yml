@@ -190,8 +190,9 @@ jobs:
 
     steps:
     # TODO: szenius/set-timezone update to node16
+    # sudo ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
     - name: Setup Timezone
-      uses: szenius/set-timezone@v1.1
+      uses: szenius/set-timezone@v2.0
       with:
         timezoneLinux: "Asia/Shanghai"
 
@@ -244,3 +245,4 @@ jobs:
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
       with:
         flags: go-${{ matrix.go-version }}-${{ matrix.goarch }}
+        token: ${{ secrets.CODECOV_TOKEN }}
