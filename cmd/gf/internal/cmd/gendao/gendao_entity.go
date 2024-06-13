@@ -70,6 +70,7 @@ func generateEntityContent(
 			tplVarPackageImports:     getImportPartContent(ctx, structDefine, false, appendImports),
 			tplVarTableNameCamelCase: tableNameCamelCase,
 			tplVarStructDefine:       structDefine,
+			tplVarPackageName:        filepath.Base(in.EntityPath),
 		},
 	)
 	entityContent = replaceDefaultVar(in, entityContent)

@@ -85,6 +85,7 @@ func generateDoContent(
 			tplVarPackageImports:     getImportPartContent(ctx, structDefine, true, nil),
 			tplVarTableNameCamelCase: tableNameCamelCase,
 			tplVarStructDefine:       structDefine,
+			tplVarPackageName:        filepath.Base(in.DoPath),
 		},
 	)
 	doContent = replaceDefaultVar(in, doContent)

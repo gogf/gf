@@ -116,6 +116,7 @@ func generateDaoIndex(in generateDaoIndexInput) {
 				tplVarTableName:               in.TableName,
 				tplVarTableNameCamelCase:      in.TableNameCamelCase,
 				tplVarTableNameCamelLowerCase: in.TableNameCamelLowerCase,
+				tplVarPackageName:             filepath.Base(in.DaoPath),
 			})
 		indexContent = replaceDefaultVar(in.CGenDaoInternalInput, indexContent)
 		if err := gfile.PutContents(path, strings.TrimSpace(indexContent)); err != nil {

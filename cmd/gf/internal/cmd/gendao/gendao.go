@@ -118,6 +118,7 @@ generated json tag case for model struct, cases are as follows:
 	tplVarGroupName               = `{TplGroupName}`
 	tplVarDatetimeStr             = `{TplDatetimeStr}`
 	tplVarCreatedAtDatetimeStr    = `{TplCreatedAtDatetimeStr}`
+	tplVarPackageName             = `{TplPackageName}`
 )
 
 var (
