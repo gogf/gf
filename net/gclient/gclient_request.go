@@ -230,7 +230,7 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 				writer = multipart.NewWriter(buffer)
 			)
 			for _, item := range strings.Split(params, "&") {
-				array := strings.Split(item, "=")
+				array := strings.SplitN(item, "=", 2)
 				if len(array[1]) > 6 && strings.Compare(array[1][0:6], httpParamFileHolder) == 0 {
 					path := array[1][6:]
 					if !gfile.Exists(path) {
