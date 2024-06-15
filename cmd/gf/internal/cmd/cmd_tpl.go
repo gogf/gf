@@ -47,7 +47,7 @@ gf tpl parse -p ./template -v values.json -o ./template.parsed
 
 type (
 	cTplParseInput struct {
-		g.Meta     `name:"parse" brief:"{cTplParseBrief}" eg:"{cTplParseEg}"`
+		g.Meta     `name:"parse" config:"gfcli.tpl.parse" brief:"{cTplParseBrief}" eg:"{cTplParseEg}"`
 		Path       string `name:"path"       short:"p" brief:"template file or folder path" v:"required"`
 		Pattern    string `name:"pattern"    short:"n" brief:"template file pattern when path is a folder, default is:*" d:"*"`
 		Recursive  bool   `name:"recursive"  short:"c" brief:"recursively parsing files if path is folder, default is:true" d:"true"`
