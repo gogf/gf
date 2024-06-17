@@ -493,6 +493,7 @@ func TestOpenApiV3_CommonRequest_Files(t *testing.T) {
 		t.AssertNil(err)
 
 		// fmt.Println(oai.String())
+		// TODO https://openapi.apifox.cn/
 		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Req`).Value.Properties.Get("files").Value.Type, goai.TypeArray)
 		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Req`).Value.Properties.Get("file").Value.Type, goai.TypeFile)
 	})
