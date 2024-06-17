@@ -22,6 +22,7 @@ import (
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -56,7 +57,7 @@ func (c *Core) Ctx(ctx context.Context) DB {
 		panic(err)
 	}
 	newCore.ctx = WithDB(ctx, newCore.db)
-	newCore.ctx = c.InjectInternalCtxData(newCore.ctx)
+	newCore.ctx = c.injectInternalCtxData(newCore.ctx)
 	return newCore.db
 }
 
@@ -67,7 +68,7 @@ func (c *Core) GetCtx() context.Context {
 	if ctx == nil {
 		ctx = context.TODO()
 	}
-	return c.InjectInternalCtxData(ctx)
+	return c.injectInternalCtxData(ctx)
 }
 
 // GetCtxTimeout returns the context and cancel function for specified timeout type.
@@ -106,7 +107,7 @@ func (c *Core) Close(ctx context.Context) (err error) {
 	if err = c.cache.Close(ctx); err != nil {
 		return err
 	}
-	c.links.LockFunc(func(m map[string]interface{}) {
+	c.links.LockFunc(func(m map[any]any) {
 		for k, v := range m {
 			if db, ok := v.(*sql.DB); ok {
 				err = db.Close()
@@ -414,7 +415,7 @@ func (c *Core) fieldsToSequence(ctx context.Context, table string, fields []stri
 	return fieldsResultInSequence, nil
 }
 
-// DoInsert inserts or updates data forF given table.
+// DoInsert inserts or updates data for given table.
 // This function is usually used for custom interface definition, you do not need call it manually.
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
 // Eg:
@@ -487,12 +488,16 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 		keysStr      = charL + strings.Join(keys, charR+","+charL) + charR
 		operation    = GetInsertOperationByOption(option.InsertOption)
 	)
+	// Upsert clause only takes effect on Save operation.
 	if option.InsertOption == InsertOptionSave {
-		onDuplicateStr = c.formatOnDuplicate(keys, option)
+		onDuplicateStr, err = c.db.FormatUpsert(keys, list, option)
+		if err != nil {
+			return nil, err
+		}
 	}
 	var (
-		listLength  = len(list)
-		valueHolder = make([]string, 0)
+		listLength   = len(list)
+		valueHolders = make([]string, 0)
 	)
 	for i := 0; i < listLength; i++ {
 		values = values[:0]
@@ -506,9 +511,9 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 				params = append(params, list[i][k])
 			}
 		}
-		valueHolder = append(valueHolder, "("+gstr.Join(values, ",")+")")
+		valueHolders = append(valueHolders, "("+gstr.Join(values, ",")+")")
 		// Batch package checks: It meets the batch number, or it is the last element.
-		if len(valueHolder) == option.BatchCount || (i == listLength-1 && len(valueHolder) > 0) {
+		if len(valueHolders) == option.BatchCount || (i == listLength-1 && len(valueHolders) > 0) {
 			var (
 				stdSqlResult sql.Result
 				affectedRows int64
@@ -516,7 +521,7 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 			stdSqlResult, err = c.db.DoExec(ctx, link, fmt.Sprintf(
 				"%s INTO %s(%s) VALUES%s %s",
 				operation, c.QuotePrefixTableName(table), keysStr,
-				gstr.Join(valueHolder, ","),
+				gstr.Join(valueHolders, ","),
 				onDuplicateStr,
 			), params...)
 			if err != nil {
@@ -530,53 +535,10 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 				batchResult.Affected += affectedRows
 			}
 			params = params[:0]
-			valueHolder = valueHolder[:0]
+			valueHolders = valueHolders[:0]
 		}
 	}
 	return batchResult, nil
-}
-
-func (c *Core) formatOnDuplicate(columns []string, option DoInsertOption) string {
-	var onDuplicateStr string
-	if option.OnDuplicateStr != "" {
-		onDuplicateStr = option.OnDuplicateStr
-	} else if len(option.OnDuplicateMap) > 0 {
-		for k, v := range option.OnDuplicateMap {
-			if len(onDuplicateStr) > 0 {
-				onDuplicateStr += ","
-			}
-			switch v.(type) {
-			case Raw, *Raw:
-				onDuplicateStr += fmt.Sprintf(
-					"%s=%s",
-					c.QuoteWord(k),
-					v,
-				)
-			default:
-				onDuplicateStr += fmt.Sprintf(
-					"%s=VALUES(%s)",
-					c.QuoteWord(k),
-					c.QuoteWord(gconv.String(v)),
-				)
-			}
-		}
-	} else {
-		for _, column := range columns {
-			// If it's SAVE operation, do not automatically update the creating time.
-			if c.isSoftCreatedFieldName(column) {
-				continue
-			}
-			if len(onDuplicateStr) > 0 {
-				onDuplicateStr += ","
-			}
-			onDuplicateStr += fmt.Sprintf(
-				"%s=VALUES(%s)",
-				c.QuoteWord(column),
-				c.QuoteWord(column),
-			)
-		}
-	}
-	return InsertOnDuplicateKeyUpdate + " " + onDuplicateStr
 }
 
 // Update does "UPDATE ... " statement for the table.
@@ -766,6 +728,8 @@ func (c *Core) HasTable(name string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	charL, charR := c.db.GetChars()
+	name = gstr.Trim(name, charL+charR)
 	for _, table := range tables {
 		if table == name {
 			return true, nil
@@ -774,20 +738,27 @@ func (c *Core) HasTable(name string) (bool, error) {
 	return false, nil
 }
 
+func (c *Core) GetInnerMemCache() *gcache.Cache {
+	return c.innerMemCache
+}
+
 // GetTablesWithCache retrieves and returns the table names of current database with cache.
 func (c *Core) GetTablesWithCache() ([]string, error) {
 	var (
-		ctx      = c.db.GetCtx()
-		cacheKey = fmt.Sprintf(`Tables: %s`, c.db.GetGroup())
+		ctx           = c.db.GetCtx()
+		cacheKey      = fmt.Sprintf(`Tables:%s`, c.db.GetGroup())
+		cacheDuration = gcache.DurationNoExpire
+		innerMemCache = c.GetInnerMemCache()
 	)
-	result, err := c.GetCache().GetOrSetFuncLock(
-		ctx, cacheKey, func(ctx context.Context) (interface{}, error) {
+	result, err := innerMemCache.GetOrSetFuncLock(
+		ctx, cacheKey,
+		func(ctx context.Context) (interface{}, error) {
 			tableList, err := c.db.Tables(ctx)
 			if err != nil {
-				return false, err
+				return nil, err
 			}
 			return tableList, nil
-		}, 0,
+		}, cacheDuration,
 	)
 	if err != nil {
 		return nil, err
@@ -795,8 +766,8 @@ func (c *Core) GetTablesWithCache() ([]string, error) {
 	return result.Strings(), nil
 }
 
-// isSoftCreatedFieldName checks and returns whether given field name is an automatic-filled created time.
-func (c *Core) isSoftCreatedFieldName(fieldName string) bool {
+// IsSoftCreatedFieldName checks and returns whether given field name is an automatic-filled created time.
+func (c *Core) IsSoftCreatedFieldName(fieldName string) bool {
 	if fieldName == "" {
 		return false
 	}
@@ -822,5 +793,5 @@ func (c *Core) FormatSqlBeforeExecuting(sql string, args []interface{}) (newSql 
 	// sql = gstr.Trim(sql)
 	// sql = gstr.Replace(sql, "\n", " ")
 	// sql, _ = gregex.ReplaceString(`\s{2,}`, ` `, sql)
-	return handleArguments(sql, args)
+	return handleSliceAndStructArgsForSql(sql, args)
 }

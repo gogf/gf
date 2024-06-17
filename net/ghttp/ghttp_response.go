@@ -8,7 +8,6 @@
 package ghttp
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"net/http"
@@ -24,22 +23,17 @@ import (
 // Response is the http response manager.
 // Note that it implements the http.ResponseWriter interface with buffering feature.
 type Response struct {
-	*ResponseWriter                 // Underlying ResponseWriter.
-	Server          *Server         // Parent server.
-	Writer          *ResponseWriter // Alias of ResponseWriter.
-	Request         *Request        // According request.
+	*response.BufferWriter          // Underlying ResponseWriter.
+	Server                 *Server  // Parent server.
+	Request                *Request // According request.
 }
 
 // newResponse creates and returns a new Response object.
 func newResponse(s *Server, w http.ResponseWriter) *Response {
 	r := &Response{
-		Server: s,
-		ResponseWriter: &ResponseWriter{
-			writer: response.NewWriter(w),
-			buffer: bytes.NewBuffer(nil),
-		},
+		Server:       s,
+		BufferWriter: response.NewBufferWriter(w),
 	}
-	r.Writer = r.ResponseWriter
 	return r
 }
 
@@ -96,6 +90,7 @@ func (r *Response) ServeFileDownload(path string, name ...string) {
 	r.Header().Set("Content-Type", "application/force-download")
 	r.Header().Set("Accept-Ranges", "bytes")
 	r.Header().Set("Content-Disposition", fmt.Sprintf(`attachment;filename=%s`, url.QueryEscape(downloadName)))
+	r.Header().Set("Access-Control-Expose-Headers", "Content-Disposition")
 	r.Server.serveFile(r.Request, serveFile)
 }
 
@@ -119,32 +114,6 @@ func (r *Response) RedirectBack(code ...int) {
 	r.RedirectTo(r.Request.GetReferer(), code...)
 }
 
-// Buffer returns the buffered content as []byte.
-func (r *Response) Buffer() []byte {
-	return r.buffer.Bytes()
-}
-
-// BufferString returns the buffered content as string.
-func (r *Response) BufferString() string {
-	return r.buffer.String()
-}
-
-// BufferLength returns the length of the buffered content.
-func (r *Response) BufferLength() int {
-	return r.buffer.Len()
-}
-
-// SetBuffer overwrites the buffer with `data`.
-func (r *Response) SetBuffer(data []byte) {
-	r.buffer.Reset()
-	r.buffer.Write(data)
-}
-
-// ClearBuffer clears the response buffer.
-func (r *Response) ClearBuffer() {
-	r.buffer.Reset()
-}
-
 // ServeContent replies to the request using the content in the
 // provided ReadSeeker. The main benefit of ServeContent over io.Copy
 // is that it handles Range requests properly, sets the MIME type, and
@@ -153,7 +122,7 @@ func (r *Response) ClearBuffer() {
 //
 // See http.ServeContent
 func (r *Response) ServeContent(name string, modTime time.Time, content io.ReadSeeker) {
-	http.ServeContent(r.Writer.RawWriter(), r.Request.Request, name, modTime, content)
+	http.ServeContent(r.RawWriter(), r.Request.Request, name, modTime, content)
 }
 
 // Flush outputs the buffer content to the client and clears the buffer.
@@ -162,5 +131,5 @@ func (r *Response) Flush() {
 	if r.Server.config.ServerAgent != "" {
 		r.Header().Set("Server", r.Server.config.ServerAgent)
 	}
-	r.Writer.Flush()
+	r.BufferWriter.Flush()
 }

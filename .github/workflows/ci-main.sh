@@ -52,6 +52,12 @@ for file in `find . -name go.mod`; do
           echo "ignore example as go version: $(go version)"
           continue 1
         fi
+        echo "the example directory only needs to be built, not unit tests and coverage tests."
+        cd $dirpath
+        go mod tidy
+        go build ./...
+        cd -
+        continue 1
     fi
 
     # package otlpgrpc needs golang >= v1.20
@@ -66,6 +72,14 @@ for file in `find . -name go.mod`; do
     if [ "otlphttp" = $(basename $dirpath) ]; then
         if ! go version|grep -qE "go1.[2-9][0-9]"; then
           echo "ignore otlphttp as go version: $(go version)"
+          continue 1
+        fi
+    fi
+
+    # package otelmetric needs golang >= v1.20
+    if [ "otelmetric" = $(basename $dirpath) ]; then
+        if ! go version|grep -qE "go1.[2-9][0-9]"; then
+          echo "ignore otelmetric as go version: $(go version)"
           continue 1
         fi
     fi

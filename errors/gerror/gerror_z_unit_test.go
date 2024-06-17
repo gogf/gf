@@ -414,10 +414,28 @@ func Test_Is(t *testing.T) {
 		err2 := gerror.Wrap(err1, "2")
 		err2 = gerror.Wrap(err2, "3")
 		t.Assert(gerror.Is(err2, err1), true)
+
+		var (
+			errNotFound = errors.New("not found")
+			gerror1     = gerror.Wrap(errNotFound, "wrapped")
+			gerror2     = gerror.New("not found")
+		)
+		t.Assert(errors.Is(errNotFound, errNotFound), true)
+		t.Assert(errors.Is(nil, errNotFound), false)
+		t.Assert(errors.Is(nil, nil), true)
+
+		t.Assert(gerror.Is(errNotFound, errNotFound), true)
+		t.Assert(gerror.Is(nil, errNotFound), false)
+		t.Assert(gerror.Is(nil, nil), true)
+
+		t.Assert(errors.Is(gerror1, errNotFound), true)
+		t.Assert(errors.Is(gerror2, errNotFound), false)
+		t.Assert(gerror.Is(gerror1, errNotFound), true)
+		t.Assert(gerror.Is(gerror2, errNotFound), false)
 	})
 }
 
-func Test_HashError(t *testing.T) {
+func Test_HasError(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err1 := errors.New("1")
 		err2 := gerror.Wrap(err1, "2")
@@ -426,23 +444,27 @@ func Test_HashError(t *testing.T) {
 	})
 }
 
-func Test_HashCode(t *testing.T) {
+func Test_HasCode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gerror.HasCode(nil, gcode.CodeNotAuthorized), false)
 		err1 := errors.New("1")
 		err2 := gerror.WrapCode(gcode.CodeNotAuthorized, err1, "2")
 		err3 := gerror.Wrap(err2, "3")
 		err4 := gerror.Wrap(err3, "4")
+		err5 := gerror.WrapCode(gcode.CodeInvalidParameter, err4, "5")
 		t.Assert(gerror.HasCode(err1, gcode.CodeNotAuthorized), false)
 		t.Assert(gerror.HasCode(err2, gcode.CodeNotAuthorized), true)
 		t.Assert(gerror.HasCode(err3, gcode.CodeNotAuthorized), true)
 		t.Assert(gerror.HasCode(err4, gcode.CodeNotAuthorized), true)
+		t.Assert(gerror.HasCode(err5, gcode.CodeNotAuthorized), true)
+		t.Assert(gerror.HasCode(err5, gcode.CodeInvalidParameter), true)
+		t.Assert(gerror.HasCode(err5, gcode.CodeInternalError), false)
 	})
 }
 
 func Test_NewOption(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t.AssertNE(gerror.NewOption(gerror.Option{
+		t.AssertNE(gerror.NewWithOption(gerror.Option{
 			Error: errors.New("NewOptionError"),
 			Stack: true,
 			Text:  "Text",

@@ -161,6 +161,7 @@ const (
 	specialMethodNameShut                   = "Shut"
 	specialMethodNameIndex                  = "Index"
 	defaultEndpointPort                     = 80
+	noPrintInternalRoute                    = "internalMiddlewareServerTracing"
 )
 
 const (
@@ -205,7 +206,7 @@ var (
 )
 
 var (
-	ErrNeedJsonBody = gerror.NewOption(gerror.Option{
+	ErrNeedJsonBody = gerror.NewWithOption(gerror.Option{
 		Text: "the request body content should be JSON format",
 		Code: gcode.CodeInvalidRequest,
 	})

@@ -12,6 +12,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/allyes"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -19,12 +22,10 @@ import (
 	"github.com/gogf/gf/v2/os/gres"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gtag"
-
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/allyes"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 var (
+	// Init .
 	Init = cInit{}
 )
 
@@ -33,13 +34,15 @@ type cInit struct {
 }
 
 const (
-	cInitRepoPrefix = `github.com/gogf/`
-	cInitMonoRepo   = `template-mono`
-	cInitSingleRepo = `template-single`
-	cInitBrief      = `create and initialize an empty GoFrame project`
-	cInitEg         = `
+	cInitRepoPrefix  = `github.com/gogf/`
+	cInitMonoRepo    = `template-mono`
+	cInitMonoRepoApp = `template-mono-app`
+	cInitSingleRepo  = `template-single`
+	cInitBrief       = `create and initialize an empty GoFrame project`
+	cInitEg          = `
 gf init my-project
 gf init my-mono-repo -m
+gf init my-mono-repo -a
 `
 	cInitNameBrief = `
 name for the project. It will create a folder with NAME in current directory.
@@ -60,18 +63,18 @@ func init() {
 }
 
 type cInitInput struct {
-	g.Meta `name:"init"`
-	Name   string `name:"NAME" arg:"true" v:"required" brief:"{cInitNameBrief}"`
-	Mono   bool   `name:"mono"   short:"m" brief:"initialize a mono-repo instead a single-repo" orphan:"true"`
-	Update bool   `name:"update" short:"u" brief:"update to the latest goframe version" orphan:"true"`
+	g.Meta  `name:"init"`
+	Name    string `name:"NAME" arg:"true" v:"required" brief:"{cInitNameBrief}"`
+	Mono    bool   `name:"mono" short:"m" brief:"initialize a mono-repo instead a single-repo" orphan:"true"`
+	MonoApp bool   `name:"monoApp" short:"a" brief:"initialize a mono-repo-app instead a single-repo" orphan:"true"`
+	Update  bool   `name:"update" short:"u" brief:"update to the latest goframe version" orphan:"true"`
+	Module  string `name:"module" short:"g" brief:"custom go module"`
 }
 
 type cInitOutput struct{}
 
 func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err error) {
-	var (
-		overwrote = false
-	)
+	var overwrote = false
 	if !gfile.IsEmpty(in.Name) && !allyes.Check() {
 		s := gcmd.Scanf(`the folder "%s" is not empty, files might be overwrote, continue? [y/n]: `, in.Name)
 		if strings.EqualFold(s, "n") {
@@ -86,11 +89,15 @@ func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err 
 		templateRepoName string
 		gitignoreFile    = in.Name + "/" + cInitGitignore
 	)
+
 	if in.Mono {
 		templateRepoName = cInitMonoRepo
+	} else if in.MonoApp {
+		templateRepoName = cInitMonoRepoApp
 	} else {
 		templateRepoName = cInitSingleRepo
 	}
+
 	err = gres.Export(templateRepoName, in.Name, gres.ExportOption{
 		RemovePrefix: templateRepoName,
 	})
@@ -101,11 +108,12 @@ func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err 
 	// build ignoreFiles from the .gitignore file
 	ignoreFiles := make([]string, 0, 10)
 	ignoreFiles = append(ignoreFiles, cInitGitDir)
-	if overwrote {
+	// in.MonoApp is a mono-repo-app, it should ignore the .gitignore file
+	if overwrote && !in.MonoApp {
 		err = gfile.ReadLines(gitignoreFile, func(line string) error {
 			// Add only hidden files or directories
 			// If other directories are added, it may cause the entire directory to be ignored
-			// such as 'main' in the .gitignore file, but the path is 'D:\main\my-project'
+			// such as 'main' in the .gitignore file, but the path is ' D:\main\my-project '
 			if line != "" && strings.HasPrefix(line, ".") {
 				ignoreFiles = append(ignoreFiles, line)
 			}
@@ -118,6 +126,15 @@ func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err 
 		}
 	}
 
+	// Get template name and module name.
+	if in.Module == "" {
+		in.Module = gfile.Basename(gfile.RealPath(in.Name))
+	}
+	if in.MonoApp {
+		pwd := gfile.Pwd() + string(os.PathSeparator) + in.Name
+		in.Module = utils.GetImportPath(pwd)
+	}
+
 	// Replace template name to project name.
 	err = gfile.ReplaceDirFunc(func(path, content string) string {
 		for _, ignoreFile := range ignoreFiles {
@@ -125,7 +142,7 @@ func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err 
 				return content
 			}
 		}
-		return gstr.Replace(gfile.GetContents(path), cInitRepoPrefix+templateRepoName, gfile.Basename(gfile.RealPath(in.Name)))
+		return gstr.Replace(gfile.GetContents(path), cInitRepoPrefix+templateRepoName, in.Module)
 	}, in.Name, "*", true)
 	if err != nil {
 		return

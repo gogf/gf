@@ -1,0 +1,14 @@
+grpc:
+  name:             "demo"  # 服务名称
+  address:          ":8000" # 自定义服务监听地址
+  logPath:          "./log" # 日志存储目录路径
+  logStdout:        true    # 日志是否输出到终端
+  errorLogEnabled:  true    # 是否开启错误日志记录
+  accessLogEnabled: true    # 是否开启访问日志记录
+  errorStack:       true    # 当产生错误时，是否记录错误堆栈
+  logger:
+    path:                  "/tmp/log/"   # 日志文件路径。默认为空，表示关闭，仅输出到终端
+    file:                  "{Y-m-d}.log" # 日志文件格式。默认为"{Y-m-d}.log"
+    prefix:                "TestLogger"  # 日志内容输出前缀。默认为空
+    level:                 "all"         # 日志输出级别
+    stdout:                false         # 日志是否同时输出到终端。默认true

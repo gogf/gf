@@ -91,8 +91,10 @@ func New(path ...string) *View {
 			}
 		} else {
 			// Dir path of working dir.
-			if err := view.SetPath(gfile.Pwd()); err != nil {
-				intlog.Errorf(context.TODO(), `%+v`, err)
+			if pwdPath := gfile.Pwd(); pwdPath != "" {
+				if err := view.SetPath(pwdPath); err != nil {
+					intlog.Errorf(context.TODO(), `%+v`, err)
+				}
 			}
 			// Dir path of binary.
 			if selfPath := gfile.SelfDir(); selfPath != "" && gfile.Exists(selfPath) {

@@ -66,10 +66,23 @@ jobs:
         ports:
           - 3306:3306
 
+      # MariaDb backend server.
+      mariadb:
+        image: loads/mariadb:10.4
+        env:
+          MARIADB_DATABASE: test
+          MARIADB_ROOT_PASSWORD: 12345678
+        ports:
+          - 3307:3306
+
       # PostgreSQL backend server.
-      # docker run -d --name postgres -p 5432:5432 \
-      # -e POSTGRES_PASSWORD=12345678 -e POSTGRES_USER=postgres -e POSTGRES_DB=test \
-      # -v postgres:/Users/john/Temp/postgresql/data loads/postgres:13
+      # docker run -d --name postgres \
+      # -p 5432:5432 \
+      # -e POSTGRES_PASSWORD=12345678 \
+      # -e POSTGRES_USER=postgres \
+      # -e POSTGRES_DB=test \
+      # -v postgres:/Users/john/Temp/postgresql/data \
+      # loads/postgres:13
       postgres:
         image: loads/postgres:13
         env:
@@ -87,7 +100,8 @@ jobs:
           --health-retries 5
 
       # MSSQL backend server.
-      # docker run -d --name mssql -p 1433:1433 \
+      # docker run \
+      # -p 1433:1433 \
       # -e ACCEPT_EULA=Y \
       # -e SA_PASSWORD=LoremIpsum86 \
       # -e MSSQL_DB=test \
@@ -123,8 +137,13 @@ jobs:
           - 9001:9001
 
       # Polaris backend server.
-      # docker run -d --name polaris -p 8090:8090 -p 8091:8091 -p 8093:8093  -p 9090:9090 -p 9091:9091 loads/polaris-server-standalone:1.11.2
-      # docker run -d --name polaris -p 8090:8090 -p 8091:8091 -p 8093:8093  -p 9090:9090 -p 9091:9091 loads/polaris-standalone:v1.16.3
+      # docker run -d --name polaris \
+      # -p 8090:8090 -p 8091:8091 -p 8093:8093 -p 9090:9090 -p 9091:9091 \
+      # loads/polaris-server-standalone:1.11.2
+      #
+      # docker run -d --name polaris \
+      # -p 8090:8090 -p 8091:8091 -p 8093:8093 -p 9090:9090 -p 9091:9091 \
+      # loads/polaris-standalone:v1.16.3
       polaris:
         image: loads/polaris-standalone:v1.17.2
         ports:
@@ -134,7 +153,14 @@ jobs:
           - 9090:9090
           - 9091:9091
 
-      # Oracle 11g server
+      # Oracle 11g server.
+      # docker run \
+      # -e ORACLE_ALLOW_REMOTE=true \
+      # -e ORACLE_SID=XE \
+      # -e ORACLE_DB_USER_NAME=system \
+      # -e ORACLE_DB_PASSWORD=oracle \
+      # -p 1521:1521 \
+      # loads/oracle-xe-11g-r2:11.2.0
       oracle-server:
         image: loads/oracle-xe-11g-r2:11.2.0
         env:
@@ -146,7 +172,7 @@ jobs:
           - 1521:1521
 
       # dm8 server
-      # docker run -d --name dm -p 5236:5236 loads/dm:v8.1.2.128_ent_x86_64_ctm_pack4
+      # docker run -p 5236:5236 loads/dm:v8.1.2.128_ent_x86_64_ctm_pack4
       dm-server:
         image: loads/dm:v8.1.2.128_ent_x86_64_ctm_pack4
         ports:
@@ -159,13 +185,14 @@ jobs:
 
     strategy:
       matrix:
-        go-version: [ "1.18", "1.19", "1.20", "1.21" ]
+        go-version: [ "1.18", "1.19", "1.20", "1.21", "1.22" ]
         goarch: [ "386", "amd64" ]
 
     steps:
     # TODO: szenius/set-timezone update to node16
+    # sudo ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
     - name: Setup Timezone
-      uses: szenius/set-timezone@v1.1
+      uses: szenius/set-timezone@v2.0
       with:
         timezoneLinux: "Asia/Shanghai"
 
@@ -173,19 +200,19 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Start Apollo Containers
-      run:  docker-compose -f ".github/workflows/apollo/docker-compose.yml" up -d --build
+      run:  docker compose -f ".github/workflows/apollo/docker-compose.yml" up -d --build
       
     - name: Start Nacos Containers
-      run:  docker-compose -f ".github/workflows/nacos/docker-compose.yml" up -d --build
+      run:  docker compose -f ".github/workflows/nacos/docker-compose.yml" up -d --build
 
     - name: Start Redis Cluster Containers
-      run:  docker-compose -f ".github/workflows/redis/docker-compose.yml" up -d --build
+      run:  docker compose -f ".github/workflows/redis/docker-compose.yml" up -d --build
 
     - name: Start Consul Containers
-      run:  docker-compose -f ".github/workflows/consul/docker-compose.yml" up -d --build
+      run:  docker compose -f ".github/workflows/consul/docker-compose.yml" up -d --build
 
     - name: Setup Golang ${{ matrix.go-version }}
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: ${{ matrix.go-version }}
         cache-dependency-path: '**/go.sum' 
@@ -202,19 +229,20 @@ jobs:
       run: bash .github/workflows/ci-main.sh coverage
 
     - name: Stop Redis Cluster Containers
-      run:  docker-compose -f ".github/workflows/redis/docker-compose.yml" down
+      run:  docker compose -f ".github/workflows/redis/docker-compose.yml" down
 
     - name: Stop Apollo Containers
-      run:  docker-compose -f ".github/workflows/apollo/docker-compose.yml" down
+      run:  docker compose -f ".github/workflows/apollo/docker-compose.yml" down
 
     - name: Stop Nacos Containers
-      run:  docker-compose -f ".github/workflows/nacos/docker-compose.yml" down
+      run:  docker compose -f ".github/workflows/nacos/docker-compose.yml" down
 
     - name: Stop Consul Containers
-      run:  docker-compose -f ".github/workflows/consul/docker-compose.yml" down
+      run:  docker compose -f ".github/workflows/consul/docker-compose.yml" down
 
     - name: Report Coverage
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
       with:
         flags: go-${{ matrix.go-version }}-${{ matrix.goarch }}
+        token: ${{ secrets.CODECOV_TOKEN }}

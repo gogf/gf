@@ -5,12 +5,13 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gdb provides ORM features for popular relationship databases.
+//
+// TODO use context.Context as required parameter for all DB operations.
 package gdb
 
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
@@ -167,6 +168,7 @@ type DB interface {
 	// Utility methods.
 	// ===========================================================================
 
+	Stats(ctx context.Context) []StatsItem                                                                   // See Core.Stats.
 	GetCtx() context.Context                                                                                 // See Core.GetCtx.
 	GetCore() *Core                                                                                          // See Core.GetCore
 	GetChars() (charLeft string, charRight string)                                                           // See Core.GetChars.
@@ -175,6 +177,7 @@ type DB interface {
 	ConvertValueForField(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) // See Core.ConvertValueForField
 	ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) // See Core.ConvertValueForLocal
 	CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (LocalType, error) // See Core.CheckLocalTypeForField
+	FormatUpsert(columns []string, list List, option DoInsertOption) (string, error)                         // See Core.DoFormatUpsert
 }
 
 // TX defines the interfaces for ORM transaction operations.
@@ -244,6 +247,15 @@ type TX interface {
 	RollbackTo(point string) error
 }
 
+// StatsItem defines the stats information for a configuration node.
+type StatsItem interface {
+	// Node returns the configuration node info.
+	Node() ConfigNode
+
+	// Stats returns the connection stat for current node.
+	Stats() sql.DBStats
+}
+
 // Core is the base struct for database management.
 type Core struct {
 	db            DB              // DB interface object.
@@ -252,10 +264,11 @@ type Core struct {
 	schema        string          // Custom schema for this object.
 	debug         *gtype.Bool     // Enable debug mode for the database, which can be changed in runtime.
 	cache         *gcache.Cache   // Cache manager, SQL result cache only.
-	links         *gmap.StrAnyMap // links caches all created links by node.
+	links         *gmap.Map       // links caches all created links by node.
 	logger        glog.ILogger    // Logger for logging functionality.
 	config        *ConfigNode     // Current config node.
 	dynamicConfig dynamicConfig   // Dynamic configurations, which can be changed in runtime.
+	innerMemCache *gcache.Cache
 }
 
 type dynamicConfig struct {
@@ -272,7 +285,7 @@ type DoCommitInput struct {
 	Link          Link
 	Sql           string
 	Args          []interface{}
-	Type          string
+	Type          SqlType
 	IsTransaction bool
 }
 
@@ -304,7 +317,7 @@ type Link interface {
 // Sql is the sql recording struct.
 type Sql struct {
 	Sql           string        // SQL string(may contain reserved char '?').
-	Type          string        // SQL operation type.
+	Type          SqlType       // SQL operation type.
 	Args          []interface{} // Arguments for this sql.
 	Format        string        // Formatted sql which contains arguments in the sql.
 	Error         error         // Execution result.
@@ -320,6 +333,7 @@ type Sql struct {
 type DoInsertOption struct {
 	OnDuplicateStr string                 // Custom string for `on duplicated` statement.
 	OnDuplicateMap map[string]interface{} // Custom key-value map from `OnDuplicateEx` function for `on duplicated` statement.
+	OnConflict     []string               // Custom conflict key of upsert clause, if the database needs it.
 	InsertOption   InsertOption           // Insert operation in constant value.
 	BatchCount     int                    // Batch count for batch inserting.
 }
@@ -384,9 +398,9 @@ const (
 type queryType int
 
 const (
-	queryTypeNormal queryType = 0
-	queryTypeCount  queryType = 1
-	queryTypeValue  queryType = 2
+	queryTypeNormal queryType = iota
+	queryTypeCount
+	queryTypeValue
 )
 
 type joinOperator string
@@ -400,31 +414,37 @@ const (
 type InsertOption int
 
 const (
-	InsertOptionDefault        InsertOption = 0
-	InsertOptionReplace        InsertOption = 1
-	InsertOptionSave           InsertOption = 2
-	InsertOptionIgnore         InsertOption = 3
-	InsertOperationInsert                   = "INSERT"
-	InsertOperationReplace                  = "REPLACE"
-	InsertOperationIgnore                   = "INSERT IGNORE"
-	InsertOnDuplicateKeyUpdate              = "ON DUPLICATE KEY UPDATE"
+	InsertOptionDefault InsertOption = iota
+	InsertOptionReplace
+	InsertOptionSave
+	InsertOptionIgnore
 )
 
 const (
-	SqlTypeBegin               = "DB.Begin"
-	SqlTypeTXCommit            = "TX.Commit"
-	SqlTypeTXRollback          = "TX.Rollback"
-	SqlTypeExecContext         = "DB.ExecContext"
-	SqlTypeQueryContext        = "DB.QueryContext"
-	SqlTypePrepareContext      = "DB.PrepareContext"
-	SqlTypeStmtExecContext     = "DB.Statement.ExecContext"
-	SqlTypeStmtQueryContext    = "DB.Statement.QueryContext"
-	SqlTypeStmtQueryRowContext = "DB.Statement.QueryRowContext"
+	InsertOperationInsert      = "INSERT"
+	InsertOperationReplace     = "REPLACE"
+	InsertOperationIgnore      = "INSERT IGNORE"
+	InsertOnDuplicateKeyUpdate = "ON DUPLICATE KEY UPDATE"
+)
+
+type SqlType string
+
+const (
+	SqlTypeBegin               SqlType = "DB.Begin"
+	SqlTypeTXCommit            SqlType = "TX.Commit"
+	SqlTypeTXRollback          SqlType = "TX.Rollback"
+	SqlTypeExecContext         SqlType = "DB.ExecContext"
+	SqlTypeQueryContext        SqlType = "DB.QueryContext"
+	SqlTypePrepareContext      SqlType = "DB.PrepareContext"
+	SqlTypeStmtExecContext     SqlType = "DB.Statement.ExecContext"
+	SqlTypeStmtQueryContext    SqlType = "DB.Statement.QueryContext"
+	SqlTypeStmtQueryRowContext SqlType = "DB.Statement.QueryRowContext"
 )
 
 type LocalType string
 
 const (
+	LocalTypeUndefined   LocalType = ""
 	LocalTypeString      LocalType = "string"
 	LocalTypeDate        LocalType = "date"
 	LocalTypeDatetime    LocalType = "datetime"
@@ -494,6 +514,10 @@ var (
 	// which is a regular field name of table.
 	regularFieldNameRegPattern = `^[\w\.\-]+$`
 
+	// regularFieldNameWithCommaRegPattern is the regular expression pattern for one or more strings
+	// which are regular field names of table, multiple field names joined with char ','.
+	regularFieldNameWithCommaRegPattern = `^[\w\.\-,\s]+$`
+
 	// regularFieldNameWithoutDotRegPattern is similar to regularFieldNameRegPattern but not allows '.'.
 	// Note that, although some databases allow char '.' in the field name, but it here does not allow '.'
 	// in the field name as it conflicts with "db.table.field" pattern in SOME situations.
@@ -502,9 +526,6 @@ var (
 	// allDryRun sets dry-run feature for all database connections.
 	// It is commonly used for command options for convenience.
 	allDryRun = false
-
-	// tableFieldsMap caches the table information retrieved from database.
-	tableFieldsMap = gmap.NewStrAnyMap(true)
 )
 
 func init() {
@@ -564,12 +585,13 @@ func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
 		node = parseConfigNodeLink(node)
 	}
 	c := &Core{
-		group:  group,
-		debug:  gtype.NewBool(),
-		cache:  gcache.New(),
-		links:  gmap.NewStrAnyMap(true),
-		logger: glog.New(),
-		config: node,
+		group:         group,
+		debug:         gtype.NewBool(),
+		cache:         gcache.New(),
+		links:         gmap.New(true),
+		logger:        glog.New(),
+		config:        node,
+		innerMemCache: gcache.New(),
 		dynamicConfig: dynamicConfig{
 			MaxIdleConnCount: node.MaxIdleConnCount,
 			MaxOpenConnCount: node.MaxOpenConnCount,
@@ -721,36 +743,39 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		node.Name = nodeSchema
 	}
 	// Update the configuration object in internal data.
-	internalData := c.GetInternalCtxDataFromCtx(ctx)
-	if internalData != nil {
-		internalData.ConfigNode = node
+	if err = c.setConfigNodeToCtx(ctx, node); err != nil {
+		return
 	}
+
 	// Cache the underlying connection pool object by node.
-	instanceNameByNode := fmt.Sprintf(`%+v`, node)
-	instanceValue := c.links.GetOrSetFuncLock(instanceNameByNode, func() interface{} {
-		if sqlDb, err = c.db.Open(node); err != nil {
-			return nil
+	var (
+		instanceCacheFunc = func() interface{} {
+			if sqlDb, err = c.db.Open(node); err != nil {
+				return nil
+			}
+			if sqlDb == nil {
+				return nil
+			}
+			if c.dynamicConfig.MaxIdleConnCount > 0 {
+				sqlDb.SetMaxIdleConns(c.dynamicConfig.MaxIdleConnCount)
+			} else {
+				sqlDb.SetMaxIdleConns(defaultMaxIdleConnCount)
+			}
+			if c.dynamicConfig.MaxOpenConnCount > 0 {
+				sqlDb.SetMaxOpenConns(c.dynamicConfig.MaxOpenConnCount)
+			} else {
+				sqlDb.SetMaxOpenConns(defaultMaxOpenConnCount)
+			}
+			if c.dynamicConfig.MaxConnLifeTime > 0 {
+				sqlDb.SetConnMaxLifetime(c.dynamicConfig.MaxConnLifeTime)
+			} else {
+				sqlDb.SetConnMaxLifetime(defaultMaxConnLifeTime)
+			}
+			return sqlDb
 		}
-		if sqlDb == nil {
-			return nil
-		}
-		if c.dynamicConfig.MaxIdleConnCount > 0 {
-			sqlDb.SetMaxIdleConns(c.dynamicConfig.MaxIdleConnCount)
-		} else {
-			sqlDb.SetMaxIdleConns(defaultMaxIdleConnCount)
-		}
-		if c.dynamicConfig.MaxOpenConnCount > 0 {
-			sqlDb.SetMaxOpenConns(c.dynamicConfig.MaxOpenConnCount)
-		} else {
-			sqlDb.SetMaxOpenConns(defaultMaxOpenConnCount)
-		}
-		if c.dynamicConfig.MaxConnLifeTime > 0 {
-			sqlDb.SetConnMaxLifetime(c.dynamicConfig.MaxConnLifeTime)
-		} else {
-			sqlDb.SetConnMaxLifetime(defaultMaxConnLifeTime)
-		}
-		return sqlDb
-	})
+		// it here uses node value not pointer as the cache key, in case of oracle ORA-12516 error.
+		instanceValue = c.links.GetOrSetFuncLock(*node, instanceCacheFunc)
+	)
 	if instanceValue != nil && sqlDb == nil {
 		// It reads from instance map.
 		sqlDb = instanceValue.(*sql.DB)

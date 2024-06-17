@@ -24,9 +24,7 @@ import (
 
 func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 	var dirPathDo = filepath.FromSlash(gfile.Join(in.Path, in.DoPath))
-	if in.Clear {
-		doClear(ctx, dirPathDo, false)
-	}
+	in.genItems.AppendDirPath(dirPathDo)
 	in.NoJsonTag = true
 	in.DescriptionTag = false
 	in.NoModelComment = false
@@ -42,7 +40,7 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 			structDefinition, _ = generateStructDefinition(ctx, generateStructDefinitionInput{
 				CGenDaoInternalInput: in,
 				TableName:            tableName,
-				StructName:           gstr.CaseCamel(newTableName),
+				StructName:           gstr.CaseCamel(strings.ToLower(newTableName)),
 				FieldMap:             fieldMap,
 				IsDo:                 true,
 			})
@@ -63,9 +61,10 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 			ctx,
 			in,
 			tableName,
-			gstr.CaseCamel(newTableName),
+			gstr.CaseCamel(strings.ToLower(newTableName)),
 			structDefinition,
 		)
+		in.genItems.AppendGeneratedFilePath(doFilePath)
 		err = gfile.PutContents(doFilePath, strings.TrimSpace(modelContent))
 		if err != nil {
 			mlog.Fatalf(`writing content to "%s" failed: %v`, doFilePath, err)
@@ -86,6 +85,7 @@ func generateDoContent(
 			tplVarPackageImports:     getImportPartContent(ctx, structDefine, true, nil),
 			tplVarTableNameCamelCase: tableNameCamelCase,
 			tplVarStructDefine:       structDefine,
+			tplVarPackageName:        filepath.Base(in.DoPath),
 		},
 	)
 	doContent = replaceDefaultVar(in, doContent)

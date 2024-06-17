@@ -7,13 +7,14 @@
 package cmd
 
 import (
+	"path/filepath"
+	"testing"
+
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/genservice"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
 	"github.com/gogf/gf/v2/util/gutil"
-	"path/filepath"
-	"testing"
 )
 
 func Test_Gen_Service_Default(t *testing.T) {
@@ -41,9 +42,7 @@ func Test_Gen_Service_Default(t *testing.T) {
 		defer gfile.Remove(path)
 
 		_, err = genservice.CGenService{}.Service(ctx, in)
-		if err != nil {
-			panic(err)
-		}
+		t.AssertNil(err)
 
 		// logic file
 		var (
@@ -58,12 +57,16 @@ func Test_Gen_Service_Default(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(files, []string{
 			dstFolder + filepath.FromSlash("/article.go"),
+			dstFolder + filepath.FromSlash("/delivery.go"),
+			dstFolder + filepath.FromSlash("/user.go"),
 		})
 
 		// contents
 		testPath := gtest.DataPath("genservice", "service")
 		expectFiles := []string{
 			testPath + filepath.FromSlash("/article.go"),
+			testPath + filepath.FromSlash("/delivery.go"),
+			testPath + filepath.FromSlash("/user.go"),
 		}
 		for i := range files {
 			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))

@@ -58,29 +58,35 @@ CONFIGURATION SUPPORT
 			  import: github.com/shopspring/decimal
 			numeric:
 			  type: string
+		  fieldMapping:
+			table_name.field_name:
+			  type:   decimal.Decimal
+			  import: github.com/shopspring/decimal
 `
-	CGenDaoBriefPath            = `directory path for generated files`
-	CGenDaoBriefLink            = `database configuration, the same as the ORM configuration of GoFrame`
-	CGenDaoBriefTables          = `generate models only for given tables, multiple table names separated with ','`
-	CGenDaoBriefTablesEx        = `generate models excluding given tables, multiple table names separated with ','`
-	CGenDaoBriefPrefix          = `add prefix for all table of specified link/database tables`
-	CGenDaoBriefRemovePrefix    = `remove specified prefix of the table, multiple prefix separated with ','`
-	CGenDaoBriefStdTime         = `use time.Time from stdlib instead of gtime.Time for generated time/date fields of tables`
-	CGenDaoBriefWithTime        = `add created time for auto produced go files`
-	CGenDaoBriefGJsonSupport    = `use gJsonSupport to use *gjson.Json instead of string for generated json fields of tables`
-	CGenDaoBriefImportPrefix    = `custom import prefix for generated go files`
-	CGenDaoBriefDaoPath         = `directory path for storing generated dao files under path`
-	CGenDaoBriefDoPath          = `directory path for storing generated do files under path`
-	CGenDaoBriefEntityPath      = `directory path for storing generated entity files under path`
-	CGenDaoBriefOverwriteDao    = `overwrite all dao files both inside/outside internal folder`
-	CGenDaoBriefModelFile       = `custom file name for storing generated model content`
-	CGenDaoBriefModelFileForDao = `custom file name generating model for DAO operations like Where/Data. It's empty in default`
-	CGenDaoBriefDescriptionTag  = `add comment to description tag for each field`
-	CGenDaoBriefNoJsonTag       = `no json tag will be added for each field`
-	CGenDaoBriefNoModelComment  = `no model comment will be added for each field`
-	CGenDaoBriefClear           = `delete all generated go files that do not exist in database`
-	CGenDaoBriefTypeMapping     = `custom local type mapping for generated struct attributes relevant to fields of table`
-	CGenDaoBriefGroup           = `
+	CGenDaoBriefPath              = `directory path for generated files`
+	CGenDaoBriefLink              = `database configuration, the same as the ORM configuration of GoFrame`
+	CGenDaoBriefTables            = `generate models only for given tables, multiple table names separated with ','`
+	CGenDaoBriefTablesEx          = `generate models excluding given tables, multiple table names separated with ','`
+	CGenDaoBriefPrefix            = `add prefix for all table of specified link/database tables`
+	CGenDaoBriefRemovePrefix      = `remove specified prefix of the table, multiple prefix separated with ','`
+	CGenDaoBriefRemoveFieldPrefix = `remove specified prefix of the field, multiple prefix separated with ','`
+	CGenDaoBriefStdTime           = `use time.Time from stdlib instead of gtime.Time for generated time/date fields of tables`
+	CGenDaoBriefWithTime          = `add created time for auto produced go files`
+	CGenDaoBriefGJsonSupport      = `use gJsonSupport to use *gjson.Json instead of string for generated json fields of tables`
+	CGenDaoBriefImportPrefix      = `custom import prefix for generated go files`
+	CGenDaoBriefDaoPath           = `directory path for storing generated dao files under path`
+	CGenDaoBriefDoPath            = `directory path for storing generated do files under path`
+	CGenDaoBriefEntityPath        = `directory path for storing generated entity files under path`
+	CGenDaoBriefOverwriteDao      = `overwrite all dao files both inside/outside internal folder`
+	CGenDaoBriefModelFile         = `custom file name for storing generated model content`
+	CGenDaoBriefModelFileForDao   = `custom file name generating model for DAO operations like Where/Data. It's empty in default`
+	CGenDaoBriefDescriptionTag    = `add comment to description tag for each field`
+	CGenDaoBriefNoJsonTag         = `no json tag will be added for each field`
+	CGenDaoBriefNoModelComment    = `no model comment will be added for each field`
+	CGenDaoBriefClear             = `delete all generated go files that do not exist in database`
+	CGenDaoBriefTypeMapping       = `custom local type mapping for generated struct attributes relevant to fields of table`
+	CGenDaoBriefFieldMapping      = `custom local type mapping for generated struct attributes relevant to specific fields of table`
+	CGenDaoBriefGroup             = `
 specifying the configuration group name of database for generated ORM instance,
 it's not necessary and the default value is "default"
 `
@@ -112,6 +118,7 @@ generated json tag case for model struct, cases are as follows:
 	tplVarGroupName               = `{TplGroupName}`
 	tplVarDatetimeStr             = `{TplDatetimeStr}`
 	tplVarCreatedAtDatetimeStr    = `{TplCreatedAtDatetimeStr}`
+	tplVarPackageName             = `{TplPackageName}`
 )
 
 var (
@@ -145,6 +152,7 @@ func init() {
 		`CGenDaoBriefTablesEx`:           CGenDaoBriefTablesEx,
 		`CGenDaoBriefPrefix`:             CGenDaoBriefPrefix,
 		`CGenDaoBriefRemovePrefix`:       CGenDaoBriefRemovePrefix,
+		`CGenDaoBriefRemoveFieldPrefix`:  CGenDaoBriefRemoveFieldPrefix,
 		`CGenDaoBriefStdTime`:            CGenDaoBriefStdTime,
 		`CGenDaoBriefWithTime`:           CGenDaoBriefWithTime,
 		`CGenDaoBriefDaoPath`:            CGenDaoBriefDaoPath,
@@ -160,6 +168,7 @@ func init() {
 		`CGenDaoBriefNoModelComment`:     CGenDaoBriefNoModelComment,
 		`CGenDaoBriefClear`:              CGenDaoBriefClear,
 		`CGenDaoBriefTypeMapping`:        CGenDaoBriefTypeMapping,
+		`CGenDaoBriefFieldMapping`:       CGenDaoBriefFieldMapping,
 		`CGenDaoBriefGroup`:              CGenDaoBriefGroup,
 		`CGenDaoBriefJsonCase`:           CGenDaoBriefJsonCase,
 		`CGenDaoBriefTplDaoIndexPath`:    CGenDaoBriefTplDaoIndexPath,
@@ -180,6 +189,7 @@ type (
 		Group              string `name:"group"               short:"g"  brief:"{CGenDaoBriefGroup}" d:"default"`
 		Prefix             string `name:"prefix"              short:"f"  brief:"{CGenDaoBriefPrefix}"`
 		RemovePrefix       string `name:"removePrefix"        short:"r"  brief:"{CGenDaoBriefRemovePrefix}"`
+		RemoveFieldPrefix  string `name:"removeFieldPrefix"   short:"rf" brief:"{CGenDaoBriefRemoveFieldPrefix}"`
 		JsonCase           string `name:"jsonCase"            short:"j"  brief:"{CGenDaoBriefJsonCase}" d:"CamelLower"`
 		ImportPrefix       string `name:"importPrefix"        short:"i"  brief:"{CGenDaoBriefImportPrefix}"`
 		DaoPath            string `name:"daoPath"             short:"d"  brief:"{CGenDaoBriefDaoPath}" d:"dao"`
@@ -198,7 +208,9 @@ type (
 		NoModelComment     bool   `name:"noModelComment"      short:"m"  brief:"{CGenDaoBriefNoModelComment}" orphan:"true"`
 		Clear              bool   `name:"clear"               short:"a"  brief:"{CGenDaoBriefClear}" orphan:"true"`
 
-		TypeMapping map[DBFieldTypeName]CustomAttributeType `name:"typeMapping" short:"y" brief:"{CGenDaoBriefTypeMapping}" orphan:"true"`
+		TypeMapping  map[DBFieldTypeName]CustomAttributeType  `name:"typeMapping" short:"y" brief:"{CGenDaoBriefTypeMapping}" orphan:"true"`
+		FieldMapping map[DBTableFieldName]CustomAttributeType `name:"fieldMapping" short:"fm"  brief:"{CGenDaoBriefFieldMapping}" orphan:"true"`
+		genItems     *CGenDaoInternalGenItems
 	}
 	CGenDaoOutput struct{}
 
@@ -208,7 +220,7 @@ type (
 		TableNames    []string
 		NewTableNames []string
 	}
-
+	DBTableFieldName    = string
 	DBFieldTypeName     = string
 	CustomAttributeType struct {
 		Type   string `brief:"custom attribute type name"`
@@ -217,7 +229,10 @@ type (
 )
 
 func (c CGenDao) Dao(ctx context.Context, in CGenDaoInput) (out *CGenDaoOutput, err error) {
-	if g.Cfg().Available(ctx) {
+	in.genItems = newCGenDaoInternalGenItems()
+	if in.Link != "" {
+		doGenDaoForArray(ctx, -1, in)
+	} else if g.Cfg().Available(ctx) {
 		v := g.Cfg().MustGet(ctx, CGenDaoConfig)
 		if v.IsSlice() {
 			for i := 0; i < len(v.Interfaces()); i++ {
@@ -229,6 +244,7 @@ func (c CGenDao) Dao(ctx context.Context, in CGenDaoInput) (out *CGenDaoOutput, 
 	} else {
 		doGenDaoForArray(ctx, -1, in)
 	}
+	doClear(in.genItems)
 	mlog.Print("done!")
 	return
 }
@@ -309,6 +325,8 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 		newTableNames[i] = newTableName
 	}
 
+	in.genItems.Scale()
+
 	// Dao: index and internal.
 	generateDao(ctx, CGenDaoInternalInput{
 		CGenDaoInput:  in,
@@ -330,6 +348,8 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 		TableNames:    tableNames,
 		NewTableNames: newTableNames,
 	})
+
+	in.genItems.SetClear(in.Clear)
 }
 
 func getImportPartContent(ctx context.Context, source string, isDo bool, appendImports []string) string {
@@ -351,7 +371,7 @@ func getImportPartContent(ctx context.Context, source string, isDo bool, appendI
 	}
 
 	// Check and update imports in go.mod
-	if appendImports != nil && len(appendImports) > 0 {
+	if len(appendImports) > 0 {
 		goModPath := utils.GetModPath()
 		if goModPath == "" {
 			mlog.Fatal("go.mod not found in current project")
@@ -369,8 +389,9 @@ func getImportPartContent(ctx context.Context, source string, isDo bool, appendI
 				}
 			}
 			if !found {
-				err = gproc.ShellRun(ctx, `go get `+appendImport)
-				mlog.Fatalf(`%+v`, err)
+				if err = gproc.ShellRun(ctx, `go get `+appendImport); err != nil {
+					mlog.Fatalf(`%+v`, err)
+				}
 			}
 			packageImportsArray.Append(fmt.Sprintf(`"%s"`, appendImport))
 		}

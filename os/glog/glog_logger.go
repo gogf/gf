@@ -219,8 +219,8 @@ func (l *Logger) print(ctx context.Context, level int, stack string, values ...a
 	}
 }
 
-// doDefaultPrint outputs the logging content according configuration.
-func (l *Logger) doDefaultPrint(ctx context.Context, input *HandlerInput) *bytes.Buffer {
+// doFinalPrint outputs the logging content according configuration.
+func (l *Logger) doFinalPrint(ctx context.Context, input *HandlerInput) *bytes.Buffer {
 	var buffer *bytes.Buffer
 	// Allow output to stdout?
 	if l.config.StdoutPrint {
@@ -358,7 +358,7 @@ func (l *Logger) printStd(ctx context.Context, level int, values ...interface{})
 	l.print(ctx, level, "", values...)
 }
 
-// printStd prints content `s` with stack check.
+// printErr prints content `s` with stack check.
 func (l *Logger) printErr(ctx context.Context, level int, values ...interface{}) {
 	var stack string
 	if l.config.StStatus == 1 {

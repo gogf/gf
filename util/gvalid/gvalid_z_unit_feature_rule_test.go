@@ -90,6 +90,16 @@ func Test_RequiredIf(t *testing.T) {
 	})
 }
 
+func Test_RequiredIfAll(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		rule := "required-if-all:id,1,age,18"
+		t.Assert(g.Validator().Data("").Assoc(g.Map{"id": 1}).Rules(rule).Run(ctx), nil)
+		t.Assert(g.Validator().Data("").Assoc(g.Map{"age": 18}).Rules(rule).Run(ctx), nil)
+		t.Assert(g.Validator().Data("").Assoc(g.Map{"id": 0, "age": 20}).Rules(rule).Run(ctx), nil)
+		t.AssertNE(g.Validator().Data("").Assoc(g.Map{"id": 1, "age": 18}).Rules(rule).Run(ctx), nil)
+	})
+}
+
 func Test_RequiredUnless(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "required-unless:id,1,age,18"
@@ -311,24 +321,28 @@ func Test_Datetime(t *testing.T) {
 
 func Test_DateFormat(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		val1 := "2010"
-		val2 := "201011"
-		val3 := "2010.11"
-		val4 := "201011-01"
-		val5 := "2010~11~01"
-		val6 := "2010-11~01"
-		err1 := g.Validator().Data(val1).Rules("date-format:Y").Run(ctx)
-		err2 := g.Validator().Data(val2).Rules("date-format:Ym").Run(ctx)
-		err3 := g.Validator().Data(val3).Rules("date-format:Y.m").Run(ctx)
-		err4 := g.Validator().Data(val4).Rules("date-format:Ym-d").Run(ctx)
-		err5 := g.Validator().Data(val5).Rules("date-format:Y~m~d").Run(ctx)
-		err6 := g.Validator().Data(val6).Rules("date-format:Y~m~d").Run(ctx)
-		t.Assert(err1, nil)
-		t.Assert(err2, nil)
-		t.Assert(err3, nil)
-		t.Assert(err4, nil)
-		t.Assert(err5, nil)
-		t.AssertNE(err6, nil)
+		m := g.MapStrStr{
+			"2010":                 "date-format:Y",
+			"201011":               "date-format:Ym",
+			"2010.11":              "date-format:Y.m",
+			"201011-01":            "date-format:Ym-d",
+			"2010~11~01":           "date-format:Y~m~d",
+			"2010-11~01":           "date-format:Y-m~d",
+			"2023-09-10T19:46:31Z": "date-format:2006-01-02\\T15:04:05Z07:00", // RFC3339
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules(v).Run(ctx)
+			t.AssertNil(err)
+		}
+	})
+	gtest.C(t, func(t *gtest.T) {
+		errM := g.MapStrStr{
+			"2010-11~01": "date-format:Y~m~d",
+		}
+		for k, v := range errM {
+			err := g.Validator().Data(k).Rules(v).Run(ctx)
+			t.AssertNE(err, nil)
+		}
 	})
 	gtest.C(t, func(t *gtest.T) {
 		t1 := gtime.Now()
@@ -1563,6 +1577,10 @@ func Test_Enums(t *testing.T) {
 			Id    int
 			Enums EnumsTest `v:"enums"`
 		}
+		type SliceParams struct {
+			Id    int
+			Enums []EnumsTest `v:"foreach|enums"`
+		}
 
 		oldEnumsJson, err := gtag.GetGlobalEnums()
 		t.AssertNil(err)
@@ -1582,5 +1600,11 @@ func Test_Enums(t *testing.T) {
 			Enums: "c",
 		}).Run(ctx)
 		t.Assert(err, "The Enums value `c` should be in enums of: [\"a\",\"b\"]")
+
+		err = g.Validator().Data(&SliceParams{
+			Id:    1,
+			Enums: []EnumsTest{EnumsTestA, EnumsTestB},
+		}).Run(ctx)
+		t.AssertNil(err)
 	})
 }

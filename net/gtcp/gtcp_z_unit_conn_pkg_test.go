@@ -258,7 +258,7 @@ func Test_Package_Option_HeadSize4(t *testing.T) {
 		defer conn.Close()
 		data := make([]byte, 0xFFFF+1)
 		_, err = conn.SendRecvPkg(data, gtcp.PkgOption{HeaderSize: 4})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 	// SendRecvPkg with big data - success.
 	gtest.C(t, func(t *gtest.T) {

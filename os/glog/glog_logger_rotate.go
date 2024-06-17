@@ -153,7 +153,7 @@ func (l *Logger) rotateChecksTimely(ctx context.Context) {
 		)
 		for _, file := range files {
 			// ignore backup file
-			if gregex.IsMatchString(`.+\.\d{20}\.log`, gfile.Basename(file)) {
+			if gregex.IsMatchString(`.+\.\d{20}\.log`, gfile.Basename(file)) || gfile.ExtName(file) == "gz" {
 				continue
 			}
 			// ignore not matching file

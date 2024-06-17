@@ -1,3 +1,9 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package main
 
 import (
@@ -24,5 +30,9 @@ func main() {
 		content = g.I18n().T(ctx, `{#hello} {#world}!`)
 		r.Response.Write(content)
 	})
+	s.SetErrorLogEnabled(true)
+	s.SetAccessLogEnabled(true)
 	s.Run()
+	// gf pack resource packed/packed.go
+	// http://127.0.0.1:8199/index.html
 }

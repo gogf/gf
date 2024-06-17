@@ -15,6 +15,7 @@ import (
 type Config struct {
 	URL     string          `v:"required"` // Service address. Eg: user.svc.local, http://user.svc.local
 	Client  *gclient.Client // Custom underlying client.
+	Handler Handler         // Custom response handler.
 	Logger  *glog.Logger    // Custom logger.
 	RawDump bool            // Whether auto dump request&response in stdout.
 }

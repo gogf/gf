@@ -60,7 +60,7 @@ func (c *Core) GetFieldType(ctx context.Context, fieldName, table, schema string
 func (c *Core) ConvertDataForRecord(ctx context.Context, value interface{}, table string) (map[string]interface{}, error) {
 	var (
 		err  error
-		data = DataToMapDeep(value)
+		data = MapOrStructToMapDeep(value, true)
 	)
 	for fieldName, fieldValue := range data {
 		data[fieldName], err = c.db.ConvertValueForField(
@@ -86,9 +86,7 @@ func (c *Core) ConvertValueForField(ctx context.Context, fieldType string, field
 	// If `value` implements interface `driver.Valuer`, it then uses the interface for value converting.
 	if valuer, ok := fieldValue.(driver.Valuer); ok {
 		if convertedValue, err = valuer.Value(); err != nil {
-			if err != nil {
-				return nil, err
-			}
+			return nil, err
 		}
 		return convertedValue, nil
 	}
@@ -299,7 +297,9 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 // ConvertValueForLocal converts value to local Golang type of value according field type name from database.
 // The parameter `fieldType` is in lower case, like:
 // `float(5,2)`, `unsigned double(5,2)`, `decimal(10,2)`, `char(45)`, `varchar(100)`, etc.
-func (c *Core) ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) {
+func (c *Core) ConvertValueForLocal(
+	ctx context.Context, fieldType string, fieldValue interface{},
+) (interface{}, error) {
 	// If there's no type retrieved, it returns the `fieldValue` directly
 	// to use its original data type, as `fieldValue` is type of interface{}.
 	if fieldType == "" {
@@ -379,6 +379,9 @@ func (c *Core) mappingAndFilterData(ctx context.Context, schema, table string, d
 	if err != nil {
 		return nil, err
 	}
+	if len(fieldsMap) == 0 {
+		return nil, gerror.Newf(`The table %s may not exist, or the table contains no fields`, table)
+	}
 	fieldsKeyMap := make(map[string]interface{}, len(fieldsMap))
 	for k := range fieldsMap {
 		fieldsKeyMap[k] = nil
@@ -403,6 +406,9 @@ func (c *Core) mappingAndFilterData(ctx context.Context, schema, table string, d
 			if _, ok := fieldsMap[dataKey]; !ok {
 				delete(data, dataKey)
 			}
+		}
+		if len(data) == 0 {
+			return nil, gerror.Newf(`input data match no fields in table %s`, table)
 		}
 	}
 	return data, nil

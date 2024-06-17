@@ -16,8 +16,11 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/encoding/ghash"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gstructs"
@@ -26,6 +29,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gmeta"
+	"github.com/gogf/gf/v2/util/gtag"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
@@ -55,12 +59,13 @@ type iTableName interface {
 }
 
 const (
-	OrmTagForStruct    = "orm"
-	OrmTagForTable     = "table"
-	OrmTagForWith      = "with"
-	OrmTagForWithWhere = "where"
-	OrmTagForWithOrder = "order"
-	OrmTagForDo        = "do"
+	OrmTagForStruct       = "orm"
+	OrmTagForTable        = "table"
+	OrmTagForWith         = "with"
+	OrmTagForWithWhere    = "where"
+	OrmTagForWithOrder    = "order"
+	OrmTagForWithUnscoped = "unscoped"
+	OrmTagForDo           = "do"
 )
 
 var (
@@ -68,7 +73,7 @@ var (
 	quoteWordReg = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
 
 	// structTagPriority tags for struct converting for orm field mapping.
-	structTagPriority = append([]string{OrmTagForStruct}, gconv.StructTagPriority...)
+	structTagPriority = append([]string{OrmTagForStruct}, gtag.StructTagPriority...)
 )
 
 // WithDB injects given db object into context and returns a new context.
@@ -96,7 +101,9 @@ func DBFromCtx(ctx context.Context) DB {
 	return nil
 }
 
-// ToSQL formats and returns the last one of sql statements in given closure function without truly executing it.
+// ToSQL formats and returns the last one of sql statements in given closure function
+// WITHOUT TRULY EXECUTING IT.
+// Be caution that, all the following sql statements should use the context object passing by function `f`.
 func ToSQL(ctx context.Context, f func(ctx context.Context) error) (sql string, err error) {
 	var manager = &CatchSQLManager{
 		SQLArray: garray.NewStrArray(),
@@ -108,7 +115,8 @@ func ToSQL(ctx context.Context, f func(ctx context.Context) error) (sql string, 
 	return
 }
 
-// CatchSQL catches and returns all sql statements that are executed in given closure function.
+// CatchSQL catches and returns all sql statements that are EXECUTED in given closure function.
+// Be caution that, all the following sql statements should use the context object passing by function `f`.
 func CatchSQL(ctx context.Context, f func(ctx context.Context) error) (sqlArray []string, err error) {
 	var manager = &CatchSQLManager{
 		SQLArray: garray.NewStrArray(),
@@ -210,14 +218,46 @@ func GetInsertOperationByOption(option InsertOption) string {
 }
 
 func anyValueToMapBeforeToRecord(value interface{}) map[string]interface{} {
-	return gconv.Map(value, gconv.MapOption{Tags: structTagPriority})
+	convertedMap := gconv.Map(value, gconv.MapOption{
+		Tags:      structTagPriority,
+		OmitEmpty: true, // To be compatible with old version from v2.6.0.
+	})
+	if gutil.OriginValueAndKind(value).OriginKind != reflect.Struct {
+		return convertedMap
+	}
+	// It here converts all struct/map slice attributes to json string.
+	for k, v := range convertedMap {
+		originValueAndKind := gutil.OriginValueAndKind(v)
+		switch originValueAndKind.OriginKind {
+		// Check map item slice item.
+		case reflect.Array, reflect.Slice:
+			mapItemValue := originValueAndKind.OriginValue
+			if mapItemValue.Len() == 0 {
+				break
+			}
+			// Check slice item type struct/map type.
+			switch mapItemValue.Index(0).Kind() {
+			case reflect.Struct, reflect.Map:
+				mapItemJsonBytes, err := json.Marshal(v)
+				if err != nil {
+					// Do not eat any error.
+					intlog.Error(context.TODO(), err)
+				}
+				convertedMap[k] = mapItemJsonBytes
+			}
+		}
+	}
+	return convertedMap
 }
 
-// DataToMapDeep converts `value` to map type recursively(if attribute struct is embedded).
+// MapOrStructToMapDeep converts `value` to map type recursively(if attribute struct is embedded).
 // The parameter `value` should be type of *map/map/*struct/struct.
 // It supports embedded struct definition for struct.
-func DataToMapDeep(value interface{}) map[string]interface{} {
-	m := gconv.Map(value, gconv.MapOption{Tags: structTagPriority})
+func MapOrStructToMapDeep(value interface{}, omitempty bool) map[string]interface{} {
+	m := gconv.Map(value, gconv.MapOption{
+		Tags:      structTagPriority,
+		OmitEmpty: omitempty,
+	})
 	for k, v := range m {
 		switch v.(type) {
 		case time.Time, *time.Time, gtime.Time, *gtime.Time, gjson.Json, *gjson.Json:
@@ -413,7 +453,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 		newArgs = formatWhereInterfaces(db, gconv.Interfaces(in.Where), buffer, newArgs)
 
 	case reflect.Map:
-		for key, value := range DataToMapDeep(in.Where) {
+		for key, value := range MapOrStructToMapDeep(in.Where, true) {
 			if in.OmitNil && empty.IsNil(value) {
 				continue
 			}
@@ -468,7 +508,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 		var (
 			reflectType = reflectInfo.OriginValue.Type()
 			structField reflect.StructField
-			data        = DataToMapDeep(in.Where)
+			data        = MapOrStructToMapDeep(in.Where, true)
 		)
 		// If `Prefix` is given, it checks and retrieves the table name.
 		if in.Prefix != "" {
@@ -622,7 +662,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 			}
 		}
 	}
-	return handleArguments(newWhere, newArgs)
+	return handleSliceAndStructArgsForSql(newWhere, newArgs)
 }
 
 // formatWhereInterfaces formats `where` as []interface{}.
@@ -747,97 +787,107 @@ func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []interface{}) {
 	return in.Args
 }
 
-// handleArguments is an important function, which handles the sql and all its arguments
+// handleSliceAndStructArgsForSql is an important function, which handles the sql and all its arguments
 // before committing them to underlying driver.
-func handleArguments(sql string, args []interface{}) (newSql string, newArgs []interface{}) {
-	newSql = sql
+func handleSliceAndStructArgsForSql(
+	oldSql string, oldArgs []interface{},
+) (newSql string, newArgs []interface{}) {
+	newSql = oldSql
+	if len(oldArgs) == 0 {
+		return
+	}
 	// insertHolderCount is used to calculate the inserting position for the '?' holder.
 	insertHolderCount := 0
-	// Handles the slice arguments.
-	if len(args) > 0 {
-		for index, arg := range args {
-			reflectInfo := reflection.OriginValueAndKind(arg)
-			switch reflectInfo.OriginKind {
-			case reflect.Slice, reflect.Array:
-				// It does not split the type of []byte.
-				// Eg: table.Where("name = ?", []byte("john"))
-				if _, ok := arg.([]byte); ok {
-					newArgs = append(newArgs, arg)
-					continue
+	// Handles the slice and struct type argument item.
+	for index, oldArg := range oldArgs {
+		argReflectInfo := reflection.OriginValueAndKind(oldArg)
+		switch argReflectInfo.OriginKind {
+		case reflect.Slice, reflect.Array:
+			// It does not split the type of []byte.
+			// Eg: table.Where("name = ?", []byte("john"))
+			if _, ok := oldArg.([]byte); ok {
+				newArgs = append(newArgs, oldArg)
+				continue
+			}
+			var (
+				valueHolderCount = gstr.Count(newSql, "?")
+				argSliceLength   = argReflectInfo.OriginValue.Len()
+			)
+			if argSliceLength == 0 {
+				// Empty slice argument, it converts the sql to a false sql.
+				// Example:
+				// Query("select * from xxx where id in(?)", g.Slice{}) -> select * from xxx where 0=1
+				// Where("id in(?)", g.Slice{}) -> WHERE 0=1
+				if gstr.Contains(newSql, "?") {
+					whereKeyWord := " WHERE "
+					if p := gstr.PosI(newSql, whereKeyWord); p == -1 {
+						return "0=1", []interface{}{}
+					} else {
+						return gstr.SubStr(newSql, 0, p+len(whereKeyWord)) + "0=1", []interface{}{}
+					}
 				}
+			} else {
+				// Example:
+				// Query("SELECT ?+?", g.Slice{1,2})
+				// WHERE("id=?", g.Slice{1,2})
+				for i := 0; i < argSliceLength; i++ {
+					newArgs = append(newArgs, argReflectInfo.OriginValue.Index(i).Interface())
+				}
+			}
 
-				if reflectInfo.OriginValue.Len() == 0 {
-					// Empty slice argument, it converts the sql to a false sql.
-					// Eg:
-					// Query("select * from xxx where id in(?)", g.Slice{}) -> select * from xxx where 0=1
-					// Where("id in(?)", g.Slice{}) -> WHERE 0=1
-					if gstr.Contains(newSql, "?") {
-						whereKeyWord := " WHERE "
-						if p := gstr.PosI(newSql, whereKeyWord); p == -1 {
-							return "0=1", []interface{}{}
-						} else {
-							return gstr.SubStr(newSql, 0, p+len(whereKeyWord)) + "0=1", []interface{}{}
-						}
-					}
-				} else {
-					for i := 0; i < reflectInfo.OriginValue.Len(); i++ {
-						newArgs = append(newArgs, reflectInfo.OriginValue.Index(i).Interface())
-					}
-				}
+			// If the '?' holder count equals the length of the slice,
+			// it does not implement the arguments splitting logic.
+			// Eg: db.Query("SELECT ?+?", g.Slice{1, 2})
+			if len(oldArgs) == 1 && valueHolderCount == argSliceLength {
+				break
+			}
 
-				// If the '?' holder count equals the length of the slice,
-				// it does not implement the arguments splitting logic.
-				// Eg: db.Query("SELECT ?+?", g.Slice{1, 2})
-				if len(args) == 1 && gstr.Count(newSql, "?") == reflectInfo.OriginValue.Len() {
-					break
-				}
-				// counter is used to finding the inserting position for the '?' holder.
-				var (
-					counter  = 0
-					replaced = false
-				)
-				newSql, _ = gregex.ReplaceStringFunc(`\?`, newSql, func(s string) string {
-					if replaced {
-						return s
-					}
-					counter++
-					if counter == index+insertHolderCount+1 {
-						replaced = true
-						insertHolderCount += reflectInfo.OriginValue.Len() - 1
-						return "?" + strings.Repeat(",?", reflectInfo.OriginValue.Len()-1)
-					}
+			// counter is used to finding the inserting position for the '?' holder.
+			var (
+				counter  = 0
+				replaced = false
+			)
+			newSql, _ = gregex.ReplaceStringFunc(`\?`, newSql, func(s string) string {
+				if replaced {
 					return s
-				})
-
-			// Special struct handling.
-			case reflect.Struct:
-				switch arg.(type) {
-				// The underlying driver supports time.Time/*time.Time types.
-				case time.Time, *time.Time:
-					newArgs = append(newArgs, arg)
-					continue
-
-				case gtime.Time:
-					newArgs = append(newArgs, arg.(gtime.Time).Time)
-					continue
-
-				case *gtime.Time:
-					newArgs = append(newArgs, arg.(*gtime.Time).Time)
-					continue
-
-				default:
-					// It converts the struct to string in default
-					// if it has implemented the String interface.
-					if v, ok := arg.(iString); ok {
-						newArgs = append(newArgs, v.String())
-						continue
-					}
 				}
-				newArgs = append(newArgs, arg)
+				counter++
+				if counter == index+insertHolderCount+1 {
+					replaced = true
+					insertHolderCount += argSliceLength - 1
+					return "?" + strings.Repeat(",?", argSliceLength-1)
+				}
+				return s
+			})
+
+		// Special struct handling.
+		case reflect.Struct:
+			switch oldArg.(type) {
+			// The underlying driver supports time.Time/*time.Time types.
+			case time.Time, *time.Time:
+				newArgs = append(newArgs, oldArg)
+				continue
+
+			case gtime.Time:
+				newArgs = append(newArgs, oldArg.(gtime.Time).Time)
+				continue
+
+			case *gtime.Time:
+				newArgs = append(newArgs, oldArg.(*gtime.Time).Time)
+				continue
 
 			default:
-				newArgs = append(newArgs, arg)
+				// It converts the struct to string in default
+				// if it has implemented the String interface.
+				if v, ok := oldArg.(iString); ok {
+					newArgs = append(newArgs, v.String())
+					continue
+				}
 			}
+			newArgs = append(newArgs, oldArg)
+
+		default:
+			newArgs = append(newArgs, oldArg)
 		}
 	}
 	return
@@ -880,4 +930,42 @@ func FormatSqlWithArgs(sql string, args []interface{}) string {
 			return s
 		})
 	return newQuery
+}
+
+// FormatMultiLineSqlToSingle formats sql template string into one line.
+func FormatMultiLineSqlToSingle(sql string) (string, error) {
+	var err error
+	// format sql template string.
+	sql, err = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(sql))
+	if err != nil {
+		return "", err
+	}
+	sql, err = gregex.ReplaceString(`\s{2,}`, " ", gstr.Trim(sql))
+	if err != nil {
+		return "", err
+	}
+	return sql, nil
+}
+
+func genTableFieldsCacheKey(group, schema, table string) string {
+	return fmt.Sprintf(
+		`%s%s@%s#%s`,
+		cachePrefixTableFields,
+		group,
+		schema,
+		table,
+	)
+}
+
+func genSelectCacheKey(table, group, schema, name, sql string, args ...interface{}) string {
+	if name == "" {
+		name = fmt.Sprintf(
+			`%s@%s#%s:%d`,
+			table,
+			group,
+			schema,
+			ghash.BKDR64([]byte(sql+", @PARAMS:"+gconv.String(args))),
+		)
+	}
+	return fmt.Sprintf(`%s%s`, cachePrefixSelectCache, name)
 }

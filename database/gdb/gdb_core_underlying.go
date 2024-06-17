@@ -10,6 +10,7 @@ package gdb
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"reflect"
 
 	"go.opentelemetry.io/otel"
@@ -155,9 +156,6 @@ func (c *Core) DoFilter(ctx context.Context, link Link, sql string, args []inter
 
 // DoCommit commits current sql and arguments to underlying sql driver.
 func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutput, err error) {
-	// Inject internal data into ctx, especially for transaction creating.
-	ctx = c.InjectInternalCtxData(ctx)
-
 	var (
 		sqlTx                *sql.Tx
 		sqlStmt              *sql.Stmt
@@ -173,7 +171,7 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 
 	// Trace span start.
 	tr := otel.GetTracerProvider().Tracer(traceInstrumentName, trace.WithInstrumentationVersion(gf.VERSION))
-	ctx, span := tr.Start(ctx, in.Type, trace.WithSpanKind(trace.SpanKindInternal))
+	ctx, span := tr.Start(ctx, string(in.Type), trace.WithSpanKind(trace.SpanKindInternal))
 	defer span.End()
 
 	// Execution cased by type.
@@ -352,6 +350,53 @@ func (c *Core) DoPrepare(ctx context.Context, link Link, sql string) (stmt *Stmt
 	return out.Stmt, err
 }
 
+// FormatUpsert formats and returns SQL clause part for upsert statement.
+// In default implements, this function performs upsert statement for MySQL like:
+// `INSERT INTO ... ON DUPLICATE KEY UPDATE x=VALUES(z),m=VALUES(y)...`
+func (c *Core) FormatUpsert(columns []string, list List, option DoInsertOption) (string, error) {
+	var onDuplicateStr string
+	if option.OnDuplicateStr != "" {
+		onDuplicateStr = option.OnDuplicateStr
+	} else if len(option.OnDuplicateMap) > 0 {
+		for k, v := range option.OnDuplicateMap {
+			if len(onDuplicateStr) > 0 {
+				onDuplicateStr += ","
+			}
+			switch v.(type) {
+			case Raw, *Raw:
+				onDuplicateStr += fmt.Sprintf(
+					"%s=%s",
+					c.QuoteWord(k),
+					v,
+				)
+			default:
+				onDuplicateStr += fmt.Sprintf(
+					"%s=VALUES(%s)",
+					c.QuoteWord(k),
+					c.QuoteWord(gconv.String(v)),
+				)
+			}
+		}
+	} else {
+		for _, column := range columns {
+			// If it's SAVE operation, do not automatically update the creating time.
+			if c.IsSoftCreatedFieldName(column) {
+				continue
+			}
+			if len(onDuplicateStr) > 0 {
+				onDuplicateStr += ","
+			}
+			onDuplicateStr += fmt.Sprintf(
+				"%s=VALUES(%s)",
+				c.QuoteWord(column),
+				c.QuoteWord(column),
+			)
+		}
+	}
+
+	return InsertOnDuplicateKeyUpdate + " " + onDuplicateStr, nil
+}
+
 // RowsToResult converts underlying data record type sql.Rows to Result type.
 func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error) {
 	if rows == nil {
@@ -372,7 +417,7 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 	}
 
 	if len(columnTypes) > 0 {
-		if internalData := c.GetInternalCtxDataFromCtx(ctx); internalData != nil {
+		if internalData := c.getInternalColumnFromCtx(ctx); internalData != nil {
 			internalData.FirstResultColumn = columnTypes[0].Name()
 		}
 	}

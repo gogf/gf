@@ -33,10 +33,14 @@ import (
 const (
 	defaultHttpAddr  = ":80"  // Default listening port for HTTP.
 	defaultHttpsAddr = ":443" // Default listening port for HTTPS.
-	UriTypeDefault   = 0      // Method names to the URI converting type, which converts name to its lower case and joins the words using char '-'.
-	UriTypeFullName  = 1      // Method names to the URI converting type, which does not convert to the method name.
-	UriTypeAllLower  = 2      // Method names to the URI converting type, which converts name to its lower case.
-	UriTypeCamel     = 3      // Method names to the URI converting type, which converts name to its camel case.
+
+)
+
+const (
+	UriTypeDefault  = iota // Method names to the URI converting type, which converts name to its lower case and joins the words using char '-'.
+	UriTypeFullName        // Method names to the URI converting type, which does not convert to the method name.
+	UriTypeAllLower        // Method names to the URI converting type, which converts name to its lower case.
+	UriTypeCamel           // Method names to the URI converting type, which converts name to its camel case.
 )
 
 // ServerConfig is the HTTP Server configuration manager.
@@ -222,8 +226,9 @@ type ServerConfig struct {
 	// API & Swagger.
 	// ======================================================================================================
 
-	OpenApiPath string `json:"openapiPath"` // OpenApiPath specifies the OpenApi specification file path.
-	SwaggerPath string `json:"swaggerPath"` // SwaggerPath specifies the swagger UI path for route registering.
+	OpenApiPath       string `json:"openapiPath"`       // OpenApiPath specifies the OpenApi specification file path.
+	SwaggerPath       string `json:"swaggerPath"`       // SwaggerPath specifies the swagger UI path for route registering.
+	SwaggerUITemplate string `json:"swaggerUITemplate"` // SwaggerUITemplate specifies the swagger UI custom template
 
 	// ======================================================================================================
 	// Other.

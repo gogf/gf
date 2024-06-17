@@ -30,7 +30,7 @@ type ConfigNode struct {
 	User                 string        `json:"user"`                 // Authentication username.
 	Pass                 string        `json:"pass"`                 // Authentication password.
 	Name                 string        `json:"name"`                 // Default used database name.
-	Type                 string        `json:"type"`                 // Database type: mysql, sqlite, mssql, pgsql, oracle.
+	Type                 string        `json:"type"`                 // Database type: mysql, mariadb, sqlite, mssql, pgsql, oracle, clickhouse, dm.
 	Link                 string        `json:"link"`                 // (Optional) Custom link information for all configuration in one single string.
 	Extra                string        `json:"extra"`                // (Optional) Extra configuration according the registered third-party database driver.
 	Role                 string        `json:"role"`                 // (Optional, "master" in default) Node role, used for master-slave mode: master, slave.
@@ -208,15 +208,15 @@ func (c *Core) SetMaxConnLifeTime(d time.Duration) {
 
 // GetConfig returns the current used node configuration.
 func (c *Core) GetConfig() *ConfigNode {
-	internalData := c.GetInternalCtxDataFromCtx(c.db.GetCtx())
-	if internalData != nil && internalData.ConfigNode != nil {
+	var configNode = c.getConfigNodeFromCtx(c.db.GetCtx())
+	if configNode != nil {
 		// Note:
 		// It so here checks and returns the config from current DB,
 		// if different schemas between current DB and config.Name from context,
 		// for example, in nested transaction scenario, the context is passed all through the logic procedure,
 		// but the config.Name from context may be still the original one from the first transaction object.
-		if c.config.Name == internalData.ConfigNode.Name {
-			return internalData.ConfigNode
+		if c.config.Name == configNode.Name {
+			return configNode
 		}
 	}
 	return c.config

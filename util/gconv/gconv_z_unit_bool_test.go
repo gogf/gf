@@ -13,29 +13,45 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-type boolStruct struct{}
+var boolTests = []struct {
+	value  interface{}
+	expect bool
+}{
+	{true, true},
+	{false, false},
 
-func Test_Bool(t *testing.T) {
+	{0, false},
+	{1, true},
+
+	{[]byte(""), false},
+
+	{"", false},
+	{"0", false},
+	{"1", true},
+	{"123.456", true},
+	{"true", true},
+	{"false", false},
+	{"on", true},
+	{"off", false},
+
+	{complex(1, 2), true},
+	{complex(123.456, 789.123), true},
+
+	{[3]int{1, 2, 3}, true},
+	{[]int{1, 2, 3}, true},
+
+	{map[int]int{1: 1}, true},
+	{map[string]string{"Earth": "印度洋"}, true},
+
+	{struct{}{}, true},
+	{&struct{}{}, true},
+	{nil, false},
+}
+
+func TestBool(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var any interface{} = nil
-		t.AssertEQ(gconv.Bool(any), false)
-		t.AssertEQ(gconv.Bool(false), false)
-		t.AssertEQ(gconv.Bool(nil), false)
-		t.AssertEQ(gconv.Bool(0), false)
-		t.AssertEQ(gconv.Bool("0"), false)
-		t.AssertEQ(gconv.Bool(""), false)
-		t.AssertEQ(gconv.Bool("false"), false)
-		t.AssertEQ(gconv.Bool("off"), false)
-		t.AssertEQ(gconv.Bool([]byte{}), false)
-		t.AssertEQ(gconv.Bool([]string{}), false)
-		t.AssertEQ(gconv.Bool([]interface{}{}), false)
-		t.AssertEQ(gconv.Bool([]map[int]int{}), false)
-
-		t.AssertEQ(gconv.Bool("1"), true)
-		t.AssertEQ(gconv.Bool("on"), true)
-		t.AssertEQ(gconv.Bool(1), true)
-		t.AssertEQ(gconv.Bool(123.456), true)
-		t.AssertEQ(gconv.Bool(boolStruct{}), true)
-		t.AssertEQ(gconv.Bool(&boolStruct{}), true)
+		for _, test := range boolTests {
+			t.AssertEQ(gconv.Bool(test.value), test.expect)
+		}
 	})
 }

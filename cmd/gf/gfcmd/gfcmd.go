@@ -7,20 +7,21 @@
 package gfcmd
 
 import (
-	_ "github.com/gogf/gf/cmd/gf/v2/internal/packed"
+	"context"
+	"runtime"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-
-	"context"
-
-	"github.com/gogf/gf/cmd/gf/v2/internal/cmd"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/allyes"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gstr"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/cmd"
+	_ "github.com/gogf/gf/cmd/gf/v2/internal/packed"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/allyes"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 const (
@@ -87,6 +88,7 @@ func GetCommand(ctx context.Context) (*Command, error) {
 		cmd.Docker,
 		cmd.Install,
 		cmd.Version,
+		cmd.Doc,
 	)
 	if err != nil {
 		return nil, err
@@ -99,6 +101,9 @@ func GetCommand(ctx context.Context) (*Command, error) {
 
 // zsh alias "git fetch" conflicts checks.
 func handleZshAlias() {
+	if runtime.GOOS == "windows" {
+		return
+	}
 	if home, err := gfile.Home(); err == nil {
 		zshPath := gfile.Join(home, ".zshrc")
 		if gfile.Exists(zshPath) {

@@ -11,7 +11,6 @@ import (
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
@@ -36,16 +35,16 @@ func (c *controllerClearer) doClear(dstModuleFolderPath string, item apiItem) (e
 		methodFilePath  = gfile.Join(dstModuleFolderPath, fmt.Sprintf(
 			`%s_%s_%s.go`, item.Module, item.Version, methodNameSnake,
 		))
-		fileContent = gstr.Trim(gfile.GetContents(methodFilePath))
 	)
-	match, err := gregex.MatchString(`.+?Req.+?Res.+?{([\s\S]+?)}`, fileContent)
+
+	funcs, err := c.getFuncInDst(methodFilePath)
 	if err != nil {
 		return err
 	}
-	if len(match) > 1 {
-		implements := gstr.Trim(match[1])
+
+	if len(funcs) > 1 {
 		// One line.
-		if !gstr.Contains(implements, "\n") && gstr.Contains(implements, `CodeNotImplemented`) {
+		if !gstr.Contains(funcs[0], "\n") && gstr.Contains(funcs[0], `CodeNotImplemented`) {
 			mlog.Printf(
 				`remove unimplemented and of no api definitions controller file: %s`,
 				methodFilePath,
