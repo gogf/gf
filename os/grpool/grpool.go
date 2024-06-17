@@ -20,8 +20,14 @@ import (
 // Func is the pool function which contains context parameter.
 type Func func(ctx context.Context)
 
+// FuncWithParams is the pool function which contains context and func params.
+type FuncWithParams func(ctx context.Context, params ...interface{})
+
 // RecoverFunc is the pool runtime panic recover function which contains context parameter.
 type RecoverFunc func(ctx context.Context, exception error)
+
+// RecoverFuncWithParams is the pool runtime panic recover function which contains context and func params.
+type RecoverFuncWithParams func(ctx context.Context, exception error, params ...interface{})
 
 // Pool manages the goroutines using pool.
 type Pool struct {
@@ -33,8 +39,10 @@ type Pool struct {
 
 // localPoolItem is the job item storing in job list.
 type localPoolItem struct {
-	Ctx  context.Context // Context.
-	Func Func            // Job function.
+	Ctx            context.Context // Context.
+	Func           Func            // Job function.
+	FuncWithParams FuncWithParams
+	Params         []interface{}
 }
 
 const (
@@ -76,6 +84,12 @@ func Add(ctx context.Context, f Func) error {
 	return defaultPool.Add(ctx, f)
 }
 
+// AddWithParams pushes a new job to the default goroutine pool.
+// The job will be executed asynchronously.
+func AddWithParams(ctx context.Context, f FuncWithParams, params ...interface{}) error {
+	return defaultPool.AddWithParams(ctx, f, params...)
+}
+
 // AddWithRecover pushes a new job to the default pool with specified recover function.
 //
 // The optional `recoverFunc` is called when any panic during executing of `userFunc`.
@@ -83,6 +97,15 @@ func Add(ctx context.Context, f Func) error {
 // The job will be executed asynchronously.
 func AddWithRecover(ctx context.Context, userFunc Func, recoverFunc RecoverFunc) error {
 	return defaultPool.AddWithRecover(ctx, userFunc, recoverFunc)
+}
+
+// AddWithRecoverWithParams pushes a new job to the default pool with specified recover function.
+//
+// The optional `recoverFunc` is called when any panic during executing of `userFunc`.
+// If `recoverFunc` is not passed or given nil, it ignores the panic from `userFunc`.
+// The job will be executed asynchronously.
+func AddWithRecoverWithParams(ctx context.Context, userFunc FuncWithParams, recoverFunc RecoverFuncWithParams, params ...interface{}) error {
+	return defaultPool.AddWithRecoverWithParams(ctx, userFunc, recoverFunc, params...)
 }
 
 // Size returns current goroutine count of default goroutine pool.

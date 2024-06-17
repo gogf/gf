@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Basic(t *testing.T) {
+func Test_Add(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err   error
@@ -40,6 +40,82 @@ func Test_Basic(t *testing.T) {
 		t.Assert(array.Len(), size)
 		t.Assert(grpool.Jobs(), 0)
 		t.Assert(grpool.Size(), 0)
+	})
+}
+
+func Test_AddWithParams(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err   error
+			wg    = sync.WaitGroup{}
+			array = garray.NewArray(true)
+			size  = 100
+		)
+		wg.Add(size)
+		for i := 0; i < size; i++ {
+			err = grpool.AddWithParams(ctx, func(ctx context.Context, params ...interface{}) {
+				array.Append(params[0])
+				wg.Done()
+			}, 2)
+			t.AssertNil(err)
+		}
+		wg.Wait()
+
+		time.Sleep(100 * time.Millisecond)
+		t.Assert(array.Len(), size)
+		t.Assert(array.At(0), 2)
+		t.Assert(grpool.Jobs(), 0)
+		t.Assert(grpool.Size(), 0)
+	})
+}
+
+func Test_AddWithRecover(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err   error
+			array = garray.NewArray(true)
+		)
+		err = grpool.AddWithRecover(ctx, func(ctx context.Context) {
+			array.Append(1)
+			panic(1)
+		}, func(ctx context.Context, err error) {
+			array.Append(1)
+		})
+		t.AssertNil(err)
+		err = grpool.AddWithRecover(ctx, func(ctx context.Context) {
+			panic(1)
+			array.Append(1)
+		}, nil)
+		t.AssertNil(err)
+
+		time.Sleep(500 * time.Millisecond)
+
+		t.Assert(array.Len(), 2)
+	})
+}
+
+func Test_AddWithRecoverWithParams(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err   error
+			array = garray.NewArray(true)
+		)
+		err = grpool.AddWithRecoverWithParams(ctx, func(ctx context.Context, params ...interface{}) {
+			array.Append(params[0].(int))
+			panic(1)
+		}, func(ctx context.Context, err error, params ...interface{}) {
+			array.Append(params[0].(int))
+		}, 2)
+		t.AssertNil(err)
+		err = grpool.AddWithRecoverWithParams(ctx, func(ctx context.Context, params ...interface{}) {
+			panic(1)
+		}, nil)
+		t.AssertNil(err)
+
+		time.Sleep(500 * time.Millisecond)
+
+		t.Assert(array.Len(), 2)
+		t.Assert(array.At(0), 2)
 	})
 }
 
@@ -110,30 +186,5 @@ func Test_Limit3(t *testing.T) {
 		t.Assert(array.Len(), 100)
 		t.Assert(pool.IsClosed(), true)
 		t.AssertNE(pool.Add(ctx, func(ctx context.Context) {}), nil)
-	})
-}
-
-func Test_AddWithRecover(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		var (
-			err   error
-			array = garray.NewArray(true)
-		)
-		err = grpool.AddWithRecover(ctx, func(ctx context.Context) {
-			array.Append(1)
-			panic(1)
-		}, func(ctx context.Context, err error) {
-			array.Append(1)
-		})
-		t.AssertNil(err)
-		err = grpool.AddWithRecover(ctx, func(ctx context.Context) {
-			panic(1)
-			array.Append(1)
-		}, nil)
-		t.AssertNil(err)
-
-		time.Sleep(500 * time.Millisecond)
-
-		t.Assert(array.Len(), 2)
 	})
 }

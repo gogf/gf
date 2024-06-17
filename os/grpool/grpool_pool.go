@@ -31,6 +31,25 @@ func (p *Pool) Add(ctx context.Context, f Func) error {
 	return nil
 }
 
+// AddWithParams pushes a new job to the pool.
+// The job will be executed asynchronously.
+func (p *Pool) AddWithParams(ctx context.Context, f FuncWithParams, params ...interface{}) error {
+	for p.closed.Val() {
+		return gerror.NewCode(
+			gcode.CodeInvalidOperation,
+			"goroutine defaultPool is already closed",
+		)
+	}
+	p.list.PushFront(&localPoolItem{
+		Ctx:            ctx,
+		FuncWithParams: f,
+		Params:         params,
+	})
+	// Check and fork new worker.
+	p.checkAndForkNewGoroutineWorker()
+	return nil
+}
+
 // AddWithRecover pushes a new job to the pool with specified recover function.
 //
 // The optional `recoverFunc` is called when any panic during executing of `userFunc`.
@@ -51,6 +70,28 @@ func (p *Pool) AddWithRecover(ctx context.Context, userFunc Func, recoverFunc Re
 		}()
 		userFunc(ctx)
 	})
+}
+
+// AddWithRecoverWithParams pushes a new job to the pool with specified recover function.
+//
+// The optional `recoverFunc` is called when any panic during executing of `userFunc`.
+// If `recoverFunc` is not passed or given nil, it ignores the panic from `userFunc`.
+// The job will be executed asynchronously.
+func (p *Pool) AddWithRecoverWithParams(ctx context.Context, userFunc FuncWithParams, recoverFunc RecoverFuncWithParams, params ...interface{}) error {
+	return p.AddWithParams(ctx, func(ctx context.Context, params ...interface{}) {
+		defer func() {
+			if exception := recover(); exception != nil {
+				if recoverFunc != nil {
+					if v, ok := exception.(error); ok && gerror.HasStack(v) {
+						recoverFunc(ctx, v, params...)
+					} else {
+						recoverFunc(ctx, gerror.NewCodef(gcode.CodeInternalPanic, "%+v", exception), params...)
+					}
+				}
+			}
+		}()
+		userFunc(ctx, params...)
+	}, params...)
 }
 
 // Cap returns the capacity of the pool.
@@ -116,6 +157,10 @@ func (p *Pool) asynchronousWorker() {
 			return
 		}
 		poolItem = listItem.(*localPoolItem)
-		poolItem.Func(poolItem.Ctx)
+		if poolItem.Func != nil {
+			poolItem.Func(poolItem.Ctx)
+		} else if poolItem.FuncWithParams != nil {
+			poolItem.FuncWithParams(poolItem.Ctx, poolItem.Params...)
+		}
 	}
 }
