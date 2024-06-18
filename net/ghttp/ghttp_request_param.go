@@ -109,7 +109,7 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 		}
 		funcInfo := r.serveHandler.Handler.Info
 		if funcInfo.IsStrictRoute {
-			if funcInfo.validTagFields == 0 {
+			if funcInfo.hasValidTagFields == false {
 				return nil
 			}
 		}

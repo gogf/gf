@@ -320,33 +320,42 @@ func parseStructFields(funcInfo *handlerFuncInfo) {
 		if inTag != "" {
 			funcInfo.inTagFields = append(funcInfo.inTagFields, field)
 		}
-		// Check for recursively nested structs
 		validTag := field.TagValid()
 		if validTag == "" {
-			funcInfo.validTagFields = getValidTagField(field.Field.Type)
+			// Check for recursively nested structs
+			funcInfo.hasValidTagFields = checkFieldsHasValidTag(field.Field.Type)
 		} else {
-			funcInfo.validTagFields = 1
+			funcInfo.hasValidTagFields = true
 		}
 	}
 }
 
-func getValidTagField(field reflect.Type) (count int) {
+func checkFieldsHasValidTag(field reflect.Type) (has bool) {
 	if field.Kind() == reflect.Ptr {
 		field = field.Elem()
 	}
-	if field.Kind() == reflect.Struct {
-		for i := 0; i < field.NumField(); i++ {
-			f := field.Field(i)
-			tag := f.Tag.Get("v")
-			if tag == "" {
-				tag = f.Tag.Get("valid")
-			}
-			if tag != "" {
-				count++
-				return
-			}
-			count += getValidTagField(f.Type)
+	switch field.Kind() {
+	// []*struct or map[key]*struct
+	case reflect.Slice, reflect.Map, reflect.Array:
+		field = field.Elem()
+	}
+	if field.Kind() == reflect.Ptr {
+		field = field.Elem()
+	}
+	if field.Kind() != reflect.Struct {
+		return
+	}
+
+	for i := 0; i < field.NumField(); i++ {
+		f := field.Field(i)
+		tag := f.Tag.Get("v")
+		if tag == "" {
+			tag = f.Tag.Get("valid")
 		}
+		if tag != "" {
+			return true
+		}
+		has = checkFieldsHasValidTag(f.Type)
 	}
 
 	return

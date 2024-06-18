@@ -77,18 +77,14 @@ type (
 
 	// handlerFuncInfo contains the HandlerFunc address and its reflection type.
 	handlerFuncInfo struct {
-		Func            HandlerFunc      // Handler function address.
-		Type            reflect.Type     // Reflect type information for current handler, which is used for extensions of the handler feature.
-		Value           reflect.Value    // Reflect value information for current handler, which is used for extensions of the handler feature.
-		IsStrictRoute   bool             // Whether strict route matching is enabled.
-		ReqStructFields []gstructs.Field // Request struct fields.
-		// Language string `d:"go"`
-		defaultTagFields []gstructs.Field
-		// Language string `in:"header"`
-		inTagFields []gstructs.Field
-		// Language string `v:"required|eq:go"`
-		// todo: Subsequently, the fields with valid tags are parsed into maps for direct verification
-		validTagFields int
+		Func              HandlerFunc      // Handler function address.
+		Type              reflect.Type     // Reflect type information for current handler, which is used for extensions of the handler feature.
+		Value             reflect.Value    // Reflect value information for current handler, which is used for extensions of the handler feature.
+		IsStrictRoute     bool             // Whether strict route matching is enabled.
+		ReqStructFields   []gstructs.Field // Request struct fields.
+		defaultTagFields  []gstructs.Field // Language string `d:"go"`
+		inTagFields       []gstructs.Field // Language string `in:"header"`
+		hasValidTagFields bool
 	}
 
 	// HandlerItem is the registered handler for route handling,
