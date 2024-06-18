@@ -313,7 +313,7 @@ func TestCron_JobWaiter(t *testing.T) {
 		glog.Printf(ctx, "Signal received: %s, stopping cron", sig)
 
 		glog.Print(ctx, "Waiting for all cron jobs to complete...")
-		gcron.GracefulStop()
+		gcron.StopGracefully()
 		glog.Print(ctx, "All cron jobs completed")
 		t.Assert(s1.Len(), 4)
 		t.Assert(s2.Len(), 2)

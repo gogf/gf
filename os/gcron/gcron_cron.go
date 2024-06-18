@@ -189,8 +189,8 @@ func (c *Cron) Stop(name ...string) {
 	}
 }
 
-// GracefulStop Blocks and waits all current running jobs done.
-func (c *Cron) GracefulStop() {
+// StopGracefully Blocks and waits all current running jobs done.
+func (c *Cron) StopGracefully() {
 	c.status.Set(StatusStopped)
 	c.jobWaiter.Wait()
 }
