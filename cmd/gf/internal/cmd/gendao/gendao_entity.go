@@ -36,7 +36,7 @@ func generateEntity(ctx context.Context, in CGenDaoInternalInput) {
 			structDefinition, appendImports = generateStructDefinition(ctx, generateStructDefinitionInput{
 				CGenDaoInternalInput: in,
 				TableName:            tableName,
-				StructName:           gstr.CaseCamel(newTableName),
+				StructName:           gstr.CaseCamel(strings.ToLower(newTableName)),
 				FieldMap:             fieldMap,
 				IsDo:                 false,
 			})
@@ -44,7 +44,7 @@ func generateEntity(ctx context.Context, in CGenDaoInternalInput) {
 				ctx,
 				in,
 				newTableName,
-				gstr.CaseCamel(newTableName),
+				gstr.CaseCamel(strings.ToLower(newTableName)),
 				structDefinition,
 				appendImports,
 			)
@@ -70,6 +70,7 @@ func generateEntityContent(
 			tplVarPackageImports:     getImportPartContent(ctx, structDefine, false, appendImports),
 			tplVarTableNameCamelCase: tableNameCamelCase,
 			tplVarStructDefine:       structDefine,
+			tplVarPackageName:        filepath.Base(in.EntityPath),
 		},
 	)
 	entityContent = replaceDefaultVar(in, entityContent)

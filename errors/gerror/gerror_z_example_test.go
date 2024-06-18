@@ -77,7 +77,7 @@ func ExampleIs() {
 	fmt.Println(gerror.Is(err1, err2))
 
 	// Output:
-	// false
+	// true
 	// true
 	// true
 	// false

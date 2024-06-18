@@ -569,41 +569,43 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 	}
 	// Start listening asynchronously.
 	serverRunning.Add(1)
-	var wg = sync.WaitGroup{}
-	for _, v := range s.servers {
+	var wg = &sync.WaitGroup{}
+	for _, gs := range s.servers {
 		wg.Add(1)
-		go func(server *gracefulServer) {
-			s.serverCount.Add(1)
-			var err error
-			// Create listener.
-			if server.isHttps {
-				err = server.CreateListenerTLS(
-					s.config.HTTPSCertPath, s.config.HTTPSKeyPath, s.config.TLSConfig,
-				)
-			} else {
-				err = server.CreateListener()
-			}
-			if err != nil {
-				s.Logger().Fatalf(ctx, `%+v`, err)
-			}
-			wg.Done()
-			// Start listening and serving in blocking way.
-			err = server.Serve(ctx)
-			// The process exits if the server is closed with none closing error.
-			if err != nil && !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
-				s.Logger().Fatalf(ctx, `%+v`, err)
-			}
-			// If all the underlying servers' shutdown, the process exits.
-			if s.serverCount.Add(-1) < 1 {
-				s.closeChan <- struct{}{}
-				if serverRunning.Add(-1) < 1 {
-					serverMapping.Remove(s.instance)
-					allShutdownChan <- struct{}{}
-				}
-			}
-		}(v)
+		go s.startGracefulServer(ctx, wg, gs)
 	}
 	wg.Wait()
+}
+
+func (s *Server) startGracefulServer(ctx context.Context, wg *sync.WaitGroup, server *gracefulServer) {
+	s.serverCount.Add(1)
+	var err error
+	// Create listener.
+	if server.isHttps {
+		err = server.CreateListenerTLS(
+			s.config.HTTPSCertPath, s.config.HTTPSKeyPath, s.config.TLSConfig,
+		)
+	} else {
+		err = server.CreateListener()
+	}
+	if err != nil {
+		s.Logger().Fatalf(ctx, `%+v`, err)
+	}
+	wg.Done()
+	// Start listening and serving in blocking way.
+	err = server.Serve(ctx)
+	// The process exits if the server is closed with none closing error.
+	if err != nil && !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
+		s.Logger().Fatalf(ctx, `%+v`, err)
+	}
+	// If all the underlying servers' shutdown, the process exits.
+	if s.serverCount.Add(-1) < 1 {
+		s.closeChan <- struct{}{}
+		if serverRunning.Add(-1) < 1 {
+			serverMapping.Remove(s.instance)
+			allShutdownChan <- struct{}{}
+		}
+	}
 }
 
 // Status retrieves and returns the server status.

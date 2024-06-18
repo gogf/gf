@@ -11,7 +11,7 @@ const TemplateGenDaoEntityContent = `
 // Code generated and maintained by GoFrame CLI tool. DO NOT EDIT. {TplCreatedAtDatetimeStr}
 // =================================================================================
 
-package entity
+package {TplPackageName}
 
 {TplPackageImports}
 

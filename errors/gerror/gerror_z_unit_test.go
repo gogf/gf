@@ -414,10 +414,28 @@ func Test_Is(t *testing.T) {
 		err2 := gerror.Wrap(err1, "2")
 		err2 = gerror.Wrap(err2, "3")
 		t.Assert(gerror.Is(err2, err1), true)
+
+		var (
+			errNotFound = errors.New("not found")
+			gerror1     = gerror.Wrap(errNotFound, "wrapped")
+			gerror2     = gerror.New("not found")
+		)
+		t.Assert(errors.Is(errNotFound, errNotFound), true)
+		t.Assert(errors.Is(nil, errNotFound), false)
+		t.Assert(errors.Is(nil, nil), true)
+
+		t.Assert(gerror.Is(errNotFound, errNotFound), true)
+		t.Assert(gerror.Is(nil, errNotFound), false)
+		t.Assert(gerror.Is(nil, nil), true)
+
+		t.Assert(errors.Is(gerror1, errNotFound), true)
+		t.Assert(errors.Is(gerror2, errNotFound), false)
+		t.Assert(gerror.Is(gerror1, errNotFound), true)
+		t.Assert(gerror.Is(gerror2, errNotFound), false)
 	})
 }
 
-func Test_HashError(t *testing.T) {
+func Test_HasError(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err1 := errors.New("1")
 		err2 := gerror.Wrap(err1, "2")
@@ -426,7 +444,7 @@ func Test_HashError(t *testing.T) {
 	})
 }
 
-func Test_HashCode(t *testing.T) {
+func Test_HasCode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gerror.HasCode(nil, gcode.CodeNotAuthorized), false)
 		err1 := errors.New("1")

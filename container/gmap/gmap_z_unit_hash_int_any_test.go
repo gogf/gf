@@ -118,6 +118,22 @@ func Test_IntAnyMap_Batch(t *testing.T) {
 	})
 }
 
+func Test_IntAnyMap_Iterator_Deadlock(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewIntAnyMapFrom(map[int]interface{}{1: 1, 2: 2, 3: "3", 4: 4}, true)
+		m.Iterator(func(k int, _ interface{}) bool {
+			if k%2 == 0 {
+				m.Remove(k)
+			}
+			return true
+		})
+		t.Assert(m.Map(), map[int]interface{}{
+			1: 1,
+			3: "3",
+		})
+	})
+}
+
 func Test_IntAnyMap_Iterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[int]interface{}{1: 1, 2: "2"}
