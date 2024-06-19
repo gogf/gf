@@ -131,7 +131,7 @@ func (r *Response) WriteJsonExit(content interface{}) {
 //
 // Note that there should be a "callback" parameter in the request for JSONP format.
 func (r *Response) WriteJsonP(content interface{}) {
-	r.Header().Set("Content-Type", contentTypeJson)
+	r.Header().Set("Content-Type", contentTypeJavascript)
 	// If given string/[]byte, response it directly to client.
 	switch content.(type) {
 	case string, []byte:
