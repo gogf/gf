@@ -7,6 +7,7 @@
 package gerror
 
 import (
+	"errors"
 	"runtime"
 )
 
@@ -91,17 +92,17 @@ func Equal(err, target error) bool {
 }
 
 // Is reports whether current error `err` has error `target` in its chaining errors.
-// It is just for implements for stdlib errors.Is from Go version 1.17.
+// There's similar function HasError which is designed and implemented early before errors.Is of go stdlib.
+// It is now alias of errors.Is of go stdlib, to guarantee the same performance as go stdlib.
 func Is(err, target error) bool {
-	if e, ok := err.(IIs); ok {
-		return e.Is(target)
-	}
-	return false
+	return errors.Is(err, target)
 }
 
-// HasError is alias of Is, which more easily understanding semantics.
+// HasError performs as Is.
+// This function is designed and implemented early before errors.Is of go stdlib.
+// Deprecated: use Is instead.
 func HasError(err, target error) bool {
-	return Is(err, target)
+	return errors.Is(err, target)
 }
 
 // callers returns the stack callers.
